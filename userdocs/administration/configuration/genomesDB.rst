@@ -26,11 +26,12 @@ This section contains information about genome.
 chrAllFile
 __________
 
+.. FIXME:
+  Fill me
+
 .. code-block:: ini
 
-  chrAllFile = <TODO>
-
-TODO
+  chrAllFile = <>
 
 defaultGeneModel
 ________________
@@ -55,13 +56,15 @@ The absolute filepath to the gene model with <gene model id>.
 [PARs]
 ------
 
-TODO
+.. FIXME:
+  Fill me
 
-regions.<TODO>
-______________
+regions.<>
+__________
+
+.. FIXME:
+  Fill me
 
 .. code-block:: ini
 
-  regions.<TODO> = <comma separated TODO>
-
-TODO
+  regions.<> = <comma separated >

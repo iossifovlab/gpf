@@ -11,11 +11,12 @@ This configuration file hosts information about gene data.
 geneInfoFile
 ____________
 
+.. FIXME:
+  Fill me
+
 .. code-block:: ini
 
-  geneInfoFile = <TODO>
-
-TODO
+  geneInfoFile = <>
 
 [geneTerms.<gene term id>]
 --------------------------
@@ -33,29 +34,32 @@ Identifier of the gene term. Default value is <gene term id> from the
 file
 ____
 
+.. FIXME:
+  Fill me
+
 .. code-block:: ini
 
-  file = <TODO>
-
-TODO
+  file = <>
 
 webFormatStr
 ____________
 
+.. FIXME:
+  Fill me
+
 .. code-block:: ini
 
-  webFormatStr = <TODO>
-
-TODO
+  webFormatStr = <>
 
 webLabel
 ________
 
+.. FIXME:
+  Fill me
+
 .. code-block:: ini
 
-  webLabel = <TODO>
-
-TODO
+  webLabel = <>
 
 [geneWeights]
 -------------
@@ -145,11 +149,12 @@ separated by a comma.
 [chromosomes]
 -------------
 
+.. FIXME:
+  Fill me
+
 file
 ____
 
 .. code-block:: ini
 
-  file = <TODO>
-
-TODO
+  file = <>

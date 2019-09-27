@@ -3,4 +3,5 @@
 Studies and Datasets DB configuration
 =====================================
 
-TODO
+.. FIXME:
+  Fill me

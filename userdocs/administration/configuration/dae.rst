@@ -45,17 +45,18 @@ Port number of the HDFS server.
 baseDir
 _______
 
+.. FIXME:
+  Fill me
+
 .. code-block:: ini
 
-  baseDir = <TODO>
+  baseDir = <>
 
 DEFAULT
   .. exec::
     from dae.configuration.dae_config_parser import DAEConfigParser
 
     print(f"``{DAEConfigParser.DEFAULT_SECTION_VALUES['HDFS']['baseDir']}``")
-
-TODO
 
 [Impala]
 --------
