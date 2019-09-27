@@ -42,7 +42,7 @@ recurrencyCriteria.segments
 ___________________________
 
 .. FIXME:
- Fill me
+  Fill me
 
 .. code-block:: ini
 
