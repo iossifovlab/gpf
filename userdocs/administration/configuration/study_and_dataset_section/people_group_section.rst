@@ -31,7 +31,7 @@ ____________________
 
   <people group id>.id = <people group identifier>
 
-Identifier of the people group. Default value is <people group id> from the
+Identifier of the people group. Default value is ``<people group id>`` from the
 people group property name.
 
 <people group id>.name
