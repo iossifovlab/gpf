@@ -3,564 +3,437 @@
 Genotype Browser Section
 ========================
 
+The configuration section for a genotype browser follows the general INI
+format. Its name must be ``genotypeBrowser`` - this will indicate that it is a
+genotype browser configuration section. This configuration section must
+properly describe a genotype browser used by one study.
+
+[genotypeBrowser]
+-----------------
+
+hasCNV
+______
+
+.. code-block:: ini
+
+  hasCNV = <boolean>
+
+This property show:
+
+  * if ``CNV`` effect group containing ``CNV+`` and ``CNV*`` effect types are
+    present in the ``Effect Types`` filter in the ``Genotype Browser`` for the
+    study.
+
+  * if ``CNV``, ``CNV+`` and ``CNV*`` effect types are present in the
+    ``Effect Types`` filter in the ``Phenotype Tool`` for the study.
+
+  * if ``CNV`` variant type is present in the ``Variant Types`` filter in the
+    ``Genotype Browser`` for the study.
+
+This property takes a :ref:`boolean <allowed_values_booleans>` value.
+
+hasComplex
+__________
+
+.. code-block:: ini
+
+  hasComplex = <boolean>
+
+This property show if ``complex`` variant type is present in the
+``Variant Types`` filter in the ``Genotype Browser`` for the study. This
+property takes a :ref:`boolean <allowed_values_booleans>` value.
+
+hasStudyTypes
+_____________
+
+.. code-block:: ini
+
+  hasStudyTypes = <boolean>
+
+This property show if ``Study Types`` filter is present in the
+``Genotype Browser`` for the study. This property takes a
+:ref:`boolean <allowed_values_booleans>` value.
+
+hasStudyFilters
+_______________
+
+.. code-block:: ini
+
+  hasStudyFilters = <boolean>
+
+This property show if ``Studies`` filter block is present in the
+``Genotype Browser`` for the study. This property takes a
+:ref:`boolean <allowed_values_booleans>` value.
+
+hasFamilyFilters
+________________
+
+.. code-block:: ini
+
+  hasFamilyFilters = <boolean>
+
+This property show:
+
+  * if ``Studies`` filter block is present in the ``Genotype Browser`` for the
+    study.
+
+  * if ``Studies`` filter block is present in the ``Phenotype Tool`` for the
+    study.
+
+This property takes a :ref:`boolean <allowed_values_booleans>` value.
+
+hasPresentInRole
+________________
+
+.. code-block:: ini
+
+  hasPresentInRole = <boolean>
+
+This property show if ``Present in Role`` filter is present in the
+``Genotype Browser`` for the study. This property takes
+a :ref:`boolean <allowed_values_booleans>` value. You see configuration of
+``Present in Role`` :ref:`here <present_in_role_property>`.
+
+hasPresentInChild
+_________________
+
+.. code-block:: ini
+
+  hasPresentInChild = <boolean>
+
+This property show if ``Present in Child`` filter is present in the
+``Genotype Browser`` for the study. This property takes a
+:ref:`boolean <allowed_values_booleans>` value.
+
+hasPresentInParent
+__________________
+
+.. code-block:: ini
+
+  hasPresentInParent = <boolean>
+
+This property show if ``Present in Parent`` filter is present in the
+``Genotype Browser`` for the study. This property takes a
+:ref:`boolean <allowed_values_booleans>` value.
+
+hasPedigreeSelector
+___________________
+
+.. code-block:: ini
+
+  hasPedigreeSelector = <boolean>
+
+This property show if ``Pedigree Selector`` filter is present in the
+``Genotype Browser`` for the study. This property takes a
+:ref:`boolean <allowed_values_booleans>` value.
+
+hasGraphicalPreview
+___________________
+
+.. code-block:: ini
+
+  hasGraphicalPreview = <boolean>
+
+This property show if user can make ``Graphical Preview`` request in the
+``Genotype Browser`` for the study. This property takes a
+:ref:`boolean <allowed_values_booleans>` value.
 
 inheritanceTypeFilter
----------------------
+_____________________
 
 .. code-block:: ini
 
   inheritanceTypeFilter = <comma-separated list of inheritance types>
 
-This is a list of inheritance types that will be available
-as filters in the Genotype Browser.
-You can see the available values :ref:`here <allowed_values_inheritance>`.
-
+This is a list of inheritance types that will be available as filters in the
+``Genotype Browser`` for the study. You can see the available values
+:ref:`here <allowed_values_inheritance>`.
 
 selectedInheritanceTypeFilterValues
------------------------------------
+___________________________________
 
 .. code-block:: ini
 
   selectedInheritanceTypeFilterValues = <comma-separated list of inheritance types>
 
-This is a list of inheritance type filters that will be selected by default
-on a study/dataset's page in the Genotype Browser. Note that these values must
-be present in the ``inheritanceTypeFilter`` property.
-You can see the available values :ref:`here <allowed_values_inheritance>`.
+This is a list of inheritance type filters that will be selected by default on
+a study/dataset's page in the ``Genotype Browser``. Note that these values must
+be present in the ``inheritanceTypeFilter`` property. You can see the available
+values :ref:`here <allowed_values_inheritance>`.
 
+familyFilters
+_____________
 
-Preview columns
----------------
+.. FIXME:
+  Fill me
 
+.. code-block:: ini
 
+  familyFilters = <>
 
-========  ========  ===========
-Column    Field     Description
-========  ========  ===========
-family    familyId  Family	ID
-\         study     Study name
-variant   location  The	position of	the variant in a 1-­‐based coordinate
-                    system of hg19 reference assembly.
-\         variant   Description of the variant: sub(R-­‐>A) stands for
-                    substitution of the reference allele R to an alternative
-                    allele A; ins(seq) stands for insertion of the provided
-                    sequence (“seq”), and del(N) stands for deletions of
-                    N nucleotides
-========  ========  ===========
+selectedPhenoFiltersValues
+__________________________
 
+.. code-block:: ini
 
+  selectedPhenoFiltersValues = <comma-separated list of pheno filter ids>
 
+A comma-separated list of selected pheno filters. If this property is
+missing then all defined pheno filters in this section are selected.
 
-Download columns
-----------------
+phenoFilters.<pheno filter id>.name
+___________________________________
 
-=================== ===========================================================
-Field               Description
-=================== ===========================================================
-familyId            Family ID
+.. FIXME:
+  Fill me
 
-study               Study name
+.. code-block:: ini
 
-phenotype           Study phenotype
+  phenoFilters.<pheno filter id>.name = <>
 
-location            The position of the variant in a 1-­‐based coordinate
-                    system of hg19 reference assembly.
+phenoFilters.<pheno filter id>.measureType
+__________________________________________
 
-variant             Description of the variant: sub(R-­‐>A) stands for
-                    substitution of the reference allele R to an alternative
-                    allele A; ins(seq) stands for insertion of the provided
-                    sequence (“seq”), and del(N) stands for deletions of
-                    N nucleotides
+.. FIXME:
+  Fill me
 
-family genotype     The best state according to the Multinomial Model
-                    (Experimental Procedures). The format of the column is
-                    "momR dadR autR sibR/momA dadA autA sibA" where
-                    (for example) momR stands for the number of copies of the
-                    reference allele in the mother’s genotype and autA stands
-                    for the number of
-                    copies of the alternative allele in the genotype of the
-                    affected child.
+.. code-block:: ini
 
-family structure
+  phenoFilters.<pheno filter id>.measureType = <>
 
-from parent         Shows the parental haplotypes giving rise to de novo
-                    variants
-                    when they could be identified.
+phenoFilters.<pheno filter id>.filter
+_____________________________________
 
-in child            Shows the affected status and gender of the child in
-                    which the
-                    de novo variant was observed. The two children are listed
-                    when
-                    the de novo variant is shared by both.
+.. code-block:: ini
 
-count               The observed number of reads supporting the different
-                    alleles at a given location. The format is
-                    <reference allele counts>/<alternative allele counts>/<other allele counts>
-                    and the order of individuals is <mom> <dad> <proband> and
-                    <sibling>. For example, "10 12 5 20/1 0 8 0/0 0 0 1"
-                    indicates that there were 10 reads supporting the reference
-                    allele in the mother, there were 8 reads supporting the
-                    alternative in the proband, and there was 1 read with a
-                    non-­‐reference allele in the unaffected sibling.
+  phenoFilters.<pheno filter id>.filter = <<filter_type>:<role>:<optional: measure>>
 
-alt alleles
+.. FIXME:
+  Fill me
 
-parents called      Count of independent parents tested for this variant
+.. _present_in_role_property:
 
-worst effect type   The most severe effect the variant has on genes.
+selectedPresentInRoleValues
+___________________________
 
-genes               The list of gene affected by the variant and the most
-                    severe effect for every gene. The format is
-                    <gene 1>:<effect on gene 1>|<gene 2>:<effect on gene 2>|.
+.. code-block:: ini
 
-all effects
+  selectedPresentInRoleValues = <comma-separated list of present in role ids>
 
-effect details      Details of variant effects on each affected isoform.
-                    The format is: <isoform 1 of gene 1>; <isoform 2 or gene 1>|<isoform 1 of gene 2>; <isoform 2 of gene 2>|...
-                    The amino acid change and the position of the amino acid
-                    within the protein are shown.
+A comma-separated list of selected present in roles. If this property is
+missing then all defined present in roles in this section are selected.
 
+presentInRole.<present in role id>.id
+______________________________________
 
-=================== ===========================================================
+.. code-block:: ini
 
+  presentInRole.<present in role id>.id = <present in role identifier>
 
+Identifier of present in role. Default value is ``<present in role id>`` from
+the present in role property name.
 
-Gene Weights
-----------------
+presentInRole.<present in role id>.name
+_______________________________________
 
+.. code-block:: ini
 
-LGD rank
-........
+  presentInRole.<present in role id>.name = <present in role name>
 
-RVIS rank
-.........
+This property defines display name of the ``Present in Role`` filter in the
+``Genotype Browser`` for the study.
 
-pLI rank
-........
+presentInRole.<present in role id>.roles
+________________________________________
 
+.. code-block:: ini
 
-Genomic Scores
-----------------
-
-
-====================================    ========================================================================================================
-Field                                   Description
-====================================    ========================================================================================================
-phyloP100                                Link: http://hgdownload.cse.ucsc.edu/goldenpath/hg19/phyloP100way/.
-                                         Conservation scoring by phyloP (phylogenetic p-values) from the
-                                         PHAST package (http://compgen.bscb.cornell.edu/phast/) for multiple
-                                         alignments of 99 vertebrate genomes to the human genome.
-
-                                         .. image:: imgs/genomic_scores/phyloP100.png
-                                             :scale: 30
-                                             :alt: phyloP100
-                                             :align: center
-
-
-phyloP46_vertebrates                     Link: http://hgdownload.cse.ucsc.edu/goldenpath/hg19/phyloP46way/.
-                                         Conservation scoring by phyloP (phylogenetic p-values) from the
-                                         PHAST package (http://compgen.bscb.cornell.edu/phast/) for multiple
-                                         alignments of 45 vertebrate genomes to the human genome, plus alternate
-                                         sets of scores for the primate species and the placental mammal species
-                                         in the alignments.
+  presentInRole.<present in role id>.roles = <comma-separated list of roles>
 
-                                         .. image:: imgs/genomic_scores/phyloP46_vertebrates.png
-                                             :scale: 30
-                                             :alt: phyloP46_vertebrates
-                                             :align: center
-
-phyloP46_placentals                      Alternate set of phyloP46_vertebrates scores for the placental mammal
-                                         subset of species in the alignments.
+This property defines which roles to present in the ``Present in Role`` filter
+in the ``Genotype Browser`` for the study.
 
-                                         .. image:: imgs/genomic_scores/phyloP46_placentals.png
-                                             :scale: 30
-                                             :alt: phyloP46_placentals
-                                             :align: center
-
-phyloP46_primates                        Alternate set of phyloP46_vertebrates scores for the primates subset species
-                                         in the alignments.
+selectedGenotypeColumnValues
+____________________________
 
-                                         .. image:: imgs/genomic_scores/phyloP46_primates.png
-                                             :scale: 30
-                                             :alt: phyloP46_primates
-                                             :align: center
+.. code-block:: ini
 
-phastCons100                             Link: http://hgdownload.cse.ucsc.edu/goldenpath/hg19/phastCons100way/.
-                                         Compressed phastCons scores for multiple alignments of 99 vertebrate
-                                         genomes to the human genome. PhastCons is a program for identifying
-                                         evolutionarily conserved elements in a multiple alignment, given a
-                                         phylogenetic tree.
+  selectedGenotypeColumnValues = <comma-separated list of genotype column ids>
 
-                                         .. image:: imgs/genomic_scores/phastCons100.png
-                                             :scale: 30
-                                             :alt: phastCons100
-                                             :align: center
+A comma-separated list of selected genotype columns. If this property is
+missing then all defined genotype columns in this section are selected.
 
-phastCons46_vertebrates                  Link: http://hgdownload.cse.ucsc.edu/goldenpath/hg19/phastCons46way/.
-                                         Compressed phastCons scores for multiple alignments of 45 vertebrate genomes
-                                         to the human genome, plus an alternate set of scores for the primates subset
-                                         of species in the alignments, and an alternate set of scores for the placental
-                                         mammal subset of species in the alignments. PhastCons is a program for
-                                         identifying evolutionarily conserved elements in a multiple alignment,
-                                         given a phylogenetic tree.
+genotype.<genotype columns id>.id
+_________________________________
 
-                                         .. image:: imgs/genomic_scores/phastCons46_vertebrates.png
-                                             :scale: 30
-                                             :alt: phastCons46_vertebrates
-                                             :align: center
+.. code-block:: ini
 
-phastCons46_placentals                   Alternate set of phastCons46_vertebrates scores for the placental mammal subset
-                                         of species in the alignments.
+  genotype.<genotype columns id>.id = <genotype column identifier>
 
-                                         .. image:: imgs/genomic_scores/phastCons46_placentals.png
-                                             :scale: 30
-                                             :alt: phastCons46_placentals
-                                             :align: center
+Identifier of the genotype column. Default value is ``<genotype column id>``
+from the genotype column property name.
 
-phastCons46_primates                     Alternate set of phastCons46_vertebrates scores for the primates subset of
-                                         species in the alignments.
+genotype.<genotype columns id>.name
+___________________________________
 
-                                         .. image:: imgs/genomic_scores/phastCons46_primates.png
-                                             :scale: 30
-                                             :alt: phastCons46_primates
-                                             :align: center
+.. code-block:: ini
 
-CADD_raw                                 Link: https://cadd.gs.washington.edu/download ; Higher values of raw
-                                         scores have relative meaning that a variant is more likely to be simulated
-                                         (or "not observed") and therefore more likely to have deleterious effects.
-                                         Scaled scores are PHRED-like (-10*log10(rank/total)) scaled C-score ranking
-                                         a variant relative to all possible substitutions of the
-                                         human genome (8.6x10^9).
+  genotype.<genotype columns id>.name = <genotype column name>
 
-                                         .. image:: imgs/genomic_scores/CADD_raw_gs.png
-                                             :scale: 30
-                                             :alt: CADD raw
-                                             :align: center
+Display name of the genotype column used in the header of the table in the
+``Table Preview`` query in ``Genotype Browser`` for the study.
 
-CADD_phred                               Link: https://cadd.gs.washington.edu/download ; Higher values of raw scores
-                                         have relative meaning that a variant is more likely to be simulated
-                                         (or "not observed") and therefore more likely to have deleterious effects.
-                                         Scaled scores are PHRED-like (-10*log10(rank/total)) scaled C-score ranking
-                                         a variant relative to all possible substitutions of the
-                                         human genome (8.6x10^9).
+genotype.<genotype columns id>.source
+_____________________________________
 
-                                         .. image:: imgs/genomic_scores/CADD_phred_gs.png
-                                             :scale: 30
-                                             :alt: CADD phred
-                                             :align: center
+.. code-block:: ini
 
-Linsight                                 Linsight scores for prediction of deleterious noncoding variants
+  genotype.<genotype columns id>.source = <genotype column source>
 
-                                         .. image:: imgs/genomic_scores/Linsight.png
-                                             :scale: 30
-                                             :alt: Linsight
-                                             :align: center
+Source of the display value in the table of the ``Table Preview`` query in
+``Genotype Browser`` for the study which is extracted from the variant.
 
+genotype.<genotype columns id>.slots
+____________________________________
 
-FitCons i6 merged                        Link: http://compgen.cshl.edu/fitCons/0downloads/tracks/i6/scores/.
-                                         Indicates the fraction of genomic positions evincing a particular pattern
-                                         (or "fingerprint") of functional assay results, that are under selective
-                                         pressure. Score ranges from 0.0 to 1.0. A lower score indicates higher
-                                         confidence.
+.. code-block:: ini
 
-                                         .. image:: imgs/genomic_scores/FitCons-i6-merged.png
-                                             :scale: 30
-                                             :alt: FitCons-i6-merged
-                                             :align: center
+  genotype.<genotype columns id>.slots = <<source>:<label>:<optional: label_format>>
 
+Slots of the genotype column in the header of the table of the
+``Table Preview`` query in ``Genotype Browser`` for the study. Each slot
+contain information about:
 
-Brain Angular Gyrus                      FitCons2 Scores for E067-Brain Angular Gyrus score-Roadmap 
-                                         Epigenomics DHS regions
+  * ``<source>`` - source of the display value which is extracted from the
+    variant.
 
-                                         .. image:: imgs/genomic_scores/FitCons2_E067.png
-                                             :scale: 30
-                                             :alt: FitCons2 E067-Brain Angular Gyrus
-                                             :align: center
+  * ``<label>`` - display name of this slot in the genotype column in the
+    table of the ``Table Preview`` query in ``Genotype Browser``.
 
+  * ``<label format>`` - format of the values in the table of the
+    ``Table Preview`` query in the ``Genotype Browser``. This property is
+    optional and default value for it is ``%s``.
 
-Brain Anterior Caudate                   Scores for E068-Brain Anterior Caudate score-Roadmap Epigenomics DHS regions
+selectedPhenoColumnValues
+_________________________
 
-                                         .. figure:: imgs/genomic_scores/FitCons2_E068.png
-                                            :scale: 50
-                                            :alt: FitCons2 E068-Brain Anterior Caudate
-                                            :align: center
+.. code-block:: ini
 
+  selectedPhenoColumnValues = <comma-separated list of phenotype column ids>
 
-Brain Cingulate Gyrus                   Scores for E069-Brain Cingulate Gyrus score-Roadmap Epigenomics DHS regions
+A comma-separated list of selected phenotype columns. If this property is
+missing then all defined phenotype columns in this section are selected.
 
-                                        .. figure:: imgs/genomic_scores/FitCons2_E069.png
-                                           :scale: 50
-                                           :alt: FitCons2 E069-Brain Cingulate Gyrus
-                                           :align: center
+pheno.<phenotype column id>.id
+______________________________
 
+.. code-block:: ini
 
-Brain Germinal Matrix                   Scores for E070-Brain Germinal Matrix score-Roadmap Epigenomics DHS regions
+  pheno.<phenotype column id>.id = <phenotype column identifier>
 
-                                        .. figure:: imgs/genomic_scores/FitCons2_E070.png
-                                           :scale: 50
-                                           :alt: FitCons2 E070-Brain Germinal Matrix
-                                           :align: center
+Identifier of the phenotype column. Default value is ``<phenotype column id>``
+from the phenotype column property name.
 
+pheno.<phenotype column id>.name
+________________________________
 
-Brain Hippocampus Middle                Scores for E071-Brain Hippocampus Middle score-Roadmap Epigenomics DHS regions 
+.. code-block:: ini
 
-                                        .. figure:: imgs/genomic_scores/FitCons2_E071.png
-                                           :scale: 50
-                                           :alt: FitCons2 E071-Brain Hippocampus Middle
-                                           :align: center
+  pheno.<phenotype column id>.name = <phenotype column name>
 
+Display name of the phenotype column used in the header of the table in the
+``Table Preview`` query in ``Genotype Browser`` for the study.
 
-Brain Inferior Temporal Lobe            Scores for E072-Brain Inferior Temporal Lobe score-Roadmap Epigenomics DHS regions
+pheno.<phenotype column id>.slots
+_________________________________
 
-                                        .. figure:: imgs/genomic_scores/FitCons2_E072.png
-                                           :scale: 50
-                                           :alt: FitCons2 E072-Brain Inferior Temporal Lobe
-                                           :align: center
+.. code-block:: ini
 
+  pheno.<phenotype column id>.slots = <<role>:<source>:<label>:<optional: label format>>
 
-Brain Dorsolateral Prefrontal Cortex    Scores for E073-Brain Dorsolateral Prefrontal Cortex score-Roadmap Epigenomics 
-                                        DHS regions
+Slots of the phenotype column in the header of the table of the
+``Table Preview`` query in ``Genotype Browser`` for the study. Each slot
+contain information about:
 
-                                        .. figure:: imgs/genomic_scores/FitCons2_E073.png
-                                           :scale: 50
-                                           :alt: FitCons2 E073-Brain Dorsolateral Prefrontal Cortex
-                                           :align: center
+  * ``<role>`` - phenotype role.
 
+  * ``<source>`` - source to be used when appending phenotype value to the
+    variant.
 
-Brain Substantia Nigra                  Scores for E074-Brain Substantia Nigra score-Roadmap Epigenomics DHS regions
+  * ``<label>`` - display name of this slot in the phenotype column in the
+    table of the ``Table Preview`` query in ``Genotype Browser``.
 
-                                        .. figure:: imgs/genomic_scores/FitCons2_E074.png
-                                           :scale: 50
-                                           :alt: FitCons2 E074-Brain Substantia Nigra
-                                           :align: center
+  * ``<label format>`` - format of the values in the table of the
+    ``Table Preview`` query in the ``Genotype Browser``. This property is
+    optional and default value for it is ``%s``.
 
+inRoles
+_______
 
-Fetal Brain Male                        Scores for E081-Fetal Brain Male score-Roadmap Epigenomics DHS regions
-                                        
-                                        .. figure:: imgs/genomic_scores/FitCons2_E081.png
-                                           :scale: 50
-                                           :alt: FitCons2 E081-Fetal Brain Male
-                                           :align: center
+Each of the defined ``inRoles`` will be added to the variant as new generated
+column. This new column will contain information about defined roles in the
+``inRoles.<in role column id>.roles``. Result list with be all possible
+combinations of the role from roles list with the gender of the people with
+this role.
 
+selectedInRolesValues
+.....................
 
-Fetal Brain Female                      Scores for E082-Fetal Brain Female score-Roadmap Epigenomics DHS regions
+.. code-block:: ini
 
-                                        .. figure:: imgs/genomic_scores/FitCons2_E082.png
-                                           :scale: 50
-                                           :alt: FitCons2 E082-Fetal Brain Female
-                                           :align: center
+  selectedInRolesValues = <comma-separated list of in role column ids>
 
+A comma-separated list of selected in role columns. If this property is missing
+then all defined in role columns in this section are selected.
 
-SSC Frequency                           SSC Frequency
+inRoles.<in role column id>.id
+..............................
 
-                                        .. figure:: imgs/genomic_scores/SSC-freq.png
-                                           :scale: 50
-                                           :alt: SSC Frequency
-                                           :align: center
+.. code-block:: ini
 
+  inRoles.<in role column id>.id = <in role column identifier>
 
-genome gnomAD AC                        Allele counts for the genome-only subset of gnomAD v2.1.
+Identifier of the in role column. Default value is ``<in role column id>`` from
+the in role column property name.
 
+inRoles.<in role column id>.destination
+.......................................
 
-genome gnomAD AN                        Allele numbers for the genome-only subset of gnomAD v2.1.
+.. code-block:: ini
 
+  inRoles.<in role column id>.destination = <destination column name>
 
-genome gnomAD AF                        Allele frequencies for the genome-only subset of gnomAD v2.1.
-                                        gnomAD v2.1 comprises a total of 16mln SNVs and 1.2mln indels from 125,748 exomes,
-                                        and 229mln SNVs and 33mln indels from 15,708 genomes.
-                                        (Cited from https://macarthurlab.org/2018/10/17/gnomad-v2-1/)
+Name which will be used as the source of the generated column. Default value
+for this property is ``inRoles.<in role column id>.id``.
 
-                                        *"The raw counts (ac and an) refer to the total number of chromosomes with this allele,
-                                        and total that were able to be called (whether reference or alternate), respectively.
-                                        Thus, the allele frequency is ac/an."*
-                                        (Cited from https://macarthurlab.org/2016/03/17/reproduce-all-the-figures-a-users-guide-to-exac-part-2/)
+inRoles.<in role column id>.roles
+.................................
 
-                                        *"Deleterious variants are expected to have lower allele frequencies
-                                        than neutral ones, due to negative selection."*
-                                        (Cited from the ExAC paper, p.10, 'Inferring variant deleteriousness and gene constraint')
+.. code-block:: ini
 
-                                        A total of 15,708 genomes.
-                                        (Cited from https://gnomad.broadinstitute.org/faq)
+  inRoles.<in role column id>.roles = <comma-separated list of roles>
 
-                                        .. figure:: imgs/genomic_scores/genome_gnomAD-AF.png
-                                           :scale: 50
-                                           :alt: genome gnomAD allele frequency
-                                           :align: center
+A comma-separated list of roles which will be used for the generation of the
+new column.
 
+previewColumns
+______________
 
-genome gnomAD AF percent                Allele frequencies for the genome-only subset of gnomAD v2.1,
-                                        as a percentage. (i.e. multiplied by 100.0)
+.. code-block:: ini
 
-                                        .. figure:: imgs/genomic_scores/genome_gnomAD-AF_percent.png
-                                           :scale: 50
-                                           :alt: genome gnomAD allele frequency percent
-                                           :align: center
+  previewColumns = <comma-separated list of genotype or phenotype column ids>
 
+A comma-separated list of columns used as header of the table of
+``Table Preview`` query in ``Genotype Browser`` for the study. Possible values
+in this list are genotype or phenotype column ids.
 
-genome gnomAD controls AC               Controls-only allele counts for the genome-only subset of gnomAD v2.1.
-                                        (Only samples from individuals who were not selected as a case in a 
-                                        case/control study of common disease.)
+downloadColumns
+_______________
 
+.. code-block:: ini
 
-genome gnomAD controls AN               Controls-only allele numbers for the genome-only subset of gnomAD v2.1.
-                                        (Only samples from individuals who were not selected as a case in a 
-                                        case/control study of common disease.)
+  downloadColumns = <comma-separated list of genotype or phenotype column ids>
 
-
-genome gnomAD controls AF               Controls-only allele frequencies for the genome-only subset of gnomAD v2.1.
-                                        (Only samples from individuals who were not selected as a case in a 
-                                        case/control study of common disease.)
-
-                                        .. figure:: imgs/genomic_scores/genome_gnomAD-controls_AF.png
-                                           :scale: 50
-                                           :alt: controls genome gnomAD allele frequency
-                                           :align: center
-
-
-genome gnomAD controls AF percent       Controls-only allele frequencies for the genome-only subset of gnomAD v2.1,
-                                        as a percentage. (i.e. multiplied by 100.0)
-                                        (Only samples from individuals who were not selected as a case in a 
-                                        case/control study of common disease.)
-
-                                        .. figure:: imgs/genomic_scores/genome_gnomAD-controls_AF_percent.png
-                                           :scale: 50
-                                           :alt: controls genome gnomAD allele frequency percent
-                                           :align: center
-
-
-genome gnomAD non-neuro AC              Non-neuro allele counts for the genome-only subset of gnomAD v2.1.
-                                        (Only samples from individuals who were not ascertained for having a
-                                        neurological condition in a neurological case/control study)
-
-
-genome gnomAD non-neuro AN              Non-neuro allele numbers for the genome-only subset of gnomAD v2.1.
-                                        (Only samples from individuals who were not ascertained for having a
-                                        neurological condition in a neurological case/control study)
-
-
-genome gnomAD non-neuro AF              Non-neuro allele frequencies for the genome-only subset of gnomAD v2.1.
-                                        (Only samples from individuals who were not ascertained for having a
-                                        neurological condition in a neurological case/control study)
-
-                                        .. figure:: imgs/genomic_scores/genome_gnomAD-non_neuro_AF.png
-                                           :scale: 50
-                                           :alt: non-neuro genome gnomAD allele frequency
-                                           :align: center
-
-
-genome gnomAD non-neuro AF percent      Non-neuro allele frequencies for the genome-only subset of gnomAD v2.1,
-                                        as a percentage. (i.e. multiplied by 100.0)
-                                        (Only samples from individuals who were not ascertained for having a
-                                        neurological condition in a neurological case/control study)
-
-                                        .. figure:: imgs/genomic_scores/genome_gnomAD-non_neuro_AF_percent.png
-                                           :scale: 50
-                                           :alt: non-neuro genome gnomAD allele frequency percent
-                                           :align: center
-
-
-exome gnomAD AC                         Allele counts for the exome-only subset of gnomAD v2.1.
-
-
-exome gnomAD AN                         Allele numbers for the exome-only subset of gnomAD v2.1.
-
-
-exome gnomAD AF                         Allele frequencies for the exome-only subset of gnomAD v2.1.
-
-                                        A total of 125,748 exomes.
-                                        (Cited from https://gnomad.broadinstitute.org/faq)
-
-                                        .. figure:: imgs/genomic_scores/exome_gnomAD-AF.png
-                                           :scale: 50
-                                           :alt: exome gnomAD allele frequency
-                                           :align: center
-
-
-exome gnomAD AF percent                 Allele frequencies for the exome-only subset of gnomAD v2.1,
-                                        as a percentage. (i.e. multiplied by 100.0)
-
-                                        .. figure:: imgs/genomic_scores/exome_gnomAD-AF_percent.png
-                                           :scale: 50
-                                           :alt: exome gnomAD allele frequency percent
-                                           :align: center
-
-
-exome gnomAD controls AC                Controls-only allele counts for the exome-only subset of gnomAD v2.1.
-                                        (Only samples from individuals who were not selected as a case in a 
-                                        case/control study of common disease.)
-
-
-exome gnomAD controls AN                Controls-only allele numbers for the exome-only subset of gnomAD v2.1.
-                                        (Only samples from individuals who were not selected as a case in a 
-                                        case/control study of common disease.)
-
-
-exome gnomAD controls AF                Controls-only allele frequencies for the exome-only subset of gnomAD v2.1.
-                                        (Only samples from individuals who were not selected as a case in a 
-                                        case/control study of common disease.)
-
-                                        .. figure:: imgs/genomic_scores/exome_gnomAD-controls_AF.png
-                                           :scale: 50
-                                           :alt: controls exome gnomAD allele frequency
-                                           :align: center
-
-
-exome gnomAD controls AF percent        Controls-only allele frequencies for the exome-only subset of gnomAD v2.1,
-                                        as a percentage. (i.e. multiplied by 100.0)
-                                        (Only samples from individuals who were not selected as a case in a 
-                                        case/control study of common disease.)
-
-                                        .. figure:: imgs/genomic_scores/exome_gnomAD-controls_AF_percent.png
-                                           :scale: 50
-                                           :alt: controls exome gnomAD allele frequency percent
-                                           :align: center
-
-
-exome gnomAD non-neuro AC               Non-neuro allele counts for the exome-only subset of gnomAD v2.1.
-                                        (Only samples from individuals who were not ascertained for having a
-                                        neurological condition in a neurological case/control study)
-
-
-exome gnomAD non-neuro AN               Non-neuro allele numbers for the exome-only subset of gnomAD v2.1.
-                                        (Only samples from individuals who were not ascertained for having a
-                                        neurological condition in a neurological case/control study)
-
-
-exome gnomAD non-neuro AF               Non-neuro allele frequencies for the exome-only subset of gnomAD v2.1.
-                                        (Only samples from individuals who were not ascertained for having a
-                                        neurological condition in a neurological case/control study)
-
-                                        .. figure:: imgs/genomic_scores/exome_gnomAD-non_neuro_AF.png
-                                           :scale: 50
-                                           :alt: non-neuro exome gnomAD allele frequency
-                                           :align: center
-
-
-exome gnomAD non-neuro AF percent       Non-neuro allele frequencies for the exome-only subset of gnomAD v2.1,
-                                        as a percentage. (i.e. multiplied by 100.0)
-                                        (Only samples from individuals who were not ascertained for having a
-                                        neurological condition in a neurological case/control study)
-
-                                        .. figure:: imgs/genomic_scores/exome_gnomAD-non_neuro_AF_percent.png
-                                           :scale: 50
-                                           :alt: non-neuro exome gnomAD allele frequency percent
-                                           :align: center
-
-
-MPC                                     MPC - Missense badness, PolyPhen-2, and Constraint
-
-                                        - `MPC paper`_
-                                        - `MPC paper supplement`_
-
-                                        Downloaded from: `MPC download link`_
-
-                                        .. figure:: imgs/genomic_scores/MPC.png
-                                           :scale: 50
-                                           :alt: MPC
-                                           :align: center
-====================================    ========================================================================================================
-
-.. _`MPC download link`: ftp://ftp.broadinstitute.org/pub/ExAC_release/release1/regional_missense_constraint/fordist_constraint_official_mpc_values_v2.txt.gz
-.. _`MPC paper`: https://www.biorxiv.org/content/biorxiv/early/2017/06/12/148353.full.pdf
-.. _`MPC paper supplement`: https://www.biorxiv.org/content/biorxiv/suppl/2017/06/12/148353.DC1/148353-1.pdf
-
+A comma-separated list of columns used as header of the table download from the
+``Download`` query in ``Genotype Browser`` for the study. Possible values in
+this list are genotype or phenotype column ids.
