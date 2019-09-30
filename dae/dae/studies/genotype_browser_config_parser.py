@@ -29,9 +29,6 @@ class GenotypeBrowserConfigParser(ConfigParserBase):
     )
 
     SPLIT_STR_LISTS = [
-        'baseColumns',
-        'basePreviewColumns',
-        'baseDownloadColumns',
         'previewColumns',
         'downloadColumns',
         'selectedPhenoColumnValues',
@@ -40,8 +37,6 @@ class GenotypeBrowserConfigParser(ConfigParserBase):
         'selectedGenotypeColumnValues',
         'selectedInRolesValues',
         'selectedPresentInRoleValues',
-        'roles',
-        'columns',
         'inheritanceTypeFilter',
         'selectedInheritanceTypeFilterValues',
     ]
@@ -252,9 +247,8 @@ class GenotypeBrowserConfigParser(ConfigParserBase):
             'hasPedigreeSelector', 'hasPresentInChild', 'hasPresentInParent',
             'hasPresentInRole', 'hasCNV', 'hasComplex', 'hasFamilyFilters',
             'hasStudyFilters', 'hasStudyTypes', 'hasGraphicalPreview',
-            'previewColumns', 'rolesFilterOptions', 'genotypeColumns',
-            'phenoFilters', 'familyFilters',
-            'presentInRole', 'downloadColumns',
+            'previewColumns', 'genotypeColumns', 'phenoFilters',
+            'familyFilters', 'presentInRole', 'downloadColumns',
             'inheritanceTypeFilter', 'selectedInheritanceTypeFilterValues',
         ]
 
