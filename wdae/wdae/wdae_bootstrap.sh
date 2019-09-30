@@ -48,7 +48,7 @@ echo "GPF data directory in use: $DAE_DB_DIR"
 mkdir -p genomic-scores-hg19
 mkdir -p genomic-scores-hg38
 
-mkdir wdae
+mkdir -p wdae
 
 cat <<EOF > setenv.sh
 #!/bin/bash
