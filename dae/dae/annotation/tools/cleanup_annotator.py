@@ -5,9 +5,10 @@ class CleanupAnnotator(AnnotatorBase):
 
     def __init__(self, config):
         super(CleanupAnnotator, self).__init__(config)
-        self.cleanup_columns = self.config.columns['cleanup'] \
-            .replace(' ', '') \
-            .split(',')
+        self.cleanup_columns = self.config.columns['cleanup'].split(',')
+        self.cleanup_columns = [
+            col.strip() for col in self.cleanup_columns
+        ]
 
     def collect_annotator_schema(self, schema):
         for column in self.cleanup_columns:
