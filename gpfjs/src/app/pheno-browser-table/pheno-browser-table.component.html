@@ -40,7 +40,12 @@
         </gpf-table-header>
         <gpf-table-content>
             <gpf-table-subcontent field="measureType"></gpf-table-subcontent>
-            <gpf-table-subcontent field="valuesDomain"></gpf-table-subcontent>
+            <gpf-table-subcontent>
+                <span *gpfTableCellContent="let data">
+                    [{{ +data.valuesDomain.slice(data.valuesDomain.indexOf('[') + 1, data.valuesDomain.indexOf(',')) | numberWithExp: "1.3-3" }},
+                    {{ +data.valuesDomain.slice(data.valuesDomain.indexOf(',') + 1, data.valuesDomain.indexOf(']')) | numberWithExp: "1.3-3" }}]
+                </span>
+            </gpf-table-subcontent>
         </gpf-table-content>
     </gpf-table-column>
     <div *ngFor="let regressionId of getRegressionIds()">
