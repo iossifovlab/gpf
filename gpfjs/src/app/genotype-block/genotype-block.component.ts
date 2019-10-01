@@ -23,7 +23,6 @@ export class GenotypeBlockComponent extends QueryStateCollector implements After
   pedigrees: Observable<Array<PedigreeSelector>>;
   presentInRole: Observable<Array<PresentInRole>>;
   selectedDataset$: Observable<Dataset>;
-  rolesFilterOptions: Observable<Array<string>>;
   inheritanceTypeFilter: Observable<Array<string>>;
   selectedInheritanceTypeFilterValues: Observable<Array<string>>;
 
@@ -90,12 +89,6 @@ export class GenotypeBlockComponent extends QueryStateCollector implements After
         return [];
       }
       return dataset.genotypeBrowserConfig.presentInRole;
-    });
-    this.rolesFilterOptions = selectedDataset$.map(dataset => {
-      if (!dataset || !dataset.genotypeBrowserConfig) {
-        return [];
-      }
-      return dataset.genotypeBrowserConfig.rolesFilterOptions;
     });
     this.inheritanceTypeFilter = selectedDataset$.map(dataset => {
       if (!dataset || !dataset.genotypeBrowserConfig) {
