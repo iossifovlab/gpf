@@ -12,7 +12,6 @@ def test_genotype_browser_parse_variables():
         'hasStudyFilters', 'hasPresentInRole', 'hasGraphicalPreview',
     )
     assert GenotypeBrowserConfigParser.SPLIT_STR_LISTS == [
-        'baseColumns', 'basePreviewColumns', 'baseDownloadColumns',
         'previewColumns', 'downloadColumns', 'selectedPhenoColumnValues',
         'familyFilters', 'selectedPhenoFiltersValues',
         'selectedGenotypeColumnValues', 'selectedInRolesValues',
@@ -38,9 +37,9 @@ def test_get_description_keys():
         'hasPedigreeSelector', 'hasPresentInChild', 'hasPresentInParent',
         'hasPresentInRole', 'hasCNV', 'hasComplex', 'hasFamilyFilters',
         'hasStudyFilters', 'hasStudyTypes', 'hasGraphicalPreview',
-        'previewColumns', 'rolesFilterOptions', 'genotypeColumns',
-        'phenoFilters', 'familyFilters', 'presentInRole', 'downloadColumns',
-        'inheritanceTypeFilter', 'selectedInheritanceTypeFilterValues',
+        'previewColumns', 'genotypeColumns', 'phenoFilters', 'familyFilters',
+        'presentInRole', 'downloadColumns', 'inheritanceTypeFilter',
+        'selectedInheritanceTypeFilterValues',
     ]
 
 
@@ -75,7 +74,7 @@ def test_inheritance_types_selected_without_available():
         default_box=True, default_box_attr=None
     )
 
-    with pytest.raises(AssertionError) as excinfo:
+    with pytest.raises(AssertionError) as _:
         GenotypeBrowserConfigParser.parse(genotype_browser_config)
 
 
@@ -91,5 +90,5 @@ def test_inheritance_types_selecting_nonavailable_filters():
         default_box=True, default_box_attr=None
     )
 
-    with pytest.raises(AssertionError) as excinfo:
+    with pytest.raises(AssertionError) as _:
         GenotypeBrowserConfigParser.parse(genotype_browser_config)
