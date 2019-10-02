@@ -11,7 +11,7 @@ describe a people groups used by one study. This is an optional section.
 [peopleGroup]
 -------------
 
-Every defined people group represent group of peoples based on the values in
+Every defined people group represents a group of people based on the values in
 the pedigree file column ``<people group id>.source``. The properties for this
 section are explained below.
 
@@ -42,7 +42,7 @@ ______________________
 
   <people group id>.name = <people group name>
 
-Name of the people group indicates the dispay name of the people group.
+Indicates the display name of the people group.
 
 <people group id>.domain
 ________________________
@@ -51,13 +51,17 @@ ________________________
 
   <people group id>.domain = <<<people group element id>:<people group element name>:<people group element color>>,<...>>
 
-Domain defines list of elements of the people group. In this property are
-defined different values present in ``<people group id>.source`` column in the
-pedigree file. ``<people group element id>`` indicates the value in the
-pedigree file ``<people group id>.source`` column of the people group element,
-``<people group element name>`` indicate the dispay name of the people group
-element, ``<people group element color>`` indicate the dispay color of the
-people group element.
+The domain property maps display names and colors to the set of values present
+in the ``<people group id>.source`` column in the pedigree file. These are the
+elements of each mapping:
+
+  * ``<people group element id>`` selects the value from the column.
+
+  * ``<people group element name>`` indicates the display name of the people
+    group element.
+
+  * ``<people group element color>`` indicates the display color of the people
+    group element.
 
 <people group id>.default
 _________________________
@@ -66,12 +70,10 @@ _________________________
 
   <people group id>.default = <<<people group element id>:<people group element name>:people group element color>>
 
-Default property of the people group is used for default people group element.
-Structure is similar to one of the ``<people group id>.domain`` elements. This
-default element is used when people value in the ``<people group id>.source``
-column in the pedigree file can't be found in one of the
-``<people group element id>`` of the people group's
-``<people group id>.domain``.
+This property is defined in the same way as a single mapping from the
+``<people group id>.domain`` property. It is applied to any value in the column
+from the pedigree file for which there is no mapping defined in the
+``<people group id>.domain`` property.
 
 <people group id>.source
 ________________________
@@ -80,5 +82,5 @@ ________________________
 
   <people group id>.source = <source of people group>
 
-This property define source of the people group. This source is one of the
+This property defines the source of the people group. This source is one of the
 columns from the pedigree file.
