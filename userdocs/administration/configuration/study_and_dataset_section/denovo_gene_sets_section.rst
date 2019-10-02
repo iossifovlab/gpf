@@ -65,5 +65,8 @@ _______
 
   enabled = <boolean>
 
+DEFAULT
+  ``True``
+
 This property enables the denovo gene sets functionality for the study. This
 property takes a :ref:`boolean <allowed_values_booleans>` value.
