@@ -21,8 +21,8 @@ ____________
   peopleGroups = <comma-separated list of people groups>
 
 ``peopleGroups`` is a comma-separated list of ids of people groups (defined in
-the :ref:`people_group_section` section in the study config), indicating which
-people groups to be used by enrichment tool.
+:ref:`people_group_section`), indicating which people groups to be used by
+enrichment tool.
 
 defaultBackgroundModel
 ______________________
@@ -31,7 +31,7 @@ ______________________
 
   defaultBackgroundModel = <default background model id>
 
-This property defines default background model used by gpfjs.
+This property defines the default background model used by gpfjs.
 
 selectedBackgroundValues
 ________________________
@@ -50,9 +50,9 @@ _____________________________________
 
   background.<background model id>.file = <background model filename>
 
-This property difines file path of the background model file. This is relative
-path to the enrichment directory which is in the same location as the study
-configuration file.
+This property defines the filepath of the background model file. This is a
+relative path to the enrichment directory which is in the same location as
+the study configuration file.
 
 background.<background model id>.name
 _____________________________________
@@ -61,8 +61,8 @@ _____________________________________
 
   background.<background model id>.name = <background model name>
 
-Name of the background model. This name override background id in the
-enrichment configuration parser. This property is also used as mapper between
+Name of the background model. This name overrides the background id in the
+enrichment configuration parser. This property is also used as a mapper between
 background configuration and background class which defines the background
 model.
 
@@ -83,17 +83,17 @@ ____________________
 
   defaultCountingModel = <default counting model id>
 
-This property defines default counting model used by gpfjs.
+This property defines the default counting model used by gpfjs.
 
 selectedCountingValues
 ______________________
 
 .. code-block:: ini
 
-  selectedCountingValues = <comma-separated list of counting ids>
+  selectedCountingValues = <comma-separated list of counter ids>
 
-A comma-separated list of selected countings. If this property is missing then
-all defined countings in this section are selected.
+A comma-separated list of selected counters. If this property is missing then
+all defined counters in this section are selected.
 
 counting.<counting id>.name
 ___________________________
@@ -102,9 +102,9 @@ ___________________________
 
   counting.<counting id>.name = <counting name>
 
-Name of the counting. This name override counting id in the enrichment
+Name of the counter. This name overrides the counter id in the enrichment
 configuration parser. This property is also used as mapper between counting
-configuration and counting class which defines the counting.
+configuration and counting class which defines the counter.
 
 counting.<counting id>.desc
 ___________________________
