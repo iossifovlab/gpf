@@ -5,7 +5,7 @@ Default Configuration
 
 This configuration file contains common, global properties used by all studies
 and datasets. Values in the sections of this configuration are used as default
-values to the coresponding section in the study and dataset configurations.
+values to the corresponding section in the study and dataset configurations.
 Supported sections in this configuration file are:
 
 [DEFAULT]

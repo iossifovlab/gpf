@@ -64,7 +64,7 @@ ________
 [geneWeights]
 -------------
 
-This is a optional section containing list of selected gene weights.
+This is an optional section containing a list of selected gene weights.
 
 geneWeights
 ___________
@@ -73,7 +73,7 @@ ___________
 
   weights = <gene weight id 1>,<gene weight id 2>,<...>
 
-A comma-separated list of selected gene weights. If this property is missing
+A comma-separated list of selected gene weights. If this property is missing,
 then all defined weights with section name ``[geneWeights.<gene weight id>]``
 in this file are selected.
 

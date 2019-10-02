@@ -372,7 +372,7 @@ To see the imported variants, restart the GPF development web server and find
 Example Usage of GPF Python Interface
 #####################################
 
-Simplest way to start using GPF's Python API is to import the ``GPFInstance``
+The simplest way to start using GPF's Python API is to import the ``GPFInstance``
 class and instantiate it:
 
 .. code-block:: python3
@@ -380,8 +380,8 @@ class and instantiate it:
     from dae.gpf_instance.gpf_instance import GPFInstance
     gpf_instance = GPFInstance()
 
-This ``gpf_instance`` object create and store different types of facades. One
-of these facades is ``VariantsDb`` which is responsible for creating and
+This ``gpf_instance`` object creates and stores different types of facades. One
+of these facades is ``VariantsDb``, which is responsible for creating and
 storing studies and datasets.
 
 .. code-block:: python3
@@ -389,8 +389,8 @@ storing studies and datasets.
     vdb = gpf_instance.variants_db
 
 This ``vdb`` factory object allows you to get all studies and datasets in the
-configured GPF instance. For example to list all studies configured in
-the startup GPF instance use:
+configured GPF instance. For example, to list all studies configured in
+the startup GPF instance, use:
 
 .. code-block:: python3
 
@@ -412,13 +412,12 @@ To get a specific study and query it, you can use:
 .. code-block:: python3
 
     st = vdb.get_study("comp_denovo")
-    vs = st.query_variants()
-    vs = list(vs)
+    vs = list(st.query_variants())
 
 .. note::
     The `query_variants` method returns a Python iterator.
 
-To get the basic information about variants found by ``query_variants`` method,
+To get the basic information about variants found by the ``query_variants`` method,
 you can use:
 
 .. code-block:: python3

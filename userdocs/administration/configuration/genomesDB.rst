@@ -16,13 +16,14 @@ _____________
 
   defaultGenome = <default genome id>
 
-The given id belongs to one of the given in the ``[genome.<genome id>]``
-section genomes.
+The default genome to use. The genome id
+must reference a configured genome from one of
+the ``[genome.<genome id>]`` sections below.
 
 [genome.<genome id>]
 --------------------
 
-This section contains information about genome.
+This section contains information about a single genome.
 
 chrAllFile
 __________
@@ -41,8 +42,9 @@ ________________
 
   defaultGeneModel = <default gene model id>
 
-The given id belongs to one of the given in the
-``geneModel.<gene model id>.file`` properties.
+The default gene model to use. This id
+must reference a defined gene model from one of the
+``geneModel.<gene model id>.file`` properties below.
 
 geneModel.<gene model id>.file
 ______________________________
@@ -51,7 +53,9 @@ ______________________________
 
   geneModel.<gene model id>.file = <gene model filename>
 
-The absolute filepath to the gene model with <gene model id>.
+This property defines a gene model. It sets both the id of
+the gene model and the absolute path to its file. The id
+can be chosen by the user.
 
 
 [PARs]

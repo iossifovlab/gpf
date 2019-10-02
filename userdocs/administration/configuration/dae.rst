@@ -189,24 +189,24 @@ _______________
 
 .. code-block:: ini
 
-  scores_hg19_dir = <dir containing hg19 genomic scores>
+  scores_hg19_dir = <dir containing HG19 genomic scores>
 
 ENVIRONMENT OVERRIDE
   ``DAE_GENOMIC_SCORES_HG19``
 
-The absolute dirpath to the hg19 genomic scores.
+The absolute path to the directory containing the HG19 genomic scores.
 
 scores_hg38_dir
 _______________
 
 .. code-block:: ini
 
-  scores_hg38_dir = <dir containing hg38 genomic scores>
+  scores_hg38_dir = <dir containing HG38 genomic scores>
 
 ENVIRONMENT OVERRIDE
   ``DAE_GENOMIC_SCORES_HG38``
 
-The absolute dirpath to the hg38 genomic scores.
+The absolute path to the directory containing the HG38 genomic scores.
 
 [annotation]
 ------------
@@ -216,7 +216,7 @@ ________
 
 .. code-block:: ini
 
-  confFile = <annotation file path>
+  confFile = <annotation configuration file path>
 
 The absolute filepath to the annotation configuration file. You can see more
 about this configuration :ref:`here <annotation>`.
@@ -244,7 +244,7 @@ ________
 
 .. code-block:: ini
 
-  confFile = <gene info db file path>
+  confFile = <gene info db configuration file path>
 
 The absolute filepath to the geneInfoDB configuration file. You can see more
 about this configuration :ref:`here <gene_info_db>`.
@@ -260,7 +260,7 @@ ________
   confFile = <defaultConfiguration file path>
 
 The absolute filepath to the defaultConfiguration file. The configuration in
-this file is used as default configuration for studies and datasets. You can
+this file is used as a default configuration for all studies and datasets. You can
 see more about this configuration :ref:`here <default_configuration>`.
 
 [gpfjs]
@@ -271,18 +271,18 @@ __________________________
 
 .. code-block:: ini
 
-  permissionDeniedPromptFile = <the markdown filepath>
+  permissionDeniedPromptFile = <absolute filepath to markdown file>
 
 The absolute filepath to the permissionDeniedPromptFile file. This file
-contains markdown to show in gpfjs when access is denied to a user. Content of
-this file is loaded to permissionDeniedPrompt.
+contains markdown to display in the browser when access is denied to a user.
+The content of this file is stored in permissionDeniedPrompt.
 
 permissionDeniedPrompt
 ______________________
 
 .. code-block:: ini
 
-  permissionDeniedPrompt = <the markdown string>
+  permissionDeniedPrompt = <markdown>
 
 DEFAULT
   .. exec::
@@ -290,6 +290,6 @@ DEFAULT
 
     print(f"``{DAEConfigParser.DEFAULT_SECTION_VALUES['gpfjs']['permissionDeniedPrompt']}``")
 
-The markdown to show in gpfjs when access to a user is denied. If
-permissionDeniedPromptFile is defined in the same section of configuration,
-this property is overridden with the file content from the given path.
+The markdown to display in the browser when access to a user is denied. If
+permissionDeniedPromptFile is defined, this property is overridden with the
+file content from the given path.
