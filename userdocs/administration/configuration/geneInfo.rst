@@ -3,7 +3,8 @@
 Gene Info Configuration
 =======================
 
-This configuration file hosts information about gene data.
+This file is responsible for configuring which gene info information, gene
+terms, gene weights and chromosomes are available to the GPF system.
 
 [geneInfo]
 ----------
