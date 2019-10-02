@@ -6,13 +6,14 @@ People Group Section
 The configuration section for a people group follows the general INI format.
 Its name must be ``peopleGroup`` - this will indicate that it is a
 people group configuration section. This configuration section must properly
-describe a people groups used by one study.
+describe a people groups used by one study. This is an optional section.
 
 [peopleGroup]
 -------------
 
 Every defined people group represent group of peoples based on the values in
-the pedigree file column ``<people group id>.source``.
+the pedigree file column ``<people group id>.source``. The properties for this
+section are explained below.
 
 selectedPeopleGroupValues
 _________________________

@@ -3,15 +3,15 @@
 Denovo Gene Sets Section
 ========================
 
-The configuration section for a denovo gene sets follows the general INI
-format. Its name must be ``denovoGeneSets`` - this will indicate that it is a
-denovo gene sets configuration section. This configuration section must
-properly describe a denovo gene sets for one study.
+The configuration section for denovo gene sets follows the general INI format.
+Its name must be ``denovoGeneSets`` - this will indicate that it is denovo gene
+sets configuration section. This configuration section must properly describe
+one or more denovo gene sets for one study. This is an optional section.
 
 [denovoGeneSets]
 ----------------
 
-Down below are explained proprties of this section.
+The properties for this section are explained below.
 
 peopleGroups
 ____________

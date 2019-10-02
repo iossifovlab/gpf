@@ -6,10 +6,14 @@ Genotype Browser Section
 The configuration section for a genotype browser follows the general INI
 format. Its name must be ``genotypeBrowser`` - this will indicate that it is a
 genotype browser configuration section. This configuration section must
-properly describe a genotype browser used by one study.
+properly describe a genotype browser used by one study. This is an optional
+section.
 
 [genotypeBrowser]
 -----------------
+
+The properties for this section are explained below.
+
 
 hasCNV
 ______

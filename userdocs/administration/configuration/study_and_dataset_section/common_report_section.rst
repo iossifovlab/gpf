@@ -5,12 +5,13 @@ Common Reports Section
 
 The configuration section for a common report follows the general INI format
 and must properly describe a common report for a single study. Its name must be
-``commonReport`` - this will indicate that it is a common report section.
+``commonReport`` - this will indicate that it is a common report section. This
+is an optional section.
 
 [commonReport]
 --------------
 
-Down below are explained proprties of this section.
+The properties for this section are explained below.
 
 peopleGroups
 ____________

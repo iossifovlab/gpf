@@ -3,6 +3,9 @@
 Gene Info Configuration
 =======================
 
+.. FIXME:
+  Extend Gene Info Configuration description.
+
 This file is responsible for configuring which gene info information, gene
 terms, gene weights and chromosomes are available to the GPF system.
 

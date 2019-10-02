@@ -3,15 +3,15 @@
 Enrichment Section
 ==================
 
-The configuration section for a enrichment follows the general INI format. Its
-name must be ``enrichment`` - this will indicate that it is a enrichment
-configuration section. This configuration section must properly describe a
-enrichment tool for one study.
+The configuration section for enrichment data follows the general INI
+format. Its name must be ``enrichment`` - this will indicate that it is an
+enrichment data configuration section. This configuration section must properly
+configure enrichment data for one study. This is an optional section.
 
 [enrichment]
 ------------
 
-Down below are explained proprties of this section.
+The properties for this section are explained below.
 
 peopleGroups
 ____________
