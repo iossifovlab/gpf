@@ -3,7 +3,8 @@
 GenomesDB configuration
 =======================
 
-This configuration file hosts information for the genome.
+This file is responsible for configuring which reference genomes and gene
+models are available to the GPF system and which it should use by default.
 
 [genomes]
 ---------
