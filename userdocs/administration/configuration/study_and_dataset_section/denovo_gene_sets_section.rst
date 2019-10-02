@@ -4,9 +4,10 @@ Denovo Gene Sets Section
 ========================
 
 The configuration section for denovo gene sets follows the general INI format.
-Its name must be ``denovoGeneSets`` - this will indicate that it is denovo gene
-sets configuration section. This configuration section must properly describe
-one or more denovo gene sets for one study. This is an optional section.
+Its name must be ``denovoGeneSets`` - this will indicate that it is a denovo
+gene sets configuration section. This configuration section must properly
+describe one or more denovo gene sets for one study. This is an optional
+section.
 
 [denovoGeneSets]
 ----------------
@@ -21,22 +22,37 @@ ____________
   peopleGroups = <comma-separated list of people groups>
 
 ``peopleGroups`` is a comma-separated list of ids of people groups (defined in
-the :ref:`people_group_section` section in the study config), indicating for
-which people groups to generate denovo gene sets.
+the :ref:`people_group_section` section in the study config), indicating
+which people groups to generate denovo gene sets for.
 
 standardCriterias.<standard criteria id>.segments
 _________________________________________________
+
+.. FIXME:
+  Add link to `here` reference for variants querying filters.
 
 .. code-block:: ini
 
   standardCriterias.<standard criteria id>.segments = <<<standard criteria name 1>:<standard criteria value 1>>,<<standard criteria name 2>:<standard criteria value 2>>,<...>>
 
-This properly defines standard criteria segments indicating group in denovo
-gene sets. ``<standard criteria id>`` indicates filter used in quering variants
-for denovo gene set group defined by this standard criteria,
-``<standard criteria name>`` indicates display name of group defined by this
-standard criteria and ``<standard criteria value>`` indicates value used in
-quering variants for denovo gene set group defined by this standard criteria.
+This property defines standard criteria segments indicating a group of genes
+and their families. The configured standard criterias can be combined together,
+or with ``recurrencyCriteria``, in the ``geneSetsNames`` property in this
+section. The combinations will then be added as groups of denovo gene sets
+(which will be available in the ``Gene Sets`` filter in the
+``Genotype Browser`` of the study).
+
+Elements of the standard criteria segments are:
+
+  * ``<standard criteria id>`` indicates the id of the standard criteria.
+    The id must be one of the defined filters by which you can query variants
+    in the backend. The possible filters are defined here.
+
+  * ``<standard criteria name>`` indicates the display name of the group
+    defined by this standard criteria.
+
+  * ``<standard criteria value>`` indicates the value used when querying
+    variants for the denovo gene set group defined by this standard criteria.
 
 recurrencyCriteria.segments
 ___________________________
@@ -55,8 +71,11 @@ _____________
 
   geneSetsNames = <<<standard or recurrency criteria 1>.<standard or recurrency criteria 2>.<...>>,<...>>
 
-Name of denovo gene set combination which is defined by standard or recurrency
-criterias. This name represent configuration of denovo gene set.
+The names of denovo gene set combinations which are defined by combining
+``standardCriterias`` and/or ``recurrencyCriteria``. This name represents the
+configuration of the denovo gene set. All combinations listed here will be
+available in the ``Gene Sets`` filter in the ``Genotype Browser`` of
+the study.
 
 enabled
 _______
