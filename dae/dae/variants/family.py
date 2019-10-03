@@ -15,6 +15,7 @@ PED_COLUMNS_REQUIRED = (
     'mom_id',
     'sex',
     'status',
+    'role',
 )
 
 PED_COLUMNS_OPTIONAL = (

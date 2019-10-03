@@ -3,10 +3,13 @@ Created on Jul 26, 2017
 
 @author: lubo
 '''
+import pytest
+
 from dae.pheno.prepare.ped_prepare import PreparePersons
 from dae.variants.attributes import Role
 
 
+@pytest.mark.skip('Disabling role guessing for now')
 def test_role_guessing(test_config, sample_nuc_family):
     test_config.person.role.type = 'guess'
     prep = PreparePersons(test_config)
