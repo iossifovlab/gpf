@@ -141,7 +141,7 @@ class PreparePersons(PrepareBase):
         return ped_df
 
     @classmethod
-    def load_pedfile(cls, pedfile):
+    def load_pedigree_file(cls, pedfile):
         df = FamiliesBase.load_pedigree_file(pedfile)
 
         assert set(cls.PED_COLUMNS_REQUIRED) <= set(df.columns)
@@ -197,7 +197,7 @@ class PreparePersons(PrepareBase):
         self._save_persons(ped_df)
 
     def build_pedigree(self, pedfile):
-        ped_df = self.load_pedfile(pedfile)
+        ped_df = self.load_pedigree_file(pedfile)
         ped_df = self.prepare_pedigree(ped_df)
         self.save_pedigree(ped_df)
         self.pedigree_df = ped_df

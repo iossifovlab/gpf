@@ -327,6 +327,9 @@ class FamiliesBase(object):
             'dadId': 'dad_id',
             'sampleId': 'sample_id',
         }, inplace=True)
+
+        assert set(PED_COLUMNS_REQUIRED) <= set(ped_df.columns)
+
         return ped_df
 
     @staticmethod
