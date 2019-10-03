@@ -134,9 +134,15 @@ class PreparePersons(PrepareBase):
         return ped_df
 
     def _prepare_persons(self, ped_df):
+        assert self.config.person.role.type != 'guess', \
+            ('Guessing roles has been deprecated - '
+             ' please provide a column with roles!')
+
         if self.config.person.role.type == 'column':
             ped_df = self._map_role_column(ped_df)
         elif self.config.person.role.type == 'guess':
+            # This branch is currently disabled (see the assertion above),
+            # but the code won't be removed until a later commit
             ped_df = self._guess_role_nuc(ped_df)
         return ped_df
 
