@@ -45,7 +45,8 @@ def contigs_makefile_generate(
         import_sources,
         log_directory=None,
         rows=100000,
-        outfile=sys.stdout):
+        outfile=sys.stdout,
+        env=""):
 
     makefile = []
     all_targets = []
@@ -105,8 +106,8 @@ def contigs_makefile_generate(
                     log_directory,
                     "time_{:0>6}.log".format(bucket_index))
 
-                command = "time ({command} &> {log_filename}) " \
-                    "2> {time_filename}".format(
+                command = "time -o {time_filename} {command} &> " \
+                    "{log_filename} ".format(
                         command=command,
                         log_filename=log_filename,
                         time_filename=time_filename
@@ -114,11 +115,12 @@ def contigs_makefile_generate(
 
             make_rule = "{targets}: " \
                 "{import_sources}\n\t" \
-                "{command}" \
+                "{env}{command}" \
                 .format(
                     command=command,
                     targets=" ".join(targets),
                     import_sources=import_sources,
+                    env=env
                 )
             makefile.append(make_rule)
 

@@ -92,20 +92,26 @@ def dae_build_makefile(dae_config, genome, argv):
     if argv.no_reference:
         no_reference = "--no-reference"
 
+    env = ""
+    if argv.env:
+        env = "{} ".format(argv.env)
+
     contigs_makefile_generate(
         build_contigs,
         data_contigs,
         argv.output,
         'dae2parquet.py dae {family_format} {no_reference}'.format(
             family_format=family_format,
-            no_reference=no_reference),
+            no_reference=no_reference,
+            env=env),
         argv.annotation_config,
         "{family_filename} {summary_filename} {toomany_filename}".format(
             family_filename=argv.families,
             summary_filename=argv.summary,
             toomany_filename=argv.toomany),
         rows=argv.rows,
-        log_directory=argv.log
+        log_directory=argv.log,
+        env=env
     )
 
 
@@ -261,6 +267,12 @@ def init_parser_make(gpf_instance, subparsers):
         help='directory to store log files'
     )
 
+    parser.add_argument(
+        '--env', type=str,
+        default=None,
+        dest='env', metavar='<ENV options>',
+        help='additional environment options'
+    )
 
 def parse_cli_arguments(gpf_instance, argv=sys.argv[1:]):
     parser = argparse.ArgumentParser(
