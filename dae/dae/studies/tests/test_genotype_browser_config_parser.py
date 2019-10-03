@@ -12,11 +12,16 @@ def test_genotype_browser_parse_variables():
         'hasStudyFilters', 'hasPresentInRole', 'hasGraphicalPreview',
     )
     assert GenotypeBrowserConfigParser.SPLIT_STR_LISTS == [
-        'previewColumns', 'downloadColumns', 'selectedPhenoColumnValues',
-        'familyFilters', 'selectedPhenoFiltersValues',
-        'selectedGenotypeColumnValues', 'selectedInRolesValues',
-        'selectedPresentInRoleValues', 'roles', 'columns',
-        'inheritanceTypeFilter', 'selectedInheritanceTypeFilterValues',
+        'previewColumns',
+        'downloadColumns',
+        'selectedPhenoColumnValues',
+        'familyFilters',
+        'selectedPhenoFiltersValues',
+        'selectedGenotypeColumnValues',
+        'selectedInRolesValues',
+        'selectedPresentInRoleValues',
+        'inheritanceTypeFilter',
+        'selectedInheritanceTypeFilterValues',
     ]
     assert GenotypeBrowserConfigParser.FILTER_SELECTORS == {
         'phenoFilters': 'selectedPhenoFiltersValues',

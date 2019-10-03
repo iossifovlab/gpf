@@ -13,8 +13,8 @@ def test_effect_cell_missense(dataset1, denovo_variants_ds1, filter_objects):
 
     assert effect_cell.number_of_observed_events == 2
     assert effect_cell.number_of_children_with_event == 1
-    assert effect_cell.observed_rate_per_child == 2.0 / 12.0
-    assert effect_cell.percent_of_children_with_events == 1.0 / 12.0
+    assert effect_cell.observed_rate_per_child == 2.0 / 3.0
+    assert effect_cell.percent_of_children_with_events == 1.0 / 3.0
     assert effect_cell.column == 'sib and phenotype2'
 
     assert effect_cell.is_empty() is False
@@ -34,8 +34,8 @@ def test_effect_cell_frame_shift(
 
     assert effect_cell.number_of_observed_events == 2
     assert effect_cell.number_of_children_with_event == 2
-    assert effect_cell.observed_rate_per_child == 2.0 / 12.0
-    assert effect_cell.percent_of_children_with_events == 2.0 / 12.0
+    assert effect_cell.observed_rate_per_child == 2.0 / 7.0
+    assert effect_cell.percent_of_children_with_events == 2.0 / 7.0
     assert effect_cell.column == 'prb and phenotype1'
 
     assert effect_cell.is_empty() is False
