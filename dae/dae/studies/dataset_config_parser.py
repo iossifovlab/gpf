@@ -56,26 +56,35 @@ class DatasetConfigParser(StudyConfigParserBase):
     ]
 
     COMPOSITE_ATTRIBUTES = {
+        'commonReport': _boolean_and_attribute,
+        'common_report': _boolean_and_attribute,
+
         'genotypeBrowser': _boolean_and_attribute,
         'genotype_browser': _boolean_and_attribute,
 
-        'phenotypeTool': _boolean_and_attribute,
         'phenotypeBrowser': _boolean_and_attribute,
-
-        'phenotype_tool': _boolean_and_attribute,
         'phenotype_browser': _boolean_and_attribute,
-
-        'hasTransmitted': _boolean_or_attribute,
-        'hasDenovo': _boolean_or_attribute,
-
-        'has_transmitted': _boolean_or_attribute,
-        'has_denovo': _boolean_or_attribute,
-
-        'peopleGroupConfig': _same_value_attribute,
-        'people_group_config': _same_value_attribute,
 
         'enrichmentTool': _boolean_and_attribute,
         'enrichment_tool': _boolean_and_attribute,
+
+        'phenotypeTool': _boolean_and_attribute,
+        'phenotype_tool': _boolean_and_attribute,
+
+        'hasDenovo': _boolean_or_attribute,
+        'has_denovo': _boolean_or_attribute,
+
+        'hasTransmitted': _boolean_or_attribute,
+        'has_transmitted': _boolean_or_attribute,
+
+        'hasComplex': _boolean_or_attribute,
+        'has_complex': _boolean_or_attribute,
+
+        'hasCNV': _boolean_or_attribute,
+        'has_cnv': _boolean_or_attribute,
+
+        'peopleGroupConfig': _same_value_attribute,
+        'people_group_config': _same_value_attribute,
 
         'authorizedGroups': _set_union_attribute,
         'authorized_groups': _set_union_attribute,
