@@ -758,9 +758,9 @@ You can enable the Phenotype tool using the following property:
 
 
 Restart the GPF development web server and select the `comp_all` study.
-You should see a :ref:`phenotool-ui` tab. Once you have selected it, you can
-select a phenotype measure of your choice. To get the tool to acknowledge the
-variants in the ``comp_all`` study, select the `All` option of the
+You should see a :ref:`phenotype_tool_ui` tab. Once you have selected it, you
+can select a phenotype measure of your choice. To get the tool to acknowledge
+the variants in the ``comp_all`` study, select the `All` option of the
 `Present in Parent` field. Since the effect types of the variants in the comp
 study are only `Missense` and `Synonymous`, you may wish to de-select the
 `LGDs` option under the `Effect Types` field. There are is also the option to

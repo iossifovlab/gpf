@@ -241,6 +241,8 @@ After the desired users are selected, by choosing an option from the
 After choosing an option, a new page will appear, allowing you to pick groups
 to remove or add.
 
+.. _user_dataset_groups:
+
 Groups
 ------
 
