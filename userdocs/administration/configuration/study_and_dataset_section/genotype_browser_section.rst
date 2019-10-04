@@ -6,7 +6,7 @@ Genotype Browser Section
 The configuration section for a genotype browser follows the general INI
 format. Its name must be ``genotypeBrowser`` - this will indicate that it is a
 genotype browser configuration section. This configuration section must
-properly describe a genotype browser used by one study. This is an optional
+properly describe the genotype browser for the study. This is an optional
 section.
 
 [genotypeBrowser]
@@ -22,17 +22,17 @@ ______
 
   hasCNV = <boolean>
 
-This property show:
+This property determines:
 
-  * if ``CNV`` effect group containing ``CNV+`` and ``CNV*`` effect types are
-    present in the ``Effect Types`` filter in the ``Genotype Browser`` for the
-    study.
+  * if the ``CNV+`` and ``CNV*`` effect types (part of the ``CNV`` effect
+    group) are present in the ``Effect Types`` filter in the
+    ``Genotype Browser`` for the study.
 
-  * if ``CNV``, ``CNV+`` and ``CNV*`` effect types are present in the
+  * if the ``CNV``, ``CNV+`` and ``CNV*`` effect types are present in the
     ``Effect Types`` filter in the ``Phenotype Tool`` for the study.
 
-  * if ``CNV`` variant type is present in the ``Variant Types`` filter in the
-    ``Genotype Browser`` for the study.
+  * if the ``CNV`` variant type is present in the ``Variant Types`` filter in
+    the ``Genotype Browser`` for the study.
 
 This property takes a :ref:`boolean <allowed_values_booleans>` value.
 
@@ -43,7 +43,7 @@ __________
 
   hasComplex = <boolean>
 
-This property show if ``complex`` variant type is present in the
+This property determines whether the ``complex`` variant type is present in the
 ``Variant Types`` filter in the ``Genotype Browser`` for the study. This
 property takes a :ref:`boolean <allowed_values_booleans>` value.
 
@@ -54,7 +54,7 @@ _____________
 
   hasStudyTypes = <boolean>
 
-This property show if ``Study Types`` filter is present in the
+This property determines whether the ``Study Types`` filter is present in the
 ``Genotype Browser`` for the study. This property takes a
 :ref:`boolean <allowed_values_booleans>` value.
 
@@ -65,7 +65,7 @@ _______________
 
   hasStudyFilters = <boolean>
 
-This property show if ``Studies`` filter block is present in the
+This property determines whether the ``Studies`` filter block is present in the
 ``Genotype Browser`` for the study. This property takes a
 :ref:`boolean <allowed_values_booleans>` value.
 
@@ -76,15 +76,9 @@ ________________
 
   hasFamilyFilters = <boolean>
 
-This property show:
-
-  * if ``Studies`` filter block is present in the ``Genotype Browser`` for the
-    study.
-
-  * if ``Studies`` filter block is present in the ``Phenotype Tool`` for the
-    study.
-
-This property takes a :ref:`boolean <allowed_values_booleans>` value.
+This property determines if the ``Studies`` filter block is present in the
+``Genotype Browser`` and ``Phenotype Tool`` for the study. This property takes
+a :ref:`boolean <allowed_values_booleans>` value.
 
 hasPresentInRole
 ________________
@@ -93,7 +87,7 @@ ________________
 
   hasPresentInRole = <boolean>
 
-This property show if ``Present in Role`` filter is present in the
+This property determines if the ``Present in Role`` filter is present in the
 ``Genotype Browser`` for the study. This property takes
 a :ref:`boolean <allowed_values_booleans>` value. You see configuration of
 ``Present in Role`` :ref:`here <present_in_role_property>`.
@@ -105,7 +99,7 @@ _________________
 
   hasPresentInChild = <boolean>
 
-This property show if ``Present in Child`` filter is present in the
+This property determines if the ``Present in Child`` filter is present in the
 ``Genotype Browser`` for the study. This property takes a
 :ref:`boolean <allowed_values_booleans>` value.
 
@@ -116,7 +110,7 @@ __________________
 
   hasPresentInParent = <boolean>
 
-This property show if ``Present in Parent`` filter is present in the
+This property determines if the ``Present in Parent`` filter is present in the
 ``Genotype Browser`` for the study. This property takes a
 :ref:`boolean <allowed_values_booleans>` value.
 
@@ -127,7 +121,7 @@ ___________________
 
   hasPedigreeSelector = <boolean>
 
-This property show if ``Pedigree Selector`` filter is present in the
+This property determines if the ``Pedigree Selector`` filter is present in the
 ``Genotype Browser`` for the study. This property takes a
 :ref:`boolean <allowed_values_booleans>` value.
 
@@ -138,8 +132,8 @@ ___________________
 
   hasGraphicalPreview = <boolean>
 
-This property show if user can make ``Graphical Preview`` request in the
-``Genotype Browser`` for the study. This property takes a
+This property determines if the user can make a ``Graphical Preview`` request
+in the ``Genotype Browser`` for the study. This property takes a
 :ref:`boolean <allowed_values_booleans>` value.
 
 inheritanceTypeFilter
@@ -222,10 +216,10 @@ ___________________________
 
 .. code-block:: ini
 
-  selectedPresentInRoleValues = <comma-separated list of present in role ids>
+  selectedPresentInRoleValues = <comma-separated list of presentInRole ids>
 
-A comma-separated list of selected present in roles. If this property is
-missing then all defined present in roles in this section are selected.
+A comma-separated list of selected presentInRole values. If this property is
+missing then all defined presentInRole values in this section are selected.
 
 presentInRole.<present in role id>.id
 ______________________________________
@@ -244,7 +238,7 @@ _______________________________________
 
   presentInRole.<present in role id>.name = <present in role name>
 
-This property defines display name of the ``Present in Role`` filter in the
+This property defines the display name of the ``Present in Role`` filter in the
 ``Genotype Browser`` for the study.
 
 presentInRole.<present in role id>.roles
@@ -265,7 +259,7 @@ ____________________________
   selectedGenotypeColumnValues = <comma-separated list of genotype column ids>
 
 A comma-separated list of selected genotype columns. If this property is
-missing then all defined genotype columns in this section are selected.
+missing, then all defined genotype columns in this section are selected.
 
 genotype.<genotype columns id>.id
 _________________________________
@@ -294,28 +288,26 @@ _____________________________________
 
   genotype.<genotype columns id>.source = <genotype column source>
 
-Source of the display value in the table of the ``Table Preview`` query in
-``Genotype Browser`` for the study which is extracted from the variant.
+This property defines the source of the values for this column. This is
+selected from the raw study data column names.
 
 genotype.<genotype columns id>.slots
 ____________________________________
 
 .. code-block:: ini
 
-  genotype.<genotype columns id>.slots = <<source>:<label>:<optional: label_format>>
+  genotype.<genotype columns id>.slots = <<source>:<label>:<label_format>>
 
-Slots of the genotype column in the header of the table of the
-``Table Preview`` query in ``Genotype Browser`` for the study. Each slot
-contain information about:
+A genotype column can be split up into multiple sub-columns. These are called
+slots. Each slot is defined by:
 
-  * ``<source>`` - source of the display value which is extracted from the
-    variant.
+  * ``<source>`` - analogous to the ``genotype.<genotype columns id>.source``
+    property above.
 
   * ``<label>`` - display name of this slot in the genotype column in the
-    table of the ``Table Preview`` query in ``Genotype Browser``.
+    preview table in the ``Genotype Browser``.
 
-  * ``<label format>`` - format of the values in the table of the
-    ``Table Preview`` query in the ``Genotype Browser``. This property is
+  * ``<label format>`` - format of the values in this slot. This property is
     optional and default value for it is ``%s``.
 
 selectedPhenoColumnValues
@@ -345,40 +337,38 @@ ________________________________
 
   pheno.<phenotype column id>.name = <phenotype column name>
 
-Display name of the phenotype column used in the header of the table in the
-``Table Preview`` query in ``Genotype Browser`` for the study.
+Display name of the phenotype column used in the header of the preview table in
+the ``Genotype Browser`` for the study.
 
 pheno.<phenotype column id>.slots
 _________________________________
 
 .. code-block:: ini
 
-  pheno.<phenotype column id>.slots = <<role>:<source>:<label>:<optional: label format>>
+  pheno.<phenotype column id>.slots = <<role>:<source>:<label>:<label format>>
 
-Slots of the phenotype column in the header of the table of the
-``Table Preview`` query in ``Genotype Browser`` for the study. Each slot
-contain information about:
+Slots of the phenotype column in the header of the preview table in the
+``Genotype Browser`` for the study. Each slot is defined by:
 
   * ``<role>`` - phenotype role.
 
   * ``<source>`` - source to be used when appending phenotype value to the
     variant.
 
-  * ``<label>`` - display name of this slot in the phenotype column in the
-    table of the ``Table Preview`` query in ``Genotype Browser``.
+  * ``<label>`` - display name of this slot.
 
-  * ``<label format>`` - format of the values in the table of the
-    ``Table Preview`` query in the ``Genotype Browser``. This property is
-    optional and default value for it is ``%s``.
+  * ``<label format>`` - format of the values in this slot. This property is
+    optional and the default value for it is ``%s``.
 
 inRoles
 _______
 
-Each of the defined ``inRoles`` will be added to the variant as new generated
-column. This new column will contain information about defined roles in the
-``inRoles.<in role column id>.roles``. Result list with be all possible
-combinations of the role from roles list with the gender of the people with
-this role.
+Each of the defined ``inRoles`` will be added to the variant as a new,
+generated column. This new column will contain information about defined roles
+in the ``inRoles.<in role column id>.roles``. The resulting list will be all
+possible combinations of the role from roles list with the gender of the people
+with this role. The newly generated column can be optionally defined as a
+genotype column.
 
 selectedInRolesValues
 .....................
@@ -387,8 +377,8 @@ selectedInRolesValues
 
   selectedInRolesValues = <comma-separated list of in role column ids>
 
-A comma-separated list of selected in role columns. If this property is missing
-then all defined in role columns in this section are selected.
+A comma-separated list of selected ``inRoles`` columns. If this property is
+missing, then all defined ``inRoles`` columns in this section are selected.
 
 inRoles.<in role column id>.id
 ..............................
@@ -397,8 +387,8 @@ inRoles.<in role column id>.id
 
   inRoles.<in role column id>.id = <in role column identifier>
 
-Identifier of the in role column. Default value is ``<in role column id>`` from
-the in role column property name.
+Identifier of the ``inRoles`` column. Default value is ``<in role column id>``
+from the ``inRoles`` column property name.
 
 inRoles.<in role column id>.destination
 .......................................
@@ -407,8 +397,8 @@ inRoles.<in role column id>.destination
 
   inRoles.<in role column id>.destination = <destination column name>
 
-Name which will be used as the source of the generated column. Default value
-for this property is ``inRoles.<in role column id>.id``.
+The name of the column in the variant which will contain the generated values.
+Default value for this property is ``inRoles.<in role column id>.id``.
 
 inRoles.<in role column id>.roles
 .................................
@@ -427,9 +417,8 @@ ______________
 
   previewColumns = <comma-separated list of genotype or phenotype column ids>
 
-A comma-separated list of columns used as header of the table of
-``Table Preview`` query in ``Genotype Browser`` for the study. Possible values
-in this list are genotype or phenotype column ids.
+Which columns to display in the preview table of the ``Genotype Browser`` of
+the study. Possible values in this list are genotype or phenotype column ids.
 
 downloadColumns
 _______________
@@ -438,6 +427,7 @@ _______________
 
   downloadColumns = <comma-separated list of genotype or phenotype column ids>
 
-A comma-separated list of columns used as header of the table download from the
-``Download`` query in ``Genotype Browser`` for the study. Possible values in
-this list are genotype or phenotype column ids.
+
+Which columns to include in the download table file of the ``Genotype Browser``
+of the study. Possible values in this list are genotype or phenotype column
+ids. Slots will be expanded into independent columns.
