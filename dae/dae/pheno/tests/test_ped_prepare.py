@@ -26,7 +26,7 @@ def instrument_files():
 def test_ped_prepare_simple(test_config, fake_ped_file):
     test_config.person.role.mapping = 'INTERNAL'
     prep = PreparePersons(test_config)
-    ped_df = PreparePersons.load_pedfile(fake_ped_file)
+    ped_df = PreparePersons.load_pedigree_file(fake_ped_file)
 
     assert ped_df is not None
 

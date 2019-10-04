@@ -8,6 +8,22 @@ import pandas as pd
 from dae.variants.attributes import Role, Sex, Status
 
 
+PED_COLUMNS_REQUIRED = (
+    'family_id',
+    'person_id',
+    'dad_id',
+    'mom_id',
+    'sex',
+    'status',
+    'role',
+)
+
+PED_COLUMNS_OPTIONAL = (
+    'sampleId',
+    'phenotype',
+)
+
+
 class Person(object):
 
     def __init__(self, atts=None):
@@ -274,7 +290,7 @@ class FamiliesBase(object):
                 'role': lambda r: Role.from_name(r),
                 'sex': lambda s: Sex.from_name_or_value(s),
                 'gender': lambda s: Sex.from_name_or_value(s),
-                'status': lambda s: Status.from_name(s),
+                'status': lambda s: Status.from_name_or_value(s),
                 'layout': lambda lc: lc.split(':')[-1],
                 'generated': lambda g: True if g == '1.0' else False,
             },
@@ -311,6 +327,9 @@ class FamiliesBase(object):
             'dadId': 'dad_id',
             'sampleId': 'sample_id',
         }, inplace=True)
+
+        assert set(PED_COLUMNS_REQUIRED) <= set(ped_df.columns)
+
         return ped_df
 
     @staticmethod

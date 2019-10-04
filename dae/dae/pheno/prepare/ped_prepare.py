@@ -3,30 +3,28 @@ Created on Jul 25, 2017
 
 @author: lubo
 '''
+import os
+import traceback
+from collections import defaultdict, OrderedDict
+
 import numpy as np
 import pandas as pd
+from multiprocessing import Pool
+from box import Box
+
 from dae.pheno.db import DbManager
 from dae.pheno.common import RoleMapping, MeasureType
-from dae.variants.attributes import Role, Status, Sex
-import os
-from box import Box
-from collections import defaultdict, OrderedDict
+from dae.variants.attributes import Role, Status
+from dae.variants.family import FamiliesBase, \
+    PED_COLUMNS_REQUIRED
 from dae.pheno.prepare.measure_classifier import MeasureClassifier,\
     convert_to_string, convert_to_numeric, ClassifierReport
-from multiprocessing import Pool
-import traceback
 
 
 class PrepareCommon(object):
     PID_COLUMN = "$PID"
     PERSON_ID = 'person_id'
-
-    PED_COLUMNS = [
-        'family_id', 'person_id', 'dad_id', 'mom_id',
-        'sex', 'status',
-        # 'sampleId',
-        # 'role',
-    ]
+    PED_COLUMNS_REQUIRED = tuple(PED_COLUMNS_REQUIRED)
 
 
 class PrepareBase(PrepareCommon):
@@ -66,8 +64,12 @@ class PreparePersons(PrepareBase):
 
         roles = pd.Series(ped_df.index)
         for index, row in ped_df.iterrows():
-            role = mapping.get(row['role'])
-            roles[index] = role.value
+            if type(row['role']) is not Role:
+                role = mapping.get(row['role'])
+            else:
+                role = row['role']
+            # roles[index] = role.value
+            roles[index] = role
         ped_df['role'] = roles
         return ped_df
 
@@ -99,12 +101,12 @@ class PreparePersons(PrepareBase):
     @staticmethod
     def _find_prb_in_family(family_df):
         return PreparePersons._find_status_in_family(
-            family_df, Status.affected.value)
+            family_df, Status.affected)
 
     @staticmethod
     def _find_sib_in_family(family_df):
         return PreparePersons._find_status_in_family(
-            family_df, Status.unaffected.value)
+            family_df, Status.unaffected)
 
     def _guess_role_nuc(self, ped_df):
         assert self.config.person.role.type == 'guess'
@@ -132,41 +134,29 @@ class PreparePersons(PrepareBase):
         return ped_df
 
     def _prepare_persons(self, ped_df):
+        assert self.config.person.role.type != 'guess', \
+            ('Guessing roles has been deprecated - '
+             ' please provide a column with roles!')
+
         if self.config.person.role.type == 'column':
             ped_df = self._map_role_column(ped_df)
         elif self.config.person.role.type == 'guess':
+            # This branch is currently disabled (see the assertion above),
+            # but the code won't be removed until a later commit
             ped_df = self._guess_role_nuc(ped_df)
         return ped_df
 
     @classmethod
-    def load_pedfile(cls, pedfile):
-        df = pd.read_csv(
-            pedfile, sep='\t',
-            dtype={
-                'familyId': np.object,
-                'personId': np.object,
-                'dadId': np.object,
-                'momId': np.object,
-                'gender': np.int32,
-                'status': np.int32,
-            }
-        )
-        df = df.rename(
-            columns={
-                'gender': 'sex',
-                'personId': 'person_id',
-                'familyId': 'family_id',
-                'momId': 'mom_id',
-                'dadId': 'dad_id',
-            })
+    def load_pedigree_file(cls, pedfile):
+        df = FamiliesBase.load_pedigree_file(pedfile)
 
-        assert set(cls.PED_COLUMNS) <= set(df.columns)
+        assert set(cls.PED_COLUMNS_REQUIRED) <= set(df.columns)
         print(df.columns)
 
         return df
 
     def prepare_pedigree(self, ped_df):
-        assert set(self.PED_COLUMNS) <= set(ped_df.columns)
+        assert set(self.PED_COLUMNS_REQUIRED) <= set(ped_df.columns)
         ped_df = self._prepare_families(ped_df)
         ped_df = self._prepare_persons(ped_df)
         print(ped_df.columns)
@@ -198,9 +188,9 @@ class PreparePersons(PrepareBase):
             p = {
                 'family_id': families[row['family_id']].id,
                 self.PERSON_ID: row['person_id'],
-                'role': Role(row['role']),
-                'status': Status(row['status']),
-                'sex': Sex(row['sex']),
+                'role': row['role'],
+                'status': row['status'],
+                'sex': row['sex'],
                 'sample_id': self._build_sample_id(row.get('sample_id')),
             }
             persons.append(p)
@@ -213,7 +203,7 @@ class PreparePersons(PrepareBase):
         self._save_persons(ped_df)
 
     def build_pedigree(self, pedfile):
-        ped_df = self.load_pedfile(pedfile)
+        ped_df = self.load_pedigree_file(pedfile)
         ped_df = self.prepare_pedigree(ped_df)
         self.save_pedigree(ped_df)
         self.pedigree_df = ped_df
@@ -531,7 +521,7 @@ class PrepareVariables(PreparePersons):
 
     def build_pheno_common(self):
         pheno_common_measures = set(self.pedigree_df.columns) - \
-            (set(self.PED_COLUMNS) | set(['sampleId', 'role']))
+            (set(self.PED_COLUMNS_REQUIRED) | set(['sampleId', 'role']))
 
         df = self.pedigree_df.copy(deep=True)
         df.rename(columns={'personId': self.PERSON_ID}, inplace=True)
