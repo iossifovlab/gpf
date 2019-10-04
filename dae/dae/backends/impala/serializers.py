@@ -56,7 +56,8 @@ class ParquetSerializer(object):
         'rare',
         'genomic_scores_data',
         'frequency_bin',
-
+        'coding',
+        'position_bin',
     ]
 
     summary = namedtuple(
