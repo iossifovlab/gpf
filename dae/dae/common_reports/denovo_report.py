@@ -24,16 +24,23 @@ class EffectCell(object):
         variants = self._get_variants(
             people_with_filter, people_with_parents_ids)
 
+        people_with_filter_and_parents_ids = people_with_filter & \
+            people_with_parents_ids
+        number_of_people_with_filter_and_parents = \
+            len(people_with_filter_and_parents_ids)
+
         self.number_of_observed_events = len(variants)
         self.number_of_children_with_event = \
             self._get_number_of_children_with_event(
                 variants, people_with_filter, people_with_parents_ids)
         self.observed_rate_per_child =\
-            self.number_of_observed_events / len(people_with_parents_ids)\
-            if len(people_with_parents_ids) != 0 else 0
+            self.number_of_observed_events \
+                / number_of_people_with_filter_and_parents\
+            if number_of_people_with_filter_and_parents != 0 else 0
         self.percent_of_children_with_events =\
-            self.number_of_children_with_event / len(people_with_parents_ids)\
-            if len(people_with_parents_ids) != 0 else 0
+            self.number_of_children_with_event \
+                / number_of_people_with_filter_and_parents \
+            if number_of_people_with_filter_and_parents != 0 else 0
 
         self.column = self.filter_object.get_column_name()
 

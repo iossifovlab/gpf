@@ -278,6 +278,47 @@ class ImpalaFamilyVariants(FamiliesBase):
                         return 'rare = 0'
         return ''
 
+    def _build_frequency_bin_heuristic(self, ultra_rare, real_attr_filter):
+        if 'frequency_bin' not in self.schema:
+            return ''
+        if ultra_rare:
+            return 'frequency_bin = 0'
+        if real_attr_filter:
+            for name, (begin, end) in real_attr_filter:
+                if name == 'af_allele_freq':
+                    if end < 5.0:
+                        return 'frequency_bin = 1'
+                    if begin >= 5.0:
+                        return 'frequency_bin = 2'
+        return ''
+
+    def _build_coding_heuristic(self, effect_types):
+        if effect_types is None:
+            return ''
+        if 'coding' not in self.schema:
+            return ''
+        intersection = set(effect_types) & set([
+            'splice-site',
+            'frame-shift',
+            'nonsense',
+            'no-frame-shift-newStop',
+            'noStart',
+            'noEnd',
+            'missense',
+            'no-frame-shift',
+            'CDS',
+            'synonymous',
+            'coding_unknown',
+            'regulatory',
+            "3'UTR",
+            "5'UTR",
+        ])
+        if intersection == set(effect_types):
+            return 'coding = 1'
+        if not intersection:
+            return 'coding = 0'
+        return ''
+
     def _build_ultra_rare_heuristic(self, ultra_rare):
         if 'ultra_rare' not in self.schema:
             return ''
@@ -377,10 +418,21 @@ class ImpalaFamilyVariants(FamiliesBase):
         where.append(self._build_return_reference_and_return_unknown(
             return_reference, return_unknown
         ))
-        where.append(self._build_rare_heuristic(ultra_rare, real_attr_filter))
-        where.append(self._build_ultra_rare_heuristic(ultra_rare))
-        where.append(self._build_family_bin_heuristic(family_ids, person_ids))
-
+        where.append(
+            self._build_rare_heuristic(ultra_rare, real_attr_filter)
+        )
+        where.append(
+            self._build_frequency_bin_heuristic(ultra_rare, real_attr_filter)
+        )
+        where.append(
+            self._build_ultra_rare_heuristic(ultra_rare)
+        )
+        where.append(
+            self._build_family_bin_heuristic(family_ids, person_ids)
+        )
+        where.append(
+            self._build_coding_heuristic(effect_types)
+        )
         where = [w for w in where if w]
 
         where_clause = ''
