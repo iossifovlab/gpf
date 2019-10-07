@@ -7,7 +7,6 @@ Study and Dataset Configuration
 .. toctree::
    :maxdepth: 4
 
-   study_and_dataset_section/default_section
    study_and_dataset_section/study_section
    study_and_dataset_section/dataset_section
    study_and_dataset_section/people_group_section

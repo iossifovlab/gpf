@@ -8,13 +8,6 @@ and datasets. Values in the sections of this configuration are used as default
 values to the corresponding section in the study and dataset configurations.
 Supported sections in this configuration file are:
 
-[DEFAULT]
----------
-
-The default configuration section can contain properties common to all other
-sections in this file. You can find more about this section
-:ref:`here <default_section>`.
-
 [study]
 -------
 
