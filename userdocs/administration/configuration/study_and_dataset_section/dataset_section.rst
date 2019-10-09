@@ -230,7 +230,7 @@ This property shows if ``Enrichment Tool`` tab is enabled for the study. You
 can see more about ``Enrichment Tool`` tab :ref:`here <enrichment_tool_ui>`. It
 has default value if it is defined in all of the dataset's defined studies and
 its value is ``True`` only if all of the studies'
-:ref:`enrichmentTool <study_section_enrichement_tool>` properties are ``True``
+:ref:`enrichmentTool <study_section_enrichment_tool>` properties are ``True``
 as well. This property takes a :ref:`boolean <allowed_values_booleans>` value.
 
 phenotypeTool
