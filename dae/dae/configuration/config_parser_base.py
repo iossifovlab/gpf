@@ -6,26 +6,47 @@ from dae.configuration.utils import parser_to_dict
 
 
 class VerificationError(Exception):
+    '''
+    Exception to raise when there is some verification problem in the
+    configuration.
+
+    Expected parameters of the constructor are:
+
+    :param message: message of the exeption
+
+    Each object of `VerificationError` has following fields:
+
+    :ivar message: message of the exeption
+    '''
 
     def __init__(self, message):
         self.message = message
 
 
 class CaseSensitiveConfigParser(ConfigParser):
-    """
+    '''
     .. _case_sensitive_config_parser:
 
-    Modified ConfigParser that allows case sensitive options.
-    """
+    Modified `ConfigParser` that allows case sensitive options.
+    '''
 
     def optionxform(self, option):
-        """
+        '''
         The default implementation returns a lower-case version of options.
-        """
+        '''
         return str(option)
 
 
 class ConfigParserBase(object):
+    '''
+    ConfigParserBase is a base class for all configuration parsers. It can be
+    inherited by a specific parser or to be used alone. It has different kinds
+    of methods for reading and parsing configuration. When you inherited it
+    support class properties which are used for parsing different kind of
+    properties. When you use some of the classmethods for read reading
+    configuration result that you get is Box object. All of its methods are
+    class or static methods.
+    '''
 
     ENABLED_DIR = '.'
 

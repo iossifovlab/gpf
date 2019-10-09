@@ -1,5 +1,11 @@
-dae.configuration.config_parser_base module
--------------------------------------------
+configuration package
+=====================
+
+Example usage of :mod:`config_parser_base <dae.configuration.config_parser_base>`
+---------------------------------------------------------------------------------
+
+dae.configuration.config_parser_base - module for parsing configuration
+-----------------------------------------------------------------------
 
 .. automodule:: dae.configuration.config_parser_base
     :members:
