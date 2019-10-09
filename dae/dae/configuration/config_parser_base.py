@@ -13,6 +13,8 @@ class VerificationError(Exception):
 
 class CaseSensitiveConfigParser(ConfigParser):
     """
+    .. _case_sensitive_config_parser:
+
     Modified ConfigParser that allows case sensitive options.
     """
 

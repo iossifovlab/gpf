@@ -9,6 +9,7 @@ DAE Interface
 .. toctree::
    :maxdepth: 4
 
+   configuration
    variants
    pheno
    pheno_tool
