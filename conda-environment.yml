@@ -42,4 +42,4 @@ hadoop=3.1.2
 sphinx=2.2.0
 sphinx_rtd_theme=0.4.3
 sphinx-copybutton=0.2.5
-pybigwig=0.3.17
+pybigwig=0.3.16
