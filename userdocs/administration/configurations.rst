@@ -11,6 +11,19 @@ the configurations follows the general INI format for which you can see more
 In all configuration files you can add ``[DEFAULT]`` section which is supported
 by the ``ConfigParser``.
 
+Common documentation information
+--------------------------------
+
+Documentation defines information badges about properties. This information
+badges are defined below of the property signature. Possible kinds of
+information badges are:
+
+  * ``DEFAULT`` - This information badge defines default value of the property
+    which is set in the code.
+
+  * ``ENVIRONMENT OVERRIDE`` - This information badge defines name of the
+    environment variable which can override property from the configuration.
+
 .. toctree::
    :maxdepth: 2
 
