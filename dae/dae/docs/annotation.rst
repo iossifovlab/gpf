@@ -6,7 +6,8 @@ Annotation pipeline is a tool for annotating data.
 The :ref:`annotation_pipeline.py` help
 --------------------------------------
 
-The tool has a help info that can be shown using -h/--help option on the command line.::
+The tool has a help info that can be shown using -h/--help option on the
+command line.::
 
     usage: annotation_pipeline.py [-h] [-H] --config CONFIG [--always-add]
                                   [--region REGION] [--split SPLIT]
@@ -68,13 +69,16 @@ Example annotating of VCF data with `annotation_pipeline.py`::
 
     ./annotation_pipeline.py --config file.conf --vcf -c chromosome -p position -r reference -a alternative input_file output_file
 
-We need `-x`, `-v`, `-c`, `-p`, `-r`, `-a`, `--vcf` options to describe the input format so that we can support multiple formats. Preannotators use these arguments to generate virtual columns.
+We need `-x`, `-v`, `-c`, `-p`, `-r`, `-a`, `--vcf` options to describe the
+input format so that we can support multiple formats. Preannotators use these
+arguments to generate virtual columns.
 
 
 Configuration file
 ------------------
 
-Configuration file contain sections for different operations which contain options for annotating data
+Configuration file contain sections for different operations which contain
+options for annotating data
 
 Example annotation pipeline configuration file::
 
@@ -91,10 +95,10 @@ Example annotation pipeline configuration file::
     # Section name
     [Step-Effects]
 
-    # Annotator class. Complete list of annotators can be seen below in annotation.tools module
+    # Annotator class. Complete list of annotators can be seen below in dae.annotation.tools module
     annotator=annotate_variants.EffectAnnotator
 
-    # Annotator options. Complete list of option for annotators can be seen below in annotation.tools module
+    # Annotator options. Complete list of option for annotators can be seen below in dae.annotation.tools module
     options.c=CSHL:chr
     options.p=CSHL:position
     options.v=CSHL:variant
@@ -126,127 +130,170 @@ Example annotation pipeline configuration file::
 Add Annotator or Preannotator
 -----------------------------
 
-To create `Annotator` or `Preannotator` you need to create a class who inherits `annotation.utilities.AnnotatorBase`. That class must implements methods `new_columns()` and `line_annotations(line, new_columns)`. `new_columns` must be a @property method who returns names of new columns, `line_annotations` must be a method who takes `line` and `new_columns` and returns a list of values for new_columns.
+To create `Annotator` or `Preannotator` you need to create a class who inherits
+`dae.annotation.utilities.AnnotatorBase`. That class must implements methods
+`new_columns()` and `line_annotations(line, new_columns)`. `new_columns` must
+be a @property method who returns names of new columns, `line_annotations` must
+be a method who takes `line` and `new_columns` and returns a list of values for
+new_columns.
 
-`Annotator` directory is `annotation/tools`. Except annotator you need to add `get_argument_parser()` function and you must call `main` function from `utilities` in annotator file. `get_argument_parser()` function must return an argument parser with annotator options. `utilities.main()` function takes two params first is argument parser and second is `Annotator`.
-`Preannotator` directory is `annotation/preannotators`. Except preannotator you need to add `get_arguments()` function in preannotator file. This function must return dictionary with preannotator options. When you add preannotator in this directory it is found by `MultiAnnotator` class.
+`Annotator` directory is `annotation/tools`. Except annotator you need to add
+`get_argument_parser()` function and you must call `main` function from
+`utilities` in annotator file. `get_argument_parser()` function must return an
+argument parser with annotator options. `utilities.main()` function takes two
+params first is argument parser and second is `Annotator`.
+`Preannotator` directory is `annotation/preannotators`. Except preannotator you
+need to add `get_arguments()` function in preannotator file. This function must
+return dictionary with preannotator options. When you add preannotator in this
+directory it is found by `MultiAnnotator` class.
 
-annotation.annotation_pipeline module
+dae.annotation.annotation_pipeline module
 ----------------------------------------------
 
-.. automodule:: annotation.annotation_pipeline
+.. automodule:: dae.annotation.annotation_pipeline
     :members:
     :undoc-members:
     :show-inheritance:
 
-annotation.preannotators module
-----------------------------------------
+.. dae.annotation.preannotators module
+.. -------------------------------
 
-annotation.preannotators.variant_format module
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++
+.. dae.annotation.preannotators.variant_format module
+.. ++++++++++++++++++++++++++++++++++++++++++++++
 
-.. automodule:: annotation.preannotators.variant_format
-    :members:
-    :undoc-members:
-    :show-inheritance:
+.. .. automodule:: dae.annotation.preannotators.variant_format
+..     :members:
+..     :undoc-members:
+..     :show-inheritance:
 
-annotation.tools module
---------------------------------
+dae.annotation.tools module
+---------------------------
 
-annotation.tools.utilities module
+dae.annotation.tools.annotator_base module
 ++++++++++++++++++++++++++++++++++++++++++
 
-.. automodule:: annotation.tools.utilities
+.. automodule:: dae.annotation.tools.annotator_base
     :members:
     :undoc-members:
     :show-inheritance:
 
-annotation.tools.add_missense_scores module
-++++++++++++++++++++++++++++++++++++++++++++++++++++
+dae.annotation.tools.annotator_config module
+++++++++++++++++++++++++++++++++++++++++++++
 
-.. automodule:: annotation.tools.add_missense_scores
+.. automodule:: dae.annotation.tools.annotator_config
     :members:
     :undoc-members:
     :show-inheritance:
 
-annotation.tools.annotate_variants module
-++++++++++++++++++++++++++++++++++++++++++++++++++
+dae.annotation.tools.cleanup_annotator module
++++++++++++++++++++++++++++++++++++++++++++++
 
-.. automodule:: annotation.tools.annotate_variants
+.. automodule:: dae.annotation.tools.cleanup_annotator
     :members:
     :undoc-members:
     :show-inheritance:
 
-annotation.tools.change_coordinate_base module
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++
+dae.annotation.tools.dbnsfp_annotator module
+++++++++++++++++++++++++++++++++++++++++++++
 
-.. automodule:: annotation.tools.change_coordinate_base
+.. automodule:: dae.annotation.tools.dbnsfp_annotator
     :members:
     :undoc-members:
     :show-inheritance:
 
-annotation.tools.annotate_score_base module
-++++++++++++++++++++++++++++++++++++++++++++++++++++
+dae.annotation.tools.effect_annotator module
+++++++++++++++++++++++++++++++++++++++++++++
 
-.. automodule:: annotation.tools.annotate_score_base
+.. automodule:: dae.annotation.tools.effect_annotator
     :members:
     :undoc-members:
     :show-inheritance:
 
-annotation.tools.annotate_with_multiple_scores module
-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+dae.annotation.tools.file_io_parquet module
++++++++++++++++++++++++++++++++++++++++++++
 
-.. automodule:: annotation.tools.annotate_with_multiple_scores
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-annotation.tools.duplicate_columns module
-++++++++++++++++++++++++++++++++++++++++++++++++++
-
-.. automodule:: annotation.tools.duplicate_columns
+.. automodule:: dae.annotation.tools.file_io_parquet
     :members:
     :undoc-members:
     :show-inheritance:
 
 
-annotation.tools.annotateFreqTransm module
-+++++++++++++++++++++++++++++++++++++++++++++++++++
+dae.annotation.tools.file_io_tsv module
++++++++++++++++++++++++++++++++++++++++
 
-.. automodule:: annotation.tools.annotateFreqTransm
+.. automodule:: dae.annotation.tools.file_io_tsv
     :members:
     :undoc-members:
     :show-inheritance:
 
-annotation.tools.annotate_with_genomic_scores module
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+dae.annotation.tools.file_io module
++++++++++++++++++++++++++++++++++++
 
-.. automodule:: annotation.tools.annotate_with_genomic_scores
-
+.. automodule:: dae.annotation.tools.file_io
     :members:
     :undoc-members:
     :show-inheritance:
 
-annotation.tools.concat_columns module
+dae.annotation.tools.frequency_annotator module
 +++++++++++++++++++++++++++++++++++++++++++++++
 
-.. automodule:: annotation.tools.concat_columns
+.. automodule:: dae.annotation.tools.frequency_annotator
     :members:
     :undoc-members:
     :show-inheritance:
 
-annotation.tools.lift_over_variants module
-+++++++++++++++++++++++++++++++++++++++++++++++++++
+dae.annotation.tools.lift_over_annotator module
++++++++++++++++++++++++++++++++++++++++++++++++
 
-.. automodule:: annotation.tools.lift_over_variants
+.. automodule:: dae.annotation.tools.lift_over_annotator
     :members:
     :undoc-members:
     :show-inheritance:
 
-annotation.tools.relabel_chromosome module
-+++++++++++++++++++++++++++++++++++++++++++++++++++
+dae.annotation.tools.schema module
+++++++++++++++++++++++++++++++++++
 
-.. automodule:: annotation.tools.relabel_chromosome
+.. automodule:: dae.annotation.tools.schema
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+dae.annotation.tools.score_annotator module
++++++++++++++++++++++++++++++++++++++++++++
+
+.. automodule:: dae.annotation.tools.score_annotator
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+dae.annotation.tools.score_file_io_bigwig module
+++++++++++++++++++++++++++++++++++++++++++++++++
+
+.. automodule:: dae.annotation.tools.score_file_io_bigwig
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+dae.annotation.tools.score_file_io module
++++++++++++++++++++++++++++++++++++++++++
+
+.. automodule:: dae.annotation.tools.score_file_io
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+dae.annotation.tools.utils module
++++++++++++++++++++++++++++++++++
+
+.. automodule:: dae.annotation.tools.utils
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+dae.annotation.tools.vcf_info_extractor module
+++++++++++++++++++++++++++++++++++++++++++++++
+
+.. automodule:: dae.annotation.tools.vcf_info_extractor
     :members:
     :undoc-members:
     :show-inheritance:

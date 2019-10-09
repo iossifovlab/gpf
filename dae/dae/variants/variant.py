@@ -27,7 +27,7 @@ class VariantBase(object):
     :ivar chromosome: chromosome lable where variant is located
     :ivar position: position of the variant using *VCF* convention
     :ivar reference: reference DNA string
-    :ivar alternative: alternative DNA string
+    :ivar _alternative: alternative DNA string
     """
 
     def __init__(self, chromosome, position, reference,

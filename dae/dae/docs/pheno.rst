@@ -21,8 +21,8 @@ To access a pheno DB you need to import DAE and use a factory object named
 
     In [3]: phdb = pheno.get_pheno_db('agre')
 
-The result of `get_pheno_db` is an instance of :ref:`PhenoDB` class. This is the
-main class that provides access to the phenotype database.
+The result of `get_pheno_db` is an instance of :ref:`PhenoDB` class. This is
+the main class that provides access to the phenotype database.
 
 
 To access values of given measure use::
@@ -90,7 +90,7 @@ You can access individuals and measures values as a joined data frame by using
 
 
 dae.pheno.pheno_db module
----------------------
+-------------------------
 
 .. automodule:: dae.pheno.pheno_db
     :members:
