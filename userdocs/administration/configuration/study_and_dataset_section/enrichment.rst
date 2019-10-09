@@ -8,6 +8,43 @@ format. Its name must be ``enrichment`` - this will indicate that it is an
 enrichment data configuration section. This configuration section must properly
 configure enrichment data for one study. This is an optional section.
 
+Example Configuration
+---------------------
+
+.. code-block:: ini
+
+  [enrichment]
+  enabled = yes
+
+  peopleGroups = status
+
+  defaultBackgroundModel = codingLenBackgroundModel
+
+  selectedBackgroundValues = synonymousBackgroundModel,codingLenBackgroundModel,samochaBackgroundModel
+
+  background.synonymousBackgroundModel.name = synonymousBackgroundModel
+  background.synonymousBackgroundModel.desc = Background model based on synonymous variants in transmitted
+
+  background.codingLenBackgroundModel.file = %(dae_data_dir)s/enrichment/background-model-coding-len-in-target.csv
+  background.codingLenBackgroundModel.name = codingLenBackgroundModel
+  background.codingLenBackgroundModel.desc = Genes coding lenght background model
+
+  background.samochaBackgroundModel.file = %(dae_data_dir)s/enrichment/background-samocha-et-al.csv
+  background.samochaBackgroundModel.name = samochaBackgroundModel
+  background.samochaBackgroundModel.desc = Background model described in Samocha et al
+
+  defaultCountingModel = enrichmentGeneCounting
+
+  selectedCountingValues = enrichmentEventsCounting,enrichmentGeneCounting
+
+  counting.enrichmentEventsCounting.name = enrichmentEventsCounting
+  counting.enrichmentEventsCounting.desc = Counting events
+
+  counting.enrichmentGeneCounting.name = enrichmentGeneCounting
+  counting.enrichmentGeneCounting.desc = Counting affected genes
+
+  effect_types = LGDs,missense,synonymous
+
 [enrichment]
 ------------
 

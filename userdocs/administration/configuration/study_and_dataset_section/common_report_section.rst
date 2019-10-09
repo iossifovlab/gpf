@@ -8,6 +8,24 @@ and must properly describe a common report for a single study. Its name must be
 ``commonReport`` - this will indicate that it is a common report section. This
 is an optional section.
 
+Example Configuration
+---------------------
+
+.. code-block:: ini
+
+  [commonReport]
+  enabled = yes
+
+  peopleGroups = status
+  groups = role:Role|status:Status|role,status:Role and Status
+
+  effect_groups = LGDs,nonsynonymous,UTRs
+  effect_types = Nonsense,Frame-shift,Splice-site,Missense,No-frame-shift
+      noStart,noEnd,Synonymous,Non coding,Intron,Intergenic,3'-UTR,5'-UTR
+
+  draw_all_families = False
+  families_count_show_id = 3
+
 [commonReport]
 --------------
 

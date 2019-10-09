@@ -8,6 +8,12 @@ and datasets. Values in the sections of this configuration are used as default
 values to the corresponding section in the study and dataset configurations.
 Supported sections in this configuration file are:
 
+Example Configuration
+---------------------
+
+For example of this configuration you can see
+``data-hg19-startup/defaultConfiguration.conf``.
+
 [study]
 -------
 

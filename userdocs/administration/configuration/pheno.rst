@@ -10,6 +10,19 @@ configuration file.  This configuration file must properly describe a single
 phenotype database. Its properties, which must belong to the ``phenoDB``
 section, are explained below.
 
+Example Configuration
+---------------------
+
+.. code-block:: ini
+
+  [phenoDB]
+  name = phenotypeDatabaseName
+  dbfile = %(wd)s/pheno.db
+  browser_dbfile = %(wd)s/browser/pheno_browser.db
+  browser_images_dir = %(wd)s/browser/images/
+  browser_images_url = /static/phenotypeDatabaseName/browser/images/
+
+
 [phenoDB]
 ---------
 

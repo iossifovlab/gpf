@@ -8,6 +8,34 @@ name must be ``dataset`` - this will indicate that it is a dataset
 configuration section. This configuration section must properly describe one
 dataset. This is a required section.
 
+Example Configuration
+---------------------
+
+.. code-block:: ini
+
+  [dataset]
+  enabled = yes
+
+  name = Dataset
+  id = dataset
+
+  studies = study
+
+  description = %(work_dir)s/data/description.md
+
+  authorizedGroups = any_user
+
+  hasDenovo = yes
+  hasTransmitted = no
+  hasComplex = no
+  hasCNV = no
+
+  commonReport = True
+  genotypeBrowser = True
+  phenotypeBrowser = True
+  enrichmentTool = False
+  phenotypeTool = False
+
 [dataset]
 ---------
 

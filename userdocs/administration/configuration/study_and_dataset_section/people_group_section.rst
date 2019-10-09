@@ -8,6 +8,20 @@ Its name must be ``peopleGroup`` - this will indicate that it is a
 people group configuration section. This configuration section must properly
 describe a people groups used by one study. This is an optional section.
 
+Example Configuration
+---------------------
+
+.. code-block:: ini
+
+  [peopleGroup]
+  selectedPeopleGroupValues = status
+
+  status.name = Affected Status
+  status.domain = affected:affected:#e35252,
+      unaffected:unaffected:#ffffff
+  status.default = unspecified:unspecified:#aaaaaa
+  status.source = status
+
 [peopleGroup]
 -------------
 

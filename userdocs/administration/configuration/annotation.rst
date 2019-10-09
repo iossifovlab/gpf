@@ -17,6 +17,75 @@ properties - ``annotator``, ``options`` and ``columns``.
 ``annotator`` has a single value, but the other two properties
 have sub-properties separated with a ``.``.
 
+Example Configuration
+---------------------
+
+.. code-block:: ini
+
+  [DEFAULT]
+  GENOMIC_SCORES_HG19 = %(scores_hg19_dir)s
+
+  ###############################
+  [Step-CADD-Score]
+
+  annotator = score_annotator.NPScoreAnnotator
+
+  options.scores_file = %(GENOMIC_SCORES_HG19)s/CADD/CADD.bedgraph.gz
+
+  columns.raw = cadd_raw
+  columns.phred = cadd_phred
+
+  ###############################
+  [Step-MPC-Score]
+
+  annotator = score_annotator.NPScoreAnnotator
+
+  options.scores_file = %(GENOMIC_SCORES_HG19)s/MPC/fordist_constraint_official_mpc_values_v2.txt.gz
+
+  columns.MPC = mpc
+
+  #######################################
+  [gnomAD genome Frequency]
+
+  annotator = frequency_annotator.FrequencyAnnotator
+
+  options.scores_file = %(GENOMIC_SCORES_HG19)s/gnomAD_genome/gnomad.genomes.r2.1.sites.tsv.gz
+
+  columns.AF = genome_gnomad_af
+  columns.AF_percent = genome_gnomad_af_percent
+
+  columns.AC = genome_gnomad_ac
+  columns.AN = genome_gnomad_an
+  columns.controls_AC = genome_gnomad_controls_ac
+  columns.controls_AN = genome_gnomad_controls_an
+  columns.controls_AF = genome_gnomad_controls_af
+  columns.non_neuro_AC = genome_gnomad_non_neuro_ac
+  columns.non_neuro_AN = genome_gnomad_non_neuro_an
+  columns.non_neuro_AF = genome_gnomad_non_neuro_af
+  columns.controls_AF_percent = genome_gnomad_controls_af_percent
+  columns.non_neuro_AF_percent = genome_gnomad_non_neuro_af_percent
+
+  #######################################
+  [gnomAD exome Frequency]
+
+  annotator = frequency_annotator.FrequencyAnnotator
+
+  options.scores_file = %(GENOMIC_SCORES_HG19)s/gnomAD_exome/gnomad.exomes.r2.1.sites.tsv.gz
+
+  columns.AF = exome_gnomad_af
+  columns.AF_percent = exome_gnomad_af_percent
+
+  columns.AC = exome_gnomad_ac
+  columns.AN = exome_gnomad_an
+  columns.controls_AC = exome_gnomad_controls_ac
+  columns.controls_AN = exome_gnomad_controls_an
+  columns.controls_AF = exome_gnomad_controls_af
+  columns.non_neuro_AC = exome_gnomad_non_neuro_ac
+  columns.non_neuro_AN = exome_gnomad_non_neuro_an
+  columns.non_neuro_AF = exome_gnomad_non_neuro_af
+  columns.controls_AF_percent = exome_gnomad_controls_af_percent
+  columns.non_neuro_AF_percent = exome_gnomad_non_neuro_af_percent
+
 annotator
 ---------
 

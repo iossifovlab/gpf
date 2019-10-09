@@ -8,6 +8,55 @@ configuration file and other filesystem paths.
 .. note::
   You can use interpolation values when specifying filepaths.
 
+Example Configuration
+---------------------
+
+.. code-block:: ini
+
+  [DEFAULT]
+  instance_id = data_hg19_startup
+
+  [HDFS]
+  host = localhost
+  port = 8020
+  baseDir = /user/%(instance_id)s/studies
+
+  [Impala]
+  host = localhost
+  port = 21050
+  db = gpf_variant_db
+
+  [studiesDB]
+  confFile = %(wd)s/studiesDB.conf
+  dir = %(wd)s/studies
+
+  [datasetsDB]
+  confFile = %(wd)s/datasetsDB.conf
+  dir = %(wd)s/datasets
+
+  [genomesDB]
+  confFile = %(wd)s/genomesDB.conf
+
+  [genomicScoresDB]
+  confFile = %(wd)s/genomicScores.conf
+  scores_hg19_dir = /genomic-scores-hg19
+  scores_hg38_dir = /genomic-scores-hg38
+
+  [annotation]
+  confFile = %(wd)s/annotation.conf
+
+  [phenoDB]
+  dir = %(wd)s/pheno
+
+  [geneInfoDB]
+  confFile = %(wd)s/geneInfo.conf
+
+  [defaultConfiguration]
+  confFile = %(wd)s/defaultConfiguration.conf
+
+  [gpfjs]
+  permissionDeniedPrompt = This is a default permission denied prompt. Please log in or register.
+  permissionDeniedPromptFile = %(wd)s/permissionDeniedPrompt.md
 
 [HDFS]
 ------

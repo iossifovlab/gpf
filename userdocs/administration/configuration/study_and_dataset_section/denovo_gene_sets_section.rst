@@ -9,6 +9,25 @@ gene sets configuration section. This configuration section must properly
 describe one or more denovo gene sets for one study. This is an optional
 section.
 
+Example Configuration
+---------------------
+
+.. code-block:: ini
+
+  [denovoGeneSets]
+  enabled = yes
+
+  peopleGroups = status
+
+  standardCriterias.effect_types.segments=LGDs:LGDs,Missense:missense,Synonymous:synonymous
+  standardCriterias.sexes.segments=Female:F,Male:M,Unspecified:U
+
+  recurrencyCriteria.segments=Single:1:2,Triple:3:-1,Recurrent:2:-1
+
+  geneSetsNames=LGDs,LGDs.Male,LGDs.Female,LGDs.Recurrent,LGDs.Single,LGDs.Triple,
+      Missense,Missense.Male,Missense.Female,Missense.Recurrent,Missense.Triple,
+      Synonymous,Synonymous.Male,Synonymous.Female,Synonymous.Recurrent,Synonymous.Triple
+
 [denovoGeneSets]
 ----------------
 

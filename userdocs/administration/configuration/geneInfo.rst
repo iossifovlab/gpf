@@ -9,6 +9,52 @@ Gene Info Configuration
 This file is responsible for configuring which gene info information, gene
 terms, gene weights and chromosomes are available to the GPF system.
 
+Example Configuration
+---------------------
+
+.. code-block:: ini
+
+  [geneInfo]
+  geneInfoFile = %(wd)s/geneInfo/humanGeneInfo.txt
+
+  [geneTerms.main]
+  file = %(wd)s/geneInfo/GeneSets
+  webFormatStr = key| (|count|): |desc
+  webLabel = Main
+
+  [geneTerms.GO]
+  file = %(wd)s/geneInfo/GO-map.txt
+  webFormatStr = key| (|count|): |desc
+  webLabel = GO Terms
+
+  [geneWeights]
+  weights = LGD_rank,pLI
+
+  [geneWeights.LGD_rank]
+  file = %(wd)s/geneInfo/GeneWeights/LGD.csv
+  desc = LGD rank
+  bins = 150
+  yscale = linear
+  xscale = linear
+  range = 1,10000
+
+  [geneWeights.LGD_score]
+  file = %(wd)s/geneInfo/GeneWeights/LGD.csv
+  desc = LGD score
+  bins = 150
+  yscale = log
+  xscale = linear
+
+  [geneWeights.pLI]
+  file = %(wd)s/geneInfo/GeneWeights/ExAC.csv
+  desc = ExAC pLI
+  bins = 150
+  yscale = log
+  xscale = log
+
+  [chromosomes]
+  file = %(wd)s/geneInfo/hgTables.txt
+
 [geneInfo]
 ----------
 
@@ -70,8 +116,8 @@ ________
 
 This is an optional section containing a list of selected gene weights.
 
-geneWeights
-___________
+weights
+_______
 
 .. code-block:: ini
 

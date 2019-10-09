@@ -6,6 +6,41 @@ Genomic Scores Configuration
 This configuration file hosts the list of all available genomic scores
 and the properties of their histograms.
 
+Example Configuration
+---------------------
+
+.. code-block:: ini
+
+  [genomicScores]
+  scores = mpc,cadd_gs_raw
+
+  [genomicScores.mpc]
+  id = mpc
+  file = %(wd)s/genomicScores/mpc
+  desc = MPC - Missense badness, PolyPhen-2, and Constraint
+  bins = 100
+  yscale = log
+  xscale = linear
+  range = 0,1
+
+  [genomicScores.cadd_gs_raw]
+  id = cadd_gs_raw
+  file = %(wd)s/genomicScores/cadd_raw_gs
+  desc = CADD GS raw
+  bins = 101
+  yscale = log
+  xscale = linear
+  help_file = %(wd)s/genomicScores/cadd_raw_gs.md
+
+  [genomicScores.cadd_gs_phred]
+  id = cadd_gs_phred
+  file = %(wd)s/genomicScores/cadd_phred_gs
+  desc = CADD GS phred
+  bins = 101
+  yscale = log
+  xscale = linear
+  help_file = %(wd)s/genomicScores/cadd_phred_gs.md
+
 [genomicScores]
 ---------------
 

@@ -8,6 +8,23 @@ The format follows the general INI style.
 Regression configurations can be created as a separate file or
 embedded in a phenotype database's own configuration file for ease of access.
 
+Example Configuration
+---------------------
+
+.. code-block:: ini
+
+  [regression.age]
+  instrument_name = common
+  measure_name = age_at_assessment
+  jitter = 0.1
+  display_name = age at assessment
+
+  [regression.nonverbal_iq]
+  instrument_name = common
+  measure_name = nonverbal_iq
+  jitter = 0.1
+  display_name = nonverbal iq
+
 [regression.<regression_name>]
 ------------------------------
 

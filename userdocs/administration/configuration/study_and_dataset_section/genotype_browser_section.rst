@@ -9,11 +9,75 @@ genotype browser configuration section. This configuration section must
 properly describe the genotype browser for the study. This is an optional
 section.
 
+Example Configuration
+---------------------
+
+.. code-block:: ini
+
+  [genotypeBrowser]
+  hasCNV = no
+  hasComplex = no
+  hasStudyTypes = no
+  hasStudyFilters = no
+  hasFamilyFilters = yes
+  hasPresentInRole = no
+  hasPresentInChild = no
+  hasPresentInParent = no
+  hasPedigreeSelector = yes
+  hasGraphicalPreview = yes
+  inheritanceTypeFilter = mendelian, denovo
+  selectedInheritanceTypeFilterValues = mendelian, denovo
+
+  selectedPhenoFiltersValues = continuous
+
+  phenoFilters.continuous.name = Continuous
+  phenoFilters.continuous.measureType = continuous
+  phenoFilters.continuous.filter = multi:prb
+
+  selectedPresentInRoleValues = parent
+
+  presentInRole.parent.name = Parents
+  presentInRole.parent.roles = mom,dad
+
+  selectedGenotypeColumnValues = family,variant,inchild
+
+  genotype.family.name = family
+  genotype.family.slots = family:family id,studyName:study
+
+  genotype.variant.name = variant
+  genotype.variant.slots = location:location,variant:variant
+
+  genotype.genotype.name = genotype
+  genotype.genotype.source = pedigree
+  genotype.genotype.slots = inChild:in child,fromParent:from parent
+
+  genotype.inchild.name = in child
+  genotype.inchild.source = inChS
+
+  genotype.fromparent.name = from parent
+  genotype.fromparent.source = fromParentS
+
+  selectedPhenoColumnValues = pheno
+
+  pheno.pheno.name = Measures
+  pheno.pheno.slots = prb:i1.age:Age:%%.2f,
+      prb:i1.iq:Iq:%%.2f
+
+  selectedInRolesValues = inChild,fromParentS
+
+  inRoles.inChild.destination = inChS
+  inRoles.inChild.roles = prb,sib
+
+  inRoles.fromParents.destination = fromParentS
+  inRoles.fromParents.roles = mom,dad
+
+  previewColumns = family,variant,pheno
+  downloadColumns = family,variant,inchild
+
 [genotypeBrowser]
 -----------------
 
 The properties for this section are explained below.
-
 
 hasCNV
 ______

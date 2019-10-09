@@ -8,6 +8,37 @@ must be ``study`` - this will indicate that it is a study configuration
 section. This configuration section must properly describe one study. This is a
 required section.
 
+Example Configuration
+---------------------
+
+.. code-block:: ini
+
+  [study]
+  enabled = yes
+
+  name = Study
+  id = study
+
+  prefix = data
+  file_format = vcf
+  description = %(work_dir)s/data/description.md
+
+  authorizedGroups = any_user
+
+  studyType = WE
+  year = 2019
+
+  hasDenovo = yes
+  hasTransmitted = no
+  hasComplex = no
+  hasCNV = no
+
+  commonReport = True
+  genotypeBrowser = True
+  phenotypeBrowser = True
+  enrichmentTool = False
+  phenotypeTool = False
+
 [study]
 -------
 
