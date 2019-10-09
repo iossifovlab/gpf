@@ -3,8 +3,8 @@ annotation_pipeline
 
 Annotation pipeline is a tool for annotating data.
 
-The :ref:`annotation_pipeline.py` help
---------------------------------------
+The :mod:`annotation_pipeline <dae.annotation.annotation_pipeline>` help
+------------------------------------------------------------------------
 
 The tool has a help info that can be shown using -h/--help option on the
 command line.::

@@ -1,8 +1,8 @@
 pheno_tool package
 ==================
 
-Example usage of :ref:`PhenoTool` class
----------------------------------------
+Example usage of :class:`PhenoTool <dae.pheno_tool.tool.PhenoTool>` class
+-------------------------------------------------------------------------
 First some imports::
 
     from DAE import *
@@ -73,8 +73,9 @@ to pass to this method the specification of the variants::
         ))
 
 
-The returned object is of type :ref:`PhenoResult`. This class could be queried
-about the results of the calculation::
+The returned object is of type
+:class:`PhenoResult <dae.pheno_tool.pheno_common.PhenoResult>`. This class
+could be queried about the results of the calculation::
 
     In [23]: res.positive_count
     Out[23]: 135
@@ -143,8 +144,8 @@ and as dictionaries::
       }
 
 
-Example usage of :ref:`PhenoTool` class with pheno filters
-----------------------------------------------------------
+Example usage of :class:`PhenoTool <dae.pheno_tool.tool.PhenoTool>` class with pheno filters
+--------------------------------------------------------------------------------------------
 
 The `PhenoTool` class supports different ways to specify which individuals are
 subject to the calculations. We can use `roles`, `measure_id`, `normalize_by`
@@ -267,10 +268,10 @@ dae.pheno_tool.tool module
     :undoc-members:
     :show-inheritance:
 
-Module contents
----------------
+dae.pheno_tool.pheno_common.PhenoResult class
+---------------------------------------------
 
-.. automodule:: dae.pheno_tool
+.. autoclass:: dae.pheno_tool.pheno_common.PhenoResult
     :members:
     :undoc-members:
     :show-inheritance:

@@ -5,8 +5,8 @@ Variants in families
 --------------------
 
 
-Example usage of :ref:`variants`
---------------------------------
+Example usage of :mod:`variants <dae.variants>`
+-----------------------------------------------
 
 Example usage of `variants` package::
 
@@ -154,7 +154,7 @@ Summary Variants/Alleles flat schema
 * **position** (int64) -
     1-based position of the start of the variant
 * **reference** (string) -
-    reference DNA string 
+    reference DNA string
 * **alternative** (string) -
     alternative DNA string (None for reference allele)
 * **summary_index** (int64) -

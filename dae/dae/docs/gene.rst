@@ -1,8 +1,8 @@
 gene package
 ============
 
-Example usage of :ref:`Weights` class
--------------------------------------
+Example usage of :class:`Weights <dae.gene.weights.Weights>` class
+-------------------------------------------------------------------
 
 You can list all available gene weights names using::
 
@@ -15,11 +15,12 @@ You can list all available gene weights names using::
 
 
 To create an instance of a gene weights class you can use
-:ref:`load_gene_weights`::
+:func:`load_gene_weights <dae.gene.weights.Weights.load_gene_weights>`::
 
     In [4]: w = Weights.load_gene_weights('RVIS_rank')
 
-Alternatively you can create an instance of a :ref:`Weights` class::
+Alternatively you can create an instance of a
+:class:`Weights <dae.gene.weights.Weights>` class::
 
     In [2]: w = Weights('RVIS_rank')
 

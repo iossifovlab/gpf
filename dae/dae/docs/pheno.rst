@@ -8,8 +8,8 @@ Pheno DB access
 
 
 
-Example usage of :ref:`PhenoDB`
--------------------------------
+Example usage of :class:`PhenoDB <dae.pheno.pheno_db.PhenoDB>`
+--------------------------------------------------------------
 
 To access a pheno DB you need to import DAE and use a factory object named
 `pheno`::
@@ -21,8 +21,9 @@ To access a pheno DB you need to import DAE and use a factory object named
 
     In [3]: phdb = pheno.get_pheno_db('agre')
 
-The result of `get_pheno_db` is an instance of :ref:`PhenoDB` class. This is
-the main class that provides access to the phenotype database.
+The result of `get_pheno_db` is an instance of
+:class:`PhenoDB <dae.pheno.pheno_db.PhenoDB>` class. This is the main class
+that provides access to the phenotype database.
 
 
 To access values of given measure use::
