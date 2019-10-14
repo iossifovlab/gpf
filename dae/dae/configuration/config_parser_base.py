@@ -157,7 +157,7 @@ class ConfigParserBase(object):
                          file is readed.
         :type defaults: dict or None
         :return: read and parsed configuration.
-        :rtype: Box
+        :rtype: Box or None
         '''
         if defaults is None:
             defaults = {}
@@ -225,7 +225,7 @@ class ConfigParserBase(object):
                          file is readed.
         :type defaults: dict or None
         :return: read configuration.
-        :rtype: Box
+        :rtype: Box or None
         '''
         if defaults is None:
             defaults = {}
@@ -246,6 +246,42 @@ class ConfigParserBase(object):
 
     @classmethod
     def read_config(cls, config_file, work_dir, defaults=None):
+        '''
+        Read configuration stored in a file. Delimiter used in this
+        configuration file must be ``=``. If :attr:`SECTION` is defined in the
+        read configuration file then it would be checked if the configuration
+        file is enabled.
+
+        :param str config_file: file which contains configuration.
+        :param str work_dir: working directory which will be added as
+                             ``work_dir`` and ``wd`` default values in the
+                             configuration.
+        :param defaults: default values which will be used when configuration
+                         file is readed. If this parameter is dict then it can
+                         define the following properties:
+
+                           * values - this property define dict which would be
+                             added as default values for all of the
+                             configurational sections.
+
+                           * sections - with this property you can define dict
+                             containing default values for particular section
+                             in the configuration.
+
+                           * override - with this property you can define dict
+                             containing values which will be used for
+                             overriding values in the particular section in the
+                             configuration.
+
+                           * conf - with this property you can define
+                             configuration file. Values in the sections of this
+                             configuration are used as default values to the
+                             corresponding section in the read configuration.
+
+        :type defaults: dict or None
+        :return: read configuration.
+        :rtype: dict or None
+        '''
         if defaults is None:
             defaults = {}
 
@@ -293,6 +329,15 @@ class ConfigParserBase(object):
 
     @classmethod
     def parse(cls, config):
+        '''
+        Parse :attr:`SECTION` section from configuration if it is defined else
+        parse all of the sections in the configuration.
+
+        :param config: configuration.
+        :type config: Box or dict
+        :return: parsed configuration.
+        :rtype: Box or dict or None
+        '''
         if not config:
             return None
 
@@ -314,6 +359,19 @@ class ConfigParserBase(object):
 
     @classmethod
     def parse_section(cls, config_section):
+        '''
+        Parse one section from configuration based on the
+        :attr:`SPLIT_STR_LISTS`, :attr:`SPLIT_STR_SETS`, :attr:`CAST_TO_BOOL`,
+        :attr:`CAST_TO_INT`, :attr:`FILTER_SELECTORS` and :attr:`VERIFY_VALUES`
+        class properties. If ``enabled`` property is defined in the
+        configuration section then it would be checked if the configuration
+        section is enabled.
+
+        :param config_section: section from configuration.
+        :type config_section: Box or dict
+        :return: parsed configuration section.
+        :rtype: Box or dict or None
+        '''
         if config_section is None:
             return None
         if not isinstance(config_section, dict):
