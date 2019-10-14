@@ -182,9 +182,9 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'users_api.authentication.SessionAuthenticationWithoutCSRF',
     ),
-    'DEFAULT_RENDERER_CLASSES': (
-        'rest_framework.renderers.JSONRenderer',
-    )
+    # 'DEFAULT_RENDERER_CLASSES': (
+    #     'rest_framework.renderers.JSONRenderer',
+    # )
 }
 
 SESSION_SERIALIZER = 'django.contrib.sessions.serializers.JSONSerializer'

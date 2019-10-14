@@ -11,6 +11,7 @@ import traceback
 
 from dae.pheno import pheno_db
 from dae.pheno_browser.prepare_data import PreparePhenoBrowserBase
+from dae.pheno.utils.config import PhenoRegressionConfigParser
 
 from dae.utils.filehash import sha256sum
 
@@ -128,9 +129,13 @@ USAGE
         if not args.dbfile or not os.path.exists(args.dbfile):
             raise CLIError(
                 "pheno db file name must be specified")
+        
+        regressions = PhenoRegressionConfigParser.\
+            read_and_parse_file_configuration(args.regression, '') \
+            if args.regression else None
 
         build_pheno_browser(
-            args.dbfile, args.pheno_name, args.output, args.regression)
+            args.dbfile, args.pheno_name, args.output, regressions)
 
         return 0
     except KeyboardInterrupt:

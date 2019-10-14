@@ -1,4 +1,5 @@
 import os
+import copy
 
 from dae.studies.people_group_config_parser import PeopleGroupConfigParser
 from dae.studies.genotype_browser_config_parser import \
@@ -67,7 +68,8 @@ class StudyConfigParserBase(ConfigParserBase):
     def _fill_sections_config(cls, config_section, config):
         cls._fill_people_group_config(config_section, config)
         cls._fill_genotype_browser_config(config_section, config)
-
+        config = copy.deepcopy(config)
+        del config[cls.SECTION]
         config_section.study_config = config
 
 
