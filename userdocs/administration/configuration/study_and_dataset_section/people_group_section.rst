@@ -39,6 +39,8 @@ _________________________
 A comma-separated list of selected people groups. If this property is
 missing then all defined people groups in this section are selected.
 
+.. _people_group_selector:
+
 <people group id>.id
 ____________________
 

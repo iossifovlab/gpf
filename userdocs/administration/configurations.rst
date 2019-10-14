@@ -4,6 +4,9 @@ System Configuration
 Common configuration information
 --------------------------------
 
+ConfigParser
+____________
+
 For parsing all of the system configurations we use
 slightly modified version of `ConfigParser <https://docs.python.org/3/library/configparser.html>`_
 which you can find :ref:`here <case_sensitive_config_parser>`. All of the
@@ -12,11 +15,26 @@ configurations follows the general INI format for which you can see more
 In all configuration files you can add ``[DEFAULT]`` section which is supported
 by the ``ConfigParser``.
 
+Interpolation
+_____________
+
 You can use interpolation values when specifying filepaths. You can use for
 this purpose ``work_dir`` and ``wd`` which are added by a parsers to all of the
 configurations as default values for all of the sections. Path of the
 ``work_dir`` and ``wd`` is the same is the path to the directory containing the
 configuration file.
+
+.. _configuration_selectors:
+
+Selectors
+_________
+
+Configuration files may contain nested values whose root name is called a
+"selector" (e.g. sel.val1, sel.val2). Selectors are essentially just nested
+dictionaries. We will refer to the dictionaries nested within as "entries".
+Selectors and their contents are parsed as a Python dictionary. You can see an
+example of a selector in the people group
+configuration :ref:`here <people_group_selector>`.
 
 Common documentation information
 --------------------------------
