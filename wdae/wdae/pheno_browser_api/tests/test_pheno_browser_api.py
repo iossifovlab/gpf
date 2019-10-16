@@ -91,3 +91,23 @@ def test_download_forbidden(user_client):
     assert len(header.keys()) == 1
     assert header['detail'] == \
         'You do not have permission to perform this action.'
+
+
+def test_download_all_instruments(admin_client):
+    url = '{}?dataset_id=quads_f1_ds&instrument='.format(DOWNLOAD_URL)
+    response = admin_client.get(url)
+
+    assert response.status_code == 200
+
+    header = response.content.decode('utf-8').split()[0].split(',')
+
+    assert len(header) == 7
+    assert set(header) == {
+        'person_id',
+        'instrument1.continuous',
+        'instrument1.categorical',
+        'instrument1.ordinal',
+        'instrument1.raw',
+        'instrument2.dummy1',
+        'instrument3.dummy2',
+    }
