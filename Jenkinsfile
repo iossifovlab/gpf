@@ -41,11 +41,13 @@ pipeline {
     }
 
     stage('Clean') {
-      sh '''
-        export PATH=$HOME/anaconda3/envs/gpf3/bin:$PATH
+      steps {
+        sh '''
+          export PATH=$HOME/anaconda3/envs/gpf3/bin:$PATH
 
-        ./jenkins_clean.sh
-      '''
+          ./jenkins_clean.sh
+        '''
+      }
     }
 
     stage('Setup') {
