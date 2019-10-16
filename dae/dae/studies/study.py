@@ -20,8 +20,6 @@ class StudyBase(object):
 
         self.description = self.config.description
 
-        self.study_names = ','.join(study.name for study in self.studies)
-
     def query_variants(self, **kwargs):
         raise NotImplementedError()
 
