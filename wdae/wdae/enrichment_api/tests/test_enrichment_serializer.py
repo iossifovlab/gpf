@@ -6,6 +6,7 @@ from dae.enrichment_tool.event_counters import EnrichmentResult
 pytestmark = pytest.mark.usefixtures('mock_gpf_instance')
 
 
+@pytest.mark.xfail(reason='[gene models] wrong annotation')
 def test_serialize(enrichment_serializer):
     serialize = enrichment_serializer.serialize()
 

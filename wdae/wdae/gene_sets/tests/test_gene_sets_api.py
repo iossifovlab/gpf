@@ -58,6 +58,7 @@ def test_gene_set_download(db, admin_client):
     assert 1 + 1 == count
 
 
+@pytest.mark.xfail(reason='[gene models] wrong annotation')
 def test_gene_set_download_synonymous_recurrent(db, admin_client):
     url = '/api/v3/gene_sets/gene_set_download'
     query = {
@@ -115,6 +116,7 @@ def test_bad_gene_set_collection_not_found(db, admin_client):
     assert status.HTTP_404_NOT_FOUND == response.status_code, repr(response)
 
 
+@pytest.mark.xfail(reason='[gene models] wrong annotation')
 def test_get_gene_set_download_synonymous_autism(db, admin_client):
     url = '/api/v3/gene_sets/gene_set_download'
     query = {
@@ -135,6 +137,7 @@ def test_get_gene_set_download_synonymous_autism(db, admin_client):
     assert 1 + 1 == count
 
 
+@pytest.mark.xfail(reason='[gene models] wrong annotation')
 def test_get_gene_set_download_synonymous_recurrent(db, admin_client):
     url = '/api/v3/gene_sets/gene_set_download'
     query = {
@@ -154,6 +157,7 @@ def test_get_gene_set_download_synonymous_recurrent(db, admin_client):
     assert 1 + 1 == count
 
 
+@pytest.mark.xfail(reason='[gene models] wrong annotation')
 def test_get_gene_set_download_synonymous_triple(db, admin_client):
     url = '/api/v3/gene_sets/gene_set_download'
     query = {
@@ -219,6 +223,7 @@ def test_get_gene_set_collection_empty_query(db, admin_client):
     assert status.HTTP_400_BAD_REQUEST == response.status_code, repr(response)
 
 
+@pytest.mark.xfail(reason='[gene models] wrong annotation')
 def test_gene_sets(db, admin_client):
     url = '/api/v3/gene_sets/gene_sets'
     query = {
