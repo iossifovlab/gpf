@@ -36,14 +36,16 @@ class GeneInfoConfigParser(ConfigParserBase):
     def getGeneTerms(cls, config, gt_id='main', inNS='sym'):
         fl = config.gene_terms[gt_id].file
         gt = loadGeneTerm(fl)
+
         if not inNS:
             return gt
         if gt.geneNS == inNS:
             return gt
         if gt.geneNS == 'id' and inNS == 'sym':
             def rF(x):
-                if x in config.gene_info.genes:
-                    return config.gene_info.genes[x].sym
+                genes = GeneInfoDB.getGenes(config.gene_info)
+                if x in genes:
+                    return genes[x].sym
             gt.renameGenes('sym', rF)
         elif gt.geneNS == 'sym' and inNS == 'id':
             gt.renameGenes(
@@ -66,10 +68,8 @@ class GeneInfoDB(ConfigParserBase):
         if config is None:
             return
 
-        genes, ns_tokens = cls._parseNCBIGeneInfo(config)
-
-        config['genes'] = genes
-        config['nsTokens'] = ns_tokens
+        config['genes'] = None
+        config['nsTokens'] = None
 
         return config
 
@@ -128,13 +128,31 @@ class GeneInfoDB(ConfigParserBase):
             tokens[token] = []
         tokens[token].append(gi)
 
-    @staticmethod
-    def getCleanGeneId(config, ns, t):
-        if ns not in config.nsTokens:
+    @classmethod
+    def getCleanGeneId(cls, config, ns, t):
+        ns_tokens = cls.getNsTokens(config)
+
+        if ns not in ns_tokens:
             return
-        allTokens = config.nsTokens[ns]
+        allTokens = ns_tokens[ns]
         if t not in allTokens:
             return
         if len(allTokens[t]) != 1:
             return
         return allTokens[t][0].id
+
+    @classmethod
+    def getGenes(cls, config):
+        if config.genes is None:
+            genes, ns_tokens = cls._parseNCBIGeneInfo(config)
+            config.genes = genes
+            config.nsTokes = ns_tokens
+        return config.genes
+
+    @classmethod
+    def getNsTokens(cls, config):
+        if config.ns_tokens is None:
+            genes, ns_tokens = cls._parseNCBIGeneInfo(config)
+            config.genes = genes
+            config.nsTokes = ns_tokens
+        return config.ns_tokens
