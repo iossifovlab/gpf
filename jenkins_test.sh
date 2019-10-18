@@ -7,11 +7,11 @@ rm -rf coverage/ && mkdir coverage
 py.test -v \
     --doctest-plus --doctest-rst \
     --junitxml=coverage/doc-junit.xml \
-    userdocs/administration \
-    userdocs/development \
-    userdocs/user_interface \
-    ${DOCKER_SOURCE_DIR}/dae/dae/docs \
-    ${DOCKER_SOURCE_DIR}/wdae/wdae/docs
+    ${DOCUMENTATION_DIR}/userdocs/administration \
+    ${DOCUMENTATION_DIR}/userdocs/development \
+    ${DOCUMENTATION_DIR}/userdocs/user_interface \
+    ${DOCUMENTATION_DIR}/userdocs/development/gpf/dae/dae/docs \
+    ${DOCUMENTATION_DIR}/userdocs/development/gpf/wdae/wdae/docs
 
 chmod a+rwx -R coverage
 
