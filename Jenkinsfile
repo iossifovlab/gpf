@@ -68,7 +68,7 @@ pipeline {
       }
     }
 
-    stage('Setup') {
+    stage('Docker Setup') {
       steps {
         script {
           docker.build(
@@ -83,6 +83,14 @@ pipeline {
       }
     }
 
+    stage('GPF Setup') {
+      steps {
+        sh '''
+          docker run --rm ${DOCKER_PARAMETERS} ${DOCKER_IMAGE} /documentation/jenkins_gpf_setup.sh
+        '''
+      }
+    }
+
     stage('Build') {
       steps {
         sh '''
@@ -90,8 +98,19 @@ pipeline {
         '''
       }
     }
+
+    stage('Test') {
+      steps {
+        sh '''
+          docker run --rm ${DOCKER_PARAMETERS} ${DOCKER_IMAGE} /documentation/jenkins_test.sh
+        '''
+      }
+    }
   }
   post {
+    always {
+      junit 'coverage/doc-junit.xml'
+    }
     success {
       slackSend (
         color: '#00FF00',
