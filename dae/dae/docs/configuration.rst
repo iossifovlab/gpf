@@ -10,20 +10,20 @@ The following example is how to use
 
 .. testcode::
 
-  from dae.configuration.dae_config_parser import DAEConfigParser
+  >>> from dae.configuration.dae_config_parser import DAEConfigParser
 
 .. testsetup::
 
-  import os
+  >>> import os
 
-  def relative_to_this_test_folder(path):
-      return os.path.join(
-          os.environ['DAE_SOURCE_DIR'],
-          'dae/dae/docs',
-          path
-      )
+  >>> def relative_to_this_test_folder(path):
+  ...     return os.path.join(
+  ...         os.environ['DAE_SOURCE_DIR'],
+  ...         'dae/dae/docs',
+  ...         path
+  ...     )
 
-  fixtures_dir = relative_to_this_test_folder('fixtures')
+  >>> fixtures_dir = relative_to_this_test_folder('fixtures')
 
 Content of the config which will be used in this example is:
 
@@ -74,7 +74,9 @@ Read and Parse file configuration
 
 .. testcode::
 
-  config = DAEConfigParser.read_and_parse_file_configuration(work_dir=fixtures_dir)
+  >>> config = DAEConfigParser.read_and_parse_file_configuration(
+  ...     work_dir=fixtures_dir
+  ... )
 
 .. doctest::
 
