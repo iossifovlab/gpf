@@ -11,7 +11,6 @@ py.test -v \
     ${DOCUMENTATION_DIR}/userdocs/development \
     ${DOCUMENTATION_DIR}/userdocs/user_interface \
     ${DOCUMENTATION_DIR}/userdocs/development/gpf/dae/dae/docs \
-    ${DOCUMENTATION_DIR}/userdocs/development/gpf/wdae/wdae/docs
 
 chmod a+rwx -R coverage
 
