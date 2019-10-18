@@ -152,12 +152,13 @@ class PhenoMeasuresDownload(PhenoBrowserBaseView):
 
         instrument = request.query_params.get('instrument', None)
         if not instrument:
-            instruments = list(dataset.pheno_db.instruments.keys())
-            instrument = instruments[0]
-        elif instrument not in dataset.pheno_db.instruments:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+            measure_ids = list(dataset.pheno_db.measures.keys())
+            df = dataset.pheno_db.get_values_df(measure_ids)
+        else:
+            if instrument not in dataset.pheno_db.instruments:
+                return Response(status=status.HTTP_404_NOT_FOUND)
+            df = dataset.pheno_db.get_instrument_values_df(instrument)
 
-        df = dataset.pheno_db.get_instrument_values_df(instrument)
         df_csv = df.to_csv(index=False, encoding="utf-8")
 
         response = HttpResponse(df_csv, content_type='text/csv')
