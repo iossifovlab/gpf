@@ -1,14 +1,14 @@
 <div *ngIf="(userInfo$ | async)?.email as email" class="row justify-content-end dropdown">
   <div class="align-self-center">
     <span class="username-field">{{ email }}</span>
-    <button class="btn btn-sm" (click)="logout()">Logout</button>
+    <button class="btn btn-sm" id="logout-button" (click)="logout()">Logout</button>
   </div>
 </div>
 
 <div *ngIf="!(userInfo$ | async)?.email" class="row justify-content-end dropdown">
   <div>
     <button #dropdownButton (click)="hideDropdown = !hideDropdown"
-      class="btn btn-secondary dropdown-toggle" type="button">
+      class="btn btn-secondary dropdown-toggle" id="login-dropdown-toggle-button" type="button">
       Login
     </button>
     <div #dialog class="open row" [hidden]="hideDropdown">
@@ -32,7 +32,7 @@
         </div>
         <div class="row mt-1">
           <div class="col-12">
-            <button class="btn btn-primary" style="width: 100%" (click)="login()">
+            <button class="btn btn-primary" id="login-button" style="width: 100%" (click)="login()">
               Login
             </button>
           </div>

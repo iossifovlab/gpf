@@ -9,14 +9,14 @@
               ngbDropdownToggle
               class="dataset-selector btn btn-outline-secondary navbar-brand"
               type="button"
-              id="dropdownMenuButton"
+              id="datasets-dropdown-menu-button"
               aria-haspopup="true"
               aria-expanded="false">{{ selectedDataset.name }}
             </button>
             <div
               ngbDropdownMenu
               class="dataset-selector"
-              aria-labelledby="dropdownMenuButton">
+              aria-labelledby="datasets-dropdown-menu-button">
               <a
                 *ngFor="let dataset of (datasets$ | async)"
                 class="dropdown-item"
@@ -48,7 +48,7 @@
     </ul>
   </nav>
 
-  <div *ngIf="registerAlertVisible" class="alert alert-danger" style="margin: 10px">
+  <div *ngIf="registerAlertVisible" class="alert alert-danger" style="margin: 10px" id="permission-denied-prompt">
       <markdown [data]="permissionDeniedPrompt"></markdown>
       <div style="width: 100%; text-align: center;">
           <input class="btn btn-primary" type="button" (click)="location.back()" value="Go back" />
