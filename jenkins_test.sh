@@ -10,8 +10,8 @@ py.test -v \
     userdocs/administration \
     userdocs/development \
     userdocs/user_interface \
-    userdocs/gpf/dae/dae/docs \
-    userdocs/gpf/wdae/wdae/docs
+    ${DOCKER_SOURCE_DIR}/dae/dae/docs \
+    ${DOCKER_SOURCE_DIR}/wdae/wdae/docs
 
 chmod a+rwx -R coverage
 
