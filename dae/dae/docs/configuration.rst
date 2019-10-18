@@ -11,3 +11,11 @@ dae.configuration.config_parser_base - module for parsing configuration
     :members:
     :undoc-members:
     :show-inheritance:
+
+dae.configuration.dae_config_parser - module for parsing :ref:`DAE Configuration <dae_configuration>`
+-----------------------------------------------------------------------------------------------------
+
+.. automodule:: dae.configuration.dae_config_parser
+    :members:
+    :undoc-members:
+    :show-inheritance:

@@ -34,7 +34,8 @@ class CaseSensitiveConfigParser(ConfigParser):
 
 class ConfigParserBase(object):
     '''
-    ConfigParserBase is a base class for all configuration parsers. It can be
+    ConfigParserBase is a base class for all configuration parsers. It is
+    responsible for parsing all of the system configuration. It can be
     inherited by a specific parser or be used alone. It has different kinds of
     methods for reading and parsing configurations. Any class which inherits
     from this parser may use its class properties which are used for parsing
