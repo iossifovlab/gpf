@@ -1,3 +1,5 @@
+.. _dae_configuration:
+
 DAE Configuration
 =================
 
@@ -7,6 +9,12 @@ configuration file and other filesystem paths.
 
 .. note::
   You can use interpolation values when specifying filepaths.
+
+Parser
+------
+
+:class:`DAEConfigParser <dae.configuration.dae_config_parser.DAEConfigParser>`
+is the parser responsible for reading and parsing this configuration file.
 
 Example Configuration
 ---------------------
