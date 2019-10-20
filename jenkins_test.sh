@@ -9,8 +9,7 @@ py.test -v \
     --junitxml=coverage/doc-junit.xml \
     ${DOCUMENTATION_DIR}/userdocs/administration \
     ${DOCUMENTATION_DIR}/userdocs/development \
-    ${DOCUMENTATION_DIR}/userdocs/user_interface \
-    ${DOCUMENTATION_DIR}/userdocs/development/gpf/dae/dae/docs \
+    ${DOCUMENTATION_DIR}/userdocs/user_interface
 
 chmod a+rwx -R coverage
 
