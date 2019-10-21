@@ -15,13 +15,13 @@
         <button
           class="btn btn-sm dropdown-toggle"
           type="button"
-          id="dropdownMenuButton"
+          id="pedigree-dropdown-menu-button"
           data-toggle="dropdown"
           aria-haspopup="true"
           aria-expanded="false">{{ pedigreeState.pedigree?.name }}</button>
         <div
           class="dropdown-menu"
-          aria-labelledby="dropdownMenuButton">
+          aria-labelledby="pedigree-dropdown-menu-button">
           <a
             *ngFor="let pedigree of pedigrees; let i=index"
             class="dropdown-item"
