@@ -1,7 +1,7 @@
 import traceback
 import logging
 
-from dae.gene.gene_info_config import GeneInfoConfigParser
+from dae.gene.gene_info_config import GeneInfoConfigParser, GeneInfoDB
 from dae.gene.gene_term import loadGeneTerm
 
 LOGGER = logging.getLogger(__name__)
@@ -27,8 +27,9 @@ class GeneSetsCollection(object):
 
         if gene_sets_collection.geneNS == 'id':
             def rF(x):
-                if x in self.config.gene_info.genes:
-                    return self.config.gene_info.genes[x].sym
+                genes = GeneInfoDB.getGenes(self.config.gene_info)
+                if x in genes:
+                    return genes[x].sym
             gene_sets_collection.renameGenes("sym", rF)
 
         if gene_sets_collection.geneNS != 'sym':

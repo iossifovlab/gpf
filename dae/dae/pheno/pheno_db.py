@@ -1,8 +1,3 @@
-'''
-Created on Sep 10, 2016
-
-@author: lubo
-'''
 import pandas as pd
 from sqlalchemy.sql import select, text
 from sqlalchemy import not_
@@ -584,7 +579,7 @@ class PhenoDB(object):
             self, instrument_id, person_ids=None, family_ids=None, role=None):
         """
         Returns a dictionary with values for all measures in given
-        instrument (see :ref:`get_values`).
+        instrument (see :func:`get_values`).
         """
         measure_ids = self.get_instrument_measures(instrument_id)
         df = self.get_values_df(measure_ids, person_ids, family_ids, role)

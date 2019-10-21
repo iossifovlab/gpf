@@ -5,6 +5,8 @@ from django.contrib.auth.models import Group
 
 from users_api.models import WdaeUser
 
+from dae.gpf_instance.gpf_instance import GPFInstance
+
 
 @pytest.fixture()
 def user(db):
@@ -65,8 +67,18 @@ def admin_client(admin, client):
     return client
 
 
+@pytest.fixture(scope='session')
+def global_gpf_instance():
+    return GPFInstance()
+
+
+@pytest.fixture(scope='session')
+def default_gene_models(global_gpf_instance):
+    return global_gpf_instance.genomes_db.get_gene_models()
+
+
 @pytest.fixture(scope='function')
-def mock_genomes_db(mocker):
+def mock_genomes_db(mocker, default_gene_models):
     genome = mocker.Mock()
     genome.getSequence = lambda _, start, end: 'A' * (end - start + 1)
 
@@ -84,7 +96,7 @@ def mock_genomes_db(mocker):
     )
     mocker.patch(
         'dae.GenomesDB.GenomesDB.get_gene_models',
-        return_value='Gene Models'
+        return_value=default_gene_models
     )
     mocker.patch(
         'dae.GenomesDB.GenomesDB.get_genome_file',

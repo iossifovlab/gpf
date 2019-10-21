@@ -6,39 +6,129 @@ from dae.configuration.utils import parser_to_dict
 
 
 class VerificationError(Exception):
+    '''
+    Exception to raise when there is some verification problem in the
+    configuration.
+
+    :param str message: message of the exeption
+    :ivar str message: message of the exeption
+    '''
 
     def __init__(self, message):
         self.message = message
 
 
 class CaseSensitiveConfigParser(ConfigParser):
-    """
-    Modified ConfigParser that allows case sensitive options.
-    """
+    '''
+    .. _case_sensitive_config_parser:
+
+    Modified `ConfigParser` that allows case sensitive options.
+    '''
 
     def optionxform(self, option):
-        """
+        '''
         The default implementation returns a lower-case version of options.
-        """
+        '''
         return str(option)
 
 
 class ConfigParserBase(object):
+    '''
+    ConfigParserBase is a base class for all configuration parsers. It is
+    responsible for parsing all of the system configuration. It can be
+    inherited by a specific parser or be used alone. It has different kinds of
+    methods for reading and parsing configurations. Any class which inherits
+    from this parser may use its class properties which are used for parsing
+    different kinds of properties from the configuration. The return value for
+    all of the classmethods for reading a configuration is a Box object. All of
+    its methods are class or static methods.
+    '''
 
     ENABLED_DIR = '.'
+    '''
+    Holds a path, relative to the ``configuration_dir`` parameter, passed in
+    :func:`read_directory_configurations` and
+    :func:`read_and_parse_directory_configurations` functions. This relative
+    path is a directory of the enabled configurations.
+    '''
 
     SECTION = None
+    '''
+    Holds the name of a configuration section which would be parsed by the
+    :func:`parse` function. If it is None, then all of the sections in the
+    configuration will be parsed one by one.
+    '''
 
     SPLIT_STR_LISTS = ()
+    '''
+    Holds a tuple of configuration property names. Each property's value will
+    be converted from a comma-separated string to a list.
+    '''
+
     SPLIT_STR_SETS = ()
+    '''
+    Holds a tuple of configuration property names. Each property's value will
+    be converted from a comma-separated string to a set.
+    '''
+
     CAST_TO_BOOL = ()
+    '''
+    Holds a tuple of configuration property names. Each property's value will
+    be cast from a string (you can find all possible values
+    :ref:`here <allowed_values_booleans>`) to a boolean value.
+    '''
+
     CAST_TO_INT = ()
+    '''
+    Holds a tuple of configuration property names. Each property's value will
+    be cast from a string (which is number) to an integer.
+    '''
+
     FILTER_SELECTORS = {}
+    '''
+    Holds a mapping of configuration property
+    :ref:`selectors <configuration_selectors>` to a list of their entries. All
+    entries of the selectors which are **not** in this list
+    or **not** a valid entry will be ignored. Invalid entries will always be
+    filtered.
+
+    .. note::
+      Each entry which is not filtered will automatically receive an ``id``
+      property if one is not already set. The default value will be the name of
+      the entry.
+    '''
+
     VERIFY_VALUES = {}
+    '''
+    Holds a mapping of configuration property names to functions. The values of
+    the property names will be given as an input to the supplied functions, and
+    the results of these functions will **replace** the original values. The
+    messages of any exceptions that occur during the execution of the functions
+    will be aggregated and displayed as the message of a raised
+    VerificationError exception.
+    '''
 
     @classmethod
     def read_and_parse_directory_configurations(
             cls, configurations_dir, defaults=None, fail_silently=False):
+        '''
+        Read and parse multiple configurations stored in a directory. This
+        method will search recursively in the directory for configurations.
+
+        :param str configuration_dir: directory which contains configurations.
+        :param defaults: default values which will be used when configuration
+                         file is readed.
+        :param bool fail_silently: flag which will indicate if it will be
+                                   raised :exc:`RuntimeError` exception if
+                                   combination of configuration_dir and
+                                   :attr:`ENABLED_DIR` doesn't exists.
+        :type defaults: dict or None
+        :return: list of read and parsed configurations.
+        :rtype: list(Box)
+        :raises RuntimeError: if fail_silently is False and combination of
+                              configuration_dir and :attr:`ENABLED_DIR` doesn't
+                              exists.
+        '''
         if defaults is None:
             defaults = {}
 
@@ -57,6 +147,19 @@ class ConfigParserBase(object):
     @classmethod
     def read_and_parse_file_configuration(
             cls, config_file, work_dir, defaults=None):
+        '''
+        Read and parse configuration stored in a file.
+
+        :param str config_file: file which contains configuration.
+        :param str work_dir: working directory which will be added as
+                             ``work_dir`` and ``wd`` default values in the
+                             configuration.
+        :param defaults: default values which will be used when configuration
+                         file is readed.
+        :type defaults: dict or None
+        :return: read and parsed configuration.
+        :rtype: Box or None
+        '''
         if defaults is None:
             defaults = {}
 
@@ -71,6 +174,24 @@ class ConfigParserBase(object):
     @classmethod
     def read_directory_configurations(
             cls, configurations_dir, defaults=None, fail_silently=False):
+        '''
+        Read multiple configurations stored in a directory. This method will
+        search recursively in the directory for configurations.
+
+        :param str configuration_dir: directory which contains configurations.
+        :param defaults: default values which will be used when configuration
+                         file is readed.
+        :param bool fail_silently: flag which will indicate if it will be
+                                   raised :exc:`RuntimeError` exception if
+                                   combination of configuration_dir and
+                                   :attr:`ENABLED_DIR` doesn't exists.
+        :type defaults: dict or None
+        :return: list of read configurations.
+        :rtype: list(Box)
+        :raises RuntimeError: if fail_silently is False and combination of
+                              configuration_dir and :attr:`ENABLED_DIR` doesn't
+                              exists.
+        '''
         if defaults is None:
             defaults = {}
 
@@ -94,6 +215,19 @@ class ConfigParserBase(object):
 
     @classmethod
     def read_file_configuration(cls, config_file, work_dir, defaults=None):
+        '''
+        Read configuration stored in a file.
+
+        :param str config_file: file which contains configuration.
+        :param str work_dir: working directory which will be added as
+                             ``work_dir`` and ``wd`` default values in the
+                             configuration.
+        :param defaults: default values which will be used when configuration
+                         file is readed.
+        :type defaults: dict or None
+        :return: read configuration.
+        :rtype: Box or None
+        '''
         if defaults is None:
             defaults = {}
 
@@ -113,6 +247,42 @@ class ConfigParserBase(object):
 
     @classmethod
     def read_config(cls, config_file, work_dir, defaults=None):
+        '''
+        Read configuration stored in a file. Delimiter used in this
+        configuration file must be ``=``. If :attr:`SECTION` is defined in the
+        read configuration file then it would be checked if the configuration
+        file is enabled.
+
+        :param str config_file: file which contains configuration.
+        :param str work_dir: working directory which will be added as
+                             ``work_dir`` and ``wd`` default values in the
+                             configuration.
+        :param defaults: default values which will be used when configuration
+                         file is readed. If this parameter is dict then it can
+                         define the following properties:
+
+                           * values - this property define dict which would be
+                             added as default values for all of the
+                             configurational sections.
+
+                           * sections - with this property you can define dict
+                             containing default values for particular section
+                             in the configuration.
+
+                           * override - with this property you can define dict
+                             containing values which will be used for
+                             overriding values in the particular section in the
+                             configuration.
+
+                           * conf - with this property you can define
+                             configuration file. Values in the sections of this
+                             configuration are used as default values to the
+                             corresponding section in the read configuration.
+
+        :type defaults: dict or None
+        :return: read configuration.
+        :rtype: dict or None
+        '''
         if defaults is None:
             defaults = {}
 
@@ -160,6 +330,15 @@ class ConfigParserBase(object):
 
     @classmethod
     def parse(cls, config):
+        '''
+        Parse :attr:`SECTION` section from configuration if it is defined else
+        parse all of the sections in the configuration.
+
+        :param config: configuration.
+        :type config: Box or dict
+        :return: parsed configuration.
+        :rtype: Box or dict or None
+        '''
         if not config:
             return None
 
@@ -181,6 +360,19 @@ class ConfigParserBase(object):
 
     @classmethod
     def parse_section(cls, config_section):
+        '''
+        Parse one section from configuration based on the
+        :attr:`SPLIT_STR_LISTS`, :attr:`SPLIT_STR_SETS`, :attr:`CAST_TO_BOOL`,
+        :attr:`CAST_TO_INT`, :attr:`FILTER_SELECTORS` and :attr:`VERIFY_VALUES`
+        class properties. If ``enabled`` property is defined in the
+        configuration section then it would be checked if the configuration
+        section is enabled.
+
+        :param config_section: section from configuration.
+        :type config_section: Box or dict
+        :return: parsed configuration section.
+        :rtype: Box or dict or None
+        '''
         if config_section is None:
             return None
         if not isinstance(config_section, dict):
