@@ -2,14 +2,20 @@
 
 set -e
 
+cd ${DOCUMENTATION_DIR}/userdocs/gpf/dae && pip install -e . && cd -
+cd ${DOCUMENTATION_DIR}/userdocs/gpf/wdae && pip install -e . && cd -
+
 rm -rf coverage/ && mkdir coverage
 
 py.test -v \
-    --doctest-plus --doctest-rst \
+    --doctest-modules --doctest-plus \
+    --doctest-rst --text-file-format rst \
     --junitxml=coverage/doc-junit.xml \
     ${DOCUMENTATION_DIR}/userdocs/administration \
     ${DOCUMENTATION_DIR}/userdocs/development \
-    ${DOCUMENTATION_DIR}/userdocs/user_interface
+    ${DOCUMENTATION_DIR}/userdocs/user_interface \
+    ${DOCUMENTATION_DIR}/userdocs/gpf/dae/dae/docs \
+    ${DOCUMENTATION_DIR}/userdocs/gpf/wdae/wdae/docs
 
 chmod a+rwx -R coverage
 
