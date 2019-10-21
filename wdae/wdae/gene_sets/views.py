@@ -1,9 +1,12 @@
 import ast
+import json
+import itertools
 from copy import deepcopy
+
 from rest_framework import views, status
 from rest_framework.response import Response
+
 from django.http.response import StreamingHttpResponse
-import itertools
 from django.utils.http import urlencode
 
 from gpf_instance.gpf_instance import get_gpf_instance
@@ -54,6 +57,10 @@ class GeneSetsView(GeneSetsBaseView):
     @staticmethod
     def _build_download_url(query):
         url = 'gene_sets/gene_set_download'
+
+        if query['geneSetsCollection'] == 'denovo':
+            query['geneSetsTypes'] = json.dumps(query['geneSetsTypes'])
+            query['geneSetsTypes'] = query['geneSetsTypes'].replace(' ', '')
         return '{}?{}'.format(url, urlencode(query))
 
     def post(self, request):
