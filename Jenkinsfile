@@ -82,14 +82,6 @@ pipeline {
       }
     }
 
-    stage('GPF Setup') {
-      steps {
-        sh '''
-          docker run --rm ${DOCKER_PARAMETERS} ${DOCKER_IMAGE} /documentation/jenkins_gpf_setup.sh
-        '''
-      }
-    }
-
     stage('Build') {
       steps {
         sh '''
