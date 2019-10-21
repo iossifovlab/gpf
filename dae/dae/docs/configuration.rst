@@ -74,8 +74,12 @@ Read and Parse file configuration
 
 .. testcode::
 
+  >>> os.environ['DAE_IMPALA_HOST'] = 'impala'
+
+.. testcode::
+
   >>> config = DAEConfigParser.read_and_parse_file_configuration(
-  ...     work_dir=fixtures_dir
+  ...     work_dir=fixtures_dir, environment_override=False
   ... )
 
 .. doctest::
