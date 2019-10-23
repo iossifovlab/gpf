@@ -305,7 +305,7 @@ class VariantsDb(object):
                 raise ValueError(
                     "Unknown study: {}, known studies: [{}]".format(
                         dataset_config.studies,
-                        ",".join(self.get_all_study_ids())
+                        ",".join(self.get_datasets_ids())
                     ))
             studies.append(study)
         assert studies
