@@ -21,6 +21,7 @@ class DAEConfigParser(ConfigParserBase):
         'impala.port': '21050',
         'hdfs.base_dir': '/tmp',
         'hdfs.port': '0',
+        'dir':'%(wd)s/studies'
     }
     '''
     Holds a  a mapping of property to a value of this property. This mapping
