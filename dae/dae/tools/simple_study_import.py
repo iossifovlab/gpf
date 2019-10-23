@@ -79,9 +79,12 @@ file_format = impala
 
 def impala_load_study(dae_config, study_id, parquet_directory):
     impala_helpers = ImpalaHelpers(
-        dae_config.impala.host, dae_config.impala.port)
+        dae_config.storage.genotype_impala.impala.host,
+        dae_config.storage.genotype_impala.impala.port
+    )
     hdfs_helpers = HdfsHelpers(
-        dae_config.hdfs.host, dae_config.hdfs.port
+        dae_config.storage.genotype_impala.hdfs.host,
+        dae_config.storage.genotype_impala.hdfs.port
     )
     variant_glob = os.path.join(
         parquet_directory,
@@ -90,7 +93,9 @@ def impala_load_study(dae_config, study_id, parquet_directory):
         parquet_directory,
         "{}_pedigree.parquet".format(study_id))
 
-    hdfs_dirname = os.path.join(dae_config.hdfs.base_dir, study_id)
+    hdfs_dirname = os.path.join(
+        dae_config.storage.genotype_impala.hdfs.base_dir, study_id
+    )
     if not hdfs_helpers.hdfs.exists(hdfs_dirname):
         hdfs_helpers.hdfs.mkdir(hdfs_dirname)
 
@@ -110,7 +115,7 @@ def impala_load_study(dae_config, study_id, parquet_directory):
         pedigree_files.append(hdfs_filename)
         hdfs_helpers.put(pedigree_filename, hdfs_filename)
 
-    dbname = dae_config.impala.db
+    dbname = dae_config.storage.genotype_impala.impala.db
     pedigree_table = "{}_pedigree".format(study_id)
     variant_table = "{}_variant".format(study_id)
     variant_glob = os.path.join(

@@ -250,7 +250,7 @@ class VariantsDb(object):
                     'pedigree': os.path.join(prefix, pedigree_file),
                     'variant': os.path.join(prefix, variant_files),
                 },
-                'db': self.dae_config.impala.db,
+                'db': self.dae_config.storage.genotype_impala.impala.db,
                 'tables': {
                     'pedigree': '{}_pedigree'.format(study_config.id),
                     'variant': '{}_variant'.format(study_config.id),
@@ -261,7 +261,9 @@ class VariantsDb(object):
 
     def _make_impala_connection(self):
         connection = ImpalaHelpers.get_impala(
-            self.dae_config.impala.host, self.dae_config.impala.port)
+            self.dae_config.storage.genotype_impala.impala.host,
+            self.dae_config.storage.genotype_impala.impala.port
+        )
 
         return connection
 

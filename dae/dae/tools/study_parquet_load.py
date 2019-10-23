@@ -63,11 +63,12 @@ def load_study_parquet(
 
     for study_id, parquet_directory in zip(study_ids, parquet_directories):
         print('Loading `{}` study in impala `{}` db'.format(
-            study_id, dae_config.impala.db))
+            study_id, dae_config.storage.genotype_impala.impala.db))
         start = time.time()
         impala_load_study(dae_config, study_id, parquet_directory)
         print("Loaded `{}` study in impala `{}` db for {:.2f} sec".format(
-            study_id, dae_config.impala.db, time.time() - start),
+            study_id, dae_config.storage.genotype_impala.impala.db,
+            time.time() - start),
             file=sys.stderr)
 
 
