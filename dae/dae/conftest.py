@@ -412,7 +412,7 @@ def test_hdfs(request):
 @pytest.fixture(scope='session')
 def test_impala_helpers(request):
     from dae.backends.impala.impala_helpers import ImpalaHelpers
-    helpers = ImpalaHelpers()
+    helpers = ImpalaHelpers(impala_host='127.0.0.1', impala_port=21050)
 
     return helpers
 

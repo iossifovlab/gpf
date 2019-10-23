@@ -5,13 +5,9 @@ from impala import dbapi
 class ImpalaHelpers(object):
 
     @staticmethod
-    def get_impala(impala_host=None, impala_port=None):
-        if impala_host is None:
-            impala_host = "127.0.0.1"
-        impala_host = os.getenv("DAE_IMPALA_HOST", impala_host)
-        if impala_port is None:
-            impala_port = 21050
-        impala_port = int(os.getenv("DAE_IMPALA_PORT", impala_port))
+    def get_impala(impala_host, impala_port):
+        assert impala_host
+        assert impala_port
 
         impala_connection = dbapi.connect(
             host=impala_host,

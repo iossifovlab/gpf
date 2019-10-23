@@ -13,7 +13,7 @@ def test_hdfs_helpers():
 
 def test_impala_connection_simple():
 
-    with ImpalaHelpers.get_impala() as conn:
+    with ImpalaHelpers.get_impala('127.0.0.1', 21050) as conn:
         assert conn is not None
 
 
