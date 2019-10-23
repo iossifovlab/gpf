@@ -16,14 +16,19 @@ class DAEConfigParser(ConfigParserBase):
         'port',
     )
 
+    DEFAULT_VALUES = {
+        'impala.db': 'gpf_variant_db',
+        'impala.port': '21050',
+        'hdfs.base_dir': '/tmp',
+        'hdfs.port': '0',
+    }
+    '''
+    Holds a  a mapping of property to a value of this property. This mapping
+    will be used as default values for the configuration sections.
+    '''
+
     DEFAULT_SECTION_VALUES = {
-        'Impala': {
-            'db': 'gpf_variant_db',
-            'port': '21050'
-        }, 'HDFS': {
-            'baseDir': '/tmp',
-            'port': '0'
-        }, 'gpfjs': {
+        'gpfjs': {
             'permissionDeniedPrompt': ('This is a default permission denied'
                                        ' prompt. Please log in or register.')
         },
@@ -34,32 +39,36 @@ class DAEConfigParser(ConfigParserBase):
     for the configuration sections.
     '''
 
+    FILTER_SELECTORS = {
+        'storage': None,
+    }
+
     @staticmethod
     def _get_environment_override_values():
-        impala_db = os.environ.get('DAE_IMPALA_DB', None)
-        impala_host = os.environ.get('DAE_IMPALA_HOST', None)
-        impala_port = os.environ.get('DAE_IMPALA_PORT', None)
-        hdfs_host = os.environ.get('DAE_HDFS_HOST', None)
-        hdfs_port = os.environ.get('DAE_HDFS_PORT', None)
+        # impala_db = os.environ.get('DAE_IMPALA_DB', None)
+        # impala_host = os.environ.get('DAE_IMPALA_HOST', None)
+        # impala_port = os.environ.get('DAE_IMPALA_PORT', None)
+        # hdfs_host = os.environ.get('DAE_HDFS_HOST', None)
+        # hdfs_port = os.environ.get('DAE_HDFS_PORT', None)
         genomic_scores_hg19 = os.environ.get('DAE_GENOMIC_SCORES_HG19', None)
         genomic_scores_hg38 = os.environ.get('DAE_GENOMIC_SCORES_HG38', None)
 
         environment_override = {}
-        if impala_db or impala_host or impala_port:
-            environment_override['Impala'] = {}
-            if impala_db:
-                environment_override['Impala']['db'] = impala_db
-            if impala_host:
-                environment_override['Impala']['host'] = impala_host
-            if impala_port:
-                environment_override['Impala']['port'] = impala_port
+        # if impala_db or impala_host or impala_port:
+        #     environment_override['Impala'] = {}
+        #     if impala_db:
+        #         environment_override['Impala']['db'] = impala_db
+        #     if impala_host:
+        #         environment_override['Impala']['host'] = impala_host
+        #     if impala_port:
+        #         environment_override['Impala']['port'] = impala_port
 
-        if hdfs_host or hdfs_port:
-            environment_override['HDFS'] = {}
-            if hdfs_host:
-                environment_override['HDFS']['host'] = hdfs_host
-            if hdfs_port:
-                environment_override['HDFS']['port'] = hdfs_port
+        # if hdfs_host or hdfs_port:
+        #     environment_override['HDFS'] = {}
+        #     if hdfs_host:
+        #         environment_override['HDFS']['host'] = hdfs_host
+        #     if hdfs_port:
+        #         environment_override['HDFS']['port'] = hdfs_port
 
         if genomic_scores_hg19 or genomic_scores_hg38:
             environment_override['genomicScoresDB'] = {}
@@ -82,6 +91,11 @@ class DAEConfigParser(ConfigParserBase):
             default_override = defaults.get('override', {})
             override.update(default_override)
             defaults['override'] = override
+
+        values = cls.DEFAULT_VALUES
+        default_values = defaults.get('values', {})
+        values.update(default_values)
+        defaults['values'] = values
 
         sections = cls.DEFAULT_SECTION_VALUES
         default_sections = defaults.get('sections', {})

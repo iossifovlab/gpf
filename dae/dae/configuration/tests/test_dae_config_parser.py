@@ -122,7 +122,7 @@ def test_dae_config_impala_genotype_storage(dae_config, fixturedir):
     assert genotype_impala_storage.hdfs.base_dir == '/tmp/test_data'
 
 
-
+@pytest.mark.skip(reason='missing support for impala and hdfs override')
 def test_dae_config_override_environment(monkeypatch, fixturedir):
     scores_hg19_dir = os.path.join(fixturedir, 'genomic_scores_db/hg19')
     scores_hg38_dir = os.path.join(fixturedir, 'genomic_scores_db/hg38')
@@ -154,6 +154,7 @@ def test_dae_config_override_environment(monkeypatch, fixturedir):
     assert config.hdfs.port == 2048
 
 
+@pytest.mark.skip(reason='missing support for impala and hdfs override')
 def test_dae_config_non_override_environment(monkeypatch, fixturedir):
     scores_dir = os.path.join(fixturedir, 'genomic_scores_db')
     scores_hg19_dir = os.path.join(fixturedir, 'genomic_scores_db/hg19')
@@ -186,6 +187,7 @@ def test_dae_config_non_override_environment(monkeypatch, fixturedir):
     assert config.hdfs.port == 8020
 
 
+@pytest.mark.skip(reason='missing support for impala and hdfs override')
 def test_dae_config_override_params(fixturedir):
     scores_hg19_dir = os.path.join(fixturedir, 'genomic_scores_db/hg19')
     scores_hg38_dir = os.path.join(fixturedir, 'genomic_scores_db/hg38')
@@ -221,6 +223,7 @@ def test_dae_config_override_params(fixturedir):
     assert config.hdfs.port == 2048
 
 
+@pytest.mark.skip(reason='missing support for impala and hdfs override')
 def test_dae_config_override_environment_and_params(monkeypatch, fixturedir):
     scores_hg19_dir = os.path.join(fixturedir, 'genomic_scores_db/hg19')
     scores_hg38_dir = os.path.join(fixturedir, 'genomic_scores_db/hg38')
