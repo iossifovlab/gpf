@@ -94,8 +94,6 @@ class StudyConfigParser(StudyConfigParserBase):
         if config is None:
             return None
 
-        cls.make_prefix_absolute_path(config)
-
         config.authorizedGroups = config.get(
             'authorizedGroups', [config.get('id', '')])
 
@@ -116,11 +114,3 @@ class StudyConfigParser(StudyConfigParserBase):
         assert 'hasTransmitted' in config
 
         return config
-
-    @staticmethod
-    def make_prefix_absolute_path(config):
-        if not os.path.isabs(config.prefix):
-            config_filename = config.study_config.config_file
-            dirname = os.path.dirname(config_filename)
-            config.prefix = os.path.abspath(
-                os.path.join(dirname, config.prefix))

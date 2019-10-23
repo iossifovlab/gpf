@@ -58,7 +58,10 @@ def load_study_parquet(
             study_ids.append(study_id)
 
             parquet_directory = os.path.join(
-                study_config.work_dir, study_config.id, 'parquet')
+                dae_config.storage.genotype_impala.dir,
+                study_config.id,
+                'data'
+            )
             parquet_directories.append(parquet_directory)
 
     for study_id, parquet_directory in zip(study_ids, parquet_directories):
