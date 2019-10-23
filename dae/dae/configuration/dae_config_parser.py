@@ -148,8 +148,13 @@ class DAEConfigParser(ConfigParserBase):
         :rtype: Box or dict or None
         '''
         config = super(DAEConfigParser, cls).parse(config)
+        config = super(DAEConfigParser, cls).parse_section(config)
 
         assert config is not None
+
+        for storage in config.get('storage', {}).keys():
+            config.storage[storage] = \
+                super(DAEConfigParser, cls).parse(config.storage[storage])
 
         if config.genomic_scores_db and \
                 config.genomic_scores_db.scores_hg19_dir:
