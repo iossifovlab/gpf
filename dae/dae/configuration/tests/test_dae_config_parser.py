@@ -98,8 +98,9 @@ def test_dae_config_annotation_defaults(fixturedir, dae_config):
 def test_dae_config_genotype_storage(dae_config):
     assert dae_config is not None
 
-    assert len(dae_config.storage) == 1
-    assert list(dae_config.storage.keys()) == ['genotype_impala']
+    assert len(dae_config.storage) == 2
+    assert list(dae_config.storage.keys()) == \
+        ['genotype_impala', 'genotype_filesystem']
 
 
 def test_dae_config_impala_genotype_storage(dae_config, fixturedir):
@@ -120,6 +121,18 @@ def test_dae_config_impala_genotype_storage(dae_config, fixturedir):
     assert genotype_impala_storage.hdfs.host == 'localhost'
     assert genotype_impala_storage.hdfs.port == 8020
     assert genotype_impala_storage.hdfs.base_dir == '/tmp/test_data'
+
+
+def test_dae_config_filesystem_genotype_storage(dae_config, fixturedir):
+    assert dae_config is not None
+
+    assert dae_config.dae_data_dir == fixturedir
+
+    genotype_filesystem_storage = dae_config.storage.genotype_filesystem
+
+    assert genotype_filesystem_storage.id == 'genotype_filesystem'
+    assert genotype_filesystem_storage.type == 'filesystem'
+    assert genotype_filesystem_storage.dir == '/tmp/test_data'
 
 
 @pytest.mark.skip(reason='missing support for impala and hdfs override')
