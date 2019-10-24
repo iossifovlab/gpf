@@ -7,8 +7,6 @@ from dae.studies.dataset_config_parser import DatasetConfigParser
 
 class VariantsDb(object):
 
-    FILE_FORMATS = set(['vcf', 'impala'])
-
     def __init__(
             self, dae_config, pheno_factory, weights_factory, genomes_db,
             genotype_storage_factory):
@@ -231,15 +229,18 @@ class VariantsDb(object):
         if study_config is None:
             return None
 
-        if study_config.file_format not in self.FILE_FORMATS:
-            raise ValueError(
-                "Unknown study format: {}\nKnown ones: {}"
-                .format(
-                    study_config.file_format, self.FILE_FORMATS)
-            )
-
         genotype_storage = self.genotype_storage_factory. \
             get_genotype_storage(study_config.genotype_storage)
+
+        if genotype_storage is None:
+            raise ValueError(
+                "Unknown genotype storage: {}\nKnown ones: {}"
+                .format(
+                    study_config.genotype_storage,
+                    self.genotype_storage_factory.get_genotype_storage_ids()
+                )
+            )
+
         variants = genotype_storage.get_backend(
             study_config, self.genomes_db
         )

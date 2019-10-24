@@ -105,7 +105,7 @@ class StudyConfigParser(StudyConfigParserBase):
         assert config.name
         assert config.prefix
         # assert config.pedigree_file
-        assert config.file_format
+        assert config.genotype_storage
         assert config.work_dir
         assert 'studyType' in config
         assert 'hasComplex' in config
