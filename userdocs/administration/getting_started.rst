@@ -286,10 +286,14 @@ variants ``comp.tsv``. This example data can be found inside
 
 To import this data as a study into the GPF instance:
 
-* go into `studies` directory of the GPF instance data folder::
+* download ``comp`` demo study and extract the download archive::
 
-    cd $DAE_DB_DIR/studies/comp
+    wget -c https://iossifovlab.com/distribution/public/studies/comp-latest.tar.gz
+    tar zxvf comp-latest.tar.gz
 
+* enter into the create directory ``comp``::
+
+    cd comp
 
 * run ``simple_study_import.py`` to import the VCF variants; this command uses
   three arguments - study ID to use, pedigree file name and VCF file name::
