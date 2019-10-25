@@ -6,7 +6,9 @@ Dataset Section
 The configuration section for a dataset follows the general INI format. Its
 name must be ``dataset`` - this will indicate that it is a dataset
 configuration section. This configuration section must properly describe one
-dataset. This is a required section.
+dataset. Either this section or the `ref:<study study_section>` section
+must be present in the config file.
+
 
 Example Configuration
 ---------------------
@@ -48,7 +50,7 @@ ____
 
   name = <dataset name>
 
-Name which will be used as display name for the dataset. Default value for it
+Name which will be used as a display name for the dataset. The default value
 is the value of the ``id`` property from the dataset.
 
 id
@@ -67,8 +69,8 @@ _______
 
   studies = <comma-separated list of study ids>
 
-This property defines which are the studies in the dataset. Format of it is
-comma-separated list of study ids. You can see study section configuration
+This property defines which studies are in the dataset. It's format is a
+comma-separated list of study ids. You can see the study section configuration
 :ref:`here <study_section>`.
 
 description
@@ -78,9 +80,9 @@ ___________
 
   description = <study description>
 
-This property shows if ``Dataset Description`` tab is enabled for the dataset.
-It can contain description as a string in markdown format or as a absolute or
-relative path to file in markdown format. You can see more about
+This property shows if the ``Dataset Description`` tab is enabled for the
+dataset.  It can contain a description as a string in markdown format or as an
+absolute or relative path to a markdown file. You can see more about the
 ``Dataset Description`` tab :ref:`here <dataset_description_ui>`.
 
 authorizedGroups
@@ -90,9 +92,9 @@ ________________
 
   authorizedGroups = <comma-separated list of user groups>
 
-This property defines comma-separated list of user groups which are authorized
-to access the dataset. It has default value if it is defined in
-all of the dataset's defined studies and its value is a set of the the studies'
+This property defines a comma-separated list of user groups which are authorized
+to access the dataset. It has a default value if and only if all of the defined
+studies have this property. Its default value is a set of the the studies'
 :ref:`authorizedGroups <study_section_authorized_groups>` properties. You can
 more about groups :ref:`here <user_dataset_groups>`.
 
@@ -103,8 +105,8 @@ _______
 
   phenoDB = <pheno db name>
 
-The corresponding :ref:`pheno DB <pheno_db>` for the dataset. It must be valid
-pheno DB id.
+The corresponding :ref:`pheno DB <pheno_db>` for the dataset. It must be a
+valid pheno DB id.
 
 hasDenovo
 _________

@@ -5,8 +5,9 @@ Study Section
 
 The configuration section for a study follows the general INI format. Its name
 must be ``study`` - this will indicate that it is a study configuration
-section. This configuration section must properly describe one study. This is a
-required section.
+section. This configuration section must properly describe one study.
+Either this section or the `ref:<dataset dataset_section>` section must
+be present in the config file.
 
 Example Configuration
 ---------------------
