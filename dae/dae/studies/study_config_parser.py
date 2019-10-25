@@ -103,7 +103,6 @@ class StudyConfigParser(StudyConfigParserBase):
             {config.study_type} if config.get('studyType', None) else set()
 
         assert config.name
-        assert config.prefix
         # assert config.pedigree_file
         assert config.genotype_storage
         assert config.work_dir
