@@ -10,6 +10,11 @@ class GenotypeStorageFactory:
 
         self._genotype_storage_cache = {}
 
+    def get_default_genotype_storage(self):
+        default_genotype_storage_id = \
+            self.dae_config.get('genotype_storage', {}).get('default', None)
+        return self.get_genotype_storage(default_genotype_storage_id)
+
     def get_genotype_storage(self, genotype_storage_id):
         self._load_genotype_storage({genotype_storage_id})
 
@@ -20,7 +25,6 @@ class GenotypeStorageFactory:
 
     def get_genotype_storage_ids(self):
         return list(self.dae_config.get('storage', {}).keys())
-
 
     def _load_genotype_storage(self, genotype_storage_ids=None):
         if genotype_storage_ids is None:

@@ -135,6 +135,12 @@ def test_dae_config_filesystem_genotype_storage(dae_config, fixturedir):
     assert genotype_filesystem_storage.dir == '/tmp/test_data'
 
 
+def test_dae_config_default_genotype_storage(dae_config, fixturedir):
+    assert dae_config is not None
+
+    assert dae_config.genotype_storage.default == 'genotype_filesystem'
+
+
 @pytest.mark.skip(reason='missing support for impala and hdfs override')
 def test_dae_config_override_environment(monkeypatch, fixturedir):
     scores_hg19_dir = os.path.join(fixturedir, 'genomic_scores_db/hg19')

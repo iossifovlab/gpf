@@ -27,6 +27,13 @@ def test_get_genotype_storage_filesystem(genotype_storage_factory):
     assert genotype_filesystem.storage_config.id == 'genotype_filesystem'
 
 
+def test_get_default_genotype_storage(genotype_storage_factory):
+    genotype_storage = genotype_storage_factory.get_default_genotype_storage()
+
+    assert isinstance(genotype_storage, FilesystemGenotypeStorage)
+    assert genotype_storage.storage_config.id == 'genotype_filesystem'
+
+
 def test_get_genotype_storage_missing(genotype_storage_factory):
     genotype_missing = \
         genotype_storage_factory.get_genotype_storage('genotype_missing')
