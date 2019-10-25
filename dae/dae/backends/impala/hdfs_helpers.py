@@ -7,19 +7,14 @@ import pyarrow as pa
 class HdfsHelpers(object):
 
     def __init__(self, hdfs_host, hdfs_port):
-
-        self.host = hdfs_host
-        self.port = hdfs_port
-        self.hdfs = pa.hdfs.connect(host=self.host, port=self.port)
-
-    @staticmethod
-    def get_hdfs(hdfs_host, hdfs_port):
         assert hdfs_host
         assert hdfs_port
 
         print("hdfs connecting to:", hdfs_host, hdfs_port)
 
-        return HdfsHelpers(hdfs_host, hdfs_port)
+        self.host = hdfs_host
+        self.port = hdfs_port
+        self.hdfs = pa.hdfs.connect(host=self.host, port=self.port)
 
     def exists(self, path):
         return self.hdfs.exists(path)

@@ -1,11 +1,10 @@
-import os
 from impala import dbapi
 
 
 class ImpalaHelpers(object):
 
     @staticmethod
-    def get_impala(impala_host, impala_port):
+    def create_impala_connection(impala_host, impala_port):
         assert impala_host
         assert impala_port
 
@@ -21,7 +20,9 @@ class ImpalaHelpers(object):
             assert impala_host
             assert impala_port
 
-            impala_connection = self.get_impala(impala_host, impala_port)
+            impala_connection = self.create_impala_connection(
+                impala_host, impala_port
+            )
         self.connection = impala_connection
 
     def import_variants(self, config):

@@ -405,7 +405,7 @@ def reimport(request):
 @pytest.fixture(scope='session')
 def test_hdfs(request):
     from dae.backends.impala.hdfs_helpers import HdfsHelpers
-    hdfs = HdfsHelpers.get_hdfs('127.0.0.1', 8020)
+    hdfs = HdfsHelpers('127.0.0.1', 8020)
     return hdfs
 
 
