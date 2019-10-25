@@ -13,14 +13,9 @@ class HdfsHelpers(object):
         self.hdfs = pa.hdfs.connect(host=self.host, port=self.port)
 
     @staticmethod
-    def get_hdfs(hdfs_host=None, hdfs_port=None):
-
-        if hdfs_host is None:
-            hdfs_host = "127.0.0.1"
-        hdfs_host = os.getenv("DAE_HDFS_HOST", hdfs_host)
-        if hdfs_port is None:
-            hdfs_port = 8020
-        hdfs_port = int(os.getenv("DAE_HDFS_PORT", hdfs_port))
+    def get_hdfs(hdfs_host, hdfs_port):
+        assert hdfs_host
+        assert hdfs_port
 
         print("hdfs connecting to:", hdfs_host, hdfs_port)
 

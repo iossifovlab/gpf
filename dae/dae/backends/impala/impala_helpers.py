@@ -18,6 +18,9 @@ class ImpalaHelpers(object):
     def __init__(
             self, impala_host=None, impala_port=None, impala_connection=None):
         if impala_connection is None:
+            assert impala_host
+            assert impala_port
+
             impala_connection = self.get_impala(impala_host, impala_port)
         self.connection = impala_connection
 
