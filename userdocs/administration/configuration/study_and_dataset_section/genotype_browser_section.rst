@@ -140,7 +140,7 @@ ________________
 
   hasFamilyFilters = <boolean>
 
-This property determines if the ``Studies`` filter block is present in the
+This property determines if the ``Family`` filter block is present in the
 ``Genotype Browser`` and ``Phenotype Tool`` for the study. This property takes
 a :ref:`boolean <allowed_values_booleans>` value.
 
@@ -153,8 +153,8 @@ ________________
 
 This property determines if the ``Present in Role`` filter is present in the
 ``Genotype Browser`` for the study. This property takes
-a :ref:`boolean <allowed_values_booleans>` value. You see configuration of
-``Present in Role`` :ref:`here <present_in_role_property>`.
+a :ref:`boolean <allowed_values_booleans>` value. You can see the configuration
+of ``Present in Role`` :ref:`here <present_in_role_property>`.
 
 hasPresentInChild
 _________________
@@ -187,7 +187,9 @@ ___________________
 
 This property determines if the ``Pedigree Selector`` filter is present in the
 ``Genotype Browser`` for the study. This property takes a
-:ref:`boolean <allowed_values_booleans>` value.
+:ref:`boolean <allowed_values_booleans>` value. The ``Pedigree Selector``
+filter presents the configured people groups and their values as options to
+filter variants by.
 
 hasGraphicalPreview
 ___________________
@@ -219,7 +221,7 @@ ___________________________________
   selectedInheritanceTypeFilterValues = <comma-separated list of inheritance types>
 
 This is a list of inheritance type filters that will be selected by default on
-a study/dataset's page in the ``Genotype Browser``. Note that these values must
+a study's page in the ``Genotype Browser``. Note that these values must
 be present in the ``inheritanceTypeFilter`` property. You can see the available
 values :ref:`here <allowed_values_inheritance>`.
 
@@ -312,8 +314,8 @@ ________________________________________
 
   presentInRole.<present in role id>.roles = <comma-separated list of roles>
 
-This property defines which roles to present in the ``Present in Role`` filter
-in the ``Genotype Browser`` for the study.
+This property defines which roles are available to the ``Present in Role``
+filter in the ``Genotype Browser`` for the study.
 
 selectedGenotypeColumnValues
 ____________________________
@@ -414,10 +416,10 @@ _________________________________
 Slots of the phenotype column in the header of the preview table in the
 ``Genotype Browser`` for the study. Each slot is defined by:
 
-  * ``<role>`` - phenotype role.
+  * ``<role>`` - apply the filter for people with this role.
 
-  * ``<source>`` - source to be used when appending phenotype value to the
-    variant.
+  * ``<source>`` - the id of the phenotype measure whose values will be
+    displayed.
 
   * ``<label>`` - display name of this slot.
 
