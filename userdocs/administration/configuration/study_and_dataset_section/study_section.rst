@@ -70,9 +70,9 @@ ___________
 
   description = <study description>
 
-This property shows if ``Dataset Description`` tab is enabled for the study. It
-can contain description as a string in markdown format or as a absolute or
-relative path to file in markdown format. You can see more about
+This property shows if the ``Dataset Description`` tab is enabled for the
+study. It can contain a description as a string in markdown format or as an
+absolute or relative path to a markdown file. You can see more about the
 ``Dataset Description`` tab :ref:`here <dataset_description_ui>`.
 
 prefix
@@ -82,22 +82,22 @@ ______
 
   prefix = <directory of data>
 
-This property shows the location of the directory with study data files. It can
-be absolute path or relative. If it is relative path it must be relative to the
-directory contains study configuration file.
+This property shows the location of the directory that contains the study's
+data files. It can be an absolute or relative path. If it is a relative path,
+it must be relative to the directory containing the study's configuration file.
 
 file_format
 ___________
 
 .. code-block:: ini
 
-  file_format = <study data file format - vcf / impala>
+  file_format = <vcf / impala>
 
-This property shows file format of the study data files. Supported formats are
-``impala`` and ``vcf``. In the ``impala`` format files are querying with the
-help of ``Apache Impala`` and the expected file format is ``Apache Parquet``.
-On the other hand if it is choosed ``vcf`` file format files are expected to be
-valid ``tsv`` files which to be in the ``vcf`` format. Querying in ``vcf`` file
+This property shows the file format of the study data files. Supported formats
+are ``impala`` and ``vcf``. In the ``impala`` format, files are queried with
+the help of ``Apache Impala`` and the expected file format is ``Apache
+Parquet``.  On the other hand, if ``vcf`` is the chosen file format, files are
+expected to be valid ``tsv`` files in the VCF format. Querying in the VCF file
 format is implemented with the help of ``pandas``.
 
 .. _study_section_authorized_groups:
@@ -109,8 +109,8 @@ ________________
 
   authorizedGroups = <comma-separated list of user groups>
 
-This property defines comma-separated list of user groups which are authorized
-to access the study. You can more about groups
+This property defines a comma-separated list of user groups which are
+authorized to access the study. You can see more about user groups
 :ref:`here <user_dataset_groups>`.
 
 phenoDB
@@ -120,7 +120,7 @@ _______
 
   phenoDB = <pheno db name>
 
-The corresponding :ref:`pheno DB <pheno_db>` for the study. It must be valid
+The corresponding :ref:`pheno DB <pheno_db>` for the study. It must be a valid
 pheno DB id.
 
 studyType
@@ -128,7 +128,7 @@ _________
 
 .. code-block:: ini
 
-  studyType = <study type WE / WG / TG>
+  studyType = <WE / WG / TG>
 
 This property gives the type of the study. Possible types are:
 
@@ -143,10 +143,9 @@ ____
 
 .. code-block:: ini
 
-  year = <year in YYYY format>
+  year = <YYYY>
 
-This property store release year of the study. Format of this property is
-number in the YYYY format.
+This property specifies the release year of the study.
 
 pubMed
 ______
@@ -155,8 +154,9 @@ ______
 
   pubMed = <id of PubMed article>
 
-This property contains id of an article from PubMed assosiated with the study.
-You can see more about PubMed in there site - https://www.ncbi.nlm.nih.gov/pubmed/.
+This property contains the id of an article from PubMed associated with the
+study. You can see more about PubMed on their website -
+https://www.ncbi.nlm.nih.gov/pubmed/.
 
 .. _study_section_has_denovo:
 
@@ -171,8 +171,9 @@ _________
 
   hasDenovo = <boolean>
 
-This property shows if the study contains variants with ``denovo`` inheritance.
-This property takes a :ref:`boolean <allowed_values_booleans>` value.
+This property specifies if the study contains variants with ``denovo``
+inheritance. This property takes a :ref:`boolean <allowed_values_booleans>`
+value.
 
 .. _study_section_has_transmitted:
 
@@ -187,9 +188,9 @@ ______________
 
   hasTransmitted = <boolean>
 
-This property shows if the study contains variants with ``transmitted``
-inheritance. This property takes a :ref:`boolean <allowed_values_booleans>`
-value.
+This property specifies if the study contains variants with ``transmitted``
+type inheritance.
+This property takes a :ref:`boolean <allowed_values_booleans>` value.
 
 .. _study_section_has_complex:
 
@@ -204,7 +205,7 @@ __________
 
   hasComplex = <boolean>
 
-This property shows if the study contains variants with ``complex`` variant
+This property specifies if the study contains variants with ``complex`` variant
 type. This property takes a :ref:`boolean <allowed_values_booleans>` value.
 
 .. _study_section_has_CNV:
@@ -233,8 +234,8 @@ ____________
 
   commonReport = <boolean>
 
-This property shows if ``Dataset Statistics`` tab is enabled for the study. You
-can see more about ``Dataset Statistics`` tab
+This property specifies if the ``Dataset Statistics`` tab is enabled for the
+study. You can see more about the ``Dataset Statistics`` tab
 :ref:`here <dataset_statistics_ui>`. This property takes a
 :ref:`boolean <allowed_values_booleans>` value.
 
@@ -247,8 +248,9 @@ _______________
 
   genotypeBrowser = <boolean>
 
-This property shows if ``Genotype Browser`` tab is enabled for the study. You
-can see more about ``Genotype Browser`` tab :ref:`here <genotype_browser_ui>`.
+This property specifies if the ``Genotype Browser`` tab is enabled for the
+study. You can see more about the ``Genotype Browser`` tab
+:ref:`here <genotype_browser_ui>`.
 This property takes a :ref:`boolean <allowed_values_booleans>` value.
 
 .. _study_section_phenotype_browser:
@@ -260,8 +262,8 @@ ________________
 
   phenotypeBrowser = <boolean>
 
-This property shows if ``Phenotype Browser`` tab is enabled for the study. You
-can see more about ``Phenotype Browser`` tab
+This property specifies if the ``Phenotype Browser`` tab is enabled for the
+study. You can see more about the ``Phenotype Browser`` tab
 :ref:`here <phenotype_browser_ui>`. This property takes a
 :ref:`boolean <allowed_values_booleans>` value.
 
@@ -274,9 +276,10 @@ ______________
 
   enrichmentTool = <boolean>
 
-This property shows if ``Enrichment Tool`` tab is enabled for the study. You
-can see more about ``Enrichment Tool`` tab :ref:`here <enrichment_tool_ui>`.
-This property takes a :ref:`boolean <allowed_values_booleans>` value.
+This property specifies if the ``Enrichment Tool`` tab is enabled for the study.
+You can see more about the ``Enrichment Tool``
+tab :ref:`here <enrichment_tool_ui>`. This property takes a
+:ref:`boolean <allowed_values_booleans>` value.
 
 .. _study_section_phenotype_tool:
 
@@ -287,8 +290,9 @@ _____________
 
   phenotypeTool = <boolean>
 
-This property shows if ``Phenotype Tool`` tab is enabled for the study. You
-can see more about ``Phenotype Tool`` tab :ref:`here <phenotype_tool_ui>`.
+This property specifies if the ``Phenotype Tool`` tab is enabled for the study.
+You can see more about the ``Phenotype Tool``
+tab :ref:`here <phenotype_tool_ui>`.
 This property takes a :ref:`boolean <allowed_values_booleans>` value.
 
 enabled
