@@ -24,8 +24,6 @@ Example Configuration
   file_format = vcf
   description = %(work_dir)s/data/description.md
 
-  authorizedGroups = any_user
-
   studyType = WE
   year = 2019
 
@@ -100,19 +98,6 @@ the help of ``Apache Impala`` and the expected file format is ``Apache
 Parquet``.  On the other hand, if ``vcf`` is the chosen file format, files are
 expected to be valid ``tsv`` files in the VCF format. Querying in the VCF file
 format is implemented with the help of ``pandas``.
-
-.. _study_section_authorized_groups:
-
-authorizedGroups
-________________
-
-.. code-block:: ini
-
-  authorizedGroups = <comma-separated list of user groups>
-
-This property defines a comma-separated list of user groups which are
-authorized to access the study. You can see more about user groups
-:ref:`here <user_dataset_groups>`.
 
 phenoDB
 _______

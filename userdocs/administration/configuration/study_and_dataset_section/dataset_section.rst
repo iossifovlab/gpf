@@ -25,8 +25,6 @@ Example Configuration
 
   description = %(work_dir)s/data/description.md
 
-  authorizedGroups = any_user
-
   hasDenovo = yes
   hasTransmitted = no
   hasComplex = no
@@ -84,19 +82,6 @@ This property shows if the ``Dataset Description`` tab is enabled for the
 dataset.  It can contain a description as a string in markdown format or as an
 absolute or relative path to a markdown file. You can see more about the
 ``Dataset Description`` tab :ref:`here <dataset_description_ui>`.
-
-authorizedGroups
-________________
-
-.. code-block:: ini
-
-  authorizedGroups = <comma-separated list of user groups>
-
-This property defines a comma-separated list of user groups which are authorized
-to access the dataset. It has a default value if and only if all of the defined
-studies have this property. Its default value is a set of the the studies'
-:ref:`authorizedGroups <study_section_authorized_groups>` properties. You can
-more about groups :ref:`here <user_dataset_groups>`.
 
 phenoDB
 _______
