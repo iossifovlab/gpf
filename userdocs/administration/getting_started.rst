@@ -485,7 +485,7 @@ Ater the the editing the configuration file should look like::
 
 Restart the `wdaemanage.py`::
 
-    wdaemanage runserver 0.0.0.0:8000
+    wdaemanage.py runserver 0.0.0.0:8000
 
 Now if you locate the `iossifov_2014` study in the browser you should be able
 to use the tool from `Enrichment Tool` tab of study.
