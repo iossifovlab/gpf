@@ -281,8 +281,8 @@ Example import of variants
 
 Let's say you have a pedigree file ``comp.ped`` describing family information,
 a VCF file ``comp.vcf`` with transmitted variants and a list of de Novo
-variants ``comp.tsv``. This example data can be found inside
-``$DAE_DB_DIR/studies/comp`` of the GPF startup data instance `gpf_test`.
+variants ``comp.tsv``. The example data can be downloade from following URL:
+https://iossifovlab.com/distribution/public/studies/ .
 
 To import this data as a study into the GPF instance:
 
@@ -405,7 +405,6 @@ This should return a list of all studies' IDs:
 .. code-block:: python3
 
     ['multi',
-     'comp',
      'comp_vcf',
      'comp_denovo',
      'comp_all',
@@ -951,4 +950,5 @@ we need to rerun import process. Let's do it of ``iossifov_2014`` data:
 After import is finished restart the GPF develompent instance::
 
 .. code::
+
     wdaemanage.py runserver 0.0.0.0:8000
