@@ -13,6 +13,9 @@ import pysam
 
 import numpy as np
 import pandas as pd
+
+from dae.pedigrees.pedigree_reader import PedigreeReader
+
 from dae.variants.attributes import VariantType
 from dae.variants.family import FamiliesBase, Family
 from dae.variants.family_variant import FamilyVariant
@@ -40,7 +43,7 @@ class BaseDAE(FamiliesBase):
         return False
 
     def load_pedigree_families(self):
-        self.ped_df = FamiliesBase.load_pedigree_file(
+        self.ped_df = PedigreeReader.load_pedigree_file(
             self.family_filename)
         self.families_build(self.ped_df, Family)
 

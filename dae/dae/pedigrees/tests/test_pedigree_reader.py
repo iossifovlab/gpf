@@ -3,7 +3,7 @@ import pytest
 from io import StringIO
 import pandas as pd
 
-from dae.variants.family import FamiliesBase
+from dae.pedigrees.pedigree_reader import PedigreeReader
 from dae.variants.attributes import Role, Sex, Status
 
 
@@ -58,7 +58,7 @@ familyId\tpersonId\tdadId\tmomId\tsex\tstatus\trole\tlayout\tsampleId
     })),
 ])
 def test_load_pedigree_file(infile, pedigree):
-    loaded_pedigree = FamiliesBase.load_pedigree_file(infile, sep='\t')
+    loaded_pedigree = PedigreeReader.load_pedigree_file(infile, sep='\t')
     print(loaded_pedigree)
     columns = ['family_id', 'person_id', 'dad_id', 'mom_id', 'sex', 'status',
                'role', 'layout', 'sample_id']

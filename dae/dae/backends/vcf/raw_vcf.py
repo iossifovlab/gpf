@@ -3,6 +3,8 @@ import os
 import numpy as np
 import pandas as pd
 
+from dae.pedigrees.pedigree_reader import PedigreeReader
+
 from dae.variants.family import FamiliesBase
 from dae.variants.family import Family
 from dae.variants.variant import SummaryVariantFactory
@@ -138,7 +140,7 @@ class RawFamilyVariants(FamiliesBase):
         assert self.config.pedigree
         assert os.path.exists(self.config.pedigree), self.config.pedigree
 
-        return FamiliesBase.load_pedigree_file(self.config.pedigree)
+        return PedigreeReader.load_pedigree_file(self.config.pedigree)
 
     def _load(self, annotator, region, genomes_db):
         loader = RawVariantsLoader(self.config, genomes_db)

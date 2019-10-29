@@ -1,5 +1,6 @@
 import pytest
 
+import os
 from io import StringIO
 import six
 import csv
@@ -13,16 +14,17 @@ from dae.pedigrees.interval_sandwich import SandwichSolver
 from dae.pedigrees.layout import IndividualWithCoordinates, Layout
 from dae.pedigrees.drawing import OffsetLayoutDrawer
 
-from dae.utils.fixtures import path_to_fixtures as _path_to_fixtures
 
-
-def path_to_fixtures(*args):
-    return _path_to_fixtures('pedigrees', *args)
+def relative_to_this_folder(path):
+    return os.path.join(
+        os.path.dirname(os.path.realpath(__file__)),
+        path
+    )
 
 
 @pytest.fixture(scope='session')
 def input_filename():
-    return path_to_fixtures('input', 'test.ped')
+    return relative_to_this_folder('fixtures/test.ped')
 
 
 @pytest.fixture(scope='session')

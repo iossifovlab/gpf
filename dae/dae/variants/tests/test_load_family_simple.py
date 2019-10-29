@@ -7,6 +7,7 @@ import os
 import pytest
 import pandas as pd
 
+from dae.pedigrees.pedigree_reader import PedigreeReader
 from ..family import FamiliesBase, Family
 
 from .conftests import relative_to_this_test_folder
@@ -34,10 +35,10 @@ def test_load_family_simple(fixture_name, temp_filename):
     FamiliesBase.save_pedigree(fam_df, temp_filename)
     assert fam_df is not None
 
-    ped_df = FamiliesBase.load_pedigree_file(temp_filename)
+    ped_df = PedigreeReader.load_pedigree_file(temp_filename)
     print("-------------------------")
     print("-------------------------")
     print(ped_df)
     print("-------------------------")
-    
+
     pd.testing.assert_frame_equal(fam_df, ped_df)

@@ -6,6 +6,7 @@ Created on Jul 26, 2017
 import pytest
 import pandas as pd
 
+from dae.pedigrees.pedigree_reader import PedigreeReader
 from dae.pheno.prepare.ped_prepare import PreparePersons
 from dae.variants.attributes import Role
 
@@ -15,7 +16,7 @@ def test_role_guessing(test_config, sample_nuc_family):
     test_config.person.role.type = 'guess'
     prep = PreparePersons(test_config)
 
-    ped_df = prep.load_pedigree_file(sample_nuc_family)
+    ped_df = PedigreeReader.load_pedigree_file(sample_nuc_family)
     assert ped_df is not None
 
     ped_df = prep._guess_role_nuc(ped_df)
@@ -29,7 +30,7 @@ def test_role_guessing_is_disabled(test_config, sample_nuc_family):
     prep = PreparePersons(test_config)
 
     with pytest.raises(AssertionError):
-        prep.load_pedigree_file(sample_nuc_family)
+        PedigreeReader.load_pedigree_file(sample_nuc_family)
 
     with pytest.raises(AssertionError):
         prep._prepare_persons(pd.DataFrame())

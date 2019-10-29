@@ -15,7 +15,7 @@ from box import Box
 from dae.pheno.db import DbManager
 from dae.pheno.common import RoleMapping, MeasureType
 from dae.variants.attributes import Role, Status
-from dae.variants.family import FamiliesBase, \
+from dae.pedigrees.pedigree_reader import PedigreeReader, \
     PED_COLUMNS_REQUIRED
 from dae.pheno.prepare.measure_classifier import MeasureClassifier,\
     convert_to_string, convert_to_numeric, ClassifierReport
@@ -146,15 +146,6 @@ class PreparePersons(PrepareBase):
             ped_df = self._guess_role_nuc(ped_df)
         return ped_df
 
-    @classmethod
-    def load_pedigree_file(cls, pedfile):
-        df = FamiliesBase.load_pedigree_file(pedfile)
-
-        assert set(cls.PED_COLUMNS_REQUIRED) <= set(df.columns)
-        print(df.columns)
-
-        return df
-
     def prepare_pedigree(self, ped_df):
         assert set(self.PED_COLUMNS_REQUIRED) <= set(ped_df.columns)
         ped_df = self._prepare_families(ped_df)
@@ -203,7 +194,7 @@ class PreparePersons(PrepareBase):
         self._save_persons(ped_df)
 
     def build_pedigree(self, pedfile):
-        ped_df = self.load_pedigree_file(pedfile)
+        ped_df = PedigreeReader.load_pedigree_file(pedfile)
         ped_df = self.prepare_pedigree(ped_df)
         self.save_pedigree(ped_df)
         self.pedigree_df = ped_df
