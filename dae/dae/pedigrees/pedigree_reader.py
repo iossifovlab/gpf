@@ -28,7 +28,6 @@ PED_COLUMNS_REQUIRED = (
     PEDIGREE_COLUMN_NAMES['father'],
     PEDIGREE_COLUMN_NAMES['sex'],
     PEDIGREE_COLUMN_NAMES['status'],
-    PEDIGREE_COLUMN_NAMES['role'],
 )
 
 
@@ -139,3 +138,70 @@ class PedigreeReader(object):
             "role": "role",
             "layout": "layout"
         }
+
+
+class PedigreeRoleGuesser():
+
+    @staticmethod
+    def _find_parent_in_family_ped(family_df, mom_or_dad):
+        df = family_df[family_df[mom_or_dad] != '0']
+        assert len(df[mom_or_dad].unique()) <= 1
+        if len(df) > 0:
+            row = df.iloc[0]
+            return (row.family_id, row[mom_or_dad])
+        return None
+
+    @staticmethod
+    def _find_mom_in_family_ped(family_df):
+        return PedigreeRoleGuesser._find_parent_in_family_ped(
+            family_df, 'mom_id')
+
+    @staticmethod
+    def _find_dad_in_family_ped(family_df):
+        return PedigreeRoleGuesser._find_parent_in_family_ped(
+            family_df, 'dad_id')
+
+    @staticmethod
+    def _find_status_in_family(family_df, status):
+        df = family_df[family_df.status == status]
+        result = []
+        for row in df.to_dict('records'):
+            result.append((row['family_id'], row['person_id']))
+        return result
+
+    @staticmethod
+    def _find_prb_in_family(family_df):
+        return PedigreeRoleGuesser._find_status_in_family(
+            family_df, Status.affected)
+
+    @staticmethod
+    def _find_sib_in_family(family_df):
+        return PedigreeRoleGuesser._find_status_in_family(
+            family_df, Status.unaffected)
+
+    @staticmethod
+    def guess_role_nuc(ped_df):
+        res_df = ped_df.copy()
+
+        grouped = res_df.groupby('family_id')
+        roles = {}
+        for _, family_df in grouped:
+            mom = PedigreeRoleGuesser._find_mom_in_family_ped(family_df)
+            if mom:
+                roles[mom] = Role.mom
+            dad = PedigreeRoleGuesser._find_dad_in_family_ped(family_df)
+            if dad:
+                roles[dad] = Role.dad
+            for p in PedigreeRoleGuesser._find_prb_in_family(family_df):
+                if p not in roles:
+                    roles[p] = Role.prb
+            for p in PedigreeRoleGuesser._find_sib_in_family(family_df):
+                if p not in roles:
+                    roles[p] = Role.sib
+        assert len(roles) == len(res_df)
+
+        role = pd.Series(res_df.index)
+        for index, row in res_df.iterrows():
+            role[index] = roles[(row['family_id'], row['person_id'])]
+        res_df['role'] = role
+        return res_df

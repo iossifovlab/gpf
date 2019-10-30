@@ -14,9 +14,9 @@ from box import Box
 
 from dae.pheno.db import DbManager
 from dae.pheno.common import RoleMapping, MeasureType
-from dae.variants.attributes import Role, Status
+from dae.variants.attributes import Role
 from dae.pedigrees.pedigree_reader import PedigreeReader, \
-    PED_COLUMNS_REQUIRED
+    PedigreeRoleGuesser, PED_COLUMNS_REQUIRED
 from dae.pheno.prepare.measure_classifier import MeasureClassifier,\
     convert_to_string, convert_to_numeric, ClassifierReport
 
@@ -73,66 +73,6 @@ class PreparePersons(PrepareBase):
         ped_df['role'] = roles
         return ped_df
 
-    @staticmethod
-    def _find_parent_in_family_ped(family_df, mom_or_dad):
-        df = family_df[family_df[mom_or_dad] != '0']
-        assert len(df[mom_or_dad].unique()) <= 1
-        if len(df) > 0:
-            row = df.iloc[0]
-            return (row.family_id, row[mom_or_dad])
-        return None
-
-    @staticmethod
-    def _find_mom_in_family_ped(family_df):
-        return PreparePersons._find_parent_in_family_ped(family_df, 'mom_id')
-
-    @staticmethod
-    def _find_dad_in_family_ped(family_df):
-        return PreparePersons._find_parent_in_family_ped(family_df, 'dad_id')
-
-    @staticmethod
-    def _find_status_in_family(family_df, status):
-        df = family_df[family_df.status == status]
-        result = []
-        for row in df.to_dict('records'):
-            result.append((row['family_id'], row['person_id']))
-        return result
-
-    @staticmethod
-    def _find_prb_in_family(family_df):
-        return PreparePersons._find_status_in_family(
-            family_df, Status.affected)
-
-    @staticmethod
-    def _find_sib_in_family(family_df):
-        return PreparePersons._find_status_in_family(
-            family_df, Status.unaffected)
-
-    def _guess_role_nuc(self, ped_df):
-        assert self.config.person.role.type == 'guess'
-        grouped = ped_df.groupby('family_id')
-        roles = {}
-        for _, family_df in grouped:
-            mom = self._find_mom_in_family_ped(family_df)
-            if mom:
-                roles[mom] = Role.mom
-            dad = self._find_dad_in_family_ped(family_df)
-            if dad:
-                roles[dad] = Role.dad
-            for p in self._find_prb_in_family(family_df):
-                if p not in roles:
-                    roles[p] = Role.prb
-            for p in self._find_sib_in_family(family_df):
-                if p not in roles:
-                    roles[p] = Role.sib
-        assert len(roles) == len(ped_df)
-
-        role = pd.Series(ped_df.index)
-        for index, row in ped_df.iterrows():
-            role[index] = roles[(row['family_id'], row['person_id'])]
-        ped_df['role'] = role
-        return ped_df
-
     def _prepare_persons(self, ped_df):
         assert self.config.person.role.type != 'guess', \
             ('Guessing roles has been deprecated - '
@@ -141,9 +81,7 @@ class PreparePersons(PrepareBase):
         if self.config.person.role.type == 'column':
             ped_df = self._map_role_column(ped_df)
         elif self.config.person.role.type == 'guess':
-            # This branch is currently disabled (see the assertion above),
-            # but the code won't be removed until a later commit
-            ped_df = self._guess_role_nuc(ped_df)
+            ped_df = PedigreeRoleGuesser.guess_role_nuc(ped_df)
         return ped_df
 
     def prepare_pedigree(self, ped_df):

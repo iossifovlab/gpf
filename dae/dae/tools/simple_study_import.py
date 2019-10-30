@@ -16,7 +16,7 @@ from dae.tools.vcf2parquet import import_vcf
 from dae.tools.dae2parquet import import_dae_denovo
 from dae.backends.impala.impala_helpers import ImpalaHelpers
 from dae.backends.impala.hdfs_helpers import HdfsHelpers
-from dae.pedigrees.pedigree_reader import PedigreeReader
+from dae.pedigrees.pedigree_reader import PedigreeReader, PedigreeRoleGuesser
 
 
 def parse_cli_arguments(argv=sys.argv[1:]):
@@ -113,6 +113,14 @@ def parse_cli_arguments(argv=sys.argv[1:]):
         default='role',
         help='specify the name of the column in the pedigree file that holds '
         'the role of the person [default: %(default)s]'
+    )
+
+    parser.add_argument(
+        '--ped-no-role',
+        action='store_true',
+        help='indicates that the provided pedigree file has no role column. '
+        'If this argument is provided, the import tool will guess the roles '
+        'of individuals and write them in a "role" column.'
     )
 
     parser.add_argument(
@@ -278,6 +286,8 @@ if __name__ == "__main__":
         col_status=argv.ped_status,
         col_role=argv.ped_role,
     )
+    if argv.ped_no_role:
+        ped_df = PedigreeRoleGuesser.guess_role_nuc(ped_df)
 
     denovo_parquet = None
     vcf_parquet = None

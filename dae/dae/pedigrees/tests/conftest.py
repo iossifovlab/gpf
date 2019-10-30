@@ -330,3 +330,8 @@ def fam1(pedigree_test):
 @pytest.fixture(scope='session')
 def fam1_family_connections(fam1):
     return FamilyConnections.from_pedigree(fam1)
+
+
+@pytest.fixture(scope='session')
+def sample_nuc_family():
+    return relative_to_this_folder('fixtures/sample_nuc_family.ped')
