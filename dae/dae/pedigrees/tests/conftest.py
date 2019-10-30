@@ -250,7 +250,7 @@ def columns_labels():
         'id': 'personId',
         'father': 'dadId',
         'mother': 'momId',
-        'sex': 'gender',
+        'sex': 'sex',
         'status': 'status',
         'layout': 'layout',
         'role': 'role'
@@ -259,7 +259,7 @@ def columns_labels():
 
 @pytest.fixture(scope='session')
 def header():
-    return ['familyId', 'personId', 'dadId', 'momId', 'gender', 'status',
+    return ['familyId', 'personId', 'dadId', 'momId', 'sex', 'status',
             'role']
 
 
@@ -273,7 +273,7 @@ def dict_writer(output, header, layout_column, generated_column):
 
 @pytest.fixture(scope='session')
 def test_output():
-    return """familyId\tpersonId\tdadId\tmomId\tgender\tstatus\trole\tlayout\tgenerated
+    return """familyId\tpersonId\tdadId\tmomId\tsex\tstatus\trole\tlayout\tgenerated
 fam1\tid1\tdad1\tmom1\t1\t2\tprb\tError\t
 fam1\tmom1\t0\t0\t2\t1\tmom\tError\t
 fam2\tid2\tdad2\tmom2\t1\t2\tprb\t2:100.0,75.0\t

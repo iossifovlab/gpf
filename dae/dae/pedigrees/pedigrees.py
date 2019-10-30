@@ -491,7 +491,7 @@ def get_argument_parser(description):
         default='momId', action='store')
     parser.add_argument(
         '--sex', help='Specify sex column label.',
-        default='gender', action='store')
+        default='sex', action='store')
     parser.add_argument(
         '--status', help='Specify status column label.',
         default='status', action='store')
@@ -501,7 +501,7 @@ def get_argument_parser(description):
     parser.add_argument(
         '--no-header-order', help='Comma separated order of columns in header '
         'when header is not in the input file. Values for columns are '
-        'familyId, personId, dadId, momId, gender, status. You can replace '
+        'familyId, personId, dadId, momId, sex, status. You can replace '
         'unnecessary column with `_`.', dest='no_header_order', default=None,
         action='store')
     parser.add_argument(

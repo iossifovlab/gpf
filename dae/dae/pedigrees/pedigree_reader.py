@@ -100,14 +100,6 @@ class PedigreeReader(object):
             encoding='utf-8'
         )
 
-        if col_sex not in ped_df:
-            if 'gender' in ped_df:
-                ped_df['gender'] = \
-                    list(map(Sex.from_name_or_value, ped_df['gender']))
-                ped_df = ped_df.rename(columns={
-                    'gender': PEDIGREE_COLUMN_NAMES['sex']
-                })
-
         if col_sample_id in ped_df:
             sample_ids = ped_df.apply(
                 lambda r: r.personId if pd.isna(r.sampleId) else r.sampleId,
@@ -142,7 +134,7 @@ class PedigreeReader(object):
             "id": "personId",
             "father": "dadId",
             "mother": "momId",
-            "sex": "gender",
+            "sex": "sex",
             "status": "status",
             "role": "role",
             "layout": "layout"
