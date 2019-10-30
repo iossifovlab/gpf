@@ -119,7 +119,8 @@ def import_dae_denovo(
         dae_config, genome, annotation_pipeline,
         families_filename, variants_filename,
         family_format='pedigree', output='.', rows=10000,
-        bucket_index=0, defaults={}, study_id=None, filesystem=None):
+        bucket_index=0, defaults={}, study_id=None, filesystem=None,
+        pedigree_df=None):
 
     config = Configure.from_dict({
         "denovo": {
@@ -131,15 +132,18 @@ def import_dae_denovo(
         config.denovo.denovo_filename,
         config.denovo.family_filename,
         genome=genome,
-        annotator=annotation_pipeline)
-    if family_format == 'simple':
-        fvars.load_simple_families()
-    elif family_format == 'pedigree':
-        fvars.load_pedigree_families()
-    else:
-        raise ValueError("unexpected family format: {}".format(
-            family_format
-        ))
+        annotator=annotation_pipeline,
+        pedigree_df=pedigree_df)
+
+    if pedigree_df is None:
+        if family_format == 'simple':
+            fvars.load_simple_families()
+        elif family_format == 'pedigree':
+            fvars.load_pedigree_families()
+        else:
+            raise ValueError("unexpected family format: {}".format(
+                family_format
+            ))
 
     df = fvars.load_denovo_variants()
     assert df is not None
@@ -273,6 +277,7 @@ def init_parser_make(gpf_instance, subparsers):
         dest='env', metavar='<ENV options>',
         help='additional environment options'
     )
+
 
 def parse_cli_arguments(gpf_instance, argv=sys.argv[1:]):
     parser = argparse.ArgumentParser(

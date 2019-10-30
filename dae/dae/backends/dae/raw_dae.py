@@ -250,7 +250,8 @@ class RawDAE(BaseDAE):
 class RawDenovo(BaseDAE):
     def __init__(self, denovo_filename, family_filename,
                  genome=None,
-                 annotator=None):
+                 annotator=None,
+                 pedigree_df=None):
         super(RawDenovo, self).__init__(
             family_filename=family_filename,
             transmission_type='denovo',
@@ -267,6 +268,10 @@ class RawDenovo(BaseDAE):
         self.family_filename = family_filename
 
         self.genome = genome
+
+        if pedigree_df is not None:
+            self.ped_df = pedigree_df
+            self.families_build(self.ped_df)
 
     def split_location(self, location):
         chrom, position = location.split(":")

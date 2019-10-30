@@ -89,7 +89,8 @@ class RawFamilyVariants(FamiliesBase):
 
     def __init__(self, config=None, prefix=None, annotator=None, region=None,
                  transmission_type='transmitted',
-                 variant_factory=VariantFactory, genomes_db=None):
+                 variant_factory=VariantFactory,
+                 genomes_db=None, pedigree_df=None):
         super(RawFamilyVariants, self).__init__()
         if prefix is not None:
             config = Configure.from_prefix_vcf(prefix)
@@ -103,7 +104,7 @@ class RawFamilyVariants(FamiliesBase):
         self.prefix = prefix
         self.transmission_type = transmission_type
 
-        self._load(annotator, region, genomes_db)
+        self._load(annotator, region, genomes_db, pedigree_df)
 
     def is_empty(self):
         return len(self.annot_df) == 0
@@ -142,9 +143,9 @@ class RawFamilyVariants(FamiliesBase):
 
         return PedigreeReader.load_pedigree_file(self.config.pedigree)
 
-    def _load(self, annotator, region, genomes_db):
+    def _load(self, annotator, region, genomes_db, pedigree_df):
         loader = RawVariantsLoader(self.config, genomes_db)
-        self.ped_df = self._load_pedigree()
+        self.ped_df = pedigree_df or self._load_pedigree()
 
         self.vcf = loader.load_vcf(region)
 

@@ -30,21 +30,11 @@ def get_contigs(vcf_filename):
     return vcf.seqnames
 
 
-def create_vcf_variants(config, genomes_db, region=None):
-
-    freq_annotator = VcfAlleleFrequencyAnnotator()
-
-    fvars = RawFamilyVariants(
-        config=config, annotator=freq_annotator,
-        region=region, genomes_db=genomes_db)
-    return fvars
-
-
 def import_vcf(
         dae_config, genomes_db, annotation_pipeline,
         pedigree_filename, vcf_filename,
         region=None, bucket_index=1, rows=10000, output='.',
-        study_id=None, filesystem=None):
+        study_id=None, filesystem=None, pedigree_df=None):
 
     assert os.path.exists(vcf_filename), vcf_filename
     assert os.path.exists(pedigree_filename), pedigree_filename
@@ -66,7 +56,10 @@ def import_vcf(
         output, bucket_index=bucket_index, db=None, study_id=study_id).impala
     print("converting into ", impala_config, file=sys.stderr)
 
-    fvars = create_vcf_variants(vcf_config, genomes_db, region)
+    fvars = RawFamilyVariants(
+        config=vcf_config, annotator=VcfAlleleFrequencyAnnotator(),
+        region=region, genomes_db=genomes_db,
+        pedigree_df=pedigree_df)
 
     fvars.annot_df = annotation_pipeline.annotate_df(fvars.annot_df)
 

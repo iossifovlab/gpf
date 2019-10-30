@@ -124,10 +124,14 @@ class PedigreeReader(object):
             col_person: PEDIGREE_COLUMN_NAMES['person'],
             col_mom: PEDIGREE_COLUMN_NAMES['mother'],
             col_dad: PEDIGREE_COLUMN_NAMES['father'],
+            col_sex: PEDIGREE_COLUMN_NAMES['sex'],
+            col_status: PEDIGREE_COLUMN_NAMES['status'],
+            col_role: PEDIGREE_COLUMN_NAMES['role'],
             col_sample_id: PEDIGREE_COLUMN_NAMES['sample id'],
         })
 
-        assert set(PED_COLUMNS_REQUIRED) <= set(ped_df.columns)
+        assert set(PED_COLUMNS_REQUIRED) <= set(ped_df.columns), \
+            ped_df.columns
 
         return ped_df
 
