@@ -5,6 +5,12 @@ from dae.configuration.config_parser_base import ConfigParserBase
 
 
 class DAEConfigParser(ConfigParserBase):
+    '''
+    DAEConfigParser is responsible for parsing :ref:`DAE Configuration
+    <dae_configuration>`. It inherits
+    :class:`ConfigParserBase <dae.configuration.config_parser_base.ConfigParserBase>` and use some
+    of its methods for reading and parsing configuration.
+    '''
 
     CAST_TO_INT = (
         'port',
@@ -22,6 +28,11 @@ class DAEConfigParser(ConfigParserBase):
                                        ' prompt. Please log in or register.')
         },
     }
+    '''
+    Holds a mapping of configuration section to a mapping of section property
+    to a value of this property. This mapping will be used as default values
+    for the configuration sections.
+    '''
 
     @staticmethod
     def _get_environment_override_values():
@@ -83,6 +94,27 @@ class DAEConfigParser(ConfigParserBase):
     def read_and_parse_file_configuration(
             cls, config_file='DAE.conf', work_dir=None, defaults=None,
             environment_override=True):
+        '''
+        Read and parse DAE configuration stored in a file. This method overload
+        :func:`read_and_parse_file_configuration <dae.configuration.config_parser_base.ConfigParserBase.read_and_parse_file_configuration>`
+        from the :class:`ConfigParserBase <dae.configuration.config_parser_base.ConfigParserBase>`
+        class by adding ``environment_override`` parameter. It also combine
+        default and override values from environment and from predifined in the
+        class property :attr:`DEFAULT_SECTION_VALUES` above.
+
+        :param str config_file: file which contains configuration.
+        :param str work_dir: working directory which will be added as
+                             ``work_dir`` and ``wd`` default values in the
+                             configuration.
+        :param defaults: default values which will be used when configuration
+                         file is readed.
+        :param bool environment_override: it shows if
+                                          :func:`read_config <dae.configuration.config_parser_base.ConfigParserBase.read_config>`
+                                          will use `override` from `defaults`.
+        :type defaults: dict or None
+        :return: read and parsed configuration.
+        :rtype: Box or None
+        '''
         if work_dir is None:
             work_dir = os.environ.get('DAE_DB_DIR', None)
         assert work_dir is not None
@@ -102,6 +134,19 @@ class DAEConfigParser(ConfigParserBase):
 
     @classmethod
     def parse(cls, config, dae_data_dir=None):
+        '''
+        Parse all of the sections in the DAE configuration. This method
+        overload :func:`parse <dae.configuration.config_parser_base.ConfigParserBase.parse>`
+        from :class:`ConfigParserBase <dae.configuration.config_parser_base.ConfigParserBase>`
+        class by adding ``dae_data_dir`` parameter.
+
+        :param config: configuration.
+        :param dae_data_dir: path of data directory
+        :type config: Box or dict
+        :type dae_data_dir: str or None
+        :return: parsed configuration.
+        :rtype: Box or dict or None
+        '''
         config = super(DAEConfigParser, cls).parse(config)
 
         assert config is not None

@@ -15,6 +15,7 @@ def test_build(enrichment_builder):
         sorted(['autism', 'unaffected'])
 
 
+@pytest.mark.xfail(reason='[gene models] wrong annotation')
 def test_build_people_group_selector(enrichment_builder, f1_trio):
     assert enrichment_builder
     people_group = f1_trio.get_people_group('phenotype')

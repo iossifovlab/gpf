@@ -25,7 +25,7 @@ various criteria.
 Query by regions
 ^^^^^^^^^^^^^^^^
 
-The query interface support searching of variants in given genome region or 
+The query interface support searching of variants in given genome region or
 list of regions.
 
 :Example: The following example will return variants that are at one
@@ -34,30 +34,30 @@ list of regions.
     .. code-block:: python
 
         from RegionOperations import Region
-        
+
         vs = fvars.query_variants(regions=[Region("1", 878109, 878109)])
-    
+
     You can specify list of regions in the query:
 
     .. code-block:: python
 
         from RegionOperations import Region
-        
+
         vs = fvars.query_variants(
             regions=[Region("1", 11539, 11539), Region("1", 11550, 11550)])
 
-    
+
 Query by genes and effect types
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-:Example: The following example will return only variants with effect type 
+:Example: The following example will return only variants with effect type
     `frame-shift`:
 
     .. code-block:: python
 
         vs = fvars.query_variants(
             effects=["frame-shift"])
-    
+
     You can specify multiple effects in the query. The following example
     will return variants that with effect type `frame-shift` or `missense`:
 
@@ -73,9 +73,9 @@ Query by genes and effect types
 
         vs = fvars.query_variants(
             genes=["PLEKHN1"])
-    
+
     or list of genes:
-    
+
     .. code-block:: python
 
         vs = fvars.query_variants(
@@ -83,7 +83,7 @@ Query by genes and effect types
 
     You can specifye combination of effect types and genes in which case the
     query will return only variants that match both criteria:
-    
+
 
     .. code-block:: python
 
@@ -155,11 +155,11 @@ Query by sexes
         vs = fvars.query_variants(sexes="male")
 
     You can use `or` to combine sexes and `not` to negate. For example:
-    
+
     .. code-block:: python
 
         vs = fvars.query_variants(sexes="male and not female")
-    
+
     will return only family variants that affect male individuals in family, but
     not female.
 
@@ -175,11 +175,11 @@ Query by roles
         vs = fvars.query_variants(roles="prb")
 
     You can use `or`, `and` and `not` to combine roles. For example:
-    
+
     .. code-block:: python
 
         vs = fvars.query_variants(roles="prb and not sib")
-    
+
     will return only family variants that affect probands in family, but
     not siblings.
 
@@ -195,11 +195,11 @@ Query by variant types
         vs = fvars.query_variants(variant_types="sub")
 
     You can use `or`, `and` and `not` to combine variant types. For example:
-    
+
     .. code-block:: python
 
         vs = fvars.query_variants(roles="sub or del")
-    
+
     will return only family variants that are of type `sub` or `del`.
 
 

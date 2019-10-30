@@ -87,7 +87,7 @@ def variant_effect_annotator(genomes_db):
 
 
 def test_effect_annotator(effect_annotator, variants_io, capsys):
-    with variants_io('fixtures/effects_trio_multi-eff.txt') as io_manager:
+    with variants_io('fixtures/effects_trio_multi-effect.txt') as io_manager:
 
         captured = capsys.readouterr()
 
@@ -102,7 +102,7 @@ def test_effect_annotator(effect_annotator, variants_io, capsys):
 
 def test_effect_annotator_df(variant_effect_annotator):
     df = pd.read_csv(
-        relative_to_this_test_folder('fixtures/effects_trio_multi-eff.txt'),
+        relative_to_this_test_folder('fixtures/effects_trio_multi-effect.txt'),
         dtype={
             'chrom': str,
             'position': np.int32,
@@ -138,7 +138,7 @@ def test_effect_annotators_compare(
     assert effect_annotator is not None
     assert variant_effect_annotator is not None
     df = pd.read_csv(
-        relative_to_this_test_folder('fixtures/effects_trio_multi-eff.txt'),
+        relative_to_this_test_folder('fixtures/effects_trio_multi-effect.txt'),
         dtype={
             'chrom': str,
             'position': np.int32,

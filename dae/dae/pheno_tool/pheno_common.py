@@ -1,8 +1,3 @@
-'''
-Created on Nov 29, 2016
-
-@author: lubo
-'''
 import numpy as np
 from dae.pheno.common import MeasureType
 

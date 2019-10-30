@@ -51,7 +51,7 @@ def effect_annotator(genomes_db):
 
 
 def test_effect_annotator(effect_annotator, variants_io, capsys):
-    with variants_io('fixtures/effects_trio_multi-eff.txt') as io_manager:
+    with variants_io('fixtures/effects_trio_multi-effect.txt') as io_manager:
 
         captured = capsys.readouterr()
 
@@ -67,7 +67,7 @@ def test_effect_annotator(effect_annotator, variants_io, capsys):
 def test_effect_annotator_df(effect_annotator):
 
     df = RawVariantsLoader.load_annotation_file(
-        relative_to_this_test_folder('fixtures/effects_trio_multi-eff.txt')
+        relative_to_this_test_folder('fixtures/effects_trio_multi-effect.txt')
     )
 
     columns = [

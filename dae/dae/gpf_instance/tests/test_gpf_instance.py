@@ -43,7 +43,6 @@ def test_mocker_genomes_db(gpf_instance):
 
     assert genomes_db.get_genome()
     assert genomes_db.get_genome_from_file()
-    assert genomes_db.get_gene_models() == 'Gene Models'
     assert genomes_db.get_genome_file() == \
         './genomes/GATK_ResourceBundle_5777_b37_phiX174/chrAll.fa'
     assert genomes_db.get_gene_model_id() == 'RefSeq2013'

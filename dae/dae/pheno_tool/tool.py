@@ -188,11 +188,11 @@ class PhenoTool(object):
 
         if not normalize_by:
             dn = pd.Series(
-                index=df.index, data=df[measure_id].values)
+                index=df.index, data=df[measure_id].to_numpy())
             df.loc[:, 'normalized'] = dn
             return df
         else:
-            X = sm.add_constant(df[normalize_by])
+            X = sm.add_constant(df[normalize_by].to_numpy())
             y = df[measure_id]
             model = sm.OLS(y, X)
             fitted = model.fit()

@@ -40,6 +40,16 @@ pipeline {
       }
     }
 
+    stage('Clean') {
+      steps {
+        sh '''
+          export PATH=$HOME/anaconda3/envs/gpf3/bin:$PATH
+
+          ./jenkins_clean.sh
+        '''
+      }
+    }
+
     stage('Setup') {
       steps {
         script {
@@ -52,8 +62,6 @@ pipeline {
       steps {
         sh '''
           export PATH=$HOME/anaconda3/envs/gpf3/bin:$PATH
-
-          docker-compose -f docker-compose.yml down
 
           docker-compose -f docker-compose.yml up -d
         '''

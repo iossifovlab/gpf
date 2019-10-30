@@ -457,7 +457,7 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
 
         :param gt: genotype as `np.array`.
         :return: list of all alternative allele indexes present into
-        genotype passed.
+                 genotype passed.
         """
         return sorted(list(set(gt.flatten()).difference({0})))
 
