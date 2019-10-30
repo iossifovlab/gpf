@@ -765,7 +765,7 @@ class StudyWrapper(object):
         for config_key, parser in config_keys.items():
             config = dataset_description.get(config_key, None)
             if not config:
-                return
+                continue
 
             dataset_description[config_key] = \
                 parser.get_config_description(config)
