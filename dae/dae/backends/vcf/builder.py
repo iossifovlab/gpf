@@ -10,6 +10,7 @@ from .loader import RawVariantsLoader
 
 from dae.annotation.tools.annotator_config import AnnotationConfigParser
 from dae.annotation.tools.effect_annotator import VariantEffectAnnotator
+from dae.pedigrees.pedigree_reader import PedigreeReader
 
 
 def effect_annotator_builder(genomes_db):
@@ -88,8 +89,10 @@ def variants_builder(prefix, genomes_db, force_reannotate=False):
 
     conf = Configure.from_prefix_vcf(prefix)
 
+    ped_df = PedigreeReader.load_pedigree_file(conf.vcf.pedigree)
+
     if os.path.exists(conf.vcf.annotation) and not force_reannotate:
-        fvars = RawFamilyVariants(conf, genomes_db=genomes_db)
+        fvars = RawFamilyVariants(ped_df, config=conf, genomes_db=genomes_db)
         return fvars
 
     # effect_annotator = VcfVariantEffectsAnnotator(genome, gene_models)
@@ -97,7 +100,7 @@ def variants_builder(prefix, genomes_db, force_reannotate=False):
     effect_annotator = effect_annotator_builder(genomes_db)
 
     fvars = RawFamilyVariants(
-        conf, annotator=freq_annotator, genomes_db=genomes_db
+        ped_df, config=conf, annotator=freq_annotator, genomes_db=genomes_db
     )
     fvars.annot_df = effect_annotator.annotate_df(fvars.annot_df)
 

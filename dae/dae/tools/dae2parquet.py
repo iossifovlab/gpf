@@ -20,6 +20,8 @@ from dae.backends.import_commons import build_contig_regions, \
 from dae.backends.import_commons import construct_import_annotation_pipeline
 
 from dae.backends.impala.import_tools import variants_iterator_to_parquet
+from dae.pedigrees.pedigree_reader import PedigreeReader
+from dae.variants.family import FamiliesBase
 
 
 def get_contigs(tabixfilename):
@@ -40,22 +42,24 @@ def dae_build_transmitted(
 
     assert argv.output is not None
 
+    assert argv.family_format in ['pedigree', 'simple'], argv.family_format
+    if argv.family_format == 'pedigree':
+        ped_df = PedigreeReader.load_pedigree_file(
+            config.dae.family_filename
+        )
+    else:
+        ped_df = FamiliesBase.load_simple_family_file(
+            config.dae.family_filename
+        )
+
     fvars = RawDAE(
         config.dae.summary_filename,
         config.dae.toomany_filename,
-        config.dae.family_filename,
+        ped_df,
         region=argv.region,
         genome=genome,
-        annotator=annotation_pipeline)
-
-    if argv.family_format == 'simple':
-        fvars.load_simple_families()
-    elif argv.family_format == 'pedigree':
-        fvars.load_pedigree_families()
-    else:
-        raise ValueError("unexpected family format: {}".format(
-            argv.family_format
-        ))
+        annotator=annotation_pipeline
+    )
 
     annotation_schema = ParquetSchema()
     annotation_pipeline.collect_annotator_schema(annotation_schema)
@@ -128,22 +132,22 @@ def import_dae_denovo(
             'family_filename': families_filename
         }})
 
+    assert family_format in ['pedigree', 'simple'], family_format
+    if family_format == 'pedigree':
+        ped_df = PedigreeReader.load_pedigree_file(
+            config.denovo.family_filename
+        )
+    else:
+        ped_df = FamiliesBase.load_simple_family_file(
+            config.denovo.family_filename
+        )
+
     fvars = RawDenovo(
         config.denovo.denovo_filename,
-        config.denovo.family_filename,
+        ped_df,
         genome=genome,
         annotator=annotation_pipeline,
         pedigree_df=pedigree_df)
-
-    if pedigree_df is None:
-        if family_format == 'simple':
-            fvars.load_simple_families()
-        elif family_format == 'pedigree':
-            fvars.load_pedigree_families()
-        else:
-            raise ValueError("unexpected family format: {}".format(
-                family_format
-            ))
 
     df = fvars.load_denovo_variants()
     assert df is not None

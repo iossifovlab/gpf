@@ -24,6 +24,8 @@ from dae.backends.vcf.builder import variants_builder
 from dae.backends.import_commons import \
     construct_import_annotation_pipeline
 from dae.tools.vcf2parquet import import_vcf
+from dae.variants.family import FamiliesBase
+from dae.pedigrees.pedigree_reader import PedigreeReader
 
 
 def relative_to_this_test_folder(path):
@@ -215,12 +217,17 @@ def dae_denovo_config():
 @pytest.fixture
 def dae_denovo(
         dae_denovo_config, default_genome, annotation_pipeline_internal):
+
+    ped_df = FamiliesBase.load_simple_family_file(
+        dae_denovo_config.family_filename
+    )
+
     denovo = RawDenovo(
         dae_denovo_config.denovo_filename,
-        dae_denovo_config.family_filename,
+        ped_df,
         genome=default_genome,
-        annotator=annotation_pipeline_internal)
-    denovo.load_simple_families()
+        annotator=annotation_pipeline_internal
+    )
 
     return denovo
 
@@ -237,14 +244,19 @@ def dae_transmitted_config():
 @pytest.fixture
 def dae_transmitted(
         dae_transmitted_config, default_genome, annotation_pipeline_internal):
+
+    ped_df = FamiliesBase.load_simple_family_file(
+        dae_transmitted_config.family_filename
+    )
+
     denovo = RawDAE(
         dae_transmitted_config.summary_filename,
         dae_transmitted_config.toomany_filename,
-        dae_transmitted_config.family_filename,
+        ped_df,
         region=None,
         genome=default_genome,
-        annotator=annotation_pipeline_internal)
-    denovo.load_simple_families()
+        annotator=annotation_pipeline_internal
+    )
 
     return denovo
 
@@ -264,7 +276,10 @@ def vcf_import_raw(
         genomes_db):
     freq_annotator = VcfAlleleFrequencyAnnotator()
 
+    ped_df = PedigreeReader.load_pedigree_file(vcf_import_config.pedigree)
+
     fvars = RawFamilyVariants(
+        ped_df,
         prefix=vcf_import_config.prefix,
         annotator=freq_annotator,
         genomes_db=genomes_db
@@ -303,12 +318,17 @@ def dae_iossifov2014_config():
 def dae_iossifov2014(
         dae_iossifov2014_config, default_genome, annotation_pipeline_internal):
     config = dae_iossifov2014_config
+
+    ped_df = PedigreeReader.load_pedigree_file(
+        config.family_filename
+    )
+
     denovo = RawDenovo(
         config.denovo_filename,
-        config.family_filename,
+        ped_df,
         genome=default_genome,
-        annotator=annotation_pipeline_internal)
-    denovo.load_simple_families()
+        annotator=annotation_pipeline_internal
+    )
 
     return denovo
 
@@ -351,10 +371,15 @@ def config_dae():
 def raw_dae(config_dae, default_genome):
     def builder(path, region=None):
         config = config_dae(path)
+
+        ped_df = FamiliesBase.load_simple_family_file(
+            dae_transmitted_config.family_filename
+        )
+
         dae = RawDAE(
             config.dae.summary_filename,
             config.dae.toomany_filename,
-            config.dae.family_filename,
+            ped_df,
             region=region,
             genome=default_genome,
             annotator=None)
@@ -376,9 +401,14 @@ def config_denovo():
 def raw_denovo(config_denovo, default_genome):
     def builder(path):
         config = config_denovo(path)
+
+        ped_df = FamiliesBase.load_simple_family_file(
+            config.denovo.family_filename
+        )
+
         denovo = RawDenovo(
             config.denovo.denovo_filename,
-            config.denovo.family_filename,
+            ped_df,
             genome=default_genome,
             annotator=None)
         return denovo

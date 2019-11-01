@@ -295,16 +295,16 @@ if __name__ == "__main__":
     if argv.vcf is not None:
         vcf_parquet = import_vcf(
             dae_config, genomes_db, annotation_pipeline,
-            argv.pedigree, argv.vcf,
-            output=output, study_id=study_id,
-            pedigree_df=ped_df)
+            ped_df, argv.vcf, study_id
+            output=output
+        )
     if argv.denovo is not None:
         denovo_parquet = import_dae_denovo(
             dae_config, genome, annotation_pipeline,
-            argv.pedigree, argv.denovo,
+            ped_df, argv.denovo,
             output=output, family_format='pedigree',
             study_id=study_id,
-            pedigree_df=ped_df)
+        )
     if argv.denovo is None and argv.vcf is not None:
         assert denovo_parquet is None
         assert vcf_parquet is not None
