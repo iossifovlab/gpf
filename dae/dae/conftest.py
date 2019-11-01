@@ -26,6 +26,7 @@ from dae.backends.import_commons import \
 from dae.tools.vcf2parquet import import_vcf
 from dae.variants.family import FamiliesBase
 from dae.pedigrees.pedigree_reader import PedigreeReader
+from dae.utils.helpers import pedigree_from_path
 
 
 def relative_to_this_test_folder(path):
@@ -514,9 +515,12 @@ def data_import(
                     test_impala_helpers.check_table(
                         impala_test_dbname(), impala.tables.pedigree):
                 continue
+
+            ped_df, study_id = pedigree_from_path(vcf.pedigree)
+
             impala_config = import_vcf(
                 dae_config_fixture, genomes_db, annotation_pipeline,
-                vcf.pedigree, vcf.vcf,
+                ped_df, vcf.vcf, study_id,
                 region=None, bucket_index=0,
                 output=temp_dirname,
                 filesystem=test_hdfs.filesystem())
