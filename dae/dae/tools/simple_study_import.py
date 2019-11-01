@@ -19,53 +19,7 @@ from dae.backends.impala.hdfs_helpers import HdfsHelpers
 from dae.pedigrees.pedigree_reader import PedigreeReader, PedigreeRoleGuesser
 
 
-def parse_cli_arguments(argv=sys.argv[1:]):
-    parser = argparse.ArgumentParser(
-        description='simple import of new study data',
-        conflict_handler='resolve',
-        formatter_class=argparse.RawDescriptionHelpFormatter)
-
-    parser.add_argument(
-        'pedigree', type=str,
-        metavar='<pedigree filename>',
-        help='families file in pedigree format'
-    )
-    parser.add_argument(
-        '--id', type=str,
-        metavar='<study ID>',
-        dest="id",
-        help='Unique study ID to use. '
-        'If not specified the basename of the family pedigree file is used '
-        'for study ID'
-    )
-
-    parser.add_argument(
-        '--vcf', type=str,
-        metavar='<VCF filename>',
-        help='VCF file to import'
-    )
-
-    parser.add_argument(
-        '--denovo', type=str,
-        metavar='<de Novo variants filename>',
-        help='DAE denovo variants file'
-    )
-
-    parser.add_argument(
-        '-o', '--out', type=str, default=None,
-        dest='output', metavar='<output directory>',
-        help='output directory for storing intermediate parquet files. '
-        'If none specified, "parquet/" directory inside GPF instance '
-        'study directory is used [default: %(default)s]'
-    )
-
-    parser.add_argument(
-        '--skip-reports',
-        help='skip running report generation [default: %(default)s]',
-        default=False,
-        action='store_true',
-    )
-
+def add_cli_arguments_pedigree(parser):
     parser.add_argument(
         '--ped-family',
         default='familyId',
@@ -130,6 +84,56 @@ def parse_cli_arguments(argv=sys.argv[1:]):
         'pedigree column arguments will accept indices if this argument is '
         'given. [default: %(default)s]'
     )
+
+
+def parse_cli_arguments(argv=sys.argv[1:]):
+    parser = argparse.ArgumentParser(
+        description='simple import of new study data',
+        conflict_handler='resolve',
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+
+    parser.add_argument(
+        'pedigree', type=str,
+        metavar='<pedigree filename>',
+        help='families file in pedigree format'
+    )
+    parser.add_argument(
+        '--id', type=str,
+        metavar='<study ID>',
+        dest="id",
+        help='Unique study ID to use. '
+        'If not specified the basename of the family pedigree file is used '
+        'for study ID'
+    )
+
+    parser.add_argument(
+        '--vcf', type=str,
+        metavar='<VCF filename>',
+        help='VCF file to import'
+    )
+
+    parser.add_argument(
+        '--denovo', type=str,
+        metavar='<de Novo variants filename>',
+        help='DAE denovo variants file'
+    )
+
+    parser.add_argument(
+        '-o', '--out', type=str, default=None,
+        dest='output', metavar='<output directory>',
+        help='output directory for storing intermediate parquet files. '
+        'If none specified, "parquet/" directory inside GPF instance '
+        'study directory is used [default: %(default)s]'
+    )
+
+    parser.add_argument(
+        '--skip-reports',
+        help='skip running report generation [default: %(default)s]',
+        default=False,
+        action='store_true',
+    )
+
+    add_cli_arguments_pedigree(parser)
 
     parser_args = parser.parse_args(argv)
     return parser_args
@@ -295,7 +299,7 @@ if __name__ == "__main__":
     if argv.vcf is not None:
         vcf_parquet = import_vcf(
             dae_config, genomes_db, annotation_pipeline,
-            ped_df, argv.vcf, study_id
+            ped_df, argv.vcf, study_id,
             output=output
         )
     if argv.denovo is not None:
