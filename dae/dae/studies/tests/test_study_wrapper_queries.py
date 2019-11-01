@@ -312,7 +312,6 @@ def test_query_gene_weights(
     ([{'metric': 'score1', 'rangeStart': 2.0, 'rangeEnd': 7.0},
       {'metric': 'score2', 'rangeStart': 50.0, 'rangeEnd': 75.0}], 0),
 ])
-@pytest.mark.xfail(reason='[gene models] wrong annotation')
 def test_query_genomic_scores(genomicScores, count, quads_f2_wrapper):
     variants = list(quads_f2_wrapper.query_variants(
         genomicScores=genomicScores))

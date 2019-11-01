@@ -11,7 +11,6 @@ from dae.enrichment_tool.genotype_helper import GenotypeHelper
     ('unaffected', 'synonymous', 1),
     ('unaffected', ['missense', 'synonymous'], 1),
 ])
-@pytest.mark.xfail(reason='[gene models] wrong annotation')
 def test_get_variants(f1_trio, people_group, effect_types, count):
     pg = f1_trio.get_people_group('phenotype')
     gh = GenotypeHelper(f1_trio, pg, people_group)

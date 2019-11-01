@@ -60,9 +60,9 @@ def default_gene_models(global_gpf_instance):
 
 
 @pytest.fixture(scope='function')
-def mock_genomes_db(mocker, default_gene_models):
-    genome = mocker.Mock()
-    genome.getSequence = lambda _, start, end: 'A' * (end - start + 1)
+def mock_genomes_db(mocker, default_gene_models, default_genome):
+    # genome = mocker.Mock()
+    # genome.getSequence = lambda _, start, end: 'A' * (end - start + 1)
 
     mocker.patch(
         'dae.GenomesDB.GenomesDB.__init__', return_value=None
@@ -70,11 +70,11 @@ def mock_genomes_db(mocker, default_gene_models):
 
     mocker.patch(
         'dae.GenomesDB.GenomesDB.get_genome',
-        return_value=genome
+        return_value=default_genome
     )
     mocker.patch(
         'dae.GenomesDB.GenomesDB.get_genome_from_file',
-        return_value=genome
+        return_value=default_genome
     )
     mocker.patch(
         'dae.GenomesDB.GenomesDB.get_gene_models',

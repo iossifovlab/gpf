@@ -60,7 +60,6 @@ def test_get_f4_descriptions(denovo_gene_set_facade):
     ('Synonymous', ['unaffected'], 1),
     ('Synonymous', ['autism', 'unaffected'], 2),
 ])
-@pytest.mark.xfail(reason='[gene models] wrong annotation')
 def test_get_denovo_gene_set_f4(
         denovo_gene_set_facade, denovo_gene_set_id, people_groups, count):
     dgs = denovo_gene_set_facade.get_denovo_gene_set(
@@ -80,7 +79,6 @@ def test_get_denovo_gene_set_f4(
     ('LGDs', ['autism', 'unaffected']),
     ('Missense', ['unaffected']),
 ])
-@pytest.mark.xfail(reason='[gene models] wrong annotation')
 def test_get_denovo_gene_set_f4_empty(
         denovo_gene_set_facade, denovo_gene_set_id, people_groups):
     dgs = denovo_gene_set_facade.get_denovo_gene_set(
@@ -90,7 +88,6 @@ def test_get_denovo_gene_set_f4_empty(
     assert dgs is None
 
 
-@pytest.mark.xfail(reason='[gene models] wrong annotation')
 def test_get_denovo_gene_sets_f4_autism(denovo_gene_set_facade):
     dgs = denovo_gene_set_facade.get_denovo_gene_sets(
         'denovo', {'f4_trio': {'phenotype': ['autism']}})
@@ -103,7 +100,6 @@ def test_get_denovo_gene_sets_f4_autism(denovo_gene_set_facade):
     assert name_in_gene_sets(dgs, 'Missense.Female', 1)
 
 
-@pytest.mark.xfail(reason='[gene models] wrong annotation')
 def test_get_denovo_gene_sets_f4_unaffected(denovo_gene_set_facade):
     dgs = denovo_gene_set_facade.get_denovo_gene_sets(
         'denovo', {'f4_trio': {'phenotype': ['unaffected']}})
@@ -113,7 +109,6 @@ def test_get_denovo_gene_sets_f4_unaffected(denovo_gene_set_facade):
     assert name_in_gene_sets(dgs, 'Synonymous', 1)
 
 
-@pytest.mark.xfail(reason='[gene models] wrong annotation')
 def test_get_denovo_gene_sets_f4_autism_unaffected(denovo_gene_set_facade):
     dgs = denovo_gene_set_facade.get_denovo_gene_sets(
         'denovo', {'f4_trio': {'phenotype': ['autism', 'unaffected']}})

@@ -4,7 +4,6 @@ from dae.common_reports.denovo_report import EffectCell, EffectRow, \
     DenovoReportTable, DenovoReport
 
 
-@pytest.mark.xfail(reason='[gene models] wrong annotation')
 def test_effect_cell_missense(dataset1, denovo_variants_ds1, filter_objects):
     filter_object = filter_objects[0].get_filter_object_by_column_name(
         'sib and phenotype2')
@@ -66,7 +65,6 @@ def test_effect_cell_empty(dataset1, denovo_variants_ds1, filter_objects):
     assert len(effect_cell.to_dict()) == 5
 
 
-@pytest.mark.xfail(reason='[gene models] wrong annotation')
 def test_effect_row(dataset1, denovo_variants_ds1, filter_objects):
     effect_row = EffectRow(
         dataset1, denovo_variants_ds1, 'Missense', filter_objects[0]
@@ -90,7 +88,6 @@ def test_effect_row(dataset1, denovo_variants_ds1, filter_objects):
     assert len(effect_row.to_dict()) == 2
 
 
-@pytest.mark.xfail(reason='[gene models] wrong annotation')
 def test_denovo_report_table(dataset1, denovo_variants_ds1, filter_objects):
     denovo_report_table = DenovoReportTable(
         dataset1, denovo_variants_ds1, ['Missense', 'Splice-site'],

@@ -35,7 +35,6 @@ def test_load_cache(denovo_gene_sets):
     assert loaded is not None
 
 
-@pytest.mark.xfail(reason='[gene models] wrong annotation')
 def test_f1_autism_get_gene_sets(denovo_gene_sets):
     gene_sets = DenovoGeneSet.get_gene_sets(
         denovo_gene_sets,
@@ -58,7 +57,6 @@ def test_f1_affected_and_unaffected_get_gene_sets(denovo_gene_sets):
     assert name_in_gene_sets(gene_sets, 'Synonymous', 1)
 
 
-@pytest.mark.xfail(reason='[gene models] wrong annotation')
 def test_f1_unaffected_get_gene_sets(denovo_gene_sets):
     gene_sets = DenovoGeneSet.get_gene_sets(
         denovo_gene_sets,
@@ -72,7 +70,6 @@ def test_f1_unaffected_get_gene_sets(denovo_gene_sets):
     # assert name_in_gene_sets(gene_sets, 'Missense.Female', 0)
 
 
-@pytest.mark.xfail(reason='[gene models] wrong annotation')
 def test_f1_single_get_gene_sets(denovo_gene_sets):
     gene_sets = DenovoGeneSet.get_gene_sets(
         denovo_gene_sets,
@@ -85,7 +82,6 @@ def test_f1_single_get_gene_sets(denovo_gene_sets):
     assert name_in_gene_sets(gene_sets, 'Missense.Male', 2)
 
 
-@pytest.mark.xfail(reason='[gene models] wrong annotation')
 def test_synonymous_recurrency_get_gene_sets(denovo_gene_sets):
     gene_sets = DenovoGeneSet.get_gene_sets(
         denovo_gene_sets,
@@ -98,7 +94,6 @@ def test_synonymous_recurrency_get_gene_sets(denovo_gene_sets):
     assert not name_in_gene_sets(gene_sets, 'Synonymous.Triple')
 
 
-@pytest.mark.xfail(reason='[gene models] wrong annotation')
 def test_missense_recurrency_get_gene_sets(denovo_gene_sets):
     gene_sets = DenovoGeneSet.get_gene_sets(
         denovo_gene_sets,
@@ -111,7 +106,6 @@ def test_missense_recurrency_get_gene_sets(denovo_gene_sets):
     assert not name_in_gene_sets(gene_sets, 'Missense.Triple')
 
 
-@pytest.mark.xfail(reason='[gene models] wrong annotation')
 def test_synonymous_triple_get_gene_sets(denovo_gene_sets):
     gene_sets = DenovoGeneSet.get_gene_sets(
         denovo_gene_sets,
@@ -124,7 +118,6 @@ def test_synonymous_triple_get_gene_sets(denovo_gene_sets):
     assert name_in_gene_sets(gene_sets, 'Synonymous', 1)
 
 
-@pytest.mark.xfail(reason='[gene models] wrong annotation')
 def test_missense_triple_get_gene_sets(denovo_gene_sets):
     gene_sets = DenovoGeneSet.get_gene_sets(
         denovo_gene_sets,
@@ -137,7 +130,6 @@ def test_missense_triple_get_gene_sets(denovo_gene_sets):
     assert name_in_gene_sets(gene_sets, 'Missense.Triple', 2)
 
 
-@pytest.mark.xfail(reason='[gene models] wrong annotation')
 def test_missense_triple_get_gene_sets_affected_and_unaffected(
         denovo_gene_sets):
     gene_sets = DenovoGeneSet.get_gene_sets(
@@ -151,7 +143,6 @@ def test_missense_triple_get_gene_sets_affected_and_unaffected(
     assert name_in_gene_sets(gene_sets, 'Missense.Triple', 2)
 
 
-@pytest.mark.xfail(reason='[gene models] wrong annotation')
 def test_autism_trio_get_gene_sets(denovo_gene_set_f4):
     gene_sets = DenovoGeneSet.get_gene_sets(
         [denovo_gene_set_f4],
@@ -166,7 +157,6 @@ def test_autism_trio_get_gene_sets(denovo_gene_set_f4):
     assert name_in_gene_sets(gene_sets, 'Missense.Female', 1)
 
 
-@pytest.mark.xfail(reason='[gene models] wrong annotation')
 def test_unaffected_trio_get_gene_sets(denovo_gene_set_f4):
     gene_sets = DenovoGeneSet.get_gene_sets(
         [denovo_gene_set_f4],
@@ -178,7 +168,6 @@ def test_unaffected_trio_get_gene_sets(denovo_gene_set_f4):
     assert name_in_gene_sets(gene_sets, 'Synonymous', 1)
 
 
-@pytest.mark.xfail(reason='[gene models] wrong annotation')
 def test_affected_and_unaffected_trio_get_gene_sets(denovo_gene_set_f4):
     gene_sets = DenovoGeneSet.get_gene_sets(
         [denovo_gene_set_f4],
