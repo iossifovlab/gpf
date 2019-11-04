@@ -18,3 +18,27 @@ def test_is_impala(impala_genotype_storage):
 def test_is_filestorage(impala_genotype_storage):
     assert impala_genotype_storage.is_filestorage() is False
 
+
+def test_impala_connection(impala_genotype_storage):
+    impala_connection = impala_genotype_storage.impala_connection
+
+    assert impala_connection is not None
+
+
+def test_impala_helpers(impala_genotype_storage):
+    impala_helpers = impala_genotype_storage.impala_helpers
+
+    assert impala_helpers is not None
+    assert impala_helpers.connection is not None
+
+
+def test_hdfs_helpers(impala_genotype_storage):
+    hdfs_helpers = impala_genotype_storage.hdfs_helpers
+
+    assert hdfs_helpers is not None
+
+    assert hdfs_helpers.host == 'localhost'
+    assert hdfs_helpers.port == 8020
+    assert hdfs_helpers.hdfs is not None
+
+

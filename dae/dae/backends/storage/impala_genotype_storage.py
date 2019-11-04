@@ -2,8 +2,7 @@ import os
 
 from dae.backends.storage.genotype_storage import GenotypeStorage
 
-from dae.backends.configure import Configure
-
+from dae.backends.impala.hdfs_helpers import HdfsHelpers
 from dae.backends.impala.impala_helpers import ImpalaHelpers
 from dae.backends.impala.impala_variants import ImpalaFamilyVariants
 
@@ -13,22 +12,47 @@ class ImpalaGenotypeStorage(GenotypeStorage):
     def __init__(self, storage_config):
         super(ImpalaGenotypeStorage, self).__init__(storage_config)
 
+        self._impala_connection = None
+        self._impala_helpers = None
+        self._hdfs_helpers = None
+
     def is_impala(self):
         return True
 
-    def _create_impala_connection(self):
-        connection = ImpalaHelpers.create_impala_connection(
+    @property
+    def impala_connection(self):
+        if self._impala_connection is None:
+            self._impala_connection = ImpalaHelpers.create_impala_connection(
             self.storage_config.impala.host,
             self.storage_config.impala.port
         )
 
-        return connection
+        return self._impala_connection
+
+    @property
+    def impala_helpers(self):
+        if self._impala_helpers is None:
+            self._impala_helpers = ImpalaHelpers(
+                impala_connection=self.impala_connection
+            )
+
+        return self._impala_helpers
+
+    @property
+    def hdfs_helpers(self):
+        if self._hdfs_helpers is None:
+            self._hdfs_helpers = HdfsHelpers(
+                self.storage_config.hdfs.host,
+                self.storage_config.hdfs.port
+            )
+
+        return self._hdfs_helpers
 
     def get_backend(self, study_config, genomes_db):
         impala_config = self._impala_configuration(study_config).impala
         
         variants = ImpalaFamilyVariants(
-            impala_config, self._impala_connection,
+            impala_config, self.impala_connection,
             genomes_db.get_gene_models()
         )
 
