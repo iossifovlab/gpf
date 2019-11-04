@@ -15,6 +15,9 @@ class FilesystemGenotypeStorage(GenotypeStorage):
             os.path.join(self.storage_config.dir, study_id, 'data')
         )
 
+    def is_filestorage(self):
+        return True
+
     def get_backend(self, study_config, genomes_db):
         data_path = self.get_data_dir(study_config.id)
 

@@ -13,7 +13,8 @@ class ImpalaGenotypeStorage(GenotypeStorage):
     def __init__(self, storage_config):
         super(ImpalaGenotypeStorage, self).__init__(storage_config)
 
-        self._impala_connection = self._make_impala_connection()
+    def is_impala(self):
+        return True
 
     def _create_impala_connection(self):
         connection = ImpalaHelpers.create_impala_connection(
