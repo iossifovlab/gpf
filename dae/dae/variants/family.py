@@ -198,7 +198,10 @@ class FamiliesBase(object):
     def families_query_by_person(self, person_ids):
         res = {}
         for person_id in person_ids:
-            fam = self.persons[person_id]
+            people = self.ped_df.loc[self.ped_df['person_id'] == person_id]
+            assert len(people) == 1
+            famId = people.loc[:, 'family_id'].iloc[0]
+            fam = self.families[famId]
             if fam.family_id not in res:
                 res[fam.family_id] = fam
         return res
