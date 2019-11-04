@@ -7,7 +7,7 @@
 .table-centered,
 .table-centered th,
 .table-centered td {
-	text-align: center;
+  text-align: center;
 }
 
 .container {
@@ -39,13 +39,14 @@
 }
 
 th.rotate > div {
+  display: inline-block;
   position: relative;
   height: 210px;
   width: auto;
   margin: auto;
   margin-top: 0;
   margin-bottom: 0;
-  writing-mode: tb-rl;
+  writing-mode: vertical-lr;
   filter: flipv fliph;
   transform: rotate(180deg);
 }
