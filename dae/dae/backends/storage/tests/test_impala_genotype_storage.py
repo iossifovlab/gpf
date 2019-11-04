@@ -6,7 +6,7 @@ def test_get_backend(
     assert impala_genotype_storage
 
     backend = impala_genotype_storage.get_backend(
-        quads_f1_impala_config, genomes_db
+        quads_f1_impala_config.id, genomes_db
     )
 
     assert len(backend.families) == 1
