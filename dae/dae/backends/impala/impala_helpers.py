@@ -32,33 +32,16 @@ class ImpalaHelpers(object):
             cursor.execute("""
                 CREATE DATABASE IF NOT EXISTS {db}
             """.format(db=config.db))
-            self.import_pedigree_file(
+            self.import_files(
                 cursor, config.db, config.tables.pedigree,
-                config.files.pedigree)
-            self.import_variant_files(
+                config.files.pedigree
+            )
+            self.import_files(
                 cursor, config.db, config.tables.variant,
-                [config.files.variant]
+                config.files.variants
             )
 
-    def import_pedigree_file(self, cursor, dbname, table_name, pedigree_file):
-        cursor.execute("""
-            DROP TABLE IF EXISTS {db}.{table_name}
-        """.format(db=dbname, table_name=table_name))
-
-        cursor.execute("""
-            CREATE TABLE {db}.{pedigree} LIKE PARQUET '{pedigree_file}'
-            STORED AS PARQUET
-        """.format(
-                db=dbname, pedigree_file=pedigree_file,
-                pedigree=table_name))
-        cursor.execute("""
-            LOAD DATA INPATH '{pedigree_file}' INTO TABLE {db}.{pedigree}
-        """.format(
-                db=dbname, pedigree_file=pedigree_file,
-                pedigree=table_name))
-
-    def import_variant_files(
-            self, cursor, dbname, table_name, variant_files):
+    def import_files(self, cursor, dbname, table_name, variant_files):
 
         cursor.execute("""
             DROP TABLE IF EXISTS {db}.{table_name}

@@ -73,7 +73,7 @@ def test_variants_parquet_io(
             CREATE DATABASE IF NOT EXISTS {db}
         """.format(db=db))
 
-        test_impala_helpers.import_variant_files(
+        test_impala_helpers.import_files(
             cursor, db, "variant",
             [os.path.join(temp_dirname, "variant.parquet")]
         )
