@@ -4,16 +4,17 @@ import os
 
 from dae.gpf_instance.gpf_instance import GPFInstance
 
-from dae.tools.study_parquet_load import load_study_parquet
 
+def relative_to_this_test_folder(path):
+    return os.path.join(
+        os.path.dirname(os.path.realpath(__file__)),
+        path
+    )
 
-def fixtures_dir():
-    return os.path.abspath(
-        os.path.join(os.path.dirname(__file__), 'fixtures'))
 
 @pytest.fixture(scope='function')
 def gpf_instance(mock_genomes_db):
-    return GPFInstance(work_dir=fixtures_dir())
+    return GPFInstance(work_dir=relative_to_this_test_folder('fixtures'))
 
 
 @pytest.fixture(scope='function')
