@@ -1,5 +1,5 @@
 from dae.annotation.tools.file_io_parquet import ParquetSchema
-from dae.variants.family import FamiliesBase, Family
+from dae.pedigrees.family import FamiliesBase, Family
 from dae.backends.impala.parquet_io import ParquetSerializer
 
 from impala.util import as_pandas

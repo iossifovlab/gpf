@@ -10,7 +10,7 @@ from dae.variants.attributes import Role, Sex, Status
 
 class Person(object):
 
-    def __init__(self, atts=None):
+    def __init__(self, atts):
         if atts:
             self.atts = atts
         else:

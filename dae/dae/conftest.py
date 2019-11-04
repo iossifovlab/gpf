@@ -24,7 +24,7 @@ from dae.backends.vcf.builder import variants_builder
 from dae.backends.import_commons import \
     construct_import_annotation_pipeline
 from dae.tools.vcf2parquet import import_vcf
-from dae.variants.family import FamiliesBase
+from dae.pedigrees.family import FamiliesBase
 from dae.pedigrees.pedigree_reader import PedigreeReader
 from dae.utils.helpers import pedigree_from_path
 

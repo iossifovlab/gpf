@@ -4,7 +4,7 @@ from sqlalchemy import not_
 
 from collections import defaultdict, OrderedDict
 
-from dae.variants.family import Person, Family
+from dae.pedigrees.family import Person, Family
 from dae.pheno.db import DbManager
 from dae.pheno.common import MeasureType
 from dae.variants.attributes import Sex, Status, Role

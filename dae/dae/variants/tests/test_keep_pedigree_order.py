@@ -7,7 +7,7 @@ from io import StringIO
 
 from dae.pedigrees.pedigree_reader import PedigreeReader
 from dae.variants.attributes import Role
-from dae.variants.family import FamiliesBase, Family
+from dae.pedigrees.family import FamiliesBase, Family
 
 
 PED_FILE1 = """

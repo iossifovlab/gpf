@@ -106,31 +106,31 @@ FamilyVariant - representation of family variants
 
 
 
-variants.family module
-----------------------
+.. variants.family module
+.. ----------------------
 
-.. automodule:: dae.variants.family
-    :members:
-    :undoc-members:
-    :show-inheritance:
+.. .. automodule:: dae.variants.family
+..     :members:
+..     :undoc-members:
+..     :show-inheritance:
 
-Family - representation of a family
------------------------------------
+.. Family - representation of a family
+.. -----------------------------------
 
-.. autoclass:: dae.variants.family.Family
-    :members:
-    :undoc-members:
-    :special-members: __init__, __len__
+.. .. autoclass:: dae.variants.family.Family
+..     :members:
+..     :undoc-members:
+..     :special-members: __init__, __len__
 
 
-VcfFamily - family specialization for VCF variants
---------------------------------------------------
+.. VcfFamily - family specialization for VCF variants
+.. --------------------------------------------------
 
-.. autoclass:: dae.backends.vcf.raw_vcf.VcfFamily
-    :members:
-    :undoc-members:
-    :special-members: __init__
-    :inherited-members:
+.. .. autoclass:: dae.backends.vcf.raw_vcf.VcfFamily
+..     :members:
+..     :undoc-members:
+..     :special-members: __init__
+..     :inherited-members:
 
 
 RawFamilyVariants - query interface for VCF variants

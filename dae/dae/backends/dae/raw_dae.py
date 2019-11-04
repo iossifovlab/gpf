@@ -16,7 +16,7 @@ import pandas as pd
 
 
 from dae.variants.attributes import VariantType
-from dae.variants.family import FamiliesBase, Family
+from dae.pedigrees.family import FamiliesBase, Family
 from dae.variants.family_variant import FamilyVariant
 from dae.variants.variant import SummaryVariantFactory, SummaryVariant
 

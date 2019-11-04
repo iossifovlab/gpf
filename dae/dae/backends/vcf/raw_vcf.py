@@ -5,8 +5,8 @@ import pandas as pd
 
 from dae.pedigrees.pedigree_reader import PedigreeReader
 
-from dae.variants.family import FamiliesBase
-from dae.variants.family import Family
+from dae.pedigrees.family import FamiliesBase
+from dae.pedigrees.family import Family
 from dae.variants.variant import SummaryVariantFactory
 from dae.variants.family_variant import FamilyVariant, FamilyAllele
 

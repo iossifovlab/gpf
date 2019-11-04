@@ -8,7 +8,7 @@ import pytest
 import pandas as pd
 
 from dae.pedigrees.pedigree_reader import PedigreeReader
-from ..family import FamiliesBase, Family
+from dae.pedigrees.family import FamiliesBase, Family
 
 from .conftests import relative_to_this_test_folder
 
