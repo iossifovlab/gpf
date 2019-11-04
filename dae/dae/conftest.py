@@ -21,6 +21,8 @@ from dae.backends.vcf.annotate_allele_frequencies import \
     VcfAlleleFrequencyAnnotator
 from dae.backends.vcf.builder import variants_builder
 
+from dae.backends.storage.impala_genotype_storage import ImpalaGenotypeStorage
+
 from dae.backends.import_commons import \
     construct_import_annotation_pipeline
 from dae.tools.vcf2parquet import import_vcf
@@ -417,6 +419,25 @@ def test_impala_helpers(request):
     return helpers
 
 
+@pytest.fixture(scope='session')
+def impala_genotype_storage():
+    storage_config = Box({
+        'type': 'impala',
+        'impala': {
+            'host': '127.0.0.1',
+            'port': 21050,
+            'db': impala_test_dbname(),
+        },
+        'hdfs': {
+            'host': '127.0.0.1',
+            'port': 8020,
+            'base_dir': '/tmp'
+        }
+    })
+
+    return ImpalaGenotypeStorage(storage_config)
+
+
 def collect_vcf(dirname):
     result = []
     pattern = os.path.join(dirname, '*.vcf')
@@ -498,18 +519,11 @@ def data_import(
 
 
 @pytest.fixture(scope='session')
-def variants_impala(
-        request, data_import, test_impala_helpers, default_gene_models):
+def variants_impala(request, data_import, impala_genotype_storage, genomes_db):
 
     def builder(path):
-        from dae.backends.impala.impala_variants import ImpalaFamilyVariants
-
-        vcf_prefix = relative_to_this_test_folder(
-            os.path.join('fixtures', path))
-        vcf_config = Configure.from_prefix_vcf(vcf_prefix).vcf
-        impala_config = build_impala_config(vcf_config)
-        fvars = ImpalaFamilyVariants(
-            impala_config, test_impala_helpers.connection, default_gene_models
-        )
+        study_id = os.path.basename(path)
+        fvars = impala_genotype_storage.get_backend(study_id, genomes_db)
         return fvars
+
     return builder
