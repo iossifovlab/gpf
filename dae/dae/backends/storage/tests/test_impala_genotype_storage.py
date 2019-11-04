@@ -28,7 +28,7 @@ def test_is_filestorage(impala_genotype_storage):
 ])
 def test_get_hdfs_dir(impala_genotype_storage, hdfs_dir, path):
     if impala_genotype_storage.hdfs_helpers.exists(hdfs_dir):
-        impala_genotype_storage.hdfs_helpers.delete(hdfs_dir)
+        impala_genotype_storage.hdfs_helpers.delete(hdfs_dir, recursive=True)
 
     assert impala_genotype_storage.hdfs_helpers.exists(hdfs_dir) is False
 
