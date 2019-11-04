@@ -1,5 +1,6 @@
 import pytest
 
+import os
 from io import StringIO
 import six
 import csv
@@ -13,16 +14,17 @@ from dae.pedigrees.interval_sandwich import SandwichSolver
 from dae.pedigrees.layout import IndividualWithCoordinates, Layout
 from dae.pedigrees.drawing import OffsetLayoutDrawer
 
-from dae.utils.fixtures import path_to_fixtures as _path_to_fixtures
 
-
-def path_to_fixtures(*args):
-    return _path_to_fixtures('pedigrees', *args)
+def relative_to_this_folder(path):
+    return os.path.join(
+        os.path.dirname(os.path.realpath(__file__)),
+        path
+    )
 
 
 @pytest.fixture(scope='session')
 def input_filename():
-    return path_to_fixtures('input', 'test.ped')
+    return relative_to_this_folder('fixtures/test.ped')
 
 
 @pytest.fixture(scope='session')
@@ -248,7 +250,7 @@ def columns_labels():
         'id': 'personId',
         'father': 'dadId',
         'mother': 'momId',
-        'sex': 'gender',
+        'sex': 'sex',
         'status': 'status',
         'layout': 'layout',
         'role': 'role'
@@ -257,7 +259,7 @@ def columns_labels():
 
 @pytest.fixture(scope='session')
 def header():
-    return ['familyId', 'personId', 'dadId', 'momId', 'gender', 'status',
+    return ['familyId', 'personId', 'dadId', 'momId', 'sex', 'status',
             'role']
 
 
@@ -271,7 +273,7 @@ def dict_writer(output, header, layout_column, generated_column):
 
 @pytest.fixture(scope='session')
 def test_output():
-    return """familyId\tpersonId\tdadId\tmomId\tgender\tstatus\trole\tlayout\tgenerated
+    return """familyId\tpersonId\tdadId\tmomId\tsex\tstatus\trole\tlayout\tgenerated
 fam1\tid1\tdad1\tmom1\t1\t2\tprb\tError\t
 fam1\tmom1\t0\t0\t2\t1\tmom\tError\t
 fam2\tid2\tdad2\tmom2\t1\t2\tprb\t2:100.0,75.0\t
@@ -328,3 +330,8 @@ def fam1(pedigree_test):
 @pytest.fixture(scope='session')
 def fam1_family_connections(fam1):
     return FamilyConnections.from_pedigree(fam1)
+
+
+@pytest.fixture(scope='session')
+def sample_nuc_family():
+    return relative_to_this_folder('fixtures/sample_nuc_family.ped')

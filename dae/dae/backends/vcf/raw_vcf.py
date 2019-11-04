@@ -3,6 +3,8 @@ import os
 import numpy as np
 import pandas as pd
 
+from dae.pedigrees.pedigree_reader import PedigreeReader
+
 from dae.variants.family import FamiliesBase
 from dae.variants.family import Family
 from dae.variants.variant import SummaryVariantFactory
@@ -85,14 +87,16 @@ class VariantFactory(SummaryVariantFactory):
 
 class RawFamilyVariants(FamiliesBase):
 
-    def __init__(self, config=None, prefix=None, annotator=None, region=None,
+    def __init__(self, pedigree_df, config=None, prefix=None,
+                 annotator=None, region=None,
                  transmission_type='transmitted',
-                 variant_factory=VariantFactory, genomes_db=None):
+                 variant_factory=VariantFactory,
+                 genomes_db=None):
         super(RawFamilyVariants, self).__init__()
         if prefix is not None:
             config = Configure.from_prefix_vcf(prefix)
 
-        assert isinstance(config, Configure)
+        assert isinstance(config, Configure), type(config)
 
         self.config = config.vcf
         assert self.config is not None
@@ -100,6 +104,7 @@ class RawFamilyVariants(FamiliesBase):
         self.VF = variant_factory
         self.prefix = prefix
         self.transmission_type = transmission_type
+        self.ped_df = pedigree_df
 
         self._load(annotator, region, genomes_db)
 
@@ -134,15 +139,8 @@ class RawFamilyVariants(FamiliesBase):
         ped_df = pd.DataFrame(pedigree)
         return ped_df, ped_df['sample_id'].values
 
-    def _load_pedigree(self):
-        assert self.config.pedigree
-        assert os.path.exists(self.config.pedigree), self.config.pedigree
-
-        return FamiliesBase.load_pedigree_file(self.config.pedigree)
-
     def _load(self, annotator, region, genomes_db):
         loader = RawVariantsLoader(self.config, genomes_db)
-        self.ped_df = self._load_pedigree()
 
         self.vcf = loader.load_vcf(region)
 

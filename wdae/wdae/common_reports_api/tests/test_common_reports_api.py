@@ -58,7 +58,7 @@ def test_families_data_download(admin_client):
     assert len(header) == 8
 
     assert header == [
-        'familyId', 'personId', 'dadId', 'momId', 'gender', 'status', 'role',
+        'familyId', 'personId', 'dadId', 'momId', 'sex', 'status', 'role',
         'study'
     ]
 

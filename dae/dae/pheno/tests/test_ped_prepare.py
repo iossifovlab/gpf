@@ -6,6 +6,7 @@ Created on Jul 25, 2017
 import os
 from dae.pheno.prepare.ped_prepare import PreparePersons, PrepareVariables
 from dae.pheno.pheno_db import PhenoDB
+from dae.pedigrees.pedigree_reader import PedigreeReader
 import pytest
 
 
@@ -26,7 +27,7 @@ def instrument_files():
 def test_ped_prepare_simple(test_config, fake_ped_file):
     test_config.person.role.mapping = 'INTERNAL'
     prep = PreparePersons(test_config)
-    ped_df = PreparePersons.load_pedigree_file(fake_ped_file)
+    ped_df = PedigreeReader.load_pedigree_file(fake_ped_file)
 
     assert ped_df is not None
 

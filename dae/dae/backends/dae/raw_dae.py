@@ -13,6 +13,8 @@ import pysam
 
 import numpy as np
 import pandas as pd
+
+
 from dae.variants.attributes import VariantType
 from dae.variants.family import FamiliesBase, Family
 from dae.variants.family_variant import FamilyVariant
@@ -24,30 +26,22 @@ from dae.utils.dae_utils import dae2vcf_variant
 
 class BaseDAE(FamiliesBase):
 
-    def __init__(self, family_filename,
+    def __init__(self, pedigree_dataframe,
                  transmission_type,
                  genome, annotator):
         super(BaseDAE, self).__init__()
 
         assert genome is not None
         self.transmission_type = transmission_type
-        self.family_filename = family_filename
+        self.pedigree_dataframe = pedigree_dataframe
 
         self.genome = genome
         self.annotator = annotator
 
+        self.families_build(self.pedigree_dataframe, Family)
+
     def is_empty(self):
         return False
-
-    def load_pedigree_families(self):
-        self.ped_df = FamiliesBase.load_pedigree_file(
-            self.family_filename)
-        self.families_build(self.ped_df, Family)
-
-    def load_simple_families(self):
-        self.ped_df = FamiliesBase.load_simple_family_file(
-            self.family_filename)
-        self.families_build(self.ped_df, Family)
 
     def dae2vcf_variant(self, chrom, position, dae_variant):
         position, reference, alternative = dae2vcf_variant(
@@ -139,18 +133,17 @@ class BaseDAE(FamiliesBase):
 
 class RawDAE(BaseDAE):
 
-    def __init__(self, summary_filename, toomany_filename, family_filename,
+    def __init__(self, summary_filename, toomany_filename, pedigree_dataframe,
                  region=None, genome=None, annotator=None,
                  transmission_type='transmitted'):
         super(RawDAE, self).__init__(
-            family_filename=family_filename,
+            pedigree_dataframe=pedigree_dataframe,
             transmission_type=transmission_type,
             genome=genome,
             annotator=annotator)
 
         os.path.exists(summary_filename)
         os.path.exists(toomany_filename)
-        os.path.exists(family_filename)
 
         self.summary_filename = summary_filename
         self.toomany_filename = toomany_filename
@@ -245,25 +238,18 @@ class RawDAE(BaseDAE):
 
 
 class RawDenovo(BaseDAE):
-    def __init__(self, denovo_filename, family_filename,
+    def __init__(self, denovo_filename, pedigree_dataframe,
                  genome=None,
-                 annotator=None):
+                 annotator=None,
+                 pedigree_df=None):
         super(RawDenovo, self).__init__(
-            family_filename=family_filename,
+            pedigree_dataframe=pedigree_dataframe,
             transmission_type='denovo',
             genome=genome,
             annotator=annotator
         )
-
         os.path.exists(denovo_filename)
-        os.path.exists(family_filename)
-
-        assert genome is not None
-
         self.denovo_filename = denovo_filename
-        self.family_filename = family_filename
-
-        self.genome = genome
 
     def split_location(self, location):
         chrom, position = location.split(":")

@@ -30,43 +30,30 @@ def get_contigs(vcf_filename):
     return vcf.seqnames
 
 
-def create_vcf_variants(config, genomes_db, region=None):
-
-    freq_annotator = VcfAlleleFrequencyAnnotator()
-
-    fvars = RawFamilyVariants(
-        config=config, annotator=freq_annotator,
-        region=region, genomes_db=genomes_db)
-    return fvars
-
-
 def import_vcf(
         dae_config, genomes_db, annotation_pipeline,
-        pedigree_filename, vcf_filename,
+        pedigree_df, vcf_filename, study_id,
         region=None, bucket_index=1, rows=10000, output='.',
-        study_id=None, filesystem=None):
+        filesystem=None):
 
     assert os.path.exists(vcf_filename), vcf_filename
-    assert os.path.exists(pedigree_filename), pedigree_filename
 
     vcf_config = Configure.from_dict({
             'vcf': {
-                'pedigree': pedigree_filename,
                 'vcf': vcf_filename,
                 'annotation': None,
             },
         })
 
-    if study_id is None:
-        filename = os.path.basename(pedigree_filename)
-        study_id = os.path.splitext(filename)[0]
-        print(filename, os.path.splitext(filename), study_id)
-
     impala_config = Configure.from_prefix_impala(
         output, bucket_index=bucket_index, db=None, study_id=study_id).impala
     print("converting into ", impala_config, file=sys.stderr)
 
-    fvars = create_vcf_variants(vcf_config, genomes_db, region)
+    fvars = RawFamilyVariants(
+        pedigree_df,
+        config=vcf_config, annotator=VcfAlleleFrequencyAnnotator(),
+        region=region, genomes_db=genomes_db
+    )
 
     fvars.annot_df = annotation_pipeline.annotate_df(fvars.annot_df)
 

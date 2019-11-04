@@ -8,22 +8,6 @@ import pandas as pd
 from dae.variants.attributes import Role, Sex, Status
 
 
-PED_COLUMNS_REQUIRED = (
-    'family_id',
-    'person_id',
-    'dad_id',
-    'mom_id',
-    'sex',
-    'status',
-    'role',
-)
-
-PED_COLUMNS_OPTIONAL = (
-    'sampleId',
-    'phenotype',
-)
-
-
 class Person(object):
 
     def __init__(self, atts=None):
@@ -282,78 +266,8 @@ class FamiliesBase(object):
         return fam_df
 
     @staticmethod
-    def load_pedigree_file(infile, sep="\t"):
-        ped_df = pd.read_csv(
-            infile, sep=sep, index_col=False,
-            skipinitialspace=True,
-            converters={
-                'role': lambda r: Role.from_name(r),
-                'sex': lambda s: Sex.from_name_or_value(s),
-                'gender': lambda s: Sex.from_name_or_value(s),
-                'status': lambda s: Status.from_name_or_value(s),
-                'layout': lambda lc: lc.split(':')[-1],
-                'generated': lambda g: True if g == '1.0' else False,
-            },
-            dtype={
-                'familyId': str,
-                'personId': str,
-                'sampleId': str,
-                'momId': str,
-                'dadId': str,
-            },
-            comment='#',
-            encoding='utf-8'
-        )
-        if 'gender' in ped_df.columns:
-            ped_df = ped_df.rename(columns={
-                'gender': 'sex',
-            })
-
-        if 'sampleId' not in ped_df.columns:
-            sample_ids = pd.Series(data=ped_df['personId'].values)
-            ped_df['sampleId'] = sample_ids
-        else:
-            sample_ids = ped_df.apply(
-                lambda r: r.personId if pd.isna(r.sampleId) else r.sampleId,
-                axis=1,
-                result_type='reduce',
-            )
-            ped_df['sampleId'] = sample_ids
-
-        ped_df.rename(columns={
-            'personId': 'person_id',
-            'familyId': 'family_id',
-            'momId': 'mom_id',
-            'dadId': 'dad_id',
-            'sampleId': 'sample_id',
-        }, inplace=True)
-
-        assert set(PED_COLUMNS_REQUIRED) <= set(ped_df.columns)
-
-        return ped_df
-
-    @staticmethod
     def sort_pedigree(ped_df):
         ped_df['role_order'] = ped_df['role'].apply(lambda r: r.value)
         ped_df = ped_df.sort_values(by=['familyId', 'role_order'])
         ped_df = ped_df.drop(axis=1, columns=['role_order'])
         return ped_df
-
-    @staticmethod
-    def save_pedigree(ped_df, filename):
-        df = ped_df.copy()
-
-        df = df.rename(columns={
-            'person_id': 'personId',
-            'family_id': 'familyId',
-            'mom_id': 'momId',
-            'dad_id': 'dadId',
-            'sample_id': 'sampleId',
-        })
-        df.sex = df.sex.apply(lambda v: v.name)
-        df.role = df.role.apply(lambda v: v.name)
-        df.status = df.status.apply(lambda v: v.name)
-
-        df.to_csv(
-            filename, index=False,
-            sep='\t')

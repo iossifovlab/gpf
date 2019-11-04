@@ -2,8 +2,8 @@ import pytest
 import pandas as pd
 
 from dae.variants.attributes import Sex, Status, Role
-from dae.pheno.prepare.ped_prepare import PreparePersons
-from dae.pheno.tests.conftest import relative_to_this_folder
+from dae.pedigrees.pedigree_reader import PedigreeReader
+from dae.pedigrees.tests.conftest import relative_to_this_folder
 
 
 expected_pedigree_df = pd.DataFrame([
@@ -37,9 +37,9 @@ def test_load_pedigree_file(filepath):
     expected_df['sample_id'] = expected_df['person_id']
 
     absolute_filepath = relative_to_this_folder(
-        'fixtures/pedigree_data/varieties/{}'.format(filepath)
+        'fixtures/{}'.format(filepath)
     )
-    pedigree_df = PreparePersons.load_pedigree_file(absolute_filepath)
+    pedigree_df = PedigreeReader.load_pedigree_file(absolute_filepath)
     assert pedigree_df.equals(expected_df)
 
 
@@ -59,9 +59,9 @@ def test_load_pedigree_file_additional_columns():
     expected_df['sample_id'] = expected_df['person_id']
 
     absolute_filepath = relative_to_this_folder(
-        'fixtures/pedigree_data/varieties/pedigree_D.ped'
+        'fixtures/pedigree_D.ped'
     )
-    pedigree_df = PreparePersons.load_pedigree_file(absolute_filepath)
+    pedigree_df = PedigreeReader.load_pedigree_file(absolute_filepath)
     assert pedigree_df.equals(expected_df)
 
 
@@ -80,7 +80,7 @@ def test_load_pedigree_file_do_not_override_sample_id_column():
     ]
 
     absolute_filepath = relative_to_this_folder(
-        'fixtures/pedigree_data/varieties/pedigree_E.ped'
+        'fixtures/pedigree_E.ped'
     )
-    pedigree_df = PreparePersons.load_pedigree_file(absolute_filepath)
+    pedigree_df = PedigreeReader.load_pedigree_file(absolute_filepath)
     assert pedigree_df.equals(expected_df)

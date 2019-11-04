@@ -5,6 +5,7 @@ from dae.backends.import_commons import construct_import_annotation_pipeline
 
 from dae.tools.vcf2parquet import parse_cli_arguments, import_vcf, \
     generate_makefile
+from dae.utils.helpers import pedigree_from_path
 
 
 def test_vcf2parquet_vcf(
@@ -28,9 +29,11 @@ def test_vcf2parquet_vcf(
             "scores_dirname": annotation_scores_dirname,
         }})
 
+    ped_df, study_id = pedigree_from_path(argv.pedigree)
+
     vcf_parquet = import_vcf(
         dae_config_fixture, genomes_db, annotation_pipeline,
-        argv.pedigree, argv.vcf,
+        ped_df, argv.vcf, study_id,
         region=argv.region, bucket_index=argv.bucket_index,
         output=argv.output)
 

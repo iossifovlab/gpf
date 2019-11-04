@@ -1,4 +1,4 @@
-familyId	personId	dadId	momId	gender	status	role
+familyId	personId	dadId	momId	sex	status	role
 fam1	id1	dad1	mom1	1	2	prb
 fam1	mom1	0	0	2	1	mom
 fam2	id2	dad2	mom2	1	2	prb

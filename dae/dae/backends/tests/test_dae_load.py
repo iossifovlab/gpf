@@ -33,7 +33,6 @@ def test_best2gt():
 
 def test_load_denovo(raw_denovo):
     denovo = raw_denovo("backends/denovo")
-    denovo.load_simple_families()
 
     assert denovo is not None
     assert denovo.families is not None
@@ -50,8 +49,6 @@ def test_load_denovo(raw_denovo):
 
 def test_load_denovo_families(raw_denovo):
     denovo = raw_denovo("backends/denovo")
-
-    denovo.load_simple_families()
     assert denovo.families is not None
 
 

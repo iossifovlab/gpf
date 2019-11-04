@@ -11,6 +11,7 @@ from dae.backends.configure import Configure
 
 from dae.backends.impala.impala_helpers import ImpalaHelpers
 from dae.backends.impala.impala_variants import ImpalaFamilyVariants
+from dae.pedigrees.pedigree_reader import PedigreeReader
 
 
 class VariantsDb(object):
@@ -285,8 +286,11 @@ class VariantsDb(object):
             )
             return Study(study_config, variants)
         else:
+            ped_df = PedigreeReader.load_pedigree_file(
+                '{}.ped'.format(study_config.prefix)
+            )
             variants = RawFamilyVariants(
-                prefix=study_config.prefix, genomes_db=self.genomes_db
+                ped_df, prefix=study_config.prefix, genomes_db=self.genomes_db
             )
 
             return Study(study_config, variants)
