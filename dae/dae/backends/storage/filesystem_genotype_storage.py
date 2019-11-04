@@ -10,8 +10,13 @@ class FilesystemGenotypeStorage(GenotypeStorage):
     def __init__(self, storage_config):
         super(FilesystemGenotypeStorage, self).__init__(storage_config)
 
+    def get_data_dir(self, study_id):
+        return os.path.abspath(
+            os.path.join(self.storage_config.dir, study_id, 'data')
+        )
+
     def get_backend(self, study_config, genomes_db):
-        data_path = self._get_data_path(study_config.id)
+        data_path = self.get_data_dir(study_config.id)
 
         variants = RawFamilyVariants(
             prefix=os.path.join(data_path, study_config.id),
