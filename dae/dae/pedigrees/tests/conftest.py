@@ -8,8 +8,10 @@ import csv
 from dae.pedigrees.layout_saver import LayoutSaver
 from dae.pedigrees.layout_loader import LayoutLoader
 from dae.pedigrees.pedigree_reader import PedigreeReader
-from dae.pedigrees.pedigrees import Pedigree, PedigreeMember, Individual, \
+from dae.pedigrees.pedigrees import Pedigree, Individual, \
     FamilyConnections, MatingUnit, SibshipUnit
+from dae.pedigrees.family import Person
+
 from dae.pedigrees.interval_sandwich import SandwichSolver
 from dae.pedigrees.layout import IndividualWithCoordinates, Layout
 from dae.pedigrees.drawing import OffsetLayoutDrawer
@@ -61,43 +63,43 @@ def error_message():
 
 @pytest.fixture(scope='function')
 def member1(error_message):
-    return PedigreeMember(
+    return Person.make_person(
         'id1', 'fam1', 'mom1', 'dad1', '2', '2', 'prb', error_message, False)
 
 
 @pytest.fixture(scope='function')
 def member2():
-    return PedigreeMember(
+    return Person.make_person(
         'mom1', 'fam1', '0', '0', '2', '1', 'mom', error_message, False)
 
 
 @pytest.fixture(scope='function')
 def member3():
-    return PedigreeMember(
+    return Person.make_person(
         'dad1', 'fam1', '0', '0', '1', '1', 'dad', error_message, True)
 
 
 @pytest.fixture(scope='function')
 def member4():
-    return PedigreeMember(
+    return Person.make_person(
         'id2', 'fam2', 'mom2', 'dad2', '1', '2', 'prb', '2:100.0,75.0', False)
 
 
 @pytest.fixture(scope='function')
 def member5():
-    return PedigreeMember(
+    return Person.make_person(
         'mom2', 'fam2', '0', '0', '2', '1', 'mom', '1:50.0,50.0', False)
 
 
 @pytest.fixture(scope='function')
 def member6():
-    return PedigreeMember(
+    return Person.make_person(
         'dad2', 'fam2', '0', '0', '1', '1', 'dad', '1:50.0,100.0', True)
 
 
 @pytest.fixture(scope='function')
 def member7():
-    return PedigreeMember('id3', 'fam3', 'mom3', '0', '1', '2', 'prb')
+    return Person.make_person('id3', 'fam3', 'mom3', '0', '1', '2', 'prb')
 
 
 @pytest.fixture(scope='function')

@@ -10,11 +10,9 @@ from dae.variants.attributes import Role, Sex, Status
 
 class Person(object):
 
-    def __init__(self, atts):
-        if atts:
-            self.atts = atts
-        else:
-            self.atts = {}
+    def __init__(self, **atts):
+        self.atts = atts
+
         assert 'person_id' in atts
         self.family_id = atts['family_id']
         self.person_id = atts['person_id']
@@ -24,22 +22,47 @@ class Person(object):
         self.sex = atts['sex']
         self.role = atts['role']
         self.status = atts['status']
-        self.mom = atts.get('mom_id', None)
-        self.dad = atts.get('dad_id', None)
-        self.layout_position = atts.get('layout', None)
+        self.mom_id = atts.get('mom_id', None)
+        self.dad_id = atts.get('dad_id', None)
+        self.mom = None
+        self.dad = None
+        self.layout = atts.get('layout', None)
         self.generated = atts.get('generated', False)
 
     def __repr__(self):
         return "Person({} ({}); {}; {})".format(
             self.person_id, self.family_id, self.role, self.sex)
 
-    @property
-    def dad_id(self):
-        return self.dad.person_id if self.has_dad() else ''
+    @staticmethod
+    def make_person(
+            person_id, family_id, mom_id, dad_id, sex, status, role,
+            layout=None, generated=False):
+        return Person(
+            person_id=person_id,
+            family_id=family_id,
+            mom_id=mom_id,
+            dad_id=dad_id,
+            sex=sex,
+            status=status,
+            role=Role.from_name(role),
+            layout=layout,
+            generated=generated)
 
     @property
-    def mom_id(self):
-        return self.mom.person_id if self.has_mom() else ''
+    def mother(self):
+        return self.mom_id if self.mom_id else ''
+
+    @mother.setter
+    def mother(self, mom_id):
+        self.mom_id = mom_id
+
+    @property
+    def father(self):
+        return self.dad_id if self.dad_id else ''
+
+    @father.setter
+    def father(self, dad_id):
+        self.dad_id = dad_id
 
     def has_mom(self):
         return not (self.mom is None or self.mom == '0')
@@ -63,6 +86,34 @@ class Person(object):
     def get_attr(self, item):
         return str(self.atts.get(item))
 
+    def has_missing_mother(self):
+        return self.mother == '0' or self.mother == '' or self.mother is None
+
+    def has_missing_father(self):
+        return self.father == '0' or self.father == '' or self.father is None
+
+    def has_missing_parents(self):
+        return self.has_missing_father() or self.has_missing_mother()
+
+    def get_member_dataframe(self):
+        phenotype = "unknown"
+        if self.status == "1":
+            phenotype = "unaffected"
+        elif self.status == "2":
+            phenotype = "affected"
+        return pd.DataFrame.from_dict({
+            "family_id": [self.family_id],
+            "person_id": [self.person_id],
+            "sample_id": [self.person_id],
+            "sex": [Sex.from_name_or_value(self.sex)],
+            "role": [self.role],
+            "status": [self.status],
+            "mom_id": [self.mother],
+            "dad_id": [self.father],
+            "layout": [self.layout],
+            "generated": [self.generated],
+            "phenotype": [phenotype]
+        })
 
 class Family(object):
 
@@ -78,7 +129,7 @@ class Family(object):
         members = []
         for index, person in enumerate(ped_df.to_dict(orient="records")):
             person['index'] = index
-            person_object = Person(person)
+            person_object = Person(**person)
 
             persons[person['person_id']] = person_object
             members.append(person_object)
@@ -89,8 +140,8 @@ class Family(object):
 
     def _connect_children_with_parents(self, persons, members):
         for member in members:
-            member.mom = persons.get(member.mom, None)
-            member.dad = persons.get(member.dad, None)
+            member.mom = persons.get(member.mom_id, None)
+            member.dad = persons.get(member.dad_id, None)
 
     @classmethod
     def from_df(cls, family_id, ped_df):

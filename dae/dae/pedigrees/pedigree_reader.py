@@ -4,7 +4,8 @@ import pandas as pd
 import csv
 
 from dae.variants.attributes import Role, Sex, Status
-from dae.pedigrees.pedigrees import Pedigree, PedigreeMember
+from dae.pedigrees.pedigrees import Pedigree
+from dae.pedigrees.family import Person
 
 
 PEDIGREE_COLUMN_NAMES = {
@@ -44,7 +45,7 @@ class PedigreeReader(object):
             for row in reader:
                 kwargs = {
                     "family_id": row[columns_labels["family_id"]],
-                    "id": row[columns_labels["id"]],
+                    "person_id": row[columns_labels["person_id"]],
                     "father": row[columns_labels["father"]],
                     "mother": row[columns_labels["mother"]],
                     "sex": row[columns_labels["sex"]],
@@ -55,7 +56,7 @@ class PedigreeReader(object):
                 if 'generated' in columns_labels:
                     generated = row.get(columns_labels["generated"], False)
                     kwargs["generated"] = True if generated else False
-                member = PedigreeMember(**kwargs)
+                member = Person(**kwargs)
                 if member.family_id not in families:
                     families[member.family_id] = Pedigree([member])
                 else:
@@ -147,7 +148,7 @@ class PedigreeReader(object):
     def get_default_colum_labels():
         return {
             "family_id": "familyId",
-            "id": "personId",
+            "person_id": "personId",
             "father": "dadId",
             "mother": "momId",
             "sex": "sex",
