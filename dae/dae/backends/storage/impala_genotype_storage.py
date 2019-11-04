@@ -57,8 +57,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
 
         return self._hdfs_helpers
 
-    def get_backend(self, study_config, genomes_db):
-        impala_config = self._impala_configuration(study_config).impala
+    def get_backend(self, study_id, genomes_db):
         
         variants = ImpalaFamilyVariants(
             impala_config, self.impala_connection,
