@@ -19,6 +19,15 @@ class ImpalaGenotypeStorage(GenotypeStorage):
     def is_impala(self):
         return True
 
+    def get_hdfs_dir(self, *path):
+        hdfs_dirname = os.path.join(
+            self.storage_config.hdfs.base_dir, *path
+        )
+        if not self.hdfs_helpers.hdfs.exists(hdfs_dirname):
+            self.hdfs_helpers.hdfs.mkdir(hdfs_dirname)
+
+        return hdfs_dirname
+
     @property
     def impala_connection(self):
         if self._impala_connection is None:

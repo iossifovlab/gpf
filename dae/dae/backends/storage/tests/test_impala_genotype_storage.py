@@ -1,3 +1,6 @@
+import pytest
+
+
 def test_get_backend(
         impala_genotype_storage, quads_f1_impala_config, genomes_db):
     assert impala_genotype_storage
@@ -17,6 +20,21 @@ def test_is_impala(impala_genotype_storage):
 
 def test_is_filestorage(impala_genotype_storage):
     assert impala_genotype_storage.is_filestorage() is False
+
+
+@pytest.mark.parametrize('hdfs_dir,path', [
+    ('/tmp/test_data/study_id', ['study_id']),
+    ('/tmp/test_data/study_id/pedigree', ['study_id', 'pedigree']),
+])
+def test_get_hdfs_dir(impala_genotype_storage, hdfs_dir, path):
+    if impala_genotype_storage.hdfs_helpers.exists(hdfs_dir):
+        impala_genotype_storage.hdfs_helpers.delete(hdfs_dir)
+
+    assert impala_genotype_storage.hdfs_helpers.exists(hdfs_dir) is False
+
+    assert impala_genotype_storage.get_hdfs_dir(*path) == hdfs_dir
+
+    assert impala_genotype_storage.hdfs_helpers.exists(hdfs_dir) is True
 
 
 def test_impala_connection(impala_genotype_storage):
