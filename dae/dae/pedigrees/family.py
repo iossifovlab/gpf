@@ -50,7 +50,7 @@ class Person(object):
 
     @property
     def mother(self):
-        return self.mom_id if self.mom_id else ''
+        return self.mom_id if self.mom_id else '0'
 
     @mother.setter
     def mother(self, mom_id):
@@ -58,11 +58,15 @@ class Person(object):
 
     @property
     def father(self):
-        return self.dad_id if self.dad_id else ''
+        return self.dad_id if self.dad_id else '0'
 
     @father.setter
     def father(self, dad_id):
         self.dad_id = dad_id
+
+    @property
+    def layout_position(self):
+        return self.layout
 
     def has_mom(self):
         return not (self.mom is None or self.mom == '0')

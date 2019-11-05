@@ -306,7 +306,7 @@ class PhenoDB(object):
             person_id = row['person_id']
             family_id = row['family_id']
 
-            p = Person(row)
+            p = Person(**row)
             p.person_id = person_id
             p.family_id = family_id
             assert row['role'] in Role, \
