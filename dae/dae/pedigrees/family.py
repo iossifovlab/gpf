@@ -233,22 +233,36 @@ class Family(object):
 
 class FamiliesData(object):
 
-    def __init__(self, ped_df=None):
+    def __init__(self, ped_df=None, family_class=Family):
+        # assert ped_df is not None
         self.ped_df = ped_df
         self.families = {}
         self.family_ids = []
+        # self._families_build(ped_df, family_class)
 
-    def families_build(self, ped_df, family_class=Family):
+    def _families_build(self, ped_df, family_class=Family):
         self.ped_df = ped_df
         for family_id, fam_df in self.ped_df.groupby(by='family_id'):
             family = family_class.from_df(family_id, fam_df)
             self.families[family_id] = family
             self.family_ids.append(family_id)
 
-    def families_build_from_simple(self, fam_df, family_class=Family):
-        for family_id, fam in fam_df.groupby(by='family_id'):
-            family = family_class.from_df(family_id, fam_df)
-            self.families[family_id] = family
+    # def families_build_from_simple(self, fam_df, family_class=Family):
+    #     for family_id, fam in fam_df.groupby(by='family_id'):
+    #         family = family_class.from_df(family_id, fam_df)
+    #         self.families[family_id] = family
+
+    @staticmethod
+    def from_pedigree_df(ped_df, family_class=Family):
+        fams = FamiliesData(ped_df, family_class)
+        fams._families_build(ped_df, family_class)
+        return fams
+
+    def families_list(self):
+        return list(self.families.values())
+
+    def get_family(self, family_id):
+        return self.families[family_id]
 
     def families_query_by_person(self, person_ids):
         res = {}

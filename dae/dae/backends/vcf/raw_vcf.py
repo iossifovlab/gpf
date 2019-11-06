@@ -85,14 +85,14 @@ class VariantFactory(SummaryVariantFactory):
             summary_variant, family, gt)
 
 
-class RawFamilyVariants(FamiliesData):
+class RawVcfVariants:
 
     def __init__(self, pedigree_df, config=None, prefix=None,
                  annotator=None, region=None,
                  transmission_type='transmitted',
                  variant_factory=VariantFactory,
                  genomes_db=None):
-        super(RawFamilyVariants, self).__init__()
+        super(RawVcfVariants, self).__init__()
         if prefix is not None:
             config = Configure.from_prefix_vcf(prefix)
 
@@ -105,7 +105,7 @@ class RawFamilyVariants(FamiliesData):
         self.prefix = prefix
         self.transmission_type = transmission_type
         self.ped_df = pedigree_df
-
+        self.families = None
         self._load(annotator, region, genomes_db)
 
     def is_empty(self):
@@ -146,7 +146,9 @@ class RawFamilyVariants(FamiliesData):
 
         self.ped_df, self.samples = self._match_pedigree_to_samples(
             self.ped_df, self.vcf.samples)
-        self.families_build(self.ped_df, family_class=VcfFamily)
+        # self._families_build(self.ped_df, family_class=VcfFamily)
+        self.families = FamiliesData.from_pedigree_df(
+            self.ped_df, family_class=VcfFamily)
         assert np.all(self.samples == self.ped_df['sample_id'].values)
 
         self.vcf_vars = self.vcf.vars
@@ -383,7 +385,7 @@ class RawFamilyVariants(FamiliesData):
             vcf = variants[summary_index]
             summary_variant = self.wrap_summary_variant(
                 group_df.to_dict(orient='records'))
-            for fam in list(self.families.values()):
+            for fam in self.families.families_list():
                 v = self.VF.family_variant_from_vcf(
                     summary_variant, fam, vcf=vcf)
                 yield v
@@ -399,7 +401,7 @@ class RawFamilyVariants(FamiliesData):
                 group_df.to_dict(orient='records'))
 
             family_variants = []
-            for fam in list(self.families.values()):
+            for fam in self.families.families_list():
                 v = self.VF.family_variant_from_vcf(
                     summary_variant, fam, vcf=vcf)
                 family_variants.append(v)

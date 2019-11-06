@@ -131,7 +131,7 @@ class VariantsParquetWriter(object):
         return unknown_allele
 
     def _setup_all_unknown_variant(self, summary_variant, family_id):
-        family = self.families[family_id]
+        family = self.families.get_family(family_id)
         genotype = -1 * np.ones(
             shape=(2, len(family)), dtype=GENOTYPE_TYPE)
         alleles = [

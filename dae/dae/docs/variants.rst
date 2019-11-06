@@ -133,10 +133,10 @@ FamilyVariant - representation of family variants
 ..     :inherited-members:
 
 
-RawFamilyVariants - query interface for VCF variants
+RawVcfVariants - query interface for VCF variants
 ----------------------------------------------------
 
-.. autoclass:: dae.backends.vcf.raw_vcf.RawFamilyVariants
+.. autoclass:: dae.backends.vcf.raw_vcf.RawVcfVariants
     :members:
     :undoc-members:
     :inherited-members:

@@ -40,7 +40,7 @@ class ImpalaFamilyVariants(FamiliesData):
         self.ped_df = self.load_pedigree()
         self.pedigree_schema = self.pedigree_schema()
 
-        self.families_build(self.ped_df, family_class=Family)
+        self._families_build(self.ped_df, family_class=Family)
         self.schema = self.variant_schema()
         self.serializer = ParquetSerializer(schema=self.schema)
 

@@ -29,7 +29,7 @@ class BaseDAE(FamiliesData):
     def __init__(self, pedigree_dataframe,
                  transmission_type,
                  genome, annotator):
-        super(BaseDAE, self).__init__()
+        super(BaseDAE, self).__init__(pedigree_dataframe, Family)
 
         assert genome is not None
         self.transmission_type = transmission_type
@@ -38,7 +38,7 @@ class BaseDAE(FamiliesData):
         self.genome = genome
         self.annotator = annotator
 
-        self.families_build(self.pedigree_dataframe, Family)
+        self._families_build(self.pedigree_dataframe, Family)
 
     def is_empty(self):
         return False

@@ -4,7 +4,7 @@ from box import Box
 
 from ..configure import Configure
 
-from .raw_vcf import RawFamilyVariants
+from .raw_vcf import RawVcfVariants
 from .annotate_allele_frequencies import VcfAlleleFrequencyAnnotator
 from .loader import RawVariantsLoader
 
@@ -92,14 +92,14 @@ def variants_builder(prefix, genomes_db, force_reannotate=False):
     ped_df = PedigreeReader.load_pedigree_file(conf.vcf.pedigree)
 
     if os.path.exists(conf.vcf.annotation) and not force_reannotate:
-        fvars = RawFamilyVariants(ped_df, config=conf, genomes_db=genomes_db)
+        fvars = RawVcfVariants(ped_df, config=conf, genomes_db=genomes_db)
         return fvars
 
     # effect_annotator = VcfVariantEffectsAnnotator(genome, gene_models)
     freq_annotator = VcfAlleleFrequencyAnnotator()
     effect_annotator = effect_annotator_builder(genomes_db)
 
-    fvars = RawFamilyVariants(
+    fvars = RawVcfVariants(
         ped_df, config=conf, annotator=freq_annotator, genomes_db=genomes_db
     )
     fvars.annot_df = effect_annotator.annotate_df(fvars.annot_df)
