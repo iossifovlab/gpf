@@ -2,9 +2,10 @@ from box import Box
 
 from dae.annotation.tools.file_io_parquet import ParquetReader
 from dae.backends.import_commons import construct_import_annotation_pipeline
+from dae.backends.impala.parquet_io import ParquetManager
 
-from dae.tools.vcf2parquet import parse_cli_arguments, import_vcf, \
-    generate_makefile
+from dae.tools.vcf2parquet import parse_cli_arguments, \
+    generate_makefile, vcf2parquet
 
 
 def test_vcf2parquet_vcf(
@@ -27,15 +28,16 @@ def test_vcf2parquet_vcf(
         dae_config_fixture, genomes_db, argv, defaults={'values': {
             "scores_dirname": annotation_scores_dirname,
         }})
+    parquet_manager = ParquetManager(dae_config_fixture.studies_db.dir)
 
-    vcf_parquet = import_vcf(
-        dae_config_fixture, genomes_db, annotation_pipeline,
+    parquet_config = vcf2parquet(
         argv.pedigree, argv.vcf,
-        region=argv.region, bucket_index=argv.bucket_index,
-        output=argv.output)
+        genomes_db, annotation_pipeline, parquet_manager,
+        argv.output, argv.bucket_index, argv.region
+    )
 
     summary = ParquetReader(Box({
-        'infile': vcf_parquet.files.variant,
+        'infile': parquet_config.files.variant,
     }, default_box=True, default_box_attr=None))
     summary._setup()
     summary._cleanup()

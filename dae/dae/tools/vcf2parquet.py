@@ -12,17 +12,13 @@ from dae.backends.vcf.annotate_allele_frequencies import \
     VcfAlleleFrequencyAnnotator
 
 from dae.backends.configure import Configure
+from dae.backends.impala.parquet_io import ParquetManager
 from dae.backends.vcf.raw_vcf import RawFamilyVariants
 from cyvcf2 import VCF
 
 from dae.backends.import_commons import build_contig_regions, \
     contigs_makefile_generate
 from dae.backends.import_commons import construct_import_annotation_pipeline
-
-from dae.backends.impala.import_tools import variants_iterator_to_parquet
-
-# import multiprocessing
-# import functools
 
 
 def get_contigs(vcf_filename):
@@ -41,10 +37,9 @@ def create_vcf_variants(config, genomes_db, region=None):
 
 
 def import_vcf(
-        dae_config, genomes_db, annotation_pipeline,
+        genomes_db, annotation_pipeline,
         pedigree_filename, vcf_filename,
-        region=None, bucket_index=1, rows=10000, output='.',
-        study_id=None, filesystem=None):
+        region=None):
 
     assert os.path.exists(vcf_filename), vcf_filename
     assert os.path.exists(pedigree_filename), pedigree_filename
@@ -57,27 +52,14 @@ def import_vcf(
             },
         })
 
-    if study_id is None:
-        filename = os.path.basename(pedigree_filename)
-        study_id = os.path.splitext(filename)[0]
-        print(filename, os.path.splitext(filename), study_id)
-
-    impala_config = Configure.from_prefix_impala(
-        output, bucket_index=bucket_index, db=None, study_id=study_id).impala
-    print("converting into ", impala_config, file=sys.stderr)
-
     fvars = create_vcf_variants(vcf_config, genomes_db, region)
 
     fvars.annot_df = annotation_pipeline.annotate_df(fvars.annot_df)
 
-    return variants_iterator_to_parquet(
-        fvars,
-        impala_config,
-        bucket_index=bucket_index,
-        rows=rows,
-        annotation_pipeline=annotation_pipeline,
-        filesystem=filesystem
-    )
+    if fvars.is_empty():
+        print('empty bucket {} done'.format(vcf_filename), file=sys.stderr)
+
+    return fvars
 
 
 def parse_cli_arguments(gpf_instance, argv=sys.argv[1:]):
@@ -174,6 +156,39 @@ def generate_makefile(dae_config, genome, argv):
     )
 
 
+def vcf2parquet(
+        pedigree_file, vcf_file,
+        genomes_db, annotation_pipeline, parquet_manager,
+        output='.', bucket_index=1, region=None,
+        filesystem=None):
+    filename = os.path.basename(pedigree_file)
+    study_id = os.path.splitext(filename)[0]
+    print(filename, os.path.splitext(filename), study_id)
+
+    parquet_config = ParquetManager.parquet_file_config(
+        output, bucket_index=bucket_index, study_id=study_id
+    )
+    print("converting into ", parquet_config, file=sys.stderr)
+
+    fvars = import_vcf(
+        genomes_db, annotation_pipeline,
+        pedigree_file, vcf_file,
+        region=region
+    )
+
+    parquet_manager.pedigree_to_parquet(
+        fvars, parquet_config, filesystem=filesystem
+    )
+    parquet_manager.variants_to_parquet(
+        fvars, parquet_config,
+        bucket_index=bucket_index,
+        annotation_pipeline=annotation_pipeline,
+        filesystem=filesystem
+    )
+
+    return parquet_config
+
+
 if __name__ == "__main__":
     gpf_instance = GPFInstance()
     dae_config = gpf_instance.dae_config
@@ -182,14 +197,15 @@ if __name__ == "__main__":
 
     argv = parse_cli_arguments(gpf_instance, sys.argv[1:])
 
+    annotation_pipeline = construct_import_annotation_pipeline(
+        dae_config, genomes_db, argv)
+    parquet_manager = ParquetManager(dae_config.studies_db.dir)
+
     if argv.type == 'make':
         generate_makefile(dae_config, genome, argv)
     elif argv.type == 'vcf':
-        annotation_pipeline = construct_import_annotation_pipeline(
-            dae_config, genomes_db, argv)
-
-        import_vcf(
-            dae_config, genomes_db, annotation_pipeline,
+        vcf2parquet(
             argv.pedigree, argv.vcf,
-            region=argv.region, bucket_index=argv.bucket_index,
-            output=argv.output)
+            genomes_db, annotation_pipeline, parquet_manager,
+            argv.output, argv.bucket_index, argv.region
+        )
