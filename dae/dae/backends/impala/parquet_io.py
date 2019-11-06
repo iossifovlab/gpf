@@ -343,7 +343,9 @@ class ParquetManager:
             ))
 
     def pedigree_to_parquet(self, fvars, parquet_config, filesystem=None):
-        os.makedirs(os.path.split(parquet_config.files.pedigree)[0])
+        os.makedirs(
+            os.path.split(parquet_config.files.pedigree)[0], exist_ok=True
+        )
 
         save_ped_df_to_parquet(
             fvars.ped_df, parquet_config.files.pedigree,
@@ -353,7 +355,10 @@ class ParquetManager:
     def variants_to_parquet(
             self, fvars, parquet_config, bucket_index=0, rows=100000,
             annotation_pipeline=None, filesystem=None, no_reference=False):
-        os.makedirs(os.path.split(parquet_config.files.variant)[0])
+        os.makedirs(
+            os.path.split(parquet_config.files.variant)[0],
+            exist_ok=True
+        )
 
         start = time.time()
         variants_writer = VariantsParquetWriter(
