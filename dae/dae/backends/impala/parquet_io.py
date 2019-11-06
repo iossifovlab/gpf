@@ -228,7 +228,7 @@ class VariantsParquetWriter(object):
             if family_variant_index % 1000 == 0:
                 elapsed = time.time() - self.start
                 print(
-                    "Bucket {}: {} family variants imported for {:.2f} sec".
+                    'Bucket {}: {} family variants imported for {:.2f} sec'.
                     format(
                         bucket_index,
                         family_variant_index, elapsed),
@@ -244,12 +244,12 @@ class VariantsParquetWriter(object):
 
             yield table
 
-        print("-------------------------------------------", file=sys.stderr)
-        print("Bucket:", bucket_index, file=sys.stderr)
-        print("-------------------------------------------", file=sys.stderr)
+        print('-------------------------------------------', file=sys.stderr)
+        print('Bucket:', bucket_index, file=sys.stderr)
+        print('-------------------------------------------', file=sys.stderr)
         elapsed = time.time() - self.start
         print(
-            "DONE: {} family variants imported for {:.2f} sec".
+            'DONE: {} family variants imported for {:.2f} sec'.
             format(
                 family_variant_index, elapsed),
             file=sys.stderr)
@@ -269,7 +269,7 @@ class VariantsParquetWriter(object):
                 writer.write_table(table)
 
         except Exception as ex:
-            print("unexpected error:", ex)
+            print('unexpected error:', ex)
             traceback.print_exc(file=sys.stdout)
         finally:
             writer.close()
@@ -277,16 +277,16 @@ class VariantsParquetWriter(object):
 
 def pedigree_parquet_schema():
     fields = [
-        pa.field("family_id", pa.string()),
-        pa.field("person_id", pa.string()),
-        pa.field("dad_id", pa.string()),
-        pa.field("mom_id", pa.string()),
-        pa.field("sex", pa.int8()),
-        pa.field("status", pa.int8()),
-        pa.field("role", pa.int32()),
-        pa.field("sample_id", pa.string()),
-        pa.field("generated", pa.bool_()),
-        pa.field("layout", pa.string()),
+        pa.field('family_id', pa.string()),
+        pa.field('person_id', pa.string()),
+        pa.field('dad_id', pa.string()),
+        pa.field('mom_id', pa.string()),
+        pa.field('sex', pa.int8()),
+        pa.field('status', pa.int8()),
+        pa.field('role', pa.int32()),
+        pa.field('sample_id', pa.string()),
+        pa.field('generated', pa.bool_()),
+        pa.field('layout', pa.string()),
     ]
 
     return pa.schema(fields)
