@@ -1,5 +1,7 @@
 import os
+import sys
 from box import Box
+from time import time
 
 from dae.backends.storage.genotype_storage import GenotypeStorage
 
@@ -9,7 +11,7 @@ from dae.backends.impala.impala_variants import ImpalaFamilyVariants
 
 
 class ImpalaGenotypeStorage(GenotypeStorage):
-    
+
     def __init__(self, storage_config):
         super(ImpalaGenotypeStorage, self).__init__(storage_config)
 
@@ -33,9 +35,9 @@ class ImpalaGenotypeStorage(GenotypeStorage):
     def impala_connection(self):
         if self._impala_connection is None:
             self._impala_connection = ImpalaHelpers.create_impala_connection(
-            self.storage_config.impala.host,
-            self.storage_config.impala.port
-        )
+                self.storage_config.impala.host,
+                self.storage_config.impala.port
+            )
 
         return self._impala_connection
 
@@ -60,13 +62,34 @@ class ImpalaGenotypeStorage(GenotypeStorage):
 
     def get_backend(self, study_id, genomes_db):
         impala_config = self._impala_storage_config(study_id)
-        
+
         variants = ImpalaFamilyVariants(
             impala_config, self.impala_connection,
             genomes_db.get_gene_models()
         )
 
         return variants
+
+    def impala_load_study(self, study_id, pedigree_path, variants_path):
+        impala_config = self._impala_config(
+            study_id, pedigree_path, variants_path
+        )
+        print('converting into ', impala_config, file=sys.stderr)
+
+        print(
+            f'Loading `{study_id}` study in impala '
+            f'`{self.storage_config.db}` db', file=sys.stderr
+        )
+        start = time()
+
+        self.impala_helpers.import_variants(impala_config)
+
+        end = time()
+        total = end - start
+        print(
+            f'Loaded `{study_id}` study in impala `{self.storage_config.db}` '
+            f'db for {total:.2f} sec', file=sys.stderr
+        )
 
     def _impala_config(self, study_id, pedigree_path, variants_path):
         study_impala_config = self._impala_storage_config(study_id)
@@ -78,12 +101,12 @@ class ImpalaGenotypeStorage(GenotypeStorage):
 
     def _impala_storage_config(self, study_id):
         conf = {
-                'db': self.storage_config.impala.db,
-                'tables': {
+            'db': self.storage_config.impala.db,
+            'tables': {
                 'pedigree': '{}_pedigree'.format(study_id),
                 'variant': '{}_variant'.format(study_id),
             }
-                }
+        }
 
         return Box(conf)
 

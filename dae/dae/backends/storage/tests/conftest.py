@@ -43,8 +43,13 @@ def quads_f1_vcf_config(variants_db_fixture):
 
 
 @pytest.fixture(scope='function')
-def quads_f1_impala_config(gpf_instance, variants_db_fixture, reimport):
-    if reimport:
-        load_study_parquet(gpf_instance)
+def quads_f1_config(variants_db_fixture, impala_genotype_storage):
+    impala_genotype_storage.impala_load_study(
+        'quads_f1_impala',
+        relative_to_this_test_folder(
+            'fixtures/studies/quads_f1_impala/data/pedigree'),
+        relative_to_this_test_folder(
+            'fixtures/studies/quads_f1_impala/data/variants')
+    )
 
     return variants_db_fixture.get_study_config('quads_f1_impala')
