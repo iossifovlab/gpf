@@ -41,26 +41,26 @@ class ImpalaHelpers(object):
                 config.files.variants
             )
 
-    def import_files(self, cursor, dbname, table_name, variant_files):
+    def import_files(self, cursor, dbname, table_name, import_files):
 
         cursor.execute("""
             DROP TABLE IF EXISTS {db}.{table_name}
         """.format(db=dbname, table_name=table_name))
 
         cursor.execute("""
-            CREATE TABLE {db}.{variant} LIKE PARQUET '{variant_file}'
+            CREATE TABLE {db}.{table_name} LIKE PARQUET '{import_file}'
             STORED AS PARQUET
         """.format(
-            db=dbname, variant_file=variant_files[0],
-            variant=table_name))
+            db=dbname, import_file=import_files[0],
+            table_name=table_name))
 
-        for variant_file in variant_files:
+        for import_file in import_files:
             cursor.execute("""
-                LOAD DATA INPATH '{variant_file}'
-                INTO TABLE {db}.{variant}
+                LOAD DATA INPATH '{import_file}'
+                INTO TABLE {db}.{table_name}
             """.format(
-                db=dbname, variant_file=variant_file,
-                variant=table_name))
+                db=dbname, import_file=import_file,
+                table_name=table_name))
 
     def check_database(self, dbname):
         with self.connection.cursor() as cursor:
