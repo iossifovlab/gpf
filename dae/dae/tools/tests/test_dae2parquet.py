@@ -1,13 +1,12 @@
 import pytest
 
+import os
 from box import Box
 
-from dae.conftest import impala_test_dbname
+from dae.tools.dae2parquet import parse_cli_arguments, dae_build_makefile, \
+    dae2parquet, denovo2parquet
 
-from dae.tools.dae2parquet import parse_cli_arguments, import_dae_denovo, \
-    dae_build_transmitted, dae_build_makefile
-
-from dae.backends.impala.impala_variants import ImpalaFamilyVariants
+from dae.backends.impala.parquet_io import ParquetManager
 from dae.backends.import_commons import construct_import_annotation_pipeline
 
 from dae.annotation.tools.file_io_parquet import ParquetReader
@@ -29,6 +28,7 @@ def test_dae2parquet_denovo(
         dae_denovo_config.denovo_filename,
     ]
     genome = genomes_db.get_genome()
+    parquet_manager = ParquetManager(dae_config_fixture.studies_db.dir)
 
     argv = parse_cli_arguments(global_gpf_instance, argv)
 
@@ -40,14 +40,14 @@ def test_dae2parquet_denovo(
             'scores_dirname': annotation_scores_dirname,
         }})
 
-    denovo_parquet = import_dae_denovo(
-        dae_config_fixture, genome, annotation_pipeline,
-        argv.families, argv.variants, family_format=argv.family_format,
-        output=argv.output
+    parquet_config = denovo2parquet(
+        argv.families, argv.variants,
+        parquet_manager, annotation_pipeline, genome,
+        family_format=argv.family_format, output=argv.output
     )
 
     summary = ParquetReader(Box({
-        'infile': denovo_parquet.files.variant,
+        'infile': parquet_config.files.variant,
     }, default_box=True, default_box_attr=None))
     summary._setup()
     summary._cleanup()
@@ -81,6 +81,7 @@ def test_dae2parquet_transmitted(
         dae_transmitted_config.toomany_filename,
     ]
     genome = genomes_db.get_genome()
+    parquet_manager = ParquetManager(dae_config_fixture.studies_db.dir)
 
     argv = parse_cli_arguments(global_gpf_instance, argv)
 
@@ -92,13 +93,12 @@ def test_dae2parquet_transmitted(
             'scores_dirname': annotation_scores_dirname,
         }})
 
-    transmitted_parquet = dae_build_transmitted(
-        dae_config_fixture, annotation_pipeline, genome, argv, defaults={
-            'scores_dirname': annotation_scores_dirname,
-        })
+    parquet_config = dae2parquet(
+        dae_config_fixture, parquet_manager, annotation_pipeline, genome, argv
+    )
 
     summary = ParquetReader(Box({
-        'infile': transmitted_parquet.files.variant,
+        'infile': parquet_config.files.variant,
     }, default_box=True, default_box_attr=None))
     summary._setup()
     summary._cleanup()
@@ -142,11 +142,11 @@ def test_dae2parquet_make(
     dae_build_makefile(dae_config_fixture, genome, argv)
 
 
-@pytest.fixture
+@pytest.fixture(scope='session')
 def dae_iossifov2014_thrift(
         request, dae_iossifov2014_config, annotation_scores_dirname,
-        temp_dirname, global_gpf_instance, dae_config_fixture, genomes_db,
-        test_impala_helpers, test_hdfs):
+        global_gpf_instance, dae_config_fixture, genomes_db,
+        test_hdfs, impala_genotype_storage, parquet_manager):
 
     temp_dirname = test_hdfs.tempdir(prefix='variants_', suffix='_data')
     test_hdfs.mkdir(temp_dirname)
@@ -155,18 +155,25 @@ def dae_iossifov2014_thrift(
         test_hdfs.delete(temp_dirname, recursive=True)
     request.addfinalizer(fin)
 
-    def build(annotation_config):
+    def build(annotation_config, db):
+        impala_genotype_storage.impala_helpers.drop_database(db)
+        impala_genotype_storage.storage_config.impala.db = db
+
+        annotation_temp_dir = os.path.join(
+            temp_dirname,
+            os.path.split(os.path.splitext(annotation_config)[0])[-1]
+        )
+
         config = dae_iossifov2014_config
         argv = [
             'denovo',
             '--annotation', annotation_config,
-            '-o', temp_dirname,
+            '-o', annotation_temp_dir,
             '-f', 'simple',
             config.family_filename,
             config.denovo_filename,
         ]
         genome = genomes_db.get_genome()
-        gene_models = genomes_db.get_gene_models()
 
         argv = parse_cli_arguments(global_gpf_instance, argv)
 
@@ -178,29 +185,72 @@ def dae_iossifov2014_thrift(
                 'scores_dirname': annotation_scores_dirname,
             }})
 
-        denovo_parquet = import_dae_denovo(
-            dae_config_fixture, genome, annotation_pipeline,
-            argv.families, argv.variants, family_format=argv.family_format,
-            output=argv.output, filesystem=test_hdfs.filesystem()
-        )
-        assert denovo_parquet is not None
+        filename = os.path.basename(argv.families)
+        study_id = os.path.splitext(filename)[0]
 
-        denovo_parquet['db'] = impala_test_dbname()
-        test_impala_helpers.import_variants(denovo_parquet)
-
-        fvars = ImpalaFamilyVariants(
-            denovo_parquet, test_impala_helpers.connection, gene_models
+        parquet_config = denovo2parquet(
+            argv.families, argv.variants,
+            parquet_manager, annotation_pipeline, genome,
+            family_format=argv.family_format, output=argv.output
         )
+
+        assert parquet_config is not None
+
+        impala_genotype_storage.impala_load_study(
+            study_id,
+            os.path.join(annotation_temp_dir, 'pedigree'),
+            os.path.join(annotation_temp_dir, 'variants')
+        )
+
+        fvars = impala_genotype_storage.get_backend(study_id, genomes_db)
         return fvars
 
     return build
 
 
-@pytest.mark.parametrize("annotation_config", [
-    'annotation_pipeline_config',
-    'annotation_pipeline_default_config'
+@pytest.fixture(scope='session')
+def dae_iossifov2014_thrift_annotation_pipeline_config(
+        dae_iossifov2014_thrift, annotation_pipeline_config):
+    assert dae_iossifov2014_thrift is not None
+    fvars = dae_iossifov2014_thrift(
+        annotation_pipeline_config, 'impala_test_annotation_db'
+    )
+
+    return fvars
+
+
+@pytest.fixture(scope='session')
+def dae_iossifov2014_thrift_annotation_pipeline_default_config(
+        dae_iossifov2014_thrift, annotation_pipeline_default_config):
+    assert dae_iossifov2014_thrift is not None
+    fvars = dae_iossifov2014_thrift(
+        annotation_pipeline_default_config, 'impala_test_import_annotation_db'
+    )
+
+    return fvars
+
+
+@pytest.fixture(scope='session')
+def fixture_select(
+        dae_iossifov2014_thrift_annotation_pipeline_config,
+        dae_iossifov2014_thrift_annotation_pipeline_default_config):
+    def build(fixture_name):
+        if fixture_name == \
+                'dae_iossifov2014_thrift_annotation_pipeline_config':
+            return dae_iossifov2014_thrift_annotation_pipeline_config
+        elif fixture_name == \
+                'dae_iossifov2014_thrift_annotation_pipeline_default_config':
+            return dae_iossifov2014_thrift_annotation_pipeline_default_config
+        else:
+            raise ValueError(fixture_name)
+    return build
+
+
+@pytest.mark.parametrize('variants_iterator', [
+    'dae_iossifov2014_thrift_annotation_pipeline_config',
+    'dae_iossifov2014_thrift_annotation_pipeline_default_config'
 ])
-@pytest.mark.parametrize("region,cshl_location,effect_type", [
+@pytest.mark.parametrize('region,cshl_location,effect_type', [
     (Region('15', 80137553, 80137553), '15:80137554', 'noEnd'),
     (Region('12', 116418553, 116418553), '12:116418554', 'splice-site'),
     (Region('3', 56627767, 56627767), '3:56627768', 'splice-site'),
@@ -215,13 +265,9 @@ def dae_iossifov2014_thrift(
     (Region('3', 151176416, 151176416), '3:151176417', 'no-frame-shift'),
 ])
 def test_dae2parquet_iossifov2014_variant_coordinates(
-        dae_iossifov2014_thrift, fixture_select,
-        annotation_config,
+        fixture_select, variants_iterator,
         region, cshl_location, effect_type):
-
-    assert dae_iossifov2014_thrift is not None
-    annotation_pipeline_config = fixture_select(annotation_config)
-    fvars = dae_iossifov2014_thrift(annotation_pipeline_config)
+    fvars = fixture_select(variants_iterator)
 
     vs = fvars.query_variants(regions=[region])
     vs = list(vs)
