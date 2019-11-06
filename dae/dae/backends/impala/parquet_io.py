@@ -275,6 +275,16 @@ class VariantsParquetWriter(object):
             writer.close()
 
 
+class ParquetManager:
+
+    def __init__(self, studies_dir):
+        self.studies_dir = studies_dir
+
+    def get_data_dir(self, study_id):
+        return os.path.abspath(
+            os.path.join(self.studies_dir, study_id, 'data')
+        )
+
 def pedigree_parquet_schema():
     fields = [
         pa.field('family_id', pa.string()),
