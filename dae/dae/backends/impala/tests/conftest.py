@@ -25,5 +25,15 @@ def dae_config_fixture(gpf_instance):
 
 
 @pytest.fixture(scope='function')
+def variants_db_fixture(gpf_instance):
+    return gpf_instance.variants_db
+
+
+@pytest.fixture(scope='function')
 def parquet_manager(dae_config_fixture):
     return ParquetManager(dae_config_fixture.studies_db.dir)
+
+
+@pytest.fixture(scope='function')
+def quads_f1_variants(variants_db_fixture):
+    return variants_db_fixture.get('quads_f1_vcf').backend

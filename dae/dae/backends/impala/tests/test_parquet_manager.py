@@ -2,6 +2,7 @@ import pytest
 
 import os
 import shutil
+from box import Box
 
 from dae.backends.impala.tests.conftest import relative_to_this_test_folder
 
@@ -88,3 +89,59 @@ id = quads_f1_impala
 genotype_storage = genotype_impala
 
 '''
+
+
+def test_pedigree_to_parquet(parquet_manager, quads_f1_variants):
+    data_dir = relative_to_this_test_folder(
+        'fixtures/studies/quads_f1_impala'
+    )
+    pedigree_path = relative_to_this_test_folder(
+        'fixtures/studies/quads_f1_impala/pedigree/'
+        'quads_f1_impala_pedigree.parquet'
+    )
+    variant_path = relative_to_this_test_folder(
+        'fixtures/studies/quads_f1_impala/variant/'
+        'quads_f1_impala_variant.parquet'
+    )
+    shutil.rmtree(data_dir, ignore_errors=True)
+
+    parquet_config = Box({
+        'files': {
+            'pedigree': pedigree_path,
+            'variant': variant_path
+        }
+    })
+
+    assert not os.path.exists(pedigree_path)
+
+    parquet_manager.pedigree_to_parquet(quads_f1_variants, parquet_config)
+
+    assert os.path.exists(pedigree_path)
+
+
+def test_variant_to_parquet(parquet_manager, quads_f1_variants):
+    data_dir = relative_to_this_test_folder(
+        'fixtures/studies/quads_f1_impala'
+    )
+    pedigree_path = relative_to_this_test_folder(
+        'fixtures/studies/quads_f1_impala/pedigree/'
+        'quads_f1_impala_pedigree.parquet'
+    )
+    variant_path = relative_to_this_test_folder(
+        'fixtures/studies/quads_f1_impala/variant/'
+        'quads_f1_impala_variant.parquet'
+    )
+    shutil.rmtree(data_dir, ignore_errors=True)
+
+    parquet_config = Box({
+        'files': {
+            'pedigree': pedigree_path,
+            'variant': variant_path
+        }
+    })
+
+    assert not os.path.exists(variant_path)
+
+    parquet_manager.variants_to_parquet(quads_f1_variants, parquet_config)
+
+    assert os.path.exists(variant_path)

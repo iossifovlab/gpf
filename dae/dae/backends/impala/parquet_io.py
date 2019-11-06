@@ -342,6 +342,43 @@ class ParquetManager:
                 genotype_storage=genotype_storage_id
             ))
 
+    def pedigree_to_parquet(self, fvars, parquet_config, filesystem=None):
+        os.makedirs(os.path.split(parquet_config.files.pedigree)[0])
+
+        save_ped_df_to_parquet(
+            fvars.ped_df, parquet_config.files.pedigree,
+            filesystem=filesystem
+        )
+
+    def variants_to_parquet(
+            self, fvars, parquet_config, bucket_index=0, rows=100000,
+            annotation_pipeline=None, filesystem=None, no_reference=False):
+        os.makedirs(os.path.split(parquet_config.files.variant)[0])
+
+        start = time.time()
+        variants_writer = VariantsParquetWriter(
+            fvars.families,
+            fvars.full_variants_iterator(),
+            annotation_pipeline=annotation_pipeline,
+            return_reference=not no_reference,
+            return_unknown=not no_reference
+        )
+        print('[DONE] going to create variants writer...')
+
+        variants_writer.save_variants_to_parquet(
+            parquet_config.files.variant,
+            bucket_index=bucket_index,
+            rows=rows,
+            filesystem=filesystem
+        )
+        end = time.time()
+
+        print(
+            'DONE: {} for {:.2f} sec'.format(
+                parquet_config.files.variant, end-start),
+            file=sys.stderr
+        )
+
 
 def pedigree_parquet_schema():
     fields = [
