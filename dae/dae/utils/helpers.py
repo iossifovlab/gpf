@@ -5,6 +5,7 @@ import pandas as pd
 from dae.pedigrees.pedigree_reader import PedigreeReader
 from dae.utils.dae_utils import dae2vcf_variant
 from dae.utils.vcf_utils import str2mat, GENOTYPE_TYPE
+from dae.variants.family import FamiliesBase
 
 
 def pedigree_from_path(filepath):
@@ -16,17 +17,14 @@ def pedigree_from_path(filepath):
 def split_location(location):
     assert ':' in location
     chrom, pos = location.split(':')
-    return chrom, int(pos)
+    return chrom, pos
 
 
 def produce_genotype(family, members_with_variant):
-    genotype = np.empty(0, dtype=GENOTYPE_TYPE)
-    for person in family.members_in_order:
-        genotype = np.append(genotype, 0)
-        if person.person_id in members_with_variant:
-            genotype = np.append(genotype, 1)
-        else:
-            genotype = np.append(genotype, 0)
+    genotype = np.zeros(len(family) * 2, dtype=GENOTYPE_TYPE)
+    members_with_variant_index = family.members_index(members_with_variant)
+    for index in members_with_variant_index:
+        genotype[(index * 2) + 1] = 1
     return genotype
 
 
@@ -94,9 +92,19 @@ def read_variants_from_dsv(
 
     :rtype: An instance of Pandas' DataFrame class.
     """
-    assert location or (chrom and pos)
-    assert variant or (ref and alt)
-    assert (personId and families) or (familyId and genotype)
+    assert location or (chrom and pos),\
+        ('You must specify either a location column or'
+         ' chromosome and position columns!')
+    assert variant or (ref and alt), \
+        ('You must specify either a variant column or'
+         ' reference and alternative columns!')
+    assert (personId and families) or (familyId and genotype), \
+        ('You must specify either a personId column and provide a FamiliesBase'
+         ' object or specify familyId and genotype columns!')
+
+    if families:
+        assert isinstance(families, FamiliesBase), \
+            'families must be an instance of FamiliesBase!'
 
     raw_df = pd.read_csv(
         filepath,
@@ -117,6 +125,7 @@ def read_variants_from_dsv(
         pos_col = raw_df.loc[:, pos]
 
     if variant:
+        assert genome, 'You must provide a genome object!'
         variant_col = raw_df.loc[:, variant]
         ref_alt_tuples = [
             dae2vcf_variant(*variant_tuple, genome)
