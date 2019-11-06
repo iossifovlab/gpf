@@ -1,4 +1,5 @@
 from collections import OrderedDict
+from functools import partial
 
 import pandas as pd
 import csv
@@ -66,7 +67,39 @@ class PedigreeReader(object):
         return list(families.values())
 
     @staticmethod
+    def produce_header_from_indices(
+       col_family,
+       col_person,
+       col_mom,
+       col_dad,
+       col_sex,
+       col_status,
+       col_role,
+       col_layout,
+       col_generated,
+       col_sample_id,
+    ):
+        header = (
+            (col_family, PEDIGREE_COLUMN_NAMES['family']),
+            (col_person, PEDIGREE_COLUMN_NAMES['person']),
+            (col_mom, PEDIGREE_COLUMN_NAMES['mother']),
+            (col_dad, PEDIGREE_COLUMN_NAMES['father']),
+            (col_sex, PEDIGREE_COLUMN_NAMES['sex']),
+            (col_status, PEDIGREE_COLUMN_NAMES['status']),
+            (col_role, PEDIGREE_COLUMN_NAMES['role']),
+            (col_layout, PEDIGREE_COLUMN_NAMES['layout']),
+            (col_generated, PEDIGREE_COLUMN_NAMES['generated']),
+            (col_sample_id, PEDIGREE_COLUMN_NAMES['sample id']),
+        )
+        header = tuple(filter(lambda col: type(col[0]) is int, header))
+        for col in header:
+            assert type(col[0]) is int, col[0]
+        header = tuple(sorted(header, key=lambda col: col[0]))
+        return zip(*header)
+
+    @staticmethod
     def load_pedigree_file(pedigree_filepath, sep='\t',
+                           has_header=True,
                            col_family='familyId',
                            col_person='personId',
                            col_mom='momId',
@@ -78,8 +111,10 @@ class PedigreeReader(object):
                            col_generated='generated',
                            col_sample_id='sampleId'):
 
-        ped_df = pd.read_csv(
-            pedigree_filepath, sep=sep, index_col=False,
+        read_csv_func = partial(
+            pd.read_csv,
+            sep=sep,
+            index_col=False,
             skipinitialspace=True,
             converters={
                 col_role: Role.from_name,
@@ -98,6 +133,28 @@ class PedigreeReader(object):
             comment='#',
             encoding='utf-8'
         )
+
+        if not has_header:
+            _, file_header = PedigreeReader.produce_header_from_indices(
+                col_family, col_person, col_mom,
+                col_dad, col_sex, col_status,
+                col_role, col_layout, col_generated, col_sample_id,
+            )
+            col_family = PEDIGREE_COLUMN_NAMES['family']
+            col_person = PEDIGREE_COLUMN_NAMES['person']
+            col_mom = PEDIGREE_COLUMN_NAMES['mother']
+            col_dad = PEDIGREE_COLUMN_NAMES['father']
+            col_sex = PEDIGREE_COLUMN_NAMES['sex']
+            col_status = PEDIGREE_COLUMN_NAMES['status']
+            col_role = PEDIGREE_COLUMN_NAMES['role']
+            col_layout = PEDIGREE_COLUMN_NAMES['layout']
+            col_generated = PEDIGREE_COLUMN_NAMES['generated']
+            col_sample_id = PEDIGREE_COLUMN_NAMES['sample id']
+            ped_df = read_csv_func(
+                pedigree_filepath, header=None, names=file_header
+            )
+        else:
+            ped_df = read_csv_func(pedigree_filepath)
 
         if col_sample_id in ped_df:
             sample_ids = ped_df.apply(
