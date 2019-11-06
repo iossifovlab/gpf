@@ -55,9 +55,11 @@ class HdfsHelpers(object):
     def put_content(self, local_path, hdfs_dirname):
         assert os.path.exists(local_path)
 
-        if os.path.is_dir(local_path):
+        if os.path.isdir(local_path):
             for local_file in os.listdir(local_path):
-                self.put_in_directory(local_file, hdfs_dirname)
+                self.put_in_directory(
+                    os.path.join(local_path, local_file), hdfs_dirname
+                )
         else:
             self.put_in_directory(local_path, hdfs_dirname)
 
