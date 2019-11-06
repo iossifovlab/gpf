@@ -78,7 +78,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
 
         print(
             f'Loading `{study_id}` study in impala '
-            f'`{self.storage_config.db}` db', file=sys.stderr
+            f'`{impala_config.db}` db', file=sys.stderr
         )
         start = time()
 
@@ -87,7 +87,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
         end = time()
         total = end - start
         print(
-            f'Loaded `{study_id}` study in impala `{self.storage_config.db}` '
+            f'Loaded `{study_id}` study in impala `{impala_config.db}` '
             f'db for {total:.2f} sec', file=sys.stderr
         )
 
