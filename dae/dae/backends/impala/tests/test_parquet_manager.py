@@ -1,5 +1,8 @@
 import pytest
 
+import os
+import shutil
+
 from dae.backends.impala.tests.conftest import relative_to_this_test_folder
 
 
@@ -45,3 +48,43 @@ def test_parquet_file_config(
 
     assert parquet_file_config.files.pedigree == pedigree
     assert parquet_file_config.files.variant == variant
+
+
+def test_generate_study_config_exist(capsys, parquet_manager):
+    parquet_manager.generate_study_config(
+        'quads_f1_vcf', 'genotype_impala'
+    )
+    config_path = relative_to_this_test_folder(
+        'fixtures/studies/quads_f1_vcf/quads_f1_vcf.conf'
+    )
+
+    captured = capsys.readouterr()
+    assert captured.out == \
+        f'configuration file already exists: {config_path}\n' \
+        'skipping generation of default config for: quads_f1_vcf\n'
+
+
+def test_generate_study_config(parquet_manager):
+    config_dir = relative_to_this_test_folder(
+        'fixtures/studies/quads_f1_impala'
+    )
+    config_path = relative_to_this_test_folder(
+        'fixtures/studies/quads_f1_impala/quads_f1_impala.conf'
+    )
+    shutil.rmtree(config_dir, ignore_errors=True)
+
+    parquet_manager.generate_study_config(
+        'quads_f1_impala', 'genotype_impala'
+    )
+
+    assert os.path.exists(config_path)
+
+    with open(config_path, 'r') as config:
+        assert config.read() == \
+            '''
+[study]
+
+id = quads_f1_impala
+genotype_storage = genotype_impala
+
+'''
