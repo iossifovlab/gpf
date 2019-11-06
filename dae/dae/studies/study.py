@@ -111,7 +111,7 @@ class Study(StudyBase):
 
     @property
     def families(self):
-        return self.backend.families
+        return self.backend.families.families
 
     def get_pedigree_values(self, column):
         return set(self.backend.ped_df[column])
