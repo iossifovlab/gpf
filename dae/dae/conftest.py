@@ -278,11 +278,11 @@ def vcf_import_raw(
         genomes_db):
 
     fvars = RawVariantsLoader.load_raw_vcf_variants(
-        vcf_import_config.vcf.pedigree, vcf_import_config.vcf.vcf
+        vcf_import_config.pedigree, vcf_import_config.vcf
     )
     fvars.annot_df = annotation_pipeline_internal.annotate_df(fvars.annot_df)
     RawVariantsLoader.save_annotation_file(
-        fvars.annot_df, vcf_import_config.vcf.annotation)
+        fvars.annot_df, vcf_import_config.annotation)
 
     return fvars
 
