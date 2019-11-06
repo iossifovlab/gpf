@@ -1,29 +1,33 @@
 #!/bin/sh
 
-dir_setup() {
-    data_tar_time=`stat -c %Y data-hg19-startup-latest.tar.gz`
-    data_dir_time=`stat -c %Y data-hg19-startup`
-    if [ ! -d 'data-hg19-startup' ] || [ $data_tar_time -nt $data_dir_time ];
-    then
-        tar zxf data-hg19-startup-latest.tar.gz
-    fi
-}
+echo "jenkins_data DataHG19Branch: ${DataHG19StartupBranch}"
+echo "jenkins_data DAE_DB_DIR: ${DAE_DB_DIR}"
 
-get_file() {
-    wget -c https://iossifovlab.com/distribution/public/data-hg19-startup-latest.tar.gz
-}
+git clone git@github.com:seqpipe/data-hg19-startup.git
 
-if [ -f 'data-hg19-startup-latest.tar.gz' ];
-then
-    new_time=`curl -I https://iossifovlab.com/distribution/public/data-hg19-startup-latest.tar.gz | grep Last-Modified | sed "s/^Last-Modified: \(.*\)$/\1/"`
-    python ${SOURCE_DIR}/jenkins_data_check_timestamp.py "$new_time"
-    if [ $? != 0 ];
-    then
-        rm data-hg19-startup-latest.tar.gz
-	get_file
-    fi
-else
-    get_file
-fi
+cd $DAE_DB_DIR
 
-dir_setup
+git checkout -f ${DataHG19Branch}
+git pull origin ${DataHG19Branch}
+
+dvc pull -r nemo -j 20
+rm -rf enrichment/cache/*
+rm -rf geneInfo/cache/*
+
+cd -
+
+
+cd $DAE_DB_DIR/pheno
+
+for pheno_db in "comp_pheno" "comp_pheno_data"
+do
+
+    echo $pheno_db
+    cd $pheno_db
+    rm -rf ${pheno_db}
+    tar zxf "${pheno_db}_pheno_browser.tar.gz"
+    cd ..
+    pwd
+done
+
+cd -
