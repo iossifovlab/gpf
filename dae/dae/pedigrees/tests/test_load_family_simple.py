@@ -20,7 +20,7 @@ def test_load_family_simple(fixture_name, temp_filename):
     family_filename = relative_to_this_folder(fixture_name)
     assert os.path.exists(family_filename)
 
-    fam_df = FamiliesBase.load_simple_family_file(family_filename)
+    fam_df = PedigreeReader.load_simple_family_file(family_filename)
     assert fam_df is not None
     print("-------------------------")
     print("-------------------------")

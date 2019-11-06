@@ -315,13 +315,8 @@ def loaded_layout2(layout_positions2):
 
 
 @pytest.fixture(scope='session')
-def pedigree_reader():
-    return PedigreeReader()
-
-
-@pytest.fixture(scope='session')
-def pedigree_test(pedigree_reader, input_filename):
-    return pedigree_reader.read_file(input_filename, return_as_dict=True)
+def pedigree_test(input_filename):
+    return PedigreeReader.read_file(input_filename, return_as_dict=True)
 
 
 @pytest.fixture(scope='session')

@@ -48,7 +48,7 @@ def dae_build_transmitted(
             config.dae.family_filename
         )
     else:
-        ped_df = FamiliesBase.load_simple_family_file(
+        ped_df = PedigreeReader.load_simple_family_file(
             config.dae.family_filename
         )
 
@@ -138,7 +138,7 @@ def import_dae_denovo(
             config.denovo.family_filename
         )
     else:
-        ped_df = FamiliesBase.load_simple_family_file(
+        ped_df = PedigreeReader.load_simple_family_file(
             config.denovo.family_filename
         )
 

@@ -219,7 +219,7 @@ def dae_denovo_config():
 def dae_denovo(
         dae_denovo_config, default_genome, annotation_pipeline_internal):
 
-    ped_df = FamiliesBase.load_simple_family_file(
+    ped_df = PedigreeReader.load_simple_family_file(
         dae_denovo_config.family_filename
     )
 
@@ -246,7 +246,7 @@ def dae_transmitted_config():
 def dae_transmitted(
         dae_transmitted_config, default_genome, annotation_pipeline_internal):
 
-    ped_df = FamiliesBase.load_simple_family_file(
+    ped_df = PedigreeReader.load_simple_family_file(
         dae_transmitted_config.family_filename
     )
 
@@ -373,7 +373,7 @@ def raw_dae(config_dae, default_genome):
     def builder(path, region=None):
         config = config_dae(path)
 
-        ped_df = FamiliesBase.load_simple_family_file(
+        ped_df = PedigreeReader.load_simple_family_file(
             dae_transmitted_config.family_filename
         )
 
@@ -403,7 +403,7 @@ def raw_denovo(config_denovo, default_genome):
     def builder(path):
         config = config_denovo(path)
 
-        ped_df = FamiliesBase.load_simple_family_file(
+        ped_df = PedigreeReader.load_simple_family_file(
             config.denovo.family_filename
         )
 

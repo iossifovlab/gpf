@@ -1,5 +1,6 @@
 from collections import OrderedDict
 
+import numpy as np
 import pandas as pd
 import csv
 
@@ -34,33 +35,41 @@ PED_COLUMNS_REQUIRED = (
 
 class PedigreeReader(object):
 
-    def read_file(self, file, columns_labels=None, header=None, delimiter='\t',
-                  return_as_dict=False):
-        if columns_labels is None:
-            columns_labels = PedigreeReader.get_default_colum_labels()
-        families = OrderedDict()
-        with open(file) as csvfile:
-            reader = csv.DictReader(csvfile, fieldnames=header,
-                                    delimiter=delimiter)
-            for row in reader:
-                kwargs = {
-                    "family_id": row[columns_labels["family_id"]],
-                    "person_id": row[columns_labels["person_id"]],
-                    "father": row[columns_labels["father"]],
-                    "mother": row[columns_labels["mother"]],
-                    "sex": row[columns_labels["sex"]],
-                    "status": row[columns_labels["status"]],
-                    "role": row[columns_labels["role"]],
-                    "layout": row.get(columns_labels["layout"], None)
-                }
-                if 'generated' in columns_labels:
-                    generated = row.get(columns_labels["generated"], False)
-                    kwargs["generated"] = True if generated else False
-                member = Person(**kwargs)
-                if member.family_id not in families:
-                    families[member.family_id] = Pedigree([member])
-                else:
-                    families[member.family_id].members.append(member)
+    @staticmethod
+    def read_file(
+        pedigree_filepath, sep='\t',
+        col_family='familyId', col_person='personId', col_mom='momId', 
+        col_dad='dadId', col_sex='sex', col_status='status', col_role='role', 
+        col_layout='layout', col_generated='generated', 
+        col_sample_id='sampleId', 
+        return_as_dict=False):
+    
+        ped_df = PedigreeReader.load_pedigree_file(
+            pedigree_filepath, sep=sep,
+            col_family=col_family, col_person=col_person,
+            col_mom=col_mom, col_dad=col_dad,
+            col_sex=col_sex, col_status=col_status,
+            col_role=col_role, col_layout=col_layout,
+            col_generated=col_generated, col_sample_id=col_sample_id)
+
+        families = {}
+        for row in ped_df.to_dict(orient='records'):
+            kwargs = {
+                "family_id": row["family_id"],
+                "person_id": row["person_id"],
+                "father": row["dad_id"],
+                "mother": row["mom_id"],
+                "sex": row["sex"],
+                "status": row["status"],
+                "role": row["role"],
+                "layout": row.get("layout", None),
+                "generated": row.get("generated", False),
+            }
+            member = Person(**kwargs)
+            if member.family_id not in families:
+                families[member.family_id] = Pedigree([member])
+            else:
+                families[member.family_id].members.append(member)
 
         if return_as_dict:
             return families
@@ -128,6 +137,56 @@ class PedigreeReader(object):
         return ped_df
 
     @staticmethod
+    def load_simple_family_file(infile, sep="\t"):
+        fam_df = pd.read_csv(
+            infile, sep=sep, index_col=False,
+            skipinitialspace=True,
+            converters={
+                'role': lambda r: Role.from_name(r),
+                'gender': lambda s: Sex.from_name(s),
+            },
+            dtype={
+                'familyId': str,
+                'personId': str,
+            },
+            comment="#",
+        )
+
+        fam_df = fam_df.rename(columns={"gender": "sex"})
+
+        fam_df['status'] = pd.Series(
+            index=fam_df.index, data=1)
+        fam_df.loc[fam_df.role == Role.prb, 'status'] = 2
+        fam_df['status'] = fam_df.status.apply(lambda s: Status.from_value(s))
+
+        fam_df['momId'] = pd.Series(
+            index=fam_df.index, data='0')
+        fam_df['dadId'] = pd.Series(
+            index=fam_df.index, data='0')
+        for fid, fam in fam_df.groupby(by='familyId'):
+            mom_id = fam[fam.role == Role.mom]['personId'].iloc[0]
+            dad_id = fam[fam.role == Role.dad]['personId'].iloc[0]
+            children_mask = np.logical_and(
+                fam_df['familyId'] == fid,
+                np.logical_or(
+                    fam_df.role == Role.prb,
+                    fam_df.role == Role.sib))
+            fam_df.loc[children_mask, 'momId'] = mom_id
+            fam_df.loc[children_mask, 'dadId'] = dad_id
+
+        if 'sampleId' not in fam_df.columns:
+            sample_ids = pd.Series(data=fam_df['personId'].values)
+            fam_df['sampleId'] = sample_ids
+
+        fam_df.rename(columns={
+            'personId': 'person_id',
+            'familyId': 'family_id',
+            'momId': 'mom_id',
+            'dadId': 'dad_id',
+            'sampleId': 'sample_id',
+        }, inplace=True)
+        return fam_df
+    @staticmethod
     def save_pedigree(ped_df, filename):
         df = ped_df.copy()
 
@@ -156,6 +215,13 @@ class PedigreeReader(object):
             "role": "role",
             "layout": "layout"
         }
+
+    @staticmethod
+    def sort_pedigree(ped_df):
+        ped_df['role_order'] = ped_df['role'].apply(lambda r: r.value)
+        ped_df = ped_df.sort_values(by=['familyId', 'role_order'])
+        ped_df = ped_df.drop(axis=1, columns=['role_order'])
+        return ped_df
 
 
 class PedigreeRoleGuesser():
