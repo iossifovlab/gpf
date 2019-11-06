@@ -5,7 +5,7 @@ import pandas as pd
 
 from dae.pedigrees.pedigree_reader import PedigreeReader
 
-from dae.pedigrees.family import FamiliesBase
+from dae.pedigrees.family import FamiliesData
 from dae.pedigrees.family import Family
 from dae.variants.variant import SummaryVariantFactory
 from dae.variants.family_variant import FamilyVariant, FamilyAllele
@@ -85,7 +85,7 @@ class VariantFactory(SummaryVariantFactory):
             summary_variant, family, gt)
 
 
-class RawFamilyVariants(FamiliesBase):
+class RawFamilyVariants(FamiliesData):
 
     def __init__(self, pedigree_df, config=None, prefix=None,
                  annotator=None, region=None,

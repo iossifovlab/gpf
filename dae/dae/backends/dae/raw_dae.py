@@ -16,7 +16,7 @@ import pandas as pd
 
 
 from dae.variants.attributes import VariantType
-from dae.pedigrees.family import FamiliesBase, Family
+from dae.pedigrees.family import FamiliesData, Family
 from dae.variants.family_variant import FamilyVariant
 from dae.variants.variant import SummaryVariantFactory, SummaryVariant
 
@@ -24,7 +24,7 @@ from dae.utils.vcf_utils import best2gt, str2mat, reference_genotype
 from dae.utils.dae_utils import dae2vcf_variant
 
 
-class BaseDAE(FamiliesBase):
+class BaseDAE(FamiliesData):
 
     def __init__(self, pedigree_dataframe,
                  transmission_type,

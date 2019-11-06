@@ -21,7 +21,6 @@ from dae.backends.import_commons import construct_import_annotation_pipeline
 
 from dae.backends.impala.import_tools import variants_iterator_to_parquet
 from dae.pedigrees.pedigree_reader import PedigreeReader
-from dae.pedigrees.family import FamiliesBase
 
 
 def get_contigs(tabixfilename):

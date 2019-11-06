@@ -231,7 +231,7 @@ class Family(object):
         return sorted([p.person_id for p in persons])
 
 
-class FamiliesBase(object):
+class FamiliesData(object):
 
     def __init__(self, ped_df=None):
         self.ped_df = ped_df

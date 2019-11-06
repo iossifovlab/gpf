@@ -84,7 +84,7 @@ def read_variants_from_dsv(
     :param str genotype: The name of the column containing the best state for
     the variant.
 
-    :param str families: An instance of the FamiliesBase class for the pedigree
+    :param str families: An instance of the FamiliesData class for the pedigree
     of the relevant study.
 
     :type genome: An instance of GenomicSequence_Dan or GenomicSequence_Ivan.

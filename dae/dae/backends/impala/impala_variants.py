@@ -1,5 +1,5 @@
 from dae.annotation.tools.file_io_parquet import ParquetSchema
-from dae.pedigrees.family import FamiliesBase, Family
+from dae.pedigrees.family import FamiliesData, Family
 from dae.backends.impala.parquet_io import ParquetSerializer
 
 from impala.util import as_pandas
@@ -17,7 +17,7 @@ from ..attributes_query_inheritance import InheritanceTransformer, \
 from dae.variants.attributes import Role, Status, Sex
 
 
-class ImpalaFamilyVariants(FamiliesBase):
+class ImpalaFamilyVariants(FamiliesData):
     QUOTE = '\''
     WHERE = '''
         WHERE

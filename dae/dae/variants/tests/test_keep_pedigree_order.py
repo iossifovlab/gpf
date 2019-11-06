@@ -7,7 +7,7 @@ from io import StringIO
 
 from dae.pedigrees.pedigree_reader import PedigreeReader
 from dae.variants.attributes import Role
-from dae.pedigrees.family import FamiliesBase, Family
+from dae.pedigrees.family import FamiliesData, Family
 
 
 PED_FILE1 = """
@@ -34,7 +34,7 @@ SF0014912,SP0014912,SP0024751,SP0015221,1,2,prb
 def test_pedigree_keep_family_order_local():
     ped_df = PedigreeReader.load_pedigree_file(
         StringIO(PED_FILE1), sep=",")
-    families = FamiliesBase(ped_df)
+    families = FamiliesData(ped_df)
     families.families_build(ped_df, family_class=Family)
 
     f = families.families['SF0043014']
