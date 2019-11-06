@@ -1,4 +1,5 @@
 import os
+from box import Box
 
 from dae.backends.storage.genotype_storage import GenotypeStorage
 
@@ -58,6 +59,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
         return self._hdfs_helpers
 
     def get_backend(self, study_id, genomes_db):
+        impala_config = self._impala_storage_config(study_id)
         
         variants = ImpalaFamilyVariants(
             impala_config, self.impala_connection,
@@ -66,29 +68,40 @@ class ImpalaGenotypeStorage(GenotypeStorage):
 
         return variants
 
-    def _impala_configuration(self, study_config):
-        data_path = self._get_data_path(study_config.id)
+    def _impala_config(self, study_id, pedigree_path, variants_path):
+        study_impala_config = self._impala_storage_config(study_id)
+        import_files_config = self._hdfs_parquet_files_config(
+            study_id, pedigree_path, variants_path
+        )
 
-        if 'pedigree_file' in study_config:
-            pedigree_file = study_config.pedigree_file
-        else:
-            pedigree_file = "{}_pedigree.parquet".format(study_config.id)
-        if 'variant_files' in study_config:
-            variant_files = study_config.variant_files
-        else:
-            variant_files = "{}_variant*.pedigree".format(study_config.id)
+        return Box({**study_impala_config, **import_files_config})
 
+    def _impala_storage_config(self, study_id):
         conf = {
-            'impala': {
-                'files': {
-                    'pedigree': os.path.join(data_path, pedigree_file),
-                    'variant': os.path.join(data_path, variant_files),
-                },
                 'db': self.storage_config.impala.db,
                 'tables': {
-                    'pedigree': '{}_pedigree'.format(study_config.id),
-                    'variant': '{}_variant'.format(study_config.id),
+                'pedigree': '{}_pedigree'.format(study_id),
+                'variant': '{}_variant'.format(study_id),
+            }
                 }
+
+        return Box(conf)
+
+    def _hdfs_parquet_files_config(
+            self, study_id, pedigree_path, variants_path):
+        pedigree_dirname = self.get_hdfs_dir(study_id, 'pedigree')
+        variants_dirname = self.get_hdfs_dir(study_id, 'variants')
+
+        self.hdfs_helpers.put_content(pedigree_path, pedigree_dirname)
+        self.hdfs_helpers.put_content(variants_path, variants_dirname)
+
+        pedigree_files = self.hdfs_helpers.list_dir(pedigree_dirname)
+        variants_files = self.hdfs_helpers.list_dir(variants_dirname)
+
+        conf = {
+            'files': {
+                'pedigree': pedigree_files,
+                'variants': variants_files
             }
         }
-        return Configure(conf)
+        return Box(conf)
