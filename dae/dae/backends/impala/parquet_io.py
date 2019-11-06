@@ -1,7 +1,9 @@
+import os
 import sys
 import time
 import itertools
 import traceback
+from box import Box
 
 import numpy as np
 import pyarrow as pa
@@ -284,6 +286,44 @@ class ParquetManager:
         return os.path.abspath(
             os.path.join(self.studies_dir, study_id, 'data')
         )
+
+    @staticmethod
+    def parquet_file_config(
+            prefix, study_id=None, bucket_index=0, suffix=None):
+        assert bucket_index >= 0
+
+        basename = os.path.basename(os.path.abspath(prefix))
+        if study_id is None:
+            study_id = basename
+        assert study_id
+
+        if suffix is None and bucket_index == 0:
+            filesuffix = ''
+        elif bucket_index > 0 and suffix is None:
+            filesuffix = f'_{bucket_index:0>6}'
+        elif bucket_index == 0 and suffix is not None:
+            filesuffix = f'{suffix}'
+        else:
+            filesuffix = f'_{bucket_index:0>6}{suffix}'
+
+        variant_filename = os.path.join(
+            prefix, 'variants',
+            f'{study_id}_variant{filesuffix}.parquet'
+        )
+        pedigree_filename = os.path.join(
+            prefix, 'pedigree',
+            f'{study_id}_pedigree{filesuffix}.parquet'
+        )
+
+        conf = {
+            'files': {
+                'variant': variant_filename,
+                'pedigree': pedigree_filename,
+            }
+        }
+
+        return Box(conf)
+
 
 def pedigree_parquet_schema():
     fields = [

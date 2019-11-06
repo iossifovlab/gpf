@@ -8,7 +8,7 @@ from box import Box
 
 from dae.annotation.annotation_pipeline import PipelineAnnotator
 
-from .configure import Configure
+from dae.backends.impala.parquet_io import ParquetManager
 
 
 def build_contig_regions(genome, TRANSMITTED_STEP=10000000):
@@ -66,10 +66,11 @@ def contigs_makefile_generate(
             )
             # target_prefix = os.path.join(output_prefix, suffix)
 
-            parquet = Configure.from_prefix_impala(
+            parquet = ParquetManager.parquet_file_config(
                 output_directory,
                 bucket_index=bucket_index,
-                suffix=suffix).impala
+                suffix=suffix
+            )
 
             targets = [
                 parquet.files.variant
