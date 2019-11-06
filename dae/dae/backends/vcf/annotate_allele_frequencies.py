@@ -9,9 +9,6 @@ import numpy as np
 
 class VcfAnnotatorBase(object):
 
-    def setup(self, family_variants):
-        pass
-
     def columns(self):
         return self.COLUMNS
 
@@ -46,26 +43,19 @@ class VcfAlleleFrequencyAnnotator(VcfAnnotatorBase):
         'af_allele_freq',
     ]
 
-    def __init__(self):
+    def __init__(self, families, vcf):
         super(VcfAlleleFrequencyAnnotator, self).__init__()
-        self.family_variants = None
-        self.independent = None
-        self.independent_index = None
-        self.n_independent_parents = None
+        # self.family_variants = None
+        self.families = families
+        self.vcf = vcf
 
-    def setup(self, family_variants):
-        super(VcfAlleleFrequencyAnnotator, self).setup(family_variants)
-
-        self.family_variants = family_variants
-
-        self.independent = self.family_variants.families.persons_without_parents()
+        self.independent = self.families.persons_without_parents()
         self.independent_index = \
-            np.array(self.family_variants.persons_samples(self.independent))
-
+            np.array(sorted([p.sample_index for p in self.independent]))
         self.n_independent_parents = len(self.independent)
 
     def get_vcf_variant(self, allele):
-        return self.family_variants.vcf.vars[allele['summary_variant_index']]
+        return self.vcf.vars[allele['summary_variant_index']]
 
     def get_variant_full_genotype(self, allele):
         vcf_variant = self.get_vcf_variant(allele)

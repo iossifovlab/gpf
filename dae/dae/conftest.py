@@ -17,6 +17,8 @@ from dae.annotation.annotation_pipeline import PipelineAnnotator
 from dae.backends.configure import Configure
 from dae.backends.dae.raw_dae import RawDAE, RawDenovo
 from dae.backends.vcf.raw_vcf import RawVcfVariants
+from dae.backends.vcf.loader import RawVariantsLoader
+
 from dae.backends.vcf.annotate_allele_frequencies import \
     VcfAlleleFrequencyAnnotator
 from dae.backends.vcf.builder import variants_builder
@@ -274,17 +276,13 @@ def vcf_import_config():
 def vcf_import_raw(
         vcf_import_config, default_genome, annotation_pipeline_internal,
         genomes_db):
-    freq_annotator = VcfAlleleFrequencyAnnotator()
 
-    ped_df = PedigreeReader.load_pedigree_file(vcf_import_config.pedigree)
-
-    fvars = RawVcfVariants(
-        ped_df,
-        prefix=vcf_import_config.prefix,
-        annotator=freq_annotator,
-        genomes_db=genomes_db
+    fvars = RawVariantsLoader.load_raw_vcf_variants(
+        vcf_import_config.vcf.pedigree, vcf_import_config.vcf.vcf
     )
     fvars.annot_df = annotation_pipeline_internal.annotate_df(fvars.annot_df)
+    RawVariantsLoader.save_annotation_file(
+        fvars.annot_df, vcf_import_config.vcf.annotation)
 
     return fvars
 

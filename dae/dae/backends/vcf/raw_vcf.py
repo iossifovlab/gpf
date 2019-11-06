@@ -10,56 +10,33 @@ from dae.pedigrees.family import Family
 from dae.variants.variant import SummaryVariantFactory
 from dae.variants.family_variant import FamilyVariant, FamilyAllele
 
-from dae.backends.vcf.loader import RawVariantsLoader
 from dae.backends.configure import Configure
 
 from dae.backends.raw.raw_variants import RawFamilyVariants
 
 
-def split_gene_effect(effects):
-    result = []
-    if not isinstance(effects, str):
-        return result
-    for ge in effects.split("|"):
-        sym, eff = ge.split(":")
-        result.append({'sym': sym, 'eff': eff})
-    return result
+# def split_gene_effect(effects):
+#     result = []
+#     if not isinstance(effects, str):
+#         return result
+#     for ge in effects.split("|"):
+#         sym, eff = ge.split(":")
+#         result.append({'sym': sym, 'eff': eff})
+#     return result
 
 
-def parse_gene_effect(effect):
-    if isinstance(effect, list):
-        return [{'eff': eff, 'sym': sym} for (eff, sym) in effect]
-    if effect in set(["CNV+", "CNV-", "intergenic"]):
-        return [{'eff': effect, 'sym': ""}]
+# def parse_gene_effect(effect):
+#     if isinstance(effect, list):
+#         return [{'eff': eff, 'sym': sym} for (eff, sym) in effect]
+#     if effect in set(["CNV+", "CNV-", "intergenic"]):
+#         return [{'eff': effect, 'sym': ""}]
 
-    return split_gene_effect(effect)
+#     return split_gene_effect(effect)
 
 
 # def samples_to_alleles_index(samples):
 #     return np.stack([2 * samples, 2 * samples + 1]). \
 #         reshape([1, 2 * len(samples)], order='F')[0]
-
-
-class VcfFamily(Family):
-
-    @classmethod
-    def from_df(cls, family_id, ped_df):
-        assert 'sampleIndex' in ped_df.columns
-        family = Family.from_df(family_id, ped_df)
-
-        family.samples = ped_df['sampleIndex'].values
-
-        return family
-
-    def __init__(self, family_id):
-        super(VcfFamily, self).__init__(family_id)
-        self.samples = []
-        self.alleles = []
-
-    def vcf_samples_index(self, person_ids):
-        return self.ped_df[
-            self.ped_df['personId'].isin(set(person_ids))
-        ]['sampleIndex'].values
 
 
 class VariantFactory(SummaryVariantFactory):
@@ -86,107 +63,70 @@ class VariantFactory(SummaryVariantFactory):
 
 class RawVcfVariants(RawFamilyVariants):
 
-    def __init__(self, pedigree_df, config=None, prefix=None,
-                 annotator=None, region=None,
+    def __init__(self, families, vcf, annot_df, 
                  transmission_type='transmitted',
-                 variant_factory=VariantFactory,
-                 genomes_db=None):
+                 variant_factory=VariantFactory):
+
         super(RawVcfVariants, self).__init__()
-        if prefix is not None:
-            config = Configure.from_prefix_vcf(prefix)
-
-        assert isinstance(config, Configure), type(config)
-
-        self.config = config.vcf
-        assert self.config is not None
 
         self.VF = variant_factory
-        self.prefix = prefix
         self.transmission_type = transmission_type
-        self.ped_df = pedigree_df
-        self.families = None
-        self._load(annotator, region, genomes_db)
+        self.families = families
+        self.vcf = vcf
+        self.annot_df = annot_df
 
     def is_empty(self):
         return len(self.annot_df) == 0
 
-    def _match_pedigree_to_samples(self, ped_df, samples):
-        samples = list(samples)
-        samples_needed = set(samples)
-        pedigree_samples = set(ped_df['sample_id'].values)
-        missing_samples = samples_needed.difference(pedigree_samples)
+    # def _load(self, annotator, region, genomes_db):
+    #     loader = RawVariantsLoader(self.config, genomes_db)
 
-        samples_needed = samples_needed.difference(missing_samples)
-        assert samples_needed.issubset(pedigree_samples)
+    #     self.vcf = loader.load_vcf(self.config.vcf, region)
 
-        pedigree = []
-        seen = set()
-        for record in ped_df.to_dict(orient='record'):
-            if record['sample_id'] in samples_needed:
-                if record['sample_id'] in seen:
-                    continue
-                record['sampleIndex'] = samples.index(record['sample_id'])
-                pedigree.append(record)
-                seen.add(record['sample_id'])
+    #     self.ped_df, self.samples = self._match_pedigree_to_samples(
+    #         self.ped_df, self.vcf.samples)
+    #     # self._families_build(self.ped_df, family_class=VcfFamily)
+    #     self.families = FamiliesData.from_pedigree_df(
+    #         self.ped_df, family_class=VcfFamily)
+    #     assert np.all(self.samples == self.ped_df['sample_id'].values)
 
-        assert len(pedigree) == len(samples_needed)
+    #     self.vcf_vars = self.vcf.vars
 
-        pedigree_order = list(ped_df['sample_id'].values)
-        pedigree = sorted(
-            pedigree, key=lambda p: pedigree_order.index(p['sample_id']))
+    #     if annotator is None:
+    #         self.annot_df = loader.load_annotation()
+    #     else:
+    #         records = []
+    #         for index, v in enumerate(self.vcf_vars):
+    #             allele_count = len(v.ALT) + 1
+    #             records.append(
+    #                 (v.CHROM, v.start + 1,
+    #                  v.REF, None,
+    #                  index, 0, allele_count))
+    #             for allele_index, alt in enumerate(v.ALT):
+    #                 records.append(
+    #                     (v.CHROM, v.start + 1,
+    #                      v.REF, alt,
+    #                      index,
+    #                      allele_index + 1, allele_count
+    #                      ))
+    #         self.annot_df = pd.DataFrame.from_records(
+    #             data=records,
+    #             columns=[
+    #                 'chrom', 'position', 'reference', 'alternative',
+    #                 'summary_variant_index',
+    #                 'allele_index', 'allele_count',
+    #             ])
 
-        ped_df = pd.DataFrame(pedigree)
-        return ped_df, ped_df['sample_id'].values
-
-    def _load(self, annotator, region, genomes_db):
-        loader = RawVariantsLoader(self.config, genomes_db)
-
-        self.vcf = loader.load_vcf(region)
-
-        self.ped_df, self.samples = self._match_pedigree_to_samples(
-            self.ped_df, self.vcf.samples)
-        # self._families_build(self.ped_df, family_class=VcfFamily)
-        self.families = FamiliesData.from_pedigree_df(
-            self.ped_df, family_class=VcfFamily)
-        assert np.all(self.samples == self.ped_df['sample_id'].values)
-
-        self.vcf_vars = self.vcf.vars
-
-        if annotator is None:
-            self.annot_df = loader.load_annotation()
-        else:
-            records = []
-            for index, v in enumerate(self.vcf_vars):
-                allele_count = len(v.ALT) + 1
-                records.append(
-                    (v.CHROM, v.start + 1,
-                     v.REF, None,
-                     index, 0, allele_count))
-                for allele_index, alt in enumerate(v.ALT):
-                    records.append(
-                        (v.CHROM, v.start + 1,
-                         v.REF, alt,
-                         index,
-                         allele_index + 1, allele_count
-                         ))
-            self.annot_df = pd.DataFrame.from_records(
-                data=records,
-                columns=[
-                    'chrom', 'position', 'reference', 'alternative',
-                    'summary_variant_index',
-                    'allele_index', 'allele_count',
-                ])
-
-            annotator.setup(self)
-            self.annot_df = annotator.annotate(self.annot_df)
+    #         annotator.setup(self)
+    #         self.annot_df = annotator.annotate(self.annot_df)
 
 #  FIXME:
 #         assert len(self.annot_df) == len(self.vcf_vars)
 #         assert np.all(self.annot_df.index.values ==
 #                       np.arange(len(self.annot_df)))
 
-    def persons_samples(self, persons):
-        return sorted([p.sample_index for p in persons])
+    # def persons_samples(self, persons):
+    #     return sorted([p.sample_index for p in persons])
 
     def wrap_summary_variant(self, records):
         return self.VF.summary_variant_from_records(
@@ -195,7 +135,7 @@ class RawVcfVariants(RawFamilyVariants):
 
     def full_variants_iterator(self):
         sum_df = self.annot_df
-        variants = self.vcf_vars
+        variants = self.vcf.vars
         for summary_index, group_df in \
                 sum_df.groupby("summary_variant_index"):
             vcf = variants[summary_index]
