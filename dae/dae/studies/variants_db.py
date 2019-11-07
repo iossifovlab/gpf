@@ -7,7 +7,7 @@ from dae.studies.study_config_parser import StudyConfigParser
 from dae.studies.dataset_config_parser import DatasetConfigParser
 
 from dae.backends.vcf.raw_vcf import RawVcfVariants
-from dae.backends.vcf.loader import RawVariantsLoader
+from dae.backends.vcf.loader import RawVcfLoader
 
 from dae.backends.configure import Configure
 
@@ -199,6 +199,9 @@ class VariantsDb(object):
             for study_id in to_load:
                 self._load_study_in_cache(study_id)
 
+    def wrap_study(self, study):
+        return StudyWrapper(study, self.pheno_factory, self.weights_factory)
+
     def _load_study_in_cache(self, study_id):
         conf = self.study_configs.get(study_id)
         if not conf:
@@ -288,7 +291,7 @@ class VariantsDb(object):
             )
             return Study(study_config, variants)
         else:
-            variants = RawVariantsLoader.load_raw_vcf_variants_from_prefix(
+            variants = RawVcfLoader.load_raw_vcf_variants_from_prefix(
                 study_config.prefix
             )
             return Study(study_config, variants)

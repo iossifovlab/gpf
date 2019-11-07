@@ -17,7 +17,7 @@ from dae.annotation.annotation_pipeline import PipelineAnnotator
 from dae.backends.configure import Configure
 from dae.backends.dae.raw_dae import RawDAE, RawDenovo
 from dae.backends.vcf.raw_vcf import RawVcfVariants
-from dae.backends.vcf.loader import RawVariantsLoader
+from dae.backends.vcf.loader import RawVcfLoader
 
 from dae.backends.vcf.annotate_allele_frequencies import \
     VcfAlleleFrequencyAnnotator
@@ -41,6 +41,11 @@ def relative_to_this_test_folder(path):
 @pytest.fixture(scope='session')
 def global_gpf_instance():
     return GPFInstance()
+
+
+@pytest.fixture(scope='session')
+def default_dae_config(global_gpf_instance):
+    return global_gpf_instance.dae_config
 
 
 @pytest.fixture(scope='session')
@@ -144,9 +149,32 @@ def annotation_pipeline_config():
     return filename
 
 
-@pytest.fixture(scope='session')
-def annotation_pipeline_default_config(dae_config_fixture):
-    return dae_config_fixture.annotation.conf_file
+# @pytest.fixture(scope='session')
+# def annotation_pipeline_default_config(dae_config_fixture):
+#     return dae_config_fixture.annotation.conf_file
+
+
+@pytest.fixture(scope='function')
+def default_annotation_pipeline(
+        default_dae_config, genomes_db):
+    filename = default_dae_config.annotation.conf_file
+
+    options = Box({
+            'default_arguments': None,
+            'vcf': True,
+            'r': 'reference',
+            'a': 'alternative',
+            'c': 'chrom',
+            'p': 'position',
+        },
+        default_box=True,
+        default_box_attr=None)
+
+    pipeline = PipelineAnnotator.build(
+        options, filename, '.', genomes_db,
+        defaults={})
+
+    return pipeline
 
 
 @pytest.fixture(scope='session')
@@ -277,11 +305,11 @@ def vcf_import_raw(
         vcf_import_config, default_genome, annotation_pipeline_internal,
         genomes_db):
 
-    fvars = RawVariantsLoader.load_raw_vcf_variants(
+    fvars = RawVcfLoader.load_raw_vcf_variants(
         vcf_import_config.pedigree, vcf_import_config.vcf
     )
     fvars.annot_df = annotation_pipeline_internal.annotate_df(fvars.annot_df)
-    RawVariantsLoader.save_annotation_file(
+    RawVcfLoader.save_annotation_file(
         fvars.annot_df, vcf_import_config.annotation)
 
     return fvars

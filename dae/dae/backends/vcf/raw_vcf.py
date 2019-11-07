@@ -78,56 +78,6 @@ class RawVcfVariants(RawFamilyVariants):
     def is_empty(self):
         return len(self.annot_df) == 0
 
-    # def _load(self, annotator, region, genomes_db):
-    #     loader = RawVariantsLoader(self.config, genomes_db)
-
-    #     self.vcf = loader.load_vcf(self.config.vcf, region)
-
-    #     self.ped_df, self.samples = self._match_pedigree_to_samples(
-    #         self.ped_df, self.vcf.samples)
-    #     # self._families_build(self.ped_df, family_class=VcfFamily)
-    #     self.families = FamiliesData.from_pedigree_df(
-    #         self.ped_df, family_class=VcfFamily)
-    #     assert np.all(self.samples == self.ped_df['sample_id'].values)
-
-    #     self.vcf_vars = self.vcf.vars
-
-    #     if annotator is None:
-    #         self.annot_df = loader.load_annotation()
-    #     else:
-    #         records = []
-    #         for index, v in enumerate(self.vcf_vars):
-    #             allele_count = len(v.ALT) + 1
-    #             records.append(
-    #                 (v.CHROM, v.start + 1,
-    #                  v.REF, None,
-    #                  index, 0, allele_count))
-    #             for allele_index, alt in enumerate(v.ALT):
-    #                 records.append(
-    #                     (v.CHROM, v.start + 1,
-    #                      v.REF, alt,
-    #                      index,
-    #                      allele_index + 1, allele_count
-    #                      ))
-    #         self.annot_df = pd.DataFrame.from_records(
-    #             data=records,
-    #             columns=[
-    #                 'chrom', 'position', 'reference', 'alternative',
-    #                 'summary_variant_index',
-    #                 'allele_index', 'allele_count',
-    #             ])
-
-    #         annotator.setup(self)
-    #         self.annot_df = annotator.annotate(self.annot_df)
-
-#  FIXME:
-#         assert len(self.annot_df) == len(self.vcf_vars)
-#         assert np.all(self.annot_df.index.values ==
-#                       np.arange(len(self.annot_df)))
-
-    # def persons_samples(self, persons):
-    #     return sorted([p.sample_index for p in persons])
-
     def wrap_summary_variant(self, records):
         return self.VF.summary_variant_from_records(
             records,

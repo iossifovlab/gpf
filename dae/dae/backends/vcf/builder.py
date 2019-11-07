@@ -6,7 +6,7 @@ from ..configure import Configure
 
 from .raw_vcf import RawVcfVariants
 from .annotate_allele_frequencies import VcfAlleleFrequencyAnnotator
-from .loader import RawVariantsLoader
+from dae.backends.vcf.loader import RawVcfLoader
 
 from dae.annotation.tools.annotator_config import AnnotationConfigParser
 from dae.annotation.tools.effect_annotator import VariantEffectAnnotator
@@ -55,17 +55,17 @@ def variants_builder(prefix, genomes_db, force_reannotate=False):
     conf = Configure.from_prefix_vcf(prefix)
 
     if os.path.exists(conf.vcf.annotation) and not force_reannotate:
-        fvars = RawVariantsLoader.load_raw_vcf_variants(
+        fvars = RawVcfLoader.load_raw_vcf_variants(
             conf.vcf.pedigree, conf.vcf.vcf, conf.vcf.annotation
         )
         return fvars
 
     effect_annotator = effect_annotator_builder(genomes_db)
 
-    fvars = RawVariantsLoader.load_raw_vcf_variants(
+    fvars = RawVcfLoader.load_raw_vcf_variants(
         conf.vcf.pedigree, conf.vcf.vcf
     )
     fvars.annot_df = effect_annotator.annotate_df(fvars.annot_df)
-    RawVariantsLoader.save_annotation_file(fvars.annot_df, conf.vcf.annotation)
+    RawVcfLoader.save_annotation_file(fvars.annot_df, conf.vcf.annotation)
 
     return fvars

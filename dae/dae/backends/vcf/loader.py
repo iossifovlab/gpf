@@ -14,6 +14,8 @@ from dae.pedigrees.pedigree_reader import PedigreeReader
 from dae.pedigrees.family import FamiliesData, Family
 
 from dae.backends.configure import Configure
+from dae.backends.raw.loader import RawVariantsLoader
+
 from dae.backends.vcf.annotate_allele_frequencies import \
     VcfAlleleFrequencyAnnotator
 from dae.backends.vcf.raw_vcf import RawVcfVariants
@@ -86,109 +88,12 @@ class VcfFamily(Family):
         ]['sampleIndex'].values
 
 
-class RawVariantsLoader(object):
-    SEP1 = '!'
-    SEP2 = '|'
-    SEP3 = ':'
-
-    def __init__(self, config, genomes_db):
-        self.config = config
-        self.genomes_db = genomes_db
-
-    @staticmethod
-    def convert_array_of_strings(token):
-        if not token:
-            return None
-        token = token.strip()
-        words = [w.strip() for w in token.split(RawVariantsLoader.SEP1)]
-        return words
-
-    @staticmethod
-    def convert_string(token):
-        if not token:
-            return None
-        return token
-
-    @staticmethod
-    def has_annotation_file(annotation):
-        return os.path.exists(annotation)
-
-    @classmethod
-    def load_annotation_file(cls, filename, sep='\t', storage='csv'):
-        assert os.path.exists(filename)
-        assert storage == 'csv'
-        if storage == 'csv':
-            with open(filename, 'r') as infile:
-                annot_df = pd.read_csv(
-                    infile, sep=sep, index_col=False,
-                    dtype={
-                        'chrom': str,
-                        'position': np.int32,
-                    },
-                    converters={
-                        'cshl_variant': cls.convert_string,
-                        'effect_gene_genes':
-                        cls.convert_array_of_strings,
-                        'effect_gene_types':
-                        cls.convert_array_of_strings,
-                        'effect_details_transcript_ids':
-                        cls.convert_array_of_strings,
-                        'effect_details_details':
-                        cls.convert_array_of_strings,
-                    },
-                    encoding="utf-8"
-                )
-            for col in ['alternative', 'effect_type']:
-                annot_df[col] = annot_df[col].astype(object). \
-                    where(pd.notnull(annot_df[col]), None)
-            return annot_df
-        # elif storage == 'parquet':
-        #     annot_df = read_summary_from_parquet(filename)
-        #     return annot_df
-        else:
-            raise ValueError("unexpected input format: {}".format(storage))
-
-    @staticmethod
-    def save_annotation_file(annot_df, filename, sep="\t"):
-        def convert_array_of_strings_to_string(a):
-            if not a:
-                return None
-            return RawVariantsLoader.SEP1.join(a)
-
-        vars_df = annot_df.copy()
-        vars_df['effect_gene_genes'] = vars_df['effect_gene_genes'].\
-            apply(convert_array_of_strings_to_string)
-        vars_df['effect_gene_types'] = vars_df['effect_gene_types'].\
-            apply(convert_array_of_strings_to_string)
-        vars_df['effect_details_transcript_ids'] = \
-            vars_df['effect_details_transcript_ids'].\
-            apply(convert_array_of_strings_to_string)
-        vars_df['effect_details_details'] = \
-            vars_df['effect_details_details'].\
-            apply(convert_array_of_strings_to_string)
-        vars_df.to_csv(
-            filename,
-            index=False,
-            sep=sep
-        )
+class RawVcfLoader(RawVariantsLoader):
 
     @staticmethod
     def load_vcf(filename, region=None):
         assert os.path.exists(filename)
         return VCFWrapper(filename, region)
-
-    # def load_annotation(self, storage='csv'):
-    #     assert self.config.annotation
-
-    #     if self.has_annotation_file(self.config.annotation):
-    #         return self.load_annotation_file(
-    #             self.config.annotation, storage=storage)
-    #     else:
-    #         # TODO: add test for this
-    #         from .builder import variants_builder
-    #         variants_builder(self.config.prefix, self.genomes_db)
-    #         return self.load_annotation_file(
-    #             self.config.annotation, storage=storage)
 
     @staticmethod
     def _match_pedigree_to_samples(ped_df, vcf):
@@ -248,11 +153,11 @@ class RawVariantsLoader(object):
 
     @staticmethod
     def build_raw_vcf(ped_df, vcf, annot_df=None):
-        ped_df, vcf_samples = RawVariantsLoader._match_pedigree_to_samples(ped_df, vcf)
+        ped_df, vcf_samples = RawVcfLoader._match_pedigree_to_samples(ped_df, vcf)
         families = FamiliesData.from_pedigree_df(ped_df, family_class=VcfFamily)
 
         if annot_df is None:
-            annot_df = RawVariantsLoader._build_initial_vcf_annotation(families, vcf)
+            annot_df = RawVcfLoader._build_initial_vcf_annotation(families, vcf)
 
         return RawVcfVariants(families, vcf, annot_df)
 
@@ -261,17 +166,17 @@ class RawVariantsLoader(object):
             ped_filename, vcf_filename,
             annotation_filename=None, region=None):
         ped_df = PedigreeReader.load_pedigree_file(ped_filename)
-        vcf = RawVariantsLoader.load_vcf(vcf_filename, region)
+        vcf = RawVcfLoader.load_vcf(vcf_filename, region)
 
         annot_df = None
         if annotation_filename is not None \
                 and os.path.exists(annotation_filename):
-            annot_df = RawVariantsLoader.load_annotation_file(annotation_filename)
-        return RawVariantsLoader.build_raw_vcf(ped_df, vcf, annot_df)
+            annot_df = RawVcfLoader.load_annotation_file(annotation_filename)
+        return RawVcfLoader.build_raw_vcf(ped_df, vcf, annot_df)
 
     @staticmethod
     def load_raw_vcf_variants_from_prefix(prefix):
         config = Configure.from_prefix_vcf(prefix).vcf
-        return RawVariantsLoader.load_raw_vcf_variants(
+        return RawVcfLoader.load_raw_vcf_variants(
             config.pedigree, config.vcf, config.annotation
         )
