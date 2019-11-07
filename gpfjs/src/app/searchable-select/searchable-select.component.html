@@ -1,5 +1,5 @@
 <div class="input-group" style="width: 100%; max-width: 100%;">
-  <input [hidden]="caption" #searchBox id="search-box"
+  <input [hidden]="caption" #searchBox id="search-box" autocomplete="off"
     (keyup)="searchBoxChange(searchBox.value)"
     style="width: 100%"
     placeholder="Select or start typing to search"
