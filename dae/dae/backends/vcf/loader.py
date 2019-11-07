@@ -13,6 +13,7 @@ import pandas as pd
 from dae.pedigrees.pedigree_reader import PedigreeReader
 from dae.pedigrees.family import FamiliesData, Family
 
+from dae.backends.configure import Configure
 from dae.backends.vcf.annotate_allele_frequencies import \
     VcfAlleleFrequencyAnnotator
 from dae.backends.vcf.raw_vcf import RawVcfVariants
@@ -246,19 +247,31 @@ class RawVariantsLoader(object):
         return annot_df
 
     @staticmethod
+    def build_raw_vcf(ped_df, vcf, annot_df=None):
+        ped_df, vcf_samples = RawVariantsLoader._match_pedigree_to_samples(ped_df, vcf)
+        families = FamiliesData.from_pedigree_df(ped_df, family_class=VcfFamily)
+
+        if annot_df is None:
+            annot_df = RawVariantsLoader._build_initial_vcf_annotation(families, vcf)
+
+        return RawVcfVariants(families, vcf, annot_df)
+
+    @staticmethod
     def load_raw_vcf_variants(
             ped_filename, vcf_filename,
             annotation_filename=None, region=None):
         ped_df = PedigreeReader.load_pedigree_file(ped_filename)
         vcf = RawVariantsLoader.load_vcf(vcf_filename, region)
-        ped_df, vcf_samples = RawVariantsLoader._match_pedigree_to_samples(ped_df, vcf)
-        families = FamiliesData.from_pedigree_df(ped_df, family_class=VcfFamily)
 
+        annot_df = None
         if annotation_filename is not None \
                 and os.path.exists(annotation_filename):
             annot_df = RawVariantsLoader.load_annotation_file(annotation_filename)
-        else:
-            # build initial annotation dataframe
-            annot_df = RawVariantsLoader._build_initial_vcf_annotation(families, vcf)
+        return RawVariantsLoader.build_raw_vcf(ped_df, vcf, annot_df)
 
-        return RawVcfVariants(families, vcf, annot_df)
+    @staticmethod
+    def load_raw_vcf_variants_from_prefix(prefix):
+        config = Configure.from_prefix_vcf(prefix).vcf
+        return RawVariantsLoader.load_raw_vcf_variants(
+            config.pedigree, config.vcf, config.annotation
+        )

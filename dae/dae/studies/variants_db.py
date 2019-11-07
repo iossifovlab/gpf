@@ -7,6 +7,8 @@ from dae.studies.study_config_parser import StudyConfigParser
 from dae.studies.dataset_config_parser import DatasetConfigParser
 
 from dae.backends.vcf.raw_vcf import RawVcfVariants
+from dae.backends.vcf.loader import RawVariantsLoader
+
 from dae.backends.configure import Configure
 
 from dae.backends.impala.impala_helpers import ImpalaHelpers
@@ -286,13 +288,9 @@ class VariantsDb(object):
             )
             return Study(study_config, variants)
         else:
-            ped_df = PedigreeReader.load_pedigree_file(
-                '{}.ped'.format(study_config.prefix)
+            variants = RawVariantsLoader.load_raw_vcf_variants_from_prefix(
+                study_config.prefix
             )
-            variants = RawVcfVariants(
-                ped_df, prefix=study_config.prefix, genomes_db=self.genomes_db
-            )
-
             return Study(study_config, variants)
 
     def make_dataset(self, dataset_config):

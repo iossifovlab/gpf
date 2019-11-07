@@ -16,7 +16,7 @@ def variants_iterator_to_parquet(
         return
 
     save_ped_df_to_parquet(
-        fvars.ped_df, impala_config.files.pedigree,
+        fvars.families.ped_df, impala_config.files.pedigree,
         filesystem=filesystem)
 
     start = time.time()

@@ -13,6 +13,8 @@ from dae.backends.vcf.annotate_allele_frequencies import \
 
 from dae.backends.configure import Configure
 from dae.backends.vcf.raw_vcf import RawVcfVariants
+from dae.backends.vcf.loader import RawVariantsLoader
+
 from cyvcf2 import VCF
 
 from dae.backends.import_commons import build_contig_regions, \
@@ -49,11 +51,9 @@ def import_vcf(
         output, bucket_index=bucket_index, db=None, study_id=study_id).impala
     print("converting into ", impala_config, file=sys.stderr)
 
-    fvars = RawVcfVariants(
-        pedigree_df,
-        config=vcf_config, annotator=VcfAlleleFrequencyAnnotator(),
-        region=region, genomes_db=genomes_db
-    )
+    vcf = RawVariantsLoader.load_vcf(vcf_config.vcf.vcf)
+
+    fvars = RawVariantsLoader.build_raw_vcf(pedigree_df, vcf)
 
     fvars.annot_df = annotation_pipeline.annotate_df(fvars.annot_df)
 
