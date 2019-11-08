@@ -7,6 +7,7 @@ import time
 import glob
 import shutil
 import copy
+from functools import partial
 
 from dae.gpf_instance.gpf_instance import GPFInstance
 
@@ -277,11 +278,8 @@ if __name__ == "__main__":
         dae_config, genomes_db, argv)
 
     # handle pedigree
-    if argv.ped_no_header:
-        argv = cast_pedigree_column_indices_to_int(argv)
-    ped_df = PedigreeReader.load_pedigree_file(
-        argv.pedigree,
-        sep='\t',
+    load_pedigree_partial = partial(
+        PedigreeReader.load_pedigree_file,
         col_family=argv.ped_family,
         col_person=argv.ped_person,
         col_mom=argv.ped_mom,
@@ -290,6 +288,13 @@ if __name__ == "__main__":
         col_status=argv.ped_status,
         col_role=argv.ped_role,
     )
+
+    if argv.ped_no_header:
+        argv = cast_pedigree_column_indices_to_int(argv)
+        ped_df = load_pedigree_partial(argv.pedigree, has_header=False)
+    else:
+        ped_df = load_pedigree_partial(argv.pedigree)
+
     if argv.ped_no_role:
         ped_df = PedigreeRoleGuesser.guess_role_nuc(ped_df)
 

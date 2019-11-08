@@ -1,4 +1,5 @@
 import pytest
+from io import StringIO
 import pandas as pd
 
 from dae.variants.attributes import Sex, Status, Role
@@ -26,13 +27,57 @@ expected_pedigree_df = pd.DataFrame([
 )
 
 
+@pytest.mark.parametrize("infile,pedigree", [
+    (StringIO("""
+familyId\tpersonId\tdadId\tmomId\tsex\tstatus\trole\tlayout
+1\t1.x1\t0\t0\t2\t1\tmom\t1:53.5,50.0
+1\t1.x2\t0\t0\t1\t1\tdad\t1:10.0,50.0
+1\t1.x3\t1.x2\t1.x1\t2\t2\tprb\t2:31.75,80.0
+"""), pd.DataFrame({
+        'family_id': ['1', '1', '1'],
+        'person_id': ['1.x1', '1.x2', '1.x3'],
+        'dad_id': ['0', '0', '1.x2'],
+        'mom_id': ['0', '0', '1.x1'],
+        'sex': [Sex.female, Sex.male, Sex.female],
+        'status': [Status.unaffected, Status.unaffected, Status.affected],
+        'role': [Role.mom, Role.dad, Role.prb],
+        'layout': ['53.5,50.0', '10.0,50.0', '31.75,80.0'],
+        'sample_id': ['1.x1', '1.x2', '1.x3']
+    })),
+    (StringIO("""
+familyId\tpersonId\tdadId\tmomId\tsex\tstatus\trole\tlayout\tsampleId
+1\t1.x1\t0\t0\t2\t1\tmom\t1:53.5,50.0\t
+1\t1.x2\t0\t0\t1\t1\tdad\t1:10.0,50.0\t1.x2
+1\t1.x3\t1.x2\t1.x1\t2\t2\tprb\t2:31.75,80.0\t
+"""), pd.DataFrame({
+        'family_id': ['1', '1', '1'],
+        'person_id': ['1.x1', '1.x2', '1.x3'],
+        'dad_id': ['0', '0', '1.x2'],
+        'mom_id': ['0', '0', '1.x1'],
+        'sex': [Sex.female, Sex.male, Sex.female],
+        'status': [Status.unaffected, Status.unaffected, Status.affected],
+        'role': [Role.mom, Role.dad, Role.prb],
+        'layout': ['53.5,50.0', '10.0,50.0', '31.75,80.0'],
+        'sample_id': ['1.x1', '1.x2', '1.x3']
+    })),
+])
+def test_load_pedigree_file(infile, pedigree):
+    loaded_pedigree = PedigreeReader.load_pedigree_file(infile, sep='\t')
+    print(loaded_pedigree)
+    columns = ['family_id', 'person_id', 'dad_id', 'mom_id', 'sex', 'status',
+               'role', 'layout', 'sample_id']
+    for column in columns:
+        assert (loaded_pedigree[column].values ==
+                pedigree[column].values).all()
+
+
 @pytest.mark.parametrize('filepath', [
     ('pedigree_A.ped'),
     ('pedigree_B.ped'),
     ('pedigree_B2.ped'),
     ('pedigree_C.ped'),
 ])
-def test_load_pedigree_file(filepath):
+def test_load_pedigree_file_from_filesystem(filepath):
     expected_df = expected_pedigree_df.copy()
     expected_df['sample_id'] = expected_df['person_id']
 
@@ -83,4 +128,27 @@ def test_load_pedigree_file_do_not_override_sample_id_column():
         'fixtures/pedigree_E.ped'
     )
     pedigree_df = PedigreeReader.load_pedigree_file(absolute_filepath)
+    assert pedigree_df.equals(expected_df)
+
+
+def test_load_pedigree_file_no_header():
+    expected_df = expected_pedigree_df.copy()
+    expected_df['sample_id'] = expected_df['person_id']
+
+    absolute_filepath = relative_to_this_folder(
+        'fixtures/pedigree_no_header.ped'
+    )
+    pedigree_df = PedigreeReader.load_pedigree_file(
+        absolute_filepath,
+        has_header=False,
+        col_family=0,
+        col_person=1,
+        col_dad=2,
+        col_mom=3,
+        col_sex=4,
+        col_status=5,
+        col_role=6,
+    )
+    print(pedigree_df)
+    print(expected_df)
     assert pedigree_df.equals(expected_df)
