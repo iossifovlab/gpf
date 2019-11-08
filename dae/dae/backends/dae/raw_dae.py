@@ -14,50 +14,22 @@ import pysam
 import numpy as np
 import pandas as pd
 
+from dae.utils.vcf_utils import best2gt, str2mat, reference_genotype
 
 from dae.variants.attributes import VariantType
 from dae.pedigrees.family import FamiliesData, Family
 from dae.variants.family_variant import FamilyVariant
 from dae.variants.variant import SummaryVariantFactory, SummaryVariant
 
-from dae.utils.vcf_utils import best2gt, str2mat, reference_genotype
-from dae.utils.dae_utils import dae2vcf_variant
+from dae.backends.raw.raw_variants import RawFamilyVariants, TransmissionType
 
 
-class BaseDAE(FamiliesData):
+class BaseDAE(RawFamilyVariants):
 
-    def __init__(self, pedigree_dataframe,
-                 transmission_type,
-                 genome, annotator):
-        super(BaseDAE, self).__init__(pedigree_dataframe, Family)
-
-        assert genome is not None
-        self.transmission_type = transmission_type
-        self.pedigree_dataframe = pedigree_dataframe
-
-        self.genome = genome
-        self.annotator = annotator
-
-        self._families_build(self.pedigree_dataframe, Family)
-
-    def is_empty(self):
-        return False
-
-    def dae2vcf_variant(self, chrom, position, dae_variant):
-        position, reference, alternative = dae2vcf_variant(
-            chrom, position, dae_variant, self.genome
-        )
-        return chrom, position, reference, alternative
-
-    @staticmethod
-    def split_gene_effects(data, sep="|"):
-        if data == 'intergenic':
-            return [u'intergenic'], [u'intergenic']
-
-        res = [ge.split(':') for ge in data.split(sep)]
-        genes = [str(ge[0]) for ge in res]
-        effects = [str(ge[1]) for ge in res]
-        return genes, effects
+    def __init__(self, families,
+                 transmission_type):
+        super(BaseDAE, self).__init__(
+            families, transmission_type=transmission_type)
 
     @staticmethod
     def _rename_columns(columns):
@@ -71,7 +43,7 @@ class BaseDAE(FamiliesData):
             columns[columns.index('variant')] = 'cshl_variant'
         return columns
 
-    def summary_variant_from_dae_record(self, rec, transmission_type):
+    def summary_variant_from_dae_record(self, rec):
 
         parents_called = int(rec.get('all.nParCalled', 0))
         ref_allele_count = 2 * int(rec.get('all.nParCalled', 0)) - \
@@ -97,7 +69,7 @@ class BaseDAE(FamiliesData):
             'transmission_type': self.transmission_type,
         }
         ref_allele = SummaryVariantFactory.summary_allele_from_record(
-            ref, transmission_type=transmission_type)
+            ref, transmission_type=self.transmission_type)
 
         alt = {
             'chrom': rec['chrom'],
@@ -117,19 +89,46 @@ class BaseDAE(FamiliesData):
             'af_allele_freq': float(rec.get('all.altFreq', 0.0)),
             'transmission_type': self.transmission_type,
         }
-        if self.annotator:
-            self.annotator.line_annotation(alt)
 
         alt_allele = SummaryVariantFactory.summary_allele_from_record(
-            alt, transmission_type=transmission_type)
+            alt, transmission_type=self.transmission_type)
         assert alt_allele is not None
 
         return SummaryVariant([ref_allele, alt_allele])
 
-    def get_reference_genotype(self, family):
-        assert family is not None
-        return reference_genotype(len(family))
 
+
+
+class RawDenovo(BaseDAE):
+    def __init__(self, families, denovo_df):
+        super(RawDenovo, self).__init__(
+            families=families,
+            transmission_type=TransmissionType.denovo)
+        self.denovo_df = denovo_df
+
+    def full_variants_iterator(self, return_reference=False):
+
+        for index, row in self.denovo_df.iterrows():
+            row['summary_variant_index'] = index
+            try:
+                summary_variant = self.summary_variant_from_dae_record(row)
+
+                gt = row['gt']
+                family_id = row['familyId']
+                family = self.families.get_family(family_id)
+                assert family is not None
+
+                assert len(family) == gt.shape[1], \
+                    (family.family_id, len(family), gt.shape)
+
+                family_variant = FamilyVariant.from_sumary_variant(
+                    summary_variant, family, gt)
+
+                yield summary_variant, [family_variant]
+            except Exception as ex:
+                print("unexpected error:", ex)
+                print("error in handling:", row, index)
+                traceback.print_exc(file=sys.stdout)
 
 class RawDAE(BaseDAE):
 
@@ -227,7 +226,7 @@ class RawDAE(BaseDAE):
                     if gt is None:
                         if not return_reference:
                             continue
-                        gt = self.get_reference_genotype(family)
+                        gt = reference_genotype(family)
 
                     assert len(family) == gt.shape[1], family.family_id
 
@@ -235,114 +234,3 @@ class RawDAE(BaseDAE):
                         FamilyVariant.from_sumary_variant(
                             summary_variant, family, gt))
                 yield summary_variant, family_variants
-
-
-class RawDenovo(BaseDAE):
-    def __init__(self, denovo_filename, pedigree_dataframe,
-                 genome=None,
-                 annotator=None,
-                 pedigree_df=None):
-        super(RawDenovo, self).__init__(
-            pedigree_dataframe=pedigree_dataframe,
-            transmission_type='denovo',
-            genome=genome,
-            annotator=annotator
-        )
-        os.path.exists(denovo_filename)
-        self.denovo_filename = denovo_filename
-
-    def split_location(self, location):
-        chrom, position = location.split(":")
-        return chrom, int(position)
-
-    def augment_denovo_variant(self, df):
-        result = []
-
-        for index, row in df.iterrows():
-            try:
-                chrom, cshl_position = self.split_location(row['location'])
-
-                chrom, position, reference, alternative = self.dae2vcf_variant(
-                    chrom, cshl_position, row['cshl_variant'])
-                result.append({
-                    "chrom": chrom,
-                    "position": position,
-                    "reference": reference,
-                    "alternative": alternative,
-                    "cshl_position": cshl_position,
-                })
-            except Exception as ex:
-                print("unexpected error:", ex)
-                print("error in handling:", row, index)
-                traceback.print_exc(file=sys.stdout)
-                result.append({
-                    "chrom": chrom,
-                    "position": None,
-                    "reference": None,
-                    "alternative": None})
-
-        aug_df = pd.DataFrame.from_records(
-            data=result,
-            columns=["chrom", "position",
-                     "reference",
-                     "alternative",
-                     "cshl_position"])
-
-        assert len(aug_df.index) == len(df.index)  # FIXME:
-
-        df['chrom'] = aug_df['chrom']
-        df['position'] = aug_df['position'].astype(np.int64)
-        df['reference'] = aug_df['reference']
-        df['alternative'] = aug_df['alternative']
-        df['cshl_position'] = aug_df['cshl_position'].astype(np.int64)
-        return df
-
-    def load_denovo_variants(self):
-        df = pd.read_csv(
-            self.denovo_filename,
-            dtype={
-                'familyId': np.str,
-                'chr': np.str,
-                'position': int,
-            },
-            sep='\t')
-
-        df = df.rename(columns={
-            "variant": "cshl_variant",
-            "bestState": "family_data",
-        })
-        df = self.augment_denovo_variant(df)
-        return df
-
-    @staticmethod
-    def explode_family_genotype(best_st, col_sep="", row_sep="/"):
-        return best2gt(str2mat(best_st, col_sep=col_sep, row_sep=row_sep))
-
-    def full_variants_iterator(self, return_reference=False):
-
-        df = self.load_denovo_variants()
-
-        for index, row in df.iterrows():
-            row['summary_variant_index'] = index
-            try:
-                summary_variant = self.summary_variant_from_dae_record(
-                    row, transmission_type='denovo')
-
-                gt = self.explode_family_genotype(
-                    row['family_data'], col_sep=" ")
-                family_id = row['familyId']
-
-                family = self.families.get(family_id)
-                assert family is not None
-
-                assert len(family) == gt.shape[1], \
-                    (family.family_id, len(family), gt.shape)
-
-                family_variant = FamilyVariant.from_sumary_variant(
-                    summary_variant, family, gt)
-
-                yield summary_variant, [family_variant]
-            except Exception as ex:
-                print("unexpected error:", ex)
-                print("error in handling:", row, index)
-                traceback.print_exc(file=sys.stdout)

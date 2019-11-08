@@ -15,7 +15,9 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.annotation.annotation_pipeline import PipelineAnnotator
 
 from dae.backends.configure import Configure
+from dae.backends.dae.loader import RawDaeLoader
 from dae.backends.dae.raw_dae import RawDAE, RawDenovo
+
 from dae.backends.vcf.raw_vcf import RawVcfVariants
 from dae.backends.vcf.loader import RawVcfLoader
 
@@ -431,12 +433,12 @@ def raw_denovo(config_denovo, default_genome):
         ped_df = PedigreeReader.load_simple_family_file(
             config.denovo.family_filename
         )
-
-        denovo = RawDenovo(
-            config.denovo.denovo_filename,
+        denovo_df = RawDaeLoader.load_dae_denovo_file(
+            config.denovo.denovo_filename, default_genome)
+        denovo = RawDaeLoader.build_raw_denovo(
             ped_df,
-            genome=default_genome,
-            annotator=None)
+            denovo_df
+        )
         return denovo
     return builder
 

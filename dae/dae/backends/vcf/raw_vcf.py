@@ -12,31 +12,7 @@ from dae.variants.family_variant import FamilyVariant, FamilyAllele
 
 from dae.backends.configure import Configure
 
-from dae.backends.raw.raw_variants import RawFamilyVariants
-
-
-# def split_gene_effect(effects):
-#     result = []
-#     if not isinstance(effects, str):
-#         return result
-#     for ge in effects.split("|"):
-#         sym, eff = ge.split(":")
-#         result.append({'sym': sym, 'eff': eff})
-#     return result
-
-
-# def parse_gene_effect(effect):
-#     if isinstance(effect, list):
-#         return [{'eff': eff, 'sym': sym} for (eff, sym) in effect]
-#     if effect in set(["CNV+", "CNV-", "intergenic"]):
-#         return [{'eff': effect, 'sym': ""}]
-
-#     return split_gene_effect(effect)
-
-
-# def samples_to_alleles_index(samples):
-#     return np.stack([2 * samples, 2 * samples + 1]). \
-#         reshape([1, 2 * len(samples)], order='F')[0]
+from dae.backends.raw.raw_variants import RawFamilyVariants, TransmissionType
 
 
 class VariantFactory(SummaryVariantFactory):
@@ -64,14 +40,16 @@ class VariantFactory(SummaryVariantFactory):
 class RawVcfVariants(RawFamilyVariants):
 
     def __init__(self, families, vcf, annot_df, 
-                 transmission_type='transmitted',
+                 transmission_type=TransmissionType.transmitted,
                  variant_factory=VariantFactory):
 
-        super(RawVcfVariants, self).__init__()
+        super(RawVcfVariants, self).__init__(
+            families,
+            transmission_type=transmission_type)
+
+        assert annot_df is not None
 
         self.VF = variant_factory
-        self.transmission_type = transmission_type
-        self.families = families
         self.vcf = vcf
         self.annot_df = annot_df
 

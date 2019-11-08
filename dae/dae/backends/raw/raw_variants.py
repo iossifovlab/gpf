@@ -4,8 +4,21 @@ from dae.backends.attributes_query import role_query, sex_query, \
     inheritance_query,\
     variant_type_query
 
+import enum
+
+class TransmissionType(enum.Enum):
+
+    unknown = 0
+    transmitted = 1
+    denovo = 2
+
 
 class RawFamilyVariants:
+
+    def __init__(
+            self, families, transmission_type=TransmissionType.transmitted):
+        self.families = families
+        self.transmission_type = transmission_type
 
     @staticmethod
     def filter_regions(v, regions):

@@ -37,10 +37,6 @@ def test_load_denovo(raw_denovo):
     assert denovo is not None
     assert denovo.families is not None
 
-    df = denovo.load_denovo_variants()
-    assert df is not None
-    print(df.head())
-
     vs = denovo.full_variants_iterator()
     for sv, fvs in vs:
         for v in fvs:
@@ -50,12 +46,3 @@ def test_load_denovo(raw_denovo):
 def test_load_denovo_families(raw_denovo):
     denovo = raw_denovo("backends/denovo")
     assert denovo.families is not None
-
-
-def test_gene_effects_split():
-    gene_effects = \
-        "MIB2:missense|MIB2:intron|MIB2:non-coding|MIB2:5'UTR-intron"
-    genes, effects = BaseDAE.split_gene_effects(gene_effects)
-    print(genes, effects)
-    assert genes == [u'MIB2', u'MIB2', u'MIB2', u'MIB2']
-    assert effects == [u'missense', u'intron', u'non-coding', u"5'UTR-intron"]
