@@ -1,17 +1,17 @@
 #!/usr/bin/env python
 
-import os
 import sys
 import argparse
-import time
-from copy import deepcopy
 
 from dae.gpf_instance.gpf_instance import GPFInstance
+from dae.backends.storage.genotype_storage_factory import \
+    GenotypeStorageFactory
 
-from dae.tools.simple_study_import import impala_load_study
 
+def parse_cli_arguments(dae_config, argv=sys.argv[1:]):
+    default_genotype_storage_id = \
+        dae_config.get('genotype_storage', {}).get('default', None)
 
-def parse_cli_arguments(argv=sys.argv[1:]):
     parser = argparse.ArgumentParser(
         description='loading study parquet files in impala db',
         conflict_handler='resolve',
@@ -19,71 +19,62 @@ def parse_cli_arguments(argv=sys.argv[1:]):
     )
 
     parser.add_argument(
-        '--study-ids', type=str,
-        metavar='<study IDs>',
-        dest="study_ids",
-        help='list of study IDs to load [default: all study ids]'
+        '--study-id', type=str,
+        metavar='<study ID>',
+        dest='study_id',
+        help='study ID to be load'
     )
 
     parser.add_argument(
-        '--parquet-directories', type=str,
-        metavar='<parquet directories>',
-        dest="parquet_directories",
-        help='list of parquet directories corresponding to study IDs '
-             '[default: `<study_config_directory>/<study_id>/parquet`]'
+        '--genotype-storage', type=str,
+        metavar='<Genotype Storage>',
+        dest='genotype_storage',
+        help='Genotype Storage which will be used for import '
+             '[default: %(default)s]',
+        default=default_genotype_storage_id,
+    )
+
+    parser.add_argument(
+        '--pedigree-directory', type=str,
+        metavar='<Pedigree Parquet Directory>',
+        dest='pedigree_directory',
+        help='path to directory which contains pedigree parquet data files'
+    )
+
+    parser.add_argument(
+        '--variants-directory', type=str,
+        metavar='<Variants Parquet Directory>',
+        dest='variants_directory',
+        help='path to directory which contains variants parquet data files'
     )
 
     parser_args = parser.parse_args(argv)
     return parser_args
 
 
-def load_study_parquet(
-        gpf_instance=None, study_ids=None, parquet_directories=None):
+def main(gpf_instance=None):
     if gpf_instance is None:
         gpf_instance = GPFInstance()
     dae_config = gpf_instance.dae_config
-    variants_db = gpf_instance.variants_db
 
-    if study_ids is None:
-        study_ids = variants_db.get_studies_ids()
-    if parquet_directories is None:
-        temp_study_ids = deepcopy(study_ids)
-        study_ids = []
-        parquet_directories = []
-        for study_id in temp_study_ids:
-            study_config = variants_db.study_configs[study_id]
+    argv = parse_cli_arguments(dae_config, sys.argv[1:])
 
-            if study_config.file_format != 'impala':
-                continue
-            study_ids.append(study_id)
+    if argv.study_id is None or argv.pedigree_directory is None or \
+            argv.variants_directory is None:
+        return
 
-            parquet_directory = os.path.join(
-                dae_config.storage.genotype_impala.dir,
-                study_config.id,
-                'data'
-            )
-            parquet_directories.append(parquet_directory)
+    genotype_storage_factory = GenotypeStorageFactory(dae_config)
+    genotype_storage = genotype_storage_factory.get_genotype_storage(
+        argv.genotype_storage
+    )
+    if not genotype_storage or \
+            (genotype_storage and not genotype_storage.is_impala()):
+        return
 
-    for study_id, parquet_directory in zip(study_ids, parquet_directories):
-        print('Loading `{}` study in impala `{}` db'.format(
-            study_id, dae_config.storage.genotype_impala.impala.db))
-        start = time.time()
-        impala_load_study(dae_config, study_id, parquet_directory)
-        print("Loaded `{}` study in impala `{}` db for {:.2f} sec".format(
-            study_id, dae_config.storage.genotype_impala.impala.db,
-            time.time() - start),
-            file=sys.stderr)
+    genotype_storage.impala_load_study(
+        argv.study_id, argv.pedigree_directory, argv.variants_directory
+    )
 
 
-if __name__ == "__main__":
-    argv = parse_cli_arguments(sys.argv[1:])
-
-    study_ids = None
-    parquet_directories = None
-    if argv.study_ids is not None:
-        study_ids = argv.study_ids.split(',')
-        if argv.parquet_directories is not None:
-            parquet_directories = argv.parquet_directories.split(',')
-
-    load_study_parquet(
-        study_ids=study_ids, parquet_directories=parquet_directories)
+if __name__ == '__main__':
+    main()
