@@ -1,14 +1,14 @@
 #!/bin/sh
 
-echo "jenkins_data DataHG19Branch: ${DataHG19StartupBranch}"
+echo "jenkins_data DataHG19StartupBranch: ${DataHG19StartupBranch}"
 echo "jenkins_data DAE_DB_DIR: ${DAE_DB_DIR}"
 
 git clone git@github.com:seqpipe/data-hg19-startup.git
 
 cd $DAE_DB_DIR
 
-git checkout -f ${DataHG19Branch}
-git pull origin ${DataHG19Branch}
+git checkout -f ${DataHG19StartupBranch}
+git pull origin ${DataHG19StartupBranch}
 
 dvc pull -r nemo -j 20
 rm -rf enrichment/cache/*
