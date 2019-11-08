@@ -122,6 +122,13 @@ def parse_vcf_arguments(gpf_instance, subparsers):
         help='bucket index [default: %(default)s]'
     )
 
+    parser.add_argument(
+        '--skip-pedigree',
+        help='skip import of pedigree file [default: %(default)s]',
+        default=False,
+        action='store_true',
+    )
+
 
 def parser_make_arguments(gpf_instance, subparsers):
     parser = subparsers.add_parser('make')
@@ -160,7 +167,7 @@ def vcf2parquet(
         pedigree_file, vcf_file,
         genomes_db, annotation_pipeline, parquet_manager,
         output='.', bucket_index=1, region=None,
-        filesystem=None):
+        filesystem=None, skip_pedigree=False):
     filename = os.path.basename(pedigree_file)
     study_id = os.path.splitext(filename)[0]
     print(filename, os.path.splitext(filename), study_id)
@@ -176,9 +183,10 @@ def vcf2parquet(
         region=region
     )
 
-    parquet_manager.pedigree_to_parquet(
-        fvars, parquet_config, filesystem=filesystem
-    )
+    if not skip_pedigree:
+        parquet_manager.pedigree_to_parquet(
+            fvars, parquet_config, filesystem=filesystem
+        )
     parquet_manager.variants_to_parquet(
         fvars, parquet_config,
         bucket_index=bucket_index,
@@ -207,5 +215,5 @@ if __name__ == "__main__":
         vcf2parquet(
             argv.pedigree, argv.vcf,
             genomes_db, annotation_pipeline, parquet_manager,
-            argv.output, argv.bucket_index, argv.region
+            argv.output, argv.bucket_index, argv.region, argv.skip_pedigree
         )

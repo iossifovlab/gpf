@@ -168,6 +168,13 @@ def init_parser_dae_common(gpf_instance, parser):
         help='row group size'
     )
 
+    parser.add_argument(
+        '--skip-pedigree',
+        help='skip import of pedigree file [default: %(default)s]',
+        default=False,
+        action='store_true',
+    )
+
 
 def init_parser_denovo(gpf_instance, subparsers):
     parser_denovo = subparsers.add_parser('denovo')
@@ -258,7 +265,8 @@ def denovo2parquet(
         pedigree_file, variants_file,
         parquet_manager, annotation_pipeline, genome,
         family_format='pedigree',
-        output='.', bucket_index=0, rows=10000, filesystem=None):
+        output='.', bucket_index=0, rows=10000, filesystem=None,
+        skip_pedigree=False):
     filename = os.path.basename(pedigree_file)
     study_id = os.path.splitext(filename)[0]
     print(filename, os.path.splitext(filename), study_id)
@@ -272,7 +280,8 @@ def denovo2parquet(
         pedigree_file, variants_file,
         family_format=family_format
     )
-    parquet_manager.pedigree_to_parquet(fvars, parquet_config)
+    if not skip_pedigree:
+        parquet_manager.pedigree_to_parquet(fvars, parquet_config)
     parquet_manager.variants_to_parquet(
         fvars, parquet_config,
         rows=rows, bucket_index=bucket_index,
@@ -326,7 +335,8 @@ if __name__ == "__main__":
             argv.families, argv.variants,
             parquet_manager, annotation_pipeline, genome,
             family_format=argv.family_format,
-            output=argv.output, bucket_index=0, rows=argv.rows
+            output=argv.output, bucket_index=0, rows=argv.rows,
+            skip_pedigree=argv.skip_pedigree
         )
     elif argv.type == 'dae':
         dae2parquet(
