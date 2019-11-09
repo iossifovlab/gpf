@@ -13,7 +13,7 @@ dir_setup() {
 
 get_file() {
     wget -c https://iossifovlab.com/distribution/public/data-hg19-startup-3.0.0dev-genotype-storage.tar.gz
-    git mv data-hg19-startup-3.0.0dev-genotype-storage.tar.gz data-hg19-startup-latest.tar.gz
+    mv data-hg19-startup-3.0.0dev-genotype-storage.tar.gz data-hg19-startup-latest.tar.gz
 }
 
 if [ -f 'data-hg19-startup-latest.tar.gz' ];
