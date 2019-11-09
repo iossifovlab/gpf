@@ -1,7 +1,9 @@
+import os
 import sys
 import time
 import itertools
 import traceback
+from box import Box
 
 import numpy as np
 import pyarrow as pa
@@ -228,7 +230,7 @@ class VariantsParquetWriter(object):
             if family_variant_index % 1000 == 0:
                 elapsed = time.time() - self.start
                 print(
-                    "Bucket {}: {} family variants imported for {:.2f} sec".
+                    'Bucket {}: {} family variants imported for {:.2f} sec'.
                     format(
                         bucket_index,
                         family_variant_index, elapsed),
@@ -244,12 +246,12 @@ class VariantsParquetWriter(object):
 
             yield table
 
-        print("-------------------------------------------", file=sys.stderr)
-        print("Bucket:", bucket_index, file=sys.stderr)
-        print("-------------------------------------------", file=sys.stderr)
+        print('-------------------------------------------', file=sys.stderr)
+        print('Bucket:', bucket_index, file=sys.stderr)
+        print('-------------------------------------------', file=sys.stderr)
         elapsed = time.time() - self.start
         print(
-            "DONE: {} family variants imported for {:.2f} sec".
+            'DONE: {} family variants imported for {:.2f} sec'.
             format(
                 family_variant_index, elapsed),
             file=sys.stderr)
@@ -269,24 +271,132 @@ class VariantsParquetWriter(object):
                 writer.write_table(table)
 
         except Exception as ex:
-            print("unexpected error:", ex)
+            print('unexpected error:', ex)
             traceback.print_exc(file=sys.stdout)
         finally:
             writer.close()
 
 
+class ParquetManager:
+
+    def __init__(self, studies_dir):
+        self.studies_dir = studies_dir
+
+    def get_data_dir(self, study_id):
+        return os.path.abspath(
+            os.path.join(self.studies_dir, study_id, 'data')
+        )
+
+    @staticmethod
+    def parquet_file_config(
+            prefix, study_id=None, bucket_index=0, suffix=None):
+        assert bucket_index >= 0
+
+        basename = os.path.basename(os.path.abspath(prefix))
+        if study_id is None:
+            study_id = basename
+        assert study_id
+
+        if suffix is None and bucket_index == 0:
+            filesuffix = ''
+        elif bucket_index > 0 and suffix is None:
+            filesuffix = f'_{bucket_index:0>6}'
+        elif bucket_index == 0 and suffix is not None:
+            filesuffix = f'{suffix}'
+        else:
+            filesuffix = f'_{bucket_index:0>6}{suffix}'
+
+        variant_filename = os.path.join(
+            prefix, 'variants',
+            f'{study_id}_variant{filesuffix}.parquet'
+        )
+        pedigree_filename = os.path.join(
+            prefix, 'pedigree',
+            f'{study_id}_pedigree{filesuffix}.parquet'
+        )
+
+        conf = {
+            'files': {
+                'variant': variant_filename,
+                'pedigree': pedigree_filename,
+            }
+        }
+
+        return Box(conf)
+
+    def generate_study_config(self, study_id, genotype_storage_id):
+        assert study_id is not None
+
+        dirname = os.path.join(self.studies_dir, study_id)
+        filename = os.path.join(dirname, '{}.conf'.format(study_id))
+
+        if os.path.exists(filename):
+            print('configuration file already exists:', filename)
+            print('skipping generation of default config for:', study_id)
+            return
+
+        os.makedirs(dirname, exist_ok=True)
+        with open(filename, 'w') as outfile:
+            outfile.write(STUDY_CONFIG_TEMPLATE.format(
+                id=study_id,
+                genotype_storage=genotype_storage_id
+            ))
+
+    def pedigree_to_parquet(self, fvars, parquet_config, filesystem=None):
+        os.makedirs(
+            os.path.split(parquet_config.files.pedigree)[0], exist_ok=True
+        )
+
+        save_ped_df_to_parquet(
+            fvars.families.ped_df, parquet_config.files.pedigree,
+            filesystem=filesystem
+        )
+
+    def variants_to_parquet(
+            self, fvars, parquet_config, bucket_index=0, rows=100000,
+            annotation_pipeline=None, filesystem=None, no_reference=False):
+        os.makedirs(
+            os.path.split(parquet_config.files.variant)[0],
+            exist_ok=True
+        )
+
+        start = time.time()
+        variants_writer = VariantsParquetWriter(
+            fvars.families,
+            fvars.full_variants_iterator(),
+            annotation_pipeline=annotation_pipeline,
+            return_reference=not no_reference,
+            return_unknown=not no_reference
+        )
+        print('[DONE] going to create variants writer...')
+
+        variants_writer.save_variants_to_parquet(
+            parquet_config.files.variant,
+            bucket_index=bucket_index,
+            rows=rows,
+            filesystem=filesystem
+        )
+        end = time.time()
+
+        print(
+            'DONE: {} for {:.2f} sec'.format(
+                parquet_config.files.variant, end-start),
+            file=sys.stderr
+        )
+
+
 def pedigree_parquet_schema():
     fields = [
-        pa.field("family_id", pa.string()),
-        pa.field("person_id", pa.string()),
-        pa.field("dad_id", pa.string()),
-        pa.field("mom_id", pa.string()),
-        pa.field("sex", pa.int8()),
-        pa.field("status", pa.int8()),
-        pa.field("role", pa.int32()),
-        pa.field("sample_id", pa.string()),
-        pa.field("generated", pa.bool_()),
-        pa.field("layout", pa.string()),
+        pa.field('family_id', pa.string()),
+        pa.field('person_id', pa.string()),
+        pa.field('dad_id', pa.string()),
+        pa.field('mom_id', pa.string()),
+        pa.field('sex', pa.int8()),
+        pa.field('status', pa.int8()),
+        pa.field('role', pa.int32()),
+        pa.field('sample_id', pa.string()),
+        pa.field('generated', pa.bool_()),
+        pa.field('layout', pa.string()),
     ]
 
     return pa.schema(fields)
@@ -317,3 +427,12 @@ def save_ped_df_to_parquet(ped_df, filename, filesystem=None):
 
     table = pa.Table.from_pandas(ped_df, schema=pps)
     pq.write_table(table, filename, filesystem=filesystem)
+
+
+STUDY_CONFIG_TEMPLATE = '''
+[study]
+
+id = {id}
+genotype_storage = {genotype_storage}
+
+'''

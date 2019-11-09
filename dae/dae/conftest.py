@@ -1,9 +1,9 @@
+import pytest
 
 import os
-import pytest
+import glob
 import shutil
 import tempfile
-import glob
 
 import pandas as pd
 from io import StringIO
@@ -23,7 +23,6 @@ from dae.backends.vcf.loader import RawVcfLoader
 
 from dae.backends.vcf.annotate_allele_frequencies import \
     VcfAlleleFrequencyAnnotator
-from dae.backends.vcf.builder import variants_builder
 
 from dae.backends.import_commons import \
     construct_import_annotation_pipeline
@@ -31,6 +30,12 @@ from dae.tools.vcf2parquet import import_vcf
 from dae.pedigrees.pedigree_reader import PedigreeReader
 from dae.pedigrees.family import FamiliesData
 from dae.utils.helpers import pedigree_from_path
+from dae.backends.impala.parquet_io import ParquetManager
+from dae.backends.storage.impala_genotype_storage import ImpalaGenotypeStorage
+
+from dae.backends.import_commons import construct_import_annotation_pipeline
+
+from dae.tools.vcf2parquet import vcf2parquet
 
 
 def relative_to_this_test_folder(path):
@@ -157,7 +162,7 @@ def annotation_pipeline_config():
 #     return dae_config_fixture.annotation.conf_file
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope='session')
 def default_annotation_pipeline(
         default_dae_config, genomes_db):
     filename = default_dae_config.annotation.conf_file
@@ -309,9 +314,9 @@ def vcf_import_raw(
         vcf_import_config, default_genome, annotation_pipeline_internal,
         genomes_db):
 
+    ped_df = PedigreeReader.load_pedigree_file(vcf_import_config.pedigree)
     fvars = RawVcfLoader.load_raw_vcf_variants(
-        vcf_import_config.pedigree, vcf_import_config.vcf
-    )
+        ped_df, vcf_import_config.vcf)
     fvars.annot_df = annotation_pipeline_internal.annotate_df(fvars.annot_df)
     RawVcfLoader.save_annotation_file(
         fvars.annot_df, vcf_import_config.annotation)
@@ -364,10 +369,17 @@ def dae_iossifov2014(
 
 
 @pytest.fixture(scope='session')
-def variants_vcf(genomes_db):
+def variants_vcf(genomes_db, default_annotation_pipeline):
     def builder(path):
-        a_path = os.path.join(relative_to_this_test_folder('fixtures'), path)
-        fvars = variants_builder(a_path, genomes_db, force_reannotate=True)
+        prefix = os.path.join(relative_to_this_test_folder('fixtures'), path)
+        conf = Configure.from_prefix_vcf(prefix)
+        ped_df = PedigreeReader.load_pedigree_file(conf.vcf.pedigree)
+        fvars = RawVcfLoader.load_raw_vcf_variants(
+            ped_df, conf.vcf.vcf
+        )
+        fvars.annot_df = default_annotation_pipeline.annotate_df(fvars.annot_df)
+        RawVcfLoader.save_annotation_file(fvars.annot_df, conf.vcf.annotation)
+
         return fvars
     return builder
 
@@ -465,16 +477,40 @@ def reimport(request):
 @pytest.fixture(scope='session')
 def test_hdfs(request):
     from dae.backends.impala.hdfs_helpers import HdfsHelpers
-    hdfs = HdfsHelpers.get_hdfs()
+    hdfs = HdfsHelpers('127.0.0.1', 8020)
     return hdfs
 
 
 @pytest.fixture(scope='session')
 def test_impala_helpers(request):
     from dae.backends.impala.impala_helpers import ImpalaHelpers
-    helpers = ImpalaHelpers()
+    helpers = ImpalaHelpers(impala_host='127.0.0.1', impala_port=21050)
 
     return helpers
+
+
+@pytest.fixture(scope='session')
+def impala_genotype_storage():
+    storage_config = Box({
+        'type': 'impala',
+        'impala': {
+            'host': '127.0.0.1',
+            'port': 21050,
+            'db': impala_test_dbname(),
+        },
+        'hdfs': {
+            'host': '127.0.0.1',
+            'port': 8020,
+            'base_dir': '/tmp'
+        }
+    })
+
+    return ImpalaGenotypeStorage(storage_config)
+
+
+@pytest.fixture(scope='session')
+def parquet_manager(dae_config_fixture):
+    return ParquetManager(dae_config_fixture.studies_db.dir)
 
 
 def collect_vcf(dirname):
@@ -487,29 +523,13 @@ def collect_vcf(dirname):
     return result
 
 
-def build_impala_config(vcf_config):
-    study_id = os.path.basename(
-        os.path.splitext(vcf_config.pedigree)[0])
-
-    conf = {
-        'impala': {
-            'db': impala_test_dbname(),
-            'tables': {
-                'variant': '{}_variant'.format(study_id),
-                'pedigree': '{}_pedigree'.format(study_id),
-            }
-        }
-    }
-    return Configure(conf).impala
-
-
 DATA_IMPORT_COUNT = 0
 
 
 @pytest.fixture(scope='session')
 def data_import(
-        request, test_hdfs, test_impala_helpers, reimport, dae_config_fixture,
-        genomes_db):
+        request, test_hdfs, test_impala_helpers, parquet_manager,
+        impala_genotype_storage, reimport, dae_config_fixture, genomes_db):
 
     global DATA_IMPORT_COUNT
     DATA_IMPORT_COUNT += 1
@@ -537,7 +557,11 @@ def data_import(
 
         for vcf in vcf_configs:
             print('importing vcf:', vcf.vcf)
-            impala = build_impala_config(vcf)
+
+            filename = os.path.basename(vcf.pedigree)
+            study_id = os.path.splitext(filename)[0]
+
+            impala = impala_genotype_storage._impala_storage_config(study_id)
             if not reimport and \
                     test_impala_helpers.check_table(
                         impala_test_dbname(), impala.tables.variant) and \
@@ -547,32 +571,38 @@ def data_import(
 
             ped_df, study_id = pedigree_from_path(vcf.pedigree)
 
-            impala_config = import_vcf(
-                dae_config_fixture, genomes_db, annotation_pipeline,
-                ped_df, vcf.vcf, study_id,
-                region=None, bucket_index=0,
-                output=temp_dirname,
-                filesystem=test_hdfs.filesystem())
-            impala_config['db'] = impala_test_dbname()
-            test_impala_helpers.import_variants(impala_config)
+            # impala_config = import_vcf(
+            #     dae_config_fixture, genomes_db, annotation_pipeline,
+            #     ped_df, vcf.vcf, study_id,
+            #     region=None, bucket_index=0,
+            #     output=temp_dirname,
+            #     filesystem=test_hdfs.filesystem())
+            # impala_config['db'] = impala_test_dbname()
+            # test_impala_helpers.import_variants(impala_config)
+            study_temp_dirname = os.path.join(temp_dirname, study_id)
+
+            vcf2parquet(
+                study_id, ped_df, vcf.vcf,
+                genomes_db, annotation_pipeline, parquet_manager,
+                output=study_temp_dirname, bucket_index=0, region=None
+            )
+
+            impala_genotype_storage.impala_load_study(
+                study_id,
+                os.path.join(study_temp_dirname, 'pedigree'),
+                os.path.join(study_temp_dirname, 'variants')
+            )
 
     build('backends/')
     return True
 
 
 @pytest.fixture(scope='session')
-def variants_impala(
-        request, data_import, test_impala_helpers, default_gene_models):
+def variants_impala(request, data_import, impala_genotype_storage, genomes_db):
 
     def builder(path):
-        from dae.backends.impala.impala_variants import ImpalaFamilyVariants
-
-        vcf_prefix = relative_to_this_test_folder(
-            os.path.join('fixtures', path))
-        vcf_config = Configure.from_prefix_vcf(vcf_prefix).vcf
-        impala_config = build_impala_config(vcf_config)
-        fvars = ImpalaFamilyVariants(
-            impala_config, test_impala_helpers.connection, default_gene_models
-        )
+        study_id = os.path.basename(path)
+        fvars = impala_genotype_storage.get_backend(study_id, genomes_db)
         return fvars
+
     return builder

@@ -34,14 +34,13 @@ Content of the config which will be used in this example is:
       [DEFAULT]
       instance_id = data_hg19_startup
 
-      [HDFS]
-      host = localhost
-      port = 8020
-      baseDir = /user/%(instance_id)s/studies
-
-      [Impala]
-      host = localhost
-      port = 21050
+      [storage.genotype_impala]
+      type = impala
+      impala.host = localhost
+      impala.port = 21050
+      hdfs.host = localhost
+      hdfs.port = 8020
+      hdfs.base_dir = /user/%(instance_id)s/studies
 
       [studiesDB]
       confFile = %(wd)s/studiesDB.conf
@@ -84,13 +83,13 @@ Read and Parse file configuration
 
 .. doctest::
 
-  >>> print(config.impala.host)
+  >>> print(config.storage.genotype_impala.impala.host)
   localhost
 
-  >>> print(config.impala.port)
+  >>> print(config.storage.genotype_impala.impala.port)
   21050
 
-  >>> print(config.impala.db)
+  >>> print(config.storage.genotype_impala.impala.db)
   gpf_variant_db
 
 .. doctest::
