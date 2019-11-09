@@ -1,7 +1,7 @@
 import os
 import pytest
 from dae.pedigrees.pedigree_reader import PedigreeReader
-from dae.variants.family import FamiliesBase
+from dae.pedigrees.family import FamiliesData
 
 
 def relative_to_this_folder(path):
@@ -18,6 +18,5 @@ def fake_families():
             'fixtures/fake_pheno.ped'
         )
     )
-    fake_families = FamiliesBase()
-    fake_families.families_build(ped_df)
+    fake_families = FamiliesData.from_pedigree_df(ped_df)
     return fake_families

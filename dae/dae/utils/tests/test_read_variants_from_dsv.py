@@ -2,7 +2,7 @@ import pytest
 import pandas as pd
 import numpy as np
 from dae.utils.helpers import produce_genotype, read_variants_from_dsv
-from dae.variants.family import FamiliesBase
+from dae.pedigrees.family import FamiliesData
 from dae.utils.vcf_utils import GENOTYPE_TYPE
 
 from dae.utils.tests.conftest import relative_to_this_folder
@@ -97,11 +97,11 @@ def test_read_variants_column_assertion_variant():
 def test_read_variants_column_assertion_family():
     """
     Tests the assertion for having either a personId column with a
-    FamiliesBase object specified or familyId and genotype columns.
+    FamiliesData object specified or familyId and genotype columns.
     """
 
     error_message = ('You must specify either a personId column and'
-                     ' provide a FamiliesBase object or specify'
+                     ' provide a FamiliesData object or specify'
                      ' familyId and genotype columns!')
     with pytest.raises(AssertionError) as excinfo:
         read_variants_from_dsv(
@@ -129,12 +129,12 @@ def test_read_variants_column_assertion_family():
     with pytest.raises(AssertionError) as excinfo:
         read_variants_from_dsv(
             None, None, location='foo', variant='bar',
-            families=FamiliesBase())
+            families=FamiliesData())
     assert str(excinfo.value) == error_message
 
 
 def test_families_instance_type_assertion():
-    error_message = 'families must be an instance of FamiliesBase!'
+    error_message = 'families must be an instance of FamiliesData!'
     with pytest.raises(AssertionError) as excinfo:
         read_variants_from_dsv(
             None, None, location='foo', variant='bar',
