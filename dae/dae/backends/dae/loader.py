@@ -1,6 +1,7 @@
 import sys
 import traceback
 import os
+import gzip
 
 import numpy as np
 import pandas as pd 
@@ -101,10 +102,10 @@ class RawDaeLoader(RawVariantsLoader):
         return RawDaeLoader._augment_denovo_variant(df, genome)
 
     @staticmethod
-    def build_raw_denovo(ped_df, denovo_df):
+    def build_raw_denovo(ped_df, denovo_df, annot_df=None):
         families = FamiliesData.from_pedigree_df(ped_df)
 
-        return RawDenovo(families, denovo_df)
+        return RawDenovo(families, denovo_df, annot_df)
 
     @staticmethod
     def load_raw_denovo(
@@ -118,3 +119,12 @@ class RawDaeLoader(RawVariantsLoader):
                 and os.path.exists(annotation_filename):
             annot_df = RawDaeLoader.load_annotation_file(annotation_filename)
         return RawDaeLoader.build_raw_denovo(ped_df, denovo_df, annot_df)
+
+    @staticmethod
+    def load_raw_dae(
+        ped_filename, summary_filename, toomany_filename, genome, region=None):
+        ped_df = PedigreeReader.load_pedigree_file(ped_filename)
+        families = FamiliesData.from_pedigree_df(ped_df)
+
+        return RawDAE(
+            families, summary_filename, toomany_filename, genome, region)

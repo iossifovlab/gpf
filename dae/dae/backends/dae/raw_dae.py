@@ -15,6 +15,7 @@ import numpy as np
 import pandas as pd
 
 from dae.utils.vcf_utils import best2gt, str2mat, reference_genotype
+from dae.utils.dae_utils import dae2vcf_variant
 
 from dae.variants.attributes import VariantType
 from dae.pedigrees.family import FamiliesData, Family
@@ -30,18 +31,6 @@ class BaseDAE(RawFamilyVariants):
                  transmission_type):
         super(BaseDAE, self).__init__(
             families, transmission_type=transmission_type)
-
-    @staticmethod
-    def _rename_columns(columns):
-        if '#chr' in columns:
-            columns[columns.index('#chr')] = 'chrom'
-        if 'chr' in columns:
-            columns[columns.index('chr')] = 'chrom'
-        if 'position' in columns:
-            columns[columns.index('position')] = 'cshl_position'
-        if 'variant' in columns:
-            columns[columns.index('variant')] = 'cshl_variant'
-        return columns
 
     def summary_variant_from_dae_record(self, rec):
 
@@ -100,11 +89,12 @@ class BaseDAE(RawFamilyVariants):
 
 
 class RawDenovo(BaseDAE):
-    def __init__(self, families, denovo_df):
+    def __init__(self, families, denovo_df, annot_df):
         super(RawDenovo, self).__init__(
             families=families,
             transmission_type=TransmissionType.denovo)
         self.denovo_df = denovo_df
+        self.annot_df = annot_df
 
     def full_variants_iterator(self, return_reference=False):
 
@@ -132,31 +122,43 @@ class RawDenovo(BaseDAE):
 
 class RawDAE(BaseDAE):
 
-    def __init__(self, summary_filename, toomany_filename, pedigree_dataframe,
-                 region=None, genome=None, annotator=None,
-                 transmission_type='transmitted'):
-        super(RawDAE, self).__init__(
-            pedigree_dataframe=pedigree_dataframe,
-            transmission_type=transmission_type,
-            genome=genome,
-            annotator=annotator)
+    def __init__(self, families, summary_filename, toomany_filename,
+                 genome, region=None):
 
-        os.path.exists(summary_filename)
-        os.path.exists(toomany_filename)
+        super(RawDAE, self).__init__(
+            families,
+            transmission_type=TransmissionType.transmitted)
+
+        assert os.path.exists(summary_filename)
+        assert os.path.exists(toomany_filename)
+        assert genome is not None
 
         self.summary_filename = summary_filename
         self.toomany_filename = toomany_filename
+        self.genome = genome
         self.region = region
 
     @staticmethod
-    def load_column_names(filename):
+    def _rename_columns(columns):
+        if '#chr' in columns:
+            columns[columns.index('#chr')] = 'chrom'
+        if 'chr' in columns:
+            columns[columns.index('chr')] = 'chrom'
+        if 'position' in columns:
+            columns[columns.index('position')] = 'cshl_position'
+        if 'variant' in columns:
+            columns[columns.index('variant')] = 'cshl_variant'
+        return columns
+
+    @staticmethod
+    def _load_column_names(filename):
         with gzip.open(filename) as infile:
             column_names = \
                 infile.readline().decode('utf-8').strip().split("\t")
         return column_names
 
     @staticmethod
-    def explode_family_genotypes(family_data, col_sep="", row_sep="/"):
+    def _explode_family_genotypes(family_data, col_sep="", row_sep="/"):
         res = {
             fid: bs for [fid, bs] in [
                 fg.split(':')[:2] for fg in family_data.split(';')]
@@ -167,17 +169,19 @@ class RawDAE(BaseDAE):
         }
         return res
 
-    def load_toomany_columns(self):
-        columns = RawDAE.load_column_names(self.toomany_filename)
-        return self._rename_columns(columns)
+    @staticmethod
+    def _load_toomany_columns(toomany_filename):
+        toomany_columns = RawDAE._load_column_names(toomany_filename)
+        return RawDAE._rename_columns(toomany_columns)
 
-    def load_summary_columns(self):
-        summary_columns = RawDAE.load_column_names(self.summary_filename)
-        return self._rename_columns(summary_columns)
+    @staticmethod
+    def load_summary_columns(summary_filename):
+        summary_columns = RawDAE.load_column_names(summary_filename)
+        return RawDAE._rename_columns(summary_columns)
 
     def full_variants_iterator(self, return_reference=False):
-        summary_columns = self.load_summary_columns()
-        toomany_columns = self.load_toomany_columns()
+        summary_columns = self._load_summary_columns(self.summary_filename)
+        toomany_columns = self._load_toomany_columns(self.toomany_filename)
 
         # using a context manager because of
         # https://stackoverflow.com/a/25968716/2316754
@@ -193,10 +197,10 @@ class RawDAE(BaseDAE):
             for summary_index, summary_line in enumerate(summary_iterator):
                 rec = dict(zip(summary_columns, summary_line))
                 rec['cshl_position'] = int(rec['cshl_position'])
-                chrom, position, reference, alternative = self.dae2vcf_variant(
-                    rec['chrom'], rec['cshl_position'], rec['cshl_variant']
+                position, reference, alternative = dae2vcf_variant(
+                    rec['chrom'], rec['cshl_position'], rec['cshl_variant'],
+                    self.genome
                 )
-                rec['chrom'] = chrom
                 rec['position'] = position
                 rec['reference'] = reference
                 rec['alternative'] = alternative
@@ -206,8 +210,8 @@ class RawDAE(BaseDAE):
                 rec['all.altFreq'] = float(rec['all.altFreq'])
                 rec['summary_variant_index'] = summary_index
 
-                summary_variant = self.summary_variant_from_dae_record(
-                    rec, transmission_type='transmitted')
+                summary_variant = self.summary_variant_from_dae_record(rec)
+
                 family_data = rec['familyData']
                 if family_data == 'TOOMANY':
                     toomany_line = next(toomany_iterator)
@@ -218,11 +222,10 @@ class RawDAE(BaseDAE):
                         int(toomany_rec['cshl_position'])
                 family_genotypes = self.explode_family_genotypes(family_data)
                 family_variants = []
-                for family_id in self.family_ids:
-                    family = self.families.get(family_id)
+                for family in self.families.families_list():
                     assert family is not None
 
-                    gt = family_genotypes.get(family_id, None)
+                    gt = family_genotypes.get(family.family_id, None)
                     if gt is None:
                         if not return_reference:
                             continue

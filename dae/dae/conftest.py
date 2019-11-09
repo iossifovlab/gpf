@@ -29,6 +29,7 @@ from dae.backends.import_commons import \
     construct_import_annotation_pipeline
 from dae.tools.vcf2parquet import import_vcf
 from dae.pedigrees.pedigree_reader import PedigreeReader
+from dae.pedigrees.family import FamiliesData
 from dae.utils.helpers import pedigree_from_path
 
 
@@ -253,14 +254,15 @@ def dae_denovo(
     ped_df = PedigreeReader.load_simple_family_file(
         dae_denovo_config.family_filename
     )
+    denovo_df = RawDaeLoader.load_dae_denovo_file(
+        dae_denovo_config.denovo_filename, default_genome)
 
-    denovo = RawDenovo(
-        dae_denovo_config.denovo_filename,
+    denovo_df = annotation_pipeline_internal.annotate_df(denovo_df)
+
+    denovo = RawDaeLoader.build_raw_denovo(
         ped_df,
-        genome=default_genome,
-        annotator=annotation_pipeline_internal
+        denovo_df
     )
-
     return denovo
 
 
@@ -280,17 +282,17 @@ def dae_transmitted(
     ped_df = PedigreeReader.load_simple_family_file(
         dae_transmitted_config.family_filename
     )
+    families = FamiliesData.from_pedigree_df(ped_df)
 
-    denovo = RawDAE(
+    transmitted = RawDAE(
+        families,
         dae_transmitted_config.summary_filename,
         dae_transmitted_config.toomany_filename,
-        ped_df,
-        region=None,
         genome=default_genome,
-        annotator=annotation_pipeline_internal
+        region=None,
     )
 
-    return denovo
+    return transmitted
 
 
 @pytest.fixture

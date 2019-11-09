@@ -10,7 +10,7 @@ from ..dae.raw_dae import RawDAE, BaseDAE
 
 
 def test_explode_family_genotype():
-    fgt = RawDAE.explode_family_genotypes(
+    fgt = RawDAE._explode_family_genotypes(
         'f3:2121/0101:11 27 34 13/0 26 0 15/0 0 0 0')
     print(fgt)
 

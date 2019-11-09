@@ -264,6 +264,9 @@ class FamiliesData(object):
     def get_family(self, family_id):
         return self.families[family_id]
 
+    def has_family(self, family_id):
+        return family_id in self.families
+
     def families_query_by_person(self, person_ids):
         res = {}
         for person_id in person_ids:

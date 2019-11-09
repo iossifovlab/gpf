@@ -10,10 +10,10 @@ def variants_iterator_to_parquet(
         annotation_pipeline=None, filesystem=None,
         no_reference=False):
 
-    if fvars.is_empty():
-        print("empty bucket {} done".format(impala_config.files.variant),
-              file=sys.stderr)
-        return
+    # if fvars.is_empty():
+    #     print("empty bucket {} done".format(impala_config.files.variant),
+    #           file=sys.stderr)
+    #     return
 
     save_ped_df_to_parquet(
         fvars.families.ped_df, impala_config.files.pedigree,

@@ -13,6 +13,7 @@ from dae.annotation.tools.annotator_config import annotation_config_cli_options
 
 from dae.backends.configure import Configure
 from dae.backends.dae.raw_dae import RawDAE, RawDenovo
+from dae.backends.dae.loader import RawDaeLoader
 
 from dae.backends.import_commons import build_contig_regions, \
     contigs_makefile_generate
@@ -21,6 +22,7 @@ from dae.backends.import_commons import construct_import_annotation_pipeline
 
 from dae.backends.impala.import_tools import variants_iterator_to_parquet
 from dae.pedigrees.pedigree_reader import PedigreeReader
+from dae.pedigrees.family import FamiliesData
 
 
 def get_contigs(tabixfilename):
@@ -50,14 +52,14 @@ def dae_build_transmitted(
         ped_df = PedigreeReader.load_simple_family_file(
             config.dae.family_filename
         )
+    families = FamiliesData.from_pedigree_df(ped_df)
 
     fvars = RawDAE(
+        families,
         config.dae.summary_filename,
         config.dae.toomany_filename,
-        ped_df,
-        region=argv.region,
         genome=genome,
-        annotator=annotation_pipeline
+        region=argv.region,
     )
 
     annotation_schema = ParquetSchema()
@@ -141,15 +143,9 @@ def import_dae_denovo(
             config.denovo.family_filename
         )
 
-    fvars = RawDenovo(
-        config.denovo.denovo_filename,
-        ped_df,
-        genome=genome,
-        annotator=annotation_pipeline,
-        pedigree_df=pedigree_df)
-
-    df = fvars.load_denovo_variants()
-    assert df is not None
+    families = FamiliesData.from_pedigree_df(ped_df)
+    denovo_df = RawDaeLoader.load_dae_denovo_file(variants_filename, genome)
+    fvars = RawDenovo(families, denovo_df, annot_df=None)
 
     assert output is not None
 

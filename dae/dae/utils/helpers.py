@@ -5,7 +5,7 @@ import pandas as pd
 from dae.pedigrees.pedigree_reader import PedigreeReader
 from dae.utils.dae_utils import dae2vcf_variant
 from dae.utils.vcf_utils import str2mat, GENOTYPE_TYPE
-from dae.variants.family import FamiliesBase
+from dae.pedigrees.family import FamiliesData
 
 
 def pedigree_from_path(filepath):
@@ -150,12 +150,12 @@ def read_variants_from_dsv(
         ('You must specify either a variant column or'
          ' reference and alternative columns!')
     assert (personId and families) or (familyId and genotype), \
-        ('You must specify either a personId column and provide a FamiliesBase'
+        ('You must specify either a personId column and provide a FamiliesData'
          ' object or specify familyId and genotype columns!')
 
     if families:
-        assert isinstance(families, FamiliesBase), \
-            'families must be an instance of FamiliesBase!'
+        assert isinstance(families, FamiliesData), \
+            'families must be an instance of FamiliesData!'
 
     raw_df = pd.read_csv(
         filepath,
