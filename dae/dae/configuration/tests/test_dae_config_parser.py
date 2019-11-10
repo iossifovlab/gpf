@@ -98,9 +98,9 @@ def test_dae_config_annotation_defaults(fixturedir, dae_config):
 def test_dae_config_genotype_storage(dae_config):
     assert dae_config is not None
 
-    assert len(dae_config.storage) == 2
+    assert len(dae_config.storage) == 3
     assert list(dae_config.storage.keys()) == \
-        ['genotype_impala', 'genotype_filesystem']
+        ['genotype_impala', 'override_impala', 'genotype_filesystem']
 
 
 def test_dae_config_impala_genotype_storage(dae_config, fixturedir):
@@ -141,7 +141,6 @@ def test_dae_config_default_genotype_storage(dae_config, fixturedir):
     assert dae_config.genotype_storage.default == 'genotype_filesystem'
 
 
-@pytest.mark.skip(reason='missing support for impala and hdfs override')
 def test_dae_config_override_environment(monkeypatch, fixturedir):
     scores_hg19_dir = os.path.join(fixturedir, 'genomic_scores_db/hg19')
     scores_hg38_dir = os.path.join(fixturedir, 'genomic_scores_db/hg38')
@@ -166,14 +165,13 @@ def test_dae_config_override_environment(monkeypatch, fixturedir):
 
     assert config.genomic_scores_db.scores_hg19_dir == scores_hg19_dir
     assert config.genomic_scores_db.scores_hg38_dir == scores_hg38_dir
-    assert config.impala.host == '127.0.0.1'
-    assert config.impala.port == 1024
-    assert config.impala.db == 'test-impala-db'
-    assert config.hdfs.host == '10.0.0.1'
-    assert config.hdfs.port == 2048
+    assert config.storage.override_impala.impala.host == '127.0.0.1'
+    assert config.storage.override_impala.impala.port == 1024
+    assert config.storage.override_impala.impala.db == 'test-impala-db'
+    assert config.storage.override_impala.hdfs.host == '10.0.0.1'
+    assert config.storage.override_impala.hdfs.port == 2048
 
 
-@pytest.mark.skip(reason='missing support for impala and hdfs override')
 def test_dae_config_non_override_environment(monkeypatch, fixturedir):
     scores_dir = os.path.join(fixturedir, 'genomic_scores_db')
     scores_hg19_dir = os.path.join(fixturedir, 'genomic_scores_db/hg19')
@@ -199,27 +197,28 @@ def test_dae_config_non_override_environment(monkeypatch, fixturedir):
 
     assert config.genomic_scores_db.scores_hg19_dir == scores_dir
     assert config.genomic_scores_db.scores_hg38_dir == scores_dir
-    assert config.impala.host is None
-    assert config.impala.port == 21050
-    assert config.impala.db == 'gpf_variant_db'
-    assert config.hdfs.host == 'localhost'
-    assert config.hdfs.port == 8020
+    assert config.storage.override_impala.impala.host is None
+    assert config.storage.override_impala.impala.port == 21050
+    assert config.storage.override_impala.impala.db == 'gpf_variant_db'
+    assert config.storage.override_impala.hdfs.host == 'localhost'
+    assert config.storage.override_impala.hdfs.port == 8020
 
 
-@pytest.mark.skip(reason='missing support for impala and hdfs override')
 def test_dae_config_override_params(fixturedir):
     scores_hg19_dir = os.path.join(fixturedir, 'genomic_scores_db/hg19')
     scores_hg38_dir = os.path.join(fixturedir, 'genomic_scores_db/hg38')
     filename = 'dae_test.conf'
 
     default_sections = {
-        'Impala': {
-            'db': 'test-impala-db',
-            'host': '127.0.0.1',
-            'port': '1024'
-        }, 'HDFS': {
-            'host': '10.0.0.1',
-            'port': '2048'
+        'impala_storage': {
+            'impala': {
+                'db': 'test-impala-db',
+                'host': '127.0.0.1',
+                'port': '1024'
+            }, 'hdfs': {
+                'host': '10.0.0.1',
+                'port': '2048'
+            }
         }, 'genomicScoresDB': {
             'scores_hg19_dir': scores_hg19_dir,
             'scores_hg38_dir': scores_hg38_dir
@@ -235,14 +234,13 @@ def test_dae_config_override_params(fixturedir):
 
     assert config.genomic_scores_db.scores_hg19_dir == scores_hg19_dir
     assert config.genomic_scores_db.scores_hg38_dir == scores_hg38_dir
-    assert config.impala.host == '127.0.0.1'
-    assert config.impala.port == 1024
-    assert config.impala.db == 'test-impala-db'
-    assert config.hdfs.host == '10.0.0.1'
-    assert config.hdfs.port == 2048
+    assert config.storage.override_impala.impala.host == '127.0.0.1'
+    assert config.storage.override_impala.impala.port == 1024
+    assert config.storage.override_impala.impala.db == 'test-impala-db'
+    assert config.storage.override_impala.hdfs.host == '10.0.0.1'
+    assert config.storage.override_impala.hdfs.port == 2048
 
 
-@pytest.mark.skip(reason='missing support for impala and hdfs override')
 def test_dae_config_override_environment_and_params(monkeypatch, fixturedir):
     scores_hg19_dir = os.path.join(fixturedir, 'genomic_scores_db/hg19')
     scores_hg38_dir = os.path.join(fixturedir, 'genomic_scores_db/hg38')
@@ -261,13 +259,15 @@ def test_dae_config_override_environment_and_params(monkeypatch, fixturedir):
     filename = 'dae_test.conf'
 
     default_sections = {
-        'Impala': {
-            'db': 'test-impala-db',
-            'host': '127.0.0.1',
-            'port': '1024'
-        }, 'HDFS': {
-            'host': '10.0.0.1',
-            'port': '2048'
+        'impala_storage': {
+            'impala': {
+                'db': 'test-impala-db',
+                'host': '127.0.0.1',
+                'port': '1024'
+            }, 'hdfs': {
+                'host': '10.0.0.1',
+                'port': '2048'
+            }
         }, 'genomicScoresDB': {
             'scores_hg19_dir': scores_hg19_dir,
             'scores_hg38_dir': scores_hg38_dir
@@ -283,11 +283,11 @@ def test_dae_config_override_environment_and_params(monkeypatch, fixturedir):
 
     assert config.genomic_scores_db.scores_hg19_dir == scores_hg19_dir
     assert config.genomic_scores_db.scores_hg38_dir == scores_hg38_dir
-    assert config.impala.host == '127.0.0.1'
-    assert config.impala.port == 1024
-    assert config.impala.db == 'test-impala-db'
-    assert config.hdfs.host == '10.0.0.1'
-    assert config.hdfs.port == 2048
+    assert config.storage.override_impala.impala.host == '127.0.0.1'
+    assert config.storage.override_impala.impala.port == 1024
+    assert config.storage.override_impala.impala.db == 'test-impala-db'
+    assert config.storage.override_impala.hdfs.host == '10.0.0.1'
+    assert config.storage.override_impala.hdfs.port == 2048
 
 
 def test_missing_permission_denied_prompt(dae_config):
