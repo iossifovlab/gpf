@@ -253,9 +253,10 @@ To see the available options supported by this tools use::
 which will output a short help message::
 
     usage: simple_study_import.py [-h] [--id <study ID>] [--vcf <VCF filename>]
-                                [--denovo <de Novo variants filename>]
-                                [-o <output directory>] [--skip-reports]
-                                <pedigree filename>
+                              [--denovo <de Novo variants filename>]
+                              [-o <output directory>] [--skip-reports]
+                              [--genotype-storage <genotype storage id>]
+                              <pedigree filename>
 
     simple import of new study data
 
@@ -274,6 +275,9 @@ which will output a short help message::
                             files. If none specified, "parquet/" directory inside
                             GPF instance study directory is used [default: None]
     --skip-reports        skip running report generation [default: False]
+    --genotype-storage <genotype storage id>
+                            Id of defined in DAE.conf genotype storage [default:
+                            genotype_impala]
 
 
 Example import of variants
@@ -482,7 +486,7 @@ Ater the the editing the configuration file should look like::
     [study]
 
     id = iossifov_2014
-    file_format = impala
+    genotype_storage = genotype_impala
 
     enrichmentTool = yes
 
