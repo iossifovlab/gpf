@@ -262,9 +262,9 @@ ______________
 
   enrichmentTool = <boolean>
 
-This property specifies if the ``Enrichment Tool`` tab is enabled for the study.
-You can see more about the ``Enrichment Tool``
-tab :ref:`here <enrichment_tool_ui>`. This property takes a
+This property specifies if the ``Enrichment Tool`` tab is enabled for the
+study. You can see more about the ``Enrichment Tool`` tab
+:ref:`here <enrichment_tool_ui>`. This property takes a
 :ref:`boolean <allowed_values_booleans>` value.
 
 .. _study_section_phenotype_tool:
@@ -293,12 +293,3 @@ DEFAULT
 
 This property enables the study. This property takes a
 :ref:`boolean <allowed_values_booleans>` value.
-
-
-.. FIXME:
-  Review this study properties:
-    pedigree_file
-    summary_files
-    family_files
-    effect_gene_files
-    member_files
