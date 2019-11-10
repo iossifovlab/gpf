@@ -24,15 +24,21 @@ Example Configuration
   [DEFAULT]
   instance_id = data_hg19_startup
 
-  [HDFS]
-  host = localhost
-  port = 8020
-  baseDir = /user/%(instance_id)s/studies
+  [genotype_storage]
+  default = genotype_impala
 
-  [Impala]
-  host = localhost
-  port = 21050
-  db = gpf_variant_db
+  [storage.genotype_impala]
+  type = impala
+  impala.host = localhost
+  impala.port = 21050
+  impala.db = gpf_variant_db
+  hdfs.host = localhost
+  hdfs.port = 8020
+  hdfs.base_dir = /user/%(instance_id)s/studies
+
+  [storage.genotype_filesystem]
+  type = filesystem
+  dir = %(wd)s/studies
 
   [studiesDB]
   confFile = %(wd)s/studiesDB.conf
@@ -66,106 +72,140 @@ Example Configuration
   permissionDeniedPrompt = This is a default permission denied prompt. Please log in or register.
   permissionDeniedPromptFile = %(wd)s/permissionDeniedPrompt.md
 
-[HDFS]
-------
+[genotype_storage]
+------------------
 
-host
-____
-
-.. code-block:: ini
-
-  host = <HDFS hostname>
-
-ENVIRONMENT OVERRIDE
-  ``DAE_HDFS_HOST``
-
-Hostname of the HDFS server.
-
-port
-____
-
-.. code-block:: ini
-
-  port = <HDFS port number>
-
-DEFAULT
-  .. exec::
-    from dae.configuration.dae_config_parser import DAEConfigParser
-
-    print(f"``{DAEConfigParser.DEFAULT_SECTION_VALUES['HDFS']['port']}``")
-
-ENVIRONMENT OVERRIDE
-  ``DAE_HDFS_PORT``
-
-Port number of the HDFS server.
-
-baseDir
+default
 _______
 
-.. FIXME:
-  Fill me
-
 .. code-block:: ini
 
-  baseDir = <>
+  default = <default genotype storage id>
 
-DEFAULT
-  .. exec::
-    from dae.configuration.dae_config_parser import DAEConfigParser
+The default genotype storage to use. The genotype storage id must reference a
+configured genotype storage from one of the ``[storage.<genotype storage id>]``
+sections below.
 
-    print(f"``{DAEConfigParser.DEFAULT_SECTION_VALUES['HDFS']['baseDir']}``")
+[storage.<genotype storage id>]
 
-[Impala]
---------
-
-host
+type
 ____
 
 .. code-block:: ini
 
-  host = <Impala hostname>
+  type = <genotype storage type>
+
+Type of the genotype storage. Supported types are impala and filesystem.
+
+impala genotype storage options
+_______________________________
+
+impala.host
+~~~~~~~~~~~
+
+.. code-block:: ini
+
+  impala.host = <Impala hostname>
 
 ENVIRONMENT OVERRIDE
   ``DAE_IMPALA_HOST``
 
 Hostname of the Impala server.
 
-port
-____
+impala.port
+~~~~~~~~~~~
 
 .. code-block:: ini
 
-  port = <Impala port number>
+  impala.port = <Impala port number>
 
 DEFAULT
   .. exec::
     from dae.configuration.dae_config_parser import DAEConfigParser
 
-    print(f"``{DAEConfigParser.DEFAULT_SECTION_VALUES['Impala']['port']}``")
+    print(f"``{DAEConfigParser.DEFAULT_VALUES['impala.port']}``")
 
 ENVIRONMENT OVERRIDE
   ``DAE_IMPALA_PORT``
 
 Port number of the Impala server.
 
-db
-__
+impala.db
+~~~~~~~~~
 
 .. code-block:: ini
 
-  db = <Impala database name>
+  impala.db = <Impala database name>
 
 DEFAULT
   .. exec::
     from dae.configuration.dae_config_parser import DAEConfigParser
 
-    print(f"``{DAEConfigParser.DEFAULT_SECTION_VALUES['Impala']['db']}``")
+    print(f"``{DAEConfigParser.DEFAULT_VALUES['impala.db']}``")
 
 ENVIRONMENT OVERRIDE
   ``DAE_IMPALA_DB``
 
 Name of the database used by Impala for storing variants and pedigree
 information.
+
+hdfs.host
+~~~~~~~~~
+
+.. code-block:: ini
+
+  hdfs.host = <HDFS hostname>
+
+ENVIRONMENT OVERRIDE
+  ``DAE_HDFS_HOST``
+
+Hostname of the HDFS server.
+
+hdfs.port
+~~~~~~~~~
+
+.. code-block:: ini
+
+  hdfs.port = <HDFS port number>
+
+DEFAULT
+  .. exec::
+    from dae.configuration.dae_config_parser import DAEConfigParser
+
+    print(f"``{DAEConfigParser.DEFAULT_VALUES['hdfs.port']}``")
+
+ENVIRONMENT OVERRIDE
+  ``DAE_HDFS_PORT``
+
+Port number of the HDFS server.
+
+hdfs.base_dir
+~~~~~~~~~~~~~
+
+.. FIXME:
+  Fill me
+
+.. code-block:: ini
+
+  hdfs.base_dir = <>
+
+DEFAULT
+  .. exec::
+    from dae.configuration.dae_config_parser import DAEConfigParser
+
+    print(f"``{DAEConfigParser.DEFAULT_VALUES['hdfs.base_dir']}``")
+
+filessytem genotype storage options
+___________________________________
+
+dir
+~~~
+
+.. code-block:: ini
+
+  dir = <directory containing studies>
+
+Directory containing studies data.
 
 [studiesDB]
 -----------
