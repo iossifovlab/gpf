@@ -184,10 +184,6 @@ export class PedigreeChartComponent implements OnInit, AfterViewInit, OnDestroy 
     }
   }
 
-  getScaleString() {
-    return `scale(${this.scale})`;
-  }
-
   getViewBox() {
     const sortedCurveLines = this.curveLines.sort(curveLine => curveLine.inverseCurveP1[1]);
 
