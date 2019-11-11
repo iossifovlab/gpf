@@ -83,7 +83,7 @@ def test_enrichment_test_missing_study(admin_client):
         url, json.dumps(query), content_type='application/json', format='json')
 
     assert response
-    assert response.status_code == 404
+    assert response.status_code == 403
 
 
 def test_enrichment_test_missing_gene_symbols(admin_client):

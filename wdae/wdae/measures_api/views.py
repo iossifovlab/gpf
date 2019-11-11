@@ -1,23 +1,27 @@
-'''
-Created on Mar 30, 2017
+import os
+import logging
+import traceback
+import numpy as np
 
-@author: lubo
-'''
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.exceptions import NotAuthenticated
-import traceback
-from genotype_browser.views import QueryBaseView
-import numpy as np
-import os
+
 from dae.pheno.common import MeasureType
 from dae.pheno_browser.db import DbManager
-import logging
+
+from genotype_browser.views import QueryBaseView
+
+from users_api.authentication import SessionAuthenticationWithoutCSRF
+from datasets_api.permissions import IsDatasetAllowed
 
 logger = logging.getLogger(__name__)
 
 
 class PhenoMeasuresView(QueryBaseView):
+
+    authentication_classes = (SessionAuthenticationWithoutCSRF,)
+    permission_classes = (IsDatasetAllowed,)
 
     def get(self, request, measure_type):
         data = request.query_params
@@ -66,6 +70,9 @@ class PhenoMeasuresView(QueryBaseView):
 
 class PhenoMeasureHistogramView(QueryBaseView):
 
+    authentication_classes = (SessionAuthenticationWithoutCSRF,)
+    permission_classes = (IsDatasetAllowed,)
+
     def post(self, request):
         data = request.data
         try:
@@ -113,6 +120,9 @@ class PhenoMeasureHistogramView(QueryBaseView):
 
 
 class PhenoMeasurePartitionsView(QueryBaseView):
+
+    authentication_classes = (SessionAuthenticationWithoutCSRF,)
+    permission_classes = (IsDatasetAllowed,)
 
     def post(self, request):
         data = request.data
@@ -172,6 +182,9 @@ class PhenoMeasurePartitionsView(QueryBaseView):
 
 
 class PhenoMeasureRegressionsView(QueryBaseView):
+
+    authentication_classes = (SessionAuthenticationWithoutCSRF, )
+    permission_classes = (IsDatasetAllowed,)
 
     def __init__(self):
         super(PhenoMeasureRegressionsView, self).__init__()

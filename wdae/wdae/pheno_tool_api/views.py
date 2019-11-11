@@ -11,6 +11,7 @@ from rest_framework.exceptions import NotAuthenticated
 from django.http.response import StreamingHttpResponse
 
 from gene_sets.expand_gene_set_decorator import expand_gene_set
+from datasets_api.permissions import IsDatasetAllowed
 from users_api.authentication import SessionAuthenticationWithoutCSRF
 
 from dae.pheno_tool.tool import PhenoTool, PhenoToolHelper
@@ -24,7 +25,8 @@ logger = logging.getLogger(__name__)
 
 class PhenoToolView(APIView):
 
-    authentication_classes = (SessionAuthenticationWithoutCSRF, )
+    authentication_classes = (SessionAuthenticationWithoutCSRF,)
+    permission_classes = (IsDatasetAllowed,)
 
     def __init__(self):
         self._variants_db = get_gpf_instance().variants_db
@@ -138,6 +140,10 @@ class PhenoToolView(APIView):
 
 
 class PhenoToolDownload(PhenoToolView):
+
+    authentication_classes = (SessionAuthenticationWithoutCSRF,)
+    permission_classes = (IsDatasetAllowed,)
+
     def _parse_query_params(self, data):
         res = {str(k): str(v) for k, v in list(data.items())}
         assert 'queryData' in res

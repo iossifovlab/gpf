@@ -8,6 +8,7 @@ from .enrichment_builder import EnrichmentBuilder
 from .enrichment_serializer import EnrichmentSerializer
 
 from users_api.authentication import SessionAuthenticationWithoutCSRF
+from datasets_api.permissions import IsDatasetAllowed
 
 from gpf_instance.gpf_instance import get_gpf_instance
 
@@ -26,6 +27,9 @@ LOGGER = logging.getLogger(__name__)
 
 
 class EnrichmentModelsView(APIView):
+
+    authentication_classes = (SessionAuthenticationWithoutCSRF,)
+    permission_classes = (IsDatasetAllowed,)
 
     def __init__(self):
         self.background_facade = get_gpf_instance().background_facade
@@ -54,7 +58,8 @@ class EnrichmentModelsView(APIView):
 
 class EnrichmentTestView(APIView):
 
-    authentication_classes = (SessionAuthenticationWithoutCSRF, )
+    authentication_classes = (SessionAuthenticationWithoutCSRF,)
+    permission_classes = (IsDatasetAllowed,)
 
     def __init__(self):
         self.variants_db = get_gpf_instance().variants_db
