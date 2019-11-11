@@ -22,10 +22,6 @@ class StudyConfigParserBase(ConfigParserBase):
         'commonReport'
     )
 
-    SPLIT_STR_LISTS = [
-        'authorizedGroups'
-    ]
-
     @classmethod
     def parse(cls, config):
         config = super(StudyConfigParserBase, cls).parse(config)
@@ -93,9 +89,6 @@ class StudyConfigParser(StudyConfigParserBase):
         config = super(StudyConfigParser, cls).parse(config)
         if config is None:
             return None
-
-        config.authorizedGroups = config.get(
-            'authorizedGroups', [config.get('id', '')])
 
         config.years = [config.year] if config.year else []
         config.pub_meds = [config.pub_med] if config.pub_med else []

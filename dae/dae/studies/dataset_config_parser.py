@@ -51,9 +51,9 @@ class DatasetConfigParser(StudyConfigParserBase):
 
     SECTION = 'dataset'
 
-    SPLIT_STR_LISTS = StudyConfigParserBase.SPLIT_STR_LISTS + [
+    SPLIT_STR_LISTS = StudyConfigParserBase.SPLIT_STR_LISTS + (
         'studies',
-    ]
+    )
 
     COMPOSITE_ATTRIBUTES = {
         'commonReport': _boolean_and_attribute,
@@ -85,9 +85,6 @@ class DatasetConfigParser(StudyConfigParserBase):
 
         'peopleGroupConfig': _same_value_attribute,
         'people_group_config': _same_value_attribute,
-
-        'authorizedGroups': _set_union_attribute,
-        'authorized_groups': _set_union_attribute,
 
         'year': _strings_join_attribute,
         'years': _list_extend_attribute,
@@ -138,10 +135,6 @@ class DatasetConfigParser(StudyConfigParserBase):
             return None
 
         config = cls._combine_studies_attributes(config, study_configs)
-
-        config.authorizedGroups = BoxList(config.get(
-            'authorizedGroups', [config.get('id', '')]))
-
         assert config.studies
 
         return config

@@ -716,7 +716,7 @@ class StudyWrapper(object):
     def _get_description_keys():
         return [
             'id', 'name', 'description', 'phenotypeBrowser', 'phenotypeTool',
-            'authorizedGroups', 'phenoDB', 'enrichmentTool', 'genotypeBrowser',
+            'phenoDB', 'enrichmentTool', 'genotypeBrowser',
             'peopleGroupConfig', 'genotypeBrowserConfig', 'commonReport',
             'studyTypes', 'studies'
         ]
