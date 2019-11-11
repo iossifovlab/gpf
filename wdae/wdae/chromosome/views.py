@@ -1,14 +1,16 @@
 import pandas as pd
 
-from rest_framework.views import APIView
 from rest_framework.response import Response
-from gpf_instance.gpf_instance import get_gpf_instance
+
+from query_base.query_base import QueryBaseView
 
 
-class ChromosomeView(APIView):
+class ChromosomeView(QueryBaseView):
 
     def __init__(self):
-        gene_info_config = get_gpf_instance().gene_info_config
+        super(ChromosomeView, self).__init__()
+
+        gene_info_config = self.gpf_instance.gene_info_config
         self.chromosomes = []
 
         csvfile = gene_info_config.chromosomes.file

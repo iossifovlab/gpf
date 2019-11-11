@@ -1,13 +1,14 @@
-from rest_framework.views import APIView
 from rest_framework.response import Response
 
-from gpf_instance.gpf_instance import get_gpf_instance
+from query_base.query_base import QueryBaseView
 
 
-class GenomicScoresView(APIView):
+class GenomicScoresView(QueryBaseView):
 
     def __init__(self):
-        self.scores_factory = get_gpf_instance().scores_factory
+        super(GenomicScoresView, self).__init__()
+
+        self.scores_factory = self.gpf_instance.scores_factory
 
     def get_genomic_scores(self, scores):
         return [

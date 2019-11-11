@@ -3,24 +3,22 @@ import json
 import itertools
 from copy import deepcopy
 
-from rest_framework import views, status
+from rest_framework import status
 from rest_framework.response import Response
 
 from django.http.response import StreamingHttpResponse
 from django.utils.http import urlencode
 
-from gpf_instance.gpf_instance import get_gpf_instance
-from datasets_api.permissions import IsDatasetAllowed
-from users_api.authentication import SessionAuthenticationWithoutCSRF
+from query_base.query_base import QueryBaseView
 
 
-class GeneSetsBaseView(views.APIView):
-    authentication_classes = (SessionAuthenticationWithoutCSRF, )
-    permission_classes = (IsDatasetAllowed,)
+class GeneSetsBaseView(QueryBaseView):
 
     def __init__(self):
-        self.gscs = get_gpf_instance().gene_sets_collections
-        self.dgsf = get_gpf_instance().denovo_gene_set_facade
+        super(GeneSetsBaseView, self).__init__()
+        self.gscs = self.gpf_instance.gene_sets_collections
+        self.dgsf = self.gpf_instance.denovo_gene_set_facade
+
         print("datasets loaded in view")
 
 
@@ -30,7 +28,7 @@ class GeneSetsCollectionsView(GeneSetsBaseView):
         super(GeneSetsCollectionsView, self).__init__()
 
     def get(self, request):
-        permitted_datasets = IsDatasetAllowed.permitted_datasets(request.user)
+        permitted_datasets = self.get_permitted_datasets(request.user)
         gene_sets_collections = deepcopy(
             self.gscs.get_collections_descriptions(permitted_datasets))
         denovo_gene_sets = \
@@ -76,7 +74,7 @@ class GeneSetsView(GeneSetsBaseView):
 
             gene_sets = self.dgsf.get_denovo_gene_sets(
                 gene_sets_collection_id, gene_sets_types,
-                IsDatasetAllowed.permitted_datasets(request.user))
+                self.get_permitted_datasets(request.user))
 
         else:
             if not self.gscs.has_gene_sets_collection(gene_sets_collection_id):
@@ -84,7 +82,7 @@ class GeneSetsView(GeneSetsBaseView):
 
             gene_sets = self.gscs.get_gene_sets(
                 gene_sets_collection_id, gene_sets_types,
-                IsDatasetAllowed.permitted_datasets(request.user))
+                self.get_permitted_datasets(request.user))
 
         response = gene_sets
         if 'filter' in data:
@@ -139,7 +137,7 @@ class GeneSetDownloadView(GeneSetsBaseView):
         gene_set_id = data['geneSet']
         gene_sets_types = data.get('geneSetsTypes', {})
 
-        permitted_datasets = IsDatasetAllowed.permitted_datasets(user)
+        permitted_datasets = self.get_permitted_datasets(user)
 
         if gene_sets_collection_id == 'denovo':
             if not self.dgsf.has_denovo_gene_set(gene_sets_collection_id):

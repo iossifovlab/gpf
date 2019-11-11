@@ -27,7 +27,7 @@ def variants_db_fixture(gpf_instance):
 def mock_gpf_instance(db, mocker, gpf_instance):
     reload_datasets(gpf_instance.variants_db)
     mocker.patch(
-        'gene_sets.views.get_gpf_instance',
+        'query_base.query_base.get_gpf_instance',
         return_value=gpf_instance
     )
     mocker.patch(
