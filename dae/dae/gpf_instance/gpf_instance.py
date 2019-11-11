@@ -12,6 +12,7 @@ from dae.gene.score_config_parser import ScoreConfigParser
 from dae.gene.scores import ScoresFactory
 from dae.gene.gene_set_collections import GeneSetsCollections
 from dae.gene.denovo_gene_set_facade import DenovoGeneSetFacade
+from dae.gene.gene_sets_dbs import DenovoGeneSetsDb
 
 from dae.studies.variants_db import VariantsDb
 
@@ -56,6 +57,7 @@ class GPFInstance(object):
 
         self.gene_sets_collections = \
             GeneSetsCollections(self.variants_db, self.gene_info_config)
-        self.denovo_gene_set_facade = DenovoGeneSetFacade(self.variants_db)
+
+        self.denovo_gene_sets_db = DenovoGeneSetsDb(self.variants_db)
 
         self.background_facade = BackgroundFacade(self.variants_db)

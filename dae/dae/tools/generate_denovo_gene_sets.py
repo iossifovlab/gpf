@@ -21,10 +21,10 @@ def main(gpf_instance=None, argv=None):
 
     if gpf_instance is None:
         gpf_instance = GPFInstance()
-    dgsf = gpf_instance.denovo_gene_set_facade
+    denovo_gene_sets_db = gpf_instance.denovo_gene_sets_db
 
     if args.show_studies:
-        for study_id in dgsf.get_all_denovo_gene_set_ids():
+        for study_id in denovo_gene_sets_db.get_genotype_data_ids():
             print(study_id)
     else:
         filter_studies_ids = None
@@ -32,11 +32,11 @@ def main(gpf_instance=None, argv=None):
             studies = args.studies.split(',')
             filter_studies_ids = [
                 study_id
-                for study_id in dgsf.get_all_denovo_gene_set_ids()
+                for study_id in denovo_gene_sets_db.get_genotype_data_ids()
                 if study_id in studies
             ]
 
-        dgsf.build_cache(filter_studies_ids)
+        denovo_gene_sets_db._build_cache(filter_studies_ids)
 
 
 if __name__ == '__main__':

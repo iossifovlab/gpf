@@ -30,6 +30,12 @@ class DenovoGeneSetsDb:
             self.old_api_cache_loaded = True
         return self.old_api_instance
 
+    def __len__(self):
+        return len(self.old_api_instance._denovo_gene_set_cache)
+
+    def get_descriptions(self, permitted_datasets=None):
+        return self.old_api.get_descriptions(permitted_datasets)
+
     def get_genotype_data_ids(self):
         return set(self.old_api._denovo_gene_set_cache.keys())
 
@@ -37,11 +43,25 @@ class DenovoGeneSetsDb:
         return self.old_api._denovo_gene_set_config_cache[genotype_data_id].\
             gene_sets_names
 
-    def get_gene_set(self, gene_set_id, denovo_gene_set_spec):
+    def get_gene_set(self, gene_set_id, denovo_gene_set_spec,
+                     permitted_datasets=None):
         genotype_data_ids = denovo_gene_set_spec.keys()
         return self.old_api.get_denovo_gene_set(
             'denovo',
             gene_set_id,
             denovo_gene_set_spec,
-            genotype_data_ids
+            genotype_data_ids,
+            permitted_datasets
         )
+
+    def get_gene_sets(self, denovo_gene_set_spec, permitted_datasets=None):
+        genotype_data_ids = denovo_gene_set_spec.keys()
+        return self.old_api.get_denovo_gene_sets(
+            'denovo',
+            denovo_gene_set_spec,
+            genotype_data_ids,
+            permitted_datasets
+        )
+
+    def _build_cache(self, denovo_gene_set_ids=None):
+        self.old_api.build_cache(denovo_gene_set_ids=denovo_gene_set_ids)
