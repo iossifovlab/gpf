@@ -157,9 +157,9 @@ def annotation_pipeline_config():
     return filename
 
 
-# @pytest.fixture(scope='session')
-# def annotation_pipeline_default_config(dae_config_fixture):
-#     return dae_config_fixture.annotation.conf_file
+@pytest.fixture(scope='session')
+def annotation_pipeline_default_config(dae_config_fixture):
+    return dae_config_fixture.annotation.conf_file
 
 
 @pytest.fixture(scope='session')

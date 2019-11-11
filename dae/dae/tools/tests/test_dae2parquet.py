@@ -6,6 +6,7 @@ from box import Box
 from dae.tools.dae2parquet import parse_cli_arguments, dae_build_makefile, \
     dae2parquet, denovo2parquet
 
+from dae.pedigrees.pedigree_reader import PedigreeReader
 from dae.backends.impala.parquet_io import ParquetManager
 from dae.backends.import_commons import construct_import_annotation_pipeline
 
@@ -146,7 +147,7 @@ def test_dae2parquet_make(
 
 
 @pytest.fixture(scope='session')
-def dae_iossifov2014_thrift(
+def dae_iossifov2014_import(
         request, dae_iossifov2014_config, annotation_scores_dirname,
         global_gpf_instance, dae_config_fixture, genomes_db,
         test_hdfs, impala_genotype_storage, parquet_manager):
@@ -168,6 +169,8 @@ def dae_iossifov2014_thrift(
         )
 
         config = dae_iossifov2014_config
+        print("dae_iossifov2014_config:", config)
+
         argv = [
             'denovo',
             '--annotation', annotation_config,
@@ -191,10 +194,13 @@ def dae_iossifov2014_thrift(
         filename = os.path.basename(argv.families)
         study_id = os.path.splitext(filename)[0]
 
+        print("family filename:", argv.families, "; variants:", argv.variants)
+        ped_df = PedigreeReader.load_simple_family_file(argv.families)
+
         parquet_config = denovo2parquet(
-            argv.families, argv.variants,
+            study_id, ped_df, argv.variants,
             parquet_manager, annotation_pipeline, genome,
-            family_format=argv.family_format, output=argv.output
+            output=argv.output
         )
 
         assert parquet_config is not None
@@ -213,9 +219,9 @@ def dae_iossifov2014_thrift(
 
 @pytest.fixture(scope='session')
 def dae_iossifov2014_thrift_annotation_pipeline_config(
-        dae_iossifov2014_thrift, annotation_pipeline_config):
-    assert dae_iossifov2014_thrift is not None
-    fvars = dae_iossifov2014_thrift(
+        dae_iossifov2014_import, annotation_pipeline_config):
+    assert dae_iossifov2014_import is not None
+    fvars = dae_iossifov2014_import(
         annotation_pipeline_config, 'impala_test_annotation_db'
     )
 
@@ -224,9 +230,9 @@ def dae_iossifov2014_thrift_annotation_pipeline_config(
 
 @pytest.fixture(scope='session')
 def dae_iossifov2014_thrift_annotation_pipeline_default_config(
-        dae_iossifov2014_thrift, annotation_pipeline_default_config):
-    assert dae_iossifov2014_thrift is not None
-    fvars = dae_iossifov2014_thrift(
+        dae_iossifov2014_import, annotation_pipeline_default_config):
+    assert dae_iossifov2014_import is not None
+    fvars = dae_iossifov2014_import(
         annotation_pipeline_default_config, 'impala_test_import_annotation_db'
     )
 

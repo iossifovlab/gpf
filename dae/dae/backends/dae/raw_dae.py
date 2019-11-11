@@ -96,15 +96,21 @@ class RawDenovo(BaseDAE):
         self.denovo_df = denovo_df
         self.annot_df = annot_df
 
+        assert self.annot_df is not None
+        assert len(self.denovo_df) == len(self.annot_df)
+
     def full_variants_iterator(self, return_reference=False):
+        denovo = self.denovo_df.to_dict(orient='records')
+        annot = self.annot_df.to_dict(orient='records')
 
-        for index, row in self.denovo_df.iterrows():
-            row['summary_variant_index'] = index
+        for index, (arow, drow) in enumerate(zip(annot, denovo)):
             try:
-                summary_variant = self.summary_variant_from_dae_record(row)
+                summary_variant = SummaryVariantFactory \
+                    .summary_variant_from_records(
+                        [arow], transmission_type=self.transmission_type)
 
-                gt = row['gt']
-                family_id = row['familyId']
+                gt = drow['genotype']
+                family_id = drow['family_id']
                 family = self.families.get_family(family_id)
                 assert family is not None
 
@@ -117,7 +123,7 @@ class RawDenovo(BaseDAE):
                 yield summary_variant, [family_variant]
             except Exception as ex:
                 print("unexpected error:", ex)
-                print("error in handling:", row, index)
+                print("error in handling:", arow, drow, index)
                 traceback.print_exc(file=sys.stdout)
 
 class RawDAE(BaseDAE):

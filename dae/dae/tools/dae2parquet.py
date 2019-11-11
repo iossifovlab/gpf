@@ -110,12 +110,10 @@ def import_dae_denovo(
 
     families = FamiliesData.from_pedigree_df(ped_df)
     denovo_df = RawDaeLoader.load_dae_denovo_file(variants_filename, genome)
-    fvars = RawDenovo(families, denovo_df, annot_df=None)
+    annot_df = RawDaeLoader._build_initial_annotation(denovo_df)
+    annot_df = annotation_pipeline.annotate_df(annot_df)
 
-    # if fvars.is_empty():
-    #     print('empty bucket {} done'.format(variants_filename),
-    #           file=sys.stderr)
-
+    fvars = RawDenovo(families, denovo_df, annot_df)
     return fvars
 
 
