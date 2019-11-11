@@ -1,7 +1,8 @@
-
 import os
 
 from dae.configuration.config_parser_base import ConfigParserBase
+
+from dae.utils.dict_utils import recursive_dict_update
 
 
 class DAEConfigParser(ConfigParserBase):
@@ -21,7 +22,7 @@ class DAEConfigParser(ConfigParserBase):
         'impala.port': '21050',
         'hdfs.base_dir': '/tmp',
         'hdfs.port': '0',
-        'dir':'%(wd)s/studies'
+        'dir': '%(wd)s/studies'
     }
     '''
     Holds a  a mapping of property to a value of this property. This mapping
@@ -46,30 +47,43 @@ class DAEConfigParser(ConfigParserBase):
 
     @staticmethod
     def _get_environment_override_values():
-        # impala_db = os.environ.get('DAE_IMPALA_DB', None)
-        # impala_host = os.environ.get('DAE_IMPALA_HOST', None)
-        # impala_port = os.environ.get('DAE_IMPALA_PORT', None)
-        # hdfs_host = os.environ.get('DAE_HDFS_HOST', None)
-        # hdfs_port = os.environ.get('DAE_HDFS_PORT', None)
+        impala_db = os.environ.get('DAE_IMPALA_DB', None)
+        impala_host = os.environ.get('DAE_IMPALA_HOST', None)
+        impala_port = os.environ.get('DAE_IMPALA_PORT', None)
+        hdfs_host = os.environ.get('DAE_HDFS_HOST', None)
+        hdfs_port = os.environ.get('DAE_HDFS_PORT', None)
         genomic_scores_hg19 = os.environ.get('DAE_GENOMIC_SCORES_HG19', None)
         genomic_scores_hg38 = os.environ.get('DAE_GENOMIC_SCORES_HG38', None)
 
         environment_override = {}
-        # if impala_db or impala_host or impala_port:
-        #     environment_override['Impala'] = {}
-        #     if impala_db:
-        #         environment_override['Impala']['db'] = impala_db
-        #     if impala_host:
-        #         environment_override['Impala']['host'] = impala_host
-        #     if impala_port:
-        #         environment_override['Impala']['port'] = impala_port
+        if impala_db or impala_host or impala_port:
+            if 'impala_storage' not in environment_override:
+                environment_override['impala_storage'] = {}
+            if 'impala' not in environment_override['impala_storage']:
+                environment_override['impala_storage']['impala'] = {}
 
-        # if hdfs_host or hdfs_port:
-        #     environment_override['HDFS'] = {}
-        #     if hdfs_host:
-        #         environment_override['HDFS']['host'] = hdfs_host
-        #     if hdfs_port:
-        #         environment_override['HDFS']['port'] = hdfs_port
+            if impala_db:
+                environment_override['impala_storage']['impala']['db'] = \
+                    impala_db
+            if impala_host:
+                environment_override['impala_storage']['impala']['host'] = \
+                    impala_host
+            if impala_port:
+                environment_override['impala_storage']['impala']['port'] = \
+                    impala_port
+
+        if hdfs_host or hdfs_port:
+            if 'impala_storage' not in environment_override:
+                environment_override['impala_storage'] = {}
+            if 'hdfs' not in environment_override['impala_storage']:
+                environment_override['impala_storage']['hdfs'] = {}
+
+            if hdfs_host:
+                environment_override['impala_storage']['hdfs']['host'] = \
+                    hdfs_host
+            if hdfs_port:
+                environment_override['impala_storage']['hdfs']['port'] = \
+                    hdfs_port
 
         if genomic_scores_hg19 or genomic_scores_hg38:
             environment_override['genomicScoresDB'] = {}
@@ -90,17 +104,17 @@ class DAEConfigParser(ConfigParserBase):
         if environment_override:
             override = cls._get_environment_override_values()
             default_override = defaults.get('override', {})
-            override.update(default_override)
+            override = recursive_dict_update(override, default_override)
             defaults['override'] = override
 
         values = cls.DEFAULT_VALUES
         default_values = defaults.get('values', {})
-        values.update(default_values)
+        values = recursive_dict_update(values, default_values)
         defaults['values'] = values
 
         sections = cls.DEFAULT_SECTION_VALUES
         default_sections = defaults.get('sections', {})
-        sections.update(default_sections)
+        sections = recursive_dict_update(sections, default_sections)
         defaults['sections'] = sections
 
         return defaults
@@ -139,9 +153,19 @@ class DAEConfigParser(ConfigParserBase):
 
         defaults = cls._get_defaults(environment_override, defaults)
 
+        ois = defaults.get('override', {}).pop('impala_storage', None)
+
         config = super(DAEConfigParser, cls).read_file_configuration(
             config_file, work_dir, defaults=defaults
         )
+
+        for genotype_storage_id in config.get('storage', {}).keys():
+            genotype_storage = config.storage[genotype_storage_id]
+            if genotype_storage.type == 'impala':
+                if ois:
+                    genotype_storage = \
+                        recursive_dict_update(genotype_storage, ois)
+            config.storage[genotype_storage_id] = genotype_storage
 
         config = cls.parse(config, dae_data_dir=work_dir)
 

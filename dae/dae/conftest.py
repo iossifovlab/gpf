@@ -473,33 +473,43 @@ def reimport(request):
     return bool(request.config.getoption('--reimport'))
 
 
+@pytest.fixture(scope='session')
+def hdfs_host():
+    return os.environ.get('DAE_HDFS_HOST', '127.0.0.1')
+
+
+@pytest.fixture(scope='session')
+def impala_host():
+    return os.environ.get('DAE_IMPALA_HOST', '127.0.0.1')
+
+
 # Impala backend
 @pytest.fixture(scope='session')
-def test_hdfs(request):
+def test_hdfs(request, hdfs_host):
     from dae.backends.impala.hdfs_helpers import HdfsHelpers
-    hdfs = HdfsHelpers('127.0.0.1', 8020)
+    hdfs = HdfsHelpers(hdfs_host, 8020)
     return hdfs
 
 
 @pytest.fixture(scope='session')
-def test_impala_helpers(request):
+def test_impala_helpers(request, impala_host):
     from dae.backends.impala.impala_helpers import ImpalaHelpers
-    helpers = ImpalaHelpers(impala_host='127.0.0.1', impala_port=21050)
+    helpers = ImpalaHelpers(impala_host=impala_host, impala_port=21050)
 
     return helpers
 
 
 @pytest.fixture(scope='session')
-def impala_genotype_storage():
+def impala_genotype_storage(hdfs_host, impala_host):
     storage_config = Box({
         'type': 'impala',
         'impala': {
-            'host': '127.0.0.1',
+            'host': impala_host,
             'port': 21050,
             'db': impala_test_dbname(),
         },
         'hdfs': {
-            'host': '127.0.0.1',
+            'host': hdfs_host,
             'port': 8020,
             'base_dir': '/tmp'
         }

@@ -3,17 +3,17 @@ from dae.backends.impala.hdfs_helpers import HdfsHelpers
 from dae.backends.impala.impala_helpers import ImpalaHelpers
 
 
-def test_hdfs_helpers():
-    hdfs = HdfsHelpers('127.0.0.1', 8020)
+def test_hdfs_helpers(hdfs_host):
+    hdfs = HdfsHelpers(hdfs_host, 8020)
     assert hdfs is not None
 
     dirname = hdfs.tempdir()
     print(dirname)
 
 
-def test_impala_connection_simple():
+def test_impala_connection_simple(impala_host):
 
-    with ImpalaHelpers.create_impala_connection('127.0.0.1', 21050) as conn:
+    with ImpalaHelpers.create_impala_connection(impala_host, 21050) as conn:
         assert conn is not None
 
 
