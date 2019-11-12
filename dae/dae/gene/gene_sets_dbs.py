@@ -97,8 +97,7 @@ class DenovoGeneSetsDb:
             denovo_gene_sets_types
         )
 
-    def get_gene_sets(self, denovo_gene_set_spec,
-                      permitted_datasets=None, load=True):
+    def get_gene_sets(self, denovo_gene_set_spec, permitted_datasets=None):
         denovo_gene_sets_types = self._get_gene_sets_types(
             denovo_gene_set_spec,
             permitted_datasets

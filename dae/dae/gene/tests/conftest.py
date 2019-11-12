@@ -65,8 +65,8 @@ def scores_factory(gpf_instance):
 
 
 @pytest.fixture(scope='function')
-def denovo_gene_set_facade(gpf_instance):
-    return gpf_instance.denovo_gene_set_facade
+def denovo_gene_sets_db(gpf_instance):
+    return gpf_instance.denovo_gene_sets_db
 
 
 @pytest.fixture(scope='module')
