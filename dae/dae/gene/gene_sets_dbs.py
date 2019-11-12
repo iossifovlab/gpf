@@ -21,12 +21,23 @@ class DenovoGeneSetsDb:
 
     def __init__(self, variants_db):
         self.variants_db = variants_db
-        self._denovo_gene_set_cache = dict()
-        self._denovo_gene_set_config_cache = dict()
-        self._load_cache()
+        self._denovo_gene_set_cache_values = dict()
+        self._denovo_gene_set_config_cache_values = dict()
 
     def __len__(self):
         return len(self._denovo_gene_set_cache)
+
+    @property
+    def _denovo_gene_set_cache(self):
+        if not self._denovo_gene_set_cache_values:
+            self._load_cache()
+        return self._denovo_gene_set_cache_values
+
+    @property
+    def _denovo_gene_set_config_cache(self):
+        if not self._denovo_gene_set_config_cache_values:
+            self._load_cache()
+        return self._denovo_gene_set_config_cache_values
 
     @staticmethod
     def _get_gene_sets_types(gene_sets_types, permitted_datasets):
@@ -50,11 +61,12 @@ class DenovoGeneSetsDb:
             return
 
         denovo_gene_set = DenovoGeneSet(study, denovo_gene_set_config)
-        denovo_gene_set.load(build_cache=True)
+        denovo_gene_set.load()
 
-        self._denovo_gene_set_config_cache[denovo_gene_set_id] = \
+        self._denovo_gene_set_config_cache_values[denovo_gene_set_id] = \
             denovo_gene_set_config
-        self._denovo_gene_set_cache[denovo_gene_set_id] = denovo_gene_set
+        self._denovo_gene_set_cache_values[denovo_gene_set_id] = \
+            denovo_gene_set
 
     def _build_cache(self, gene_set_ids=None):
         for dgs_id, dgs in self._denovo_gene_set_cache.items():
