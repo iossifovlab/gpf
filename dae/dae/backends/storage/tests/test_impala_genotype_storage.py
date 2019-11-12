@@ -10,8 +10,8 @@ def test_get_backend(impala_genotype_storage, quads_f1_config, genomes_db):
         quads_f1_config.id, genomes_db
     )
 
-    assert len(backend.families) == 1
-    assert len(backend.families['f1'].members_ids) == 5
+    assert len(backend.families.families_list()) == 1
+    assert len(backend.families.get_family('f1').members_ids) == 5
     assert len(list(backend.query_variants())) == 3
 
 
@@ -78,8 +78,8 @@ def test_impala_load_study(impala_genotype_storage, genomes_db):
         'study_id', genomes_db
     )
 
-    assert len(backend.families) == 1
-    assert len(backend.families['f1'].members_ids) == 5
+    assert len(backend.families.families_list()) == 1
+    assert len(backend.families.get_family('f1').members_ids) == 5
     assert len(list(backend.query_variants())) == 3
 
 

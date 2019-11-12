@@ -9,6 +9,7 @@ from dae.tools.dae2parquet import parse_cli_arguments, dae_build_makefile, \
 from dae.pedigrees.pedigree_reader import PedigreeReader
 from dae.backends.impala.parquet_io import ParquetManager
 from dae.backends.import_commons import construct_import_annotation_pipeline
+from dae.backends.dae.loader import RawDaeLoader
 
 from dae.annotation.tools.file_io_parquet import ParquetReader
 
@@ -44,8 +45,10 @@ def test_dae2parquet_denovo(
     ped_df, study_id = pedigree_from_path(
         argv.families, family_format=argv.family_format)
 
+    denovo_df = RawDaeLoader.load_dae_denovo_file(argv.variants, genome)
+
     parquet_config = denovo2parquet(
-        study_id, ped_df, argv.variants,
+        study_id, ped_df, denovo_df,
         parquet_manager, annotation_pipeline, genome,
         output=argv.output
     )
@@ -196,9 +199,10 @@ def dae_iossifov2014_import(
 
         print("family filename:", argv.families, "; variants:", argv.variants)
         ped_df = PedigreeReader.load_simple_family_file(argv.families)
+        denovo_df = RawDaeLoader.load_dae_denovo_file(argv.variants, genome)
 
         parquet_config = denovo2parquet(
-            study_id, ped_df, argv.variants,
+            study_id, ped_df, denovo_df,
             parquet_manager, annotation_pipeline, genome,
             output=argv.output
         )
