@@ -78,18 +78,6 @@ def test_composite_dataset_config_enrichment_tool(composite_dataset_config):
     assert composite_dataset_config.enrichment_tool is True
 
 
-def test_composite_dataset_config_authorized_groups(composite_dataset_config):
-    assert composite_dataset_config is not None
-
-    assert composite_dataset_config['authorizedGroups'] is not None
-    assert composite_dataset_config['authorizedGroups'].to_list() == \
-        ['any_user']
-
-    assert composite_dataset_config.authorized_groups is not None
-    assert composite_dataset_config.authorized_groups.to_list() == \
-        ['any_user']
-
-
 def test_composite_dataset_config_people_group_overwrite(
         quads_composite_dataset_config):
     assert quads_composite_dataset_config is not None

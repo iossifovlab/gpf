@@ -119,12 +119,6 @@ def fake_background_df(fake_background_filename):
     return df
 
 
-@pytest.fixture(scope='session')
-def sample_nuc_family():
-    return relative_to_this_folder(
-        'fixtures/pedigree_data/sample_nuc_family.ped')
-
-
 @pytest.fixture
 def test_config(temp_dbfile):
     config = default_config()

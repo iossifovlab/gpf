@@ -1,5 +1,7 @@
 #!/bin/sh
 
+
+
 dir_setup() {
     data_tar_time=`stat -c %Y data-hg19-startup-latest.tar.gz`
     data_dir_time=`stat -c %Y data-hg19-startup`
@@ -10,12 +12,13 @@ dir_setup() {
 }
 
 get_file() {
-    wget -c https://iossifovlab.com/distribution/public/data-hg19-startup-latest.tar.gz
+    wget -c https://iossifovlab.com/distribution/public/data-hg19-startup-3.0.0dev-genotype-storage.tar.gz
+    mv data-hg19-startup-3.0.0dev-genotype-storage.tar.gz data-hg19-startup-latest.tar.gz
 }
 
 if [ -f 'data-hg19-startup-latest.tar.gz' ];
 then
-    new_time=`curl -I https://iossifovlab.com/distribution/public/data-hg19-startup-latest.tar.gz | grep Last-Modified | sed "s/^Last-Modified: \(.*\)$/\1/"`
+    new_time=`curl -I https://iossifovlab.com/distribution/public/data-hg19-startup-3.0.0dev-genotype-storage.tar.gz | grep Last-Modified | sed "s/^Last-Modified: \(.*\)$/\1/"`
     python ${SOURCE_DIR}/jenkins_data_check_timestamp.py "$new_time"
     if [ $? != 0 ];
     then

@@ -716,7 +716,7 @@ class StudyWrapper(object):
     def _get_description_keys():
         return [
             'id', 'name', 'description', 'phenotypeBrowser', 'phenotypeTool',
-            'authorizedGroups', 'phenoDB', 'enrichmentTool', 'genotypeBrowser',
+            'phenoDB', 'enrichmentTool', 'genotypeBrowser',
             'peopleGroupConfig', 'genotypeBrowserConfig', 'commonReport',
             'studyTypes', 'studies'
         ]
@@ -765,7 +765,7 @@ class StudyWrapper(object):
         for config_key, parser in config_keys.items():
             config = dataset_description.get(config_key, None)
             if not config:
-                return
+                continue
 
             dataset_description[config_key] = \
                 parser.get_config_description(config)

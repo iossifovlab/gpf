@@ -10,7 +10,7 @@ from ..dae.raw_dae import RawDAE, BaseDAE
 
 
 def test_explode_family_genotype():
-    fgt = RawDAE.explode_family_genotypes(
+    fgt = RawDAE._explode_family_genotypes(
         'f3:2121/0101:11 27 34 13/0 26 0 15/0 0 0 0')
     print(fgt)
 
@@ -33,14 +33,9 @@ def test_best2gt():
 
 def test_load_denovo(raw_denovo):
     denovo = raw_denovo("backends/denovo")
-    denovo.load_simple_families()
 
     assert denovo is not None
     assert denovo.families is not None
-
-    df = denovo.load_denovo_variants()
-    assert df is not None
-    print(df.head())
 
     vs = denovo.full_variants_iterator()
     for sv, fvs in vs:
@@ -50,15 +45,4 @@ def test_load_denovo(raw_denovo):
 
 def test_load_denovo_families(raw_denovo):
     denovo = raw_denovo("backends/denovo")
-
-    denovo.load_simple_families()
     assert denovo.families is not None
-
-
-def test_gene_effects_split():
-    gene_effects = \
-        "MIB2:missense|MIB2:intron|MIB2:non-coding|MIB2:5'UTR-intron"
-    genes, effects = BaseDAE.split_gene_effects(gene_effects)
-    print(genes, effects)
-    assert genes == [u'MIB2', u'MIB2', u'MIB2', u'MIB2']
-    assert effects == [u'missense', u'intron', u'non-coding', u"5'UTR-intron"]

@@ -8,7 +8,9 @@ from box import Box
 
 from dae.annotation.annotation_pipeline import PipelineAnnotator
 
-from .configure import Configure
+from dae.backends.impala.parquet_io import ParquetManager
+
+from dae.utils.dict_utils import recursive_dict_update
 
 
 def build_contig_regions(genome, TRANSMITTED_STEP=10000000):
@@ -66,10 +68,11 @@ def contigs_makefile_generate(
             )
             # target_prefix = os.path.join(output_prefix, suffix)
 
-            parquet = Configure.from_prefix_impala(
+            parquet = ParquetManager.parquet_file_config(
                 output_directory,
                 bucket_index=bucket_index,
-                suffix=suffix).impala
+                suffix=suffix
+            )
 
             targets = [
                 parquet.files.variant
@@ -164,23 +167,6 @@ def construct_import_annotation_pipeline(
     options = Box(options, default_box=True, default_box_attr=None)
 
     annotation_defaults = {'values': dae_config.annotation_defaults}
-
-    def recursive_dict_update(input_dict, updater_dict):
-        # FIXME !
-        # This method cannot handle nested dictionaries
-        # that hold a reference to the dictionary that
-        # contains them. If such a dictionary is given
-        # to this function, it will reach the maximum
-        # recursion depth.
-
-        result_dict = dict(input_dict)
-        for key, val in updater_dict.items():
-            if key in result_dict and type(val) is dict:
-                result_dict[key] = recursive_dict_update(
-                    result_dict[key], updater_dict[key])
-            else:
-                result_dict[key] = updater_dict[key]
-        return result_dict
 
     annotation_defaults = recursive_dict_update(annotation_defaults, defaults)
 

@@ -287,9 +287,10 @@ class OffsetLayoutDrawer(object):
                     ))
 
                 if self.show_id:
-                    axes.annotate(individual.individual.member.id, (cx, cy),
-                                  color='black', weight='bold', fontsize=2,
-                                  ha='center', va='center')
+                    axes.annotate(
+                        individual.individual.member.person_id, (cx, cy),
+                        color='black', weight='bold', fontsize=2,
+                        ha='center', va='center')
 
     def _draw_family(self, axes, family):
         col_labels =\
@@ -299,7 +300,8 @@ class OffsetLayoutDrawer(object):
 
         for member in family:
             table_vals.append(
-                [member.family_id, member.id, member.father, member.mother,
+                [member.family_id, member.person_id, 
+                 member.father, member.mother,
                  Sex.from_name_or_value(member.sex), member.status,
                  member.role, member.layout])
 

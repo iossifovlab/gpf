@@ -53,6 +53,11 @@ def weights_factory(gpf_instance):
 
 
 @pytest.fixture(scope='function')
+def genotype_storage_factory(gpf_instance):
+    return gpf_instance.genotype_storage_factory
+
+
+@pytest.fixture(scope='function')
 def study_configs(variants_db_fixture):
     return variants_db_fixture.study_configs
 
