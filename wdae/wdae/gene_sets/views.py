@@ -20,7 +20,6 @@ class GeneSetsBaseView(views.APIView):
 
     def __init__(self):
         self.gscs = get_gpf_instance().gene_sets_collections
-        self.dgsf = get_gpf_instance().denovo_gene_set_facade
         self.denovo_gene_sets_db = get_gpf_instance().denovo_gene_sets_db
         print("datasets loaded in view")
 

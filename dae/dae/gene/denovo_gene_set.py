@@ -215,20 +215,11 @@ class DenovoGeneSet(object):
 
     @classmethod
     def get_gene_sets(cls, denovo_gene_sets, gene_sets_types={}):
-        gene_sets_types_desc = cls._format_description(gene_sets_types)
-
-        result = []
-        for gsn in cls._get_gene_sets_names(denovo_gene_sets):
-            gene_set_syms = cls._get_gene_set_syms(
-                gsn, denovo_gene_sets, gene_sets_types)
-            if gene_set_syms:
-                result.append({
-                    'name': gsn,
-                    'count': len(gene_set_syms),
-                    'syms': gene_set_syms,
-                    'desc': '{} ({})'.format(gsn, gene_sets_types_desc)
-                })
-        return result
+        res = [
+            DenovoGeneSet.get_gene_set(gsn, denovo_gene_sets, gene_sets_types)
+            for gsn in cls._get_gene_sets_names(denovo_gene_sets)
+        ]
+        return list(filter(None, res))
 
     @classmethod
     def get_gene_set(
@@ -270,10 +261,8 @@ class DenovoGeneSet(object):
                     for gene, families in ds_pedigree_genes_families.items():
                         genes_families.setdefault(gene, set()).update(families)
 
-        # print("genes_families", genes_families)
         matching_genes = genes_families
         if recurrency_criteria:
-            # print("recurrency_criteria", recurrency_criteria)
             if recurrency_criteria['to'] < 0:
                 def filter_lambda(item): return len(
                     item) >= recurrency_criteria['from']
@@ -289,7 +278,6 @@ class DenovoGeneSet(object):
             }
 
         matching_genes = matching_genes.keys()
-        # print("matching_genes", matching_genes)
 
         return set(matching_genes)
 

@@ -1,4 +1,5 @@
-from dae.gene.denovo_gene_set_facade import DenovoGeneSetFacade
+from dae.gene.denovo_gene_set_config import DenovoGeneSetConfigParser
+from dae.gene.denovo_gene_set import DenovoGeneSet
 
 
 class GeneSetsDb:
@@ -20,48 +21,90 @@ class DenovoGeneSetsDb:
 
     def __init__(self, variants_db):
         self.variants_db = variants_db
-        self.old_api_instance = DenovoGeneSetFacade(variants_db)
-        self.old_api_cache_loaded = False
-
-    @property
-    def old_api(self):
-        if not self.old_api_cache_loaded:
-            self.old_api_instance.load_cache()
-            self.old_api_cache_loaded = True
-        return self.old_api_instance
+        self._denovo_gene_set_cache = dict()
+        self._denovo_gene_set_config_cache = dict()
+        self._load_cache()
 
     def __len__(self):
-        return len(self.old_api_instance._denovo_gene_set_cache)
+        return len(self._denovo_gene_set_cache)
+
+    @staticmethod
+    def _get_gene_sets_types(gene_sets_types, permitted_datasets):
+        return {
+            k: {pg_id: v for pg_id, v in pg.items() if v}
+            for k, pg in gene_sets_types.items()
+            if permitted_datasets is None or k in permitted_datasets
+        }
+
+    def _load_cache(self):
+        gene_set_ids = set(self.variants_db.get_all_ids())
+        for denovo_gene_set_id in gene_set_ids:
+            self._load_denovo_gene_set_in_cache(denovo_gene_set_id)
+
+    def _load_denovo_gene_set_in_cache(self, denovo_gene_set_id):
+        study = self.variants_db.get(denovo_gene_set_id)
+        denovo_gene_set_config = DenovoGeneSetConfigParser.parse(
+            self.variants_db.get_config(denovo_gene_set_id)
+        )
+        if not (study and denovo_gene_set_config):
+            return
+
+        denovo_gene_set = DenovoGeneSet(study, denovo_gene_set_config)
+        denovo_gene_set.load(build_cache=True)
+
+        self._denovo_gene_set_config_cache[denovo_gene_set_id] = \
+            denovo_gene_set_config
+        self._denovo_gene_set_cache[denovo_gene_set_id] = denovo_gene_set
+
+    def _build_cache(self, gene_set_ids=None):
+        for dgs_id, dgs in self._denovo_gene_set_cache.items():
+            if gene_set_ids and dgs_id not in gene_set_ids:
+                continue
+            dgs.build_cache()
 
     def get_descriptions(self, permitted_datasets=None):
-        return self.old_api.get_descriptions(permitted_datasets)
+        gene_sets_types = []
+        for denovo_gene_set_id, denovo_gene_set in \
+                self._denovo_gene_set_cache.items():
+            if permitted_datasets is None or \
+                    denovo_gene_set_id in permitted_datasets:
+                gene_sets_types += denovo_gene_set.get_gene_sets_types_legend()
+
+        return {
+            'desc': 'Denovo',
+            'name': 'denovo',
+            'format':  ['key', ' (|count|)'],
+            'types': gene_sets_types,
+        }
 
     def get_genotype_data_ids(self):
-        return set(self.old_api._denovo_gene_set_cache.keys())
+        return set(self._denovo_gene_set_cache.keys())
 
     def get_gene_set_ids(self, genotype_data_id):
-        return self.old_api._denovo_gene_set_config_cache[genotype_data_id].\
+        return self._denovo_gene_set_config_cache[genotype_data_id].\
             gene_sets_names
 
     def get_gene_set(self, gene_set_id, denovo_gene_set_spec,
                      permitted_datasets=None):
-        genotype_data_ids = denovo_gene_set_spec.keys()
-        return self.old_api.get_denovo_gene_set(
-            'denovo',
+        denovo_gene_sets_types = self._get_gene_sets_types(
+            denovo_gene_set_spec,
+            permitted_datasets
+        )
+
+        return DenovoGeneSet.get_gene_set(
             gene_set_id,
+            list(self._denovo_gene_set_cache.values()),
+            denovo_gene_sets_types
+        )
+
+    def get_gene_sets(self, denovo_gene_set_spec,
+                      permitted_datasets=None, load=True):
+        denovo_gene_sets_types = self._get_gene_sets_types(
             denovo_gene_set_spec,
-            genotype_data_ids,
             permitted_datasets
         )
 
-    def get_gene_sets(self, denovo_gene_set_spec, permitted_datasets=None):
-        genotype_data_ids = denovo_gene_set_spec.keys()
-        return self.old_api.get_denovo_gene_sets(
-            'denovo',
-            denovo_gene_set_spec,
-            genotype_data_ids,
-            permitted_datasets
+        return DenovoGeneSet.get_gene_sets(
+            list(self._denovo_gene_set_cache.values()),
+            denovo_gene_sets_types
         )
-
-    def _build_cache(self, denovo_gene_set_ids=None):
-        self.old_api.build_cache(denovo_gene_set_ids=denovo_gene_set_ids)

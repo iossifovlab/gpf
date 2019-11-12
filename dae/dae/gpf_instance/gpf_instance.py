@@ -11,7 +11,6 @@ from dae.gene.weights import WeightsFactory
 from dae.gene.score_config_parser import ScoreConfigParser
 from dae.gene.scores import ScoresFactory
 from dae.gene.gene_set_collections import GeneSetsCollections
-from dae.gene.denovo_gene_set_facade import DenovoGeneSetFacade
 from dae.gene.gene_sets_dbs import DenovoGeneSetsDb
 
 from dae.studies.variants_db import VariantsDb
