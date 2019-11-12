@@ -75,7 +75,6 @@ describe('PedigreeChartComponent', () => {
 
     component.scaleSvg();
     expect(component.scale).toBe(1);
-    expect(component.getScaleString()).toBe('scale(1)');
   });
 
   it('should toggle maximized', () => {
