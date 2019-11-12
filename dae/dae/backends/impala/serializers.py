@@ -58,6 +58,9 @@ class ParquetSerializer(object):
         'frequency_bin',
         'coding',
         'position_bin',
+        'chrome_bin',
+        'coding2',
+        'region_bin',
     ]
 
     summary = namedtuple(
