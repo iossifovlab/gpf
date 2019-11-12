@@ -14,11 +14,15 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.backends.impala.parquet_io import ParquetManager
 from dae.backends.import_commons import construct_import_annotation_pipeline
 
+from dae.utils.helpers import add_flexible_denovo_import_args, \
+    read_variants_from_dsv
+
 from dae.tools.vcf2parquet import import_vcf
 from dae.tools.dae2parquet import import_dae_denovo
 from dae.backends.impala.impala_helpers import ImpalaHelpers
 from dae.backends.impala.hdfs_helpers import HdfsHelpers
 from dae.pedigrees.pedigree_reader import PedigreeReader, PedigreeRoleGuesser
+from dae.pedigrees.family import FamiliesData
 
 from dae.tools.vcf2parquet import vcf2parquet
 from dae.tools.dae2parquet import denovo2parquet
@@ -152,6 +156,7 @@ def parse_cli_arguments(dae_config, argv=sys.argv[1:]):
     )
 
     add_cli_arguments_pedigree(parser)
+    add_flexible_denovo_import_args(parser)
 
     parser_args = parser.parse_args(argv)
     return parser_args
@@ -209,9 +214,13 @@ if __name__ == "__main__":
     genotype_storage_factory = gpf_instance.genotype_storage_factory
     genomes_db = gpf_instance.genomes_db
     genome = genomes_db.get_genome()
+
+
     genotype_storage = genotype_storage_factory.get_genotype_storage(
         argv.genotype_storage
     )
+    print("genotype storage:", argv.genotype_storage, genotype_storage)
+
     annotation_pipeline = construct_import_annotation_pipeline(
         dae_config, genomes_db, argv)
     parquet_manager = ParquetManager(dae_config.studies_db.dir)
@@ -252,6 +261,7 @@ if __name__ == "__main__":
 
     if argv.ped_no_role:
         ped_df = PedigreeRoleGuesser.guess_role_nuc(ped_df)
+    families = FamiliesData.from_pedigree_df(ped_df)
 
     denovo_parquet = None
     vcf_parquet = None
@@ -268,8 +278,25 @@ if __name__ == "__main__":
             output=output, bucket_index=1
         )
     if argv.denovo is not None:
+        print("denovo filename:", argv.denovo)
+        denovo_df = read_variants_from_dsv(
+            argv.denovo,
+            genome,
+            location=argv.denovo_location,
+            variant=argv.denovo_variant,
+            chrom=argv.denovo_chrom,
+            pos=argv.denovo_pos,
+            ref=argv.denovo_ref,
+            alt=argv.denovo_alt,
+            personId=argv.denovo_personId,
+            familyId=argv.denovo_familyId,
+            bestSt=argv.denovo_bestSt,
+            families=families,
+        )
+        print(denovo_df.head())
+
         parquet_config = denovo2parquet(
-            study_id, ped_df, argv.denovo,
+            study_id, ped_df, denovo_df,
             parquet_manager, annotation_pipeline, genome,
             output=output, bucket_index=0, skip_pedigree=skip_pedigree
         )

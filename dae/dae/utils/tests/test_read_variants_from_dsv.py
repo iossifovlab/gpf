@@ -29,108 +29,17 @@ def compare_variant_dfs(res_df, expected_df):
 
 
 def test_produce_genotype(fake_families):
-    expected_output = np.array([0, 0, 0, 0, 0, 0, 0, 1, 0, 1])
+    expected_output = np.array([[0, 0, 0, 0, 0,], [ 0, 0, 0, 1, 1]])
     output = produce_genotype(fake_families.families['f1'], ['f1.p1', 'f1.s2'])
     assert np.array_equal(output, expected_output)
     assert output.dtype == GENOTYPE_TYPE
 
 
 def test_produce_genotype_no_people_with_variants(fake_families):
-    expected_output = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+    expected_output = np.array([[0, 0, 0, 0, 0], [0, 0, 0, 0, 0]])
     output = produce_genotype(fake_families.families['f1'], [])
     assert np.array_equal(output, expected_output)
     assert output.dtype == GENOTYPE_TYPE
-
-
-def test_read_variants_column_assertion_location():
-    """
-    Tests the assertion for having either a location or CHROM and POS
-    columns.
-    """
-
-    error_message = ('You must specify either a location column or'
-                     ' chromosome and position columns!')
-    with pytest.raises(AssertionError) as excinfo:
-        read_variants_from_dsv(
-            None, None, variant='foo', familyId='bar', genotype='baz')
-    assert str(excinfo.value) == error_message
-
-    with pytest.raises(AssertionError) as excinfo:
-        read_variants_from_dsv(
-            None, None, variant='foo', chrom='CHROM',
-            familyId='bar', genotype='baz')
-    assert str(excinfo.value) == error_message
-
-    with pytest.raises(AssertionError) as excinfo:
-        read_variants_from_dsv(
-            None, None, variant='foo', pos='POS',
-            familyId='bar', genotype='baz')
-    assert str(excinfo.value) == error_message
-
-
-def test_read_variants_column_assertion_variant():
-    """
-    Tests the assertion for having either a variant or REF and ALT
-    columns.
-    """
-
-    error_message = ('You must specify either a variant column or'
-                     ' reference and alternative columns!')
-    with pytest.raises(AssertionError) as excinfo:
-        read_variants_from_dsv(
-            None, None, location='foo', familyId='bar', genotype='baz')
-    assert str(excinfo.value) == error_message
-
-    with pytest.raises(AssertionError) as excinfo:
-        read_variants_from_dsv(
-            None, None, location='foo', ref='REF',
-            familyId='bar', genotype='baz')
-    assert str(excinfo.value) == error_message
-
-    with pytest.raises(AssertionError) as excinfo:
-        read_variants_from_dsv(
-            None, None, location='foo', alt='ALT',
-            familyId='bar', genotype='baz')
-    assert str(excinfo.value) == error_message
-
-
-def test_read_variants_column_assertion_family():
-    """
-    Tests the assertion for having either a personId column with a
-    FamiliesData object specified or familyId and genotype columns.
-    """
-
-    error_message = ('You must specify either a personId column and'
-                     ' provide a FamiliesData object or specify'
-                     ' familyId and genotype columns!')
-    with pytest.raises(AssertionError) as excinfo:
-        read_variants_from_dsv(
-            None, None, location='foo', variant='bar')
-    assert str(excinfo.value) == error_message
-
-    with pytest.raises(AssertionError) as excinfo:
-        read_variants_from_dsv(
-            None, None, location='foo', variant='bar',
-            familyId='baz')
-    assert str(excinfo.value) == error_message
-
-    with pytest.raises(AssertionError) as excinfo:
-        read_variants_from_dsv(
-            None, None, location='foo', variant='bar',
-            genotype='baz')
-    assert str(excinfo.value) == error_message
-
-    with pytest.raises(AssertionError) as excinfo:
-        read_variants_from_dsv(
-            None, None, location='foo', variant='bar',
-            personId='baz')
-    assert str(excinfo.value) == error_message
-
-    with pytest.raises(AssertionError) as excinfo:
-        read_variants_from_dsv(
-            None, None, location='foo', variant='bar',
-            families=FamiliesData())
-    assert str(excinfo.value) == error_message
 
 
 def test_families_instance_type_assertion():
@@ -146,19 +55,19 @@ def test_read_variants_DAE_style(default_genome):
     filename = relative_to_this_folder('fixtures/variants_DAE_style.tsv')
     res_df = read_variants_from_dsv(
         filename, default_genome, location='location', variant='variant',
-        familyId='familyId', genotype='bestState'
+        familyId='familyId', bestSt='bestState'
     )
 
     expected_df = pd.DataFrame({
         'chrom': ['1', '2', '2'],
-        'position': ['123', '234', '234'],
+        'position': [123, 234, 234],
         'reference': ['A', 'T', 'G'],
         'alternative': ['G', 'T', 'A'],
         'family_id': ['f1', 'f1', 'f2'],
         'genotype': [
-            np.array([0, 0, 0, 0, 0, 0, 0, 1, 0, 1]),
-            np.array([0, 0, 0, 0, 0, 0, 0, 1, 0, 0]),
-            np.array([0, 0, 0, 0, 0, 0, 0, 1]),
+            np.array([[0, 0, 0, 0, 0], [0, 0, 1, 0, 1]]),
+            np.array([[0, 0, 0, 0, 0], [0, 0, 1, 0, 0]]),
+            np.array([[0, 0, 0, 0], [0, 0, 0, 1]]),
         ],
     })
 
@@ -169,19 +78,19 @@ def test_read_variants_a_la_VCF_style():
     filename = relative_to_this_folder('fixtures/variants_VCF_style.tsv')
     res_df = read_variants_from_dsv(
         filename, None, chrom='chrom', pos='pos',
-        ref='ref', alt='alt', familyId='familyId', genotype='bestState'
+        ref='ref', alt='alt', familyId='familyId', bestSt='bestState'
     )
 
     expected_df = pd.DataFrame({
         'chrom': ['1', '2', '2'],
-        'position': ['123', '234', '234'],
+        'position': [123, 234, 234],
         'reference': ['A', 'T', 'G'],
         'alternative': ['G', 'T', 'A'],
         'family_id': ['f1', 'f1', 'f2'],
         'genotype': [
-            np.array([0, 0, 0, 0, 0, 0, 0, 1, 0, 1]),
-            np.array([0, 0, 0, 0, 0, 0, 0, 1, 0, 0]),
-            np.array([0, 0, 0, 0, 0, 0, 0, 1]),
+            np.array([[0, 0, 0, 0, 0], [0, 0, 1, 0, 1]]),
+            np.array([[0, 0, 0, 0, 0], [0, 0, 1, 0, 0]]),
+            np.array([[0, 0, 0, 0], [0, 0, 0, 1]]),
         ],
     })
 
@@ -192,19 +101,19 @@ def test_read_variants_mixed_A():
     filename = relative_to_this_folder('fixtures/variants_mixed_style_A.tsv')
     res_df = read_variants_from_dsv(
         filename, None, location='location',
-        ref='ref', alt='alt', familyId='familyId', genotype='bestState'
+        ref='ref', alt='alt', familyId='familyId', bestSt='bestState'
     )
 
     expected_df = pd.DataFrame({
         'chrom': ['1', '2', '2'],
-        'position': ['123', '234', '234'],
+        'position': [123, 234, 234],
         'reference': ['A', 'T', 'G'],
         'alternative': ['G', 'T', 'A'],
         'family_id': ['f1', 'f1', 'f2'],
         'genotype': [
-            np.array([0, 0, 0, 0, 0, 0, 0, 1, 0, 1]),
-            np.array([0, 0, 0, 0, 0, 0, 0, 1, 0, 0]),
-            np.array([0, 0, 0, 0, 0, 0, 0, 1]),
+            np.array([[0, 0, 0, 0, 0], [0, 0, 1, 0, 1]]),
+            np.array([[0, 0, 0, 0, 0], [0, 0, 1, 0, 0]]),
+            np.array([[0, 0, 0, 0], [0, 0, 0, 1]]),
         ],
     })
 
@@ -215,19 +124,19 @@ def test_read_variants_mixed_B(default_genome):
     filename = relative_to_this_folder('fixtures/variants_mixed_style_B.tsv')
     res_df = read_variants_from_dsv(
         filename, default_genome, chrom='chrom', pos='pos',
-        variant='variant', familyId='familyId', genotype='bestState'
+        variant='variant', familyId='familyId', bestSt='bestState'
     )
 
     expected_df = pd.DataFrame({
         'chrom': ['1', '2', '2'],
-        'position': ['123', '234', '234'],
+        'position': [123, 234, 234],
         'reference': ['A', 'T', 'G'],
         'alternative': ['G', 'T', 'A'],
         'family_id': ['f1', 'f1', 'f2'],
         'genotype': [
-            np.array([0, 0, 0, 0, 0, 0, 0, 1, 0, 1]),
-            np.array([0, 0, 0, 0, 0, 0, 0, 1, 0, 0]),
-            np.array([0, 0, 0, 0, 0, 0, 0, 1]),
+            np.array([[0, 0, 0, 0, 0], [0, 0, 1, 0, 1]]),
+            np.array([[0, 0, 0, 0, 0], [0, 0, 1, 0, 0]]),
+            np.array([[0, 0, 0, 0], [0, 0, 0, 1]]),
         ],
     })
 
@@ -247,14 +156,14 @@ def test_read_variants_person_ids(filename, fake_families):
 
     expected_df = pd.DataFrame({
         'chrom': ['1', '2', '2'],
-        'position': ['123', '234', '234'],
+        'position': [123, 234, 234],
         'reference': ['A', 'T', 'G'],
         'alternative': ['G', 'T', 'A'],
         'family_id': ['f1', 'f1', 'f2'],
         'genotype': [
-            np.array([0, 0, 0, 0, 0, 0, 0, 1, 0, 1]),
-            np.array([0, 0, 0, 0, 0, 0, 0, 1, 0, 0]),
-            np.array([0, 0, 0, 0, 0, 0, 0, 1]),
+            np.array([[0, 0, 0, 0, 0], [0, 0, 1, 0, 1]]),
+            np.array([[0, 0, 0, 0, 0], [0, 0, 1, 0, 0]]),
+            np.array([[0, 0, 0, 0], [0, 0, 0, 1]]),
         ],
     })
 
@@ -272,19 +181,19 @@ def test_read_variants_different_separator():
     )
     res_df = read_variants_from_dsv(
         filename, None, sep='$', chrom='chrom', pos='pos',
-        ref='ref', alt='alt', familyId='familyId', genotype='bestState'
+        ref='ref', alt='alt', familyId='familyId', bestSt='bestState'
     )
 
     expected_df = pd.DataFrame({
         'chrom': ['1', '2', '2'],
-        'position': ['123', '234', '234'],
+        'position': [123, 234, 234],
         'reference': ['A', 'T', 'G'],
         'alternative': ['G', 'T', 'A'],
         'family_id': ['f1', 'f1', 'f2'],
         'genotype': [
-            np.array([0, 0, 0, 0, 0, 0, 0, 1, 0, 1]),
-            np.array([0, 0, 0, 0, 0, 0, 0, 1, 0, 0]),
-            np.array([0, 0, 0, 0, 0, 0, 0, 1]),
+            np.array([[0, 0, 0, 0, 0], [0, 0, 1, 0, 1]]),
+            np.array([[0, 0, 0, 0, 0], [0, 0, 1, 0, 0]]),
+            np.array([[0, 0, 0, 0], [0, 0, 0, 1]]),
         ],
     })
 
@@ -297,7 +206,7 @@ def test_read_variants_genome_assertion():
     with pytest.raises(AssertionError) as excinfo:
         res_df = read_variants_from_dsv(
             filename, None, location='location', variant='variant',
-            familyId='familyId', genotype='bestState'
+            familyId='familyId', bestSt='bestState'
         )
         
     assert str(excinfo.value) == 'You must provide a genome object!'

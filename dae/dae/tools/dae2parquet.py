@@ -106,10 +106,10 @@ def dae_build_makefile(dae_config, genome, argv):
 
 def import_dae_denovo(
         genome, annotation_pipeline,
-        ped_df, variants_filename):
+        ped_df, denovo_df):
 
     families = FamiliesData.from_pedigree_df(ped_df)
-    denovo_df = RawDaeLoader.load_dae_denovo_file(variants_filename, genome)
+    # denovo_df = RawDaeLoader.load_dae_denovo_file(variants_filename, genome)
     annot_df = RawDaeLoader._build_initial_annotation(denovo_df)
     annot_df = annotation_pipeline.annotate_df(annot_df)
 
@@ -253,7 +253,7 @@ def parse_cli_arguments(gpf_instance, argv=sys.argv[1:]):
 
 
 def denovo2parquet(
-        study_id, ped_df, variants_file,
+        study_id, ped_df, denovo_df,
         parquet_manager, annotation_pipeline, genome,
         output='.', bucket_index=0, rows=10000, filesystem=None,
         skip_pedigree=False):
@@ -264,7 +264,7 @@ def denovo2parquet(
 
     fvars = import_dae_denovo(
         genome, annotation_pipeline,
-        ped_df, variants_file
+        ped_df, denovo_df
     )
     if not skip_pedigree:
         parquet_manager.pedigree_to_parquet(fvars, parquet_config)

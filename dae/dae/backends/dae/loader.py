@@ -34,6 +34,9 @@ class RawDaeLoader(RawVariantsLoader):
 
     @staticmethod
     def _augment_denovo_variant(denovo_df, genome):
+        import traceback
+        traceback.print_stack()
+
         result = []
 
         for index, row in denovo_df.iterrows():

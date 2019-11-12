@@ -24,15 +24,10 @@ def pedigree_from_path(filepath, family_format='pedigree'):
 def split_location(location):
     assert ':' in location
     chrom, pos = location.split(':')
-    return chrom, pos
+    return chrom, int(pos)
 
 
 def add_flexible_denovo_import_args(parser):
-    parser.add_argument(
-        '--denovo-sep',
-        help='The separator dividing the columns in the denovo file.',
-        default=','
-    )
     parser.add_argument(
         '--denovo-location',
         help=('The label or index of the column containing the CSHL-style'
@@ -72,24 +67,23 @@ def add_flexible_denovo_import_args(parser):
         help='The label or index of the column containing the family\'s ID.',
     )
     parser.add_argument(
-        '--denovo-genotype',
+        '--denovo-bestSt',
         help=('The label or index of the column containing the best state'
               ' for the family.'),
     )
 
 
 def produce_genotype(family, members_with_variant):
-    genotype = np.zeros(len(family) * 2, dtype=GENOTYPE_TYPE)
+    genotype = np.zeros(shape=(2, len(family)), dtype=GENOTYPE_TYPE)
     members_with_variant_index = family.members_index(members_with_variant)
     for index in members_with_variant_index:
-        genotype[(index * 2) + 1] = 1
+        genotype[1, index] = 1
     return genotype
 
 
 def read_variants_from_dsv(
     filepath,
     genome,
-    sep='\t',
     location=None,
     variant=None,
     chrom=None,
@@ -98,8 +92,9 @@ def read_variants_from_dsv(
     alt=None,
     personId=None,
     familyId=None,
-    genotype=None,
-    families=None
+    bestSt=None,
+    families=None,
+    sep='\t'
 ):
     """
     Read a text file containing variants in the form
@@ -111,7 +106,7 @@ def read_variants_from_dsv(
 
     :param str filepath: The path to the DSV file to read.
 
-    :param genome: A genome object.
+    :param genome: A reference genome object.
 
     :param str location: The label or index of the column containing the
     CSHL-style location of the variant.
@@ -150,15 +145,16 @@ def read_variants_from_dsv(
 
     :rtype: An instance of Pandas' DataFrame class.
     """
-    assert location or (chrom and pos),\
-        ('You must specify either a location column or'
-         ' chromosome and position columns!')
-    assert variant or (ref and alt), \
-        ('You must specify either a variant column or'
-         ' reference and alternative columns!')
-    assert (personId and families) or (familyId and genotype), \
-        ('You must specify either a personId column and provide a FamiliesData'
-         ' object or specify familyId and genotype columns!')
+
+    if not (location or (chrom and pos)):
+        location = 'location'
+    
+    if not (variant or (ref and alt)):
+        variant = 'variant'
+
+    if not ( (personId and families) or (familyId and bestSt) ):
+        familyId = 'familyId'
+        bestSt = 'bestState'
 
     if families:
         assert isinstance(families, FamiliesData), \
@@ -169,12 +165,13 @@ def read_variants_from_dsv(
         sep=sep,
         dtype={
             chrom: str,
-            pos: str,
+            pos: int,
             personId: str,
             familyId: str,
-            genotype: str,
+            bestSt: str,
         }
     )
+    print(raw_df.columns)
 
     if location:
         chrom_col, pos_col = zip(*map(split_location, raw_df[location]))
@@ -182,6 +179,7 @@ def read_variants_from_dsv(
         chrom_col = raw_df.loc[:, chrom]
         pos_col = raw_df.loc[:, pos]
 
+    print("variant:", variant)
     if variant:
         assert genome, 'You must provide a genome object!'
         variant_col = raw_df.loc[:, variant]
@@ -240,12 +238,7 @@ def read_variants_from_dsv(
     else:
         family_col = raw_df.loc[:, familyId]
         str2mat_partial = partial(str2mat, col_sep=' ')
-
-        genotype_col = [
-            np.ndarray.flatten(person_genotype, order='F')
-            for person_genotype
-            in map(str2mat_partial, raw_df[genotype])
-        ]
+        genotype_col = map(str2mat_partial, raw_df[bestSt])
 
     return pd.DataFrame({
         'chrom': chrom_col,

@@ -30,11 +30,13 @@ def main(gpf_instance=None, argv=None):
         filter_studies_ids = None
         if args.studies:
             studies = args.studies.split(',')
+            print("generating de Novo gene sets for studies:", studies)
             filter_studies_ids = [
                 study_id
                 for study_id in dgsf.get_all_denovo_gene_set_ids()
                 if study_id in studies
             ]
+            print("filter studies ids:", filter_studies_ids)
 
         dgsf.build_cache(filter_studies_ids)
 
