@@ -3,8 +3,6 @@
 import os
 import sys
 import time
-import glob
-import shutil
 import copy
 from functools import partial
 import argparse
@@ -14,85 +12,13 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.backends.impala.parquet_io import ParquetManager
 from dae.backends.import_commons import construct_import_annotation_pipeline
 
-from dae.utils.helpers import add_flexible_denovo_import_args, \
-    read_variants_from_dsv
+from dae.backends.dae.loader import RawDaeLoader
 
-from dae.tools.vcf2parquet import import_vcf
-from dae.tools.dae2parquet import import_dae_denovo
-from dae.backends.impala.impala_helpers import ImpalaHelpers
-from dae.backends.impala.hdfs_helpers import HdfsHelpers
 from dae.pedigrees.pedigree_reader import PedigreeReader, PedigreeRoleGuesser
 from dae.pedigrees.family import FamiliesData
 
 from dae.tools.vcf2parquet import vcf2parquet
 from dae.tools.dae2parquet import denovo2parquet
-
-
-def add_cli_arguments_pedigree(parser):
-    parser.add_argument(
-        '--ped-family',
-        default='familyId',
-        help='specify the name of the column in the pedigree file that holds '
-        'the ID of the family the person belongs to [default: %(default)s]'
-    )
-
-    parser.add_argument(
-        '--ped-person',
-        default='personId',
-        help='specify the name of the column in the pedigree file that holds '
-        'the person\'s ID [default: %(default)s]'
-    )
-
-    parser.add_argument(
-        '--ped-mom',
-        default='momId',
-        help='specify the name of the column in the pedigree file that holds '
-        'the ID of the person\'s mother [default: %(default)s]'
-    )
-
-    parser.add_argument(
-        '--ped-dad',
-        default='dadId',
-        help='specify the name of the column in the pedigree file that holds '
-        'the ID of the person\'s father [default: %(default)s]'
-    )
-
-    parser.add_argument(
-        '--ped-sex',
-        default='sex',
-        help='specify the name of the column in the pedigree file that holds '
-        'the sex of the person [default: %(default)s]'
-    )
-
-    parser.add_argument(
-        '--ped-status',
-        default='status',
-        help='specify the name of the column in the pedigree file that holds '
-        'the status of the person [default: %(default)s]'
-    )
-
-    parser.add_argument(
-        '--ped-role',
-        default='role',
-        help='specify the name of the column in the pedigree file that holds '
-        'the role of the person [default: %(default)s]'
-    )
-
-    parser.add_argument(
-        '--ped-no-role',
-        action='store_true',
-        help='indicates that the provided pedigree file has no role column. '
-        'If this argument is provided, the import tool will guess the roles '
-        'of individuals and write them in a "role" column.'
-    )
-
-    parser.add_argument(
-        '--ped-no-header',
-        action='store_true',
-        help='indicates that the provided pedigree file has no header. The '
-        'pedigree column arguments will accept indices if this argument is '
-        'given. [default: %(default)s]'
-    )
 
 
 def parse_cli_arguments(dae_config, argv=sys.argv[1:]):
@@ -155,8 +81,8 @@ def parse_cli_arguments(dae_config, argv=sys.argv[1:]):
         action='store'
     )
 
-    add_cli_arguments_pedigree(parser)
-    add_flexible_denovo_import_args(parser)
+    PedigreeReader.flexible_pedigree_cli_arguments(parser)
+    RawDaeLoader.flexible_denovo_read(parser)
 
     parser_args = parser.parse_args(argv)
     return parser_args
@@ -215,7 +141,6 @@ if __name__ == "__main__":
     genomes_db = gpf_instance.genomes_db
     genome = genomes_db.get_genome()
 
-
     genotype_storage = genotype_storage_factory.get_genotype_storage(
         argv.genotype_storage
     )
@@ -243,7 +168,7 @@ if __name__ == "__main__":
 
     # handle pedigree
     load_pedigree_partial = partial(
-        PedigreeReader.load_pedigree_file,
+        PedigreeReader.flexible_pedigree_read,
         col_family=argv.ped_family,
         col_person=argv.ped_person,
         col_mom=argv.ped_mom,
@@ -278,8 +203,7 @@ if __name__ == "__main__":
             output=output, bucket_index=1
         )
     if argv.denovo is not None:
-        print("denovo filename:", argv.denovo)
-        denovo_df = read_variants_from_dsv(
+        denovo_df = RawDaeLoader.flexible_denovo_read(
             argv.denovo,
             genome,
             location=argv.denovo_location,
@@ -293,7 +217,6 @@ if __name__ == "__main__":
             bestSt=argv.denovo_bestSt,
             families=families,
         )
-        print(denovo_df.head())
 
         parquet_config = denovo2parquet(
             study_id, ped_df, denovo_df,

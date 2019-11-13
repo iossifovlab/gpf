@@ -35,7 +35,7 @@ def test_load_family_simple(fixture_name, temp_filename):
     PedigreeReader.save_pedigree(fam_df, temp_filename)
     assert fam_df is not None
 
-    ped_df = PedigreeReader.load_pedigree_file(temp_filename)
+    ped_df = PedigreeReader.flexible_pedigree_read(temp_filename)
     print("-------------------------")
     print("-------------------------")
     print(ped_df)

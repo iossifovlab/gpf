@@ -13,7 +13,7 @@ def relative_to_this_folder(path):
 
 @pytest.fixture(scope='session')
 def fake_families():
-    ped_df = PedigreeReader.load_pedigree_file(
+    ped_df = PedigreeReader.flexible_pedigree_read(
         relative_to_this_folder(
             'fixtures/fake_pheno.ped'
         )

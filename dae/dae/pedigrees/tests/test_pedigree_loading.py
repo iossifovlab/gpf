@@ -61,8 +61,8 @@ familyId\tpersonId\tdadId\tmomId\tsex\tstatus\trole\tlayout\tsampleId
         'sample_id': ['1.x1', '1.x2', '1.x3']
     })),
 ])
-def test_load_pedigree_file(infile, pedigree):
-    loaded_pedigree = PedigreeReader.load_pedigree_file(infile, sep='\t')
+def test_flexible_pedigree_read(infile, pedigree):
+    loaded_pedigree = PedigreeReader.flexible_pedigree_read(infile, sep='\t')
     print(loaded_pedigree)
     columns = ['family_id', 'person_id', 'dad_id', 'mom_id', 'sex', 'status',
                'role', 'layout', 'sample_id']
@@ -77,18 +77,18 @@ def test_load_pedigree_file(infile, pedigree):
     ('pedigree_B2.ped'),
     ('pedigree_C.ped'),
 ])
-def test_load_pedigree_file_from_filesystem(filepath):
+def test_flexible_pedigree_read_from_filesystem(filepath):
     expected_df = expected_pedigree_df.copy()
     expected_df['sample_id'] = expected_df['person_id']
 
     absolute_filepath = relative_to_this_folder(
         'fixtures/{}'.format(filepath)
     )
-    pedigree_df = PedigreeReader.load_pedigree_file(absolute_filepath)
+    pedigree_df = PedigreeReader.flexible_pedigree_read(absolute_filepath)
     assert pedigree_df.equals(expected_df)
 
 
-def test_load_pedigree_file_additional_columns():
+def test_flexible_pedigree_read_additional_columns():
     expected_df = expected_pedigree_df.copy()
     expected_df['phenotype'] = [
         'healthy',
@@ -106,11 +106,11 @@ def test_load_pedigree_file_additional_columns():
     absolute_filepath = relative_to_this_folder(
         'fixtures/pedigree_D.ped'
     )
-    pedigree_df = PedigreeReader.load_pedigree_file(absolute_filepath)
+    pedigree_df = PedigreeReader.flexible_pedigree_read(absolute_filepath)
     assert pedigree_df.equals(expected_df)
 
 
-def test_load_pedigree_file_do_not_override_sample_id_column():
+def test_flexible_pedigree_read_do_not_override_sample_id_column():
     expected_df = expected_pedigree_df.copy()
     expected_df['sample_id'] = [
         'f1_father',
@@ -127,18 +127,18 @@ def test_load_pedigree_file_do_not_override_sample_id_column():
     absolute_filepath = relative_to_this_folder(
         'fixtures/pedigree_E.ped'
     )
-    pedigree_df = PedigreeReader.load_pedigree_file(absolute_filepath)
+    pedigree_df = PedigreeReader.flexible_pedigree_read(absolute_filepath)
     assert pedigree_df.equals(expected_df)
 
 
-def test_load_pedigree_file_no_header():
+def test_flexible_pedigree_read_no_header():
     expected_df = expected_pedigree_df.copy()
     expected_df['sample_id'] = expected_df['person_id']
 
     absolute_filepath = relative_to_this_folder(
         'fixtures/pedigree_no_header.ped'
     )
-    pedigree_df = PedigreeReader.load_pedigree_file(
+    pedigree_df = PedigreeReader.flexible_pedigree_read(
         absolute_filepath,
         has_header=False,
         col_family=0,

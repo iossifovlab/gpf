@@ -44,7 +44,7 @@ def dae_build_transmitted(annotation_pipeline, genome, argv):
 
     assert argv.family_format in ['pedigree', 'simple'], argv.family_format
     if argv.family_format == 'pedigree':
-        ped_df = PedigreeReader.load_pedigree_file(
+        ped_df = PedigreeReader.flexible_pedigree_read(
             config.dae.family_filename
         )
     else:
@@ -102,19 +102,6 @@ def dae_build_makefile(dae_config, genome, argv):
         log_directory=argv.log,
         env=env
     )
-
-
-def import_dae_denovo(
-        genome, annotation_pipeline,
-        ped_df, denovo_df):
-
-    families = FamiliesData.from_pedigree_df(ped_df)
-    # denovo_df = RawDaeLoader.load_dae_denovo_file(variants_filename, genome)
-    annot_df = RawDaeLoader._build_initial_annotation(denovo_df)
-    annot_df = annotation_pipeline.annotate_df(annot_df)
-
-    fvars = RawDenovo(families, denovo_df, annot_df)
-    return fvars
 
 
 def init_parser_dae_common(gpf_instance, parser):
@@ -262,10 +249,12 @@ def denovo2parquet(
         output, bucket_index=bucket_index, study_id=study_id)
     print("converting into ", parquet_config, file=sys.stderr)
 
-    fvars = import_dae_denovo(
-        genome, annotation_pipeline,
-        ped_df, denovo_df
-    )
+    families = FamiliesData.from_pedigree_df(ped_df)
+    annot_df = RawDaeLoader._build_initial_annotation(denovo_df)
+    annot_df = annotation_pipeline.annotate_df(annot_df)
+
+    fvars = RawDenovo(families, denovo_df, annot_df)
+
     if not skip_pedigree:
         parquet_manager.pedigree_to_parquet(fvars, parquet_config)
 

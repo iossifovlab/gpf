@@ -177,7 +177,7 @@ class RawVcfLoader(RawVariantsLoader):
     @staticmethod
     def load_raw_vcf_variants_from_prefix(prefix):
         config = Configure.from_prefix_vcf(prefix).vcf
-        ped_df = PedigreeReader.load_pedigree_file(config.pedigree)
+        ped_df = PedigreeReader.flexible_pedigree_read(config.pedigree)
         return RawVcfLoader.load_raw_vcf_variants(
             ped_df, config.vcf, config.annotation
         )

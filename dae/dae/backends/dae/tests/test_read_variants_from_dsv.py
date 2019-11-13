@@ -1,11 +1,11 @@
 import pytest
 import pandas as pd
 import numpy as np
-from dae.utils.helpers import produce_genotype, read_variants_from_dsv
-from dae.pedigrees.family import FamiliesData
+from dae.backends.dae.loader import RawDaeLoader
+
 from dae.utils.vcf_utils import GENOTYPE_TYPE
 
-from dae.utils.tests.conftest import relative_to_this_folder
+from .conftest import relative_to_this_folder
 
 
 def compare_variant_dfs(res_df, expected_df):
@@ -29,15 +29,16 @@ def compare_variant_dfs(res_df, expected_df):
 
 
 def test_produce_genotype(fake_families):
-    expected_output = np.array([[0, 0, 0, 0, 0,], [ 0, 0, 0, 1, 1]])
-    output = produce_genotype(fake_families.families['f1'], ['f1.p1', 'f1.s2'])
+    expected_output = np.array([[0, 0, 0, 0, 0], [0, 0, 0, 1, 1]])
+    output = RawDaeLoader.produce_genotype(
+        fake_families.families['f1'], ['f1.p1', 'f1.s2'])
     assert np.array_equal(output, expected_output)
     assert output.dtype == GENOTYPE_TYPE
 
 
 def test_produce_genotype_no_people_with_variants(fake_families):
     expected_output = np.array([[0, 0, 0, 0, 0], [0, 0, 0, 0, 0]])
-    output = produce_genotype(fake_families.families['f1'], [])
+    output = RawDaeLoader.produce_genotype(fake_families.families['f1'], [])
     assert np.array_equal(output, expected_output)
     assert output.dtype == GENOTYPE_TYPE
 
@@ -45,7 +46,7 @@ def test_produce_genotype_no_people_with_variants(fake_families):
 def test_families_instance_type_assertion():
     error_message = 'families must be an instance of FamiliesData!'
     with pytest.raises(AssertionError) as excinfo:
-        read_variants_from_dsv(
+        RawDaeLoader.flexible_denovo_read(
             None, None, location='foo', variant='bar',
             personId='baz', families='bla')
     assert str(excinfo.value) == error_message
@@ -53,7 +54,7 @@ def test_families_instance_type_assertion():
 
 def test_read_variants_DAE_style(default_genome):
     filename = relative_to_this_folder('fixtures/variants_DAE_style.tsv')
-    res_df = read_variants_from_dsv(
+    res_df = RawDaeLoader.flexible_denovo_read(
         filename, default_genome, location='location', variant='variant',
         familyId='familyId', bestSt='bestState'
     )
@@ -76,7 +77,7 @@ def test_read_variants_DAE_style(default_genome):
 
 def test_read_variants_a_la_VCF_style():
     filename = relative_to_this_folder('fixtures/variants_VCF_style.tsv')
-    res_df = read_variants_from_dsv(
+    res_df = RawDaeLoader.flexible_denovo_read(
         filename, None, chrom='chrom', pos='pos',
         ref='ref', alt='alt', familyId='familyId', bestSt='bestState'
     )
@@ -99,7 +100,7 @@ def test_read_variants_a_la_VCF_style():
 
 def test_read_variants_mixed_A():
     filename = relative_to_this_folder('fixtures/variants_mixed_style_A.tsv')
-    res_df = read_variants_from_dsv(
+    res_df = RawDaeLoader.flexible_denovo_read(
         filename, None, location='location',
         ref='ref', alt='alt', familyId='familyId', bestSt='bestState'
     )
@@ -122,7 +123,7 @@ def test_read_variants_mixed_A():
 
 def test_read_variants_mixed_B(default_genome):
     filename = relative_to_this_folder('fixtures/variants_mixed_style_B.tsv')
-    res_df = read_variants_from_dsv(
+    res_df = RawDaeLoader.flexible_denovo_read(
         filename, default_genome, chrom='chrom', pos='pos',
         variant='variant', familyId='familyId', bestSt='bestState'
     )
@@ -149,7 +150,7 @@ def test_read_variants_mixed_B(default_genome):
 ])
 def test_read_variants_person_ids(filename, fake_families):
     filename = relative_to_this_folder(filename)
-    res_df = read_variants_from_dsv(
+    res_df = RawDaeLoader.flexible_denovo_read(
         filename, None, chrom='chrom', pos='pos',
         ref='ref', alt='alt', personId='personId', families=fake_families
     )
@@ -179,7 +180,7 @@ def test_read_variants_different_separator():
     filename = relative_to_this_folder(
         'fixtures/variants_different_separator.dsv'
     )
-    res_df = read_variants_from_dsv(
+    res_df = RawDaeLoader.flexible_denovo_read(
         filename, None, sep='$', chrom='chrom', pos='pos',
         ref='ref', alt='alt', familyId='familyId', bestSt='bestState'
     )
@@ -204,9 +205,9 @@ def test_read_variants_genome_assertion():
     filename = relative_to_this_folder('fixtures/variants_DAE_style.tsv')
 
     with pytest.raises(AssertionError) as excinfo:
-        res_df = read_variants_from_dsv(
+        RawDaeLoader.flexible_denovo_read(
             filename, None, location='location', variant='variant',
             familyId='familyId', bestSt='bestState'
         )
-        
+
     assert str(excinfo.value) == 'You must provide a genome object!'

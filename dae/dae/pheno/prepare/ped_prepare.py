@@ -132,7 +132,7 @@ class PreparePersons(PrepareBase):
         self._save_persons(ped_df)
 
     def build_pedigree(self, pedfile):
-        ped_df = PedigreeReader.load_pedigree_file(pedfile)
+        ped_df = PedigreeReader.flexible_pedigree_read(pedfile)
         ped_df = self.prepare_pedigree(ped_df)
         self.save_pedigree(ped_df)
         self.pedigree_df = ped_df

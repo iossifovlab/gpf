@@ -314,7 +314,7 @@ def vcf_import_raw(
         vcf_import_config, default_genome, annotation_pipeline_internal,
         genomes_db):
 
-    ped_df = PedigreeReader.load_pedigree_file(vcf_import_config.pedigree)
+    ped_df = PedigreeReader.flexible_pedigree_read(vcf_import_config.pedigree)
     fvars = RawVcfLoader.load_raw_vcf_variants(
         ped_df, vcf_import_config.vcf)
     fvars.annot_df = annotation_pipeline_internal.annotate_df(fvars.annot_df)
@@ -354,7 +354,7 @@ def dae_iossifov2014(
         dae_iossifov2014_config, default_genome, annotation_pipeline_internal):
     config = dae_iossifov2014_config
 
-    ped_df = PedigreeReader.load_pedigree_file(
+    ped_df = PedigreeReader.flexible_pedigree_read(
         config.family_filename
     )
 
@@ -373,11 +373,12 @@ def variants_vcf(genomes_db, default_annotation_pipeline):
     def builder(path):
         prefix = os.path.join(relative_to_this_test_folder('fixtures'), path)
         conf = Configure.from_prefix_vcf(prefix)
-        ped_df = PedigreeReader.load_pedigree_file(conf.vcf.pedigree)
+        ped_df = PedigreeReader.flexible_pedigree_read(conf.vcf.pedigree)
         fvars = RawVcfLoader.load_raw_vcf_variants(
             ped_df, conf.vcf.vcf
         )
-        fvars.annot_df = default_annotation_pipeline.annotate_df(fvars.annot_df)
+        fvars.annot_df = default_annotation_pipeline.annotate_df(
+            fvars.annot_df)
         RawVcfLoader.save_annotation_file(fvars.annot_df, conf.vcf.annotation)
 
         return fvars

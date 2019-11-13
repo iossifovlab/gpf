@@ -27,7 +27,7 @@ def instrument_files():
 def test_ped_prepare_simple(test_config, fake_ped_file):
     test_config.person.role.mapping = 'INTERNAL'
     prep = PreparePersons(test_config)
-    ped_df = PedigreeReader.load_pedigree_file(fake_ped_file)
+    ped_df = PedigreeReader.flexible_pedigree_read(fake_ped_file)
 
     assert ped_df is not None
 

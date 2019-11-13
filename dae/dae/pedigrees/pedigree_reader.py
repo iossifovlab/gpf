@@ -1,9 +1,7 @@
-from collections import OrderedDict
 from functools import partial
 
 import numpy as np
 import pandas as pd
-import csv
 
 from dae.variants.attributes import Role, Sex, Status
 from dae.pedigrees.pedigrees import Pedigree
@@ -38,14 +36,15 @@ class PedigreeReader(object):
 
     @staticmethod
     def read_file(
-        pedigree_filepath, sep='\t',
-        col_family='familyId', col_person='personId', col_mom='momId', 
-        col_dad='dadId', col_sex='sex', col_status='status', col_role='role', 
-        col_layout='layout', col_generated='generated', 
-        col_sample_id='sampleId', 
-        return_as_dict=False):
-    
-        ped_df = PedigreeReader.load_pedigree_file(
+            pedigree_filepath, sep='\t',
+            col_family='familyId', col_person='personId', col_mom='momId',
+            col_dad='dadId', col_sex='sex', col_status='status',
+            col_role='role',
+            col_layout='layout', col_generated='generated',
+            col_sample_id='sampleId',
+            return_as_dict=False):
+
+        ped_df = PedigreeReader.flexible_pedigree_read(
             pedigree_filepath, sep=sep,
             col_family=col_family, col_person=col_person,
             col_mom=col_mom, col_dad=col_dad,
@@ -108,18 +107,97 @@ class PedigreeReader(object):
         return zip(*header)
 
     @staticmethod
-    def load_pedigree_file(pedigree_filepath, sep='\t',
-                           has_header=True,
-                           col_family='familyId',
-                           col_person='personId',
-                           col_mom='momId',
-                           col_dad='dadId',
-                           col_sex='sex',
-                           col_status='status',
-                           col_role='role',
-                           col_layout='layout',
-                           col_generated='generated',
-                           col_sample_id='sampleId'):
+    def flexible_pedigree_cli_arguments(parser):
+        parser.add_argument(
+            '--ped-family',
+            default='familyId',
+            help='specify the name of the column in the pedigree file that '
+            'holds '
+            'the ID of the family the person belongs to [default: %(default)s]'
+        )
+
+        parser.add_argument(
+            '--ped-person',
+            default='personId',
+            help='specify the name of the column in the pedigree file that '
+            'holds '
+            'the person\'s ID [default: %(default)s]'
+        )
+
+        parser.add_argument(
+            '--ped-mom',
+            default='momId',
+            help='specify the name of the column in the pedigree file that '
+            'holds '
+            'the ID of the person\'s mother [default: %(default)s]'
+        )
+
+        parser.add_argument(
+            '--ped-dad',
+            default='dadId',
+            help='specify the name of the column in the pedigree file that '
+            'holds '
+            'the ID of the person\'s father [default: %(default)s]'
+        )
+
+        parser.add_argument(
+            '--ped-sex',
+            default='sex',
+            help='specify the name of the column in the pedigree file that '
+            'holds '
+            'the sex of the person [default: %(default)s]'
+        )
+
+        parser.add_argument(
+            '--ped-status',
+            default='status',
+            help='specify the name of the column in the pedigree file that '
+            'holds '
+            'the status of the person [default: %(default)s]'
+        )
+
+        parser.add_argument(
+            '--ped-role',
+            default='role',
+            help='specify the name of the column in the pedigree file that '
+            'holds '
+            'the role of the person [default: %(default)s]'
+        )
+
+        parser.add_argument(
+            '--ped-no-role',
+            action='store_true',
+            help='indicates that the provided pedigree file has no role '
+            'column. '
+            'If this argument is provided, the import tool will guess the '
+            'roles '
+            'of individuals and write them in a "role" column.'
+        )
+
+        parser.add_argument(
+            '--ped-no-header',
+            action='store_true',
+            help='indicates that the provided pedigree file has no header. '
+            'The '
+            'pedigree column arguments will accept indices if this argument '
+            'is '
+            'given. [default: %(default)s]'
+        )
+
+    @staticmethod
+    def flexible_pedigree_read(
+            pedigree_filepath, sep='\t',
+            has_header=True,
+            col_family='familyId',
+            col_person='personId',
+            col_mom='momId',
+            col_dad='dadId',
+            col_sex='sex',
+            col_status='status',
+            col_role='role',
+            col_layout='layout',
+            col_generated='generated',
+            col_sample_id='sampleId'):
 
         read_csv_func = partial(
             pd.read_csv,
@@ -243,6 +321,7 @@ class PedigreeReader(object):
             'sampleId': 'sample_id',
         }, inplace=True)
         return fam_df
+
     @staticmethod
     def save_pedigree(ped_df, filename):
         df = ped_df.copy()
