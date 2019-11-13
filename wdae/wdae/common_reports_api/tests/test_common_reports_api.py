@@ -15,28 +15,24 @@ def test_variant_reports(admin_client):
     data = response.data
     assert data
 
-    assert data['is_downloadable'] is True
-
 
 def test_variant_reports_no_permissions(user_client):
     url = '/api/v3/common_reports/studies/study4'
     response = user_client.get(url)
 
     assert response
-    assert response.status_code == status.HTTP_200_OK
+    assert response.status_code == status.HTTP_403_FORBIDDEN
 
     data = response.data
     assert data
 
-    assert data['is_downloadable'] is False
 
-
-def test_variant_reports_not_found(user_client):
-    url = '/api/v3/common_reports/studies/Study4'
-    response = user_client.get(url)
+def test_variant_reports_not_found(admin_client):
+    url = '/api/v3/common_reports/studies/Study3'
+    response = admin_client.get(url)
 
     assert response
-    assert response.data['error'] == 'Common report Study4 not found'
+    assert response.data['error'] == 'Common report Study3 not found'
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
@@ -78,9 +74,9 @@ def test_families_data_download_no_permissions(user_client):
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_families_data_download_not_found(user_client):
-    url = '/api/v3/common_reports/families_data/Study4'
-    response = user_client.get(url)
+def test_families_data_download_not_found(admin_client):
+    url = '/api/v3/common_reports/families_data/Study3'
+    response = admin_client.get(url)
 
     assert response
     assert response.status_code == status.HTTP_404_NOT_FOUND

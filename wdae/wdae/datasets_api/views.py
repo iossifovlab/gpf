@@ -1,21 +1,14 @@
-from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from guardian.shortcuts import get_groups_with_perms
 
-from gpf_instance.gpf_instance import get_gpf_instance
+from query_base.query_base import QueryBaseView
+
 from .models import Dataset
 from groups_api.serializers import GroupSerializer
 
 
-class DatasetView(APIView):
-
-    def __init__(self, variants_db=None):
-        # assert self.datasets is not None
-
-        if variants_db is None:
-            variants_db = get_gpf_instance().variants_db
-        self.variants_db = variants_db
+class DatasetView(QueryBaseView):
 
     def augment_accessibility(self, dataset, user):
         dataset_object = Dataset.objects.get(dataset_id=dataset['id'])
@@ -56,11 +49,13 @@ class DatasetView(APIView):
                 status=status.HTTP_404_NOT_FOUND)
 
 
-class PermissionDeniedPromptView(APIView):
+class PermissionDeniedPromptView(QueryBaseView):
 
     def __init__(self):
+        super(PermissionDeniedPromptView, self).__init__()
+
         self.permission_denied_prompt = \
-            get_gpf_instance().dae_config.gpfjs.permission_denied_prompt
+            self.gpf_instance.dae_config.gpfjs.permission_denied_prompt
 
     def get(self, request):
         return Response({'data': self.permission_denied_prompt})
