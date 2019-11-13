@@ -21,7 +21,7 @@ export class MeasuresService {
     let params: URLSearchParams = new URLSearchParams();
     params.set('datasetId', datasetId);
 
-    let requestOptions = new RequestOptions();
+    let requestOptions = new RequestOptions({ withCredentials: true });
     requestOptions.search = params;
 
     return this.http
@@ -33,7 +33,7 @@ export class MeasuresService {
 
   getMeasureHistogram(datasetId: string, measureName: string) {
     let headers = new Headers({ 'Content-Type': 'application/json' });
-    let options = new RequestOptions({ headers: headers });
+    let options = new RequestOptions({ headers: headers, withCredentials: true });
     return this.http
       .post(this.measureHistogramUrl, { datasetId: datasetId, measure: measureName }, options)
       .map(res => {
@@ -43,7 +43,7 @@ export class MeasuresService {
 
   getMeasurePartitions(datasetId: string, measureName: string, rangeStart: number, rangeEnd: number) {
     let headers = new Headers({ 'Content-Type': 'application/json' });
-    let options = new RequestOptions({ headers: headers });
+    let options = new RequestOptions({ headers: headers, withCredentials: true });
     return this.http
       .post(this.measurePartitionsUrl, {
         datasetId: datasetId,
@@ -59,7 +59,7 @@ export class MeasuresService {
   getRegressions(datasetId: string) {
     let params: URLSearchParams = new URLSearchParams();
     params.set('datasetId', datasetId);
-    let requestOptions = new RequestOptions();
+    let requestOptions = new RequestOptions({ withCredentials: true });
     requestOptions.search = params;
 
     return this.http.get(this.regressionsUrl, requestOptions).map(res => { return res.json() });
