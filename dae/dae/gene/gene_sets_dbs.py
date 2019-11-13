@@ -2,21 +2,6 @@ from dae.gene.denovo_gene_set_config import DenovoGeneSetConfigParser
 from dae.gene.denovo_gene_set import DenovoGeneSet
 
 
-class GeneSetsDb:
-
-    def get_gene_set_collections_ids():
-        pass
-
-    def get_gene_set_ids():
-        pass
-
-    def get_gene_set():
-        pass
-
-    def load_gene_set_from_file():
-        pass
-
-
 class DenovoGeneSetsDb:
 
     def __init__(self, variants_db):

@@ -19,7 +19,7 @@ class GeneSetsBaseView(views.APIView):
     permission_classes = (IsDatasetAllowed,)
 
     def __init__(self):
-        self.gscs = get_gpf_instance().gene_sets_collections
+        self.gene_sets_db = get_gpf_instance().gene_sets_db
         self.denovo_gene_sets_db = get_gpf_instance().denovo_gene_sets_db
         print("datasets loaded in view")
 
@@ -32,7 +32,8 @@ class GeneSetsCollectionsView(GeneSetsBaseView):
     def get(self, request):
         permitted_datasets = IsDatasetAllowed.permitted_datasets(request.user)
         gene_sets_collections = deepcopy(
-            self.gscs.get_collections_descriptions(permitted_datasets))
+            self.gene_sets_db.get_collections_descriptions()
+        )
         denovo_gene_sets = \
             deepcopy(
                 self.denovo_gene_sets_db.get_descriptions(permitted_datasets)
@@ -80,12 +81,13 @@ class GeneSetsView(GeneSetsBaseView):
                 IsDatasetAllowed.permitted_datasets(request.user)
             )
         else:
-            if not self.gscs.has_gene_sets_collection(gene_sets_collection_id):
+            if not self.gene_sets_db.has_gene_sets_collection(
+                    gene_sets_collection_id):
                 return Response(status=status.HTTP_404_NOT_FOUND)
 
-            gene_sets = self.gscs.get_gene_sets(
-                gene_sets_collection_id, gene_sets_types,
-                IsDatasetAllowed.permitted_datasets(request.user))
+            gene_sets = self.gene_sets_db.get_gene_sets(
+                gene_sets_collection_id
+            )
 
         response = gene_sets
         if 'filter' in data:
@@ -151,16 +153,15 @@ class GeneSetDownloadView(GeneSetsBaseView):
                 permitted_datasets
             )
         else:
-            if not self.gscs.has_gene_sets_collection(gene_sets_collection_id):
+            if not self.gene_sets_db.has_gene_sets_collection(
+                    gene_sets_collection_id):
                 return Response({
                     "unknown gene set collection": gene_sets_collection_id
                 }, status=status.HTTP_404_NOT_FOUND)
 
-            gene_set = self.gscs.get_gene_set(
+            gene_set = self.gene_sets_db.get_gene_set(
                 gene_sets_collection_id,
                 gene_set_id,
-                gene_sets_types,
-                permitted_datasets
             )
 
         if gene_set is None:

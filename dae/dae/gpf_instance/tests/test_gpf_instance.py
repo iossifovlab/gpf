@@ -27,7 +27,7 @@ def test_init(gpf_instance):
     assert gpf_instance.scores_factory
     assert gpf_instance.variants_db
     assert gpf_instance.common_report_facade
-    assert gpf_instance.gene_sets_collections
+    assert gpf_instance.gene_sets_db
     assert gpf_instance.denovo_gene_sets_db is not None
     assert gpf_instance.background_facade
 

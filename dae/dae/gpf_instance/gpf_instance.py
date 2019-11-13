@@ -10,7 +10,7 @@ from dae.gene.gene_info_config import GeneInfoConfigParser
 from dae.gene.weights import WeightsFactory
 from dae.gene.score_config_parser import ScoreConfigParser
 from dae.gene.scores import ScoresFactory
-from dae.gene.gene_set_collections import GeneSetsCollections
+from dae.gene.gene_set_collections import GeneSetsDb
 from dae.gene.gene_sets_dbs import DenovoGeneSetsDb
 
 from dae.studies.variants_db import VariantsDb
@@ -54,8 +54,8 @@ class GPFInstance(object):
 
         self.common_report_facade = CommonReportFacade(self.variants_db)
 
-        self.gene_sets_collections = \
-            GeneSetsCollections(self.variants_db, self.gene_info_config)
+        self.gene_sets_db = GeneSetsDb(self.variants_db,
+                                       self.gene_info_config)
 
         self.denovo_gene_sets_db = DenovoGeneSetsDb(self.variants_db)
 

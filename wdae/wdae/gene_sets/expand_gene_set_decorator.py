@@ -18,9 +18,8 @@ def expand_gene_set(request_function):
                     IsDatasetAllowed.permitted_datasets(request.user)
                 )
             else:
-                gene_sets_collections =\
-                    get_gpf_instance().gene_sets_collections
-                gene_set = gene_sets_collections.get_gene_set(
+                gene_sets_db = get_gpf_instance().gene_sets_db
+                gene_set = gene_sets_db.get_gene_set(
                     gene_sets_collection_id, gene_set_id, gene_sets_types,
                     IsDatasetAllowed.permitted_datasets(request.user))
             # del request.data['geneSet']
