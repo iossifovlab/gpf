@@ -1,4 +1,4 @@
-from django.http.response import StreamingHttpResponse
+from django.http.response import StreamingHttpResponse, FileResponse
 from rest_framework import status
 from rest_framework.response import Response
 
@@ -7,6 +7,7 @@ import logging
 
 from utils.logger import log_filter
 from utils.logger import LOGGER
+from utils.streaming_response_util import iterator_to_json
 
 from query_base.query_base import QueryBaseView
 
@@ -24,7 +25,7 @@ class QueryPreviewView(QueryBaseView):
 
     @expand_gene_set
     def post(self, request):
-        LOGGER.info(log_filter(request, "query v3 preview request: " +
+        LOGGER.info(log_filter(request, 'query v3 preview request: ' +
                                str(request.data)))
 
         data = request.data
@@ -34,22 +35,48 @@ class QueryPreviewView(QueryBaseView):
 
         dataset = self.variants_db.get_wdae_wrapper(dataset_id)
 
-        # LOGGER.info("dataset " + str(dataset))
-        response = dataset.get_variants_wdae_preview(
-            data,
-            max_variants_count=self.MAX_SHOWN_VARIANTS,
-            variants_hard_max=self.MAX_VARIANTS
-        )
+        # LOGGER.info('dataset ' + str(dataset))
+        response = dataset.get_wdae_preview_info(data)
 
         # pprint.pprint(response)
 
         return Response(response, status=status.HTTP_200_OK)
 
 
+class QueryPreviewVariantsView(QueryBaseView):
+
+    MAX_SHOWN_VARIANTS = 1000
+
+    @expand_gene_set
+    def post(self, request):
+        LOGGER.info(log_filter(request, 'query v3 preview request: ' +
+                               str(request.data)))
+
+        data = request.data
+        dataset_id = data.pop('datasetId', None)
+        if dataset_id is None:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        dataset = self.variants_db.get_wdae_wrapper(dataset_id)
+
+        # LOGGER.info('dataset ' + str(dataset))
+        response = dataset.get_variants_wdae_preview(
+            data,
+            max_variants_count=self.MAX_SHOWN_VARIANTS
+        )
+
+        # pprint.pprint(response)
+
+        return StreamingHttpResponse(
+            iterator_to_json(response),
+            status=status.HTTP_200_OK,
+            content_type='text/event-stream'
+        )
+
+
 class QueryDownloadView(QueryBaseView):
 
-    def __init__(self):
-        super(QueryDownloadView, self).__init__()
+    DOWNLOAD_LIMIT = 10000
 
     def _parse_query_params(self, data):
         print(data)
@@ -59,11 +86,9 @@ class QueryDownloadView(QueryBaseView):
         query = json.loads(res['queryData'])
         return query
 
-    DOWNLOAD_LIMIT = 10000
-
     @expand_gene_set
     def post(self, request):
-        LOGGER.info(log_filter(request, "query v3 download request: " +
+        LOGGER.info(log_filter(request, 'query v3 download request: ' +
                                str(request.data)))
 
         data = self._parse_query_params(request.data)
@@ -79,12 +104,10 @@ class QueryDownloadView(QueryBaseView):
 
         variants_data = dataset.get_variants_wdae_download(
             data,
-            max_variants_count=download_limit,
-            variants_hard_max=self.DOWNLOAD_LIMIT
+            max_variants_count=download_limit
         )
 
-        response = \
-            StreamingHttpResponse(variants_data, content_type='text/tsv')
+        response = FileResponse(variants_data, content_type='text/tsv')
 
         response['Content-Disposition'] = \
             'attachment; filename=variants.tsv'
