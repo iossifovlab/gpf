@@ -11,22 +11,19 @@
     <div class="col-sm-1">
       <i class="clickable fa fa-question-circle-o fa-2x" aria-hidden="false" (click)="showHelp()"></i>
     </div>
-</div>
-
-<div class="row">
-  <div class="col-sm-8">
-    <gpf-histogram
-      *ngIf="selectedGenomicScores"
-      width="650" height="145"
-      [bins]="selectedGenomicScores.bins"
-      [bars]="selectedGenomicScores.bars"
-      [domainMin]="domainMin"
-      [domainMax]="domainMax"
-      [logScaleX]="selectedGenomicScores.logScaleX"
-      [logScaleY]="selectedGenomicScores.logScaleY"
-      [rangesCounts]="rangesCounts | async"
-      [(rangeStart)]="rangeStart" [(rangeEnd)]="rangeEnd">
-    </gpf-histogram>
-    <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
-  </div>
+    <div class="col-sm-8">
+      <gpf-histogram
+        *ngIf="selectedGenomicScores"
+        width="650" height="145"
+        [bins]="selectedGenomicScores.bins"
+        [bars]="selectedGenomicScores.bars"
+        [domainMin]="domainMin"
+        [domainMax]="domainMax"
+        [logScaleX]="selectedGenomicScores.logScaleX"
+        [logScaleY]="selectedGenomicScores.logScaleY"
+        [rangesCounts]="rangesCounts | async"
+        [(rangeStart)]="rangeStart" [(rangeEnd)]="rangeEnd">
+      </gpf-histogram>
+      <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
+    </div>
 </div>
