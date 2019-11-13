@@ -1,6 +1,8 @@
 import os
 import copy
 
+from box import Box
+
 from dae.studies.people_group_config_parser import PeopleGroupConfigParser
 from dae.studies.genotype_browser_config_parser import \
     GenotypeBrowserConfigParser
@@ -73,6 +75,11 @@ class StudyConfigParser(StudyConfigParserBase):
 
     SECTION = 'study'
 
+    SPLIT_STR_LISTS = [
+        'files',
+        'tables',
+    ]
+
     @classmethod
     def read_and_parse_directory_configurations(
             cls, configurations_dir, defaults=None, fail_silently=False):
@@ -85,6 +92,17 @@ class StudyConfigParser(StudyConfigParserBase):
         return {c.id: c for c in configs}
 
     @classmethod
+    def _split_type_values_dict(cls, type_values_dict):
+        if type_values_dict is None:
+            return None
+
+        type_values_dict = [tv.split(':') for tv in type_values_dict]
+        res = {ft.strip(): fn.strip() for (ft, fn) in type_values_dict}
+        return Box(
+            res, camel_killer_box=True,
+            default_box=True, default_box_attr=None)
+
+    @classmethod
     def parse(cls, config):
         config = super(StudyConfigParser, cls).parse(config)
         if config is None:
@@ -94,6 +112,9 @@ class StudyConfigParser(StudyConfigParserBase):
         config.pub_meds = [config.pub_med] if config.pub_med else []
         config.studyTypes = \
             {config.study_type} if config.get('studyType', None) else set()
+
+        config.files = cls._split_type_values_dict(config.files)
+        config.tables = cls._split_type_values_dict(config.tables)
 
         assert config.name
         assert config.genotype_storage

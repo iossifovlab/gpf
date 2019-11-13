@@ -155,3 +155,11 @@ def test_quads_f1_config_genotype_browser_columns(
         assert gc_slot['name'] == e_slot['name']
         assert gc_slot['id'] == e_slot['id']
         assert gc_slot['format'] == e_slot['format']
+
+
+def test_quads_f1_files_and_tables(quads_f1_config):
+    assert quads_f1_config.files.vcf == 'data/quads_f1.vcf'
+    assert quads_f1_config.files.pedigree == 'data/quads_f1.ped'
+
+    assert quads_f1_config.tables.variant == 'f1_quads_variant'
+    assert quads_f1_config.tables.pedigree == 'f1_quads_pedigree'
