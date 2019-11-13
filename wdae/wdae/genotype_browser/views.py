@@ -19,10 +19,6 @@ logger = logging.getLogger(__name__)
 
 class QueryPreviewView(QueryBaseView):
 
-    MAX_SHOWN_VARIANTS = 1000
-
-    MAX_VARIANTS = 2000
-
     @expand_gene_set
     def post(self, request):
         LOGGER.info(log_filter(request, 'query v3 preview request: ' +
