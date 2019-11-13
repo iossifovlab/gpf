@@ -1,5 +1,5 @@
 <div class="histogram">
-	<svg [attr.width]="width" [attr.height]="height">
+	<svg [attr.width]="width" [attr.height]="height" viewBox="0 0 650 145">
 	  <g [attr.transform]="'translate(' + marginLeft +',' + marginTop + ')'">
 	    <g #histogramContainer transform="translate(0, 50)"> </g>
 		<g gpf-histogram-range-selector-line [width]="2" [(x)]="startX" [textOnRight]="false" [text]=beforeRangeText></g>
@@ -10,9 +10,10 @@
 
 	<div class="histogram-controls" *ngIf="showMinMaxInputWithDefaultValue">
 	    <div class="histogram-to">
-	        <label>To (Max: {{ max_value }})</label>
+	        <label for="to-field">To (Max: {{ max_value }})</label>
 			<div class="stepper">
-		        <input
+				<input
+				  id="to-field"
 		          class="steps form-control no-arrows"
 		          required type="number"
 		          [(ngModel)]="rangeEndWithoutNull"
@@ -22,9 +23,10 @@
 			</div>
 	    </div>
 	    <div class="histogram-from">
-	        <label>From (Min: {{ min_value }})</label>
+	        <label for="from-field">From (Min: {{ min_value }})</label>
 			<div class="stepper">
-		        <input
+				<input
+				  id="from-field"
 		          class="steps form-control no-arrows"
 		          required type="number"
 		          [(ngModel)]="rangeStartWithoutNull"
