@@ -1,24 +1,22 @@
 import os
 import numpy as np
 
-from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
 from django.conf import settings
 from django.http.response import HttpResponse
 
-from gpf_instance.gpf_instance import get_gpf_instance
-from users_api.authentication import SessionAuthenticationWithoutCSRF
-from datasets_api.permissions import IsDatasetAllowed
-
 from dae.pheno_browser.db import DbManager
 
+from query_base.query_base import QueryBaseView
 
-class PhenoBrowserBaseView(APIView):
+
+class PhenoBrowserBaseView(QueryBaseView):
 
     def __init__(self):
-        self.variants_db = get_gpf_instance().variants_db
+        super(PhenoBrowserBaseView, self).__init__()
+
         self.pheno_config = self.variants_db.pheno_factory.config
 
     def get_cache_dir(self, dbname):
@@ -50,8 +48,6 @@ class PhenoBrowserBaseView(APIView):
 
 
 class PhenoInstrumentsView(PhenoBrowserBaseView):
-    authentication_classes = (SessionAuthenticationWithoutCSRF, )
-    permission_classes = (IsDatasetAllowed,)
 
     def __init__(self):
         super(PhenoInstrumentsView, self).__init__()
@@ -78,8 +74,6 @@ def isnan(val):
 
 
 class PhenoMeasuresView(PhenoBrowserBaseView):
-    authentication_classes = (SessionAuthenticationWithoutCSRF, )
-    permission_classes = (IsDatasetAllowed,)
 
     def __init__(self):
         super(PhenoMeasuresView, self).__init__()
@@ -135,8 +129,6 @@ class PhenoMeasuresView(PhenoBrowserBaseView):
 
 
 class PhenoMeasuresDownload(PhenoBrowserBaseView):
-    authentication_classes = (SessionAuthenticationWithoutCSRF, )
-    permission_classes = (IsDatasetAllowed,)
 
     def __init__(self):
         super(PhenoMeasuresDownload, self).__init__()

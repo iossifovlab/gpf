@@ -7,24 +7,14 @@ import pyarrow as pa
 class HdfsHelpers(object):
 
     def __init__(self, hdfs_host, hdfs_port):
+        assert hdfs_host
+        assert hdfs_port
+
+        print("hdfs connecting to:", hdfs_host, hdfs_port)
 
         self.host = hdfs_host
         self.port = hdfs_port
         self.hdfs = pa.hdfs.connect(host=self.host, port=self.port)
-
-    @staticmethod
-    def get_hdfs(hdfs_host=None, hdfs_port=None):
-
-        if hdfs_host is None:
-            hdfs_host = "127.0.0.1"
-        hdfs_host = os.getenv("DAE_HDFS_HOST", hdfs_host)
-        if hdfs_port is None:
-            hdfs_port = 8020
-        hdfs_port = int(os.getenv("DAE_HDFS_PORT", hdfs_port))
-
-        print("hdfs connecting to:", hdfs_host, hdfs_port)
-
-        return HdfsHelpers(hdfs_host, hdfs_port)
 
     def exists(self, path):
         return self.hdfs.exists(path)
@@ -56,9 +46,29 @@ class HdfsHelpers(object):
         with open(local_filename, 'rb') as infile:
             self.hdfs.upload(hdfs_filename, infile)
 
+    def put_in_directory(self, local_file, hdfs_dirname):
+        basename = os.path.basename(local_file)
+        hdfs_filename = os.path.join(hdfs_dirname, basename)
+
+        self.put(local_file, hdfs_filename)
+
+    def put_content(self, local_path, hdfs_dirname):
+        assert os.path.exists(local_path)
+
+        if os.path.isdir(local_path):
+            for local_file in os.listdir(local_path):
+                self.put_in_directory(
+                    os.path.join(local_path, local_file), hdfs_dirname
+                )
+        else:
+            self.put_in_directory(local_path, hdfs_dirname)
+
     def get(self, hdfs_filename, local_filename):
         # assert os.path.exists(local_filename)
         assert self.exists(hdfs_filename)
 
         with open(local_filename, "wb") as outfile:
             self.hdfs.download(hdfs_filename, outfile)
+
+    def list_dir(self, hdfs_dirname):
+        return self.hdfs.ls(hdfs_dirname)

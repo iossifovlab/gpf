@@ -1,19 +1,20 @@
 import pytest
 
+import os
 from box import Box
 
-from dae.conftest import impala_test_dbname
+from dae.tools.dae2parquet import parse_cli_arguments, dae_build_makefile, \
+    dae2parquet, denovo2parquet
 
-from dae.tools.dae2parquet import parse_cli_arguments, import_dae_denovo, \
-    dae_build_transmitted, dae_build_makefile
-
-from dae.backends.impala.impala_variants import ImpalaFamilyVariants
+from dae.pedigrees.pedigree_reader import PedigreeReader
+from dae.backends.impala.parquet_io import ParquetManager
 from dae.backends.import_commons import construct_import_annotation_pipeline
+from dae.backends.dae.loader import RawDaeLoader
 
 from dae.annotation.tools.file_io_parquet import ParquetReader
 
 from dae.RegionOperations import Region
-
+from dae.utils.helpers import pedigree_from_path
 
 def test_dae2parquet_denovo(
         dae_denovo_config, annotation_pipeline_config,
@@ -29,6 +30,7 @@ def test_dae2parquet_denovo(
         dae_denovo_config.denovo_filename,
     ]
     genome = genomes_db.get_genome()
+    parquet_manager = ParquetManager(dae_config_fixture.studies_db.dir)
 
     argv = parse_cli_arguments(global_gpf_instance, argv)
 
@@ -40,14 +42,19 @@ def test_dae2parquet_denovo(
             'scores_dirname': annotation_scores_dirname,
         }})
 
-    denovo_parquet = import_dae_denovo(
-        dae_config_fixture, genome, annotation_pipeline,
-        argv.families, argv.variants, family_format=argv.family_format,
+    ped_df, study_id = pedigree_from_path(
+        argv.families, family_format=argv.family_format)
+
+    denovo_df = RawDaeLoader.load_dae_denovo_file(argv.variants, genome)
+
+    parquet_config = denovo2parquet(
+        study_id, ped_df, denovo_df,
+        parquet_manager, annotation_pipeline, genome,
         output=argv.output
     )
 
     summary = ParquetReader(Box({
-        'infile': denovo_parquet.files.variant,
+        'infile': parquet_config.files.variant,
     }, default_box=True, default_box_attr=None))
     summary._setup()
     summary._cleanup()
@@ -81,6 +88,7 @@ def test_dae2parquet_transmitted(
         dae_transmitted_config.toomany_filename,
     ]
     genome = genomes_db.get_genome()
+    parquet_manager = ParquetManager(dae_config_fixture.studies_db.dir)
 
     argv = parse_cli_arguments(global_gpf_instance, argv)
 
@@ -92,13 +100,12 @@ def test_dae2parquet_transmitted(
             'scores_dirname': annotation_scores_dirname,
         }})
 
-    transmitted_parquet = dae_build_transmitted(
-        dae_config_fixture, annotation_pipeline, genome, argv, defaults={
-            'scores_dirname': annotation_scores_dirname,
-        })
+    parquet_config = dae2parquet(
+        dae_config_fixture, parquet_manager, annotation_pipeline, genome, argv
+    )
 
     summary = ParquetReader(Box({
-        'infile': transmitted_parquet.files.variant,
+        'infile': parquet_config.files.variant,
     }, default_box=True, default_box_attr=None))
     summary._setup()
     summary._cleanup()
@@ -142,96 +149,148 @@ def test_dae2parquet_make(
     dae_build_makefile(dae_config_fixture, genome, argv)
 
 
-# @pytest.fixture
-# def dae_iossifov2014_thrift(
-#         request, dae_iossifov2014_config, annotation_scores_dirname,
-#         temp_dirname, global_gpf_instance, dae_config_fixture, genomes_db,
-#         test_impala_helpers, test_hdfs):
+@pytest.fixture(scope='session')
+def dae_iossifov2014_import(
+        request, dae_iossifov2014_config, annotation_scores_dirname,
+        global_gpf_instance, dae_config_fixture, genomes_db,
+        test_hdfs, impala_genotype_storage, parquet_manager):
 
-#     temp_dirname = test_hdfs.tempdir(prefix='variants_', suffix='_data')
-#     test_hdfs.mkdir(temp_dirname)
+    temp_dirname = test_hdfs.tempdir(prefix='variants_', suffix='_data')
+    test_hdfs.mkdir(temp_dirname)
 
-#     def fin():
-#         test_hdfs.delete(temp_dirname, recursive=True)
-#     request.addfinalizer(fin)
+    def fin():
+        test_hdfs.delete(temp_dirname, recursive=True)
+    request.addfinalizer(fin)
 
-#     def build(annotation_config):
-#         config = dae_iossifov2014_config
-#         argv = [
-#             'denovo',
-#             '--annotation', annotation_config,
-#             '-o', temp_dirname,
-#             '-f', 'simple',
-#             config.family_filename,
-#             config.denovo_filename,
-#         ]
-#         genome = genomes_db.get_genome()
-#         gene_models = genomes_db.get_gene_models()
+    def build(annotation_config, db):
+        impala_genotype_storage.impala_helpers.drop_database(db)
+        impala_genotype_storage.storage_config.impala.db = db
 
-#         argv = parse_cli_arguments(global_gpf_instance, argv)
+        annotation_temp_dir = os.path.join(
+            temp_dirname,
+            os.path.split(os.path.splitext(annotation_config)[0])[-1]
+        )
 
-#         assert argv is not None
-#         assert argv.type == 'denovo'
+        config = dae_iossifov2014_config
+        print("dae_iossifov2014_config:", config)
 
-#         annotation_pipeline = construct_import_annotation_pipeline(
-#             dae_config_fixture, genomes_db, argv, defaults={'values': {
-#                 'scores_dirname': annotation_scores_dirname,
-#             }})
+        argv = [
+            'denovo',
+            '--annotation', annotation_config,
+            '-o', annotation_temp_dir,
+            '-f', 'simple',
+            config.family_filename,
+            config.denovo_filename,
+        ]
+        genome = genomes_db.get_genome()
 
-#         denovo_parquet = import_dae_denovo(
-#             dae_config_fixture, genome, annotation_pipeline,
-#             argv.families, argv.variants, family_format=argv.family_format,
-#             output=argv.output, filesystem=test_hdfs.filesystem()
-#         )
-#         assert denovo_parquet is not None
+        argv = parse_cli_arguments(global_gpf_instance, argv)
 
-#         denovo_parquet['db'] = impala_test_dbname()
-#         test_impala_helpers.import_variants(denovo_parquet)
+        assert argv is not None
+        assert argv.type == 'denovo'
 
-#         fvars = ImpalaFamilyVariants(
-#             denovo_parquet, test_impala_helpers.connection, gene_models
-#         )
-#         return fvars
+        annotation_pipeline = construct_import_annotation_pipeline(
+            dae_config_fixture, genomes_db, argv, defaults={'values': {
+                'scores_dirname': annotation_scores_dirname,
+            }})
 
-#     return build
+        filename = os.path.basename(argv.families)
+        study_id = os.path.splitext(filename)[0]
+
+        print("family filename:", argv.families, "; variants:", argv.variants)
+        ped_df = PedigreeReader.load_simple_family_file(argv.families)
+        denovo_df = RawDaeLoader.load_dae_denovo_file(argv.variants, genome)
+
+        parquet_config = denovo2parquet(
+            study_id, ped_df, denovo_df,
+            parquet_manager, annotation_pipeline, genome,
+            output=argv.output
+        )
+
+        assert parquet_config is not None
+
+        impala_genotype_storage.impala_load_study(
+            study_id,
+            os.path.join(annotation_temp_dir, 'pedigree'),
+            os.path.join(annotation_temp_dir, 'variants')
+        )
+
+        fvars = impala_genotype_storage.get_backend(study_id, genomes_db)
+        return fvars
+
+    return build
 
 
-# @pytest.mark.parametrize("annotation_config", [
-#     'annotation_pipeline_config',
-#     'annotation_pipeline_default_config'
-# ])
-# @pytest.mark.parametrize("region,cshl_location,effect_type", [
-#     (Region('15', 80137553, 80137553), '15:80137554', 'noEnd'),
-#     (Region('12', 116418553, 116418553), '12:116418554', 'splice-site'),
-#     (Region('3', 56627767, 56627767), '3:56627768', 'splice-site'),
-#     (Region('3', 195475903, 195475903), '3:195475904', 'splice-site'),
-#     (Region('21', 38877891, 38877891), '21:38877892', 'splice-site'),
-#     (Region('15', 43694048, 43694048), '15:43694049', 'splice-site'),
-#     (Region('12', 93792632, 93792632), '12:93792633', 'splice-site'),
-#     (Region('4', 83276456, 83276456), '4:83276456', 'splice-site'),
-#     (Region('3', 195966607, 195966607), '3:195966608', 'splice-site'),
-#     (Region('3', 97611837, 97611837), '3:97611838', 'splice-site'),
-#     (Region('15', 31776803, 31776803), '15:31776804', 'no-frame-shift'),
-#     (Region('3', 151176416, 151176416), '3:151176417', 'no-frame-shift'),
-# ])
-# def test_dae2parquet_iossifov2014_variant_coordinates(
-#         dae_iossifov2014_thrift, fixture_select,
-#         annotation_config,
-#         region, cshl_location, effect_type):
+@pytest.fixture(scope='session')
+def dae_iossifov2014_thrift_annotation_pipeline_config(
+        dae_iossifov2014_import, annotation_pipeline_config):
+    assert dae_iossifov2014_import is not None
+    fvars = dae_iossifov2014_import(
+        annotation_pipeline_config, 'impala_test_annotation_db'
+    )
 
-#     assert dae_iossifov2014_thrift is not None
-#     annotation_pipeline_config = fixture_select(annotation_config)
-#     fvars = dae_iossifov2014_thrift(annotation_pipeline_config)
+    return fvars
 
-#     vs = fvars.query_variants(regions=[region])
-#     vs = list(vs)
-#     print(vs)
-#     assert len(vs) == 1
-#     v = vs[0]
-#     assert len(v.alt_alleles) == 1
-#     aa = v.alt_alleles[0]
 
-#     assert aa.chromosome == region.chrom
-#     assert aa.position == region.start
-#     assert aa.cshl_location == cshl_location
-#     assert aa.effect.worst == effect_type
+@pytest.fixture(scope='session')
+def dae_iossifov2014_thrift_annotation_pipeline_default_config(
+        dae_iossifov2014_import, annotation_pipeline_default_config):
+    assert dae_iossifov2014_import is not None
+    fvars = dae_iossifov2014_import(
+        annotation_pipeline_default_config, 'impala_test_import_annotation_db'
+    )
+
+    return fvars
+
+
+@pytest.fixture(scope='session')
+def fixture_select(
+        dae_iossifov2014_thrift_annotation_pipeline_config,
+        dae_iossifov2014_thrift_annotation_pipeline_default_config):
+    def build(fixture_name):
+        if fixture_name == \
+                'dae_iossifov2014_thrift_annotation_pipeline_config':
+            return dae_iossifov2014_thrift_annotation_pipeline_config
+        elif fixture_name == \
+                'dae_iossifov2014_thrift_annotation_pipeline_default_config':
+            return dae_iossifov2014_thrift_annotation_pipeline_default_config
+        else:
+            raise ValueError(fixture_name)
+    return build
+
+
+@pytest.mark.parametrize('variants_iterator', [
+    'dae_iossifov2014_thrift_annotation_pipeline_config',
+    'dae_iossifov2014_thrift_annotation_pipeline_default_config'
+])
+@pytest.mark.parametrize('region,cshl_location,effect_type', [
+    (Region('15', 80137553, 80137553), '15:80137554', 'noEnd'),
+    (Region('12', 116418553, 116418553), '12:116418554', 'splice-site'),
+    (Region('3', 56627767, 56627767), '3:56627768', 'splice-site'),
+    (Region('3', 195475903, 195475903), '3:195475904', 'splice-site'),
+    (Region('21', 38877891, 38877891), '21:38877892', 'splice-site'),
+    (Region('15', 43694048, 43694048), '15:43694049', 'splice-site'),
+    (Region('12', 93792632, 93792632), '12:93792633', 'splice-site'),
+    (Region('4', 83276456, 83276456), '4:83276456', 'splice-site'),
+    (Region('3', 195966607, 195966607), '3:195966608', 'splice-site'),
+    (Region('3', 97611837, 97611837), '3:97611838', 'splice-site'),
+    (Region('15', 31776803, 31776803), '15:31776804', 'no-frame-shift'),
+    (Region('3', 151176416, 151176416), '3:151176417', 'no-frame-shift'),
+])
+def test_dae2parquet_iossifov2014_variant_coordinates(
+        fixture_select, variants_iterator,
+        region, cshl_location, effect_type):
+    fvars = fixture_select(variants_iterator)
+
+    vs = fvars.query_variants(regions=[region])
+    vs = list(vs)
+    print(vs)
+    assert len(vs) == 1
+    v = vs[0]
+    assert len(v.alt_alleles) == 1
+    aa = v.alt_alleles[0]
+
+    assert aa.chromosome == region.chrom
+    assert aa.position == region.start
+    assert aa.cshl_location == cshl_location
+    assert aa.effect.worst == effect_type

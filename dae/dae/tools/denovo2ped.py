@@ -38,10 +38,10 @@ def parse_cli_arguments(argv=sys.argv[1:]):
         help='column name for status. Default is \'status\''
     )
     parser.add_argument(
-        '-g', '--genderColumn',
-        type=str, default='gender',
-        dest='gender', metavar='genderColumn',
-        help='column name for gender. Default is \'gender\''
+        '-g', '--sexColumn',
+        type=str, default='sex',
+        dest='sex', metavar='sexColumn',
+        help='column name for sex. Default is \'sex\''
     )
 
     args = parser.parse_args(argv)
@@ -91,7 +91,7 @@ def denovo2ped(args):
     families['momId'] = '0'
     families['dadId'] = '0'
     families['role'] = 'prb'
-    families['gender'] = handle_column(args['gender'], variants, 'U')
+    families['sex'] = handle_column(args['sex'], variants, 'U')
     families['status'] = handle_column(args['status'], variants, 2)
 
     families.to_csv(args['outputFile'], sep='\t', index=False)

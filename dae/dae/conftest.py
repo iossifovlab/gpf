@@ -1,9 +1,9 @@
+import pytest
 
 import os
-import pytest
+import glob
 import shutil
 import tempfile
-import glob
 
 import pandas as pd
 from io import StringIO
@@ -15,15 +15,27 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.annotation.annotation_pipeline import PipelineAnnotator
 
 from dae.backends.configure import Configure
+from dae.backends.dae.loader import RawDaeLoader
 from dae.backends.dae.raw_dae import RawDAE, RawDenovo
-from dae.backends.vcf.raw_vcf import RawFamilyVariants
+
+from dae.backends.vcf.raw_vcf import RawVcfVariants
+from dae.backends.vcf.loader import RawVcfLoader
+
 from dae.backends.vcf.annotate_allele_frequencies import \
     VcfAlleleFrequencyAnnotator
-from dae.backends.vcf.builder import variants_builder
 
 from dae.backends.import_commons import \
     construct_import_annotation_pipeline
 from dae.tools.vcf2parquet import import_vcf
+from dae.pedigrees.pedigree_reader import PedigreeReader
+from dae.pedigrees.family import FamiliesData
+from dae.utils.helpers import pedigree_from_path
+from dae.backends.impala.parquet_io import ParquetManager
+from dae.backends.storage.impala_genotype_storage import ImpalaGenotypeStorage
+
+from dae.backends.import_commons import construct_import_annotation_pipeline
+
+from dae.tools.vcf2parquet import vcf2parquet
 
 
 def relative_to_this_test_folder(path):
@@ -37,6 +49,11 @@ def relative_to_this_test_folder(path):
 @pytest.fixture(scope='session')
 def global_gpf_instance():
     return GPFInstance()
+
+
+@pytest.fixture(scope='session')
+def default_dae_config(global_gpf_instance):
+    return global_gpf_instance.dae_config
 
 
 @pytest.fixture(scope='session')
@@ -146,6 +163,29 @@ def annotation_pipeline_default_config(dae_config_fixture):
 
 
 @pytest.fixture(scope='session')
+def default_annotation_pipeline(
+        default_dae_config, genomes_db):
+    filename = default_dae_config.annotation.conf_file
+
+    options = Box({
+            'default_arguments': None,
+            'vcf': True,
+            'r': 'reference',
+            'a': 'alternative',
+            'c': 'chrom',
+            'p': 'position',
+        },
+        default_box=True,
+        default_box_attr=None)
+
+    pipeline = PipelineAnnotator.build(
+        options, filename, '.', genomes_db,
+        defaults={})
+
+    return pipeline
+
+
+@pytest.fixture(scope='session')
 def annotation_scores_dirname():
     filename = relative_to_this_test_folder(
         'fixtures/annotation_pipeline/')
@@ -215,13 +255,19 @@ def dae_denovo_config():
 @pytest.fixture
 def dae_denovo(
         dae_denovo_config, default_genome, annotation_pipeline_internal):
-    denovo = RawDenovo(
-        dae_denovo_config.denovo_filename,
-        dae_denovo_config.family_filename,
-        genome=default_genome,
-        annotator=annotation_pipeline_internal)
-    denovo.load_simple_families()
 
+    ped_df = PedigreeReader.load_simple_family_file(
+        dae_denovo_config.family_filename
+    )
+    denovo_df = RawDaeLoader.load_dae_denovo_file(
+        dae_denovo_config.denovo_filename, default_genome)
+
+    denovo_df = annotation_pipeline_internal.annotate_df(denovo_df)
+
+    denovo = RawDaeLoader.build_raw_denovo(
+        ped_df,
+        denovo_df
+    )
     return denovo
 
 
@@ -237,16 +283,21 @@ def dae_transmitted_config():
 @pytest.fixture
 def dae_transmitted(
         dae_transmitted_config, default_genome, annotation_pipeline_internal):
-    denovo = RawDAE(
+
+    ped_df = PedigreeReader.load_simple_family_file(
+        dae_transmitted_config.family_filename
+    )
+    families = FamiliesData.from_pedigree_df(ped_df)
+
+    transmitted = RawDAE(
+        families,
         dae_transmitted_config.summary_filename,
         dae_transmitted_config.toomany_filename,
-        dae_transmitted_config.family_filename,
-        region=None,
         genome=default_genome,
-        annotator=annotation_pipeline_internal)
-    denovo.load_simple_families()
+        region=None,
+    )
 
-    return denovo
+    return transmitted
 
 
 @pytest.fixture
@@ -262,14 +313,13 @@ def vcf_import_config():
 def vcf_import_raw(
         vcf_import_config, default_genome, annotation_pipeline_internal,
         genomes_db):
-    freq_annotator = VcfAlleleFrequencyAnnotator()
 
-    fvars = RawFamilyVariants(
-        prefix=vcf_import_config.prefix,
-        annotator=freq_annotator,
-        genomes_db=genomes_db
-    )
+    ped_df = PedigreeReader.load_pedigree_file(vcf_import_config.pedigree)
+    fvars = RawVcfLoader.load_raw_vcf_variants(
+        ped_df, vcf_import_config.vcf)
     fvars.annot_df = annotation_pipeline_internal.annotate_df(fvars.annot_df)
+    RawVcfLoader.save_annotation_file(
+        fvars.annot_df, vcf_import_config.annotation)
 
     return fvars
 
@@ -303,21 +353,33 @@ def dae_iossifov2014_config():
 def dae_iossifov2014(
         dae_iossifov2014_config, default_genome, annotation_pipeline_internal):
     config = dae_iossifov2014_config
+
+    ped_df = PedigreeReader.load_pedigree_file(
+        config.family_filename
+    )
+
     denovo = RawDenovo(
         config.denovo_filename,
-        config.family_filename,
+        ped_df,
         genome=default_genome,
-        annotator=annotation_pipeline_internal)
-    denovo.load_simple_families()
+        annotator=annotation_pipeline_internal
+    )
 
     return denovo
 
 
 @pytest.fixture(scope='session')
-def variants_vcf(genomes_db):
+def variants_vcf(genomes_db, default_annotation_pipeline):
     def builder(path):
-        a_path = os.path.join(relative_to_this_test_folder('fixtures'), path)
-        fvars = variants_builder(a_path, genomes_db, force_reannotate=True)
+        prefix = os.path.join(relative_to_this_test_folder('fixtures'), path)
+        conf = Configure.from_prefix_vcf(prefix)
+        ped_df = PedigreeReader.load_pedigree_file(conf.vcf.pedigree)
+        fvars = RawVcfLoader.load_raw_vcf_variants(
+            ped_df, conf.vcf.vcf
+        )
+        fvars.annot_df = default_annotation_pipeline.annotate_df(fvars.annot_df)
+        RawVcfLoader.save_annotation_file(fvars.annot_df, conf.vcf.annotation)
+
         return fvars
     return builder
 
@@ -351,10 +413,15 @@ def config_dae():
 def raw_dae(config_dae, default_genome):
     def builder(path, region=None):
         config = config_dae(path)
+
+        ped_df = PedigreeReader.load_simple_family_file(
+            dae_transmitted_config.family_filename
+        )
+
         dae = RawDAE(
             config.dae.summary_filename,
             config.dae.toomany_filename,
-            config.dae.family_filename,
+            ped_df,
             region=region,
             genome=default_genome,
             annotator=None)
@@ -376,11 +443,16 @@ def config_denovo():
 def raw_denovo(config_denovo, default_genome):
     def builder(path):
         config = config_denovo(path)
-        denovo = RawDenovo(
-            config.denovo.denovo_filename,
-            config.denovo.family_filename,
-            genome=default_genome,
-            annotator=None)
+
+        ped_df = PedigreeReader.load_simple_family_file(
+            config.denovo.family_filename
+        )
+        denovo_df = RawDaeLoader.load_dae_denovo_file(
+            config.denovo.denovo_filename, default_genome)
+        denovo = RawDaeLoader.build_raw_denovo(
+            ped_df,
+            denovo_df
+        )
         return denovo
     return builder
 
@@ -401,20 +473,54 @@ def reimport(request):
     return bool(request.config.getoption('--reimport'))
 
 
+@pytest.fixture(scope='session')
+def hdfs_host():
+    return os.environ.get('DAE_HDFS_HOST', '127.0.0.1')
+
+
+@pytest.fixture(scope='session')
+def impala_host():
+    return os.environ.get('DAE_IMPALA_HOST', '127.0.0.1')
+
+
 # Impala backend
 @pytest.fixture(scope='session')
-def test_hdfs(request):
+def test_hdfs(request, hdfs_host):
     from dae.backends.impala.hdfs_helpers import HdfsHelpers
-    hdfs = HdfsHelpers.get_hdfs()
+    hdfs = HdfsHelpers(hdfs_host, 8020)
     return hdfs
 
 
 @pytest.fixture(scope='session')
-def test_impala_helpers(request):
+def test_impala_helpers(request, impala_host):
     from dae.backends.impala.impala_helpers import ImpalaHelpers
-    helpers = ImpalaHelpers()
+    helpers = ImpalaHelpers(impala_host=impala_host, impala_port=21050)
 
     return helpers
+
+
+@pytest.fixture(scope='session')
+def impala_genotype_storage(hdfs_host, impala_host):
+    storage_config = Box({
+        'type': 'impala',
+        'impala': {
+            'host': impala_host,
+            'port': 21050,
+            'db': impala_test_dbname(),
+        },
+        'hdfs': {
+            'host': hdfs_host,
+            'port': 8020,
+            'base_dir': '/tmp'
+        }
+    })
+
+    return ImpalaGenotypeStorage(storage_config)
+
+
+@pytest.fixture(scope='session')
+def parquet_manager(dae_config_fixture):
+    return ParquetManager(dae_config_fixture.studies_db.dir)
 
 
 def collect_vcf(dirname):
@@ -427,29 +533,13 @@ def collect_vcf(dirname):
     return result
 
 
-def build_impala_config(vcf_config):
-    study_id = os.path.basename(
-        os.path.splitext(vcf_config.pedigree)[0])
-
-    conf = {
-        'impala': {
-            'db': impala_test_dbname(),
-            'tables': {
-                'variant': '{}_variant'.format(study_id),
-                'pedigree': '{}_pedigree'.format(study_id),
-            }
-        }
-    }
-    return Configure(conf).impala
-
-
 DATA_IMPORT_COUNT = 0
 
 
 @pytest.fixture(scope='session')
 def data_import(
-        request, test_hdfs, test_impala_helpers, reimport, dae_config_fixture,
-        genomes_db):
+        request, test_hdfs, test_impala_helpers, parquet_manager,
+        impala_genotype_storage, reimport, dae_config_fixture, genomes_db):
 
     global DATA_IMPORT_COUNT
     DATA_IMPORT_COUNT += 1
@@ -477,39 +567,52 @@ def data_import(
 
         for vcf in vcf_configs:
             print('importing vcf:', vcf.vcf)
-            impala = build_impala_config(vcf)
+
+            filename = os.path.basename(vcf.pedigree)
+            study_id = os.path.splitext(filename)[0]
+
+            impala = impala_genotype_storage._impala_storage_config(study_id)
             if not reimport and \
                     test_impala_helpers.check_table(
                         impala_test_dbname(), impala.tables.variant) and \
                     test_impala_helpers.check_table(
                         impala_test_dbname(), impala.tables.pedigree):
                 continue
-            impala_config = import_vcf(
-                dae_config_fixture, genomes_db, annotation_pipeline,
-                vcf.pedigree, vcf.vcf,
-                region=None, bucket_index=0,
-                output=temp_dirname,
-                filesystem=test_hdfs.filesystem())
-            impala_config['db'] = impala_test_dbname()
-            test_impala_helpers.import_variants(impala_config)
+
+            ped_df, study_id = pedigree_from_path(vcf.pedigree)
+
+            # impala_config = import_vcf(
+            #     dae_config_fixture, genomes_db, annotation_pipeline,
+            #     ped_df, vcf.vcf, study_id,
+            #     region=None, bucket_index=0,
+            #     output=temp_dirname,
+            #     filesystem=test_hdfs.filesystem())
+            # impala_config['db'] = impala_test_dbname()
+            # test_impala_helpers.import_variants(impala_config)
+            study_temp_dirname = os.path.join(temp_dirname, study_id)
+
+            vcf2parquet(
+                study_id, ped_df, vcf.vcf,
+                genomes_db, annotation_pipeline, parquet_manager,
+                output=study_temp_dirname, bucket_index=0, region=None
+            )
+
+            impala_genotype_storage.impala_load_study(
+                study_id,
+                os.path.join(study_temp_dirname, 'pedigree'),
+                os.path.join(study_temp_dirname, 'variants')
+            )
 
     build('backends/')
     return True
 
 
 @pytest.fixture(scope='session')
-def variants_impala(
-        request, data_import, test_impala_helpers, default_gene_models):
+def variants_impala(request, data_import, impala_genotype_storage, genomes_db):
 
     def builder(path):
-        from dae.backends.impala.impala_variants import ImpalaFamilyVariants
-
-        vcf_prefix = relative_to_this_test_folder(
-            os.path.join('fixtures', path))
-        vcf_config = Configure.from_prefix_vcf(vcf_prefix).vcf
-        impala_config = build_impala_config(vcf_config)
-        fvars = ImpalaFamilyVariants(
-            impala_config, test_impala_helpers.connection, default_gene_models
-        )
+        study_id = os.path.basename(path)
+        fvars = impala_genotype_storage.get_backend(study_id, genomes_db)
         return fvars
+
     return builder

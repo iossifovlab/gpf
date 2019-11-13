@@ -30,7 +30,8 @@ def use_common_reports(common_report_facade):
         if os.path.exists(temp_file):
             os.remove(temp_file)
 
-    common_report_facade.generate_all_common_reports()
+    common_report_facade.generate_common_report('Study1')
+    common_report_facade.generate_common_report('study4')
 
     yield
 
@@ -43,6 +44,6 @@ def use_common_reports(common_report_facade):
 def mock_gpf_instance(db, mocker, gpf_instance):
     reload_datasets(gpf_instance.variants_db)
     mocker.patch(
-        'common_reports_api.views.get_gpf_instance',
+        'query_base.query_base.get_gpf_instance',
         return_value=gpf_instance
     )

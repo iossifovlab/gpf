@@ -13,7 +13,7 @@ def test_study_config_year(study_configs):
 
 
 @pytest.mark.parametrize('option_name,expected_value', [
-    ('file_format', 'vcf'),
+    ('genotype_storage', 'genotype_filesystem'),
     ('name', 'QUADS_F1'),
     ('id', 'quads_f1'),
     ('description', 'QUADS F1'),
@@ -28,7 +28,7 @@ def test_quads_f1_config_dict(quads_f1_config, option_name, expected_value):
 
 
 @pytest.mark.parametrize('option_name,expected_value', [
-    ('file_format', 'vcf'),
+    ('genotype_storage', 'genotype_filesystem'),
     ('name', 'QUADS_F1'),
     ('id', 'quads_f1'),
     ('description', 'QUADS F1'),

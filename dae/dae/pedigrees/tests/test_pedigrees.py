@@ -7,7 +7,7 @@ NO_RANK = -3673473456
 
 
 def test_pedigree_member(member4):
-    assert member4.id == 'id2'
+    assert member4.person_id == 'id2'
     assert member4.role == Role.prb
 
     member = member4.get_member_dataframe().to_dict()
@@ -56,7 +56,7 @@ def test_mating_unit(mating_unit2, individual4, individual5, individual6):
 def test_individual(individual4, individual5, individual6, mating_unit2):
     individual5.mating_units.append(mating_unit2)
     individual6.mating_units.append(mating_unit2)
-    assert individual5.member.id == 'mom2'
+    assert individual5.member.person_id == 'mom2'
 
     assert len(individual5.individual_set()) == 1
     assert individual5 in individual5.individual_set()
@@ -115,29 +115,29 @@ def test_family_connections_add_missing_members(family2, family3):
     assert len(family2.members) == 3
     FamilyConnections.add_missing_members(family2)
     assert len(family2.members) == 3
-    ids = [member.id for member in family2.members]
+    ids = [member.person_id for member in family2.members]
     assert len(ids) == 3
     assert sorted(ids) == sorted(['id2', 'mom2', 'dad2'])
 
     assert len(family3.members) == 1
     FamilyConnections.add_missing_members(family3)
     assert len(family3.members) == 3
-    ids = [member.id for member in family3.members]
+    ids = [member.person_id for member in family3.members]
     assert len(ids) == 3
     assert sorted(ids) == sorted(['id3', 'mom3', 'mom3.father'])
 
     family2._members = list(filter(
-        lambda member: member.id != 'mom2', family2.members
+        lambda member: member.person_id != 'mom2', family2.members
     ))
     prb = list(filter(
-        lambda member: member.id == 'id2', family2.members
+        lambda member: member.person_id == 'id2', family2.members
     ))
     assert len(prb) == 1
     prb[0].mother = '0'
     assert len(family2.members) == 2
     FamilyConnections.add_missing_members(family2)
     assert len(family2.members) == 3
-    ids = [member.id for member in family2.members]
+    ids = [member.person_id for member in family2.members]
     assert len(ids) == 3
     assert sorted(ids) == sorted(['id2', 'dad2', 'dad2.mother'])
 
@@ -155,7 +155,7 @@ def test_family_connections_from_pedigree_simple(family2):
 
     individuals_with_rank = family_connections.get_individuals_with_rank(1)
     assert len(individuals_with_rank) == 1
-    assert 'id2' in [el.member.id for el in individuals_with_rank]
+    assert 'id2' in [el.member.person_id for el in individuals_with_rank]
 
 
 def test_family_connections_from_pedigree_add_members_one_member(family3):
@@ -172,7 +172,7 @@ def test_family_connections_from_pedigree_add_members_one_member(family3):
 
     individuals_with_rank = family_connections.get_individuals_with_rank(1)
     assert len(individuals_with_rank) == 1
-    assert 'id3' in [el.member.id for el in individuals_with_rank]
+    assert 'id3' in [el.member.person_id for el in individuals_with_rank]
 
 
 def test_family_connections_from_pedigree_one_member(family3):
@@ -182,10 +182,10 @@ def test_family_connections_from_pedigree_one_member(family3):
 
 def test_family_connections_from_pedigree_add_members(family2):
     family2._members = list(filter(
-        lambda member: member.id != 'mom2', family2.members
+        lambda member: member.person_id != 'mom2', family2.members
     ))
     prb = list(filter(
-        lambda member: member.id == 'id2', family2.members
+        lambda member: member.person_id == 'id2', family2.members
     ))
     assert len(prb) == 1
     prb[0].mother = '0'
@@ -202,15 +202,15 @@ def test_family_connections_from_pedigree_add_members(family2):
 
     individuals_with_rank = family_connections.get_individuals_with_rank(1)
     assert len(individuals_with_rank) == 1
-    assert 'id2' in [el.member.id for el in individuals_with_rank]
+    assert 'id2' in [el.member.person_id for el in individuals_with_rank]
 
 
 def test_family_connections_from_pedigree_do_not_add_members(family2):
     family2._members = list(filter(
-        lambda member: member.id != 'mom2', family2.members
+        lambda member: member.person_id != 'mom2', family2.members
     ))
     prb = list(filter(
-        lambda member: member.id == 'id2', family2.members
+        lambda member: member.person_id == 'id2', family2.members
     ))
     assert len(prb) == 1
     prb[0].mother = '0'

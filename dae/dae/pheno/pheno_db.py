@@ -4,7 +4,7 @@ from sqlalchemy import not_
 
 from collections import defaultdict, OrderedDict
 
-from dae.variants.family import Person, Family
+from dae.pedigrees.family import Person, Family
 from dae.pheno.db import DbManager
 from dae.pheno.common import MeasureType
 from dae.variants.attributes import Sex, Status, Role
@@ -306,7 +306,7 @@ class PhenoDB(object):
             person_id = row['person_id']
             family_id = row['family_id']
 
-            p = Person(row)
+            p = Person(**row)
             p.person_id = person_id
             p.family_id = family_id
             assert row['role'] in Role, \

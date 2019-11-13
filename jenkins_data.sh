@@ -1,5 +1,7 @@
 #!/bin/sh
 
+
+
 dir_setup() {
     data_tar_time=`stat -c %Y data-hg19-startup-latest.tar.gz`
     data_dir_time=`stat -c %Y data-hg19-startup`

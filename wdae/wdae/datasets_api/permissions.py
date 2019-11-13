@@ -8,18 +8,30 @@ from guardian.utils import get_anonymous_user
 class IsDatasetAllowed(permissions.BasePermission):
 
     def has_permission(self, request, view):
-        if 'dataset_id' not in request.query_params:
+        dataset_id = request.query_params.get('dataset_id', None)
+        if dataset_id is None:
+            dataset_id = request.query_params.get('datasetId', None)
+        if dataset_id is None:
+            dataset_id = request.data.get('datasetId', None)
+        if dataset_id is None:
+            dataset_id = request.parser_context. \
+                get('kwargs', {}).get('common_report_id', None)
+
+        if dataset_id is None:
             return True
 
-        return self.has_object_permission(
-            request, view, request.query_params['dataset_id'])
+        return self.has_object_permission(request, view, dataset_id)
 
     def has_object_permission(self, request, view, dataset_id):
         return self.user_has_permission(request.user, dataset_id)
 
     @staticmethod
     def user_has_permission(user, dataset_id):
-        dataset_object = Dataset.objects.get(dataset_id=dataset_id)
+        try:
+            dataset_object = Dataset.objects.get(dataset_id=dataset_id)
+        except Dataset.DoesNotExist:
+            print("dataset ", dataset_id, "does not exists...")
+            return False
         return user.has_perm('datasets_api.view', dataset_object) or\
             get_anonymous_user().has_perm('datasets_api.view', dataset_object)
 

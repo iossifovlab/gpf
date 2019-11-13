@@ -1,18 +1,18 @@
-from rest_framework import views, status
+from rest_framework import status
 from rest_framework.response import Response
 from django.http.response import StreamingHttpResponse
 
 import numpy as np
 
-from gpf_instance.gpf_instance import get_gpf_instance
-
-from users_api.authentication import SessionAuthenticationWithoutCSRF
+from query_base.query_base import QueryBaseView
 
 
-class GeneWeightsListView(views.APIView):
+class GeneWeightsListView(QueryBaseView):
 
     def __init__(self):
-        self.weights_factory = get_gpf_instance().weights_factory
+        super(GeneWeightsListView, self).__init__()
+
+        self.weights_factory = self.gpf_instance.weights_factory
 
     def get_gene_weights(self, weights):
         return [
@@ -34,10 +34,12 @@ class GeneWeightsListView(views.APIView):
         return Response(gene_weights)
 
 
-class GeneWeightsDownloadView(views.APIView):
+class GeneWeightsDownloadView(QueryBaseView):
 
     def __init__(self):
-        self.weights_factory = get_gpf_instance().weights_factory
+        super(GeneWeightsDownloadView, self).__init__()
+
+        self.weights_factory = self.gpf_instance.weights_factory
 
     def get(self, request, weight):
         tsv = self.weights_factory[weight].to_tsv()
@@ -49,11 +51,12 @@ class GeneWeightsDownloadView(views.APIView):
         return response
 
 
-class GeneWeightsGetGenesView(views.APIView):
-    authentication_classes = (SessionAuthenticationWithoutCSRF, )
+class GeneWeightsGetGenesView(QueryBaseView):
 
     def __init__(self):
-        self.weights_factory = get_gpf_instance().weights_factory
+        super(GeneWeightsGetGenesView, self).__init__()
+
+        self.weights_factory = self.gpf_instance.weights_factory
 
     def prepare_data(self, data):
         if 'weight' not in data:
@@ -77,11 +80,12 @@ class GeneWeightsGetGenesView(views.APIView):
         return Response(genes)
 
 
-class GeneWeightsPartitionsView(views.APIView):
-    authentication_classes = (SessionAuthenticationWithoutCSRF, )
+class GeneWeightsPartitionsView(QueryBaseView):
 
     def __init__(self):
-        self.weights_factory = get_gpf_instance().weights_factory
+        super(GeneWeightsPartitionsView, self).__init__()
+
+        self.weights_factory = self.gpf_instance.weights_factory
 
     def post(self, request):
         data = request.data

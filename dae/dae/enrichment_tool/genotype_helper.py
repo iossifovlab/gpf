@@ -1,7 +1,7 @@
 from collections import Counter, defaultdict
 
 from dae.variants.attributes import Inheritance
-from dae.variants.family import Family
+from dae.pedigrees.family import Family
 
 
 class GenotypeHelper(object):

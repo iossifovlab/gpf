@@ -22,10 +22,6 @@ class StudyConfigParserBase(ConfigParserBase):
         'commonReport'
     )
 
-    SPLIT_STR_LISTS = [
-        'authorizedGroups'
-    ]
-
     @classmethod
     def parse(cls, config):
         config = super(StudyConfigParserBase, cls).parse(config)
@@ -94,20 +90,13 @@ class StudyConfigParser(StudyConfigParserBase):
         if config is None:
             return None
 
-        cls.make_prefix_absolute_path(config)
-
-        config.authorizedGroups = config.get(
-            'authorizedGroups', [config.get('id', '')])
-
         config.years = [config.year] if config.year else []
         config.pub_meds = [config.pub_med] if config.pub_med else []
         config.studyTypes = \
             {config.study_type} if config.get('studyType', None) else set()
 
         assert config.name
-        assert config.prefix
-        # assert config.pedigree_file
-        assert config.file_format
+        assert config.genotype_storage
         assert config.work_dir
         assert 'studyType' in config
         assert 'hasComplex' in config
@@ -116,11 +105,3 @@ class StudyConfigParser(StudyConfigParserBase):
         assert 'hasTransmitted' in config
 
         return config
-
-    @staticmethod
-    def make_prefix_absolute_path(config):
-        if not os.path.isabs(config.prefix):
-            config_filename = config.study_config.config_file
-            dirname = os.path.dirname(config_filename)
-            config.prefix = os.path.abspath(
-                os.path.join(dirname, config.prefix))

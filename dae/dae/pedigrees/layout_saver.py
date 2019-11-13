@@ -27,7 +27,7 @@ class LayoutSaver(object):
                 self.generated_column: '1' if member.generated else ''
             }
 
-            key = self._member_key(family.family_id, member.id)
+            key = self._member_key(family.family_id, member.person_id)
 
             self._people_with_layout[key] = row
             self._people[key] = member

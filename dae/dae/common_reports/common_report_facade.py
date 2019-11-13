@@ -80,7 +80,7 @@ class CommonReportFacade(object):
 
         data = []
         data.append([
-            'familyId', 'personId', 'dadId', 'momId', 'gender', 'status',
+            'familyId', 'personId', 'dadId', 'momId', 'sex', 'status',
             'role', 'study'
         ])
 

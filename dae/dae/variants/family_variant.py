@@ -7,7 +7,7 @@ Created on Jul 9, 2018
 import numpy as np
 
 from dae.variants.variant import SummaryVariant, SummaryAllele
-from dae.variants.family import Family
+from dae.pedigrees.family import Family
 from dae.variants.attributes import Inheritance
 import itertools
 from dae.utils.vcf_utils import GENOTYPE_TYPE

@@ -38,7 +38,7 @@ class CommonReport(object):
         self.study_year = study.year
         self.pub_med = study.pub_med
 
-        self.families = len(study.families)
+        self.families = len(study.families.values())
         self.number_of_probands =\
             self._get_number_of_people_with_role(Role.prb)
         self.number_of_siblings =\

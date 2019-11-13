@@ -2,12 +2,12 @@ import pytest
 
 from box import Box
 
-from ..tools.annotator_config import AnnotationConfigParser
-from ..tools.effect_annotator import VariantEffectAnnotator
+from dae.annotation.tools.annotator_config import AnnotationConfigParser
+from dae.annotation.tools.effect_annotator import VariantEffectAnnotator
 
 from .conftest import relative_to_this_test_folder
 
-from dae.backends.vcf.loader import RawVariantsLoader
+from dae.backends.raw.loader import RawVariantsLoader
 
 
 @pytest.fixture(scope='session')

@@ -17,6 +17,9 @@ from dae.studies.variants_db import VariantsDb
 
 from dae.pheno.pheno_factory import PhenoFactory
 
+from dae.backends.storage.genotype_storage_factory import \
+    GenotypeStorageFactory
+
 
 class GPFInstance(object):
 
@@ -47,9 +50,11 @@ class GPFInstance(object):
             )
         self.scores_factory = ScoresFactory(self.score_config)
 
+        self.genotype_storage_factory = GenotypeStorageFactory(self.dae_config)
+
         self.variants_db = VariantsDb(
             self.dae_config, self.pheno_factory, self.weights_factory,
-            self.genomes_db
+            self.genomes_db, self.genotype_storage_factory
         )
 
         self.common_report_facade = CommonReportFacade(self.variants_db)
