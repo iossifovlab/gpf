@@ -15,7 +15,7 @@ class FamiliesReport(object):
         self.draw_all_families = draw_all_families
         self.families_count_show_id = families_count_show_id
 
-        self.families_total = len(self.families)
+        self.families_total = len(self.families.values())
         self.people_counters = self._get_people_counters()
         self.families_counters = self._get_families_counters()
 

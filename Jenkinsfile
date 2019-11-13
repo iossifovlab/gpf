@@ -35,6 +35,7 @@ pipeline {
     stage('Data') {
       steps {
         sh '''
+          export PATH=$HOME/anaconda2/envs/gpf2/bin:$PATH
           ./jenkins_data.sh
         '''
       }

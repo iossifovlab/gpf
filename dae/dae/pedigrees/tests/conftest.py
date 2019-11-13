@@ -1,5 +1,6 @@
 import pytest
 
+import os
 from io import StringIO
 import six
 import csv
@@ -7,22 +8,25 @@ import csv
 from dae.pedigrees.layout_saver import LayoutSaver
 from dae.pedigrees.layout_loader import LayoutLoader
 from dae.pedigrees.pedigree_reader import PedigreeReader
-from dae.pedigrees.pedigrees import Pedigree, PedigreeMember, Individual, \
+from dae.pedigrees.pedigrees import Pedigree, Individual, \
     FamilyConnections, MatingUnit, SibshipUnit
+from dae.pedigrees.family import Person
+
 from dae.pedigrees.interval_sandwich import SandwichSolver
 from dae.pedigrees.layout import IndividualWithCoordinates, Layout
 from dae.pedigrees.drawing import OffsetLayoutDrawer
 
-from dae.utils.fixtures import path_to_fixtures as _path_to_fixtures
 
-
-def path_to_fixtures(*args):
-    return _path_to_fixtures('pedigrees', *args)
+def relative_to_this_folder(path):
+    return os.path.join(
+        os.path.dirname(os.path.realpath(__file__)),
+        path
+    )
 
 
 @pytest.fixture(scope='session')
 def input_filename():
-    return path_to_fixtures('input', 'test.ped')
+    return relative_to_this_folder('fixtures/test.ped')
 
 
 @pytest.fixture(scope='session')
@@ -59,43 +63,43 @@ def error_message():
 
 @pytest.fixture(scope='function')
 def member1(error_message):
-    return PedigreeMember(
+    return Person.make_person(
         'id1', 'fam1', 'mom1', 'dad1', '2', '2', 'prb', error_message, False)
 
 
 @pytest.fixture(scope='function')
 def member2():
-    return PedigreeMember(
+    return Person.make_person(
         'mom1', 'fam1', '0', '0', '2', '1', 'mom', error_message, False)
 
 
 @pytest.fixture(scope='function')
 def member3():
-    return PedigreeMember(
+    return Person.make_person(
         'dad1', 'fam1', '0', '0', '1', '1', 'dad', error_message, True)
 
 
 @pytest.fixture(scope='function')
 def member4():
-    return PedigreeMember(
+    return Person.make_person(
         'id2', 'fam2', 'mom2', 'dad2', '1', '2', 'prb', '2:100.0,75.0', False)
 
 
 @pytest.fixture(scope='function')
 def member5():
-    return PedigreeMember(
+    return Person.make_person(
         'mom2', 'fam2', '0', '0', '2', '1', 'mom', '1:50.0,50.0', False)
 
 
 @pytest.fixture(scope='function')
 def member6():
-    return PedigreeMember(
+    return Person.make_person(
         'dad2', 'fam2', '0', '0', '1', '1', 'dad', '1:50.0,100.0', True)
 
 
 @pytest.fixture(scope='function')
 def member7():
-    return PedigreeMember('id3', 'fam3', 'mom3', '0', '1', '2', 'prb')
+    return Person.make_person('id3', 'fam3', 'mom3', '0', '1', '2', 'prb')
 
 
 @pytest.fixture(scope='function')
@@ -248,7 +252,7 @@ def columns_labels():
         'id': 'personId',
         'father': 'dadId',
         'mother': 'momId',
-        'sex': 'gender',
+        'sex': 'sex',
         'status': 'status',
         'layout': 'layout',
         'role': 'role'
@@ -257,7 +261,7 @@ def columns_labels():
 
 @pytest.fixture(scope='session')
 def header():
-    return ['familyId', 'personId', 'dadId', 'momId', 'gender', 'status',
+    return ['familyId', 'personId', 'dadId', 'momId', 'sex', 'status',
             'role']
 
 
@@ -271,7 +275,7 @@ def dict_writer(output, header, layout_column, generated_column):
 
 @pytest.fixture(scope='session')
 def test_output():
-    return """familyId\tpersonId\tdadId\tmomId\tgender\tstatus\trole\tlayout\tgenerated
+    return """familyId\tpersonId\tdadId\tmomId\tsex\tstatus\trole\tlayout\tgenerated
 fam1\tid1\tdad1\tmom1\t1\t2\tprb\tError\t
 fam1\tmom1\t0\t0\t2\t1\tmom\tError\t
 fam2\tid2\tdad2\tmom2\t1\t2\tprb\t2:100.0,75.0\t
@@ -311,13 +315,8 @@ def loaded_layout2(layout_positions2):
 
 
 @pytest.fixture(scope='session')
-def pedigree_reader():
-    return PedigreeReader()
-
-
-@pytest.fixture(scope='session')
-def pedigree_test(pedigree_reader, input_filename):
-    return pedigree_reader.read_file(input_filename, return_as_dict=True)
+def pedigree_test(input_filename):
+    return PedigreeReader.read_file(input_filename, return_as_dict=True)
 
 
 @pytest.fixture(scope='session')
@@ -328,3 +327,8 @@ def fam1(pedigree_test):
 @pytest.fixture(scope='session')
 def fam1_family_connections(fam1):
     return FamilyConnections.from_pedigree(fam1)
+
+
+@pytest.fixture(scope='session')
+def sample_nuc_family():
+    return relative_to_this_folder('fixtures/sample_nuc_family.ped')

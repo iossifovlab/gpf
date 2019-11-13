@@ -113,11 +113,13 @@ class Layout(object):
 
     @property
     def id_to_position(self):
-        return {k.member.id: v for k, v in list(self._id_to_position.items())}
+        return {
+            k.member.person_id: v 
+            for k, v in list(self._id_to_position.items())}
 
     @property
     def individuals_by_rank(self):
-        return {individual.member.id: rank for rank, individuals in
+        return {individual.member.person_id: rank for rank, individuals in
                 enumerate(self._individuals_by_rank, start=1)
                 for individual in individuals}
 

@@ -1,0 +1,31 @@
+chrom	position	reference	alternative	summary_variant_index	allele_index	allele_count	af_parents_called_count	af_parents_called_percent	af_allele_count	af_allele_freq	CSHL:location	CSHL:chr	CSHL:position	CSHL:variant	VCF:chr	VCF:position	VCF:ref	VCF:alt	effect_type	effect_gene_genes	effect_gene_types	effect_genes	effect_details_transcript_ids	effect_details_details	effect_details	Unnamed: 26	
+1	11500	T		0	0	2	2	100	4	100																	
+1	11500	T	G	0	1	2	2	100	0	0	1:11500	1	11500.0	sub(T->G)	1	11500.0	T	G	intergenic	intergenic	intergenic	['intergenic:intergenic']	intergenic	intergenic	['intergenic:intergenic:intergenic']	['intergenic']	['intergenic']
+1	11501	T		1	0	2	2	100	3	75																	
+1	11501	T	G	1	1	2	2	100	1	25	1:11501	1	11501.0	sub(T->G)	1	11501.0	T	G	intergenic	intergenic	intergenic	['intergenic:intergenic']	intergenic	intergenic	['intergenic:intergenic:intergenic']	['intergenic']	['intergenic']
+1	11502	T		2	0	2	2	100	3	75																	
+1	11502	T	G	2	1	2	2	100	1	25	1:11502	1	11502.0	sub(T->G)	1	11502.0	T	G	intergenic	intergenic	intergenic	['intergenic:intergenic']	intergenic	intergenic	['intergenic:intergenic:intergenic']	['intergenic']	['intergenic']
+1	11503	T		3	0	2	2	100	3	75																	
+1	11503	T	G	3	1	2	2	100	1	25	1:11503	1	11503.0	sub(T->G)	1	11503.0	T	G	intergenic	intergenic	intergenic	['intergenic:intergenic']	intergenic	intergenic	['intergenic:intergenic:intergenic']	['intergenic']	['intergenic']
+1	11504	T		4	0	2	2	100	3	75																	
+1	11504	T	G	4	1	2	2	100	1	25	1:11504	1	11504.0	sub(T->G)	1	11504.0	T	G	intergenic	intergenic	intergenic	['intergenic:intergenic']	intergenic	intergenic	['intergenic:intergenic:intergenic']	['intergenic']	['intergenic']
+1	11511	T		5	0	2	2	100	2	50																	
+1	11511	T	G	5	1	2	2	100	2	50	1:11511	1	11511.0	sub(T->G)	1	11511.0	T	G	intergenic	intergenic	intergenic	['intergenic:intergenic']	intergenic	intergenic	['intergenic:intergenic:intergenic']	['intergenic']	['intergenic']
+1	11512	T		6	0	2	2	100	2	50																	
+1	11512	T	G	6	1	2	2	100	2	50	1:11512	1	11512.0	sub(T->G)	1	11512.0	T	G	intergenic	intergenic	intergenic	['intergenic:intergenic']	intergenic	intergenic	['intergenic:intergenic:intergenic']	['intergenic']	['intergenic']
+1	11513	T		7	0	2	2	100	1	25																	
+1	11513	T	G	7	1	2	2	100	3	75	1:11513	1	11513.0	sub(T->G)	1	11513.0	T	G	intergenic	intergenic	intergenic	['intergenic:intergenic']	intergenic	intergenic	['intergenic:intergenic:intergenic']	['intergenic']	['intergenic']
+1	11514	T		8	0	2	2	100	1	25																	
+1	11514	T	G	8	1	2	2	100	3	75	1:11514	1	11514.0	sub(T->G)	1	11514.0	T	G	intergenic	intergenic	intergenic	['intergenic:intergenic']	intergenic	intergenic	['intergenic:intergenic:intergenic']	['intergenic']	['intergenic']
+1	11515	T		9	0	2	2	100	3	75																	
+1	11515	T	G	9	1	2	2	100	1	25	1:11515	1	11515.0	sub(T->G)	1	11515.0	T	G	intergenic	intergenic	intergenic	['intergenic:intergenic']	intergenic	intergenic	['intergenic:intergenic:intergenic']	['intergenic']	['intergenic']
+1	11521	T		10	0	2	2	100	4	100																	
+1	11521	T	G	10	1	2	2	100	0	0	1:11521	1	11521.0	sub(T->G)	1	11521.0	T	G	intergenic	intergenic	intergenic	['intergenic:intergenic']	intergenic	intergenic	['intergenic:intergenic:intergenic']	['intergenic']	['intergenic']
+1	11522	T		11	0	2	2	100	4	100																	
+1	11522	T	G	11	1	2	2	100	0	0	1:11522	1	11522.0	sub(T->G)	1	11522.0	T	G	intergenic	intergenic	intergenic	['intergenic:intergenic']	intergenic	intergenic	['intergenic:intergenic:intergenic']	['intergenic']	['intergenic']
+1	11523	T		12	0	2	2	100	0	0																	
+1	11523	T	G	12	1	2	2	100	4	100	1:11523	1	11523.0	sub(T->G)	1	11523.0	T	G	intergenic	intergenic	intergenic	['intergenic:intergenic']	intergenic	intergenic	['intergenic:intergenic:intergenic']	['intergenic']	['intergenic']
+1	11524	T		13	0	2	2	100	0	0																	
+1	11524	T	G	13	1	2	2	100	4	100	1:11524	1	11524.0	sub(T->G)	1	11524.0	T	G	intergenic	intergenic	intergenic	['intergenic:intergenic']	intergenic	intergenic	['intergenic:intergenic:intergenic']	['intergenic']	['intergenic']
+1	11531	T		14	0	2	1	50	0	0																	
+1	11531	T	G	14	1	2	1	50	2	100	1:11531	1	11531.0	sub(T->G)	1	11531.0	T	G	intergenic	intergenic	intergenic	['intergenic:intergenic']	intergenic	intergenic	['intergenic:intergenic:intergenic']	['intergenic']	['intergenic']

@@ -1,7 +1,0 @@
-familyId	personId	dadId	momId	gender	status	role
-fam1	id1	dad1	mom1	1	2	prb
-fam1	mom1	0	0	2	1	mom
-fam2	id2	dad2	mom2	1	2	prb
-fam2	dad2	0	0	1	1	dad
-fam2	mom2	0	0	2	1	mom
-fam3	id3	dad3	mom3	2	2	prb

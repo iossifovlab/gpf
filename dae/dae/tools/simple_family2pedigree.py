@@ -4,7 +4,7 @@ import sys
 import argparse
 
 from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.variants.family import FamiliesBase
+from dae.pedigrees.pedigree_reader import PedigreeReader
 
 
 def parse_cli_arguments(argv=sys.argv[1:]):
@@ -52,8 +52,8 @@ def main(argv):
     gpf_instance = GPFInstance()
     dae_config = gpf_instance.dae_config
 
-    fam_df = FamiliesBase.load_simple_family_file(args.family_filename)
-    FamiliesBase.save_pedigree(fam_df, output)
+    fam_df = PedigreeReader.load_simple_family_file(args.family_filename)
+    PedigreeReader.save_pedigree(fam_df, output)
 
 if __name__ == "__main__":
     main(sys.argv)

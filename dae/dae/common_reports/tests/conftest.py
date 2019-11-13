@@ -54,7 +54,7 @@ def study2(vdb_fixture):
 
 @pytest.fixture(scope='function')
 def study4(vdb_fixture):
-    return vdb_fixture.get_study_wdae_wrapper("study4")
+    return vdb_fixture.get_study_wdae_wrapper("Study4")
 
 
 @pytest.fixture(scope='function')

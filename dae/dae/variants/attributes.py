@@ -118,7 +118,7 @@ class Sex(enum.Enum):
             return Sex.female
         elif name == 'unspecified' or name == 'U' or name == '0':
             return Sex.unspecified
-        raise ValueError("unexpected sex type: " + name)
+        raise ValueError("unexpected sex type: " + str(name))
 
     @staticmethod
     def from_value(val):

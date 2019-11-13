@@ -1,7 +1,9 @@
 def assert_positions(expected, resulted):
     for expected_level, resulted_level in zip(expected, resulted):
-        expected_level.sort(key=lambda layout: layout.individual.member.id)
-        resulted_level.sort(key=lambda layout: layout.individual.member.id)
+        expected_level.sort(
+            key=lambda layout: layout.individual.member.person_id)
+        resulted_level.sort(
+            key=lambda layout: layout.individual.member.person_id)
 
         for expected_layout, resulted_layout in\
                 zip(expected_level, resulted_level):

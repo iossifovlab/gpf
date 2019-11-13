@@ -1,0 +1,7 @@
+chrom	position	reference	alternative	summary_variant_index	allele_index	allele_count	af_parents_called_count	af_parents_called_percent	af_allele_count	af_allele_freq	CSHL:location	CSHL:chr	CSHL:position	CSHL:variant	VCF:chr	VCF:position	VCF:ref	VCF:alt	effect_type	effect_gene_genes	effect_gene_types	effect_genes	effect_details_transcript_ids	effect_details_details	effect_details	Unnamed: 26	Unnamed: 27	Unnamed: 28	
+1	865624	G		0	0	2	6	100	12	100																			
+1	865624	G	A	0	1	2	6	100	0	0	1:865624	1	865624.0	sub(G->A)	1	865624.0	G	A	missense	SAMD11	missense	['SAMD11:missense']	NM_152486_1	54/681(Ser->Arg)	['NM_152486_1:SAMD11:54/681(Ser->Arg)']	['SAMD11']	['SAMD11']	['SAMD11']	['SAMD11']
+1	905956	CGGCTCGGAAGG		1	0	2	6	100	12	100																			
+1	905956	CGGCTCGGAAGG	C	1	1	2	6	100	0	0	1:905957	1	905957.0	del(11)	1	905956.0	CGGCTCGGAAGG	C	frame-shift	PLEKHN1	frame-shift	['PLEKHN1:frame-shift']	NM_001160184_1!NM_032129_1	129/576!129/611	['NM_001160184_1:PLEKHN1:129/576', 'NM_032129_1:PLEKHN1:129/611']	['PLEKHN1', 'PLEKHN1']	['PLEKHN1', 'PLEKHN1']	['PLEKHN1', 'PLEKHN1']	['PLEKHN1', 'PLEKHN1']
+1	865691	C		2	0	2	6	100	12	100																			
+1	865691	C	T	2	1	2	6	100	0	0	1:865691	1	865691.0	sub(C->T)	1	865691.0	C	T	missense	SAMD11	missense	['SAMD11:missense']	NM_152486_1	77/681(Pro->Ser)	['NM_152486_1:SAMD11:77/681(Pro->Ser)']	['SAMD11']	['SAMD11']	['SAMD11']	['SAMD11']

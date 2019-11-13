@@ -1,17 +1,12 @@
-import os
 from impala import dbapi
 
 
 class ImpalaHelpers(object):
 
     @staticmethod
-    def get_impala(impala_host=None, impala_port=None):
-        if impala_host is None:
-            impala_host = "127.0.0.1"
-        impala_host = os.getenv("DAE_IMPALA_HOST", impala_host)
-        if impala_port is None:
-            impala_port = 21050
-        impala_port = int(os.getenv("DAE_IMPALA_PORT", impala_port))
+    def create_impala_connection(impala_host, impala_port):
+        assert impala_host
+        assert impala_port
 
         impala_connection = dbapi.connect(
             host=impala_host,
@@ -22,7 +17,12 @@ class ImpalaHelpers(object):
     def __init__(
             self, impala_host=None, impala_port=None, impala_connection=None):
         if impala_connection is None:
-            impala_connection = self.get_impala(impala_host, impala_port)
+            assert impala_host
+            assert impala_port
+
+            impala_connection = self.create_impala_connection(
+                impala_host, impala_port
+            )
         self.connection = impala_connection
 
     def import_variants(self, config):
@@ -32,52 +32,35 @@ class ImpalaHelpers(object):
             cursor.execute("""
                 CREATE DATABASE IF NOT EXISTS {db}
             """.format(db=config.db))
-            self.import_pedigree_file(
+            self.import_files(
                 cursor, config.db, config.tables.pedigree,
-                config.files.pedigree)
-            self.import_variant_files(
+                config.files.pedigree
+            )
+            self.import_files(
                 cursor, config.db, config.tables.variant,
-                [config.files.variant]
+                config.files.variants
             )
 
-    def import_pedigree_file(self, cursor, dbname, table_name, pedigree_file):
-        cursor.execute("""
-            DROP TABLE IF EXISTS {db}.{table_name}
-        """.format(db=dbname, table_name=table_name))
-
-        cursor.execute("""
-            CREATE TABLE {db}.{pedigree} LIKE PARQUET '{pedigree_file}'
-            STORED AS PARQUET
-        """.format(
-                db=dbname, pedigree_file=pedigree_file,
-                pedigree=table_name))
-        cursor.execute("""
-            LOAD DATA INPATH '{pedigree_file}' INTO TABLE {db}.{pedigree}
-        """.format(
-                db=dbname, pedigree_file=pedigree_file,
-                pedigree=table_name))
-
-    def import_variant_files(
-            self, cursor, dbname, table_name, variant_files):
+    def import_files(self, cursor, dbname, table_name, import_files):
 
         cursor.execute("""
             DROP TABLE IF EXISTS {db}.{table_name}
         """.format(db=dbname, table_name=table_name))
 
         cursor.execute("""
-            CREATE TABLE {db}.{variant} LIKE PARQUET '{variant_file}'
+            CREATE TABLE {db}.{table_name} LIKE PARQUET '{import_file}'
             STORED AS PARQUET
         """.format(
-            db=dbname, variant_file=variant_files[0],
-            variant=table_name))
+            db=dbname, import_file=import_files[0],
+            table_name=table_name))
 
-        for variant_file in variant_files:
+        for import_file in import_files:
             cursor.execute("""
-                LOAD DATA INPATH '{variant_file}'
-                INTO TABLE {db}.{variant}
+                LOAD DATA INPATH '{import_file}'
+                INTO TABLE {db}.{table_name}
             """.format(
-                db=dbname, variant_file=variant_file,
-                variant=table_name))
+                db=dbname, import_file=import_file,
+                table_name=table_name))
 
     def check_database(self, dbname):
         with self.connection.cursor() as cursor:

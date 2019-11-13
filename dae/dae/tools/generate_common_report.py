@@ -30,8 +30,10 @@ def main(gpf_instance=None, argv=None):
     else:
         if args.studies:
             studies = args.studies.split(',')
+            print("generating common reports for:", studies)
             common_report_facade.generate_common_reports(studies)
         else:
+            print("generating common reports for all studies!!!")
             common_report_facade.generate_all_common_reports()
 
 

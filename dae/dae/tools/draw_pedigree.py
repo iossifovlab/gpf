@@ -5,14 +5,14 @@ import functools
 import pandas as pd
 from box import Box
 
-from pedigrees.pedigree_reader import PedigreeReader
-from pedigrees.pedigrees import get_argument_parser
-from pedigrees.drawing import OffsetLayoutDrawer, PDFLayoutDrawer
-from pedigrees.layout_loader import LayoutLoader
-from variants.family import FamiliesBase
-from common_reports.family_report import FamiliesReport
-from common_reports.people_group_info import PeopleGroupInfo
-from common_reports.filter import FilterObjects, FilterObject
+from dae.pedigrees.pedigree_reader import PedigreeReader
+from dae.pedigrees.pedigrees import get_argument_parser
+from dae.pedigrees.drawing import OffsetLayoutDrawer, PDFLayoutDrawer
+from dae.pedigrees.layout_loader import LayoutLoader
+from dae.pedigrees.family import FamiliesData
+from dae.common_reports.family_report import FamiliesReport
+from dae.common_reports.people_group_info import PeopleGroupInfo
+from dae.common_reports.filter import FilterObjects, FilterObject
 
 
 def draw_family_pedigree(family, show_id=False):
@@ -51,7 +51,7 @@ def get_families_report(pedigrees):
     pedigrees_df = pd.concat([pedigree.get_pedigree_dataframe()
                               for pedigree in pedigrees])
 
-    families = FamiliesBase(pedigrees_df)
+    families = FamiliesData(pedigrees_df)
     families.families_build(pedigrees_df)
 
     people_group_info = {

@@ -1,5 +1,5 @@
 from dae.annotation.tools.file_io_parquet import ParquetSchema
-from dae.variants.family import FamiliesBase, Family
+from dae.pedigrees.family import FamiliesData, Family
 from dae.backends.impala.parquet_io import ParquetSerializer
 
 from impala.util import as_pandas
@@ -17,7 +17,7 @@ from ..attributes_query_inheritance import InheritanceTransformer, \
 from dae.variants.attributes import Role, Status, Sex
 
 
-class ImpalaFamilyVariants(FamiliesBase):
+class ImpalaFamilyVariants:
     QUOTE = '\''
     WHERE = '''
         WHERE
@@ -39,8 +39,8 @@ class ImpalaFamilyVariants(FamiliesBase):
         self.impala = impala_connection
         self.ped_df = self.load_pedigree()
         self.pedigree_schema = self.pedigree_schema()
+        self.families = FamiliesData.from_pedigree_df(self.ped_df)
 
-        self.families_build(self.ped_df, family_class=Family)
         self.schema = self.variant_schema()
         self.serializer = ParquetSerializer(schema=self.schema)
 
@@ -85,7 +85,7 @@ class ImpalaFamilyVariants(FamiliesBase):
                     frequency_data, genomic_scores_data, \
                     matched_alleles = row
 
-                family = self.families.get(family_id)
+                family = self.families.get_family(family_id)
                 v = self.serializer.deserialize_variant(
                     family,
                     chrom, position, reference, alternatives_data,
