@@ -3,11 +3,11 @@ import pytest
 from dae.backends.storage.tests.conftest import relative_to_this_test_folder
 
 
-def test_get_backend(impala_genotype_storage, quads_f1_config, genomes_db):
+def test_build_backend(impala_genotype_storage, quads_f1_config, genomes_db):
     assert impala_genotype_storage
 
-    backend = impala_genotype_storage.get_backend(
-        quads_f1_config.id, genomes_db
+    backend = impala_genotype_storage.build_backend(
+        quads_f1_config, genomes_db
     )
 
     assert len(backend.families.families_list()) == 1
@@ -74,8 +74,9 @@ def test_impala_load_study(impala_genotype_storage, genomes_db):
             'fixtures/studies/quads_f1_impala/data/variants')
     )
 
-    backend = impala_genotype_storage.get_backend(
-        'study_id', genomes_db
+    backend = impala_genotype_storage.build_backend(
+        impala_genotype_storage.default_study_config('study_id'),
+        genomes_db
     )
 
     assert len(backend.families.families_list()) == 1

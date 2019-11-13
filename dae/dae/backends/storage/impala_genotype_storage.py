@@ -31,6 +31,16 @@ class ImpalaGenotypeStorage(GenotypeStorage):
 
         return hdfs_dirname
 
+    @classmethod
+    def default_study_config(cls, study_id):
+        return Box({
+            'id': study_id,
+            'tables': {
+                'pedigree': '{}_pedigree'.format(study_id),
+                'variant': '{}_variant'.format(study_id),
+            }
+        }, camel_killer_box=True, default_box=True, default_box_attr=None)
+
     @property
     def impala_connection(self):
         if self._impala_connection is None:
@@ -60,8 +70,8 @@ class ImpalaGenotypeStorage(GenotypeStorage):
 
         return self._hdfs_helpers
 
-    def get_backend(self, study_id, genomes_db):
-        impala_config = self._impala_storage_config(study_id)
+    def build_backend(self, study_config, genomes_db):
+        impala_config = self._impala_storage_config(study_config.id)
 
         variants = ImpalaFamilyVariants(
             impala_config, self.impala_connection,

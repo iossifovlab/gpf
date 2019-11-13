@@ -24,8 +24,12 @@ class RawVariantsLoader:
         return token
 
     @staticmethod
-    def has_annotation_file(annotation):
-        return os.path.exists(annotation)
+    def annotation_filename(filename):
+        return "{}-eff.txt".format(os.path.splitext(filename)[0])
+
+    @staticmethod
+    def has_annotation_file(annotation_filename):
+        return os.path.exists(annotation_filename)
 
     @classmethod
     def load_annotation_file(cls, filename, sep='\t'):

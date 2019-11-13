@@ -215,7 +215,9 @@ def dae_iossifov2014_import(
             os.path.join(annotation_temp_dir, 'variants')
         )
 
-        fvars = impala_genotype_storage.get_backend(study_id, genomes_db)
+        fvars = impala_genotype_storage.build_backend(
+            impala_genotype_storage.default_study_config(study_id),
+            genomes_db)
         return fvars
 
     return build

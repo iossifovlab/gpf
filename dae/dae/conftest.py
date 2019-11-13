@@ -613,7 +613,9 @@ def variants_impala(request, data_import, impala_genotype_storage, genomes_db):
 
     def builder(path):
         study_id = os.path.basename(path)
-        fvars = impala_genotype_storage.get_backend(study_id, genomes_db)
+        fvars = impala_genotype_storage.build_backend(
+            impala_genotype_storage.default_study_config(study_id),
+            genomes_db)
         return fvars
 
     return builder

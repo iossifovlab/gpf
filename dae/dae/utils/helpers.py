@@ -13,9 +13,3 @@ def pedigree_from_path(filepath, family_format='pedigree'):
 
     study_id = os.path.splitext(os.path.basename(filepath))[0]
     return ped_df, study_id
-
-
-def split_location(location):
-    assert ':' in location
-    chrom, pos = location.split(':')
-    return chrom, int(pos)

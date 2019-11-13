@@ -132,7 +132,7 @@ class RawDaeLoader(RawVariantsLoader):
         return annot_df
 
     @staticmethod
-    def load_raw_denovo(
+    def load_raw_denovo_variants(
             ped_filename, denovo_filename,
             annotation_filename=None, region=None):
         ped_df = PedigreeReader.flexible_pedigree_read(ped_filename)

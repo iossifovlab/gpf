@@ -151,27 +151,31 @@ class RawVcfLoader(RawVariantsLoader):
         annot_df = freq_annotator.annotate(annot_df)
         return annot_df
 
-    @staticmethod
-    def build_raw_vcf(ped_df, vcf, annot_df=None):
-        ped_df, vcf_samples = RawVcfLoader._match_pedigree_to_samples(ped_df, vcf)
-        families = FamiliesData.from_pedigree_df(ped_df, family_class=VcfFamily)
+    @classmethod
+    def build_raw_vcf(cls, ped_df, vcf, annot_df=None):
+        ped_df, vcf_samples = cls._match_pedigree_to_samples(ped_df, vcf)
+        families = FamiliesData.from_pedigree_df(
+            ped_df, family_class=VcfFamily)
 
         if annot_df is None:
-            annot_df = RawVcfLoader._build_initial_vcf_annotation(families, vcf)
+            annot_df = cls._build_initial_vcf_annotation(families, vcf)
 
         return RawVcfVariants(families, vcf, annot_df)
 
-    @staticmethod
+    @classmethod
     def load_raw_vcf_variants(
-            ped_df, vcf_filename,
+            cls, ped_df, vcf_filename,
             annotation_filename=None, region=None):
 
         vcf = RawVcfLoader.load_vcf(vcf_filename, region)
 
         annot_df = None
+        if annotation_filename is None:
+            annotation_filename = cls.annotation_filename(vcf_filename)
         if annotation_filename is not None \
                 and os.path.exists(annotation_filename):
             annot_df = RawVcfLoader.load_annotation_file(annotation_filename)
+
         return RawVcfLoader.build_raw_vcf(ped_df, vcf, annot_df)
 
     @staticmethod
