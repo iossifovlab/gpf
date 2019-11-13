@@ -1,5 +1,4 @@
 from rest_framework.response import Response
-from rest_framework.views import APIView
 from rest_framework import status
 
 import logging
@@ -7,9 +6,7 @@ import logging
 from .enrichment_builder import EnrichmentBuilder
 from .enrichment_serializer import EnrichmentSerializer
 
-from users_api.authentication import SessionAuthenticationWithoutCSRF
-
-from gpf_instance.gpf_instance import get_gpf_instance
+from query_base.query_base import QueryBaseView
 
 from dae.utils.gene_utils import GeneSymsMixin
 
@@ -25,10 +22,12 @@ from dae.enrichment_tool.event_counters import CounterBase
 LOGGER = logging.getLogger(__name__)
 
 
-class EnrichmentModelsView(APIView):
+class EnrichmentModelsView(QueryBaseView):
 
     def __init__(self):
-        self.background_facade = get_gpf_instance().background_facade
+        super(EnrichmentModelsView, self).__init__()
+
+        self.background_facade = self.gpf_instance.background_facade
 
     def get_from_config(self, dataset_id, key):
         enrichment_config = \
@@ -52,15 +51,13 @@ class EnrichmentModelsView(APIView):
         return Response(result)
 
 
-class EnrichmentTestView(APIView):
-
-    authentication_classes = (SessionAuthenticationWithoutCSRF, )
+class EnrichmentTestView(QueryBaseView):
 
     def __init__(self):
-        self.variants_db = get_gpf_instance().variants_db
-        self.background_facade = get_gpf_instance().background_facade
+        super(EnrichmentTestView, self).__init__()
 
-        self.gene_info_config = get_gpf_instance().gene_info_config
+        self.background_facade = self.gpf_instance.background_facade
+        self.gene_info_config = self.gpf_instance.gene_info_config
 
     def enrichment_description(self, query):
         gene_set = query.get('geneSet')

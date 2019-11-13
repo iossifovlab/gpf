@@ -25,10 +25,10 @@ QUERY = {
 }
 
 
-def test_pheno_tool_view_valid_request(user_client):
+def test_pheno_tool_view_valid_request(admin_client):
     query = copy.deepcopy(QUERY)
 
-    response = user_client.post(
+    response = admin_client.post(
         TOOL_URL, json.dumps(query), format='json',
         content_type='application/json'
     )
@@ -36,12 +36,12 @@ def test_pheno_tool_view_valid_request(user_client):
 
 
 @pytest.mark.xfail(reason='[gene models] wrong annotation')
-def test_pheno_tool_view_lgds(user_client):
+def test_pheno_tool_view_lgds(admin_client):
     query = copy.deepcopy(QUERY)
     query['effectTypes'] = ['LGDs']
 
-    response = user_client.post(TOOL_URL, json.dumps(query), format='json',
-                                content_type='application/json')
+    response = admin_client.post(TOOL_URL, json.dumps(query), format='json',
+                                 content_type='application/json')
     assert response.status_code == status.HTTP_200_OK
     result = response.data['results'][0]
     assert len(response.data['results']) == 1
@@ -62,19 +62,19 @@ def test_pheno_tool_view_lgds(user_client):
 
 
 @pytest.mark.xfail(reason='[gene models] wrong annotation')
-def test_pheno_tool_view_normalize(user_client):
+def test_pheno_tool_view_normalize(admin_client):
     query = copy.deepcopy(QUERY)
     query['effectTypes'] = ['LGDs']
 
-    response = user_client.post(TOOL_URL, json.dumps(query), format='json',
-                                content_type='application/json')
+    response = admin_client.post(TOOL_URL, json.dumps(query), format='json',
+                                 content_type='application/json')
     assert response.status_code == status.HTTP_200_OK
     result = response.data['results'][0]
 
     query['normalizeBy'] = [{'measure_name': 'age', 'instrument_name': 'i1'}]
-    response_normalized = user_client.post(TOOL_URL, json.dumps(query),
-                                           format='json',
-                                           content_type='application/json')
+    response_normalized = admin_client.post(TOOL_URL, json.dumps(query),
+                                            format='json',
+                                            content_type='application/json')
     assert response_normalized.status_code == status.HTTP_200_OK
     result_normalized = response_normalized.data['results'][0]
 
@@ -102,13 +102,13 @@ def test_pheno_tool_view_normalize(user_client):
                       abs=1e-3)
 
 
-def test_pheno_tool_view_family_ids_filter(user_client):
+def test_pheno_tool_view_family_ids_filter(admin_client):
     query = copy.deepcopy(QUERY)
     query['effectTypes'] = ['LGDs']
     query['familyIds'] = ['f1', 'f4']
 
-    response = user_client.post(TOOL_URL, json.dumps(query), format='json',
-                                content_type='application/json')
+    response = admin_client.post(TOOL_URL, json.dumps(query), format='json',
+                                 content_type='application/json')
     assert response.status_code == status.HTTP_200_OK
     result = response.data['results'][0]
     assert result['maleResults']['positive']['count'] == 0
@@ -117,13 +117,13 @@ def test_pheno_tool_view_family_ids_filter(user_client):
     assert result['femaleResults']['negative']['count'] == 1
 
 
-def test_pheno_tool_view_na_values(user_client):
+def test_pheno_tool_view_na_values(admin_client):
     query = copy.deepcopy(QUERY)
     query['effectTypes'] = ['frame-shift']
     query['familyIds'] = ['f4']
 
-    response = user_client.post(TOOL_URL, json.dumps(query), format='json',
-                                content_type='application/json')
+    response = admin_client.post(TOOL_URL, json.dumps(query), format='json',
+                                 content_type='application/json')
     assert response.status_code == status.HTTP_200_OK
     result = response.data['results'][0]
 
@@ -135,7 +135,7 @@ def test_pheno_tool_view_na_values(user_client):
         result['femaleResults']['negative']['mean']
 
 
-def test_pheno_tool_view_pheno_filter(user_client):
+def test_pheno_tool_view_pheno_filter(admin_client):
     query = copy.deepcopy(QUERY)
     query['effectTypes'] = ['frame-shift']
     query['phenoFilters'] = [{
@@ -151,8 +151,8 @@ def test_pheno_tool_view_pheno_filter(user_client):
         }
     }]
 
-    response = user_client.post(TOOL_URL, json.dumps(query), format='json',
-                                content_type='application/json')
+    response = admin_client.post(TOOL_URL, json.dumps(query), format='json',
+                                 content_type='application/json')
     assert response.status_code == status.HTTP_200_OK
     result = response.data['results'][0]
 
@@ -168,32 +168,32 @@ def test_pheno_tool_view_pheno_filter(user_client):
         result['maleResults']['negative']['mean']
 
 
-def test_pheno_tool_view_missing_dataset(user_client):
+def test_pheno_tool_view_missing_dataset(admin_client):
     query = copy.deepcopy(QUERY)
     query['datasetId'] = '???'
 
-    response = user_client.post(TOOL_URL, json.dumps(query), format='json',
-                                content_type='application/json')
-    assert response.status_code == status.HTTP_404_NOT_FOUND
+    response = admin_client.post(TOOL_URL, json.dumps(query), format='json',
+                                 content_type='application/json')
+    assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_pheno_tool_view_missing_measure(user_client):
+def test_pheno_tool_view_missing_measure(admin_client):
     query = copy.deepcopy(QUERY)
     query['measureId'] = '???'
 
-    response = user_client.post(TOOL_URL, json.dumps(query), format='json',
-                                content_type='application/json')
+    response = admin_client.post(TOOL_URL, json.dumps(query), format='json',
+                                 content_type='application/json')
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
 @pytest.mark.xfail(reason='[gene models] wrong annotation')
-def test_pheno_tool_download_valid_request(user_client):
+def test_pheno_tool_download_valid_request(admin_client):
     query = copy.deepcopy(QUERY)
     query['effectTypes'] = ['LGDs']
     query['normalizeBy'] = [{'measure_name': 'age', 'instrument_name': 'i1'}]
 
-    response = user_client.post(TOOL_URL, json.dumps(query), format='json',
-                                content_type='application/json')
+    response = admin_client.post(TOOL_URL, json.dumps(query), format='json',
+                                 content_type='application/json')
     assert response.status_code == status.HTTP_200_OK
     assert response.data['description'] == 'i1.m1 ~ i1.age'
     assert response.data['results']

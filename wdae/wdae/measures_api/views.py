@@ -1,18 +1,14 @@
-'''
-Created on Mar 30, 2017
+import os
+import logging
+import numpy as np
 
-@author: lubo
-'''
 from rest_framework import status
 from rest_framework.response import Response
-from rest_framework.exceptions import NotAuthenticated
-import traceback
-from genotype_browser.views import QueryBaseView
-import numpy as np
-import os
+
 from dae.pheno.common import MeasureType
 from dae.pheno_browser.db import DbManager
-import logging
+
+from query_base.query_base import QueryBaseView
 
 logger = logging.getLogger(__name__)
 
@@ -22,153 +18,119 @@ class PhenoMeasuresView(QueryBaseView):
     def get(self, request, measure_type):
         data = request.query_params
 
-        try:
-            dataset_id = data['datasetId']
-            dataset = self.variants_db.get_wdae_wrapper(dataset_id)
-            assert dataset is not None
+        dataset_id = data['datasetId']
+        dataset = self.variants_db.get_wdae_wrapper(dataset_id)
+        assert dataset is not None
 
-            if dataset.pheno_db is None:
-                return Response(status=status.HTTP_404_NOT_FOUND)
+        if dataset.pheno_db is None:
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
-            assert measure_type == 'continuous' or \
-                measure_type == 'categorical'
+        assert measure_type == 'continuous' or \
+            measure_type == 'categorical'
 
-            res = dataset.pheno_db.get_measures(measure_type=measure_type)
-            if measure_type == 'continuous':
-                res = [
-                    {
-                        'measure': m.measure_id,
-                        'min': m.min_value,
-                        'max': m.max_value,
-                    }
-                    for m in list(res.values())
-                ]
-            elif measure_type == 'categorical':
-                res = [
-                    {
-                        'measure': m.measure_id,
-                        'domain': m.values_domain.split(',')
-                    }
-                    for m in list(res.values())
-                ]
-            return Response(res, status=status.HTTP_200_OK)
-        except NotAuthenticated:
-            logger.exception("error while processing genotype query")
-            traceback.print_exc()
-            return Response(status=status.HTTP_401_UNAUTHORIZED)
-
-        except Exception:
-            logger.exception("error while processing genotype query")
-            traceback.print_exc()
-
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+        res = dataset.pheno_db.get_measures(measure_type=measure_type)
+        if measure_type == 'continuous':
+            res = [
+                {
+                    'measure': m.measure_id,
+                    'min': m.min_value,
+                    'max': m.max_value,
+                }
+                for m in list(res.values())
+            ]
+        elif measure_type == 'categorical':
+            res = [
+                {
+                    'measure': m.measure_id,
+                    'domain': m.values_domain.split(',')
+                }
+                for m in list(res.values())
+            ]
+        return Response(res, status=status.HTTP_200_OK)
 
 
 class PhenoMeasureHistogramView(QueryBaseView):
 
     def post(self, request):
         data = request.data
-        try:
-            dataset_id = data['datasetId']
-            dataset = self.variants_db.get_wdae_wrapper(dataset_id)
+        dataset_id = data['datasetId']
+        dataset = self.variants_db.get_wdae_wrapper(dataset_id)
 
-            assert dataset is not None
-            assert dataset.pheno_db is not None
-            assert "measure" in data
+        assert dataset is not None
+        assert dataset.pheno_db is not None
+        assert "measure" in data
 
-            pheno_measure = data['measure']
-            assert dataset.pheno_db.has_measure(pheno_measure)
+        pheno_measure = data['measure']
+        assert dataset.pheno_db.has_measure(pheno_measure)
 
-            measure = dataset.pheno_db.get_measure(pheno_measure)
-            assert measure.measure_type == MeasureType.continuous
+        measure = dataset.pheno_db.get_measure(pheno_measure)
+        assert measure.measure_type == MeasureType.continuous
 
-            df = dataset.pheno_db.get_measure_values_df(
-                pheno_measure)
+        df = dataset.pheno_db.get_measure_values_df(
+            pheno_measure)
 
-            m = df[pheno_measure]
-            bars, bins = np.histogram(
-                df[np.logical_not(np.isnan(m.values))][pheno_measure].values,
-                25)
+        m = df[pheno_measure]
+        bars, bins = np.histogram(
+            df[np.logical_not(np.isnan(m.values))][pheno_measure].values,
+            25)
 
-            result = {
-                "measure": pheno_measure,
-                "desc": "",
-                "min": min(bins),
-                "max": max(bins),
-                "bars": bars,
-                "bins": bins,
-                "step": (measure.max_value - measure.min_value) / 1000.0,
-            }
-            return Response(result, status=status.HTTP_200_OK)
-
-        except NotAuthenticated:
-            logger.exception("error while processing genotype query")
-            traceback.print_exc()
-            return Response(status=status.HTTP_401_UNAUTHORIZED)
-
-        except Exception:
-            logger.exception("error while processing genotype query")
-            traceback.print_exc()
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+        result = {
+            "measure": pheno_measure,
+            "desc": "",
+            "min": min(bins),
+            "max": max(bins),
+            "bars": bars,
+            "bins": bins,
+            "step": (measure.max_value - measure.min_value) / 1000.0,
+        }
+        return Response(result, status=status.HTTP_200_OK)
 
 
 class PhenoMeasurePartitionsView(QueryBaseView):
 
     def post(self, request):
         data = request.data
+        dataset_id = data['datasetId']
+        dataset = self.variants_db.get_wdae_wrapper(dataset_id)
+        assert dataset is not None
+        assert dataset.pheno_db is not None
+        assert "measure" in data
+        pheno_measure = data['measure']
+
+        assert dataset.pheno_db.has_measure(pheno_measure)
+
+        df = dataset.pheno_db.get_measure_values_df(pheno_measure)
+
         try:
-            dataset_id = data['datasetId']
-            dataset = self.variants_db.get_wdae_wrapper(dataset_id)
-            assert dataset is not None
-            assert dataset.pheno_db is not None
-            assert "measure" in data
-            pheno_measure = data['measure']
+            mmin = float(data["min"])
+        except TypeError:
+            mmin = float("-inf")
 
-            assert dataset.pheno_db.has_measure(pheno_measure)
+        try:
+            mmax = float(data["max"])
+        except TypeError:
+            mmax = float("inf")
 
-            df = dataset.pheno_db.get_measure_values_df(pheno_measure)
+        total = 1.0 * len(df)
 
-            try:
-                mmin = float(data["min"])
-            except TypeError:
-                mmin = float("-inf")
+        ldf = df[df[pheno_measure] < mmin]
+        rdf = df[df[pheno_measure] >= mmax]
+        mdf = df[np.logical_and(df[pheno_measure] >= mmin,
+                                df[pheno_measure] < mmax)]
 
-            try:
-                mmax = float(data["max"])
-            except TypeError:
-                mmax = float("inf")
-
-            total = 1.0 * len(df)
-
-            ldf = df[df[pheno_measure] < mmin]
-            rdf = df[df[pheno_measure] >= mmax]
-            mdf = df[np.logical_and(df[pheno_measure] >= mmin,
-                                    df[pheno_measure] < mmax)]
-
-            res = {
-                "left": {
-                    "count": len(ldf),
-                    "percent": len(ldf) / total
-                }, "mid": {
-                    "count": len(mdf),
-                    "percent": len(mdf) / total
-                }, "right": {
-                    "count": len(rdf),
-                    "percent": len(rdf) / total
-                }
+        res = {
+            "left": {
+                "count": len(ldf),
+                "percent": len(ldf) / total
+            }, "mid": {
+                "count": len(mdf),
+                "percent": len(mdf) / total
+            }, "right": {
+                "count": len(rdf),
+                "percent": len(rdf) / total
             }
-            return Response(res)
-
-        except NotAuthenticated:
-            logger.exception("error while processing genotype query")
-            traceback.print_exc()
-            return Response(status=status.HTTP_401_UNAUTHORIZED)
-
-        except Exception:
-            logger.exception("error while processing genotype query")
-            traceback.print_exc()
-
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+        }
+        return Response(res)
 
 
 class PhenoMeasureRegressionsView(QueryBaseView):
@@ -185,25 +147,15 @@ class PhenoMeasureRegressionsView(QueryBaseView):
 
     def get(self, request):
         data = request.query_params
-        try:
-            dataset_id = data['datasetId']
 
-            db = DbManager(self.get_browser_dbfile(
-                self.variants_db.get_config(dataset_id).phenoDB))
-            db.build()
+        dataset_id = data['datasetId']
 
-            if db is None:
-                return Response(status=status.HTTP_404_NOT_FOUND)
+        db = DbManager(self.get_browser_dbfile(
+            self.variants_db.get_config(dataset_id).phenoDB))
+        db.build()
 
-            return Response(db.regression_display_names_with_ids,
-                            status=status.HTTP_200_OK)
-        except NotAuthenticated:
-            logger.exception("error while processing genotype query")
-            traceback.print_exc()
-            return Response(status=status.HTTP_401_UNAUTHORIZED)
+        if db is None:
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
-        except Exception:
-            logger.exception("error while processing genotype query")
-            traceback.print_exc()
-
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+        return Response(db.regression_display_names_with_ids,
+                        status=status.HTTP_200_OK)

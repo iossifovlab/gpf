@@ -5,9 +5,6 @@ pipeline {
   options { 
     disableConcurrentBuilds()
   }
-  parameters {
-    string(name: 'DataHG19StartupBranch', defaultValue: 'master', description: 'Name of data-hg19-startup branch')
-  }
   triggers {
     pollSCM('* * * * *')
     cron('H 2 * * *')

@@ -1,33 +1,24 @@
-import traceback
 import json
 import logging
 from collections import Counter
 
 from rest_framework.response import Response
-from rest_framework.views import APIView
 from rest_framework import status
-from rest_framework.exceptions import NotAuthenticated
 
 from django.http.response import StreamingHttpResponse
 
 from gene_sets.expand_gene_set_decorator import expand_gene_set
-from users_api.authentication import SessionAuthenticationWithoutCSRF
 
 from dae.pheno_tool.tool import PhenoTool, PhenoToolHelper
 from dae.variants.attributes import Sex
 
-from gpf_instance.gpf_instance import get_gpf_instance
+from query_base.query_base import QueryBaseView
 
 
 logger = logging.getLogger(__name__)
 
 
-class PhenoToolView(APIView):
-
-    authentication_classes = (SessionAuthenticationWithoutCSRF, )
-
-    def __init__(self):
-        self._variants_db = get_gpf_instance().variants_db
+class PhenoToolView(QueryBaseView):
 
     @staticmethod
     def get_result_by_sex(result, sex):
@@ -55,7 +46,7 @@ class PhenoToolView(APIView):
         }
 
     def prepare_pheno_tool(self, data):
-        study_wrapper = self._variants_db.get_wdae_wrapper(data['datasetId'])
+        study_wrapper = self.variants_db.get_wdae_wrapper(data['datasetId'])
 
         if not (study_wrapper and
                 study_wrapper.pheno_db.has_measure(data['measureId'])):
@@ -105,39 +96,28 @@ class PhenoToolView(APIView):
     @expand_gene_set
     def post(self, request):
         data = request.data
-        try:
-            helper, tool = self.prepare_pheno_tool(data)
+        helper, tool = self.prepare_pheno_tool(data)
 
-            if not (helper and tool):
-                return Response(status=status.HTTP_404_NOT_FOUND)
+        if not (helper and tool):
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
-            people_variants = helper.study_variants(data)
+        people_variants = helper.study_variants(data)
 
-            results = [self.calc_by_effect(effect, tool,
-                       people_variants.get(effect.lower(), Counter()))
-                       for effect in data['effectTypes']]
-            self._align_NA_results(results)
+        results = [self.calc_by_effect(effect, tool,
+                   people_variants.get(effect.lower(), Counter()))
+                   for effect in data['effectTypes']]
+        self._align_NA_results(results)
 
-            response = {
-                "description": self._build_report_description(
-                    tool.measure_id, tool.normalize_by),
-                "results": results
-            }
-            return Response(response)
-
-        except NotAuthenticated:
-            logger.exception("error while processing genotype query")
-            traceback.print_exc()
-            return Response(status=status.HTTP_401_UNAUTHORIZED)
-
-        except Exception:
-            print("error while processing genotype query")
-            traceback.print_exc()
-
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+        response = {
+            "description": self._build_report_description(
+                tool.measure_id, tool.normalize_by),
+            "results": results
+        }
+        return Response(response)
 
 
 class PhenoToolDownload(PhenoToolView):
+
     def _parse_query_params(self, data):
         res = {str(k): str(v) for k, v in list(data.items())}
         assert 'queryData' in res
@@ -147,49 +127,38 @@ class PhenoToolDownload(PhenoToolView):
     @expand_gene_set
     def post(self, request):
         data = self._parse_query_params(request.data)
-        try:
-            helper, tool = self.prepare_pheno_tool(data)
+        helper, tool = self.prepare_pheno_tool(data)
 
-            result_df = tool.pheno_df.copy()
-            variants = helper.study_variants(data)
+        result_df = tool.pheno_df.copy()
+        variants = helper.study_variants(data)
 
-            for effect in data['effectTypes']:
-                result_df = PhenoTool.join_pheno_df_with_variants(
-                    result_df, variants[effect.lower()])
-                result_df = result_df.rename(
-                    columns={'variant_count': effect})
+        for effect in data['effectTypes']:
+            result_df = PhenoTool.join_pheno_df_with_variants(
+                result_df, variants[effect.lower()])
+            result_df = result_df.rename(
+                columns={'variant_count': effect})
 
-            if tool.normalize_by:
-                column_name = \
-                    self._build_report_description(tool.measure_id,
-                                                   tool.normalize_by)
-                result_df = result_df.rename(
-                    columns={'normalized': column_name})
+        if tool.normalize_by:
+            column_name = \
+                self._build_report_description(tool.measure_id,
+                                               tool.normalize_by)
+            result_df = result_df.rename(
+                columns={'normalized': column_name})
 
-            # Select & sort columns for output
-            effectTypesCount = len(data['effectTypes'])
-            columns = [col
-                       for col in result_df.columns.tolist()
-                       if col != "normalized" and col != "role"]
-            columns[0], columns[1] = columns[1], columns[0]
-            columns = columns[:3] + columns[-effectTypesCount:] + \
-                columns[3:-effectTypesCount]
+        # Select & sort columns for output
+        effectTypesCount = len(data['effectTypes'])
+        columns = [col
+                   for col in result_df.columns.tolist()
+                   if col != "normalized" and col != "role"]
+        columns[0], columns[1] = columns[1], columns[0]
+        columns = columns[:3] + columns[-effectTypesCount:] + \
+            columns[3:-effectTypesCount]
 
-            response = StreamingHttpResponse(result_df.to_csv(index=False,
-                                                              columns=columns),
-                                             content_type='text/csv')
-            response['Content-Disposition'] = \
-                'attachment; filename=pheno_report.csv'
-            response['Expires'] = '0'
-            return response
-
-        except NotAuthenticated:
-            print("error while processing genotype query")
-            traceback.print_exc()
-            return Response(status=status.HTTP_401_UNAUTHORIZED)
-
-        except Exception:
-            print("error while processing genotype query")
-            traceback.print_exc()
-
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+        response = StreamingHttpResponse(
+            result_df.to_csv(index=False, columns=columns),
+            content_type='text/csv'
+        )
+        response['Content-Disposition'] = \
+            'attachment; filename=pheno_report.csv'
+        response['Expires'] = '0'
+        return response
