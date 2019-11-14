@@ -1,0 +1,122 @@
+- bands:
+  - end: 2300000
+    gieStain: gneg
+    name: p36.33
+    start: 0
+  - end: 5400000
+    gieStain: gpos25
+    name: p36.32
+    start: 2300000
+  - end: 7200000
+    gieStain: gneg
+    name: p36.31
+    start: 5400000
+  - end: 9200000
+    gieStain: gpos25
+    name: p36.23
+    start: 7200000
+  - end: 12700000
+    gieStain: gneg
+    name: p36.22
+    start: 9200000
+  - end: 16200000
+    gieStain: gpos50
+    name: p36.21
+    start: 12700000
+  - end: 20400000
+    gieStain: gneg
+    name: p36.13
+    start: 16200000
+  name: '1'
+- bands:
+  - end: 4400000
+    gieStain: gneg
+    name: p25.3
+    start: 0
+  - end: 7100000
+    gieStain: gpos50
+    name: p25.2
+    start: 4400000
+  - end: 12200000
+    gieStain: gneg
+    name: p25.1
+    start: 7100000
+  - end: 16700000
+    gieStain: gpos75
+    name: p24.3
+    start: 12200000
+  - end: 19200000
+    gieStain: gneg
+    name: p24.2
+    start: 16700000
+  - end: 24000000
+    gieStain: gpos75
+    name: p24.1
+    start: 19200000
+  - end: 27900000
+    gieStain: gneg
+    name: p23.3
+    start: 24000000
+  - end: 30000000
+    gieStain: gpos25
+    name: p23.2
+    start: 27900000
+  - end: 32100000
+    gieStain: gneg
+    name: p23.1
+    start: 30000000
+  - end: 36600000
+    gieStain: gpos75
+    name: p22.3
+    start: 32100000
+  - end: 38600000
+    gieStain: gneg
+    name: p22.2
+    start: 36600000
+  name: '2'
+- bands:
+  - end: 4400000
+    gieStain: gneg
+    name: p25.3
+    start: 0
+  - end: 7100000
+    gieStain: gpos50
+    name: p25.2
+    start: 4400000
+  - end: 12200000
+    gieStain: gneg
+    name: p25.1
+    start: 7100000
+  - end: 16700000
+    gieStain: gpos75
+    name: p24.3
+    start: 12200000
+  - end: 19200000
+    gieStain: gneg
+    name: p24.2
+    start: 16700000
+  - end: 24000000
+    gieStain: gpos75
+    name: p24.1
+    start: 19200000
+  - end: 27900000
+    gieStain: gneg
+    name: p23.3
+    start: 24000000
+  - end: 30000000
+    gieStain: gpos25
+    name: p23.2
+    start: 27900000
+  - end: 32100000
+    gieStain: gneg
+    name: p23.1
+    start: 30000000
+  - end: 36600000
+    gieStain: gpos75
+    name: p22.3
+    start: 32100000
+  - end: 38600000
+    gieStain: gneg
+    name: p22.2
+    start: 36600000
+  name: '3'
