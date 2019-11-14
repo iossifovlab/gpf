@@ -18,16 +18,22 @@ class ChromosomeView(QueryBaseView):
 
         reader['#chrom'] = reader['#chrom'].map(lambda x: x[3:])
 
-        self.chromosomes.append({'name': '1', 'bands': []})
-        for _, row in reader.iterrows():
-            if self.chromosomes[-1]['name'] != row['#chrom']:
-                self.chromosomes.append({'name': row['#chrom'], 'bands': []})
-            self.chromosomes[-1]['bands'].append({
-                'start': int(row['chromStart']),
-                'end': int(row['chromEnd']),
-                'name': row['name'],
-                'gieStain': row['gieStain']
-            })
+        cols = ['chromStart', 'chromEnd', 'name', 'gieStain']
+        reader = reader.groupby('#chrom')[cols] \
+                       .apply(lambda x: x.values.tolist()) \
+                       .to_dict()
+
+        for k, v in reader.items():
+            bands = []
+            for band in v:  # Maybe find a way to do this with pandas
+                bands.append({
+                    'start': int(band[0]),
+                    'end': int(band[1]),
+                    'name': band[2],
+                    'gieStain': band[3]
+                })
+
+            self.chromosomes.append({'name': k, 'bands': bands})
 
     def get(self, request):
         return Response(self.chromosomes)
