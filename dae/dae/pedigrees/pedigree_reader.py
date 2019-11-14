@@ -1,3 +1,4 @@
+import copy
 from functools import partial
 
 import numpy as np
@@ -183,6 +184,27 @@ class PedigreeReader(object):
             'is '
             'given. [default: %(default)s]'
         )
+
+    @staticmethod
+    def cast_pedigree_column_indices_to_int(argv):
+        ped_col_args = [
+            'ped_family',
+            'ped_person',
+            'ped_mom',
+            'ped_dad',
+            'ped_sex',
+            'ped_status',
+            'ped_role',
+        ]
+        res_argv = copy.deepcopy(argv)
+
+        for col in ped_col_args:
+            col_idx = getattr(argv, col)
+            assert col_idx.isnumeric(), \
+                '{} must hold an integer value!'.format(col)
+            setattr(res_argv, col, int(col_idx))
+
+        return res_argv
 
     @staticmethod
     def flexible_pedigree_read(

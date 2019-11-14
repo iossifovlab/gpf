@@ -18,22 +18,16 @@ from dae.backends.configure import Configure
 from dae.backends.dae.loader import RawDaeLoader
 from dae.backends.dae.raw_dae import RawDAE, RawDenovo
 
-from dae.backends.vcf.raw_vcf import RawVcfVariants
 from dae.backends.vcf.loader import RawVcfLoader
-
-from dae.backends.vcf.annotate_allele_frequencies import \
-    VcfAlleleFrequencyAnnotator
 
 from dae.backends.import_commons import \
     construct_import_annotation_pipeline
-from dae.tools.vcf2parquet import import_vcf
+
 from dae.pedigrees.pedigree_reader import PedigreeReader
 from dae.pedigrees.family import FamiliesData
 from dae.utils.helpers import pedigree_from_path
 from dae.backends.impala.parquet_io import ParquetManager
 from dae.backends.storage.impala_genotype_storage import ImpalaGenotypeStorage
-
-from dae.backends.import_commons import construct_import_annotation_pipeline
 
 from dae.tools.vcf2parquet import vcf2parquet
 
@@ -300,46 +294,6 @@ def dae_transmitted(
     return transmitted
 
 
-@pytest.fixture
-def vcf_import_config():
-    fullpath = relative_to_this_test_folder(
-        'fixtures/vcf_import/effects_trio'
-    )
-    config = Configure.from_prefix_vcf(fullpath)
-    return config.vcf
-
-
-@pytest.fixture
-def vcf_import_raw(
-        vcf_import_config, default_genome, annotation_pipeline_internal,
-        genomes_db):
-
-    ped_df = PedigreeReader.flexible_pedigree_read(vcf_import_config.pedigree)
-    fvars = RawVcfLoader.load_raw_vcf_variants(
-        ped_df, vcf_import_config.vcf)
-    fvars.annot_df = annotation_pipeline_internal.annotate_df(fvars.annot_df)
-    RawVcfLoader.save_annotation_file(
-        fvars.annot_df, vcf_import_config.annotation)
-
-    return fvars
-
-
-@pytest.fixture
-def fixture_select(
-        vcf_import_raw,
-        annotation_pipeline_config, annotation_pipeline_default_config):
-    def build(fixture_name):
-        if fixture_name == 'vcf_import_raw':
-            return vcf_import_raw
-        elif fixture_name == 'annotation_pipeline_config':
-            return annotation_pipeline_config
-        elif fixture_name == 'annotation_pipeline_default_config':
-            return annotation_pipeline_default_config
-        else:
-            raise ValueError(fixture_name)
-    return build
-
-
 @pytest.fixture(scope='session')
 def dae_iossifov2014_config():
     fullpath = relative_to_this_test_folder(
@@ -371,15 +325,19 @@ def dae_iossifov2014(
 @pytest.fixture(scope='session')
 def variants_vcf(genomes_db, default_annotation_pipeline):
     def builder(path):
-        prefix = os.path.join(relative_to_this_test_folder('fixtures'), path)
+        if os.path.isabs(path):
+            prefix = path
+        else:
+            prefix = os.path.join(
+                relative_to_this_test_folder('fixtures'), path)
+        print(prefix)
         conf = Configure.from_prefix_vcf(prefix)
+        print(conf)
+
         ped_df = PedigreeReader.flexible_pedigree_read(conf.vcf.pedigree)
-        fvars = RawVcfLoader.load_raw_vcf_variants(
-            ped_df, conf.vcf.vcf
+        fvars = RawVcfLoader.load_and_annotate_raw_vcf_variants(
+            ped_df, conf.vcf.vcf, default_annotation_pipeline
         )
-        fvars.annot_df = default_annotation_pipeline.annotate_df(
-            fvars.annot_df)
-        RawVcfLoader.save_annotation_file(fvars.annot_df, conf.vcf.annotation)
 
         return fvars
     return builder
@@ -592,16 +550,17 @@ def data_import(
             # test_impala_helpers.import_variants(impala_config)
             study_temp_dirname = os.path.join(temp_dirname, study_id)
 
-            vcf2parquet(
+            parquet_filenames = vcf2parquet(
                 study_id, ped_df, vcf.vcf,
                 genomes_db, annotation_pipeline, parquet_manager,
-                output=study_temp_dirname, bucket_index=0, region=None
+                output=study_temp_dirname, bucket_index=0, region=None,
+                include_reference=True
             )
 
             impala_genotype_storage.impala_load_study(
                 study_id,
-                os.path.join(study_temp_dirname, 'pedigree'),
-                os.path.join(study_temp_dirname, 'variants')
+                parquet_filenames.pedigree,
+                parquet_filenames.variant
             )
 
     build('backends/')

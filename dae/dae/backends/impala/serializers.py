@@ -15,42 +15,6 @@ from dae.variants.effects import Effect
 
 class ParquetSerializer(object):
 
-    BASE_SCHEMA = pa.schema([
-        pa.field("bucket_index", pa.int32()),
-        pa.field("summary_variant_index", pa.int64()),
-        pa.field("allele_index", pa.int8()),
-        pa.field("chrom", pa.string()),
-        pa.field("position", pa.int32()),
-        pa.field("reference", pa.string()),
-        pa.field("alternative", pa.string()),
-        pa.field("variant_type", pa.int8()),
-        pa.field("worst_effect", pa.string()),
-        pa.field("alternatives_data", pa.string()),
-
-        pa.field("effect_type", pa.string()),
-        pa.field("effect_gene", pa.string()),
-        pa.field("effect_data", pa.string()),
-
-        pa.field("family_variant_index", pa.int64()),
-        pa.field("family_id", pa.string()),
-        pa.field("is_denovo", pa.bool_()),
-
-        pa.field("variant_sexes", pa.int8()),
-        pa.field("variant_roles", pa.int32()),
-        pa.field("variant_inheritance", pa.int16()),
-
-        pa.field("variant_in_member", pa.string()),
-        pa.field("genotype_data", pa.string()),
-
-        pa.field('af_parents_called_count', pa.int32()),
-        pa.field('af_parents_called_percent', pa.float32()),
-        pa.field('af_allele_count', pa.int32()),
-        pa.field('af_allele_freq', pa.float32()),
-        pa.field('frequency_data', pa.string()),
-        pa.field('genomic_scores_data', pa.string()),
-
-    ])
-
     GENOMIC_SCORES_SCHEMA_CLEAN_UP = [
         'family_bin',
         'rare',
@@ -112,8 +76,9 @@ class ParquetSerializer(object):
         ]
     )
 
-    def __init__(self, include_reference=True, schema=None):
-        assert isinstance(schema, ParquetSchema)
+    def __init__(self, schema, include_reference=False):
+        assert schema is not None
+        assert isinstance(schema, ParquetSchema), type(schema)
 
         self.include_reference = include_reference
         self.schema = schema
@@ -121,7 +86,7 @@ class ParquetSerializer(object):
 
     def _setup_genomic_scores(self):
         base_schema = ParquetSchema.from_arrow(
-            ParquetSerializer.BASE_SCHEMA)
+            ParquetSchema.BASE_SCHEMA)
         genomic_scores_schema = ParquetSchema.diff_schemas(
             self.schema, base_schema)
         for field_name in self.GENOMIC_SCORES_SCHEMA_CLEAN_UP:

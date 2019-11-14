@@ -6,31 +6,6 @@ Created on Jul 5, 2018
 import pytest
 
 
-@pytest.mark.xfail(reason='import of genomic scores are broken in impala')
-@pytest.mark.parametrize("variants", [
-    'vcf_import_raw',
-])
-@pytest.mark.parametrize("real_attr_filter,count", [
-    ([('score0', (None, 865664))], 5),
-    ([('score0', (865583, 865664))], 4),
-    ([('score0', (865583, 865664)), ('score2', (8656.25, 9019))], 2),
-    (None, 10),
-    ([], 10),
-])
-def test_real_attr_queries_with_scores(
-        variants, fixture_select,
-        real_attr_filter, count):
-
-    fvars = fixture_select(variants)
-
-    vs = fvars.query_variants(
-        real_attr_filter=real_attr_filter)
-    vs = list(vs)
-    for v in vs:
-        print(v)
-    assert len(vs) == count
-
-
 @pytest.mark.parametrize("variants", [
     "variants_vcf",
     "variants_impala",

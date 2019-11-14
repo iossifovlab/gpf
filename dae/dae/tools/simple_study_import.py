@@ -3,8 +3,6 @@
 import os
 import sys
 import time
-import copy
-from functools import partial
 import argparse
 
 from dae.gpf_instance.gpf_instance import GPFInstance
@@ -110,27 +108,6 @@ def generate_denovo_gene_sets(gpf_instance, study_id):
     main(gpf_instance=gpf_instance, argv=argv)
 
 
-def cast_pedigree_column_indices_to_int(argv):
-    ped_col_args = [
-        'ped_family',
-        'ped_person',
-        'ped_mom',
-        'ped_dad',
-        'ped_sex',
-        'ped_status',
-        'ped_role',
-    ]
-    res_argv = copy.deepcopy(argv)
-
-    for col in ped_col_args:
-        col_idx = getattr(argv, col)
-        assert col_idx.isnumeric(), \
-            '{} must hold an integer value!'.format(col)
-        setattr(res_argv, col, int(col_idx))
-
-    return res_argv
-
-
 if __name__ == "__main__":
     gpf_instance = GPFInstance()
     dae_config = gpf_instance.dae_config
@@ -166,9 +143,12 @@ if __name__ == "__main__":
     assert output is not None
     assert argv.vcf is not None or argv.denovo is not None
 
-    # handle pedigree
-    load_pedigree_partial = partial(
-        PedigreeReader.flexible_pedigree_read,
+    has_header = True
+    if argv.ped_no_header:
+        argv = PedigreeReader.cast_pedigree_column_indices_to_int(argv)
+
+    ped_df = PedigreeReader.flexible_pedigree_read(
+        argv.pedigree,
         col_family=argv.ped_family,
         col_person=argv.ped_person,
         col_mom=argv.ped_mom,
@@ -176,13 +156,7 @@ if __name__ == "__main__":
         col_sex=argv.ped_sex,
         col_status=argv.ped_status,
         col_role=argv.ped_role,
-    )
-
-    if argv.ped_no_header:
-        argv = cast_pedigree_column_indices_to_int(argv)
-        ped_df = load_pedigree_partial(argv.pedigree, has_header=False)
-    else:
-        ped_df = load_pedigree_partial(argv.pedigree)
+        has_header=has_header)
 
     if argv.ped_no_role:
         ped_df = PedigreeRoleGuesser.guess_role_nuc(ped_df)

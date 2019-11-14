@@ -3,21 +3,17 @@ from dae.backends.impala.parquet_io import VariantsParquetWriter
 
 
 def test_impala_import_annotation(
-        vcf_import_raw, annotation_pipeline_internal, temp_filename):
-    assert annotation_pipeline_internal
+        variants_vcf, temp_filename):
 
-    fvars = vcf_import_raw
+    fvars = variants_vcf('vcf_import/effects_trio')
 
-    parquet_writer = VariantsParquetWriter(
-        fvars.families,
-        fvars.full_variants_iterator(),
-        annotation_pipeline_internal)
+    parquet_writer = VariantsParquetWriter(fvars)
 
     assert parquet_writer is not None
 
     print(parquet_writer.schema)
     print(dir(parquet_writer.schema))
-    print(parquet_writer.schema.names)
+    # print(parquet_writer.schema.names)
     parquet_writer.save_variants_to_parquet(
         temp_filename
     )

@@ -43,10 +43,7 @@ def test_full_variants_iterator_parquet_storage_unknown_variants(
     fvars = variants_impl(variants)(fixture_name)
     assert fvars is not None
 
-    full_iterator = fvars.full_variants_iterator()
-
-    parquet_writer = VariantsParquetWriter(fvars.families, full_iterator)
-
+    parquet_writer = VariantsParquetWriter(fvars)
     table_iterator = parquet_writer.variants_table()
     for t in table_iterator:
         print(t)

@@ -1,10 +1,11 @@
-from dae.variants.family_variant import FamilyVariant, FamilyAllele
+from dae.variants.family_variant import FamilyAllele
 
 from dae.backends.attributes_query import role_query, sex_query, \
     inheritance_query,\
     variant_type_query
 
 import enum
+
 
 class TransmissionType(enum.Enum):
 
@@ -19,6 +20,8 @@ class RawFamilyVariants:
             self, families, transmission_type=TransmissionType.transmitted):
         self.families = families
         self.transmission_type = transmission_type
+        self.annot_df = None
+        self.annotation_schema = None
 
     @staticmethod
     def filter_regions(v, regions):
@@ -205,3 +208,7 @@ class RawFamilyVariants:
                 if alleles_matched:
                     v.set_matched_alleles(alleles_matched)
                     yield v
+
+    def annotate(self, annotation_pipeline):
+        self.annot_df = annotation_pipeline.annotate_df(self.annot_df)
+        self.annotation_schema = annotation_pipeline.build_annotation_schema()

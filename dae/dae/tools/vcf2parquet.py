@@ -8,16 +8,8 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 
 from dae.annotation.tools.annotator_config import annotation_config_cli_options
 
-from dae.backends.vcf.annotate_allele_frequencies import \
-    VcfAlleleFrequencyAnnotator
-
-from dae.backends.configure import Configure
-from dae.backends.vcf.raw_vcf import RawVcfVariants
 from dae.backends.vcf.loader import RawVcfLoader
-
-from dae.backends.impala.parquet_io import ParquetManager
-from dae.backends.vcf.raw_vcf import RawFamilyVariants
-from dae.backends.vcf.loader import RawVcfLoader
+from dae.backends.impala.parquet_io import ParquetManager, ParquetSerializer
 
 from cyvcf2 import VCF
 
@@ -29,24 +21,6 @@ from dae.backends.import_commons import construct_import_annotation_pipeline
 def get_contigs(vcf_filename):
     vcf = VCF(vcf_filename)
     return vcf.seqnames
-
-
-def import_vcf(
-        genomes_db, annotation_pipeline,
-        ped_df, vcf_filename,
-        region=None):
-
-    assert os.path.exists(vcf_filename), vcf_filename
-
-    fvars = RawVcfLoader.load_raw_vcf_variants(
-        ped_df, vcf_filename, annotation_filename=None)
-
-    fvars.annot_df = annotation_pipeline.annotate_df(fvars.annot_df)
-
-    if fvars.is_empty():
-        print('empty bucket {} done'.format(vcf_filename), file=sys.stderr)
-
-    return fvars
 
 
 def parse_cli_arguments(gpf_instance, argv=sys.argv[1:]):
@@ -150,35 +124,42 @@ def generate_makefile(dae_config, genome, argv):
     )
 
 
+def load_and_annotate_vcf():
+    pass
+
+
 def vcf2parquet(
-        study_id, ped_df, vcf_file,
+        study_id, ped_df, vcf_filename,
         genomes_db, annotation_pipeline, parquet_manager,
         output='.', bucket_index=1, region=None,
-        filesystem=None, skip_pedigree=False):
+        filesystem=None, skip_pedigree=False, include_reference=False):
 
-    parquet_config = ParquetManager.parquet_file_config(
+    assert os.path.exists(vcf_filename), vcf_filename
+
+    parquet_filenames = ParquetManager.build_parquet_filenames(
         output, bucket_index=bucket_index, study_id=study_id
     )
-    print("converting into ", parquet_config, file=sys.stderr)
+    print("converting into ", parquet_filenames.variant, file=sys.stderr)
 
-    fvars = import_vcf(
-        genomes_db, annotation_pipeline,
-        ped_df, vcf_file,
-        region=region
-    )
+    fvars = RawVcfLoader.load_and_annotate_raw_vcf_variants(
+        ped_df, vcf_filename, annotation_pipeline, region=region)
+
+    if fvars.is_empty():
+        print('empty bucket {} done'.format(vcf_filename), file=sys.stderr)
 
     if not skip_pedigree:
         parquet_manager.pedigree_to_parquet(
-            fvars, parquet_config, filesystem=filesystem
+            fvars, parquet_filenames.pedigree, filesystem=filesystem
         )
+
     parquet_manager.variants_to_parquet(
-        fvars, parquet_config,
+        fvars, parquet_filenames.variant,
         bucket_index=bucket_index,
-        annotation_pipeline=annotation_pipeline,
+        include_reference=include_reference,
         filesystem=filesystem
     )
 
-    return parquet_config
+    return parquet_filenames
 
 
 if __name__ == "__main__":

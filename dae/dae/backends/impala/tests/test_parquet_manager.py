@@ -16,39 +16,39 @@ def test_get_data_dir(parquet_manager):
     'prefix,study_id,bucket_index,suffix,pedigree,variant', [
         (
             '/tmp', None, 0, None, '/tmp/pedigree/tmp_pedigree.parquet',
-            '/tmp/variants/tmp_variant.parquet'
+            '/tmp/variant/tmp_variant.parquet'
         ),
         (
             '/tmp', 'study_id', 0, None,
             '/tmp/pedigree/study_id_pedigree.parquet',
-            '/tmp/variants/study_id_variant.parquet'
+            '/tmp/variant/study_id_variant.parquet'
         ),
         (
             '/tmp', 'study_id', 1, None,
             '/tmp/pedigree/study_id_pedigree_000001.parquet',
-            '/tmp/variants/study_id_variant_000001.parquet'
+            '/tmp/variant/study_id_variant_000001.parquet'
         ),
         (
             '/tmp', 'study_id', 0, 'suffix',
             '/tmp/pedigree/study_id_pedigreesuffix.parquet',
-            '/tmp/variants/study_id_variantsuffix.parquet'
+            '/tmp/variant/study_id_variantsuffix.parquet'
         ),
         (
             '/tmp', 'study_id', 1111111, 'suffix',
             '/tmp/pedigree/study_id_pedigree_1111111suffix.parquet',
-            '/tmp/variants/study_id_variant_1111111suffix.parquet'
+            '/tmp/variant/study_id_variant_1111111suffix.parquet'
         )
     ]
 )
 def test_parquet_file_config(
         parquet_manager, prefix, study_id, bucket_index, suffix, pedigree,
         variant):
-    parquet_file_config = parquet_manager.parquet_file_config(
+    parquet_file_config = parquet_manager.build_parquet_filenames(
         prefix, study_id, bucket_index, suffix
     )
 
-    assert parquet_file_config.files.pedigree == pedigree
-    assert parquet_file_config.files.variant == variant
+    assert parquet_file_config.pedigree == pedigree
+    assert parquet_file_config.variant == variant
 
 
 def test_generate_study_config_exist(capsys, parquet_manager):
@@ -91,57 +91,31 @@ genotype_storage = genotype_impala
 '''
 
 
-def test_pedigree_to_parquet(parquet_manager, quads_f1_variants):
-    data_dir = relative_to_this_test_folder(
-        'fixtures/studies/quads_f1_impala'
-    )
-    pedigree_path = relative_to_this_test_folder(
-        'fixtures/studies/quads_f1_impala/pedigree/'
+def test_pedigree_to_parquet(parquet_manager, variants_vcf, temp_dirname):
+    fvars = variants_vcf('backends/effects_trio')
+
+    data_dir = temp_dirname
+    pedigree_path = os.path.join(
+        data_dir,
         'quads_f1_impala_pedigree.parquet'
     )
-    variant_path = relative_to_this_test_folder(
-        'fixtures/studies/quads_f1_impala/variant/'
-        'quads_f1_impala_variant.parquet'
-    )
-    shutil.rmtree(data_dir, ignore_errors=True)
-
-    parquet_config = Box({
-        'files': {
-            'pedigree': pedigree_path,
-            'variant': variant_path
-        }
-    })
-
     assert not os.path.exists(pedigree_path)
 
-    parquet_manager.pedigree_to_parquet(quads_f1_variants, parquet_config)
-
+    parquet_manager.pedigree_to_parquet(fvars, pedigree_path)
     assert os.path.exists(pedigree_path)
 
 
-def test_variant_to_parquet(parquet_manager, quads_f1_variants):
-    data_dir = relative_to_this_test_folder(
-        'fixtures/studies/quads_f1_impala'
-    )
-    pedigree_path = relative_to_this_test_folder(
-        'fixtures/studies/quads_f1_impala/pedigree/'
-        'quads_f1_impala_pedigree.parquet'
-    )
-    variant_path = relative_to_this_test_folder(
-        'fixtures/studies/quads_f1_impala/variant/'
+def test_variant_to_parquet(parquet_manager, variants_vcf, temp_dirname):
+    fvars = variants_vcf('backends/effects_trio')
+
+    data_dir = temp_dirname
+    variant_path = os.path.join(
+        data_dir,
         'quads_f1_impala_variant.parquet'
     )
-    shutil.rmtree(data_dir, ignore_errors=True)
-
-    parquet_config = Box({
-        'files': {
-            'pedigree': pedigree_path,
-            'variant': variant_path
-        }
-    })
 
     assert not os.path.exists(variant_path)
 
-    parquet_manager.variants_to_parquet(quads_f1_variants, parquet_config)
+    parquet_manager.variants_to_parquet(fvars, variant_path)
 
     assert os.path.exists(variant_path)

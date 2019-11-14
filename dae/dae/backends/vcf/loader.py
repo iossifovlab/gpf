@@ -91,7 +91,7 @@ class VcfFamily(Family):
 class RawVcfLoader(RawVariantsLoader):
 
     @staticmethod
-    def load_vcf(filename, region=None):
+    def load_vcf_file(filename, region=None):
         assert os.path.exists(filename)
         return VCFWrapper(filename, region)
 
@@ -167,21 +167,22 @@ class RawVcfLoader(RawVariantsLoader):
             cls, ped_df, vcf_filename,
             annotation_filename=None, region=None):
 
-        vcf = RawVcfLoader.load_vcf(vcf_filename, region)
+        vcf = cls.load_vcf_file(vcf_filename, region)
 
         annot_df = None
         if annotation_filename is None:
             annotation_filename = cls.annotation_filename(vcf_filename)
         if annotation_filename is not None \
                 and os.path.exists(annotation_filename):
-            annot_df = RawVcfLoader.load_annotation_file(annotation_filename)
+            annot_df = cls.load_annotation_file(annotation_filename)
 
-        return RawVcfLoader.build_raw_vcf(ped_df, vcf, annot_df)
+        return cls.build_raw_vcf(ped_df, vcf, annot_df)
 
-    @staticmethod
-    def load_raw_vcf_variants_from_prefix(prefix):
-        config = Configure.from_prefix_vcf(prefix).vcf
-        ped_df = PedigreeReader.flexible_pedigree_read(config.pedigree)
-        return RawVcfLoader.load_raw_vcf_variants(
-            ped_df, config.vcf, config.annotation
-        )
+    @classmethod
+    def load_and_annotate_raw_vcf_variants(
+            cls, ped_df, vcf_filename,
+            annotation_pipeline, region=None):
+
+        fvars = cls.load_raw_vcf_variants(ped_df, vcf_filename, region)
+        fvars.annotate(annotation_pipeline)
+        return fvars

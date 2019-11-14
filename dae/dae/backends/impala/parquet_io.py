@@ -11,14 +11,13 @@ import pyarrow.parquet as pq
 
 from dae.utils.vcf_utils import GENOTYPE_TYPE
 from dae.variants.family_variant import FamilyAllele, FamilyVariant
-from dae.annotation.tools.file_io_parquet import ParquetSchema
 from dae.backends.impala.serializers import ParquetSerializer
 
 
 class ParquetData(object):
 
     def __init__(self, schema):
-        self.schema = schema
+        self.schema = schema.to_arrow()
         self.data_reset()
 
     def data_reset(self):
@@ -62,44 +61,29 @@ class ParquetData(object):
 
 class VariantsParquetWriter(object):
 
-    ANNOTATION_EXCLUDE = [
-        'effect_gene_genes',
-        'effect_gene_types',
-        'effect_genes',
-        'effect_details_transcript_ids',
-        'effect_details_details',
-        'effect_details',
-        'OLD_effectType',
-        'OLD_effectGene',
-        'OLD_effectDetails',
-    ]
-
     def __init__(
-            self, families, full_variants_iterator,
-            annotation_pipeline=None,
-            return_reference=True,
-            return_unknown=True):
+            self, fvars,
+            bucket_index=1, rows=100000,
+            include_reference=True,
+            include_unknown=True,
+            filesystem=None):
 
-        self.families = families
-        self.full_variants_iterator = full_variants_iterator
-        self.return_reference = return_reference
-        self.return_unknown = return_unknown
+        self.fvars = fvars
+        self.families = fvars.families
+        self.full_variants_iterator = fvars.full_variants_iterator()
 
-        if self.return_unknown:
-            assert self.return_reference
+        self.include_reference = include_reference
+        self.include_unknown = include_unknown
 
-        annotation_schema = ParquetSchema.from_arrow(
-            ParquetSerializer.BASE_SCHEMA)
-        if annotation_pipeline is not None:
-            annotation_pipeline.collect_annotator_schema(annotation_schema)
-            for schema_key in self.ANNOTATION_EXCLUDE:
-                if schema_key in annotation_schema:
-                    del annotation_schema[schema_key]
+        self.bucket_index = bucket_index
+        self.rows = rows
+        self.filesystem = filesystem
 
-        self.schema = annotation_schema.to_arrow()
+        if self.include_unknown:
+            assert self.include_unknown
+        self.schema = fvars.annotation_schema
         self.parquet_serializer = ParquetSerializer(
-            schema=annotation_schema
-        )
+            self.schema, include_reference=True)
 
         self.start = time.time()
         self.data = ParquetData(self.schema)
@@ -145,7 +129,7 @@ class VariantsParquetWriter(object):
         )
 
     def _process_family_variant(
-        self, bucket_index,  summary_variant_index, family_variant_index,
+        self, summary_variant_index, family_variant_index,
             family_variant):
 
         effect_data = \
@@ -167,7 +151,8 @@ class VariantsParquetWriter(object):
             )
 
         for family_allele in family_variant.alleles:
-            if family_allele.is_reference_allele and not self.return_reference:
+            if family_allele.is_reference_allele and \
+                    not self.include_reference:
                 continue
 
             summary = \
@@ -195,14 +180,13 @@ class VariantsParquetWriter(object):
                     [summary], [frequency], [genomic_scores],
                     effect_genes, [family], member):
 
-                self.data.data_append('bucket_index', bucket_index)
+                self.data.data_append('bucket_index', self.bucket_index)
 
                 for d in (s, freq, gs, e, f, m):
                     for key, val in d._asdict().items():
                         self.data.data_append(key, val)
 
-    def variants_table(self, bucket_index=0, rows=10000):
-
+    def variants_table(self):
         family_variant_index = 0
         for summary_variant_index, (sumary_variant, family_variants) in \
                 enumerate(self.full_variants_iterator):
@@ -211,19 +195,19 @@ class VariantsParquetWriter(object):
                 family_variant_index += 1
 
                 if family_variant.is_unknown():
-                    if not self.return_unknown:
+                    if not self.include_unknown:
                         continue
                     # handle all unknown variants
                     unknown_variant = self._setup_all_unknown_variant(
                         sumary_variant, family_variant.family_id)
                     self._process_family_variant(
-                        bucket_index, summary_variant_index,
+                        summary_variant_index,
                         family_variant_index,
                         unknown_variant
                     )
                 else:
                     self._process_family_variant(
-                        bucket_index, summary_variant_index,
+                        summary_variant_index,
                         family_variant_index,
                         family_variant)
 
@@ -232,11 +216,11 @@ class VariantsParquetWriter(object):
                 print(
                     'Bucket {}: {} family variants imported for {:.2f} sec'.
                     format(
-                        bucket_index,
+                        self.bucket_index,
                         family_variant_index, elapsed),
                     file=sys.stderr)
 
-            if len(self.data) >= rows:
+            if len(self.data) >= self.rows:
                 table = self.data.build_table()
 
                 yield table
@@ -247,7 +231,7 @@ class VariantsParquetWriter(object):
             yield table
 
         print('-------------------------------------------', file=sys.stderr)
-        print('Bucket:', bucket_index, file=sys.stderr)
+        print('Bucket:', self.bucket_index, file=sys.stderr)
         print('-------------------------------------------', file=sys.stderr)
         elapsed = time.time() - self.start
         print(
@@ -257,16 +241,15 @@ class VariantsParquetWriter(object):
             file=sys.stderr)
 
     def save_variants_to_parquet(
-            self, filename=None, bucket_index=1, rows=100000,
-            filesystem=None):
+            self, filename):
 
         writer = pq.ParquetWriter(
             filename, self.data.schema,
-            compression='snappy', filesystem=filesystem)
+            compression='snappy',
+            filesystem=self.filesystem)
 
         try:
-            for table in self.variants_table(
-                    bucket_index=bucket_index, rows=rows):
+            for table in self.variants_table():
                 assert table.schema == self.data.schema
                 writer.write_table(table)
 
@@ -288,7 +271,7 @@ class ParquetManager:
         )
 
     @staticmethod
-    def parquet_file_config(
+    def build_parquet_filenames(
             prefix, study_id=None, bucket_index=0, suffix=None):
         assert bucket_index >= 0
 
@@ -307,7 +290,7 @@ class ParquetManager:
             filesuffix = f'_{bucket_index:0>6}{suffix}'
 
         variant_filename = os.path.join(
-            prefix, 'variants',
+            prefix, 'variant',
             f'{study_id}_variant{filesuffix}.parquet'
         )
         pedigree_filename = os.path.join(
@@ -316,12 +299,9 @@ class ParquetManager:
         )
 
         conf = {
-            'files': {
-                'variant': variant_filename,
-                'pedigree': pedigree_filename,
-            }
+            'variant': variant_filename,
+            'pedigree': pedigree_filename,
         }
-
         return Box(conf)
 
     def generate_study_config(self, study_id, genotype_storage_id):
@@ -342,45 +322,50 @@ class ParquetManager:
                 genotype_storage=genotype_storage_id
             ))
 
-    def pedigree_to_parquet(self, fvars, parquet_config, filesystem=None):
+    def pedigree_to_parquet(self, fvars, pedigree_filename, filesystem=None):
         os.makedirs(
-            os.path.split(parquet_config.files.pedigree)[0], exist_ok=True
+            os.path.split(pedigree_filename)[0], exist_ok=True
         )
 
         save_ped_df_to_parquet(
-            fvars.families.ped_df, parquet_config.files.pedigree,
+            fvars.families.ped_df, pedigree_filename,
             filesystem=filesystem
         )
 
+    @staticmethod
     def variants_to_parquet(
-            self, fvars, parquet_config, bucket_index=0, rows=100000,
-            annotation_pipeline=None, filesystem=None, no_reference=False):
+            fvars, variants_filename, bucket_index=0, rows=100000,
+            filesystem=None, 
+            include_reference=False,
+            include_unknown=False):
+
+        assert fvars.annotation_schema is not None
+
         os.makedirs(
-            os.path.split(parquet_config.files.variant)[0],
+            os.path.split(variants_filename)[0],
             exist_ok=True
         )
 
         start = time.time()
+
         variants_writer = VariantsParquetWriter(
-            fvars.families,
-            fvars.full_variants_iterator(),
-            annotation_pipeline=annotation_pipeline,
-            return_reference=not no_reference,
-            return_unknown=not no_reference
+            fvars,
+            include_reference=include_reference,
+            include_unknown=include_unknown,
+            bucket_index=bucket_index,
+            rows=rows,
+            filesystem=filesystem
         )
         print('[DONE] going to create variants writer...')
 
         variants_writer.save_variants_to_parquet(
-            parquet_config.files.variant,
-            bucket_index=bucket_index,
-            rows=rows,
-            filesystem=filesystem
+            variants_filename,
         )
         end = time.time()
 
         print(
             'DONE: {} for {:.2f} sec'.format(
-                parquet_config.files.variant, end-start),
+                variants_filename, end-start),
             file=sys.stderr
         )
 
