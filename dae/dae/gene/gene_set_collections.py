@@ -91,8 +91,10 @@ class GeneSetsDb(object):
         return self.config.gene_terms.keys()
 
     def get_gene_set_ids(self, collection_id):
-        collection = self.gene_sets_collections[collection_id]
-        return collection.gene_sets_collections.tDesc.keys()
+        gsc = self.get_gene_sets_collection(collection_id)
+        if gsc is None:
+            return None
+        return gsc.gene_sets_collections.tDesc.keys()
 
     def get_collections_descriptions(self):
         gene_sets_collections_desc = []
@@ -119,10 +121,13 @@ class GeneSetsDb(object):
             for gsc in self.get_collections_descriptions()
         ])
 
-    def load_gene_set_from_file(self, filename):
-        gsc = GeneSetsCollection(filename, config=self.config)
-        gsc.load(from_file=True)
-        return gsc
+    @staticmethod
+    def load_gene_set_from_file(filename, config):
+        assert os.path.exists(filename) and os.path.isfile(filename)
+        return GeneSetsCollection._load_collection(
+            config,
+            loadGeneTerm(filename)
+        )
 
     def _load_gene_set(self, gene_sets_collection_id, load=True):
         gsc = GeneSetsCollection(gene_sets_collection_id, config=self.config)
