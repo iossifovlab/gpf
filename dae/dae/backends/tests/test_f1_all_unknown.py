@@ -1,4 +1,3 @@
-from dae.backends.import_commons import construct_import_annotation_pipeline
 from dae.backends.impala.parquet_io import VariantsParquetWriter
 
 

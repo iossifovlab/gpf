@@ -1,16 +1,5 @@
-import os
-
-import numpy as np
-import pandas as pd
-
-from dae.pedigrees.pedigree_reader import PedigreeReader
-
-from dae.pedigrees.family import FamiliesData
-from dae.pedigrees.family import Family
 from dae.variants.variant import SummaryVariantFactory
-from dae.variants.family_variant import FamilyVariant, FamilyAllele
-
-from dae.backends.configure import Configure
+from dae.variants.family_variant import FamilyVariant
 
 from dae.backends.raw.raw_variants import RawFamilyVariants, TransmissionType
 

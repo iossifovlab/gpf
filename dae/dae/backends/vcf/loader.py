@@ -10,10 +10,8 @@ from cyvcf2 import VCF
 import numpy as np
 import pandas as pd
 
-from dae.pedigrees.pedigree_reader import PedigreeReader
 from dae.pedigrees.family import FamiliesData, Family
 
-from dae.backends.configure import Configure
 from dae.backends.raw.loader import RawVariantsLoader
 
 from dae.backends.vcf.annotate_allele_frequencies import \
@@ -138,8 +136,8 @@ class RawVcfLoader(RawVariantsLoader):
                     (v.CHROM, v.start + 1,
                         v.REF, alt,
                         index,
-                        allele_index + 1, allele_count
-                        ))
+                        allele_index + 1, allele_count)
+                )
         annot_df = pd.DataFrame.from_records(
             data=records,
             columns=[

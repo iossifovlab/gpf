@@ -13,7 +13,6 @@ def test_impala_import_annotation(
 
     print(parquet_writer.schema)
     print(dir(parquet_writer.schema))
-    # print(parquet_writer.schema.names)
     parquet_writer.save_variants_to_parquet(
         temp_filename
     )

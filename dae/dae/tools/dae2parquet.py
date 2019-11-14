@@ -241,31 +241,30 @@ def parse_cli_arguments(gpf_instance, argv=sys.argv[1:]):
 
 def denovo2parquet(
         study_id, ped_df, denovo_df,
-        parquet_manager, annotation_pipeline, genome,
+        annotation_pipeline, genome,
         output='.', bucket_index=0, rows=10000, filesystem=None,
         skip_pedigree=False):
 
-    parquet_config = ParquetManager.parquet_file_config(
+    parquet_filenames = ParquetManager.build_parquet_filenames(
         output, bucket_index=bucket_index, study_id=study_id)
-    print("converting into ", parquet_config, file=sys.stderr)
+    print("converting into ", parquet_filenames, file=sys.stderr)
 
     families = FamiliesData.from_pedigree_df(ped_df)
     annot_df = RawDaeLoader._build_initial_annotation(denovo_df)
-    annot_df = annotation_pipeline.annotate_df(annot_df)
 
     fvars = RawDenovo(families, denovo_df, annot_df)
+    fvars.annotate(annotation_pipeline)
 
     if not skip_pedigree:
-        parquet_manager.pedigree_to_parquet(fvars, parquet_config)
+        ParquetManager.pedigree_to_parquet(fvars, parquet_filenames.pedigree)
 
-    parquet_manager.variants_to_parquet(
-        fvars, parquet_config,
+    ParquetManager.variants_to_parquet(
+        fvars, parquet_filenames.variant,
         rows=rows, bucket_index=bucket_index,
-        annotation_pipeline=annotation_pipeline,
         filesystem=filesystem
     )
 
-    return parquet_config
+    return parquet_filenames
 
 
 def dae2parquet(
@@ -274,25 +273,21 @@ def dae2parquet(
     study_id = os.path.splitext(filename)[0]
     print(filename, os.path.splitext(filename), study_id)
 
-    parquet_config = ParquetManager.parquet_file_config(
+    parquet_filenames = ParquetManager.build_parquet_filenames(
         argv.output, bucket_index=argv.bucket_index, study_id=study_id)
-    print("converting into ", parquet_config, file=sys.stderr)
+    print("converting into ", parquet_filenames, file=sys.stderr)
 
     fvars = dae_build_transmitted(annotation_pipeline, genome, argv)
 
-    annotation_schema = ParquetSchema()
-    annotation_pipeline.collect_annotator_schema(annotation_schema)
-
-    parquet_manager.pedigree_to_parquet(fvars, parquet_config)
+    parquet_manager.pedigree_to_parquet(fvars, parquet_filenames.pedigree)
     parquet_manager.variants_to_parquet(
-        fvars, parquet_config,
+        fvars, parquet_filenames.variant,
         bucket_index=argv.bucket_index,
         rows=argv.rows,
-        annotation_pipeline=annotation_pipeline,
-        no_reference=argv.no_reference
+        include_reference=not argv.no_reference
     )
 
-    return parquet_config
+    return parquet_filenames
 
 
 if __name__ == "__main__":

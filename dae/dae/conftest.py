@@ -303,23 +303,61 @@ def dae_iossifov2014_config():
     return config.denovo
 
 
-@pytest.fixture
-def dae_iossifov2014(
-        dae_iossifov2014_config, default_genome, annotation_pipeline_internal):
+@pytest.fixture(scope='session')
+def iossifov2014_raw_denovo(
+        dae_iossifov2014_config, default_genome,
+        annotation_pipeline_internal):
     config = dae_iossifov2014_config
 
-    ped_df = PedigreeReader.flexible_pedigree_read(
+    ped_df = PedigreeReader.load_simple_family_file(
         config.family_filename
     )
+    families = FamiliesData.from_pedigree_df(ped_df)
 
+    denovo_df = RawDaeLoader.load_dae_denovo_file(
+        config.denovo_filename, default_genome)
+    annot_df = RawDaeLoader._build_initial_annotation(denovo_df)
     denovo = RawDenovo(
-        config.denovo_filename,
-        ped_df,
-        genome=default_genome,
-        annotator=annotation_pipeline_internal
+        families,
+        denovo_df,
+        annot_df
+    )
+    denovo.annotate(annotation_pipeline_internal)
+    return denovo
+
+
+@pytest.fixture(scope='session')
+def iossifov2014_impala(
+        request, iossifov2014_raw_denovo, genomes_db,
+        test_hdfs, impala_genotype_storage, parquet_manager):
+
+    temp_dirname = test_hdfs.tempdir(prefix='variants_', suffix='_data')
+    test_hdfs.mkdir(temp_dirname)
+
+    study_id = 'iossifov_wd2014_test'
+    parquet_filenames = ParquetManager.build_parquet_filenames(
+        temp_dirname, bucket_index=0, study_id=study_id
     )
 
-    return denovo
+    assert parquet_filenames is not None
+    print(parquet_filenames)
+
+    ParquetManager.pedigree_to_parquet(
+        iossifov2014_raw_denovo, parquet_filenames.pedigree)
+
+    ParquetManager.variants_to_parquet(
+        iossifov2014_raw_denovo, parquet_filenames.variant)
+
+    impala_genotype_storage.impala_load_study(
+        study_id,
+        parquet_filenames.pedigree,
+        parquet_filenames.variant
+    )
+
+    fvars = impala_genotype_storage.build_backend(
+        impala_genotype_storage.default_study_config(study_id),
+        genomes_db)
+    return fvars
 
 
 @pytest.fixture(scope='session')

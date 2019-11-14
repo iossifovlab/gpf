@@ -322,7 +322,8 @@ class ParquetManager:
                 genotype_storage=genotype_storage_id
             ))
 
-    def pedigree_to_parquet(self, fvars, pedigree_filename, filesystem=None):
+    @staticmethod
+    def pedigree_to_parquet(fvars, pedigree_filename, filesystem=None):
         os.makedirs(
             os.path.split(pedigree_filename)[0], exist_ok=True
         )
@@ -335,7 +336,7 @@ class ParquetManager:
     @staticmethod
     def variants_to_parquet(
             fvars, variants_filename, bucket_index=0, rows=100000,
-            filesystem=None, 
+            filesystem=None,
             include_reference=False,
             include_unknown=False):
 

@@ -9,7 +9,7 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.annotation.tools.annotator_config import annotation_config_cli_options
 
 from dae.backends.vcf.loader import RawVcfLoader
-from dae.backends.impala.parquet_io import ParquetManager, ParquetSerializer
+from dae.backends.impala.parquet_io import ParquetManager
 
 from cyvcf2 import VCF
 
@@ -130,7 +130,7 @@ def load_and_annotate_vcf():
 
 def vcf2parquet(
         study_id, ped_df, vcf_filename,
-        genomes_db, annotation_pipeline, parquet_manager,
+        genomes_db, annotation_pipeline,
         output='.', bucket_index=1, region=None,
         filesystem=None, skip_pedigree=False, include_reference=False):
 
@@ -148,11 +148,11 @@ def vcf2parquet(
         print('empty bucket {} done'.format(vcf_filename), file=sys.stderr)
 
     if not skip_pedigree:
-        parquet_manager.pedigree_to_parquet(
+        ParquetManager.pedigree_to_parquet(
             fvars, parquet_filenames.pedigree, filesystem=filesystem
         )
 
-    parquet_manager.variants_to_parquet(
+    ParquetManager.variants_to_parquet(
         fvars, parquet_filenames.variant,
         bucket_index=bucket_index,
         include_reference=include_reference,

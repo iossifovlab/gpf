@@ -1,18 +1,29 @@
 import sys
 import traceback
 import os
-from functools import partial
+import gzip
 
+from functools import partial
+from contextlib import closing
+
+import pysam
 import numpy as np
 import pandas as pd
 
-from dae.utils.vcf_utils import best2gt, str2mat, GENOTYPE_TYPE
+from dae.utils.vcf_utils import best2gt, str2mat, GENOTYPE_TYPE, \
+    reference_genotype
 from dae.utils.dae_utils import dae2vcf_variant
+from dae.utils.helpers import pedigree_from_path
 
 from dae.pedigrees.family import FamiliesData
 from dae.pedigrees.pedigree_reader import PedigreeReader
 from dae.backends.raw.loader import RawVariantsLoader
 from dae.backends.dae.raw_dae import RawDenovo, RawDAE
+
+from dae.variants.attributes import VariantType
+from dae.variants.variant import SummaryVariantFactory, SummaryVariant
+
+from dae.backends.raw.raw_variants import RawFamilyVariants, TransmissionType
 
 
 class RawDaeLoader(RawVariantsLoader):
@@ -131,9 +142,9 @@ class RawDaeLoader(RawVariantsLoader):
             ])
         return annot_df
 
-    @staticmethod
+    @classmethod
     def load_raw_denovo_variants(
-            ped_filename, denovo_filename,
+            cls, ped_filename, denovo_filename,
             annotation_filename=None, region=None):
         ped_df = PedigreeReader.flexible_pedigree_read(ped_filename)
         denovo_df = RawDaeLoader.load_dae_denovo_file(denovo_filename, region)
@@ -145,6 +156,166 @@ class RawDaeLoader(RawVariantsLoader):
             annot_df = RawDaeLoader._build_initial_annotation(denovo_df)
 
         return RawDaeLoader.build_raw_denovo(ped_df, denovo_df, annot_df)
+
+    @staticmethod
+    def _rename_columns(columns):
+        if '#chr' in columns:
+            columns[columns.index('#chr')] = 'chrom'
+        if 'chr' in columns:
+            columns[columns.index('chr')] = 'chrom'
+        if 'position' in columns:
+            columns[columns.index('position')] = 'cshl_position'
+        if 'variant' in columns:
+            columns[columns.index('variant')] = 'cshl_variant'
+        return columns
+
+    @staticmethod
+    def _load_column_names(filename):
+        with gzip.open(filename) as infile:
+            column_names = \
+                infile.readline().decode('utf-8').strip().split("\t")
+        return column_names
+
+    @classmethod
+    def _load_toomany_columns(cls, toomany_filename):
+        toomany_columns = cls._load_column_names(toomany_filename)
+        return cls._rename_columns(toomany_columns)
+
+    @classmethod
+    def _load_summary_columns(cls, summary_filename):
+        summary_columns = cls._load_column_names(summary_filename)
+        return cls._rename_columns(summary_columns)
+
+    @staticmethod
+    def _summary_variant_from_dae_record(rec):
+        parents_called = int(rec.get('all.nParCalled', 0))
+        ref_allele_count = 2 * int(rec.get('all.nParCalled', 0)) - \
+            int(rec.get('all.nAltAlls', 0))
+        ref_allele_prcnt = 0.0
+        if parents_called > 0:
+            ref_allele_prcnt = ref_allele_count / 2.0 / parents_called
+        ref = {
+            'chrom': rec['chrom'],
+            'position': rec['position'],
+            'reference': rec['reference'],
+            'alternative': None,
+            'variant_type': 0,
+            'cshl_position': rec['cshl_position'],
+            'cshl_variant': rec['cshl_variant'],
+            'summary_variant_index': rec['summary_variant_index'],
+            'allele_index': 0,
+            'af_parents_called_count': parents_called,
+            'af_parents_called_percent':
+                float(rec.get('all.prcntParCalled', 0.0)),
+            'af_allele_count': ref_allele_count,
+            'af_allele_freq': ref_allele_prcnt,
+        }
+
+        alt = {
+            'chrom': rec['chrom'],
+            'position': rec['position'],
+            'reference': rec['reference'],
+            'alternative': rec['alternative'],
+            'variant_type': VariantType.from_cshl_variant(
+                rec['cshl_variant']).value,
+            'cshl_position': rec['cshl_position'],
+            'cshl_variant': rec['cshl_variant'],
+            'summary_variant_index': rec['summary_variant_index'],
+            'allele_index': 1,
+            'af_parents_called_count': int(rec.get('all.nParCalled', 0)),
+            'af_parents_called_percent':
+                float(rec.get('all.prcntParCalled', 0.0)),
+            'af_allele_count': int(rec.get('all.nAltAlls', 0)),
+            'af_allele_freq': float(rec.get('all.altFreq', 0.0)),
+        }
+        return (ref, alt)
+
+    @staticmethod
+    def _explode_family_genotypes(family_data, col_sep="", row_sep="/"):
+        res = {
+            fid: bs for [fid, bs] in [
+                fg.split(':')[:2] for fg in family_data.split(';')]
+        }
+        res = {
+            fid: best2gt(str2mat(bs, col_sep=col_sep, row_sep=row_sep))
+            for fid, bs in list(res.items())
+        }
+        return res
+
+    @classmethod
+    def load_raw_dae_transmitted_variants(
+            cls, family_filename, summary_filename, toomany_filename, genome,
+            region=None,
+            family_format='simple',
+            include_reference=False):
+        
+        ped_df, _ = pedigree_from_path(
+            family_filename, family_format=family_format)
+        families = FamiliesData.from_pedigree_df(ped_df)
+
+        summary_columns = cls._load_summary_columns(summary_filename)
+        toomany_columns = cls._load_toomany_columns(toomany_filename)
+
+        # using a context manager because of
+        # https://stackoverflow.com/a/25968716/2316754
+        with closing(pysam.Tabixfile(summary_filename)) as sum_tbf, \
+                closing(pysam.Tabixfile(toomany_filename)) as too_tbf:
+            summary_iterator = sum_tbf.fetch(
+                region=region,
+                parser=pysam.asTuple())
+            toomany_iterator = too_tbf.fetch(
+                region=region,
+                parser=pysam.asTuple())
+
+            summary_records = []
+            genotype_records = []
+
+            for summary_index, summary_line in enumerate(summary_iterator):
+                rec = dict(zip(summary_columns, summary_line))
+                rec['cshl_position'] = int(rec['cshl_position'])
+                position, reference, alternative = dae2vcf_variant(
+                    rec['chrom'], rec['cshl_position'], rec['cshl_variant'],
+                    genome
+                )
+                rec['position'] = position
+                rec['reference'] = reference
+                rec['alternative'] = alternative
+                rec['all.nParCalled'] = int(rec['all.nParCalled'])
+                rec['all.nAltAlls'] = int(rec['all.nAltAlls'])
+                rec['all.prcntParCalled'] = float(rec['all.prcntParCalled'])
+                rec['all.altFreq'] = float(rec['all.altFreq'])
+                rec['summary_variant_index'] = summary_index
+
+                ref, alt = cls._summary_variant_from_dae_record(rec)
+                summary_records.append(ref)
+                summary_records.append(alt)
+
+                family_data = rec['familyData']
+                if family_data == 'TOOMANY':
+                    toomany_line = next(toomany_iterator)
+                    toomany_rec = dict(zip(toomany_columns, toomany_line))
+                    family_data = toomany_rec['familyData']
+
+                    assert rec['cshl_position'] == \
+                        int(toomany_rec['cshl_position'])
+                family_genotypes = cls._explode_family_genotypes(family_data)
+                genotype_record = []
+                for family in families.families_list():
+
+                    gt = family_genotypes.get(family.family_id, None)
+                    if gt is None:
+                        gt = reference_genotype(len(family))
+
+                    assert len(family) == gt.shape[1], family.family_id
+                    genotype_record.append(gt)
+                assert len(genotype_record) == len(families.families_list())
+                genotype_records.append(genotype_record)
+
+        annot_df = pd.DataFrame.from_records(summary_records)
+        assert len(annot_df) == 2 * len(genotype_records), \
+            "{} == 2 * {}".format(len(annot_df), len(genotype_records))
+
+        return RawDAE(families, annot_df, genotype_records)
 
     @staticmethod
     def load_raw_dae(
