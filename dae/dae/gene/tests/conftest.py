@@ -69,6 +69,11 @@ def denovo_gene_sets_db(gpf_instance):
     return gpf_instance.denovo_gene_sets_db
 
 
+@pytest.fixture(scope='function')
+def gene_sets_db(gpf_instance):
+    return gpf_instance.gene_sets_db
+
+
 @pytest.fixture(scope='module')
 def gene_info_cache_dir():
     cache_dir = path_to_fixtures('geneInfo', 'cache')
