@@ -1,5 +1,5 @@
 import pytest
-from dae.gene.gene_set_collections import GeneSetsCollection
+from dae.gene.gene_sets_db import GeneSetsCollection
 from dae.gene.tests.conftest import path_to_fixtures
 
 

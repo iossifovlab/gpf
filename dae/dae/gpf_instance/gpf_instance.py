@@ -10,8 +10,8 @@ from dae.gene.gene_info_config import GeneInfoConfigParser
 from dae.gene.weights import WeightsFactory
 from dae.gene.score_config_parser import ScoreConfigParser
 from dae.gene.scores import ScoresFactory
-from dae.gene.gene_set_collections import GeneSetsDb
-from dae.gene.gene_sets_dbs import DenovoGeneSetsDb
+from dae.gene.gene_sets_db import GeneSetsDb
+from dae.gene.denovo_gene_sets_db import DenovoGeneSetsDb
 
 from dae.studies.variants_db import VariantsDb
 

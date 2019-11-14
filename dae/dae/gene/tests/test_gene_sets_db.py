@@ -1,4 +1,4 @@
-from dae.gene.gene_set_collections import GeneSetsDb, GeneSetsCollection
+from dae.gene.gene_sets_db import GeneSetsDb, GeneSetsCollection
 from dae.gene.gene_term import GeneTerms
 from dae.gene.tests.conftest import path_to_fixtures
 
