@@ -5,9 +5,9 @@ from gpf_instance.gpf_instance import get_gpf_instance
 pytestmark = pytest.mark.usefixtures('mock_gpf_instance')
 
 
-def test_get_gene_weights_factory(db):
-    weights_factory = get_gpf_instance().weights_factory
+def test_get_gene_gene_weights_db(db):
+    gene_weights_db = get_gpf_instance().gene_weights_db
 
-    assert weights_factory is not None
+    assert gene_weights_db is not None
 
-    assert len(weights_factory) == 5
+    assert len(gene_weights_db) == 5

@@ -50,8 +50,8 @@ def gene_info_config(gpf_instance):
 
 
 @pytest.fixture(scope='function')
-def weights_factory(gpf_instance):
-    return gpf_instance.weights_factory
+def gene_weights_db(gpf_instance):
+    return gpf_instance.gene_weights_db
 
 
 @pytest.fixture(scope='function')
