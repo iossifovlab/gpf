@@ -5,13 +5,14 @@
 .histogram {
 	text-align: center;
 }
+
 .histogram svg {
 	width: 100%;
 	height: 100%;
 }
 
 .histogram-controls {
-	text-align: left;
+	display: flex;
 	max-width: 520px;
 	margin: 0 auto;
 	width: 100%;
@@ -27,6 +28,6 @@
     width: 100px;
 }
 
-.histogram-to {
-	float: right;
+.histogram-from {
+	padding-left: 74px;
 }
