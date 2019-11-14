@@ -1,20 +1,14 @@
 import pytest
-
-import os
 from box import Box
 
-from dae.tools.dae2parquet import parse_cli_arguments, dae_build_makefile, \
-    dae2parquet, denovo2parquet
+from dae.tools.dae2parquet import parse_cli_arguments, dae_build_makefile
 
-from dae.pedigrees.pedigree_reader import PedigreeReader
 from dae.backends.impala.parquet_io import ParquetManager
-from dae.backends.import_commons import construct_import_annotation_pipeline
 from dae.backends.dae.loader import RawDaeLoader
 
 from dae.annotation.tools.file_io_parquet import ParquetReader
 
 from dae.RegionOperations import Region
-from dae.utils.helpers import pedigree_from_path
 
 
 def test_dae2parquet_denovo(
@@ -26,21 +20,27 @@ def test_dae2parquet_denovo(
 
     genome = genomes_db.get_genome()
 
-    ped_df, study_id = pedigree_from_path(
-        dae_denovo_config.family_filename, 
-        family_format='simple')
+    fvars = RawDaeLoader.load_raw_denovo_variants(
+        dae_denovo_config.family_filename,
+        dae_denovo_config.denovo_filename, 
+        None,
+        genome,
+        family_format='simple'
+    )
+    fvars.annotate(annotation_pipeline_internal)
+    study_id = "test_dae2parquet_denovo"
 
-    denovo_df = RawDaeLoader.load_dae_denovo_file(
-        dae_denovo_config.denovo_filename, genome)
+    parquet_filenames = ParquetManager.build_parquet_filenames(
+        temp_dirname, bucket_index=100, study_id=study_id)
 
-    parquet_config = denovo2parquet(
-        study_id, ped_df, denovo_df,
-        annotation_pipeline_internal, genome,
-        output=temp_dirname
+    ParquetManager.pedigree_to_parquet(fvars, parquet_filenames.pedigree)
+    ParquetManager.variants_to_parquet(
+        fvars, parquet_filenames.variant,
+        bucket_index=100
     )
 
     summary = ParquetReader(Box({
-        'infile': parquet_config.variant,
+        'infile': parquet_filenames.variant,
     }, default_box=True, default_box_attr=None))
     summary._setup()
     summary._cleanup()

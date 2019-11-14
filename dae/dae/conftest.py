@@ -250,19 +250,15 @@ def dae_denovo_config():
 def dae_denovo(
         dae_denovo_config, default_genome, annotation_pipeline_internal):
 
-    ped_df = PedigreeReader.load_simple_family_file(
-        dae_denovo_config.family_filename
+    fvars = RawDaeLoader.load_raw_denovo_variants(
+        dae_denovo_config.family_filename,
+        dae_denovo_config.denovo_filename, 
+        None,
+        default_genome,
+        family_format='simple'
     )
-    denovo_df = RawDaeLoader.load_dae_denovo_file(
-        dae_denovo_config.denovo_filename, default_genome)
-
-    denovo_df = annotation_pipeline_internal.annotate_df(denovo_df)
-
-    denovo = RawDaeLoader.build_raw_denovo(
-        ped_df,
-        denovo_df
-    )
-    return denovo
+    fvars.annotate(annotation_pipeline_internal)
+    return fvars
 
 
 @pytest.fixture
@@ -308,22 +304,16 @@ def iossifov2014_raw_denovo(
         dae_iossifov2014_config, default_genome,
         annotation_pipeline_internal):
     config = dae_iossifov2014_config
-
-    ped_df = PedigreeReader.load_simple_family_file(
-        config.family_filename
+    fvars = RawDaeLoader.load_raw_denovo_variants(
+        config.family_filename,
+        config.denovo_filename, 
+        None,
+        default_genome,
+        family_format='simple'
     )
-    families = FamiliesData.from_pedigree_df(ped_df)
-
-    denovo_df = RawDaeLoader.load_dae_denovo_file(
-        config.denovo_filename, default_genome)
-    annot_df = RawDaeLoader._build_initial_annotation(denovo_df)
-    denovo = RawDenovo(
-        families,
-        denovo_df,
-        annot_df
-    )
-    denovo.annotate(annotation_pipeline_internal)
-    return denovo
+    fvars.annotate(annotation_pipeline_internal)
+    fvars.annotate(annotation_pipeline_internal)
+    return fvars
 
 
 @pytest.fixture(scope='session')
@@ -441,16 +431,15 @@ def raw_denovo(config_denovo, default_genome):
     def builder(path):
         config = config_denovo(path)
 
-        ped_df = PedigreeReader.load_simple_family_file(
-            config.denovo.family_filename
+        fvars = RawDaeLoader.load_raw_denovo_variants(
+            config.family_filename,
+            config.denovo_filename, 
+            None,
+            default_genome,
+            family_format='simple'
         )
-        denovo_df = RawDaeLoader.load_dae_denovo_file(
-            config.denovo.denovo_filename, default_genome)
-        denovo = RawDaeLoader.build_raw_denovo(
-            ped_df,
-            denovo_df
-        )
-        return denovo
+
+        return fvars
     return builder
 
 
@@ -616,3 +605,12 @@ def variants_impala(request, data_import, impala_genotype_storage, genomes_db):
         return fvars
 
     return builder
+
+
+@pytest.fixture
+def vcf_import_config():
+    fullpath = relative_to_this_test_folder(
+        'fixtures/vcf_import/effects_trio'
+    )
+    config = Configure.from_prefix_vcf(fullpath)
+    return config.vcf

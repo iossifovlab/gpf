@@ -144,10 +144,21 @@ class RawDaeLoader(RawVariantsLoader):
 
     @classmethod
     def load_raw_denovo_variants(
-            cls, ped_filename, denovo_filename,
-            annotation_filename=None, region=None):
-        ped_df = PedigreeReader.flexible_pedigree_read(ped_filename)
-        denovo_df = RawDaeLoader.load_dae_denovo_file(denovo_filename, region)
+            cls, family_filename, denovo_filename,
+            annotation_filename,
+            genome,
+            family_format='pedigree',
+            pedigree_format={}):
+
+        if family_format == 'pedigree':
+            ped_df = PedigreeReader.flexible_pedigree_read(
+                family_filename, **pedigree_format)
+        elif family_format == 'simple':
+            ped_df = PedigreeReader.load_simple_family_file(
+                family_filename
+            )
+
+        denovo_df = RawDaeLoader.load_dae_denovo_file(denovo_filename, genome)
 
         if annotation_filename is not None \
                 and os.path.exists(annotation_filename):
@@ -316,17 +327,6 @@ class RawDaeLoader(RawVariantsLoader):
             "{} == 2 * {}".format(len(annot_df), len(genotype_records))
 
         return RawDAE(families, annot_df, genotype_records)
-
-    @staticmethod
-    def load_raw_dae(
-            ped_filename, summary_filename, toomany_filename, genome,
-            region=None):
-
-        ped_df = PedigreeReader.flexible_pedigree_read(ped_filename)
-        families = FamiliesData.from_pedigree_df(ped_df)
-
-        return RawDAE(
-            families, summary_filename, toomany_filename, genome, region)
 
     @staticmethod
     def flexible_denovo_cli_arguments(parser):
