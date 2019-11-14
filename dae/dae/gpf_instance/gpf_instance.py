@@ -7,7 +7,7 @@ from dae.configuration.dae_config_parser import DAEConfigParser
 from dae.enrichment_tool.background_facade import BackgroundFacade
 
 from dae.gene.gene_info_config import GeneInfoConfigParser
-from dae.gene.weights import WeightsFactory
+from dae.gene.weights import GeneWeightsDb
 from dae.gene.score_config_parser import ScoreConfigParser
 from dae.gene.scores import ScoresFactory
 from dae.gene.gene_sets_db import GeneSetsDb
@@ -40,8 +40,8 @@ class GPFInstance(object):
                 self.dae_config.gene_info_db.conf_file,
                 self.dae_config.dae_data_dir
             )
-        self.weights_factory = \
-            WeightsFactory(config=self.gene_info_config.gene_weights)
+        self.gene_weights_db = \
+            GeneWeightsDb(self.gene_info_config.gene_weights)
 
         self.score_config = \
             ScoreConfigParser.read_and_parse_file_configuration(
@@ -53,7 +53,7 @@ class GPFInstance(object):
         self.genotype_storage_factory = GenotypeStorageFactory(self.dae_config)
 
         self.variants_db = VariantsDb(
-            self.dae_config, self.pheno_factory, self.weights_factory,
+            self.dae_config, self.pheno_factory, self.gene_weights_db,
             self.genomes_db, self.genotype_storage_factory
         )
 

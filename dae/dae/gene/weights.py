@@ -1,13 +1,12 @@
 import itertools
+from collections import OrderedDict, namedtuple
 import numpy as np
-from collections import OrderedDict
 
 from dae.gene.genomic_values import GenomicValues
-
 from dae.utils.dae_utils import join_line
 
 
-class Weights(GenomicValues):
+class GeneWeight(GenomicValues):
     """
     Represents gene weights.
 
@@ -15,8 +14,8 @@ class Weights(GenomicValues):
     in `geneInfo.conf`.
     """
 
-    def __init__(self, config, *args, **kwargs):
-        super(Weights, self).__init__(config.id, *args, **kwargs)
+    def __init__(self, config):
+        super(GeneWeight, self).__init__(config.id)
         self.config = config
 
         self.genomic_values_col = 'gene'
@@ -31,9 +30,9 @@ class Weights(GenomicValues):
         self._load_data()
         self.df.dropna(inplace=True)
 
-        self.histogram_bins, self.histogram_bars = self.bins_bars()
+        self.histogram_bins, self.histogram_bars = self._bins_bars()
 
-    def bins_bars(self):
+    def _bins_bars(self):
         step = 1.0 * (self.max() - self.min()) / (self.bins - 1)
         dec = - np.log10(step)
         dec = dec if dec >= 0 else 0
@@ -62,6 +61,23 @@ class Weights(GenomicValues):
         # bins = np.round(bins, -int(np.log(step)))
 
         return (bins, bars)
+
+    def _to_dict(self):
+        """
+        Returns dictionary of all defined weights keyed by gene symbol.
+        """
+        if self._dict is None:
+            self._dict = self.df.set_index('gene')[self.id].to_dict()
+        return self._dict
+
+    def _to_list(self):
+        columns = self.df.applymap(str).columns.tolist()
+        values = self.df.applymap(str).values.tolist()
+
+        return itertools.chain([columns], values)
+
+    def _to_tsv(self):
+        return map(join_line, self.to_list())
 
     def min(self):
         """
@@ -97,80 +113,49 @@ class Weights(GenomicValues):
         genes = self.df[index].gene
         return set(genes.values)
 
-    def to_dict(self):
-        """
-        Returns dictionary of all defined weights keyed by gene symbol.
-        """
-        if self._dict is None:
-            self._dict = self.df.set_index('gene')[self.id].to_dict()
-        return self._dict
 
-    def to_df(self):
-        """
-        Returns a data frame with all gene weights with columns `gene` and
-        `weight`.
-        """
-        return self.df
-
-    def to_list(self):
-        columns = self.df.applymap(str).columns.tolist()
-        values = self.df.applymap(str).values.tolist()
-
-        return itertools.chain([columns], values)
-
-    def to_tsv(self):
-        df_list = self.to_list()
-
-        return map(join_line, df_list)
-
-    @staticmethod
-    def load_gene_weights(gene_weight_id, config):
-        """
-        Creates and loads a gene weights instance by gene weights id.
-        """
-        assert gene_weight_id in Weights.list_gene_weights(config)
-        weight_config = config.get(gene_weight_id)
-        w = Weights(weight_config)
-        return w
-
-    @staticmethod
-    def list_gene_weights(config):
-        """
-        Lists all available gene weights configured in `geneInfo.conf`.
-        """
-        weights = list(config.keys())
-        return weights
-
-
-class WeightsFactory(object):
+class GeneWeightsDb(object):
     """
     Helper class used to load all defined gene weights.
 
     Used by Web interface.
     """
 
-    def __init__(self, config, *args, **kwargs):
-        super(WeightsFactory, self).__init__(*args, **kwargs)
+    def __init__(self, config):
+        super(GeneWeightsDb, self).__init__()
         self.config = config
 
         self.weights = OrderedDict()
         self._load()
 
-    def get_weights(self):
-        result = []
+    @staticmethod
+    def load_gene_weight_from_file(filename, bins=150, xscale='linear',
+                                   yscale='linear', desc=None, range=None):
+        config = namedtuple(
+            id=filename.split('.')[0],
+            file=filename,
+            desc=desc,
+            bins=bins,
+            xscale=xscale,
+            yscale=yscale,
+            range=range
+        )
+        return GeneWeight(config)
 
-        for weight_id in self.weights:
-            weight = self[weight_id]
+    def get_gene_weight_ids(self):
+        return list(self.weights.keys())
 
-            assert weight.df is not None
+    def get_gene_weight(self, weight_id):
+        assert self[weight_id].df is not None
+        return self[weight_id]
 
-            result.append(weight)
-
-        return result
+    def get_gene_weights(self):
+        return [self.get_gene_weight(weight_id)
+                for weight_id in self.weights]
 
     def _load(self):
         for weight_config in self.config.values():
-            w = Weights(weight_config)
+            w = GeneWeight(weight_config)
             self.weights[weight_config.id] = w
 
     def __getitem__(self, weight_id):

@@ -391,7 +391,7 @@ class StudyWrapper(object):
             gene_weights = self.weights_factory[gwc]
             if gene != '':
                 gene_weights_values[gwc] =\
-                    gene_weights.to_dict().get(gene, '')
+                    gene_weights._to_dict().get(gene, '')
             else:
                 gene_weights_values[gwc] = ''
 
