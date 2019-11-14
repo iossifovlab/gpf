@@ -67,7 +67,7 @@ class EnrichmentTestView(QueryBaseView):
 
         weights_id, range_start, range_end = \
             GeneSymsMixin.get_gene_weights_query(
-                self.gene_info_config, **query)
+                self.gene_info_config.gene_weights, **query)
         if weights_id:
             if range_start and range_end:
                 desc = 'Gene Weights: {} from {} upto {}'.format(
