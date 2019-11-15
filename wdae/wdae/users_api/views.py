@@ -23,7 +23,7 @@ from .serializers import UserSerializer
 from .serializers import UserWithoutEmailSerializer
 from .serializers import BulkGroupOperationSerializer
 
-from utils.logger import log_filter, LOGGER
+from utils.logger import log_filter, LOGGER, request_logging
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -42,6 +42,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
         return serializer_class
 
+    @request_logging(LOGGER)
     @action(detail=True, methods=['post'])
     def password_remove(self, request, pk=None):
         self.check_permissions(request)
@@ -54,6 +55,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+    @request_logging(LOGGER)
     @action(detail=True, methods=['post'])
     def password_reset(self, request, pk=None):
         self.check_permissions(request)
@@ -64,6 +66,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+    @request_logging(LOGGER)
     @action(detail=False, methods=['post'])
     def bulk_add_group(self, request):
         self.check_permissions(request)
@@ -84,6 +87,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
         return Response(status=status.HTTP_200_OK)
 
+    @request_logging(LOGGER)
     @action(detail=False, methods=['post'])
     def bulk_remove_group(self, request):
         serializer = BulkGroupOperationSerializer(data=request.data)
