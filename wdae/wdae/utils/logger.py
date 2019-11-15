@@ -20,9 +20,15 @@ def log_filter(request, message):
     remote_addr = META.get('REMOTE_ADDR', '-')
     # server_protocol = META.get('SERVER_PROTOCOL', '-')
     # http_user_agent = META.get('HTTP_USER_AGENT', '-')
-    return "user: %s; remote addr: %s; method: %s; path: %s; %s" % (
-        username,
-        remote_addr,
-        request_method,
-        path_info,
-        message)
+    return f'user: {username}; remote addr: {remote_addr}; ' + \
+        f'method: {request_method}; path: {path_info}; {message}'
+
+
+def request_logging(_LOGGER):
+    def request_logging_decorator(func):
+        def func_wrapper(self, request):
+            _LOGGER.info(log_filter(request, '').strip())
+
+            return func(self, request)
+        return func_wrapper
+    return request_logging_decorator
