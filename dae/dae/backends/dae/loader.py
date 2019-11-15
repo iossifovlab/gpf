@@ -21,9 +21,6 @@ from dae.backends.raw.loader import RawVariantsLoader
 from dae.backends.dae.raw_dae import RawDenovo, RawDAE
 
 from dae.variants.attributes import VariantType
-from dae.variants.variant import SummaryVariantFactory, SummaryVariant
-
-from dae.backends.raw.raw_variants import RawFamilyVariants, TransmissionType
 
 
 class RawDaeLoader(RawVariantsLoader):
@@ -259,7 +256,7 @@ class RawDaeLoader(RawVariantsLoader):
             region=None,
             family_format='simple',
             include_reference=False):
-        
+
         ped_df, _ = pedigree_from_path(
             family_filename, family_format=family_format)
         families = FamiliesData.from_pedigree_df(ped_df)

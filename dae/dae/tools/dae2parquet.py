@@ -9,7 +9,6 @@ import argparse
 
 from dae.gpf_instance.gpf_instance import GPFInstance
 
-from dae.annotation.tools.file_io_parquet import ParquetSchema
 from dae.annotation.tools.annotator_config import annotation_config_cli_options
 
 from dae.backends.dae.raw_dae import RawDAE, RawDenovo

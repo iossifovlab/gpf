@@ -3,24 +3,10 @@ Created on Jul 23, 2018
 
 @author: lubo
 '''
-import gzip
-import os
 import sys
 import traceback
-from contextlib import closing
-
-import pysam
-
-import numpy as np
-import pandas as pd
-
-from dae.utils.vcf_utils import best2gt, str2mat, reference_genotype
-from dae.utils.dae_utils import dae2vcf_variant
-
-from dae.variants.attributes import VariantType
-from dae.pedigrees.family import FamiliesData, Family
 from dae.variants.family_variant import FamilyVariant
-from dae.variants.variant import SummaryVariantFactory, SummaryVariant
+from dae.variants.variant import SummaryVariantFactory
 
 from dae.backends.raw.raw_variants import RawFamilyVariants, TransmissionType
 

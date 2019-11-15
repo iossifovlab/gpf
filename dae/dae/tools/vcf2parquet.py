@@ -132,7 +132,8 @@ def vcf2parquet(
         study_id, ped_df, vcf_filename,
         genomes_db, annotation_pipeline,
         output='.', bucket_index=1, region=None,
-        filesystem=None, skip_pedigree=False, include_reference=False):
+        filesystem=None, skip_pedigree=False,
+        include_reference=False, include_unknown=False):
 
     assert os.path.exists(vcf_filename), vcf_filename
 
@@ -156,6 +157,7 @@ def vcf2parquet(
         fvars, parquet_filenames.variant,
         bucket_index=bucket_index,
         include_reference=include_reference,
+        include_unknown=include_unknown,
         filesystem=filesystem
     )
 

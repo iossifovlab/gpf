@@ -16,7 +16,7 @@ from dae.annotation.annotation_pipeline import PipelineAnnotator
 
 from dae.backends.configure import Configure
 from dae.backends.dae.loader import RawDaeLoader
-from dae.backends.dae.raw_dae import RawDAE, RawDenovo
+from dae.backends.dae.raw_dae import RawDAE
 
 from dae.backends.vcf.loader import RawVcfLoader
 
@@ -252,7 +252,7 @@ def dae_denovo(
 
     fvars = RawDaeLoader.load_raw_denovo_variants(
         dae_denovo_config.family_filename,
-        dae_denovo_config.denovo_filename, 
+        dae_denovo_config.denovo_filename,
         None,
         default_genome,
         family_format='simple'
@@ -306,7 +306,7 @@ def iossifov2014_raw_denovo(
     config = dae_iossifov2014_config
     fvars = RawDaeLoader.load_raw_denovo_variants(
         config.family_filename,
-        config.denovo_filename, 
+        config.denovo_filename,
         None,
         default_genome,
         family_format='simple'
@@ -422,7 +422,7 @@ def config_denovo():
         fullpath = relative_to_this_test_folder(
             os.path.join('fixtures', path))
         config = Configure.from_prefix_denovo(fullpath)
-        return config
+        return config.denovo
     return builder
 
 
@@ -433,7 +433,7 @@ def raw_denovo(config_denovo, default_genome):
 
         fvars = RawDaeLoader.load_raw_denovo_variants(
             config.family_filename,
-            config.denovo_filename, 
+            config.denovo_filename,
             None,
             default_genome,
             family_format='simple'
@@ -566,22 +566,14 @@ def data_import(
                 continue
 
             ped_df, study_id = pedigree_from_path(vcf.pedigree)
-
-            # impala_config = import_vcf(
-            #     dae_config_fixture, genomes_db, annotation_pipeline,
-            #     ped_df, vcf.vcf, study_id,
-            #     region=None, bucket_index=0,
-            #     output=temp_dirname,
-            #     filesystem=test_hdfs.filesystem())
-            # impala_config['db'] = impala_test_dbname()
-            # test_impala_helpers.import_variants(impala_config)
             study_temp_dirname = os.path.join(temp_dirname, study_id)
 
             parquet_filenames = vcf2parquet(
                 study_id, ped_df, vcf.vcf,
-                genomes_db, annotation_pipeline, parquet_manager,
+                genomes_db, annotation_pipeline,
                 output=study_temp_dirname, bucket_index=0, region=None,
-                include_reference=True
+                include_reference=True,
+                include_unknown=True
             )
 
             impala_genotype_storage.impala_load_study(

@@ -28,7 +28,7 @@ class VariantFactory(SummaryVariantFactory):
 
 class RawVcfVariants(RawFamilyVariants):
 
-    def __init__(self, families, vcf, annot_df, 
+    def __init__(self, families, vcf, annot_df,
                  transmission_type=TransmissionType.transmitted,
                  variant_factory=VariantFactory):
 
