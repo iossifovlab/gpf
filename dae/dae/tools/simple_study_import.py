@@ -10,13 +10,12 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.backends.impala.parquet_io import ParquetManager
 from dae.backends.import_commons import construct_import_annotation_pipeline
 
+from dae.backends.import_commons import variants2parquet
 from dae.backends.dae.loader import RawDaeLoader
+from dae.backends.vcf.loader import RawVcfLoader
 
 from dae.pedigrees.pedigree_reader import PedigreeReader, PedigreeRoleGuesser
 from dae.pedigrees.family import FamiliesData
-
-from dae.tools.vcf2parquet import vcf2parquet
-from dae.tools.dae2parquet import denovo2parquet
 
 
 def parse_cli_arguments(dae_config, argv=sys.argv[1:]):
@@ -80,7 +79,7 @@ def parse_cli_arguments(dae_config, argv=sys.argv[1:]):
     )
 
     PedigreeReader.flexible_pedigree_cli_arguments(parser)
-    RawDaeLoader.flexible_denovo_read(parser)
+    RawDaeLoader.flexible_denovo_cli_arguments(parser)
 
     parser_args = parser.parse_args(argv)
     return parser_args
@@ -171,38 +170,46 @@ if __name__ == "__main__":
 
     parquet_config = None
     if argv.vcf is not None:
-        parquet_config = vcf2parquet(
-            ped_df, argv.vcf,
-            genomes_db, annotation_pipeline, parquet_manager,
-            output=output, bucket_index=1
+        fvars = RawVcfLoader.load_and_annotate_raw_vcf_variants(
+            ped_df, argv.vcf, annotation_pipeline,
+            region=argv.region
         )
-    if argv.denovo is not None:
-        denovo_df = RawDaeLoader.flexible_denovo_read(
-            argv.denovo,
-            genome,
-            location=argv.denovo_location,
-            variant=argv.denovo_variant,
-            chrom=argv.denovo_chrom,
-            pos=argv.denovo_pos,
-            ref=argv.denovo_ref,
-            alt=argv.denovo_alt,
-            personId=argv.denovo_personId,
-            familyId=argv.denovo_familyId,
-            bestSt=argv.denovo_bestSt,
-            families=families,
+        parquet_filenames = variants2parquet(
+            study_id, fvars,
+            output=output, bucket_index=100,
+            skip_pedigree=skip_pedigree,
         )
 
-        parquet_config = denovo2parquet(
-            study_id, ped_df, denovo_df,
-            parquet_manager, annotation_pipeline, genome,
-            output=output, bucket_index=0, skip_pedigree=skip_pedigree
+    if argv.denovo is not None:
+        fvars = RawDaeLoader.load_raw_denovo_variants(
+            ped_df,
+            argv.denovo,
+            annotation_filename=None,
+            genome=genome,
+            denovo_format={
+                'location': argv.denovo_location,
+                'variant': argv.denovo_variant,
+                'chrom': argv.denovo_chrom,
+                'pos': argv.denovo_pos,
+                'ref': argv.denovo_ref,
+                'alt': argv.denovo_alt,
+                'personId': argv.denovo_personId,
+                'familyId': argv.denovo_familyId,
+                'bestSt': argv.denovo_bestSt,
+                'families': families,
+            }
+        )
+        fvars.annotate(annotation_pipeline)
+        parquet_config = variants2parquet(
+            study_id, fvars,
+            output=output, bucket_index=0
         )
 
     if parquet_config:
         genotype_storage.impala_load_study(
             study_id,
-            os.path.split(parquet_config.files.pedigree)[0],
-            os.path.split(parquet_config.files.variant)[0]
+            os.path.split(parquet_config.pedigree)[0],
+            os.path.split(parquet_config.variant)[0]
         )
 
     parquet_manager.generate_study_config(

@@ -141,21 +141,33 @@ class RawDaeLoader(RawVariantsLoader):
 
     @classmethod
     def load_raw_denovo_variants(
-            cls, family_filename, denovo_filename,
+            cls, pedigree, denovo_filename,
             annotation_filename,
             genome,
             family_format='pedigree',
-            pedigree_format={}):
+            pedigree_format={},
+            denovo_format={}):
 
-        if family_format == 'pedigree':
-            ped_df = PedigreeReader.flexible_pedigree_read(
-                family_filename, **pedigree_format)
-        elif family_format == 'simple':
-            ped_df = PedigreeReader.load_simple_family_file(
-                family_filename
+        if isinstance(pedigree, pd.DataFrame):
+            ped_df = pedigree
+        else:
+            family_filename = pedigree
+            if family_format == 'pedigree':
+                ped_df = PedigreeReader.flexible_pedigree_read(
+                    family_filename, **pedigree_format)
+            elif family_format == 'simple':
+                ped_df = PedigreeReader.load_simple_family_file(
+                    family_filename
+                )
+
+        if not denovo_format:
+            denovo_df = RawDaeLoader.load_dae_denovo_file(
+                denovo_filename, genome)
+        else:
+            denovo_df = RawDaeLoader.flexible_denovo_read(
+                denovo_filename, genome,
+                **denovo_format
             )
-
-        denovo_df = RawDaeLoader.load_dae_denovo_file(denovo_filename, genome)
 
         if annotation_filename is not None \
                 and os.path.exists(annotation_filename):

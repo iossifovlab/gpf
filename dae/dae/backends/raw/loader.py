@@ -24,7 +24,7 @@ class RawVariantsLoader:
         return token
 
     @staticmethod
-    def annotation_filename(filename):
+    def _build_annotation_filename(filename):
         return "{}-eff.txt".format(os.path.splitext(filename)[0])
 
     @staticmethod

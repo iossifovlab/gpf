@@ -25,11 +25,11 @@ from dae.backends.import_commons import \
 
 from dae.pedigrees.pedigree_reader import PedigreeReader
 from dae.pedigrees.family import FamiliesData
-from dae.utils.helpers import pedigree_from_path
+from dae.utils.helpers import study_id_from_path
+from dae.backends.import_commons import variants2parquet
+
 from dae.backends.impala.parquet_io import ParquetManager
 from dae.backends.storage.impala_genotype_storage import ImpalaGenotypeStorage
-
-from dae.tools.vcf2parquet import vcf2parquet
 
 
 def relative_to_this_test_folder(path):
@@ -565,13 +565,16 @@ def data_import(
                         impala_test_dbname(), impala.tables.pedigree):
                 continue
 
-            ped_df, study_id = pedigree_from_path(vcf.pedigree)
+            study_id = study_id_from_path(vcf.pedigree)
             study_temp_dirname = os.path.join(temp_dirname, study_id)
 
-            parquet_filenames = vcf2parquet(
-                study_id, ped_df, vcf.vcf,
-                genomes_db, annotation_pipeline,
-                output=study_temp_dirname, bucket_index=0, region=None,
+            fvars = RawVcfLoader.load_and_annotate_raw_vcf_variants(
+                vcf.pedigree, vcf.vcf, annotation_pipeline
+            )
+            parquet_filenames = variants2parquet(
+                study_id, fvars,
+                output=study_temp_dirname,
+                bucket_index=0,
                 include_reference=True,
                 include_unknown=True
             )

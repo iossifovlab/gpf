@@ -13,3 +13,7 @@ def pedigree_from_path(filepath, family_format='pedigree'):
 
     study_id = os.path.splitext(os.path.basename(filepath))[0]
     return ped_df, study_id
+
+
+def study_id_from_path(filepath):
+    return os.path.splitext(os.path.basename(filepath))[0]

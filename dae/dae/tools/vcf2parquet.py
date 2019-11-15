@@ -14,7 +14,7 @@ from dae.backends.impala.parquet_io import ParquetManager
 from cyvcf2 import VCF
 
 from dae.backends.import_commons import build_contig_regions, \
-    contigs_makefile_generate
+    contigs_makefile_generate, variants2parquet
 from dae.backends.import_commons import construct_import_annotation_pipeline
 
 
@@ -63,6 +63,24 @@ def parser_common_arguments(gpf_instance, parser):
         dest='output', metavar='<output filepath prefix>',
         help='output filepath prefix. '
         'If none specified, current directory is used [default: %(default)s]'
+    )
+    parser.add_argument(
+        '--include-reference', default=False,
+        dest='include_reference',
+        help='include reference only variants [default: %(defaults)s]',
+        action='store_true'
+    )
+    parser.add_argument(
+        '--include-unknown', default=False,
+        dest='include_unknown',
+        help='include variants with unknown genotype [default: %(defaults)s]',
+        action='store_true'
+    )
+    parser.add_argument(
+        '--study-id', default=None,
+        dest='study_id',
+        help='specifies study id to use when storing parquet files '
+        '[default: %(defaults)s]'
     )
 
 
@@ -124,10 +142,6 @@ def generate_makefile(dae_config, genome, argv):
     )
 
 
-def load_and_annotate_vcf():
-    pass
-
-
 def vcf2parquet(
         study_id, ped_df, vcf_filename,
         genomes_db, annotation_pipeline,
@@ -164,23 +178,45 @@ def vcf2parquet(
     return parquet_filenames
 
 
-if __name__ == "__main__":
-    gpf_instance = GPFInstance()
-    dae_config = gpf_instance.dae_config
-    genomes_db = gpf_instance.genomes_db
-    genome = genomes_db.get_genome()
+def main(
+        argv,
+        gpf_instance=None, dae_config=None, genomes_db=None, genome=None,
+        annotation_defaults={}):
 
-    argv = parse_cli_arguments(gpf_instance, sys.argv[1:])
+    if gpf_instance is None:
+        gpf_instance = GPFInstance()
+    if dae_config is None:
+        dae_config = gpf_instance.dae_config
+    if genomes_db is None:
+        genomes_db = gpf_instance.genomes_db
+    if genome is None:
+        genome = genomes_db.get_genome()
+
+    argv = parse_cli_arguments(gpf_instance, argv)
 
     annotation_pipeline = construct_import_annotation_pipeline(
-        dae_config, genomes_db, argv)
-    parquet_manager = ParquetManager(dae_config.studies_db.dir)
+        dae_config, genomes_db, argv, defaults=annotation_defaults)
+
+    study_id = argv.study_id
+    if study_id is None:
+        study_id = os.path.splitext(os.path.basename(argv.pedigree))[0]
 
     if argv.type == 'make':
         generate_makefile(dae_config, genome, argv)
     elif argv.type == 'vcf':
-        vcf2parquet(
-            argv.pedigree, argv.vcf,
-            genomes_db, annotation_pipeline, parquet_manager,
-            argv.output, argv.bucket_index, argv.region, argv.skip_pedigree
+        fvars = RawVcfLoader.load_and_annotate_raw_vcf_variants(
+            argv.pedigree, argv.vcf, annotation_pipeline,
+            region=argv.region
         )
+        parquet_filenames = variants2parquet(
+            study_id, fvars,
+            output=argv.output, bucket_index=argv.bucket_index,
+            skip_pedigree=argv.skip_pedigree,
+            include_reference=argv.include_reference,
+            include_unknown=argv.include_unknown
+        )
+        return parquet_filenames
+
+
+if __name__ == "__main__":
+    main(sys.argv[1:])

@@ -11,15 +11,13 @@ import numpy as np
 import pandas as pd
 
 from dae.pedigrees.family import FamiliesData, Family
+from dae.pedigrees.pedigree_reader import PedigreeReader
 
 from dae.backends.raw.loader import RawVariantsLoader
 
 from dae.backends.vcf.annotate_allele_frequencies import \
     VcfAlleleFrequencyAnnotator
 from dae.backends.vcf.raw_vcf import RawVcfVariants
-
-# from variants.parquet_io import save_summary_to_parquet,\
-#     read_summary_from_parquet
 
 
 class VCFVariantWrapper(object):
@@ -162,14 +160,22 @@ class RawVcfLoader(RawVariantsLoader):
 
     @classmethod
     def load_raw_vcf_variants(
-            cls, ped_df, vcf_filename,
-            annotation_filename=None, region=None):
+            cls, pedigree, vcf_filename,
+            annotation_filename=None,
+            region=None,
+            pedigree_format={}):
+        if isinstance(pedigree, pd.DataFrame):
+            ped_df = pedigree
+        else:
+            ped_filename = pedigree
+            ped_df = PedigreeReader.flexible_pedigree_read(
+                ped_filename, **pedigree_format)
 
         vcf = cls.load_vcf_file(vcf_filename, region)
 
         annot_df = None
         if annotation_filename is None:
-            annotation_filename = cls.annotation_filename(vcf_filename)
+            annotation_filename = cls._build_annotation_filename(vcf_filename)
         if annotation_filename is not None \
                 and os.path.exists(annotation_filename):
             annot_df = cls.load_annotation_file(annotation_filename)
@@ -178,9 +184,15 @@ class RawVcfLoader(RawVariantsLoader):
 
     @classmethod
     def load_and_annotate_raw_vcf_variants(
-            cls, ped_df, vcf_filename,
-            annotation_pipeline, region=None):
+            cls, pedigree, vcf_filename,
+            annotation_pipeline,
+            region=None,
+            pedigree_format={}):
 
-        fvars = cls.load_raw_vcf_variants(ped_df, vcf_filename, region)
+        fvars = cls.load_raw_vcf_variants(
+            pedigree, vcf_filename,
+            region=region,
+            pedigree_format=pedigree_format)
+
         fvars.annotate(annotation_pipeline)
         return fvars
