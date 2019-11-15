@@ -17,7 +17,8 @@ urlpatterns = [
         name="revoke_permission"),
     url(r'^groups/(\d+)/user/(\d+)', GroupUsersManagementView.as_view(),
         name='group_users_management'),
-    url(r'^groups/(\d+)/dataset/(\d+)', GroupDatasetsManagementView.as_view(),
+    url(r'^groups/(\d+)/dataset/([\w ]+)',
+        GroupDatasetsManagementView.as_view(),
         name='group_datasets_management'),
 
 ] + router.urls
