@@ -1,9 +1,0 @@
-familyId	personId	dadId	momId	sex	status	role
-f1	mom1	0	0	2	1	mom
-f1	dad1	0	0	1	1	dad
-f1	prb1	dad1	mom1	1	2	prb
-f1	sib1	dad1	mom1	2	2	sib
-f2	mom2	0	0	2	1	mom
-f2	dad2	0	0	1	1	dad
-f2	prb2	dad2	mom2	2	2	prb
-f2	sib2	dad2	mom2	1	2	sib
