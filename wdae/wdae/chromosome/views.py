@@ -26,9 +26,6 @@ class ChromosomeView(QueryBaseView):
         reader = reader.groupby('#chrom')[cols] \
                        .apply(lambda x: x.to_dict(orient='records')) \
                        .to_dict()
-        print(reader)
-
-        # print(repr(reader))
 
         self.chromosomes = [{'name': k, 'bands': v} for k, v in reader.items()]
 

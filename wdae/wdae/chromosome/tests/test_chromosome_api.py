@@ -6,7 +6,6 @@ pytestmark = pytest.mark.usefixtures('mock_gpf_instance')
 def test_chromosome_api_get(user_client):
     response = user_client.get('/api/v3/chromosomes')
 
-    print(repr(response.data[0]))
     assert response
     assert response.status_code == 200
 
