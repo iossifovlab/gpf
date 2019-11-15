@@ -39,8 +39,8 @@ class StudyWrapper(object):
         self.weights_factory = weights_factory
 
     def _init_wdae_config(self):
-        preview_column_slots = []
-        download_column_slots = []
+        preview_column_slots = {}
+        download_column_slots = {}
         pheno_column_slots = []
         gene_weight_column_sources = []
         in_role_columns = []
@@ -84,15 +84,26 @@ class StudyWrapper(object):
         else:
             self.legend = {}
 
-        self.preview_columns, self.preview_sources = tuple(map(list, zip(*[
+        self.preview_columns = []
+        self.preview_sources = []
+        self.download_columns = []
+        self.download_sources = []
+
+        preview_slots = tuple(map(list, zip(*[
             (attr['id'], attr['source'])
             for attr in preview_column_slots.values()
         ])))
 
-        self.download_columns, self.download_sources = tuple(map(list, zip(*[
+        download_slots = tuple(map(list, zip(*[
             (attr['name'], attr['source'])
             for attr in download_column_slots.values()
         ])))
+
+        if len(preview_slots) > 0:
+            self.preview_columns, self.preview_sources = preview_slots
+
+        if len(download_slots) > 0:
+            self.download_columns, self.download_sources = download_slots
 
     def _init_pheno(self, pheno_factory):
         self.pheno_db = None
