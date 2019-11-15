@@ -17,23 +17,20 @@ class ChromosomeView(QueryBaseView):
         reader = pd.read_csv(csvfile, delimiter='\t')
 
         reader['#chrom'] = reader['#chrom'].map(lambda x: x[3:])
+        col_rename = {'chromStart': 'start', 'chromEnd': 'end'}
+        reader = reader.rename(columns=col_rename)
 
-        cols = ['chromStart', 'chromEnd', 'name', 'gieStain']
+        cols = ['start', 'end', 'name', 'gieStain']
+        reader['start'] = pd.to_numeric(reader['start'], downcast='integer')
+        reader['end'] = pd.to_numeric(reader['end'], downcast='integer')
         reader = reader.groupby('#chrom')[cols] \
-                       .apply(lambda x: x.values.tolist()) \
+                       .apply(lambda x: x.to_dict(orient='records')) \
                        .to_dict()
+        print(reader)
 
-        for k, v in reader.items():
-            bands = []
-            for band in v:  # Maybe find a way to do this with pandas
-                bands.append({
-                    'start': int(band[0]),
-                    'end': int(band[1]),
-                    'name': band[2],
-                    'gieStain': band[3]
-                })
+        # print(repr(reader))
 
-            self.chromosomes.append({'name': k, 'bands': bands})
+        self.chromosomes = [{'name': k, 'bands': v} for k, v in reader.items()]
 
     def get(self, request):
         return Response(self.chromosomes)
