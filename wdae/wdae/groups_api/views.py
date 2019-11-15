@@ -10,8 +10,11 @@ from .serializers import GroupSerializer
 from .serializers import GroupRetrieveSerializer
 from .serializers import PermissionChangeSerializer
 from .serializers import PermissionRevokeSerializer
+from .serializers import GroupUserPermissionSerializer
+from .serializers import GroupDatasetPermissionSerializer
 from datasets_api.models import Dataset
 from django.contrib.auth.models import Group
+from django.contrib.auth import get_user_model
 from guardian.shortcuts import assign_perm
 from guardian.shortcuts import remove_perm
 
@@ -66,6 +69,75 @@ class RevokePermissionToGroupView(views.APIView):
 
         dataset = Dataset.objects.get(dataset_id=serializer.data['datasetId'])
         group = Group.objects.get(pk=serializer.data['groupId'])
+
+        if group.name in dataset.default_groups:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        remove_perm('view', group, dataset)
+
+        return Response(status=status.HTTP_200_OK)
+
+
+class GroupUsersManagementView(views.APIView):
+    permission_classes = (permissions.IsAdminUser,)
+    serializer_class = GroupUserPermissionSerializer
+
+    def post(self, request, group_id, user_id):
+        data = {'groupId': group_id, 'userId': user_id}
+        serializer = self.serializer_class(data=data)
+
+        if not serializer.is_valid():
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        user = get_user_model().objects.get(user_id=user_id)
+        group = Group.objects.get(pk=group_id)
+
+        user.groups.add(group)
+
+        return Response(status=status.HTTP_200_OK)
+
+    def delete(self, request, group_id, user_id):
+        data = {'groupId': group_id, 'userId': user_id}
+        serializer = self.serializer_class(data=data)
+
+        if not serializer.is_valid():
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        user = get_user_model().objects.get(user_id=user_id)
+        group = Group.objects.get(pk=group_id)
+
+        user.groups.add(group)
+
+        return Response(status=status.HTTP_200_OK)
+
+
+class GroupDatasetsManagementView(views.APIView):
+    permission_classes = (permissions.IsAdminUser,)
+    serializer_class = GroupDatasetPermissionSerializer
+
+    def post(self, request, group_id, dataset_id):
+        data = {'groupId': group_id, 'datasetId': dataset_id}
+        serializer = self.serializer_class(data=data)
+
+        if not serializer.is_valid():
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        dataset = Dataset.objects.get(dataset_id=dataset_id)
+        group = Group.objects.get(pk=group_id)
+
+        assign_perm('view', group, dataset)
+
+        return Response(status=status.HTTP_200_OK)
+
+    def delete(self, request, group_id, dataset_id):
+        data = {'groupId': group_id, 'datasetId': dataset_id}
+        serializer = self.serializer_class(data=data)
+
+        if not serializer.is_valid():
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        dataset = Dataset.objects.get(dataset_id=dataset_id)
+        group = Group.objects.get(pk=group_id)
 
         if group.name in dataset.default_groups:
             return Response(status=status.HTTP_403_FORBIDDEN)

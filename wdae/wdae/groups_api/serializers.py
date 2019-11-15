@@ -58,3 +58,24 @@ class PermissionRevokeSerializer(serializers.Serializer):
         slug_field='dataset_id'
 
     )
+
+class GroupUserPermissionSerializer(serializers.Serializer):
+
+    groupId = serializers.PrimaryKeyRelatedField(
+        queryset=Group.objects.all()
+    )
+
+    userId = serializers.PrimaryKeyRelatedField(
+        queryset=Dataset.objects.all()
+    )
+
+
+class GroupDatasetPermissionSerializer(serializers.Serializer):
+
+    groupId = serializers.PrimaryKeyRelatedField(
+        queryset=Group.objects.all()
+    )
+
+    datasetId = serializers.PrimaryKeyRelatedField(
+        queryset=Dataset.objects.all(),
+    )
