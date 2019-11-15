@@ -148,17 +148,6 @@ class RawVcfLoader(RawVariantsLoader):
         return annot_df
 
     @classmethod
-    def build_raw_vcf(cls, ped_df, vcf, annot_df=None):
-        ped_df, vcf_samples = cls._match_pedigree_to_samples(ped_df, vcf)
-        families = FamiliesData.from_pedigree_df(
-            ped_df, family_class=VcfFamily)
-
-        if annot_df is None:
-            annot_df = cls._build_initial_vcf_annotation(families, vcf)
-
-        return RawVcfVariants(families, vcf, annot_df)
-
-    @classmethod
     def load_raw_vcf_variants(
             cls, pedigree, vcf_filename,
             annotation_filename=None,
@@ -180,7 +169,12 @@ class RawVcfLoader(RawVariantsLoader):
                 and os.path.exists(annotation_filename):
             annot_df = cls.load_annotation_file(annotation_filename)
 
-        return cls.build_raw_vcf(ped_df, vcf, annot_df)
+        ped_df, vcf_samples = cls._match_pedigree_to_samples(ped_df, vcf)
+        families = FamiliesData.from_pedigree_df(
+            ped_df, family_class=VcfFamily)
+
+        return RawVcfVariants(
+            families, vcf, annot_df, source_filename=vcf_filename)
 
     @classmethod
     def load_and_annotate_raw_vcf_variants(

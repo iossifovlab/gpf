@@ -20,10 +20,11 @@ class BaseDAE(RawFamilyVariants):
 
 
 class RawDenovo(BaseDAE):
-    def __init__(self, families, denovo_df, annot_df):
+    def __init__(self, families, denovo_df, annot_df, source_filename=None):
         super(RawDenovo, self).__init__(
             families=families,
-            transmission_type=TransmissionType.denovo)
+            transmission_type=TransmissionType.denovo,
+            source_filename=source_filename)
         self.denovo_df = denovo_df
         self.annot_df = annot_df
 
@@ -60,11 +61,14 @@ class RawDenovo(BaseDAE):
 
 class RawDAE(BaseDAE):
 
-    def __init__(self, families, annot_df, genotype_records):
+    def __init__(
+            self, families, annot_df, genotype_records,
+            source_filename=None):
 
         super(RawDAE, self).__init__(
             families,
-            transmission_type=TransmissionType.transmitted)
+            transmission_type=TransmissionType.transmitted,
+            source_filename=source_filename)
 
         assert len(annot_df) == 2 * len(genotype_records), \
             "{} == 2 * {}".format(len(annot_df), len(genotype_records))

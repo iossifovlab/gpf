@@ -30,11 +30,13 @@ class RawVcfVariants(RawFamilyVariants):
 
     def __init__(self, families, vcf, annot_df,
                  transmission_type=TransmissionType.transmitted,
-                 variant_factory=VariantFactory):
+                 variant_factory=VariantFactory,
+                 source_filename=None):
 
         super(RawVcfVariants, self).__init__(
             families,
-            transmission_type=transmission_type)
+            transmission_type=transmission_type,
+            source_filename=source_filename)
 
         assert annot_df is not None
 

@@ -112,14 +112,6 @@ class RawDaeLoader(RawVariantsLoader):
         return RawDaeLoader._augment_denovo_variant(df, genome)
 
     @staticmethod
-    def build_raw_denovo(ped_df, denovo_df, annot_df=None):
-        if annot_df is None:
-            annot_df = RawDaeLoader._build_initial_annotation(denovo_df)
-        families = FamiliesData.from_pedigree_df(ped_df)
-
-        return RawDenovo(families, denovo_df, annot_df)
-
-    @staticmethod
     def _build_initial_annotation(denovo_df):
         records = []
         for index, rec in enumerate(denovo_df.to_dict(orient='records')):
@@ -175,7 +167,10 @@ class RawDaeLoader(RawVariantsLoader):
         else:
             annot_df = RawDaeLoader._build_initial_annotation(denovo_df)
 
-        return RawDaeLoader.build_raw_denovo(ped_df, denovo_df, annot_df)
+        families = FamiliesData.from_pedigree_df(ped_df)
+
+        return RawDenovo(
+            families, denovo_df, annot_df, source_filename=denovo_filename)
 
     @staticmethod
     def _rename_columns(columns):
@@ -335,7 +330,9 @@ class RawDaeLoader(RawVariantsLoader):
         assert len(annot_df) == 2 * len(genotype_records), \
             "{} == 2 * {}".format(len(annot_df), len(genotype_records))
 
-        return RawDAE(families, annot_df, genotype_records)
+        return RawDAE(
+            families, annot_df, genotype_records,
+            source_filename=summary_filename)
 
     @staticmethod
     def flexible_denovo_cli_arguments(parser):

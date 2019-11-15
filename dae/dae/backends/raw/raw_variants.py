@@ -17,9 +17,11 @@ class TransmissionType(enum.Enum):
 class RawFamilyVariants:
 
     def __init__(
-            self, families, transmission_type=TransmissionType.transmitted):
+            self, families, transmission_type=TransmissionType.transmitted,
+            source_filename=None):
         self.families = families
         self.transmission_type = transmission_type
+        self.source_filename = source_filename
         self.annot_df = None
         self.annotation_schema = None
 
