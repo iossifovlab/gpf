@@ -49,6 +49,7 @@ def vcfParser( argv ):
 
    return parser
 
+'''
 def trimStr( pos, ref, alt ):
    for n,s in enumerate(zip(ref[::-1],alt[::-1])):
         if s[0] != s[1]: break
@@ -99,26 +100,30 @@ def vcf2cshlFormat( pos, ref, alts ):
         vrts.append( v )
 
    return pxx, vrts
-
+'''
 #argColumnNs = [
 # chrCol, posCol, locCol, varCol, refCol, altCol, lengthCol, seqCol, typeCol]
 def vrt2Eff( annotator, chrom, pos, ref, alts ):
    et, eg, ed = [], [], []
 
-   pxx, vrt = vcf2cshlFormat( pos, ref, alts )
-   for p,v in zip(pxx,vrt):
-        pm = [chrom, p, None, v, None, None, None, None, None]
+   #pxx, vrt = vcf2cshlFormat( pos, ref, alts )
+   #for p,v in zip(pxx,vrt):
+        #pm = [chrom, p, None, v, None, None, None, None, None]
+   for alt in alts:
+        pm = [chrom, pos,None,None,ref,alt,None,None,None]
         effects = annotator.do_annotate_variant(*pm)
-        desc = annotator.effect_description(effects)
+        t, g, d = annotator.effect_description(effects)
         #print( effects, desc )
         #TODO: delimiter
-        et.append( desc[0] ) #effect type#'|'.join( desc ) )
-        eg.append( desc[1] ) #effect gene
-        ed.append( desc[2] ) #effect detail
+        g = g.replace(':','|')
+        d = d.replace(';','|') 
+        et.append( t ) #effect type#'|'.join( desc ) )
+        eg.append( g ) #effect gene
+        ed.append( d ) #effect detail
    #TODO: delimiter
-   et = '|'.join( et )
-   eg = '|'.join( eg )
-   ed = '|'.join( ed )
+   et = ','.join( et )
+   eg = ','.join( eg )
+   ed = ','.join( ed )
 
    return et, eg, ed
 
