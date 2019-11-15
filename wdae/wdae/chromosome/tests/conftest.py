@@ -23,11 +23,3 @@ def mock_gpf_instance(db, mocker, gpf_instance):
         'query_base.query_base.get_gpf_instance',
         return_value=gpf_instance
     )
-
-
-@pytest.fixture(scope='function')
-def chromosome_test_data():
-    chr_test_data = []
-    with open(fixtures_dir() + '/chr_test_data.yml', 'r') as infile:
-        chr_test_data = yaml.safe_load(infile)
-    return chr_test_data
