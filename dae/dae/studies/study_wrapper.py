@@ -152,7 +152,7 @@ class StudyWrapper(object):
 
         for index, member in enumerate(allele.members_in_order):
             result.append(
-                self.get_wdae_member(member, people_group, best_st[index])
+                self._get_wdae_member(member, people_group, best_st[index])
             )
 
         return result
@@ -769,3 +769,18 @@ class StudyWrapper(object):
 
             dataset_description[config_key] = \
                 parser.get_config_description(config)
+
+    def _get_wdae_member(self, member, people_group, best_st):
+        return [
+            member.family_id,
+            member.person_id,
+            member.mom_id,
+            member.dad_id,
+            member.sex.short(),
+            str(member.role),
+            self.study._get_person_color(member, people_group),
+            member.layout_position,
+            member.generated,
+            best_st,
+            0
+        ]

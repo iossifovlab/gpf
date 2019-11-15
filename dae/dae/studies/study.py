@@ -61,21 +61,6 @@ class StudyBase(object):
         else:
             return people_group['default']['color']
 
-    def get_wdae_member(self, member, people_group, best_st):
-        return [
-            member.family_id,
-            member.person_id,
-            member.mom_id,
-            member.dad_id,
-            member.sex.short(),
-            str(member.role),
-            self._get_person_color(member, people_group),
-            member.layout_position,
-            member.generated,
-            best_st,
-            0
-        ]
-
 
 class Study(StudyBase):
 
