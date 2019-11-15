@@ -28,7 +28,7 @@ def mock_gpf_instance(db, mocker, gpf_instance):
         return_value=gpf_instance
     )
     mocker.patch(
-        'gene_weights.tests.test_gene_weights_factory.get_gpf_instance',
+        'gene_weights.tests.test_gene_weights_db.get_gpf_instance',
         return_value=gpf_instance
     )
 

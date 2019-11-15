@@ -48,8 +48,8 @@ def pheno_factory(gpf_instance):
 
 
 @pytest.fixture(scope='function')
-def weights_factory(gpf_instance):
-    return gpf_instance.weights_factory
+def gene_weights_db(gpf_instance):
+    return gpf_instance.gene_weights_db
 
 
 @pytest.fixture(scope='function')
@@ -117,40 +117,40 @@ def quads_in_parent(variants_db_fixture, study_configs):
 
 
 @pytest.fixture(scope='function')
-def inheritance_trio_wrapper(inheritance_trio, pheno_factory, weights_factory):
-    return StudyWrapper(inheritance_trio, pheno_factory, weights_factory)
+def inheritance_trio_wrapper(inheritance_trio, pheno_factory, gene_weights_db):
+    return StudyWrapper(inheritance_trio, pheno_factory, gene_weights_db)
 
 
 @pytest.fixture(scope='function')
-def quads_f1_wrapper(quads_f1, pheno_factory, weights_factory):
-    return StudyWrapper(quads_f1, pheno_factory, weights_factory)
+def quads_f1_wrapper(quads_f1, pheno_factory, gene_weights_db):
+    return StudyWrapper(quads_f1, pheno_factory, gene_weights_db)
 
 
 @pytest.fixture(scope='function')
-def quads_f2_wrapper(quads_f2, pheno_factory, weights_factory):
-    return StudyWrapper(quads_f2, pheno_factory, weights_factory)
+def quads_f2_wrapper(quads_f2, pheno_factory, gene_weights_db):
+    return StudyWrapper(quads_f2, pheno_factory, gene_weights_db)
 
 
 @pytest.fixture(scope='function')
 def quads_variant_types_wrapper(
-        quads_variant_types, pheno_factory, weights_factory):
-    return StudyWrapper(quads_variant_types, pheno_factory, weights_factory)
+        quads_variant_types, pheno_factory, gene_weights_db):
+    return StudyWrapper(quads_variant_types, pheno_factory, gene_weights_db)
 
 
 @pytest.fixture(scope='function')
 def quads_two_families_wrapper(
-        quads_two_families, pheno_factory, weights_factory):
-    return StudyWrapper(quads_two_families, pheno_factory, weights_factory)
+        quads_two_families, pheno_factory, gene_weights_db):
+    return StudyWrapper(quads_two_families, pheno_factory, gene_weights_db)
 
 
 @pytest.fixture(scope='function')
-def quads_in_child_wrapper(quads_in_child, pheno_factory, weights_factory):
-    return StudyWrapper(quads_in_child, pheno_factory, weights_factory)
+def quads_in_child_wrapper(quads_in_child, pheno_factory, gene_weights_db):
+    return StudyWrapper(quads_in_child, pheno_factory, gene_weights_db)
 
 
 @pytest.fixture(scope='function')
-def quads_in_parent_wrapper(quads_in_parent, pheno_factory, weights_factory):
-    return StudyWrapper(quads_in_parent, pheno_factory, weights_factory)
+def quads_in_parent_wrapper(quads_in_parent, pheno_factory, gene_weights_db):
+    return StudyWrapper(quads_in_parent, pheno_factory, gene_weights_db)
 
 
 @pytest.fixture(scope='function')
@@ -185,9 +185,9 @@ def inheritance_trio_dataset(variants_db_fixture, dataset_configs):
 
 @pytest.fixture(scope='function')
 def inheritance_trio_dataset_wrapper(
-        inheritance_trio_dataset, pheno_factory, weights_factory):
+        inheritance_trio_dataset, pheno_factory, gene_weights_db):
     return StudyWrapper(
-        inheritance_trio_dataset, pheno_factory, weights_factory
+        inheritance_trio_dataset, pheno_factory, gene_weights_db
     )
 
 
@@ -199,9 +199,9 @@ def quads_two_families_dataset(variants_db_fixture, dataset_configs):
 
 @pytest.fixture(scope='function')
 def quads_two_families_dataset_wrapper(
-        quads_two_families_dataset, pheno_factory, weights_factory):
+        quads_two_families_dataset, pheno_factory, gene_weights_db):
     return StudyWrapper(
-        quads_two_families_dataset, pheno_factory, weights_factory
+        quads_two_families_dataset, pheno_factory, gene_weights_db
     )
 
 
@@ -211,8 +211,8 @@ def quads_f1_dataset(variants_db_fixture, dataset_configs):
 
 
 @pytest.fixture(scope='function')
-def quads_f1_dataset_wrapper(quads_f1_dataset, pheno_factory, weights_factory):
-    return StudyWrapper(quads_f1_dataset, pheno_factory, weights_factory)
+def quads_f1_dataset_wrapper(quads_f1_dataset, pheno_factory, gene_weights_db):
+    return StudyWrapper(quads_f1_dataset, pheno_factory, gene_weights_db)
 
 
 @pytest.fixture(scope='function')
@@ -221,8 +221,8 @@ def quads_f2_dataset(variants_db_fixture, dataset_configs):
 
 
 @pytest.fixture(scope='function')
-def quads_f2_dataset_wrapper(quads_f2_dataset, pheno_factory, weights_factory):
-    return StudyWrapper(quads_f2_dataset, pheno_factory, weights_factory)
+def quads_f2_dataset_wrapper(quads_f2_dataset, pheno_factory, gene_weights_db):
+    return StudyWrapper(quads_f2_dataset, pheno_factory, gene_weights_db)
 
 
 @pytest.fixture(scope='function')
@@ -233,9 +233,9 @@ def quads_variant_types_dataset(variants_db_fixture, dataset_configs):
 
 @pytest.fixture(scope='function')
 def quads_variant_types_dataset_wrapper(
-        quads_variant_types_dataset, pheno_factory, weights_factory):
+        quads_variant_types_dataset, pheno_factory, gene_weights_db):
     return StudyWrapper(
-        quads_variant_types_dataset, pheno_factory, weights_factory
+        quads_variant_types_dataset, pheno_factory, gene_weights_db
     )
 
 
@@ -247,8 +247,8 @@ def quads_in_child_dataset(variants_db_fixture, dataset_configs):
 
 @pytest.fixture(scope='function')
 def quads_in_child_dataset_wrapper(
-        quads_in_child_dataset, pheno_factory, weights_factory):
-    return StudyWrapper(quads_in_child_dataset, pheno_factory, weights_factory)
+        quads_in_child_dataset, pheno_factory, gene_weights_db):
+    return StudyWrapper(quads_in_child_dataset, pheno_factory, gene_weights_db)
 
 
 @pytest.fixture(scope='function')
@@ -259,9 +259,9 @@ def quads_in_parent_dataset(variants_db_fixture, dataset_configs):
 
 @pytest.fixture(scope='function')
 def quads_in_parent_dataset_wrapper(
-        quads_in_parent_dataset, pheno_factory, weights_factory):
+        quads_in_parent_dataset, pheno_factory, gene_weights_db):
     return StudyWrapper(
-        quads_in_parent_dataset, pheno_factory, weights_factory
+        quads_in_parent_dataset, pheno_factory, gene_weights_db
     )
 
 
@@ -273,5 +273,5 @@ def composite_dataset(variants_db_fixture, dataset_configs):
 
 @pytest.fixture(scope='function')
 def composite_dataset_wrapper(
-        composite_dataset, pheno_factory, weights_factory):
-    return StudyWrapper(composite_dataset, pheno_factory, weights_factory)
+        composite_dataset, pheno_factory, gene_weights_db):
+    return StudyWrapper(composite_dataset, pheno_factory, gene_weights_db)
