@@ -26,9 +26,9 @@ def log_filter(request, message):
 
 def request_logging(_LOGGER):
     def request_logging_decorator(func):
-        def func_wrapper(self, request):
+        def func_wrapper(self, request, *args, **kwargs):
             _LOGGER.info(log_filter(request, '').strip())
 
-            return func(self, request)
+            return func(self, request, *args, **kwargs)
         return func_wrapper
     return request_logging_decorator
