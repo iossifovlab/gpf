@@ -112,6 +112,22 @@ class RawDaeLoader(RawVariantsLoader):
         return RawDaeLoader._augment_denovo_variant(df, genome)
 
     @staticmethod
+    def save_dae_denovo_file(denovo_df, denovo_filename):
+        with open(denovo_filename, "w") as outfile:
+            print(
+                'familyId', 'location', 'variant', 'bestState',
+                sep='\t', file=outfile)
+            for rec in denovo_df.to_dict(orient='records'):
+                family_id = rec['family_id']
+                family_data = rec['family_data']
+                location = "{}:{}".format(rec['chrom'], rec['cshl_position'])
+                variant = rec['cshl_variant']
+
+                print(
+                    family_id, location, variant, family_data,
+                    sep='\t', file=outfile)
+    
+    @staticmethod
     def _build_initial_annotation(denovo_df):
         records = []
         for index, rec in enumerate(denovo_df.to_dict(orient='records')):

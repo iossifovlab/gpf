@@ -46,3 +46,9 @@ def test_load_denovo(raw_denovo):
 def test_load_denovo_families(raw_denovo):
     denovo = raw_denovo("backends/denovo")
     assert denovo.families is not None
+
+
+def test_save_denovo_file(raw_denovo, temp_filename):
+    denovo = raw_denovo("backends/denovo")
+    assert denovo.families is not None
+    RawDaeLoader.save_dae_denovo_file(denovo.denovo_df, temp_filename)

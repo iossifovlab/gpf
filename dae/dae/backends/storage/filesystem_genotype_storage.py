@@ -1,7 +1,10 @@
 import os
+import shutil
 
+from dae.pedigrees.pedigree_reader import PedigreeReader
 from dae.backends.storage.genotype_storage import GenotypeStorage
 
+from dae.backends.raw.loader import RawVariantsLoader
 from dae.backends.vcf.loader import RawVcfLoader
 from dae.backends.dae.loader import RawDaeLoader
 
@@ -43,3 +46,24 @@ class FilesystemGenotypeStorage(GenotypeStorage):
                 denovo_filename)
             return RawDaeLoader.load_raw_denovo_variants(
                 ped_filename, denovo_filename, annotation_filename)
+
+    def _import_variants_common(self, study_id, fvars):
+        data_dir = self.get_data_dir(study_id, 'data')
+        pedigree_filename = os.path.join(data_dir, f"{study_id}.ped")
+        PedigreeReader.save_pedigree(
+            fvars.families.ped_df, pedigree_filename)
+        annotation_filename = os.path.join(data_dir, f"{study_id}-eff.txt")
+        RawVariantsLoader.save_annotation_file(
+            fvars.annot_df, annotation_filename)
+        return data_dir
+
+    def simple_import_denovo_variants(self, study_id, fvars):
+        data_dir = self._import_variants_common(study_id, fvars)
+        denovo_filename = os.path.join(data_dir, f"{study_id}.tsv")
+        RawDaeLoader.save_dae_denovo_file(fvars.denovo_df, denovo_filename)
+
+    def simple_import_vcf_variants(self, study_id, fvars):
+        self._import_variants_common(study_id, fvars)
+        data_dir = self._import_variants_common(study_id, fvars)
+        vcf_filename = os.path.join(data_dir, f"{study_id}.vcf")
+        shutil.copyfile(fvars.source_filename, vcf_filename)

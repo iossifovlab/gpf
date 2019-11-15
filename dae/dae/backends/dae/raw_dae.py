@@ -14,9 +14,11 @@ from dae.backends.raw.raw_variants import RawFamilyVariants, TransmissionType
 class BaseDAE(RawFamilyVariants):
 
     def __init__(self, families,
-                 transmission_type):
+                 transmission_type,
+                 source_filename=None):
         super(BaseDAE, self).__init__(
-            families, transmission_type=transmission_type)
+            families, transmission_type=transmission_type,
+            source_filename=source_filename)
 
 
 class RawDenovo(BaseDAE):
