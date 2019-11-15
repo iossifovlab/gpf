@@ -5,8 +5,8 @@ from rest_framework.response import Response
 import json
 import logging
 
-from utils.logger import log_filter
 from utils.logger import LOGGER
+from utils.logger import request_logging
 
 from query_base.query_base import QueryBaseView
 
@@ -23,9 +23,9 @@ class QueryPreviewView(QueryBaseView):
     MAX_VARIANTS = 2000
 
     @expand_gene_set
+    @request_logging(LOGGER)
     def post(self, request):
-        LOGGER.info(log_filter(request, "query v3 preview request: " +
-                               str(request.data)))
+        LOGGER.info("query v3 preview request: " + str(request.data))
 
         data = request.data
         dataset_id = data.pop('datasetId', None)
@@ -62,9 +62,9 @@ class QueryDownloadView(QueryBaseView):
     DOWNLOAD_LIMIT = 10000
 
     @expand_gene_set
+    @request_logging(LOGGER)
     def post(self, request):
-        LOGGER.info(log_filter(request, "query v3 download request: " +
-                               str(request.data)))
+        LOGGER.info("query v3 download request: " + str(request.data))
 
         data = self._parse_query_params(request.data)
         user = request.user
