@@ -1,9 +1,22 @@
 from builtins import object
 from rest_framework import serializers
 from django.contrib.auth.models import Group
+from django.contrib.auth import get_user_model
 from guardian import shortcuts
 from datasets_api.models import Dataset
 from users_api.serializers import CreatableSlugRelatedField
+
+
+class GroupCreateSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(validators=[])
+
+    class Meta(object):
+        model = Group
+        fields = ('id', 'name',)
+
+    def create(self, validated_data):
+        group = Group.objects.create(name=validated_data['name'])
+        return group
 
 
 class GroupSerializer(serializers.ModelSerializer):
@@ -59,14 +72,15 @@ class PermissionRevokeSerializer(serializers.Serializer):
 
     )
 
+
 class GroupUserPermissionSerializer(serializers.Serializer):
 
     groupId = serializers.PrimaryKeyRelatedField(
         queryset=Group.objects.all()
     )
 
-    userId = serializers.PrimaryKeyRelatedField(
-        queryset=Dataset.objects.all()
+    Id = serializers.PrimaryKeyRelatedField(
+        queryset=get_user_model().objects.all()
     )
 
 
@@ -76,6 +90,8 @@ class GroupDatasetPermissionSerializer(serializers.Serializer):
         queryset=Group.objects.all()
     )
 
-    datasetId = serializers.PrimaryKeyRelatedField(
+    datasetId = serializers.SlugRelatedField(
         queryset=Dataset.objects.all(),
+        # read_only=True,
+        slug_field='dataset_id'
     )

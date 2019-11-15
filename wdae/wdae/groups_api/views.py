@@ -8,6 +8,7 @@ from rest_framework import status
 
 from .serializers import GroupSerializer
 from .serializers import GroupRetrieveSerializer
+from .serializers import GroupCreateSerializer
 from .serializers import PermissionChangeSerializer
 from .serializers import PermissionRevokeSerializer
 from .serializers import GroupUserPermissionSerializer
@@ -19,7 +20,11 @@ from guardian.shortcuts import assign_perm
 from guardian.shortcuts import remove_perm
 
 
-class GroupsViewSet(mixins.UpdateModelMixin, viewsets.ReadOnlyModelViewSet):
+class GroupsViewSet(
+        mixins.CreateModelMixin,
+        mixins.UpdateModelMixin,
+        viewsets.ReadOnlyModelViewSet):
+
     serializer_class = GroupSerializer
     permission_classes = (permissions.IsAdminUser,)
     pagination_class = None
@@ -29,6 +34,8 @@ class GroupsViewSet(mixins.UpdateModelMixin, viewsets.ReadOnlyModelViewSet):
 
         if self.action == 'list' or self.action == 'retrieve':
             serializer_class = GroupRetrieveSerializer
+        elif self.action == 'create':
+            serializer_class = GroupCreateSerializer
 
         return serializer_class
 
@@ -83,13 +90,13 @@ class GroupUsersManagementView(views.APIView):
     serializer_class = GroupUserPermissionSerializer
 
     def post(self, request, group_id, user_id):
-        data = {'groupId': group_id, 'userId': user_id}
+        data = {'groupId': group_id, 'Id': user_id}
         serializer = self.serializer_class(data=data)
 
         if not serializer.is_valid():
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        user = get_user_model().objects.get(user_id=user_id)
+        user = get_user_model().objects.get(id=user_id)
         group = Group.objects.get(pk=group_id)
 
         user.groups.add(group)
@@ -97,16 +104,16 @@ class GroupUsersManagementView(views.APIView):
         return Response(status=status.HTTP_200_OK)
 
     def delete(self, request, group_id, user_id):
-        data = {'groupId': group_id, 'userId': user_id}
+        data = {'groupId': group_id, 'Id': user_id}
         serializer = self.serializer_class(data=data)
 
         if not serializer.is_valid():
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        user = get_user_model().objects.get(user_id=user_id)
+        user = get_user_model().objects.get(id=user_id)
         group = Group.objects.get(pk=group_id)
 
-        user.groups.add(group)
+        user.groups.remove(group)
 
         return Response(status=status.HTTP_200_OK)
 
