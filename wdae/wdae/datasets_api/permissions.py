@@ -2,28 +2,25 @@ from rest_framework import permissions
 
 from gpf_instance.gpf_instance import get_gpf_instance
 from .models import Dataset
+from utils.datasets import find_dataset_id_in_request
 from guardian.utils import get_anonymous_user
 
 
 class IsDatasetAllowed(permissions.BasePermission):
 
-    def has_permission(self, request, view):
-        dataset_id = request.query_params.get('dataset_id', None)
-        if dataset_id is None:
-            dataset_id = request.query_params.get('datasetId', None)
-        if dataset_id is None:
-            dataset_id = request.data.get('datasetId', None)
-        if dataset_id is None:
-            dataset_id = request.parser_context. \
-                get('kwargs', {}).get('common_report_id', None)
+    @staticmethod
+    def has_permission(request, view):
+        dataset_id = find_dataset_id_in_request(request)
 
         if dataset_id is None:
             return True
 
-        return self.has_object_permission(request, view, dataset_id)
+        return IsDatasetAllowed.has_object_permission(
+                request, view, dataset_id)
 
-    def has_object_permission(self, request, view, dataset_id):
-        return self.user_has_permission(request.user, dataset_id)
+    @staticmethod
+    def has_object_permission(request, view, dataset_id):
+        return IsDatasetAllowed.user_has_permission(request.user, dataset_id)
 
     @staticmethod
     def user_has_permission(user, dataset_id):
