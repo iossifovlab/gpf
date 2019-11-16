@@ -62,7 +62,7 @@ def test_vcf2parquet_vcf(
     assert schema['effect_gene'].type_name == 'str'
     assert schema['effect_type'].type_name == 'str'
     assert schema['effect_data'].type_name == 'str'
-    assert schema['worst_effect'].type_name == 'str'
+    # assert schema['worst_effect'].type_name == 'str'
 
 
 def test_vcf2parquet_make(
