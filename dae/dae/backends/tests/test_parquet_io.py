@@ -1,8 +1,6 @@
-import os
 import pytest
 import numpy as np
-from dae.backends.impala.parquet_io import ParquetSerializer, \
-    VariantsParquetWriter
+from dae.backends.impala.parquet_io import ParquetSerializer
 
 
 @pytest.mark.parametrize("gt", [

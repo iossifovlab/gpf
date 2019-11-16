@@ -447,15 +447,15 @@ class SummaryVariantFactory(object):
     def summary_allele_from_record(
             record, transmission_type='transmitted'):
         record['transmission_type'] = transmission_type
-        if record.get('effect_type') is None:
-            effects = None
-        else:
-            effects = Effect.from_effects(
-                record['effect_type'],
-                list(zip(record['effect_gene_genes'],
-                         record['effect_gene_types'])),
-                list(zip(record['effect_details_transcript_ids'],
-                         record['effect_details_details'])))
+        # if record.get('effect_type') is None:
+        #     effects = None
+        # else:
+        #     effects = Effect.from_effects(
+        #         record['effect_type'],
+        #         list(zip(record['effect_gene_genes'],
+        #                  record['effect_gene_types'])),
+        #         list(zip(record['effect_details_transcript_ids'],
+        #                  record['effect_details_details'])))
         alternative = record['alternative']
 
         return SummaryAllele(

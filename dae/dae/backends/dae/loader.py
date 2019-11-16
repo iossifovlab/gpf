@@ -126,7 +126,7 @@ class RawDaeLoader(RawVariantsLoader):
                 print(
                     family_id, location, variant, family_data,
                     sep='\t', file=outfile)
-    
+
     @staticmethod
     def _build_initial_annotation(denovo_df):
         records = []

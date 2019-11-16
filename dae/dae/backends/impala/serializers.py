@@ -4,13 +4,11 @@ import operator
 from collections import namedtuple
 
 import numpy as np
-import pyarrow as pa
 
 from dae.utils.vcf_utils import GENOTYPE_TYPE
 from dae.annotation.tools.file_io_parquet import ParquetSchema
 
 from dae.variants.family_variant import FamilyAllele, FamilyVariant
-from dae.variants.effects import Effect
 
 
 class ParquetSerializer(object):

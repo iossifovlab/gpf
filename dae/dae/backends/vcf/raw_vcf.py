@@ -8,7 +8,7 @@ class VariantFactory(SummaryVariantFactory):
 
     @staticmethod
     def from_summary_variant(sv, family, gt):
-        return FamilyVariant.from_sumary_variant(sv, family, gt)
+        return FamilyVariant.from_summary_variant(sv, family, gt)
 
     @staticmethod
     def family_variant_from_vcf(summary_variant, family, vcf):

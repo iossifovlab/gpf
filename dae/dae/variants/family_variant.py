@@ -348,7 +348,7 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
         self._matched_alleles = []
 
     @staticmethod
-    def from_sumary_variant(summary_variant, family, genotype):
+    def from_summary_variant(summary_variant, family, genotype):
         assert summary_variant is not None
         assert isinstance(summary_variant, SummaryVariant)
 

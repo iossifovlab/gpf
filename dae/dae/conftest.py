@@ -15,10 +15,13 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.annotation.annotation_pipeline import PipelineAnnotator
 
 from dae.backends.configure import Configure
+from dae.backends.raw.loader import AlleleFrequencyDecorator
+from dae.backends.raw.raw_variants import RawMemoryVariants
+
 from dae.backends.dae.loader import RawDaeLoader
 from dae.backends.dae.raw_dae import RawDAE
 
-from dae.backends.vcf.loader import RawVcfLoader
+from dae.backends.vcf.loader import RawVcfLoader, VcfLoader
 
 from dae.backends.import_commons import \
     construct_import_annotation_pipeline
@@ -350,7 +353,7 @@ def iossifov2014_impala(
     return fvars
 
 
-@pytest.fixture
+@pytest.fixture(scope='session')
 def vcf_loader_data():
     def builder(path):
         if os.path.isabs(path):
@@ -384,12 +387,31 @@ def variants_vcf(genomes_db, default_annotation_pipeline):
     return builder
 
 
+@pytest.fixture(scope='session')
+def variants_mem(vcf_loader_data):
+    def builder(path):
+        conf = vcf_loader_data(path)
+
+        ped_df = PedigreeReader.flexible_pedigree_read(conf.pedigree)
+        families = FamiliesData.from_pedigree_df(ped_df)
+
+        loader = VcfLoader(families, conf.vcf)
+        assert loader is not None
+
+        loader = AlleleFrequencyDecorator(loader)
+        fvars = RawMemoryVariants(loader)
+        return fvars
+
+    return builder
+
+
 @pytest.fixture
 def variants_implementations(
-        variants_vcf, variants_impala):
+        variants_vcf, variants_impala, variants_mem):
     impls = {
         'variants_vcf': variants_vcf,
         'variants_impala': variants_impala,
+        'variants_mem': variants_mem
     }
     return impls
 

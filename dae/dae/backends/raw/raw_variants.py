@@ -188,7 +188,7 @@ class RawFamilyVariants:
 
             kwargs['variant_type'] = variant_type_query.\
                 transform_tree_to_matcher(parsed)
-        
+
         return_reference = kwargs.get("return_reference", False)
         return_unknown = kwargs.get("return_unknown", False)
 
@@ -214,3 +214,18 @@ class RawFamilyVariants:
     def annotate(self, annotation_pipeline):
         self.annot_df = annotation_pipeline.annotate_df(self.annot_df)
         self.annotation_schema = annotation_pipeline.build_annotation_schema()
+
+
+class RawMemoryVariants(RawFamilyVariants):
+
+    def __init__(
+            self, loader):
+
+        super(RawMemoryVariants, self).__init__(
+            loader.families, loader.transmission_type)
+
+        self.full_variants = list(loader.full_variants_iterator())
+
+    def full_variants_iterator(self):
+        for sv, fvs in self.full_variants:
+            yield sv, fvs

@@ -51,7 +51,7 @@ class RawDenovo(BaseDAE):
                 assert len(family) == gt.shape[1], \
                     (family.family_id, len(family), gt.shape)
 
-                family_variant = FamilyVariant.from_sumary_variant(
+                family_variant = FamilyVariant.from_summary_variant(
                     summary_variant, family, gt)
 
                 yield summary_variant, [family_variant]
@@ -95,7 +95,7 @@ class RawDAE(BaseDAE):
             assert len(genotype_record) == len(self.families.families_list())
             for family, gt in zip(
                     self.families.families_list(), genotype_record):
-                v = FamilyVariant.from_sumary_variant(
+                v = FamilyVariant.from_summary_variant(
                     summary_variant, family, gt)
                 family_variants.append(v)
             yield summary_variant, family_variants

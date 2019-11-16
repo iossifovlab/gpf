@@ -5,7 +5,7 @@ Created on Feb 13, 2018
 '''
 import numpy as np
 import pandas as pd
-from dae.variants.attributes import Role, Sex, Status
+from dae.variants.attributes import Role, Sex
 
 
 class Person(object):
@@ -17,7 +17,7 @@ class Person(object):
         self.family_id = atts['family_id']
         self.person_id = atts['person_id']
         self.sample_id = atts.get('sample_id', None)
-        self.sample_index = atts.get('sampleIndex', None)
+        self.sample_index = atts.get('samples_index', None)
         self.index = atts.get('index', None)
         self.sex = atts['sex']
         self.role = atts['role']
@@ -118,6 +118,7 @@ class Person(object):
             "generated": [self.generated],
             "phenotype": [phenotype]
         })
+
 
 class Family(object):
 

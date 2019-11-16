@@ -1,8 +1,3 @@
-'''
-Created on Feb 7, 2018
-
-@author: lubo
-'''
 import os
 
 from cyvcf2 import VCF
@@ -10,10 +5,10 @@ from cyvcf2 import VCF
 import numpy as np
 import pandas as pd
 
-from dae.variants.variant import SummaryVariantFactory
-
 from dae.pedigrees.family import FamiliesData, Family
 from dae.pedigrees.pedigree_reader import PedigreeReader
+
+from dae.variants.variant import SummaryVariantFactory
 
 from dae.backends.raw.loader import RawVariantsLoader, VariantsLoader
 
@@ -68,10 +63,10 @@ class VcfFamily(Family):
 
     @classmethod
     def from_df(cls, family_id, ped_df):
-        assert 'sampleIndex' in ped_df.columns
+        assert 'samples_index' in ped_df.columns
         family = Family.from_df(family_id, ped_df)
 
-        family.samples = ped_df['sampleIndex'].values
+        family.samples = ped_df['samples_index'].values
 
         return family
 
@@ -83,7 +78,7 @@ class VcfFamily(Family):
     def vcf_samples_index(self, person_ids):
         return self.ped_df[
             self.ped_df['personId'].isin(set(person_ids))
-        ]['sampleIndex'].values
+        ]['samples_index'].values
 
 
 class VcfLoader(VariantsLoader):
@@ -116,7 +111,8 @@ class VcfLoader(VariantsLoader):
             if record['sample_id'] in samples_needed:
                 if record['sample_id'] in seen:
                     continue
-                record['sampleIndex'] = vcf_samples.index(record['sample_id'])
+                record['samples_index'] = \
+                    vcf_samples.index(record['sample_id'])
                 pedigree.append(record)
                 seen.add(record['sample_id'])
 
@@ -146,9 +142,9 @@ class VcfLoader(VariantsLoader):
         for allele_index, alt in enumerate(vcf_variant.ALT):
             records.append(
                 {
-                    'chrom': vcf_variant.CHROM, 
+                    'chrom': vcf_variant.CHROM,
                     'position': vcf_variant.start + 1,
-                    'reference':vcf_variant.REF,
+                    'reference': vcf_variant.REF,
                     'alternative': alt,
                     'summary_variant_index': summary_index,
                     'allele_index': allele_index + 1,
@@ -157,13 +153,14 @@ class VcfLoader(VariantsLoader):
             )
         return SummaryVariantFactory.summary_variant_from_records(records)
 
-    def full_variants_iterator(self):
+    def summary_genotypes_iterator(self):
         for summary_index, vcf_variant in enumerate(self.vcf):
-            print(vcf_variant, vcf_variant.genotypes)
-            family_genotypes = np.array(vcf_variant.genotypes, dtype=np.int8)
-            print(family_genotypes.T)
+            family_genotypes = np.array(vcf_variant.genotypes, dtype=np.int8).T
 
-            yield self._warp_summary_variant(summary_index, vcf_variant)
+            summary_variant = self._warp_summary_variant(
+                summary_index, vcf_variant)
+
+            yield summary_variant, family_genotypes
 
 
 class RawVcfLoader(RawVariantsLoader):
@@ -189,7 +186,8 @@ class RawVcfLoader(RawVariantsLoader):
             if record['sample_id'] in samples_needed:
                 if record['sample_id'] in seen:
                     continue
-                record['sampleIndex'] = vcf_samples.index(record['sample_id'])
+                record['samples_index'] = \
+                    vcf_samples.index(record['sample_id'])
                 pedigree.append(record)
                 seen.add(record['sample_id'])
 
