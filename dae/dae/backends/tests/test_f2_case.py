@@ -25,8 +25,7 @@ def count_variants(
     return len(vs)
 
 
-@pytest.mark.parametrize("variants", [
-    'variants_vcf',
+@pytest.mark.parametrize('variants', [
     'variants_impala',
     'variants_mem'
 ])
@@ -51,8 +50,7 @@ def test_f2_all_unknown(
     assert c == count
 
 
-@pytest.mark.parametrize("variants", [
-    'variants_vcf',
+@pytest.mark.parametrize('variants', [
     'variants_impala',
     'variants_mem'
 ])
@@ -77,8 +75,7 @@ def test_f2_reference_and_unknown(
     assert c == count
 
 
-@pytest.mark.parametrize("variants", [
-    'variants_vcf',
+@pytest.mark.parametrize('variants', [
     'variants_impala',
     'variants_mem'
 ])
@@ -104,8 +101,7 @@ def test_f2_canonical_denovo(
     assert c == count
 
 
-@pytest.mark.parametrize("variants", [
-    'variants_vcf',
+@pytest.mark.parametrize('variants', [
     'variants_impala',
     'variants_mem'
 ])
@@ -131,8 +127,7 @@ def test_f2_canonical_omission(
     assert c == count
 
 
-@pytest.mark.parametrize("variants", [
-    'variants_vcf',
+@pytest.mark.parametrize('variants', [
     'variants_impala',
     'variants_mem'
 ])
@@ -158,8 +153,7 @@ def test_f2_non_canonical_omission(
     assert c == count
 
 
-@pytest.mark.parametrize("variants", [
-    'variants_vcf',
+@pytest.mark.parametrize('variants', [
     'variants_impala',
     'variants_mem'
 ])

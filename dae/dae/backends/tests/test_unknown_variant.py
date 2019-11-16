@@ -11,7 +11,6 @@ from dae.backends.impala.parquet_io import VariantsParquetWriter
 
 
 @pytest.mark.parametrize('variants', [
-    'variants_vcf',
     'variants_impala',
     'variants_mem'
 ])
@@ -32,16 +31,13 @@ def test_variant_in_members(variants_impl, variants, region, count, members):
             assert list(aa.variant_in_members) == members
 
 
-@pytest.mark.parametrize('variants', [
-    'variants_vcf',
-])
 @pytest.mark.parametrize("fixture_name", [
     "backends/f1_test_901923",
 ])
 def test_full_variants_iterator_parquet_storage_unknown_variants(
-        variants_impl, variants, fixture_name):
+        vcf_variants_loader, fixture_name):
 
-    fvars = variants_impl(variants)(fixture_name)
+    fvars = vcf_variants_loader(fixture_name)
     assert fvars is not None
 
     parquet_writer = VariantsParquetWriter(fvars)

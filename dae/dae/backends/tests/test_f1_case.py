@@ -5,8 +5,8 @@ from dae.RegionOperations import Region
 from dae.utils.vcf_utils import mat2str
 
 
-def test_f1_check_all_variants_effects(variants_vcf):
-    vvars = variants_vcf("backends/f1_test")
+def test_f1_check_all_variants_effects(variants_mem):
+    vvars = variants_mem("backends/f1_test")
     assert vvars is not None
 
     vs = vvars.query_variants(
@@ -43,8 +43,7 @@ def count_variants(variants, regions, inheritance, effect_types):
     return len(vs)
 
 
-@pytest.mark.parametrize("variants", [
-    'variants_vcf',
+@pytest.mark.parametrize('variants', [
     'variants_impala',
     'variants_mem'
 ])
@@ -72,8 +71,7 @@ def test_f1_simple(
     assert len(vs) == count
 
 
-@pytest.mark.parametrize("variants", [
-    'variants_vcf',
+@pytest.mark.parametrize('variants', [
     'variants_impala',
     'variants_mem'
 ])
@@ -93,8 +91,7 @@ def test_f1_all_unknown(
     assert c == count
 
 
-@pytest.mark.parametrize("variants", [
-    'variants_vcf',
+@pytest.mark.parametrize('variants', [
     'variants_impala',
     'variants_mem'
 ])
@@ -117,8 +114,7 @@ def test_f1_unknown_and_reference(
     assert c == count
 
 
-@pytest.mark.parametrize("variants", [
-    'variants_vcf',
+@pytest.mark.parametrize('variants', [
     'variants_impala',
     'variants_mem'
 ])
@@ -143,8 +139,7 @@ def test_f1_cannonical_denovo(
     assert c == count
 
 
-@pytest.mark.parametrize("variants", [
-    'variants_vcf',
+@pytest.mark.parametrize('variants', [
     'variants_impala',
     'variants_mem'
 ])
@@ -167,8 +162,7 @@ def test_f1_cannonical_omission(
     assert c == count
 
 
-@pytest.mark.parametrize("variants", [
-    'variants_vcf',
+@pytest.mark.parametrize('variants', [
     'variants_impala',
     'variants_mem'
 ])
@@ -192,8 +186,7 @@ def test_f1_non_cannonical_omission(
     assert c == count
 
 
-@pytest.mark.parametrize("variants", [
-    'variants_vcf',
+@pytest.mark.parametrize('variants', [
     'variants_impala',
     'variants_mem'
 ])
@@ -213,8 +206,7 @@ def test_f1_partially_known_denovo(
     assert c == count
 
 
-@pytest.mark.parametrize("variants", [
-    'variants_vcf',
+@pytest.mark.parametrize('variants', [
     'variants_impala',
     'variants_mem'
 ])

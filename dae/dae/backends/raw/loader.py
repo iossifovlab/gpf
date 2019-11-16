@@ -114,6 +114,7 @@ class AnnotationPipelineDecorator(VariantsLoader):
         )
         self.variants_loader = variants_loader
         self.annotation_pipeline = annotation_pipeline
+        self.annotation_schema = annotation_pipeline.build_annotation_schema()
 
     def summary_genotypes_iterator(self):
         for summary_variant, family_genotypes in \

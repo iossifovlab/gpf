@@ -199,7 +199,7 @@ class SummaryAllele(VariantBase):
             chromosome, position, reference, alternative)
 
         #: index of the summary variant this allele belongs to
-        # self.summary_index = summary_index
+        self.summary_index = summary_index
         #: index of the allele of summary variant
         self.allele_index = allele_index
 

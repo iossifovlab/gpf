@@ -3,9 +3,9 @@ from dae.backends.impala.parquet_io import VariantsParquetWriter
 
 
 def test_impala_import_annotation(
-        variants_vcf, temp_filename):
+        vcf_variants_loader, temp_filename):
 
-    fvars = variants_vcf('vcf_import/effects_trio')
+    fvars = vcf_variants_loader('vcf_import/effects_trio')
 
     parquet_writer = VariantsParquetWriter(fvars)
 

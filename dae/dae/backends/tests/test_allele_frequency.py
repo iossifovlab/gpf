@@ -9,7 +9,6 @@ from dae.utils.vcf_utils import mat2str
 
 
 @pytest.mark.parametrize("variants", [
-    'variants_vcf',
     'variants_impala',
     'variants_mem'
 ])
@@ -43,7 +42,6 @@ def test_variant_frequency_single(
 
 
 @pytest.mark.parametrize("variants", [
-    'variants_vcf',
     'variants_impala',
     'variants_mem'
 ])

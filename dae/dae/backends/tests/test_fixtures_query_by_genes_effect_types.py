@@ -8,8 +8,7 @@ import pytest
 from dae.RegionOperations import Region
 
 
-@pytest.mark.parametrize("variants", [
-    'variants_vcf',
+@pytest.mark.parametrize('variants', [
     'variants_impala',
     'variants_mem'
 ])
@@ -32,8 +31,7 @@ def test_single_alt_allele_effects(
     assert len(vs) == count
 
 
-@pytest.mark.parametrize("variants", [
-    'variants_vcf',
+@pytest.mark.parametrize('variants', [
     'variants_impala',
     'variants_mem'
 ])
@@ -44,8 +42,7 @@ def test_no_missense_effects(variants_impl, variants):
     assert len(vs) == 0
 
 
-@pytest.mark.parametrize("variants", [
-    'variants_vcf',
+@pytest.mark.parametrize('variants', [
     'variants_impala',
     'variants_mem'
 ])
@@ -64,8 +61,7 @@ def test_multi_alt_allele_effects(variants_impl, variants, effect, count):
     assert len(vs) == count
 
 
-@pytest.mark.parametrize("variants", [
-    'variants_vcf',
+@pytest.mark.parametrize('variants', [
     'variants_impala',
     'variants_mem'
 ])
@@ -95,8 +91,7 @@ def test_single_alt_allele_genes(
     assert len(vs) == count
 
 
-@pytest.mark.parametrize("variants", [
-    'variants_vcf',
+@pytest.mark.parametrize('variants', [
     'variants_impala',
     'variants_mem'
 ])

@@ -6,8 +6,7 @@ Created on Jul 5, 2018
 import pytest
 
 
-@pytest.mark.parametrize("variants", [
-    'variants_vcf',
+@pytest.mark.parametrize('variants', [
     'variants_impala',
     'variants_mem'
 ])
@@ -39,17 +38,9 @@ def test_variant_real_attr_frequency_queries(
         return_reference=False,
         return_unknown=False))
     assert len(vs) == count
-    # for v in vs:
-    #     print(v)
-    #     for a in v.alleles:
-    #         print(
-    #             "\t>", a,
-    #             "\taf_allele_count:", a.get_attribute("af_allele_count"),
-    #             "\taf_allele_freq:", a.get_attribute("af_allele_freq"))
 
 
-@pytest.mark.parametrize("variants", [
-    'variants_vcf',
+@pytest.mark.parametrize('variants', [
     'variants_impala',
     'variants_mem'
 ])

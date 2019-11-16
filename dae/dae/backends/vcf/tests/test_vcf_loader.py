@@ -15,11 +15,11 @@ from dae.backends.vcf.loader import VcfLoader
     "backends/trios_multi",
     "backends/quads_f1",
 ])
-def test_vcf_loader(vcf_loader_data, variants_vcf, fixture_data):
+def test_vcf_loader(vcf_loader_data, variants_mem, fixture_data):
     conf = vcf_loader_data(fixture_data)
     print(conf)
 
-    fvars = variants_vcf(fixture_data)
+    fvars = variants_mem(fixture_data)
 
     ped_df = PedigreeReader.flexible_pedigree_read(conf.pedigree)
     families = FamiliesData.from_pedigree_df(ped_df)

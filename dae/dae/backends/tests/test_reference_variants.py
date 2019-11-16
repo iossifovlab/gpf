@@ -9,7 +9,6 @@ from dae.backends.impala.parquet_io import VariantsParquetWriter
 
 
 @pytest.mark.parametrize('variants', [
-    'variants_vcf',
     'variants_impala',
     'variants_mem'
 ])
@@ -54,9 +53,8 @@ def test_reference_variant_single_allele(
 
 
 @pytest.mark.parametrize('variants', [
-    'variants_vcf',
     # 'variants_impala',
-    # 'variants_mem'
+    'variants_mem'
 ])
 @pytest.mark.parametrize("fixture_name", [
     "backends/trios2_11541",
@@ -74,18 +72,13 @@ def test_full_variants_iterator(
             print(fv)
 
 
-@pytest.mark.parametrize('variants', [
-    'variants_vcf',
-    # 'variants_impala',
-    # 'variants_mem'
-])
 @pytest.mark.parametrize("fixture_name", [
     "backends/trios2_11541",
 ])
 def test_full_variants_iterator_parquet_storage(
-        variants_impl, variants, fixture_name):
+        vcf_variants_loader, fixture_name):
 
-    fvars = variants_impl(variants)(fixture_name)
+    fvars = vcf_variants_loader(fixture_name)
     assert fvars is not None
 
     parquet_writer = VariantsParquetWriter(fvars)

@@ -3,8 +3,8 @@ import numpy as np
 from dae.variants.family_variant import FamilyAllele as FA
 
 
-def test_inheritance_trio_denovo_omissions(variants_vcf):
-    fvars = variants_vcf("backends/inheritance_trio_denovo_omission")
+def test_inheritance_trio_denovo_omissions(variants_mem):
+    fvars = variants_mem("backends/inheritance_trio_denovo_omission")
     vs = list(fvars.query_variants())
 
     for v in vs:
@@ -15,8 +15,8 @@ def test_inheritance_trio_denovo_omissions(variants_vcf):
     assert len(vs) == 3
 
 
-def test_inheritance_trio(variants_vcf):
-    fvars = variants_vcf("backends/inheritance_trio")
+def test_inheritance_trio(variants_mem):
+    fvars = variants_mem("backends/inheritance_trio")
     vs = list(fvars.query_variants())
 
     for v in vs:

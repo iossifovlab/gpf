@@ -138,3 +138,6 @@ class ImpalaGenotypeStorage(GenotypeStorage):
             }
         }
         return Box(conf)
+
+    def simple_study_import(self, study_id, variants_loader):
+        pass

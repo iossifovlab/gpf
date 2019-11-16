@@ -89,8 +89,8 @@ def test_parquet_file_config(
 # '''
 
 
-def test_pedigree_to_parquet(parquet_manager, variants_vcf, temp_dirname):
-    fvars = variants_vcf('backends/effects_trio')
+def test_pedigree_to_parquet(parquet_manager, variants_mem, temp_dirname):
+    fvars = variants_mem('backends/effects_trio')
 
     data_dir = temp_dirname
     pedigree_path = os.path.join(
@@ -103,8 +103,8 @@ def test_pedigree_to_parquet(parquet_manager, variants_vcf, temp_dirname):
     assert os.path.exists(pedigree_path)
 
 
-def test_variant_to_parquet(parquet_manager, variants_vcf, temp_dirname):
-    fvars = variants_vcf('backends/effects_trio')
+def test_variant_to_parquet(parquet_manager, variants_mem, temp_dirname):
+    fvars = variants_mem('backends/effects_trio')
 
     data_dir = temp_dirname
     variant_path = os.path.join(

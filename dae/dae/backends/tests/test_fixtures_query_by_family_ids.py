@@ -8,8 +8,7 @@ import pytest
 from dae.RegionOperations import Region
 
 
-@pytest.mark.parametrize("variants", [
-    'variants_vcf',
+@pytest.mark.parametrize('variants', [
     'variants_impala',
     'variants_mem'
 ])

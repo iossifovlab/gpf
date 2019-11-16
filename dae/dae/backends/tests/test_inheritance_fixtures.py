@@ -15,8 +15,8 @@ from dae.utils.vcf_utils import mat2str
     (Region('1', 11521, 11530), 4, "denovo"),
     (Region('1', 11531, 11540), 1, "unknown"),
 ])
-def test_inheritance_trio_full(variants_vcf, region, count, inheritance):
-    fvars = variants_vcf("backends/inheritance_trio")
+def test_inheritance_trio_full(variants_mem, region, count, inheritance):
+    fvars = variants_mem("backends/inheritance_trio")
     vs = list(fvars.query_variants(
         inheritance=inheritance,
         regions=[region],
@@ -37,8 +37,8 @@ def test_inheritance_trio_full(variants_vcf, region, count, inheritance):
     (Region('1', 11511, 11520), 3, "omission"),
     (Region('1', 11521, 11530), 2, "denovo"),
 ])
-def test_inheritance_quad_full(variants_vcf, region, count, inheritance):
-    fvars = variants_vcf("backends/inheritance_quad")
+def test_inheritance_quad_full(variants_mem, region, count, inheritance):
+    fvars = variants_mem("backends/inheritance_quad")
     vs = list(fvars.query_variants(
         regions=[region],
         return_reference=False,
@@ -58,8 +58,8 @@ def test_inheritance_quad_full(variants_vcf, region, count, inheritance):
     (Region('1', 11511, 11520), 1, "omission"),
     (Region('1', 11521, 11530), 1, "unknown"),
 ])
-def test_inheritance_multi_full(variants_vcf, region, count, inheritance):
-    fvars = variants_vcf("backends/inheritance_multi")
+def test_inheritance_multi_full(variants_mem, region, count, inheritance):
+    fvars = variants_mem("backends/inheritance_multi")
     vs = list(fvars.query_variants(
         regions=[region],
         return_reference=False,

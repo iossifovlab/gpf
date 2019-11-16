@@ -22,7 +22,7 @@ from dae.backends.raw.raw_variants import RawMemoryVariants
 from dae.backends.dae.loader import RawDaeLoader
 from dae.backends.dae.raw_dae import RawDAE
 
-from dae.backends.vcf.loader import RawVcfLoader, VcfLoader
+from dae.backends.vcf.loader import VcfLoader
 
 from dae.backends.import_commons import \
     construct_import_annotation_pipeline
@@ -368,28 +368,7 @@ def vcf_loader_data():
 
 
 @pytest.fixture(scope='session')
-def variants_vcf(genomes_db, default_annotation_pipeline):
-    def builder(path):
-        if os.path.isabs(path):
-            prefix = path
-        else:
-            prefix = os.path.join(
-                relative_to_this_test_folder('fixtures'), path)
-        print(prefix)
-        conf = Configure.from_prefix_vcf(prefix)
-        print(conf)
-
-        ped_df = PedigreeReader.flexible_pedigree_read(conf.vcf.pedigree)
-        fvars = RawVcfLoader.load_and_annotate_raw_vcf_variants(
-            ped_df, conf.vcf.vcf, default_annotation_pipeline
-        )
-
-        return fvars
-    return builder
-
-
-@pytest.fixture(scope='session')
-def variants_mem(vcf_loader_data, default_annotation_pipeline):
+def vcf_variants_loader(vcf_loader_data, default_annotation_pipeline):
     def builder(path):
         conf = vcf_loader_data(path)
 
@@ -403,6 +382,15 @@ def variants_mem(vcf_loader_data, default_annotation_pipeline):
         loader = AnnotationPipelineDecorator(
             loader, default_annotation_pipeline)
 
+        return loader
+    return builder
+
+
+@pytest.fixture(scope='session')
+def variants_mem(vcf_variants_loader):
+    def builder(path):
+        loader = vcf_variants_loader(path)
+
         fvars = RawMemoryVariants(loader)
         return fvars
 
@@ -411,9 +399,8 @@ def variants_mem(vcf_loader_data, default_annotation_pipeline):
 
 @pytest.fixture
 def variants_implementations(
-        variants_vcf, variants_impala, variants_mem):
+        variants_impala, variants_mem):
     impls = {
-        'variants_vcf': variants_vcf,
         'variants_impala': variants_impala,
         'variants_mem': variants_mem
     }
@@ -607,11 +594,15 @@ def data_import(
             study_id = study_id_from_path(vcf.pedigree)
             study_temp_dirname = os.path.join(temp_dirname, study_id)
 
-            fvars = RawVcfLoader.load_and_annotate_raw_vcf_variants(
-                vcf.pedigree, vcf.vcf, annotation_pipeline
-            )
+            families = FamiliesData.from_pedigree_df(
+                PedigreeReader.flexible_pedigree_read(vcf.pedigree))
+
+            loader = VcfLoader(families, vcf.vcf, region=None)
+            loader = AlleleFrequencyDecorator(loader)
+            loader = AnnotationPipelineDecorator(loader, annotation_pipeline)
+
             parquet_filenames = variants2parquet(
-                study_id, fvars,
+                study_id, loader,
                 output=study_temp_dirname,
                 bucket_index=0,
                 include_reference=True,

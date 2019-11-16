@@ -6,8 +6,7 @@ Created on Jul 5, 2018
 import pytest
 
 
-@pytest.mark.parametrize("variants", [
-    'variants_vcf',
+@pytest.mark.parametrize('variants', [
     'variants_impala',
     'variants_mem'
 ])

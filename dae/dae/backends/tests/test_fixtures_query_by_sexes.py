@@ -2,7 +2,6 @@ import pytest
 
 
 @pytest.mark.parametrize('variants', [
-    'variants_vcf',
     'variants_impala',
     'variants_mem'
 ])

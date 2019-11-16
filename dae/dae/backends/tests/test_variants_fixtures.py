@@ -10,7 +10,6 @@ from dae.utils.vcf_utils import mat2str
 
 
 @pytest.mark.parametrize('variants', [
-    'variants_vcf',
     'variants_impala',
     'variants_mem'
 ])
@@ -37,7 +36,6 @@ def test_variants_all_count(variants_impl, variants, fixture_name, count):
     "backends/trios2",
 ])
 @pytest.mark.parametrize('variants', [
-    'variants_vcf',
     'variants_impala',
     'variants_mem'
 ])
@@ -70,7 +68,6 @@ def test_df_query_multiallelic3_families(
 
 
 @pytest.mark.parametrize('variants', [
-    'variants_vcf',
     'variants_impala',
     'variants_mem'
 ])
@@ -98,7 +95,6 @@ def test_reference_variant(
 
 
 @pytest.mark.parametrize('variants', [
-    'variants_vcf',
     'variants_impala',
     'variants_mem'
 ])

@@ -22,7 +22,7 @@ def test_dae2parquet_denovo(
 
     fvars = RawDaeLoader.load_raw_denovo_variants(
         dae_denovo_config.family_filename,
-        dae_denovo_config.denovo_filename, 
+        dae_denovo_config.denovo_filename,
         None,
         genome,
         family_format='simple'
@@ -147,7 +147,7 @@ def test_dae2parquet_iossifov2014_variant_coordinates(
         variants,
         iossifov2014_impala, iossifov2014_raw_denovo,
         region, cshl_location, effect_type):
-    
+
     if variants == 'iossifov2014_impala':
         fvars = iossifov2014_impala
     elif variants == 'iossifov2014_raw_denovo':

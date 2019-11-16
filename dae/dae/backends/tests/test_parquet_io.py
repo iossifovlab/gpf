@@ -32,8 +32,8 @@ def test_alternatives_serialize_deserialize(alts):
     assert alts == alts2[1:]
 
 
-def test_variant_effects_serialize_deserialize(variants_vcf):
-    fvars = variants_vcf("backends/effects_trio")
+def test_variant_effects_serialize_deserialize(variants_mem):
+    fvars = variants_mem("backends/effects_trio")
     vs = list(fvars.query_variants())
 
     for v in vs:
