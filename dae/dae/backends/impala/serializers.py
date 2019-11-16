@@ -33,7 +33,7 @@ class ParquetSerializer(object):
             'reference',
             'alternative',
             'variant_type',
-            'worst_effect',
+            # 'worst_effect',
             'alternatives_data',
         ])
 
@@ -115,7 +115,7 @@ class ParquetSerializer(object):
                 allele.reference,
                 None,
                 None,
-                None,
+                # None,
                 alternatives_data,
             )
         else:
@@ -127,7 +127,7 @@ class ParquetSerializer(object):
                 allele.reference,
                 allele.alternative,
                 allele.variant_type.value,
-                allele.effect.worst,
+                # allele.effect.worst if allele.effect else None,
                 alternatives_data,
             )
 
@@ -275,10 +275,10 @@ class ParquetSerializer(object):
 
     @staticmethod
     def deserialize_variant_effects(data):
-        res = [None]
+        res = [{'effects': None}]
         if data is None:
             return res
-        res.extend([Effect.from_string(e) for e in data.split("#")])
+        res.extend([{'effects': e} for e in data.split("#")])
 
         return res
 
@@ -356,13 +356,14 @@ class ParquetSerializer(object):
                     alternatives, effects, attributes)
 
         for allele_index, (alt, effect, attr) in enumerate(values):
+            attr.update(effect)
 
             allele = FamilyAllele(
                 chrom, position, reference,
                 alternative=alt,
                 summary_index=0,
                 allele_index=allele_index,
-                effect=effect,
+                # effect=effect,
                 attributes=attr,
                 family=family,
                 genotype=genotype)

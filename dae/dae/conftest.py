@@ -350,6 +350,19 @@ def iossifov2014_impala(
     return fvars
 
 
+@pytest.fixture
+def vcf_loader_data():
+    def builder(path):
+        if os.path.isabs(path):
+            prefix = path
+        else:
+            prefix = os.path.join(
+                relative_to_this_test_folder('fixtures'), path)
+        conf = Configure.from_prefix_vcf(prefix).vcf
+        return conf
+    return builder
+
+
 @pytest.fixture(scope='session')
 def variants_vcf(genomes_db, default_annotation_pipeline):
     def builder(path):

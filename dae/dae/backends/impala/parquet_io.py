@@ -109,7 +109,6 @@ class VariantsParquetWriter(object):
             ra.reference,
             None,  # summary_allele.summary_index,
             -1,
-            ra.effect,
             {},
             family,
             genotype

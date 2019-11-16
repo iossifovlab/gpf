@@ -193,7 +193,7 @@ class SummaryAllele(VariantBase):
                  alternative=None,
                  summary_index=None,
                  allele_index=0,
-                 effect=None,
+                 # effect=None,
                  attributes=None):
         super(SummaryAllele, self).__init__(
             chromosome, position, reference, alternative)
@@ -206,7 +206,7 @@ class SummaryAllele(VariantBase):
         self.details = None
 
         #: variant effect of the allele; None for the reference allele.
-        self.effect = effect
+        self._effect = None
 
         if attributes is None:
             #: allele additional attributes
@@ -217,6 +217,24 @@ class SummaryAllele(VariantBase):
 
         # self.update_attributes({'variant_type': self.variant_type.value
         #                         if self.variant_type else None})
+
+    @property
+    def effect(self):
+        if self._effect is None:
+            record = self.attributes
+            if 'effect_type' in record:
+                effects = Effect.from_effects(
+                    record['effect_type'],
+                    list(zip(record['effect_gene_genes'],
+                             record['effect_gene_types'])),
+                    list(zip(record['effect_details_transcript_ids'],
+                             record['effect_details_details'])))
+                self._effect = effects
+            elif 'effects' in record:
+                self._effects = Effect.from_string(record.get('effects'))
+            else:
+                self._effects = None
+        return self._effect
 
     @property
     def frequency(self):
@@ -446,7 +464,7 @@ class SummaryVariantFactory(object):
             alternative=alternative,
             summary_index=record['summary_variant_index'],
             allele_index=record['allele_index'],
-            effect=effects,
+            # effect=effects,
             attributes=record)
 
     @staticmethod

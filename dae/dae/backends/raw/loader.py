@@ -3,6 +3,15 @@ import numpy as np
 import pandas as pd
 
 
+class VariantsLoader:
+
+    def __init__(self):
+        pass
+
+    def full_variants_iterator(self):
+        raise NotImplementedError()
+
+
 class RawVariantsLoader:
 
     SEP1 = '!'

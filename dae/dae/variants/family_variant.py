@@ -60,7 +60,6 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
             alternative,
             summary_index,
             allele_index,
-            effect,
             attributes,
             family,
             genotype):
@@ -73,7 +72,6 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
             alternative,
             summary_index,
             allele_index,
-            effect,
             attributes)
 
         FamilyDelegate.__init__(self, family)
@@ -102,7 +100,6 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
             summary_allele.alternative,
             None,  # summary_allele.summary_index,
             summary_allele.allele_index,
-            summary_allele.effect,
             summary_allele.attributes,
             family,
             genotype

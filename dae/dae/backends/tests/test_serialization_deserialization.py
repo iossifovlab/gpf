@@ -43,4 +43,7 @@ def test_variant_effects_serialization_deserialization(
 
         data = ParquetSerializer.serialize_variant_effects(v.effects)
         effects = ParquetSerializer.deserialize_variant_effects(data)
-        assert all(e1 == e2 for e1, e2 in zip(effects[1:], v.effects))
+        assert all([
+            e1['effects'] == str(e2)
+            for e1, e2 in zip(effects[1:], v.effects[1:])
+        ])

@@ -21,7 +21,7 @@ class ParquetSchema(Schema):
         pa.field("reference", pa.string()),
         pa.field("alternative", pa.string()),
         pa.field("variant_type", pa.int8()),
-        pa.field("worst_effect", pa.string()),
+        # pa.field("worst_effect", pa.string()),
         pa.field("alternatives_data", pa.string()),
 
         pa.field("effect_type", pa.string()),
