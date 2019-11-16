@@ -14,6 +14,7 @@ from dae.variants.family_variant import FamilyAllele, FamilyVariant
 class ParquetSerializer(object):
 
     GENOMIC_SCORES_SCHEMA_CLEAN_UP = [
+        'worst_effect',
         'family_bin',
         'rare',
         'genomic_scores_data',

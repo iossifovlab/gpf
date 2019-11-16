@@ -223,17 +223,20 @@ class SummaryAllele(VariantBase):
         if self._effect is None:
             record = self.attributes
             if 'effect_type' in record:
+                worst_effect = record['effect_type']
+                if worst_effect is None:
+                    return None
                 effects = Effect.from_effects(
-                    record['effect_type'],
+                    worst_effect,
                     list(zip(record['effect_gene_genes'],
                              record['effect_gene_types'])),
                     list(zip(record['effect_details_transcript_ids'],
                              record['effect_details_details'])))
                 self._effect = effects
             elif 'effects' in record:
-                self._effects = Effect.from_string(record.get('effects'))
+                self._effect = Effect.from_string(record.get('effects'))
             else:
-                self._effects = None
+                self._effect = None
         return self._effect
 
     @property
