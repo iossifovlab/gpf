@@ -173,6 +173,9 @@ class RawVcfLoader(RawVariantsLoader):
         families = FamiliesData.from_pedigree_df(
             ped_df, family_class=VcfFamily)
 
+        if annot_df is None:
+            annot_df = cls._build_initial_vcf_annotation(families, vcf)
+
         return RawVcfVariants(
             families, vcf, annot_df, source_filename=vcf_filename)
 
