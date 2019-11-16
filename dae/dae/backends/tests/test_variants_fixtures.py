@@ -9,9 +9,10 @@ from dae.RegionOperations import Region
 from dae.utils.vcf_utils import mat2str
 
 
-@pytest.mark.parametrize("variants", [
-    "variants_vcf",
-    "variants_impala",
+@pytest.mark.parametrize('variants', [
+    'variants_vcf',
+    'variants_impala',
+    'variants_mem'
 ])
 @pytest.mark.parametrize("fixture_name,count", [
     ("backends/effects_trio_multi", 3),
@@ -35,9 +36,10 @@ def test_variants_all_count(variants_impl, variants, fixture_name, count):
 @pytest.mark.parametrize("fixture_name", [
     "backends/trios2",
 ])
-@pytest.mark.parametrize("variants", [
-    "variants_vcf",
-    "variants_impala",
+@pytest.mark.parametrize('variants', [
+    'variants_vcf',
+    'variants_impala',
+    'variants_mem'
 ])
 def test_df_query_multiallelic3_families(
         variants_impl, variants, fixture_name):
@@ -67,9 +69,10 @@ def test_df_query_multiallelic3_families(
     assert "ch1" not in fa2.variant_in_members
 
 
-@pytest.mark.parametrize("variants", [
-    "variants_vcf",
-    "variants_impala",
+@pytest.mark.parametrize('variants', [
+    'variants_vcf',
+    'variants_impala',
+    'variants_mem'
 ])
 @pytest.mark.parametrize("fixture_name", [
     "backends/trios2_11541",
@@ -94,9 +97,10 @@ def test_reference_variant(
     # assert vs[0].summary_variant == vs[1].summary_variant
 
 
-@pytest.mark.parametrize("variants", [
-    "variants_vcf",
-    "variants_impala",
+@pytest.mark.parametrize('variants', [
+    'variants_vcf',
+    'variants_impala',
+    'variants_mem'
 ])
 @pytest.mark.parametrize("fixture_name", [
     "backends/trios2_11600",

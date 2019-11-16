@@ -105,6 +105,24 @@ class AlleleFrequencyDecorator(VariantsLoader):
             yield summary_variant, family_genotypes
 
 
+class AnnotationPipelineDecorator(VariantsLoader):
+
+    def __init__(self, variants_loader, annotation_pipeline):
+        super(AnnotationPipelineDecorator, self).__init__(
+            variants_loader.families,
+            TransmissionType.transmitted
+        )
+        self.variants_loader = variants_loader
+        self.annotation_pipeline = annotation_pipeline
+
+    def summary_genotypes_iterator(self):
+        for summary_variant, family_genotypes in \
+                self.variants_loader.summary_genotypes_iterator():
+
+            self.annotation_pipeline.annotate_summary_variant(summary_variant)
+            yield summary_variant, family_genotypes
+
+
 class RawVariantsLoader:
 
     SEP1 = '!'

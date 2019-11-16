@@ -15,7 +15,8 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.annotation.annotation_pipeline import PipelineAnnotator
 
 from dae.backends.configure import Configure
-from dae.backends.raw.loader import AlleleFrequencyDecorator
+from dae.backends.raw.loader import AlleleFrequencyDecorator, \
+    AnnotationPipelineDecorator
 from dae.backends.raw.raw_variants import RawMemoryVariants
 
 from dae.backends.dae.loader import RawDaeLoader
@@ -388,7 +389,7 @@ def variants_vcf(genomes_db, default_annotation_pipeline):
 
 
 @pytest.fixture(scope='session')
-def variants_mem(vcf_loader_data):
+def variants_mem(vcf_loader_data, default_annotation_pipeline):
     def builder(path):
         conf = vcf_loader_data(path)
 
@@ -399,6 +400,9 @@ def variants_mem(vcf_loader_data):
         assert loader is not None
 
         loader = AlleleFrequencyDecorator(loader)
+        loader = AnnotationPipelineDecorator(
+            loader, default_annotation_pipeline)
+
         fvars = RawMemoryVariants(loader)
         return fvars
 

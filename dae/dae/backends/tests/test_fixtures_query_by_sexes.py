@@ -1,14 +1,10 @@
-'''
-Created on Jul 3, 2018
-
-@author: lubo
-'''
 import pytest
 
 
-@pytest.mark.parametrize("variants", [
-    "variants_vcf",
-    "variants_impala",
+@pytest.mark.parametrize('variants', [
+    'variants_vcf',
+    'variants_impala',
+    'variants_mem'
 ])
 @pytest.mark.parametrize("fixture_name,sexes,count", [
     ("backends/effects_trio_dad", 'male', 1),

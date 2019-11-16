@@ -26,8 +26,9 @@ def count_variants(
 
 
 @pytest.mark.parametrize("variants", [
-    "variants_vcf",
-    "variants_impala",
+    'variants_vcf',
+    'variants_impala',
+    'variants_mem'
 ])
 @pytest.mark.parametrize("regions,inheritance,reference, unknown, count", [
     ([Region("1", 901923, 901923)],
@@ -51,8 +52,9 @@ def test_f2_all_unknown(
 
 
 @pytest.mark.parametrize("variants", [
-    "variants_vcf",
-    "variants_impala",
+    'variants_vcf',
+    'variants_impala',
+    'variants_mem'
 ])
 @pytest.mark.parametrize("regions,inheritance,reference, unknown, count", [
     ([Region("1", 905951, 905951)],
@@ -76,8 +78,9 @@ def test_f2_reference_and_unknown(
 
 
 @pytest.mark.parametrize("variants", [
-    "variants_vcf",
-    "variants_impala",
+    'variants_vcf',
+    'variants_impala',
+    'variants_mem'
 ])
 @pytest.mark.parametrize("regions,inheritance,reference, unknown, count", [
     ([Region("1", 905957, 905957)],
@@ -102,8 +105,9 @@ def test_f2_canonical_denovo(
 
 
 @pytest.mark.parametrize("variants", [
-    "variants_vcf",
-    "variants_impala",
+    'variants_vcf',
+    'variants_impala',
+    'variants_mem'
 ])
 @pytest.mark.parametrize("regions,inheritance,reference, unknown, count", [
     ([Region("1", 905966, 905966)],
@@ -128,8 +132,9 @@ def test_f2_canonical_omission(
 
 
 @pytest.mark.parametrize("variants", [
-    "variants_vcf",
-    "variants_impala",
+    'variants_vcf',
+    'variants_impala',
+    'variants_mem'
 ])
 @pytest.mark.parametrize("regions,inheritance,reference, unknown, count", [
     ([Region("1", 906092, 906092)],
@@ -154,8 +159,9 @@ def test_f2_non_canonical_omission(
 
 
 @pytest.mark.parametrize("variants", [
-    "variants_vcf",
-    "variants_impala",
+    'variants_vcf',
+    'variants_impala',
+    'variants_mem'
 ])
 @pytest.mark.parametrize("regions,inheritance,reference, unknown, count", [
     ([Region("1", 906086, 906086)],

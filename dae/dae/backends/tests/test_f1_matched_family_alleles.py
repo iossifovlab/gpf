@@ -11,8 +11,9 @@ from dae.variants.effects import EffectGene
 
 
 @pytest.mark.parametrize("variants", [
-    "variants_vcf",
-    "variants_impala",
+    'variants_vcf',
+    'variants_impala',
+    'variants_mem'
 ])
 @pytest.mark.parametrize(
     "position,inheritance,effect_types,return_reference,matched_alleles",
@@ -48,8 +49,9 @@ def test_f1_matched_alleles(
 
 
 @pytest.mark.parametrize("variants", [
-    "variants_vcf",
-    "variants_impala",
+    'variants_vcf',
+    'variants_impala',
+    'variants_mem'
 ])
 @pytest.mark.parametrize(
     "position,inheritance,effect_types,return_reference,"

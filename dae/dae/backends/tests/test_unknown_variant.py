@@ -10,9 +10,10 @@ from dae.utils.vcf_utils import mat2str
 from dae.backends.impala.parquet_io import VariantsParquetWriter
 
 
-@pytest.mark.parametrize("variants", [
-    "variants_vcf",
-    "variants_impala",
+@pytest.mark.parametrize('variants', [
+    'variants_vcf',
+    'variants_impala',
+    'variants_mem'
 ])
 @pytest.mark.parametrize("region,count,members", [
     (Region('1', 11500, 11500), 1, ['mom1', None, None]),
@@ -31,8 +32,8 @@ def test_variant_in_members(variants_impl, variants, region, count, members):
             assert list(aa.variant_in_members) == members
 
 
-@pytest.mark.parametrize("variants", [
-    "variants_vcf",
+@pytest.mark.parametrize('variants', [
+    'variants_vcf',
 ])
 @pytest.mark.parametrize("fixture_name", [
     "backends/f1_test_901923",

@@ -8,9 +8,10 @@ from dae.utils.vcf_utils import mat2str
 from dae.backends.impala.parquet_io import VariantsParquetWriter
 
 
-@pytest.mark.parametrize("variants", [
-    "variants_vcf",
-    "variants_impala",
+@pytest.mark.parametrize('variants', [
+    'variants_vcf',
+    'variants_impala',
+    'variants_mem'
 ])
 @pytest.mark.parametrize("fixture_name", [
     "backends/trios2_11541",
@@ -52,9 +53,10 @@ def test_reference_variant_single_allele(
     # assert len(sv.effects) == 1
 
 
-@pytest.mark.parametrize("variants", [
-    "variants_vcf",
-    # "variants_impala",
+@pytest.mark.parametrize('variants', [
+    'variants_vcf',
+    # 'variants_impala',
+    # 'variants_mem'
 ])
 @pytest.mark.parametrize("fixture_name", [
     "backends/trios2_11541",
@@ -72,8 +74,10 @@ def test_full_variants_iterator(
             print(fv)
 
 
-@pytest.mark.parametrize("variants", [
-    "variants_vcf",
+@pytest.mark.parametrize('variants', [
+    'variants_vcf',
+    # 'variants_impala',
+    # 'variants_mem'
 ])
 @pytest.mark.parametrize("fixture_name", [
     "backends/trios2_11541",

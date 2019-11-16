@@ -7,8 +7,9 @@ import pytest
 
 
 @pytest.mark.parametrize("variants", [
-    "variants_vcf",
-    "variants_impala",
+    'variants_vcf',
+    'variants_impala',
+    'variants_mem'
 ])
 @pytest.mark.parametrize("real_attr_filter,count", [
     (None, 20),
@@ -48,8 +49,9 @@ def test_variant_real_attr_frequency_queries(
 
 
 @pytest.mark.parametrize("variants", [
-    "variants_vcf",
-    "variants_impala",
+    'variants_vcf',
+    'variants_impala',
+    'variants_mem'
 ])
 def test_variant_ultra_rare_frequency_queries(
         variants, variants_impl, ):

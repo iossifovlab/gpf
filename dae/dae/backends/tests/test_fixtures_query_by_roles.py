@@ -9,12 +9,13 @@ from dae.RegionOperations import Region
 
 from dae.variants.attributes import Role
 
-from ..attributes_query import role_query
+from dae.backends.attributes_query import role_query
 
 
 @pytest.mark.parametrize("variants", [
-    "variants_vcf",
-    "variants_impala",
+    'variants_vcf',
+    'variants_impala',
+    'variants_mem'
 ])
 @pytest.mark.parametrize("fixture_name,regions,roles,count", [
     ("backends/effects_trio_dad", None, 'dad', 1),

@@ -9,8 +9,9 @@ from dae.RegionOperations import Region
 
 
 @pytest.mark.parametrize("variants", [
-    "variants_vcf",
-    "variants_impala",
+    'variants_vcf',
+    'variants_impala',
+    'variants_mem'
 ])
 @pytest.mark.parametrize("fixture_name,regions,count", [
     ("backends/effects_trio_multi", None, 3),
