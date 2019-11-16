@@ -49,58 +49,6 @@ def vcfParser( argv ):
 
    return parser
 
-'''
-def trimStr( pos, ref, alt ):
-   for n,s in enumerate(zip(ref[::-1],alt[::-1])):
-        if s[0] != s[1]: break
-
-   if n == 0:
-      if ref[-1] != alt[-1]:
-        r, a = ref[:], alt[:]
-      else:
-        r, a = ref[:-1], alt[:-1]
-   else:
-        r, a = ref[:-n], alt[:-n]
-
-   if len(r) == 0 or len(a) == 0:
-        return pos, r, a
-
-   for n,s in enumerate(zip(r,a)):
-        if s[0] != s[1]: break
-
-   if r[n] == a[n]:
-        return pos+n+1, r[n+1:], a[n+1:]
-
-   return pos+n, r[n:], a[n:]
-
-def cshlFormat( pos, ref, alt ):
-   p, r, a = trimStr( pos, ref, alt )
-
-   if len(r) == len(a) and len(r) == 1:
-        wx = 'sub('+ r +'->'+ a +')'
-        return p, wx
-
-   if len(r) > len(a) and len(a) == 0:
-           wx = 'del('+ str(len(r)) +')'
-           return p, wx
-
-   # len(ref) < len(alt):
-   if len(r) < len(a) and len(r) == 0:
-        wx = 'ins('+ a +')'
-        return p, wx
-
-   return p, 'complex('+ r +'->'+ a +')'
-
-def vcf2cshlFormat( pos, ref, alts ):
-   vrts, pxx = list(), list()
-   for alt in alts:
-        p, v = cshlFormat( pos, ref, alt )
-
-        pxx.append( p )
-        vrts.append( v )
-
-   return pxx, vrts
-'''
 #argColumnNs = [
 # chrCol, posCol, locCol, varCol, refCol, altCol, lengthCol, seqCol, typeCol]
 def vrt2Eff( annotator, chrom, pos, ref, alts ):
@@ -115,7 +63,7 @@ def vrt2Eff( annotator, chrom, pos, ref, alts ):
         t, g, d = annotator.effect_description(effects)
         #print( effects, desc )
         #TODO: delimiter
-        g = g.replace(':','|')
+        #g = g.replace(':','|')
         d = d.replace(';','|') 
         et.append( t ) #effect type#'|'.join( desc ) )
         eg.append( g ) #effect gene

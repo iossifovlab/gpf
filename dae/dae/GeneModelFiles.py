@@ -642,8 +642,8 @@ def gtfGeneModelParser(self, file_name, gene_mapping_file=None, testMode=False):
 
                 self.transcriptModels[trID]._is_coding = True
 
-                cx = self.transcriptModels[trID].cds
-                self.transcriptModels[trID].cds = (min(cx[0],rx['start']), max(cx[1],rx['end']))
+                #cx = self.transcriptModels[trID].cds
+                #self.transcriptModels[trID].cds = (min(cx[0],rx['start']), max(cx[1],rx['end']))
 
                 continue
 
@@ -651,18 +651,25 @@ def gtfGeneModelParser(self, file_name, gene_mapping_file=None, testMode=False):
                 ix = int(rx['attributes']['exon_number']) # 1-based
                 if rx['feature'] == 'UTR':
                         self.transcriptModels[trID].utrs.append( (rx['start'],rx['end'],ix) )
+                        continue
+
                 if rx['feature'] == 'start_codon':
                         self.transcriptModels[trID].start_codon = (rx['start'],rx['end'],ix)
                 if rx['feature'] == 'stop_codon':
                         self.transcriptModels[trID].stop_codon  = (rx['start'],rx['end'],ix)
+
+                cx = self.transcriptModels[trID].cds
+                self.transcriptModels[trID].cds = (min(cx[0],rx['start']), max(cx[1],rx['end']))
 
                 continue
           
           raise Exception("unknown {} found".format( rx['feature'] ))
 
         for k in self.transcriptModels.keys():
-           self.transcriptModels[k].exons = sorted( self.transcriptModels[k].exons, key=lambda x: x.start )
-           self.transcriptModels[k].utrs  = sorted( self.transcriptModels[k].utrs, key=lambda x: x[0] )
+            tm = self.transcriptModels[k]
+            tm.exons = sorted( tm.exons, key=lambda x: x.start )
+            tm.utrs  = sorted( tm.utrs, key=lambda x: x[0] )
+            tm.update_frames()
 
         #TODO: no need: done by self.addModelToDict(tm)
         #for k, gx in self.transcriptModels.items():
