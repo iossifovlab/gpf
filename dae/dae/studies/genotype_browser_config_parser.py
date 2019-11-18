@@ -54,6 +54,43 @@ class GenotypeBrowserConfigParser(ConfigParserBase):
         'selectedInheritanceTypeFilterValues': verify_inheritance_types,
     }
 
+    INCLUDE_PROPERTIES = (
+        'hasCNV',
+        'hasComplex',
+        'hasStudyTypes',
+        'hasStudyFilters',
+        'hasFamilyFilters',
+        'hasPresentInRole',
+        'hasPresentInChild',
+        'hasPresentInParent',
+        'hasPedigreeSelector',
+        'hasGraphicalPreview',
+        'inheritanceTypeFilter',
+        'selectedInheritanceTypeFilterValues',
+        'familyFilters',
+        'selectedPhenoFiltersValues',
+        'name',
+        'measureType',
+        'filter',
+        'selectedPresentInRoleValues',
+        'id',
+        'name',
+        'roles',
+        'selectedGenotypeColumnValues',
+        'id',
+        'name',
+        'source',
+        'slots',
+        'selectedPhenoColumnValues',
+        'id',
+        'name',
+        'slots',
+        'inRoles',
+        'previewColumns',
+        'downloadColumns',
+        'destination',
+    )
+
     @classmethod
     def _parse_pheno_filter(cls, pheno_filters):
         if pheno_filters is None:

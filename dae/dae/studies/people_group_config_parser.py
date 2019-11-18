@@ -16,6 +16,15 @@ class PeopleGroupConfigParser(ConfigParserBase):
         'peopleGroup': 'selectedPeopleGroupValues',
     }
 
+    INCLUDE_PROPERTIES = (
+        'selectedPeopleGroupValues',
+        'id',
+        'name',
+        'domain',
+        'default',
+        'source'
+    )
+
     @staticmethod
     def _people_group_selectors_split_dict(dict_to_split):
         options = dict_to_split.split(':')

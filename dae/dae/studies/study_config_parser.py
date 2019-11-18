@@ -22,6 +22,28 @@ class StudyConfigParserBase(ConfigParserBase):
         'commonReport'
     )
 
+    INCLUDE_PROPERTIES = (
+        'name',
+        'id',
+        'description',
+        'prefix',
+        'file_format',
+        'phenoDB',
+        'studyType',
+        'year',
+        'pubMed',
+        'hasDenovo',
+        'hasTransmitted',
+        'hasComplex',
+        'hasCNV',
+        'commonReport',
+        'genotypeBrowser',
+        'phenotypeBrowser',
+        'enrichmentTool',
+        'phenotypeTool',
+        'enabled',
+    )
+
     @classmethod
     def parse(cls, config):
         config = super(StudyConfigParserBase, cls).parse(config)
@@ -38,7 +60,6 @@ class StudyConfigParserBase(ConfigParserBase):
 
         assert config_section.name
         assert 'description' in config_section
-        assert config_section.work_dir
 
         if os.path.exists(config_section.description):
             with open(config_section.description) as desc:
@@ -72,6 +93,11 @@ class StudyConfigParserBase(ConfigParserBase):
 class StudyConfigParser(StudyConfigParserBase):
 
     SECTION = 'study'
+
+    INCLUDE_PROPERTIES = StudyConfigParserBase.INCLUDE_PROPERTIES + (
+        'work_dir',
+        'genotype_storage'
+    )
 
     @classmethod
     def read_and_parse_directory_configurations(
