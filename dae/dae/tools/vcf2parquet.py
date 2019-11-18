@@ -205,12 +205,14 @@ def main(
     if argv.type == 'make':
         generate_makefile(dae_config, genome, argv)
     elif argv.type == 'vcf':
-        fvars = RawVcfLoader.load_and_annotate_raw_vcf_variants(
-            argv.pedigree, argv.vcf, annotation_pipeline,
-            region=argv.region
+        families = FamiliesData.load_pedigree(argv.pedigree)
+        variants_loader = VcfLoader(families, argv.vcf, region=argv.region)
+        variants_loader = AnnotationPipelineDecorator(
+            variants_loader, annotation_pipeline
         )
+
         parquet_filenames = variants2parquet(
-            study_id, fvars,
+            study_id, variants_loader,
             output=argv.output, bucket_index=argv.bucket_index,
             skip_pedigree=argv.skip_pedigree,
             include_reference=argv.include_reference,

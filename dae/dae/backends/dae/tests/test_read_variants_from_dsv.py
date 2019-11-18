@@ -1,7 +1,7 @@
 import pytest
 import pandas as pd
 import numpy as np
-from dae.backends.dae.loader import RawDaeLoader, DenovoLoader
+from dae.backends.dae.loader import DenovoLoader
 
 from dae.utils.vcf_utils import GENOTYPE_TYPE
 
@@ -30,7 +30,7 @@ def compare_variant_dfs(res_df, expected_df):
 
 def test_produce_genotype(fake_families):
     expected_output = np.array([[0, 0, 0, 0, 0], [0, 0, 0, 1, 1]])
-    output = RawDaeLoader.produce_genotype(
+    output = DenovoLoader.produce_genotype(
         fake_families.families['f1'], ['f1.p1', 'f1.s2'])
     assert np.array_equal(output, expected_output)
     assert output.dtype == GENOTYPE_TYPE
@@ -38,7 +38,7 @@ def test_produce_genotype(fake_families):
 
 def test_produce_genotype_no_people_with_variants(fake_families):
     expected_output = np.array([[0, 0, 0, 0, 0], [0, 0, 0, 0, 0]])
-    output = RawDaeLoader.produce_genotype(fake_families.families['f1'], [])
+    output = DenovoLoader.produce_genotype(fake_families.families['f1'], [])
     assert np.array_equal(output, expected_output)
     assert output.dtype == GENOTYPE_TYPE
 

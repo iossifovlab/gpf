@@ -18,24 +18,6 @@ def test_vcf2parquet_vcf(
         vcf_import_config.vcf
     ]
 
-    # argv = parse_cli_arguments(global_gpf_instance, argv)
-    # assert argv.type == 'vcf'
-
-    # annotation_pipeline = construct_import_annotation_pipeline(
-    #     dae_config_fixture, genomes_db, argv, defaults={'values': {
-    #         "scores_dirname": annotation_scores_dirname,
-    #     }})
-
-    # ped_df, study_id = pedigree_from_path(argv.pedigree)
-
-    # parquet_filenames = vcf2parquet(
-    #     study_id, ped_df, argv.vcf,
-    #     genomes_db, annotation_pipeline,
-    #     output=argv.output,
-    #     bucket_index=int(argv.bucket_index),
-    #     region=argv.region
-    # )
-
     parquet_filenames = main(
         argv, gpf_instance=global_gpf_instance,
         dae_config=dae_config_fixture,
