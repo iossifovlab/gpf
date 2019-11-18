@@ -1,7 +1,7 @@
 import pytest
 import pandas as pd
 import numpy as np
-from dae.backends.dae.loader import RawDaeLoader
+from dae.backends.dae.loader import RawDaeLoader, DenovoLoader
 
 from dae.utils.vcf_utils import GENOTYPE_TYPE
 
@@ -46,17 +46,17 @@ def test_produce_genotype_no_people_with_variants(fake_families):
 def test_families_instance_type_assertion():
     error_message = 'families must be an instance of FamiliesData!'
     with pytest.raises(AssertionError) as excinfo:
-        RawDaeLoader.flexible_denovo_read(
+        DenovoLoader.flexible_denovo_load(
             None, None, location='foo', variant='bar',
-            personId='baz', families='bla')
+            person_id='baz', families='bla')
     assert str(excinfo.value) == error_message
 
 
 def test_read_variants_DAE_style(default_genome):
     filename = relative_to_this_folder('fixtures/variants_DAE_style.tsv')
-    res_df = RawDaeLoader.flexible_denovo_read(
+    res_df = DenovoLoader.flexible_denovo_load(
         filename, default_genome, location='location', variant='variant',
-        familyId='familyId', bestSt='bestState'
+        family_id='familyId', best_state='bestState'
     )
 
     expected_df = pd.DataFrame({
@@ -77,9 +77,9 @@ def test_read_variants_DAE_style(default_genome):
 
 def test_read_variants_a_la_VCF_style():
     filename = relative_to_this_folder('fixtures/variants_VCF_style.tsv')
-    res_df = RawDaeLoader.flexible_denovo_read(
+    res_df = DenovoLoader.flexible_denovo_load(
         filename, None, chrom='chrom', pos='pos',
-        ref='ref', alt='alt', familyId='familyId', bestSt='bestState'
+        ref='ref', alt='alt', family_id='familyId', best_state='bestState'
     )
 
     expected_df = pd.DataFrame({
@@ -100,9 +100,9 @@ def test_read_variants_a_la_VCF_style():
 
 def test_read_variants_mixed_A():
     filename = relative_to_this_folder('fixtures/variants_mixed_style_A.tsv')
-    res_df = RawDaeLoader.flexible_denovo_read(
+    res_df = DenovoLoader.flexible_denovo_load(
         filename, None, location='location',
-        ref='ref', alt='alt', familyId='familyId', bestSt='bestState'
+        ref='ref', alt='alt', family_id='familyId', best_state='bestState'
     )
 
     expected_df = pd.DataFrame({
@@ -123,9 +123,9 @@ def test_read_variants_mixed_A():
 
 def test_read_variants_mixed_B(default_genome):
     filename = relative_to_this_folder('fixtures/variants_mixed_style_B.tsv')
-    res_df = RawDaeLoader.flexible_denovo_read(
+    res_df = DenovoLoader.flexible_denovo_load(
         filename, default_genome, chrom='chrom', pos='pos',
-        variant='variant', familyId='familyId', bestSt='bestState'
+        variant='variant', family_id='familyId', best_state='bestState'
     )
 
     expected_df = pd.DataFrame({
@@ -150,9 +150,9 @@ def test_read_variants_mixed_B(default_genome):
 ])
 def test_read_variants_person_ids(filename, fake_families):
     filename = relative_to_this_folder(filename)
-    res_df = RawDaeLoader.flexible_denovo_read(
+    res_df = DenovoLoader.flexible_denovo_load(
         filename, None, chrom='chrom', pos='pos',
-        ref='ref', alt='alt', personId='personId', families=fake_families
+        ref='ref', alt='alt', person_id='personId', families=fake_families
     )
 
     expected_df = pd.DataFrame({
@@ -180,9 +180,9 @@ def test_read_variants_different_separator():
     filename = relative_to_this_folder(
         'fixtures/variants_different_separator.dsv'
     )
-    res_df = RawDaeLoader.flexible_denovo_read(
+    res_df = DenovoLoader.flexible_denovo_load(
         filename, None, sep='$', chrom='chrom', pos='pos',
-        ref='ref', alt='alt', familyId='familyId', bestSt='bestState'
+        ref='ref', alt='alt', family_id='familyId', best_state='bestState'
     )
 
     expected_df = pd.DataFrame({
@@ -205,9 +205,9 @@ def test_read_variants_genome_assertion():
     filename = relative_to_this_folder('fixtures/variants_DAE_style.tsv')
 
     with pytest.raises(AssertionError) as excinfo:
-        RawDaeLoader.flexible_denovo_read(
+        DenovoLoader.flexible_denovo_load(
             filename, None, location='location', variant='variant',
-            familyId='familyId', bestSt='bestState'
+            family_id='familyId', best_state='bestState'
         )
 
     assert str(excinfo.value) == 'You must provide a genome object!'

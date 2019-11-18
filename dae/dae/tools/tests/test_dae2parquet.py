@@ -1,10 +1,14 @@
 import pytest
 from box import Box
 
+from dae.pedigrees.family import FamiliesData
+
 from dae.tools.dae2parquet import parse_cli_arguments, dae_build_makefile
 
+from dae.backends.raw.loader import AnnotationPipelineDecorator
+
 from dae.backends.impala.parquet_io import ParquetManager
-from dae.backends.dae.loader import RawDaeLoader
+from dae.backends.dae.loader import RawDaeLoader, DenovoLoader
 
 from dae.annotation.tools.file_io_parquet import ParquetReader
 
@@ -20,22 +24,24 @@ def test_dae2parquet_denovo(
 
     genome = genomes_db.get_genome()
 
-    fvars = RawDaeLoader.load_raw_denovo_variants(
-        dae_denovo_config.family_filename,
-        dae_denovo_config.denovo_filename,
-        None,
-        genome,
-        family_format='simple'
+    families = FamiliesData.load_simple_families_file(
+        dae_denovo_config.family_filename)
+
+    variants_loader = DenovoLoader(
+        families, dae_denovo_config.denovo_filename, genome)
+    variants_loader = AnnotationPipelineDecorator(
+        variants_loader, annotation_pipeline_internal
     )
-    fvars.annotate(annotation_pipeline_internal)
+
     study_id = "test_dae2parquet_denovo"
 
     parquet_filenames = ParquetManager.build_parquet_filenames(
         temp_dirname, bucket_index=100, study_id=study_id)
 
-    ParquetManager.pedigree_to_parquet(fvars, parquet_filenames.pedigree)
+    ParquetManager.pedigree_to_parquet(
+        variants_loader, parquet_filenames.pedigree)
     ParquetManager.variants_to_parquet(
-        fvars, parquet_filenames.variant,
+        variants_loader, parquet_filenames.variant,
         bucket_index=100
     )
 

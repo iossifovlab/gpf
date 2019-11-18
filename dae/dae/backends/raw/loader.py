@@ -2,9 +2,24 @@ import os
 import numpy as np
 import pandas as pd
 
+from dae.variants.variant import SummaryVariantFactory
 from dae.variants.family_variant import FamilyVariant
 
 from dae.backends.raw.raw_variants import TransmissionType
+
+
+class FamiliesGenotypes:
+    def __init__(self):
+        pass
+
+    def full_families_genotypes(self):
+        raise NotImplementedError()
+
+    def get_family_genotype(self, family_id):
+        raise NotImplementedError()
+
+    def family_genotype_iterator(self):
+        raise NotImplementedError()
 
 
 class VariantsLoader:
@@ -23,13 +38,11 @@ class VariantsLoader:
         for summary_variant, family_genotypes in summary_genotypes_iterator:
 
             family_variants = []
-            for fam in self.families.families_list():
-                fam_df = fam.ped_df
-                gt = family_genotypes[0:2, fam_df.samples_index]
-                assert gt.shape == (2, len(fam))
+            for fam, gt in family_genotypes.family_genotype_iterator():
+                family_variants.append(
+                    FamilyVariant.from_summary_variant(
+                        summary_variant, fam, gt))
 
-                family_variants.append(FamilyVariant.from_summary_variant(
-                    summary_variant, fam, gt))
             yield summary_variant, family_variants
 
     def family_variants_iterator(self, summary_genotypes_iterator=None):
@@ -63,7 +76,7 @@ class AlleleFrequencyDecorator(VariantsLoader):
         return self.vcf.vars[allele['summary_variant_index']]
 
     def get_variant_full_genotype(self, family_genotypes):
-        gt = family_genotypes
+        gt = family_genotypes.full_families_genotypes()
         gt = gt[:, self.independent_index]
 
         unknown = np.any(gt == -1, axis=0)
@@ -110,7 +123,7 @@ class AnnotationPipelineDecorator(VariantsLoader):
     def __init__(self, variants_loader, annotation_pipeline):
         super(AnnotationPipelineDecorator, self).__init__(
             variants_loader.families,
-            TransmissionType.transmitted
+            variants_loader.transmission_type
         )
         self.variants_loader = variants_loader
         self.annotation_pipeline = annotation_pipeline
@@ -124,22 +137,46 @@ class AnnotationPipelineDecorator(VariantsLoader):
             yield summary_variant, family_genotypes
 
 
-class RawVariantsLoader:
+class StoredAnnotationDecorator(VariantsLoader):
 
     SEP1 = '!'
     SEP2 = '|'
     SEP3 = ':'
 
+    def __init__(self, variants_loader, annotation_filename):
+        super(StoredAnnotationDecorator, self).__init__(
+            variants_loader.families,
+            variants_loader.transmission_type
+        )
+        self.variants_loader = variants_loader
+        assert os.path.exists(annotation_filename)
+        self.annotation_filename = annotation_filename
+
     @staticmethod
-    def convert_array_of_strings(token):
+    def decorate(variants_loader, source_filename):
+        annotation_filename = \
+            StoredAnnotationDecorator._build_annotation_filename(
+                    source_filename
+                )
+        if not os.path.exists(annotation_filename):
+            return variants_loader
+        else:
+            variants_loader = StoredAnnotationDecorator(
+                variants_loader,
+                annotation_filename
+            )
+            return variants_loader
+
+    @classmethod
+    def _convert_array_of_strings(cls, token):
         if not token:
             return None
         token = token.strip()
-        words = [w.strip() for w in token.split(RawVariantsLoader.SEP1)]
+        words = [w.strip() for w in token.split(cls.SEP1)]
         return words
 
     @staticmethod
-    def convert_string(token):
+    def _convert_string(token):
         if not token:
             return None
         return token
@@ -163,15 +200,15 @@ class RawVariantsLoader:
                     'position': np.int32,
                 },
                 converters={
-                    'cshl_variant': cls.convert_string,
+                    'cshl_variant': cls._convert_string,
                     'effect_gene_genes':
-                    cls.convert_array_of_strings,
+                    cls._convert_array_of_strings,
                     'effect_gene_types':
-                    cls.convert_array_of_strings,
+                    cls._convert_array_of_strings,
                     'effect_details_transcript_ids':
-                    cls.convert_array_of_strings,
+                    cls._convert_array_of_strings,
                     'effect_details_details':
-                    cls.convert_array_of_strings,
+                    cls._convert_array_of_strings,
                 },
                 encoding="utf-8"
             )
@@ -180,12 +217,12 @@ class RawVariantsLoader:
                 where(pd.notnull(annot_df[col]), None)
         return annot_df
 
-    @staticmethod
-    def save_annotation_file(annot_df, filename, sep="\t"):
+    @classmethod
+    def save_annotation_file(cls, annot_df, filename, sep="\t"):
         def convert_array_of_strings_to_string(a):
             if not a:
                 return None
-            return RawVariantsLoader.SEP1.join(a)
+            return cls.SEP1.join(a)
 
         vars_df = annot_df.copy()
         vars_df['effect_gene_genes'] = vars_df['effect_gene_genes'].\
@@ -203,3 +240,21 @@ class RawVariantsLoader:
             index=False,
             sep=sep
         )
+
+    def summary_genotypes_iterator(self):
+        variant_iterator = self.variants_loader.summary_genotypes_iterator()
+
+        annot_df = self.load_annotation_file(self.annotation_filename)
+        for index, group_df in annot_df.groupby('summary_variant_index'):
+            sv, family_genotypes = next(variant_iterator)
+
+            assert index == \
+                sv.ref_allele.get_attribute('summary_variant_index')
+
+            records = group_df.to_dict(orient='records')
+            summary_variant = SummaryVariantFactory.\
+                summary_variant_from_records(
+                    records,
+                    transmission_type=self.transmission_type)
+
+            yield summary_variant, family_genotypes

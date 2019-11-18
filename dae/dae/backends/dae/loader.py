@@ -1,5 +1,3 @@
-import sys
-import traceback
 import os
 import gzip
 
@@ -15,14 +13,300 @@ from dae.utils.vcf_utils import best2gt, str2mat, GENOTYPE_TYPE, \
 from dae.utils.dae_utils import dae2vcf_variant
 from dae.utils.helpers import pedigree_from_path
 
-from dae.pedigrees.family import FamiliesData, PedigreeReader
-from dae.backends.raw.loader import RawVariantsLoader
-from dae.backends.dae.raw_dae import RawDenovo, RawDAE
+from dae.pedigrees.family import FamiliesData
+from dae.variants.variant import SummaryVariantFactory
+
+from dae.backends.raw.loader import VariantsLoader, \
+    TransmissionType, FamiliesGenotypes
+
+from dae.backends.dae.raw_dae import RawDAE
 
 from dae.variants.attributes import VariantType
 
 
-class RawDaeLoader(RawVariantsLoader):
+class DenovoFamiliesGenotypes(FamiliesGenotypes):
+
+    def __init__(self, family, gt):
+        super(DenovoFamiliesGenotypes, self).__init__()
+        self.family = family
+        self.gt = gt
+
+    def get_family_genotype(self, family):
+        return self.gt
+
+    def family_genotype_iterator(self):
+        yield self.family, self.gt
+
+
+class DenovoLoader(VariantsLoader):
+
+    def __init__(
+            self, families, denovo_filename, genome, denovo_format={}):
+        super(DenovoLoader, self).__init__(
+            families=families,
+            transmission_type=TransmissionType.denovo)
+
+        assert os.path.exists(denovo_filename)
+        self.genome = genome
+        self.denovo_format = denovo_format
+        self.denovo_filename = denovo_filename
+
+        self.denovo_df = self.flexible_denovo_load(
+            self.denovo_filename, genome, **denovo_format
+        )
+
+    def summary_genotypes_iterator(self):
+
+        for index, rec in enumerate(self.denovo_df.to_dict(orient='records')):
+            rec['summary_variant_index'] = index
+            rec['allele_index'] = 1
+
+            summary_variant = SummaryVariantFactory \
+                .summary_variant_from_records(
+                    [rec], transmission_type=self.transmission_type)
+            family_id = rec['family_id']
+            gt = rec['genotype']
+            family = self.families.get_family(family_id)
+            
+            yield summary_variant, DenovoFamiliesGenotypes(family, gt)
+
+    @staticmethod
+    def split_location(location):
+        chrom, position = location.split(":")
+        return chrom, int(position)
+
+    @staticmethod
+    def produce_genotype(family, members_with_variant):
+        genotype = np.zeros(shape=(2, len(family)), dtype=GENOTYPE_TYPE)
+        members_with_variant_index = family.members_index(members_with_variant)
+        for index in members_with_variant_index:
+            genotype[1, index] = 1
+        return genotype
+
+    @staticmethod
+    def flexible_denovo_cli_arguments(parser):
+        parser.add_argument(
+            '--denovo-location',
+            help='The label or index of the column containing the CSHL-style'
+                 ' location of the variant.',
+        )
+        parser.add_argument(
+            '--denovo-variant',
+            help='The label or index of the column containing the CSHL-style'
+                 ' representation of the variant.'
+        )
+        parser.add_argument(
+            '--denovo-chrom',
+            help='The label or index of the column containing the chromosome'
+                 ' upon which the variant is located.',
+        )
+        parser.add_argument(
+            '--denovo-pos',
+            help='The label or index of the column containing the position'
+                 ' upon which the variant is located.',
+        )
+        parser.add_argument(
+            '--denovo-ref',
+            help='The label or index of the column containing the reference'
+                 ' allele for the variant.',
+        )
+        parser.add_argument(
+            '--denovo-alt',
+            help='The label or index of the column containing the alternative'
+                 ' allele for the variant.',
+        )
+        parser.add_argument(
+            '--denovo-person-id',
+            help='The label or index of the column containing the '
+            'person\'s ID.',
+        )
+        parser.add_argument(
+            '--denovo-family-id',
+            help='The label or index of the column containing the '
+            'family\'s ID.',
+        )
+        parser.add_argument(
+            '--denovo-best-state',
+            help='The label or index of the column containing the best state'
+            ' for the family.',
+        )
+
+    @classmethod
+    def flexible_denovo_load(
+            cls,
+            filepath,
+            genome,
+            location=None,
+            variant=None,
+            chrom=None,
+            pos=None,
+            ref=None,
+            alt=None,
+            person_id=None,
+            family_id=None,
+            best_state=None,
+            families=None,
+            sep='\t'):
+
+        """
+        Read a text file containing variants in the form
+        of delimiter-separted values and produce a dataframe.
+
+        The text file may use different names for the columns
+        containing the relevant data - these are specified
+        with the provided parameters.
+
+        :param str filepath: The path to the DSV file to read.
+
+        :param genome: A reference genome object.
+
+        :param str location: The label or index of the column containing the
+        CSHL-style location of the variant.
+
+        :param str variant: The label or index of the column containing the
+        CSHL-style representation of the variant.
+
+        :param str chrom: The label or index of the column containing the
+        chromosome upon which the variant is located.
+
+        :param str pos: The label or index of the column containing the
+        position upon which the variant is located.
+
+        :param str ref: The label or index of the column containing the
+        variant's reference allele.
+
+        :param str alt: The label or index of the column containing the
+        variant's alternative allele.
+
+        :param str person_id: The label or index of the column containing 
+        either
+        a singular person ID or a comma-separated list of person IDs.
+
+        :param str family_id: The label or index of the column containing a
+        singular family ID.
+
+        :param str best_state: The label or index of the column containing the
+        best state for the variant.
+
+        :param str families: An instance of the FamiliesData class for the
+        pedigree of the relevant study.
+
+        :type genome: An instance of GenomicSequence_Dan or
+        GenomicSequence_Ivan.
+
+        :return: Dataframe containing the variants, with the following
+        header - 'chrom', 'position', 'reference', 'alternative', 'family_id',
+        'genotype'.
+
+        :rtype: An instance of Pandas' DataFrame class.
+        """
+
+        if not (location or (chrom and pos)):
+            location = 'location'
+
+        if not (variant or (ref and alt)):
+            variant = 'variant'
+
+        if not ((person_id and families) or (family_id and best_state)):
+            family_id = 'familyId'
+            best_state = 'bestState'
+
+        if families:
+            assert isinstance(families, FamiliesData), \
+                'families must be an instance of FamiliesData!'
+
+        raw_df = pd.read_csv(
+            filepath,
+            sep=sep,
+            dtype={
+                chrom: str,
+                pos: int,
+                person_id: str,
+                family_id: str,
+                best_state: str,
+            }
+        )
+
+        if location:
+            chrom_col, pos_col = zip(
+                *map(cls.split_location, raw_df[location]))
+        else:
+            chrom_col = raw_df.loc[:, chrom]
+            pos_col = raw_df.loc[:, pos]
+
+        if variant:
+            assert genome, 'You must provide a genome object!'
+            variant_col = raw_df.loc[:, variant]
+            ref_alt_tuples = [
+                dae2vcf_variant(*variant_tuple, genome)
+                for variant_tuple
+                in zip(chrom_col, pos_col, variant_col)
+            ]
+            pos_col, ref_col, alt_col = zip(*ref_alt_tuples)
+
+        else:
+            ref_col = raw_df.loc[:, ref]
+            alt_col = raw_df.loc[:, alt]
+
+        if person_id:
+            temp_df = pd.DataFrame({
+                'chrom': chrom_col,
+                'pos': pos_col,
+                'ref': ref_col,
+                'alt': alt_col,
+                'person_id': raw_df.loc[:, person_id],
+            })
+
+            variant_to_people = dict()
+            variant_to_families = dict()
+
+            for variant, variants_indices in \
+                    temp_df.groupby(['chrom', 'pos', 'ref', 'alt']) \
+                           .groups.items():
+                # Here we join and then split again by ',' to handle cases
+                # where the person IDs are actually a list of IDs, separated
+                # by a ','
+                people = ','.join(
+                    temp_df.iloc[variants_indices].loc[:, 'person_id'])\
+                    .split(',')
+
+                variant_to_people[variant] = people
+                variant_to_families[variant] = \
+                    families.families_query_by_person(people)
+
+            # TODO Implement support for multiallelic variants
+            result = []
+            for variant, families in variant_to_families.items():
+                for family_id, family in families.items():
+                    result.append({
+                        'chrom': variant[0],
+                        'position': variant[1],
+                        'reference': variant[2],
+                        'alternative': variant[3],
+                        'family_id': family_id,
+                        'genotype': cls.produce_genotype(
+                            family, variant_to_people[variant]
+                        )
+                    })
+
+            return pd.DataFrame(result)
+
+        else:
+            family_col = raw_df.loc[:, family_id]
+            str2mat_partial = partial(str2mat, col_sep=' ')
+            genotype_col = map(str2mat_partial, raw_df[best_state])
+
+        return pd.DataFrame({
+            'chrom': chrom_col,
+            'position': pos_col,
+            'reference': ref_col,
+            'alternative': alt_col,
+            'family_id': family_col,
+            'genotype': genotype_col,
+        })
+
+
+class RawDaeLoader:
 
     @staticmethod
     def split_location(location):
@@ -40,152 +324,152 @@ class RawDaeLoader(RawVariantsLoader):
         )
         return chrom, position, reference, alternative
 
-    @classmethod
-    def _augment_denovo_variant(cls, denovo_df, genome):
-        result = []
+    # @classmethod
+    # def _augment_denovo_variant(cls, denovo_df, genome):
+    #     result = []
 
-        for index, row in denovo_df.iterrows():
-            try:
-                chrom, cshl_position = cls.split_location(row['location'])
+    #     for index, row in denovo_df.iterrows():
+    #         try:
+    #             chrom, cshl_position = cls.split_location(row['location'])
 
-                gt = cls.explode_family_genotype(
-                    row['family_data'], col_sep=" ")
+    #             gt = cls.explode_family_genotype(
+    #                 row['family_data'], col_sep=" ")
 
-                chrom, position, reference, alternative = \
-                    cls.dae2vcf_variant(
-                        chrom, cshl_position, row['cshl_variant'], genome)
-                result.append({
-                    'chrom': chrom,
-                    'position': position,
-                    'reference': reference,
-                    'alternative': alternative,
-                    'cshl_position': cshl_position,
-                    'genotype': gt,
-                })
-            except Exception as ex:
-                print("unexpected error:", ex)
-                print("error in handling:", row, index)
-                traceback.print_exc(file=sys.stdout)
-                result.append({
-                    'chrom': chrom,
-                    'position': None,
-                    'reference': None,
-                    'alternative': None,
-                    'genotype': None})
+    #             chrom, position, reference, alternative = \
+    #                 cls.dae2vcf_variant(
+    #                     chrom, cshl_position, row['cshl_variant'], genome)
+    #             result.append({
+    #                 'chrom': chrom,
+    #                 'position': position,
+    #                 'reference': reference,
+    #                 'alternative': alternative,
+    #                 'cshl_position': cshl_position,
+    #                 'genotype': gt,
+    #             })
+    #         except Exception as ex:
+    #             print("unexpected error:", ex)
+    #             print("error in handling:", row, index)
+    #             traceback.print_exc(file=sys.stdout)
+    #             result.append({
+    #                 'chrom': chrom,
+    #                 'position': None,
+    #                 'reference': None,
+    #                 'alternative': None,
+    #                 'genotype': None})
 
-        aug_df = pd.DataFrame.from_records(
-            data=result,
-            columns=['chrom', 'position',
-                     'reference',
-                     'alternative',
-                     'cshl_position',
-                     'genotype'])
+    #     aug_df = pd.DataFrame.from_records(
+    #         data=result,
+    #         columns=['chrom', 'position',
+    #                  'reference',
+    #                  'alternative',
+    #                  'cshl_position',
+    #                  'genotype'])
 
-        assert len(aug_df.index) == len(denovo_df.index)  # FIXME:
+    #     assert len(aug_df.index) == len(denovo_df.index)  # FIXME:
 
-        denovo_df['chrom'] = aug_df['chrom']
-        denovo_df['position'] = aug_df['position'].astype(np.int64)
-        denovo_df['reference'] = aug_df['reference']
-        denovo_df['alternative'] = aug_df['alternative']
-        denovo_df['cshl_position'] = aug_df['cshl_position'].astype(np.int64)
-        denovo_df['genotype'] = aug_df['genotype']
-        return denovo_df
+    #     denovo_df['chrom'] = aug_df['chrom']
+    #     denovo_df['position'] = aug_df['position'].astype(np.int64)
+    #     denovo_df['reference'] = aug_df['reference']
+    #     denovo_df['alternative'] = aug_df['alternative']
+    #     denovo_df['cshl_position'] = aug_df['cshl_position'].astype(np.int64)
+    #     denovo_df['genotype'] = aug_df['genotype']
+    #     return denovo_df
 
-    @staticmethod
-    def load_dae_denovo_file(denovo_filename, genome):
-        df = pd.read_csv(
-            denovo_filename,
-            dtype={
-                'familyId': np.str,
-                'chr': np.str,
-                'position': int,
-            },
-            sep='\t')
+    # @staticmethod
+    # def load_dae_denovo_file(denovo_filename, genome):
+    #     df = pd.read_csv(
+    #         denovo_filename,
+    #         dtype={
+    #             'familyId': np.str,
+    #             'chr': np.str,
+    #             'position': int,
+    #         },
+    #         sep='\t')
 
-        df = df.rename(columns={
-            "variant": "cshl_variant",
-            "bestState": "family_data",
-            'familyId': 'family_id',
-        })
+    #     df = df.rename(columns={
+    #         "variant": "cshl_variant",
+    #         "bestState": "family_data",
+    #         'familyId': 'family_id',
+    #     })
 
-        return RawDaeLoader._augment_denovo_variant(df, genome)
+    #     return RawDaeLoader._augment_denovo_variant(df, genome)
 
-    @staticmethod
-    def save_dae_denovo_file(denovo_df, denovo_filename):
-        with open(denovo_filename, "w") as outfile:
-            print(
-                'familyId', 'location', 'variant', 'bestState',
-                sep='\t', file=outfile)
-            for rec in denovo_df.to_dict(orient='records'):
-                family_id = rec['family_id']
-                family_data = rec['family_data']
-                location = "{}:{}".format(rec['chrom'], rec['cshl_position'])
-                variant = rec['cshl_variant']
+    # @staticmethod
+    # def save_dae_denovo_file(denovo_df, denovo_filename):
+    #     with open(denovo_filename, "w") as outfile:
+    #         print(
+    #             'familyId', 'location', 'variant', 'bestState',
+    #             sep='\t', file=outfile)
+    #         for rec in denovo_df.to_dict(orient='records'):
+    #             family_id = rec['family_id']
+    #             family_data = rec['family_data']
+    #             location = "{}:{}".format(rec['chrom'], rec['cshl_position'])
+    #             variant = rec['cshl_variant']
 
-                print(
-                    family_id, location, variant, family_data,
-                    sep='\t', file=outfile)
+    #             print(
+    #                 family_id, location, variant, family_data,
+    #                 sep='\t', file=outfile)
 
-    @staticmethod
-    def _build_initial_annotation(denovo_df):
-        records = []
-        for index, rec in enumerate(denovo_df.to_dict(orient='records')):
-            records.append(
-                (
-                    rec['chrom'], rec['position'],
-                    rec['reference'], rec['alternative'],
-                    index,
-                    1, 1
-                    ))
-        annot_df = pd.DataFrame.from_records(
-            data=records,
-            columns=[
-                'chrom', 'position', 'reference', 'alternative',
-                'summary_variant_index',
-                'allele_index', 'allele_count',
-            ])
-        return annot_df
+    # @staticmethod
+    # def _build_initial_annotation(denovo_df):
+    #     records = []
+    #     for index, rec in enumerate(denovo_df.to_dict(orient='records')):
+    #         records.append(
+    #             (
+    #                 rec['chrom'], rec['position'],
+    #                 rec['reference'], rec['alternative'],
+    #                 index,
+    #                 1, 1
+    #                 ))
+    #     annot_df = pd.DataFrame.from_records(
+    #         data=records,
+    #         columns=[
+    #             'chrom', 'position', 'reference', 'alternative',
+    #             'summary_variant_index',
+    #             'allele_index', 'allele_count',
+    #         ])
+    #     return annot_df
 
-    @classmethod
-    def load_raw_denovo_variants(
-            cls, pedigree, denovo_filename,
-            annotation_filename,
-            genome,
-            family_format='pedigree',
-            pedigree_format={},
-            denovo_format={}):
+    # @classmethod
+    # def load_raw_denovo_variants(
+    #         cls, pedigree, denovo_filename,
+    #         annotation_filename,
+    #         genome,
+    #         family_format='pedigree',
+    #         pedigree_format={},
+    #         denovo_format={}):
 
-        if isinstance(pedigree, pd.DataFrame):
-            ped_df = pedigree
-        else:
-            family_filename = pedigree
-            if family_format == 'pedigree':
-                ped_df = PedigreeReader.flexible_pedigree_read(
-                    family_filename, **pedigree_format)
-            elif family_format == 'simple':
-                ped_df = PedigreeReader.load_simple_family_file(
-                    family_filename
-                )
+    #     if isinstance(pedigree, pd.DataFrame):
+    #         ped_df = pedigree
+    #     else:
+    #         family_filename = pedigree
+    #         if family_format == 'pedigree':
+    #             ped_df = PedigreeReader.flexible_pedigree_read(
+    #                 family_filename, **pedigree_format)
+    #         elif family_format == 'simple':
+    #             ped_df = PedigreeReader.load_simple_family_file(
+    #                 family_filename
+    #             )
 
-        if not denovo_format:
-            denovo_df = RawDaeLoader.load_dae_denovo_file(
-                denovo_filename, genome)
-        else:
-            denovo_df = RawDaeLoader.flexible_denovo_read(
-                denovo_filename, genome,
-                **denovo_format
-            )
+    #     if not denovo_format:
+    #         denovo_df = RawDaeLoader.load_dae_denovo_file(
+    #             denovo_filename, genome)
+    #     else:
+    #         denovo_df = RawDaeLoader.flexible_denovo_read(
+    #             denovo_filename, genome,
+    #             **denovo_format
+    #         )
 
-        if annotation_filename is not None \
-                and os.path.exists(annotation_filename):
-            annot_df = RawDaeLoader.load_annotation_file(annotation_filename)
-        else:
-            annot_df = RawDaeLoader._build_initial_annotation(denovo_df)
+    #     if annotation_filename is not None \
+    #             and os.path.exists(annotation_filename):
+    #         annot_df = RawDaeLoader.load_annotation_file(annotation_filename)
+    #     else:
+    #         annot_df = RawDaeLoader._build_initial_annotation(denovo_df)
 
-        families = FamiliesData.from_pedigree_df(ped_df)
+    #     families = FamiliesData.from_pedigree_df(ped_df)
 
-        return RawDenovo(
-            families, denovo_df, annot_df, source_filename=denovo_filename)
+    #     return RawDenovo(
+    #         families, denovo_df, annot_df, source_filename=denovo_filename)
 
     @staticmethod
     def _rename_columns(columns):
@@ -348,232 +632,3 @@ class RawDaeLoader(RawVariantsLoader):
         return RawDAE(
             families, annot_df, genotype_records,
             source_filename=summary_filename)
-
-    @staticmethod
-    def flexible_denovo_cli_arguments(parser):
-        parser.add_argument(
-            '--denovo-location',
-            help='The label or index of the column containing the CSHL-style'
-                 ' location of the variant.',
-        )
-        parser.add_argument(
-            '--denovo-variant',
-            help='The label or index of the column containing the CSHL-style'
-                 ' representation of the variant.'
-        )
-        parser.add_argument(
-            '--denovo-chrom',
-            help='The label or index of the column containing the chromosome'
-                 ' upon which the variant is located.',
-        )
-        parser.add_argument(
-            '--denovo-pos',
-            help='The label or index of the column containing the position'
-                 ' upon which the variant is located.',
-        )
-        parser.add_argument(
-            '--denovo-ref',
-            help='The label or index of the column containing the reference'
-                 ' allele for the variant.',
-        )
-        parser.add_argument(
-            '--denovo-alt',
-            help='The label or index of the column containing the alternative'
-                 ' allele for the variant.',
-        )
-        parser.add_argument(
-            '--denovo-personId',
-            help='The label or index of the column containing the '
-            'person\'s ID.',
-        )
-        parser.add_argument(
-            '--denovo-familyId',
-            help='The label or index of the column containing the '
-            'family\'s ID.',
-        )
-        parser.add_argument(
-            '--denovo-bestSt',
-            help='The label or index of the column containing the best state'
-            ' for the family.',
-        )
-
-    @staticmethod
-    def produce_genotype(family, members_with_variant):
-        genotype = np.zeros(shape=(2, len(family)), dtype=GENOTYPE_TYPE)
-        members_with_variant_index = family.members_index(members_with_variant)
-        for index in members_with_variant_index:
-            genotype[1, index] = 1
-        return genotype
-
-    @classmethod
-    def flexible_denovo_read(
-            cls,
-            filepath,
-            genome,
-            location=None,
-            variant=None,
-            chrom=None,
-            pos=None,
-            ref=None,
-            alt=None,
-            personId=None,
-            familyId=None,
-            bestSt=None,
-            families=None,
-            sep='\t'):
-
-        """
-        Read a text file containing variants in the form
-        of delimiter-separted values and produce a dataframe.
-
-        The text file may use different names for the columns
-        containing the relevant data - these are specified
-        with the provided parameters.
-
-        :param str filepath: The path to the DSV file to read.
-
-        :param genome: A reference genome object.
-
-        :param str location: The label or index of the column containing the
-        CSHL-style location of the variant.
-
-        :param str variant: The label or index of the column containing the
-        CSHL-style representation of the variant.
-
-        :param str chrom: The label or index of the column containing the
-        chromosome upon which the variant is located.
-
-        :param str pos: The label or index of the column containing the
-        position upon which the variant is located.
-
-        :param str ref: The label or index of the column containing the
-        variant's reference allele.
-
-        :param str alt: The label or index of the column containing the
-        variant's alternative allele.
-
-        :param str personId: The label or index of the column containing either
-        a singular person ID or a comma-separated list of person IDs.
-
-        :param str familyId: The label or index of the column containing a
-        singular family ID.
-
-        :param str genotype: The label or index of the column containing the
-        best state for the variant.
-
-        :param str families: An instance of the FamiliesData class for the
-        pedigree of the relevant study.
-
-        :type genome: An instance of GenomicSequence_Dan or
-        GenomicSequence_Ivan.
-
-        :return: Dataframe containing the variants, with the following
-        header - 'chrom', 'position', 'reference', 'alternative', 'family_id',
-        'genotype'.
-
-        :rtype: An instance of Pandas' DataFrame class.
-        """
-
-        if not (location or (chrom and pos)):
-            location = 'location'
-
-        if not (variant or (ref and alt)):
-            variant = 'variant'
-
-        if not ((personId and families) or (familyId and bestSt)):
-            familyId = 'familyId'
-            bestSt = 'bestState'
-
-        if families:
-            assert isinstance(families, FamiliesData), \
-                'families must be an instance of FamiliesData!'
-
-        raw_df = pd.read_csv(
-            filepath,
-            sep=sep,
-            dtype={
-                chrom: str,
-                pos: int,
-                personId: str,
-                familyId: str,
-                bestSt: str,
-            }
-        )
-
-        if location:
-            chrom_col, pos_col = zip(
-                *map(cls.split_location, raw_df[location]))
-        else:
-            chrom_col = raw_df.loc[:, chrom]
-            pos_col = raw_df.loc[:, pos]
-
-        if variant:
-            assert genome, 'You must provide a genome object!'
-            variant_col = raw_df.loc[:, variant]
-            ref_alt_tuples = [
-                dae2vcf_variant(*variant_tuple, genome)
-                for variant_tuple
-                in zip(chrom_col, pos_col, variant_col)
-            ]
-            _, ref_col, alt_col = zip(*ref_alt_tuples)
-
-        else:
-            ref_col = raw_df.loc[:, ref]
-            alt_col = raw_df.loc[:, alt]
-
-        if personId:
-            temp_df = pd.DataFrame({
-                'chrom': chrom_col,
-                'pos': pos_col,
-                'ref': ref_col,
-                'alt': alt_col,
-                'personId': raw_df.loc[:, personId],
-            })
-
-            variant_to_people = dict()
-            variant_to_families = dict()
-
-            for variant, variants_indices in \
-                    temp_df.groupby(['chrom', 'pos', 'ref', 'alt']) \
-                           .groups.items():
-                # Here we join and then split again by ',' to handle cases
-                # where the person IDs are actually a list of IDs, separated
-                # by a ','
-                people = ','.join(
-                    temp_df.iloc[variants_indices].loc[:, 'personId'])\
-                    .split(',')
-
-                variant_to_people[variant] = people
-                variant_to_families[variant] = \
-                    families.families_query_by_person(people)
-
-            # TODO Implement support for multiallelic variants
-            result = []
-            for variant, families in variant_to_families.items():
-                for family_id, family in families.items():
-                    result.append({
-                        'chrom': variant[0],
-                        'position': variant[1],
-                        'reference': variant[2],
-                        'alternative': variant[3],
-                        'family_id': family_id,
-                        'genotype': cls.produce_genotype(
-                            family, variant_to_people[variant]
-                        )
-                    })
-
-            return pd.DataFrame(result)
-
-        else:
-            family_col = raw_df.loc[:, familyId]
-            str2mat_partial = partial(str2mat, col_sep=' ')
-            genotype_col = map(str2mat_partial, raw_df[bestSt])
-
-        return pd.DataFrame({
-            'chrom': chrom_col,
-            'position': pos_col,
-            'reference': ref_col,
-            'alternative': alt_col,
-            'family_id': family_col,
-            'genotype': genotype_col,
-        })

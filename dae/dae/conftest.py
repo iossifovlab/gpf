@@ -19,7 +19,7 @@ from dae.backends.raw.loader import AlleleFrequencyDecorator, \
     AnnotationPipelineDecorator
 from dae.backends.raw.raw_variants import RawMemoryVariants
 
-from dae.backends.dae.loader import RawDaeLoader
+from dae.backends.dae.loader import RawDaeLoader, DenovoLoader
 from dae.backends.dae.raw_dae import RawDAE
 
 from dae.backends.vcf.loader import VcfLoader
@@ -254,14 +254,15 @@ def dae_denovo_config():
 def dae_denovo(
         dae_denovo_config, default_genome, annotation_pipeline_internal):
 
-    fvars = RawDaeLoader.load_raw_denovo_variants(
-        dae_denovo_config.family_filename,
-        dae_denovo_config.denovo_filename,
-        None,
-        default_genome,
-        family_format='simple'
-    )
-    fvars.annotate(annotation_pipeline_internal)
+    families = FamiliesData.load_simple_families_file(
+        dae_denovo_config.family_filename)
+
+    variants_loader = DenovoLoader(
+        families, dae_denovo_config.denovo_filename, default_genome)
+
+    variants_loader = AnnotationPipelineDecorator(
+        variants_loader, annotation_pipeline_internal)
+    fvars = RawMemoryVariants(variants_loader)
     return fvars
 
 
@@ -304,25 +305,33 @@ def dae_iossifov2014_config():
 
 
 @pytest.fixture(scope='session')
-def iossifov2014_raw_denovo(
+def iossifov2014_loader(
         dae_iossifov2014_config, default_genome,
         annotation_pipeline_internal):
     config = dae_iossifov2014_config
-    fvars = RawDaeLoader.load_raw_denovo_variants(
-        config.family_filename,
-        config.denovo_filename,
-        None,
-        default_genome,
-        family_format='simple'
-    )
-    fvars.annotate(annotation_pipeline_internal)
-    fvars.annotate(annotation_pipeline_internal)
+
+    families = FamiliesData.load_simple_families_file(config.family_filename)
+
+    variants_loader = DenovoLoader(
+        families, config.denovo_filename, default_genome)
+
+    variants_loader = AnnotationPipelineDecorator(
+        variants_loader, annotation_pipeline_internal)
+
+    return variants_loader
+
+
+@pytest.fixture(scope='session')
+def iossifov2014_raw_denovo(iossifov2014_loader):
+
+    fvars = RawMemoryVariants(iossifov2014_loader)
+
     return fvars
 
 
 @pytest.fixture(scope='session')
 def iossifov2014_impala(
-        request, iossifov2014_raw_denovo, genomes_db,
+        request, iossifov2014_loader, genomes_db,
         test_hdfs, impala_genotype_storage, parquet_manager):
 
     temp_dirname = test_hdfs.tempdir(prefix='variants_', suffix='_data')
@@ -337,10 +346,10 @@ def iossifov2014_impala(
     print(parquet_filenames)
 
     ParquetManager.pedigree_to_parquet(
-        iossifov2014_raw_denovo, parquet_filenames.pedigree)
+        iossifov2014_loader, parquet_filenames.pedigree)
 
     ParquetManager.variants_to_parquet(
-        iossifov2014_raw_denovo, parquet_filenames.variant)
+        iossifov2014_loader, parquet_filenames.variant)
 
     impala_genotype_storage.impala_load_study(
         study_id,

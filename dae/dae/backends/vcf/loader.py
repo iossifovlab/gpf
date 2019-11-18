@@ -7,14 +7,42 @@ import pandas as pd
 
 from dae.pedigrees.family import FamiliesData
 from dae.variants.variant import SummaryVariantFactory
-from dae.backends.raw.loader import VariantsLoader
+from dae.backends.raw.loader import VariantsLoader, TransmissionType, \
+    FamiliesGenotypes
+
+
+class VcfFamiliesGenotypes(FamiliesGenotypes):
+
+    def __init__(self, families, families_genotypes):
+        super(VcfFamiliesGenotypes, self).__init__()
+        self.families = families
+        self.families_genotypes = families_genotypes
+
+    def get_family_genotype(self, family):
+        fam_df = family.ped_df
+        gt = self.families_genotypes[0:2, fam_df.samples_index]
+        assert gt.shape == (2, len(family))
+        return gt
+
+    def family_genotype_iterator(self):
+        for fam in self.families.families_list():
+            gt = self.get_family_genotype(fam)
+            yield fam, gt
+
+    def full_families_genotypes(self):
+        return self.families_genotypes
 
 
 class VcfLoader(VariantsLoader):
 
     def __init__(self, families, vcf_filename, region=None):
+        super(VcfLoader, self).__init__(
+            families=families,
+            transmission_type=TransmissionType.transmitted)
+
         assert os.path.exists(vcf_filename)
         self.vcf_filename = vcf_filename
+        self.region = region
 
         self.vcf = VCF(vcf_filename, lazy=True)
         samples = np.array(self.vcf.samples)
@@ -83,8 +111,10 @@ class VcfLoader(VariantsLoader):
         return SummaryVariantFactory.summary_variant_from_records(records)
 
     def summary_genotypes_iterator(self):
-        for summary_index, vcf_variant in enumerate(self.vcf):
-            family_genotypes = np.array(vcf_variant.genotypes, dtype=np.int8).T
+        for summary_index, vcf_variant in enumerate(self.vcf(self.region)):
+            family_genotypes = VcfFamiliesGenotypes(
+                self.families,
+                np.array(vcf_variant.genotypes, dtype=np.int8).T)
 
             summary_variant = self._warp_summary_variant(
                 summary_index, vcf_variant)

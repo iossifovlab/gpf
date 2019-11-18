@@ -3,8 +3,6 @@ Created on Jul 23, 2018
 
 @author: lubo
 '''
-import sys
-import traceback
 from dae.variants.family_variant import FamilyVariant
 from dae.variants.variant import SummaryVariantFactory
 
@@ -19,46 +17,6 @@ class BaseDAE(RawFamilyVariants):
         super(BaseDAE, self).__init__(
             families, transmission_type=transmission_type,
             source_filename=source_filename)
-
-
-class RawDenovo(BaseDAE):
-    def __init__(self, families, denovo_df, annot_df, source_filename=None):
-        super(RawDenovo, self).__init__(
-            families=families,
-            transmission_type=TransmissionType.denovo,
-            source_filename=source_filename)
-        self.denovo_df = denovo_df
-        self.annot_df = annot_df
-
-        assert self.annot_df is not None
-        assert len(self.denovo_df) == len(self.annot_df)
-
-    def full_variants_iterator(self, return_reference=False):
-        denovo = self.denovo_df.to_dict(orient='records')
-        annot = self.annot_df.to_dict(orient='records')
-
-        for index, (arow, drow) in enumerate(zip(annot, denovo)):
-            try:
-                summary_variant = SummaryVariantFactory \
-                    .summary_variant_from_records(
-                        [arow], transmission_type=self.transmission_type)
-
-                gt = drow['genotype']
-                family_id = drow['family_id']
-                family = self.families.get_family(family_id)
-                assert family is not None
-
-                assert len(family) == gt.shape[1], \
-                    (family.family_id, len(family), gt.shape)
-
-                family_variant = FamilyVariant.from_summary_variant(
-                    summary_variant, family, gt)
-
-                yield summary_variant, [family_variant]
-            except Exception as ex:
-                print("unexpected error:", ex)
-                print("error in handling:", arow, drow, index)
-                traceback.print_exc(file=sys.stdout)
 
 
 class RawDAE(BaseDAE):

@@ -270,6 +270,13 @@ class FamiliesData(object):
         )
         return FamiliesData.from_pedigree_df(ped_df)
 
+    @staticmethod
+    def load_simple_families_file(families_filename):
+        ped_df = PedigreeReader.load_simple_family_file(
+            families_filename
+        )
+        return FamiliesData.from_pedigree_df(ped_df)
+
     def families_list(self):
         return list(self.families.values())
 
