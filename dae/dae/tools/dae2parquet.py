@@ -11,8 +11,10 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 
 from dae.annotation.tools.annotator_config import annotation_config_cli_options
 
-from dae.backends.dae.raw_dae import RawDAE, RawDenovo
-from dae.backends.dae.loader import RawDaeLoader
+from dae.backends.raw.loader import AnnotationPipelineDecorator
+from dae.backends.dae.loader import DenovoLoader
+
+from dae.backends.dae.raw_dae import RawDAE
 
 from dae.backends.import_commons import build_contig_regions, \
     contigs_makefile_generate
@@ -238,7 +240,7 @@ def parse_cli_arguments(gpf_instance, argv=sys.argv[1:]):
 
 
 def denovo2parquet(
-        study_id, ped_df, denovo_df,
+        study_id, family_filename, denovo_filename,
         annotation_pipeline, genome,
         output='.', bucket_index=0, rows=10000, filesystem=None,
         skip_pedigree=False):
@@ -247,17 +249,17 @@ def denovo2parquet(
         output, bucket_index=bucket_index, study_id=study_id)
     print("converting into ", parquet_filenames, file=sys.stderr)
 
-    families = FamiliesData.from_pedigree_df(ped_df)
-    annot_df = RawDaeLoader._build_initial_annotation(denovo_df)
-
-    fvars = RawDenovo(families, denovo_df, annot_df)
-    fvars.annotate(annotation_pipeline)
+    families = FamiliesData.load_simple_families_file(family_filename)
+    variants_loader = DenovoLoader(families, denovo_filename, genome)
+    variants_loader = AnnotationPipelineDecorator(
+        variants_loader, annotation_pipeline)
 
     if not skip_pedigree:
-        ParquetManager.pedigree_to_parquet(fvars, parquet_filenames.pedigree)
+        ParquetManager.pedigree_to_parquet(
+            variants_loader, parquet_filenames.pedigree)
 
     ParquetManager.variants_to_parquet(
-        fvars, parquet_filenames.variant,
+        variants_loader, parquet_filenames.variant,
         rows=rows, bucket_index=bucket_index,
         filesystem=filesystem
     )

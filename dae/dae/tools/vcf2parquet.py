@@ -8,7 +8,9 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 
 from dae.annotation.tools.annotator_config import annotation_config_cli_options
 
-from dae.backends.vcf.loader import RawVcfLoader
+from dae.pedigrees.family import FamiliesData
+from dae.backends.raw.loader import AnnotationPipelineDecorator
+from dae.backends.vcf.loader import VcfLoader
 from dae.backends.impala.parquet_io import ParquetManager
 
 from cyvcf2 import VCF
@@ -156,19 +158,18 @@ def vcf2parquet(
     )
     print("converting into ", parquet_filenames.variant, file=sys.stderr)
 
-    fvars = RawVcfLoader.load_and_annotate_raw_vcf_variants(
-        ped_df, vcf_filename, annotation_pipeline, region=region)
-
-    if fvars.is_empty():
-        print('empty bucket {} done'.format(vcf_filename), file=sys.stderr)
+    families = FamiliesData.from_pedigree_df(ped_df)
+    variants_loader = VcfLoader(families, vcf_filename, region=region)
+    variants_loader = AnnotationPipelineDecorator(
+        variants_loader, annotation_pipeline)
 
     if not skip_pedigree:
         ParquetManager.pedigree_to_parquet(
-            fvars, parquet_filenames.pedigree, filesystem=filesystem
+            variants_loader, parquet_filenames.pedigree, filesystem=filesystem
         )
 
     ParquetManager.variants_to_parquet(
-        fvars, parquet_filenames.variant,
+        variants_loader, parquet_filenames.variant,
         bucket_index=bucket_index,
         include_reference=include_reference,
         include_unknown=include_unknown,
