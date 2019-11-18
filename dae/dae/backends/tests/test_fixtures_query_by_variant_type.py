@@ -8,7 +8,7 @@ import pytest
 
 @pytest.mark.parametrize('variants', [
     'variants_impala',
-    'variants_mem'
+    'variants_vcf'
 ])
 @pytest.mark.parametrize("variant_type,count", [
     (None, 10),
@@ -29,7 +29,7 @@ def test_single_alt_allele_variant_types(
 
 @pytest.mark.parametrize('variants', [
     'variants_impala',
-    'variants_mem'
+    'variants_vcf'
 ])
 @pytest.mark.parametrize("variant_type,count", [
     (None, 3),

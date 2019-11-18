@@ -11,7 +11,7 @@ from dae.utils.vcf_utils import mat2str
 
 @pytest.mark.parametrize('variants', [
     'variants_impala',
-    'variants_mem'
+    'variants_vcf'
 ])
 @pytest.mark.parametrize("fixture_name,count", [
     ("backends/effects_trio_multi", 3),
@@ -37,7 +37,7 @@ def test_variants_all_count(variants_impl, variants, fixture_name, count):
 ])
 @pytest.mark.parametrize('variants', [
     'variants_impala',
-    'variants_mem'
+    'variants_vcf'
 ])
 def test_df_query_multiallelic3_families(
         variants_impl, variants, fixture_name):
@@ -69,7 +69,7 @@ def test_df_query_multiallelic3_families(
 
 @pytest.mark.parametrize('variants', [
     'variants_impala',
-    'variants_mem'
+    'variants_vcf'
 ])
 @pytest.mark.parametrize("fixture_name", [
     "backends/trios2_11541",
@@ -96,7 +96,7 @@ def test_reference_variant(
 
 @pytest.mark.parametrize('variants', [
     'variants_impala',
-    'variants_mem'
+    'variants_vcf'
 ])
 @pytest.mark.parametrize("fixture_name", [
     "backends/trios2_11600",

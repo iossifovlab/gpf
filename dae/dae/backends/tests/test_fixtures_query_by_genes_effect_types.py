@@ -10,7 +10,7 @@ from dae.RegionOperations import Region
 
 @pytest.mark.parametrize('variants', [
     'variants_impala',
-    'variants_mem'
+    'variants_vcf'
 ])
 @pytest.mark.parametrize("regions,effect,count", [
     ([Region('1', 865582, 865691)], "synonymous", 3),
@@ -33,7 +33,7 @@ def test_single_alt_allele_effects(
 
 @pytest.mark.parametrize('variants', [
     'variants_impala',
-    'variants_mem'
+    'variants_vcf'
 ])
 def test_no_missense_effects(variants_impl, variants):
     fvars = variants_impl(variants)("backends/effects_trio_nomissense")
@@ -44,7 +44,7 @@ def test_no_missense_effects(variants_impl, variants):
 
 @pytest.mark.parametrize('variants', [
     'variants_impala',
-    'variants_mem'
+    'variants_vcf'
 ])
 @pytest.mark.parametrize("effect,count", [
     ("missense", 3),
@@ -63,7 +63,7 @@ def test_multi_alt_allele_effects(variants_impl, variants, effect, count):
 
 @pytest.mark.parametrize('variants', [
     'variants_impala',
-    'variants_mem'
+    'variants_vcf'
 ])
 @pytest.mark.parametrize("regions,effects,genes,count", [
     (None, None, None, 10),
@@ -93,7 +93,7 @@ def test_single_alt_allele_genes(
 
 @pytest.mark.parametrize('variants', [
     'variants_impala',
-    'variants_mem'
+    'variants_vcf'
 ])
 @pytest.mark.parametrize("regions,effects,genes,count", [
     (None, None, None, 10),

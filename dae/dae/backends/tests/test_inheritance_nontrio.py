@@ -17,8 +17,8 @@ from dae.variants.attributes import Inheritance
     (Region('1', 11504, 11504), 1, Inheritance.unknown),
     (Region('1', 11505, 11505), 1, Inheritance.unknown),
 ])
-def test_inheritance_nontrio(variants_mem, region, count, inheritance):
-    fvars = variants_mem("backends/inheritance_nontrio")
+def test_inheritance_nontrio(variants_vcf, region, count, inheritance):
+    fvars = variants_vcf("backends/inheritance_nontrio")
     vs = list(fvars.query_variants(
         regions=[region],
         family_ids=['f1'],

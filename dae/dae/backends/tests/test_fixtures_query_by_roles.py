@@ -9,7 +9,7 @@ from dae.backends.attributes_query import role_query
 
 @pytest.mark.parametrize('variants', [
     'variants_impala',
-    'variants_mem'
+    'variants_vcf'
 ])
 @pytest.mark.parametrize("fixture_name,regions,roles,count", [
     ("backends/effects_trio_dad", None, 'dad', 1),

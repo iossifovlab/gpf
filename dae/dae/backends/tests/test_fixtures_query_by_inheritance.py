@@ -10,7 +10,7 @@ from dae.utils.vcf_utils import mat2str
 
 @pytest.mark.parametrize('variants', [
     'variants_impala',
-    'variants_mem'
+    'variants_vcf'
 ])
 @pytest.mark.parametrize("inheritance,count", [
     ("mendelian", 3),
@@ -30,7 +30,7 @@ def test_inheritance_trio_full(variants_impl, variants, inheritance, count):
 
 @pytest.mark.parametrize('variants', [
     'variants_impala',
-    'variants_mem'
+    'variants_vcf'
 ])
 @pytest.mark.parametrize("count,inheritance", [
     (7, "mendelian"),
@@ -49,7 +49,7 @@ def test_inheritance_quad_full(variants_impl, variants, count, inheritance):
 
 @pytest.mark.parametrize('variants', [
     'variants_impala',
-    'variants_mem'
+    'variants_vcf'
 ])
 @pytest.mark.parametrize("count,inheritance", [
     (5, None),

@@ -12,7 +12,7 @@ from dae.backends.impala.parquet_io import VariantsParquetWriter
 
 @pytest.mark.parametrize('variants', [
     'variants_impala',
-    'variants_mem'
+    'variants_vcf'
 ])
 @pytest.mark.parametrize("region,count,members", [
     (Region('1', 11500, 11500), 1, ['mom1', None, None]),

@@ -10,7 +10,7 @@ from dae.backends.impala.parquet_io import VariantsParquetWriter
 
 @pytest.mark.parametrize('variants', [
     'variants_impala',
-    'variants_mem'
+    'variants_vcf'
 ])
 @pytest.mark.parametrize("fixture_name", [
     "backends/trios2_11541",
@@ -54,7 +54,7 @@ def test_reference_variant_single_allele(
 
 @pytest.mark.parametrize('variants', [
     # 'variants_impala',
-    'variants_mem'
+    'variants_vcf'
 ])
 @pytest.mark.parametrize("fixture_name", [
     "backends/trios2_11541",

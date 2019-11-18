@@ -11,8 +11,8 @@ from dae.variants.effects import Effect
 
 ])
 def test_allele_effects_serialization_deserialization(
-        variants_mem, fixture_name):
-    fvars = variants_mem(fixture_name)
+        variants_vcf, fixture_name):
+    fvars = variants_vcf(fixture_name)
     vs = list(fvars.query_variants())
 
     for v in vs:
@@ -32,8 +32,8 @@ def test_allele_effects_serialization_deserialization(
     "backends/trios2",
 ])
 def test_variant_effects_serialization_deserialization(
-        variants_mem, fixture_name):
-    fvars = variants_mem(fixture_name)
+        variants_vcf, fixture_name):
+    fvars = variants_vcf(fixture_name)
     vs = list(fvars.query_variants())
 
     for v in vs:

@@ -16,8 +16,8 @@ from dae.RegionOperations import Region
     (Region('1', 865664, 865664), "synonymous"),
     (Region('1', 865691, 865691), "missense"),
 ])
-def test_single_alt_allele_effects(variants_mem, region, worst_effect):
-    fvars = variants_mem("backends/effects_trio")
+def test_single_alt_allele_effects(variants_vcf, region, worst_effect):
+    fvars = variants_vcf("backends/effects_trio")
     vs = list(fvars.query_variants(
         regions=[region]))
     assert len(vs) == 1
@@ -33,8 +33,8 @@ def test_single_alt_allele_effects(variants_mem, region, worst_effect):
     (Region('1', 901921, 901921), ("synonymous", "missense")),
     (Region('1', 905956, 905956), ("frame-shift", "missense")),
 ])
-def test_multi_alt_allele_effects(variants_mem, region, worst_effect):
-    fvars = variants_mem("backends/effects_trio")
+def test_multi_alt_allele_effects(variants_vcf, region, worst_effect):
+    fvars = variants_vcf("backends/effects_trio")
     vs = list(fvars.query_variants(
         regions=[region]))
     assert len(vs) == 1
@@ -51,9 +51,9 @@ def test_multi_alt_allele_effects(variants_mem, region, worst_effect):
     (Region('1', 905956, 905956), ("frame-shift", "missense")),
 ])
 def test_multi_alt_allele_effects_match_family(
-        variants_mem, region, worst_effect):
+        variants_vcf, region, worst_effect):
 
-    fvars = variants_mem("backends/effects_trio")
+    fvars = variants_vcf("backends/effects_trio")
     vs = list(fvars.query_variants(
         regions=[region]))
     assert len(vs) == 1

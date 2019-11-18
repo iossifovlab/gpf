@@ -10,7 +10,7 @@ from dae.utils.vcf_utils import mat2str
 
 @pytest.mark.parametrize("variants", [
     'variants_impala',
-    'variants_mem'
+    'variants_vcf'
 ])
 @pytest.mark.parametrize("region,count,freq0,freq1", [
     (Region('1', 11539, 11539), 2, 75.0, 25.0),
@@ -43,7 +43,7 @@ def test_variant_frequency_single(
 
 @pytest.mark.parametrize("variants", [
     'variants_impala',
-    'variants_mem'
+    'variants_vcf'
 ])
 @pytest.mark.parametrize("region,count,freq0,freq1,freq2", [
     (Region('1', 11600, 11600), 0, 100.0, 0.0, 0.0),

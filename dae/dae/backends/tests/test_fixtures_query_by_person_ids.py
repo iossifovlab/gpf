@@ -8,7 +8,7 @@ import pytest
 
 @pytest.mark.parametrize('variants', [
     'variants_impala',
-    'variants_mem'
+    'variants_vcf'
 ])
 @pytest.mark.parametrize("fixture_name,person_ids,count", [
 

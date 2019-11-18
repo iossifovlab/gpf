@@ -387,7 +387,7 @@ def vcf_variants_loader(vcf_loader_data, default_annotation_pipeline):
 
 
 @pytest.fixture(scope='session')
-def variants_mem(vcf_variants_loader):
+def variants_vcf(vcf_variants_loader):
     def builder(path):
         loader = vcf_variants_loader(path)
 
@@ -397,12 +397,30 @@ def variants_mem(vcf_variants_loader):
     return builder
 
 
+@pytest.fixture(scope='session')
+def variants_mem():
+    def builder(loader):
+        fvars = RawMemoryVariants(loader)
+        return fvars
+
+    return builder
+
+
+@pytest.fixture(scope='session')
+def annotation_pipeline_default_decorator(default_annotation_pipeline):
+    def builder(variants_loader):
+        decorator = AnnotationPipelineDecorator(
+            variants_loader, default_annotation_pipeline)
+        return decorator
+    
+    return builder
+
 @pytest.fixture
 def variants_implementations(
-        variants_impala, variants_mem):
+        variants_impala, variants_vcf):
     impls = {
         'variants_impala': variants_impala,
-        'variants_mem': variants_mem
+        'variants_vcf': variants_vcf
     }
     return impls
 
