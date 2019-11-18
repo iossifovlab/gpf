@@ -1,5 +1,6 @@
 import os
 from box import Box
+from collections import deque
 from configparser import ConfigParser
 
 from dae.configuration.utils import parser_to_dict
@@ -498,15 +499,44 @@ class ConfigParserBase(object):
         return config
 
     @classmethod
-    def _filter_included(cls, config):
+    def _evaluate_included_properties(cls, depthStack):
+        depth = len(depthStack)
+        split_props = list(map(lambda x: x.split('.'), cls.INCLUDE_PROPERTIES))
+        valid_props = list()
+        for prop_tokens in split_props:
+            valid = True
+            recursive = False
+            for i, token in enumerate(prop_tokens):
+                if i > depth:
+                    valid = False
+                    break
+                elif i < depth:
+                    node = depthStack[i]
+                    if token == '**':
+                        recursive = True
+                        break
+                    if token != node and token != '*':
+                        valid = False
+                        break
+            if valid:
+                if recursive or i == depth:
+                    valid_props.append(prop_tokens[len(prop_tokens) - 1])
+        return valid_props
+
+    @classmethod
+    def _filter_included(cls, config, depthStack=deque()):
         if not cls.INCLUDE_PROPERTIES:
             return config
 
+        evaluated_properties = cls._evaluate_included_properties(depthStack)
         for k in list(config):
             if type(config[k]) == Box:
-                config[k] = cls._filter_included(config[k])
-            elif k not in cls.INCLUDE_PROPERTIES:
-                del config[k]
+                depthStack.append(k)
+                cls._filter_included(config[k], depthStack)
+                depthStack.pop()
+            else:
+                if k not in evaluated_properties:
+                    del config[k]
 
         return config
 
