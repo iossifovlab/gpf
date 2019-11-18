@@ -13,12 +13,12 @@ def fixtures_dir():
         os.path.join(os.path.dirname(__file__), 'fixtures'))
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope='session')
 def gpf_instance(mock_genomes_db):
     return GPFInstance(work_dir=fixtures_dir())
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope='session')
 def variants_db_fixture(gpf_instance):
     return gpf_instance.variants_db
 
@@ -36,7 +36,7 @@ def mock_gpf_instance(db, mocker, gpf_instance):
     )
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope='session')
 def calc_gene_sets(request, denovo_gene_sets):
     for dgs in denovo_gene_sets:
         dgs.load(build_cache=True)
@@ -60,7 +60,7 @@ def get_denovo_gene_set_by_id(variants_db_fixture, dgs_id):
     )
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope='session')
 def denovo_gene_sets(variants_db_fixture):
     return [
         get_denovo_gene_set_by_id(variants_db_fixture, 'f1_group'),
