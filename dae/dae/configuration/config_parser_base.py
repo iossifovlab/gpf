@@ -108,6 +108,12 @@ class ConfigParserBase(object):
     VerificationError exception.
     '''
 
+    INCLUDE_PROPERTIES = ()
+    '''
+    Holds a tuple of configuration property names. Any property name that is
+    **not** inside this tuple will be omitted from the end result
+    '''
+
     @classmethod
     def read_and_parse_directory_configurations(
             cls, configurations_dir, defaults=None, fail_silently=False):
@@ -386,6 +392,7 @@ class ConfigParserBase(object):
         config_section = cls._cast_to_bool(config_section)
         config_section = cls._cast_to_int(config_section)
         config_section = cls._filter_selectors(config_section)
+        config_section = cls._filter_included(config_section)
 
         # This one should remain last so as to avoid having a seemingly valid
         # value be rendered invalid by one of the previous transformations
@@ -487,6 +494,17 @@ class ConfigParserBase(object):
                     selector.id = selector_id
 
                 config[key][selector_id] = selector
+
+        return config
+
+    @classmethod
+    def _filter_included(cls, config):
+        if not cls.INCLUDE_PROPERTIES:
+            return config
+
+        for k in list(config):
+            if k not in cls.INCLUDE_PROPERTIES:
+                del config[k]
 
         return config
 

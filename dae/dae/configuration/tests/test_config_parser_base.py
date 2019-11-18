@@ -40,6 +40,22 @@ class ConfigParserTestWrapper(ConfigParserBase):
     }
 
 
+class ConfigParserIncludeTestWrapper(ConfigParserTestWrapper):
+
+    INCLUDE_PROPERTIES = (
+        'list',
+        'set',
+        'bool',
+        'missing',
+        'int',
+        'selector',
+        'selector_no_selected',
+        'to_verify1',
+        'to_verify2',
+        'to_verify3',
+    )
+
+
 class SectionConfigParserTestWrapper(ConfigParserTestWrapper):
 
     SECTION = 'section'
@@ -444,6 +460,16 @@ def test_cast_to_bool():
 
     assert config['bool'] is False
     assert config['list'] == 'a,b'
+
+
+def test_include_properties():
+    config = ConfigParserIncludeTestWrapper._filter_included(
+        Box({'bool': 'no', 'list': 'a,b', 'bepis': 'hihihi'})
+    )
+
+    assert len(config) == 2
+
+    assert 'bepis' not in config
 
 
 def test_cast_to_int():
