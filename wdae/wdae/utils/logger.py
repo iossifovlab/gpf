@@ -4,6 +4,7 @@ Created on Jun 12, 2015
 @author: lubo
 '''
 import logging
+from functools import wraps
 
 LOGGER = logging.getLogger('wdae.api')
 
@@ -25,10 +26,24 @@ def log_filter(request, message):
 
 
 def request_logging(_LOGGER):
+    """Automatically log request info on views"""
     def request_logging_decorator(func):
+        @wraps(func)
         def func_wrapper(self, request, *args, **kwargs):
             _LOGGER.info(log_filter(request, '').strip())
 
             return func(self, request, *args, **kwargs)
+        return func_wrapper
+    return request_logging_decorator
+
+
+def request_logging_function_view(_LOGGER):
+    """Automatically log request info on view functions"""
+    def request_logging_decorator(func):
+        @wraps(func)
+        def func_wrapper(request, *args, **kwargs):
+            _LOGGER.info(log_filter(request, '').strip())
+
+            return func(request, *args, **kwargs)
         return func_wrapper
     return request_logging_decorator
