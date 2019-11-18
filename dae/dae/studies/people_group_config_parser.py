@@ -18,11 +18,22 @@ class PeopleGroupConfigParser(ConfigParserBase):
 
     INCLUDE_PROPERTIES = (
         'selectedPeopleGroupValues',
-        'id',
-        'name',
-        'domain',
-        'default',
-        'source'
+        'peopleGroups',
+        '*.id',
+        '*.name',
+        '*.domain',
+        '*.default',
+        '*.source',
+        'peopleGroup.status.id',
+        'peopleGroup.status.name',
+        'peopleGroup.status.domain',
+        'peopleGroup.status.default',
+        'peopleGroup.status.source',
+        'peopleGroup.phenotype.id',
+        'peopleGroup.phenotype.name',
+        'peopleGroup.phenotype.domain',
+        'peopleGroup.phenotype.default',
+        'peopleGroup.phenotype.source',
     )
 
     @staticmethod
