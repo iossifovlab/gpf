@@ -1,5 +1,5 @@
 import os
-from dae.pedigrees.pedigree_reader import PedigreeReader
+from dae.pedigrees.family import PedigreeReader
 
 
 def pedigree_from_path(filepath, family_format='pedigree'):

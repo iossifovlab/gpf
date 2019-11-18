@@ -5,7 +5,7 @@ Created on Mar 12, 2018
 '''
 from io import StringIO
 
-from dae.pedigrees.pedigree_reader import PedigreeReader
+from dae.pedigrees.family import PedigreeReader
 from dae.variants.attributes import Role
 from dae.pedigrees.family import FamiliesData
 

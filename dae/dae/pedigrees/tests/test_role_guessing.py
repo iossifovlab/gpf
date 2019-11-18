@@ -3,7 +3,7 @@ Created on Jul 26, 2017
 
 @author: lubo
 '''
-from dae.pedigrees.pedigree_reader import PedigreeReader, PedigreeRoleGuesser
+from dae.pedigrees.family import PedigreeReader, PedigreeRoleGuesser
 from dae.variants.attributes import Role
 
 

@@ -15,7 +15,7 @@ from box import Box
 from dae.pheno.db import DbManager
 from dae.pheno.common import RoleMapping, MeasureType
 from dae.variants.attributes import Role
-from dae.pedigrees.pedigree_reader import PedigreeReader, \
+from dae.pedigrees.family import PedigreeReader, \
     PedigreeRoleGuesser, PED_COLUMNS_REQUIRED
 from dae.pheno.prepare.measure_classifier import MeasureClassifier,\
     convert_to_string, convert_to_numeric, ClassifierReport

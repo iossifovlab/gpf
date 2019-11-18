@@ -7,7 +7,7 @@ import csv
 
 from dae.pedigrees.layout_saver import LayoutSaver
 from dae.pedigrees.layout_loader import LayoutLoader
-from dae.pedigrees.pedigree_reader import PedigreeReader
+from dae.pedigrees.family import PedigreeReader
 from dae.pedigrees.pedigrees import Pedigree, Individual, \
     FamilyConnections, MatingUnit, SibshipUnit
 from dae.pedigrees.family import Person

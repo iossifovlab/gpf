@@ -15,8 +15,7 @@ from dae.utils.vcf_utils import best2gt, str2mat, GENOTYPE_TYPE, \
 from dae.utils.dae_utils import dae2vcf_variant
 from dae.utils.helpers import pedigree_from_path
 
-from dae.pedigrees.family import FamiliesData
-from dae.pedigrees.pedigree_reader import PedigreeReader
+from dae.pedigrees.family import FamiliesData, PedigreeReader
 from dae.backends.raw.loader import RawVariantsLoader
 from dae.backends.dae.raw_dae import RawDenovo, RawDAE
 

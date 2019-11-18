@@ -5,7 +5,7 @@ import functools
 import pandas as pd
 from box import Box
 
-from dae.pedigrees.pedigree_reader import PedigreeReader
+from dae.pedigrees.family import PedigreeReader
 from dae.pedigrees.pedigrees import get_argument_parser
 from dae.pedigrees.drawing import OffsetLayoutDrawer, PDFLayoutDrawer
 from dae.pedigrees.layout_loader import LayoutLoader

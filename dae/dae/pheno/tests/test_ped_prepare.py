@@ -6,7 +6,7 @@ Created on Jul 25, 2017
 import os
 from dae.pheno.prepare.ped_prepare import PreparePersons, PrepareVariables
 from dae.pheno.pheno_db import PhenoDB
-from dae.pedigrees.pedigree_reader import PedigreeReader
+from dae.pedigrees.family import PedigreeReader
 import pytest
 
 

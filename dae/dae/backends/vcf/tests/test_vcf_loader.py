@@ -1,5 +1,5 @@
 import pytest
-from dae.pedigrees.pedigree_reader import PedigreeReader
+from dae.pedigrees.family import PedigreeReader
 from dae.pedigrees.family import FamiliesData
 
 from dae.backends.vcf.loader import VcfLoader

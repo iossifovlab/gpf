@@ -14,7 +14,7 @@ from dae.backends.import_commons import variants2parquet
 from dae.backends.dae.loader import RawDaeLoader
 from dae.backends.vcf.loader import RawVcfLoader
 
-from dae.pedigrees.pedigree_reader import PedigreeReader, PedigreeRoleGuesser
+from dae.pedigrees.family import PedigreeReader, PedigreeRoleGuesser
 from dae.pedigrees.family import FamiliesData
 
 

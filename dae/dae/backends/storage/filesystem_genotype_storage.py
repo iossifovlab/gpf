@@ -1,11 +1,15 @@
 import os
 import shutil
 
-from dae.pedigrees.pedigree_reader import PedigreeReader
+from dae.pedigrees.family import PedigreeReader
+from dae.pedigrees.family import FamiliesData
+
 from dae.backends.storage.genotype_storage import GenotypeStorage
 
 from dae.backends.raw.loader import RawVariantsLoader
-from dae.backends.vcf.loader import RawVcfLoader
+from dae.backends.raw.raw_variants import RawMemoryVariants
+
+from dae.backends.vcf.loader import VcfLoader
 from dae.backends.dae.loader import RawDaeLoader
 
 
@@ -29,14 +33,15 @@ class FilesystemGenotypeStorage(GenotypeStorage):
                 data_dir, "{}.vcf".format(study_config.id))
             ped_filename = os.path.join(
                 data_dir, "{}.ped".format(study_config.id))
-            return RawVcfLoader.load_raw_vcf_variants(
-                ped_filename, vcf_filename
-            )
-        elif study_config.files.vcf is not None:
 
-            return RawVcfLoader.load_raw_vcf_variants(
-                study_config.files.pedigree, study_config.files.vcf
-            )
+            families = FamiliesData.load_pedigree(ped_filename)
+            variants_loader = VcfLoader(families, vcf_filename)
+            return RawMemoryVariants(variants_loader)
+
+        elif study_config.files.vcf is not None:
+            families = FamiliesData.load_pedigree(study_config.files.pedigree)
+            variants_loader = VcfLoader(study_config.files.vcf)
+            return RawMemoryVariants(variants_loader)
 
         else:
             assert study_config.files.denovo is not None

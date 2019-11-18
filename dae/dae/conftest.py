@@ -27,7 +27,7 @@ from dae.backends.vcf.loader import VcfLoader
 from dae.backends.import_commons import \
     construct_import_annotation_pipeline
 
-from dae.pedigrees.pedigree_reader import PedigreeReader
+from dae.pedigrees.family import PedigreeReader
 from dae.pedigrees.family import FamiliesData
 from dae.utils.helpers import study_id_from_path
 from dae.backends.import_commons import variants2parquet
@@ -412,8 +412,9 @@ def annotation_pipeline_default_decorator(default_annotation_pipeline):
         decorator = AnnotationPipelineDecorator(
             variants_loader, default_annotation_pipeline)
         return decorator
-    
+
     return builder
+
 
 @pytest.fixture
 def variants_implementations(

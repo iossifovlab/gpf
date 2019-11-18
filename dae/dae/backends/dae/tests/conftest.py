@@ -1,6 +1,6 @@
 import os
 import pytest
-from dae.pedigrees.pedigree_reader import PedigreeReader
+from dae.pedigrees.family import PedigreeReader
 from dae.pedigrees.family import FamiliesData
 
 
