@@ -503,7 +503,9 @@ class ConfigParserBase(object):
             return config
 
         for k in list(config):
-            if k not in cls.INCLUDE_PROPERTIES:
+            if type(config[k]) == Box:
+                config[k] = cls._filter_included(config[k])
+            elif k not in cls.INCLUDE_PROPERTIES:
                 del config[k]
 
         return config
