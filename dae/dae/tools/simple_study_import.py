@@ -11,8 +11,9 @@ from dae.backends.impala.parquet_io import ParquetManager
 from dae.backends.import_commons import construct_import_annotation_pipeline
 
 from dae.backends.import_commons import variants2parquet
-from dae.backends.dae.loader import RawDaeLoader
-from dae.backends.vcf.loader import RawVcfLoader
+from dae.backends.dae.loader import DenovoLoader
+from dae.backends.vcf.loader import VcfLoader
+from dae.backends.raw.loader import AnnotationPipelineDecorator
 
 from dae.pedigrees.family import PedigreeReader, PedigreeRoleGuesser
 from dae.pedigrees.family import FamiliesData
@@ -79,7 +80,7 @@ def parse_cli_arguments(dae_config, argv=sys.argv[1:]):
     )
 
     PedigreeReader.flexible_pedigree_cli_arguments(parser)
-    RawDaeLoader.flexible_denovo_cli_arguments(parser)
+    DenovoLoader.flexible_denovo_cli_arguments(parser)
 
     parser_args = parser.parse_args(argv)
     return parser_args
@@ -107,11 +108,13 @@ def generate_denovo_gene_sets(gpf_instance, study_id):
     main(gpf_instance=gpf_instance, argv=argv)
 
 
-if __name__ == "__main__":
-    gpf_instance = GPFInstance()
+def main(argv, gpf_instance=None):
+    if gpf_instance is None:
+        gpf_instance = GPFInstance()
+
     dae_config = gpf_instance.dae_config
 
-    argv = parse_cli_arguments(dae_config, sys.argv[1:])
+    argv = parse_cli_arguments(dae_config, argv)
 
     genotype_storage_factory = gpf_instance.genotype_storage_factory
     genomes_db = gpf_instance.genomes_db
@@ -161,30 +164,29 @@ if __name__ == "__main__":
         ped_df = PedigreeRoleGuesser.guess_role_nuc(ped_df)
     families = FamiliesData.from_pedigree_df(ped_df)
 
-    denovo_parquet = None
-    vcf_parquet = None
-
     skip_pedigree = False
     if argv.vcf and argv.denovo:
         skip_pedigree = True
 
-    parquet_config = None
+    parquet_filenames = None
     if argv.vcf is not None:
-        fvars = RawVcfLoader.load_and_annotate_raw_vcf_variants(
-            ped_df, argv.vcf, annotation_pipeline,
-            region=argv.region
+        variants_loader = VcfLoader(
+            families,
+            argv.vcf
+        )
+        variants_loader = AnnotationPipelineDecorator(
+            variants_loader, annotation_pipeline
         )
         parquet_filenames = variants2parquet(
-            study_id, fvars,
+            study_id, variants_loader,
             output=output, bucket_index=100,
             skip_pedigree=skip_pedigree,
         )
 
     if argv.denovo is not None:
-        fvars = RawDaeLoader.load_raw_denovo_variants(
-            ped_df,
+        variants_loader = DenovoLoader(
+            families,
             argv.denovo,
-            annotation_filename=None,
             genome=genome,
             denovo_format={
                 'location': argv.denovo_location,
@@ -193,23 +195,25 @@ if __name__ == "__main__":
                 'pos': argv.denovo_pos,
                 'ref': argv.denovo_ref,
                 'alt': argv.denovo_alt,
-                'personId': argv.denovo_personId,
-                'familyId': argv.denovo_familyId,
-                'bestSt': argv.denovo_bestSt,
+                'person_id': argv.denovo_person_id,
+                'family_id': argv.denovo_family_id,
+                'best_state': argv.denovo_best_state,
                 'families': families,
             }
         )
-        fvars.annotate(annotation_pipeline)
-        parquet_config = variants2parquet(
-            study_id, fvars,
+        variants_loader = AnnotationPipelineDecorator(
+            variants_loader, annotation_pipeline
+        )
+        parquet_filenames = variants2parquet(
+            study_id, variants_loader,
             output=output, bucket_index=0
         )
 
-    if parquet_config:
+    if parquet_filenames:
         genotype_storage.impala_load_study(
             study_id,
-            os.path.split(parquet_config.pedigree)[0],
-            os.path.split(parquet_config.variant)[0]
+            os.path.split(parquet_filenames.pedigree)[0],
+            os.path.split(parquet_filenames.variant)[0]
         )
 
     parquet_manager.generate_study_config(
@@ -233,3 +237,7 @@ if __name__ == "__main__":
         print("DONE: generating de Novo gene sets in {:.2f} sec".format(
             time.time() - start
             ), file=sys.stderr)
+
+
+if __name__ == "__main__":
+    main(sys.argv[1:])

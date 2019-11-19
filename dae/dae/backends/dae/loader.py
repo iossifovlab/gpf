@@ -1,7 +1,6 @@
 import os
 import gzip
 
-from functools import partial
 from contextlib import closing
 
 import pysam
@@ -290,8 +289,10 @@ class DenovoLoader(VariantsLoader):
 
         else:
             family_col = raw_df.loc[:, family_id]
-            str2mat_partial = partial(str2mat, col_sep=' ')
-            genotype_col = map(str2mat_partial, raw_df[best_state])
+
+            def best_state2genotype(best_st):
+                return best2gt(str2mat(best_st, col_sep=' '))
+            genotype_col = map(best_state2genotype, raw_df[best_state])
 
         return pd.DataFrame({
             'chrom': chrom_col,

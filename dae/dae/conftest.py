@@ -138,7 +138,7 @@ def temp_filename(request):
     return output
 
 
-@pytest.fixture
+@pytest.fixture(scope='session')
 def fixture_dirname(request):
     def builder(relpath):
         return relative_to_this_test_folder(
