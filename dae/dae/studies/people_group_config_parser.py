@@ -91,4 +91,6 @@ class PeopleGroupConfigParser(ConfigParserBase):
         config_section.peopleGroup = \
             cls._parse_people_groups(config_section.people_group)
 
+        del config[cls.SECTION]
+
         return config_section

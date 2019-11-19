@@ -1,4 +1,5 @@
 from box import Box
+import copy
 
 from dae.configuration.config_parser_base import ConfigParserBase
 
@@ -256,7 +257,7 @@ class GenotypeBrowserConfigParser(ConfigParserBase):
             return None
         config = super(GenotypeBrowserConfigParser, cls).parse(config)
 
-        config_section = config.genotype_browser
+        config_section = copy.deepcopy(config.genotype_browser)
         if config_section is None:
             return False
 
@@ -275,6 +276,8 @@ class GenotypeBrowserConfigParser(ConfigParserBase):
                 for inheritance_type
                 in config_section.selected_inheritance_type_filter_values
             ])
+
+        del config.genotypeBrowser
 
         return Box(
             config_section, camel_killer_box=True, default_box=True,
