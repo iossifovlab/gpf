@@ -19,22 +19,15 @@ from dae.backends.configure import Configure
 from dae.backends.dae.loader import RawDaeLoader
 from dae.backends.dae.raw_dae import RawDAE, RawDenovo
 
-from dae.backends.vcf.raw_vcf import RawVcfVariants
 from dae.backends.vcf.loader import RawVcfLoader
-
-from dae.backends.vcf.annotate_allele_frequencies import \
-    VcfAlleleFrequencyAnnotator
 
 from dae.backends.import_commons import \
     construct_import_annotation_pipeline
-from dae.tools.vcf2parquet import import_vcf
 from dae.pedigrees.pedigree_reader import PedigreeReader
 from dae.pedigrees.family import FamiliesData
 from dae.utils.helpers import pedigree_from_path
 from dae.backends.impala.parquet_io import ParquetManager
 from dae.backends.storage.impala_genotype_storage import ImpalaGenotypeStorage
-
-from dae.backends.import_commons import construct_import_annotation_pipeline
 
 from dae.tools.vcf2parquet import vcf2parquet
 
@@ -86,8 +79,6 @@ def default_gene_models(global_gpf_instance):
 
 @pytest.fixture(scope='session')
 def mock_genomes_db(monkeysession, default_gene_models, default_genome):
-    # genome = mocker.Mock()
-    # genome.getSequence = lambda _, start, end: 'A' * (end - start + 1)
 
     def fake_init(self, dae_dir, conf_file=None):
         self.dae_dir = None
@@ -111,7 +102,8 @@ def mock_genomes_db(monkeysession, default_gene_models, default_genome):
     )
     monkeysession.setattr(
         'dae.GenomesDB.GenomesDB.get_genome_file',
-        lambda self, _=None: './genomes/GATK_ResourceBundle_5777_b37_phiX174/chrAll.fa'
+        lambda self, _=None:
+            './genomes/GATK_ResourceBundle_5777_b37_phiX174/chrAll.fa'
     )
     monkeysession.setattr(
         'dae.GenomesDB.GenomesDB.get_gene_model_id',
@@ -389,7 +381,8 @@ def variants_vcf(genomes_db, default_annotation_pipeline):
         fvars = RawVcfLoader.load_raw_vcf_variants(
             ped_df, conf.vcf.vcf
         )
-        fvars.annot_df = default_annotation_pipeline.annotate_df(fvars.annot_df)
+        fvars.annot_df = \
+            default_annotation_pipeline.annotate_df(fvars.annot_df)
         RawVcfLoader.save_annotation_file(fvars.annot_df, conf.vcf.annotation)
 
         return fvars

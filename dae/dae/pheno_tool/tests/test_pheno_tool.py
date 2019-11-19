@@ -165,7 +165,6 @@ def test_join_pheno_df_with_empty_pheno_df():
         PhenoTool.join_pheno_df_with_variants(pheno_df, variants)
 
 
-@pytest.mark.skip
 def test_normalize_df():
     pheno_df = pd.DataFrame([{'person_id': 112233, 'i1.m1': 1e6,
                               'i1.m2': 1e3},

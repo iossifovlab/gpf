@@ -86,10 +86,12 @@ def default_gene_models(global_gpf_instance):
 
 
 @pytest.fixture(scope='session')
-def mock_genomes_db(monkeysession, default_gene_models):
-    class FakeGenome:
-        def getSequence(_, start, end):
-            return 'A' * (end - start + 1)
+def default_genome(global_gpf_instance):
+    return global_gpf_instance.genomes_db.get_genome()
+
+
+@pytest.fixture(scope='session')
+def mock_genomes_db(monkeysession, default_gene_models, default_genome):
 
     def fake_init(self, dae_dir, conf_file=None):
         self.dae_dir = None
@@ -101,11 +103,11 @@ def mock_genomes_db(monkeysession, default_gene_models):
 
     monkeysession.setattr(
         'dae.GenomesDB.GenomesDB.get_genome',
-        lambda self: FakeGenome()
+        lambda self: default_genome
     )
     monkeysession.setattr(
         'dae.GenomesDB.GenomesDB.get_genome_from_file',
-        lambda self, _=None: FakeGenome()
+        lambda self, _=None: default_genome
     )
     monkeysession.setattr(
         'dae.GenomesDB.GenomesDB.get_gene_models',

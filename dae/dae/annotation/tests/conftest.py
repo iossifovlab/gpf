@@ -30,10 +30,7 @@ def dae_config_fixture():
 
 @pytest.fixture(scope='session')
 def mocked_gpf_instance(mock_genomes_db, dae_config_fixture):
-    gpf_instance = GPFInstance(work_dir=relative_to_this_test_folder('fixtures'))
-    gpf_instance.dae_config = dae_config_fixture
-
-    return gpf_instance
+    return GPFInstance(work_dir=relative_to_this_test_folder('fixtures'))
 
 
 @pytest.fixture(scope='session')
