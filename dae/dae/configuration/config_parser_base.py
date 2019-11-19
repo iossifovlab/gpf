@@ -499,28 +499,44 @@ class ConfigParserBase(object):
         return config
 
     @classmethod
+    def _is_property_valid(cls, depthStack, props):
+        n_depth = 0
+        n_prop = 0
+        while n_depth <= len(depthStack) and n_prop < len(props):
+            if n_depth == len(depthStack):
+                if n_prop == len(props)-1:
+                    return True
+                else:
+                    break
+            prop_token = props[n_prop]
+
+            depth_token = depthStack[n_depth]
+            if prop_token == '**':
+                if n_prop == len(props) - 2:
+                    return True
+                else:
+                    next_prop = prop_token[n_prop+1]
+                    while n_depth < len(depthStack):
+                        depth_token = depthStack[n_depth]
+                        if depth_token == next_prop or next_prop == '*':
+                            break
+                        n_depth+=1
+                    n_prop+=1
+            elif prop_token != depth_token and prop_token != '*':
+                return False
+            n_depth+=1
+            n_prop+=1
+        return False
+
+
+    @classmethod
     def _evaluate_included_properties(cls, depthStack):
         depth = len(depthStack)
         split_props = list(map(lambda x: x.split('.'), cls.INCLUDE_PROPERTIES))
         valid_props = list()
         for prop_tokens in split_props:
-            valid = True
-            recursive = False
-            for i, token in enumerate(prop_tokens):
-                if i > depth:
-                    valid = False
-                    break
-                elif i < depth:
-                    node = depthStack[i]
-                    if token == '**':
-                        recursive = True
-                        break
-                    if token != node and token != '*':
-                        valid = False
-                        break
-            if valid:
-                if recursive or i == depth:
-                    valid_props.append(prop_tokens[len(prop_tokens) - 1])
+            if cls._is_property_valid(depthStack, prop_tokens):
+                valid_props.append(prop_tokens[len(prop_tokens) - 1])
         return valid_props
 
     @classmethod
@@ -534,6 +550,8 @@ class ConfigParserBase(object):
                 depthStack.append(k)
                 cls._filter_included(config[k], depthStack)
                 depthStack.pop()
+                if len(config[k]) == 0:
+                    del config[k]
             else:
                 if k not in evaluated_properties \
                         and '*' not in evaluated_properties:
