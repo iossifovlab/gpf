@@ -100,6 +100,24 @@ class DatasetConfigParser(StudyConfigParserBase):
         'studyTypes': _set_union_attribute,
     }
 
+    INCLUDE_PROPERTIES = (
+        'name',
+        'id',
+        'studies',
+        'description',
+        'phenoDB',
+        'hasDenovo',
+        'hasTransmitted',
+        'hasComplex',
+        'hasCNV',
+        'commonReport',
+        'genotypeBrowser',
+        'phenotypeBrowser',
+        'enrichmentTool',
+        'phenotypeTool',
+        'enabled'
+    )
+
     @classmethod
     def _get_dataset_study_configs(cls, dataset_config, study_configs):
         dataset_study_configs = []

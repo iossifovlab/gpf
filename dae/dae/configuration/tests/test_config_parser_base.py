@@ -40,6 +40,53 @@ class ConfigParserTestWrapper(ConfigParserBase):
     }
 
 
+class ConfigParserIncludeTestWrapper(ConfigParserTestWrapper):
+
+    INCLUDE_PROPERTIES = (
+        'list',
+        'set',
+        'bool',
+        'missing',
+        'int',
+        'selector',
+        'selector_no_selected',
+        'to_verify1',
+        'to_verify2',
+        'to_verify3',
+    )
+
+
+class ConfigParserIncludeWildcardTestWrapper1(ConfigParserTestWrapper):
+
+    INCLUDE_PROPERTIES = (
+        '*'
+    )
+
+
+class ConfigParserIncludeWildcardTestWrapper2(ConfigParserTestWrapper):
+
+    INCLUDE_PROPERTIES = (
+        '*',
+        '**.*'
+    )
+
+
+class ConfigParserIncludeWildcardTestWrapper3(ConfigParserTestWrapper):
+
+    INCLUDE_PROPERTIES = (
+        'ayayaya.*',
+        'asdf.*.guitarman'
+    )
+
+
+class ConfigParserIncludeWildcardTestWrapper4(ConfigParserTestWrapper):
+
+    INCLUDE_PROPERTIES = (
+        'asdf.**.guitarman',
+        'asf'
+    )
+
+
 class SectionConfigParserTestWrapper(ConfigParserTestWrapper):
 
     SECTION = 'section'
@@ -444,6 +491,204 @@ def test_cast_to_bool():
 
     assert config['bool'] is False
     assert config['list'] == 'a,b'
+
+
+def test_include_properties():
+    config = ConfigParserIncludeTestWrapper._filter_included(
+        Box({'bool': 'no', 'list': 'a,b', 'bepis': 'hihihi'})
+    )
+
+    assert len(config) == 2
+
+    assert 'bepis' not in config
+
+
+def test_include_properties_wildcards_1():
+    config = ConfigParserIncludeWildcardTestWrapper1._filter_included(
+        Box({'bool': 'no', 'list': 'a,b', 'bee': 'bzzzzzzzzzzzzz'})
+    )
+
+    assert len(config) == 3
+    assert 'bool' in config
+    assert 'list' in config
+    assert 'bee' in config
+
+
+def test_include_properties_wildcards_2():
+    config = ConfigParserIncludeWildcardTestWrapper1._filter_included(
+        Box(
+            {
+                'bool': 'no',
+                'list': 'a,b',
+                'free': 'man',
+                'no': Box(
+                    {
+                        'asdf': 'ghjk',
+                        'aaaa': 'bbbb'
+                    }
+                )
+            }
+        )
+    )
+
+    assert len(config) == 3
+
+    assert 'bool' in config
+    assert 'list' in config
+    assert 'free' in config
+    assert 'no' not in config
+
+
+def test_include_properties_wildcards_3():
+    config = ConfigParserIncludeWildcardTestWrapper2._filter_included(
+        Box(
+            {
+                'bool': 'no',
+                'list': 'a,b',
+                'bionic': 'man',
+                'no': Box(
+                    {
+                        'asdf': 'ghjk',
+                        'aaaa': 'bbbb',
+                        'ka6onka6on': Box(
+                            {
+                                'uh': 'oh'
+                            }
+                        )
+                    }
+                )
+            }
+        )
+    )
+
+    assert len(config) == 4
+
+    assert 'bool' in config
+    assert 'list' in config
+    assert 'bionic' in config
+    assert 'no' in config
+    assert isinstance(config['no'], Box)
+    assert len(config['no']) == 3
+    assert 'asdf' in config['no']
+    assert 'aaaa' in config['no']
+    assert 'ka6onka6on' in config['no']
+    assert isinstance(config['no']['ka6onka6on'], Box)
+    assert len(config['no']['ka6onka6on']) == 1
+    assert 'uh' in config['no']['ka6onka6on']
+
+
+def test_include_properties_wildcards_4():
+    config = ConfigParserIncludeWildcardTestWrapper3._filter_included(
+        Box(
+            {
+                'bool': 'no',
+                'ayayaya': Box(
+                    {
+                        'shmukule': 'babule',
+                        'test': Box(
+                            {
+                                'uh': 'oh'
+                            }
+                        )
+                    }
+                ),
+                'asdf': Box(
+                    {
+                        'asdf': 'ghjk',
+                        'aaaa': 'bbbb',
+                        'brbr': Box(
+                            {
+                                'guitarman': 'deng',
+                                'heli': 'brbrbrbr'
+                            }
+                        )
+                    }
+                ),
+                'decoy': Box(
+                    {
+                        'asdf': 'ghjk'
+                    }
+                )
+            }
+        )
+    )
+
+    assert len(config) == 2
+
+    assert 'ayayaya' in config
+    assert isinstance(config['ayayaya'], Box)
+    assert len(config['ayayaya']) == 1
+    assert 'shmukule' in config['ayayaya']
+    assert 'asdf' in config
+    assert isinstance(config['asdf'], Box)
+    assert len(config['asdf']) == 1
+    assert 'brbr' in config['asdf']
+    assert isinstance(config['asdf']['brbr'], Box)
+    assert len(config['asdf']['brbr']) == 1
+    assert 'guitarman' in config['asdf']['brbr']
+
+
+def test_include_properties_wildcards_5():
+    config = ConfigParserIncludeWildcardTestWrapper4._filter_included(
+        Box(
+            {
+                'bool': 'no',
+                'ayayaya': Box(
+                    {
+                        'test': Box(
+                            {
+                                'guitarman': 'deng'
+                            }
+                        )
+                    }
+                ),
+                'asdf': Box(
+                    {
+                        'brbr': Box(
+                            {
+                                'guitarman': 'test1'
+                            }
+                        ),
+                        'second': Box(
+                            {
+                                'drdrdr': Box(
+                                    {
+                                        'guitarman': 'test2'
+                                    }
+                                )
+                            }
+                        )
+                    }
+                ),
+                'flying': Box(
+                    {
+                        'skeleton': Box(
+                            {
+                                'guitarman': 'hell'
+                            }
+                        )
+                    }
+                )
+            }
+        )
+    )
+
+    assert len(config) == 1
+
+    assert 'asdf' in config
+    assert isinstance(config['asdf'], Box)
+    assert len(config['asdf']) == 2
+    assert 'brbr' in config['asdf']
+    assert 'second' in config['asdf']
+    assert isinstance(config['asdf']['brbr'], Box)
+    assert isinstance(config['asdf']['second'], Box)
+    assert len(config['asdf']['brbr']) == 1
+    assert 'guitarman' in config['asdf']['brbr']
+    assert len(config['asdf']['second']) == 1
+    assert 'drdrdr' in config['asdf']['second']
+    assert isinstance(config['asdf']['second']['drdrdr'], Box)
+    assert len(config['asdf']['second']['drdrdr']) == 1
+    assert 'guitarman' in config['asdf']['second']['drdrdr']
 
 
 def test_cast_to_int():
