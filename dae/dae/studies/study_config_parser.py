@@ -96,6 +96,7 @@ class StudyConfigParser(StudyConfigParserBase):
 
     INCLUDE_PROPERTIES = StudyConfigParserBase.INCLUDE_PROPERTIES + (
         'work_dir',
+        'wd',
         'genotype_storage'
     )
 
