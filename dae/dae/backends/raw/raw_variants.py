@@ -21,9 +21,9 @@ class RawFamilyVariants:
             source_filename=None):
         self.families = families
         self.transmission_type = transmission_type
-        self.source_filename = source_filename
-        self.annot_df = None
-        self.annotation_schema = None
+
+    def full_variants_iterator(self):
+        raise NotImplementedError()
 
     @staticmethod
     def filter_regions(v, regions):
@@ -149,12 +149,7 @@ class RawFamilyVariants:
                 return False
         return True
 
-    def full_variants_iterator(self):
-        raise NotImplementedError()
-
     def query_variants(self, **kwargs):
-        # annot_df = self.annot_df
-
         if kwargs.get("roles") is not None:
             parsed = kwargs['roles']
             if isinstance(parsed, list):
@@ -210,10 +205,6 @@ class RawFamilyVariants:
                 if alleles_matched:
                     v.set_matched_alleles(alleles_matched)
                     yield v
-
-    def annotate(self, annotation_pipeline):
-        self.annot_df = annotation_pipeline.annotate_df(self.annot_df)
-        self.annotation_schema = annotation_pipeline.build_annotation_schema()
 
 
 class RawMemoryVariants(RawFamilyVariants):

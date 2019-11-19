@@ -19,9 +19,7 @@ from dae.backends.raw.loader import AlleleFrequencyDecorator, \
     AnnotationPipelineDecorator
 from dae.backends.raw.raw_variants import RawMemoryVariants
 
-from dae.backends.dae.loader import RawDaeLoader, DenovoLoader
-from dae.backends.dae.raw_dae import RawDAE
-
+from dae.backends.dae.loader import DaeTransmittedLoader, DenovoLoader
 from dae.backends.vcf.loader import VcfLoader
 
 from dae.backends.import_commons import \
@@ -284,15 +282,19 @@ def dae_transmitted(
     )
     families = FamiliesData.from_pedigree_df(ped_df)
 
-    transmitted = RawDAE(
+    variants_loader = DaeTransmittedLoader(
         families,
         dae_transmitted_config.summary_filename,
         dae_transmitted_config.toomany_filename,
         genome=default_genome,
         region=None,
     )
+    variants_loader = AnnotationPipelineDecorator(
+        variants_loader,
+        annotation_pipeline_internal
+    )
 
-    return transmitted
+    return variants_loader
 
 
 @pytest.fixture(scope='session')
@@ -459,13 +461,12 @@ def raw_dae(config_dae, default_genome):
             dae_transmitted_config.family_filename
         )
 
-        dae = RawDAE(
+        dae = DaeTransmittedLoader(
             config.dae.summary_filename,
             config.dae.toomany_filename,
             ped_df,
             region=region,
-            genome=default_genome,
-            annotator=None)
+            genome=default_genome)
         return dae
     return builder
 
@@ -477,23 +478,6 @@ def config_denovo():
             os.path.join('fixtures', path))
         config = Configure.from_prefix_denovo(fullpath)
         return config.denovo
-    return builder
-
-
-@pytest.fixture(scope='session')
-def raw_denovo(config_denovo, default_genome):
-    def builder(path):
-        config = config_denovo(path)
-
-        fvars = RawDaeLoader.load_raw_denovo_variants(
-            config.family_filename,
-            config.denovo_filename,
-            None,
-            default_genome,
-            family_format='simple'
-        )
-
-        return fvars
     return builder
 
 

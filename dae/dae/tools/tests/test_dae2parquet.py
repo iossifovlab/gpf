@@ -8,7 +8,7 @@ from dae.tools.dae2parquet import parse_cli_arguments, dae_build_makefile
 from dae.backends.raw.loader import AnnotationPipelineDecorator
 
 from dae.backends.impala.parquet_io import ParquetManager
-from dae.backends.dae.loader import RawDaeLoader, DenovoLoader
+from dae.backends.dae.loader import DaeTransmittedLoader, DenovoLoader
 
 from dae.annotation.tools.file_io_parquet import ParquetReader
 
@@ -72,19 +72,25 @@ def test_dae2parquet_transmitted(
 
     genome = genomes_db.get_genome()
 
-    fvars = RawDaeLoader.load_raw_dae_transmitted_variants(
-        dae_transmitted_config.family_filename,
+    families = FamiliesData.load_simple_families_file(
+                dae_transmitted_config.family_filename
+    )
+    variants_loader = DaeTransmittedLoader(
+        families,
         dae_transmitted_config.summary_filename,
         dae_transmitted_config.toomany_filename,
         genome
     )
-    fvars.annotate(annotation_pipeline_internal)
+    variants_loader = AnnotationPipelineDecorator(
+        variants_loader, annotation_pipeline_internal)
 
     parquet_filenames = ParquetManager.build_parquet_filenames(
         temp_dirname, bucket_index=100, study_id="test_dae_transmitted"
     )
-    ParquetManager.pedigree_to_parquet(fvars, parquet_filenames.pedigree)
-    ParquetManager.variants_to_parquet(fvars, parquet_filenames.variant)
+    ParquetManager.pedigree_to_parquet(
+        variants_loader, parquet_filenames.pedigree)
+    ParquetManager.variants_to_parquet(
+        variants_loader, parquet_filenames.variant)
 
     summary = ParquetReader(Box({
         'infile': parquet_filenames.variant,

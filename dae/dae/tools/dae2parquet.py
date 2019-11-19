@@ -12,9 +12,7 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.annotation.tools.annotator_config import annotation_config_cli_options
 
 from dae.backends.raw.loader import AnnotationPipelineDecorator
-from dae.backends.dae.loader import DenovoLoader
-
-from dae.backends.dae.raw_dae import RawDAE
+from dae.backends.dae.loader import DenovoLoader, DaeTransmittedLoader
 
 from dae.backends.import_commons import build_contig_regions, \
     contigs_makefile_generate
@@ -53,7 +51,7 @@ def dae_build_transmitted(annotation_pipeline, genome, argv):
         )
     families = FamiliesData.from_pedigree_df(ped_df)
 
-    fvars = RawDAE(
+    fvars = DaeTransmittedLoader(
         families,
         config.dae.summary_filename,
         config.dae.toomany_filename,
