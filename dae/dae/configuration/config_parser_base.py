@@ -535,7 +535,8 @@ class ConfigParserBase(object):
                 cls._filter_included(config[k], depthStack)
                 depthStack.pop()
             else:
-                if k not in evaluated_properties:
+                if k not in evaluated_properties \
+                        and '*' not in evaluated_properties:
                     del config[k]
 
         return config
