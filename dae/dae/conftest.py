@@ -1,4 +1,5 @@
 import pytest
+from _pytest.monkeypatch import MonkeyPatch
 
 import os
 import glob
@@ -43,6 +44,13 @@ def relative_to_this_test_folder(path):
 
 
 @pytest.fixture(scope='session')
+def monkeysession(request):
+    mp = MonkeyPatch()
+    request.addfinalizer(mp.undo)
+    return mp
+
+
+@pytest.fixture(scope='session')
 def global_gpf_instance():
     return GPFInstance()
 
@@ -72,34 +80,37 @@ def default_gene_models(global_gpf_instance):
     return global_gpf_instance.genomes_db.get_gene_models()
 
 
-@pytest.fixture(scope='function')
-def mock_genomes_db(mocker, default_gene_models, default_genome):
-    # genome = mocker.Mock()
-    # genome.getSequence = lambda _, start, end: 'A' * (end - start + 1)
+@pytest.fixture(scope='session')
+def mock_genomes_db(monkeysession, default_gene_models, default_genome):
 
-    mocker.patch(
-        'dae.GenomesDB.GenomesDB.__init__', return_value=None
+    def fake_init(self, dae_dir, conf_file=None):
+        self.dae_dir = None
+        self.config = None
+
+    monkeysession.setattr(
+        'dae.GenomesDB.GenomesDB.__init__', fake_init
     )
 
-    mocker.patch(
+    monkeysession.setattr(
         'dae.GenomesDB.GenomesDB.get_genome',
-        return_value=default_genome
+        lambda self: default_genome
     )
-    mocker.patch(
+    monkeysession.setattr(
         'dae.GenomesDB.GenomesDB.get_genome_from_file',
-        return_value=default_genome
+        lambda self, _=None: default_genome
     )
-    mocker.patch(
+    monkeysession.setattr(
         'dae.GenomesDB.GenomesDB.get_gene_models',
-        return_value=default_gene_models
+        lambda self, _=None: default_gene_models
     )
-    mocker.patch(
+    monkeysession.setattr(
         'dae.GenomesDB.GenomesDB.get_genome_file',
-        return_value='./genomes/GATK_ResourceBundle_5777_b37_phiX174/chrAll.fa'
+        lambda self, _=None:
+            './genomes/GATK_ResourceBundle_5777_b37_phiX174/chrAll.fa'
     )
-    mocker.patch(
+    monkeysession.setattr(
         'dae.GenomesDB.GenomesDB.get_gene_model_id',
-        return_value='RefSeq2013'
+        lambda self: 'RefSeq2013'
     )
 
 

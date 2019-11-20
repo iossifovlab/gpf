@@ -1,4 +1,5 @@
 from box import Box
+import copy
 
 from dae.configuration.config_parser_base import ConfigParserBase
 
@@ -53,6 +54,46 @@ class GenotypeBrowserConfigParser(ConfigParserBase):
         'inheritanceTypeFilter': verify_inheritance_types,
         'selectedInheritanceTypeFilterValues': verify_inheritance_types,
     }
+
+    INCLUDE_PROPERTIES = (
+        'hasCNV',
+        'hasComplex',
+        'hasStudyTypes',
+        'hasStudyFilters',
+        'hasFamilyFilters',
+        'hasPresentInRole',
+        'hasPresentInChild',
+        'hasPresentInParent',
+        'hasPedigreeSelector',
+        'hasGraphicalPreview',
+        'inheritanceTypeFilter',
+        'selectedInheritanceTypeFilterValues',
+        'familyFilters',
+        'selectedPhenoFiltersValues',
+        'phenoFilters.*.name',
+        'phenoFilters.*.measureType',
+        'phenoFilters.*.filter',
+        'selectedPresentInRoleValues',
+        'presentInRole.*.id',
+        'presentInRole.*.name',
+        'presentInRole.*.roles',
+        'selectedGenotypeColumnValues',
+        'genotype.*.id',
+        'genotype.*.name',
+        'genotype.*.source',
+        'genotype.*.slots',
+        'selectedPhenoColumnValues',
+        'pheno.*.id',
+        'pheno.*.name',
+        'pheno.*.slots',
+        'selectedInRolesValues',
+        'inRoles.*.id',
+        'inRoles.*.destination',
+        'inRoles.*.roles',
+        'previewColumns',
+        'downloadColumns',
+        '**.destination'
+    )
 
     @classmethod
     def _parse_pheno_filter(cls, pheno_filters):
@@ -216,7 +257,7 @@ class GenotypeBrowserConfigParser(ConfigParserBase):
             return None
         config = super(GenotypeBrowserConfigParser, cls).parse(config)
 
-        config_section = config.genotype_browser
+        config_section = copy.deepcopy(config.genotype_browser)
         if config_section is None:
             return False
 
@@ -235,6 +276,8 @@ class GenotypeBrowserConfigParser(ConfigParserBase):
                 for inheritance_type
                 in config_section.selected_inheritance_type_filter_values
             ])
+
+        del config.genotypeBrowser
 
         return Box(
             config_section, camel_killer_box=True, default_box=True,

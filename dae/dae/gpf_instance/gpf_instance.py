@@ -21,46 +21,107 @@ from dae.backends.storage.genotype_storage_factory import \
     GenotypeStorageFactory
 
 
+def cached(prop):
+    cached_val_name = '_' + prop.__name__
+
+    def wrap(self):
+        if getattr(self, cached_val_name, None) is None:
+            setattr(self, cached_val_name, prop(self))
+        return getattr(self, cached_val_name)
+
+    return wrap
+
+
 class GPFInstance(object):
 
-    def __init__(self, config_file='DAE.conf', work_dir=None, defaults=None):
+    def __init__(self, config_file='DAE.conf', work_dir=None, defaults=None,
+                 load_eagerly=False):
         self.dae_config = DAEConfigParser.read_and_parse_file_configuration(
             config_file=config_file, work_dir=work_dir, defaults=defaults
         )
 
-        self.genomes_db = GenomesDB(
+        if load_eagerly:
+            self.genomes_db
+            self.pheno_factory
+            self.gene_info_config
+            self.weights_factory
+            self.score_config
+            self.scores_factory
+            self.genotype_storage_factory
+            self.variants_db
+            self.common_report_facade
+            self.gene_sets_collections
+            self.denovo_gene_set_facade
+            self.background_facade
+
+    @property
+    @cached
+    def genomes_db(self):
+        return GenomesDB(
             self.dae_config.dae_data_dir,
             self.dae_config.genomes_db.conf_file
         )
 
-        self.pheno_factory = PhenoFactory(dae_config=self.dae_config)
+    @property
+    @cached
+    def pheno_factory(self):
+        return PhenoFactory(dae_config=self.dae_config)
 
-        self.gene_info_config = \
-            GeneInfoConfigParser.read_and_parse_file_configuration(
-                self.dae_config.gene_info_db.conf_file,
-                self.dae_config.dae_data_dir
-            )
-        self.weights_factory = \
-            WeightsFactory(config=self.gene_info_config.gene_weights)
+    @property
+    @cached
+    def gene_info_config(self):
+        return GeneInfoConfigParser.read_and_parse_file_configuration(
+            self.dae_config.gene_info_db.conf_file,
+            self.dae_config.dae_data_dir
+        )
 
-        self.score_config = \
-            ScoreConfigParser.read_and_parse_file_configuration(
-                self.dae_config.genomic_scores_db.conf_file,
-                self.dae_config.dae_data_dir
-            )
-        self.scores_factory = ScoresFactory(self.score_config)
+    @property
+    @cached
+    def weights_factory(self):
+        return WeightsFactory(config=self.gene_info_config.gene_weights)
 
-        self.genotype_storage_factory = GenotypeStorageFactory(self.dae_config)
+    @property
+    @cached
+    def score_config(self):
+        return ScoreConfigParser.read_and_parse_file_configuration(
+            self.dae_config.genomic_scores_db.conf_file,
+            self.dae_config.dae_data_dir
+        )
 
-        self.variants_db = VariantsDb(
+    @property
+    @cached
+    def scores_factory(self):
+        return ScoresFactory(self.score_config)
+
+    @property
+    @cached
+    def genotype_storage_factory(self):
+        return GenotypeStorageFactory(self.dae_config)
+
+    @property
+    @cached
+    def variants_db(self):
+        return VariantsDb(
             self.dae_config, self.pheno_factory, self.weights_factory,
             self.genomes_db, self.genotype_storage_factory
         )
 
-        self.common_report_facade = CommonReportFacade(self.variants_db)
+    @property
+    @cached
+    def common_report_facade(self):
+        return CommonReportFacade(self.variants_db)
 
-        self.gene_sets_collections = \
-            GeneSetsCollections(self.variants_db, self.gene_info_config)
-        self.denovo_gene_set_facade = DenovoGeneSetFacade(self.variants_db)
+    @property
+    @cached
+    def gene_sets_collections(self):
+        return GeneSetsCollections(self.variants_db, self.gene_info_config)
 
-        self.background_facade = BackgroundFacade(self.variants_db)
+    @property
+    @cached
+    def denovo_gene_set_facade(self):
+        return DenovoGeneSetFacade(self.variants_db)
+
+    @property
+    @cached
+    def background_facade(self):
+        return BackgroundFacade(self.variants_db)
