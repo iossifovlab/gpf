@@ -157,6 +157,5 @@ def test_quads_f1_config_genotype_browser_columns(
         assert gc_slot['format'] == e_slot['format']
 
 
-def test_quads_f1_config_work_dir(quads_f1_config):
-    assert quads_f1_config['work_dir'] == \
-            '/home/ivo/gpf/dae/dae/studies/tests/fixtures/studies/quads_f1'
+def test_quads_f1_config_work_dir(quads_f1_config, fixtures_dir):
+    assert quads_f1_config['work_dir'] == fixtures_dir

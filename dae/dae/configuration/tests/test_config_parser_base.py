@@ -109,7 +109,7 @@ def test_read_and_parse_directory_configurations():
     assert sorted([config.dir.wd for config in configs]) == sorted([
         relative_to_this_test_folder('fixtures/configs'),
         relative_to_this_test_folder('fixtures/configs'),
-        relative_to_this_test_folder('fixtures/configs')
+        relative_to_this_test_folder('fixtures/configs/sub_configs')
     ])
 
     assert configs[0].dir.int == 7
@@ -196,7 +196,7 @@ def test_read_directory_configurations():
     assert sorted([config.dir.wd for config in configs]) == sorted([
         relative_to_this_test_folder('fixtures/configs'),
         relative_to_this_test_folder('fixtures/configs'),
-        relative_to_this_test_folder('fixtures/configs')
+        relative_to_this_test_folder('fixtures/configs/sub_configs')
     ])
 
     assert configs[0].dir.int == '7'

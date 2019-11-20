@@ -119,10 +119,9 @@ def test_composite_dataset_config_genotype_browser_overwrite(
 
 
 def test_dataset_quads_work_dir(
-        quads_composite_dataset_config):
+        quads_composite_dataset_config, fixtures_dir):
 
     assert quads_composite_dataset_config is not None
     config = quads_composite_dataset_config
 
-    assert config['work_dir'] == \
-        '/home/ivo/gpf/dae/dae/studies/tests/fixtures/datasets'
+    assert config['work_dir'] == fixtures_dir
