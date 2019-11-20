@@ -20,7 +20,13 @@ def test_cache_file(f4_trio_denovo_gene_set_config):
 
 
 def test_people_groups(f4_trio_denovo_gene_set_config):
-    assert f4_trio_denovo_gene_set_config.people_groups == ['phenotype']
+    people_groups = f4_trio_denovo_gene_set_config.people_groups
+
+    assert isinstance(people_groups, dict)
+    assert len(people_groups) == 1
+    assert 'phenotype' in people_groups
+    assert people_groups['phenotype']['name'] == 'Phenotype'
+    assert people_groups['phenotype']['source'] == 'phenotype'
 
 
 def test_gene_sets_names(f4_trio_denovo_gene_set_config):
@@ -84,15 +90,6 @@ def test_standard_criterias(f4_trio_denovo_gene_set_config):
     assert sexes[2]['property'] == 'sexes'
     assert sexes[2]['name'] == 'Unspecified'
     assert sexes[2]['value'] == [Sex.unspecified]
-
-
-def test_denovo_gene_sets(f4_trio_denovo_gene_set_config):
-    denovo_gene_sets = f4_trio_denovo_gene_set_config.denovo_gene_sets
-
-    assert len(denovo_gene_sets) == 1
-
-    assert denovo_gene_sets['phenotype']['name'] == 'Phenotype'
-    assert denovo_gene_sets['phenotype']['source'] == 'phenotype'
 
 
 def test_empty():

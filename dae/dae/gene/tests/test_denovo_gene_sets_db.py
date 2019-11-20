@@ -19,7 +19,7 @@ def name_in_gene_sets(gene_sets, name, count=None):
 
 
 def test_get_all_descriptions(denovo_gene_sets_db):
-    gene_set_descriptions = denovo_gene_sets_db.get_descriptions()
+    gene_set_descriptions = denovo_gene_sets_db.get_gene_set_descriptions()
 
     assert gene_set_descriptions['desc'] == 'Denovo'
     assert gene_set_descriptions['name'] == 'denovo'
@@ -28,7 +28,7 @@ def test_get_all_descriptions(denovo_gene_sets_db):
 
 
 def test_get_f4_descriptions(denovo_gene_sets_db):
-    gene_set_descriptions = denovo_gene_sets_db.get_descriptions(
+    gene_set_descriptions = denovo_gene_sets_db.get_gene_set_descriptions(
         permitted_datasets=['f4_trio']
     )
 
@@ -52,7 +52,8 @@ def test_get_f4_descriptions(denovo_gene_sets_db):
 ])
 def test_get_denovo_gene_set_f4(
         denovo_gene_sets_db, denovo_gene_set_id, people_groups, count):
-    dgs = denovo_gene_sets_db.get_gene_set(denovo_gene_set_id,
+    dgs = denovo_gene_sets_db.get_gene_set(
+        denovo_gene_set_id,
         {'f4_trio': {'phenotype': people_groups}}
     )
 
@@ -71,7 +72,8 @@ def test_get_denovo_gene_set_f4(
 ])
 def test_get_denovo_gene_set_f4_empty(
         denovo_gene_sets_db, denovo_gene_set_id, people_groups):
-    dgs = denovo_gene_sets_db.get_gene_set(denovo_gene_set_id,
+    dgs = denovo_gene_sets_db.get_gene_set(
+        denovo_gene_set_id,
         {'f4_trio': {'phenotype': people_groups}}
     )
 
@@ -79,7 +81,7 @@ def test_get_denovo_gene_set_f4_empty(
 
 
 def test_get_denovo_gene_sets_f4_autism(denovo_gene_sets_db):
-    dgs = denovo_gene_sets_db.get_gene_sets(
+    dgs = denovo_gene_sets_db.get_all_gene_sets(
         {'f4_trio': {'phenotype': ['autism']}}
     )
 
@@ -92,7 +94,7 @@ def test_get_denovo_gene_sets_f4_autism(denovo_gene_sets_db):
 
 
 def test_get_denovo_gene_sets_f4_unaffected(denovo_gene_sets_db):
-    dgs = denovo_gene_sets_db.get_gene_sets(
+    dgs = denovo_gene_sets_db.get_all_gene_sets(
         {'f4_trio': {'phenotype': ['unaffected']}}
     )
 
@@ -102,7 +104,7 @@ def test_get_denovo_gene_sets_f4_unaffected(denovo_gene_sets_db):
 
 
 def test_get_denovo_gene_sets_f4_autism_unaffected(denovo_gene_sets_db):
-    dgs = denovo_gene_sets_db.get_gene_sets(
+    dgs = denovo_gene_sets_db.get_all_gene_sets(
         {'f4_trio': {'phenotype': ['autism', 'unaffected']}}
     )
 
