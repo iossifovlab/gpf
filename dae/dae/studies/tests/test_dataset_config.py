@@ -1,4 +1,5 @@
 import pytest
+from dae.studies.tests.conftest import datasets_dir
 
 
 def test_dataset_configs_simple(dataset_configs):
@@ -119,9 +120,10 @@ def test_composite_dataset_config_genotype_browser_overwrite(
 
 
 def test_dataset_quads_work_dir(
-        quads_composite_dataset_config, fixtures_dir):
+        quads_composite_dataset_config):
 
     assert quads_composite_dataset_config is not None
     config = quads_composite_dataset_config
 
-    assert config['work_dir'] == fixtures_dir
+    assert config['work_dir'] == \
+        datasets_dir()
