@@ -212,7 +212,7 @@ class ConfigParserBase(object):
 
         for config_path in config_paths:
             config = cls.read_file_configuration(
-                config_path, enabled_dir, defaults
+                config_path, os.path.dirname(config_path), defaults
             )
 
             if config:

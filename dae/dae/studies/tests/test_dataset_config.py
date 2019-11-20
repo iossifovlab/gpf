@@ -116,3 +116,13 @@ def test_composite_dataset_config_genotype_browser_overwrite(
         'family', 'phenotype', 'variant', 'best', 'fromparent', 'inchild',
         'effect', 'count', 'geneeffect', 'effectdetails'
     ]
+
+
+def test_dataset_quads_work_dir(
+        quads_composite_dataset_config):
+
+    assert quads_composite_dataset_config is not None
+    config = quads_composite_dataset_config
+
+    assert config['work_dir'] == \
+        '/home/ivo/gpf/dae/dae/studies/tests/fixtures/datasets'

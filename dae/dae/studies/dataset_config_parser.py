@@ -115,7 +115,9 @@ class DatasetConfigParser(StudyConfigParserBase):
         'phenotypeBrowser',
         'enrichmentTool',
         'phenotypeTool',
-        'enabled'
+        'enabled',
+        'work_dir',
+        'wd'
     )
 
     @classmethod
