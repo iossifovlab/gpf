@@ -31,10 +31,11 @@ class GeneSetsCollectionsView(GeneSetsBaseView):
         gene_sets_collections = deepcopy(
             self.gene_sets_db.get_collections_descriptions()
         )
-        denovo_gene_sets = \
-            deepcopy(
-                self.denovo_gene_sets_db.get_descriptions(permitted_datasets)
+        denovo_gene_sets = deepcopy(
+            self.denovo_gene_sets_db.get_gene_set_descriptions(
+                permitted_datasets
             )
+        )
 
         gene_sets_collections[1:1] = [denovo_gene_sets]
         return Response(gene_sets_collections, status=status.HTTP_200_OK)
@@ -73,7 +74,7 @@ class GeneSetsView(GeneSetsBaseView):
         if gene_sets_collection_id == 'denovo':
             if len(self.denovo_gene_sets_db) == 0:
                 return Response(status=status.HTTP_404_NOT_FOUND)
-            gene_sets = self.denovo_gene_sets_db.get_gene_sets(
+            gene_sets = self.denovo_gene_sets_db.get_all_gene_sets(
                 gene_sets_types,
                 self.get_permitted_datasets(request.user)
             )

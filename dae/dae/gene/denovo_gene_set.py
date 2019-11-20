@@ -10,7 +10,7 @@ from dae.variants.attributes import Inheritance
 LOGGER = logging.getLogger(__name__)
 
 
-class DenovoGeneSet(object):
+class DenovoGeneSetCollection(object):
 
     def __init__(self, study, config):
         self.study = study
@@ -19,19 +19,19 @@ class DenovoGeneSet(object):
         self.standard_criterias = self.config.standard_criterias
         self.recurrency_criterias = self.config.recurrency_criterias
         self.gene_sets_names = self.config.gene_sets_names
-        if not self.config.denovo_gene_sets:
+        if not self.config.people_groups:
             return None
-        self.denovo_gene_sets = self.config.denovo_gene_sets
+        self.people_groups = self.config.people_groups
 
         self.cache = {}
 
     def load(self, build_cache=False):
         if len(self.cache) == 0:
             self._load_cache_from_json(build_cache=build_cache)
-        return DenovoGeneSet.get_gene_sets([self])
+        return DenovoGeneSetCollection.get_gene_sets([self])
 
     def _load_cache_from_json(self, build_cache=False):
-        for people_group_id, _ in self.denovo_gene_sets.items():
+        for people_group_id in self.people_groups:
             cache_dir = DenovoGeneSetConfigParser.denovo_gene_set_cache_file(
                 self.config, people_group_id
             )
@@ -46,7 +46,7 @@ class DenovoGeneSet(object):
             self.cache[people_group_id] = self._load_cache(cache_dir)
 
     def build_cache(self, people_group_ids=None):
-        for people_group_id, _ in self.denovo_gene_sets.items():
+        for people_group_id in self.people_groups:
             if people_group_ids and \
                     people_group_id not in people_group_ids:
                 continue
@@ -93,7 +93,7 @@ class DenovoGeneSet(object):
         return res
 
     def _generate_gene_set_for(self, people_group_id):
-        people_group_source = self.denovo_gene_sets[people_group_id]['source']
+        people_group_source = self.people_groups[people_group_id]['source']
         people_group_values = [
             str(p) for p in self.study.get_pedigree_values(people_group_source)
         ]
@@ -101,9 +101,7 @@ class DenovoGeneSet(object):
         cache = {value: {} for value in people_group_values}
 
         variants = self.study.query_variants(
-            inheritance=str(Inheritance.denovo.name),
-            # status='{} or {}'.format(
-            #     Status.affected.name, Status.unaffected.name)
+            inheritance=str(Inheritance.denovo.name)
         )
         variants = list(variants)
 
@@ -143,30 +141,37 @@ class DenovoGeneSet(object):
                 'peopleGroupName': people_group['name'],
                 'peopleGroupLegend': self.get_gene_set_legend(people_group_id)
             }
-            for people_group_id, people_group in self.denovo_gene_sets.items()
+            for people_group_id, people_group in self.people_groups.items()
         ]
 
     @staticmethod
     def _format_description(
-            gene_sets_types, include_datasets_desc=False,
+            denovo_gene_set_spec, include_datasets_desc=False,
             full_description=True):
+
         if full_description:
-            return ";".join([
-                "{}:{}:{}".format(d, pg_id, ",".join(p))
-                for d, pg in gene_sets_types.items() for pg_id, p in pg.items()
+            return ';'.join([
+                '{}:{}:{}'.format(genotype_data, group_id, ','.join(values))
+                for genotype_data, people_group in denovo_gene_set_spec.items()
+                for group_id, values in people_group.items()
             ])
 
-        people_groups = ', '.join(set(chain(*list([
-            p for pg in gene_sets_types.values() for p in pg.values()]))))
+        all_people_group_values = ', '.join(set(chain(
+            *[people_group.values()
+              for people_group in denovo_gene_set_spec.values()])
+        ))
+
         if include_datasets_desc:
             return '{}::{}'.format(
                 ', '.join(set([
-                    '{}:{}'.format(d, pg_id)
-                    for d, pg in gene_sets_types.items()
-                    for pg_id, _ in pg.items()])),
-                people_groups)
+                    f'{genotype_data}:{people_group_id}'
+                    for genotype_data, people_group
+                    in denovo_gene_set_spec.items()
+                    for people_group_id in people_group])
+                ),
+                all_people_group_values)
         else:
-            return people_groups
+            return all_people_group_values
 
     @staticmethod
     def _get_gene_sets_names(dgs):
@@ -214,18 +219,20 @@ class DenovoGeneSet(object):
         return cache
 
     @classmethod
-    def get_gene_sets(cls, denovo_gene_sets, gene_sets_types={}):
-        res = [
-            DenovoGeneSet.get_gene_set(gsn, denovo_gene_sets, gene_sets_types)
-            for gsn in cls._get_gene_sets_names(denovo_gene_sets)
+    def get_gene_sets(cls, denovo_gene_sets, denovo_gene_set_spec={}):
+        sets = [
+            DenovoGeneSetCollection.get_gene_set(
+                name, denovo_gene_sets, denovo_gene_set_spec
+            )
+            for name in cls._get_gene_sets_names(denovo_gene_sets)
         ]
-        return list(filter(None, res))
+        return list(filter(None, sets))
 
     @classmethod
     def get_gene_set(
-            cls, gene_set_id, denovo_gene_sets, gene_sets_types={}):
+            cls, gene_set_id, denovo_gene_sets, denovo_gene_set_spec={}):
         syms = cls._get_gene_set_syms(
-            gene_set_id, denovo_gene_sets, gene_sets_types)
+            gene_set_id, denovo_gene_sets, denovo_gene_set_spec)
         if not syms:
             return None
 
@@ -235,12 +242,12 @@ class DenovoGeneSet(object):
             "syms": syms,
             "desc": "{} ({})".format(
                 gene_set_id,
-                cls._format_description(gene_sets_types)
+                cls._format_description(denovo_gene_set_spec)
             )
         }
 
     @classmethod
-    def _get_gene_set_syms(cls, gene_set_id, dgs, gene_sets_types):
+    def _get_gene_set_syms(cls, gene_set_id, dgs, denovo_gene_set_spec):
         rc = cls._get_recurrency_criterias(dgs)
         criterias = set(gene_set_id.split('.'))
         recurrency_criterias = criterias & set(rc.keys())
@@ -250,7 +257,7 @@ class DenovoGeneSet(object):
         else:
             recurrency_criteria = None
         genes_families = {}
-        for dataset_id, people_group in gene_sets_types.items():
+        for dataset_id, people_group in denovo_gene_set_spec.items():
             for people_group_id, people_group_values in \
                     people_group.items():
                 for people_group_value in people_group_values:

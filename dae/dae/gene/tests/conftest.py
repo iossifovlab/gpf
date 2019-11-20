@@ -8,7 +8,7 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.utils.fixtures import change_environment
 
 from dae.gene.denovo_gene_set_config import DenovoGeneSetConfigParser
-from dae.gene.denovo_gene_set import DenovoGeneSet
+from dae.gene.denovo_gene_set import DenovoGeneSetCollection
 
 from dae.utils.fixtures import path_to_fixtures as _path_to_fixtures
 
@@ -112,7 +112,7 @@ def get_denovo_gene_set_by_id(variants_db_fixture, dgs_id):
     denovo_gene_set_config = DenovoGeneSetConfigParser.parse(
         variants_db_fixture.get_config(dgs_id))
 
-    return DenovoGeneSet(
+    return DenovoGeneSetCollection(
         variants_db_fixture.get(dgs_id), denovo_gene_set_config
     )
 

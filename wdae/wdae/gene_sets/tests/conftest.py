@@ -5,7 +5,7 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 from gpf_instance.gpf_instance import reload_datasets
 
 from dae.gene.denovo_gene_set_config import DenovoGeneSetConfigParser
-from dae.gene.denovo_gene_set import DenovoGeneSet
+from dae.gene.denovo_gene_set import DenovoGeneSetCollection
 
 
 def fixtures_dir():
@@ -55,7 +55,7 @@ def get_denovo_gene_set_by_id(variants_db_fixture, dgs_id):
         variants_db_fixture.get_config(dgs_id)
     )
 
-    return DenovoGeneSet(
+    return DenovoGeneSetCollection(
         variants_db_fixture.get(dgs_id), denovo_gene_set_config
     )
 
