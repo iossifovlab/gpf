@@ -460,9 +460,11 @@ class GtfFileReader:
    @staticmethod
    def gtfParseAttr( stx ):
     atx = {}
-    for x in stx.split('; '):
-        #print x, x.split(' ')
-        n,d = x.split(' ')
+    for x in stx.split(';'):
+        x = x.strip(" ")
+        if not x: continue
+        # print(x, x.split(' '))
+        n,d = [w for w in x.split(' ') if w != '']
         if d.startswith('"') and d.endswith('"'):
           d = d[1:-1]
 
@@ -655,9 +657,9 @@ def gtfGeneModelParser(self, file_name, gene_mapping_file=None, testMode=False):
 
                 continue
 
-          if rx['feature'] in ['UTR','start_codon','stop_codon']:
+          if rx['feature'] in ['UTR','5UTR','3UTR','start_codon','stop_codon']:
                 ix = int(rx['attributes']['exon_number']) # 1-based
-                if rx['feature'] == 'UTR':
+                if 'UTR' in rx['feature']:
                         self.transcriptModels[trID].utrs.append( (rx['start'],rx['end'],ix) )
                         continue
 
@@ -1079,3 +1081,9 @@ def join_gene_models(*gene_models):
 
     return(gm)
 
+if __name__ == "__main__":
+    fn = "../../../tests/gtf/genePred.gtf"
+    gm = GeneModelDB() 
+    print(gtfGeneModelParser(gm, fn, testMode=True))
+    print(infer_format(fn))
+    load_gene_models(fn)
