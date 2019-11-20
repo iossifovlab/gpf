@@ -1,4 +1,5 @@
 import pytest
+from _pytest.monkeypatch import MonkeyPatch
 
 import os
 import glob
@@ -18,22 +19,15 @@ from dae.backends.configure import Configure
 from dae.backends.dae.loader import RawDaeLoader
 from dae.backends.dae.raw_dae import RawDAE, RawDenovo
 
-from dae.backends.vcf.raw_vcf import RawVcfVariants
 from dae.backends.vcf.loader import RawVcfLoader
-
-from dae.backends.vcf.annotate_allele_frequencies import \
-    VcfAlleleFrequencyAnnotator
 
 from dae.backends.import_commons import \
     construct_import_annotation_pipeline
-from dae.tools.vcf2parquet import import_vcf
 from dae.pedigrees.pedigree_reader import PedigreeReader
 from dae.pedigrees.family import FamiliesData
 from dae.utils.helpers import pedigree_from_path
 from dae.backends.impala.parquet_io import ParquetManager
 from dae.backends.storage.impala_genotype_storage import ImpalaGenotypeStorage
-
-from dae.backends.import_commons import construct_import_annotation_pipeline
 
 from dae.tools.vcf2parquet import vcf2parquet
 
@@ -44,6 +38,13 @@ def relative_to_this_test_folder(path):
         'tests',
         path
     )
+
+
+@pytest.fixture(scope='session')
+def monkeysession(request):
+    mp = MonkeyPatch()
+    request.addfinalizer(mp.undo)
+    return mp
 
 
 @pytest.fixture(scope='session')
@@ -76,34 +77,37 @@ def default_gene_models(global_gpf_instance):
     return global_gpf_instance.genomes_db.get_gene_models()
 
 
-@pytest.fixture(scope='function')
-def mock_genomes_db(mocker, default_gene_models, default_genome):
-    # genome = mocker.Mock()
-    # genome.getSequence = lambda _, start, end: 'A' * (end - start + 1)
+@pytest.fixture(scope='session')
+def mock_genomes_db(monkeysession, default_gene_models, default_genome):
 
-    mocker.patch(
-        'dae.GenomesDB.GenomesDB.__init__', return_value=None
+    def fake_init(self, dae_dir, conf_file=None):
+        self.dae_dir = None
+        self.config = None
+
+    monkeysession.setattr(
+        'dae.GenomesDB.GenomesDB.__init__', fake_init
     )
 
-    mocker.patch(
+    monkeysession.setattr(
         'dae.GenomesDB.GenomesDB.get_genome',
-        return_value=default_genome
+        lambda self: default_genome
     )
-    mocker.patch(
+    monkeysession.setattr(
         'dae.GenomesDB.GenomesDB.get_genome_from_file',
-        return_value=default_genome
+        lambda self, _=None: default_genome
     )
-    mocker.patch(
+    monkeysession.setattr(
         'dae.GenomesDB.GenomesDB.get_gene_models',
-        return_value=default_gene_models
+        lambda self, _=None: default_gene_models
     )
-    mocker.patch(
+    monkeysession.setattr(
         'dae.GenomesDB.GenomesDB.get_genome_file',
-        return_value='./genomes/GATK_ResourceBundle_5777_b37_phiX174/chrAll.fa'
+        lambda self, _=None:
+            './genomes/GATK_ResourceBundle_5777_b37_phiX174/chrAll.fa'
     )
-    mocker.patch(
+    monkeysession.setattr(
         'dae.GenomesDB.GenomesDB.get_gene_model_id',
-        return_value='RefSeq2013'
+        lambda self: 'RefSeq2013'
     )
 
 
@@ -377,7 +381,8 @@ def variants_vcf(genomes_db, default_annotation_pipeline):
         fvars = RawVcfLoader.load_raw_vcf_variants(
             ped_df, conf.vcf.vcf
         )
-        fvars.annot_df = default_annotation_pipeline.annotate_df(fvars.annot_df)
+        fvars.annot_df = \
+            default_annotation_pipeline.annotate_df(fvars.annot_df)
         RawVcfLoader.save_annotation_file(fvars.annot_df, conf.vcf.annotation)
 
         return fvars

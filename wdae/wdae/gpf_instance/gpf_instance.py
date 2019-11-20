@@ -20,7 +20,7 @@ def get_gpf_instance():
         _gpf_instance_lock.acquire()
         try:
             if _gpf_instance is None:
-                gpf_instance = GPFInstance()
+                gpf_instance = GPFInstance(load_eagerly=True)
                 reload_datasets(gpf_instance.variants_db)
                 _gpf_instance = gpf_instance
         finally:

@@ -10,12 +10,12 @@ def fixtures_dir():
         os.path.join(os.path.dirname(__file__), 'fixtures'))
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope='session')
 def gpf_instance(mock_genomes_db):
     return GPFInstance(work_dir=fixtures_dir())
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope='session')
 def dae_config_fixture(gpf_instance):
     return gpf_instance.dae_config
 
@@ -33,6 +33,6 @@ def mock_gpf_instance(db, mocker, gpf_instance):
     )
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope='session')
 def weights_factory(gpf_instance):
     return gpf_instance.weights_factory
