@@ -466,7 +466,13 @@ class GtfFileReader:
         if d.startswith('"') and d.endswith('"'):
           d = d[1:-1]
 
-        atx[n] = d
+        if n in atx:
+            try:
+                atx[n].append( d )
+            except AttributeError:
+                atx[n] = [atx[n],d]
+        else:
+            atx[n] = d
     #print atx
     return atx
 
@@ -596,6 +602,8 @@ def gtfGeneModelParser(self, file_name, gene_mapping_file=None, testMode=False):
                 continue 
 
           if testMode and nLR > NumOfLine2Read4Test: return True
+
+          #if 'transcript_support_level' in rx['attributes']  and rx['attributes']['transcript_support_level'] != '1': continue
 
           trID = rx['attributes']['transcript_id']
           if rx['feature'] in ['transcript','Selenocysteine']:
