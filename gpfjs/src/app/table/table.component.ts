@@ -108,4 +108,19 @@ export class GpfTableComponent {
     const scrollIndices  = this.getScrollIndices();
     return this.dataSource.slice(scrollIndices[0], scrollIndices[1]);
   }
+
+  // This function is used to calculate the 'min-width' style attribute for the
+  // '.table-header-sticky-div' wrapper, used for resizing the div properly.
+  calculateMinWidth(columns): number {
+    let totalWidth = 0;
+
+    // Iterates through the columns._result array, which contains the column's widths.
+    // Removes the 'px' from the end of each columnWidth, converts it to a number,
+    // and adds it to 'totalWidth'
+    for (const column of columns._results) {
+      totalWidth += Number(column.columnWidth.substring(0, column.columnWidth.length - 2));
+    }
+
+    return totalWidth + 5;
+  }
 }
