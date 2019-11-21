@@ -18,7 +18,7 @@ from dae.RegionOperations import Region
 def test_dae2parquet_denovo(
         dae_denovo_config, annotation_pipeline_internal,
         temp_dirname,
-        global_gpf_instance, dae_config_fixture, genomes_db):
+        default_gpf_instance, dae_config_fixture, genomes_db):
 
     print(dae_denovo_config)
 
@@ -68,7 +68,7 @@ def test_dae2parquet_denovo(
 def test_dae2parquet_transmitted(
         dae_transmitted_config, annotation_pipeline_internal,
         temp_dirname,
-        global_gpf_instance, dae_config_fixture, genomes_db):
+        default_gpf_instance, dae_config_fixture, genomes_db):
 
     genome = genomes_db.get_genome()
 
@@ -115,7 +115,7 @@ def test_dae2parquet_transmitted(
 def test_dae2parquet_make(
         dae_transmitted_config, annotation_pipeline_config,
         annotation_scores_dirname, temp_dirname,
-        global_gpf_instance, dae_config_fixture, genomes_db):
+        default_gpf_instance, dae_config_fixture, genomes_db):
 
     argv = [
         'make',
@@ -129,7 +129,7 @@ def test_dae2parquet_make(
     ]
     genome = genomes_db.get_genome()
 
-    argv = parse_cli_arguments(global_gpf_instance, argv)
+    argv = parse_cli_arguments(default_gpf_instance, argv)
 
     assert argv is not None
     assert argv.type == 'make'

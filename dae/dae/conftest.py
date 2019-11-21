@@ -10,7 +10,7 @@ import pandas as pd
 from io import StringIO
 
 from box import Box
-
+from dae.configuration.dae_config_parser import DAEConfigParser
 from dae.gpf_instance.gpf_instance import GPFInstance
 
 from dae.annotation.annotation_pipeline import PipelineAnnotator
@@ -51,33 +51,43 @@ def monkeysession(request):
 
 
 @pytest.fixture(scope='session')
-def global_gpf_instance():
-    return GPFInstance()
+def default_dae_config(request):
+    dirname = tempfile.mkdtemp(suffix='_test', prefix='studies_')
+
+    def fin():
+        shutil.rmtree(dirname)
+
+    request.addfinalizer(fin)
+    dae_config = DAEConfigParser.read_and_parse_file_configuration()
+    print(list(dae_config.keys()))
+    dae_config.studies_db.dir = dirname
+
+    return dae_config
 
 
 @pytest.fixture(scope='session')
-def default_dae_config(global_gpf_instance):
-    return global_gpf_instance.dae_config
+def default_gpf_instance(default_dae_config):
+    return GPFInstance(dae_config=default_dae_config)
 
 
 @pytest.fixture(scope='session')
-def dae_config_fixture(global_gpf_instance):
-    return global_gpf_instance.dae_config
+def dae_config_fixture(default_gpf_instance):
+    return default_gpf_instance.dae_config
 
 
 @pytest.fixture(scope='session')
-def genomes_db(global_gpf_instance):
-    return global_gpf_instance.genomes_db
+def genomes_db(default_gpf_instance):
+    return default_gpf_instance.genomes_db
 
 
 @pytest.fixture(scope='session')
-def default_genome(global_gpf_instance):
-    return global_gpf_instance.genomes_db.get_genome()
+def default_genome(default_gpf_instance):
+    return default_gpf_instance.genomes_db.get_genome()
 
 
 @pytest.fixture(scope='session')
-def default_gene_models(global_gpf_instance):
-    return global_gpf_instance.genomes_db.get_gene_models()
+def default_gene_models(default_gpf_instance):
+    return default_gpf_instance.genomes_db.get_gene_models()
 
 
 @pytest.fixture(scope='session')
@@ -537,6 +547,7 @@ def test_impala_helpers(request, impala_host):
 @pytest.fixture(scope='session')
 def impala_genotype_storage(hdfs_host, impala_host):
     storage_config = Box({
+        'id': 'impala_test_storage',
         'type': 'impala',
         'impala': {
             'host': impala_host,

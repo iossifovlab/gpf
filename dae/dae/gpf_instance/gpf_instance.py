@@ -34,11 +34,15 @@ def cached(prop):
 
 class GPFInstance(object):
 
-    def __init__(self, config_file='DAE.conf', work_dir=None, defaults=None,
-                 load_eagerly=False):
-        self.dae_config = DAEConfigParser.read_and_parse_file_configuration(
-            config_file=config_file, work_dir=work_dir, defaults=defaults
-        )
+    def __init__(
+            self, dae_config=None, config_file='DAE.conf', work_dir=None,
+            defaults=None, load_eagerly=False):
+    
+        if dae_config is None:
+            dae_config = DAEConfigParser.read_and_parse_file_configuration(
+                config_file=config_file, work_dir=work_dir, defaults=defaults
+            )
+        self.dae_config = dae_config
 
         if load_eagerly:
             self.genomes_db
@@ -105,6 +109,9 @@ class GPFInstance(object):
             self.dae_config, self.pheno_factory, self.weights_factory,
             self.genomes_db, self.genotype_storage_factory
         )
+
+    def reload_variants_db(self):
+        self.__variants_db__ = None
 
     @property
     @cached

@@ -86,14 +86,18 @@ def parse_cli_arguments(dae_config, argv=sys.argv[1:]):
     return parser_args
 
 
-STUDY_CONFIG_TEMPLATE = """
-[study]
+def save_study_config(dae_config, study_id, study_config):
+    dirname = os.path.join(dae_config.studies_db.dir, study_id)
+    filename = os.path.join(dirname, '{}.conf'.format(study_id))
 
-id = {id}
-prefix = {output}
-file_format = impala
+    if os.path.exists(filename):
+        print('configuration file already exists:', filename)
+        print('skipping generation of default study config for:', study_id)
+        return
 
-"""
+    os.makedirs(dirname, exist_ok=True)
+    with open(filename, 'w') as outfile:
+        outfile.write(study_config)
 
 
 def generate_common_report(gpf_instance, study_id):
@@ -124,6 +128,7 @@ def main(argv, gpf_instance=None):
         argv.genotype_storage
     )
     print("genotype storage:", argv.genotype_storage, genotype_storage)
+    assert genotype_storage is not None, argv.genotype_storage
 
     annotation_pipeline = construct_import_annotation_pipeline(
         dae_config, genomes_db, argv)
@@ -210,30 +215,29 @@ def main(argv, gpf_instance=None):
         )
 
     if parquet_filenames:
-        genotype_storage.impala_load_study(
+        study_config = genotype_storage.impala_load_study(
             study_id,
             os.path.split(parquet_filenames.pedigree)[0],
             os.path.split(parquet_filenames.variant)[0]
         )
+        print(study_config)
 
-    parquet_manager.generate_study_config(
-        study_id, genotype_storage.storage_config.id
-    )
+        save_study_config(dae_config, study_id, study_config)
 
     if not argv.skip_reports:
         # needs to reload the configuration, hence gpf_instance=None
-        gpf_instance_reload = GPFInstance()
+        gpf_instance.reload_variants_db()
 
         print("generating common reports...", file=sys.stderr)
         start = time.time()
-        generate_common_report(gpf_instance_reload, study_id)
+        generate_common_report(gpf_instance, study_id)
         print("DONE: generating common reports in {:.2f} sec".format(
             time.time() - start
             ), file=sys.stderr)
 
         print("generating de Novo gene sets...", file=sys.stderr)
         start = time.time()
-        generate_denovo_gene_sets(gpf_instance_reload, study_id)
+        generate_denovo_gene_sets(gpf_instance, study_id)
         print("DONE: generating de Novo gene sets in {:.2f} sec".format(
             time.time() - start
             ), file=sys.stderr)

@@ -6,22 +6,24 @@ from dae.tools.simple_study_import import main
 
 
 def test_import_denovo_dae_style_into_impala(
-        genomes_db, default_gene_models, fixture_dirname, default_dae_config):
+        genomes_db, fixture_dirname,
+        default_dae_config, default_gpf_instance):
 
     pedigree_filename = fixture_dirname('denovo_import/fake_pheno.ped')
     denovo_filename = fixture_dirname('denovo_import/variants_DAE_style.tsv')
     argv = [
         pedigree_filename,
         '--id', 'test_denovo_dae_style',
-        '--skip-reports',
+        # '--skip-reports',
         '--denovo', denovo_filename,
         '--denovo-location', 'location',
         '--denovo-variant', 'variant',
         '--denovo-family-id', 'familyId',
         '--denovo-best-state', 'bestState',
+        '--genotype-storage', 'test_impala',
     ]
 
-    main(argv)
+    main(argv, default_gpf_instance)
 
     default_storage_id = default_dae_config.genotype_storage.default
     default_storage_config = default_dae_config.storage[default_storage_id]
@@ -38,7 +40,8 @@ def test_import_denovo_dae_style_into_impala(
 
 
 def test_import_vcf_into_impala(
-        genomes_db, default_gene_models, fixture_dirname, default_dae_config):
+        genomes_db, fixture_dirname, default_dae_config,
+        default_gpf_instance):
 
     pedigree_filename = fixture_dirname('vcf_import/effects_trio.ped')
     vcf_filename = fixture_dirname('vcf_import/effects_trio.vcf.gz')
@@ -48,9 +51,10 @@ def test_import_vcf_into_impala(
         '--id', study_id,
         '--skip-reports',
         '--vcf', vcf_filename,
+        '--genotype-storage', 'test_impala',
     ]
 
-    main(argv)
+    main(argv, default_gpf_instance)
 
     default_storage_id = default_dae_config.genotype_storage.default
     default_storage_config = default_dae_config.storage[default_storage_id]

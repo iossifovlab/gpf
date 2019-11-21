@@ -100,6 +100,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
             f'Loaded `{study_id}` study in impala `{impala_config.db}` '
             f'db for {total:.2f} sec', file=sys.stderr
         )
+        return self._generate_study_config(study_id, impala_config)
 
     def _impala_config(self, study_id, pedigree_path, variants_path):
         study_impala_config = self._impala_storage_config(study_id)
@@ -141,3 +142,25 @@ class ImpalaGenotypeStorage(GenotypeStorage):
 
     def simple_study_import(self, study_id, variants_loader):
         pass
+
+    def _generate_study_config(self, study_id, impala_config):
+        assert study_id is not None
+
+        study_config = STUDY_CONFIG_TEMPLATE.format(
+                id=study_id,
+                genotype_storage=self.id,
+                pedigree_table=impala_config.tables.pedigree,
+                variant_table=impala_config.tables.variant,
+            )
+        return study_config
+
+
+STUDY_CONFIG_TEMPLATE = '''
+[study]
+
+id = {id}
+genotype_storage = {genotype_storage}
+tables = pedigree:{pedigree_table},
+    variant:{variant_table}
+
+'''

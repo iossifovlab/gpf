@@ -111,6 +111,7 @@ class StudyConfigParser(StudyConfigParserBase):
     @classmethod
     def read_and_parse_directory_configurations(
             cls, configurations_dir, defaults=None, fail_silently=False):
+        print("parsing studies directory:", configurations_dir)
         configs = super(StudyConfigParser, cls). \
             read_and_parse_directory_configurations(
                 configurations_dir, defaults=defaults,

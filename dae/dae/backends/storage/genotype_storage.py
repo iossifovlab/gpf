@@ -2,6 +2,7 @@ class GenotypeStorage:
 
     def __init__(self, storage_config):
         self.storage_config = storage_config
+        self.id = self.storage_config.id
 
     def is_impala(self):
         return False

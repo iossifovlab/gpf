@@ -303,24 +303,6 @@ class ParquetManager:
         }
         return Box(conf)
 
-    def generate_study_config(self, study_id, genotype_storage_id):
-        assert study_id is not None
-
-        dirname = os.path.join(self.studies_dir, study_id)
-        filename = os.path.join(dirname, '{}.conf'.format(study_id))
-
-        if os.path.exists(filename):
-            print('configuration file already exists:', filename)
-            print('skipping generation of default config for:', study_id)
-            return
-
-        os.makedirs(dirname, exist_ok=True)
-        with open(filename, 'w') as outfile:
-            outfile.write(STUDY_CONFIG_TEMPLATE.format(
-                id=study_id,
-                genotype_storage=genotype_storage_id
-            ))
-
     @staticmethod
     def pedigree_to_parquet(fvars, pedigree_filename, filesystem=None):
         os.makedirs(
@@ -413,11 +395,3 @@ def save_ped_df_to_parquet(ped_df, filename, filesystem=None):
     table = pa.Table.from_pandas(ped_df, schema=pps)
     pq.write_table(table, filename, filesystem=filesystem)
 
-
-STUDY_CONFIG_TEMPLATE = '''
-[study]
-
-id = {id}
-genotype_storage = {genotype_storage}
-
-'''

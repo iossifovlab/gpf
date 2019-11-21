@@ -8,7 +8,7 @@ from dae.tools.vcf2parquet import main, parse_cli_arguments, generate_makefile
 def test_vcf2parquet_vcf(
         vcf_import_config, annotation_pipeline_config,
         annotation_scores_dirname, temp_dirname,
-        global_gpf_instance, dae_config_fixture, genomes_db):
+        default_gpf_instance, dae_config_fixture, genomes_db):
 
     argv = [
         'vcf',
@@ -19,7 +19,7 @@ def test_vcf2parquet_vcf(
     ]
 
     parquet_filenames = main(
-        argv, gpf_instance=global_gpf_instance,
+        argv, gpf_instance=default_gpf_instance,
         dae_config=dae_config_fixture,
         genomes_db=genomes_db,
         annotation_defaults={'values': {
@@ -50,7 +50,7 @@ def test_vcf2parquet_vcf(
 def test_vcf2parquet_make(
         vcf_import_config, annotation_pipeline_config,
         annotation_scores_dirname, temp_dirname,
-        global_gpf_instance, dae_config_fixture, default_genome):
+        default_gpf_instance, dae_config_fixture, default_genome):
 
     argv = [
         'make',
@@ -60,7 +60,7 @@ def test_vcf2parquet_make(
         vcf_import_config.vcf
     ]
 
-    argv = parse_cli_arguments(global_gpf_instance, argv)
+    argv = parse_cli_arguments(default_gpf_instance, argv)
     assert argv.type == 'make'
 
     generate_makefile(dae_config_fixture, default_genome, argv)
