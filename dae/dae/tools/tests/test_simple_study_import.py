@@ -11,6 +11,8 @@ def test_import_denovo_dae_style_into_impala(
 
     pedigree_filename = fixture_dirname('denovo_import/fake_pheno.ped')
     denovo_filename = fixture_dirname('denovo_import/variants_DAE_style.tsv')
+    genotype_storage_id = 'test_impala'
+
     argv = [
         pedigree_filename,
         '--id', 'test_denovo_dae_style',
@@ -20,16 +22,15 @@ def test_import_denovo_dae_style_into_impala(
         '--denovo-variant', 'variant',
         '--denovo-family-id', 'familyId',
         '--denovo-best-state', 'bestState',
-        '--genotype-storage', 'test_impala',
+        '--genotype-storage', genotype_storage_id,
     ]
 
     main(argv, default_gpf_instance)
 
-    default_storage_id = default_dae_config.genotype_storage.default
-    default_storage_config = default_dae_config.storage[default_storage_id]
-    assert default_storage_config.type == 'impala'
+    storage_config = default_dae_config.storage[genotype_storage_id]
+    assert storage_config.type == 'impala'
 
-    impala_storage = ImpalaGenotypeStorage(default_storage_config)
+    impala_storage = ImpalaGenotypeStorage(storage_config)
     fvars = impala_storage.build_backend(
         Box({'id': 'test_denovo_dae_style'}),
         genomes_db
@@ -46,21 +47,22 @@ def test_import_vcf_into_impala(
     pedigree_filename = fixture_dirname('vcf_import/effects_trio.ped')
     vcf_filename = fixture_dirname('vcf_import/effects_trio.vcf.gz')
     study_id = 'test_vcf'
+    genotype_storage_id = 'test_impala'
+
     argv = [
         pedigree_filename,
         '--id', study_id,
         '--skip-reports',
         '--vcf', vcf_filename,
-        '--genotype-storage', 'test_impala',
+        '--genotype-storage', genotype_storage_id,
     ]
 
     main(argv, default_gpf_instance)
 
-    default_storage_id = default_dae_config.genotype_storage.default
-    default_storage_config = default_dae_config.storage[default_storage_id]
-    assert default_storage_config.type == 'impala'
+    storage_config = default_dae_config.storage[genotype_storage_id]
+    assert storage_config.type == 'impala'
 
-    impala_storage = ImpalaGenotypeStorage(default_storage_config)
+    impala_storage = ImpalaGenotypeStorage(storage_config)
     fvars = impala_storage.build_backend(
         Box({'id': study_id}),
         genomes_db
