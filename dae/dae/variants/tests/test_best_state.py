@@ -111,7 +111,6 @@ def test_allele_best_state(
         alternative,
         0,
         allele_index,
-        None,
         {},
         sample_family,
         genotype

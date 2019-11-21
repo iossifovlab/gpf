@@ -23,7 +23,7 @@ f1,          p1,          d1,       m1,       1,     2,         prb
 
 @pytest.fixture(scope='function')
 def sample_family():
-    ped_df = PedigreeReader.load_pedigree_file(
+    ped_df = PedigreeReader.flexible_pedigree_read(
         StringIO(PED1), sep=',')
 
     family = Family.from_df('f1', ped_df)
