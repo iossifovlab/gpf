@@ -458,15 +458,15 @@ class GtfFileReader:
    colNames = 'seqname,source,feature,start,end,score,strand,phase,attributes,comments'.split(',')
 
    @staticmethod
-   def gtfParseAttr( stx ):
+   def gtfParseAttr( stx, delim=' ' ):
     atx = {}
-    for x in stx.split(';'):
-        x = x.strip(" ")
-        if not x: continue
-        # print(x, x.split(' '))
-        n,d = [w for w in x.split(' ') if w != '']
-        if d.startswith('"') and d.endswith('"'):
-          d = d[1:-1]
+    for x in stx.strip(' ;').split(';'):
+        dx = [w for w in x.split(delim) if w != '']
+
+        if not dx: continue
+        # print(x, dx)
+        n,d = dx 
+        d = d.strip('"') 
 
         if n in atx:
             try:
@@ -475,7 +475,7 @@ class GtfFileReader:
                 atx[n] = [atx[n],d]
         else:
             atx[n] = d
-    #print atx
+    #print( atx )
     return atx
 
    @staticmethod
@@ -489,7 +489,10 @@ class GtfFileReader:
 
         return rx
 
-   def __init__( cls, fileName ):
+   def __init__( cls, fileName, delim=' ' ):
+        #
+        # GTF: space delimiter
+        # GFF: =     delimiter
         cls.colIndex = { cls.colNames[n]:n for n in range(len(cls.colNames)) }
 
         cls._file = None
@@ -538,8 +541,8 @@ class defaultFileReader:
      terms = line.strip('\n').split('\t')
      return [terms[n] for n in self.index]
 
-def defaultGeneModelParser(self, file_name, gene_mapping_file=None,testMode=False):  
-      self.location = file_name
+def defaultGeneModelParser(gm, file_name, gene_mapping_file=None,testMode=False):  
+      gm.location = file_name
 
       f = openFile(file_name)
 
@@ -576,27 +579,27 @@ def defaultGeneModelParser(self, file_name, gene_mapping_file=None,testMode=Fals
           tm.exons  = exons
           tm.attr = attrs
 
-          self.transcriptModels[tm.trID] = tm
+          gm.transcriptModels[tm.trID] = tm
 
       f.close()
-      self._updateIndexes()
+      gm._updateIndexes()
 
       if testMode: return True
 
-def pickledGeneModelParser( self, file_name, gene_mapping_file=None, testMode=False ):
+def pickledGeneModelParser( gm, file_name, gene_mapping_file=None, testMode=False ):
     import pickle
  
-    self.location = file_name
+    gm.location = file_name
     pkl_file = open(file_name, 'rb')
-    self._utrModels, self.transcriptModels, self._geneModels = pickle.load(pkl_file)
+    gm._utrModels, gm.transcriptModels, gm._geneModels = pickle.load(pkl_file)
     pkl_file.close()
 
     if testMode: return True
 
-def gtfGeneModelParser(self, file_name, gene_mapping_file=None, testMode=False):
-        self.name = 'GTF'
-        # print( 'GeneModel format: ', self.name, '\timporting: ', file_name, file=sys.stderr )
-        self.location = file_name
+def gtfGeneModelParser(gm, file_name, gene_mapping_file=None, testMode=False):
+        gm.name = 'GTF'
+        # print( 'GeneModel format: ', gm.name, '\timporting: ', file_name, file=sys.stderr )
+        gm.location = file_name
 
         f = GtfFileReader( file_name )
         for nLR, rx in enumerate(f):
@@ -609,10 +612,10 @@ def gtfGeneModelParser(self, file_name, gene_mapping_file=None, testMode=False):
 
           trID = rx['attributes']['transcript_id']
           if rx['feature'] in ['transcript','Selenocysteine']:
-            if rx['feature'] in ['Selenocysteine'] and trID in self.transcriptModels:
+            if rx['feature'] in ['Selenocysteine'] and trID in gm.transcriptModels:
                 continue
 
-            if trID in self.transcriptModels:
+            if trID in gm.transcriptModels:
                 raise Exception("{} of {}: already existed on transcriptModels".format( trID, rx['feature'] ))
 
             tm = TranscriptModel()
@@ -624,79 +627,79 @@ def gtfGeneModelParser(self, file_name, gene_mapping_file=None, testMode=False):
             tm.cds    = (rx['end'],rx['start'])
             tm.attr   = rx['attributes']
 
-            self.addModelToDict(tm)
-            #self.transcriptModels[tm.trID] = tm
+            gm.addModelToDict(tm)
+            #gm.transcriptModels[tm.trID] = tm
             continue
 
           if rx['feature'] in ['CDS','exon']:
-             if trID not in self.transcriptModels:
+             if trID not in gm.transcriptModels:
                 raise Exception("{}: exon or CDS not existed on transcriptModels".format( trID ))
         
              ix = int(rx['attributes']['exon_number']) - 1 # 1-based to 0-based indexing
-             #print trID, len(self.transcriptModels[trID].exons), ix, rx['attributes']['exon_number']
-             if len(self.transcriptModels[trID].exons) <= ix:
-                self.transcriptModels[trID].exons.append( Exon() )
+             #print trID, len(gm.transcriptModels[trID].exons), ix, rx['attributes']['exon_number']
+             if len(gm.transcriptModels[trID].exons) <= ix:
+                gm.transcriptModels[trID].exons.append( Exon() )
 
              if rx['feature'] == 'exon':
-                self.transcriptModels[trID].exons[ix].start = rx['start']
-                self.transcriptModels[trID].exons[ix].stop  = rx['end']
-                self.transcriptModels[trID].exons[ix].frame = -1
-                self.transcriptModels[trID].exons[ix].number = ix + 1 #return to 1-base indexing
+                gm.transcriptModels[trID].exons[ix].start = rx['start']
+                gm.transcriptModels[trID].exons[ix].stop  = rx['end']
+                gm.transcriptModels[trID].exons[ix].frame = -1
+                gm.transcriptModels[trID].exons[ix].number = ix + 1 #return to 1-base indexing
 
                 continue
 
              if rx['feature'] == 'CDS':
-                self.transcriptModels[trID].exons[ix].cds_start = rx['start']
-                self.transcriptModels[trID].exons[ix].cds_stop  = rx['end']
-                self.transcriptModels[trID].exons[ix].frame     = int(rx['phase'])
+                gm.transcriptModels[trID].exons[ix].cds_start = rx['start']
+                gm.transcriptModels[trID].exons[ix].cds_stop  = rx['end']
+                gm.transcriptModels[trID].exons[ix].frame     = int(rx['phase'])
 
-                self.transcriptModels[trID]._is_coding = True
+                gm.transcriptModels[trID]._is_coding = True
 
-                #cx = self.transcriptModels[trID].cds
-                #self.transcriptModels[trID].cds = (min(cx[0],rx['start']), max(cx[1],rx['end']))
+                #cx = gm.transcriptModels[trID].cds
+                #gm.transcriptModels[trID].cds = (min(cx[0],rx['start']), max(cx[1],rx['end']))
 
                 continue
 
           if rx['feature'] in ['UTR','5UTR','3UTR','start_codon','stop_codon']:
                 ix = int(rx['attributes']['exon_number']) # 1-based
                 if 'UTR' in rx['feature']:
-                        self.transcriptModels[trID].utrs.append( (rx['start'],rx['end'],ix) )
+                        gm.transcriptModels[trID].utrs.append( (rx['start'],rx['end'],ix) )
                         continue
 
                 if rx['feature'] == 'start_codon':
-                        self.transcriptModels[trID].start_codon = (rx['start'],rx['end'],ix)
+                        gm.transcriptModels[trID].start_codon = (rx['start'],rx['end'],ix)
                 if rx['feature'] == 'stop_codon':
-                        self.transcriptModels[trID].stop_codon  = (rx['start'],rx['end'],ix)
+                        gm.transcriptModels[trID].stop_codon  = (rx['start'],rx['end'],ix)
 
-                cx = self.transcriptModels[trID].cds
-                self.transcriptModels[trID].cds = (min(cx[0],rx['start']), max(cx[1],rx['end']))
+                cx = gm.transcriptModels[trID].cds
+                gm.transcriptModels[trID].cds = (min(cx[0],rx['start']), max(cx[1],rx['end']))
 
                 continue
           
           raise Exception("unknown {} found".format( rx['feature'] ))
 
-        for k in self.transcriptModels.keys():
-            tm = self.transcriptModels[k]
+        for k in gm.transcriptModels.keys():
+            tm = gm.transcriptModels[k]
             tm.exons = sorted( tm.exons, key=lambda x: x.start )
             tm.utrs  = sorted( tm.utrs, key=lambda x: x[0] )
             tm.update_frames()
 
-        #TODO: no need: done by self.addModelToDict(tm)
-        #for k, gx in self.transcriptModels.items():
+        #TODO: no needed: done by gm.addModelToDict(tm)
+        #for k, gx in gm.transcriptModels.items():
         #   gID = gx.gene
-        #   if gID not in self._geneModels: self._geneModels[gID] = []
+        #   if gID not in gm._geneModels: gm._geneModels[gID] = []
         #
-        #   self._geneModels[gID].append( gx )
+        #   gm._geneModels[gID].append( gx )
         if testMode: return True
 
 #
 #  MT chromosome
 #
-def mitoGeneModelParser(self, file_name, gene_mapping_file=None, testMode=False ):
-        self.name = "mitomap"
-        self._Alternative_names = None
+def mitoGeneModelParser(gm, file_name, gene_mapping_file=None, testMode=False ):
+        gm.name = "mitomap"
+        gm._Alternative_names = None
 
-        self._utrModels['chrM'] = {}
+        gm._utrModels['chrM'] = {}
         file = openFile(file_name)
 
         for line in file:
@@ -742,9 +745,9 @@ def mitoGeneModelParser(self, file_name, gene_mapping_file=None, testMode=False 
 
             mm.exons = [e]
 
-            self._utrModels['chrM'][mm.tx] = [mm]
-            self.transcriptModels[mm.trID] = mm
-            self._geneModels[mm.gene] = [mm]
+            gm._utrModels['chrM'][mm.tx] = [mm]
+            gm.transcriptModels[mm.trID] = mm
+            gm._geneModels[mm.gene] = [mm]
               
         file.close()
 
@@ -791,7 +794,7 @@ class parserLine4UCSC_genePred:
      #trIdC[tm.trID] += 1                       #TODO implimented outside
      #tm.trID += "_" + str(trIdC[tm.trID])      #TODO implimented outside
 
-     #self.addModelToDict(tm)                   #TODO should be done outside
+     #cls.addModelToDict(tm)                   #TODO should be done outside
      return tm, cs
 
 def geneMapping( fileName=None ):
@@ -812,11 +815,11 @@ def geneMapping( fileName=None ):
 
    return altName
 
-def refSeqParser( self, location=None, gene_mapping_file = None, testMode=False ):
+def refSeqParser( gm, location=None, gene_mapping_file = None, testMode=False ):
     colNames = Columns4FileFormat['refSeq']
     lR = parserLine4UCSC_genePred(colNames)
 
-    if not location: location = self.location
+    if not location: location = gm.location
 
     GMF = openFile(location)
 
@@ -835,13 +838,13 @@ def refSeqParser( self, location=None, gene_mapping_file = None, testMode=False 
        tm.trID += "_" + str(trIdC[tm.trID])
        tm.update_frames()
 
-       self.addModelToDict(tm)
+       gm.addModelToDict(tm)
 
     GMF.close()
     if testMode: return True
         
 
-def refFlatParser( self, file_name, gene_mapping_file, testMode=False):
+def refFlatParser( gm, file_name, gene_mapping_file, testMode=False):
         assert gene_mapping_file == "default"
 
         #column names
@@ -870,19 +873,19 @@ def refFlatParser( self, file_name, gene_mapping_file, testMode=False):
             tm.trID += "_" + str(trIdC[tm.trID])
             tm.update_frames()
 
-            self.addModelToDict(tm)
+            gm.addModelToDict(tm)
 
         GMF.close()
         if testMode: return True
 
-def knownGeneParser(self, file_name, gene_mapping_file='default',testMode=False):
+def knownGeneParser(gm, file_name, gene_mapping_file='default',testMode=False):
     colNames = Columns4FileFormat['knownGene']
     lR = parserLine4UCSC_genePred(colNames)
 
     if gene_mapping_file == 'default':
         gene_mapping_file = os.path.dirname(file_name) + "/kgId2Sym.txt.gz"
 
-    if not testMode: self._Alternative_names = geneMapping( gene_mapping_file)
+    if not testMode: gm._Alternative_names = geneMapping( gene_mapping_file)
 
     GMF = openFile(file_name)
 
@@ -896,7 +899,7 @@ def knownGeneParser(self, file_name, gene_mapping_file='default',testMode=False)
 
         tm, cs =  lR.parse( line ) 
         try:
-            if not testMode: tm.gene = self._Alternative_names[cs['name']]
+            if not testMode: tm.gene = gm._Alternative_names[cs['name']]
         except KeyError as e:
             tm.gene = cs['name']
 
@@ -904,7 +907,7 @@ def knownGeneParser(self, file_name, gene_mapping_file='default',testMode=False)
         tm.trID += "_" + str(trIdC[tm.trID])
         tm.update_frames()
 
-        self.addModelToDict(tm)
+        gm.addModelToDict(tm)
 
     GMF.close()
     if testMode: return True
@@ -916,14 +919,14 @@ def knownGeneParser(self, file_name, gene_mapping_file='default',testMode=False)
 #
     
 # ccdsGene
-def ccdsParser(self, file_name, gene_mapping_file='default', testMode=False ):
+def ccdsParser(gm, file_name, gene_mapping_file='default', testMode=False ):
     colNames = Columns4FileFormat['ccds']
     lR = parserLine4UCSC_genePred(colNames)
 
     if gene_mapping_file == 'default':
         gene_mapping_file = os.path.dirname(file_name) + "/ccdsId2Sym.txt.gz"
 
-    if not testMode: self._Alternative_names = geneMapping( gene_mapping_file)
+    if not testMode: gm._Alternative_names = geneMapping( gene_mapping_file)
 
     GMF = openFile(file_name)
 
@@ -938,7 +941,7 @@ def ccdsParser(self, file_name, gene_mapping_file='default', testMode=False ):
         tm, cs =  lR.parse( line ) 
         try:
             if not testMode:
-                tm.gene = self._Alternative_names[cs['name']]
+                tm.gene = gm._Alternative_names[cs['name']]
         except KeyError as e:
             tm.gene = cs['name']
 
@@ -946,7 +949,7 @@ def ccdsParser(self, file_name, gene_mapping_file='default', testMode=False ):
         tm.trID += "_" + str(trIdC[tm.trID])
         tm.update_frames()
 
-        self.addModelToDict(tm)
+        gm.addModelToDict(tm)
 
     GMF.close()
     if testMode: return True
@@ -954,12 +957,12 @@ def ccdsParser(self, file_name, gene_mapping_file='default', testMode=False ):
 # 
 # similar to refFlat except geneName (missing column)
 #
-def ucscGenePredParser(self, file_name, gene_mapping_file='default', testMode=False ):
+def ucscGenePredParser(gm, file_name, gene_mapping_file='default', testMode=False ):
     colNames = Columns4FileFormat['ucscGenePred']
     lR = parserLine4UCSC_genePred(colNames)
 
     if (not testMode) and (gene_mapping_file != 'default'):
-        self._Alternative_names = geneMapping( gene_mapping_file)
+        gm._Alternative_names = geneMapping( gene_mapping_file)
 
     GMF = openFile(file_name)
 
@@ -974,7 +977,7 @@ def ucscGenePredParser(self, file_name, gene_mapping_file='default', testMode=Fa
 
         tm, cs =  lR.parse( line ) 
         try:
-            tm.gene = self._Alternative_names[cs['name']]
+            tm.gene = gm._Alternative_names[cs['name']]
         except (KeyError,TypeError) as e:
             tm.gene = cs['name']
 
@@ -982,7 +985,7 @@ def ucscGenePredParser(self, file_name, gene_mapping_file='default', testMode=Fa
         tm.trID += "_" + str(trIdC[tm.trID])
         tm.update_frames()
 
-        self.addModelToDict(tm)
+        gm.addModelToDict(tm)
 
     GMF.close()
     if testMode: return True
