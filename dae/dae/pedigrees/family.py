@@ -1,8 +1,4 @@
-'''
-Created on Feb 13, 2018
-
-@author: lubo
-'''
+import os
 import copy
 
 from functools import partial
@@ -263,20 +259,6 @@ class FamiliesData(object):
         fams._families_build(ped_df, family_class)
         return fams
 
-    @staticmethod
-    def load_pedigree(pedigree_filename, pedigree_format={}):
-        ped_df = PedigreeReader.flexible_pedigree_read(
-            pedigree_filename, **pedigree_format
-        )
-        return FamiliesData.from_pedigree_df(ped_df)
-
-    @staticmethod
-    def load_simple_families_file(families_filename):
-        ped_df = PedigreeReader.load_simple_family_file(
-            families_filename
-        )
-        return FamiliesData.from_pedigree_df(ped_df)
-
     def families_list(self):
         return list(self.families.values())
 
@@ -363,25 +345,62 @@ class Pedigree(object):
                           for member in self._members])
 
 
+class FamiliesLoader:
+
+    def __init__(
+            self, families_filename,
+            file_format='pedigree', pedigree_format={}):
+
+        assert os.path.exists(families_filename)
+        self.families_filename = families_filename
+        self.file_format = file_format
+        self.pedigree_format = pedigree_format
+
+        self.families = self._load_families_data()
+
+    @staticmethod
+    def load_pedigree_file(pedigree_filename, pedigree_format={}):
+        ped_df = PedigreeReader.flexible_pedigree_read(
+            pedigree_filename, **pedigree_format
+        )
+        return FamiliesData.from_pedigree_df(ped_df)
+
+    @staticmethod
+    def load_simple_families_file(families_filename):
+        ped_df = PedigreeReader.load_simple_family_file(
+            families_filename
+        )
+        return FamiliesData.from_pedigree_df(ped_df)
+
+    def _load_families_data(self):
+        if self.file_format == 'simple':
+            assert not self.pedigree_format
+            return self.load_simple_families_file(self.families_filename)
+        else:
+            assert self.file_format == 'pedigree'
+            return self.load_pedigree_file(
+                self.families_filename, pedigree_format=self.pedigree_format)
+
+
 class PedigreeReader(object):
 
     @staticmethod
     def read_file(
             pedigree_filepath, sep='\t',
-            col_family='familyId', col_person='personId', col_mom='momId',
-            col_dad='dadId', col_sex='sex', col_status='status',
-            col_role='role',
-            col_layout='layout', col_generated='generated',
-            col_sample_id='sampleId',
+            ped_family='familyId', ped_person='personId', ped_mom='momId',
+            ped_dad='dadId', ped_sex='sex', ped_status='status',
+            ped_role='role',
+            ped_layout='layout', ped_generated='generated',
+            ped_sample_id='sampleId',
             return_as_dict=False):
 
         ped_df = PedigreeReader.flexible_pedigree_read(
             pedigree_filepath, sep=sep,
-            col_family=col_family, col_person=col_person,
-            col_mom=col_mom, col_dad=col_dad,
-            col_sex=col_sex, col_status=col_status,
-            col_role=col_role, col_layout=col_layout,
-            col_generated=col_generated, col_sample_id=col_sample_id)
+            ped_family=ped_family, ped_person=ped_person,
+            ped_mom=ped_mom, ped_dad=ped_dad,
+            ped_sex=ped_sex, ped_status=ped_status,
+            ped_role=ped_role, ped_layout=ped_layout,
+            ped_generated=ped_generated, ped_sample_id=ped_sample_id)
 
         families = {}
         for row in ped_df.to_dict(orient='records'):
@@ -408,28 +427,28 @@ class PedigreeReader(object):
 
     @staticmethod
     def produce_header_from_indices(
-       col_family,
-       col_person,
-       col_mom,
-       col_dad,
-       col_sex,
-       col_status,
-       col_role,
-       col_layout,
-       col_generated,
-       col_sample_id,
+       ped_family,
+       ped_person,
+       ped_mom,
+       ped_dad,
+       ped_sex,
+       ped_status,
+       ped_role,
+       ped_layout,
+       ped_generated,
+       ped_sample_id,
     ):
         header = (
-            (col_family, PEDIGREE_COLUMN_NAMES['family']),
-            (col_person, PEDIGREE_COLUMN_NAMES['person']),
-            (col_mom, PEDIGREE_COLUMN_NAMES['mother']),
-            (col_dad, PEDIGREE_COLUMN_NAMES['father']),
-            (col_sex, PEDIGREE_COLUMN_NAMES['sex']),
-            (col_status, PEDIGREE_COLUMN_NAMES['status']),
-            (col_role, PEDIGREE_COLUMN_NAMES['role']),
-            (col_layout, PEDIGREE_COLUMN_NAMES['layout']),
-            (col_generated, PEDIGREE_COLUMN_NAMES['generated']),
-            (col_sample_id, PEDIGREE_COLUMN_NAMES['sample id']),
+            (ped_family, PEDIGREE_COLUMN_NAMES['family']),
+            (ped_person, PEDIGREE_COLUMN_NAMES['person']),
+            (ped_mom, PEDIGREE_COLUMN_NAMES['mother']),
+            (ped_dad, PEDIGREE_COLUMN_NAMES['father']),
+            (ped_sex, PEDIGREE_COLUMN_NAMES['sex']),
+            (ped_status, PEDIGREE_COLUMN_NAMES['status']),
+            (ped_role, PEDIGREE_COLUMN_NAMES['role']),
+            (ped_layout, PEDIGREE_COLUMN_NAMES['layout']),
+            (ped_generated, PEDIGREE_COLUMN_NAMES['generated']),
+            (ped_sample_id, PEDIGREE_COLUMN_NAMES['sample id']),
         )
         header = tuple(filter(lambda col: type(col[0]) is int, header))
         for col in header:
@@ -515,9 +534,9 @@ class PedigreeReader(object):
             'given. [default: %(default)s]'
         )
 
-    @staticmethod
-    def cast_pedigree_column_indices_to_int(argv):
-        ped_col_args = [
+    @classmethod
+    def flexible_pedigree_parse_cli_arguments(cls, argv):
+        ped_ped_args = [
             'ped_family',
             'ped_person',
             'ped_mom',
@@ -525,31 +544,38 @@ class PedigreeReader(object):
             'ped_sex',
             'ped_status',
             'ped_role',
+            'ped_no_role',
         ]
-        res_argv = copy.deepcopy(argv)
+        has_header = not argv.ped_no_header
+        res = {}
+        res['has_header'] = has_header
 
-        for col in ped_col_args:
-            col_idx = getattr(argv, col)
-            assert col_idx.isnumeric(), \
-                '{} must hold an integer value!'.format(col)
-            setattr(res_argv, col, int(col_idx))
+        for col in ped_ped_args:
+            ped_value = getattr(argv, col)
+            if has_header:
+                res[col] = ped_value
+            else:
+                assert ped_value.isnumeric(), \
+                    '{} must hold an integer value!'.format(col)
+                res[col] = int(ped_value)
 
-        return res_argv
+        return res
 
     @staticmethod
     def flexible_pedigree_read(
             pedigree_filepath, sep='\t',
             has_header=True,
-            col_family='familyId',
-            col_person='personId',
-            col_mom='momId',
-            col_dad='dadId',
-            col_sex='sex',
-            col_status='status',
-            col_role='role',
-            col_layout='layout',
-            col_generated='generated',
-            col_sample_id='sampleId'):
+            ped_family='familyId',
+            ped_person='personId',
+            ped_mom='momId',
+            ped_dad='dadId',
+            ped_sex='sex',
+            ped_status='status',
+            ped_role='role',
+            ped_layout='layout',
+            ped_generated='generated',
+            ped_sample_id='sampleId',
+            ped_no_role=False):
 
         read_csv_func = partial(
             pd.read_csv,
@@ -557,18 +583,18 @@ class PedigreeReader(object):
             index_col=False,
             skipinitialspace=True,
             converters={
-                col_role: Role.from_name,
-                col_sex: Sex.from_name_or_value,
-                col_status: Status.from_name_or_value,
-                col_layout: lambda lc: lc.split(':')[-1],
-                col_generated: lambda g: True if g == '1.0' else False,
+                ped_role: Role.from_name,
+                ped_sex: Sex.from_name_or_value,
+                ped_status: Status.from_name_or_value,
+                ped_layout: lambda lc: lc.split(':')[-1],
+                ped_generated: lambda g: True if g == '1.0' else False,
             },
             dtype={
-                col_family: str,
-                col_person: str,
-                col_mom: str,
-                col_dad: str,
-                col_sample_id: str,
+                ped_family: str,
+                ped_person: str,
+                ped_mom: str,
+                ped_dad: str,
+                ped_sample_id: str,
             },
             comment='#',
             encoding='utf-8'
@@ -576,50 +602,53 @@ class PedigreeReader(object):
 
         if not has_header:
             _, file_header = PedigreeReader.produce_header_from_indices(
-                col_family, col_person, col_mom,
-                col_dad, col_sex, col_status,
-                col_role, col_layout, col_generated, col_sample_id,
+                ped_family, ped_person, ped_mom,
+                ped_dad, ped_sex, ped_status,
+                ped_role, ped_layout, ped_generated, ped_sample_id,
             )
-            col_family = PEDIGREE_COLUMN_NAMES['family']
-            col_person = PEDIGREE_COLUMN_NAMES['person']
-            col_mom = PEDIGREE_COLUMN_NAMES['mother']
-            col_dad = PEDIGREE_COLUMN_NAMES['father']
-            col_sex = PEDIGREE_COLUMN_NAMES['sex']
-            col_status = PEDIGREE_COLUMN_NAMES['status']
-            col_role = PEDIGREE_COLUMN_NAMES['role']
-            col_layout = PEDIGREE_COLUMN_NAMES['layout']
-            col_generated = PEDIGREE_COLUMN_NAMES['generated']
-            col_sample_id = PEDIGREE_COLUMN_NAMES['sample id']
+            ped_family = PEDIGREE_COLUMN_NAMES['family']
+            ped_person = PEDIGREE_COLUMN_NAMES['person']
+            ped_mom = PEDIGREE_COLUMN_NAMES['mother']
+            ped_dad = PEDIGREE_COLUMN_NAMES['father']
+            ped_sex = PEDIGREE_COLUMN_NAMES['sex']
+            ped_status = PEDIGREE_COLUMN_NAMES['status']
+            ped_role = PEDIGREE_COLUMN_NAMES['role']
+            ped_layout = PEDIGREE_COLUMN_NAMES['layout']
+            ped_generated = PEDIGREE_COLUMN_NAMES['generated']
+            ped_sample_id = PEDIGREE_COLUMN_NAMES['sample id']
             ped_df = read_csv_func(
                 pedigree_filepath, header=None, names=file_header
             )
         else:
             ped_df = read_csv_func(pedigree_filepath)
 
-        if col_sample_id in ped_df:
+        if ped_sample_id in ped_df:
             sample_ids = ped_df.apply(
                 lambda r: r.personId if pd.isna(r.sampleId) else r.sampleId,
                 axis=1,
                 result_type='reduce',
             )
-            ped_df[col_sample_id] = sample_ids
+            ped_df[ped_sample_id] = sample_ids
         else:
-            sample_ids = pd.Series(data=ped_df[col_person].values)
-            ped_df[col_sample_id] = sample_ids
+            sample_ids = pd.Series(data=ped_df[ped_person].values)
+            ped_df[ped_sample_id] = sample_ids
 
         ped_df = ped_df.rename(columns={
-            col_family: PEDIGREE_COLUMN_NAMES['family'],
-            col_person: PEDIGREE_COLUMN_NAMES['person'],
-            col_mom: PEDIGREE_COLUMN_NAMES['mother'],
-            col_dad: PEDIGREE_COLUMN_NAMES['father'],
-            col_sex: PEDIGREE_COLUMN_NAMES['sex'],
-            col_status: PEDIGREE_COLUMN_NAMES['status'],
-            col_role: PEDIGREE_COLUMN_NAMES['role'],
-            col_sample_id: PEDIGREE_COLUMN_NAMES['sample id'],
+            ped_family: PEDIGREE_COLUMN_NAMES['family'],
+            ped_person: PEDIGREE_COLUMN_NAMES['person'],
+            ped_mom: PEDIGREE_COLUMN_NAMES['mother'],
+            ped_dad: PEDIGREE_COLUMN_NAMES['father'],
+            ped_sex: PEDIGREE_COLUMN_NAMES['sex'],
+            ped_status: PEDIGREE_COLUMN_NAMES['status'],
+            ped_role: PEDIGREE_COLUMN_NAMES['role'],
+            ped_sample_id: PEDIGREE_COLUMN_NAMES['sample id'],
         })
 
         assert set(PED_COLUMNS_REQUIRED) <= set(ped_df.columns), \
             ped_df.columns
+
+        if ped_no_role:
+            ped_df = PedigreeRoleGuesser.guess_role_nuc(ped_df)
 
         return ped_df
 

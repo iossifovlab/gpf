@@ -8,7 +8,7 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 
 from dae.annotation.tools.annotator_config import annotation_config_cli_options
 
-from dae.pedigrees.family import FamiliesData
+from dae.pedigrees.family import FamiliesLoader
 from dae.backends.raw.loader import AnnotationPipelineDecorator
 from dae.backends.vcf.loader import VcfLoader
 from dae.backends.impala.parquet_io import ParquetManager
@@ -205,8 +205,10 @@ def main(
     if argv.type == 'make':
         generate_makefile(dae_config, genome, argv)
     elif argv.type == 'vcf':
-        families = FamiliesData.load_pedigree(argv.pedigree)
-        variants_loader = VcfLoader(families, argv.vcf, region=argv.region)
+
+        families_loader = FamiliesLoader(argv.pedigree)
+        variants_loader = VcfLoader(
+            families_loader.families, argv.vcf, region=argv.region)
         variants_loader = AnnotationPipelineDecorator(
             variants_loader, annotation_pipeline
         )

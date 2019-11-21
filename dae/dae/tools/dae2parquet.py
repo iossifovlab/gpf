@@ -20,7 +20,7 @@ from dae.backends.import_commons import build_contig_regions, \
 from dae.backends.import_commons import construct_import_annotation_pipeline
 
 from dae.pedigrees.family import PedigreeReader
-from dae.pedigrees.family import FamiliesData
+from dae.pedigrees.family import FamiliesData, FamiliesLoader
 from dae.backends.impala.parquet_io import ParquetManager
 
 
@@ -247,8 +247,9 @@ def denovo2parquet(
         output, bucket_index=bucket_index, study_id=study_id)
     print("converting into ", parquet_filenames, file=sys.stderr)
 
-    families = FamiliesData.load_simple_families_file(family_filename)
-    variants_loader = DenovoLoader(families, denovo_filename, genome)
+    families_loader = FamiliesLoader(family_filename, file_format='simple')
+    variants_loader = DenovoLoader(
+        families_loader.families, denovo_filename, genome)
     variants_loader = AnnotationPipelineDecorator(
         variants_loader, annotation_pipeline)
 

@@ -15,8 +15,8 @@ from dae.backends.dae.loader import DenovoLoader
 from dae.backends.vcf.loader import VcfLoader
 from dae.backends.raw.loader import AnnotationPipelineDecorator
 
-from dae.pedigrees.family import PedigreeReader, PedigreeRoleGuesser
-from dae.pedigrees.family import FamiliesData
+from dae.pedigrees.family import PedigreeReader
+from dae.pedigrees.family import FamiliesLoader
 
 
 def parse_cli_arguments(dae_config, argv=sys.argv[1:]):
@@ -150,24 +150,11 @@ def main(argv, gpf_instance=None):
     assert output is not None
     assert argv.vcf is not None or argv.denovo is not None
 
-    has_header = True
-    if argv.ped_no_header:
-        argv = PedigreeReader.cast_pedigree_column_indices_to_int(argv)
+    pedigree_format = \
+        PedigreeReader.flexible_pedigree_parse_cli_arguments(argv)
 
-    ped_df = PedigreeReader.flexible_pedigree_read(
-        argv.pedigree,
-        col_family=argv.ped_family,
-        col_person=argv.ped_person,
-        col_mom=argv.ped_mom,
-        col_dad=argv.ped_dad,
-        col_sex=argv.ped_sex,
-        col_status=argv.ped_status,
-        col_role=argv.ped_role,
-        has_header=has_header)
-
-    if argv.ped_no_role:
-        ped_df = PedigreeRoleGuesser.guess_role_nuc(ped_df)
-    families = FamiliesData.from_pedigree_df(ped_df)
+    families_loader = FamiliesLoader(
+        argv.pedigree, pedigree_format=pedigree_format)
 
     skip_pedigree = False
     if argv.vcf and argv.denovo:
@@ -176,7 +163,7 @@ def main(argv, gpf_instance=None):
     parquet_filenames = None
     if argv.vcf is not None:
         variants_loader = VcfLoader(
-            families,
+            families_loader.families,
             argv.vcf
         )
         variants_loader = AnnotationPipelineDecorator(
@@ -190,7 +177,7 @@ def main(argv, gpf_instance=None):
 
     if argv.denovo is not None:
         variants_loader = DenovoLoader(
-            families,
+            families_loader.families,
             argv.denovo,
             genome=genome,
             denovo_format={
@@ -203,7 +190,6 @@ def main(argv, gpf_instance=None):
                 'person_id': argv.denovo_person_id,
                 'family_id': argv.denovo_family_id,
                 'best_state': argv.denovo_best_state,
-                'families': families,
             }
         )
         variants_loader = AnnotationPipelineDecorator(

@@ -1,7 +1,7 @@
 import pytest
 from box import Box
 
-from dae.pedigrees.family import FamiliesData
+from dae.pedigrees.family import FamiliesData, FamiliesLoader
 
 from dae.tools.dae2parquet import parse_cli_arguments, dae_build_makefile
 
@@ -24,11 +24,12 @@ def test_dae2parquet_denovo(
 
     genome = genomes_db.get_genome()
 
-    families = FamiliesData.load_simple_families_file(
-        dae_denovo_config.family_filename)
+    families_loader = FamiliesLoader(
+        dae_denovo_config.family_filename,
+        file_format='simple')
 
     variants_loader = DenovoLoader(
-        families, dae_denovo_config.denovo_filename, genome)
+        families_loader.families, dae_denovo_config.denovo_filename, genome)
     variants_loader = AnnotationPipelineDecorator(
         variants_loader, annotation_pipeline_internal
     )
@@ -72,11 +73,12 @@ def test_dae2parquet_transmitted(
 
     genome = genomes_db.get_genome()
 
-    families = FamiliesData.load_simple_families_file(
-                dae_transmitted_config.family_filename
-    )
+    families_loader = FamiliesLoader(
+        dae_transmitted_config.family_filename,
+        file_format='simple')
+
     variants_loader = DaeTransmittedLoader(
-        families,
+        families_loader.families,
         dae_transmitted_config.summary_filename,
         dae_transmitted_config.toomany_filename,
         genome

@@ -27,7 +27,7 @@ from dae.backends.import_commons import \
     construct_import_annotation_pipeline
 
 from dae.pedigrees.family import PedigreeReader
-from dae.pedigrees.family import FamiliesData
+from dae.pedigrees.family import FamiliesData, FamiliesLoader
 from dae.utils.helpers import study_id_from_path
 from dae.backends.import_commons import variants2parquet
 
@@ -273,11 +273,13 @@ def dae_denovo_config():
 def dae_denovo(
         dae_denovo_config, default_genome, annotation_pipeline_internal):
 
-    families = FamiliesData.load_simple_families_file(
-        dae_denovo_config.family_filename)
+    families_loader = FamiliesLoader(
+        dae_denovo_config.family_filename,
+        file_format='simple')
 
     variants_loader = DenovoLoader(
-        families, dae_denovo_config.denovo_filename, default_genome)
+        families_loader.families, dae_denovo_config.denovo_filename,
+        default_genome)
 
     variants_loader = AnnotationPipelineDecorator(
         variants_loader, annotation_pipeline_internal)
@@ -333,10 +335,11 @@ def iossifov2014_loader(
         annotation_pipeline_internal):
     config = dae_iossifov2014_config
 
-    families = FamiliesData.load_simple_families_file(config.family_filename)
+    families_loader = FamiliesLoader(
+        config.family_filename, file_format='simple')
 
     variants_loader = DenovoLoader(
-        families, config.denovo_filename, default_genome)
+        families_loader.families, config.denovo_filename, default_genome)
 
     variants_loader = AnnotationPipelineDecorator(
         variants_loader, annotation_pipeline_internal)

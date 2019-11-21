@@ -141,13 +141,13 @@ def test_flexible_pedigree_read_no_header():
     pedigree_df = PedigreeReader.flexible_pedigree_read(
         absolute_filepath,
         has_header=False,
-        col_family=0,
-        col_person=1,
-        col_dad=2,
-        col_mom=3,
-        col_sex=4,
-        col_status=5,
-        col_role=6,
+        ped_family=0,
+        ped_person=1,
+        ped_dad=2,
+        ped_mom=3,
+        ped_sex=4,
+        ped_status=5,
+        ped_role=6,
     )
     print(pedigree_df)
     print(expected_df)

@@ -47,6 +47,7 @@ class DenovoLoader(VariantsLoader):
         self.denovo_format = denovo_format
         self.denovo_filename = denovo_filename
 
+        denovo_format['families'] = families
         self.denovo_df = self.flexible_denovo_load(
             self.denovo_filename, genome, **denovo_format
         )

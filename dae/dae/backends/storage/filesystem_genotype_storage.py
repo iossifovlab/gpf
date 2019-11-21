@@ -1,6 +1,6 @@
 import os
 
-from dae.pedigrees.family import FamiliesData
+from dae.pedigrees.family import FamiliesLoader
 
 from dae.backends.storage.genotype_storage import GenotypeStorage
 
@@ -32,16 +32,18 @@ class FilesystemGenotypeStorage(GenotypeStorage):
             ped_filename = os.path.join(
                 data_dir, "{}.ped".format(study_config.id))
 
-            families = FamiliesData.load_pedigree(ped_filename)
-            variants_loader = VcfLoader(families, vcf_filename)
+            families_loader = FamiliesLoader(ped_filename)
+            variants_loader = VcfLoader(
+                families_loader.families, vcf_filename)
             variants_loader = StoredAnnotationDecorator.decorate(
                 variants_loader, vcf_filename
             )
             return RawMemoryVariants(variants_loader)
 
         elif study_config.files.vcf is not None:
-            families = FamiliesData.load_pedigree(study_config.files.pedigree)
-            variants_loader = VcfLoader(families, study_config.files.vcf)
+            families_loader = FamiliesLoader(study_config.files.pedigree)
+            variants_loader = VcfLoader(
+                families_loader.families, study_config.files.vcf)
             variants_loader = StoredAnnotationDecorator.decorate(
                 variants_loader, study_config.files.vcf
             )
@@ -49,8 +51,9 @@ class FilesystemGenotypeStorage(GenotypeStorage):
 
         else:
             assert study_config.files.denovo is not None
-            families = FamiliesData.load_pedigree(study_config.files.pedigree)
-            variants_loader = DenovoLoader(study_config.files.denovo)
+            families_loader = FamiliesLoader(study_config.files.pedigree)
+            variants_loader = DenovoLoader(
+                families_loader.familes, study_config.files.denovo)
             variants_loader = StoredAnnotationDecorator.decorate(
                 variants_loader, study_config.files.denovo
             )
