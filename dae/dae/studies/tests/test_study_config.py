@@ -166,6 +166,8 @@ def test_quads_f1_files_and_tables(quads_f1_config):
 
     assert quads_f1_config.tables.variant == 'quads_f1_variant'
     assert quads_f1_config.tables.pedigree == 'quads_f1_pedigree'
+
+
 def test_quads_f1_config_work_dir(quads_f1_config):
     assert quads_f1_config['work_dir'] == \
         os.path.join(studies_dir(), 'quads_f1')
