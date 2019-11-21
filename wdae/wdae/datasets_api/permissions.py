@@ -8,8 +8,7 @@ from guardian.utils import get_anonymous_user
 
 class IsDatasetAllowed(permissions.BasePermission):
 
-    @staticmethod
-    def has_permission(request, view):
+    def has_permission(self, request, view):
         dataset_id = find_dataset_id_in_request(request)
 
         if dataset_id is None:
@@ -18,9 +17,8 @@ class IsDatasetAllowed(permissions.BasePermission):
         return IsDatasetAllowed.has_object_permission(
                 request, view, dataset_id)
 
-    @staticmethod
-    def has_object_permission(request, view, dataset_id):
-        return IsDatasetAllowed.user_has_permission(request.user, dataset_id)
+    def has_object_permission(self, request, view, dataset_id):
+        return self.user_has_permission(request.user, dataset_id)
 
     @staticmethod
     def user_has_permission(user, dataset_id):
