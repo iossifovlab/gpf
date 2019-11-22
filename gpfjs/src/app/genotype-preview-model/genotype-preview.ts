@@ -47,7 +47,7 @@ const KEY_TO_MAPPER: Map<string, any> = new Map([
 export class GenotypePreview {
   data: any = new Map<string, any>();
 
-  static fromJson(row: Array<string>, columns: Array<string>): GenotypePreview {
+  static fromJson(row: Array<any>, columns: Array<string>): GenotypePreview {
     const result = new GenotypePreview();
     for (const elem in row) {
       if (row.hasOwnProperty(elem)) {
