@@ -1,18 +1,20 @@
-import { Component, OnInit, ViewChild, ElementRef, HostListener } from '@angular/core';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Component, OnInit, ViewChild, ElementRef, HostListener, OnChanges, SimpleChanges } from '@angular/core';
+import { Router, ActivatedRoute, Params } from '@angular/router';
 
 import { Observable } from 'rxjs';
 
 import { VariantReportsService } from './variant-reports.service';
 import { VariantReport, FamilyCounter, PedigreeCounter, EffectTypeTable,
          DeNovoData, PedigreeTable, PeopleCounter, PeopleSex } from './variant-reports';
+import { Dataset } from 'app/datasets/datasets';
+import { DatasetsService } from 'app/datasets/datasets.service';
 
 @Component({
   selector: 'gpf-variant-reports',
   templateUrl: './variant-reports.component.html',
   styleUrls: ['./variant-reports.component.css']
 })
-export class VariantReportsComponent implements OnInit {
+export class VariantReportsComponent implements OnInit, OnChanges {
   @ViewChild('families_pedigree') familiesPedigree: ElementRef;
   @ViewChild('legend') legend: ElementRef;
   familiesPedigreeTop: number;
@@ -26,10 +28,14 @@ export class VariantReportsComponent implements OnInit {
   variantReport$: Observable<VariantReport>;
   pedigreeTables: PedigreeTable[];
 
+  selectedDatasetId: string;
+  selectedDataset$: Observable<Dataset>;
+
   constructor(
     private variantReportsService: VariantReportsService,
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    private datasetsService: DatasetsService,
   ) { }
 
   ngOnInit() {
@@ -37,22 +43,40 @@ export class VariantReportsComponent implements OnInit {
       .take(1)
       .map(params => <string>params['dataset']);
 
-    this.variantReport$ = datasetId$.switchMap(datasetId =>
-      this.variantReportsService.getVariantReport(datasetId)).share();
+    this.route.parent.params.subscribe(
+      (params: Params) => {
+        this.selectedDatasetId = params['dataset'];
+      }
+    );
 
-    this.variantReport$.take(1).subscribe(params => {
-      this.pedigreeTables = params.familyReport.familiesCounters.map(
-        familiesCounters => new PedigreeTable(
-            this.chunkPedigrees(familiesCounters.familyCounter),
-            familiesCounters.phenotypes, familiesCounters.groupName,
-            familiesCounters.legend
-          )
-        );
+    this.selectedDataset$ = this.datasetsService.getSelectedDataset();
 
-      this.currentPeopleCounter = params.familyReport.peopleCounters[0];
-      this.currentPedigreeTable = this.pedigreeTables[0];
-      this.currentDenovoReport = params.denovoReport.tables[0];
-    });
+    this.selectedDataset$.subscribe(
+      dataset => {
+        if (dataset.accessRights) {
+          this.variantReport$ = datasetId$.switchMap(datasetId =>
+            this.variantReportsService.getVariantReport(datasetId)).share();
+
+          this.variantReport$.take(1).subscribe(params => {
+            this.pedigreeTables = params.familyReport.familiesCounters.map(
+              familiesCounters => new PedigreeTable(
+                  this.chunkPedigrees(familiesCounters.familyCounter),
+                  familiesCounters.phenotypes, familiesCounters.groupName,
+                  familiesCounters.legend
+                )
+              );
+
+            this.currentPeopleCounter = params.familyReport.peopleCounters[0];
+            this.currentPedigreeTable = this.pedigreeTables[0];
+            this.currentDenovoReport = params.denovoReport.tables[0];
+          });
+        }
+      }
+    );
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    this.datasetsService.setSelectedDatasetById(this.selectedDatasetId);
   }
 
   @HostListener('window:scroll', ['$event'])
