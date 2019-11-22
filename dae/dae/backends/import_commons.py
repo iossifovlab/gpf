@@ -185,7 +185,8 @@ def variants2parquet(
         filesystem=None):
 
     parquet_filenames = ParquetManager.build_parquet_filenames(
-        output, bucket_index=bucket_index, study_id=study_id
+        output, bucket_index=bucket_index, study_id=study_id,
+        skip_pedigree=skip_pedigree
     )
     print("converting into ", parquet_filenames.variant, file=sys.stderr)
 

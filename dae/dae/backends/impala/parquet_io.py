@@ -271,7 +271,8 @@ class ParquetManager:
 
     @staticmethod
     def build_parquet_filenames(
-            prefix, study_id=None, bucket_index=0, suffix=None):
+            prefix, study_id=None, bucket_index=0, suffix=None,
+            skip_pedigree=False):
         assert bucket_index >= 0
 
         basename = os.path.basename(os.path.abspath(prefix))
@@ -292,16 +293,17 @@ class ParquetManager:
             prefix, 'variant',
             f'{study_id}_variant{filesuffix}.parquet'
         )
-        pedigree_filename = os.path.join(
-            prefix, 'pedigree',
-            f'{study_id}_pedigree{filesuffix}.parquet'
-        )
-
         conf = {
             'variant': variant_filename,
-            'pedigree': pedigree_filename,
         }
-        return Box(conf)
+        if not skip_pedigree:
+            pedigree_filename = os.path.join(
+                prefix, 'pedigree',
+                f'{study_id}_pedigree{filesuffix}.parquet'
+            )
+            conf['pedigree'] = pedigree_filename
+
+        return Box(conf, default_box=True)
 
     @staticmethod
     def pedigree_to_parquet(fvars, pedigree_filename, filesystem=None):

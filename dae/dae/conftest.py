@@ -379,12 +379,12 @@ def iossifov2014_impala(
 
     impala_genotype_storage.impala_load_study(
         study_id,
-        parquet_filenames.pedigree,
-        parquet_filenames.variant
+        [parquet_filenames.variant],
+        [parquet_filenames.pedigree],
     )
 
     fvars = impala_genotype_storage.build_backend(
-        impala_genotype_storage.default_study_config(study_id),
+        Box({'id': study_id}, default_box=True),
         genomes_db)
     return fvars
 
@@ -620,12 +620,14 @@ def data_import(
             filename = os.path.basename(vcf.pedigree)
             study_id = os.path.splitext(filename)[0]
 
-            impala = impala_genotype_storage._impala_storage_config(study_id)
+            variant_table, pedigree_table = impala_genotype_storage. \
+                study_tables(Box({'id': study_id}, default_box=True))
+
             if not reimport and \
                     test_impala_helpers.check_table(
-                        impala_test_dbname(), impala.tables.variant) and \
+                        impala_test_dbname(), variant_table) and \
                     test_impala_helpers.check_table(
-                        impala_test_dbname(), impala.tables.pedigree):
+                        impala_test_dbname(), pedigree_table):
                 continue
 
             study_id = study_id_from_path(vcf.pedigree)
@@ -648,8 +650,8 @@ def data_import(
 
             impala_genotype_storage.impala_load_study(
                 study_id,
-                parquet_filenames.pedigree,
-                parquet_filenames.variant
+                [parquet_filenames.variant],
+                [parquet_filenames.pedigree],
             )
 
     build('backends/')
@@ -662,7 +664,7 @@ def variants_impala(request, data_import, impala_genotype_storage, genomes_db):
     def builder(path):
         study_id = os.path.basename(path)
         fvars = impala_genotype_storage.build_backend(
-            impala_genotype_storage.default_study_config(study_id),
+            Box({'id': study_id}, default_box=True),
             genomes_db)
         return fvars
 

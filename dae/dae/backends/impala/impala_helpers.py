@@ -25,21 +25,21 @@ class ImpalaHelpers(object):
             )
         self.connection = impala_connection
 
-    def import_variants(self, config):
-        print("importing variants into impala:", config)
+    def import_variants(
+            self, db,
+            variant_table, pedigree_table,
+            variant_hdfs_path, pedigree_hdfs_path):
 
         with self.connection.cursor() as cursor:
             cursor.execute("""
                 CREATE DATABASE IF NOT EXISTS {db}
-            """.format(db=config.db))
+            """.format(db=db))
             self.import_files(
-                cursor, config.db, config.tables.pedigree,
-                config.files.pedigree
-            )
+                cursor, db, pedigree_table,
+                pedigree_hdfs_path)
             self.import_files(
-                cursor, config.db, config.tables.variant,
-                config.files.variants
-            )
+                cursor, db, variant_table,
+                variant_hdfs_path)
 
     def import_files(self, cursor, dbname, table_name, import_files):
 

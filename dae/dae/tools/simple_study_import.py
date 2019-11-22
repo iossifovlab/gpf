@@ -160,7 +160,9 @@ def main(argv, gpf_instance=None):
     if argv.vcf and argv.denovo:
         skip_pedigree = True
 
-    parquet_filenames = None
+    parquet_pedigrees = []
+    parquet_variants = []
+
     if argv.vcf is not None:
         variants_loader = VcfLoader(
             families_loader.families,
@@ -169,11 +171,15 @@ def main(argv, gpf_instance=None):
         variants_loader = AnnotationPipelineDecorator(
             variants_loader, annotation_pipeline
         )
-        parquet_filenames = variants2parquet(
+        filenames = variants2parquet(
             study_id, variants_loader,
             output=output, bucket_index=100,
             skip_pedigree=skip_pedigree,
         )
+        if filenames.variant:
+            parquet_variants.append(filenames.variant)
+        if filenames.pedigree:
+            parquet_pedigrees.append(filenames.pedigree)
 
     if argv.denovo is not None:
         variants_loader = DenovoLoader(
@@ -195,16 +201,20 @@ def main(argv, gpf_instance=None):
         variants_loader = AnnotationPipelineDecorator(
             variants_loader, annotation_pipeline
         )
-        parquet_filenames = variants2parquet(
+        filenames = variants2parquet(
             study_id, variants_loader,
             output=output, bucket_index=0
         )
+        if filenames.variant:
+            parquet_variants.append(filenames.variant)
+        if filenames.pedigree:
+            parquet_pedigrees.append(filenames.pedigree)
 
-    if parquet_filenames:
+    if parquet_pedigrees and parquet_variants:
         study_config = genotype_storage.impala_load_study(
             study_id,
-            os.path.split(parquet_filenames.pedigree)[0],
-            os.path.split(parquet_filenames.variant)[0]
+            parquet_variants,
+            parquet_pedigrees
         )
         print(study_config)
 
