@@ -2,7 +2,7 @@ import os
 import sys
 import time
 import itertools
-import traceback
+# import traceback
 from box import Box
 
 import numpy as np
@@ -43,7 +43,7 @@ class ParquetData(object):
         for index, name in enumerate(self.schema.names):
             assert name in self.data
             column = self.data[name]
-            field = self.schema.field_by_name(name)
+            field = self.schema.field(name)
             batch_data.append(pa.array(column, type=field.type))
             if index > 0:
                 assert len(batch_data[index]) == len(batch_data[0]), name
@@ -59,14 +59,48 @@ class ParquetData(object):
         return len(self.data['summary_variant_index'])
 
 
+class ContinuousParquetFileWriter(object):
+    """
+    Class that automatically writes to a given parquet file when supplied
+    enough data. Automatically dumps leftover data when closing into the file
+    """
+    def __init__(
+                self, filepath, schema,
+                filesystem=None, rows=10000):
+        self._data = ParquetData(schema)
+        schema = schema.to_arrow()
+        path = os.path.dirname(filepath)
+        if not os.path.exists(path):
+            os.makedirs(path)
+        self._writer = pq.ParquetWriter(
+                filepath,
+                schema,
+                compression='snappy',
+                filesystem=filesystem)
+        self.rows = rows
+
+    def _write_table(self):
+        self._writer.write_table(self._data.build_table())
+
+    def data_append(self, attr_name, value):
+        self._data.data_append(attr_name, value)
+        if len(self._data) >= self.rows:
+            self._write_table()
+
+    def close(self):
+        if len(self._data) > 0:
+            self._write_table()
+        self._writer.close()
+
+
 class VariantsParquetWriter(object):
 
     def __init__(
             self, fvars,
-            bucket_index=1, rows=100000,
-            include_reference=True,
-            include_unknown=True,
-            filesystem=None):
+            region_length, family_bin_size,
+            root_folder, bucket_index=1,
+            rows=100000, include_reference=True,
+            include_unknown=True, filesystem=None):
 
         self.fvars = fvars
         self.families = fvars.families
@@ -86,7 +120,11 @@ class VariantsParquetWriter(object):
             self.schema, include_reference=True)
 
         self.start = time.time()
-        self.data = ParquetData(self.schema)
+        # self.data = ParquetData(self.schema)
+        self.data_writers = {}
+        self.region_len = region_length
+        self.family_bin_size = family_bin_size
+        self.root_folder = root_folder
 
     def _setup_reference_allele(self, summary_variant, family):
         genotype = -1 * np.ones(
@@ -128,8 +166,8 @@ class VariantsParquetWriter(object):
         )
 
     def _process_family_variant(
-        self, summary_variant_index, family_variant_index,
-            family_variant):
+        self, summary_variant_index, summary_variant,
+            family_variant_index, family_variant):
 
         effect_data = \
             self.parquet_serializer.serialize_variant_effects(
@@ -179,17 +217,49 @@ class VariantsParquetWriter(object):
                     [summary], [frequency], [genomic_scores],
                     effect_genes, [family], member):
 
-                self.data.data_append('bucket_index', self.bucket_index)
+                bin_writer = self._get_bin_writer(
+                    summary_variant, family_variant)
+                bin_writer.data_append('bucket_index', self.bucket_index)
 
                 for d in (s, freq, gs, e, f, m):
                     for key, val in d._asdict().items():
-                        self.data.data_append(key, val)
+                        bin_writer.data_append(key, val)
 
-    def variants_table(self):
+    def _evaluate_region_bin(self, summary_variant):
+        chromosome = summary_variant.ref_allele.chromosome
+        pos = summary_variant.ref_allele.position // self.region_len
+        return f'{chromosome}_{pos}'
+
+    def _evaluate_family_bin(self, family_variant):
+        family_variant_id = family_variant.family_id
+        print(family_variant_id)
+        return hash(family_variant_id) % self.family_bin_size
+
+    def _get_parquet_filename(self, bins):
+        filename = self.root_folder
+        filename = os.path.join(filename, *tuple(map(str, bins)))
+        filename = os.path.join(filename,
+                                f'variants_region_bin_{bins[0]}'
+                                + f'_family_bin_{bins[1]}.parquet')
+        return filename
+
+    def _get_bin_writer(self, summary_variant, family_variant):
+        region_bin = self._evaluate_region_bin(summary_variant)
+        family_bin = self._evaluate_family_bin(family_variant)
+        key = (region_bin, family_bin)
+        if key not in self.data_writers:
+            filename = self._get_parquet_filename(key)
+            self.data_writers[key] = ContinuousParquetFileWriter(
+                    filename,
+                    self.schema,
+                    filesystem=self.filesystem,
+                    rows=self.rows)
+        return self.data_writers[key]
+
+    def write_partition(self):
         family_variant_index = 0
-        for summary_variant_index, (sumary_variant, family_variants) in \
+        for summary_variant_index, (summary_variant, family_variants) in \
                 enumerate(self.full_variants_iterator):
-
             for family_variant in family_variants:
                 family_variant_index += 1
 
@@ -198,15 +268,17 @@ class VariantsParquetWriter(object):
                         continue
                     # handle all unknown variants
                     unknown_variant = self._setup_all_unknown_variant(
-                        sumary_variant, family_variant.family_id)
+                        summary_variant, family_variant.family_id)
                     self._process_family_variant(
                         summary_variant_index,
+                        summary_variant,
                         family_variant_index,
                         unknown_variant
                     )
                 else:
                     self._process_family_variant(
                         summary_variant_index,
+                        summary_variant,
                         family_variant_index,
                         family_variant)
 
@@ -219,16 +291,6 @@ class VariantsParquetWriter(object):
                         family_variant_index, elapsed),
                     file=sys.stderr)
 
-            if len(self.data) >= self.rows:
-                table = self.data.build_table()
-
-                yield table
-
-        if len(self.data) > 0:
-            table = self.data.build_table()
-
-            yield table
-
         print('-------------------------------------------', file=sys.stderr)
         print('Bucket:', self.bucket_index, file=sys.stderr)
         print('-------------------------------------------', file=sys.stderr)
@@ -239,24 +301,36 @@ class VariantsParquetWriter(object):
                 family_variant_index, elapsed),
             file=sys.stderr)
 
-    def save_variants_to_parquet(
-            self, filename):
-
-        writer = pq.ParquetWriter(
-            filename, self.data.schema,
-            compression='snappy',
-            filesystem=self.filesystem)
-
-        try:
-            for table in self.variants_table():
-                assert table.schema == self.data.schema
-                writer.write_table(table)
-
-        except Exception as ex:
-            print('unexpected error:', ex)
-            traceback.print_exc(file=sys.stdout)
-        finally:
-            writer.close()
+#    def variants_table(self):
+#        for key, value in self.data_writers.items():
+#            yield (key, value.build_table())
+#
+#    def save_variants_to_parquet(
+#            self, root_path):
+#
+#        try:
+#            self.fill_bins()
+#            print(self.data_writers.keys())
+#            for (bins, table) in self.variants_table():
+#                filename = root_path
+#                filename = os.path.join(filename, *tuple(map(str, bins)))
+#
+#                if not os.path.exists(filename):
+#                    os.makedirs(filename)
+#
+#                filename = os.path.join(filename,
+#                                        f'variants_region_bin_{bins[0]}'
+#                                        + f'_family_bin_{bins[1]}.parquet')
+#                assert table.schema == self.data_writers[bins].schema
+#                with pq.ParquetWriter(
+#                        filename, table.schema,
+#                        compression='snappy',
+#                        filesystem=self.filesystem) as writer:
+#                    writer.write_table(table)
+#
+#        except Exception as ex:
+#            print('unexpected error:', ex)
+#            traceback.print_exc(file=sys.stdout)
 
 
 class ParquetManager:
@@ -394,4 +468,3 @@ def save_ped_df_to_parquet(ped_df, filename, filesystem=None):
 
     table = pa.Table.from_pandas(ped_df, schema=pps)
     pq.write_table(table, filename, filesystem=filesystem)
-
