@@ -80,10 +80,13 @@ class ContinuousParquetFileWriter(object):
         self.rows = rows
 
     def _write_table(self):
+        print('WRITING')
         self._writer.write_table(self._data.build_table())
 
     def data_append(self, attr_name, value):
         self._data.data_append(attr_name, value)
+
+    def write_if_overflowing(self):
         if len(self._data) >= self.rows:
             self._write_table()
 
@@ -224,6 +227,7 @@ class VariantsParquetWriter(object):
                 for d in (s, freq, gs, e, f, m):
                     for key, val in d._asdict().items():
                         bin_writer.data_append(key, val)
+                bin_writer.write_if_overflowing()
 
     def _evaluate_region_bin(self, summary_variant):
         chromosome = summary_variant.ref_allele.chromosome
