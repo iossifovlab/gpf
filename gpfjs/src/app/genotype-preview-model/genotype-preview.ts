@@ -47,17 +47,17 @@ const KEY_TO_MAPPER: Map<string, any> = new Map([
 export class GenotypePreview {
   data: any = new Map<string, any>();
 
-  static fromJson(row: string, json: any): GenotypePreview {
+  static fromJson(row: Array<string>, columns: Array<string>): GenotypePreview {
     const result = new GenotypePreview();
-    for (const elem in json.rows[row]) {
-      if (json.rows[row].hasOwnProperty(elem)) {
-        const mapper = KEY_TO_MAPPER.get(json.cols[elem]);
-        const propertyValue = json.rows[row][elem];
+    for (const elem in row) {
+      if (row.hasOwnProperty(elem)) {
+        const mapper = KEY_TO_MAPPER.get(columns[elem]);
+        const propertyValue = row[elem];
 
         if (mapper) {
-          result.data[json.cols[elem]] = mapper(propertyValue);
+          result.data[columns[elem]] = mapper(propertyValue);
         } else if (propertyValue !== 'nan' && propertyValue !== '') {
-          result.data[json.cols[elem]] = propertyValue;
+          result.data[columns[elem]] = propertyValue;
         }
       }
     }
@@ -71,31 +71,40 @@ export class GenotypePreview {
 
 }
 
-export class GenotypePreviewsArray {
-  genotypePreviews: GenotypePreview[] = [];
+export class GenotypePreviewInfo {
 
-  static fromJson(json: any): GenotypePreviewsArray {
-    if (json.count === 0) {
-      return new GenotypePreviewsArray(0, null);
-    }
-    if (json.cols === undefined) {
-      return new GenotypePreviewsArray(0, null);
-    }
+  static fromJson(json: any): GenotypePreviewInfo {
+    const genotypePreviewInfo = new GenotypePreviewInfo(
+      json.cols, json.legend, json.maxVariantsCount
+    );
 
-    const genotypePreviewsArray = new GenotypePreviewsArray(json.count, json.legend);
-
-    for (const row in json.rows) {
-      if (json.rows.hasOwnProperty(row)) {
-        const genotypePreview = GenotypePreview.fromJson(row, json);
-        genotypePreviewsArray.genotypePreviews.push(genotypePreview);
-      }
-    }
-    return genotypePreviewsArray;
+    return genotypePreviewInfo;
   }
 
   constructor(
-    readonly total: number,
-    readonly legend: Array<any>
-  ) {
+    readonly columns: Array<string>,
+    readonly legend: Array<any>,
+    readonly maxVariantsCount: Number
+  ) { }
+}
+
+export class GenotypePreviewVariantsArray {
+  genotypePreviews: GenotypePreview[] = [];
+  moreThan: Boolean = false;
+
+  constructor() { }
+
+  addPreviewVariant(row: Array<string>, genotypePreviewInfo: GenotypePreviewInfo) {
+    if (this.genotypePreviews.length === genotypePreviewInfo.maxVariantsCount) {
+      this.moreThan = true;
+      return;
+    }
+    const genotypePreview = GenotypePreview.fromJson(row, genotypePreviewInfo.columns);
+    this.genotypePreviews.push(genotypePreview);
+  }
+
+  variantsCount() {
+    const total = this.moreThan ? 'more than 1000' : this.genotypePreviews.length;
+    return `${total} variants selected (${this.genotypePreviews.length} shown)`;
   }
 }
