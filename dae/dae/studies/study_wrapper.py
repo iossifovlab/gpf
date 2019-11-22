@@ -221,11 +221,13 @@ class StudyWrapper(object):
 
         return limited_rows
 
-    def get_wdae_preview_info(self, query):
+    def get_wdae_preview_info(self, query, max_variants_count=1000):
         preview_info = {}
 
         preview_info['cols'] = self.preview_columns
         preview_info['legend'] = self.get_legend(**query)
+
+        preview_info['maxVariantsCount'] = max_variants_count
 
         return preview_info
 

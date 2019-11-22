@@ -32,7 +32,10 @@ class QueryPreviewView(QueryBaseView):
         dataset = self.variants_db.get_wdae_wrapper(dataset_id)
 
         # LOGGER.info('dataset ' + str(dataset))
-        response = dataset.get_wdae_preview_info(data)
+        response = dataset.get_wdae_preview_info(
+            data,
+            max_variants_count=QueryPreviewVariantsView.MAX_SHOWN_VARIANTS
+        )
 
         # pprint.pprint(response)
 
@@ -63,11 +66,13 @@ class QueryPreviewVariantsView(QueryBaseView):
 
         # pprint.pprint(response)
 
-        return StreamingHttpResponse(
+        response = StreamingHttpResponse(
             iterator_to_json(response),
             status=status.HTTP_200_OK,
             content_type='text/event-stream'
         )
+        response['Cache-Control'] = 'no-cache'
+        return response
 
 
 class QueryDownloadView(QueryBaseView):
@@ -75,8 +80,6 @@ class QueryDownloadView(QueryBaseView):
     DOWNLOAD_LIMIT = 10000
 
     def _parse_query_params(self, data):
-        print(data)
-
         res = {str(k): str(v) for k, v in list(data.items())}
         assert 'queryData' in res
         query = json.loads(res['queryData'])
