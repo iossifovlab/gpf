@@ -2,10 +2,15 @@ import json
 import numpy as np
 
 
-def convert(o):
-    if isinstance(o, np.int64):
-        return int(o)
-    raise TypeError
+def convert(obj):
+    if isinstance(obj, np.int64):
+        return int(obj)
+    elif isinstance(obj, np.float32):
+        return float(obj)
+    else:
+        raise TypeError(
+            "Unserializable object {} of type {}".format(obj, type(obj))
+        )
 
 
 def iterator_to_json(variants):
