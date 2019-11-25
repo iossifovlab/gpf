@@ -109,8 +109,6 @@ class PreparePersons(PrepareBase):
         return str(sample_id)
 
     def _save_persons(self, ped_df):
-        print(ped_df.head())
-
         families = self.db.get_families()
         persons = []
         for _index, row in ped_df.iterrows():
