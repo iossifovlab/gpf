@@ -1,12 +1,15 @@
 import os
 import time
 from dae.backends.impala.parquet_io import VariantsParquetWriter
+from dae.backends.impala.parquet_io import ParquetPartitionDescription
 
 
 def test_custom_parquet_writing(vcf_variants_loader):
     fvars = vcf_variants_loader('vcf_import/effects_trio')
 
-    parquet_writer = VariantsParquetWriter(fvars, 10, 10,
+    partition_desc = ParquetPartitionDescription(10, 10)
+
+    parquet_writer = VariantsParquetWriter(fvars, partition_desc,
                                            '/tmp/variant-test-dataset2')
 
     assert parquet_writer is not None
