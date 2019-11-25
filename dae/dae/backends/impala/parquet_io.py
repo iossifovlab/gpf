@@ -64,9 +64,9 @@ class ParquetPartitionDescription():
         self.region_length = region_length
         self.family_bin_size = family_bin_size
 
-    def _evaluate_region_bin(self, summary_variant):
-        chromosome = summary_variant.ref_allele.chromosome
-        pos = summary_variant.ref_allele.position // self.region_length
+    def _evaluate_region_bin(self, family_variant):
+        chromosome = family_variant.ref_allele.chromosome
+        pos = family_variant.ref_allele.position // self.region_length
         return f'{chromosome}_{pos}'
 
     def _evaluate_family_bin(self, family_variant):
@@ -74,9 +74,9 @@ class ParquetPartitionDescription():
         print(family_variant_id)
         return hash(family_variant_id) % self.family_bin_size
 
-    def evaluate_variant_bin(self, summary_variant, family_variant):
+    def evaluate_variant_bin(self, family_variant):
         return (
-            self._evaluate_region_bin(summary_variant),
+            self._evaluate_region_bin(family_variant),
             self._evaluate_family_bin(family_variant)
         )
 
@@ -265,8 +265,7 @@ class VariantsParquetWriter():
         return filename
 
     def _get_bin_writer(self, summary_variant, family_variant):
-        key = self.partition_description.evaluate_variant_bin(
-            summary_variant, family_variant)
+        key = self.partition_description.evaluate_variant_bin(family_variant)
 
         if key not in self.data_writers:
             filename = self._get_parquet_filename(key)
