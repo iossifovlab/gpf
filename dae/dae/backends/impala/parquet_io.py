@@ -14,7 +14,7 @@ from dae.variants.family_variant import FamilyAllele, FamilyVariant
 from dae.backends.impala.serializers import ParquetSerializer
 
 
-class ParquetData(object):
+class ParquetData():
 
     def __init__(self, schema):
         self.schema = schema.to_arrow()
@@ -59,7 +59,7 @@ class ParquetData(object):
         return len(self.data['summary_variant_index'])
 
 
-class ParquetPartitionDescription(object):
+class ParquetPartitionDescription():
     def __init__(self, region_length, family_bin_size):
         self.region_length = region_length
         self.family_bin_size = family_bin_size
@@ -81,7 +81,7 @@ class ParquetPartitionDescription(object):
         )
 
 
-class ContinuousParquetFileWriter(object):
+class ContinuousParquetFileWriter():
     """
     Class that automatically writes to a given parquet file when supplied
     enough data. Automatically dumps leftover data when closing into the file
@@ -122,7 +122,7 @@ class ContinuousParquetFileWriter(object):
         self._writer.close()
 
 
-class VariantsParquetWriter(object):
+class VariantsParquetWriter():
 
     def __init__(
             self, fvars,
