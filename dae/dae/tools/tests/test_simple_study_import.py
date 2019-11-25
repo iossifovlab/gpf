@@ -7,7 +7,7 @@ from dae.tools.simple_study_import import main
 
 def test_import_denovo_dae_style_into_impala(
         genomes_db, fixture_dirname,
-        default_dae_config, default_gpf_instance):
+        default_dae_config, default_gpf_instance, temp_dirname):
 
     pedigree_filename = fixture_dirname('denovo_import/fake_pheno.ped')
     denovo_filename = fixture_dirname('denovo_import/variants_DAE_style.tsv')
@@ -23,6 +23,7 @@ def test_import_denovo_dae_style_into_impala(
         '--denovo-family-id', 'familyId',
         '--denovo-best-state', 'bestState',
         '--genotype-storage', genotype_storage_id,
+        '-o', temp_dirname,
     ]
 
     main(argv, default_gpf_instance)
@@ -42,7 +43,7 @@ def test_import_denovo_dae_style_into_impala(
 
 def test_import_comp_vcf_into_impala(
         genomes_db, fixture_dirname, default_dae_config,
-        default_gpf_instance):
+        default_gpf_instance, temp_dirname):
 
     pedigree_filename = fixture_dirname('study_import/comp.ped')
     vcf_filename = fixture_dirname('study_import/comp.vcf')
@@ -55,6 +56,7 @@ def test_import_comp_vcf_into_impala(
         '--skip-reports',
         '--vcf', vcf_filename,
         '--genotype-storage', genotype_storage_id,
+        '-o', temp_dirname,
     ]
 
     main(argv, default_gpf_instance)
@@ -74,7 +76,7 @@ def test_import_comp_vcf_into_impala(
 
 def test_import_comp_denovo_into_impala(
         genomes_db, fixture_dirname, default_dae_config,
-        default_gpf_instance):
+        default_gpf_instance, temp_dirname):
 
     pedigree_filename = fixture_dirname('study_import/comp.ped')
     denovo_filename = fixture_dirname('study_import/comp.tsv')
@@ -92,6 +94,7 @@ def test_import_comp_denovo_into_impala(
         '--denovo-family-id', 'familyId',
         '--denovo-best-state', 'bestState',
         '--genotype-storage', genotype_storage_id,
+        '-o', temp_dirname,
     ]
 
     main(argv, default_gpf_instance)
@@ -111,7 +114,7 @@ def test_import_comp_denovo_into_impala(
 
 def test_import_comp_all_into_impala(
         genomes_db, fixture_dirname, default_dae_config,
-        default_gpf_instance):
+        default_gpf_instance, temp_dirname):
 
     pedigree_filename = fixture_dirname('study_import/comp.ped')
     vcf_filename = fixture_dirname('study_import/comp.vcf')
@@ -131,6 +134,7 @@ def test_import_comp_all_into_impala(
         '--denovo-family-id', 'familyId',
         '--denovo-best-state', 'bestState',
         '--genotype-storage', genotype_storage_id,
+        '-o', temp_dirname,
     ]
 
     main(argv, default_gpf_instance)

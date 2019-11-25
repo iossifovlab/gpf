@@ -1,6 +1,5 @@
 import os
 import sys
-from box import Box
 from time import time
 
 from dae.backends.storage.genotype_storage import GenotypeStorage
@@ -8,6 +7,7 @@ from dae.backends.storage.genotype_storage import GenotypeStorage
 from dae.backends.impala.hdfs_helpers import HdfsHelpers
 from dae.backends.impala.impala_helpers import ImpalaHelpers
 from dae.backends.impala.impala_variants import ImpalaFamilyVariants
+from dae.backends.impala.parquet_io import ParquetManager
 
 
 class ImpalaGenotypeStorage(GenotypeStorage):
@@ -134,9 +134,6 @@ class ImpalaGenotypeStorage(GenotypeStorage):
 
         return variant_files, pedigree_files
 
-    def simple_study_import(self, study_id, variants_loader):
-        pass
-
     def _generate_study_config(self, study_id, variant_table, pedigree_table):
         assert study_id is not None
 
@@ -146,6 +143,50 @@ class ImpalaGenotypeStorage(GenotypeStorage):
                 pedigree_table=pedigree_table,
                 variant_table=variant_table)
         return study_config
+
+    def simple_study_import(
+            self, study_id, denovo_loader, vcf_loader,
+            families_loader, output='.'):
+
+        assert denovo_loader is not None or vcf_loader is not None
+
+        parquet_pedigrees = []
+        parquet_variants = []
+
+        parquet_filenames = None
+        if vcf_loader is not None:
+            bucket_index = 100  # transmitted buckets (>=100)
+            parquet_filenames = ParquetManager.build_parquet_filenames(
+                output, bucket_index=bucket_index, study_id=study_id
+            )
+            ParquetManager.variants_to_parquet(
+                vcf_loader, parquet_filenames.variant,
+                bucket_index=bucket_index,
+                filesystem=None
+            )
+            parquet_variants.append(parquet_filenames.variant)
+
+        if denovo_loader is not None:
+            bucket_index = 0  # denovo buckets (0-99)
+            parquet_filenames = ParquetManager.build_parquet_filenames(
+                output, bucket_index=bucket_index, study_id=study_id
+            )
+            ParquetManager.variants_to_parquet(
+                denovo_loader, parquet_filenames.variant,
+                bucket_index=bucket_index,
+                filesystem=None
+            )
+            parquet_variants.append(parquet_filenames.variant)
+
+        assert parquet_filenames is not None
+        ParquetManager.families_loader_to_parquet(
+            families_loader, parquet_filenames.pedigree
+        )
+
+        parquet_pedigrees.append(parquet_filenames.pedigree)
+
+        return self.impala_load_study(
+            study_id, parquet_variants, parquet_pedigrees)
 
 
 STUDY_CONFIG_TEMPLATE = '''

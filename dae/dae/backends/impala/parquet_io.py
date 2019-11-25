@@ -3,6 +3,7 @@ import sys
 import time
 import itertools
 import traceback
+from deprecation import deprecated
 from box import Box
 
 import numpy as np
@@ -306,6 +307,9 @@ class ParquetManager:
         return Box(conf, default_box=True)
 
     @staticmethod
+    @deprecated(
+        details="replace 'pedigree_to_parquet' with "
+        "'families_loader_to_parquet'")
     def pedigree_to_parquet(fvars, pedigree_filename, filesystem=None):
         os.makedirs(
             os.path.split(pedigree_filename)[0], exist_ok=True
@@ -313,6 +317,19 @@ class ParquetManager:
 
         save_ped_df_to_parquet(
             fvars.families.ped_df, pedigree_filename,
+            filesystem=filesystem
+        )
+
+    @staticmethod
+    def families_loader_to_parquet(
+            families_loader, pedigree_filename, filesystem=None):
+        
+        os.makedirs(
+            os.path.split(pedigree_filename)[0], exist_ok=True
+        )
+
+        save_ped_df_to_parquet(
+            families_loader.ped_df, pedigree_filename,
             filesystem=filesystem
         )
 

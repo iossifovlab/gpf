@@ -156,33 +156,19 @@ def main(argv, gpf_instance=None):
     families_loader = FamiliesLoader(
         argv.pedigree, pedigree_format=pedigree_format)
 
-    skip_pedigree = False
-    if argv.vcf and argv.denovo:
-        skip_pedigree = True
-
-    parquet_pedigrees = []
-    parquet_variants = []
-
+    vcf_loader = None
+    denovo_loader = None
     if argv.vcf is not None:
-        variants_loader = VcfLoader(
+        vcf_loader = VcfLoader(
             families_loader.families,
             argv.vcf
         )
-        variants_loader = AnnotationPipelineDecorator(
-            variants_loader, annotation_pipeline
+        vcf_loader = AnnotationPipelineDecorator(
+            vcf_loader, annotation_pipeline
         )
-        filenames = variants2parquet(
-            study_id, variants_loader,
-            output=output, bucket_index=100,
-            skip_pedigree=skip_pedigree,
-        )
-        if filenames.variant:
-            parquet_variants.append(filenames.variant)
-        if filenames.pedigree:
-            parquet_pedigrees.append(filenames.pedigree)
 
     if argv.denovo is not None:
-        variants_loader = DenovoLoader(
+        denovo_loader = DenovoLoader(
             families_loader.families,
             argv.denovo,
             genome=genome,
@@ -198,26 +184,14 @@ def main(argv, gpf_instance=None):
                 'best_state': argv.denovo_best_state,
             }
         )
-        variants_loader = AnnotationPipelineDecorator(
-            variants_loader, annotation_pipeline
+        denovo_loader = AnnotationPipelineDecorator(
+            denovo_loader, annotation_pipeline
         )
-        filenames = variants2parquet(
-            study_id, variants_loader,
-            output=output, bucket_index=0
-        )
-        if filenames.variant:
-            parquet_variants.append(filenames.variant)
-        if filenames.pedigree:
-            parquet_pedigrees.append(filenames.pedigree)
 
-    if parquet_pedigrees and parquet_variants:
-        study_config = genotype_storage.impala_load_study(
-            study_id,
-            parquet_variants,
-            parquet_pedigrees
+        study_config = genotype_storage.simple_study_import(
+            study_id, denovo_loader, vcf_loader, families_loader,
+            output=output
         )
-        print(study_config)
-
         save_study_config(dae_config, study_id, study_config)
 
     if not argv.skip_reports:

@@ -357,6 +357,7 @@ class FamiliesLoader:
         self.pedigree_format = pedigree_format
 
         self.families = self._load_families_data()
+        self.ped_df = self.families.ped_df
 
     @staticmethod
     def load_pedigree_file(pedigree_filename, pedigree_format={}):

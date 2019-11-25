@@ -12,3 +12,6 @@ class GenotypeStorage:
 
     def build_backend(self, study_id, genomes_db):
         raise NotImplementedError()
+
+    def simple_study_import(self, study_id, pedigree_loader, variant_loaders):
+        raise NotImplementedError()
