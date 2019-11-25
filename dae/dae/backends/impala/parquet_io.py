@@ -108,7 +108,7 @@ class ContinuousParquetFileWriter(object):
     def data_append(self, attributes):
         '''
         Appends the data for an entire variant to the buffer
-        
+
         :param list attributes: List of key-value tuples containing the data
         '''
         for attr_name, value in attributes:
@@ -312,6 +312,9 @@ class VariantsParquetWriter(object):
                         family_variant_index, elapsed),
                     file=sys.stderr)
 
+        for bin_writer in self.data_writers.values():
+            bin_writer.close()
+
         print('-------------------------------------------', file=sys.stderr)
         print('Bucket:', self.bucket_index, file=sys.stderr)
         print('-------------------------------------------', file=sys.stderr)
@@ -321,6 +324,7 @@ class VariantsParquetWriter(object):
             format(
                 family_variant_index, elapsed),
             file=sys.stderr)
+
 
 #    def variants_table(self):
 #        for key, value in self.data_writers.items():
