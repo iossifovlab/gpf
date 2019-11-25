@@ -105,10 +105,14 @@ class ContinuousParquetFileWriter(object):
         print('WRITING')
         self._writer.write_table(self._data.build_table())
 
-    def data_append(self, attr_name, value):
-        self._data.data_append(attr_name, value)
-
-    def write_if_overflowing(self):
+    def data_append(self, attributes):
+        '''
+        Appends the data for an entire variant to the buffer
+        
+        :param list attributes: List of key-value tuples containing the data
+        '''
+        for attr_name, value in attributes:
+            self._data.data_append(attr_name, value)
         if len(self._data) >= self.rows:
             self._write_table()
 
@@ -243,12 +247,14 @@ class VariantsParquetWriter(object):
 
                 bin_writer = self._get_bin_writer(
                     summary_variant, family_variant)
-                bin_writer.data_append('bucket_index', self.bucket_index)
+                writer_data = []
+                writer_data.append(('bucket_index', self.bucket_index))
 
                 for d in (s, freq, gs, e, f, m):
                     for key, val in d._asdict().items():
-                        bin_writer.data_append(key, val)
-                bin_writer.write_if_overflowing()
+                        writer_data.append((key, val))
+
+                bin_writer.data_append(writer_data)
 
     def _get_parquet_filename(self, bins):
         filename = self.root_folder
