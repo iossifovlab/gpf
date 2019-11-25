@@ -8,6 +8,7 @@ from box import Box
 import numpy as np
 import pyarrow as pa
 import pyarrow.parquet as pq
+import configparser
 
 from dae.utils.vcf_utils import GENOTYPE_TYPE
 from dae.variants.family_variant import FamilyAllele, FamilyVariant
@@ -60,25 +61,97 @@ class ParquetData():
 
 
 class ParquetPartitionDescription():
-    def __init__(self, region_length, family_bin_size):
+    def __init__(self,
+                 chromosomes,
+                 region_length,
+                 family_bin_size=0,
+                 coding_effect_types=[],
+                 rare_boundary=0):
+
+        self.chromosomes = chromosomes
         self.region_length = region_length
         self.family_bin_size = family_bin_size
+        self.coding_effect_types = coding_effect_types
+        self.rare_boundary = rare_boundary
 
     def _evaluate_region_bin(self, family_variant):
         chromosome = family_variant.ref_allele.chromosome
         pos = family_variant.ref_allele.position // self.region_length
-        return f'{chromosome}_{pos}'
+        if chromosome in self.chromosomes:
+            return f'{chromosome}_{pos}'
+        else:
+            return f'other_{pos}'
 
     def _evaluate_family_bin(self, family_variant):
         family_variant_id = family_variant.family_id
         print(family_variant_id)
         return hash(family_variant_id) % self.family_bin_size
 
-    def evaluate_variant_bin(self, family_variant):
-        return (
-            self._evaluate_region_bin(family_variant),
-            self._evaluate_family_bin(family_variant)
-        )
+    def _evaluate_coding_bin(self, family_variant):
+        variant_effects = set()
+        for effect in family_variant.effects:
+            variant_effects = variant_effects.union(effect.types)
+        coding_effect_types = set(self.coding_effect_types)
+
+        result = variant_effects.intersection(coding_effect_types)
+        if len(result) == 0:
+            return 0
+        else:
+            return 1
+
+    def _evaluate_frequency_bin(self, family_variant):
+        count = min(family_variant.get_attribute('af_allele_count'))
+        frequency = min(family_variant.get_attribute('af_allele_freq'))
+        if count == 1:  # Ultra rare
+            frequency_bin = 1
+        elif frequency < self.rare_boundary:  # Rare
+            frequency_bin = 2
+        else:  # Common
+            frequency_bin = 3
+
+        return frequency_bin
+
+    def evaluate_variant_filename(self, family_variant):
+        bins = (self._evaluate_region_bin(family_variant),)
+        filename = f'variants_region_bin_{bins[0]}'
+        if self.family_bin_size > 0:
+            bins += (self._evaluate_family_bin(family_variant),)
+            filename += f'_family_bin_{bins[len(bins)-1]}'
+        if len(self.coding_effect_types) > 0:
+            bins += (self._evaluate_coding_bin(family_variant),)
+            filename += f'_coding_bin_{bins[len(bins)-1]}'
+        if self.rare_boundary > 0:
+            bins += (self._evaluate_frequency_bin(family_variant),)
+            filename += f'_frequency_bin_{bins[len(bins)-1]}'
+        filepath = os.path.join('', *tuple(map(str, bins)))
+        filename += '.parquet'
+
+        return os.path.join(filepath, filename)
+
+    def write_partition_configuration_to_file(self, directory):
+        config = configparser.ConfigParser()
+
+        config.add_section('region_bin')
+        config['region_bin']['chromosomes'] = ', '.join(self.chromosomes)
+        config['region_bin']['region_length'] = str(self.region_length)
+
+        if self.family_bin_size > 0:
+            config.add_section('family_bin')
+            config['family_bin']['family_bin_size'] = \
+                str(self.family_bin_size)
+
+        if len(self.coding_effect_types) > 0:
+            config.add_section('coding_bin')
+            config['coding_bin']['coding_effect_types'] = \
+                ', '.join(self.coding_effect_types)
+
+        if self.rare_boundary > 0:
+            config.add_section('frequency_bin')
+            config['frequency_bin']['rare_boundary'] = str(self.rare_boundary)
+
+        filename = os.path.join(directory, '_PARTITION_DESCRIPTION')
+        with open(filename, 'w') as configfile:
+            config.write(configfile)
 
 
 class ContinuousParquetFileWriter():
@@ -256,25 +329,22 @@ class VariantsParquetWriter():
 
                 bin_writer.data_append(writer_data)
 
-    def _get_parquet_filename(self, bins):
-        filename = self.root_folder
-        filename = os.path.join(filename, *tuple(map(str, bins)))
-        filename = os.path.join(filename,
-                                f'variants_region_bin_{bins[0]}'
-                                + f'_family_bin_{bins[1]}.parquet')
-        return filename
+    def _get_full_filepath(self, filename):
+        filepath = os.path.join(self.root_folder, filename)
+        return filepath
 
     def _get_bin_writer(self, summary_variant, family_variant):
-        key = self.partition_description.evaluate_variant_bin(family_variant)
+        filename = self.partition_description.evaluate_variant_filename(
+                family_variant)
 
-        if key not in self.data_writers:
-            filename = self._get_parquet_filename(key)
-            self.data_writers[key] = ContinuousParquetFileWriter(
-                    filename,
+        if filename not in self.data_writers:
+            filepath = self._get_full_filepath(filename)
+            self.data_writers[filename] = ContinuousParquetFileWriter(
+                    filepath,
                     self.schema,
                     filesystem=self.filesystem,
                     rows=self.rows)
-        return self.data_writers[key]
+        return self.data_writers[filename]
 
     def write_partition(self):
         family_variant_index = 0
@@ -323,6 +393,9 @@ class VariantsParquetWriter():
             format(
                 family_variant_index, elapsed),
             file=sys.stderr)
+
+        self.partition_description.write_partition_configuration_to_file(
+                self.root_folder)
 
 
 #    def variants_table(self):
