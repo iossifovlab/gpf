@@ -30,17 +30,19 @@ class DenovoGeneSetCollection(object):
                 'datasetName': self.study_name,
                 'peopleGroupId': people_group_id,
                 'peopleGroupName': people_group['name'],
-                'peopleGroupLegend': self.get_gene_set_legend(people_group_id)
+                'peopleGroupLegend': self.get_people_group_legend(
+                    people_group_id
+                ),
             }
             for people_group_id, people_group in self.people_groups.items()
         ]
 
-    def get_gene_set_legend(self, people_group_id):
-        gene_set_pg = self.people_groups.get(people_group_id)
-        if not gene_set_pg:
+    def get_people_group_legend(self, people_group_id):
+        people_group = self.people_groups.get(people_group_id)
+        if not people_group:
             return []
 
-        return list(gene_set_pg['domain'].values())
+        return list(people_group['domain'].values())
 
     @classmethod
     def get_all_gene_sets(cls, denovo_gene_sets, denovo_gene_set_spec={}):
