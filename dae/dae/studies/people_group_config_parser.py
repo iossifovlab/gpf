@@ -52,7 +52,8 @@ class PeopleGroupConfigParser(ConfigParserBase):
         result = {
             pg.id: {
                 'name': pg.name,
-                'source': pg.source
+                'source': pg.source,
+                'domain': pg.domain
             } for pg in available_groups.values()
             if pg.id in specified_groups
         }
