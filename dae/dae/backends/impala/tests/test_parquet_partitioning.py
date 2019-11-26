@@ -574,6 +574,9 @@ def test_all(vcf_variants_loader):
                          'variants_region_bin_2_12_family_bin_6' +
                          '_coding_bin_0_frequency_bin_3.parquet'))
 
+    shutil.rmtree(tmp_dir)
+    assert not os.path.exists(tmp_dir)
+
 
 def test_region_family_frequency(vcf_variants_loader):
     fvars = vcf_variants_loader('backends/partition')
@@ -672,3 +675,6 @@ def test_region_family_frequency(vcf_variants_loader):
                          '3',
                          'variants_region_bin_2_12_family_bin_6' +
                          '_frequency_bin_3.parquet'))
+
+    shutil.rmtree(tmp_dir)
+    assert not os.path.exists(tmp_dir)
