@@ -188,7 +188,10 @@ def main(argv, gpf_instance=None):
         )
 
         study_config = genotype_storage.simple_study_import(
-            study_id, denovo_loader, vcf_loader, families_loader,
+            study_id, 
+            denovo_loader=denovo_loader,
+            vcf_loader=vcf_loader,
+            families_loader=families_loader,
             output=output
         )
         save_study_config(dae_config, study_id, study_config)

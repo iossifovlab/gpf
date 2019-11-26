@@ -87,7 +87,13 @@ class ImpalaGenotypeStorage(GenotypeStorage):
 
         return family_variants
 
-    def impala_load_study(self, study_id, variant_paths, pedigree_paths):
+    def impala_load_study(
+            self, study_id,
+            variant_paths=[],
+            pedigree_paths=[]):
+        assert variant_paths
+        assert pedigree_paths
+
         variant_hdfs_path, pedigree_hdfs_path = \
             self._hdfs_parquet_put_study_files(
                 study_id, variant_paths, pedigree_paths)
@@ -145,8 +151,11 @@ class ImpalaGenotypeStorage(GenotypeStorage):
         return study_config
 
     def simple_study_import(
-            self, study_id, denovo_loader, vcf_loader,
-            families_loader, output='.',
+            self, study_id,
+            families_loader=None,
+            denovo_loader=None,
+            vcf_loader=None,
+            output='.',
             include_reference=False,
             include_unknown=False):
 
@@ -191,7 +200,9 @@ class ImpalaGenotypeStorage(GenotypeStorage):
         parquet_pedigrees.append(parquet_filenames.pedigree)
 
         return self.impala_load_study(
-            study_id, parquet_variants, parquet_pedigrees)
+            study_id,
+            variant_paths=parquet_variants,
+            pedigree_paths=parquet_pedigrees)
 
 
 STUDY_CONFIG_TEMPLATE = '''

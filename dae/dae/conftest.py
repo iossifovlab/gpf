@@ -378,8 +378,8 @@ def iossifov2014_impala(
 
     impala_genotype_storage.impala_load_study(
         study_id,
-        [parquet_filenames.variant],
-        [parquet_filenames.pedigree],
+        variant_paths=[parquet_filenames.variant],
+        pedigree_paths=[parquet_filenames.pedigree],
     )
 
     fvars = impala_genotype_storage.build_backend(
@@ -639,9 +639,9 @@ def data_import(
 
             impala_genotype_storage.simple_study_import(
                 study_id,
-                None,  # denovo loader
-                loader,
-                families_loader,
+                denovo_loader=None,  # denovo loader
+                vcf_loader=loader,
+                families_loader=families_loader,
                 output=study_temp_dirname,
                 include_reference=True,
                 include_unknown=True

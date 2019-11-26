@@ -8,7 +8,7 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 
 from dae.annotation.tools.annotator_config import annotation_config_cli_options
 
-from dae.pedigrees.family import FamiliesLoader
+from dae.pedigrees.family import FamiliesLoader, FamiliesData
 from dae.backends.raw.loader import AnnotationPipelineDecorator
 from dae.backends.vcf.loader import VcfLoader
 from dae.backends.impala.parquet_io import ParquetManager
@@ -144,41 +144,6 @@ def generate_makefile(dae_config, genome, argv):
     )
 
 
-def vcf2parquet(
-        study_id, ped_df, vcf_filename,
-        genomes_db, annotation_pipeline,
-        output='.', bucket_index=1, region=None,
-        filesystem=None, skip_pedigree=False,
-        include_reference=False, include_unknown=False):
-
-    assert os.path.exists(vcf_filename), vcf_filename
-
-    parquet_filenames = ParquetManager.build_parquet_filenames(
-        output, bucket_index=bucket_index, study_id=study_id
-    )
-    print("converting into ", parquet_filenames.variant, file=sys.stderr)
-
-    families = FamiliesData.from_pedigree_df(ped_df)
-    variants_loader = VcfLoader(families, vcf_filename, region=region)
-    variants_loader = AnnotationPipelineDecorator(
-        variants_loader, annotation_pipeline)
-
-    if not skip_pedigree:
-        ParquetManager.pedigree_to_parquet(
-            variants_loader, parquet_filenames.pedigree, filesystem=filesystem
-        )
-
-    ParquetManager.variants_to_parquet(
-        variants_loader, parquet_filenames.variant,
-        bucket_index=bucket_index,
-        include_reference=include_reference,
-        include_unknown=include_unknown,
-        filesystem=filesystem
-    )
-
-    return parquet_filenames
-
-
 def main(
         argv,
         gpf_instance=None, dae_config=None, genomes_db=None, genome=None,
@@ -228,6 +193,7 @@ def main(
             include_reference=argv.include_reference,
             include_unknown=argv.include_unknown)
 
+        return parquet_filenames
 
 if __name__ == "__main__":
     main(sys.argv[1:])

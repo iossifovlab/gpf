@@ -46,9 +46,9 @@ def quads_f1_vcf_config(variants_db_fixture):
 def quads_f1_config(gpf_instance, impala_genotype_storage):
     impala_genotype_storage.impala_load_study(
         'quads_f1_impala',
-        [relative_to_this_test_folder(
+        variant_paths=[relative_to_this_test_folder(
             'fixtures/studies/quads_f1_impala/data/variants')],
-        [relative_to_this_test_folder(
+        pedigree_paths=[relative_to_this_test_folder(
             'fixtures/studies/quads_f1_impala/data/pedigree')]
     )
     gpf_instance.reload_variants_db()

@@ -335,12 +335,12 @@ class ParquetManager:
 
     @staticmethod
     def variants_to_parquet(
-            fvars, variants_filename, bucket_index=0, rows=100000,
+            variants_loader, variants_filename, bucket_index=0, rows=100000,
             filesystem=None,
             include_reference=False,
             include_unknown=False):
 
-        assert fvars.annotation_schema is not None
+        assert variants_loader.annotation_schema is not None
 
         os.makedirs(
             os.path.split(variants_filename)[0],
@@ -350,7 +350,7 @@ class ParquetManager:
         start = time.time()
 
         variants_writer = VariantsParquetWriter(
-            fvars,
+            variants_loader,
             include_reference=include_reference,
             include_unknown=include_unknown,
             bucket_index=bucket_index,
