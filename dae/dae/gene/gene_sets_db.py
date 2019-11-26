@@ -1,167 +1,124 @@
 import os
 import logging
 
-from dae.gene.gene_info_config import GeneInfoConfigParser, GeneInfoDB
+from dae.gene.gene_info_config import GeneInfoConfigParser
 from dae.gene.gene_term import loadGeneTerm
 
 LOGGER = logging.getLogger(__name__)
 
 
-class GeneSetsCollection(object):
+def cached(prop):
+    # FIXME This has been duplicated temporarily - once
+    # the master branch is merged into this branch, this
+    # should be removed
+
+    cached_val_name = '_' + prop.__name__
+
+    def wrap(self):
+        if getattr(self, cached_val_name, None) is None:
+            setattr(self, cached_val_name, prop(self))
+        return getattr(self, cached_val_name)
+
+    return wrap
+
+
+class GeneSetCollection(object):
 
     def __init__(self, gene_sets_collection_id, config):
-        self.config = config
-
         assert gene_sets_collection_id != 'denovo'
+
         self.gsc_id = gene_sets_collection_id
-        self.gene_sets_descriptions = None
-        self.gene_sets_collections = None
 
-    @staticmethod
-    def _load_collection(config, gene_sets_collection):
-        assert gene_sets_collection.geneNS in ['id', 'sym'], \
-            'The namespace must be either "id" or "sym"!'
+        self.gene_terms = GeneInfoConfigParser.getGeneTerms(
+            config, self.gsc_id, inNS='sym'
+        )
+        assert self.gene_terms, self.gsc_id
 
-        if gene_sets_collection.geneNS == 'id':
-            def rF(x):
-                genes = GeneInfoDB.getGenes(config.gene_info)
-                if x in genes:
-                    return genes[x].sym
-            gene_sets_collection.renameGenes('sym', rF)
-
-        return gene_sets_collection
-
-    def load(self, from_file=False):
-        if self.gene_sets_collections:
-            return self.gene_sets_collections
-
-        if from_file:
-            assert os.path.exists(self.gsc_id) and os.path.isfile(self.gsc_id)
-            gsc = loadGeneTerm(self.gsc_id)
-        else:
-            gsc = GeneInfoConfigParser.getGeneTerms(self.config, self.gsc_id)
-
-        self.gene_sets_collections = self._load_collection(self.config, gsc)
-
-        self.gene_sets_descriptions = [
-            {
+        self.gene_terms_descriptions = dict()
+        for key, value in self.gene_terms.tDesc.items():
+            syms = list(self.gene_terms.t2G[key].keys())
+            self.gene_terms_descriptions[key] = {
                 'name': key,
                 'desc': value,
-                'count': len(list(self.gene_sets_collections.t2G[key].keys()))
+                'count': len(syms),
+                'syms': syms,
             }
-            for key, value in list(self.gene_sets_collections.tDesc.items())
-        ]
-        return self.gene_sets_collections
-
-    def get_gene_sets(self):
-        assert self.gene_sets_collections is not None
-        assert self.gene_sets_descriptions is not None
-        return self.gene_sets_descriptions
+        assert self.gene_terms_descriptions, self.gsc_id
 
     def get_gene_set(self, gene_set_id):
-        assert self.gene_sets_collections is not None
-
-        if gene_set_id not in self.gene_sets_collections.t2G:
-            print("{} not found in {}".format(
-                gene_set_id,
-                self.gene_sets_collections.t2G.keys()))
+        if gene_set_id not in self.gene_terms_descriptions:
+            print(f'{gene_set_id} not found in '
+                  '{self.gene_terms_descriptions.keys()}')
             return None
-        syms = set(self.gene_sets_collections.t2G[gene_set_id].keys())
-        count = len(syms)
-        desc = self.gene_sets_collections.tDesc[gene_set_id]
-
-        return {
-            "name": gene_set_id,
-            "count": count,
-            "syms": syms,
-            "desc": desc,
-        }
+        return self.gene_terms_descriptions[gene_set_id]
 
 
 class GeneSetsDb(object):
 
     def __init__(self, variants_db, config):
         assert config is not None
+        assert variants_db is not None
         self.config = config
-
         self.variants_db = variants_db
-        self.gene_sets_collections = {}
+        self.gene_sets_collections = dict()
 
-    def get_gene_set_collection_ids(self):
-        return self.config.gene_terms.keys()
-
-    def get_gene_set_ids(self, collection_id):
-        gsc = self.get_gene_sets_collection(collection_id)
-        if gsc is None:
-            return None
-        return gsc.gene_sets_collections.tDesc.keys()
-
-    def get_collections_descriptions(self):
+    @property
+    @cached
+    def collections_descriptions(self):
         gene_sets_collections_desc = []
         for gsc_id in self.config.gene_terms.keys():
             label = GeneInfoConfigParser.getGeneTermAtt(
-                self.config, gsc_id, "webLabel")
+                self.config, gsc_id, 'webLabel')
             formatStr = GeneInfoConfigParser.getGeneTermAtt(
-                self.config, gsc_id, "webFormatStr")
+                self.config, gsc_id, 'webFormatStr')
             if not label or not formatStr:
                 continue
             gene_sets_collections_desc.append(
                 {
                     'desc': label,
                     'name': gsc_id,
-                    'format': formatStr.split("|"),
+                    'format': formatStr.split('|'),
                     'types': [],
                 }
             )
         return gene_sets_collections_desc
 
-    def has_gene_sets_collection(self, gsc_id):
-        return any([
-            gsc['name'] == gsc_id
-            for gsc in self.get_collections_descriptions()
-        ])
-
     @staticmethod
     def load_gene_set_from_file(filename, config):
         assert os.path.exists(filename) and os.path.isfile(filename)
-        return GeneSetsCollection._load_collection(
-            config,
-            loadGeneTerm(filename)
+        gene_term = loadGeneTerm(filename)
+        gene_term = GeneInfoConfigParser._rename_gene_terms(
+            config, gene_term, inNS='sym'
         )
+        return gene_term
 
-    def _load_gene_set(self, gene_sets_collection_id, load=True):
-        gsc = GeneSetsCollection(gene_sets_collection_id, config=self.config)
-
-        if load:
-            gsc.load()
-
-        return gsc
-
-    def get_gene_sets_collection(self, gene_sets_collection_id, load=True):
-        assert gene_sets_collection_id != 'denovo'
-
+    def _load_gene_set_collection(self, gene_sets_collection_id):
         if gene_sets_collection_id not in self.gene_sets_collections:
-            gsc = self._load_gene_set(gene_sets_collection_id, load)
-            self.gene_sets_collections[gene_sets_collection_id] = gsc
+            self.gene_sets_collections[gene_sets_collection_id] = \
+                GeneSetCollection(gene_sets_collection_id, config=self.config)
+        return self.gene_sets_collections[gene_sets_collection_id]
 
-        return self.gene_sets_collections.get(gene_sets_collection_id, None)
+    def has_gene_sets_collection(self, gsc_id):
+        return any([
+            gsc['name'] == gsc_id
+            for gsc in self.collections_descriptions
+        ])
 
-    def get_gene_sets(self, gene_sets_collection_id, load=True):
-        assert gene_sets_collection_id != 'denovo'
+    def get_gene_set_collection_ids(self):
+        '''
+        Return all gene set collection ids (including the ids
+        of collections which have not been loaded).
+        '''
+        return self.config.gene_sets_collections.keys()
 
-        gsc = self.get_gene_sets_collection(gene_sets_collection_id, load)
+    def get_gene_set_ids(self, collection_id):
+        gsc = self._load_gene_set_collection(collection_id)
+        return gsc.gene_terms_descriptions.keys()
 
-        if gsc is None:
-            return None
+    def get_all_gene_sets(self, collection_id):
+        gsc = self._load_gene_set_collection(collection_id)
+        return gsc.gene_terms_descriptions.values()
 
-        return gsc.get_gene_sets()
-
-    def get_gene_set(self, gene_sets_collection_id, gene_set_id):
-        assert gene_sets_collection_id != 'denovo'
-
-        gsc = self.get_gene_sets_collection(gene_sets_collection_id)
-
-        if gsc is None:
-            return None
-
+    def get_gene_set(self, collection_id, gene_set_id):
+        gsc = self._load_gene_set_collection(collection_id)
         return gsc.get_gene_set(gene_set_id)

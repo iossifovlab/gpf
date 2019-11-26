@@ -29,7 +29,7 @@ class GeneSetsCollectionsView(GeneSetsBaseView):
     def get(self, request):
         permitted_datasets = self.get_permitted_datasets(request.user)
         gene_sets_collections = deepcopy(
-            self.gene_sets_db.get_collections_descriptions()
+            self.gene_sets_db.collections_descriptions
         )
         denovo_gene_sets = deepcopy(
             self.denovo_gene_sets_db.get_gene_set_descriptions(
@@ -83,7 +83,7 @@ class GeneSetsView(GeneSetsBaseView):
                     gene_sets_collection_id):
                 return Response(status=status.HTTP_404_NOT_FOUND)
 
-            gene_sets = self.gene_sets_db.get_gene_sets(
+            gene_sets = self.gene_sets_db.get_all_gene_sets(
                 gene_sets_collection_id
             )
 
