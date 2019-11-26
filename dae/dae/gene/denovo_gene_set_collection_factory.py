@@ -5,7 +5,7 @@ from functools import reduce
 
 from dae.variants.attributes import Inheritance
 from dae.gene.denovo_gene_set_config import DenovoGeneSetConfigParser
-from dae.gene.denovo_gene_set import DenovoGeneSetCollection
+from dae.gene.denovo_gene_set_collection import DenovoGeneSetCollection
 
 
 class DenovoGeneSetCollectionFactory():

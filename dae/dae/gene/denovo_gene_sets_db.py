@@ -1,6 +1,7 @@
 from dae.gene.denovo_gene_set_config import DenovoGeneSetConfigParser
+from dae.gene.denovo_gene_set_collection import DenovoGeneSetCollection
 from dae.gene.denovo_gene_set_collection_factory import \
-    DenovoGeneSetCollection, DenovoGeneSetCollectionFactory
+    DenovoGeneSetCollectionFactory
 
 
 class DenovoGeneSetsDb:
