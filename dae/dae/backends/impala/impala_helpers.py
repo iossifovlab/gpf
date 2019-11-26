@@ -76,15 +76,22 @@ class ImpalaHelpers(object):
 
     def check_table(self, dbname, tablename):
         with self.connection.cursor() as cursor:
-            q = """
-                SHOW TABLES IN {db}
-            """.format(db=dbname)
+            q = f"""
+                SHOW TABLES IN {dbname}
+            """
 
             cursor.execute(q)
             for row in cursor:
                 if row[0] == tablename:
                     return True
         return False
+
+    def drop_table(self, dbname, tablename):
+        with self.connection.cursor() as cursor:
+            q = f"""
+                DROP TABLE IF EXISTS {dbname}.{tablename}
+            """
+            cursor.execute(q)
 
     def create_database(self, dbname):
         with self.connection.cursor() as cursor:

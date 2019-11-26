@@ -87,6 +87,12 @@ class ImpalaGenotypeStorage(GenotypeStorage):
 
         return family_variants
 
+    def impala_drop_study_tables(self, study_config):
+        for table in self.study_tables(study_config):
+            self.impala_helpers.drop_table(
+                self.get_db(), table
+            )
+
     def impala_load_study(
             self, study_id,
             variant_paths=[],
