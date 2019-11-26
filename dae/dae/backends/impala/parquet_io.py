@@ -2,6 +2,7 @@ import os
 import sys
 import time
 import itertools
+import hashlib
 # import traceback
 from box import Box
 
@@ -83,9 +84,11 @@ class ParquetPartitionDescription():
             return f'other_{pos}'
 
     def _evaluate_family_bin(self, family_variant):
+        sha256 = hashlib.sha256()
         family_variant_id = family_variant.family_id
-        print(family_variant_id)
-        return hash(family_variant_id) % self.family_bin_size
+        sha256.update(family_variant_id.encode())
+        digest = int(sha256.hexdigest(), 16)
+        return digest % self.family_bin_size
 
     def _evaluate_coding_bin(self, family_variant):
         variant_effects = set()
@@ -175,7 +178,6 @@ class ContinuousParquetFileWriter():
         self.rows = rows
 
     def _write_table(self):
-        print('WRITING')
         self._writer.write_table(self._data.build_table())
 
     def data_append(self, attributes):
