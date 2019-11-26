@@ -16,7 +16,7 @@ from dae.backends.impala.parquet_io import ParquetManager
 from cyvcf2 import VCF
 
 from dae.backends.import_commons import build_contig_regions, \
-    contigs_makefile_generate, variants2parquet
+    contigs_makefile_generate
 from dae.backends.import_commons import construct_import_annotation_pipeline
 
 
@@ -213,14 +213,20 @@ def main(
             variants_loader, annotation_pipeline
         )
 
-        parquet_filenames = variants2parquet(
-            study_id, variants_loader,
-            output=argv.output, bucket_index=argv.bucket_index,
-            skip_pedigree=argv.skip_pedigree,
-            include_reference=argv.include_reference,
-            include_unknown=argv.include_unknown
+        parquet_filenames = ParquetManager.build_parquet_filenames(
+            argv.output, bucket_index=argv.bucket_index, study_id=study_id,
         )
-        return parquet_filenames
+        print("converting into ", parquet_filenames.variant, file=sys.stderr)
+
+        if not argv.skip_pedigree:
+            ParquetManager.pedigree_to_parquet(
+                families_loader, parquet_filenames.pedigree)
+
+        ParquetManager.variants_to_parquet(
+            variants_loader, parquet_filenames.variant,
+            bucket_index=argv.bucket_index,
+            include_reference=argv.include_reference,
+            include_unknown=argv.include_unknown)
 
 
 if __name__ == "__main__":

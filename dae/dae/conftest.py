@@ -29,7 +29,6 @@ from dae.backends.import_commons import \
 from dae.pedigrees.family import PedigreeReader
 from dae.pedigrees.family import FamiliesData, FamiliesLoader
 from dae.utils.helpers import study_id_from_path
-from dae.backends.import_commons import variants2parquet
 
 from dae.backends.impala.parquet_io import ParquetManager
 from dae.backends.storage.impala_genotype_storage import ImpalaGenotypeStorage
@@ -633,25 +632,19 @@ def data_import(
             study_id = study_id_from_path(vcf.pedigree)
             study_temp_dirname = os.path.join(temp_dirname, study_id)
 
-            families = FamiliesData.from_pedigree_df(
-                PedigreeReader.flexible_pedigree_read(vcf.pedigree))
-
-            loader = VcfLoader(families, vcf.vcf, region=None)
+            families_loader = FamiliesLoader(vcf.pedigree)
+            loader = VcfLoader(families_loader.families, vcf.vcf, region=None)
             loader = AlleleFrequencyDecorator(loader)
             loader = AnnotationPipelineDecorator(loader, annotation_pipeline)
 
-            parquet_filenames = variants2parquet(
-                study_id, loader,
+            impala_genotype_storage.simple_study_import(
+                study_id,
+                None,  # denovo loader
+                loader,
+                families_loader,
                 output=study_temp_dirname,
-                bucket_index=0,
                 include_reference=True,
                 include_unknown=True
-            )
-
-            impala_genotype_storage.impala_load_study(
-                study_id,
-                [parquet_filenames.variant],
-                [parquet_filenames.pedigree],
             )
 
     build('backends/')

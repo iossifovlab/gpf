@@ -146,7 +146,9 @@ class ImpalaGenotypeStorage(GenotypeStorage):
 
     def simple_study_import(
             self, study_id, denovo_loader, vcf_loader,
-            families_loader, output='.'):
+            families_loader, output='.',
+            include_reference=False,
+            include_unknown=False):
 
         assert denovo_loader is not None or vcf_loader is not None
 
@@ -162,7 +164,9 @@ class ImpalaGenotypeStorage(GenotypeStorage):
             ParquetManager.variants_to_parquet(
                 vcf_loader, parquet_filenames.variant,
                 bucket_index=bucket_index,
-                filesystem=None
+                filesystem=None,
+                include_reference=include_reference,
+                include_unknown=include_unknown
             )
             parquet_variants.append(parquet_filenames.variant)
 

@@ -10,7 +10,6 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.backends.impala.parquet_io import ParquetManager
 from dae.backends.import_commons import construct_import_annotation_pipeline
 
-from dae.backends.import_commons import variants2parquet
 from dae.backends.dae.loader import DenovoLoader
 from dae.backends.vcf.loader import VcfLoader
 from dae.backends.raw.loader import AnnotationPipelineDecorator
