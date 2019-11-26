@@ -140,8 +140,8 @@ class Family(object):
             members.append(person_object)
 
         self._connect_children_with_parents(persons, members)
-
-        return persons, members
+        members = filter(lambda m: not m.generated, members)
+        return persons, list(members)
 
     def _connect_children_with_parents(self, persons, members):
         for member in members:
@@ -167,7 +167,7 @@ class Family(object):
         self.persons = None
 
     def __len__(self):
-        return len(self.ped_df)
+        return len(self.members_in_order)
 
     def __repr__(self):
         return "Family({}; {})".format(self.family_id, self.members_in_order)
