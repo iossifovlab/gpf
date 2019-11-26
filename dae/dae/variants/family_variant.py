@@ -193,9 +193,11 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
                 gt[gt != allele_index] = -1
 
             index = np.any(gt == allele_index, axis=0)
-            noindex = np.logical_not(index)
-            self._variant_in_members = np.copy(self.members_ids)
-            self._variant_in_members[noindex] = None
+            self._variant_in_members = [
+                m.person_id if has_variant else None
+                for m, has_variant in zip(self.members_in_order, index)
+            ]
+
         return self._variant_in_members
 
     @property
