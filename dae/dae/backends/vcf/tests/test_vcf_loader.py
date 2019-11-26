@@ -27,7 +27,6 @@ def test_vcf_loader(vcf_loader_data, variants_vcf, fixture_data):
     loader = VcfLoader(families, conf.vcf)
     assert loader is not None
 
-    print(loader.samples)
     vars_old = list(fvars.query_variants(
         return_reference=True, return_unknown=True))
     vars_new = list(loader.family_variants_iterator())

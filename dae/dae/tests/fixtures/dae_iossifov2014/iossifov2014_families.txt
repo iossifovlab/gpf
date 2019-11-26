@@ -1,4 +1,4 @@
-familyId	personId	dadId	momId	gender	status	role	phenotype	layout	generated
+familyId	personId	dadId	momId	sex	status	role	phenotype	layout	generated
 13590	13590.mo	0	0	F	1	mom	unaffected	1:39.0,50.0	
 13590	13590.fa	0	0	M	1	dad	unaffected	1:10.0,50.0	
 13590	13590.p1	13590.fa	13590.mo	M	2	prb	autism	2:39.0,80.0	
@@ -7,7 +7,6 @@ familyId	personId	dadId	momId	gender	status	role	phenotype	layout	generated
 12969	12969.fa	0	0	M	1	dad	unaffected	1:10.0,50.0	
 12969	12969.p1	12969.fa	12969.mo	M	2	prb	autism	2:39.0,80.0	
 12969	12969.s1	12969.fa	12969.mo	M	1	sib	unaffected	2:10.0,80.0	
-
 13060	13060.mo	0	0	F	1	mom	unaffected	1:10.0,50.0	
 13060	13060.fa	0	0	M	1	dad	unaffected	1:53.5,50.0	
 13060	13060.p1	13060.fa	13060.mo	M	2	prb	autism	2:31.75,80.0	
@@ -19,7 +18,6 @@ familyId	personId	dadId	momId	gender	status	role	phenotype	layout	generated
 13256	13256.fa	0	0	M	1	dad	unaffected	1:39.0,50.0	
 13256	13256.p1	13256.fa	13256.mo	M	2	prb	autism	2:39.0,80.0	
 13256	13256.s1	13256.fa	13256.mo	F	1	sib	unaffected	2:10.0,80.0	
-
 13537	13537.mo	0	0	F	1	mom	unaffected	1:10.0,50.0	
 13537	13537.fa	0	0	M	1	dad	unaffected	1:39.0,50.0	
 13537	13537.p1	13537.fa	13537.mo	M	2	prb	autism	2:39.0,80.0	
@@ -40,7 +38,6 @@ familyId	personId	dadId	momId	gender	status	role	phenotype	layout	generated
 14500	14500.fa	0	0	M	1	dad	unaffected	1:10.0,50.0	
 14500	14500.p1	14500.fa	14500.mo	M	2	prb	autism	2:39.0,80.0	
 14500	14500.s1	14500.fa	14500.mo	F	1	sib	unaffected	2:10.0,80.0	
-
 12628	12628.mo	0	0	F	1	mom	unaffected	1:39.0,50.0	
 12628	12628.fa	0	0	M	1	dad	unaffected	1:10.0,50.0	
 12628	12628.p1	12628.fa	12628.mo	M	2	prb	autism	2:39.0,80.0	

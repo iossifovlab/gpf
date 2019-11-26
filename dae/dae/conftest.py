@@ -335,7 +335,7 @@ def iossifov2014_loader(
     config = dae_iossifov2014_config
 
     families_loader = FamiliesLoader(
-        config.family_filename, file_format='simple')
+        config.family_filename, file_format='pedigree')
 
     variants_loader = DenovoLoader(
         families_loader.families, config.denovo_filename, default_genome)

@@ -1,5 +1,4 @@
 import os
-import copy
 
 from functools import partial
 
@@ -145,6 +144,8 @@ class Family(object):
 
         family.persons =\
             family._build_persons(ped_df)
+        assert family._members_in_order is None
+
         return family
 
     def __init__(self, family_id):
@@ -157,8 +158,8 @@ class Family(object):
     def __len__(self):
         return len(self.members_in_order)
 
-    def __repr__(self):
-        return "Family({}; {})".format(self.family_id, self.members_in_order)
+    # def __repr__(self):
+    #     return "Family({}; {})".format(self.family_id, self.members_in_order)
 
     def redefine(self):
         self._members_in_order = None
@@ -637,6 +638,8 @@ class PedigreeReader(object):
             )
         else:
             ped_df = read_csv_func(pedigree_filepath)
+
+        print(ped_df.head())
 
         if ped_sample_id in ped_df:
             sample_ids = ped_df.apply(
