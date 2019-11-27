@@ -1,8 +1,3 @@
-'''
-Created on Feb 6, 2017
-
-@author: lubo
-'''
 import copy
 import json
 import pytest
@@ -18,42 +13,63 @@ EXAMPLE_REQUEST_F1 = {
 
 
 PREVIEW_URL = '/api/v3/genotype_browser/preview'
+PREVIEW_VARIANTS_URL = '/api/v3/genotype_browser/preview/variants'
 DOWNLOAD_URL = '/api/v3/genotype_browser/download'
 
 
-def test_simple_query_preview(db, admin_client):
+def test_simple_preview(db, admin_client):
     data = copy.deepcopy(EXAMPLE_REQUEST_F1)
 
     response = admin_client.post(
-        PREVIEW_URL, json.dumps(data), content_type='application/json')
+        PREVIEW_URL, json.dumps(data), content_type='application/json'
+    )
     assert status.HTTP_200_OK == response.status_code
     res = response.data
 
     assert 'cols' in res
-    assert 'rows' in res
-    assert 'count' in res
     assert 'legend' in res
 
     assert 8 == len(res['legend'])
-    assert 2 == int(res['count'])
-    assert 2 == len(res['rows'])
+    assert 20 == len(res['cols'])
 
 
-def test_missing_dataset(db, user_client):
+def test_simple_query_variants_preview(db, admin_client):
+    data = copy.deepcopy(EXAMPLE_REQUEST_F1)
+
+    response = admin_client.post(
+        PREVIEW_VARIANTS_URL, json.dumps(data),
+        content_type='application/json'
+    )
+    assert status.HTTP_200_OK == response.status_code
+    res = response.streaming_content
+    res = list(map(json.loads, res))
+
+    assert 2 == len(res)
+
+
+@pytest.mark.parametrize('url', [
+    PREVIEW_URL,
+    PREVIEW_VARIANTS_URL
+])
+def test_missing_dataset(db, user_client, url):
     data = copy.deepcopy(EXAMPLE_REQUEST_F1)
     del data['datasetId']
 
     response = user_client.post(
-        PREVIEW_URL, json.dumps(data), content_type='application/json')
+        url, json.dumps(data), content_type='application/json')
     assert status.HTTP_400_BAD_REQUEST, response.status_code
 
 
-def test_bad_dataset(db, user_client):
+@pytest.mark.parametrize('url', [
+    PREVIEW_URL,
+    PREVIEW_VARIANTS_URL
+])
+def test_bad_dataset(db, user_client, url):
     data = copy.deepcopy(EXAMPLE_REQUEST_F1)
     data['datasetId'] = 'ala bala portokala'
 
     response = user_client.post(
-        PREVIEW_URL, json.dumps(data), content_type='application/json')
+        url, json.dumps(data), content_type='application/json')
     assert status.HTTP_400_BAD_REQUEST, response.status_code
 
 
