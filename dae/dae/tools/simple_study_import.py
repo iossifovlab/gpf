@@ -273,6 +273,7 @@ if __name__ == "__main__":
     parquet_config = None
     if argv.vcf is not None:
         parquet_config = vcf2parquet(
+            study_id,
             ped_df, argv.vcf,
             genomes_db, annotation_pipeline, parquet_manager,
             output=output, bucket_index=1

@@ -1,4 +1,3 @@
-
 from django.db import IntegrityError, transaction
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import BaseUserManager, Group
@@ -23,7 +22,8 @@ from .serializers import UserSerializer
 from .serializers import UserWithoutEmailSerializer
 from .serializers import BulkGroupOperationSerializer
 
-from utils.logger import log_filter, LOGGER
+from utils.logger import log_filter, LOGGER, request_logging
+from utils.logger import request_logging_function_view
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -42,6 +42,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
         return serializer_class
 
+    @request_logging(LOGGER)
     @action(detail=True, methods=['post'])
     def password_remove(self, request, pk=None):
         self.check_permissions(request)
@@ -54,6 +55,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+    @request_logging(LOGGER)
     @action(detail=True, methods=['post'])
     def password_reset(self, request, pk=None):
         self.check_permissions(request)
@@ -64,6 +66,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+    @request_logging(LOGGER)
     @action(detail=False, methods=['post'])
     def bulk_add_group(self, request):
         self.check_permissions(request)
@@ -84,6 +87,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
         return Response(status=status.HTTP_200_OK)
 
+    @request_logging(LOGGER)
     @action(detail=False, methods=['post'])
     def bulk_remove_group(self, request):
         serializer = BulkGroupOperationSerializer(data=request.data)
@@ -102,6 +106,7 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response(status=status.HTTP_200_OK)
 
 
+@request_logging_function_view(LOGGER)
 @api_view(['POST'])
 def reset_password(request):
     email = request.data['email']
@@ -119,6 +124,7 @@ def reset_password(request):
                         status=status.HTTP_200_OK)
 
 
+@request_logging_function_view(LOGGER)
 @api_view(['POST'])
 def change_password(request):
     password = request.data['password']
@@ -129,6 +135,7 @@ def change_password(request):
     return Response({}, status.HTTP_201_CREATED)
 
 
+@request_logging_function_view(LOGGER)
 @api_view(['POST'])
 def register(request):
     user_model = get_user_model()
@@ -171,6 +178,7 @@ def register(request):
         return Response({}, status=status.HTTP_201_CREATED)
 
 
+@request_logging_function_view(LOGGER)
 @api_view(['POST'])
 @authentication_classes((SessionAuthenticationWithUnauthenticatedCSRF, ))
 def login(request):
@@ -193,6 +201,7 @@ def login(request):
     return Response(status=status.HTTP_404_NOT_FOUND)
 
 
+@request_logging_function_view(LOGGER)
 @api_view(['POST'])
 @authentication_classes((SessionAuthentication, ))
 def logout(request):
@@ -200,6 +209,7 @@ def logout(request):
     return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+@request_logging_function_view(LOGGER)
 @ensure_csrf_cookie
 @api_view(['GET'])
 def get_user_info(request):
@@ -212,6 +222,7 @@ def get_user_info(request):
         return Response({'loggedIn': False}, status.HTTP_200_OK)
 
 
+@request_logging_function_view(LOGGER)
 @api_view(['POST'])
 def check_verif_path(request):
     verif_path = request.data['verifPath']
