@@ -1,6 +1,6 @@
 <div class="genome-preview">
-    <div *ngIf="genotypePreviewsArray">
-        <gpf-table [dataSource]="genotypePreviewsArray.genotypePreviews" style="display: inline-block">
+    <div *ngIf="genotypePreviewVariantsArray">
+        <gpf-table [dataSource]="genotypePreviewVariantsArray.genotypePreviews" style="display: inline-block">
             <gpf-table-column *ngFor="let column of columns">
                 <gpf-table-header caption="{{ column.name }}">
                 </gpf-table-header>
@@ -32,7 +32,7 @@
             </gpf-table-column>
 
             <div *gpfTableLegend style="text-align: left; border: 1px solid #dddddd; padding: 5px">
-              <div *ngFor="let legendItem of genotypePreviewsArray.legend">
+              <div *ngFor="let legendItem of genotypePreviewInfo?.legend">
                 <span class="pedigree-icon" [style.background-color]="legendItem.color"></span>
                 {{ legendItem.name }}
               </div>

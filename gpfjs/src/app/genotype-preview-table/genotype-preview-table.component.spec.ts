@@ -8,7 +8,7 @@ import { GpfTableCellComponent } from 'app/table/view/cell.component';
 import { GpfTableEmptyCellComponent } from 'app/table/view/empty-cell.component';
 import { GpfTableSubheaderComponent } from 'app/table/component/subheader.component';
 import { AdditionalColumn } from 'app/datasets/datasets';
-import { GenotypePreview } from 'app/genotype-preview-model/genotype-preview';
+import { GenotypePreview, GenotypePreviewVariantsArray } from 'app/genotype-preview-model/genotype-preview';
 
 describe('GenotypePreviewTableComponent', () => {
   let component: GenotypePreviewTableComponent;
@@ -33,12 +33,8 @@ describe('GenotypePreviewTableComponent', () => {
     fixture = TestBed.createComponent(GenotypePreviewTableComponent);
     component = fixture.componentInstance;
 
-    component.genotypePreviewsArray = {
-      genotypePreviews: [
-        GenotypePreview.fromJson('0', {rows: [['value11', 'value12']], cols: ['column1', 'column2']}),
-        GenotypePreview.fromJson('0', {rows: [['value21', 'value22']], cols: ['column1', 'column2']}),
-        GenotypePreview.fromJson('0', {rows: [['value31', 'value32']], cols: ['column1', 'column2']}),
-      ],
+    component.genotypePreviewInfo = {
+      columns: ['column1', 'column2'],
       legend: [
         {
           color: '#E35252',
@@ -51,8 +47,15 @@ describe('GenotypePreviewTableComponent', () => {
           name: 'name2'
         }
       ],
-      total: 3
+      maxVariantsCount: 1000
     };
+    component.genotypePreviewVariantsArray = new GenotypePreviewVariantsArray();
+    component.genotypePreviewVariantsArray.
+      addPreviewVariant(['value11', 'value12'], component.genotypePreviewInfo);
+    component.genotypePreviewVariantsArray.
+      addPreviewVariant(['value21', 'value22'], component.genotypePreviewInfo);
+    component.genotypePreviewVariantsArray.
+      addPreviewVariant(['value31', 'value32'], component.genotypePreviewInfo);
     component.columns = AdditionalColumn.fromJsonArray([
       {
         id: 'column1',
@@ -86,38 +89,38 @@ describe('GenotypePreviewTableComponent', () => {
     expect(component.comparator('variant.location')).toBe(component.locationComparator);
 
     expect(component.comparator('field')(
-      GenotypePreview.fromJson('0', {rows: [[null]], cols: ['field']}),
-      GenotypePreview.fromJson('0', {rows: [[null]], cols: ['field']})
+      GenotypePreview.fromJson([null], ['field']),
+      GenotypePreview.fromJson([null], ['field'])
     )).toBe(0);
 
     expect(component.comparator('field')(
-      GenotypePreview.fromJson('0', {rows: [['value1']], cols: ['field']}),
-      GenotypePreview.fromJson('0', {rows: [[null]], cols: ['field']})
+      GenotypePreview.fromJson(['value1'], ['field']),
+      GenotypePreview.fromJson([null], ['field'])
     )).toBe(1);
 
     expect(component.comparator('field')(
-      GenotypePreview.fromJson('0', {rows: [[null]], cols: ['field']}),
-      GenotypePreview.fromJson('0', {rows: [['value1']], cols: ['field']})
+      GenotypePreview.fromJson([null], ['field']),
+      GenotypePreview.fromJson(['value1'], ['field'])
     )).toBe(-1);
 
     expect(component.comparator('field')(
-      GenotypePreview.fromJson('0', {rows: [[[0]]], cols: ['field']}),
-      GenotypePreview.fromJson('0', {rows: [[[10]]], cols: ['field']})
+      GenotypePreview.fromJson([0], ['field']),
+      GenotypePreview.fromJson([10], ['field'])
     )).toBe(-10);
 
     expect(component.locationComparator(
-      GenotypePreview.fromJson('0', {rows: [['X:123']], cols: ['variant.location']}),
-      GenotypePreview.fromJson('0', {rows: [['1:123']], cols: ['variant.location']})
+      GenotypePreview.fromJson(['X:123'], ['variant.location']),
+      GenotypePreview.fromJson(['1:123'], ['variant.location'])
     )).toBe(99);
 
     expect(component.locationComparator(
-      GenotypePreview.fromJson('0', {rows: [['Y:125']], cols: ['variant.location']}),
-      GenotypePreview.fromJson('0', {rows: [['Y:113']], cols: ['variant.location']})
+      GenotypePreview.fromJson(['Y:125'], ['variant.location']),
+      GenotypePreview.fromJson(['Y:113'], ['variant.location'])
     )).toBe(12);
 
     expect(component.locationComparator(
-      GenotypePreview.fromJson('0', {rows: [['Y:125']], cols: ['variant.location']}),
-      GenotypePreview.fromJson('0', {rows: [['M:113']], cols: ['variant.location']})
+      GenotypePreview.fromJson(['Y:125'], ['variant.location']),
+      GenotypePreview.fromJson(['M:113'], ['variant.location'])
     )).toBe(-1);
   });
 });

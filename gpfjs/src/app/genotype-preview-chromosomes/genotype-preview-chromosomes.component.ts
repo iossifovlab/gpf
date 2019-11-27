@@ -1,6 +1,6 @@
 import { Component, OnInit, OnChanges, SimpleChanges, Input } from '@angular/core';
 
-import { GenotypePreviewsArray } from '../genotype-preview-model/genotype-preview';
+import { GenotypePreview } from '../genotype-preview-model/genotype-preview';
 import { Chromosome } from '../chromosome-service/chromosome';
 import { ChromosomeService } from '../chromosome-service/chromosome.service';
 
@@ -29,9 +29,7 @@ export class GenotypePreviewChromosomesComponent implements OnInit, OnChanges {
   rightCentromerePosition: number;
 
   @Input()
-  genotypePreviewsArray: GenotypePreviewsArray;
-
-  genotypePreviewsByChromosome: any;
+  genotypePreviews: GenotypePreview[];
 
   chromosomes: Chromosome[];
 
@@ -49,17 +47,19 @@ export class GenotypePreviewChromosomesComponent implements OnInit, OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges) {
-    if (changes.genotypePreviewsArray) {
-      if (this.genotypePreviewsArray) {
-        this.genotypePreviewsByChromosome = _.groupBy(this.genotypePreviewsArray.genotypePreviews,
-          genotypePreview => genotypePreview.get('variant.location').split(':')[0]);
-      } else {
-        this.genotypePreviewsByChromosome = null;
-      }
-    }
     if (changes.width) {
       this.leftColumnWidth = 2 * this.width / 3;
       this.rightColumnWidth = this.width / 3;
+    }
+  }
+
+  get genotypePreviewsByChromosome() {
+    if (this.genotypePreviews) {
+      return _.groupBy(this.genotypePreviews,
+        genotypePreview => genotypePreview.get('variant.location').split(':')[0]
+      );
+    } else {
+      return null;
     }
   }
 }
