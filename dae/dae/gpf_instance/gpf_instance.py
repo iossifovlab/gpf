@@ -44,14 +44,13 @@ class GPFInstance(object):
             self.genomes_db
             self.pheno_factory
             self.gene_info_config
-            self.weights_factory
+            self.denovo_gene_sets_db
+            self.gene_sets_db
             self.score_config
             self.scores_factory
             self.genotype_storage_factory
             self.variants_db
             self.common_report_facade
-            self.gene_sets_collections
-            self.denovo_gene_set_facade
             self.background_facade
 
     @property
