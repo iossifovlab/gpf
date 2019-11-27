@@ -155,8 +155,28 @@ def main(argv, gpf_instance=None):
     families_loader = FamiliesLoader(
         argv.pedigree, pedigree_format=pedigree_format)
 
-    vcf_loader = None
-    denovo_loader = None
+    variant_loaders = []
+    if argv.denovo is not None:
+        denovo_loader = DenovoLoader(
+            families_loader.families,
+            argv.denovo,
+            genome=genome,
+            params={
+                'denovo_location': argv.denovo_location,
+                'denovo_variant': argv.denovo_variant,
+                'denovo_chrom': argv.denovo_chrom,
+                'denovo_pos': argv.denovo_pos,
+                'denovo_ref': argv.denovo_ref,
+                'denovo_alt': argv.denovo_alt,
+                'denovo_person_id': argv.denovo_person_id,
+                'denovo_family_id': argv.denovo_family_id,
+                'denovo_best_state': argv.denovo_best_state,
+            }
+        )
+        denovo_loader = AnnotationPipelineDecorator(
+            denovo_loader, annotation_pipeline
+        )
+        variant_loaders.append(denovo_loader)
     if argv.vcf is not None:
         vcf_loader = VcfLoader(
             families_loader.families,
@@ -165,33 +185,12 @@ def main(argv, gpf_instance=None):
         vcf_loader = AnnotationPipelineDecorator(
             vcf_loader, annotation_pipeline
         )
-
-    if argv.denovo is not None:
-        denovo_loader = DenovoLoader(
-            families_loader.families,
-            argv.denovo,
-            genome=genome,
-            denovo_format={
-                'location': argv.denovo_location,
-                'variant': argv.denovo_variant,
-                'chrom': argv.denovo_chrom,
-                'pos': argv.denovo_pos,
-                'ref': argv.denovo_ref,
-                'alt': argv.denovo_alt,
-                'person_id': argv.denovo_person_id,
-                'family_id': argv.denovo_family_id,
-                'best_state': argv.denovo_best_state,
-            }
-        )
-        denovo_loader = AnnotationPipelineDecorator(
-            denovo_loader, annotation_pipeline
-        )
+        variant_loaders.append(vcf_loader)
 
     study_config = genotype_storage.simple_study_import(
         study_id,
-        denovo_loader=denovo_loader,
-        vcf_loader=vcf_loader,
         families_loader=families_loader,
+        variant_loaders=variant_loaders,
         output=output
     )
     save_study_config(dae_config, study_id, study_config)

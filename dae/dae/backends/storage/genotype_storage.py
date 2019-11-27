@@ -17,7 +17,6 @@ class GenotypeStorage:
             self,
             study_id,
             families_loader=None,
-            vcf_loader=None,
-            denovo_loader=None,
+            variant_loaders=None,
             **kwargs):
         raise NotImplementedError()

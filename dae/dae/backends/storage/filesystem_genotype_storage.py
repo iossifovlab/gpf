@@ -60,6 +60,12 @@ class FilesystemGenotypeStorage(GenotypeStorage):
             )
             return RawMemoryVariants(variants_loader)
 
+    def simple_study_import(
+            self, study_id,
+            families_loader=None,
+            variant_loaders=None):
+        pass
+
     # def _import_variants_common(self, study_id, fvars):
     #     data_dir = self.get_data_dir(study_id, 'data')
     #     pedigree_filename = os.path.join(data_dir, f"{study_id}.ped")

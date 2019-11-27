@@ -2,6 +2,7 @@ import os
 import sys
 from time import time
 
+from dae.backends.raw.loader import VariantsLoader, TransmissionType
 from dae.backends.storage.genotype_storage import GenotypeStorage
 
 from dae.backends.impala.hdfs_helpers import HdfsHelpers
@@ -159,41 +160,33 @@ class ImpalaGenotypeStorage(GenotypeStorage):
     def simple_study_import(
             self, study_id,
             families_loader=None,
-            denovo_loader=None,
-            vcf_loader=None,
-            output='.',
-            include_reference=False,
-            include_unknown=False):
-
-        assert denovo_loader is not None or vcf_loader is not None
+            variant_loaders=None,
+            output='.'):
 
         parquet_pedigrees = []
         parquet_variants = []
 
         parquet_filenames = None
-        if vcf_loader is not None:
-            bucket_index = 100  # transmitted buckets (>=100)
+        for index, variant_loader in enumerate(variant_loaders):
+            assert isinstance(variant_loader, VariantsLoader), \
+                type(variant_loader)
+
+            if variant_loader.transmission_type == TransmissionType.denovo:
+                assert index < 100
+
+                bucket_index = index  # denovo buckets < 100
+            elif variant_loader.transmission_type == \
+                    TransmissionType.transmitted:
+                bucket_index = index + 100  # transmitted buckets (>=100)
+
             parquet_filenames = ParquetManager.build_parquet_filenames(
                 output, bucket_index=bucket_index, study_id=study_id
             )
             ParquetManager.variants_to_parquet(
-                vcf_loader, parquet_filenames.variant,
+                variant_loader, parquet_filenames.variant,
                 bucket_index=bucket_index,
                 filesystem=None,
-                include_reference=include_reference,
-                include_unknown=include_unknown
-            )
-            parquet_variants.append(parquet_filenames.variant)
-
-        if denovo_loader is not None:
-            bucket_index = 0  # denovo buckets (0-99)
-            parquet_filenames = ParquetManager.build_parquet_filenames(
-                output, bucket_index=bucket_index, study_id=study_id
-            )
-            ParquetManager.variants_to_parquet(
-                denovo_loader, parquet_filenames.variant,
-                bucket_index=bucket_index,
-                filesystem=None
+                **variant_loader.params
             )
             parquet_variants.append(parquet_filenames.variant)
 
@@ -213,10 +206,11 @@ class ImpalaGenotypeStorage(GenotypeStorage):
 
 STUDY_CONFIG_TEMPLATE = '''
 [study]
-
 id = {id}
 genotype_storage = {genotype_storage}
-tables = pedigree:{pedigree_table},
-    variant:{variant_table}
 
+
+[tables]
+pedigree = {pedigree_table}
+variant = {variant_table}
 '''

@@ -24,9 +24,10 @@ class FamiliesGenotypes:
 
 class VariantsLoader:
 
-    def __init__(self, families, transmission_type):
+    def __init__(self, families, transmission_type, params={}):
         self.families = families
         self.transmission_type = transmission_type
+        self.params = params
 
     def summary_genotypes_iterator(self):
         raise NotImplementedError()

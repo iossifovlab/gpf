@@ -35,10 +35,11 @@ class VcfFamiliesGenotypes(FamiliesGenotypes):
 
 class VcfLoader(VariantsLoader):
 
-    def __init__(self, families, vcf_filename, region=None):
+    def __init__(self, families, vcf_filename, region=None, params={}):
         super(VcfLoader, self).__init__(
             families=families,
-            transmission_type=TransmissionType.transmitted)
+            transmission_type=TransmissionType.transmitted,
+            params=params)
 
         assert os.path.exists(vcf_filename)
         self.vcf_filename = vcf_filename
