@@ -1,5 +1,5 @@
 import pytest
-from dae.gene.gene_sets_db import GeneSetsCollection
+from dae.gene.gene_sets_db import GeneSetCollection
 from dae.gene.tests.conftest import path_to_fixtures
 
 
@@ -7,10 +7,9 @@ from dae.gene.tests.conftest import path_to_fixtures
     ('main'),
     (path_to_fixtures('geneInfo/GeneSets/main_candidates.txt'))
 ])
-def test_gene_sets_collection_main(gene_collection, gene_info_config):
-    gsc = GeneSetsCollection('main', config=gene_info_config)
-    gsc.load()
-    assert len(gsc.get_gene_sets()) == 1
+def test_gene_set_collection_main(gene_collection, gene_info_config):
+    gsc = GeneSetCollection('main', config=gene_info_config)
+    assert len(gsc.gene_terms_descriptions) == 1
     gene_set = gsc.get_gene_set('main_candidates')
     assert gene_set is not None
     assert gene_set['name'] == 'main_candidates'

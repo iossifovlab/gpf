@@ -27,16 +27,18 @@ def test_people_groups(f4_trio_denovo_gene_set_config):
     assert 'phenotype' in people_groups
     assert people_groups['phenotype']['name'] == 'Phenotype'
     assert people_groups['phenotype']['source'] == 'phenotype'
+    assert set(people_groups['phenotype']['domain'].keys()) == {
+        'autism', 'congenital_heart_disease', 'epilepsy',
+        'intellectual_disability', 'schizophrenia', 'unaffected'
+    }
 
 
 def test_gene_sets_names(f4_trio_denovo_gene_set_config):
     assert f4_trio_denovo_gene_set_config.gene_sets_names == [
         'LGDs', 'LGDs.Male', 'LGDs.Female', 'LGDs.Recurrent', 'LGDs.Single',
-        'LGDs.Triple', 'LGDs.WE.Recurrent', 'LGDs.WE.Triple', 'Missense',
-        'Missense.Single', 'Missense.Male', 'Missense.Female',
-        'Missense.Recurrent', 'Missense.Triple', 'Missense.WE.Recurrent',
-        'Missense.WE.Triple', 'Synonymous', 'Synonymous.WE',
-        'Synonymous.WE.Recurrent', 'Synonymous.WE.Triple'
+        'LGDs.Triple', 'Missense', 'Missense.Single', 'Missense.Male',
+        'Missense.Female', 'Missense.Recurrent', 'Missense.Triple',
+        'Synonymous'
     ]
 
 

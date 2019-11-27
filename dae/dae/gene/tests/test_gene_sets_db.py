@@ -1,4 +1,4 @@
-from dae.gene.gene_sets_db import GeneSetsDb, GeneSetsCollection
+from dae.gene.gene_sets_db import GeneSetsDb, GeneSetCollection
 from dae.gene.gene_term import GeneTerms
 from dae.gene.tests.conftest import path_to_fixtures
 
@@ -13,7 +13,7 @@ def test_get_gene_set_ids(gene_sets_db):
 
 
 def test_get_collections_descriptions(gene_sets_db):
-    assert gene_sets_db.get_collections_descriptions() == [
+    assert gene_sets_db.collections_descriptions == [
         {
             'desc': 'Main',
             'name': 'main',
@@ -29,21 +29,21 @@ def test_get_collections_descriptions(gene_sets_db):
     ]
 
 
-def test_has_gene_sets_collection(gene_sets_db):
-    assert gene_sets_db.has_gene_sets_collection('main')
-    assert gene_sets_db.has_gene_sets_collection('term_curated')
-    assert not gene_sets_db.has_gene_sets_collection('nonexistent_gsc')
+def test_has_gene_set_collection(gene_sets_db):
+    assert gene_sets_db.has_gene_set_collection('main')
+    assert gene_sets_db.has_gene_set_collection('term_curated')
+    assert not gene_sets_db.has_gene_set_collection('nonexistent_gsc')
 
 
-def test_get_gene_sets_collection(gene_sets_db):
-    gene_sets_db.gene_sets_collections = {}
-    gsc = gene_sets_db.get_gene_sets_collection('main')
-    assert gene_sets_db.has_gene_sets_collection('main')
-    assert isinstance(gsc, GeneSetsCollection)
+def test_load_gene_sets_collection(gene_sets_db):
+    gene_sets_db.gene_set_collections = {}
+    gsc = gene_sets_db._load_gene_set_collection('main')
+    assert gene_sets_db.has_gene_set_collection('main')
+    assert isinstance(gsc, GeneSetCollection)
 
 
-def test_get_gene_sets(gene_sets_db):
-    gene_sets = gene_sets_db.get_gene_sets('main')
+def test_get_all_gene_sets(gene_sets_db):
+    gene_sets = gene_sets_db.get_all_gene_sets('main')
 
     assert len(gene_sets) == 1
     gene_set = gene_sets[0]
