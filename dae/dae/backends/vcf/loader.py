@@ -3,9 +3,7 @@ import os
 from cyvcf2 import VCF
 
 import numpy as np
-import pandas as pd
 
-from dae.pedigrees.family import FamiliesData
 from dae.variants.variant import SummaryVariantFactory
 from dae.backends.raw.loader import VariantsLoader, TransmissionType, \
     FamiliesGenotypes

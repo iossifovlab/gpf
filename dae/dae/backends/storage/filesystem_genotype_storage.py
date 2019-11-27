@@ -41,21 +41,22 @@ class FilesystemGenotypeStorage(GenotypeStorage):
             return RawMemoryVariants(variants_loader)
 
         elif study_config.files.vcf is not None:
-            families_loader = FamiliesLoader(study_config.files.pedigree)
-            variants_loader = VcfLoader(
-                families_loader.families, study_config.files.vcf)
+            families_loader = FamiliesLoader(study_config.files.pedigree.path)
+            vcf_filename = study_config.files.vcf[0].path
+            variants_loader = VcfLoader(families_loader.families, vcf_filename)
             variants_loader = StoredAnnotationDecorator.decorate(
-                variants_loader, study_config.files.vcf
+                variants_loader, vcf_filename
             )
             return RawMemoryVariants(variants_loader)
 
         else:
             assert study_config.files.denovo is not None
-            families_loader = FamiliesLoader(study_config.files.pedigree)
+            families_loader = FamiliesLoader(study_config.files.pedigree.path)
+            denovo_filename = study_config.files.denovo[0].path
             variants_loader = DenovoLoader(
-                families_loader.familes, study_config.files.denovo)
+                families_loader.familes, denovo_filename)
             variants_loader = StoredAnnotationDecorator.decorate(
-                variants_loader, study_config.files.denovo
+                variants_loader, denovo_filename
             )
             return RawMemoryVariants(variants_loader)
 
