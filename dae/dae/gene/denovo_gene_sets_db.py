@@ -30,34 +30,26 @@ class DenovoGeneSetsDb:
         genotype_data_ids = set(self.variants_db.get_all_ids())
         for genotype_data_id in genotype_data_ids:
             study = self.variants_db.get(genotype_data_id)
-            denovo_gene_set_config = DenovoGeneSetConfigParser.parse(
-                study.config
-            )
-            if not (study and denovo_gene_set_config):
-                return
+            assert study is not None, genotype_data_id
+
+            # Skip studies which do not have valid denovo gene
+            # set configurations
+            if not DenovoGeneSetConfigParser.parse(study.config):
+                continue
 
             denovo_gene_set_collection = \
-                DenovoGeneSetCollectionFactory.load_collection(
-                    study, denovo_gene_set_config
-                )
+                DenovoGeneSetCollectionFactory.load_collection(study)
 
             self._denovo_gene_set_configs_cache[genotype_data_id] = \
-                denovo_gene_set_config
+                denovo_gene_set_collection.config
             self._denovo_gene_set_collections_cache[genotype_data_id] = \
                 denovo_gene_set_collection
 
     def _build_cache(self, genotype_data_ids):
         for genotype_data_id in genotype_data_ids:
             study = self.variants_db.get(genotype_data_id)
-            denovo_gene_set_config = DenovoGeneSetConfigParser.parse(
-                study.config
-            )
-            if not (study and denovo_gene_set_config):
-                return
-
-            DenovoGeneSetCollectionFactory.build_collection(
-                denovo_gene_set_config
-            )
+            assert study is not None, genotype_data_id
+            DenovoGeneSetCollectionFactory.build_collection(study)
 
     def get_gene_set_descriptions(self, permitted_datasets=None):
         gene_sets_types = []

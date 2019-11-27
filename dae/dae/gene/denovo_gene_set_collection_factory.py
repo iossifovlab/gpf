@@ -1,7 +1,6 @@
 import json
 import os
 from itertools import product
-from functools import reduce
 
 from dae.variants.attributes import Inheritance
 from dae.gene.denovo_gene_set_config import DenovoGeneSetConfigParser
@@ -11,12 +10,16 @@ from dae.gene.denovo_gene_set_collection import DenovoGeneSetCollection
 class DenovoGeneSetCollectionFactory():
 
     @classmethod
-    def load_collection(cls, study, config):
+    def load_collection(cls, study):
         '''
         Loads a denovo gene set collection (from the filesystem)
-        specified by a denovo gene set config.
+        for a given study.
         '''
+        config = DenovoGeneSetConfigParser.parse(study.config)
+        assert config is not None, study.id
+
         collection = DenovoGeneSetCollection(study.id, study.name, config)
+
         for people_group_id in config.people_groups:
             cache_dir = DenovoGeneSetConfigParser.denovo_gene_set_cache_file(
                 config, people_group_id
@@ -34,13 +37,18 @@ class DenovoGeneSetCollectionFactory():
         return collection
 
     @classmethod
-    def build_collection(cls, config):
+    def build_collection(cls, study):
         '''
-        Builds a denovo gene set collection specified by
-        a denovo gene set config and writes it to the filesystem.
+        Builds a denovo gene set collection for the given study and
+        writes it to the filesystem.
         '''
+        config = DenovoGeneSetConfigParser.parse(study.config)
+        assert config is not None, study.id
+
         for people_group_id in config.people_groups:
-            gene_set_cache = cls._generate_gene_set_for(people_group_id)
+            gene_set_cache = cls._generate_gene_set_for(
+                study, config, people_group_id
+            )
             cache_path = DenovoGeneSetConfigParser.denovo_gene_set_cache_file(
                 config, people_group_id
             )
@@ -65,14 +73,6 @@ class DenovoGeneSetCollectionFactory():
         ))
 
         for criteria_combination in product(*config.standard_criterias):
-
-            # Skip criteria combinations which are not
-            # selected in the denovo gene set configuration.
-            criteria_string = \
-                str(reduce(lambda x, y: f'{x}.{y}', criteria_combination))
-            if criteria_string not in config.gene_sets_names:
-                continue
-
             search_args = {criteria['property']: criteria['value']
                            for criteria in criteria_combination}
             for people_group_value in people_group_values:

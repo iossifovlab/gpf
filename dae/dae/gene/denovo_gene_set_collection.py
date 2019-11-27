@@ -14,6 +14,7 @@ class DenovoGeneSetCollection(object):
 
         self.study_id = study_id
         self.study_name = study_name
+        self.config = config
 
         self.standard_criteria = config.standard_criteria
         self.recurrency_criteria = config.recurrency_criterias
