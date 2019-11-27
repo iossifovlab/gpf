@@ -60,7 +60,7 @@ class GeneSetsDb(object):
         assert variants_db is not None
         self.config = config
         self.variants_db = variants_db
-        self.gene_sets_collections = dict()
+        self.gene_set_collections = dict()
 
     @property
     @cached
@@ -93,12 +93,12 @@ class GeneSetsDb(object):
         return gene_term
 
     def _load_gene_set_collection(self, gene_sets_collection_id):
-        if gene_sets_collection_id not in self.gene_sets_collections:
-            self.gene_sets_collections[gene_sets_collection_id] = \
+        if gene_sets_collection_id not in self.gene_set_collections:
+            self.gene_set_collections[gene_sets_collection_id] = \
                 GeneSetCollection(gene_sets_collection_id, config=self.config)
-        return self.gene_sets_collections[gene_sets_collection_id]
+        return self.gene_set_collections[gene_sets_collection_id]
 
-    def has_gene_sets_collection(self, gsc_id):
+    def has_gene_set_collection(self, gsc_id):
         return any([
             gsc['name'] == gsc_id
             for gsc in self.collections_descriptions
@@ -109,15 +109,15 @@ class GeneSetsDb(object):
         Return all gene set collection ids (including the ids
         of collections which have not been loaded).
         '''
-        return self.config.gene_sets_collections.keys()
+        return self.config.gene_terms.keys()
 
     def get_gene_set_ids(self, collection_id):
         gsc = self._load_gene_set_collection(collection_id)
-        return gsc.gene_terms_descriptions.keys()
+        return set(gsc.gene_terms_descriptions.keys())
 
     def get_all_gene_sets(self, collection_id):
         gsc = self._load_gene_set_collection(collection_id)
-        return gsc.gene_terms_descriptions.values()
+        return list(gsc.gene_terms_descriptions.values())
 
     def get_gene_set(self, collection_id, gene_set_id):
         gsc = self._load_gene_set_collection(collection_id)

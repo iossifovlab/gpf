@@ -79,7 +79,7 @@ class GeneSetsView(GeneSetsBaseView):
                 self.get_permitted_datasets(request.user)
             )
         else:
-            if not self.gene_sets_db.has_gene_sets_collection(
+            if not self.gene_sets_db.has_gene_set_collection(
                     gene_sets_collection_id):
                 return Response(status=status.HTTP_404_NOT_FOUND)
 
