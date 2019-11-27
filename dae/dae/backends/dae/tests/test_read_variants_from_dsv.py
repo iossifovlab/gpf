@@ -58,16 +58,17 @@ def test_families_instance_type_assertion():
     error_message = 'families must be an instance of FamiliesData!'
     with pytest.raises(AssertionError) as excinfo:
         DenovoLoader.flexible_denovo_load(
-            None, None, location='foo', variant='bar',
-            person_id='baz', families='bla')
+            None, None, denovo_location='foo', denovo_variant='bar',
+            denovo_person_id='baz', families='bla')
     assert str(excinfo.value) == error_message
 
 
 def test_read_variants_DAE_style(default_genome, fixture_dirname):
     filename = fixture_dirname('denovo_import/variants_DAE_style.tsv')
     res_df = DenovoLoader.flexible_denovo_load(
-        filename, default_genome, location='location', variant='variant',
-        family_id='familyId', best_state='bestState'
+        filename, default_genome, denovo_location='location',
+        denovo_variant='variant',
+        denovo_family_id='familyId', denovo_best_state='bestState'
     )
 
     expected_df = pd.DataFrame({
@@ -89,8 +90,10 @@ def test_read_variants_DAE_style(default_genome, fixture_dirname):
 def test_read_variants_a_la_VCF_style(fixture_dirname):
     filename = fixture_dirname('denovo_import/variants_VCF_style.tsv')
     res_df = DenovoLoader.flexible_denovo_load(
-        filename, None, chrom='chrom', pos='pos',
-        ref='ref', alt='alt', family_id='familyId', best_state='bestState'
+        filename, None, denovo_chrom='chrom', denovo_pos='pos',
+        denovo_ref='ref',
+        denovo_alt='alt', denovo_family_id='familyId',
+        denovo_best_state='bestState'
     )
 
     expected_df = pd.DataFrame({
@@ -112,8 +115,10 @@ def test_read_variants_a_la_VCF_style(fixture_dirname):
 def test_read_variants_mixed_A(fixture_dirname):
     filename = fixture_dirname('denovo_import/variants_mixed_style_A.tsv')
     res_df = DenovoLoader.flexible_denovo_load(
-        filename, None, location='location',
-        ref='ref', alt='alt', family_id='familyId', best_state='bestState'
+        filename, None, denovo_location='location',
+        denovo_ref='ref',
+        denovo_alt='alt', denovo_family_id='familyId',
+        denovo_best_state='bestState'
     )
 
     expected_df = pd.DataFrame({
@@ -135,8 +140,9 @@ def test_read_variants_mixed_A(fixture_dirname):
 def test_read_variants_mixed_B(default_genome, fixture_dirname):
     filename = fixture_dirname('denovo_import/variants_mixed_style_B.tsv')
     res_df = DenovoLoader.flexible_denovo_load(
-        filename, default_genome, chrom='chrom', pos='pos',
-        variant='variant', family_id='familyId', best_state='bestState'
+        filename, default_genome, denovo_chrom='chrom', denovo_pos='pos',
+        denovo_variant='variant',
+        denovo_family_id='familyId', denovo_best_state='bestState'
     )
 
     expected_df = pd.DataFrame({
@@ -162,8 +168,9 @@ def test_read_variants_mixed_B(default_genome, fixture_dirname):
 def test_read_variants_person_ids(filename, fake_families, fixture_dirname):
     filename = fixture_dirname(filename)
     res_df = DenovoLoader.flexible_denovo_load(
-        filename, None, chrom='chrom', pos='pos',
-        ref='ref', alt='alt', person_id='personId', families=fake_families
+        filename, None, denovo_chrom='chrom', denovo_pos='pos',
+        denovo_ref='ref', denovo_alt='alt', denovo_person_id='personId',
+        families=fake_families
     )
 
     expected_df = pd.DataFrame({
@@ -191,8 +198,11 @@ def test_read_variants_different_separator(fixture_dirname):
     filename = fixture_dirname(
         'denovo_import/variants_different_separator.dsv')
     res_df = DenovoLoader.flexible_denovo_load(
-        filename, None, sep='$', chrom='chrom', pos='pos',
-        ref='ref', alt='alt', family_id='familyId', best_state='bestState'
+        filename, None, denovo_sep='$', denovo_chrom='chrom',
+        denovo_pos='pos',
+        denovo_ref='ref',
+        denovo_alt='alt', denovo_family_id='familyId',
+        denovo_best_state='bestState'
     )
 
     expected_df = pd.DataFrame({
@@ -216,8 +226,9 @@ def test_read_variants_genome_assertion(fixture_dirname):
 
     with pytest.raises(AssertionError) as excinfo:
         DenovoLoader.flexible_denovo_load(
-            filename, None, location='location', variant='variant',
-            family_id='familyId', best_state='bestState'
+            filename, None, denovo_location='location',
+            denovo_variant='variant',
+            denovo_family_id='familyId', denovo_best_state='bestState'
         )
 
     assert str(excinfo.value) == 'You must provide a genome object!'

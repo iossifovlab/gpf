@@ -633,18 +633,21 @@ def data_import(
             study_temp_dirname = os.path.join(temp_dirname, study_id)
 
             families_loader = FamiliesLoader(vcf.pedigree)
-            loader = VcfLoader(families_loader.families, vcf.vcf, region=None)
+            loader = VcfLoader(
+                families_loader.families, vcf.vcf, region=None,
+                params={
+                    'include_reference': True,
+                    'include_unknown': True
+                })
+
             loader = AlleleFrequencyDecorator(loader)
             loader = AnnotationPipelineDecorator(loader, annotation_pipeline)
 
             impala_genotype_storage.simple_study_import(
                 study_id,
-                denovo_loader=None,  # denovo loader
-                vcf_loader=loader,
                 families_loader=families_loader,
-                output=study_temp_dirname,
-                include_reference=True,
-                include_unknown=True
+                variant_loaders=[loader],
+                output=study_temp_dirname
             )
 
     build('backends/')
