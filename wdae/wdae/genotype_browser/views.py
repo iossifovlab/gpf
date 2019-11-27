@@ -20,9 +20,9 @@ logger = logging.getLogger(__name__)
 class QueryPreviewView(QueryBaseView):
 
     @expand_gene_set
+    @request_logging(LOGGER)
     def post(self, request):
-        LOGGER.info(log_filter(request, 'query v3 preview request: ' +
-                               str(request.data)))
+        LOGGER.info("query v3 preview request: " + str(request.data))
 
         data = request.data
         dataset_id = data.pop('datasetId', None)
