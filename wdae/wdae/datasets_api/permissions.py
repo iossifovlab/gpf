@@ -14,8 +14,7 @@ class IsDatasetAllowed(permissions.BasePermission):
         if dataset_id is None:
             return True
 
-        return IsDatasetAllowed.has_object_permission(
-                request, view, dataset_id)
+        return self.has_object_permission(request, view, dataset_id)
 
     def has_object_permission(self, request, view, dataset_id):
         return self.user_has_permission(request.user, dataset_id)
