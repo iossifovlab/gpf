@@ -45,16 +45,14 @@ def test_parquet_family_bin(fam1, fam2, gt):
     pd = ParquetPartitionDescription(
         ['1'], 1000, family_bin_size
     )
-    expected_fam_1 = hash(fv1.family_id) % family_bin_size
-    expected_fam_2 = hash(fv2.family_id) % family_bin_size
-    assert pd._evaluate_family_bin(fv1) == expected_fam_1
-    assert pd._evaluate_family_bin(fv2) == expected_fam_2
+    assert pd._evaluate_family_bin(fv1) == 9
+    assert pd._evaluate_family_bin(fv2) == 6
     assert pd.evaluate_variant_filename(fv1) == \
-        f'1_11/{expected_fam_1}/' + \
-        f'variants_region_bin_1_11_family_bin_{expected_fam_1}.parquet'
+        f'1_11/9/' + \
+        f'variants_region_bin_1_11_family_bin_9.parquet'
     assert pd.evaluate_variant_filename(fv2) == \
-        f'1_11/{expected_fam_2}/' + \
-        f'variants_region_bin_1_11_family_bin_{expected_fam_2}.parquet'
+        f'1_11/6/' + \
+        f'variants_region_bin_1_11_family_bin_6.parquet'
 
 
 @pytest.mark.parametrize('attributes, rare_boundary, expected', [
