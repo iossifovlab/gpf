@@ -111,6 +111,8 @@ ________
 
   webLabel = <>
 
+.. _gene_weights:
+
 [geneWeights]
 -------------
 

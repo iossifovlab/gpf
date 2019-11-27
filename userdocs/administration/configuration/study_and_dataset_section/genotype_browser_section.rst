@@ -74,6 +74,93 @@ Example Configuration
   previewColumns = family,variant,pheno
   downloadColumns = family,variant,inchild
 
+Columns
+-------
+
+genotypeBrowser section support different types of columns. These columns are:
+
+  * Genotype - Here you can define columns from the raw study data columns.
+    Configuration of this columns can be found :ref:`here <genotype_columns>`.
+
+  * Phenotype - Here you can define columns from ``phenoDB`` by the ``id`` of
+    the phenotype measure. Configuration of this columns can be found
+    :ref:`here <pheno_columns>`.
+
+  * In Roles - Here you can define columns which are based on the pedigree
+    information. They will be added to the variant as new ``genotype columns``.
+    Information that this columns will be containing will be all possible
+    combinations of the role from all of the defined roles list in it with the
+    gender of the people with this role. Configuration of this columns can be
+    found :ref:`here <_in_roles_columns>`. This columns can be used as a
+    genotype columns.
+
+  * Gene Weights - Here you can define columns which are based on the
+    :ref:`Gene Weights <gene_weights>` data. They will be added to the variant
+    as new ``genotype columns``. This columns can be used as a genotype
+    columns.
+
+Only ``Genotype`` and ``Phenotype`` columns can be used as a
+:ref:`Preview <preview_columns>` and :ref:`Download <download_columns>`
+columns.
+
+Here you can see example configuration for different column types:
+
+.. code-block:: ini
+
+  [genotypeBrowser]
+
+  ...
+
+  # Genotype columns
+  #############################################################################
+
+  genotype.family.name = family
+  genotype.family.slots = family:family id,studyName:study
+
+  genotype.variant.name = variant
+  genotype.variant.slots = location:location,variant:variant
+
+  genotype.genotype.name = genotype
+  genotype.genotype.source = pedigree
+  genotype.genotype.slots = inChS:in child,fromParentS:from parent
+
+  # Phenotype columns
+  #############################################################################
+
+  pheno.iq.name = Proband IQs
+  pheno.iq.slots = prb:diagnosis_summary.best_nonverbal_iq:NvIQ,
+      prb:diagnosis_summary.best_verbal_iq:vIQ
+
+  # In Roles columns
+  #############################################################################
+
+  inRoles.inChild.destination = inChS
+  inRoles.inChild.roles = prb,sib
+
+  inRoles.fromParents.destination = fromParentS
+  inRoles.fromParents.roles = mom,dad
+
+  genotype.inchild.name = in child
+  genotype.inchild.source = inChS
+
+  genotype.fromparent.name = from parent
+  genotype.fromparent.source = fromParentS
+
+  # Gene Weights columns
+  #############################################################################
+
+  genotype.weights.name = vulnerability/intolerance
+  genotype.weights.slots = LGD_rank:LGD rank:LGD %%d ,
+      RVIS_rank:RVIS rank:RVIS %%d,pLI_rank:pLI rank:pLI %%d
+
+  # Preview and Download columns
+  #############################################################################
+
+  previewColumns = family,variant,genotype,weights
+  downloadColumns=family,variant,fromparent,inchild,weights,iq
+
+  ...
+
 [genotypeBrowser]
 -----------------
 
@@ -317,6 +404,8 @@ ________________________________________
 This property defines which roles are available to the ``Present in Role``
 filter in the ``Genotype Browser`` for the study.
 
+.. _genotype_columns:
+
 selectedGenotypeColumnValues
 ____________________________
 
@@ -376,6 +465,8 @@ slots. Each slot is defined by:
   * ``<label format>`` - format of the values in this slot. This property is
     optional and default value for it is ``%s``.
 
+.. _pheno_columns:
+
 selectedPhenoColumnValues
 _________________________
 
@@ -425,6 +516,8 @@ Slots of the phenotype column in the header of the preview table in the
 
   * ``<label format>`` - format of the values in this slot. This property is
     optional and the default value for it is ``%s``.
+
+.. _in_roles_columns:
 
 inRoles
 _______
@@ -476,6 +569,8 @@ inRoles.<in role column id>.roles
 A comma-separated list of roles which will be used for the generation of the
 new column.
 
+.. _preview_columns:
+
 previewColumns
 ______________
 
@@ -485,6 +580,8 @@ ______________
 
 Which columns to display in the preview table of the ``Genotype Browser`` of
 the study. Possible values in this list are genotype or phenotype column ids.
+
+.. _download_columns:
 
 downloadColumns
 _______________
