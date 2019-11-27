@@ -3,6 +3,7 @@ from collections import OrderedDict, namedtuple
 import numpy as np
 
 from dae.gene.genomic_values import GenomicValues
+from dae.gene.gene_sets_db import cached
 from dae.utils.dae_utils import join_line
 
 
@@ -62,6 +63,7 @@ class GeneWeight(GenomicValues):
 
         return (bins, bars)
 
+    @cached
     def _to_dict(self):
         """
         Returns dictionary of all defined weights keyed by gene symbol.
@@ -70,21 +72,25 @@ class GeneWeight(GenomicValues):
             self._dict = self.df.set_index('gene')[self.id].to_dict()
         return self._dict
 
+    @cached
     def _to_list(self):
         columns = self.df.applymap(str).columns.tolist()
         values = self.df.applymap(str).values.tolist()
 
         return itertools.chain([columns], values)
 
+    @cached
     def _to_tsv(self):
         return map(join_line, self.to_list())
 
+    @cached
     def min(self):
         """
         Returns minimal weight value.
         """
         return self.df[self.id].min()
 
+    @cached
     def max(self):
         """
         Returns maximal weight value.
@@ -142,16 +148,18 @@ class GeneWeightsDb(object):
         )
         return GeneWeight(config)
 
+    @cached
     def get_gene_weight_ids(self):
         return list(self.weights.keys())
+
+    @cached
+    def get_gene_weights(self):
+        return [self.get_gene_weight(weight_id)
+                for weight_id in self.weights]
 
     def get_gene_weight(self, weight_id):
         assert self[weight_id].df is not None
         return self[weight_id]
-
-    def get_gene_weights(self):
-        return [self.get_gene_weight(weight_id)
-                for weight_id in self.weights]
 
     def _load(self):
         for weight_config in self.config.values():
