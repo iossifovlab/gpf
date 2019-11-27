@@ -115,18 +115,21 @@ class ParquetPartitionDescription():
         return frequency_bin
 
     def evaluate_variant_filename(self, family_variant):
-        bins = (self._evaluate_region_bin(family_variant),)
-        filename = f'variants_region_bin_{bins[0]}'
+        current_bin = self._evaluate_region_bin(family_variant)
+        filepath = f'region_bin={current_bin}'
+        filename = f'variants_region_bin_{current_bin}'
         if self.family_bin_size > 0:
-            bins += (self._evaluate_family_bin(family_variant),)
-            filename += f'_family_bin_{bins[len(bins)-1]}'
+            current_bin = self._evaluate_family_bin(family_variant)
+            filepath = os.path.join(filepath, f'family_bin={current_bin}')
+            filename += f'_family_bin_{current_bin}'
         if len(self.coding_effect_types) > 0:
-            bins += (self._evaluate_coding_bin(family_variant),)
-            filename += f'_coding_bin_{bins[len(bins)-1]}'
+            current_bin = self._evaluate_coding_bin(family_variant)
+            filepath = os.path.join(filepath, f'coding_bin={current_bin}')
+            filename += f'_coding_bin_{current_bin}'
         if self.rare_boundary > 0:
-            bins += (self._evaluate_frequency_bin(family_variant),)
-            filename += f'_frequency_bin_{bins[len(bins)-1]}'
-        filepath = os.path.join('', *tuple(map(str, bins)))
+            current_bin = self._evaluate_frequency_bin(family_variant)
+            filepath = os.path.join(filepath, f'frequency_bin={current_bin}')
+            filename += f'_frequency_bin_{current_bin}'
         filename += '.parquet'
 
         return os.path.join(filepath, filename)
