@@ -29,42 +29,42 @@ def mock_property(mocker):
     return result
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope='session')
 def gpf_instance(mock_genomes_db):
     return GPFInstance(work_dir=fixtures_dir())
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope='session')
 def dae_config_fixture(gpf_instance):
     return gpf_instance.dae_config
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope='session')
 def variants_db_fixture(gpf_instance):
     return gpf_instance.variants_db
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope='session')
 def gene_info_config(gpf_instance):
     return gpf_instance.gene_info_config
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope='session')
 def weights_factory(gpf_instance):
     return gpf_instance.weights_factory
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope='session')
 def score_config(gpf_instance):
     return gpf_instance.score_config
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope='session')
 def scores_factory(gpf_instance):
     return gpf_instance.scores_factory
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope='session')
 def denovo_gene_set_facade(gpf_instance):
     return gpf_instance.denovo_gene_set_facade
 
@@ -89,7 +89,7 @@ def gene_info_cache_dir():
     shutil.rmtree(cache_dir)
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope='session')
 def calc_gene_sets(request, denovo_gene_sets, denovo_gene_set_f4):
     for dgs in denovo_gene_sets + [denovo_gene_set_f4]:
         dgs.load(build_cache=True)
@@ -112,7 +112,7 @@ def get_denovo_gene_set_by_id(variants_db_fixture, dgs_id):
     )
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope='session')
 def denovo_gene_sets(variants_db_fixture):
     return [
         get_denovo_gene_set_by_id(variants_db_fixture, 'f1_group'),
@@ -121,12 +121,12 @@ def denovo_gene_sets(variants_db_fixture):
     ]
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope='session')
 def denovo_gene_set_f4(variants_db_fixture):
     return get_denovo_gene_set_by_id(variants_db_fixture, 'f4_trio')
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope='session')
 def f4_trio_denovo_gene_set_config(variants_db_fixture):
     return DenovoGeneSetConfigParser.parse(
         variants_db_fixture.get_config('f4_trio')
