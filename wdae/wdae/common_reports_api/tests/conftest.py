@@ -11,17 +11,17 @@ def fixtures_dir():
         os.path.join(os.path.dirname(__file__), 'fixtures'))
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope='session')
 def gpf_instance(mock_genomes_db):
     return GPFInstance(work_dir=fixtures_dir())
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope='session')
 def common_report_facade(gpf_instance):
     return gpf_instance.common_report_facade
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope='session')
 def use_common_reports(common_report_facade):
     all_configs = common_report_facade.get_all_common_report_configs()
     temp_files = [config.file_path for config in all_configs]
