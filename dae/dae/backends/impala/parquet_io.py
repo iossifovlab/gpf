@@ -75,25 +75,25 @@ class ParquetPartitionDescription():
         self.coding_effect_types = coding_effect_types
         self.rare_boundary = rare_boundary
 
-    def _evaluate_region_bin(self, family_variant):
-        chromosome = family_variant.ref_allele.chromosome
-        pos = family_variant.ref_allele.position // self.region_length
+    def _evaluate_region_bin(self, family_allele):
+        chromosome = family_allele.chromosome
+        pos = family_allele.position // self.region_length
         if chromosome in self.chromosomes:
             return f'{chromosome}_{pos}'
         else:
             return f'other_{pos}'
 
-    def _evaluate_family_bin(self, family_variant):
+    def _evaluate_family_bin(self, family_allele):
         sha256 = hashlib.sha256()
-        family_variant_id = family_variant.family_id
+        family_variant_id = family_allele.family_id
         sha256.update(family_variant_id.encode())
         digest = int(sha256.hexdigest(), 16)
         return digest % self.family_bin_size
 
-    def _evaluate_coding_bin(self, family_variant):
-        variant_effects = set()
-        for effect in family_variant.effects:
-            variant_effects = variant_effects.union(effect.types)
+    def _evaluate_coding_bin(self, family_allele):
+        if family_allele.is_reference_allele:
+            return 0
+        variant_effects = set(family_allele.effect.types)
         coding_effect_types = set(self.coding_effect_types)
 
         result = variant_effects.intersection(coding_effect_types)
@@ -102,9 +102,9 @@ class ParquetPartitionDescription():
         else:
             return 1
 
-    def _evaluate_frequency_bin(self, family_variant):
-        count = min(family_variant.get_attribute('af_allele_count'))
-        frequency = min(family_variant.get_attribute('af_allele_freq'))
+    def _evaluate_frequency_bin(self, family_allele):
+        count = family_allele.get_attribute('af_allele_count')
+        frequency = family_allele.get_attribute('af_allele_freq')
         if count == 1:  # Ultra rare
             frequency_bin = 1
         elif frequency < self.rare_boundary:  # Rare
@@ -114,19 +114,22 @@ class ParquetPartitionDescription():
 
         return frequency_bin
 
-    def evaluate_variant_filename(self, family_variant):
-        bins = (self._evaluate_region_bin(family_variant),)
-        filename = f'variants_region_bin_{bins[0]}'
+    def evaluate_variant_filename(self, family_allele):
+        current_bin = self._evaluate_region_bin(family_allele)
+        filepath = f'region_bin={current_bin}'
+        filename = f'variants_region_bin_{current_bin}'
         if self.family_bin_size > 0:
-            bins += (self._evaluate_family_bin(family_variant),)
-            filename += f'_family_bin_{bins[len(bins)-1]}'
+            current_bin = self._evaluate_family_bin(family_allele)
+            filepath = os.path.join(filepath, f'family_bin={current_bin}')
+            filename += f'_family_bin_{current_bin}'
         if len(self.coding_effect_types) > 0:
-            bins += (self._evaluate_coding_bin(family_variant),)
-            filename += f'_coding_bin_{bins[len(bins)-1]}'
+            current_bin = self._evaluate_coding_bin(family_allele)
+            filepath = os.path.join(filepath, f'coding_bin={current_bin}')
+            filename += f'_coding_bin_{current_bin}'
         if self.rare_boundary > 0:
-            bins += (self._evaluate_frequency_bin(family_variant),)
-            filename += f'_frequency_bin_{bins[len(bins)-1]}'
-        filepath = os.path.join('', *tuple(map(str, bins)))
+            current_bin = self._evaluate_frequency_bin(family_allele)
+            filepath = os.path.join(filepath, f'frequency_bin={current_bin}')
+            filename += f'_frequency_bin_{current_bin}'
         filename += '.parquet'
 
         return os.path.join(filepath, filename)
@@ -201,8 +204,8 @@ class VariantsParquetWriter():
 
     def __init__(
             self, fvars,
-            partition_description,
-            root_folder, bucket_index=1,
+            partition_description=None,
+            root_folder='', bucket_index=1,
             rows=100000, include_reference=True,
             include_unknown=True, filesystem=None):
 
@@ -320,8 +323,6 @@ class VariantsParquetWriter():
                     [summary], [frequency], [genomic_scores],
                     effect_genes, [family], member):
 
-                bin_writer = self._get_bin_writer(
-                    summary_variant, family_variant)
                 writer_data = []
                 writer_data.append(('bucket_index', self.bucket_index))
 
@@ -329,15 +330,21 @@ class VariantsParquetWriter():
                     for key, val in d._asdict().items():
                         writer_data.append((key, val))
 
-                bin_writer.data_append(writer_data)
+                print(writer_data)
+
+                yield (family_allele, writer_data)
 
     def _get_full_filepath(self, filename):
         filepath = os.path.join(self.root_folder, filename)
         return filepath
 
-    def _get_bin_writer(self, summary_variant, family_variant):
-        filename = self.partition_description.evaluate_variant_filename(
-                family_variant)
+    def _get_bin_writer(self, family_allele,
+                        force_filename=None):
+        if force_filename:
+            filename = force_filename
+        else:
+            filename = self.partition_description.evaluate_variant_filename(
+                family_allele)
 
         if filename not in self.data_writers:
             filepath = self._get_full_filepath(filename)
@@ -348,31 +355,33 @@ class VariantsParquetWriter():
                     rows=self.rows)
         return self.data_writers[filename]
 
-    def write_partition(self):
+    def _write_internal(self, force_filename=None):
         family_variant_index = 0
         for summary_variant_index, (summary_variant, family_variants) in \
                 enumerate(self.full_variants_iterator):
             for family_variant in family_variants:
                 family_variant_index += 1
 
+                fv = family_variant
                 if family_variant.is_unknown():
                     if not self.include_unknown:
                         continue
                     # handle all unknown variants
                     unknown_variant = self._setup_all_unknown_variant(
                         summary_variant, family_variant.family_id)
-                    self._process_family_variant(
-                        summary_variant_index,
-                        summary_variant,
-                        family_variant_index,
-                        unknown_variant
-                    )
-                else:
-                    self._process_family_variant(
-                        summary_variant_index,
-                        summary_variant,
-                        family_variant_index,
-                        family_variant)
+                    fv = unknown_variant
+
+                data_gen = self._process_family_variant(
+                    summary_variant_index,
+                    summary_variant,
+                    family_variant_index,
+                    fv)
+
+                for (family_allele, data) in data_gen:
+                    bin_writer = self._get_bin_writer(
+                            family_allele, force_filename)
+
+                    bin_writer.data_append(data)
 
             if family_variant_index % 1000 == 0:
                 elapsed = time.time() - self.start
@@ -396,40 +405,18 @@ class VariantsParquetWriter():
                 family_variant_index, elapsed),
             file=sys.stderr)
 
+    def write_partition(self):
+        self._write_internal()
+
         self.partition_description.write_partition_configuration_to_file(
                 self.root_folder)
-
 
 #    def variants_table(self):
 #        for key, value in self.data_writers.items():
 #            yield (key, value.build_table())
 #
-#    def save_variants_to_parquet(
-#            self, root_path):
-#
-#        try:
-#            self.fill_bins()
-#            print(self.data_writers.keys())
-#            for (bins, table) in self.variants_table():
-#                filename = root_path
-#                filename = os.path.join(filename, *tuple(map(str, bins)))
-#
-#                if not os.path.exists(filename):
-#                    os.makedirs(filename)
-#
-#                filename = os.path.join(filename,
-#                                        f'variants_region_bin_{bins[0]}'
-#                                        + f'_family_bin_{bins[1]}.parquet')
-#                assert table.schema == self.data_writers[bins].schema
-#                with pq.ParquetWriter(
-#                        filename, table.schema,
-#                        compression='snappy',
-#                        filesystem=self.filesystem) as writer:
-#                    writer.write_table(table)
-#
-#        except Exception as ex:
-#            print('unexpected error:', ex)
-#            traceback.print_exc(file=sys.stdout)
+    def save_variants_to_parquet(self, filename):
+        self._write_internal(filename)
 
 
 class ParquetManager:
