@@ -3,10 +3,6 @@
 import os
 import sys
 import time
-import glob
-import shutil
-import copy
-from functools import partial
 import argparse
 
 from dae.gpf_instance.gpf_instance import GPFInstance
@@ -14,85 +10,12 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.backends.impala.parquet_io import ParquetManager
 from dae.backends.import_commons import construct_import_annotation_pipeline
 
-from dae.utils.helpers import add_flexible_denovo_import_args, \
-    read_variants_from_dsv
+from dae.backends.dae.loader import DenovoLoader
+from dae.backends.vcf.loader import VcfLoader
+from dae.backends.raw.loader import AnnotationPipelineDecorator
 
-from dae.tools.vcf2parquet import import_vcf
-from dae.tools.dae2parquet import import_dae_denovo
-from dae.backends.impala.impala_helpers import ImpalaHelpers
-from dae.backends.impala.hdfs_helpers import HdfsHelpers
-from dae.pedigrees.pedigree_reader import PedigreeReader, PedigreeRoleGuesser
-from dae.pedigrees.family import FamiliesData
-
-from dae.tools.vcf2parquet import vcf2parquet
-from dae.tools.dae2parquet import denovo2parquet
-
-
-def add_cli_arguments_pedigree(parser):
-    parser.add_argument(
-        '--ped-family',
-        default='familyId',
-        help='specify the name of the column in the pedigree file that holds '
-        'the ID of the family the person belongs to [default: %(default)s]'
-    )
-
-    parser.add_argument(
-        '--ped-person',
-        default='personId',
-        help='specify the name of the column in the pedigree file that holds '
-        'the person\'s ID [default: %(default)s]'
-    )
-
-    parser.add_argument(
-        '--ped-mom',
-        default='momId',
-        help='specify the name of the column in the pedigree file that holds '
-        'the ID of the person\'s mother [default: %(default)s]'
-    )
-
-    parser.add_argument(
-        '--ped-dad',
-        default='dadId',
-        help='specify the name of the column in the pedigree file that holds '
-        'the ID of the person\'s father [default: %(default)s]'
-    )
-
-    parser.add_argument(
-        '--ped-sex',
-        default='sex',
-        help='specify the name of the column in the pedigree file that holds '
-        'the sex of the person [default: %(default)s]'
-    )
-
-    parser.add_argument(
-        '--ped-status',
-        default='status',
-        help='specify the name of the column in the pedigree file that holds '
-        'the status of the person [default: %(default)s]'
-    )
-
-    parser.add_argument(
-        '--ped-role',
-        default='role',
-        help='specify the name of the column in the pedigree file that holds '
-        'the role of the person [default: %(default)s]'
-    )
-
-    parser.add_argument(
-        '--ped-no-role',
-        action='store_true',
-        help='indicates that the provided pedigree file has no role column. '
-        'If this argument is provided, the import tool will guess the roles '
-        'of individuals and write them in a "role" column.'
-    )
-
-    parser.add_argument(
-        '--ped-no-header',
-        action='store_true',
-        help='indicates that the provided pedigree file has no header. The '
-        'pedigree column arguments will accept indices if this argument is '
-        'given. [default: %(default)s]'
-    )
+from dae.pedigrees.family import PedigreeReader
+from dae.pedigrees.family import FamiliesLoader
 
 
 def parse_cli_arguments(dae_config, argv=sys.argv[1:]):
@@ -155,21 +78,25 @@ def parse_cli_arguments(dae_config, argv=sys.argv[1:]):
         action='store'
     )
 
-    add_cli_arguments_pedigree(parser)
-    add_flexible_denovo_import_args(parser)
+    PedigreeReader.flexible_pedigree_cli_arguments(parser)
+    DenovoLoader.flexible_denovo_cli_arguments(parser)
 
     parser_args = parser.parse_args(argv)
     return parser_args
 
 
-STUDY_CONFIG_TEMPLATE = """
-[study]
+def save_study_config(dae_config, study_id, study_config):
+    dirname = os.path.join(dae_config.studies_db.dir, study_id)
+    filename = os.path.join(dirname, '{}.conf'.format(study_id))
 
-id = {id}
-prefix = {output}
-file_format = impala
+    if os.path.exists(filename):
+        print('configuration file already exists:', filename)
+        print('skipping generation of default study config for:', study_id)
+        return
 
-"""
+    os.makedirs(dirname, exist_ok=True)
+    with open(filename, 'w') as outfile:
+        outfile.write(study_config)
 
 
 def generate_common_report(gpf_instance, study_id):
@@ -184,42 +111,23 @@ def generate_denovo_gene_sets(gpf_instance, study_id):
     main(gpf_instance=gpf_instance, argv=argv)
 
 
-def cast_pedigree_column_indices_to_int(argv):
-    ped_col_args = [
-        'ped_family',
-        'ped_person',
-        'ped_mom',
-        'ped_dad',
-        'ped_sex',
-        'ped_status',
-        'ped_role',
-    ]
-    res_argv = copy.deepcopy(argv)
+def main(argv, gpf_instance=None):
+    if gpf_instance is None:
+        gpf_instance = GPFInstance()
 
-    for col in ped_col_args:
-        col_idx = getattr(argv, col)
-        assert col_idx.isnumeric(), \
-            '{} must hold an integer value!'.format(col)
-        setattr(res_argv, col, int(col_idx))
-
-    return res_argv
-
-
-if __name__ == "__main__":
-    gpf_instance = GPFInstance()
     dae_config = gpf_instance.dae_config
 
-    argv = parse_cli_arguments(dae_config, sys.argv[1:])
+    argv = parse_cli_arguments(dae_config, argv)
 
     genotype_storage_factory = gpf_instance.genotype_storage_factory
     genomes_db = gpf_instance.genomes_db
     genome = genomes_db.get_genome()
 
-
     genotype_storage = genotype_storage_factory.get_genotype_storage(
         argv.genotype_storage
     )
     print("genotype storage:", argv.genotype_storage, genotype_storage)
+    assert genotype_storage is not None, argv.genotype_storage
 
     annotation_pipeline = construct_import_annotation_pipeline(
         dae_config, genomes_db, argv)
@@ -241,92 +149,70 @@ if __name__ == "__main__":
     assert output is not None
     assert argv.vcf is not None or argv.denovo is not None
 
-    # handle pedigree
-    load_pedigree_partial = partial(
-        PedigreeReader.load_pedigree_file,
-        col_family=argv.ped_family,
-        col_person=argv.ped_person,
-        col_mom=argv.ped_mom,
-        col_dad=argv.ped_dad,
-        col_sex=argv.ped_sex,
-        col_status=argv.ped_status,
-        col_role=argv.ped_role,
-    )
+    pedigree_format = \
+        PedigreeReader.flexible_pedigree_parse_cli_arguments(argv)
 
-    if argv.ped_no_header:
-        argv = cast_pedigree_column_indices_to_int(argv)
-        ped_df = load_pedigree_partial(argv.pedigree, has_header=False)
-    else:
-        ped_df = load_pedigree_partial(argv.pedigree)
+    families_loader = FamiliesLoader(
+        argv.pedigree, pedigree_format=pedigree_format)
 
-    if argv.ped_no_role:
-        ped_df = PedigreeRoleGuesser.guess_role_nuc(ped_df)
-    families = FamiliesData.from_pedigree_df(ped_df)
-
-    denovo_parquet = None
-    vcf_parquet = None
-
-    skip_pedigree = False
-    if argv.vcf and argv.denovo:
-        skip_pedigree = True
-
-    parquet_config = None
-    if argv.vcf is not None:
-        parquet_config = vcf2parquet(
-            study_id,
-            ped_df, argv.vcf,
-            genomes_db, annotation_pipeline, parquet_manager,
-            output=output, bucket_index=1
-        )
+    variant_loaders = []
     if argv.denovo is not None:
-        print("denovo filename:", argv.denovo)
-        denovo_df = read_variants_from_dsv(
+        denovo_loader = DenovoLoader(
+            families_loader.families,
             argv.denovo,
-            genome,
-            location=argv.denovo_location,
-            variant=argv.denovo_variant,
-            chrom=argv.denovo_chrom,
-            pos=argv.denovo_pos,
-            ref=argv.denovo_ref,
-            alt=argv.denovo_alt,
-            personId=argv.denovo_personId,
-            familyId=argv.denovo_familyId,
-            bestSt=argv.denovo_bestSt,
-            families=families,
+            genome=genome,
+            params={
+                'denovo_location': argv.denovo_location,
+                'denovo_variant': argv.denovo_variant,
+                'denovo_chrom': argv.denovo_chrom,
+                'denovo_pos': argv.denovo_pos,
+                'denovo_ref': argv.denovo_ref,
+                'denovo_alt': argv.denovo_alt,
+                'denovo_person_id': argv.denovo_person_id,
+                'denovo_family_id': argv.denovo_family_id,
+                'denovo_best_state': argv.denovo_best_state,
+            }
         )
-        print(denovo_df.head())
-
-        parquet_config = denovo2parquet(
-            study_id, ped_df, denovo_df,
-            parquet_manager, annotation_pipeline, genome,
-            output=output, bucket_index=0, skip_pedigree=skip_pedigree
+        denovo_loader = AnnotationPipelineDecorator(
+            denovo_loader, annotation_pipeline
         )
-
-    if parquet_config:
-        genotype_storage.impala_load_study(
-            study_id,
-            os.path.split(parquet_config.files.pedigree)[0],
-            os.path.split(parquet_config.files.variant)[0]
+        variant_loaders.append(denovo_loader)
+    if argv.vcf is not None:
+        vcf_loader = VcfLoader(
+            families_loader.families,
+            argv.vcf
         )
+        vcf_loader = AnnotationPipelineDecorator(
+            vcf_loader, annotation_pipeline
+        )
+        variant_loaders.append(vcf_loader)
 
-    parquet_manager.generate_study_config(
-        study_id, genotype_storage.storage_config.id
+    study_config = genotype_storage.simple_study_import(
+        study_id,
+        families_loader=families_loader,
+        variant_loaders=variant_loaders,
+        output=output
     )
+    save_study_config(dae_config, study_id, study_config)
 
     if not argv.skip_reports:
         # needs to reload the configuration, hence gpf_instance=None
-        gpf_instance_reload = GPFInstance()
+        gpf_instance.reload_variants_db()
 
         print("generating common reports...", file=sys.stderr)
         start = time.time()
-        generate_common_report(gpf_instance_reload, study_id)
+        generate_common_report(gpf_instance, study_id)
         print("DONE: generating common reports in {:.2f} sec".format(
             time.time() - start
             ), file=sys.stderr)
 
         print("generating de Novo gene sets...", file=sys.stderr)
         start = time.time()
-        generate_denovo_gene_sets(gpf_instance_reload, study_id)
+        generate_denovo_gene_sets(gpf_instance, study_id)
         print("DONE: generating de Novo gene sets in {:.2f} sec".format(
             time.time() - start
             ), file=sys.stderr)
+
+
+if __name__ == "__main__":
+    main(sys.argv[1:])

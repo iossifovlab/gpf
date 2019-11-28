@@ -1,11 +1,22 @@
 import pytest
 import pandas as pd
 import numpy as np
-from dae.utils.helpers import produce_genotype, read_variants_from_dsv
-from dae.pedigrees.family import FamiliesData
-from dae.utils.vcf_utils import GENOTYPE_TYPE
 
-from dae.utils.tests.conftest import relative_to_this_folder
+from dae.pedigrees.family import PedigreeReader
+from dae.pedigrees.family import FamiliesData
+
+from dae.backends.dae.loader import DenovoLoader
+
+from dae.utils.variant_utils import GENOTYPE_TYPE
+
+
+@pytest.fixture(scope='session')
+def fake_families(fixture_dirname):
+    ped_df = PedigreeReader.flexible_pedigree_read(
+        fixture_dirname('denovo_import/fake_pheno.ped')
+    )
+    fake_families = FamiliesData.from_pedigree_df(ped_df)
+    return fake_families
 
 
 def compare_variant_dfs(res_df, expected_df):
@@ -29,15 +40,16 @@ def compare_variant_dfs(res_df, expected_df):
 
 
 def test_produce_genotype(fake_families):
-    expected_output = np.array([[0, 0, 0, 0, 0,], [ 0, 0, 0, 1, 1]])
-    output = produce_genotype(fake_families.families['f1'], ['f1.p1', 'f1.s2'])
+    expected_output = np.array([[0, 0, 0, 0, 0], [0, 0, 0, 1, 1]])
+    output = DenovoLoader.produce_genotype(
+        fake_families.families['f1'], ['f1.p1', 'f1.s2'])
     assert np.array_equal(output, expected_output)
     assert output.dtype == GENOTYPE_TYPE
 
 
 def test_produce_genotype_no_people_with_variants(fake_families):
     expected_output = np.array([[0, 0, 0, 0, 0], [0, 0, 0, 0, 0]])
-    output = produce_genotype(fake_families.families['f1'], [])
+    output = DenovoLoader.produce_genotype(fake_families.families['f1'], [])
     assert np.array_equal(output, expected_output)
     assert output.dtype == GENOTYPE_TYPE
 
@@ -45,17 +57,18 @@ def test_produce_genotype_no_people_with_variants(fake_families):
 def test_families_instance_type_assertion():
     error_message = 'families must be an instance of FamiliesData!'
     with pytest.raises(AssertionError) as excinfo:
-        read_variants_from_dsv(
-            None, None, location='foo', variant='bar',
-            personId='baz', families='bla')
+        DenovoLoader.flexible_denovo_load(
+            None, None, denovo_location='foo', denovo_variant='bar',
+            denovo_person_id='baz', families='bla')
     assert str(excinfo.value) == error_message
 
 
-def test_read_variants_DAE_style(default_genome):
-    filename = relative_to_this_folder('fixtures/variants_DAE_style.tsv')
-    res_df = read_variants_from_dsv(
-        filename, default_genome, location='location', variant='variant',
-        familyId='familyId', bestSt='bestState'
+def test_read_variants_DAE_style(default_genome, fixture_dirname):
+    filename = fixture_dirname('denovo_import/variants_DAE_style.tsv')
+    res_df = DenovoLoader.flexible_denovo_load(
+        filename, default_genome, denovo_location='location',
+        denovo_variant='variant',
+        denovo_family_id='familyId', denovo_best_state='bestState'
     )
 
     expected_df = pd.DataFrame({
@@ -74,11 +87,13 @@ def test_read_variants_DAE_style(default_genome):
     assert compare_variant_dfs(res_df, expected_df)
 
 
-def test_read_variants_a_la_VCF_style():
-    filename = relative_to_this_folder('fixtures/variants_VCF_style.tsv')
-    res_df = read_variants_from_dsv(
-        filename, None, chrom='chrom', pos='pos',
-        ref='ref', alt='alt', familyId='familyId', bestSt='bestState'
+def test_read_variants_a_la_VCF_style(fixture_dirname):
+    filename = fixture_dirname('denovo_import/variants_VCF_style.tsv')
+    res_df = DenovoLoader.flexible_denovo_load(
+        filename, None, denovo_chrom='chrom', denovo_pos='pos',
+        denovo_ref='ref',
+        denovo_alt='alt', denovo_family_id='familyId',
+        denovo_best_state='bestState'
     )
 
     expected_df = pd.DataFrame({
@@ -97,11 +112,13 @@ def test_read_variants_a_la_VCF_style():
     assert compare_variant_dfs(res_df, expected_df)
 
 
-def test_read_variants_mixed_A():
-    filename = relative_to_this_folder('fixtures/variants_mixed_style_A.tsv')
-    res_df = read_variants_from_dsv(
-        filename, None, location='location',
-        ref='ref', alt='alt', familyId='familyId', bestSt='bestState'
+def test_read_variants_mixed_A(fixture_dirname):
+    filename = fixture_dirname('denovo_import/variants_mixed_style_A.tsv')
+    res_df = DenovoLoader.flexible_denovo_load(
+        filename, None, denovo_location='location',
+        denovo_ref='ref',
+        denovo_alt='alt', denovo_family_id='familyId',
+        denovo_best_state='bestState'
     )
 
     expected_df = pd.DataFrame({
@@ -120,11 +137,12 @@ def test_read_variants_mixed_A():
     assert compare_variant_dfs(res_df, expected_df)
 
 
-def test_read_variants_mixed_B(default_genome):
-    filename = relative_to_this_folder('fixtures/variants_mixed_style_B.tsv')
-    res_df = read_variants_from_dsv(
-        filename, default_genome, chrom='chrom', pos='pos',
-        variant='variant', familyId='familyId', bestSt='bestState'
+def test_read_variants_mixed_B(default_genome, fixture_dirname):
+    filename = fixture_dirname('denovo_import/variants_mixed_style_B.tsv')
+    res_df = DenovoLoader.flexible_denovo_load(
+        filename, default_genome, denovo_chrom='chrom', denovo_pos='pos',
+        denovo_variant='variant',
+        denovo_family_id='familyId', denovo_best_state='bestState'
     )
 
     expected_df = pd.DataFrame({
@@ -144,14 +162,15 @@ def test_read_variants_mixed_B(default_genome):
 
 
 @pytest.mark.parametrize('filename', [
-    ('fixtures/variants_personId_single.tsv'),
-    ('fixtures/variants_personId_list.tsv'),
+    ('denovo_import/variants_personId_single.tsv'),
+    ('denovo_import/variants_personId_list.tsv'),
 ])
-def test_read_variants_person_ids(filename, fake_families):
-    filename = relative_to_this_folder(filename)
-    res_df = read_variants_from_dsv(
-        filename, None, chrom='chrom', pos='pos',
-        ref='ref', alt='alt', personId='personId', families=fake_families
+def test_read_variants_person_ids(filename, fake_families, fixture_dirname):
+    filename = fixture_dirname(filename)
+    res_df = DenovoLoader.flexible_denovo_load(
+        filename, None, denovo_chrom='chrom', denovo_pos='pos',
+        denovo_ref='ref', denovo_alt='alt', denovo_person_id='personId',
+        families=fake_families
     )
 
     expected_df = pd.DataFrame({
@@ -175,13 +194,15 @@ def test_read_variants_person_ids(filename, fake_families):
     assert compare_variant_dfs(res_df, expected_df)
 
 
-def test_read_variants_different_separator():
-    filename = relative_to_this_folder(
-        'fixtures/variants_different_separator.dsv'
-    )
-    res_df = read_variants_from_dsv(
-        filename, None, sep='$', chrom='chrom', pos='pos',
-        ref='ref', alt='alt', familyId='familyId', bestSt='bestState'
+def test_read_variants_different_separator(fixture_dirname):
+    filename = fixture_dirname(
+        'denovo_import/variants_different_separator.dsv')
+    res_df = DenovoLoader.flexible_denovo_load(
+        filename, None, denovo_sep='$', denovo_chrom='chrom',
+        denovo_pos='pos',
+        denovo_ref='ref',
+        denovo_alt='alt', denovo_family_id='familyId',
+        denovo_best_state='bestState'
     )
 
     expected_df = pd.DataFrame({
@@ -200,13 +221,14 @@ def test_read_variants_different_separator():
     assert compare_variant_dfs(res_df, expected_df)
 
 
-def test_read_variants_genome_assertion():
-    filename = relative_to_this_folder('fixtures/variants_DAE_style.tsv')
+def test_read_variants_genome_assertion(fixture_dirname):
+    filename = fixture_dirname('denovo_import/variants_DAE_style.tsv')
 
     with pytest.raises(AssertionError) as excinfo:
-        res_df = read_variants_from_dsv(
-            filename, None, location='location', variant='variant',
-            familyId='familyId', bestSt='bestState'
+        DenovoLoader.flexible_denovo_load(
+            filename, None, denovo_location='location',
+            denovo_variant='variant',
+            denovo_family_id='familyId', denovo_best_state='bestState'
         )
-        
+
     assert str(excinfo.value) == 'You must provide a genome object!'

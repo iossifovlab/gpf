@@ -4,7 +4,7 @@ import sys
 import argparse
 
 from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.pedigrees.pedigree_reader import PedigreeReader
+from dae.pedigrees.family import PedigreeReader
 
 
 def parse_cli_arguments(argv=sys.argv[1:]):

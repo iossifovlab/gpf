@@ -10,26 +10,28 @@ import pandas as pd
 from io import StringIO
 
 from box import Box
-
+from dae.configuration.dae_config_parser import DAEConfigParser
 from dae.gpf_instance.gpf_instance import GPFInstance
 
 from dae.annotation.annotation_pipeline import PipelineAnnotator
 
 from dae.backends.configure import Configure
-from dae.backends.dae.loader import RawDaeLoader
-from dae.backends.dae.raw_dae import RawDAE, RawDenovo
+from dae.backends.raw.loader import AlleleFrequencyDecorator, \
+    AnnotationPipelineDecorator
+from dae.backends.raw.raw_variants import RawMemoryVariants
 
-from dae.backends.vcf.loader import RawVcfLoader
+from dae.backends.dae.loader import DaeTransmittedLoader, DenovoLoader
+from dae.backends.vcf.loader import VcfLoader
 
 from dae.backends.import_commons import \
     construct_import_annotation_pipeline
-from dae.pedigrees.pedigree_reader import PedigreeReader
-from dae.pedigrees.family import FamiliesData
-from dae.utils.helpers import pedigree_from_path
+
+from dae.pedigrees.family import PedigreeReader
+from dae.pedigrees.family import FamiliesData, FamiliesLoader
+from dae.utils.helpers import study_id_from_path
+
 from dae.backends.impala.parquet_io import ParquetManager
 from dae.backends.storage.impala_genotype_storage import ImpalaGenotypeStorage
-
-from dae.tools.vcf2parquet import vcf2parquet
 
 
 def relative_to_this_test_folder(path):
@@ -48,33 +50,43 @@ def monkeysession(request):
 
 
 @pytest.fixture(scope='session')
-def global_gpf_instance():
-    return GPFInstance()
+def default_dae_config(request):
+    dirname = tempfile.mkdtemp(suffix='_test', prefix='studies_')
+
+    def fin():
+        shutil.rmtree(dirname)
+
+    request.addfinalizer(fin)
+    dae_config = DAEConfigParser.read_and_parse_file_configuration()
+    print(list(dae_config.keys()))
+    dae_config.studies_db.dir = dirname
+
+    return dae_config
 
 
 @pytest.fixture(scope='session')
-def default_dae_config(global_gpf_instance):
-    return global_gpf_instance.dae_config
+def default_gpf_instance(default_dae_config):
+    return GPFInstance(dae_config=default_dae_config)
 
 
 @pytest.fixture(scope='session')
-def dae_config_fixture(global_gpf_instance):
-    return global_gpf_instance.dae_config
+def dae_config_fixture(default_gpf_instance):
+    return default_gpf_instance.dae_config
 
 
 @pytest.fixture(scope='session')
-def genomes_db(global_gpf_instance):
-    return global_gpf_instance.genomes_db
+def genomes_db(default_gpf_instance):
+    return default_gpf_instance.genomes_db
 
 
 @pytest.fixture(scope='session')
-def default_genome(global_gpf_instance):
-    return global_gpf_instance.genomes_db.get_genome()
+def default_genome(default_gpf_instance):
+    return default_gpf_instance.genomes_db.get_genome()
 
 
 @pytest.fixture(scope='session')
-def default_gene_models(global_gpf_instance):
-    return global_gpf_instance.genomes_db.get_gene_models()
+def default_gene_models(default_gpf_instance):
+    return default_gpf_instance.genomes_db.get_gene_models()
 
 
 @pytest.fixture(scope='session')
@@ -146,7 +158,7 @@ def temp_filename(request):
     return output
 
 
-@pytest.fixture
+@pytest.fixture(scope='session')
 def fixture_dirname(request):
     def builder(relpath):
         return relative_to_this_test_folder(
@@ -260,19 +272,18 @@ def dae_denovo_config():
 def dae_denovo(
         dae_denovo_config, default_genome, annotation_pipeline_internal):
 
-    ped_df = PedigreeReader.load_simple_family_file(
-        dae_denovo_config.family_filename
-    )
-    denovo_df = RawDaeLoader.load_dae_denovo_file(
-        dae_denovo_config.denovo_filename, default_genome)
+    families_loader = FamiliesLoader(
+        dae_denovo_config.family_filename,
+        file_format='simple')
 
-    denovo_df = annotation_pipeline_internal.annotate_df(denovo_df)
+    variants_loader = DenovoLoader(
+        families_loader.families, dae_denovo_config.denovo_filename,
+        default_genome)
 
-    denovo = RawDaeLoader.build_raw_denovo(
-        ped_df,
-        denovo_df
-    )
-    return denovo
+    variants_loader = AnnotationPipelineDecorator(
+        variants_loader, annotation_pipeline_internal)
+    fvars = RawMemoryVariants(variants_loader)
+    return fvars
 
 
 @pytest.fixture
@@ -293,55 +304,19 @@ def dae_transmitted(
     )
     families = FamiliesData.from_pedigree_df(ped_df)
 
-    transmitted = RawDAE(
+    variants_loader = DaeTransmittedLoader(
         families,
         dae_transmitted_config.summary_filename,
         dae_transmitted_config.toomany_filename,
         genome=default_genome,
         region=None,
     )
-
-    return transmitted
-
-
-@pytest.fixture
-def vcf_import_config():
-    fullpath = relative_to_this_test_folder(
-        'fixtures/vcf_import/effects_trio'
+    variants_loader = AnnotationPipelineDecorator(
+        variants_loader,
+        annotation_pipeline_internal
     )
-    config = Configure.from_prefix_vcf(fullpath)
-    return config.vcf
 
-
-@pytest.fixture
-def vcf_import_raw(
-        vcf_import_config, default_genome, annotation_pipeline_internal,
-        genomes_db):
-
-    ped_df = PedigreeReader.load_pedigree_file(vcf_import_config.pedigree)
-    fvars = RawVcfLoader.load_raw_vcf_variants(
-        ped_df, vcf_import_config.vcf)
-    fvars.annot_df = annotation_pipeline_internal.annotate_df(fvars.annot_df)
-    RawVcfLoader.save_annotation_file(
-        fvars.annot_df, vcf_import_config.annotation)
-
-    return fvars
-
-
-@pytest.fixture
-def fixture_select(
-        vcf_import_raw,
-        annotation_pipeline_config, annotation_pipeline_default_config):
-    def build(fixture_name):
-        if fixture_name == 'vcf_import_raw':
-            return vcf_import_raw
-        elif fixture_name == 'annotation_pipeline_config':
-            return annotation_pipeline_config
-        elif fixture_name == 'annotation_pipeline_default_config':
-            return annotation_pipeline_default_config
-        else:
-            raise ValueError(fixture_name)
-    return build
+    return variants_loader
 
 
 @pytest.fixture(scope='session')
@@ -353,48 +328,139 @@ def dae_iossifov2014_config():
     return config.denovo
 
 
-@pytest.fixture
-def dae_iossifov2014(
-        dae_iossifov2014_config, default_genome, annotation_pipeline_internal):
+@pytest.fixture(scope='session')
+def iossifov2014_loader(
+        dae_iossifov2014_config, default_genome,
+        annotation_pipeline_internal):
     config = dae_iossifov2014_config
 
-    ped_df = PedigreeReader.load_pedigree_file(
-        config.family_filename
-    )
+    families_loader = FamiliesLoader(
+        config.family_filename, file_format='pedigree')
 
-    denovo = RawDenovo(
-        config.denovo_filename,
-        ped_df,
-        genome=default_genome,
-        annotator=annotation_pipeline_internal
-    )
+    variants_loader = DenovoLoader(
+        families_loader.families, config.denovo_filename, default_genome)
 
-    return denovo
+    variants_loader = AnnotationPipelineDecorator(
+        variants_loader, annotation_pipeline_internal)
+
+    return variants_loader
 
 
 @pytest.fixture(scope='session')
-def variants_vcf(genomes_db, default_annotation_pipeline):
-    def builder(path):
-        prefix = os.path.join(relative_to_this_test_folder('fixtures'), path)
-        conf = Configure.from_prefix_vcf(prefix)
-        ped_df = PedigreeReader.load_pedigree_file(conf.vcf.pedigree)
-        fvars = RawVcfLoader.load_raw_vcf_variants(
-            ped_df, conf.vcf.vcf
-        )
-        fvars.annot_df = \
-            default_annotation_pipeline.annotate_df(fvars.annot_df)
-        RawVcfLoader.save_annotation_file(fvars.annot_df, conf.vcf.annotation)
+def iossifov2014_raw_denovo(iossifov2014_loader):
 
+    fvars = RawMemoryVariants(iossifov2014_loader)
+
+    return fvars
+
+
+@pytest.fixture(scope='session')
+def iossifov2014_impala(
+        request, iossifov2014_loader, genomes_db,
+        test_hdfs, impala_genotype_storage, parquet_manager):
+
+    temp_dirname = test_hdfs.tempdir(prefix='variants_', suffix='_data')
+    test_hdfs.mkdir(temp_dirname)
+
+    study_id = 'iossifov_wd2014_test'
+    parquet_filenames = ParquetManager.build_parquet_filenames(
+        temp_dirname, bucket_index=0, study_id=study_id
+    )
+
+    assert parquet_filenames is not None
+    print(parquet_filenames)
+
+    ParquetManager.pedigree_to_parquet(
+        iossifov2014_loader, parquet_filenames.pedigree)
+
+    ParquetManager.variants_to_parquet(
+        iossifov2014_loader, parquet_filenames.variant)
+
+    impala_genotype_storage.impala_load_study(
+        study_id,
+        variant_paths=[parquet_filenames.variant],
+        pedigree_paths=[parquet_filenames.pedigree],
+    )
+
+    fvars = impala_genotype_storage.build_backend(
+        Box({'id': study_id}, default_box=True),
+        genomes_db)
+    return fvars
+
+
+@pytest.fixture(scope='session')
+def vcf_loader_data():
+    def builder(path):
+        if os.path.isabs(path):
+            prefix = path
+        else:
+            prefix = os.path.join(
+                relative_to_this_test_folder('fixtures'), path)
+        conf = Configure.from_prefix_vcf(prefix).vcf
+        return conf
+    return builder
+
+
+@pytest.fixture(scope='session')
+def vcf_variants_loader(vcf_loader_data, default_annotation_pipeline):
+    def builder(
+        path, params={
+            'include_reference_genotypes': True,
+            'include_unknown_family_genotypes': True,
+            'include_unknown_person_genotypes': True
+            }):
+        conf = vcf_loader_data(path)
+
+        ped_df = PedigreeReader.flexible_pedigree_read(conf.pedigree)
+        families = FamiliesData.from_pedigree_df(ped_df)
+
+        loader = VcfLoader(families, conf.vcf, params=params)
+        assert loader is not None
+
+        loader = AlleleFrequencyDecorator(loader)
+        loader = AnnotationPipelineDecorator(
+            loader, default_annotation_pipeline)
+
+        return loader
+    return builder
+
+
+@pytest.fixture(scope='session')
+def variants_vcf(vcf_variants_loader):
+    def builder(path):
+        loader = vcf_variants_loader(path)
+
+        fvars = RawMemoryVariants(loader)
         return fvars
+
+    return builder
+
+
+@pytest.fixture(scope='session')
+def variants_mem():
+    def builder(loader):
+        fvars = RawMemoryVariants(loader)
+        return fvars
+
+    return builder
+
+
+@pytest.fixture(scope='session')
+def annotation_pipeline_default_decorator(default_annotation_pipeline):
+    def builder(variants_loader):
+        decorator = AnnotationPipelineDecorator(
+            variants_loader, default_annotation_pipeline)
+        return decorator
+
     return builder
 
 
 @pytest.fixture
 def variants_implementations(
-        variants_vcf, variants_impala):
+        variants_impala, variants_vcf):
     impls = {
-        'variants_vcf': variants_vcf,
         'variants_impala': variants_impala,
+        'variants_vcf': variants_vcf
     }
     return impls
 
@@ -423,13 +489,12 @@ def raw_dae(config_dae, default_genome):
             dae_transmitted_config.family_filename
         )
 
-        dae = RawDAE(
+        dae = DaeTransmittedLoader(
             config.dae.summary_filename,
             config.dae.toomany_filename,
             ped_df,
             region=region,
-            genome=default_genome,
-            annotator=None)
+            genome=default_genome)
         return dae
     return builder
 
@@ -440,25 +505,7 @@ def config_denovo():
         fullpath = relative_to_this_test_folder(
             os.path.join('fixtures', path))
         config = Configure.from_prefix_denovo(fullpath)
-        return config
-    return builder
-
-
-@pytest.fixture(scope='session')
-def raw_denovo(config_denovo, default_genome):
-    def builder(path):
-        config = config_denovo(path)
-
-        ped_df = PedigreeReader.load_simple_family_file(
-            config.denovo.family_filename
-        )
-        denovo_df = RawDaeLoader.load_dae_denovo_file(
-            config.denovo.denovo_filename, default_genome)
-        denovo = RawDaeLoader.build_raw_denovo(
-            ped_df,
-            denovo_df
-        )
-        return denovo
+        return config.denovo
     return builder
 
 
@@ -507,6 +554,7 @@ def test_impala_helpers(request, impala_host):
 @pytest.fixture(scope='session')
 def impala_genotype_storage(hdfs_host, impala_host):
     storage_config = Box({
+        'id': 'impala_test_storage',
         'type': 'impala',
         'impala': {
             'host': impala_host,
@@ -576,36 +624,36 @@ def data_import(
             filename = os.path.basename(vcf.pedigree)
             study_id = os.path.splitext(filename)[0]
 
-            impala = impala_genotype_storage._impala_storage_config(study_id)
+            variant_table, pedigree_table = impala_genotype_storage. \
+                study_tables(Box({'id': study_id}, default_box=True))
+
             if not reimport and \
                     test_impala_helpers.check_table(
-                        impala_test_dbname(), impala.tables.variant) and \
+                        impala_test_dbname(), variant_table) and \
                     test_impala_helpers.check_table(
-                        impala_test_dbname(), impala.tables.pedigree):
+                        impala_test_dbname(), pedigree_table):
                 continue
 
-            ped_df, study_id = pedigree_from_path(vcf.pedigree)
-
-            # impala_config = import_vcf(
-            #     dae_config_fixture, genomes_db, annotation_pipeline,
-            #     ped_df, vcf.vcf, study_id,
-            #     region=None, bucket_index=0,
-            #     output=temp_dirname,
-            #     filesystem=test_hdfs.filesystem())
-            # impala_config['db'] = impala_test_dbname()
-            # test_impala_helpers.import_variants(impala_config)
+            study_id = study_id_from_path(vcf.pedigree)
             study_temp_dirname = os.path.join(temp_dirname, study_id)
 
-            vcf2parquet(
-                study_id, ped_df, vcf.vcf,
-                genomes_db, annotation_pipeline, parquet_manager,
-                output=study_temp_dirname, bucket_index=0, region=None
-            )
+            families_loader = FamiliesLoader(vcf.pedigree)
+            loader = VcfLoader(
+                families_loader.families, vcf.vcf, region=None,
+                params={
+                    'include_reference_genotypes': True,
+                    'include_unknown_family_genotypes': True,
+                    'include_unknown_person_genotypes': True
+                })
 
-            impala_genotype_storage.impala_load_study(
+            loader = AlleleFrequencyDecorator(loader)
+            loader = AnnotationPipelineDecorator(loader, annotation_pipeline)
+
+            impala_genotype_storage.simple_study_import(
                 study_id,
-                os.path.join(study_temp_dirname, 'pedigree'),
-                os.path.join(study_temp_dirname, 'variants')
+                families_loader=families_loader,
+                variant_loaders=[loader],
+                output=study_temp_dirname
             )
 
     build('backends/')
@@ -617,7 +665,18 @@ def variants_impala(request, data_import, impala_genotype_storage, genomes_db):
 
     def builder(path):
         study_id = os.path.basename(path)
-        fvars = impala_genotype_storage.get_backend(study_id, genomes_db)
+        fvars = impala_genotype_storage.build_backend(
+            Box({'id': study_id}, default_box=True),
+            genomes_db)
         return fvars
 
     return builder
+
+
+@pytest.fixture
+def vcf_import_config():
+    fullpath = relative_to_this_test_folder(
+        'fixtures/vcf_import/effects_trio'
+    )
+    config = Configure.from_prefix_vcf(fullpath)
+    return config.vcf

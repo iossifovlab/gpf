@@ -1,13 +1,15 @@
 import pytest
 
+from box import Box
+
 from dae.backends.storage.tests.conftest import relative_to_this_test_folder
 
 
-def test_get_backend(impala_genotype_storage, quads_f1_config, genomes_db):
+def test_build_backend(impala_genotype_storage, quads_f1_config, genomes_db):
     assert impala_genotype_storage
 
-    backend = impala_genotype_storage.get_backend(
-        quads_f1_config.id, genomes_db
+    backend = impala_genotype_storage.build_backend(
+        quads_f1_config, genomes_db
     )
 
     assert len(backend.families.families_list()) == 1
@@ -68,14 +70,15 @@ def test_impala_load_study(impala_genotype_storage, genomes_db):
 
     impala_genotype_storage.impala_load_study(
         'study_id',
-        relative_to_this_test_folder(
-            'fixtures/studies/quads_f1_impala/data/pedigree'),
-        relative_to_this_test_folder(
-            'fixtures/studies/quads_f1_impala/data/variants')
+        [relative_to_this_test_folder(
+            'fixtures/studies/quads_f1_impala/data/variants')],
+        [relative_to_this_test_folder(
+            'fixtures/studies/quads_f1_impala/data/pedigree')]
     )
 
-    backend = impala_genotype_storage.get_backend(
-        'study_id', genomes_db
+    backend = impala_genotype_storage.build_backend(
+        Box({'id': 'study_id'}, default_box=True),
+        genomes_db
     )
 
     assert len(backend.families.families_list()) == 1
@@ -83,45 +86,45 @@ def test_impala_load_study(impala_genotype_storage, genomes_db):
     assert len(list(backend.query_variants())) == 3
 
 
-def test_impala_config(impala_genotype_storage):
-    impala_config = impala_genotype_storage._impala_config(
-        'study_id',
-        relative_to_this_test_folder(
-            'fixtures/studies/quads_f1_impala/data/pedigree'),
-        relative_to_this_test_folder(
-            'fixtures/studies/quads_f1_impala/data/variants')
-    )
+# def test_impala_config(impala_genotype_storage):
+#     impala_config = impala_genotype_storage._impala_config(
+#         'study_id',
+#         relative_to_this_test_folder(
+#             'fixtures/studies/quads_f1_impala/data/pedigree'),
+#         relative_to_this_test_folder(
+#             'fixtures/studies/quads_f1_impala/data/variants')
+#     )
 
-    assert list(impala_config.keys()) == ['db', 'tables', 'files']
-
-
-def test_impala_storage_config(impala_genotype_storage):
-    impala_storage_config = \
-        impala_genotype_storage._impala_storage_config('study_id')
-
-    assert impala_storage_config.db == 'impala_storage_test_db'
-    assert impala_storage_config.tables.pedigree == 'study_id_pedigree'
-    assert impala_storage_config.tables.variant == 'study_id_variant'
+#     assert list(impala_config.keys()) == ['db', 'tables', 'files']
 
 
-def test_hdfs_parquet_files_config(impala_genotype_storage):
-    if impala_genotype_storage.hdfs_helpers.exists('/tmp/test_data/study_id'):
-        impala_genotype_storage.hdfs_helpers.delete(
-            '/tmp/test_data/study_id', recursive=True
-        )
+# def test_impala_storage_config(impala_genotype_storage):
+#     impala_storage_config = \
+#         impala_genotype_storage._impala_storage_config('study_id')
 
-    hdfs_parquet_files_config = \
-        impala_genotype_storage._hdfs_parquet_files_config(
-            'study_id',
-            relative_to_this_test_folder(
-                'fixtures/studies/quads_f1_impala/data/pedigree'),
-            relative_to_this_test_folder(
-                'fixtures/studies/quads_f1_impala/data/variants')
-        )
+#     assert impala_storage_config.db == 'impala_storage_test_db'
+#     assert impala_storage_config.tables.pedigree == 'study_id_pedigree'
+#     assert impala_storage_config.tables.variant == 'study_id_variant'
 
-    assert hdfs_parquet_files_config.files.pedigree == \
-        ['/tmp/test_data/study_id/pedigree/quads_f1_impala_pedigree.parquet']
-    assert hdfs_parquet_files_config.files.variants == [
-        '/tmp/test_data/study_id/variants/quads_f1_impala_variant_000001.'
-        'parquet'
-    ]
+
+# def test_hdfs_parquet_files_config(impala_genotype_storage):
+#     if impala_genotype_storage.hdfs_helpers.exists('/tmp/test_data/study_id'):
+#         impala_genotype_storage.hdfs_helpers.delete(
+#             '/tmp/test_data/study_id', recursive=True
+#         )
+
+#     hdfs_parquet_files_config = \
+#         impala_genotype_storage._hdfs_parquet_files_config(
+#             'study_id',
+#             relative_to_this_test_folder(
+#                 'fixtures/studies/quads_f1_impala/data/pedigree'),
+#             relative_to_this_test_folder(
+#                 'fixtures/studies/quads_f1_impala/data/variants')
+#         )
+
+#     assert hdfs_parquet_files_config.files.pedigree == \
+#         ['/tmp/test_data/study_id/pedigree/quads_f1_impala_pedigree.parquet']
+#     assert hdfs_parquet_files_config.files.variants == [
+#         '/tmp/test_data/study_id/variants/quads_f1_impala_variant_000001.'
+#         'parquet'
+#     ]

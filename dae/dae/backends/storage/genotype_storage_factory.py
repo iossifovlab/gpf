@@ -4,7 +4,7 @@ from dae.backends.storage.filesystem_genotype_storage import \
 
 
 class GenotypeStorageFactory:
-    
+
     def __init__(self, dae_config):
         self.dae_config = dae_config
 

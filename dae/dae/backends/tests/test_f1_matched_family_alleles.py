@@ -10,9 +10,9 @@ from dae.RegionOperations import Region
 from dae.variants.effects import EffectGene
 
 
-@pytest.mark.parametrize("variants", [
-    "variants_vcf",
-    "variants_impala",
+@pytest.mark.parametrize('variants', [
+    'variants_impala',
+    'variants_vcf'
 ])
 @pytest.mark.parametrize(
     "position,inheritance,effect_types,return_reference,matched_alleles",
@@ -47,9 +47,9 @@ def test_f1_matched_alleles(
     assert v.matched_alleles_indexes == matched_alleles
 
 
-@pytest.mark.parametrize("variants", [
-    "variants_vcf",
-    "variants_impala",
+@pytest.mark.parametrize('variants', [
+    'variants_impala',
+    'variants_vcf'
 ])
 @pytest.mark.parametrize(
     "position,inheritance,effect_types,return_reference,"

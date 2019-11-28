@@ -13,6 +13,8 @@ from dae.annotation.tools.annotator_base import AnnotatorBase, \
     CompositeVariantAnnotator
 from dae.annotation.tools.annotator_config import AnnotationConfigParser
 from dae.annotation.tools.file_io import IOType, IOManager
+from dae.annotation.tools.file_io_parquet import ParquetSchema
+
 from dae.annotation.tools.annotator_config import annotation_config_cli_options
 from dae.annotation.tools.utils import AnnotatorFactory
 
@@ -41,6 +43,29 @@ def run_tabix(filename):
 
 
 class PipelineAnnotator(CompositeVariantAnnotator):
+
+    ANNOTATION_SCHEMA_EXCLUDE = [
+        'effect_gene_genes',
+        'effect_gene_types',
+        'effect_genes',
+        'effect_details_transcript_ids',
+        'effect_details_details',
+        'effect_details',
+        'OLD_effectType',
+        'OLD_effectGene',
+        'OLD_effectDetails',
+    ]
+
+    def build_annotation_schema(self):
+        annotation_schema = ParquetSchema.from_arrow(
+            ParquetSchema.BASE_SCHEMA)
+        self.collect_annotator_schema(annotation_schema)
+        for schema_key in self.ANNOTATION_SCHEMA_EXCLUDE:
+            if schema_key in annotation_schema:
+                del annotation_schema[schema_key]
+        return annotation_schema
+        # schema = annotation_schema.to_arrow()
+        # return schema
 
     def __init__(self, config):
         super(PipelineAnnotator, self).__init__(config)

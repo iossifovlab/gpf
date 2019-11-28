@@ -3,12 +3,12 @@ import pytest
 from dae.backends.storage.tests.conftest import relative_to_this_test_folder
 
 
-def test_get_backend(
+def test_build_backend(
         filesystem_genotype_storage, quads_f1_vcf_config, genomes_db):
     assert filesystem_genotype_storage
 
-    backend = filesystem_genotype_storage.get_backend(
-        quads_f1_vcf_config.id, genomes_db
+    backend = filesystem_genotype_storage.build_backend(
+        quads_f1_vcf_config, genomes_db
     )
 
     assert len(backend.families.families_list()) == 1

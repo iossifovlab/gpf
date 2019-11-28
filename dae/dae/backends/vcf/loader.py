@@ -1,183 +1,132 @@
-'''
-Created on Feb 7, 2018
-
-@author: lubo
-'''
 import os
 
 from cyvcf2 import VCF
 
 import numpy as np
-import pandas as pd
 
-from dae.pedigrees.pedigree_reader import PedigreeReader
-from dae.pedigrees.family import FamiliesData, Family
-
-from dae.backends.configure import Configure
-from dae.backends.raw.loader import RawVariantsLoader
-
-from dae.backends.vcf.annotate_allele_frequencies import \
-    VcfAlleleFrequencyAnnotator
-from dae.backends.vcf.raw_vcf import RawVcfVariants
-
-# from variants.parquet_io import save_summary_to_parquet,\
-#     read_summary_from_parquet
+from dae.utils.variant_utils import is_all_reference_genotype, \
+    is_all_unknown_genotype, is_unknown_genotype
+from dae.variants.variant import SummaryVariantFactory
+from dae.backends.raw.loader import VariantsLoader, TransmissionType, \
+    FamiliesGenotypes
 
 
-class VCFVariantWrapper(object):
-    def __init__(self, v):
-        self.v = v
-        gt = np.array(v.genotypes, dtype=np.int8)
-        gt = gt[:, 0:2]
-        self.gt = gt.T
+class VcfFamiliesGenotypes(FamiliesGenotypes):
 
-    def __getattr__(self, name):
-        return getattr(self.v, name)
+    def __init__(self, families, families_genotypes, params={}):
+        super(VcfFamiliesGenotypes, self).__init__()
+        self.families = families
+        self.families_genotypes = families_genotypes
+        self.include_reference_genotypes = \
+            params.get('include_reference_genotypes', False)
+        self.include_unknown_family_genotypes = \
+            params.get('include_unknown_family_genotypes', False)
+        self.include_unknown_person_genotypes = \
+            params.get('include_unknown_person_genotypes', False)
+
+    def get_family_genotype(self, family):
+        gt = self.families_genotypes[0:2, family.samples_index]
+        assert gt.shape == (2, len(family)), \
+            f"{gt.shape} == (2, {len(family)})"
+        return gt
+
+    def family_genotype_iterator(self):
+        for fam in self.families.families_list():
+            if len(fam) == 0:
+                continue
+            gt = self.get_family_genotype(fam)
+            if is_all_reference_genotype(gt) \
+                    and not self.include_reference_genotypes:
+                continue
+            if is_unknown_genotype(gt) \
+                    and not self.include_unknown_person_genotypes:
+                continue
+            if is_all_unknown_genotype(gt) \
+                    and not self.include_unknown_family_genotypes:
+                continue
+
+            yield fam, gt
+
+    def full_families_genotypes(self):
+        return self.families_genotypes
 
 
-class VCFWrapper(object):
+class VcfLoader(VariantsLoader):
 
-    def __init__(self, filename, region=None):
-        self.vcf_file = filename
-        self.vcf = VCF(filename, lazy=True)
-        self._samples = None
-        self._vars = None
+    def __init__(self, families, vcf_filename, region=None, params={}):
+        super(VcfLoader, self).__init__(
+            families=families,
+            transmission_type=TransmissionType.transmitted,
+            params=params)
+
+        assert os.path.exists(vcf_filename)
+        self.vcf_filename = vcf_filename
         self.region = region
 
-    @property
-    def samples(self):
-        if self._samples is None:
-            self._samples = np.array(self.vcf.samples)
-        return self._samples
+        self.vcf = VCF(vcf_filename, lazy=True)
+        samples = np.array(self.vcf.samples)
 
-    @property
-    def seqnames(self):
-        return self.vcf.seqnames
-
-    @property
-    def vars(self):
-        if self._vars is None:
-            if self.region:
-                self._vars = list(
-                    map(VCFVariantWrapper, self.vcf(self.region)))
-            else:
-                self._vars = list(
-                    map(VCFVariantWrapper, self.vcf))
-        return self._vars
-
-
-class VcfFamily(Family):
-
-    @classmethod
-    def from_df(cls, family_id, ped_df):
-        assert 'sampleIndex' in ped_df.columns
-        family = Family.from_df(family_id, ped_df)
-
-        family.samples = ped_df['sampleIndex'].values
-
-        return family
-
-    def __init__(self, family_id):
-        super(VcfFamily, self).__init__(family_id)
-        self.samples = []
-        self.alleles = []
-
-    def vcf_samples_index(self, person_ids):
-        return self.ped_df[
-            self.ped_df['personId'].isin(set(person_ids))
-        ]['sampleIndex'].values
-
-
-class RawVcfLoader(RawVariantsLoader):
+        self.families = families
+        self._match_pedigree_to_samples(families, samples)
 
     @staticmethod
-    def load_vcf(filename, region=None):
-        assert os.path.exists(filename)
-        return VCFWrapper(filename, region)
+    def _match_pedigree_to_samples(families, vcf_samples):
+        vcf_samples_index = list(vcf_samples)
+        vcf_samples = set(vcf_samples)
+        pedigree_samples = set(families.ped_df['sample_id'].values)
+        missing_samples = vcf_samples.difference(pedigree_samples)
 
-    @staticmethod
-    def _match_pedigree_to_samples(ped_df, vcf):
-        vcf_samples = list(vcf.samples)
-        samples_needed = set(vcf_samples)
-        pedigree_samples = set(ped_df['sample_id'].values)
-        missing_samples = samples_needed.difference(pedigree_samples)
+        vcf_samples = vcf_samples.difference(missing_samples)
+        assert vcf_samples.issubset(pedigree_samples)
 
-        samples_needed = samples_needed.difference(missing_samples)
-        assert samples_needed.issubset(pedigree_samples)
-
-        pedigree = []
         seen = set()
-        for record in ped_df.to_dict(orient='record'):
-            if record['sample_id'] in samples_needed:
-                if record['sample_id'] in seen:
+        for person_id, person in families.persons.items():
+            if person.sample_id in vcf_samples:
+                if person.sample_id in seen:
                     continue
-                record['sampleIndex'] = vcf_samples.index(record['sample_id'])
-                pedigree.append(record)
-                seen.add(record['sample_id'])
+                person.sample_index = \
+                    vcf_samples_index.index(person.sample_id)
+                seen.add(person.sample_id)
+            else:
+                person.generated = True
+                families.families[person.family_id].redefine()
 
-        assert len(pedigree) == len(samples_needed)
-
-        pedigree_order = list(ped_df['sample_id'].values)
-        pedigree = sorted(
-            pedigree, key=lambda p: pedigree_order.index(p['sample_id']))
-
-        ped_df = pd.DataFrame(pedigree)
-        return ped_df, ped_df['sample_id'].values
-
-    @staticmethod
-    def _build_initial_vcf_annotation(families, vcf):
+    def _warp_summary_variant(self, summary_index, vcf_variant):
         records = []
-        for index, v in enumerate(vcf.vars):
-            allele_count = len(v.ALT) + 1
-            records.append(
-                (v.CHROM, v.start + 1,
-                    v.REF, None,
-                    index, 0, allele_count))
-            for allele_index, alt in enumerate(v.ALT):
-                records.append(
-                    (v.CHROM, v.start + 1,
-                        v.REF, alt,
-                        index,
-                        allele_index + 1, allele_count
-                        ))
-        annot_df = pd.DataFrame.from_records(
-            data=records,
-            columns=[
-                'chrom', 'position', 'reference', 'alternative',
-                'summary_variant_index',
-                'allele_index', 'allele_count',
-            ])
-        freq_annotator = VcfAlleleFrequencyAnnotator(families, vcf)
-        annot_df = freq_annotator.annotate(annot_df)
-        return annot_df
-
-    @staticmethod
-    def build_raw_vcf(ped_df, vcf, annot_df=None):
-        ped_df, vcf_samples = RawVcfLoader._match_pedigree_to_samples(ped_df, vcf)
-        families = FamiliesData.from_pedigree_df(ped_df, family_class=VcfFamily)
-
-        if annot_df is None:
-            annot_df = RawVcfLoader._build_initial_vcf_annotation(families, vcf)
-
-        return RawVcfVariants(families, vcf, annot_df)
-
-    @staticmethod
-    def load_raw_vcf_variants(
-            ped_df, vcf_filename,
-            annotation_filename=None, region=None):
-
-        vcf = RawVcfLoader.load_vcf(vcf_filename, region)
-
-        annot_df = None
-        if annotation_filename is not None \
-                and os.path.exists(annotation_filename):
-            annot_df = RawVcfLoader.load_annotation_file(annotation_filename)
-        return RawVcfLoader.build_raw_vcf(ped_df, vcf, annot_df)
-
-    @staticmethod
-    def load_raw_vcf_variants_from_prefix(prefix):
-        config = Configure.from_prefix_vcf(prefix).vcf
-        ped_df = PedigreeReader.load_pedigree_file(config.pedigree)
-        return RawVcfLoader.load_raw_vcf_variants(
-            ped_df, config.vcf, config.annotation
+        allele_count = len(vcf_variant.ALT) + 1
+        records.append(
+            {
+                'chrom': vcf_variant.CHROM,
+                'position': vcf_variant.start + 1,
+                'reference': vcf_variant.REF,
+                'alternative': None,
+                'summary_variant_index': summary_index,
+                'allele_index': 0,
+                'allele_count': allele_count
+            }
         )
+        for allele_index, alt in enumerate(vcf_variant.ALT):
+            records.append(
+                {
+                    'chrom': vcf_variant.CHROM,
+                    'position': vcf_variant.start + 1,
+                    'reference': vcf_variant.REF,
+                    'alternative': alt,
+                    'summary_variant_index': summary_index,
+                    'allele_index': allele_index + 1,
+                    'allele_count': allele_count
+                }
+            )
+        return SummaryVariantFactory.summary_variant_from_records(records)
+
+    def summary_genotypes_iterator(self):
+        for summary_index, vcf_variant in enumerate(self.vcf(self.region)):
+            family_genotypes = VcfFamiliesGenotypes(
+                self.families,
+                np.array(vcf_variant.genotypes, dtype=np.int8).T,
+                params=self.params)
+
+            summary_variant = self._warp_summary_variant(
+                summary_index, vcf_variant)
+
+            yield summary_variant, family_genotypes

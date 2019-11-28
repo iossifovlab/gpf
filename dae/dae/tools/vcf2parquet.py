@@ -8,16 +8,10 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 
 from dae.annotation.tools.annotator_config import annotation_config_cli_options
 
-from dae.backends.vcf.annotate_allele_frequencies import \
-    VcfAlleleFrequencyAnnotator
-
-from dae.backends.configure import Configure
-from dae.backends.vcf.raw_vcf import RawVcfVariants
-from dae.backends.vcf.loader import RawVcfLoader
-
+from dae.pedigrees.family import FamiliesLoader, FamiliesData
+from dae.backends.raw.loader import AnnotationPipelineDecorator
+from dae.backends.vcf.loader import VcfLoader
 from dae.backends.impala.parquet_io import ParquetManager
-from dae.backends.vcf.raw_vcf import RawFamilyVariants
-from dae.backends.vcf.loader import RawVcfLoader
 
 from cyvcf2 import VCF
 
@@ -29,24 +23,6 @@ from dae.backends.import_commons import construct_import_annotation_pipeline
 def get_contigs(vcf_filename):
     vcf = VCF(vcf_filename)
     return vcf.seqnames
-
-
-def import_vcf(
-        genomes_db, annotation_pipeline,
-        ped_df, vcf_filename,
-        region=None):
-
-    assert os.path.exists(vcf_filename), vcf_filename
-
-    fvars = RawVcfLoader.load_raw_vcf_variants(
-        ped_df, vcf_filename, annotation_filename=None)
-
-    fvars.annot_df = annotation_pipeline.annotate_df(fvars.annot_df)
-
-    if fvars.is_empty():
-        print('empty bucket {} done'.format(vcf_filename), file=sys.stderr)
-
-    return fvars
 
 
 def parse_cli_arguments(gpf_instance, argv=sys.argv[1:]):
@@ -89,6 +65,24 @@ def parser_common_arguments(gpf_instance, parser):
         dest='output', metavar='<output filepath prefix>',
         help='output filepath prefix. '
         'If none specified, current directory is used [default: %(default)s]'
+    )
+    parser.add_argument(
+        '--include-reference', default=False,
+        dest='include_reference',
+        help='include reference only variants [default: %(defaults)s]',
+        action='store_true'
+    )
+    parser.add_argument(
+        '--include-unknown', default=False,
+        dest='include_unknown',
+        help='include variants with unknown genotype [default: %(defaults)s]',
+        action='store_true'
+    )
+    parser.add_argument(
+        '--study-id', default=None,
+        dest='study_id',
+        help='specifies study id to use when storing parquet files '
+        '[default: %(defaults)s]'
     )
 
 
@@ -150,54 +144,59 @@ def generate_makefile(dae_config, genome, argv):
     )
 
 
-def vcf2parquet(
-        study_id, ped_df, vcf_file,
-        genomes_db, annotation_pipeline, parquet_manager,
-        output='.', bucket_index=1, region=None,
-        filesystem=None, skip_pedigree=False):
+def main(
+        argv,
+        gpf_instance=None, dae_config=None, genomes_db=None, genome=None,
+        annotation_defaults={}):
 
-    parquet_config = ParquetManager.parquet_file_config(
-        output, bucket_index=bucket_index, study_id=study_id
-    )
-    print("converting into ", parquet_config, file=sys.stderr)
+    if gpf_instance is None:
+        gpf_instance = GPFInstance()
+    if dae_config is None:
+        dae_config = gpf_instance.dae_config
+    if genomes_db is None:
+        genomes_db = gpf_instance.genomes_db
+    if genome is None:
+        genome = genomes_db.get_genome()
 
-    fvars = import_vcf(
-        genomes_db, annotation_pipeline,
-        ped_df, vcf_file,
-        region=region
-    )
-
-    if not skip_pedigree:
-        parquet_manager.pedigree_to_parquet(
-            fvars, parquet_config, filesystem=filesystem
-        )
-    parquet_manager.variants_to_parquet(
-        fvars, parquet_config,
-        bucket_index=bucket_index,
-        annotation_pipeline=annotation_pipeline,
-        filesystem=filesystem
-    )
-
-    return parquet_config
-
-
-if __name__ == "__main__":
-    gpf_instance = GPFInstance()
-    dae_config = gpf_instance.dae_config
-    genomes_db = gpf_instance.genomes_db
-    genome = genomes_db.get_genome()
-
-    argv = parse_cli_arguments(gpf_instance, sys.argv[1:])
+    argv = parse_cli_arguments(gpf_instance, argv)
 
     annotation_pipeline = construct_import_annotation_pipeline(
-        dae_config, genomes_db, argv)
-    parquet_manager = ParquetManager(dae_config.studies_db.dir)
+        dae_config, genomes_db, argv, defaults=annotation_defaults)
+
+    study_id = argv.study_id
+    if study_id is None:
+        study_id = os.path.splitext(os.path.basename(argv.pedigree))[0]
 
     if argv.type == 'make':
         generate_makefile(dae_config, genome, argv)
     elif argv.type == 'vcf':
-        vcf2parquet(
-            argv.pedigree, argv.vcf,
-            genomes_db, annotation_pipeline, parquet_manager,
-            argv.output, argv.bucket_index, argv.region, argv.skip_pedigree
+
+        families_loader = FamiliesLoader(argv.pedigree)
+        variants_loader = VcfLoader(
+            families_loader.families, argv.vcf, region=argv.region,
+            params={
+                'include_reference_genotypes': argv.include_reference,
+                'include_unknown_family_genotypes': argv.include_unknown,
+                'include_unknown_person_genotypes': argv.include_unknown
+            })
+        variants_loader = AnnotationPipelineDecorator(
+            variants_loader, annotation_pipeline
         )
+
+        parquet_filenames = ParquetManager.build_parquet_filenames(
+            argv.output, bucket_index=argv.bucket_index, study_id=study_id,
+        )
+        print("converting into ", parquet_filenames.variant, file=sys.stderr)
+
+        if not argv.skip_pedigree:
+            ParquetManager.pedigree_to_parquet(
+                families_loader, parquet_filenames.pedigree)
+
+        ParquetManager.variants_to_parquet(
+            variants_loader, parquet_filenames.variant,
+            bucket_index=argv.bucket_index)
+
+        return parquet_filenames
+
+if __name__ == "__main__":
+    main(sys.argv[1:])

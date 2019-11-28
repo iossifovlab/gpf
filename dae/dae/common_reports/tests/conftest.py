@@ -138,7 +138,7 @@ def denovo_variants_ds1(dataset1):
     )
     denovo_variants = list(denovo_variants)
 
-    assert len(denovo_variants) == 8
+    assert len(denovo_variants) == 7
 
     return denovo_variants
 

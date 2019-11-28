@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 from dae.variants.family_variant import FamilyAllele
-from dae.utils.vcf_utils import GENOTYPE_TYPE
+from dae.utils.variant_utils import GENOTYPE_TYPE
 
 
 @pytest.mark.parametrize(
@@ -111,7 +111,6 @@ def test_allele_best_state(
         alternative,
         0,
         allele_index,
-        None,
         {},
         sample_family,
         genotype

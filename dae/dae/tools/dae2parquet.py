@@ -9,20 +9,18 @@ import argparse
 
 from dae.gpf_instance.gpf_instance import GPFInstance
 
-from dae.annotation.tools.file_io_parquet import ParquetSchema
 from dae.annotation.tools.annotator_config import annotation_config_cli_options
 
-from dae.backends.dae.raw_dae import RawDAE, RawDenovo
-from dae.backends.dae.loader import RawDaeLoader
+from dae.backends.raw.loader import AnnotationPipelineDecorator
+from dae.backends.dae.loader import DenovoLoader, DaeTransmittedLoader
 
 from dae.backends.import_commons import build_contig_regions, \
     contigs_makefile_generate
 
 from dae.backends.import_commons import construct_import_annotation_pipeline
 
-# from dae.backends.impala.import_tools import variants_iterator_to_parquet
-from dae.pedigrees.pedigree_reader import PedigreeReader
-from dae.pedigrees.family import FamiliesData
+from dae.pedigrees.family import PedigreeReader
+from dae.pedigrees.family import FamiliesData, FamiliesLoader
 from dae.backends.impala.parquet_io import ParquetManager
 
 
@@ -44,7 +42,7 @@ def dae_build_transmitted(annotation_pipeline, genome, argv):
 
     assert argv.family_format in ['pedigree', 'simple'], argv.family_format
     if argv.family_format == 'pedigree':
-        ped_df = PedigreeReader.load_pedigree_file(
+        ped_df = PedigreeReader.flexible_pedigree_read(
             config.dae.family_filename
         )
     else:
@@ -53,7 +51,7 @@ def dae_build_transmitted(annotation_pipeline, genome, argv):
         )
     families = FamiliesData.from_pedigree_df(ped_df)
 
-    fvars = RawDAE(
+    fvars = DaeTransmittedLoader(
         families,
         config.dae.summary_filename,
         config.dae.toomany_filename,
@@ -102,19 +100,6 @@ def dae_build_makefile(dae_config, genome, argv):
         log_directory=argv.log,
         env=env
     )
-
-
-def import_dae_denovo(
-        genome, annotation_pipeline,
-        ped_df, denovo_df):
-
-    families = FamiliesData.from_pedigree_df(ped_df)
-    # denovo_df = RawDaeLoader.load_dae_denovo_file(variants_filename, genome)
-    annot_df = RawDaeLoader._build_initial_annotation(denovo_df)
-    annot_df = annotation_pipeline.annotate_df(annot_df)
-
-    fvars = RawDenovo(families, denovo_df, annot_df)
-    return fvars
 
 
 def init_parser_dae_common(gpf_instance, parser):
@@ -253,30 +238,32 @@ def parse_cli_arguments(gpf_instance, argv=sys.argv[1:]):
 
 
 def denovo2parquet(
-        study_id, ped_df, denovo_df,
-        parquet_manager, annotation_pipeline, genome,
+        study_id, family_filename, denovo_filename,
+        annotation_pipeline, genome,
         output='.', bucket_index=0, rows=10000, filesystem=None,
         skip_pedigree=False):
 
-    parquet_config = ParquetManager.parquet_file_config(
+    parquet_filenames = ParquetManager.build_parquet_filenames(
         output, bucket_index=bucket_index, study_id=study_id)
-    print("converting into ", parquet_config, file=sys.stderr)
+    print("converting into ", parquet_filenames, file=sys.stderr)
 
-    fvars = import_dae_denovo(
-        genome, annotation_pipeline,
-        ped_df, denovo_df
-    )
+    families_loader = FamiliesLoader(family_filename, file_format='simple')
+    variants_loader = DenovoLoader(
+        families_loader.families, denovo_filename, genome)
+    variants_loader = AnnotationPipelineDecorator(
+        variants_loader, annotation_pipeline)
+
     if not skip_pedigree:
-        parquet_manager.pedigree_to_parquet(fvars, parquet_config)
+        ParquetManager.pedigree_to_parquet(
+            variants_loader, parquet_filenames.pedigree)
 
-    parquet_manager.variants_to_parquet(
-        fvars, parquet_config,
+    ParquetManager.variants_to_parquet(
+        variants_loader, parquet_filenames.variant,
         rows=rows, bucket_index=bucket_index,
-        annotation_pipeline=annotation_pipeline,
         filesystem=filesystem
     )
 
-    return parquet_config
+    return parquet_filenames
 
 
 def dae2parquet(
@@ -285,25 +272,21 @@ def dae2parquet(
     study_id = os.path.splitext(filename)[0]
     print(filename, os.path.splitext(filename), study_id)
 
-    parquet_config = ParquetManager.parquet_file_config(
+    parquet_filenames = ParquetManager.build_parquet_filenames(
         argv.output, bucket_index=argv.bucket_index, study_id=study_id)
-    print("converting into ", parquet_config, file=sys.stderr)
+    print("converting into ", parquet_filenames, file=sys.stderr)
 
     fvars = dae_build_transmitted(annotation_pipeline, genome, argv)
 
-    annotation_schema = ParquetSchema()
-    annotation_pipeline.collect_annotator_schema(annotation_schema)
-
-    parquet_manager.pedigree_to_parquet(fvars, parquet_config)
+    parquet_manager.pedigree_to_parquet(fvars, parquet_filenames.pedigree)
     parquet_manager.variants_to_parquet(
-        fvars, parquet_config,
+        fvars, parquet_filenames.variant,
         bucket_index=argv.bucket_index,
         rows=argv.rows,
-        annotation_pipeline=annotation_pipeline,
-        no_reference=argv.no_reference
+        include_reference=not argv.no_reference
     )
 
-    return parquet_config
+    return parquet_filenames
 
 
 if __name__ == "__main__":

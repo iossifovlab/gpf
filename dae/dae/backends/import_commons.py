@@ -68,14 +68,14 @@ def contigs_makefile_generate(
             )
             # target_prefix = os.path.join(output_prefix, suffix)
 
-            parquet = ParquetManager.parquet_file_config(
+            parquet_files = ParquetManager.build_parquet_filenames(
                 output_directory,
                 bucket_index=bucket_index,
                 suffix=suffix
             )
 
             targets = [
-                parquet.files.variant
+                parquet_files.variant
             ]
 
             all_targets.extend(targets)

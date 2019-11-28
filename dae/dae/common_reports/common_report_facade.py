@@ -88,8 +88,6 @@ class CommonReportFacade(object):
         families.sort(key=lambda f: f.family_id)
         for f in families:
             for p in f.members_in_order:
-                if p.generated:
-                    continue
 
                 row = [
                     p.family_id,
