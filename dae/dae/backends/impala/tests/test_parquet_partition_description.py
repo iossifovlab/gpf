@@ -32,9 +32,10 @@ def test_parquet_region_bin(fam1, gt, chromosomes,
         chromosomes, region_length
     )
     region_bin = pd._evaluate_region_bin(fv)
-    assert region_bin == expected
-    assert pd.evaluate_variant_filename(fv) == \
-        f'region_bin={region_bin}/variants_region_bin_{region_bin}.parquet'
+    for fa in fv.alleles:
+        assert region_bin == expected
+        assert pd.evaluate_variant_filename(fa) == \
+            f'region_bin={region_bin}/variants_region_bin_{region_bin}.parquet'
 
 
 def test_parquet_family_bin(fam1, fam2, gt):
@@ -45,14 +46,15 @@ def test_parquet_family_bin(fam1, fam2, gt):
     pd = ParquetPartitionDescription(
         ['1'], 1000, family_bin_size
     )
-    assert pd._evaluate_family_bin(fv1) == 9
-    assert pd._evaluate_family_bin(fv2) == 6
-    assert pd.evaluate_variant_filename(fv1) == \
-        f'region_bin=1_11/family_bin=9/' + \
-        f'variants_region_bin_1_11_family_bin_9.parquet'
-    assert pd.evaluate_variant_filename(fv2) == \
-        f'region_bin=1_11/family_bin=6/' + \
-        f'variants_region_bin_1_11_family_bin_6.parquet'
+    for fa1, fa2 in zip(fv1.alleles, fv2.alleles):
+        assert pd._evaluate_family_bin(fa1) == 9
+        assert pd._evaluate_family_bin(fa2) == 6
+        assert pd.evaluate_variant_filename(fa1) == \
+            f'region_bin=1_11/family_bin=9/' + \
+            f'variants_region_bin_1_11_family_bin_9.parquet'
+        assert pd.evaluate_variant_filename(fa2) == \
+            f'region_bin=1_11/family_bin=6/' + \
+            f'variants_region_bin_1_11_family_bin_6.parquet'
 
 
 @pytest.mark.parametrize('attributes, rare_boundary, expected', [
@@ -72,10 +74,11 @@ def test_parquet_frequency_bin(fam1, gt, attributes, rare_boundary, expected):
         ['1'], 1000, rare_boundary=rare_boundary
     )
 
-    assert pd._evaluate_frequency_bin(fv) == expected
-    assert pd.evaluate_variant_filename(fv) == \
-        f'region_bin=1_11/frequency_bin={expected}/' + \
-        f'variants_region_bin_1_11_frequency_bin_{expected}.parquet'
+    for fa in fv.alleles:
+        assert pd._evaluate_frequency_bin(fa) == expected
+        assert pd.evaluate_variant_filename(fa) == \
+            f'region_bin=1_11/frequency_bin={expected}/' + \
+            f'variants_region_bin_1_11_frequency_bin_{expected}.parquet'
 
 
 @pytest.mark.parametrize('eff1, eff2, eff3, coding_effect_types, expected', [
@@ -84,35 +87,35 @@ def test_parquet_frequency_bin(fam1, gt, attributes, rare_boundary, expected):
             'synonymous!SAMD11:synonymous!NM_152486_1:40/68',
             'synonymous!SAMD11:synonymous!NM_152486_1:40/68',
             ['synonymous'],
-            1
+            [0, 1, 1, 1]
         ),
         (
             'synonymous!SAMD11:synonymous!NM_152486_1:40/68',
             'synonymous!SAMD11:synonymous!NM_152486_1:40/68',
             'synonymous!SAMD11:synonymous!NM_152486_1:40/68',
             ['missense'],
-            0
+            [0, 0, 0, 0]
         ),
         (
             'synonymous!SAMD11:synonymous!NM_152486_1:40/68',
             'synonymous!SAMD11:synonymous!NM_152486_1:40/68',
             'synonymous!SAMD11:synonymous!NM_152486_1:40/68',
             ['missense', 'synonymous'],
-            1
+            [0, 1, 1, 1]
         ),
         (
             'synonymous!SAMD11:synonymous!NM_152486_1:40/68',
             'missense!SAMD11:missense!NM_152486_1:54/681(Ser->Arg)',
             'intergenic!intergenic:intergenic!intergenic:intergenic',
             ['synonymous'],
-            1
+            [0, 1, 0, 0]
         ),
         (
             'synonymous!SAMD11:synonymous!NM_152486_1:40/68',
             'missense!SAMD11:missense!NM_152486_1:54/681(Ser->Arg)',
             'missense!SAMD11:missense!NM_152486_1:54/681(Ser->Arg)',
             ['nonsense', 'intergenic'],
-            0
+            [0, 0, 0, 0]
         ),
     ])
 def test_parquet_coding_bin(fam1, gt, eff1, eff2, eff3,
@@ -132,7 +135,8 @@ def test_parquet_coding_bin(fam1, gt, eff1, eff2, eff3,
     pd = ParquetPartitionDescription(
         ['1'], 1000, coding_effect_types=coding_effect_types
     )
-    assert pd._evaluate_coding_bin(fv) == expected
-    assert pd.evaluate_variant_filename(fv) == \
-        f'region_bin=1_11/coding_bin={expected}/' + \
-        f'variants_region_bin_1_11_coding_bin_{expected}.parquet'
+    for fa, ex in zip(fv.alleles, expected):
+        assert pd._evaluate_coding_bin(fa) == ex
+        assert pd.evaluate_variant_filename(fa) == \
+            f'region_bin=1_11/coding_bin={ex}/' + \
+            f'variants_region_bin_1_11_coding_bin_{ex}.parquet'
