@@ -10,7 +10,7 @@ import numpy as np
 import pyarrow as pa
 import pyarrow.parquet as pq
 
-from dae.utils.vcf_utils import GENOTYPE_TYPE
+from dae.utils.variant_utils import GENOTYPE_TYPE
 from dae.variants.family_variant import FamilyAllele, FamilyVariant
 from dae.backends.impala.serializers import ParquetSerializer
 
@@ -65,23 +65,16 @@ class VariantsParquetWriter(object):
     def __init__(
             self, fvars,
             bucket_index=1, rows=100000,
-            include_reference=True,
-            include_unknown=True,
             filesystem=None):
 
         self.fvars = fvars
         self.families = fvars.families
         self.full_variants_iterator = fvars.full_variants_iterator()
 
-        self.include_reference = include_reference
-        self.include_unknown = include_unknown
-
         self.bucket_index = bucket_index
         self.rows = rows
         self.filesystem = filesystem
 
-        if self.include_unknown:
-            assert self.include_unknown
         self.schema = fvars.annotation_schema
         self.parquet_serializer = ParquetSerializer(
             self.schema, include_reference=True)
@@ -151,9 +144,6 @@ class VariantsParquetWriter(object):
             )
 
         for family_allele in family_variant.alleles:
-            if family_allele.is_reference_allele and \
-                    not self.include_reference:
-                continue
 
             summary = \
                 self.parquet_serializer.serialize_summary(
@@ -195,8 +185,6 @@ class VariantsParquetWriter(object):
                 family_variant_index += 1
 
                 if family_variant.is_unknown():
-                    if not self.include_unknown:
-                        continue
                     # handle all unknown variants
                     unknown_variant = self._setup_all_unknown_variant(
                         sumary_variant, family_variant.family_id)
@@ -336,9 +324,7 @@ class ParquetManager:
     @staticmethod
     def variants_to_parquet(
             variants_loader, variants_filename, bucket_index=0, rows=100000,
-            filesystem=None,
-            include_reference=False,
-            include_unknown=False):
+            filesystem=None):
 
         assert variants_loader.annotation_schema is not None
 
@@ -351,8 +337,6 @@ class ParquetManager:
 
         variants_writer = VariantsParquetWriter(
             variants_loader,
-            include_reference=include_reference,
-            include_unknown=include_unknown,
             bucket_index=bucket_index,
             rows=rows,
             filesystem=filesystem

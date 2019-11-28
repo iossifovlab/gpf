@@ -5,7 +5,7 @@ from collections import namedtuple
 
 import numpy as np
 
-from dae.utils.vcf_utils import GENOTYPE_TYPE
+from dae.utils.variant_utils import GENOTYPE_TYPE
 from dae.annotation.tools.file_io_parquet import ParquetSchema
 
 from dae.variants.family_variant import FamilyAllele, FamilyVariant

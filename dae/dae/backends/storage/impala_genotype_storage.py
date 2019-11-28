@@ -185,8 +185,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
             ParquetManager.variants_to_parquet(
                 variant_loader, parquet_filenames.variant,
                 bucket_index=bucket_index,
-                filesystem=None,
-                **variant_loader.params
+                filesystem=None
             )
             parquet_variants.append(parquet_filenames.variant)
 

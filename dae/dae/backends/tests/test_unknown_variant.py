@@ -6,7 +6,7 @@ Created on Mar 29, 2018
 import pytest
 
 from dae.RegionOperations import Region
-from dae.utils.vcf_utils import mat2str
+from dae.utils.variant_utils import mat2str
 from dae.backends.impala.parquet_io import VariantsParquetWriter
 
 

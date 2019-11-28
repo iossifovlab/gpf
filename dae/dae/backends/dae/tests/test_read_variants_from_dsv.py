@@ -7,7 +7,7 @@ from dae.pedigrees.family import FamiliesData
 
 from dae.backends.dae.loader import DenovoLoader
 
-from dae.utils.vcf_utils import GENOTYPE_TYPE
+from dae.utils.variant_utils import GENOTYPE_TYPE
 
 
 @pytest.fixture(scope='session')

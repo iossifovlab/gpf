@@ -5,7 +5,7 @@ Created on Mar 5, 2018
 '''
 import pytest
 from dae.RegionOperations import Region
-from dae.utils.vcf_utils import mat2str
+from dae.utils.variant_utils import mat2str
 
 
 @pytest.mark.parametrize("variants", [

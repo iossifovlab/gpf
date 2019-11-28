@@ -4,6 +4,8 @@ from cyvcf2 import VCF
 
 import numpy as np
 
+from dae.utils.variant_utils import is_all_reference_genotype, \
+    is_all_unknown_genotype, is_unknown_genotype
 from dae.variants.variant import SummaryVariantFactory
 from dae.backends.raw.loader import VariantsLoader, TransmissionType, \
     FamiliesGenotypes
@@ -11,10 +13,16 @@ from dae.backends.raw.loader import VariantsLoader, TransmissionType, \
 
 class VcfFamiliesGenotypes(FamiliesGenotypes):
 
-    def __init__(self, families, families_genotypes):
+    def __init__(self, families, families_genotypes, params={}):
         super(VcfFamiliesGenotypes, self).__init__()
         self.families = families
         self.families_genotypes = families_genotypes
+        self.include_reference_genotypes = \
+            params.get('include_reference_genotypes', False)
+        self.include_unknown_family_genotypes = \
+            params.get('include_unknown_family_genotypes', False)
+        self.include_unknown_person_genotypes = \
+            params.get('include_unknown_person_genotypes', False)
 
     def get_family_genotype(self, family):
         gt = self.families_genotypes[0:2, family.samples_index]
@@ -27,6 +35,16 @@ class VcfFamiliesGenotypes(FamiliesGenotypes):
             if len(fam) == 0:
                 continue
             gt = self.get_family_genotype(fam)
+            if is_all_reference_genotype(gt) \
+                    and not self.include_reference_genotypes:
+                continue
+            if is_unknown_genotype(gt) \
+                    and not self.include_unknown_person_genotypes:
+                continue
+            if is_all_unknown_genotype(gt) \
+                    and not self.include_unknown_family_genotypes:
+                continue
+
             yield fam, gt
 
     def full_families_genotypes(self):
@@ -50,7 +68,6 @@ class VcfLoader(VariantsLoader):
 
         self.families = families
         self._match_pedigree_to_samples(families, samples)
-        # self.families.ped_df = ped_df
 
     @staticmethod
     def _match_pedigree_to_samples(families, vcf_samples):
@@ -73,13 +90,6 @@ class VcfLoader(VariantsLoader):
             else:
                 person.generated = True
                 families.families[person.family_id].redefine()
-
-        # pedigree_order = list(families.ped_df['sample_id'].values)
-        # pedigree = sorted(
-        #     pedigree, key=lambda p: pedigree_order.index(p['sample_id']))
-
-        # ped_df = pd.DataFrame(pedigree)
-        # return ped_df, ped_df['sample_id'].values
 
     def _warp_summary_variant(self, summary_index, vcf_variant):
         records = []
@@ -113,7 +123,8 @@ class VcfLoader(VariantsLoader):
         for summary_index, vcf_variant in enumerate(self.vcf(self.region)):
             family_genotypes = VcfFamiliesGenotypes(
                 self.families,
-                np.array(vcf_variant.genotypes, dtype=np.int8).T)
+                np.array(vcf_variant.genotypes, dtype=np.int8).T,
+                params=self.params)
 
             summary_variant = self._warp_summary_variant(
                 summary_index, vcf_variant)

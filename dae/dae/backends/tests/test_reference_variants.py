@@ -4,7 +4,7 @@ Created on Jun 15, 2018
 @author: lubo
 '''
 import pytest
-from dae.utils.vcf_utils import mat2str
+from dae.utils.variant_utils import mat2str
 from dae.backends.impala.parquet_io import VariantsParquetWriter
 
 

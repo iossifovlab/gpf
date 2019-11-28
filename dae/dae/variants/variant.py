@@ -3,7 +3,7 @@ Created on Feb 13, 2018
 
 @author: lubo
 '''
-from dae.utils.vcf_utils import vcf2cshl
+from dae.utils.variant_utils import vcf2cshl
 
 from dae.variants.attributes import VariantType
 from dae.variants.effects import Effect

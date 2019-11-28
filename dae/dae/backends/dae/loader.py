@@ -7,7 +7,7 @@ import pysam
 import numpy as np
 import pandas as pd
 
-from dae.utils.vcf_utils import best2gt, str2mat, GENOTYPE_TYPE, \
+from dae.utils.variant_utils import best2gt, str2mat, GENOTYPE_TYPE, \
     reference_genotype
 from dae.utils.dae_utils import dae2vcf_variant
 
