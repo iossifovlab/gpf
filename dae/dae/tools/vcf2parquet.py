@@ -173,7 +173,12 @@ def main(
 
         families_loader = FamiliesLoader(argv.pedigree)
         variants_loader = VcfLoader(
-            families_loader.families, argv.vcf, region=argv.region)
+            families_loader.families, argv.vcf, region=argv.region,
+            params={
+                'include_reference_genotypes': argv.include_reference,
+                'include_unknown_family_genotypes': argv.include_unknown,
+                'include_unknown_person_genotypes': argv.include_unknown
+            })
         variants_loader = AnnotationPipelineDecorator(
             variants_loader, annotation_pipeline
         )
@@ -189,9 +194,7 @@ def main(
 
         ParquetManager.variants_to_parquet(
             variants_loader, parquet_filenames.variant,
-            bucket_index=argv.bucket_index,
-            include_reference=argv.include_reference,
-            include_unknown=argv.include_unknown)
+            bucket_index=argv.bucket_index)
 
         return parquet_filenames
 
