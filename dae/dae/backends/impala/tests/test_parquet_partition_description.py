@@ -34,7 +34,7 @@ def test_parquet_region_bin(fam1, gt, chromosomes,
     region_bin = pd._evaluate_region_bin(fv)
     assert region_bin == expected
     assert pd.evaluate_variant_filename(fv) == \
-        f'{region_bin}/variants_region_bin_{region_bin}.parquet'
+        f'region_bin={region_bin}/variants_region_bin_{region_bin}.parquet'
 
 
 def test_parquet_family_bin(fam1, fam2, gt):
@@ -48,10 +48,10 @@ def test_parquet_family_bin(fam1, fam2, gt):
     assert pd._evaluate_family_bin(fv1) == 9
     assert pd._evaluate_family_bin(fv2) == 6
     assert pd.evaluate_variant_filename(fv1) == \
-        f'1_11/9/' + \
+        f'region_bin=1_11/family_bin=9/' + \
         f'variants_region_bin_1_11_family_bin_9.parquet'
     assert pd.evaluate_variant_filename(fv2) == \
-        f'1_11/6/' + \
+        f'region_bin=1_11/family_bin=6/' + \
         f'variants_region_bin_1_11_family_bin_6.parquet'
 
 
@@ -74,7 +74,7 @@ def test_parquet_frequency_bin(fam1, gt, attributes, rare_boundary, expected):
 
     assert pd._evaluate_frequency_bin(fv) == expected
     assert pd.evaluate_variant_filename(fv) == \
-        f'1_11/{expected}/' + \
+        f'region_bin=1_11/frequency_bin={expected}/' + \
         f'variants_region_bin_1_11_frequency_bin_{expected}.parquet'
 
 
@@ -134,5 +134,5 @@ def test_parquet_coding_bin(fam1, gt, eff1, eff2, eff3,
     )
     assert pd._evaluate_coding_bin(fv) == expected
     assert pd.evaluate_variant_filename(fv) == \
-        f'1_11/{expected}/' + \
+        f'region_bin=1_11/coding_bin={expected}/' + \
         f'variants_region_bin_1_11_coding_bin_{expected}.parquet'
