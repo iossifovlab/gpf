@@ -8,10 +8,11 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 
 from dae.annotation.tools.annotator_config import annotation_config_cli_options
 
-from dae.pedigrees.family import FamiliesLoader, FamiliesData
+from dae.pedigrees.family import FamiliesLoader  # , FamiliesData
 from dae.backends.raw.loader import AnnotationPipelineDecorator
 from dae.backends.vcf.loader import VcfLoader
-from dae.backends.impala.parquet_io import ParquetManager
+from dae.backends.impala.parquet_io import ParquetManager, \
+    ParquetPartitionDescription
 
 from cyvcf2 import VCF
 
@@ -37,7 +38,7 @@ def parse_cli_arguments(gpf_instance, argv=sys.argv[1:]):
         description='choose what type of data to convert',
         help='vcf import or make generation for vcf import')
 
-    parse_vcf_arguments(gpf_instance, subparsers)
+    parser_vcf_arguments(gpf_instance, subparsers)
     parser_make_arguments(gpf_instance, subparsers)
 
     parser_args = parser.parse_args(argv)
@@ -67,6 +68,11 @@ def parser_common_arguments(gpf_instance, parser):
         'If none specified, current directory is used [default: %(default)s]'
     )
     parser.add_argument(
+        '-pd', '--partition_description', type=str, default=None,
+        dest='partition_description',
+        help='Path to a config file containing the partition description'
+    )
+    parser.add_argument(
         '--include-reference', default=False,
         dest='include_reference',
         help='include reference only variants [default: %(default)s]',
@@ -87,7 +93,7 @@ def parser_common_arguments(gpf_instance, parser):
     )
 
 
-def parse_vcf_arguments(gpf_instance, subparsers):
+def parser_vcf_arguments(gpf_instance, subparsers):
     parser = subparsers.add_parser('vcf')
     parser_common_arguments(gpf_instance, parser)
 
@@ -171,7 +177,6 @@ def main(
     if argv.type == 'make':
         generate_makefile(dae_config, genome, argv)
     elif argv.type == 'vcf':
-
         families_loader = FamiliesLoader(argv.pedigree)
         variants_loader = VcfLoader(
             families_loader.families, argv.vcf, region=argv.region,
@@ -184,20 +189,34 @@ def main(
             variants_loader, annotation_pipeline
         )
 
-        parquet_filenames = ParquetManager.build_parquet_filenames(
-            argv.output, bucket_index=argv.bucket_index, study_id=study_id,
-        )
-        print("converting into ", parquet_filenames.variant, file=sys.stderr)
+        if argv.partition_description is None:
 
-        if not argv.skip_pedigree:
-            ParquetManager.pedigree_to_parquet(
-                families_loader, parquet_filenames.pedigree)
+            parquet_filenames = ParquetManager.build_parquet_filenames(
+                argv.output, bucket_index=argv.bucket_index, study_id=study_id,
+            )
+            print("converting into ",
+                  parquet_filenames.variant,
+                  file=sys.stderr)
 
-        ParquetManager.variants_to_parquet(
-            variants_loader, parquet_filenames.variant,
-            bucket_index=argv.bucket_index)
+            if not argv.skip_pedigree:
+                ParquetManager.pedigree_to_parquet(
+                    families_loader, parquet_filenames.pedigree)
 
-        return parquet_filenames
+            ParquetManager.variants_to_parquet(
+                variants_loader, parquet_filenames.variant,
+                bucket_index=argv.bucket_index)
+
+            return parquet_filenames
+        else:
+            description = ParquetPartitionDescription.from_config(
+                    argv.partition_description)
+
+            ParquetManager.variants_to_parquet_partition(
+                    variants_loader, description,
+                    bucket_index=argv.bucket_index,
+                    rows=argv.rows
+            )
+
 
 if __name__ == "__main__":
     main(sys.argv[1:])

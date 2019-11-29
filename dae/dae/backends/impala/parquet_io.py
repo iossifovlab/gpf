@@ -513,6 +513,37 @@ class ParquetManager:
             file=sys.stderr
         )
 
+    @staticmethod
+    def variants_to_parquet_partition(
+        variants_loader,
+        partition_description,
+        root_folder,
+        bucket_index=1,
+        rows=100000,
+        filesystem=None
+    ):
+        assert variants_loader.annotation_schema is not None
+
+        start = time.time()
+
+        print('[DONE] going to create variants partition writer...')
+        variants_writer = VariantsParquetWriter(
+            variants_loader,
+            partition_description=partition_description,
+            root_folder=root_folder,
+            bucket_index=bucket_index,
+            rows=rows
+        )
+
+        variants_writer.write_partition()
+        end = time.time()
+
+        print(
+            'DONE: {} for {:.2f} sec'.format(
+                root_folder, end-start),
+            file=sys.stderr
+        )
+
 
 def pedigree_parquet_schema():
     fields = [
