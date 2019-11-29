@@ -129,7 +129,8 @@ class FilesConfigParser(ConfigParserBase):
         vcf = []
         for key, file_config in config_section.items():
             print(key, ":", file_config)
-            if file_config.params is not None:
+            print(file_config.params)
+            if file_config.params:
                 file_config.params = cls._split_type_values_dict(
                     [p.strip() for p in file_config.params.split(',')]
                 )

@@ -679,6 +679,7 @@ class PedigreeReader(object):
             converters={
                 'role': lambda r: Role.from_name(r),
                 'gender': lambda s: Sex.from_name(s),
+                'sex': lambda s: Sex.from_name(s),
             },
             dtype={
                 'familyId': str,

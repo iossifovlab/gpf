@@ -25,9 +25,14 @@ class FamiliesGenotypes:
 
 class VariantsLoader:
 
-    def __init__(self, families, transmission_type, params={}):
+    def __init__(
+            self, families, filename, source_type,
+            transmission_type, params={}):
+
         assert isinstance(families, FamiliesData)
         self.families = families
+        self.filename = filename
+        self.source_type = source_type
         self.transmission_type = transmission_type
         self.params = params
 
@@ -55,7 +60,19 @@ class VariantsLoader:
                 yield fv
 
 
-class AlleleFrequencyDecorator(VariantsLoader):
+class VariantsLoaderDecorator(VariantsLoader):
+
+    def __init__(self, variants_loader):
+        super(VariantsLoaderDecorator, self).__init__(
+            variants_loader.families,
+            variants_loader.filename,
+            variants_loader.source_type,
+            variants_loader.transmission_type
+        )
+        self.variants_loader = variants_loader
+
+
+class AlleleFrequencyDecorator(VariantsLoaderDecorator):
     COLUMNS = [
         'af_parents_called_count',
         'af_parents_called_percent',
@@ -64,11 +81,8 @@ class AlleleFrequencyDecorator(VariantsLoader):
     ]
 
     def __init__(self, variants_loader):
-        super(AlleleFrequencyDecorator, self).__init__(
-            variants_loader.families,
-            TransmissionType.transmitted
-        )
-        self.variants_loader = variants_loader
+        super(AlleleFrequencyDecorator, self).__init__(variants_loader)
+        assert self.transmission_type == TransmissionType.transmitted
 
         self.independent = self.families.persons_without_parents()
         self.independent_index = \
@@ -121,14 +135,15 @@ class AlleleFrequencyDecorator(VariantsLoader):
             yield summary_variant, family_genotypes
 
 
-class AnnotationPipelineDecorator(VariantsLoader):
+class AnnotationPipelineDecorator(VariantsLoaderDecorator):
+
+    SEP1 = '!'
+    SEP2 = '|'
+    SEP3 = ':'
 
     def __init__(self, variants_loader, annotation_pipeline):
-        super(AnnotationPipelineDecorator, self).__init__(
-            variants_loader.families,
-            variants_loader.transmission_type
-        )
-        self.variants_loader = variants_loader
+        super(AnnotationPipelineDecorator, self).__init__(variants_loader)
+
         self.annotation_pipeline = annotation_pipeline
         self.annotation_schema = annotation_pipeline.build_annotation_schema()
 
@@ -139,19 +154,80 @@ class AnnotationPipelineDecorator(VariantsLoader):
             self.annotation_pipeline.annotate_summary_variant(summary_variant)
             yield summary_variant, family_genotypes
 
+    CLEAN_UP_COLUMNS = set([
+        'alternatives_data',
+        'family_variant_index',
+        'family_id',
+        'variant_sexes',
+        'variant_roles',
+        'variant_inheritance',
+        'variant_in_member',
+        'genotype_data',
+        'frequency_data',
+        'genomic_scores_data',
+    ])
 
-class StoredAnnotationDecorator(VariantsLoader):
+    def save_annotation_file(self, filename, sep="\t"):
+        def convert_array_of_strings_to_string(a):
+            if not a:
+                return None
+            return self.SEP1.join(a)
+
+        common_columns = [
+            'chrom', 'position', 'reference', 'alternative',
+            'bucket_index', 'summary_variant_index',
+            'allele_index', 'allele_count',
+        ]
+        effect_columns = [
+            'effect_gene_genes', 'effect_gene_types',
+            'effect_details_transcript_ids',
+            'effect_details_details'
+        ]
+
+        other_columns = filter(
+            lambda col: col not in common_columns
+            and col not in effect_columns
+            and col not in self.CLEAN_UP_COLUMNS,
+            self.annotation_schema.col_names)
+
+        header = common_columns[:]
+        header.extend(effect_columns)
+        header.extend(other_columns)
+
+        with open(filename, 'w') as outfile:
+            outfile.write(sep.join(header))
+            outfile.write('\n')
+
+            for summary_variant, _ in self.summary_genotypes_iterator():
+                for allele_index, summary_allele in \
+                        enumerate(summary_variant.alleles):
+                    line = []
+                    rec = summary_allele.attributes
+                    rec['allele_index'] = allele_index
+
+                    for col in common_columns:
+                        line.append(str(rec.get(col, '')))
+                    for col in effect_columns:
+                        line.append(
+                            convert_array_of_strings_to_string(
+                                rec.get(col, [''])
+                            )
+                        )
+                    for col in other_columns:
+                        line.append(str(rec.get(col, '')))
+                    outfile.write(sep.join(line))
+                    outfile.write('\n')
+
+
+class StoredAnnotationDecorator(VariantsLoaderDecorator):
 
     SEP1 = '!'
     SEP2 = '|'
     SEP3 = ':'
 
     def __init__(self, variants_loader, annotation_filename):
-        super(StoredAnnotationDecorator, self).__init__(
-            variants_loader.families,
-            variants_loader.transmission_type
-        )
-        self.variants_loader = variants_loader
+        super(StoredAnnotationDecorator, self).__init__(variants_loader)
+
         assert os.path.exists(annotation_filename)
         self.annotation_filename = annotation_filename
 
@@ -220,29 +296,29 @@ class StoredAnnotationDecorator(VariantsLoader):
                 where(pd.notnull(annot_df[col]), None)
         return annot_df
 
-    @classmethod
-    def save_annotation_file(cls, annot_df, filename, sep="\t"):
-        def convert_array_of_strings_to_string(a):
-            if not a:
-                return None
-            return cls.SEP1.join(a)
+    # @classmethod
+    # def save_annotation_file(cls, annot_df, filename, sep="\t"):
+    #     def convert_array_of_strings_to_string(a):
+    #         if not a:
+    #             return None
+    #         return cls.SEP1.join(a)
 
-        vars_df = annot_df.copy()
-        vars_df['effect_gene_genes'] = vars_df['effect_gene_genes'].\
-            apply(convert_array_of_strings_to_string)
-        vars_df['effect_gene_types'] = vars_df['effect_gene_types'].\
-            apply(convert_array_of_strings_to_string)
-        vars_df['effect_details_transcript_ids'] = \
-            vars_df['effect_details_transcript_ids'].\
-            apply(convert_array_of_strings_to_string)
-        vars_df['effect_details_details'] = \
-            vars_df['effect_details_details'].\
-            apply(convert_array_of_strings_to_string)
-        vars_df.to_csv(
-            filename,
-            index=False,
-            sep=sep
-        )
+    #     vars_df = annot_df.copy()
+    #     vars_df['effect_gene_genes'] = vars_df['effect_gene_genes'].\
+    #         apply(convert_array_of_strings_to_string)
+    #     vars_df['effect_gene_types'] = vars_df['effect_gene_types'].\
+    #         apply(convert_array_of_strings_to_string)
+    #     vars_df['effect_details_transcript_ids'] = \
+    #         vars_df['effect_details_transcript_ids'].\
+    #         apply(convert_array_of_strings_to_string)
+    #     vars_df['effect_details_details'] = \
+    #         vars_df['effect_details_details'].\
+    #         apply(convert_array_of_strings_to_string)
+    #     vars_df.to_csv(
+    #         filename,
+    #         index=False,
+    #         sep=sep
+    #     )
 
     def summary_genotypes_iterator(self):
         variant_iterator = self.variants_loader.summary_genotypes_iterator()

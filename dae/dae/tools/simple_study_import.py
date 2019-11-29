@@ -7,7 +7,6 @@ import argparse
 
 from dae.gpf_instance.gpf_instance import GPFInstance
 
-from dae.backends.impala.parquet_io import ParquetManager
 from dae.backends.import_commons import construct_import_annotation_pipeline
 
 from dae.backends.dae.loader import DenovoLoader
@@ -131,7 +130,6 @@ def main(argv, gpf_instance=None):
 
     annotation_pipeline = construct_import_annotation_pipeline(
         dae_config, genomes_db, argv)
-    parquet_manager = ParquetManager(dae_config.studies_db.dir)
 
     if argv.id is not None:
         study_id = argv.id
@@ -139,7 +137,7 @@ def main(argv, gpf_instance=None):
         study_id, _ = os.path.splitext(os.path.basename(argv.pedigree))
 
     if argv.output is None:
-        output = parquet_manager.get_data_dir(study_id)
+        output = dae_config.studies_db.dir
     else:
         output = argv.output
 
