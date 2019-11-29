@@ -8,7 +8,7 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 
 from dae.annotation.tools.annotator_config import annotation_config_cli_options
 
-from dae.pedigrees.family import FamiliesLoader
+from dae.pedigrees.family import FamiliesLoader, FamiliesData
 from dae.backends.raw.loader import AnnotationPipelineDecorator
 from dae.backends.vcf.loader import VcfLoader
 from dae.backends.impala.parquet_io import ParquetManager
@@ -16,7 +16,7 @@ from dae.backends.impala.parquet_io import ParquetManager
 from cyvcf2 import VCF
 
 from dae.backends.import_commons import build_contig_regions, \
-    contigs_makefile_generate, variants2parquet
+    contigs_makefile_generate
 from dae.backends.import_commons import construct_import_annotation_pipeline
 
 
@@ -69,20 +69,21 @@ def parser_common_arguments(gpf_instance, parser):
     parser.add_argument(
         '--include-reference', default=False,
         dest='include_reference',
-        help='include reference only variants [default: %(defaults)s]',
+        help='include reference only variants [default: %(default)s]',
         action='store_true'
     )
     parser.add_argument(
         '--include-unknown', default=False,
         dest='include_unknown',
-        help='include variants with unknown genotype [default: %(defaults)s]',
+        help='include variants with unknown genotype [default: %(default)s]',
         action='store_true'
     )
+
     parser.add_argument(
         '--study-id', default=None,
         dest='study_id',
         help='specifies study id to use when storing parquet files '
-        '[default: %(defaults)s]'
+        '[default: %(default)s]'
     )
 
 
@@ -144,41 +145,6 @@ def generate_makefile(dae_config, genome, argv):
     )
 
 
-def vcf2parquet(
-        study_id, ped_df, vcf_filename,
-        genomes_db, annotation_pipeline,
-        output='.', bucket_index=1, region=None,
-        filesystem=None, skip_pedigree=False,
-        include_reference=False, include_unknown=False):
-
-    assert os.path.exists(vcf_filename), vcf_filename
-
-    parquet_filenames = ParquetManager.build_parquet_filenames(
-        output, bucket_index=bucket_index, study_id=study_id
-    )
-    print("converting into ", parquet_filenames.variant, file=sys.stderr)
-
-    families = FamiliesData.from_pedigree_df(ped_df)
-    variants_loader = VcfLoader(families, vcf_filename, region=region)
-    variants_loader = AnnotationPipelineDecorator(
-        variants_loader, annotation_pipeline)
-
-    if not skip_pedigree:
-        ParquetManager.pedigree_to_parquet(
-            variants_loader, parquet_filenames.pedigree, filesystem=filesystem
-        )
-
-    ParquetManager.variants_to_parquet(
-        variants_loader, parquet_filenames.variant,
-        bucket_index=bucket_index,
-        include_reference=include_reference,
-        include_unknown=include_unknown,
-        filesystem=filesystem
-    )
-
-    return parquet_filenames
-
-
 def main(
         argv,
         gpf_instance=None, dae_config=None, genomes_db=None, genome=None,
@@ -208,20 +174,30 @@ def main(
 
         families_loader = FamiliesLoader(argv.pedigree)
         variants_loader = VcfLoader(
-            families_loader.families, argv.vcf, region=argv.region)
+            families_loader.families, argv.vcf, region=argv.region,
+            params={
+                'include_reference_genotypes': argv.include_reference,
+                'include_unknown_family_genotypes': argv.include_unknown,
+                'include_unknown_person_genotypes': argv.include_unknown
+            })
         variants_loader = AnnotationPipelineDecorator(
             variants_loader, annotation_pipeline
         )
 
-        parquet_filenames = variants2parquet(
-            study_id, variants_loader,
-            output=argv.output, bucket_index=argv.bucket_index,
-            skip_pedigree=argv.skip_pedigree,
-            include_reference=argv.include_reference,
-            include_unknown=argv.include_unknown
+        parquet_filenames = ParquetManager.build_parquet_filenames(
+            argv.output, bucket_index=argv.bucket_index, study_id=study_id,
         )
-        return parquet_filenames
+        print("converting into ", parquet_filenames.variant, file=sys.stderr)
 
+        if not argv.skip_pedigree:
+            ParquetManager.pedigree_to_parquet(
+                families_loader, parquet_filenames.pedigree)
+
+        ParquetManager.variants_to_parquet(
+            variants_loader, parquet_filenames.variant,
+            bucket_index=argv.bucket_index)
+
+        return parquet_filenames
 
 if __name__ == "__main__":
     main(sys.argv[1:])

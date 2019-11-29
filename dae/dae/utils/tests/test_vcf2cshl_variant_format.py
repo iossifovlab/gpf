@@ -3,7 +3,7 @@ Created on Mar 12, 2018
 
 @author: lubo
 '''
-from dae.utils.vcf_utils import vcf2cshl, trim_str_back
+from dae.utils.variant_utils import vcf2cshl, trim_str_back
 from dae.utils.dae_utils import dae2vcf_variant
 
 

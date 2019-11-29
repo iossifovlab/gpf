@@ -6,7 +6,8 @@ from rest_framework import status
 
 pytestmark = pytest.mark.usefixtures('mock_gpf_instance')
 
-URL = '/api/v3/genotype_browser/preview'
+PREVIEW_URL = '/api/v3/genotype_browser/preview'
+PREVIEW_VARIANTS_URL = '/api/v3/genotype_browser/preview/variants'
 
 FILTER_QUERY_CATEGORICAL = {
     'id': 'Categorical',
@@ -57,7 +58,8 @@ def test_simple_query_passes(db, admin_client):
         'datasetId': 'quads_f1'
     }
     response = admin_client.post(
-        URL, json.dumps(data), content_type='application/json')
+        PREVIEW_VARIANTS_URL, json.dumps(data), content_type='application/json'
+    )
     assert status.HTTP_200_OK == response.status_code
 
 
@@ -66,11 +68,13 @@ def test_simple_query(db, admin_client):
         'datasetId': 'quads_f1'
     }
     response = admin_client.post(
-        URL, json.dumps(data), content_type='application/json')
+        PREVIEW_VARIANTS_URL, json.dumps(data), content_type='application/json'
+    )
     assert status.HTTP_200_OK == response.status_code
-    res = response.data
+    res = response.streaming_content
+    res = list(map(json.loads, res))
 
-    assert 2 == len(res['rows'])
+    assert 2 == len(res)
 
 
 @pytest.mark.parametrize('pheno_filters,variants_count,pheno_values', [
@@ -87,18 +91,26 @@ def test_query_with_pheno_filters(
     }
 
     response = admin_client.post(
-        URL, json.dumps(data), content_type='application/json')
+        PREVIEW_VARIANTS_URL, json.dumps(data), content_type='application/json'
+    )
     assert status.HTTP_200_OK == response.status_code
-    res = response.data
+    variants = response.streaming_content
+    variants = list(map(json.loads, variants))
+
+    response = admin_client.post(
+        PREVIEW_URL, json.dumps(data), content_type='application/json'
+    )
+    assert status.HTTP_200_OK == response.status_code
+    cols = response.data['cols']
 
     columns = [
         '{}.{}'.format(pf['measureType'], pf['id']) for pf in pheno_filters
     ]
-    columns_idxs = [res['cols'].index(col) for col in columns]
+    columns_idxs = [cols.index(col) for col in columns]
 
-    assert variants_count == len(res['rows'])
+    assert variants_count == len(variants)
     rows_values = []
-    for row in res['rows']:
+    for row in variants:
         row_values = []
         for column_idx in columns_idxs:
             row_values.append(row[column_idx])

@@ -1,7 +1,7 @@
 import pytest
 from box import Box
 
-from dae.pedigrees.family import FamiliesData, FamiliesLoader
+from dae.pedigrees.family import FamiliesLoader
 
 from dae.tools.dae2parquet import parse_cli_arguments, dae_build_makefile
 

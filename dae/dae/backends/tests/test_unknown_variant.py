@@ -6,8 +6,7 @@ Created on Mar 29, 2018
 import pytest
 
 from dae.RegionOperations import Region
-from dae.utils.vcf_utils import mat2str
-from dae.backends.impala.parquet_io import VariantsParquetWriter
+from dae.utils.variant_utils import mat2str
 
 
 @pytest.mark.parametrize('variants', [
@@ -29,18 +28,3 @@ def test_variant_in_members(variants_impl, variants, region, count, members):
         for aa in v.alt_alleles:
             print(aa, aa.variant_in_members)
             assert list(aa.variant_in_members) == members
-
-
-@pytest.mark.parametrize("fixture_name", [
-    "backends/f1_test_901923",
-])
-def test_full_variants_iterator_parquet_storage_unknown_variants(
-        vcf_variants_loader, fixture_name):
-
-    fvars = vcf_variants_loader(fixture_name)
-    assert fvars is not None
-
-    parquet_writer = VariantsParquetWriter(fvars)
-    table_iterator = parquet_writer.variants_table()
-    for t in table_iterator:
-        print(t)

@@ -24,10 +24,13 @@ def test_vcf_loader(vcf_loader_data, variants_vcf, fixture_data):
     ped_df = PedigreeReader.flexible_pedigree_read(conf.pedigree)
     families = FamiliesData.from_pedigree_df(ped_df)
 
-    loader = VcfLoader(families, conf.vcf)
+    loader = VcfLoader(families, conf.vcf, params={
+        'include_reference_genotypes': True,
+        'include_unknown_family_genotypes': True,
+        'include_unknown_person_genotypes': True
+    })
     assert loader is not None
 
-    print(loader.samples)
     vars_old = list(fvars.query_variants(
         return_reference=True, return_unknown=True))
     vars_new = list(loader.family_variants_iterator())

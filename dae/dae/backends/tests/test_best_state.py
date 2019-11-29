@@ -1,4 +1,4 @@
-from dae.utils.vcf_utils import mat2str
+from dae.utils.variant_utils import mat2str
 from dae.RegionOperations import Region
 
 

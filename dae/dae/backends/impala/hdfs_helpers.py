@@ -53,7 +53,7 @@ class HdfsHelpers(object):
         self.put(local_file, hdfs_filename)
 
     def put_content(self, local_path, hdfs_dirname):
-        assert os.path.exists(local_path)
+        assert os.path.exists(local_path), local_path
 
         if os.path.isdir(local_path):
             for local_file in os.listdir(local_path):

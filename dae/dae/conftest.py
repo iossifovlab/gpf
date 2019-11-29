@@ -15,7 +15,6 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 
 from dae.annotation.annotation_pipeline import PipelineAnnotator
 
-from dae.backends.configure import Configure
 from dae.backends.raw.loader import AlleleFrequencyDecorator, \
     AnnotationPipelineDecorator
 from dae.backends.raw.raw_variants import RawMemoryVariants
@@ -29,7 +28,6 @@ from dae.backends.import_commons import \
 from dae.pedigrees.family import PedigreeReader
 from dae.pedigrees.family import FamiliesData, FamiliesLoader
 from dae.utils.helpers import study_id_from_path
-from dae.backends.import_commons import variants2parquet
 
 from dae.backends.impala.parquet_io import ParquetManager
 from dae.backends.storage.impala_genotype_storage import ImpalaGenotypeStorage
@@ -260,12 +258,39 @@ def annotation_pipeline_internal(genomes_db):
     return pipeline
 
 
+def from_prefix_denovo(prefix):
+    denovo_filename = '{}.txt'.format(prefix)
+    family_filename = "{}_families.ped".format(prefix)
+
+    conf = {
+        'denovo': {
+            'denovo_filename': denovo_filename,
+            'family_filename': family_filename,
+        }
+    }
+    return Box(conf, default_box=True)
+
+
+def from_prefix_vcf(prefix):
+    vcf_filename = '{}.vcf'.format(prefix)
+    if not os.path.exists(vcf_filename):
+        vcf_filename = '{}.vcf.gz'.format(prefix)
+
+    conf = {
+        'pedigree': '{}.ped'.format(prefix),
+        'vcf': vcf_filename,
+        'annotation': '{}-eff.txt'.format(prefix),
+        'prefix': prefix
+    }
+    return Box(conf, default_box=True)
+
+
 @pytest.fixture
 def dae_denovo_config():
     fullpath = relative_to_this_test_folder(
         'fixtures/dae_denovo/denovo'
     )
-    config = Configure.from_prefix_denovo(fullpath)
+    config = from_prefix_denovo(fullpath)
     return config.denovo
 
 
@@ -287,12 +312,27 @@ def dae_denovo(
     return fvars
 
 
+def from_prefix_dae(prefix):
+    summary_filename = '{}.txt.gz'.format(prefix)
+    toomany_filename = '{}-TOOMANY.txt.gz'.format(prefix)
+    family_filename = "{}.families.txt".format(prefix)
+
+    conf = {
+        'dae': {
+            'summary_filename': summary_filename,
+            'toomany_filename': toomany_filename,
+            'family_filename': family_filename,
+        }
+    }
+    return Box(conf, default_box=True)
+
+
 @pytest.fixture
 def dae_transmitted_config():
     fullpath = relative_to_this_test_folder(
         'fixtures/dae_transmitted/transmission'
     )
-    config = Configure.from_prefix_dae(fullpath)
+    config = from_prefix_dae(fullpath)
     return config.dae
 
 
@@ -325,7 +365,7 @@ def dae_iossifov2014_config():
     fullpath = relative_to_this_test_folder(
         'fixtures/dae_iossifov2014/iossifov2014'
     )
-    config = Configure.from_prefix_denovo(fullpath)
+    config = from_prefix_denovo(fullpath)
     return config.denovo
 
 
@@ -336,7 +376,7 @@ def iossifov2014_loader(
     config = dae_iossifov2014_config
 
     families_loader = FamiliesLoader(
-        config.family_filename, file_format='simple')
+        config.family_filename, file_format='pedigree')
 
     variants_loader = DenovoLoader(
         families_loader.families, config.denovo_filename, default_genome)
@@ -379,12 +419,12 @@ def iossifov2014_impala(
 
     impala_genotype_storage.impala_load_study(
         study_id,
-        parquet_filenames.pedigree,
-        parquet_filenames.variant
+        variant_paths=[parquet_filenames.variant],
+        pedigree_paths=[parquet_filenames.pedigree],
     )
 
     fvars = impala_genotype_storage.build_backend(
-        impala_genotype_storage.default_study_config(study_id),
+        Box({'id': study_id}, default_box=True),
         genomes_db)
     return fvars
 
@@ -397,20 +437,25 @@ def vcf_loader_data():
         else:
             prefix = os.path.join(
                 relative_to_this_test_folder('fixtures'), path)
-        conf = Configure.from_prefix_vcf(prefix).vcf
+        conf = from_prefix_vcf(prefix)
         return conf
     return builder
 
 
 @pytest.fixture(scope='session')
 def vcf_variants_loader(vcf_loader_data, default_annotation_pipeline):
-    def builder(path):
+    def builder(
+        path, params={
+            'include_reference_genotypes': True,
+            'include_unknown_family_genotypes': True,
+            'include_unknown_person_genotypes': True
+            }):
         conf = vcf_loader_data(path)
 
         ped_df = PedigreeReader.flexible_pedigree_read(conf.pedigree)
         families = FamiliesData.from_pedigree_df(ped_df)
 
-        loader = VcfLoader(families, conf.vcf)
+        loader = VcfLoader(families, conf.vcf, params=params)
         assert loader is not None
 
         loader = AlleleFrequencyDecorator(loader)
@@ -471,7 +516,7 @@ def config_dae():
     def builder(path):
         fullpath = relative_to_this_test_folder(
             os.path.join('fixtures', path))
-        config = Configure.from_prefix_dae(fullpath)
+        config = from_prefix_dae(fullpath)
         return config
     return builder
 
@@ -492,16 +537,6 @@ def raw_dae(config_dae, default_genome):
             region=region,
             genome=default_genome)
         return dae
-    return builder
-
-
-@pytest.fixture(scope='session')
-def config_denovo():
-    def builder(path):
-        fullpath = relative_to_this_test_folder(
-            os.path.join('fixtures', path))
-        config = Configure.from_prefix_denovo(fullpath)
-        return config.denovo
     return builder
 
 
@@ -577,7 +612,7 @@ def collect_vcf(dirname):
     pattern = os.path.join(dirname, '*.vcf')
     for filename in glob.glob(pattern):
         prefix = os.path.splitext(filename)[0]
-        vcf_config = Configure.from_prefix_vcf(prefix).vcf
+        vcf_config = from_prefix_vcf(prefix)
         result.append(vcf_config)
     return result
 
@@ -620,36 +655,36 @@ def data_import(
             filename = os.path.basename(vcf.pedigree)
             study_id = os.path.splitext(filename)[0]
 
-            impala = impala_genotype_storage._impala_storage_config(study_id)
+            variant_table, pedigree_table = impala_genotype_storage. \
+                study_tables(Box({'id': study_id}, default_box=True))
+
             if not reimport and \
                     test_impala_helpers.check_table(
-                        impala_test_dbname(), impala.tables.variant) and \
+                        impala_test_dbname(), variant_table) and \
                     test_impala_helpers.check_table(
-                        impala_test_dbname(), impala.tables.pedigree):
+                        impala_test_dbname(), pedigree_table):
                 continue
 
             study_id = study_id_from_path(vcf.pedigree)
             study_temp_dirname = os.path.join(temp_dirname, study_id)
 
-            families = FamiliesData.from_pedigree_df(
-                PedigreeReader.flexible_pedigree_read(vcf.pedigree))
+            families_loader = FamiliesLoader(vcf.pedigree)
+            loader = VcfLoader(
+                families_loader.families, vcf.vcf, region=None,
+                params={
+                    'include_reference_genotypes': True,
+                    'include_unknown_family_genotypes': True,
+                    'include_unknown_person_genotypes': True
+                })
 
-            loader = VcfLoader(families, vcf.vcf, region=None)
             loader = AlleleFrequencyDecorator(loader)
             loader = AnnotationPipelineDecorator(loader, annotation_pipeline)
 
-            parquet_filenames = variants2parquet(
-                study_id, loader,
-                output=study_temp_dirname,
-                bucket_index=0,
-                include_reference=True,
-                include_unknown=True
-            )
-
-            impala_genotype_storage.impala_load_study(
+            impala_genotype_storage.simple_study_import(
                 study_id,
-                parquet_filenames.pedigree,
-                parquet_filenames.variant
+                families_loader=families_loader,
+                variant_loaders=[loader],
+                output=study_temp_dirname
             )
 
     build('backends/')
@@ -662,7 +697,7 @@ def variants_impala(request, data_import, impala_genotype_storage, genomes_db):
     def builder(path):
         study_id = os.path.basename(path)
         fvars = impala_genotype_storage.build_backend(
-            impala_genotype_storage.default_study_config(study_id),
+            Box({'id': study_id}, default_box=True),
             genomes_db)
         return fvars
 
@@ -674,5 +709,5 @@ def vcf_import_config():
     fullpath = relative_to_this_test_folder(
         'fixtures/vcf_import/effects_trio'
     )
-    config = Configure.from_prefix_vcf(fullpath)
-    return config.vcf
+    config = from_prefix_vcf(fullpath)
+    return config

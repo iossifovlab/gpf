@@ -7,10 +7,8 @@ import argparse
 
 from dae.gpf_instance.gpf_instance import GPFInstance
 
-from dae.backends.impala.parquet_io import ParquetManager
 from dae.backends.import_commons import construct_import_annotation_pipeline
 
-from dae.backends.import_commons import variants2parquet
 from dae.backends.dae.loader import DenovoLoader
 from dae.backends.vcf.loader import VcfLoader
 from dae.backends.raw.loader import AnnotationPipelineDecorator
@@ -132,7 +130,6 @@ def main(argv, gpf_instance=None):
 
     annotation_pipeline = construct_import_annotation_pipeline(
         dae_config, genomes_db, argv)
-    parquet_manager = ParquetManager(dae_config.studies_db.dir)
 
     if argv.id is not None:
         study_id = argv.id
@@ -140,7 +137,7 @@ def main(argv, gpf_instance=None):
         study_id, _ = os.path.splitext(os.path.basename(argv.pedigree))
 
     if argv.output is None:
-        output = parquet_manager.get_data_dir(study_id)
+        output = dae_config.studies_db.dir
     else:
         output = argv.output
 
@@ -156,59 +153,45 @@ def main(argv, gpf_instance=None):
     families_loader = FamiliesLoader(
         argv.pedigree, pedigree_format=pedigree_format)
 
-    skip_pedigree = False
-    if argv.vcf and argv.denovo:
-        skip_pedigree = True
-
-    parquet_filenames = None
-    if argv.vcf is not None:
-        variants_loader = VcfLoader(
-            families_loader.families,
-            argv.vcf
-        )
-        variants_loader = AnnotationPipelineDecorator(
-            variants_loader, annotation_pipeline
-        )
-        parquet_filenames = variants2parquet(
-            study_id, variants_loader,
-            output=output, bucket_index=100,
-            skip_pedigree=skip_pedigree,
-        )
-
+    variant_loaders = []
     if argv.denovo is not None:
-        variants_loader = DenovoLoader(
+        denovo_loader = DenovoLoader(
             families_loader.families,
             argv.denovo,
             genome=genome,
-            denovo_format={
-                'location': argv.denovo_location,
-                'variant': argv.denovo_variant,
-                'chrom': argv.denovo_chrom,
-                'pos': argv.denovo_pos,
-                'ref': argv.denovo_ref,
-                'alt': argv.denovo_alt,
-                'person_id': argv.denovo_person_id,
-                'family_id': argv.denovo_family_id,
-                'best_state': argv.denovo_best_state,
+            params={
+                'denovo_location': argv.denovo_location,
+                'denovo_variant': argv.denovo_variant,
+                'denovo_chrom': argv.denovo_chrom,
+                'denovo_pos': argv.denovo_pos,
+                'denovo_ref': argv.denovo_ref,
+                'denovo_alt': argv.denovo_alt,
+                'denovo_person_id': argv.denovo_person_id,
+                'denovo_family_id': argv.denovo_family_id,
+                'denovo_best_state': argv.denovo_best_state,
             }
         )
-        variants_loader = AnnotationPipelineDecorator(
-            variants_loader, annotation_pipeline
+        denovo_loader = AnnotationPipelineDecorator(
+            denovo_loader, annotation_pipeline
         )
-        parquet_filenames = variants2parquet(
-            study_id, variants_loader,
-            output=output, bucket_index=0
+        variant_loaders.append(denovo_loader)
+    if argv.vcf is not None:
+        vcf_loader = VcfLoader(
+            families_loader.families,
+            argv.vcf
         )
+        vcf_loader = AnnotationPipelineDecorator(
+            vcf_loader, annotation_pipeline
+        )
+        variant_loaders.append(vcf_loader)
 
-    if parquet_filenames:
-        study_config = genotype_storage.impala_load_study(
-            study_id,
-            os.path.split(parquet_filenames.pedigree)[0],
-            os.path.split(parquet_filenames.variant)[0]
-        )
-        print(study_config)
-
-        save_study_config(dae_config, study_id, study_config)
+    study_config = genotype_storage.simple_study_import(
+        study_id,
+        families_loader=families_loader,
+        variant_loaders=variant_loaders,
+        output=output
+    )
+    save_study_config(dae_config, study_id, study_config)
 
     if not argv.skip_reports:
         # needs to reload the configuration, hence gpf_instance=None

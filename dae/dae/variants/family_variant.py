@@ -1,16 +1,11 @@
-'''
-Created on Jul 9, 2018
-
-@author: lubo
-'''
-
 import numpy as np
 
 from dae.variants.variant import SummaryVariant, SummaryAllele
 from dae.pedigrees.family import Family
 from dae.variants.attributes import Inheritance
 import itertools
-from dae.utils.vcf_utils import GENOTYPE_TYPE
+from dae.utils.variant_utils import GENOTYPE_TYPE, is_all_unknown_genotype, \
+    is_reference_genotype
 
 
 class FamilyDelegate(object):
@@ -193,9 +188,11 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
                 gt[gt != allele_index] = -1
 
             index = np.any(gt == allele_index, axis=0)
-            noindex = np.logical_not(index)
-            self._variant_in_members = np.copy(self.members_ids)
-            self._variant_in_members[noindex] = None
+            self._variant_in_members = [
+                m.person_id if has_variant else None
+                for m, has_variant in zip(self.members_in_order, index)
+            ]
+
         return self._variant_in_members
 
     @property
@@ -401,15 +398,14 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
         Returns True if all known alleles in the family variant are
         `reference`.
         """
-        return np.any(self.gt == 0) and \
-            np.all(np.logical_or(self.gt == 0, self.gt == -1))
+        return is_reference_genotype(self.gt)
 
     def is_unknown(self):
         """
         Returns True if all alleles in the family variant are
         `unknown`.
         """
-        return np.all(self.gt == -1)
+        return is_all_unknown_genotype(self.gt)
 
     def __repr__(self):
         if not self.alternative:

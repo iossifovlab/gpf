@@ -2,7 +2,7 @@ import pytest
 
 from dae.RegionOperations import Region
 
-from dae.utils.vcf_utils import mat2str
+from dae.utils.variant_utils import mat2str
 
 
 def test_f1_check_all_variants_effects(variants_vcf):

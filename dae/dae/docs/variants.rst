@@ -11,7 +11,7 @@ Example usage of :mod:`variants <dae.variants>`
 Example usage of `variants` package::
 
     import os
-    from utils.vcf_utils import mat2str
+    from utils.variant_utils import mat2str
     from variants.builder import variants_builder as VB
 
     prefix = "ivan-tiny/a"

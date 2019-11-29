@@ -174,32 +174,3 @@ def construct_import_annotation_pipeline(
         options, config_filename, dae_config.dae_data_dir, genomes_db,
         defaults=annotation_defaults)
     return pipeline
-
-
-def variants2parquet(
-        study_id, fvars,
-        output='.', bucket_index=1,
-        skip_pedigree=False,
-        include_reference=False,
-        include_unknown=False,
-        filesystem=None):
-
-    parquet_filenames = ParquetManager.build_parquet_filenames(
-        output, bucket_index=bucket_index, study_id=study_id
-    )
-    print("converting into ", parquet_filenames.variant, file=sys.stderr)
-
-    if not skip_pedigree:
-        ParquetManager.pedigree_to_parquet(
-            fvars, parquet_filenames.pedigree, filesystem=filesystem
-        )
-
-    ParquetManager.variants_to_parquet(
-        fvars, parquet_filenames.variant,
-        bucket_index=bucket_index,
-        include_reference=include_reference,
-        include_unknown=include_unknown,
-        filesystem=filesystem
-    )
-
-    return parquet_filenames

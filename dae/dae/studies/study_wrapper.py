@@ -4,7 +4,7 @@ import itertools
 import traceback
 import numpy as np
 
-from dae.utils.vcf_utils import mat2str
+from dae.utils.variant_utils import mat2str
 from dae.utils.dae_utils import split_iterable, join_line, \
     members_in_order_get_family_structure
 from dae.utils.effect_utils import expand_effect_types, ge2str, gd2str, \
@@ -39,8 +39,8 @@ class StudyWrapper(object):
         self.weights_factory = weights_factory
 
     def _init_wdae_config(self):
-        preview_column_slots = []
-        download_column_slots = []
+        preview_column_slots = {}
+        download_column_slots = {}
         pheno_column_slots = []
         gene_weight_column_sources = []
         in_role_columns = []
@@ -65,8 +65,6 @@ class StudyWrapper(object):
             if genotype_browser_config.present_in_role:
                 present_in_role = genotype_browser_config.present_in_role
 
-        self.preview_column_slots = preview_column_slots
-        self.download_column_slots = download_column_slots
         self.pheno_column_slots = pheno_column_slots
         self.gene_weight_column_sources = gene_weight_column_sources
         self.in_role_columns = in_role_columns
@@ -85,6 +83,27 @@ class StudyWrapper(object):
             }
         else:
             self.legend = {}
+
+        self.preview_columns = []
+        self.preview_sources = []
+        self.download_columns = []
+        self.download_sources = []
+
+        preview_slots = tuple(map(list, zip(*[
+            (attr['id'], attr['source'])
+            for attr in preview_column_slots.values()
+        ])))
+
+        download_slots = tuple(map(list, zip(*[
+            (attr['name'], attr['source'])
+            for attr in download_column_slots.values()
+        ])))
+
+        if len(preview_slots) > 0:
+            self.preview_columns, self.preview_sources = preview_slots
+
+        if len(download_slots) > 0:
+            self.download_columns, self.download_sources = download_slots
 
     def _init_pheno(self, pheno_factory):
         self.pheno_db = None
@@ -189,7 +208,7 @@ class StudyWrapper(object):
 
                 yield row_variant
 
-    def get_variant_web_rows(self, query, sources, variants_hard_max=2000):
+    def get_variant_web_rows(self, query, sources, max_variants_count=None):
         people_group_id = query.get('peopleGroup', {}).get('id', None)
         people_group = self.get_people_group(people_group_id)
         if not people_group:
@@ -197,43 +216,37 @@ class StudyWrapper(object):
 
         rows = self.query_list_variants(sources, people_group, **query)
 
-        if variants_hard_max is not None:
-            limited_rows = itertools.islice(rows, variants_hard_max+1)
+        if max_variants_count is not None:
+            limited_rows = itertools.islice(rows, max_variants_count)
 
         return limited_rows
 
-    def get_variants_wdae_preview(
-            self, query, max_variants_count=1000, variants_hard_max=2000):
-        columns, sources = zip(*[
-            (attr['id'], attr['source'])
-            for attr in self.preview_column_slots.values()
-        ])
-        rows = self.get_variant_web_rows(query, sources, variants_hard_max)
-        rows = list(rows)
+    def get_wdae_preview_info(self, query, max_variants_count=1000):
+        preview_info = {}
 
-        if variants_hard_max is None or len(rows) < variants_hard_max:
-            count = str(len(rows))
-        else:
-            count = 'more than {}'.format(variants_hard_max)
+        preview_info['cols'] = self.preview_columns
+        preview_info['legend'] = self.get_legend(**query)
 
-        variants_data = {}
-        variants_data['count'] = count
-        variants_data['rows'] = list(rows[:max_variants_count])
-        variants_data['cols'] = list(columns)
-        variants_data['legend'] = self.get_legend(**query)
+        preview_info['maxVariantsCount'] = max_variants_count
+
+        return preview_info
+
+    def get_variants_wdae_preview(self, query, max_variants_count=1000):
+        variants_data = self.get_variant_web_rows(
+            query, self.preview_sources,
+            max_variants_count=(max_variants_count + 1)
+        )
 
         return variants_data
 
-    def get_variants_wdae_download(
-            self, query, max_variants_count=1000, variants_hard_max=2000):
-        columns, sources = zip(*[
-            (attr['name'], attr['source'])
-            for attr in self.download_column_slots.values()
-        ])
-        rows = self.get_variant_web_rows(query, sources, variants_hard_max)
-        rows = itertools.islice(rows, max_variants_count)
+    def get_variants_wdae_download(self, query, max_variants_count=10000):
+        rows = self.get_variant_web_rows(
+            query, self.download_sources, max_variants_count=max_variants_count
+        )
 
-        wdae_download = map(join_line, itertools.chain([columns], rows))
+        wdae_download = map(
+            join_line, itertools.chain([self.download_columns], rows)
+        )
 
         return wdae_download
 

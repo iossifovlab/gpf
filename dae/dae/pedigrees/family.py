@@ -1,5 +1,4 @@
 import os
-import copy
 
 from functools import partial
 
@@ -122,55 +121,78 @@ class Person(object):
 
 class Family(object):
 
-    def _build_trios(self, persons):
-        trios = {}
-        for pid, p in list(persons.items()):
-            if p.mom_id in persons and p.dad_id in persons:
-                trios[pid] = [pid, p.mom_id, p.dad_id]
-        return trios
-
     def _build_persons(self, ped_df):
         persons = {}
-        members = []
-        for index, person in enumerate(ped_df.to_dict(orient="records")):
-            person['index'] = index
-            person_object = Person(**person)
+        for index, rec in enumerate(ped_df.to_dict(orient="records")):
+            rec['index'] = index
+            person = Person(**rec)
+            person_id = person.person_id
+            persons[person_id] = person
 
-            persons[person['person_id']] = person_object
-            members.append(person_object)
+        self._connect_children_with_parents(persons)
+        return persons
 
-        self._connect_children_with_parents(persons, members)
-
-        return persons, members
-
-    def _connect_children_with_parents(self, persons, members):
-        for member in members:
+    def _connect_children_with_parents(self, persons):
+        for member in persons.values():
             member.mom = persons.get(member.mom_id, None)
             member.dad = persons.get(member.dad_id, None)
 
-    @classmethod
-    def from_df(cls, family_id, ped_df):
-        family = cls(family_id)
-        family.ped_df = ped_df
+    @staticmethod
+    def from_df(family_id, ped_df):
+        family = Family(family_id)
         assert np.all(ped_df['family_id'].isin(set([family_id])).values)
 
-        family.persons, family.members_in_order =\
-            family._build_persons(family.ped_df)
-        family.trios = family._build_trios(family.persons)
+        family.persons =\
+            family._build_persons(ped_df)
+        assert family._members_in_order is None
 
         return family
 
     def __init__(self, family_id):
         self.family_id = family_id
-        self.ped_df = None
-        self.members_in_order = None
         self.persons = None
+        self._samples_index = None
+        self._members_in_order = None
+        self._trios = None
 
     def __len__(self):
-        return len(self.ped_df)
+        return len(self.members_in_order)
 
-    def __repr__(self):
-        return "Family({}; {})".format(self.family_id, self.members_in_order)
+    # def __repr__(self):
+    #     return "Family({}; {})".format(self.family_id, self.members_in_order)
+
+    def redefine(self):
+        self._members_in_order = None
+        self._trios = None
+        self._samples_index = None
+
+    @property
+    def members_in_order(self):
+        if self._members_in_order is None:
+            self._members_in_order = list(
+                filter(lambda m: not m.generated, self.persons.values()))
+        return self._members_in_order
+
+    @property
+    def members_ids(self):
+        return [m.person_id for m in self.members_in_order]
+
+    @property
+    def trios(self):
+        if self._trios is None:
+            self._trios = {}
+            members = {m.person_id: m for m in self.members_in_order}
+            for pid, p in list(members.items()):
+                if p.mom_id in members and p.dad_id in members:
+                    self._trios[pid] = [pid, p.mom_id, p.dad_id]
+        return self._trios
+
+    @property
+    def samples_index(self):
+        if self._samples_index is None:
+            self._samples_index = np.array([
+                m.sample_index for m in self.members_in_order])
+        return self._samples_index
 
     def members_index(self, person_ids):
         index = []
@@ -210,10 +232,6 @@ class Family(object):
         return set([member.get_attr(phenotype_column)
                     for member in self.members_in_order])
 
-    @property
-    def members_ids(self):
-        return self.ped_df['person_id'].values
-
     @staticmethod
     def persons_with_parents(families):
         person = []
@@ -234,29 +252,27 @@ class Family(object):
 
 class FamiliesData(object):
 
-    def __init__(self, ped_df=None, family_class=Family):
+    def __init__(self, ped_df=None):
         # assert ped_df is not None
         self.ped_df = ped_df
         self.families = {}
+        self.persons = {}
         self.family_ids = []
         # self._families_build(ped_df, family_class)
 
-    def _families_build(self, ped_df, family_class=Family):
+    def _families_build(self, ped_df):
         self.ped_df = ped_df
         for family_id, fam_df in self.ped_df.groupby(by='family_id'):
-            family = family_class.from_df(family_id, fam_df)
+            family = Family.from_df(family_id, fam_df)
             self.families[family_id] = family
             self.family_ids.append(family_id)
-
-    # def families_build_from_simple(self, fam_df, family_class=Family):
-    #     for family_id, fam in fam_df.groupby(by='family_id'):
-    #         family = family_class.from_df(family_id, fam_df)
-    #         self.families[family_id] = family
+            for person_id, person in family.persons.items():
+                self.persons[person_id] = person
 
     @staticmethod
-    def from_pedigree_df(ped_df, family_class=Family):
-        fams = FamiliesData(ped_df, family_class)
-        fams._families_build(ped_df, family_class)
+    def from_pedigree_df(ped_df):
+        fams = FamiliesData(ped_df)
+        fams._families_build(ped_df)
         return fams
 
     def families_list(self):
@@ -357,6 +373,7 @@ class FamiliesLoader:
         self.pedigree_format = pedigree_format
 
         self.families = self._load_families_data()
+        self.ped_df = self.families.ped_df
 
     @staticmethod
     def load_pedigree_file(pedigree_filename, pedigree_format={}):
@@ -622,6 +639,8 @@ class PedigreeReader(object):
         else:
             ped_df = read_csv_func(pedigree_filepath)
 
+        print(ped_df.head())
+
         if ped_sample_id in ped_df:
             sample_ids = ped_df.apply(
                 lambda r: r.personId if pd.isna(r.sampleId) else r.sampleId,
@@ -660,6 +679,7 @@ class PedigreeReader(object):
             converters={
                 'role': lambda r: Role.from_name(r),
                 'gender': lambda s: Sex.from_name(s),
+                'sex': lambda s: Sex.from_name(s),
             },
             dtype={
                 'familyId': str,

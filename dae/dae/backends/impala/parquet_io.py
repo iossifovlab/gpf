@@ -2,8 +2,8 @@ import os
 import sys
 import time
 import itertools
+from deprecation import deprecated
 import hashlib
-# import traceback
 from box import Box
 
 import numpy as np
@@ -11,7 +11,7 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 import configparser
 
-from dae.utils.vcf_utils import GENOTYPE_TYPE
+from dae.utils.variant_utils import GENOTYPE_TYPE
 from dae.variants.family_variant import FamilyAllele, FamilyVariant
 from dae.backends.impala.serializers import ParquetSerializer
 
@@ -45,7 +45,7 @@ class ParquetData():
         for index, name in enumerate(self.schema.names):
             assert name in self.data
             column = self.data[name]
-            field = self.schema.field(name)
+            field = self.schema.field_by_name(name)
             batch_data.append(pa.array(column, type=field.type))
             if index > 0:
                 assert len(batch_data[index]) == len(batch_data[0]), name
@@ -213,15 +213,10 @@ class VariantsParquetWriter():
         self.families = fvars.families
         self.full_variants_iterator = fvars.full_variants_iterator()
 
-        self.include_reference = include_reference
-        self.include_unknown = include_unknown
-
         self.bucket_index = bucket_index
         self.rows = rows
         self.filesystem = filesystem
 
-        if self.include_unknown:
-            assert self.include_unknown
         self.schema = fvars.annotation_schema
         self.parquet_serializer = ParquetSerializer(
             self.schema, include_reference=True)
@@ -294,9 +289,6 @@ class VariantsParquetWriter():
             )
 
         for family_allele in family_variant.alleles:
-            if family_allele.is_reference_allele and \
-                    not self.include_reference:
-                continue
 
             summary = \
                 self.parquet_serializer.serialize_summary(
@@ -330,8 +322,6 @@ class VariantsParquetWriter():
                     for key, val in d._asdict().items():
                         writer_data.append((key, val))
 
-                print(writer_data)
-
                 yield (family_allele, writer_data)
 
     def _get_full_filepath(self, filename):
@@ -364,8 +354,6 @@ class VariantsParquetWriter():
 
                 fv = family_variant
                 if family_variant.is_unknown():
-                    if not self.include_unknown:
-                        continue
                     # handle all unknown variants
                     unknown_variant = self._setup_all_unknown_variant(
                         summary_variant, family_variant.family_id)
@@ -456,14 +444,17 @@ class ParquetManager:
             prefix, 'pedigree',
             f'{study_id}_pedigree{filesuffix}.parquet'
         )
-
         conf = {
             'variant': variant_filename,
             'pedigree': pedigree_filename,
         }
-        return Box(conf)
+
+        return Box(conf, default_box=True)
 
     @staticmethod
+    @deprecated(
+        details="replace 'pedigree_to_parquet' with "
+        "'families_loader_to_parquet'")
     def pedigree_to_parquet(fvars, pedigree_filename, filesystem=None):
         os.makedirs(
             os.path.split(pedigree_filename)[0], exist_ok=True
@@ -475,13 +466,26 @@ class ParquetManager:
         )
 
     @staticmethod
-    def variants_to_parquet(
-            fvars, variants_filename, bucket_index=0, rows=100000,
-            filesystem=None,
-            include_reference=False,
-            include_unknown=False):
+    def families_loader_to_parquet(
+            families_loader, pedigree_filename, filesystem=None):
 
-        assert fvars.annotation_schema is not None
+        print(pedigree_filename)
+
+        os.makedirs(
+            os.path.split(pedigree_filename)[0], exist_ok=True
+        )
+
+        save_ped_df_to_parquet(
+            families_loader.ped_df, pedigree_filename,
+            filesystem=filesystem
+        )
+
+    @staticmethod
+    def variants_to_parquet(
+            variants_loader, variants_filename, bucket_index=0, rows=100000,
+            filesystem=None):
+
+        assert variants_loader.annotation_schema is not None
 
         os.makedirs(
             os.path.split(variants_filename)[0],
@@ -491,9 +495,7 @@ class ParquetManager:
         start = time.time()
 
         variants_writer = VariantsParquetWriter(
-            fvars,
-            include_reference=include_reference,
-            include_unknown=include_unknown,
+            variants_loader,
             bucket_index=bucket_index,
             rows=rows,
             filesystem=filesystem

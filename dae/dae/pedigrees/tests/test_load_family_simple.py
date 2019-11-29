@@ -8,7 +8,7 @@ import pytest
 import pandas as pd
 
 from dae.pedigrees.family import PedigreeReader
-from dae.pedigrees.family import FamiliesData, Family
+from dae.pedigrees.family import FamiliesData
 
 from .conftest import relative_to_this_folder
 
@@ -28,7 +28,7 @@ def test_load_family_simple(fixture_name, temp_filename):
     print("-------------------------")
 
     families = FamiliesData(fam_df)
-    families._families_build(fam_df, Family)
+    families._families_build(fam_df)
 
     assert families is not None
 
