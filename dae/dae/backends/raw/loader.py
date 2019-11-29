@@ -2,6 +2,7 @@ import os
 import numpy as np
 import pandas as pd
 
+from dae.pedigrees.family import FamiliesData
 from dae.variants.variant import SummaryVariantFactory
 from dae.variants.family_variant import FamilyVariant
 
@@ -25,6 +26,7 @@ class FamiliesGenotypes:
 class VariantsLoader:
 
     def __init__(self, families, transmission_type, params={}):
+        assert isinstance(families, FamiliesData)
         self.families = families
         self.transmission_type = transmission_type
         self.params = params

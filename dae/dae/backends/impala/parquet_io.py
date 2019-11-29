@@ -322,8 +322,6 @@ class VariantsParquetWriter():
                     for key, val in d._asdict().items():
                         writer_data.append((key, val))
 
-                print(writer_data)
-
                 yield (family_allele, writer_data)
 
     def _get_full_filepath(self, filename):

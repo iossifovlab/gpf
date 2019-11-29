@@ -325,13 +325,13 @@ class DaeTransmittedFamiliesGenotypes(FamiliesGenotypes):
             return reference_genotype(len(family))
 
     def family_genotype_iterator(self):
-        for family_id, gt in self.families_genotypes:
+        for family_id, gt in self.families_genotypes.items():
             fam = self.families.get_family(family_id)
             yield fam, gt
 
     def full_families_genotypes(self):
-
-        return self.families_genotypes
+        raise NotImplementedError()
+        # return self.families_genotypes
 
 
 class DaeTransmittedLoader(VariantsLoader):
@@ -354,22 +354,6 @@ class DaeTransmittedLoader(VariantsLoader):
         self.genome = genome
         self.region = region
         self.include_reference = include_reference
-
-    @staticmethod
-    def split_location(location):
-        chrom, position = location.split(":")
-        return chrom, int(position)
-
-    @staticmethod
-    def explode_family_genotype(best_st, col_sep="", row_sep="/"):
-        return best2gt(str2mat(best_st, col_sep=col_sep, row_sep=row_sep))
-
-    @staticmethod
-    def dae2vcf_variant(chrom, position, dae_variant, genome):
-        position, reference, alternative = dae2vcf_variant(
-            chrom, position, dae_variant, genome
-        )
-        return chrom, position, reference, alternative
 
     @staticmethod
     def _rename_columns(columns):
@@ -460,6 +444,23 @@ class DaeTransmittedLoader(VariantsLoader):
         )
         return summary_variant
 
+    # @staticmethod
+    # def split_location(location):
+    #     chrom, position = location.split(":")
+    #     return chrom, int(position)
+
+    # @staticmethod
+    # def explode_family_genotype(best_st, col_sep="", row_sep="/"):
+    #     return best2gt(str2mat(best_st, col_sep=col_sep, row_sep=row_sep))
+
+    # @staticmethod
+    # def dae2vcf_variant(chrom, position, dae_variant, genome):
+    #     position, reference, alternative = dae2vcf_variant(
+    #         chrom, position, dae_variant, genome
+    #     )
+    #     return chrom, position, reference, alternative
+
+
     @staticmethod
     def _explode_family_genotypes(family_data, col_sep="", row_sep="/"):
         res = {
@@ -503,6 +504,7 @@ class DaeTransmittedLoader(VariantsLoader):
                     assert rec['cshl_position'] == \
                         int(toomany_rec['cshl_position'])
                 families_genotypes = DaeTransmittedFamiliesGenotypes(
+                    self.families,
                     self._explode_family_genotypes(family_data))
 
                 yield summary_variant, families_genotypes
