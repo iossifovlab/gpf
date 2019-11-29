@@ -100,7 +100,7 @@ class PhenoTool(object):
 
     Arguments of the constructor are:
 
-    `pheno_db` -- an instance of PhenoDB
+    `phenotype_data` -- an instance of PhenotypeData
 
     `measure_id` -- a phenotype measure ID
 
@@ -111,14 +111,14 @@ class PhenoTool(object):
     an empty list
     """
 
-    def __init__(self, pheno_db, measure_id, person_ids=None,
+    def __init__(self, phenotype_data, measure_id, person_ids=None,
                  normalize_by=[]):
 
-        self.pheno_db = pheno_db
+        self.phenotype_data = phenotype_data
         self.measure_id = measure_id
 
-        assert self.pheno_db.has_measure(measure_id)
-        assert self.pheno_db.get_measure(self.measure_id).measure_type in \
+        assert self.phenotype_data.has_measure(measure_id)
+        assert self.phenotype_data.get_measure(self.measure_id).measure_type in \
             [MeasureType.continuous, MeasureType.ordinal]
 
         self.normalize_by = self._init_normalize_measures(normalize_by)
@@ -127,7 +127,7 @@ class PhenoTool(object):
         # options via PeopleGroup
         all_measures = [self.measure_id] + self.normalize_by
 
-        pheno_df = self.pheno_db.get_persons_values_df(
+        pheno_df = self.phenotype_data.get_persons_values_df(
             all_measures, person_ids=person_ids, roles=[Role.prb])
 
         self.pheno_df = pheno_df.dropna()
@@ -142,7 +142,7 @@ class PhenoTool(object):
                         for normalize_measure in normalize_by]
         normalize_by = list(filter(None, normalize_by))
 
-        assert all([self.pheno_db.get_measure(m).measure_type
+        assert all([self.phenotype_data.get_measure(m).measure_type
                     == MeasureType.continuous
                     for m in normalize_by])
         return normalize_by
@@ -158,7 +158,7 @@ class PhenoTool(object):
 
         normalize_id = '.'.join([normalize_measure['instrument_name'],
                                  normalize_measure['measure_name']])
-        if self.pheno_db.has_measure(normalize_id) and \
+        if self.phenotype_data.has_measure(normalize_id) and \
            normalize_id != self.measure_id:
             return normalize_id
         else:

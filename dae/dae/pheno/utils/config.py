@@ -10,7 +10,7 @@ from dae.configuration.config_parser_base import ConfigParserBase
 
 class PhenoConfigParser(ConfigParserBase):
 
-    SECTION = 'phenoDB'
+    SECTION = 'phenotypeData'
 
     @staticmethod
     def _assert_pheno_paths(configs):
@@ -48,10 +48,10 @@ class PhenoConfigParser(ConfigParserBase):
     def read_file_configuration(cls, config_file, work_dir, defaults=None):
         config = super(PhenoConfigParser, cls).read_file_configuration(
             config_file, work_dir, defaults=None)
-        if not config or not config.pheno_db:
+        if not config or not config.phenotype_data:
             return None
 
-        config = config.pheno_db
+        config = config.phenotype_data
 
         cls._assert_pheno_paths({config.name: config})
 

@@ -86,7 +86,49 @@ class Measure(object):
         return m
 
 
-class PhenoDB(object):
+class PhenotypeData():
+
+    def get_persons_df(self, roles, person_ids, family_ids):
+        raise NotImplementedError()
+
+    def get_persons_values_df(self, measure_ids, person_ids,
+                              family_ids, roles):
+        raise NotImplementedError()
+
+    def get_persons(self, roles, person_ids, family_ids):
+        raise NotImplementedError()
+
+    def has_measure(self, measure_id):
+        raise NotImplementedError()
+
+    def get_measure(self, measure_id):
+        raise NotImplementedError()
+
+    def get_measures(self, instrument, measure_type):
+        raise NotImplementedError()
+
+    def get_measure_values_df(self, measure_id, person_ids, family_ids, roles):
+        raise NotImplementedError()
+
+    def get_measure_values(self, measure_id, person_ids, family_ids, roles):
+        raise NotImplementedError()
+
+    def get_values_df(self, measure_ids, person_ids, family_ids, roles):
+        raise NotImplementedError()
+
+    def get_values(self, measure_ids, person_ids, family_ids, roles):
+        raise NotImplementedError()
+
+    def get_instrument_values_df(self, instrument_df, person_ids,
+                                 family_ids, roles):
+        raise NotImplementedError()
+
+    def get_instrument_values(self, instrument_df, person_ids,
+                              family_ids, roles):
+        raise NotImplementedError()
+
+
+class PhenotypeDataStudy(PhenotypeData):
     """
     Main class for accessing phenotype database in DAE.
 
@@ -112,6 +154,7 @@ class PhenoDB(object):
         self.measures = {}
         self.db = DbManager(dbfile=dbfile)
         self.db.build()
+        self._load()
 
     def _get_measures_df(self, instrument=None, measure_type=None):
         """
@@ -228,9 +271,11 @@ class PhenoDB(object):
             f.familyId = family_id
             self.families[family_id] = f
 
-    def load(self):
-        """Loads basic families, instruments and measures data from
-        the phenotype database."""
+    def _load(self):
+        '''
+        Loads basic families, instruments and measures data from
+        the phenotype database.
+        '''
         if self.families is None:
             self._load_families()
         if self.instruments is None:
@@ -554,7 +599,7 @@ class PhenoDB(object):
 
         return df
 
-    def get_instrument_measures(self, instrument_name):
+    def _get_instrument_measures(self, instrument_name):
         """
         Returns measures for given instrument.
         """
@@ -571,7 +616,7 @@ class PhenoDB(object):
         Returns a dataframe with values for all measures in given
         instrument (see **get_values_df**).
         """
-        measure_ids = self.get_instrument_measures(instrument_id)
+        measure_ids = self._get_instrument_measures(instrument_id)
         res = self.get_values_df(measure_ids, person_ids, family_ids, role)
         return res
 
@@ -581,7 +626,7 @@ class PhenoDB(object):
         Returns a dictionary with values for all measures in given
         instrument (see :func:`get_values`).
         """
-        measure_ids = self.get_instrument_measures(instrument_id)
+        measure_ids = self._get_instrument_measures(instrument_id)
         df = self.get_values_df(measure_ids, person_ids, family_ids, role)
         return self._values_df_to_dict(df)
 
@@ -590,3 +635,8 @@ class PhenoDB(object):
         Checks is `measure_id` is value ID for measure in our phenotype DB.
         """
         return measure_id in self.measures
+
+
+class PhenotypeDataGroup(PhenotypeData):
+    # TODO Implement
+    pass

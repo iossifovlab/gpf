@@ -15,7 +15,7 @@ from dae.gene.denovo_gene_set_facade import DenovoGeneSetFacade
 
 from dae.studies.variants_db import VariantsDb
 
-from dae.pheno.pheno_factory import PhenoFactory
+from dae.pheno.pheno_factory import PhenoDb
 
 from dae.backends.storage.genotype_storage_factory import \
     GenotypeStorageFactory
@@ -42,7 +42,7 @@ class GPFInstance(object):
 
         if load_eagerly:
             self.genomes_db
-            self.pheno_factory
+            self._pheno_db
             self.gene_info_config
             self.weights_factory
             self.score_config
@@ -64,8 +64,8 @@ class GPFInstance(object):
 
     @property
     @cached
-    def pheno_factory(self):
-        return PhenoFactory(dae_config=self.dae_config)
+    def _pheno_db(self):
+        return PhenoDb(dae_config=self.dae_config)
 
     @property
     @cached
@@ -102,7 +102,7 @@ class GPFInstance(object):
     @cached
     def variants_db(self):
         return VariantsDb(
-            self.dae_config, self.pheno_factory, self.weights_factory,
+            self.dae_config, self._pheno_db, self.weights_factory,
             self.genomes_db, self.genotype_storage_factory
         )
 

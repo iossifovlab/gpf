@@ -24,7 +24,7 @@ from dae.studies.people_group_config_parser import PeopleGroupConfigParser
 
 class StudyWrapper(object):
 
-    def __init__(self, study, pheno_factory, weights_factory, *args, **kwargs):
+    def __init__(self, study, pheno_db, weights_factory, *args, **kwargs):
         super(StudyWrapper, self).__init__(*args, **kwargs)
         assert study is not None
 
@@ -33,8 +33,8 @@ class StudyWrapper(object):
         assert self.config is not None
 
         self._init_wdae_config()
-        self.pheno_factory = pheno_factory
-        self._init_pheno(self.pheno_factory)
+        self.pheno_db = pheno_db
+        self._init_pheno(self.pheno_db)
 
         self.weights_factory = weights_factory
 
@@ -105,14 +105,14 @@ class StudyWrapper(object):
         if len(download_slots) > 0:
             self.download_columns, self.download_sources = download_slots
 
-    def _init_pheno(self, pheno_factory):
-        self.pheno_db = None
+    def _init_pheno(self, pheno_db):
+        self.phenotype_data = None
         self.pheno_filter_builder = None
 
         self.pheno_filters_in_config = set()
-        pheno_db = self.config.phenoDB
-        if pheno_db:
-            self.pheno_db = pheno_factory.get_pheno_db(pheno_db)
+        phenotype_data = self.config.phenoDB
+        if phenotype_data:
+            self.phenotype_data = pheno_db.get_phenotype_data(phenotype_data)
 
             if self.pheno_filters:
                 self.pheno_filters_in_config = {
@@ -120,7 +120,9 @@ class StudyWrapper(object):
                     for pf in self.pheno_filters
                     if pf['measureFilter']['filterType'] == 'single'
                 }
-                self.pheno_filter_builder = PhenoFilterBuilder(self.pheno_db)
+                self.pheno_filter_builder = PhenoFilterBuilder(
+                    self.phenotype_data
+                )
 
     @staticmethod
     def _get_pheno_filter_key(pheno_filter, measure_key='measure'):
@@ -376,7 +378,7 @@ class StudyWrapper(object):
         return pheno_values
 
     def _get_all_pheno_values(self, families):
-        if not self.pheno_db or not self.pheno_column_slots:
+        if not self.phenotype_data or not self.pheno_column_slots:
             return None
 
         pheno_column_dfs = []
@@ -384,7 +386,7 @@ class StudyWrapper(object):
 
         for slot in self.pheno_column_slots:
             pheno_column_dfs.append(
-                self.pheno_db.get_measure_values_df(
+                self.phenotype_data.get_measure_values_df(
                     slot.measure,
                     family_ids=list(families),
                     roles=[slot.role]))
@@ -645,7 +647,7 @@ class StudyWrapper(object):
     def _transform_pheno_filters_to_people_ids(self, pheno_filter_args):
         people_ids = []
         for pheno_filter_arg in pheno_filter_args:
-            if not self.pheno_db.has_measure(pheno_filter_arg['measure']):
+            if not self.phenotype_data.has_measure(pheno_filter_arg['measure']):
                 continue
             pheno_constraints = self._get_pheno_filter_constraints(
                 pheno_filter_arg)
@@ -653,7 +655,7 @@ class StudyWrapper(object):
             pheno_filter = self.pheno_filter_builder.make_filter(
                 pheno_filter_arg['measure'], pheno_constraints)
 
-            measure_df = self.pheno_db.get_measure_values_df(
+            measure_df = self.phenotype_data.get_measure_values_df(
                 pheno_filter_arg['measure'],
                 roles=[pheno_filter_arg["role"]])
 
@@ -670,7 +672,7 @@ class StudyWrapper(object):
         pheno_filter_args = kwargs['phenoFilters']
 
         assert isinstance(pheno_filter_args, list)
-        assert self.pheno_db
+        assert self.phenotype_data
 
         people_ids_to_query = self._transform_pheno_filters_to_people_ids(
             pheno_filter_args)
@@ -767,10 +769,10 @@ class StudyWrapper(object):
             if measure_filter is None or 'measure' not in measure_filter:
                 continue
 
-            if self.pheno_db is None:
+            if self.phenotype_data is None:
                 continue
 
-            measure = self.pheno_db.get_measure(
+            measure = self.phenotype_data.get_measure(
                 measure_filter['measure'])
             measure_filter['domain'] = measure.values_domain.split(",")
 
