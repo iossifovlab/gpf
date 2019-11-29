@@ -15,7 +15,6 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 
 from dae.annotation.annotation_pipeline import PipelineAnnotator
 
-from dae.backends.configure import Configure
 from dae.backends.raw.loader import AlleleFrequencyDecorator, \
     AnnotationPipelineDecorator
 from dae.backends.raw.raw_variants import RawMemoryVariants
@@ -259,12 +258,39 @@ def annotation_pipeline_internal(genomes_db):
     return pipeline
 
 
+def from_prefix_denovo(prefix):
+    denovo_filename = '{}.txt'.format(prefix)
+    family_filename = "{}_families.ped".format(prefix)
+
+    conf = {
+        'denovo': {
+            'denovo_filename': denovo_filename,
+            'family_filename': family_filename,
+        }
+    }
+    return Box(conf, default_box=True)
+
+
+def from_prefix_vcf(prefix):
+    vcf_filename = '{}.vcf'.format(prefix)
+    if not os.path.exists(vcf_filename):
+        vcf_filename = '{}.vcf.gz'.format(prefix)
+
+    conf = {
+        'pedigree': '{}.ped'.format(prefix),
+        'vcf': vcf_filename,
+        'annotation': '{}-eff.txt'.format(prefix),
+        'prefix': prefix
+    }
+    return Box(conf, default_box=True)
+
+
 @pytest.fixture
 def dae_denovo_config():
     fullpath = relative_to_this_test_folder(
         'fixtures/dae_denovo/denovo'
     )
-    config = Configure.from_prefix_denovo(fullpath)
+    config = from_prefix_denovo(fullpath)
     return config.denovo
 
 
@@ -286,12 +312,27 @@ def dae_denovo(
     return fvars
 
 
+def from_prefix_dae(prefix):
+    summary_filename = '{}.txt.gz'.format(prefix)
+    toomany_filename = '{}-TOOMANY.txt.gz'.format(prefix)
+    family_filename = "{}.families.txt".format(prefix)
+
+    conf = {
+        'dae': {
+            'summary_filename': summary_filename,
+            'toomany_filename': toomany_filename,
+            'family_filename': family_filename,
+        }
+    }
+    return Box(conf, default_box=True)
+
+
 @pytest.fixture
 def dae_transmitted_config():
     fullpath = relative_to_this_test_folder(
         'fixtures/dae_transmitted/transmission'
     )
-    config = Configure.from_prefix_dae(fullpath)
+    config = from_prefix_dae(fullpath)
     return config.dae
 
 
@@ -324,7 +365,7 @@ def dae_iossifov2014_config():
     fullpath = relative_to_this_test_folder(
         'fixtures/dae_iossifov2014/iossifov2014'
     )
-    config = Configure.from_prefix_denovo(fullpath)
+    config = from_prefix_denovo(fullpath)
     return config.denovo
 
 
@@ -396,7 +437,7 @@ def vcf_loader_data():
         else:
             prefix = os.path.join(
                 relative_to_this_test_folder('fixtures'), path)
-        conf = Configure.from_prefix_vcf(prefix).vcf
+        conf = from_prefix_vcf(prefix)
         return conf
     return builder
 
@@ -475,7 +516,7 @@ def config_dae():
     def builder(path):
         fullpath = relative_to_this_test_folder(
             os.path.join('fixtures', path))
-        config = Configure.from_prefix_dae(fullpath)
+        config = from_prefix_dae(fullpath)
         return config
     return builder
 
@@ -496,16 +537,6 @@ def raw_dae(config_dae, default_genome):
             region=region,
             genome=default_genome)
         return dae
-    return builder
-
-
-@pytest.fixture(scope='session')
-def config_denovo():
-    def builder(path):
-        fullpath = relative_to_this_test_folder(
-            os.path.join('fixtures', path))
-        config = Configure.from_prefix_denovo(fullpath)
-        return config.denovo
     return builder
 
 
@@ -581,7 +612,7 @@ def collect_vcf(dirname):
     pattern = os.path.join(dirname, '*.vcf')
     for filename in glob.glob(pattern):
         prefix = os.path.splitext(filename)[0]
-        vcf_config = Configure.from_prefix_vcf(prefix).vcf
+        vcf_config = from_prefix_vcf(prefix)
         result.append(vcf_config)
     return result
 
@@ -678,5 +709,5 @@ def vcf_import_config():
     fullpath = relative_to_this_test_folder(
         'fixtures/vcf_import/effects_trio'
     )
-    config = Configure.from_prefix_vcf(fullpath)
-    return config.vcf
+    config = from_prefix_vcf(fullpath)
+    return config

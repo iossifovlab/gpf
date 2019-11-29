@@ -3,7 +3,6 @@ import os
 import sys
 import argparse
 
-from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.pedigrees.family import PedigreeReader
 
 
