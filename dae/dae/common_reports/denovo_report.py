@@ -35,11 +35,11 @@ class EffectCell(object):
                 variants, people_with_filter, people_with_parents_ids)
         self.observed_rate_per_child =\
             self.number_of_observed_events \
-                / number_of_people_with_filter_and_parents\
+            / number_of_people_with_filter_and_parents \
             if number_of_people_with_filter_and_parents != 0 else 0
-        self.percent_of_children_with_events =\
+        self.percent_of_children_with_events = \
             self.number_of_children_with_event \
-                / number_of_people_with_filter_and_parents \
+            / number_of_people_with_filter_and_parents \
             if number_of_people_with_filter_and_parents != 0 else 0
 
         self.column = self.filter_object.get_column_name()
@@ -77,7 +77,7 @@ class EffectCell(object):
             for aa in v.alt_alleles:
                 if not (set(aa.variant_in_members) & people):
                     continue
-                if not (aa.effect.types & effect_types):
+                if not (aa.effect and aa.effect.types & effect_types):
                     continue
                 variants.append(v)
                 break

@@ -56,17 +56,18 @@ class VcfLoader(VariantsLoader):
     def __init__(self, families, vcf_filename, region=None, params={}):
         super(VcfLoader, self).__init__(
             families=families,
+            filename=vcf_filename,
+            source_type='vcf',
             transmission_type=TransmissionType.transmitted,
             params=params)
 
         assert os.path.exists(vcf_filename)
-        self.vcf_filename = vcf_filename
         self.region = region
 
-        self.vcf = VCF(vcf_filename, lazy=True)
+        self.vcf = VCF(self.filename, lazy=True)
         samples = np.array(self.vcf.samples)
 
-        self.families = families
+        # self.families = families
         self._match_pedigree_to_samples(families, samples)
 
     @staticmethod

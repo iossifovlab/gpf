@@ -69,20 +69,21 @@ def parser_common_arguments(gpf_instance, parser):
     parser.add_argument(
         '--include-reference', default=False,
         dest='include_reference',
-        help='include reference only variants [default: %(defaults)s]',
+        help='include reference only variants [default: %(default)s]',
         action='store_true'
     )
     parser.add_argument(
         '--include-unknown', default=False,
         dest='include_unknown',
-        help='include variants with unknown genotype [default: %(defaults)s]',
+        help='include variants with unknown genotype [default: %(default)s]',
         action='store_true'
     )
+
     parser.add_argument(
         '--study-id', default=None,
         dest='study_id',
         help='specifies study id to use when storing parquet files '
-        '[default: %(defaults)s]'
+        '[default: %(default)s]'
     )
 
 
