@@ -49,7 +49,7 @@ class PhenoToolView(QueryBaseView):
         study_wrapper = self.variants_db.get_wdae_wrapper(data['datasetId'])
 
         if not (study_wrapper and
-                study_wrapper.pheno_db.has_measure(data['measureId'])):
+                study_wrapper.phenotype_data.has_measure(data['measureId'])):
             return None, None
 
         helper = PhenoToolHelper(study_wrapper)
@@ -63,7 +63,7 @@ class PhenoToolView(QueryBaseView):
             person_ids &= set(pheno_filter_persons)
 
         tool = PhenoTool(
-            helper.study.pheno_db,
+            helper.study.phenotype_data,
             measure_id=data['measureId'],
             person_ids=person_ids,
             normalize_by=data['normalizeBy']
