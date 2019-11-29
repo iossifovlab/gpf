@@ -75,6 +75,41 @@ class ParquetPartitionDescription():
         self.coding_effect_types = coding_effect_types
         self.rare_boundary = rare_boundary
 
+    @staticmethod
+    def from_config(config_path):
+        config = configparser.ConfigParser()
+        config.read(config_path)
+        assert config['region_bin'] is not None
+
+        chromosomes = list(
+            map(
+                str.strip,
+                config['region_bin']['chromosomes'].split(',')
+            )
+        )
+
+        # chromosomes = list(map(str.strip))
+
+        region_length = int(config['region_bin']['region_length'])
+        family_bin_size = 0
+        coding_effect_types = []
+        rare_boundary = 0
+
+        if config['family_bin']:
+            family_bin_size = int(config['family_bin']['family_bin_size'])
+        if config['coding_bin']:
+            coding_effect_types = config['coding_bin']['coding_effect_types']
+        if config['frequency_bin']:
+            rare_boundary = int(config['frequency_bin']['rare_boundary'])
+
+        return ParquetPartitionDescription(
+            chromosomes,
+            region_length,
+            family_bin_size,
+            coding_effect_types,
+            rare_boundary
+        )
+
     def _evaluate_region_bin(self, family_allele):
         chromosome = family_allele.chromosome
         pos = family_allele.position // self.region_length
@@ -105,9 +140,9 @@ class ParquetPartitionDescription():
     def _evaluate_frequency_bin(self, family_allele):
         count = family_allele.get_attribute('af_allele_count')
         frequency = family_allele.get_attribute('af_allele_freq')
-        if count == 1:  # Ultra rare
+        if count and count == 1:  # Ultra rare
             frequency_bin = 1
-        elif frequency < self.rare_boundary:  # Rare
+        elif frequency and frequency < self.rare_boundary:  # Rare
             frequency_bin = 2
         else:  # Common
             frequency_bin = 3

@@ -73,6 +73,11 @@ def parser_common_arguments(gpf_instance, parser):
         help='Path to a config file containing the partition description'
     )
     parser.add_argument(
+        '--rows', type=int, default=100000,
+        dest='rows',
+        help='Amount of allele rows to write at once'
+    )
+    parser.add_argument(
         '--include-reference', default=False,
         dest='include_reference',
         help='include reference only variants [default: %(default)s]',
@@ -208,11 +213,18 @@ def main(
 
             return parquet_filenames
         else:
+            if not argv.skip_pedigree:
+                pedigree_path = os.path.join(
+                    argv.output,
+                    'pedigree/partition_pedigree.ped')
+                ParquetManager.pedigree_to_parquet(
+                    families_loader, pedigree_path)
             description = ParquetPartitionDescription.from_config(
                     argv.partition_description)
 
             ParquetManager.variants_to_parquet_partition(
                     variants_loader, description,
+                    argv.output,
                     bucket_index=argv.bucket_index,
                     rows=argv.rows
             )
