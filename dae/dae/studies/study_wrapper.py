@@ -4,7 +4,7 @@ import itertools
 import traceback
 import numpy as np
 
-from dae.utils.vcf_utils import mat2str
+from dae.utils.variant_utils import mat2str
 from dae.utils.dae_utils import split_iterable, join_line, \
     members_in_order_get_family_structure
 from dae.utils.effect_utils import expand_effect_types, ge2str, gd2str, \

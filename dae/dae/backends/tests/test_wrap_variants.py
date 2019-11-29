@@ -1,10 +1,5 @@
-'''
-Created on Mar 19, 2018
-
-@author: lubo
-'''
 from dae.RegionOperations import Region
-from dae.utils.vcf_utils import mat2str
+from dae.utils.variant_utils import mat2str
 
 
 def test_trios_multi_single_allele1_full(variants_vcf):

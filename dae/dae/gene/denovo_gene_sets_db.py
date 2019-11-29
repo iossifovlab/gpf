@@ -1,3 +1,5 @@
+from dae.gene.denovo_gene_set_collection import cached
+
 from dae.gene.denovo_gene_set_config import DenovoGeneSetConfigParser
 from dae.gene.denovo_gene_set_collection import DenovoGeneSetCollection
 from dae.gene.denovo_gene_set_collection_factory import \
@@ -27,15 +29,9 @@ class DenovoGeneSetsDb:
         return self._denovo_gene_set_configs_cache
 
     def _load_cache(self):
-        genotype_data_ids = set(self.variants_db.get_all_ids())
-        for genotype_data_id in genotype_data_ids:
+        for genotype_data_id in self.get_genotype_data_ids():
             study = self.variants_db.get(genotype_data_id)
             assert study is not None, genotype_data_id
-
-            # Skip studies which do not have valid denovo gene
-            # set configurations
-            if not DenovoGeneSetConfigParser.parse(study.config):
-                continue
 
             denovo_gene_set_collection = \
                 DenovoGeneSetCollectionFactory.load_collection(study)
@@ -67,8 +63,16 @@ class DenovoGeneSetsDb:
             'types': gene_sets_types,
         }
 
+    @cached
     def get_genotype_data_ids(self):
-        return set(self._denovo_gene_set_collections.keys())
+        genotype_data_ids = set(self.variants_db.get_all_ids())
+        result = set()
+        for genotype_data_id in genotype_data_ids:
+            gtd_config = self.variants_db.get_config(genotype_data_id)
+            if DenovoGeneSetConfigParser.parse(gtd_config):
+                result.add(genotype_data_id)
+
+        return result
 
     def get_gene_set_ids(self, genotype_data_id):
         return self._denovo_gene_set_configs[genotype_data_id].gene_sets_names

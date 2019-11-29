@@ -1,16 +1,11 @@
-'''
-Created on Jul 1, 2018
-
-@author: lubo
-'''
 import pytest
 
 from dae.RegionOperations import Region
 
 
-@pytest.mark.parametrize("variants", [
-    "variants_vcf",
-    "variants_impala",
+@pytest.mark.parametrize('variants', [
+    'variants_impala',
+    'variants_vcf'
 ])
 @pytest.mark.parametrize("fixture_name,regions,count", [
     ("backends/effects_trio_multi", None, 3),

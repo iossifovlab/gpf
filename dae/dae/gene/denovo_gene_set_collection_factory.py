@@ -151,7 +151,8 @@ class DenovoGeneSetCollectionFactory():
                 filter_flag = False
                 for search_arg_name, search_arg_value in search_args.items():
                     if search_arg_name == 'effect_types':
-                        if not (aa.effect.types & set(search_arg_value)):
+                        if not (aa.effect and \
+                                aa.effect.types & set(search_arg_value)):
                             filter_flag = True
                             break
                     elif search_arg_name == 'sexes':

@@ -1,9 +1,4 @@
-'''
-Created on Mar 19, 2018
-
-@author: lubo
-'''
-from dae.utils.vcf_utils import mat2str
+from dae.utils.variant_utils import mat2str
 from dae.RegionOperations import Region
 
 

@@ -247,6 +247,12 @@ class VariantAnnotatorBase(AnnotatorBase):
     def do_annotate(self, aline, variant):
         raise NotImplementedError()
 
+    def annotate_summary_variant(self, summary_variant):
+        for alt_allele in summary_variant.alt_alleles:
+            attributes = deepcopy(alt_allele.attributes)
+            self.line_annotation(attributes)
+            alt_allele.update_attributes(attributes)
+
 
 class CompositeAnnotator(AnnotatorBase):
 

@@ -3,7 +3,7 @@ Created on Feb 13, 2018
 
 @author: lubo
 '''
-from dae.utils.vcf_utils import vcf2cshl
+from dae.utils.variant_utils import vcf2cshl
 
 from dae.variants.attributes import VariantType
 from dae.variants.effects import Effect
@@ -193,20 +193,20 @@ class SummaryAllele(VariantBase):
                  alternative=None,
                  summary_index=None,
                  allele_index=0,
-                 effect=None,
+                 # effect=None,
                  attributes=None):
         super(SummaryAllele, self).__init__(
             chromosome, position, reference, alternative)
 
         #: index of the summary variant this allele belongs to
-        # self.summary_index = summary_index
+        self.summary_index = summary_index
         #: index of the allele of summary variant
         self.allele_index = allele_index
 
         self.details = None
 
         #: variant effect of the allele; None for the reference allele.
-        self.effect = effect
+        self._effect = None
 
         if attributes is None:
             #: allele additional attributes
@@ -217,6 +217,27 @@ class SummaryAllele(VariantBase):
 
         # self.update_attributes({'variant_type': self.variant_type.value
         #                         if self.variant_type else None})
+
+    @property
+    def effect(self):
+        if self._effect is None:
+            record = self.attributes
+            if 'effect_type' in record:
+                worst_effect = record['effect_type']
+                if worst_effect is None:
+                    return None
+                effects = Effect.from_effects(
+                    worst_effect,
+                    list(zip(record['effect_gene_genes'],
+                             record['effect_gene_types'])),
+                    list(zip(record['effect_details_transcript_ids'],
+                             record['effect_details_details'])))
+                self._effect = effects
+            elif 'effects' in record:
+                self._effect = Effect.from_string(record.get('effects'))
+            else:
+                self._effect = None
+        return self._effect
 
     @property
     def frequency(self):
@@ -429,15 +450,15 @@ class SummaryVariantFactory(object):
     def summary_allele_from_record(
             record, transmission_type='transmitted'):
         record['transmission_type'] = transmission_type
-        if record.get('effect_type') is None:
-            effects = None
-        else:
-            effects = Effect.from_effects(
-                record['effect_type'],
-                list(zip(record['effect_gene_genes'],
-                         record['effect_gene_types'])),
-                list(zip(record['effect_details_transcript_ids'],
-                         record['effect_details_details'])))
+        # if record.get('effect_type') is None:
+        #     effects = None
+        # else:
+        #     effects = Effect.from_effects(
+        #         record['effect_type'],
+        #         list(zip(record['effect_gene_genes'],
+        #                  record['effect_gene_types'])),
+        #         list(zip(record['effect_details_transcript_ids'],
+        #                  record['effect_details_details'])))
         alternative = record['alternative']
 
         return SummaryAllele(
@@ -446,7 +467,7 @@ class SummaryVariantFactory(object):
             alternative=alternative,
             summary_index=record['summary_variant_index'],
             allele_index=record['allele_index'],
-            effect=effects,
+            # effect=effects,
             attributes=record)
 
     @staticmethod

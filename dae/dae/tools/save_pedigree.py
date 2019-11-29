@@ -2,7 +2,7 @@
 from tqdm import tqdm
 import multiprocessing
 
-from pedigrees.pedigree_reader import PedigreeReader
+from pedigrees.family import PedigreeReader
 from pedigrees.pedigrees import get_argument_parser, FamilyConnections
 from pedigrees.interval_sandwich import SandwichSolver
 from pedigrees.layout import Layout
