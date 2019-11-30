@@ -7,11 +7,11 @@ from dae.configuration.dae_config_parser import DAEConfigParser
 from dae.enrichment_tool.background_facade import BackgroundFacade
 
 from dae.gene.gene_info_config import GeneInfoConfigParser
-from dae.gene.weights import WeightsFactory
+from dae.gene.weights import GeneWeightsDb
 from dae.gene.score_config_parser import ScoreConfigParser
 from dae.gene.scores import ScoresFactory
-from dae.gene.gene_set_collections import GeneSetsCollections
-from dae.gene.denovo_gene_set_facade import DenovoGeneSetFacade
+from dae.gene.gene_sets_db import GeneSetsDb
+from dae.gene.denovo_gene_sets_db import DenovoGeneSetsDb
 
 from dae.studies.variants_db import VariantsDb
 
@@ -48,14 +48,13 @@ class GPFInstance(object):
             self.genomes_db
             self.pheno_factory
             self.gene_info_config
-            self.weights_factory
+            self.denovo_gene_sets_db
+            self.gene_sets_db
             self.score_config
             self.scores_factory
             self.genotype_storage_factory
             self.variants_db
             self.common_report_facade
-            self.gene_sets_collections
-            self.denovo_gene_set_facade
             self.background_facade
 
     @property
@@ -81,8 +80,8 @@ class GPFInstance(object):
 
     @property
     @cached
-    def weights_factory(self):
-        return WeightsFactory(config=self.gene_info_config.gene_weights)
+    def gene_weights_db(self):
+        return GeneWeightsDb(self.gene_info_config.gene_weights)
 
     @property
     @cached
@@ -106,7 +105,7 @@ class GPFInstance(object):
     @cached
     def variants_db(self):
         return VariantsDb(
-            self.dae_config, self.pheno_factory, self.weights_factory,
+            self.dae_config, self.pheno_factory, self.gene_weights_db,
             self.genomes_db, self.genotype_storage_factory
         )
 
@@ -120,13 +119,13 @@ class GPFInstance(object):
 
     @property
     @cached
-    def gene_sets_collections(self):
-        return GeneSetsCollections(self.variants_db, self.gene_info_config)
+    def gene_sets_db(self):
+        return GeneSetsDb(self.variants_db, self.gene_info_config)
 
     @property
     @cached
-    def denovo_gene_set_facade(self):
-        return DenovoGeneSetFacade(self.variants_db)
+    def denovo_gene_sets_db(self):
+        return DenovoGeneSetsDb(self.variants_db)
 
     @property
     @cached

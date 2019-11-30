@@ -26,7 +26,7 @@ def test_import_denovo_dae_style_into_impala(
     argv = [
         pedigree_filename,
         '--id', study_id,
-        # '--skip-reports',
+        '--skip-reports',
         '--denovo', denovo_filename,
         '--denovo-location', 'location',
         '--denovo-variant', 'variant',
@@ -151,7 +151,7 @@ def test_import_comp_all_into_impala(
     argv = [
         pedigree_filename,
         '--id', study_id,
-        '--skip-reports',
+        # '--skip-reports',
         '--vcf', vcf_filename,
         '--denovo', denovo_filename,
         '--denovo-location', 'location',
