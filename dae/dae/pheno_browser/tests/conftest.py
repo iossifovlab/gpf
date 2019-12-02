@@ -7,7 +7,7 @@ import os
 
 from dae.configuration.dae_config_parser import DAEConfigParser
 
-from dae.pheno.pheno_factory import PhenoFactory
+from dae.pheno.pheno_factory import PhenoDb
 
 
 def relative_to_this_folder(path):
@@ -36,24 +36,24 @@ def dae_config_fixture():
 
 
 @pytest.fixture(scope='session')
-def fake_pheno_factory(dae_config_fixture):
-    return PhenoFactory(dae_config_fixture)
+def fake_pheno_db(dae_config_fixture):
+    return PhenoDb(dae_config_fixture)
 
 
 @pytest.fixture(scope='session')
-def fphdb(fake_pheno_factory):
-    db = fake_pheno_factory.get_pheno_db('fake')
+def fake_phenotype_data(fake_pheno_db):
+    db = fake_pheno_db.get_phenotype_data('fake')
     return db
 
 
 @pytest.fixture(scope='session')
-def fphdb_browser_dir():
+def fake_phenotype_data_browser_dir():
     return relative_to_this_folder(
         'fixtures/pheno/fake_phenoDB/fake_browser.db')
 
 
 @pytest.fixture(scope='session')
-def fphdb_desc_conf():
+def fake_phenotype_data_desc_conf():
     return relative_to_this_folder('fixtures/pheno/fake_phenoDB/fake.conf')
 
 

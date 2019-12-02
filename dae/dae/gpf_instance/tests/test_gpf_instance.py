@@ -20,7 +20,7 @@ def test_init(gpf_instance):
 
     assert gpf_instance.dae_config
     assert gpf_instance.genomes_db
-    assert gpf_instance.pheno_factory
+    assert gpf_instance._pheno_db
     assert gpf_instance.gene_info_config
     assert gpf_instance.weights_factory is not None
     assert gpf_instance.score_config
