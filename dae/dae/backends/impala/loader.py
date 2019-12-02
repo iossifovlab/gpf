@@ -42,8 +42,7 @@ class ParquetLoader(VariantsLoader):
 
             return filenames
 
-    def _parquet_file_iterator(self, filename):
-        table = pq.read_table(filename)
+    def _table_iterator(self, table):
         df = table.to_pandas()
         df = self._deserialize_fields(df)
         summary_variants_indexes = pd.unique(df['summary_variant_index'])
@@ -79,6 +78,13 @@ class ParquetLoader(VariantsLoader):
                     continue
 
                 yield (summary_variant, row['genotype_data'])
+
+    def _parquet_file_iterator(self, filename):
+        pq_file = pq.ParquetFile(filename)
+        for row_group_index in range(0, pq_file.num_row_groups):
+            table = pq_file.read_row_group(row_group_index)
+            for summary_variant, gt_data in self._table_iterator(table):
+                yield (summary_variant, gt_data)
 
     def _deserialize_fields(self, df):
         df['genotype_data'] = df['genotype_data'].apply(
