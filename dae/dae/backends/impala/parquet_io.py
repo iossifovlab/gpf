@@ -415,6 +415,8 @@ class VariantsParquetWriter():
                         family_variant_index, elapsed),
                     file=sys.stderr)
 
+        filenames = list(self.data_writers.keys())
+
         for bin_writer in self.data_writers.values():
             bin_writer.close()
 
@@ -428,18 +430,23 @@ class VariantsParquetWriter():
                 family_variant_index, elapsed),
             file=sys.stderr)
 
+        return filenames
+
     def write_partition(self):
-        self._write_internal()
+        filenames = self._write_internal()
 
         self.partition_description.write_partition_configuration_to_file(
                 self.root_folder)
+
+        return filenames
 
 #    def variants_table(self):
 #        for key, value in self.data_writers.items():
 #            yield (key, value.build_table())
 #
     def save_variants_to_parquet(self, filename):
-        self._write_internal(filename)
+        filenames = self._write_internal(filename)
+        return filenames
 
 
 class ParquetManager:

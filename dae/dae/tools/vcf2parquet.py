@@ -222,7 +222,7 @@ def main(
             description = ParquetPartitionDescription.from_config(
                     argv.partition_description)
 
-            ParquetManager.variants_to_parquet_partition(
+            return ParquetManager.variants_to_parquet_partition(
                     variants_loader, description,
                     argv.output,
                     bucket_index=argv.bucket_index,

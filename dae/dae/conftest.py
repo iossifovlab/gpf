@@ -680,3 +680,10 @@ def vcf_import_config():
     )
     config = Configure.from_prefix_vcf(fullpath)
     return config.vcf
+
+
+@pytest.fixture(scope='session')
+def parquet_partition_configuration():
+    filename = relative_to_this_test_folder(
+        'fixtures/backends/example_partition_configuration.conf')
+    return filename
