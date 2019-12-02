@@ -168,7 +168,6 @@ class ParquetReader(AbstractFormat):
     def _read_row_group(self):
         if self.row_group_curr < self.row_group_count:
             row_group_buffer = self.pqfile.read_row_group(self.row_group_curr)
-            print(row_group_buffer)
             self.row_count = row_group_buffer.shape[0]
             self.row_group_curr += 1
             for index, col in enumerate(row_group_buffer.itercolumns()):
