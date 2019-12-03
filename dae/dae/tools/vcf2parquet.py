@@ -16,8 +16,6 @@ from dae.backends.impala.parquet_io import ParquetManager, \
 
 from cyvcf2 import VCF
 
-from dae.backends.import_commons import build_contig_regions, \
-    contigs_makefile_generate
 from dae.backends.import_commons import construct_import_annotation_pipeline
 
 
@@ -68,7 +66,7 @@ def parser_common_arguments(gpf_instance, parser):
         'If none specified, current directory is used [default: %(default)s]'
     )
     parser.add_argument(
-        '-pd', '--partition_description', type=str, default=None,
+        '--pd', type=str, default=None,
         dest='partition_description',
         help='Path to a config file containing the partition description'
     )
@@ -97,17 +95,18 @@ def parser_common_arguments(gpf_instance, parser):
         '[default: %(default)s]'
     )
 
+    parser.add_argument(
+        '--region', type=str,
+        dest='region', metavar='region',
+        default=None, nargs='+',
+        help='region to convert [default: %(default)s] '
+        'ex. chr1:1-10000'
+    )
+
 
 def parser_vcf_arguments(gpf_instance, subparsers):
     parser = subparsers.add_parser('vcf')
     parser_common_arguments(gpf_instance, parser)
-
-    parser.add_argument(
-        '--region', type=str,
-        dest='region', metavar='region',
-        default=None,
-        help='region to convert [default: %(default)s]'
-    )
 
     parser.add_argument(
         '-b', '--bucket-index', type=int, default=1,
@@ -136,24 +135,86 @@ def parser_make_arguments(gpf_instance, subparsers):
     )
 
 
-def generate_makefile(dae_config, genome, argv):
-    assert os.path.exists(argv.vcf)
-    assert os.path.exists(argv.pedigree)
+def generate_region_argument_string(chrom, start, end):
+    return f'{chrom}:{start}-{end}'
 
-    vcf_filename = argv.vcf
-    ped_filename = argv.pedigree
 
-    data_contigs = get_contigs(vcf_filename)
-    build_contigs = build_contig_regions(genome, argv.len)
+def generate_region_argument(fa, description):
+    segment = fa.position // description.region_length
+    start = (segment * description.region_length) + 1
+    end = (segment + 1) * description.region_length
 
-    contigs_makefile_generate(
-        build_contigs,
-        data_contigs,
-        argv.output,
-        "vcf2parquet.py vcf",
-        argv.annotation_config,
-        "{} {}".format(ped_filename, vcf_filename)
-    )
+    return (fa.chromosome, start, end)
+
+
+def generate_makefile(families_loader, variants_loader, argv):
+    targets = dict()
+    if argv.partition_description is None:
+        pass
+    else:
+        description = ParquetPartitionDescription.from_config(
+            argv.partition_description)
+        other_regions = dict()
+        for sv, fvs in variants_loader.full_variants_iterator():
+            for fv in fvs:
+                for fa in fv.alleles:
+                    region_bin = description.evaluate_region_bin(fa)
+                    if region_bin not in targets.keys():
+                        if fa.chromosome in description.chromosomes:
+                            targets[region_bin] = generate_region_argument(
+                                fa,
+                                description
+                            )
+                        else:
+                            if region_bin not in other_regions.keys():
+                                other_regions[region_bin] = set()
+
+                            other_regions[region_bin].add(
+                                generate_region_argument(
+                                    fa,
+                                    description
+                                )
+                            )
+
+        output = ''
+        all_target = 'all:'
+        main_targets = ''
+        other_targets = ''
+        for target_name in targets.keys():
+            all_target += f' {target_name}'
+
+        for target_name, target_args in targets.items():
+            command = f'python ~/gpf/dae/dae/tools/vcf2parquet.py vcf ' \
+                '{argv.pedigree} {argv.vcf} ' \
+                f'--skip-pedigree --o {argv.output} ' \
+                f'--pd {argv.partition_description} ' \
+                f'--region {generate_region_argument_string(*target_args)}'
+            main_targets += f'{target_name}:\n'
+            main_targets += f'\t{command}\n\n'
+
+        if len(other_regions) > 0:
+            for region_bin, command_args in other_regions.items():
+                all_target += f' {region_bin}'
+                other_targets += f'{region_bin}:\n'
+                regions = ' '.join(
+                    map(
+                        lambda x: generate_region_argument_string(*x),
+                        command_args
+                    )
+                )
+                command = f'python ~/gpf/dae/dae/tools/vcf2parquet.py vcf ' \
+                    '{argv.pedigree} {argv.vcf} ' \
+                    f'--skip-pedigree --o {argv.output} ' \
+                    f'--pd {argv.partition_description} ' \
+                    f'--region {regions}'
+                other_targets += f'\t{command}\n\n'
+        output += f'{all_target}\n'
+        output += '.PHONY: all\n\n'
+        output += main_targets
+        output += other_targets
+        print(output)
+
+    # TODO: Find a way to use this logic in dae2parquet when it is done
 
 
 def main(
@@ -178,21 +239,20 @@ def main(
     study_id = argv.study_id
     if study_id is None:
         study_id = os.path.splitext(os.path.basename(argv.pedigree))[0]
-
+    families_loader = FamiliesLoader(argv.pedigree)
+    variants_loader = VcfLoader(
+        families_loader.families, argv.vcf, regions=argv.region,
+        params={
+            'include_reference_genotypes': argv.include_reference,
+            'include_unknown_family_genotypes': argv.include_unknown,
+            'include_unknown_person_genotypes': argv.include_unknown
+        })
+    variants_loader = AnnotationPipelineDecorator(
+        variants_loader, annotation_pipeline
+    )
     if argv.type == 'make':
-        generate_makefile(dae_config, genome, argv)
+        generate_makefile(families_loader, variants_loader, argv)
     elif argv.type == 'vcf':
-        families_loader = FamiliesLoader(argv.pedigree)
-        variants_loader = VcfLoader(
-            families_loader.families, argv.vcf, region=argv.region,
-            params={
-                'include_reference_genotypes': argv.include_reference,
-                'include_unknown_family_genotypes': argv.include_unknown,
-                'include_unknown_person_genotypes': argv.include_unknown
-            })
-        variants_loader = AnnotationPipelineDecorator(
-            variants_loader, annotation_pipeline
-        )
 
         if argv.partition_description is None:
 
