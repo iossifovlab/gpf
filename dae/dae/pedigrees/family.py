@@ -639,8 +639,6 @@ class PedigreeReader(object):
         else:
             ped_df = read_csv_func(pedigree_filepath)
 
-        print(ped_df.head())
-
         if ped_sample_id in ped_df:
             sample_ids = ped_df.apply(
                 lambda r: r.personId if pd.isna(r.sampleId) else r.sampleId,
