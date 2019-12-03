@@ -68,7 +68,9 @@ export class VariantReportsComponent implements OnInit, OnChanges {
 
             this.currentPeopleCounter = params.familyReport.peopleCounters[0];
             this.currentPedigreeTable = this.pedigreeTables[0];
-            this.currentDenovoReport = params.denovoReport.tables[0];
+            if(params.denovoReport !== null) {
+              this.currentDenovoReport = params.denovoReport.tables[0];
+            }
           });
         }
       }
