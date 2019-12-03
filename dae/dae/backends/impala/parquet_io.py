@@ -110,7 +110,7 @@ class ParquetPartitionDescription():
             rare_boundary
         )
 
-    def _evaluate_region_bin(self, family_allele):
+    def evaluate_region_bin(self, family_allele):
         chromosome = family_allele.chromosome
         pos = family_allele.position // self.region_length
         if chromosome in self.chromosomes:
@@ -118,14 +118,14 @@ class ParquetPartitionDescription():
         else:
             return f'other_{pos}'
 
-    def _evaluate_family_bin(self, family_allele):
+    def evaluate_family_bin(self, family_allele):
         sha256 = hashlib.sha256()
         family_variant_id = family_allele.family_id
         sha256.update(family_variant_id.encode())
         digest = int(sha256.hexdigest(), 16)
         return digest % self.family_bin_size
 
-    def _evaluate_coding_bin(self, family_allele):
+    def evaluate_coding_bin(self, family_allele):
         if family_allele.is_reference_allele:
             return 0
         variant_effects = set(family_allele.effect.types)
@@ -137,7 +137,7 @@ class ParquetPartitionDescription():
         else:
             return 1
 
-    def _evaluate_frequency_bin(self, family_allele):
+    def evaluate_frequency_bin(self, family_allele):
         count = family_allele.get_attribute('af_allele_count')
         frequency = family_allele.get_attribute('af_allele_freq')
         if count and count == 1:  # Ultra rare
@@ -150,19 +150,19 @@ class ParquetPartitionDescription():
         return frequency_bin
 
     def evaluate_variant_filename(self, family_allele):
-        current_bin = self._evaluate_region_bin(family_allele)
+        current_bin = self.evaluate_region_bin(family_allele)
         filepath = f'region_bin={current_bin}'
         filename = f'variants_region_bin_{current_bin}'
         if self.family_bin_size > 0:
-            current_bin = self._evaluate_family_bin(family_allele)
+            current_bin = self.evaluate_family_bin(family_allele)
             filepath = os.path.join(filepath, f'family_bin={current_bin}')
             filename += f'_family_bin_{current_bin}'
         if len(self.coding_effect_types) > 0:
-            current_bin = self._evaluate_coding_bin(family_allele)
+            current_bin = self.evaluate_coding_bin(family_allele)
             filepath = os.path.join(filepath, f'coding_bin={current_bin}')
             filename += f'_coding_bin_{current_bin}'
         if self.rare_boundary > 0:
-            current_bin = self._evaluate_frequency_bin(family_allele)
+            current_bin = self.evaluate_frequency_bin(family_allele)
             filepath = os.path.join(filepath, f'frequency_bin={current_bin}')
             filename += f'_frequency_bin_{current_bin}'
         filename += '.parquet'
