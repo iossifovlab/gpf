@@ -69,11 +69,31 @@ class ParquetPartitionDescription():
                  coding_effect_types=[],
                  rare_boundary=0):
 
-        self.chromosomes = chromosomes
-        self.region_length = region_length
-        self.family_bin_size = family_bin_size
-        self.coding_effect_types = coding_effect_types
-        self.rare_boundary = rare_boundary
+        self._chromosomes = chromosomes
+        self._region_length = region_length
+        self._family_bin_size = family_bin_size
+        self._coding_effect_types = coding_effect_types
+        self._rare_boundary = rare_boundary
+
+    @property
+    def chromosomes(self):
+        return self._chromosomes
+
+    @property
+    def region_length(self):
+        return self._region_length
+
+    @property
+    def family_bin_size(self):
+        return self._family_bin_size
+
+    @property
+    def coding_effect_types(self):
+        return self._coding_effect_types
+
+    @property
+    def rare_boundary(self):
+        return self._rare_boundary
 
     @staticmethod
     def from_config(config_path):
@@ -112,8 +132,8 @@ class ParquetPartitionDescription():
 
     def evaluate_region_bin(self, family_allele):
         chromosome = family_allele.chromosome
-        pos = family_allele.position // self.region_length
-        if chromosome in self.chromosomes:
+        pos = family_allele.position // self._region_length
+        if chromosome in self._chromosomes:
             return f'{chromosome}_{pos}'
         else:
             return f'other_{pos}'
@@ -123,13 +143,13 @@ class ParquetPartitionDescription():
         family_variant_id = family_allele.family_id
         sha256.update(family_variant_id.encode())
         digest = int(sha256.hexdigest(), 16)
-        return digest % self.family_bin_size
+        return digest % self._family_bin_size
 
     def evaluate_coding_bin(self, family_allele):
         if family_allele.is_reference_allele:
             return 0
         variant_effects = set(family_allele.effect.types)
-        coding_effect_types = set(self.coding_effect_types)
+        coding_effect_types = set(self._coding_effect_types)
 
         result = variant_effects.intersection(coding_effect_types)
         if len(result) == 0:
@@ -142,7 +162,7 @@ class ParquetPartitionDescription():
         frequency = family_allele.get_attribute('af_allele_freq')
         if count and count == 1:  # Ultra rare
             frequency_bin = 1
-        elif frequency and frequency < self.rare_boundary:  # Rare
+        elif frequency and frequency < self._rare_boundary:  # Rare
             frequency_bin = 2
         else:  # Common
             frequency_bin = 3
@@ -153,15 +173,15 @@ class ParquetPartitionDescription():
         current_bin = self.evaluate_region_bin(family_allele)
         filepath = f'region_bin={current_bin}'
         filename = f'variants_region_bin_{current_bin}'
-        if self.family_bin_size > 0:
+        if self._family_bin_size > 0:
             current_bin = self.evaluate_family_bin(family_allele)
             filepath = os.path.join(filepath, f'family_bin={current_bin}')
             filename += f'_family_bin_{current_bin}'
-        if len(self.coding_effect_types) > 0:
+        if len(self._coding_effect_types) > 0:
             current_bin = self.evaluate_coding_bin(family_allele)
             filepath = os.path.join(filepath, f'coding_bin={current_bin}')
             filename += f'_coding_bin_{current_bin}'
-        if self.rare_boundary > 0:
+        if self._rare_boundary > 0:
             current_bin = self.evaluate_frequency_bin(family_allele)
             filepath = os.path.join(filepath, f'frequency_bin={current_bin}')
             filename += f'_frequency_bin_{current_bin}'
@@ -173,22 +193,22 @@ class ParquetPartitionDescription():
         config = configparser.ConfigParser()
 
         config.add_section('region_bin')
-        config['region_bin']['chromosomes'] = ', '.join(self.chromosomes)
-        config['region_bin']['region_length'] = str(self.region_length)
+        config['region_bin']['chromosomes'] = ', '.join(self._chromosomes)
+        config['region_bin']['region_length'] = str(self._region_length)
 
-        if self.family_bin_size > 0:
+        if self._family_bin_size > 0:
             config.add_section('family_bin')
             config['family_bin']['family_bin_size'] = \
-                str(self.family_bin_size)
+                str(self._family_bin_size)
 
-        if len(self.coding_effect_types) > 0:
+        if len(self._coding_effect_types) > 0:
             config.add_section('coding_bin')
             config['coding_bin']['coding_effect_types'] = \
-                ', '.join(self.coding_effect_types)
+                ', '.join(self._coding_effect_types)
 
-        if self.rare_boundary > 0:
+        if self._rare_boundary > 0:
             config.add_section('frequency_bin')
-            config['frequency_bin']['rare_boundary'] = str(self.rare_boundary)
+            config['frequency_bin']['rare_boundary'] = str(self._rare_boundary)
 
         filename = os.path.join(directory, '_PARTITION_DESCRIPTION')
         with open(filename, 'w') as configfile:
