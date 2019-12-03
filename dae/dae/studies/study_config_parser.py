@@ -1,6 +1,8 @@
 import os
 import copy
 
+from box import Box
+
 from dae.studies.people_group_config_parser import PeopleGroupConfigParser
 from dae.studies.genotype_browser_config_parser import \
     GenotypeBrowserConfigParser
@@ -90,6 +92,91 @@ class StudyConfigParserBase(ConfigParserBase):
         config_section.study_config = config
 
 
+class FilesConfigParser(ConfigParserBase):
+
+    SECTION = 'files'
+    INCLUDE_PROPERTIES = (
+        '*.path',
+        '*.format',
+        '*.params',
+    )
+
+    @staticmethod
+    def _split_type_values_dict(type_values_dict):
+        if type_values_dict is None:
+            return None
+
+        type_values_dict = [tv.split(':') for tv in type_values_dict]
+        res = {ft.strip(): fn.strip() for (ft, fn) in type_values_dict}
+        return Box(
+            res, camel_killer_box=True,
+            default_box=True, default_box_attr=None)
+
+    @classmethod
+    def parse(cls, config):
+        config = super(FilesConfigParser, cls).parse(config)
+        if config is None:
+            return None
+
+        if not config or not config.get(cls.SECTION, None):
+            return None
+
+        config_section = copy.deepcopy(config[cls.SECTION])
+        del config[cls.SECTION]
+
+        pedigree = []
+        denovo = []
+        vcf = []
+        for key, file_config in config_section.items():
+            print(key, ":", file_config)
+            print(file_config.params)
+            if file_config.params:
+                file_config.params = cls._split_type_values_dict(
+                    [p.strip() for p in file_config.params.split(',')]
+                )
+            if file_config.format == 'pedigree':
+                pedigree.append(file_config)
+            elif file_config.format == 'vcf':
+                vcf.append(file_config)
+            elif file_config.format == 'denovo':
+                denovo.append(file_config)
+            else:
+                assert False, file_config
+
+        assert len(pedigree) == 1
+
+        config_section = Box({
+            'pedigree': pedigree[0],
+            'vcf': vcf,
+            'denovo': denovo
+        }, default_box=True)
+
+        return config_section
+
+
+class TablesConfigParser(ConfigParserBase):
+
+    SECTION = 'tables'
+    INCLUDE_PROPERTIES = (
+        'pedigree',
+        'variant',
+    )
+
+    @classmethod
+    def parse(cls, config):
+        config = super(TablesConfigParser, cls).parse(config)
+        if config is None:
+            return None
+
+        if not config or not config.get(cls.SECTION, None):
+            return None
+
+        config_section = copy.deepcopy(config[cls.SECTION])
+        del config[cls.SECTION]
+
+        return config_section
+
+
 class StudyConfigParser(StudyConfigParserBase):
 
     SECTION = 'study'
@@ -97,12 +184,15 @@ class StudyConfigParser(StudyConfigParserBase):
     INCLUDE_PROPERTIES = StudyConfigParserBase.INCLUDE_PROPERTIES + (
         'work_dir',
         'wd',
-        'genotype_storage'
+        'genotype_storage',
+        'files',
+        'tables',
     )
 
     @classmethod
     def read_and_parse_directory_configurations(
             cls, configurations_dir, defaults=None, fail_silently=False):
+        print("parsing studies directory:", configurations_dir)
         configs = super(StudyConfigParser, cls). \
             read_and_parse_directory_configurations(
                 configurations_dir, defaults=defaults,
@@ -112,7 +202,36 @@ class StudyConfigParser(StudyConfigParserBase):
         return {c.id: c for c in configs}
 
     @classmethod
+    def _fill_files_config(cls, config_section, config):
+        files_config = FilesConfigParser.parse(config)
+        if not files_config:
+            return
+
+        config_section.files = files_config
+
+    @classmethod
+    def _fill_tables_config(cls, config_section, config):
+        tables_config = TablesConfigParser.parse(config)
+        if not tables_config:
+            return
+
+        config_section.tables = tables_config
+
+    @classmethod
+    def _fill_sections_config(cls, config_section, config):
+        super(StudyConfigParser, cls)._fill_sections_config(
+            config_section, config)
+
+        cls._fill_files_config(config_section, config)
+        cls._fill_tables_config(config_section, config)
+
+        config = copy.deepcopy(config)
+        del config[cls.SECTION]
+        config_section.study_config = config
+
+    @classmethod
     def parse(cls, config):
+
         config = super(StudyConfigParser, cls).parse(config)
         if config is None:
             return None

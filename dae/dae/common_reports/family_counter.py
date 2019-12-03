@@ -8,7 +8,7 @@ class FamilyCounter(object):
         self.family = family
         self.people_group_info = people_group_info
 
-        self.pedigree = self._get_pedigree()
+        self.pedigree = self._get_pedigree_to_draw()
         self.pedigrees_count = pedigrees_count
 
     def to_dict(self):
@@ -28,12 +28,12 @@ class FamilyCounter(object):
             else:
                 return self.people_group_info.default['color']
 
-    def _get_pedigree(self):
+    def _get_pedigree_to_draw(self):
         return [[member.family_id, member.person_id, member.dad_id,
                  member.mom_id, member.sex.short(), str(member.role),
                  self._get_member_color(member),
                  member.layout_position, member.generated, '', '']
-                for member in self.family.members_in_order]
+                for member in self.family.persons.values()]
 
 
 class FamiliesGroupCounter(object):

@@ -4,6 +4,7 @@ Created on Feb 16, 2017
 @author: lubo
 '''
 import sys
+from copy import deepcopy
 from box import Box
 
 from dae.configuration.config_parser_base import ConfigParserBase
@@ -16,6 +17,29 @@ class GeneInfoConfigParser(ConfigParserBase):
     """
     Helper class for accessing DAE and geneInfo configuration.
     """
+
+    @staticmethod
+    def _rename_gene_terms(config, gene_terms, inNS):
+        assert {gene_terms.geneNS, inNS} <= {'id', 'sym'}, \
+            (f'The provided namespaces "{gene_terms.geneNS}",'
+             ' "{inNS}" must be either "id" or "sym"!')
+
+        result = deepcopy(gene_terms)
+
+        if result.geneNS == inNS:
+            return result
+        elif result.geneNS == 'id' and inNS == 'sym':
+            def rF(x):
+                genes = GeneInfoDB.getGenes(config.gene_info)
+                if x in genes:
+                    return genes[x].sym
+            result.renameGenes('sym', rF)
+        elif result.geneNS == 'sym' and inNS == 'id':
+            result.renameGenes(
+                'id',
+                lambda x: GeneInfoDB.getCleanGeneId(config.gene_info, 'sym', x)
+            )
+        return result
 
     @classmethod
     def parse(cls, config):
@@ -36,26 +60,13 @@ class GeneInfoConfigParser(ConfigParserBase):
     def getGeneTerms(cls, config, gt_id='main', inNS='sym'):
         fl = config.gene_terms[gt_id].file
         gt = loadGeneTerm(fl)
-
-        if not inNS:
-            return gt
-        if gt.geneNS == inNS:
-            return gt
-        if gt.geneNS == 'id' and inNS == 'sym':
-            def rF(x):
-                genes = GeneInfoDB.getGenes(config.gene_info)
-                if x in genes:
-                    return genes[x].sym
-            gt.renameGenes('sym', rF)
-        elif gt.geneNS == 'sym' and inNS == 'id':
-            gt.renameGenes(
-                'id',
-                lambda x: GeneInfoDB.getCleanGeneId(config.gene_info, 'sym', x)
-            )
-        else:
+        try:
+            gt = GeneInfoConfigParser._rename_gene_terms(config, gt, inNS)
+        except AssertionError:
             raise Exception(
-                'Unknown name space for the ' + gt_id + ' gene terms: |'
-                + gt.geneNS + '|' + inNS + '|')
+                (f'Unknown namespace(s) for the {gt_id} gene terms:'
+                 ' |{gt.geneNS}| -> |{inNS}|')
+            )
         return gt
 
 

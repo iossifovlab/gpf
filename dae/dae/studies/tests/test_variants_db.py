@@ -19,7 +19,7 @@ def test_variants_db_can_create_study_from_config(
 
 
 def test_variants_db_studies_simple(
-        dae_config_fixture, pheno_db, weights_factory,
+        dae_config_fixture, pheno_db, gene_weights_db,
         mocked_gene_models, genotype_storage_factory):
     assert dae_config_fixture is not None
     assert dae_config_fixture.studies_db.dir is not None
@@ -28,14 +28,14 @@ def test_variants_db_studies_simple(
         os.path.join(fixtures_dir(), "studies")
 
     vdb = VariantsDb(
-        dae_config_fixture, pheno_db, weights_factory, mocked_gene_models,
+        dae_config_fixture, pheno_db, gene_weights_db, mocked_gene_models,
         genotype_storage_factory
     )
     assert vdb is not None
 
 
 def test_variants_db_datasets_simple(
-        dae_config_fixture, pheno_db, weights_factory,
+        dae_config_fixture, pheno_db, gene_weights_db,
         mocked_gene_models, genotype_storage_factory):
     assert dae_config_fixture is not None
     assert dae_config_fixture.datasets_db.dir is not None
@@ -44,7 +44,7 @@ def test_variants_db_datasets_simple(
         os.path.join(fixtures_dir(), "datasets")
 
     vdb = VariantsDb(
-        dae_config_fixture, pheno_db, weights_factory, mocked_gene_models,
+        dae_config_fixture, pheno_db, gene_weights_db, mocked_gene_models,
         genotype_storage_factory
     )
     assert vdb is not None

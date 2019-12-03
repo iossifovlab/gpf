@@ -1,5 +1,5 @@
 from dae.annotation.tools.file_io_parquet import ParquetSchema
-from dae.pedigrees.family import FamiliesData, Family
+from dae.pedigrees.family import FamiliesData
 from dae.backends.impala.parquet_io import ParquetSerializer
 
 from impala.util import as_pandas
@@ -29,16 +29,22 @@ class ImpalaFamilyVariants:
 
     MAX_CHILD_NUMBER = 9999
 
-    def __init__(self, config, impala_connection, gene_models):
+    def __init__(
+            self, impala_connection, db, variant_table, pedigree_table,
+            gene_models=None):
 
         super(ImpalaFamilyVariants, self).__init__()
+        assert db, db
+        assert variant_table, variant_table
+        assert pedigree_table, pedigree_table
 
-        assert config is not None
-        self.config = config
+        self.db = db
+        self.variant_table = variant_table
+        self.pedigree_table = pedigree_table
 
         self.impala = impala_connection
-        self.ped_df = self.load_pedigree()
         self.pedigree_schema = self.pedigree_schema()
+        self.ped_df = self.load_pedigree()
         self.families = FamiliesData.from_pedigree_df(self.ped_df)
 
         self.schema = self.variant_schema()
@@ -49,7 +55,7 @@ class ImpalaFamilyVariants:
 
     def count_variants(self, **kwargs):
         with self.impala.cursor() as cursor:
-            query = self.build_count_query(self.config, **kwargs)
+            query = self.build_count_query(**kwargs)
             # print('COUNT QUERY:', query)
             cursor.execute(query)
             row = next(cursor)
@@ -67,7 +73,6 @@ class ImpalaFamilyVariants:
 
         with self.impala.cursor() as cursor:
             query = self.build_query(
-                self.config,
                 regions=regions, genes=genes, effect_types=effect_types,
                 family_ids=family_ids, person_ids=person_ids,
                 inheritance=inheritance, roles=roles, sexes=sexes,
@@ -102,7 +107,7 @@ class ImpalaFamilyVariants:
         with self.impala.cursor() as cursor:
             q = '''
                 SELECT * FROM {db}.{pedigree}
-            '''.format(db=self.config.db, pedigree=self.config.tables.pedigree)
+            '''.format(db=self.db, pedigree=self.pedigree_table)
 
             cursor.execute(q)
             ped_df = as_pandas(cursor)
@@ -133,7 +138,7 @@ class ImpalaFamilyVariants:
         with self.impala.cursor() as cursor:
             q = '''
                 DESCRIBE {db}.{variant}
-            '''.format(db=self.config.db, variant=self.config.tables.variant)
+            '''.format(db=self.db, variant=self.variant_table)
 
             cursor.execute(q)
             df = as_pandas(cursor)
@@ -147,7 +152,7 @@ class ImpalaFamilyVariants:
         with self.impala.cursor() as cursor:
             q = '''
                 DESCRIBE {db}.{pedigree}
-            '''.format(db=self.config.db, pedigree=self.config.tables.pedigree)
+            '''.format(db=self.db, pedigree=self.pedigree_table)
 
             cursor.execute(q)
             df = as_pandas(cursor)
@@ -446,7 +451,7 @@ class ImpalaFamilyVariants:
         return where_clause
 
     def build_query(
-            self, config,
+            self,
             regions=None, genes=None, effect_types=None,
             family_ids=None, person_ids=None,
             inheritance=None, roles=None, sexes=None,
@@ -497,12 +502,12 @@ class ImpalaFamilyVariants:
                 genomic_scores_data
             {limit_clause}
             '''.format(
-            db=config.db, variant=config.tables.variant,
+            db=self.db, variant=self.variant_table,
             where_clause=where_clause,
             limit_clause=limit_clause)
 
     def build_count_query(
-            self, config,
+            self,
             regions=None, genes=None, effect_types=None,
             family_ids=None, person_ids=None,
             inheritance=None, roles=None, sexes=None,
@@ -532,5 +537,5 @@ class ImpalaFamilyVariants:
             FROM {db}.{variant}
             {where_clause}
             '''.format(
-            db=config.db, variant=config.tables.variant,
+            db=self.db, variant=self.variant_table,
             where_clause=where_clause)

@@ -13,10 +13,10 @@ def test_effect_cell_missense(dataset1, denovo_variants_ds1, filter_objects):
         dataset1, denovo_variants_ds1, filter_object, 'Missense'
     )
 
-    assert effect_cell.number_of_observed_events == 2
+    assert effect_cell.number_of_observed_events == 1
     assert effect_cell.number_of_children_with_event == 1
-    assert effect_cell.observed_rate_per_child == 2.0 / 3.0
-    assert effect_cell.percent_of_children_with_events == 1.0 / 3.0
+    assert effect_cell.observed_rate_per_child == 1.0 / 1
+    assert effect_cell.percent_of_children_with_events == 1.0 / 1
     assert effect_cell.column == 'sib and phenotype2'
 
     assert effect_cell.is_empty() is False
@@ -111,7 +111,7 @@ def test_denovo_report(dataset1, filter_objects, denovo_variants_ds1):
         dataset1, ['Missense'], ['Frame-shift'], filter_objects
     )
 
-    assert len(denovo_report.denovo_variants) == 8
+    assert len(denovo_report.denovo_variants) == 7
     assert denovo_report.denovo_variants == denovo_variants_ds1
     assert len(denovo_report.tables) == 1
 

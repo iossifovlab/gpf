@@ -67,7 +67,7 @@ class EnrichmentTestView(QueryBaseView):
 
         weights_id, range_start, range_end = \
             GeneSymsMixin.get_gene_weights_query(
-                self.gene_info_config, **query)
+                self.gene_info_config.gene_weights, **query)
         if weights_id:
             if range_start and range_end:
                 desc = 'Gene Weights: {} from {} upto {}'.format(
@@ -123,7 +123,10 @@ class EnrichmentTestView(QueryBaseView):
             self.background_facade.get_study_enrichment_config(dataset_id)
         enrichment_tool = self.get_enrichment_tool(enrichment_config, query)
 
-        gene_syms = GeneSymsMixin.get_gene_syms(self.gene_info_config, **query)
+        gene_syms = GeneSymsMixin.get_gene_syms(
+            self.gene_info_config.gene_weights,
+            **query
+        )
         if gene_syms is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 

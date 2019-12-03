@@ -8,17 +8,17 @@ from dae.studies.dataset_config_parser import DatasetConfigParser
 class VariantsDb(object):
 
     def __init__(
-            self, dae_config, pheno_factory, weights_factory, genomes_db,
+            self, dae_config, pheno_factory, gene_weights_db, genomes_db,
             genotype_storage_factory):
         self.dae_config = dae_config
 
         assert pheno_factory is not None
-        assert weights_factory is not None
+        assert gene_weights_db is not None
         assert genomes_db is not None
         assert genotype_storage_factory is not None
 
         self.pheno_factory = pheno_factory
-        self.weights_factory = weights_factory
+        self.gene_weights_db = gene_weights_db
         self.genomes_db = genomes_db
         self.genotype_storage_factory = genotype_storage_factory
 
@@ -190,7 +190,7 @@ class VariantsDb(object):
                 self._load_study_in_cache(study_id)
 
     def wrap_study(self, study):
-        return StudyWrapper(study, self.pheno_factory, self.weights_factory)
+        return StudyWrapper(study, self.pheno_factory, self.gene_weights_db)
 
     def _load_study_in_cache(self, study_id):
         conf = self.study_configs.get(study_id)
@@ -202,7 +202,7 @@ class VariantsDb(object):
             return
         self._study_cache[study_id] = study
         self._study_wrapper_cache[study_id] = \
-            StudyWrapper(study, self.pheno_factory, self.weights_factory)
+            StudyWrapper(study, self.pheno_factory, self.gene_weights_db)
 
     def load_dataset_cache(self, dataset_ids=None):
         if dataset_ids is None:
@@ -226,7 +226,7 @@ class VariantsDb(object):
             return
         self._dataset_cache[dataset_id] = dataset
         self._dataset_wrapper_cache[dataset_id] = \
-            StudyWrapper(dataset, self.pheno_factory, self.weights_factory)
+            StudyWrapper(dataset, self.pheno_factory, self.gene_weights_db)
 
     def make_study(self, study_config):
         if study_config is None:
@@ -244,8 +244,8 @@ class VariantsDb(object):
                 )
             )
 
-        variants = genotype_storage.get_backend(
-            study_config.id, self.genomes_db
+        variants = genotype_storage.build_backend(
+            study_config, self.genomes_db
         )
 
         return Study(study_config, variants)

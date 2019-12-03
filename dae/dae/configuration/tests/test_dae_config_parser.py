@@ -52,6 +52,10 @@ def test_dae_config_simple(fixturedir, dae_config):
 
     assert dae_config.dae_data_dir == fixturedir
 
+    assert dae_config.studies_db.dir == os.path.join(fixturedir, 'studies')
+    assert dae_config.studies_db.conf_file == \
+        os.path.join(fixturedir, 'studiesDB.conf')
+
     assert dae_config.pheno_db is not None
     print(dae_config.pheno_db)
 

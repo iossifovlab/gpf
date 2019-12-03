@@ -6,9 +6,9 @@ Created on Jul 5, 2018
 import pytest
 
 
-@pytest.mark.parametrize("variants", [
-    "variants_vcf",
-    "variants_impala",
+@pytest.mark.parametrize('variants', [
+    'variants_impala',
+    'variants_vcf'
 ])
 @pytest.mark.parametrize("variant_type,count", [
     (None, 10),
@@ -27,9 +27,9 @@ def test_single_alt_allele_variant_types(
     assert len(vs) == count
 
 
-@pytest.mark.parametrize("variants", [
-    "variants_vcf",
-    "variants_impala",
+@pytest.mark.parametrize('variants', [
+    'variants_impala',
+    'variants_vcf'
 ])
 @pytest.mark.parametrize("variant_type,count", [
     (None, 3),

@@ -159,6 +159,30 @@ def test_quads_f1_config_genotype_browser_columns(
         assert gc_slot['format'] == e_slot['format']
 
 
+def test_quads_f1_files_and_tables(quads_f1_config):
+    assert quads_f1_config.files.vcf[0].path.endswith('data/quads_f1.vcf')
+    assert quads_f1_config.files.pedigree.path.endswith('data/quads_f1.ped')
+    assert quads_f1_config.files.denovo[0].path.endswith(
+        'data/quads_f1_denovo.tsv')
+
+    assert quads_f1_config.tables.variant == 'quads_f1_variant'
+    assert quads_f1_config.tables.pedigree == 'quads_f1_pedigree'
+
+
 def test_quads_f1_config_work_dir(quads_f1_config):
     assert quads_f1_config['work_dir'] == \
         os.path.join(studies_dir(), 'quads_f1')
+
+
+def test_quads_f1_config_files(quads_f1_config):
+    assert quads_f1_config['files'] is not None
+    assert quads_f1_config.files.pedigree is not None
+    assert quads_f1_config.files.pedigree.path.endswith('/data/quads_f1.ped')
+    assert len(quads_f1_config.files.pedigree.params) == 3
+
+
+def test_quads_f1_config_tables(quads_f1_config):
+    assert quads_f1_config['tables'] is not None
+
+    assert quads_f1_config.tables.pedigree == 'quads_f1_pedigree'
+    assert quads_f1_config.tables.variant == 'quads_f1_variant'

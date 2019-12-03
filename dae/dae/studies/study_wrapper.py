@@ -4,7 +4,7 @@ import itertools
 import traceback
 import numpy as np
 
-from dae.utils.vcf_utils import mat2str
+from dae.utils.variant_utils import mat2str
 from dae.utils.dae_utils import split_iterable, join_line, \
     members_in_order_get_family_structure
 from dae.utils.effect_utils import expand_effect_types, ge2str, gd2str, \
@@ -24,7 +24,7 @@ from dae.studies.people_group_config_parser import PeopleGroupConfigParser
 
 class StudyWrapper(object):
 
-    def __init__(self, study, pheno_db, weights_factory, *args, **kwargs):
+    def __init__(self, study, pheno_db, gene_weights_db, *args, **kwargs):
         super(StudyWrapper, self).__init__(*args, **kwargs)
         assert study is not None
 
@@ -36,7 +36,7 @@ class StudyWrapper(object):
         self.pheno_db = pheno_db
         self._init_pheno(self.pheno_db)
 
-        self.weights_factory = weights_factory
+        self.gene_weights_db = gene_weights_db
 
     def _init_wdae_config(self):
         preview_column_slots = {}
@@ -400,13 +400,13 @@ class StudyWrapper(object):
 
         gene_weights_values = {}
         for gwc in self.gene_weight_column_sources:
-            if gwc not in self.weights_factory:
+            if gwc not in self.gene_weights_db:
                 continue
 
-            gene_weights = self.weights_factory[gwc]
+            gene_weights = self.gene_weights_db[gwc]
             if gene != '':
                 gene_weights_values[gwc] =\
-                    gene_weights.to_dict().get(gene, '')
+                    gene_weights._to_dict().get(gene, '')
             else:
                 gene_weights_values[gwc] = ''
 
@@ -496,7 +496,7 @@ class StudyWrapper(object):
         kwargs['real_attr_filter'] += genomic_scores_filter
 
     def _transform_gene_weights(self, kwargs):
-        if not self.weights_factory:
+        if not self.gene_weights_db:
             return
 
         gene_weights = kwargs.pop('geneWeights', {})
@@ -505,8 +505,8 @@ class StudyWrapper(object):
         range_start = gene_weights.get('rangeStart', None)
         range_end = gene_weights.get('rangeEnd', None)
 
-        if weight_name and weight_name in self.weights_factory:
-            weight = self.weights_factory[gene_weights.get('weight')]
+        if weight_name and weight_name in self.gene_weights_db:
+            weight = self.gene_weights_db[gene_weights.get('weight')]
 
             genes = weight.get_genes(range_start, range_end)
 
@@ -647,7 +647,8 @@ class StudyWrapper(object):
     def _transform_pheno_filters_to_people_ids(self, pheno_filter_args):
         people_ids = []
         for pheno_filter_arg in pheno_filter_args:
-            if not self.phenotype_data.has_measure(pheno_filter_arg['measure']):
+            if not self.phenotype_data.has_measure(
+                    pheno_filter_arg['measure']):
                 continue
             pheno_constraints = self._get_pheno_filter_constraints(
                 pheno_filter_arg)

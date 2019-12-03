@@ -7,11 +7,11 @@ from dae.configuration.dae_config_parser import DAEConfigParser
 from dae.enrichment_tool.background_facade import BackgroundFacade
 
 from dae.gene.gene_info_config import GeneInfoConfigParser
-from dae.gene.weights import WeightsFactory
+from dae.gene.weights import GeneWeightsDb
 from dae.gene.score_config_parser import ScoreConfigParser
 from dae.gene.scores import ScoresFactory
-from dae.gene.gene_set_collections import GeneSetsCollections
-from dae.gene.denovo_gene_set_facade import DenovoGeneSetFacade
+from dae.gene.gene_sets_db import GeneSetsDb
+from dae.gene.denovo_gene_sets_db import DenovoGeneSetsDb
 
 from dae.studies.variants_db import VariantsDb
 
@@ -34,24 +34,27 @@ def cached(prop):
 
 class GPFInstance(object):
 
-    def __init__(self, config_file='DAE.conf', work_dir=None, defaults=None,
-                 load_eagerly=False):
-        self.dae_config = DAEConfigParser.read_and_parse_file_configuration(
-            config_file=config_file, work_dir=work_dir, defaults=defaults
-        )
+    def __init__(
+            self, dae_config=None, config_file='DAE.conf', work_dir=None,
+            defaults=None, load_eagerly=False):
+
+        if dae_config is None:
+            dae_config = DAEConfigParser.read_and_parse_file_configuration(
+                config_file=config_file, work_dir=work_dir, defaults=defaults
+            )
+        self.dae_config = dae_config
 
         if load_eagerly:
             self.genomes_db
             self._pheno_db
             self.gene_info_config
-            self.weights_factory
+            self.denovo_gene_sets_db
+            self.gene_sets_db
             self.score_config
             self.scores_factory
             self.genotype_storage_factory
             self.variants_db
             self.common_report_facade
-            self.gene_sets_collections
-            self.denovo_gene_set_facade
             self.background_facade
 
     @property
@@ -77,8 +80,8 @@ class GPFInstance(object):
 
     @property
     @cached
-    def weights_factory(self):
-        return WeightsFactory(config=self.gene_info_config.gene_weights)
+    def gene_weights_db(self):
+        return GeneWeightsDb(self.gene_info_config.gene_weights)
 
     @property
     @cached
@@ -102,9 +105,12 @@ class GPFInstance(object):
     @cached
     def variants_db(self):
         return VariantsDb(
-            self.dae_config, self._pheno_db, self.weights_factory,
+            self.dae_config, self._pheno_db, self.gene_weights_db,
             self.genomes_db, self.genotype_storage_factory
         )
+
+    def reload_variants_db(self):
+        self.__variants_db__ = None
 
     @property
     @cached
@@ -113,13 +119,13 @@ class GPFInstance(object):
 
     @property
     @cached
-    def gene_sets_collections(self):
-        return GeneSetsCollections(self.variants_db, self.gene_info_config)
+    def gene_sets_db(self):
+        return GeneSetsDb(self.variants_db, self.gene_info_config)
 
     @property
     @cached
-    def denovo_gene_set_facade(self):
-        return DenovoGeneSetFacade(self.variants_db)
+    def denovo_gene_sets_db(self):
+        return DenovoGeneSetsDb(self.variants_db)
 
     @property
     @cached

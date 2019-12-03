@@ -72,7 +72,7 @@ def main(gpf_instance=None):
         return
 
     genotype_storage.impala_load_study(
-        argv.study_id, argv.pedigree_directory, argv.variants_directory
+        argv.study_id, [argv.variants_directory], [argv.pedigree_directory]
     )
 
 

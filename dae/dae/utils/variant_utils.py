@@ -45,6 +45,23 @@ def reference_genotype(size):
     return np.zeros(shape=(2, size), dtype=GENOTYPE_TYPE)
 
 
+def is_reference_genotype(gt):
+    return np.any(gt == 0) and \
+        np.all(np.logical_or(gt == 0, gt == -1))
+
+
+def is_all_reference_genotype(gt):
+    return np.all(gt == 0)
+
+
+def is_unknown_genotype(gt):
+    return np.any(gt == -1)
+
+
+def is_all_unknown_genotype(gt):
+    return np.all(gt == -1)
+
+
 def trim_str_front(pos, ref, alt):
     for n, s in enumerate(zip(ref, alt)):
         if s[0] != s[1]:
