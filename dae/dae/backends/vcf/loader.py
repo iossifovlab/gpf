@@ -53,7 +53,7 @@ class VcfFamiliesGenotypes(FamiliesGenotypes):
 
 class VcfLoader(VariantsLoader):
 
-    def __init__(self, families, vcf_filename, region=None, params={}):
+    def __init__(self, families, vcf_filename, regions=None, params={}):
         super(VcfLoader, self).__init__(
             families=families,
             transmission_type=TransmissionType.transmitted,
@@ -61,7 +61,10 @@ class VcfLoader(VariantsLoader):
 
         assert os.path.exists(vcf_filename)
         self.vcf_filename = vcf_filename
-        self.region = region
+        if type(regions) == str or type(regions) == type(None):
+            self.regions = [regions]
+        else:
+            self.regions = regions
 
         self.vcf = VCF(vcf_filename, lazy=True)
         samples = np.array(self.vcf.samples)
@@ -120,13 +123,14 @@ class VcfLoader(VariantsLoader):
         return SummaryVariantFactory.summary_variant_from_records(records)
 
     def summary_genotypes_iterator(self):
-        for summary_index, vcf_variant in enumerate(self.vcf(self.region)):
-            family_genotypes = VcfFamiliesGenotypes(
-                self.families,
-                np.array(vcf_variant.genotypes, dtype=np.int8).T,
-                params=self.params)
+        for region in self.regions:
+            for summary_index, vcf_variant in enumerate(self.vcf(region)):
+                family_genotypes = VcfFamiliesGenotypes(
+                    self.families,
+                    np.array(vcf_variant.genotypes, dtype=np.int8).T,
+                    params=self.params)
 
-            summary_variant = self._warp_summary_variant(
-                summary_index, vcf_variant)
+                summary_variant = self._warp_summary_variant(
+                    summary_index, vcf_variant)
 
-            yield summary_variant, family_genotypes
+                yield summary_variant, family_genotypes
