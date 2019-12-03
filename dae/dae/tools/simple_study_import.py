@@ -150,8 +150,7 @@ def main(argv, gpf_instance=None):
     pedigree_format = \
         PedigreeReader.flexible_pedigree_parse_cli_arguments(argv)
 
-    families_loader = FamiliesLoader(
-        argv.pedigree, pedigree_format=pedigree_format)
+    families_loader = FamiliesLoader(argv.pedigree, params=pedigree_format)
 
     variant_loaders = []
     if argv.denovo is not None:

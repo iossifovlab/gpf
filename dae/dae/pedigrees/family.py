@@ -363,14 +363,12 @@ class Pedigree(object):
 
 class FamiliesLoader:
 
-    def __init__(
-            self, families_filename,
-            file_format='pedigree', pedigree_format={}):
+    def __init__(self, families_filename, params={}):
 
         assert os.path.exists(families_filename)
         self.families_filename = families_filename
-        self.file_format = file_format
-        self.pedigree_format = pedigree_format
+        self.pedigree_format = params
+        self.file_format = params.get('ped_file_format', 'pedigree')
 
         self.families = self._load_families_data()
         self.ped_df = self.families.ped_df
@@ -551,6 +549,14 @@ class PedigreeReader(object):
             'given. [default: %(default)s]'
         )
 
+        parser.add_argument(
+            '--ped-file-format',
+            default='pedigree',
+            help='Families file format. It should `pedigree` or `simple`'
+            'for simple family format [default: %(default)s]'
+        )
+
+
     @classmethod
     def flexible_pedigree_parse_cli_arguments(cls, argv):
         ped_ped_args = [
@@ -562,6 +568,7 @@ class PedigreeReader(object):
             'ped_status',
             'ped_role',
             'ped_no_role',
+            'ped_file_format',
         ]
         has_header = not argv.ped_no_header
         res = {}
@@ -592,7 +599,8 @@ class PedigreeReader(object):
             ped_layout='layout',
             ped_generated='generated',
             ped_sample_id='sampleId',
-            ped_no_role=False):
+            ped_no_role=False,
+            **kwargs):
 
         read_csv_func = partial(
             pd.read_csv,
@@ -638,8 +646,6 @@ class PedigreeReader(object):
             )
         else:
             ped_df = read_csv_func(pedigree_filepath)
-
-        print(ped_df.head())
 
         if ped_sample_id in ped_df:
             sample_ids = ped_df.apply(

@@ -26,7 +26,7 @@ def test_dae2parquet_denovo(
 
     families_loader = FamiliesLoader(
         dae_denovo_config.family_filename,
-        file_format='simple')
+        params={'ped_file_format': 'simple'})
 
     variants_loader = DenovoLoader(
         families_loader.families, dae_denovo_config.denovo_filename, genome)
@@ -75,7 +75,7 @@ def test_dae2parquet_transmitted(
 
     families_loader = FamiliesLoader(
         dae_transmitted_config.family_filename,
-        file_format='simple')
+        params={'ped_file_format': 'simple'})
 
     variants_loader = DaeTransmittedLoader(
         families_loader.families,

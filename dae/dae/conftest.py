@@ -300,7 +300,7 @@ def dae_denovo(
 
     families_loader = FamiliesLoader(
         dae_denovo_config.family_filename,
-        file_format='simple')
+        params={'ped_file_format': 'simple'})
 
     variants_loader = DenovoLoader(
         families_loader.families, dae_denovo_config.denovo_filename,
@@ -375,8 +375,7 @@ def iossifov2014_loader(
         annotation_pipeline_internal):
     config = dae_iossifov2014_config
 
-    families_loader = FamiliesLoader(
-        config.family_filename, file_format='pedigree')
+    families_loader = FamiliesLoader(config.family_filename)
 
     variants_loader = DenovoLoader(
         families_loader.families, config.denovo_filename, default_genome)
