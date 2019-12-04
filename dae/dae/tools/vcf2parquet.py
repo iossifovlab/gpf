@@ -16,7 +16,8 @@ from dae.backends.impala.parquet_io import ParquetManager, \
 
 from cyvcf2 import VCF
 
-from dae.backends.import_commons import construct_import_annotation_pipeline
+from dae.backends.import_commons import construct_import_annotation_pipeline, \
+        generate_makefile
 
 
 def get_contigs(vcf_filename):
@@ -135,88 +136,6 @@ def parser_make_arguments(gpf_instance, subparsers):
     )
 
 
-def generate_region_argument_string(chrom, start, end):
-    return f'{chrom}:{start}-{end}'
-
-
-def generate_region_argument(fa, description):
-    segment = fa.position // description.region_length
-    start = (segment * description.region_length) + 1
-    end = (segment + 1) * description.region_length
-
-    return (fa.chromosome, start, end)
-
-
-def generate_makefile(families_loader, variants_loader, argv):
-    targets = dict()
-    if argv.partition_description is None:
-        pass
-    else:
-        description = ParquetPartitionDescription.from_config(
-            argv.partition_description)
-        other_regions = dict()
-        for sv, fvs in variants_loader.full_variants_iterator():
-            for fv in fvs:
-                for fa in fv.alleles:
-                    region_bin = description.evaluate_region_bin(fa)
-                    if region_bin not in targets.keys():
-                        if fa.chromosome in description.chromosomes:
-                            targets[region_bin] = generate_region_argument(
-                                fa,
-                                description
-                            )
-                        else:
-                            if region_bin not in other_regions.keys():
-                                other_regions[region_bin] = set()
-
-                            other_regions[region_bin].add(
-                                generate_region_argument(
-                                    fa,
-                                    description
-                                )
-                            )
-
-        output = ''
-        all_target = 'all:'
-        main_targets = ''
-        other_targets = ''
-        for target_name in targets.keys():
-            all_target += f' {target_name}'
-
-        for target_name, target_args in targets.items():
-            command = f'python ~/gpf/dae/dae/tools/vcf2parquet.py vcf ' \
-                '{argv.pedigree} {argv.vcf} ' \
-                f'--skip-pedigree --o {argv.output} ' \
-                f'--pd {argv.partition_description} ' \
-                f'--region {generate_region_argument_string(*target_args)}'
-            main_targets += f'{target_name}:\n'
-            main_targets += f'\t{command}\n\n'
-
-        if len(other_regions) > 0:
-            for region_bin, command_args in other_regions.items():
-                all_target += f' {region_bin}'
-                other_targets += f'{region_bin}:\n'
-                regions = ' '.join(
-                    map(
-                        lambda x: generate_region_argument_string(*x),
-                        command_args
-                    )
-                )
-                command = f'python ~/gpf/dae/dae/tools/vcf2parquet.py vcf ' \
-                    '{argv.pedigree} {argv.vcf} ' \
-                    f'--skip-pedigree --o {argv.output} ' \
-                    f'--pd {argv.partition_description} ' \
-                    f'--region {regions}'
-                other_targets += f'\t{command}\n\n'
-        output += f'{all_target}\n'
-        output += '.PHONY: all\n\n'
-        output += main_targets
-        output += other_targets
-        print(output)
-
-    # TODO: Find a way to use this logic in dae2parquet when it is done
-
-
 def main(
         argv,
         gpf_instance=None, dae_config=None, genomes_db=None, genome=None,
@@ -251,7 +170,7 @@ def main(
         variants_loader, annotation_pipeline
     )
     if argv.type == 'make':
-        generate_makefile(families_loader, variants_loader, argv)
+        generate_makefile(variants_loader, argv, 'vcf2parquet.py vcf')
     elif argv.type == 'vcf':
 
         if argv.partition_description is None:

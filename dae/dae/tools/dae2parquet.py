@@ -17,11 +17,13 @@ from dae.backends.dae.loader import DenovoLoader, DaeTransmittedLoader
 from dae.backends.import_commons import build_contig_regions, \
     contigs_makefile_generate
 
-from dae.backends.import_commons import construct_import_annotation_pipeline
+from dae.backends.import_commons import construct_import_annotation_pipeline, \
+    generate_makefile
 
 from dae.pedigrees.family import PedigreeReader
 from dae.pedigrees.family import FamiliesData, FamiliesLoader
-from dae.backends.impala.parquet_io import ParquetManager
+from dae.backends.impala.parquet_io import ParquetManager, \
+    ParquetPartitionDescription
 
 
 def get_contigs(tabixfilename):
@@ -151,6 +153,12 @@ def init_parser_dae_common(gpf_instance, parser):
         action='store_true',
     )
 
+    parser.add_argument(
+        '--pd', type=str, default=None,
+        dest='partition_description',
+        help='Path to a config file containing the partition description'
+    )
+
 
 def init_parser_denovo(gpf_instance, subparsers):
     parser_denovo = subparsers.add_parser('denovo')
@@ -218,6 +226,13 @@ def init_parser_make(gpf_instance, subparsers):
         help='additional environment options'
     )
 
+    parser.add_argument(
+        '--region', type=str,
+        dest='region', metavar='region',
+        default=None,
+        help='region to convert'
+    )
+
 
 def parse_cli_arguments(gpf_instance, argv=sys.argv[1:]):
     parser = argparse.ArgumentParser(
@@ -238,14 +253,10 @@ def parse_cli_arguments(gpf_instance, argv=sys.argv[1:]):
 
 
 def denovo2parquet(
-        study_id, family_filename, denovo_filename,
-        annotation_pipeline, genome,
+        family_filename, denovo_filename,
+        annotation_pipeline, genome, argv,
         output='.', bucket_index=0, rows=10000, filesystem=None,
         skip_pedigree=False):
-
-    parquet_filenames = ParquetManager.build_parquet_filenames(
-        output, bucket_index=bucket_index, study_id=study_id)
-    print("converting into ", parquet_filenames, file=sys.stderr)
 
     families_loader = FamiliesLoader(family_filename, file_format='simple')
     variants_loader = DenovoLoader(
@@ -254,16 +265,28 @@ def denovo2parquet(
         variants_loader, annotation_pipeline)
 
     if not skip_pedigree:
+        pedigree_path = os.path.join(
+            argv.output,
+            'pedigree/partition_pedigree.ped')
         ParquetManager.pedigree_to_parquet(
-            variants_loader, parquet_filenames.pedigree)
+            families_loader, pedigree_path)
 
-    ParquetManager.variants_to_parquet(
-        variants_loader, parquet_filenames.variant,
-        rows=rows, bucket_index=bucket_index,
-        filesystem=filesystem
-    )
+    if argv.partition_description is None:
+        filename = os.path.join(argv.out, 'variants.parquet')
+        ParquetManager.variants_to_parquet(
+            variants_loader, filename,
+            rows=rows, bucket_index=bucket_index,
+            filesystem=filesystem
+        )
+    else:
+        description = ParquetPartitionDescription.from_config(
+                    argv.partition_description)
 
-    return parquet_filenames
+        ParquetManager.variants_to_parquet_partition(
+            variants_loader, description,
+            argv.output,
+            bucket_index=argv.bucket_index
+        )
 
 
 def dae2parquet(
@@ -271,40 +294,57 @@ def dae2parquet(
     filename = os.path.basename(argv.families)
     study_id = os.path.splitext(filename)[0]
     print(filename, os.path.splitext(filename), study_id)
-
-    parquet_filenames = ParquetManager.build_parquet_filenames(
-        argv.output, bucket_index=argv.bucket_index, study_id=study_id)
-    print("converting into ", parquet_filenames, file=sys.stderr)
-
     fvars = dae_build_transmitted(annotation_pipeline, genome, argv)
+    fvars = AnnotationPipelineDecorator(fvars, annotation_pipeline)
 
-    parquet_manager.pedigree_to_parquet(fvars, parquet_filenames.pedigree)
-    parquet_manager.variants_to_parquet(
-        fvars, parquet_filenames.variant,
-        bucket_index=argv.bucket_index,
-        rows=argv.rows,
-        include_reference=not argv.no_reference
-    )
+    if not argv.skip_pedigree:
+        pedigree_path = os.path.join(
+            argv.output,
+            'pedigree/partition_pedigree.ped')
+        ParquetManager.pedigree_to_parquet(
+            fvars, pedigree_path)
 
-    return parquet_filenames
+    if argv.partition_description is None:
+        parquet_filenames = ParquetManager.build_parquet_filenames(
+            argv.output, bucket_index=argv.bucket_index, study_id=study_id)
+        print("converting into ", parquet_filenames, file=sys.stderr)
+
+        parquet_manager.variants_to_parquet(
+            fvars, parquet_filenames.variant,
+            bucket_index=argv.bucket_index,
+            rows=argv.rows,
+            include_reference=not argv.no_reference
+        )
+
+        return parquet_filenames
+    else:
+        description = ParquetPartitionDescription.from_config(
+            argv.partition_description)
+
+        parquet_manager.variants_to_parquet_partition(
+            fvars, description,
+            argv.output,
+            bucket_index=argv.bucket_index,
+            rows=argv.rows
+        )
 
 
-if __name__ == "__main__":
+def main(argv):
     gpf_instance = GPFInstance()
     dae_config = gpf_instance.dae_config
     genomes_db = gpf_instance.genomes_db
     genome = genomes_db.get_genome()
     parquet_manager = ParquetManager(dae_config.studies_db.dir)
 
-    argv = parse_cli_arguments(gpf_instance, sys.argv[1:])
+    argv = parse_cli_arguments(gpf_instance, argv)
     annotation_pipeline = construct_import_annotation_pipeline(
         dae_config, genomes_db, argv)
 
     if argv.type == 'denovo':
         denovo2parquet(
             argv.families, argv.variants,
-            parquet_manager, annotation_pipeline, genome,
-            family_format=argv.family_format,
+            annotation_pipeline, genome,
+            argv,
             output=argv.output, bucket_index=0, rows=argv.rows,
             skip_pedigree=argv.skip_pedigree
         )
@@ -313,4 +353,15 @@ if __name__ == "__main__":
             dae_config, parquet_manager, annotation_pipeline, genome, argv
         )
     elif argv.type == 'make':
-        dae_build_makefile(dae_config, genome, argv)
+        fvars = dae_build_transmitted(annotation_pipeline, genome, argv)
+        fvars = AnnotationPipelineDecorator(fvars, annotation_pipeline)
+        generate_makefile(
+            fvars,
+            f'dae2parquet dae {argv.families}'
+            f'{argv.summary} {argv.toomany}',
+            argv
+        )
+
+
+if __name__ == "__main__":
+    main(sys.argv[1:])

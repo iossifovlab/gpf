@@ -3,7 +3,7 @@ from box import Box
 
 from dae.pedigrees.family import FamiliesData, FamiliesLoader
 
-from dae.tools.dae2parquet import parse_cli_arguments, dae_build_makefile
+from dae.tools.dae2parquet import parse_cli_arguments, dae_build_makefile, main
 
 from dae.backends.raw.loader import AnnotationPipelineDecorator
 
@@ -137,6 +137,43 @@ def test_dae2parquet_make(
     assert argv.type == 'make'
 
     dae_build_makefile(dae_config_fixture, genome, argv)
+
+
+def test_dae2parquet_dae_partition(
+        dae_transmitted_config, annotation_pipeline_default_config,
+        temp_dirname, parquet_partition_configuration):
+
+    print(dae_transmitted_config)
+    argv = [
+        'dae',
+        dae_transmitted_config.family_filename,
+        dae_transmitted_config.summary_filename,
+        dae_transmitted_config.toomany_filename,
+        '--annotation', annotation_pipeline_default_config,
+        '--family-format', 'simple',
+        '-o', '/tmp/test_d2p_dae_part',
+        '--pd', parquet_partition_configuration
+    ]
+
+    main(argv)
+
+
+def test_dae2parquet_denovo_partition(
+        dae_denovo_config, annotation_pipeline_default_config,
+        temp_dirname, parquet_partition_configuration):
+
+    print(dae_denovo_config)
+    argv = [
+        'denovo',
+        dae_denovo_config.family_filename,
+        dae_denovo_config.denovo_filename,
+        '--annotation', annotation_pipeline_default_config,
+        '--family-format', 'simple',
+        '-o', '/tmp/test_d2p_dae_part',
+        '--pd', parquet_partition_configuration
+    ]
+
+    main(argv)
 
 
 @pytest.mark.parametrize('variants', [
