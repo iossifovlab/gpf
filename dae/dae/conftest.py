@@ -308,7 +308,7 @@ def dae_denovo(
 
     variants_loader = AnnotationPipelineDecorator(
         variants_loader, annotation_pipeline_internal)
-    fvars = RawMemoryVariants(variants_loader)
+    fvars = RawMemoryVariants([variants_loader])
     return fvars
 
 
@@ -389,7 +389,7 @@ def iossifov2014_loader(
 @pytest.fixture(scope='session')
 def iossifov2014_raw_denovo(iossifov2014_loader):
 
-    fvars = RawMemoryVariants(iossifov2014_loader)
+    fvars = RawMemoryVariants([iossifov2014_loader])
 
     return fvars
 
@@ -470,7 +470,7 @@ def variants_vcf(vcf_variants_loader):
     def builder(path):
         loader = vcf_variants_loader(path)
 
-        fvars = RawMemoryVariants(loader)
+        fvars = RawMemoryVariants([loader])
         return fvars
 
     return builder
@@ -479,7 +479,7 @@ def variants_vcf(vcf_variants_loader):
 @pytest.fixture(scope='session')
 def variants_mem():
     def builder(loader):
-        fvars = RawMemoryVariants(loader)
+        fvars = RawMemoryVariants([loader])
         return fvars
 
     return builder
