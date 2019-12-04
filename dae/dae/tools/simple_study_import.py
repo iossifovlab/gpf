@@ -194,7 +194,7 @@ def main(argv, gpf_instance=None):
 
     if not argv.skip_reports:
         # needs to reload the configuration, hence gpf_instance=None
-        gpf_instance.reload_variants_db()
+        gpf_instance.reload()
 
         print("generating common reports...", file=sys.stderr)
         start = time.time()

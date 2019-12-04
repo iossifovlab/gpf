@@ -211,7 +211,7 @@ def test_import_denovo_dae_style_into_filesystem(
     storage_config = default_dae_config.storage[genotype_storage_id]
     assert storage_config.type == 'filesystem'
 
-    default_gpf_instance.reload_variants_db()
+    default_gpf_instance.reload()
     study = default_gpf_instance.variants_db.get_study(study_id)
     vs = list(study.query_variants())
     assert len(vs) == 3
@@ -255,7 +255,7 @@ def test_import_iossifov2014_filesystem(
     storage_config = default_dae_config.storage[genotype_storage_id]
     assert storage_config.type == 'filesystem'
 
-    default_gpf_instance.reload_variants_db()
+    default_gpf_instance.reload()
     study = default_gpf_instance.variants_db.get_study(study_id)
     assert study is not None
 
@@ -302,7 +302,7 @@ def test_import_comp_all_into_filesystem(
     storage_config = default_dae_config.storage[genotype_storage_id]
     assert storage_config.type == 'filesystem'
 
-    default_gpf_instance.reload_variants_db()
+    default_gpf_instance.reload()
     study = default_gpf_instance.variants_db.get_study(study_id)
     assert study is not None
 
