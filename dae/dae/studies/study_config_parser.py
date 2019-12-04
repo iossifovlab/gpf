@@ -10,7 +10,7 @@ from dae.studies.genotype_browser_config_parser import \
 from dae.configuration.config_parser_base import ConfigParserBase
 
 
-class StudyConfigParserBase(ConfigParserBase):
+class GenotypeDataConfigParser(ConfigParserBase):
 
     CAST_TO_BOOL = (
         'hasComplex',
@@ -48,7 +48,7 @@ class StudyConfigParserBase(ConfigParserBase):
 
     @classmethod
     def parse(cls, config):
-        config = super(StudyConfigParserBase, cls).parse(config)
+        config = super(GenotypeDataConfigParser, cls).parse(config)
         if config is None:
             return None
 
@@ -177,11 +177,11 @@ class TablesConfigParser(ConfigParserBase):
         return config_section
 
 
-class StudyConfigParser(StudyConfigParserBase):
+class GenotypeDataStudyConfigParser(GenotypeDataConfigParser):
 
-    SECTION = 'study'
+    SECTION = 'genotypeDataStudy'
 
-    INCLUDE_PROPERTIES = StudyConfigParserBase.INCLUDE_PROPERTIES + (
+    INCLUDE_PROPERTIES = GenotypeDataConfigParser.INCLUDE_PROPERTIES + (
         'work_dir',
         'wd',
         'genotype_storage',
@@ -193,7 +193,7 @@ class StudyConfigParser(StudyConfigParserBase):
     def read_and_parse_directory_configurations(
             cls, configurations_dir, defaults=None, fail_silently=False):
         print("parsing studies directory:", configurations_dir)
-        configs = super(StudyConfigParser, cls). \
+        configs = super(GenotypeDataStudyConfigParser, cls). \
             read_and_parse_directory_configurations(
                 configurations_dir, defaults=defaults,
                 fail_silently=fail_silently
@@ -219,7 +219,7 @@ class StudyConfigParser(StudyConfigParserBase):
 
     @classmethod
     def _fill_sections_config(cls, config_section, config):
-        super(StudyConfigParser, cls)._fill_sections_config(
+        super(GenotypeDataStudyConfigParser, cls)._fill_sections_config(
             config_section, config)
 
         cls._fill_files_config(config_section, config)
@@ -231,8 +231,7 @@ class StudyConfigParser(StudyConfigParserBase):
 
     @classmethod
     def parse(cls, config):
-
-        config = super(StudyConfigParser, cls).parse(config)
+        config = super(GenotypeDataStudyConfigParser, cls).parse(config)
         if config is None:
             return None
 
