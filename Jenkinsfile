@@ -16,6 +16,8 @@ pipeline {
     }    
 
   environment {
+    WD="${env.WORKSPACE}"
+
     DOCKER_IMAGE="iossifovlab/gpf-base:${env.BRANCH_NAME}"
 
     SOURCE_DIR="${env.WORKSPACE}"
