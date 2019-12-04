@@ -3,13 +3,13 @@ import pytest
 from dae.studies.tests.conftest import studies_dir
 
 
-def test_study_config_simple(study_configs):
-    assert study_configs is not None
-    assert list(study_configs.keys())
+def test_study_config_simple(genotype_data_study_configs):
+    assert genotype_data_study_configs is not None
+    assert list(genotype_data_study_configs.keys())
 
 
-def test_study_config_year(study_configs):
-    study_config = study_configs.get('inheritance_trio')
+def test_study_config_year(genotype_data_study_configs):
+    study_config = genotype_data_study_configs.get('inheritance_trio')
     assert study_config is not None
     assert study_config.year == ''
 

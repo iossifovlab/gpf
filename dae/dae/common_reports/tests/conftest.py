@@ -20,7 +20,7 @@ def studies_dir():
         os.path.join(os.path.dirname(__file__), 'fixtures/studies'))
 
 
-def datasets_dir():
+def genotype_data_groups_dir():
     return os.path.abspath(
         os.path.join(os.path.dirname(__file__), 'fixtures/datasets'))
 
@@ -58,8 +58,8 @@ def study4(vdb_fixture):
 
 
 @pytest.fixture(scope='session')
-def dataset1(vdb_fixture):
-    return vdb_fixture.get_dataset_wdae_wrapper("Dataset1")
+def genotype_data_group1(vdb_fixture):
+    return vdb_fixture.get_genotype_data_group_wdae_wrapper("Dataset1")
 
 
 @pytest.fixture(scope='session')
@@ -68,18 +68,18 @@ def study1_config(vdb_fixture):
 
 
 @pytest.fixture(scope='session')
-def dataset2_config(vdb_fixture):
-    return vdb_fixture.get_dataset_config("Dataset2")
+def genotype_data_group2_config(vdb_fixture):
+    return vdb_fixture.get_genotype_data_group_config("Dataset2")
 
 
 @pytest.fixture(scope='session')
-def dataset3_config(vdb_fixture):
-    return vdb_fixture.get_dataset_config("Dataset3")
+def genotype_data_group3_config(vdb_fixture):
+    return vdb_fixture.get_genotype_data_group_config("Dataset3")
 
 
 @pytest.fixture(scope='session')
-def dataset4_config(vdb_fixture):
-    return vdb_fixture.get_dataset_config("Dataset4")
+def genotype_data_group4_config(vdb_fixture):
+    return vdb_fixture.get_genotype_data_group_config("Dataset4")
 
 
 @pytest.fixture(scope='session')
@@ -131,8 +131,8 @@ def families_groups(study1):
 
 
 @pytest.fixture(scope='session')
-def denovo_variants_ds1(dataset1):
-    denovo_variants = dataset1.query_variants(
+def denovo_variants_ds1(genotype_data_group1):
+    denovo_variants = genotype_data_group1.query_variants(
         limit=None,
         inheritance='denovo',
     )

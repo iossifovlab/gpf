@@ -17,7 +17,7 @@ def studies_dir():
         os.path.join(os.path.dirname(__file__), 'fixtures/studies'))
 
 
-def datasets_dir():
+def genotype_data_groups_dir():
     return os.path.abspath(
         os.path.join(os.path.dirname(__file__), 'fixtures/datasets'))
 
@@ -58,8 +58,8 @@ def genotype_storage_factory(gpf_instance):
 
 
 @pytest.fixture(scope='session')
-def study_configs(variants_db_fixture):
-    return variants_db_fixture.study_configs
+def genotype_data_study_configs(variants_db_fixture):
+    return variants_db_fixture.genotype_data_study_configs
 
 
 @pytest.fixture(scope='session')
@@ -72,8 +72,8 @@ def quads_f2_config(variants_db_fixture):
     return variants_db_fixture.get_study_config('quads_f2')
 
 
-def load_study(variants_db_fixture, study_configs, study_name):
-    config = study_configs.get(study_name)
+def load_study(variants_db_fixture, genotype_data_study_configs, study_name):
+    config = genotype_data_study_configs.get(study_name)
 
     result = variants_db_fixture.make_study(config)
     assert result is not None
@@ -81,39 +81,48 @@ def load_study(variants_db_fixture, study_configs, study_name):
 
 
 @pytest.fixture(scope='session')
-def inheritance_trio(variants_db_fixture, study_configs):
-    return load_study(variants_db_fixture, study_configs, 'inheritance_trio')
-
-
-@pytest.fixture(scope='session')
-def quads_f1(variants_db_fixture, study_configs):
-    return load_study(variants_db_fixture, study_configs, 'quads_f1')
-
-
-@pytest.fixture(scope='session')
-def quads_f2(variants_db_fixture, study_configs):
-    return load_study(variants_db_fixture, study_configs, 'quads_f2')
-
-
-@pytest.fixture(scope='session')
-def quads_variant_types(variants_db_fixture, study_configs):
+def inheritance_trio(variants_db_fixture, genotype_data_study_configs):
     return load_study(
-        variants_db_fixture, study_configs, 'quads_variant_types')
+        variants_db_fixture, genotype_data_study_configs, 'inheritance_trio')
 
 
 @pytest.fixture(scope='session')
-def quads_two_families(variants_db_fixture, study_configs):
-    return load_study(variants_db_fixture, study_configs, 'quads_two_families')
+def quads_f1(variants_db_fixture, genotype_data_study_configs):
+    return load_study(
+       variants_db_fixture, genotype_data_study_configs, 'quads_f1')
 
 
 @pytest.fixture(scope='session')
-def quads_in_child(variants_db_fixture, study_configs):
-    return load_study(variants_db_fixture, study_configs, 'quads_in_child')
+def quads_f2(variants_db_fixture, genotype_data_study_configs):
+    return load_study(
+       variants_db_fixture, genotype_data_study_configs, 'quads_f2')
 
 
 @pytest.fixture(scope='session')
-def quads_in_parent(variants_db_fixture, study_configs):
-    return load_study(variants_db_fixture, study_configs, 'quads_in_parent')
+def quads_variant_types(variants_db_fixture, genotype_data_study_configs):
+    return load_study(
+        variants_db_fixture,
+        genotype_data_study_configs,
+        'quads_variant_types'
+    )
+
+
+@pytest.fixture(scope='session')
+def quads_two_families(variants_db_fixture, genotype_data_study_configs):
+    return load_study(
+        variants_db_fixture, genotype_data_study_configs, 'quads_two_families')
+
+
+@pytest.fixture(scope='session')
+def quads_in_child(variants_db_fixture, genotype_data_study_configs):
+    return load_study(
+        variants_db_fixture, genotype_data_study_configs, 'quads_in_child')
+
+
+@pytest.fixture(scope='session')
+def quads_in_parent(variants_db_fixture, genotype_data_study_configs):
+    return load_study(
+        variants_db_fixture, genotype_data_study_configs, 'quads_in_parent')
 
 
 @pytest.fixture(scope='session')
@@ -154,121 +163,146 @@ def quads_in_parent_wrapper(quads_in_parent, pheno_db, gene_weights_db):
 
 
 @pytest.fixture(scope='session')
-def dataset_configs(variants_db_fixture):
-    return variants_db_fixture.dataset_configs
+def genotype_data_group_configs(variants_db_fixture):
+    return variants_db_fixture.genotype_data_group_configs
 
 
 @pytest.fixture(scope='session')
-def quads_composite_dataset_config(variants_db_fixture):
-    return variants_db_fixture.get_dataset_config('quads_composite_ds')
+def quads_composite_genotype_data_group_config(variants_db_fixture):
+    return variants_db_fixture.get_genotype_data_group_config(
+        'quads_composite_ds'
+    )
 
 
 @pytest.fixture(scope='session')
 def composite_dataset_config(variants_db_fixture):
-    return variants_db_fixture.get_dataset_config('composite_dataset_ds')
+    return variants_db_fixture.get_genotype_data_group_config(
+        'composite_dataset_ds'
+    )
 
 
-def load_dataset(variants_db_fixture, dataset_configs, dataset_name):
-    config = dataset_configs.get(dataset_name)
-    assert config is not None, dataset_name
+def load_genotype_data_group(
+        variants_db_fixture, genotype_data_group_configs,
+        genotype_data_group_name):
+    config = genotype_data_group_configs.get(genotype_data_group_name)
+    assert config is not None, genotype_data_group_name
 
-    result = variants_db_fixture.make_dataset(config)
+    result = variants_db_fixture.make_genotype_data_group(config)
     assert result is not None
     return result
 
 
 @pytest.fixture(scope='session')
-def inheritance_trio_dataset(variants_db_fixture, dataset_configs):
-    return load_dataset(
-        variants_db_fixture, dataset_configs, 'inheritance_trio_ds')
+def inheritance_trio_genotype_data_group(
+        variants_db_fixture, genotype_data_group_configs):
+    return load_genotype_data_group(
+        variants_db_fixture, genotype_data_group_configs,
+        'inheritance_trio_ds')
 
 
 @pytest.fixture(scope='session')
-def inheritance_trio_dataset_wrapper(
-        inheritance_trio_dataset, pheno_db, gene_weights_db):
+def inheritance_trio_genotype_data_group_wrapper(
+        inheritance_trio_genotype_data_group, pheno_db, gene_weights_db):
     return StudyWrapper(
-        inheritance_trio_dataset, pheno_db, gene_weights_db
+        inheritance_trio_genotype_data_group, pheno_db, gene_weights_db
     )
 
 
 @pytest.fixture(scope='session')
-def quads_two_families_dataset(variants_db_fixture, dataset_configs):
-    return load_dataset(
-        variants_db_fixture, dataset_configs, 'quads_two_families_ds')
+def quads_two_families_genotype_data_group(
+        variants_db_fixture, genotype_data_group_configs):
+    return load_genotype_data_group(
+        variants_db_fixture, genotype_data_group_configs,
+        'quads_two_families_ds')
 
 
 @pytest.fixture(scope='session')
-def quads_two_families_dataset_wrapper(
-        quads_two_families_dataset, pheno_db, gene_weights_db):
+def quads_two_families_genotype_data_group_wrapper(
+        quads_two_families_genotype_data_group, pheno_db, gene_weights_db):
     return StudyWrapper(
-        quads_two_families_dataset, pheno_db, gene_weights_db
+        quads_two_families_genotype_data_group, pheno_db, gene_weights_db
     )
 
 
 @pytest.fixture(scope='session')
-def quads_f1_dataset(variants_db_fixture, dataset_configs):
-    return load_dataset(variants_db_fixture, dataset_configs, 'quads_f1_ds')
+def quads_f1_genotype_data_group(
+        variants_db_fixture, genotype_data_group_configs):
+    return load_genotype_data_group(
+        variants_db_fixture, genotype_data_group_configs, 'quads_f1_ds')
 
 
 @pytest.fixture(scope='session')
-def quads_f1_dataset_wrapper(quads_f1_dataset, pheno_db, gene_weights_db):
-    return StudyWrapper(quads_f1_dataset, pheno_db, gene_weights_db)
+def quads_f1_genotype_data_group_wrapper(
+        quads_f1_genotype_data_group, pheno_db, gene_weights_db):
+    return StudyWrapper(quads_f1_genotype_data_group,
+                        pheno_db, gene_weights_db)
 
 
 @pytest.fixture(scope='session')
-def quads_f2_dataset(variants_db_fixture, dataset_configs):
-    return load_dataset(variants_db_fixture, dataset_configs, 'quads_f2_ds')
+def quads_f2_genotype_data_group(variants_db_fixture,
+                                 genotype_data_group_configs):
+    return load_genotype_data_group(
+        variants_db_fixture, genotype_data_group_configs, 'quads_f2_ds')
 
 
 @pytest.fixture(scope='session')
-def quads_f2_dataset_wrapper(quads_f2_dataset, pheno_db, gene_weights_db):
-    return StudyWrapper(quads_f2_dataset, pheno_db, gene_weights_db)
+def quads_f2_genotype_data_group_wrapper(quads_f2_genotype_data_group,
+                                         pheno_db, gene_weights_db):
+    return StudyWrapper(quads_f2_genotype_data_group,
+                        pheno_db, gene_weights_db)
 
 
 @pytest.fixture(scope='session')
-def quads_variant_types_dataset(variants_db_fixture, dataset_configs):
-    return load_dataset(
-        variants_db_fixture, dataset_configs, 'quads_variant_types_ds')
+def quads_variant_types_genotype_data_group(variants_db_fixture,
+                                            genotype_data_group_configs):
+    return load_genotype_data_group(
+        variants_db_fixture, genotype_data_group_configs,
+        'quads_variant_types_ds')
 
 
 @pytest.fixture(scope='session')
-def quads_variant_types_dataset_wrapper(
-        quads_variant_types_dataset, pheno_db, gene_weights_db):
+def quads_variant_types_genotype_data_group_wrapper(
+        quads_variant_types_genotype_data_group, pheno_db, gene_weights_db):
     return StudyWrapper(
-        quads_variant_types_dataset, pheno_db, gene_weights_db
+        quads_variant_types_genotype_data_group, pheno_db, gene_weights_db
     )
 
 
 @pytest.fixture(scope='session')
-def quads_in_child_dataset(variants_db_fixture, dataset_configs):
-    return load_dataset(
-        variants_db_fixture, dataset_configs, 'quads_in_child_ds')
+def quads_in_child_genotype_data_group(variants_db_fixture,
+                                       genotype_data_group_configs):
+    return load_genotype_data_group(
+        variants_db_fixture, genotype_data_group_configs, 'quads_in_child_ds')
 
 
 @pytest.fixture(scope='session')
-def quads_in_child_dataset_wrapper(
-        quads_in_child_dataset, pheno_db, gene_weights_db):
-    return StudyWrapper(quads_in_child_dataset, pheno_db, gene_weights_db)
+def quads_in_child_genotype_data_group_wrapper(
+        quads_in_child_genotype_data_group, pheno_db, gene_weights_db):
+    return StudyWrapper(quads_in_child_genotype_data_group,
+                        pheno_db, gene_weights_db)
 
 
 @pytest.fixture(scope='session')
-def quads_in_parent_dataset(variants_db_fixture, dataset_configs):
-    return load_dataset(
-        variants_db_fixture, dataset_configs, 'quads_in_parent_ds')
+def quads_in_parent_genotype_data_group(variants_db_fixture,
+                                        genotype_data_group_configs):
+    return load_genotype_data_group(
+        variants_db_fixture, genotype_data_group_configs,
+        'quads_in_parent_ds')
 
 
 @pytest.fixture(scope='session')
-def quads_in_parent_dataset_wrapper(
-        quads_in_parent_dataset, pheno_db, gene_weights_db):
+def quads_in_parent_genotype_data_group_wrapper(
+        quads_in_parent_genotype_data_group, pheno_db, gene_weights_db):
     return StudyWrapper(
-        quads_in_parent_dataset, pheno_db, gene_weights_db
+        quads_in_parent_genotype_data_group, pheno_db, gene_weights_db
     )
 
 
 @pytest.fixture(scope='session')
-def composite_dataset(variants_db_fixture, dataset_configs):
-    return load_dataset(
-        variants_db_fixture, dataset_configs, 'composite_dataset_ds')
+def composite_dataset(variants_db_fixture, genotype_data_group_configs):
+    return load_genotype_data_group(
+        variants_db_fixture, genotype_data_group_configs,
+        'composite_dataset_ds')
 
 
 @pytest.fixture(scope='session')
