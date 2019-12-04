@@ -12,7 +12,7 @@ class GeneWeightsListView(QueryBaseView):
     def __init__(self):
         super(GeneWeightsListView, self).__init__()
 
-        self.weights_factory = self.gpf_instance.weights_factory
+        self.gene_weights_db = self.gpf_instance.gene_weights_db
 
     def get_gene_weights(self, weights):
         return [
@@ -28,7 +28,7 @@ class GeneWeightsListView(QueryBaseView):
         ]
 
     def get(self, request):
-        weights = self.weights_factory.get_weights()
+        weights = self.gene_weights_db.get_gene_weights()
         gene_weights = self.get_gene_weights(weights)
 
         return Response(gene_weights)
@@ -39,10 +39,10 @@ class GeneWeightsDownloadView(QueryBaseView):
     def __init__(self):
         super(GeneWeightsDownloadView, self).__init__()
 
-        self.weights_factory = self.gpf_instance.weights_factory
+        self.gene_weights_db = self.gpf_instance.gene_weights_db
 
     def get(self, request, weight):
-        tsv = self.weights_factory[weight].to_tsv()
+        tsv = self.gene_weights_db[weight]._to_tsv()
 
         response = StreamingHttpResponse(tsv, content_type='text/csv')
 
@@ -56,13 +56,13 @@ class GeneWeightsGetGenesView(QueryBaseView):
     def __init__(self):
         super(GeneWeightsGetGenesView, self).__init__()
 
-        self.weights_factory = self.gpf_instance.weights_factory
+        self.gene_weights_db = self.gpf_instance.gene_weights_db
 
     def prepare_data(self, data):
         if 'weight' not in data:
             raise ValueError('weight key not found')
         wname = data['weight']
-        if wname not in self.weights_factory:
+        if wname not in self.gene_weights_db:
             raise ValueError('unknown gene weight')
         if 'min' not in data:
             wmin = None
@@ -72,7 +72,7 @@ class GeneWeightsGetGenesView(QueryBaseView):
             wmax = None
         else:
             wmax = float(data['max'])
-        return self.weights_factory[wname].get_genes(wmin=wmin, wmax=wmax)
+        return self.gene_weights_db[wname].get_genes(wmin=wmin, wmax=wmax)
 
     def post(self, request):
         data = self.request.data
@@ -85,20 +85,20 @@ class GeneWeightsPartitionsView(QueryBaseView):
     def __init__(self):
         super(GeneWeightsPartitionsView, self).__init__()
 
-        self.weights_factory = self.gpf_instance.weights_factory
+        self.gene_weights_db = self.gpf_instance.gene_weights_db
 
     def post(self, request):
         data = request.data
 
         assert "weight" in data
-        assert self.weights_factory is not None
+        assert self.gene_weights_db is not None
 
         weight_name = data['weight']
 
-        if weight_name not in self.weights_factory:
+        if weight_name not in self.gene_weights_db:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        w = self.weights_factory[weight_name]
+        w = self.gene_weights_db[weight_name]
         df = w.df
 
         try:

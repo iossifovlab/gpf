@@ -3,28 +3,28 @@ import pytest
 pytestmark = pytest.mark.usefixtures('mock_gpf_instance')
 
 
-def test_weights_created(weights_factory):
-    assert weights_factory is not None
+def test_weights_created(gene_weights_db):
+    assert gene_weights_db is not None
 
 
-def test_lgd_rank_available(weights_factory):
-    assert 'LGD_rank' in weights_factory
+def test_lgd_rank_available(gene_weights_db):
+    assert 'LGD_rank' in gene_weights_db
 
 
-def test_get_lgd_rank(weights_factory):
-    w = weights_factory['LGD_rank']
+def test_get_lgd_rank(gene_weights_db):
+    w = gene_weights_db['LGD_rank']
 
     assert w is not None
     assert w.min() == pytest.approx(1.0, 0.01)
     assert w.max() == pytest.approx(18394.5, 0.01)
 
 
-def test_get_genes_by_weight(weights_factory):
-    g = weights_factory['LGD_rank'].get_genes(1.5, 5.0)
+def test_get_genes_by_weight(gene_weights_db):
+    g = gene_weights_db['LGD_rank'].get_genes(1.5, 5.0)
     assert len(g) == 3
 
-    g = weights_factory['LGD_rank'].get_genes(-1, 5.0)
+    g = gene_weights_db['LGD_rank'].get_genes(-1, 5.0)
     assert len(g) == 4
 
-    g = weights_factory['LGD_rank'].get_genes(1.0, 5.0)
+    g = gene_weights_db['LGD_rank'].get_genes(1.0, 5.0)
     assert len(g) == 4

@@ -22,13 +22,31 @@ def test_init(gpf_instance):
     assert gpf_instance.genomes_db
     assert gpf_instance.pheno_factory
     assert gpf_instance.gene_info_config
-    assert gpf_instance.weights_factory is not None
+    assert gpf_instance.gene_weights_db is not None
     assert gpf_instance.score_config
     assert gpf_instance.scores_factory
     assert gpf_instance.variants_db
     assert gpf_instance.common_report_facade
-    assert gpf_instance.gene_sets_collections
-    assert gpf_instance.denovo_gene_set_facade
+    assert gpf_instance.gene_sets_db
+    assert gpf_instance.denovo_gene_sets_db is not None
+    assert gpf_instance.background_facade
+
+
+def test_eager_init():
+    gpf_instance = GPFInstance(work_dir=fixtures_dir(), load_eagerly=True)
+    assert gpf_instance
+
+    assert gpf_instance.dae_config
+    assert gpf_instance.genomes_db
+    assert gpf_instance.pheno_factory
+    assert gpf_instance.gene_info_config
+    assert gpf_instance.gene_weights_db is not None
+    assert gpf_instance.score_config
+    assert gpf_instance.scores_factory
+    assert gpf_instance.variants_db
+    assert gpf_instance.common_report_facade
+    assert gpf_instance.gene_sets_db
+    assert gpf_instance.denovo_gene_sets_db is not None
     assert gpf_instance.background_facade
 
 

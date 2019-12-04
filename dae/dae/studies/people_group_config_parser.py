@@ -64,6 +64,22 @@ class PeopleGroupConfigParser(ConfigParserBase):
 
         return people_group_config
 
+    @staticmethod
+    def _select_people_groups(available_groups, specified_groups):
+        if len(available_groups) == 0:
+            return None
+
+        result = {
+            pg.id: {
+                'name': pg.name,
+                'source': pg.source,
+                'domain': pg.domain
+            } for pg in available_groups.values()
+            if pg.id in specified_groups
+        }
+
+        return result
+
     @classmethod
     def get_config_description(cls, config):
         config = config.to_dict()

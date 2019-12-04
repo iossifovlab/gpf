@@ -4,8 +4,8 @@ from dae.gene.genomic_values import GenomicValues
 
 
 class Scores(GenomicValues):
-    def __init__(self, config, *args, **kwargs):
-        super(Scores, self).__init__(config.id, *args, **kwargs)
+    def __init__(self, config):
+        super(Scores, self).__init__(config.id)
 
         self.config = config
         self.genomic_values_col = 'scores'
@@ -28,8 +28,8 @@ class Scores(GenomicValues):
 
 class ScoresFactory(object):
 
-    def __init__(self, config, *args, **kwargs):
-        super(ScoresFactory, self).__init__(*args, **kwargs)
+    def __init__(self, config):
+        super(ScoresFactory, self).__init__()
         self.config = config
 
         self.scores = OrderedDict()

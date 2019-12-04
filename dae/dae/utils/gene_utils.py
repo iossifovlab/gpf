@@ -1,4 +1,4 @@
-from dae.gene.weights import Weights
+from dae.gene.weights import GeneWeight
 
 
 class GeneSymsMixin(object):
@@ -16,14 +16,14 @@ class GeneSymsMixin(object):
         return set([g.strip() for g in gene_symbols])
 
     @staticmethod
-    def get_gene_weights_query(gene_info_config, **kwargs):
+    def get_gene_weights_query(gene_weights_config, **kwargs):
         gene_weights = kwargs.get('geneWeights', None)
         if gene_weights is None:
             return None, None, None
         if 'weight' not in gene_weights:
             return None, None, None
         weights_id = gene_weights['weight']
-        if weights_id not in Weights.list_gene_weights(gene_info_config):
+        if weights_id not in gene_weights_config:
             return None, None, None
         range_start = gene_weights.get('rangeStart', None)
         range_end = gene_weights.get('rangeEnd', None)
@@ -44,19 +44,19 @@ class GeneSymsMixin(object):
         return gene_sets_collection, gene_set, gene_sets_types
 
     @classmethod
-    def get_gene_syms(cls, gene_info_config, **kwargs):
+    def get_gene_syms(cls, gene_weights_config, **kwargs):
         result = cls.get_gene_symbols(**kwargs) | \
-            cls.get_gene_weights(gene_info_config, **kwargs)
+            cls.get_gene_weights(gene_weights_config, **kwargs)
 
         return result if result else None
 
     @classmethod
-    def get_gene_weights(cls, gene_info_config, **kwargs):
+    def get_gene_weights(cls, gene_weights_config, **kwargs):
         weights_id, range_start, range_end = cls.get_gene_weights_query(
-            gene_info_config, **kwargs)
-        if not weights_id or \
-                weights_id not in Weights.list_gene_weights(gene_info_config):
+            gene_weights_config, **kwargs)
+
+        if not weights_id or weights_id not in gene_weights_config:
             return set([])
 
-        weights = Weights.load_gene_weights(weights_id, gene_info_config)
+        weights = GeneWeight(gene_weights_config.get(weights_id))
         return weights.get_genes(wmin=range_start, wmax=range_end)
