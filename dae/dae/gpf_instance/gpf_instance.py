@@ -109,8 +109,11 @@ class GPFInstance(object):
             self.genomes_db, self.genotype_storage_factory
         )
 
-    def reload_variants_db(self):
-        self.__variants_db__ = None
+    def reload(self):
+        self._variants_db = None
+        self._denovo_gene_sets_db = None
+        self._common_report_facade = None
+        self._gene_sets_db = None
 
     @property
     @cached

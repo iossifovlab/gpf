@@ -42,30 +42,34 @@ class FilesystemGenotypeStorage(GenotypeStorage):
             variants_loader = StoredAnnotationDecorator.decorate(
                 variants_loader, vcf_filename
             )
-            return RawMemoryVariants(variants_loader)
-
-        elif study_config.files.vcf:
-
-            families_loader = FamiliesLoader(study_config.files.pedigree.path)
-            vcf_filename = study_config.files.vcf[0].path
-            variants_loader = VcfLoader(families_loader.families, vcf_filename)
-            variants_loader = StoredAnnotationDecorator.decorate(
-                variants_loader, vcf_filename
-            )
-            return RawMemoryVariants(variants_loader)
+            return RawMemoryVariants([variants_loader])
 
         else:
-            assert study_config.files.denovo
-            families_loader = FamiliesLoader(study_config.files.pedigree.path)
-            denovo_filename = study_config.files.denovo[0].path
-            variants_loader = DenovoLoader(
-                families_loader.families, denovo_filename,
-                genomes_db.get_genome())
+            families_loader = FamiliesLoader(
+                study_config.files.pedigree.path,
+                params=study_config.files.pedigree.params)
+            loaders = []
+            if study_config.files.vcf:
+                variants_filename = study_config.files.vcf[0].path
+                variants_loader = VcfLoader(
+                    families_loader.families, variants_filename)
+                variants_loader = StoredAnnotationDecorator.decorate(
+                    variants_loader, variants_filename
+                )
+                loaders.append(variants_loader)
+            if study_config.files.denovo:
 
-            variants_loader = StoredAnnotationDecorator.decorate(
-                variants_loader, denovo_filename
-            )
-            return RawMemoryVariants(variants_loader)
+                variants_filename = study_config.files.denovo[0].path
+                variants_loader = DenovoLoader(
+                    families_loader.families, variants_filename,
+                    genomes_db.get_genome())
+                variants_loader = StoredAnnotationDecorator.decorate(
+                    variants_loader, variants_filename
+                )
+                loaders.append(variants_loader)
+
+            assert len(loaders) > 0
+            return RawMemoryVariants(loaders)
 
     def simple_study_import(
             self, study_id,
@@ -73,8 +77,8 @@ class FilesystemGenotypeStorage(GenotypeStorage):
             variant_loaders=None,
             **kwargs):
 
-        assert len(variant_loaders) == 1, \
-            'Filesystem genotype storage supports only one variant file'
+        # assert len(variant_loaders) == 1, \
+        #     'Filesystem genotype storage supports only one variant file'
 
         families_config = self._import_families_file(
             study_id, families_loader)
@@ -105,16 +109,15 @@ class FilesystemGenotypeStorage(GenotypeStorage):
                 for k, v in params.items()])
         )
 
-        print(source_filename, destination_filename, config)
         os.makedirs(
             os.path.dirname(destination_filename),
             exist_ok=True)
         shutil.copyfile(source_filename, destination_filename)
         return config
 
-    def _import_variants_files(self, study_id, variants_loaders):
+    def _import_variants_files(self, study_id, loaders):
         result_config = []
-        for index, variants_loader in enumerate(variants_loaders):
+        for index, variants_loader in enumerate(loaders):
             assert isinstance(variants_loader, AnnotationPipelineDecorator)
 
             source_filename = variants_loader.filename
@@ -134,7 +137,6 @@ class FilesystemGenotypeStorage(GenotypeStorage):
                 source_type=variants_loader.source_type
             )
             result_config.append(config)
-            print(source_filename, destination_filename, config)
 
             os.makedirs(
                 os.path.dirname(destination_filename),

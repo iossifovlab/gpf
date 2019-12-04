@@ -1,10 +1,11 @@
+import enum
+import itertools
+
 from dae.variants.family_variant import FamilyAllele
 
 from dae.backends.attributes_query import role_query, sex_query, \
     inheritance_query,\
     variant_type_query
-
-import enum
 
 
 class TransmissionType(enum.Enum):
@@ -17,10 +18,8 @@ class TransmissionType(enum.Enum):
 class RawFamilyVariants:
 
     def __init__(
-            self, families, transmission_type=TransmissionType.transmitted,
-            source_filename=None):
+            self, families):
         self.families = families
-        self.transmission_type = transmission_type
 
     def full_variants_iterator(self):
         raise NotImplementedError()
@@ -210,12 +209,12 @@ class RawFamilyVariants:
 class RawMemoryVariants(RawFamilyVariants):
 
     def __init__(
-            self, loader):
+            self, loaders):
+        assert len(loaders) > 0
+        super(RawMemoryVariants, self).__init__(loaders[0].families)
 
-        super(RawMemoryVariants, self).__init__(
-            loader.families, loader.transmission_type)
-
-        self.full_variants = list(loader.full_variants_iterator())
+        self.full_variants = list(itertools.chain.from_iterable(
+            [loader.full_variants_iterator() for loader in loaders]))
 
     def full_variants_iterator(self):
         for sv, fvs in self.full_variants:

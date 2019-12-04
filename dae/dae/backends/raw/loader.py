@@ -177,11 +177,12 @@ class AnnotationPipelineDecorator(VariantsLoaderDecorator):
             'chrom', 'position', 'reference', 'alternative',
             'bucket_index', 'summary_variant_index',
             'allele_index', 'allele_count',
+            'effect_type', 'effect_gene',
         ]
         effect_columns = [
             'effect_gene_genes', 'effect_gene_types',
             'effect_details_transcript_ids',
-            'effect_details_details'
+            'effect_details_details',
         ]
 
         other_columns = filter(
@@ -331,6 +332,7 @@ class StoredAnnotationDecorator(VariantsLoaderDecorator):
                 sv.ref_allele.get_attribute('summary_variant_index')
 
             records = group_df.to_dict(orient='records')
+
             summary_variant = SummaryVariantFactory.\
                 summary_variant_from_records(
                     records,

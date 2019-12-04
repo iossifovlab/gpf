@@ -162,8 +162,8 @@ def test_quads_f1_config_genotype_browser_columns(
 def test_quads_f1_files_and_tables(quads_f1_config):
     assert quads_f1_config.files.vcf[0].path.endswith('data/quads_f1.vcf')
     assert quads_f1_config.files.pedigree.path.endswith('data/quads_f1.ped')
-    assert quads_f1_config.files.denovo[0].path.endswith(
-        'data/quads_f1_denovo.tsv')
+    # assert quads_f1_config.files.denovo[0].path.endswith(
+    #     'data/quads_f1_denovo.tsv')
 
     assert quads_f1_config.tables.variant == 'quads_f1_variant'
     assert quads_f1_config.tables.pedigree == 'quads_f1_pedigree'

@@ -51,5 +51,5 @@ def quads_f1_config(gpf_instance, impala_genotype_storage):
         pedigree_paths=[relative_to_this_test_folder(
             'fixtures/studies/quads_f1_impala/data/pedigree')]
     )
-    gpf_instance.reload_variants_db()
+    gpf_instance.reload()
     return gpf_instance.variants_db.get_study_config('quads_f1_impala')

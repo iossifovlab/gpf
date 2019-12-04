@@ -150,8 +150,7 @@ def main(argv, gpf_instance=None):
     pedigree_format = \
         PedigreeReader.flexible_pedigree_parse_cli_arguments(argv)
 
-    families_loader = FamiliesLoader(
-        argv.pedigree, pedigree_format=pedigree_format)
+    families_loader = FamiliesLoader(argv.pedigree, params=pedigree_format)
 
     variant_loaders = []
     if argv.denovo is not None:
@@ -195,7 +194,7 @@ def main(argv, gpf_instance=None):
 
     if not argv.skip_reports:
         # needs to reload the configuration, hence gpf_instance=None
-        gpf_instance.reload_variants_db()
+        gpf_instance.reload()
 
         print("generating common reports...", file=sys.stderr)
         start = time.time()
