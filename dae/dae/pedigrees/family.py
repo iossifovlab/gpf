@@ -389,7 +389,7 @@ class FamiliesLoader:
 
     def _load_families_data(self):
         if self.file_format == 'simple':
-            assert not self.pedigree_format
+            # assert not self.pedigree_format
             return self.load_simple_families_file(self.families_filename)
         else:
             assert self.file_format == 'pedigree'
