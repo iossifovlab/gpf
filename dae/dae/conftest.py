@@ -57,7 +57,6 @@ def default_dae_config(request):
 
     request.addfinalizer(fin)
     dae_config = DAEConfigParser.read_and_parse_file_configuration()
-    print(list(dae_config.keys()))
     dae_config.studies_db.dir = dirname
 
     return dae_config
