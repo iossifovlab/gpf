@@ -53,7 +53,7 @@ pipeline {
             } else {
                 copyArtifacts(
                     projectName: 'seqpipe/build-data-hg19-startup/master',
-                    selector: specific("$DATA_HG19_BUILD"));
+                    selector: specific(DATA_HG19_BUILD));
             }
         }
         sh '''
