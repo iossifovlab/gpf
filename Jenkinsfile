@@ -9,6 +9,12 @@ pipeline {
     pollSCM('* * * * *')
     cron('H 2 * * *')
   }
+    parameters {
+        string(
+            name: 'DATA_HG19_BUILD', defaultValue: '0', 
+            description: 'data-hg19-startup build number to use for testing')
+    }    
+
   environment {
     DOCKER_IMAGE="iossifovlab/gpf-base:${env.BRANCH_NAME}"
 
@@ -35,8 +41,23 @@ pipeline {
     stage('Data') {
       steps {
         sh '''
-          export PATH=$HOME/anaconda2/envs/gpf2/bin:$PATH
-          ./jenkins_data.sh
+            rm -f builds/*
+        '''
+        script {
+            println "DATA_HG19_BUILD=" + DATA_HG19_BUILD
+            if (DATA_HG19_BUILD == '0') {
+                copyArtifacts(
+                    projectName: 'seqpipe/build-data-hg19-startup/master',
+                    selector: lastSuccessful()
+                );
+            } else {
+                copyArtifacts(
+                    projectName: 'seqpipe/build-data-hg19-startup/master',
+                    selector: specific("$DATA_HG19_BUILD"));
+            }
+        }
+        sh '''
+            tar zxf builds/data_hg19_startup_*.tar.gz -C $WD
         '''
       }
     }
