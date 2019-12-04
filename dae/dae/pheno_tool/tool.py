@@ -22,16 +22,17 @@ LOGGER = logging.getLogger(__name__)
 
 class PhenoToolHelper(object):
     """
-    Helper class for PhenoTool. Collects variants and person ids from a study.
+    Helper class for PhenoTool.
+    Collects variants and person ids from genotype data.
 
     Arguments of the constructor are:
 
-    `study` -- an instance of StudyWrapper or DatasetWrapper
+    `genotype_data` -- an instance of StudyWrapper
     """
 
-    def __init__(self, study):
-        assert study
-        self.study = study
+    def __init__(self, genotype_data):
+        assert genotype_data
+        self.genotype_data = genotype_data
         self.effect_types_mixin = EffectTypesMixin()
 
     def _package_effect_type_group(self, group, variants):
@@ -45,16 +46,16 @@ class PhenoToolHelper(object):
                 res[group][person_id] = 1
         return res
 
-    def study_persons(self, family_ids=[], roles=[Role.prb]):
+    def genotype_data_persons(self, family_ids=[], roles=[Role.prb]):
         assert isinstance(family_ids, list)
         assert isinstance(roles, list)
         persons = set()
 
         if not family_ids:
-            family_ids = self.study.families.keys()
+            family_ids = self.genotype_data.families.keys()
 
         for family_id in family_ids:
-            family = self.study.families[family_id]
+            family = self.genotype_data.families[family_id]
             for person in family.members_in_order:
                 if person.role in roles:
                     persons.add(person.person_id)
@@ -66,10 +67,10 @@ class PhenoToolHelper(object):
 
         assert isinstance(pheno_filters, list)
 
-        return self.study._transform_pheno_filters_to_people_ids(
+        return self.genotype_data._transform_pheno_filters_to_people_ids(
             pheno_filters)
 
-    def study_variants(self, data):
+    def genotype_data_variants(self, data):
         assert 'effectTypes' in data
 
         queried_effect_types = set(self.effect_types_mixin.
@@ -77,7 +78,7 @@ class PhenoToolHelper(object):
         variants_by_effect = {effect: Counter() for effect in
                               queried_effect_types}
 
-        for variant in self.study.query_variants(**data):
+        for variant in self.genotype_data.query_variants(**data):
             for allele in variant.matched_alleles:
                 for person in filter(None, allele.variant_in_members):
                     for effect in allele.effects.types:
@@ -118,8 +119,8 @@ class PhenoTool(object):
         self.measure_id = measure_id
 
         assert self.phenotype_data.has_measure(measure_id)
-        assert self.phenotype_data.get_measure(self.measure_id).measure_type in \
-            [MeasureType.continuous, MeasureType.ordinal]
+        assert self.phenotype_data.get_measure(self.measure_id).measure_type \
+            in [MeasureType.continuous, MeasureType.ordinal]
 
         self.normalize_by = self._init_normalize_measures(normalize_by)
 

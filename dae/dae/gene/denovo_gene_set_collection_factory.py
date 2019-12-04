@@ -10,15 +10,17 @@ from dae.gene.denovo_gene_set_collection import DenovoGeneSetCollection
 class DenovoGeneSetCollectionFactory():
 
     @classmethod
-    def load_collection(cls, study):
+    def load_collection(cls, genotype_data_study):
         '''
         Loads a denovo gene set collection (from the filesystem)
         for a given study.
         '''
-        config = DenovoGeneSetConfigParser.parse(study.config)
-        assert config is not None, study.id
+        config = DenovoGeneSetConfigParser.parse(genotype_data_study.config)
+        assert config is not None, genotype_data_study.id
 
-        collection = DenovoGeneSetCollection(study.id, study.name, config)
+        collection = DenovoGeneSetCollection(
+            genotype_data_study.id, genotype_data_study.name, config
+        )
 
         for people_group_id in config.people_groups:
             cache_dir = DenovoGeneSetConfigParser.denovo_gene_set_cache_file(
@@ -37,17 +39,17 @@ class DenovoGeneSetCollectionFactory():
         return collection
 
     @classmethod
-    def build_collection(cls, study):
+    def build_collection(cls, genotype_data_study):
         '''
         Builds a denovo gene set collection for the given study and
         writes it to the filesystem.
         '''
-        config = DenovoGeneSetConfigParser.parse(study.config)
-        assert config is not None, study.id
+        config = DenovoGeneSetConfigParser.parse(genotype_data_study.config)
+        assert config is not None, genotype_data_study.id
 
         for people_group_id in config.people_groups:
             gene_set_cache = cls._generate_gene_set_for(
-                study, config, people_group_id
+                genotype_data_study, config, people_group_id
             )
             cache_path = DenovoGeneSetConfigParser.denovo_gene_set_cache_file(
                 config, people_group_id
@@ -55,7 +57,8 @@ class DenovoGeneSetCollectionFactory():
             cls._save_cache(gene_set_cache, cache_path)
 
     @classmethod
-    def _generate_gene_set_for(cls, study, config, people_group_id):
+    def _generate_gene_set_for(cls, genotype_data_study, config,
+                               people_group_id):
         '''
         Produces a nested dictionary which represents a denovo gene set.
         It maps denovo gene set criteria to an innermost dictionary mapping
@@ -63,12 +66,13 @@ class DenovoGeneSetCollectionFactory():
         '''
         people_group_source = config.people_groups[people_group_id]['source']
         people_group_values = [
-                str(p) for p in study.get_pedigree_values(people_group_source)
+                str(p) for p
+                in genotype_data_study.get_pedigree_values(people_group_source)
         ]
 
         cache = {value: {} for value in people_group_values}
 
-        variants = list(study.query_variants(
+        variants = list(genotype_data_study.query_variants(
             inheritance=str(Inheritance.denovo.name)
         ))
 
@@ -82,9 +86,10 @@ class DenovoGeneSetCollectionFactory():
                         criteria['name'], {}
                     )
 
-                people_with_people_group = study.get_people_with_people_group(
-                    people_group_id, people_group_value
-                )
+                people_with_people_group = \
+                    genotype_data_study.get_people_with_people_group(
+                        people_group_id, people_group_value
+                    )
 
                 innermost_cache.update(cls._add_genes_families(
                     variants, people_with_people_group, search_args)
@@ -151,7 +156,7 @@ class DenovoGeneSetCollectionFactory():
                 filter_flag = False
                 for search_arg_name, search_arg_value in search_args.items():
                     if search_arg_name == 'effect_types':
-                        if not (aa.effect and \
+                        if not (aa.effect and
                                 aa.effect.types & set(search_arg_value)):
                             filter_flag = True
                             break

@@ -6,23 +6,26 @@ from dae.pedigrees.family import Family
 
 class GenotypeHelper(object):
 
-    def __init__(self, dataset, people_group, people_group_value):
-        self.dataset = dataset
+    def __init__(self, genotype_data_group, people_group, people_group_value):
+        self.genotype_data_group = genotype_data_group
         self.people_group = people_group
         self.people_group_value = people_group_value
         self._children_stats = None
         self._children_by_sex = None
 
     def get_variants(self, effect_types):
-        people_with_people_group = self.dataset.get_people_with_people_group(
-            self.people_group.id, self.people_group_value)
+        people_with_people_group = \
+           self.genotype_data_group.get_people_with_people_group(
+            self.people_group.id,
+            self.people_group_value
+           )
 
-        # TODO: Remove this when study.query_variants can support non
-        # expand_effect_types as LGDs
+        # TODO: Remove this when genotype_data_study.query_variants can
+        # support non expand_effect_types as LGDs
         from dae.utils.effect_utils import expand_effect_types
         effect_types = expand_effect_types(effect_types)
 
-        variants = self.dataset.query_variants(
+        variants = self.genotype_data_group.query_variants(
             inheritance=str(Inheritance.denovo.name),
             person_ids=people_with_people_group,
             effect_types=set(effect_types)
@@ -35,7 +38,8 @@ class GenotypeHelper(object):
             self._children_by_sex = defaultdict(set)
             seen = set()
 
-            for p in Family.persons_with_parents(self.dataset.families):
+            for p in Family.persons_with_parents(
+                    self.genotype_data_group.families):
                 iid = "{}:{}".format(p.family_id, p.person_id)
                 if iid in seen:
                     continue

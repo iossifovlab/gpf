@@ -8,8 +8,9 @@ from dae.pedigrees.family import Family
 
 class EffectCell(object):
 
-    def __init__(self, study, denovo_variants, filter_object, effect):
-        self.study = study
+    def __init__(self, genotype_data_study, denovo_variants,
+                 filter_object, effect):
+        self.genotype_data_study = genotype_data_study
         self.denovo_variants = denovo_variants
         self.filter_object = filter_object
         self.effect = effect
@@ -17,7 +18,8 @@ class EffectCell(object):
         self.effect_types_converter = EffectTypesMixin()
 
         people_with_filter = self._people_with_filter()
-        people_with_parents = Family.persons_with_parents(study.families)
+        people_with_parents = \
+            Family.persons_with_parents(genotype_data_study.families)
         people_with_parents_ids =\
             set(Family.persons_ids(people_with_parents))
 
@@ -58,7 +60,7 @@ class EffectCell(object):
     def _people_with_filter(self):
         people_with_filter = set()
 
-        for family in self.study.families.values():
+        for family in self.genotype_data_study.families.values():
             family_members_with_filter = set.intersection(*[set(
                 family.get_people_with_property(filt.column, filt.value))
                 for filt in self.filter_object.filters])
@@ -104,8 +106,9 @@ class EffectCell(object):
 
 class EffectRow(object):
 
-    def __init__(self, study, denovo_variants, effect, filter_objects):
-        self.study = study
+    def __init__(self, genotype_data_study, denovo_variants,
+                 effect, filter_objects):
+        self.genotype_data_study = genotype_data_study
         self.denovo_variants = denovo_variants
         self.filter_objects = filter_objects
 
@@ -121,7 +124,7 @@ class EffectRow(object):
     def _get_row(self):
         return [
             EffectCell(
-                self.study, self.denovo_variants, filter_object,
+                self.genotype_data_study, self.denovo_variants, filter_object,
                 self.effect_type)
             for filter_object in self.filter_objects.filter_objects]
 
@@ -139,9 +142,9 @@ class EffectRow(object):
 class DenovoReportTable(object):
 
     def __init__(
-            self, study, denovo_variants, effect_groups, effect_types,
-            filter_object):
-        self.study = study
+            self, genotype_data_study, denovo_variants, effect_groups,
+            effect_types, filter_object):
+        self.genotype_data_study = genotype_data_study
         self.denovo_variants = denovo_variants
         self.filter_object = filter_object
 
@@ -188,7 +191,9 @@ class DenovoReportTable(object):
 
         effect_rows = [
             EffectRow(
-                self.study, self.denovo_variants, effect, self.filter_object)
+                self.genotype_data_study, self.denovo_variants, effect,
+                self.filter_object
+            )
             for effect in self.effects
         ]
 
@@ -214,13 +219,14 @@ class DenovoReportTable(object):
 
 class DenovoReport(object):
 
-    def __init__(self, study, effect_groups, effect_types, filter_objects):
-        self.study = study
+    def __init__(self, genotype_data_study, effect_groups,
+                 effect_types, filter_objects):
+        self.genotype_data_study = genotype_data_study
         self.effect_groups = effect_groups
         self.effect_types = effect_types
         self.filter_objects = filter_objects
 
-        denovo_variants = study.query_variants(
+        denovo_variants = genotype_data_study.query_variants(
             limit=None,
             inheritance='denovo',
         )
@@ -240,8 +246,12 @@ class DenovoReport(object):
         denovo_report_tables = []
         for filter_object in self.filter_objects:
             denovo_report_table = DenovoReportTable(
-                self.study, self.denovo_variants, deepcopy(self.effect_groups),
-                deepcopy(self.effect_types), filter_object)
+                self.genotype_data_study,
+                self.denovo_variants,
+                deepcopy(self.effect_groups),
+                deepcopy(self.effect_types),
+                filter_object
+            )
 
             if not denovo_report_table.is_empty():
                 denovo_report_tables.append(denovo_report_table)

@@ -24,12 +24,13 @@ from dae.studies.people_group_config_parser import PeopleGroupConfigParser
 
 class StudyWrapper(object):
 
-    def __init__(self, study, pheno_db, gene_weights_db, *args, **kwargs):
+    def __init__(self, genotype_data_study, pheno_db,
+                 gene_weights_db, *args, **kwargs):
         super(StudyWrapper, self).__init__(*args, **kwargs)
-        assert study is not None
+        assert genotype_data_study is not None
 
-        self.study = study
-        self.config = study.config
+        self.genotype_data_study = genotype_data_study
+        self.config = genotype_data_study.config
         assert self.config is not None
 
         self._init_wdae_config()
@@ -129,7 +130,7 @@ class StudyWrapper(object):
         return '{}.{}'.format(pheno_filter['role'], pheno_filter[measure_key])
 
     def __getattr__(self, name):
-        return getattr(self.study, name)
+        return getattr(self.genotype_data_study, name)
 
     FILTER_RENAMES_MAP = {
         'familyIds': 'family_ids',
@@ -328,7 +329,7 @@ class StudyWrapper(object):
             kwargs.pop('inheritanceTypeFilter')
 
         variants_from_studies = itertools.islice(
-            self.study.query_variants(**kwargs), limit)
+            self.genotype_data_study.query_variants(**kwargs), limit)
 
         for variant in \
                 self._add_additional_columns(variants_from_studies):
@@ -457,7 +458,9 @@ class StudyWrapper(object):
 
         people_group_query = kwargs.pop('peopleGroup')
 
-        people_group = self.study.get_people_group(people_group_query['id'])
+        people_group = self.genotype_data_study.get_people_group(
+            people_group_query['id']
+        )
         if not people_group:
             return kwargs
 
@@ -744,7 +747,7 @@ class StudyWrapper(object):
             'peopleGroupConfig': PeopleGroupConfigParser
         }
 
-    def get_dataset_description(self):
+    def get_genotype_data_group_description(self):
         keys = self._get_description_keys()
         config = self.config
 
@@ -756,8 +759,9 @@ class StudyWrapper(object):
 
         return result
 
-    def _augment_pheno_filters_domain(self, dataset_description):
-        genotype_browser_config = dataset_description['genotypeBrowserConfig']
+    def _augment_pheno_filters_domain(self, genotype_data_group_description):
+        genotype_browser_config = \
+            genotype_data_group_description['genotypeBrowserConfig']
         if not genotype_browser_config:
             return
 
@@ -777,13 +781,14 @@ class StudyWrapper(object):
                 measure_filter['measure'])
             measure_filter['domain'] = measure.values_domain.split(",")
 
-    def _filter_section_configs(self, dataset_description, config_keys={}):
+    def _filter_section_configs(self, genotype_data_group_description,
+                                config_keys={}):
         for config_key, parser in config_keys.items():
-            config = dataset_description.get(config_key, None)
+            config = genotype_data_group_description.get(config_key, None)
             if not config:
                 continue
 
-            dataset_description[config_key] = \
+            genotype_data_group_description[config_key] = \
                 parser.get_config_description(config)
 
     def _get_wdae_member(self, member, people_group, best_st):
@@ -794,7 +799,7 @@ class StudyWrapper(object):
             member.dad_id,
             member.sex.short(),
             str(member.role),
-            self.study._get_person_color(member, people_group),
+            self.genotype_data_study._get_person_color(member, people_group),
             member.layout_position,
             member.generated,
             best_st,

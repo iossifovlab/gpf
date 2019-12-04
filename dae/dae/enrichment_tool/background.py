@@ -110,8 +110,8 @@ class SynonymousBackground(BackgroundCommon):
         return background
 
     def _build_synonymous_background(self):
-        study = self.variants_db.get(self.TRANSMITTED_STUDY_NAME)
-        vs = study.query_variants(
+        genotype_data_study = self.variants_db.get(self.TRANSMITTED_STUDY_NAME)
+        vs = genotype_data_study.query_variants(
             # inheritance=str(Inheritance.transmitted.name),
             ultraRareOnly=True,
             minParentsCalled=600,
