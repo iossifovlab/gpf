@@ -170,7 +170,7 @@ def main(
         variants_loader, annotation_pipeline
     )
     if argv.type == 'make':
-        generate_makefile(variants_loader, argv, 'vcf2parquet.py vcf')
+        generate_makefile(variants_loader, 'vcf2parquet.py vcf ', argv)
     elif argv.type == 'vcf':
         if not argv.skip_pedigree:
             pedigree_path = os.path.join(

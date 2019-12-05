@@ -354,8 +354,8 @@ def main(argv):
         fvars = AnnotationPipelineDecorator(fvars, annotation_pipeline)
         generate_makefile(
             fvars,
-            f'dae2parquet dae {argv.families}'
-            f'{argv.summary} {argv.toomany}',
+            f'dae2parquet.py dae {argv.families} '
+            f'{argv.summary} {argv.toomany} ',
             argv
         )
 

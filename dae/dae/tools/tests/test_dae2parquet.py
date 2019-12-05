@@ -1,12 +1,16 @@
 import pytest
 import os
+import io
+
+from contextlib import redirect_stdout
+
 from box import Box
 
 from dae.pedigrees.family import FamiliesData, PedigreeReader
 
 from dae.backends.impala.loader import ParquetLoader
 
-from dae.tools.dae2parquet import parse_cli_arguments, dae_build_makefile, main
+from dae.tools.dae2parquet import main
 
 from dae.annotation.tools.file_io_parquet import ParquetReader
 
@@ -77,28 +81,59 @@ def test_dae2parquet_transmitted(
 
 
 def test_dae2parquet_make(
-        dae_transmitted_config, annotation_pipeline_config,
+        dae_transmitted_config, annotation_pipeline_default_config,
         annotation_scores_dirname, temp_dirname,
         default_gpf_instance, dae_config_fixture, genomes_db):
 
     argv = [
         'make',
-        '--annotation', annotation_pipeline_config,
-        '-o', temp_dirname,
-        '-f', 'simple',
-        '-l', '100000000',
         dae_transmitted_config.family_filename,
         dae_transmitted_config.summary_filename,
         dae_transmitted_config.toomany_filename,
+        '--annotation', annotation_pipeline_default_config,
+        '-o', temp_dirname,
+        '-f', 'simple',
+        '-l', '100000000',
     ]
-    genome = genomes_db.get_genome()
 
-    argv = parse_cli_arguments(default_gpf_instance, argv)
+    f = io.StringIO()
+    with redirect_stdout(f):
+        main(argv)
 
-    assert argv is not None
-    assert argv.type == 'make'
+    makefile = f.getvalue()
+    assert 'all:' in makefile
+    assert 'dae2parquet.py dae ' in makefile
 
-    dae_build_makefile(dae_config_fixture, genome, argv)
+
+def test_dae2parquet_make_partition(
+        dae_transmitted_config, annotation_pipeline_default_config,
+        annotation_scores_dirname, temp_dirname,
+        default_gpf_instance, dae_config_fixture, genomes_db,
+        parquet_partition_configuration):
+
+    argv = [
+        'make',
+        dae_transmitted_config.family_filename,
+        dae_transmitted_config.summary_filename,
+        dae_transmitted_config.toomany_filename,
+        '--annotation', annotation_pipeline_default_config,
+        '-o', temp_dirname,
+        '-f', 'simple',
+        '-l', '100000000',
+        '--pd', parquet_partition_configuration
+    ]
+
+    f = io.StringIO()
+    with redirect_stdout(f):
+        main(argv)
+
+    makefile = f.getvalue()
+    assert 'all:' in makefile
+    assert 'dae2parquet.py dae ' in makefile
+    assert '1_8:' in makefile
+    assert '--region 1:800001-900000'
+    assert '1_0:' in makefile
+    assert '--region 1:1-100000'
 
 
 def test_dae2parquet_dae_partition(
@@ -131,6 +166,14 @@ def test_dae2parquet_dae_partition(
         summary_genotypes.append((summary, gt))
 
     assert len(summary_genotypes) == 185
+    assert all(sgt[0].get_attribute('region_bin')[0] is not None
+               for sgt in summary_genotypes)
+    assert all(sgt[0].get_attribute('family_bin')[0] is not None
+               for sgt in summary_genotypes)
+    assert all(sgt[0].get_attribute('coding_bin')[0] is not None
+               for sgt in summary_genotypes)
+    assert all(sgt[0].get_attribute('frequency_bin')[0] is not None
+               for sgt in summary_genotypes)
     assert any(sgt[0].reference == 'G' for sgt in summary_genotypes)
     assert any(sgt[0].reference == 'C' for sgt in summary_genotypes)
     assert any(sgt[0].alternative == 'T' for sgt in summary_genotypes)
@@ -166,6 +209,14 @@ def test_dae2parquet_denovo_partition(
         summary_genotypes.append((summary, gt))
 
     assert len(summary_genotypes) == 49
+    assert all(sgt[0].get_attribute('region_bin')[0] is not None
+               for sgt in summary_genotypes)
+    assert all(sgt[0].get_attribute('family_bin')[0] is not None
+               for sgt in summary_genotypes)
+    assert all(sgt[0].get_attribute('coding_bin')[0] is not None
+               for sgt in summary_genotypes)
+    assert all(sgt[0].get_attribute('frequency_bin')[0] is not None
+               for sgt in summary_genotypes)
     assert any(sgt[0].reference == 'G' for sgt in summary_genotypes)
     assert any(sgt[0].reference == 'C' for sgt in summary_genotypes)
     assert any(sgt[0].alternative == 'T' for sgt in summary_genotypes)
