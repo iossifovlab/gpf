@@ -42,7 +42,26 @@ class ParquetLoader(VariantsLoader):
 
             return filenames
 
-    def _table_iterator(self, table):
+    def _get_bins_from_filename(self, filename):
+        bins_dict = {
+            'region_bin': None,
+            'family_bin': None,
+            'coding_bin': None,
+            'frequency_bin': None,
+        }
+
+        filepath = os.path.dirname(filename)
+
+        filepath = filepath[filepath.find('region_bin'):]
+
+        bins = filepath.split(os.sep)
+        for b in bins:
+            bin_kv = tuple(b.split('='))
+            bins_dict[bin_kv[0]] = bin_kv[1]
+
+        return bins_dict
+
+    def _table_iterator(self, table, filename):
         df = table.to_pandas()
         df = self._deserialize_fields(df)
         summary_variants_indexes = pd.unique(df['summary_variant_index'])
@@ -56,18 +75,22 @@ class ParquetLoader(VariantsLoader):
                         for r in records):
                     continue
 
-                records.append(
-                    {
-                        'chrom': row['chrom'],
-                        'position': row['position'],
-                        'reference': row['reference'],
-                        'alternative': row['alternative'],
-                        'summary_variant_index':
-                            row['summary_variant_index'],
-                        'allele_index': row['allele_index'],
-                        'allele_count': row['af_allele_count']
-                    }
-                )
+                record_dict = {
+                    'chrom': row['chrom'],
+                    'position': row['position'],
+                    'reference': row['reference'],
+                    'alternative': row['alternative'],
+                    'summary_variant_index':
+                        row['summary_variant_index'],
+                    'allele_index': row['allele_index'],
+                    'allele_count': row['af_allele_count']
+                }
+
+                bins_dict = self._get_bins_from_filename(filename)
+
+                record_dict.update(bins_dict)
+
+                records.append(record_dict)
 
             summary_variant = SummaryVariantFactory. \
                 summary_variant_from_records(records)
@@ -83,7 +106,10 @@ class ParquetLoader(VariantsLoader):
         pq_file = pq.ParquetFile(filename)
         for row_group_index in range(0, pq_file.num_row_groups):
             table = pq_file.read_row_group(row_group_index)
-            for summary_variant, gt_data in self._table_iterator(table):
+            for summary_variant, gt_data in self._table_iterator(
+                    table,
+                    filename):
+
                 yield (summary_variant, gt_data)
 
     def _deserialize_fields(self, df):
