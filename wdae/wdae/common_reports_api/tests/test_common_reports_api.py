@@ -55,7 +55,7 @@ def test_families_data_download(admin_client):
 
     assert header == [
         'familyId', 'personId', 'dadId', 'momId', 'sex', 'status', 'role',
-        'study'
+        'genotype_data_study'
     ]
 
     first_person = streaming_content[1].decode('utf8')
