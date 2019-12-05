@@ -1,14 +1,12 @@
 import pytest
+import os
 from box import Box
 
-from dae.pedigrees.family import FamiliesData, FamiliesLoader
+from dae.pedigrees.family import FamiliesData, PedigreeReader
+
+from dae.backends.impala.loader import ParquetLoader
 
 from dae.tools.dae2parquet import parse_cli_arguments, dae_build_makefile, main
-
-from dae.backends.raw.loader import AnnotationPipelineDecorator
-
-from dae.backends.impala.parquet_io import ParquetManager
-from dae.backends.dae.loader import DaeTransmittedLoader, DenovoLoader
 
 from dae.annotation.tools.file_io_parquet import ParquetReader
 
@@ -16,49 +14,29 @@ from dae.RegionOperations import Region
 
 
 def test_dae2parquet_denovo(
-        dae_denovo_config, annotation_pipeline_internal,
+        dae_denovo_config, annotation_pipeline_default_config,
         temp_dirname,
         default_gpf_instance, dae_config_fixture, genomes_db):
 
-    print(dae_denovo_config)
-
-    genome = genomes_db.get_genome()
-
-    families_loader = FamiliesLoader(
+    argv = [
+        'denovo',
         dae_denovo_config.family_filename,
-        file_format='simple')
+        dae_denovo_config.denovo_filename,
+        '--annotation', annotation_pipeline_default_config,
+        '--family-format', 'simple',
+        '-o', temp_dirname
+    ]
 
-    variants_loader = DenovoLoader(
-        families_loader.families, dae_denovo_config.denovo_filename, genome)
-    variants_loader = AnnotationPipelineDecorator(
-        variants_loader, annotation_pipeline_internal
-    )
-
-    study_id = "test_dae2parquet_denovo"
-
-    parquet_filenames = ParquetManager.build_parquet_filenames(
-        temp_dirname, bucket_index=100, study_id=study_id)
-
-    ParquetManager.pedigree_to_parquet(
-        variants_loader, parquet_filenames.pedigree)
-    ParquetManager.variants_to_parquet(
-        variants_loader, parquet_filenames.variant,
-        bucket_index=100
-    )
+    main(argv)
 
     summary = ParquetReader(Box({
-        'infile': parquet_filenames.variant,
+        'infile': os.path.join(temp_dirname, 'variant', 'variants.parquet'),
     }, default_box=True, default_box_attr=None))
     summary._setup()
     summary._cleanup()
 
     # print(summary.schema)
     schema = summary.schema
-    print(schema['score0'])
-
-    assert schema['score0'].type_name == 'float'
-    assert schema['score2'].type_name == 'float'
-    assert schema['score4'].type_name == 'float'
 
     assert schema['effect_gene'].type_name == 'str'
     assert schema['effect_type'].type_name == 'str'
@@ -67,46 +45,30 @@ def test_dae2parquet_denovo(
 
 
 def test_dae2parquet_transmitted(
-        dae_transmitted_config, annotation_pipeline_internal,
+        dae_transmitted_config, annotation_pipeline_default_config,
         temp_dirname,
         default_gpf_instance, dae_config_fixture, genomes_db):
 
-    genome = genomes_db.get_genome()
-
-    families_loader = FamiliesLoader(
+    argv = [
+        'dae',
         dae_transmitted_config.family_filename,
-        file_format='simple')
-
-    variants_loader = DaeTransmittedLoader(
-        families_loader.families,
         dae_transmitted_config.summary_filename,
         dae_transmitted_config.toomany_filename,
-        genome
-    )
-    variants_loader = AnnotationPipelineDecorator(
-        variants_loader, annotation_pipeline_internal)
+        '--annotation', annotation_pipeline_default_config,
+        '--family-format', 'simple',
+        '-o', temp_dirname
+    ]
 
-    parquet_filenames = ParquetManager.build_parquet_filenames(
-        temp_dirname, bucket_index=100, study_id="test_dae_transmitted"
-    )
-    ParquetManager.pedigree_to_parquet(
-        variants_loader, parquet_filenames.pedigree)
-    ParquetManager.variants_to_parquet(
-        variants_loader, parquet_filenames.variant)
+    main(argv)
 
     summary = ParquetReader(Box({
-        'infile': parquet_filenames.variant,
+        'infile': os.path.join(temp_dirname, 'variant', 'variants.parquet'),
     }, default_box=True, default_box_attr=None))
     summary._setup()
     summary._cleanup()
 
     # print(summary.schema)
     schema = summary.schema
-    print(schema['score0'])
-
-    assert schema['score0'].type_name == 'float'
-    assert schema['score2'].type_name == 'float'
-    assert schema['score4'].type_name == 'float'
 
     assert schema['effect_gene'].type_name == 'str'
     assert schema['effect_type'].type_name == 'str'
@@ -151,11 +113,30 @@ def test_dae2parquet_dae_partition(
         dae_transmitted_config.toomany_filename,
         '--annotation', annotation_pipeline_default_config,
         '--family-format', 'simple',
-        '-o', '/tmp/test_d2p_dae_part',
+        '-o', temp_dirname,
         '--pd', parquet_partition_configuration
     ]
 
     main(argv)
+
+    generated_conf = os.path.join(temp_dirname, '_PARTITION_DESCRIPTION')
+    assert os.path.exists(generated_conf)
+
+    ped_df = PedigreeReader.load_simple_family_file(
+        dae_transmitted_config.family_filename)
+    families = FamiliesData.from_pedigree_df(ped_df)
+
+    pl = ParquetLoader(families, generated_conf)
+    summary_genotypes = []
+    for summary, gt in pl.summary_genotypes_iterator():
+        summary_genotypes.append((summary, gt))
+
+    print(summary_genotypes)
+    assert len(summary_genotypes) == 185
+    assert any(sgt[0].reference == 'G' for sgt in summary_genotypes)
+    assert any(sgt[0].reference == 'C' for sgt in summary_genotypes)
+    assert any(sgt[0].alternative == 'T' for sgt in summary_genotypes)
+    assert any(sgt[0].alternative == 'A' for sgt in summary_genotypes)
 
 
 def test_dae2parquet_denovo_partition(
@@ -169,11 +150,30 @@ def test_dae2parquet_denovo_partition(
         dae_denovo_config.denovo_filename,
         '--annotation', annotation_pipeline_default_config,
         '--family-format', 'simple',
-        '-o', '/tmp/test_d2p_dae_part',
+        '-o', temp_dirname,
         '--pd', parquet_partition_configuration
     ]
 
     main(argv)
+
+    generated_conf = os.path.join(temp_dirname, '_PARTITION_DESCRIPTION')
+    assert os.path.exists(generated_conf)
+
+    ped_df = PedigreeReader.load_simple_family_file(
+        dae_denovo_config.family_filename)
+    families = FamiliesData.from_pedigree_df(ped_df)
+
+    pl = ParquetLoader(families, generated_conf)
+    summary_genotypes = []
+    for summary, gt in pl.summary_genotypes_iterator():
+        summary_genotypes.append((summary, gt))
+
+    print(summary_genotypes)
+    assert len(summary_genotypes) == 49
+    assert any(sgt[0].reference == 'G' for sgt in summary_genotypes)
+    assert any(sgt[0].reference == 'C' for sgt in summary_genotypes)
+    assert any(sgt[0].alternative == 'T' for sgt in summary_genotypes)
+    assert any(sgt[0].alternative == 'A' for sgt in summary_genotypes)
 
 
 @pytest.mark.parametrize('variants', [
