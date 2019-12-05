@@ -267,12 +267,13 @@ def denovo2parquet(
     if not skip_pedigree:
         pedigree_path = os.path.join(
             argv.output,
-            'pedigree/partition_pedigree.ped')
+            'pedigree',
+            'pedigree.ped')
         ParquetManager.pedigree_to_parquet(
             families_loader, pedigree_path)
 
     if argv.partition_description is None:
-        filename = os.path.join(argv.out, 'variants.parquet')
+        filename = os.path.join(argv.output, 'variant', 'variants.parquet')
         ParquetManager.variants_to_parquet(
             variants_loader, filename,
             rows=rows, bucket_index=bucket_index,
@@ -300,23 +301,19 @@ def dae2parquet(
     if not argv.skip_pedigree:
         pedigree_path = os.path.join(
             argv.output,
-            'pedigree/partition_pedigree.ped')
+            'pedigree',
+            'pedigree.ped')
         ParquetManager.pedigree_to_parquet(
             fvars, pedigree_path)
 
     if argv.partition_description is None:
-        parquet_filenames = ParquetManager.build_parquet_filenames(
-            argv.output, bucket_index=argv.bucket_index, study_id=study_id)
-        print("converting into ", parquet_filenames, file=sys.stderr)
+        filename = os.path.join(argv.output, 'variant', 'variants.parquet')
 
         parquet_manager.variants_to_parquet(
-            fvars, parquet_filenames.variant,
+            fvars, filename,
             bucket_index=argv.bucket_index,
-            rows=argv.rows,
-            include_reference=not argv.no_reference
+            rows=argv.rows
         )
-
-        return parquet_filenames
     else:
         description = ParquetPartitionDescription.from_config(
             argv.partition_description)

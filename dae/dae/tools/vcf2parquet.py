@@ -172,36 +172,29 @@ def main(
     if argv.type == 'make':
         generate_makefile(variants_loader, argv, 'vcf2parquet.py vcf')
     elif argv.type == 'vcf':
+        if not argv.skip_pedigree:
+            pedigree_path = os.path.join(
+                argv.output,
+                'pedigree',
+                'pedigree.ped')
+            ParquetManager.pedigree_to_parquet(
+                families_loader, pedigree_path)
 
         if argv.partition_description is None:
 
-            parquet_filenames = ParquetManager.build_parquet_filenames(
-                argv.output, bucket_index=argv.bucket_index, study_id=study_id,
-            )
-            print("converting into ",
-                  parquet_filenames.variant,
-                  file=sys.stderr)
-
-            if not argv.skip_pedigree:
-                ParquetManager.pedigree_to_parquet(
-                    families_loader, parquet_filenames.pedigree)
+            filename_parquet = os.path.join(
+                argv.output,
+                'variant',
+                'variants.parquet')
 
             ParquetManager.variants_to_parquet(
-                variants_loader, parquet_filenames.variant,
+                variants_loader, filename_parquet,
                 bucket_index=argv.bucket_index)
-
-            return parquet_filenames
         else:
-            if not argv.skip_pedigree:
-                pedigree_path = os.path.join(
-                    argv.output,
-                    'pedigree/partition_pedigree.ped')
-                ParquetManager.pedigree_to_parquet(
-                    families_loader, pedigree_path)
             description = ParquetPartitionDescription.from_config(
                     argv.partition_description)
 
-            return ParquetManager.variants_to_parquet_partition(
+            ParquetManager.variants_to_parquet_partition(
                     variants_loader, description,
                     argv.output,
                     bucket_index=argv.bucket_index,
