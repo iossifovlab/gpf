@@ -105,7 +105,6 @@ def test_dae2parquet_dae_partition(
         dae_transmitted_config, annotation_pipeline_default_config,
         temp_dirname, parquet_partition_configuration):
 
-    print(dae_transmitted_config)
     argv = [
         'dae',
         dae_transmitted_config.family_filename,
@@ -131,7 +130,6 @@ def test_dae2parquet_dae_partition(
     for summary, gt in pl.summary_genotypes_iterator():
         summary_genotypes.append((summary, gt))
 
-    print(summary_genotypes)
     assert len(summary_genotypes) == 185
     assert any(sgt[0].reference == 'G' for sgt in summary_genotypes)
     assert any(sgt[0].reference == 'C' for sgt in summary_genotypes)
@@ -143,7 +141,6 @@ def test_dae2parquet_denovo_partition(
         dae_denovo_config, annotation_pipeline_default_config,
         temp_dirname, parquet_partition_configuration):
 
-    print(dae_denovo_config)
     argv = [
         'denovo',
         dae_denovo_config.family_filename,
@@ -168,7 +165,6 @@ def test_dae2parquet_denovo_partition(
     for summary, gt in pl.summary_genotypes_iterator():
         summary_genotypes.append((summary, gt))
 
-    print(summary_genotypes)
     assert len(summary_genotypes) == 49
     assert any(sgt[0].reference == 'G' for sgt in summary_genotypes)
     assert any(sgt[0].reference == 'C' for sgt in summary_genotypes)
