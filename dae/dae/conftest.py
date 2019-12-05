@@ -57,7 +57,6 @@ def default_dae_config(request):
 
     request.addfinalizer(fin)
     dae_config = DAEConfigParser.read_and_parse_file_configuration()
-    print(list(dae_config.keys()))
     dae_config.studies_db.dir = dirname
 
     return dae_config
@@ -300,7 +299,7 @@ def dae_denovo(
 
     families_loader = FamiliesLoader(
         dae_denovo_config.family_filename,
-        file_format='simple')
+        params={'ped_file_format': 'simple'})
 
     variants_loader = DenovoLoader(
         families_loader.families, dae_denovo_config.denovo_filename,
@@ -308,7 +307,7 @@ def dae_denovo(
 
     variants_loader = AnnotationPipelineDecorator(
         variants_loader, annotation_pipeline_internal)
-    fvars = RawMemoryVariants(variants_loader)
+    fvars = RawMemoryVariants([variants_loader])
     return fvars
 
 
@@ -375,8 +374,7 @@ def iossifov2014_loader(
         annotation_pipeline_internal):
     config = dae_iossifov2014_config
 
-    families_loader = FamiliesLoader(
-        config.family_filename, file_format='pedigree')
+    families_loader = FamiliesLoader(config.family_filename)
 
     variants_loader = DenovoLoader(
         families_loader.families, config.denovo_filename, default_genome)
@@ -390,7 +388,7 @@ def iossifov2014_loader(
 @pytest.fixture(scope='session')
 def iossifov2014_raw_denovo(iossifov2014_loader):
 
-    fvars = RawMemoryVariants(iossifov2014_loader)
+    fvars = RawMemoryVariants([iossifov2014_loader])
 
     return fvars
 
@@ -471,7 +469,7 @@ def variants_vcf(vcf_variants_loader):
     def builder(path):
         loader = vcf_variants_loader(path)
 
-        fvars = RawMemoryVariants(loader)
+        fvars = RawMemoryVariants([loader])
         return fvars
 
     return builder
@@ -480,7 +478,7 @@ def variants_vcf(vcf_variants_loader):
 @pytest.fixture(scope='session')
 def variants_mem():
     def builder(loader):
-        fvars = RawMemoryVariants(loader)
+        fvars = RawMemoryVariants([loader])
         return fvars
 
     return builder
