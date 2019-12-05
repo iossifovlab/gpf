@@ -192,7 +192,7 @@ def generate_makefile(variants_loader, tool, argv):
     targets = dict()
     if argv.partition_description is None:
         output = 'all: \n'
-        output += f'{tool}' \
+        output += f'\t{tool}' \
             f'--o {argv.output} '
         print(output)
         return
@@ -251,8 +251,9 @@ def generate_makefile(variants_loader, tool, argv):
                     f'--pd {argv.partition_description} ' \
                     f'--region {regions}'
                 other_targets += f'\t{command}\n\n'
-        output += f'{all_target}\n'
-        output += '.PHONY: all\n\n'
-        output += main_targets
-        output += other_targets
-        print(output)
+
+    output += f'{all_target}\n'
+    output += '.PHONY: all\n\n'
+    output += main_targets
+    output += other_targets
+    print(output)
