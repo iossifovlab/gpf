@@ -214,6 +214,20 @@ class ParquetPartitionDescription():
         with open(filename, 'w') as configfile:
             config.write(configfile)
 
+    def generate_file_access_glob(self):
+        """
+        Generates a glob for accessing every parquet file in the partition
+        """
+        glob = '*/'
+        if self.family_bin_size == 0:
+            glob += '*/'
+        if self.coding_effect_types == []:
+            glob += '*/'
+        if self.rare_boundary == 0:
+            glob += '*/'
+        glob += '*'
+        return glob
+
 
 class ContinuousParquetFileWriter():
     """
