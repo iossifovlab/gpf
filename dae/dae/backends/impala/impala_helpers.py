@@ -1,4 +1,5 @@
 from impala import dbapi
+import os
 
 
 class ImpalaHelpers(object):
@@ -73,7 +74,7 @@ class ImpalaHelpers(object):
 
         if not partition_description.family_bin_size <= 0:
             partitions += ', family_bin tinyint'
-        if not partition_description.coding_bin_size == []:
+        if not partition_description.coding_effect_types == []:
             partitions += ', coding_bin tinyint'
         if not partition_description.rare_boundary <= 0:
             partitions += ', frequency_bin tinyint'
@@ -95,16 +96,24 @@ class ImpalaHelpers(object):
             self, db, partition_table, partition_hdfs_path, files,
             partition_description):
 
-        with self.connection.cursor as cursor:
+        with self.connection.cursor() as cursor:
             cursor.execute(f"""
                 CREATE DATABASE IF NOT EXISTS {db}
             """)
+            print('test')
+            print(db)
+            print(partition_table)
+            print(partition_hdfs_path)
+            print(files[0])
+            print(partition_description)
+            sample_file = os.path.join(partition_hdfs_path, files[0])
             self.create_partition_table(
                 cursor,
                 db,
                 partition_table,
                 partition_hdfs_path,
-                files[0])
+                sample_file,
+                partition_description)
 
     def check_database(self, dbname):
         with self.connection.cursor() as cursor:

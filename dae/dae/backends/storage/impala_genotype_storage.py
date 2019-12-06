@@ -167,11 +167,9 @@ class ImpalaGenotypeStorage(GenotypeStorage):
                 variant_table=variant_table)
         return study_config
 
-    def _put_partition_file(self, filename, root_dir):
-        path = os.path.dirname(filename)
-        self.hdfs_helpers.makedirs(path)
-        file = os.path.join(root_dir, filename)
-        self.hdfs_helpers.put_in_directory(file, path)
+    def _put_partition_file(self, filename, hdfs_path):
+        self.hdfs_helpers.makedirs(hdfs_path)
+        self.hdfs_helpers.put_in_directory(filename, hdfs_path)
 
     def simple_study_import(
             self, study_id,
@@ -243,20 +241,23 @@ class ImpalaGenotypeStorage(GenotypeStorage):
         print(duration)
 
     def partition_import(self, study_id, partition_config_file):
-        db = self.storage_config.db
+        db = self.storage_config.impala.db
         part_desc = ParquetPartitionDescription.from_config(
             partition_config_file)
-        root_dir = os.path.dirname(part_desc)
+        root_dir = os.path.dirname(partition_config_file)
         files_glob = part_desc.generate_file_access_glob()
         files_glob = os.path.join(root_dir, files_glob)
         files = glob.glob(files_glob)
 
+        partition_path = self.storage_config.hdfs.base_dir
+        partition_path = os.path.join(partition_path, study_id)
         for file in files:
-            file = os.path.join(study_id, file)
-            self._put_partition_file(file, root_dir)
+            file_dir = os.path.dirname(file)
+            file_dir = file_dir[file_dir.find('region_bin'):]
+            file_dir = os.path.join(partition_path, file_dir)
+            self._put_partition_file(file, file_dir)
 
-        partition_path = os.path.dirname(files[0])
-        partition_path = partition_path[:partition_path.find('region_bin')]
+        files = list(map(lambda f: f[f.find('region_bin'):], files))
 
         self.impala_load_partition(
                 study_id, part_desc, db, partition_path, files

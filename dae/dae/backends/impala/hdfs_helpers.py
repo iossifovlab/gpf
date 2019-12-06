@@ -25,7 +25,11 @@ class HdfsHelpers(object):
         self.chmod(path, 0o777)
 
     def makedirs(self, path):
-        paths = path.split(os.sep)
+        if path[0] == os.sep:
+            paths = path[1:].split(os.sep)
+            paths[0] = '/' + paths[0]
+        else:
+            paths = path.split(os.sep)
         current_path = ''
         for directory in paths:
             current_path = os.path.join(current_path, directory)
