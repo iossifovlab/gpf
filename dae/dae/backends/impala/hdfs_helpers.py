@@ -24,6 +24,16 @@ class HdfsHelpers(object):
         self.hdfs.mkdir(path)
         self.chmod(path, 0o777)
 
+    def makedirs(self, path):
+        paths = path.split(os.sep)
+        current_path = ''
+        for directory in paths:
+            current_path = os.path.join(current_path, directory)
+            if not self.exists(current_path):
+                self.mkdir(current_path)
+
+        return self.exists(current_path)
+
     def tempdir(self, prefix='', suffix=''):
         dirname = tempfile.mktemp(prefix=prefix, suffix=suffix)
         self.mkdir(dirname)

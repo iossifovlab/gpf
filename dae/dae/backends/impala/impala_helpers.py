@@ -62,6 +62,50 @@ class ImpalaHelpers(object):
                 db=dbname, import_file=import_file,
                 table_name=table_name))
 
+    def create_partition_table(
+            self, cursor, db, table, hdfs_path, sample_file,
+            partition_description):
+        cursor.execute("""
+            DROP TABLE IF EXISTS {db}.{table}
+        """.format(db=db, table=table))
+
+        partitions = '(region_bin string'
+
+        if not partition_description.family_bin_size <= 0:
+            partitions += ', family_bin tinyint'
+        if not partition_description.coding_bin_size == []:
+            partitions += ', coding_bin tinyint'
+        if not partition_description.rare_boundary <= 0:
+            partitions += ', frequency_bin tinyint'
+
+        partitions += ')'
+        cursor.execute(f"""
+            CREATE EXTERNAL TABLE {db}.{table} LIKE PARQUET '{sample_file}'
+            PARTITIONED BY {partitions}
+            STORED AS PARQUET LOCATION '{hdfs_path}'
+        """)
+        cursor.execute(f"""
+            ALTER TABLE {db}.{table} RECOVER PARTITIONS
+        """)
+        cursor.execute(f"""
+            REFRESH {db}.{table}
+        """)
+
+    def import_partitions(
+            self, db, partition_table, partition_hdfs_path, files,
+            partition_description):
+
+        with self.connection.cursor as cursor:
+            cursor.execute(f"""
+                CREATE DATABASE IF NOT EXISTS {db}
+            """)
+            self.create_partition_table(
+                cursor,
+                db,
+                partition_table,
+                partition_hdfs_path,
+                files[0])
+
     def check_database(self, dbname):
         with self.connection.cursor() as cursor:
             q = """
