@@ -219,11 +219,11 @@ class ParquetPartitionDescription():
         Generates a glob for accessing every parquet file in the partition
         """
         glob = '*/'
-        if self.family_bin_size == 0:
+        if not self.family_bin_size == 0:
             glob += '*/'
-        if self.coding_effect_types == []:
+        if not self.coding_effect_types == []:
             glob += '*/'
-        if self.rare_boundary == 0:
+        if not self.rare_boundary == 0:
             glob += '*/'
         glob += '*'
         return glob
