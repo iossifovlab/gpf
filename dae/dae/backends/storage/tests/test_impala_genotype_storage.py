@@ -1,4 +1,5 @@
 import pytest
+import os
 
 from box import Box
 
@@ -86,6 +87,19 @@ def test_impala_load_study(impala_genotype_storage, genomes_db):
     assert len(list(backend.query_variants())) == 3
 
 
+def test_impala_partition_import(
+        impala_genotype_storage, genomes_db,
+        sample_parquet_partition_root):
+
+    configuration = os.path.join(
+            sample_parquet_partition_root, '_PARTITION_DESCRIPTION')
+
+    impala_genotype_storage.partition_import(
+        'test_study',
+        configuration)
+    pass
+
+
 # def test_impala_config(impala_genotype_storage):
 #     impala_config = impala_genotype_storage._impala_config(
 #         'study_id',
@@ -108,7 +122,8 @@ def test_impala_load_study(impala_genotype_storage, genomes_db):
 
 
 # def test_hdfs_parquet_files_config(impala_genotype_storage):
-#     if impala_genotype_storage.hdfs_helpers.exists('/tmp/test_data/study_id'):
+#     if impala_genotype_storage.hdfs_helpers.exists(
+#             '/tmp/test_data/study_id'):
 #         impala_genotype_storage.hdfs_helpers.delete(
 #             '/tmp/test_data/study_id', recursive=True
 #         )
