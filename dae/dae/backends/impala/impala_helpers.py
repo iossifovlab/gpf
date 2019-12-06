@@ -63,6 +63,45 @@ class ImpalaHelpers(object):
                 db=dbname, import_file=import_file,
                 table_name=table_name))
 
+    def add_partition_properties(
+            self, cursor, db, table, partition_description):
+        chromosomes = ', '.join(partition_description.chromosomes)
+        cursor.execute(
+            f"ALTER TABLE {db}.{table} "
+            "SET TBLPROPERTIES("
+            f"'gpf_partitioning_region_bin_chromosomes' = "
+            f"'{chromosomes}'"
+            ")"
+        )
+        cursor.execute(
+            f"ALTER TABLE {db}.{table} "
+            "SET TBLPROPERTIES("
+            f"'gpf_partitioning_region_bin_region_length' = "
+            f"'{partition_description.region_length}'"
+            ")"
+        )
+        cursor.execute(
+            f"ALTER TABLE {db}.{table} "
+            "SET TBLPROPERTIES("
+            f"'gpf_partitioning_family_bin_family_bin_size' = "
+            f"'{partition_description.family_bin_size}'"
+            ")"
+        )
+        cursor.execute(
+            f"ALTER TABLE {db}.{table} "
+            "SET TBLPROPERTIES("
+            f"'gpf_partitioning_coding_bin_coding_effect_types' = "
+            f"'{partition_description.coding_effect_types}'"
+            ")"
+        )
+        cursor.execute(
+            f"ALTER TABLE {db}.{table} "
+            "SET TBLPROPERTIES("
+            f"'gpf_partitioning_frequency_bin_rare_boundary' = "
+            f"'{partition_description.rare_boundary}'"
+            ")"
+        )
+
     def create_partition_table(
             self, cursor, db, table, hdfs_path, sample_file,
             partition_description):
@@ -100,12 +139,6 @@ class ImpalaHelpers(object):
             cursor.execute(f"""
                 CREATE DATABASE IF NOT EXISTS {db}
             """)
-            print('test')
-            print(db)
-            print(partition_table)
-            print(partition_hdfs_path)
-            print(files[0])
-            print(partition_description)
             sample_file = os.path.join(partition_hdfs_path, files[0])
             self.create_partition_table(
                 cursor,
@@ -113,6 +146,12 @@ class ImpalaHelpers(object):
                 partition_table,
                 partition_hdfs_path,
                 sample_file,
+                partition_description)
+
+            self.add_partition_properties(
+                cursor,
+                db,
+                partition_table,
                 partition_description)
 
     def check_database(self, dbname):
