@@ -97,8 +97,71 @@ def test_impala_partition_import(
     impala_genotype_storage.partition_import(
         'test_study',
         configuration)
-    pass
 
+    hdfs = impala_genotype_storage.hdfs_helpers
+    root = impala_genotype_storage.storage_config.hdfs.base_dir
+
+    assert hdfs.exists(os.path.join(
+        root,
+        'test_study/region_bin=1_8/family_bin=6/coding_bin=0/frequency_bin=3'))
+    assert hdfs.exists(os.path.join(
+        root,
+        'test_study/region_bin=1_8/family_bin=6/coding_bin=0/frequency_bin=3/'
+        'variants_region_bin_1_8_family_bin_6_'
+        'coding_bin_0_frequency_bin_3.parquet'))
+    assert hdfs.exists(os.path.join(
+        root,
+        'test_study/region_bin=1_8/family_bin=69'
+        '/coding_bin=0/frequency_bin=3'))
+    assert hdfs.exists(os.path.join(
+        root,
+        'test_study/region_bin=1_8/family_bin=69/coding_bin=0/frequency_bin=3/'
+        'variants_region_bin_1_8_family_bin_69_'
+        'coding_bin_0_frequency_bin_3.parquet'))
+    assert hdfs.exists(os.path.join(
+        root,
+        'test_study/region_bin=2_9/family_bin=6/coding_bin=0/frequency_bin=3'))
+    assert hdfs.exists(os.path.join(
+        root,
+        'test_study/region_bin=2_9/family_bin=6/coding_bin=0/frequency_bin=3/'
+        'variants_region_bin_2_9_family_bin_6_'
+        'coding_bin_0_frequency_bin_3.parquet'))
+    assert hdfs.exists(os.path.join(
+        root,
+        'test_study/region_bin=2_9/family_bin=69'
+        '/coding_bin=0/frequency_bin=3'))
+    assert hdfs.exists(os.path.join(
+        root,
+        'test_study/region_bin=2_9/family_bin=69/coding_bin=0/frequency_bin=3/'
+        'variants_region_bin_2_9_family_bin_69_'
+        'coding_bin_0_frequency_bin_3.parquet'))
+
+    impala = impala_genotype_storage.impala_helpers
+    db = impala_genotype_storage.storage_config.impala.db
+
+    with impala.connection.cursor() as cursor:
+        cursor.execute(f'DESCRIBE EXTENDED {db}.test_study_partition')
+        rows = list(cursor)
+        assert any(
+                row[1] == 'gpf_partitioning_coding_bin_coding_effect_types'
+                and row[2] == 'missense, nonsense, frame-shift, synonymous'
+                for row in rows)
+        assert any(
+                row[1] == 'gpf_partitioning_family_bin_family_bin_size'
+                and int(row[2]) == 100
+                for row in rows)
+        assert any(
+                row[1] == 'gpf_partitioning_frequency_bin_rare_boundary'
+                and int(row[2]) == 30
+                for row in rows)
+        assert any(
+                row[1] == 'gpf_partitioning_region_bin_chromosomes'
+                and '1, 2' in row[2]
+                for row in rows)
+        assert any(
+                row[1] == 'gpf_partitioning_region_bin_region_length'
+                and int(row[2]) == 100000
+                for row in rows)
 
 # def test_impala_config(impala_genotype_storage):
 #     impala_config = impala_genotype_storage._impala_config(
