@@ -17,7 +17,7 @@ from dae.pedigrees.family import PedigreeReader
 from dae.pedigrees.family import FamiliesLoader
 
 
-def parse_cli_arguments(dae_config, argv=sys.argv[1:]):
+def cli_arguments(dae_config, argv=sys.argv[1:]):
     default_genotype_storage_id = \
         dae_config.get('genotype_storage', {}).get('default', None)
 
@@ -78,7 +78,8 @@ def parse_cli_arguments(dae_config, argv=sys.argv[1:]):
     )
 
     PedigreeReader.flexible_pedigree_cli_arguments(parser)
-    DenovoLoader.flexible_denovo_cli_arguments(parser)
+    DenovoLoader.denovo_cli_arguments(parser)
+    VcfLoader.vcf_cli_arguments(parser)
 
     parser_args = parser.parse_args(argv)
     return parser_args
@@ -116,7 +117,7 @@ def main(argv, gpf_instance=None):
 
     dae_config = gpf_instance.dae_config
 
-    argv = parse_cli_arguments(dae_config, argv)
+    argv = cli_arguments(dae_config, argv)
 
     genotype_storage_factory = gpf_instance.genotype_storage_factory
     genomes_db = gpf_instance.genomes_db
@@ -175,9 +176,11 @@ def main(argv, gpf_instance=None):
         )
         variant_loaders.append(denovo_loader)
     if argv.vcf is not None:
+        params = VcfLoader.vcf_parse_cli_arguments(argv)
         vcf_loader = VcfLoader(
             families_loader.families,
-            argv.vcf
+            argv.vcf,
+            params=params
         )
         vcf_loader = AnnotationPipelineDecorator(
             vcf_loader, annotation_pipeline

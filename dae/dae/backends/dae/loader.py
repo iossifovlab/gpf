@@ -82,7 +82,7 @@ class DenovoLoader(VariantsLoader):
         return genotype
 
     @staticmethod
-    def flexible_denovo_cli_arguments(parser):
+    def denovo_cli_arguments(parser):
         parser.add_argument(
             '--denovo-location',
             help='The label or index of the column containing the CSHL-style'
