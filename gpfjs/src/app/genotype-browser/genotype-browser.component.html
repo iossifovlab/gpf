@@ -38,9 +38,9 @@
       <p class="overview">
         <span *ngIf="!loadingFinished">
           <span class="loader"></span>
-            Loading variants...
-          </span>
-        <span *ngIf="loadingFinished">
+          Loading variants...
+        </span>
+        <span *ngIf="loadingFinished" id="variants-count-span">
           {{ genotypePreviewVariantsArray.variantsCount() }}
         </span>
       </p>
