@@ -3,7 +3,7 @@ import { Headers, Http, Response, RequestOptions } from '@angular/http';
 import { Router } from '@angular/router';
 import { Location } from '@angular/common';
 // tslint:disable-next-line:import-blacklist
-import { Observable } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 
 const oboe = require('oboe');
 
@@ -22,6 +22,10 @@ export class QueryService {
   private loadQueryEndpoint = 'query_state/load';
 
   private headers = new Headers({ 'Content-Type': 'application/json' });
+
+  private connectionEstablished = false;
+  private oboeInstance = null;
+  public streamingFinishedSubject = new Subject(); // This is for notifying that the streaming has completely finished
 
   constructor(
     private location: Location,
@@ -54,22 +58,40 @@ export class QueryService {
   }
 
   streamPost(url: string, filter: QueryData) {
-    return new Observable(obs => {
-      oboe({
-        url: `${environment.apiPath}${url}`,
-        method: 'POST',
-        headers: this.headers.toJSON(),
-        body: filter,
-        withCredentials: true
-      }).done(data => obs.next(data));
+    if (this.connectionEstablished) {
+      this.oboeInstance.abort();
+    }
+
+    const streamingSubject = new Subject();
+    this.oboeInstance = oboe({
+      url: `${environment.apiPath}${url}`,
+      method: 'POST',
+      headers: this.headers.toJSON(),
+      body: filter,
+      withCredentials: true
+    }).start(data => {
+      this.connectionEstablished = true;
+    }).node('!.*', data => {
+      streamingSubject.next(data);
+    }).done(data => {
+      this.connectionEstablished = false;
+      this.streamingFinishedSubject.next(true);
+    }).fail(error => {
+      this.connectionEstablished = false;
+      this.streamingFinishedSubject.next(true);
+      console.warn('oboejs encountered a fail event while streaming');
+      streamingSubject.next([]); // Sending an empty object so the loading service can stop the loading overlay
     });
+    return streamingSubject;
   }
 
-  getGenotypePreviewVariantsByFilter(filter: QueryData, genotypePreviewInfo: GenotypePreviewInfo): GenotypePreviewVariantsArray {
+  getGenotypePreviewVariantsByFilter(filter: QueryData, genotypePreviewInfo: GenotypePreviewInfo,
+    loadingService: any): GenotypePreviewVariantsArray {
     const genotypePreviewVariantsArray = new GenotypePreviewVariantsArray();
 
     this.streamPost(this.genotypePreviewVariantsUrl, filter).subscribe(variant => {
       this.parseGenotypePreviewVariantsResponse(variant, genotypePreviewInfo, genotypePreviewVariantsArray);
+      loadingService.setLoadingStop(); // Stop the loading overlay when at least one variant has been loaded
     });
 
     return genotypePreviewVariantsArray;

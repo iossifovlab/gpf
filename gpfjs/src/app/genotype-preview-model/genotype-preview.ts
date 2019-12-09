@@ -55,9 +55,9 @@ export class GenotypePreview {
         const propertyValue = row[elem];
 
         if (mapper) {
-          result.data[columns[elem]] = mapper(propertyValue);
+          result.data.set(columns[elem], mapper(propertyValue));
         } else if (propertyValue !== 'nan' && propertyValue !== '') {
-          result.data[columns[elem]] = propertyValue;
+          result.data.set(columns[elem], propertyValue);
         }
       }
     }
@@ -66,7 +66,7 @@ export class GenotypePreview {
   }
 
   get(key: string): any {
-    return this.data[key];
+    return this.data.get(key);
   }
 
 }
@@ -100,7 +100,9 @@ export class GenotypePreviewVariantsArray {
       return;
     }
     const genotypePreview = GenotypePreview.fromJson(row, genotypePreviewInfo.columns);
-    this.genotypePreviews.push(genotypePreview);
+    if (genotypePreview.data.size) {
+      this.genotypePreviews.push(genotypePreview);
+    }
   }
 
   variantsCount() {
