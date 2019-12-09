@@ -396,83 +396,8 @@ class FamiliesLoader:
             return self.load_pedigree_file(
                 self.families_filename, pedigree_format=self.pedigree_format)
 
-
-class PedigreeReader(object):
-
     @staticmethod
-    def read_file(
-            pedigree_filepath, sep='\t',
-            ped_family='familyId', ped_person='personId', ped_mom='momId',
-            ped_dad='dadId', ped_sex='sex', ped_status='status',
-            ped_role='role',
-            ped_layout='layout', ped_generated='generated',
-            ped_sample_id='sampleId',
-            return_as_dict=False):
-
-        ped_df = PedigreeReader.flexible_pedigree_read(
-            pedigree_filepath, sep=sep,
-            ped_family=ped_family, ped_person=ped_person,
-            ped_mom=ped_mom, ped_dad=ped_dad,
-            ped_sex=ped_sex, ped_status=ped_status,
-            ped_role=ped_role, ped_layout=ped_layout,
-            ped_generated=ped_generated, ped_sample_id=ped_sample_id)
-
-        families = {}
-        for row in ped_df.to_dict(orient='records'):
-            kwargs = {
-                "family_id": row["family_id"],
-                "person_id": row["person_id"],
-                "father": row["dad_id"],
-                "mother": row["mom_id"],
-                "sex": row["sex"],
-                "status": row["status"],
-                "role": row["role"],
-                "layout": row.get("layout", None),
-                "generated": row.get("generated", False),
-            }
-            member = Person(**kwargs)
-            if member.family_id not in families:
-                families[member.family_id] = Pedigree([member])
-            else:
-                families[member.family_id].members.append(member)
-
-        if return_as_dict:
-            return families
-        return list(families.values())
-
-    @staticmethod
-    def produce_header_from_indices(
-       ped_family,
-       ped_person,
-       ped_mom,
-       ped_dad,
-       ped_sex,
-       ped_status,
-       ped_role,
-       ped_layout,
-       ped_generated,
-       ped_sample_id,
-    ):
-        header = (
-            (ped_family, PEDIGREE_COLUMN_NAMES['family']),
-            (ped_person, PEDIGREE_COLUMN_NAMES['person']),
-            (ped_mom, PEDIGREE_COLUMN_NAMES['mother']),
-            (ped_dad, PEDIGREE_COLUMN_NAMES['father']),
-            (ped_sex, PEDIGREE_COLUMN_NAMES['sex']),
-            (ped_status, PEDIGREE_COLUMN_NAMES['status']),
-            (ped_role, PEDIGREE_COLUMN_NAMES['role']),
-            (ped_layout, PEDIGREE_COLUMN_NAMES['layout']),
-            (ped_generated, PEDIGREE_COLUMN_NAMES['generated']),
-            (ped_sample_id, PEDIGREE_COLUMN_NAMES['sample id']),
-        )
-        header = tuple(filter(lambda col: type(col[0]) is int, header))
-        for col in header:
-            assert type(col[0]) is int, col[0]
-        header = tuple(sorted(header, key=lambda col: col[0]))
-        return zip(*header)
-
-    @staticmethod
-    def flexible_pedigree_cli_arguments(parser):
+    def cli_arguments(parser):
         parser.add_argument(
             '--ped-family',
             default='familyId',
@@ -556,9 +481,8 @@ class PedigreeReader(object):
             'for simple family format [default: %(default)s]'
         )
 
-
     @classmethod
-    def flexible_pedigree_parse_cli_arguments(cls, argv):
+    def parse_cli_arguments(cls, argv):
         ped_ped_args = [
             'ped_family',
             'ped_person',
@@ -584,6 +508,81 @@ class PedigreeReader(object):
                 res[col] = int(ped_value)
 
         return res
+
+
+class PedigreeReader(object):
+
+    @staticmethod
+    def read_file(
+            pedigree_filepath, sep='\t',
+            ped_family='familyId', ped_person='personId', ped_mom='momId',
+            ped_dad='dadId', ped_sex='sex', ped_status='status',
+            ped_role='role',
+            ped_layout='layout', ped_generated='generated',
+            ped_sample_id='sampleId',
+            return_as_dict=False):
+
+        ped_df = PedigreeReader.flexible_pedigree_read(
+            pedigree_filepath, sep=sep,
+            ped_family=ped_family, ped_person=ped_person,
+            ped_mom=ped_mom, ped_dad=ped_dad,
+            ped_sex=ped_sex, ped_status=ped_status,
+            ped_role=ped_role, ped_layout=ped_layout,
+            ped_generated=ped_generated, ped_sample_id=ped_sample_id)
+
+        families = {}
+        for row in ped_df.to_dict(orient='records'):
+            kwargs = {
+                "family_id": row["family_id"],
+                "person_id": row["person_id"],
+                "father": row["dad_id"],
+                "mother": row["mom_id"],
+                "sex": row["sex"],
+                "status": row["status"],
+                "role": row["role"],
+                "layout": row.get("layout", None),
+                "generated": row.get("generated", False),
+            }
+            member = Person(**kwargs)
+            if member.family_id not in families:
+                families[member.family_id] = Pedigree([member])
+            else:
+                families[member.family_id].members.append(member)
+
+        if return_as_dict:
+            return families
+        return list(families.values())
+
+    @staticmethod
+    def produce_header_from_indices(
+       ped_family,
+       ped_person,
+       ped_mom,
+       ped_dad,
+       ped_sex,
+       ped_status,
+       ped_role,
+       ped_layout,
+       ped_generated,
+       ped_sample_id,
+    ):
+        header = (
+            (ped_family, PEDIGREE_COLUMN_NAMES['family']),
+            (ped_person, PEDIGREE_COLUMN_NAMES['person']),
+            (ped_mom, PEDIGREE_COLUMN_NAMES['mother']),
+            (ped_dad, PEDIGREE_COLUMN_NAMES['father']),
+            (ped_sex, PEDIGREE_COLUMN_NAMES['sex']),
+            (ped_status, PEDIGREE_COLUMN_NAMES['status']),
+            (ped_role, PEDIGREE_COLUMN_NAMES['role']),
+            (ped_layout, PEDIGREE_COLUMN_NAMES['layout']),
+            (ped_generated, PEDIGREE_COLUMN_NAMES['generated']),
+            (ped_sample_id, PEDIGREE_COLUMN_NAMES['sample id']),
+        )
+        header = tuple(filter(lambda col: type(col[0]) is int, header))
+        for col in header:
+            assert type(col[0]) is int, col[0]
+        header = tuple(sorted(header, key=lambda col: col[0]))
+        return zip(*header)
 
     @staticmethod
     def flexible_pedigree_read(

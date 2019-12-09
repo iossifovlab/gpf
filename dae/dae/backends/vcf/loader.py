@@ -133,7 +133,7 @@ class VcfLoader(VariantsLoader):
             yield summary_variant, family_genotypes
 
     @staticmethod
-    def vcf_cli_arguments(parser):
+    def cli_arguments(parser):
         parser.add_argument(
             '--vcf-include-reference', default=False,
             dest='vcf_include_reference',
@@ -142,14 +142,14 @@ class VcfLoader(VariantsLoader):
         )
         parser.add_argument(
             '--vcf-include-unknown', default=False,
-            dest='include_unknown',
+            dest='vcf_include_unknown',
             help='include variants with unknown genotype '
             '[default: %(default)s]',
             action='store_true'
         )
 
     @staticmethod
-    def vcf_parse_cli_arguments(argv):
+    def parse_cli_arguments(argv):
         params={
             'include_reference_genotypes': argv.vcf_include_reference,
             'include_unknown_family_genotypes': argv.vcf_include_unknown,
