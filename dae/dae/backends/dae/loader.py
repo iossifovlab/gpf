@@ -82,7 +82,7 @@ class DenovoLoader(VariantsLoader):
         return genotype
 
     @staticmethod
-    def flexible_denovo_cli_arguments(parser):
+    def cli_arguments(parser):
         parser.add_argument(
             '--denovo-location',
             help='The label or index of the column containing the CSHL-style'
@@ -128,6 +128,21 @@ class DenovoLoader(VariantsLoader):
             help='The label or index of the column containing the best state'
             ' for the family.',
         )
+
+    @staticmethod
+    def parse_cli_arguments(argv):
+        params={
+            'denovo_location': argv.denovo_location,
+            'denovo_variant': argv.denovo_variant,
+            'denovo_chrom': argv.denovo_chrom,
+            'denovo_pos': argv.denovo_pos,
+            'denovo_ref': argv.denovo_ref,
+            'denovo_alt': argv.denovo_alt,
+            'denovo_person_id': argv.denovo_person_id,
+            'denovo_family_id': argv.denovo_family_id,
+            'denovo_best_state': argv.denovo_best_state,
+        }
+        return params
 
     @classmethod
     def flexible_denovo_load(
