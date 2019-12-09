@@ -82,6 +82,7 @@ class ImpalaFamilyVariants:
                 return_unknown=return_unknown,
                 limit=limit)
 
+            # print("LIMIT:", limit)
             # print('FINAL QUERY: ', query)
             cursor.execute(query)
             for row in cursor:
@@ -324,6 +325,80 @@ class ImpalaFamilyVariants:
             return 'coding = 0'
         return ''
 
+    def _build_chrom_bin_heuristic(self, regions):
+        if not regions:
+            return ''
+        if 'chrom_bin' not in self.schema:
+            return ''
+        chroms = ['chr{}'.format(c) for c in range(1, 23)]
+        chroms.append('chrX')
+        chroms = set(chroms)
+        region_chroms = set([
+            r.chrom if r.chrom in chroms else 'other' for r in regions
+        ])
+
+        chrom_bins = ','.join(region_chroms)
+        return "chrom_bin IN ({chrom_bins})".format(chrom_bins=chrom_bins)
+
+    def _build_region_bin_heuristic(self, regions):
+        if not regions:
+            return ''
+        if 'region_bin' not in self.schema:
+            return ''
+
+        chroms = ['chr{}'.format(c) for c in range(1, 23)]
+        chroms.append('chrX')
+        chroms = set(chroms)
+
+        region_length=10_000_000
+        region_bins = []
+        for region in regions:
+            if region.chrom in chroms:
+                chrom_bin = region.chrom
+            else:
+                chrom_bin = 'other'
+            start = region.start // region_length
+            stop = region.stop // region_length 
+            for position_bin in range(start, stop+1):
+                region_bins.append("{}_{}".format(chrom_bin, position_bin))
+        if not region_bins:
+            return ''
+        return "region_bin IN ({})".format(','.join([
+            "'{}'".format(rb) for rb in region_bins]))
+
+    def _build_coding2_heuristic(self, effect_types):
+        if effect_types is None:
+            return ''
+        if 'coding2' not in self.schema:
+            return ''
+        intersection = set(effect_types) & set([
+            'splice-site',
+            'frame-shift',
+            'nonsense',
+            'no-frame-shift-newStop',
+            'noStart',
+            'noEnd',
+            'missense',
+            'no-frame-shift',
+            'CDS',
+            'synonymous',
+            'coding_unknown',
+            'regulatory',
+            "3'UTR",
+            "5'UTR",
+            'intron',
+            'non-coding',
+            "5'UTR-intron",
+            "3'UTR-intron",
+            "promoter",
+            "non-coding-intron",
+        ])
+        if intersection == set(effect_types):
+            return 'coding2 = 1'
+        if not intersection:
+            return 'coding2 = 0'
+        return ''
+
     def _build_ultra_rare_heuristic(self, ultra_rare):
         if 'ultra_rare' not in self.schema:
             return ''
@@ -339,22 +414,23 @@ class ImpalaFamilyVariants:
         family_bins = set()
         if family_ids:
             family_ids = set(family_ids)
-            family_bins.union(
+            family_bins = family_bins.union(
                 set(self.ped_df[
                         self.ped_df['family_id'].isin(family_ids)
                     ].family_bin.values)
             )
+
         if person_ids:
             person_ids = set(person_ids)
-            family_bins.union(
+            family_bins = family_bins.union(
                 set(self.ped_df[
                         self.ped_df['person_id'].isin(person_ids)
                     ].family_bin.values)
             )
 
-        if family_bins:
-            w = ', '.join(family_bins)
-            return 'family_bin IN {w}'.format(w=w)
+        if 0 < len(family_bins) < 7:  # FIXME:
+            w = ', '.join([str(fb) for fb in family_bins])
+            return 'family_bin IN ({w})'.format(w=w)
 
         return ''
 
@@ -437,6 +513,15 @@ class ImpalaFamilyVariants:
         )
         where.append(
             self._build_coding_heuristic(effect_types)
+        )
+        where.append(
+            self._build_coding2_heuristic(effect_types)
+        )
+        where.append(
+            self._build_chrom_bin_heuristic(regions)
+        )
+        where.append(
+            self._build_region_bin_heuristic(regions)
         )
         where = [w for w in where if w]
 
