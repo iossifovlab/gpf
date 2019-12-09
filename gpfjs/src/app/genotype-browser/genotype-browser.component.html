@@ -34,9 +34,17 @@
       </div>
     </div>
     <div class="genotype-browser-results" *ngIf="genotypePreviewVariantsArray">
+      
       <p class="overview">
-        {{ genotypePreviewVariantsArray.variantsCount() }}
+        <span *ngIf="!loadingFinished">
+          <span class="loader"></span>
+            Loading variants...
+          </span>
+        <span *ngIf="loadingFinished">
+          {{ genotypePreviewVariantsArray.variantsCount() }}
+        </span>
       </p>
+
       <gpf-genotype-preview-table
       	*ngIf="tablePreview"
         [columns]="dataset?.genotypeBrowserConfig?.columns"

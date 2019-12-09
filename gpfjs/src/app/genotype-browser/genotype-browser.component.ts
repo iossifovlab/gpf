@@ -29,6 +29,7 @@ export class GenotypeBrowserComponent extends QueryStateCollector
   selectedDatasetId: string;
   selectedDataset$: Observable<Dataset>;
   private genotypeBrowserState: Object;
+  private loadingFinished: boolean;
 
   constructor(
     private queryService: QueryService,
@@ -75,6 +76,7 @@ export class GenotypeBrowserComponent extends QueryStateCollector
   }
 
   submitQuery() {
+    this.loadingFinished = false;
     this.loadingService.setLoadingStart();
     this.getCurrentState()
       .subscribe(state => {
@@ -88,12 +90,15 @@ export class GenotypeBrowserComponent extends QueryStateCollector
 
             this.genotypeBrowserState = state;
 
+            this.queryService.streamingFinishedSubject.subscribe(
+              _ => { this.loadingFinished = true; }
+            );
+
             this.genotypePreviewVariantsArray =
               this.queryService.getGenotypePreviewVariantsByFilter(
-                state, this.genotypePreviewInfo
+                state, this.genotypePreviewInfo, this.loadingService
               );
 
-            this.loadingService.setLoadingStop();
           }, error => {
             console.warn(error);
           }
