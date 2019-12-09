@@ -32,8 +32,6 @@ class VariantsDb(object):
         if dae_config.default_configuration and \
                 dae_config.default_configuration.conf_file:
             defaults['conf'] = dae_config.default_configuration.conf_file
-            print('got here - ', dae_config.default_configuration.keys())
-            print('got here - ', dae_config.default_configuration.conf_file)
 
         self.genotype_data_study_configs = GenotypeDataStudyConfigParser.\
             read_and_parse_directory_configurations(

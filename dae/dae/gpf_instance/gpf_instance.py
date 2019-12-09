@@ -111,10 +111,11 @@ class GPFInstance(object):
         )
 
     def reload(self):
-        self.__variants_db = None
-        self._denovo_gene_sets_db = None
-        self._gene_sets_db = None
-        self.__common_report_facade = None
+        reload_properties = [
+            '__variants_db', '__common_report_facade', '_denovo_gene_sets_db',
+            '_gene_sets_db']
+        for cached_val_name in reload_properties:
+            setattr(self, cached_val_name, None)
 
     @property
     @cached
