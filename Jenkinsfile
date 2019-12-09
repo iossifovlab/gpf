@@ -59,7 +59,7 @@ pipeline {
             }
         }
         sh '''
-            tar zxf builds/data_hg19_startup_*.tar.gz -C $WD
+            tar zxf builds/data-hg19-startup-*.tar.gz -C $WD
         '''
       }
     }
