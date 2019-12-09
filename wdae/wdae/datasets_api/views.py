@@ -27,7 +27,7 @@ class DatasetView(QueryBaseView):
     def get(self, request, dataset_id=None):
         user = request.user
         if dataset_id is None:
-            datasets = self.variants_db.get_all_wrappers()
+            datasets = self.variants_db.get_all_genotype_data_wrappers()
             res = sorted(list(dataset.get_genotype_data_group_description()
                          for dataset in datasets),
                          key=lambda dataset: dataset['name'])

@@ -12,7 +12,7 @@ def test_variants_db_can_create_study_from_config(
         genotype_data_study_configs, variants_db_fixture):
     test_config = genotype_data_study_configs.get('quads_f1')
 
-    assert variants_db_fixture.make_study(test_config) is not None
+    assert variants_db_fixture.make_genotype_data_study(test_config) is not None
 
 
 ##############################################################
@@ -84,9 +84,9 @@ def test_get_non_existing_study_wrapper(variants_db_fixture):
     assert study is None
 
 
-def test_get_all_studies(variants_db_fixture):
-    studies = variants_db_fixture.get_all_studies()
-    assert len(studies) == 7
+# def test_get_all_studies(variants_db_fixture):
+#     studies = variants_db_fixture.get_all_studies()
+#     assert len(studies) == 7
 
 
 ##############################################################
@@ -214,5 +214,5 @@ def test_get_non_existing_wrapper(variants_db_fixture):
 
 
 def test_get_all(variants_db_fixture):
-    studies = variants_db_fixture.get_all()
+    studies = variants_db_fixture.get_all_genotype_data()
     assert len(studies) == 16

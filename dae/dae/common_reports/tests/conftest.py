@@ -34,12 +34,12 @@ def gpf_instance(mock_genomes_db):
 
 @pytest.fixture(scope='session')
 def vdb_fixture(gpf_instance):
-    return gpf_instance.variants_db
+    return gpf_instance._variants_db
 
 
 @pytest.fixture(scope='session')
 def common_report_facade(gpf_instance):
-    return gpf_instance.common_report_facade
+    return gpf_instance._common_report_facade
 
 
 @pytest.fixture(scope='session')

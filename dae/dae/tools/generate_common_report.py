@@ -22,7 +22,7 @@ def main(gpf_instance=None, argv=None):
     if gpf_instance is None:
         gpf_instance = GPFInstance()
 
-    common_report_facade = gpf_instance.common_report_facade
+    common_report_facade = gpf_instance._common_report_facade
 
     if args.show_studies:
         for study_id in common_report_facade.get_all_common_report_ids():

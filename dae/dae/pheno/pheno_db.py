@@ -1,3 +1,6 @@
+import logging
+import logging
+
 import pandas as pd
 from sqlalchemy.sql import select, text
 from sqlalchemy import not_
@@ -7,7 +10,12 @@ from collections import defaultdict, OrderedDict
 from dae.pedigrees.family import Person, Family
 from dae.pheno.db import DbManager
 from dae.pheno.common import MeasureType
+from dae.pheno.utils.config import PhenoConfigParser
+
 from dae.variants.attributes import Sex, Status, Role
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 class Instrument(object):
@@ -640,3 +648,53 @@ class PhenotypeDataStudy(PhenotypeData):
 class PhenotypeDataGroup(PhenotypeData):
     # TODO Implement
     pass
+
+
+
+class PhenoDb(object):
+
+    def __init__(self, dae_config):
+        super(PhenoDb, self).__init__()
+        assert dae_config
+
+        self.config = PhenoConfigParser.read_directory_configurations(
+            dae_config.pheno_db.dir)
+        
+        self.pheno_cache = {}
+
+    def get_dbfile(self, pheno_data_id):
+        return self.config[pheno_data_id].dbfile
+
+    def get_dbconfig(self, pheno_data_id):
+        return self.config[pheno_data_id]
+
+    def has_phenotype_data(self, pheno_data_id):
+        return pheno_data_id in self.config
+
+    def get_phenotype_data_ids(self):
+        return list(self.config.keys())
+
+    def get_phenotype_data(self, pheno_data_id):
+        if not self.has_phenotype_data(pheno_data_id):
+            raise ValueError('cannot find phenotype data {};'
+                             ' available phenotype data: {}'
+                             .format(pheno_data_id,
+                                     self.get_phenotype_data_ids()))
+        if pheno_data_id in self.pheno_cache:
+            phenotype_data = self.pheno_cache[pheno_data_id]
+        else:
+            LOGGER.info('loading pheno db <{}>'.format(pheno_data_id))
+            phenotype_data = PhenotypeDataStudy(
+                dbfile=self.get_dbfile(pheno_data_id)
+            )
+            self.pheno_cache[pheno_data_id] = phenotype_data
+        return phenotype_data
+
+    def get_all_phenotype_data(self):
+        return [
+            self.get_phenotype_data(pheno_id)
+            for pheno_id in self.get_phenotype_data_ids()
+        ]
+    
+    def get_phenotype_data_config(self, pheno_data_id):
+        return self.config.get(pheno_data_id)

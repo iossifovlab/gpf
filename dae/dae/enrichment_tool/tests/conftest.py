@@ -21,7 +21,7 @@ def gpf_instance(mock_genomes_db):
 
 @pytest.fixture(scope='session')
 def variants_db_fixture(gpf_instance):
-    return gpf_instance.variants_db
+    return gpf_instance._variants_db
 
 
 @pytest.fixture(scope='session')
@@ -47,4 +47,4 @@ def f1_trio_samocha_background(f1_trio_enrichment_config):
 
 @pytest.fixture(scope='session')
 def background_facade(gpf_instance):
-    return gpf_instance.background_facade
+    return gpf_instance._background_facade

@@ -15,7 +15,7 @@ from dae.gene.denovo_gene_sets_db import DenovoGeneSetsDb
 
 from dae.studies.variants_db import VariantsDb
 
-from dae.pheno.pheno_factory import PhenoDb
+from dae.pheno.pheno_db import PhenoDb
 
 from dae.backends.storage.genotype_storage_factory import \
     GenotypeStorageFactory
@@ -46,16 +46,17 @@ class GPFInstance(object):
 
         if load_eagerly:
             self.genomes_db
-            self._pheno_db
-            self.gene_info_config
-            self.denovo_gene_sets_db
             self.gene_sets_db
-            self.score_config
-            self.scores_factory
-            self.genotype_storage_factory
-            self.variants_db
-            self.common_report_facade
-            self.background_facade
+            self._gene_info_config
+            self._pheno_db
+            self._variants_db
+            self._gene_info_config
+            self.denovo_gene_sets_db
+            self._score_config
+            self._scores_factory
+            self._genotype_storage_factory
+            self._common_report_facade
+            self._background_facade
 
     @property
     @cached
@@ -72,7 +73,7 @@ class GPFInstance(object):
 
     @property
     @cached
-    def gene_info_config(self):
+    def _gene_info_config(self):
         return GeneInfoConfigParser.read_and_parse_file_configuration(
             self.dae_config.gene_info_db.conf_file,
             self.dae_config.dae_data_dir
@@ -81,11 +82,11 @@ class GPFInstance(object):
     @property
     @cached
     def gene_weights_db(self):
-        return GeneWeightsDb(self.gene_info_config.gene_weights)
+        return GeneWeightsDb(self._gene_info_config.gene_weights)
 
     @property
     @cached
-    def score_config(self):
+    def _score_config(self):
         return ScoreConfigParser.read_and_parse_file_configuration(
             self.dae_config.genomic_scores_db.conf_file,
             self.dae_config.dae_data_dir
@@ -93,44 +94,78 @@ class GPFInstance(object):
 
     @property
     @cached
-    def scores_factory(self):
-        return ScoresFactory(self.score_config)
+    def _scores_factory(self):
+        return ScoresFactory(self._score_config)
 
     @property
     @cached
-    def genotype_storage_factory(self):
+    def _genotype_storage_factory(self):
         return GenotypeStorageFactory(self.dae_config)
 
     @property
     @cached
-    def variants_db(self):
+    def _variants_db(self):
         return VariantsDb(
             self.dae_config, self._pheno_db, self.gene_weights_db,
-            self.genomes_db, self.genotype_storage_factory
+            self.genomes_db, self._genotype_storage_factory
         )
 
     def reload(self):
-        self._variants_db = None
+        self.__variants_db = None
         self._denovo_gene_sets_db = None
-        self._common_report_facade = None
         self._gene_sets_db = None
+        self.__common_report_facade = None
 
     @property
     @cached
-    def common_report_facade(self):
-        return CommonReportFacade(self.variants_db)
+    def _common_report_facade(self):
+        return CommonReportFacade(self._variants_db)
 
     @property
     @cached
     def gene_sets_db(self):
-        return GeneSetsDb(self.variants_db, self.gene_info_config)
+        return GeneSetsDb(self._variants_db, self._gene_info_config)
 
     @property
     @cached
     def denovo_gene_sets_db(self):
-        return DenovoGeneSetsDb(self.variants_db)
+        return DenovoGeneSetsDb(self._variants_db)
 
     @property
     @cached
-    def background_facade(self):
-        return BackgroundFacade(self.variants_db)
+    def _background_facade(self):
+        return BackgroundFacade(self._variants_db)
+
+    def get_genotype_data_ids(self):
+        return self._variants_db.get_genotype_studies_ids() + \
+            self._variants_db.get_genotype_data_groups_ids()
+
+    def get_genotype_data(self, genotype_data_id):
+        genotype_data_study = self._variants_db.get_study(genotype_data_id)
+        if genotype_data_study:
+            return genotype_data_study
+        return self._variants_db.get_genotype_data_group(genotype_data_id)
+
+    def get_all_genotype_data(self):
+        genotype_studies = self._variants_db.get_all_studies()
+        genotype_data_groups = self._variants_db.get_all_genotype_data_groups()
+        return genotype_studies + genotype_data_groups
+
+    def get_genotype_data_config(self, genotype_data_id):
+        config = self._variants_db.get_study_config(genotype_data_id)
+        if config is not None:
+            return config
+        return self._variants_db.get_genotype_data_group_config(
+            genotype_data_id)
+
+    def get_phenotype_data_ids(self):
+        return self._pheno_db.get_phenotype_data_ids()
+
+    def get_phenotype_data(self, phenotype_data_id):
+        return self._pheno_db.get_phenotype_data(phenotype_data_id)
+
+    def get_all_phenotype_data(self):
+        return self._pheno_db.get_all_phenotype_data()
+    
+    def get_phenotype_data_config(self, phenotype_data_id):
+        return self._pheno_db.get_phenotype_data_config(phenotype_data_id)

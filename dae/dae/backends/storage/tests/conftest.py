@@ -19,7 +19,7 @@ def gpf_instance(mock_genomes_db):
 
 @pytest.fixture(scope='session')
 def genotype_storage_factory(gpf_instance):
-    return gpf_instance.genotype_storage_factory
+    return gpf_instance._genotype_storage_factory
 
 
 @pytest.fixture(scope='session')
@@ -34,7 +34,7 @@ def impala_genotype_storage(genotype_storage_factory):
 
 @pytest.fixture(scope='session')
 def variants_db_fixture(gpf_instance):
-    return gpf_instance.variants_db
+    return gpf_instance._variants_db
 
 
 @pytest.fixture(scope='session')
@@ -52,4 +52,4 @@ def quads_f1_config(gpf_instance, impala_genotype_storage):
             'fixtures/studies/quads_f1_impala/data/pedigree')]
     )
     gpf_instance.reload()
-    return gpf_instance.variants_db.get_study_config('quads_f1_impala')
+    return gpf_instance._variants_db.get_study_config('quads_f1_impala')

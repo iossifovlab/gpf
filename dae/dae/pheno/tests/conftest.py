@@ -12,7 +12,7 @@ from dae.pheno.prepare.ped2individuals import SPARKCsvPedigreeReader
 from dae.pheno.prepare.individuals2ped import InternalCsvIndividualsReader
 from dae.pheno.common import default_config
 from dae.pheno.utils.config import PhenoConfigParser
-from dae.pheno.pheno_factory import PhenoDb
+from dae.pheno.pheno_db import PhenoDb
 
 
 def relative_to_this_folder(path):

@@ -27,7 +27,7 @@ class EnrichmentModelsView(QueryBaseView):
     def __init__(self):
         super(EnrichmentModelsView, self).__init__()
 
-        self.background_facade = self.gpf_instance.background_facade
+        self.background_facade = self.gpf_instance._background_facade
 
     def get_from_config(self, dataset_id, key):
         enrichment_config = \
@@ -56,8 +56,8 @@ class EnrichmentTestView(QueryBaseView):
     def __init__(self):
         super(EnrichmentTestView, self).__init__()
 
-        self.background_facade = self.gpf_instance.background_facade
-        self.gene_info_config = self.gpf_instance.gene_info_config
+        self.background_facade = self.gpf_instance._background_facade
+        self.gene_info_config = self.gpf_instance._gene_info_config
 
     def enrichment_description(self, query):
         gene_set = query.get('geneSet')

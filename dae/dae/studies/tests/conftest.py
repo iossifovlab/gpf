@@ -39,7 +39,7 @@ def dae_config_fixture(gpf_instance):
 
 @pytest.fixture(scope='session')
 def variants_db_fixture(gpf_instance):
-    return gpf_instance.variants_db
+    return gpf_instance._variants_db
 
 
 @pytest.fixture(scope='session')
@@ -54,7 +54,7 @@ def gene_weights_db(gpf_instance):
 
 @pytest.fixture(scope='session')
 def genotype_storage_factory(gpf_instance):
-    return gpf_instance.genotype_storage_factory
+    return gpf_instance._genotype_storage_factory
 
 
 @pytest.fixture(scope='session')
@@ -75,7 +75,7 @@ def quads_f2_config(variants_db_fixture):
 def load_study(variants_db_fixture, genotype_data_study_configs, study_name):
     config = genotype_data_study_configs.get(study_name)
 
-    result = variants_db_fixture.make_study(config)
+    result = variants_db_fixture.make_genotype_data_study(config)
     assert result is not None
     return result
 

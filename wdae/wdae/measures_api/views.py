@@ -137,7 +137,7 @@ class PhenoMeasureRegressionsView(QueryBaseView):
 
     def __init__(self):
         super(PhenoMeasureRegressionsView, self).__init__()
-        self.pheno_config = self.variants_db.pheno_factory.config
+        self.pheno_config = self.pheno_db.config
 
     def get_browser_dbfile(self, dbname):
         browser_dbfile = self.pheno_config[dbname].browser_dbfile

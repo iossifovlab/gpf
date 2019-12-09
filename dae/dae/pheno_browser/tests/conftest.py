@@ -7,7 +7,7 @@ import os
 
 from dae.configuration.dae_config_parser import DAEConfigParser
 
-from dae.pheno.pheno_factory import PhenoDb
+from dae.pheno.pheno_db import PhenoDb
 
 
 def relative_to_this_folder(path):

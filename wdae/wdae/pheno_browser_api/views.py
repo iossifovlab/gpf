@@ -17,7 +17,7 @@ class PhenoBrowserBaseView(QueryBaseView):
     def __init__(self):
         super(PhenoBrowserBaseView, self).__init__()
 
-        self.pheno_config = self.variants_db.pheno_factory.config
+        self.pheno_config = self.pheno_db.config
 
     def get_cache_dir(self, dbname):
 
