@@ -132,8 +132,9 @@ class ImpalaHelpers(object):
         """)
 
     def import_partitions(
-            self, db, partition_table, partition_hdfs_path, files,
-            partition_description):
+            self, db, partition_table, pedigree_table,
+            partition_description, pedigree_hdfs_path,
+            partition_hdfs_path, files):
 
         with self.connection.cursor() as cursor:
             cursor.execute(f"""
@@ -146,13 +147,22 @@ class ImpalaHelpers(object):
                 partition_table,
                 partition_hdfs_path,
                 sample_file,
-                partition_description)
+                partition_description
+            )
 
             self.add_partition_properties(
                 cursor,
                 db,
                 partition_table,
-                partition_description)
+                partition_description
+            )
+
+            self.import_files(
+                cursor,
+                db,
+                pedigree_table,
+                [pedigree_hdfs_path]
+            )
 
     def check_database(self, dbname):
         with self.connection.cursor() as cursor:

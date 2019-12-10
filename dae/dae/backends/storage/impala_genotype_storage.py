@@ -217,9 +217,10 @@ class ImpalaGenotypeStorage(GenotypeStorage):
             pedigree_paths=parquet_pedigrees)
 
     def impala_load_partition(
-            self, study_id, partition_description, db,
-            partition_hdfs_path, files):
+            self, study_id, partition_description, pedigree_file,
+            db, partition_hdfs_path, files):
         partition_table = f'{study_id}_partition'
+        pedigree_table = f'{study_id}_pedigree'
 
         print(
             f'Loading partition with study_id `{study_id}` in impala '
@@ -231,16 +232,19 @@ class ImpalaGenotypeStorage(GenotypeStorage):
         self.impala_helpers.import_partitions(
             db,
             partition_table,
+            pedigree_table,
+            partition_description,
+            pedigree_file,
             partition_hdfs_path,
-            files,
-            partition_description
+            files
         )
 
         end = time()
         duration = end - start
         print(duration)
 
-    def partition_import(self, study_id, partition_config_file):
+    def partition_import(self, study_id, partition_config_file, pedigree_file,
+                         pedigree_local_hdfs_path=None):
         db = self.storage_config.impala.db
         part_desc = ParquetPartitionDescription.from_config(
             partition_config_file)
@@ -257,10 +261,18 @@ class ImpalaGenotypeStorage(GenotypeStorage):
             file_dir = os.path.join(partition_path, file_dir)
             self._put_partition_file(file, file_dir)
 
+        if not pedigree_local_hdfs_path:
+            pedigree_hdfs_path = os.path.join(partition_path, 'pedigree')
+        else:
+            pedigree_hdfs_path = os.path.join(
+                partition_path, pedigree_local_hdfs_path)
+
+        self.hdfs_helpers.put(pedigree_hdfs_path, pedigree_file)
+
         files = list(map(lambda f: f[f.find('region_bin'):], files))
 
         self.impala_load_partition(
-                study_id, part_desc, db, partition_path, files
+            study_id, part_desc, pedigree_hdfs_path, db, partition_path, files
         )
 
 
