@@ -138,12 +138,14 @@ class ParquetPartitionDescription():
         else:
             return f'other_{pos}'
 
-    def evaluate_family_bin(self, family_allele):
+    def _family_bin_from_id(self, family_id):
         sha256 = hashlib.sha256()
-        family_variant_id = family_allele.family_id
-        sha256.update(family_variant_id.encode())
+        sha256.update(family_id.encode())
         digest = int(sha256.hexdigest(), 16)
-        return digest % self._family_bin_size
+        return digest % self.family_bin_size
+
+    def evaluate_family_bin(self, family_allele):
+        return self._family_bin_from_id(family_allele.family_id)
 
     def evaluate_coding_bin(self, family_allele):
         if family_allele.is_reference_allele:
@@ -227,6 +229,15 @@ class ParquetPartitionDescription():
             glob += '*/'
         glob += '*'
         return glob
+
+    def add_family_bins_to_pedigree_df(self, ped_df):
+        family_ids = ped_df['family_id'].values
+        family_bins = []
+        for family_id in family_ids:
+            family_bins.append(self._family_bin_from_id(family_id))
+        assert len(family_bins) == len(family_ids)
+        ped_df['family_bin'] = family_bins
+        return ped_df
 
 
 class ContinuousParquetFileWriter():
@@ -633,6 +644,7 @@ def pedigree_parquet_schema():
         pa.field('sample_id', pa.string()),
         pa.field('generated', pa.bool_()),
         pa.field('layout', pa.string()),
+        pa.field('family_bin', pa.int8()),
     ]
 
     return pa.schema(fields)
@@ -657,6 +669,8 @@ def save_ped_df_to_parquet(ped_df, filename, filesystem=None):
         ped_df['generated'] = False
     if 'layout' not in ped_df:
         ped_df['layout'] = None
+    if 'family_bin' not in ped_df:
+        ped_df['family_bin'] = None
 
     pps = pedigree_parquet_schema()
     pps = add_missing_parquet_fields(pps, ped_df)
