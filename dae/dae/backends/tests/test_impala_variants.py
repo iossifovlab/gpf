@@ -16,6 +16,9 @@ def test_impala_connection_simple(impala_host):
     with ImpalaHelpers.create_impala_connection(impala_host, 21050) as conn:
         assert conn is not None
 
+def test_impala_query_build(impala_host):
+    pass
+
 
 @pytest.mark.parametrize("fixture_name", [
     "backends/a",

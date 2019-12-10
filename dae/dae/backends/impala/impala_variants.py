@@ -15,6 +15,7 @@ from ..attributes_query_inheritance import InheritanceTransformer, \
     inheritance_parser
 
 from dae.variants.attributes import Role, Status, Sex
+from deprecated import deprecated
 
 
 class ImpalaFamilyVariants:
@@ -52,6 +53,13 @@ class ImpalaFamilyVariants:
 
         assert gene_models is not None
         self.gene_models = gene_models
+
+        self.region_length = 0
+        self.chromosomes = []
+        self.family_bin_size = 0
+        self.coding_effect_types = []
+        self.rare_boundary = 0
+        self._fetch_tblproperties()
 
     def count_variants(self, **kwargs):
         with self.impala.cursor() as cursor:
@@ -163,6 +171,45 @@ class ImpalaFamilyVariants:
             }
             return schema
 
+    def _fetch_tblproperties(self):
+        with self.impala.cursor as cursor:
+            cursor.execute(f'DESCRIBE EXTENDED {self.db}.{self.variant_table}')
+            rows = list(cursor)
+            properties_start, properties_end = -1, -1
+            for row_index, row in enumerate(rows):
+                if row[0].strip() == 'Table Parameters:':
+                    properties_start = row_index + 1
+
+                if (properties_start != -1 and row[0] == ''
+                        and row[1] is None and row[2] is None):
+                    properties_end = row_index + 1
+
+            if properties_start == -1:
+                print('No partitioning found')
+                return
+
+            for index in range(properties_start, properties_end):
+                prop_name = rows[index][1]
+                prop_value = rows[index][1]
+                if prop_name == 'gpf_partitioning_region_bin_region_length':
+                    self.region_length = int(prop_value)
+                elif prop_name == 'gpf_partitioning_region_bin_chromosomes':
+                    self.chromosomes = prop_value.split(',')
+                    self.chromosomes = list(map(str.strip, self.chromosomes))
+                elif prop_name == 'gpf_partitioning_family_bin_' \
+                        'family_bin_size':
+                    self.family_bin_size = int(prop_value)
+                elif prop_name == 'gpf_partitioning_coding_bin_' \
+                        'coding_effect_types':
+                    self.coding_effect_types = prop_value.split(',')
+                    self.coding_effect_types = list(map(
+                        str.strip,
+                        self.coding_effect_types
+                    ))
+                elif prop_name == 'gpf_partitioning_frequency_bin_'\
+                        'rare_boundary':
+                    self.rare_boundary = int(prop_value)
+
     def _build_real_attr_where(self, real_attr_filter):
         query = []
         for attr_name, attr_range in real_attr_filter:
@@ -254,6 +301,7 @@ class ImpalaFamilyVariants:
         res = transformer.transform(tree)
         return res
 
+    @deprecated
     def _build_gene_regions_heuristic(self, genes, regions):
         assert genes is not None
         if len(genes) > 0 and len(genes) <= self.GENE_REGIONS_HEURISTIC_CUTOFF:
@@ -270,6 +318,7 @@ class ImpalaFamilyVariants:
                 regions = dae.RegionOperations.collapse(regions)
             return regions
 
+    @deprecated
     def _build_rare_heuristic(self, ultra_rare, real_attr_filter):
         if 'rare' not in self.schema:
             return ''
@@ -288,43 +337,30 @@ class ImpalaFamilyVariants:
         if 'frequency_bin' not in self.schema:
             return ''
         if ultra_rare:
-            return 'frequency_bin = 0'
+            return 'frequency_bin = 1'
         if real_attr_filter:
             for name, (begin, end) in real_attr_filter:
                 if name == 'af_allele_freq':
-                    if end < 5.0:
-                        return 'frequency_bin = 1'
-                    if begin >= 5.0:
+                    if end < self.rare_boundary:
                         return 'frequency_bin = 2'
+                    if begin >= self.rare_boundary:
+                        return 'frequency_bin = 3'
         return ''
 
     def _build_coding_heuristic(self, effect_types):
         if effect_types is None:
             return ''
-        if 'coding' not in self.schema:
+        if 'coding_bin' not in self.schema:
             return ''
-        intersection = set(effect_types) & set([
-            'splice-site',
-            'frame-shift',
-            'nonsense',
-            'no-frame-shift-newStop',
-            'noStart',
-            'noEnd',
-            'missense',
-            'no-frame-shift',
-            'CDS',
-            'synonymous',
-            'coding_unknown',
-            'regulatory',
-            "3'UTR",
-            "5'UTR",
-        ])
-        if intersection == set(effect_types):
-            return 'coding = 1'
+        effect_types = set(effect_types)
+        intersection = effect_types & set(self.coding_effect_types)
+        if intersection == effect_types:
+            return 'coding_bin = 1'
         if not intersection:
             return 'coding = 0'
         return ''
 
+    @deprecated
     def _build_chrom_bin_heuristic(self, regions):
         if not regions:
             return ''
@@ -341,16 +377,12 @@ class ImpalaFamilyVariants:
         return "chrom_bin IN ({chrom_bins})".format(chrom_bins=chrom_bins)
 
     def _build_region_bin_heuristic(self, regions):
-        if not regions:
-            return ''
-        if 'region_bin' not in self.schema:
+        if not regions or self.region_length == 0:
             return ''
 
-        chroms = ['chr{}'.format(c) for c in range(1, 23)]
-        chroms.append('chrX')
-        chroms = set(chroms)
+        chroms = set(self.chromosomes)
 
-        region_length=10_000_000
+        region_length = self.region_length
         region_bins = []
         for region in regions:
             if region.chrom in chroms:
@@ -358,7 +390,7 @@ class ImpalaFamilyVariants:
             else:
                 chrom_bin = 'other'
             start = region.start // region_length
-            stop = region.stop // region_length 
+            stop = region.stop // region_length
             for position_bin in range(start, stop+1):
                 region_bins.append("{}_{}".format(chrom_bin, position_bin))
         if not region_bins:
@@ -366,6 +398,7 @@ class ImpalaFamilyVariants:
         return "region_bin IN ({})".format(','.join([
             "'{}'".format(rb) for rb in region_bins]))
 
+    @deprecated
     def _build_coding2_heuristic(self, effect_types):
         if effect_types is None:
             return ''
@@ -399,6 +432,7 @@ class ImpalaFamilyVariants:
             return 'coding2 = 0'
         return ''
 
+    @deprecated
     def _build_ultra_rare_heuristic(self, ultra_rare):
         if 'ultra_rare' not in self.schema:
             return ''
@@ -428,7 +462,7 @@ class ImpalaFamilyVariants:
                     ].family_bin.values)
             )
 
-        if 0 < len(family_bins) < 7:  # FIXME:
+        if len(family_bins) > self.family_bin_size:
             w = ', '.join([str(fb) for fb in family_bins])
             return 'family_bin IN ({w})'.format(w=w)
 
@@ -499,27 +533,27 @@ class ImpalaFamilyVariants:
         where.append(self._build_return_reference_and_return_unknown(
             return_reference, return_unknown
         ))
-        where.append(
-            self._build_rare_heuristic(ultra_rare, real_attr_filter)
-        )
+        # where.append(
+            # self._build_rare_heuristic(ultra_rare, real_attr_filter)
+        # )
         where.append(
             self._build_frequency_bin_heuristic(ultra_rare, real_attr_filter)
-        )
-        where.append(
-            self._build_ultra_rare_heuristic(ultra_rare)
-        )
+        # )
+        # where.append(
+            # self._build_ultra_rare_heuristic(ultra_rare)
+        # )
         where.append(
             self._build_family_bin_heuristic(family_ids, person_ids)
         )
         where.append(
             self._build_coding_heuristic(effect_types)
         )
-        where.append(
-            self._build_coding2_heuristic(effect_types)
-        )
-        where.append(
-            self._build_chrom_bin_heuristic(regions)
-        )
+        # where.append(
+            # self._build_coding2_heuristic(effect_types)
+        # )
+        # where.append(
+            # self._build_chrom_bin_heuristic(regions)
+        # )
         where.append(
             self._build_region_bin_heuristic(regions)
         )
