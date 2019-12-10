@@ -172,7 +172,7 @@ class ImpalaFamilyVariants:
             return schema
 
     def _fetch_tblproperties(self):
-        with self.impala.cursor as cursor:
+        with self.impala.cursor() as cursor:
             cursor.execute(f'DESCRIBE EXTENDED {self.db}.{self.variant_table}')
             rows = list(cursor)
             properties_start, properties_end = -1, -1
@@ -190,7 +190,7 @@ class ImpalaFamilyVariants:
 
             for index in range(properties_start, properties_end):
                 prop_name = rows[index][1]
-                prop_value = rows[index][1]
+                prop_value = rows[index][2]
                 if prop_name == 'gpf_partitioning_region_bin_region_length':
                     self.region_length = int(prop_value)
                 elif prop_name == 'gpf_partitioning_region_bin_chromosomes':
