@@ -477,7 +477,7 @@ class VariantsParquetWriter():
 
         return filenames
 
-    def write_partition(self):
+    def write_dataset(self):
         filenames = self._write_internal()
 
         self.partition_description.write_partition_configuration_to_file(
@@ -622,7 +622,7 @@ class ParquetManager:
             rows=rows
         )
 
-        variants_writer.write_partition()
+        variants_writer.write_dataset()
         end = time.time()
 
         print(

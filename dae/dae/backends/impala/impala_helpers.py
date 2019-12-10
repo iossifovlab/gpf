@@ -102,7 +102,7 @@ class ImpalaHelpers(object):
             ")"
         )
 
-    def create_partition_table(
+    def create_dataset_table(
             self, cursor, db, table, hdfs_path, sample_file,
             partition_description):
         cursor.execute("""
@@ -131,21 +131,21 @@ class ImpalaHelpers(object):
             REFRESH {db}.{table}
         """)
 
-    def import_partitions(
+    def import_dataset_into_db(
             self, db, partition_table, pedigree_table,
             partition_description, pedigree_hdfs_path,
-            partition_hdfs_path, files):
+            dataset_hdfs_path, files):
 
         with self.connection.cursor() as cursor:
             cursor.execute(f"""
                 CREATE DATABASE IF NOT EXISTS {db}
             """)
-            sample_file = os.path.join(partition_hdfs_path, files[0])
-            self.create_partition_table(
+            sample_file = os.path.join(dataset_hdfs_path, files[0])
+            self.create_dataset_table(
                 cursor,
                 db,
                 partition_table,
-                partition_hdfs_path,
+                dataset_hdfs_path,
                 sample_file,
                 partition_description
             )

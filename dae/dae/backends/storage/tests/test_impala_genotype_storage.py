@@ -96,7 +96,7 @@ def test_impala_partition_import(
 
     ped_file = fixture_dirname('backends/test_partition/pedigree.parquet')
 
-    impala_genotype_storage.partition_import(
+    impala_genotype_storage.dataset_import(
         'test_study',
         configuration,
         ped_file)

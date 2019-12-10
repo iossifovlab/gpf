@@ -216,7 +216,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
             variant_paths=parquet_variants,
             pedigree_paths=parquet_pedigrees)
 
-    def impala_load_partition(
+    def impala_load_dataset(
             self, study_id, partition_description, pedigree_file,
             db, partition_hdfs_path, files):
         partition_table = f'{study_id}_partition'
@@ -229,7 +229,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
 
         start = time()
 
-        self.impala_helpers.import_partitions(
+        self.impala_helpers.import_dataset_into_db(
             db,
             partition_table,
             pedigree_table,
@@ -243,8 +243,8 @@ class ImpalaGenotypeStorage(GenotypeStorage):
         duration = end - start
         print(duration)
 
-    def partition_import(self, study_id, partition_config_file, pedigree_file,
-                         pedigree_local_hdfs_path=None):
+    def dataset_import(self, study_id, partition_config_file, pedigree_file,
+                       pedigree_local_hdfs_path=None):
         db = self.storage_config.impala.db
         part_desc = ParquetPartitionDescription.from_config(
             partition_config_file)
@@ -272,7 +272,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
 
         files = list(map(lambda f: f[f.find('region_bin'):], files))
 
-        self.impala_load_partition(
+        self.impala_load_dataset(
             study_id, part_desc, pedigree_hdfs_path, db, partition_path, files
         )
 
