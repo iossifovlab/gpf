@@ -462,7 +462,7 @@ class ImpalaFamilyVariants:
                     ].family_bin.values)
             )
 
-        if len(family_bins) > self.family_bin_size:
+        if 0 < len(family_bins) < self.family_bin_size:
             w = ', '.join([str(fb) for fb in family_bins])
             return 'family_bin IN ({w})'.format(w=w)
 
