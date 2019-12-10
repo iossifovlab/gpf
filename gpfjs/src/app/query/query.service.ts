@@ -74,13 +74,13 @@ export class QueryService {
     }).node('!.*', data => {
       streamingSubject.next(data);
     }).done(data => {
-      this.connectionEstablished = false;
       this.streamingFinishedSubject.next(true);
+      streamingSubject.next(null); // Emit null so the loading service can stop the loading overlay even if no variants were received
     }).fail(error => {
       this.connectionEstablished = false;
       this.streamingFinishedSubject.next(true);
       console.warn('oboejs encountered a fail event while streaming');
-      streamingSubject.next([]); // Sending an empty object so the loading service can stop the loading overlay
+      streamingSubject.next(null);
     });
     return streamingSubject;
   }

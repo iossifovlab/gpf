@@ -76,11 +76,13 @@ export class GenotypeBrowserComponent extends QueryStateCollector
   }
 
   submitQuery() {
-    this.loadingFinished = false;
-    this.loadingService.setLoadingStart();
     this.getCurrentState()
       .subscribe(state => {
+
         this.genotypePreviewInfo = null;
+        this.loadingFinished = false;
+        this.loadingService.setLoadingStart();
+
         this.queryService.getGenotypePreviewInfo(
           { datasetId: state.datasetId, peopleGroup: state.peopleGroup }
         ).subscribe(
