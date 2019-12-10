@@ -262,12 +262,13 @@ class ImpalaGenotypeStorage(GenotypeStorage):
             self._put_partition_file(file, file_dir)
 
         if not pedigree_local_hdfs_path:
-            pedigree_hdfs_path = os.path.join(partition_path, 'pedigree')
+            pedigree_hdfs_path = os.path.join(
+                    partition_path, 'pedigree', 'pedigree.ped')
         else:
             pedigree_hdfs_path = os.path.join(
                 partition_path, pedigree_local_hdfs_path)
 
-        self.hdfs_helpers.put(pedigree_hdfs_path, pedigree_file)
+        self.hdfs_helpers.put(pedigree_file, pedigree_hdfs_path)
 
         files = list(map(lambda f: f[f.find('region_bin'):], files))
 

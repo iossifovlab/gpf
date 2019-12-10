@@ -89,14 +89,17 @@ def test_impala_load_study(impala_genotype_storage, genomes_db):
 
 def test_impala_partition_import(
         impala_genotype_storage, genomes_db,
-        sample_parquet_partition_root):
+        sample_parquet_partition_root, fixture_dirname):
 
     configuration = os.path.join(
             sample_parquet_partition_root, '_PARTITION_DESCRIPTION')
 
+    ped_file = fixture_dirname('backends/test_partition/pedigree.parquet')
+
     impala_genotype_storage.partition_import(
         'test_study',
-        configuration)
+        configuration,
+        ped_file)
 
     hdfs = impala_genotype_storage.hdfs_helpers
     root = impala_genotype_storage.storage_config.hdfs.base_dir
