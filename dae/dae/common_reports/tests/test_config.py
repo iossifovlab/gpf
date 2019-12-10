@@ -50,22 +50,24 @@ def test_common_reports_parse_config(study1_config):
                      'fixtures/studies/Study1/common_report.json')
 
 
-def test_common_reports_parse_config_missing_config(dataset2_config):
+def test_common_reports_parse_config_missing_config(
+        genotype_data_group2_config):
     common_reports_parse_config = \
-        CommonReportsConfigParser.parse(dataset2_config)
+        CommonReportsConfigParser.parse(genotype_data_group2_config)
 
     assert common_reports_parse_config is None
 
 
-def test_common_reports_parse_config_disabled(dataset3_config):
+def test_common_reports_parse_config_disabled(genotype_data_group3_config):
     common_reports_parse_config = \
-        CommonReportsConfigParser.parse(dataset3_config)
+        CommonReportsConfigParser.parse(genotype_data_group3_config)
 
     assert common_reports_parse_config is None
 
 
-def test_common_reports_parse_config_missing_groups(dataset4_config):
+def test_common_reports_parse_config_missing_groups(
+        genotype_data_group4_config):
     common_reports_parse_config = \
-        CommonReportsConfigParser.parse(dataset4_config)
+        CommonReportsConfigParser.parse(genotype_data_group4_config)
 
     assert common_reports_parse_config is None

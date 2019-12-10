@@ -1,8 +1,9 @@
 import pytest
 
 
-def test_query_all_variants(inheritance_trio_dataset_wrapper):
-    variants = list(inheritance_trio_dataset_wrapper.query_variants())
+def test_query_all_variants(inheritance_trio_genotype_data_group_wrapper):
+    variants = \
+       list(inheritance_trio_genotype_data_group_wrapper.query_variants())
 
     assert len(variants) == 14
 
@@ -15,16 +16,19 @@ def test_query_all_variants(inheritance_trio_dataset_wrapper):
     ("reference", 0)  # not returned unless return_reference is set to true
 ])
 def test_query_inheritance_variants(
-        inheritance, count, inheritance_trio_dataset_wrapper):
+        inheritance, count, inheritance_trio_genotype_data_group_wrapper):
     variants = list(
-        inheritance_trio_dataset_wrapper.query_variants(
+        inheritance_trio_genotype_data_group_wrapper.query_variants(
             inheritance=inheritance))
 
     assert len(variants) == count
 
 
-def test_query_limit_variants(inheritance_trio_dataset_wrapper):
-    variants = list(inheritance_trio_dataset_wrapper.query_variants(limit=1))
+def test_query_limit_variants(inheritance_trio_genotype_data_group_wrapper):
+    variants = \
+       list(
+        inheritance_trio_genotype_data_group_wrapper.query_variants(limit=1)
+       )
 
     assert len(variants) == 1
 
@@ -37,9 +41,12 @@ def test_query_limit_variants(inheritance_trio_dataset_wrapper):
     # FIXME: (None, 28)
 ])
 def test_query_family_variants(
-        families, count, quads_two_families_dataset_wrapper):
+        families, count, quads_two_families_genotype_data_group_wrapper):
     variants = list(
-        quads_two_families_dataset_wrapper.query_variants(family_ids=families))
+        quads_two_families_genotype_data_group_wrapper.query_variants(
+            family_ids=families
+        )
+    )
 
     assert len(variants) == count
 
@@ -48,8 +55,10 @@ def test_query_family_variants(
     (["M"], 3),
     (["F"], 2),
 ])
-def test_query_sexes_variants(sexes, count, quads_f1_dataset_wrapper):
-    variants = list(quads_f1_dataset_wrapper.query_variants(sexes=sexes))
+def test_query_sexes_variants(
+        sexes, count, quads_f1_genotype_data_group_wrapper):
+    variants = \
+       list(quads_f1_genotype_data_group_wrapper.query_variants(sexes=sexes))
 
     assert len(variants) == count
 
@@ -61,9 +70,13 @@ def test_query_sexes_variants(sexes, count, quads_f1_dataset_wrapper):
         (["del"], 1)],
     ids=repr)
 def test_query_variant_type_variants(
-        variant_type, count, quads_variant_types_dataset_wrapper):
-    variants = list(quads_variant_types_dataset_wrapper.query_variants(
-        variant_type=variant_type))
+        variant_type, count, quads_variant_types_genotype_data_group_wrapper):
+    variants = \
+       list(
+            quads_variant_types_genotype_data_group_wrapper.query_variants(
+                variant_type=variant_type
+            )
+       )
 
     assert len(variants) == count
 
@@ -73,8 +86,8 @@ def test_query_variant_type_variants(
     (["CNV"], 0)
 ])
 def test_query_effect_types_variants(
-        effect_types, count, quads_f1_dataset_wrapper):
-    variants = list(quads_f1_dataset_wrapper.query_variants(
+        effect_types, count, quads_f1_genotype_data_group_wrapper):
+    variants = list(quads_f1_genotype_data_group_wrapper.query_variants(
         effect_types=effect_types))
 
     assert len(variants) == count
@@ -85,8 +98,11 @@ def test_query_effect_types_variants(
     (["2:0-100000000"], 1),
     (["1:11539-11539"], 1),
 ])
-def test_query_regions_variants(regions, count, quads_f1_dataset_wrapper):
-    variants = list(quads_f1_dataset_wrapper.query_variants(regions=regions))
+def test_query_regions_variants(
+        regions, count, quads_f1_genotype_data_group_wrapper):
+    variants = list(
+        quads_f1_genotype_data_group_wrapper.query_variants(regions=regions)
+    )
 
     assert len(variants) == count
 
@@ -107,8 +123,9 @@ def test_query_regions_variants(regions, count, quads_f1_dataset_wrapper):
     ],
     ids=repr
 )
-def test_query_present_in_child(option, count, quads_in_child_dataset_wrapper):
-    variants = list(quads_in_child_dataset_wrapper.query_variants(
+def test_query_present_in_child(
+        option, count, quads_in_child_genotype_data_group_wrapper):
+    variants = list(quads_in_child_genotype_data_group_wrapper.query_variants(
         presentInChild=option))
 
     assert len(variants) == count
@@ -125,18 +142,19 @@ def test_query_present_in_child(option, count, quads_in_child_dataset_wrapper):
     ids=repr
 )
 def test_query_present_in_child_compared_to_raw(
-        option, raw_query, quads_f1_dataset_wrapper):
-    vs = quads_f1_dataset_wrapper.studies[0]\
+        option, raw_query, quads_f1_genotype_data_group_wrapper):
+    vs = quads_f1_genotype_data_group_wrapper.studies[0]\
         .query_variants(roles=raw_query)
     vs = list(vs)
 
-    variants = list(quads_f1_dataset_wrapper.query_variants(
+    variants = list(quads_f1_genotype_data_group_wrapper.query_variants(
         presentInChild=option))
     assert len(vs) == len(variants)
 
 
-def test_query_present_in_child_and_roles(quads_f1_dataset_wrapper):
-    variants = list(quads_f1_dataset_wrapper.query_variants(
+def test_query_present_in_child_and_roles(
+        quads_f1_genotype_data_group_wrapper):
+    variants = list(quads_f1_genotype_data_group_wrapper.query_variants(
         presentInChild=["proband only"], roles="dad"))
 
     assert len(variants) == 1
@@ -159,8 +177,8 @@ def test_query_present_in_child_and_roles(quads_f1_dataset_wrapper):
     ids=repr
 )
 def test_query_present_in_parent(
-        option, count, quads_in_parent_dataset_wrapper):
-    variants = list(quads_in_parent_dataset_wrapper.query_variants(
+        option, count, quads_in_parent_genotype_data_group_wrapper):
+    variants = list(quads_in_parent_genotype_data_group_wrapper.query_variants(
         presentInParent=option))
 
     assert len(variants) == count
@@ -178,8 +196,9 @@ def test_query_present_in_parent(
     ],
     ids=repr
 )
-def test_query_present_in_role(option, count, quads_in_child_dataset_wrapper):
-    variants = list(quads_in_child_dataset_wrapper.query_variants(
+def test_query_present_in_role(
+        option, count, quads_in_child_genotype_data_group_wrapper):
+    variants = list(quads_in_child_genotype_data_group_wrapper.query_variants(
         presentInRole=option))
 
     assert len(variants) == count
@@ -196,12 +215,12 @@ def test_query_present_in_role(option, count, quads_in_child_dataset_wrapper):
     ids=repr
 )
 def test_query_present_in_role_compared_to_raw(
-        option, raw_query, quads_f1_dataset_wrapper):
-    vs = quads_f1_dataset_wrapper.studies[0]\
+        option, raw_query, quads_f1_genotype_data_group_wrapper):
+    vs = quads_f1_genotype_data_group_wrapper.studies[0]\
         .query_variants(roles=raw_query)
     vs = list(vs)
 
-    variants = list(quads_f1_dataset_wrapper.query_variants(
+    variants = list(quads_f1_genotype_data_group_wrapper.query_variants(
         presentInRole=option))
     assert len(vs) == len(variants)
 
@@ -216,8 +235,8 @@ def test_query_present_in_role_compared_to_raw(
     ]
 )
 def test_query_min_alt_frequency(
-        option, count, quads_in_child_dataset_wrapper):
-    variants = list(quads_in_child_dataset_wrapper.query_variants(
+        option, count, quads_in_child_genotype_data_group_wrapper):
+    variants = list(quads_in_child_genotype_data_group_wrapper.query_variants(
         minAltFrequencyPercent=option))
 
     assert len(variants) == count
@@ -234,8 +253,8 @@ def test_query_min_alt_frequency(
     ]
 )
 def test_query_max_alt_frequency(
-        option, count, quads_in_child_dataset_wrapper):
-    variants = list(quads_in_child_dataset_wrapper.query_variants(
+        option, count, quads_in_child_genotype_data_group_wrapper):
+    variants = list(quads_in_child_genotype_data_group_wrapper.query_variants(
         maxAltFrequencyPercent=option))
 
     assert len(variants) == count
@@ -254,8 +273,8 @@ def test_query_max_alt_frequency(
     ]
 )
 def test_query_min_max_alt_frequency(
-        minFreq, maxFreq, count, quads_in_child_dataset_wrapper):
-    variants = list(quads_in_child_dataset_wrapper.query_variants(
+        minFreq, maxFreq, count, quads_in_child_genotype_data_group_wrapper):
+    variants = list(quads_in_child_genotype_data_group_wrapper.query_variants(
         minAltFrequencyPercent=minFreq,
         maxAltFrequencyPercent=maxFreq))
 
@@ -288,13 +307,14 @@ def test_query_study_filter(composite_dataset_wrapper):
     ({'weight': 'LGD_rank', 'rangeStart': 1000.0, 'rangeEnd': 2000.0}, 0),
     ({'weight': 'ala bala', 'rangeStart': 1000.0, 'rangeEnd': 2000.0}, 5),
 ])
-def test_query_gene_weights(geneWeights, count, quads_f2_dataset_wrapper):
-    variants = list(quads_f2_dataset_wrapper.query_variants(
+def test_query_gene_weights(
+        geneWeights, count, quads_f2_genotype_data_group_wrapper):
+    variants = list(quads_f2_genotype_data_group_wrapper.query_variants(
         geneWeights=geneWeights))
 
     assert len(variants) == count
 
-    all_variants = list(quads_f2_dataset_wrapper.query_variants())
+    all_variants = list(quads_f2_genotype_data_group_wrapper.query_variants())
 
     assert len(all_variants) == 5
 
@@ -312,8 +332,9 @@ def test_query_gene_weights(geneWeights, count, quads_f2_dataset_wrapper):
     ([{'metric': 'score1', 'rangeStart': 2.0, 'rangeEnd': 7.0},
       {'metric': 'score2', 'rangeStart': 50.0, 'rangeEnd': 75.0}], 0),
 ])
-def test_query_genomic_scores(genomicScores, count, quads_f2_dataset_wrapper):
-    variants = list(quads_f2_dataset_wrapper.query_variants(
+def test_query_genomic_scores(
+        genomicScores, count, quads_f2_genotype_data_group_wrapper):
+    variants = list(quads_f2_genotype_data_group_wrapper.query_variants(
         genomicScores=genomicScores))
 
     assert len(variants) == count

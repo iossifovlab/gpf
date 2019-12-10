@@ -22,7 +22,7 @@ def dae_config_fixture(gpf_instance):
 
 @pytest.fixture(scope='function')
 def mock_gpf_instance(db, mocker, gpf_instance):
-    reload_datasets(gpf_instance.variants_db)
+    reload_datasets(gpf_instance._variants_db)
     mocker.patch(
         'query_base.query_base.get_gpf_instance',
         return_value=gpf_instance

@@ -1,4 +1,4 @@
-class StudyBase(object):
+class GenotypeData(object):
 
     def __init__(self, config, studies):
         self.config = config
@@ -6,21 +6,24 @@ class StudyBase(object):
 
         self.id = self.config.id
         self.name = self.config.name
-        self.has_denovo = self.config.has_denovo
-        self.has_transmitted = self.config.has_transmitted
-        self.has_complex = self.config.has_complex
-        self.has_cnv = self.config.hasCNV
-        self.study_type = self.config.study_type
+        self.description = self.config.description
         self.year = self.config.year
         self.pub_med = self.config.pub_med
 
+        self.has_denovo = self.config.has_denovo
+        self.has_transmitted = self.config.has_transmitted
+        self.has_cnv = self.config.hasCNV
+        self.has_complex = self.config.has_complex
+
+        self.study_type = self.config.study_type
         self.study_types = self.config.study_types
         self.years = self.config.years
         self.pub_meds = self.config.pub_meds
 
-        self.description = self.config.description
-
     def query_variants(self, **kwargs):
+        raise NotImplementedError()
+
+    def get_studies_ids(self):
         raise NotImplementedError()
 
     @property
@@ -61,26 +64,11 @@ class StudyBase(object):
         else:
             return people_group['default']['color']
 
-    def get_wdae_member(self, member, people_group, best_st):
-        return [
-            member.family_id,
-            member.person_id,
-            member.mom_id,
-            member.dad_id,
-            member.sex.short(),
-            str(member.role),
-            self._get_person_color(member, people_group),
-            member.layout_position,
-            member.generated,
-            best_st,
-            0
-        ]
 
-
-class Study(StudyBase):
+class GenotypeDataStudy(GenotypeData):
 
     def __init__(self, config, backend):
-        super(Study, self).__init__(config, [self])
+        super(GenotypeDataStudy, self).__init__(config, [self])
 
         self.backend = backend
 
@@ -108,6 +96,9 @@ class Study(StudyBase):
                 for allele in variant.alleles:
                     allele.update_attributes({'studyName': self.name})
                 yield variant
+
+    def get_studies_ids(self):
+        return [self.id]
 
     @property
     def families(self):

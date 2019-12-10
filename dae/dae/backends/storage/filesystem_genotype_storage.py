@@ -164,7 +164,7 @@ STUDY_VARIANTS_TEMPLATE = '''
 '''
 
 STUDY_CONFIG_TEMPLATE = '''
-[study]
+[genotypeDataStudy]
 id = {study_id}
 genotype_storage = {genotype_storage}
 

@@ -23,12 +23,12 @@ def gpf_instance(mock_genomes_db):
 
 @pytest.fixture(scope='session')
 def variants_db_fixture(gpf_instance):
-    return gpf_instance.variants_db
+    return gpf_instance._variants_db
 
 
 @pytest.fixture(scope='function')
 def mock_gpf_instance(db, mocker, gpf_instance):
-    reload_datasets(gpf_instance.variants_db)
+    reload_datasets(gpf_instance._variants_db)
     mocker.patch(
         'query_base.query_base.get_gpf_instance',
         return_value=gpf_instance
@@ -45,7 +45,7 @@ def mock_gpf_instance(db, mocker, gpf_instance):
 
 @pytest.fixture(scope='session')
 def background_facade(gpf_instance):
-    return gpf_instance.background_facade
+    return gpf_instance._background_facade
 
 
 @pytest.fixture(scope='session')

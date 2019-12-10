@@ -1,23 +1,32 @@
 import itertools
 import functools
 
-from dae.studies.study import StudyBase
+from dae.studies.study import GenotypeData
 
 
-class Dataset(StudyBase):
+class GenotypeDataGroup(GenotypeData):
 
-    def __init__(self, dataset_config, studies):
-        super(Dataset, self).__init__(dataset_config, studies)
+    def __init__(self, genotype_data_group_config, studies):
+        super(GenotypeDataGroup, self).__init__(
+            genotype_data_group_config,
+            studies
+        )
 
     def query_variants(self, **kwargs):
         return itertools.chain(*[
-                study.query_variants(**kwargs) for study in self.studies])
+                genotype_data_study.query_variants(**kwargs)
+                for genotype_data_study in self.studies
+            ])
+
+    def get_studies_ids(self):
+        # TODO Use the 'cached' property on this
+        return [genotype_data_study.id for genotype_data_study in self.studies]
 
     @property
     def families(self):
         return functools.reduce(
             lambda x, y: self._combine_families(x, y),
-            [study.families for study in self.studies])
+            [genotype_data_study.families for genotype_data_study in self.studies])
 
     def _combine_families(self, first, second):
         same_families = set(first.keys()) & set(second.keys())

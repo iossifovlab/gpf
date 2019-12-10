@@ -4,19 +4,19 @@ from dae.pheno.common import MeasureType
 
 class PhenoFilter(object):
 
-    def __init__(self, phdb, measure_id):
-        assert phdb.has_measure(measure_id)
+    def __init__(self, phenotype_data, measure_id):
+        assert phenotype_data.has_measure(measure_id)
 
-        self.phdb = phdb
+        self.phenotype_data = phenotype_data
         self.measure_id = measure_id
 
 
 class PhenoFilterSet(PhenoFilter):
 
-    def __init__(self, phdb, measure_id, values_set):
-        super(PhenoFilterSet, self).__init__(phdb, measure_id)
+    def __init__(self, phenotype_data, measure_id, values_set):
+        super(PhenoFilterSet, self).__init__(phenotype_data, measure_id)
 
-        measure_type = phdb.get_measure(measure_id).measure_type
+        measure_type = phenotype_data.get_measure(measure_id).measure_type
         assert measure_type == MeasureType.categorical
 
         assert type(values_set) in (list, set, tuple)
@@ -28,9 +28,9 @@ class PhenoFilterSet(PhenoFilter):
 
 class PhenoFilterRange(PhenoFilter):
 
-    def __init__(self, phdb, measure_id, values_range):
-        super(PhenoFilterRange, self).__init__(phdb, measure_id)
-        measure_type = phdb.get_measure(measure_id).measure_type
+    def __init__(self, phenotype_data, measure_id, values_range):
+        super(PhenoFilterRange, self).__init__(phenotype_data, measure_id)
+        measure_type = phenotype_data.get_measure(measure_id).measure_type
         assert measure_type == MeasureType.continuous or \
             measure_type == MeasureType.ordinal
 
@@ -54,16 +54,16 @@ class PhenoFilterRange(PhenoFilter):
 
 class PhenoFilterBuilder(object):
 
-    def __init__(self, phdb):
-        self.phdb = phdb
+    def __init__(self, phenotype_data):
+        self.phenotype_data = phenotype_data
 
     def make_filter(self, measure_id, constraints):
-        measure = self.phdb.get_measure(measure_id)
+        measure = self.phenotype_data.get_measure(measure_id)
         assert measure is not None
         if measure.measure_type == MeasureType.categorical:
-            return PhenoFilterSet(self.phdb, measure_id, constraints)
+            return PhenoFilterSet(self.phenotype_data, measure_id, constraints)
         else:
-            return PhenoFilterRange(self.phdb, measure_id, constraints)
+            return PhenoFilterRange(self.phenotype_data, measure_id, constraints)
 
 
 class PhenoResult(object):

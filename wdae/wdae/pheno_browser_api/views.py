@@ -17,7 +17,7 @@ class PhenoBrowserBaseView(QueryBaseView):
     def __init__(self):
         super(PhenoBrowserBaseView, self).__init__()
 
-        self.pheno_config = self.variants_db.pheno_factory.config
+        self.pheno_config = self.pheno_db.config
 
     def get_cache_dir(self, dbname):
 
@@ -58,10 +58,10 @@ class PhenoInstrumentsView(PhenoBrowserBaseView):
         dataset_id = request.query_params['dataset_id']
 
         dataset = self.variants_db.get_wdae_wrapper(dataset_id)
-        if dataset is None or dataset.pheno_db is None:
+        if dataset is None or dataset.phenotype_data is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        instruments = sorted(dataset.pheno_db.instruments.keys())
+        instruments = sorted(dataset.phenotype_data.instruments.keys())
         res = {
             'instruments': instruments,
             'default': instruments[0],
@@ -84,13 +84,13 @@ class PhenoMeasuresView(PhenoBrowserBaseView):
         dataset_id = request.query_params['dataset_id']
 
         dataset = self.variants_db.get_wdae_wrapper(dataset_id)
-        if dataset is None or dataset.pheno_db is None:
+        if dataset is None or dataset.phenotype_data is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         instrument = request.query_params.get('instrument', None)
         search_term = request.query_params.get('search', None)
 
-        if instrument and instrument not in dataset.pheno_db.instruments:
+        if instrument and instrument not in dataset.phenotype_data.instruments:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         browser_dbfile = self.get_browser_dbfile(dataset.config.phenoDB)
@@ -139,17 +139,17 @@ class PhenoMeasuresDownload(PhenoBrowserBaseView):
         dataset_id = request.query_params['dataset_id']
 
         dataset = self.variants_db.get_wdae_wrapper(dataset_id)
-        if dataset is None or dataset.pheno_db is None:
+        if dataset is None or dataset.phenotype_data is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         instrument = request.query_params.get('instrument', None)
         if not instrument:
-            measure_ids = list(dataset.pheno_db.measures.keys())
-            df = dataset.pheno_db.get_values_df(measure_ids)
+            measure_ids = list(dataset.phenotype_data.measures.keys())
+            df = dataset.phenotype_data.get_values_df(measure_ids)
         else:
-            if instrument not in dataset.pheno_db.instruments:
+            if instrument not in dataset.phenotype_data.instruments:
                 return Response(status=status.HTTP_404_NOT_FOUND)
-            df = dataset.pheno_db.get_instrument_values_df(instrument)
+            df = dataset.phenotype_data.get_instrument_values_df(instrument)
 
         df_csv = df.to_csv(index=False, encoding="utf-8")
 

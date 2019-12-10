@@ -35,12 +35,12 @@ def dae_config_fixture(gpf_instance):
 
 @pytest.fixture(scope='session')
 def variants_db_fixture(gpf_instance):
-    return gpf_instance.variants_db
+    return gpf_instance._variants_db
 
 
 @pytest.fixture(scope='session')
 def gene_info_config(gpf_instance):
-    return gpf_instance.gene_info_config
+    return gpf_instance._gene_info_config
 
 
 @pytest.fixture(scope='session')
@@ -50,12 +50,12 @@ def gene_weights_db(gpf_instance):
 
 @pytest.fixture(scope='session')
 def score_config(gpf_instance):
-    return gpf_instance.score_config
+    return gpf_instance._score_config
 
 
 @pytest.fixture(scope='session')
 def scores_factory(gpf_instance):
-    return gpf_instance.scores_factory
+    return gpf_instance._scores_factory
 
 
 @pytest.fixture(scope='session')

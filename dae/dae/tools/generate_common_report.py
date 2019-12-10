@@ -10,10 +10,10 @@ def main(gpf_instance=None, argv=None):
 
     parser.add_argument(
         '--show-studies', help='This option will print available '
-        'datasets and studies names', default=False,
+        'genotype studies and groups names', default=False,
         action='store_true')
     parser.add_argument(
-        '--studies', help='Specify datasets and studies '
+        '--studies', help='Specify genotype studies and groups '
         'names for generating common report. Default to all query objects.',
         default=None, action='store')
 
@@ -22,7 +22,7 @@ def main(gpf_instance=None, argv=None):
     if gpf_instance is None:
         gpf_instance = GPFInstance()
 
-    common_report_facade = gpf_instance.common_report_facade
+    common_report_facade = gpf_instance._common_report_facade
 
     if args.show_studies:
         for study_id in common_report_facade.get_all_common_report_ids():

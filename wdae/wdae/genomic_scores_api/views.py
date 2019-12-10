@@ -8,7 +8,7 @@ class GenomicScoresView(QueryBaseView):
     def __init__(self):
         super(GenomicScoresView, self).__init__()
 
-        self.scores_factory = self.gpf_instance.scores_factory
+        self.scores_factory = self.gpf_instance._scores_factory
 
     def get_genomic_scores(self, scores):
         return [

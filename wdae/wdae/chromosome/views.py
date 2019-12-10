@@ -10,7 +10,7 @@ class ChromosomeView(QueryBaseView):
     def __init__(self):
         super(ChromosomeView, self).__init__()
 
-        gene_info_config = self.gpf_instance.gene_info_config
+        gene_info_config = self.gpf_instance._gene_info_config
         self.chromosomes = []
 
         csvfile = gene_info_config.chromosomes.file

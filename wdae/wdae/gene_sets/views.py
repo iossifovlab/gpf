@@ -18,7 +18,6 @@ class GeneSetsBaseView(QueryBaseView):
         super(GeneSetsBaseView, self).__init__()
         self.gene_sets_db = self.gpf_instance.gene_sets_db
         self.denovo_gene_sets_db = self.gpf_instance.denovo_gene_sets_db
-        print("datasets loaded in view")
 
 
 class GeneSetsCollectionsView(GeneSetsBaseView):

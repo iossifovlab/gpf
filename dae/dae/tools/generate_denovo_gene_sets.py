@@ -10,10 +10,10 @@ def main(gpf_instance=None, argv=None):
 
     parser.add_argument(
         '--show-studies', help='This option will print available '
-        'datasets and studies names', default=False,
+        'genotype studies and groups names', default=False,
         action='store_true')
     parser.add_argument(
-        '--studies', help='Specify datasets and studies '
+        '--studies', help='Specify genotype studies and groups '
         'names for generating denovo gene sets. Default to all.',
         default=None, action='store')
 

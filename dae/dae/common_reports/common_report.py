@@ -10,42 +10,42 @@ from dae.common_reports.filter import FilterObjects
 
 class CommonReport(object):
 
-    def __init__(self, study, config):
+    def __init__(self, genotype_data_study, config):
         people_groups_info = config.people_groups_info
         effect_groups = config.effect_groups
         effect_types = config.effect_types
 
-        self.study = study
+        self.genotype_data_study = genotype_data_study
         self.people_groups_info = PeopleGroupsInfo(
-            study, config.people_groups, people_groups_info
+            genotype_data_study, config.people_groups, people_groups_info
         )
 
         filter_objects = FilterObjects.get_filter_objects(
-            study, self.people_groups_info, config.groups
+            genotype_data_study, self.people_groups_info, config.groups
         )
 
-        self.id = study.id
+        self.id = genotype_data_study.id
         self.families_report = FamiliesReport(
-            study, self.people_groups_info, filter_objects,
+            genotype_data_study, self.people_groups_info, filter_objects,
             config.draw_all_families, config.families_count_show_id
         )
         self.denovo_report = DenovoReport(
-            study, effect_groups, effect_types, filter_objects)
-        self.study_name = study.name
+            genotype_data_study, effect_groups, effect_types, filter_objects)
+        self.study_name = genotype_data_study.name
         self.phenotype = self._get_phenotype()
-        self.study_type = ','.join(study.study_types)\
-            if study.study_types else None
-        self.study_year = study.year
-        self.pub_med = study.pub_med
+        self.study_type = ','.join(genotype_data_study.study_types)\
+            if genotype_data_study.study_types else None
+        self.study_year = genotype_data_study.year
+        self.pub_med = genotype_data_study.pub_med
 
-        self.families = len(study.families.values())
+        self.families = len(genotype_data_study.families.values())
         self.number_of_probands =\
             self._get_number_of_people_with_role(Role.prb)
         self.number_of_siblings =\
             self._get_number_of_people_with_role(Role.sib)
-        self.denovo = study.has_denovo
-        self.transmitted = study.has_transmitted
-        self.study_description = study.description
+        self.denovo = genotype_data_study.has_denovo
+        self.transmitted = genotype_data_study.has_transmitted
+        self.study_description = genotype_data_study.description
 
     def to_dict(self):
         return OrderedDict([
@@ -78,4 +78,4 @@ class CommonReport(object):
 
     def _get_number_of_people_with_role(self, role):
         return sum([len(family.get_people_with_role(role))
-                    for family in self.study.families.values()])
+                    for family in self.genotype_data_study.families.values()])

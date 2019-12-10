@@ -22,13 +22,13 @@ class PhenoMeasuresView(QueryBaseView):
         dataset = self.variants_db.get_wdae_wrapper(dataset_id)
         assert dataset is not None
 
-        if dataset.pheno_db is None:
+        if dataset.phenotype_data is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         assert measure_type == 'continuous' or \
             measure_type == 'categorical'
 
-        res = dataset.pheno_db.get_measures(measure_type=measure_type)
+        res = dataset.phenotype_data.get_measures(measure_type=measure_type)
         if measure_type == 'continuous':
             res = [
                 {
@@ -57,16 +57,16 @@ class PhenoMeasureHistogramView(QueryBaseView):
         dataset = self.variants_db.get_wdae_wrapper(dataset_id)
 
         assert dataset is not None
-        assert dataset.pheno_db is not None
+        assert dataset.phenotype_data is not None
         assert "measure" in data
 
         pheno_measure = data['measure']
-        assert dataset.pheno_db.has_measure(pheno_measure)
+        assert dataset.phenotype_data.has_measure(pheno_measure)
 
-        measure = dataset.pheno_db.get_measure(pheno_measure)
+        measure = dataset.phenotype_data.get_measure(pheno_measure)
         assert measure.measure_type == MeasureType.continuous
 
-        df = dataset.pheno_db.get_measure_values_df(
+        df = dataset.phenotype_data.get_measure_values_df(
             pheno_measure)
 
         m = df[pheno_measure]
@@ -93,13 +93,13 @@ class PhenoMeasurePartitionsView(QueryBaseView):
         dataset_id = data['datasetId']
         dataset = self.variants_db.get_wdae_wrapper(dataset_id)
         assert dataset is not None
-        assert dataset.pheno_db is not None
+        assert dataset.phenotype_data is not None
         assert "measure" in data
         pheno_measure = data['measure']
 
-        assert dataset.pheno_db.has_measure(pheno_measure)
+        assert dataset.phenotype_data.has_measure(pheno_measure)
 
-        df = dataset.pheno_db.get_measure_values_df(pheno_measure)
+        df = dataset.phenotype_data.get_measure_values_df(pheno_measure)
 
         try:
             mmin = float(data["min"])
@@ -137,7 +137,7 @@ class PhenoMeasureRegressionsView(QueryBaseView):
 
     def __init__(self):
         super(PhenoMeasureRegressionsView, self).__init__()
-        self.pheno_config = self.variants_db.pheno_factory.config
+        self.pheno_config = self.pheno_db.config
 
     def get_browser_dbfile(self, dbname):
         browser_dbfile = self.pheno_config[dbname].browser_dbfile

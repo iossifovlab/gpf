@@ -47,9 +47,12 @@ def test_pheno_regressions_from_conf_path(regressions_conf):
         assert regs.regression[reg_name] == expected_reg
 
 
-def test_has_regression_measure(fphdb, output_dir, regressions_conf):
+def test_has_regression_measure(
+        fake_phenotype_data, output_dir, regressions_conf):
     reg = ConfigParserBase.read_file_configuration(regressions_conf, '')
-    prep = PreparePhenoBrowserBase('fake', fphdb, output_dir, reg)
+    prep = PreparePhenoBrowserBase(
+        'fake', fake_phenotype_data, output_dir, reg
+    )
 
     expected_reg_measures = [
      ('regressor1', 'i1'),

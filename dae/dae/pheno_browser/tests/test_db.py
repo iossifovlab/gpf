@@ -88,15 +88,15 @@ def test_has_descriptions(output_dir):
     assert db.has_descriptions
 
 
-def test_search_measures_get_all(fphdb_browser_dir):
-    db = DbManager(fphdb_browser_dir)
+def test_search_measures_get_all(fake_phenotype_data_browser_dir):
+    db = DbManager(fake_phenotype_data_browser_dir)
     assert db is not None
     db.build()
     assert len(db.search_measures()) == 15
 
 
-def test_search_measures_get_by_instrument(fphdb_browser_dir):
-    db = DbManager(fphdb_browser_dir)
+def test_search_measures_get_by_instrument(fake_phenotype_data_browser_dir):
+    db = DbManager(fake_phenotype_data_browser_dir)
     assert db is not None
     db.build()
     measure_df = db.search_measures('i1', None)
@@ -111,8 +111,9 @@ def test_search_measures_get_by_instrument(fphdb_browser_dir):
         assert row['instrument_name'] == 'i2'
 
 
-def test_search_measures_by_keyword_in_description(fphdb_browser_dir):
-    db = DbManager(fphdb_browser_dir)
+def test_search_measures_by_keyword_in_description(
+        fake_phenotype_data_browser_dir):
+    db = DbManager(fake_phenotype_data_browser_dir)
     assert db is not None
     db.build()
     measure_df = db.search_measures(None, 'number')
@@ -121,8 +122,9 @@ def test_search_measures_by_keyword_in_description(fphdb_browser_dir):
         assert 'number' in row['description']
 
 
-def test_search_measures_by_keyword_in_measure_id(fphdb_browser_dir):
-    db = DbManager(fphdb_browser_dir)
+def test_search_measures_by_keyword_in_measure_id(
+        fake_phenotype_data_browser_dir):
+    db = DbManager(fake_phenotype_data_browser_dir)
     assert db is not None
     db.build()
     measure_df = db.search_measures(None, 'i1.m2')
@@ -131,8 +133,9 @@ def test_search_measures_by_keyword_in_measure_id(fphdb_browser_dir):
     assert measure_df.iloc[0]['instrument_name'] == 'i1'
 
 
-def test_search_measures_by_keyword_in_measure_name(fphdb_browser_dir):
-    db = DbManager(fphdb_browser_dir)
+def test_search_measures_by_keyword_in_measure_name(
+        fake_phenotype_data_browser_dir):
+    db = DbManager(fake_phenotype_data_browser_dir)
     assert db is not None
     db.build()
     measure_df = db.search_measures(None, 'm2')
@@ -143,8 +146,9 @@ def test_search_measures_by_keyword_in_measure_name(fphdb_browser_dir):
     assert measure_df.iloc[1]['instrument_name'] == 'i2'
 
 
-def test_search_measures_by_keyword_in_instrument_name(fphdb_browser_dir):
-    db = DbManager(fphdb_browser_dir)
+def test_search_measures_by_keyword_in_instrument_name(
+        fake_phenotype_data_browser_dir):
+    db = DbManager(fake_phenotype_data_browser_dir)
     assert db is not None
     db.build()
 
@@ -334,6 +338,6 @@ def test_regression_ids(output_dir):
     assert reg_ids == ['test_regression_1', 'test_regression_2']
 
 
-def test_pheno_db_disabled(fake_pheno_factory):
-    assert not fake_pheno_factory.has_pheno_db('fake_disabled')
-    assert len(fake_pheno_factory.config) == 1
+def test_pheno_db_disabled(fake_pheno_db):
+    assert not fake_pheno_db.has_phenotype_data('fake_disabled')
+    assert len(fake_pheno_db.config) == 1
