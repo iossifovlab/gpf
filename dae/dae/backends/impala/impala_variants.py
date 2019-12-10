@@ -15,7 +15,7 @@ from ..attributes_query_inheritance import InheritanceTransformer, \
     inheritance_parser
 
 from dae.variants.attributes import Role, Status, Sex
-from deprecated import deprecated
+from deprecation import deprecated
 
 
 class ImpalaFamilyVariants:
@@ -533,27 +533,27 @@ class ImpalaFamilyVariants:
         where.append(self._build_return_reference_and_return_unknown(
             return_reference, return_unknown
         ))
-        # where.append(
-            # self._build_rare_heuristic(ultra_rare, real_attr_filter)
-        # )
+#        where.append(
+#            self._build_rare_heuristic(ultra_rare, real_attr_filter)
+#        )
         where.append(
             self._build_frequency_bin_heuristic(ultra_rare, real_attr_filter)
-        # )
-        # where.append(
-            # self._build_ultra_rare_heuristic(ultra_rare)
-        # )
+        )
+#        where.append(
+#            self._build_ultra_rare_heuristic(ultra_rare)
+#        )
         where.append(
             self._build_family_bin_heuristic(family_ids, person_ids)
         )
         where.append(
             self._build_coding_heuristic(effect_types)
         )
-        # where.append(
-            # self._build_coding2_heuristic(effect_types)
-        # )
-        # where.append(
-            # self._build_chrom_bin_heuristic(regions)
-        # )
+#        where.append(
+#            self._build_coding2_heuristic(effect_types)
+#        )
+#        where.append(
+#            self._build_chrom_bin_heuristic(regions)
+#        )
         where.append(
             self._build_region_bin_heuristic(regions)
         )
