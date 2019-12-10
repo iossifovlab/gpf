@@ -19,7 +19,7 @@ def test_simple_query_preview(db, admin_client):
     )
     assert status.HTTP_200_OK == response.status_code
     res = response.streaming_content
-    res = list(map(json.loads, res))
+    res = json.loads(''.join(map(lambda x: x.decode('utf-8'), res)))
 
     assert 2 == len(res)
 
@@ -52,7 +52,7 @@ def test_query_preview_have_pheno_column_values(db, admin_client):
     )
     assert status.HTTP_200_OK == response.status_code
     res = response.streaming_content
-    res = list(map(json.loads, res))
+    res = json.loads(''.join(map(lambda x: x.decode('utf-8'), res)))
 
     assert len(res) == 2
     for row in enumerate(res):
