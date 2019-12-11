@@ -151,7 +151,7 @@ class PhenoMeasureRegressionsView(QueryBaseView):
         dataset_id = data['datasetId']
 
         db = DbManager(self.get_browser_dbfile(
-            self.variants_db.get_config(dataset_id).phenoDB))
+            self.variants_db.get_config(dataset_id).phenotype_data))
         db.build()
 
         if db is None:

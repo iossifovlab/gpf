@@ -93,9 +93,9 @@ class PhenoMeasuresView(PhenoBrowserBaseView):
         if instrument and instrument not in dataset.phenotype_data.instruments:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        browser_dbfile = self.get_browser_dbfile(dataset.config.phenoDB)
+        browser_dbfile = self.get_browser_dbfile(dataset.config.phenotype_data)
         browser_images_url = self.get_browser_images_url(
-            dataset.config.phenoDB)
+            dataset.config.phenotype_data)
 
         db = DbManager(dbfile=browser_dbfile)
         db.build()

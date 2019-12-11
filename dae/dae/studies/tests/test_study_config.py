@@ -21,7 +21,7 @@ def test_study_config_year(genotype_data_study_configs):
     ('description', 'QUADS F1'),
     ('phenotypeTool', True),
     ('phenotypeBrowser', False),
-    ('phenoDB', ''),
+    ('phenotypeData', ''),
 ])
 def test_quads_f1_config_dict(quads_f1_config, option_name, expected_value):
     assert quads_f1_config is not None
@@ -39,7 +39,7 @@ def test_quads_f1_config_dict(quads_f1_config, option_name, expected_value):
 
     ('phenotype_tool', True),
     ('phenotype_browser', False),
-    ('pheno_db', ''),
+    ('phenotype_data', ''),
     ('year', ''),
     ('pub_med', ''),
     ('years', []),

@@ -54,8 +54,7 @@ def calc_dbfile_hashsum(dbfilename):
 
 def build_pheno_browser(dbfile, pheno_name, output_dir,
                         pheno_regressions=None):
-    phenodb = pheno_db.PhenoDB(dbfile=dbfile)
-    phenodb.load()
+    phenodb = pheno_db.PhenotypeDataStudy(dbfile=dbfile)
 
     prep = PreparePhenoBrowserBase(pheno_name, phenodb,
                                    output_dir, pheno_regressions)
@@ -129,7 +128,7 @@ USAGE
         if not args.dbfile or not os.path.exists(args.dbfile):
             raise CLIError(
                 "pheno db file name must be specified")
-        
+
         regressions = PhenoRegressionConfigParser.\
             read_and_parse_file_configuration(args.regression, '') \
             if args.regression else None

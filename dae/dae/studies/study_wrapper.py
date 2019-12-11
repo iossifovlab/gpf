@@ -111,7 +111,7 @@ class StudyWrapper(object):
         self.pheno_filter_builder = None
 
         self.pheno_filters_in_config = set()
-        phenotype_data = self.config.phenoDB
+        phenotype_data = self.config.phenotype_data
         if phenotype_data:
             self.phenotype_data = pheno_db.get_phenotype_data(phenotype_data)
 
@@ -735,7 +735,7 @@ class StudyWrapper(object):
     def _get_description_keys():
         return [
             'id', 'name', 'description', 'phenotypeBrowser', 'phenotypeTool',
-            'phenoDB', 'enrichmentTool', 'genotypeBrowser',
+            'phenotypeData', 'enrichmentTool', 'genotypeBrowser',
             'peopleGroupConfig', 'genotypeBrowserConfig', 'commonReport',
             'studyTypes', 'studies'
         ]

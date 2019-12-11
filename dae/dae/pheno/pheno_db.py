@@ -1,5 +1,4 @@
 import logging
-import logging
 
 import pandas as pd
 from sqlalchemy.sql import select, text
@@ -650,7 +649,6 @@ class PhenotypeDataGroup(PhenotypeData):
     pass
 
 
-
 class PhenoDb(object):
 
     def __init__(self, dae_config):
@@ -658,8 +656,8 @@ class PhenoDb(object):
         assert dae_config
 
         self.config = PhenoConfigParser.read_directory_configurations(
-            dae_config.pheno_db.dir)
-        
+            dae_config.phenotype_data.dir)
+
         self.pheno_cache = {}
 
     def get_dbfile(self, pheno_data_id):
@@ -695,6 +693,6 @@ class PhenoDb(object):
             self.get_phenotype_data(pheno_id)
             for pheno_id in self.get_phenotype_data_ids()
         ]
-    
+
     def get_phenotype_data_config(self, pheno_data_id):
         return self.config.get(pheno_data_id)

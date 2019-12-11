@@ -148,7 +148,7 @@ def default_config():
     return Box(config)
 
 
-def check_config_pheno_db(config):
+def check_phenotype_data_config(config):
     categorical = config.classification.categorical.min_rank
     if categorical < 1:
         print('categorical min rank expected to be > 0')

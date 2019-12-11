@@ -11,7 +11,7 @@ from argparse import ArgumentParser
 # from argparse import ArgumentDefaultsHelpFormatter
 import traceback
 from dae.pheno.common import dump_config,\
-    check_config_pheno_db, default_config
+    check_phenotype_data_config, default_config
 from dae.pheno.prepare.ped_prepare import PrepareVariables
 
 
@@ -256,7 +256,7 @@ USAGE
         config = parse_config(args)
         dump_config(config)
 
-        if not check_config_pheno_db(config):
+        if not check_phenotype_data_config(config):
             raise Exception("bad classification boundaries")
 
         if os.path.exists(args.output):

@@ -104,7 +104,7 @@ class GenotypeDataGroupConfigParser(GenotypeDataConfigParser):
         'id',
         'studies',
         'description',
-        'phenoDB',
+        'phenotypeData',
         'hasDenovo',
         'hasTransmitted',
         'hasComplex',

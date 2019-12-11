@@ -104,7 +104,7 @@ def dummy_pheno_missing_files_conf():
 @pytest.fixture(scope='session')
 def fake_pheno_config(fake_dae_conf):
     return PhenoConfigParser.read_directory_configurations(
-        fake_dae_conf.pheno_db.dir)
+        fake_dae_conf.phenotype_data.dir)
 
 
 @pytest.fixture(scope='session')
