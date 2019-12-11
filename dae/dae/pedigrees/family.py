@@ -4,6 +4,7 @@ from functools import partial
 
 import numpy as np
 import pandas as pd
+from dae.utils.helpers import str2bool
 from dae.variants.attributes import Role, Sex, Status
 
 
@@ -494,13 +495,13 @@ class FamiliesLoader:
             'ped_no_role',
             'ped_file_format',
         ]
-        has_header = not argv.ped_no_header
+        ped_has_header = not argv.ped_no_header
         res = {}
-        res['has_header'] = has_header
+        res['ped_has_header'] = ped_has_header
 
         for col in ped_ped_args:
             ped_value = getattr(argv, col)
-            if has_header:
+            if ped_has_header:
                 res[col] = ped_value
             else:
                 assert ped_value.isnumeric(), \
@@ -587,7 +588,7 @@ class PedigreeReader(object):
     @staticmethod
     def flexible_pedigree_read(
             pedigree_filepath, sep='\t',
-            has_header=True,
+            ped_has_header=True,
             ped_family='familyId',
             ped_person='personId',
             ped_mom='momId',
@@ -600,6 +601,11 @@ class PedigreeReader(object):
             ped_sample_id='sampleId',
             ped_no_role=False,
             **kwargs):
+
+        if type(ped_no_role) == str:
+            ped_no_role = str2bool(ped_no_role)
+        if type(ped_has_header) == str:
+            ped_has_header = str2bool(ped_has_header)
 
         read_csv_func = partial(
             pd.read_csv,
@@ -624,7 +630,7 @@ class PedigreeReader(object):
             encoding='utf-8'
         )
 
-        if not has_header:
+        if not ped_has_header:
             _, file_header = PedigreeReader.produce_header_from_indices(
                 ped_family, ped_person, ped_mom,
                 ped_dad, ped_sex, ped_status,

@@ -29,7 +29,6 @@ class GenotypeDataConfigParser(ConfigParserBase):
         'id',
         'description',
         'prefix',
-        # 'file_format',
         'phenoDB',
         'studyType',
         'year',
