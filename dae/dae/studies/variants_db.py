@@ -70,11 +70,7 @@ class VariantsDb(object):
         return list(self.genotype_data_study_configs.keys())
 
     def get_study_config(self, study_id):
-        self._load_study_cache({study_id})
-        if study_id not in self._genotype_data_study_cache:
-            return None
-
-        return self._genotype_data_study_cache.get(study_id).config
+        return self.genotype_data_study_configs.get(study_id)
 
     def get_study(self, study_id):
         self._load_study_cache({study_id})
@@ -112,12 +108,7 @@ class VariantsDb(object):
         return list(self.genotype_data_group_configs.keys())
 
     def get_genotype_data_group_config(self, genotype_data_group_id):
-        self._load_genotype_data_group_cache({genotype_data_group_id})
-        if genotype_data_group_id not in self._genotype_data_group_cache:
-            return None
-
-        return self._genotype_data_group_cache.get(
-            genotype_data_group_id).config
+        return self.genotype_data_group_configs.get(genotype_data_group_id)
 
     def get_genotype_data_group(self, genotype_data_group_id):
         self._load_genotype_data_group_cache({genotype_data_group_id})
@@ -155,7 +146,8 @@ class VariantsDb(object):
 
     @deprecated(details="start using GPFInstance methods")
     def get_all_ids(self):
-        return self.get_genotype_studies_ids() + self.get_genotype_data_groups_ids()
+        return self.get_genotype_studies_ids() \
+            + self.get_genotype_data_groups_ids()
 
     @deprecated(details="start using GPFInstance methods")
     def get_config(self, config_id):
