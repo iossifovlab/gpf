@@ -12,9 +12,24 @@ class GenotypeDataGroup(GenotypeData):
             studies
         )
 
-    def query_variants(self, **kwargs):
+    def query_variants(
+            self, regions=None, genes=None, effect_types=None,
+            family_ids=None, person_ids=None,
+            inheritance=None, roles=None, sexes=None,
+            variant_type=None, real_attr_filter=None,
+            ultra_rare=None,
+            return_reference=None,
+            return_unknown=None,
+            limit=None,
+            study_filters=None,
+            **kwargs):
         return itertools.chain(*[
-                genotype_data_study.query_variants(**kwargs)
+                genotype_data_study.query_variants(
+                    regions, genes, effect_types, family_ids,
+                    person_ids, inheritance, roles, sexes, variant_type,
+                    real_attr_filter, ultra_rare, return_reference,
+                    return_unknown, limit, study_filters, **kwargs
+                )
                 for genotype_data_study in self.studies
             ])
 
@@ -26,7 +41,9 @@ class GenotypeDataGroup(GenotypeData):
     def families(self):
         return functools.reduce(
             lambda x, y: self._combine_families(x, y),
-            [genotype_data_study.families for genotype_data_study in self.studies])
+            [genotype_data_study.families
+             for genotype_data_study in self.studies]
+        )
 
     def _combine_families(self, first, second):
         same_families = set(first.keys()) & set(second.keys())

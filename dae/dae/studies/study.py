@@ -20,7 +20,17 @@ class GenotypeData(object):
         self.years = self.config.years
         self.pub_meds = self.config.pub_meds
 
-    def query_variants(self, **kwargs):
+    def query_variants(
+            self, regions=None, genes=None, effect_types=None,
+            family_ids=None, person_ids=None,
+            inheritance=None, roles=None, sexes=None,
+            variant_type=None, real_attr_filter=None,
+            ultra_rare=None,
+            return_reference=None,
+            return_unknown=None,
+            limit=None,
+            study_filters=None,
+            **kwargs):
         raise NotImplementedError()
 
     def get_studies_ids(self):
@@ -72,30 +82,46 @@ class GenotypeDataStudy(GenotypeData):
 
         self.backend = backend
 
-    def query_variants(self, **kwargs):
-        if 'studyFilters' in kwargs and \
-                self.name not in kwargs['studyFilters']:
+    def query_variants(
+            self, regions=None, genes=None, effect_types=None,
+            family_ids=None, person_ids=None,
+            inheritance=None, roles=None, sexes=None,
+            variant_type=None, real_attr_filter=None,
+            ultra_rare=None,
+            return_reference=None,
+            return_unknown=None,
+            limit=None,
+            study_filters=None,
+            **kwargs):
+
+        if len(kwargs):
+            # FIXME This will remain so it can be used for discovering
+            # when excess kwargs are passed in order to fix such cases.
+            print('received excess keyword arguments when querying variants!')
+            print('kwargs received: {}'.format(list(kwargs.keys())))
+
+        if study_filters and self.name not in study_filters:
             return
-        else:
-            for variant in self.backend.query_variants(
-                    regions=kwargs.get('regions'),
-                    genes=kwargs.get('genes'),
-                    effect_types=kwargs.get('effect_types'),
-                    family_ids=kwargs.get('family_ids'),
-                    person_ids=kwargs.get('person_ids'),
-                    inheritance=kwargs.get('inheritance'),
-                    roles=kwargs.get('roles'),
-                    sexes=kwargs.get('sexes'),
-                    variant_type=kwargs.get('variant_type'),
-                    real_attr_filter=kwargs.get('real_attr_filter'),
-                    ultra_rare=kwargs.get('ultra_rare'),
-                    return_reference=kwargs.get('return_reference'),
-                    return_unknown=kwargs.get('return_unknown'),
-                    limit=kwargs.get('limit')
-                    ):
-                for allele in variant.alleles:
-                    allele.update_attributes({'studyName': self.name})
-                yield variant
+
+        for variant in self.backend.query_variants(
+                regions=regions,
+                genes=genes,
+                effect_types=effect_types,
+                family_ids=family_ids,
+                person_ids=person_ids,
+                inheritance=inheritance,
+                roles=roles,
+                sexes=sexes,
+                variant_type=variant_type,
+                real_attr_filter=real_attr_filter,
+                ultra_rare=ultra_rare,
+                return_reference=return_reference,
+                return_unknown=return_unknown,
+                limit=limit
+                ):
+            for allele in variant.alleles:
+                allele.update_attributes({'studyName': self.name})
+            yield variant
 
     def get_studies_ids(self):
         return [self.id]
