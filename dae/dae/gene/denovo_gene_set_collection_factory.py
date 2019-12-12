@@ -87,7 +87,7 @@ class DenovoGeneSetCollectionFactory():
                     )
 
                 people_with_people_group = \
-                    genotype_data_study.get_people_with_people_group(
+                    genotype_data_study.get_people_from_people_group(
                         people_group_id, people_group_value
                     )
 

@@ -43,7 +43,7 @@ class GenotypeData(object):
     def get_pedigree_values(self, column):
         raise NotImplementedError()
 
-    def get_people_with_people_group(self, people_group, people_group_value):
+    def get_people_from_people_group(self, people_group, people_group_value):
         raise NotImplementedError()
 
     def get_people_group(self, people_group_id):
@@ -80,7 +80,7 @@ class GenotypeDataStudy(GenotypeData):
     def __init__(self, config, backend):
         super(GenotypeDataStudy, self).__init__(config, [self])
 
-        self.backend = backend
+        self._backend = backend
 
     def query_variants(
             self, regions=None, genes=None, effect_types=None,
@@ -103,7 +103,7 @@ class GenotypeDataStudy(GenotypeData):
         if study_filters and self.name not in study_filters:
             return
 
-        for variant in self.backend.query_variants(
+        for variant in self._backend.query_variants(
                 regions=regions,
                 genes=genes,
                 effect_types=effect_types,
@@ -128,17 +128,17 @@ class GenotypeDataStudy(GenotypeData):
 
     @property
     def families(self):
-        return self.backend.families.families
+        return self._backend.families.families
 
     def get_pedigree_values(self, column):
-        return set(self.backend.families.ped_df[column])
+        return set(self._backend.families.ped_df[column])
 
-    def get_people_with_people_group(
+    def get_people_from_people_group(
             self, people_group_id, people_group_value):
         people_group = self.get_people_group(people_group_id)
         source = people_group.source
 
-        pedigree_df = self.backend.families.ped_df
+        pedigree_df = self._backend.families.ped_df
         people_ids = pedigree_df[
             pedigree_df[source].apply(str) == str(people_group_value)]
 
