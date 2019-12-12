@@ -130,7 +130,7 @@ def main(argv):
         args.pheno_name = verify_phenotype_data_name(args.pheno_name)
 
         pheno_db_dir = os.path.join(
-            dae_conf.pheno_db.dir,
+            dae_conf.phenotype_data.dir,
             args.pheno_name
         )
         if not os.path.exists(pheno_db_dir):
