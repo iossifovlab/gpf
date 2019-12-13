@@ -668,7 +668,7 @@ def data_import(
 
             families_loader = FamiliesLoader(vcf.pedigree)
             loader = VcfLoader(
-                families_loader.families, vcf.vcf, region=None,
+                families_loader.families, vcf.vcf, regions=None,
                 params={
                     'include_reference_genotypes': True,
                     'include_unknown_family_genotypes': True,

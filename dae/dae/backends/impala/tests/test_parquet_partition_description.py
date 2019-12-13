@@ -31,7 +31,7 @@ def test_parquet_region_bin(fam1, gt, chromosomes,
     pd = ParquetPartitionDescription(
         chromosomes, region_length
     )
-    region_bin = pd._evaluate_region_bin(fv)
+    region_bin = pd.evaluate_region_bin(fv)
     for fa in fv.alleles:
         assert region_bin == expected
         assert pd.evaluate_variant_filename(fa) == \
@@ -47,8 +47,8 @@ def test_parquet_family_bin(fam1, fam2, gt):
         ['1'], 1000, family_bin_size
     )
     for fa1, fa2 in zip(fv1.alleles, fv2.alleles):
-        assert pd._evaluate_family_bin(fa1) == 9
-        assert pd._evaluate_family_bin(fa2) == 6
+        assert pd.evaluate_family_bin(fa1) == 9
+        assert pd.evaluate_family_bin(fa2) == 6
         assert pd.evaluate_variant_filename(fa1) == \
             f'region_bin=1_11/family_bin=9/' + \
             f'variants_region_bin_1_11_family_bin_9.parquet'
@@ -75,7 +75,7 @@ def test_parquet_frequency_bin(fam1, gt, attributes, rare_boundary, expected):
     )
 
     for fa in fv.alleles:
-        assert pd._evaluate_frequency_bin(fa) == expected
+        assert pd.evaluate_frequency_bin(fa) == expected
         assert pd.evaluate_variant_filename(fa) == \
             f'region_bin=1_11/frequency_bin={expected}/' + \
             f'variants_region_bin_1_11_frequency_bin_{expected}.parquet'
@@ -136,7 +136,7 @@ def test_parquet_coding_bin(fam1, gt, eff1, eff2, eff3,
         ['1'], 1000, coding_effect_types=coding_effect_types
     )
     for fa, ex in zip(fv.alleles, expected):
-        assert pd._evaluate_coding_bin(fa) == ex
+        assert pd.evaluate_coding_bin(fa) == ex
         assert pd.evaluate_variant_filename(fa) == \
             f'region_bin=1_11/coding_bin={ex}/' + \
             f'variants_region_bin_1_11_coding_bin_{ex}.parquet'

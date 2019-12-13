@@ -14,6 +14,8 @@ class ParquetLoader(VariantsLoader):
                  transmission_type=TransmissionType.transmitted):
         super(ParquetLoader, self).__init__(
             families=families,
+            filename=partitions_to_read,
+            source_type='parquet',
             transmission_type=transmission_type)
         self._read_partition_config(partition_config_file)
         self.root_dir = os.path.dirname(partition_config_file)

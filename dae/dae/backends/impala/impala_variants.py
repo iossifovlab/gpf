@@ -301,7 +301,6 @@ class ImpalaFamilyVariants:
         res = transformer.transform(tree)
         return res
 
-    @deprecated
     def _build_gene_regions_heuristic(self, genes, regions):
         assert genes is not None
         if len(genes) > 0 and len(genes) <= self.GENE_REGIONS_HEURISTIC_CUTOFF:
@@ -318,7 +317,8 @@ class ImpalaFamilyVariants:
                 regions = dae.RegionOperations.collapse(regions)
             return regions
 
-    @deprecated
+    @deprecated(
+        "'rare' heuristic is deprecated in favor of 'frequency_bin' heuristic")
     def _build_rare_heuristic(self, ultra_rare, real_attr_filter):
         if 'rare' not in self.schema:
             return ''
@@ -360,7 +360,9 @@ class ImpalaFamilyVariants:
             return 'coding = 0'
         return ''
 
-    @deprecated
+    @deprecated(
+        "'chorm_bin' heuristic is deprecated in favor of 'region_bin' "
+        "heuristic")
     def _build_chrom_bin_heuristic(self, regions):
         if not regions:
             return ''
@@ -398,7 +400,8 @@ class ImpalaFamilyVariants:
         return "region_bin IN ({})".format(','.join([
             "'{}'".format(rb) for rb in region_bins]))
 
-    @deprecated
+    @deprecated(
+        "'coding2' heuristic is deprecated in favor of 'coding_bin' heuristic")
     def _build_coding2_heuristic(self, effect_types):
         if effect_types is None:
             return ''
@@ -432,7 +435,9 @@ class ImpalaFamilyVariants:
             return 'coding2 = 0'
         return ''
 
-    @deprecated
+    @deprecated(
+        "'ultra_rare' heuristic is deprecated in favor of 'frequency_bin' "
+        "heuristic")
     def _build_ultra_rare_heuristic(self, ultra_rare):
         if 'ultra_rare' not in self.schema:
             return ''

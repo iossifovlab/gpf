@@ -258,7 +258,12 @@ def denovo2parquet(
         output='.', bucket_index=0, rows=10000, filesystem=None,
         skip_pedigree=False):
 
-    families_loader = FamiliesLoader(family_filename, file_format='simple')
+    families_loader = FamiliesLoader(
+        family_filename, 
+        params={
+            'ped_file_format': 'simple',
+        })
+
     variants_loader = DenovoLoader(
         families_loader.families, denovo_filename, genome)
     variants_loader = AnnotationPipelineDecorator(
