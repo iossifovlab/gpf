@@ -7,9 +7,9 @@ from dae.common_reports.family_counter import FamiliesGroupCounters
 class FamiliesReport(object):
 
     def __init__(
-            self, study, people_groups_info, filter_objects,
+            self, genotype_data_study, people_groups_info, filter_objects,
             draw_all_families=False, families_count_show_id=False):
-        self.families = study.families
+        self.families = genotype_data_study.families
         self.people_groups_info = people_groups_info
         self.filter_objects = filter_objects
         self.draw_all_families = draw_all_families

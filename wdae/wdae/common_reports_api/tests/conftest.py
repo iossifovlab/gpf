@@ -18,7 +18,7 @@ def gpf_instance(mock_genomes_db):
 
 @pytest.fixture(scope='session')
 def common_report_facade(gpf_instance):
-    return gpf_instance.common_report_facade
+    return gpf_instance._common_report_facade
 
 
 @pytest.fixture(scope='session')
@@ -42,7 +42,7 @@ def use_common_reports(common_report_facade):
 
 @pytest.fixture(scope='function')
 def mock_gpf_instance(db, mocker, gpf_instance):
-    reload_datasets(gpf_instance.variants_db)
+    reload_datasets(gpf_instance._variants_db)
     mocker.patch(
         'query_base.query_base.get_gpf_instance',
         return_value=gpf_instance

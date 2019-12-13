@@ -42,7 +42,7 @@ def test_simple_query_variants_preview(db, admin_client):
     )
     assert status.HTTP_200_OK == response.status_code
     res = response.streaming_content
-    res = list(map(json.loads, res))
+    res = json.loads(''.join(map(lambda x: x.decode('utf-8'), res)))
 
     assert 2 == len(res)
 

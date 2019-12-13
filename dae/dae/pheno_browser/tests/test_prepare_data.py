@@ -8,10 +8,10 @@ from dae.variants.attributes import Role, Sex
 from dae.configuration.config_parser_base import ConfigParserBase
 
 
-def test_augment_measure(fphdb, output_dir):
-    prep = PreparePhenoBrowserBase('fake', fphdb, output_dir)
-    regressand = fphdb.get_measure('i1.m1')
-    regressor = fphdb.get_measure('i1.age')
+def test_augment_measure(fake_phenotype_data, output_dir):
+    prep = PreparePhenoBrowserBase('fake', fake_phenotype_data, output_dir)
+    regressand = fake_phenotype_data.get_measure('i1.m1')
+    regressor = fake_phenotype_data.get_measure('i1.age')
     df = prep._augment_measure_values_df(regressor, 'test regression',
                                          regressand)
     roles = list(df['role'].unique())
@@ -23,10 +23,11 @@ def test_augment_measure(fphdb, output_dir):
     assert len(df) > 0
 
 
-def test_augment_measure_regressor_no_instrument_name(fphdb, output_dir):
-    prep = PreparePhenoBrowserBase('fake', fphdb, output_dir)
-    regressand = fphdb.get_measure('i1.m1')
-    regressor = fphdb.get_measure('i1.age')
+def test_augment_measure_regressor_no_instrument_name(
+        fake_phenotype_data, output_dir):
+    prep = PreparePhenoBrowserBase('fake', fake_phenotype_data, output_dir)
+    regressand = fake_phenotype_data.get_measure('i1.m1')
+    regressor = fake_phenotype_data.get_measure('i1.age')
     exp_df = prep._augment_measure_values_df(regressor, 'test regression',
                                              regressand)
     regressor.instrument_name = None
@@ -38,26 +39,28 @@ def test_augment_measure_regressor_no_instrument_name(fphdb, output_dir):
     assert list(df['test regression']) == list(exp_df['test regression'])
 
 
-def test_augment_measure_with_identical_measures(fphdb, output_dir):
-    prep = PreparePhenoBrowserBase('fake', fphdb, output_dir)
-    regressand = fphdb.get_measure('i1.age')
-    regressor = fphdb.get_measure('i1.age')
+def test_augment_measure_with_identical_measures(
+        fake_phenotype_data, output_dir):
+    prep = PreparePhenoBrowserBase('fake', fake_phenotype_data, output_dir)
+    regressand = fake_phenotype_data.get_measure('i1.age')
+    regressor = fake_phenotype_data.get_measure('i1.age')
     df = prep._augment_measure_values_df(regressor, 'test regression',
                                          regressand)
     assert df is None
 
 
-def test_augment_measure_with_nonexistent_regressor(fphdb, output_dir):
-    prep = PreparePhenoBrowserBase('fake', fphdb, output_dir)
-    regressand = fphdb.get_measure('i2.m1')
-    regressor = fphdb.get_measure('i1.age')
+def test_augment_measure_with_nonexistent_regressor(
+        fake_phenotype_data, output_dir):
+    prep = PreparePhenoBrowserBase('fake', fake_phenotype_data, output_dir)
+    regressand = fake_phenotype_data.get_measure('i2.m1')
+    regressor = fake_phenotype_data.get_measure('i1.age')
     regressor.instrument_name = None
     df = prep._augment_measure_values_df(regressor, 'test regression',
                                          regressand)
     assert df is None
 
 
-def test_build_regression(mocker, fphdb, output_dir):
+def test_build_regression(mocker, fake_phenotype_data, output_dir):
 
     fake_df = pd.DataFrame({
         # Only two unique values, in order to test
@@ -94,9 +97,9 @@ def test_build_regression(mocker, fphdb, output_dir):
                  'PreparePhenoBrowserBase._augment_measure_values_df',
                  side_effect=fake_augment_df)
 
-    prep = PreparePhenoBrowserBase('fake', fphdb, output_dir)
-    regressand = fphdb.get_measure('i1.m1')
-    regressor = fphdb.get_measure('i1.age')
+    prep = PreparePhenoBrowserBase('fake', fake_phenotype_data, output_dir)
+    regressand = fake_phenotype_data.get_measure('i1.m1')
+    regressor = fake_phenotype_data.get_measure('i1.age')
     jitter = 0.32403423849
 
     res = prep.build_regression(regressand, regressor, jitter)
@@ -110,7 +113,7 @@ def test_build_regression(mocker, fphdb, output_dir):
     assert jitter == 0.32403423849
 
 
-def test_build_regression_min_vals(mocker, fphdb, output_dir):
+def test_build_regression_min_vals(mocker, fake_phenotype_data, output_dir):
     fake_df = pd.DataFrame({
         'i1.m1': [1, 2, 3, 4, 5],
         'age': [1, 2, 3, 4, 5],
@@ -127,15 +130,16 @@ def test_build_regression_min_vals(mocker, fphdb, output_dir):
                  'PreparePhenoBrowserBase._augment_measure_values_df',
                  side_effect=fake_augment_df)
 
-    prep = PreparePhenoBrowserBase('fake', fphdb, output_dir)
-    regressand = fphdb.get_measure('i1.m1')
-    regressor = fphdb.get_measure('i1.age')
+    prep = PreparePhenoBrowserBase('fake', fake_phenotype_data, output_dir)
+    regressand = fake_phenotype_data.get_measure('i1.m1')
+    regressor = fake_phenotype_data.get_measure('i1.age')
     jitter = 0.32403423849
 
     assert prep.build_regression(regressand, regressor, jitter) == {}
 
 
-def test_build_regression_min_unique_vals(mocker, fphdb, output_dir):
+def test_build_regression_min_unique_vals(
+        mocker, fake_phenotype_data, output_dir):
     fake_df = pd.DataFrame({
         'i1.m1': [1, 1, 1, 1, 1, 1],
         'age': [1, 2, 3, 4, 5, 6],
@@ -152,24 +156,26 @@ def test_build_regression_min_unique_vals(mocker, fphdb, output_dir):
                  'PreparePhenoBrowserBase._augment_measure_values_df',
                  side_effect=fake_augment_df)
 
-    prep = PreparePhenoBrowserBase('fake', fphdb, output_dir)
-    regressand = fphdb.get_measure('i1.m1')
-    regressor = fphdb.get_measure('i1.age')
+    prep = PreparePhenoBrowserBase('fake', fake_phenotype_data, output_dir)
+    regressand = fake_phenotype_data.get_measure('i1.m1')
+    regressor = fake_phenotype_data.get_measure('i1.age')
     jitter = 0.32403423849
 
     assert prep.build_regression(regressand, regressor, jitter) == {}
 
 
-def test_build_regression_identical_measures(mocker, fphdb, output_dir):
-    prep = PreparePhenoBrowserBase('fake', fphdb, output_dir)
-    regressand = fphdb.get_measure('i1.age')
-    regressor = fphdb.get_measure('i1.age')
+def test_build_regression_identical_measures(
+        mocker, fake_phenotype_data, output_dir):
+    prep = PreparePhenoBrowserBase('fake', fake_phenotype_data, output_dir)
+    regressand = fake_phenotype_data.get_measure('i1.age')
+    regressor = fake_phenotype_data.get_measure('i1.age')
     jitter = 0.32403423849
 
     assert prep.build_regression(regressand, regressor, jitter) == {}
 
 
-def test_build_regression_aug_df_is_none(mocker, fphdb, output_dir):
+def test_build_regression_aug_df_is_none(
+        mocker, fake_phenotype_data, output_dir):
     def fake_augment_df(*args):
         return None
 
@@ -177,15 +183,17 @@ def test_build_regression_aug_df_is_none(mocker, fphdb, output_dir):
                  'PreparePhenoBrowserBase._augment_measure_values_df',
                  side_effect=fake_augment_df)
 
-    prep = PreparePhenoBrowserBase('fake', fphdb, output_dir)
-    regressand = fphdb.get_measure('i1.m1')
-    regressor = fphdb.get_measure('i1.age')
+    prep = PreparePhenoBrowserBase('fake', fake_phenotype_data, output_dir)
+    regressand = fake_phenotype_data.get_measure('i1.m1')
+    regressor = fake_phenotype_data.get_measure('i1.age')
     jitter = 0.32403423849
 
     assert prep.build_regression(regressand, regressor, jitter) == {}
 
 
-def test_handle_regressions(mocker, fphdb, output_dir, fphdb_desc_conf):
+def test_handle_regressions(
+        mocker, fake_phenotype_data, output_dir,
+        fake_phenotype_data_desc_conf):
     def fake_build_regression(dependent_measure,
                               independent_measure, jitter):
         return {'regressand': dependent_measure,
@@ -198,9 +206,13 @@ def test_handle_regressions(mocker, fphdb, output_dir, fphdb_desc_conf):
                           'PreparePhenoBrowserBase.build_regression',
                           side_effect=fake_build_regression)
 
-    reg = ConfigParserBase.read_file_configuration(fphdb_desc_conf, '')
-    prep = PreparePhenoBrowserBase('fake', fphdb, output_dir, reg)
-    regressand = fphdb.get_measure('i1.m1')
+    reg = ConfigParserBase.read_file_configuration(
+        fake_phenotype_data_desc_conf, ''
+    )
+    prep = PreparePhenoBrowserBase(
+        'fake', fake_phenotype_data, output_dir, reg
+    )
+    regressand = fake_phenotype_data.get_measure('i1.m1')
 
     res = [r for r in prep.handle_regressions(regressand) if r is not None]
     assert len(res) == 2
@@ -218,11 +230,15 @@ def test_handle_regressions(mocker, fphdb, output_dir, fphdb_desc_conf):
 
 
 def test_handle_regressions_non_continuous_or_ordinal_measure(
-        fphdb, output_dir, fphdb_desc_conf):
-    reg = ConfigParserBase.read_file_configuration(fphdb_desc_conf, '')
-    prep = PreparePhenoBrowserBase('fake', fphdb, output_dir, reg)
-    regressand_categorical = fphdb.get_measure('i1.m5')
-    regressand_raw = fphdb.get_measure('i1.m6')
+        fake_phenotype_data, output_dir, fake_phenotype_data_desc_conf):
+    reg = ConfigParserBase.read_file_configuration(
+        fake_phenotype_data_desc_conf, ''
+    )
+    prep = PreparePhenoBrowserBase(
+        'fake', fake_phenotype_data, output_dir, reg
+    )
+    regressand_categorical = fake_phenotype_data.get_measure('i1.m5')
+    regressand_raw = fake_phenotype_data.get_measure('i1.m6')
 
     with pytest.raises(StopIteration):
         next(prep.handle_regressions(regressand_categorical))
@@ -232,17 +248,22 @@ def test_handle_regressions_non_continuous_or_ordinal_measure(
 
 
 def test_handle_regressions_regressand_is_regressor(
-        fphdb, output_dir, fphdb_desc_conf):
-    reg = ConfigParserBase.read_file_configuration(fphdb_desc_conf, '')
-    prep = PreparePhenoBrowserBase('fake', fphdb, output_dir, reg)
-    regressand = fphdb.get_measure('i1.age')
+        fake_phenotype_data, output_dir, fake_phenotype_data_desc_conf):
+    reg = ConfigParserBase.read_file_configuration(
+        fake_phenotype_data_desc_conf, ''
+    )
+    prep = PreparePhenoBrowserBase(
+        'fake', fake_phenotype_data, output_dir, reg
+    )
+    regressand = fake_phenotype_data.get_measure('i1.age')
 
     with pytest.raises(StopIteration):
         next(prep.handle_regressions(regressand))
 
 
 def test_handle_regressions_default_jitter(
-        mocker, fphdb, output_dir, fphdb_desc_conf):
+        mocker, fake_phenotype_data, output_dir,
+        fake_phenotype_data_desc_conf):
     def fake_build_regression(*args):
         return {'pvalue_regression_male': 0,
                 'pvalue_regression_female': 0}
@@ -251,9 +272,13 @@ def test_handle_regressions_default_jitter(
                           'PreparePhenoBrowserBase.build_regression',
                           side_effect=fake_build_regression)
 
-    reg = ConfigParserBase.read_file_configuration(fphdb_desc_conf, '')
-    prep = PreparePhenoBrowserBase('fake', fphdb, output_dir, reg)
-    regressand = fphdb.get_measure('i1.m1')
+    reg = ConfigParserBase.read_file_configuration(
+        fake_phenotype_data_desc_conf, ''
+    )
+    prep = PreparePhenoBrowserBase(
+        'fake', fake_phenotype_data, output_dir, reg
+    )
+    regressand = fake_phenotype_data.get_measure('i1.m1')
     for i in prep.handle_regressions(regressand):
         pass
 

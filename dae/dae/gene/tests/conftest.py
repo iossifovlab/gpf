@@ -8,7 +8,8 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.utils.fixtures import change_environment
 
 from dae.gene.denovo_gene_set_config import DenovoGeneSetConfigParser
-from dae.gene.denovo_gene_set import DenovoGeneSet
+from dae.gene.denovo_gene_set_collection_factory import \
+    DenovoGeneSetCollectionFactory
 
 from dae.utils.fixtures import path_to_fixtures as _path_to_fixtures
 
@@ -20,13 +21,6 @@ def fixtures_dir():
 
 def path_to_fixtures(*args):
     return _path_to_fixtures('gene', *args)
-
-
-def mock_property(mocker):
-    def result(property, mock_value):
-        file_mock = mocker.patch(property, new_callable=mocker.PropertyMock)
-        file_mock.return_value = mock_value
-    return result
 
 
 @pytest.fixture(scope='session')
@@ -41,39 +35,44 @@ def dae_config_fixture(gpf_instance):
 
 @pytest.fixture(scope='session')
 def variants_db_fixture(gpf_instance):
-    return gpf_instance.variants_db
+    return gpf_instance._variants_db
 
 
 @pytest.fixture(scope='session')
 def gene_info_config(gpf_instance):
-    return gpf_instance.gene_info_config
+    return gpf_instance._gene_info_config
 
 
 @pytest.fixture(scope='session')
-def weights_factory(gpf_instance):
-    return gpf_instance.weights_factory
+def gene_weights_db(gpf_instance):
+    return gpf_instance.gene_weights_db
 
 
 @pytest.fixture(scope='session')
 def score_config(gpf_instance):
-    return gpf_instance.score_config
+    return gpf_instance._score_config
 
 
 @pytest.fixture(scope='session')
 def scores_factory(gpf_instance):
-    return gpf_instance.scores_factory
+    return gpf_instance._scores_factory
 
 
 @pytest.fixture(scope='session')
-def denovo_gene_set_facade(gpf_instance):
-    return gpf_instance.denovo_gene_set_facade
+def denovo_gene_sets_db(gpf_instance):
+    return gpf_instance.denovo_gene_sets_db
+
+
+@pytest.fixture(scope='session')
+def gene_sets_db(gpf_instance):
+    return gpf_instance.gene_sets_db
 
 
 @pytest.fixture(scope='module')
 def gene_info_cache_dir():
     cache_dir = path_to_fixtures('geneInfo', 'cache')
     assert not os.path.exists(cache_dir), \
-        'Cache dir "{}"already  exists..'.format(cache_dir)
+        'Cache dir "{}" already  exists..'.format(cache_dir)
     os.makedirs(cache_dir)
 
     new_envs = {
@@ -90,40 +89,45 @@ def gene_info_cache_dir():
 
 
 @pytest.fixture(scope='session')
-def calc_gene_sets(request, denovo_gene_sets, denovo_gene_set_f4):
-    for dgs in denovo_gene_sets + [denovo_gene_set_f4]:
-        dgs.load(build_cache=True)
+def genotype_data_names():
+    return ['f1_group', 'f2_group', 'f3_group', 'f4_trio']
+
+
+@pytest.fixture(scope='session')
+def calc_gene_sets(request, variants_db_fixture, genotype_data_names):
+    for dgs in genotype_data_names:
+        genotype_data = variants_db_fixture.get(dgs)
+        DenovoGeneSetCollectionFactory.build_collection(genotype_data)
 
     print("PRECALCULATION COMPLETE")
 
     def remove_gene_sets():
-        for dgs in denovo_gene_sets + [denovo_gene_set_f4]:
+        for dgs in genotype_data_names:
+            genotype_data = variants_db_fixture.get(dgs)
+            config = DenovoGeneSetConfigParser.parse(genotype_data.config)
             os.remove(DenovoGeneSetConfigParser.denovo_gene_set_cache_file(
-                dgs.config, 'phenotype'))
+                config, 'phenotype')
+            )
     request.addfinalizer(remove_gene_sets)
-
-
-def get_denovo_gene_set_by_id(variants_db_fixture, dgs_id):
-    denovo_gene_set_config = DenovoGeneSetConfigParser.parse(
-        variants_db_fixture.get_config(dgs_id))
-
-    return DenovoGeneSet(
-        variants_db_fixture.get(dgs_id), denovo_gene_set_config
-    )
 
 
 @pytest.fixture(scope='session')
 def denovo_gene_sets(variants_db_fixture):
     return [
-        get_denovo_gene_set_by_id(variants_db_fixture, 'f1_group'),
-        get_denovo_gene_set_by_id(variants_db_fixture, 'f2_group'),
-        get_denovo_gene_set_by_id(variants_db_fixture, 'f3_group')
+        DenovoGeneSetCollectionFactory.load_collection(
+            variants_db_fixture.get('f1_group')),
+        DenovoGeneSetCollectionFactory.load_collection(
+            variants_db_fixture.get('f2_group')),
+        DenovoGeneSetCollectionFactory.load_collection(
+            variants_db_fixture.get('f3_group')),
     ]
 
 
 @pytest.fixture(scope='session')
 def denovo_gene_set_f4(variants_db_fixture):
-    return get_denovo_gene_set_by_id(variants_db_fixture, 'f4_trio')
+    return DenovoGeneSetCollectionFactory.load_collection(
+        variants_db_fixture.get('f4_trio')
+    )
 
 
 @pytest.fixture(scope='session')

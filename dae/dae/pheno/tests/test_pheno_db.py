@@ -7,7 +7,7 @@ import pytest
 import pandas as pd
 import numpy as np
 from dae.pheno.common import MeasureType
-from dae.pheno.pheno_db import Measure, PhenoDB
+from dae.pheno.pheno_db import Measure, PhenotypeDataStudy
 
 
 def df_check(df, expected_count, expected_cols):
@@ -32,8 +32,8 @@ def dict_check_measure(dict_, expected_count, *args):
     assert expected_count == len(dict_)
 
 
-def test_get_measure_type(fphdb):
-    m = fphdb.get_measure('i1.m1')
+def test_get_measure_type(fake_phenotype_data):
+    m = fake_phenotype_data.get_measure('i1.m1')
     assert m.measure_type == MeasureType.continuous
 
 
@@ -42,69 +42,69 @@ def test_get_measure_type(fphdb):
     (['i1.m1', 'i1.m2'])
 ])
 @pytest.mark.parametrize('get,check', [
-    (PhenoDB.get_values, dict_check),
-    (PhenoDB.get_values_df, df_check)
+    (PhenotypeDataStudy.get_values, dict_check),
+    (PhenotypeDataStudy.get_values_df, df_check)
 ])
-def test_get_values(fphdb, query_cols, get, check):
-    vals = get(fphdb, query_cols)
+def test_get_values(fake_phenotype_data, query_cols, get, check):
+    vals = get(fake_phenotype_data, query_cols)
     check(vals, 195, query_cols)
 
-    vals = get(fphdb, query_cols, ['f20.p1'])
+    vals = get(fake_phenotype_data, query_cols, ['f20.p1'])
     check(vals, 1, query_cols)
 
-    vals = get(fphdb, query_cols, ['f20.p1', 'f21.p1'])
+    vals = get(fake_phenotype_data, query_cols, ['f20.p1', 'f21.p1'])
     check(vals, 2, query_cols)
 
-    vals = get(fphdb, query_cols, roles=['prb'])
+    vals = get(fake_phenotype_data, query_cols, roles=['prb'])
     check(vals, 39, query_cols)
 
 
 @pytest.mark.parametrize('get,check', [
-    (PhenoDB.get_instrument_values, dict_check),
-    (PhenoDB.get_instrument_values_df, df_check)
+    (PhenotypeDataStudy.get_instrument_values, dict_check),
+    (PhenotypeDataStudy.get_instrument_values_df, df_check)
 ])
-def test_get_instrument_values(fphdb, get, check):
-    values = get(fphdb, 'i1')
+def test_get_instrument_values(fake_phenotype_data, get, check):
+    values = get(fake_phenotype_data, 'i1')
     check(values, 195, ['i1.m1', 'i1.m2', 'i1.m3', 'i1.m4',
                         'i1.m5', 'i1.m6', 'i1.m7', 'i1.m8',
                         'i1.m9', 'i1.m10'])
 
 
-def test_has_measure(fphdb):
+def test_has_measure(fake_phenotype_data):
     measures = ['i1.m1', 'i1.m2', 'i1.m3', 'i1.m4',
                 'i1.m5', 'i1.m6', 'i1.m7', 'i1.m8',
                 'i1.m9', 'i1.m10']
-    assert all([fphdb.has_measure(m) for m in measures])
+    assert all([fake_phenotype_data.has_measure(m) for m in measures])
 
 
 @pytest.mark.parametrize('get,check', [
-    (PhenoDB.get_measures, dict_check_measure),
-    (PhenoDB._get_measures_df, df_check)
+    (PhenotypeDataStudy.get_measures, dict_check_measure),
+    (PhenotypeDataStudy._get_measures_df, df_check)
 ])
-def test_get_measures(fphdb, get, check):
+def test_get_measures(fake_phenotype_data, get, check):
     expected_cols = ['measure_id', 'measure_name', 'instrument_name',
                      'description', 'individuals', 'measure_type',
                      'min_value', 'max_value', 'values_domain']
 
-    measures = get(fphdb, measure_type='continuous')
+    measures = get(fake_phenotype_data, measure_type='continuous')
     check(measures, 7, expected_cols)
 
 
-def test_default_get_measure_df(fphdb):
-    df = fphdb._get_measures_df()
+def test_default_get_measure_df(fake_phenotype_data):
+    df = fake_phenotype_data._get_measures_df()
     assert df is not None
     assert len(df) == 12
 
 
-def test_get_persons_df(fphdb):
-    prbs = fphdb.get_persons_df(roles=['prb'])
+def test_get_persons_df(fake_phenotype_data):
+    prbs = fake_phenotype_data.get_persons_df(roles=['prb'])
     assert len(prbs.columns) == 5
     df_check(prbs, 39, ['person_id', 'family_id', 'role',
                         'sex', 'status'])
 
 
-def test_get_persons_values_df(fphdb):
-    pvdf = fphdb.get_persons_values_df(['i1.m1'])
+def test_get_persons_values_df(fake_phenotype_data):
+    pvdf = fake_phenotype_data.get_persons_values_df(['i1.m1'])
     assert len(pvdf) > 0
 
 
@@ -116,17 +116,17 @@ def test_get_persons_values_df(fphdb):
     (['i1.m1']),
     (['i1.m1', 'i1.m2'])
 ])
-def test_get_values_families_filter(fphdb, families,
+def test_get_values_families_filter(fake_phenotype_data, families,
                                     expected_count, query_cols):
     personlist = ['{}.dad', '{}.mom', '{}.p1']
-    vals = fphdb.get_values(query_cols, family_ids=families)
+    vals = fake_phenotype_data.get_values(query_cols, family_ids=families)
     for f in families:
         assert all([p.format(f) in vals for p in personlist])
     dict_check(vals, expected_count, query_cols)
 
 
-def test_min_max_measure_values(fphdb):
-    measures = fphdb.get_measures()
+def test_min_max_measure_values(fake_phenotype_data):
+    measures = fake_phenotype_data.get_measures()
 
     for measure in measures.values():
         if measure.measure_type == MeasureType.categorical or \
@@ -134,8 +134,9 @@ def test_min_max_measure_values(fphdb):
             continue
         mmin = measure.min_value
         mmax = measure.max_value
-        df = fphdb.get_measure_values_df(measure.measure_id,
-                                         default_filter='skip')
+        df = fake_phenotype_data.get_measure_values_df(
+            measure.measure_id, default_filter='skip'
+        )
         df = df[pd.to_numeric(
                     df[measure.measure_id], errors='coerce').notnull()]
         error = np.abs(mmin - df[measure.measure_id].min())
@@ -145,8 +146,8 @@ def test_min_max_measure_values(fphdb):
         assert error < 1E-5, measure.measure_id
 
 
-def test_get_persons_df_person_ids(fphdb):
-    res = fphdb.get_persons_df(
+def test_get_persons_df_person_ids(fake_phenotype_data):
+    res = fake_phenotype_data.get_persons_df(
         person_ids=[],
         family_ids=['f1', 'f2', 'f3'],
         roles=['prb']
@@ -154,8 +155,8 @@ def test_get_persons_df_person_ids(fphdb):
     assert res.empty
 
 
-def test_get_persons_df_family_ids(fphdb):
-    res = fphdb.get_persons_df(
+def test_get_persons_df_family_ids(fake_phenotype_data):
+    res = fake_phenotype_data.get_persons_df(
         person_ids=['f1.p1', 'f2.p1', 'f3.p1'],
         family_ids=[],
         roles=['prb']
@@ -163,8 +164,8 @@ def test_get_persons_df_family_ids(fphdb):
     assert res.empty
 
 
-def test_get_persons_df_roles(fphdb):
-    res = fphdb.get_persons_df(
+def test_get_persons_df_roles(fake_phenotype_data):
+    res = fake_phenotype_data.get_persons_df(
         person_ids=['f1.p1', 'f2.p1', 'f3.p1'],
         family_ids=['f1', 'f2', 'f3'],
         roles=[]
@@ -172,9 +173,9 @@ def test_get_persons_df_roles(fphdb):
     assert res.empty
 
 
-def test_raw_get_measure_values_df_person_ids(fphdb):
-    test_measure = fphdb.get_measure('i1.m1')
-    res = fphdb._raw_get_measure_values_df(
+def test_raw_get_measure_values_df_person_ids(fake_phenotype_data):
+    test_measure = fake_phenotype_data.get_measure('i1.m1')
+    res = fake_phenotype_data._raw_get_measure_values_df(
         test_measure,
         person_ids=[],
         family_ids=['f1', 'f2', 'f3'],
@@ -183,9 +184,9 @@ def test_raw_get_measure_values_df_person_ids(fphdb):
     assert res.empty
 
 
-def test_raw_get_measure_values_df_family_ids(fphdb):
-    test_measure = fphdb.get_measure('i1.m1')
-    res = fphdb._raw_get_measure_values_df(
+def test_raw_get_measure_values_df_family_ids(fake_phenotype_data):
+    test_measure = fake_phenotype_data.get_measure('i1.m1')
+    res = fake_phenotype_data._raw_get_measure_values_df(
         test_measure,
         person_ids=['f1.p1', 'f2.p1', 'f3.p1'],
         family_ids=[],
@@ -194,9 +195,9 @@ def test_raw_get_measure_values_df_family_ids(fphdb):
     assert res.empty
 
 
-def test_raw_get_measure_values_df_roles(fphdb):
-    test_measure = fphdb.get_measure('i1.m1')
-    res = fphdb._raw_get_measure_values_df(
+def test_raw_get_measure_values_df_roles(fake_phenotype_data):
+    test_measure = fake_phenotype_data.get_measure('i1.m1')
+    res = fake_phenotype_data._raw_get_measure_values_df(
         test_measure,
         person_ids=['f1.p1', 'f2.p1', 'f3.p1'],
         family_ids=['f1', 'f2', 'f3'],

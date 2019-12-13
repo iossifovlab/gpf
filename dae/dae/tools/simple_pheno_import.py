@@ -8,7 +8,8 @@ from configparser import ConfigParser
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
 
-from dae.pheno.common import default_config, dump_config, check_config_pheno_db
+from dae.pheno.common import default_config, dump_config, \
+    check_phenotype_data_config
 from dae.pheno.prepare.ped_prepare import PrepareVariables
 from dae.tools.pheno2browser import build_pheno_browser
 
@@ -64,19 +65,19 @@ def pheno_cli_parser():
     return parser
 
 
-def verify_pheno_db_name(input_name):
-    pheno_db_name = os.path.normpath(input_name)
+def verify_phenotype_data_name(input_name):
+    phenotype_data_name = os.path.normpath(input_name)
     # check that the given pheno name is not a directory path
-    split_path = os.path.split(pheno_db_name)
+    split_path = os.path.split(phenotype_data_name)
     assert not split_path[0], \
-        '"{}" is a directory path!'.format(pheno_db_name)
-    return pheno_db_name
+        '"{}" is a directory path!'.format(phenotype_data_name)
+    return phenotype_data_name
 
 
-def generate_pheno_db_config(args):
+def generate_phenotype_data_config(args):
     config = ConfigParser()
-    config['phenoDB'] = {}
-    section = config['phenoDB']
+    config['phenotypeData'] = {}
+    section = config['phenotypeData']
     section['name'] = args.pheno_name
     section['dbfile'] = os.path.join(
         '%(wd)s', os.path.basename(args.pheno_db_filename))
@@ -91,7 +92,7 @@ def generate_pheno_db_config(args):
     return config
 
 
-def parse_pheno_db_config(args):
+def parse_phenotype_data_config(args):
     config = default_config()
     config.verbose = args.verbose
     config.instruments.dir = args.instruments
@@ -101,7 +102,7 @@ def parse_pheno_db_config(args):
     config.db.filename = args.pheno_db_filename
 
     dump_config(config)
-    check_config_pheno_db(config)
+    check_phenotype_data_config(config)
 
     return config
 
@@ -126,10 +127,10 @@ def main(argv):
             print("missing pheno db name", sys.stderr)
             raise ValueError()
 
-        args.pheno_name = verify_pheno_db_name(args.pheno_name)
+        args.pheno_name = verify_phenotype_data_name(args.pheno_name)
 
         pheno_db_dir = os.path.join(
-            dae_conf.pheno_db.dir,
+            dae_conf.phenotype_data.dir,
             args.pheno_name
         )
         if not os.path.exists(pheno_db_dir):
@@ -154,7 +155,7 @@ def main(argv):
         if not os.path.exists(args.browser_dir):
             os.makedirs(args.browser_dir)
 
-        config = parse_pheno_db_config(args)
+        config = parse_phenotype_data_config(args)
         regressions = PhenoRegressionConfigParser.\
             read_and_parse_file_configuration(args.regression, '') \
             if args.regression else None
@@ -175,7 +176,7 @@ def main(argv):
         )
 
         with open(pheno_conf_path, 'w') as pheno_conf_file:
-            generate_pheno_db_config(args).write(pheno_conf_file)
+            generate_phenotype_data_config(args).write(pheno_conf_file)
 
         return 0
     except KeyboardInterrupt:

@@ -33,7 +33,7 @@ def test_variants_have_roles_columns_values(db, admin_client):
     )
     assert status.HTTP_200_OK == response.status_code
     variants = response.streaming_content
-    variants = list(map(json.loads, variants))
+    variants = json.loads(''.join(map(lambda x: x.decode('utf-8'), variants)))
 
     response = admin_client.post(
         PREVIEW_URL, json.dumps(data), content_type='application/json'

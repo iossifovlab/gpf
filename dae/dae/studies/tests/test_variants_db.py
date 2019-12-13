@@ -9,17 +9,17 @@ def test_fixture_variants_db_can_be_loaded(variants_db_fixture):
 
 
 def test_variants_db_can_create_study_from_config(
-        study_configs, variants_db_fixture):
-    test_config = study_configs.get('quads_f1')
+        genotype_data_study_configs, variants_db_fixture):
+    test_config = genotype_data_study_configs.get('quads_f1')
 
-    assert variants_db_fixture.make_study(test_config) is not None
+    assert variants_db_fixture.make_genotype_data_study(test_config) is not None
 
 
 ##############################################################
 
 
 def test_variants_db_studies_simple(
-        dae_config_fixture, pheno_factory, weights_factory,
+        dae_config_fixture, pheno_db, gene_weights_db,
         mocked_gene_models, genotype_storage_factory):
     assert dae_config_fixture is not None
     assert dae_config_fixture.studies_db.dir is not None
@@ -28,14 +28,14 @@ def test_variants_db_studies_simple(
         os.path.join(fixtures_dir(), "studies")
 
     vdb = VariantsDb(
-        dae_config_fixture, pheno_factory, weights_factory, mocked_gene_models,
+        dae_config_fixture, pheno_db, gene_weights_db, mocked_gene_models,
         genotype_storage_factory
     )
     assert vdb is not None
 
 
-def test_variants_db_datasets_simple(
-        dae_config_fixture, pheno_factory, weights_factory,
+def test_variants_db_genotype_data_groups_simple(
+        dae_config_fixture, pheno_db, gene_weights_db,
         mocked_gene_models, genotype_storage_factory):
     assert dae_config_fixture is not None
     assert dae_config_fixture.datasets_db.dir is not None
@@ -44,7 +44,7 @@ def test_variants_db_datasets_simple(
         os.path.join(fixtures_dir(), "datasets")
 
     vdb = VariantsDb(
-        dae_config_fixture, pheno_factory, weights_factory, mocked_gene_models,
+        dae_config_fixture, pheno_db, gene_weights_db, mocked_gene_models,
         genotype_storage_factory
     )
     assert vdb is not None
@@ -84,16 +84,16 @@ def test_get_non_existing_study_wrapper(variants_db_fixture):
     assert study is None
 
 
-def test_get_all_studies(variants_db_fixture):
-    studies = variants_db_fixture.get_all_studies()
-    assert len(studies) == 7
+# def test_get_all_studies(variants_db_fixture):
+#     studies = variants_db_fixture.get_all_studies()
+#     assert len(studies) == 7
 
 
 ##############################################################
 
 
-def test_get_datasets_ids(variants_db_fixture):
-    assert sorted(variants_db_fixture.get_datasets_ids()) == \
+def test_get_genotype_data_groups_ids(variants_db_fixture):
+    assert sorted(variants_db_fixture.get_genotype_data_groups_ids()) == \
         sorted([
             'quads_in_parent_ds', 'composite_dataset_ds', 'quads_in_child_ds',
             'quads_composite_ds', 'inheritance_trio_ds',
@@ -102,55 +102,62 @@ def test_get_datasets_ids(variants_db_fixture):
         ])
 
 
-def test_get_existing_dataset_config(variants_db_fixture):
+def test_get_existing_genotype_data_group_config(variants_db_fixture):
     vdb = variants_db_fixture
-    assert vdb.get_dataset_config('inheritance_trio_ds') is not None
+    assert vdb.get_genotype_data_group_config(
+        'inheritance_trio_ds') is not None
 
 
-def test_get_non_existing_dataset_config(variants_db_fixture):
-    assert variants_db_fixture.get_dataset_config('ala bala') is None
+def test_get_non_existing_genotype_data_group_config(variants_db_fixture):
+    assert variants_db_fixture.get_genotype_data_group_config(
+        'ala bala') is None
 
 
-def test_get_dataset(variants_db_fixture):
-    dataset = variants_db_fixture.get_dataset('quads_in_parent_ds')
-    assert dataset is not None
-    assert dataset.id == 'quads_in_parent_ds'
+def test_get_genotype_data_group(variants_db_fixture):
+    genotype_data_group = \
+        variants_db_fixture.get_genotype_data_group('quads_in_parent_ds')
+    assert genotype_data_group is not None
+    assert genotype_data_group.id == 'quads_in_parent_ds'
 
 
-def test_get_existing_dataset(variants_db_fixture):
-    dataset = variants_db_fixture.get_dataset('inheritance_trio_ds')
-    assert dataset is not None
-    vs = dataset.query_variants()
+def test_get_existing_genotype_data_group(variants_db_fixture):
+    genotype_data_group = \
+        variants_db_fixture.get_genotype_data_group('inheritance_trio_ds')
+    assert genotype_data_group is not None
+    vs = genotype_data_group.query_variants()
     vs = list(vs)
     assert len(vs) == 14
 
 
-def test_get_non_existing_dataset(variants_db_fixture):
-    dataset = variants_db_fixture.get_dataset('ala bala')
-    assert dataset is None
+def test_get_non_existing_genotype_data_group(variants_db_fixture):
+    genotype_data_group = \
+        variants_db_fixture.get_genotype_data_group('ala bala')
+    assert genotype_data_group is None
 
 
-def test_get_existing_dataset_wrapper(variants_db_fixture):
-    dataset = variants_db_fixture.get_dataset_wdae_wrapper(
-        'inheritance_trio_ds')
-    assert dataset is not None
-    vs = dataset.query_variants()
+def test_get_existing_genotype_data_group_wrapper(variants_db_fixture):
+    genotype_data_group = \
+        variants_db_fixture.get_genotype_data_group_wdae_wrapper(
+            'inheritance_trio_ds')
+    assert genotype_data_group is not None
+    vs = genotype_data_group.query_variants()
     vs = list(vs)
     assert len(vs) == 14
 
 
-def test_get_non_existing_dataset_wrapper(variants_db_fixture):
-    dataset = variants_db_fixture.get_dataset_wdae_wrapper('ala bala')
-    assert dataset is None
+def test_get_non_existing_genotype_data_group_wrapper(variants_db_fixture):
+    genotype_data_group = \
+        variants_db_fixture.get_genotype_data_group_wdae_wrapper('ala bala')
+    assert genotype_data_group is None
 
 
-def test_get_all_datasets(variants_db_fixture):
-    datasets = variants_db_fixture.get_all_datasets()
-    assert len(datasets) == 9
+def test_get_all_genotype_data_groups(variants_db_fixture):
+    genotype_data_groups = variants_db_fixture.get_all_genotype_data_groups()
+    assert len(genotype_data_groups) == 9
 
 
-def test_get_all_dataset_configs(variants_db_fixture):
-    configs = variants_db_fixture.get_all_dataset_configs()
+def test_get_all_genotype_data_group_configs(variants_db_fixture):
+    configs = variants_db_fixture.get_all_genotype_data_group_configs()
     assert len(configs) == 9
 
 
@@ -173,9 +180,9 @@ def test_get_existing(variants_db_fixture):
     vs = list(vs)
     assert len(vs) == 14
 
-    dataset = variants_db_fixture.get('inheritance_trio_ds')
-    assert dataset is not None
-    vs = dataset.query_variants()
+    genotype_data_group = variants_db_fixture.get('inheritance_trio_ds')
+    assert genotype_data_group is not None
+    vs = genotype_data_group.query_variants()
     vs = list(vs)
     assert len(vs) == 14
 
@@ -193,10 +200,10 @@ def test_get_existing_wrapper(variants_db_fixture):
     vs = list(vs)
     assert len(vs) == 14
 
-    dataset = variants_db_fixture.get_wdae_wrapper(
+    genotype_data_group = variants_db_fixture.get_wdae_wrapper(
         'inheritance_trio_ds')
-    assert dataset is not None
-    vs = dataset.query_variants()
+    assert genotype_data_group is not None
+    vs = genotype_data_group.query_variants()
     vs = list(vs)
     assert len(vs) == 14
 
@@ -207,5 +214,5 @@ def test_get_non_existing_wrapper(variants_db_fixture):
 
 
 def test_get_all(variants_db_fixture):
-    studies = variants_db_fixture.get_all()
+    studies = variants_db_fixture.get_all_genotype_data()
     assert len(studies) == 16

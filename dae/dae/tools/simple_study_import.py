@@ -7,18 +7,16 @@ import argparse
 
 from dae.gpf_instance.gpf_instance import GPFInstance
 
-from dae.backends.impala.parquet_io import ParquetManager
 from dae.backends.import_commons import construct_import_annotation_pipeline
 
 from dae.backends.dae.loader import DenovoLoader
 from dae.backends.vcf.loader import VcfLoader
 from dae.backends.raw.loader import AnnotationPipelineDecorator
 
-from dae.pedigrees.family import PedigreeReader
 from dae.pedigrees.family import FamiliesLoader
 
 
-def parse_cli_arguments(dae_config, argv=sys.argv[1:]):
+def cli_arguments(dae_config, argv=sys.argv[1:]):
     default_genotype_storage_id = \
         dae_config.get('genotype_storage', {}).get('default', None)
 
@@ -78,8 +76,9 @@ def parse_cli_arguments(dae_config, argv=sys.argv[1:]):
         action='store'
     )
 
-    PedigreeReader.flexible_pedigree_cli_arguments(parser)
-    DenovoLoader.flexible_denovo_cli_arguments(parser)
+    FamiliesLoader.cli_arguments(parser)
+    DenovoLoader.cli_arguments(parser)
+    VcfLoader.cli_arguments(parser)
 
     parser_args = parser.parse_args(argv)
     return parser_args
@@ -117,9 +116,9 @@ def main(argv, gpf_instance=None):
 
     dae_config = gpf_instance.dae_config
 
-    argv = parse_cli_arguments(dae_config, argv)
+    argv = cli_arguments(dae_config, argv)
 
-    genotype_storage_factory = gpf_instance.genotype_storage_factory
+    genotype_storage_factory = gpf_instance._genotype_storage_factory
     genomes_db = gpf_instance.genomes_db
     genome = genomes_db.get_genome()
 
@@ -131,7 +130,6 @@ def main(argv, gpf_instance=None):
 
     annotation_pipeline = construct_import_annotation_pipeline(
         dae_config, genomes_db, argv)
-    parquet_manager = ParquetManager(dae_config.studies_db.dir)
 
     if argv.id is not None:
         study_id = argv.id
@@ -139,7 +137,7 @@ def main(argv, gpf_instance=None):
         study_id, _ = os.path.splitext(os.path.basename(argv.pedigree))
 
     if argv.output is None:
-        output = parquet_manager.get_data_dir(study_id)
+        output = dae_config.studies_db.dir
     else:
         output = argv.output
 
@@ -149,38 +147,28 @@ def main(argv, gpf_instance=None):
     assert output is not None
     assert argv.vcf is not None or argv.denovo is not None
 
-    pedigree_format = \
-        PedigreeReader.flexible_pedigree_parse_cli_arguments(argv)
-
-    families_loader = FamiliesLoader(
-        argv.pedigree, pedigree_format=pedigree_format)
+    params = FamiliesLoader.parse_cli_arguments(argv)
+    families_loader = FamiliesLoader(argv.pedigree, params=params)
 
     variant_loaders = []
     if argv.denovo is not None:
+        params = DenovoLoader.parse_cli_arguments(argv)
         denovo_loader = DenovoLoader(
             families_loader.families,
             argv.denovo,
             genome=genome,
-            params={
-                'denovo_location': argv.denovo_location,
-                'denovo_variant': argv.denovo_variant,
-                'denovo_chrom': argv.denovo_chrom,
-                'denovo_pos': argv.denovo_pos,
-                'denovo_ref': argv.denovo_ref,
-                'denovo_alt': argv.denovo_alt,
-                'denovo_person_id': argv.denovo_person_id,
-                'denovo_family_id': argv.denovo_family_id,
-                'denovo_best_state': argv.denovo_best_state,
-            }
+            params=params
         )
         denovo_loader = AnnotationPipelineDecorator(
             denovo_loader, annotation_pipeline
         )
         variant_loaders.append(denovo_loader)
     if argv.vcf is not None:
+        params = VcfLoader.parse_cli_arguments(argv)
         vcf_loader = VcfLoader(
             families_loader.families,
-            argv.vcf
+            argv.vcf,
+            params=params
         )
         vcf_loader = AnnotationPipelineDecorator(
             vcf_loader, annotation_pipeline
@@ -197,7 +185,7 @@ def main(argv, gpf_instance=None):
 
     if not argv.skip_reports:
         # needs to reload the configuration, hence gpf_instance=None
-        gpf_instance.reload_variants_db()
+        gpf_instance.reload()
 
         print("generating common reports...", file=sys.stderr)
         start = time.time()

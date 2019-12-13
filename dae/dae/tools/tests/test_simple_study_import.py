@@ -1,7 +1,8 @@
 from box import Box
 
 from dae.backends.storage.impala_genotype_storage import ImpalaGenotypeStorage
-
+from dae.backends.storage.filesystem_genotype_storage import \
+    FilesystemGenotypeStorage
 from dae.tools.simple_study_import import main
 
 
@@ -25,7 +26,7 @@ def test_import_denovo_dae_style_into_impala(
     argv = [
         pedigree_filename,
         '--id', study_id,
-        # '--skip-reports',
+        '--skip-reports',
         '--denovo', denovo_filename,
         '--denovo-location', 'location',
         '--denovo-variant', 'variant',
@@ -150,7 +151,7 @@ def test_import_comp_all_into_impala(
     argv = [
         pedigree_filename,
         '--id', study_id,
-        '--skip-reports',
+        # '--skip-reports',
         '--vcf', vcf_filename,
         '--denovo', denovo_filename,
         '--denovo-location', 'location',
@@ -169,4 +170,141 @@ def test_import_comp_all_into_impala(
     )
 
     vs = list(fvars.query_variants())
+    assert len(vs) == 35
+
+
+def test_import_denovo_dae_style_into_filesystem(
+        genomes_db, fixture_dirname,
+        default_dae_config, default_gpf_instance, temp_dirname):
+
+    pedigree_filename = fixture_dirname('denovo_import/fake_pheno.ped')
+    denovo_filename = fixture_dirname('denovo_import/variants_DAE_style.tsv')
+
+    # pedigree_filename = fixture_dirname(
+    #     'dae_iossifov2014/iossifov2014_families.ped')
+    # denovo_filename = fixture_dirname(
+    #     'dae_iossifov2014/iossifov2014.txt')
+
+    genotype_storage_id = 'test_filesystem'
+    study_id = 'test_denovo_dae_style'
+
+    storage_config = default_dae_config.storage[genotype_storage_id]
+    assert storage_config.type == 'filesystem'
+    genotype_storage = FilesystemGenotypeStorage(storage_config)
+    assert genotype_storage
+
+    argv = [
+        pedigree_filename,
+        '--id', study_id,
+        '--skip-reports',
+        '--denovo', denovo_filename,
+        '--denovo-location', 'location',
+        '--denovo-variant', 'variant',
+        '--denovo-family-id', 'familyId',
+        '--denovo-best-state', 'bestState',
+        '--genotype-storage', genotype_storage_id,
+        '-o', temp_dirname,
+    ]
+
+    main(argv, default_gpf_instance)
+
+    storage_config = default_dae_config.storage[genotype_storage_id]
+    assert storage_config.type == 'filesystem'
+
+    default_gpf_instance.reload()
+    study = default_gpf_instance._variants_db.get_study(study_id)
+    vs = list(study.query_variants())
+    assert len(vs) == 3
+
+
+def test_import_iossifov2014_filesystem(
+        genomes_db, fixture_dirname, dae_iossifov2014_config,
+        default_dae_config, default_gpf_instance, temp_dirname):
+
+    pedigree_filename = dae_iossifov2014_config.family_filename
+    denovo_filename = dae_iossifov2014_config.denovo_filename
+
+    # pedigree_filename = fixture_dirname(
+    #     'dae_iossifov2014/iossifov2014_families.ped')
+    # denovo_filename = fixture_dirname(
+    #     'dae_iossifov2014/iossifov2014.txt')
+
+    genotype_storage_id = 'test_filesystem'
+    study_id = 'test_denovo_iossifov2014_fs'
+
+    storage_config = default_dae_config.storage[genotype_storage_id]
+    assert storage_config.type == 'filesystem'
+    genotype_storage = FilesystemGenotypeStorage(storage_config)
+    assert genotype_storage
+
+    argv = [
+        pedigree_filename,
+        '--id', study_id,
+        '--skip-reports',
+        '--denovo', denovo_filename,
+        '--denovo-location', 'location',
+        '--denovo-variant', 'variant',
+        '--denovo-family-id', 'familyId',
+        '--denovo-best-state', 'bestState',
+        '--genotype-storage', genotype_storage_id,
+        '-o', temp_dirname,
+    ]
+
+    main(argv, default_gpf_instance)
+
+    storage_config = default_dae_config.storage[genotype_storage_id]
+    assert storage_config.type == 'filesystem'
+
+    default_gpf_instance.reload()
+    study = default_gpf_instance._variants_db.get_study(study_id)
+    assert study is not None
+
+    vs = list(study.query_variants())
+    assert len(vs) == 12
+
+    vs = list(study.query_variants(effect_types=['splice-site']))
+    assert len(vs) == 9
+
+    vs = list(study.query_variants(effect_types=['no-frame-shift']))
+    assert len(vs) == 2
+
+
+def test_import_comp_all_into_filesystem(
+        genomes_db, fixture_dirname, default_dae_config,
+        default_gpf_instance, temp_dirname):
+
+    pedigree_filename = fixture_dirname('study_import/comp.ped')
+    vcf_filename = fixture_dirname('study_import/comp.vcf')
+    denovo_filename = fixture_dirname('study_import/comp.tsv')
+
+    study_id = 'test_comp_all_fs'
+    genotype_storage_id = 'test_filesystem'
+
+    storage_config = default_dae_config.storage[genotype_storage_id]
+    assert storage_config.type == 'filesystem'
+
+    argv = [
+        pedigree_filename,
+        '--id', study_id,
+        '--skip-reports',
+        '--vcf', vcf_filename,
+        '--denovo', denovo_filename,
+        '--denovo-location', 'location',
+        '--denovo-variant', 'variant',
+        '--denovo-family-id', 'familyId',
+        '--denovo-best-state', 'bestState',
+        '--genotype-storage', genotype_storage_id,
+        '-o', temp_dirname,
+    ]
+
+    main(argv, default_gpf_instance)
+
+    storage_config = default_dae_config.storage[genotype_storage_id]
+    assert storage_config.type == 'filesystem'
+
+    default_gpf_instance.reload()
+    study = default_gpf_instance._variants_db.get_study(study_id)
+    assert study is not None
+
+    vs = list(study.query_variants())
     assert len(vs) == 35

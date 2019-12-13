@@ -1,7 +1,6 @@
 import functools
-from box import BoxList
 
-from dae.studies.study_config_parser import StudyConfigParserBase
+from dae.studies.study_config_parser import GenotypeDataConfigParser
 
 
 def _set_union_attribute(studies_configs, option_name):
@@ -47,11 +46,11 @@ def _strings_join_attribute(studies_configs, option_name):
     return ','.join(res)
 
 
-class DatasetConfigParser(StudyConfigParserBase):
+class GenotypeDataGroupConfigParser(GenotypeDataConfigParser):
 
-    SECTION = 'dataset'
+    SECTION = 'genotypeDataGroup'
 
-    SPLIT_STR_LISTS = StudyConfigParserBase.SPLIT_STR_LISTS + (
+    SPLIT_STR_LISTS = GenotypeDataConfigParser.SPLIT_STR_LISTS + (
         'studies',
     )
 
@@ -105,7 +104,7 @@ class DatasetConfigParser(StudyConfigParserBase):
         'id',
         'studies',
         'description',
-        'phenoDB',
+        'phenotypeData',
         'hasDenovo',
         'hasTransmitted',
         'hasComplex',
@@ -121,14 +120,15 @@ class DatasetConfigParser(StudyConfigParserBase):
     )
 
     @classmethod
-    def _get_dataset_study_configs(cls, dataset_config, study_configs):
-        dataset_study_configs = []
+    def _get_group_study_configs(cls, genotype_data_group_config,
+                                 study_configs):
+        group_study_configs = []
         for study_id in cls._split_str_option_list(
-                dataset_config[cls.SECTION].studies):
+                genotype_data_group_config[cls.SECTION].studies):
             study_config = study_configs[study_id]
             if study_config:
-                dataset_study_configs.append(study_config)
-        return dataset_study_configs
+                group_study_configs.append(study_config)
+        return group_study_configs
 
     @classmethod
     def read_and_parse_directory_configurations(
@@ -141,16 +141,16 @@ class DatasetConfigParser(StudyConfigParserBase):
         parsed_configs = []
 
         for config in configs:
-            dataset_study_configs = \
-                cls._get_dataset_study_configs(config, study_configs)
-            parsed_config = cls.parse(config, dataset_study_configs)
+            group_study_configs = \
+                cls._get_group_study_configs(config, study_configs)
+            parsed_config = cls.parse(config, group_study_configs)
             parsed_configs.append(parsed_config)
 
         return {pc.id: pc for pc in parsed_configs}
 
     @classmethod
     def parse(cls, config, study_configs):
-        config = super(DatasetConfigParser, cls).parse(config)
+        config = super(GenotypeDataGroupConfigParser, cls).parse(config)
         if config is None:
             return None
 

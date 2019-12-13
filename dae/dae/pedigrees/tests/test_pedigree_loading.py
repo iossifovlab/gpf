@@ -140,7 +140,7 @@ def test_flexible_pedigree_read_no_header():
     )
     pedigree_df = PedigreeReader.flexible_pedigree_read(
         absolute_filepath,
-        has_header=False,
+        ped_has_header=False,
         ped_family=0,
         ped_person=1,
         ped_dad=2,

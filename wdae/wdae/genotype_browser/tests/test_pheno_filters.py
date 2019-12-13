@@ -72,7 +72,7 @@ def test_simple_query(db, admin_client):
     )
     assert status.HTTP_200_OK == response.status_code
     res = response.streaming_content
-    res = list(map(json.loads, res))
+    res = json.loads(''.join(map(lambda x: x.decode('utf-8'), res)))
 
     assert 2 == len(res)
 
@@ -95,7 +95,7 @@ def test_query_with_pheno_filters(
     )
     assert status.HTTP_200_OK == response.status_code
     variants = response.streaming_content
-    variants = list(map(json.loads, variants))
+    variants = json.loads(''.join(map(lambda x: x.decode('utf-8'), variants)))
 
     response = admin_client.post(
         PREVIEW_URL, json.dumps(data), content_type='application/json'

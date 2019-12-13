@@ -3,7 +3,6 @@ import os
 import sys
 import argparse
 
-from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.pedigrees.family import PedigreeReader
 
 
@@ -47,13 +46,11 @@ def main(argv):
     if args.output is None:
         output = "{study_id}.ped".format(study_id=study_id)
     else:
-        output = argv.output
-
-    gpf_instance = GPFInstance()
-    dae_config = gpf_instance.dae_config
+        output = args.output
 
     fam_df = PedigreeReader.load_simple_family_file(args.family_filename)
     PedigreeReader.save_pedigree(fam_df, output)
+
 
 if __name__ == "__main__":
     main(sys.argv)

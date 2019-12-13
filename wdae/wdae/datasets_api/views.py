@@ -27,8 +27,8 @@ class DatasetView(QueryBaseView):
     def get(self, request, dataset_id=None):
         user = request.user
         if dataset_id is None:
-            datasets = self.variants_db.get_all_wrappers()
-            res = sorted(list(dataset.get_dataset_description()
+            datasets = self.variants_db.get_all_genotype_data_wrappers()
+            res = sorted(list(dataset.get_genotype_data_group_description()
                          for dataset in datasets),
                          key=lambda dataset: dataset['name'])
 
@@ -38,7 +38,7 @@ class DatasetView(QueryBaseView):
         else:
             dataset = self.variants_db.get_wdae_wrapper(dataset_id)
             if dataset:
-                res = dataset.get_dataset_description()
+                res = dataset.get_genotype_data_group_description()
                 res = self.augment_accessibility(res, user)
                 res = self.augment_with_groups(res)
                 return Response({'data': res})

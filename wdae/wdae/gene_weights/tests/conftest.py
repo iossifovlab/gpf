@@ -22,17 +22,17 @@ def dae_config_fixture(gpf_instance):
 
 @pytest.fixture(scope='function')
 def mock_gpf_instance(db, mocker, gpf_instance):
-    reload_datasets(gpf_instance.variants_db)
+    reload_datasets(gpf_instance._variants_db)
     mocker.patch(
         'query_base.query_base.get_gpf_instance',
         return_value=gpf_instance
     )
     mocker.patch(
-        'gene_weights.tests.test_gene_weights_factory.get_gpf_instance',
+        'gene_weights.tests.test_gene_weights_db.get_gpf_instance',
         return_value=gpf_instance
     )
 
 
 @pytest.fixture(scope='session')
-def weights_factory(gpf_instance):
-    return gpf_instance.weights_factory
+def gene_weights_db(gpf_instance):
+    return gpf_instance.gene_weights_db

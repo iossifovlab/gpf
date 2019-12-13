@@ -40,29 +40,30 @@ class DenovoLoader(VariantsLoader):
             self, families, denovo_filename, genome, params={}):
         super(DenovoLoader, self).__init__(
             families=families,
+            filename=denovo_filename,
+            source_type='denovo',
             transmission_type=TransmissionType.denovo,
             params=params)
 
         assert os.path.exists(denovo_filename)
         self.genome = genome
-        self.denovo_filename = denovo_filename
 
-        # denovo_format['families'] = families
         self.denovo_df = self.flexible_denovo_load(
-            self.denovo_filename, genome, **self.params
+            self.filename, genome, **self.params
         )
 
     def summary_genotypes_iterator(self):
 
         for index, rec in enumerate(self.denovo_df.to_dict(orient='records')):
+            family_id = rec.pop('family_id')
+            gt = rec.pop('genotype')
+
             rec['summary_variant_index'] = index
             rec['allele_index'] = 1
 
             summary_variant = SummaryVariantFactory \
                 .summary_variant_from_records(
                     [rec], transmission_type=self.transmission_type)
-            family_id = rec['family_id']
-            gt = rec['genotype']
             family = self.families.get_family(family_id)
 
             yield summary_variant, DenovoFamiliesGenotypes(family, gt)
@@ -81,7 +82,7 @@ class DenovoLoader(VariantsLoader):
         return genotype
 
     @staticmethod
-    def flexible_denovo_cli_arguments(parser):
+    def cli_arguments(parser):
         parser.add_argument(
             '--denovo-location',
             help='The label or index of the column containing the CSHL-style'
@@ -128,6 +129,21 @@ class DenovoLoader(VariantsLoader):
             ' for the family.',
         )
 
+    @staticmethod
+    def parse_cli_arguments(argv):
+        params={
+            'denovo_location': argv.denovo_location,
+            'denovo_variant': argv.denovo_variant,
+            'denovo_chrom': argv.denovo_chrom,
+            'denovo_pos': argv.denovo_pos,
+            'denovo_ref': argv.denovo_ref,
+            'denovo_alt': argv.denovo_alt,
+            'denovo_person_id': argv.denovo_person_id,
+            'denovo_family_id': argv.denovo_family_id,
+            'denovo_best_state': argv.denovo_best_state,
+        }
+        return params
+
     @classmethod
     def flexible_denovo_load(
             cls,
@@ -160,10 +176,12 @@ class DenovoLoader(VariantsLoader):
         :param str denovo_location: The label or index of the column containing
         the CSHL-style location of the variant.
 
-        :param str denovo_variant: The label or index of the column containing the
+        :param str denovo_variant: The label or index of the column containing
+        the
         CSHL-style representation of the variant.
 
-        :param str denovo_chrom: The label or index of the column containing the
+        :param str denovo_chrom: The label or index of the column containing
+        the
         chromosome upon which the variant is located.
 
         :param str denovo_pos: The label or index of the column containing the
@@ -175,14 +193,17 @@ class DenovoLoader(VariantsLoader):
         :param str denovo_alt: The label or index of the column containing the
         variant's alternative allele.
 
-        :param str denovo_person_id: The label or index of the column containing
+        :param str denovo_person_id: The label or index of the column
+        containing
         either
         a singular person ID or a comma-separated list of person IDs.
 
-        :param str denovo_family_id: The label or index of the column containing a
+        :param str denovo_family_id: The label or index of the column
+        containing a
         singular family ID.
 
-        :param str denovo_best_state: The label or index of the column containing the
+        :param str denovo_best_state: The label or index of the column
+        containing the
         best state for the variant.
 
         :param str families: An instance of the FamiliesData class for the
@@ -204,7 +225,7 @@ class DenovoLoader(VariantsLoader):
         if not (denovo_variant or (denovo_ref and denovo_alt)):
             denovo_variant = 'variant'
 
-        if not ((denovo_person_id and families) or \
+        if not ((denovo_person_id and families) or
                 (denovo_family_id and denovo_best_state)):
             denovo_family_id = 'familyId'
             denovo_best_state = 'bestState'
@@ -343,6 +364,8 @@ class DaeTransmittedLoader(VariantsLoader):
             include_reference=False):
         super(DaeTransmittedLoader, self).__init__(
             families=families,
+            filename=summary_filename,
+            source_type='dae',
             transmission_type=TransmissionType.transmitted)
 
         assert os.path.exists(summary_filename), summary_filename
@@ -459,7 +482,6 @@ class DaeTransmittedLoader(VariantsLoader):
     #         chrom, position, dae_variant, genome
     #     )
     #     return chrom, position, reference, alternative
-
 
     @staticmethod
     def _explode_family_genotypes(family_data, col_sep="", row_sep="/"):

@@ -3,6 +3,7 @@ from copy import deepcopy
 
 from dae.configuration.config_parser_base import ConfigParserBase
 from dae.variants.attributes import Sex
+from dae.studies.people_group_config_parser import PeopleGroupConfigParser
 
 
 class DenovoGeneSetConfigParser(ConfigParserBase):
@@ -33,8 +34,8 @@ class DenovoGeneSetConfigParser(ConfigParserBase):
         options = dict_to_split.split(':')
         value = options[1].split('.')
 
-        # TODO: Remove this when study.query_variants can support non
-        # expand_effect_types as LGDs
+        # TODO: Remove this when genotype_data_study.query_variants can
+        # support non expand_effect_types as LGDs
         if standard_criteria_id == 'effect_types':
             from dae.utils.effect_utils import expand_effect_types
             value = expand_effect_types(value)
@@ -78,21 +79,6 @@ class DenovoGeneSetConfigParser(ConfigParserBase):
 
         return recurrency_criterias
 
-    @staticmethod
-    def _parse_denovo_gene_sets(people_group, people_groups):
-        if len(people_group) == 0:
-            return None
-
-        denovo_gene_sets = {
-            pg.id: {
-                'name': pg.name,
-                'source': pg.source
-            } for pg in people_group.values()
-            if pg.id in people_groups
-        }
-
-        return denovo_gene_sets
-
     @classmethod
     def parse(cls, config):
         if not config or not config.study_config or \
@@ -116,10 +102,11 @@ class DenovoGeneSetConfigParser(ConfigParserBase):
             config_section.get('recurrencyCriteria', {}).get('segments', [])
         )
 
-        config_section.denovo_gene_sets = cls._parse_denovo_gene_sets(
-            config.people_group_config.people_group,
-            config_section.people_groups
-        )
+        config_section.people_groups = \
+            PeopleGroupConfigParser._select_people_groups(
+                config.people_group_config.people_group,
+                config_section.people_groups
+            )
 
         config_section.config_file = study_config.config_file
 

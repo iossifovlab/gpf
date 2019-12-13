@@ -12,7 +12,7 @@ from dae.pheno.prepare.ped2individuals import SPARKCsvPedigreeReader
 from dae.pheno.prepare.individuals2ped import InternalCsvIndividualsReader
 from dae.pheno.common import default_config
 from dae.pheno.utils.config import PhenoConfigParser
-from dae.pheno.pheno_factory import PhenoFactory
+from dae.pheno.pheno_db import PhenoDb
 
 
 def relative_to_this_folder(path):
@@ -81,19 +81,19 @@ def fi1_df(fake_instrument_filename):
 
 
 @pytest.fixture(scope='session')
-def fake_pheno_factory(fake_dae_conf):
-    return PhenoFactory(fake_dae_conf)
+def fake_pheno_db(fake_dae_conf):
+    return PhenoDb(fake_dae_conf)
 
 
 @pytest.fixture(scope='session')
-def fphdb_config():
+def fake_phenotype_data_config():
     return relative_to_this_folder('fixtures/fake_phenoDB/main_fake/fake.conf')
 
 
 @pytest.fixture(scope='session')
-def fphdb(fake_pheno_factory):
-    db = fake_pheno_factory.get_pheno_db('fake')
-    return db
+def fake_phenotype_data(fake_pheno_db):
+    data = fake_pheno_db.get_phenotype_data('fake')
+    return data
 
 
 @pytest.fixture(scope='session')
@@ -104,7 +104,7 @@ def dummy_pheno_missing_files_conf():
 @pytest.fixture(scope='session')
 def fake_pheno_config(fake_dae_conf):
     return PhenoConfigParser.read_directory_configurations(
-        fake_dae_conf.pheno_db.dir)
+        fake_dae_conf.phenotype_data.dir)
 
 
 @pytest.fixture(scope='session')

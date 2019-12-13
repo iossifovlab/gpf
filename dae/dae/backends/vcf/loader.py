@@ -56,6 +56,8 @@ class VcfLoader(VariantsLoader):
     def __init__(self, families, vcf_filename, regions=None, params={}):
         super(VcfLoader, self).__init__(
             families=families,
+            filename=vcf_filename,
+            source_type='vcf',
             transmission_type=TransmissionType.transmitted,
             params=params)
 
@@ -66,10 +68,10 @@ class VcfLoader(VariantsLoader):
         else:
             self.regions = regions
 
-        self.vcf = VCF(vcf_filename, lazy=True)
+        self.vcf = VCF(self.filename, lazy=True)
         samples = np.array(self.vcf.samples)
 
-        self.families = families
+        # self.families = families
         self._match_pedigree_to_samples(families, samples)
 
     @staticmethod
@@ -134,3 +136,28 @@ class VcfLoader(VariantsLoader):
                     summary_index, vcf_variant)
 
                 yield summary_variant, family_genotypes
+
+    @staticmethod
+    def cli_arguments(parser):
+        parser.add_argument(
+            '--vcf-include-reference', default=False,
+            dest='vcf_include_reference',
+            help='include reference only variants [default: %(default)s]',
+            action='store_true'
+        )
+        parser.add_argument(
+            '--vcf-include-unknown', default=False,
+            dest='vcf_include_unknown',
+            help='include variants with unknown genotype '
+            '[default: %(default)s]',
+            action='store_true'
+        )
+
+    @staticmethod
+    def parse_cli_arguments(argv):
+        params={
+            'include_reference_genotypes': argv.vcf_include_reference,
+            'include_unknown_family_genotypes': argv.vcf_include_unknown,
+            'include_unknown_person_genotypes': argv.vcf_include_unknown
+        }
+        return params

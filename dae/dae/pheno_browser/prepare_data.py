@@ -27,7 +27,7 @@ class PreparePhenoBrowserBase(object):
     SMALL_DPI = 16
 
     def __init__(
-            self, pheno_name, pheno_db, output_dir,
+            self, pheno_name, phenotype_data, output_dir,
             pheno_regressions=None, images_dir=None):
         assert os.path.exists(output_dir)
         self.output_dir = output_dir
@@ -40,7 +40,7 @@ class PreparePhenoBrowserBase(object):
 
         self.images_dir = images_dir
 
-        self.pheno_db = pheno_db
+        self.phenotype_data = phenotype_data
         self.pheno_regressions = pheno_regressions
 
         self.browser_db = os.path.join(
@@ -49,7 +49,7 @@ class PreparePhenoBrowserBase(object):
         )
 
     def load_measure(self, measure):
-        df = self.pheno_db.get_persons_values_df([measure.measure_id])
+        df = self.phenotype_data.get_persons_values_df([measure.measure_id])
         return df
 
     def _augment_measure_values_df(self, augment, augment_name, measure):
@@ -68,10 +68,10 @@ class PreparePhenoBrowserBase(object):
 
         if augment_id == measure.measure_id:
             return None
-        if not self.pheno_db.has_measure(augment_id):
+        if not self.phenotype_data.has_measure(augment_id):
             return None
 
-        df = self.pheno_db.get_persons_values_df(
+        df = self.phenotype_data.get_persons_values_df(
             [augment_id, measure.measure_id])
         df.loc[df.role == Role.mom, 'role'] = Role.parent
         df.loc[df.role == Role.dad, 'role'] = Role.parent
@@ -226,8 +226,8 @@ class PreparePhenoBrowserBase(object):
     def _get_measure_by_name(self, measure_name, instrument_name):
         if instrument_name:
             measure_id = '.'.join([instrument_name, measure_name])
-            if self.pheno_db.has_measure(measure_id):
-                return self.pheno_db.get_measure(measure_id)
+            if self.phenotype_data.has_measure(measure_id):
+                return self.phenotype_data.get_measure(measure_id)
         return None
 
     def handle_measure(self, measure):
@@ -286,7 +286,7 @@ class PreparePhenoBrowserBase(object):
                     'display_name': reg_data.display_name
                 })
 
-        for instrument in list(self.pheno_db.instruments.values()):
+        for instrument in list(self.phenotype_data.instruments.values()):
             progress_nl()
             for measure in list(instrument.measures.values()):
                 progress(text=str(measure) + "\n")

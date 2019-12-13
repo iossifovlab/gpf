@@ -10,10 +10,10 @@ def main(gpf_instance=None, argv=None):
 
     parser.add_argument(
         '--show-studies', help='This option will print available '
-        'datasets and studies names', default=False,
+        'genotype studies and groups names', default=False,
         action='store_true')
     parser.add_argument(
-        '--studies', help='Specify datasets and studies '
+        '--studies', help='Specify genotype studies and groups '
         'names for generating denovo gene sets. Default to all.',
         default=None, action='store')
 
@@ -21,24 +21,24 @@ def main(gpf_instance=None, argv=None):
 
     if gpf_instance is None:
         gpf_instance = GPFInstance()
-    dgsf = gpf_instance.denovo_gene_set_facade
+    denovo_gene_sets_db = gpf_instance.denovo_gene_sets_db
 
     if args.show_studies:
-        for study_id in dgsf.get_all_denovo_gene_set_ids():
+        for study_id in denovo_gene_sets_db.get_genotype_data_ids():
             print(study_id)
     else:
-        filter_studies_ids = None
         if args.studies:
+            filter_studies_ids = None
             studies = args.studies.split(',')
             print("generating de Novo gene sets for studies:", studies)
             filter_studies_ids = [
                 study_id
-                for study_id in dgsf.get_all_denovo_gene_set_ids()
+                for study_id in denovo_gene_sets_db.get_genotype_data_ids()
                 if study_id in studies
             ]
             print("filter studies ids:", filter_studies_ids)
 
-        dgsf.build_cache(filter_studies_ids)
+            denovo_gene_sets_db._build_cache(filter_studies_ids)
 
 
 if __name__ == '__main__':

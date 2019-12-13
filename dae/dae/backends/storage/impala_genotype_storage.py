@@ -278,7 +278,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
 
 
 STUDY_CONFIG_TEMPLATE = '''
-[study]
+[genotypeDataStudy]
 id = {id}
 genotype_storage = {genotype_storage}
 
