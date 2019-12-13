@@ -1,7 +1,6 @@
 from deprecation import deprecated
 
-from dae.studies.study import GenotypeDataStudy
-from dae.studies.dataset import GenotypeDataGroup
+from dae.studies.study import GenotypeDataStudy, GenotypeDataGroup
 from dae.studies.study_wrapper import StudyWrapper
 from dae.studies.study_config_parser import GenotypeDataStudyConfigParser
 from dae.studies.dataset_config_parser import GenotypeDataGroupConfigParser

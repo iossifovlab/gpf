@@ -471,7 +471,7 @@ class StudyWrapper(object):
         for family in self.families.values():
             family_members_with_people_group = set([
                 person.person_id for person in
-                family.get_people_with_people_groups(
+                family.get_people_from_people_group(
                     people_group.source, people_group_query['checkedValues']
                 )
             ])

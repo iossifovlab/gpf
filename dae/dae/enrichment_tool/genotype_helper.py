@@ -15,7 +15,7 @@ class GenotypeHelper(object):
 
     def get_variants(self, effect_types):
         people_with_people_group = \
-           self.genotype_data_group.get_people_with_people_group(
+           self.genotype_data_group.get_people_from_people_group(
             self.people_group.id,
             self.people_group_value
            )
