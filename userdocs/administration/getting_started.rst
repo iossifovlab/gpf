@@ -250,52 +250,23 @@ To see the available options supported by this tools use::
 
     simple_study_import.py --help
 
-which will output a short help message::
-
-    usage: simple_study_import.py [-h] [--id <study ID>] [--vcf <VCF filename>]
-                              [--denovo <de Novo variants filename>]
-                              [-o <output directory>] [--skip-reports]
-                              [--genotype-storage <genotype storage id>]
-                              <pedigree filename>
-
-    simple import of new study data
-
-    positional arguments:
-    <pedigree filename>   families file in pedigree format
-
-    optional arguments:
-    -h, --help            show this help message and exit
-    --id <study ID>       Unique study ID to use. If not specified the basename
-                            of the family pedigree file is used for study ID
-    --vcf <VCF filename>  VCF file to import
-    --denovo <de Novo variants filename>
-                            DAE denovo variants file
-    -o <output directory>, --out <output directory>
-                            output directory for storing intermediate parquet
-                            files. If none specified, "parquet/" directory inside
-                            GPF instance study directory is used [default: None]
-    --skip-reports        skip running report generation [default: False]
-    --genotype-storage <genotype storage id>
-                            Id of defined in DAE.conf genotype storage [default:
-                            genotype_impala]
-
 
 Example import of variants
 **************************
 
 Let's say you have a pedigree file ``comp.ped`` describing family information,
 a VCF file ``comp.vcf`` with transmitted variants and a list of de Novo
-variants ``comp.tsv``. The example data can be downloade from following URL:
+variants ``comp.tsv``. The example data can be downloaded from following URL:
 https://iossifovlab.com/distribution/public/studies/ .
 
 To import this data as a study into the GPF instance:
 
 * download ``comp`` demo study and extract the download archive::
 
-    wget -c https://iossifovlab.com/distribution/public/studies/comp-latest.tar.gz
-    tar zxvf comp-latest.tar.gz
+    wget -c https://iossifovlab.com/distribution/public/studies/genotype-comp-latest.tar.gz
+    tar zxvf genotype-comp-latest.tar.gz
 
-* enter into the create directory ``comp``::
+* enter into the created directory ``comp``::
 
     cd comp
 
@@ -343,6 +314,10 @@ To import this data as a study into the GPF instance:
     - variant - description of the variant
     - bestState - best state of the variant in the family
 
+    The columns of your file may have different labels - if so, the
+    simple_study_import tool accepts arguments which specify the labels
+    of the columns in the input file.
+
     Example::
 
         familyId       location       variant        bestState
@@ -356,14 +331,14 @@ To import this data as a study into the GPF instance:
 Example import of de Novo variants
 **********************************
 
-As an example of importing study with de Novo variants you can use data
+As an example of importing study with de Novo variants, you can use data
 from::
 
-    wget -c https://iossifovlab.com/distribution/public/studies/iossifov_2014-latest.tar.gz
+    wget -c https://iossifovlab.com/distribution/public/studies/genotype-iossifov_2014-latest.tar.gz
 
 Untar this data::
 
-    tar zxf iossifov_2014-latest.tar.gz
+    tar zxf genotype-iossifov_2014-latest.tar.gz
 
 and run ``simple_study_import.py`` tool::
 
@@ -388,21 +363,15 @@ class and instantiate it:
     from dae.gpf_instance.gpf_instance import GPFInstance
     gpf_instance = GPFInstance()
 
-This ``gpf_instance`` object creates and stores different types of facades. One
-of these facades is ``VariantsDb``, which is responsible for creating and
-storing studies and datasets.
+This ``gpf_instance`` object groups together a number of objects, each dedicated
+to managing different parts of the underlying data. It can be used to interact
+with the system as a whole.
+
+For example, to list all studies configured in the startup GPF instance, use:
 
 .. code-block:: python3
 
-    vdb = gpf_instance.variants_db
-
-This ``vdb`` factory object allows you to get all studies and datasets in the
-configured GPF instance. For example, to list all studies configured in
-the startup GPF instance, use:
-
-.. code-block:: python3
-
-    vdb.get_studies_ids()
+    gpf_instance.get_genotype_data_ids()
 
 This should return a list of all studies' IDs:
 
@@ -418,7 +387,7 @@ To get a specific study and query it, you can use:
 
 .. code-block:: python3
 
-    st = vdb.get_study("comp_denovo")
+    st = gpf_instance.get_genotype_data('comp_denovo')
     vs = list(st.query_variants())
 
 .. note::
@@ -446,7 +415,7 @@ can use:
 
 .. code-block:: python3
 
-    st = vdb.get_study("iossifov_2014")
+    st = gpf_instance.get_genotype_data('iossifov_2014')
     vs = st.query_variants(effect_types=['splice-site'])
     vs = list(vs)
     print(len(vs))
@@ -483,7 +452,7 @@ Edit the study configuration file `iossifov_2014.conf` to add the line::
 
 Ater the the editing the configuration file should look like::
 
-    [study]
+    [genotypeDataStudy]
 
     id = iossifov_2014
     genotype_storage = genotype_impala
@@ -537,19 +506,19 @@ The GPF simple pheno import tool prepares phenotype data to be use by GPF
 system.
 
 As and example we are going to show how to import simulated demo phenotype 
-data into our gemo GPF instance. We are going to use simulated
+data into our demo GPF instance. We are going to use simulated
 phenotype data available::
 
-    https://iossifovlab.com/distribution/public/pheno/comp_pheno_data-latest.tar.gz
+    https://iossifovlab.com/distribution/public/pheno/phenotype-comp-data-latest.tar.gz
 
 Download the archive and extract it outside of GPF instance data directory:
 
 .. code::
 
-    wget -c https://iossifovlab.com/distribution/public/pheno/comp_pheno_data-latest.tar.gz
-    tar zxvf comp_pheno_data-latest.tar.gz
+    wget -c https://iossifovlab.com/distribution/public/pheno/phenotype-comp-data-latest.tar.gz
+    tar zxvf phenotype-comp-data-latest.tar.gz
 
-This will create a ``comp_pheno_data`` directory.
+This will create a ``comp-data`` directory.
 Files that are available in that directory are:
 
 * | ``comp_pheno.ped`` - the pedigree file for all families included into the
@@ -607,7 +576,7 @@ to see the configuration file generated from the import tool:
 
 .. code::
 
-    [phenoDB]
+    [phenotypeData]
     name = comp_pheno
     dbfile = %(wd)s/comp_pheno.db
     browser_dbfile = %(wd)s/browser/comp_pheno.db
@@ -631,7 +600,7 @@ study configuration file ``comp_all.conf``:
 
     id = comp_all
     prefix = data/
-    phenoDB = comp_pheno
+    phenotypeData = comp_pheno
 
 and to enable the phenotype browser you must add:
 
@@ -761,7 +730,7 @@ the Phenotype browser. Open the configuration file ``comp_all.conf``:
 
     id = comp
     prefix = data/
-    phenoDB = comp_pheno
+    phenotypeData = comp_pheno
     phenotypeBrowser = yes
 
 
