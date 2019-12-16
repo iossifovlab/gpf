@@ -1,13 +1,15 @@
+import os
 import pytest
+from dae.studies.tests.conftest import studies_dir
 
 
-def test_study_config_simple(study_configs):
-    assert study_configs is not None
-    assert list(study_configs.keys())
+def test_study_config_simple(genotype_data_study_configs):
+    assert genotype_data_study_configs is not None
+    assert list(genotype_data_study_configs.keys())
 
 
-def test_study_config_year(study_configs):
-    study_config = study_configs.get('inheritance_trio')
+def test_study_config_year(genotype_data_study_configs):
+    study_config = genotype_data_study_configs.get('inheritance_trio')
     assert study_config is not None
     assert study_config.year == ''
 
@@ -19,7 +21,7 @@ def test_study_config_year(study_configs):
     ('description', 'QUADS F1'),
     ('phenotypeTool', True),
     ('phenotypeBrowser', False),
-    ('phenoDB', ''),
+    ('phenotypeData', ''),
 ])
 def test_quads_f1_config_dict(quads_f1_config, option_name, expected_value):
     assert quads_f1_config is not None
@@ -37,7 +39,7 @@ def test_quads_f1_config_dict(quads_f1_config, option_name, expected_value):
 
     ('phenotype_tool', True),
     ('phenotype_browser', False),
-    ('pheno_db', ''),
+    ('phenotype_data', ''),
     ('year', ''),
     ('pub_med', ''),
     ('years', []),
@@ -155,3 +157,32 @@ def test_quads_f1_config_genotype_browser_columns(
         assert gc_slot['name'] == e_slot['name']
         assert gc_slot['id'] == e_slot['id']
         assert gc_slot['format'] == e_slot['format']
+
+
+def test_quads_f1_files_and_tables(quads_f1_config):
+    assert quads_f1_config.files.vcf[0].path.endswith('data/quads_f1.vcf')
+    assert quads_f1_config.files.pedigree.path.endswith('data/quads_f1.ped')
+    # assert quads_f1_config.files.denovo[0].path.endswith(
+    #     'data/quads_f1_denovo.tsv')
+
+    assert quads_f1_config.tables.variant == 'quads_f1_variant'
+    assert quads_f1_config.tables.pedigree == 'quads_f1_pedigree'
+
+
+def test_quads_f1_config_work_dir(quads_f1_config):
+    assert quads_f1_config['work_dir'] == \
+        os.path.join(studies_dir(), 'quads_f1')
+
+
+def test_quads_f1_config_files(quads_f1_config):
+    assert quads_f1_config['files'] is not None
+    assert quads_f1_config.files.pedigree is not None
+    assert quads_f1_config.files.pedigree.path.endswith('/data/quads_f1.ped')
+    assert len(quads_f1_config.files.pedigree.params) == 3
+
+
+def test_quads_f1_config_tables(quads_f1_config):
+    assert quads_f1_config['tables'] is not None
+
+    assert quads_f1_config.tables.pedigree == 'quads_f1_pedigree'
+    assert quads_f1_config.tables.variant == 'quads_f1_variant'

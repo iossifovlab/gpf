@@ -6,6 +6,7 @@ ALLOWED_HOSTS += ['localhost']
 
 INSTALLED_APPS += [
     'corsheaders',
+    'django_extensions',
 ]
 
 

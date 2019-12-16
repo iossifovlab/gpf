@@ -129,12 +129,17 @@ class Effect(object):
 
     @classmethod
     def from_effects(cls, effect_type, effect_genes, transcripts):
+        if effect_type is None:
+            return None
+
         transcripts = EffectTranscript.from_effect_transcripts(transcripts)
         effect_genes = EffectGene.from_gene_effects(effect_genes)
         return Effect(effect_type, effect_genes, transcripts)
 
     @staticmethod
     def from_string(data):
+        if data is None:
+            return None
         parts = data.split("!")
         assert len(parts) == 3
         worst = parts[0].strip()

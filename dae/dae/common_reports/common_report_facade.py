@@ -52,11 +52,13 @@ class CommonReportFacade(object):
         if common_report_id not in self._common_report_config_cache:
             return None
 
-        study = self.variants_db.get_wdae_wrapper(common_report_id)
+        genotype_data_study = self.variants_db.get_wdae_wrapper(
+            common_report_id
+        )
         common_report_config = \
             self._common_report_config_cache[common_report_id]
         file_path = common_report_config.file_path
-        common_report = CommonReport(study, common_report_config)
+        common_report = CommonReport(genotype_data_study, common_report_config)
 
         if not os.path.exists(os.path.dirname(file_path)):
             os.makedirs(os.path.dirname(file_path))
@@ -74,22 +76,20 @@ class CommonReportFacade(object):
             self.generate_common_report(common_report_id)
 
     def get_families_data(self, study_id):
-        study = self.variants_db.get(study_id)
-        if not study:
+        genotype_data_study = self.variants_db.get(study_id)
+        if not genotype_data_study:
             return None
 
         data = []
         data.append([
             'familyId', 'personId', 'dadId', 'momId', 'sex', 'status',
-            'role', 'study'
+            'role', 'genotype_data_study'
         ])
 
-        families = list(study.families.values())
+        families = list(genotype_data_study.families.values())
         families.sort(key=lambda f: f.family_id)
         for f in families:
             for p in f.members_in_order:
-                if p.generated:
-                    continue
 
                 row = [
                     p.family_id,
@@ -99,7 +99,7 @@ class CommonReportFacade(object):
                     p.sex,
                     p.status,
                     p.role,
-                    study.name,
+                    genotype_data_study.name,
                 ]
 
                 data.append(row)

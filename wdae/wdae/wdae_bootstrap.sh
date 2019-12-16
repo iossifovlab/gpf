@@ -4,6 +4,7 @@ set -e
 
 REFERENCE_GENOME=$1
 INSTALL_DIRNAME=$2
+DATA_ARCHIVE=$3
 
 if [[ -z $REFERENCE_GENOME ]]; then
     REFERENCE_GENOME=hg19
@@ -30,16 +31,24 @@ if [[ -d "${INSTALL_DIRNAME}" ]]; then
 fi
 
 
+if [[ -z $DATA_ARCHIVE ]]; then
+    DATA_ARCHIVE=data-${REFERENCE_GENOME}-startup-latest.tar.gz
+    wget -c https://iossifovlab.com/distribution/public/$DATA_ARCHIVE
 
-DATA_ARCHIVE=data-${REFERENCE_GENOME}-startup-latest.tar.gz
+    mkdir $INSTALL_DIRNAME && \
+        tar xzf $DATA_ARCHIVE -C $INSTALL_DIRNAME --strip-components 1
 
+    rm $DATA_ARCHIVE 
+else
+    if [[ ! -f $DATA_ARCHIVE ]]; then
+        echo "Data archive '$DATA_ARCHIVE' not found"
+        exit 1
+    fi
 
-wget -c https://iossifovlab.com/distribution/public/$DATA_ARCHIVE
+    mkdir $INSTALL_DIRNAME && \
+        tar xzf $DATA_ARCHIVE -C $INSTALL_DIRNAME --strip-components 1
 
-mkdir $INSTALL_DIRNAME && \
-    tar xzf $DATA_ARCHIVE -C $INSTALL_DIRNAME --strip-components 1
-
-rm $DATA_ARCHIVE
+fi
 
 cd $INSTALL_DIRNAME
 export DAE_DB_DIR=`pwd`

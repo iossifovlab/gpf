@@ -5,12 +5,12 @@ Created on Jul 3, 2018
 '''
 import pytest
 
-from dae.utils.vcf_utils import mat2str
+from dae.utils.variant_utils import mat2str
 
 
-@pytest.mark.parametrize("variants", [
-    "variants_vcf",
-    "variants_impala",
+@pytest.mark.parametrize('variants', [
+    'variants_impala',
+    'variants_vcf'
 ])
 @pytest.mark.parametrize("inheritance,count", [
     ("mendelian", 3),
@@ -28,9 +28,9 @@ def test_inheritance_trio_full(variants_impl, variants, inheritance, count):
     assert len(vs) == count
 
 
-@pytest.mark.parametrize("variants", [
-    "variants_vcf",
-    "variants_impala",
+@pytest.mark.parametrize('variants', [
+    'variants_impala',
+    'variants_vcf'
 ])
 @pytest.mark.parametrize("count,inheritance", [
     (7, "mendelian"),
@@ -47,9 +47,9 @@ def test_inheritance_quad_full(variants_impl, variants, count, inheritance):
         assert len(mat2str(v.best_st)) == 9
 
 
-@pytest.mark.parametrize("variants", [
-    "variants_vcf",
-    "variants_impala",
+@pytest.mark.parametrize('variants', [
+    'variants_impala',
+    'variants_vcf'
 ])
 @pytest.mark.parametrize("count,inheritance", [
     (5, None),

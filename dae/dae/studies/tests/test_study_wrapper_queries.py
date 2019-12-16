@@ -11,7 +11,7 @@ def test_query_all_variants(inheritance_trio_wrapper):
     ("denovo", 2),
     ("omission", 4),
     ("unknown", 14),  # matches all variants
-    ("mendelian", 3),
+    ("mendelian", 4),
     ("reference", 0)  # not returned unless return_reference is set to true
 ])
 def test_query_inheritance_variants(type, count, inheritance_trio_wrapper):
@@ -120,7 +120,7 @@ def test_query_present_in_child(option, count, quads_in_child_wrapper):
 )
 def test_query_present_in_child_compared_to_raw(
         option, raw_query, quads_f1_wrapper):
-    vs = quads_f1_wrapper.study \
+    vs = quads_f1_wrapper.genotype_data_study \
         .query_variants(roles=raw_query)
     vs = list(vs)
 

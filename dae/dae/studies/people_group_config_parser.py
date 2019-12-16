@@ -16,6 +16,26 @@ class PeopleGroupConfigParser(ConfigParserBase):
         'peopleGroup': 'selectedPeopleGroupValues',
     }
 
+    INCLUDE_PROPERTIES = (
+        'selectedPeopleGroupValues',
+        'peopleGroups',
+        '*.id',
+        '*.name',
+        '*.domain',
+        '*.default',
+        '*.source',
+        'peopleGroup.status.id',
+        'peopleGroup.status.name',
+        'peopleGroup.status.domain',
+        'peopleGroup.status.default',
+        'peopleGroup.status.source',
+        'peopleGroup.phenotype.id',
+        'peopleGroup.phenotype.name',
+        'peopleGroup.phenotype.domain',
+        'peopleGroup.phenotype.default',
+        'peopleGroup.phenotype.source',
+    )
+
     @staticmethod
     def _people_group_selectors_split_dict(dict_to_split):
         options = dict_to_split.split(':')
@@ -44,6 +64,22 @@ class PeopleGroupConfigParser(ConfigParserBase):
 
         return people_group_config
 
+    @staticmethod
+    def _select_people_groups(available_groups, specified_groups):
+        if len(available_groups) == 0:
+            return None
+
+        result = {
+            pg.id: {
+                'name': pg.name,
+                'source': pg.source,
+                'domain': pg.domain
+            } for pg in available_groups.values()
+            if pg.id in specified_groups
+        }
+
+        return result
+
     @classmethod
     def get_config_description(cls, config):
         config = config.to_dict()
@@ -70,5 +106,7 @@ class PeopleGroupConfigParser(ConfigParserBase):
 
         config_section.peopleGroup = \
             cls._parse_people_groups(config_section.people_group)
+
+        del config[cls.SECTION]
 
         return config_section

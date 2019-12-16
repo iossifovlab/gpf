@@ -6,34 +6,9 @@ Created on Jul 5, 2018
 import pytest
 
 
-@pytest.mark.xfail(reason='import of genomic scores are broken in impala')
-@pytest.mark.parametrize("variants", [
-    'vcf_import_raw',
-])
-@pytest.mark.parametrize("real_attr_filter,count", [
-    ([('score0', (None, 865664))], 5),
-    ([('score0', (865583, 865664))], 4),
-    ([('score0', (865583, 865664)), ('score2', (8656.25, 9019))], 2),
-    (None, 10),
-    ([], 10),
-])
-def test_real_attr_queries_with_scores(
-        variants, fixture_select,
-        real_attr_filter, count):
-
-    fvars = fixture_select(variants)
-
-    vs = fvars.query_variants(
-        real_attr_filter=real_attr_filter)
-    vs = list(vs)
-    for v in vs:
-        print(v)
-    assert len(vs) == count
-
-
-@pytest.mark.parametrize("variants", [
-    "variants_vcf",
-    "variants_impala",
+@pytest.mark.parametrize('variants', [
+    'variants_impala',
+    'variants_vcf'
 ])
 @pytest.mark.parametrize("real_attr_filter,count", [
     (None, 20),
@@ -63,18 +38,11 @@ def test_variant_real_attr_frequency_queries(
         return_reference=False,
         return_unknown=False))
     assert len(vs) == count
-    # for v in vs:
-    #     print(v)
-    #     for a in v.alleles:
-    #         print(
-    #             "\t>", a,
-    #             "\taf_allele_count:", a.get_attribute("af_allele_count"),
-    #             "\taf_allele_freq:", a.get_attribute("af_allele_freq"))
 
 
-@pytest.mark.parametrize("variants", [
-    "variants_vcf",
-    "variants_impala",
+@pytest.mark.parametrize('variants', [
+    'variants_impala',
+    'variants_vcf'
 ])
 def test_variant_ultra_rare_frequency_queries(
         variants, variants_impl, ):

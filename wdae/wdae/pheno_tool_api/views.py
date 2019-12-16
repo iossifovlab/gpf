@@ -49,21 +49,21 @@ class PhenoToolView(QueryBaseView):
         study_wrapper = self.variants_db.get_wdae_wrapper(data['datasetId'])
 
         if not (study_wrapper and
-                study_wrapper.pheno_db.has_measure(data['measureId'])):
+                study_wrapper.phenotype_data.has_measure(data['measureId'])):
             return None, None
 
         helper = PhenoToolHelper(study_wrapper)
 
         pheno_filter_persons = \
             helper.pheno_filter_persons(data.get('phenoFilters'))
-        study_persons = helper.study_persons(data.get('familyIds', []))
+        study_persons = helper.genotype_data_persons(data.get('familyIds', []))
 
         person_ids = set(study_persons)
         if pheno_filter_persons:
             person_ids &= set(pheno_filter_persons)
 
         tool = PhenoTool(
-            helper.study.pheno_db,
+            helper.genotype_data.phenotype_data,
             measure_id=data['measureId'],
             person_ids=person_ids,
             normalize_by=data['normalizeBy']
@@ -101,7 +101,7 @@ class PhenoToolView(QueryBaseView):
         if not (helper and tool):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        people_variants = helper.study_variants(data)
+        people_variants = helper.genotype_data_variants(data)
 
         results = [self.calc_by_effect(effect, tool,
                    people_variants.get(effect.lower(), Counter()))
@@ -130,7 +130,7 @@ class PhenoToolDownload(PhenoToolView):
         helper, tool = self.prepare_pheno_tool(data)
 
         result_df = tool.pheno_df.copy()
-        variants = helper.study_variants(data)
+        variants = helper.genotype_data_variants(data)
 
         for effect in data['effectTypes']:
             result_df = PhenoTool.join_pheno_df_with_variants(

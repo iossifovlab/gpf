@@ -5,8 +5,8 @@ Created on Jul 25, 2017
 '''
 import os
 from dae.pheno.prepare.ped_prepare import PreparePersons, PrepareVariables
-from dae.pheno.pheno_db import PhenoDB
-from dae.pedigrees.pedigree_reader import PedigreeReader
+from dae.pheno.pheno_db import PhenotypeDataStudy
+from dae.pedigrees.family import PedigreeReader
 import pytest
 
 
@@ -27,7 +27,7 @@ def instrument_files():
 def test_ped_prepare_simple(test_config, fake_ped_file):
     test_config.person.role.mapping = 'INTERNAL'
     prep = PreparePersons(test_config)
-    ped_df = PedigreeReader.load_pedigree_file(fake_ped_file)
+    ped_df = PedigreeReader.flexible_pedigree_read(fake_ped_file)
 
     assert ped_df is not None
 
@@ -85,7 +85,7 @@ def test_ped_prepare_variable_with_descriptions(test_config, temp_dbfile,
     assert df is not None
     assert len(df) == 195
 
-    temp_db = PhenoDB(temp_dbfile)
+    temp_db = PhenotypeDataStudy(temp_dbfile)
     measures = temp_db.get_measures()
     assert measures['i1.m1'].description == 'Measure number one'
     assert measures['i1.m2'].description == 'Measure number two'

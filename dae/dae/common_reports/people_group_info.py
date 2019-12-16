@@ -4,21 +4,24 @@ from collections import OrderedDict
 class PeopleGroupInfo(object):
 
     def __init__(
-            self, people_group_info, people_group, study=None,
+            self, people_group_info, people_group, genotype_data_study=None,
             people_groups=[]):
         self.name = people_group_info['name']
         self.domain = people_group_info['domain']
         self.default = people_group_info['default']
         self.source = people_group_info['source']
 
-        self.people_groups = self._get_people_groups(study)\
-            if study is not None and len(people_groups) == 0 else people_groups
+        self.people_groups = self._get_people_groups(genotype_data_study)\
+            if genotype_data_study is not None \
+            and len(people_groups) == 0 else people_groups
 
         self.people_group = people_group
 
-    def _get_people_groups(self, study):
+    def _get_people_groups(self, genotype_data_study):
         return list([
-            str(p) for p in study.get_pedigree_values(self.source)])
+            str(p) for p
+            in genotype_data_study.get_pedigree_values(self.source)
+        ])
 
     def _is_default(self, people_group):
         return people_group not in self.domain.keys()
@@ -60,8 +63,8 @@ class PeopleGroupInfo(object):
 
 class PeopleGroupsInfo(object):
 
-    def __init__(self, study, people_groups, people_groups_info):
-        self.study = study
+    def __init__(self, genotype_data_study, people_groups, people_groups_info):
+        self.genotype_data_study = genotype_data_study
         self.people_groups = people_groups
         self.people_groups_info = people_groups_info
 
@@ -71,7 +74,7 @@ class PeopleGroupsInfo(object):
         return [
             PeopleGroupInfo(
                 self.people_groups_info[people_group], people_group,
-                study=self.study)
+                genotype_data_study=self.genotype_data_study)
             for people_group in self.people_groups
         ]
 

@@ -6,7 +6,7 @@ Created on Jul 9, 2018
 import pytest
 
 import numpy as np
-from dae.utils.vcf_utils import mat2str
+from dae.utils.variant_utils import mat2str
 
 
 @pytest.mark.parametrize("gt,bs", [

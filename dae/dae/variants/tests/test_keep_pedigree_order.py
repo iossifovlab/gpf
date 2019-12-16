@@ -5,9 +5,9 @@ Created on Mar 12, 2018
 '''
 from io import StringIO
 
-from dae.pedigrees.pedigree_reader import PedigreeReader
+from dae.pedigrees.family import PedigreeReader
 from dae.variants.attributes import Role
-from dae.pedigrees.family import FamiliesData, Family
+from dae.pedigrees.family import FamiliesData
 
 
 PED_FILE1 = """
@@ -32,7 +32,7 @@ SF0014912,SP0014912,SP0024751,SP0015221,1,2,prb
 
 
 def test_pedigree_keep_family_order_local():
-    ped_df = PedigreeReader.load_pedigree_file(
+    ped_df = PedigreeReader.flexible_pedigree_read(
         StringIO(PED_FILE1), sep=",")
     families = FamiliesData.from_pedigree_df(ped_df)
 

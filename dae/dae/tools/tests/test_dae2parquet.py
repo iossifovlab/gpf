@@ -1,267 +1,229 @@
 import pytest
-
 import os
+import io
+
+from contextlib import redirect_stdout
+
 from box import Box
+from dae.RegionOperations import Region
+from dae.pedigrees.family import FamiliesLoader
 
-from dae.tools.dae2parquet import parse_cli_arguments, dae_build_makefile, \
-    dae2parquet, denovo2parquet
-
-from dae.pedigrees.pedigree_reader import PedigreeReader
-from dae.backends.impala.parquet_io import ParquetManager
-from dae.backends.import_commons import construct_import_annotation_pipeline
-from dae.backends.dae.loader import RawDaeLoader
+from dae.pedigrees.family import FamiliesData, PedigreeReader
+from dae.backends.impala.loader import ParquetLoader
+from dae.tools.dae2parquet import main
 
 from dae.annotation.tools.file_io_parquet import ParquetReader
 
-from dae.RegionOperations import Region
-from dae.utils.helpers import pedigree_from_path
 
 def test_dae2parquet_denovo(
-        dae_denovo_config, annotation_pipeline_config,
-        annotation_scores_dirname, temp_dirname,
-        global_gpf_instance, dae_config_fixture, genomes_db):
+        dae_denovo_config, annotation_pipeline_default_config,
+        temp_dirname,
+        default_gpf_instance, dae_config_fixture, genomes_db):
 
     argv = [
         'denovo',
-        '--annotation', annotation_pipeline_config,
-        '-o', temp_dirname,
-        '-f', 'simple',
         dae_denovo_config.family_filename,
         dae_denovo_config.denovo_filename,
+        '--annotation', annotation_pipeline_default_config,
+        '--family-format', 'simple',
+        '-o', temp_dirname
     ]
-    genome = genomes_db.get_genome()
-    parquet_manager = ParquetManager(dae_config_fixture.studies_db.dir)
 
-    argv = parse_cli_arguments(global_gpf_instance, argv)
-
-    assert argv is not None
-    assert argv.type == 'denovo'
-
-    annotation_pipeline = construct_import_annotation_pipeline(
-        dae_config_fixture, genomes_db, argv, defaults={'values': {
-            'scores_dirname': annotation_scores_dirname,
-        }})
-
-    ped_df, study_id = pedigree_from_path(
-        argv.families, family_format=argv.family_format)
-
-    denovo_df = RawDaeLoader.load_dae_denovo_file(argv.variants, genome)
-
-    parquet_config = denovo2parquet(
-        study_id, ped_df, denovo_df,
-        parquet_manager, annotation_pipeline, genome,
-        output=argv.output
-    )
+    main(argv)
 
     summary = ParquetReader(Box({
-        'infile': parquet_config.files.variant,
+        'infile': os.path.join(temp_dirname, 'variant', 'variants.parquet'),
     }, default_box=True, default_box_attr=None))
     summary._setup()
     summary._cleanup()
 
     # print(summary.schema)
     schema = summary.schema
-    print(schema['score0'])
-
-    assert schema['score0'].type_name == 'float'
-    assert schema['score2'].type_name == 'float'
-    assert schema['score4'].type_name == 'float'
 
     assert schema['effect_gene'].type_name == 'str'
     assert schema['effect_type'].type_name == 'str'
     assert schema['effect_data'].type_name == 'str'
-    assert schema['worst_effect'].type_name == 'str'
+    # assert schema['worst_effect'].type_name == 'str'
 
 
 def test_dae2parquet_transmitted(
-        dae_transmitted_config, annotation_pipeline_config,
-        annotation_scores_dirname, temp_dirname,
-        global_gpf_instance, dae_config_fixture, genomes_db):
+        dae_transmitted_config, annotation_pipeline_default_config,
+        temp_dirname,
+        default_gpf_instance, dae_config_fixture, genomes_db):
 
     argv = [
         'dae',
-        '--annotation', annotation_pipeline_config,
-        '-o', temp_dirname,
-        '-f', 'simple',
         dae_transmitted_config.family_filename,
         dae_transmitted_config.summary_filename,
         dae_transmitted_config.toomany_filename,
+        '--annotation', annotation_pipeline_default_config,
+        '--family-format', 'simple',
+        '-o', temp_dirname
     ]
-    genome = genomes_db.get_genome()
-    parquet_manager = ParquetManager(dae_config_fixture.studies_db.dir)
 
-    argv = parse_cli_arguments(global_gpf_instance, argv)
-
-    assert argv is not None
-    assert argv.type == 'dae'
-
-    annotation_pipeline = construct_import_annotation_pipeline(
-        dae_config_fixture, genomes_db, argv, defaults={'values': {
-            'scores_dirname': annotation_scores_dirname,
-        }})
-
-    parquet_config = dae2parquet(
-        dae_config_fixture, parquet_manager, annotation_pipeline, genome, argv
-    )
+    main(argv)
 
     summary = ParquetReader(Box({
-        'infile': parquet_config.files.variant,
+        'infile': os.path.join(temp_dirname, 'variant', 'variants.parquet'),
     }, default_box=True, default_box_attr=None))
     summary._setup()
     summary._cleanup()
 
     # print(summary.schema)
     schema = summary.schema
-    print(schema['score0'])
-
-    assert schema['score0'].type_name == 'float'
-    assert schema['score2'].type_name == 'float'
-    assert schema['score4'].type_name == 'float'
 
     assert schema['effect_gene'].type_name == 'str'
     assert schema['effect_type'].type_name == 'str'
     assert schema['effect_data'].type_name == 'str'
-    assert schema['worst_effect'].type_name == 'str'
+    # assert schema['worst_effect'].type_name == 'str'
 
 
 def test_dae2parquet_make(
-        dae_transmitted_config, annotation_pipeline_config,
+        dae_transmitted_config, annotation_pipeline_default_config,
         annotation_scores_dirname, temp_dirname,
-        global_gpf_instance, dae_config_fixture, genomes_db):
+        default_gpf_instance, dae_config_fixture, genomes_db):
 
     argv = [
         'make',
-        '--annotation', annotation_pipeline_config,
-        '-o', temp_dirname,
-        '-f', 'simple',
-        '-l', '100000000',
         dae_transmitted_config.family_filename,
         dae_transmitted_config.summary_filename,
         dae_transmitted_config.toomany_filename,
+        '--annotation', annotation_pipeline_default_config,
+        '-o', temp_dirname,
+        '-f', 'simple',
+        '-l', '100000000',
     ]
-    genome = genomes_db.get_genome()
 
-    argv = parse_cli_arguments(global_gpf_instance, argv)
+    f = io.StringIO()
+    with redirect_stdout(f):
+        main(argv)
 
-    assert argv is not None
-    assert argv.type == 'make'
-
-    dae_build_makefile(dae_config_fixture, genome, argv)
-
-
-@pytest.fixture(scope='session')
-def dae_iossifov2014_import(
-        request, dae_iossifov2014_config, annotation_scores_dirname,
-        global_gpf_instance, dae_config_fixture, genomes_db,
-        test_hdfs, impala_genotype_storage, parquet_manager):
-
-    temp_dirname = test_hdfs.tempdir(prefix='variants_', suffix='_data')
-    test_hdfs.mkdir(temp_dirname)
-
-    def fin():
-        test_hdfs.delete(temp_dirname, recursive=True)
-    request.addfinalizer(fin)
-
-    def build(annotation_config, db):
-        impala_genotype_storage.impala_helpers.drop_database(db)
-        impala_genotype_storage.storage_config.impala.db = db
-
-        annotation_temp_dir = os.path.join(
-            temp_dirname,
-            os.path.split(os.path.splitext(annotation_config)[0])[-1]
-        )
-
-        config = dae_iossifov2014_config
-        print("dae_iossifov2014_config:", config)
-
-        argv = [
-            'denovo',
-            '--annotation', annotation_config,
-            '-o', annotation_temp_dir,
-            '-f', 'simple',
-            config.family_filename,
-            config.denovo_filename,
-        ]
-        genome = genomes_db.get_genome()
-
-        argv = parse_cli_arguments(global_gpf_instance, argv)
-
-        assert argv is not None
-        assert argv.type == 'denovo'
-
-        annotation_pipeline = construct_import_annotation_pipeline(
-            dae_config_fixture, genomes_db, argv, defaults={'values': {
-                'scores_dirname': annotation_scores_dirname,
-            }})
-
-        filename = os.path.basename(argv.families)
-        study_id = os.path.splitext(filename)[0]
-
-        print("family filename:", argv.families, "; variants:", argv.variants)
-        ped_df = PedigreeReader.load_simple_family_file(argv.families)
-        denovo_df = RawDaeLoader.load_dae_denovo_file(argv.variants, genome)
-
-        parquet_config = denovo2parquet(
-            study_id, ped_df, denovo_df,
-            parquet_manager, annotation_pipeline, genome,
-            output=argv.output
-        )
-
-        assert parquet_config is not None
-
-        impala_genotype_storage.impala_load_study(
-            study_id,
-            os.path.join(annotation_temp_dir, 'pedigree'),
-            os.path.join(annotation_temp_dir, 'variants')
-        )
-
-        fvars = impala_genotype_storage.get_backend(study_id, genomes_db)
-        return fvars
-
-    return build
+    makefile = f.getvalue()
+    assert 'all:' in makefile
+    assert 'dae2parquet.py dae ' in makefile
 
 
-@pytest.fixture(scope='session')
-def dae_iossifov2014_thrift_annotation_pipeline_config(
-        dae_iossifov2014_import, annotation_pipeline_config):
-    assert dae_iossifov2014_import is not None
-    fvars = dae_iossifov2014_import(
-        annotation_pipeline_config, 'impala_test_annotation_db'
-    )
+def test_dae2parquet_make_partition(
+        dae_transmitted_config, annotation_pipeline_default_config,
+        annotation_scores_dirname, temp_dirname,
+        default_gpf_instance, dae_config_fixture, genomes_db,
+        parquet_partition_configuration):
 
-    return fvars
+    argv = [
+        'make',
+        dae_transmitted_config.family_filename,
+        dae_transmitted_config.summary_filename,
+        dae_transmitted_config.toomany_filename,
+        '--annotation', annotation_pipeline_default_config,
+        '-o', temp_dirname,
+        '-f', 'simple',
+        '-l', '100000000',
+        '--pd', parquet_partition_configuration
+    ]
 
+    f = io.StringIO()
+    with redirect_stdout(f):
+        main(argv)
 
-@pytest.fixture(scope='session')
-def dae_iossifov2014_thrift_annotation_pipeline_default_config(
-        dae_iossifov2014_import, annotation_pipeline_default_config):
-    assert dae_iossifov2014_import is not None
-    fvars = dae_iossifov2014_import(
-        annotation_pipeline_default_config, 'impala_test_import_annotation_db'
-    )
-
-    return fvars
-
-
-@pytest.fixture(scope='session')
-def fixture_select(
-        dae_iossifov2014_thrift_annotation_pipeline_config,
-        dae_iossifov2014_thrift_annotation_pipeline_default_config):
-    def build(fixture_name):
-        if fixture_name == \
-                'dae_iossifov2014_thrift_annotation_pipeline_config':
-            return dae_iossifov2014_thrift_annotation_pipeline_config
-        elif fixture_name == \
-                'dae_iossifov2014_thrift_annotation_pipeline_default_config':
-            return dae_iossifov2014_thrift_annotation_pipeline_default_config
-        else:
-            raise ValueError(fixture_name)
-    return build
+    makefile = f.getvalue()
+    assert 'all:' in makefile
+    assert 'dae2parquet.py dae ' in makefile
+    assert '1_8:' in makefile
+    assert '--region 1:800001-900000'
+    assert '1_0:' in makefile
+    assert '--region 1:1-100000'
 
 
-@pytest.mark.parametrize('variants_iterator', [
-    'dae_iossifov2014_thrift_annotation_pipeline_config',
-    'dae_iossifov2014_thrift_annotation_pipeline_default_config'
+def test_dae2parquet_dae_partition(
+        dae_transmitted_config, annotation_pipeline_default_config,
+        temp_dirname, parquet_partition_configuration):
+
+    argv = [
+        'dae',
+        dae_transmitted_config.family_filename,
+        dae_transmitted_config.summary_filename,
+        dae_transmitted_config.toomany_filename,
+        '--annotation', annotation_pipeline_default_config,
+        '--family-format', 'simple',
+        '-o', temp_dirname,
+        '--pd', parquet_partition_configuration
+    ]
+
+    main(argv)
+
+    generated_conf = os.path.join(temp_dirname, '_PARTITION_DESCRIPTION')
+    assert os.path.exists(generated_conf)
+
+    ped_df = PedigreeReader.load_simple_family_file(
+        dae_transmitted_config.family_filename)
+    families = FamiliesData.from_pedigree_df(ped_df)
+
+    pl = ParquetLoader(families, generated_conf)
+    summary_genotypes = []
+    for summary, gt in pl.summary_genotypes_iterator():
+        summary_genotypes.append((summary, gt))
+
+    assert len(summary_genotypes) == 185
+    assert all(sgt[0].get_attribute('region_bin')[0] is not None
+               for sgt in summary_genotypes)
+    assert all(sgt[0].get_attribute('family_bin')[0] is not None
+               for sgt in summary_genotypes)
+    assert all(sgt[0].get_attribute('coding_bin')[0] is not None
+               for sgt in summary_genotypes)
+    assert all(sgt[0].get_attribute('frequency_bin')[0] is not None
+               for sgt in summary_genotypes)
+    assert any(sgt[0].reference == 'G' for sgt in summary_genotypes)
+    assert any(sgt[0].reference == 'C' for sgt in summary_genotypes)
+    assert any(sgt[0].alternative == 'T' for sgt in summary_genotypes)
+    assert any(sgt[0].alternative == 'A' for sgt in summary_genotypes)
+
+
+def test_dae2parquet_denovo_partition(
+        dae_denovo_config, annotation_pipeline_default_config,
+        temp_dirname, parquet_partition_configuration):
+
+    argv = [
+        'denovo',
+        dae_denovo_config.family_filename,
+        dae_denovo_config.denovo_filename,
+        '--annotation', annotation_pipeline_default_config,
+        '--family-format', 'simple',
+        '-o', temp_dirname,
+        '--pd', parquet_partition_configuration
+    ]
+
+    main(argv)
+
+    generated_conf = os.path.join(temp_dirname, '_PARTITION_DESCRIPTION')
+    assert os.path.exists(generated_conf)
+
+    ped_df = PedigreeReader.load_simple_family_file(
+        dae_denovo_config.family_filename)
+    families = FamiliesData.from_pedigree_df(ped_df)
+
+    pl = ParquetLoader(families, generated_conf)
+    summary_genotypes = []
+    for summary, gt in pl.summary_genotypes_iterator():
+        summary_genotypes.append((summary, gt))
+
+    assert len(summary_genotypes) == 49
+    assert all(sgt[0].get_attribute('region_bin')[0] is not None
+               for sgt in summary_genotypes)
+    assert all(sgt[0].get_attribute('family_bin')[0] is not None
+               for sgt in summary_genotypes)
+    assert all(sgt[0].get_attribute('coding_bin')[0] is not None
+               for sgt in summary_genotypes)
+    assert all(sgt[0].get_attribute('frequency_bin')[0] is not None
+               for sgt in summary_genotypes)
+    assert any(sgt[0].reference == 'G' for sgt in summary_genotypes)
+    assert any(sgt[0].reference == 'C' for sgt in summary_genotypes)
+    assert any(sgt[0].alternative == 'T' for sgt in summary_genotypes)
+    assert any(sgt[0].alternative == 'A' for sgt in summary_genotypes)
+
+
+@pytest.mark.parametrize('variants', [
+    'iossifov2014_raw_denovo',
+    'iossifov2014_impala',
 ])
 @pytest.mark.parametrize('region,cshl_location,effect_type', [
     (Region('15', 80137553, 80137553), '15:80137554', 'noEnd'),
@@ -278,9 +240,16 @@ def fixture_select(
     (Region('3', 151176416, 151176416), '3:151176417', 'no-frame-shift'),
 ])
 def test_dae2parquet_iossifov2014_variant_coordinates(
-        fixture_select, variants_iterator,
+        variants,
+        iossifov2014_impala, iossifov2014_raw_denovo,
         region, cshl_location, effect_type):
-    fvars = fixture_select(variants_iterator)
+
+    if variants == 'iossifov2014_impala':
+        fvars = iossifov2014_impala
+    elif variants == 'iossifov2014_raw_denovo':
+        fvars = iossifov2014_raw_denovo
+    else:
+        assert False, variants
 
     vs = fvars.query_variants(regions=[region])
     vs = list(vs)

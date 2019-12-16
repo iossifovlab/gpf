@@ -3,8 +3,8 @@ import pandas as pd
 
 class GenomicValues(object):
 
-    def __init__(self, value_id, *args, **kwargs):
-        super(GenomicValues, self).__init__(*args, **kwargs)
+    def __init__(self, value_id):
+        super(GenomicValues, self).__init__()
         self.id = value_id
 
         self.df = None

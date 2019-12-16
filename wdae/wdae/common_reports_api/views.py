@@ -12,7 +12,7 @@ class VariantReportsView(QueryBaseView):
     def __init__(self):
         super(VariantReportsView, self).__init__()
 
-        self.common_reports_facade = self.gpf_instance.common_report_facade
+        self.common_reports_facade = self.gpf_instance._common_report_facade
 
     def get(self, request, common_report_id):
         assert common_report_id
@@ -34,7 +34,7 @@ class FamiliesDataDownloadView(QueryBaseView):
     def __init__(self):
         super(FamiliesDataDownloadView, self).__init__()
 
-        self.common_reports_facade = self.gpf_instance.common_report_facade
+        self.common_reports_facade = self.gpf_instance._common_report_facade
 
     def get(self, request, common_report_id):
         report = self.common_reports_facade.get_common_report(common_report_id)

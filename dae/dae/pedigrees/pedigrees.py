@@ -3,10 +3,9 @@ import abc
 from collections import defaultdict
 import argparse
 from functools import reduce
-import pandas as pd
 
 from dae.pedigrees.interval_sandwich import SandwichInstance
-from dae.variants.attributes import Role, Sex
+from dae.variants.attributes import Role
 from dae.pedigrees.family import Person
 
 # class PedigreeMember(object):
@@ -52,36 +51,6 @@ from dae.pedigrees.family import Person
 #         })
 
 
-class Pedigree(object):
-
-    def __init__(self, members):
-        self._members = members
-        self.family_id = members[0].family_id if len(members) > 0 else ""
-        self._independent_members = None
-
-    @property
-    def members(self):
-        return self._members
-
-    def add_members(self, new_members):
-        self._members += new_members
-
-    def add_member(self, member):
-        self._members.append(member)
-        self._independent_members = None
-
-    def independent_members(self):
-        if not self._independent_members:
-            self._independent_members = \
-                [m for m in self._members if m.has_missing_parents()]
-
-        return self._independent_members
-
-    def get_pedigree_dataframe(self):
-        return pd.concat([member.get_member_dataframe()
-                          for member in self._members])
-
-
 class FamilyConnections(object):
 
     def __init__(self, pedigree, id_to_individual, id_to_mating_unit):
@@ -121,25 +90,25 @@ class FamilyConnections(object):
                     # id, family_id, mother, father, sex, status, role,
                     # layout=None, generated=False
                     missing_mother_fathers[member.father] = Person.make_person(
-                        member.father + ".mother", 
+                        member.father + ".mother",
                         pedigree.family_id,
-                        "0", 
-                        "0", 
-                        "2", 
-                        "-", 
-                        Role.mom, 
+                        "0",
+                        "0",
+                        "2",
+                        "-",
+                        Role.mom,
                         True)
                     new_members.append(missing_mother_fathers[member.father])
                 member.mother = member.father + ".mother"
             elif member.father == "0":
                 if member.mother not in missing_father_mothers:
                     missing_father_mothers[member.mother] = Person.make_person(
-                        member.mother + ".father", 
+                        member.mother + ".father",
                         pedigree.family_id,
-                        "0", 
-                        "0", 
-                        "1", 
-                        "-", 
+                        "0",
+                        "0",
+                        "1",
+                        "-",
                         Role.dad,
                         generated=True)
                     new_members.append(missing_father_mothers[member.mother])

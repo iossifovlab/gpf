@@ -4,60 +4,26 @@ import operator
 from collections import namedtuple
 
 import numpy as np
-import pyarrow as pa
 
-from dae.utils.vcf_utils import GENOTYPE_TYPE
+from dae.utils.variant_utils import GENOTYPE_TYPE
 from dae.annotation.tools.file_io_parquet import ParquetSchema
 
 from dae.variants.family_variant import FamilyAllele, FamilyVariant
-from dae.variants.effects import Effect
 
 
 class ParquetSerializer(object):
 
-    BASE_SCHEMA = pa.schema([
-        pa.field("bucket_index", pa.int32()),
-        pa.field("summary_variant_index", pa.int64()),
-        pa.field("allele_index", pa.int8()),
-        pa.field("chrom", pa.string()),
-        pa.field("position", pa.int32()),
-        pa.field("reference", pa.string()),
-        pa.field("alternative", pa.string()),
-        pa.field("variant_type", pa.int8()),
-        pa.field("worst_effect", pa.string()),
-        pa.field("alternatives_data", pa.string()),
-
-        pa.field("effect_type", pa.string()),
-        pa.field("effect_gene", pa.string()),
-        pa.field("effect_data", pa.string()),
-
-        pa.field("family_variant_index", pa.int64()),
-        pa.field("family_id", pa.string()),
-        pa.field("is_denovo", pa.bool_()),
-
-        pa.field("variant_sexes", pa.int8()),
-        pa.field("variant_roles", pa.int32()),
-        pa.field("variant_inheritance", pa.int16()),
-
-        pa.field("variant_in_member", pa.string()),
-        pa.field("genotype_data", pa.string()),
-
-        pa.field('af_parents_called_count', pa.int32()),
-        pa.field('af_parents_called_percent', pa.float32()),
-        pa.field('af_allele_count', pa.int32()),
-        pa.field('af_allele_freq', pa.float32()),
-        pa.field('frequency_data', pa.string()),
-        pa.field('genomic_scores_data', pa.string()),
-
-    ])
-
     GENOMIC_SCORES_SCHEMA_CLEAN_UP = [
+        'worst_effect',
         'family_bin',
         'rare',
         'genomic_scores_data',
         'frequency_bin',
         'coding',
         'position_bin',
+        'chrome_bin',
+        'coding2',
+        'region_bin',
     ]
 
     summary = namedtuple(
@@ -69,7 +35,7 @@ class ParquetSerializer(object):
             'reference',
             'alternative',
             'variant_type',
-            'worst_effect',
+            # 'worst_effect',
             'alternatives_data',
         ])
 
@@ -112,8 +78,9 @@ class ParquetSerializer(object):
         ]
     )
 
-    def __init__(self, include_reference=True, schema=None):
-        assert isinstance(schema, ParquetSchema)
+    def __init__(self, schema, include_reference=False):
+        assert schema is not None
+        assert isinstance(schema, ParquetSchema), type(schema)
 
         self.include_reference = include_reference
         self.schema = schema
@@ -121,7 +88,7 @@ class ParquetSerializer(object):
 
     def _setup_genomic_scores(self):
         base_schema = ParquetSchema.from_arrow(
-            ParquetSerializer.BASE_SCHEMA)
+            ParquetSchema.BASE_SCHEMA)
         genomic_scores_schema = ParquetSchema.diff_schemas(
             self.schema, base_schema)
         for field_name in self.GENOMIC_SCORES_SCHEMA_CLEAN_UP:
@@ -150,7 +117,7 @@ class ParquetSerializer(object):
                 allele.reference,
                 None,
                 None,
-                None,
+                # None,
                 alternatives_data,
             )
         else:
@@ -162,7 +129,7 @@ class ParquetSerializer(object):
                 allele.reference,
                 allele.alternative,
                 allele.variant_type.value,
-                allele.effect.worst,
+                # allele.effect.worst if allele.effect else None,
                 alternatives_data,
             )
 
@@ -310,10 +277,10 @@ class ParquetSerializer(object):
 
     @staticmethod
     def deserialize_variant_effects(data):
-        res = [None]
+        res = [{'effects': None}]
         if data is None:
             return res
-        res.extend([Effect.from_string(e) for e in data.split("#")])
+        res.extend([{'effects': e} for e in data.split("#")])
 
         return res
 
@@ -391,13 +358,14 @@ class ParquetSerializer(object):
                     alternatives, effects, attributes)
 
         for allele_index, (alt, effect, attr) in enumerate(values):
+            attr.update(effect)
 
             allele = FamilyAllele(
                 chrom, position, reference,
                 alternative=alt,
                 summary_index=0,
                 allele_index=allele_index,
-                effect=effect,
+                # effect=effect,
                 attributes=attr,
                 family=family,
                 genotype=genotype)

@@ -2,20 +2,14 @@ from rest_framework import permissions
 
 from gpf_instance.gpf_instance import get_gpf_instance
 from .models import Dataset
+from utils.datasets import find_dataset_id_in_request
 from guardian.utils import get_anonymous_user
 
 
 class IsDatasetAllowed(permissions.BasePermission):
 
     def has_permission(self, request, view):
-        dataset_id = request.query_params.get('dataset_id', None)
-        if dataset_id is None:
-            dataset_id = request.query_params.get('datasetId', None)
-        if dataset_id is None:
-            dataset_id = request.data.get('datasetId', None)
-        if dataset_id is None:
-            dataset_id = request.parser_context. \
-                get('kwargs', {}).get('common_report_id', None)
+        dataset_id = find_dataset_id_in_request(request)
 
         if dataset_id is None:
             return True
@@ -37,7 +31,7 @@ class IsDatasetAllowed(permissions.BasePermission):
 
     @staticmethod
     def permitted_datasets(user):
-        dataset_ids = get_gpf_instance().variants_db.get_all_ids()
+        dataset_ids = get_gpf_instance().get_genotype_data_ids()
 
         return list(filter(
             lambda dataset_id: IsDatasetAllowed.user_has_permission(

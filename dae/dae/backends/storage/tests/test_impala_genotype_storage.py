@@ -1,13 +1,16 @@
 import pytest
+import os
+
+from box import Box
 
 from dae.backends.storage.tests.conftest import relative_to_this_test_folder
 
 
-def test_get_backend(impala_genotype_storage, quads_f1_config, genomes_db):
+def test_build_backend(impala_genotype_storage, quads_f1_config, genomes_db):
     assert impala_genotype_storage
 
-    backend = impala_genotype_storage.get_backend(
-        quads_f1_config.id, genomes_db
+    backend = impala_genotype_storage.build_backend(
+        quads_f1_config, genomes_db
     )
 
     assert len(backend.families.families_list()) == 1
@@ -68,14 +71,15 @@ def test_impala_load_study(impala_genotype_storage, genomes_db):
 
     impala_genotype_storage.impala_load_study(
         'study_id',
-        relative_to_this_test_folder(
-            'fixtures/studies/quads_f1_impala/data/pedigree'),
-        relative_to_this_test_folder(
-            'fixtures/studies/quads_f1_impala/data/variants')
+        [relative_to_this_test_folder(
+            'fixtures/studies/quads_f1_impala/data/variants')],
+        [relative_to_this_test_folder(
+            'fixtures/studies/quads_f1_impala/data/pedigree')]
     )
 
-    backend = impala_genotype_storage.get_backend(
-        'study_id', genomes_db
+    backend = impala_genotype_storage.build_backend(
+        Box({'id': 'study_id'}, default_box=True),
+        genomes_db
     )
 
     assert len(backend.families.families_list()) == 1
@@ -83,45 +87,125 @@ def test_impala_load_study(impala_genotype_storage, genomes_db):
     assert len(list(backend.query_variants())) == 3
 
 
-def test_impala_config(impala_genotype_storage):
-    impala_config = impala_genotype_storage._impala_config(
-        'study_id',
-        relative_to_this_test_folder(
-            'fixtures/studies/quads_f1_impala/data/pedigree'),
-        relative_to_this_test_folder(
-            'fixtures/studies/quads_f1_impala/data/variants')
-    )
+def test_impala_partition_import(
+        impala_genotype_storage, genomes_db,
+        sample_parquet_partition_root, fixture_dirname):
 
-    assert list(impala_config.keys()) == ['db', 'tables', 'files']
+    configuration = os.path.join(
+            sample_parquet_partition_root, '_PARTITION_DESCRIPTION')
+
+    ped_file = fixture_dirname('backends/test_partition/pedigree.parquet')
+
+    impala_genotype_storage.dataset_import(
+        'test_study',
+        configuration,
+        ped_file)
+
+    hdfs = impala_genotype_storage.hdfs_helpers
+    root = impala_genotype_storage.storage_config.hdfs.base_dir
+
+    assert hdfs.exists(os.path.join(
+        root,
+        'test_study/region_bin=1_8/family_bin=6/coding_bin=0/frequency_bin=3'))
+    assert hdfs.exists(os.path.join(
+        root,
+        'test_study/region_bin=1_8/family_bin=6/coding_bin=0/frequency_bin=3/'
+        'variants_region_bin_1_8_family_bin_6_'
+        'coding_bin_0_frequency_bin_3.parquet'))
+    assert hdfs.exists(os.path.join(
+        root,
+        'test_study/region_bin=1_8/family_bin=69'
+        '/coding_bin=0/frequency_bin=3'))
+    assert hdfs.exists(os.path.join(
+        root,
+        'test_study/region_bin=1_8/family_bin=69/coding_bin=0/frequency_bin=3/'
+        'variants_region_bin_1_8_family_bin_69_'
+        'coding_bin_0_frequency_bin_3.parquet'))
+    assert hdfs.exists(os.path.join(
+        root,
+        'test_study/region_bin=2_9/family_bin=6/coding_bin=0/frequency_bin=3'))
+    assert hdfs.exists(os.path.join(
+        root,
+        'test_study/region_bin=2_9/family_bin=6/coding_bin=0/frequency_bin=3/'
+        'variants_region_bin_2_9_family_bin_6_'
+        'coding_bin_0_frequency_bin_3.parquet'))
+    assert hdfs.exists(os.path.join(
+        root,
+        'test_study/region_bin=2_9/family_bin=69'
+        '/coding_bin=0/frequency_bin=3'))
+    assert hdfs.exists(os.path.join(
+        root,
+        'test_study/region_bin=2_9/family_bin=69/coding_bin=0/frequency_bin=3/'
+        'variants_region_bin_2_9_family_bin_69_'
+        'coding_bin_0_frequency_bin_3.parquet'))
+
+    impala = impala_genotype_storage.impala_helpers
+    db = impala_genotype_storage.storage_config.impala.db
+
+    with impala.connection.cursor() as cursor:
+        cursor.execute(f'DESCRIBE EXTENDED {db}.test_study_partition')
+        rows = list(cursor)
+        assert any(
+                row[1] == 'gpf_partitioning_coding_bin_coding_effect_types'
+                and row[2] == 'missense, nonsense, frame-shift, synonymous'
+                for row in rows)
+        assert any(
+                row[1] == 'gpf_partitioning_family_bin_family_bin_size'
+                and int(row[2]) == 100
+                for row in rows)
+        assert any(
+                row[1] == 'gpf_partitioning_frequency_bin_rare_boundary'
+                and int(row[2]) == 30
+                for row in rows)
+        assert any(
+                row[1] == 'gpf_partitioning_region_bin_chromosomes'
+                and '1, 2' in row[2]
+                for row in rows)
+        assert any(
+                row[1] == 'gpf_partitioning_region_bin_region_length'
+                and int(row[2]) == 100000
+                for row in rows)
+
+# def test_impala_config(impala_genotype_storage):
+#     impala_config = impala_genotype_storage._impala_config(
+#         'study_id',
+#         relative_to_this_test_folder(
+#             'fixtures/studies/quads_f1_impala/data/pedigree'),
+#         relative_to_this_test_folder(
+#             'fixtures/studies/quads_f1_impala/data/variants')
+#     )
+
+#     assert list(impala_config.keys()) == ['db', 'tables', 'files']
 
 
-def test_impala_storage_config(impala_genotype_storage):
-    impala_storage_config = \
-        impala_genotype_storage._impala_storage_config('study_id')
+# def test_impala_storage_config(impala_genotype_storage):
+#     impala_storage_config = \
+#         impala_genotype_storage._impala_storage_config('study_id')
 
-    assert impala_storage_config.db == 'impala_storage_test_db'
-    assert impala_storage_config.tables.pedigree == 'study_id_pedigree'
-    assert impala_storage_config.tables.variant == 'study_id_variant'
+#     assert impala_storage_config.db == 'impala_storage_test_db'
+#     assert impala_storage_config.tables.pedigree == 'study_id_pedigree'
+#     assert impala_storage_config.tables.variant == 'study_id_variant'
 
 
-def test_hdfs_parquet_files_config(impala_genotype_storage):
-    if impala_genotype_storage.hdfs_helpers.exists('/tmp/test_data/study_id'):
-        impala_genotype_storage.hdfs_helpers.delete(
-            '/tmp/test_data/study_id', recursive=True
-        )
+# def test_hdfs_parquet_files_config(impala_genotype_storage):
+#     if impala_genotype_storage.hdfs_helpers.exists(
+#             '/tmp/test_data/study_id'):
+#         impala_genotype_storage.hdfs_helpers.delete(
+#             '/tmp/test_data/study_id', recursive=True
+#         )
 
-    hdfs_parquet_files_config = \
-        impala_genotype_storage._hdfs_parquet_files_config(
-            'study_id',
-            relative_to_this_test_folder(
-                'fixtures/studies/quads_f1_impala/data/pedigree'),
-            relative_to_this_test_folder(
-                'fixtures/studies/quads_f1_impala/data/variants')
-        )
+#     hdfs_parquet_files_config = \
+#         impala_genotype_storage._hdfs_parquet_files_config(
+#             'study_id',
+#             relative_to_this_test_folder(
+#                 'fixtures/studies/quads_f1_impala/data/pedigree'),
+#             relative_to_this_test_folder(
+#                 'fixtures/studies/quads_f1_impala/data/variants')
+#         )
 
-    assert hdfs_parquet_files_config.files.pedigree == \
-        ['/tmp/test_data/study_id/pedigree/quads_f1_impala_pedigree.parquet']
-    assert hdfs_parquet_files_config.files.variants == [
-        '/tmp/test_data/study_id/variants/quads_f1_impala_variant_000001.'
-        'parquet'
-    ]
+#     assert hdfs_parquet_files_config.files.pedigree == \
+#         ['/tmp/test_data/study_id/pedigree/quads_f1_impala_pedigree.parquet']
+#     assert hdfs_parquet_files_config.files.variants == [
+#         '/tmp/test_data/study_id/variants/quads_f1_impala_variant_000001.'
+#         'parquet'
+#     ]

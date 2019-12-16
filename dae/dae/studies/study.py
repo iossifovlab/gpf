@@ -1,4 +1,7 @@
-class StudyBase(object):
+import itertools
+import functools
+
+class GenotypeData:
 
     def __init__(self, config, studies):
         self.config = config
@@ -6,21 +9,34 @@ class StudyBase(object):
 
         self.id = self.config.id
         self.name = self.config.name
-        self.has_denovo = self.config.has_denovo
-        self.has_transmitted = self.config.has_transmitted
-        self.has_complex = self.config.has_complex
-        self.has_cnv = self.config.hasCNV
-        self.study_type = self.config.study_type
+        self.description = self.config.description
         self.year = self.config.year
         self.pub_med = self.config.pub_med
 
+        self.has_denovo = self.config.has_denovo
+        self.has_transmitted = self.config.has_transmitted
+        self.has_cnv = self.config.hasCNV
+        self.has_complex = self.config.has_complex
+
+        self.study_type = self.config.study_type
         self.study_types = self.config.study_types
         self.years = self.config.years
         self.pub_meds = self.config.pub_meds
 
-        self.description = self.config.description
+    def query_variants(
+            self, regions=None, genes=None, effect_types=None,
+            family_ids=None, person_ids=None,
+            inheritance=None, roles=None, sexes=None,
+            variant_type=None, real_attr_filter=None,
+            ultra_rare=None,
+            return_reference=None,
+            return_unknown=None,
+            limit=None,
+            study_filters=None,
+            **kwargs):
+        raise NotImplementedError()
 
-    def query_variants(self, **kwargs):
+    def get_studies_ids(self):
         raise NotImplementedError()
 
     @property
@@ -30,7 +46,7 @@ class StudyBase(object):
     def get_pedigree_values(self, column):
         raise NotImplementedError()
 
-    def get_people_with_people_group(self, people_group, people_group_value):
+    def get_people_from_people_group(self, people_group, people_group_value):
         raise NotImplementedError()
 
     def get_people_group(self, people_group_id):
@@ -61,67 +77,137 @@ class StudyBase(object):
         else:
             return people_group['default']['color']
 
-    def get_wdae_member(self, member, people_group, best_st):
-        return [
-            member.family_id,
-            member.person_id,
-            member.mom_id,
-            member.dad_id,
-            member.sex.short(),
-            str(member.role),
-            self._get_person_color(member, people_group),
-            member.layout_position,
-            member.generated,
-            best_st,
-            0
-        ]
 
+class GenotypeDataGroup(GenotypeData):
 
-class Study(StudyBase):
+    def __init__(self, genotype_data_group_config, studies):
+        super(GenotypeDataGroup, self).__init__(
+            genotype_data_group_config,
+            studies
+        )
 
-    def __init__(self, config, backend):
-        super(Study, self).__init__(config, [self])
+    def query_variants(
+            self, regions=None, genes=None, effect_types=None,
+            family_ids=None, person_ids=None,
+            inheritance=None, roles=None, sexes=None,
+            variant_type=None, real_attr_filter=None,
+            ultra_rare=None,
+            return_reference=None,
+            return_unknown=None,
+            limit=None,
+            study_filters=None,
+            **kwargs):
+        return itertools.chain(*[
+                genotype_data_study.query_variants(
+                    regions, genes, effect_types, family_ids,
+                    person_ids, inheritance, roles, sexes, variant_type,
+                    real_attr_filter, ultra_rare, return_reference,
+                    return_unknown, limit, study_filters, **kwargs
+                )
+                for genotype_data_study in self.studies
+            ])
 
-        self.backend = backend
-
-    def query_variants(self, **kwargs):
-        if 'studyFilters' in kwargs and \
-                self.name not in kwargs['studyFilters']:
-            return
-        else:
-            for variant in self.backend.query_variants(
-                    regions=kwargs.get('regions'),
-                    genes=kwargs.get('genes'),
-                    effect_types=kwargs.get('effect_types'),
-                    family_ids=kwargs.get('family_ids'),
-                    person_ids=kwargs.get('person_ids'),
-                    inheritance=kwargs.get('inheritance'),
-                    roles=kwargs.get('roles'),
-                    sexes=kwargs.get('sexes'),
-                    variant_type=kwargs.get('variant_type'),
-                    real_attr_filter=kwargs.get('real_attr_filter'),
-                    ultra_rare=kwargs.get('ultra_rare'),
-                    return_reference=kwargs.get('return_reference'),
-                    return_unknown=kwargs.get('return_unknown'),
-                    limit=kwargs.get('limit')
-                    ):
-                for allele in variant.alleles:
-                    allele.update_attributes({'studyName': self.name})
-                yield variant
+    def get_studies_ids(self):
+        # TODO Use the 'cached' property on this
+        return [genotype_data_study.id for genotype_data_study in self.studies]
 
     @property
     def families(self):
-        return self.backend.families.families
+        return functools.reduce(
+            lambda x, y: self._combine_families(x, y),
+            [genotype_data_study.families
+             for genotype_data_study in self.studies]
+        )
+
+    def _combine_families(self, first, second):
+        same_families = set(first.keys()) & set(second.keys())
+        combined_dict = {}
+        combined_dict.update(first)
+        combined_dict.update(second)
+        for sf in same_families:
+            combined_dict[sf] =\
+                first[sf] if len(first[sf]) > len(second[sf]) else second[sf]
+        return combined_dict
 
     def get_pedigree_values(self, column):
-        return set(self.backend.families.ped_df[column])
+        return functools.reduce(
+            lambda x, y: x | y,
+            [st.get_pedigree_values(column) for st in self.studies], set())
 
-    def get_people_with_people_group(
+    def get_people_from_people_group(
+            self, people_group_id, people_group_value):
+        return functools.reduce(
+            lambda x, y: x | y,
+            [st.get_people_from_people_group(
+             people_group_id, people_group_value) for st in self.studies],
+            set()
+        )
+
+
+class GenotypeDataStudy(GenotypeData):
+
+    def __init__(self, config, backend):
+        super(GenotypeDataStudy, self).__init__(config, [self])
+
+        self._backend = backend
+
+    def query_variants(
+            self, regions=None, genes=None, effect_types=None,
+            family_ids=None, person_ids=None,
+            inheritance=None, roles=None, sexes=None,
+            variant_type=None, real_attr_filter=None,
+            ultra_rare=None,
+            return_reference=None,
+            return_unknown=None,
+            limit=None,
+            study_filters=None,
+            **kwargs):
+
+        if len(kwargs):
+            # FIXME This will remain so it can be used for discovering
+            # when excess kwargs are passed in order to fix such cases.
+            print('received excess keyword arguments when querying variants!')
+            print('kwargs received: {}'.format(list(kwargs.keys())))
+
+        if study_filters and self.name not in study_filters:
+            return
+
+        for variant in self._backend.query_variants(
+                regions=regions,
+                genes=genes,
+                effect_types=effect_types,
+                family_ids=family_ids,
+                person_ids=person_ids,
+                inheritance=inheritance,
+                roles=roles,
+                sexes=sexes,
+                variant_type=variant_type,
+                real_attr_filter=real_attr_filter,
+                ultra_rare=ultra_rare,
+                return_reference=return_reference,
+                return_unknown=return_unknown,
+                limit=limit
+                ):
+            for allele in variant.alleles:
+                allele.update_attributes({'studyName': self.name})
+            yield variant
+
+    def get_studies_ids(self):
+        return [self.id]
+
+    @property
+    def families(self):
+        return self._backend.families.families
+
+    def get_pedigree_values(self, column):
+        return set(self._backend.families.ped_df[column])
+
+    def get_people_from_people_group(
             self, people_group_id, people_group_value):
         people_group = self.get_people_group(people_group_id)
         source = people_group.source
 
-        pedigree_df = self.backend.families.ped_df
+        pedigree_df = self._backend.families.ped_df
         people_ids = pedigree_df[
             pedigree_df[source].apply(str) == str(people_group_value)]
 

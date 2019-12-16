@@ -1,11 +1,16 @@
-def test_get_gene_set_legend(denovo_gene_set_f4):
-    dgsl = denovo_gene_set_f4.get_gene_set_legend('phenotype')
+import pytest
+
+pytestmark = pytest.mark.usefixtures('gene_info_cache_dir', 'calc_gene_sets')
+
+
+def test_get_people_group_legend(denovo_gene_set_f4):
+    dgsl = denovo_gene_set_f4.get_people_group_legend('phenotype')
 
     assert len(dgsl) == 6
 
 
-def test_get_gene_set_legend_missing(denovo_gene_set_f4):
-    dgsl = denovo_gene_set_f4.get_gene_set_legend('missing')
+def test_get_people_group_legend_missing(denovo_gene_set_f4):
+    dgsl = denovo_gene_set_f4.get_people_group_legend('missing')
 
     assert len(dgsl) == 0
 

@@ -5,5 +5,5 @@
 ##contig=<ID=1>
 ##contig=<ID=5>
 ##contig=<ID=8>
-#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	mom1	dad1	ch1	mom3	dad3	ch3	mom4	dad4	ch4	ch4.1	mom5	dad5	ch5	ch5.1	mom6	dad6	ch6	mom7	dad7	ch7	mom8	dad8	ch8	ch8.1	ch9	ch9.1	ch9.2	ch10	ch10.1	ch10.2	mom11	dad11	ch11
-1	865627	.	G	A	.	.	EFF=MIS;INH=DEN	GT	0/0	0/0	0/1	0/0	0/0	0/0	0/0	0/0	0/1	0/1	0/1	0/0	0/0	0/1	0/0	0/0	0/1	0/0	0/0	0/0	0/0	0/0	0/0	0/0	0/0	0/0	0/0	0/0	0/0	0/0	0/0	0/0	0/0
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	mom1	dad1	ch1	mom3	dad3	ch3	mom4	ch4	ch4.1	mom5	dad5	ch5	mom6	dad6	ch6	mom7	dad7	ch7	mom8	dad8	ch8	ch9	ch9.1	ch9.2	ch10	ch10.1	ch10.2	mom11	dad11	ch11
+1	865627	.	G	A	.	.	EFF=MIS;INH=DEN	GT	0/0	0/0	0/1	0/0	0/0	0/0	0/0	0/1	0/1	0/1	0/0	0/0	0/0	0/0	0/1	0/0	0/0	0/0	0/0	0/0	0/0	0/0	0/0	0/0	0/0	0/0	0/0	0/0	0/0	0/0

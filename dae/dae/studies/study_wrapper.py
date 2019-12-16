@@ -4,7 +4,7 @@ import itertools
 import traceback
 import numpy as np
 
-from dae.utils.vcf_utils import mat2str
+from dae.utils.variant_utils import mat2str
 from dae.utils.dae_utils import split_iterable, join_line, \
     members_in_order_get_family_structure
 from dae.utils.effect_utils import expand_effect_types, ge2str, gd2str, \
@@ -24,23 +24,24 @@ from dae.studies.people_group_config_parser import PeopleGroupConfigParser
 
 class StudyWrapper(object):
 
-    def __init__(self, study, pheno_factory, weights_factory, *args, **kwargs):
+    def __init__(self, genotype_data_study, pheno_db,
+                 gene_weights_db, *args, **kwargs):
         super(StudyWrapper, self).__init__(*args, **kwargs)
-        assert study is not None
+        assert genotype_data_study is not None
 
-        self.study = study
-        self.config = study.config
+        self.genotype_data_study = genotype_data_study
+        self.config = genotype_data_study.config
         assert self.config is not None
 
         self._init_wdae_config()
-        self.pheno_factory = pheno_factory
-        self._init_pheno(self.pheno_factory)
+        self.pheno_db = pheno_db
+        self._init_pheno(self.pheno_db)
 
-        self.weights_factory = weights_factory
+        self.gene_weights_db = gene_weights_db
 
     def _init_wdae_config(self):
-        preview_column_slots = []
-        download_column_slots = []
+        preview_column_slots = {}
+        download_column_slots = {}
         pheno_column_slots = []
         gene_weight_column_sources = []
         in_role_columns = []
@@ -65,8 +66,6 @@ class StudyWrapper(object):
             if genotype_browser_config.present_in_role:
                 present_in_role = genotype_browser_config.present_in_role
 
-        self.preview_column_slots = preview_column_slots
-        self.download_column_slots = download_column_slots
         self.pheno_column_slots = pheno_column_slots
         self.gene_weight_column_sources = gene_weight_column_sources
         self.in_role_columns = in_role_columns
@@ -86,14 +85,35 @@ class StudyWrapper(object):
         else:
             self.legend = {}
 
-    def _init_pheno(self, pheno_factory):
-        self.pheno_db = None
+        self.preview_columns = []
+        self.preview_sources = []
+        self.download_columns = []
+        self.download_sources = []
+
+        preview_slots = tuple(map(list, zip(*[
+            (attr['id'], attr['source'])
+            for attr in preview_column_slots.values()
+        ])))
+
+        download_slots = tuple(map(list, zip(*[
+            (attr['name'], attr['source'])
+            for attr in download_column_slots.values()
+        ])))
+
+        if len(preview_slots) > 0:
+            self.preview_columns, self.preview_sources = preview_slots
+
+        if len(download_slots) > 0:
+            self.download_columns, self.download_sources = download_slots
+
+    def _init_pheno(self, pheno_db):
+        self.phenotype_data = None
         self.pheno_filter_builder = None
 
         self.pheno_filters_in_config = set()
-        pheno_db = self.config.phenoDB
-        if pheno_db:
-            self.pheno_db = pheno_factory.get_pheno_db(pheno_db)
+        phenotype_data = self.config.phenotype_data
+        if phenotype_data:
+            self.phenotype_data = pheno_db.get_phenotype_data(phenotype_data)
 
             if self.pheno_filters:
                 self.pheno_filters_in_config = {
@@ -101,14 +121,16 @@ class StudyWrapper(object):
                     for pf in self.pheno_filters
                     if pf['measureFilter']['filterType'] == 'single'
                 }
-                self.pheno_filter_builder = PhenoFilterBuilder(self.pheno_db)
+                self.pheno_filter_builder = PhenoFilterBuilder(
+                    self.phenotype_data
+                )
 
     @staticmethod
     def _get_pheno_filter_key(pheno_filter, measure_key='measure'):
         return '{}.{}'.format(pheno_filter['role'], pheno_filter[measure_key])
 
     def __getattr__(self, name):
-        return getattr(self.study, name)
+        return getattr(self.genotype_data_study, name)
 
     FILTER_RENAMES_MAP = {
         'familyIds': 'family_ids',
@@ -152,7 +174,7 @@ class StudyWrapper(object):
 
         for index, member in enumerate(allele.members_in_order):
             result.append(
-                self.get_wdae_member(member, people_group, best_st[index])
+                self._get_wdae_member(member, people_group, best_st[index])
             )
 
         return result
@@ -189,7 +211,7 @@ class StudyWrapper(object):
 
                 yield row_variant
 
-    def get_variant_web_rows(self, query, sources, variants_hard_max=2000):
+    def get_variant_web_rows(self, query, sources, max_variants_count=None):
         people_group_id = query.get('peopleGroup', {}).get('id', None)
         people_group = self.get_people_group(people_group_id)
         if not people_group:
@@ -197,43 +219,37 @@ class StudyWrapper(object):
 
         rows = self.query_list_variants(sources, people_group, **query)
 
-        if variants_hard_max is not None:
-            limited_rows = itertools.islice(rows, variants_hard_max+1)
+        if max_variants_count is not None:
+            limited_rows = itertools.islice(rows, max_variants_count)
 
         return limited_rows
 
-    def get_variants_wdae_preview(
-            self, query, max_variants_count=1000, variants_hard_max=2000):
-        columns, sources = zip(*[
-            (attr['id'], attr['source'])
-            for attr in self.preview_column_slots.values()
-        ])
-        rows = self.get_variant_web_rows(query, sources, variants_hard_max)
-        rows = list(rows)
+    def get_wdae_preview_info(self, query, max_variants_count=1000):
+        preview_info = {}
 
-        if variants_hard_max is None or len(rows) < variants_hard_max:
-            count = str(len(rows))
-        else:
-            count = 'more than {}'.format(variants_hard_max)
+        preview_info['cols'] = self.preview_columns
+        preview_info['legend'] = self.get_legend(**query)
 
-        variants_data = {}
-        variants_data['count'] = count
-        variants_data['rows'] = list(rows[:max_variants_count])
-        variants_data['cols'] = list(columns)
-        variants_data['legend'] = self.get_legend(**query)
+        preview_info['maxVariantsCount'] = max_variants_count
+
+        return preview_info
+
+    def get_variants_wdae_preview(self, query, max_variants_count=1000):
+        variants_data = self.get_variant_web_rows(
+            query, self.preview_sources,
+            max_variants_count=(max_variants_count + 1)
+        )
 
         return variants_data
 
-    def get_variants_wdae_download(
-            self, query, max_variants_count=1000, variants_hard_max=2000):
-        columns, sources = zip(*[
-            (attr['name'], attr['source'])
-            for attr in self.download_column_slots.values()
-        ])
-        rows = self.get_variant_web_rows(query, sources, variants_hard_max)
-        rows = itertools.islice(rows, max_variants_count)
+    def get_variants_wdae_download(self, query, max_variants_count=10000):
+        rows = self.get_variant_web_rows(
+            query, self.download_sources, max_variants_count=max_variants_count
+        )
 
-        wdae_download = map(join_line, itertools.chain([columns], rows))
+        wdae_download = map(
+            join_line, itertools.chain([self.download_columns], rows)
+        )
 
         return wdae_download
 
@@ -294,7 +310,7 @@ class StudyWrapper(object):
 
         if 'studyFilters' in kwargs:
             if kwargs['studyFilters']:
-                kwargs['studyFilters'] =\
+                kwargs['study_filters'] =\
                     [sf['studyName'] for sf in kwargs['studyFilters']]
             else:
                 del(kwargs['studyFilters'])
@@ -313,7 +329,7 @@ class StudyWrapper(object):
             kwargs.pop('inheritanceTypeFilter')
 
         variants_from_studies = itertools.islice(
-            self.study.query_variants(**kwargs), limit)
+            self.genotype_data_study.query_variants(**kwargs), limit)
 
         for variant in \
                 self._add_additional_columns(variants_from_studies):
@@ -363,7 +379,7 @@ class StudyWrapper(object):
         return pheno_values
 
     def _get_all_pheno_values(self, families):
-        if not self.pheno_db or not self.pheno_column_slots:
+        if not self.phenotype_data or not self.pheno_column_slots:
             return None
 
         pheno_column_dfs = []
@@ -371,7 +387,7 @@ class StudyWrapper(object):
 
         for slot in self.pheno_column_slots:
             pheno_column_dfs.append(
-                self.pheno_db.get_measure_values_df(
+                self.phenotype_data.get_measure_values_df(
                     slot.measure,
                     family_ids=list(families),
                     roles=[slot.role]))
@@ -385,13 +401,13 @@ class StudyWrapper(object):
 
         gene_weights_values = {}
         for gwc in self.gene_weight_column_sources:
-            if gwc not in self.weights_factory:
+            if gwc not in self.gene_weights_db:
                 continue
 
-            gene_weights = self.weights_factory[gwc]
+            gene_weights = self.gene_weights_db[gwc]
             if gene != '':
                 gene_weights_values[gwc] =\
-                    gene_weights.to_dict().get(gene, '')
+                    gene_weights._to_dict().get(gene, '')
             else:
                 gene_weights_values[gwc] = ''
 
@@ -442,7 +458,9 @@ class StudyWrapper(object):
 
         people_group_query = kwargs.pop('peopleGroup')
 
-        people_group = self.study.get_people_group(people_group_query['id'])
+        people_group = self.genotype_data_study.get_people_group(
+            people_group_query['id']
+        )
         if not people_group:
             return kwargs
 
@@ -453,7 +471,7 @@ class StudyWrapper(object):
         for family in self.families.values():
             family_members_with_people_group = set([
                 person.person_id for person in
-                family.get_people_with_people_groups(
+                family.get_people_from_people_group(
                     people_group.source, people_group_query['checkedValues']
                 )
             ])
@@ -481,7 +499,7 @@ class StudyWrapper(object):
         kwargs['real_attr_filter'] += genomic_scores_filter
 
     def _transform_gene_weights(self, kwargs):
-        if not self.weights_factory:
+        if not self.gene_weights_db:
             return
 
         gene_weights = kwargs.pop('geneWeights', {})
@@ -490,8 +508,8 @@ class StudyWrapper(object):
         range_start = gene_weights.get('rangeStart', None)
         range_end = gene_weights.get('rangeEnd', None)
 
-        if weight_name and weight_name in self.weights_factory:
-            weight = self.weights_factory[gene_weights.get('weight')]
+        if weight_name and weight_name in self.gene_weights_db:
+            weight = self.gene_weights_db[gene_weights.get('weight')]
 
             genes = weight.get_genes(range_start, range_end)
 
@@ -632,7 +650,8 @@ class StudyWrapper(object):
     def _transform_pheno_filters_to_people_ids(self, pheno_filter_args):
         people_ids = []
         for pheno_filter_arg in pheno_filter_args:
-            if not self.pheno_db.has_measure(pheno_filter_arg['measure']):
+            if not self.phenotype_data.has_measure(
+                    pheno_filter_arg['measure']):
                 continue
             pheno_constraints = self._get_pheno_filter_constraints(
                 pheno_filter_arg)
@@ -640,7 +659,7 @@ class StudyWrapper(object):
             pheno_filter = self.pheno_filter_builder.make_filter(
                 pheno_filter_arg['measure'], pheno_constraints)
 
-            measure_df = self.pheno_db.get_measure_values_df(
+            measure_df = self.phenotype_data.get_measure_values_df(
                 pheno_filter_arg['measure'],
                 roles=[pheno_filter_arg["role"]])
 
@@ -657,7 +676,7 @@ class StudyWrapper(object):
         pheno_filter_args = kwargs['phenoFilters']
 
         assert isinstance(pheno_filter_args, list)
-        assert self.pheno_db
+        assert self.phenotype_data
 
         people_ids_to_query = self._transform_pheno_filters_to_people_ids(
             pheno_filter_args)
@@ -716,7 +735,7 @@ class StudyWrapper(object):
     def _get_description_keys():
         return [
             'id', 'name', 'description', 'phenotypeBrowser', 'phenotypeTool',
-            'phenoDB', 'enrichmentTool', 'genotypeBrowser',
+            'phenotypeData', 'enrichmentTool', 'genotypeBrowser',
             'peopleGroupConfig', 'genotypeBrowserConfig', 'commonReport',
             'studyTypes', 'studies'
         ]
@@ -728,7 +747,7 @@ class StudyWrapper(object):
             'peopleGroupConfig': PeopleGroupConfigParser
         }
 
-    def get_dataset_description(self):
+    def get_genotype_data_group_description(self):
         keys = self._get_description_keys()
         config = self.config
 
@@ -740,8 +759,9 @@ class StudyWrapper(object):
 
         return result
 
-    def _augment_pheno_filters_domain(self, dataset_description):
-        genotype_browser_config = dataset_description['genotypeBrowserConfig']
+    def _augment_pheno_filters_domain(self, genotype_data_group_description):
+        genotype_browser_config = \
+            genotype_data_group_description['genotypeBrowserConfig']
         if not genotype_browser_config:
             return
 
@@ -754,18 +774,34 @@ class StudyWrapper(object):
             if measure_filter is None or 'measure' not in measure_filter:
                 continue
 
-            if self.pheno_db is None:
+            if self.phenotype_data is None:
                 continue
 
-            measure = self.pheno_db.get_measure(
+            measure = self.phenotype_data.get_measure(
                 measure_filter['measure'])
             measure_filter['domain'] = measure.values_domain.split(",")
 
-    def _filter_section_configs(self, dataset_description, config_keys={}):
+    def _filter_section_configs(self, genotype_data_group_description,
+                                config_keys={}):
         for config_key, parser in config_keys.items():
-            config = dataset_description.get(config_key, None)
+            config = genotype_data_group_description.get(config_key, None)
             if not config:
                 continue
 
-            dataset_description[config_key] = \
+            genotype_data_group_description[config_key] = \
                 parser.get_config_description(config)
+
+    def _get_wdae_member(self, member, people_group, best_st):
+        return [
+            member.family_id,
+            member.person_id,
+            member.mom_id,
+            member.dad_id,
+            member.sex.short(),
+            str(member.role),
+            self.genotype_data_study._get_person_color(member, people_group),
+            member.layout_position,
+            member.generated,
+            best_st,
+            0
+        ]

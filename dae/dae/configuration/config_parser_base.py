@@ -1,5 +1,6 @@
 import os
 from box import Box
+from collections import deque
 from configparser import ConfigParser
 
 from dae.configuration.utils import parser_to_dict
@@ -108,6 +109,12 @@ class ConfigParserBase(object):
     VerificationError exception.
     '''
 
+    INCLUDE_PROPERTIES = ()
+    '''
+    Holds a tuple of configuration property names. Any property name that is
+    **not** inside this tuple will be omitted from the end result
+    '''
+
     @classmethod
     def read_and_parse_directory_configurations(
             cls, configurations_dir, defaults=None, fail_silently=False):
@@ -205,7 +212,7 @@ class ConfigParserBase(object):
 
         for config_path in config_paths:
             config = cls.read_file_configuration(
-                config_path, enabled_dir, defaults
+                config_path, os.path.dirname(config_path), defaults
             )
 
             if config:
@@ -348,6 +355,8 @@ class ConfigParserBase(object):
 
         for section in sections:
             config_section = config[section]
+            if config_section is None:
+                continue
 
             config_section = cls.parse_section(config_section)
             if config_section is None:
@@ -386,6 +395,7 @@ class ConfigParserBase(object):
         config_section = cls._cast_to_bool(config_section)
         config_section = cls._cast_to_int(config_section)
         config_section = cls._filter_selectors(config_section)
+        config_section = cls._filter_included(config_section)
 
         # This one should remain last so as to avoid having a seemingly valid
         # value be rendered invalid by one of the previous transformations
@@ -487,6 +497,65 @@ class ConfigParserBase(object):
                     selector.id = selector_id
 
                 config[key][selector_id] = selector
+
+        return config
+
+    @classmethod
+    def _is_property_valid(cls, depth_stack, props):
+        n_depth = 0
+        n_prop = 0
+        while n_depth <= len(depth_stack) and n_prop < len(props):
+            if n_depth == len(depth_stack):
+                if n_prop == len(props)-1:
+                    return True
+                else:
+                    break
+            prop_token = props[n_prop]
+
+            depth_token = depth_stack[n_depth]
+            if prop_token == '**':
+                if n_prop == len(props) - 2:
+                    return True
+                else:
+                    next_prop = prop_token[n_prop+1]
+                    while n_depth < len(depth_stack):
+                        depth_token = depth_stack[n_depth]
+                        if depth_token == next_prop or next_prop == '*':
+                            break
+                        n_depth += 1
+                    n_prop += 1
+            elif prop_token != depth_token and prop_token != '*':
+                return False
+            n_depth += 1
+            n_prop += 1
+        return False
+
+    @classmethod
+    def _evaluate_included_properties(cls, depth_stack):
+        split_props = list(map(lambda x: x.split('.'), cls.INCLUDE_PROPERTIES))
+        valid_props = list()
+        for prop_tokens in split_props:
+            if cls._is_property_valid(depth_stack, prop_tokens):
+                valid_props.append(prop_tokens[len(prop_tokens) - 1])
+        return valid_props
+
+    @classmethod
+    def _filter_included(cls, config, depth_stack=deque()):
+        if not cls.INCLUDE_PROPERTIES:
+            return config
+
+        evaluated_properties = cls._evaluate_included_properties(depth_stack)
+        for k in list(config):
+            if type(config[k]) == Box:
+                depth_stack.append(k)
+                cls._filter_included(config[k], depth_stack)
+                depth_stack.pop()
+                if len(config[k]) == 0:
+                    del config[k]
+            else:
+                if k not in evaluated_properties \
+                        and '*' not in evaluated_properties:
+                    del config[k]
 
         return config
 

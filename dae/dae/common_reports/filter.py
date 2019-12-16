@@ -51,7 +51,7 @@ class FilterObjects(object):
         return None
 
     @staticmethod
-    def get_filter_objects(study, people_groups_info, groups):
+    def get_filter_objects(genotype_data_study, people_groups_info, groups):
         filter_objects = []
         for name, group in groups.items():
             filters = []
@@ -63,7 +63,7 @@ class FilterObjects(object):
                     el_values = people_group_info.people_groups
                 else:
                     el_column = el
-                    el_values = study.get_pedigree_values(el)
+                    el_values = genotype_data_study.get_pedigree_values(el)
 
                 filt = []
                 for el_value in el_values:

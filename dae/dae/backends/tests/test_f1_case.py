@@ -2,7 +2,7 @@ import pytest
 
 from dae.RegionOperations import Region
 
-from dae.utils.vcf_utils import mat2str
+from dae.utils.variant_utils import mat2str
 
 
 def test_f1_check_all_variants_effects(variants_vcf):
@@ -43,9 +43,9 @@ def count_variants(variants, regions, inheritance, effect_types):
     return len(vs)
 
 
-@pytest.mark.parametrize("variants", [
-    "variants_vcf",
-    "variants_impala",
+@pytest.mark.parametrize('variants', [
+    'variants_impala',
+    'variants_vcf'
 ])
 @pytest.mark.parametrize("regions,inheritance,effect_types,count", [
     ([Region("1", 878152, 878152)], None, None, 1),
@@ -71,9 +71,9 @@ def test_f1_simple(
     assert len(vs) == count
 
 
-@pytest.mark.parametrize("variants", [
-    "variants_vcf",
-    "variants_impala",
+@pytest.mark.parametrize('variants', [
+    'variants_impala',
+    'variants_vcf'
 ])
 @pytest.mark.parametrize("regions,inheritance,effect_types,count", [
     ([Region("1", 901923, 901923)], None, None, 1),
@@ -91,9 +91,9 @@ def test_f1_all_unknown(
     assert c == count
 
 
-@pytest.mark.parametrize("variants", [
-    "variants_vcf",
-    "variants_impala",
+@pytest.mark.parametrize('variants', [
+    'variants_impala',
+    'variants_vcf'
 ])
 @pytest.mark.parametrize("regions,inheritance,effect_types,count", [
     ([Region("1", 905951, 905951)], None, None, 1),
@@ -114,9 +114,9 @@ def test_f1_unknown_and_reference(
     assert c == count
 
 
-@pytest.mark.parametrize("variants", [
-    "variants_vcf",
-    "variants_impala",
+@pytest.mark.parametrize('variants', [
+    'variants_impala',
+    'variants_vcf'
 ])
 @pytest.mark.parametrize("regions,inheritance,effect_types,count", [
     ([Region("1", 905957, 905957)], None, None, 1),
@@ -139,9 +139,9 @@ def test_f1_cannonical_denovo(
     assert c == count
 
 
-@pytest.mark.parametrize("variants", [
-    "variants_vcf",
-    "variants_impala",
+@pytest.mark.parametrize('variants', [
+    'variants_impala',
+    'variants_vcf'
 ])
 @pytest.mark.parametrize("regions,inheritance,effect_types,count", [
     ([Region("1", 905966, 905966)], None, None, 1),
@@ -162,9 +162,9 @@ def test_f1_cannonical_omission(
     assert c == count
 
 
-@pytest.mark.parametrize("variants", [
-    "variants_vcf",
-    "variants_impala",
+@pytest.mark.parametrize('variants', [
+    'variants_impala',
+    'variants_vcf'
 ])
 @pytest.mark.parametrize("regions,inheritance,effect_types,count", [
     ([Region("1", 906092, 906092)], None, None, 1),
@@ -186,9 +186,9 @@ def test_f1_non_cannonical_omission(
     assert c == count
 
 
-@pytest.mark.parametrize("variants", [
-    "variants_vcf",
-    "variants_impala",
+@pytest.mark.parametrize('variants', [
+    'variants_impala',
+    'variants_vcf'
 ])
 @pytest.mark.parametrize("regions,inheritance,effect_types,count", [
     ([Region("1", 906086, 906086)], None, None, 1),
@@ -206,9 +206,9 @@ def test_f1_partially_known_denovo(
     assert c == count
 
 
-@pytest.mark.parametrize("variants", [
-    "variants_vcf",
-    "variants_impala",
+@pytest.mark.parametrize('variants', [
+    'variants_impala',
+    'variants_vcf'
 ])
 @pytest.mark.parametrize("regions,inheritance,effect_types,count", [
     ([Region("1", 901923, 901923)], None, None, 1),

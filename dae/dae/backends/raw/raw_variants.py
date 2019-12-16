@@ -1,10 +1,12 @@
-from dae.variants.family_variant import FamilyVariant, FamilyAllele
+import enum
+import itertools
+
+from dae.variants.family_variant import FamilyAllele
 
 from dae.backends.attributes_query import role_query, sex_query, \
     inheritance_query,\
     variant_type_query
 
-import enum
 
 class TransmissionType(enum.Enum):
 
@@ -16,9 +18,11 @@ class TransmissionType(enum.Enum):
 class RawFamilyVariants:
 
     def __init__(
-            self, families, transmission_type=TransmissionType.transmitted):
+            self, families):
         self.families = families
-        self.transmission_type = transmission_type
+
+    def full_variants_iterator(self):
+        raise NotImplementedError()
 
     @staticmethod
     def filter_regions(v, regions):
@@ -144,12 +148,7 @@ class RawFamilyVariants:
                 return False
         return True
 
-    def full_variants_iterator(self):
-        raise NotImplementedError()
-
     def query_variants(self, **kwargs):
-        # annot_df = self.annot_df
-
         if kwargs.get("roles") is not None:
             parsed = kwargs['roles']
             if isinstance(parsed, list):
@@ -183,7 +182,7 @@ class RawFamilyVariants:
 
             kwargs['variant_type'] = variant_type_query.\
                 transform_tree_to_matcher(parsed)
-        
+
         return_reference = kwargs.get("return_reference", False)
         return_unknown = kwargs.get("return_unknown", False)
 
@@ -205,3 +204,18 @@ class RawFamilyVariants:
                 if alleles_matched:
                     v.set_matched_alleles(alleles_matched)
                     yield v
+
+
+class RawMemoryVariants(RawFamilyVariants):
+
+    def __init__(
+            self, loaders):
+        assert len(loaders) > 0
+        super(RawMemoryVariants, self).__init__(loaders[0].families)
+
+        self.full_variants = list(itertools.chain.from_iterable(
+            [loader.full_variants_iterator() for loader in loaders]))
+
+    def full_variants_iterator(self):
+        for sv, fvs in self.full_variants:
+            yield sv, fvs

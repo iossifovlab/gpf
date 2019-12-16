@@ -8,9 +8,9 @@ import pytest
 from dae.RegionOperations import Region
 
 
-@pytest.mark.parametrize("variants", [
-    "variants_vcf",
-    "variants_impala",
+@pytest.mark.parametrize('variants', [
+    'variants_impala',
+    'variants_vcf'
 ])
 @pytest.mark.parametrize("fixture_name,regions,family_ids,count", [
 
