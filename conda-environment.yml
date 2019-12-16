@@ -48,3 +48,4 @@ deprecation=2.0.6
 lxml=4.4.2
 beautifulsoup4=4.8.1
 django-extensions=2.2.5
+biopython=1.74

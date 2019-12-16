@@ -1,14 +1,6 @@
 #!/usr/bin/env python
 
-from __future__ import print_function
-from __future__ import unicode_literals
-
-from builtins import zip
-from builtins import map
-from builtins import str
-from builtins import range
-from builtins import object
-from RegionOperations import Region, \
+from dae.RegionOperations import Region, \
     collapse_noChr
 import gzip
 import pickle
@@ -16,7 +8,6 @@ import sys
 from collections import defaultdict, \
     namedtuple, OrderedDict
 
-import os
 
 NumOfLine2Read4Test = 100
 
