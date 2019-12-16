@@ -28,7 +28,7 @@ def temp_filename(request):
     return os.path.abspath(output)
 
 
-def test_annotate_variant_simple(temp_filename):
+def test_annotate_variant_simple(temp_filename, default_gene_models):
     denovo_filename = relative_to_this_test_folder('fixtures/denovo.txt')
     assert os.path.exists(denovo_filename)
 
@@ -36,7 +36,11 @@ def test_annotate_variant_simple(temp_filename):
     assert expected_df is not None
     assert len(expected_df) == 8
 
-    command = "cut -f 1-3 {} | annotate_variant.py | head -n 9 > {}".format(
+    print(default_gene_models.location)
+
+    command = "cut -f 1-3 {} " \
+        "| annotate_variant.py -T RefSeq2013 " \
+        "| head -n 9 > {}".format(
         denovo_filename, temp_filename
     )
     print(command)
@@ -44,6 +48,7 @@ def test_annotate_variant_simple(temp_filename):
     assert res == 0
 
     result_df = pd.read_csv(temp_filename, sep='\t')
+    print(result_df.head())
 
     pd.testing.assert_frame_equal(
         result_df[['effectType', 'effectGene']],

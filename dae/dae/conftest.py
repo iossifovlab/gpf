@@ -84,7 +84,7 @@ def default_genome(default_gpf_instance):
 
 @pytest.fixture(scope='session')
 def default_gene_models(default_gpf_instance):
-    return default_gpf_instance.genomes_db.get_gene_models()
+    return default_gpf_instance.genomes_db.get_gene_models("RefSeq2013")
 
 
 @pytest.fixture(scope='session')
