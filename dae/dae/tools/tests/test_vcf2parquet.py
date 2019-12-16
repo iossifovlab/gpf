@@ -1,8 +1,17 @@
+import os
+import io
+
+from contextlib import redirect_stdout
+
 from box import Box
+
+from dae.pedigrees.family import FamiliesData, PedigreeReader
 
 from dae.annotation.tools.file_io_parquet import ParquetReader
 
-from dae.tools.vcf2parquet import main, parse_cli_arguments, generate_makefile
+from dae.backends.impala.loader import ParquetLoader
+
+from dae.tools.vcf2parquet import main
 
 
 def test_vcf2parquet_vcf(
@@ -18,7 +27,7 @@ def test_vcf2parquet_vcf(
         vcf_import_config.vcf
     ]
 
-    parquet_filenames = main(
+    main(
         argv, gpf_instance=default_gpf_instance,
         dae_config=dae_config_fixture,
         genomes_db=genomes_db,
@@ -28,7 +37,7 @@ def test_vcf2parquet_vcf(
     )
 
     summary = ParquetReader(Box({
-        'infile': parquet_filenames.variant,
+        'infile': os.path.join(temp_dirname, 'variant', 'variants.parquet'),
     }, default_box=True, default_box_attr=None))
     summary._setup()
     summary._cleanup()
@@ -47,20 +56,105 @@ def test_vcf2parquet_vcf(
     # assert schema['worst_effect'].type_name == 'str'
 
 
-def test_vcf2parquet_make(
+def test_vcf2parquet_vcf_partition(
         vcf_import_config, annotation_pipeline_config,
+        annotation_scores_dirname, temp_dirname,
+        default_gpf_instance, dae_config_fixture, genomes_db,
+        parquet_partition_configuration):
+
+    argv = [
+        'vcf',
+        '--annotation', annotation_pipeline_config,
+        '-o', temp_dirname,
+        '--pd', parquet_partition_configuration,
+        vcf_import_config.pedigree,
+        vcf_import_config.vcf
+    ]
+
+    main(
+        argv, gpf_instance=default_gpf_instance,
+        dae_config=dae_config_fixture,
+        genomes_db=genomes_db,
+        annotation_defaults={'values': {
+             "scores_dirname": annotation_scores_dirname,
+        }}
+    )
+
+    generated_conf = os.path.join(temp_dirname, '_PARTITION_DESCRIPTION')
+    assert os.path.exists(generated_conf)
+
+    ped_df = PedigreeReader.flexible_pedigree_read(vcf_import_config.pedigree)
+    families = FamiliesData.from_pedigree_df(ped_df)
+
+    pl = ParquetLoader(families, generated_conf)
+    summary_genotypes = []
+    for summary, gt in pl.summary_genotypes_iterator():
+        summary_genotypes.append((summary, gt))
+
+    assert len(summary_genotypes) == 110
+    assert all(sgt[0].get_attribute('region_bin')[0] is not None
+               for sgt in summary_genotypes)
+    assert all(sgt[0].get_attribute('family_bin')[0] is not None
+               for sgt in summary_genotypes)
+    assert all(sgt[0].get_attribute('coding_bin')[0] is not None
+               for sgt in summary_genotypes)
+    assert all(sgt[0].get_attribute('frequency_bin')[0] is not None
+               for sgt in summary_genotypes)
+    assert any(sgt[0].reference == 'G' for sgt in summary_genotypes)
+    assert any(sgt[0].reference == 'C' for sgt in summary_genotypes)
+    assert any(sgt[0].alternative == 'T' for sgt in summary_genotypes)
+    assert any(sgt[0].alternative == 'A' for sgt in summary_genotypes)
+    assert any(sgt[0].reference == 'CGGCTCGGAAGG' for sgt in summary_genotypes)
+
+
+def test_vcf2parquet_make(
+        vcf_import_config, annotation_pipeline_default_config,
         annotation_scores_dirname, temp_dirname,
         default_gpf_instance, dae_config_fixture, default_genome):
 
     argv = [
         'make',
-        '--annotation', annotation_pipeline_config,
+        '--annotation', annotation_pipeline_default_config,
         '-o', temp_dirname,
         vcf_import_config.pedigree,
         vcf_import_config.vcf
     ]
 
-    argv = parse_cli_arguments(default_gpf_instance, argv)
-    assert argv.type == 'make'
+    f = io.StringIO()
+    with redirect_stdout(f):
+        main(argv)
 
-    generate_makefile(dae_config_fixture, default_genome, argv)
+    makefile = f.getvalue()
+    assert 'all:' in makefile
+    assert 'vcf2parquet.py vcf ' in makefile
+
+
+def test_vcf2parquet_make_partition(
+        vcf_import_config, annotation_pipeline_default_config,
+        annotation_scores_dirname, temp_dirname,
+        default_gpf_instance, dae_config_fixture, default_genome,
+        parquet_partition_configuration):
+
+    argv = [
+        'make',
+        '--annotation', annotation_pipeline_default_config,
+        '-o', temp_dirname,
+        '--pd', parquet_partition_configuration,
+        vcf_import_config.pedigree,
+        vcf_import_config.vcf
+    ]
+
+    f = io.StringIO()
+    with redirect_stdout(f):
+        main(argv)
+
+    makefile = f.getvalue()
+    print(makefile)
+    assert 'all:' in makefile
+    assert 'vcf2parquet.py vcf ' in makefile
+    assert '2_8:' in makefile
+    assert '--region 2:800001-900000'
+    assert '2_9:' in makefile
+    assert '--region 2:900001-1000000'
+    assert '2_12:' in makefile
+    assert '--region 2:1200001-1300000'

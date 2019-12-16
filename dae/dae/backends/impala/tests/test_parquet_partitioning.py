@@ -22,7 +22,7 @@ def test_region_partition(vcf_variants_loader):
 
     assert parquet_writer is not None
 
-    parquet_writer.write_partition()
+    parquet_writer.write_dataset()
 
     assert os.path.exists(os.path.join(tmp_dir, 'region_bin=1_86'))
     assert os.path.exists(os.path.join(tmp_dir, 'region_bin=1_87'))
@@ -61,7 +61,7 @@ def test_region_partition_chromosome_filter(vcf_variants_loader):
 
     assert parquet_writer is not None
 
-    parquet_writer.write_partition()
+    parquet_writer.write_dataset()
 
     assert os.path.exists(os.path.join(tmp_dir, 'region_bin=1_86'))
     assert os.path.exists(os.path.join(tmp_dir, 'region_bin=1_87'))
@@ -101,7 +101,7 @@ def test_region_partition_small_region(vcf_variants_loader):
 
     assert parquet_writer is not None
 
-    parquet_writer.write_partition()
+    parquet_writer.write_dataset()
 
     assert os.path.exists(os.path.join(tmp_dir, 'region_bin=1_86558'))
     assert os.path.exists(os.path.join(tmp_dir, 'region_bin=1_86562'))
@@ -150,7 +150,7 @@ def test_region_partition_large_region(vcf_variants_loader):
 
     assert parquet_writer is not None
 
-    parquet_writer.write_partition()
+    parquet_writer.write_dataset()
 
     assert os.path.exists(os.path.join(tmp_dir, 'region_bin=1_0'))
     assert os.path.exists(os.path.join(tmp_dir, 'region_bin=2_0'))
@@ -183,7 +183,7 @@ def test_family_partition(vcf_variants_loader):
 
     assert parquet_writer is not None
 
-    parquet_writer.write_partition()
+    parquet_writer.write_dataset()
 
     assert os.path.exists(os.path.join(tmp_dir, 'region_bin=1_0',
                                        'family_bin=369'))
@@ -234,7 +234,7 @@ def test_coding_partition_1(vcf_variants_loader):
 
     assert parquet_writer is not None
 
-    parquet_writer.write_partition()
+    parquet_writer.write_dataset()
 
     assert os.path.exists(os.path.join(tmp_dir, 'region_bin=1_0',
                                        'coding_bin=1'))
@@ -284,7 +284,7 @@ def test_coding_partition_2(vcf_variants_loader):
 
     assert parquet_writer is not None
 
-    parquet_writer.write_partition()
+    parquet_writer.write_dataset()
 
     assert os.path.exists(os.path.join(tmp_dir, 'region_bin=1_0',
                                        'coding_bin=1'))
@@ -325,7 +325,7 @@ def test_coding_partition_3(vcf_variants_loader):
 
     assert parquet_writer is not None
 
-    parquet_writer.write_partition()
+    parquet_writer.write_dataset()
 
     assert os.path.exists(os.path.join(tmp_dir, 'region_bin=1_0',
                                        'coding_bin=0'))
@@ -365,7 +365,7 @@ def test_frequency_partition_1(vcf_variants_loader):
 
     assert parquet_writer is not None
 
-    parquet_writer.write_partition()
+    parquet_writer.write_dataset()
 
     assert os.path.exists(os.path.join(tmp_dir, 'region_bin=1_0',
                                        'frequency_bin=2'))
@@ -419,7 +419,7 @@ def test_frequency_partition_2(vcf_variants_loader):
 
     assert parquet_writer is not None
 
-    parquet_writer.write_partition()
+    parquet_writer.write_dataset()
 
     assert os.path.exists(os.path.join(tmp_dir, 'region_bin=1_0',
                                        'frequency_bin=3'))
@@ -459,7 +459,7 @@ def test_frequency_partition_3(vcf_variants_loader):
 
     assert parquet_writer is not None
 
-    parquet_writer.write_partition()
+    parquet_writer.write_dataset()
 
     assert os.path.exists(os.path.join(tmp_dir, 'region_bin=1_0',
                                        'frequency_bin=2'))
@@ -503,7 +503,7 @@ def test_all(vcf_variants_loader):
 
     assert parquet_writer is not None
 
-    parquet_writer.write_partition()
+    parquet_writer.write_dataset()
 
     assert os.path.exists(os.path.join(
         tmp_dir,
@@ -619,7 +619,7 @@ def test_region_family_frequency(vcf_variants_loader):
 
     assert parquet_writer is not None
 
-    parquet_writer.write_partition()
+    parquet_writer.write_dataset()
 
     assert os.path.exists(os.path.join(
         tmp_dir,

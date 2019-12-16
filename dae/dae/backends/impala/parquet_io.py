@@ -69,32 +69,89 @@ class ParquetPartitionDescription():
                  coding_effect_types=[],
                  rare_boundary=0):
 
-        self.chromosomes = chromosomes
-        self.region_length = region_length
-        self.family_bin_size = family_bin_size
-        self.coding_effect_types = coding_effect_types
-        self.rare_boundary = rare_boundary
+        self._chromosomes = chromosomes
+        self._region_length = region_length
+        self._family_bin_size = family_bin_size
+        self._coding_effect_types = coding_effect_types
+        self._rare_boundary = rare_boundary
 
-    def _evaluate_region_bin(self, family_allele):
+    @property
+    def chromosomes(self):
+        return self._chromosomes
+
+    @property
+    def region_length(self):
+        return self._region_length
+
+    @property
+    def family_bin_size(self):
+        return self._family_bin_size
+
+    @property
+    def coding_effect_types(self):
+        return self._coding_effect_types
+
+    @property
+    def rare_boundary(self):
+        return self._rare_boundary
+
+    @staticmethod
+    def from_config(config_path):
+        config = configparser.ConfigParser()
+        config.read(config_path)
+        assert config['region_bin'] is not None
+
+        chromosomes = list(
+            map(
+                str.strip,
+                config['region_bin']['chromosomes'].split(',')
+            )
+        )
+
+        # chromosomes = list(map(str.strip))
+
+        region_length = int(config['region_bin']['region_length'])
+        family_bin_size = 0
+        coding_effect_types = []
+        rare_boundary = 0
+
+        if config['family_bin']:
+            family_bin_size = int(config['family_bin']['family_bin_size'])
+        if config['coding_bin']:
+            coding_effect_types = config['coding_bin']['coding_effect_types']
+        if config['frequency_bin']:
+            rare_boundary = int(config['frequency_bin']['rare_boundary'])
+
+        return ParquetPartitionDescription(
+            chromosomes,
+            region_length,
+            family_bin_size,
+            coding_effect_types,
+            rare_boundary
+        )
+
+    def evaluate_region_bin(self, family_allele):
         chromosome = family_allele.chromosome
-        pos = family_allele.position // self.region_length
-        if chromosome in self.chromosomes:
+        pos = family_allele.position // self._region_length
+        if chromosome in self._chromosomes:
             return f'{chromosome}_{pos}'
         else:
             return f'other_{pos}'
 
-    def _evaluate_family_bin(self, family_allele):
+    def _family_bin_from_id(self, family_id):
         sha256 = hashlib.sha256()
-        family_variant_id = family_allele.family_id
-        sha256.update(family_variant_id.encode())
+        sha256.update(family_id.encode())
         digest = int(sha256.hexdigest(), 16)
         return digest % self.family_bin_size
 
-    def _evaluate_coding_bin(self, family_allele):
+    def evaluate_family_bin(self, family_allele):
+        return self._family_bin_from_id(family_allele.family_id)
+
+    def evaluate_coding_bin(self, family_allele):
         if family_allele.is_reference_allele:
             return 0
         variant_effects = set(family_allele.effect.types)
-        coding_effect_types = set(self.coding_effect_types)
+        coding_effect_types = set(self._coding_effect_types)
 
         result = variant_effects.intersection(coding_effect_types)
         if len(result) == 0:
@@ -102,12 +159,12 @@ class ParquetPartitionDescription():
         else:
             return 1
 
-    def _evaluate_frequency_bin(self, family_allele):
+    def evaluate_frequency_bin(self, family_allele):
         count = family_allele.get_attribute('af_allele_count')
         frequency = family_allele.get_attribute('af_allele_freq')
-        if count == 1:  # Ultra rare
+        if count and count == 1:  # Ultra rare
             frequency_bin = 1
-        elif frequency < self.rare_boundary:  # Rare
+        elif frequency and frequency < self._rare_boundary:  # Rare
             frequency_bin = 2
         else:  # Common
             frequency_bin = 3
@@ -115,19 +172,19 @@ class ParquetPartitionDescription():
         return frequency_bin
 
     def evaluate_variant_filename(self, family_allele):
-        current_bin = self._evaluate_region_bin(family_allele)
+        current_bin = self.evaluate_region_bin(family_allele)
         filepath = f'region_bin={current_bin}'
         filename = f'variants_region_bin_{current_bin}'
-        if self.family_bin_size > 0:
-            current_bin = self._evaluate_family_bin(family_allele)
+        if self._family_bin_size > 0:
+            current_bin = self.evaluate_family_bin(family_allele)
             filepath = os.path.join(filepath, f'family_bin={current_bin}')
             filename += f'_family_bin_{current_bin}'
-        if len(self.coding_effect_types) > 0:
-            current_bin = self._evaluate_coding_bin(family_allele)
+        if len(self._coding_effect_types) > 0:
+            current_bin = self.evaluate_coding_bin(family_allele)
             filepath = os.path.join(filepath, f'coding_bin={current_bin}')
             filename += f'_coding_bin_{current_bin}'
-        if self.rare_boundary > 0:
-            current_bin = self._evaluate_frequency_bin(family_allele)
+        if self._rare_boundary > 0:
+            current_bin = self.evaluate_frequency_bin(family_allele)
             filepath = os.path.join(filepath, f'frequency_bin={current_bin}')
             filename += f'_frequency_bin_{current_bin}'
         filename += '.parquet'
@@ -138,26 +195,49 @@ class ParquetPartitionDescription():
         config = configparser.ConfigParser()
 
         config.add_section('region_bin')
-        config['region_bin']['chromosomes'] = ', '.join(self.chromosomes)
-        config['region_bin']['region_length'] = str(self.region_length)
+        config['region_bin']['chromosomes'] = ', '.join(self._chromosomes)
+        config['region_bin']['region_length'] = str(self._region_length)
 
-        if self.family_bin_size > 0:
+        if self._family_bin_size > 0:
             config.add_section('family_bin')
             config['family_bin']['family_bin_size'] = \
-                str(self.family_bin_size)
+                str(self._family_bin_size)
 
-        if len(self.coding_effect_types) > 0:
+        if len(self._coding_effect_types) > 0:
             config.add_section('coding_bin')
             config['coding_bin']['coding_effect_types'] = \
-                ', '.join(self.coding_effect_types)
+                ', '.join(self._coding_effect_types)
 
-        if self.rare_boundary > 0:
+        if self._rare_boundary > 0:
             config.add_section('frequency_bin')
-            config['frequency_bin']['rare_boundary'] = str(self.rare_boundary)
+            config['frequency_bin']['rare_boundary'] = str(self._rare_boundary)
 
         filename = os.path.join(directory, '_PARTITION_DESCRIPTION')
         with open(filename, 'w') as configfile:
             config.write(configfile)
+
+    def generate_file_access_glob(self):
+        """
+        Generates a glob for accessing every parquet file in the partition
+        """
+        glob = '*/'
+        if not self.family_bin_size == 0:
+            glob += '*/'
+        if not self.coding_effect_types == []:
+            glob += '*/'
+        if not self.rare_boundary == 0:
+            glob += '*/'
+        glob += '*'
+        return glob
+
+    def add_family_bins_to_pedigree_df(self, ped_df):
+        family_ids = ped_df['family_id'].values
+        family_bins = []
+        for family_id in family_ids:
+            family_bins.append(self._family_bin_from_id(family_id))
+        assert len(family_bins) == len(family_ids)
+        ped_df['family_bin'] = family_bins
+        return ped_df
 
 
 class ContinuousParquetFileWriter():
@@ -380,6 +460,8 @@ class VariantsParquetWriter():
                         family_variant_index, elapsed),
                     file=sys.stderr)
 
+        filenames = list(self.data_writers.keys())
+
         for bin_writer in self.data_writers.values():
             bin_writer.close()
 
@@ -393,18 +475,23 @@ class VariantsParquetWriter():
                 family_variant_index, elapsed),
             file=sys.stderr)
 
-    def write_partition(self):
-        self._write_internal()
+        return filenames
+
+    def write_dataset(self):
+        filenames = self._write_internal()
 
         self.partition_description.write_partition_configuration_to_file(
                 self.root_folder)
+
+        return filenames
 
 #    def variants_table(self):
 #        for key, value in self.data_writers.items():
 #            yield (key, value.build_table())
 #
     def save_variants_to_parquet(self, filename):
-        self._write_internal(filename)
+        filenames = self._write_internal(filename)
+        return filenames
 
 
 class ParquetManager:
@@ -513,6 +600,37 @@ class ParquetManager:
             file=sys.stderr
         )
 
+    @staticmethod
+    def variants_to_parquet_partition(
+        variants_loader,
+        partition_description,
+        root_folder,
+        bucket_index=1,
+        rows=100000,
+        filesystem=None
+    ):
+        assert variants_loader.annotation_schema is not None
+
+        start = time.time()
+
+        print('[DONE] going to create variants partition writer...')
+        variants_writer = VariantsParquetWriter(
+            variants_loader,
+            partition_description=partition_description,
+            root_folder=root_folder,
+            bucket_index=bucket_index,
+            rows=rows
+        )
+
+        variants_writer.write_dataset()
+        end = time.time()
+
+        print(
+            'DONE: {} for {:.2f} sec'.format(
+                root_folder, end-start),
+            file=sys.stderr
+        )
+
 
 def pedigree_parquet_schema():
     fields = [
@@ -526,6 +644,7 @@ def pedigree_parquet_schema():
         pa.field('sample_id', pa.string()),
         pa.field('generated', pa.bool_()),
         pa.field('layout', pa.string()),
+        pa.field('family_bin', pa.int8()),
     ]
 
     return pa.schema(fields)
@@ -550,6 +669,8 @@ def save_ped_df_to_parquet(ped_df, filename, filesystem=None):
         ped_df['generated'] = False
     if 'layout' not in ped_df:
         ped_df['layout'] = None
+    if 'family_bin' not in ped_df:
+        ped_df['family_bin'] = None
 
     pps = pedigree_parquet_schema()
     pps = add_missing_parquet_fields(pps, ped_df)

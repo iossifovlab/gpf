@@ -668,7 +668,7 @@ def data_import(
 
             families_loader = FamiliesLoader(vcf.pedigree)
             loader = VcfLoader(
-                families_loader.families, vcf.vcf, region=None,
+                families_loader.families, vcf.vcf, regions=None,
                 params={
                     'include_reference_genotypes': True,
                     'include_unknown_family_genotypes': True,
@@ -709,3 +709,15 @@ def vcf_import_config():
     )
     config = from_prefix_vcf(fullpath)
     return config
+
+
+@pytest.fixture(scope='session')
+def parquet_partition_configuration():
+    filename = relative_to_this_test_folder(
+        'fixtures/backends/example_partition_configuration.conf')
+    return filename
+
+
+@pytest.fixture(scope='session')
+def sample_parquet_partition_root():
+    return relative_to_this_test_folder('fixtures/backends/test_partition')

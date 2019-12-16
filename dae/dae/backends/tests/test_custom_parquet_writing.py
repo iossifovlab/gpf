@@ -17,6 +17,6 @@ def test_custom_parquet_writing(vcf_variants_loader):
     # print(parquet_writer.schema)
     # print(dir(parquet_writer.schema))
     # temp_filename = '/tmp/variant-test-dataset2'
-    parquet_writer.write_partition()
+    parquet_writer.write_dataset()
 
     # assert os.path.exists(temp_filename)

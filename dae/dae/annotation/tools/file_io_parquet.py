@@ -170,8 +170,9 @@ class ParquetReader(AbstractFormat):
             row_group_buffer = self.pqfile.read_row_group(self.row_group_curr)
             self.row_count = row_group_buffer.shape[0]
             self.row_group_curr += 1
-            for col in row_group_buffer.itercolumns():
-                self.column_buffer[col.name] = col.data.to_pylist()
+            for index, col in enumerate(row_group_buffer.itercolumns()):
+                name = row_group_buffer.field(index).name
+                self.column_buffer[name] = col.data.to_pylist()
 
     def _line_read(self):
         if self.buffer_line == self.row_count:

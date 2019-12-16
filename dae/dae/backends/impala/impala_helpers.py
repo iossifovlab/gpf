@@ -1,4 +1,5 @@
 from impala import dbapi
+import os
 
 
 class ImpalaHelpers(object):
@@ -61,6 +62,107 @@ class ImpalaHelpers(object):
             """.format(
                 db=dbname, import_file=import_file,
                 table_name=table_name))
+
+    def add_partition_properties(
+            self, cursor, db, table, partition_description):
+        chromosomes = ', '.join(partition_description.chromosomes)
+        cursor.execute(
+            f"ALTER TABLE {db}.{table} "
+            "SET TBLPROPERTIES("
+            f"'gpf_partitioning_region_bin_chromosomes' = "
+            f"'{chromosomes}'"
+            ")"
+        )
+        cursor.execute(
+            f"ALTER TABLE {db}.{table} "
+            "SET TBLPROPERTIES("
+            f"'gpf_partitioning_region_bin_region_length' = "
+            f"'{partition_description.region_length}'"
+            ")"
+        )
+        cursor.execute(
+            f"ALTER TABLE {db}.{table} "
+            "SET TBLPROPERTIES("
+            f"'gpf_partitioning_family_bin_family_bin_size' = "
+            f"'{partition_description.family_bin_size}'"
+            ")"
+        )
+        cursor.execute(
+            f"ALTER TABLE {db}.{table} "
+            "SET TBLPROPERTIES("
+            f"'gpf_partitioning_coding_bin_coding_effect_types' = "
+            f"'{partition_description.coding_effect_types}'"
+            ")"
+        )
+        cursor.execute(
+            f"ALTER TABLE {db}.{table} "
+            "SET TBLPROPERTIES("
+            f"'gpf_partitioning_frequency_bin_rare_boundary' = "
+            f"'{partition_description.rare_boundary}'"
+            ")"
+        )
+
+    def create_dataset_table(
+            self, cursor, db, table, hdfs_path, sample_file,
+            partition_description):
+        cursor.execute("""
+            DROP TABLE IF EXISTS {db}.{table}
+        """.format(db=db, table=table))
+
+        partitions = '(region_bin string'
+
+        if not partition_description.family_bin_size <= 0:
+            partitions += ', family_bin tinyint'
+        if not partition_description.coding_effect_types == []:
+            partitions += ', coding_bin tinyint'
+        if not partition_description.rare_boundary <= 0:
+            partitions += ', frequency_bin tinyint'
+
+        partitions += ')'
+        cursor.execute(f"""
+            CREATE EXTERNAL TABLE {db}.{table} LIKE PARQUET '{sample_file}'
+            PARTITIONED BY {partitions}
+            STORED AS PARQUET LOCATION '{hdfs_path}'
+        """)
+        cursor.execute(f"""
+            ALTER TABLE {db}.{table} RECOVER PARTITIONS
+        """)
+        cursor.execute(f"""
+            REFRESH {db}.{table}
+        """)
+
+    def import_dataset_into_db(
+            self, db, partition_table, pedigree_table,
+            partition_description, pedigree_hdfs_path,
+            dataset_hdfs_path, files):
+
+        with self.connection.cursor() as cursor:
+            cursor.execute(f"""
+                CREATE DATABASE IF NOT EXISTS {db}
+            """)
+            sample_file = os.path.join(dataset_hdfs_path, files[0])
+            self.create_dataset_table(
+                cursor,
+                db,
+                partition_table,
+                dataset_hdfs_path,
+                sample_file,
+                partition_description
+            )
+
+            self.add_partition_properties(
+                cursor,
+                db,
+                partition_table,
+                partition_description
+            )
+
+            self.import_files(
+                cursor,
+                db,
+                pedigree_table,
+                [pedigree_hdfs_path]
+            )
 
     def check_database(self, dbname):
         with self.connection.cursor() as cursor:
