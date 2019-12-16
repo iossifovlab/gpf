@@ -54,3 +54,14 @@ def test_annotate_variant_simple(temp_filename, default_gene_models):
         result_df[['effectType', 'effectGene']],
         expected_df[['effectType', 'effectGene']]
     )
+
+
+def test_gene_models_orig_transcript_id(genomes_db):
+    gene_models = genomes_db.get_gene_models("RefSeq")
+    assert gene_models.location.endswith("refGene-20190211.gz")
+
+    for count, tr in enumerate(gene_models.transcriptModels.values()):
+        # print(dir(tr))
+        assert tr.trID != tr.trOrigId
+        if count >= 1000:
+            break
