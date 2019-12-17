@@ -12,13 +12,6 @@ from collections import defaultdict, \
     namedtuple, OrderedDict
 
 
-class AbstractClassDoNotInstantiate(object):
-    name = None
-    location = None
-    _shift = None
-    _Alternative_names = None
-
-
 class TranscriptModel(object):
 
     attr = {}
@@ -315,12 +308,17 @@ class Exon(object):
     frame = None
 
 
-class GeneModels(AbstractClassDoNotInstantiate):
+class GeneModels:
+    def __init__(self):
+        self.name = None
+        self.location = None
+        self._shift = None
+        self._Alternative_names = None
 
-    _utrModels = OrderedDict()
-    transcriptModels = OrderedDict()
-    _geneModels = OrderedDict
-    _Alternative_names = None
+        self._utrModels = OrderedDict()
+        self.transcriptModels = OrderedDict()
+        self._geneModels = OrderedDict
+        self._Alternative_names = None
 
     def __addToDict(self, line):
 
