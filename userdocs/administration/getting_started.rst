@@ -163,72 +163,13 @@ that are already configured:
 To demonstrate how to import new study data into the GPF data instance, we
 will reproduce the necessary steps for importing the `comp` study data.
 
-Start local Apache Impala
-++++++++++++++++++++++++++++++++
+Data Storage
+++++++++++++
 
-By default GPF uses Apache Impala as a backend for storing genomic variants.
-The GPF import tools import studies data into Impala.
-
-To start a local instance of Apache Impala you will need an installed
-Docker (https://www.docker.com/get-started).
-
-.. note::
-   Docker can be installed by following the instructions at
-   https://docs.docker.com/install/linux/docker-ce/ubuntu/.
-
-To make using GPF
-easier, we provide a Docker container with Apache Impala. To run it, you
-can use the script::
-
-    run_gpf_impala.sh
-
-This script pulls out Apache Impala image from
-`dockerhub <https://cloud.docker.com/u/seqpipe/repository/docker/seqpipe/seqpipe-docker-impala>`_,
-creates and starts Docker container named `gpf_impala`
-containing all the components needed for running Apache Impala. When the
-Apache Impala container is ready for use the script will print a message::
-
-    ...
-    ===============================================
-    Local GPF Apache Impala container is READY...
-    ===============================================
-
-
-.. note::
-    In case you need to stop this container you can
-    use Docker comands `docker stop gpf_impala`. For starting the `gpf_impala`
-    container use `run_gpf_impala.sh`.
-
-.. note::
-    Here is a list of some useful Docker commands:
-
-        - `docker ps` shows all running docker containers;
-
-        - `docker logs -f gpf_impala` shows log from `gpf_impala` container;
-
-        - `docker stop gpf_impala` stops the running `gpf_impala` container;
-
-        - `docker start gpf_impala` starts existing stopped `gpf_impala`
-          container;
-        
-        - `docker rm gpf_impala` removes existing and stopped `gpf_impala`
-          container.
-
-.. note::
-    Following ports are used by `gpf_impala` container:
-
-        - 8020 - port for accessing HDFS
-        - 9870 - port for Web interface to HDFS Named Node
-        - 9864 - port for Web interface to HDFS Data Node
-        - 21050 - port for accessing Impala
-        - 25000 - port for Web interface to Impala deamon
-        - 25010 - port for Web interface to Impala state store
-        - 25020 - port for Web interface to Impala catalog
-
-    Please make sure that this ports are not in use on the host where you are
-    starting `gpf_impala` conatiner.
-
-
+By default, GPF uses the filesystem for storing imported genotype data.
+This is fine for smaller sized studies - however, there is an option to use
+Apache Impala as storage. This can be especially useful for larger studies.
+If you wish to use Apache Impala as storage, refer to :ref:`impala-storage`.
 
 Simple study import
 +++++++++++++++++++
@@ -349,7 +290,6 @@ and run ``simple_study_import.py`` tool::
 
 To see the imported variants, restart the GPF development web server and find
 `iossifov_2014` study.
-
 
 
 Example Usage of GPF Python Interface
@@ -925,3 +865,103 @@ After import is finished restart the GPF develompent instance::
 .. code::
 
     wdaemanage.py runserver 0.0.0.0:8000
+
+.. _impala-storage:
+
+Using Apache Impala as storage
+##############################
+
+Starting Apache Impala
+++++++++++++++++++++++
+
+To start a local instance of Apache Impala you will need an installed
+Docker (https://www.docker.com/get-started).
+
+.. note::
+   Docker can be installed by following the instructions at
+   https://docs.docker.com/install/linux/docker-ce/ubuntu/.
+
+To make using GPF
+easier, we provide a Docker container with Apache Impala. To run it, you
+can use the script::
+
+    run_gpf_impala.sh
+
+This script pulls out Apache Impala image from
+`dockerhub <https://cloud.docker.com/u/seqpipe/repository/docker/seqpipe/seqpipe-docker-impala>`_,
+creates and starts Docker container named `gpf_impala`
+containing all the components needed for running Apache Impala. When the
+Apache Impala container is ready for use the script will print a message::
+
+    ...
+    ===============================================
+    Local GPF Apache Impala container is READY...
+    ===============================================
+
+
+.. note::
+    In case you need to stop this container you can
+    use Docker comands `docker stop gpf_impala`. For starting the `gpf_impala`
+    container use `run_gpf_impala.sh`.
+
+.. note::
+    Here is a list of some useful Docker commands:
+
+        - `docker ps` shows all running docker containers;
+
+        - `docker logs -f gpf_impala` shows log from `gpf_impala` container;
+
+        - `docker stop gpf_impala` stops the running `gpf_impala` container;
+
+        - `docker start gpf_impala` starts existing stopped `gpf_impala`
+          container;
+
+        - `docker rm gpf_impala` removes existing and stopped `gpf_impala`
+          container.
+
+.. note::
+    Following ports are used by `gpf_impala` container:
+
+        - 8020 - port for accessing HDFS
+        - 9870 - port for Web interface to HDFS Named Node
+        - 9864 - port for Web interface to HDFS Data Node
+        - 21050 - port for accessing Impala
+        - 25000 - port for Web interface to Impala deamon
+        - 25010 - port for Web interface to Impala state store
+        - 25020 - port for Web interface to Impala catalog
+
+    Please make sure that this ports are not in use on the host where you are
+    starting `gpf_impala` conatiner.
+
+
+Configuring the Apache Impala storage
++++++++++++++++++++++++++++++++++++++
+
+The available storages are configured within ``DAE.conf``.
+This is an example section which configures an Apache Impala storage.
+
+.. code:: none
+
+    [storage.test_impala]
+    type = impala
+    impala.host = localhost
+    impala.port = 21050
+    impala.db = gpf_test_db
+    hdfs.host = localhost
+    hdfs.port = 8020
+    hdfs.base_dir = /user/test_impala/studies
+    dir = /tmp/test_impala/studies
+
+
+Import the study into Impala
+++++++++++++++++++++++++++++
+
+The simple study import tool has an optional argument to specify the storage
+you wish to use. You can pass the ID of the Apache Impala storage configured
+in DAE.conf earlier.
+
+.. code:: none
+
+  --genotype-storage <genotype storage id>
+                        Id of defined in DAE.conf genotype storage [default:
+                        genotype_impala]
