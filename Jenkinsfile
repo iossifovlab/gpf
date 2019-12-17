@@ -18,7 +18,7 @@ pipeline {
     environment {
         WD="${env.WORKSPACE}"
 
-        DOCKER_IMAGE="iossifovlab/gpf-base:${env.BRANCH_NAME}"
+        DOCKER_IMAGE="iossifovlab/gpf-base-${env.BRANCH_NAME}:${env.BUILD_NUMBER}"
 
         SOURCE_DIR="${env.WORKSPACE}"
         DAE_DB_DIR="${env.WORKSPACE}/data-hg19-startup"
@@ -81,10 +81,7 @@ pipeline {
         stage('Git Clean') {
           steps {
             sh '''
-                docker-compose -f docker-compose.yml exec -T tests cd /code && \
-                    git clean -xdf \
-                        -e data-hg19-startup*.tar.gz \
-                        -e data-hg19-startup || true
+                docker-compose -f docker-compose.yml exec -T tests /code/jenkins_git_clean.sh
             '''
           }
         }
