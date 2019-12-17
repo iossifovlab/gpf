@@ -36,8 +36,6 @@ def test_annotate_variant_simple(temp_filename, default_gene_models):
     assert expected_df is not None
     assert len(expected_df) == 8
 
-    print(default_gene_models.location)
-
     command = "cut -f 1-3 {} " \
         "| annotate_variant.py -T RefSeq2013 " \
         "| head -n 9 > {}".format(
@@ -48,19 +46,23 @@ def test_annotate_variant_simple(temp_filename, default_gene_models):
     assert res == 0
 
     result_df = pd.read_csv(temp_filename, sep='\t')
-    print(result_df.head())
+    check_columns = ['effectType', 'effectGene']
 
     pd.testing.assert_frame_equal(
-        result_df[['effectType', 'effectGene']],
-        expected_df[['effectType', 'effectGene']]
+        result_df[check_columns],
+        expected_df[check_columns]
     )
 
 
-def test_gene_models_orig_transcript_id(genomes_db, default_gene_models):
-    assert default_gene_models.location.endswith("refGene-201309.gz")
+def test_gene_models_orig_transcript_id(
+        gpf_instance, genomes_db, default_gene_models):
+    assert default_gene_models.location.endswith("refGene-201309.gz"), \
+        default_gene_models.location
 
-    gene_models = genomes_db.get_gene_models("RefSeq")
-    assert gene_models.location.endswith("refGene-20190211.gz")
+    gene_models = genomes_db.get_gene_model(
+        "RefSeq", genomes_db.default_genome)
+    assert gene_models.location.endswith("refGene-20190211.gz"), \
+        gene_models.location
 
     for count, tr in enumerate(gene_models.transcriptModels.values()):
         # print(dir(tr))

@@ -22,8 +22,7 @@ def test_annotation_config_cli_options(mocked_gpf_instance):
     assert cli_options[-1][1]['default'] == 'RefSeq2013'
 
 
-def test_annotation_config_options_parsing(mocked_gpf_instance,
-                                           mock_genomes_db):
+def test_annotation_config_options_parsing(mocked_gpf_instance):
 
     annotator_config = \
         AnnotationConfigParser.read_and_parse_file_configuration(

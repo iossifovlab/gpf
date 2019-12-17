@@ -718,34 +718,43 @@ class GeneModels:
 
 
 class RefSeq(GeneModels):
+    def __init__(self):
+        super(RefSeq, self).__init__()
 
-    name = "refseq"
-    location = "/data/unsafe/autism/genomes/hg19/geneModels/refGene.txt.gz"
-    _shift = 1
-    _Alternative_names = None
+        self.name = "refseq"
+        self.location = "/data/unsafe/autism/genomes/hg19/geneModels/refGene.txt.gz"
+        self._shift = 1
+        self._Alternative_names = None
 
 
 class KnownGene(GeneModels):
 
-    name = "knowngene"
-    location = "/data/unsafe/autism/genomes/hg19/geneModels/knownGene.txt.gz"
-    _shift = 0
-    _Alternative_names = None
+    def __init__(self):
+        super(KnownGene, self).__init__()
+
+        self.name = "knowngene"
+        self.location = "/data/unsafe/autism/genomes/hg19/geneModels/knownGene.txt.gz"
+        self._shift = 0
+        self._Alternative_names = None
 
 
 class Ccds(GeneModels):
 
-    name = "ccds"
-    location = "/data/unsafe/autism/genomes/hg19/geneModels/ccdsGene.txt.gz"
-    _shift = 1
-    _Alternative_names = None
+    def __init__(self):
+        super(Ccds, self).__init__()
+        self.name = "ccds"
+        self.location = "/data/unsafe/autism/genomes/hg19/geneModels/ccdsGene.txt.gz"
+        self._shift = 1
+        self._Alternative_names = None
 
 
 class MitoModel(GeneModels):
 
-    name = "mitomap"
-    location = "/data/unsafe/autism/genomes/hg19/geneModels/mitomap.txt"
-    _Alternative_names = None
+    def __init__(self):
+        super(MitoModel, self).__init__()
+        self.name = "mitomap"
+        self.location = "/data/unsafe/autism/genomes/hg19/geneModels/mitomap.txt"
+        self._Alternative_names = None
 
     def _create_gene_model_dict(self, file_name):
 
