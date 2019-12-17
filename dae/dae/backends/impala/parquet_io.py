@@ -45,7 +45,7 @@ class ParquetData():
         for index, name in enumerate(self.schema.names):
             assert name in self.data
             column = self.data[name]
-            field = self.schema.field_by_name(name)
+            field = self.schema.field(name)
             batch_data.append(pa.array(column, type=field.type))
             if index > 0:
                 assert len(batch_data[index]) == len(batch_data[0]), name

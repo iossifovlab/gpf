@@ -34,8 +34,8 @@ pipeline {
         stage ('Start') {
             steps {
                 slackSend (
-                color: '#FFFF00',
-                message: "STARTED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' ${env.BUILD_URL}"
+                    color: '#FFFF00',
+                    message: "STARTED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' ${env.BUILD_URL}"
                 )
             }
         }
@@ -72,6 +72,8 @@ pipeline {
                 }
                 sh '''
                     export PATH=$HOME/anaconda3/envs/gpf3/bin:$PATH
+                    
+                    mkdir -p test_results
 
                     docker-compose -f docker-compose.yml up -d
                 '''
@@ -111,12 +113,12 @@ pipeline {
     }
     post {
         always {
-            junit 'coverage/wdae-junit.xml, coverage/dae-junit.xml'
+            junit 'test_results/wdae-junit.xml, test_results/dae-junit.xml'
             step([
                 $class: 'CoberturaPublisher', 
-                coberturaReportFile: 'coverage/coverage.xml'])
+                coberturaReportFile: 'test_results/coverage.xml'])
             warnings(
-                parserConfigurations: [[parserName: 'PyLint', pattern: 'pyflakes.report']],
+                parserConfigurations: [[parserName: 'PyLint', pattern: 'test_results/pyflakes.report']],
                 excludePattern: '.*site-packages.*',
                 usePreviousBuildAsReference: true,
             )
