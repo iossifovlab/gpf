@@ -69,8 +69,8 @@ def test_to_arrow(generic_pq_schema, generic_pa_schema):
     converted_schema = generic_pq_schema.to_arrow()
     assert [name in generic_pa_schema.names for name in converted_schema.names]
     for name in converted_schema.names:
-        assert converted_schema.field_by_name(name).type == \
-            generic_pa_schema.field_by_name(name).type
+        assert converted_schema.field(name).type == \
+            generic_pa_schema.field(name).type
 
 
 # FIXME:
