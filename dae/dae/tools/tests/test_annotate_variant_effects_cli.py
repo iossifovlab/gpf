@@ -56,7 +56,9 @@ def test_annotate_variant_simple(temp_filename, default_gene_models):
     )
 
 
-def test_gene_models_orig_transcript_id(genomes_db):
+def test_gene_models_orig_transcript_id(genomes_db, default_gene_models):
+    assert default_gene_models.location.endswith("refGene-201309.gz")
+
     gene_models = genomes_db.get_gene_models("RefSeq")
     assert gene_models.location.endswith("refGene-20190211.gz")
 

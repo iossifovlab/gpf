@@ -207,7 +207,6 @@ class TranscriptModel:
 
         return l
 
-
     def UTR5_len(self):
 
        utr5 = self.UTR5_regions()
