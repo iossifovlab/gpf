@@ -66,10 +66,6 @@ pipeline {
 
         stage('Setup') {
             steps {
-                script {
-                    docker.build(
-                        "${DOCKER_IMAGE}", ". -f ${SOURCE_DIR}/Dockerfile")
-                }
                 sh '''
                     export PATH=$HOME/anaconda3/envs/gpf3/bin:$PATH
                     
@@ -81,6 +77,10 @@ pipeline {
 
                     docker-compose -f docker-compose.yml up -d
                 '''
+                script {
+                    docker.build(
+                        "${DOCKER_IMAGE}", ". -f ${SOURCE_DIR}/Dockerfile")
+                }
             }
         }
 
