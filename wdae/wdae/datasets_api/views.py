@@ -6,6 +6,7 @@ from query_base.query_base import QueryBaseView
 
 from .models import Dataset
 from groups_api.serializers import GroupSerializer
+from rest_framework import permissions
 
 
 class DatasetView(QueryBaseView):
@@ -59,3 +60,24 @@ class PermissionDeniedPromptView(QueryBaseView):
 
     def get(self, request):
         return Response({'data': self.permission_denied_prompt})
+
+
+class DatasetDetailsView(QueryBaseView):
+    permission_classes = (permissions.IsAdminUser,)
+
+    def get(self, request, dataset_id):
+        if dataset_id is None:
+            return Response({
+                'error': 'No dataset ID given'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        genotype_data = self.gpf_instance.get_genotype_data(dataset_id)
+
+        if genotype_data is None:
+            return Response({
+                'error': f'No such dataset {dataset_id}'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        dataset_details = \
+            {'hasDenovo': genotype_data.has_denovo}
+        return Response(dataset_details)
