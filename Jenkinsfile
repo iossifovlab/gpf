@@ -40,6 +40,27 @@ pipeline {
             }
         }
 
+        stage('Setup') {
+            steps {
+                sh '''
+                    export PATH=$HOME/anaconda3/envs/gpf3/bin:$PATH
+
+                    docker run -d --rm \
+                        -v ${SOURCE_DIR}:/code \
+                        busybox:latest \
+                        /bin/sh -c "rm -rf /code/wdae-*.log && rm -rf /code/wdae_django*.cache"
+
+                    mkdir -p test_results
+
+                    docker-compose -f docker-compose.yml up -d
+                '''
+                script {
+                    docker.build(
+                        "${DOCKER_IMAGE}", ". -f ${SOURCE_DIR}/Dockerfile")
+                }
+            }
+        }
+
         stage('Data') {
             steps {
                 sh '''
@@ -61,26 +82,6 @@ pipeline {
                 sh '''
                     tar zxf builds/data-hg19-startup-*.tar.gz -C $WD
                 '''
-            }
-        }
-
-        stage('Setup') {
-            steps {
-                sh '''
-                    export PATH=$HOME/anaconda3/envs/gpf3/bin:$PATH
-                    
-                    docker run busybox:latest \
-                        -v ${SOURCE_DIR}:/code \
-                        /bin/sh -c "rm -rf /code/wdae-*.log && rm -rf /code/wdae_django*.cache"
-
-                    mkdir -p test_results
-
-                    docker-compose -f docker-compose.yml up -d
-                '''
-                script {
-                    docker.build(
-                        "${DOCKER_IMAGE}", ". -f ${SOURCE_DIR}/Dockerfile")
-                }
             }
         }
 
