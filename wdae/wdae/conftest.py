@@ -1,4 +1,5 @@
 import pytest
+import os
 from _pytest.monkeypatch import MonkeyPatch
 
 from django.contrib.auth import get_user_model
@@ -7,6 +8,7 @@ from django.contrib.auth.models import Group
 from users_api.models import WdaeUser
 
 from dae.gpf_instance.gpf_instance import GPFInstance
+from gpf_instance.gpf_instance import reload_datasets
 
 
 @pytest.fixture(scope='session')
@@ -121,4 +123,23 @@ def mock_genomes_db(monkeysession, default_gene_models, default_genome):
     monkeysession.setattr(
         'dae.GenomesDB.GenomesDB.get_gene_model_id',
         lambda self: 'RefSeq2013'
+    )
+
+
+def global_fixtures_dir():
+    return os.path.abspath(
+        os.path.join(os.path.dirname(__file__), 'tests', 'fixtures'))
+
+
+@pytest.fixture(scope='session')
+def gpf_instance(mock_genomes_db):
+    return GPFInstance(work_dir=global_fixtures_dir())
+
+
+@pytest.fixture(scope='function')
+def mock_gpf_instance(db, mocker, gpf_instance):
+    reload_datasets(gpf_instance._variants_db)
+    mocker.patch(
+        'query_base.query_base.get_gpf_instance',
+        return_value=gpf_instance
     )
