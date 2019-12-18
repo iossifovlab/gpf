@@ -69,9 +69,9 @@ pipeline {
                 sh '''
                     export PATH=$HOME/anaconda3/envs/gpf3/bin:$PATH
                     
-                    docker run busybox \
+                    docker run busybox:latest \
                         -v ${SOURCE_DIR}:/code \
-                        /bin/bash -c "rm -rf /code/wdae-*.log && rm -rf /code/wdae_django*.cache"
+                        /bin/sh -c "rm -rf /code/wdae-*.log && rm -rf /code/wdae_django*.cache"
 
                     mkdir -p test_results
 
