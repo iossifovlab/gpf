@@ -271,6 +271,7 @@ describe('VariantReportsComponent', () => {
     fixture = TestBed.createComponent(VariantReportsComponent);
     component = fixture.componentInstance;
 
+    //Stubbing the function to reduce mock test data
     component['chunkPedigrees'] = function(a, b) { return null; };
 
     component.ngOnInit();
@@ -312,6 +313,7 @@ describe('VariantReportsComponent Denovo', () => {
     fixture = TestBed.createComponent(VariantReportsComponent);
     component = fixture.componentInstance;
 
+    //Stubbing the function to reduce mock test data
     component['chunkPedigrees'] = function(a, b) { return null; };
 
     component.ngOnInit();
