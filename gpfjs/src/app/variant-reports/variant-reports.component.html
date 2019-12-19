@@ -26,7 +26,7 @@
       </div>
 
       <ng-template [ngIf]="this.currentPeopleCounter">
-        <div class="row mb-3">
+        <div id="families-by-number-div" class="row mb-3">
           <div class="col-12">
             <table class="table table-bordered table-hover table-sm table-centered table-header-rotate">
               <thead>
@@ -65,7 +65,7 @@
       </div>
 
       <ng-template [ngIf]="this.currentPedigreeTable">
-        <div class="row mb-3" #families_pedigree>
+        <div id="families-by-pedigree-div" class="row mb-3" #families_pedigree>
 
           <div class="col-12">
 
@@ -126,7 +126,7 @@
         </div>
 
         <ng-template [ngIf]="this.currentDenovoReport">
-          <div class="row mb-3">
+          <div id="denovo-variants-div" class="row mb-3">
             <div class="col-12">
               <table class="table table-bordered table-hover table-sm table-centered">
                 <thead>
