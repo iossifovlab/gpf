@@ -246,7 +246,7 @@ class VariantReportsServiceMock {
   }
 }
 
-fdescribe('VariantReportsComponent', () => {
+describe('VariantReportsComponent', () => {
   let component: VariantReportsComponent;
   let fixture: ComponentFixture<VariantReportsComponent>;
 
@@ -287,7 +287,7 @@ fdescribe('VariantReportsComponent', () => {
   })
 });
 
-fdescribe('VariantReportsComponent Denovo', () => {
+describe('VariantReportsComponent Denovo', () => {
   let component: VariantReportsComponent;
   let fixture: ComponentFixture<VariantReportsComponent>;
 
