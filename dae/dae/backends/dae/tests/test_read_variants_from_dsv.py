@@ -63,10 +63,11 @@ def test_families_instance_type_assertion():
     assert str(excinfo.value) == error_message
 
 
-def test_read_variants_DAE_style(default_genome, fixture_dirname):
+def test_read_variants_DAE_style(default_genome, fixture_dirname, fake_families):
     filename = fixture_dirname('denovo_import/variants_DAE_style.tsv')
     res_df = DenovoLoader.flexible_denovo_load(
-        filename, default_genome, denovo_location='location',
+        filename, default_genome, families=fake_families,
+        denovo_location='location',
         denovo_variant='variant',
         denovo_family_id='familyId', denovo_best_state='bestState'
     )
@@ -87,10 +88,11 @@ def test_read_variants_DAE_style(default_genome, fixture_dirname):
     assert compare_variant_dfs(res_df, expected_df)
 
 
-def test_read_variants_a_la_VCF_style(fixture_dirname):
+def test_read_variants_a_la_VCF_style(fixture_dirname, fake_families):
     filename = fixture_dirname('denovo_import/variants_VCF_style.tsv')
     res_df = DenovoLoader.flexible_denovo_load(
-        filename, None, denovo_chrom='chrom', denovo_pos='pos',
+        filename, None,  families=fake_families,
+        denovo_chrom='chrom', denovo_pos='pos',
         denovo_ref='ref',
         denovo_alt='alt', denovo_family_id='familyId',
         denovo_best_state='bestState'
@@ -112,10 +114,11 @@ def test_read_variants_a_la_VCF_style(fixture_dirname):
     assert compare_variant_dfs(res_df, expected_df)
 
 
-def test_read_variants_mixed_A(fixture_dirname):
+def test_read_variants_mixed_A(fixture_dirname, fake_families):
     filename = fixture_dirname('denovo_import/variants_mixed_style_A.tsv')
     res_df = DenovoLoader.flexible_denovo_load(
-        filename, None, denovo_location='location',
+        filename, None,  families=fake_families,
+        denovo_location='location',
         denovo_ref='ref',
         denovo_alt='alt', denovo_family_id='familyId',
         denovo_best_state='bestState'
@@ -137,10 +140,11 @@ def test_read_variants_mixed_A(fixture_dirname):
     assert compare_variant_dfs(res_df, expected_df)
 
 
-def test_read_variants_mixed_B(default_genome, fixture_dirname):
+def test_read_variants_mixed_B(default_genome, fixture_dirname, fake_families):
     filename = fixture_dirname('denovo_import/variants_mixed_style_B.tsv')
     res_df = DenovoLoader.flexible_denovo_load(
-        filename, default_genome, denovo_chrom='chrom', denovo_pos='pos',
+        filename, default_genome,  families=fake_families,
+        denovo_chrom='chrom', denovo_pos='pos',
         denovo_variant='variant',
         denovo_family_id='familyId', denovo_best_state='bestState'
     )
@@ -168,9 +172,9 @@ def test_read_variants_mixed_B(default_genome, fixture_dirname):
 def test_read_variants_person_ids(filename, fake_families, fixture_dirname):
     filename = fixture_dirname(filename)
     res_df = DenovoLoader.flexible_denovo_load(
-        filename, None, denovo_chrom='chrom', denovo_pos='pos',
-        denovo_ref='ref', denovo_alt='alt', denovo_person_id='personId',
-        families=fake_families
+        filename, None,  families=fake_families,
+        denovo_chrom='chrom', denovo_pos='pos',
+        denovo_ref='ref', denovo_alt='alt', denovo_person_id='personId'
     )
 
     expected_df = pd.DataFrame({
@@ -194,11 +198,12 @@ def test_read_variants_person_ids(filename, fake_families, fixture_dirname):
     assert compare_variant_dfs(res_df, expected_df)
 
 
-def test_read_variants_different_separator(fixture_dirname):
+def test_read_variants_different_separator(fixture_dirname, fake_families):
     filename = fixture_dirname(
         'denovo_import/variants_different_separator.dsv')
     res_df = DenovoLoader.flexible_denovo_load(
-        filename, None, denovo_sep='$', denovo_chrom='chrom',
+        filename, None,  families=fake_families,
+        denovo_sep='$', denovo_chrom='chrom',
         denovo_pos='pos',
         denovo_ref='ref',
         denovo_alt='alt', denovo_family_id='familyId',
@@ -221,12 +226,13 @@ def test_read_variants_different_separator(fixture_dirname):
     assert compare_variant_dfs(res_df, expected_df)
 
 
-def test_read_variants_genome_assertion(fixture_dirname):
+def test_read_variants_genome_assertion(fixture_dirname, fake_families):
     filename = fixture_dirname('denovo_import/variants_DAE_style.tsv')
 
     with pytest.raises(AssertionError) as excinfo:
         DenovoLoader.flexible_denovo_load(
-            filename, None, denovo_location='location',
+            filename, None,  families=fake_families,
+            denovo_location='location',
             denovo_variant='variant',
             denovo_family_id='familyId', denovo_best_state='bestState'
         )
