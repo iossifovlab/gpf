@@ -6,7 +6,6 @@ from query_base.query_base import QueryBaseView
 
 from .models import Dataset
 from groups_api.serializers import GroupSerializer
-from rest_framework import permissions
 
 
 class DatasetView(QueryBaseView):
@@ -63,8 +62,6 @@ class PermissionDeniedPromptView(QueryBaseView):
 
 
 class DatasetDetailsView(QueryBaseView):
-    permission_classes = (permissions.IsAdminUser,)
-
     def get(self, request, dataset_id):
         if dataset_id is None:
             return Response({

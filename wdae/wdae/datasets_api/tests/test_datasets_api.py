@@ -48,24 +48,17 @@ def test_datasets_name_ordering(admin_client):
     assert response.data['data'] == sorted_response_data
 
 
-def test_user_client_details_no_access(user_client, mock_gpf_instance):
+def test_user_client_get_dataset_details(user_client, mock_gpf_instance):
     response = user_client.get('/api/v3/datasets/details/inheritance_trio')
-
-    assert response
-    assert response.status_code == 403
-
-
-def test_admin_client_get_dataset_details(admin_client, mock_gpf_instance):
-    response = admin_client.get('/api/v3/datasets/details/inheritance_trio')
 
     assert response
     assert response.status_code == 200
     assert response.data['hasDenovo']
 
 
-def test_admin_client_get_nonexistant_dataset_details(
-        admin_client, mock_gpf_instance):
-    response = admin_client.get('/api/v3/datasets/details/asdfghjkl')
+def test_user_client_get_nonexistant_dataset_details(
+        user_client, mock_gpf_instance):
+    response = user_client.get('/api/v3/datasets/details/asdfghjkl')
 
     assert response
     assert response.status_code == 400
