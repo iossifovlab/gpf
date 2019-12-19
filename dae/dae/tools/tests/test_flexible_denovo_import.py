@@ -53,6 +53,43 @@ def test_import_iossifov2014_filesystem(
     assert len(vs) == 2
 
 
+def assert_proper_flexible_short_variants(vs):
+    assert len(vs) == 3
+    v = vs[0]
+    for a in v.alt_alleles:
+        print(a, a.effect)
+        print("\t>", a.effect.transcripts)
+        assert a.chrom == '15'
+        assert a.position == 80137553
+        assert a.reference == 'T'
+        assert a.alternative == 'TA'
+        assert a.family_id == '13590'
+        assert len(a.effect.transcripts) == 4
+
+    v = vs[1]
+    for a in v.alt_alleles:
+        print(a, a.effect)
+        print("\t>", a.effect.transcripts)
+
+        assert a.chrom == '3'
+        assert a.position == 56627767
+        assert a.reference == 'AAAGT'
+        assert a.alternative == 'A'
+        assert a.family_id == '13060'
+        assert len(a.effect.transcripts) == 28
+
+    v = vs[2]
+    for a in v.alt_alleles:
+        print(a, a.effect)
+        print("\t>", a.effect.transcripts)
+        assert a.chrom == '4'
+        assert a.position == 83276456
+        assert a.reference == 'C'
+        assert a.alternative == 'T'
+        assert a.family_id == '13590'
+        assert len(a.effect.transcripts) == 4
+
+
 def test_flexible_denovo_default(
         genomes_db, fixture_dirname, default_dae_config, default_gpf_instance,
         temp_dirname):
@@ -89,8 +126,7 @@ def test_flexible_denovo_default(
     assert study is not None
 
     vs = list(study.query_variants())
-    assert len(vs) == 3
-
+    assert_proper_flexible_short_variants(vs)
 
 def test_flexible_denovo_vcf(
         genomes_db, fixture_dirname, default_dae_config, default_gpf_instance,
@@ -133,4 +169,4 @@ def test_flexible_denovo_vcf(
     assert study is not None
 
     vs = list(study.query_variants())
-    assert len(vs) == 3
+    assert_proper_flexible_short_variants(vs)
