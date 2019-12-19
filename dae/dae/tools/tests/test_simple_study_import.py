@@ -260,7 +260,7 @@ def test_import_iossifov2014_filesystem(
     assert study is not None
 
     vs = list(study.query_variants())
-    assert len(vs) == 12
+    assert len(vs) == 16
 
     vs = list(study.query_variants(effect_types=['splice-site']))
     assert len(vs) == 9

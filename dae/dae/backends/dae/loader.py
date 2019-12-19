@@ -49,7 +49,7 @@ class DenovoLoader(VariantsLoader):
         self.genome = genome
 
         self.denovo_df = self.flexible_denovo_load(
-            self.filename, genome, **self.params
+            self.filename, genome, families=families, **self.params
         )
 
     def summary_genotypes_iterator(self):
@@ -230,9 +230,9 @@ class DenovoLoader(VariantsLoader):
             denovo_family_id = 'familyId'
             denovo_best_state = 'bestState'
 
-        if families:
-            assert isinstance(families, FamiliesData), \
-                'families must be an instance of FamiliesData!'
+        assert families is not None
+        assert isinstance(families, FamiliesData), \
+            'families must be an instance of FamiliesData!'
 
         raw_df = pd.read_csv(
             filepath,
