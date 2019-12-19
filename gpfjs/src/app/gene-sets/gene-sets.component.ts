@@ -82,7 +82,7 @@ export class GeneSetsComponent extends QueryStateWithErrorsProvider implements O
         const datasetDetails = this.datasetService.getSelectedDatasetDetails();
         if(datasetDetails && !datasetDetails.hasDenovo) {
           geneSetsCollections = geneSetsCollections.filter(
-            (geneSet) => {return geneSet.name.toLowerCase() !== 'denovo'}
+            (geneSet) => {return geneSet.name.toLowerCase().trim() !== 'denovo'}
           )
         }
         this.geneSetsCollections = geneSetsCollections;
