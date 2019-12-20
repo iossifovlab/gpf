@@ -83,55 +83,110 @@ class DenovoLoader(VariantsLoader):
 
     @staticmethod
     def cli_arguments(parser):
-        parser.add_argument(
-            '--denovo-location',
-            help='The label or index of the column containing the CSHL-style'
-                 ' location of the variant.',
-        )
-        parser.add_argument(
+        variant_group = parser.add_argument_group('variant specification')
+        variant_group.add_argument(
             '--denovo-variant',
             help='The label or index of the column containing the CSHL-style'
                  ' representation of the variant.'
+                 '[Default: variant]'
         )
-        parser.add_argument(
-            '--denovo-chrom',
-            help='The label or index of the column containing the chromosome'
-                 ' upon which the variant is located.',
-        )
-        parser.add_argument(
-            '--denovo-pos',
-            help='The label or index of the column containing the position'
-                 ' upon which the variant is located.',
-        )
-        parser.add_argument(
+        variant_group.add_argument(
             '--denovo-ref',
             help='The label or index of the column containing the reference'
-                 ' allele for the variant.',
+                 ' allele for the variant. [Default: none]',
         )
-        parser.add_argument(
+        variant_group.add_argument(
             '--denovo-alt',
             help='The label or index of the column containing the alternative'
-                 ' allele for the variant.',
+                 ' allele for the variant. [Default: none]',
         )
-        parser.add_argument(
-            '--denovo-person-id',
-            help='The label or index of the column containing the '
-            'person\'s ID.',
+
+        location_group = parser.add_argument_group('variant location')
+        location_group.add_argument(
+            '--denovo-location',
+            help='The label or index of the column containing the CSHL-style'
+                 ' location of the variant. [Default: location]',
         )
-        parser.add_argument(
+        location_group.add_argument(
+            '--denovo-chrom',
+            help='The label or index of the column containing the chromosome'
+                 ' upon which the variant is located. [Default: none]',
+        )
+        location_group.add_argument(
+            '--denovo-pos',
+            help='The label or index of the column containing the position'
+                 ' upon which the variant is located. [Default: none]',
+        )
+
+        genotype_group = parser.add_argument_group('variant genotype')
+        genotype_group.add_argument(
             '--denovo-family-id',
             help='The label or index of the column containing the '
-            'family\'s ID.',
+            'family\'s ID. [Default: familyId]',
         )
-        parser.add_argument(
+        genotype_group.add_argument(
             '--denovo-best-state',
             help='The label or index of the column containing the best state'
-            ' for the family.',
+            ' for the family. [Default: bestState]',
+        )
+        genotype_group.add_argument(
+            '--denovo-person-id',
+            help='The label or index of the column containing the '
+            'person\'s ID. [Default: none]',
         )
 
     @staticmethod
     def parse_cli_arguments(argv):
-        params={
+        if argv.denovo_location and (argv.denovo_chrom or argv.denovo_pos):
+            print(
+                "--denovo-location and (--denovo-chorm, --denovo-pos) "
+                "are mutually exclusive")
+            raise ValueError()
+
+        if argv.denovo_variant and (argv.denovo_ref or argv.denovo_alt):
+            print(
+                "--denovo-variant and (denovo-ref, denovo-alt) "
+                "are mutually exclusive")
+            raise ValueError()
+
+        if argv.denovo_person_id and \
+                (argv.denovo_family_id or argv.denovo_best_state):
+            print(
+                "--denovo-person-id and (denovo-family-id, denovo-best-state) "
+                "are mutually exclusive")
+            raise ValueError()
+
+        if not (argv.denovo_location or
+                (argv.denovo_chrom and argv.denovo_pos)):
+            argv.denovo_location = 'location'
+
+        if not (argv.denovo_variant or (argv.denovo_ref and argv.denovo_alt)):
+            argv.denovo_variant = 'variant'
+
+        if not (argv.denovo_person_id or
+                (argv.denovo_family_id and argv.denovo_best_state)):
+            argv.denovo_family_id = 'familyId'
+            argv.denovo_best_state = 'bestState'
+
+        if not argv.denovo_location:
+            if not argv.denovo_chrom:
+                argv.denovo_chrom = 'CHROM'
+            if not argv.denovo_pos:
+                argv.denovo_pos = 'POS'
+
+        if not argv.denovo_variant:
+            if not argv.denovo_ref:
+                argv.denovo_ref = 'REF'
+            if not argv.denovo_alt:
+                argv.denovo_alt = 'ALT'
+
+        if not argv.denovo_person_id:
+            if not argv.denovo_family_id:
+                argv.denovo_family_id = 'familyId'
+            if not argv.denovo_best_state:
+                argv.denovo_best_state = 'bestState'
+
+        params = {
             'denovo_location': argv.denovo_location,
             'denovo_variant': argv.denovo_variant,
             'denovo_chrom': argv.denovo_chrom,
@@ -218,17 +273,6 @@ class DenovoLoader(VariantsLoader):
 
         :rtype: An instance of Pandas' DataFrame class.
         """
-
-        if not (denovo_location or (denovo_chrom and denovo_pos)):
-            denovo_location = 'location'
-
-        if not (denovo_variant or (denovo_ref and denovo_alt)):
-            denovo_variant = 'variant'
-
-        if not ((denovo_person_id and families) or
-                (denovo_family_id and denovo_best_state)):
-            denovo_family_id = 'familyId'
-            denovo_best_state = 'bestState'
 
         assert families is not None
         assert isinstance(families, FamiliesData), \
