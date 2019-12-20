@@ -46,3 +46,19 @@ def test_datasets_name_ordering(admin_client):
     sorted_response_data = sorted(response.data['data'],
                                   key=lambda d: d['name'])
     assert response.data['data'] == sorted_response_data
+
+
+def test_user_client_get_dataset_details(user_client, mock_gpf_instance):
+    response = user_client.get('/api/v3/datasets/details/inheritance_trio')
+
+    assert response
+    assert response.status_code == 200
+    assert response.data['hasDenovo']
+
+
+def test_user_client_get_nonexistant_dataset_details(
+        user_client, mock_gpf_instance):
+    response = user_client.get('/api/v3/datasets/details/asdfghjkl')
+
+    assert response
+    assert response.status_code == 400
