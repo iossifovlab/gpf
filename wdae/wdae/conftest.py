@@ -9,6 +9,9 @@ from users_api.models import WdaeUser
 from dae.gpf_instance.gpf_instance import GPFInstance
 
 
+pytest_plugins = ['dae_conftests.dae_conftests']
+
+
 @pytest.fixture(scope='session')
 def monkeysession(request):
     mp = MonkeyPatch()
