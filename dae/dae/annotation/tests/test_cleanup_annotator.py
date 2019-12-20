@@ -11,7 +11,7 @@ Y:4372
 '''
 
 
-def test_cleanup_annotator(capsys, variants_io, genomes_db):
+def test_cleanup_annotator(capsys, variants_io, genomes_db_2013):
     opts = Box({}, default_box=True, default_box_attr=None)
 
     section_config = AnnotationConfigParser.parse_section(
@@ -22,7 +22,7 @@ def test_cleanup_annotator(capsys, variants_io, genomes_db):
             },
             'annotator': 'cleanup_annotator.CleanupAnnotator'
         }),
-        genomes_db
+        genomes_db_2013
     )
 
     with variants_io('fixtures/input.tsv') as io_manager:

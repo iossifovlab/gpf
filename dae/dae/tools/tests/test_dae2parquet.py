@@ -18,7 +18,7 @@ from dae.annotation.tools.file_io_parquet import ParquetReader
 def test_dae2parquet_denovo(
         dae_denovo_config, annotation_pipeline_default_config,
         temp_dirname,
-        default_gpf_instance, dae_config_fixture, genomes_db):
+        genomes_db_2013):
 
     argv = [
         'denovo',
@@ -49,7 +49,7 @@ def test_dae2parquet_denovo(
 def test_dae2parquet_transmitted(
         dae_transmitted_config, annotation_pipeline_default_config,
         temp_dirname,
-        default_gpf_instance, dae_config_fixture, genomes_db):
+        genomes_db_2013):
 
     argv = [
         'dae',
@@ -81,7 +81,7 @@ def test_dae2parquet_transmitted(
 def test_dae2parquet_make(
         dae_transmitted_config, annotation_pipeline_default_config,
         annotation_scores_dirname, temp_dirname,
-        default_gpf_instance, dae_config_fixture, genomes_db):
+        genomes_db_2013):
 
     argv = [
         'make',
@@ -106,7 +106,7 @@ def test_dae2parquet_make(
 def test_dae2parquet_make_partition(
         dae_transmitted_config, annotation_pipeline_default_config,
         annotation_scores_dirname, temp_dirname,
-        default_gpf_instance, dae_config_fixture, genomes_db,
+        genomes_db_2013,
         parquet_partition_configuration):
 
     argv = [

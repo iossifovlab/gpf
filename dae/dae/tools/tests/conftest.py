@@ -17,11 +17,6 @@ def relative_to_this_test_folder(path):
     )
 
 
-@pytest.fixture(scope='session')
-def gpf_instance(mock_genomes_db):
-    return GPFInstance(work_dir=relative_to_this_test_folder('fixtures'))
-
-
 @pytest.fixture
 def vcf_variants_io(request):
 

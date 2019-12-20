@@ -6,10 +6,6 @@ from io import StringIO
 
 from box import Box
 
-from dae.gpf_instance.gpf_instance import GPFInstance
-
-from dae.configuration.dae_config_parser import DAEConfigParser
-
 from dae.annotation.tools.file_io import IOManager, IOType
 from dae.annotation.tools.score_file_io import ScoreFile, TabixAccess
 
@@ -20,22 +16,9 @@ def relative_to_this_test_folder(path):
         path
     )
 
-
 @pytest.fixture(scope='session')
-def dae_config_fixture():
-    return DAEConfigParser.read_and_parse_file_configuration(
-        work_dir=relative_to_this_test_folder('fixtures')
-    )
-
-
-@pytest.fixture(scope='session')
-def mocked_gpf_instance(mock_genomes_db, dae_config_fixture):
-    return GPFInstance(work_dir=relative_to_this_test_folder('fixtures'))
-
-
-@pytest.fixture(scope='session')
-def mocked_genomes_db(mocked_gpf_instance):
-    return mocked_gpf_instance.genomes_db
+def work_dir():
+    return relative_to_this_test_folder('fixtures')
 
 
 @pytest.fixture

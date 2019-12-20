@@ -7,8 +7,8 @@ from dae.tools.simple_study_import import main
 
 
 def test_import_denovo_dae_style_into_impala(
-        genomes_db, fixture_dirname,
-        default_dae_config, default_gpf_instance, temp_dirname):
+        genomes_db_2013, fixture_dirname,
+        default_dae_config, gpf_instance_2013, temp_dirname):
 
     pedigree_filename = fixture_dirname('denovo_import/fake_pheno.ped')
     denovo_filename = fixture_dirname('denovo_import/variants_DAE_style.tsv')
@@ -36,7 +36,7 @@ def test_import_denovo_dae_style_into_impala(
         '-o', temp_dirname,
     ]
 
-    main(argv, default_gpf_instance)
+    main(argv, gpf_instance_2013)
 
     storage_config = default_dae_config.storage[genotype_storage_id]
     assert storage_config.type == 'impala'
@@ -44,7 +44,7 @@ def test_import_denovo_dae_style_into_impala(
     impala_storage = ImpalaGenotypeStorage(storage_config)
     fvars = impala_storage.build_backend(
         Box({'id': study_id}, default_box=True),
-        genomes_db
+        genomes_db_2013
     )
 
     vs = list(fvars.query_variants())
@@ -52,8 +52,8 @@ def test_import_denovo_dae_style_into_impala(
 
 
 def test_import_comp_vcf_into_impala(
-        genomes_db, fixture_dirname, default_dae_config,
-        default_gpf_instance, temp_dirname):
+        genomes_db_2013, fixture_dirname, default_dae_config,
+        gpf_instance_2013, temp_dirname):
 
     pedigree_filename = fixture_dirname('study_import/comp.ped')
     vcf_filename = fixture_dirname('study_import/comp.vcf')
@@ -76,11 +76,11 @@ def test_import_comp_vcf_into_impala(
         '-o', temp_dirname,
     ]
 
-    main(argv, default_gpf_instance)
+    main(argv, gpf_instance_2013)
 
     fvars = impala_storage.build_backend(
         Box({'id': study_id}, default_box=True),
-        genomes_db
+        genomes_db_2013
     )
 
     vs = list(fvars.query_variants())
@@ -88,8 +88,8 @@ def test_import_comp_vcf_into_impala(
 
 
 def test_import_comp_denovo_into_impala(
-        genomes_db, fixture_dirname, default_dae_config,
-        default_gpf_instance, temp_dirname):
+        genomes_db_2013, fixture_dirname, default_dae_config,
+        gpf_instance_2013, temp_dirname):
 
     pedigree_filename = fixture_dirname('study_import/comp.ped')
     denovo_filename = fixture_dirname('study_import/comp.tsv')
@@ -118,11 +118,11 @@ def test_import_comp_denovo_into_impala(
         '-o', temp_dirname,
     ]
 
-    main(argv, default_gpf_instance)
+    main(argv, gpf_instance_2013)
 
     fvars = impala_storage.build_backend(
         Box({'id': study_id}, default_box=True),
-        genomes_db
+        genomes_db_2013
     )
 
     vs = list(fvars.query_variants())
@@ -130,8 +130,8 @@ def test_import_comp_denovo_into_impala(
 
 
 def test_import_comp_all_into_impala(
-        genomes_db, fixture_dirname, default_dae_config,
-        default_gpf_instance, temp_dirname):
+        genomes_db_2013, fixture_dirname, default_dae_config,
+        gpf_instance_2013, temp_dirname):
 
     pedigree_filename = fixture_dirname('study_import/comp.ped')
     vcf_filename = fixture_dirname('study_import/comp.vcf')
@@ -162,11 +162,11 @@ def test_import_comp_all_into_impala(
         '-o', temp_dirname,
     ]
 
-    main(argv, default_gpf_instance)
+    main(argv, gpf_instance_2013)
 
     fvars = impala_storage.build_backend(
         Box({'id': study_id}, default_box=True),
-        genomes_db
+        genomes_db_2013
     )
 
     vs = list(fvars.query_variants())
@@ -174,8 +174,8 @@ def test_import_comp_all_into_impala(
 
 
 def test_import_denovo_dae_style_into_filesystem(
-        genomes_db, fixture_dirname,
-        default_dae_config, default_gpf_instance, temp_dirname):
+        genomes_db_2013, fixture_dirname,
+        default_dae_config, gpf_instance_2013, temp_dirname):
 
     pedigree_filename = fixture_dirname('denovo_import/fake_pheno.ped')
     denovo_filename = fixture_dirname('denovo_import/variants_DAE_style.tsv')
@@ -206,20 +206,20 @@ def test_import_denovo_dae_style_into_filesystem(
         '-o', temp_dirname,
     ]
 
-    main(argv, default_gpf_instance)
+    main(argv, gpf_instance_2013)
 
     storage_config = default_dae_config.storage[genotype_storage_id]
     assert storage_config.type == 'filesystem'
 
-    default_gpf_instance.reload()
-    study = default_gpf_instance._variants_db.get_study(study_id)
+    gpf_instance_2013.reload()
+    study = gpf_instance_2013._variants_db.get_study(study_id)
     vs = list(study.query_variants())
     assert len(vs) == 3
 
 
 def test_import_iossifov2014_filesystem(
-        genomes_db, fixture_dirname, dae_iossifov2014_config,
-        default_dae_config, default_gpf_instance, temp_dirname):
+        genomes_db_2013, fixture_dirname, dae_iossifov2014_config,
+        default_dae_config, gpf_instance_2013, temp_dirname):
 
     pedigree_filename = dae_iossifov2014_config.family_filename
     denovo_filename = dae_iossifov2014_config.denovo_filename
@@ -250,13 +250,13 @@ def test_import_iossifov2014_filesystem(
         '-o', temp_dirname,
     ]
 
-    main(argv, default_gpf_instance)
+    main(argv, gpf_instance_2013)
 
     storage_config = default_dae_config.storage[genotype_storage_id]
     assert storage_config.type == 'filesystem'
 
-    default_gpf_instance.reload()
-    study = default_gpf_instance._variants_db.get_study(study_id)
+    gpf_instance_2013.reload()
+    study = gpf_instance_2013._variants_db.get_study(study_id)
     assert study is not None
 
     vs = list(study.query_variants())
@@ -270,8 +270,8 @@ def test_import_iossifov2014_filesystem(
 
 
 def test_import_comp_all_into_filesystem(
-        genomes_db, fixture_dirname, default_dae_config,
-        default_gpf_instance, temp_dirname):
+        genomes_db_2013, fixture_dirname, default_dae_config,
+        gpf_instance_2013, temp_dirname):
 
     pedigree_filename = fixture_dirname('study_import/comp.ped')
     vcf_filename = fixture_dirname('study_import/comp.vcf')
@@ -297,13 +297,13 @@ def test_import_comp_all_into_filesystem(
         '-o', temp_dirname,
     ]
 
-    main(argv, default_gpf_instance)
+    main(argv, gpf_instance_2013)
 
     storage_config = default_dae_config.storage[genotype_storage_id]
     assert storage_config.type == 'filesystem'
 
-    default_gpf_instance.reload()
-    study = default_gpf_instance._variants_db.get_study(study_id)
+    gpf_instance_2013.reload()
+    study = gpf_instance_2013._variants_db.get_study(study_id)
     assert study is not None
 
     vs = list(study.query_variants())

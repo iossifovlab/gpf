@@ -7,8 +7,8 @@ from dae.tools.simple_study_import import main
 
 
 def test_import_iossifov2014_filesystem(
-        genomes_db, fixture_dirname, dae_iossifov2014_config,
-        default_dae_config, default_gpf_instance, temp_dirname):
+        genomes_db_2013, fixture_dirname, dae_iossifov2014_config,
+        default_dae_config, gpf_instance_2013, temp_dirname):
 
     pedigree_filename = dae_iossifov2014_config.family_filename
     denovo_filename = dae_iossifov2014_config.denovo_filename
@@ -34,13 +34,13 @@ def test_import_iossifov2014_filesystem(
         '-o', temp_dirname,
     ]
 
-    main(argv, default_gpf_instance)
+    main(argv, gpf_instance_2013)
 
     storage_config = default_dae_config.storage[genotype_storage_id]
     assert storage_config.type == 'filesystem'
 
-    default_gpf_instance.reload()
-    study = default_gpf_instance._variants_db.get_study(study_id)
+    gpf_instance_2013.reload()
+    study = gpf_instance_2013._variants_db.get_study(study_id)
     assert study is not None
 
     vs = list(study.query_variants())
@@ -91,8 +91,8 @@ def assert_proper_flexible_short_variants(vs):
 
 
 def test_flexible_denovo_default(
-        genomes_db, fixture_dirname, default_dae_config, default_gpf_instance,
-        temp_dirname):
+        fixture_dirname, gpf_instance_2019,
+        temp_dirname, genomes_db_2019):
 
 
     pedigree_filename = fixture_dirname(
@@ -102,7 +102,7 @@ def test_flexible_denovo_default(
     genotype_storage_id = 'test_filesystem'
     study_id = 'test_flexible_denovo_default'
 
-    storage_config = default_dae_config.storage[genotype_storage_id]
+    storage_config = gpf_instance_2019.dae_config.storage[genotype_storage_id]
     assert storage_config.type == 'filesystem'
     genotype_storage = FilesystemGenotypeStorage(storage_config)
     assert genotype_storage
@@ -116,21 +116,21 @@ def test_flexible_denovo_default(
         '-o', temp_dirname,
     ]
 
-    main(argv, default_gpf_instance)
+    main(argv, gpf_instance_2019)
 
-    storage_config = default_dae_config.storage[genotype_storage_id]
+    storage_config = gpf_instance_2019.dae_config.storage[genotype_storage_id]
     assert storage_config.type == 'filesystem'
 
-    default_gpf_instance.reload()
-    study = default_gpf_instance._variants_db.get_study(study_id)
+    gpf_instance_2019.reload()
+    study = gpf_instance_2019._variants_db.get_study(study_id)
     assert study is not None
 
     vs = list(study.query_variants())
     assert_proper_flexible_short_variants(vs)
 
 def test_flexible_denovo_vcf(
-        genomes_db, fixture_dirname, default_dae_config, default_gpf_instance,
-        temp_dirname):
+        fixture_dirname, gpf_instance_2019,
+        temp_dirname, genomes_db_2019):
 
 
     pedigree_filename = fixture_dirname(
@@ -140,7 +140,7 @@ def test_flexible_denovo_vcf(
     genotype_storage_id = 'test_filesystem'
     study_id = 'test_flexible_denovo_vcf'
 
-    storage_config = default_dae_config.storage[genotype_storage_id]
+    storage_config = gpf_instance_2019.dae_config.storage[genotype_storage_id]
     assert storage_config.type == 'filesystem'
     genotype_storage = FilesystemGenotypeStorage(storage_config)
     assert genotype_storage
@@ -159,13 +159,13 @@ def test_flexible_denovo_vcf(
         '-o', temp_dirname,
     ]
 
-    main(argv, default_gpf_instance)
+    main(argv, gpf_instance_2019)
 
-    storage_config = default_dae_config.storage[genotype_storage_id]
+    storage_config = gpf_instance_2019.dae_config.storage[genotype_storage_id]
     assert storage_config.type == 'filesystem'
 
-    default_gpf_instance.reload()
-    study = default_gpf_instance._variants_db.get_study(study_id)
+    gpf_instance_2019.reload()
+    study = gpf_instance_2019._variants_db.get_study(study_id)
     assert study is not None
 
     vs = list(study.query_variants())

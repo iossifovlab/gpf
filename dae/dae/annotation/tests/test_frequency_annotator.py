@@ -22,7 +22,7 @@ expected_result_freq = \
 
 
 def test_frequency_annotator(
-        variants_io, expected_df, capsys, mocked_genomes_db):
+        variants_io, expected_df, capsys, genomes_db_2013):
     options = Box({
         'vcf': True,
         'direct': False,
@@ -42,7 +42,7 @@ def test_frequency_annotator(
             'columns': columns,
             'annotator': 'frequency_annotator.FrequencyAnnotator'
         }),
-        mocked_genomes_db
+        genomes_db_2013
     )
 
     with variants_io('fixtures/freq_test_1.tsv') as io_manager:

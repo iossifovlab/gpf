@@ -18,7 +18,7 @@ expected_result_dbNSFP = \
 '''
 
 
-def test_dbNSFP_annotator(variants_io, expected_df, capsys, mocked_genomes_db):
+def test_dbNSFP_annotator(variants_io, expected_df, capsys, genomes_db_2013):
     options = Box({
         'vcf': True,
         'direct': False,
@@ -40,7 +40,7 @@ def test_dbNSFP_annotator(variants_io, expected_df, capsys, mocked_genomes_db):
             'columns': columns,
             'annotator': 'dbNSFP_annotator.dbNSFPAnnotator'
         }),
-        mocked_genomes_db
+        genomes_db_2013
     )
 
     with variants_io('fixtures/multi_chrom_input.tsv') as io_manager:

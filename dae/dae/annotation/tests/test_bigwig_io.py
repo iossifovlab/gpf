@@ -82,7 +82,8 @@ def test_bigwig_access_simple():
 
 @pytest.mark.skipif(bigwig_enabled is False,
                     reason='pyBigWig module is not installed')
-def test_bigwig_access_indels(expected_df, capsys, variants_io, genomes_db):
+def test_bigwig_access_indels(
+        expected_df, capsys, variants_io, genomes_db_2013):
 
     options = Box({
         'mode': 'overwrite',
@@ -98,7 +99,7 @@ def test_bigwig_access_indels(expected_df, capsys, variants_io, genomes_db):
             },
             'annotator': 'score_annotator.PositionScoreAnnotator'
         }),
-        genomes_db
+        genomes_db_2013
     )
     print(config.options)
     print(type(config.options))

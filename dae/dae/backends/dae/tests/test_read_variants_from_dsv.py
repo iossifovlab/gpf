@@ -63,10 +63,10 @@ def test_families_instance_type_assertion():
     assert str(excinfo.value) == error_message
 
 
-def test_read_variants_DAE_style(default_genome, fixture_dirname, fake_families):
+def test_read_variants_DAE_style(genome_2013, fixture_dirname, fake_families):
     filename = fixture_dirname('denovo_import/variants_DAE_style.tsv')
     res_df = DenovoLoader.flexible_denovo_load(
-        filename, default_genome, families=fake_families,
+        filename, genome_2013, families=fake_families,
         denovo_location='location',
         denovo_variant='variant',
         denovo_family_id='familyId', denovo_best_state='bestState'
@@ -140,10 +140,10 @@ def test_read_variants_mixed_A(fixture_dirname, fake_families):
     assert compare_variant_dfs(res_df, expected_df)
 
 
-def test_read_variants_mixed_B(default_genome, fixture_dirname, fake_families):
+def test_read_variants_mixed_B(genome_2013, fixture_dirname, fake_families):
     filename = fixture_dirname('denovo_import/variants_mixed_style_B.tsv')
     res_df = DenovoLoader.flexible_denovo_load(
-        filename, default_genome,  families=fake_families,
+        filename, genome_2013,  families=fake_families,
         denovo_chrom='chrom', denovo_pos='pos',
         denovo_variant='variant',
         denovo_family_id='familyId', denovo_best_state='bestState'

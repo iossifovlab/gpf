@@ -26,20 +26,19 @@ def genotype_data_groups_dir():
 
 
 @pytest.fixture(scope='session')
-def gpf_instance(mock_genomes_db):
-    gpf_instance = GPFInstance(work_dir=fixtures_dir())
-
+def local_gpf_instance(gpf_instance):
+    gpf_instance = gpf_instance(fixtures_dir())
     return gpf_instance
 
 
 @pytest.fixture(scope='session')
-def vdb_fixture(gpf_instance):
-    return gpf_instance._variants_db
+def vdb_fixture(local_gpf_instance):
+    return local_gpf_instance._variants_db
 
 
 @pytest.fixture(scope='session')
-def common_report_facade(gpf_instance):
-    return gpf_instance._common_report_facade
+def common_report_facade(local_gpf_instance):
+    return local_gpf_instance._common_report_facade
 
 
 @pytest.fixture(scope='session')
