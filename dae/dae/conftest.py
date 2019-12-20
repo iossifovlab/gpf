@@ -1,5 +1,4 @@
 import pytest
-from _pytest.monkeypatch import MonkeyPatch
 
 import os
 import glob
@@ -97,8 +96,8 @@ def gpf_instance_2013(default_dae_config):
                 self.dae_config.genomes_db.conf_file
             )
 
-
     return GPFInstance2013(dae_config=default_dae_config)
+
 
 @pytest.fixture(scope='session')
 def gene_models_2013(gpf_instance_2013):
@@ -132,8 +131,8 @@ def gpf_instance_2019(default_dae_config):
                 self.dae_config.genomes_db.conf_file
             )
 
-
     return GPFInstance2019(dae_config=default_dae_config)
+
 
 @pytest.fixture(scope='session')
 def gene_models_2019(gpf_instance_2019):
@@ -659,8 +658,9 @@ def data_import(
     test_hdfs.mkdir(temp_dirname)
 
     annotation_pipeline = \
-        construct_import_annotation_pipeline(default_dae_config,
-        genomes_db_2013)
+        construct_import_annotation_pipeline(
+            default_dae_config,
+            genomes_db_2013)
 
     def fin():
         test_hdfs.delete(temp_dirname, recursive=True)
@@ -719,8 +719,8 @@ def data_import(
 
 @pytest.fixture(scope='session')
 def variants_impala(
-    request, data_import, impala_genotype_storage, 
-    genomes_db_2013):
+        request, data_import, impala_genotype_storage,
+        genomes_db_2013):
 
     def builder(path):
         study_id = os.path.basename(path)

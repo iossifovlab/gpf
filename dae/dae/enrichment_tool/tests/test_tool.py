@@ -15,7 +15,7 @@ def test_enrichment_tool(
         event_counter)
     pg = f1_trio.get_people_group('phenotype')
     gh = GenotypeHelper(f1_trio, pg, 'autism')
-    children_stats = gh.get_children_stats()
+    # children_stats = gh.get_children_stats()
     children_by_sex = gh.children_by_sex()
 
     enrichment_events = enrichment_tool.calc(

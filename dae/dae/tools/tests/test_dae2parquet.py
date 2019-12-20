@@ -6,7 +6,6 @@ from contextlib import redirect_stdout
 
 from box import Box
 from dae.RegionOperations import Region
-from dae.pedigrees.family import FamiliesLoader
 
 from dae.pedigrees.family import FamiliesData, PedigreeReader
 from dae.backends.impala.loader import ParquetLoader

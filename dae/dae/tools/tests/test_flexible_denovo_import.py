@@ -1,6 +1,3 @@
-from box import Box
-
-from dae.backends.storage.impala_genotype_storage import ImpalaGenotypeStorage
 from dae.backends.storage.filesystem_genotype_storage import \
     FilesystemGenotypeStorage
 from dae.tools.simple_study_import import main
@@ -94,7 +91,6 @@ def test_flexible_denovo_default(
         fixture_dirname, gpf_instance_2019,
         temp_dirname, genomes_db_2019):
 
-
     pedigree_filename = fixture_dirname(
         'flexible_short/flexible_short_families.ped')
     denovo_filename = fixture_dirname('flexible_short/flexible_short.txt')
@@ -127,6 +123,7 @@ def test_flexible_denovo_default(
 
     vs = list(study.query_variants())
     assert_proper_flexible_short_variants(vs)
+
 
 def test_flexible_denovo_vcf(
         fixture_dirname, gpf_instance_2019,

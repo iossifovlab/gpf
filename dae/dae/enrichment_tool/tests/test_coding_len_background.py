@@ -68,7 +68,7 @@ def test_calc_stats(f1_trio, f1_trio_coding_len_background):
     assert ee == enrichment_events
 
     assert len(ee['all'].events) == 2
-    assert ee['all'].events == [['SAMD11'], ['SAMD11'],]
+    assert ee['all'].events == [['SAMD11'], ['SAMD11'], ]
     assert ee['all'].expected == 2.0
     assert ee['all'].pvalue == 1.0
     assert len(ee['rec'].events) == 1

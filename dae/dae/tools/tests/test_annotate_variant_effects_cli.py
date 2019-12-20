@@ -39,8 +39,7 @@ def test_annotate_variant_simple(temp_filename, genomes_db_2013):
     command = "cut -f 1-3 {} " \
         "| annotate_variant.py -T RefSeq2013 " \
         "| head -n 9 > {}".format(
-        denovo_filename, temp_filename
-    )
+            denovo_filename, temp_filename)
     print(command)
     res = os.system(command)
     assert res == 0

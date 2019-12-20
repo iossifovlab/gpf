@@ -47,7 +47,7 @@ def test_calc_stats(f1_trio, f1_trio_samocha_background):
 
     pg = f1_trio.get_people_group('phenotype')
     gh = GenotypeHelper(f1_trio, pg, 'autism')
-    children_stats = gh.get_children_stats()
+    # children_stats = gh.get_children_stats()
     children_by_sex = gh.children_by_sex()
 
     enrichment_events = event_counter.events(
@@ -94,7 +94,7 @@ def test_calc_stats(f1_trio, f1_trio_samocha_background):
     assert ee['male'].expected == 15.0
     assert ee['male'].pvalue == pytest.approx(9.788e-06, rel=1e-3)
     assert len(ee['female'].events) == 1
-    assert ee['female'].events == [['SAMD11'],]
+    assert ee['female'].events == [['SAMD11'], ]
     assert ee['female'].expected == 15.0
     assert ee['female'].pvalue == pytest.approx(9.788e-06, rel=1e-3)
     assert len(ee['unspecified'].events) == 0

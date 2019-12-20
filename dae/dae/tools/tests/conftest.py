@@ -4,8 +4,6 @@ import os
 import shutil
 from box import Box
 
-from dae.gpf_instance.gpf_instance import GPFInstance
-
 from dae.annotation.tools.file_io import IOManager, IOType
 from dae.utils.fixtures import change_environment
 
