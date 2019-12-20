@@ -302,3 +302,15 @@ export class Dataset extends IdName {
   }
 }
 
+export class DatasetDetails {
+  static fromJson(json: any): DatasetDetails {
+    return new DatasetDetails(
+      json.hasDenovo as boolean
+    )
+  }
+
+  constructor(
+    readonly hasDenovo: boolean
+  ) { }
+}
+

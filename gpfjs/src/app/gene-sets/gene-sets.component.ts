@@ -6,6 +6,7 @@ import { GeneSetsCollection, GeneSet, GeneSetType } from './gene-sets';
 import { Subject ,  Observable } from 'rxjs';
 import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query-state-provider';
 import { StateRestoreService } from '../store/state-restore.service';
+import { DatasetsService } from 'app/datasets/datasets.service';
 
 @Component({
   selector: 'gpf-gene-sets',
@@ -28,7 +29,8 @@ export class GeneSetsComponent extends QueryStateWithErrorsProvider implements O
   constructor(
     private geneSetsService: GeneSetsService,
     private config: ConfigService,
-    private stateRestoreService: StateRestoreService
+    private stateRestoreService: StateRestoreService,
+    private datasetService: DatasetsService
   ) {
     super();
   }
@@ -75,6 +77,14 @@ export class GeneSetsComponent extends QueryStateWithErrorsProvider implements O
   ngOnInit() {
     this.geneSetsService.getGeneSetsCollections().subscribe(
       (geneSetsCollections) => {
+
+        const dataset$ = this.datasetService.getSelectedDataset();
+        const datasetDetails = this.datasetService.getSelectedDatasetDetails();
+        if(datasetDetails && !datasetDetails.hasDenovo) {
+          geneSetsCollections = geneSetsCollections.filter(
+            (geneSet) => {return geneSet.name.toLowerCase().trim() !== 'denovo'}
+          )
+        }
         this.geneSetsCollections = geneSetsCollections;
         this.selectedGeneSetsCollection = geneSetsCollections[0];
         this.restoreStateSubscribe();
