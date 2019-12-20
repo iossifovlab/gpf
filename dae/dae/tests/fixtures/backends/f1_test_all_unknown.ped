@@ -1,5 +1,0 @@
-familyId	personId	dadId	momId	sex	status	role
-f1	mom1	0	0	2	1	mom
-f1	dad1	0	0	1	1	dad
-f1	ch1	dad1	mom1	2	2	prb
-f1	ch2	dad1	mom1	1	1	sib

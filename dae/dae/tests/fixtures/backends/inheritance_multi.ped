@@ -1,8 +1,0 @@
-familyId	personId	dadId	momId	sex	status	role
-f	gpa	0	0	1	1	maternal_grandfather
-f	gma	0	0	2	1	maternal_grandmother
-f	mom	gpa	gma	2	1	mom
-f	dad	0	0	1	1	dad
-f	ch1	dad	mom	2	2	prb
-f	ch2	dad	mom	2	1	sib
-f	ch3	dad	mom	2	1	sib
