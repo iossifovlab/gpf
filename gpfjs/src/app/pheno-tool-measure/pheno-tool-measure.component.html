@@ -4,6 +4,8 @@
       Proband Pheno Measure
   	  <gpf-pheno-measure-selector [(selectedMeasure)]="phenoToolMeasure.measure" (measuresChange)="measuresUpdate($event)" (selectedMeasureChange)="uncheckCheckboxes($event)">
       </gpf-pheno-measure-selector>
+
+      <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
     </div>
     <div class="col-lg-6">
       Normalized by:
@@ -20,7 +22,5 @@
           </label>
       </div>
     </div>
-
-    <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
   </div>
 </div>
