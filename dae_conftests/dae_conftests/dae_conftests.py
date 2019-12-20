@@ -42,6 +42,7 @@ def relative_to_this_test_folder(path):
 
 
 def get_global_dae_fixtures_dir():
+    print('Dar-jee says:', relative_to_this_test_folder('fixtures'))
     return relative_to_this_test_folder('fixtures')
 
 
