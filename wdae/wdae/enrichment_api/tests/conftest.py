@@ -1,4 +1,3 @@
-import os
 import pytest
 
 from dae.gpf_instance.gpf_instance import GPFInstance
@@ -9,11 +8,11 @@ from enrichment_api.enrichment_serializer import EnrichmentSerializer
 
 from dae.enrichment_tool.event_counters import EventsCounter
 from dae.enrichment_tool.tool import EnrichmentTool
+from dae_conftests.dae_conftests import get_global_dae_fixtures_dir
 
 
 def fixtures_dir():
-    return os.path.abspath(
-        os.path.join(os.path.dirname(__file__), 'fixtures'))
+    return get_global_dae_fixtures_dir()
 
 
 @pytest.fixture(scope='session')
