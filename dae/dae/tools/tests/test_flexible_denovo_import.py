@@ -132,7 +132,6 @@ def test_flexible_denovo_vcf(
         fixture_dirname, gpf_instance_2019,
         temp_dirname, genomes_db_2019):
 
-
     pedigree_filename = fixture_dirname(
         'flexible_short/flexible_short_families.ped')
     denovo_filename = fixture_dirname('flexible_short/flexible_short_vcf.txt')
@@ -155,6 +154,133 @@ def test_flexible_denovo_vcf(
         '--denovo-pos', 'position',
         '--denovo-ref', 'reference',
         '--denovo-alt', 'alternative',
+        '--genotype-storage', genotype_storage_id,
+        '-o', temp_dirname,
+    ]
+
+    main(argv, gpf_instance_2019)
+
+    storage_config = gpf_instance_2019.dae_config.storage[genotype_storage_id]
+    assert storage_config.type == 'filesystem'
+
+    gpf_instance_2019.reload()
+    study = gpf_instance_2019._variants_db.get_study(study_id)
+    assert study is not None
+
+    vs = list(study.query_variants())
+    assert_proper_flexible_short_variants(vs)
+
+
+def test_flexible_denovo_vcf_location(
+        fixture_dirname, gpf_instance_2019,
+        temp_dirname, genomes_db_2019):
+
+    pedigree_filename = fixture_dirname(
+        'flexible_short/flexible_short_families.ped')
+    denovo_filename = fixture_dirname(
+        'flexible_short/flexible_short_vcf_location.txt')
+
+    genotype_storage_id = 'test_filesystem'
+    study_id = 'test_flexible_denovo_vcf_location'
+
+    storage_config = gpf_instance_2019.dae_config.storage[genotype_storage_id]
+    assert storage_config.type == 'filesystem'
+    genotype_storage = FilesystemGenotypeStorage(storage_config)
+    assert genotype_storage
+
+    argv = [
+        pedigree_filename,
+        '--id', study_id,
+        '--skip-reports',
+        '--denovo', denovo_filename,
+        '--denovo-person-id', 'person_id',
+        '--denovo-location', 'location',
+        '--denovo-ref', 'reference',
+        '--denovo-alt', 'alternative',
+        '--genotype-storage', genotype_storage_id,
+        '-o', temp_dirname,
+    ]
+
+    main(argv, gpf_instance_2019)
+
+    storage_config = gpf_instance_2019.dae_config.storage[genotype_storage_id]
+    assert storage_config.type == 'filesystem'
+
+    gpf_instance_2019.reload()
+    study = gpf_instance_2019._variants_db.get_study(study_id)
+    assert study is not None
+
+    vs = list(study.query_variants())
+    assert_proper_flexible_short_variants(vs)
+
+def test_flexible_denovo_dae_chrom_pos(
+        fixture_dirname, gpf_instance_2019,
+        temp_dirname, genomes_db_2019):
+
+    pedigree_filename = fixture_dirname(
+        'flexible_short/flexible_short_families.ped')
+    denovo_filename = fixture_dirname(
+        'flexible_short/flexible_short_dae_chrom_pos.txt')
+
+    genotype_storage_id = 'test_filesystem'
+    study_id = 'test_flexible_denovo_dae_chrom_pos'
+
+    storage_config = gpf_instance_2019.dae_config.storage[genotype_storage_id]
+    assert storage_config.type == 'filesystem'
+    genotype_storage = FilesystemGenotypeStorage(storage_config)
+    assert genotype_storage
+
+    argv = [
+        pedigree_filename,
+        '--id', study_id,
+        '--skip-reports',
+        '--denovo', denovo_filename,
+        '--denovo-chrom', 'chrom',
+        '--denovo-pos', 'position',
+        '--denovo-variant', 'variant',
+        '--denovo-family-id', 'familyId',
+        '--denovo-best-state', 'bestState',
+        '--genotype-storage', genotype_storage_id,
+        '-o', temp_dirname,
+    ]
+
+    main(argv, gpf_instance_2019)
+
+    storage_config = gpf_instance_2019.dae_config.storage[genotype_storage_id]
+    assert storage_config.type == 'filesystem'
+
+    gpf_instance_2019.reload()
+    study = gpf_instance_2019._variants_db.get_study(study_id)
+    assert study is not None
+
+    vs = list(study.query_variants())
+    assert_proper_flexible_short_variants(vs)
+
+
+def test_flexible_denovo_dae_person(
+        fixture_dirname, gpf_instance_2019,
+        temp_dirname, genomes_db_2019):
+
+    pedigree_filename = fixture_dirname(
+        'flexible_short/flexible_short_families.ped')
+    denovo_filename = fixture_dirname(
+        'flexible_short/flexible_short_dae_person.txt')
+
+    genotype_storage_id = 'test_filesystem'
+    study_id = 'test_flexible_denovo_dae_person'
+
+    storage_config = gpf_instance_2019.dae_config.storage[genotype_storage_id]
+    assert storage_config.type == 'filesystem'
+    genotype_storage = FilesystemGenotypeStorage(storage_config)
+    assert genotype_storage
+
+    argv = [
+        pedigree_filename,
+        '--id', study_id,
+        '--skip-reports',
+        '--denovo', denovo_filename,
+        '--denovo-variant', 'variant',
+        '--denovo-person-id', 'person_id',
         '--genotype-storage', genotype_storage_id,
         '-o', temp_dirname,
     ]
