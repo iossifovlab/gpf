@@ -4,11 +4,11 @@ import os
 
 from dae.gpf_instance.gpf_instance import GPFInstance
 from gpf_instance.gpf_instance import reload_datasets
+from dae_conftests.dae_conftests import get_global_dae_fixtures_dir
 
 
 def fixtures_dir():
-    return os.path.abspath(
-        os.path.join(os.path.dirname(__file__), 'fixtures'))
+    return get_global_dae_fixtures_dir()
 
 
 @pytest.fixture(scope='session')
