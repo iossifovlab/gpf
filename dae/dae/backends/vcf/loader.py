@@ -63,7 +63,7 @@ class VcfLoader(VariantsLoader):
 
         assert os.path.exists(vcf_filename)
         self.vcf_filename = vcf_filename
-        if type(regions) == str or type(regions) == type(None):
+        if regions is None or isinstance(regions, str):
             self.regions = [regions]
         else:
             self.regions = regions
@@ -155,7 +155,7 @@ class VcfLoader(VariantsLoader):
 
     @staticmethod
     def parse_cli_arguments(argv):
-        params={
+        params = {
             'include_reference_genotypes': argv.vcf_include_reference,
             'include_unknown_family_genotypes': argv.vcf_include_unknown,
             'include_unknown_person_genotypes': argv.vcf_include_unknown

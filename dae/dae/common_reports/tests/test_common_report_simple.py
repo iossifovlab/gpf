@@ -1,5 +1,3 @@
-import pytest
-
 from pprint import pprint
 
 from dae.common_reports.common_report import CommonReport

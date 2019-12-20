@@ -300,7 +300,7 @@ class OffsetLayoutDrawer(object):
 
         for member in family:
             table_vals.append(
-                [member.family_id, member.person_id, 
+                [member.family_id, member.person_id,
                  member.father, member.mother,
                  Sex.from_name_or_value(member.sex), member.status,
                  member.role, member.layout])

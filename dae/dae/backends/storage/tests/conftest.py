@@ -9,6 +9,7 @@ def relative_to_this_test_folder(path):
         path
     )
 
+
 @pytest.fixture(scope='session')
 def work_dir():
     return relative_to_this_test_folder('fixtures')

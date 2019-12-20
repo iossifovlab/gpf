@@ -2,8 +2,6 @@ import pytest
 
 import os
 
-from dae.gpf_instance.gpf_instance import GPFInstance
-
 from dae.enrichment_tool.config import EnrichmentConfigParser
 from dae.enrichment_tool.background import CodingLenBackground, \
     SamochaBackground

@@ -1,8 +1,5 @@
 import pytest
-
 import os
-
-from dae.gpf_instance.gpf_instance import GPFInstance
 
 from dae.studies.study_wrapper import StudyWrapper
 

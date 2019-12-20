@@ -142,7 +142,7 @@ input2_score2_expected = \
     ('fixtures/score2_annotator.conf', input2_score2_expected),
 ])
 def test_build_pipeline(
-        expected_df, variants_io, capsys, config_file, expected, 
+        expected_df, variants_io, capsys, config_file, expected,
         genomes_db_2013):
 
     options = Box({

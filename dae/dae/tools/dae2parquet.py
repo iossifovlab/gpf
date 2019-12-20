@@ -259,7 +259,7 @@ def denovo2parquet(
         skip_pedigree=False):
 
     families_loader = FamiliesLoader(
-        family_filename, 
+        family_filename,
         params={
             'ped_file_format': 'simple',
         })

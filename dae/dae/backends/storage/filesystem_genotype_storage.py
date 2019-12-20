@@ -130,8 +130,7 @@ class FilesystemGenotypeStorage(GenotypeStorage):
                 'data',
                 os.path.basename(source_filename)
             )
-
-            params=",\n\t".join([
+            params = ",\n\t".join([
                 "{}:{}".format(k, v)
                 for k, v in variants_loader.params.items() if v is not None])
             config = STUDY_VARIANTS_TEMPLATE.format(

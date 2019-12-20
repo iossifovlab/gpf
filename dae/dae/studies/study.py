@@ -1,6 +1,7 @@
 import itertools
 import functools
 
+
 class GenotypeData:
 
     def __init__(self, config, studies):

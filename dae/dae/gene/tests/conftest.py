@@ -3,8 +3,6 @@ import pytest
 import os
 import shutil
 
-from dae.gpf_instance.gpf_instance import GPFInstance
-
 from dae.utils.fixtures import change_environment
 
 from dae.gene.denovo_gene_set_config import DenovoGeneSetConfigParser

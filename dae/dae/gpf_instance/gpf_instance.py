@@ -167,6 +167,6 @@ class GPFInstance(object):
 
     def get_all_phenotype_data(self):
         return self._pheno_db.get_all_phenotype_data()
-    
+
     def get_phenotype_data_config(self, phenotype_data_id):
         return self._pheno_db.get_phenotype_data_config(phenotype_data_id)
