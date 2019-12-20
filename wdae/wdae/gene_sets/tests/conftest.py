@@ -7,11 +7,11 @@ from gpf_instance.gpf_instance import reload_datasets
 from dae.gene.denovo_gene_set_config import DenovoGeneSetConfigParser
 from dae.gene.denovo_gene_set_collection_factory import \
     DenovoGeneSetCollectionFactory
+from dae_conftests.dae_conftests import get_global_dae_fixtures_dir
 
 
 def fixtures_dir():
-    return os.path.abspath(
-        os.path.join(os.path.dirname(__file__), 'fixtures'))
+    return get_global_dae_fixtures_dir()
 
 
 @pytest.fixture(scope='session')
