@@ -41,6 +41,15 @@ def relative_to_this_test_folder(path):
     )
 
 
+def get_global_dae_fixtures_dir():
+    return relative_to_this_test_folder('fixtures')
+
+
+@pytest.fixture(scope='session')
+def global_dae_fixtures_dir():
+    return get_global_dae_fixtures_dir()
+
+
 @pytest.fixture(scope='session')
 def monkeysession(request):
     mp = MonkeyPatch()
