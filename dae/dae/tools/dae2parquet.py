@@ -31,7 +31,7 @@ def get_contigs(tabixfilename):
         return tbx.contigs
 
 
-def dae_build_transmitted(annotation_pipeline, genome, argv):
+def dae_build_transmitted(genome, argv):
 
     config = Box({
         "dae": {
@@ -300,7 +300,7 @@ def dae2parquet(
     filename = os.path.basename(argv.families)
     study_id = os.path.splitext(filename)[0]
     print(filename, os.path.splitext(filename), study_id)
-    fvars = dae_build_transmitted(annotation_pipeline, genome, argv)
+    fvars = dae_build_transmitted(genome, argv)
     fvars = AnnotationPipelineDecorator(fvars, annotation_pipeline)
 
     if not argv.skip_pedigree:
@@ -355,10 +355,9 @@ def main(argv):
             dae_config, parquet_manager, annotation_pipeline, genome, argv
         )
     elif argv.type == 'make':
-        fvars = dae_build_transmitted(annotation_pipeline, genome, argv)
-        fvars = AnnotationPipelineDecorator(fvars, annotation_pipeline)
         generate_makefile(
-            fvars,
+            genome,
+            get_contigs(argv.summary),
             f'dae2parquet.py dae {argv.families} '
             f'{argv.summary} {argv.toomany} ',
             argv

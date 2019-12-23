@@ -737,7 +737,7 @@ class StudyWrapper(object):
             'id', 'name', 'description', 'phenotypeBrowser', 'phenotypeTool',
             'phenotypeData', 'enrichmentTool', 'genotypeBrowser',
             'peopleGroupConfig', 'genotypeBrowserConfig', 'commonReport',
-            'studyTypes', 'studies'
+            'studyTypes', 'studies', 'hasPresentInChild', 'hasPresentInParent'
         ]
 
     @staticmethod

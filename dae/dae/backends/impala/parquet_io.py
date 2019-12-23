@@ -115,11 +115,11 @@ class ParquetPartitionDescription():
         coding_effect_types = []
         rare_boundary = 0
 
-        if config['family_bin']:
+        if 'family_bin' in config:
             family_bin_size = int(config['family_bin']['family_bin_size'])
-        if config['coding_bin']:
+        if 'coding_bin' in config:
             coding_effect_types = config['coding_bin']['coding_effect_types']
-        if config['frequency_bin']:
+        if 'frequency_bin' in config:
             rare_boundary = int(config['frequency_bin']['rare_boundary'])
 
         return ParquetPartitionDescription(
