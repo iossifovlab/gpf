@@ -31,6 +31,9 @@ from dae.utils.helpers import study_id_from_path
 
 from dae.backends.impala.parquet_io import ParquetManager
 from dae.backends.storage.impala_genotype_storage import ImpalaGenotypeStorage
+from dae.gene.denovo_gene_set_config import DenovoGeneSetConfigParser
+from dae.gene.denovo_gene_set_collection_factory import \
+    DenovoGeneSetCollectionFactory
 
 
 def relative_to_this_test_folder(path):
@@ -737,3 +740,32 @@ def test_fixture():
     print('start')
     yield 'works'
     print('end')
+
+
+@pytest.fixture(scope='session')
+def gpf_instance(mock_genomes_db, global_dae_fixtures_dir):
+    return GPFInstance(work_dir=global_dae_fixtures_dir)
+
+
+@pytest.fixture(scope='session')
+def variants_db_fixture(gpf_instance):
+    return gpf_instance._variants_db
+
+
+@pytest.fixture(scope='session')
+def calc_gene_sets(request, variants_db_fixture):
+    genotype_data_names = ['f1_group', 'f2_group', 'f3_group']
+    for dgs in genotype_data_names:
+        genotype_data = variants_db_fixture.get(dgs)
+        DenovoGeneSetCollectionFactory.build_collection(genotype_data)
+
+    print("PRECALCULATION COMPLETE")
+
+    def remove_gene_sets():
+        for dgs in genotype_data_names:
+            genotype_data = variants_db_fixture.get(dgs)
+            config = DenovoGeneSetConfigParser.parse(genotype_data.config)
+            os.remove(DenovoGeneSetConfigParser.denovo_gene_set_cache_file(
+                config, 'phenotype')
+            )
+    request.addfinalizer(remove_gene_sets)

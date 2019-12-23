@@ -1,6 +1,5 @@
 import pytest
 
-from dae.gpf_instance.gpf_instance import GPFInstance
 from gpf_instance.gpf_instance import reload_datasets
 
 from enrichment_api.enrichment_builder import EnrichmentBuilder
@@ -8,25 +7,11 @@ from enrichment_api.enrichment_serializer import EnrichmentSerializer
 
 from dae.enrichment_tool.event_counters import EventsCounter
 from dae.enrichment_tool.tool import EnrichmentTool
-from dae_conftests.dae_conftests import get_global_dae_fixtures_dir
-
-
-def fixtures_dir():
-    return get_global_dae_fixtures_dir()
-
-
-@pytest.fixture(scope='session')
-def gpf_instance(mock_genomes_db):
-    return GPFInstance(work_dir=fixtures_dir())
-
-
-@pytest.fixture(scope='session')
-def variants_db_fixture(gpf_instance):
-    return gpf_instance._variants_db
 
 
 @pytest.fixture(scope='function')
 def mock_gpf_instance(db, mocker, gpf_instance):
+    print('my child will choose me')
     reload_datasets(gpf_instance._variants_db)
     mocker.patch(
         'query_base.query_base.get_gpf_instance',
