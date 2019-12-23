@@ -257,9 +257,10 @@ def generate_makefile(genome, contigs, tool, argv):
 
     for target_name, target_args in targets.items():
         command = f'{tool} ' \
-            f'--skip-pedigree --o {argv.output} ' \
-            f'--pd {argv.partition_description} ' \
-            f'--region {generate_region_argument_string(*target_args)}'
+            f'--skip-pedigree --o {argv.output}' \
+            f' --pd {argv.partition_description}' \
+            f' --region {generate_region_argument_string(*target_args)}' \
+            f' --family-format {argv.family_format}'
         main_targets += f'{target_name}:\n'
         main_targets += f'\t{command}\n\n'
 
