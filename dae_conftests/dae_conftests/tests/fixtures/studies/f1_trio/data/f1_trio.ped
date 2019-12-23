@@ -1,8 +1,8 @@
 familyId	personId	dadId	momId	sex	status	role	phenotype
 f1	mom1	0	0	2	1	mom	unaffected
 f1	dad1	0	0	1	1	dad	unaffected
-f1	ch1	dad1	mom1	2	2	prb	autism
+f1	ch1	dad1	mom1	2	2	prb	phenotype 1
 f2	mom2	0	0	2	1	mom	unaffected
 f2	dad2	0	0	1	1	dad	unaffected
-f2	ch2	dad2	mom2	1	2	prb	autism
+f2	ch2	dad2	mom2	1	2	prb	phenotype 1
 f2	ch2.1	dad2	mom2	2	1	sib	unaffected

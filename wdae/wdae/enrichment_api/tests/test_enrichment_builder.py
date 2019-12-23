@@ -12,7 +12,7 @@ def test_build(enrichment_builder):
     assert len(build) == 2
 
     assert sorted([b['peopleGroupValue'] for b in build]) == \
-        sorted(['autism', 'unaffected'])
+        sorted(['phenotype 1', 'unaffected'])
 
 
 @pytest.mark.xfail(reason='[gene models] wrong annotation')
