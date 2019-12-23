@@ -11,7 +11,6 @@ from dae.enrichment_tool.tool import EnrichmentTool
 
 @pytest.fixture(scope='function')
 def mock_gpf_instance(db, mocker, gpf_instance):
-    print('my child will choose me')
     reload_datasets(gpf_instance._variants_db)
     mocker.patch(
         'query_base.query_base.get_gpf_instance',

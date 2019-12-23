@@ -43,7 +43,7 @@ def test_gene_set_download(db, admin_client):
         'geneSet': 'Synonymous',
         'geneSetsTypes': {
             'f1_group': {
-                'phenotype': ['autism', 'unaffected']
+                'phenotype': ['phenotype 1', 'unaffected']
             }
         }
     }
