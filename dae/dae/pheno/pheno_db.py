@@ -359,18 +359,14 @@ class PhenotypeDataStudy(PhenotypeData):
             family_id = row['family_id']
 
             p = Person(**row)
-            p.person_id = person_id
-            p.family_id = family_id
+            # p.person_id = person_id
+            # p.family_id = family_id
             assert row['role'] in Role, \
                 "{} not a valid role".format(row['role'])
             assert row['sex'] in Sex, \
                 "{} not a valid sex".format(row['sex'])
             assert row['status'] in Status, \
                 "{} not a valid status".format(row['status'])
-            # FIXME:
-            p.role = row['role']
-            p.sex = row['sex']
-            p.status = row['status']
 
             persons[person_id] = p
         return persons
