@@ -261,7 +261,7 @@ def denovo2parquet(
     families = families_loader.load()
 
     variants_loader = DenovoLoader(
-        families_loader.families, denovo_filename, genome,
+        families, denovo_filename, genome,
         params=denovo_params)
     variants_loader = AnnotationPipelineDecorator(
         variants_loader, annotation_pipeline)
@@ -306,7 +306,7 @@ def dae2parquet(
             'pedigree',
             'pedigree.ped')
         ParquetManager.pedigree_to_parquet(
-            fvars, pedigree_path)
+            fvars.families, pedigree_path)
 
     if argv.partition_description is None:
         filename = os.path.join(argv.output, 'variant', 'variants.parquet')

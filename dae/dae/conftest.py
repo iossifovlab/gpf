@@ -437,7 +437,7 @@ def iossifov2014_impala(
     print(parquet_filenames)
 
     ParquetManager.pedigree_to_parquet(
-        iossifov2014_loader, parquet_filenames.pedigree)
+        iossifov2014_loader.families, parquet_filenames.pedigree)
 
     ParquetManager.variants_to_parquet(
         iossifov2014_loader, parquet_filenames.variant)
