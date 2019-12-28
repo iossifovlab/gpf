@@ -10,7 +10,7 @@ from pedigrees.layout_saver import LayoutSaver
 
 
 def save_pedigree(family):
-    family_connections = FamilyConnections.from_pedigree(family)
+    family_connections = FamilyConnections.from_family(family)
     if family_connections is None:
         print(family.family_id)
         print("Missing members")

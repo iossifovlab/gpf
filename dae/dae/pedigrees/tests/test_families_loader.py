@@ -63,8 +63,13 @@ def test_families_loader_phenos():
     assert is_string_dtype(ped_df['phenotype'])
 
 
-def test_families_loader_no_role():
-    filename = relative_to_this_folder('fixtures/sample_nuc_family.ped')
+@pytest.mark.parametrize('pedigree', [
+    ('sample_nuc_family.ped'),
+    ('pedigree_no_role_A.ped'),
+    # ('pedigree_no_role_B.ped'),
+])
+def test_families_loader_no_role(pedigree):
+    filename = relative_to_this_folder(f'fixtures/{pedigree}')
     assert os.path.exists(filename)
 
     params = {
@@ -84,3 +89,9 @@ def test_families_loader_no_role():
 
     person = persons[0]
     assert person.person_id == 'f1.prb'
+
+    persons = fam.get_people_with_roles(['sib'])
+    assert len(persons) == 1
+
+    person = persons[0]
+    assert person.person_id == 'f1.sib'

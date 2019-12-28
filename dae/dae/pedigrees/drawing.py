@@ -9,7 +9,7 @@ import matplotlib.lines as mlines
 from matplotlib.path import Path
 from matplotlib.backends.backend_pdf import PdfPages
 
-from dae.variants.attributes import Sex, Role
+from dae.variants.attributes import Sex, Role, Status
 
 
 class PDFLayoutDrawer(object):
@@ -225,9 +225,9 @@ class OffsetLayoutDrawer(object):
             for individual in level:
                 if individual.individual.member.generated:
                     individual_color = "grey"
-                elif individual.individual.member.status == "1":
+                elif individual.individual.member.status == Status.unaffected:
                     individual_color = "white"
-                elif individual.individual.member.status == "2":
+                elif individual.individual.member.status == Status.affected:
                     individual_color = "red"
                 else:
                     individual_color = "purple"
@@ -301,7 +301,7 @@ class OffsetLayoutDrawer(object):
         for member in family:
             table_vals.append(
                 [member.family_id, member.person_id,
-                 member.father, member.mother,
+                 member.dad_id, member.mom_id,
                  Sex.from_name_or_value(member.sex), member.status,
                  member.role, member.layout])
 
