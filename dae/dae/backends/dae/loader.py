@@ -197,6 +197,7 @@ class DenovoLoader(VariantsLoader):
             'denovo_family_id': argv.denovo_family_id,
             'denovo_best_state': argv.denovo_best_state,
         }
+
         return params
 
     @classmethod
@@ -277,6 +278,18 @@ class DenovoLoader(VariantsLoader):
         assert families is not None
         assert isinstance(families, FamiliesData), \
             'families must be an instance of FamiliesData!'
+
+        if not (denovo_location or
+                (denovo_chrom and denovo_pos)):
+            denovo_location = 'location'
+
+        if not (denovo_variant or (denovo_ref and denovo_alt)):
+            denovo_variant = 'variant'
+
+        if not (denovo_person_id or
+                (denovo_family_id and denovo_best_state)):
+            denovo_family_id = 'familyId'
+            denovo_best_state = 'bestState'
 
         raw_df = pd.read_csv(
             filepath,

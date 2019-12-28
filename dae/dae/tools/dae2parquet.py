@@ -9,8 +9,6 @@ import argparse
 
 from dae.gpf_instance.gpf_instance import GPFInstance
 
-from dae.annotation.tools.annotator_config import annotation_config_cli_options
-
 from dae.backends.raw.loader import AnnotationPipelineDecorator
 from dae.backends.dae.loader import DenovoLoader, DaeTransmittedLoader
 
@@ -41,20 +39,14 @@ def dae_build_transmitted(annotation_pipeline, genome, argv):
         }})
 
     assert argv.output is not None
-
-    assert argv.family_format in ['pedigree', 'simple'], argv.family_format
-    if argv.family_format == 'pedigree':
-        ped_df = PedigreeReader.flexible_pedigree_read(
-            config.dae.family_filename
-        )
-    else:
-        ped_df = PedigreeReader.load_simple_family_file(
-            config.dae.family_filename
-        )
-    families = FamiliesData.from_pedigree_df(ped_df)
+    ped_params = FamiliesLoader.parse_cli_arguments(argv)
+    families_loader = FamiliesLoader(
+        config.dae.family_filename,
+        params=ped_params
+    )
 
     fvars = DaeTransmittedLoader(
-        families,
+        families_loader.families,
         config.dae.summary_filename,
         config.dae.toomany_filename,
         genome=genome,
@@ -111,9 +103,11 @@ def init_parser_dae_common(gpf_instance, parser):
         help='families file in pedigree format'
     )
 
-    options = annotation_config_cli_options(gpf_instance)
-    for name, args in options:
-        parser.add_argument(name, **args)
+    FamiliesLoader.cli_arguments(parser)
+
+    # options = annotation_config_cli_options(gpf_instance)
+    # for name, args in options:
+    #     parser.add_argument(name, **args)
 
     parser.add_argument(
         '-o', '--out', type=str, default='./',
@@ -126,13 +120,13 @@ def init_parser_dae_common(gpf_instance, parser):
         dest='bucket_index', metavar='bucket index',
         help='bucket index'
     )
-    parser.add_argument(
-        '-f', '--family-format', type=str,
-        default='pedigree',
-        dest='family_format',
-        help='families file format - `pedigree` or `simple`; '
-        '[default: %(default)s]'
-    )
+    # parser.add_argument(
+    #     '-f', '--family-format', type=str,
+    #     default='pedigree',
+    #     dest='family_format',
+    #     help='families file format - `pedigree` or `simple`; '
+    #     '[default: %(default)s]'
+    # )
 
     parser.add_argument(
         '--no-reference', action="store_true", default=None,
@@ -169,6 +163,8 @@ def init_parser_denovo(gpf_instance, subparsers):
         metavar='<variants filename>',
         help='DAE denovo variants file'
     )
+
+    DenovoLoader.cli_arguments(parser_denovo)
 
 
 def init_transmitted_common(gpf_instance, parser):
@@ -256,16 +252,16 @@ def denovo2parquet(
         family_filename, denovo_filename,
         annotation_pipeline, genome, argv,
         output='.', bucket_index=0, rows=10000, filesystem=None,
-        skip_pedigree=False):
+        skip_pedigree=False,
+        ped_params={}, denovo_params={}):
 
     families_loader = FamiliesLoader(
         family_filename,
-        params={
-            'ped_file_format': 'simple',
-        })
+        params=ped_params)
 
     variants_loader = DenovoLoader(
-        families_loader.families, denovo_filename, genome)
+        families_loader.families, denovo_filename, genome,
+        params=denovo_params)
     variants_loader = AnnotationPipelineDecorator(
         variants_loader, annotation_pipeline)
 
@@ -343,12 +339,17 @@ def main(argv):
         dae_config, genomes_db, argv)
 
     if argv.type == 'denovo':
+        denovo_params = DenovoLoader.parse_cli_arguments(argv)
+        ped_params = FamiliesLoader.parse_cli_arguments(argv)
+
         denovo2parquet(
             argv.families, argv.variants,
             annotation_pipeline, genome,
             argv,
             output=argv.output, bucket_index=0, rows=argv.rows,
-            skip_pedigree=argv.skip_pedigree
+            skip_pedigree=argv.skip_pedigree,
+            ped_params=ped_params,
+            denovo_params=denovo_params
         )
     elif argv.type == 'dae':
         dae2parquet(

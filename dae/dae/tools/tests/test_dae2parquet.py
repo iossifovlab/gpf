@@ -22,9 +22,10 @@ def test_dae2parquet_denovo(
     argv = [
         'denovo',
         dae_denovo_config.family_filename,
+        # '--denovo',
         dae_denovo_config.denovo_filename,
-        '--annotation', annotation_pipeline_default_config,
-        '--family-format', 'simple',
+        # '--annotation', annotation_pipeline_default_config,
+        '--ped-file-format', 'simple',
         '-o', temp_dirname
     ]
 
@@ -55,8 +56,8 @@ def test_dae2parquet_transmitted(
         dae_transmitted_config.family_filename,
         dae_transmitted_config.summary_filename,
         dae_transmitted_config.toomany_filename,
-        '--annotation', annotation_pipeline_default_config,
-        '--family-format', 'simple',
+        # '--annotation', annotation_pipeline_default_config,
+        '--ped-file-format', 'simple',
         '-o', temp_dirname
     ]
 
@@ -87,9 +88,9 @@ def test_dae2parquet_make(
         dae_transmitted_config.family_filename,
         dae_transmitted_config.summary_filename,
         dae_transmitted_config.toomany_filename,
-        '--annotation', annotation_pipeline_default_config,
+        # '--annotation', annotation_pipeline_default_config,
+        '--ped-file-format', 'simple',
         '-o', temp_dirname,
-        '-f', 'simple',
         '-l', '100000000',
     ]
 
@@ -113,9 +114,9 @@ def test_dae2parquet_make_partition(
         dae_transmitted_config.family_filename,
         dae_transmitted_config.summary_filename,
         dae_transmitted_config.toomany_filename,
-        '--annotation', annotation_pipeline_default_config,
+        # '--annotation', annotation_pipeline_default_config,
+        '--ped-file-format', 'simple',
         '-o', temp_dirname,
-        '-f', 'simple',
         '-l', '100000000',
         '--pd', parquet_partition_configuration
     ]
@@ -143,8 +144,8 @@ def test_dae2parquet_dae_partition(
         dae_transmitted_config.family_filename,
         dae_transmitted_config.summary_filename,
         dae_transmitted_config.toomany_filename,
-        '--annotation', annotation_pipeline_default_config,
-        '--family-format', 'simple',
+        # '--annotation', annotation_pipeline_default_config,
+        '--ped-file-format', 'simple',
         '-o', temp_dirname,
         '--pd', parquet_partition_configuration
     ]
@@ -187,8 +188,8 @@ def test_dae2parquet_denovo_partition(
         'denovo',
         dae_denovo_config.family_filename,
         dae_denovo_config.denovo_filename,
-        '--annotation', annotation_pipeline_default_config,
-        '--family-format', 'simple',
+        # '--annotation', annotation_pipeline_default_config,
+        '--ped-file-format', 'simple',
         '-o', temp_dirname,
         '--pd', parquet_partition_configuration
     ]
