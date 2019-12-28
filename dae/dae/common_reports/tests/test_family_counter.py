@@ -9,9 +9,9 @@ def test_family_counter(study1, people_groups_info):
     )
 
     assert family_counter.pedigree[0] == \
-        ['f5', 'mom5', '0', '0', 'F', 'mom', '#e35252', None, False, '', '']
+        ['f5', 'mom5', None, None, 'F', 'mom', '#e35252', None, False, '', '']
     assert family_counter.pedigree[1] == \
-        ['f5', 'dad5', '0', '0', 'M', 'dad', '#aaaaaa', None, False, '', '']
+        ['f5', 'dad5', None, None, 'M', 'dad', '#aaaaaa', None, False, '', '']
     assert family_counter.pedigree[2] == \
         ['f5', 'ch5', 'dad5', 'mom5', 'F', 'prb', '#e35252', None, False, '',
          '']
