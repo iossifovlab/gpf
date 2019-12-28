@@ -18,8 +18,7 @@ from dae.backends.import_commons import build_contig_regions, \
 from dae.backends.import_commons import construct_import_annotation_pipeline, \
     generate_makefile
 
-from dae.pedigrees.family import PedigreeReader
-from dae.pedigrees.family import FamiliesData, FamiliesLoader
+from dae.pedigrees.family import FamiliesLoader
 from dae.backends.impala.parquet_io import ParquetManager, \
     ParquetPartitionDescription
 
@@ -44,9 +43,10 @@ def dae_build_transmitted(annotation_pipeline, genome, argv):
         config.dae.family_filename,
         params=ped_params
     )
+    families = families_loader.load()
 
     fvars = DaeTransmittedLoader(
-        families_loader.families,
+        families,
         config.dae.summary_filename,
         config.dae.toomany_filename,
         genome=genome,
@@ -258,6 +258,7 @@ def denovo2parquet(
     families_loader = FamiliesLoader(
         family_filename,
         params=ped_params)
+    families = families_loader.load()
 
     variants_loader = DenovoLoader(
         families_loader.families, denovo_filename, genome,
@@ -271,7 +272,7 @@ def denovo2parquet(
             'pedigree',
             'pedigree.ped')
         ParquetManager.pedigree_to_parquet(
-            families_loader, pedigree_path)
+            families, pedigree_path)
 
     if argv.partition_description is None:
         filename = os.path.join(argv.output, 'variant', 'variants.parquet')

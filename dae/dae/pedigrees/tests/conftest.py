@@ -2,7 +2,6 @@ import pytest
 
 import os
 from io import StringIO
-import six
 import csv
 
 from dae.pedigrees.layout_saver import LayoutSaver
@@ -37,7 +36,7 @@ def output_filename():
 
 @pytest.fixture(scope='session')
 def output():
-    return six.StringIO()
+    return StringIO()
 
 
 @pytest.fixture(scope='session')

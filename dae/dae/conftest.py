@@ -325,9 +325,10 @@ def dae_denovo(
     families_loader = FamiliesLoader(
         dae_denovo_config.family_filename,
         params={'ped_file_format': 'simple'})
+    families = families_loader.load()
 
     variants_loader = DenovoLoader(
-        families_loader.families, dae_denovo_config.denovo_filename,
+        families, dae_denovo_config.denovo_filename,
         genome_2013)
 
     variants_loader = AnnotationPipelineDecorator(
@@ -400,9 +401,10 @@ def iossifov2014_loader(
     config = dae_iossifov2014_config
 
     families_loader = FamiliesLoader(config.family_filename)
+    families = families_loader.load()
 
     variants_loader = DenovoLoader(
-        families_loader.families, config.denovo_filename, genome_2013)
+        families, config.denovo_filename, genome_2013)
 
     variants_loader = AnnotationPipelineDecorator(
         variants_loader, annotation_pipeline_internal)
@@ -695,8 +697,10 @@ def data_import(
             study_temp_dirname = os.path.join(temp_dirname, study_id)
 
             families_loader = FamiliesLoader(vcf.pedigree)
+            families = families_loader.load()
+
             loader = VcfLoader(
-                families_loader.families, vcf.vcf, regions=None,
+                families, vcf.vcf, regions=None,
                 params={
                     'include_reference_genotypes': True,
                     'include_unknown_family_genotypes': True,

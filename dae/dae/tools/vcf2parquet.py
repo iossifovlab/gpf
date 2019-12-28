@@ -159,8 +159,10 @@ def main(
     if study_id is None:
         study_id = os.path.splitext(os.path.basename(argv.pedigree))[0]
     families_loader = FamiliesLoader(argv.pedigree)
+    families = families_loader.load()
+
     variants_loader = VcfLoader(
-        families_loader.families, argv.vcf, regions=argv.region,
+        families, argv.vcf, regions=argv.region,
         params={
             'include_reference_genotypes': argv.include_reference,
             'include_unknown_family_genotypes': argv.include_unknown,
@@ -178,7 +180,7 @@ def main(
                 'pedigree',
                 'pedigree.ped')
             ParquetManager.pedigree_to_parquet(
-                families_loader, pedigree_path)
+                families, pedigree_path)
 
         if argv.partition_description is None:
 

@@ -368,11 +368,8 @@ class FamiliesLoader:
 
         assert os.path.exists(families_filename)
         self.families_filename = families_filename
-        self.pedigree_format = params
+        self.params = params
         self.file_format = params.get('ped_file_format', 'pedigree')
-
-        self.families = self._load_families_data()
-        self.ped_df = self.families.ped_df
 
     @staticmethod
     def load_pedigree_file(pedigree_filename, pedigree_format={}):
@@ -388,14 +385,13 @@ class FamiliesLoader:
         )
         return FamiliesData.from_pedigree_df(ped_df)
 
-    def _load_families_data(self):
+    def load(self):
         if self.file_format == 'simple':
-            # assert not self.pedigree_format
             return self.load_simple_families_file(self.families_filename)
         else:
             assert self.file_format == 'pedigree'
             return self.load_pedigree_file(
-                self.families_filename, pedigree_format=self.pedigree_format)
+                self.families_filename, pedigree_format=self.params)
 
     @staticmethod
     def cli_arguments(parser):
@@ -619,13 +615,7 @@ class PedigreeReader(object):
                 ped_layout: lambda lc: lc.split(':')[-1],
                 ped_generated: lambda g: True if g == '1.0' else False,
             },
-            dtype={
-                ped_family: str,
-                ped_person: str,
-                ped_mom: str,
-                ped_dad: str,
-                ped_sample_id: str,
-            },
+            dtype=str,
             comment='#',
             encoding='utf-8'
         )
