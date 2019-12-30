@@ -800,7 +800,7 @@ class StudyWrapper(object):
             member.sex.short(),
             str(member.role),
             self.genotype_data_study._get_person_color(member, people_group),
-            member.layout_position,
+            member.layout,
             member.generated,
             best_st,
             0

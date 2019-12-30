@@ -356,7 +356,6 @@ class PhenotypeDataStudy(PhenotypeData):
 
         for row in df.to_dict('records'):
             person_id = row['person_id']
-            family_id = row['family_id']
 
             p = Person(**row)
             # p.person_id = person_id

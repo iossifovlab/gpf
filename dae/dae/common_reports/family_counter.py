@@ -32,7 +32,7 @@ class FamilyCounter(object):
         return [[member.family_id, member.person_id, member.dad_id,
                  member.mom_id, member.sex.short(), str(member.role),
                  self._get_member_color(member),
-                 member.layout_position, member.generated, '', '']
+                 member.layout, member.generated, '', '']
                 for member in self.family.persons.values()]
 
 
@@ -59,7 +59,7 @@ class FamiliesGroupCounter(object):
             members = family.members_in_order
             families_records +=\
                 [(member.family_id, member.sex.name, member.role.name,
-                  member.status, member.layout_position, member.generated,
+                  member.status, member.layout, member.generated,
                   member.get_attr(self.people_group_info.source))
                  for member in members]
         return pd.DataFrame.from_records(

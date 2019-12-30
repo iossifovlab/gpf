@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from dae.pedigrees.family import PedigreeReader
+from dae.pedigrees.family import FamiliesLoader
 from dae.pedigrees.family import Family
 from io import StringIO
 
@@ -23,7 +23,7 @@ f2,          p2,          d2,       m2,       1,     2,         prb
 
 @pytest.fixture(scope='module')
 def fam1():
-    ped_df = PedigreeReader.flexible_pedigree_read(
+    ped_df = FamiliesLoader.flexible_pedigree_read(
         StringIO(PED1), sep=',')
 
     family = Family.from_df('f1', ped_df)
@@ -33,7 +33,7 @@ def fam1():
 
 @pytest.fixture(scope='module')
 def fam2():
-    ped_df = PedigreeReader.flexible_pedigree_read(
+    ped_df = FamiliesLoader.flexible_pedigree_read(
         StringIO(PED2), sep=',')
 
     family = Family.from_df('f2', ped_df)

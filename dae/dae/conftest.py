@@ -26,7 +26,6 @@ from dae.backends.vcf.loader import VcfLoader
 from dae.backends.import_commons import \
     construct_import_annotation_pipeline
 
-from dae.pedigrees.family import PedigreeReader
 from dae.pedigrees.family import FamiliesData, FamiliesLoader
 from dae.utils.helpers import study_id_from_path
 
@@ -365,7 +364,7 @@ def dae_transmitted_config():
 def dae_transmitted(
         dae_transmitted_config, genome_2013, annotation_pipeline_internal):
 
-    ped_df = PedigreeReader.load_simple_family_file(
+    ped_df = FamiliesLoader.load_simple_family_file(
         dae_transmitted_config.family_filename
     )
     families = FamiliesData.from_pedigree_df(ped_df)
@@ -477,7 +476,7 @@ def vcf_variants_loader(vcf_loader_data, default_annotation_pipeline):
             }):
         conf = vcf_loader_data(path)
 
-        ped_df = PedigreeReader.flexible_pedigree_read(conf.pedigree)
+        ped_df = FamiliesLoader.flexible_pedigree_read(conf.pedigree)
         families = FamiliesData.from_pedigree_df(ped_df)
 
         loader = VcfLoader(families, conf.vcf, params=params)
@@ -551,7 +550,7 @@ def raw_dae(config_dae, genome_2013):
     def builder(path, region=None):
         config = config_dae(path)
 
-        ped_df = PedigreeReader.load_simple_family_file(
+        ped_df = FamiliesLoader.load_simple_family_file(
             dae_transmitted_config.family_filename
         )
 

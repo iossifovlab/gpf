@@ -2,7 +2,7 @@ import pytest
 import pandas as pd
 import numpy as np
 
-from dae.pedigrees.family import PedigreeReader
+from dae.pedigrees.family import FamiliesLoader
 from dae.pedigrees.family import FamiliesData
 
 from dae.backends.dae.loader import DenovoLoader
@@ -12,7 +12,7 @@ from dae.utils.variant_utils import GENOTYPE_TYPE
 
 @pytest.fixture(scope='session')
 def fake_families(fixture_dirname):
-    ped_df = PedigreeReader.flexible_pedigree_read(
+    ped_df = FamiliesLoader.flexible_pedigree_read(
         fixture_dirname('denovo_import/fake_pheno.ped')
     )
     fake_families = FamiliesData.from_pedigree_df(ped_df)

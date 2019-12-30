@@ -7,7 +7,7 @@ from contextlib import redirect_stdout
 from box import Box
 from dae.RegionOperations import Region
 
-from dae.pedigrees.family import FamiliesData, PedigreeReader
+from dae.pedigrees.family import FamiliesData, FamiliesLoader
 from dae.backends.impala.loader import ParquetLoader
 from dae.tools.dae2parquet import main
 
@@ -155,7 +155,7 @@ def test_dae2parquet_dae_partition(
     generated_conf = os.path.join(temp_dirname, '_PARTITION_DESCRIPTION')
     assert os.path.exists(generated_conf)
 
-    ped_df = PedigreeReader.load_simple_family_file(
+    ped_df = FamiliesLoader.load_simple_family_file(
         dae_transmitted_config.family_filename)
     families = FamiliesData.from_pedigree_df(ped_df)
 
@@ -199,7 +199,7 @@ def test_dae2parquet_denovo_partition(
     generated_conf = os.path.join(temp_dirname, '_PARTITION_DESCRIPTION')
     assert os.path.exists(generated_conf)
 
-    ped_df = PedigreeReader.load_simple_family_file(
+    ped_df = FamiliesLoader.load_simple_family_file(
         dae_denovo_config.family_filename)
     families = FamiliesData.from_pedigree_df(ped_df)
 

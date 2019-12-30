@@ -3,7 +3,7 @@ import os
 import sys
 import argparse
 
-from dae.pedigrees.family import PedigreeReader
+from dae.pedigrees.family import FamiliesLoader
 
 
 def parse_cli_arguments(argv=sys.argv[1:]):
@@ -48,8 +48,8 @@ def main(argv):
     else:
         output = args.output
 
-    fam_df = PedigreeReader.load_simple_family_file(args.family_filename)
-    PedigreeReader.save_pedigree(fam_df, output)
+    fam_df = FamiliesLoader.load_simple_family_file(args.family_filename)
+    FamiliesLoader.save_pedigree(fam_df, output)
 
 
 if __name__ == "__main__":

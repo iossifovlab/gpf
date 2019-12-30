@@ -19,8 +19,8 @@ class Person(object):
         self.sample_id = atts.get('sample_id', None)
         self.sample_index = atts.get('samples_index', None)
         self.index = atts.get('index', None)
-        self.sex = Sex.from_name(atts['sex'])
-        self.role = Role.from_name(atts['role'])
+        self._sex = Sex.from_name(atts['sex'])
+        self._role = Role.from_name(atts['role'])
         self._status = Status.from_name(atts['status'])
         self.mom_id = atts.get('mom_id', None)
         if self.mom_id == '0':
@@ -30,7 +30,7 @@ class Person(object):
             self.dad_id = None
         self.mom = None
         self.dad = None
-        self.layout = atts.get('layout', None)
+        self._layout = atts.get('layout', None)
         self.generated = atts.get('generated', False)
 
     def __repr__(self):
@@ -38,25 +38,26 @@ class Person(object):
             self.person_id, self.family_id, self.role, self.sex)
 
     @property
+    def role(self):
+        return self._role
+
+    @property
+    def sex(self):
+        return self._sex
+
+    @property
     def status(self):
         return self._status
 
-    @status.setter
-    def status(self, status):
-        assert False, status
-        # self._status = status
-
     @property
-    def layout_position(self):
-        return self.layout
+    def layout(self):
+        return self._layout
 
     def has_mom(self):
         return self.mom is not None
-        # return not (self.mom_id is None or self.mom_id == '0')
 
     def has_dad(self):
         return self.dad is not None
-        # return not (self.dad_id is None or self.dad_id == '0')
 
     def has_parent(self):
         return self.has_dad() or self.has_mom()
@@ -196,10 +197,6 @@ class Family(object):
             lambda m: m.get_attr(people_group_column) in people_group_values,
             self.members_in_order))
 
-    # def get_people_with_property(self, column, value):
-    #     return list(filter(lambda m: m.get_attr(column) == value,
-    #                        self.members_in_order))
-
     def get_family_phenotypes(self, phenotype_column):
         return set([member.get_attr(phenotype_column)
                     for member in self.members_in_order])
@@ -310,14 +307,14 @@ class FamiliesLoader:
 
     @staticmethod
     def load_pedigree_file(pedigree_filename, pedigree_format={}):
-        ped_df = PedigreeReader.flexible_pedigree_read(
+        ped_df = FamiliesLoader.flexible_pedigree_read(
             pedigree_filename, **pedigree_format
         )
         return FamiliesData.from_pedigree_df(ped_df)
 
     @staticmethod
     def load_simple_families_file(families_filename):
-        ped_df = PedigreeReader.load_simple_family_file(
+        ped_df = FamiliesLoader.load_simple_family_file(
             families_filename
         )
         return FamiliesData.from_pedigree_df(ped_df)
@@ -443,9 +440,6 @@ class FamiliesLoader:
 
         return res
 
-
-class PedigreeReader(object):
-
     @staticmethod
     def produce_header_from_indices(
        ped_family,
@@ -517,7 +511,7 @@ class PedigreeReader(object):
         )
 
         if not ped_has_header:
-            _, file_header = PedigreeReader.produce_header_from_indices(
+            _, file_header = FamiliesLoader.produce_header_from_indices(
                 ped_family, ped_person, ped_mom,
                 ped_dad, ped_sex, ped_status,
                 ped_role, ped_layout, ped_generated, ped_sample_id,

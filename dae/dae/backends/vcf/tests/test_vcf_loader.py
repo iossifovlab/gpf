@@ -1,5 +1,5 @@
 import pytest
-from dae.pedigrees.family import PedigreeReader
+from dae.pedigrees.family import FamiliesLoader
 from dae.pedigrees.family import FamiliesData
 
 from dae.backends.vcf.loader import VcfLoader
@@ -21,7 +21,7 @@ def test_vcf_loader(vcf_loader_data, variants_vcf, fixture_data):
 
     fvars = variants_vcf(fixture_data)
 
-    ped_df = PedigreeReader.flexible_pedigree_read(conf.pedigree)
+    ped_df = FamiliesLoader.flexible_pedigree_read(conf.pedigree)
     families = FamiliesData.from_pedigree_df(ped_df)
 
     loader = VcfLoader(families, conf.vcf, params={

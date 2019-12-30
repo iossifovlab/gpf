@@ -5,7 +5,7 @@ from contextlib import redirect_stdout
 
 from box import Box
 
-from dae.pedigrees.family import FamiliesData, PedigreeReader
+from dae.pedigrees.family import FamiliesData, FamiliesLoader
 
 from dae.annotation.tools.file_io_parquet import ParquetReader
 
@@ -83,7 +83,7 @@ def test_vcf2parquet_vcf_partition(
     generated_conf = os.path.join(temp_dirname, '_PARTITION_DESCRIPTION')
     assert os.path.exists(generated_conf)
 
-    ped_df = PedigreeReader.flexible_pedigree_read(vcf_import_config.pedigree)
+    ped_df = FamiliesLoader.flexible_pedigree_read(vcf_import_config.pedigree)
     families = FamiliesData.from_pedigree_df(ped_df)
 
     pl = ParquetLoader(families, generated_conf)
