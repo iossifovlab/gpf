@@ -36,12 +36,12 @@ def test_pedigree_keep_family_order_local():
         StringIO(PED_FILE1), sep=",")
     families = FamiliesData.from_pedigree_df(ped_df)
 
-    f = families.families['SF0043014']
+    f = families['SF0043014']
     print(f.members_in_order)
     assert f.members_in_order[-1].role == Role.prb
-    f = families.families['SF0033119']
+    f = families['SF0033119']
     print(f.members_in_order)
     assert f.members_in_order[-1].role == Role.prb
-    f = families.families['SF0014912']
+    f = families['SF0014912']
     print(f.members_in_order)
     assert f.members_in_order[-1].role == Role.prb
