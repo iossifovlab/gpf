@@ -263,9 +263,6 @@ class FamiliesData(Mapping):
     def get(self, family_id, default=None):
         return self._families.get(family_id, default)
 
-    def families_list(self):
-        return list(self._families.values())
-
     def families_query_by_person_ids(self, person_ids):
         res = {}
         for person_id in person_ids:

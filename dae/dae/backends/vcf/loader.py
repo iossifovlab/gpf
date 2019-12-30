@@ -31,7 +31,7 @@ class VcfFamiliesGenotypes(FamiliesGenotypes):
         return gt
 
     def family_genotype_iterator(self):
-        for fam in self.families.families_list():
+        for fam in self.families.values():
             if len(fam) == 0:
                 continue
             gt = self.get_family_genotype(fam)
