@@ -37,44 +37,14 @@ class Person(object):
         return "Person({} ({}); {}; {})".format(
             self.person_id, self.family_id, self.role, self.sex)
 
-    # @staticmethod
-    # def make_person(
-    #         person_id, family_id, mom_id, dad_id, sex, status, role,
-    #         layout=None, generated=False):
-    #     return Person(
-    #         person_id=person_id,
-    #         family_id=family_id,
-    #         mom_id=mom_id,
-    #         dad_id=dad_id,
-    #         sex=sex,
-    #         status=status,
-    #         role=Role.from_name(role),
-    #         layout=layout,
-    #         generated=generated)
-
     @property
     def status(self):
         return self._status
-    
+
     @status.setter
     def status(self, status):
         assert False, status
         # self._status = status
-    # @property
-    # def mother(self):
-    #     return self.mom_id if self.mom_id else '0'
-
-    # @mother.setter
-    # def mother(self, mom_id):
-    #     self.mom_id = mom_id
-
-    # @property
-    # def father(self):
-    #     return self.dad_id if self.dad_id else '0'
-
-    # @father.setter
-    # def father(self, dad_id):
-    #     self.dad_id = dad_id
 
     @property
     def layout_position(self):
@@ -103,45 +73,6 @@ class Person(object):
 
     def get_attr(self, item):
         return str(self.atts.get(item))
-
-    # def has_missing_mother(self):
-    #     return self.mother == '0' or self.mother == '' or self.mother is None
-
-    # def has_missing_father(self):
-    #     return self.father == '0' or self.father == '' or self.father is None
-
-    # def has_missing_parents(self):
-    #     return self.has_missing_father() or self.has_missing_mother()
-
-
-# class Pedigree(object):
-
-#     def __init__(self, members):
-#         self._members = members
-#         self.family_id = members[0].family_id if len(members) > 0 else ""
-#         self._independent_members = None
-
-#     @property
-#     def members(self):
-#         return self._members
-
-#     def add_members(self, new_members):
-#         self._members += new_members
-
-#     def add_member(self, member):
-#         self._members.append(member)
-#         self._independent_members = None
-
-#     def independent_members(self):
-#         if not self._independent_members:
-#             self._independent_members = \
-#                 [m for m in self._members if m.has_missing_parents()]
-
-#         return self._independent_members
-
-#     def get_pedigree_dataframe(self):
-#         return pd.concat([member.get_member_dataframe()
-#                           for member in self._members])
 
 
 class Family(object):
@@ -200,9 +131,6 @@ class Family(object):
     def __len__(self):
         return len(self.members_in_order)
 
-    # def __repr__(self):
-    #     return "Family({}; {})".format(self.family_id, self.members_in_order)
-
     def add_members(self, persons):
         assert all([isinstance(p, Person) for p in persons])
         for p in persons:
@@ -256,23 +184,11 @@ class Family(object):
     def get_member(self, person_id):
         return self.persons.get(person_id)
 
-    def get_people_with_role(self, role):
-        if not isinstance(role, Role):
-            role = Role.from_name(role)
-        return list(filter(
-            lambda m: m.role == role, self.members_in_order))
-
     def get_people_with_roles(self, roles):
         if not isinstance(roles[0], Role):
             roles = [Role.from_name(role) for role in roles]
         return list(filter(
             lambda m: m.role in roles, self.members_in_order))
-
-    # def get_people_from_people_group(
-    #         self, people_group_column, people_group_value):
-    #     return list(filter(
-    #         lambda m: m.get_attr(people_group_column) == people_group_value,
-    #         self.members_in_order))
 
     def get_people_from_people_group(
             self, people_group_column, people_group_values):
@@ -280,9 +196,9 @@ class Family(object):
             lambda m: m.get_attr(people_group_column) in people_group_values,
             self.members_in_order))
 
-    def get_people_with_property(self, column, value):
-        return list(filter(lambda m: m.get_attr(column) == value,
-                           self.members_in_order))
+    # def get_people_with_property(self, column, value):
+    #     return list(filter(lambda m: m.get_attr(column) == value,
+    #                        self.members_in_order))
 
     def get_family_phenotypes(self, phenotype_column):
         return set([member.get_attr(phenotype_column)
@@ -300,10 +216,6 @@ class Family(object):
                 elif p.has_both_parents() and (not p.has_generated_parent()):
                     person.append(p)
         return person
-
-    @staticmethod
-    def persons_ids(persons):
-        return sorted([p.person_id for p in persons])
 
 
 class FamiliesData(object):
@@ -533,47 +445,6 @@ class FamiliesLoader:
 
 
 class PedigreeReader(object):
-
-    # @staticmethod
-    # def read_file(
-    #         pedigree_filepath, sep='\t',
-    #         ped_family='familyId', ped_person='personId', ped_mom='momId',
-    #         ped_dad='dadId', ped_sex='sex', ped_status='status',
-    #         ped_role='role',
-    #         ped_layout='layout', ped_generated='generated',
-    #         ped_sample_id='sampleId',
-    #         return_as_dict=False):
-
-    #     ped_df = PedigreeReader.flexible_pedigree_read(
-    #         pedigree_filepath, sep=sep,
-    #         ped_family=ped_family, ped_person=ped_person,
-    #         ped_mom=ped_mom, ped_dad=ped_dad,
-    #         ped_sex=ped_sex, ped_status=ped_status,
-    #         ped_role=ped_role, ped_layout=ped_layout,
-    #         ped_generated=ped_generated, ped_sample_id=ped_sample_id)
-
-    #     families = {}
-    #     for row in ped_df.to_dict(orient='records'):
-    #         kwargs = {
-    #             "family_id": row["family_id"],
-    #             "person_id": row["person_id"],
-    #             "father": row["dad_id"],
-    #             "mother": row["mom_id"],
-    #             "sex": row["sex"],
-    #             "status": row["status"],
-    #             "role": row["role"],
-    #             "layout": row.get("layout", None),
-    #             "generated": row.get("generated", False),
-    #         }
-    #         member = Person(**kwargs)
-    #         if member.family_id not in families:
-    #             families[member.family_id] = Family.from_members([member])
-    #         else:
-    #             families[member.family_id].members.append(member)
-
-    #     if return_as_dict:
-    #         return families
-    #     return list(families.values())
 
     @staticmethod
     def produce_header_from_indices(

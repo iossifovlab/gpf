@@ -77,5 +77,5 @@ class CommonReport(object):
                 for pheno in people_group_info.people_groups]
 
     def _get_number_of_people_with_role(self, role):
-        return sum([len(family.get_people_with_role(role))
+        return sum([len(family.get_people_with_roles([role]))
                     for family in self.genotype_data_study.families.values()])

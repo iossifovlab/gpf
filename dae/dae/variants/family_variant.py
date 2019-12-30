@@ -37,7 +37,7 @@ class FamilyDelegate(object):
         return self.family.family_id
 
     def people_group_attribute(self, attribute):
-        people = self.family.get_people_with_role(attribute['role'])
+        people = self.family.get_people_with_roles([attribute['role']])
         return [person.get_attr(attribute['source']) for person in people]
 
     def get_family_members_attribute(self, attribute):

@@ -21,7 +21,7 @@ class EffectCell(object):
         people_with_parents = \
             Family.persons_with_parents(genotype_data_study.families)
         people_with_parents_ids =\
-            set(Family.persons_ids(people_with_parents))
+            set(sorted([p.person_id for p in people_with_parents]))
 
         variants = self._get_variants(
             people_with_filter, people_with_parents_ids)
@@ -62,7 +62,7 @@ class EffectCell(object):
 
         for family in self.genotype_data_study.families.values():
             family_members_with_filter = set.intersection(*[set(
-                family.get_people_with_property(filt.column, filt.value))
+                family.get_people_from_people_group(filt.column, [filt.value]))
                 for filt in self.filter_object.filters])
             family_members_with_filter_ids =\
                 [person.person_id for person in family_members_with_filter]
