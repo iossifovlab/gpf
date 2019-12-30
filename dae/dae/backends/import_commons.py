@@ -226,28 +226,6 @@ def generate_makefile(genome, contigs, tool, argv):
                     other_regions[region_bin] = set()
                 other_regions[region_bin] = (contig, start, end)
 
-    # TODO: Discuss if this will stay for use in the other bin types
-    # for sv, fvs in variants_loader.full_variants_iterator():
-    #     for fv in fvs:
-    #         for fa in fv.alleles:
-    #             region_bin = description.evaluate_region_bin(fa)
-    #             if region_bin not in targets.keys():
-    #                 if fa.chromosome in description.chromosomes:
-    #                     targets[region_bin] = generate_region_argument(
-    #                         fa,
-    #                         description
-    #                     )
-    #                 else:
-    #                     if region_bin not in other_regions.keys():
-    #                         other_regions[region_bin] = set()
-
-    #                     other_regions[region_bin].add(
-    #                         generate_region_argument(
-    #                             fa,
-    #                             description
-    #                         )
-    #                     )
-
     output = ''
     all_target = 'all:'
     main_targets = ''
