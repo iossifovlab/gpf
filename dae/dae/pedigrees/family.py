@@ -1,6 +1,7 @@
 import os
 
 from functools import partial
+from collections import defaultdict
 
 import numpy as np
 import pandas as pd
@@ -78,65 +79,59 @@ class Person(object):
 
 class Family(object):
 
-    def _build_persons_from_df(self, ped_df):
-        persons = {}
-        for index, rec in enumerate(ped_df.to_dict(orient="records")):
-            rec['index'] = index
-            person = Person(**rec)
-            person_id = person.person_id
-            persons[person_id] = person
-
-        return persons
-
-    @staticmethod
-    def _connect_children_with_parents(persons):
-        for member in persons.values():
-            member.mom = persons.get(member.mom_id, None)
-            member.dad = persons.get(member.dad_id, None)
-
-    @staticmethod
-    def from_df(family_id, ped_df):
-        family = Family(family_id)
-        assert np.all(ped_df['family_id'].isin(set([family_id])).values)
-
-        family.persons =\
-            family._build_persons_from_df(ped_df)
-        Family._connect_children_with_parents(family.persons)
-
-        assert family._members_in_order is None
-
-        return family
-
-    @staticmethod
-    def from_persons(persons):
-        assert all([persons[0].family_id == p.family_id for p in persons])
-        family_id = persons[0].family_id
-        family = Family(family_id)
-        family.persons = {}
-
-        for person in persons:
-            family.persons[person.person_id] = person
-        Family._connect_children_with_parents(family.persons)
-
-        assert family._members_in_order is None
-
-        return family
-
     def __init__(self, family_id):
         self.family_id = family_id
-        self.persons = None
+        self.persons = {}
         self._samples_index = None
         self._members_in_order = None
         self._trios = None
+
+    @staticmethod
+    def _build_persons_from_df(ped_df):
+        persons = []
+        for rec in ped_df.to_dict(orient="records"):
+            person = Person(**rec)
+            persons.append(person)
+
+        return persons
+
+    def _connect_family(self):
+        for index, member in enumerate(self.persons.values()):
+            member.index = index
+            member.mom = self.get_member(member.mom_id, None)
+            member.dad = self.get_member(member.dad_id, None)
+
+    @staticmethod
+    def from_df(family_id, ped_df):
+        assert np.all(ped_df['family_id'].isin(set([family_id])).values)
+
+        persons =\
+            Family._build_persons_from_df(ped_df)
+        return Family.from_persons(persons)
+
+    @staticmethod
+    def from_persons(persons):
+        assert len(persons) > 0
+        assert all([persons[0].family_id == p.family_id for p in persons])
+        family_id = persons[0].family_id
+
+        family = Family(family_id)
+        for person in persons:
+            family.persons[person.person_id] = person
+        family._connect_family()
+
+        return family
 
     def __len__(self):
         return len(self.members_in_order)
 
     def add_members(self, persons):
         assert all([isinstance(p, Person) for p in persons])
+        assert all([p.family_id == self.family_id for p in persons])
+
         for p in persons:
             self.persons[p.person_id] = p
-        Family._connect_children_with_parents(self.persons)
+        self._connect_family()
         self.redefine()
 
     def redefine(self):
@@ -182,8 +177,8 @@ class Family(object):
             index.append(self.persons[pid].index)
         return index
 
-    def get_member(self, person_id):
-        return self.persons.get(person_id)
+    def get_member(self, person_id, default=None):
+        return self.persons.get(person_id, default)
 
     def get_people_with_roles(self, roles):
         if not isinstance(roles[0], Role):
@@ -217,18 +212,21 @@ class Family(object):
 
 class FamiliesData(object):
 
-    def __init__(self, ped_df=None):
-        # assert ped_df is not None
-        self.ped_df = ped_df
+    def __init__(self):
+        self.ped_df = None
         self.families = {}
         self.persons = {}
         self.family_ids = []
-        # self._families_build(ped_df, family_class)
 
     def _families_build(self, ped_df):
         self.ped_df = ped_df
-        for family_id, fam_df in self.ped_df.groupby(by='family_id'):
-            family = Family.from_df(family_id, fam_df)
+        persons = defaultdict(list)
+        for rec in ped_df.to_dict(orient='record'):
+            person = Person(**rec)
+            persons[person.family_id].append(person)
+
+        for family_id, family_persons in persons.items():
+            family = Family.from_persons(family_persons)
             self.families[family_id] = family
             self.family_ids.append(family_id)
             for person_id, person in family.persons.items():
@@ -236,7 +234,7 @@ class FamiliesData(object):
 
     @staticmethod
     def from_pedigree_df(ped_df):
-        fams = FamiliesData(ped_df)
+        fams = FamiliesData()
         fams._families_build(ped_df)
         return fams
 
@@ -249,7 +247,7 @@ class FamiliesData(object):
     def has_family(self, family_id):
         return family_id in self.families
 
-    def families_query_by_person(self, person_ids):
+    def families_query_by_person_ids(self, person_ids):
         res = {}
         for person_id in person_ids:
             people = self.ped_df.loc[self.ped_df['person_id'] == person_id]

@@ -348,7 +348,7 @@ class DenovoLoader(VariantsLoader):
 
                 variant_to_people[variant] = people
                 variant_to_families[variant] = \
-                    families.families_query_by_person(people)
+                    families.families_query_by_person_ids(people)
 
             # TODO Implement support for multiallelic variants
             result = []
