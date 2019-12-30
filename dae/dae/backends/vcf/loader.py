@@ -71,7 +71,6 @@ class VcfLoader(VariantsLoader):
         self.vcf = VCF(self.filename, lazy=True)
         samples = np.array(self.vcf.samples)
 
-        # self.families = families
         self._match_pedigree_to_samples(families, samples)
 
     @staticmethod
@@ -94,7 +93,7 @@ class VcfLoader(VariantsLoader):
                 seen.add(person.sample_id)
             else:
                 person.generated = True
-                families.families[person.family_id].redefine()
+                families[person.family_id].redefine()
 
     def _warp_summary_variant(self, summary_index, vcf_variant):
         records = []

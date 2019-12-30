@@ -32,7 +32,7 @@ def test_families_loader_phenotype():
     assert families is not None
     assert isinstance(families, FamiliesData)
 
-    for fam_id, family in families.families.items():
+    for fam_id, family in families.items():
         print(fam_id, family, family.persons)
         for person_id, person in family.persons.items():
             print(person)
@@ -51,7 +51,7 @@ def test_families_loader_phenos():
     assert families is not None
     assert isinstance(families, FamiliesData)
 
-    for fam_id, family in families.families.items():
+    for fam_id, family in families.items():
         for person_id, person in family.persons.items():
             assert person.has_attr('phenotype')
             assert person.has_attr('pheno2')

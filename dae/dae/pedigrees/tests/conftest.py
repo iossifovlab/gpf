@@ -373,7 +373,7 @@ def loaded_layout2(layout_positions2):
 def pedigree_test(input_filename):
     loader = FamiliesLoader(input_filename)
     families = loader.load()
-    return families.families
+    return families
 
 
 @pytest.fixture(scope='session')

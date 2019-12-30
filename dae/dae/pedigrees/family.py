@@ -2,6 +2,7 @@ import os
 
 from functools import partial
 from collections import defaultdict
+from collections.abc import Mapping
 
 import numpy as np
 import pandas as pd
@@ -210,13 +211,13 @@ class Family(object):
         return person
 
 
-class FamiliesData(object):
+class FamiliesData(Mapping):
 
     def __init__(self):
         self.ped_df = None
-        self.families = {}
+        self._families = {}
         self.persons = {}
-        self.family_ids = []
+        # self.family_ids = []
 
     def _families_build(self, ped_df):
         self.ped_df = ped_df
@@ -227,10 +228,34 @@ class FamiliesData(object):
 
         for family_id, family_persons in persons.items():
             family = Family.from_persons(family_persons)
-            self.families[family_id] = family
-            self.family_ids.append(family_id)
+            self._families[family_id] = family
+            # self.family_ids.append(family_id)
             for person_id, person in family.persons.items():
                 self.persons[person_id] = person
+
+    def __getitem__(self, family_id):
+        return self._families[family_id]
+
+    def __len__(self):
+        return len(self._families)
+
+    def __iter__(self):
+        return iter(self._families)
+
+    def __contains__(self, family_id):
+        return family_id in self._families
+
+    def keys(self):
+        return self._families.keys()
+
+    def values(self):
+        return self._families.values()
+
+    def items(self):
+        return self._families.items()
+
+    def get(self, family_id, default=None):
+        return self._families.get(family_id, default)
 
     @staticmethod
     def from_pedigree_df(ped_df):
@@ -239,28 +264,27 @@ class FamiliesData(object):
         return fams
 
     def families_list(self):
-        return list(self.families.values())
+        return list(self._families.values())
 
     def get_family(self, family_id):
-        return self.families[family_id]
+        return self._families[family_id]
 
     def has_family(self, family_id):
-        return family_id in self.families
+        return family_id in self._families
 
     def families_query_by_person_ids(self, person_ids):
         res = {}
         for person_id in person_ids:
-            people = self.ped_df.loc[self.ped_df['person_id'] == person_id]
-            assert len(people) == 1
-            famId = people.loc[:, 'family_id'].iloc[0]
-            fam = self.families[famId]
-            if fam.family_id not in res:
-                res[fam.family_id] = fam
+            person = self.persons[person_id]
+            if person.family_id in res:
+                continue
+            family = self._families[person.family_id]
+            res[family.family_id] = family
         return res
 
     def persons_without_parents(self):
         person = []
-        for fam in list(self.families.values()):
+        for fam in list(self._families.values()):
             for p in fam.members_in_order:
                 if not p.has_parent():
                     person.append(p)

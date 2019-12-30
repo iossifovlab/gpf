@@ -198,7 +198,7 @@ class GenotypeDataStudy(GenotypeData):
 
     @property
     def families(self):
-        return self._backend.families.families
+        return self._backend.families
 
     def get_pedigree_values(self, column):
         return set(self._backend.families.ped_df[column])

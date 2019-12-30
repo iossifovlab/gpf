@@ -26,6 +26,8 @@ def test_pedigree(family2, member1, member2):
     assert len(family2.members_in_order) == 2
 
     assert family2.family_id == 'fam2'
+    member1.family_id = 'fam2'
+    member2.family_id = 'fam2'
     family2.add_members([member1, member2])
     assert len(family2.full_members) == 5
 
