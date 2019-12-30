@@ -1,7 +1,6 @@
 import pytest
 import numpy as np
 from dae.pedigrees.family import FamiliesLoader
-from dae.pedigrees.family import Family
 from io import StringIO
 
 PED1 = '''
@@ -23,20 +22,20 @@ f2,          p2,          d2,       m2,       1,     2,         prb
 
 @pytest.fixture(scope='module')
 def fam1():
-    ped_df = FamiliesLoader.flexible_pedigree_read(
-        StringIO(PED1), sep=',')
+    families_loader = FamiliesLoader(StringIO(PED1), sep=',')
+    families = families_loader.load()
+    family = families['f1']
 
-    family = Family.from_df('f1', ped_df)
     assert len(family.trios) == 1
     return family
 
 
 @pytest.fixture(scope='module')
 def fam2():
-    ped_df = FamiliesLoader.flexible_pedigree_read(
-        StringIO(PED2), sep=',')
+    families_loader = FamiliesLoader(StringIO(PED1), sep=',')
+    families = families_loader.load()
+    family = families['f2']
 
-    family = Family.from_df('f2', ped_df)
     assert len(family.trios) == 1
     return family
 

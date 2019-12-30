@@ -84,13 +84,13 @@ def test_families_loader_no_role(pedigree):
     fam = families['f1']
     assert fam is not None
 
-    persons = fam.get_people_with_roles(['prb'])
+    persons = fam.get_members_with_roles(['prb'])
     assert len(persons) == 1
 
     person = persons[0]
     assert person.person_id == 'f1.prb'
 
-    persons = fam.get_people_with_roles(['sib'])
+    persons = fam.get_members_with_roles(['sib'])
     assert len(persons) == 1
 
     person = persons[0]

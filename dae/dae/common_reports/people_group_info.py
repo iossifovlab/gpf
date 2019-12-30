@@ -1,4 +1,3 @@
-from collections import OrderedDict
 
 
 class PeopleGroupInfo(object):
@@ -54,11 +53,11 @@ class PeopleGroupInfo(object):
 
     @property
     def missing_person_info(self):
-        return OrderedDict([
-            ('id', 'missing-person'),
-            ('name', 'missing-person'),
-            ('color', '#E0E0E0')
-        ])
+        return {
+            'id': 'missing-person',
+            'name': 'missing-person',
+            'color': '#E0E0E0'
+        }
 
 
 class PeopleGroupsInfo(object):

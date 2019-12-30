@@ -1,7 +1,5 @@
-import os
-
 from functools import partial
-from collections import defaultdict
+from collections import defaultdict, namedtuple
 from collections.abc import Mapping
 
 import numpy as np
@@ -78,6 +76,44 @@ class Person(object):
         return str(self.atts.get(item))
 
 
+class PeopleGroup:
+
+    ValueDescriptor = namedtuple("ValueDescriptor", [
+        'id', 'name', 'color', 'index'
+    ])
+
+    def __init__(
+            self, people_group_id, name=None, domain=None, default=None,
+            source=None):
+        self.id = people_group_id
+        self.name = name
+        self.domain = domain
+        self.default = default
+        self.source = source
+
+    @staticmethod
+    def from_config(people_group_id, people_group_config):
+        return PeopleGroup(
+            people_group_id,
+            name=people_group_config.name,
+            domain={
+                value['id']: PeopleGroup.ValueDescriptor(index=index, **value)
+                for index, value in enumerate(people_group_config.domain)
+            },
+            default=PeopleGroup.ValueDescriptor(
+                **people_group_config.default,
+                index=999_999_999),
+            source=people_group_config.source
+        )
+
+    missing_person = ValueDescriptor(
+            id='missing-person',
+            name='missing-person',
+            color='#E0E0E0',
+            index=1_000_000_000,
+        )
+
+
 class Family(object):
 
     def __init__(self, family_id):
@@ -87,28 +123,11 @@ class Family(object):
         self._members_in_order = None
         self._trios = None
 
-    @staticmethod
-    def _build_persons_from_df(ped_df):
-        persons = []
-        for rec in ped_df.to_dict(orient="records"):
-            person = Person(**rec)
-            persons.append(person)
-
-        return persons
-
     def _connect_family(self):
         for index, member in enumerate(self.persons.values()):
             member.index = index
             member.mom = self.get_member(member.mom_id, None)
             member.dad = self.get_member(member.dad_id, None)
-
-    @staticmethod
-    def from_df(family_id, ped_df):
-        assert np.all(ped_df['family_id'].isin(set([family_id])).values)
-
-        persons =\
-            Family._build_persons_from_df(ped_df)
-        return Family.from_persons(persons)
 
     @staticmethod
     def from_persons(persons):
@@ -181,7 +200,7 @@ class Family(object):
     def get_member(self, person_id, default=None):
         return self.persons.get(person_id, default)
 
-    def get_people_with_roles(self, roles):
+    def get_members_with_roles(self, roles):
         if not isinstance(roles[0], Role):
             roles = [Role.from_name(role) for role in roles]
         return list(filter(
@@ -193,9 +212,24 @@ class Family(object):
             lambda m: m.get_attr(people_group_column) in people_group_values,
             self.members_in_order))
 
-    def get_family_phenotypes(self, phenotype_column):
-        return set([member.get_attr(phenotype_column)
+    def get_people_group_values(self, people_group_column):
+        return set([member.get_attr(people_group_column)
                     for member in self.members_in_order])
+
+    def family_type(self, pg):
+        assert isinstance(pg, PeopleGroup)
+        values = set([
+            p.get_attr(pg.source)
+            for p in self.members_in_order
+        ])
+        values = set([
+            pg.domain.get(v, pg.default).id
+            for v in values
+        ])
+        values = sorted(
+            list(values),
+            key=lambda dv: pg.domain.get(dv, pg.default).index)
+        return tuple(values)
 
 
 class FamiliesData(Mapping):
@@ -224,7 +258,7 @@ class FamiliesData(Mapping):
 
         fams = FamiliesData.from_family_persons(
             [
-                (family_id, family_persons) 
+                (family_id, family_persons)
                 for family_id, family_persons in persons.items()
             ]
         )
@@ -289,6 +323,76 @@ class FamiliesData(Mapping):
                     person.append(p)
         return person
 
+    def persons_with_roles(self, roles):
+        if not isinstance(roles[0], Role):
+            roles = [Role.from_name(role) for role in roles]
+        return list(filter(
+            lambda m: m.role in roles, self.persons.values()))
+
+
+class FamiliesGroup(PeopleGroup):
+    def __init__(self, families, people_group):
+        super(FamiliesGroup, self).__init__(
+            people_group.id,
+            name=people_group.name,
+            domain=people_group.domain,
+            default=people_group.default,
+            source=people_group.source)
+
+        self.families = families
+        self.people_group = people_group
+        self._available_values = None
+        self._families_types = None
+
+    @property
+    def available_values(self):
+        if self._available_values is None:
+            values = set([
+                p.get_attr(self.source)
+                for p in self.families.persons.values()
+            ])
+            values = set([
+                self.domain.get(v, self.default).id
+                for v in values
+            ])
+            self._available_values = sorted(
+                list(values),
+                key=lambda dv: self.domain.get(dv, self.default).index)
+        return self._available_values
+
+    @property
+    def families_types(self):
+        if self._families_types is None:
+            families_types = set([
+                family.family_type(self) for family in self.families.values()
+            ])
+
+            def ft_key(ft):
+                return tuple(
+                    map(
+                        lambda dv: self.domain.get(dv, self.default).index,
+                        ft
+                    )
+                )
+
+            self._families_types = sorted(
+                list(families_types), key=ft_key)
+        return self._families_types
+
+
+class FamiliesGroups:
+
+    def __init__(self, families):
+        self.families = families
+        self.families_groups = {}
+
+    def add_families_group(self, people_group):
+        if people_group.id in self.families_groups:
+            print("WARN: adding {people_group.id} more than once! Skipping...")
+            return
+        families_group = FamiliesGroup(self.families, people_group)
+        self.families_groups[families_group.id] = families_group
+
 
 PEDIGREE_COLUMN_NAMES = {
     'family': 'family_id',
@@ -316,11 +420,11 @@ PED_COLUMNS_REQUIRED = (
 
 class FamiliesLoader:
 
-    def __init__(self, families_filename, params={}):
+    def __init__(self, families_filename, params={}, sep='\t'):
 
-        assert os.path.exists(families_filename)
         self.families_filename = families_filename
         self.params = params
+        self.params['sep'] = sep
         self.file_format = params.get('ped_file_format', 'pedigree')
 
     @staticmethod
