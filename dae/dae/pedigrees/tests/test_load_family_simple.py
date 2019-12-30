@@ -27,8 +27,7 @@ def test_load_family_simple(fixture_name, temp_filename):
     print(fam_df)
     print("-------------------------")
 
-    families = FamiliesData()
-    families._families_build(fam_df)
+    families = FamiliesData.from_pedigree_df(fam_df)
 
     assert families is not None
 

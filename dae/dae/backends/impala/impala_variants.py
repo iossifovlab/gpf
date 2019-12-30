@@ -99,7 +99,7 @@ class ImpalaFamilyVariants:
                     frequency_data, genomic_scores_data, \
                     matched_alleles = row
 
-                family = self.families.get_family(family_id)
+                family = self.families[family_id]
                 v = self.serializer.deserialize_variant(
                     family,
                     chrom, position, reference, alternatives_data,

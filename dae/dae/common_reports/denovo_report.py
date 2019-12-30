@@ -3,7 +3,6 @@ from copy import deepcopy
 from collections import OrderedDict
 
 from dae.utils.effect_utils import EffectTypesMixin
-from dae.pedigrees.family import Family
 
 
 class EffectCell(object):
@@ -19,8 +18,8 @@ class EffectCell(object):
 
         people_with_filter = self._people_with_filter()
         people_with_parents = \
-            Family.persons_with_parents(genotype_data_study.families)
-        people_with_parents_ids =\
+            genotype_data_study.families.persons_with_parents()
+        people_with_parents_ids = \
             set(sorted([p.person_id for p in people_with_parents]))
 
         variants = self._get_variants(

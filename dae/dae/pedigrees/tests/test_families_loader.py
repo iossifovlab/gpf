@@ -81,7 +81,7 @@ def test_families_loader_no_role(pedigree):
     assert families is not None
     assert isinstance(families, FamiliesData)
 
-    fam = families.get_family('f1')
+    fam = families['f1']
     assert fam is not None
 
     persons = fam.get_people_with_roles(['prb'])

@@ -7,8 +7,6 @@ from copy import deepcopy
 from dae.common_reports.filter import Filter, FilterObject, FilterObjects
 from dae.common_reports.people_group_info import PeopleGroupsInfo
 
-from dae.gpf_instance.gpf_instance import GPFInstance
-
 
 def fixtures_dir():
     return os.path.abspath(

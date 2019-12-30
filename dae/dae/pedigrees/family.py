@@ -197,19 +197,6 @@ class Family(object):
         return set([member.get_attr(phenotype_column)
                     for member in self.members_in_order])
 
-    @staticmethod
-    def persons_with_parents(families):
-        person = []
-        for fam in list(families.values()):
-            for p in fam.members_in_order:
-                if p.has_attr('with_parents'):
-                    with_parents = p.get_attr('with_parents')
-                    if with_parents == '1':
-                        person.append(p)
-                elif p.has_both_parents() and (not p.has_generated_parent()):
-                    person.append(p)
-        return person
-
 
 class FamiliesData(Mapping):
 
@@ -217,21 +204,40 @@ class FamiliesData(Mapping):
         self.ped_df = None
         self._families = {}
         self.persons = {}
-        # self.family_ids = []
 
-    def _families_build(self, ped_df):
-        self.ped_df = ped_df
+    @staticmethod
+    def from_family_persons(family_persons):
+        families_data = FamiliesData()
+        for family_id, persons in family_persons:
+            family = Family.from_persons(persons)
+            families_data._families[family_id] = family
+            for person_id, person in family.persons.items():
+                families_data.persons[person_id] = person
+        return families_data
+
+    @staticmethod
+    def from_pedigree_df(ped_df):
         persons = defaultdict(list)
         for rec in ped_df.to_dict(orient='record'):
             person = Person(**rec)
             persons[person.family_id].append(person)
 
-        for family_id, family_persons in persons.items():
-            family = Family.from_persons(family_persons)
-            self._families[family_id] = family
-            # self.family_ids.append(family_id)
-            for person_id, person in family.persons.items():
-                self.persons[person_id] = person
+        fams = FamiliesData.from_family_persons(
+            [
+                (family_id, family_persons) 
+                for family_id, family_persons in persons.items()
+            ]
+        )
+        fams.ped_df = ped_df
+        return fams
+
+    @staticmethod
+    def from_families(families):
+        return FamiliesData.from_family_persons(
+            [
+                (fam.family_id, fam.full_members) for fam in families.values()
+            ]
+        )
 
     def __getitem__(self, family_id):
         return self._families[family_id]
@@ -257,20 +263,8 @@ class FamiliesData(Mapping):
     def get(self, family_id, default=None):
         return self._families.get(family_id, default)
 
-    @staticmethod
-    def from_pedigree_df(ped_df):
-        fams = FamiliesData()
-        fams._families_build(ped_df)
-        return fams
-
     def families_list(self):
         return list(self._families.values())
-
-    def get_family(self, family_id):
-        return self._families[family_id]
-
-    def has_family(self, family_id):
-        return family_id in self._families
 
     def families_query_by_person_ids(self, person_ids):
         res = {}
@@ -290,8 +284,13 @@ class FamiliesData(Mapping):
                     person.append(p)
         return person
 
-    def persons_index(self, persons):
-        return sorted([p.index for p in persons])
+    def persons_with_parents(self):
+        person = []
+        for fam in list(self._families.values()):
+            for p in fam.members_in_order:
+                if p.has_both_parents() and (not p.has_generated_parent()):
+                    person.append(p)
+        return person
 
 
 PEDIGREE_COLUMN_NAMES = {

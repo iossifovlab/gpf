@@ -64,7 +64,7 @@ class DenovoLoader(VariantsLoader):
             summary_variant = SummaryVariantFactory \
                 .summary_variant_from_records(
                     [rec], transmission_type=self.transmission_type)
-            family = self.families.get_family(family_id)
+            family = self.families[family_id]
 
             yield summary_variant, DenovoFamiliesGenotypes(family, gt)
 
@@ -404,7 +404,7 @@ class DaeTransmittedFamiliesGenotypes(FamiliesGenotypes):
 
     def family_genotype_iterator(self):
         for family_id, gt in self.families_genotypes.items():
-            fam = self.families.get_family(family_id)
+            fam = self.families[family_id]
             yield fam, gt
 
     def full_families_genotypes(self):

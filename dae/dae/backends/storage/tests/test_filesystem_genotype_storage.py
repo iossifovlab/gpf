@@ -12,7 +12,7 @@ def test_build_backend(
     )
 
     assert len(backend.families.families_list()) == 1
-    assert len(backend.families.get_family('f1').members_ids) == 5
+    assert len(backend.families['f1'].members_ids) == 5
     assert len(list(backend.query_variants())) == 3
 
 

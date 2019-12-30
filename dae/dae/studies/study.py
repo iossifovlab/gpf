@@ -1,5 +1,6 @@
 import itertools
 import functools
+from dae.pedigrees.family import FamiliesData
 
 
 class GenotypeData:
@@ -86,6 +87,11 @@ class GenotypeDataGroup(GenotypeData):
             genotype_data_group_config,
             studies
         )
+        self._families = self._build_families()
+
+    @property
+    def families(self):
+        return self._families
 
     def query_variants(
             self, regions=None, genes=None, effect_types=None,
@@ -112,13 +118,12 @@ class GenotypeDataGroup(GenotypeData):
         # TODO Use the 'cached' property on this
         return [genotype_data_study.id for genotype_data_study in self.studies]
 
-    @property
-    def families(self):
-        return functools.reduce(
+    def _build_families(self):
+        return FamiliesData.from_families(functools.reduce(
             lambda x, y: self._combine_families(x, y),
             [genotype_data_study.families
              for genotype_data_study in self.studies]
-        )
+        ))
 
     def _combine_families(self, first, second):
         same_families = set(first.keys()) & set(second.keys())

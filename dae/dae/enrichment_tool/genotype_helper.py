@@ -1,7 +1,6 @@
 from collections import Counter, defaultdict
 
 from dae.variants.attributes import Inheritance
-from dae.pedigrees.family import Family
 
 
 class GenotypeHelper(object):
@@ -38,8 +37,7 @@ class GenotypeHelper(object):
             self._children_by_sex = defaultdict(set)
             seen = set()
 
-            for p in Family.persons_with_parents(
-                    self.genotype_data_group.families):
+            for p in self.genotype_data_group.families.persons_with_parents():
                 iid = "{}:{}".format(p.family_id, p.person_id)
                 if iid in seen:
                     continue
