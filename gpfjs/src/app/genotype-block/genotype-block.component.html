@@ -16,7 +16,7 @@
 			</div>
 		</div>
 
-		<div class="col-lg-2 panel-row">
+		<div class="col-lg-3 panel-row">
 		  <div>
 			<gpf-gender></gpf-gender>
 		  </div>
@@ -29,10 +29,10 @@
             <gpf-study-types></gpf-study-types>
         </div>
 
-		<gpf-effecttypes [hasCNV]="hasCNV | async" class="panel-row col-lg-4"> </gpf-effecttypes>
+		<gpf-effecttypes [hasCNV]="hasCNV | async" class="panel-row col-lg-6"> </gpf-effecttypes>
 
 		<!-- There is probably a better way of separating Effect Types and Inheritance Types panel in SPARKv3_denovo study -->
-		<div class="panel-row col-lg-1"></div>
+		<!-- <div class="panel-row col-lg-1"></div> -->
 
         <gpf-inheritancetypes
             *ngIf="inheritanceTypeFilter | async"
