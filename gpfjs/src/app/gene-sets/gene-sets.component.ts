@@ -192,7 +192,7 @@ export class GeneSetsComponent extends QueryStateWithErrorsProvider implements O
   }
 
   getGeneSetName(geneType: GeneSetType, lenght: number): string {
-    return `${geneType.datasetName} : ${geneType.peopleGroupName}`.slice(0, lenght);
+    return `${geneType.datasetName}: ${geneType.peopleGroupName}`.slice(0, lenght);
   }
 
   getState() {
