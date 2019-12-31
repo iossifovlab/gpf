@@ -177,7 +177,11 @@ def construct_import_annotation_pipeline(
 
 
 def generate_region_argument_string(chrom, start, end):
-    return f'{chrom}:{start}-{end}'
+    if start is None and end is None:
+        return f'{chrom}'
+    else:
+        assert start and end, f'{start}-{end} is an invalid region!'
+        return f'{chrom}:{start}-{end}'
 
 
 def generate_region_argument(fa, description):
@@ -211,20 +215,21 @@ def generate_makefile(genome, contigs, tool, argv):
         region_bins = contig_lengths[contig] // description.region_length \
             + bool(contig_lengths[contig] % description.region_length)
         for rb_idx in range(0, region_bins):
+
+            if description.region_length < contig_lengths[contig]:
+                start = rb_idx * description.region_length + 1
+                end = (rb_idx + 1) * description.region_length
+            else:
+                start, end = None, None
+
             if contig in description.chromosomes:
                 region_bin = f'{contig}_{rb_idx}'
-            else:
-                region_bin = f'other_{rb_idx}'
-
-            start = rb_idx * description.region_length + 1
-            end = (rb_idx + 1) * description.region_length
-
-            if contig in description.chromosomes:
                 targets[region_bin] = (contig, start, end)
             else:
-                if region_bin not in other_regions:
-                    other_regions[region_bin] = set()
-                other_regions[region_bin] = (contig, start, end)
+                region_bin = f'other_{rb_idx}'
+                other_regions.setdefault(region_bin, set()).add(
+                    (contig, start, end)
+                )
 
     output = ''
     all_target = 'all:'
