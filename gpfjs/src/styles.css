@@ -105,8 +105,8 @@ label {
 	cursor: pointer;
 }
 
-.btn-primary {
-    background-color: #2a6395;
+.btn-group {
+  flex-wrap: wrap;
 }
 
 .btn-primary,
