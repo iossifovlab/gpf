@@ -90,13 +90,13 @@ export class GenotypePreviewInfo {
 
 export class GenotypePreviewVariantsArray {
   genotypePreviews: GenotypePreview[] = [];
-  moreThan: Boolean = false;
+  hasMoreThanMaxVariantsCount = false;
 
   constructor() { }
 
   addPreviewVariant(row: Array<string>, genotypePreviewInfo: GenotypePreviewInfo) {
     if (this.genotypePreviews.length === genotypePreviewInfo.maxVariantsCount) {
-      this.moreThan = true;
+      this.hasMoreThanMaxVariantsCount = true;
       return;
     }
     const genotypePreview = GenotypePreview.fromJson(row, genotypePreviewInfo.columns);
@@ -105,8 +105,17 @@ export class GenotypePreviewVariantsArray {
     }
   }
 
-  variantsCount() {
-    const total = this.moreThan ? 'more than 1000' : this.genotypePreviews.length;
-    return `${total} variants selected (${this.genotypePreviews.length} shown)`;
+  get variantsCount() {
+    let variantsCount: string;
+
+    if (this.hasMoreThanMaxVariantsCount) {
+      variantsCount = 'more than 1000 variant selected (1000 shown)';
+    } else if (this.genotypePreviews.length !== 1) {
+      variantsCount = `${this.genotypePreviews.length} variants selected (${this.genotypePreviews.length} shown)`;
+    } else {
+      variantsCount = '1 variant selected (1 shown)';
+    }
+
+    return variantsCount;
   }
 }
