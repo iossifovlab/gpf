@@ -104,6 +104,13 @@ def parser_common_arguments(gpf_instance, parser):
         'ex. chr1:1-10000'
     )
 
+    parser.add_argument(
+        '-f', '--family-format', type=str,
+        default='pedigree',
+        dest='family_format',
+        help='families file format - `pedigree` or `simple`; '
+        '[default: %(default)s]'
+    )
 
 def parser_vcf_arguments(gpf_instance, subparsers):
     parser = subparsers.add_parser('vcf')
@@ -170,7 +177,8 @@ def main(
         variants_loader, annotation_pipeline
     )
     if argv.type == 'make':
-        generate_makefile(variants_loader, 'vcf2parquet.py vcf ', argv)
+        generate_makefile(genome, get_contigs(argv.vcf),
+                          'vcf2parquet.py vcf ', argv)
     elif argv.type == 'vcf':
         if not argv.skip_pedigree:
             pedigree_path = os.path.join(

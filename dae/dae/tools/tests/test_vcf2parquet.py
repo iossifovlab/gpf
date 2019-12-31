@@ -152,9 +152,9 @@ def test_vcf2parquet_make_partition(
     print(makefile)
     assert 'all:' in makefile
     assert 'vcf2parquet.py vcf ' in makefile
-    assert '2_8:' in makefile
-    assert '--region 2:800001-900000'
-    assert '2_9:' in makefile
-    assert '--region 2:900001-1000000'
-    assert '2_12:' in makefile
-    assert '--region 2:1200001-1300000'
+    assert '1_8:' in makefile
+    assert '--region 1:80000001-90000000' in makefile
+    assert '1_9:' in makefile
+    assert '--region 1:90000001-100000000' in makefile
+    assert '1_12:' in makefile
+    assert '--region 1:120000001-130000000' in makefile
