@@ -36,7 +36,6 @@ def test_families_loader_phenotype():
         print(fam_id, family, family.persons)
         for person_id, person in family.persons.items():
             print(person)
-            print(person.atts)
             print(person.has_attr('phenotype'))
             assert person.has_attr('phenotype')
 

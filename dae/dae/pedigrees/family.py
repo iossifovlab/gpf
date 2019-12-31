@@ -10,37 +10,37 @@ from dae.variants.attributes import Role, Sex, Status
 
 class Person(object):
 
-    def __init__(self, **atts):
-        self.atts = atts
+    def __init__(self, **attributes):
+        self._attributes = attributes
 
-        assert 'person_id' in atts
-        self.family_id = atts['family_id']
-        self.person_id = atts['person_id']
-        self.sample_id = atts.get('sample_id', None)
-        self.sample_index = atts.get('samples_index', None)
-        self.index = atts.get('index', None)
+        assert 'person_id' in attributes
+        self.family_id = attributes['family_id']
+        self.person_id = attributes['person_id']
+        self.sample_id = attributes.get('sample_id', None)
+        self.sample_index = attributes.get('samples_index', None)
+        self.index = attributes.get('index', None)
 
-        self._sex = Sex.from_name(atts['sex'])
-        self._role = Role.from_name(atts['role'])
-        self._status = Status.from_name(atts['status'])
+        self._sex = Sex.from_name(attributes['sex'])
+        self._role = Role.from_name(attributes['role'])
+        self._status = Status.from_name(attributes['status'])
 
-        self.atts['sex'] = self._sex
-        self.atts['role'] = self._role
-        self.atts['status'] = self._status
+        self._attributes['sex'] = self._sex
+        self._attributes['role'] = self._role
+        self._attributes['status'] = self._status
 
-        self.mom_id = atts.get('mom_id', None)
+        self.mom_id = attributes.get('mom_id', None)
         if self.mom_id == '0':
             self.mom_id = None
-            self.atts['mom_id'] = None
-        self.dad_id = atts.get('dad_id', None)
+            self._attributes['mom_id'] = None
+        self.dad_id = attributes.get('dad_id', None)
         if self.dad_id == '0':
             self.dad_id = None
-            self.atts['dad_id'] = None
+            self._attributes['dad_id'] = None
         self.mom = None
         self.dad = None
 
-        self._layout = atts.get('layout', None)
-        self._generated = atts.get('generated', False)
+        self._layout = attributes.get('layout', None)
+        self._generated = attributes.get('generated', False)
 
     def __repr__(self):
         return "Person({} ({}); {}; {})".format(
@@ -83,10 +83,10 @@ class Person(object):
                 (self.has_mom() and self.mom.generated))
 
     def has_attr(self, item):
-        return item in self.atts
+        return item in self._attributes
 
-    def get_attr(self, item):
-        return str(self.atts.get(item))
+    def get_attr(self, item, default=None):
+        return str(self._attributes.get(item, default))
 
 
 class PeopleGroup:

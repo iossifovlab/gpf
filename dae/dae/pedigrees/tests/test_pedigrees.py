@@ -10,9 +10,8 @@ def test_pedigree_member(member4):
     assert member4.person_id == 'id2'
     assert member4.role == Role.prb
 
-    member = member4.atts
-    assert member['person_id'] == 'id2'
-    assert member['sex'] == Sex.M
+    assert member4.get_attr('person_id') == 'id2'
+    assert member4.get_attr('sex') == str(Sex.M)
     # assert member['phenotype'] == 'affected'
 
     # assert sorted(list(member.keys())) == sorted([
