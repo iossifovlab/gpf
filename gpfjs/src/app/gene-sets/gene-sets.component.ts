@@ -191,8 +191,8 @@ export class GeneSetsComponent extends QueryStateWithErrorsProvider implements O
     return `${this.config.baseUrl}${selectedGeneSet.download}`;
   }
 
-  getGeneSetName(geneType: GeneSetType, lenght: number): string {
-    return `${geneType.datasetName}: ${geneType.peopleGroupName}`.slice(0, lenght);
+  getGeneSetName(geneType: GeneSetType): string {
+    return `${geneType.datasetName}: ${geneType.peopleGroupName}`;
   }
 
   getState() {
