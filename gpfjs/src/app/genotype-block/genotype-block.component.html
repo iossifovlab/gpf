@@ -4,41 +4,43 @@
 		<div *ngIf="hasPedigreeSelector | async" class="col-lg-3">
 			<gpf-pedigree-selector [pedigrees]="pedigrees | async"></gpf-pedigree-selector>
 		</div>
+		
 		<div *ngIf="hasPresentInChild | async" class="col-lg-3">
 			<gpf-present-in-child></gpf-present-in-child>
 		</div>
-		<div *ngIf="hasPresentInParent | async" class="col-lg-2">
-			<gpf-present-in-parent></gpf-present-in-parent>
+		
+		<div class="col-lg-6 panel-row">
+			<gpf-effecttypes [hasCNV]="hasCNV | async"> </gpf-effecttypes>
 		</div>
-		<div class="col-lg-3 panel-row" *ngIf="hasPresentInRole | async">
+
+		<div *ngIf="hasPresentInRole | async" class="col-lg-3 panel-row">
 			<div>
 				<gpf-present-in-role *ngFor="let pir of presentInRole | async" [presentInRole]="pir"></gpf-present-in-role>
 			</div>
 		</div>
 
 		<div class="col-lg-3 panel-row">
-		  <div>
 			<gpf-gender></gpf-gender>
-		  </div>
-		  <div>
-			<gpf-varianttypes [hasCNV]="hasCNV | async" [hasComplex]="hasComplex | async"></gpf-varianttypes>
-		  </div>
 		</div>
 
-        <div *ngIf="hasStudyTypes | async" class="col-lg-2">
+		<div class="col-lg-3 panel-row">
+			<gpf-varianttypes [hasCNV]="hasCNV | async" [hasComplex]="hasComplex | async"></gpf-varianttypes>
+		</div>
+
+        <div *ngIf="hasStudyTypes | async" class="col-lg-3">
             <gpf-study-types></gpf-study-types>
-        </div>
-
-		<gpf-effecttypes [hasCNV]="hasCNV | async" class="panel-row col-lg-6"> </gpf-effecttypes>
-
-		<!-- There is probably a better way of separating Effect Types and Inheritance Types panel in SPARKv3_denovo study -->
-		<!-- <div class="panel-row col-lg-1"></div> -->
-
-        <gpf-inheritancetypes
-            *ngIf="inheritanceTypeFilter | async"
-            [inheritanceTypeFilter]="inheritanceTypeFilter | async"
-            [selectedInheritanceTypeFilterValues]="selectedInheritanceTypeFilterValues | async"
-            class="panel-row col-lg-3">
-        </gpf-inheritancetypes>
+		</div>
+		
+		<div  class="col-lg-3">
+			<gpf-present-in-parent></gpf-present-in-parent>
+		</div>
+		
+		<div class="col-lg-3 panel-row">
+			<gpf-inheritancetypes
+				*ngIf="inheritanceTypeFilter | async"
+				[inheritanceTypeFilter]="inheritanceTypeFilter | async"
+				[selectedInheritanceTypeFilterValues]="selectedInheritanceTypeFilterValues | async">
+			</gpf-inheritancetypes>
+		</div>
 	</div>
 </div>
