@@ -92,7 +92,7 @@ class VcfLoader(VariantsLoader):
                     vcf_samples_index.index(person.sample_id)
                 seen.add(person.sample_id)
             else:
-                person.generated = True
+                person._generated = True
                 families[person.family_id].redefine()
 
     def _warp_summary_variant(self, summary_index, vcf_variant):

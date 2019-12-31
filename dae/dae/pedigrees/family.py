@@ -19,19 +19,28 @@ class Person(object):
         self.sample_id = atts.get('sample_id', None)
         self.sample_index = atts.get('samples_index', None)
         self.index = atts.get('index', None)
+
         self._sex = Sex.from_name(atts['sex'])
         self._role = Role.from_name(atts['role'])
         self._status = Status.from_name(atts['status'])
+
+        self.atts['sex'] = self._sex
+        self.atts['role'] = self._role
+        self.atts['status'] = self._status
+
         self.mom_id = atts.get('mom_id', None)
         if self.mom_id == '0':
             self.mom_id = None
+            self.atts['mom_id'] = None
         self.dad_id = atts.get('dad_id', None)
         if self.dad_id == '0':
             self.dad_id = None
+            self.atts['dad_id'] = None
         self.mom = None
         self.dad = None
+
         self._layout = atts.get('layout', None)
-        self.generated = atts.get('generated', False)
+        self._generated = atts.get('generated', False)
 
     def __repr__(self):
         return "Person({} ({}); {}; {})".format(
@@ -52,6 +61,10 @@ class Person(object):
     @property
     def layout(self):
         return self._layout
+
+    @property
+    def generated(self):
+        return self._generated
 
     def has_mom(self):
         return self.mom is not None
@@ -98,7 +111,8 @@ class PeopleGroup:
             name=people_group_config.name,
             domain={
                 value['id']: PeopleGroup.ValueDescriptor(index=index, **value)
-                for index, value in enumerate(people_group_config.domain)
+                for index, value in enumerate(
+                    people_group_config.domain.values())
             },
             default=PeopleGroup.ValueDescriptor(
                 **people_group_config.default,
@@ -223,7 +237,7 @@ class Family(object):
             for p in self.members_in_order
         ])
         values = set([
-            pg.domain.get(v, pg.default).id
+            pg.domain.get(str(v), pg.default).id
             for v in values
         ])
         values = sorted(
@@ -339,6 +353,8 @@ class FamiliesGroup(PeopleGroup):
             default=people_group.default,
             source=people_group.source)
 
+        assert isinstance(families, FamiliesData)
+
         self.families = families
         self.people_group = people_group
         self._available_values = None
@@ -352,7 +368,7 @@ class FamiliesGroup(PeopleGroup):
                 for p in self.families.persons.values()
             ])
             values = set([
-                self.domain.get(v, self.default).id
+                self.domain.get(str(v), self.default).id
                 for v in values
             ])
             self._available_values = sorted(

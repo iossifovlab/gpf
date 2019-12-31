@@ -1,7 +1,7 @@
 
 from dae.pedigrees.pedigrees import FamilyConnections, MatingUnit, \
     SibshipUnit, Individual
-from dae.variants.attributes import Role
+from dae.variants.attributes import Role, Sex
 
 NO_RANK = -3673473456
 
@@ -12,7 +12,7 @@ def test_pedigree_member(member4):
 
     member = member4.atts
     assert member['person_id'] == 'id2'
-    assert member['sex'] == '1'
+    assert member['sex'] == Sex.M
     # assert member['phenotype'] == 'affected'
 
     # assert sorted(list(member.keys())) == sorted([
