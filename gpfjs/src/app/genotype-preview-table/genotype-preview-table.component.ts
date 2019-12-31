@@ -1,5 +1,5 @@
 import { Input, Component } from '@angular/core';
-import { GenotypePreview, GenotypePreviewsArray } from '../genotype-preview-model/genotype-preview';
+import { GenotypePreview, GenotypePreviewVariantsArray, GenotypePreviewInfo } from '../genotype-preview-model/genotype-preview';
 import { AdditionalColumn } from '../datasets/datasets';
 
 @Component({
@@ -8,7 +8,8 @@ import { AdditionalColumn } from '../datasets/datasets';
   styleUrls: ['./genotype-preview-table.component.css']
 })
 export class GenotypePreviewTableComponent {
-  @Input() genotypePreviewsArray: GenotypePreviewsArray;
+  @Input() genotypePreviewInfo: GenotypePreviewInfo;
+  @Input() genotypePreviewVariantsArray: GenotypePreviewVariantsArray;
   @Input() columns: Array<AdditionalColumn>;
   constructor(
   ) { }

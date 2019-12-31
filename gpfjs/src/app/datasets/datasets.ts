@@ -258,7 +258,7 @@ export class Dataset extends IdName {
       json['accessRights'],
       json['studies'],
       json['studyTypes'],
-      json['phenoDB'],
+      json['phenotypeData'],
       json['genotypeBrowser'],
       json['phenotypeTool'],
       json['enrichmentTool'],
@@ -288,7 +288,7 @@ export class Dataset extends IdName {
     readonly accessRights: boolean,
     readonly studies: string[],
     readonly studyTypes: string[],
-    readonly phenoDB: string,
+    readonly phenotypeData: string,
     readonly genotypeBrowser: boolean,
     readonly phenotypeTool: boolean,
     readonly enrichmentTool: boolean,
@@ -300,5 +300,17 @@ export class Dataset extends IdName {
   ) {
     super(id, name);
   }
+}
+
+export class DatasetDetails {
+  static fromJson(json: any): DatasetDetails {
+    return new DatasetDetails(
+      json.hasDenovo as boolean
+    )
+  }
+
+  constructor(
+    readonly hasDenovo: boolean
+  ) { }
 }
 

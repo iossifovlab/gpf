@@ -16,7 +16,7 @@ import { DatasetsService } from '../datasets/datasets.service';
   templateUrl: './pheno-browser.component.html',
   styleUrls: ['./pheno-browser.component.css'],
 })
-export class PhenoBrowserComponent implements OnInit, OnChanges {
+export class PhenoBrowserComponent implements OnInit {
 
   selectedInstrument$: BehaviorSubject<PhenoInstrument> = new BehaviorSubject<PhenoInstrument>(undefined);
   measuresToShow$: Observable<PhenoMeasures>;
@@ -59,10 +59,6 @@ export class PhenoBrowserComponent implements OnInit, OnChanges {
           }
         }
       );
-  }
-
-  ngOnChanges(changes: SimpleChanges) {
-    this.datasetsService.setSelectedDatasetById(this.selectedDatasetId);
   }
 
   initMeasuresToShow(datasetId$: Observable<string>) {

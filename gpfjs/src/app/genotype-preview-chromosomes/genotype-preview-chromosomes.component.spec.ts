@@ -59,11 +59,15 @@ describe('GenotypePreviewChromosomesComponent', () => {
     component = fixture.componentInstance;
 
     // add empty lists of variants to allow chromosomes to draw
-    component.genotypePreviewsByChromosome = {};
-    for (let i of Array.from(Array(24).keys())) {
-      let chrName = i == 22 ? 'X' : i == 23 ? 'Y' : (i+1).toString();
-      component.genotypePreviewsByChromosome[chrName] = [];
+    const genotypePreviewsByChromosome = {};
+    for (const i of Array.from(Array(24).keys())) {
+      const chrName = i === 22 ? 'X' : i === 23 ? 'Y' : (i + 1).toString();
+      genotypePreviewsByChromosome[chrName] = [];
     }
+
+    const spy = spyOnProperty(component, 'genotypePreviewsByChromosome', 'get').and.returnValue(
+      genotypePreviewsByChromosome
+    );
 
     // set column width directly to allow chromosomes to draw without calling ngOnChanges
     component.leftColumnWidth = 300;

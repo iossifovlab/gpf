@@ -48,13 +48,14 @@ export class PhenoToolMeasureComponent extends QueryStateWithErrorsProvider impl
         }
       });
 
-
     this.datasetsService.getSelectedDataset().subscribe(
       dataset => {
-        if(dataset.phenoDB) {
+        if (dataset.phenotypeData) {
           this.measuresService.getRegressions(dataset.id).subscribe(
-            res => { this.regressions = res });
-        } else this.regressions = {};
+            res => { this.regressions = res; });
+        } else {
+          this.regressions = {};
+        }
       }
     );
   }
