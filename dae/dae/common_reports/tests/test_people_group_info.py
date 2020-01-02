@@ -1,4 +1,4 @@
-from dae.pedigrees.family import PeopleGroup, FamiliesGroup
+from dae.pedigrees.family import PeopleGroup, FamiliesGroup, FamiliesGroups
 
 
 def test_people_group_info(people_groups, study2):
@@ -6,7 +6,7 @@ def test_people_group_info(people_groups, study2):
         'phenotype', people_groups['phenotype']
     )
 
-    assert people_group_info.name == 'Study phenotype'
+    assert people_group_info.name == 'Diagnosis'
     assert people_group_info.domain['phenotype1'].id == 'phenotype1'
     assert people_group_info.domain['phenotype1'].name == 'phenotype 1'
     assert people_group_info.domain['phenotype1'].color == '#e35252'
@@ -50,13 +50,11 @@ def test_families_group(people_groups, study2):
     assert people_group.missing_person.color == '#E0E0E0'
 
 
-def test_people_groups_info(people_groups_info):
-    assert len(people_groups_info.people_groups_info) == 1
+def test_people_groups_info(families_groups):
+    assert len(families_groups) == 4
 
-    assert people_groups_info.get_first_people_group_info() == \
-        people_groups_info.people_groups_info[0]
-    assert people_groups_info.has_people_group_info('phenotype') is True
-    assert people_groups_info.has_people_group_info('pheno') is False
-    assert people_groups_info.get_people_group_info('phenotype') == \
-        people_groups_info.people_groups_info[0]
-    assert people_groups_info.get_people_group_info('pheno') == []
+    assert families_groups.get_default_families_group() == \
+        next(iter(families_groups.values()))
+    assert families_groups.has_families_group('phenotype') is True
+    assert families_groups.has_families_group('pheno') is False
+    assert families_groups.get_families_group('pheno') is None

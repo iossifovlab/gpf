@@ -3,14 +3,16 @@ from copy import deepcopy
 from collections import OrderedDict
 
 from dae.utils.effect_utils import EffectTypesMixin
+from dae.common_reports.filter import FilterObject
 
 
 class EffectCell(object):
 
-    def __init__(self, genotype_data_study, denovo_variants,
+    def __init__(self, genotype_data, denovo_variants,
                  filter_object, effect):
-        self.genotype_data_study = genotype_data_study
+        self.genotype_data = genotype_data
         self.denovo_variants = denovo_variants
+        assert isinstance(filter_object, FilterObject)
         self.filter_object = filter_object
         self.effect = effect
 
@@ -18,7 +20,7 @@ class EffectCell(object):
 
         people_with_filter = self._people_with_filter()
         people_with_parents = \
-            genotype_data_study.families.persons_with_parents()
+            genotype_data.families.persons_with_parents()
         people_with_parents_ids = \
             set(sorted([p.person_id for p in people_with_parents]))
 
@@ -57,23 +59,28 @@ class EffectCell(object):
         ])
 
     def _people_with_filter(self):
-        people_with_filter = set()
-
-        for family in self.genotype_data_study.families.values():
-            family_members_with_filter = set.intersection(*[set(
-                family.get_people_from_people_group(filt.column, [filt.value]))
-                for filt in self.filter_object.filters])
-            family_members_with_filter_ids =\
-                [person.person_id for person in family_members_with_filter]
-            people_with_filter.update(family_members_with_filter_ids)
-
+        print(list(self.genotype_data.families.values()))
+        people_with_filter = [
+            set([
+                m.person_id
+                for m in filt.families_group.get_people_with_propvalues(
+                    [filt.specified_value])])
+            for filt in self.filter_object.filters]
+        print(people_with_filter)
+        people_with_filter = set.intersection(*people_with_filter)
+        print(people_with_filter)
         return people_with_filter
 
     def _get_variants(self, people_with_filter, people_with_parents):
         people = people_with_filter.intersection(people_with_parents)
+        print(people)
+
         effect_types = set(self.effect_types_converter.get_effect_types(
             effectTypes=self.effect))
         variants = []
+
+        print(self.denovo_variants)
+
         for v in self.denovo_variants:
             for aa in v.alt_alleles:
                 if not (set(aa.variant_in_members) & people):
@@ -82,6 +89,7 @@ class EffectCell(object):
                     continue
                 variants.append(v)
                 break
+        print(variants)
         return variants
 
     def _get_number_of_children_with_event(
@@ -105,9 +113,9 @@ class EffectCell(object):
 
 class EffectRow(object):
 
-    def __init__(self, genotype_data_study, denovo_variants,
+    def __init__(self, genotype_data, denovo_variants,
                  effect, filter_objects):
-        self.genotype_data_study = genotype_data_study
+        self.genotype_data = genotype_data
         self.denovo_variants = denovo_variants
         self.filter_objects = filter_objects
 
@@ -123,7 +131,7 @@ class EffectRow(object):
     def _get_row(self):
         return [
             EffectCell(
-                self.genotype_data_study, self.denovo_variants, filter_object,
+                self.genotype_data, self.denovo_variants, filter_object,
                 self.effect_type)
             for filter_object in self.filter_objects.filter_objects]
 
@@ -141,9 +149,9 @@ class EffectRow(object):
 class DenovoReportTable(object):
 
     def __init__(
-            self, genotype_data_study, denovo_variants, effect_groups,
+            self, genotype_data, denovo_variants, effect_groups,
             effect_types, filter_object):
-        self.genotype_data_study = genotype_data_study
+        self.genotype_data = genotype_data
         self.denovo_variants = denovo_variants
         self.filter_object = filter_object
 
@@ -190,7 +198,7 @@ class DenovoReportTable(object):
 
         effect_rows = [
             EffectRow(
-                self.genotype_data_study, self.denovo_variants, effect,
+                self.genotype_data, self.denovo_variants, effect,
                 self.filter_object
             )
             for effect in self.effects
@@ -218,14 +226,14 @@ class DenovoReportTable(object):
 
 class DenovoReport(object):
 
-    def __init__(self, genotype_data_study, effect_groups,
+    def __init__(self, genotype_data, effect_groups,
                  effect_types, filter_objects):
-        self.genotype_data_study = genotype_data_study
+        self.genotype_data = genotype_data
         self.effect_groups = effect_groups
         self.effect_types = effect_types
         self.filter_objects = filter_objects
 
-        denovo_variants = genotype_data_study.query_variants(
+        denovo_variants = genotype_data.query_variants(
             limit=None,
             inheritance='denovo',
         )
@@ -245,7 +253,7 @@ class DenovoReport(object):
         denovo_report_tables = []
         for filter_object in self.filter_objects:
             denovo_report_table = DenovoReportTable(
-                self.genotype_data_study,
+                self.genotype_data,
                 self.denovo_variants,
                 deepcopy(self.effect_groups),
                 deepcopy(self.effect_types),

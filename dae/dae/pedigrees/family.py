@@ -4,6 +4,9 @@ from collections.abc import Mapping
 
 import numpy as np
 import pandas as pd
+
+from box import Box
+
 from dae.utils.helpers import str2bool
 from dae.variants.attributes import Role, Sex, Status
 
@@ -15,6 +18,7 @@ class Person(object):
 
         assert 'person_id' in attributes
         self.family_id = attributes['family_id']
+        self.family = None
         self.person_id = attributes['person_id']
         self.sample_id = attributes.get('sample_id', None)
         self.sample_index = attributes.get('samples_index', None)
@@ -97,15 +101,25 @@ class PeopleGroup:
 
     def __init__(
             self, people_group_id, name=None, domain=None, default=None,
-            source=None):
+            source=None, getter=None):
         self.id = people_group_id
         self.name = name
         self.domain = domain
         self.default = default
         self.source = source
+        if getter is not None:
+            self.getter = getter
+        else:
+            self.getter = lambda person: person.get_attr(self.source)
 
     @staticmethod
-    def from_config(people_group_id, people_group_config):
+    def grayscale32(index):
+        val = 255 - 8 * (index % 32)
+        res = f'#{val:x}{val:x}{val:x}'
+        return res
+
+    @staticmethod
+    def from_config(people_group_id, people_group_config, getter=None):
         return PeopleGroup(
             people_group_id,
             name=people_group_config.name,
@@ -117,7 +131,8 @@ class PeopleGroup:
             default=PeopleGroup.ValueDescriptor(
                 **people_group_config.default,
                 index=999_999_999),
-            source=people_group_config.source
+            source=people_group_config.source,
+            getter=getter
         )
 
     missing_person = ValueDescriptor(
@@ -126,6 +141,109 @@ class PeopleGroup:
             color='#E0E0E0',
             index=1_000_000_000,
         )
+
+
+_PEOPLE_GROUP_ROLES = PeopleGroup.from_config(
+    'role',
+    Box({
+        'name': 'Role',
+        'domain': {
+            str(r): {
+                'id': str(r),
+                'name': str(r),
+                'color': PeopleGroup.grayscale32(index)
+            } for index, r in enumerate(Role.__members__)
+        },
+        'default': {
+            'id': 'unknown',
+            'name': 'unknown',
+            'color': '#bbbbbb'
+        },
+        'source': 'role'
+    })
+)
+
+
+_PEOPLE_GROUP_FAMILY_SIZES = PeopleGroup.from_config(
+    'family_size',
+    Box({
+        'name': 'Family Size',
+        'domain': {
+            str(size): {
+                'id': str(size),
+                'name': str(size),
+                'color': PeopleGroup.grayscale32(size)
+            } for size in range(1, 32)
+        },
+        'default': {
+            'id': '>=32',
+            'name': '>=32',
+            'color': '#bbbbbb'
+        },
+        'source': 'size'
+    }),
+    getter=lambda person: str(len(person.family))
+)
+
+
+_PEOPLE_GROUP_SEXES = PeopleGroup.from_config(
+    'sex',
+    Box({
+        'name': 'Sex',
+        'domain': {
+            'M': {
+                'id': 'M',
+                'name': 'M',
+                'color': '#e35252',
+            },
+            'F': {
+                'id': 'F',
+                'name': 'F',
+                'color': '#b8008a',
+            },
+            'U': {
+                'id': 'U',
+                'name': 'U',
+                'color': '#aaaaaa',
+            }
+        },
+        'default': {
+            'id': 'unknown',
+            'name': 'unknown',
+            'color': '#bbbbbb',
+        },
+        'source': 'sex',
+    }, default_box=True))
+
+
+_PEOPLE_GROUP_STATUS = PeopleGroup.from_config(
+    'status',
+    Box({
+        'name': 'Status',
+        'domain': {
+            'affected': {
+                'id': 'affected',
+                'name': 'affected',
+                'color': '#e35252',
+            },
+            'unaffected': {
+                'id': 'unaffected',
+                'name': 'unaffected',
+                'color': '#b8008a',
+            },
+            'unspecified': {
+                'id': 'unspecified',
+                'name': 'unspecified',
+                'color': '#aaaaaa',
+            }
+        },
+        'default': {
+            'id': 'unknown',
+            'name': 'unknown',
+            'color': '#bbbbbb',
+        },
+        'source': 'status',
+    }, default_box=True))
 
 
 class Family(object):
@@ -139,6 +257,7 @@ class Family(object):
 
     def _connect_family(self):
         for index, member in enumerate(self.persons.values()):
+            member.family = self
             member.index = index
             member.mom = self.get_member(member.mom_id, None)
             member.dad = self.get_member(member.dad_id, None)
@@ -153,11 +272,15 @@ class Family(object):
         for person in persons:
             family.persons[person.person_id] = person
         family._connect_family()
+        assert all([p.family is not None for p in family.persons.values()])
 
         return family
 
     def __len__(self):
         return len(self.members_in_order)
+
+    def __repr__(self):
+        return f'Family({self.family_id}, {self.members_in_order})'
 
     def add_members(self, persons):
         assert all([isinstance(p, Person) for p in persons])
@@ -219,31 +342,6 @@ class Family(object):
             roles = [Role.from_name(role) for role in roles]
         return list(filter(
             lambda m: m.role in roles, self.members_in_order))
-
-    def get_people_from_people_group(
-            self, people_group_column, people_group_values):
-        return list(filter(
-            lambda m: m.get_attr(people_group_column) in people_group_values,
-            self.members_in_order))
-
-    def get_people_group_values(self, people_group_column):
-        return set([member.get_attr(people_group_column)
-                    for member in self.members_in_order])
-
-    def family_type(self, pg):
-        assert isinstance(pg, PeopleGroup)
-        values = set([
-            p.get_attr(pg.source)
-            for p in self.members_in_order
-        ])
-        values = set([
-            pg.domain.get(str(v), pg.default).id
-            for v in values
-        ])
-        values = sorted(
-            list(values),
-            key=lambda dv: pg.domain.get(dv, pg.default).index)
-        return tuple(values)
 
 
 class FamiliesData(Mapping):
@@ -351,7 +449,8 @@ class FamiliesGroup(PeopleGroup):
             name=people_group.name,
             domain=people_group.domain,
             default=people_group.default,
-            source=people_group.source)
+            source=people_group.source,
+            getter=people_group.getter)
 
         assert isinstance(families, FamiliesData)
 
@@ -364,7 +463,7 @@ class FamiliesGroup(PeopleGroup):
     def available_values(self):
         if self._available_values is None:
             values = set([
-                p.get_attr(self.source)
+                self.getter(p)
                 for p in self.families.persons.values()
             ])
             values = set([
@@ -376,11 +475,26 @@ class FamiliesGroup(PeopleGroup):
                 key=lambda dv: self.domain.get(dv, self.default).index)
         return self._available_values
 
+    def calc_family_type(self, family):
+        values = set([
+            self.getter(p)
+            for p in family.members_in_order
+        ])
+        values = set([
+            self.domain.get(str(v), self.default).id
+            for v in values
+        ])
+        values = sorted(
+            list(values),
+            key=lambda dv: self.domain.get(dv, self.default).index)
+        return tuple(values)
+
     @property
     def families_types(self):
         if self._families_types is None:
             families_types = set([
-                family.family_type(self) for family in self.families.values()
+                self.calc_family_type(family)
+                for family in self.families.values()
             ])
 
             def ft_key(ft):
@@ -395,19 +509,91 @@ class FamiliesGroup(PeopleGroup):
                 list(families_types), key=ft_key)
         return self._families_types
 
+    def get_people_with_propvalues(self, propvalues):
+        propvalues = set([
+            self.domain.get(dv, self.default).id for dv in propvalues
+        ])
+        return filter(
+            lambda p: not p.generated and self.getter(p) in propvalues,
+            self.families.persons.values())
 
-class FamiliesGroups:
+
+class FamiliesGroups(Mapping):
 
     def __init__(self, families):
+        assert isinstance(families, FamiliesData)
         self.families = families
-        self.families_groups = {}
+        self._families_groups = {}
+
+    def __getitem__(self, family_id):
+        return self._families_groups[family_id]
+
+    def __len__(self):
+        return len(self._families_groups)
+
+    def __iter__(self):
+        return iter(self._families_groups)
+
+    def __contains__(self, family_id):
+        return family_id in self._families_groups
+
+    def keys(self):
+        return self._families_groups.keys()
+
+    def values(self):
+        return self._families_groups.values()
+
+    def items(self):
+        return self._families_groups.items()
+
+    def get(self, family_id, default=None):
+        return self._families_groups.get(family_id, default)
+
+    def has_families_group(self, people_group_id):
+        return people_group_id in self._families_groups
+
+    def get_families_group(self, people_group_id):
+        return self._families_groups.get(people_group_id)
+
+    def get_default_families_group(self):
+        return next(iter(self._families_groups.values()))
 
     def add_families_group(self, people_group):
-        if people_group.id in self.families_groups:
+        if people_group.id in self._families_groups:
             print("WARN: adding {people_group.id} more than once! Skipping...")
             return
         families_group = FamiliesGroup(self.families, people_group)
-        self.families_groups[families_group.id] = families_group
+        self._families_groups[families_group.id] = families_group
+
+    def add_predefined_groups(self, attributes):
+        # assert attribute in {'role', 'status', 'sex'}, attribute
+        for attribute in attributes:
+            if attribute == 'role':
+                self.add_families_group(_PEOPLE_GROUP_ROLES)
+            elif attribute == 'sex':
+                self.add_families_group(_PEOPLE_GROUP_SEXES)
+            elif attribute == 'status':
+                self.add_families_group(_PEOPLE_GROUP_STATUS)
+            else:
+                raise ValueError(
+                    f"unexpected predefined people group attribute: "
+                    "{attribute}; supported predefined attributes are "
+                    "'role', 'sex', 'status")
+
+    @staticmethod
+    def from_config(families, people_group_ids, people_groups_config):
+        result = FamiliesGroups(families)
+
+        for people_group_id in people_group_ids:
+            if people_group_id not in people_groups_config:
+                result.add_predefined_group(people_group_id)
+            else:
+                people_group = PeopleGroup.from_config(
+                    people_group_id,
+                    people_groups_config[people_group_id]
+                )
+                result.add_families_group(people_group)
+        return result
 
 
 PEDIGREE_COLUMN_NAMES = {

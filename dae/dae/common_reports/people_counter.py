@@ -29,7 +29,7 @@ class PeopleCounter(object):
         for family in self.families.values():
             people += list(filter(
                 lambda pwr: pwr.sex == sex and
-                all([pwr.get_attr(filt.column) == filt.value
+                all([filt.eval(pwr)
                      for filt in self.filter_object.filters]),
                 family.members_in_order))
 

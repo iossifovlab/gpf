@@ -2,32 +2,28 @@ from dae.common_reports.filter import FilterObject, FilterObjects
 
 
 def test_filter(filter_role):
-    assert filter_role.column == 'role'
-    assert filter_role.value == 'mom'
-    assert filter_role.column_value == 'Mother'
-
-    assert filter_role.get_column_name() == 'Mother'
+    assert filter_role.families_group.id == 'role'
+    assert filter_role.specified_value == 'mom'
+    assert filter_role.name == 'Mother'
 
 
 def test_filter_object(filter_object, filter_role, filter_people_group):
-    filter_object_from_list = FilterObject.from_list(
-        [[filter_role, filter_people_group]])
+    # filter_object_from_list = FilterObject.from_list(
+    #     [[filter_role]])
 
     assert filter_object.get_column_name() == 'Mother'
-    filter_object.add_filter(
-        filter_people_group.column, filter_people_group.value,
-        filter_people_group.column_value)
+    filter_object.add_filter(filter_people_group)
+
     assert filter_object.get_column_name() == 'Mother and Pheno'
 
-    assert len(filter_object_from_list) == 1
-    assert len(filter_object_from_list[0].filters) == \
-        len(filter_object.filters)
+    # assert len(filter_object_from_list) == 1
+    # assert len(filter_object_from_list[0].filters) == \
+    #     len(filter_object.filters)
 
 
 def test_filter_objects(filter_object, filter_people_group):
-    filter_objects = FilterObjects('Role', filter_objects=[filter_object])
+    filter_objects = FilterObjects(filter_objects=[filter_object])
 
-    assert filter_objects.name == 'Role'
     assert filter_objects.get_columns() == ['Mother']
     assert filter_objects.get_filter_object_by_column_name(
         'Mother') is not None
@@ -36,7 +32,8 @@ def test_filter_objects(filter_object, filter_people_group):
     assert filter_objects.get_filter_object_by_column_name(
         'mom and dad') is None
 
-    filter_objects.add_filter_object(filter_people_group)
+    filter_objects.add_filter_object(
+        FilterObject([filter_people_group]))
 
     assert filter_objects.get_columns() == ['Mother', 'Pheno']
 

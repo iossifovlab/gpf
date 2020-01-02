@@ -2,8 +2,47 @@ from dae.common_reports.denovo_report import EffectCell, EffectRow, \
     DenovoReportTable, DenovoReport
 
 
-def test_effect_cell_missense(genotype_data_group1, denovo_variants_ds1,
-                              filter_objects):
+def test_families_group_filter_people(families_groups):
+    families_group = families_groups.get_default_families_group()
+    assert families_group.id == 'phenotype'
+    assert len(list(families_group.get_people_with_propvalues(
+        ['phenotype2']))) == 2
+    print(list(families_group.get_people_with_propvalues(
+        ['phenotype2'])))
+
+    families_group = families_groups.get('role')
+    assert families_group.id == 'role'
+    assert len(list(families_group.get_people_with_propvalues(
+        ['sib']))) == 4
+    print(list(families_group.get_people_with_propvalues(
+        ['sib'])))
+
+
+def test_effect_cell_missense_study1(
+        study1, denovo_variants_st1, filter_objects):
+
+    filter_object = filter_objects[0].get_filter_object_by_column_name(
+        'sib and phenotype2')
+    assert filter_object
+
+    effect_cell = EffectCell(
+        study1, denovo_variants_st1, filter_object, 'Missense'
+    )
+
+    assert effect_cell.number_of_observed_events == 1
+    assert effect_cell.number_of_children_with_event == 1
+    assert effect_cell.observed_rate_per_child == 1.0 / 1
+    assert effect_cell.percent_of_children_with_events == 1.0 / 1
+    assert effect_cell.column == 'sib and phenotype2'
+
+    assert effect_cell.is_empty() is False
+
+    assert len(effect_cell.to_dict()) == 5
+
+
+def test_effect_cell_missense(
+        genotype_data_group1, denovo_variants_ds1, filter_objects):
+
     filter_object = filter_objects[0].get_filter_object_by_column_name(
         'sib and phenotype2')
     assert filter_object
@@ -12,9 +51,9 @@ def test_effect_cell_missense(genotype_data_group1, denovo_variants_ds1,
         genotype_data_group1, denovo_variants_ds1, filter_object, 'Missense'
     )
 
-    assert effect_cell.number_of_observed_events == 1
+    assert effect_cell.number_of_observed_events == 2
     assert effect_cell.number_of_children_with_event == 1
-    assert effect_cell.observed_rate_per_child == 1.0 / 1
+    assert effect_cell.observed_rate_per_child == 2.0 / 1
     assert effect_cell.percent_of_children_with_events == 1.0 / 1
     assert effect_cell.column == 'sib and phenotype2'
 
@@ -33,10 +72,10 @@ def test_effect_cell_frame_shift(
         genotype_data_group1, denovo_variants_ds1, filter_object, 'Frame-shift'
     )
 
-    assert effect_cell.number_of_observed_events == 2
-    assert effect_cell.number_of_children_with_event == 2
-    assert effect_cell.observed_rate_per_child == 2.0 / 7.0
-    assert effect_cell.percent_of_children_with_events == 2.0 / 7.0
+    assert effect_cell.number_of_observed_events == 1
+    assert effect_cell.number_of_children_with_event == 1
+    assert effect_cell.observed_rate_per_child == 1.0 / 6.0
+    assert effect_cell.percent_of_children_with_events == 1.0 / 6.0
     assert effect_cell.column == 'prb and phenotype1'
 
     assert effect_cell.is_empty() is False
@@ -114,7 +153,7 @@ def test_denovo_report(genotype_data_group1, filter_objects,
         genotype_data_group1, ['Missense'], ['Frame-shift'], filter_objects
     )
 
-    assert len(denovo_report.denovo_variants) == 7
+    assert len(denovo_report.denovo_variants) == 8
     assert denovo_report.denovo_variants == denovo_variants_ds1
     assert len(denovo_report.tables) == 1
 

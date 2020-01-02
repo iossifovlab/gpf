@@ -4,7 +4,9 @@ from box import Box
 from dae.pedigrees.family import PeopleGroup
 from dae.pedigrees.tests.conftest import relative_to_this_folder
 
-from dae.pedigrees.family import FamiliesLoader, FamiliesGroup
+from dae.pedigrees.family import FamiliesLoader, FamiliesGroup, \
+    _PEOPLE_GROUP_ROLES, _PEOPLE_GROUP_STATUS, _PEOPLE_GROUP_SEXES, \
+    _PEOPLE_GROUP_FAMILY_SIZES
 
 
 @pytest.fixture
@@ -194,6 +196,24 @@ def test_family_role_group(people_group_role):
         ('prb', 'sib', 'mom', 'dad')]
 
 
+def test_family_role_group_predefined():
+    filename = relative_to_this_folder('fixtures/pedigree_phenos.ped')
+    assert os.path.exists(filename)
+
+    loader = FamiliesLoader(filename)
+    families = loader.load()
+    people_group = _PEOPLE_GROUP_ROLES
+
+    families_group = FamiliesGroup(families, people_group)
+    assert families_group is not None
+    assert families_group.available_values is not None
+    assert families_group.available_values == ['mom', 'dad', 'prb', 'sib']
+
+    assert families_group.families_types is not None
+    assert families_group.families_types == [
+        ('mom', 'dad', 'prb', 'sib')]
+
+
 def test_family_status_group(people_group_status):
     filename = relative_to_this_folder('fixtures/pedigree_phenos.ped')
     assert os.path.exists(filename)
@@ -210,3 +230,76 @@ def test_family_status_group(people_group_status):
     assert families_group.families_types is not None
     assert families_group.families_types == [
         ('affected', 'unaffected')]
+
+
+def test_family_status_group_predefined():
+    filename = relative_to_this_folder('fixtures/pedigree_phenos.ped')
+    assert os.path.exists(filename)
+
+    loader = FamiliesLoader(filename)
+    families = loader.load()
+    # people_group = PeopleGroup.from_config('status', people_group_status)
+    people_group = _PEOPLE_GROUP_STATUS
+
+    families_group = FamiliesGroup(families, people_group)
+    assert families_group is not None
+    assert families_group.available_values is not None
+    assert families_group.available_values == ['affected', 'unaffected']
+
+    assert families_group.families_types is not None
+    assert families_group.families_types == [
+        ('affected', 'unaffected')]
+
+
+def test_family_sex_group_predefined():
+    filename = relative_to_this_folder('fixtures/pedigree_phenos.ped')
+    assert os.path.exists(filename)
+
+    loader = FamiliesLoader(filename)
+    families = loader.load()
+    # people_group = PeopleGroup.from_config('status', people_group_status)
+    people_group = _PEOPLE_GROUP_SEXES
+
+    families_group = FamiliesGroup(families, people_group)
+    assert families_group is not None
+    assert families_group.available_values is not None
+    assert families_group.available_values == ['M', 'F']
+
+    assert families_group.families_types is not None
+    assert families_group.families_types == [
+        ('M', 'F')]
+
+
+def test_grayscale_colors():
+    assert PeopleGroup.grayscale32(0) == '#ffffff'
+    assert PeopleGroup.grayscale32(1) == '#f7f7f7'
+    assert PeopleGroup.grayscale32(2) == '#efefef'
+    assert PeopleGroup.grayscale32(32) == '#ffffff'
+
+
+def test_family_sizes_group_predefined():
+    filename = relative_to_this_folder('fixtures/pedigree_phenos_B.ped')
+    assert os.path.exists(filename)
+
+    loader = FamiliesLoader(filename)
+    families = loader.load()
+    # people_group = PeopleGroup.from_config('status', people_group_status)
+    people_group = _PEOPLE_GROUP_FAMILY_SIZES
+
+    families_group = FamiliesGroup(families, people_group)
+
+    fam1 = families['f1']
+    assert fam1 is not None
+    assert len(fam1) == 5
+    prb = fam1.get_member('f1.p1')
+    assert prb is not None
+    assert people_group.getter(prb) == '5'
+
+    assert people_group.getter(fam1.get_member('f1.p1')) == '5'
+
+    assert families_group is not None
+    assert families_group.available_values is not None
+    assert families_group.available_values == ['4', '5']
+
+    assert families_group.families_types is not None
+    assert families_group.families_types == [('4',), ('5',)]

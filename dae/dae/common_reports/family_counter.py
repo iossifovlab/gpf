@@ -24,9 +24,9 @@ class FamilyCounter(object):
             pheno = member.get_attr(self.people_group_info.source)
             domain = self.people_group_info.domain.get(pheno, None)
             if domain and pheno:
-                return domain['color']
+                return domain.color
             else:
-                return self.people_group_info.default['color']
+                return self.people_group_info.default.color
 
     def _get_pedigree_to_draw(self):
         return [[member.family_id, member.person_id, member.dad_id,
@@ -137,22 +137,23 @@ class FamiliesGroupCounter(object):
 class FamiliesGroupCounters(object):
 
     def __init__(
-            self, families, people_group_info, draw_all_families,
+            self, families, families_group, draw_all_families,
             families_count_show_id):
         self.families = families
-        self.people_group_info = people_group_info
+        self.families_group = families_group
         self.draw_all_families = draw_all_families
         self.families_count_show_id = families_count_show_id
 
-        self.group_name = people_group_info.name
-        self.people_groups = people_group_info.get_people_groups()
+        self.group_name = families_group.name
+        self.family_types = families_group.families_types
+        self.available_values = families_group.available_values
         self.counters = self._get_counters()
         self.legend = self._get_legend()
 
     def to_dict(self):
         return OrderedDict([
             ('group_name', self.group_name),
-            ('phenotypes', self.people_groups),
+            ('phenotypes', self.family_types),
             ('counters', [counter.to_dict() for counter in self.counters]),
             ('legend', self.legend)
         ])
@@ -161,13 +162,9 @@ class FamiliesGroupCounters(object):
         families_groups = defaultdict(list)
 
         for family in self.families.values():
-            family_phenotypes = \
-                family.get_people_group_values(self.people_group_info.source)
-            family_phenotypes = frozenset(
-                self.people_group_info.sort_people_groups_by_domain_order(
-                    list(family_phenotypes)))
-
-            families_groups[family_phenotypes].append(family)
+            family_type = \
+                self.families_group.calc_family_type(family)
+            families_groups[family_type].append(family)
 
         families_groups_keys = sorted(list(families_groups.keys()), key=len)
         families_groups =\
@@ -181,11 +178,11 @@ class FamiliesGroupCounters(object):
             self._get_families_groups()
 
         return [FamiliesGroupCounter(
-            families, self.people_group_info, self.draw_all_families,
+            families, self.families_group, self.draw_all_families,
             self.families_count_show_id)
                 for families in families_groups]
 
     def _get_legend(self):
-        return list(self.people_group_info.domain.values()) +\
-            [self.people_group_info.default] +\
-            [self.people_group_info.missing_person_info]
+        return list(self.families_group.domain.values()) +\
+            [self.families_group.default] +\
+            [self.families_group.missing_person]
