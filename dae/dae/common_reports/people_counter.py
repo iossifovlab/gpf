@@ -25,21 +25,23 @@ class PeopleCounter(object):
         self.people_total = len(matched_people)
 
         assert self.people_total == \
-            self.people_male + self.people_female + self.people_unspecified, \
-            f'{self.people_total}, {self.people_male} {self.people_female} {self.people_unspecified}'
+            self.people_male + self.people_female + self.people_unspecified
 
-        self.column = people_filter.filter_name
+        self.filter_name = people_filter.filter_name
 
     def to_dict(self, rows):
         people_counter_dict =\
             {row: getattr(self, row) for row in rows}
-        people_counter_dict['column'] = self.column
+        people_counter_dict['column'] = self.filter_name
         return people_counter_dict
 
     def is_empty(self):
         return self.people_total == 0
 
     def is_empty_field(self, field):
+        assert field in {
+            'people_male', 'people_female', 
+            'people_unspecified', 'people_total'}
         return getattr(self, field) == 0
 
 
@@ -53,12 +55,13 @@ class PeopleCounters(object):
 
         self.group_name = filter_collection.name
         self.rows = self._get_row_names()
-        self.columns = self._get_column_names()
+        self.filter_names = [
+            people_counter.filter_name for people_counter in self.counters]
 
     def to_dict(self):
         return {
             'group_name': self.group_name,
-            'columns': self.columns,
+            'columns': self.filter_names,
             'rows': self.rows,
             'counters': [c.to_dict(self.rows) for c in self.counters]
         }
@@ -73,11 +76,13 @@ class PeopleCounters(object):
             people_counters))
 
     def _get_column_names(self):
-        return [people_counter.column for people_counter in self.counters]
+        return []
 
     def _is_row_empty(self, row):
-        return all([people_counter.is_empty_field(row)
-                    for people_counter in self.counters])
+        return all([
+            people_counter.is_empty_field(row)
+            for people_counter in self.counters
+        ])
 
     def _get_row_names(self):
         rows = ['people_male', 'people_female',

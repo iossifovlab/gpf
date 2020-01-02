@@ -5,14 +5,16 @@ import functools
 import pandas as pd
 from box import Box
 
+
 from dae.pedigrees.family import PedigreeReader
+from dae.pedigrees.families_groups import FamiliesGroups
+
 from dae.pedigrees.pedigrees import get_argument_parser
 from dae.pedigrees.drawing import OffsetLayoutDrawer, PDFLayoutDrawer
 from dae.pedigrees.layout_loader import LayoutLoader
 from dae.pedigrees.family import FamiliesData
 from dae.common_reports.family_report import FamiliesReport
-from dae.common_reports.people_group_info import PeopleGroupInfo
-from dae.common_reports.filter import FilterObjects, FilterObject
+from dae.common_reports.filter import FilterCollection, FilterObject
 
 
 def draw_family_pedigree(family, show_id=False):
@@ -54,51 +56,13 @@ def get_families_report(pedigrees):
     families = FamiliesData(pedigrees_df)
     families.families_build(pedigrees_df)
 
-    people_group_info = {
-        'domain': {
-            'affected': {
-                'id': 'affected',
-                'name': 'affected',
-                'color': '#e35252'
-            }
-        },
-        'unaffected': {
-            'id': 'unaffected',
-            'name': 'unaffected',
-            'color': '#ffffff'
-        },
-        'default': {
-            'id': 'unknown',
-            'name': 'unknown',
-            'color': '#aaaaaa'
-        },
-        'source': 'phenotype',
-        'name': 'Phenotype'
-    }
-
-    people_groups = ['affected', 'unaffected', 'unknown']
-
-    people_group_info = PeopleGroupInfo(
-        people_group_info, 'Phenotype', people_groups=people_groups)
-
-    people_groups_info = Box({'people_groups_info': [people_group_info]})
-
-    filters_objects = []
-
-    filter_objects = FilterObjects('Status')
-    filter_object1 = FilterObject([])
-    filter_object1.add_filter('phenotype', 'unaffected')
-    filter_objects.add_filter_object(filter_object1)
-    filter_object2 = FilterObject([])
-    filter_object2.add_filter('phenotype', 'affected')
-    filter_objects.add_filter_object(filter_object2)
-    filter_object3 = FilterObject([])
-    filter_object3.add_filter('phenotype', 'unknown')
-    filter_objects.add_filter_object(filter_object3)
-    filters_objects.append(filter_objects)
+    families_groups = FamiliesGroups(families)
+    families_groups.add_predefined_groups(['status'])
+    filter_collections = FilterCollection.build_filter_objects(
+        families_groups, {'Status': ['status']})
 
     families_report = FamiliesReport(
-        families, people_groups_info, filters_objects)
+        families, families_groups, filter_collections)
 
     return families_report
 
