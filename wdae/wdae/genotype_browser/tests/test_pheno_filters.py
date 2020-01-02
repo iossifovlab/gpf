@@ -74,7 +74,7 @@ def test_simple_query(db, admin_client):
     res = response.streaming_content
     res = json.loads(''.join(map(lambda x: x.decode('utf-8'), res)))
 
-    assert 2 == len(res)
+    assert len(res) == 3
 
 
 @pytest.mark.parametrize('pheno_filters,variants_count,pheno_values', [

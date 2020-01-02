@@ -11,7 +11,6 @@ def fixtures_dir():
 
 @pytest.fixture(scope='session')
 def gpf_instance(mock_genomes_db):
-    print('otumeel says: ', fixtures_dir())
     return GPFInstance(work_dir=fixtures_dir())
 
 

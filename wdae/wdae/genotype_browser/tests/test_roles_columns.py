@@ -44,8 +44,8 @@ def test_variants_have_roles_columns_values(db, admin_client):
     in_child_index = columns.index('genotype.in child')
     from_parents_index = columns.index('genotype.from parent')
 
-    in_child_expected = ['prbM', 'prbM']
-    from_parents_expected = ['momF', 'dadM']
+    in_child_expected = ['prbM', 'prbM', 'sibFsibF']
+    from_parents_expected = ['momF', 'dadM', 'dadM']
 
     print('in_child_expected:', in_child_expected)
 
@@ -68,5 +68,5 @@ def test_download_variants_have_roles_columns(db, admin_client):
     assert res[0]
     header = res[0].decode('utf-8')[:-1].split('\t')
 
-    assert 'in childs' in header
-    assert 'from parents' in header
+    assert 'in child' in header
+    assert 'from parent' in header

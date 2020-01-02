@@ -10,20 +10,6 @@ PREVIEW_URL = '/api/v3/genotype_browser/preview'
 PREVIEW_VARIANTS_URL = '/api/v3/genotype_browser/preview/variants'
 
 
-def test_simple_query_preview(db, admin_client):
-    data = {
-        'datasetId': 'quads_f1'
-    }
-    response = admin_client.post(
-        PREVIEW_VARIANTS_URL, json.dumps(data), content_type='application/json'
-    )
-    assert status.HTTP_200_OK == response.status_code
-    res = response.streaming_content
-    res = json.loads(''.join(map(lambda x: x.decode('utf-8'), res)))
-
-    assert 2 == len(res)
-
-
 def test_query_preview_have_pheno_columns(db, admin_client):
     data = {
         'datasetId': 'quads_f1'
@@ -34,13 +20,10 @@ def test_query_preview_have_pheno_columns(db, admin_client):
     assert status.HTTP_200_OK == response.status_code
     res = response.data
 
-    assert 20 == len(res['cols'])
-    assert res['cols'][-4:] == [
-        'continuous.Continuous',
-        'categorical.Categorical',
-        'ordinal.Ordinal',
-        'raw.Raw'
-    ]
+    assert 'continuous.Continuous' in res['cols']
+    assert 'categorical.Categorical' in res['cols']
+    assert 'ordinal.Ordinal' in res['cols']
+    assert 'raw.Raw' in res['cols']
 
 
 def test_query_preview_have_pheno_column_values(db, admin_client):
@@ -54,7 +37,8 @@ def test_query_preview_have_pheno_column_values(db, admin_client):
     res = response.streaming_content
     res = json.loads(''.join(map(lambda x: x.decode('utf-8'), res)))
 
-    assert len(res) == 2
+    assert len(res) == 3
+
     for row in enumerate(res):
         for value in row[-4:]:
             assert value is not None
