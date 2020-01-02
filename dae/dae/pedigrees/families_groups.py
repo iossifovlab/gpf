@@ -57,7 +57,7 @@ class PeopleGroup:
         )
 
 
-_PEOPLE_GROUP_ROLES = PeopleGroup.from_config(
+PEOPLE_GROUP_ROLES = PeopleGroup.from_config(
     'role',
     Box({
         'name': 'Role',
@@ -78,7 +78,7 @@ _PEOPLE_GROUP_ROLES = PeopleGroup.from_config(
 )
 
 
-_PEOPLE_GROUP_FAMILY_SIZES = PeopleGroup.from_config(
+PEOPLE_GROUP_FAMILY_SIZES = PeopleGroup.from_config(
     'family_size',
     Box({
         'name': 'Family Size',
@@ -100,7 +100,7 @@ _PEOPLE_GROUP_FAMILY_SIZES = PeopleGroup.from_config(
 )
 
 
-_PEOPLE_GROUP_SEXES = PeopleGroup.from_config(
+PEOPLE_GROUP_SEXES = PeopleGroup.from_config(
     'sex',
     Box({
         'name': 'Sex',
@@ -130,7 +130,7 @@ _PEOPLE_GROUP_SEXES = PeopleGroup.from_config(
     }, default_box=True))
 
 
-_PEOPLE_GROUP_STATUS = PeopleGroup.from_config(
+PEOPLE_GROUP_STATUS = PeopleGroup.from_config(
     'status',
     Box({
         'name': 'Status',
@@ -287,11 +287,11 @@ class FamiliesGroups(Mapping):
         # assert attribute in {'role', 'status', 'sex'}, attribute
         for attribute in attributes:
             if attribute == 'role':
-                self.add_families_group(_PEOPLE_GROUP_ROLES)
+                self.add_families_group(PEOPLE_GROUP_ROLES)
             elif attribute == 'sex':
-                self.add_families_group(_PEOPLE_GROUP_SEXES)
+                self.add_families_group(PEOPLE_GROUP_SEXES)
             elif attribute == 'status':
-                self.add_families_group(_PEOPLE_GROUP_STATUS)
+                self.add_families_group(PEOPLE_GROUP_STATUS)
             else:
                 raise ValueError(
                     f"unexpected predefined people group attribute: "

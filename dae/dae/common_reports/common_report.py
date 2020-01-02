@@ -6,7 +6,7 @@ from dae.pedigrees.families_groups import FamiliesGroups
 from dae.common_reports.family_report import FamiliesReport
 from dae.common_reports.denovo_report import DenovoReport
 # from dae.common_reports.people_group_info import PeopleGroupsInfo
-from dae.common_reports.filter import FilterObjects
+from dae.common_reports.people_filters import FilterCollection
 
 
 class CommonReport(object):
@@ -24,7 +24,7 @@ class CommonReport(object):
         )
         self.families_groups.add_predefined_groups(['status', 'sex', 'role'])
 
-        filter_objects = FilterObjects.build_filter_objects(
+        filter_objects = FilterCollection.build_filter_objects(
             self.families_groups, config.groups
         )
 

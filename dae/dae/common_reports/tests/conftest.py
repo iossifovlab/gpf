@@ -6,7 +6,8 @@ from copy import deepcopy
 
 from dae.pedigrees.families_groups import FamiliesGroups
 
-from dae.common_reports.filter import Filter, FilterObject, FilterObjects
+from dae.common_reports.people_filters import PeopleGroupFilter, \
+    MultiFilter, FilterCollection
 # from dae.common_reports.people_group_info import PeopleGroupsInfo
 
 
@@ -111,22 +112,23 @@ def families_groups(study1, selected_people_groups, people_groups):
 
 @pytest.fixture(scope='session')
 def filter_role(families_groups):
-    return Filter(families_groups['role'], 'mom', name='Mother')
+    return PeopleGroupFilter(families_groups['role'], 'mom', name='Mother')
 
 
 @pytest.fixture(scope='session')
 def filter_people_group(families_groups):
-    return Filter(families_groups['phenotype'], 'pheno', name='Pheno')
+    return PeopleGroupFilter(
+        families_groups['phenotype'], 'pheno', name='Pheno')
 
 
 @pytest.fixture(scope='function')
 def filter_object(filter_role):
-    return FilterObject([filter_role])
+    return MultiFilter([filter_role])
 
 
 @pytest.fixture(scope='function')
 def filter_objects(study1, families_groups, groups):
-    return FilterObjects.build_filter_objects(families_groups, groups)
+    return FilterCollection.build_filter_objects(families_groups, groups)
 
 
 @pytest.fixture(scope='session')

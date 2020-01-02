@@ -3,17 +3,18 @@ from copy import deepcopy
 from collections import OrderedDict
 
 from dae.utils.effect_utils import EffectTypesMixin
-from dae.common_reports.filter import FilterObject
+from dae.common_reports.people_filters import PeopleFilter
 
 
 class EffectCell(object):
 
     def __init__(self, genotype_data, denovo_variants,
-                 filter_object, effect):
+                 people_filter, effect):
         self.genotype_data = genotype_data
+        self.families = genotype_data.families
         self.denovo_variants = denovo_variants
-        assert isinstance(filter_object, FilterObject)
-        self.filter_object = filter_object
+        assert isinstance(people_filter, PeopleFilter)
+        self.people_filter = people_filter
         self.effect = effect
 
         self.effect_types_converter = EffectTypesMixin()
@@ -45,7 +46,7 @@ class EffectCell(object):
             / number_of_people_with_filter_and_parents \
             if number_of_people_with_filter_and_parents != 0 else 0
 
-        self.column = self.filter_object.get_column_name()
+        self.column = self.people_filter.filter_name
 
     def to_dict(self):
         return OrderedDict([
@@ -59,17 +60,9 @@ class EffectCell(object):
         ])
 
     def _people_with_filter(self):
-        print(list(self.genotype_data.families.values()))
-        people_with_filter = [
-            set([
-                m.person_id
-                for m in filt.families_group.get_people_with_propvalues(
-                    [filt.specified_value])])
-            for filt in self.filter_object.filters]
-        print(people_with_filter)
-        people_with_filter = set.intersection(*people_with_filter)
-        print(people_with_filter)
-        return people_with_filter
+        people_with_filter = self.people_filter.filter(
+            self.families.persons.values())
+        return set([p.person_id for p in people_with_filter])
 
     def _get_variants(self, people_with_filter, people_with_parents):
         people = people_with_filter.intersection(people_with_parents)
@@ -114,10 +107,10 @@ class EffectCell(object):
 class EffectRow(object):
 
     def __init__(self, genotype_data, denovo_variants,
-                 effect, filter_objects):
+                 effect, filter_collection):
         self.genotype_data = genotype_data
         self.denovo_variants = denovo_variants
-        self.filter_objects = filter_objects
+        self.filter_collection = filter_collection
 
         self.effect_type = effect
         self.row = self._get_row()
@@ -131,9 +124,9 @@ class EffectRow(object):
     def _get_row(self):
         return [
             EffectCell(
-                self.genotype_data, self.denovo_variants, filter_object,
+                self.genotype_data, self.denovo_variants, people_filter,
                 self.effect_type)
-            for filter_object in self.filter_objects.filter_objects]
+            for people_filter in self.filter_collection.filters]
 
     def is_row_empty(self):
         return all([value.is_empty() for value in self.row])
@@ -150,15 +143,15 @@ class DenovoReportTable(object):
 
     def __init__(
             self, genotype_data, denovo_variants, effect_groups,
-            effect_types, filter_object):
+            effect_types, filter_collection):
         self.genotype_data = genotype_data
         self.denovo_variants = denovo_variants
-        self.filter_object = filter_object
+        self.filter_collection = filter_collection
 
         self.effects = effect_groups + effect_types
 
-        self.group_name = filter_object.name
-        self.columns = filter_object.get_columns()
+        self.group_name = filter_collection.name
+        self.columns = filter_collection.get_filter_names()
 
         self.effect_groups = effect_groups
         self.effect_types = effect_types
@@ -199,7 +192,7 @@ class DenovoReportTable(object):
         effect_rows = [
             EffectRow(
                 self.genotype_data, self.denovo_variants, effect,
-                self.filter_object
+                self.filter_collection
             )
             for effect in self.effects
         ]

@@ -2,7 +2,7 @@ from dae.common_reports.people_counter import PeopleCounter, PeopleCounters
 
 
 def test_people_counter(study1, filter_objects):
-    filter_object = filter_objects[0].get_filter_object_by_column_name(
+    filter_object = filter_objects[0].get_filter_by_name(
         'mom and phenotype1')
     assert filter_object
 
@@ -24,7 +24,7 @@ def test_people_counter(study1, filter_objects):
 
 
 def test_people_counter_empty(study1, filter_objects):
-    filter_object = filter_objects[0].get_filter_object_by_column_name(
+    filter_object = filter_objects[0].get_filter_by_name(
         'dad and phenotype1')
     assert filter_object
 

@@ -5,8 +5,8 @@ from dae.pedigrees.tests.conftest import relative_to_this_folder
 from dae.pedigrees.family import FamiliesLoader
 from dae.pedigrees.families_groups import PeopleGroup, \
     FamiliesGroup, \
-    _PEOPLE_GROUP_ROLES, _PEOPLE_GROUP_STATUS, _PEOPLE_GROUP_SEXES, \
-    _PEOPLE_GROUP_FAMILY_SIZES
+    PEOPLE_GROUP_ROLES, PEOPLE_GROUP_STATUS, PEOPLE_GROUP_SEXES, \
+    PEOPLE_GROUP_FAMILY_SIZES
 
 
 @pytest.fixture
@@ -202,7 +202,7 @@ def test_family_role_group_predefined():
 
     loader = FamiliesLoader(filename)
     families = loader.load()
-    people_group = _PEOPLE_GROUP_ROLES
+    people_group = PEOPLE_GROUP_ROLES
 
     families_group = FamiliesGroup(families, people_group)
     assert families_group is not None
@@ -239,7 +239,7 @@ def test_family_status_group_predefined():
     loader = FamiliesLoader(filename)
     families = loader.load()
     # people_group = PeopleGroup.from_config('status', people_group_status)
-    people_group = _PEOPLE_GROUP_STATUS
+    people_group = PEOPLE_GROUP_STATUS
 
     families_group = FamiliesGroup(families, people_group)
     assert families_group is not None
@@ -258,7 +258,7 @@ def test_family_sex_group_predefined():
     loader = FamiliesLoader(filename)
     families = loader.load()
     # people_group = PeopleGroup.from_config('status', people_group_status)
-    people_group = _PEOPLE_GROUP_SEXES
+    people_group = PEOPLE_GROUP_SEXES
 
     families_group = FamiliesGroup(families, people_group)
     assert families_group is not None
@@ -284,7 +284,7 @@ def test_family_sizes_group_predefined():
     loader = FamiliesLoader(filename)
     families = loader.load()
     # people_group = PeopleGroup.from_config('status', people_group_status)
-    people_group = _PEOPLE_GROUP_FAMILY_SIZES
+    people_group = PEOPLE_GROUP_FAMILY_SIZES
 
     families_group = FamiliesGroup(families, people_group)
 

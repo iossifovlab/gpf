@@ -21,7 +21,7 @@ def test_families_group_filter_people(families_groups):
 def test_effect_cell_missense_study1(
         study1, denovo_variants_st1, filter_objects):
 
-    filter_object = filter_objects[0].get_filter_object_by_column_name(
+    filter_object = filter_objects[0].get_filter_by_name(
         'sib and phenotype2')
     assert filter_object
 
@@ -43,7 +43,7 @@ def test_effect_cell_missense_study1(
 def test_effect_cell_missense(
         genotype_data_group1, denovo_variants_ds1, filter_objects):
 
-    filter_object = filter_objects[0].get_filter_object_by_column_name(
+    filter_object = filter_objects[0].get_filter_by_name(
         'sib and phenotype2')
     assert filter_object
 
@@ -64,7 +64,7 @@ def test_effect_cell_missense(
 
 def test_effect_cell_frame_shift(
         genotype_data_group1, denovo_variants_ds1, filter_objects):
-    filter_object = filter_objects[0].get_filter_object_by_column_name(
+    filter_object = filter_objects[0].get_filter_by_name(
         'prb and phenotype1')
     assert filter_object
 
@@ -72,10 +72,10 @@ def test_effect_cell_frame_shift(
         genotype_data_group1, denovo_variants_ds1, filter_object, 'Frame-shift'
     )
 
-    assert effect_cell.number_of_observed_events == 1
-    assert effect_cell.number_of_children_with_event == 1
-    assert effect_cell.observed_rate_per_child == 1.0 / 6.0
-    assert effect_cell.percent_of_children_with_events == 1.0 / 6.0
+    assert effect_cell.number_of_observed_events == 2
+    assert effect_cell.number_of_children_with_event == 2
+    assert effect_cell.observed_rate_per_child == 2.0 / 7.0
+    assert effect_cell.percent_of_children_with_events == 2.0 / 7.0
     assert effect_cell.column == 'prb and phenotype1'
 
     assert effect_cell.is_empty() is False
@@ -85,7 +85,7 @@ def test_effect_cell_frame_shift(
 
 def test_effect_cell_empty(genotype_data_group1, denovo_variants_ds1,
                            filter_objects):
-    filter_object = filter_objects[0].get_filter_object_by_column_name(
+    filter_object = filter_objects[0].get_filter_by_name(
         'dad and unknown')
     assert filter_object
 
