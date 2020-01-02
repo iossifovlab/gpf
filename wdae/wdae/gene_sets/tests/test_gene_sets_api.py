@@ -54,8 +54,7 @@ def test_gene_set_download(db, admin_client):
 
     result = list(response.streaming_content)
     count = len(result)
-    # self.assertEqual(576 + 1, count)
-    assert 1 + 1 == count
+    assert 1 + 2 == count
 
 
 @pytest.mark.xfail(reason='[gene models] wrong annotation')
