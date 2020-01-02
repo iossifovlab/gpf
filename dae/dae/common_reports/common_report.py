@@ -1,7 +1,7 @@
 from collections import OrderedDict
 
 from dae.variants.attributes import Role
-from dae.pedigrees.family import FamiliesGroups
+from dae.pedigrees.families_groups import FamiliesGroups
 
 from dae.common_reports.family_report import FamiliesReport
 from dae.common_reports.denovo_report import DenovoReport

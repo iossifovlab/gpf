@@ -1,10 +1,10 @@
 import os
 import pytest
 from box import Box
-from dae.pedigrees.family import PeopleGroup
 from dae.pedigrees.tests.conftest import relative_to_this_folder
-
-from dae.pedigrees.family import FamiliesLoader, FamiliesGroup, \
+from dae.pedigrees.family import FamiliesLoader
+from dae.pedigrees.families_groups import PeopleGroup, \
+    FamiliesGroup, \
     _PEOPLE_GROUP_ROLES, _PEOPLE_GROUP_STATUS, _PEOPLE_GROUP_SEXES, \
     _PEOPLE_GROUP_FAMILY_SIZES
 

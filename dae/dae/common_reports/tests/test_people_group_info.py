@@ -1,4 +1,4 @@
-from dae.pedigrees.family import PeopleGroup, FamiliesGroup, FamiliesGroups
+from dae.pedigrees.families_groups import PeopleGroup, FamiliesGroup
 
 
 def test_people_group_info(people_groups, study2):

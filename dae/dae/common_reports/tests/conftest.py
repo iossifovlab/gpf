@@ -4,7 +4,7 @@ import os
 from box import Box
 from copy import deepcopy
 
-from dae.pedigrees.family import FamiliesGroups
+from dae.pedigrees.families_groups import FamiliesGroups
 
 from dae.common_reports.filter import Filter, FilterObject, FilterObjects
 # from dae.common_reports.people_group_info import PeopleGroupsInfo

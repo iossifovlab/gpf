@@ -1,5 +1,5 @@
 import itertools
-from dae.pedigrees.family import FamiliesGroup
+from dae.pedigrees.families_groups import FamiliesGroup
 
 
 class Filter(object):
