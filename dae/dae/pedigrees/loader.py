@@ -48,7 +48,7 @@ class FamiliesLoader:
         pedigree_format['ped_no_role'] = \
             str2bool(pedigree_format.get('ped_no_role', False))
         pedigree_format['ped_has_header'] = \
-            str2bool(pedigree_format.get('ped_has_header', False))
+            str2bool(pedigree_format.get('ped_has_header', True))
 
         ped_df = FamiliesLoader.flexible_pedigree_read(
             pedigree_filename, **pedigree_format
