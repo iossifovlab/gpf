@@ -11,7 +11,6 @@ class PeopleCounter(object):
 
         matched_people = list(self.people_filter.filter(
             self.families.persons.values()))
-        print(matched_people)
 
         self.people_male = len(
             list(PeopleGroupFilter.sex_filter(

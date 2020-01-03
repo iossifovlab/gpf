@@ -66,13 +66,10 @@ class EffectCell(object):
 
     def _get_variants(self, people_with_filter, people_with_parents):
         people = people_with_filter.intersection(people_with_parents)
-        print(people)
 
         effect_types = set(self.effect_types_converter.get_effect_types(
             effectTypes=self.effect))
         variants = []
-
-        print(self.denovo_variants)
 
         for v in self.denovo_variants:
             for aa in v.alt_alleles:
@@ -82,7 +79,6 @@ class EffectCell(object):
                     continue
                 variants.append(v)
                 break
-        print(variants)
         return variants
 
     def _get_number_of_children_with_event(

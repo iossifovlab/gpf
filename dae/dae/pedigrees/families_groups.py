@@ -278,7 +278,9 @@ class FamiliesGroups(Mapping):
 
     def add_families_group(self, people_group):
         if people_group.id in self._families_groups:
-            print("WARN: adding {people_group.id} more than once! Skipping...")
+            print(
+                f"WARN: adding {people_group.id} more than once! "
+                "Skipping...")
             return
         families_group = FamiliesGroup(self.families, people_group)
         self._families_groups[families_group.id] = families_group

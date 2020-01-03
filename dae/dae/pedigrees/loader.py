@@ -45,11 +45,17 @@ class FamiliesLoader:
 
     @staticmethod
     def load_pedigree_file(pedigree_filename, pedigree_format={}):
+        pedigree_format['ped_no_role'] = \
+            str2bool(pedigree_format.get('ped_no_role', False))
+        pedigree_format['ped_has_header'] = \
+            str2bool(pedigree_format.get('ped_has_header', False))
+
         ped_df = FamiliesLoader.flexible_pedigree_read(
             pedigree_filename, **pedigree_format
         )
         families = FamiliesData.from_pedigree_df(ped_df)
         if pedigree_format.get('ped_no_role'):
+            print(pedigree_format)
             for family in families.values():
                 role_build = FamilyRoleBuilder(family)
                 role_build.build_roles()
@@ -166,12 +172,12 @@ class FamiliesLoader:
             'ped_sex',
             'ped_status',
             'ped_role',
-            'ped_no_role',
             'ped_file_format',
         ]
         ped_has_header = not argv.ped_no_header
         res = {}
-        res['ped_has_header'] = ped_has_header
+        res['ped_has_header'] = str2bool(ped_has_header)
+        res['ped_no_role'] = str2bool(argv.ped_no_role)
 
         for col in ped_ped_args:
             ped_value = getattr(argv, col)
