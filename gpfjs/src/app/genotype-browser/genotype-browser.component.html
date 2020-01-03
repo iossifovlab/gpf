@@ -41,7 +41,7 @@
           Loading variants...
         </span>
         <span *ngIf="loadingFinished" id="variants-count-span">
-          {{ genotypePreviewVariantsArray.variantsCount }}
+          {{ genotypePreviewVariantsArray.getVariantsCount(genotypePreviewInfo.maxVariantsCount) }}
         </span>
       </p>
 
