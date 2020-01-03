@@ -56,6 +56,10 @@ class PeopleGroup:
             index=1_000_000_000,
         )
 
+    def person_color(self, person):
+        propvalue = self.getter(person)
+        return self.domain.get(propvalue, self.default).color
+
 
 PEOPLE_GROUP_ROLES = PeopleGroup.from_config(
     'role',

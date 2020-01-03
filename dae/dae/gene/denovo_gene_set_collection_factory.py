@@ -86,9 +86,13 @@ class DenovoGeneSetCollectionFactory():
                         criteria['name'], {}
                     )
 
-                people_with_people_group = \
-                    genotype_data_study.get_people_from_people_group(
-                        people_group_id, people_group_value
+                families_group = genotype_data_study.get_families_group(
+                    people_group_id
+                )
+                assert families_group is not None
+                people_with_people_group = families_group.\
+                    get_people_with_propvalues(
+                        [people_group_value]
                     )
 
                 innermost_cache.update(cls._add_genes_families(
