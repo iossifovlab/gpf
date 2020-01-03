@@ -84,6 +84,8 @@ class GenotypeData:
     def _get_person_color(self, person, people_group):
         if person.generated:
             return '#E0E0E0'
+        # print(people_group)
+
         if people_group is None:
             return '#FFFFFF'
         return people_group.person_color(person)

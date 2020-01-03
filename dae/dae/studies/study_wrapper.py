@@ -788,8 +788,8 @@ class StudyWrapper(object):
         return [
             member.family_id,
             member.person_id,
-            member.mom_id,
-            member.dad_id,
+            member.mom_id if member.mom_id else '0',
+            member.dad_id if member.dad_id else '0',
             member.sex.short(),
             str(member.role),
             self.genotype_data_study._get_person_color(member, people_group),
