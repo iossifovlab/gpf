@@ -85,6 +85,7 @@ class Role(enum.Enum):
 
     @staticmethod
     def from_name(name):
+        assert name is not None
         if isinstance(name, Role):
             return name
         elif name in Role.__members__:

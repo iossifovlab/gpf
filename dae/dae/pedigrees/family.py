@@ -23,7 +23,11 @@ class Person(object):
         self.index = attributes.get('index', None)
 
         self._sex = Sex.from_name(attributes['sex'])
-        self._role = Role.from_name(attributes['role'])
+        if 'role' not in attributes:
+            self._role = None
+        else:
+            self._role = Role.from_name(attributes.get('role'))
+        
         self._status = Status.from_name(attributes['status'])
 
         self._attributes['sex'] = self._sex
@@ -188,6 +192,12 @@ class Family(object):
         return list(filter(
             lambda m: m.role in roles, self.members_in_order))
 
+    def get_members_with_statuses(self, statuses):
+        if not isinstance(statuses[0], Status):
+            statuses = [Status.from_name(status) for status in statuses]
+        return list(filter(
+            lambda m: m.status in statuses, self.members_in_order))
+
 
 class FamiliesData(Mapping):
 
@@ -325,7 +335,13 @@ class FamiliesLoader:
         ped_df = FamiliesLoader.flexible_pedigree_read(
             pedigree_filename, **pedigree_format
         )
-        return FamiliesData.from_pedigree_df(ped_df)
+        families = FamiliesData.from_pedigree_df(ped_df)
+        if pedigree_format.get('ped_no_role'):
+            for family in families.values():
+                role_build = FamilyRoleBuilder(family)
+                role_build.build_roles()
+
+        return families
 
     @staticmethod
     def load_simple_families_file(families_filename):
@@ -572,8 +588,8 @@ class FamiliesLoader:
         assert set(PED_COLUMNS_REQUIRED) <= set(ped_df.columns), \
             ped_df.columns
 
-        if ped_no_role:
-            ped_df = PedigreeRoleGuesser.guess_role_nuc(ped_df)
+        # if ped_no_role:
+        #     ped_df = PedigreeRoleGuesser.guess_role_nuc(ped_df)
 
         return ped_df
 
@@ -667,68 +683,235 @@ class FamiliesLoader:
         return ped_df
 
 
-class PedigreeRoleGuesser():
+class Mating:
+
+    def __init__(self, mom_id, dad_id):
+        self.mom_id = mom_id
+        self.dad_id = dad_id
+        self.id = Mating.build_id(mom_id, dad_id)
+        self.children = set()
 
     @staticmethod
-    def _find_parent_in_family_ped(family_df, mom_or_dad):
-        df = family_df[family_df[mom_or_dad] != '0']
-        assert len(df[mom_or_dad].unique()) <= 1
-        if len(df) > 0:
-            row = df.iloc[0]
-            return (row.family_id, row[mom_or_dad])
+    def build_id(mom_id, dad_id):
+        return f'{mom_id},{dad_id}'
+
+    @staticmethod
+    def parents_id(person):
+        return Mating.build_id(person.mom_id, person.dad_id)
+
+
+class FamilyRoleBuilder:
+
+    def __init__(self, family):
+        self.family = family
+        self.family_matings = self._build_family_matings()
+        self.members_matings = self._build_members_matings()
+
+    def build_roles(self):
+        proband = self._get_family_proband()
+        assert proband is not None
+        self._set_person_role(proband, Role.prb)
+
+        self._assign_roles_children(proband)
+        self._assign_roles_mates(proband)
+        self._assign_roles_parents(proband)
+        self._assign_roles_siblings(proband)
+        self._assign_roles_paternal(proband)
+        self._assign_roles_maternal(proband)
+
+    @classmethod
+    def _set_person_role(cls, person, role):
+        assert isinstance(person, Person)
+        assert isinstance(role, Role)
+        person._role = role
+        person._attributes['role'] = role
+
+    def _get_family_proband(self):
+        probands = self.family.get_members_with_roles([Role.prb])
+        if len(probands) > 0:
+            return probands[0]
+        affected = self.family.get_members_with_statuses([Status.affected])
+        if len(affected) > 0:
+            return affected[0]
         return None
 
-    @staticmethod
-    def _find_mom_in_family_ped(family_df):
-        return PedigreeRoleGuesser._find_parent_in_family_ped(
-            family_df, 'mom_id')
+    def _build_family_matings(self):
+        matings = {}
 
-    @staticmethod
-    def _find_dad_in_family_ped(family_df):
-        return PedigreeRoleGuesser._find_parent_in_family_ped(
-            family_df, 'dad_id')
+        for person_id, person in self.family.persons.items():
+            if person.has_parent():
 
-    @staticmethod
-    def _find_status_in_family(family_df, status):
-        df = family_df[family_df.status == status]
-        result = []
-        for row in df.to_dict('records'):
-            result.append((row['family_id'], row['person_id']))
-        return result
+                parents_mating_id = Mating.parents_id(person)
+                if parents_mating_id not in matings:
+                    parents = Mating(person.mom_id, person.dad_id)
+                    matings[parents_mating_id] = parents
+                parents_mating = matings.get(parents_mating_id)
+                assert parents_mating is not None
+                parents_mating.children.add(person_id)
+        return matings
 
-    @staticmethod
-    def _find_prb_in_family(family_df):
-        return PedigreeRoleGuesser._find_status_in_family(
-            family_df, Status.affected)
+    def _build_members_matings(self):
+        members_matings = defaultdict(set)
+        for mating_id, mating in self.family_matings.items():
+            if mating.mom_id is not None:
+                members_matings[mating.mom_id].add(mating_id)
+            if mating.dad_id is not None:
+                members_matings[mating.dad_id].add(mating_id)
+        return members_matings
 
-    @staticmethod
-    def _find_sib_in_family(family_df):
-        return PedigreeRoleGuesser._find_status_in_family(
-            family_df, Status.unaffected)
+    def _assign_roles_children(self, proband):
+        for mating_id in self.members_matings[proband.person_id]:
+            mating = self.family_matings[mating_id]
+            for child_id in mating.children:
+                child = self.family.persons[child_id]
+                self._set_person_role(child, Role.child)
 
-    @staticmethod
-    def guess_role_nuc(ped_df):
-        res_df = ped_df.copy()
+    def _assign_roles_mates(self, proband):
+        for mating_id in self.members_matings[proband.person_id]:
+            mating = self.family_matings[mating_id]
+            if mating.dad_id is not None \
+                    and mating.dad_id != proband.person_id:
+                person = self.family.persons[mating.dad_id]
+                self._set_person_role(person, Role.spouse)
+            elif mating.mom_id is not None \
+                    and mating.mom_id != proband.person_id:
+                person = self.family.persons[mating.mom_id]
+                self._set_person_role(person, Role.spouse)
 
-        grouped = res_df.groupby('family_id')
-        roles = {}
-        for _, family_df in grouped:
-            mom = PedigreeRoleGuesser._find_mom_in_family_ped(family_df)
-            if mom:
-                roles[mom] = Role.mom
-            dad = PedigreeRoleGuesser._find_dad_in_family_ped(family_df)
-            if dad:
-                roles[dad] = Role.dad
-            for p in PedigreeRoleGuesser._find_prb_in_family(family_df):
-                if p not in roles:
-                    roles[p] = Role.prb
-            for p in PedigreeRoleGuesser._find_sib_in_family(family_df):
-                if p not in roles:
-                    roles[p] = Role.sib
-        assert len(roles) == len(res_df)
+    def _assign_roles_parents(self, proband):
+        if not proband.has_parent():
+            return
+        if proband.mom is not None:
+            self._set_person_role(proband.mom, Role.mom)
+        if proband.dad is not None:
+            self._set_person_role(proband.dad, Role.dad)
 
-        role = pd.Series(res_df.index)
-        for index, row in res_df.iterrows():
-            role[index] = roles[(row['family_id'], row['person_id'])]
-        res_df['role'] = role
-        return res_df
+    def _assign_roles_siblings(self, proband):
+        if not proband.has_parent():
+            return
+        parents_mating = self.family_matings[Mating.parents_id(proband)]
+        for person_id in parents_mating.children:
+            if person_id != proband.person_id:
+                person = self.family.persons[person_id]
+                self._set_person_role(person, Role.sib)
+
+    def _assign_roles_paternal(self, proband):
+        if proband.dad is None or not proband.dad.has_parent():
+            return
+
+        dad = proband.dad
+        if dad.dad is not None:
+            self._set_person_role(dad.dad, Role.paternal_grandfather)
+        if dad.mom is not None:
+            self._set_person_role(dad.mom, Role.paternal_grandmother)
+
+        grandparents_mating_id = Mating.parents_id(dad)
+        grandparents_mating = self.family_matings[grandparents_mating_id]
+        for person_id in grandparents_mating.children:    
+            person = self.family.persons[person_id]
+            if person.role is not None:
+                continue
+            if person.sex == Sex.M:
+                self._set_person_role(person, Role.paternal_uncle)
+            if person.sex == Sex.F:
+                self._set_person_role(person, Role.paternal_aunt)
+
+            for person_mating_id in self.members_matings[person.person_id]:
+                person_mating = self.family_matings[person_mating_id]
+                for cousin_id in person_mating.children:
+                    cousin = self.family.persons[cousin_id]
+                    self._set_person_role(cousin, Role.paternal_cousin)
+
+    def _assign_roles_maternal(self, proband):
+        if proband.mom is None or not proband.mom.has_parent():
+            return
+
+        mom = proband.mom
+        if mom.dad is not None:
+            self._set_person_role(mom.dad, Role.maternal_grandfather)
+        if mom.mom is not None:
+            self._set_person_role(mom.mom, Role.maternal_grandmother)
+
+        grandparents_mating_id = Mating.parents_id(mom)
+        grandparents_mating = self.family_matings[grandparents_mating_id]
+        for person_id in grandparents_mating.children:    
+            person = self.family.persons[person_id]
+            if person.role is not None:
+                continue
+            if person.sex == Sex.M:
+                self._set_person_role(person, Role.maternal_uncle)
+            if person.sex == Sex.F:
+                self._set_person_role(person, Role.maternal_aunt)
+
+            for person_mating_id in self.members_matings[person.person_id]:
+                person_mating = self.family_matings[person_mating_id]
+                for cousin_id in person_mating.children:
+                    cousin = self.family.persons[cousin_id]
+                    self._set_person_role(cousin, Role.maternal_cousin)
+
+
+# class PedigreeRoleGuesser():
+
+#     @staticmethod
+#     def _find_parent_in_family_ped(family_df, mom_or_dad):
+#         df = family_df[family_df[mom_or_dad] != '0']
+#         assert len(df[mom_or_dad].unique()) <= 1
+#         if len(df) > 0:
+#             row = df.iloc[0]
+#             return (row.family_id, row[mom_or_dad])
+#         return None
+
+#     @staticmethod
+#     def _find_mom_in_family_ped(family_df):
+#         return PedigreeRoleGuesser._find_parent_in_family_ped(
+#             family_df, 'mom_id')
+
+#     @staticmethod
+#     def _find_dad_in_family_ped(family_df):
+#         return PedigreeRoleGuesser._find_parent_in_family_ped(
+#             family_df, 'dad_id')
+
+#     @staticmethod
+#     def _find_status_in_family(family_df, status):
+#         df = family_df[family_df.status == status]
+#         result = []
+#         for row in df.to_dict('records'):
+#             result.append((row['family_id'], row['person_id']))
+#         return result
+
+#     @staticmethod
+#     def _find_prb_in_family(family_df):
+#         return PedigreeRoleGuesser._find_status_in_family(
+#             family_df, Status.affected)
+
+#     @staticmethod
+#     def _find_sib_in_family(family_df):
+#         return PedigreeRoleGuesser._find_status_in_family(
+#             family_df, Status.unaffected)
+
+#     @staticmethod
+#     def guess_role_nuc(ped_df):
+#         res_df = ped_df.copy()
+
+#         grouped = res_df.groupby('family_id')
+#         roles = {}
+#         for _, family_df in grouped:
+#             mom = PedigreeRoleGuesser._find_mom_in_family_ped(family_df)
+#             if mom:
+#                 roles[mom] = Role.mom
+#             dad = PedigreeRoleGuesser._find_dad_in_family_ped(family_df)
+#             if dad:
+#                 roles[dad] = Role.dad
+#             for p in PedigreeRoleGuesser._find_prb_in_family(family_df):
+#                 if p not in roles:
+#                     roles[p] = Role.prb
+#             for p in PedigreeRoleGuesser._find_sib_in_family(family_df):
+#                 if p not in roles:
+#                     roles[p] = Role.sib
+#         assert len(roles) == len(res_df)
+
+#         role = pd.Series(res_df.index)
+#         for index, row in res_df.iterrows():
+#             role[index] = roles[(row['family_id'], row['person_id'])]
+#         res_df['role'] = role
+#         return res_df

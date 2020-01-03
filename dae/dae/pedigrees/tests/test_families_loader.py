@@ -2,6 +2,7 @@ import os
 import pytest
 from pandas.api.types import is_string_dtype
 
+from dae.variants.attributes import Role
 from dae.pedigrees.tests.conftest import relative_to_this_folder
 
 from dae.pedigrees.family import FamiliesLoader, FamiliesData
@@ -65,7 +66,8 @@ def test_families_loader_phenos():
 @pytest.mark.parametrize('pedigree', [
     ('sample_nuc_family.ped'),
     ('pedigree_no_role_A.ped'),
-    # ('pedigree_no_role_B.ped'),
+    ('pedigree_no_role_B.ped'),
+    ('pedigree_no_role_C.ped'),
 ])
 def test_families_loader_no_role(pedigree):
     filename = relative_to_this_folder(f'fixtures/{pedigree}')
@@ -94,3 +96,19 @@ def test_families_loader_no_role(pedigree):
 
     person = persons[0]
     assert person.person_id == 'f1.sib'
+
+
+def test_families_loader_roles_testing():
+    filename = relative_to_this_folder('fixtures/pedigree_no_role_C.ped')
+    assert os.path.exists(filename)
+
+    params = {
+        'ped_no_role': True,
+    }
+    loader = FamiliesLoader(filename, params=params)
+    families = loader.load()
+
+    assert families.persons['f1.mg_dad'].role == Role.maternal_grandfather
+    assert families.persons['f1.mg_mom'].role == Role.maternal_grandmother
+    assert families.persons['f1.pg_dad'].role == Role.paternal_grandfather
+    assert families.persons['f1.pg_mom'].role == Role.paternal_grandmother
