@@ -227,7 +227,7 @@ class ParquetPartitionDescription():
             glob += '*/'
         if not self.rare_boundary == 0:
             glob += '*/'
-        glob += '*'
+        glob += '*.parquet'
         return glob
 
     def add_family_bins_to_pedigree_df(self, ped_df):
