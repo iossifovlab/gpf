@@ -2,7 +2,7 @@ from io import StringIO
 
 import pytest
 
-from dae.pedigrees.family import FamiliesLoader
+from dae.pedigrees.loader import FamiliesLoader
 from dae.variants.family_variant import FamilyVariant
 from dae.variants.variant import SummaryAllele, SummaryVariant
 

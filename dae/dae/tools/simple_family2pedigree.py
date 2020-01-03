@@ -3,7 +3,7 @@ import os
 import sys
 import argparse
 
-from dae.pedigrees.family import FamiliesLoader
+from dae.pedigrees.loader import FamiliesLoader
 
 
 def parse_cli_arguments(argv=sys.argv[1:]):

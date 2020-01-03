@@ -18,7 +18,7 @@ from dae.backends.import_commons import build_contig_regions, \
 from dae.backends.import_commons import construct_import_annotation_pipeline, \
     generate_makefile
 
-from dae.pedigrees.family import FamiliesLoader
+from dae.pedigrees.loader import FamiliesLoader
 from dae.backends.impala.parquet_io import ParquetManager, \
     ParquetPartitionDescription
 

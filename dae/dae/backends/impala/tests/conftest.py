@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from dae.pedigrees.family import FamiliesLoader
+from dae.pedigrees.loader import FamiliesLoader
 from io import StringIO
 
 PED1 = '''

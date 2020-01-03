@@ -1,5 +1,5 @@
 from dae.backends.impala.loader import ParquetLoader
-from dae.pedigrees.family import FamiliesLoader
+from dae.pedigrees.loader import FamiliesLoader
 from dae.pedigrees.family import FamiliesData
 
 

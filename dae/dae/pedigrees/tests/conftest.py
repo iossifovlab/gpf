@@ -6,7 +6,8 @@ import csv
 
 from dae.pedigrees.layout_saver import LayoutSaver
 from dae.pedigrees.layout_loader import LayoutLoader
-from dae.pedigrees.family import Family, FamiliesLoader
+from dae.pedigrees.family import Family
+from dae.pedigrees.loader import FamiliesLoader
 
 from dae.pedigrees.pedigrees import Individual, \
     FamilyConnections, MatingUnit, SibshipUnit

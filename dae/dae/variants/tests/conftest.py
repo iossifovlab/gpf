@@ -2,7 +2,7 @@ import os
 from io import StringIO
 import pytest
 
-from dae.pedigrees.family import FamiliesLoader
+from dae.pedigrees.loader import FamiliesLoader
 
 
 def relative_to_this_test_folder(path):

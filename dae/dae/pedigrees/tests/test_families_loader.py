@@ -5,7 +5,8 @@ from pandas.api.types import is_string_dtype
 from dae.variants.attributes import Role
 from dae.pedigrees.tests.conftest import relative_to_this_folder
 
-from dae.pedigrees.family import FamiliesLoader, FamiliesData
+from dae.pedigrees.family import FamiliesData
+from dae.pedigrees.loader import FamiliesLoader
 
 
 @pytest.mark.parametrize('pedigree', [

@@ -2,7 +2,7 @@ import os
 import pytest
 from box import Box
 from dae.pedigrees.tests.conftest import relative_to_this_folder
-from dae.pedigrees.family import FamiliesLoader
+from dae.pedigrees.loader import FamiliesLoader
 from dae.pedigrees.families_groups import PeopleGroup, \
     FamiliesGroup, \
     PEOPLE_GROUP_ROLES, PEOPLE_GROUP_STATUS, PEOPLE_GROUP_SEXES, \

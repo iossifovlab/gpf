@@ -1,5 +1,5 @@
 import pytest
-from dae.pedigrees.family import FamiliesLoader
+from dae.pedigrees.loader import FamiliesLoader
 from dae.pedigrees.family import FamiliesData
 
 from dae.backends.vcf.loader import VcfLoader

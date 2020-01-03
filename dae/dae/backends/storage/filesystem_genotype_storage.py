@@ -2,7 +2,7 @@ import os
 import copy
 import shutil
 
-from dae.pedigrees.family import FamiliesLoader
+from dae.pedigrees.loader import FamiliesLoader
 
 from dae.backends.storage.genotype_storage import GenotypeStorage
 

@@ -3,7 +3,7 @@ from io import StringIO
 import pandas as pd
 
 from dae.variants.attributes import Sex, Status, Role
-from dae.pedigrees.family import FamiliesLoader
+from dae.pedigrees.loader import FamiliesLoader
 from dae.pedigrees.tests.conftest import relative_to_this_folder
 
 

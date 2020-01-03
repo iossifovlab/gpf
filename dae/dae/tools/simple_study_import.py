@@ -13,7 +13,7 @@ from dae.backends.dae.loader import DenovoLoader
 from dae.backends.vcf.loader import VcfLoader
 from dae.backends.raw.loader import AnnotationPipelineDecorator
 
-from dae.pedigrees.family import FamiliesLoader
+from dae.pedigrees.loader import FamiliesLoader
 
 
 def cli_arguments(dae_config, argv=sys.argv[1:]):

@@ -2,7 +2,7 @@ import pytest
 import pandas as pd
 import numpy as np
 
-from dae.pedigrees.family import FamiliesLoader
+from dae.pedigrees.loader import FamiliesLoader
 from dae.pedigrees.family import FamiliesData
 
 from dae.backends.dae.loader import DenovoLoader

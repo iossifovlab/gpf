@@ -26,7 +26,8 @@ from dae.backends.vcf.loader import VcfLoader
 from dae.backends.import_commons import \
     construct_import_annotation_pipeline
 
-from dae.pedigrees.family import FamiliesData, FamiliesLoader
+from dae.pedigrees.family import FamiliesData
+from dae.pedigrees.loader import FamiliesLoader
 from dae.utils.helpers import study_id_from_path
 
 from dae.backends.impala.parquet_io import ParquetManager

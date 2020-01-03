@@ -7,7 +7,7 @@ import os
 import pytest
 import pandas as pd
 
-from dae.pedigrees.family import FamiliesLoader
+from dae.pedigrees.loader import FamiliesLoader
 from dae.pedigrees.family import FamiliesData
 
 from .conftest import relative_to_this_folder
