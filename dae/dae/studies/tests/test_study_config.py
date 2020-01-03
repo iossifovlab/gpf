@@ -1,6 +1,7 @@
 import os
 import pytest
 from dae.studies.tests.conftest import studies_dir
+from box import Box
 
 
 def test_study_config_simple(genotype_data_study_configs):
@@ -21,9 +22,11 @@ def test_study_config_year(genotype_data_study_configs):
     ('description', 'QUADS F1'),
     ('phenotypeTool', True),
     ('phenotypeBrowser', False),
-    ('phenotypeData', ''),
+    ('phenotypeData', 'quads_f1'),
+
 ])
-def test_quads_f1_config_dict(quads_f1_config, option_name, expected_value):
+def test_quads_f1_config_dict_access(
+        quads_f1_config, option_name, expected_value):
     assert quads_f1_config is not None
 
     assert quads_f1_config[option_name] == expected_value
@@ -36,16 +39,18 @@ def test_quads_f1_config_dict(quads_f1_config, option_name, expected_value):
     ('description', 'QUADS F1'),
     ('phenotypeTool', True),
     ('phenotypeBrowser', False),
+    ('phenotypeData', 'quads_f1'),
 
     ('phenotype_tool', True),
     ('phenotype_browser', False),
-    ('phenotype_data', ''),
+    ('phenotype_data', 'quads_f1'),
     ('year', ''),
     ('pub_med', ''),
     ('years', []),
     ('pub_meds', []),
 ])
-def test_quads_f1_config_attr(quads_f1_config, option_name, expected_value):
+def test_quads_f1_config_attr_access(
+        quads_f1_config, option_name, expected_value):
     assert quads_f1_config is not None
 
     assert getattr(quads_f1_config, option_name) == expected_value
@@ -59,7 +64,6 @@ def test_quads_f1_config_attr(quads_f1_config, option_name, expected_value):
     ('hasCNV', False),
     ('hasComplex', False),
     ('hasStudyFilters', True),
-    ('phenoFilters', None),
 ])
 def test_quads_f1_config_genotype_browser(
         quads_f1_config, option_name, expected_value):
@@ -68,16 +72,52 @@ def test_quads_f1_config_genotype_browser(
     assert genotype_browser_config[option_name] == expected_value
 
 
+def test_quads_f1_config_genotype_browser_pheno_filters(quads_f1_config):
+    genotype_browser_config = quads_f1_config.genotype_browser_config
+
+    assert genotype_browser_config['phenoFilters'] == [
+        Box({
+            'id': 'Categorical',
+            'name': 'Categorical',
+            'measureType': 'categorical',
+            'filter': 'single:prb:instrument1.categorical',
+            'measureFilter': {
+                'filterType': 'single',
+                'role': 'prb',
+                'measure': 'instrument1.categorical'
+            }
+        }),
+        Box({
+            'id': 'Continuous',
+            'name': 'Continuous',
+            'measureType': 'continuous',
+            'filter': 'single:prb:instrument1.continuous',
+            'measureFilter': {
+                'filterType': 'single',
+                'role': 'prb',
+                'measure': 'instrument1.continuous'
+            }
+        }),
+    ]
+
+
 def test_quads_f1_config_genotype_browser_present_in_role(quads_f1_config):
     genotype_browser_config = quads_f1_config.genotype_browser_config
 
-    assert len(genotype_browser_config['presentInRole']) == 1
+    assert len(genotype_browser_config['presentInRole']) == 2
     assert genotype_browser_config['presentInRole'][0].id == 'prb'
     assert genotype_browser_config['presentInRole'][0].name == \
-        'Present in Probant and Sibling'
+        'Present in Proband and Sibling'
     assert len(genotype_browser_config['presentInRole'][0].roles) == 2
     assert genotype_browser_config['presentInRole'][0].roles[0] == 'Proband'
     assert genotype_browser_config['presentInRole'][0].roles[1] == 'Sibling'
+
+    assert genotype_browser_config['presentInRole'][1].id == 'parent'
+    assert genotype_browser_config['presentInRole'][1].name == \
+        'Parents'
+    assert len(genotype_browser_config['presentInRole'][1].roles) == 2
+    assert genotype_browser_config['presentInRole'][1].roles[0] == 'Mom'
+    assert genotype_browser_config['presentInRole'][1].roles[1] == 'Dad'
 
 
 @pytest.mark.parametrize(
@@ -111,21 +151,43 @@ def test_quads_f1_config_genotype_browser_present_in_role(quads_f1_config):
             }
         ]),
         ('best', 'family genotype', 'bestSt', []),
-        ('iq', 'Proband IQs', None, [
+        ('continuous', 'Continuous', None, [
             {
-                'id': 'iq.NvIQ',
-                'name': 'NvIQ',
-                'role': 'role',
-                'measure': 'diagnosis_summary.best_nonverbal_iq',
-                'source': 'prb.diagnosis_summary.best_nonverbal_iq',
-                'format': 'NvIQ %.2f'
-            },
+                'id': 'continuous.Continuous',
+                'name': 'Continuous',
+                'role': 'prb',
+                'measure': 'instrument1.continuous',
+                'source': 'prb.instrument1.continuous',
+                'format': '%s'
+            }
+        ]),
+        ('categorical', 'Categorical', None, [
             {
-                'id': 'iq.vIQ',
-                'name': 'vIQ',
-                'role': 'role',
-                'measure': 'diagnosis_summary.best_verbal_iq',
-                'source': 'prb.diagnosis_summary.best_verbal_iq',
+                'id': 'categorical.Categorical',
+                'name': 'Categorical',
+                'role': 'prb',
+                'measure': 'instrument1.categorical',
+                'source': 'prb.instrument1.categorical',
+                'format': '%s'
+            }
+        ]),
+        ('ordinal', 'Ordinal', None, [
+            {
+                'id': 'ordinal.Ordinal',
+                'name': 'Ordinal',
+                'role': 'prb',
+                'measure': 'instrument1.ordinal',
+                'source': 'prb.instrument1.ordinal',
+                'format': '%s'
+            }
+        ]),
+        ('raw', 'Raw', None, [
+            {
+                'id': 'raw.Raw',
+                'name': 'Raw',
+                'role': 'prb',
+                'measure': 'instrument1.raw',
+                'source': 'prb.instrument1.raw',
                 'format': '%s'
             }
         ]),
@@ -136,7 +198,7 @@ def test_quads_f1_config_genotype_browser_columns(
         expected_slots):
     genotype_browser_config = quads_f1_config.genotype_browser_config
 
-    assert len(genotype_browser_config['genotypeColumns']) == 14
+    assert len(genotype_browser_config['genotypeColumns']) == 17
 
     genotype_column = list(filter(
         lambda gc: gc['id'] == option_name,
