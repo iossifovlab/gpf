@@ -94,7 +94,9 @@ class DenovoGeneSetCollectionFactory():
                     get_people_with_propvalues(
                         [people_group_value]
                     )
-
+                people_with_people_group = set([
+                    p.person_id for p in people_with_people_group
+                ])
                 innermost_cache.update(cls._add_genes_families(
                     variants, people_with_people_group, search_args)
                 )

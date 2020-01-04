@@ -20,6 +20,8 @@ class GenotypeHelper(object):
         people_with_people_group = families_group.get_people_with_propvalues(
             [self.people_group_value]
         )
+        people_with_people_group = set([
+            p.person_id for p in people_with_people_group])
 
         # TODO: Remove this when genotype_data_study.query_variants can
         # support non expand_effect_types as LGDs
