@@ -4,9 +4,9 @@ from collections import defaultdict, OrderedDict
 
 class FamilyCounter(object):
 
-    def __init__(self, family, pedigrees_count, people_group_info):
+    def __init__(self, family, pedigrees_count, people_group):
         self.family = family
-        self.people_group_info = people_group_info
+        self.people_group = people_group
 
         self.pedigree = self._get_pedigree_to_draw()
         self.pedigrees_count = pedigrees_count
@@ -21,12 +21,10 @@ class FamilyCounter(object):
         if member.generated:
             return '#E0E0E0'
         else:
-            pheno = member.get_attr(self.people_group_info.source)
-            domain = self.people_group_info.domain.get(pheno, None)
-            if domain and pheno:
-                return domain.color
-            else:
-                return self.people_group_info.default.color
+            pheno = self.people_group.getter(member)
+            domain = self.people_group.domain.get(
+                pheno, self.people_group.default)
+            return domain.color
 
     def _get_pedigree_to_draw(self):
         result = [

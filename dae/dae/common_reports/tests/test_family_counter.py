@@ -75,9 +75,10 @@ def test_families_group_counters(study1, families_groups):
     )
 
     assert families_group_counters.group_name == 'Diagnosis'
-    assert sorted(families_group_counters.available_values) == \
-        sorted(['phenotype1', 'phenotype2', 'unknown', 'unaffected'])
-    assert len(families_group_counters.counters) == 5
+    assert families_group_counters.available_values == \
+        ['phenotype1', 'phenotype2', 'unaffected', 'unknown']
+
+    assert len(families_group_counters.counters) == 6
     assert len(families_group_counters.legend) == 6
     assert families_group_counters.legend[-1].id == 'missing-person'
 

@@ -51,7 +51,7 @@ def test_families_group(people_groups, study2):
 
 
 def test_people_groups_info(families_groups):
-    assert len(families_groups) == 4
+    assert len(families_groups) == 5
 
     assert families_groups.get_default_families_group() == \
         next(iter(families_groups.values()))

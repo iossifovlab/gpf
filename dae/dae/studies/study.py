@@ -47,20 +47,18 @@ class GenotypeData:
     def families(self):
         raise NotImplementedError()
 
-    def get_pedigree_values(self, column):
-        raise NotImplementedError()
-
-    # def get_people_from_people_group(self, people_group, people_group_value):
-    #     raise NotImplementedError()
-
     def _build_study_groups(self):
         if self.families_groups is None:
             config = self.config.people_group_config['peopleGroup']
+            print("config:", config)
+            print("config.people_groups_info:", config.people_groups_info)
+            print("config.people_groups:", config.people_groups)
+
             self.families_groups = FamiliesGroups.from_config(
-                self.families, config.keys(), config
+                self.families, config
             )
             self.families_groups.add_predefined_groups([
-                'status', 'role', 'sex'
+                'status', 'role', 'sex', 'family_size'
             ])
 
     def get_families_group(self, families_group_id):

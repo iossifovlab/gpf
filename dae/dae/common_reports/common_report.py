@@ -12,6 +12,10 @@ from dae.common_reports.people_filters import FilterCollection
 class CommonReport(object):
 
     def __init__(self, genotype_data_study, config):
+        print("genotype_data:", genotype_data_study.id)
+        print("config.people_groups_info:", config.people_groups_info)
+        print("config.people_groups:", config.people_groups)
+        print("config.groups:", config.groups)
         people_groups_info = config.people_groups_info
         effect_groups = config.effect_groups
         effect_types = config.effect_types
@@ -19,10 +23,10 @@ class CommonReport(object):
         self.genotype_data_study = genotype_data_study
         self.families_groups = FamiliesGroups.from_config(
             genotype_data_study.families,
-            config.people_groups,
             people_groups_info
         )
-        self.families_groups.add_predefined_groups(['status', 'sex', 'role'])
+        self.families_groups.add_predefined_groups(
+            ['status', 'sex', 'role', 'family_size'])
 
         filter_objects = FilterCollection.build_filter_objects(
             self.families_groups, config.groups
@@ -30,7 +34,7 @@ class CommonReport(object):
 
         self.id = genotype_data_study.id
         self.families_report = FamiliesReport(
-            genotype_data_study, self.families_groups, filter_objects,
+            config.people_groups, self.families_groups, filter_objects,
             config.draw_all_families, config.families_count_show_id
         )
         self.denovo_report = DenovoReport(
@@ -75,11 +79,8 @@ class CommonReport(object):
     def _get_phenotype(self):
         families_group = \
             self.families_groups.get_default_families_group()
-        default_phenotype = families_group.default.name
-
-        return [pheno if pheno is not None else default_phenotype
-                for pheno in families_group.available_values]
+        return families_group.available_values
 
     def _get_number_of_people_with_role(self, role):
-        return len(self.genotype_data_study.families.persons_with_roles(
-            [role]))
+        role_group = self.families_groups['role']
+        return len(role_group.get_people_with_propvalues((role,)))

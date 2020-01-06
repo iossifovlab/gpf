@@ -6,16 +6,16 @@ def test_families_group_filter_people(families_groups):
     families_group = families_groups.get_default_families_group()
     assert families_group.id == 'phenotype'
     assert len(list(families_group.get_people_with_propvalues(
-        ['phenotype2']))) == 2
+        ('phenotype2',)))) == 2
     print(list(families_group.get_people_with_propvalues(
-        ['phenotype2'])))
+        ('phenotype2',))))
 
     families_group = families_groups.get('role')
     assert families_group.id == 'role'
     assert len(list(families_group.get_people_with_propvalues(
-        ['sib']))) == 4
+        ('sib',)))) == 4
     print(list(families_group.get_people_with_propvalues(
-        ['sib'])))
+        ('sib',))))
 
 
 def test_effect_cell_missense_study1(

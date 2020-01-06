@@ -102,9 +102,10 @@ def people_groups(study1_config):
 @pytest.fixture(scope='session')
 def families_groups(study1, selected_people_groups, people_groups):
     families_groups = FamiliesGroups.from_config(
-        study1.families, selected_people_groups, people_groups
+        study1.families, people_groups
     )
-    families_groups.add_predefined_groups(['status', 'sex', 'role'])
+    families_groups.add_predefined_groups([
+        'status', 'sex', 'role', 'family_size'])
     return families_groups
     # return PeopleGroupsInfo(
     #     study1.families, selected_people_groups, people_groups)

@@ -4,7 +4,7 @@ from box import Box
 from dae.pedigrees.tests.conftest import relative_to_this_folder
 from dae.pedigrees.loader import FamiliesLoader
 from dae.pedigrees.families_groups import PeopleGroup, \
-    FamiliesGroup, \
+    FamiliesGroup, FamiliesSizeGroup, \
     PEOPLE_GROUP_ROLES, PEOPLE_GROUP_STATUS, PEOPLE_GROUP_SEXES, \
     PEOPLE_GROUP_FAMILY_SIZES
 
@@ -157,7 +157,8 @@ def test_family_groups2(people_group_config2):
     assert families_group.available_values == ['a', 'b', 'c']
 
     assert families_group.families_types is not None
-    assert families_group.families_types == [('a', 'b'), ('a', 'b', 'c')]
+    assert families_group.families_types == [
+        ('a', 'a', 'a', 'b', 'b'), ('a', 'a', 'b', 'c')]
 
 
 def test_family_groups2_unknown(people_group_config2):
@@ -175,7 +176,9 @@ def test_family_groups2_unknown(people_group_config2):
 
     assert families_group.families_types is not None
     assert families_group.families_types == [
-        ('a', 'b'), ('a', 'b', 'c'), ('a', 'b', 'c', 'unknown')]
+        ('a', 'a', 'a', 'b', 'b'),
+        ('a', 'a', 'b', 'c'), 
+        ('a', 'a', 'b', 'c', 'unknown')]
 
 
 def test_family_role_group(people_group_role):
@@ -193,7 +196,9 @@ def test_family_role_group(people_group_role):
 
     assert families_group.families_types is not None
     assert families_group.families_types == [
-        ('prb', 'sib', 'mom', 'dad')]
+        ('prb', 'sib', 'sib', 'mom', 'dad'),
+        ('prb', 'sib', 'mom', 'dad')
+    ]
 
 
 def test_family_role_group_predefined():
@@ -211,7 +216,9 @@ def test_family_role_group_predefined():
 
     assert families_group.families_types is not None
     assert families_group.families_types == [
-        ('mom', 'dad', 'prb', 'sib')]
+        ('mom', 'dad', 'prb', 'sib'),
+        ('mom', 'dad', 'prb', 'sib', 'sib')
+    ]
 
 
 def test_family_status_group(people_group_status):
@@ -229,7 +236,9 @@ def test_family_status_group(people_group_status):
 
     assert families_group.families_types is not None
     assert families_group.families_types == [
-        ('affected', 'unaffected')]
+        ('affected', 'affected', 'unaffected', 'unaffected', 'unaffected'),
+        ('affected', 'unaffected', 'unaffected', 'unaffected')
+    ]
 
 
 def test_family_status_group_predefined():
@@ -248,7 +257,8 @@ def test_family_status_group_predefined():
 
     assert families_group.families_types is not None
     assert families_group.families_types == [
-        ('affected', 'unaffected')]
+        ('affected', 'affected', 'unaffected', 'unaffected', 'unaffected'),                         
+        ('affected', 'unaffected', 'unaffected', 'unaffected')]
 
 
 def test_family_sex_group_predefined():
@@ -267,7 +277,9 @@ def test_family_sex_group_predefined():
 
     assert families_group.families_types is not None
     assert families_group.families_types == [
-        ('M', 'F')]
+        ('M', 'M', 'F', 'F'),
+        ('M', 'M', 'F', 'F', 'F')
+    ]
 
 
 def test_grayscale_colors():
@@ -286,7 +298,7 @@ def test_family_sizes_group_predefined():
     # people_group = PeopleGroup.from_config('status', people_group_status)
     people_group = PEOPLE_GROUP_FAMILY_SIZES
 
-    families_group = FamiliesGroup(families, people_group)
+    families_group = FamiliesSizeGroup(families)
 
     fam1 = families['f1']
     assert fam1 is not None

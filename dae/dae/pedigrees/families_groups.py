@@ -1,5 +1,6 @@
 from collections import namedtuple
 from collections.abc import Mapping
+from functools import lru_cache
 
 from box import Box
 
@@ -231,13 +232,25 @@ class FamiliesGroup(PeopleGroup):
                 list(families_types), key=ft_key)
         return self._families_types
 
+    @lru_cache(maxsize=32)
     def get_people_with_propvalues(self, propvalues):
         propvalues = set([
-            self.domain.get(dv, self.default).id for dv in propvalues
+            self.domain.get(str(dv), self.default).id for dv in propvalues
         ])
-        return filter(
+        return list(filter(
             lambda p: not p.generated and self.getter(p) in propvalues,
-            self.families.persons.values())
+            self.families.persons.values()))
+
+
+class FamiliesSizeGroup(FamiliesGroup):
+    def __init__(self, families):
+        super(FamiliesSizeGroup, self).__init__(
+            families,
+            PEOPLE_GROUP_FAMILY_SIZES
+        )
+
+    def calc_family_type(self, family):
+        return (str(len(family)),)
 
 
 class FamiliesGroups(Mapping):
@@ -298,6 +311,10 @@ class FamiliesGroups(Mapping):
                 self.add_families_group(PEOPLE_GROUP_SEXES)
             elif attribute == 'status':
                 self.add_families_group(PEOPLE_GROUP_STATUS)
+            elif attribute == 'family_size':
+                self._families_groups['family_size'] = FamiliesSizeGroup(
+                    self.families
+                )
             else:
                 raise ValueError(
                     f"unexpected predefined people group attribute: "
@@ -305,16 +322,15 @@ class FamiliesGroups(Mapping):
                     "'role', 'sex', 'status")
 
     @staticmethod
-    def from_config(families, people_group_ids, people_groups_config):
+    def from_config(families, people_groups_config):
+        print("FamiliesGroups:", people_groups_config)
+
         result = FamiliesGroups(families)
 
-        for people_group_id in people_group_ids:
-            if people_group_id not in people_groups_config:
-                result.add_predefined_group(people_group_id)
-            else:
-                people_group = PeopleGroup.from_config(
-                    people_group_id,
-                    people_groups_config[people_group_id]
-                )
-                result.add_families_group(people_group)
+        for people_group_id in people_groups_config:
+            people_group = PeopleGroup.from_config(
+                people_group_id,
+                people_groups_config[people_group_id]
+            )
+            result.add_families_group(people_group)
         return result
