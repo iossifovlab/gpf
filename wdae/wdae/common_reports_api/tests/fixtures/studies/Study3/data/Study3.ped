@@ -1,8 +1,0 @@
-familyId	personId	dadId	momId	sex	status	role	study.phenotype	sampleId
-f2	mom2	0	0	2	1	mom	unaffected	mom2
-f2	dad2	0	0	1	1	dad	phenotype2	dad2
-f2	ch2	dad2	mom2	2	2	prb	phenotype1	ch2
-f4	dad4	0	0	1	1	dad	phenotype1	dad4
-f4	mom4	0	0	2	1	mom	phenotype1	mom4
-f4	ch4	dad4	mom4	1	2	prb	phenotype1	ch4
-f4	ch4.1	dad4	mom4	2	1	sib	phenotype2	ch4.1
