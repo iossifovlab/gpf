@@ -75,10 +75,10 @@ class CommonReportFacade(object):
         for common_report_id in self.variants_db.get_all_ids():
             self.generate_common_report(common_report_id)
 
-    def get_families_data(self, study_id):
+    def get_families_data(self, genotype_data_id):
         # FIXME: start using FamiliesData save method
-        genotype_data_study = self.variants_db.get(study_id)
-        if not genotype_data_study:
+        genotype_data = self.variants_db.get(genotype_data_id)
+        if not genotype_data:
             return None
 
         data = []
@@ -87,7 +87,7 @@ class CommonReportFacade(object):
             'role', 'genotype_data_study'
         ])
 
-        families = list(genotype_data_study.families.values())
+        families = list(genotype_data.families.values())
         families.sort(key=lambda f: f.family_id)
         for f in families:
             for p in f.members_in_order:
@@ -100,7 +100,7 @@ class CommonReportFacade(object):
                     p.sex,
                     p.status,
                     p.role,
-                    genotype_data_study.name,
+                    genotype_data.name,
                 ]
 
                 data.append(row)

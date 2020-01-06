@@ -18,7 +18,7 @@ class GenotypeHelper(object):
         )
         assert families_group is not None
         people_with_people_group = families_group.get_people_with_propvalues(
-            [self.people_group_value]
+            (self.people_group_value,)
         )
         people_with_people_group = set([
             p.person_id for p in people_with_people_group])

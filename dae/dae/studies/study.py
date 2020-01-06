@@ -50,9 +50,6 @@ class GenotypeData:
     def _build_study_groups(self):
         if self.families_groups is None:
             config = self.config.people_group_config['peopleGroup']
-            print("config:", config)
-            print("config.people_groups_info:", config.people_groups_info)
-            print("config.people_groups:", config.people_groups)
 
             self.families_groups = FamiliesGroups.from_config(
                 self.families, config
@@ -64,20 +61,6 @@ class GenotypeData:
     def get_families_group(self, families_group_id):
         self._build_study_groups()
         return self.families_groups.get(families_group_id)
-
-    # def get_people_from_people_group(
-    #         self, people_group_id, people_group_values):
-    #     families_group = self.get_people_group(people_group_id)
-    #     persons = families_group.get_people_with_propvalues(
-    #         people_group_values)
-    #     return set([p.person_id for p in persons])        
-    #     # source = people_group.source
-
-    #     # pedigree_df = self._backend.families.ped_df
-    #     # people_ids = pedigree_df[
-    #     #     pedigree_df[source].apply(str) == str(people_group_value)]
-
-    #     # return set(people_ids['person_id'])
 
     def _get_person_color(self, person, people_group):
         if person.generated:
@@ -144,20 +127,6 @@ class GenotypeDataGroup(GenotypeData):
                 first[sf] if len(first[sf]) > len(second[sf]) else second[sf]
         return combined_dict
 
-    def get_pedigree_values(self, column):
-        return functools.reduce(
-            lambda x, y: x | y,
-            [st.get_pedigree_values(column) for st in self.studies], set())
-
-    # def get_people_from_people_group(
-    #         self, people_group_id, people_group_value):
-    #     return functools.reduce(
-    #         lambda x, y: x | y,
-    #         [st.get_people_from_people_group(
-    #          people_group_id, people_group_value) for st in self.studies],
-    #         set()
-    #     )
-
 
 class GenotypeDataStudy(GenotypeData):
 
@@ -213,6 +182,3 @@ class GenotypeDataStudy(GenotypeData):
     @property
     def families(self):
         return self._backend.families
-
-    def get_pedigree_values(self, column):
-        return set(self._backend.families.ped_df[column])

@@ -393,10 +393,3 @@ class FamiliesLoader:
             "role": "role",
             "layout": "layout"
         }
-
-    @staticmethod
-    def sort_pedigree(ped_df):
-        ped_df['role_order'] = ped_df['role'].apply(lambda r: r.value)
-        ped_df = ped_df.sort_values(by=['familyId', 'role_order'])
-        ped_df = ped_df.drop(axis=1, columns=['role_order'])
-        return ped_df

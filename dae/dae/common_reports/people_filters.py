@@ -82,9 +82,6 @@ class MultiFilter(PeopleFilter):
     def match(self, person):
         return all([filt.match(person) for filt in self._filters])
 
-    def filter(self, persons):
-        return filter(lambda p: not p.generated and self.match(p), persons)
-
 
 class FilterCollection(object):
 

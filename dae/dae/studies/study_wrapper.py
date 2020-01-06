@@ -467,7 +467,7 @@ class StudyWrapper(object):
             return kwargs
 
         persons = families_group.get_people_with_propvalues(
-            people_group_values)
+            tuple(people_group_values))
         person_ids = set([p.person_id for p in persons])
 
         if 'person_ids' in kwargs:
