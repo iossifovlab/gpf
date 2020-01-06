@@ -198,16 +198,16 @@ class FamiliesGroup(PeopleGroup):
         return self._available_values
 
     def calc_family_type(self, family):
-        values = set([
+        values = [
             self.getter(p)
             for p in family.members_in_order
-        ])
-        values = set([
+        ]
+        values = [
             self.domain.get(str(v), self.default).id
             for v in values
-        ])
+        ]
         values = sorted(
-            list(values),
+            values,
             key=lambda dv: self.domain.get(dv, self.default).index)
         return tuple(values)
 

@@ -76,6 +76,7 @@ class CommonReportFacade(object):
             self.generate_common_report(common_report_id)
 
     def get_families_data(self, study_id):
+        # FIXME: start using FamiliesData save method
         genotype_data_study = self.variants_db.get(study_id)
         if not genotype_data_study:
             return None
@@ -94,8 +95,8 @@ class CommonReportFacade(object):
                 row = [
                     p.family_id,
                     p.person_id,
-                    p.dad_id,
-                    p.mom_id,
+                    p.mom_id if p.mom_id else '0',
+                    p.dad_id if p.dad_id else '0',
                     p.sex,
                     p.status,
                     p.role,

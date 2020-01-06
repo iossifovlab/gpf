@@ -111,7 +111,7 @@ class FilesystemGenotypeStorage(GenotypeStorage):
         config = STUDY_PEDIGREE_TEMPLATE.format(
             path=destination_filename,
             params=",\n\t".join([
-                "{}:{}".format(k, v)
+                "{}:{}".format(k, str(v).replace('\t', '\\t'))
                 for k, v in params.items()])
         )
 
