@@ -3,6 +3,7 @@ import numpy as np
 from dae.pedigrees.family import PedigreeReader
 from dae.pedigrees.family import Family
 from io import StringIO
+from dae.utils.variant_utils import GENOTYPE_TYPE, BEST_STATE_TYPE
 
 PED1 = '''
 # SIMPLE TRIO
@@ -43,4 +44,18 @@ def fam2():
 
 @pytest.fixture(scope='module')
 def gt():
-    return np.array([[0, 0, 0], [0, 0, 0]], dtype='int8')
+    return np.array([[0, 0, 0], [0, 0, 0]], dtype=GENOTYPE_TYPE)
+
+
+@pytest.fixture(scope='module')
+def best_state():
+    return np.array([
+        [2, 1, 0, 0],
+        [0, 1, 2, 1],
+        [0, 0, 0, 1]
+    ], dtype=BEST_STATE_TYPE)
+
+
+@pytest.fixture(scope='module')
+def best_state_serialized():
+    return '\x02\x00\x00\x01\x01\x00\x00\x02\x00\x00\x01\x01'
