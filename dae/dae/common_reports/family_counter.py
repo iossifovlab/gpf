@@ -29,7 +29,7 @@ class FamilyCounter(object):
                 return self.people_group_info.default.color
 
     def _get_pedigree_to_draw(self):
-        return [
+        result = [
             [
                 member.family_id, member.person_id,
                 member.mom_id if member.mom_id else '0',
@@ -38,6 +38,7 @@ class FamilyCounter(object):
                 self._get_member_color(member),
                 member.layout, member.generated, '', '']
             for member in self.family.persons.values()]
+        return result
 
 
 class FamiliesGroupCounter(object):
