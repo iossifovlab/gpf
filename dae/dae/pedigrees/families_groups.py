@@ -1,3 +1,4 @@
+import itertools
 from collections import namedtuple
 from collections.abc import Mapping
 from functools import lru_cache
@@ -19,15 +20,31 @@ class PeopleGroup:
             source=None, getter=None):
         self.id = people_group_id
         self.name = name
-        self.domain = domain
-        self.default = default
-        self.source = source
+        self._domain = domain
+        self._default = default
+        self._source = source
         self._legend = None
 
         if getter is not None:
-            self.getter = getter
+            self._getter = getter
         else:
-            self.getter = lambda person: person.get_attr(self.source)
+            self._getter = lambda person: person.get_attr(self.source)
+
+    @property
+    def domain(self):
+        return self._domain
+
+    @property
+    def default(self):
+        return self._default
+
+    @property
+    def source(self):
+        return self._source
+
+    @property
+    def getter(self):
+        return self._getter
 
     @staticmethod
     def grayscale32(index):
@@ -100,6 +117,56 @@ class PeopleGroup:
         return result
 
 
+class PeopleMultiGroup(PeopleGroup):
+
+    def __init__(
+            self, people_groups):
+        super(PeopleMultiGroup, self).__init__(
+            ".".join([pg.id for pg in people_groups]),
+            name=" and ".join([pg.name for pg in people_groups]),
+            domain=None,
+            default=None,
+            source=None,
+            getter=None)
+        self.people_groups = people_groups
+
+    @property
+    def domain(self):
+        if self._domain is None:
+            domain = {
+                str(tuple([dv.id for dv in value])):
+                    PeopleGroup.ValueDescriptor(index=index, **{
+                        'id': str(tuple([dv.id for dv in value])),
+                        'name': tuple([dv.name for dv in value]),
+                        'color': value[0].color
+                    })
+                for index, value in enumerate(itertools.product(*[
+                    pg.domain.values()
+                    for pg in self.people_groups]))
+            }
+            self._domain = domain
+        return self._domain
+
+    @property
+    def default(self):
+        if self._default is None:
+            defaults = [pg.default for pg in self.people_groups]
+
+            self._default = PeopleGroup.ValueDescriptor(
+                index=999_999_999,
+                id=str(tuple([dv.id for dv in defaults])),
+                name=tuple([dv.name for dv in defaults]),
+                color=defaults[0].color
+            )
+        return self._default
+
+    @property
+    def getter(self):
+        return lambda person: str(tuple(
+            [pg.getter(person) for pg in self.people_groups]
+        ))
+
+
 PEOPLE_GROUP_ROLES = PeopleGroup.from_config(
     'role',
     Box({
@@ -165,12 +232,18 @@ PEOPLE_GROUP_SEXES = PeopleGroup.from_config(
             }
         },
         'default': {
-            'id': 'unknown',
-            'name': 'unknown',
-            'color': '#bbbbbb',
+            'id': 'U',
+            'name': 'U',
+            'color': '#aaaaaa',
         },
         'source': 'sex',
     }, default_box=True))
+
+
+PEOPLE_GROUP_ROLES_SEXES = PeopleMultiGroup([
+    PEOPLE_GROUP_ROLES,
+    PEOPLE_GROUP_SEXES
+])
 
 
 PEOPLE_GROUP_STATUS = PeopleGroup.from_config(
@@ -249,7 +322,8 @@ class FamiliesGroup(PeopleGroup):
         values = sorted(
             values,
             key=lambda dv: self.domain.get(dv, self.default).index)
-        return tuple(values)
+        result = tuple(values)
+        return result
 
     @property
     def families_types(self):
@@ -268,7 +342,8 @@ class FamiliesGroup(PeopleGroup):
             def ft_key(ft):
                 return tuple(
                     map(
-                        lambda dv: self.domain.get(dv, self.default).index,
+                        lambda dv: self.domain.get(
+                            dv, self.default).index,
                         ft
                     )
                 )
@@ -295,7 +370,8 @@ class FamiliesSizeGroup(FamiliesGroup):
         )
 
     def calc_family_type(self, family):
-        return (str(len(family)),)
+        result = (str(len(family)),)
+        return result
 
 
 class FamiliesGroups(Mapping):
@@ -354,6 +430,8 @@ class FamiliesGroups(Mapping):
                 self.add_families_group(PEOPLE_GROUP_ROLES)
             elif attribute == 'sex':
                 self.add_families_group(PEOPLE_GROUP_SEXES)
+            elif attribute == 'role.sex':
+                self.add_families_group(PEOPLE_GROUP_ROLES_SEXES)
             elif attribute == 'status':
                 self.add_families_group(PEOPLE_GROUP_STATUS)
             elif attribute == 'family_size':

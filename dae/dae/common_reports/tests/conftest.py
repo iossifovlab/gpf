@@ -106,7 +106,7 @@ def families_groups(people_groups):
             study.families, people_groups
         )
         families_groups.add_predefined_groups([
-            'status', 'sex', 'role', 'family_size'])
+            'status', 'sex', 'role', 'role.sex', 'family_size'])
         return families_groups
     return builder
 

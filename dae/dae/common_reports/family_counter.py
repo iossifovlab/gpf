@@ -33,22 +33,20 @@ class FamiliesGroupCounters(object):
 
     def _build_counters(self):
         if self.draw_all_families is True:
-            result = []
-            for count, family in enumerate(self.families.values()):
-                print(count, family)
+            result = {}
+            for family in self.families.values():
                 fc = FamilyCounter(
                     self.selected_families_group.family_pedigree(family),
                     family.family_id)
-                result.append(fc)
+                result[family.family_id] = fc
             assert len(self.families) == len(result)
             return result
         else:
             available_types = list(itertools.product(*[
                 self.selected_families_group.available_families_types,
                 self.families_groups['family_size'].available_families_types,
+                self.families_groups['role.sex'].available_families_types,
                 self.families_groups['status'].available_families_types,
-                self.families_groups['role'].available_families_types,
-                self.families_groups['sex'].available_families_types
             ]))
 
             families_types_counters = {
@@ -66,9 +64,8 @@ class FamiliesGroupCounters(object):
             families_types = list(zip(
                 self.selected_families_group.families_types,
                 self.families_groups['family_size'].families_types,
+                self.families_groups['role.sex'].families_types,
                 self.families_groups['status'].families_types,
-                self.families_groups['role'].families_types,
-                self.families_groups['sex'].families_types
             ))
             assert len(families_types) == len(self.families)
             for family, family_type in zip(
@@ -76,7 +73,7 @@ class FamiliesGroupCounters(object):
                 assert family_type in families_types_counters, family_type
                 families_types_counters[family_type].append(family)
 
-            result = []
+            result = {}
             for family_type, families in families_types_counters.items():
                 if len(families) == 0:
                     continue
@@ -84,11 +81,12 @@ class FamiliesGroupCounters(object):
                     pedigree_label = ",".join(families)
                 else:
                     pedigree_label = str(len(families))
+                family = families[0]
                 fc = FamilyCounter(
                     self.selected_families_group.family_pedigree(family),
                     pedigree_label)
 
-                result.append(fc)
+                result[family_type] = fc
 
             return result
 
@@ -99,7 +97,7 @@ class FamiliesGroupCounters(object):
             'counters': [
                 {
                     'counters': [
-                        counter.to_dict() for counter in self.counters
+                        counter.to_dict() for counter in self.counters.values()
                     ],
                 }
             ],

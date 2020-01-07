@@ -55,7 +55,7 @@ class GenotypeData:
                 self.families, config
             )
             self.families_groups.add_predefined_groups([
-                'status', 'role', 'sex', 'family_size'
+                'status', 'role', 'sex', 'role.sex', 'family_size'
             ])
 
     def get_families_group(self, families_group_id):

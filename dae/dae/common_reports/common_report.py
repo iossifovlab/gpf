@@ -26,7 +26,7 @@ class CommonReport(object):
             people_groups_info
         )
         self.families_groups.add_predefined_groups(
-            ['status', 'sex', 'role', 'family_size'])
+            ['status', 'sex', 'role', 'role.sex', 'family_size'])
 
         filter_objects = FilterCollection.build_filter_objects(
             self.families_groups, config.groups
