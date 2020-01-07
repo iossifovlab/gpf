@@ -9,11 +9,11 @@ from dae.utils.dae_utils import join_line
 
 class CommonReportFacade(object):
 
-    def __init__(self, variants_db):
+    def __init__(self, gpf_instance):
         self._common_report_cache = {}
         self._common_report_config_cache = {}
 
-        self.variants_db = variants_db
+        self.gpf_instance = gpf_instance
 
     def get_common_report(self, common_report_id):
         self.load_cache({common_report_id})
@@ -52,7 +52,8 @@ class CommonReportFacade(object):
         if common_report_id not in self._common_report_config_cache:
             return None
 
-        genotype_data_study = self.variants_db.get_wdae_wrapper(
+        variants_db = self.gpf_instance._variants_db
+        genotype_data_study = variants_db.get_wdae_wrapper(
             common_report_id
         )
         common_report_config = \
@@ -72,7 +73,7 @@ class CommonReportFacade(object):
             self.generate_common_report(common_report_id)
 
     def generate_all_common_reports(self):
-        for common_report_id in self.variants_db.get_all_ids():
+        for common_report_id in self.gpf_instance.get_genotype_data_ids():
             self.generate_common_report(common_report_id)
 
     def get_families_data(self, genotype_data_id):
@@ -109,7 +110,7 @@ class CommonReportFacade(object):
 
     def load_cache(self, common_report_ids=None):
         if common_report_ids is None:
-            common_report_ids = set(self.variants_db.get_all_ids())
+            common_report_ids = set(self.gpf_instance.get_genotype_data_ids())
 
         assert isinstance(common_report_ids, set)
 
@@ -122,7 +123,7 @@ class CommonReportFacade(object):
 
     def _load_common_report_config_in_cache(self, common_report_id):
         common_report_config = CommonReportsConfigParser.parse(
-            self.variants_db.get_config(common_report_id))
+            self.gpf_instance.get_genotype_data_config(common_report_id))
         if common_report_config is None:
             return
 

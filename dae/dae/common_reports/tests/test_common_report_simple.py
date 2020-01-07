@@ -6,12 +6,6 @@ from dae.common_reports.common_report import CommonReport
 def test_common_report_simple(vdb_fixture, common_report_facade):
     assert common_report_facade is not None
 
-    print([
-        vdb_fixture.get(common_report_id).name
-        for common_report_id in
-        common_report_facade.get_all_common_report_ids()
-    ])
-
     study_wrapper = vdb_fixture.get_wdae_wrapper('Study3')
     assert study_wrapper is not None
 

@@ -120,7 +120,7 @@ class GPFInstance(object):
     @property
     @cached
     def _common_report_facade(self):
-        return CommonReportFacade(self._variants_db)
+        return CommonReportFacade(self)
 
     @property
     @cached
