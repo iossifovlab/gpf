@@ -26,6 +26,8 @@ export class GeneSetsComponent extends QueryStateWithErrorsProvider implements O
   private geneSetsQueryChange = new Subject<[string, string, Object]>();
   private geneSetsResult: Observable<GeneSet[]>;
 
+  private selectedDatasetId: string;
+
   constructor(
     private geneSetsService: GeneSetsService,
     private config: ConfigService,
@@ -79,6 +81,10 @@ export class GeneSetsComponent extends QueryStateWithErrorsProvider implements O
       (geneSetsCollections) => {
 
         const dataset$ = this.datasetService.getSelectedDataset();
+        dataset$.take(1).subscribe(dataset => {
+          this.selectedDatasetId = dataset.id;
+        });
+
         const datasetDetails = this.datasetService.getSelectedDatasetDetails();
         if(datasetDetails && !datasetDetails.hasDenovo) {
           geneSetsCollections = geneSetsCollections.filter(
@@ -172,10 +178,14 @@ export class GeneSetsComponent extends QueryStateWithErrorsProvider implements O
     this.geneSets = [];
 
     if (selectedGeneSetsCollection.types.length > 0) {
-      const geneSetType = selectedGeneSetsCollection.types[0];
+      const geneSetType = selectedGeneSetsCollection.types.find(genesetType => {
+        return genesetType.datasetId === this.selectedDatasetId;
+      });
+
       this.setSelectedGeneType(geneSetType.datasetId, geneSetType.peopleGroupId,
                                geneSetType.peopleGroupLegend[0].id, true);
     }
+
     this.onSearch();
   }
 
