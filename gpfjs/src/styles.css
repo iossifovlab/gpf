@@ -126,6 +126,20 @@ label {
 	float: right;
 }
 
+.btn:disabled,
+.btn-primary:disabled {
+  cursor: not-allowed;
+}
+
+.btn-primary:disabled {
+  background-color: #3e5d7e;
+  border-color: #3e5d7e;
+}
+
+.btn-primary:disabled:hover {
+  background-color: #3e5d7e;
+}
+
 .form-block .alert {
     margin-bottom: 0px;
     margin-top: 20px;

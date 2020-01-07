@@ -23,8 +23,7 @@
 }
 .button > input, gpf-save-query-button {
   display: inline-block;
-  margin-left: 0.3%;
-  margin-right: 0.3%;
+  margin-right: 5px;
 }
 
 .loader {
