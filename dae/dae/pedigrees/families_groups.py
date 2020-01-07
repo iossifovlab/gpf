@@ -22,6 +22,8 @@ class PeopleGroup:
         self.domain = domain
         self.default = default
         self.source = source
+        self._legend = None
+
         if getter is not None:
             self.getter = getter
         else:
@@ -58,8 +60,44 @@ class PeopleGroup:
         )
 
     def person_color(self, person):
+        if person.generated:
+            return self.missing_person.color
         propvalue = self.getter(person)
         return self.domain.get(propvalue, self.default).color
+
+    @property
+    def legend(self):
+        if self._legend is None:
+            result = list(self.domain.values())
+            result.append(self.default)
+            result.append(self.missing_person)
+            self._legend = [
+                {
+                    "id": dv.id,
+                    "name": dv.name,
+                    "color": dv.color
+                }
+                for dv in result
+            ]
+        return self._legend
+
+    def family_pedigree(self, family):
+        result = [
+            [
+                p.family_id,
+                p.person_id,
+                p.mom_id if p.mom_id else '0',
+                p.dad_id if p.dad_id else '0',
+                p.sex.short(),
+                str(p.role),
+                self.person_color(p),
+                p.layout,
+                p.generated,
+                '',
+                ''
+            ]
+            for p in family.persons.values()]
+        return result
 
 
 PEOPLE_GROUP_ROLES = PeopleGroup.from_config(
@@ -92,7 +130,7 @@ PEOPLE_GROUP_FAMILY_SIZES = PeopleGroup.from_config(
                 'id': str(size),
                 'name': str(size),
                 'color': PeopleGroup.grayscale32(size)
-            } for size in range(1, 32)
+            } for size in range(32, 1, -1)
         },
         'default': {
             'id': '>=32',
@@ -181,6 +219,7 @@ class FamiliesGroup(PeopleGroup):
         self.people_group = people_group
         self._available_values = None
         self._families_types = None
+        self._available_families_types = None
 
     @property
     def available_values(self):
@@ -215,10 +254,16 @@ class FamiliesGroup(PeopleGroup):
     @property
     def families_types(self):
         if self._families_types is None:
-            families_types = set([
+            self._families_types = [
                 self.calc_family_type(family)
                 for family in self.families.values()
-            ])
+            ]
+        return self._families_types
+
+    @property
+    def available_families_types(self):
+        if self._available_families_types is None:
+            families_types = set(self.families_types)
 
             def ft_key(ft):
                 return tuple(
@@ -228,9 +273,9 @@ class FamiliesGroup(PeopleGroup):
                     )
                 )
 
-            self._families_types = sorted(
+            self._available_families_types = sorted(
                 list(families_types), key=ft_key)
-        return self._families_types
+        return self._available_families_types
 
     @lru_cache(maxsize=32)
     def get_people_with_propvalues(self, propvalues):

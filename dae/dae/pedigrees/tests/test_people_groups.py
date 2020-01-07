@@ -216,8 +216,8 @@ def test_family_role_group_predefined():
 
     assert families_group.families_types is not None
     assert families_group.families_types == [
+        ('mom', 'dad', 'prb', 'sib', 'sib'),
         ('mom', 'dad', 'prb', 'sib'),
-        ('mom', 'dad', 'prb', 'sib', 'sib')
     ]
 
 
@@ -277,8 +277,8 @@ def test_family_sex_group_predefined():
 
     assert families_group.families_types is not None
     assert families_group.families_types == [
+        ('M', 'M', 'F', 'F', 'F'),
         ('M', 'M', 'F', 'F'),
-        ('M', 'M', 'F', 'F', 'F')
     ]
 
 
@@ -311,7 +311,7 @@ def test_family_sizes_group_predefined():
 
     assert families_group is not None
     assert families_group.available_values is not None
-    assert families_group.available_values == ['4', '5']
+    assert families_group.available_values == ['5', '4']
 
     assert families_group.families_types is not None
-    assert families_group.families_types == [('4',), ('5',)]
+    assert families_group.families_types == [('5',), ('4',), ('5',)]

@@ -2,15 +2,16 @@ from dae.common_reports.denovo_report import EffectCell, EffectRow, \
     DenovoReportTable, DenovoReport
 
 
-def test_families_group_filter_people(families_groups):
-    families_group = families_groups.get_default_families_group()
+def test_families_group_filter_people(study1, families_groups):
+    fg = families_groups(study1)
+    families_group = fg.get_default_families_group()
     assert families_group.id == 'phenotype'
     assert len(list(families_group.get_people_with_propvalues(
         ('phenotype2',)))) == 2
     print(list(families_group.get_people_with_propvalues(
         ('phenotype2',))))
 
-    families_group = families_groups.get('role')
+    families_group = fg.get('role')
     assert families_group.id == 'role'
     assert len(list(families_group.get_people_with_propvalues(
         ('sib',)))) == 4

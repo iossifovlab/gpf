@@ -50,11 +50,12 @@ def test_families_group(people_groups, study2):
     assert people_group.missing_person.color == '#E0E0E0'
 
 
-def test_people_groups_info(families_groups):
-    assert len(families_groups) == 5
+def test_people_groups_info(study1, families_groups):
+    fg = families_groups(study1)
+    assert len(fg) == 5
 
-    assert families_groups.get_default_families_group() == \
-        next(iter(families_groups.values()))
-    assert families_groups.has_families_group('phenotype') is True
-    assert families_groups.has_families_group('pheno') is False
-    assert families_groups.get_families_group('pheno') is None
+    assert fg.get_default_families_group() == \
+        next(iter(fg.values()))
+    assert fg.has_families_group('phenotype') is True
+    assert fg.has_families_group('pheno') is False
+    assert fg.get_families_group('pheno') is None

@@ -20,7 +20,7 @@ class FamiliesReport(object):
 
         self.families_total = len(self.families.values())
         self.people_counters = self._get_people_counters()
-        self.families_counters = self._get_families_counters()
+        self.families_counters = self._build_families_counters()
 
     def to_dict(self):
         return OrderedDict([
@@ -36,10 +36,11 @@ class FamiliesReport(object):
             for filter_collection in self.filter_collections
         ]
 
-    def _get_families_counters(self):
+    def _build_families_counters(self):
         return [
             FamiliesGroupCounters(
-                self.families, self.families_groups[families_group_id],
+                self.families_groups,
+                self.families_groups[families_group_id],
                 self.draw_all_families,
                 self.families_count_show_id)
             for families_group_id in self.selected_groups

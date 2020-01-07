@@ -100,26 +100,28 @@ def people_groups(study1_config):
 
 
 @pytest.fixture(scope='session')
-def families_groups(study1, selected_people_groups, people_groups):
-    families_groups = FamiliesGroups.from_config(
-        study1.families, people_groups
-    )
-    families_groups.add_predefined_groups([
-        'status', 'sex', 'role', 'family_size'])
-    return families_groups
-    # return PeopleGroupsInfo(
-    #     study1.families, selected_people_groups, people_groups)
+def families_groups(people_groups):
+    def builder(study):
+        families_groups = FamiliesGroups.from_config(
+            study.families, people_groups
+        )
+        families_groups.add_predefined_groups([
+            'status', 'sex', 'role', 'family_size'])
+        return families_groups
+    return builder
 
 
 @pytest.fixture(scope='session')
-def filter_role(families_groups):
-    return PeopleGroupFilter(families_groups['role'], 'mom', name='Mother')
+def filter_role(study1, families_groups):
+    fg = families_groups(study1)
+    return PeopleGroupFilter(fg['role'], 'mom', name='Mother')
 
 
 @pytest.fixture(scope='session')
-def filter_people_group(families_groups):
+def filter_people_group(study1, families_groups):
+    fg = families_groups(study1)
     return PeopleGroupFilter(
-        families_groups['phenotype'], 'pheno', name='Pheno')
+        fg['phenotype'], 'pheno', name='Pheno')
 
 
 @pytest.fixture(scope='function')
@@ -129,7 +131,8 @@ def filter_object(filter_role):
 
 @pytest.fixture(scope='function')
 def filter_objects(study1, families_groups, groups):
-    return FilterCollection.build_filter_objects(families_groups, groups)
+    return FilterCollection.build_filter_objects(
+        families_groups(study1), groups)
 
 
 @pytest.fixture(scope='session')
