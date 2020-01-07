@@ -41,7 +41,7 @@ chr2	20004	G	A	-0.118
     (False, 'phyloP100way', 'chr2:20003-20004', phylo_chr2_2),
 ])
 def test_regions_parameterized(
-        expected_df, variants_io, capsys, mocked_genomes_db,
+        expected_df, variants_io, capsys, genomes_db_2013,
         direct, score_name, region, expected):
 
     score_filename = \
@@ -66,7 +66,7 @@ def test_regions_parameterized(
             'columns': columns,
             'annotator': 'score_annotator.VariantScoreAnnotator'
         }),
-        mocked_genomes_db
+        genomes_db_2013
     )
 
     with variants_io('fixtures/input3.tsv.gz', options) as io_manager:
@@ -109,7 +109,7 @@ missing_phast_chr22_2 = '''CHROM	POS	REF	ALT	RESULT_phastCons100way
     (False, 'phastCons100way', 'chr22:20006-20007', missing_phast_chr22_2),
 ])
 def test_regions_parameterized_missing_scores(
-        expected_df, variants_io, capsys, mocked_genomes_db,
+        expected_df, variants_io, capsys, genomes_db_2013,
         direct, score_name, region, expected):
 
     score_filename = \
@@ -134,7 +134,7 @@ def test_regions_parameterized_missing_scores(
             'columns': columns,
             'annotator': 'score_annotator.VariantScoreAnnotator'
         }),
-        mocked_genomes_db
+        genomes_db_2013
     )
 
     with variants_io('fixtures/input3.tsv.gz', options) as io_manager:
@@ -155,7 +155,7 @@ def test_regions_parameterized_missing_scores(
         check_dtype=False)
 
 
-def test_regions_simple(expected_df, variants_io, capsys, mocked_genomes_db):
+def test_regions_simple(expected_df, variants_io, capsys, genomes_db_2013):
 
     direct = True
     score_name = 'phastCons100way'
@@ -184,7 +184,7 @@ def test_regions_simple(expected_df, variants_io, capsys, mocked_genomes_db):
             'columns': columns,
             'annotator': 'score_annotator.VariantScoreAnnotator'
         }),
-        mocked_genomes_db
+        genomes_db_2013
     )
 
     with variants_io('fixtures/input3.tsv.gz', options) as io_manager:

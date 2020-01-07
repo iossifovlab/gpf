@@ -317,3 +317,35 @@ def test_query_genomic_scores(genomicScores, count, quads_f2_wrapper):
         genomicScores=genomicScores))
 
     assert len(variants) == count
+
+
+@pytest.mark.parametrize("people_group,count", [
+    (None, 4),
+    ({"id": "phenotype", "checkedValues": ["autism"]}, 2),
+    ({"id": "phenotype", "checkedValues": ["unaffected"]}, 4),
+    ({"id": "phenotype", "checkedValues": ["epilepsy"]}, 0),
+    ({"id": "phenotype", "checkedValues": [
+        "autism", "congenital_heart_disease",
+        "epilepsy", "intellectual_disability",
+        "schizophrenia", "unaffected"]}, 4)
+])
+def test_query_people_group(people_group, count, quads_in_child_wrapper):
+    variants = list(quads_in_child_wrapper.query_variants(
+        peopleGroup=people_group))
+
+    assert len(variants) == count
+
+
+def test_families_groups(quads_in_child):
+    families = quads_in_child.families
+    assert families is not None
+    assert len(families.persons) == 4
+
+    for p in families.persons.values():
+        print(p._attributes)
+
+    pheno_group = quads_in_child.get_families_group('phenotype')
+    assert pheno_group is not None
+
+    persons = pheno_group.get_people_with_propvalues(('autism',))
+    assert len(persons) == 1

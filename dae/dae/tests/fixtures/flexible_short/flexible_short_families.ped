@@ -1,0 +1,8 @@
+familyId	personId	dadId	momId	sex	status	role	phenotype
+13590	13590.mo	0	0	F	1	mom	unaffected
+13590	13590.fa	0	0	M	1	dad	unaffected
+13590	13590.p1	13590.fa	13590.mo	M	2	prb	autism
+13590	13590.s1	13590.fa	13590.mo	M	1	sib	unaffected
+13060	13060.mo	0	0	F	1	mom	unaffected
+13060	13060.fa	0	0	M	1	dad	unaffected
+13060	13060.p1	13060.fa	13060.mo	M	2	prb	autism

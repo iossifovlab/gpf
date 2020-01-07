@@ -9,7 +9,7 @@ class DAEConfigParser(ConfigParserBase):
     '''
     DAEConfigParser is responsible for parsing :ref:`DAE Configuration
     <dae_configuration>`. It inherits
-    :class:`ConfigParserBase <dae.configuration.config_parser_base.ConfigParserBase>` and use some
+    :class:`ConfigParserBase <ConfigParserBase>` and use some
     of its methods for reading and parsing configuration.
     '''
 
@@ -125,8 +125,9 @@ class DAEConfigParser(ConfigParserBase):
             environment_override=True):
         '''
         Read and parse DAE configuration stored in a file. This method overload
-        :func:`read_and_parse_file_configuration <dae.configuration.config_parser_base.ConfigParserBase.read_and_parse_file_configuration>`
-        from the :class:`ConfigParserBase <dae.configuration.config_parser_base.ConfigParserBase>`
+        :func:`read_and_parse_file_configuration
+            <ConfigParserBase.read_and_parse_file_configuration>`
+        from the :class:`ConfigParserBase <ConfigParserBase>`
         class by adding ``environment_override`` parameter. It also combine
         default and override values from environment and from predifined in the
         class property :attr:`DEFAULT_SECTION_VALUES` above.
@@ -138,8 +139,8 @@ class DAEConfigParser(ConfigParserBase):
         :param defaults: default values which will be used when configuration
                          file is readed.
         :param bool environment_override: it shows if
-                                          :func:`read_config <dae.configuration.config_parser_base.ConfigParserBase.read_config>`
-                                          will use `override` from `defaults`.
+            :func:`read_config <ConfigParserBase.read_config>`
+            will use `override` from `defaults`.
         :type defaults: dict or None
         :return: read and parsed configuration.
         :rtype: Box or None
@@ -175,8 +176,8 @@ class DAEConfigParser(ConfigParserBase):
     def parse(cls, config, dae_data_dir=None):
         '''
         Parse all of the sections in the DAE configuration. This method
-        overload :func:`parse <dae.configuration.config_parser_base.ConfigParserBase.parse>`
-        from :class:`ConfigParserBase <dae.configuration.config_parser_base.ConfigParserBase>`
+        overload :func:`parse <ConfigParserBase.parse>`
+        from :class:`ConfigParserBase <ConfigParserBase>`
         class by adding ``dae_data_dir`` parameter.
 
         :param config: configuration.

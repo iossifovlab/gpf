@@ -57,22 +57,19 @@ class DenovoGeneSetCollectionFactory():
             cls._save_cache(gene_set_cache, cache_path)
 
     @classmethod
-    def _generate_gene_set_for(cls, genotype_data_study, config,
+    def _generate_gene_set_for(cls, genotype_data, config,
                                people_group_id):
         '''
         Produces a nested dictionary which represents a denovo gene set.
         It maps denovo gene set criteria to an innermost dictionary mapping
         gene set symbols to lists of family IDs.
         '''
-        people_group_source = config.people_groups[people_group_id]['source']
-        people_group_values = [
-                str(p) for p
-                in genotype_data_study.get_pedigree_values(people_group_source)
-        ]
+        families_group = genotype_data.get_families_group(people_group_id)
+        people_group_values = families_group.available_values
 
         cache = {value: {} for value in people_group_values}
 
-        variants = list(genotype_data_study.query_variants(
+        variants = list(genotype_data.query_variants(
             inheritance=str(Inheritance.denovo.name)
         ))
 
@@ -86,11 +83,14 @@ class DenovoGeneSetCollectionFactory():
                         criteria['name'], {}
                     )
 
-                people_with_people_group = \
-                    genotype_data_study.get_people_from_people_group(
-                        people_group_id, people_group_value
+                assert families_group is not None
+                people_with_people_group = families_group.\
+                    get_people_with_propvalues(
+                        (people_group_value,)
                     )
-
+                people_with_people_group = set([
+                    p.person_id for p in people_with_people_group
+                ])
                 innermost_cache.update(cls._add_genes_families(
                     variants, people_with_people_group, search_args)
                 )

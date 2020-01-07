@@ -99,7 +99,7 @@ class ImpalaFamilyVariants:
                     frequency_data, genomic_scores_data, \
                     matched_alleles = row
 
-                family = self.families.get_family(family_id)
+                family = self.families[family_id]
                 v = self.serializer.deserialize_variant(
                     family,
                     chrom, position, reference, alternatives_data,
@@ -402,7 +402,8 @@ class ImpalaFamilyVariants:
             "'{}'".format(rb) for rb in region_bins]))
 
     @deprecated(
-        details="'coding2' heuristic is deprecated in favor of 'coding_bin' heuristic")
+        details="'coding2' heuristic is deprecated in favor of 'coding_bin' "
+        "heuristic")
     def _build_coding2_heuristic(self, effect_types):
         if effect_types is None:
             return ''
@@ -437,8 +438,8 @@ class ImpalaFamilyVariants:
         return ''
 
     @deprecated(
-        details="'ultra_rare' heuristic is deprecated in favor of 'frequency_bin' "
-        "heuristic")
+        details="'ultra_rare' heuristic is deprecated in favor of "
+        "'frequency_bin' heuristic")
     def _build_ultra_rare_heuristic(self, ultra_rare):
         if 'ultra_rare' not in self.schema:
             return ''

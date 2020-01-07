@@ -240,7 +240,7 @@ def test_quads_f1_config_files(quads_f1_config):
     assert quads_f1_config['files'] is not None
     assert quads_f1_config.files.pedigree is not None
     assert quads_f1_config.files.pedigree.path.endswith('/data/quads_f1.ped')
-    assert len(quads_f1_config.files.pedigree.params) == 3
+    assert len(quads_f1_config.files.pedigree.params) == 6
 
 
 def test_quads_f1_config_tables(quads_f1_config):

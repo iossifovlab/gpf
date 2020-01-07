@@ -25,7 +25,7 @@ def test_common_reports_parse_config(study1_config):
     people_groups_info = \
         common_reports_config.people_groups_info['phenotype']
 
-    assert people_groups_info['name'] == 'Study phenotype'
+    assert people_groups_info['name'] == 'Diagnosis'
     assert len(people_groups_info['domain']) == 4
     assert sorted(list(people_groups_info['domain'].values())[0].keys()) == \
         sorted(['id', 'name', 'color'])

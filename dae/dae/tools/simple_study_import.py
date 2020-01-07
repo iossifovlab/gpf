@@ -13,7 +13,7 @@ from dae.backends.dae.loader import DenovoLoader
 from dae.backends.vcf.loader import VcfLoader
 from dae.backends.raw.loader import AnnotationPipelineDecorator
 
-from dae.pedigrees.family import FamiliesLoader
+from dae.pedigrees.loader import FamiliesLoader
 
 
 def cli_arguments(dae_config, argv=sys.argv[1:]):
@@ -149,12 +149,13 @@ def main(argv, gpf_instance=None):
 
     params = FamiliesLoader.parse_cli_arguments(argv)
     families_loader = FamiliesLoader(argv.pedigree, params=params)
+    families = families_loader.load()
 
     variant_loaders = []
     if argv.denovo is not None:
         params = DenovoLoader.parse_cli_arguments(argv)
         denovo_loader = DenovoLoader(
-            families_loader.families,
+            families,
             argv.denovo,
             genome=genome,
             params=params
@@ -166,7 +167,7 @@ def main(argv, gpf_instance=None):
     if argv.vcf is not None:
         params = VcfLoader.parse_cli_arguments(argv)
         vcf_loader = VcfLoader(
-            families_loader.families,
+            families,
             argv.vcf,
             params=params
         )

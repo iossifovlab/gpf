@@ -1,3 +1,4 @@
+from dae.variants.attributes import Status
 from dae.pedigrees.layout_saver import LayoutSaver
 import dae.pedigrees.layout_saver
 
@@ -39,6 +40,13 @@ def test_write(
     assert layout_saver._people == expected_people
 
 
+def test_family1(family1):
+    dad = family1.get_member('dad1')
+    assert dad is not None
+
+    assert dad.status == Status.unaffected
+
+
 # FIXME: this test should probably be rewritten to use and captured stdout
 #  instead of trying to mock `open`
 def test_save(
@@ -63,4 +71,4 @@ def test_save(
 
             layout_saver.save(columns_labels)
 
-    assert output.getvalue() == test_output
+    assert test_output == output.getvalue()

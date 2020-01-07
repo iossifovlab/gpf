@@ -36,14 +36,6 @@ class FamilyDelegate(object):
         """
         return self.family.family_id
 
-    def people_group_attribute(self, attribute):
-        people = self.family.get_people_with_role(attribute['role'])
-        return [person.get_attr(attribute['source']) for person in people]
-
-    def get_family_members_attribute(self, attribute):
-        people = self.family.members_in_order
-        return [person.get_attr(attribute) for person in people]
-
 
 class FamilyAllele(SummaryAllele, FamilyDelegate):
 
@@ -341,8 +333,6 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
         self.alleles = alleles
 
         self._best_st = None
-        self._inheritance_in_members = None
-        self._variant_in_members = None
         self._matched_alleles = []
 
     @staticmethod

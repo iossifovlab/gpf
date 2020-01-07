@@ -4,9 +4,9 @@ from dae.variant_annotation.annotator import VariantAnnotator \
     as VariantAnnotation
 
 
-def test_chr1_120387132_del_var(default_genome, default_gene_models):
+def test_chr1_120387132_del_var(genome_2013, gene_models_2013):
     [effect] = VariantAnnotation.annotate_variant(
-        default_gene_models, default_genome, loc='1:120387132', var='del(71)'
+        gene_models_2013, genome_2013, loc='1:120387132', var='del(71)'
     )
 
     assert effect.gene == 'NBPF7'
@@ -18,9 +18,9 @@ def test_chr1_120387132_del_var(default_genome, default_gene_models):
     assert effect.aa_change is None
 
 
-def test_chr2_237172988_ins_var(default_genome, default_gene_models):
+def test_chr2_237172988_ins_var(genome_2013, gene_models_2013):
     [effect] = VariantAnnotation.annotate_variant(
-        default_gene_models, default_genome, loc='2:237172988',
+        gene_models_2013, genome_2013, loc='2:237172988',
         var='ins(TTGTTACG)'
     )
 
@@ -34,9 +34,9 @@ def test_chr2_237172988_ins_var(default_genome, default_gene_models):
 
 
 @pytest.mark.skip()
-def test_chr1_802610_867930_CNV_var(default_genome, default_gene_models):
+def test_chr1_802610_867930_CNV_var(genome_2013, gene_models_2013):
     effects = VariantAnnotation.annotate_variant(
-        default_gene_models, default_genome, loc='1:802610-867930', var='CNV+'
+        gene_models_2013, genome_2013, loc='1:802610-867930', var='CNV+'
     )
     assert len(effects) == 3
     effects_sorted = sorted(effects, key=lambda k: k.transcript_id)

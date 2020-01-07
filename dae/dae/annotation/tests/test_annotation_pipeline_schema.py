@@ -6,7 +6,7 @@ from dae.annotation.tools.file_io_parquet import ParquetSchema
 from .conftest import relative_to_this_test_folder
 
 
-def test_pipeline_schema(genomes_db):
+def test_pipeline_schema(genomes_db_2013):
     filename = relative_to_this_test_folder('fixtures/import_annotation.conf')
 
     options = Box({
@@ -20,7 +20,7 @@ def test_pipeline_schema(genomes_db):
     work_dir = relative_to_this_test_folder('fixtures/')
 
     pipeline = PipelineAnnotator.build(
-        options, filename, work_dir, genomes_db,
+        options, filename, work_dir, genomes_db_2013,
         defaults={'values': {'fixtures_dir': work_dir}}
     )
     assert pipeline is not None

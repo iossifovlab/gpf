@@ -1,8 +1,5 @@
 import pytest
-
 import os
-
-from dae.gpf_instance.gpf_instance import GPFInstance
 
 from dae.studies.study_wrapper import StudyWrapper
 from dae_conftests.dae_conftests import get_global_dae_fixtures_dir
@@ -23,38 +20,38 @@ def genotype_data_groups_dir():
 
 
 @pytest.fixture(scope='session')
-def gpf_instance(mock_genomes_db):
-    return GPFInstance(work_dir=fixtures_dir())
+def local_gpf_instance(gpf_instance):
+    return gpf_instance(work_dir=fixtures_dir())
 
 
 @pytest.fixture(scope='session')
-def mocked_gene_models(gpf_instance):
-    return gpf_instance.genomes_db.get_gene_models()
+def mocked_gene_models(local_gpf_instance):
+    return local_gpf_instance.genomes_db.get_gene_models()
 
 
 @pytest.fixture(scope='session')
-def dae_config_fixture(gpf_instance):
-    return gpf_instance.dae_config
+def dae_config_fixture(local_gpf_instance):
+    return local_gpf_instance.dae_config
 
 
 @pytest.fixture(scope='session')
-def variants_db_fixture(gpf_instance):
-    return gpf_instance._variants_db
+def variants_db_fixture(local_gpf_instance):
+    return local_gpf_instance._variants_db
 
 
 @pytest.fixture(scope='session')
-def pheno_db(gpf_instance):
-    return gpf_instance._pheno_db
+def pheno_db(local_gpf_instance):
+    return local_gpf_instance._pheno_db
 
 
 @pytest.fixture(scope='session')
-def gene_weights_db(gpf_instance):
-    return gpf_instance.gene_weights_db
+def gene_weights_db(local_gpf_instance):
+    return local_gpf_instance.gene_weights_db
 
 
 @pytest.fixture(scope='session')
-def genotype_storage_factory(gpf_instance):
-    return gpf_instance._genotype_storage_factory
+def genotype_storage_factory(local_gpf_instance):
+    return local_gpf_instance._genotype_storage_factory
 
 
 @pytest.fixture(scope='session')

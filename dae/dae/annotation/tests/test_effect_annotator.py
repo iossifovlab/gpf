@@ -12,7 +12,7 @@ from .conftest import relative_to_this_test_folder
 
 
 @pytest.fixture(scope='session')
-def effect_annotator(genomes_db):
+def effect_annotator(genomes_db_2013):
     options = Box({
         'vcf': True,
         'direct': False,
@@ -38,7 +38,7 @@ def effect_annotator(genomes_db):
             'columns': columns,
             'annotator': 'effect_annotator.EffectAnnotator'
         }),
-        genomes_db
+        genomes_db_2013
     )
 
     annotator = EffectAnnotator(config)
@@ -48,7 +48,7 @@ def effect_annotator(genomes_db):
 
 
 @pytest.fixture(scope='session')
-def variant_effect_annotator(genomes_db):
+def variant_effect_annotator(genomes_db_2013):
     options = Box({
         'direct': False,
         'vcf': True,
@@ -77,7 +77,7 @@ def variant_effect_annotator(genomes_db):
             'columns': columns,
             'annotator': 'effect_annotator.VariantEffectAnnotator'
         }),
-        genomes_db
+        genomes_db_2013
     )
 
     annotator = VariantEffectAnnotator(config)

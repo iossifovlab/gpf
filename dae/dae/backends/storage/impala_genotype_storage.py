@@ -205,8 +205,10 @@ class ImpalaGenotypeStorage(GenotypeStorage):
 
         assert parquet_filenames is not None
         print("families save in:", parquet_filenames)
+        families = families_loader.load()
+
         ParquetManager.families_loader_to_parquet(
-            families_loader, parquet_filenames.pedigree
+            families, parquet_filenames.pedigree
         )
 
         parquet_pedigrees.append(parquet_filenames.pedigree)

@@ -1,81 +1,87 @@
-from collections import OrderedDict
 
 from dae.variants.attributes import Sex
+from dae.common_reports.people_filters import PeopleGroupFilter
 
 
 class PeopleCounter(object):
 
-    def __init__(self, families, filter_object):
+    def __init__(self, families, people_filter):
         self.families = families
-        self.filter_object = filter_object
+        self.people_filter = people_filter
 
-        self.people_male = len(self._get_people(Sex.male))
-        self.people_female = len(self._get_people(Sex.female))
-        self.people_unspecified = len(self._get_people(Sex.unspecified))
-        self.people_total =\
+        matched_people = list(self.people_filter.filter(
+            self.families.persons.values()))
+
+        self.people_male = len(
+            list(PeopleGroupFilter.sex_filter(
+                Sex.male).filter(matched_people)))
+        self.people_female = len(
+            list(PeopleGroupFilter.sex_filter(
+                Sex.female).filter(matched_people)))
+        self.people_unspecified = len(
+            list(PeopleGroupFilter.sex_filter(
+                Sex.unspecified).filter(matched_people)))
+        self.people_total = len(matched_people)
+
+        assert self.people_total == \
             self.people_male + self.people_female + self.people_unspecified
 
-        self.column = filter_object.get_column_name()
+        self.filter_name = people_filter.filter_name
 
     def to_dict(self, rows):
         people_counter_dict =\
-            OrderedDict([(row, getattr(self, row)) for row in rows])
-        people_counter_dict['column'] = self.column
+            {row: getattr(self, row) for row in rows}
+        people_counter_dict['column'] = self.filter_name
         return people_counter_dict
-
-    def _get_people(self, sex):
-        people = []
-
-        for family in self.families.values():
-            people += list(filter(
-                lambda pwr: pwr.sex == sex and
-                all([pwr.get_attr(filt.column) == filt.value
-                     for filt in self.filter_object.filters]),
-                family.members_in_order))
-
-        return people
 
     def is_empty(self):
         return self.people_total == 0
 
     def is_empty_field(self, field):
+        assert field in {
+            'people_male', 'people_female',
+            'people_unspecified', 'people_total'}
         return getattr(self, field) == 0
 
 
 class PeopleCounters(object):
 
-    def __init__(self, families, filter_object):
+    def __init__(self, families, filter_collection):
         self.families = families
-        self.filter_object = filter_object
+        self.filter_collection = filter_collection
 
-        self.counters = self._get_counters()
+        self.counters = self._build_counters()
 
-        self.group_name = filter_object.name
+        self.group_name = filter_collection.name
         self.rows = self._get_row_names()
-        self.columns = self._get_column_names()
+        self.filter_names = [
+            people_counter.filter_name for people_counter in self.counters]
 
     def to_dict(self):
-        return OrderedDict([
-            ('group_name', self.group_name),
-            ('columns', self.columns),
-            ('rows', self.rows),
-            ('counters', [c.to_dict(self.rows) for c in self.counters])
-        ])
+        return {
+            'group_name': self.group_name,
+            'columns': self.filter_names,
+            'rows': self.rows,
+            'counters': [c.to_dict(self.rows) for c in self.counters]
+        }
 
-    def _get_counters(self):
-        people_counters = [PeopleCounter(self.families, filters)
-                           for filters in self.filter_object.filter_objects]
+    def _build_counters(self):
+        people_counters = [
+            PeopleCounter(self.families, filters)
+            for filters in self.filter_collection.filters]
 
         return list(filter(
             lambda people_counter: not people_counter.is_empty(),
             people_counters))
 
     def _get_column_names(self):
-        return [people_counter.column for people_counter in self.counters]
+        return []
 
     def _is_row_empty(self, row):
-        return all([people_counter.is_empty_field(row)
-                    for people_counter in self.counters])
+        return all([
+            people_counter.is_empty_field(row)
+            for people_counter in self.counters
+        ])
 
     def _get_row_names(self):
         rows = ['people_male', 'people_female',

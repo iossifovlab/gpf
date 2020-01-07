@@ -37,7 +37,7 @@ chr3	20001	A	ACCC	-0.0988	0.8059
     (False, 'fixtures/indels2.tsv', indels2_cadd_expected),
 ])
 def test_np_score_annotator_indels(
-        expected_df, variants_io, capsys, mocked_genomes_db,
+        expected_df, variants_io, capsys, genomes_db_2013,
         direct, infile, expected):
 
     score_filename = \
@@ -62,7 +62,7 @@ def test_np_score_annotator_indels(
             'columns': columns,
             'annotator': 'score_annotator.NPScoreAnnotator'
         }),
-        mocked_genomes_db
+        genomes_db_2013
     )
 
     with variants_io(infile, options) as io_manager:
@@ -107,7 +107,7 @@ chr3	20001	A	ACCC	-0.254
     (False, 'fixtures/indels2.tsv', indels2_phylo_expected),
 ])
 def test_position_score_annotator_indels(
-        expected_df, variants_io, capsys, mocked_genomes_db,
+        expected_df, variants_io, capsys, genomes_db_2013,
         direct, infile, expected):
 
     score_filename = \
@@ -131,7 +131,7 @@ def test_position_score_annotator_indels(
             'columns': columns,
             'annotator': 'score_annotator.NPScoreAnnotator'
         }),
-        mocked_genomes_db
+        genomes_db_2013
     )
 
     with variants_io(infile, options) as io_manager:
@@ -162,7 +162,7 @@ def test_position_score_annotator_indels(
     ('1', 10914, 'CGC', 'CAA', 3, 2.5, 7.5),
 ])
 def test_np_score_annotator_indels_test_score(
-        chrom, pos, ref, alt, t1, t2, t3, mocked_genomes_db):
+        chrom, pos, ref, alt, t1, t2, t3, genomes_db_2013):
 
     score_filename = \
         'fixtures/TESTCADD/TESTwhole_genome_SNVs.tsv.gz'
@@ -187,7 +187,7 @@ def test_np_score_annotator_indels_test_score(
             'columns': columns,
             'annotator': 'score_annotator.NPScoreAnnotator'
         }),
-        mocked_genomes_db
+        genomes_db_2013
     )
 
     score_annotator = NPScoreAnnotator(config)
@@ -216,7 +216,7 @@ def test_np_score_annotator_indels_test_score(
     ('1', 10918, 'GAG', 'CAA', 1, 2.5, 5.5),
 ])
 def test_position_score_annotator_indels_test_score(
-        chrom, pos, ref, alt, t1, t2, t3, mocked_genomes_db):
+        chrom, pos, ref, alt, t1, t2, t3, genomes_db_2013):
 
     score_filename = \
         'fixtures/TESTphyloP100way/TESTphyloP100way.bedGraph.gz'
@@ -241,7 +241,7 @@ def test_position_score_annotator_indels_test_score(
             'columns': columns,
             'annotator': 'score_annotator.NPScoreAnnotator'
         }),
-        mocked_genomes_db
+        genomes_db_2013
     )
 
     score_annotator = PositionScoreAnnotator(config)
