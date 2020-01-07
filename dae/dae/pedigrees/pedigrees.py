@@ -5,50 +5,8 @@ import argparse
 from functools import reduce
 
 from dae.pedigrees.interval_sandwich import SandwichInstance
-from dae.variants.attributes import Role
-from dae.pedigrees.family import Person
-
-# class PedigreeMember(object):
-#     def __init__(self, id, family_id, mother, father, sex, status, role,
-#                  layout=None, generated=False):
-#         self.id = id
-#         self.family_id = family_id
-#         self.mother = mother
-#         self.father = father
-#         self.sex = sex
-#         self.status = status
-#         self.layout = layout
-#         self.role = Role.from_name(role)
-#         self.generated = generated
-
-#     def has_missing_mother(self):
-#         return self.mother == '0' or self.mother == '' or self.mother is None
-
-#     def has_missing_father(self):
-#         return self.father == '0' or self.father == '' or self.father is None
-
-#     def has_missing_parents(self):
-#         return self.has_missing_father() or self.has_missing_mother()
-
-#     def get_member_dataframe(self):
-#         phenotype = "unknown"
-#         if self.status == "1":
-#             phenotype = "unaffected"
-#         elif self.status == "2":
-#             phenotype = "affected"
-#         return pd.DataFrame.from_dict({
-#             "family_id": [self.family_id],
-#             "person_id": [self.id],
-#             "sample_id": [self.id],
-#             "sex": [Sex.from_name_or_value(self.sex)],
-#             "role": [self.role],
-#             "status": [self.status],
-#             "mom_id": [self.mother],
-#             "dad_id": [self.father],
-#             "layout": [self.layout],
-#             "generated": [self.generated],
-#             "phenotype": [phenotype]
-#         })
+from dae.variants.attributes import Role, Sex, Status
+from dae.pedigrees.family import Person, Family
 
 
 class FamilyConnections(object):
@@ -60,6 +18,8 @@ class FamilyConnections(object):
 
     @staticmethod
     def is_valid_family(family):
+        if not family:
+            return False
         for parents in family.keys():
             if family[parents].mother.member is None:
                 return False
@@ -75,56 +35,68 @@ class FamilyConnections(object):
         new_members = []
         id_to_individual = defaultdict(Individual)
 
-        for member in pedigree.members:
+        for member in pedigree.full_members:
             individual = id_to_individual[member.person_id]
             individual.member = member
 
         missing_father_mothers = {}
         missing_mother_fathers = {}
 
-        for member in pedigree.members:
-            if member.mother == member.father:
+        for member in pedigree.full_members:
+            if member.mom_id == member.dad_id:
                 continue
-            if member.mother == "0":
-                if member.father not in missing_mother_fathers:
-                    # id, family_id, mother, father, sex, status, role,
-                    # layout=None, generated=False
-                    missing_mother_fathers[member.father] = Person.make_person(
-                        member.father + ".mother",
-                        pedigree.family_id,
-                        "0",
-                        "0",
-                        "2",
-                        "-",
-                        Role.mom,
-                        True)
-                    new_members.append(missing_mother_fathers[member.father])
-                member.mother = member.father + ".mother"
-            elif member.father == "0":
-                if member.mother not in missing_father_mothers:
-                    missing_father_mothers[member.mother] = Person.make_person(
-                        member.mother + ".father",
-                        pedigree.family_id,
-                        "0",
-                        "0",
-                        "1",
-                        "-",
-                        Role.dad,
+            if member.mom_id is None:
+                assert member.dad_id is not None
+                if member.dad_id not in missing_mother_fathers:
+                    missing_mother_fathers[member.dad_id] = Person(
+                        person_id=member.dad_id + ".mother",
+                        family_id=pedigree.family_id,
+                        mom_id="0",
+                        dad_id="0",
+                        sex="2",
+                        status="-",
+                        role=Role.mom,
                         generated=True)
-                    new_members.append(missing_father_mothers[member.mother])
-                member.father = member.mother + ".father"
+                    new_members.append(missing_mother_fathers[member.dad_id])
+                member.mom_id = member.dad_id + ".mother"
+            elif member.dad_id is None:
+                assert member.mom_id is not None
+                if member.mom_id not in missing_father_mothers:
+                    missing_father_mothers[member.mom_id] = Person(
+                        person_id=member.mom_id + ".father",
+                        family_id=pedigree.family_id,
+                        mom_id="0",
+                        dad_id="0",
+                        sex="1",
+                        status="-",
+                        role=Role.dad,
+                        generated=True)
+                    new_members.append(missing_father_mothers[member.mom_id])
+                member.dad_id = member.mom_id + ".father"
 
-            mother = id_to_individual[member.mother]
-            father = id_to_individual[member.father]
+            mother = id_to_individual[member.mom_id]
+            father = id_to_individual[member.dad_id]
             if mother.member is None and mother not in new_members:
-                mother.member = Person.make_person(
-                    member.mother, pedigree.family_id, "0", "0", "2", "-",
-                    Role.mom, generated=True)
+                mother.member = Person(
+                    person_id=member.mom_id,
+                    family_id=pedigree.family_id,
+                    mom_id="0",
+                    dad_id="0",
+                    sex=Sex.F,
+                    status=Status.unspecified,
+                    role=Role.mom,
+                    generated=True)
                 new_members.append(mother.member)
             if father.member is None and father not in new_members:
-                father.member = Person.make_person(
-                    member.father, pedigree.family_id, "0", "0", "1", "-",
-                    Role.dad, generated=True)
+                father.member = Person(
+                    person_id=member.dad_id,
+                    family_id=pedigree.family_id,
+                    mom_id="0",
+                    dad_id="0",
+                    sex="1",
+                    status="-",
+                    role=Role.dad,
+                    generated=True)
                 new_members.append(father.member)
 
         unique_new_members = []
@@ -136,23 +108,28 @@ class FamilyConnections(object):
         pedigree.add_members(unique_new_members)
 
     @classmethod
-    def from_pedigree(cls, pedigree, add_missing_members=True):
+    def from_family(cls, family, add_missing_members=True):
+        assert isinstance(family, Family)
+
         if add_missing_members:
-            cls.add_missing_members(pedigree)
+            cls.add_missing_members(family)
 
         id_to_individual = defaultdict(Individual)
         id_to_mating_unit = {}
 
-        for member in pedigree.members:
-            mother = id_to_individual[member.mother]
-            father = id_to_individual[member.father]
-
-            mating_unit_key = member.mother + "," + member.father
-            if mother != father and not (mating_unit_key in id_to_mating_unit):
-                id_to_mating_unit[mating_unit_key] = MatingUnit(mother, father)
-
+        for member in family.full_members:
             individual = id_to_individual[member.person_id]
             individual.member = member
+
+            if not member.has_both_parents():
+                continue
+
+            mother = id_to_individual[member.mom_id]
+            father = id_to_individual[member.dad_id]
+
+            mating_unit_key = member.mom_id + "," + member.dad_id
+            if mother != father and not (mating_unit_key in id_to_mating_unit):
+                id_to_mating_unit[mating_unit_key] = MatingUnit(mother, father)
 
             if mother != father:
                 parental_unit = id_to_mating_unit[mating_unit_key]
@@ -172,7 +149,7 @@ class FamilyConnections(object):
         except KeyError:
             pass
 
-        return FamilyConnections(pedigree, id_to_individual, id_to_mating_unit)
+        return FamilyConnections(family, id_to_individual, id_to_mating_unit)
 
     def create_sandwich_instance(self):
         """
@@ -288,7 +265,7 @@ class FamilyConnections(object):
     def members(self):
         if not self.pedigree:
             return []
-        return self.pedigree.members
+        return self.pedigree.full_members
 
     def add_ranks(self):
         if len(self.id_to_mating_unit) == 0:

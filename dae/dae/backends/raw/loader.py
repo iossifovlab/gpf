@@ -67,7 +67,8 @@ class VariantsLoaderDecorator(VariantsLoader):
             variants_loader.families,
             variants_loader.filename,
             variants_loader.source_type,
-            variants_loader.transmission_type
+            variants_loader.transmission_type,
+            params=variants_loader.params
         )
         self.variants_loader = variants_loader
 

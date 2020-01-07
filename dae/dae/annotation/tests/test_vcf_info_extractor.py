@@ -17,7 +17,7 @@ def vcf_io(request):
     return io_manager
 
 
-def test_vcf_info_extractor(capsys, vcf_io, genomes_db):
+def test_vcf_info_extractor(capsys, vcf_io, genomes_db_2013):
 
     expected_output = \
         ('extracted-AC\textracted-AB\textracted-AT\textracted-AZ\n'
@@ -41,7 +41,7 @@ def test_vcf_info_extractor(capsys, vcf_io, genomes_db):
             },
             'annotator': 'vcf_info_extractor.VCFInfoExtractor'
         }),
-        genomes_db
+        genomes_db_2013
     )
 
     with vcf_io as io_manager:

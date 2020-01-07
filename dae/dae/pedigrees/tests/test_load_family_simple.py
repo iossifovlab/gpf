@@ -7,7 +7,7 @@ import os
 import pytest
 import pandas as pd
 
-from dae.pedigrees.family import PedigreeReader
+from dae.pedigrees.loader import FamiliesLoader
 from dae.pedigrees.family import FamiliesData
 
 from .conftest import relative_to_this_folder
@@ -20,22 +20,21 @@ def test_load_family_simple(fixture_name, temp_filename):
     family_filename = relative_to_this_folder(fixture_name)
     assert os.path.exists(family_filename)
 
-    fam_df = PedigreeReader.load_simple_family_file(family_filename)
+    fam_df = FamiliesLoader.load_simple_family_file(family_filename)
     assert fam_df is not None
     print("-------------------------")
     print("-------------------------")
     print(fam_df)
     print("-------------------------")
 
-    families = FamiliesData(fam_df)
-    families._families_build(fam_df)
+    families = FamiliesData.from_pedigree_df(fam_df)
 
     assert families is not None
 
-    PedigreeReader.save_pedigree(fam_df, temp_filename)
+    FamiliesLoader.save_pedigree(fam_df, temp_filename)
     assert fam_df is not None
 
-    ped_df = PedigreeReader.flexible_pedigree_read(temp_filename)
+    ped_df = FamiliesLoader.flexible_pedigree_read(temp_filename)
     print("-------------------------")
     print("-------------------------")
     print(ped_df)

@@ -31,7 +31,7 @@ class VcfFamiliesGenotypes(FamiliesGenotypes):
         return gt
 
     def family_genotype_iterator(self):
-        for fam in self.families.families_list():
+        for fam in self.families.values():
             if len(fam) == 0:
                 continue
             gt = self.get_family_genotype(fam)
@@ -63,7 +63,7 @@ class VcfLoader(VariantsLoader):
 
         assert os.path.exists(vcf_filename)
         self.vcf_filename = vcf_filename
-        if type(regions) == str or type(regions) == type(None):
+        if regions is None or isinstance(regions, str):
             self.regions = [regions]
         else:
             self.regions = regions
@@ -71,7 +71,6 @@ class VcfLoader(VariantsLoader):
         self.vcf = VCF(self.filename, lazy=True)
         samples = np.array(self.vcf.samples)
 
-        # self.families = families
         self._match_pedigree_to_samples(families, samples)
 
     @staticmethod
@@ -93,8 +92,8 @@ class VcfLoader(VariantsLoader):
                     vcf_samples_index.index(person.sample_id)
                 seen.add(person.sample_id)
             else:
-                person.generated = True
-                families.families[person.family_id].redefine()
+                person._generated = True
+                families[person.family_id].redefine()
 
     def _warp_summary_variant(self, summary_index, vcf_variant):
         records = []
@@ -155,7 +154,7 @@ class VcfLoader(VariantsLoader):
 
     @staticmethod
     def parse_cli_arguments(argv):
-        params={
+        params = {
             'include_reference_genotypes': argv.vcf_include_reference,
             'include_unknown_family_genotypes': argv.vcf_include_unknown,
             'include_unknown_person_genotypes': argv.vcf_include_unknown

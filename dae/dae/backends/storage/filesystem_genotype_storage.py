@@ -2,7 +2,7 @@ import os
 import copy
 import shutil
 
-from dae.pedigrees.family import FamiliesLoader
+from dae.pedigrees.loader import FamiliesLoader
 
 from dae.backends.storage.genotype_storage import GenotypeStorage
 
@@ -37,8 +37,9 @@ class FilesystemGenotypeStorage(GenotypeStorage):
                 data_dir, "{}.ped".format(study_config.id))
 
             families_loader = FamiliesLoader(ped_filename)
+            families = families_loader.load()
             variants_loader = VcfLoader(
-                families_loader.families, vcf_filename)
+                families, vcf_filename)
             variants_loader = StoredAnnotationDecorator.decorate(
                 variants_loader, vcf_filename
             )
@@ -48,11 +49,14 @@ class FilesystemGenotypeStorage(GenotypeStorage):
             families_loader = FamiliesLoader(
                 study_config.files.pedigree.path,
                 params=study_config.files.pedigree.params)
+            families = families_loader.load()
+
             loaders = []
             if study_config.files.vcf:
                 variants_filename = study_config.files.vcf[0].path
                 variants_loader = VcfLoader(
-                    families_loader.families, variants_filename)
+                    families, variants_filename,
+                    params=study_config.files.vcf[0].params)
                 variants_loader = StoredAnnotationDecorator.decorate(
                     variants_loader, variants_filename
                 )
@@ -61,8 +65,10 @@ class FilesystemGenotypeStorage(GenotypeStorage):
 
                 variants_filename = study_config.files.denovo[0].path
                 variants_loader = DenovoLoader(
-                    families_loader.families, variants_filename,
-                    genomes_db.get_genome())
+                    families, variants_filename,
+                    genomes_db.get_genome(),
+                    params=study_config.files.denovo[0].params)
+
                 variants_loader = StoredAnnotationDecorator.decorate(
                     variants_loader, variants_filename
                 )
@@ -100,12 +106,12 @@ class FilesystemGenotypeStorage(GenotypeStorage):
             os.path.basename(source_filename)
         )
 
-        params = copy.deepcopy(families_loader.pedigree_format)
+        params = copy.deepcopy(families_loader.params)
         params['file_format'] = families_loader.file_format
         config = STUDY_PEDIGREE_TEMPLATE.format(
             path=destination_filename,
             params=",\n\t".join([
-                "{}:{}".format(k, v)
+                "{}:{}".format(k, str(v).replace('\t', '\\t'))
                 for k, v in params.items()])
         )
 
@@ -127,13 +133,13 @@ class FilesystemGenotypeStorage(GenotypeStorage):
                 'data',
                 os.path.basename(source_filename)
             )
-
-            params = copy.deepcopy(variants_loader.params)
+            params = ",\n\t".join([
+                "{}:{}".format(k, v)
+                for k, v in variants_loader.params.items() if v is not None])
             config = STUDY_VARIANTS_TEMPLATE.format(
                 index=index,
                 path=destination_filename,
-                params=",\n\t".join([
-                    "{}:{}".format(k, v) for k, v in params.items()]),
+                params=params,
                 source_type=variants_loader.source_type
             )
             result_config.append(config)

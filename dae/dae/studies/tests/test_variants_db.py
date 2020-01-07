@@ -12,7 +12,8 @@ def test_variants_db_can_create_study_from_config(
         genotype_data_study_configs, variants_db_fixture):
     test_config = genotype_data_study_configs.get('quads_f1')
 
-    assert variants_db_fixture.make_genotype_data_study(test_config) is not None
+    assert variants_db_fixture.make_genotype_data_study(test_config) \
+        is not None
 
 
 ##############################################################

@@ -28,7 +28,7 @@ def temp_filename(request):
     return os.path.abspath(output)
 
 
-def test_annotate_variant_simple(temp_filename, default_gene_models):
+def test_annotate_variant_simple(temp_filename, genomes_db_2013):
     denovo_filename = relative_to_this_test_folder('fixtures/denovo.txt')
     assert os.path.exists(denovo_filename)
 
@@ -39,8 +39,7 @@ def test_annotate_variant_simple(temp_filename, default_gene_models):
     command = "cut -f 1-3 {} " \
         "| annotate_variant.py -T RefSeq2013 " \
         "| head -n 9 > {}".format(
-        denovo_filename, temp_filename
-    )
+            denovo_filename, temp_filename)
     print(command)
     res = os.system(command)
     assert res == 0
@@ -54,13 +53,10 @@ def test_annotate_variant_simple(temp_filename, default_gene_models):
     )
 
 
-def test_gene_models_orig_transcript_id(
-        gpf_instance, genomes_db, default_gene_models):
-    assert default_gene_models.location.endswith("refGene-201309.gz"), \
-        default_gene_models.location
+def test_gene_models_orig_transcript_id(genomes_db_2019):
 
-    gene_models = genomes_db.get_gene_model(
-        "RefSeq", genomes_db.default_genome)
+    gene_models = genomes_db_2019.get_gene_model(
+        "RefSeq", genomes_db_2019.default_genome)
     assert gene_models.location.endswith("refGene-20190211.gz"), \
         gene_models.location
 

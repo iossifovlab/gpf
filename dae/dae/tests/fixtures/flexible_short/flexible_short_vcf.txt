@@ -1,0 +1,4 @@
+person_id	chrom	position	reference	alternative
+13590.p1	15	80137553	T	TA
+13060.p1	3	56627767	AAAGT	A
+13590.p1	4	83276456	C	T

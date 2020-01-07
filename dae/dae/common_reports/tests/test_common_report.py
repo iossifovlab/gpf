@@ -8,8 +8,8 @@ def test_common_report(study4, common_reports_config):
     assert common_report.families_report
     assert common_report.denovo_report
     assert common_report.study_name == 'Study4'
-    assert sorted(common_report.phenotype) == \
-        sorted(['unaffected', 'phenotype1'])
+    assert common_report.phenotype == \
+        ['phenotype1', 'unaffected']
     assert common_report.study_type == 'WE'
     assert common_report.study_year == ''
     assert common_report.pub_med == ''

@@ -1,32 +1,40 @@
 from collections import OrderedDict
 
 from dae.variants.attributes import Role
+from dae.pedigrees.families_groups import FamiliesGroups
 
 from dae.common_reports.family_report import FamiliesReport
 from dae.common_reports.denovo_report import DenovoReport
-from dae.common_reports.people_group_info import PeopleGroupsInfo
-from dae.common_reports.filter import FilterObjects
+# from dae.common_reports.people_group_info import PeopleGroupsInfo
+from dae.common_reports.people_filters import FilterCollection
 
 
 class CommonReport(object):
 
     def __init__(self, genotype_data_study, config):
+        print("genotype_data:", genotype_data_study.id)
+        print("config.people_groups_info:", config.people_groups_info)
+        print("config.people_groups:", config.people_groups)
+        print("config.groups:", config.groups)
         people_groups_info = config.people_groups_info
         effect_groups = config.effect_groups
         effect_types = config.effect_types
 
         self.genotype_data_study = genotype_data_study
-        self.people_groups_info = PeopleGroupsInfo(
-            genotype_data_study, config.people_groups, people_groups_info
+        self.families_groups = FamiliesGroups.from_config(
+            genotype_data_study.families,
+            people_groups_info
         )
+        self.families_groups.add_predefined_groups(
+            ['status', 'sex', 'role', 'role.sex', 'family_size'])
 
-        filter_objects = FilterObjects.get_filter_objects(
-            genotype_data_study, self.people_groups_info, config.groups
+        filter_objects = FilterCollection.build_filter_objects(
+            self.families_groups, config.groups
         )
 
         self.id = genotype_data_study.id
         self.families_report = FamiliesReport(
-            genotype_data_study, self.people_groups_info, filter_objects,
+            config.people_groups, self.families_groups, filter_objects,
             config.draw_all_families, config.families_count_show_id
         )
         self.denovo_report = DenovoReport(
@@ -69,13 +77,10 @@ class CommonReport(object):
         ])
 
     def _get_phenotype(self):
-        people_group_info = \
-            self.people_groups_info.get_first_people_group_info()
-        default_phenotype = people_group_info.default['name']
-
-        return [pheno if pheno is not None else default_phenotype
-                for pheno in people_group_info.people_groups]
+        families_group = \
+            self.families_groups.get_default_families_group()
+        return families_group.available_values
 
     def _get_number_of_people_with_role(self, role):
-        return sum([len(family.get_people_with_role(role))
-                    for family in self.genotype_data_study.families.values()])
+        role_group = self.families_groups['role']
+        return len(role_group.get_people_with_propvalues((role,)))

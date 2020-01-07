@@ -4,10 +4,11 @@ import os
 from box import Box
 from copy import deepcopy
 
-from dae.common_reports.filter import Filter, FilterObject, FilterObjects
-from dae.common_reports.people_group_info import PeopleGroupsInfo
+from dae.pedigrees.families_groups import FamiliesGroups
 
-from dae.gpf_instance.gpf_instance import GPFInstance
+from dae.common_reports.people_filters import PeopleGroupFilter, \
+    MultiFilter, FilterCollection
+# from dae.common_reports.people_group_info import PeopleGroupsInfo
 
 
 def fixtures_dir():
@@ -26,20 +27,19 @@ def genotype_data_groups_dir():
 
 
 @pytest.fixture(scope='session')
-def gpf_instance(mock_genomes_db):
-    gpf_instance = GPFInstance(work_dir=fixtures_dir())
-
+def local_gpf_instance(gpf_instance):
+    gpf_instance = gpf_instance(fixtures_dir())
     return gpf_instance
 
 
 @pytest.fixture(scope='session')
-def vdb_fixture(gpf_instance):
-    return gpf_instance._variants_db
+def vdb_fixture(local_gpf_instance):
+    return local_gpf_instance._variants_db
 
 
 @pytest.fixture(scope='session')
-def common_report_facade(gpf_instance):
-    return gpf_instance._common_report_facade
+def common_report_facade(local_gpf_instance):
+    return local_gpf_instance._common_report_facade
 
 
 @pytest.fixture(scope='session')
@@ -100,34 +100,59 @@ def people_groups(study1_config):
 
 
 @pytest.fixture(scope='session')
-def people_groups_info(study1, selected_people_groups, people_groups):
-    return PeopleGroupsInfo(study1, selected_people_groups, people_groups)
+def families_groups(people_groups):
+    def builder(study):
+        families_groups = FamiliesGroups.from_config(
+            study.families, people_groups
+        )
+        families_groups.add_predefined_groups([
+            'status', 'sex', 'role', 'role.sex', 'family_size'])
+        return families_groups
+    return builder
 
 
 @pytest.fixture(scope='session')
-def filter_role():
-    return Filter('role', 'mom', column_value='Mother')
+def filter_role(study1, families_groups):
+    fg = families_groups(study1)
+    return PeopleGroupFilter(fg['role'], 'mom', name='Mother')
 
 
 @pytest.fixture(scope='session')
-def filter_people_group():
-    return Filter('phenotype', 'pheno', column_value='Pheno')
+def filter_people_group(study1, families_groups):
+    fg = families_groups(study1)
+    return PeopleGroupFilter(
+        fg['phenotype'], 'pheno', name='Pheno')
 
 
 @pytest.fixture(scope='function')
 def filter_object(filter_role):
-    return FilterObject([filter_role])
+    return MultiFilter([filter_role])
 
 
 @pytest.fixture(scope='function')
-def filter_objects(study1, people_groups_info, groups):
-    return FilterObjects.get_filter_objects(study1, people_groups_info, groups)
+def filter_objects(study1, families_groups, groups):
+    return FilterCollection.build_filter_objects(
+        families_groups(study1), groups)
 
 
 @pytest.fixture(scope='session')
-def families_groups(study1):
+def families_list(study1):
     return [study1.families['f4'], study1.families['f5'],
             study1.families['f7'], study1.families['f8']]
+
+
+@pytest.fixture(scope='session')
+def denovo_variants_st1(study1):
+    denovo_variants = study1.query_variants(
+        limit=None,
+        inheritance='denovo',
+    )
+    denovo_variants = list(denovo_variants)
+
+    assert len(denovo_variants) == 3
+    print(denovo_variants)
+
+    return denovo_variants
 
 
 @pytest.fixture(scope='session')
@@ -138,7 +163,8 @@ def denovo_variants_ds1(genotype_data_group1):
     )
     denovo_variants = list(denovo_variants)
 
-    assert len(denovo_variants) == 7
+    assert len(denovo_variants) == 8
+    print(denovo_variants)
 
     return denovo_variants
 

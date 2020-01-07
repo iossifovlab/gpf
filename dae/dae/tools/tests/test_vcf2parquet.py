@@ -5,7 +5,8 @@ from contextlib import redirect_stdout
 
 from box import Box
 
-from dae.pedigrees.family import FamiliesData, PedigreeReader
+from dae.pedigrees.family import FamiliesData
+from dae.pedigrees.loader import FamiliesLoader
 
 from dae.annotation.tools.file_io_parquet import ParquetReader
 
@@ -17,7 +18,7 @@ from dae.tools.vcf2parquet import main
 def test_vcf2parquet_vcf(
         vcf_import_config, annotation_pipeline_config,
         annotation_scores_dirname, temp_dirname,
-        default_gpf_instance, dae_config_fixture, genomes_db):
+        gpf_instance_2013, default_dae_config, genomes_db_2013):
 
     argv = [
         'vcf',
@@ -28,9 +29,9 @@ def test_vcf2parquet_vcf(
     ]
 
     main(
-        argv, gpf_instance=default_gpf_instance,
-        dae_config=dae_config_fixture,
-        genomes_db=genomes_db,
+        argv, gpf_instance=gpf_instance_2013,
+        dae_config=default_dae_config,
+        genomes_db=genomes_db_2013,
         annotation_defaults={'values': {
              "scores_dirname": annotation_scores_dirname,
         }}
@@ -59,7 +60,7 @@ def test_vcf2parquet_vcf(
 def test_vcf2parquet_vcf_partition(
         vcf_import_config, annotation_pipeline_config,
         annotation_scores_dirname, temp_dirname,
-        default_gpf_instance, dae_config_fixture, genomes_db,
+        gpf_instance_2013, default_dae_config, genomes_db_2013,
         parquet_partition_configuration):
 
     argv = [
@@ -72,9 +73,9 @@ def test_vcf2parquet_vcf_partition(
     ]
 
     main(
-        argv, gpf_instance=default_gpf_instance,
-        dae_config=dae_config_fixture,
-        genomes_db=genomes_db,
+        argv, gpf_instance=gpf_instance_2013,
+        dae_config=default_dae_config,
+        genomes_db=genomes_db_2013,
         annotation_defaults={'values': {
              "scores_dirname": annotation_scores_dirname,
         }}
@@ -83,7 +84,7 @@ def test_vcf2parquet_vcf_partition(
     generated_conf = os.path.join(temp_dirname, '_PARTITION_DESCRIPTION')
     assert os.path.exists(generated_conf)
 
-    ped_df = PedigreeReader.flexible_pedigree_read(vcf_import_config.pedigree)
+    ped_df = FamiliesLoader.flexible_pedigree_read(vcf_import_config.pedigree)
     families = FamiliesData.from_pedigree_df(ped_df)
 
     pl = ParquetLoader(families, generated_conf)
@@ -110,7 +111,7 @@ def test_vcf2parquet_vcf_partition(
 def test_vcf2parquet_make(
         vcf_import_config, annotation_pipeline_default_config,
         annotation_scores_dirname, temp_dirname,
-        default_gpf_instance, dae_config_fixture, default_genome):
+        gpf_instance_2013, default_dae_config, genome_2013):
 
     argv = [
         'make',
@@ -132,7 +133,7 @@ def test_vcf2parquet_make(
 def test_vcf2parquet_make_partition(
         vcf_import_config, annotation_pipeline_default_config,
         annotation_scores_dirname, temp_dirname,
-        default_gpf_instance, dae_config_fixture, default_genome,
+        gpf_instance_2013, default_dae_config, genome_2013,
         parquet_partition_configuration):
 
     argv = [

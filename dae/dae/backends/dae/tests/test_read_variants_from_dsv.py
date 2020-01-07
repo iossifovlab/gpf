@@ -2,7 +2,7 @@ import pytest
 import pandas as pd
 import numpy as np
 
-from dae.pedigrees.family import PedigreeReader
+from dae.pedigrees.loader import FamiliesLoader
 from dae.pedigrees.family import FamiliesData
 
 from dae.backends.dae.loader import DenovoLoader
@@ -12,7 +12,7 @@ from dae.utils.variant_utils import GENOTYPE_TYPE
 
 @pytest.fixture(scope='session')
 def fake_families(fixture_dirname):
-    ped_df = PedigreeReader.flexible_pedigree_read(
+    ped_df = FamiliesLoader.flexible_pedigree_read(
         fixture_dirname('denovo_import/fake_pheno.ped')
     )
     fake_families = FamiliesData.from_pedigree_df(ped_df)
@@ -42,14 +42,14 @@ def compare_variant_dfs(res_df, expected_df):
 def test_produce_genotype(fake_families):
     expected_output = np.array([[0, 0, 0, 0, 0], [0, 0, 0, 1, 1]])
     output = DenovoLoader.produce_genotype(
-        fake_families.families['f1'], ['f1.p1', 'f1.s2'])
+        fake_families['f1'], ['f1.p1', 'f1.s2'])
     assert np.array_equal(output, expected_output)
     assert output.dtype == GENOTYPE_TYPE
 
 
 def test_produce_genotype_no_people_with_variants(fake_families):
     expected_output = np.array([[0, 0, 0, 0, 0], [0, 0, 0, 0, 0]])
-    output = DenovoLoader.produce_genotype(fake_families.families['f1'], [])
+    output = DenovoLoader.produce_genotype(fake_families['f1'], [])
     assert np.array_equal(output, expected_output)
     assert output.dtype == GENOTYPE_TYPE
 
@@ -63,10 +63,11 @@ def test_families_instance_type_assertion():
     assert str(excinfo.value) == error_message
 
 
-def test_read_variants_DAE_style(default_genome, fixture_dirname):
+def test_read_variants_DAE_style(genome_2013, fixture_dirname, fake_families):
     filename = fixture_dirname('denovo_import/variants_DAE_style.tsv')
     res_df = DenovoLoader.flexible_denovo_load(
-        filename, default_genome, denovo_location='location',
+        filename, genome_2013, families=fake_families,
+        denovo_location='location',
         denovo_variant='variant',
         denovo_family_id='familyId', denovo_best_state='bestState'
     )
@@ -87,10 +88,11 @@ def test_read_variants_DAE_style(default_genome, fixture_dirname):
     assert compare_variant_dfs(res_df, expected_df)
 
 
-def test_read_variants_a_la_VCF_style(fixture_dirname):
+def test_read_variants_a_la_VCF_style(fixture_dirname, fake_families):
     filename = fixture_dirname('denovo_import/variants_VCF_style.tsv')
     res_df = DenovoLoader.flexible_denovo_load(
-        filename, None, denovo_chrom='chrom', denovo_pos='pos',
+        filename, None,  families=fake_families,
+        denovo_chrom='chrom', denovo_pos='pos',
         denovo_ref='ref',
         denovo_alt='alt', denovo_family_id='familyId',
         denovo_best_state='bestState'
@@ -112,10 +114,11 @@ def test_read_variants_a_la_VCF_style(fixture_dirname):
     assert compare_variant_dfs(res_df, expected_df)
 
 
-def test_read_variants_mixed_A(fixture_dirname):
+def test_read_variants_mixed_A(fixture_dirname, fake_families):
     filename = fixture_dirname('denovo_import/variants_mixed_style_A.tsv')
     res_df = DenovoLoader.flexible_denovo_load(
-        filename, None, denovo_location='location',
+        filename, None,  families=fake_families,
+        denovo_location='location',
         denovo_ref='ref',
         denovo_alt='alt', denovo_family_id='familyId',
         denovo_best_state='bestState'
@@ -137,10 +140,11 @@ def test_read_variants_mixed_A(fixture_dirname):
     assert compare_variant_dfs(res_df, expected_df)
 
 
-def test_read_variants_mixed_B(default_genome, fixture_dirname):
+def test_read_variants_mixed_B(genome_2013, fixture_dirname, fake_families):
     filename = fixture_dirname('denovo_import/variants_mixed_style_B.tsv')
     res_df = DenovoLoader.flexible_denovo_load(
-        filename, default_genome, denovo_chrom='chrom', denovo_pos='pos',
+        filename, genome_2013,  families=fake_families,
+        denovo_chrom='chrom', denovo_pos='pos',
         denovo_variant='variant',
         denovo_family_id='familyId', denovo_best_state='bestState'
     )
@@ -168,9 +172,9 @@ def test_read_variants_mixed_B(default_genome, fixture_dirname):
 def test_read_variants_person_ids(filename, fake_families, fixture_dirname):
     filename = fixture_dirname(filename)
     res_df = DenovoLoader.flexible_denovo_load(
-        filename, None, denovo_chrom='chrom', denovo_pos='pos',
-        denovo_ref='ref', denovo_alt='alt', denovo_person_id='personId',
-        families=fake_families
+        filename, None,  families=fake_families,
+        denovo_chrom='chrom', denovo_pos='pos',
+        denovo_ref='ref', denovo_alt='alt', denovo_person_id='personId'
     )
 
     expected_df = pd.DataFrame({
@@ -194,11 +198,12 @@ def test_read_variants_person_ids(filename, fake_families, fixture_dirname):
     assert compare_variant_dfs(res_df, expected_df)
 
 
-def test_read_variants_different_separator(fixture_dirname):
+def test_read_variants_different_separator(fixture_dirname, fake_families):
     filename = fixture_dirname(
         'denovo_import/variants_different_separator.dsv')
     res_df = DenovoLoader.flexible_denovo_load(
-        filename, None, denovo_sep='$', denovo_chrom='chrom',
+        filename, None,  families=fake_families,
+        denovo_sep='$', denovo_chrom='chrom',
         denovo_pos='pos',
         denovo_ref='ref',
         denovo_alt='alt', denovo_family_id='familyId',
@@ -221,12 +226,13 @@ def test_read_variants_different_separator(fixture_dirname):
     assert compare_variant_dfs(res_df, expected_df)
 
 
-def test_read_variants_genome_assertion(fixture_dirname):
+def test_read_variants_genome_assertion(fixture_dirname, fake_families):
     filename = fixture_dirname('denovo_import/variants_DAE_style.tsv')
 
     with pytest.raises(AssertionError) as excinfo:
         DenovoLoader.flexible_denovo_load(
-            filename, None, denovo_location='location',
+            filename, None,  families=fake_families,
+            denovo_location='location',
             denovo_variant='variant',
             denovo_family_id='familyId', denovo_best_state='bestState'
         )

@@ -99,7 +99,7 @@ def test_pedigree_to_parquet(parquet_manager, variants_vcf, temp_dirname):
     )
     assert not os.path.exists(pedigree_path)
 
-    parquet_manager.pedigree_to_parquet(fvars, pedigree_path)
+    parquet_manager.pedigree_to_parquet(fvars.families, pedigree_path)
     assert os.path.exists(pedigree_path)
 
 

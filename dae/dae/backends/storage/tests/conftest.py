@@ -2,8 +2,6 @@ import pytest
 
 import os
 
-from dae.gpf_instance.gpf_instance import GPFInstance
-
 
 def relative_to_this_test_folder(path):
     return os.path.join(
@@ -13,13 +11,18 @@ def relative_to_this_test_folder(path):
 
 
 @pytest.fixture(scope='session')
-def gpf_instance(mock_genomes_db):
-    return GPFInstance(work_dir=relative_to_this_test_folder('fixtures'))
+def work_dir():
+    return relative_to_this_test_folder('fixtures')
 
 
 @pytest.fixture(scope='session')
-def genotype_storage_factory(gpf_instance):
-    return gpf_instance._genotype_storage_factory
+def local_gpf_instance(gpf_instance, work_dir):
+    return gpf_instance(work_dir=work_dir)
+
+
+@pytest.fixture(scope='session')
+def genotype_storage_factory(local_gpf_instance):
+    return local_gpf_instance._genotype_storage_factory
 
 
 @pytest.fixture(scope='session')
@@ -33,8 +36,8 @@ def impala_genotype_storage(genotype_storage_factory):
 
 
 @pytest.fixture(scope='session')
-def variants_db_fixture(gpf_instance):
-    return gpf_instance._variants_db
+def variants_db_fixture(local_gpf_instance):
+    return local_gpf_instance._variants_db
 
 
 @pytest.fixture(scope='session')
@@ -43,7 +46,7 @@ def quads_f1_vcf_config(variants_db_fixture):
 
 
 @pytest.fixture(scope='session')
-def quads_f1_config(gpf_instance, impala_genotype_storage):
+def quads_f1_config(local_gpf_instance, impala_genotype_storage):
     impala_genotype_storage.impala_load_study(
         'quads_f1_impala',
         variant_paths=[relative_to_this_test_folder(
@@ -51,5 +54,5 @@ def quads_f1_config(gpf_instance, impala_genotype_storage):
         pedigree_paths=[relative_to_this_test_folder(
             'fixtures/studies/quads_f1_impala/data/pedigree')]
     )
-    gpf_instance.reload()
-    return gpf_instance._variants_db.get_study_config('quads_f1_impala')
+    local_gpf_instance.reload()
+    return local_gpf_instance._variants_db.get_study_config('quads_f1_impala')

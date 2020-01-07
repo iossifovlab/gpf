@@ -1,5 +1,8 @@
 import itertools
 import functools
+from dae.pedigrees.family import FamiliesData
+from dae.pedigrees.families_groups import FamiliesGroups
+
 
 class GenotypeData:
 
@@ -22,6 +25,7 @@ class GenotypeData:
         self.study_types = self.config.study_types
         self.years = self.config.years
         self.pub_meds = self.config.pub_meds
+        self.families_groups = None
 
     def query_variants(
             self, regions=None, genes=None, effect_types=None,
@@ -43,39 +47,29 @@ class GenotypeData:
     def families(self):
         raise NotImplementedError()
 
-    def get_pedigree_values(self, column):
-        raise NotImplementedError()
+    def _build_study_groups(self):
+        if self.families_groups is None:
+            config = self.config.people_group_config['peopleGroup']
 
-    def get_people_from_people_group(self, people_group, people_group_value):
-        raise NotImplementedError()
+            self.families_groups = FamiliesGroups.from_config(
+                self.families, config
+            )
+            self.families_groups.add_predefined_groups([
+                'status', 'role', 'sex', 'role.sex', 'family_size'
+            ])
 
-    def get_people_group(self, people_group_id):
-        if not self.config.people_group_config and \
-                not self.config.people_group_config.people_group:
-            return None
-
-        people_groups = self.config.people_group_config.people_group
-        if not people_group_id:
-            return people_groups.values()[0] if people_groups else {}
-
-        people_group_with_id = people_groups.get(people_group_id, {})
-
-        return people_group_with_id
+    def get_families_group(self, families_group_id):
+        self._build_study_groups()
+        return self.families_groups.get(families_group_id)
 
     def _get_person_color(self, person, people_group):
         if person.generated:
             return '#E0E0E0'
-        if len(people_group) == 0:
+        # print(people_group)
+
+        if people_group is None:
             return '#FFFFFF'
-
-        source = people_group['source']
-        people_group_attribute = person.get_attr(source)
-        domain = people_group['domain'].get(people_group_attribute, None)
-
-        if domain and people_group_attribute:
-            return domain['color']
-        else:
-            return people_group['default']['color']
+        return people_group.person_color(person)
 
 
 class GenotypeDataGroup(GenotypeData):
@@ -85,6 +79,11 @@ class GenotypeDataGroup(GenotypeData):
             genotype_data_group_config,
             studies
         )
+        self._families = self._build_families()
+
+    @property
+    def families(self):
+        return self._families
 
     def query_variants(
             self, regions=None, genes=None, effect_types=None,
@@ -111,13 +110,12 @@ class GenotypeDataGroup(GenotypeData):
         # TODO Use the 'cached' property on this
         return [genotype_data_study.id for genotype_data_study in self.studies]
 
-    @property
-    def families(self):
-        return functools.reduce(
+    def _build_families(self):
+        return FamiliesData.from_families(functools.reduce(
             lambda x, y: self._combine_families(x, y),
             [genotype_data_study.families
              for genotype_data_study in self.studies]
-        )
+        ))
 
     def _combine_families(self, first, second):
         same_families = set(first.keys()) & set(second.keys())
@@ -128,20 +126,6 @@ class GenotypeDataGroup(GenotypeData):
             combined_dict[sf] =\
                 first[sf] if len(first[sf]) > len(second[sf]) else second[sf]
         return combined_dict
-
-    def get_pedigree_values(self, column):
-        return functools.reduce(
-            lambda x, y: x | y,
-            [st.get_pedigree_values(column) for st in self.studies], set())
-
-    def get_people_from_people_group(
-            self, people_group_id, people_group_value):
-        return functools.reduce(
-            lambda x, y: x | y,
-            [st.get_people_from_people_group(
-             people_group_id, people_group_value) for st in self.studies],
-            set()
-        )
 
 
 class GenotypeDataStudy(GenotypeData):
@@ -197,18 +181,4 @@ class GenotypeDataStudy(GenotypeData):
 
     @property
     def families(self):
-        return self._backend.families.families
-
-    def get_pedigree_values(self, column):
-        return set(self._backend.families.ped_df[column])
-
-    def get_people_from_people_group(
-            self, people_group_id, people_group_value):
-        people_group = self.get_people_group(people_group_id)
-        source = people_group.source
-
-        pedigree_df = self._backend.families.ped_df
-        people_ids = pedigree_df[
-            pedigree_df[source].apply(str) == str(people_group_value)]
-
-        return set(people_ids['person_id'])
+        return self._backend.families
