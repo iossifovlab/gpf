@@ -25,7 +25,7 @@ class EffectCell(object):
         people_with_parents_ids = \
             set(sorted([p.person_id for p in people_with_parents]))
 
-        variants = self._get_variants(
+        variants = self._count_variants(
             people_with_filter, people_with_parents_ids)
 
         people_with_filter_and_parents_ids = people_with_filter & \
@@ -64,14 +64,20 @@ class EffectCell(object):
             self.families.persons.values())
         return set([p.person_id for p in people_with_filter])
 
-    def _get_variants(self, people_with_filter, people_with_parents):
+    def _count_variants(self, people_with_filter, people_with_parents):
         people = people_with_filter.intersection(people_with_parents)
 
         effect_types = set(self.effect_types_converter.get_effect_types(
             effectTypes=self.effect))
         variants = []
 
+        seen = set()
         for v in self.denovo_variants:
+            fvid = f'{v.family_id}.{v.location}.{v.reference}.{v.alternative}'
+            if fvid in seen:
+                continue
+            seen.add(fvid)
+
             for aa in v.alt_alleles:
                 if not (set(aa.variant_in_members) & people):
                     continue

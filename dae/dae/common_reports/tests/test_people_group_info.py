@@ -52,7 +52,7 @@ def test_families_group(people_groups, study2):
 
 def test_people_groups_info(study1, families_groups):
     fg = families_groups(study1)
-    assert len(fg) == 5
+    assert len(fg) == 6
 
     assert fg.get_default_families_group() == \
         next(iter(fg.values()))

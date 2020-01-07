@@ -11,6 +11,6 @@ def test_families_report(study1, filter_objects, families_groups):
     assert len(families_report.people_counters) == 1
     print(families_report.families_counters)
 
-    assert len(families_report.families_counters) == 5
+    assert len(families_report.families_counters) == 6
 
     assert len(families_report.to_dict()) == 3
