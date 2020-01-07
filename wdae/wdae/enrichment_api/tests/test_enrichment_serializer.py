@@ -150,7 +150,7 @@ def test_serialize_error(f1_trio, enrichment_builder, enrichment_serializer):
     all_er.expected = 3
     all_er.pvalue = 0.5
 
-    prople_group = f1_trio.get_people_group('phenotype')
+    prople_group = f1_trio.get_families_group('phenotype')
     results = enrichment_builder.build_people_group_selector(
         ['missense'], prople_group, 'autism')
 

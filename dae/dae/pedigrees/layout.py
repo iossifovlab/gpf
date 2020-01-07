@@ -114,7 +114,7 @@ class Layout(object):
     @property
     def id_to_position(self):
         return {
-            k.member.person_id: v 
+            k.member.person_id: v
             for k, v in list(self._id_to_position.items())}
 
     @property

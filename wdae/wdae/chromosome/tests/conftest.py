@@ -1,6 +1,5 @@
 import os
 import pytest
-import yaml
 
 from dae.gpf_instance.gpf_instance import GPFInstance
 from gpf_instance.gpf_instance import reload_datasets

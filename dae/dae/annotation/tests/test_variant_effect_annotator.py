@@ -11,7 +11,7 @@ from dae.backends.raw.loader import StoredAnnotationDecorator
 
 
 @pytest.fixture(scope='session')
-def effect_annotator(genomes_db):
+def effect_annotator(genomes_db_2013):
     options = Box({
         'vcf': True,
         'direct': False,
@@ -41,7 +41,7 @@ def effect_annotator(genomes_db):
             'columns': columns,
             'annotator': 'effect_annotator.VariantEffectAnnotator'
         }),
-        genomes_db
+        genomes_db_2013
     )
 
     annotator = VariantEffectAnnotator(config)

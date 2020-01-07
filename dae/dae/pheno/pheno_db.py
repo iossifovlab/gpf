@@ -267,7 +267,7 @@ class PhenotypeDataStudy(PhenotypeData):
         persons = self.get_persons()
 
         for p in list(persons.values()):
-            families[p.atts['family_id']].append(p)
+            families[p.family_id].append(p)
 
         self.persons = persons
         self.families = {}
@@ -350,27 +350,22 @@ class PhenotypeDataStudy(PhenotypeData):
         Returns a dictionary of (`personId`, `Person()`) where
         the `Person` object is the same object used into `VariantDB` families.
         """
-        persons = OrderedDict()
+        persons = {}
         df = self.get_persons_df(roles=roles, person_ids=person_ids,
                                  family_ids=family_ids)
 
         for row in df.to_dict('records'):
             person_id = row['person_id']
-            family_id = row['family_id']
 
             p = Person(**row)
-            p.person_id = person_id
-            p.family_id = family_id
+            # p.person_id = person_id
+            # p.family_id = family_id
             assert row['role'] in Role, \
                 "{} not a valid role".format(row['role'])
             assert row['sex'] in Sex, \
                 "{} not a valid sex".format(row['sex'])
             assert row['status'] in Status, \
                 "{} not a valid status".format(row['status'])
-            # FIXME:
-            p.role = row['role']
-            p.sex = row['sex']
-            p.status = row['status']
 
             persons[person_id] = p
         return persons

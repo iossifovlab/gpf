@@ -19,14 +19,14 @@ def test_impala_connection_simple(impala_host):
         assert conn is not None
 
 
-def test_impala_query_build(impala_host, genomes_db):
+def test_impala_query_build(impala_host, genomes_db_2013):
     connection = ImpalaHelpers.create_impala_connection(impala_host, 21050)
     ifv = ImpalaFamilyVariants(
         connection,
         'impala_storage_test_db',
         'test_study_partition',
         'test_study_pedigree',
-        genomes_db.get_gene_models())
+        genomes_db_2013.get_gene_models())
     regions = [Region('1', 1, 199999), Region('2', 1, 199999)]
     families = ['f1', 'f2']
     coding_effects = ['missense', 'frame-shift']

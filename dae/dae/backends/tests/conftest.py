@@ -2,8 +2,7 @@ from io import StringIO
 
 import pytest
 
-from dae.pedigrees.family import PedigreeReader
-from dae.pedigrees.family import Family
+from dae.pedigrees.loader import FamiliesLoader
 from dae.variants.family_variant import FamilyVariant
 from dae.variants.variant import SummaryAllele, SummaryVariant
 
@@ -27,10 +26,9 @@ f1,          p1,          d1,       m1,       1,     2,         prb
 
 @pytest.fixture(scope='session')
 def fam1():
-    ped_df = PedigreeReader.flexible_pedigree_read(
-        StringIO(PED1), sep=',')
-
-    family = Family.from_df('f1', ped_df)
+    families_loader = FamiliesLoader(StringIO(PED1), sep=',')
+    families = families_loader.load()
+    family = families['f1']
     assert len(family.trios) == 1
     return family
 

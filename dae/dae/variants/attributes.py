@@ -85,10 +85,25 @@ class Role(enum.Enum):
 
     @staticmethod
     def from_name(name):
-        if name in Role.__members__:
+        assert name is not None
+        if isinstance(name, Role):
+            return name
+        elif name in Role.__members__:
             return Role[name]
         else:
+            print(f"Role '{name}' is unknown")
             return Role.unknown
+
+    @staticmethod
+    def from_value(val):
+        return Role(int(val))
+
+    @classmethod
+    def from_name_or_value(cls, name_or_value):
+        try:
+            return cls.from_name(name_or_value)
+        except ValueError:
+            return cls.from_value(name_or_value)
 
     @staticmethod
     def from_display_name(display_name):
@@ -112,7 +127,9 @@ class Sex(enum.Enum):
 
     @staticmethod
     def from_name(name):
-        if name == 'male' or name == 'M' or name == '1':
+        if isinstance(name, Sex):
+            return name
+        elif name == 'male' or name == 'M' or name == '1':
             return Sex.male
         elif name == 'female' or name == 'F' or name == '2':
             return Sex.female
@@ -149,7 +166,9 @@ class Status(enum.Enum):
 
     @staticmethod
     def from_name(name):
-        if name == 'unaffected' or name == '1':
+        if isinstance(name, Status):
+            return name
+        elif name == 'unaffected' or name == '1':
             return Status.unaffected
         elif name == 'affected' or name == '2':
             return Status.affected

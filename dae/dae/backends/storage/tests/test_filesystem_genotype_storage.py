@@ -4,15 +4,15 @@ from dae.backends.storage.tests.conftest import relative_to_this_test_folder
 
 
 def test_build_backend(
-        filesystem_genotype_storage, quads_f1_vcf_config, genomes_db):
+        filesystem_genotype_storage, quads_f1_vcf_config, genomes_db_2013):
     assert filesystem_genotype_storage
 
     backend = filesystem_genotype_storage.build_backend(
-        quads_f1_vcf_config, genomes_db
+        quads_f1_vcf_config, genomes_db_2013
     )
 
-    assert len(backend.families.families_list()) == 1
-    assert len(backend.families.get_family('f1').members_ids) == 5
+    assert len(backend.families) == 1
+    assert len(backend.families['f1'].members_ids) == 5
     assert len(list(backend.query_variants())) == 3
 
 

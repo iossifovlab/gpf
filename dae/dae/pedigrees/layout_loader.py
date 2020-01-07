@@ -9,13 +9,13 @@ class LayoutLoader(object):
 
     def __init__(self, family):
         self.family = family
-        self.family_connections = FamilyConnections.from_pedigree(
+        self.family_connections = FamilyConnections.from_family(
             family, add_missing_members=False)
 
     def get_positions_from_family(self):
         positions = {}
         if self.family_connections is None:
-            layout = layout_parser(self.family.members[0].layout)
+            layout = layout_parser(self.family.full_members[0].layout)
             if layout is None:
                 return None
         individuals = self.family_connections.get_individuals()

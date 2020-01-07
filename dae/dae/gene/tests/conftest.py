@@ -3,8 +3,6 @@ import pytest
 import os
 import shutil
 
-from dae.gpf_instance.gpf_instance import GPFInstance
-
 from dae.utils.fixtures import change_environment
 
 from dae.gene.denovo_gene_set_config import DenovoGeneSetConfigParser
@@ -24,48 +22,48 @@ def path_to_fixtures(*args):
 
 
 @pytest.fixture(scope='session')
-def gpf_instance(mock_genomes_db):
-    return GPFInstance(work_dir=fixtures_dir())
+def local_gpf_instance(gpf_instance):
+    return gpf_instance(fixtures_dir())
 
 
 @pytest.fixture(scope='session')
-def dae_config_fixture(gpf_instance):
-    return gpf_instance.dae_config
+def dae_config_fixture(local_gpf_instance):
+    return local_gpf_instance.dae_config
 
 
 @pytest.fixture(scope='session')
-def variants_db_fixture(gpf_instance):
-    return gpf_instance._variants_db
+def variants_db_fixture(local_gpf_instance):
+    return local_gpf_instance._variants_db
 
 
 @pytest.fixture(scope='session')
-def gene_info_config(gpf_instance):
-    return gpf_instance._gene_info_config
+def gene_info_config(local_gpf_instance):
+    return local_gpf_instance._gene_info_config
 
 
 @pytest.fixture(scope='session')
-def gene_weights_db(gpf_instance):
-    return gpf_instance.gene_weights_db
+def gene_weights_db(local_gpf_instance):
+    return local_gpf_instance.gene_weights_db
 
 
 @pytest.fixture(scope='session')
-def score_config(gpf_instance):
-    return gpf_instance._score_config
+def score_config(local_gpf_instance):
+    return local_gpf_instance._score_config
 
 
 @pytest.fixture(scope='session')
-def scores_factory(gpf_instance):
-    return gpf_instance._scores_factory
+def scores_factory(local_gpf_instance):
+    return local_gpf_instance._scores_factory
 
 
 @pytest.fixture(scope='session')
-def denovo_gene_sets_db(gpf_instance):
-    return gpf_instance.denovo_gene_sets_db
+def denovo_gene_sets_db(local_gpf_instance):
+    return local_gpf_instance.denovo_gene_sets_db
 
 
 @pytest.fixture(scope='session')
-def gene_sets_db(gpf_instance):
-    return gpf_instance.gene_sets_db
+def gene_sets_db(local_gpf_instance):
+    return local_gpf_instance.gene_sets_db
 
 
 @pytest.fixture(scope='module')

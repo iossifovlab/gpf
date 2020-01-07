@@ -49,6 +49,7 @@ pipeline {
                         /bin/sh -c "rm -rf /code/wdae-*.log && rm -rf /code/wdae_django*.cache"
 
                     mkdir -p test_results
+                    mkdir -p data-hg19-startup
                 '''
                 script {
                     docker.build(

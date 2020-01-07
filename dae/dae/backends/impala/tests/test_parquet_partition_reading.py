@@ -1,5 +1,5 @@
 from dae.backends.impala.loader import ParquetLoader
-from dae.pedigrees.family import PedigreeReader
+from dae.pedigrees.loader import FamiliesLoader
 from dae.pedigrees.family import FamiliesData
 
 
@@ -7,7 +7,7 @@ def test_partition_read(fixture_dirname):
     # ped_file = '/home/ivo/gpf/dae/dae/tests/fixtures/backends/partition.ped'
     ped_file = fixture_dirname('backends/partition.ped')
 
-    ped_df = PedigreeReader.flexible_pedigree_read(ped_file)
+    ped_df = FamiliesLoader.flexible_pedigree_read(ped_file)
     families = FamiliesData.from_pedigree_df(ped_df)
 
     loader = ParquetLoader(
@@ -32,7 +32,7 @@ def test_partition_read_glob_region_1(fixture_dirname):
     # ped_file = '/home/ivo/gpf/dae/dae/tests/fixtures/backends/partition.ped'
     ped_file = fixture_dirname('backends/partition.ped')
 
-    ped_df = PedigreeReader.flexible_pedigree_read(ped_file)
+    ped_df = FamiliesLoader.flexible_pedigree_read(ped_file)
     families = FamiliesData.from_pedigree_df(ped_df)
 
     loader = ParquetLoader(
@@ -56,7 +56,7 @@ def test_partition_read_glob_region_2(fixture_dirname):
     # ped_file = '/home/ivo/gpf/dae/dae/tests/fixtures/backends/partition.ped'
     ped_file = fixture_dirname('backends/partition.ped')
 
-    ped_df = PedigreeReader.flexible_pedigree_read(ped_file)
+    ped_df = FamiliesLoader.flexible_pedigree_read(ped_file)
     families = FamiliesData.from_pedigree_df(ped_df)
 
     loader = ParquetLoader(

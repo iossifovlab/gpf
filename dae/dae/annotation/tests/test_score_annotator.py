@@ -40,7 +40,7 @@ input2_phast_pylo_expected = \
     False
 ])
 def test_variant_score_annotator_simple(
-        expected_df, variants_io, direct, capsys, mocked_genomes_db):
+        expected_df, variants_io, direct, capsys, genomes_db_2013):
 
     options = Box({
         'vcf': True,
@@ -60,7 +60,7 @@ def test_variant_score_annotator_simple(
             'columns': columns,
             'annotator': 'score_annotator.VariantScoreAnnotator'
         }),
-        mocked_genomes_db
+        genomes_db_2013
     )
     print(config.options)
     print(type(config.options))
@@ -87,7 +87,7 @@ def test_variant_score_annotator_simple(
     False
 ])
 def test_variant_multi_score_annotator_simple(
-        expected_df, variants_io, direct, capsys, mocked_genomes_db):
+        expected_df, variants_io, direct, capsys, genomes_db_2013):
 
     options = Box({
         'vcf': True,
@@ -107,7 +107,7 @@ def test_variant_multi_score_annotator_simple(
             'columns': columns,
             'annotator': 'score_annotator.VariantScoreAnnotator'
         }),
-        mocked_genomes_db
+        genomes_db_2013
     )
     print(config.options)
     print(type(config.options))
@@ -135,7 +135,7 @@ def test_variant_multi_score_annotator_simple(
     False
 ])
 def test_variant_multi_score_annotator_multi(
-        expected_df, variants_io, direct, capsys, mocked_genomes_db):
+        expected_df, variants_io, direct, capsys, genomes_db_2013):
 
     options = Box({
         'vcf': True,
@@ -156,7 +156,7 @@ def test_variant_multi_score_annotator_multi(
             'columns': columns,
             'annotator': 'score_annotator.VariantScoreAnnotator'
         }),
-        mocked_genomes_db
+        genomes_db_2013
     )
     print(config.options)
     print(type(config.options))
@@ -192,7 +192,7 @@ input2_cadd_expected = '''RESULT_RawScore\tRESULT_PHRED
     False
 ])
 def test_variant_score_annotator_cadd(
-        expected_df, variants_io, direct, capsys, mocked_genomes_db):
+        expected_df, variants_io, direct, capsys, genomes_db_2013):
 
     options = Box({
         'vcf': True,
@@ -214,7 +214,7 @@ def test_variant_score_annotator_cadd(
             'columns': columns,
             'annotator': 'score_annotator.VariantScoreAnnotator'
         }),
-        mocked_genomes_db
+        genomes_db_2013
     )
     print(config.options)
     print(type(config.options))

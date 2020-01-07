@@ -12,7 +12,7 @@ from .conftest import relative_to_this_test_folder
     ('chr1', 10000, lambda c, p: [(c, p+1000), (c, p+2000)], 'chr1:11000'),
     ('chr1', 10000, lambda c, p: [], None),
 ])
-def test_lift_over(mocker, chrom, pos, lift_over, expected, mocked_genomes_db):
+def test_lift_over(mocker, chrom, pos, lift_over, expected, genomes_db_2013):
 
     options = Box({
         'mode': 'replace',
@@ -36,7 +36,7 @@ def test_lift_over(mocker, chrom, pos, lift_over, expected, mocked_genomes_db):
             'columns': columns,
             'annotator': 'lift_over_annotator.LiftOverAnnotator'
         }),
-        mocked_genomes_db
+        genomes_db_2013
     )
     with mocker.patch(
             'dae.annotation.tools.lift_over_annotator.'
@@ -65,7 +65,7 @@ def test_lift_over(mocker, chrom, pos, lift_over, expected, mocked_genomes_db):
     ('chr1:20000', lambda c, p: [], None),
 ])
 def test_pipeline_with_liftover(
-        mocker, location, lift_over, expected_location, genomes_db):
+        mocker, location, lift_over, expected_location, genomes_db_2013):
 
     options = Box({
             'default_arguments': None,
@@ -83,7 +83,7 @@ def test_pipeline_with_liftover(
         work_dir = relative_to_this_test_folder('fixtures/')
 
         pipeline = PipelineAnnotator.build(
-            options, filename, work_dir, genomes_db,
+            options, filename, work_dir, genomes_db_2013,
             defaults={'values': {'fixtures_dir': work_dir}}
         )
         assert pipeline is not None
