@@ -78,7 +78,7 @@ class CommonReportFacade(object):
 
     def get_families_data(self, genotype_data_id):
         # FIXME: start using FamiliesData save method
-        genotype_data = self.variants_db.get(genotype_data_id)
+        genotype_data = self.gpf_instance.get_genotype_data(genotype_data_id)
         if not genotype_data:
             return None
 
