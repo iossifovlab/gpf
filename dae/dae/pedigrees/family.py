@@ -24,7 +24,7 @@ class Person(object):
             self._role = None
         else:
             self._role = Role.from_name(attributes.get('role'))
-        
+
         self._status = Status.from_name(attributes['status'])
 
         self._attributes['sex'] = self._sex

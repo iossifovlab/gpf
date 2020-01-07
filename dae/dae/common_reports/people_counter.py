@@ -39,7 +39,7 @@ class PeopleCounter(object):
 
     def is_empty_field(self, field):
         assert field in {
-            'people_male', 'people_female', 
+            'people_male', 'people_female',
             'people_unspecified', 'people_total'}
         return getattr(self, field) == 0
 

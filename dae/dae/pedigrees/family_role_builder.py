@@ -128,7 +128,7 @@ class FamilyRoleBuilder:
 
         grandparents_mating_id = Mating.parents_id(dad)
         grandparents_mating = self.family_matings[grandparents_mating_id]
-        for person_id in grandparents_mating.children:    
+        for person_id in grandparents_mating.children:
             person = self.family.persons[person_id]
             if person.role is not None:
                 continue
@@ -155,7 +155,7 @@ class FamilyRoleBuilder:
 
         grandparents_mating_id = Mating.parents_id(mom)
         grandparents_mating = self.family_matings[grandparents_mating_id]
-        for person_id in grandparents_mating.children:    
+        for person_id in grandparents_mating.children:
             person = self.family.persons[person_id]
             if person.role is not None:
                 continue
@@ -169,4 +169,3 @@ class FamilyRoleBuilder:
                 for cousin_id in person_mating.children:
                     cousin = self.family.persons[cousin_id]
                     self._set_person_role(cousin, Role.maternal_cousin)
-

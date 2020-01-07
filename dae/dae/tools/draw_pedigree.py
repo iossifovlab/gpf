@@ -3,8 +3,6 @@ from tqdm import tqdm
 import multiprocessing
 import functools
 import pandas as pd
-from box import Box
-
 
 from dae.pedigrees.family import PedigreeReader
 from dae.pedigrees.families_groups import FamiliesGroups
@@ -14,7 +12,7 @@ from dae.pedigrees.drawing import OffsetLayoutDrawer, PDFLayoutDrawer
 from dae.pedigrees.layout_loader import LayoutLoader
 from dae.pedigrees.family import FamiliesData
 from dae.common_reports.family_report import FamiliesReport
-from dae.common_reports.filter import FilterCollection, FilterObject
+from dae.common_reports.people_filters import FilterCollection
 
 
 def draw_family_pedigree(family, show_id=False):

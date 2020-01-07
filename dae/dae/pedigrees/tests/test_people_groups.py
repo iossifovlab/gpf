@@ -177,7 +177,7 @@ def test_family_groups2_unknown(people_group_config2):
     assert families_group.families_types is not None
     assert families_group.families_types == [
         ('a', 'a', 'a', 'b', 'b'),
-        ('a', 'a', 'b', 'c'), 
+        ('a', 'a', 'b', 'c'),
         ('a', 'a', 'b', 'c', 'unknown')]
 
 
@@ -257,7 +257,7 @@ def test_family_status_group_predefined():
 
     assert families_group.families_types is not None
     assert families_group.families_types == [
-        ('affected', 'affected', 'unaffected', 'unaffected', 'unaffected'),                         
+        ('affected', 'affected', 'unaffected', 'unaffected', 'unaffected'),
         ('affected', 'unaffected', 'unaffected', 'unaffected')]
 
 
