@@ -177,7 +177,11 @@ def construct_import_annotation_pipeline(
 
 
 def generate_region_argument_string(chrom, start, end):
-    return f'{chrom}:{start}-{end}'
+    if start is None and end is None:
+        return f'{chrom}'
+    else:
+        assert start and end, f'{start}-{end} is an invalid region!'
+        return f'{chrom}:{start}-{end}'
 
 
 def generate_region_argument(fa, description):
@@ -188,8 +192,7 @@ def generate_region_argument(fa, description):
     return (fa.chromosome, start, end)
 
 
-def generate_makefile(variants_loader, tool, argv):
-    targets = dict()
+def generate_makefile(genome, contigs, tool, argv):
     if argv.partition_description is None:
         output = 'all: \n'
         output += f'\t{tool}' \
@@ -199,58 +202,66 @@ def generate_makefile(variants_loader, tool, argv):
 
     description = ParquetPartitionDescription.from_config(
         argv.partition_description)
+
+    assert set(description.chromosomes).issubset(contigs), \
+        (description.chromosomes, contigs)
+
+    targets = dict()
     other_regions = dict()
-    for sv, fvs in variants_loader.full_variants_iterator():
-        for fv in fvs:
-            for fa in fv.alleles:
-                region_bin = description.evaluate_region_bin(fa)
-                if region_bin not in targets.keys():
-                    if fa.chromosome in description.chromosomes:
-                        targets[region_bin] = generate_region_argument(
-                            fa,
-                            description
-                        )
-                    else:
-                        if region_bin not in other_regions.keys():
-                            other_regions[region_bin] = set()
+    contig_lengths = dict(genome.get_all_chr_lengths())
 
-                        other_regions[region_bin].add(
-                            generate_region_argument(
-                                fa,
-                                description
-                            )
-                        )
+    for contig in description.chromosomes:
+        assert contig in contig_lengths, (contig, contig_lengths)
+        region_bins = contig_lengths[contig] // description.region_length \
+            + bool(contig_lengths[contig] % description.region_length)
+        for rb_idx in range(0, region_bins):
 
-        output = ''
-        all_target = 'all:'
-        main_targets = ''
-        other_targets = ''
-        for target_name in targets.keys():
-            all_target += f' {target_name}'
+            if description.region_length < contig_lengths[contig]:
+                start = rb_idx * description.region_length + 1
+                end = (rb_idx + 1) * description.region_length
+            else:
+                start, end = None, None
 
-        for target_name, target_args in targets.items():
+            if contig in description.chromosomes:
+                region_bin = f'{contig}_{rb_idx}'
+                targets[region_bin] = (contig, start, end)
+            else:
+                region_bin = f'other_{rb_idx}'
+                other_regions.setdefault(region_bin, set()).add(
+                    (contig, start, end)
+                )
+
+    output = ''
+    all_target = 'all:'
+    main_targets = ''
+    other_targets = ''
+    for target_name in targets.keys():
+        all_target += f' {target_name}'
+
+    for target_name, target_args in targets.items():
+        command = f'{tool} ' \
+            f'--skip-pedigree --o {argv.output}' \
+            f' --pd {argv.partition_description}' \
+            f' --region {generate_region_argument_string(*target_args)}' \
+            f' --ped-file-format {argv.ped_file_format}'
+        main_targets += f'{target_name}:\n'
+        main_targets += f'\t{command}\n\n'
+
+    if len(other_regions) > 0:
+        for region_bin, command_args in other_regions.items():
+            all_target += f' {region_bin}'
+            other_targets += f'{region_bin}:\n'
+            regions = ' '.join(
+                map(
+                    lambda x: generate_region_argument_string(*x),
+                    command_args
+                )
+            )
             command = f'{tool} ' \
                 f'--skip-pedigree --o {argv.output} ' \
                 f'--pd {argv.partition_description} ' \
-                f'--region {generate_region_argument_string(*target_args)}'
-            main_targets += f'{target_name}:\n'
-            main_targets += f'\t{command}\n\n'
-
-        if len(other_regions) > 0:
-            for region_bin, command_args in other_regions.items():
-                all_target += f' {region_bin}'
-                other_targets += f'{region_bin}:\n'
-                regions = ' '.join(
-                    map(
-                        lambda x: generate_region_argument_string(*x),
-                        command_args
-                    )
-                )
-                command = f'{tool} ' \
-                    f'--skip-pedigree --o {argv.output} ' \
-                    f'--pd {argv.partition_description} ' \
-                    f'--region {regions}'
-                other_targets += f'\t{command}\n\n'
+                f'--region {regions}'
+            other_targets += f'\t{command}\n\n'
 
     output += f'{all_target}\n'
     output += '.PHONY: all\n\n'

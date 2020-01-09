@@ -51,10 +51,13 @@ def parser_common_arguments(gpf_instance, parser):
         parser.add_argument(name, **args)
 
     parser.add_argument(
-        'pedigree', type=str,
-        metavar='<pedigree filename>',
+        'families', type=str,
+        metavar='<families filename>',
         help='families file in pedigree format'
     )
+
+    FamiliesLoader.cli_arguments(parser)
+
     parser.add_argument(
         'vcf', type=str,
         metavar='<VCF filename>',
@@ -157,8 +160,8 @@ def main(
 
     study_id = argv.study_id
     if study_id is None:
-        study_id = os.path.splitext(os.path.basename(argv.pedigree))[0]
-    families_loader = FamiliesLoader(argv.pedigree)
+        study_id = os.path.splitext(os.path.basename(argv.families))[0]
+    families_loader = FamiliesLoader(argv.families)
     families = families_loader.load()
 
     variants_loader = VcfLoader(
@@ -172,7 +175,8 @@ def main(
         variants_loader, annotation_pipeline
     )
     if argv.type == 'make':
-        generate_makefile(variants_loader, 'vcf2parquet.py vcf ', argv)
+        generate_makefile(genome, get_contigs(argv.vcf),
+                          'vcf2parquet.py vcf ', argv)
     elif argv.type == 'vcf':
         if not argv.skip_pedigree:
             pedigree_path = os.path.join(
