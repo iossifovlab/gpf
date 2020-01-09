@@ -67,7 +67,7 @@ def test_multivcf_loader_fill_missing_ref(fixture_dirname):
     ped_df = PedigreeReader.flexible_pedigree_read(ped_file)
     families = FamiliesData.from_pedigree_df(ped_df)
 
-    multi_vcf_loader = MultiVcfLoader(families, multivcf_files, False)
+    multi_vcf_loader = MultiVcfLoader(families, multivcf_files, True)
     assert multi_vcf_loader is not None
     multi_it = multi_vcf_loader.summary_genotypes_iterator()
     first_present = next(multi_it)
@@ -122,7 +122,7 @@ def test_multivcf_loader_fill_missing_unknown(fixture_dirname):
     ped_df = PedigreeReader.flexible_pedigree_read(ped_file)
     families = FamiliesData.from_pedigree_df(ped_df)
 
-    multi_vcf_loader = MultiVcfLoader(families, multivcf_files, True)
+    multi_vcf_loader = MultiVcfLoader(families, multivcf_files, False)
     assert multi_vcf_loader is not None
     multi_it = multi_vcf_loader.summary_genotypes_iterator()
     first_present = next(multi_it)

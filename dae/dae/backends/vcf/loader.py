@@ -173,7 +173,7 @@ class MultiVcfLoader(VariantsLoader):
             self,
             families: FamiliesData,
             vcf_files: List[str],
-            unknown_on_missing: bool,
+            reference_on_missing: bool = True,
             params: Dict[str, bool] = {}):
 
         super(MultiVcfLoader, self).__init__(
@@ -186,8 +186,8 @@ class MultiVcfLoader(VariantsLoader):
 
         self.families = families
         self.vcf_files = vcf_files
-        self.unknown_on_missing = unknown_on_missing
-        self.fill_missing_value = -1 if unknown_on_missing else 0
+        self.reference_on_missing = reference_on_missing
+        self.fill_missing_value = 0 if reference_on_missing else -1
         self.vcf_loaders = list()
         self._init_loaders()
         self.seqnames = self._init_chromosome_order()
