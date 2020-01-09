@@ -264,8 +264,8 @@ class MultiVcfLoader(VariantsLoader):
 
     def _compare_summaries_g(self, lhs, rhs):
         """
-        Returns true if left summary variant is
-        larger than right summary variant
+        Returns true if left summary variant position in file is
+        larger than right summary variant position in file
         """
         l_chrom_idx = self.seqnames.index(lhs.ref_allele.chromosome)
         r_chrom_idx = self.seqnames.index(rhs.ref_allele.chromosome)
