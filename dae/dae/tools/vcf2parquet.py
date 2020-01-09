@@ -10,7 +10,7 @@ from dae.annotation.tools.annotator_config import annotation_config_cli_options
 
 from dae.pedigrees.family import FamiliesLoader  # , FamiliesData
 from dae.backends.raw.loader import AnnotationPipelineDecorator
-from dae.backends.vcf.loader import VcfLoader
+from dae.backends.vcf.loader import MultiVcfLoader
 from dae.backends.impala.parquet_io import ParquetManager, \
     ParquetPartitionDescription
 
@@ -56,7 +56,7 @@ def parser_common_arguments(gpf_instance, parser):
         help='families file in pedigree format'
     )
     parser.add_argument(
-        'vcf', type=str,
+        'vcf', type=str, nargs='+',
         metavar='<VCF filename>',
         help='VCF file to import'
     )
@@ -159,7 +159,7 @@ def main(
     if study_id is None:
         study_id = os.path.splitext(os.path.basename(argv.pedigree))[0]
     families_loader = FamiliesLoader(argv.pedigree)
-    variants_loader = VcfLoader(
+    variants_loader = MultiVcfLoader(
         families_loader.families, argv.vcf, regions=argv.region,
         params={
             'include_reference_genotypes': argv.include_reference,
@@ -170,7 +170,9 @@ def main(
         variants_loader, annotation_pipeline
     )
     if argv.type == 'make':
-        generate_makefile(variants_loader, 'vcf2parquet.py vcf ', argv)
+        generate_makefile(
+            variants_loader,
+            f'vcf2parquet.py vcf {argv.vcf}', argv)
     elif argv.type == 'vcf':
         if not argv.skip_pedigree:
             pedigree_path = os.path.join(

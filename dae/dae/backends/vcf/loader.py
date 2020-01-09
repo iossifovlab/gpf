@@ -174,6 +174,7 @@ class MultiVcfLoader(VariantsLoader):
             families: FamiliesData,
             vcf_files: List[str],
             reference_on_missing: bool = True,
+            regions=None,
             params: Dict[str, bool] = {}):
 
         super(MultiVcfLoader, self).__init__(
@@ -188,6 +189,7 @@ class MultiVcfLoader(VariantsLoader):
         self.vcf_files = vcf_files
         self.reference_on_missing = reference_on_missing
         self.fill_missing_value = 0 if reference_on_missing else -1
+        self.regions = regions
         self.vcf_loaders = list()
         self._init_loaders()
         self.seqnames = self._init_chromosome_order()
@@ -201,7 +203,13 @@ class MultiVcfLoader(VariantsLoader):
     def _init_loaders(self):
         for vcf_file in self.vcf_files:
             loader_families = deepcopy(self.families)
-            loader = VcfLoader(loader_families, vcf_file, params=self.params)
+
+            loader = VcfLoader(
+                loader_families,
+                vcf_file,
+                regions=self.regions,
+                params=self.params)
+
             self.vcf_loaders.append(loader)
 
     def _init_chromosome_order(self) -> List[str]:
