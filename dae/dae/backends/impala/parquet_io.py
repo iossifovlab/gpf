@@ -115,11 +115,11 @@ class ParquetPartitionDescription():
         coding_effect_types = []
         rare_boundary = 0
 
-        if config['family_bin']:
+        if 'family_bin' in config:
             family_bin_size = int(config['family_bin']['family_bin_size'])
-        if config['coding_bin']:
+        if 'coding_bin' in config:
             coding_effect_types = config['coding_bin']['coding_effect_types']
-        if config['frequency_bin']:
+        if 'frequency_bin' in config:
             rare_boundary = int(config['frequency_bin']['rare_boundary'])
 
         return ParquetPartitionDescription(
@@ -227,7 +227,7 @@ class ParquetPartitionDescription():
             glob += '*/'
         if not self.rare_boundary == 0:
             glob += '*/'
-        glob += '*'
+        glob += '*.parquet'
         return glob
 
     def add_family_bins_to_pedigree_df(self, ped_df):
@@ -335,7 +335,7 @@ class VariantsParquetWriter():
         return unknown_allele
 
     def _setup_all_unknown_variant(self, summary_variant, family_id):
-        family = self.families.get_family(family_id)
+        family = self.families[family_id]
         genotype = -1 * np.ones(
             shape=(2, len(family)), dtype=GENOTYPE_TYPE)
         alleles = [
@@ -542,19 +542,19 @@ class ParquetManager:
     @deprecated(
         details="replace 'pedigree_to_parquet' with "
         "'families_loader_to_parquet'")
-    def pedigree_to_parquet(fvars, pedigree_filename, filesystem=None):
+    def pedigree_to_parquet(families, pedigree_filename, filesystem=None):
         os.makedirs(
             os.path.split(pedigree_filename)[0], exist_ok=True
         )
 
         save_ped_df_to_parquet(
-            fvars.families.ped_df, pedigree_filename,
+            families.ped_df, pedigree_filename,
             filesystem=filesystem
         )
 
     @staticmethod
     def families_loader_to_parquet(
-            families_loader, pedigree_filename, filesystem=None):
+            families, pedigree_filename, filesystem=None):
 
         print(pedigree_filename)
 
@@ -563,7 +563,7 @@ class ParquetManager:
         )
 
         save_ped_df_to_parquet(
-            families_loader.ped_df, pedigree_filename,
+            families.ped_df, pedigree_filename,
             filesystem=filesystem
         )
 

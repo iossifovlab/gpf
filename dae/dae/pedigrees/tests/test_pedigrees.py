@@ -10,29 +10,27 @@ def test_pedigree_member(member4):
     assert member4.person_id == 'id2'
     assert member4.role == Role.prb
 
-    member = member4.get_member_dataframe().to_dict()
-    assert member['person_id'][0] == 'id2'
-    assert member['sex'][0] == Sex.M
-    assert member['phenotype'][0] == 'affected'
+    assert member4.get_attr('person_id') == 'id2'
+    assert member4.get_attr('sex') == str(Sex.M)
+    # assert member['phenotype'] == 'affected'
 
-    assert sorted(list(member.keys())) == sorted([
-        "family_id", "person_id", "sample_id", "sex", "role", "status",
-        "mom_id", "dad_id", "layout", "generated", "phenotype"
-    ])
+    # assert sorted(list(member.keys())) == sorted([
+    #     "family_id", "person_id", "sample_id", "sex", "role", "status",
+    #     "mom_id", "dad_id", "layout", "generated", # "phenotype"
+    # ])
 
 
 def test_pedigree(family2, member1, member2):
-    assert len(family2.members) == 3
+    assert len(family2.full_members) == 3
+    assert len(family2.members_in_order) == 2
+
     assert family2.family_id == 'fam2'
-    family2.add_members([member1])
-    family2.add_member(member2)
-    assert len(family2.members) == 5
+    member1.family_id = 'fam2'
+    member2.family_id = 'fam2'
+    family2.add_members([member1, member2])
+    assert len(family2.full_members) == 5
 
-    assert family2._independent_members is None
-    family2.independent_members()
-    assert len(family2._independent_members) == 3
-
-    assert len(family2.get_pedigree_dataframe()) == 5
+    assert len(family2.members_in_order) == 4
 
 
 def test_sibship_unit(sibship_unit2, individual4):
@@ -111,39 +109,49 @@ def test_family_connections_invalid(individual4, individual5, individual6):
     assert FamilyConnections.is_valid_family(id_to_mating_unit[2]) is False
 
 
-def test_family_connections_add_missing_members(family2, family3):
-    assert len(family2.members) == 3
+def test_family2_connections(family2):
+    assert len(family2.full_members) == 3
     FamilyConnections.add_missing_members(family2)
-    assert len(family2.members) == 3
-    ids = [member.person_id for member in family2.members]
+    assert len(family2.full_members) == 3
+    ids = [member.person_id for member in family2.full_members]
     assert len(ids) == 3
     assert sorted(ids) == sorted(['id2', 'mom2', 'dad2'])
 
-    assert len(family3.members) == 1
+
+def test_family3_connections(family3):
+    assert len(family3.full_members) == 1
     FamilyConnections.add_missing_members(family3)
-    assert len(family3.members) == 3
-    ids = [member.person_id for member in family3.members]
+    assert len(family3.full_members) == 3
+    ids = [member.person_id for member in family3.full_members]
     assert len(ids) == 3
     assert sorted(ids) == sorted(['id3', 'mom3', 'mom3.father'])
 
-    family2._members = list(filter(
-        lambda member: member.person_id != 'mom2', family2.members
-    ))
-    prb = list(filter(
-        lambda member: member.person_id == 'id2', family2.members
-    ))
-    assert len(prb) == 1
-    prb[0].mother = '0'
-    assert len(family2.members) == 2
-    FamilyConnections.add_missing_members(family2)
-    assert len(family2.members) == 3
-    ids = [member.person_id for member in family2.members]
-    assert len(ids) == 3
-    assert sorted(ids) == sorted(['id2', 'dad2', 'dad2.mother'])
+
+# def test_family_connections_add_missing_members(family2, family3):
+
+#     family2._members_in_order = list(filter(
+#         lambda member: member.person_id != 'mom2', family2.members_in_order
+#     ))
+#     prb = list(filter(
+#         lambda member: member.person_id == 'id2', family2.members_in_order
+#     ))
+#     assert len(prb) == 1
+#     prb[0].mother = '0'
+#     assert len(family2) == 2
+#     FamilyConnections.add_missing_members(family2)
+#     assert len(family2.members) == 3
+#     ids = [member.person_id for member in family2.members]
+#     assert len(ids) == 3
+#     assert sorted(ids) == sorted(['id2', 'dad2', 'dad2.mother'])
 
 
-def test_family_connections_from_pedigree_simple(family2):
-    family_connections = FamilyConnections.from_pedigree(family2)
+def test_family_connections_from_family1_simple(family1):
+    family_connections = FamilyConnections.from_family(family1)
+    assert family_connections is not None
+
+
+def test_family_connections_from_family_simple(family2):
+    family_connections = FamilyConnections.from_family(family2)
     assert family_connections is not None
 
     assert len(family_connections.members) == 3
@@ -158,9 +166,9 @@ def test_family_connections_from_pedigree_simple(family2):
     assert 'id2' in [el.member.person_id for el in individuals_with_rank]
 
 
-def test_family_connections_from_pedigree_add_members_one_member(family3):
+def test_family_connections_from_family_add_members_one_member(family3):
     family_connections = \
-        FamilyConnections.from_pedigree(family3, add_missing_members=True)
+        FamilyConnections.from_family(family3, add_missing_members=True)
     assert family_connections is not None
 
     assert len(family_connections.members) == 3
@@ -175,22 +183,22 @@ def test_family_connections_from_pedigree_add_members_one_member(family3):
     assert 'id3' in [el.member.person_id for el in individuals_with_rank]
 
 
-def test_family_connections_from_pedigree_one_member(family3):
-    assert FamilyConnections.from_pedigree(
+def test_family_connections_from_family_one_member(family3):
+    assert FamilyConnections.from_family(
         family3, add_missing_members=False) is None
 
 
-def test_family_connections_from_pedigree_add_members(family2):
-    family2._members = list(filter(
-        lambda member: member.person_id != 'mom2', family2.members
+def test_family_connections_from_family_add_members(family2):
+    family2._members_in_order = list(filter(
+        lambda member: member.person_id != 'mom2', family2.members_in_order
     ))
     prb = list(filter(
-        lambda member: member.person_id == 'id2', family2.members
+        lambda member: member.person_id == 'id2', family2.members_in_order
     ))
     assert len(prb) == 1
     prb[0].mother = '0'
     family_connections = \
-        FamilyConnections.from_pedigree(family2, add_missing_members=True)
+        FamilyConnections.from_family(family2, add_missing_members=True)
     assert family_connections is not None
 
     assert len(family_connections.members) == 3
@@ -205,18 +213,21 @@ def test_family_connections_from_pedigree_add_members(family2):
     assert 'id2' in [el.member.person_id for el in individuals_with_rank]
 
 
-def test_family_connections_from_pedigree_do_not_add_members(family2):
-    family2._members = list(filter(
-        lambda member: member.person_id != 'mom2', family2.members
-    ))
-    prb = list(filter(
-        lambda member: member.person_id == 'id2', family2.members
-    ))
-    assert len(prb) == 1
-    prb[0].mother = '0'
-    print(len(family2.members))
-    assert FamilyConnections.from_pedigree(
-        family2, add_missing_members=False) is None
+def test_family_connections_from_family_do_not_add_members(family3):
+    assert FamilyConnections.from_family(
+        family3, add_missing_members=False) is None
+
+    # family2._members_in_order = list(filter(
+    #     lambda member: member.person_id != 'mom2', family2.members_in_order
+    # ))
+    # prb = list(filter(
+    #     lambda member: member.person_id == 'id2', family2.members_in_order
+    # ))
+    # assert len(prb) == 1
+    # prb[0].mother = '0'
+    # print(len(family2))
+    # assert FamilyConnections.from_family(
+    #     family2, add_missing_members=False) is None
 
 
 def test_reading_pedigree_file(pedigree_test):

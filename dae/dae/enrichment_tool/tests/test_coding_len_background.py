@@ -31,7 +31,7 @@ def test_calc_stats(f1_trio, f1_trio_coding_len_background):
         inheritance=str(Inheritance.denovo.name)))
     event_counter = EventsCounter()
 
-    pg = f1_trio.get_people_group('phenotype')
+    pg = f1_trio.get_families_group('phenotype')
     gh = GenotypeHelper(f1_trio, pg, 'autism')
     children_stats = gh.get_children_stats()
     children_by_sex = gh.children_by_sex()
@@ -68,7 +68,7 @@ def test_calc_stats(f1_trio, f1_trio_coding_len_background):
     assert ee == enrichment_events
 
     assert len(ee['all'].events) == 2
-    assert ee['all'].events == [['SAMD11'], ['SAMD11'],]
+    assert ee['all'].events == [['SAMD11'], ['SAMD11'], ]
     assert ee['all'].expected == 2.0
     assert ee['all'].pvalue == 1.0
     assert len(ee['rec'].events) == 1

@@ -1,7 +1,7 @@
 import collections
 import csv
 
-
+from dae.variants.attributes import Status
 from dae.pedigrees.layout import Layout
 
 
@@ -21,7 +21,7 @@ class LayoutSaver(object):
         return "{};{}".format(family_id, individual_id)
 
     def writerow_error(self, family, error):
-        for member in family.members:
+        for member in family.full_members:
             row = {
                 self.fieldname: error,
                 self.generated_column: '1' if member.generated else ''
@@ -77,6 +77,9 @@ class LayoutSaver(object):
 
             writer.writeheader()
 
+            def handle_none_id(person_id):
+                return person_id if person_id is not None else '0'
+
             for row in reader:
                 row_copy = row.copy()
 
@@ -86,8 +89,10 @@ class LayoutSaver(object):
                 if key in self._people_with_layout:
                     member = self._people[key]
 
-                    row_copy[columns_labels["mother"]] = member.mother
-                    row_copy[columns_labels["father"]] = member.father
+                    row_copy[columns_labels["mother"]] = \
+                        handle_none_id(member.mom_id)
+                    row_copy[columns_labels["father"]] = \
+                        handle_none_id(member.dad_id)
 
                     row_copy.update(self._people_with_layout.pop(key))
                 else:
@@ -106,11 +111,12 @@ class LayoutSaver(object):
 
                 row[columns_labels["family_id"]] = family_id
                 row[columns_labels["id"]] = person_id
-                row[columns_labels["mother"]] = member.mother
-                row[columns_labels["father"]] = member.father
-                row[columns_labels["sex"]] = member.sex
-                row[columns_labels["status"]] = member.status
-                row[columns_labels["role"]] = member.role
+                row[columns_labels["mother"]] = handle_none_id(member.mom_id)
+                row[columns_labels["father"]] = handle_none_id(member.dad_id)
+                row[columns_labels["sex"]] = member.sex.value
+                assert isinstance(member.status, Status)
+                row[columns_labels["status"]] = member.status.value
+                row[columns_labels["role"]] = str(member.role)
                 row.update(generated_layout)
 
                 writer.writerow(row)

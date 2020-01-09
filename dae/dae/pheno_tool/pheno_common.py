@@ -63,7 +63,8 @@ class PhenoFilterBuilder(object):
         if measure.measure_type == MeasureType.categorical:
             return PhenoFilterSet(self.phenotype_data, measure_id, constraints)
         else:
-            return PhenoFilterRange(self.phenotype_data, measure_id, constraints)
+            return PhenoFilterRange(
+                self.phenotype_data, measure_id, constraints)
 
 
 class PhenoResult(object):

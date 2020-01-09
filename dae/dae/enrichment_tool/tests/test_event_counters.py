@@ -99,9 +99,9 @@ def test_counter_base_counters():
 def test_events_counter(f1_trio):
     variants = list(f1_trio.query_variants(
         inheritance=str(Inheritance.denovo.name)))
-    pg = f1_trio.get_people_group('phenotype')
+    pg = f1_trio.get_families_group('phenotype')
     gh = GenotypeHelper(f1_trio, pg, 'autism')
-    children_stats = gh.get_children_stats()
+    # children_stats = gh.get_children_stats()
     children_by_sex = gh.children_by_sex()
     effect_types = set(['missense', 'synonymous'])
     event_counter = EventsCounter()
@@ -123,9 +123,9 @@ def test_events_counter(f1_trio):
 def test_gene_events_counter(f1_trio):
     variants = list(f1_trio.query_variants(
         inheritance=str(Inheritance.denovo.name)))
-    pg = f1_trio.get_people_group('phenotype')
+    pg = f1_trio.get_families_group('phenotype')
     gh = GenotypeHelper(f1_trio, pg, 'autism')
-    children_stats = gh.get_children_stats()
+    # children_stats = gh.get_children_stats()
     children_by_sex = gh.children_by_sex()
     effect_types = set(['missense', 'synonymous'])
     event_counter = GeneEventsCounter()

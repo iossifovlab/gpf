@@ -205,8 +205,10 @@ class ImpalaGenotypeStorage(GenotypeStorage):
 
         assert parquet_filenames is not None
         print("families save in:", parquet_filenames)
+        families = families_loader.load()
+
         ParquetManager.families_loader_to_parquet(
-            families_loader, parquet_filenames.pedigree
+            families, parquet_filenames.pedigree
         )
 
         parquet_pedigrees.append(parquet_filenames.pedigree)
@@ -217,7 +219,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
             pedigree_paths=parquet_pedigrees)
 
     def impala_load_dataset(
-            self, study_id, partition_description, pedigree_file,
+            self, study_id, partition_description, hdfs_pedigree_file,
             db, partition_hdfs_path, files):
         partition_table = f'{study_id}_partition'
         pedigree_table = f'{study_id}_pedigree'
@@ -234,7 +236,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
             partition_table,
             pedigree_table,
             partition_description,
-            pedigree_file,
+            hdfs_pedigree_file,
             partition_hdfs_path,
             files
         )

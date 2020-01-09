@@ -6,15 +6,16 @@ from box import Box
 from dae.backends.storage.tests.conftest import relative_to_this_test_folder
 
 
-def test_build_backend(impala_genotype_storage, quads_f1_config, genomes_db):
+def test_build_backend(
+        impala_genotype_storage, quads_f1_config, genomes_db_2013):
     assert impala_genotype_storage
 
     backend = impala_genotype_storage.build_backend(
-        quads_f1_config, genomes_db
+        quads_f1_config, genomes_db_2013
     )
 
-    assert len(backend.families.families_list()) == 1
-    assert len(backend.families.get_family('f1').members_ids) == 5
+    assert len(backend.families) == 1
+    assert len(backend.families['f1'].members_ids) == 5
     assert len(list(backend.query_variants())) == 3
 
 
@@ -64,7 +65,7 @@ def test_hdfs_helpers(impala_genotype_storage, hdfs_host):
     assert hdfs_helpers.hdfs is not None
 
 
-def test_impala_load_study(impala_genotype_storage, genomes_db):
+def test_impala_load_study(impala_genotype_storage, genomes_db_2013):
     impala_genotype_storage.impala_helpers.drop_database(
         'impala_storage_test_db'
     )
@@ -79,16 +80,16 @@ def test_impala_load_study(impala_genotype_storage, genomes_db):
 
     backend = impala_genotype_storage.build_backend(
         Box({'id': 'study_id'}, default_box=True),
-        genomes_db
+        genomes_db_2013
     )
 
-    assert len(backend.families.families_list()) == 1
-    assert len(backend.families.get_family('f1').members_ids) == 5
+    assert len(backend.families) == 1
+    assert len(backend.families['f1'].members_ids) == 5
     assert len(list(backend.query_variants())) == 3
 
 
 def test_impala_partition_import(
-        impala_genotype_storage, genomes_db,
+        impala_genotype_storage, genomes_db_2013,
         sample_parquet_partition_root, fixture_dirname):
 
     configuration = os.path.join(

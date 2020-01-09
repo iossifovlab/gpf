@@ -7,17 +7,20 @@ from dae.common_reports.family_counter import FamiliesGroupCounters
 class FamiliesReport(object):
 
     def __init__(
-            self, genotype_data_study, people_groups_info, filter_objects,
+            self, selected_groups, families_groups, filter_collections,
             draw_all_families=False, families_count_show_id=False):
-        self.families = genotype_data_study.families
-        self.people_groups_info = people_groups_info
-        self.filter_objects = filter_objects
+
+        self.selected_groups = selected_groups
+        self.families_groups = families_groups
+        self.families = self.families_groups.families
+
+        self.filter_collections = filter_collections
         self.draw_all_families = draw_all_families
         self.families_count_show_id = families_count_show_id
 
         self.families_total = len(self.families.values())
         self.people_counters = self._get_people_counters()
-        self.families_counters = self._get_families_counters()
+        self.families_counters = self._build_families_counters()
 
     def to_dict(self):
         return OrderedDict([
@@ -29,14 +32,16 @@ class FamiliesReport(object):
 
     def _get_people_counters(self):
         return [
-            PeopleCounters(self.families, filter_object)
-            for filter_object in self.filter_objects
+            PeopleCounters(self.families, filter_collection)
+            for filter_collection in self.filter_collections
         ]
 
-    def _get_families_counters(self):
+    def _build_families_counters(self):
         return [
             FamiliesGroupCounters(
-                self.families, people_group_info, self.draw_all_families,
+                self.families_groups,
+                self.families_groups[families_group_id],
+                self.draw_all_families,
                 self.families_count_show_id)
-            for people_group_info in self.people_groups_info.people_groups_info
+            for families_group_id in self.selected_groups
         ]

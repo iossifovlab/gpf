@@ -8,7 +8,7 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 
 from dae.annotation.tools.annotator_config import annotation_config_cli_options
 
-from dae.pedigrees.family import FamiliesLoader  # , FamiliesData
+from dae.pedigrees.loader import FamiliesLoader  # , FamiliesData
 from dae.backends.raw.loader import AnnotationPipelineDecorator
 from dae.backends.vcf.loader import MultiVcfLoader
 from dae.backends.impala.parquet_io import ParquetManager, \
@@ -51,10 +51,13 @@ def parser_common_arguments(gpf_instance, parser):
         parser.add_argument(name, **args)
 
     parser.add_argument(
-        'pedigree', type=str,
-        metavar='<pedigree filename>',
+        'families', type=str,
+        metavar='<families filename>',
         help='families file in pedigree format'
     )
+
+    FamiliesLoader.cli_arguments(parser)
+
     parser.add_argument(
         'vcf', type=str, nargs='+',
         metavar='<VCF filename>',
@@ -157,10 +160,12 @@ def main(
 
     study_id = argv.study_id
     if study_id is None:
-        study_id = os.path.splitext(os.path.basename(argv.pedigree))[0]
-    families_loader = FamiliesLoader(argv.pedigree)
+        study_id = os.path.splitext(os.path.basename(argv.families))[0]
+    families_loader = FamiliesLoader(argv.families)
+    families = families_loader.load()
+
     variants_loader = MultiVcfLoader(
-        families_loader.families, argv.vcf, regions=argv.region,
+        families, argv.vcf, regions=argv.region,
         params={
             'include_reference_genotypes': argv.include_reference,
             'include_unknown_family_genotypes': argv.include_unknown,
@@ -170,9 +175,8 @@ def main(
         variants_loader, annotation_pipeline
     )
     if argv.type == 'make':
-        generate_makefile(
-            variants_loader,
-            f'vcf2parquet.py vcf {argv.vcf}', argv)
+        generate_makefile(genome, get_contigs(argv.vcf),
+                          'vcf2parquet.py vcf {argv.vcf}', argv)
     elif argv.type == 'vcf':
         if not argv.skip_pedigree:
             pedigree_path = os.path.join(
@@ -180,7 +184,7 @@ def main(
                 'pedigree',
                 'pedigree.ped')
             ParquetManager.pedigree_to_parquet(
-                families_loader, pedigree_path)
+                families, pedigree_path)
 
         if argv.partition_description is None:
 

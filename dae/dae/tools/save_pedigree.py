@@ -2,15 +2,15 @@
 from tqdm import tqdm
 import multiprocessing
 
-from pedigrees.family import PedigreeReader
-from pedigrees.pedigrees import get_argument_parser, FamilyConnections
-from pedigrees.interval_sandwich import SandwichSolver
-from pedigrees.layout import Layout
-from pedigrees.layout_saver import LayoutSaver
+from dae.pedigrees.family import PedigreeReader
+from dae.pedigrees.pedigrees import get_argument_parser, FamilyConnections
+from dae.pedigrees.interval_sandwich import SandwichSolver
+from dae.pedigrees.layout import Layout
+from dae.pedigrees.layout_saver import LayoutSaver
 
 
 def save_pedigree(family):
-    family_connections = FamilyConnections.from_pedigree(family)
+    family_connections = FamilyConnections.from_family(family)
     if family_connections is None:
         print(family.family_id)
         print("Missing members")

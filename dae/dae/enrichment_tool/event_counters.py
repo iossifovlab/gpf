@@ -23,7 +23,7 @@ def filter_denovo_one_event_per_family(vs, requested_effect_types):
     res = []
     for v in vs:
         syms = set([ge.symbol.upper() for aa in v.alt_alleles
-                    for ge in aa.effect.genes 
+                    for ge in aa.effect.genes
                     if ge.effect in requested_effect_types])
         not_seen_genes = [gs for gs in syms if (v.family_id + gs) not in seen]
         if not not_seen_genes:

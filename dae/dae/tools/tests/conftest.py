@@ -4,8 +4,6 @@ import os
 import shutil
 from box import Box
 
-from dae.gpf_instance.gpf_instance import GPFInstance
-
 from dae.annotation.tools.file_io import IOManager, IOType
 from dae.utils.fixtures import change_environment
 
@@ -15,11 +13,6 @@ def relative_to_this_test_folder(path):
         os.path.dirname(os.path.realpath(__file__)),
         path
     )
-
-
-@pytest.fixture(scope='session')
-def gpf_instance(mock_genomes_db):
-    return GPFInstance(work_dir=relative_to_this_test_folder('fixtures'))
 
 
 @pytest.fixture

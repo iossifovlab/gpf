@@ -1,5 +1,3 @@
-import os
-import time
 from dae.backends.impala.parquet_io import VariantsParquetWriter
 from dae.backends.impala.parquet_io import ParquetPartitionDescription
 

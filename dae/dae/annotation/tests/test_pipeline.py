@@ -15,7 +15,7 @@ def empty_options():
     return Box({'vcf': True}, default_box=True, default_box_attr=None)
 
 
-def test_parse_pipeline_config(genomes_db):
+def test_parse_pipeline_config(genomes_db_2013):
     filename = relative_to_this_test_folder('fixtures/annotation_test.conf')
     work_dir = relative_to_this_test_folder('fixtures')
     configuration = AnnotationConfigParser.read_file_configuration(
@@ -28,7 +28,7 @@ def test_parse_pipeline_config(genomes_db):
 
 
 @pytest.fixture
-def error_pipeline_sections_configuration(genomes_db):
+def error_pipeline_sections_configuration(genomes_db_2013):
     filename = relative_to_this_test_folder(
         'fixtures/error_annotation_sections.conf')
     work_dir = relative_to_this_test_folder('fixtures')
@@ -40,7 +40,7 @@ def error_pipeline_sections_configuration(genomes_db):
 
 
 @pytest.fixture
-def pipeline_sections_configuration(genomes_db):
+def pipeline_sections_configuration(genomes_db_2013):
     filename = relative_to_this_test_folder(
         'fixtures/annotation_test.conf')
     work_dir = relative_to_this_test_folder('fixtures')
@@ -55,24 +55,25 @@ def pipeline_sections_configuration(genomes_db):
 
 
 def test_parse_error_pipeline_section_missing_annotator(
-        error_pipeline_sections_configuration, empty_options, genomes_db):
+        error_pipeline_sections_configuration, empty_options, genomes_db_2013):
     error_configuration = error_pipeline_sections_configuration
     configuration = error_configuration['Step0']
     configuration['options'] = empty_options
 
     with pytest.raises(AssertionError):
-        AnnotationConfigParser.parse_section(configuration, genomes_db)
+        AnnotationConfigParser.parse_section(configuration, genomes_db_2013)
 
 
 def test_parse_annotation_section_sections(
-        pipeline_sections_configuration, empty_options, genomes_db):
+        pipeline_sections_configuration, empty_options, genomes_db_2013):
     configuration = pipeline_sections_configuration
 
     step1_configuration = configuration['Step1']
     step1_configuration['options'] = empty_options
 
     section1 = \
-        AnnotationConfigParser.parse_section(step1_configuration, genomes_db)
+        AnnotationConfigParser.parse_section(
+            step1_configuration, genomes_db_2013)
     assert section1.annotator == \
         'relabel_chromosome.RelabelChromosomeAnnotator'
 
@@ -80,11 +81,12 @@ def test_parse_annotation_section_sections(
     step3_configuration['options'] = empty_options
 
     section3 = \
-        AnnotationConfigParser.parse_section(step3_configuration, genomes_db)
+        AnnotationConfigParser.parse_section(
+            step3_configuration, genomes_db_2013)
     assert section3.annotator == 'annotator_base.CopyAnnotator'
 
 
-def test_build_pipeline_configuration(genomes_db):
+def test_build_pipeline_configuration(genomes_db_2013):
     options = Box({
             'default_arguments': None,
             'vcf': True,
@@ -97,7 +99,7 @@ def test_build_pipeline_configuration(genomes_db):
     work_dir = relative_to_this_test_folder('fixtures')
 
     config = AnnotationConfigParser.read_and_parse_file_configuration(
-        options, filename, work_dir, genomes_db
+        options, filename, work_dir, genomes_db_2013
     )
     assert config is not None
 
@@ -140,7 +142,8 @@ input2_score2_expected = \
     ('fixtures/score2_annotator.conf', input2_score2_expected),
 ])
 def test_build_pipeline(
-        expected_df, variants_io, capsys, config_file, expected, genomes_db):
+        expected_df, variants_io, capsys, config_file, expected,
+        genomes_db_2013):
 
     options = Box({
             'default_arguments': None,
@@ -156,7 +159,7 @@ def test_build_pipeline(
     with variants_io('fixtures/input2.tsv') as io_manager:
         work_dir = relative_to_this_test_folder('fixtures/')
         pipeline = PipelineAnnotator.build(
-            options, filename, work_dir, genomes_db,
+            options, filename, work_dir, genomes_db_2013,
             defaults={'values': {'fixtures_dir': work_dir}}
         )
         assert pipeline is not None
@@ -199,7 +202,7 @@ test	42	test	42	test	42
 
 
 def test_pipeline_change_variants_position(
-        variants_io, capsys, expected_df, genomes_db):
+        variants_io, capsys, expected_df, genomes_db_2013):
 
     options = Box({
             'default_arguments': None,
@@ -215,7 +218,7 @@ def test_pipeline_change_variants_position(
     with variants_io('fixtures/input2.tsv') as io_manager:
         work_dir = relative_to_this_test_folder('fixtures/')
         pipeline = PipelineAnnotator.build(
-            options, filename, work_dir, genomes_db,
+            options, filename, work_dir, genomes_db_2013,
             defaults={'values': {'fixtures_dir': work_dir}}
         )
         assert pipeline is not None

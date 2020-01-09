@@ -213,9 +213,7 @@ class StudyWrapper(object):
 
     def get_variant_web_rows(self, query, sources, max_variants_count=None):
         people_group_id = query.get('peopleGroup', {}).get('id', None)
-        people_group = self.get_people_group(people_group_id)
-        if not people_group:
-            people_group = {}
+        people_group = self.get_families_group(people_group_id)
 
         rows = self.query_list_variants(sources, people_group, **query)
 
@@ -451,36 +449,31 @@ class StudyWrapper(object):
         return set(selection['selection'])
 
     def _add_people_with_people_group(self, kwargs):
-        people_with_people_group = set()
 
         if 'peopleGroup' not in kwargs or kwargs['peopleGroup'] is None:
             return kwargs
 
         people_group_query = kwargs.pop('peopleGroup')
+        people_group_id = people_group_query['id']
+        people_group_values = set(people_group_query['checkedValues'])
 
-        people_group = self.genotype_data_study.get_people_group(
-            people_group_query['id']
+        families_group = self.genotype_data_study.get_families_group(
+            people_group_id
         )
-        if not people_group:
+        if not families_group:
             return kwargs
 
-        if set(people_group.domain) == \
-                set(people_group_query['checkedValues']):
+        if set(families_group.domain) == people_group_values:
             return kwargs
 
-        for family in self.families.values():
-            family_members_with_people_group = set([
-                person.person_id for person in
-                family.get_people_from_people_group(
-                    people_group.source, people_group_query['checkedValues']
-                )
-            ])
-            people_with_people_group.update(family_members_with_people_group)
+        persons = families_group.get_people_with_propvalues(
+            tuple(people_group_values))
+        person_ids = set([p.person_id for p in persons])
 
         if 'person_ids' in kwargs:
-            people_with_people_group.intersection(kwargs['person_ids'])
+            person_ids.intersection(set(kwargs['person_ids']))
 
-        kwargs['person_ids'] = list(people_with_people_group)
+        kwargs['person_ids'] = list(person_ids)
 
         return kwargs
 
@@ -737,7 +730,7 @@ class StudyWrapper(object):
             'id', 'name', 'description', 'phenotypeBrowser', 'phenotypeTool',
             'phenotypeData', 'enrichmentTool', 'genotypeBrowser',
             'peopleGroupConfig', 'genotypeBrowserConfig', 'commonReport',
-            'studyTypes', 'studies'
+            'studyTypes', 'studies', 'hasPresentInChild', 'hasPresentInParent'
         ]
 
     @staticmethod
@@ -795,12 +788,12 @@ class StudyWrapper(object):
         return [
             member.family_id,
             member.person_id,
-            member.mom_id,
-            member.dad_id,
+            member.mom_id if member.mom_id else '0',
+            member.dad_id if member.dad_id else '0',
             member.sex.short(),
             str(member.role),
             self.genotype_data_study._get_person_color(member, people_group),
-            member.layout_position,
+            member.layout,
             member.generated,
             best_st,
             0

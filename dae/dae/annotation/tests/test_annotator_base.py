@@ -47,7 +47,7 @@ def test_create_file_io():
         assert len(io.header) == 3
 
 
-def test_annotator_base_simple(genomes_db):
+def test_annotator_base_simple(genomes_db_2013):
     opts = Box({}, default_box=True, default_box_attr=None)
 
     section_config = AnnotationConfigParser.parse_section(
@@ -59,14 +59,14 @@ def test_annotator_base_simple(genomes_db):
             },
             'annotator': 'annotator_base.AnnotatorBase'
         }),
-        genomes_db
+        genomes_db_2013
     )
 
     annotator = AnnotatorBase(section_config)
     assert annotator is not None
 
 
-def test_copy_annotator_simple(capsys, variants_io1, genomes_db):
+def test_copy_annotator_simple(capsys, variants_io1, genomes_db_2013):
     opts = Box({}, default_box=True, default_box_attr=None)
 
     section_config = AnnotationConfigParser.parse_section(
@@ -78,7 +78,7 @@ def test_copy_annotator_simple(capsys, variants_io1, genomes_db):
             },
             'annotator': 'annotator_base.CopyAnnotator'
         }),
-        genomes_db
+        genomes_db_2013
     )
 
     with variants_io1 as io_manager:
@@ -95,7 +95,8 @@ def test_copy_annotator_simple(capsys, variants_io1, genomes_db):
     # assert captured.err == 'Processed 4 lines.\n'
 
 
-def test_copy_annotator_multi(capsys, variants_io_m, expected_df, genomes_db):
+def test_copy_annotator_multi(
+        capsys, variants_io_m, expected_df, genomes_db_2013):
     opts = Box({}, default_box=True, default_box_attr=None)
 
     section_config = AnnotationConfigParser.parse_section(
@@ -107,7 +108,7 @@ def test_copy_annotator_multi(capsys, variants_io_m, expected_df, genomes_db):
             },
             'annotator': 'annotator_base.CopyAnnotator'
         }),
-        genomes_db
+        genomes_db_2013
     )
 
     df = pd.read_csv(
