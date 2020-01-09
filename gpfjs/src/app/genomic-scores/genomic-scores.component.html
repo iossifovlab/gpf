@@ -8,9 +8,11 @@
         </option>
       </select>
     </div>
-    <div class="col-sm-1">
-      <i class="clickable fa fa-question-circle-o fa-2x" aria-hidden="false" (click)="showHelp()"></i>
+
+    <div>
+      <i [style.visibility]="this.genomicScoreState.score.help !== ''? 'visible': 'hidden'" class="clickable fa fa-question-circle-o fa-2x" (click)="showHelp()"></i>
     </div>
+
     <div class="col-sm-8">
       <gpf-histogram
         *ngIf="selectedGenomicScores"
