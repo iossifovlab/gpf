@@ -51,10 +51,13 @@ def parser_common_arguments(gpf_instance, parser):
         parser.add_argument(name, **args)
 
     parser.add_argument(
-        'pedigree', type=str,
-        metavar='<pedigree filename>',
+        'families', type=str,
+        metavar='<families filename>',
         help='families file in pedigree format'
     )
+
+    FamiliesLoader.cli_arguments(parser)
+
     parser.add_argument(
         'vcf', type=str,
         metavar='<VCF filename>',
@@ -104,13 +107,6 @@ def parser_common_arguments(gpf_instance, parser):
         'ex. chr1:1-10000'
     )
 
-    parser.add_argument(
-        '-f', '--family-format', type=str,
-        default='pedigree',
-        dest='family_format',
-        help='families file format - `pedigree` or `simple`; '
-        '[default: %(default)s]'
-    )
 
 def parser_vcf_arguments(gpf_instance, subparsers):
     parser = subparsers.add_parser('vcf')
@@ -164,8 +160,8 @@ def main(
 
     study_id = argv.study_id
     if study_id is None:
-        study_id = os.path.splitext(os.path.basename(argv.pedigree))[0]
-    families_loader = FamiliesLoader(argv.pedigree)
+        study_id = os.path.splitext(os.path.basename(argv.families))[0]
+    families_loader = FamiliesLoader(argv.families)
     families = families_loader.load()
 
     variants_loader = VcfLoader(
