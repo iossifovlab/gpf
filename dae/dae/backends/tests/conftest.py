@@ -7,14 +7,6 @@ from dae.variants.family_variant import FamilyVariant
 from dae.variants.variant import SummaryAllele, SummaryVariant
 
 
-from ..vcf.annotate_allele_frequencies import VcfAlleleFrequencyAnnotator
-
-
-@pytest.fixture(scope='session')
-def allele_freq_annotator():
-    return VcfAlleleFrequencyAnnotator()
-
-
 PED1 = '''
 # SIMPLE TRIO
 familyId,    personId,    dadId,    momId,    sex,   status,    role
