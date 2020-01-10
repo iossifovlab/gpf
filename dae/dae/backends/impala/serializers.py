@@ -5,7 +5,7 @@ from collections import namedtuple
 
 import numpy as np
 
-from dae.utils.variant_utils import GENOTYPE_TYPE
+from dae.utils.variant_utils import GENOTYPE_TYPE, BEST_STATE_TYPE
 from dae.annotation.tools.file_io_parquet import ParquetSchema
 
 from dae.variants.family_variant import FamilyAllele, FamilyVariant
@@ -256,6 +256,24 @@ class ParquetSerializer(object):
         size = len(gt) // 2
         gt = gt.reshape([2, size], order='F')
         return gt
+
+    @staticmethod
+    def serialize_variant_best_state(best_state):
+        flat = best_state.flatten(order='F')
+        buff = flat.tobytes()
+        data = str(buff, 'latin1')
+
+        return data
+
+    @staticmethod
+    def deserialize_variant_best_state(data, col_count):
+        buff = bytes(data, 'latin1')
+        best_state = np.frombuffer(buff, dtype=BEST_STATE_TYPE)
+        assert len(best_state) % col_count == 0
+
+        size = len(best_state) // col_count
+        best_state = best_state.reshape([size, col_count], order='F')
+        return best_state
 
     @staticmethod
     def serialize_variant_alternatives(alternatives):

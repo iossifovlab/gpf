@@ -7,6 +7,7 @@ import numpy as np
 
 
 GENOTYPE_TYPE = np.int8
+BEST_STATE_TYPE = np.int8
 
 
 def mat2str(mat, col_sep="", row_sep="/"):
