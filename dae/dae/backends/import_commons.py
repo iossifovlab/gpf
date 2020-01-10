@@ -1,52 +1,18 @@
 import os
-import sys
-
-from collections import OrderedDict
-from dae.RegionOperations import Region
 
 from box import Box
 
 from dae.annotation.annotation_pipeline import PipelineAnnotator
-
-from dae.backends.impala.parquet_io import ParquetManager, \
-    ParquetPartitionDescription
-
+from dae.backends.impala.parquet_io import ParquetPartitionDescription
 from dae.utils.dict_utils import recursive_dict_update
-
-
-def build_contig_regions(genome, TRANSMITTED_STEP=10000000):
-    contigs = OrderedDict(genome.get_all_chr_lengths())
-    contig_regions = OrderedDict()
-    if TRANSMITTED_STEP is None:
-        for contig, _ in contigs.items():
-            contig_regions[contig] = [Region(contig, None, None)]
-        return contig_regions
-
-    contig_parts = OrderedDict([
-        (contig, max(int(size / TRANSMITTED_STEP), 1))
-        for contig, size in contigs.items()
-    ])
-    for contig, size in contigs.items():
-        regions = []
-        total_parts = contig_parts[contig]
-        step = int(size / total_parts + 1)
-        for index in range(total_parts):
-            begin_pos = index * step
-            end_pos = (index + 1) * step - 1
-            if index + 1 == total_parts:
-                end_pos = size
-            region = Region(contig, begin_pos, end_pos)
-            regions.append(region)
-        contig_regions[contig] = regions
-    return contig_regions
 
 
 def construct_import_annotation_pipeline(
         dae_config, genomes_db, argv=None, defaults=None):
     if defaults is None:
         defaults = {}
-    if argv is not None and 'annotation_config' in argv and \
-            argv.annotation_config is not None:
+    if argv is not None and 'annotation_config' in argv \
+            and argv.annotation_config is not None:
         config_filename = argv.annotation_config
     else:
         config_filename = dae_config.annotation.conf_file
@@ -135,17 +101,22 @@ def generate_makefile(genome, contigs, tool, argv):
     all_target = 'all:'
     main_targets = ''
     other_targets = ''
+
+    common_command = f'{tool} ' \
+        f'--skip-pedigree --o {argv.output}' \
+        f' --pd {argv.partition_description}' \
+        f' --ped-file-format {argv.ped_file_format}'
+    if 'annotation_config' in argv:
+        common_command += f' --annotation-config {argv.annotation_config}'
+
     for target_name in targets.keys():
         all_target += f' {target_name}'
 
     for target_name, target_args in targets.items():
-        command = f'{tool} ' \
-            f'--skip-pedigree --o {argv.output}' \
-            f' --pd {argv.partition_description}' \
-            f' --region {generate_region_argument_string(*target_args)}' \
-            f' --ped-file-format {argv.ped_file_format}'
         main_targets += f'{target_name}:\n'
-        main_targets += f'\t{command}\n\n'
+        main_targets += f'\t{common_command}'
+        main_targets += \
+            f' --region {generate_region_argument_string(*target_args)}\n\n'
 
     if len(other_regions) > 0:
         for region_bin, command_args in other_regions.items():
@@ -157,11 +128,8 @@ def generate_makefile(genome, contigs, tool, argv):
                     command_args
                 )
             )
-            command = f'{tool} ' \
-                f'--skip-pedigree --o {argv.output} ' \
-                f'--pd {argv.partition_description} ' \
-                f'--region {regions}'
-            other_targets += f'\t{command}\n\n'
+            other_targets += f'\t{common_command}'
+            other_targets += f' --region {regions}\n\n'
 
     output += f'{all_target}\n'
     output += '.PHONY: all\n\n'
