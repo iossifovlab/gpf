@@ -2,7 +2,7 @@ import pytest
 
 import json
 
-pytestmark = pytest.mark.usefixtures('mock_gpf_instance')
+pytestmark = pytest.mark.usefixtures('wdae_gpf_instance', 'calc_gene_sets')
 
 
 def test_gene_weights_partitions(user_client):

@@ -4,7 +4,7 @@ import pytest
 
 from rest_framework import status
 
-pytestmark = pytest.mark.usefixtures('mock_gpf_instance')
+pytestmark = pytest.mark.usefixtures('wdae_gpf_instance', 'calc_gene_sets')
 
 
 EXAMPLE_REQUEST_F1 = {

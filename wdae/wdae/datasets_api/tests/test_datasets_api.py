@@ -1,6 +1,6 @@
 import pytest
 
-pytestmark = pytest.mark.usefixtures('mock_gpf_instance')
+pytestmark = pytest.mark.usefixtures('wdae_gpf_instance', 'calc_gene_sets')
 
 
 def test_datasets_api_get_all(admin_client):
@@ -48,7 +48,7 @@ def test_datasets_name_ordering(admin_client):
     assert response.data['data'] == sorted_response_data
 
 
-def test_user_client_get_dataset_details(user_client, mock_gpf_instance):
+def test_user_client_get_dataset_details(user_client, wdae_gpf_instance):
     response = user_client.get('/api/v3/datasets/details/inheritance_trio')
 
     assert response
@@ -57,7 +57,7 @@ def test_user_client_get_dataset_details(user_client, mock_gpf_instance):
 
 
 def test_user_client_get_nonexistant_dataset_details(
-        user_client, mock_gpf_instance):
+        user_client, wdae_gpf_instance):
     response = user_client.get('/api/v3/datasets/details/asdfghjkl')
 
     assert response

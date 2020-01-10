@@ -92,7 +92,7 @@ def gpf_instance(default_dae_config):
 
 
 @pytest.fixture(scope='session')
-def gpf_instance_2013(default_dae_config):
+def gpf_instance_2013(default_dae_config, global_dae_fixtures_dir):
 
     class GenomesDb2013(GenomesDB):
 
@@ -108,7 +108,13 @@ def gpf_instance_2013(default_dae_config):
                 self.dae_config.genomes_db.conf_file
             )
 
-    return GPFInstance2013(dae_config=default_dae_config)
+    gpf_instance = GPFInstance2013(dae_config=default_dae_config)
+    return gpf_instance
+
+
+@pytest.fixture(scope='session')
+def fixtures_gpf_instance(gpf_instance, global_dae_fixtures_dir):
+    return gpf_instance(global_dae_fixtures_dir)
 
 
 @pytest.fixture(scope='session')
@@ -127,7 +133,7 @@ def genome_2013(gpf_instance_2013):
 
 
 @pytest.fixture(scope='session')
-def gpf_instance_2019(default_dae_config):
+def gpf_instance_2019(default_dae_config, global_dae_fixtures_dir):
 
     class GenomesDb2019(GenomesDB):
 
@@ -143,7 +149,8 @@ def gpf_instance_2019(default_dae_config):
                 self.dae_config.genomes_db.conf_file
             )
 
-    return GPFInstance2019(dae_config=default_dae_config)
+    return GPFInstance2019(
+        dae_config=default_dae_config, work_dir=global_dae_fixtures_dir)
 
 
 @pytest.fixture(scope='session')
@@ -776,14 +783,9 @@ def test_fixture():
     print('end')
 
 
-# @pytest.fixture(scope='session')
-# def gpf_instance(mock_genomes_db, global_dae_fixtures_dir):
-#     return GPFInstance(work_dir=global_dae_fixtures_dir)
-
-
 @pytest.fixture(scope='session')
-def variants_db_fixture(gpf_instance):
-    return gpf_instance._variants_db
+def variants_db_fixture(fixtures_gpf_instance):
+    return fixtures_gpf_instance._variants_db
 
 
 @pytest.fixture(scope='session')
@@ -791,6 +793,8 @@ def calc_gene_sets(request, variants_db_fixture):
     genotype_data_names = ['f1_group', 'f2_group', 'f3_group']
     for dgs in genotype_data_names:
         genotype_data = variants_db_fixture.get(dgs)
+        assert genotype_data is not None
+
         DenovoGeneSetCollectionFactory.build_collection(genotype_data)
 
     print("PRECALCULATION COMPLETE")
@@ -799,7 +803,9 @@ def calc_gene_sets(request, variants_db_fixture):
         for dgs in genotype_data_names:
             genotype_data = variants_db_fixture.get(dgs)
             config = DenovoGeneSetConfigParser.parse(genotype_data.config)
-            os.remove(DenovoGeneSetConfigParser.denovo_gene_set_cache_file(
+            cache_file = DenovoGeneSetConfigParser.denovo_gene_set_cache_file(
                 config, 'phenotype')
-            )
+            if os.path.exists(cache_file):
+                os.remove(cache_file)
+
     request.addfinalizer(remove_gene_sets)

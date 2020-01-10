@@ -5,9 +5,8 @@ from rest_framework import status
 
 import json
 
-
-pytestmark = pytest.mark.usefixtures('mock_gpf_instance', 'calc_gene_sets')
-
+pytestmark = pytest.mark.usefixtures(
+    'wdae_gpf_instance', 'calc_gene_sets')
 
 def name_in_gene_sets(gene_sets, name, count=None):
     for gene_set in gene_sets:
@@ -43,7 +42,7 @@ def test_gene_set_download(db, admin_client):
         'geneSet': 'Synonymous',
         'geneSetsTypes': {
             'f1_group': {
-                'phenotype': ['phenotype 1', 'unaffected']
+                'phenotype': ['phenotype1', 'unaffected']
             }
         }
     }
@@ -53,8 +52,9 @@ def test_gene_set_download(db, admin_client):
     assert status.HTTP_200_OK == response.status_code, repr(response.content)
 
     result = list(response.streaming_content)
+
     count = len(result)
-    assert 1 + 2 == count
+    assert 1 + 1 == count
 
 
 @pytest.mark.xfail(reason='[gene models] wrong annotation')

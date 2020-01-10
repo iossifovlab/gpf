@@ -1,37 +1,6 @@
 import pytest
 
-from dae.gpf_instance.gpf_instance import GPFInstance
-from gpf_instance.gpf_instance import reload_datasets
-from dae_conftests.dae_conftests import get_global_dae_fixtures_dir
-
-
-def fixtures_dir():
-    return get_global_dae_fixtures_dir()
-
 
 @pytest.fixture(scope='session')
-def gpf_instance(mock_genomes_db):
-    return GPFInstance(work_dir=fixtures_dir())
-
-
-@pytest.fixture(scope='session')
-def dae_config_fixture(gpf_instance):
-    return gpf_instance.dae_config
-
-
-@pytest.fixture(scope='function')
-def mock_gpf_instance(db, mocker, gpf_instance):
-    reload_datasets(gpf_instance._variants_db)
-    mocker.patch(
-        'query_base.query_base.get_gpf_instance',
-        return_value=gpf_instance
-    )
-    mocker.patch(
-        'gene_weights.tests.test_gene_weights_db.get_gpf_instance',
-        return_value=gpf_instance
-    )
-
-
-@pytest.fixture(scope='session')
-def gene_weights_db(gpf_instance):
-    return gpf_instance.gene_weights_db
+def gene_weights_db(fixtures_gpf_instance):
+    return fixtures_gpf_instance.gene_weights_db
