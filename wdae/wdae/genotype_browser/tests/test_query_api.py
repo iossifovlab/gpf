@@ -4,7 +4,7 @@ import pytest
 
 from rest_framework import status
 
-pytestmark = pytest.mark.usefixtures('mock_gpf_instance')
+pytestmark = pytest.mark.usefixtures('wdae_gpf_instance', 'calc_gene_sets')
 
 
 EXAMPLE_REQUEST_F1 = {
@@ -29,8 +29,8 @@ def test_simple_preview(db, admin_client):
     assert 'cols' in res
     assert 'legend' in res
 
-    assert 8 == len(res['legend'])
-    assert 20 == len(res['cols'])
+    assert len(res['legend']) == 8
+    assert len(res['cols']) == 19
 
 
 def test_simple_query_variants_preview(db, admin_client):
@@ -44,7 +44,7 @@ def test_simple_query_variants_preview(db, admin_client):
     res = response.streaming_content
     res = json.loads(''.join(map(lambda x: x.decode('utf-8'), res)))
 
-    assert 2 == len(res)
+    assert len(res) == 3
 
 
 @pytest.mark.parametrize('url', [
@@ -86,11 +86,11 @@ def test_simple_query_download(db, admin_client):
     assert res[0]
     header = res[0].decode('utf-8')[:-1].split('\t')
 
-    assert len(res) == 3
+    assert len(res) == 4
 
     assert header == [
         'family id', 'study', 'phenotype', 'location', 'variant',
-        'family genotype', 'from parents', 'in childs', 'worst effect type',
+        'family genotype', 'from parent', 'in child', 'worst effect type',
         'genes', 'count', 'all effects', 'effect details', 'LGD rank',
-        'RVIS rank', 'SSC', 'EVS', 'E65'
+        'RVIS rank', 'pLI rank', 'SSC', 'EVS', 'E65'
     ]

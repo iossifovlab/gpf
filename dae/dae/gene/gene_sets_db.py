@@ -55,11 +55,9 @@ class GeneSetCollection(object):
 
 class GeneSetsDb(object):
 
-    def __init__(self, variants_db, config):
+    def __init__(self, config):
         assert config is not None
-        assert variants_db is not None
         self.config = config
-        self.variants_db = variants_db
         self.gene_set_collections = dict()
 
     @property

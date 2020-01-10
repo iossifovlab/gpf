@@ -11,11 +11,7 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 from gpf_instance.gpf_instance import reload_datasets
 
 
-@pytest.fixture(scope='session')
-def monkeysession(request):
-    mp = MonkeyPatch()
-    request.addfinalizer(mp.undo)
-    return mp
+pytest_plugins = ['dae_conftests.dae_conftests']
 
 
 @pytest.fixture()
@@ -76,70 +72,24 @@ def admin_client(admin, client):
     client.login(email=admin.email, password="secret")
     return client
 
-
-@pytest.fixture(scope='session')
-def global_gpf_instance():
-    return GPFInstance()
-
-
-@pytest.fixture(scope='session')
-def default_gene_models(global_gpf_instance):
-    return global_gpf_instance.genomes_db.get_gene_models()
-
-
-@pytest.fixture(scope='session')
-def default_genome(global_gpf_instance):
-    return global_gpf_instance.genomes_db.get_genome()
-
-
-@pytest.fixture(scope='session')
-def mock_genomes_db(monkeysession, default_gene_models, default_genome):
-
-    def fake_init(self, dae_dir, conf_file=None):
-        self.dae_dir = None
-        self.config = None
-
-    monkeysession.setattr(
-        'dae.GenomesDB.GenomesDB.__init__', fake_init
-    )
-
-    monkeysession.setattr(
-        'dae.GenomesDB.GenomesDB.get_genome',
-        lambda self: default_genome
-    )
-    monkeysession.setattr(
-        'dae.GenomesDB.GenomesDB.get_genome_from_file',
-        lambda self, _=None: default_genome
-    )
-    monkeysession.setattr(
-        'dae.GenomesDB.GenomesDB.get_gene_models',
-        lambda self, _=None: default_gene_models
-    )
-    monkeysession.setattr(
-        'dae.GenomesDB.GenomesDB.get_genome_file',
-        lambda self, _=None:
-            './genomes/GATK_ResourceBundle_5777_b37_phiX174/chrAll.fa'
-    )
-    monkeysession.setattr(
-        'dae.GenomesDB.GenomesDB.get_gene_model_id',
-        lambda self: 'RefSeq2013'
-    )
-
-
-def global_fixtures_dir():
-    return os.path.abspath(
-        os.path.join(os.path.dirname(__file__), 'tests', 'fixtures'))
-
-
-@pytest.fixture(scope='session')
-def gpf_instance(mock_genomes_db):
-    return GPFInstance(work_dir=global_fixtures_dir())
-
-
 @pytest.fixture(scope='function')
-def mock_gpf_instance(db, mocker, gpf_instance):
-    reload_datasets(gpf_instance._variants_db)
+def wdae_gpf_instance(db, mocker, admin_client, fixtures_gpf_instance, gpf_instance_2013):
+    reload_datasets(fixtures_gpf_instance._variants_db)
     mocker.patch(
         'query_base.query_base.get_gpf_instance',
-        return_value=gpf_instance
+        return_value=fixtures_gpf_instance
     )
+    mocker.patch(
+        'gpf_instance.gpf_instance.get_gpf_instance',
+        return_value=fixtures_gpf_instance
+    )
+    mocker.patch(
+        'gene_sets.expand_gene_set_decorator.get_gpf_instance',
+        return_value=fixtures_gpf_instance
+    )
+    mocker.patch(
+        'datasets_api.permissions.get_gpf_instance',
+        return_value=fixtures_gpf_instance
+    )
+
+    return fixtures_gpf_instance

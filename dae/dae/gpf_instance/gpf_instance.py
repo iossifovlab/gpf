@@ -125,7 +125,7 @@ class GPFInstance(object):
     @property
     @cached
     def gene_sets_db(self):
-        return GeneSetsDb(self._variants_db, self._gene_info_config)
+        return GeneSetsDb(self._gene_info_config)
 
     @property
     @cached

@@ -15,6 +15,7 @@ rm -rf \
 
 cd dae && pip install -e . && cd -
 cd wdae && pip install -e . && cd -
+cd dae_conftests && pip install -e . && cd -
 
 py.test -v --cov-config coveragerc \
     --reimport \

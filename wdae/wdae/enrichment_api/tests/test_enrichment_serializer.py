@@ -3,7 +3,7 @@ import pytest
 from dae.enrichment_tool.event_counters import EnrichmentResult
 
 
-pytestmark = pytest.mark.usefixtures('mock_gpf_instance')
+pytestmark = pytest.mark.usefixtures('wdae_gpf_instance', 'calc_gene_sets')
 
 
 @pytest.mark.xfail(reason='[gene models] wrong annotation')

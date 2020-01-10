@@ -12,8 +12,8 @@ def test_variants_db_can_create_study_from_config(
         genotype_data_study_configs, variants_db_fixture):
     test_config = genotype_data_study_configs.get('quads_f1')
 
-    assert variants_db_fixture.make_genotype_data_study(test_config) \
-        is not None
+    assert \
+        variants_db_fixture.make_genotype_data_study(test_config) is not None
 
 
 ##############################################################
@@ -94,12 +94,13 @@ def test_get_non_existing_study_wrapper(variants_db_fixture):
 
 
 def test_get_genotype_data_groups_ids(variants_db_fixture):
-    assert sorted(variants_db_fixture.get_genotype_data_groups_ids()) == \
-        sorted([
+    assert set(variants_db_fixture.get_genotype_data_groups_ids()) == \
+        set([
             'quads_in_parent_ds', 'composite_dataset_ds', 'quads_in_child_ds',
             'quads_composite_ds', 'inheritance_trio_ds',
             'quads_two_families_ds', 'quads_variant_types_ds', 'quads_f1_ds',
-            'quads_f2_ds'
+            'quads_f2_ds', 'f2_group', 'Dataset3', 'f1_group',
+            'Dataset2', 'Dataset1', 'f3_group', 'Dataset4',
         ])
 
 
@@ -154,12 +155,12 @@ def test_get_non_existing_genotype_data_group_wrapper(variants_db_fixture):
 
 def test_get_all_genotype_data_groups(variants_db_fixture):
     genotype_data_groups = variants_db_fixture.get_all_genotype_data_groups()
-    assert len(genotype_data_groups) == 9
+    assert len(genotype_data_groups) == 16
 
 
 def test_get_all_genotype_data_group_configs(variants_db_fixture):
     configs = variants_db_fixture.get_all_genotype_data_group_configs()
-    assert len(configs) == 9
+    assert len(configs) == 16
 
 
 ##############################################################
@@ -216,4 +217,4 @@ def test_get_non_existing_wrapper(variants_db_fixture):
 
 def test_get_all(variants_db_fixture):
     studies = variants_db_fixture.get_all_genotype_data()
-    assert len(studies) == 16
+    assert len(studies) == 32
