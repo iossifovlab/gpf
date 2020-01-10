@@ -87,7 +87,7 @@ class VcfLoader(VariantsLoader):
 
         self._match_pedigree_to_samples(families, samples)
 
-        self.seqnames = self._init_chromosome_order()
+        self._init_chromosome_order()
 
     def _init_vcf_readers(self):
         self.vcfs = list()
@@ -98,14 +98,18 @@ class VcfLoader(VariantsLoader):
     def _get_vcf_iterators(self, region):
         return [enumerate(vcf(region)) for vcf in self.vcfs]
 
-    def _init_chromosome_order(self) -> Dict[str, int]:
+    def _init_chromosome_order(self):
         seqnames = list()
 
         seqnames = self.vcfs[0].seqnames
         assert \
             all([vcf.seqnames == seqnames for vcf in self.vcfs])
 
-        return seqnames
+        chrom_order = dict()
+        for idx, seq in enumerate(seqnames):
+            chrom_order[seq] = idx
+
+        self.chrom_order = chrom_order
 
     @staticmethod
     def _match_pedigree_to_samples(families, vcf_samples):
@@ -163,8 +167,8 @@ class VcfLoader(VariantsLoader):
         larger than right summary variant position in file
         """
         # TODO: Change this to use a dict
-        l_chrom_idx = self.seqnames.index(lhs.ref_allele.chromosome)
-        r_chrom_idx = self.seqnames.index(rhs.ref_allele.chromosome)
+        l_chrom_idx = self.chrom_order.get(lhs.ref_allele.chromosome)
+        r_chrom_idx = self.chrom_order.get(rhs.ref_allele.chromosome)
 
         if l_chrom_idx > r_chrom_idx:
             return True
@@ -211,6 +215,7 @@ class VcfLoader(VariantsLoader):
         while True:
             if all([variant is None for variant in variants]):
                 break
+
             summary_variants = list(map(
                 lambda x: self._warp_summary_variant(variant_count, x[1]),
                 variants
@@ -241,6 +246,7 @@ class VcfLoader(VariantsLoader):
 
             for idx in iterator_idxs_to_advance:
                 variants[idx] = next(vcf_iterators[idx], None)
+                variant_count += 1
 
     def summary_genotypes_iterator(self):
         for region in self.regions:
