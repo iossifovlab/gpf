@@ -1,5 +1,7 @@
 import enum
 import itertools
+import time
+import sys
 
 from dae.variants.family_variant import FamilyAllele
 
@@ -212,9 +214,11 @@ class RawMemoryVariants(RawFamilyVariants):
             self, loaders):
         assert len(loaders) > 0
         super(RawMemoryVariants, self).__init__(loaders[0].families)
-
+        start = time.time()
         self.full_variants = list(itertools.chain.from_iterable(
             [loader.full_variants_iterator() for loader in loaders]))
+        elapsed = time.time() - start
+        print(f"Variants loaded in in {elapsed:.2f} sec", file=sys.stderr)
 
     def full_variants_iterator(self):
         for sv, fvs in self.full_variants:

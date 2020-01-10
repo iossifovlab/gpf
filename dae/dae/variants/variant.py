@@ -301,6 +301,7 @@ class SummaryAllele(VariantBase):
             allele.chromosome,
             allele.position,
             allele.reference,
+            summary_index=allele.summary_index,
             attributes=allele.attributes)
 
     @property
@@ -361,7 +362,9 @@ class SummaryVariant(VariantBase):
             self.ref_allele.position,
             self.ref_allele.reference)
 
-        # self.summary_index = self.ref_allele.summary_index
+    @property
+    def summary_index(self):
+        return self.ref_allele.summary_index
 
     @property
     def ref_allele(self):

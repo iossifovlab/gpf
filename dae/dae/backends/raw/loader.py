@@ -1,4 +1,6 @@
 import os
+import sys
+import time
 import numpy as np
 import pandas as pd
 
@@ -324,19 +326,35 @@ class StoredAnnotationDecorator(VariantsLoaderDecorator):
 
     def summary_genotypes_iterator(self):
         variant_iterator = self.variants_loader.summary_genotypes_iterator()
-
+        start = time.time()
         annot_df = self.load_annotation_file(self.annotation_filename)
-        for index, group_df in annot_df.groupby('summary_variant_index'):
+        elapsed = time.time() - start
+        print(f"Annotation loaded in in {elapsed:.2f} sec", file=sys.stderr)
+
+        start = time.time()
+        records = annot_df.to_dict(orient='record')
+        index = 0
+
+        while index < len(records):
             sv, family_genotypes = next(variant_iterator)
+            variant_records = []
 
-            assert index == \
-                sv.ref_allele.get_attribute('summary_variant_index')
+            current_record = records[index]
+            while current_record['summary_variant_index'] \
+                    == sv.summary_index:
+                variant_records.append(current_record)
+                index += 1
+                if index >= len(records):
+                    break
+                current_record = records[index]
 
-            records = group_df.to_dict(orient='records')
+            assert len(variant_records) > 0, sv
 
             summary_variant = SummaryVariantFactory.\
                 summary_variant_from_records(
-                    records,
+                    variant_records,
                     transmission_type=self.transmission_type)
-
             yield summary_variant, family_genotypes
+
+        elapsed = time.time() - start
+        print(f"Storred annotation load in {elapsed:.2f} sec", file=sys.stderr)
