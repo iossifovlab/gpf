@@ -12,8 +12,7 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.backends.raw.loader import AnnotationPipelineDecorator
 from dae.backends.dae.loader import DenovoLoader, DaeTransmittedLoader
 
-from dae.backends.import_commons import build_contig_regions, \
-    contigs_makefile_generate
+from dae.backends.import_commons import build_contig_regions
 
 from dae.backends.import_commons import construct_import_annotation_pipeline, \
     generate_makefile
@@ -54,46 +53,6 @@ def dae_build_transmitted(genome, argv):
     )
 
     return fvars
-
-
-def dae_build_makefile(dae_config, genome, argv):
-    data_contigs = get_contigs(argv.summary)
-    build_contigs = build_contig_regions(genome, argv.len)
-
-    family_format = ""
-    if argv.family_format == 'simple':
-        family_format = "-f simple"
-    elif argv.family_format == 'pedigree':
-        family_format = "-f pedigree"
-    else:
-        raise ValueError("unexpected family format: {}".format(
-            argv.family_format
-        ))
-    no_reference = ""
-    if argv.no_reference:
-        no_reference = "--no-reference"
-
-    env = ""
-    if argv.env:
-        env = "{} ".format(argv.env)
-
-    contigs_makefile_generate(
-        build_contigs,
-        data_contigs,
-        argv.output,
-        'dae2parquet.py dae {family_format} {no_reference}'.format(
-            family_format=family_format,
-            no_reference=no_reference,
-            env=env),
-        argv.annotation_config,
-        "{family_filename} {summary_filename} {toomany_filename}".format(
-            family_filename=argv.families,
-            summary_filename=argv.summary,
-            toomany_filename=argv.toomany),
-        rows=argv.rows,
-        log_directory=argv.log,
-        env=env
-    )
 
 
 def init_parser_dae_common(gpf_instance, parser):
