@@ -2,21 +2,21 @@ import pytest
 import os
 
 from dae.studies.study_wrapper import StudyWrapper
+from dae_conftests.dae_conftests import get_global_dae_fixtures_dir
 
 
 def fixtures_dir():
-    return os.path.abspath(
-        os.path.join(os.path.dirname(__file__), 'fixtures'))
+    return get_global_dae_fixtures_dir()
 
 
 def studies_dir():
     return os.path.abspath(
-        os.path.join(os.path.dirname(__file__), 'fixtures/studies'))
+        os.path.join(fixtures_dir(), 'studies'))
 
 
 def genotype_data_groups_dir():
     return os.path.abspath(
-        os.path.join(os.path.dirname(__file__), 'fixtures/datasets'))
+        os.path.join(fixtures_dir(), 'datasets'))
 
 
 @pytest.fixture(scope='session')

@@ -96,6 +96,7 @@ class QueryDownloadView(QueryBaseView):
         dataset_id = data.pop('datasetId')
 
         dataset = self.variants_db.get_wdae_wrapper(dataset_id)
+        print(self.variants_db.get_all_ids())
 
         download_limit = None
         if not (user.is_authenticated and user.has_unlimitted_download):

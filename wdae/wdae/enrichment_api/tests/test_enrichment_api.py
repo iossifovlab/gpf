@@ -3,7 +3,7 @@ import pytest
 import json
 
 
-pytestmark = pytest.mark.usefixtures('mock_gpf_instance')
+pytestmark = pytest.mark.usefixtures('wdae_gpf_instance', 'calc_gene_sets')
 
 
 def test_enrichment_models(admin_client):
@@ -167,7 +167,7 @@ def test_enrichment_test_gene_symbols(admin_client):
     assert result['result'][1]['synonymous']['female']['count'] == 1
 
 
-def test_enrichment_test_gene_set(admin_client):
+def test_enrichment_test_gene_set(admin_client, wdae_gpf_instance):
     url = '/api/v3/enrichment/test'
     query = {
         'datasetId': 'f1_trio',

@@ -10,18 +10,20 @@ def expand_gene_set(request_function):
         if 'geneSet' in request.data:
             gene_sets_collection_id, gene_set_id, denovo_gene_set_spec = \
                 GeneSymsMixin.get_gene_set_query(**request.data)
+            gpf_instance = get_gpf_instance()
+
             if gene_sets_collection_id == 'denovo':
-                denovo_gene_sets_db = get_gpf_instance().denovo_gene_sets_db
+                denovo_gene_sets_db = gpf_instance.denovo_gene_sets_db
                 gene_set = denovo_gene_sets_db.get_gene_set(
                     gene_set_id,
                     denovo_gene_set_spec,
                     IsDatasetAllowed.permitted_datasets(request.user)
                 )
             else:
-                gene_sets_db = get_gpf_instance().gene_sets_db
+                gene_sets_db = gpf_instance.gene_sets_db
                 gene_set = gene_sets_db.get_gene_set(
                     gene_sets_collection_id, gene_set_id)
-            # del request.data['geneSet']
+
             request.data['geneSymbols'] = gene_set['syms']
             request.data['geneSet'] = gene_set['desc']
         return request_function(self, request)

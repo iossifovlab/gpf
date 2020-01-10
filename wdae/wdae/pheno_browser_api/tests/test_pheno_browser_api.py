@@ -1,7 +1,7 @@
 import pytest
 
 
-pytestmark = pytest.mark.usefixtures('mock_gpf_instance')
+pytestmark = pytest.mark.usefixtures('wdae_gpf_instance', 'calc_gene_sets')
 
 
 URL = '/api/v3/pheno_browser/instruments'
@@ -28,7 +28,7 @@ def test_instruments(admin_client):
     assert response.status_code == 200
     assert 'default' in response.data
     assert 'instruments' in response.data
-    assert len(response.data['instruments']) == 3
+    assert len(response.data['instruments']) == 1
 
 
 def test_instruments_forbidden(user_client):
@@ -101,13 +101,12 @@ def test_download_all_instruments(admin_client):
 
     header = response.content.decode('utf-8').split()[0].split(',')
 
-    assert len(header) == 7
+    print('header:\n', header)
+    assert len(header) == 5
     assert set(header) == {
         'person_id',
         'instrument1.continuous',
         'instrument1.categorical',
         'instrument1.ordinal',
         'instrument1.raw',
-        'instrument2.dummy1',
-        'instrument3.dummy2',
     }
