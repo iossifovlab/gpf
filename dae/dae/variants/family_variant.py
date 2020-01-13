@@ -314,7 +314,8 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
             alleles.append(allele)
         self.alleles = alleles
 
-        self._best_st = best_state
+        self.best_st = best_state
+
         self._matched_alleles = []
 
     @staticmethod
@@ -389,31 +390,6 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
                 self.chromosome, self.position,
                 self.reference, self.alternative,
                 self.family_id)
-
-    @property
-    def best_st(self):
-        if self._best_st is None:
-            ref = (2 * np.ones(len(self.family), dtype=GENOTYPE_TYPE))
-            unknown = np.any(self.gt == -1, axis=0)
-
-            allele_count = self.allele_count
-
-            balt = []
-            for allele_index in range(1, allele_count):
-                alt_gt = np.zeros(self.gt.shape, dtype=GENOTYPE_TYPE)
-                alt_gt[self.gt == allele_index] = 1
-
-                alt = np.sum(alt_gt, axis=0, dtype=GENOTYPE_TYPE)
-                ref = ref - alt
-                balt.append(alt)
-
-            best = [ref]
-            best.extend(balt)
-
-            self._best_st = np.stack(best, axis=0)
-            self._best_st[:, unknown] = -1
-
-        return self._best_st
 
     @staticmethod
     def calc_alt_alleles(gt):
