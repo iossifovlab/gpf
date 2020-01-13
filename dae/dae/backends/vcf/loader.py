@@ -19,11 +19,13 @@ class VcfFamiliesGenotypes(FamiliesGenotypes):
         self.families = families
         self.families_genotypes = families_genotypes
         self.include_reference_genotypes = \
-            params.get('include_reference_genotypes', False)
+            params.get('vcf_include_reference_genotypes', False)
         self.include_unknown_family_genotypes = \
-            params.get('include_unknown_family_genotypes', False)
+            params.get('vcf_include_unknown_family_genotypes', False)
         self.include_unknown_person_genotypes = \
-            params.get('include_unknown_person_genotypes', False)
+            params.get('vcf_include_unknown_person_genotypes', False)
+        self.multi_loader_fill_in_mode = \
+            params.get('vcf_multi_loader_fill_in_mode', 'reference')
 
     def get_family_genotype(self, family):
         gt = self.families_genotypes[0:2, family.samples_index]
@@ -55,7 +57,7 @@ class VcfFamiliesGenotypes(FamiliesGenotypes):
 class VcfLoader(VariantsLoader):
 
     def __init__(
-            self, families, *vcf_files,
+            self, families, vcf_files,
             regions=None, fill_missing_ref=True, params={}):
         super(VcfLoader, self).__init__(
             families=families,
@@ -64,6 +66,8 @@ class VcfLoader(VariantsLoader):
             transmission_type=TransmissionType.transmitted,
             params=params)
 
+        assert len(vcf_files)
+        assert all([os.path.exists(fn) for fn in vcf_files])
         self.vcf_files = vcf_files
 
         if regions is None or isinstance(regions, str):
@@ -73,8 +77,6 @@ class VcfLoader(VariantsLoader):
 
         self.fill_missing_value = 0 if fill_missing_ref else -1
 
-        assert len(vcf_files)
-
         self._init_vcf_readers()
 
         samples = list()
@@ -83,7 +85,6 @@ class VcfLoader(VariantsLoader):
         samples = np.array(samples)
 
         self._match_pedigree_to_samples(families, samples)
-
         self._init_chromosome_order()
 
     def _init_vcf_readers(self):
@@ -96,11 +97,8 @@ class VcfLoader(VariantsLoader):
         return [enumerate(vcf(region)) for vcf in self.vcfs]
 
     def _init_chromosome_order(self):
-        seqnames = list()
-
         seqnames = self.vcfs[0].seqnames
-        assert \
-            all([vcf.seqnames == seqnames for vcf in self.vcfs])
+        assert all([vcf.seqnames == seqnames for vcf in self.vcfs])
 
         chrom_order = dict()
         for idx, seq in enumerate(seqnames):
@@ -130,7 +128,7 @@ class VcfLoader(VariantsLoader):
                 person._generated = True
                 families[person.family_id].redefine()
 
-    def _warp_summary_variant(self, summary_index, vcf_variant):
+    def _build_summary_variant(self, summary_index, vcf_variant):
         records = []
         allele_count = len(vcf_variant.ALT) + 1
         records.append(
@@ -206,28 +204,28 @@ class VcfLoader(VariantsLoader):
         return out
 
     def _summary_genotypes_iterator_internal(self, vcf_iterators):
-        variants = [next(it, None) for it in vcf_iterators]
+        vcf_variants = [next(it, None) for it in vcf_iterators]
         variant_count = 0
 
         while True:
-            if all([variant is None for variant in variants]):
+            if all([vcf_variant is None for vcf_variant in vcf_variants]):
                 break
 
             summary_variants = list(map(
-                lambda x: self._warp_summary_variant(variant_count, x[1]),
-                variants
+                lambda x: self._build_summary_variant(variant_count, x[1]),
+                vcf_variants
             ))
 
-            min_summary_variant = \
+            current_summary_variant = \
                 self._find_min_summary_variant(summary_variants)
 
             iterator_idxs_to_advance = list()
             genotypes = tuple()
 
-            for idx, (sv, (_, variant)) in \
-                    enumerate(zip(summary_variants, variants)):
-                if sv == min_summary_variant:
-                    genotypes += tuple(variant.genotypes)
+            for idx, (sv, (_, vcf_variant)) in \
+                    enumerate(zip(summary_variants, vcf_variants)):
+                if sv == current_summary_variant:
+                    genotypes += tuple(vcf_variant.genotypes)
                     iterator_idxs_to_advance.append(idx)
                 else:
                     genotypes += tuple(
@@ -239,11 +237,11 @@ class VcfLoader(VariantsLoader):
                 np.array(genotypes, dtype=np.int8).T,
                 params=self.params)
 
-            yield min_summary_variant, family_genotypes
+            yield current_summary_variant, family_genotypes
 
             for idx in iterator_idxs_to_advance:
-                variants[idx] = next(vcf_iterators[idx], None)
-                variant_count += 1
+                vcf_variants[idx] = next(vcf_iterators[idx], None)
+            variant_count += 1
 
     def summary_genotypes_iterator(self):
         for region in self.regions:
@@ -270,12 +268,22 @@ class VcfLoader(VariantsLoader):
             '[default: %(default)s]',
             action='store_true'
         )
+        parser.add_argument(
+            '--vcf-multi-loader-fill-in-mode', default='reference',
+            dest='vcf_multi_loader_fill_in_mode',
+            help='used for multi VCF files loader to fill missing genotypes; '
+            'supported values are `reference` or `unknown`'
+            '[default: %(default)s]',
+        )
 
     @staticmethod
     def parse_cli_arguments(argv):
+        multi_loader_fill_in_mode = argv.vcf_multi_loader_fill_in_mode
+        assert multi_loader_fill_in_mode in set(['reference', 'unknown'])
         params = {
-            'include_reference_genotypes': argv.vcf_include_reference,
-            'include_unknown_family_genotypes': argv.vcf_include_unknown,
-            'include_unknown_person_genotypes': argv.vcf_include_unknown
+            'vcf_include_reference_genotypes': argv.vcf_include_reference,
+            'vcf_include_unknown_family_genotypes': argv.vcf_include_unknown,
+            'vcf_include_unknown_person_genotypes': argv.vcf_include_unknown,
+            'vcf_multi_loader_fill_in_mode': multi_loader_fill_in_mode,
         }
         return params

@@ -26,10 +26,10 @@ def test_vcf_loader(vcf_loader_data, variants_vcf, fixture_data):
     ped_df = FamiliesLoader.flexible_pedigree_read(conf.pedigree)
     families = FamiliesData.from_pedigree_df(ped_df)
 
-    loader = VcfLoader(families, conf.vcf, params={
-        'include_reference_genotypes': True,
-        'include_unknown_family_genotypes': True,
-        'include_unknown_person_genotypes': True
+    loader = VcfLoader(families, [conf.vcf], params={
+        'vcf_include_reference_genotypes': True,
+        'vcf_include_unknown_family_genotypes': True,
+        'vcf_include_unknown_person_genotypes': True
     })
     assert loader is not None
 
@@ -63,10 +63,10 @@ def test_vcf_loader_multi(fixture_dirname, multivcf_files):
     families = FamiliesLoader(ped_file).load()
     families_multi = FamiliesLoader(ped_file).load()
 
-    single_loader = VcfLoader(families, single_vcf)
+    single_loader = VcfLoader(families, [single_vcf])
     assert single_loader is not None
-    multi_vcf_loader = VcfLoader(families_multi, *multivcf_files,
-                                 fill_missing_ref=False)
+    multi_vcf_loader = VcfLoader(
+        families_multi, multivcf_files, fill_missing_ref=False)
     assert multi_vcf_loader is not None
     single_it = single_loader.summary_genotypes_iterator()
     multi_it = multi_vcf_loader.summary_genotypes_iterator()
@@ -104,7 +104,7 @@ def test_multivcf_loader_fill_missing(fixture_dirname, fill_flag, fill_value):
     ]
     families = FamiliesLoader(ped_file).load()
 
-    multi_vcf_loader = VcfLoader(families, *multivcf_files,
+    multi_vcf_loader = VcfLoader(families, multivcf_files,
                                  fill_missing_ref=fill_flag)
     assert multi_vcf_loader is not None
     multi_it = multi_vcf_loader.summary_genotypes_iterator()

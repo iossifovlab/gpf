@@ -10,7 +10,7 @@ from dae.annotation.tools.annotator_config import annotation_config_cli_options
 
 from dae.pedigrees.loader import FamiliesLoader  # , FamiliesData
 from dae.backends.raw.loader import AnnotationPipelineDecorator
-from dae.backends.vcf.loader import MultiVcfLoader
+from dae.backends.vcf.loader import VcfLoader
 from dae.backends.impala.parquet_io import ParquetManager, \
     ParquetPartitionDescription
 
@@ -186,20 +186,11 @@ def main(
         annotation_pipeline = construct_import_annotation_pipeline(
             dae_config, genomes_db, argv, defaults=annotation_defaults)
 
-        # variants_loader = VcfLoader(
-        #     families, argv.vcf, regions=argv.region,
-        #     params={
-        #         'include_reference_genotypes': argv.include_reference,
-        #         'include_unknown_family_genotypes': argv.include_unknown,
-        #         'include_unknown_person_genotypes': argv.include_unknown
-        #     })
-        variants_loader = MultiVcfLoader(
-            families, argv.vcf, regions=argv.region,
-            params={
-                'include_reference_genotypes': argv.include_reference,
-                'include_unknown_family_genotypes': argv.include_unknown,
-                'include_unknown_person_genotypes': argv.include_unknown
-            })
+        vcf_files = [fn.strip() for fn in argv.vcf.split(',')]
+        params = VcfLoader.parse_cli_aruments(argv)
+        variants_loader = VcfLoader(
+            families, vcf_files, regions=argv.region,
+            params=params)
 
         variants_loader = AnnotationPipelineDecorator(
             variants_loader, annotation_pipeline

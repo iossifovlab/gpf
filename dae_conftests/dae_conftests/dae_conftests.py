@@ -490,16 +490,16 @@ def vcf_loader_data():
 def vcf_variants_loader(vcf_loader_data, default_annotation_pipeline):
     def builder(
         path, params={
-            'include_reference_genotypes': True,
-            'include_unknown_family_genotypes': True,
-            'include_unknown_person_genotypes': True
+            'vcf_include_reference_genotypes': True,
+            'vcf_include_unknown_family_genotypes': True,
+            'vcf_include_unknown_person_genotypes': True
             }):
         conf = vcf_loader_data(path)
 
         ped_df = FamiliesLoader.flexible_pedigree_read(conf.pedigree)
         families = FamiliesData.from_pedigree_df(ped_df)
 
-        loader = VcfLoader(families, conf.vcf, params=params)
+        loader = VcfLoader(families, [conf.vcf], params=params)
         assert loader is not None
 
         loader = AlleleFrequencyDecorator(loader)
@@ -721,9 +721,9 @@ def data_import(
             loader = VcfLoader(
                 families, vcf.vcf, regions=None,
                 params={
-                    'include_reference_genotypes': True,
-                    'include_unknown_family_genotypes': True,
-                    'include_unknown_person_genotypes': True
+                    'vcf_include_reference_genotypes': True,
+                    'vcf_include_unknown_family_genotypes': True,
+                    'vcf_include_unknown_person_genotypes': True
                 })
 
             loader = AlleleFrequencyDecorator(loader)
