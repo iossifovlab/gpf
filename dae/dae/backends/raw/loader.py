@@ -4,8 +4,10 @@ import time
 import numpy as np
 import pandas as pd
 
+from typing import Iterator, Tuple
+
 from dae.pedigrees.family import FamiliesData
-from dae.variants.variant import SummaryVariantFactory
+from dae.variants.variant import SummaryVariant, SummaryVariantFactory
 from dae.variants.family_variant import FamilyVariant
 
 from dae.backends.raw.raw_variants import TransmissionType
@@ -18,7 +20,10 @@ class FamiliesGenotypes:
     def full_families_genotypes(self):
         raise NotImplementedError()
 
-    def get_family_genotype(self, family_id):
+    def get_family_genotype(self, family):
+        raise NotImplementedError()
+
+    def get_family_best_state(self, family):
         raise NotImplementedError()
 
     def family_genotype_iterator(self):
@@ -48,10 +53,10 @@ class VariantsLoader:
         for summary_variant, family_genotypes in summary_genotypes_iterator:
 
             family_variants = []
-            for fam, gt in family_genotypes.family_genotype_iterator():
+            for fam, gt, bs in family_genotypes.family_genotype_iterator():
                 family_variants.append(
                     FamilyVariant.from_summary_variant(
-                        summary_variant, fam, gt))
+                        summary_variant, fam, gt, bs))
 
             yield summary_variant, family_variants
 
@@ -166,6 +171,7 @@ class AnnotationPipelineDecorator(VariantsLoaderDecorator):
         'variant_inheritance',
         'variant_in_member',
         'genotype_data',
+        'best_state_data',
         'frequency_data',
         'genomic_scores_data',
     ])

@@ -30,6 +30,9 @@ class VcfFamiliesGenotypes(FamiliesGenotypes):
             f"{gt.shape} == (2, {len(family)})"
         return gt
 
+    def get_family_best_state(self, family):
+        return None
+
     def family_genotype_iterator(self):
         for fam in self.families.values():
             if len(fam) == 0:
@@ -44,8 +47,9 @@ class VcfFamiliesGenotypes(FamiliesGenotypes):
             if is_all_unknown_genotype(gt) \
                     and not self.include_unknown_family_genotypes:
                 continue
+            bs = self.get_family_best_state(fam)
 
-            yield fam, gt
+            yield fam, gt, bs
 
     def full_families_genotypes(self):
         return self.families_genotypes
@@ -128,13 +132,21 @@ class VcfLoader(VariantsLoader):
             for summary_index, vcf_variant in enumerate(self.vcf(region)):
                 family_genotypes = VcfFamiliesGenotypes(
                     self.families,
-                    np.array(vcf_variant.genotypes, dtype=np.int8).T,
-                    params=self.params)
+                    VcfLoader.transform_vcf_genotypes(vcf_variant.genotypes),
+                    params=self.params
+                )
 
                 summary_variant = self._warp_summary_variant(
                     summary_index, vcf_variant)
 
                 yield summary_variant, family_genotypes
+
+    @staticmethod
+    def transform_vcf_genotypes(genotypes):
+        for genotype in genotypes:
+            if len(genotype) == 2:  # Handle haploid genotypes
+                genotype.insert(1, -2)
+        return np.array(genotypes, dtype=np.int8).T
 
     @staticmethod
     def cli_arguments(parser):
