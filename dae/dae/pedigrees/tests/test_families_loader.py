@@ -1,6 +1,7 @@
 import os
 import pytest
 from pandas.api.types import is_string_dtype
+from pandas.testing import assert_frame_equal
 
 from dae.variants.attributes import Role
 from dae.pedigrees.tests.conftest import relative_to_this_folder
@@ -16,7 +17,7 @@ from dae.pedigrees.loader import FamiliesLoader
     ('pedigree_C.ped'),
 ])
 def test_famlies_loader_simple(pedigree):
-    filename = relative_to_this_folder(f'fixtures/{pedigree}')
+    filename = relative_to_this_folder(f'fixtures/pedigrees/{pedigree}')
     assert os.path.exists(filename)
     loader = FamiliesLoader(filename)
     families = loader.load()
@@ -25,7 +26,7 @@ def test_famlies_loader_simple(pedigree):
 
 
 def test_families_loader_phenotype():
-    filename = relative_to_this_folder('fixtures/pedigree_D.ped')
+    filename = relative_to_this_folder('fixtures/pedigrees/pedigree_D.ped')
     assert os.path.exists(filename)
 
     loader = FamiliesLoader(filename)
@@ -43,7 +44,8 @@ def test_families_loader_phenotype():
 
 
 def test_families_loader_phenos():
-    filename = relative_to_this_folder('fixtures/pedigree_phenos.ped')
+    filename = relative_to_this_folder(
+        'fixtures/pedigrees/pedigree_phenos.ped')
     assert os.path.exists(filename)
 
     loader = FamiliesLoader(filename)
@@ -71,7 +73,7 @@ def test_families_loader_phenos():
     ('pedigree_no_role_C.ped'),
 ])
 def test_families_loader_no_role(pedigree):
-    filename = relative_to_this_folder(f'fixtures/{pedigree}')
+    filename = relative_to_this_folder(f'fixtures/pedigrees/{pedigree}')
     assert os.path.exists(filename)
 
     params = {
@@ -100,7 +102,8 @@ def test_families_loader_no_role(pedigree):
 
 
 def test_families_loader_roles_testing():
-    filename = relative_to_this_folder('fixtures/pedigree_no_role_C.ped')
+    filename = relative_to_this_folder(
+        'fixtures/pedigrees/pedigree_no_role_C.ped')
     assert os.path.exists(filename)
 
     params = {
@@ -113,3 +116,28 @@ def test_families_loader_roles_testing():
     assert families.persons['f1.mg_mom'].role == Role.maternal_grandmother
     assert families.persons['f1.pg_dad'].role == Role.paternal_grandfather
     assert families.persons['f1.pg_mom'].role == Role.paternal_grandmother
+
+
+@pytest.mark.parametrize('pedigree', [
+    ('pedigree_A.ped'),
+    ('pedigree_B.ped'),
+    ('pedigree_B2.ped'),
+    ('pedigree_C.ped'),
+])
+def test_families_ped_df(pedigree, temp_filename):
+    filename = relative_to_this_folder(
+        f'fixtures/pedigrees/{pedigree}')
+    assert os.path.exists(filename)
+
+    loader = FamiliesLoader(filename, params={})
+    families = loader.load()
+
+    assert families._ped_df is not None
+
+    ped_df = families._ped_df
+    families._ped_df = None
+
+    new_df = families.ped_df
+    assert new_df is not None
+
+    assert_frame_equal(ped_df, new_df, check_like=True)

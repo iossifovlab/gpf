@@ -55,7 +55,7 @@ def parser_common_arguments(gpf_instance, parser):
     FamiliesLoader.cli_arguments(parser)
 
     parser.add_argument(
-        'vcf', type=str, nargs='+',
+        'vcf', type=str,
         metavar='<VCF filename>',
         help='VCF file to import'
     )
@@ -65,6 +65,8 @@ def parser_common_arguments(gpf_instance, parser):
         help='output filepath prefix. '
         'If none specified, current directory is used [default: %(default)s]'
     )
+    VcfLoader.cli_arguments(parser)
+
     parser.add_argument(
         '--pd', type=str, default=None,
         dest='partition_description',
@@ -75,18 +77,18 @@ def parser_common_arguments(gpf_instance, parser):
         dest='rows',
         help='Amount of allele rows to write at once'
     )
-    parser.add_argument(
-        '--include-reference', default=False,
-        dest='include_reference',
-        help='include reference only variants [default: %(default)s]',
-        action='store_true'
-    )
-    parser.add_argument(
-        '--include-unknown', default=False,
-        dest='include_unknown',
-        help='include variants with unknown genotype [default: %(default)s]',
-        action='store_true'
-    )
+    # parser.add_argument(
+    #     '--include-reference', default=False,
+    #     dest='include_reference',
+    #     help='include reference only variants [default: %(default)s]',
+    #     action='store_true'
+    # )
+    # parser.add_argument(
+    #     '--include-unknown', default=False,
+    #     dest='include_unknown',
+    #     help='include variants with unknown genotype [default: %(default)s]',
+    #     action='store_true'
+    # )
 
     parser.add_argument(
         '--region', type=str,
@@ -169,9 +171,13 @@ def main(
     families_loader = FamiliesLoader(argv.families)
     families = families_loader.load()
 
+    print(argv.vcf)
+
+    vcf_files = [fn.strip() for fn in argv.vcf.split(',')]
+
     if argv.type == 'make':
         generate_makefile(
-            genome, get_contigs(argv.vcf),
+            genome, get_contigs(vcf_files[0]),
             f'vcf2parquet.py vcf {argv.families} {argv.vcf} ',
             argv)
     elif argv.type == 'pedigree':
@@ -186,8 +192,7 @@ def main(
         annotation_pipeline = construct_import_annotation_pipeline(
             dae_config, genomes_db, argv, defaults=annotation_defaults)
 
-        vcf_files = [fn.strip() for fn in argv.vcf.split(',')]
-        params = VcfLoader.parse_cli_aruments(argv)
+        params = VcfLoader.parse_cli_arguments(argv)
         variants_loader = VcfLoader(
             families, vcf_files, regions=argv.region,
             params=params)

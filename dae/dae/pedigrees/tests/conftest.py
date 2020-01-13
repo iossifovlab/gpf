@@ -17,17 +17,13 @@ from dae.pedigrees.interval_sandwich import SandwichSolver
 from dae.pedigrees.layout import IndividualWithCoordinates, Layout
 from dae.pedigrees.drawing import OffsetLayoutDrawer
 
-
-def relative_to_this_folder(path):
-    return os.path.join(
-        os.path.dirname(os.path.realpath(__file__)),
-        path
-    )
+from dae_conftests.dae_conftests import \
+    relative_to_this_test_folder as relative_to_this_folder
 
 
 @pytest.fixture(scope='session')
 def input_filename():
-    return relative_to_this_folder('fixtures/test.ped')
+    return relative_to_this_folder('fixtures/pedigrees/test.ped')
 
 
 @pytest.fixture(scope='session')

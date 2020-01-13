@@ -38,6 +38,7 @@ setuptools.setup(
         'dae/tools/generate_histogram.py',
         'dae/tools/run_gpf_impala.sh',
         'dae/tools/simple_family2pedigree.py',
+        'dae/tools/ped2parquet.py',
     ],
 
     classifiers=[

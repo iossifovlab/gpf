@@ -1,9 +1,26 @@
+import copy
+
 from collections import defaultdict
 from collections.abc import Mapping
 
 import numpy as np
+import pandas as pd
 
 from dae.variants.attributes import Role, Sex, Status
+
+
+PEDIGREE_COLUMN_NAMES = {
+    'family': 'family_id',
+    'person': 'person_id',
+    'mother': 'mom_id',
+    'father': 'dad_id',
+    'sex': 'sex',
+    'status': 'status',
+    'role': 'role',
+    'sample id': 'sample_id',
+    'layout': 'layout',
+    'generated': 'generated',
+}
 
 
 class Person(object):
@@ -85,11 +102,14 @@ class Person(object):
         return ((self.has_dad() and self.dad.generated) or
                 (self.has_mom() and self.mom.generated))
 
-    def has_attr(self, item):
-        return item in self._attributes
+    def has_attr(self, key):
+        return key in self._attributes
 
-    def get_attr(self, item, default=None):
-        return str(self._attributes.get(item, default))
+    def get_attr(self, key, default=None):
+        return str(self._attributes.get(key, default))
+    
+    def set_attr(self, key, value):
+        self._attributes[key] = str(value)
 
 
 class Family(object):
@@ -199,7 +219,7 @@ class Family(object):
 class FamiliesData(Mapping):
 
     def __init__(self):
-        self.ped_df = None
+        self._ped_df = None
         self._families = {}
         self.persons = {}
 
@@ -226,7 +246,7 @@ class FamiliesData(Mapping):
                 for family_id, family_persons in persons.items()
             ]
         )
-        fams.ped_df = ped_df
+        fams._ped_df = ped_df
         return fams
 
     @staticmethod
@@ -236,6 +256,30 @@ class FamiliesData(Mapping):
                 (fam.family_id, fam.full_members) for fam in families.values()
             ]
         )
+
+    @property
+    def ped_df(self):
+        if self._ped_df is None:
+            # build ped_df
+            column_names = set()
+            records = []
+            for person in self.persons.values():
+                rec = copy.deepcopy(person._attributes)
+                rec['mom_id'] = person.mom_id if person.mom_id else '0'
+                rec['dad_id'] = person.dad_id if person.dad_id else '0'
+
+                column_names = column_names.union(set(rec.keys()))
+                records.append(rec)
+            columns = [
+                col for col in PEDIGREE_COLUMN_NAMES.values()
+                if col in column_names
+            ]
+            columns.extend(column_names.difference(set(columns)))
+    
+            ped_df = pd.DataFrame.from_records(records, columns=columns)
+            self._ped_df = ped_df
+
+        return self._ped_df
 
     def __getitem__(self, family_id):
         return self._families[family_id]

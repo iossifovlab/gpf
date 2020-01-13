@@ -108,8 +108,6 @@ class ParquetPartitionDescription():
             )
         )
 
-        # chromosomes = list(map(str.strip))
-
         region_length = int(config['region_bin']['region_length'])
         family_bin_size = 0
         coding_effect_types = []
@@ -230,14 +228,13 @@ class ParquetPartitionDescription():
         glob += '*.parquet'
         return glob
 
-    def add_family_bins_to_pedigree_df(self, ped_df):
-        family_ids = ped_df['family_id'].values
-        family_bins = []
-        for family_id in family_ids:
-            family_bins.append(self._family_bin_from_id(family_id))
-        assert len(family_bins) == len(family_ids)
-        ped_df['family_bin'] = family_bins
-        return ped_df
+    def add_family_bins_to_families(self, families):
+        for family in families.values():
+            family_bin = self._family_bin_from_id(family.family_id)
+            for person in family.persons.values():
+                person.set_attr('family_bin', family_bin)
+            
+        return families
 
 
 class ContinuousParquetFileWriter():
