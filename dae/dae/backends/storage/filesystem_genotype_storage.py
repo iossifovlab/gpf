@@ -1,6 +1,7 @@
 import os
 import copy
 import shutil
+import time
 
 from dae.pedigrees.loader import FamiliesLoader
 
@@ -46,13 +47,17 @@ class FilesystemGenotypeStorage(GenotypeStorage):
             return RawMemoryVariants([variants_loader])
 
         else:
+            start = time.time()
             families_loader = FamiliesLoader(
                 study_config.files.pedigree.path,
                 params=study_config.files.pedigree.params)
             families = families_loader.load()
+            elapsed = time.time() - start
+            print(f"Families loaded in in {elapsed:.2f} sec")
 
             loaders = []
             if study_config.files.vcf:
+                start = time.time()
                 variants_filename = study_config.files.vcf[0].path
                 variants_loader = VcfLoader(
                     families, variants_filename,

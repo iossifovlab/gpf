@@ -11,16 +11,12 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 
 from dae.backends.raw.loader import AnnotationPipelineDecorator
 from dae.backends.dae.loader import DenovoLoader, DaeTransmittedLoader
-
-from dae.backends.import_commons import build_contig_regions, \
-    contigs_makefile_generate
-
 from dae.backends.import_commons import construct_import_annotation_pipeline, \
     generate_makefile
-
-from dae.pedigrees.loader import FamiliesLoader
 from dae.backends.impala.parquet_io import ParquetManager, \
     ParquetPartitionDescription
+
+from dae.pedigrees.loader import FamiliesLoader
 
 
 def get_contigs(tabixfilename):
@@ -56,46 +52,6 @@ def dae_build_transmitted(genome, argv):
     return fvars
 
 
-def dae_build_makefile(dae_config, genome, argv):
-    data_contigs = get_contigs(argv.summary)
-    build_contigs = build_contig_regions(genome, argv.len)
-
-    family_format = ""
-    if argv.family_format == 'simple':
-        family_format = "-f simple"
-    elif argv.family_format == 'pedigree':
-        family_format = "-f pedigree"
-    else:
-        raise ValueError("unexpected family format: {}".format(
-            argv.family_format
-        ))
-    no_reference = ""
-    if argv.no_reference:
-        no_reference = "--no-reference"
-
-    env = ""
-    if argv.env:
-        env = "{} ".format(argv.env)
-
-    contigs_makefile_generate(
-        build_contigs,
-        data_contigs,
-        argv.output,
-        'dae2parquet.py dae {family_format} {no_reference}'.format(
-            family_format=family_format,
-            no_reference=no_reference,
-            env=env),
-        argv.annotation_config,
-        "{family_filename} {summary_filename} {toomany_filename}".format(
-            family_filename=argv.families,
-            summary_filename=argv.summary,
-            toomany_filename=argv.toomany),
-        rows=argv.rows,
-        log_directory=argv.log,
-        env=env
-    )
-
-
 def init_parser_dae_common(gpf_instance, parser):
     parser.add_argument(
         'families', type=str,
@@ -104,10 +60,6 @@ def init_parser_dae_common(gpf_instance, parser):
     )
 
     FamiliesLoader.cli_arguments(parser)
-
-    # options = annotation_config_cli_options(gpf_instance)
-    # for name, args in options:
-    #     parser.add_argument(name, **args)
 
     parser.add_argument(
         '-o', '--out', type=str, default='./',
@@ -120,13 +72,6 @@ def init_parser_dae_common(gpf_instance, parser):
         dest='bucket_index', metavar='bucket index',
         help='bucket index'
     )
-    # parser.add_argument(
-    #     '-f', '--family-format', type=str,
-    #     default='pedigree',
-    #     dest='family_format',
-    #     help='families file format - `pedigree` or `simple`; '
-    #     '[default: %(default)s]'
-    # )
 
     parser.add_argument(
         '--no-reference', action="store_true", default=None,
@@ -153,6 +98,11 @@ def init_parser_dae_common(gpf_instance, parser):
         help='Path to a config file containing the partition description'
     )
 
+    parser.add_argument(
+        '--annotation-config', type=str, default=None,
+        help='Path to an annotation config file to use when annotating'
+    )
+
 
 def init_parser_denovo(gpf_instance, subparsers):
     parser_denovo = subparsers.add_parser('denovo')
@@ -168,7 +118,6 @@ def init_parser_denovo(gpf_instance, subparsers):
 
 
 def init_transmitted_common(gpf_instance, parser):
-
     init_parser_dae_common(gpf_instance, parser)
 
     parser.add_argument(
@@ -336,8 +285,11 @@ def main(argv):
     parquet_manager = ParquetManager(dae_config.studies_db.dir)
 
     argv = parse_cli_arguments(gpf_instance, argv)
-    annotation_pipeline = construct_import_annotation_pipeline(
-        dae_config, genomes_db, argv)
+
+    if argv.type in ('denovo', 'dae'):
+        annotation_pipeline = construct_import_annotation_pipeline(
+            dae_config, genomes_db, argv
+        )
 
     if argv.type == 'denovo':
         denovo_params = DenovoLoader.parse_cli_arguments(argv)

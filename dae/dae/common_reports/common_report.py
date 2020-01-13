@@ -12,10 +12,6 @@ from dae.common_reports.people_filters import FilterCollection
 class CommonReport(object):
 
     def __init__(self, genotype_data_study, config):
-        print("genotype_data:", genotype_data_study.id)
-        print("config.people_groups_info:", config.people_groups_info)
-        print("config.people_groups:", config.people_groups)
-        print("config.groups:", config.groups)
         people_groups_info = config.people_groups_info
         effect_groups = config.effect_groups
         effect_types = config.effect_types

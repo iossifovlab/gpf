@@ -556,8 +556,6 @@ class ParquetManager:
     def families_loader_to_parquet(
             families, pedigree_filename, filesystem=None):
 
-        print(pedigree_filename)
-
         os.makedirs(
             os.path.split(pedigree_filename)[0], exist_ok=True
         )

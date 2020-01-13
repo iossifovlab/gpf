@@ -39,17 +39,13 @@ def parse_cli_arguments(gpf_instance, argv=sys.argv[1:]):
 
     parser_vcf_arguments(gpf_instance, subparsers)
     parser_make_arguments(gpf_instance, subparsers)
+    parser_pedigree_arguments(gpf_instance, subparsers)
 
     parser_args = parser.parse_args(argv)
     return parser_args
 
 
 def parser_common_arguments(gpf_instance, parser):
-    options = annotation_config_cli_options(gpf_instance)
-
-    for name, args in options:
-        parser.add_argument(name, **args)
-
     parser.add_argument(
         'families', type=str,
         metavar='<families filename>',
@@ -93,18 +89,16 @@ def parser_common_arguments(gpf_instance, parser):
     )
 
     parser.add_argument(
-        '--study-id', default=None,
-        dest='study_id',
-        help='specifies study id to use when storing parquet files '
-        '[default: %(default)s]'
-    )
-
-    parser.add_argument(
         '--region', type=str,
         dest='region', metavar='region',
         default=None, nargs='+',
         help='region to convert [default: %(default)s] '
         'ex. chr1:1-10000'
+    )
+
+    parser.add_argument(
+        '--annotation-config', type=str, default=None,
+        help='Path to an annotation config file to use when annotating'
     )
 
 
@@ -139,6 +133,23 @@ def parser_make_arguments(gpf_instance, subparsers):
     )
 
 
+def parser_pedigree_arguments(gpf_instance, subparsers):
+    parser = subparsers.add_parser('pedigree')
+    parser.add_argument(
+        'families', type=str,
+        metavar='<families filename>',
+        help='families file in pedigree format'
+    )
+    FamiliesLoader.cli_arguments(parser)
+
+    parser.add_argument(
+        '-o', '--out', type=str, default='.',
+        dest='output', metavar='<output filepath prefix>',
+        help='output filepath prefix. '
+        'If none specified, current directory is used [default: %(default)s]'
+    )
+
+
 def main(
         argv,
         gpf_instance=None, dae_config=None, genomes_db=None, genome=None,
@@ -155,36 +166,44 @@ def main(
 
     argv = parse_cli_arguments(gpf_instance, argv)
 
-    annotation_pipeline = construct_import_annotation_pipeline(
-        dae_config, genomes_db, argv, defaults=annotation_defaults)
-
-    study_id = argv.study_id
-    if study_id is None:
-        study_id = os.path.splitext(os.path.basename(argv.families))[0]
     families_loader = FamiliesLoader(argv.families)
     families = families_loader.load()
 
-    variants_loader = MultiVcfLoader(
-        families, argv.vcf, regions=argv.region,
-        params={
-            'include_reference_genotypes': argv.include_reference,
-            'include_unknown_family_genotypes': argv.include_unknown,
-            'include_unknown_person_genotypes': argv.include_unknown
-        })
-    variants_loader = AnnotationPipelineDecorator(
-        variants_loader, annotation_pipeline
-    )
     if argv.type == 'make':
-        generate_makefile(genome, get_contigs(argv.vcf),
-                          'vcf2parquet.py vcf {argv.vcf}', argv)
+        generate_makefile(
+            genome, get_contigs(argv.vcf),
+            f'vcf2parquet.py vcf {argv.families} {argv.vcf} ',
+            argv)
+    elif argv.type == 'pedigree':
+        pedigree_prefix, _ = os.path.splitext(argv.families)
+        pedigree_path = os.path.join(
+            argv.output, f'{pedigree_prefix}.parquet')
+
+        ParquetManager.families_loader_to_parquet(
+            families, pedigree_path)
+
     elif argv.type == 'vcf':
-        if not argv.skip_pedigree:
-            pedigree_path = os.path.join(
-                argv.output,
-                'pedigree',
-                'pedigree.ped')
-            ParquetManager.pedigree_to_parquet(
-                families, pedigree_path)
+        annotation_pipeline = construct_import_annotation_pipeline(
+            dae_config, genomes_db, argv, defaults=annotation_defaults)
+
+        # variants_loader = VcfLoader(
+        #     families, argv.vcf, regions=argv.region,
+        #     params={
+        #         'include_reference_genotypes': argv.include_reference,
+        #         'include_unknown_family_genotypes': argv.include_unknown,
+        #         'include_unknown_person_genotypes': argv.include_unknown
+        #     })
+        variants_loader = MultiVcfLoader(
+            families, argv.vcf, regions=argv.region,
+            params={
+                'include_reference_genotypes': argv.include_reference,
+                'include_unknown_family_genotypes': argv.include_unknown,
+                'include_unknown_person_genotypes': argv.include_unknown
+            })
+
+        variants_loader = AnnotationPipelineDecorator(
+            variants_loader, annotation_pipeline
+        )
 
         if argv.partition_description is None:
 

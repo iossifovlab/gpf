@@ -36,8 +36,6 @@ def main(gpf_instance=None, argv=None):
                 for study_id in denovo_gene_sets_db.get_genotype_data_ids()
                 if study_id in studies
             ]
-            print("filter studies ids:", filter_studies_ids)
-
             denovo_gene_sets_db._build_cache(filter_studies_ids)
 
 

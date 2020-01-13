@@ -147,9 +147,12 @@ def main(argv, gpf_instance=None):
     assert output is not None
     assert argv.vcf is not None or argv.denovo is not None
 
+    start = time.time()
     params = FamiliesLoader.parse_cli_arguments(argv)
     families_loader = FamiliesLoader(argv.pedigree, params=params)
     families = families_loader.load()
+    elapsed = time.time() - start
+    print(f"Families loaded in in {elapsed:.2f} sec", file=sys.stderr)
 
     variant_loaders = []
     if argv.denovo is not None:

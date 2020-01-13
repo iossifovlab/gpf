@@ -113,7 +113,6 @@ class VariantsDb(object):
         self._load_genotype_data_group_cache({genotype_data_group_id})
 
         if genotype_data_group_id not in self._genotype_data_group_cache:
-            print(self._genotype_data_group_cache.keys())
             return None
 
         return self._genotype_data_group_cache[genotype_data_group_id]
