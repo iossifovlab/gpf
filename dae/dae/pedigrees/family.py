@@ -86,6 +86,10 @@ class Person(object):
     def generated(self):
         return self._generated
 
+    @property
+    def family_bin(self):
+        return self._attributes.get('family_bin', None)
+
     def has_mom(self):
         return self.mom is not None
 
@@ -109,7 +113,7 @@ class Person(object):
         return str(self._attributes.get(key, default))
 
     def set_attr(self, key, value):
-        self._attributes[key] = str(value)
+        self._attributes[key] = value
 
 
 class Family(object):

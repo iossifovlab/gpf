@@ -1,5 +1,9 @@
 import os
 import pytest
+
+import pyarrow.parquet as pq
+
+from dae.pedigrees.family import FamiliesData
 from dae.backends.impala.parquet_io import ParquetPartitionDescription
 from dae.tools.ped2parquet import main
 
@@ -53,3 +57,22 @@ def test_ped2parquet_patition(
     main(argv)
 
     assert os.path.exists(temp_filename)
+
+    pqfile = pq.ParquetFile(temp_filename)
+    schema = pqfile.schema
+    assert 'family_bin' in schema.names
+    print(schema)
+
+    df = pqfile.read().to_pandas()
+    print(df)
+    families = FamiliesData.from_pedigree_df(df)
+
+    assert 'f1' in families
+    f1 = families['f1']
+    print([p.family_bin for p in f1.persons.values()])
+    assert all([p.family_bin == 9 for p in f1.persons.values()])
+
+    assert 'f2' in families
+    f2 = families['f2']
+    print([p.family_bin for p in f2.persons.values()])
+    assert all([p.family_bin == 6 for p in f2.persons.values()])
