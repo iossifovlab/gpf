@@ -719,7 +719,7 @@ def data_import(
             families = families_loader.load()
 
             loader = VcfLoader(
-                families, vcf.vcf, regions=None,
+                families, [vcf.vcf], regions=None,
                 params={
                     'vcf_include_reference_genotypes': True,
                     'vcf_include_unknown_family_genotypes': True,

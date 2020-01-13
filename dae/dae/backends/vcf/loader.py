@@ -67,7 +67,7 @@ class VcfLoader(VariantsLoader):
             params=params)
 
         assert len(vcf_files)
-        assert all([os.path.exists(fn) for fn in vcf_files])
+        assert all([os.path.exists(fn) for fn in vcf_files]), vcf_files
         self.vcf_files = vcf_files
 
         if regions is None or isinstance(regions, str):
