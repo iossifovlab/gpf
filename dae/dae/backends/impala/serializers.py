@@ -56,6 +56,7 @@ class ParquetSerializer(object):
             'variant_roles',
             'variant_inheritance',
             'genotype_data',
+            'best_state_data',
         ]
     )
 
@@ -302,8 +303,8 @@ class ParquetSerializer(object):
 
         return res
 
-    def serialize_family(
-            self, family_variant_index, family_allele, genotype_data):
+    def serialize_family(self, family_variant_index, family_allele,
+                         genotype_data, best_state_data):
         res = self.family(
             family_variant_index,
             family_allele.family_id,
@@ -324,6 +325,7 @@ class ParquetSerializer(object):
                     if vi is not None
                 ], 0),
             genotype_data,
+            best_state_data,
         )
         return res
 
@@ -338,8 +340,8 @@ class ParquetSerializer(object):
     def deserialize_variant(
             self, family,
             chrom, position, reference, alternatives_data,
-            effect_data, genotype_data, frequency_data,
-            genomic_scores_data):
+            effect_data, genotype_data, best_state_data,
+            frequency_data, genomic_scores_data):
 
         effects = self.deserialize_variant_effects(
             effect_data)
@@ -356,6 +358,11 @@ class ParquetSerializer(object):
         rows, cols = genotype.shape
         assert cols == len(family)
 
+        best_state = self.deserialize_variant_best_state(
+            best_state_data,
+            len(alternatives) + 1  # alternatives + reference
+        )
+
         frequencies = self.deserialize_variant_frequency(
             frequency_data)
         assert len(frequencies) == len(alternatives)
@@ -363,7 +370,6 @@ class ParquetSerializer(object):
         genomic_scores = self.deserialize_variant_genomic_scores(
             genomic_scores_data
         )
-        alleles = []
         if genomic_scores is None:
             values = zip(alternatives, effects, frequencies)
         else:
@@ -372,9 +378,9 @@ class ParquetSerializer(object):
             for (f, g) in zip(frequencies, genomic_scores):
                 f.update(g)
                 attributes.append(f)
-            values = zip(
-                    alternatives, effects, attributes)
+            values = zip(alternatives, effects, attributes)
 
+        alleles = []
         for allele_index, (alt, effect, attr) in enumerate(values):
             attr.update(effect)
 
@@ -386,7 +392,8 @@ class ParquetSerializer(object):
                 # effect=effect,
                 attributes=attr,
                 family=family,
-                genotype=genotype)
+                genotype=genotype,
+                best_state=best_state)
             alleles.append(allele)
 
         return FamilyVariant(alleles, family, genotype)

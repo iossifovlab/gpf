@@ -342,8 +342,12 @@ class VariantsParquetWriter():
             self._setup_reference_allele(summary_variant, family),
             self._setup_all_unknown_allele(summary_variant, family)
         ]
+        best_state = -1 * np.ones(
+            shape=(len(alleles), len(family)),
+            dtype=GENOTYPE_TYPE
+        )
         return FamilyVariant(
-            alleles, family, genotype
+            alleles, family, genotype, best_state
         )
 
     def _process_family_variant(
@@ -358,6 +362,10 @@ class VariantsParquetWriter():
         genotype_data = \
             self.parquet_serializer.serialize_variant_genotype(
                 family_variant.gt
+            )
+        best_state_data = \
+            self.parquet_serializer.serialize_variant_best_state(
+                family_variant.best_st
             )
         frequency_data = \
             self.parquet_serializer.serialize_variant_frequency(
@@ -387,7 +395,8 @@ class VariantsParquetWriter():
                 self.parquet_serializer.serialize_effects(
                     family_allele, effect_data)
             family = self.parquet_serializer.serialize_family(
-                family_variant_index, family_allele, genotype_data)
+                family_variant_index, family_allele,
+                genotype_data, best_state_data)
             member = self.parquet_serializer.serialize_members(
                 family_variant_index, family_allele)
 
