@@ -49,7 +49,8 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
             allele_index,
             attributes,
             family,
-            genotype):
+            genotype,
+            best_state):
         assert isinstance(family, Family)
         SummaryAllele.__init__(
             self,
@@ -67,7 +68,7 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
         # self.summary_allele = summary_allele
         self.gt = genotype
         assert self.gt.dtype == GENOTYPE_TYPE
-        self._best_st = None
+        self.best_st = best_state
 
         self._inheritance_in_members = None
         self._variant_in_members = None
@@ -78,7 +79,7 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
         self.matched_gene_effects = []
 
     @staticmethod
-    def from_summary_allele(summary_allele, family, genotype):
+    def from_summary_allele(summary_allele, family, genotype, best_state):
         assert isinstance(summary_allele, SummaryAllele)
         return FamilyAllele(
             summary_allele.chromosome,
@@ -89,7 +90,8 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
             summary_allele.allele_index,
             summary_allele.attributes,
             family,
-            genotype
+            genotype,
+            best_state
         )
 
     def __repr__(self):
@@ -116,26 +118,6 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
         array.
         """
         return self.gt.flatten(order='F')
-
-    @property
-    def best_st(self):
-        if self._best_st is None:
-            ref = (2 * np.ones(len(self.family), dtype=GENOTYPE_TYPE))
-            unknown = np.any(
-                (self.gt != -0) & (self.gt != self.allele_index), axis=0)
-
-            alt_gt = np.zeros(self.gt.shape, dtype=GENOTYPE_TYPE)
-            alt_gt[self.gt != 0] = 1
-
-            alt = np.sum(alt_gt, axis=0, dtype=GENOTYPE_TYPE)
-            ref = ref - alt
-
-            best = [ref, alt]
-            self._best_st = np.stack(best, axis=0)
-
-            self._best_st[1, unknown] = -1
-
-        return self._best_st
 
     @property
     def inheritance_in_members(self):
@@ -309,7 +291,7 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
 
 class FamilyVariant(SummaryVariant, FamilyDelegate):
 
-    def __init__(self, family_alleles, family, genotype):
+    def __init__(self, family_alleles, family, genotype, best_state):
         assert family is not None
         assert genotype is not None
         assert isinstance(family, Family)
@@ -332,11 +314,11 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
             alleles.append(allele)
         self.alleles = alleles
 
-        self._best_st = None
+        self._best_st = best_state
         self._matched_alleles = []
 
     @staticmethod
-    def from_summary_variant(summary_variant, family, genotype):
+    def from_summary_variant(summary_variant, family, genotype, best_state):
         assert summary_variant is not None
         assert isinstance(summary_variant, SummaryVariant)
 
@@ -345,9 +327,9 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
         alleles = []
         for summary_allele in summary_variant.alleles:
             fa = FamilyAllele.from_summary_allele(
-                summary_allele, family, gt)
+                summary_allele, family, gt, best_state)
             alleles.append(fa)
-        return FamilyVariant(alleles, family, gt)
+        return FamilyVariant(alleles, family, gt, best_state)
 
     def set_matched_alleles(self, alleles_indexes):
         self._matched_alleles = sorted(alleles_indexes)
