@@ -107,7 +107,7 @@ class Person(object):
 
     def get_attr(self, key, default=None):
         return str(self._attributes.get(key, default))
-    
+
     def set_attr(self, key, value):
         self._attributes[key] = str(value)
 
@@ -275,7 +275,7 @@ class FamiliesData(Mapping):
                 if col in column_names
             ]
             columns.extend(column_names.difference(set(columns)))
-    
+
             ped_df = pd.DataFrame.from_records(records, columns=columns)
             self._ped_df = ped_df
 

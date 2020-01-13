@@ -89,7 +89,8 @@ def test_parquet_file_config(
 # '''
 
 
-def test_families_loader_to_parquet(parquet_manager, variants_vcf, temp_dirname):
+def test_families_loader_to_parquet(
+        parquet_manager, variants_vcf, temp_dirname):
     fvars = variants_vcf('backends/effects_trio')
 
     data_dir = temp_dirname

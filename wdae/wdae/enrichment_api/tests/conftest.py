@@ -1,7 +1,5 @@
 import pytest
 
-from gpf_instance.gpf_instance import reload_datasets
-
 from enrichment_api.enrichment_builder import EnrichmentBuilder
 from enrichment_api.enrichment_serializer import EnrichmentSerializer
 

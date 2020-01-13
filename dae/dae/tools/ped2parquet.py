@@ -20,7 +20,7 @@ def main(argv):
         help='output filename (default is [input filename]_parquet.ped)'
     )
     parser.add_argument(
-        '--partition-description', '--pd', 
+        '--partition-description', '--pd',
         help='input partition description filename'
     )
     FamiliesLoader.cli_arguments(parser)

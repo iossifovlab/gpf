@@ -254,7 +254,7 @@ class VcfLoader(VariantsLoader):
             vcf_iterator_idexes_to_advance = list()
             genotypes = tuple()
             for idx, vcf_variant in enumerate(vcf_variants):
-                if  self._compare_vcf_variants_eq(
+                if self._compare_vcf_variants_eq(
                         current_vcf_variant, vcf_variant):
                     genotypes += tuple(vcf_variant.genotypes)
                     vcf_iterator_idexes_to_advance.append(idx)

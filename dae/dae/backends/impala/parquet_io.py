@@ -2,7 +2,6 @@ import os
 import sys
 import time
 import itertools
-from deprecation import deprecated
 import hashlib
 from box import Box
 
@@ -233,7 +232,6 @@ class ParquetPartitionDescription():
             family_bin = self._family_bin_from_id(family.family_id)
             for person in family.persons.values():
                 person.set_attr('family_bin', family_bin)
-            
         return families
 
 

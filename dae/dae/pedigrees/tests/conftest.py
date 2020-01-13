@@ -1,6 +1,5 @@
 import pytest
 
-import os
 from io import StringIO
 import csv
 

@@ -6,9 +6,7 @@ import argparse
 
 from dae.gpf_instance.gpf_instance import GPFInstance
 
-from dae.annotation.tools.annotator_config import annotation_config_cli_options
-
-from dae.pedigrees.loader import FamiliesLoader  # , FamiliesData
+from dae.pedigrees.loader import FamiliesLoader
 from dae.backends.raw.loader import AnnotationPipelineDecorator
 from dae.backends.vcf.loader import VcfLoader
 from dae.backends.impala.parquet_io import ParquetManager, \

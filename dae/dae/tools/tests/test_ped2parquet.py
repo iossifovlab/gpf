@@ -21,7 +21,7 @@ def test_ped2parquet(pedigree, temp_filename, global_dae_fixtures_dir):
     filename = f'{global_dae_fixtures_dir}/pedigrees/{pedigree}'
     assert os.path.exists(filename)
 
-    argv= [
+    argv = [
         filename,
         '-o', temp_filename
     ]
@@ -44,7 +44,7 @@ def test_ped2parquet_patition(
     pd_filename = f'{global_dae_fixtures_dir}/' \
         f'partition_descriptor/partition_description.conf'
 
-    argv= [
+    argv = [
         filename,
         '-o', temp_filename,
         '--pd', pd_filename,
