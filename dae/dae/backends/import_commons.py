@@ -112,11 +112,16 @@ def generate_makefile(genome, contigs, tool, argv):
     for target_name in targets.keys():
         all_target += f' {target_name}'
 
+    bucket_index = 100
+
     for target_name, target_args in targets.items():
         main_targets += f'{target_name}:\n'
-        main_targets += f'\t{common_command}'
+        main_targets += f'\t{common_command} '
+        main_targets += \
+            f'-b {bucket_index} '
         main_targets += \
             f' --region {generate_region_argument_string(*target_args)}\n\n'
+        bucket_index += 1
 
     if len(other_regions) > 0:
         for region_bin, command_args in other_regions.items():
