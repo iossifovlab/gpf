@@ -82,7 +82,7 @@ def test_flexible_pedigree_read_from_filesystem(filepath):
     expected_df['sample_id'] = expected_df['person_id']
 
     absolute_filepath = relative_to_this_folder(
-        'fixtures/{}'.format(filepath)
+        'fixtures/pedigrees/{}'.format(filepath)
     )
     pedigree_df = FamiliesLoader.flexible_pedigree_read(absolute_filepath)
     assert pedigree_df.equals(expected_df)
@@ -104,7 +104,7 @@ def test_flexible_pedigree_read_additional_columns():
     expected_df['sample_id'] = expected_df['person_id']
 
     absolute_filepath = relative_to_this_folder(
-        'fixtures/pedigree_D.ped'
+        'fixtures/pedigrees/pedigree_D.ped'
     )
     pedigree_df = FamiliesLoader.flexible_pedigree_read(absolute_filepath)
     assert pedigree_df.equals(expected_df)
@@ -125,7 +125,7 @@ def test_flexible_pedigree_read_do_not_override_sample_id_column():
     ]
 
     absolute_filepath = relative_to_this_folder(
-        'fixtures/pedigree_E.ped'
+        'fixtures/pedigrees/pedigree_E.ped'
     )
     pedigree_df = FamiliesLoader.flexible_pedigree_read(absolute_filepath)
     assert pedigree_df.equals(expected_df)
@@ -136,7 +136,7 @@ def test_flexible_pedigree_read_no_header():
     expected_df['sample_id'] = expected_df['person_id']
 
     absolute_filepath = relative_to_this_folder(
-        'fixtures/pedigree_no_header.ped'
+        'fixtures/pedigrees/pedigree_no_header.ped'
     )
     pedigree_df = FamiliesLoader.flexible_pedigree_read(
         absolute_filepath,

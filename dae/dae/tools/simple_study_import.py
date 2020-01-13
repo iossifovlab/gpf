@@ -171,7 +171,7 @@ def main(argv, gpf_instance=None):
         params = VcfLoader.parse_cli_arguments(argv)
         vcf_loader = VcfLoader(
             families,
-            argv.vcf,
+            [argv.vcf],
             params=params
         )
         vcf_loader = AnnotationPipelineDecorator(

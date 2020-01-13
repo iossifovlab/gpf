@@ -455,7 +455,7 @@ def iossifov2014_impala(
     assert parquet_filenames is not None
     print(parquet_filenames)
 
-    ParquetManager.pedigree_to_parquet(
+    ParquetManager.families_loader_to_parquet(
         iossifov2014_loader.families, parquet_filenames.pedigree)
 
     ParquetManager.variants_to_parquet(
@@ -490,16 +490,16 @@ def vcf_loader_data():
 def vcf_variants_loader(vcf_loader_data, default_annotation_pipeline):
     def builder(
         path, params={
-            'include_reference_genotypes': True,
-            'include_unknown_family_genotypes': True,
-            'include_unknown_person_genotypes': True
+            'vcf_include_reference_genotypes': True,
+            'vcf_include_unknown_family_genotypes': True,
+            'vcf_include_unknown_person_genotypes': True
             }):
         conf = vcf_loader_data(path)
 
         ped_df = FamiliesLoader.flexible_pedigree_read(conf.pedigree)
         families = FamiliesData.from_pedigree_df(ped_df)
 
-        loader = VcfLoader(families, conf.vcf, params=params)
+        loader = VcfLoader(families, [conf.vcf], params=params)
         assert loader is not None
 
         loader = AlleleFrequencyDecorator(loader)
@@ -719,11 +719,11 @@ def data_import(
             families = families_loader.load()
 
             loader = VcfLoader(
-                families, vcf.vcf, regions=None,
+                families, [vcf.vcf], regions=None,
                 params={
-                    'include_reference_genotypes': True,
-                    'include_unknown_family_genotypes': True,
-                    'include_unknown_person_genotypes': True
+                    'vcf_include_reference_genotypes': True,
+                    'vcf_include_unknown_family_genotypes': True,
+                    'vcf_include_unknown_person_genotypes': True
                 })
 
             loader = AlleleFrequencyDecorator(loader)

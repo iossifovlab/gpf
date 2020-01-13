@@ -2,7 +2,6 @@ import os
 import sys
 import time
 import itertools
-from deprecation import deprecated
 import hashlib
 from box import Box
 
@@ -107,8 +106,6 @@ class ParquetPartitionDescription():
                 config['region_bin']['chromosomes'].split(',')
             )
         )
-
-        # chromosomes = list(map(str.strip))
 
         region_length = int(config['region_bin']['region_length'])
         family_bin_size = 0
@@ -230,14 +227,13 @@ class ParquetPartitionDescription():
         glob += '*.parquet'
         return glob
 
-    def add_family_bins_to_pedigree_df(self, ped_df):
-        family_ids = ped_df['family_id'].values
-        family_bins = []
-        for family_id in family_ids:
-            family_bins.append(self._family_bin_from_id(family_id))
-        assert len(family_bins) == len(family_ids)
-        ped_df['family_bin'] = family_bins
-        return ped_df
+    def add_family_bins_to_families(self, families):
+        for family in families.values():
+            family_bin = self._family_bin_from_id(family.family_id)
+            for person in family.persons.values():
+                person.set_attr('family_bin', family_bin)
+        families._ped_df = None
+        return families
 
 
 class ContinuousParquetFileWriter():
@@ -539,24 +535,8 @@ class ParquetManager:
         return Box(conf, default_box=True)
 
     @staticmethod
-    @deprecated(
-        details="replace 'pedigree_to_parquet' with "
-        "'families_loader_to_parquet'")
-    def pedigree_to_parquet(families, pedigree_filename, filesystem=None):
-        os.makedirs(
-            os.path.split(pedigree_filename)[0], exist_ok=True
-        )
-
-        save_ped_df_to_parquet(
-            families.ped_df, pedigree_filename,
-            filesystem=filesystem
-        )
-
-    @staticmethod
     def families_loader_to_parquet(
             families, pedigree_filename, filesystem=None):
-
-        print(pedigree_filename)
 
         os.makedirs(
             os.path.split(pedigree_filename)[0], exist_ok=True
@@ -644,7 +624,6 @@ def pedigree_parquet_schema():
         pa.field('sample_id', pa.string()),
         pa.field('generated', pa.bool_()),
         pa.field('layout', pa.string()),
-        pa.field('family_bin', pa.int8()),
     ]
 
     return pa.schema(fields)
@@ -653,14 +632,17 @@ def pedigree_parquet_schema():
 def add_missing_parquet_fields(pps, ped_df):
     missing_fields = set(ped_df.columns.values) - set(pps.names)
 
+    if 'family_bin' in missing_fields:
+        pps = pps.append(
+            pa.field('family_bin', pa.int8()))
+        missing_fields = missing_fields - set(['family_bin'])
+
     for column in missing_fields:
         pps = pps.append(pa.field(column, pa.string()))
-
     return pps
 
 
 def save_ped_df_to_parquet(ped_df, filename, filesystem=None):
-
     ped_df = ped_df.copy()
     ped_df.role = ped_df.role.apply(lambda r: r.value)
     ped_df.sex = ped_df.sex.apply(lambda s: s.value)
@@ -669,8 +651,6 @@ def save_ped_df_to_parquet(ped_df, filename, filesystem=None):
         ped_df['generated'] = False
     if 'layout' not in ped_df:
         ped_df['layout'] = None
-    if 'family_bin' not in ped_df:
-        ped_df['family_bin'] = None
 
     pps = pedigree_parquet_schema()
     pps = add_missing_parquet_fields(pps, ped_df)

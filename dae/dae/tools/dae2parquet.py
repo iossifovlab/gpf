@@ -220,7 +220,7 @@ def denovo2parquet(
             argv.output,
             'pedigree',
             'pedigree.ped')
-        ParquetManager.pedigree_to_parquet(
+        ParquetManager.families_loader_to_parquet(
             families, pedigree_path)
 
     if argv.partition_description is None:
@@ -254,7 +254,7 @@ def dae2parquet(
             argv.output,
             'pedigree',
             'pedigree.ped')
-        ParquetManager.pedigree_to_parquet(
+        ParquetManager.families_loader_to_parquet(
             fvars.families, pedigree_path)
 
     if argv.partition_description is None:

@@ -1,13 +1,10 @@
 import pytest
-import os
-from _pytest.monkeypatch import MonkeyPatch
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 
 from users_api.models import WdaeUser
 
-from dae.gpf_instance.gpf_instance import GPFInstance
 from gpf_instance.gpf_instance import reload_datasets
 
 
@@ -72,8 +69,10 @@ def admin_client(admin, client):
     client.login(email=admin.email, password="secret")
     return client
 
+
 @pytest.fixture(scope='function')
-def wdae_gpf_instance(db, mocker, admin_client, fixtures_gpf_instance, gpf_instance_2013):
+def wdae_gpf_instance(
+        db, mocker, admin_client, fixtures_gpf_instance, gpf_instance_2013):
     reload_datasets(fixtures_gpf_instance._variants_db)
     mocker.patch(
         'query_base.query_base.get_gpf_instance',

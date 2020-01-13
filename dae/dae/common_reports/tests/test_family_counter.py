@@ -85,14 +85,14 @@ def test_families_group_counters(study1, families_groups):
     )
 
     assert families_group_counters.selected_families_group.name == 'Diagnosis'
-    assert families_group_counters.selected_families_group.available_values == \
-        ['phenotype1', 'phenotype2', 'unaffected', 'unknown']
+    assert families_group_counters.selected_families_group.available_values \
+        == ['phenotype1', 'phenotype2', 'unaffected', 'unknown']
 
     assert len(families_group_counters.counters) == 8
     assert len(families_group_counters.selected_families_group.legend) == 6
 
-    assert families_group_counters.selected_families_group.legend[-1]['id'] == \
-        'missing-person'
+    assert families_group_counters.selected_families_group.legend[-1]['id'] \
+        == 'missing-person'
 
     assert len(families_group_counters.to_dict().keys()) == 4
 
