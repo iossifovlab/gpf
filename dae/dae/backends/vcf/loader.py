@@ -93,8 +93,8 @@ class VcfLoader(VariantsLoader):
             assert os.path.exists(file)
             self.vcfs.append(VCF(file, lazy=True))
 
-    def _get_vcf_iterators(self, region):
-        return [enumerate(vcf(region)) for vcf in self.vcfs]
+    def _build_vcf_iterators(self, region):
+        return [vcf(region) for vcf in self.vcfs]
 
     def _init_chromosome_order(self):
         seqnames = self.vcfs[0].seqnames
@@ -156,31 +156,66 @@ class VcfLoader(VariantsLoader):
             )
         return SummaryVariantFactory.summary_variant_from_records(records)
 
-    def _compare_summaries_g(self, lhs, rhs):
+    # def _compare_summaries_g(self, lhs, rhs):
+    #     """
+    #     Returns true if left summary variant position in file is
+    #     larger than right summary variant position in file
+    #     """
+    #     # TODO: Change this to use a dict
+    #     l_chrom_idx = self.chrom_order.get(lhs.ref_allele.chromosome)
+    #     r_chrom_idx = self.chrom_order.get(rhs.ref_allele.chromosome)
+
+    #     if l_chrom_idx > r_chrom_idx:
+    #         return True
+    #     elif lhs.ref_allele.position > rhs.ref_allele.position:
+    #         return True
+    #     else:
+    #         return False
+
+    # def _find_min_summary_variant(self, summary_variants) -> int:
+    #     assert len(summary_variants)
+    #     min = 0
+    #     for i in range(1, len(summary_variants)):
+    #         if self._compare_summaries_g(
+    #                 summary_variants[min],
+    #                 summary_variants[i]):
+    #             min = i
+    #     return summary_variants[min]
+
+    def _compare_vcf_variants_gt(self, lhs, rhs):
         """
-        Returns true if left summary variant position in file is
-        larger than right summary variant position in file
+        Returns true if left vcf variant position in file is
+        larger than right vcf variant position in file
         """
         # TODO: Change this to use a dict
-        l_chrom_idx = self.chrom_order.get(lhs.ref_allele.chromosome)
-        r_chrom_idx = self.chrom_order.get(rhs.ref_allele.chromosome)
+        l_chrom_idx = self.chrom_order.get(lhs.CHROM)
+        r_chrom_idx = self.chrom_order.get(rhs.CHROM)
 
         if l_chrom_idx > r_chrom_idx:
             return True
-        elif lhs.ref_allele.position > rhs.ref_allele.position:
+        elif lhs.POS > rhs.POS:
             return True
         else:
             return False
 
-    def _find_min_summary_variant(self, summary_variants) -> int:
-        assert len(summary_variants)
-        min = 0
-        for i in range(1, len(summary_variants)):
-            if self._compare_summaries_g(
-                    summary_variants[min],
-                    summary_variants[i]):
-                min = i
-        return summary_variants[min]
+    def _compare_vcf_variants_eq(self, lhs, rhs):
+        """
+        Returns true if left vcf variant position in file is
+        equal to right vcf variant position in file
+        """
+        return lhs.CHROM == rhs.CHROM and lhs.POS == rhs.POS
+
+    def _find_current_vcf_variant(self, vcf_variants):
+        assert len(vcf_variants)
+        min_index = 0
+        for index in range(1, len(vcf_variants)):
+            if vcf_variants[index] is None:
+                continue
+            if self._compare_vcf_variants_gt(
+                    vcf_variants[min_index],
+                    vcf_variants[index]):
+                min_index = index
+        return vcf_variants[min_index]
 
     def _generate_missing_genotype(self, vcf):
         sample_count = len(vcf.samples)
@@ -191,42 +226,38 @@ class VcfLoader(VariantsLoader):
 
         return gt
 
-    def _merge_genotypes(self, genotypes):
-        """
-        Merges a list of genotypes into one
-        """
-        out = None
-        for gt in genotypes:
-            if out is None:
-                out = gt
-            else:
-                out = np.concatenate((out, gt))
-        return out
+    # def _merge_genotypes(self, genotypes):
+    #     """
+    #     Merges a list of genotypes into one
+    #     """
+    #     out = None
+    #     for gt in genotypes:
+    #         if out is None:
+    #             out = gt
+    #         else:
+    #             out = np.concatenate((out, gt))
+    #     return out
 
     def _summary_genotypes_iterator_internal(self, vcf_iterators):
         vcf_variants = [next(it, None) for it in vcf_iterators]
-        variant_count = 0
+        summary_variant_index = 0
 
         while True:
             if all([vcf_variant is None for vcf_variant in vcf_variants]):
                 break
 
-            summary_variants = list(map(
-                lambda x: self._build_summary_variant(variant_count, x[1]),
-                vcf_variants
-            ))
+            current_vcf_variant = \
+                self._find_current_vcf_variant(vcf_variants)
+            current_summary_variant = self._build_summary_variant(
+                summary_variant_index, current_vcf_variant)
 
-            current_summary_variant = \
-                self._find_min_summary_variant(summary_variants)
-
-            iterator_idxs_to_advance = list()
+            vcf_iterator_idexes_to_advance = list()
             genotypes = tuple()
-
-            for idx, (sv, (_, vcf_variant)) in \
-                    enumerate(zip(summary_variants, vcf_variants)):
-                if sv == current_summary_variant:
+            for idx, vcf_variant in enumerate(vcf_variants):
+                if  self._compare_vcf_variants_eq(
+                        current_vcf_variant, vcf_variant):
                     genotypes += tuple(vcf_variant.genotypes)
-                    iterator_idxs_to_advance.append(idx)
+                    vcf_iterator_idexes_to_advance.append(idx)
                 else:
                     genotypes += tuple(
                         self._generate_missing_genotype(self.vcfs[idx])
@@ -239,13 +270,13 @@ class VcfLoader(VariantsLoader):
 
             yield current_summary_variant, family_genotypes
 
-            for idx in iterator_idxs_to_advance:
+            for idx in vcf_iterator_idexes_to_advance:
                 vcf_variants[idx] = next(vcf_iterators[idx], None)
-            variant_count += 1
+            summary_variant_index += 1
 
     def summary_genotypes_iterator(self):
         for region in self.regions:
-            vcf_iterators = self._get_vcf_iterators(region)
+            vcf_iterators = self._build_vcf_iterators(region)
 
             summary_genotypes = \
                 self._summary_genotypes_iterator_internal(vcf_iterators)
