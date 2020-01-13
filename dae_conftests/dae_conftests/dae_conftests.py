@@ -455,7 +455,7 @@ def iossifov2014_impala(
     assert parquet_filenames is not None
     print(parquet_filenames)
 
-    ParquetManager.pedigree_to_parquet(
+    ParquetManager.families_loader_to_parquet(
         iossifov2014_loader.families, parquet_filenames.pedigree)
 
     ParquetManager.variants_to_parquet(

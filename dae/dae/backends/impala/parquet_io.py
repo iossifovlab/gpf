@@ -539,20 +539,6 @@ class ParquetManager:
         return Box(conf, default_box=True)
 
     @staticmethod
-    @deprecated(
-        details="replace 'pedigree_to_parquet' with "
-        "'families_loader_to_parquet'")
-    def pedigree_to_parquet(families, pedigree_filename, filesystem=None):
-        os.makedirs(
-            os.path.split(pedigree_filename)[0], exist_ok=True
-        )
-
-        save_ped_df_to_parquet(
-            families.ped_df, pedigree_filename,
-            filesystem=filesystem
-        )
-
-    @staticmethod
     def families_loader_to_parquet(
             families, pedigree_filename, filesystem=None):
 
