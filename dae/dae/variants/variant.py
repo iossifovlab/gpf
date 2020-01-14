@@ -297,12 +297,28 @@ class SummaryAllele(VariantBase):
 
     @staticmethod
     def create_reference_allele(allele):
+        new_attributes = {
+            'chrom':
+                allele.attributes.get('chrom'),
+            'position':
+                allele.attributes.get('position'),
+            'reference':
+                allele.attributes.get('reference'),
+            'summary_variant_index':
+                allele.attributes.get('summary_variant_index'),
+            'allele_count':
+                allele.attributes.get('allele_count'),
+            'studyName':
+                allele.attributes.get('studyName'),
+        }
+
         return SummaryAllele(
             allele.chromosome,
             allele.position,
             allele.reference,
             summary_index=allele.summary_index,
-            attributes=allele.attributes)
+            attributes=new_attributes
+        )
 
     @property
     def is_reference_allele(self):
@@ -450,18 +466,8 @@ class SummaryVariant(VariantBase):
 class SummaryVariantFactory(object):
 
     @staticmethod
-    def summary_allele_from_record(
-            record, transmission_type='transmitted'):
+    def summary_allele_from_record(record, transmission_type='transmitted'):
         record['transmission_type'] = transmission_type
-        # if record.get('effect_type') is None:
-        #     effects = None
-        # else:
-        #     effects = Effect.from_effects(
-        #         record['effect_type'],
-        #         list(zip(record['effect_gene_genes'],
-        #                  record['effect_gene_types'])),
-        #         list(zip(record['effect_details_transcript_ids'],
-        #                  record['effect_details_details'])))
         alternative = record['alternative']
 
         return SummaryAllele(
@@ -470,8 +476,8 @@ class SummaryVariantFactory(object):
             alternative=alternative,
             summary_index=record['summary_variant_index'],
             allele_index=record['allele_index'],
-            # effect=effects,
-            attributes=record)
+            attributes=record
+        )
 
     @staticmethod
     def summary_variant_from_records(records, transmission_type='transmitted'):
@@ -479,13 +485,12 @@ class SummaryVariantFactory(object):
 
         alleles = []
         for record in records:
-            sa = SummaryVariantFactory.\
-                summary_allele_from_record(
-                    record,
-                    transmission_type=transmission_type)
+            sa = SummaryVariantFactory.summary_allele_from_record(
+                record, transmission_type
+            )
             alleles.append(sa)
         if not alleles[0].is_reference_allele:
             ref_allele = SummaryAllele.create_reference_allele(alleles[0])
-            alleles = list(itertools.chain([ref_allele], alleles))
+            alleles.insert(0, ref_allele)
 
         return SummaryVariant(alleles)
