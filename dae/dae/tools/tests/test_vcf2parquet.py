@@ -3,15 +3,10 @@ import io
 
 from contextlib import redirect_stdout
 
-from box import Box
-
 import pyarrow.parquet as pq
 
 from dae.pedigrees.family import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
-
-from dae.annotation.tools.file_io_parquet import ParquetReader
-
 from dae.backends.impala.loader import ParquetLoader
 
 from dae.tools.vcf2parquet import main

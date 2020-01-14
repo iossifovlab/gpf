@@ -1,5 +1,4 @@
 import os
-import shutil
 from dae.backends.impala.parquet_io import VariantsParquetWriter
 from dae.backends.impala.parquet_io import ParquetPartitionDescriptor
 
@@ -213,10 +212,10 @@ def test_coding_partition_2(vcf_variants_loader, temp_dirname):
     temp_dirname = '/tmp/dataset-partition-test'
 
     partition_desc = ParquetPartitionDescriptor(
-            ['1', '2'], 10000000,
-            coding_effect_types=[
-                'missense', 'nonsense', 'synonymous', 'frame-shift'
-            ],
+        ['1', '2'], 10000000,
+        coding_effect_types=[
+            'missense', 'nonsense', 'synonymous', 'frame-shift'
+        ],
         root_dirname=temp_dirname
     )
 
@@ -575,4 +574,3 @@ def test_region_family_frequency(vcf_variants_loader, temp_dirname):
                          'frequency_bin=3',
                          'variants_region_bin_2_12_family_bin_6' +
                          '_frequency_bin_3.parquet'))
-
