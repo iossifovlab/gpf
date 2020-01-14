@@ -49,9 +49,7 @@ class VariantsLoader:
 
             family_variants = []
             for fam, gt in family_genotypes.family_genotype_iterator():
-                family_variants.append(
-                    FamilyVariant.from_summary_variant(
-                        summary_variant, fam, gt))
+                family_variants.append(FamilyVariant(summary_variant, fam, gt))
 
             yield summary_variant, family_variants
 

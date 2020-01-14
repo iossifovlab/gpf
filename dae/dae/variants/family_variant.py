@@ -61,6 +61,8 @@ class FamilyAllele(Allele, FamilyDelegate):
         self._variant_in_members_objects = None
         self._variant_in_roles = None
         self._variant_in_sexes = None
+        self._effect = None
+        self.details = None
 
         self.matched_gene_effects = []
 
@@ -100,7 +102,7 @@ class FamilyAllele(Allele, FamilyDelegate):
         return self.summary_allele.allele_index
 
     @property
-    def attributes(self) -> Dict[Any]:
+    def attributes(self) -> Dict[str, Any]:
         return self.summary_allele.attributes
 
     @property
@@ -364,6 +366,10 @@ class FamilyVariant(Variant, FamilyDelegate):
     @property
     def alternative(self) -> Optional[str]:
         return self.summary_variant.alternative
+
+    @property
+    def allele_count(self):
+        return self.summary_variant.allele_count
 
     @property
     def summary_index(self) -> int:

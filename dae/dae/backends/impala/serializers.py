@@ -8,6 +8,7 @@ import numpy as np
 from dae.utils.variant_utils import GENOTYPE_TYPE
 from dae.annotation.tools.file_io_parquet import ParquetSchema
 
+from dae.variants.variant import SummaryAllele, SummaryVariant
 from dae.variants.family_variant import FamilyAllele, FamilyVariant
 
 
@@ -328,7 +329,8 @@ class ParquetSerializer(object):
         alternatives = self.deserialize_variant_alternatives(
             alternatives_data
         )
-
+        print(effects)
+        print(alternatives)
         assert len(effects) == len(alternatives)
         # family = self.families.get(family_id)
         assert family is not None
@@ -359,16 +361,20 @@ class ParquetSerializer(object):
 
         for allele_index, (alt, effect, attr) in enumerate(values):
             attr.update(effect)
-
-            allele = FamilyAllele(
+            summary_allele = SummaryAllele(
                 chrom, position, reference,
                 alternative=alt,
                 summary_index=0,
                 allele_index=allele_index,
                 # effect=effect,
-                attributes=attr,
+                attributes=attr
+            )
+
+            family_allele = FamilyAllele(
+                summary_allele,
                 family=family,
                 genotype=genotype)
-            alleles.append(allele)
 
-        return FamilyVariant(alleles, family, genotype)
+            alleles.append(family_allele)
+
+        return FamilyVariant(SummaryVariant(alleles), family, genotype)

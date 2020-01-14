@@ -80,6 +80,10 @@ class Allele:
         raise NotImplementedError()
 
     @property
+    def chrom(self) -> str:
+        return self.chromosome
+
+    @property
     def position(self) -> int:
         raise NotImplementedError()
 
@@ -100,7 +104,7 @@ class Allele:
         raise NotImplementedError()
 
     @property
-    def attributes(self) -> Dict[Any]:
+    def attributes(self) -> Dict[str, Any]:
         raise NotImplementedError()
 
     @property
@@ -242,6 +246,10 @@ class Variant:
         raise NotImplementedError()
 
     @property
+    def allele_count(self) -> int:
+        raise NotImplementedError()
+
+    @property
     def location(self) -> str:
         return '{}:{}'.format(self.chromosome, self.position)
 
@@ -331,6 +339,26 @@ class Variant:
             assert len(values) == 1 or len(values) == len(self.alt_alleles)
             for sa, val in zip(self.alt_alleles, itertools.cycle(values)):
                 sa.update_attributes({key: val})
+
+    def __repr__(self):
+        return '{} {}'.format(self.location, self.variant)
+
+    def __eq__(self, other):
+        return self.chromosome == other.chromosome and \
+            self.position == other.position and \
+            self.reference == other.reference and \
+            self.alternative == other.alternative
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __lt__(self, other):
+        return self.chromosome <= other.chromosome and \
+            self.position < other.position
+
+    def __gt__(self, other):
+        return self.chromosome >= other.chromosome and \
+            self.position > other.position
 
 
 class VariantDetail(object):
@@ -452,15 +480,11 @@ class SummaryVariant(Variant):
         assert alleles[0].is_reference_allele
         #: list of all alleles in the variant
         self._alleles = alleles
-        self.allele_count = len(self.alleles)
+        self._allele_count = len(self.alleles)
 
         self._chromosome = self.ref_allele.chromosome
         self._position = self.ref_allele.position
         self._reference = self.ref_allele.reference
-        super(SummaryVariant, self).__init__(
-            self.ref_allele.chromosome,
-            self.ref_allele.position,
-            self.ref_allele.reference)
 
     @property
     def chrom(self) -> str:
@@ -484,6 +508,10 @@ class SummaryVariant(Variant):
                 for aa in self.alt_alleles])
             return None
         return ','.join([aa.alternative for aa in self.alt_alleles])
+
+    @property
+    def allele_count(self) -> int:
+        return self._allele_count
 
     @property
     def summary_index(self):

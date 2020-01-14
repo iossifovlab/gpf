@@ -27,7 +27,7 @@ summary_alleles_chr2 = [
 def test_parquet_region_bin(fam1, gt, chromosomes,
                             region_length, summary_alleles, expected):
     sv = SummaryVariant(summary_alleles)
-    fv = FamilyVariant.from_summary_variant(sv, fam1, gt)
+    fv = FamilyVariant(sv, fam1, gt)
     pd = ParquetPartitionDescription(
         chromosomes, region_length
     )
@@ -40,8 +40,8 @@ def test_parquet_region_bin(fam1, gt, chromosomes,
 
 def test_parquet_family_bin(fam1, fam2, gt):
     sv = SummaryVariant(summary_alleles_chr1)
-    fv1 = FamilyVariant.from_summary_variant(sv, fam1, gt)
-    fv2 = FamilyVariant.from_summary_variant(sv, fam2, gt)
+    fv1 = FamilyVariant(sv, fam1, gt)
+    fv2 = FamilyVariant(sv, fam2, gt)
     family_bin_size = 10
     pd = ParquetPartitionDescription(
         ['1'], 1000, family_bin_size
@@ -69,7 +69,7 @@ def test_parquet_frequency_bin(fam1, gt, attributes, rare_boundary, expected):
         SummaryAllele('1', 11539, 'T', None, 0, 0, attributes=attributes)
     ] * 3
     sv = SummaryVariant(summary_alleles)
-    fv = FamilyVariant.from_summary_variant(sv, fam1, gt)
+    fv = FamilyVariant(sv, fam1, gt)
     pd = ParquetPartitionDescription(
         ['1'], 1000, rare_boundary=rare_boundary
     )
@@ -131,7 +131,7 @@ def test_parquet_coding_bin(fam1, gt, eff1, eff2, eff3,
     ]
     gt = np.array([[0, 1, 0], [2, 0, 3]], dtype='int8')
     sv = SummaryVariant(summary_alleles)
-    fv = FamilyVariant.from_summary_variant(sv, fam1, gt)
+    fv = FamilyVariant(sv, fam1, gt)
     pd = ParquetPartitionDescription(
         ['1'], 1000, coding_effect_types=coding_effect_types
     )

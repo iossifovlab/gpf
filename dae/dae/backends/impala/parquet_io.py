@@ -11,6 +11,7 @@ import pyarrow.parquet as pq
 import configparser
 
 from dae.utils.variant_utils import GENOTYPE_TYPE
+from dae.variants.variant import SummaryVariant, SummaryAllele
 from dae.variants.family_variant import FamilyAllele, FamilyVariant
 from dae.backends.impala.serializers import ParquetSerializer
 
@@ -308,8 +309,7 @@ class VariantsParquetWriter():
             shape=(2, len(family)), dtype=GENOTYPE_TYPE)
 
         ra = summary_variant.ref_allele
-        reference_allele = FamilyAllele.from_summary_allele(
-            ra, family, genotype)
+        reference_allele = FamilyAllele(ra, family, genotype)
         return reference_allele
 
     def _setup_all_unknown_allele(self, summary_variant, family):
@@ -318,13 +318,15 @@ class VariantsParquetWriter():
 
         ra = summary_variant.ref_allele
         unknown_allele = FamilyAllele(
-            ra.chromosome,
-            ra.position,
-            ra.reference,
-            ra.reference,
-            None,  # summary_allele.summary_index,
-            -1,
-            {},
+            SummaryAllele(
+                ra.chromosome,
+                ra.position,
+                ra.reference,
+                ra.reference,
+                None,  # summary_allele.summary_index,
+                -1,
+                {},
+            ),
             family,
             genotype
         )
@@ -339,7 +341,7 @@ class VariantsParquetWriter():
             self._setup_all_unknown_allele(summary_variant, family)
         ]
         return FamilyVariant(
-            alleles, family, genotype
+            SummaryVariant(alleles), family, genotype
         )
 
     def _process_family_variant(
