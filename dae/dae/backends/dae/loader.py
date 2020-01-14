@@ -69,8 +69,7 @@ class DenovoLoader(VariantsLoader):
             rec['allele_index'] = 1
 
             summary_variant = SummaryVariantFactory \
-                .summary_variant_from_records(
-                    [rec], transmission_type=self.transmission_type)
+                .summary_variant_from_records([rec], self.transmission_type)
             family = self.families[family_id]
 
             yield summary_variant, \
@@ -392,23 +391,20 @@ class DenovoLoader(VariantsLoader):
         else:
             family_col = raw_df.loc[:, denovo_family_id]
 
-            def best_state2genotype(best_st: str) -> np.array:
-                return best2gt(str2mat(best_st, col_sep=' '))
-
             best_state_col = list(map(
                 lambda bs: str2mat(bs, col_sep=' '), raw_df[denovo_best_state]
             ))
             genotype_col = list(map(best2gt, best_state_col))
 
-        return pd.DataFrame({
-            'chrom': chrom_col,
-            'position': pos_col,
-            'reference': ref_col,
-            'alternative': alt_col,
-            'family_id': family_col,
-            'genotype': genotype_col,
-            'best_state': best_state_col,
-        })
+            return pd.DataFrame({
+                'chrom': chrom_col,
+                'position': pos_col,
+                'reference': ref_col,
+                'alternative': alt_col,
+                'family_id': family_col,
+                'genotype': genotype_col,
+                'best_state': best_state_col,
+            })
 
 
 class DaeTransmittedFamiliesGenotypes(FamiliesGenotypes):
