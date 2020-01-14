@@ -4,7 +4,7 @@ import os
 import sys
 import argparse
 from dae.backends.impala.parquet_io import \
-    ParquetPartitionDescription, save_ped_df_to_parquet
+    ParquetPartitionDescription, ParquetManager
 from dae.pedigrees.loader import FamiliesLoader
 
 
@@ -17,7 +17,8 @@ def main(argv):
     parser.add_argument(
         '-o',
         dest='output_filename',
-        help='output filename (default is [input filename]_parquet.ped)'
+        help='output pedigree parquet filename '
+        '(default is [basename(pedigree)].parquet)'
     )
     parser.add_argument(
         '--partition-description', '--pd',
@@ -42,11 +43,11 @@ def main(argv):
 
     if not args.output_filename:
         output_filename, _ = os.path.splitext(os.path.basename(args.pedigree))
-        output_filename = f'{output_filename}_parquet.ped'
+        output_filename = f'{output_filename}.parquet'
     else:
         output_filename = args.output_filename
 
-    save_ped_df_to_parquet(families.ped_df, output_filename)
+    ParquetManager.families_to_parquet(families, output_filename)
 
 
 if __name__ == '__main__':

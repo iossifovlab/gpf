@@ -535,16 +535,16 @@ class ParquetManager:
         return Box(conf, default_box=True)
 
     @staticmethod
-    def families_loader_to_parquet(
-            families, pedigree_filename, filesystem=None):
+    def families_to_parquet(
+            families, pedigree_filename):
 
+        dirname = os.path.dirname(pedigree_filename)
         os.makedirs(
-            os.path.split(pedigree_filename)[0], exist_ok=True
+            dirname, exist_ok=True
         )
 
         save_ped_df_to_parquet(
-            families.ped_df, pedigree_filename,
-            filesystem=filesystem
+            families.ped_df, pedigree_filename
         )
 
     @staticmethod

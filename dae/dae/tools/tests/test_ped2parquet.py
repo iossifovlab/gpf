@@ -3,8 +3,12 @@ import pytest
 
 import pyarrow.parquet as pq
 
+import dae
+from dae.pedigrees.loader import FamiliesLoader
 from dae.pedigrees.family import FamiliesData
-from dae.backends.impala.parquet_io import ParquetPartitionDescription
+from dae.backends.impala.parquet_io import ParquetPartitionDescription, \
+    ParquetManager
+
 from dae.tools.ped2parquet import main
 
 
@@ -76,3 +80,29 @@ def test_ped2parquet_patition(
     f2 = families['f2']
     print([p.family_bin for p in f2.persons.values()])
     assert all([p.family_bin == 6 for p in f2.persons.values()])
+
+
+@pytest.mark.parametrize('pedigree_filename,parquet_filename', [
+    ('pedigree_A.ped', 'pedigree_A.parquet'),
+    ('/tmp/pedigree_A.ped', 'pedigree_A.parquet'),
+    ('tmp/pedigree_A.ped', 'pedigree_A.parquet'),
+    ('./pedigree_A.ped', 'pedigree_A.parquet'),
+])
+def test_ped2parquet_outfilename(mocker, pedigree_filename, parquet_filename):
+
+    mocker.patch(
+        "dae.pedigrees.loader.FamiliesLoader.load")    
+    mocker.patch(
+        "dae.backends.impala.parquet_io.ParquetManager.families_to_parquet")
+
+    argv = [
+        'pedigree_A.ped'
+    ]
+    main(argv)
+
+    FamiliesLoader.load.assert_called_once()
+    ParquetManager.families_to_parquet.assert_called_once()
+    call_args = ParquetManager.families_to_parquet.call_args
+
+    _, outfile = call_args[0]
+    assert outfile == parquet_filename

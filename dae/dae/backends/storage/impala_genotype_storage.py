@@ -207,7 +207,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
         print("families save in:", parquet_filenames)
         families = families_loader.load()
 
-        ParquetManager.families_loader_to_parquet(
+        ParquetManager.families_to_parquet(
             families, parquet_filenames.pedigree
         )
 
