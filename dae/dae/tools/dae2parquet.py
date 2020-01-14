@@ -288,7 +288,8 @@ def main(argv):
 
     if argv.type in ('denovo', 'dae'):
         annotation_pipeline = construct_import_annotation_pipeline(
-            dae_config, genomes_db, argv
+            dae_config, genomes_db,
+            annotation_configfile=argv.annotation_config
         )
 
     if argv.type == 'denovo':

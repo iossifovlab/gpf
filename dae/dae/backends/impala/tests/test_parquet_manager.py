@@ -89,7 +89,7 @@ def test_parquet_file_config(
 # '''
 
 
-def test_families_loader_to_parquet(
+def test_families_to_parquet(
         parquet_manager, variants_vcf, temp_dirname):
     fvars = variants_vcf('backends/effects_trio')
 
@@ -100,7 +100,7 @@ def test_families_loader_to_parquet(
     )
     assert not os.path.exists(pedigree_path)
 
-    parquet_manager.families_loader_to_parquet(
+    parquet_manager.families_to_parquet(
         fvars.families, pedigree_path)
     assert os.path.exists(pedigree_path)
 

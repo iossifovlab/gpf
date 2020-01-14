@@ -129,7 +129,7 @@ def main(argv, gpf_instance=None):
     assert genotype_storage is not None, argv.genotype_storage
 
     annotation_pipeline = construct_import_annotation_pipeline(
-        dae_config, genomes_db, argv)
+        dae_config, genomes_db, annotation_configfile=None)
 
     if argv.id is not None:
         study_id = argv.id
