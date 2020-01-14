@@ -367,6 +367,7 @@ class VariantsParquetWriter():
             self.parquet_serializer.serialize_variant_best_state(
                 family_variant.best_st
             )
+        genetic_model_data = family_variant.genetic_model.value
         frequency_data = \
             self.parquet_serializer.serialize_variant_frequency(
                 family_variant
@@ -396,7 +397,8 @@ class VariantsParquetWriter():
                     family_allele, effect_data)
             family = self.parquet_serializer.serialize_family(
                 family_variant_index, family_allele,
-                genotype_data, best_state_data)
+                genotype_data, best_state_data, genetic_model_data,
+            )
             member = self.parquet_serializer.serialize_members(
                 family_variant_index, family_allele)
 

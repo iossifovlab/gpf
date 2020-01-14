@@ -9,6 +9,7 @@ from dae.utils.variant_utils import GENOTYPE_TYPE, BEST_STATE_TYPE
 from dae.annotation.tools.file_io_parquet import ParquetSchema
 
 from dae.variants.family_variant import FamilyAllele, FamilyVariant
+from dae.variants.attributes import GeneticModel
 
 
 class ParquetSerializer(object):
@@ -57,6 +58,7 @@ class ParquetSerializer(object):
             'variant_inheritance',
             'genotype_data',
             'best_state_data',
+            'genetic_model_data',
         ]
     )
 
@@ -304,7 +306,7 @@ class ParquetSerializer(object):
         return res
 
     def serialize_family(self, family_variant_index, family_allele,
-                         genotype_data, best_state_data):
+                         genotype_data, best_state_data, genetic_model_data):
         res = self.family(
             family_variant_index,
             family_allele.family_id,
@@ -326,6 +328,7 @@ class ParquetSerializer(object):
                 ], 0),
             genotype_data,
             best_state_data,
+            genetic_model_data,
         )
         return res
 
@@ -338,10 +341,11 @@ class ParquetSerializer(object):
         return result
 
     def deserialize_variant(
-            self, family,
-            chrom, position, reference, alternatives_data,
-            effect_data, genotype_data, best_state_data,
-            frequency_data, genomic_scores_data):
+        self, family,
+        chrom, position, reference, alternatives_data,
+        effect_data, genotype_data, best_state_data, genetic_model_data,
+        frequency_data, genomic_scores_data,
+    ):
 
         effects = self.deserialize_variant_effects(
             effect_data)
@@ -362,6 +366,8 @@ class ParquetSerializer(object):
             best_state_data,
             len(alternatives) + 1  # alternatives + reference
         )
+
+        genetic_model = GeneticModel(genetic_model_data)
 
         frequencies = self.deserialize_variant_frequency(
             frequency_data)
@@ -393,7 +399,11 @@ class ParquetSerializer(object):
                 attributes=attr,
                 family=family,
                 genotype=genotype,
-                best_state=best_state)
+                best_state=best_state,
+            )
+            allele._genetic_model = genetic_model
             alleles.append(allele)
 
-        return FamilyVariant(alleles, family, genotype)
+        fv = FamilyVariant(alleles, family, genotype, best_state)
+        fv._genetic_model = genetic_model
+        return fv
