@@ -2,10 +2,31 @@ import numpy as np
 
 from dae.variants.variant import SummaryVariant, SummaryAllele
 from dae.pedigrees.family import Family
-from dae.variants.attributes import Inheritance
+from dae.variants.attributes import Inheritance, GeneticModel
 import itertools
 from dae.utils.variant_utils import GENOTYPE_TYPE, is_all_unknown_genotype, \
     is_reference_genotype
+
+
+def calculate_simple_best_state(
+    genotype: np.array, allele_count: int
+) -> np.array:
+    ref = (2 * np.ones(genotype.shape[1], dtype=GENOTYPE_TYPE))
+    unknown = np.any(genotype == -1, axis=0)
+
+    best_st = [ref]
+    for allele_index in range(1, allele_count):
+        alt_gt = np.zeros(genotype.shape, dtype=GENOTYPE_TYPE)
+        alt_gt[genotype == allele_index] = 1
+
+        alt = np.sum(alt_gt, axis=0, dtype=GENOTYPE_TYPE)
+        ref = ref - alt
+        best_st.append(alt)
+
+    best_st = np.stack(best_st, axis=0)
+    best_st[:, unknown] = -1
+
+    return best_st
 
 
 class FamilyDelegate(object):
@@ -40,17 +61,18 @@ class FamilyDelegate(object):
 class FamilyAllele(SummaryAllele, FamilyDelegate):
 
     def __init__(
-            self,
-            chromosome,
-            position,
-            reference,
-            alternative,
-            summary_index,
-            allele_index,
-            attributes,
-            family,
-            genotype,
-            best_state):
+        self,
+        chromosome,
+        position,
+        reference,
+        alternative,
+        summary_index,
+        allele_index,
+        attributes,
+        family,
+        genotype,
+        best_state,
+    ):
         assert isinstance(family, Family)
         SummaryAllele.__init__(
             self,
@@ -67,8 +89,9 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
         #: summary allele that corresponds to this allele in family variant
         # self.summary_allele = summary_allele
         self.gt = genotype
-        assert self.gt.dtype == GENOTYPE_TYPE
-        self.best_st = best_state
+        assert self.gt.dtype == GENOTYPE_TYPE, (self.gt, self.gt.dtype)
+        self._best_st = best_state
+        self._genetic_model = None
 
         self._inheritance_in_members = None
         self._variant_in_members = None
@@ -111,6 +134,20 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
         Returns genotype of the family.
         """
         return self.gt.T
+
+    @property
+    def best_st(self):
+        if self._best_st is None:
+            self._best_st = calculate_simple_best_state(
+                self.genotype, self.attributes['allele_count']
+            )
+        return self._best_st
+
+    @property
+    def genetic_model(self):
+        if self._genetic_model is None:
+            self._genetic_model = GeneticModel.autosomal
+        return self._genetic_model
 
     def gt_flatten(self):
         """
@@ -302,6 +339,7 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
         SummaryVariant.__init__(self, family_alleles)
         FamilyDelegate.__init__(self, family)
         self.gt = np.copy(genotype)
+        self._genetic_model = None
         self.summary_alleles = self.alleles
 
         alleles = [
@@ -314,7 +352,7 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
             alleles.append(allele)
         self.alleles = alleles
 
-        self.best_st = best_state
+        self._best_st = best_state
 
         self._matched_alleles = []
 
@@ -328,7 +366,8 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
         alleles = []
         for summary_allele in summary_variant.alleles:
             fa = FamilyAllele.from_summary_allele(
-                summary_allele, family, gt, best_state)
+                summary_allele, family, gt, best_state
+            )
             alleles.append(fa)
         return FamilyVariant(alleles, family, gt, best_state)
 
@@ -358,6 +397,12 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
         Returns genotype of the family.
         """
         return self.gt.T
+
+    @property
+    def genetic_model(self):
+        if self._genetic_model is None:
+            self._genetic_model = GeneticModel.autosomal
+        return self._genetic_model
 
     def gt_flatten(self):
         """
@@ -390,6 +435,14 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
                 self.chromosome, self.position,
                 self.reference, self.alternative,
                 self.family_id)
+
+    @property
+    def best_st(self):
+        if self._best_st is None:
+            self._best_st = calculate_simple_best_state(
+                self.genotype, self.allele_count
+            )
+        return self._best_st
 
     @staticmethod
     def calc_alt_alleles(gt):
