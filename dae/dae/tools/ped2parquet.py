@@ -4,7 +4,7 @@ import os
 import sys
 import argparse
 from dae.backends.impala.parquet_io import \
-    ParquetPartitionDescription, ParquetManager
+    ParquetPartitionDescriptor, ParquetManager
 from dae.pedigrees.loader import FamiliesLoader
 
 
@@ -36,7 +36,7 @@ def main(argv):
     families = loader.load()
 
     if args.partition_description:
-        partition_description = ParquetPartitionDescription.from_config(
+        partition_description = ParquetPartitionDescriptor.from_config(
             args.partition_description
         )
         families = partition_description.add_family_bins_to_families(families)

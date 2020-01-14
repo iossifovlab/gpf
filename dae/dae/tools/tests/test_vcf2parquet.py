@@ -5,6 +5,8 @@ from contextlib import redirect_stdout
 
 from box import Box
 
+import pyarrow.parquet as pq
+
 from dae.pedigrees.family import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
 
@@ -17,13 +19,13 @@ from dae.tools.vcf2parquet import main
 
 def test_vcf2parquet_vcf(
         vcf_import_config, annotation_pipeline_config,
-        annotation_scores_dirname, temp_dirname,
+        annotation_scores_dirname, temp_filename,
         gpf_instance_2013, default_dae_config, genomes_db_2013):
 
     argv = [
         'vcf',
         '--annotation', annotation_pipeline_config,
-        '-o', temp_dirname,
+        '-o', temp_filename,
         vcf_import_config.pedigree,
         vcf_import_config.vcf
     ]
@@ -37,24 +39,18 @@ def test_vcf2parquet_vcf(
         }}
     )
 
-    summary = ParquetReader(Box({
-        'infile': os.path.join(temp_dirname, 'variant', 'variants.parquet'),
-    }, default_box=True, default_box_attr=None))
-    summary._setup()
-    summary._cleanup()
+    assert os.path.exists(temp_filename)
 
-    # print(summary.schema)
-    schema = summary.schema
-    # print(schema['score0'])
+    pqfile = pq.ParquetFile(temp_filename)
+    schema = pqfile.schema
 
-    assert schema['score0'].type_name == 'float'
-    assert schema['score2'].type_name == 'float'
-    assert schema['score4'].type_name == 'float'
+    assert 'score0' in schema.names
+    assert 'score2' in schema.names
+    assert 'score4' in schema.names
 
-    assert schema['effect_gene'].type_name == 'str'
-    assert schema['effect_type'].type_name == 'str'
-    assert schema['effect_data'].type_name == 'str'
-    # assert schema['worst_effect'].type_name == 'str'
+    assert 'effect_gene' in schema.names
+    assert 'effect_type' in schema.names
+    assert 'effect_data' in schema.names
 
 
 def test_vcf2parquet_vcf_partition(

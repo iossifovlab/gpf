@@ -442,7 +442,7 @@ def iossifov2014_raw_denovo(iossifov2014_loader):
 @pytest.fixture(scope='session')
 def iossifov2014_impala(
         request, iossifov2014_loader, genomes_db_2013,
-        test_hdfs, impala_genotype_storage, parquet_manager):
+        test_hdfs, impala_genotype_storage):
 
     temp_dirname = test_hdfs.tempdir(prefix='variants_', suffix='_data')
     test_hdfs.mkdir(temp_dirname)
@@ -458,7 +458,7 @@ def iossifov2014_impala(
     ParquetManager.families_to_parquet(
         iossifov2014_loader.families, parquet_filenames.pedigree)
 
-    ParquetManager.variants_to_parquet(
+    ParquetManager.variants_to_parquet_filename(
         iossifov2014_loader, parquet_filenames.variant)
 
     impala_genotype_storage.impala_load_study(
@@ -646,11 +646,6 @@ def impala_genotype_storage(hdfs_host, impala_host):
     return ImpalaGenotypeStorage(storage_config)
 
 
-@pytest.fixture(scope='session')
-def parquet_manager(default_dae_config):
-    return ParquetManager(default_dae_config.studies_db.dir)
-
-
 def collect_vcf(dirname):
     result = []
     pattern = os.path.join(dirname, '*.vcf')
@@ -666,7 +661,7 @@ DATA_IMPORT_COUNT = 0
 
 @pytest.fixture(scope='session')
 def data_import(
-        request, test_hdfs, test_impala_helpers, parquet_manager,
+        request, test_hdfs, test_impala_helpers,
         impala_genotype_storage, reimport, default_dae_config,
         genomes_db_2013):
 

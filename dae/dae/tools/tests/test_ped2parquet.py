@@ -5,7 +5,7 @@ import pyarrow.parquet as pq
 
 from dae.pedigrees.loader import FamiliesLoader
 from dae.pedigrees.family import FamiliesData
-from dae.backends.impala.parquet_io import ParquetPartitionDescription, \
+from dae.backends.impala.parquet_io import ParquetPartitionDescriptor, \
     ParquetManager
 
 from dae.tools.ped2parquet import main
@@ -14,7 +14,7 @@ from dae.tools.ped2parquet import main
 def test_partition_descriptor(global_dae_fixtures_dir):
     pd_filename = f'{global_dae_fixtures_dir}/' \
         f'partition_descriptor/partition_description.conf'
-    pd = ParquetPartitionDescription.from_config(pd_filename)
+    pd = ParquetPartitionDescriptor.from_config(pd_filename)
     assert pd is not None
 
 

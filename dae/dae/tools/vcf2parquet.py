@@ -10,7 +10,7 @@ from dae.pedigrees.loader import FamiliesLoader
 from dae.backends.raw.loader import AnnotationPipelineDecorator
 from dae.backends.vcf.loader import VcfLoader
 from dae.backends.impala.parquet_io import ParquetManager, \
-    ParquetPartitionDescription
+    ParquetPartitionDescriptor
 
 from cyvcf2 import VCF
 
@@ -143,22 +143,17 @@ def main(
         )
 
         if argv.partition_description is None:
-
-            filename_parquet = os.path.join(
-                argv.output,
-                'variant',
-                'variants.parquet')
-
-            ParquetManager.variants_to_parquet(
+            filename_parquet = argv.output
+            ParquetManager.variants_to_parquet_filename(
                 variants_loader, filename_parquet,
                 bucket_index=argv.bucket_index)
         else:
-            description = ParquetPartitionDescription.from_config(
-                    argv.partition_description)
+            description = ParquetPartitionDescriptor.from_config(
+                    argv.partition_description,
+                    root_dirname=argv.output)
 
             ParquetManager.variants_to_parquet_partition(
                     variants_loader, description,
-                    argv.output,
                     bucket_index=argv.bucket_index,
                     rows=argv.rows
             )

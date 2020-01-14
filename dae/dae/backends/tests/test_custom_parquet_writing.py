@@ -1,11 +1,11 @@
 from dae.backends.impala.parquet_io import VariantsParquetWriter
-from dae.backends.impala.parquet_io import ParquetPartitionDescription
+from dae.backends.impala.parquet_io import ParquetPartitionDescriptor
 
 
 def test_custom_parquet_writing(vcf_variants_loader):
     fvars = vcf_variants_loader('vcf_import/effects_trio')
 
-    partition_desc = ParquetPartitionDescription(['2'], 10, 10)
+    partition_desc = ParquetPartitionDescriptor(['2'], 10, 10)
 
     parquet_writer = VariantsParquetWriter(fvars, partition_desc,
                                            '/tmp/variant-test-dataset2')

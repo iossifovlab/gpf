@@ -3,7 +3,7 @@ import os
 from box import Box
 
 from dae.annotation.annotation_pipeline import PipelineAnnotator
-from dae.backends.impala.parquet_io import ParquetPartitionDescription
+from dae.backends.impala.parquet_io import ParquetPartitionDescriptor
 from dae.utils.dict_utils import recursive_dict_update
 
 
@@ -61,7 +61,7 @@ def generate_makefile(genome, contigs, tool, argv):
         print(output)
         return
 
-    description = ParquetPartitionDescription.from_config(
+    description = ParquetPartitionDescriptor.from_config(
         argv.partition_description)
 
     assert set(description.chromosomes).issubset(contigs), \
