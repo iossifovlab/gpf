@@ -23,27 +23,7 @@ def get_contigs(vcf_filename):
     return vcf.seqnames
 
 
-def parse_cli_arguments(gpf_instance, argv=sys.argv[1:]):
-    parser = argparse.ArgumentParser(
-        description='Convert VCF file to parquet',
-        conflict_handler='resolve',
-        formatter_class=argparse.RawDescriptionHelpFormatter)
-
-    subparsers = parser.add_subparsers(
-        dest='type',
-        title='subcommands',
-        description='choose what type of data to convert',
-        help='vcf import or make generation for vcf import')
-
-    parser_vcf_arguments(gpf_instance, subparsers)
-    parser_make_arguments(gpf_instance, subparsers)
-    parser_pedigree_arguments(gpf_instance, subparsers)
-
-    parser_args = parser.parse_args(argv)
-    return parser_args
-
-
-def parser_common_arguments(gpf_instance, parser):
+def cli_common_arguments(gpf_instance, parser):
     parser.add_argument(
         'families', type=str,
         metavar='<families filename>',
@@ -57,13 +37,14 @@ def parser_common_arguments(gpf_instance, parser):
         metavar='<VCF filename>',
         help='VCF file to import'
     )
+    VcfLoader.cli_arguments(parser)
+
     parser.add_argument(
         '-o', '--out', type=str, default='.',
         dest='output', metavar='<output filepath prefix>',
         help='output filepath prefix. '
         'If none specified, current directory is used [default: %(default)s]'
     )
-    VcfLoader.cli_arguments(parser)
 
     parser.add_argument(
         '--pd', type=str, default=None,
@@ -75,18 +56,6 @@ def parser_common_arguments(gpf_instance, parser):
         dest='rows',
         help='Amount of allele rows to write at once'
     )
-    # parser.add_argument(
-    #     '--include-reference', default=False,
-    #     dest='include_reference',
-    #     help='include reference only variants [default: %(default)s]',
-    #     action='store_true'
-    # )
-    # parser.add_argument(
-    #     '--include-unknown', default=False,
-    #     dest='include_unknown',
-    #     help='include variants with unknown genotype [default: %(default)s]',
-    #     action='store_true'
-    # )
 
     parser.add_argument(
         '--region', type=str,
@@ -102,56 +71,36 @@ def parser_common_arguments(gpf_instance, parser):
     )
 
 
-def parser_vcf_arguments(gpf_instance, subparsers):
-    parser = subparsers.add_parser('vcf')
-    parser_common_arguments(gpf_instance, parser)
+def cli_arguments(gpf_instance):
+    parser = argparse.ArgumentParser(
+        description='Convert VCF file to parquet',
+        conflict_handler='resolve',
+        formatter_class=argparse.RawDescriptionHelpFormatter)
 
-    parser.add_argument(
+    subparsers = parser.add_subparsers(
+        dest='type',
+        title='subcommands',
+        description='choose what type of data to convert',
+        help='vcf import or make generation for vcf import')
+
+    # VCF subcommand
+    vcf_parser = subparsers.add_parser('vcf')
+    cli_common_arguments(gpf_instance, vcf_parser)
+    vcf_parser.add_argument(
         '-b', '--bucket-index', type=int, default=1,
         dest='bucket_index', metavar='bucket index',
         help='bucket index [default: %(default)s]'
     )
 
-    parser.add_argument(
-        '--skip-pedigree',
-        help='skip import of pedigree file [default: %(default)s]',
-        default=False,
-        action='store_true',
-    )
+    # make subcommand
+    make_parser = subparsers.add_parser('make')
+    cli_common_arguments(gpf_instance, make_parser)
 
-
-def parser_make_arguments(gpf_instance, subparsers):
-    parser = subparsers.add_parser('make')
-    parser_common_arguments(gpf_instance, parser)
-
-    parser.add_argument(
-        '--len', type=int,
-        default=None,
-        dest='len', metavar='len',
-        help='split contigs in regions with length <len> '
-        '[default: %(default)s]'
-    )
-
-
-def parser_pedigree_arguments(gpf_instance, subparsers):
-    parser = subparsers.add_parser('pedigree')
-    parser.add_argument(
-        'families', type=str,
-        metavar='<families filename>',
-        help='families file in pedigree format'
-    )
-    FamiliesLoader.cli_arguments(parser)
-
-    parser.add_argument(
-        '-o', '--out', type=str, default='.',
-        dest='output', metavar='<output filepath prefix>',
-        help='output filepath prefix. '
-        'If none specified, current directory is used [default: %(default)s]'
-    )
+    return parser
 
 
 def main(
-        argv,
+        argv=sys.argv[1:],
         gpf_instance=None, dae_config=None, genomes_db=None, genome=None,
         annotation_defaults={}):
 
@@ -164,12 +113,11 @@ def main(
     if genome is None:
         genome = genomes_db.get_genome()
 
-    argv = parse_cli_arguments(gpf_instance, argv)
+    parser = cli_arguments(gpf_instance)
+    argv = parser.parse_args(argv)
 
     families_loader = FamiliesLoader(argv.families)
     families = families_loader.load()
-
-    print(argv.vcf)
 
     vcf_files = [fn.strip() for fn in argv.vcf.split(',')]
 
@@ -178,17 +126,12 @@ def main(
             genome, get_contigs(vcf_files[0]),
             f'vcf2parquet.py vcf {argv.families} {argv.vcf} ',
             argv)
-    elif argv.type == 'pedigree':
-        pedigree_prefix, _ = os.path.splitext(argv.families)
-        pedigree_path = os.path.join(
-            argv.output, f'{pedigree_prefix}.parquet')
-
-        ParquetManager.families_loader_to_parquet(
-            families, pedigree_path)
 
     elif argv.type == 'vcf':
         annotation_pipeline = construct_import_annotation_pipeline(
-            dae_config, genomes_db, argv, defaults=annotation_defaults)
+            dae_config, genomes_db,
+            annotation_configfile=argv.annotation_config,
+            defaults=annotation_defaults)
 
         params = VcfLoader.parse_cli_arguments(argv)
         variants_loader = VcfLoader(

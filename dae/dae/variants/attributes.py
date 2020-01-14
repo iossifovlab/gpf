@@ -91,7 +91,7 @@ class Role(enum.Enum):
         elif isinstance(name, int):
             return Role.from_value(name)
         elif name in Role.__members__:
-            return Role[name]            
+            return Role[name]
         else:
             print(f"Role '{name}' is unknown")
             return Role.unknown

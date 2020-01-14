@@ -8,32 +8,27 @@ from dae.utils.dict_utils import recursive_dict_update
 
 
 def construct_import_annotation_pipeline(
-        dae_config, genomes_db, argv=None, defaults=None):
+        dae_config, genomes_db,
+        annotation_configfile=None, defaults=None):
+
     if defaults is None:
         defaults = {}
-    if argv is not None and 'annotation_config' in argv \
-            and argv.annotation_config is not None:
-        config_filename = argv.annotation_config
+    if annotation_configfile is not None:
+        config_filename = annotation_configfile
     else:
         config_filename = dae_config.annotation.conf_file
 
     assert os.path.exists(config_filename), config_filename
-    options = {}
-    if argv is not None:
-        options = {
-            k: v for k, v in argv._get_kwargs()
-        }
-    options.update({
+    options = {
         "vcf": True,
         'c': 'chrom',
         'p': 'position',
         'r': 'reference',
         'a': 'alternative',
-    })
+    }
     options = Box(options, default_box=True, default_box_attr=None)
 
     annotation_defaults = {'values': dae_config.annotation_defaults}
-
     annotation_defaults = recursive_dict_update(annotation_defaults, defaults)
 
     pipeline = PipelineAnnotator.build(
