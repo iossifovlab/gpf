@@ -54,7 +54,7 @@ def test_ped2parquet_mock(
 
     os.makedirs.assert_called_once_with(dirname, exist_ok=True)
     dae.backends.impala.parquet_io.save_ped_df_to_parquet.assert_called_once()
-    
+
     call_args = dae.backends.impala.parquet_io.save_ped_df_to_parquet.call_args
     _, filename = call_args[0]
     assert filename == outfile

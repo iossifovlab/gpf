@@ -3,7 +3,6 @@ import pytest
 
 import pyarrow.parquet as pq
 
-import dae
 from dae.pedigrees.loader import FamiliesLoader
 from dae.pedigrees.family import FamiliesData
 from dae.backends.impala.parquet_io import ParquetPartitionDescription, \
@@ -91,7 +90,7 @@ def test_ped2parquet_patition(
 def test_ped2parquet_outfilename(mocker, pedigree_filename, parquet_filename):
 
     mocker.patch(
-        "dae.pedigrees.loader.FamiliesLoader.load")    
+        "dae.pedigrees.loader.FamiliesLoader.load")
     mocker.patch(
         "dae.backends.impala.parquet_io.ParquetManager.families_to_parquet")
 
