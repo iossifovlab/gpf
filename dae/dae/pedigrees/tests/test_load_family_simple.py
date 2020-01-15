@@ -14,7 +14,7 @@ from .conftest import relative_to_this_folder
 
 
 @pytest.mark.parametrize("fixture_name", [
-    "fixtures/family_simple.txt"
+    "fixtures/pedigrees/family_simple.txt"
 ])
 def test_load_family_simple(fixture_name, temp_filename):
     family_filename = relative_to_this_folder(fixture_name)

@@ -442,7 +442,7 @@ def iossifov2014_raw_denovo(iossifov2014_loader):
 @pytest.fixture(scope='session')
 def iossifov2014_impala(
         request, iossifov2014_loader, genomes_db_2013,
-        test_hdfs, impala_genotype_storage, parquet_manager):
+        test_hdfs, impala_genotype_storage):
 
     temp_dirname = test_hdfs.tempdir(prefix='variants_', suffix='_data')
     test_hdfs.mkdir(temp_dirname)
@@ -455,10 +455,10 @@ def iossifov2014_impala(
     assert parquet_filenames is not None
     print(parquet_filenames)
 
-    ParquetManager.pedigree_to_parquet(
+    ParquetManager.families_to_parquet(
         iossifov2014_loader.families, parquet_filenames.pedigree)
 
-    ParquetManager.variants_to_parquet(
+    ParquetManager.variants_to_parquet_filename(
         iossifov2014_loader, parquet_filenames.variant)
 
     impala_genotype_storage.impala_load_study(
@@ -490,16 +490,16 @@ def vcf_loader_data():
 def vcf_variants_loader(vcf_loader_data, default_annotation_pipeline):
     def builder(
         path, params={
-            'include_reference_genotypes': True,
-            'include_unknown_family_genotypes': True,
-            'include_unknown_person_genotypes': True
+            'vcf_include_reference_genotypes': True,
+            'vcf_include_unknown_family_genotypes': True,
+            'vcf_include_unknown_person_genotypes': True
             }):
         conf = vcf_loader_data(path)
 
         ped_df = FamiliesLoader.flexible_pedigree_read(conf.pedigree)
         families = FamiliesData.from_pedigree_df(ped_df)
 
-        loader = VcfLoader(families, conf.vcf, params=params)
+        loader = VcfLoader(families, [conf.vcf], params=params)
         assert loader is not None
 
         loader = AlleleFrequencyDecorator(loader)
@@ -646,11 +646,6 @@ def impala_genotype_storage(hdfs_host, impala_host):
     return ImpalaGenotypeStorage(storage_config)
 
 
-@pytest.fixture(scope='session')
-def parquet_manager(default_dae_config):
-    return ParquetManager(default_dae_config.studies_db.dir)
-
-
 def collect_vcf(dirname):
     result = []
     pattern = os.path.join(dirname, '*.vcf')
@@ -666,7 +661,7 @@ DATA_IMPORT_COUNT = 0
 
 @pytest.fixture(scope='session')
 def data_import(
-        request, test_hdfs, test_impala_helpers, parquet_manager,
+        request, test_hdfs, test_impala_helpers,
         impala_genotype_storage, reimport, default_dae_config,
         genomes_db_2013):
 
@@ -719,11 +714,11 @@ def data_import(
             families = families_loader.load()
 
             loader = VcfLoader(
-                families, vcf.vcf, regions=None,
+                families, [vcf.vcf], regions=None,
                 params={
-                    'include_reference_genotypes': True,
-                    'include_unknown_family_genotypes': True,
-                    'include_unknown_person_genotypes': True
+                    'vcf_include_reference_genotypes': True,
+                    'vcf_include_unknown_family_genotypes': True,
+                    'vcf_include_unknown_person_genotypes': True
                 })
 
             loader = AlleleFrequencyDecorator(loader)

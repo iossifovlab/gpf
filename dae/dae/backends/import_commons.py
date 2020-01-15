@@ -3,37 +3,32 @@ import os
 from box import Box
 
 from dae.annotation.annotation_pipeline import PipelineAnnotator
-from dae.backends.impala.parquet_io import ParquetPartitionDescription
+from dae.backends.impala.parquet_io import ParquetPartitionDescriptor
 from dae.utils.dict_utils import recursive_dict_update
 
 
 def construct_import_annotation_pipeline(
-        dae_config, genomes_db, argv=None, defaults=None):
+        dae_config, genomes_db,
+        annotation_configfile=None, defaults=None):
+
     if defaults is None:
         defaults = {}
-    if argv is not None and 'annotation_config' in argv \
-            and argv.annotation_config is not None:
-        config_filename = argv.annotation_config
+    if annotation_configfile is not None:
+        config_filename = annotation_configfile
     else:
         config_filename = dae_config.annotation.conf_file
 
     assert os.path.exists(config_filename), config_filename
-    options = {}
-    if argv is not None:
-        options = {
-            k: v for k, v in argv._get_kwargs()
-        }
-    options.update({
+    options = {
         "vcf": True,
         'c': 'chrom',
         'p': 'position',
         'r': 'reference',
         'a': 'alternative',
-    })
+    }
     options = Box(options, default_box=True, default_box_attr=None)
 
     annotation_defaults = {'values': dae_config.annotation_defaults}
-
     annotation_defaults = recursive_dict_update(annotation_defaults, defaults)
 
     pipeline = PipelineAnnotator.build(
@@ -66,7 +61,7 @@ def generate_makefile(genome, contigs, tool, argv):
         print(output)
         return
 
-    description = ParquetPartitionDescription.from_config(
+    description = ParquetPartitionDescriptor.from_config(
         argv.partition_description)
 
     assert set(description.chromosomes).issubset(contigs), \
@@ -112,11 +107,16 @@ def generate_makefile(genome, contigs, tool, argv):
     for target_name in targets.keys():
         all_target += f' {target_name}'
 
+    bucket_index = 100
+
     for target_name, target_args in targets.items():
         main_targets += f'{target_name}:\n'
-        main_targets += f'\t{common_command}'
+        main_targets += f'\t{common_command} '
+        main_targets += \
+            f'-b {bucket_index} '
         main_targets += \
             f' --region {generate_region_argument_string(*target_args)}\n\n'
+        bucket_index += 1
 
     if len(other_regions) > 0:
         for region_bin, command_args in other_regions.items():

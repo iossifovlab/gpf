@@ -40,7 +40,7 @@ class FilesystemGenotypeStorage(GenotypeStorage):
             families_loader = FamiliesLoader(ped_filename)
             families = families_loader.load()
             variants_loader = VcfLoader(
-                families, vcf_filename)
+                families, [vcf_filename])
             variants_loader = StoredAnnotationDecorator.decorate(
                 variants_loader, vcf_filename
             )
@@ -60,7 +60,7 @@ class FilesystemGenotypeStorage(GenotypeStorage):
                 start = time.time()
                 variants_filename = study_config.files.vcf[0].path
                 variants_loader = VcfLoader(
-                    families, variants_filename,
+                    families, [variants_filename],
                     params=study_config.files.vcf[0].params)
                 variants_loader = StoredAnnotationDecorator.decorate(
                     variants_loader, variants_filename

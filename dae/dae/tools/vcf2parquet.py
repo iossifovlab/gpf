@@ -1,18 +1,15 @@
 #!/usr/bin/env python
 
-import os
 import sys
 import argparse
 
 from dae.gpf_instance.gpf_instance import GPFInstance
 
-from dae.annotation.tools.annotator_config import annotation_config_cli_options
-
-from dae.pedigrees.loader import FamiliesLoader  # , FamiliesData
+from dae.pedigrees.loader import FamiliesLoader
 from dae.backends.raw.loader import AnnotationPipelineDecorator
 from dae.backends.vcf.loader import VcfLoader
 from dae.backends.impala.parquet_io import ParquetManager, \
-    ParquetPartitionDescription
+    ParquetPartitionDescriptor
 
 from cyvcf2 import VCF
 
@@ -25,31 +22,7 @@ def get_contigs(vcf_filename):
     return vcf.seqnames
 
 
-def parse_cli_arguments(gpf_instance, argv=sys.argv[1:]):
-    parser = argparse.ArgumentParser(
-        description='Convert VCF file to parquet',
-        conflict_handler='resolve',
-        formatter_class=argparse.RawDescriptionHelpFormatter)
-
-    subparsers = parser.add_subparsers(
-        dest='type',
-        title='subcommands',
-        description='choose what type of data to convert',
-        help='vcf import or make generation for vcf import')
-
-    parser_vcf_arguments(gpf_instance, subparsers)
-    parser_make_arguments(gpf_instance, subparsers)
-
-    parser_args = parser.parse_args(argv)
-    return parser_args
-
-
-def parser_common_arguments(gpf_instance, parser):
-    options = annotation_config_cli_options(gpf_instance)
-
-    for name, args in options:
-        parser.add_argument(name, **args)
-
+def cli_common_arguments(gpf_instance, parser):
     parser.add_argument(
         'families', type=str,
         metavar='<families filename>',
@@ -63,12 +36,15 @@ def parser_common_arguments(gpf_instance, parser):
         metavar='<VCF filename>',
         help='VCF file to import'
     )
+    VcfLoader.cli_arguments(parser)
+
     parser.add_argument(
         '-o', '--out', type=str, default='.',
         dest='output', metavar='<output filepath prefix>',
         help='output filepath prefix. '
         'If none specified, current directory is used [default: %(default)s]'
     )
+
     parser.add_argument(
         '--pd', type=str, default=None,
         dest='partition_description',
@@ -79,25 +55,6 @@ def parser_common_arguments(gpf_instance, parser):
         dest='rows',
         help='Amount of allele rows to write at once'
     )
-    parser.add_argument(
-        '--include-reference', default=False,
-        dest='include_reference',
-        help='include reference only variants [default: %(default)s]',
-        action='store_true'
-    )
-    parser.add_argument(
-        '--include-unknown', default=False,
-        dest='include_unknown',
-        help='include variants with unknown genotype [default: %(default)s]',
-        action='store_true'
-    )
-
-    parser.add_argument(
-        '--study-id', default=None,
-        dest='study_id',
-        help='specifies study id to use when storing parquet files '
-        '[default: %(default)s]'
-    )
 
     parser.add_argument(
         '--region', type=str,
@@ -107,40 +64,42 @@ def parser_common_arguments(gpf_instance, parser):
         'ex. chr1:1-10000'
     )
 
-
-def parser_vcf_arguments(gpf_instance, subparsers):
-    parser = subparsers.add_parser('vcf')
-    parser_common_arguments(gpf_instance, parser)
-
     parser.add_argument(
+        '--annotation-config', type=str, default=None,
+        help='Path to an annotation config file to use when annotating'
+    )
+
+
+def cli_arguments(gpf_instance):
+    parser = argparse.ArgumentParser(
+        description='Convert VCF file to parquet',
+        conflict_handler='resolve',
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+
+    subparsers = parser.add_subparsers(
+        dest='type',
+        title='subcommands',
+        description='choose what type of data to convert',
+        help='vcf import or make generation for vcf import')
+
+    # VCF subcommand
+    vcf_parser = subparsers.add_parser('vcf')
+    cli_common_arguments(gpf_instance, vcf_parser)
+    vcf_parser.add_argument(
         '-b', '--bucket-index', type=int, default=1,
         dest='bucket_index', metavar='bucket index',
         help='bucket index [default: %(default)s]'
     )
 
-    parser.add_argument(
-        '--skip-pedigree',
-        help='skip import of pedigree file [default: %(default)s]',
-        default=False,
-        action='store_true',
-    )
+    # make subcommand
+    make_parser = subparsers.add_parser('make')
+    cli_common_arguments(gpf_instance, make_parser)
 
-
-def parser_make_arguments(gpf_instance, subparsers):
-    parser = subparsers.add_parser('make')
-    parser_common_arguments(gpf_instance, parser)
-
-    parser.add_argument(
-        '--len', type=int,
-        default=None,
-        dest='len', metavar='len',
-        help='split contigs in regions with length <len> '
-        '[default: %(default)s]'
-    )
+    return parser
 
 
 def main(
-        argv,
+        argv=sys.argv[1:],
         gpf_instance=None, dae_config=None, genomes_db=None, genome=None,
         annotation_defaults={}):
 
@@ -153,56 +112,47 @@ def main(
     if genome is None:
         genome = genomes_db.get_genome()
 
-    argv = parse_cli_arguments(gpf_instance, argv)
+    parser = cli_arguments(gpf_instance)
+    argv = parser.parse_args(argv)
 
-    annotation_pipeline = construct_import_annotation_pipeline(
-        dae_config, genomes_db, argv, defaults=annotation_defaults)
-
-    study_id = argv.study_id
-    if study_id is None:
-        study_id = os.path.splitext(os.path.basename(argv.families))[0]
     families_loader = FamiliesLoader(argv.families)
     families = families_loader.load()
 
-    variants_loader = VcfLoader(
-        families, argv.vcf, regions=argv.region,
-        params={
-            'include_reference_genotypes': argv.include_reference,
-            'include_unknown_family_genotypes': argv.include_unknown,
-            'include_unknown_person_genotypes': argv.include_unknown
-        })
-    variants_loader = AnnotationPipelineDecorator(
-        variants_loader, annotation_pipeline
-    )
+    vcf_files = [fn.strip() for fn in argv.vcf.split(',')]
+
     if argv.type == 'make':
-        generate_makefile(genome, get_contigs(argv.vcf),
-                          'vcf2parquet.py vcf ', argv)
+        generate_makefile(
+            genome, get_contigs(vcf_files[0]),
+            f'vcf2parquet.py vcf {argv.families} {argv.vcf} ',
+            argv)
+
     elif argv.type == 'vcf':
-        if not argv.skip_pedigree:
-            pedigree_path = os.path.join(
-                argv.output,
-                'pedigree',
-                'pedigree.ped')
-            ParquetManager.pedigree_to_parquet(
-                families, pedigree_path)
+        annotation_pipeline = construct_import_annotation_pipeline(
+            dae_config, genomes_db,
+            annotation_configfile=argv.annotation_config,
+            defaults=annotation_defaults)
+
+        params = VcfLoader.parse_cli_arguments(argv)
+        variants_loader = VcfLoader(
+            families, vcf_files, regions=argv.region,
+            params=params)
+
+        variants_loader = AnnotationPipelineDecorator(
+            variants_loader, annotation_pipeline
+        )
 
         if argv.partition_description is None:
-
-            filename_parquet = os.path.join(
-                argv.output,
-                'variant',
-                'variants.parquet')
-
-            ParquetManager.variants_to_parquet(
+            filename_parquet = argv.output
+            ParquetManager.variants_to_parquet_filename(
                 variants_loader, filename_parquet,
                 bucket_index=argv.bucket_index)
         else:
-            description = ParquetPartitionDescription.from_config(
-                    argv.partition_description)
+            description = ParquetPartitionDescriptor.from_config(
+                    argv.partition_description,
+                    root_dirname=argv.output)
 
             ParquetManager.variants_to_parquet_partition(
                     variants_loader, description,
-                    argv.output,
                     bucket_index=argv.bucket_index,
                     rows=argv.rows
             )

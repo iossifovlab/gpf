@@ -4,6 +4,7 @@ from cyvcf2 import VCF
 
 import numpy as np
 
+
 from dae.utils.variant_utils import is_all_reference_genotype, \
     is_all_unknown_genotype, is_unknown_genotype
 from dae.variants.variant import SummaryVariantFactory
@@ -18,11 +19,13 @@ class VcfFamiliesGenotypes(FamiliesGenotypes):
         self.families = families
         self.families_genotypes = families_genotypes
         self.include_reference_genotypes = \
-            params.get('include_reference_genotypes', False)
+            params.get('vcf_include_reference_genotypes', False)
         self.include_unknown_family_genotypes = \
-            params.get('include_unknown_family_genotypes', False)
+            params.get('vcf_include_unknown_family_genotypes', False)
         self.include_unknown_person_genotypes = \
-            params.get('include_unknown_person_genotypes', False)
+            params.get('vcf_include_unknown_person_genotypes', False)
+        self.multi_loader_fill_in_mode = \
+            params.get('vcf_multi_loader_fill_in_mode', 'reference')
 
     def get_family_genotype(self, family):
         gt = self.families_genotypes[0:2, family.samples_index]
@@ -57,25 +60,55 @@ class VcfFamiliesGenotypes(FamiliesGenotypes):
 
 class VcfLoader(VariantsLoader):
 
-    def __init__(self, families, vcf_filename, regions=None, params={}):
+    def __init__(
+            self, families, vcf_files,
+            regions=None, fill_missing_ref=True, params={}):
         super(VcfLoader, self).__init__(
             families=families,
-            filename=vcf_filename,
+            filename=vcf_files[0],
             source_type='vcf',
             transmission_type=TransmissionType.transmitted,
             params=params)
 
-        assert os.path.exists(vcf_filename)
-        self.vcf_filename = vcf_filename
+        assert len(vcf_files)
+        assert all([os.path.exists(fn) for fn in vcf_files]), vcf_files
+        self.vcf_files = vcf_files
+
         if regions is None or isinstance(regions, str):
             self.regions = [regions]
         else:
             self.regions = regions
 
-        self.vcf = VCF(self.filename, lazy=True)
-        samples = np.array(self.vcf.samples)
+        self.fill_missing_value = 0 if fill_missing_ref else -1
+
+        self._init_vcf_readers()
+
+        samples = list()
+        for vcf in self.vcfs:
+            samples += vcf.samples
+        samples = np.array(samples)
 
         self._match_pedigree_to_samples(families, samples)
+        self._init_chromosome_order()
+
+    def _init_vcf_readers(self):
+        self.vcfs = list()
+        for file in self.vcf_files:
+            assert os.path.exists(file)
+            self.vcfs.append(VCF(file, lazy=True))
+
+    def _build_vcf_iterators(self, region):
+        return [vcf(region) for vcf in self.vcfs]
+
+    def _init_chromosome_order(self):
+        seqnames = self.vcfs[0].seqnames
+        assert all([vcf.seqnames == seqnames for vcf in self.vcfs])
+
+        chrom_order = dict()
+        for idx, seq in enumerate(seqnames):
+            chrom_order[seq] = idx
+
+        self.chrom_order = chrom_order
 
     @staticmethod
     def _match_pedigree_to_samples(families, vcf_samples):
@@ -99,7 +132,7 @@ class VcfLoader(VariantsLoader):
                 person._generated = True
                 families[person.family_id].redefine()
 
-    def _warp_summary_variant(self, summary_index, vcf_variant):
+    def _build_summary_variant(self, summary_index, vcf_variant):
         records = []
         allele_count = len(vcf_variant.ALT) + 1
         records.append(
@@ -127,18 +160,132 @@ class VcfLoader(VariantsLoader):
             )
         return SummaryVariantFactory.summary_variant_from_records(records)
 
+    # def _compare_summaries_g(self, lhs, rhs):
+    #     """
+    #     Returns true if left summary variant position in file is
+    #     larger than right summary variant position in file
+    #     """
+    #     # TODO: Change this to use a dict
+    #     l_chrom_idx = self.chrom_order.get(lhs.ref_allele.chromosome)
+    #     r_chrom_idx = self.chrom_order.get(rhs.ref_allele.chromosome)
+
+    #     if l_chrom_idx > r_chrom_idx:
+    #         return True
+    #     elif lhs.ref_allele.position > rhs.ref_allele.position:
+    #         return True
+    #     else:
+    #         return False
+
+    # def _find_min_summary_variant(self, summary_variants) -> int:
+    #     assert len(summary_variants)
+    #     min = 0
+    #     for i in range(1, len(summary_variants)):
+    #         if self._compare_summaries_g(
+    #                 summary_variants[min],
+    #                 summary_variants[i]):
+    #             min = i
+    #     return summary_variants[min]
+
+    def _compare_vcf_variants_gt(self, lhs, rhs):
+        """
+        Returns true if left vcf variant position in file is
+        larger than right vcf variant position in file
+        """
+        # TODO: Change this to use a dict
+        l_chrom_idx = self.chrom_order.get(lhs.CHROM)
+        r_chrom_idx = self.chrom_order.get(rhs.CHROM)
+
+        if l_chrom_idx > r_chrom_idx:
+            return True
+        elif lhs.POS > rhs.POS:
+            return True
+        else:
+            return False
+
+    def _compare_vcf_variants_eq(self, lhs, rhs):
+        """
+        Returns true if left vcf variant position in file is
+        equal to right vcf variant position in file
+        """
+        return lhs.CHROM == rhs.CHROM and lhs.POS == rhs.POS
+
+    def _find_current_vcf_variant(self, vcf_variants):
+        assert len(vcf_variants)
+        min_index = 0
+        for index in range(1, len(vcf_variants)):
+            if vcf_variants[index] is None:
+                continue
+            if self._compare_vcf_variants_gt(
+                    vcf_variants[min_index],
+                    vcf_variants[index]):
+                min_index = index
+        return vcf_variants[min_index]
+
+    def _generate_missing_genotype(self, vcf):
+        sample_count = len(vcf.samples)
+
+        gt = np.array([[0] * 3] * sample_count, dtype=np.int8)
+
+        gt[0:sample_count] = self.fill_missing_value
+
+        return gt
+
+    # def _merge_genotypes(self, genotypes):
+    #     """
+    #     Merges a list of genotypes into one
+    #     """
+    #     out = None
+    #     for gt in genotypes:
+    #         if out is None:
+    #             out = gt
+    #         else:
+    #             out = np.concatenate((out, gt))
+    #     return out
+
+    def _summary_genotypes_iterator_internal(self, vcf_iterators):
+        vcf_variants = [next(it, None) for it in vcf_iterators]
+        summary_variant_index = 0
+
+        while True:
+            if all([vcf_variant is None for vcf_variant in vcf_variants]):
+                break
+
+            current_vcf_variant = \
+                self._find_current_vcf_variant(vcf_variants)
+            current_summary_variant = self._build_summary_variant(
+                summary_variant_index, current_vcf_variant)
+
+            vcf_iterator_idexes_to_advance = list()
+            genotypes = tuple()
+            for idx, vcf_variant in enumerate(vcf_variants):
+                if self._compare_vcf_variants_eq(
+                        current_vcf_variant, vcf_variant):
+                    genotypes += tuple(vcf_variant.genotypes)
+                    vcf_iterator_idexes_to_advance.append(idx)
+                else:
+                    genotypes += tuple(
+                        self._generate_missing_genotype(self.vcfs[idx])
+                    )
+
+            family_genotypes = VcfFamiliesGenotypes(
+                self.families,
+                VcfLoader.transform_vcf_genotypes(genotypes),
+                params=self.params)
+
+            yield current_summary_variant, family_genotypes
+
+            for idx in vcf_iterator_idexes_to_advance:
+                vcf_variants[idx] = next(vcf_iterators[idx], None)
+            summary_variant_index += 1
+
     def summary_genotypes_iterator(self):
         for region in self.regions:
-            for summary_index, vcf_variant in enumerate(self.vcf(region)):
-                family_genotypes = VcfFamiliesGenotypes(
-                    self.families,
-                    VcfLoader.transform_vcf_genotypes(vcf_variant.genotypes),
-                    params=self.params
-                )
+            vcf_iterators = self._build_vcf_iterators(region)
 
-                summary_variant = self._warp_summary_variant(
-                    summary_index, vcf_variant)
+            summary_genotypes = \
+                self._summary_genotypes_iterator_internal(vcf_iterators)
 
+            for summary_variant, family_genotypes in summary_genotypes:
                 yield summary_variant, family_genotypes
 
     @staticmethod
@@ -163,12 +310,22 @@ class VcfLoader(VariantsLoader):
             '[default: %(default)s]',
             action='store_true'
         )
+        parser.add_argument(
+            '--vcf-multi-loader-fill-in-mode', default='reference',
+            dest='vcf_multi_loader_fill_in_mode',
+            help='used for multi VCF files loader to fill missing genotypes; '
+            'supported values are `reference` or `unknown`'
+            '[default: %(default)s]',
+        )
 
     @staticmethod
     def parse_cli_arguments(argv):
+        multi_loader_fill_in_mode = argv.vcf_multi_loader_fill_in_mode
+        assert multi_loader_fill_in_mode in set(['reference', 'unknown'])
         params = {
-            'include_reference_genotypes': argv.vcf_include_reference,
-            'include_unknown_family_genotypes': argv.vcf_include_unknown,
-            'include_unknown_person_genotypes': argv.vcf_include_unknown
+            'vcf_include_reference_genotypes': argv.vcf_include_reference,
+            'vcf_include_unknown_family_genotypes': argv.vcf_include_unknown,
+            'vcf_include_unknown_person_genotypes': argv.vcf_include_unknown,
+            'vcf_multi_loader_fill_in_mode': multi_loader_fill_in_mode,
         }
         return params

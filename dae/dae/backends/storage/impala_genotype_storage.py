@@ -10,7 +10,7 @@ from dae.backends.impala.hdfs_helpers import HdfsHelpers
 from dae.backends.impala.impala_helpers import ImpalaHelpers
 from dae.backends.impala.impala_variants import ImpalaFamilyVariants
 from dae.backends.impala.parquet_io import ParquetManager, \
-    ParquetPartitionDescription
+    ParquetPartitionDescriptor
 
 
 class ImpalaGenotypeStorage(GenotypeStorage):
@@ -196,10 +196,9 @@ class ImpalaGenotypeStorage(GenotypeStorage):
             parquet_filenames = ParquetManager.build_parquet_filenames(
                 output, bucket_index=bucket_index, study_id=study_id
             )
-            ParquetManager.variants_to_parquet(
+            ParquetManager.variants_to_parquet_filename(
                 variant_loader, parquet_filenames.variant,
-                bucket_index=bucket_index,
-                filesystem=None
+                bucket_index=bucket_index
             )
             parquet_variants.append(parquet_filenames.variant)
 
@@ -207,7 +206,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
         print("families save in:", parquet_filenames)
         families = families_loader.load()
 
-        ParquetManager.families_loader_to_parquet(
+        ParquetManager.families_to_parquet(
             families, parquet_filenames.pedigree
         )
 
@@ -248,7 +247,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
     def dataset_import(self, study_id, partition_config_file, pedigree_file,
                        pedigree_local_hdfs_path=None):
         db = self.storage_config.impala.db
-        part_desc = ParquetPartitionDescription.from_config(
+        part_desc = ParquetPartitionDescriptor.from_config(
             partition_config_file)
         root_dir = os.path.dirname(partition_config_file)
         files_glob = part_desc.generate_file_access_glob()

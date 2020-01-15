@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from dae.backends.impala.parquet_io import ParquetPartitionDescription
+from dae.backends.impala.parquet_io import ParquetPartitionDescriptor
 from dae.variants.family_variant import FamilyVariant
 from dae.variants.variant import SummaryAllele, SummaryVariant
 
@@ -28,13 +28,13 @@ def test_parquet_region_bin(fam1, gt, chromosomes,
                             region_length, summary_alleles, expected):
     sv = SummaryVariant(summary_alleles)
     fv = FamilyVariant.from_summary_variant(sv, fam1, gt, None)
-    pd = ParquetPartitionDescription(
+    pd = ParquetPartitionDescriptor(
         chromosomes, region_length
     )
-    region_bin = pd.evaluate_region_bin(fv)
+    region_bin = pd._evaluate_region_bin(fv)
     for fa in fv.alleles:
         assert region_bin == expected
-        assert pd.evaluate_variant_filename(fa) == \
+        assert pd.variant_filename(fa) == \
             f'region_bin={region_bin}/variants_region_bin_{region_bin}.parquet'
 
 
@@ -43,16 +43,16 @@ def test_parquet_family_bin(fam1, fam2, gt):
     fv1 = FamilyVariant.from_summary_variant(sv, fam1, gt, None)
     fv2 = FamilyVariant.from_summary_variant(sv, fam2, gt, None)
     family_bin_size = 10
-    pd = ParquetPartitionDescription(
+    pd = ParquetPartitionDescriptor(
         ['1'], 1000, family_bin_size
     )
     for fa1, fa2 in zip(fv1.alleles, fv2.alleles):
-        assert pd.evaluate_family_bin(fa1) == 9
-        assert pd.evaluate_family_bin(fa2) == 6
-        assert pd.evaluate_variant_filename(fa1) == \
+        assert pd._evaluate_family_bin(fa1) == 9
+        assert pd._evaluate_family_bin(fa2) == 6
+        assert pd.variant_filename(fa1) == \
             f'region_bin=1_11/family_bin=9/' + \
             f'variants_region_bin_1_11_family_bin_9.parquet'
-        assert pd.evaluate_variant_filename(fa2) == \
+        assert pd.variant_filename(fa2) == \
             f'region_bin=1_11/family_bin=6/' + \
             f'variants_region_bin_1_11_family_bin_6.parquet'
 
@@ -70,13 +70,13 @@ def test_parquet_frequency_bin(fam1, gt, attributes, rare_boundary, expected):
     ] * 3
     sv = SummaryVariant(summary_alleles)
     fv = FamilyVariant.from_summary_variant(sv, fam1, gt, None)
-    pd = ParquetPartitionDescription(
+    pd = ParquetPartitionDescriptor(
         ['1'], 1000, rare_boundary=rare_boundary
     )
 
     for fa in fv.alleles:
-        assert pd.evaluate_frequency_bin(fa) == expected
-        assert pd.evaluate_variant_filename(fa) == \
+        assert pd._evaluate_frequency_bin(fa) == expected
+        assert pd.variant_filename(fa) == \
             f'region_bin=1_11/frequency_bin={expected}/' + \
             f'variants_region_bin_1_11_frequency_bin_{expected}.parquet'
 
@@ -132,11 +132,11 @@ def test_parquet_coding_bin(fam1, gt, eff1, eff2, eff3,
     gt = np.array([[0, 1, 0], [2, 0, 3]], dtype='int8')
     sv = SummaryVariant(summary_alleles)
     fv = FamilyVariant.from_summary_variant(sv, fam1, gt, None)
-    pd = ParquetPartitionDescription(
+    pd = ParquetPartitionDescriptor(
         ['1'], 1000, coding_effect_types=coding_effect_types
     )
     for fa, ex in zip(fv.alleles, expected):
-        assert pd.evaluate_coding_bin(fa) == ex
-        assert pd.evaluate_variant_filename(fa) == \
+        assert pd._evaluate_coding_bin(fa) == ex
+        assert pd.variant_filename(fa) == \
             f'region_bin=1_11/coding_bin={ex}/' + \
             f'variants_region_bin_1_11_coding_bin_{ex}.parquet'

@@ -2,9 +2,9 @@ import pytest
 
 
 @pytest.mark.parametrize(
-    "include_reference_genotypes,"
-    "include_unknown_family_genotypes,"
-    "include_unknown_person_genotypes,count", [
+    "vcf_include_reference_genotypes,"
+    "vcf_include_unknown_family_genotypes,"
+    "vcf_include_unknown_person_genotypes,count", [
         (True, True, True, 7),
         (True, True, False, 4),
         (True, False, True, 6),
@@ -15,15 +15,18 @@ import pytest
 )
 def test_vcf_loader_params(
     vcf_variants_loader,
-    include_reference_genotypes,
-    include_unknown_family_genotypes,
-    include_unknown_person_genotypes,
+    vcf_include_reference_genotypes,
+    vcf_include_unknown_family_genotypes,
+    vcf_include_unknown_person_genotypes,
     count
 ):
     params = {
-        'include_reference_genotypes': include_reference_genotypes,
-        'include_unknown_family_genotypes': include_unknown_family_genotypes,
-        'include_unknown_person_genotypes': include_unknown_person_genotypes,
+        'vcf_include_reference_genotypes':
+        vcf_include_reference_genotypes,
+        'vcf_include_unknown_family_genotypes':
+        vcf_include_unknown_family_genotypes,
+        'vcf_include_unknown_person_genotypes':
+        vcf_include_unknown_person_genotypes,
     }
 
     variants_loader = vcf_variants_loader("backends/f1_test", params=params)

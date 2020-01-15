@@ -88,6 +88,8 @@ class Role(enum.Enum):
         assert name is not None
         if isinstance(name, Role):
             return name
+        elif isinstance(name, int):
+            return Role.from_value(name)
         elif name in Role.__members__:
             return Role[name]
         else:
@@ -129,6 +131,8 @@ class Sex(enum.Enum):
     def from_name(name):
         if isinstance(name, Sex):
             return name
+        elif isinstance(name, int):
+            return Sex.from_value(name)
         elif name == 'male' or name == 'M' or name == '1':
             return Sex.male
         elif name == 'female' or name == 'F' or name == '2':
@@ -168,6 +172,8 @@ class Status(enum.Enum):
     def from_name(name):
         if isinstance(name, Status):
             return name
+        elif isinstance(name, int):
+            return Status.from_value(name)
         elif name == 'unaffected' or name == '1':
             return Status.unaffected
         elif name == 'affected' or name == '2':

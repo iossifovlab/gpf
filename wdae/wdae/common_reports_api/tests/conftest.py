@@ -29,4 +29,3 @@ def use_common_reports(common_report_facade):
     for temp_file in temp_files:
         if os.path.exists(temp_file):
             os.remove(temp_file)
-

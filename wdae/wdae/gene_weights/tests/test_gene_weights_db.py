@@ -1,7 +1,5 @@
 import pytest
 
-from gpf_instance.gpf_instance import get_gpf_instance
-
 pytestmark = pytest.mark.usefixtures('wdae_gpf_instance')
 
 

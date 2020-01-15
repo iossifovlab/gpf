@@ -6,22 +6,8 @@ from functools import partial
 from dae.utils.helpers import str2bool
 from dae.variants.attributes import Role, Sex, Status
 
-from dae.pedigrees.family import FamiliesData
+from dae.pedigrees.family import FamiliesData, PEDIGREE_COLUMN_NAMES
 from dae.pedigrees.family_role_builder import FamilyRoleBuilder
-
-
-PEDIGREE_COLUMN_NAMES = {
-    'family': 'family_id',
-    'person': 'person_id',
-    'mother': 'mom_id',
-    'father': 'dad_id',
-    'sex': 'sex',
-    'status': 'status',
-    'role': 'role',
-    'sample id': 'sample_id',
-    'layout': 'layout',
-    'generated': 'generated',
-}
 
 
 PED_COLUMNS_REQUIRED = (
@@ -307,9 +293,6 @@ class FamiliesLoader:
         assert set(PED_COLUMNS_REQUIRED) <= set(ped_df.columns), \
             ped_df.columns
 
-        # if ped_no_role:
-        #     ped_df = PedigreeRoleGuesser.guess_role_nuc(ped_df)
-
         return ped_df
 
     @staticmethod
@@ -380,6 +363,11 @@ class FamiliesLoader:
         df.status = df.status.apply(lambda v: v.name)
 
         df.to_csv(filename, index=False, sep='\t')
+
+    @staticmethod
+    def save_families(families, filename):
+        assert isinstance(families, FamiliesData)
+        FamiliesLoader.save_pedigree(families.ped_df, filename)
 
     @staticmethod
     def get_default_colum_labels():

@@ -130,7 +130,8 @@ def test_peple_group_config(people_group_config1):
 
 
 def test_family_groups1(people_group_config1):
-    filename = relative_to_this_folder('fixtures/pedigree_phenos.ped')
+    filename = relative_to_this_folder(
+        'fixtures/pedigrees/pedigree_phenos.ped')
     assert os.path.exists(filename)
 
     loader = FamiliesLoader(filename)
@@ -144,7 +145,8 @@ def test_family_groups1(people_group_config1):
 
 
 def test_family_groups2(people_group_config2):
-    filename = relative_to_this_folder('fixtures/pedigree_phenos.ped')
+    filename = relative_to_this_folder(
+        'fixtures/pedigrees/pedigree_phenos.ped')
     assert os.path.exists(filename)
 
     loader = FamiliesLoader(filename)
@@ -162,7 +164,8 @@ def test_family_groups2(people_group_config2):
 
 
 def test_family_groups2_unknown(people_group_config2):
-    filename = relative_to_this_folder('fixtures/pedigree_phenos_B.ped')
+    filename = relative_to_this_folder(
+        'fixtures/pedigrees/pedigree_phenos_B.ped')
     assert os.path.exists(filename)
 
     loader = FamiliesLoader(filename)
@@ -182,7 +185,8 @@ def test_family_groups2_unknown(people_group_config2):
 
 
 def test_family_role_group(people_group_role):
-    filename = relative_to_this_folder('fixtures/pedigree_phenos.ped')
+    filename = relative_to_this_folder(
+        'fixtures/pedigrees/pedigree_phenos.ped')
     assert os.path.exists(filename)
 
     loader = FamiliesLoader(filename)
@@ -202,7 +206,8 @@ def test_family_role_group(people_group_role):
 
 
 def test_family_role_group_predefined():
-    filename = relative_to_this_folder('fixtures/pedigree_phenos.ped')
+    filename = relative_to_this_folder(
+        'fixtures/pedigrees/pedigree_phenos.ped')
     assert os.path.exists(filename)
 
     loader = FamiliesLoader(filename)
@@ -222,7 +227,8 @@ def test_family_role_group_predefined():
 
 
 def test_family_status_group(people_group_status):
-    filename = relative_to_this_folder('fixtures/pedigree_phenos.ped')
+    filename = relative_to_this_folder(
+        'fixtures/pedigrees/pedigree_phenos.ped')
     assert os.path.exists(filename)
 
     loader = FamiliesLoader(filename)
@@ -242,7 +248,8 @@ def test_family_status_group(people_group_status):
 
 
 def test_family_status_group_predefined():
-    filename = relative_to_this_folder('fixtures/pedigree_phenos.ped')
+    filename = relative_to_this_folder(
+        'fixtures/pedigrees/pedigree_phenos.ped')
     assert os.path.exists(filename)
 
     loader = FamiliesLoader(filename)
@@ -262,7 +269,8 @@ def test_family_status_group_predefined():
 
 
 def test_family_sex_group_predefined():
-    filename = relative_to_this_folder('fixtures/pedigree_phenos.ped')
+    filename = relative_to_this_folder(
+        'fixtures/pedigrees/pedigree_phenos.ped')
     assert os.path.exists(filename)
 
     loader = FamiliesLoader(filename)
@@ -290,7 +298,8 @@ def test_grayscale_colors():
 
 
 def test_family_sizes_group_predefined():
-    filename = relative_to_this_folder('fixtures/pedigree_phenos_B.ped')
+    filename = relative_to_this_folder(
+        'fixtures/pedigrees/pedigree_phenos_B.ped')
     assert os.path.exists(filename)
 
     loader = FamiliesLoader(filename)
