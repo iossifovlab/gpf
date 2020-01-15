@@ -110,3 +110,27 @@ def test_calc_best_state(vcf, expected, variants_vcf, genome_2013):
             )
             assert np.array_equal(best_state, expected[counter])
             counter += 1
+
+
+def test_families_genotypes_decorator_expect_none_flag(
+    iossifov2014_loader, genome_2013
+):
+    decorator = FamiliesGenotypesDecorator(
+        iossifov2014_loader, genome_2013, False, True
+    )
+    with pytest.raises(AssertionError):
+        for sv, fvs in decorator.full_variants_iterator():
+            for fv in fvs:
+                pass
+
+
+def test_families_genotypes_decorator_broken_x(
+    denovo_X_broken_loader, genome_2013
+):
+    decorator = FamiliesGenotypesDecorator(
+        denovo_X_broken_loader, genome_2013
+    )
+    for sv, fvs in decorator.full_variants_iterator():
+        for fv in fvs:
+            print(fv, fv.genetic_model)
+            assert fv.genetic_model == GeneticModel.X_broken

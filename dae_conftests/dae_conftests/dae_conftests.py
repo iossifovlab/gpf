@@ -804,3 +804,21 @@ def calc_gene_sets(request, variants_db_fixture):
                 os.remove(cache_file)
 
     request.addfinalizer(remove_gene_sets)
+
+
+@pytest.fixture
+def denovo_X_broken_loader(dae_denovo_config, genome_2013):
+
+    families_loader = FamiliesLoader(
+        relative_to_this_test_folder('fixtures/backends/denovo_families.txt'),
+        params={'ped_file_format': 'simple'}
+    )
+    families = families_loader.load()
+
+    variants_loader = DenovoLoader(
+        families,
+        relative_to_this_test_folder('fixtures/backends/denovo_X_broken.txt'),
+        genome_2013
+    )
+
+    return variants_loader

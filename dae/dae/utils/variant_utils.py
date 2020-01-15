@@ -34,6 +34,7 @@ def str2mat(mat, col_sep="", row_sep="/"):
 def best2gt(mat):
     rows, cols = mat.shape
     res = np.zeros(shape=(2, cols), dtype=GENOTYPE_TYPE)
+    res[1, :] = -2
     for allele_index in range(rows):
         row = mat[allele_index, :]
         for col in range(cols):

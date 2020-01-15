@@ -466,7 +466,7 @@ class FamiliesGenotypesDecorator(VariantsLoaderDecorator):
     def full_variants_iterator(
         self, summary_genotypes_iterator=None
     ) -> Iterator[Tuple[SummaryVariant, List[FamilyVariant]]]:
-        _ = self.variant_loader.full_variants_iterator(
+        _ = self.variants_loader.full_variants_iterator(
             summary_genotypes_iterator
         )
         for summary_variant, family_variants in _:
