@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Headers, Http, RequestOptions } from '@angular/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 // tslint:disable-next-line:import-blacklist
 import { Observable } from 'rxjs';
 
@@ -8,24 +8,20 @@ import { EnrichmentResults } from './enrichment-result';
 
 @Injectable()
 export class EnrichmentQueryService {
-  private genotypePreviewUrl = 'enrichment/test';
-
-  private headers = new Headers({ 'Content-Type': 'application/json' });
+  private readonly genotypePreviewUrl = 'enrichment/test';
+  private  headers = new HttpHeaders({ 'Content-Type': 'application/json' });
 
   constructor(
-    private http: Http,
+    private http: HttpClient,
     private config: ConfigService
-  ) {
-
-  }
+  ) {}
 
   getEnrichmentTest(filter): Observable<EnrichmentResults> {
-    const headers = new Headers({ 'Content-Type': 'application/json' });
-    const options = new RequestOptions({ headers: headers, withCredentials: true });
+    const options = { headers: this.headers, withCredentials: true };
 
-    return this.http.post(this.genotypePreviewUrl, filter, options)
+    return this.http.post(this.config.baseUrl + this.genotypePreviewUrl, filter, options)
       .map(res => {
-        return EnrichmentResults.fromJson(res.json());
+        return EnrichmentResults.fromJson(res);
       });
   }
 }

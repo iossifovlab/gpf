@@ -1,13 +1,15 @@
 import { TestBed, inject } from '@angular/core/testing';
 
-import { HttpModule } from '@angular/http';
 import { VariantReportsService } from './variant-reports.service';
+import { HttpClientModule } from '@angular/common/http';
+import { ConfigService } from 'app/config/config.service';
 
 describe('VariantReportsService', () => {
   beforeEach(() => {
+    const configMock = { 'baseUrl': 'testUrl/' };
     TestBed.configureTestingModule({
-      imports: [HttpModule],
-      providers: [VariantReportsService]
+      imports: [HttpClientModule],
+      providers: [VariantReportsService, { provide: ConfigService, useValue: configMock }]
     });
   });
 

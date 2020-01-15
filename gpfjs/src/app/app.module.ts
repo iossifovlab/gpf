@@ -1,8 +1,7 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule, Injector } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { HttpModule } from '@angular/http';
-import { RequestOptions, Http, XHRBackend, XSRFStrategy, CookieXSRFStrategy } from '@angular/http';
+import { HttpClientModule } from '@angular/common/http';
 
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
@@ -10,7 +9,6 @@ import { AppComponent } from './app.component';
 
 import { DatasetsService } from './datasets/datasets.service';
 import { ConfigService } from './config/config.service';
-import { CustomRequestOptions } from './config/customrequest.options';
 import { GenderComponent } from './gender/gender.component';
 import { PresentInChildComponent } from './present-in-child/present-in-child.component';
 import { PresentInParentComponent } from './present-in-parent/present-in-parent.component';
@@ -130,7 +128,6 @@ import { DatasetsTableComponent } from './datasets-table/datasets-table.componen
 import { GenotypePreviewChromosomesComponent } from './genotype-preview-chromosomes/genotype-preview-chromosomes.component';
 import { ChromosomeService } from './chromosome-service/chromosome.service';
 import { ChromosomeComponent } from './chromosome/chromosome.component';
-import { RedirectOnErrorHttpService } from './config/redirect-on-error.service';
 import { GenotypeBrowserSingleViewComponent } from './genotype-browser-single-view/genotype-browser-single-view.component';
 import { GenotypePreviewFieldComponent } from './genotype-preview-field/genotype-preview-field.component';
 import { ErrorsAlertComponent } from './errors-alert/errors-alert.component';
@@ -329,7 +326,6 @@ const appRoutes: Routes = [
   imports: [
     BrowserModule,
     FormsModule,
-    HttpModule,
     NgbModule.forRoot(),
     GpfTableModule,
     PedigreeChartModule,
@@ -339,18 +335,15 @@ const appRoutes: Routes = [
     BrowserAnimationsModule,
     NgxMdModule.forRoot(),
     Select2Module,
+    HttpClientModule,
     ConfirmationPopoverModule.forRoot({
       confirmButtonType: 'danger'
     })
   ],
   providers: [
-    { provide: XSRFStrategy, 
-      useValue: new CookieXSRFStrategy('csrftoken', 'X-CSRFToken') 
-    },
     ConfigService,
     DatasetsService,
     QueryService,
-    { provide: RequestOptions, useClass: CustomRequestOptions },
     GeneWeightsService,
     GeneSetsService,
     UsersService,
@@ -367,8 +360,6 @@ const appRoutes: Routes = [
     GenomicScoresBlockService,
     UsersGroupsService,
     ChromosomeService,
-    { provide: Http, useClass: RedirectOnErrorHttpService,
-      deps: [XHRBackend, RequestOptions, Injector]},
     PedigreeMockService,
     PerfectlyDrawablePedigreeService,
     {
