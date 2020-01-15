@@ -6,7 +6,7 @@ import numpy as np
 
 
 from dae.utils.variant_utils import is_all_reference_genotype, \
-    is_all_unknown_genotype, is_unknown_genotype
+    is_all_unknown_genotype, is_unknown_genotype, GENOTYPE_TYPE
 from dae.variants.variant import SummaryVariantFactory
 from dae.backends.raw.loader import VariantsLoader, TransmissionType, \
     FamiliesGenotypes
@@ -290,10 +290,12 @@ class VcfLoader(VariantsLoader):
 
     @staticmethod
     def transform_vcf_genotypes(genotypes):
+        new_genotypes = []
         for genotype in genotypes:
-            if len(genotype) == 2:  # Handle haploid genotypes
+            if len(genotype) == 1:  # Handle haploid genotypes
                 genotype.insert(1, -2)
-        return np.array(genotypes, dtype=np.int8).T
+            new_genotypes.append(genotype)
+        return np.array(new_genotypes, dtype=GENOTYPE_TYPE).T
 
     @staticmethod
     def cli_arguments(parser):
