@@ -9,6 +9,8 @@ import pandas as pd
 
 from dae.utils.variant_utils import best2gt, str2mat, GENOTYPE_TYPE, \
     reference_genotype
+from dae.utils.helpers import str2bool
+
 from dae.utils.dae_utils import dae2vcf_variant
 
 from dae.pedigrees.family import FamiliesData
@@ -40,16 +42,15 @@ class DenovoLoader(VariantsLoader):
             self, families, denovo_filename, genome, params={}):
         super(DenovoLoader, self).__init__(
             families=families,
-            filename=denovo_filename,
+            filenames=[denovo_filename],
             source_type='denovo',
             transmission_type=TransmissionType.denovo,
             params=params)
 
-        assert os.path.exists(denovo_filename)
         self.genome = genome
 
         self.denovo_df = self.flexible_denovo_load(
-            self.filename, genome, families=families, **self.params
+            denovo_filename, genome, families=families, **self.params
         )
 
     def summary_genotypes_iterator(self):
@@ -83,7 +84,17 @@ class DenovoLoader(VariantsLoader):
 
     @staticmethod
     def cli_arguments(parser):
+        parser.add_argument(
+            'denovo_file', type=str,
+            metavar='<variants filename>',
+            help='DAE denovo variants file'
+        )
+        DenovoLoader.cli_options(parser)
+
+    @staticmethod
+    def cli_options(parser):
         variant_group = parser.add_argument_group('variant specification')
+
         variant_group.add_argument(
             '--denovo-variant',
             help='The label or index of the column containing the CSHL-style'
@@ -198,7 +209,7 @@ class DenovoLoader(VariantsLoader):
             'denovo_best_state': argv.denovo_best_state,
         }
 
-        return params
+        return argv.denovo_file, params
 
     @classmethod
     def flexible_denovo_load(
@@ -416,24 +427,61 @@ class DaeTransmittedLoader(VariantsLoader):
 
     def __init__(
             self, families,
-            summary_filename, toomany_filename, genome,
-            region=None,
-            include_reference=False):
+            summary_filename, genome,
+            regions=None,
+            params={}):
         super(DaeTransmittedLoader, self).__init__(
             families=families,
-            filename=summary_filename,
+            filenames=[summary_filename],
             source_type='dae',
             transmission_type=TransmissionType.transmitted)
 
         assert os.path.exists(summary_filename), summary_filename
+
+        toomany_filename = self._build_toomany_filename(summary_filename)
         assert os.path.exists(toomany_filename), toomany_filename
 
         self.summary_filename = summary_filename
         self.toomany_filename = toomany_filename
 
         self.genome = genome
-        self.region = region
-        self.include_reference = include_reference
+        if regions is None or isinstance(regions, str):
+            self.regions = [regions]
+        else:
+            self.regions = regions
+
+        self.params = params
+        self.include_reference = self.params.get(
+            'dae_include_reference_genotypes', False)
+
+        with pysam.Tabixfile(self.summary_filename) as tbx:
+            self.chromosomes = list(tbx.contigs)
+
+    @staticmethod
+    def _build_toomany_filename(summary_filename):
+        assert os.path.exists(f'{summary_filename}.tbi'), \
+            "Summary filename tabix index missing"
+
+        dirname = os.path.dirname(summary_filename)
+        basename = os.path.basename(summary_filename)
+        if basename.endswith('.txt.bgz'):
+            result = os.path.join(
+                dirname,
+                f'{basename[:-8]}-TOOMANY.txt.bgz')
+        elif basename.endswith('.txt.gz'):
+            result = os.path.join(
+                dirname,
+                f'{basename[:-7]}-TOOMANY.txt.gz'
+            )
+        else:
+            assert False, "Bad summary filename - unexpected extention"
+
+        assert os.path.exists(result), \
+            f'Missing TOOMANY file {result}'
+        assert os.path.exists(f'{result}.tbi'), \
+            f'Missing tabix index for TOOMANY file {result}'
+
+        return result
 
     @staticmethod
     def _rename_columns(columns):
@@ -557,33 +605,83 @@ class DaeTransmittedLoader(VariantsLoader):
         summary_columns = self._load_summary_columns(self.summary_filename)
         toomany_columns = self._load_toomany_columns(self.toomany_filename)
 
-        # using a context manager because of
-        # https://stackoverflow.com/a/25968716/2316754
-        with closing(pysam.Tabixfile(self.summary_filename)) as sum_tbf, \
-                closing(pysam.Tabixfile(self.toomany_filename)) as too_tbf:
-            summary_iterator = sum_tbf.fetch(
-                region=self.region,
-                parser=pysam.asTuple())
-            toomany_iterator = too_tbf.fetch(
-                region=self.region,
-                parser=pysam.asTuple())
+        summary_index = 0
+        for region in self.regions:
+            # using a context manager because of
+            # https://stackoverflow.com/a/25968716/2316754
+            with closing(pysam.Tabixfile(self.summary_filename)) as sum_tbf, \
+                    closing(pysam.Tabixfile(self.toomany_filename)) as too_tbf:
+                summary_iterator = sum_tbf.fetch(
+                    region=region,
+                    parser=pysam.asTuple())
+                toomany_iterator = too_tbf.fetch(
+                    region=region,
+                    parser=pysam.asTuple())
 
-            for summary_index, summary_line in enumerate(summary_iterator):
-                rec = dict(zip(summary_columns, summary_line))
+                for summary_line in summary_iterator:
+                    rec = dict(zip(summary_columns, summary_line))
 
-                summary_variant = self._summary_variant_from_dae_record(
-                    summary_index, rec)
+                    summary_variant = self._summary_variant_from_dae_record(
+                        summary_index, rec)
 
-                family_data = rec['familyData']
-                if family_data == 'TOOMANY':
-                    toomany_line = next(toomany_iterator)
-                    toomany_rec = dict(zip(toomany_columns, toomany_line))
-                    family_data = toomany_rec['familyData']
+                    family_data = rec['familyData']
+                    if family_data == 'TOOMANY':
+                        toomany_line = next(toomany_iterator)
+                        toomany_rec = dict(zip(toomany_columns, toomany_line))
+                        family_data = toomany_rec['familyData']
 
-                    assert rec['cshl_position'] == \
-                        int(toomany_rec['cshl_position'])
-                families_genotypes = DaeTransmittedFamiliesGenotypes(
-                    self.families,
-                    self._explode_family_genotypes(family_data))
+                        assert rec['cshl_position'] == \
+                            int(toomany_rec['cshl_position'])
+                    families_genotypes = DaeTransmittedFamiliesGenotypes(
+                        self.families,
+                        self._explode_family_genotypes(family_data))
 
-                yield summary_variant, families_genotypes
+                    yield summary_variant, families_genotypes
+                    summary_index += 1
+
+    @staticmethod
+    def cli_defaults():
+        return {
+            'dae_include_reference_genotypes': False,
+        }
+
+    @staticmethod
+    def build_cli_arguments(params):
+        param_defaults = DaeTransmittedLoader.cli_defaults()
+        result = []
+        for key, value in params.items():
+            assert key in param_defaults, (key, list(param_defaults.keys()))
+            if value != param_defaults[key]:
+                param = key.replace('_', '-')
+                if key in ('dae_include_reference_genotypes'):
+                    if value:
+                        result.append(f'--{param}')
+                else:
+                    result.append(f'--{param}')
+                    result.append(f'{value}')
+        return ' '.join(result)
+
+    @staticmethod
+    def cli_arguments(parser):
+        parser.add_argument(
+            'summary_filename', type=str,
+            metavar='<summary filename>',
+            help='summary variants file to import'
+        )
+
+        parser.add_argument(
+            '--dae-include-reference-genotypes', default=False,
+            dest='dae_include_reference_genotypes',
+            help='fill in reference only variants [default: %(default)s]',
+            action='store_true'
+        )
+
+    @staticmethod
+    def parse_cli_arguments(argv):
+        filename = argv.summary_filename
+
+        params = {
+            'dae_include_reference_genotypes': 
+            str2bool(argv.dae_include_reference_genotypes),
+        }
+        return filename, params

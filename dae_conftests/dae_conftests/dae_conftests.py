@@ -23,7 +23,7 @@ from dae.backends.raw.raw_variants import RawMemoryVariants
 from dae.backends.dae.loader import DaeTransmittedLoader, DenovoLoader
 from dae.backends.vcf.loader import VcfLoader
 
-from dae.backends.import_commons import \
+from dae.backends.impala.import_commons import \
     construct_import_annotation_pipeline
 
 from dae.pedigrees.family import FamiliesData
@@ -663,7 +663,7 @@ DATA_IMPORT_COUNT = 0
 def data_import(
         request, test_hdfs, test_impala_helpers,
         impala_genotype_storage, reimport, default_dae_config,
-        genomes_db_2013):
+        gpf_instance_2013):
 
     global DATA_IMPORT_COUNT
     DATA_IMPORT_COUNT += 1
@@ -674,9 +674,7 @@ def data_import(
     test_hdfs.mkdir(temp_dirname)
 
     annotation_pipeline = \
-        construct_import_annotation_pipeline(
-            default_dae_config,
-            genomes_db_2013)
+        construct_import_annotation_pipeline(gpf_instance_2013)
 
     def fin():
         test_hdfs.delete(temp_dirname, recursive=True)
@@ -718,7 +716,8 @@ def data_import(
                 params={
                     'vcf_include_reference_genotypes': True,
                     'vcf_include_unknown_family_genotypes': True,
-                    'vcf_include_unknown_person_genotypes': True
+                    'vcf_include_unknown_person_genotypes': True,
+                    'vcf_multi_loader_fill_in_mode': 'reference',
                 })
 
             loader = AlleleFrequencyDecorator(loader)
