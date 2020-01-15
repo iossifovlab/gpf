@@ -626,6 +626,8 @@ class ImpalaFamilyVariants:
                 effect_data,
                 family_id,
                 genotype_data,
+                best_state_data,
+                genetic_model_data,
                 frequency_data,
                 genomic_scores_data
             {limit_clause}

@@ -38,6 +38,8 @@ class ParquetSchema(Schema):
 
         pa.field("variant_in_member", pa.string()),
         pa.field("genotype_data", pa.string()),
+        pa.field("best_state_data", pa.string()),
+        pa.field("genetic_model_data", pa.int8()),
 
         pa.field('af_parents_called_count', pa.int32()),
         pa.field('af_parents_called_percent', pa.float32()),

@@ -94,14 +94,13 @@ class GenomicSequence_Ivan(object):
 
         return w.upper()
 
-    def is_autosomal(self, chrom: str, pos: int) -> bool:
+    def is_pseudoautosomal(self, chrom: str, pos: int) -> bool:
         # TODO Handle variants which are both inside and outside a PAR
         # Currently, if the position of the reference is within a PAR,
         # the whole variant is considered to be within an autosomal region
-        if chrom == 'X' \
-           and not self.pseudo_autosomal_regions.x.region.isin(chrom, pos):
-            return False
-        return True
+        chrom = chrom.replace('chr', '')
+        return chrom == 'X' and \
+            self.pseudo_autosomal_regions.x.region.isin(chrom, pos)
 
 
 def openRef(filename):

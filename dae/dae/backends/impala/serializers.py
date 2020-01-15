@@ -364,7 +364,7 @@ class ParquetSerializer(object):
 
         best_state = self.deserialize_variant_best_state(
             best_state_data,
-            len(alternatives) + 1  # alternatives + reference
+            len(family),
         )
 
         genetic_model = GeneticModel(genetic_model_data)

@@ -56,7 +56,9 @@ class VariantsLoader:
             for fam, gt, bs in family_genotypes.family_genotype_iterator():
                 family_variants.append(
                     FamilyVariant.from_summary_variant(
-                        summary_variant, fam, gt, bs))
+                        summary_variant, fam, gt, bs
+                    )
+                )
 
             yield summary_variant, family_variants
 
@@ -172,6 +174,7 @@ class AnnotationPipelineDecorator(VariantsLoaderDecorator):
         'variant_in_member',
         'genotype_data',
         'best_state_data',
+        'genetic_model_data',
         'frequency_data',
         'genomic_scores_data',
     ])

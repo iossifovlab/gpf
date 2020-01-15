@@ -5,6 +5,9 @@ Created on Mar 5, 2018
 '''
 import numpy as np
 
+from dae.GenomeAccess import GenomicSequence_Ivan
+from dae.variants.attributes import Sex
+
 
 GENOTYPE_TYPE = np.int8
 BEST_STATE_TYPE = np.int8
@@ -153,3 +156,12 @@ def vcf2cshl(pos, ref, alt, trimmer=trim_str_front):
     vp, vt, vl = cshl_format(pos, ref, alt, trimmer=trimmer)
 
     return vp, vt, vl
+
+
+def get_locus_ploidy(
+    chrom: str, pos: int, sex: Sex, genome: GenomicSequence_Ivan
+) -> int:
+    if chrom in ('chrX', 'X') and sex == Sex.M:
+        if not genome.is_pseudoautosomal(chrom, pos):
+            return 1
+    return 2

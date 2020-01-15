@@ -373,9 +373,6 @@ class SummaryVariant(VariantBase):
         self.alleles = alleles
         self.allele_count = len(self.alleles)
 
-        for allele in self.alleles:
-            allele.update_attributes({'allele_count': self.allele_count})
-
         super(SummaryVariant, self).__init__(
             self.ref_allele.chromosome,
             self.ref_allele.position,
@@ -495,5 +492,9 @@ class SummaryVariantFactory(object):
         if not alleles[0].is_reference_allele:
             ref_allele = SummaryAllele.create_reference_allele(alleles[0])
             alleles.insert(0, ref_allele)
+
+        allele_count = {'allele_count': len(alleles)}
+        for allele in alleles:
+            allele.update_attributes(allele_count)
 
         return SummaryVariant(alleles)

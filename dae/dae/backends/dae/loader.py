@@ -19,7 +19,9 @@ from dae.variants.variant import SummaryVariantFactory
 from dae.backends.raw.loader import VariantsLoader, \
     TransmissionType, FamiliesGenotypes
 
-from dae.variants.attributes import Sex, VariantType
+from dae.variants.attributes import VariantType
+
+from dae.utils.variant_utils import get_locus_ploidy
 
 
 class DenovoFamiliesGenotypes(FamiliesGenotypes):
@@ -82,7 +84,8 @@ class DenovoLoader(VariantsLoader):
 
     @staticmethod
     def produce_genotype(chrom: str,
-                         autosomal: bool,
+                         pos: int,
+                         genome: GenomicSequence_Ivan,
                          family: Family,
                          members_with_variant: List[str]) -> np.array:
         # TODO Add support for multiallelic variants
@@ -95,11 +98,13 @@ class DenovoLoader(VariantsLoader):
             index = family.members_index([person_id])
             has_variant = int(person_id in members_with_variant)
 
-            if not autosomal and (chrom == 'X' and person.sex == Sex.M):
+            ploidy = get_locus_ploidy(chrom, pos, person.sex, genome)
+
+            if ploidy == 2:
+                genotype[1, index] = has_variant
+            else:
                 genotype[0, index] = has_variant
                 genotype[1, index] = -2  # signifies haploid genotype
-            else:
-                genotype[1, index] = has_variant
 
         return genotype
 
@@ -368,8 +373,6 @@ class DenovoLoader(VariantsLoader):
             result = []
             for variant, families in variant_to_families.items():
 
-                autosomal = genome.is_autosomal(variant[0], int(variant[1]))
-
                 for family_id, family in families.items():
                     result.append({
                         'chrom': variant[0],
@@ -379,7 +382,8 @@ class DenovoLoader(VariantsLoader):
                         'family_id': family_id,
                         'genotype': cls.produce_genotype(
                             variant[0],
-                            autosomal,
+                            variant[1],
+                            genome,
                             family,
                             variant_to_people[variant],
                         ),

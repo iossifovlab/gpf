@@ -11,6 +11,8 @@ from dae.utils.variant_utils import GENOTYPE_TYPE, is_all_unknown_genotype, \
 def calculate_simple_best_state(
     genotype: np.array, allele_count: int
 ) -> np.array:
+    # Simple best state calculation
+    # Treats every genotype as diploid (including male X non-PAR)
     ref = (2 * np.ones(genotype.shape[1], dtype=GENOTYPE_TYPE))
     unknown = np.any(genotype == -1, axis=0)
 
@@ -20,7 +22,7 @@ def calculate_simple_best_state(
         alt_gt[genotype == allele_index] = 1
 
         alt = np.sum(alt_gt, axis=0, dtype=GENOTYPE_TYPE)
-        ref = ref - alt
+        best_st[0] = best_st[0] - alt
         best_st.append(alt)
 
     best_st = np.stack(best_st, axis=0)
@@ -139,7 +141,7 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
     def best_st(self):
         if self._best_st is None:
             self._best_st = calculate_simple_best_state(
-                self.genotype, self.attributes['allele_count']
+                self.gt, self.attributes['allele_count']
             )
         return self._best_st
 
@@ -440,7 +442,7 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
     def best_st(self):
         if self._best_st is None:
             self._best_st = calculate_simple_best_state(
-                self.genotype, self.allele_count
+                self.gt, self.allele_count
             )
         return self._best_st
 
