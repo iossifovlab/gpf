@@ -108,5 +108,5 @@ def test_calc_best_state(vcf, expected, variants_vcf, genome_2013):
                 fv,
                 genome_2013
             )
-            assert best_state == expected[counter]
+            assert np.array_equal(best_state, expected[counter])
             counter += 1
