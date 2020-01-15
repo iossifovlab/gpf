@@ -6,6 +6,7 @@ Created on Jul 9, 2018
 import pytest
 
 import numpy as np
+from dae.variants.family_variant import calculate_simple_best_state
 from dae.utils.variant_utils import mat2str
 
 
@@ -16,7 +17,7 @@ from dae.utils.variant_utils import mat2str
     (np.array([[0, 0, 0], [0, 0, 0]], dtype='int8'), "222/000/000"),
 ])
 def test_family_variant_best_st(fv1, gt, bs):
-    v = fv1(gt)
+    v = fv1(gt, calculate_simple_best_state(gt, 3))
     print(v)
     print(mat2str(v.best_st))
     assert mat2str(v.best_st) == bs
@@ -29,7 +30,7 @@ def test_family_variant_best_st(fv1, gt, bs):
     (np.array([[-1, 0, 0], [0, 0, 0]], dtype='int8'), "?22/?00/?00"),
 ])
 def test_family_variant_unknown_best_st(fv1, gt, bs):
-    v = fv1(gt)
+    v = fv1(gt, calculate_simple_best_state(gt, 3))
     print(v)
     print(mat2str(v.best_st))
     assert mat2str(v.best_st) == bs
