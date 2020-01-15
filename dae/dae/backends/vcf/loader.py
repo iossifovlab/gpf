@@ -292,7 +292,7 @@ class VcfLoader(VariantsLoader):
     def transform_vcf_genotypes(genotypes):
         new_genotypes = []
         for genotype in genotypes:
-            if len(genotype) == 1:  # Handle haploid genotypes
+            if len(genotype) == 2:  # Handle haploid genotypes
                 genotype.insert(1, -2)
             new_genotypes.append(genotype)
         return np.array(new_genotypes, dtype=GENOTYPE_TYPE).T
