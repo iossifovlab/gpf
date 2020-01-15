@@ -6,6 +6,10 @@
 import sys
 import os
 
+from typing import List
+
+from dae.RegionOperations import Region
+
 
 class GenomicSequence_Ivan(object):
 
@@ -98,9 +102,20 @@ class GenomicSequence_Ivan(object):
         # TODO Handle variants which are both inside and outside a PAR
         # Currently, if the position of the reference is within a PAR,
         # the whole variant is considered to be within an autosomal region
+        def in_any_region(chrom: str, pos: int, regions: List[Region]) -> bool:
+            return any(map(lambda x: x.isin(chrom, pos), regions))
+
         chrom = chrom.replace('chr', '')
-        return chrom == 'X' and \
-            self.pseudo_autosomal_regions.x.region.isin(chrom, pos)
+        if chrom == 'X':
+            return in_any_region(
+                chrom, pos, self.pseudo_autosomal_regions.x['region']
+            )
+        elif chrom == 'Y':
+            return in_any_region(
+                chrom, pos, self.pseudo_autosomal_regions.y['region']
+            )
+        else:
+            return False
 
 
 def openRef(filename):
