@@ -394,14 +394,15 @@ class FamiliesGenotypesDecorator(VariantsLoaderDecorator):
         res = []
 
         assert family_variant.gt.shape == (
-            len(family_variant.family.persons), 2
+            2, len(family_variant.family.persons)
         )
         for member_idx, member in enumerate(
             family_variant.family.members_in_order
         ):
+            if member.sex in (Sex.F, Sex.U):
+                continue
             res.append(bool(
-                member.sex == Sex.M
-                and family_variant.gt[1, member_idx] != -2)
+                family_variant.gt[1, member_idx] != -2)
             )
         return res
 
