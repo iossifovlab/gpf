@@ -1,7 +1,10 @@
+import pytest
+
 from dae.backends.impala.parquet_io import VariantsParquetWriter
 from dae.backends.impala.parquet_io import ParquetPartitionDescriptor
 
 
+@pytest.mark.skip
 def test_custom_parquet_writing(vcf_variants_loader):
     fvars = vcf_variants_loader('vcf_import/effects_trio')
 
