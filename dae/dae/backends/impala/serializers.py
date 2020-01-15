@@ -329,8 +329,6 @@ class ParquetSerializer(object):
         alternatives = self.deserialize_variant_alternatives(
             alternatives_data
         )
-        print(effects)
-        print(alternatives)
         assert len(effects) == len(alternatives)
         # family = self.families.get(family_id)
         assert family is not None
