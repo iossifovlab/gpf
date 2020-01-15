@@ -416,12 +416,15 @@ class FamiliesGenotypesDecorator(VariantsLoaderDecorator):
                 Sex.M,
                 genome
             )
-            diploid = bool(male_ploidy == 2)
-            if diploid and not all(cls._get_diploid_males(family_variant)):
-                return GeneticModel.X_broken
+            if male_ploidy == 2:
+                if not all(cls._get_diploid_males(family_variant)):
+                    return GeneticModel.X_broken
+                else:
+                    return GeneticModel.pseudo_autosomal
             elif any(cls._get_diploid_males(family_variant)):
                 return GeneticModel.X_broken
-            return GeneticModel.pseudo_autosomal
+            else:
+                return GeneticModel.X
         else:
             # We currently assume all other chromosomes are autosomal
             return GeneticModel.autosomal
@@ -440,9 +443,8 @@ class FamiliesGenotypesDecorator(VariantsLoaderDecorator):
             Sex.M,
             genome
         )
-        diploid = bool(male_ploidy == 2)
 
-        if family_variant.chromosome in ('X', 'chrX') and not diploid:
+        if family_variant.chromosome in ('X', 'chrX') and male_ploidy == 1:
             male_ids = [
                 person_id
                 for person_id, person
