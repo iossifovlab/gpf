@@ -1,0 +1,9 @@
+familyId	personId	dadId	momId	sex	status
+f1	f1.dad	0	0	male	1
+f1	f1.mom	0	0	female	1
+f1	f1.stepdad	0	0	male	1
+f1	f1.stepmom	0	0	female	1
+f1	f1.stepcousin1	f1.stepdad	f1.mom	male	1
+f1	f1.stepcousin2	f1.dad	f1.stepmom	male	1
+f1	f1.prb	f1.dad	f1.mom	male	2
+f1	f1.sib	f1.dad	f1.mom	female	1
