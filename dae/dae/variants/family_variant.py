@@ -398,9 +398,9 @@ class FamilyVariant(Variant, FamilyDelegate):
     def reference(self) -> str:
         return self.summary_variant.reference
 
-    @property
-    def alternative(self) -> Optional[str]:
-        return self.summary_variant.alternative
+    # @property
+    # def alternative(self) -> Optional[str]:
+    #     return self.summary_variant.alternative
 
     @property
     def allele_count(self):
