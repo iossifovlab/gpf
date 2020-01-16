@@ -13,12 +13,13 @@ def test_denovo2parquet_denovo(
         genomes_db_2013):
 
     argv = [
-        dae_denovo_config.family_filename,
+        'variants',
         # '--denovo',
-        dae_denovo_config.denovo_filename,
         # '--annotation', annotation_pipeline_default_config,
         '--ped-file-format', 'simple',
-        '-o', temp_filename
+        '-o', temp_filename,
+        dae_denovo_config.family_filename,
+        dae_denovo_config.denovo_filename,
     ]
 
     main(argv)

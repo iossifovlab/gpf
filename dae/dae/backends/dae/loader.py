@@ -49,6 +49,8 @@ class DenovoLoader(VariantsLoader):
 
         self.genome = genome
 
+        self.chromosomes = genome.allChromosomes
+
         self.denovo_df = self.flexible_denovo_load(
             denovo_filename, genome, families=families, **self.params
         )
