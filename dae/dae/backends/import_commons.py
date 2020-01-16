@@ -138,7 +138,7 @@ class MakefileGenerator:
             file=output)
         print(
             f'\n'
-            f'%.flag\n'
+            f'%.flag:\n'
             f'\t{command} --rb $* && touch $@\n',
             file=output
         )

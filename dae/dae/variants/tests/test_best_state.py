@@ -6,10 +6,10 @@ from dae.utils.variant_utils import GENOTYPE_TYPE
 
 @pytest.mark.parametrize(
     'chromosome, position, reference, alternative, ' +
-    'allele_index, genotype, expected',
+    'allele_index, allele_count, genotype, expected',
     [
         (
-            'chr1', 0, 'A', 'T', 1,
+            'chr1', 0, 'A', 'T', 1, 2,
             np.array(
                 [
                     [0, 0, 0],
@@ -26,7 +26,7 @@ from dae.utils.variant_utils import GENOTYPE_TYPE
             )
         ),
         (
-            'chr1', 0, 'A', 'T', 1,
+            'chr1', 0, 'A', 'T', 1, 2,
             np.array(
                 [
                     [0, 0, 0],
@@ -43,7 +43,7 @@ from dae.utils.variant_utils import GENOTYPE_TYPE
             )
         ),
         (
-            'chr1', 0, 'A', 'T', 1,
+            'chr1', 0, 'A', 'T', 1, 2,
             np.array(
                 [
                     [0, 0, 1],
@@ -60,7 +60,7 @@ from dae.utils.variant_utils import GENOTYPE_TYPE
             )
         ),
         (
-            'chr1', 0, 'A', 'G,T', 1,
+            'chr1', 0, 'A', 'G,T', 1, 3,
             np.array(
                 [
                     [0, 1, 2],
@@ -71,13 +71,14 @@ from dae.utils.variant_utils import GENOTYPE_TYPE
             np.array(
                 [
                     [2,  1,  1],
-                    [0,  1, -1]
+                    [0,  1, 0],
+                    [0,  0, 1],
                 ],
                 dtype=GENOTYPE_TYPE
             )
         ),
         (
-            'chr1', 0, 'A', 'G,T', 2,
+            'chr1', 0, 'A', 'G,T', 2, 3,
             np.array(
                 [
                     [0, 1, 2],
@@ -88,7 +89,8 @@ from dae.utils.variant_utils import GENOTYPE_TYPE
             np.array(
                 [
                     [2,  1,  1],
-                    [0, -1,  1]
+                    [0, 1,  0],
+                    [0, 0,  1]
                 ],
                 dtype=GENOTYPE_TYPE
             )
@@ -101,6 +103,7 @@ def test_allele_best_state(
         reference,
         alternative,
         allele_index,
+        allele_count,
         genotype,
         expected,
         sample_family):
@@ -113,6 +116,8 @@ def test_allele_best_state(
         allele_index,
         {},
         sample_family,
-        genotype
+        genotype,
+        None
     )
+    fa.update_attributes({'allele_count': allele_count})
     assert np.array_equal(fa.best_st, expected)

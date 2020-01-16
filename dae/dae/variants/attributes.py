@@ -296,6 +296,13 @@ class VariantType(enum.Enum):
         return self.name[:3]
 
 
+class GeneticModel(enum.Enum):
+    autosomal = 1
+    pseudo_autosomal = 2
+    X = 3
+    X_broken = 4
+
+
 class TransmissionType(enum.Enum):
 
     unknown = 0

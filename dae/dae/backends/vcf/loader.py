@@ -5,7 +5,7 @@ import numpy as np
 from dae.utils.helpers import str2bool
 
 from dae.utils.variant_utils import is_all_reference_genotype, \
-    is_all_unknown_genotype, is_unknown_genotype
+    is_all_unknown_genotype, is_unknown_genotype, GENOTYPE_TYPE
 from dae.variants.variant import SummaryVariantFactory
 from dae.backends.raw.loader import VariantsLoader, TransmissionType, \
     FamiliesGenotypes
@@ -32,6 +32,9 @@ class VcfFamiliesGenotypes(FamiliesGenotypes):
             f"{gt.shape} == (2, {len(family)})"
         return gt
 
+    def get_family_best_state(self, family):
+        return None
+
     def family_genotype_iterator(self):
         for fam in self.families.values():
             if len(fam) == 0:
@@ -46,8 +49,9 @@ class VcfFamiliesGenotypes(FamiliesGenotypes):
             if is_all_unknown_genotype(gt) \
                     and not self.include_unknown_family_genotypes:
                 continue
+            bs = self.get_family_best_state(fam)
 
-            yield fam, gt
+            yield fam, gt, bs
 
     def full_families_genotypes(self):
         return self.families_genotypes
@@ -225,7 +229,7 @@ class VcfLoader(VariantsLoader):
 
             family_genotypes = VcfFamiliesGenotypes(
                 self.families,
-                np.array(genotypes, dtype=np.int8).T,
+                VcfLoader.transform_vcf_genotypes(genotypes),
                 params=self.params)
 
             yield current_summary_variant, family_genotypes
@@ -243,6 +247,15 @@ class VcfLoader(VariantsLoader):
 
             for summary_variant, family_genotypes in summary_genotypes:
                 yield summary_variant, family_genotypes
+
+    @staticmethod
+    def transform_vcf_genotypes(genotypes):
+        new_genotypes = []
+        for genotype in genotypes:
+            if len(genotype) == 2:  # Handle haploid genotypes
+                genotype.insert(1, -2)
+            new_genotypes.append(genotype)
+        return np.array(new_genotypes, dtype=GENOTYPE_TYPE).T
 
     @staticmethod
     def cli_defaults():

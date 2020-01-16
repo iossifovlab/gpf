@@ -54,8 +54,10 @@ class GenomesDB(object):
 
     def get_genome(self, genome_id=None):
         genome_file = self.get_genome_file(genome_id)
+        genome = self.get_genome_from_file(genome_file)
+        genome.pseudo_autosomal_regions = self.config.PARs.regions
 
-        return self.get_genome_from_file(genome_file)
+        return genome
 
     def get_genome_from_file(self, genome_file=None):
         if genome_file is None:

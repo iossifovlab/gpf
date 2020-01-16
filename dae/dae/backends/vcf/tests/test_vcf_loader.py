@@ -5,6 +5,7 @@ from dae.pedigrees.loader import FamiliesLoader
 from dae.pedigrees.family import FamiliesData
 
 from dae.backends.vcf.loader import VcfLoader
+from dae.utils.variant_utils import GENOTYPE_TYPE
 
 
 @pytest.mark.parametrize("fixture_data", [
@@ -151,3 +152,23 @@ def test_multivcf_loader_fill_missing(fixture_dirname, fill_flag, fill_value):
     assert(sum_gts[3][0].ref_allele.position == 865627)
     assert(sum_gts[4][0].ref_allele.position == 865664)
     assert(sum_gts[5][0].ref_allele.position == 865691)
+
+
+def test_transform_vcf_genotype():
+    genotypes = [
+        [0, 0, False],
+        [0, 1, False],
+        [1, 0, False],
+        [1, 1, False],
+        [0, True],
+        [1, True],
+    ]
+    expected = np.array([
+        [0, 0, 1, 1, 0, 1],
+        [0, 1, 0, 1, -2, -2],
+        [False, False, False, False, True, True]
+    ], dtype=GENOTYPE_TYPE)
+
+    assert np.array_equal(
+        expected, VcfLoader.transform_vcf_genotypes(genotypes)
+    )
