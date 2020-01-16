@@ -1,7 +1,8 @@
 import numpy as np
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, List
 
-from dae.variants.variant import Variant, Allele, SummaryVariant, SummaryAllele
+from dae.variants.variant import Variant, Allele, SummaryVariant, \
+    SummaryAllele, Effect
 from dae.pedigrees.family import Family
 from dae.variants.attributes import Inheritance, GeneticModel, TransmissionType
 import itertools
@@ -86,8 +87,6 @@ class FamilyAllele(Allele, FamilyDelegate):
         self._variant_in_members_objects = None
         self._variant_in_roles = None
         self._variant_in_sexes = None
-        self._effect = None
-        self.details = None
 
         self.matched_gene_effects = []
 
@@ -133,6 +132,14 @@ class FamilyAllele(Allele, FamilyDelegate):
     @property
     def attributes(self) -> Dict[str, Any]:
         return self.summary_allele.attributes
+
+    @property
+    def details(self):
+        return self.summary_allele.details
+
+    @property
+    def effect(self) -> Optional[Effect]:
+        return self.summary_allele.effect
 
     @property
     def genotype(self):
@@ -364,16 +371,16 @@ class FamilyVariant(Variant, FamilyDelegate):
         self.summary_alleles = self.summary_variant.alleles
         self._family_alleles = family_alleles
 
-        alleles = [
-            family_alleles[0]
-        ]
-        for ai in self.calc_alt_alleles(self.gt):
-            allele = self.get_allele(ai)
-            if allele is None:
-                continue
-            alleles.append(allele)
+        # alleles = [
+        #     family_alleles[0]
+        # ]
+        # for ai in self.calc_alt_alleles(self.gt):
+        #     allele = self.get_allele(ai)
+        #     if allele is None:
+        #         continue
+        #     alleles.append(allele)
 
-        self._family_alleles = alleles
+        self._family_alleles = family_alleles
         self._best_st = best_state
         self._matched_alleles = []
 
@@ -402,7 +409,7 @@ class FamilyVariant(Variant, FamilyDelegate):
         return self.summary_variant.summary_index
 
     @property
-    def alleles(self) -> Any:
+    def alleles(self) -> List[FamilyAllele]:
         return self._family_alleles
 
     def set_matched_alleles(self, alleles_indexes):

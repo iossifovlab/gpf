@@ -74,6 +74,37 @@ class AltAlleleItems(object):
             all([s == o for (s, o) in zip(self.items, other.items)])
 
 
+class VariantDetail(object):
+    def __init__(self, chrom, position, variant, length):
+        self.length = length
+        self.type = None
+        self.chrom = chrom
+        self.cshl_position = position
+        self.cshl_variant = variant
+        self._variant_type = None
+
+    def __repr__(self):
+        return "{} {}".format(
+            self.cshl_location,
+            self.cshl_variant)
+
+    @property
+    def cshl_location(self):
+        return "{}:{}".format(self.chrom, self.cshl_position)
+
+    @property
+    def variant_type(self):
+        if self._variant_type is None:
+            self._variant_type = VariantType.from_cshl_variant(
+                self.cshl_variant)
+        return self._variant_type
+
+    @staticmethod
+    def from_vcf(chrom, position, reference, alternative):
+        return VariantDetail(
+            chrom, *vcf2cshl(position, reference, alternative))
+
+
 class Allele:
 
     def __init__(
@@ -134,24 +165,7 @@ class Allele:
 
     @property
     def effect(self) -> Optional[Effect]:
-        if self._effect is None:
-            record = self.attributes
-            if 'effect_type' in record:
-                worst_effect = record['effect_type']
-                if worst_effect is None:
-                    return None
-                effects = Effect.from_effects(
-                    worst_effect,
-                    list(zip(record['effect_gene_genes'],
-                             record['effect_gene_types'])),
-                    list(zip(record['effect_details_transcript_ids'],
-                             record['effect_details_details'])))
-                self._effect = effects
-            elif 'effects' in record:
-                self._effect = Effect.from_string(record.get('effects'))
-            else:
-                self._effect = None
-        return self._effect
+        raise NotImplementedError()
 
     @property
     def effects(self) -> Effect:
@@ -162,51 +176,39 @@ class Allele:
         return self.get_attribute('af_allele_freq')
 
     @property
+    def details(self) -> Optional[VariantDetail]:
+        raise NotImplementedError()
+
+    @property
     def cshl_variant(self) -> Optional[str]:
         if self.alternative is None:
             return None
         if self.details is None:
-
-            self.details = VariantDetail.from_vcf(
-                self.chromosome, self.position,
-                self.reference, self.alternative)
-
+            return None
         return self.details.cshl_variant
 
     @property
     def cshl_location(self) -> Optional[str]:
         if self.alternative is None:
             return None
-
         if self.details is None:
-            self.details = VariantDetail.from_vcf(
-                self.chromosome, self.position,
-                self.reference, self.alternative)
-
+            return None
         return self.details.cshl_location
 
     @property
     def cshl_position(self) -> Optional[str]:
         if self.alternative is None:
             return None
-
         if self.details is None:
-            self.details = VariantDetail.from_vcf(
-                self.chromosome, self.position,
-                self.reference, self.alternative)
-
+            return None
         return self.details.cshl_position
 
     @property
     def variant_type(self) -> Optional[VariantType]:
         if self.alternative is None:
             return None
-
         if self.details is None:
-            self.details = VariantDetail.from_vcf(
-                self.chromosome, self.position,
-                self.reference, self.alternative)
-
+            return None
         return self.details.variant_type
 
     @property
@@ -386,37 +388,6 @@ class Variant:
             self.position > other.position
 
 
-class VariantDetail(object):
-    def __init__(self, chrom, position, variant, length):
-        self.length = length
-        self.type = None
-        self.chrom = chrom
-        self.cshl_position = position
-        self.cshl_variant = variant
-        self._variant_type = None
-
-    def __repr__(self):
-        return "{} {}".format(
-            self.cshl_location,
-            self.cshl_variant)
-
-    @property
-    def cshl_location(self):
-        return "{}:{}".format(self.chrom, self.cshl_position)
-
-    @property
-    def variant_type(self):
-        if self._variant_type is None:
-            self._variant_type = VariantType.from_cshl_variant(
-                self.cshl_variant)
-        return self._variant_type
-
-    @staticmethod
-    def from_vcf(chrom, position, reference, alternative):
-        return VariantDetail(
-            chrom, *vcf2cshl(position, reference, alternative))
-
-
 class SummaryAllele(Allele):
     """
     `SummaryAllele` represents a single allele for given position.
@@ -444,7 +415,7 @@ class SummaryAllele(Allele):
         self._allele_index = allele_index
         self._transmission_type = transmission_type
 
-        self.details = None
+        self._details = None
 
         #: variant effect of the allele; None for the reference allele.
         self._effect = None
@@ -490,6 +461,37 @@ class SummaryAllele(Allele):
     @property
     def attributes(self):
         return self._attributes
+
+    @property
+    def details(self):
+        if self.alternative is None:
+            return None
+        if self._details is None:
+            self._details = VariantDetail.from_vcf(
+                self.chromosome, self.position,
+                self.reference, self.alternative)
+        return self._details
+
+    @property
+    def effect(self) -> Optional[Effect]:
+        if self._effect is None:
+            record = self.attributes
+            if 'effect_type' in record:
+                worst_effect = record['effect_type']
+                if worst_effect is None:
+                    return None
+                effects = Effect.from_effects(
+                    worst_effect,
+                    list(zip(record['effect_gene_genes'],
+                             record['effect_gene_types'])),
+                    list(zip(record['effect_details_transcript_ids'],
+                             record['effect_details_details'])))
+                self._effect = effects
+            elif 'effects' in record:
+                self._effect = Effect.from_string(record.get('effects'))
+            else:
+                self._effect = None
+        return self._effect
 
     @staticmethod
     def create_reference_allele(allele):

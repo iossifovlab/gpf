@@ -123,7 +123,6 @@ class ParquetSerializer(object):
                 None,
                 None,
                 allele.transmission_type.value,
-                # None,
                 alternatives_data,
             )
         else:
@@ -136,7 +135,6 @@ class ParquetSerializer(object):
                 allele.alternative,
                 allele.variant_type.value,
                 allele.transmission_type.value,
-                # allele.effect.worst if allele.effect else None,
                 alternatives_data,
             )
 
@@ -348,7 +346,8 @@ class ParquetSerializer(object):
             self, family,
             chrom, position, reference, transmission_type,
             alternatives_data, effect_data,
-            genotype_data, best_state_data, genetic_model_data,
+            genotype_data, best_state_data,
+            genetic_model_data,
             frequency_data, genomic_scores_data):
 
         effects = self.deserialize_variant_effects(
@@ -356,8 +355,8 @@ class ParquetSerializer(object):
         alternatives = self.deserialize_variant_alternatives(
             alternatives_data
         )
-        assert len(effects) == len(alternatives)
-        # family = self.families.get(family_id)
+        assert len(effects) == len(alternatives), \
+            (effects, alternatives)
         assert family is not None
 
         genotype = self.deserialize_variant_genotype(
@@ -398,7 +397,6 @@ class ParquetSerializer(object):
                 summary_index=0,
                 allele_index=allele_index,
                 transmission_type=transmission_type,
-                # effect=effect,
                 attributes=attr
             )
 
