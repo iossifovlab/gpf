@@ -374,9 +374,13 @@ class FamilyVariant(Variant, FamilyDelegate):
             family_alleles[0]
         ]
         for ai in self.calc_alt_alleles(self.gt):
-            if ai < 0 or ai >= len(family_alleles):
+            allele = None
+            for fa in family_alleles:
+                if fa.allele_index == ai:
+                    allele = fa
+                    break
+            if allele is None:
                 continue
-            allele = family_alleles[ai]
             assert allele.allele_index == ai, \
                 (allele.allele_index, ai)
 
