@@ -39,6 +39,7 @@ class FamilyRoleBuilder:
         self._assign_roles_siblings(proband)
         self._assign_roles_paternal(proband)
         self._assign_roles_maternal(proband)
+        self._assign_roles_step_parents_and_half_siblings(proband)
 
     @classmethod
     def _set_person_role(cls, person, role):
@@ -169,3 +170,43 @@ class FamilyRoleBuilder:
                 for cousin_id in person_mating.children:
                     cousin = self.family.persons[cousin_id]
                     self._set_person_role(cousin, Role.maternal_cousin)
+
+    def _find_parent_matings(self, parent):
+        matings = []
+        for mating in self.family_matings.values():
+            print(mating)
+            if parent.sex == Sex.male:
+                if mating.dad_id == parent.person_id:
+                    matings.append(mating)
+            else:
+                if mating.mom_id == parent.person_id:
+                    matings.append(mating)
+
+        return matings
+
+    def _assign_roles_step_parents_and_half_siblings(self, proband):
+        print(proband.mom.person_id)
+        if proband.mom is not None:
+            mom_mates = filter(lambda x: x.dad_id != proband.dad.person_id,
+                               self._find_parent_matings(proband.mom))
+            for mating in mom_mates:
+                step_dad = self.family.persons[mating.dad_id]
+                self._set_person_role(step_dad, Role.step_dad)
+                maternal_halfsiblings_ids = mating.children
+                for halfsibling_id in maternal_halfsiblings_ids:
+                    halfsibling = self.family.persons[halfsibling_id]
+                    self._set_person_role(
+                            halfsibling,
+                            Role.maternal_half_sibling)
+        if proband.dad is not None:
+            dad_mates = filter(lambda x: x.mom_id != proband.mom.person_id,
+                               self._find_parent_matings(proband.dad))
+            for mating in dad_mates:
+                step_mom = self.family.persons[mating.mom_id]
+                self._set_person_role(step_mom, Role.step_mom)
+                paternal_halfsiblings_ids = mating.children
+                for halfsibling_id in paternal_halfsiblings_ids:
+                    halfsibling = self.family.persons[halfsibling_id]
+                    self._set_person_role(
+                            halfsibling,
+                            Role.paternal_half_sibling)
