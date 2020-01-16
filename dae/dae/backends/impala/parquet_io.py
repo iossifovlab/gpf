@@ -378,6 +378,7 @@ class VariantsParquetWriter():
             ra.reference,
             None,  # summary_allele.summary_index,
             -1,
+            ra.transmission_type,
             {},
             family,
             genotype,

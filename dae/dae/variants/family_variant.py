@@ -63,18 +63,19 @@ class FamilyDelegate(object):
 class FamilyAllele(SummaryAllele, FamilyDelegate):
 
     def __init__(
-        self,
-        chromosome,
-        position,
-        reference,
-        alternative,
-        summary_index,
-        allele_index,
-        attributes,
-        family,
-        genotype,
-        best_state,
-    ):
+            self,
+            chromosome,
+            position,
+            reference,
+            alternative,
+            summary_index,
+            allele_index,
+            transmission_type,
+            attributes,
+            family,
+            genotype,
+            best_state):
+
         assert isinstance(family, Family)
         SummaryAllele.__init__(
             self,
@@ -84,6 +85,7 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
             alternative,
             summary_index,
             allele_index,
+            transmission_type,
             attributes)
 
         FamilyDelegate.__init__(self, family)
@@ -113,6 +115,7 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
             summary_allele.alternative,
             None,  # summary_allele.summary_index,
             summary_allele.allele_index,
+            summary_allele.transmission_type,
             summary_allele.attributes,
             family,
             genotype,

@@ -14,7 +14,7 @@ from dae.variants.family_variant import FamilyVariant, \
     calculate_simple_best_state
 from dae.variants.attributes import Sex, GeneticModel
 
-from dae.backends.raw.raw_variants import TransmissionType
+from dae.variants.attributes import TransmissionType
 
 from dae.utils.variant_utils import get_locus_ploidy
 
@@ -48,6 +48,8 @@ class VariantsLoader:
         self.filenames = filenames
 
         self.source_type = source_type
+        assert isinstance(transmission_type, TransmissionType)
+
         self.transmission_type = transmission_type
         self.params = params
 

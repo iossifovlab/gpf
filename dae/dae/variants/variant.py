@@ -5,7 +5,7 @@ Created on Feb 13, 2018
 '''
 from dae.utils.variant_utils import vcf2cshl
 
-from dae.variants.attributes import VariantType
+from dae.variants.attributes import VariantType, TransmissionType
 from dae.variants.effects import Effect
 import itertools
 
@@ -193,6 +193,7 @@ class SummaryAllele(VariantBase):
                  alternative=None,
                  summary_index=None,
                  allele_index=0,
+                 transmission_type=TransmissionType.transmitted,
                  # effect=None,
                  attributes=None):
         super(SummaryAllele, self).__init__(
@@ -202,6 +203,7 @@ class SummaryAllele(VariantBase):
         self.summary_index = summary_index
         #: index of the allele of summary variant
         self.allele_index = allele_index
+        self.transmission_type = transmission_type
 
         self.details = None
 
@@ -317,8 +319,8 @@ class SummaryAllele(VariantBase):
             allele.position,
             allele.reference,
             summary_index=allele.summary_index,
-            attributes=new_attributes
-        )
+            transmission_type=allele.transmission_type,
+            attributes=new_attributes)
 
     @property
     def is_reference_allele(self):
@@ -466,7 +468,8 @@ class SummaryVariant(VariantBase):
 class SummaryVariantFactory(object):
 
     @staticmethod
-    def summary_allele_from_record(record, transmission_type='transmitted'):
+    def summary_allele_from_record(
+            record, transmission_type=TransmissionType.transmitted):
         record['transmission_type'] = transmission_type
         alternative = record['alternative']
 
@@ -476,11 +479,13 @@ class SummaryVariantFactory(object):
             alternative=alternative,
             summary_index=record['summary_variant_index'],
             allele_index=record['allele_index'],
-            attributes=record
-        )
+            transmission_type=transmission_type,
+            # effect=effects,
+            attributes=record)
 
     @staticmethod
-    def summary_variant_from_records(records, transmission_type='transmitted'):
+    def summary_variant_from_records(
+            records, transmission_type=TransmissionType.transmitted):
         assert len(records) > 0
 
         alleles = []

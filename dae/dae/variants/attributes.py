@@ -301,3 +301,10 @@ class GeneticModel(enum.Enum):
     pseudo_autosomal = 2
     X = 3
     X_broken = 4
+
+
+class TransmissionType(enum.Enum):
+
+    unknown = 0
+    transmitted = 1
+    denovo = 2
