@@ -11,6 +11,7 @@ import pyarrow.parquet as pq
 import configparser
 
 from dae.utils.variant_utils import GENOTYPE_TYPE
+from dae.variants.attributes import TransmissionType
 from dae.variants.family_variant import FamilyAllele, FamilyVariant
 from dae.backends.impala.serializers import ParquetSerializer
 
@@ -204,6 +205,9 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
     def _evaluate_frequency_bin(self, family_allele):
         count = family_allele.get_attribute('af_allele_count')
         frequency = family_allele.get_attribute('af_allele_freq')
+        transmission_type = family_allele.transmission_type
+        if transmission_type == TransmissionType.denovo:
+            frequency_bin = 0
         if count and count == 1:  # Ultra rare
             frequency_bin = 1
         elif frequency and frequency < self._rare_boundary:  # Rare
