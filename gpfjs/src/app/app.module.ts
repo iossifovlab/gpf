@@ -2,7 +2,7 @@ import { BrowserModule } from '@angular/platform-browser';
 import { NgModule, Injector } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpModule } from '@angular/http';
-import { RequestOptions, Http, XHRBackend } from '@angular/http';
+import { RequestOptions, Http, XHRBackend, XSRFStrategy, CookieXSRFStrategy } from '@angular/http';
 
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
@@ -99,9 +99,6 @@ import { ResetPasswordComponent } from './reset-password/reset-password.componen
 import { PhenoBrowserModalContentComponent } from './pheno-browser-modal-content/pheno-browser-modal-content.component';
 import { PhenoBrowserTableComponent } from './pheno-browser-table/pheno-browser-table.component';
 
-import { StudiesSummariesComponent } from './studies-summaries/studies-summaries.component';
-import { StudiesSummariesService } from './studies-summaries/studies-summaries.service';
-
 import { PValueIntensityPipe } from './utils/p-value-intensity.pipe';
 
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
@@ -153,6 +150,7 @@ import { PresentInRoleComponent } from './present-in-role/present-in-role.compon
 import { SaveQueryComponent } from './save-query/save-query.component';
 import { SavedQueriesTableComponent } from './saved-queries-table/saved-queries-table.component';
 import { SavedQueriesComponent } from './saved-queries/saved-queries.component';
+import { InheritancetypesComponent } from './inheritancetypes/inheritancetypes.component';
 
 const appRoutes: Routes = [
   {
@@ -195,10 +193,6 @@ const appRoutes: Routes = [
         component: VariantReportsComponent
       }
     ]
-  },
-  {
-    path: 'reports/summary',
-    component: StudiesSummariesComponent
   },
   {
     path: 'management',
@@ -305,7 +299,6 @@ const appRoutes: Routes = [
     PhenoBrowserModalContentComponent,
     PhenoBrowserTableComponent,
     PValueIntensityPipe,
-    StudiesSummariesComponent,
     VariantReportsComponent,
     DatasetDescriptionComponent,
     GenomicScoresComponent,
@@ -341,6 +334,7 @@ const appRoutes: Routes = [
     SaveQueryComponent,
     SavedQueriesTableComponent,
     SavedQueriesComponent,
+    InheritancetypesComponent,
   ],
   imports: [
     BrowserModule,
@@ -360,6 +354,9 @@ const appRoutes: Routes = [
     })
   ],
   providers: [
+    { provide: XSRFStrategy, 
+      useValue: new CookieXSRFStrategy('csrftoken', 'X-CSRFToken') 
+    },
     ConfigService,
     DatasetsService,
     QueryService,
@@ -376,7 +373,6 @@ const appRoutes: Routes = [
     FamilyCountersService,
     PhenoBrowserService,
     PValueIntensityPipe,
-    StudiesSummariesService,
     VariantReportsService,
     GenomicScoresBlockService,
     UsersGroupsService,

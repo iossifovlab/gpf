@@ -1,10 +1,15 @@
-<div class="container">
-  <gpf-genes-block [showAllTab]="false"></gpf-genes-block>
-  <gpf-enrichment-models-block [selectedDatasetId]="selectedDatasetId"></gpf-enrichment-models-block>
-  
-  <div class="form-block">
-    <input class="btn btn-md btn-primary" type="button" value="Enrichment Test" (click)="submitQuery()">
-    <gpf-share-query-button queryType="enrichment"></gpf-share-query-button>
+<div *ngIf="selectedDataset$ | async as dataset">
+  <div *ngIf="dataset.accessRights">
+
+    <div class="container">
+      <gpf-genes-block [showAllTab]="false"></gpf-genes-block>
+      <gpf-enrichment-models-block [selectedDatasetId]="selectedDatasetId"></gpf-enrichment-models-block>
+      
+      <div class="form-block">
+        <input class="btn btn-md btn-primary" type="button" value="Enrichment Test" (click)="submitQuery()">
+        <gpf-share-query-button queryType="enrichment"></gpf-share-query-button>
+      </div>
+      <gpf-enrichment-table [enrichmentResults]="enrichmentResults"></gpf-enrichment-table>
+    </div>
   </div>
-  <gpf-enrichment-table [enrichmentResults]="enrichmentResults"></gpf-enrichment-table>
 </div>

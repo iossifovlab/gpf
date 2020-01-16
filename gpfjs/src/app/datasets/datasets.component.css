@@ -13,13 +13,13 @@
     position: relative;
 }
 
-#dropdownMenuButton {
+#datasets-dropdown-menu-button {
     color: #000;
 }
 
-.show>#dropdownMenuButton,
-#dropdownMenuButton:hover,
-#dropdownMenuButton:active {
+.show>#datasets-dropdown-menu-button,
+#datasets-dropdown-menu-button:hover,
+#datasets-dropdown-menu-button:active {
     color: #fff;
 }
 

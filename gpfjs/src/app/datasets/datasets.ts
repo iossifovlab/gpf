@@ -200,11 +200,12 @@ export class GenotypeBrowser {
       json['hasStudyTypes'],
       json['hasGraphicalPreview'],
       json['previewColumns'],
-      json['rolesFilterOptions'],
       [...AdditionalColumn.fromJsonArray(json['genotypeColumns'])],
       PhenoFilter.fromJsonArray(json['phenoFilters']),
-      PhenoFilter.fromJsonArray(json['familyStudyFilters']),
+      PhenoFilter.fromJsonArray(json['familyFilters']),
       PresentInRole.fromJsonArray(json['presentInRole']),
+      json['inheritanceTypeFilter'],
+      json['selectedInheritanceTypeFilterValues'],
     );
   }
 
@@ -220,11 +221,12 @@ export class GenotypeBrowser {
     readonly hasStudyTypes: boolean,
     readonly hasGraphicalPreview: boolean,
     readonly previewColumnsIds: string[],
-    readonly rolesFilterOptions: string[],
     readonly allColumns: Array<AdditionalColumn>,
     readonly phenoFilters: Array<PhenoFilter>,
-    readonly familyStudyFilters: Array<PhenoFilter>,
+    readonly familyFilters: Array<PhenoFilter>,
     readonly presentInRole: PresentInRole[],
+    readonly inheritanceTypeFilter: string[],
+    readonly selectedInheritanceTypeFilterValues: string[],
   ) {
     this.columns = _.filter(this.allColumns,
       (column: AdditionalColumn) => this.previewColumnsIds.indexOf(column.id) > -1);
@@ -256,9 +258,9 @@ export class Dataset extends IdName {
       json['accessRights'],
       json['studies'],
       json['studyTypes'],
-      json['phenoDB'],
+      json['phenotypeData'],
       json['genotypeBrowser'],
-      json['phenotypeGenotypeTool'],
+      json['phenotypeTool'],
       json['enrichmentTool'],
       json['phenotypeBrowser'],
       json['commonReport'],
@@ -286,9 +288,9 @@ export class Dataset extends IdName {
     readonly accessRights: boolean,
     readonly studies: string[],
     readonly studyTypes: string[],
-    readonly phenoDB: string,
+    readonly phenotypeData: string,
     readonly genotypeBrowser: boolean,
-    readonly phenotypeGenotypeTool: boolean,
+    readonly phenotypeTool: boolean,
     readonly enrichmentTool: boolean,
     readonly phenotypeBrowser: boolean,
     readonly commonReport: boolean,
@@ -298,5 +300,17 @@ export class Dataset extends IdName {
   ) {
     super(id, name);
   }
+}
+
+export class DatasetDetails {
+  static fromJson(json: any): DatasetDetails {
+    return new DatasetDetails(
+      json.hasDenovo as boolean
+    )
+  }
+
+  constructor(
+    readonly hasDenovo: boolean
+  ) { }
 }
 

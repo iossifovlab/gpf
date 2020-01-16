@@ -23,10 +23,6 @@ export class VariantReportsService {
       .get(url, options)
       .map(response => {
         return VariantReport.fromJson(response.json());
-      })
-      .catch(error => {
-        console.log(error);
-        return Observable.of(null as VariantReport);
       });
   }
 

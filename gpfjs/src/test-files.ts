@@ -21,3 +21,7 @@ import 'app/histogram/histogram.component.spec';
 import 'app/chromosome/chromosome.component.spec';
 import 'app/genotype-preview-chromosomes/genotype-preview-chromosomes.component.spec';
 import 'app/pheno-browser-table/pheno-browser-table.component.spec';
+import 'app/inheritancetypes/inheritancetypes.spec';
+import 'app/inheritancetypes/inheritancetypes.component.spec';
+import 'app/variant-reports/variant-reports.component.spec.ts';
+import 'app/variant-reports/variant-reports.service.spec.ts';

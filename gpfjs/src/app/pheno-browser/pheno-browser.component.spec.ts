@@ -1,5 +1,6 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { PhenoBrowserComponent } from './pheno-browser.component';
+import { DatasetsService } from '../datasets/datasets.service';
 import { PhenoBrowserService } from './pheno-browser.service';
 import { PhenoInstruments, PhenoInstrument, PhenoMeasures } from './pheno-browser';
 import { fakeJsonMeasureOneRegression } from './pheno-browser.spec';
@@ -61,6 +62,14 @@ class MockPhenoBrowserService {
   }
 }
 
+class MockDatasetsService {
+  getSelectedDataset = function() {
+    return of({
+      accessRights: true
+    })
+  }
+}
+
 class MockActivatedRoute {
   params = {dataset: 'testDatasetId', get: () => { return '' }};
   parent = {params: of(this.params)};
@@ -93,6 +102,7 @@ describe('PhenoBrowserComponent', () => {
   let location: jasmine.SpyObj<Location>;
   let activatedRoute = new MockActivatedRoute();
   const phenoBrowserServiceMock = new MockPhenoBrowserService();
+  const datasetServiceMock = new MockDatasetsService();
 
   let locationSpy: jasmine.SpyObj<Location>;
   const resizeSpy = jasmine.createSpyObj('ResizeService', ['addResizeEventListener']);
@@ -112,6 +122,7 @@ describe('PhenoBrowserComponent', () => {
         PhenoBrowserComponent ],
       providers: [
         PhenoBrowserComponent,
+        { provide: DatasetsService, useValue: datasetServiceMock },
         { provide: PhenoBrowserService, useValue: phenoBrowserServiceMock },
         { provide: ActivatedRoute, useValue: activatedRoute },
         { provide: Router, useClass: MockRouter },

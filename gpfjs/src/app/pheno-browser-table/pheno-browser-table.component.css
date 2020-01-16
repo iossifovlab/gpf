@@ -5,10 +5,6 @@ gpf-table {
 	margin-bottom: 50px;
 }
 
-:host /deep/ gpf-table-view-header-cell {
-    height: 100px;
-}
-
 .table-chart {
   width: 128px;
   height: 88px;

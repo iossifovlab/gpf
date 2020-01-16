@@ -133,14 +133,14 @@ export class ChromosomeComponent implements OnChanges {
 
     this.variants = [];
     this.genotypePreviews = _.sortBy(this.genotypePreviews,
-      (genotypePreview: GenotypePreview) => +genotypePreview.get('location').split(':')[1]);
+      (genotypePreview: GenotypePreview) => +genotypePreview.get('variant.location').split(':')[1]);
 
     if (this.genotypePreviews) {
       for (const genotypePreview of this.genotypePreviews) {
-        const locationInChromosome: number = +genotypePreview.get('location').split(':')[1];
+        const locationInChromosome: number = +genotypePreview.get('variant.location').split(':')[1];
         const x: number = locationInChromosome * this.scale + this.startingPoint;
-        const proband: boolean = genotypePreview.get('inChS').indexOf('prb') !== -1;
-        const sex: string = genotypePreview.get('inChS')[3];
+        const proband: boolean = genotypePreview.get('genotype.in child').indexOf('prb') !== -1;
+        const sex: string = genotypePreview.get('genotype.in child')[3];
         let stackIndex;
 
         const stackIndexMap: Map<number, boolean> = new Map();
@@ -166,12 +166,12 @@ export class ChromosomeComponent implements OnChanges {
 
         this.variants.push({
           x: x,
-          figure: getFigureByEffect(genotypePreview.get('worst_effect')),
+          figure: getFigureByEffect(genotypePreview.get('effect.worst effect type')),
           color: COLORS[sex],
           stackIndex: stackIndex,
           proband: proband,
-          genes: genotypePreview.get('genes'),
-          location: genotypePreview.get('location'),
+          genes: genotypePreview.get('effect.genes'),
+          location: genotypePreview.get('variant.location'),
           genomeBrowserUrl: `${GENOME_BROWSER}${this.chromosome.id}:${locationInChromosome}-${locationInChromosome}`
         });
       }

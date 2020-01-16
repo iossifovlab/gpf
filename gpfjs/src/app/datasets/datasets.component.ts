@@ -18,6 +18,7 @@ export class DatasetsComponent implements OnInit {
   registerAlertVisible = false;
   datasets$: Observable<Dataset[]>;
   selectedDataset$: Observable<Dataset>;
+  permissionDeniedPrompt: string;
   @Output() selectedDatasetChange = new EventEmitter<Dataset>();
 
   constructor(
@@ -62,22 +63,26 @@ export class DatasetsComponent implements OnInit {
           this.selectedDatasetChange.emit(selectedDataset);
         }
       });
+
+    this.datasetsService.getPermissionDeniedPrompt().subscribe(
+      aprompt => this.permissionDeniedPrompt = aprompt
+    );
   }
 
   findFirstTool(selectedDataset: Dataset) {
     if (selectedDataset.description) {
       return 'description';
+    } else if (selectedDataset.commonReport) {
+      return 'commonReport';
     } else if (selectedDataset.genotypeBrowser && selectedDataset.genotypeBrowserConfig) {
       return 'browser';
     } else if (selectedDataset.phenotypeBrowser) {
       return 'phenotypeBrowser';
     } else if (selectedDataset.enrichmentTool) {
       return 'enrichment';
-    } else if (selectedDataset.phenotypeGenotypeTool) {
+    } else if (selectedDataset.phenotypeTool) {
       return 'phenoTool';
-    } else if (selectedDataset) {
-      return 'commonReport';
-    } else {
+    }  else {
       return '';
     }
   }

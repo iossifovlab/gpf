@@ -9,14 +9,14 @@
               ngbDropdownToggle
               class="dataset-selector btn btn-outline-secondary navbar-brand"
               type="button"
-              id="dropdownMenuButton"
+              id="datasets-dropdown-menu-button"
               aria-haspopup="true"
               aria-expanded="false">{{ selectedDataset.name }}
             </button>
             <div
               ngbDropdownMenu
               class="dataset-selector"
-              aria-labelledby="dropdownMenuButton">
+              aria-labelledby="datasets-dropdown-menu-button">
               <a
                 *ngFor="let dataset of (datasets$ | async)"
                 class="dropdown-item"
@@ -30,6 +30,9 @@
       <li *ngIf="selectedDataset.description" class="nav-item">
         <a class="nav-link" routerLink="description" routerLinkActive="active">Dataset Description</a>
       </li>
+      <li *ngIf="selectedDataset.commonReport" class="nav-item">
+        <a class="nav-link" routerLink="commonReport" routerLinkActive="active">Dataset Statistics</a>
+      </li>
       <li *ngIf="selectedDataset.genotypeBrowser && selectedDataset.genotypeBrowserConfig" class="nav-item">
         <a class="nav-link" routerLink="browser" routerLinkActive="active">Genotype Browser</a>
       </li>
@@ -39,36 +42,19 @@
       <li *ngIf="selectedDataset.enrichmentTool" class="nav-item">
         <a class="nav-link" routerLink="enrichment" routerLinkActive="active">Enrichment Tool</a>
       </li>
-      <li *ngIf="selectedDataset.phenotypeGenotypeTool" class="nav-item">
+      <li *ngIf="selectedDataset.phenotypeTool" class="nav-item">
         <a class="nav-link" routerLink="phenoTool" routerLinkActive="active">Phenotype Tool</a>
-      </li>
-      <li *ngIf="selectedDataset.commonReport" class="nav-item">
-        <a class="nav-link" routerLink="commonReport" routerLinkActive="active">Common Report</a>
       </li>
     </ul>
   </nav>
 
-  <router-outlet class="content"></router-outlet>
-
-  <div *ngIf="registerAlertVisible"
-       class="alert alert-danger warning-alert">
-    <p>The SSC data are accessible to SFARI approved investigators. Approved investigators register (create an account) in Genotype and Phenotype in Families (GPF) and then use that account to access the collection.</p>
-    <p>The process to gain access is described below:</p>
-    <ol>
-      <li>
-        <p>Approval (first time only, requires institutional involvement): You should apply to access <a href="https://base.sfari.org/ordering" target="_blank">SFARIbase</a>. If you do not yet have a SFARI ID (SF ID), you will need to register with SFARIbase, provide a brief description of your research interests and describe your plans for analysis of the SSC genetic and genomic data, and supply all needed documents. Please note, that this process can take up to 1-2 months, if your institution does not yet have a signed <a href="http://sfari.org/resources/sfari-base/request-data-and-biospecimens" target="_blank">Research Distribution Agreement</a>. If you have any questions on the process, please contact the SFARI Collections Team at <a href="mailto:collections@sfari.org">collections@sfari.org</a>.</p>
-        <p>If you already have a SF ID, you will still need to get approved to access the SSC in the GPF.</p>
-      </li>
-      <li>Registration (first time only, immediate automatic response): You should <a style="cursor: pointer;" data-ng-click="homeCtrl.openRegister()">register</a> with the GPF using your first and last name, email, and SF ID. An automatic email will be sent to you with instructions to create a password.</li>
-      <li> Log in: (every time you access the system): Once you have successfully registered you can use your email and your password to log into the Data Access Environment.</li>
-
-
-    </ol>
-
-    Genotype and Phenotype in Families
-
-    <div style="width: 100%; text-align: center;">
-      <input class="btn btn-primary" type="button" (click)="location.back()" value="Go back" />
-    </div>
+  <div *ngIf="registerAlertVisible" class="alert alert-danger" style="margin: 10px" id="permission-denied-prompt">
+      <markdown [data]="permissionDeniedPrompt"></markdown>
+      <div style="width: 100%; text-align: center;">
+          <input class="btn btn-primary" type="button" (click)="location.back()" value="Go back" />
+      </div>
   </div>
+
+  <router-outlet *ngIf="!registerAlertVisible" class="content"></router-outlet>
+
 </div>

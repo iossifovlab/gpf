@@ -4,18 +4,21 @@ import { Headers, Http, RequestOptions } from '@angular/http';
 import { Observable, ReplaySubject, BehaviorSubject } from 'rxjs';
 import { Scheduler } from 'rxjs-compat';
 
-import { Dataset } from '../datasets/datasets';
+import { Dataset, DatasetDetails } from '../datasets/datasets';
 import { UsersService } from '../users/users.service';
 import { ConfigService } from '../config/config.service';
 
 @Injectable()
 export class DatasetsService {
-  private datasetUrl = 'datasets';
+  private readonly datasetUrl = 'datasets';
+  private readonly permissionDeniedPromptUrl = 'datasets/denied_prompt';
+  private readonly datasetsDetailsUrl = 'datasets/details'
 
-  private headers = new Headers({ 'Content-Type': 'application/json' });
+  private readonly headers = new Headers({ 'Content-Type': 'application/json' });
   private datasets$ = new ReplaySubject<Array<Dataset>>(1);
   private selectedDataset$ = new ReplaySubject<Dataset>(1);
   private selectedDatasetId$ = new BehaviorSubject<string>(null);
+  private selectedDatasetDetails$ = new BehaviorSubject<DatasetDetails>(null);
 
   constructor(
     private http: Http,
@@ -32,8 +35,12 @@ export class DatasetsService {
       })
       .catch(errors => Observable.of(null))
       .filter(a => !!a)
-      .subscribe(dataset => {
+      .mergeMap((dataset: Dataset) => {
         this.selectedDataset$.next(dataset);
+        return this.getDatasetDetails(dataset.id);
+      })
+      .subscribe((datasetDetails: DatasetDetails) => {
+        this.selectedDatasetDetails$.next(datasetDetails);
       });
 
     this.usersService.getUserInfoObservable()
@@ -92,7 +99,27 @@ export class DatasetsService {
     return !!this.selectedDatasetId$.getValue();
   }
 
+  getSelectedDatasetDetails(): DatasetDetails {
+    return this.selectedDatasetDetails$.getValue();
+  }
+
   private reloadAllDatasets() {
     this.getDatasets().take(1).subscribe(() => {});
+  }
+
+  getPermissionDeniedPrompt() {
+    const options = new RequestOptions({ withCredentials: true });
+
+    return this.http.get(this.permissionDeniedPromptUrl, options)
+      .map(res => res.json().data);
+  }
+
+  getDatasetDetails(datasetId: string): Observable<DatasetDetails> {
+    const options = new RequestOptions({ headers: this.headers, withCredentials: true });
+    return this.http
+      .get(`${this.datasetsDetailsUrl}/${datasetId}`, options)
+      .map(res => {
+        return DatasetDetails.fromJson(res.json())
+      });
   }
 }

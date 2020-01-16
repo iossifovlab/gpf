@@ -1,20 +1,20 @@
 <div class="genome-preview">
-    <div *ngIf="genotypePreviewsArray">
-        <gpf-table [dataSource]="genotypePreviewsArray.genotypePreviews" style="display: inline-block">
+    <div *ngIf="genotypePreviewVariantsArray">
+        <gpf-table [dataSource]="genotypePreviewVariantsArray.genotypePreviews" style="display: inline-block">
             <gpf-table-column *ngFor="let column of columns">
                 <gpf-table-header caption="{{ column.name }}">
                 </gpf-table-header>
                 <gpf-table-header>
                     <gpf-table-subheader *ngFor="let slot of column.slots" caption="{{ slot.name }}"
-                      [comparator]=comparator(slot.source)>
+                      [comparator]=comparator(slot.id)>
                     </gpf-table-subheader>
                 </gpf-table-header>
                 <gpf-table-content>
                     <gpf-table-subcontent *ngIf="column.source; else slots">
                         <gpf-genotype-preview-field
                             *gpfTableCellContent="let data"
-                            [field]="column.source"
-                            [value]="data.get(column.source)"
+                            [field]="column.id"
+                            [value]="data.get(column.id)"
                             [format]="column.format">
                         </gpf-genotype-preview-field>
                     </gpf-table-subcontent>
@@ -22,8 +22,8 @@
                         <gpf-table-subcontent *ngFor="let slot of column.slots">
                             <gpf-genotype-preview-field
                                 *gpfTableCellContent="let data"
-                                [field]="slot.source"
-                                [value]="data.get(slot.source)"
+                                [field]="slot.id"
+                                [value]="data.get(slot.id)"
                                 [format]="slot.format">
                             </gpf-genotype-preview-field>
                         </gpf-table-subcontent>
@@ -32,7 +32,7 @@
             </gpf-table-column>
 
             <div *gpfTableLegend style="text-align: left; border: 1px solid #dddddd; padding: 5px">
-              <div *ngFor="let legendItem of genotypePreviewsArray.legend">
+              <div *ngFor="let legendItem of genotypePreviewInfo?.legend">
                 <span class="pedigree-icon" [style.background-color]="legendItem.color"></span>
                 {{ legendItem.name }}
               </div>
