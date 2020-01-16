@@ -209,31 +209,6 @@ class Allele:
 
         return self.details.variant_type
 
-    @staticmethod
-    def create_reference_allele(allele):
-        new_attributes = {
-            'chrom':
-                allele.attributes.get('chrom'),
-            'position':
-                allele.attributes.get('position'),
-            'reference':
-                allele.attributes.get('reference'),
-            'summary_variant_index':
-                allele.attributes.get('summary_variant_index'),
-            'allele_count':
-                allele.attributes.get('allele_count'),
-            'studyName':
-                allele.attributes.get('studyName'),
-        }
-
-        return SummaryAllele(
-            allele.chromosome,
-            allele.position,
-            allele.reference,
-            summary_index=allele.summary_index,
-            transmission_type=allele.transmission_type,
-            attributes=new_attributes)
-
     @property
     def is_reference_allele(self) -> bool:
         return self.alternative is None
@@ -517,13 +492,29 @@ class SummaryAllele(Allele):
         return self._attributes
 
     @staticmethod
-    def create_reference_allele(allele) -> 'SummaryAllele':
+    def create_reference_allele(allele):
+        new_attributes = {
+            'chrom':
+                allele.attributes.get('chrom'),
+            'position':
+                allele.attributes.get('position'),
+            'reference':
+                allele.attributes.get('reference'),
+            'summary_variant_index':
+                allele.attributes.get('summary_variant_index'),
+            'allele_count':
+                allele.attributes.get('allele_count'),
+            # 'studyName':
+            #     allele.attributes.get('studyName'),
+        }
+
         return SummaryAllele(
             allele.chromosome,
             allele.position,
             allele.reference,
             summary_index=allele.summary_index,
-            attributes=allele.attributes)
+            transmission_type=allele.transmission_type,
+            attributes=new_attributes)
 
 
 class SummaryVariant(Variant):
