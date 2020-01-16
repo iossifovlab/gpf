@@ -37,5 +37,5 @@ def sv():
 @pytest.fixture(scope='session')
 def fv1(fam1, sv):
     def rfun(gt, best_st):
-        return FamilyVariant.from_summary_variant(sv, fam1, gt, best_st)
+        return FamilyVariant(sv, fam1, gt, best_st)
     return rfun
