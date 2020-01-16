@@ -10,13 +10,6 @@ from dae.backends.attributes_query import role_query, sex_query, \
     variant_type_query
 
 
-class TransmissionType(enum.Enum):
-
-    unknown = 0
-    transmitted = 1
-    denovo = 2
-
-
 class RawFamilyVariants:
 
     def __init__(

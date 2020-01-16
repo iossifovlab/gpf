@@ -294,3 +294,10 @@ class VariantType(enum.Enum):
 
     def __str__(self):
         return self.name[:3]
+
+
+class TransmissionType(enum.Enum):
+
+    unknown = 0
+    transmitted = 1
+    denovo = 2

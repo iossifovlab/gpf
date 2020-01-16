@@ -47,6 +47,7 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
             alternative,
             summary_index,
             allele_index,
+            transmission_type,
             attributes,
             family,
             genotype):
@@ -59,6 +60,7 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
             alternative,
             summary_index,
             allele_index,
+            transmission_type,
             attributes)
 
         FamilyDelegate.__init__(self, family)
@@ -87,6 +89,7 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
             summary_allele.alternative,
             None,  # summary_allele.summary_index,
             summary_allele.allele_index,
+            summary_allele.transmission_type,
             summary_allele.attributes,
             family,
             genotype

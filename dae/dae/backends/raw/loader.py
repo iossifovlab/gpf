@@ -8,7 +8,7 @@ from dae.pedigrees.family import FamiliesData
 from dae.variants.variant import SummaryVariantFactory
 from dae.variants.family_variant import FamilyVariant
 
-from dae.backends.raw.raw_variants import TransmissionType
+from dae.variants.attributes import TransmissionType
 
 
 class FamiliesGenotypes:
@@ -37,6 +37,8 @@ class VariantsLoader:
         self.filenames = filenames
 
         self.source_type = source_type
+        assert isinstance(transmission_type, TransmissionType)
+
         self.transmission_type = transmission_type
         self.params = params
 
