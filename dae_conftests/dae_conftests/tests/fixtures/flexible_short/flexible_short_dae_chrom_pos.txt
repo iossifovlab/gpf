@@ -1,0 +1,4 @@
+familyId	chrom	position	variant	bestState
+13590	15	80137554	ins(A)	2 2 1 2/0 0 1 0
+13060	3	56627768	del(4)	2 2 1/0 0 1
+13590	4	83276456	sub(C->T)	2 2 1 2/0 0 1 0

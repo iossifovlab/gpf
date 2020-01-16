@@ -1,4 +1,5 @@
 **/*.pyc
 containers/
 coverage/
-test_data
+data-hg19-startup/
+data-hg19-startup-latest.tar.gz
