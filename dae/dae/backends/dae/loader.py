@@ -681,7 +681,7 @@ class DaeTransmittedLoader(VariantsLoader):
         filename = argv.summary_filename
 
         params = {
-            'dae_include_reference_genotypes': 
+            'dae_include_reference_genotypes':
             str2bool(argv.dae_include_reference_genotypes),
         }
         return filename, params

@@ -1,12 +1,6 @@
 import pytest
 import os
-import io
-
-from contextlib import redirect_stdout
-
-from box import Box
 import pyarrow.parquet as pq
-
 
 from dae.RegionOperations import Region
 

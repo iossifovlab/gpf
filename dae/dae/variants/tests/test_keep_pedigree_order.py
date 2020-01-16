@@ -7,7 +7,6 @@ from io import StringIO
 
 from dae.pedigrees.loader import FamiliesLoader
 from dae.variants.attributes import Role
-from dae.pedigrees.family import FamiliesData
 
 
 PED_FILE1 = """

@@ -315,11 +315,11 @@ class VcfLoader(VariantsLoader):
         assert argv.vcf_multi_loader_fill_in_mode \
             in set(['reference', 'unknown'])
         params = {
-            'vcf_include_reference_genotypes': 
+            'vcf_include_reference_genotypes':
             str2bool(argv.vcf_include_reference_genotypes),
-            'vcf_include_unknown_family_genotypes': 
+            'vcf_include_unknown_family_genotypes':
             str2bool(argv.vcf_include_unknown_family_genotypes),
-            'vcf_include_unknown_person_genotypes': 
+            'vcf_include_unknown_person_genotypes':
             str2bool(argv.vcf_include_unknown_person_genotypes),
             'vcf_multi_loader_fill_in_mode':
             argv.vcf_multi_loader_fill_in_mode,

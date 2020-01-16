@@ -6,16 +6,14 @@ from math import ceil
 from collections import defaultdict
 
 from box import Box
-
-from dae.annotation.annotation_pipeline import PipelineAnnotator
 from dae.utils.dict_utils import recursive_dict_update
-
-from dae.gpf_instance.gpf_instance import GPFInstance
-
 from dae.pedigrees.loader import FamiliesLoader
+from dae.annotation.annotation_pipeline import PipelineAnnotator
 from dae.backends.raw.loader import AnnotationPipelineDecorator
-from dae.backends.impala.parquet_io import ParquetManager, \
-    ParquetPartitionDescriptor, NoPartitionDescriptor
+from dae.backends.vcf.loader import VcfLoader
+from dae.backends.impala.parquet_io import ParquetPartitionDescriptor, \
+    NoPartitionDescriptor, ParquetManager
+from dae.gpf_instance.gpf_instance import GPFInstance
 
 
 def construct_import_annotation_pipeline(
@@ -168,95 +166,15 @@ class MakefileGenerator:
             families_command, output=output)
 
 
-def generate_makefile(genome, contigs, tool, argv):
-    if argv.partition_description is None:
-        output = 'all: \n'
-        output += f'\t{tool}' \
-            f'--o {argv.output} '
-        print(output)
-        return
-
-    description = ParquetPartitionDescriptor.from_config(
-        argv.partition_description)
-
-    assert set(description.chromosomes).issubset(contigs), \
-        (description.chromosomes, contigs)
-
-    targets = dict()
-    other_regions = dict()
-    contig_lengths = dict(genome.get_all_chr_lengths())
-
-    for contig in description.chromosomes:
-        assert contig in contig_lengths, (contig, contig_lengths)
-        region_bins = contig_lengths[contig] // description.region_length \
-            + bool(contig_lengths[contig] % description.region_length)
-        for rb_idx in range(0, region_bins):
-
-            if description.region_length < contig_lengths[contig]:
-                start = rb_idx * description.region_length + 1
-                end = (rb_idx + 1) * description.region_length
-            else:
-                start, end = None, None
-
-            if contig in description.chromosomes:
-                region_bin = f'{contig}_{rb_idx}'
-                targets[region_bin] = (contig, start, end)
-            else:
-                region_bin = f'other_{rb_idx}'
-                other_regions.setdefault(region_bin, set()).add(
-                    (contig, start, end)
-                )
-
-    output = ''
-    all_target = 'all:'
-    main_targets = ''
-    other_targets = ''
-
-    common_command = f'{tool} ' \
-        f'--skip-pedigree --o {argv.output}' \
-        f' --pd {argv.partition_description}' \
-        f' --ped-file-format {argv.ped_file_format}'
-    if 'annotation_config' in argv:
-        common_command += f' --annotation-config {argv.annotation_config}'
-
-    for target_name in targets.keys():
-        all_target += f' {target_name}'
-
-    bucket_index = 100
-
-    for target_name, target_args in targets.items():
-        main_targets += f'{target_name}:\n'
-        main_targets += f'\t{common_command} '
-        main_targets += \
-            f'-b {bucket_index} '
-        main_targets += \
-            f' --region {generate_region_argument_string(*target_args)}\n\n'
-        bucket_index += 1
-
-    if len(other_regions) > 0:
-        for region_bin, command_args in other_regions.items():
-            all_target += f' {region_bin}'
-            other_targets += f'{region_bin}:\n'
-            regions = ' '.join(
-                map(
-                    lambda x: generate_region_argument_string(*x),
-                    command_args
-                )
-            )
-            other_targets += f'\t{common_command}'
-            other_targets += f' --region {regions}\n\n'
-
-    output += f'{all_target}\n'
-    output += '.PHONY: all\n\n'
-    output += main_targets
-    output += other_targets
-    print(output)
-
-
 class Variants2ParquetTool:
 
-    VARIANTS_LOADER_CLASS = None
-    VARIANTS_TOOL = None
+    # @classmethod
+    # def get_contigs(cls, vcf_filename):
+    #     vcf = VCF(vcf_filename)
+    #     return vcf.seqnames
+
+    VARIANTS_LOADER_CLASS = VcfLoader
+    VARIANTS_TOOL = 'vcf2parquet.py'
 
     @classmethod
     def cli_common_arguments(cls, gpf_instance, parser):
@@ -387,8 +305,7 @@ class Variants2ParquetTool:
             cls.VARIANTS_LOADER_CLASS.parse_cli_arguments(argv)
         variants_loader = cls.VARIANTS_LOADER_CLASS(
             families, variants_filenames,
-            params=variants_params,
-            genome=gpf_instance.genomes_db.get_genome())
+            params=variants_params)
 
         if argv.partition_description is not None:
             partition_description = ParquetPartitionDescriptor.from_config(
