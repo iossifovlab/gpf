@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+from dae.variants.variant import SummaryAllele
 from dae.variants.family_variant import FamilyAllele
 from dae.utils.variant_utils import GENOTYPE_TYPE
 
@@ -107,14 +108,17 @@ def test_allele_best_state(
         genotype,
         expected,
         sample_family):
+
     fa = FamilyAllele(
-        chromosome,
-        position,
-        reference,
-        alternative,
-        0,
-        allele_index,
-        {},
+        SummaryAllele(
+            chromosome,
+            position,
+            reference,
+            alternative,
+            0,
+            allele_index,
+            {},
+        ),
         sample_family,
         genotype,
         None
