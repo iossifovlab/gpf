@@ -369,18 +369,20 @@ class FamilyVariant(Variant, FamilyDelegate):
         self._genetic_model = None
 
         self.summary_alleles = self.summary_variant.alleles
-        self._family_alleles = family_alleles
 
-        # alleles = [
-        #     family_alleles[0]
-        # ]
-        # for ai in self.calc_alt_alleles(self.gt):
-        #     allele = self.get_allele(ai)
-        #     if allele is None:
-        #         continue
-        #     alleles.append(allele)
+        alleles = [
+            family_alleles[0]
+        ]
+        for ai in self.calc_alt_alleles(self.gt):
+            if ai < 0 or ai >= len(family_alleles):
+                continue
+            allele = family_alleles[ai]
+            assert allele.allele_index == ai, \
+                (allele.allele_index, ai)
 
-        self._family_alleles = family_alleles
+            alleles.append(allele)
+
+        self._family_alleles = alleles
         self._best_st = best_state
         self._matched_alleles = []
 

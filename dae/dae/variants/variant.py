@@ -270,7 +270,14 @@ class Variant:
 
     @property
     def alternative(self) -> Optional[str]:
-        raise NotImplementedError()
+        if not self.alt_alleles:
+            return None
+        if any([aa.alternative is None for aa in self.alt_alleles]):
+            assert all([
+                aa.alternative is None
+                for aa in self.alt_alleles])
+            return None
+        return ','.join([aa.alternative for aa in self.alt_alleles])
 
     @property
     def allele_count(self) -> int:
@@ -305,11 +312,11 @@ class Variant:
         """list of all alternative alleles"""
         return self.alleles[1:]
 
-    def get_allele(self, allele_index: int) -> Optional[Any]:
-        for allele in self.alleles:
-            if allele.allele_index == allele_index:
-                return allele
-        return None
+    # def get_allele(self, allele_index: int) -> Optional[Any]:
+    #     for allele in self.alleles:
+    #         if allele.allele_index == allele_index:
+    #             return allele
+    #     return None
 
     @property
     def details(self) -> Optional[AltAlleleItems]:
@@ -547,17 +554,6 @@ class SummaryVariant(Variant):
     @property
     def reference(self) -> str:
         return self._reference
-
-    @property
-    def alternative(self) -> Optional[str]:
-        if not self.alt_alleles:
-            return None
-        if any([aa.alternative is None for aa in self.alt_alleles]):
-            assert all([
-                aa.alternative is None
-                for aa in self.alt_alleles])
-            return None
-        return ','.join([aa.alternative for aa in self.alt_alleles])
 
     @property
     def allele_count(self) -> int:
