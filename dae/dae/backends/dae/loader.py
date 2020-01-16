@@ -149,6 +149,33 @@ class DenovoLoader(VariantsLoader):
         )
 
     @staticmethod
+    def cli_defaults():
+        return {
+            'denovo_variant': 'variant',
+            'denovo_ref': None,
+            'denovo_alt': None,
+            'denovo_location': 'location',
+            'denovo_chrom': None,
+            'denovo_pos': None,
+            'denovo_family_id': 'familyId',
+            'denovo_best_state': 'bestState',
+            'denovo_person_id': None
+        }
+
+    @staticmethod
+    def build_cli_arguments(params):
+        param_defaults = DenovoLoader.cli_defaults()
+        result = []
+        for k, v in params.items():
+            assert k in param_defaults, (k, list(param_defaults.keys()))
+            if v != param_defaults[k]:
+                param = k.replace('_', '-')
+                result.append(f'--{param}')
+                result.append(f'{v}')
+
+        return ' '.join(result)
+
+    @staticmethod
     def parse_cli_arguments(argv):
         if argv.denovo_location and (argv.denovo_chrom or argv.denovo_pos):
             print(

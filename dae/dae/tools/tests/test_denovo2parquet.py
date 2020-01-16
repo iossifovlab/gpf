@@ -1,10 +1,12 @@
 import pytest
 import os
+import glob
 import pyarrow.parquet as pq
 
 from dae.RegionOperations import Region
 
 from dae.tools.denovo2parquet import main
+from dae.backends.impala.parquet_io import ParquetPartitionDescriptor
 
 
 def test_denovo2parquet_denovo(
@@ -32,6 +34,94 @@ def test_denovo2parquet_denovo(
     assert 'effect_gene' in schema.names
     assert 'effect_type' in schema.names
     assert 'effect_data' in schema.names
+
+
+def test_denovo2parquet_denovo_make(
+        dae_denovo_config, annotation_pipeline_default_config,
+        temp_dirname,
+        genomes_db_2013):
+
+    argv = [
+        'make',
+        # '--denovo',
+        # '--annotation', annotation_pipeline_default_config,
+        '--ped-file-format', 'simple',
+        '-o', temp_dirname,
+        dae_denovo_config.family_filename,
+        dae_denovo_config.denovo_filename,
+    ]
+
+    main(argv)
+    assert os.path.exists(temp_dirname)
+
+    with open(os.path.join(temp_dirname, 'Makefile'), 'r') as makefile:
+        text = makefile.read()
+        assert 'all:' in text
+        assert 'all_bins=none' in text
+        assert 'all_bins_flags=$(foreach bin, $(all_bins), $(bin).flag)' \
+               in text
+        assert 'variants:' in text
+        assert '%.flag' in text
+        assert 'pedigree:' in text
+        assert 'ped.flag:' in text
+
+
+def test_denovo2parquet_denovo_partition(
+        dae_denovo_config, annotation_pipeline_default_config,
+        temp_dirname, genomes_db_2013, parquet_partition_configuration):
+
+    argv = [
+        'variants',
+        # '--denovo',
+        # '--annotation', annotation_pipeline_default_config,
+        '--ped-file-format', 'simple',
+        '--pd', parquet_partition_configuration,
+        '-o', temp_dirname,
+        dae_denovo_config.family_filename,
+        dae_denovo_config.denovo_filename,
+    ]
+
+    main(argv)
+
+    pd = ParquetPartitionDescriptor.from_config(
+        parquet_partition_configuration)
+    file_glob = os.path.join(temp_dirname, pd.generate_file_access_glob())
+    partition_files = glob.glob(file_glob)
+    assert len(partition_files) == 9
+    for file in partition_files:
+        assert 'frequency_bin=0' in file
+
+
+def test_denovo2parquet_denovo_partition_make(
+        dae_denovo_config, annotation_pipeline_default_config,
+        temp_dirname, parquet_partition_configuration,
+        genomes_db_2013):
+
+    argv = [
+        'make',
+        # '--denovo',
+        # '--annotation', annotation_pipeline_default_config,
+        '--ped-file-format', 'simple',
+        '--pd', parquet_partition_configuration,
+        '-o', temp_dirname,
+        dae_denovo_config.family_filename,
+        dae_denovo_config.denovo_filename,
+    ]
+
+    main(argv)
+    assert os.path.exists(temp_dirname)
+
+    with open(os.path.join(temp_dirname, 'Makefile'), 'r') as makefile:
+        text = makefile.read()
+        assert 'all:' in text
+        assert 'all_bins=1_0' in text
+        assert 'all_bins_flags=$(foreach bin, $(all_bins), $(bin).flag)' \
+               in text
+        assert 'variants:' in text
+        assert f'--pd {parquet_partition_configuration}' in text
+        assert '%.flag' in text
+        assert 'pedigree:' in text
+        assert 'ped.flag:' in text
 
 
 @pytest.mark.parametrize('variants', [
