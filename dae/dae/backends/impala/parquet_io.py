@@ -208,7 +208,7 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
         transmission_type = family_allele.transmission_type
         if transmission_type == TransmissionType.denovo:
             frequency_bin = 0
-        if count and count == 1:  # Ultra rare
+        elif count and count == 1:  # Ultra rare
             frequency_bin = 1
         elif frequency and frequency < self._rare_boundary:  # Rare
             frequency_bin = 2
