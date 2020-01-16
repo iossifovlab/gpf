@@ -7,7 +7,8 @@ import argparse
 
 from dae.gpf_instance.gpf_instance import GPFInstance
 
-from dae.backends.import_commons import construct_import_annotation_pipeline
+from dae.backends.impala.import_commons import \
+    construct_import_annotation_pipeline
 
 from dae.backends.dae.loader import DenovoLoader
 from dae.backends.vcf.loader import VcfLoader
@@ -25,11 +26,8 @@ def cli_arguments(dae_config, argv=sys.argv[1:]):
         conflict_handler='resolve',
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
-    parser.add_argument(
-        'pedigree', type=str,
-        metavar='<pedigree filename>',
-        help='families file in pedigree format'
-    )
+    FamiliesLoader.cli_arguments(parser)
+
     parser.add_argument(
         '--id', type=str,
         metavar='<study ID>',
@@ -40,13 +38,13 @@ def cli_arguments(dae_config, argv=sys.argv[1:]):
     )
 
     parser.add_argument(
-        '--vcf', type=str,
+        '--vcf-files', type=str, nargs='+',
         metavar='<VCF filename>',
         help='VCF file to import'
     )
 
     parser.add_argument(
-        '--denovo', type=str,
+        '--denovo-file', type=str,
         metavar='<de Novo variants filename>',
         help='DAE denovo variants file'
     )
@@ -76,9 +74,8 @@ def cli_arguments(dae_config, argv=sys.argv[1:]):
         action='store'
     )
 
-    FamiliesLoader.cli_arguments(parser)
-    DenovoLoader.cli_arguments(parser)
-    VcfLoader.cli_arguments(parser)
+    DenovoLoader.cli_options(parser)
+    VcfLoader.cli_options(parser)
 
     parser_args = parser.parse_args(argv)
     return parser_args
@@ -129,7 +126,7 @@ def main(argv, gpf_instance=None):
     assert genotype_storage is not None, argv.genotype_storage
 
     annotation_pipeline = construct_import_annotation_pipeline(
-        dae_config, genomes_db, annotation_configfile=None)
+        gpf_instance, annotation_configfile=None)
 
     if argv.id is not None:
         study_id = argv.id
@@ -145,34 +142,35 @@ def main(argv, gpf_instance=None):
     os.makedirs(output, exist_ok=True)
 
     assert output is not None
-    assert argv.vcf is not None or argv.denovo is not None
+    assert argv.vcf_files is not None or argv.denovo_file is not None
 
     start = time.time()
-    params = FamiliesLoader.parse_cli_arguments(argv)
-    families_loader = FamiliesLoader(argv.pedigree, params=params)
+    families_filename, families_params = \
+        FamiliesLoader.parse_cli_arguments(argv)
+    families_loader = FamiliesLoader(families_filename, params=families_params)
     families = families_loader.load()
     elapsed = time.time() - start
     print(f"Families loaded in in {elapsed:.2f} sec", file=sys.stderr)
 
     variant_loaders = []
-    if argv.denovo is not None:
-        params = DenovoLoader.parse_cli_arguments(argv)
+    if argv.denovo_file is not None:
+        denovo_filename, denovo_params = DenovoLoader.parse_cli_arguments(argv)
         denovo_loader = DenovoLoader(
             families,
-            argv.denovo,
+            denovo_filename,
             genome=genome,
-            params=params
+            params=denovo_params
         )
         denovo_loader = AnnotationPipelineDecorator(
             denovo_loader, annotation_pipeline
         )
         variant_loaders.append(denovo_loader)
-    if argv.vcf is not None:
-        params = VcfLoader.parse_cli_arguments(argv)
+    if argv.vcf_files is not None:
+        vcf_files, vcf_params = VcfLoader.parse_cli_arguments(argv)
         vcf_loader = VcfLoader(
             families,
-            [argv.vcf],
-            params=params
+            vcf_files,
+            params=vcf_params
         )
         vcf_loader = AnnotationPipelineDecorator(
             vcf_loader, annotation_pipeline

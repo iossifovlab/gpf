@@ -39,12 +39,14 @@ class FamiliesGenotypes:
 class VariantsLoader:
 
     def __init__(
-            self, families, filename, source_type,
+            self, families, filenames, source_type,
             transmission_type, params={}):
 
         assert isinstance(families, FamiliesData)
         self.families = families
-        self.filename = filename
+        assert all([os.path.exists(fn) for fn in filenames])
+        self.filenames = filenames
+
         self.source_type = source_type
         self.transmission_type = transmission_type
         self.params = params
@@ -80,7 +82,7 @@ class VariantsLoaderDecorator(VariantsLoader):
     def __init__(self, variants_loader):
         super(VariantsLoaderDecorator, self).__init__(
             variants_loader.families,
-            variants_loader.filename,
+            variants_loader.filenames,
             variants_loader.source_type,
             variants_loader.transmission_type,
             params=variants_loader.params

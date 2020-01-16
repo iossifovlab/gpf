@@ -61,9 +61,17 @@ class ParquetData():
         return len(self.data['summary_variant_index'])
 
 
-class PartitionDescriptorBase:
+class PartitionDescriptor:
     def __init__(self):
         pass
+
+    @property
+    def chromosomes(self):
+        raise NotImplementedError()
+
+    @property
+    def region_length(self):
+        raise NotImplementedError()
 
     def variant_filename(self, family_allele):
         raise NotImplementedError()
@@ -72,20 +80,28 @@ class PartitionDescriptorBase:
         raise NotImplementedError()
 
 
-class NoPartitionDescriptor(PartitionDescriptorBase):
+class NoPartitionDescriptor(PartitionDescriptor):
 
-    def __init__(self, filename):
+    def __init__(self, output):
         super(NoPartitionDescriptor, self).__init__()
-        self.filename = filename
+        self.output = output
+
+    @property
+    def chromosomes(self):
+        return []
+
+    @property
+    def region_length(self):
+        return 3_000_000_000
 
     def variant_filename(self, family_allele):
-        return self.filename
+        return self.output
 
     def write_partition_configuration(self):
         return None
 
 
-class ParquetPartitionDescriptor(PartitionDescriptorBase):
+class ParquetPartitionDescriptor(PartitionDescriptor):
     def __init__(
             self,
             chromosomes,
@@ -96,7 +112,7 @@ class ParquetPartitionDescriptor(PartitionDescriptorBase):
             root_dirname=''):
 
         super(ParquetPartitionDescriptor, self).__init__()
-        self.root_dirname = root_dirname
+        self.output = root_dirname
         self._chromosomes = chromosomes
         self._region_length = region_length
         self._family_bin_size = family_bin_size
@@ -200,7 +216,7 @@ class ParquetPartitionDescriptor(PartitionDescriptorBase):
 
     def variant_filename(self, family_allele):
         current_bin = self._evaluate_region_bin(family_allele)
-        filepath = os.path.join(self.root_dirname, f'region_bin={current_bin}')
+        filepath = os.path.join(self.output, f'region_bin={current_bin}')
 
         filename = f'variants_region_bin_{current_bin}'
         if self._family_bin_size > 0:
@@ -240,7 +256,7 @@ class ParquetPartitionDescriptor(PartitionDescriptorBase):
             config.add_section('frequency_bin')
             config['frequency_bin']['rare_boundary'] = str(self._rare_boundary)
 
-        filename = os.path.join(self.root_dirname, '_PARTITION_DESCRIPTION')
+        filename = os.path.join(self.output, '_PARTITION_DESCRIPTION')
         with open(filename, 'w') as configfile:
             config.write(configfile)
 
@@ -331,7 +347,7 @@ class VariantsParquetWriter():
         self.start = time.time()
         # self.data = ParquetData(self.schema)
         self.data_writers = {}
-        assert isinstance(partition_descriptor, PartitionDescriptorBase)
+        assert isinstance(partition_descriptor, PartitionDescriptor)
         self.partition_descriptor = partition_descriptor
 
     def _setup_reference_allele(self, summary_variant, family):

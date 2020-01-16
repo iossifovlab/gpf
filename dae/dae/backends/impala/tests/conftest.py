@@ -23,7 +23,7 @@ f2,          p2,          d2,       m2,       1,     2,         prb
 
 @pytest.fixture(scope='module')
 def fam1():
-    families_loader = FamiliesLoader(StringIO(PED1), sep=',')
+    families_loader = FamiliesLoader(StringIO(PED1), ped_sep=',')
     families = families_loader.load()
     family = families['f1']
 
@@ -33,7 +33,7 @@ def fam1():
 
 @pytest.fixture(scope='module')
 def fam2():
-    families_loader = FamiliesLoader(StringIO(PED2), sep=',')
+    families_loader = FamiliesLoader(StringIO(PED2), ped_sep=',')
     families = families_loader.load()
     family = families['f2']
 

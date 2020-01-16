@@ -103,7 +103,7 @@ class FilesystemGenotypeStorage(GenotypeStorage):
         )
 
     def _import_families_file(self, study_id, families_loader):
-        source_filename = families_loader.families_filename
+        source_filename = families_loader.filename
         destination_filename = os.path.join(
             self.data_dir,
             study_id,
@@ -131,7 +131,7 @@ class FilesystemGenotypeStorage(GenotypeStorage):
         for index, variants_loader in enumerate(loaders):
             assert isinstance(variants_loader, AnnotationPipelineDecorator)
 
-            source_filename = variants_loader.filename
+            source_filename = ' '.join(variants_loader.filenames)
             destination_filename = os.path.join(
                 self.data_dir,
                 study_id,
