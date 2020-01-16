@@ -294,9 +294,10 @@ class ContinuousParquetFileWriter():
                 filesystem=None, rows=10000):
         self._data = ParquetData(schema)
         schema = schema.to_arrow()
-        path = os.path.dirname(filepath)
-        if not os.path.exists(path):
-            os.makedirs(path)
+        dirname = os.path.dirname(filepath)
+        if dirname and not os.path.exists(dirname):
+            os.makedirs(dirname)
+
         self._writer = pq.ParquetWriter(
                 filepath,
                 schema,
@@ -577,9 +578,10 @@ class ParquetManager:
             families, pedigree_filename):
 
         dirname = os.path.dirname(pedigree_filename)
-        os.makedirs(
-            dirname, exist_ok=True
-        )
+        if dirname:
+            os.makedirs(
+                dirname, exist_ok=True
+            )
 
         save_ped_df_to_parquet(
             families.ped_df, pedigree_filename
