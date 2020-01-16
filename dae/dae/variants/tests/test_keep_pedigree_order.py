@@ -7,7 +7,6 @@ from io import StringIO
 
 from dae.pedigrees.loader import FamiliesLoader
 from dae.variants.attributes import Role
-from dae.pedigrees.family import FamiliesData
 
 
 PED_FILE1 = """
@@ -32,9 +31,8 @@ SF0014912,SP0014912,SP0024751,SP0015221,1,2,prb
 
 
 def test_pedigree_keep_family_order_local():
-    ped_df = FamiliesLoader.flexible_pedigree_read(
-        StringIO(PED_FILE1), sep=",")
-    families = FamiliesData.from_pedigree_df(ped_df)
+    loader = FamiliesLoader(StringIO(PED_FILE1), ped_sep=",")
+    families = loader.load()
 
     f = families['SF0043014']
     print(f.members_in_order)

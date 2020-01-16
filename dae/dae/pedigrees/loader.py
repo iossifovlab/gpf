@@ -22,19 +22,19 @@ PED_COLUMNS_REQUIRED = (
 
 class FamiliesLoader:
 
-    def __init__(self, families_filename, params={}, sep='\t'):
+    def __init__(self, families_filename, params={}, ped_sep='\t'):
 
-        self.families_filename = families_filename
+        self.filename = families_filename
         self.params = params
-        self.params['sep'] = sep
+        self.params['ped_sep'] = ped_sep
         self.file_format = params.get('ped_file_format', 'pedigree')
 
     @staticmethod
     def load_pedigree_file(pedigree_filename, pedigree_format={}):
         pedigree_format['ped_no_role'] = \
             str2bool(pedigree_format.get('ped_no_role', False))
-        pedigree_format['ped_has_header'] = \
-            str2bool(pedigree_format.get('ped_has_header', True))
+        pedigree_format['ped_no_header'] = \
+            str2bool(pedigree_format.get('ped_no_header', False))
 
         ped_df = FamiliesLoader.flexible_pedigree_read(
             pedigree_filename, **pedigree_format
@@ -57,14 +57,52 @@ class FamiliesLoader:
 
     def load(self):
         if self.file_format == 'simple':
-            return self.load_simple_families_file(self.families_filename)
+            return self.load_simple_families_file(self.filename)
         else:
             assert self.file_format == 'pedigree'
             return self.load_pedigree_file(
-                self.families_filename, pedigree_format=self.params)
+                self.filename, pedigree_format=self.params)
+
+    @staticmethod
+    def cli_defaults():
+        return {
+            'ped_family': 'familyId',
+            'ped_person': 'personId',
+            'ped_mom': 'momId',
+            'ped_dad': 'dadId',
+            'ped_sex': 'sex',
+            'ped_status': 'status',
+            'ped_role': 'role',
+            'ped_file_format': 'pedigree',
+            'ped_sep': '\t',
+            'ped_no_header': False,
+            'ped_no_role': False,
+        }
+
+    @staticmethod
+    def build_cli_arguments(params):
+        param_defaults = FamiliesLoader.cli_defaults()
+        result = []
+        for key, value in params.items():
+            assert key in param_defaults, (key, list(param_defaults.keys()))
+            if value != param_defaults[key]:
+                param = key.replace('_', '-')
+                if key in ('ped_no_header', 'ped_no_role'):
+                    if value:
+                        result.append(f'--{param}')
+                else:
+                    result.append(f'--{param}')
+                    result.append(f'{value}')
+        return ' '.join(result)
 
     @staticmethod
     def cli_arguments(parser):
+        parser.add_argument(
+            'families', type=str,
+            metavar='<families filename>',
+            help='families filename in pedigree or simple family format'
+        )
+
         parser.add_argument(
             '--ped-family',
             default='familyId',
@@ -148,8 +186,16 @@ class FamiliesLoader:
             'for simple family format [default: %(default)s]'
         )
 
+        parser.add_argument(
+            '--ped-sep',
+            default='\t',
+            help='Families file field separator [default: `\\t`]'
+        )
+
     @classmethod
     def parse_cli_arguments(cls, argv):
+        filename = argv.families
+
         ped_ped_args = [
             'ped_family',
             'ped_person',
@@ -159,22 +205,23 @@ class FamiliesLoader:
             'ped_status',
             'ped_role',
             'ped_file_format',
+            'ped_sep',
         ]
-        ped_has_header = not argv.ped_no_header
         res = {}
-        res['ped_has_header'] = str2bool(ped_has_header)
+
+        res['ped_no_header'] = str2bool(argv.ped_no_header)
         res['ped_no_role'] = str2bool(argv.ped_no_role)
 
         for col in ped_ped_args:
             ped_value = getattr(argv, col)
-            if ped_has_header:
+            if not res['ped_no_header']:
                 res[col] = ped_value
             else:
                 assert ped_value.isnumeric(), \
                     '{} must hold an integer value!'.format(col)
                 res[col] = int(ped_value)
 
-        return res
+        return filename, res
 
     @staticmethod
     def produce_header_from_indices(
@@ -209,7 +256,8 @@ class FamiliesLoader:
 
     @staticmethod
     def flexible_pedigree_read(
-            pedigree_filepath, sep='\t',
+            pedigree_filepath,
+            ped_sep='\t',
             ped_has_header=True,
             ped_family='familyId',
             ped_person='personId',
@@ -231,7 +279,7 @@ class FamiliesLoader:
 
         read_csv_func = partial(
             pd.read_csv,
-            sep=sep,
+            sep=ped_sep,
             index_col=False,
             skipinitialspace=True,
             converters={
@@ -296,9 +344,9 @@ class FamiliesLoader:
         return ped_df
 
     @staticmethod
-    def load_simple_family_file(infile, sep="\t"):
+    def load_simple_family_file(infile, ped_sep="\t"):
         fam_df = pd.read_csv(
-            infile, sep=sep, index_col=False,
+            infile, sep=ped_sep, index_col=False,
             skipinitialspace=True,
             converters={
                 'role': lambda r: Role.from_name(r),

@@ -23,7 +23,7 @@ f1,          p1,          d1,       m1,       1,     2,         prb
 
 @pytest.fixture(scope='function')
 def sample_family():
-    families_loader = FamiliesLoader(StringIO(PED1), sep=',')
+    families_loader = FamiliesLoader(StringIO(PED1), ped_sep=',')
     families = families_loader.load()
     family = families['f1']
     assert len(family.trios) == 1

@@ -93,7 +93,7 @@ class FamiliesGroupCounters(object):
     def to_dict(self):
         return {
             'group_name': self.selected_families_group.name,
-            'phenotypes': self.selected_families_group.families_types,
+            'phenotypes': self.selected_families_group.available_values,
             'counters': [
                 {
                     'counters': [
