@@ -13,7 +13,8 @@ from dae.utils.dict_utils import recursive_dict_update
 from dae.gpf_instance.gpf_instance import GPFInstance
 
 from dae.pedigrees.loader import FamiliesLoader
-from dae.backends.raw.loader import AnnotationPipelineDecorator
+from dae.backends.raw.loader import AnnotationPipelineDecorator, \
+    AlleleFrequencyDecorator
 from dae.backends.impala.parquet_io import ParquetManager, \
     ParquetPartitionDescriptor, NoPartitionDescriptor
 
@@ -453,6 +454,7 @@ class Variants2ParquetTool:
                 print("resetting regions:", regions)
                 variants_loader.reset_regions(regions)
 
+            variants_loader = AlleleFrequencyDecorator(variants_loader)
             variants_loader = AnnotationPipelineDecorator(
                 variants_loader, annotation_pipeline
             )
