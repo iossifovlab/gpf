@@ -9,5 +9,5 @@ def test_stored_annotation_iossifov2014(
     variants_loader = StoredAnnotationDecorator(
         iossifov2014_loader, temp_filename)
 
-    for sv, _ in variants_loader.summary_genotypes_iterator():
+    for sv, _ in variants_loader.full_variants_iterator():
         print(sv)

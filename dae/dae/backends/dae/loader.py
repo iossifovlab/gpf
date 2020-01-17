@@ -17,6 +17,7 @@ from dae.utils.dae_utils import dae2vcf_variant
 
 from dae.pedigrees.family import Family, FamiliesData
 from dae.variants.variant import SummaryVariantFactory
+from dae.variants.family_variant import FamilyVariant
 
 from dae.backends.raw.loader import VariantsLoader, \
     TransmissionType, FamiliesGenotypes
@@ -61,7 +62,7 @@ class DenovoLoader(VariantsLoader):
             denovo_filename, genome, families=families, **self.params
         )
 
-    def summary_genotypes_iterator(self):
+    def full_variants_iterator(self):
 
         for index, rec in enumerate(self.denovo_df.to_dict(orient='records')):
             family_id = rec.pop('family_id')
@@ -75,8 +76,14 @@ class DenovoLoader(VariantsLoader):
                 .summary_variant_from_records([rec], self.transmission_type)
             family = self.families[family_id]
 
-            yield summary_variant, \
-                DenovoFamiliesGenotypes(family, gt, best_state)
+            family_genotypes = DenovoFamiliesGenotypes(family, gt, best_state)
+
+            family_variants = []
+            for fam, gt, bs in family_genotypes.family_genotype_iterator():
+                family_variants.append(
+                    FamilyVariant(summary_variant, fam, gt, bs))
+
+            yield summary_variant, family_variants
 
     @staticmethod
     def split_location(location):
@@ -616,7 +623,7 @@ class DaeTransmittedLoader(VariantsLoader):
         }
         return best_states, genotypes
 
-    def summary_genotypes_iterator(self):
+    def full_variants_iterator(self):
 
         summary_columns = self._load_summary_columns(self.summary_filename)
         toomany_columns = self._load_toomany_columns(self.toomany_filename)
@@ -658,7 +665,13 @@ class DaeTransmittedLoader(VariantsLoader):
                         best_states
                     )
 
-                    yield summary_variant, families_genotypes
+                    family_variants = []
+                    for fam, gt, bs in \
+                            families_genotypes.family_genotype_iterator():
+                        family_variants.append(
+                            FamilyVariant(summary_variant, fam, gt, bs))
+
+                    yield summary_variant, family_variants
                     summary_index += 1
 
     @staticmethod

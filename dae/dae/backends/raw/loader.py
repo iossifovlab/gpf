@@ -53,12 +53,11 @@ class VariantsLoader:
         self.transmission_type = transmission_type
         self.params = params
 
-    def full_variants_iterator(self, summary_genotypes_iterator=None):
-        raise NotImplementedError
+    def full_variants_iterator(self):
+        raise NotImplementedError()
 
-    def family_variants_iterator(self, summary_genotypes_iterator=None):
-        for _, fvs in self.full_variants_iterator(
-                summary_genotypes_iterator=summary_genotypes_iterator):
+    def family_variants_iterator(self):
+        for _, fvs in self.full_variants_iterator():
             for fv in fvs:
                 yield fv
 
@@ -152,12 +151,12 @@ class AnnotationPipelineDecorator(VariantsLoaderDecorator):
         self.annotation_pipeline = annotation_pipeline
         self.annotation_schema = annotation_pipeline.build_annotation_schema()
 
-    def summary_genotypes_iterator(self):
-        for summary_variant, family_genotypes in \
-                self.variants_loader.summary_genotypes_iterator():
+    def full_variants_iterator(self):
+        for summary_variant, family_variants in \
+                self.variants_loader.full_variants_iterator():
 
             self.annotation_pipeline.annotate_summary_variant(summary_variant)
-            yield summary_variant, family_genotypes
+            yield summary_variant, family_variants
 
     CLEAN_UP_COLUMNS = set([
         'alternatives_data',
@@ -206,7 +205,7 @@ class AnnotationPipelineDecorator(VariantsLoaderDecorator):
             outfile.write(sep.join(header))
             outfile.write('\n')
 
-            for summary_variant, _ in self.summary_genotypes_iterator():
+            for summary_variant, _ in self.full_variants_iterator():
                 for allele_index, summary_allele in \
                         enumerate(summary_variant.alleles):
                     line = []
@@ -328,8 +327,8 @@ class StoredAnnotationDecorator(VariantsLoaderDecorator):
     #         sep=sep
     #     )
 
-    def summary_genotypes_iterator(self):
-        variant_iterator = self.variants_loader.summary_genotypes_iterator()
+    def full_variants_iterator(self):
+        variant_iterator = self.variants_loader.full_variants_iterator()
         start = time.time()
         annot_df = self.load_annotation_file(self.annotation_filename)
         elapsed = time.time() - start
@@ -340,7 +339,7 @@ class StoredAnnotationDecorator(VariantsLoaderDecorator):
         index = 0
 
         while index < len(records):
-            sv, family_genotypes = next(variant_iterator)
+            sv, family_variants = next(variant_iterator)
             variant_records = []
 
             current_record = records[index]
@@ -358,7 +357,7 @@ class StoredAnnotationDecorator(VariantsLoaderDecorator):
                 summary_variant_from_records(
                     variant_records,
                     transmission_type=self.transmission_type)
-            yield summary_variant, family_genotypes
+            yield summary_variant, family_variants
 
         elapsed = time.time() - start
         print(f"Storred annotation load in {elapsed:.2f} sec", file=sys.stderr)
@@ -453,11 +452,8 @@ class FamiliesGenotypesDecorator(VariantsLoaderDecorator):
         return best_state
 
     def full_variants_iterator(
-        self, summary_genotypes_iterator=None
-    ) -> Iterator[Tuple[SummaryVariant, List[FamilyVariant]]]:
-        _ = self.variants_loader.full_variants_iterator(
-            summary_genotypes_iterator
-        )
+            self) -> Iterator[Tuple[SummaryVariant, List[FamilyVariant]]]:
+        _ = self.variants_loader.full_variants_iterator()
         for summary_variant, family_variants in _:
             for family_variant in family_variants:
                 if self.expect_none:

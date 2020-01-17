@@ -6,6 +6,7 @@ import pyarrow.parquet as pq
 from dae.backends.raw.loader import VariantsLoader, TransmissionType
 from dae.backends.impala.serializers import ParquetSerializer
 from dae.variants.variant import SummaryVariantFactory
+from dae.variants.family_variant import FamilyVariant
 
 
 class ParquetLoader(VariantsLoader):
@@ -121,7 +122,12 @@ class ParquetLoader(VariantsLoader):
                 ParquetSerializer.deserialize_variant_frequency)
         return df
 
-    def summary_genotypes_iterator(self):
+    def full_variants_iterator(self):
         for filename in self._get_filenames_to_open():
-            for summary, genotype in self._parquet_file_iterator(filename):
-                yield (summary, genotype)
+            for summary_variant, genotype \
+                    in self._parquet_file_iterator(filename):
+                family_variants = []
+                for fam, gt, bs in genotype.family_genotype_iterator():
+                    family_variants.append(
+                        FamilyVariant(summary_variant, fam, gt, bs))
+                yield summary_variant, family_variants
