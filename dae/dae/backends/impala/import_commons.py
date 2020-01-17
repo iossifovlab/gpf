@@ -155,7 +155,7 @@ class MakefileGenerator:
 
     def generate_impala_load_make(self, command, output=sys.stdout):
         print(
-            f'load: load.flag\n',
+            f'impala: load.flag\n',
             file=output)
         print(
             f'load.flag:\n'
