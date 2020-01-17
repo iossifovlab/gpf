@@ -40,6 +40,7 @@ class FamilyRoleBuilder:
         self._assign_roles_paternal(proband)
         self._assign_roles_maternal(proband)
         self._assign_roles_step_parents_and_half_siblings(proband)
+        self._assign_unknown_roles()
 
     @classmethod
     def _set_person_role(cls, person, role):
@@ -131,7 +132,7 @@ class FamilyRoleBuilder:
         grandparents_mating = self.family_matings[grandparents_mating_id]
         for person_id in grandparents_mating.children:
             person = self.family.persons[person_id]
-            if person.role is not None:
+            if person.role is not None and person.role != Role.unknown:
                 continue
             if person.sex == Sex.M:
                 self._set_person_role(person, Role.paternal_uncle)
@@ -158,7 +159,7 @@ class FamilyRoleBuilder:
         grandparents_mating = self.family_matings[grandparents_mating_id]
         for person_id in grandparents_mating.children:
             person = self.family.persons[person_id]
-            if person.role is not None:
+            if person.role is not None and person.role != Role.unknown:
                 continue
             if person.sex == Sex.M:
                 self._set_person_role(person, Role.maternal_uncle)
@@ -174,7 +175,6 @@ class FamilyRoleBuilder:
     def _find_parent_matings(self, parent):
         matings = []
         for mating in self.family_matings.values():
-            print(mating)
             if parent.sex == Sex.male:
                 if mating.dad_id == parent.person_id:
                     matings.append(mating)
@@ -185,7 +185,6 @@ class FamilyRoleBuilder:
         return matings
 
     def _assign_roles_step_parents_and_half_siblings(self, proband):
-        print(proband.mom.person_id)
         if proband.mom is not None:
             mom_mates = filter(lambda x: x.dad_id != proband.dad.person_id,
                                self._find_parent_matings(proband.mom))
@@ -210,3 +209,8 @@ class FamilyRoleBuilder:
                     self._set_person_role(
                             halfsibling,
                             Role.paternal_half_sibling)
+
+    def _assign_unknown_roles(self):
+        for person in self.family.persons.values():
+            if person.role is None:
+                self._set_person_role(person, Role.unknown)
