@@ -66,20 +66,20 @@ def construct_import_annotation_pipeline(
     return pipeline
 
 
-def generate_region_argument_string(chrom, start, end):
-    if start is None and end is None:
-        return f'{chrom}'
-    else:
-        assert start and end, f'{start}-{end} is an invalid region!'
-        return f'{chrom}:{start}-{end}'
+# def generate_region_argument_string(chrom, start, end):
+#     if start is None and end is None:
+#         return f'{chrom}'
+#     else:
+#         assert start and end, f'{start}-{end} is an invalid region!'
+#         return f'{chrom}:{start}-{end}'
 
 
-def generate_region_argument(fa, description):
-    segment = fa.position // description.region_length
-    start = (segment * description.region_length) + 1
-    end = (segment + 1) * description.region_length
+# def generate_region_argument(fa, description):
+#     segment = fa.position // description.region_length
+#     start = (segment * description.region_length) + 1
+#     end = (segment + 1) * description.region_length
 
-    return (fa.chromosome, start, end)
+#     return (fa.chromosome, start, end)
 
 
 class MakefileGenerator:
@@ -168,8 +168,18 @@ class MakefileGenerator:
             f'\t{command} && touch $@',
             file=output)
 
+    def generate_impala_load_make(self, command, output=sys.stdout):
+        print(
+            f'load: load.flag\n',
+            file=output)
+        print(
+            f'load.flag:\n'
+            f'\t{command} && touch $@',
+            file=output)
+
     def generate_makefile(
-            self, families_command, variants_command, target_chromosomes,
+            self, families_command, variants_command, load_command,
+            target_chromosomes,
             output=sys.stdout):
 
         print(
@@ -180,91 +190,8 @@ class MakefileGenerator:
             variants_command, target_chromosomes, output=output)
         self.generate_pedigree_make(
             families_command, output=output)
-
-
-def generate_makefile(genome, contigs, tool, argv):
-    if argv.partition_description is None:
-        output = 'all: \n'
-        output += f'\t{tool}' \
-            f'--o {argv.output} '
-        print(output)
-        return
-
-    description = ParquetPartitionDescriptor.from_config(
-        argv.partition_description)
-
-    assert set(description.chromosomes).issubset(contigs), \
-        (description.chromosomes, contigs)
-
-    targets = dict()
-    other_regions = dict()
-    contig_lengths = dict(genome.get_all_chr_lengths())
-
-    for contig in description.chromosomes:
-        assert contig in contig_lengths, (contig, contig_lengths)
-        region_bins = contig_lengths[contig] // description.region_length \
-            + bool(contig_lengths[contig] % description.region_length)
-        for rb_idx in range(0, region_bins):
-
-            if description.region_length < contig_lengths[contig]:
-                start = rb_idx * description.region_length + 1
-                end = (rb_idx + 1) * description.region_length
-            else:
-                start, end = None, None
-
-            if contig in description.chromosomes:
-                region_bin = f'{contig}_{rb_idx}'
-                targets[region_bin] = (contig, start, end)
-            else:
-                region_bin = f'other_{rb_idx}'
-                other_regions.setdefault(region_bin, set()).add(
-                    (contig, start, end)
-                )
-
-    output = ''
-    all_target = 'all:'
-    main_targets = ''
-    other_targets = ''
-
-    common_command = f'{tool} ' \
-        f'--skip-pedigree --o {argv.output}' \
-        f' --pd {argv.partition_description}' \
-        f' --ped-file-format {argv.ped_file_format}'
-    if 'annotation_config' in argv:
-        common_command += f' --annotation-config {argv.annotation_config}'
-
-    for target_name in targets.keys():
-        all_target += f' {target_name}'
-
-    bucket_index = 100
-
-    for target_name, target_args in targets.items():
-        main_targets += f'{target_name}:\n'
-        main_targets += f'\t{common_command} '
-        main_targets += \
-            f'-b {bucket_index} '
-        main_targets += \
-            f' --region {generate_region_argument_string(*target_args)}\n\n'
-        bucket_index += 1
-
-    if len(other_regions) > 0:
-        for region_bin, command_args in other_regions.items():
-            all_target += f' {region_bin}'
-            other_targets += f'{region_bin}:\n'
-            regions = ' '.join(
-                map(
-                    lambda x: generate_region_argument_string(*x),
-                    command_args
-                )
-            )
-            other_targets += f'\t{common_command}'
-            other_targets += f' --region {regions}\n\n'
-
-    output += f'{all_target}\n'
-    output += '.PHONY: all\n\n'
-    output += main_targets
-    output += other_targets
-    print(output)
+        self.generate_impala_load_make(
+            load_command, output=output)
 
 
 class Variants2ParquetTool:
@@ -300,6 +227,7 @@ class Variants2ParquetTool:
             dest='partition_description',
             help='Path to a config file containing the partition description'
         )
+
         parser.add_argument(
             '--rows', type=int, default=100000,
             dest='rows',
@@ -355,6 +283,19 @@ class Variants2ParquetTool:
         # make subcommand
         make_parser = subparsers.add_parser('make')
         cls.cli_common_arguments(gpf_instance, make_parser)
+        default_genotype_storage_id = \
+            gpf_instance.dae_config.\
+            get('genotype_storage', {}).\
+            get('default', None)
+
+        make_parser.add_argument(
+            '--genotype-storage', '--gs',
+            type=str,
+            dest='genotype_storage',
+            default=default_genotype_storage_id,
+            help='Genotype Storage which will be used for import '
+            '[default: %(default)s]',
+        )
 
         return parser
 
@@ -406,6 +347,26 @@ class Variants2ParquetTool:
         return ' '.join(command)
 
     @classmethod
+    def build_make_impala_load_command(
+            cls, study_id, argv):
+        output = argv.output
+        if output is None:
+            output = '.'
+        output = os.path.abspath(output)
+
+        command = [
+            f'impala_parquet_loader.py {study_id}',
+            os.path.join(output, f'{study_id}_pedigree.parquet'),
+            os.path.join(output, f'{study_id}_variants.parquet'),
+        ]
+        if argv.genotype_storage is not None:
+            command.append(
+                f'--gs {argv.genotype_storage}'
+            )
+
+        return ' '.join(command)
+
+    @classmethod
     def main(
             cls, argv=sys.argv[1:],
             gpf_instance=None,
@@ -452,20 +413,22 @@ class Variants2ParquetTool:
             study_id, _ = os.path.splitext(os.path.basename(families_filename))
 
         if argv.type == 'make':
-            variants_command = cls.build_make_variants_command(
-                study_id, argv, families_loader, variants_loader
-            )
-            families_command = cls.build_make_families_command(
-                study_id, argv, families_loader
-            )
             dirname = argv.output
             if dirname is None:
                 dirname = '.'
-
             os.makedirs(dirname, exist_ok=True)
+
+            variants_command = cls.build_make_variants_command(
+                study_id, argv, families_loader, variants_loader)
+            families_command = cls.build_make_families_command(
+                study_id, argv, families_loader)
+            load_command = cls.build_make_impala_load_command(
+                study_id, argv)
+
             with open(os.path.join(dirname, 'Makefile'), 'wt') as output:
                 generator.generate_makefile(
-                    families_command, variants_command, target_chromosomes,
+                    families_command, variants_command, load_command,
+                    target_chromosomes,
                     output=output
                 )
 
