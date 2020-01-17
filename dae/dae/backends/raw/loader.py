@@ -154,7 +154,6 @@ class AnnotationPipelineDecorator(VariantsLoaderDecorator):
     def full_variants_iterator(self):
         for summary_variant, family_variants in \
                 self.variants_loader.full_variants_iterator():
-
             self.annotation_pipeline.annotate_summary_variant(summary_variant)
             yield summary_variant, family_variants
 
@@ -353,11 +352,9 @@ class StoredAnnotationDecorator(VariantsLoaderDecorator):
 
             assert len(variant_records) > 0, sv
 
-            summary_variant = SummaryVariantFactory.\
-                summary_variant_from_records(
-                    variant_records,
-                    transmission_type=self.transmission_type)
-            yield summary_variant, family_variants
+            for sa in sv.alleles:
+                sa.update_attributes(variant_records[sa.allele_index])
+            yield sv, family_variants
 
         elapsed = time.time() - start
         print(f"Storred annotation load in {elapsed:.2f} sec", file=sys.stderr)
