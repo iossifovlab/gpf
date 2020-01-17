@@ -13,10 +13,10 @@ export class SavedQueriesTableComponent {
 
   constructor(
     private queryService: QueryService
-  ) { }
+  ) {}
 
   deleteQuery(uuid: string) {
-    this.queries = this.queries.filter(query => query.uuid != uuid);
+    this.queries = this.queries.filter(query => query.uuid !== uuid);
     this.queryService.deleteQuery(uuid).subscribe();
   }
 }

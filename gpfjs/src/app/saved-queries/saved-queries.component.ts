@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnChanges } from '@angular/core';
 import { QueryService } from '../query/query.service';
 
 export class UserSavedQuery {
@@ -8,7 +8,7 @@ export class UserSavedQuery {
     public page: string,
     public uuid: string,
     public url: string
-  ) { }
+  ) {}
 }
 
 @Component({
@@ -25,28 +25,28 @@ export class SavedQueriesComponent implements OnInit {
 
   constructor(
     private queryService: QueryService,
-  ) { }
+  ) {}
 
   ngOnInit() {
-    this.queryService.collectUserSavedQueries().subscribe(response => { 
-      let queries = response['queries'].map(query => {
+    this.updateQueries();
+  }
+
+  updateQueries() {
+    this.queryService.collectUserSavedQueries().subscribe(response => {
+      const queries = response['queries'].map(query => {
         return new UserSavedQuery(
           query.name,
           query.description,
           query.page,
           query.query_uuid,
           this.queryService.getLoadUrl(query.query_uuid)
-      )
+        );
       });
 
-      // FIXME, THIS IS BUGGED
-      // when switching the tabs after deleting a query, these
-      // arrays are not updated (since the query is removed from the array
-      // sent to the saved-queries-table component) and it shows up again
-      this.genotypeQueries = queries.filter(query => query.page == 'genotype');
-      this.phenotypeQueries = queries.filter(query => query.page == 'phenotype');
-      this.phenotoolQueries = queries.filter(query => query.page == 'phenotool');
-      this.enrichmentQueries = queries.filter(query => query.page == 'enrichment');
+      this.genotypeQueries = queries.filter(query => query.page === 'genotype');
+      this.phenotypeQueries = queries.filter(query => query.page === 'phenotype');
+      this.phenotoolQueries = queries.filter(query => query.page === 'phenotool');
+      this.enrichmentQueries = queries.filter(query => query.page === 'enrichment');
     });
   }
 }

@@ -1,7 +1,7 @@
 <div class="container">
     <div class="form-block">
       <div class="card">
-        <gpf-tabset #queryTypeTabset>
+        <gpf-tabset (tabChange)="updateQueries()" #queryTypeTabset>
           <div class="gpf-tabset-left" style="width:200px">
             Saved queries
           </div>
