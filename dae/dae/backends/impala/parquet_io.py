@@ -208,9 +208,9 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
     def _evaluate_frequency_bin(self, family_allele):
         count = family_allele.get_attribute('af_allele_count')
         frequency = family_allele.get_attribute('af_allele_freq')
-        if count and count == 1:  # Ultra rare
+        if count and int(count) == 1:  # Ultra rare
             frequency_bin = 1
-        elif frequency and frequency < self._rare_boundary:  # Rare
+        elif frequency and float(frequency) < self._rare_boundary:  # Rare
             frequency_bin = 2
         else:  # Common
             frequency_bin = 3
@@ -222,18 +222,18 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
         filepath = os.path.join(self.output, f'region_bin={current_bin}')
 
         filename = f'variants_region_bin_{current_bin}'
-        if self._family_bin_size > 0:
-            current_bin = self._evaluate_family_bin(family_allele)
-            filepath = os.path.join(filepath, f'family_bin={current_bin}')
-            filename += f'_family_bin_{current_bin}'
-        if len(self._coding_effect_types) > 0:
-            current_bin = self._evaluate_coding_bin(family_allele)
-            filepath = os.path.join(filepath, f'coding_bin={current_bin}')
-            filename += f'_coding_bin_{current_bin}'
         if self._rare_boundary > 0:
             current_bin = self._evaluate_frequency_bin(family_allele)
             filepath = os.path.join(filepath, f'frequency_bin={current_bin}')
             filename += f'_frequency_bin_{current_bin}'
+        if len(self._coding_effect_types) > 0:
+            current_bin = self._evaluate_coding_bin(family_allele)
+            filepath = os.path.join(filepath, f'coding_bin={current_bin}')
+            filename += f'_coding_bin_{current_bin}'
+        if self._family_bin_size > 0:
+            current_bin = self._evaluate_family_bin(family_allele)
+            filepath = os.path.join(filepath, f'family_bin={current_bin}')
+            filename += f'_family_bin_{current_bin}'
         filename += '.parquet'
 
         return os.path.join(filepath, filename)

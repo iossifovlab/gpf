@@ -12,7 +12,8 @@ def test_partition_read(fixture_dirname):
 
     loader = ParquetLoader(
             families,
-            fixture_dirname('backends/test_partition/_PARTITION_DESCRIPTION'))
+            fixture_dirname('backends/test_partition/'
+                            'variants.parquet/_PARTITION_DESCRIPTION'))
     summaries = []
     genotypes = []
     for summary, genotype in loader.summary_genotypes_iterator():
@@ -37,7 +38,8 @@ def test_partition_read_glob_region_1(fixture_dirname):
 
     loader = ParquetLoader(
             families,
-            fixture_dirname('backends/test_partition/_PARTITION_DESCRIPTION'),
+            fixture_dirname('backends/test_partition/'
+                            'variants.parquet/_PARTITION_DESCRIPTION'),
             ['region_bin=1_8/*/*/*/*'])
     summaries = []
     genotypes = []
@@ -61,7 +63,8 @@ def test_partition_read_glob_region_2(fixture_dirname):
 
     loader = ParquetLoader(
             families,
-            fixture_dirname('backends/test_partition/_PARTITION_DESCRIPTION'),
+            fixture_dirname('backends/test_partition/'
+                            'variants.parquet/_PARTITION_DESCRIPTION'),
             ['region_bin=2_9/*/*/*/*'])
     summaries = []
     genotypes = []

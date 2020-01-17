@@ -396,91 +396,103 @@ def test_all(vcf_variants_loader, temp_dirname):
     assert os.path.exists(os.path.join(
         temp_dirname,
         'region_bin=1_8',
-        'family_bin=6',
+        'frequency_bin=2',
         'coding_bin=1',
-        'frequency_bin=2'))
+        'family_bin=6',
+    ))
     assert os.path.exists(os.path.join(
         temp_dirname,
         'region_bin=1_8',
-        'family_bin=69',
+        'frequency_bin=2',
         'coding_bin=1',
-        'frequency_bin=2'))
+        'family_bin=69',
+    ))
     assert os.path.exists(os.path.join(
         temp_dirname,
         'region_bin=1_9',
-        'family_bin=6',
+        'frequency_bin=2',
         'coding_bin=1',
-        'frequency_bin=2'))
+        'family_bin=6',
+    ))
     assert os.path.exists(os.path.join(
         temp_dirname,
         'region_bin=1_9',
-        'family_bin=69',
+        'frequency_bin=2',
         'coding_bin=1',
-        'frequency_bin=2'))
+        'family_bin=69',
+    ))
     assert os.path.exists(os.path.join(
         temp_dirname,
         'region_bin=1_12',
-        'family_bin=6',
+        'frequency_bin=3',
         'coding_bin=1',
-        'frequency_bin=3'))
+        'family_bin=6',
+    ))
     assert os.path.exists(os.path.join(
         temp_dirname,
         'region_bin=1_12',
-        'family_bin=69',
+        'frequency_bin=3',
         'coding_bin=1',
-        'frequency_bin=3'))
+        'family_bin=69',
+    ))
     assert os.path.exists(os.path.join(
         temp_dirname,
         'region_bin=2_8',
-        'family_bin=6',
+        'frequency_bin=2',
         'coding_bin=0',
-        'frequency_bin=2'))
+        'family_bin=6',
+    ))
     assert os.path.exists(os.path.join(
         temp_dirname,
         'region_bin=2_8',
-        'family_bin=69',
+        'frequency_bin=2',
         'coding_bin=0',
-        'frequency_bin=2'))
+        'family_bin=69',
+    ))
     assert os.path.exists(os.path.join(
         temp_dirname,
         'region_bin=2_9',
-        'family_bin=6',
+        'frequency_bin=2',
         'coding_bin=0',
-        'frequency_bin=2'))
+        'family_bin=6',
+    ))
     assert os.path.exists(os.path.join(
         temp_dirname,
         'region_bin=2_9',
-        'family_bin=69',
+        'frequency_bin=2',
         'coding_bin=0',
-        'frequency_bin=2'))
+        'family_bin=69',
+    ))
     assert os.path.exists(os.path.join(
         temp_dirname,
         'region_bin=2_12',
+        'frequency_bin=3',
+        'coding_bin=0',
         'family_bin=6',
-        'coding_bin=0',
-        'frequency_bin=3'))
+    ))
     assert os.path.exists(os.path.join(
         temp_dirname,
         'region_bin=2_12',
-        'family_bin=69',
+        'frequency_bin=3',
         'coding_bin=0',
-        'frequency_bin=3'))
-    assert os.path.exists(
-            os.path.join(temp_dirname,
-                         'region_bin=1_9',
-                         'family_bin=6',
-                         'coding_bin=1',
-                         'frequency_bin=2',
-                         'variants_region_bin_1_9_family_bin_6' +
-                         '_coding_bin_1_frequency_bin_2.parquet'))
-    assert os.path.exists(
-            os.path.join(temp_dirname,
-                         'region_bin=2_12',
-                         'family_bin=6',
-                         'coding_bin=0',
-                         'frequency_bin=3',
-                         'variants_region_bin_2_12_family_bin_6' +
-                         '_coding_bin_0_frequency_bin_3.parquet'))
+        'family_bin=69',
+    ))
+    assert os.path.exists(os.path.join(
+        temp_dirname,
+        'region_bin=1_9',
+        'frequency_bin=2',
+        'coding_bin=1',
+        'family_bin=6',
+        'variants_region_bin_1_9_frequency_bin_2_coding_bin_1'
+        '_family_bin_6.parquet'))
+    assert os.path.exists(os.path.join(
+        temp_dirname,
+        'region_bin=2_12',
+        'frequency_bin=3',
+        'coding_bin=0',
+        'family_bin=6',
+        'variants_region_bin_2_12_frequency_bin_3_coding_bin_0'
+        '_family_bin_6.parquet'))
 
 
 def test_region_family_frequency(vcf_variants_loader, temp_dirname):
@@ -503,74 +515,84 @@ def test_region_family_frequency(vcf_variants_loader, temp_dirname):
     assert os.path.exists(os.path.join(
         temp_dirname,
         'region_bin=1_8',
+        'frequency_bin=2',
         'family_bin=6',
-        'frequency_bin=2'))
+    ))
     assert os.path.exists(os.path.join(
         temp_dirname,
         'region_bin=1_8',
+        'frequency_bin=2',
         'family_bin=69',
-        'frequency_bin=2'))
+    ))
     assert os.path.exists(os.path.join(
         temp_dirname,
         'region_bin=1_9',
+        'frequency_bin=2',
         'family_bin=6',
-        'frequency_bin=2'))
+    ))
     assert os.path.exists(os.path.join(
         temp_dirname,
         'region_bin=1_9',
+        'frequency_bin=2',
         'family_bin=69',
-        'frequency_bin=2'))
+    ))
     assert os.path.exists(os.path.join(
         temp_dirname,
         'region_bin=1_12',
+        'frequency_bin=3',
         'family_bin=6',
-        'frequency_bin=3'))
+    ))
     assert os.path.exists(os.path.join(
         temp_dirname,
         'region_bin=1_12',
+        'frequency_bin=3',
         'family_bin=69',
-        'frequency_bin=3'))
+    ))
     assert os.path.exists(os.path.join(
         temp_dirname,
         'region_bin=2_8',
+        'frequency_bin=2',
         'family_bin=6',
-        'frequency_bin=2'))
+    ))
     assert os.path.exists(os.path.join(
         temp_dirname,
         'region_bin=2_8',
+        'frequency_bin=2',
         'family_bin=69',
-        'frequency_bin=2'))
+    ))
     assert os.path.exists(os.path.join(
         temp_dirname,
         'region_bin=2_9',
+        'frequency_bin=2',
         'family_bin=6',
-        'frequency_bin=2'))
+    ))
     assert os.path.exists(os.path.join(
         temp_dirname,
         'region_bin=2_9',
+        'frequency_bin=2',
         'family_bin=69',
-        'frequency_bin=2'))
+    ))
     assert os.path.exists(os.path.join(
         temp_dirname,
         'region_bin=2_12',
+        'frequency_bin=3',
         'family_bin=6',
-        'frequency_bin=3'))
+    ))
     assert os.path.exists(os.path.join(
         temp_dirname,
         'region_bin=2_12',
+        'frequency_bin=3',
         'family_bin=69',
-        'frequency_bin=3'))
-    assert os.path.exists(
-            os.path.join(temp_dirname,
-                         'region_bin=1_9',
-                         'family_bin=6',
-                         'frequency_bin=2',
-                         'variants_region_bin_1_9_family_bin_6' +
-                         '_frequency_bin_2.parquet'))
-    assert os.path.exists(
-            os.path.join(temp_dirname,
-                         'region_bin=2_12',
-                         'family_bin=6',
-                         'frequency_bin=3',
-                         'variants_region_bin_2_12_family_bin_6' +
-                         '_frequency_bin_3.parquet'))
+    ))
+    assert os.path.exists(os.path.join(
+        temp_dirname,
+        'region_bin=1_9',
+        'frequency_bin=2',
+        'family_bin=6',
+        'variants_region_bin_1_9_frequency_bin_2_family_bin_6.parquet'))
+    assert os.path.exists(os.path.join(
+        temp_dirname,
+        'region_bin=2_12',
+        'frequency_bin=3',
+        'family_bin=6',
+        'variants_region_bin_2_12_frequency_bin_3_family_bin_6.parquet'))
