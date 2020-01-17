@@ -51,7 +51,7 @@ def gene_weights_db(local_gpf_instance):
 
 @pytest.fixture(scope='session')
 def genotype_storage_factory(local_gpf_instance):
-    return local_gpf_instance._genotype_storage_factory
+    return local_gpf_instance.genotype_storage_db
 
 
 @pytest.fixture(scope='session')

@@ -115,7 +115,7 @@ def main(argv, gpf_instance=None):
 
     argv = cli_arguments(dae_config, argv)
 
-    genotype_storage_factory = gpf_instance._genotype_storage_factory
+    genotype_storage_factory = gpf_instance.genotype_storage_db
     genomes_db = gpf_instance.genomes_db
     genome = genomes_db.get_genome()
 

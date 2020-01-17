@@ -54,7 +54,7 @@ class GPFInstance(object):
             self.denovo_gene_sets_db
             self._score_config
             self._scores_factory
-            self._genotype_storage_factory
+            self.genotype_storage_db
             self._common_report_facade
             self._background_facade
 
@@ -99,7 +99,7 @@ class GPFInstance(object):
 
     @property
     @cached
-    def _genotype_storage_factory(self):
+    def genotype_storage_db(self):
         return GenotypeStorageFactory(self.dae_config)
 
     @property
@@ -107,7 +107,7 @@ class GPFInstance(object):
     def _variants_db(self):
         return VariantsDb(
             self.dae_config, self._pheno_db, self.gene_weights_db,
-            self.genomes_db, self._genotype_storage_factory
+            self.genomes_db, self.genotype_storage_db
         )
 
     def reload(self):
