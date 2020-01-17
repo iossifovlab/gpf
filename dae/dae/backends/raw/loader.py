@@ -53,21 +53,8 @@ class VariantsLoader:
         self.transmission_type = transmission_type
         self.params = params
 
-    def summary_genotypes_iterator(self):
-        raise NotImplementedError()
-
     def full_variants_iterator(self, summary_genotypes_iterator=None):
-        if summary_genotypes_iterator is None:
-            summary_genotypes_iterator = self.summary_genotypes_iterator()
-
-        for summary_variant, family_genotypes in summary_genotypes_iterator:
-
-            family_variants = []
-            for fam, gt, bs in family_genotypes.family_genotype_iterator():
-                family_variants.append(
-                    FamilyVariant(summary_variant, fam, gt, bs))
-
-            yield summary_variant, family_variants
+        raise NotImplementedError
 
     def family_variants_iterator(self, summary_genotypes_iterator=None):
         for _, fvs in self.full_variants_iterator(
@@ -102,34 +89,34 @@ class AlleleFrequencyDecorator(VariantsLoaderDecorator):
         assert self.transmission_type == TransmissionType.transmitted
 
         self.independent = self.families.persons_without_parents()
-        self.independent_index = \
-            np.array(sorted([p.sample_index for p in self.independent]))
         self.n_independent_parents = len(self.independent)
 
     def get_vcf_variant(self, allele):
         return self.vcf.vars[allele['summary_variant_index']]
 
-    def get_variant_full_genotype(self, family_genotypes):
-        gt = family_genotypes.full_families_genotypes()
-        gt = gt[:, self.independent_index]
-
-        unknown = np.any(gt == -1, axis=0)
-        gt = gt[0:2, np.logical_not(unknown)]
-        return gt
-
-    def annotate_summary_variant(self, summary_variant, family_genotypes):
-        gt = self.get_variant_full_genotype(family_genotypes)
+    def annotate_summary_variant(self, summary_variant, family_variants):
         n_independent_parents = self.n_independent_parents
 
-        n_parents_called = gt.shape[1]
-        percent_parents_called = \
-            (100.0 * n_parents_called) / n_independent_parents
-
         for allele in summary_variant.alleles:
-
             allele_index = allele['allele_index']
-            n_alleles = np.sum(gt == allele_index)
+            n_alleles = 0  # np.sum(gt == allele_index)
             allele_freq = 0.0
+            n_parents_called = 0
+
+            for fv in family_variants:
+                independent_indexes = list()
+
+                for idx, person in enumerate(fv.members_in_order):
+                    if person in self.independent:
+                        independent_indexes.append(idx)
+                        n_parents_called += 1
+
+                for idx in independent_indexes:
+                    person_gt = fv.genotype[idx]
+                    n_alleles += np.sum(person_gt == allele_index)
+
+            percent_parents_called = \
+                (100.0 * n_parents_called) / n_independent_parents
             if n_parents_called > 0:
                 allele_freq = \
                     (100.0 * n_alleles) / (2.0 * n_parents_called)
@@ -143,13 +130,14 @@ class AlleleFrequencyDecorator(VariantsLoaderDecorator):
             allele.update_attributes(freq)
         return summary_variant
 
-    def summary_genotypes_iterator(self):
-        for summary_variant, family_genotypes in \
-                self.variants_loader.summary_genotypes_iterator():
+    def full_variants_iterator(self):
+        for summary_variant, fvs in \
+                self.variants_loader.full_variants_iterator():
 
             summary_variant = self.annotate_summary_variant(
-                summary_variant, family_genotypes)
-            yield summary_variant, family_genotypes
+                summary_variant, fvs)
+
+            yield summary_variant, fvs
 
 
 class AnnotationPipelineDecorator(VariantsLoaderDecorator):
