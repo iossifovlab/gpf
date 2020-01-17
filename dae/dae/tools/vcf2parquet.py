@@ -9,6 +9,7 @@ class Vcf2ParquetTool(Variants2ParquetTool):
 
     VARIANTS_LOADER_CLASS = VcfLoader
     VARIANTS_TOOL = 'vcf2parquet.py'
+    VARIANTS_FREQUENCIES = True
 
 
 def main(argv=sys.argv[1:], gpf_instance=None, annotation_defaults={}):

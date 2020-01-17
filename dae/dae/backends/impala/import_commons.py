@@ -184,6 +184,7 @@ class Variants2ParquetTool:
     VARIANTS_LOADER_CLASS = None
     VARIANTS_TOOL = None
     BUCKET_INDEX_DEFAULT = 100
+    VARIANTS_FREQUENCIES = False
 
     @classmethod
     def cli_common_arguments(cls, gpf_instance, parser):
@@ -444,7 +445,9 @@ class Variants2ParquetTool:
                 print("resetting regions:", regions)
                 variants_loader.reset_regions(regions)
 
-            variants_loader = AlleleFrequencyDecorator(variants_loader)
+            if cls.VARIANTS_FREQUENCIES:
+                variants_loader = AlleleFrequencyDecorator(variants_loader)
+
             variants_loader = AnnotationPipelineDecorator(
                 variants_loader, annotation_pipeline
             )
