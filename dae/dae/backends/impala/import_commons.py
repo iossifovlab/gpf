@@ -140,7 +140,7 @@ class MakefileGenerator:
             file=output)
         print(
             f'\n'
-            f'%.flag\n'
+            f'%.flag:\n'
             f'\t{command} --rb $* && touch $@\n',
             file=output
         )
@@ -265,9 +265,17 @@ class Variants2ParquetTool:
         cls.VARIANTS_LOADER_CLASS.cli_arguments(parser)
 
         parser.add_argument(
+            '--study-id', type=str, default=None,
+            dest='study_id', metavar='<study id>',
+            help='Study ID. '
+            'If none specified, the basename of families filename is used to '
+            'construct study id [default: basename(families filename)]'
+        )
+
+        parser.add_argument(
             '-o', '--out', type=str, default='.',
-            dest='output', metavar='<output filepath>',
-            help='output filepath. '
+            dest='output', metavar='<output directory>',
+            help='output directory. '
             'If none specified, current directory is used '
             '[default: %(default)s]'
         )
@@ -338,31 +346,50 @@ class Variants2ParquetTool:
 
     @classmethod
     def build_make_variants_command(
-            cls, argv, families_loader, variants_loader):
+            cls, study_id, argv, families_loader, variants_loader):
         families_params = FamiliesLoader.build_cli_arguments(
             families_loader.params)
         families_filename = families_loader.filename
+        families_filename = os.path.abspath(families_filename)
 
         variants_params = cls.VARIANTS_LOADER_CLASS.build_cli_arguments(
             variants_loader.params)
-        variants_filenames = ' '.join(variants_loader.filenames)
+        variants_filenames = [
+            os.path.abspath(fn) for fn in variants_loader.filenames
+        ]
+        variants_filenames = ' '.join(variants_filenames)
 
-        command = f'{cls.VARIANTS_TOOL} variants '\
-            f'{families_params} {families_filename} ' \
-            f'{variants_params} {variants_filenames}'
+        command = [
+            f'{cls.VARIANTS_TOOL} variants',
+            f'{families_params} {families_filename}',
+            f'{variants_params} {variants_filenames}',
+            f'--study-id {study_id}',
+            f'-o {study_id}_variants.parquet'
+        ]
         if argv.partition_description is not None:
-            command = f'{command} --pd {argv.partition_description}'
+            pd = os.path.abspath(argv.partition_description)
+            command.append(f'--pd {pd}')
 
-        return command
+        return ' '.join(command)
 
     @classmethod
-    def build_make_families_command(cls, argv, families_loader):
+    def build_make_families_command(
+            cls, study_id, argv, families_loader):
         families_params = FamiliesLoader.build_cli_arguments(
             families_loader.params)
         families_filename = families_loader.filename
+        families_filename = os.path.abspath(families_filename)
 
-        command = f'ped2parquet.py {families_params} {families_filename}'
-        return command
+        command = [
+            f'ped2parquet.py {families_params} {families_filename}',
+            f'--study-id {study_id}',
+            f'-o {study_id}_pedigree.parquet'
+        ]
+        if argv.partition_description is not None:
+            pd = os.path.abspath(argv.partition_description)
+            command.append(f'--pd {pd}')
+
+        return ' '.join(command)
 
     @classmethod
     def main(
@@ -405,12 +432,17 @@ class Variants2ParquetTool:
         variants_targets = generator.generate_variants_targets(
             target_chromosomes)
 
+        if argv.study_id is not None:
+            study_id = argv.study_id
+        else:
+            study_id, _ = os.path.splitext(os.path.basename(families_filename))
+
         if argv.type == 'make':
             variants_command = cls.build_make_variants_command(
-                argv, families_loader, variants_loader
+                study_id, argv, families_loader, variants_loader
             )
             families_command = cls.build_make_families_command(
-                argv, families_loader
+                study_id, argv, families_loader
             )
             dirname = argv.output
             if dirname is None:

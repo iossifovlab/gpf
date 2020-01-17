@@ -142,6 +142,8 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
 
     @staticmethod
     def from_config(config_path, root_dirname=''):
+        assert os.path.exists(config_path), config_path
+
         config = configparser.ConfigParser()
         config.read(config_path)
         assert config['region_bin'] is not None
