@@ -59,14 +59,6 @@ pipeline {
       }
     }
 
-    stage('Data') {
-      steps {
-        sh '''
-          ${SOURCE_DIR}/jenkins_data.sh
-        '''
-      }
-    }
-
     stage('Docker Setup') {
       steps {
         script {
