@@ -168,7 +168,7 @@ class MakefileGenerator:
             output=sys.stdout):
 
         print(
-            f'all: ped.flag $(all_bins_flags)\n',
+            f'all: pedigree variants\n',
             file=output)
 
         self.generate_variants_make(
