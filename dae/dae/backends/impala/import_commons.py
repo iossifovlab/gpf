@@ -67,22 +67,6 @@ def construct_import_annotation_pipeline(
     return pipeline
 
 
-# def generate_region_argument_string(chrom, start, end):
-#     if start is None and end is None:
-#         return f'{chrom}'
-#     else:
-#         assert start and end, f'{start}-{end} is an invalid region!'
-#         return f'{chrom}:{start}-{end}'
-
-
-# def generate_region_argument(fa, description):
-#     segment = fa.position // description.region_length
-#     start = (segment * description.region_length) + 1
-#     end = (segment + 1) * description.region_length
-
-#     return (fa.chromosome, start, end)
-
-
 class MakefileGenerator:
 
     def __init__(self, partition_descriptor, genome):
@@ -199,6 +183,7 @@ class Variants2ParquetTool:
 
     VARIANTS_LOADER_CLASS = None
     VARIANTS_TOOL = None
+    BUCKET_INDEX_DEFAULT = 100
 
     @classmethod
     def cli_common_arguments(cls, gpf_instance, parser):
@@ -257,7 +242,8 @@ class Variants2ParquetTool:
         variants_parser = subparsers.add_parser('variants')
         cls.cli_common_arguments(gpf_instance, variants_parser)
         variants_parser.add_argument(
-            '-b', '--bucket-index', type=int, default=1,
+            '-b', '--bucket-index',
+            type=int, default=cls.BUCKET_INDEX_DEFAULT,
             dest='bucket_index', metavar='bucket index',
             help='bucket index [default: %(default)s]'
         )
@@ -439,6 +425,7 @@ class Variants2ParquetTool:
                 annotation_configfile=argv.annotation_config,
                 defaults=annotation_defaults)
 
+            bucket_index = argv.bucket_index
             if argv.region_bin is not None:
                 if argv.region_bin == 'none':
                     pass
@@ -447,8 +434,11 @@ class Variants2ParquetTool:
                         (argv.region_bin, list(variants_targets.keys()))
 
                     regions = variants_targets[argv.region_bin]
+                    bucket_index = cls.BUCKET_INDEX_DEFAULT + \
+                        list(variants_targets.keys()).index(argv.region_bin)
                     print("resetting regions:", regions)
                     variants_loader.reset_regions(regions)
+
             elif argv.regions is not None:
                 regions = argv.regions
                 print("resetting regions:", regions)
@@ -461,6 +451,6 @@ class Variants2ParquetTool:
 
             ParquetManager.variants_to_parquet_partition(
                 variants_loader, partition_description,
-                bucket_index=argv.bucket_index,
+                bucket_index=bucket_index,
                 rows=argv.rows
             )
