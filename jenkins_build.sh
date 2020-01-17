@@ -2,6 +2,7 @@
 
 cd ${DOCUMENTATION_DIR}/userdocs/gpf/dae && pip install -e . && cd -
 cd ${DOCUMENTATION_DIR}/userdocs/gpf/wdae && pip install -e . && cd -
+cd ${DOCUMENTATION_DIR}/userdocs/gpf/dae_conftests && pip install -e . && cd -
 
 cd ${DOCUMENTATION_DIR}/userdocs/gpf/dae/dae/docs
 make clean html
