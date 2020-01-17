@@ -18,6 +18,20 @@ from dae.backends.impala.parquet_io import ParquetManager, \
     ParquetPartitionDescriptor, NoPartitionDescriptor
 
 
+def save_study_config(dae_config, study_id, study_config):
+    dirname = os.path.join(dae_config.studies_db.dir, study_id)
+    filename = os.path.join(dirname, '{}.conf'.format(study_id))
+
+    if os.path.exists(filename):
+        print('configuration file already exists:', filename)
+        print('skipping generation of default study config for:', study_id)
+        return
+
+    os.makedirs(dirname, exist_ok=True)
+    with open(filename, 'w') as outfile:
+        outfile.write(study_config)
+
+
 def construct_import_annotation_pipeline(
         gpf_instance,
         annotation_configfile=None, defaults=None):

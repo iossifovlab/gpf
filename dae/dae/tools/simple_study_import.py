@@ -8,7 +8,7 @@ import argparse
 from dae.gpf_instance.gpf_instance import GPFInstance
 
 from dae.backends.impala.import_commons import \
-    construct_import_annotation_pipeline
+    construct_import_annotation_pipeline, save_study_config
 
 from dae.backends.dae.loader import DenovoLoader
 from dae.backends.vcf.loader import VcfLoader
@@ -79,20 +79,6 @@ def cli_arguments(dae_config, argv=sys.argv[1:]):
 
     parser_args = parser.parse_args(argv)
     return parser_args
-
-
-def save_study_config(dae_config, study_id, study_config):
-    dirname = os.path.join(dae_config.studies_db.dir, study_id)
-    filename = os.path.join(dirname, '{}.conf'.format(study_id))
-
-    if os.path.exists(filename):
-        print('configuration file already exists:', filename)
-        print('skipping generation of default study config for:', study_id)
-        return
-
-    os.makedirs(dirname, exist_ok=True)
-    with open(filename, 'w') as outfile:
-        outfile.write(study_config)
 
 
 def generate_common_report(gpf_instance, study_id):

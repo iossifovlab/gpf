@@ -90,13 +90,14 @@ def test_impala_load_study(impala_genotype_storage, genomes_db_2013):
 
 def test_impala_partition_import(
         impala_genotype_storage, genomes_db_2013,
-        sample_parquet_partition_root, fixture_dirname):
+        fixture_dirname):
 
     ped_file = fixture_dirname('backends/test_partition/pedigree.parquet')
+    variants_path = fixture_dirname('backends/test_partition/variants.parquet')
 
     impala_genotype_storage.impala_load_dataset(
         'test_study',
-        sample_parquet_partition_root,
+        variants_path,
         ped_file)
 
     hdfs = impala_genotype_storage.hdfs_helpers
