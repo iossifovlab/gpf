@@ -1,19 +1,21 @@
 import os
 import gzip
 
+from typing import List, Optional
 from contextlib import closing
 
 import pysam
 import numpy as np
 import pandas as pd
 
+from dae.GenomeAccess import GenomicSequence_Ivan
 from dae.utils.variant_utils import best2gt, str2mat, GENOTYPE_TYPE, \
     reference_genotype
 from dae.utils.helpers import str2bool
 
 from dae.utils.dae_utils import dae2vcf_variant
 
-from dae.pedigrees.family import FamiliesData
+from dae.pedigrees.family import Family, FamiliesData
 from dae.variants.variant import SummaryVariantFactory
 
 from dae.backends.raw.loader import VariantsLoader, \
@@ -21,19 +23,25 @@ from dae.backends.raw.loader import VariantsLoader, \
 
 from dae.variants.attributes import VariantType
 
+from dae.utils.variant_utils import get_locus_ploidy
+
 
 class DenovoFamiliesGenotypes(FamiliesGenotypes):
 
-    def __init__(self, family, gt):
+    def __init__(self, family, gt, best_state=None):
         super(DenovoFamiliesGenotypes, self).__init__()
         self.family = family
         self.gt = gt
+        self.best_state = best_state
 
-    def get_family_genotype(self, family):
+    def get_family_genotype(self):
         return self.gt
 
+    def get_family_best_state(self):
+        return self.best_state
+
     def family_genotype_iterator(self):
-        yield self.family, self.gt
+        yield self.family, self.gt, self.best_state
 
 
 class DenovoLoader(VariantsLoader):
@@ -60,16 +68,17 @@ class DenovoLoader(VariantsLoader):
         for index, rec in enumerate(self.denovo_df.to_dict(orient='records')):
             family_id = rec.pop('family_id')
             gt = rec.pop('genotype')
+            best_state = rec.pop('best_state')
 
             rec['summary_variant_index'] = index
             rec['allele_index'] = 1
 
             summary_variant = SummaryVariantFactory \
-                .summary_variant_from_records(
-                    [rec], transmission_type=self.transmission_type)
+                .summary_variant_from_records([rec], self.transmission_type)
             family = self.families[family_id]
 
-            yield summary_variant, DenovoFamiliesGenotypes(family, gt)
+            yield summary_variant, \
+                DenovoFamiliesGenotypes(family, gt, best_state)
 
     @staticmethod
     def split_location(location):
@@ -77,11 +86,29 @@ class DenovoLoader(VariantsLoader):
         return chrom, int(position)
 
     @staticmethod
-    def produce_genotype(family, members_with_variant):
+    def produce_genotype(chrom: str,
+                         pos: int,
+                         genome: GenomicSequence_Ivan,
+                         family: Family,
+                         members_with_variant: List[str]) -> np.array:
+        # TODO Add support for multiallelic variants
+        # This method currently assumes biallelic variants
+
         genotype = np.zeros(shape=(2, len(family)), dtype=GENOTYPE_TYPE)
-        members_with_variant_index = family.members_index(members_with_variant)
-        for index in members_with_variant_index:
-            genotype[1, index] = 1
+
+        for person_id, person in family.persons.items():
+
+            index = family.members_index([person_id])
+            has_variant = int(person_id in members_with_variant)
+
+            ploidy = get_locus_ploidy(chrom, pos, person.sex, genome)
+
+            if ploidy == 2:
+                genotype[1, index] = has_variant
+            else:
+                genotype[0, index] = has_variant
+                genotype[1, index] = -2  # signifies haploid genotype
+
         return genotype
 
     @staticmethod
@@ -243,19 +270,19 @@ class DenovoLoader(VariantsLoader):
     @classmethod
     def flexible_denovo_load(
             cls,
-            filepath,
-            genome,
-            families=None,
-            denovo_location=None,
-            denovo_variant=None,
-            denovo_chrom=None,
-            denovo_pos=None,
-            denovo_ref=None,
-            denovo_alt=None,
-            denovo_person_id=None,
-            denovo_family_id=None,
-            denovo_best_state=None,
-            denovo_sep='\t'):
+            filepath: str,
+            genome: GenomicSequence_Ivan,
+            families: FamiliesData,
+            denovo_location: Optional[str] = None,
+            denovo_variant: Optional[str] = None,
+            denovo_chrom: Optional[str] = None,
+            denovo_pos: Optional[str] = None,
+            denovo_ref: Optional[str] = None,
+            denovo_alt: Optional[str] = None,
+            denovo_person_id: Optional[str] = None,
+            denovo_family_id: Optional[str] = None,
+            denovo_best_state: Optional[str] = None,
+            denovo_sep: str = '\t') -> pd.DataFrame:
 
         """
         Read a text file containing variants in the form
@@ -273,12 +300,10 @@ class DenovoLoader(VariantsLoader):
         the CSHL-style location of the variant.
 
         :param str denovo_variant: The label or index of the column containing
-        the
-        CSHL-style representation of the variant.
+        the CSHL-style representation of the variant.
 
         :param str denovo_chrom: The label or index of the column containing
-        the
-        chromosome upon which the variant is located.
+        the chromosome upon which the variant is located.
 
         :param str denovo_pos: The label or index of the column containing the
         position upon which the variant is located.
@@ -290,23 +315,19 @@ class DenovoLoader(VariantsLoader):
         variant's alternative allele.
 
         :param str denovo_person_id: The label or index of the column
-        containing
-        either
-        a singular person ID or a comma-separated list of person IDs.
+        containing either a singular person ID or a comma-separated
+        list of person IDs.
 
         :param str denovo_family_id: The label or index of the column
-        containing a
-        singular family ID.
+        containing a singular family ID.
 
         :param str denovo_best_state: The label or index of the column
-        containing the
-        best state for the variant.
+        containing the best state for the variant.
 
         :param str families: An instance of the FamiliesData class for the
         pedigree of the relevant study.
 
-        :type genome: An instance of GenomicSequence_Dan or
-        GenomicSequence_Ivan.
+        :type genome: An instance of GenomicSequence_Ivan.
 
         :return: Dataframe containing the variants, with the following
         header - 'chrom', 'position', 'reference', 'alternative', 'family_id',
@@ -318,16 +339,15 @@ class DenovoLoader(VariantsLoader):
         assert families is not None
         assert isinstance(families, FamiliesData), \
             'families must be an instance of FamiliesData!'
+        assert genome, 'You must provide a genome object!'
 
-        if not (denovo_location or
-                (denovo_chrom and denovo_pos)):
+        if not (denovo_location or (denovo_chrom and denovo_pos)):
             denovo_location = 'location'
 
         if not (denovo_variant or (denovo_ref and denovo_alt)):
             denovo_variant = 'variant'
 
-        if not (denovo_person_id or
-                (denovo_family_id and denovo_best_state)):
+        if not (denovo_person_id or (denovo_family_id and denovo_best_state)):
             denovo_family_id = 'familyId'
             denovo_best_state = 'bestState'
 
@@ -351,7 +371,6 @@ class DenovoLoader(VariantsLoader):
             pos_col = raw_df.loc[:, denovo_pos]
 
         if denovo_variant:
-            assert genome, 'You must provide a genome object!'
             variant_col = raw_df.loc[:, denovo_variant]
             ref_alt_tuples = [
                 dae2vcf_variant(*variant_tuple, genome)
@@ -393,6 +412,7 @@ class DenovoLoader(VariantsLoader):
             # TODO Implement support for multiallelic variants
             result = []
             for variant, families in variant_to_families.items():
+
                 for family_id, family in families.items():
                     result.append({
                         'chrom': variant[0],
@@ -401,8 +421,13 @@ class DenovoLoader(VariantsLoader):
                         'alternative': variant[3],
                         'family_id': family_id,
                         'genotype': cls.produce_genotype(
-                            family, variant_to_people[variant]
-                        )
+                            variant[0],
+                            variant[1],
+                            genome,
+                            family,
+                            variant_to_people[variant],
+                        ),
+                        'best_state': None,
                     })
 
             return pd.DataFrame(result)
@@ -410,26 +435,29 @@ class DenovoLoader(VariantsLoader):
         else:
             family_col = raw_df.loc[:, denovo_family_id]
 
-            def best_state2genotype(best_st):
-                return best2gt(str2mat(best_st, col_sep=' '))
-            genotype_col = map(best_state2genotype, raw_df[denovo_best_state])
+            best_state_col = list(map(
+                lambda bs: str2mat(bs, col_sep=' '), raw_df[denovo_best_state]
+            ))
+            genotype_col = list(map(best2gt, best_state_col))
 
-        return pd.DataFrame({
-            'chrom': chrom_col,
-            'position': pos_col,
-            'reference': ref_col,
-            'alternative': alt_col,
-            'family_id': family_col,
-            'genotype': genotype_col,
-        })
+            return pd.DataFrame({
+                'chrom': chrom_col,
+                'position': pos_col,
+                'reference': ref_col,
+                'alternative': alt_col,
+                'family_id': family_col,
+                'genotype': genotype_col,
+                'best_state': best_state_col,
+            })
 
 
 class DaeTransmittedFamiliesGenotypes(FamiliesGenotypes):
 
-    def __init__(self, families, families_genotypes):
+    def __init__(self, families, families_genotypes, families_best_states):
         super(DaeTransmittedFamiliesGenotypes, self).__init__()
         self.families = families
         self.families_genotypes = families_genotypes
+        self.families_best_states = families_best_states
 
     def get_family_genotype(self, family):
         gt = self.families_genotypes.get(family.family_id, None)
@@ -442,10 +470,14 @@ class DaeTransmittedFamiliesGenotypes(FamiliesGenotypes):
             # - unknown
             return reference_genotype(len(family))
 
+    def get_family_best_state(self, family):
+        return self.families_best_states.get(family.family_id, None)
+
     def family_genotype_iterator(self):
         for family_id, gt in self.families_genotypes.items():
             fam = self.families[family_id]
-            yield fam, gt
+            bs = self.families_best_states[family_id]
+            yield fam, gt, bs
 
     def full_families_genotypes(self):
         raise NotImplementedError()
@@ -601,33 +633,17 @@ class DaeTransmittedLoader(VariantsLoader):
         )
         return summary_variant
 
-    # @staticmethod
-    # def split_location(location):
-    #     chrom, position = location.split(":")
-    #     return chrom, int(position)
-
-    # @staticmethod
-    # def explode_family_genotype(best_st, col_sep="", row_sep="/"):
-    #     return best2gt(str2mat(best_st, col_sep=col_sep, row_sep=row_sep))
-
-    # @staticmethod
-    # def dae2vcf_variant(chrom, position, dae_variant, genome):
-    #     position, reference, alternative = dae2vcf_variant(
-    #         chrom, position, dae_variant, genome
-    #     )
-    #     return chrom, position, reference, alternative
-
     @staticmethod
     def _explode_family_genotypes(family_data, col_sep="", row_sep="/"):
-        res = {
-            fid: bs for [fid, bs] in [
-                fg.split(':')[:2] for fg in family_data.split(';')]
+        best_states = {
+            fid: str2mat(bs, col_sep=col_sep, row_sep=row_sep)
+            for (fid, bs) in [fg.split(':')[:2]
+                              for fg in family_data.split(';')]
         }
-        res = {
-            fid: best2gt(str2mat(bs, col_sep=col_sep, row_sep=row_sep))
-            for fid, bs in list(res.items())
+        genotypes = {
+            fid: best2gt(bs) for fid, bs in list(best_states.items())
         }
-        return res
+        return best_states, genotypes
 
     def summary_genotypes_iterator(self):
 
@@ -661,9 +677,15 @@ class DaeTransmittedLoader(VariantsLoader):
 
                         assert rec['cshl_position'] == \
                             int(toomany_rec['cshl_position'])
+
+                    best_states, genotypes = \
+                        self._explode_family_genotypes(family_data)
+
                     families_genotypes = DaeTransmittedFamiliesGenotypes(
                         self.families,
-                        self._explode_family_genotypes(family_data))
+                        genotypes,
+                        best_states
+                    )
 
                     yield summary_variant, families_genotypes
                     summary_index += 1

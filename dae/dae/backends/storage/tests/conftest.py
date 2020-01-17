@@ -47,6 +47,7 @@ def quads_f1_vcf_config(variants_db_fixture):
 
 @pytest.fixture(scope='session')
 def quads_f1_config(local_gpf_instance, impala_genotype_storage):
+
     impala_genotype_storage.impala_load_study(
         'quads_f1_impala',
         variant_paths=[relative_to_this_test_folder(

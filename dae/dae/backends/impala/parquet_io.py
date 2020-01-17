@@ -12,7 +12,9 @@ import configparser
 
 from dae.utils.variant_utils import GENOTYPE_TYPE
 from dae.variants.attributes import TransmissionType
-from dae.variants.family_variant import FamilyAllele, FamilyVariant
+from dae.variants.family_variant import FamilyAllele, FamilyVariant, \
+    calculate_simple_best_state
+from dae.variants.variant import SummaryVariant, SummaryAllele
 from dae.backends.impala.serializers import ParquetSerializer
 
 
@@ -296,9 +298,10 @@ class ContinuousParquetFileWriter():
                 filesystem=None, rows=10000):
         self._data = ParquetData(schema)
         schema = schema.to_arrow()
-        path = os.path.dirname(filepath)
-        if not os.path.exists(path):
-            os.makedirs(path)
+        dirname = os.path.dirname(filepath)
+        if dirname and not os.path.exists(dirname):
+            os.makedirs(dirname)
+
         self._writer = pq.ParquetWriter(
                 filepath,
                 schema,
@@ -356,28 +359,36 @@ class VariantsParquetWriter():
     def _setup_reference_allele(self, summary_variant, family):
         genotype = -1 * np.ones(
             shape=(2, len(family)), dtype=GENOTYPE_TYPE)
+        best_state = calculate_simple_best_state(
+            genotype, summary_variant.allele_count
+        )
 
         ra = summary_variant.ref_allele
-        reference_allele = FamilyAllele.from_summary_allele(
-            ra, family, genotype)
+        reference_allele = FamilyAllele(ra, family, genotype, best_state)
         return reference_allele
 
     def _setup_all_unknown_allele(self, summary_variant, family):
         genotype = -1 * np.ones(
             shape=(2, len(family)), dtype=GENOTYPE_TYPE)
+        best_state = calculate_simple_best_state(
+            genotype, summary_variant.allele_count
+        )
 
         ra = summary_variant.ref_allele
         unknown_allele = FamilyAllele(
-            ra.chromosome,
-            ra.position,
-            ra.reference,
-            ra.reference,
-            None,  # summary_allele.summary_index,
-            -1,
-            ra.transmission_type,
-            {},
+            SummaryAllele(
+                ra.chromosome,
+                ra.position,
+                ra.reference,
+                ra.reference,
+                None,  # summary_allele.summary_index,
+                -1,
+                ra.transmission_type,
+                {},
+            ),
             family,
-            genotype
+            genotype,
+            best_state
         )
         return unknown_allele
 
@@ -389,8 +400,12 @@ class VariantsParquetWriter():
             self._setup_reference_allele(summary_variant, family),
             self._setup_all_unknown_allele(summary_variant, family)
         ]
+        best_state = -1 * np.ones(
+            shape=(len(alleles), len(family)),
+            dtype=GENOTYPE_TYPE
+        )
         return FamilyVariant(
-            alleles, family, genotype
+            SummaryVariant(alleles), family, genotype, best_state
         )
 
     def _process_family_variant(
@@ -406,6 +421,11 @@ class VariantsParquetWriter():
             self.parquet_serializer.serialize_variant_genotype(
                 family_variant.gt
             )
+        best_state_data = \
+            self.parquet_serializer.serialize_variant_best_state(
+                family_variant.best_st
+            )
+        genetic_model_data = family_variant.genetic_model.value
         frequency_data = \
             self.parquet_serializer.serialize_variant_frequency(
                 family_variant
@@ -434,7 +454,9 @@ class VariantsParquetWriter():
                 self.parquet_serializer.serialize_effects(
                     family_allele, effect_data)
             family = self.parquet_serializer.serialize_family(
-                family_variant_index, family_allele, genotype_data)
+                family_variant_index, family_allele,
+                genotype_data, best_state_data, genetic_model_data,
+            )
             member = self.parquet_serializer.serialize_members(
                 family_variant_index, family_allele)
 
@@ -560,9 +582,10 @@ class ParquetManager:
             families, pedigree_filename):
 
         dirname = os.path.dirname(pedigree_filename)
-        os.makedirs(
-            dirname, exist_ok=True
-        )
+        if dirname:
+            os.makedirs(
+                dirname, exist_ok=True
+            )
 
         save_ped_df_to_parquet(
             families.ped_df, pedigree_filename
