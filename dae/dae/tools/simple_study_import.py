@@ -117,7 +117,7 @@ def main(argv, gpf_instance=None):
     if argv.id is not None:
         study_id = argv.id
     else:
-        study_id, _ = os.path.splitext(os.path.basename(argv.pedigree))
+        study_id, _ = os.path.splitext(os.path.basename(argv.families))
 
     if argv.output is None:
         output = dae_config.studies_db.dir
