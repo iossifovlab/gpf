@@ -67,7 +67,6 @@ class VcfLoader(VariantsLoader):
         super(VcfLoader, self).__init__(
             families=families,
             filenames=vcf_files,
-            source_type='vcf',
             transmission_type=TransmissionType.transmitted,
             params=params)
 
@@ -83,6 +82,7 @@ class VcfLoader(VariantsLoader):
 
         self._match_pedigree_to_samples(families, samples)
         self._init_chromosome_order()
+        self.set_attribute('source_type', 'vcf')
 
     def reset_regions(self, regions):
         if regions is None or isinstance(regions, str):

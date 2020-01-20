@@ -1,14 +1,14 @@
 import os
 import gzip
 
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from contextlib import closing
 
 import pysam
 import numpy as np
 import pandas as pd
 
-from dae.GenomeAccess import GenomicSequence_Ivan
+from dae.GenomeAccess import GenomicSequence
 from dae.utils.variant_utils import best2gt, str2mat, GENOTYPE_TYPE, \
     reference_genotype
 from dae.utils.helpers import str2bool
@@ -48,14 +48,16 @@ class DenovoFamiliesGenotypes(FamiliesGenotypes):
 class DenovoLoader(VariantsLoader):
 
     def __init__(
-            self, families, denovo_filename, genome, params={}):
+            self, families: FamiliesData,
+            denovo_filename: str, genome: GenomicSequence,
+            params: Dict[str, Any] = {}):
         super(DenovoLoader, self).__init__(
             families=families,
             filenames=[denovo_filename],
-            source_type='denovo',
             transmission_type=TransmissionType.denovo,
             params=params)
 
+        self.set_attribute('source_type', 'denovo')
         self.genome = genome
 
         self.chromosomes = genome.allChromosomes
@@ -95,7 +97,7 @@ class DenovoLoader(VariantsLoader):
     @staticmethod
     def produce_genotype(chrom: str,
                          pos: int,
-                         genome: GenomicSequence_Ivan,
+                         genome: GenomicSequence,
                          family: Family,
                          members_with_variant: List[str]) -> np.array:
         # TODO Add support for multiallelic variants
@@ -278,7 +280,7 @@ class DenovoLoader(VariantsLoader):
     def flexible_denovo_load(
             cls,
             filepath: str,
-            genome: GenomicSequence_Ivan,
+            genome: GenomicSequence,
             families: FamiliesData,
             denovo_location: Optional[str] = None,
             denovo_variant: Optional[str] = None,
@@ -334,7 +336,7 @@ class DenovoLoader(VariantsLoader):
         :param str families: An instance of the FamiliesData class for the
         pedigree of the relevant study.
 
-        :type genome: An instance of GenomicSequence_Ivan.
+        :type genome: An instance of GenomicSequence.
 
         :return: Dataframe containing the variants, with the following
         header - 'chrom', 'position', 'reference', 'alternative', 'family_id',
@@ -501,7 +503,6 @@ class DaeTransmittedLoader(VariantsLoader):
         super(DaeTransmittedLoader, self).__init__(
             families=families,
             filenames=[summary_filename],
-            source_type='dae',
             transmission_type=TransmissionType.transmitted)
 
         assert os.path.exists(summary_filename), summary_filename
@@ -511,6 +512,8 @@ class DaeTransmittedLoader(VariantsLoader):
 
         self.summary_filename = summary_filename
         self.toomany_filename = toomany_filename
+
+        self.set_attribute('source_type', 'dae')
 
         self.genome = genome
         if regions is None or isinstance(regions, str):

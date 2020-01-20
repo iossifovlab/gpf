@@ -12,7 +12,8 @@ from dae.backends.impala.import_commons import \
 
 from dae.backends.dae.loader import DenovoLoader
 from dae.backends.vcf.loader import VcfLoader
-from dae.backends.raw.loader import AnnotationPipelineDecorator
+from dae.backends.raw.loader import AnnotationPipelineDecorator, \
+    FamiliesGenotypesDecorator
 
 from dae.pedigrees.loader import FamiliesLoader
 
@@ -147,16 +148,23 @@ def main(argv, gpf_instance=None):
             genome=genome,
             params=denovo_params
         )
+        denovo_loader = FamiliesGenotypesDecorator(
+            denovo_loader, genome
+        )
         denovo_loader = AnnotationPipelineDecorator(
             denovo_loader, annotation_pipeline
         )
         variant_loaders.append(denovo_loader)
+
     if argv.vcf_files is not None:
         vcf_files, vcf_params = VcfLoader.parse_cli_arguments(argv)
         vcf_loader = VcfLoader(
             families,
             vcf_files,
             params=vcf_params
+        )
+        vcf_loader = FamiliesGenotypesDecorator(
+            vcf_loader, genome
         )
         vcf_loader = AnnotationPipelineDecorator(
             vcf_loader, annotation_pipeline

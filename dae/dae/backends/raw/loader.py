@@ -1,15 +1,17 @@
 import os
+import pathlib
 import sys
 import time
+import copy
 import numpy as np
 import pandas as pd
 
-from typing import Iterator, Tuple, List
+from typing import Iterator, Tuple, List, Dict, Any, Optional
 
-from dae.GenomeAccess import GenomicSequence_Ivan
+from dae.GenomeAccess import GenomicSequence
 
 from dae.pedigrees.family import FamiliesData
-from dae.variants.variant import SummaryVariant, SummaryVariantFactory
+from dae.variants.variant import SummaryVariant
 from dae.variants.family_variant import FamilyVariant, \
     calculate_simple_best_state
 from dae.variants.attributes import Sex, GeneticModel
@@ -39,20 +41,24 @@ class FamiliesGenotypes:
 class VariantsLoader:
 
     def __init__(
-            self, families, filenames, source_type,
-            transmission_type, params={}, attributes={}):
+            self, families: FamiliesData,
+            filenames: List[str],
+            transmission_type: TransmissionType,
+            params: Dict[str, Any] = {},
+            attributes: Optional[Dict[str, Any]] = None):
 
         assert isinstance(families, FamiliesData)
         self.families = families
         assert all([os.path.exists(fn) for fn in filenames])
         self.filenames = filenames
 
-        self.source_type = source_type
         assert isinstance(transmission_type, TransmissionType)
-
         self.transmission_type = transmission_type
         self.params = params
-        self._attributes = attributes
+        if attributes is None:
+            self._attributes = {}
+        else:
+            self._attributes = copy.deepcopy(attributes)
 
     def full_variants_iterator(self):
         raise NotImplementedError()
@@ -62,27 +68,28 @@ class VariantsLoader:
             for fv in fvs:
                 yield fv
 
-    def get_attribute(self, key):
+    def get_attribute(self, key: str) -> Any:
         return self._attributes.get(key, None)
 
-    def set_attribute(self, key, value):
+    def set_attribute(self, key: str, value: Any) -> None:
         self._attributes[key] = value
 
 
 class VariantsLoaderDecorator(VariantsLoader):
 
-    def __init__(self, variants_loader, attributes={}):
+    def __init__(
+            self, variants_loader: VariantsLoader):
+
         super(VariantsLoaderDecorator, self).__init__(
             variants_loader.families,
             variants_loader.filenames,
-            variants_loader.source_type,
             variants_loader.transmission_type,
             params=variants_loader.params,
-            attributes=attributes
+            attributes=variants_loader._attributes
         )
         self.variants_loader = variants_loader
 
-    def get_attribute(self, key):
+    def get_attribute(self, key: str) -> Any:
         result = self._attributes.get(key, None)
         if result is not None:
             return result
@@ -98,15 +105,15 @@ class AlleleFrequencyDecorator(VariantsLoaderDecorator):
         'af_allele_freq',
     ]
 
-    def __init__(self, variants_loader):
+    def __init__(self, variants_loader: VariantsLoader):
         super(AlleleFrequencyDecorator, self).__init__(variants_loader)
         assert self.transmission_type == TransmissionType.transmitted
 
         self.independent = self.families.persons_without_parents()
         self.n_independent_parents = len(self.independent)
 
-    def get_vcf_variant(self, allele):
-        return self.vcf.vars[allele['summary_variant_index']]
+    # def get_vcf_variant(self, allele):
+    #     return self.vcf.vars[allele['summary_variant_index']]
 
     def annotate_summary_variant(self, summary_variant, family_variants):
         n_independent_parents = self.n_independent_parents
@@ -256,7 +263,7 @@ class StoredAnnotationDecorator(VariantsLoaderDecorator):
     @staticmethod
     def decorate(variants_loader, source_filename):
         annotation_filename = \
-            StoredAnnotationDecorator._build_annotation_filename(
+            StoredAnnotationDecorator.build_annotation_filename(
                     source_filename
                 )
         if not os.path.exists(annotation_filename):
@@ -283,8 +290,18 @@ class StoredAnnotationDecorator(VariantsLoaderDecorator):
         return token
 
     @staticmethod
-    def _build_annotation_filename(filename):
-        return "{}-eff.txt".format(os.path.splitext(filename)[0])
+    def build_annotation_filename(filename):
+        path = pathlib.Path(filename)
+        suffixes = path.suffixes
+
+        if not suffixes:
+            return f'{filename}-eff.txt'
+        else:
+            suffix = ''.join(suffixes)
+            replace_with = suffix.replace('.', '-')
+            filename = filename.replace(suffix, replace_with)
+
+            return f'{filename}-eff.txt'
 
     @staticmethod
     def has_annotation_file(annotation_filename):
@@ -410,7 +427,7 @@ class FamiliesGenotypesDecorator(VariantsLoaderDecorator):
 
     @classmethod
     def _calc_genetic_model(
-        cls, family_variant: FamilyVariant, genome: GenomicSequence_Ivan
+        cls, family_variant: FamilyVariant, genome: GenomicSequence
     ) -> GeneticModel:
         if family_variant.chromosome in ('X', 'chrX'):
             male_ploidy = get_locus_ploidy(
@@ -434,7 +451,7 @@ class FamiliesGenotypesDecorator(VariantsLoaderDecorator):
 
     @classmethod
     def _calc_best_state(
-        cls, family_variant: FamilyVariant, genome: GenomicSequence_Ivan
+        cls, family_variant: FamilyVariant, genome: GenomicSequence
     ) -> np.array:
         best_state = calculate_simple_best_state(
             family_variant.gt, family_variant.allele_count

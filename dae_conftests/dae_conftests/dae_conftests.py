@@ -322,7 +322,7 @@ def from_prefix_vcf(prefix):
     conf = {
         'pedigree': '{}.ped'.format(prefix),
         'vcf': vcf_filename,
-        'annotation': '{}-eff.txt'.format(prefix),
+        'annotation': '{}-vcf-eff.txt'.format(prefix),
         'prefix': prefix
     }
     return Box(conf, default_box=True)

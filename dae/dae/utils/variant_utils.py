@@ -5,7 +5,7 @@ Created on Mar 5, 2018
 '''
 import numpy as np
 
-from dae.GenomeAccess import GenomicSequence_Ivan
+from dae.GenomeAccess import GenomicSequence
 from dae.variants.attributes import Sex
 
 
@@ -160,7 +160,7 @@ def vcf2cshl(pos, ref, alt, trimmer=trim_str_front):
 
 
 def get_locus_ploidy(
-    chrom: str, pos: int, sex: Sex, genome: GenomicSequence_Ivan
+    chrom: str, pos: int, sex: Sex, genome: GenomicSequence
 ) -> int:
     if chrom in ('chrX', 'X') and sex == Sex.M:
         if not genome.is_pseudoautosomal(chrom, pos):

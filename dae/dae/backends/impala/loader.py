@@ -16,11 +16,11 @@ class ParquetLoader(VariantsLoader):
         super(ParquetLoader, self).__init__(
             families=families,
             filenames=[partition_config_file],
-            source_type='parquet',
             transmission_type=transmission_type)
         self._read_partition_config(partition_config_file)
         self.root_dir = os.path.dirname(partition_config_file)
         self.partitions_to_read = partitions_to_read
+        self.set_attribute('source_type', 'parquet')
 
     def _read_partition_config(self, config_file):
         self._config = configparser.ConfigParser()
