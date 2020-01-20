@@ -35,14 +35,16 @@ def impala_genotype_storage(genotype_storage_factory):
     return genotype_storage_factory.get_genotype_storage('genotype_impala')
 
 
-@pytest.fixture(scope='session')
-def variants_db_fixture(local_gpf_instance):
-    return local_gpf_instance._variants_db
+# @pytest.fixture(scope='session')
+# def variants_db_fixture(local_gpf_instance):
+#     return local_gpf_instance._variants_db
 
 
 @pytest.fixture(scope='session')
 def quads_f1_vcf_config(variants_db_fixture):
-    return variants_db_fixture.get_study_config('quads_f1_vcf')
+    # print(variants_db_fixture.get_genotype_studies_ids())
+
+    return variants_db_fixture.get_study_config('quads_f1')
 
 
 @pytest.fixture(scope='session')

@@ -1,6 +1,6 @@
 import pytest
 
-from dae.backends.storage.tests.conftest import relative_to_this_test_folder
+from dae.backends.storage.tests.conftest import relative_to_this_folder
 
 
 def test_build_backend(
@@ -31,4 +31,4 @@ def test_is_filestorage(filesystem_genotype_storage):
 ])
 def test_get_data_dir(filesystem_genotype_storage, abs_path, path):
     assert filesystem_genotype_storage.get_data_dir(*path) == \
-        relative_to_this_test_folder(abs_path)
+        relative_to_this_folder(abs_path)
