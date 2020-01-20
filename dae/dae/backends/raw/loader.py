@@ -383,7 +383,8 @@ class FamiliesGenotypesDecorator(VariantsLoaderDecorator):
     """
 
     def __init__(
-        self, variants_loader, genome, overwrite=False, expect_none=False
+        self, variants_loader, genome,
+        overwrite=False, expect_none=False
     ):
         super(FamiliesGenotypesDecorator, self).__init__(variants_loader)
         self.overwrite = overwrite
@@ -475,7 +476,7 @@ class FamiliesGenotypesDecorator(VariantsLoaderDecorator):
                 if self.expect_none:
                     assert family_variant._best_st is None
                     assert family_variant._genetic_model is None
-                    continue
+
                 if self.overwrite or family_variant._genetic_model is None:
                     family_variant._genetic_model = \
                         self._calc_genetic_model(

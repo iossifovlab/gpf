@@ -765,11 +765,6 @@ def parquet_partition_configuration():
     return filename
 
 
-@pytest.fixture(scope='session')
-def sample_parquet_partition_root():
-    return relative_to_this_test_folder('fixtures/backends/test_partition')
-
-
 @pytest.fixture(scope='function')
 def test_fixture():
     print('start')

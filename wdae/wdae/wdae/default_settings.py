@@ -38,7 +38,7 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': 'wdae.sql',
+'NAME': os.path.join(os.environ.get('DAE_DB_DIR'), 'wdae/wdae.sql'),
         'USER': '',
         'PASSWORD': '',
         'HOST': '',
@@ -170,7 +170,7 @@ INSTALLED_APPS = [
     'users_api',
     'groups_api',
 
-    # 'gpfjs',
+    'gpfjs',
     'chromosome',
     'query_state_save'
 ]
@@ -226,13 +226,13 @@ LOGGING = {
         # Log to a text file that can be rotated by logrotate
         'logfile': {
             'class': 'logging.handlers.WatchedFileHandler',
-            'filename': 'wdae-api.log',
+'filename': os.path.join(os.environ.get('DAE_DB_DIR'), 'wdae/wdae-api.log'),
             'filters': ['require_debug_false'],
             'formatter': 'verbose',
         },
         'logdebug': {
             'class': 'logging.handlers.WatchedFileHandler',
-            'filename': 'wdae-debug.log',
+'filename': os.path.join(os.environ.get('DAE_DB_DIR'), 'wdae/wdae-debug.log'),
             'formatter': 'verbose',
         },
     },
@@ -275,7 +275,7 @@ LOGGING = {
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
-        'LOCATION': 'wdae_django_default.cache',
+'LOCATION': os.path.join(os.environ.get('DAE_DB_DIR'), 'wdae/wdae_django_default.cache'),
         'TIMEOUT': 3600,
         'OPTIONS': {
             'MAX_ENTRIES': 10000
@@ -284,7 +284,7 @@ CACHES = {
 
     'long': {
         'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
-        'LOCATION': 'wdae_django_default.cache',
+'LOCATION': os.path.join(os.environ.get('DAE_DB_DIR'), 'wdae/wdae_django_default.cache'),
         'TIMEOUT': 86400,
         'OPTIONS': {
             'MAX_ENTRIES': 1000,
@@ -294,7 +294,7 @@ CACHES = {
 
     'pre': {
         'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
-        'LOCATION': 'wdae_django_pre.cache',
+'LOCATION': os.path.join(os.environ.get('DAE_DB_DIR'), 'wdae/wdae_django_pre.cache'),
         'TIMEOUT': None,
     },
 
