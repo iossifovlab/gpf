@@ -19,7 +19,6 @@ export class UserSavedQuery {
 export class SavedQueriesComponent implements OnInit {
 
   genotypeQueries: Array<UserSavedQuery>;
-  phenotypeQueries: Array<UserSavedQuery>;
   phenotoolQueries: Array<UserSavedQuery>;
   enrichmentQueries: Array<UserSavedQuery>;
 
@@ -44,7 +43,6 @@ export class SavedQueriesComponent implements OnInit {
       });
 
       this.genotypeQueries = queries.filter(query => query.page === 'genotype');
-      this.phenotypeQueries = queries.filter(query => query.page === 'phenotype');
       this.phenotoolQueries = queries.filter(query => query.page === 'phenotool');
       this.enrichmentQueries = queries.filter(query => query.page === 'enrichment');
     });

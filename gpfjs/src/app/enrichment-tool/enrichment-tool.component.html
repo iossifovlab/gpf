@@ -8,6 +8,7 @@
       <div class="form-block">
         <input class="btn btn-md btn-primary" type="button" value="Enrichment Test" (click)="submitQuery()">
         <gpf-share-query-button queryType="enrichment"></gpf-share-query-button>
+        <gpf-save-query queryType="enrichment"></gpf-save-query>
       </div>
       <gpf-enrichment-table [enrichmentResults]="enrichmentResults"></gpf-enrichment-table>
     </div>
