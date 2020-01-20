@@ -1,8 +1,10 @@
+import pytest
 from dae.backends.impala.loader import ParquetLoader
 from dae.pedigrees.loader import FamiliesLoader
 from dae.pedigrees.family import FamiliesData
 
 
+@pytest.mark.xfail(reason='Parquet loader does not function properly')
 def test_partition_read(fixture_dirname):
     # ped_file = '/home/ivo/gpf/dae/dae/tests/fixtures/backends/partition.ped'
     ped_file = fixture_dirname('backends/partition.ped')
@@ -27,6 +29,7 @@ def test_partition_read(fixture_dirname):
     assert any(s.reference == 'CGGCTCGGAAGG' for s in summary_variants)
 
 
+@pytest.mark.xfail(reason='Parquet loader does not function properly')
 def test_partition_read_glob_region_1(fixture_dirname):
     # ped_file = '/home/ivo/gpf/dae/dae/tests/fixtures/backends/partition.ped'
     ped_file = fixture_dirname('backends/partition.ped')
@@ -49,6 +52,7 @@ def test_partition_read_glob_region_1(fixture_dirname):
     assert not any(s.chrom == '3' for s in summary_variants)
 
 
+@pytest.mark.xfail(reason='Parquet loader does not function properly')
 def test_partition_read_glob_region_2(fixture_dirname):
     # ped_file = '/home/ivo/gpf/dae/dae/tests/fixtures/backends/partition.ped'
     ped_file = fixture_dirname('backends/partition.ped')

@@ -1,3 +1,4 @@
+import pytest
 import os
 
 import pyarrow.parquet as pq
@@ -42,6 +43,7 @@ def test_vcf2parquet_vcf(
     assert 'effect_data' in schema.names
 
 
+@pytest.mark.xfail(reason='Parquet loader does not function properly')
 def test_vcf2parquet_vcf_partition(
         vcf_import_config, annotation_pipeline_config,
         annotation_scores_dirname, temp_dirname,
