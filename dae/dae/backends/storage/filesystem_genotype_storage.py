@@ -29,7 +29,7 @@ class FilesystemGenotypeStorage(GenotypeStorage):
     def is_filestorage(self):
         return True
 
-    def build_backend(self, study_config, genome):
+    def build_backend(self, study_config, genomes_db):
         if study_config.files is None:
             data_dir = self.get_data_dir(study_config.id, 'data')
             vcf_filename = os.path.join(
@@ -45,7 +45,7 @@ class FilesystemGenotypeStorage(GenotypeStorage):
                 variants_loader, vcf_filename
             )
             variants_loader = FamiliesGenotypesDecorator(
-                variants_loader, genome)
+                variants_loader, genomes_db.get_genome())
 
             return RawMemoryVariants([variants_loader])
 
@@ -74,14 +74,14 @@ class FilesystemGenotypeStorage(GenotypeStorage):
                 variants_filename = study_config.files.denovo[0].path
                 variants_loader = DenovoLoader(
                     families, variants_filename,
-                    genome,
+                    genomes_db.get_genome(),
                     params=study_config.files.denovo[0].params)
 
                 variants_loader = StoredAnnotationDecorator.decorate(
                     variants_loader, variants_filename
                 )
                 variants_loader = FamiliesGenotypesDecorator(
-                    variants_loader, genome)
+                    variants_loader, genomes_db.get_genome())
                 loaders.append(variants_loader)
 
             assert len(loaders) > 0

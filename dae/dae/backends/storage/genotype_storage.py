@@ -10,7 +10,7 @@ class GenotypeStorage:
     def is_filestorage(self):
         return False
 
-    def build_backend(self, study_id, genome):
+    def build_backend(self, study_id, genomes_db):
         raise NotImplementedError()
 
     def simple_study_import(

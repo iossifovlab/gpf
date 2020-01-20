@@ -253,7 +253,7 @@ class VariantsDb(object):
             )
 
         variants = genotype_storage.build_backend(
-            study_config, self.genomes_db.get_genome()
+            study_config, self.genomes_db
         )
 
         return GenotypeDataStudy(study_config, variants)
