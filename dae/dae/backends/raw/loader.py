@@ -97,7 +97,7 @@ class VariantsLoaderDecorator(VariantsLoader):
         return self.variants_loader.get_attribute(key)
 
     def __getattr__(self, attr):
-        return self.variants_loader.__getattr__(attr)
+        return getattr(self.variants_loader, attr)
 
 
 class AlleleFrequencyDecorator(VariantsLoaderDecorator):

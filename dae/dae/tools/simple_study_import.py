@@ -148,11 +148,11 @@ def main(argv, gpf_instance=None):
             genome=genome,
             params=denovo_params
         )
-        denovo_loader = FamiliesGenotypesDecorator(
-            denovo_loader, genome
-        )
         denovo_loader = AnnotationPipelineDecorator(
             denovo_loader, annotation_pipeline
+        )
+        denovo_loader = FamiliesGenotypesDecorator(
+            denovo_loader, genome
         )
         variant_loaders.append(denovo_loader)
 
@@ -163,11 +163,11 @@ def main(argv, gpf_instance=None):
             vcf_files,
             params=vcf_params
         )
-        vcf_loader = FamiliesGenotypesDecorator(
-            vcf_loader, genome
-        )
         vcf_loader = AnnotationPipelineDecorator(
             vcf_loader, annotation_pipeline
+        )
+        vcf_loader = FamiliesGenotypesDecorator(
+            vcf_loader, genome
         )
         variant_loaders.append(vcf_loader)
 
