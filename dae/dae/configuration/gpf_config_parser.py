@@ -11,17 +11,15 @@ from Typing import Dict, Any
 class GPFConfigParser:
 
     filetype_parsers: Dict[str, Any] = {
-        '.yaml': yaml.safe_load,
-        '.json': json.loads,
-        '.toml': toml.loads,
+        ".yaml": yaml.safe_load,
+        ".json": json.loads,
+        ".toml": toml.loads,
     }
 
-    section_schemas: Dict[str, Dict[str, Any]] = {
-        'studyconfig': None
-    }
+    section_schemas: Dict[str, Dict[str, Any]] = {"studyconfig": None}
 
     @classmethod
-    def _dict_to_namedtuple(cls, input_dict: Dict[str, Any], dict_name: str = 'root'):
+    def _dict_to_namedtuple(cls, input_dict: Dict[str, Any], dict_name: str = "root"):
         tup_ctor = namedtuple(dict_name, input_dict.keys())
 
         for key, value in input_dict.items():
@@ -33,7 +31,7 @@ class GPFConfigParser:
     @classmethod
     def _read_config(cls, filename: str) -> Dict[str, Any]:
         ext = os.path.splitext(filename)[1]
-        assert ext in cls.filetype_parsers, f'Unsupported filetype {filename}!'
+        assert ext in cls.filetype_parsers, f"Unsupported filetype {filename}!"
         conf_dict = cls.filetype_parsers[ext](filename)
         return conf_dict
 
@@ -41,7 +39,7 @@ class GPFConfigParser:
     def _read_directory_configs(cls, dirname):
         config_files = list()
         for filetype in cls.filetype_parsers.keys():
-            config_files += glob.glob(os.path.join(dirname, f'*{filetype}'))
+            config_files += glob.glob(os.path.join(dirname, f"*{filetype}"))
 
         return list(map(cls.read_config, config_files))
 
