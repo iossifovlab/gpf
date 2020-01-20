@@ -11,6 +11,7 @@ import pyarrow.parquet as pq
 import configparser
 
 from dae.utils.variant_utils import GENOTYPE_TYPE
+from dae.variants.attributes import TransmissionType
 from dae.variants.family_variant import FamilyAllele, FamilyVariant, \
     calculate_simple_best_state
 from dae.variants.variant import SummaryVariant, SummaryAllele
@@ -208,7 +209,10 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
     def _evaluate_frequency_bin(self, family_allele):
         count = family_allele.get_attribute('af_allele_count')
         frequency = family_allele.get_attribute('af_allele_freq')
-        if count and int(count) == 1:  # Ultra rare
+        transmission_type = family_allele.transmission_type
+        if transmission_type == TransmissionType.denovo:
+            frequency_bin = 0
+        elif count and int(count) == 1:  # Ultra rare
             frequency_bin = 1
         elif frequency and float(frequency) < self._rare_boundary:  # Rare
             frequency_bin = 2
@@ -330,21 +334,21 @@ class ContinuousParquetFileWriter():
 class VariantsParquetWriter():
 
     def __init__(
-            self, fvars,
+            self, variants_loader,
             partition_descriptor,
             bucket_index=1,
             rows=100000, include_reference=True,
             include_unknown=True, filesystem=None):
 
-        self.fvars = fvars
-        self.families = fvars.families
-        self.full_variants_iterator = fvars.full_variants_iterator()
+        self.variants_loader = variants_loader
+        self.families = variants_loader.families
+        self.full_variants_iterator = variants_loader.full_variants_iterator()
 
         self.bucket_index = bucket_index
         self.rows = rows
         self.filesystem = filesystem
 
-        self.schema = fvars.annotation_schema
+        self.schema = variants_loader.get_attribute('annotation_schema')
         self.parquet_serializer = ParquetSerializer(
             self.schema, include_reference=True)
 
@@ -623,7 +627,7 @@ class ParquetManager:
             variants_loader, partition_descriptor,
             bucket_index=1, rows=100000):
 
-        assert variants_loader.annotation_schema is not None
+        assert variants_loader.get_attribute('annotation_schema') is not None
 
         start = time.time()
 

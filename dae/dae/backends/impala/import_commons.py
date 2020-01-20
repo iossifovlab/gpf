@@ -14,7 +14,7 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 
 from dae.pedigrees.loader import FamiliesLoader
 from dae.backends.raw.loader import AnnotationPipelineDecorator, \
-    AlleleFrequencyDecorator
+    AlleleFrequencyDecorator, FamiliesGenotypesDecorator
 from dae.backends.impala.parquet_io import ParquetManager, \
     ParquetPartitionDescriptor, NoPartitionDescriptor
 
@@ -183,8 +183,10 @@ class Variants2ParquetTool:
 
     VARIANTS_LOADER_CLASS = None
     VARIANTS_TOOL = None
-    BUCKET_INDEX_DEFAULT = 100
     VARIANTS_FREQUENCIES = False
+    VARIANTS_GENOTYPES = True
+
+    BUCKET_INDEX_DEFAULT = 1000
 
     @classmethod
     def cli_common_arguments(cls, gpf_instance, parser):
@@ -445,12 +447,17 @@ class Variants2ParquetTool:
                 print("resetting regions:", regions)
                 variants_loader.reset_regions(regions)
 
-            if cls.VARIANTS_FREQUENCIES:
-                variants_loader = AlleleFrequencyDecorator(variants_loader)
-
             variants_loader = AnnotationPipelineDecorator(
                 variants_loader, annotation_pipeline
             )
+
+            if cls.VARIANTS_FREQUENCIES:
+                variants_loader = AlleleFrequencyDecorator(variants_loader)
+
+            if cls.VARIANTS_GENOTYPES:
+                genome = gpf_instance.genomes_db.get_genome()
+                variants_loader = FamiliesGenotypesDecorator(
+                    variants_loader, genome)
 
             ParquetManager.variants_to_parquet_partition(
                 variants_loader, partition_description,

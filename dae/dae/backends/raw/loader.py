@@ -40,7 +40,7 @@ class VariantsLoader:
 
     def __init__(
             self, families, filenames, source_type,
-            transmission_type, params={}):
+            transmission_type, params={}, attributes={}):
 
         assert isinstance(families, FamiliesData)
         self.families = families
@@ -52,6 +52,7 @@ class VariantsLoader:
 
         self.transmission_type = transmission_type
         self.params = params
+        self._attributes = attributes
 
     def full_variants_iterator(self):
         raise NotImplementedError()
@@ -61,18 +62,32 @@ class VariantsLoader:
             for fv in fvs:
                 yield fv
 
+    def get_attribute(self, key):
+        return self._attributes.get(key, None)
+
+    def set_attribute(self, key, value):
+        self._attributes[key] = value
+
 
 class VariantsLoaderDecorator(VariantsLoader):
 
-    def __init__(self, variants_loader):
+    def __init__(self, variants_loader, attributes={}):
         super(VariantsLoaderDecorator, self).__init__(
             variants_loader.families,
             variants_loader.filenames,
             variants_loader.source_type,
             variants_loader.transmission_type,
-            params=variants_loader.params
+            params=variants_loader.params,
+            attributes=attributes
         )
         self.variants_loader = variants_loader
+
+    def get_attribute(self, key):
+        result = self._attributes.get(key, None)
+        if result is not None:
+            return result
+
+        return self.variants_loader.get_attribute(key)
 
 
 class AlleleFrequencyDecorator(VariantsLoaderDecorator):
@@ -150,6 +165,7 @@ class AnnotationPipelineDecorator(VariantsLoaderDecorator):
 
         self.annotation_pipeline = annotation_pipeline
         self.annotation_schema = annotation_pipeline.build_annotation_schema()
+        self.set_attribute('annotation_schema', self.annotation_schema)
 
     def full_variants_iterator(self):
         for summary_variant, family_variants in \
@@ -367,7 +383,8 @@ class FamiliesGenotypesDecorator(VariantsLoaderDecorator):
     """
 
     def __init__(
-        self, variants_loader, genome, overwrite=False, expect_none=False
+        self, variants_loader, genome,
+        overwrite=False, expect_none=False
     ):
         super(FamiliesGenotypesDecorator, self).__init__(variants_loader)
         self.overwrite = overwrite
@@ -456,7 +473,7 @@ class FamiliesGenotypesDecorator(VariantsLoaderDecorator):
                 if self.expect_none:
                     assert family_variant._best_st is None
                     assert family_variant._genetic_model is None
-                    continue
+
                 if self.overwrite or family_variant._genetic_model is None:
                     family_variant._genetic_model = \
                         self._calc_genetic_model(
