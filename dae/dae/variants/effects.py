@@ -141,7 +141,7 @@ class Effect(object):
         if data is None:
             return None
         parts = data.split("!")
-        assert len(parts) == 3
+        assert len(parts) == 3, parts
         worst = parts[0].strip()
         effect_genes = [
             EffectGene.from_string(eg.strip())

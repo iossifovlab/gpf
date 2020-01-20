@@ -96,17 +96,17 @@ class ImpalaFamilyVariants:
             for row in cursor:
                 chrom, position, reference, transmission_type, \
                     alternatives_data, \
-                    effect_data, family_id, genotype_data, \
-                    frequency_data, genomic_scores_data, \
+                    effect_data, family_id, genotype_data, best_state_data, \
+                    genetic_model_data, frequency_data, genomic_scores_data, \
                     matched_alleles = row
 
                 family = self.families[family_id]
                 v = self.serializer.deserialize_variant(
                     family,
                     chrom, position, reference, transmission_type,
-                    alternatives_data,
-                    effect_data, genotype_data,
-                    frequency_data, genomic_scores_data
+                    alternatives_data, effect_data,
+                    genotype_data, best_state_data,
+                    genetic_model_data, frequency_data, genomic_scores_data,
                 )
 
                 matched_alleles = [int(a) for a in matched_alleles.split(',')]
@@ -611,6 +611,8 @@ class ImpalaFamilyVariants:
                 effect_data,
                 family_id,
                 genotype_data,
+                best_state_data,
+                genetic_model_data,
                 frequency_data,
                 genomic_scores_data,
                 GROUP_CONCAT(DISTINCT CAST(allele_index AS string))
@@ -628,6 +630,8 @@ class ImpalaFamilyVariants:
                 effect_data,
                 family_id,
                 genotype_data,
+                best_state_data,
+                genetic_model_data,
                 frequency_data,
                 genomic_scores_data
             {limit_clause}

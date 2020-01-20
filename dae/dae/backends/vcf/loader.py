@@ -5,7 +5,7 @@ import numpy as np
 from dae.utils.helpers import str2bool
 
 from dae.utils.variant_utils import is_all_reference_genotype, \
-    is_all_unknown_genotype, is_unknown_genotype
+    is_all_unknown_genotype, is_unknown_genotype, GENOTYPE_TYPE
 from dae.variants.variant import SummaryVariantFactory
 from dae.backends.raw.loader import VariantsLoader, TransmissionType, \
     FamiliesGenotypes
@@ -32,6 +32,9 @@ class VcfFamiliesGenotypes(FamiliesGenotypes):
             f"{gt.shape} == (2, {len(family)})"
         return gt
 
+    def get_family_best_state(self, family):
+        return None
+
     def family_genotype_iterator(self):
         for fam in self.families.values():
             if len(fam) == 0:
@@ -46,8 +49,9 @@ class VcfFamiliesGenotypes(FamiliesGenotypes):
             if is_all_unknown_genotype(gt) \
                     and not self.include_unknown_family_genotypes:
                 continue
+            bs = self.get_family_best_state(fam)
 
-            yield fam, gt
+            yield fam, gt, bs
 
     def full_families_genotypes(self):
         return self.families_genotypes
@@ -198,51 +202,52 @@ class VcfLoader(VariantsLoader):
 
         return gt
 
-    def _summary_genotypes_iterator_internal(self, vcf_iterators):
-        vcf_variants = [next(it, None) for it in vcf_iterators]
-        summary_variant_index = 0
-
-        while True:
-            if all([vcf_variant is None for vcf_variant in vcf_variants]):
-                break
-
-            current_vcf_variant = \
-                self._find_current_vcf_variant(vcf_variants)
-            current_summary_variant = self._build_summary_variant(
-                summary_variant_index, current_vcf_variant)
-
-            vcf_iterator_idexes_to_advance = list()
-            genotypes = tuple()
-            for idx, vcf_variant in enumerate(vcf_variants):
-                if self._compare_vcf_variants_eq(
-                        current_vcf_variant, vcf_variant):
-                    genotypes += tuple(vcf_variant.genotypes)
-                    vcf_iterator_idexes_to_advance.append(idx)
-                else:
-                    genotypes += tuple(
-                        self._generate_missing_genotype(self.vcfs[idx])
-                    )
-
-            family_genotypes = VcfFamiliesGenotypes(
-                self.families,
-                np.array(genotypes, dtype=np.int8).T,
-                params=self.params)
-
-            yield current_summary_variant, family_genotypes
-
-            for idx in vcf_iterator_idexes_to_advance:
-                vcf_variants[idx] = next(vcf_iterators[idx], None)
-            summary_variant_index += 1
-
     def summary_genotypes_iterator(self):
+        summary_variant_index = 0
         for region in self.regions:
             vcf_iterators = self._build_vcf_iterators(region)
+            vcf_variants = [next(it, None) for it in vcf_iterators]
 
-            summary_genotypes = \
-                self._summary_genotypes_iterator_internal(vcf_iterators)
+            while True:
+                if all([vcf_variant is None for vcf_variant in vcf_variants]):
+                    break
 
-            for summary_variant, family_genotypes in summary_genotypes:
-                yield summary_variant, family_genotypes
+                current_vcf_variant = \
+                    self._find_current_vcf_variant(vcf_variants)
+                current_summary_variant = self._build_summary_variant(
+                    summary_variant_index, current_vcf_variant)
+
+                vcf_iterator_idexes_to_advance = list()
+                genotypes = tuple()
+                for idx, vcf_variant in enumerate(vcf_variants):
+                    if self._compare_vcf_variants_eq(
+                            current_vcf_variant, vcf_variant):
+                        genotypes += tuple(vcf_variant.genotypes)
+                        vcf_iterator_idexes_to_advance.append(idx)
+                    else:
+                        genotypes += tuple(
+                            self._generate_missing_genotype(self.vcfs[idx])
+                        )
+
+                family_genotypes = VcfFamiliesGenotypes(
+                    self.families,
+                    VcfLoader.transform_vcf_genotypes(genotypes),
+                    params=self.params)
+
+                yield current_summary_variant, family_genotypes
+
+                for idx in vcf_iterator_idexes_to_advance:
+                    vcf_variants[idx] = next(vcf_iterators[idx], None)
+                summary_variant_index += 1
+
+    @staticmethod
+    def transform_vcf_genotypes(genotypes):
+        new_genotypes = []
+        for genotype in genotypes:
+            if len(genotype) == 2:  # Handle haploid genotypes
+                genotype.insert(1, -2)
+            new_genotypes.append(genotype)
+        return np.array(new_genotypes, dtype=GENOTYPE_TYPE).T
 
     @staticmethod
     def cli_defaults():

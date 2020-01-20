@@ -24,7 +24,7 @@ def test_impala_query_build(impala_host, genomes_db_2013):
     ifv = ImpalaFamilyVariants(
         connection,
         'impala_storage_test_db',
-        'test_study_partition',
+        'test_study_variants',
         'test_study_pedigree',
         genomes_db_2013.get_gene_models())
     regions = [Region('1', 1, 199999), Region('2', 1, 199999)]

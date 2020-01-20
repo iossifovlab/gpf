@@ -9,6 +9,7 @@ class Dae2ParquetTool(Variants2ParquetTool):
 
     VARIANTS_LOADER_CLASS = DaeTransmittedLoader
     VARIANTS_TOOL = 'dae2parquet.py'
+    VARIANTS_FREQUENCIES = False
 
 
 def main(argv=sys.argv[1:], gpf_instance=None, annotation_defaults={}):

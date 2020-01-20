@@ -22,7 +22,7 @@ def local_gpf_instance(gpf_instance, work_dir):
 
 @pytest.fixture(scope='session')
 def genotype_storage_factory(local_gpf_instance):
-    return local_gpf_instance._genotype_storage_factory
+    return local_gpf_instance.genotype_storage_db
 
 
 @pytest.fixture(scope='session')
@@ -47,6 +47,7 @@ def quads_f1_vcf_config(variants_db_fixture):
 
 @pytest.fixture(scope='session')
 def quads_f1_config(local_gpf_instance, impala_genotype_storage):
+
     impala_genotype_storage.impala_load_study(
         'quads_f1_impala',
         variant_paths=[relative_to_this_test_folder(

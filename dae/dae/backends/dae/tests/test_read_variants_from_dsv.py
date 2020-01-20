@@ -22,34 +22,38 @@ def fake_families(fixture_dirname):
 def compare_variant_dfs(res_df, expected_df):
     equal = True
 
-    # The genotype column must be compared separately
-    # since it contains numpy arrays
-    res_genotype = res_df.loc[:, 'genotype']
-    expected_genotype = res_df.loc[:, 'genotype']
-    del(res_df['genotype'])
-    del(expected_df['genotype'])
+    # The genotype and best_state columns must be
+    # compared separately since they contain numpy arrays
+
+    for col in ('genotype', 'best_state'):
+        res_genotype = res_df.loc[:, col]
+        expected_genotype = res_df.loc[:, col]
+        del(res_df[col])
+        del(expected_df[col])
+
+        equal = equal and len(res_genotype) == len(expected_genotype)
+        for i in range(0, len(res_genotype)):
+            equal = equal and np.array_equal(
+                res_genotype[i],
+                expected_genotype[i]
+            )
 
     equal = equal and res_df.equals(expected_df)
-    equal = equal and len(res_genotype) == len(expected_genotype)
-    for i in range(0, len(res_genotype)):
-        equal = equal and np.array_equal(
-            res_genotype[i],
-            expected_genotype[i]
-        )
     return equal
 
 
-def test_produce_genotype(fake_families):
+def test_produce_genotype(fake_families, genome_2013):
     expected_output = np.array([[0, 0, 0, 0, 0], [0, 0, 0, 1, 1]])
     output = DenovoLoader.produce_genotype(
-        fake_families['f1'], ['f1.p1', 'f1.s2'])
+        '1', 123123, genome_2013, fake_families['f1'], ['f1.p1', 'f1.s2'])
     assert np.array_equal(output, expected_output)
     assert output.dtype == GENOTYPE_TYPE
 
 
-def test_produce_genotype_no_people_with_variants(fake_families):
+def test_produce_genotype_no_people_with_variants(fake_families, genome_2013):
     expected_output = np.array([[0, 0, 0, 0, 0], [0, 0, 0, 0, 0]])
-    output = DenovoLoader.produce_genotype(fake_families['f1'], [])
+    output = DenovoLoader.produce_genotype(
+        '1', 123123, genome_2013, fake_families['f1'], [])
     assert np.array_equal(output, expected_output)
     assert output.dtype == GENOTYPE_TYPE
 
@@ -83,15 +87,21 @@ def test_read_variants_DAE_style(genome_2013, fixture_dirname, fake_families):
             np.array([[0, 0, 0, 0, 0], [0, 0, 1, 0, 0]]),
             np.array([[0, 0, 0, 0], [0, 0, 0, 1]]),
         ],
+        'best_state': [
+            np.array([[2, 2, 1, 2, 1], [0, 0, 1, 0, 1]]),
+            np.array([[2, 2, 1, 2, 2], [0, 0, 1, 0, 0]]),
+            np.array([[2, 2, 1, 1], [0, 0, 0, 1]]),
+        ],
     })
 
     assert compare_variant_dfs(res_df, expected_df)
 
 
-def test_read_variants_a_la_VCF_style(fixture_dirname, fake_families):
+def test_read_variants_a_la_VCF_style(
+        genome_2013, fixture_dirname, fake_families):
     filename = fixture_dirname('denovo_import/variants_VCF_style.tsv')
     res_df = DenovoLoader.flexible_denovo_load(
-        filename, None,  families=fake_families,
+        filename, genome_2013,  families=fake_families,
         denovo_chrom='chrom', denovo_pos='pos',
         denovo_ref='ref',
         denovo_alt='alt', denovo_family_id='familyId',
@@ -109,15 +119,20 @@ def test_read_variants_a_la_VCF_style(fixture_dirname, fake_families):
             np.array([[0, 0, 0, 0, 0], [0, 0, 1, 0, 0]]),
             np.array([[0, 0, 0, 0], [0, 0, 0, 1]]),
         ],
+        'best_state': [
+            None,
+            None,
+            None,
+        ],
     })
 
     assert compare_variant_dfs(res_df, expected_df)
 
 
-def test_read_variants_mixed_A(fixture_dirname, fake_families):
+def test_read_variants_mixed_A(genome_2013, fixture_dirname, fake_families):
     filename = fixture_dirname('denovo_import/variants_mixed_style_A.tsv')
     res_df = DenovoLoader.flexible_denovo_load(
-        filename, None,  families=fake_families,
+        filename, genome_2013,  families=fake_families,
         denovo_location='location',
         denovo_ref='ref',
         denovo_alt='alt', denovo_family_id='familyId',
@@ -134,6 +149,11 @@ def test_read_variants_mixed_A(fixture_dirname, fake_families):
             np.array([[0, 0, 0, 0, 0], [0, 0, 1, 0, 1]]),
             np.array([[0, 0, 0, 0, 0], [0, 0, 1, 0, 0]]),
             np.array([[0, 0, 0, 0], [0, 0, 0, 1]]),
+        ],
+        'best_state': [
+            np.array([[2, 2, 1, 2, 1], [0, 0, 1, 0, 1]]),
+            np.array([[2, 2, 1, 2, 2], [0, 0, 1, 0, 0]]),
+            np.array([[2, 2, 1, 1], [0, 0, 0, 1]]),
         ],
     })
 
@@ -160,6 +180,11 @@ def test_read_variants_mixed_B(genome_2013, fixture_dirname, fake_families):
             np.array([[0, 0, 0, 0, 0], [0, 0, 1, 0, 0]]),
             np.array([[0, 0, 0, 0], [0, 0, 0, 1]]),
         ],
+        'best_state': [
+            np.array([[2, 2, 1, 2, 1], [0, 0, 1, 0, 1]]),
+            np.array([[2, 2, 1, 2, 2], [0, 0, 1, 0, 0]]),
+            np.array([[2, 2, 1, 1], [0, 0, 0, 1]]),
+        ],
     })
 
     assert compare_variant_dfs(res_df, expected_df)
@@ -169,10 +194,11 @@ def test_read_variants_mixed_B(genome_2013, fixture_dirname, fake_families):
     ('denovo_import/variants_personId_single.tsv'),
     ('denovo_import/variants_personId_list.tsv'),
 ])
-def test_read_variants_person_ids(filename, fake_families, fixture_dirname):
+def test_read_variants_person_ids(
+        genome_2013, filename, fake_families, fixture_dirname):
     filename = fixture_dirname(filename)
     res_df = DenovoLoader.flexible_denovo_load(
-        filename, None,  families=fake_families,
+        filename, genome_2013,  families=fake_families,
         denovo_chrom='chrom', denovo_pos='pos',
         denovo_ref='ref', denovo_alt='alt', denovo_person_id='personId'
     )
@@ -188,6 +214,11 @@ def test_read_variants_person_ids(filename, fake_families, fixture_dirname):
             np.array([[0, 0, 0, 0, 0], [0, 0, 1, 0, 0]]),
             np.array([[0, 0, 0, 0], [0, 0, 0, 1]]),
         ],
+        'best_state': [
+            None,
+            None,
+            None,
+        ],
     })
 
     res_df = res_df.sort_values(['position', 'reference'])
@@ -198,11 +229,12 @@ def test_read_variants_person_ids(filename, fake_families, fixture_dirname):
     assert compare_variant_dfs(res_df, expected_df)
 
 
-def test_read_variants_different_separator(fixture_dirname, fake_families):
+def test_read_variants_different_separator(
+        genome_2013, fixture_dirname, fake_families):
     filename = fixture_dirname(
         'denovo_import/variants_different_separator.dsv')
     res_df = DenovoLoader.flexible_denovo_load(
-        filename, None,  families=fake_families,
+        filename, genome_2013,  families=fake_families,
         denovo_sep='$', denovo_chrom='chrom',
         denovo_pos='pos',
         denovo_ref='ref',
@@ -220,6 +252,11 @@ def test_read_variants_different_separator(fixture_dirname, fake_families):
             np.array([[0, 0, 0, 0, 0], [0, 0, 1, 0, 1]]),
             np.array([[0, 0, 0, 0, 0], [0, 0, 1, 0, 0]]),
             np.array([[0, 0, 0, 0], [0, 0, 0, 1]]),
+        ],
+        'best_state': [
+            np.array([[2, 2, 1, 2, 1], [0, 0, 1, 0, 1]]),
+            np.array([[2, 2, 1, 2, 2], [0, 0, 1, 0, 0]]),
+            np.array([[2, 2, 1, 1], [0, 0, 0, 1]]),
         ],
     })
 
