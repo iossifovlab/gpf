@@ -455,7 +455,9 @@ class Variants2ParquetTool:
                 variants_loader = AlleleFrequencyDecorator(variants_loader)
 
             if cls.VARIANTS_GENOTYPES:
-                variants_loader = FamiliesGenotypesDecorator(variants_loader)
+                genome = gpf_instance.genomes_db.get_genome()
+                variants_loader = FamiliesGenotypesDecorator(
+                    variants_loader, genome)
 
             ParquetManager.variants_to_parquet_partition(
                 variants_loader, partition_description,

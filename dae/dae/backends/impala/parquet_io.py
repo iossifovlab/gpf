@@ -212,7 +212,7 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
         transmission_type = family_allele.transmission_type
         if transmission_type == TransmissionType.denovo:
             frequency_bin = 0
-        if count and int(count) == 1:  # Ultra rare
+        elif count and int(count) == 1:  # Ultra rare
             frequency_bin = 1
         elif frequency and float(frequency) < self._rare_boundary:  # Rare
             frequency_bin = 2
@@ -334,21 +334,21 @@ class ContinuousParquetFileWriter():
 class VariantsParquetWriter():
 
     def __init__(
-            self, fvars,
+            self, variants_loader,
             partition_descriptor,
             bucket_index=1,
             rows=100000, include_reference=True,
             include_unknown=True, filesystem=None):
 
-        self.fvars = fvars
-        self.families = fvars.families
-        self.full_variants_iterator = fvars.full_variants_iterator()
+        self.variants_loader = variants_loader
+        self.families = variants_loader.families
+        self.full_variants_iterator = variants_loader.full_variants_iterator()
 
         self.bucket_index = bucket_index
         self.rows = rows
         self.filesystem = filesystem
 
-        self.schema = fvars.annotation_schema
+        self.schema = variants_loader.get_attribute('annotation_schema')
         self.parquet_serializer = ParquetSerializer(
             self.schema, include_reference=True)
 
@@ -627,7 +627,7 @@ class ParquetManager:
             variants_loader, partition_descriptor,
             bucket_index=1, rows=100000):
 
-        assert variants_loader.annotation_schema is not None
+        assert variants_loader.get_attribute('annotation_schema') is not None
 
         start = time.time()
 

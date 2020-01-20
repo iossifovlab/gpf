@@ -1,8 +1,8 @@
 from django.conf.urls import url, include
 
-from gpfjs.views import index
+# gpfjs
 
-urlpatterns = [ url(r'^$', index), url(r'^gpfjs/.*$', index),
+urlpatterns = [
 
     url(r'^api/v3/datasets', include('datasets_api.urls')),
     url(r'^api/v3/gene_weights', include('gene_weights.urls')),
