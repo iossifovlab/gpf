@@ -270,6 +270,7 @@ class AnnotationPipelineDecorator(AnnotationDecorator):
         'genotype_data',
         'best_state_data',
         'genetic_model_data',
+        'inheritance_data',
         'frequency_data',
         'genomic_scores_data',
     ])

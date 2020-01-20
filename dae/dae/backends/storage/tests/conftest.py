@@ -3,7 +3,7 @@ import pytest
 import os
 
 
-def relative_to_this_test_folder(path):
+def relative_to_this_folder(path):
     return os.path.join(
         os.path.dirname(os.path.realpath(__file__)),
         path
@@ -11,8 +11,8 @@ def relative_to_this_test_folder(path):
 
 
 @pytest.fixture(scope='session')
-def work_dir():
-    return relative_to_this_test_folder('fixtures')
+def work_dir(fixture_dirname):
+    return relative_to_this_folder('fixtures')
 
 
 @pytest.fixture(scope='session')
@@ -46,14 +46,15 @@ def quads_f1_vcf_config(variants_db_fixture):
 
 
 @pytest.fixture(scope='session')
-def quads_f1_config(local_gpf_instance, impala_genotype_storage):
+def quads_f1_config(
+        local_gpf_instance, impala_genotype_storage, fixture_dirname):
 
     impala_genotype_storage.impala_load_study(
         'quads_f1_impala',
-        variant_paths=[relative_to_this_test_folder(
-            'fixtures/studies/quads_f1_impala/data/variants')],
-        pedigree_paths=[relative_to_this_test_folder(
-            'fixtures/studies/quads_f1_impala/data/pedigree')]
+        variant_paths=[fixture_dirname(
+            'studies/quads_f1_impala/data/variants')],
+        pedigree_paths=[fixture_dirname(
+            'studies/quads_f1_impala/data/pedigree')]
     )
     local_gpf_instance.reload()
     return local_gpf_instance._variants_db.get_study_config('quads_f1_impala')

@@ -447,7 +447,7 @@ def iossifov2014_impala(
     temp_dirname = test_hdfs.tempdir(prefix='variants_', suffix='_data')
     test_hdfs.mkdir(temp_dirname)
 
-    study_id = 'iossifov_wd2014_test'
+    study_id = 'iossifov_we2014_test'
     parquet_filenames = ParquetManager.build_parquet_filenames(
         temp_dirname, bucket_index=0, study_id=study_id
     )

@@ -69,7 +69,9 @@ class FamilyAllele(Allele, FamilyDelegate):
             summary_allele: SummaryAllele,
             family: Family,
             genotype,
-            best_state):
+            best_state,
+            genetic_model=None,
+            inheritance_in_members=None):
         assert isinstance(family, Family)
 
         FamilyDelegate.__init__(self, family)
@@ -80,9 +82,9 @@ class FamilyAllele(Allele, FamilyDelegate):
         self.gt = genotype
         assert self.gt.dtype == GENOTYPE_TYPE, (self.gt, self.gt.dtype)
         self._best_st = best_state
-        self._genetic_model = None
+        self._genetic_model = genetic_model
 
-        self._inheritance_in_members = None
+        self._inheritance_in_members = inheritance_in_members
         self._variant_in_members = None
         self._variant_in_members_objects = None
         self._variant_in_roles = None
