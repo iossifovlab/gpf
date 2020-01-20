@@ -96,6 +96,9 @@ class VariantsLoaderDecorator(VariantsLoader):
 
         return self.variants_loader.get_attribute(key)
 
+    def __getattr__(self, attr):
+        return self.variants_loader.__getattr__(attr)
+
 
 class AlleleFrequencyDecorator(VariantsLoaderDecorator):
     COLUMNS = [
@@ -161,39 +164,32 @@ class AlleleFrequencyDecorator(VariantsLoaderDecorator):
             yield summary_variant, fvs
 
 
-class AnnotationPipelineDecorator(VariantsLoaderDecorator):
+class AnnotationDecorator(VariantsLoaderDecorator):
 
     SEP1 = '!'
     SEP2 = '|'
     SEP3 = ':'
 
-    def __init__(self, variants_loader, annotation_pipeline):
-        super(AnnotationPipelineDecorator, self).__init__(variants_loader)
+    def __init__(self, variants_loader):
+        super(AnnotationDecorator, self).__init__(variants_loader)
 
-        self.annotation_pipeline = annotation_pipeline
-        self.annotation_schema = annotation_pipeline.build_annotation_schema()
-        self.set_attribute('annotation_schema', self.annotation_schema)
+    @staticmethod
+    def build_annotation_filename(filename):
+        path = pathlib.Path(filename)
+        suffixes = path.suffixes
 
-    def full_variants_iterator(self):
-        for summary_variant, family_variants in \
-                self.variants_loader.full_variants_iterator():
-            self.annotation_pipeline.annotate_summary_variant(summary_variant)
-            yield summary_variant, family_variants
+        if not suffixes:
+            return f'{filename}-eff.txt'
+        else:
+            suffix = ''.join(suffixes)
+            replace_with = suffix.replace('.', '-')
+            filename = filename.replace(suffix, replace_with)
 
-    CLEAN_UP_COLUMNS = set([
-        'alternatives_data',
-        'family_variant_index',
-        'family_id',
-        'variant_sexes',
-        'variant_roles',
-        'variant_inheritance',
-        'variant_in_member',
-        'genotype_data',
-        'best_state_data',
-        'genetic_model_data',
-        'frequency_data',
-        'genomic_scores_data',
-    ])
+            return f'{filename}-eff.txt'
+
+    @staticmethod
+    def has_annotation_file(annotation_filename):
+        return os.path.exists(annotation_filename)
 
     def save_annotation_file(self, filename, sep="\t"):
         def convert_array_of_strings_to_string(a):
@@ -248,11 +244,38 @@ class AnnotationPipelineDecorator(VariantsLoaderDecorator):
                     outfile.write('\n')
 
 
-class StoredAnnotationDecorator(VariantsLoaderDecorator):
+class AnnotationPipelineDecorator(AnnotationDecorator):
 
-    SEP1 = '!'
-    SEP2 = '|'
-    SEP3 = ':'
+    def __init__(self, variants_loader, annotation_pipeline):
+        super(AnnotationPipelineDecorator, self).__init__(variants_loader)
+
+        self.annotation_pipeline = annotation_pipeline
+        self.annotation_schema = annotation_pipeline.build_annotation_schema()
+        self.set_attribute('annotation_schema', self.annotation_schema)
+
+    def full_variants_iterator(self):
+        for summary_variant, family_variants in \
+                self.variants_loader.full_variants_iterator():
+            self.annotation_pipeline.annotate_summary_variant(summary_variant)
+            yield summary_variant, family_variants
+
+    CLEAN_UP_COLUMNS = set([
+        'alternatives_data',
+        'family_variant_index',
+        'family_id',
+        'variant_sexes',
+        'variant_roles',
+        'variant_inheritance',
+        'variant_in_member',
+        'genotype_data',
+        'best_state_data',
+        'genetic_model_data',
+        'frequency_data',
+        'genomic_scores_data',
+    ])
+
+
+class StoredAnnotationDecorator(AnnotationDecorator):
 
     def __init__(self, variants_loader, annotation_filename):
         super(StoredAnnotationDecorator, self).__init__(variants_loader)
@@ -289,26 +312,8 @@ class StoredAnnotationDecorator(VariantsLoaderDecorator):
             return None
         return token
 
-    @staticmethod
-    def build_annotation_filename(filename):
-        path = pathlib.Path(filename)
-        suffixes = path.suffixes
-
-        if not suffixes:
-            return f'{filename}-eff.txt'
-        else:
-            suffix = ''.join(suffixes)
-            replace_with = suffix.replace('.', '-')
-            filename = filename.replace(suffix, replace_with)
-
-            return f'{filename}-eff.txt'
-
-    @staticmethod
-    def has_annotation_file(annotation_filename):
-        return os.path.exists(annotation_filename)
-
     @classmethod
-    def load_annotation_file(cls, filename, sep='\t'):
+    def _load_annotation_file(cls, filename, sep='\t'):
         assert os.path.exists(filename)
         with open(filename, 'r') as infile:
             annot_df = pd.read_csv(
@@ -335,34 +340,10 @@ class StoredAnnotationDecorator(VariantsLoaderDecorator):
                 where(pd.notnull(annot_df[col]), None)
         return annot_df
 
-    # @classmethod
-    # def save_annotation_file(cls, annot_df, filename, sep="\t"):
-    #     def convert_array_of_strings_to_string(a):
-    #         if not a:
-    #             return None
-    #         return cls.SEP1.join(a)
-
-    #     vars_df = annot_df.copy()
-    #     vars_df['effect_gene_genes'] = vars_df['effect_gene_genes'].\
-    #         apply(convert_array_of_strings_to_string)
-    #     vars_df['effect_gene_types'] = vars_df['effect_gene_types'].\
-    #         apply(convert_array_of_strings_to_string)
-    #     vars_df['effect_details_transcript_ids'] = \
-    #         vars_df['effect_details_transcript_ids'].\
-    #         apply(convert_array_of_strings_to_string)
-    #     vars_df['effect_details_details'] = \
-    #         vars_df['effect_details_details'].\
-    #         apply(convert_array_of_strings_to_string)
-    #     vars_df.to_csv(
-    #         filename,
-    #         index=False,
-    #         sep=sep
-    #     )
-
     def full_variants_iterator(self):
         variant_iterator = self.variants_loader.full_variants_iterator()
         start = time.time()
-        annot_df = self.load_annotation_file(self.annotation_filename)
+        annot_df = self._load_annotation_file(self.annotation_filename)
         elapsed = time.time() - start
         print(f"Annotation loaded in in {elapsed:.2f} sec", file=sys.stderr)
 

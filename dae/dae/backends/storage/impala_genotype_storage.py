@@ -78,14 +78,14 @@ class ImpalaGenotypeStorage(GenotypeStorage):
             pedigree_table = '{}_pedigree'.format(study_config.id)
         return variant_table, pedigree_table
 
-    def build_backend(self, study_config, genomes_db):
+    def build_backend(self, study_config, genome):
         variant_table, pedigree_table = self.study_tables(study_config)
 
         family_variants = ImpalaFamilyVariants(
             self.impala_connection,
             self.storage_config.impala.db,
             variant_table, pedigree_table,
-            genomes_db.get_gene_models()
+            genome
         )
 
         return family_variants

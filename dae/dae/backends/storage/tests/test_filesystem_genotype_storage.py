@@ -8,7 +8,7 @@ def test_build_backend(
     assert filesystem_genotype_storage
 
     backend = filesystem_genotype_storage.build_backend(
-        quads_f1_vcf_config, genomes_db_2013
+        quads_f1_vcf_config, genomes_db_2013.get_genome()
     )
 
     assert len(backend.families) == 1

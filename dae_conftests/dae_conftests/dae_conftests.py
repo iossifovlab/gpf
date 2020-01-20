@@ -469,7 +469,7 @@ def iossifov2014_impala(
 
     fvars = impala_genotype_storage.build_backend(
         Box({'id': study_id}, default_box=True),
-        genomes_db_2013)
+        genomes_db_2013.get_genome())
     return fvars
 
 
@@ -743,7 +743,7 @@ def variants_impala(
         study_id = os.path.basename(path)
         fvars = impala_genotype_storage.build_backend(
             Box({'id': study_id}, default_box=True),
-            genomes_db_2013)
+            genomes_db_2013.get_genome())
         return fvars
 
     return builder

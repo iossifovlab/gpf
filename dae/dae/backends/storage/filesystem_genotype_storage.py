@@ -7,7 +7,8 @@ from dae.pedigrees.loader import FamiliesLoader
 
 from dae.backends.storage.genotype_storage import GenotypeStorage
 
-from dae.backends.raw.loader import StoredAnnotationDecorator
+from dae.backends.raw.loader import StoredAnnotationDecorator, \
+    FamiliesGenotypesDecorator
 from dae.backends.raw.raw_variants import RawMemoryVariants
 
 from dae.backends.vcf.loader import VcfLoader
@@ -28,7 +29,7 @@ class FilesystemGenotypeStorage(GenotypeStorage):
     def is_filestorage(self):
         return True
 
-    def build_backend(self, study_config, genomes_db):
+    def build_backend(self, study_config, genome):
         if study_config.files is None:
             data_dir = self.get_data_dir(study_config.id, 'data')
             vcf_filename = os.path.join(
@@ -43,6 +44,9 @@ class FilesystemGenotypeStorage(GenotypeStorage):
             variants_loader = StoredAnnotationDecorator.decorate(
                 variants_loader, vcf_filename
             )
+            variants_loader = FamiliesGenotypesDecorator(
+                variants_loader, genome)
+
             return RawMemoryVariants([variants_loader])
 
         else:
@@ -70,12 +74,14 @@ class FilesystemGenotypeStorage(GenotypeStorage):
                 variants_filename = study_config.files.denovo[0].path
                 variants_loader = DenovoLoader(
                     families, variants_filename,
-                    genomes_db.get_genome(),
+                    genome,
                     params=study_config.files.denovo[0].params)
 
                 variants_loader = StoredAnnotationDecorator.decorate(
                     variants_loader, variants_filename
                 )
+                variants_loader = FamiliesGenotypesDecorator(
+                    variants_loader, genome)
                 loaders.append(variants_loader)
 
             assert len(loaders) > 0
