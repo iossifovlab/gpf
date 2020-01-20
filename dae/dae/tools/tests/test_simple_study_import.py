@@ -44,7 +44,7 @@ def test_import_denovo_dae_style_into_impala(
     impala_storage = ImpalaGenotypeStorage(storage_config)
     fvars = impala_storage.build_backend(
         Box({'id': study_id}, default_box=True),
-        genomes_db_2013
+        genomes_db_2013.get_genome()
     )
 
     vs = list(fvars.query_variants())
@@ -80,7 +80,7 @@ def test_import_comp_vcf_into_impala(
 
     fvars = impala_storage.build_backend(
         Box({'id': study_id}, default_box=True),
-        genomes_db_2013
+        genomes_db_2013.get_genome()
     )
 
     vs = list(fvars.query_variants())
@@ -122,7 +122,7 @@ def test_import_comp_denovo_into_impala(
 
     fvars = impala_storage.build_backend(
         Box({'id': study_id}, default_box=True),
-        genomes_db_2013
+        genomes_db_2013.get_genome()
     )
 
     vs = list(fvars.query_variants())
@@ -166,7 +166,7 @@ def test_import_comp_all_into_impala(
 
     fvars = impala_storage.build_backend(
         Box({'id': study_id}, default_box=True),
-        genomes_db_2013
+        genomes_db_2013.get_genome()
     )
 
     vs = list(fvars.query_variants())

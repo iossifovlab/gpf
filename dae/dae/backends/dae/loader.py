@@ -1,14 +1,14 @@
 import os
 import gzip
 
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from contextlib import closing
 
 import pysam
 import numpy as np
 import pandas as pd
 
-from dae.GenomeAccess import GenomicSequence_Ivan
+from dae.GenomeAccess import GenomicSequence
 from dae.utils.variant_utils import best2gt, str2mat, GENOTYPE_TYPE, \
     reference_genotype
 from dae.utils.helpers import str2bool
@@ -17,6 +17,7 @@ from dae.utils.dae_utils import dae2vcf_variant
 
 from dae.pedigrees.family import Family, FamiliesData
 from dae.variants.variant import SummaryVariantFactory
+from dae.variants.family_variant import FamilyVariant
 
 from dae.backends.raw.loader import VariantsLoader, \
     TransmissionType, FamiliesGenotypes
@@ -47,14 +48,16 @@ class DenovoFamiliesGenotypes(FamiliesGenotypes):
 class DenovoLoader(VariantsLoader):
 
     def __init__(
-            self, families, denovo_filename, genome, params={}):
+            self, families: FamiliesData,
+            denovo_filename: str, genome: GenomicSequence,
+            params: Dict[str, Any] = {}):
         super(DenovoLoader, self).__init__(
             families=families,
             filenames=[denovo_filename],
-            source_type='denovo',
             transmission_type=TransmissionType.denovo,
             params=params)
 
+        self.set_attribute('source_type', 'denovo')
         self.genome = genome
 
         self.chromosomes = genome.allChromosomes
@@ -63,7 +66,7 @@ class DenovoLoader(VariantsLoader):
             denovo_filename, genome, families=families, **self.params
         )
 
-    def summary_genotypes_iterator(self):
+    def full_variants_iterator(self):
 
         for index, rec in enumerate(self.denovo_df.to_dict(orient='records')):
             family_id = rec.pop('family_id')
@@ -77,8 +80,14 @@ class DenovoLoader(VariantsLoader):
                 .summary_variant_from_records([rec], self.transmission_type)
             family = self.families[family_id]
 
-            yield summary_variant, \
-                DenovoFamiliesGenotypes(family, gt, best_state)
+            family_genotypes = DenovoFamiliesGenotypes(family, gt, best_state)
+
+            family_variants = []
+            for fam, gt, bs in family_genotypes.family_genotype_iterator():
+                family_variants.append(
+                    FamilyVariant(summary_variant, fam, gt, bs))
+
+            yield summary_variant, family_variants
 
     @staticmethod
     def split_location(location):
@@ -88,7 +97,7 @@ class DenovoLoader(VariantsLoader):
     @staticmethod
     def produce_genotype(chrom: str,
                          pos: int,
-                         genome: GenomicSequence_Ivan,
+                         genome: GenomicSequence,
                          family: Family,
                          members_with_variant: List[str]) -> np.array:
         # TODO Add support for multiallelic variants
@@ -271,7 +280,7 @@ class DenovoLoader(VariantsLoader):
     def flexible_denovo_load(
             cls,
             filepath: str,
-            genome: GenomicSequence_Ivan,
+            genome: GenomicSequence,
             families: FamiliesData,
             denovo_location: Optional[str] = None,
             denovo_variant: Optional[str] = None,
@@ -327,7 +336,7 @@ class DenovoLoader(VariantsLoader):
         :param str families: An instance of the FamiliesData class for the
         pedigree of the relevant study.
 
-        :type genome: An instance of GenomicSequence_Ivan.
+        :type genome: An instance of GenomicSequence.
 
         :return: Dataframe containing the variants, with the following
         header - 'chrom', 'position', 'reference', 'alternative', 'family_id',
@@ -494,7 +503,6 @@ class DaeTransmittedLoader(VariantsLoader):
         super(DaeTransmittedLoader, self).__init__(
             families=families,
             filenames=[summary_filename],
-            source_type='dae',
             transmission_type=TransmissionType.transmitted)
 
         assert os.path.exists(summary_filename), summary_filename
@@ -504,6 +512,8 @@ class DaeTransmittedLoader(VariantsLoader):
 
         self.summary_filename = summary_filename
         self.toomany_filename = toomany_filename
+
+        self.set_attribute('source_type', 'dae')
 
         self.genome = genome
         if regions is None or isinstance(regions, str):
@@ -645,7 +655,7 @@ class DaeTransmittedLoader(VariantsLoader):
         }
         return best_states, genotypes
 
-    def summary_genotypes_iterator(self):
+    def full_variants_iterator(self):
 
         summary_columns = self._load_summary_columns(self.summary_filename)
         toomany_columns = self._load_toomany_columns(self.toomany_filename)
@@ -687,7 +697,13 @@ class DaeTransmittedLoader(VariantsLoader):
                         best_states
                     )
 
-                    yield summary_variant, families_genotypes
+                    family_variants = []
+                    for fam, gt, bs in \
+                            families_genotypes.family_genotype_iterator():
+                        family_variants.append(
+                            FamilyVariant(summary_variant, fam, gt, bs))
+
+                    yield summary_variant, family_variants
                     summary_index += 1
 
     @staticmethod

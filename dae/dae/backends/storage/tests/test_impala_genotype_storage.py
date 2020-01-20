@@ -11,7 +11,7 @@ def test_build_backend(
     assert impala_genotype_storage
 
     backend = impala_genotype_storage.build_backend(
-        quads_f1_config, genomes_db_2013
+        quads_f1_config, genomes_db_2013.get_genome()
     )
 
     assert len(backend.families) == 1
@@ -80,7 +80,7 @@ def test_impala_load_study(impala_genotype_storage, genomes_db_2013):
 
     backend = impala_genotype_storage.build_backend(
         Box({'id': 'study_id'}, default_box=True),
-        genomes_db_2013
+        genomes_db_2013.get_genome()
     )
 
     assert len(backend.families) == 1

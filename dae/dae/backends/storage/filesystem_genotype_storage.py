@@ -8,7 +8,7 @@ from dae.pedigrees.loader import FamiliesLoader
 from dae.backends.storage.genotype_storage import GenotypeStorage
 
 from dae.backends.raw.loader import StoredAnnotationDecorator, \
-    AnnotationPipelineDecorator
+    FamiliesGenotypesDecorator
 from dae.backends.raw.raw_variants import RawMemoryVariants
 
 from dae.backends.vcf.loader import VcfLoader
@@ -29,7 +29,7 @@ class FilesystemGenotypeStorage(GenotypeStorage):
     def is_filestorage(self):
         return True
 
-    def build_backend(self, study_config, genomes_db):
+    def build_backend(self, study_config, genome):
         if study_config.files is None:
             data_dir = self.get_data_dir(study_config.id, 'data')
             vcf_filename = os.path.join(
@@ -44,6 +44,9 @@ class FilesystemGenotypeStorage(GenotypeStorage):
             variants_loader = StoredAnnotationDecorator.decorate(
                 variants_loader, vcf_filename
             )
+            variants_loader = FamiliesGenotypesDecorator(
+                variants_loader, genome)
+
             return RawMemoryVariants([variants_loader])
 
         else:
@@ -71,12 +74,14 @@ class FilesystemGenotypeStorage(GenotypeStorage):
                 variants_filename = study_config.files.denovo[0].path
                 variants_loader = DenovoLoader(
                     families, variants_filename,
-                    genomes_db.get_genome(),
+                    genome,
                     params=study_config.files.denovo[0].params)
 
                 variants_loader = StoredAnnotationDecorator.decorate(
                     variants_loader, variants_filename
                 )
+                variants_loader = FamiliesGenotypesDecorator(
+                    variants_loader, genome)
                 loaders.append(variants_loader)
 
             assert len(loaders) > 0
@@ -129,7 +134,9 @@ class FilesystemGenotypeStorage(GenotypeStorage):
     def _import_variants_files(self, study_id, loaders):
         result_config = []
         for index, variants_loader in enumerate(loaders):
-            assert isinstance(variants_loader, AnnotationPipelineDecorator)
+            # assert isinstance(variants_loader, AnnotationPipelineDecorator)
+            assert variants_loader.get_attribute("annotation_schema") \
+                is not None
 
             source_filename = ' '.join(variants_loader.filenames)
             destination_filename = os.path.join(
@@ -141,19 +148,20 @@ class FilesystemGenotypeStorage(GenotypeStorage):
             params = ",\n\t".join([
                 "{}:{}".format(k, v)
                 for k, v in variants_loader.params.items() if v is not None])
+            source_type = variants_loader.get_attribute('source_type')
             config = STUDY_VARIANTS_TEMPLATE.format(
                 index=index,
                 path=destination_filename,
                 params=params,
-                source_type=variants_loader.source_type
+                source_type=source_type
             )
             result_config.append(config)
 
             os.makedirs(
                 os.path.dirname(destination_filename),
                 exist_ok=True)
-            annotation_filename = "{}-eff.txt".format(
-                os.path.splitext(destination_filename)[0])
+            annotation_filename = StoredAnnotationDecorator\
+                .build_annotation_filename(destination_filename)
             variants_loader.save_annotation_file(annotation_filename)
 
             shutil.copyfile(source_filename, destination_filename)

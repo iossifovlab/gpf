@@ -322,7 +322,7 @@ def from_prefix_vcf(prefix):
     conf = {
         'pedigree': '{}.ped'.format(prefix),
         'vcf': vcf_filename,
-        'annotation': '{}-eff.txt'.format(prefix),
+        'annotation': '{}-vcf-eff.txt'.format(prefix),
         'prefix': prefix
     }
     return Box(conf, default_box=True)
@@ -469,7 +469,7 @@ def iossifov2014_impala(
 
     fvars = impala_genotype_storage.build_backend(
         Box({'id': study_id}, default_box=True),
-        genomes_db_2013)
+        genomes_db_2013.get_genome())
     return fvars
 
 
@@ -743,7 +743,7 @@ def variants_impala(
         study_id = os.path.basename(path)
         fvars = impala_genotype_storage.build_backend(
             Box({'id': study_id}, default_box=True),
-            genomes_db_2013)
+            genomes_db_2013.get_genome())
         return fvars
 
     return builder

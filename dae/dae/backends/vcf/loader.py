@@ -7,6 +7,7 @@ from dae.utils.helpers import str2bool
 from dae.utils.variant_utils import is_all_reference_genotype, \
     is_all_unknown_genotype, is_unknown_genotype, GENOTYPE_TYPE
 from dae.variants.variant import SummaryVariantFactory
+from dae.variants.family_variant import FamilyVariant
 from dae.backends.raw.loader import VariantsLoader, TransmissionType, \
     FamiliesGenotypes
 
@@ -66,7 +67,6 @@ class VcfLoader(VariantsLoader):
         super(VcfLoader, self).__init__(
             families=families,
             filenames=vcf_files,
-            source_type='vcf',
             transmission_type=TransmissionType.transmitted,
             params=params)
 
@@ -82,6 +82,7 @@ class VcfLoader(VariantsLoader):
 
         self._match_pedigree_to_samples(families, samples)
         self._init_chromosome_order()
+        self.set_attribute('source_type', 'vcf')
 
     def reset_regions(self, regions):
         if regions is None or isinstance(regions, str):
@@ -202,7 +203,7 @@ class VcfLoader(VariantsLoader):
 
         return gt
 
-    def summary_genotypes_iterator(self):
+    def full_variants_iterator(self):
         summary_variant_index = 0
         for region in self.regions:
             vcf_iterators = self._build_vcf_iterators(region)
@@ -234,7 +235,12 @@ class VcfLoader(VariantsLoader):
                     VcfLoader.transform_vcf_genotypes(genotypes),
                     params=self.params)
 
-                yield current_summary_variant, family_genotypes
+                family_variants = []
+                for fam, gt, bs in family_genotypes.family_genotype_iterator():
+                    family_variants.append(
+                        FamilyVariant(current_summary_variant, fam, gt, bs))
+
+                yield current_summary_variant, family_variants
 
                 for idx in vcf_iterator_idexes_to_advance:
                     vcf_variants[idx] = next(vcf_iterators[idx], None)
