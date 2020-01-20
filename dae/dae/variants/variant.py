@@ -75,7 +75,7 @@ class AltAlleleItems(object):
 
 
 class VariantDetail(object):
-    def __init__(self, chrom, position, variant, length):
+    def __init__(self, chrom: str, position, variant, length):
         self.length = length
         self.type = None
         self.chrom = chrom
@@ -107,26 +107,6 @@ class VariantDetail(object):
 
 class Allele:
 
-    def __init__(
-            self,
-            chromosome,
-            position,
-            reference,
-            alternative=None,
-            summary_index=None,
-            allele_index=0,
-            transmission_type=TransmissionType.transmitted,
-            attributes=None):
-        # super(SummaryAllele, self).__init__(
-        #     chromosome, position, reference, alternative)
-
-        # #: index of the summary variant this allele belongs to
-        # self.summary_index = summary_index
-        # #: index of the allele of summary variant
-        # self.allele_index = allele_index
-        # self.transmission_type = transmission_type
-        pass
-
     @property
     def chromosome(self) -> str:
         raise NotImplementedError()
@@ -149,10 +129,16 @@ class Allele:
 
     @property
     def summary_index(self) -> int:
+        """
+        index of the summary variant this allele belongs to
+        """
         raise NotImplementedError()
 
     @property
     def allele_index(self) -> int:
+        """
+        index of the allele in summary variant
+        """
         raise NotImplementedError()
 
     @property
@@ -161,10 +147,16 @@ class Allele:
 
     @property
     def attributes(self) -> Dict[str, Any]:
+        """
+        additional attributes of the allele
+        """
         raise NotImplementedError()
 
     @property
     def effect(self) -> Optional[Effect]:
+        """
+        effects of the allele; None for the reference allele.
+        """
         raise NotImplementedError()
 
     @property
@@ -252,6 +244,7 @@ class Allele:
 
 
 class Variant:
+
     @property
     def chrom(self) -> str:
         raise NotImplementedError()
@@ -299,24 +292,23 @@ class Variant:
         raise NotImplementedError()
 
     @property
-    def alleles(self) -> Any:
+    def alleles(self) -> List[Allele]:
+        """
+        list of all alleles of the variant
+        """
         raise NotImplementedError()
 
     @property
-    def ref_allele(self) -> Any:
-        """the reference allele"""
+    def ref_allele(self) -> Allele:
+        """
+        the reference allele
+        """
         return self.alleles[0]
 
     @property
-    def alt_alleles(self) -> Any:
+    def alt_alleles(self) -> List[Allele]:
         """list of all alternative alleles"""
         return self.alleles[1:]
-
-    # def get_allele(self, allele_index: int) -> Optional[Any]:
-    #     for allele in self.alleles:
-    #         if allele.allele_index == allele_index:
-    #             return allele
-    #     return None
 
     @property
     def details(self) -> Optional[AltAlleleItems]:
@@ -402,40 +394,33 @@ class SummaryAllele(Allele):
 
     def __init__(
             self,
-            chromosome,
-            position,
-            reference,
-            alternative=None,
-            summary_index=None,
-            allele_index=0,
-            transmission_type=TransmissionType.transmitted,
-            attributes=None):
+            chromosome: str,
+            position: int,
+            reference: str,
+            alternative: Optional[str] = None,
+            summary_index: int = -1,
+            allele_index: int = 0,
+            transmission_type: TransmissionType = TransmissionType.transmitted,
+            attributes: Dict[str, Any] = None):
 
         self._chromosome = chromosome
         self._position = position
         self._reference = reference
         self._alternative = alternative
 
-        #: index of the summary variant this allele belongs to
         self._summary_index = summary_index
-        #: index of the allele of summary variant
         self._allele_index = allele_index
         self._transmission_type = transmission_type
 
         self._details = None
 
-        #: variant effect of the allele; None for the reference allele.
         self._effect = None
 
         if attributes is None:
-            #: allele additional attributes
             self._attributes = {}
         else:
             self._attributes = {}
             self.update_attributes(attributes)
-
-        # self.update_attributes({'variant_type': self.variant_type.value
-        #                         if self.variant_type else None})
 
     @property
     def chromosome(self) -> str:
@@ -466,11 +451,11 @@ class SummaryAllele(Allele):
         return self._transmission_type
 
     @property
-    def attributes(self):
+    def attributes(self) -> Dict[str, Any]:
         return self._attributes
 
     @property
-    def details(self):
+    def details(self) -> Optional[VariantDetail]:
         if self.alternative is None:
             return None
         if self._details is None:
@@ -501,7 +486,7 @@ class SummaryAllele(Allele):
         return self._effect
 
     @staticmethod
-    def create_reference_allele(allele):
+    def create_reference_allele(allele) -> Allele:
         new_attributes = {
             'chrom':
                 allele.attributes.get('chrom'),
@@ -513,8 +498,6 @@ class SummaryAllele(Allele):
                 allele.attributes.get('summary_variant_index'),
             'allele_count':
                 allele.attributes.get('allele_count'),
-            # 'studyName':
-            #     allele.attributes.get('studyName'),
         }
 
         return SummaryAllele(
@@ -529,13 +512,10 @@ class SummaryAllele(Allele):
 class SummaryVariant(Variant):
 
     def __init__(self, alleles):
-        # import traceback
-        # traceback.print_stack()
         assert len(alleles) >= 1
         assert len(set([sa.position for sa in alleles])) == 1
 
         assert alleles[0].is_reference_allele
-        #: list of all alleles in the variant
         self._alleles = alleles
         self._allele_count = len(self.alleles)
 
@@ -583,7 +563,6 @@ class SummaryVariantFactory(object):
             summary_index=record['summary_variant_index'],
             allele_index=record['allele_index'],
             transmission_type=transmission_type,
-            # effect=effects,
             attributes=record)
 
     @staticmethod
