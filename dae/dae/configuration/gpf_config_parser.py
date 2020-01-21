@@ -8,7 +8,7 @@ import toml
 
 from copy import deepcopy
 from collections import namedtuple
-from Typing import List, Tuple, Any, Callable
+from Typing import Union, List, Tuple, Any, Callable
 from cerberus import Validator
 
 from dae.utils.dict_utils import recursive_dict_update
@@ -16,6 +16,18 @@ from dae.utils.dict_utils import recursive_dict_update
 
 def environ_override(field: str) -> Callable:
     return lambda value: os.environ.get(field, None) or value
+
+
+class GPFConfigValidator(Validator):
+    def _validate_path(
+        self, path: Union[List[str], Tuple[str]], field: str, value: str
+    ):
+        assert path in ("relative", "absolute")
+        if path == "relative":
+            raise NotImplementedError("Relative paths are not yet supported.")
+        elif path == "absolute":
+            assert os.path.isabs(value)
+            assert os.path.exists(value)
 
 
 class GPFConfigParser:
@@ -50,10 +62,10 @@ class GPFConfigParser:
                     cls.interpolation_vars, val
                 )
                 for interpolation in matched_interpolations:
-                    assert (
-                        interpolation in interpolation_vars
-                    ), (f"Undefined var '{interpolation}'!"
-                        " Defined vars: {interpolation_vars.keys()}")
+                    assert interpolation in interpolation_vars, (
+                        f"Undefined var '{interpolation}'!"
+                        " Defined vars: {interpolation_vars.keys()}"
+                    )
                     result_dict[key] = val.replace(
                         f"%({interpolation})s",
                         interpolation_vars[interpolation],
@@ -70,7 +82,7 @@ class GPFConfigParser:
         conf_dict = cls.filetype_parsers[ext](filename)
         if "vars" in conf_dict:
             conf_dict = cls._interpolate(conf_dict, **conf_dict["vars"])
-            del(conf_dict["vars"])
+            del conf_dict["vars"]
         return conf_dict
 
     @classmethod
@@ -84,9 +96,8 @@ class GPFConfigParser:
 
     @classmethod
     def _validate_config(cls, config: dict, schema: dict) -> dict:
-        v = Validator(schema)
+        v = GPFConfigValidator(schema)
         assert v.validate(config), v.errors
-
         return v.document
 
     @classmethod
