@@ -5,7 +5,7 @@ import json
 import toml
 from cerberus import Validator
 from collections import namedtuple
-from Typing import Dict, Any
+from Typing import Dict, Any, List
 
 
 class GPFConfigParser:
@@ -18,13 +18,19 @@ class GPFConfigParser:
 
     section_schemas: Dict[str, Dict[str, Any]] = {"studyconfig": None}
 
+    SPLIT_STR_SETS: List[str] = []
+
     @classmethod
-    def _dict_to_namedtuple(cls, input_dict: Dict[str, Any], dict_name: str = "root"):
+    def _dict_to_namedtuple(
+        cls, input_dict: Dict[str, Any], dict_name: str = "root"
+    ):
         tup_ctor = namedtuple(dict_name, input_dict.keys())
 
         for key, value in input_dict.items():
             if isinstance(value, dict):
                 input_dict[key] = cls._dict_to_namedtuple(value, key)
+            if isinstance(value, list) and key in cls.SPLIT_STR_SETS:
+                input_dict[key] = set(input_dict[key])
 
         return tup_ctor(*input_dict.values())
 
