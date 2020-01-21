@@ -39,7 +39,9 @@ class GPFConfigParser:
     def _read_directory_configs(cls, dirname):
         config_files = list()
         for filetype in cls.filetype_parsers.keys():
-            config_files += glob.glob(os.path.join(dirname, f"*{filetype}"))
+            config_files += glob.glob(
+                os.path.join(dirname, f"*{filetype}"), recursive=True
+            )
 
         return list(map(cls.read_config, config_files))
 
@@ -56,3 +58,11 @@ class GPFConfigParser:
     def load_config(cls, filename):
         config = cls._validate_config(cls._read_config(filename))
         return cls._dict_to_namedtuple(config)
+
+    @classmethod
+    def load_directory_configs(cls, dirname):
+        configs = list(
+            map(cls._validate_config, cls._read_directory_configs(dirname))
+        )
+
+        return list(map(cls._load_config, configs))
