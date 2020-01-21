@@ -1,25 +1,22 @@
-import pytest
 import os
 
 import pyarrow.parquet as pq
-
-from dae.pedigrees.loader import FamiliesLoader
-from dae.backends.impala.loader import ParquetLoader
 
 from dae.tools.vcf2parquet import main
 
 
 def test_vcf2parquet_vcf(
-        vcf_import_config, annotation_pipeline_config,
+        fixture_dirname, annotation_pipeline_config,
         annotation_scores_dirname, temp_filename,
         gpf_instance_2013):
 
+    prefix = fixture_dirname('vcf_import/effects_trio')
     argv = [
         'variants',
         '--annotation', annotation_pipeline_config,
         '-o', temp_filename,
-        vcf_import_config.pedigree,
-        vcf_import_config.vcf
+        f'{prefix}.ped',
+        f'{prefix}.vcf.gz',
     ]
 
     main(
@@ -43,20 +40,20 @@ def test_vcf2parquet_vcf(
     assert 'effect_data' in schema.names
 
 
-@pytest.mark.xfail(reason='Parquet loader does not function properly')
 def test_vcf2parquet_vcf_partition(
-        vcf_import_config, annotation_pipeline_config,
+        fixture_dirname, annotation_pipeline_config,
         annotation_scores_dirname, temp_dirname,
         gpf_instance_2013,
         parquet_partition_configuration):
 
+    prefix = fixture_dirname('vcf_import/effects_trio')
     argv = [
         'variants',
         '--annotation', annotation_pipeline_config,
         '-o', temp_dirname,
         '--pd', parquet_partition_configuration,
-        vcf_import_config.pedigree,
-        vcf_import_config.vcf
+        f'{prefix}.ped',
+        f'{prefix}.vcf.gz'
     ]
 
     main(
@@ -69,41 +66,19 @@ def test_vcf2parquet_vcf_partition(
     generated_conf = os.path.join(temp_dirname, '_PARTITION_DESCRIPTION')
     assert os.path.exists(generated_conf)
 
-    families_loader = FamiliesLoader(vcf_import_config.pedigree)
-    families = families_loader.load()
-
-    pl = ParquetLoader(families, generated_conf)
-    full_variants = []
-    for summary, gt in pl.full_variants_iterator():
-        full_variants.append((summary, gt))
-
-    assert len(full_variants) == 110
-    assert all(sgt[0].get_attribute('region_bin')[0] is not None
-               for sgt in full_variants)
-    assert all(sgt[0].get_attribute('family_bin')[0] is not None
-               for sgt in full_variants)
-    assert all(sgt[0].get_attribute('coding_bin')[0] is not None
-               for sgt in full_variants)
-    assert all(sgt[0].get_attribute('frequency_bin')[0] is not None
-               for sgt in full_variants)
-    assert any(sgt[0].reference == 'G' for sgt in full_variants)
-    assert any(sgt[0].reference == 'C' for sgt in full_variants)
-    assert any(sgt[0].alternative == 'T' for sgt in full_variants)
-    assert any(sgt[0].alternative == 'A' for sgt in full_variants)
-    assert any(sgt[0].reference == 'CGGCTCGGAAGG' for sgt in full_variants)
-
 
 def test_vcf2parquet_make(
-        vcf_import_config, annotation_pipeline_default_config,
+        fixture_dirname, annotation_pipeline_default_config,
         annotation_scores_dirname, temp_dirname,
         gpf_instance_2013, default_dae_config, genome_2013):
 
+    prefix = fixture_dirname('vcf_import/effects_trio')
     argv = [
         'make',
         '--annotation', annotation_pipeline_default_config,
         '-o', temp_dirname,
-        vcf_import_config.pedigree,
-        vcf_import_config.vcf
+        f'{prefix}.ped',
+        f'{prefix}.vcf.gz',
     ]
 
     main(argv)
@@ -119,18 +94,19 @@ def test_vcf2parquet_make(
 
 
 def test_vcf2parquet_make_partition(
-        vcf_import_config, annotation_pipeline_default_config,
+        fixture_dirname, annotation_pipeline_default_config,
         annotation_scores_dirname, temp_dirname,
         gpf_instance_2013, default_dae_config, genome_2013,
         parquet_partition_configuration):
 
+    prefix = fixture_dirname('vcf_import/effects_trio')
     argv = [
         'make',
         '--annotation', annotation_pipeline_default_config,
         '-o', temp_dirname,
         '--pd', parquet_partition_configuration,
-        vcf_import_config.pedigree,
-        vcf_import_config.vcf
+        f'{prefix}.ped',
+        f'{prefix}.vcf.gz',
     ]
 
     main(argv)

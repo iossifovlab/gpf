@@ -492,7 +492,9 @@ def vcf_variants_loader(vcf_loader_data, default_annotation_pipeline):
         path, params={
             'vcf_include_reference_genotypes': True,
             'vcf_include_unknown_family_genotypes': True,
-            'vcf_include_unknown_person_genotypes': True
+            'vcf_include_unknown_person_genotypes': True,
+            'vcf_denovo_mode': 'denovo',
+            'vcf_omission_mode': 'omission',
             }):
         conf = vcf_loader_data(path)
 
@@ -750,15 +752,6 @@ def variants_impala(
     return builder
 
 
-@pytest.fixture
-def vcf_import_config():
-    fullpath = relative_to_this_test_folder(
-        'fixtures/vcf_import/effects_trio'
-    )
-    config = from_prefix_vcf(fullpath)
-    return config
-
-
 @pytest.fixture(scope='session')
 def parquet_partition_configuration():
     filename = relative_to_this_test_folder(
@@ -786,8 +779,6 @@ def calc_gene_sets(request, variants_db_fixture):
         assert genotype_data is not None
 
         DenovoGeneSetCollectionFactory.build_collection(genotype_data)
-
-    print("PRECALCULATION COMPLETE")
 
     def remove_gene_sets():
         for dgs in genotype_data_names:

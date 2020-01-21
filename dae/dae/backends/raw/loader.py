@@ -377,7 +377,7 @@ class StoredAnnotationDecorator(AnnotationDecorator):
 
 class FamiliesGenotypesDecorator(VariantsLoaderDecorator):
     """
-    Calculate missing best states and add a genetic model
+    Calculate missing best states and adds a genetic model
     value to the family variant and its alleles.
     """
 
@@ -466,8 +466,8 @@ class FamiliesGenotypesDecorator(VariantsLoaderDecorator):
 
     def full_variants_iterator(
             self) -> Iterator[Tuple[SummaryVariant, List[FamilyVariant]]]:
-        _ = self.variants_loader.full_variants_iterator()
-        for summary_variant, family_variants in _:
+        full_iterator = self.variants_loader.full_variants_iterator()
+        for summary_variant, family_variants in full_iterator:
             for family_variant in family_variants:
                 if self.expect_none:
                     assert family_variant._best_st is None
