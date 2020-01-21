@@ -3,8 +3,6 @@ import os
 
 from box import Box
 
-from dae.backends.storage.tests.conftest import relative_to_this_test_folder
-
 
 def test_build_backend(
         impala_genotype_storage, quads_f1_config, genomes_db_2013):
@@ -65,17 +63,18 @@ def test_hdfs_helpers(impala_genotype_storage, hdfs_host):
     assert hdfs_helpers.hdfs is not None
 
 
-def test_impala_load_study(impala_genotype_storage, genomes_db_2013):
+def test_impala_load_study(
+        impala_genotype_storage, genomes_db_2013, fixture_dirname):
     impala_genotype_storage.impala_helpers.drop_database(
         'impala_storage_test_db'
     )
 
     impala_genotype_storage.impala_load_study(
         'study_id',
-        [relative_to_this_test_folder(
-            'fixtures/studies/quads_f1_impala/data/variants')],
-        [relative_to_this_test_folder(
-            'fixtures/studies/quads_f1_impala/data/pedigree')]
+        [fixture_dirname(
+            'studies/quads_f1_impala/data/variants')],
+        [fixture_dirname(
+            'studies/quads_f1_impala/data/pedigree')]
     )
 
     backend = impala_genotype_storage.build_backend(

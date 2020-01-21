@@ -97,7 +97,7 @@ class VariantsLoaderDecorator(VariantsLoader):
         return self.variants_loader.get_attribute(key)
 
     def __getattr__(self, attr):
-        return getattr(self.variants_loader, attr)
+        return getattr(self.variants_loader, attr, None)
 
 
 class AlleleFrequencyDecorator(VariantsLoaderDecorator):
@@ -170,6 +170,22 @@ class AnnotationDecorator(VariantsLoaderDecorator):
     SEP2 = '|'
     SEP3 = ':'
 
+    CLEAN_UP_COLUMNS = set([
+        'alternatives_data',
+        'family_variant_index',
+        'family_id',
+        'variant_sexes',
+        'variant_roles',
+        'variant_inheritance',
+        'variant_in_member',
+        'genotype_data',
+        'best_state_data',
+        'genetic_model_data',
+        'inheritance_data',
+        'frequency_data',
+        'genomic_scores_data',
+    ])
+
     def __init__(self, variants_loader):
         super(AnnotationDecorator, self).__init__(variants_loader)
 
@@ -191,39 +207,36 @@ class AnnotationDecorator(VariantsLoaderDecorator):
     def has_annotation_file(annotation_filename):
         return os.path.exists(annotation_filename)
 
-    def save_annotation_file(self, filename, sep="\t"):
+    @staticmethod
+    def save_annotation_file(variants_loader, filename, sep="\t"):
         def convert_array_of_strings_to_string(a):
             if not a:
                 return None
-            return self.SEP1.join(a)
+            return AnnotationDecorator.SEP1.join(a)
 
         common_columns = [
             'chrom', 'position', 'reference', 'alternative',
             'bucket_index', 'summary_variant_index',
-            'allele_index', 'allele_count',
-            'effect_type', 'effect_gene',
-        ]
-        effect_columns = [
-            'effect_gene_genes', 'effect_gene_types',
-            'effect_details_transcript_ids',
-            'effect_details_details',
+            'allele_index', 'allele_count', 
         ]
 
-        other_columns = filter(
-            lambda col: col not in common_columns
-            and col not in effect_columns
-            and col not in self.CLEAN_UP_COLUMNS,
-            self.annotation_schema.col_names)
+        if variants_loader.annotation_schema is not None:
+            other_columns = filter(
+                lambda col: col not in common_columns
+                and col not in AnnotationDecorator.CLEAN_UP_COLUMNS,
+                variants_loader.annotation_schema.col_names)
+        else:
+            other_columns = []
 
         header = common_columns[:]
-        header.extend(effect_columns)
+        header.extend(['effects'])
         header.extend(other_columns)
 
         with open(filename, 'w') as outfile:
             outfile.write(sep.join(header))
             outfile.write('\n')
 
-            for summary_variant, _ in self.full_variants_iterator():
+            for summary_variant, _ in variants_loader.full_variants_iterator():
                 for allele_index, summary_allele in \
                         enumerate(summary_variant.alleles):
                     line = []
@@ -232,11 +245,11 @@ class AnnotationDecorator(VariantsLoaderDecorator):
 
                     for col in common_columns:
                         line.append(str(rec.get(col, '')))
-                    for col in effect_columns:
+                    if summary_allele.effect is None:
+                        line.append('')
+                    else:
                         line.append(
-                            convert_array_of_strings_to_string(
-                                rec.get(col, [''])
-                            )
+                            str(summary_allele.effect)
                         )
                     for col in other_columns:
                         line.append(str(rec.get(col, '')))
@@ -259,21 +272,6 @@ class AnnotationPipelineDecorator(AnnotationDecorator):
             self.annotation_pipeline.annotate_summary_variant(summary_variant)
             yield summary_variant, family_variants
 
-    CLEAN_UP_COLUMNS = set([
-        'alternatives_data',
-        'family_variant_index',
-        'family_id',
-        'variant_sexes',
-        'variant_roles',
-        'variant_inheritance',
-        'variant_in_member',
-        'genotype_data',
-        'best_state_data',
-        'genetic_model_data',
-        'frequency_data',
-        'genomic_scores_data',
-    ])
-
 
 class StoredAnnotationDecorator(AnnotationDecorator):
 
@@ -289,6 +287,8 @@ class StoredAnnotationDecorator(AnnotationDecorator):
             StoredAnnotationDecorator.build_annotation_filename(
                     source_filename
                 )
+        # assert os.path.exists(annotation_filename), \
+        #     annotation_filename
         if not os.path.exists(annotation_filename):
             return variants_loader
         else:
@@ -321,9 +321,11 @@ class StoredAnnotationDecorator(AnnotationDecorator):
                 dtype={
                     'chrom': str,
                     'position': np.int32,
+                    'effects': str,
                 },
                 converters={
                     'cshl_variant': cls._convert_string,
+                    'effects': cls._convert_string,
                     'effect_gene_genes':
                     cls._convert_array_of_strings,
                     'effect_gene_types':
@@ -335,7 +337,9 @@ class StoredAnnotationDecorator(AnnotationDecorator):
                 },
                 encoding="utf-8"
             )
-        for col in ['alternative', 'effect_type']:
+        special_columns = set(annot_df.columns) \
+            & set(['alternative', 'effect_type'])
+        for col in special_columns:
             annot_df[col] = annot_df[col].astype(object). \
                 where(pd.notnull(annot_df[col]), None)
         return annot_df
@@ -345,7 +349,9 @@ class StoredAnnotationDecorator(AnnotationDecorator):
         start = time.time()
         annot_df = self._load_annotation_file(self.annotation_filename)
         elapsed = time.time() - start
-        print(f"Annotation loaded in in {elapsed:.2f} sec", file=sys.stderr)
+        print(
+            f"Storred annotation file loaded in in {elapsed:.2f} sec",
+            file=sys.stderr)
 
         start = time.time()
         records = annot_df.to_dict(orient='record')
@@ -371,12 +377,14 @@ class StoredAnnotationDecorator(AnnotationDecorator):
             yield sv, family_variants
 
         elapsed = time.time() - start
-        print(f"Storred annotation load in {elapsed:.2f} sec", file=sys.stderr)
+        print(
+            f"Storred annotation file parsed in {elapsed:.2f} sec",
+            file=sys.stderr)
 
 
 class FamiliesGenotypesDecorator(VariantsLoaderDecorator):
     """
-    Calculate missing best states and add a genetic model
+    Calculate missing best states and adds a genetic model
     value to the family variant and its alleles.
     """
 
@@ -465,8 +473,8 @@ class FamiliesGenotypesDecorator(VariantsLoaderDecorator):
 
     def full_variants_iterator(
             self) -> Iterator[Tuple[SummaryVariant, List[FamilyVariant]]]:
-        _ = self.variants_loader.full_variants_iterator()
-        for summary_variant, family_variants in _:
+        full_iterator = self.variants_loader.full_variants_iterator()
+        for summary_variant, family_variants in full_iterator:
             for family_variant in family_variants:
                 if self.expect_none:
                     assert family_variant._best_st is None

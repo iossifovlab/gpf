@@ -1,7 +1,6 @@
 import pytest
 
 import os
-
 from dae.enrichment_tool.config import EnrichmentConfigParser
 from dae.enrichment_tool.background import CodingLenBackground, \
     SamochaBackground
@@ -30,7 +29,18 @@ def f1_trio_enrichment_config(variants_db_fixture):
 
 @pytest.fixture(scope='session')
 def f1_trio(variants_db_fixture):
-    return variants_db_fixture.get('f1_trio')
+    result = variants_db_fixture.get('f1_trio')
+    # for _, fvs in result._backend.full_variants:
+    #     for fv in fvs:
+    #         for fa in fv.alleles:
+    #             inheritance_in_members = fa.inheritance_in_members
+    #             inheritance_in_members = [
+    #                 inh if inh != Inheritance.possible_denovo
+    #                 else Inheritance.denovo
+    #                 for inh in inheritance_in_members
+    #             ]
+    #             fa._inheritance_in_members = inheritance_in_members
+    return result
 
 
 @pytest.fixture(scope='session')

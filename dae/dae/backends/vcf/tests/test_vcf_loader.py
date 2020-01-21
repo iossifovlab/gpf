@@ -1,8 +1,11 @@
 import pytest
 import os
 import numpy as np
+
 from dae.pedigrees.loader import FamiliesLoader
 from dae.pedigrees.family import FamiliesData
+
+from dae.variants.attributes import Inheritance
 
 from dae.backends.vcf.loader import VcfLoader
 from dae.utils.variant_utils import GENOTYPE_TYPE
@@ -97,8 +100,11 @@ def test_vcf_loader_multi(fixture_dirname, multivcf_files):
         assert all((s_gt_f5 == m_gt_f5).flatten())
 
 
-@pytest.mark.parametrize('fill_flag, fill_value', [[True, 0], [False, -1]])
-def test_multivcf_loader_fill_missing(fixture_dirname, fill_flag, fill_value):
+@pytest.mark.parametrize('fill_mode, fill_value', [
+    ['reference', 0],
+    ['unknown', -1]
+])
+def test_multivcf_loader_fill_missing(fixture_dirname, fill_mode, fill_value):
     ped_file = fixture_dirname('backends/multivcf.ped')
 
     multivcf_files = [
@@ -109,11 +115,12 @@ def test_multivcf_loader_fill_missing(fixture_dirname, fill_flag, fill_value):
     params = {
         'vcf_include_reference_genotypes': True,
         'vcf_include_unknown_family_genotypes': True,
-        'vcf_include_unknown_person_genotypes': True
+        'vcf_include_unknown_person_genotypes': True,
+        'vcf_multi_loader_fill_in_mode': fill_mode,
     }
-    multi_vcf_loader = VcfLoader(families, multivcf_files,
-                                 fill_missing_ref=fill_flag,
-                                 params=params)
+    multi_vcf_loader = VcfLoader(
+        families, multivcf_files, params=params)
+
     assert multi_vcf_loader is not None
     multi_it = multi_vcf_loader.full_variants_iterator()
     svs_fvs = [sum_fvs for sum_fvs in multi_it]
@@ -184,3 +191,67 @@ def test_transform_vcf_genotype():
     assert np.array_equal(
         expected, VcfLoader.transform_vcf_genotypes(genotypes)
     )
+
+
+@pytest.mark.parametrize(
+    'denovo_mode, total, unexpected_inheritance', [
+        ('denovo', 3, {Inheritance.possible_denovo}),
+        ('possible_denovo', 3, {Inheritance.denovo}),
+        ('ignore', 1, {Inheritance.possible_denovo, Inheritance.denovo}),
+        ('ala_bala', 3, {Inheritance.denovo})
+
+    ])
+def test_vcf_denovo_mode(
+        denovo_mode, total, unexpected_inheritance, fixture_dirname):
+    prefix = fixture_dirname('backends/inheritance_trio_denovo_omission')
+    families = FamiliesLoader(f'{prefix}.ped').load()
+    params = {
+        'vcf_include_reference_genotypes': True,
+        'vcf_include_unknown_family_genotypes': True,
+        'vcf_include_unknown_person_genotypes': True,
+        'vcf_denovo_mode': denovo_mode,
+    }
+    vcf_loader = VcfLoader(
+        families, [f'{prefix}.vcf'],
+        params=params)
+
+    assert vcf_loader is not None
+    vs = list(vcf_loader.family_variants_iterator())
+    assert len(vs) == total
+    for fv in vs:
+        for fa in fv.alleles:
+            print(fa, fa.inheritance_in_members)
+            assert set(fa.inheritance_in_members) \
+                & unexpected_inheritance == set([])
+
+
+@pytest.mark.parametrize(
+    'omission_mode, total, unexpected_inheritance', [
+        ('omission', 3, {Inheritance.possible_omission}),
+        ('possible_omission', 3, {Inheritance.omission}),
+        ('ignore', 2, {Inheritance.possible_omission, Inheritance.omission}),
+        ('ala_bala', 3, {Inheritance.omission})
+    ])
+def test_vcf_omission_mode(
+        omission_mode, total, unexpected_inheritance, fixture_dirname):
+    prefix = fixture_dirname('backends/inheritance_trio_denovo_omission')
+    families = FamiliesLoader(f'{prefix}.ped').load()
+    params = {
+        'vcf_include_reference_genotypes': True,
+        'vcf_include_unknown_family_genotypes': True,
+        'vcf_include_unknown_person_genotypes': True,
+        'vcf_omission_mode': omission_mode,
+    }
+    vcf_loader = VcfLoader(
+        families, [f'{prefix}.vcf'],
+        params=params)
+
+    assert vcf_loader is not None
+    vs = list(vcf_loader.family_variants_iterator())
+    assert len(vs) == total
+    for fv in vs:
+        for fa in fv.alleles:
+            print(20*"-")
+            print(fa, fa.inheritance_in_members)
+            assert set(fa.inheritance_in_members) \
+                & unexpected_inheritance == set([])

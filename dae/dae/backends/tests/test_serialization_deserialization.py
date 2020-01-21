@@ -45,3 +45,25 @@ def test_variant_effects_serialization_deserialization(
             e1['effects'] == str(e2)
             for e1, e2 in zip(effects[1:], v.effects[1:])
         ])
+
+
+@pytest.mark.parametrize("fixture_name", [
+    "backends/a",
+    "backends/effects_trio",
+    "backends/effects_trio_multi",
+    "backends/f1_test",
+])
+def test_inheritance_serialization_deserialization(
+        variants_vcf, fixture_name):
+    fvars = variants_vcf(fixture_name)
+    vs = list(fvars.query_variants())
+
+    for v in vs:
+        data = ParquetSerializer.serialize_variant_inheritance(v)
+        inheritance = ParquetSerializer.deserialize_variant_inheritance(
+            data, len(v.family))
+        print(inheritance)
+        assert len(inheritance) == len(v.alleles)
+
+        for allele, inheritance_in_members in zip(v.alleles, inheritance):
+            assert allele.inheritance_in_members == inheritance_in_members

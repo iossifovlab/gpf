@@ -1,3 +1,4 @@
+import warnings
 import pandas as pd
 import numpy as np
 
@@ -293,28 +294,38 @@ class FamiliesLoader:
             comment='#',
             encoding='utf-8'
         )
+        with warnings.catch_warnings(record=True) as ws:
+            warnings.filterwarnings(
+                'ignore',
+                category=pd.errors.ParserWarning,
+                message="Both a converter and dtype were specified"
+            )
 
-        if not ped_has_header:
-            _, file_header = FamiliesLoader.produce_header_from_indices(
-                ped_family, ped_person, ped_mom,
-                ped_dad, ped_sex, ped_status,
-                ped_role, ped_layout, ped_generated, ped_sample_id,
-            )
-            ped_family = PEDIGREE_COLUMN_NAMES['family']
-            ped_person = PEDIGREE_COLUMN_NAMES['person']
-            ped_mom = PEDIGREE_COLUMN_NAMES['mother']
-            ped_dad = PEDIGREE_COLUMN_NAMES['father']
-            ped_sex = PEDIGREE_COLUMN_NAMES['sex']
-            ped_status = PEDIGREE_COLUMN_NAMES['status']
-            ped_role = PEDIGREE_COLUMN_NAMES['role']
-            ped_layout = PEDIGREE_COLUMN_NAMES['layout']
-            ped_generated = PEDIGREE_COLUMN_NAMES['generated']
-            ped_sample_id = PEDIGREE_COLUMN_NAMES['sample id']
-            ped_df = read_csv_func(
-                pedigree_filepath, header=None, names=file_header
-            )
-        else:
-            ped_df = read_csv_func(pedigree_filepath)
+            if not ped_has_header:
+                _, file_header = FamiliesLoader.produce_header_from_indices(
+                    ped_family, ped_person, ped_mom,
+                    ped_dad, ped_sex, ped_status,
+                    ped_role, ped_layout, ped_generated, ped_sample_id,
+                )
+                ped_family = PEDIGREE_COLUMN_NAMES['family']
+                ped_person = PEDIGREE_COLUMN_NAMES['person']
+                ped_mom = PEDIGREE_COLUMN_NAMES['mother']
+                ped_dad = PEDIGREE_COLUMN_NAMES['father']
+                ped_sex = PEDIGREE_COLUMN_NAMES['sex']
+                ped_status = PEDIGREE_COLUMN_NAMES['status']
+                ped_role = PEDIGREE_COLUMN_NAMES['role']
+                ped_layout = PEDIGREE_COLUMN_NAMES['layout']
+                ped_generated = PEDIGREE_COLUMN_NAMES['generated']
+                ped_sample_id = PEDIGREE_COLUMN_NAMES['sample id']
+                ped_df = read_csv_func(
+                    pedigree_filepath, header=None, names=file_header
+                )
+            else:
+                ped_df = read_csv_func(pedigree_filepath)
+
+        for w in ws:
+            warnings.showwarning(
+                w.message, w.category, w.filename, w.lineno)
 
         if ped_sample_id in ped_df:
             sample_ids = ped_df.apply(

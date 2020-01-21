@@ -240,23 +240,32 @@ class VariantsDb(object):
         if study_config is None:
             return None
 
-        genotype_storage = self.genotype_storage_factory. \
-            get_genotype_storage(study_config.genotype_storage)
+        try:
+            genotype_storage = self.genotype_storage_factory. \
+                get_genotype_storage(study_config.genotype_storage)
 
-        if genotype_storage is None:
-            raise ValueError(
-                "Unknown genotype storage: {}\nKnown ones: {}"
-                .format(
-                    study_config.genotype_storage,
-                    self.genotype_storage_factory.get_genotype_storage_ids()
+            if genotype_storage is None:
+                storage_ids = self.genotype_storage_factory\
+                    .get_genotype_storage_ids()
+                print(
+                    f"Unknown genotype storage id: "
+                    f"{study_config.genotype_storage}; "
+                    f"Known ones: {storage_ids}"
                 )
+                return None
+
+            variants = genotype_storage.build_backend(
+                study_config, self.genomes_db
             )
 
-        variants = genotype_storage.build_backend(
-            study_config, self.genomes_db
-        )
-
-        return GenotypeDataStudy(study_config, variants)
+            return GenotypeDataStudy(study_config, variants)
+        except Exception as ex:
+            print(
+                "Error: can't create genotype data study:",
+                f"{study_config.id}",
+                ex
+            )
+            return None
 
     def make_genotype_data_group(self, genotype_data_group_config):
         if genotype_data_group_config is None:

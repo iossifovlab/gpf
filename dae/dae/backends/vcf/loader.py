@@ -1,3 +1,4 @@
+import sys
 from cyvcf2 import VCF
 
 import numpy as np
@@ -6,6 +7,7 @@ from dae.utils.helpers import str2bool
 
 from dae.utils.variant_utils import is_all_reference_genotype, \
     is_all_unknown_genotype, is_unknown_genotype, GENOTYPE_TYPE
+from dae.variants.attributes import Inheritance
 from dae.variants.variant import SummaryVariantFactory
 from dae.variants.family_variant import FamilyVariant
 from dae.backends.raw.loader import VariantsLoader, TransmissionType, \
@@ -62,7 +64,7 @@ class VcfLoader(VariantsLoader):
 
     def __init__(
             self, families, vcf_files,
-            regions=None, fill_missing_ref=True, params={},
+            regions=None, params={},
             **kwargs):
         super(VcfLoader, self).__init__(
             families=families,
@@ -72,7 +74,19 @@ class VcfLoader(VariantsLoader):
 
         assert len(vcf_files)
         self.reset_regions(regions)
-        self._fill_missing_value = 0 if fill_missing_ref else -1
+        fill_in_mode = params.get(
+            "vcf_multi_loader_fill_in_mode", "reference")
+        if fill_in_mode == 'reference':
+            self._fill_missing_value = 0
+        elif fill_in_mode == 'unknown':
+            self._fill_missing_value = -1
+        else:
+            print(
+                f"unexpected `vcf_multi_loader_fill_in_mode` value",
+                f"{fill_in_mode}; "
+                f"expected values are `reference` or `unknown`",
+                file=sys.stderr)
+            self._fill_missing_value = 0
         self._init_vcf_readers()
 
         samples = list()
@@ -83,6 +97,93 @@ class VcfLoader(VariantsLoader):
         self._match_pedigree_to_samples(families, samples)
         self._init_chromosome_order()
         self.set_attribute('source_type', 'vcf')
+        self._init_denovo_mode()
+        self._init_omission_mode()
+
+    def _init_denovo_mode(self):
+        denovo_mode = self.params.get('vcf_denovo_mode', 'possible_denovo')
+        if denovo_mode == 'possible_denovo':
+            self._denovo_handler = self._possible_denovo_mode_handler
+        elif denovo_mode == 'denovo':
+            self._denovo_handler = self._denovo_mode_handler
+        elif denovo_mode == 'ignore':
+            self._denovo_handler = self._ignore_denovo_mode_handler
+        else:
+            print(
+                f"unexpected denovo mode: {denovo_mode}; "
+                f"using possible_denovo")
+            self._denovo_handler = self._possible_denovo_mode_handler
+
+    @staticmethod
+    def _possible_denovo_mode_handler(
+            family_variant: FamilyVariant) -> bool:
+        for fa in family_variant.alleles:
+            inheritance_in_members = fa.inheritance_in_members
+            inheritance_in_members = [
+                inh
+                if inh != Inheritance.denovo else Inheritance.possible_denovo
+                for inh in inheritance_in_members
+            ]
+            fa._inheritance_in_members = inheritance_in_members
+        return False
+
+    @staticmethod
+    def _ignore_denovo_mode_handler(
+            family_variant: FamilyVariant) -> bool:
+        for fa in family_variant.alleles:
+            if Inheritance.denovo in fa.inheritance_in_members:
+                return True
+        return False
+
+    @staticmethod
+    def _denovo_mode_handler(
+            family_vairant: FamilyVariant) -> bool:
+        return False
+
+    def _init_omission_mode(self):
+        omission_mode = self.params.get(
+            'vcf_omission_mode', 'possible_omission')
+        if omission_mode == 'possible_omission':
+            self._omission_handler = self._possible_omission_mode_handler
+        elif omission_mode == 'omission':
+            self._omission_handler = self._omission_mode_handler
+        elif omission_mode == 'ignore':
+            self._omission_handler = self._ignore_omission_mode_handler
+        else:
+            print(
+                f"unexpected omission mode: {omission_mode}; "
+                f"using possible_omission")
+            self._omission_handler = self._possible_omission_mode_handler
+
+    @staticmethod
+    def _possible_omission_mode_handler(
+            family_variant: FamilyVariant) -> bool:
+        for fa in family_variant.alleles:
+            inheritance_in_members = fa.inheritance_in_members
+            inheritance_in_members = [
+                inh
+                if inh != Inheritance.omission
+                else Inheritance.possible_omission
+                for inh in inheritance_in_members
+            ]
+            fa._inheritance_in_members = inheritance_in_members
+        return False
+
+    @staticmethod
+    def _ignore_omission_mode_handler(
+            family_variant: FamilyVariant) -> bool:
+        for fa in family_variant.alleles:
+            print(
+                "ignore_omission:",
+                Inheritance.omission, fa.inheritance_in_members)
+            if Inheritance.omission in fa.inheritance_in_members:
+                return True
+        return False
+
+    @staticmethod
+    def _omission_mode_handler(
+            family_vairant: FamilyVariant) -> bool:
+        return False
 
     def reset_regions(self, regions):
         if regions is None or isinstance(regions, str):
@@ -237,8 +338,12 @@ class VcfLoader(VariantsLoader):
 
                 family_variants = []
                 for fam, gt, bs in family_genotypes.family_genotype_iterator():
-                    family_variants.append(
-                        FamilyVariant(current_summary_variant, fam, gt, bs))
+                    fv = FamilyVariant(current_summary_variant, fam, gt, bs)
+                    if self._denovo_handler(fv):
+                        continue
+                    if self._omission_handler(fv):
+                        continue
+                    family_variants.append(fv)
 
                 yield current_summary_variant, family_variants
 
@@ -262,6 +367,8 @@ class VcfLoader(VariantsLoader):
             'vcf_include_unknown_family_genotypes': False,
             'vcf_include_unknown_person_genotypes': False,
             'vcf_multi_loader_fill_in_mode': 'reference',
+            'vcf_denovo_mode': 'possible_denovo',
+            'vcf_omission_mode': 'possible_omission',
         }
 
     @staticmethod
@@ -272,7 +379,9 @@ class VcfLoader(VariantsLoader):
             assert key in param_defaults, (key, list(param_defaults.keys()))
             if value != param_defaults[key]:
                 param = key.replace('_', '-')
-                if key in ('vcf_multi_loader_fill_in_mode'):
+                if key in {'vcf_multi_loader_fill_in_mode',
+                           'vcf_denovo_mode',
+                           'vcf_omission_mode'}:
                     result.append(f'--{param}')
                     result.append(f'{value}')
                 else:
@@ -318,6 +427,21 @@ class VcfLoader(VariantsLoader):
             'supported values are `reference` or `unknown`'
             '[default: %(default)s]',
         )
+        parser.add_argument(
+            '--vcf-denovo-mode', default='possible_denovo',
+            dest='vcf_denovo_mode',
+            help='used for handling family variants with denovo inheritance; '
+            'supported values are: `denovo`, `possible_denovo`, `ignore`; '
+            '[default: %(default)s]',
+        )
+        parser.add_argument(
+            '--vcf-omission-mode', default='possible_omission',
+            dest='vcf_omission_mode',
+            help='used for handling family variants with omission '
+            'inheritance; '
+            'supported values are: `omission`, `possible_omission`, `ignore`; '
+            '[default: %(default)s]',
+        )
 
     @staticmethod
     def parse_cli_arguments(argv):
@@ -325,6 +449,12 @@ class VcfLoader(VariantsLoader):
 
         assert argv.vcf_multi_loader_fill_in_mode \
             in set(['reference', 'unknown'])
+        assert argv.vcf_denovo_mode \
+            in set(['denovo', 'possible_denovo', 'ignore']), \
+            argv.vcf_denovo_mode
+        assert argv.vcf_omission_mode \
+            in set(['omission', 'possible_omission', 'ignore']), \
+            argv.vcf_omission_mode
         params = {
             'vcf_include_reference_genotypes':
             str2bool(argv.vcf_include_reference_genotypes),
@@ -334,5 +464,9 @@ class VcfLoader(VariantsLoader):
             str2bool(argv.vcf_include_unknown_person_genotypes),
             'vcf_multi_loader_fill_in_mode':
             argv.vcf_multi_loader_fill_in_mode,
+            'vcf_denovo_mode':
+            argv.vcf_denovo_mode,
+            'vcf_omission_mode':
+            argv.vcf_omission_mode,
         }
         return filenames, params

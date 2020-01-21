@@ -229,17 +229,21 @@ class Inheritance(enum.Enum):
     denovo = 1 << 2
     possible_denovo = 1 << 3
     omission = 1 << 4
-    other = 1 << 5
-    missing = 1 << 6
-    unknown = 1 << 7
+    possible_omission = 1 << 5
+    other = 1 << 6
+    missing = 1 << 7
 
-    MASK = 127
+    unknown = 1 << 8
 
     @staticmethod
     def from_name(name):
         assert name in Inheritance.__members__, \
             'Inheritance type {} does not exist!'.format(name)
         return Inheritance[name]
+
+    @staticmethod
+    def from_value(value):
+        return Inheritance(value)
 
     def __repr__(self):
         return self.name

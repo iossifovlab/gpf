@@ -447,7 +447,7 @@ def iossifov2014_impala(
     temp_dirname = test_hdfs.tempdir(prefix='variants_', suffix='_data')
     test_hdfs.mkdir(temp_dirname)
 
-    study_id = 'iossifov_wd2014_test'
+    study_id = 'iossifov_we2014_test'
     parquet_filenames = ParquetManager.build_parquet_filenames(
         temp_dirname, bucket_index=0, study_id=study_id
     )
@@ -492,7 +492,9 @@ def vcf_variants_loader(vcf_loader_data, default_annotation_pipeline):
         path, params={
             'vcf_include_reference_genotypes': True,
             'vcf_include_unknown_family_genotypes': True,
-            'vcf_include_unknown_person_genotypes': True
+            'vcf_include_unknown_person_genotypes': True,
+            'vcf_denovo_mode': 'denovo',
+            'vcf_omission_mode': 'omission',
             }):
         conf = vcf_loader_data(path)
 
@@ -718,6 +720,8 @@ def data_import(
                     'vcf_include_unknown_family_genotypes': True,
                     'vcf_include_unknown_person_genotypes': True,
                     'vcf_multi_loader_fill_in_mode': 'reference',
+                    'vcf_denovo_mode': 'denovo',
+                    'vcf_omission_mode': 'omission',
                 })
 
             loader = AlleleFrequencyDecorator(loader)
@@ -750,15 +754,6 @@ def variants_impala(
     return builder
 
 
-@pytest.fixture
-def vcf_import_config():
-    fullpath = relative_to_this_test_folder(
-        'fixtures/vcf_import/effects_trio'
-    )
-    config = from_prefix_vcf(fullpath)
-    return config
-
-
 @pytest.fixture(scope='session')
 def parquet_partition_configuration():
     filename = relative_to_this_test_folder(
@@ -786,8 +781,6 @@ def calc_gene_sets(request, variants_db_fixture):
         assert genotype_data is not None
 
         DenovoGeneSetCollectionFactory.build_collection(genotype_data)
-
-    print("PRECALCULATION COMPLETE")
 
     def remove_gene_sets():
         for dgs in genotype_data_names:
