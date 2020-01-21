@@ -720,6 +720,8 @@ def data_import(
                     'vcf_include_unknown_family_genotypes': True,
                     'vcf_include_unknown_person_genotypes': True,
                     'vcf_multi_loader_fill_in_mode': 'reference',
+                    'vcf_denovo_mode': 'denovo',
+                    'vcf_omission_mode': 'omission',
                 })
 
             loader = AlleleFrequencyDecorator(loader)
