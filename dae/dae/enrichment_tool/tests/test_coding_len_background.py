@@ -27,10 +27,10 @@ def test_load(f1_trio_coding_len_background):
 
 
 def test_calc_stats(f1_trio, f1_trio_coding_len_background):
-    
+
     variants = list(f1_trio.query_variants(
         inheritance=str(Inheritance.denovo.name)))
-    
+
     for fv in variants:
         print(80*'-')
         print(fv, fv.effects)

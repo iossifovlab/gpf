@@ -219,7 +219,7 @@ class AnnotationDecorator(VariantsLoaderDecorator):
         common_columns = [
             'chrom', 'position', 'reference', 'alternative',
             'bucket_index', 'summary_variant_index',
-            'allele_index', 'allele_count', 
+            'allele_index', 'allele_count',
         ]
 
         if variants_loader.annotation_schema is not None:
