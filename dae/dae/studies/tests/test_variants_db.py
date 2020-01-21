@@ -215,6 +215,19 @@ def test_get_non_existing_wrapper(variants_db_fixture):
     assert study is None
 
 
-def test_get_all(variants_db_fixture):
+def test_get_all(fixtures_gpf_instance, variants_db_fixture):
     studies = variants_db_fixture.get_all_genotype_data()
     assert len(studies) == 32
+
+    studies = fixtures_gpf_instance.get_all_genotype_data()
+    assert len(studies) == 32
+
+
+def test_get_all_studies_ids(fixtures_gpf_instance, variants_db_fixture):
+    studies = fixtures_gpf_instance.get_genotype_data_ids()
+    assert len(studies) == 33
+
+
+def test_get_bad_study(fixtures_gpf_instance):
+    genotype_data = fixtures_gpf_instance.get_genotype_data("quads_f1_impala")
+    assert genotype_data is None
