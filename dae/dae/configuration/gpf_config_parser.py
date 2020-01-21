@@ -3,9 +3,12 @@ import glob
 import yaml
 import json
 import toml
+
 from cerberus import Validator
 from collections import namedtuple
 from Typing import List, Tuple, Any
+
+from dae.utils.dict_utils import recursive_dict_update
 
 
 class GPFConfigParser:
@@ -36,14 +39,13 @@ class GPFConfigParser:
         return conf_dict
 
     @classmethod
-    def _read_directory_configs(cls, dirname: str, schema: dict) -> List[dict]:
+    def _collect_directory_configs(cls, dirname: str) -> List[str]:
         config_files = list()
         for filetype in cls.filetype_parsers.keys():
             config_files += glob.glob(
                 os.path.join(dirname, f"*{filetype}"), recursive=True
             )
-
-        return list(map(cls.read_config, config_files))
+        return config_files
 
     @classmethod
     def _validate_config(cls, config: dict, schema: dict) -> dict:
@@ -51,12 +53,6 @@ class GPFConfigParser:
         assert v.validate(config), v.errors
 
         return v.document
-
-    @classmethod
-    def _merge_config(cls, config: dict, default: dict) -> None:
-        for key in default.keys():
-            if key not in config.keys():
-                config[key] = default[key]
 
     @classmethod
     def load_config(
@@ -67,22 +63,14 @@ class GPFConfigParser:
             default_config = cls._validate_config(
                 cls._read_config(default_filename), schema
             )
-            cls._merge_config(config, default_config)
+            config = recursive_dict_update(config, default_config)
         return cls._dict_to_namedtuple(config)
 
     @classmethod
     def load_directory_configs(
-        cls, dirname: str, schema: dict, default_filename: str
+        cls, dirname: str, schema: dict, default_filename: str = None
     ) -> List[Tuple[Any]]:
-        configs = list(
-            map(cls._validate_config, cls._read_directory_configs(dirname))
-        )
-
-        if default_filename:
-            default_config = cls._validate_config(
-                cls._read_config(default_filename), schema
-            )
-            for config in configs:
-                cls._merge_config(config, default_config)
-
-        return list(map(cls._load_config, configs))
+        return [
+            cls.load_config(config_path, schema, default_filename)
+            for config_path in cls._collect_directory_configs(dirname)
+        ]
