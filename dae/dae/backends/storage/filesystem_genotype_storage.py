@@ -162,7 +162,8 @@ class FilesystemGenotypeStorage(GenotypeStorage):
                 exist_ok=True)
             annotation_filename = StoredAnnotationDecorator\
                 .build_annotation_filename(destination_filename)
-            variants_loader.save_annotation_file(annotation_filename)
+            StoredAnnotationDecorator.save_annotation_file(
+                variants_loader, annotation_filename)
 
             shutil.copyfile(source_filename, destination_filename)
 

@@ -1,0 +1,378 @@
+{
+    "unaffected": {
+        "LGDs": {
+            "Female": {
+                "LGDs": {
+                    "Female": {},
+                    "Male": {},
+                    "Unspecified": {}
+                },
+                "Missense": {
+                    "Female": {},
+                    "Male": {},
+                    "Unspecified": {}
+                },
+                "Synonymous": {
+                    "Female": {},
+                    "Male": {
+                        "SAMD11": [
+                            "f1",
+                            "f2",
+                            "f3"
+                        ]
+                    },
+                    "Unspecified": {}
+                }
+            },
+            "Male": {
+                "LGDs": {
+                    "Female": {},
+                    "Male": {},
+                    "Unspecified": {}
+                },
+                "Missense": {
+                    "Female": {},
+                    "Male": {},
+                    "Unspecified": {}
+                },
+                "Synonymous": {
+                    "Female": {},
+                    "Male": {
+                        "SAMD11": [
+                            "f1",
+                            "f2",
+                            "f3"
+                        ]
+                    },
+                    "Unspecified": {}
+                }
+            },
+            "Unspecified": {
+                "LGDs": {
+                    "Female": {},
+                    "Male": {},
+                    "Unspecified": {}
+                },
+                "Missense": {
+                    "Female": {},
+                    "Male": {},
+                    "Unspecified": {}
+                },
+                "Synonymous": {
+                    "Female": {},
+                    "Male": {
+                        "SAMD11": [
+                            "f1",
+                            "f2",
+                            "f3"
+                        ]
+                    },
+                    "Unspecified": {}
+                }
+            }
+        },
+        "Missense": {
+            "Female": {
+                "LGDs": {
+                    "Female": {},
+                    "Male": {},
+                    "Unspecified": {}
+                },
+                "Missense": {
+                    "Female": {},
+                    "Male": {},
+                    "Unspecified": {}
+                },
+                "Synonymous": {
+                    "Female": {},
+                    "Male": {
+                        "SAMD11": [
+                            "f1",
+                            "f2",
+                            "f3"
+                        ]
+                    },
+                    "Unspecified": {}
+                }
+            },
+            "Male": {
+                "LGDs": {
+                    "Female": {},
+                    "Male": {},
+                    "Unspecified": {}
+                },
+                "Missense": {
+                    "Female": {},
+                    "Male": {},
+                    "Unspecified": {}
+                },
+                "Synonymous": {
+                    "Female": {},
+                    "Male": {
+                        "SAMD11": [
+                            "f1",
+                            "f2",
+                            "f3"
+                        ]
+                    },
+                    "Unspecified": {}
+                }
+            },
+            "Unspecified": {
+                "LGDs": {
+                    "Female": {},
+                    "Male": {},
+                    "Unspecified": {}
+                },
+                "Missense": {
+                    "Female": {},
+                    "Male": {},
+                    "Unspecified": {}
+                },
+                "Synonymous": {
+                    "Female": {},
+                    "Male": {
+                        "SAMD11": [
+                            "f1",
+                            "f2",
+                            "f3"
+                        ]
+                    },
+                    "Unspecified": {}
+                }
+            }
+        },
+        "Synonymous": {
+            "Female": {
+                "LGDs": {
+                    "Female": {},
+                    "Male": {},
+                    "Unspecified": {}
+                },
+                "Missense": {
+                    "Female": {},
+                    "Male": {},
+                    "Unspecified": {}
+                },
+                "Synonymous": {
+                    "Female": {},
+                    "Male": {
+                        "SAMD11": [
+                            "f1",
+                            "f2",
+                            "f3"
+                        ]
+                    },
+                    "Unspecified": {}
+                }
+            },
+            "Male": {
+                "LGDs": {
+                    "Female": {},
+                    "Male": {},
+                    "Unspecified": {}
+                },
+                "Missense": {
+                    "Female": {},
+                    "Male": {},
+                    "Unspecified": {}
+                },
+                "Synonymous": {
+                    "Female": {},
+                    "Male": {
+                        "SAMD11": [
+                            "f1",
+                            "f2",
+                            "f3"
+                        ]
+                    },
+                    "Unspecified": {}
+                }
+            },
+            "Unspecified": {
+                "LGDs": {
+                    "Female": {},
+                    "Male": {},
+                    "Unspecified": {}
+                },
+                "Missense": {
+                    "Female": {},
+                    "Male": {},
+                    "Unspecified": {}
+                },
+                "Synonymous": {
+                    "Female": {},
+                    "Male": {
+                        "SAMD11": [
+                            "f1",
+                            "f2",
+                            "f3"
+                        ]
+                    },
+                    "Unspecified": {}
+                }
+            }
+        }
+    },
+    "unknown": {
+        "LGDs": {
+            "Female": {
+                "LGDs": {
+                    "Female": {},
+                    "Male": {},
+                    "Unspecified": {}
+                },
+                "Missense": {
+                    "Female": {},
+                    "Male": {},
+                    "Unspecified": {}
+                },
+                "Synonymous": {
+                    "Female": {},
+                    "Male": {},
+                    "Unspecified": {}
+                }
+            },
+            "Male": {
+                "LGDs": {
+                    "Female": {},
+                    "Male": {},
+                    "Unspecified": {}
+                },
+                "Missense": {
+                    "Female": {},
+                    "Male": {},
+                    "Unspecified": {}
+                },
+                "Synonymous": {
+                    "Female": {},
+                    "Male": {},
+                    "Unspecified": {}
+                }
+            },
+            "Unspecified": {
+                "LGDs": {
+                    "Female": {},
+                    "Male": {},
+                    "Unspecified": {}
+                },
+                "Missense": {
+                    "Female": {},
+                    "Male": {},
+                    "Unspecified": {}
+                },
+                "Synonymous": {
+                    "Female": {},
+                    "Male": {},
+                    "Unspecified": {}
+                }
+            }
+        },
+        "Missense": {
+            "Female": {
+                "LGDs": {
+                    "Female": {},
+                    "Male": {},
+                    "Unspecified": {}
+                },
+                "Missense": {
+                    "Female": {},
+                    "Male": {},
+                    "Unspecified": {}
+                },
+                "Synonymous": {
+                    "Female": {},
+                    "Male": {},
+                    "Unspecified": {}
+                }
+            },
+            "Male": {
+                "LGDs": {
+                    "Female": {},
+                    "Male": {},
+                    "Unspecified": {}
+                },
+                "Missense": {
+                    "Female": {},
+                    "Male": {},
+                    "Unspecified": {}
+                },
+                "Synonymous": {
+                    "Female": {},
+                    "Male": {},
+                    "Unspecified": {}
+                }
+            },
+            "Unspecified": {
+                "LGDs": {
+                    "Female": {},
+                    "Male": {},
+                    "Unspecified": {}
+                },
+                "Missense": {
+                    "Female": {},
+                    "Male": {},
+                    "Unspecified": {}
+                },
+                "Synonymous": {
+                    "Female": {},
+                    "Male": {},
+                    "Unspecified": {}
+                }
+            }
+        },
+        "Synonymous": {
+            "Female": {
+                "LGDs": {
+                    "Female": {},
+                    "Male": {},
+                    "Unspecified": {}
+                },
+                "Missense": {
+                    "Female": {},
+                    "Male": {},
+                    "Unspecified": {}
+                },
+                "Synonymous": {
+                    "Female": {},
+                    "Male": {},
+                    "Unspecified": {}
+                }
+            },
+            "Male": {
+                "LGDs": {
+                    "Female": {},
+                    "Male": {},
+                    "Unspecified": {}
+                },
+                "Missense": {
+                    "Female": {},
+                    "Male": {},
+                    "Unspecified": {}
+                },
+                "Synonymous": {
+                    "Female": {},
+                    "Male": {},
+                    "Unspecified": {}
+                }
+            },
+            "Unspecified": {
+                "LGDs": {
+                    "Female": {},
+                    "Male": {},
+                    "Unspecified": {}
+                },
+                "Missense": {
+                    "Female": {},
+                    "Male": {},
+                    "Unspecified": {}
+                },
+                "Synonymous": {
+                    "Female": {},
+                    "Male": {},
+                    "Unspecified": {}
+                }
+            }
+        }
+    }
+}
