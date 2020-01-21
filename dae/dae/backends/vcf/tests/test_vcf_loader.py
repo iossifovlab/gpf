@@ -21,7 +21,8 @@ from dae.utils.variant_utils import GENOTYPE_TYPE
     "backends/trios_multi",
     "backends/quads_f1",
 ])
-def test_vcf_loader(vcf_loader_data, variants_vcf, fixture_data):
+def test_vcf_loader(
+        vcf_loader_data, variants_vcf, fixture_data, genomes_db_2013):
     conf = vcf_loader_data(fixture_data)
     print(conf)
 
@@ -30,11 +31,14 @@ def test_vcf_loader(vcf_loader_data, variants_vcf, fixture_data):
     ped_df = FamiliesLoader.flexible_pedigree_read(conf.pedigree)
     families = FamiliesData.from_pedigree_df(ped_df)
 
-    loader = VcfLoader(families, [conf.vcf], params={
-        'vcf_include_reference_genotypes': True,
-        'vcf_include_unknown_family_genotypes': True,
-        'vcf_include_unknown_person_genotypes': True
-    })
+    loader = VcfLoader(
+        families, [conf.vcf],
+        genomes_db_2013.get_genome(),
+        params={
+            'vcf_include_reference_genotypes': True,
+            'vcf_include_unknown_family_genotypes': True,
+            'vcf_include_unknown_person_genotypes': True
+        })
     assert loader is not None
 
     vars_old = list(fvars.query_variants(
@@ -56,7 +60,7 @@ def test_vcf_loader(vcf_loader_data, variants_vcf, fixture_data):
         'multivcf_original.vcf'
     ]
 ])
-def test_vcf_loader_multi(fixture_dirname, multivcf_files):
+def test_vcf_loader_multi(fixture_dirname, multivcf_files, genomes_db_2013):
     ped_file = fixture_dirname('backends/multivcf.ped')
     single_vcf = fixture_dirname('backends/multivcf_original.vcf')
 
@@ -67,10 +71,13 @@ def test_vcf_loader_multi(fixture_dirname, multivcf_files):
     families = FamiliesLoader(ped_file).load()
     families_multi = FamiliesLoader(ped_file).load()
 
-    single_loader = VcfLoader(families, [single_vcf])
+    single_loader = VcfLoader(
+        families, [single_vcf], genomes_db_2013.get_genome())
     assert single_loader is not None
     multi_vcf_loader = VcfLoader(
-        families_multi, multivcf_files, fill_missing_ref=False)
+        families_multi, multivcf_files,
+        genomes_db_2013.get_genome(),
+        fill_missing_ref=False)
     assert multi_vcf_loader is not None
     single_it = single_loader.full_variants_iterator()
     multi_it = multi_vcf_loader.full_variants_iterator()
@@ -104,7 +111,9 @@ def test_vcf_loader_multi(fixture_dirname, multivcf_files):
     ['reference', 0],
     ['unknown', -1]
 ])
-def test_multivcf_loader_fill_missing(fixture_dirname, fill_mode, fill_value):
+def test_multivcf_loader_fill_missing(
+        fixture_dirname, fill_mode, fill_value,
+        genomes_db_2013):
     ped_file = fixture_dirname('backends/multivcf.ped')
 
     multivcf_files = [
@@ -119,7 +128,8 @@ def test_multivcf_loader_fill_missing(fixture_dirname, fill_mode, fill_value):
         'vcf_multi_loader_fill_in_mode': fill_mode,
     }
     multi_vcf_loader = VcfLoader(
-        families, multivcf_files, params=params)
+        families, multivcf_files,
+        genomes_db_2013.get_genome(), params=params)
 
     assert multi_vcf_loader is not None
     multi_it = multi_vcf_loader.full_variants_iterator()
@@ -202,7 +212,8 @@ def test_transform_vcf_genotype():
 
     ])
 def test_vcf_denovo_mode(
-        denovo_mode, total, unexpected_inheritance, fixture_dirname):
+        denovo_mode, total, unexpected_inheritance, fixture_dirname,
+        genomes_db_2013):
     prefix = fixture_dirname('backends/inheritance_trio_denovo_omission')
     families = FamiliesLoader(f'{prefix}.ped').load()
     params = {
@@ -213,6 +224,7 @@ def test_vcf_denovo_mode(
     }
     vcf_loader = VcfLoader(
         families, [f'{prefix}.vcf'],
+        genomes_db_2013.get_genome(),
         params=params)
 
     assert vcf_loader is not None
@@ -233,7 +245,8 @@ def test_vcf_denovo_mode(
         ('ala_bala', 3, {Inheritance.omission})
     ])
 def test_vcf_omission_mode(
-        omission_mode, total, unexpected_inheritance, fixture_dirname):
+        omission_mode, total, unexpected_inheritance, fixture_dirname,
+        genomes_db_2013):
     prefix = fixture_dirname('backends/inheritance_trio_denovo_omission')
     families = FamiliesLoader(f'{prefix}.ped').load()
     params = {
@@ -244,6 +257,7 @@ def test_vcf_omission_mode(
     }
     vcf_loader = VcfLoader(
         families, [f'{prefix}.vcf'],
+        genomes_db_2013.get_genome(),
         params=params)
 
     assert vcf_loader is not None

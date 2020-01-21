@@ -487,7 +487,8 @@ def vcf_loader_data():
 
 
 @pytest.fixture(scope='session')
-def vcf_variants_loader(vcf_loader_data, default_annotation_pipeline):
+def vcf_variants_loader(
+        vcf_loader_data, default_annotation_pipeline, genomes_db_2013):
     def builder(
         path, params={
             'vcf_include_reference_genotypes': True,
@@ -501,7 +502,10 @@ def vcf_variants_loader(vcf_loader_data, default_annotation_pipeline):
         ped_df = FamiliesLoader.flexible_pedigree_read(conf.pedigree)
         families = FamiliesData.from_pedigree_df(ped_df)
 
-        loader = VcfLoader(families, [conf.vcf], params=params)
+        loader = VcfLoader(
+            families, [conf.vcf],
+            genomes_db_2013.get_genome(),
+            params=params)
         assert loader is not None
 
         loader = AlleleFrequencyDecorator(loader)
@@ -712,9 +716,11 @@ def data_import(
 
             families_loader = FamiliesLoader(vcf.pedigree)
             families = families_loader.load()
+            genome = gpf_instance_2013.genomes_db.get_genome()
 
             loader = VcfLoader(
-                families, [vcf.vcf], regions=None,
+                families, [vcf.vcf], genome,
+                regions=None,
                 params={
                     'vcf_include_reference_genotypes': True,
                     'vcf_include_unknown_family_genotypes': True,

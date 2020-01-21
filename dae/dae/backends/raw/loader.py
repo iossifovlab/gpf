@@ -497,3 +497,134 @@ class FamiliesGenotypesDecorator(VariantsLoaderDecorator):
                             )
 
             yield summary_variant, family_variants
+
+
+class VariantsGenotypesLoader(VariantsLoader):
+    """
+    Calculate missing best states and adds a genetic model
+    value to the family variant and its alleles.
+    """
+
+    def __init__(
+        self,
+        families: FamiliesData,
+        filenames: List[str],
+        transmission_type: TransmissionType,
+        genome: GenomicSequence,
+        overwrite: bool = False,
+        expect_genotype: bool = True,
+        expect_best_state: bool = False,
+        params: Dict[str, Any] = {},
+    ):
+        super(VariantsGenotypesLoader, self).__init__(
+            families=families,
+            filenames=filenames,
+            transmission_type=transmission_type,
+            params=params)
+
+        self.genome = genome
+
+        self.overwrite = overwrite
+        self.expect_genotype = expect_genotype
+        self.expect_best_state = expect_best_state
+
+    def _full_variants_iterator_impl(self):
+        raise NotImplementedError()
+
+    @classmethod
+    def _get_diploid_males(cls, family_variant: FamilyVariant) -> List[bool]:
+        res = []
+
+        assert family_variant.gt.shape == (
+            2, len(family_variant.family.persons)
+        )
+        for member_idx, member in enumerate(
+            family_variant.family.members_in_order
+        ):
+            if member.sex in (Sex.F, Sex.U):
+                continue
+            res.append(bool(
+                family_variant.gt[1, member_idx] != -2)
+            )
+        return res
+
+    @classmethod
+    def _calc_genetic_model(
+        cls, family_variant: FamilyVariant, genome: GenomicSequence
+    ) -> GeneticModel:
+        if family_variant.chromosome in ('X', 'chrX'):
+            male_ploidy = get_locus_ploidy(
+                family_variant.chromosome,
+                family_variant.position,
+                Sex.M,
+                genome
+            )
+            if male_ploidy == 2:
+                if not all(cls._get_diploid_males(family_variant)):
+                    return GeneticModel.X_broken
+                else:
+                    return GeneticModel.pseudo_autosomal
+            elif any(cls._get_diploid_males(family_variant)):
+                return GeneticModel.X_broken
+            else:
+                return GeneticModel.X
+        else:
+            # We currently assume all other chromosomes are autosomal
+            return GeneticModel.autosomal
+
+    @classmethod
+    def _calc_best_state(
+        cls, family_variant: FamilyVariant, genome: GenomicSequence
+    ) -> np.array:
+        best_state = calculate_simple_best_state(
+            family_variant.gt, family_variant.allele_count
+        )
+
+        male_ploidy = get_locus_ploidy(
+            family_variant.chromosome,
+            family_variant.position,
+            Sex.M,
+            genome
+        )
+
+        if family_variant.chromosome in ('X', 'chrX') and male_ploidy == 1:
+            male_ids = [
+                person_id
+                for person_id, person
+                in family_variant.family.persons.items()
+                if person.sex == Sex.M
+            ]
+            male_indices = family_variant.family.members_index(male_ids)
+            for idx in male_indices:
+                # A male with a haploid genotype for X cannot
+                # have two alternative alleles, therefore there
+                # must be one or two reference alleles left over
+                # from the simple best state calculation
+                assert best_state[0, idx] in (1, 2)
+                best_state[0, idx] -= 1
+
+        return best_state
+
+    def full_variants_iterator(
+            self) -> Iterator[Tuple[SummaryVariant, List[FamilyVariant]]]:
+        full_iterator = self._full_variants_iterator_impl()
+        for summary_variant, family_variants in full_iterator:
+            for family_variant in family_variants:
+                if self.expect_genotype:
+                    assert family_variant._best_st is None
+                    assert family_variant._genetic_model is None
+                    assert family_variant.gt is not None
+
+                    family_variant._genetic_model = \
+                        self._calc_genetic_model(
+                            family_variant,
+                            self.genome
+                        )
+
+                    family_variant._best_state = \
+                        self._calc_best_state(
+                            family_variant,
+                            self.genome
+                        )
+
+            yield summary_variant, family_variants

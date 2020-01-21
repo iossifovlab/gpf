@@ -3,6 +3,8 @@ from cyvcf2 import VCF
 
 import numpy as np
 
+from dae.GenomeAccess import GenomicSequence
+
 from dae.utils.helpers import str2bool
 
 from dae.utils.variant_utils import is_all_reference_genotype, \
@@ -10,7 +12,8 @@ from dae.utils.variant_utils import is_all_reference_genotype, \
 from dae.variants.attributes import Inheritance
 from dae.variants.variant import SummaryVariantFactory
 from dae.variants.family_variant import FamilyVariant
-from dae.backends.raw.loader import VariantsLoader, TransmissionType, \
+from dae.backends.raw.loader import VariantsGenotypesLoader, \
+    TransmissionType, \
     FamiliesGenotypes
 
 
@@ -60,16 +63,24 @@ class VcfFamiliesGenotypes(FamiliesGenotypes):
         return self.families_genotypes
 
 
-class VcfLoader(VariantsLoader):
+class VcfLoader(VariantsGenotypesLoader):
 
     def __init__(
-            self, families, vcf_files,
-            regions=None, params={},
+            self,
+            families,
+            vcf_files,
+            genome: GenomicSequence,
+            regions=None,
+            params={},
             **kwargs):
         super(VcfLoader, self).__init__(
             families=families,
             filenames=vcf_files,
             transmission_type=TransmissionType.transmitted,
+            genome=genome,
+            overwrite=False,
+            expect_genotype=True,
+            expect_best_state=False,
             params=params)
 
         assert len(vcf_files)
@@ -304,7 +315,7 @@ class VcfLoader(VariantsLoader):
 
         return gt
 
-    def full_variants_iterator(self):
+    def _full_variants_iterator_impl(self):
         summary_variant_index = 0
         for region in self.regions:
             vcf_iterators = self._build_vcf_iterators(region)

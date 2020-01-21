@@ -161,14 +161,15 @@ def main(argv, gpf_instance=None):
         vcf_loader = VcfLoader(
             families,
             vcf_files,
+            genome,
             params=vcf_params
         )
         vcf_loader = AnnotationPipelineDecorator(
             vcf_loader, annotation_pipeline
         )
-        vcf_loader = FamiliesGenotypesDecorator(
-            vcf_loader, genome
-        )
+        # vcf_loader = FamiliesGenotypesDecorator(
+        #     vcf_loader, genome
+        # )
         variant_loaders.append(vcf_loader)
 
     study_config = genotype_storage.simple_study_import(
