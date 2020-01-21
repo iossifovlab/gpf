@@ -184,6 +184,8 @@ class AnnotationDecorator(VariantsLoaderDecorator):
         'inheritance_data',
         'frequency_data',
         'genomic_scores_data',
+        'effect_type',
+        'effect_gene'
     ])
 
     def __init__(self, variants_loader):

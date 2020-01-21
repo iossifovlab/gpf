@@ -4,7 +4,10 @@ from dae.backends.raw.loader import StoredAnnotationDecorator
 def test_stored_annotation_iossifov2014(
         iossifov2014_loader, temp_filename):
 
-    iossifov2014_loader.save_annotation_file(temp_filename)
+    assert iossifov2014_loader.annotation_schema is not None
+
+    StoredAnnotationDecorator.save_annotation_file(
+        iossifov2014_loader, temp_filename)
 
     variants_loader = StoredAnnotationDecorator(
         iossifov2014_loader, temp_filename)
@@ -16,7 +19,10 @@ def test_stored_annotation_iossifov2014(
 def test_stored_annotation_does_not_change_summary_alleles(
         iossifov2014_loader, temp_filename):
 
-    iossifov2014_loader.save_annotation_file(temp_filename)
+    assert iossifov2014_loader.annotation_schema is not None
+
+    StoredAnnotationDecorator.save_annotation_file(
+        iossifov2014_loader, temp_filename)
 
     variants_loader = StoredAnnotationDecorator(
         iossifov2014_loader, temp_filename)
