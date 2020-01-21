@@ -20,7 +20,7 @@ def environ_override(field: str) -> Callable:
 
 class GPFConfigParser:
 
-    interpolation_var_regex = r"%\(([A-Za-z0-9_]+)\)s"
+    interpolation_var_regex: str = r"%\(([A-Za-z0-9_]+)\)s"
 
     filetype_parsers: dict = {
         ".yaml": yaml.safe_load,
@@ -41,7 +41,7 @@ class GPFConfigParser:
         return tup_ctor(*input_dict.values())
 
     @classmethod
-    def _interpolate(cls, input_dict, **interpolation_vars):
+    def _interpolate(cls, input_dict: dict, **interpolation_vars: str) -> dict:
         result_dict = deepcopy(input_dict)
 
         for key, val in result_dict.items():
