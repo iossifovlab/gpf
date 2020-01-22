@@ -425,7 +425,7 @@ class VariantsParquetWriter():
             )
         best_state_data = \
             self.parquet_serializer.serialize_variant_best_state(
-                family_variant.best_st
+                family_variant.best_state
             )
         genetic_model_data = family_variant.genetic_model.value
 

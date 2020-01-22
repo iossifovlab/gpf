@@ -46,16 +46,19 @@ def test_get_diploid_males(vcf, expected, variants_vcf):
         ]
     ]
 ])
-def test_calc_genetic_model(vcf, expected, variants_vcf, genome_2013):
-    fvars = variants_vcf(vcf)
+def test_vcf_loader_genetic_model(
+        vcf, expected, vcf_variants_loader, genome_2013):
+    loader = vcf_variants_loader(vcf)
     counter = 0
-    for sv, fvs in fvars.full_variants_iterator():
+    for sv, fvs in loader.full_variants_iterator():
         for fv in fvs:
-            genetic_model = FamiliesGenotypesDecorator._calc_genetic_model(
-                fv,
-                genome_2013
-            )
-            assert genetic_model == expected[counter]
+            assert fv._genetic_model is not None
+            for fa in fv.alleles:
+                assert fa._genetic_model is not None
+
+            assert fv.genetic_model == expected[counter]
+            for fa in fv.alleles:
+                assert fa._genetic_model == expected[counter]
             counter += 1
 
 
@@ -99,16 +102,20 @@ def test_calc_genetic_model(vcf, expected, variants_vcf, genome_2013):
         ]
     ]
 ])
-def test_calc_best_state(vcf, expected, variants_vcf, genome_2013):
-    fvars = variants_vcf(vcf)
+def test_vcf_loader_best_state(
+        vcf, expected, vcf_variants_loader, genome_2013):
+    loader = vcf_variants_loader(vcf)
     counter = 0
-    for sv, fvs in fvars.full_variants_iterator():
+    for sv, fvs in loader.full_variants_iterator():
         for fv in fvs:
-            best_state = FamiliesGenotypesDecorator._calc_best_state(
-                fv,
-                genome_2013
-            )
-            assert np.array_equal(best_state, expected[counter])
+            assert fv._best_state is not None
+            for fa in fv.alleles:
+                assert fa._best_state is not None
+
+            assert np.array_equal(fv.best_state, expected[counter]), counter
+            for fa in fv.alleles:
+                assert np.array_equal(fa.best_state, expected[counter])
+
             counter += 1
 
 

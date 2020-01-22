@@ -1,13 +1,15 @@
-import numpy as np
-from typing import Any, Dict, Optional, List
-
-from dae.variants.variant import Variant, Allele, SummaryVariant, \
-    SummaryAllele, Effect
-from dae.pedigrees.family import Family
-from dae.variants.attributes import Inheritance, GeneticModel, TransmissionType
 import itertools
-from dae.utils.variant_utils import GENOTYPE_TYPE, is_all_unknown_genotype, \
-    is_reference_genotype
+from typing import Any, Dict, List, Optional
+
+import numpy as np
+from deprecation import deprecated
+
+from dae.pedigrees.family import Family
+from dae.utils.variant_utils import (GENOTYPE_TYPE, is_all_unknown_genotype,
+                                     is_reference_genotype)
+from dae.variants.attributes import GeneticModel, Inheritance, TransmissionType
+from dae.variants.variant import (Allele, Effect, SummaryAllele,
+                                  SummaryVariant, Variant)
 
 
 def calculate_simple_best_state(
@@ -81,7 +83,7 @@ class FamilyAllele(Allele, FamilyDelegate):
 
         self.gt = genotype
         assert self.gt.dtype == GENOTYPE_TYPE, (self.gt, self.gt.dtype)
-        self._best_st = best_state
+        self._best_state = best_state
         self._genetic_model = genetic_model
 
         self._inheritance_in_members = inheritance_in_members
@@ -151,12 +153,17 @@ class FamilyAllele(Allele, FamilyDelegate):
         return self.gt.T
 
     @property
-    def best_st(self):
-        if self._best_st is None:
-            self._best_st = calculate_simple_best_state(
+    def best_state(self):
+        if self._best_state is None:
+            self._best_state = calculate_simple_best_state(
                 self.gt, self.attributes['allele_count']
             )
-        return self._best_st
+        return self._best_state
+
+    @deprecated(details="Replace `best_st` with `best_state`")
+    @property
+    def best_st(self):
+        return self.best_state
 
     @property
     def genetic_model(self):
@@ -389,7 +396,7 @@ class FamilyVariant(Variant, FamilyDelegate):
             alleles.append(allele)
 
         self._family_alleles = alleles
-        self._best_st = best_state
+        self._best_state = best_state
         self._matched_alleles = []
 
     @property
@@ -486,12 +493,17 @@ class FamilyVariant(Variant, FamilyDelegate):
                 self.family_id)
 
     @property
-    def best_st(self):
-        if self._best_st is None:
-            self._best_st = calculate_simple_best_state(
+    def best_state(self):
+        if self._best_state is None:
+            self._best_state = calculate_simple_best_state(
                 self.gt, self.allele_count
             )
-        return self._best_st
+        return self._best_state
+
+    @property
+    @deprecated(details="Replace usage of `best_st` with `best_state`")
+    def best_st(self):
+        return self.best_state
 
     @staticmethod
     def calc_alt_alleles(gt):

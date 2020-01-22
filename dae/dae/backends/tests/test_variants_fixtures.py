@@ -56,7 +56,7 @@ def test_df_query_multiallelic3_families(
     assert len(vs) == 1
     v = vs[0]
 
-    print(v, mat2str(v.best_st))
+    print(v, mat2str(v.best_state))
     fa1 = v.alt_alleles[0]
     fa2 = v.alt_alleles[1]
     assert len(v.alt_alleles) == 2
@@ -89,7 +89,7 @@ def test_reference_variant(
     print(vs)
 
     for v in vs:
-        print(v.family_id, mat2str(v.best_st))
+        print(v.family_id, mat2str(v.best_state))
 
     # assert vs[0].summary_variant == vs[1].summary_variant
 
@@ -116,6 +116,6 @@ def test_reference_multiallelic_variant(
     assert len(vs) == 2
 
     for v in vs:
-        print(mat2str(v.best_st))
+        print(mat2str(v.best_state))
 
     # assert vs[0].summary_variant == vs[1].summary_variant

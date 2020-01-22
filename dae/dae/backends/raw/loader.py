@@ -479,7 +479,7 @@ class FamiliesGenotypesDecorator(VariantsLoaderDecorator):
         for summary_variant, family_variants in full_iterator:
             for family_variant in family_variants:
                 if self.expect_none:
-                    assert family_variant._best_st is None
+                    assert family_variant._best_state is None
                     assert family_variant._genetic_model is None
 
                 if self.overwrite or family_variant._genetic_model is None:
@@ -488,13 +488,16 @@ class FamiliesGenotypesDecorator(VariantsLoaderDecorator):
                             family_variant,
                             self.genome
                         )
-                if self.overwrite or family_variant._best_st is None:
-                    if family_variant.genetic_model != GeneticModel.X_broken:
-                        family_variant._best_state = \
-                            self._calc_best_state(
-                                family_variant,
-                                self.genome
-                            )
+                if self.overwrite or family_variant._best_state is None:
+                    family_variant._best_state = \
+                        self._calc_best_state(
+                            family_variant,
+                            self.genome
+                        )
+
+                for fa in family_variant.alleles:
+                    fa._best_state = family_variant.best_state
+                    fa._genetic_model = family_variant.genetic_model
 
             yield summary_variant, family_variants
 
@@ -611,7 +614,7 @@ class VariantsGenotypesLoader(VariantsLoader):
         for summary_variant, family_variants in full_iterator:
             for family_variant in family_variants:
                 if self.expect_genotype:
-                    assert family_variant._best_st is None
+                    assert family_variant._best_state is None
                     assert family_variant._genetic_model is None
                     assert family_variant.gt is not None
 
@@ -626,5 +629,8 @@ class VariantsGenotypesLoader(VariantsLoader):
                             family_variant,
                             self.genome
                         )
+                    for fa in family_variant.alleles:
+                        fa._best_state = family_variant.best_state
+                        fa._genetic_model = family_variant.genetic_model
 
             yield summary_variant, family_variants

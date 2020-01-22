@@ -19,8 +19,8 @@ from dae.utils.variant_utils import mat2str
 def test_family_variant_best_st(fv1, gt, bs):
     v = fv1(gt, calculate_simple_best_state(gt, 3))
     print(v)
-    print(mat2str(v.best_st))
-    assert mat2str(v.best_st) == bs
+    print(mat2str(v.best_state))
+    assert mat2str(v.best_state) == bs
 
 
 @pytest.mark.parametrize("gt,bs", [
@@ -32,5 +32,5 @@ def test_family_variant_best_st(fv1, gt, bs):
 def test_family_variant_unknown_best_st(fv1, gt, bs):
     v = fv1(gt, calculate_simple_best_state(gt, 3))
     print(v)
-    print(mat2str(v.best_st))
-    assert mat2str(v.best_st) == bs
+    print(mat2str(v.best_state))
+    assert mat2str(v.best_state) == bs
