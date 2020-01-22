@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 from dae.pedigrees.loader import FamiliesLoader
 
-from dae.backends.raw.loader import VariantsGenotypesDecorator
+from dae.backends.raw.loader import VariantsGenotypesLoader
 from dae.backends.dae.loader import DenovoLoader
 from dae.variants.attributes import GeneticModel
 
@@ -28,7 +28,7 @@ def test_get_diploid_males(vcf, expected, variants_vcf):
     counter = 0
     for sv, fvs in fvars.full_variants_iterator():
         for fv in fvs:
-            assert VariantsGenotypesDecorator._get_diploid_males(fv) == \
+            assert VariantsGenotypesLoader._get_diploid_males(fv) == \
                 expected[counter]
             counter += 1
 

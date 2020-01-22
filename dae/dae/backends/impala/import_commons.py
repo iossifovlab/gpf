@@ -361,7 +361,6 @@ class Variants2ParquetTool:
             cls, argv=sys.argv[1:],
             gpf_instance=None,
             annotation_defaults={}):
-        print("argv:", argv)
 
         if gpf_instance is None:
             gpf_instance = GPFInstance()

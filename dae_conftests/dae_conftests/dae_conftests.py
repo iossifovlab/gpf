@@ -17,7 +17,7 @@ from dae.gpf_instance.gpf_instance import GPFInstance, cached
 from dae.annotation.annotation_pipeline import PipelineAnnotator
 
 from dae.variants.variant import SummaryVariant, SummaryAllele
-from dae.variants.family_variant import FamilyVariant, FamilyAllele
+from dae.variants.family_variant import FamilyVariant
 
 from dae.backends.raw.loader import AlleleFrequencyDecorator, \
     AnnotationPipelineDecorator
@@ -845,6 +845,7 @@ def svX2():
         SummaryAllele('X', 3_000_000, 'C', 'A', 0, 1),
     ])
 
+
 @pytest.fixture
 def fv1(fam1, sv1):
     def build(gt, best_st):
@@ -857,6 +858,7 @@ def fvX1(fam1, svX1):
     def build(gt, best_st):
         return FamilyVariant(svX1, fam1, gt, best_st)
     return build
+
 
 @pytest.fixture
 def fvX2(fam1, svX2):
