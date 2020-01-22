@@ -8,7 +8,7 @@ import toml
 
 from copy import deepcopy
 from collections import namedtuple
-from Typing import Union, List, Tuple, Any, Callable
+from typing import Union, List, Tuple, Any, Callable
 from cerberus import Validator
 
 from dae.utils.dict_utils import recursive_dict_update
@@ -38,6 +38,7 @@ class GPFConfigParser:
         ".yaml": yaml.safe_load,
         ".json": json.loads,
         ".toml": toml.loads,
+        ".conf": toml.loads,  # TODO FIXME Rename all .conf to .toml
     }
 
     @classmethod
@@ -59,7 +60,7 @@ class GPFConfigParser:
         for key, val in result_dict.items():
             if isinstance(val, str):
                 matched_interpolations = re.findall(
-                    cls.interpolation_vars, val
+                    cls.interpolation_var_regex, val
                 )
                 for interpolation in matched_interpolations:
                     assert interpolation in interpolation_vars, (
@@ -71,7 +72,7 @@ class GPFConfigParser:
                         interpolation_vars[interpolation],
                     )
             elif isinstance(val, dict):
-                result_dict[key] = cls._interpolate(val, interpolation_vars)
+                result_dict[key] = cls._interpolate(val, **interpolation_vars)
 
         return result_dict
 
@@ -79,7 +80,8 @@ class GPFConfigParser:
     def _read_config(cls, filename: str) -> dict:
         ext = os.path.splitext(filename)[1]
         assert ext in cls.filetype_parsers, f"Unsupported filetype {filename}!"
-        conf_dict = cls.filetype_parsers[ext](filename)
+        with open(filename, 'r') as infile:
+            conf_dict = cls.filetype_parsers[ext](infile.read())
         if "vars" in conf_dict:
             conf_dict = cls._interpolate(conf_dict, **conf_dict["vars"])
             del conf_dict["vars"]
@@ -102,9 +104,18 @@ class GPFConfigParser:
 
     @classmethod
     def load_config(
-        cls, filename: str, schema: dict, default_filename: str = None
+        cls, filename: str, schema: dict = None, default_filename: str = None
     ) -> Tuple[Any]:
-        config = cls._validate_config(cls._read_config(filename), schema)
+
+        if schema:
+            config = cls._validate_config(cls._read_config(filename), schema)
+        else:
+            # TODO Remove this behaviour! (and schema default value None)
+            # This is a temporary crutch to fix the unit tests
+            # without creating all schemas beforehand.
+            # We do NOT want to allow lack of validation.
+            config = cls._read_config(filename)
+
         if default_filename:
             default_config = cls._validate_config(
                 cls._read_config(default_filename), schema

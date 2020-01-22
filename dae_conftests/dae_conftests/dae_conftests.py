@@ -11,8 +11,9 @@ from io import StringIO
 from box import Box
 from dae.GenomesDB import GenomesDB
 
-from dae.configuration.dae_config_parser import DAEConfigParser
 from dae.gpf_instance.gpf_instance import GPFInstance, cached
+
+from dae.configuration.gpf_config_parser import GPFConfigParser
 
 from dae.annotation.annotation_pipeline import PipelineAnnotator
 
@@ -63,7 +64,9 @@ def default_dae_config(request):
         shutil.rmtree(studies_dirname)
 
     request.addfinalizer(fin)
-    dae_config = DAEConfigParser.read_and_parse_file_configuration()
+    dae_conf_path = os.path.join(os.environ.get('DAE_DB_DIR', None), 'DAE.conf')
+    print(dae_conf_path)
+    dae_config = GPFConfigParser.load_config(dae_conf_path)
     dae_config.studies_db.dir = studies_dirname
     return dae_config
 

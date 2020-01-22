@@ -1,13 +1,3 @@
-from dae.configuration.config_parser_base import ConfigParserBase
-
-
-def verify_bool(inp_val):
-    if type(inp_val) is bool:
-        return inp_val
-    else:
-        return ConfigParserBase._str_to_bool(inp_val)
-
-
 def annotation_config_cli_options(gpf_instance):
     options = [
         ('--annotation', {
@@ -56,7 +46,7 @@ def annotation_config_cli_options(gpf_instance):
     return options
 
 
-class AnnotationConfigParser(ConfigParserBase):
+class AnnotationConfigParser():
 
     SPLIT_STR_LISTS = (
         'virtual_columns',
@@ -169,16 +159,16 @@ class AnnotationConfigParser(ConfigParserBase):
         return config
 
 
-class AnnotationOptionsSectionParser(ConfigParserBase):
+class AnnotationOptionsSectionParser():
 
     # TODO
     # very hacky, fix asap
     VERIFY_VALUES = {
-        'vcf': verify_bool
+        'vcf': bool
     }
 
 
-class ScoreFileConfigParser(ConfigParserBase):
+class ScoreFileConfigParser():
 
     SPLIT_STR_LISTS = (
         'header',
@@ -193,4 +183,5 @@ class ScoreFileConfigParser(ConfigParserBase):
 
     CAST_TO_BOOL = (
         'chr_prefix',
+
     )

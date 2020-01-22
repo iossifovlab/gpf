@@ -1,8 +1,6 @@
 from box import Box
 import copy
 
-from dae.configuration.config_parser_base import ConfigParserBase
-
 from dae.variants.attributes import Role, Inheritance
 
 
@@ -12,7 +10,7 @@ def verify_inheritance_types(str_list):
     return str_list
 
 
-class GenotypeBrowserConfigParser(ConfigParserBase):
+class GenotypeBrowserConfigParser():
 
     SECTION = 'genotypeBrowser'
 

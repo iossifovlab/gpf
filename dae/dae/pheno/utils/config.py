@@ -5,10 +5,8 @@ Created on Aug 23, 2016
 '''
 import os
 
-from dae.configuration.config_parser_base import ConfigParserBase
 
-
-class PhenoConfigParser(ConfigParserBase):
+class PhenoConfigParser():
 
     SECTION = 'phenotypeData'
 
@@ -58,7 +56,7 @@ class PhenoConfigParser(ConfigParserBase):
         return config
 
 
-class PhenoRegressionConfigParser(ConfigParserBase):
+class PhenoRegressionConfigParser():
     '''
     A parser for phenotype regression configurations.
     Verifies that the regression configuration is correct.

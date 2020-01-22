@@ -7,13 +7,13 @@ import sys
 from copy import deepcopy
 from box import Box
 
-from dae.configuration.config_parser_base import ConfigParserBase
-
 from dae.gene.gene_weight_config_parser import GeneWeightConfigParser
 from dae.gene.gene_term import loadGeneTerm
 
 
-class GeneInfoConfigParser(ConfigParserBase):
+class GeneInfoConfigParser():
+    # TODO FIXME Remove me
+
     """
     Helper class for accessing DAE and geneInfo configuration.
     """
@@ -70,7 +70,7 @@ class GeneInfoConfigParser(ConfigParserBase):
         return gt
 
 
-class GeneInfoDB(ConfigParserBase):
+class GeneInfoDB():
 
     SECTION = 'geneInfo'
 

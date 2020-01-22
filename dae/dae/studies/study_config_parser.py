@@ -7,10 +7,8 @@ from dae.studies.people_group_config_parser import PeopleGroupConfigParser
 from dae.studies.genotype_browser_config_parser import \
     GenotypeBrowserConfigParser
 
-from dae.configuration.config_parser_base import ConfigParserBase
 
-
-class GenotypeDataConfigParser(ConfigParserBase):
+class GenotypeDataConfigParser():
 
     CAST_TO_BOOL = (
         'hasComplex',
@@ -91,7 +89,7 @@ class GenotypeDataConfigParser(ConfigParserBase):
         config_section.study_config = config
 
 
-class FilesConfigParser(ConfigParserBase):
+class FilesConfigParser():
 
     SECTION = 'files'
     INCLUDE_PROPERTIES = (
@@ -153,7 +151,7 @@ class FilesConfigParser(ConfigParserBase):
         return config_section
 
 
-class TablesConfigParser(ConfigParserBase):
+class TablesConfigParser():
 
     SECTION = 'tables'
     INCLUDE_PROPERTIES = (

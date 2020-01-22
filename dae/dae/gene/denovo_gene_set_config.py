@@ -1,12 +1,11 @@
 import os
 from copy import deepcopy
 
-from dae.configuration.config_parser_base import ConfigParserBase
 from dae.variants.attributes import Sex
 from dae.studies.people_group_config_parser import PeopleGroupConfigParser
 
 
-class DenovoGeneSetConfigParser(ConfigParserBase):
+class DenovoGeneSetConfigParser():
 
     SECTION = 'denovoGeneSets'
 

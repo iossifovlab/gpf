@@ -1,7 +1,5 @@
-from dae.configuration.config_parser_base import ConfigParserBase
-
-
-class GeneWeightConfigParser(ConfigParserBase):
+class GeneWeightConfigParser():
+    # TODO FIXME Remove me
 
     SPLIT_STR_LISTS = (
         'weights',

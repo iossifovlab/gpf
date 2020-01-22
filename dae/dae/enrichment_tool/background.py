@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 
 from dae.enrichment_tool.event_counters import overlap_enrichment_result_dict
-from dae.enrichment_tool.config import EnrichmentConfigParser
+from dae.configuration.gpf_config_parser import GPFConfigParser
 # from dae.variants.attributes import Inheritance
 
 
@@ -30,7 +30,7 @@ class BackgroundBase(object):
         assert self.name is not None
         self.config = config
 
-        self.cache_filename = EnrichmentConfigParser.enrichment_cache_file(
+        self.cache_filename = GPFConfigParser.enrichment_cache_file(
             self.config, self.name)
 
         self.load()

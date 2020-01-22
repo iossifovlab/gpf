@@ -50,10 +50,6 @@ class GenotypeDataGroupConfigParser(GenotypeDataConfigParser):
 
     SECTION = 'genotypeDataGroup'
 
-    SPLIT_STR_LISTS = GenotypeDataConfigParser.SPLIT_STR_LISTS + (
-        'studies',
-    )
-
     COMPOSITE_ATTRIBUTES = {
         'commonReport': _boolean_and_attribute,
         'common_report': _boolean_and_attribute,

@@ -1,7 +1,7 @@
 from dae.GenomeAccess import openRef
 from dae.GeneModelFiles import load_gene_models
 
-from dae.genomes_db_config_parser import GenomesDBConfigParser
+from dae.configuration.gpf_config_parser import GPFConfigParser
 
 '''
 GA = genomesDB.get_GA()
@@ -32,8 +32,7 @@ class GenomesDB(object):
         if not conf_file:
             conf_file = dae_dir + '/genomesDB.conf'
 
-        self.config = GenomesDBConfigParser.read_and_parse_file_configuration(
-            conf_file, dae_dir)
+        self.config = GPFConfigParser.load_config(conf_file)
 
         self.default_genome = self.config.genomes.default_genome
         self._gene_models = {}

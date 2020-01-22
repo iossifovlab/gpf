@@ -1,10 +1,8 @@
 from box import Box
 from copy import deepcopy
 
-from dae.configuration.config_parser_base import ConfigParserBase
 
-
-class PeopleGroupConfigParser(ConfigParserBase):
+class PeopleGroupConfigParser():
 
     SECTION = 'peopleGroup'
 
