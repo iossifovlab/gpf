@@ -618,7 +618,6 @@ class ParquetManager:
             partition_descriptor,
             bucket_index=bucket_index,
             rows=rows)
-        print('[DONE] going to create variants writer...')
 
         variants_writer.write_dataset()
         end = time.time()
@@ -638,7 +637,6 @@ class ParquetManager:
 
         start = time.time()
 
-        print('[DONE] going to create variants partition writer...')
         variants_writer = VariantsParquetWriter(
             variants_loader,
             partition_descriptor,
