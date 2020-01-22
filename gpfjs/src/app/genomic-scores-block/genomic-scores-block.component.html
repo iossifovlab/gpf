@@ -15,6 +15,7 @@
     <div class="card-block">
       <div style="padding: 5px" *ngFor="let score of genomicScoresState.genomicScoresState; trackBy: trackById; let i = index">
         <span style="padding: 5px; display: block; overflow: hidden">
+          <hr width="100%">
           <gpf-remove-button
             [field]="score"
             (removeFilter)="removeFilter($event)">

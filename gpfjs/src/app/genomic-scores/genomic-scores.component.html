@@ -1,5 +1,5 @@
 <div class="row">
-    <div class="col-sm-3">
+    <div class="col-sm-9" style="margin-left: 12%">
       <select class="form-control"
         [(ngModel)]="selectedGenomicScores"
          required>
@@ -8,15 +8,12 @@
         </option>
       </select>
     </div>
-
     <div>
       <i [style.visibility]="this.genomicScoreState.score.help !== ''? 'visible': 'hidden'" class="clickable fa fa-question-circle-o fa-2x" (click)="showHelp()"></i>
     </div>
-
-    <div class="col-sm-8">
+    <div class="col-sm-12">
       <gpf-histogram
         *ngIf="selectedGenomicScores"
-        width="650" height="145"
         [bins]="selectedGenomicScores.bins"
         [bars]="selectedGenomicScores.bars"
         [domainMin]="domainMin"

@@ -8,20 +8,7 @@
 	  </g>
 	</svg>
 
-	<div class="histogram-controls" *ngIf="showMinMaxInputWithDefaultValue">
-	    <div class="histogram-to">
-	        <label for="to-input-field">To (Max: {{ max_value }})</label>
-			<div class="stepper">
-				<input
-				  id="to-input-field"
-		          class="steps form-control no-arrows"
-		          required type="number"
-		          [(ngModel)]="rangeEndWithoutNull"
-		          placeholder="end">
-				<button type="button" class="step up" (click)="endStepUp($event)">&#x25B2;</button>
-				<button type="button" class="step down" (click)="endStepDown($event)">&#x25BC;</button>
-			</div>
-	    </div>
+	<div class="histogram-controls" *ngIf="showMinMaxInputWithDefaultValue" style="justify-content: space-between">
 	    <div class="histogram-from">
 	        <label for="from-input-field">From (Min: {{ min_value }})</label>
 			<div class="stepper">
@@ -33,6 +20,19 @@
 		          placeholder="start">
 			  <button type="button" class="step up" (click)="startStepUp($event)">&#x25B2;</button>
 			  <button type="button" class="step down" (click)="startStepDown($event)">&#x25BC;</button>
+			</div>
+		</div>
+		<div class="histogram-to">
+	        <label for="to-input-field">To (Max: {{ max_value }})</label>
+			<div class="stepper">
+				<input
+				  id="to-input-field"
+		          class="steps form-control no-arrows"
+		          required type="number"
+		          [(ngModel)]="rangeEndWithoutNull"
+		          placeholder="end">
+				<button type="button" class="step up" (click)="endStepUp($event)">&#x25B2;</button>
+				<button type="button" class="step down" (click)="endStepDown($event)">&#x25BC;</button>
 			</div>
 	    </div>
 	</div>
