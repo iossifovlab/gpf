@@ -11,6 +11,7 @@ from typing import Iterator, Tuple, List, Dict, Any, Optional
 from dae.GenomeAccess import GenomicSequence
 
 from dae.pedigrees.family import FamiliesData
+
 from dae.variants.variant import SummaryVariant
 from dae.variants.family_variant import FamilyVariant, \
     calculate_simple_best_state
@@ -18,7 +19,7 @@ from dae.variants.attributes import Sex, GeneticModel
 
 from dae.variants.attributes import TransmissionType
 
-from dae.utils.variant_utils import get_locus_ploidy
+from dae.utils.variant_utils import get_locus_ploidy, best2gt
 
 
 class FamiliesGenotypes:
@@ -323,7 +324,7 @@ class StoredAnnotationDecorator(AnnotationDecorator):
                 dtype={
                     'chrom': str,
                     'position': np.int32,
-                    'effects': str,
+                    # 'effects': str,
                 },
                 converters={
                     'cshl_variant': cls._convert_string,
@@ -384,20 +385,37 @@ class StoredAnnotationDecorator(AnnotationDecorator):
             file=sys.stderr)
 
 
-class FamiliesGenotypesDecorator(VariantsLoaderDecorator):
+class VariantsGenotypesLoader(VariantsLoader):
     """
     Calculate missing best states and adds a genetic model
     value to the family variant and its alleles.
     """
 
     def __init__(
-        self, variants_loader, genome,
-        overwrite=False, expect_none=False
+        self,
+        families: FamiliesData,
+        filenames: List[str],
+        transmission_type: TransmissionType,
+        genome: GenomicSequence,
+        overwrite: bool = False,
+        expect_genotype: bool = True,
+        expect_best_state: bool = False,
+        params: Dict[str, Any] = {},
     ):
-        super(FamiliesGenotypesDecorator, self).__init__(variants_loader)
-        self.overwrite = overwrite
-        self.expect_none = expect_none
+        super(VariantsGenotypesLoader, self).__init__(
+            families=families,
+            filenames=filenames,
+            transmission_type=transmission_type,
+            params=params)
+
         self.genome = genome
+
+        self.overwrite = overwrite
+        self.expect_genotype = expect_genotype
+        self.expect_best_state = expect_best_state
+
+    def _full_variants_iterator_impl(self):
+        raise NotImplementedError()
 
     @classmethod
     def _get_diploid_males(cls, family_variant: FamilyVariant) -> List[bool]:
@@ -473,27 +491,76 @@ class FamiliesGenotypesDecorator(VariantsLoaderDecorator):
 
         return best_state
 
+    @classmethod
+    def _calc_genotype(
+        cls, family_variant: FamilyVariant, genome: GenomicSequence
+    ) -> np.array:
+        best_state = family_variant._best_state
+        genotype = best2gt(best_state)
+        male_ploidy = get_locus_ploidy(
+            family_variant.chromosome,
+            family_variant.position,
+            Sex.M,
+            genome
+        )
+        ploidy = np.sum(best_state, 0)
+        genetic_model = GeneticModel.autosomal
+
+        if family_variant.chromosome in ('X', 'chrX'):
+            genetic_model = GeneticModel.X
+            if male_ploidy == 2:
+                genetic_model = GeneticModel.pseudo_autosomal
+
+            male_ids = [
+                person_id
+                for person_id, person
+                in family_variant.family.persons.items()
+                if person.sex == Sex.M
+            ]
+            male_indices = family_variant.family.members_index(male_ids)
+            for idx in male_indices:
+                if ploidy[idx] != male_ploidy:
+                    genetic_model = GeneticModel.X_broken
+                    break
+
+        elif np.any(ploidy == 1):
+            genetic_model = GeneticModel.autosomal_broken
+
+        return genotype, genetic_model
+
     def full_variants_iterator(
             self) -> Iterator[Tuple[SummaryVariant, List[FamilyVariant]]]:
-        full_iterator = self.variants_loader.full_variants_iterator()
+        full_iterator = self._full_variants_iterator_impl()
         for summary_variant, family_variants in full_iterator:
             for family_variant in family_variants:
-                if self.expect_none:
-                    assert family_variant._best_st is None
+                if self.expect_genotype:
+                    assert family_variant._best_state is None
                     assert family_variant._genetic_model is None
+                    assert family_variant.gt is not None
 
-                if self.overwrite or family_variant._genetic_model is None:
                     family_variant._genetic_model = \
                         self._calc_genetic_model(
                             family_variant,
                             self.genome
                         )
-                if self.overwrite or family_variant._best_st is None:
-                    if family_variant.genetic_model != GeneticModel.X_broken:
-                        family_variant._best_state = \
-                            self._calc_best_state(
-                                family_variant,
-                                self.genome
-                            )
+
+                    family_variant._best_state = \
+                        self._calc_best_state(
+                            family_variant,
+                            self.genome
+                        )
+                    for fa in family_variant.alleles:
+                        fa._best_state = family_variant.best_state
+                        fa._genetic_model = family_variant.genetic_model
+                elif self.expect_best_state:
+                    assert family_variant._best_state is not None
+                    assert family_variant._genetic_model is None
+                    assert family_variant.gt is None
+
+                    family_variant.gt, family_variant._genetic_model = \
+                        self._calc_genotype(family_variant, self.genome)
+                    for fa in family_variant.alleles:
+                        fa.gt = family_variant.gt
+                        fa._genetic_model = family_variant.genetic_model
 
             yield summary_variant, family_variants

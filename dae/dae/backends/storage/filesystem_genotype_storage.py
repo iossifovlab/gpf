@@ -7,8 +7,7 @@ from dae.pedigrees.loader import FamiliesLoader
 
 from dae.backends.storage.genotype_storage import GenotypeStorage
 
-from dae.backends.raw.loader import StoredAnnotationDecorator, \
-    FamiliesGenotypesDecorator
+from dae.backends.raw.loader import StoredAnnotationDecorator
 from dae.backends.raw.raw_variants import RawMemoryVariants
 
 from dae.backends.vcf.loader import VcfLoader
@@ -40,12 +39,10 @@ class FilesystemGenotypeStorage(GenotypeStorage):
             families_loader = FamiliesLoader(ped_filename)
             families = families_loader.load()
             variants_loader = VcfLoader(
-                families, [vcf_filename])
+                families, [vcf_filename], genomes_db.get_genome())
             variants_loader = StoredAnnotationDecorator.decorate(
                 variants_loader, vcf_filename
             )
-            variants_loader = FamiliesGenotypesDecorator(
-                variants_loader, genomes_db.get_genome())
 
             return RawMemoryVariants([variants_loader])
 
@@ -64,6 +61,7 @@ class FilesystemGenotypeStorage(GenotypeStorage):
                 variants_filename = study_config.files.vcf[0].path
                 variants_loader = VcfLoader(
                     families, [variants_filename],
+                    genomes_db.get_genome(),
                     params=study_config.files.vcf[0].params)
                 variants_loader = StoredAnnotationDecorator.decorate(
                     variants_loader, variants_filename
@@ -80,8 +78,6 @@ class FilesystemGenotypeStorage(GenotypeStorage):
                 variants_loader = StoredAnnotationDecorator.decorate(
                     variants_loader, variants_filename
                 )
-                variants_loader = FamiliesGenotypesDecorator(
-                    variants_loader, genomes_db.get_genome())
                 loaders.append(variants_loader)
 
             assert len(loaders) > 0

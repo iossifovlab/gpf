@@ -9,8 +9,7 @@ import numpy as np
 import pandas as pd
 
 from dae.GenomeAccess import GenomicSequence
-from dae.utils.variant_utils import best2gt, str2mat, GENOTYPE_TYPE, \
-    reference_genotype
+from dae.utils.variant_utils import str2mat, GENOTYPE_TYPE
 from dae.utils.helpers import str2bool
 
 from dae.utils.dae_utils import dae2vcf_variant
@@ -19,7 +18,7 @@ from dae.pedigrees.family import Family, FamiliesData
 from dae.variants.variant import SummaryVariantFactory
 from dae.variants.family_variant import FamilyVariant
 
-from dae.backends.raw.loader import VariantsLoader, \
+from dae.backends.raw.loader import VariantsGenotypesLoader, \
     TransmissionType, FamiliesGenotypes
 
 from dae.variants.attributes import VariantType
@@ -45,16 +44,22 @@ class DenovoFamiliesGenotypes(FamiliesGenotypes):
         yield self.family, self.gt, self.best_state
 
 
-class DenovoLoader(VariantsLoader):
+class DenovoLoader(VariantsGenotypesLoader):
 
     def __init__(
-            self, families: FamiliesData,
-            denovo_filename: str, genome: GenomicSequence,
+            self,
+            families: FamiliesData,
+            denovo_filename: str,
+            genome: GenomicSequence,
             params: Dict[str, Any] = {}):
         super(DenovoLoader, self).__init__(
             families=families,
             filenames=[denovo_filename],
             transmission_type=TransmissionType.denovo,
+            genome=genome,
+            overwrite=False,
+            expect_genotype=False,
+            expect_best_state=False,
             params=params)
 
         self.set_attribute('source_type', 'denovo')
@@ -66,7 +71,14 @@ class DenovoLoader(VariantsLoader):
             denovo_filename, genome, families=families, **self.params
         )
 
-    def full_variants_iterator(self):
+        if np.all(pd.isnull(self.denovo_df['genotype'])):
+            self.expect_best_state = True
+        elif np.all(pd.isnull(self.denovo_df['best_state'])):
+            self.expect_genotype = True
+        else:
+            assert False
+
+    def _full_variants_iterator_impl(self):
 
         for index, rec in enumerate(self.denovo_df.to_dict(orient='records')):
             family_id = rec.pop('family_id')
@@ -410,13 +422,13 @@ class DenovoLoader(VariantsLoader):
                 # Here we join and then split again by ',' to handle cases
                 # where the person IDs are actually a list of IDs, separated
                 # by a ','
-                people = ','.join(
+                person_ids = ','.join(
                     temp_df.iloc[variants_indices].loc[:, 'person_id'])\
                     .split(',')
 
-                variant_to_people[variant] = people
+                variant_to_people[variant] = person_ids
                 variant_to_families[variant] = \
-                    families.families_query_by_person_ids(people)
+                    families.families_query_by_person_ids(person_ids)
 
             # TODO Implement support for multiallelic variants
             result = []
@@ -447,7 +459,7 @@ class DenovoLoader(VariantsLoader):
             best_state_col = list(map(
                 lambda bs: str2mat(bs, col_sep=' '), raw_df[denovo_best_state]
             ))
-            genotype_col = list(map(best2gt, best_state_col))
+            # genotype_col = list(map(best2gt, best_state_col))
 
             return pd.DataFrame({
                 'chrom': chrom_col,
@@ -455,55 +467,60 @@ class DenovoLoader(VariantsLoader):
                 'reference': ref_col,
                 'alternative': alt_col,
                 'family_id': family_col,
-                'genotype': genotype_col,
+                'genotype': None,
                 'best_state': best_state_col,
             })
 
 
 class DaeTransmittedFamiliesGenotypes(FamiliesGenotypes):
 
-    def __init__(self, families, families_genotypes, families_best_states):
+    def __init__(self, families, families_best_states):
         super(DaeTransmittedFamiliesGenotypes, self).__init__()
         self.families = families
-        self.families_genotypes = families_genotypes
         self.families_best_states = families_best_states
 
-    def get_family_genotype(self, family):
-        gt = self.families_genotypes.get(family.family_id, None)
-        if gt is not None:
-            return gt
-        else:
-            # FIXME: what genotype we should return in case
-            # we have no data in the file:
-            # - reference
-            # - unknown
-            return reference_genotype(len(family))
+    # def get_family_genotype(self, family):
+    #     gt = self.families_genotypes.get(family.family_id, None)
+    #     if gt is not None:
+    #         return gt
+    #     else:
+    #         # FIXME: what genotype we should return in case
+    #         # we have no data in the file:
+    #         # - reference
+    #         # - unknown
+    #         return reference_genotype(len(family))
 
     def get_family_best_state(self, family):
         return self.families_best_states.get(family.family_id, None)
 
     def family_genotype_iterator(self):
-        for family_id, gt in self.families_genotypes.items():
+        for family_id, bs in self.families_best_states.items():
             fam = self.families[family_id]
-            bs = self.families_best_states[family_id]
-            yield fam, gt, bs
+            yield fam, bs
 
     def full_families_genotypes(self):
         raise NotImplementedError()
         # return self.families_genotypes
 
 
-class DaeTransmittedLoader(VariantsLoader):
+class DaeTransmittedLoader(VariantsGenotypesLoader):
 
     def __init__(
-            self, families,
-            summary_filename, genome,
+            self,
+            families,
+            summary_filename,
+            genome,
             regions=None,
             params={}):
         super(DaeTransmittedLoader, self).__init__(
             families=families,
             filenames=[summary_filename],
-            transmission_type=TransmissionType.transmitted)
+            transmission_type=TransmissionType.transmitted,
+            genome=genome,
+            overwrite=False,
+            expect_genotype=False,
+            expect_best_state=True,
+            params=params)
 
         assert os.path.exists(summary_filename), summary_filename
 
@@ -644,18 +661,15 @@ class DaeTransmittedLoader(VariantsLoader):
         return summary_variant
 
     @staticmethod
-    def _explode_family_genotypes(family_data, col_sep="", row_sep="/"):
+    def _explode_family_best_states(family_data, col_sep="", row_sep="/"):
         best_states = {
             fid: str2mat(bs, col_sep=col_sep, row_sep=row_sep)
             for (fid, bs) in [fg.split(':')[:2]
                               for fg in family_data.split(';')]
         }
-        genotypes = {
-            fid: best2gt(bs) for fid, bs in list(best_states.items())
-        }
-        return best_states, genotypes
+        return best_states
 
-    def full_variants_iterator(self):
+    def _full_variants_iterator_impl(self):
 
         summary_columns = self._load_summary_columns(self.summary_filename)
         toomany_columns = self._load_toomany_columns(self.toomany_filename)
@@ -688,20 +702,19 @@ class DaeTransmittedLoader(VariantsLoader):
                         assert rec['cshl_position'] == \
                             int(toomany_rec['cshl_position'])
 
-                    best_states, genotypes = \
-                        self._explode_family_genotypes(family_data)
+                    best_states = \
+                        self._explode_family_best_states(family_data)
 
                     families_genotypes = DaeTransmittedFamiliesGenotypes(
                         self.families,
-                        genotypes,
                         best_states
                     )
 
                     family_variants = []
-                    for fam, gt, bs in \
+                    for fam, bs in \
                             families_genotypes.family_genotype_iterator():
                         family_variants.append(
-                            FamilyVariant(summary_variant, fam, gt, bs))
+                            FamilyVariant(summary_variant, fam, None, bs))
 
                     yield summary_variant, family_variants
                     summary_index += 1
