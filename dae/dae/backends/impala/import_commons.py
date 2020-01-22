@@ -128,23 +128,22 @@ class MakefileGenerator:
         all_bins = ' '.join(list(variants_targets.keys()))
 
         print(
-            f'all_bins={all_bins}\n',
+            f'all_bins={all_bins}',
             file=output)
         print(
             f'all_bins_flags=$(foreach bin, $(all_bins), $(bin).flag)\n',
             file=output)
         print(
-            f'\n'
             f'variants: $(all_bins_flags)\n',
             file=output)
         print(
-            f'\n'
             f'%.flag:\n'
             f'\t{command} --rb $* && touch $@\n',
             file=output
         )
 
     def generate_pedigree_make(self, command, output=sys.stdout):
+        print('\n', file=output)
         print(
             f'pedigree: ped.flag\n',
             file=output)
@@ -154,16 +153,28 @@ class MakefileGenerator:
             file=output)
 
     def generate_impala_load_make(self, command, output=sys.stdout):
+        print('\n', file=output)
         print(
-            f'impala: load.flag\n',
+            f'load: load.flag\n',
             file=output)
         print(
-            f'load.flag:\n'
+            f'load.flag: ped.flag $(all_bins_flags)\n'
+            f'\t{command} && touch $@',
+            file=output)
+
+    def generate_reports_make(self, command, output=sys.stdout):
+        print('\n', file=output)
+        print(
+            f'reports: reports.flag\n',
+            file=output)
+        print(
+            f'reports.flag: load.flag\n'
             f'\t{command} && touch $@',
             file=output)
 
     def generate_makefile(
             self, families_command, variants_command, load_command,
+            reports_command,
             target_chromosomes,
             output=sys.stdout):
 
@@ -177,6 +188,8 @@ class MakefileGenerator:
             families_command, output=output)
         self.generate_impala_load_make(
             load_command, output=output)
+        self.generate_reports_make(
+            reports_command, output=output)
 
 
 class Variants2ParquetTool:
@@ -184,7 +197,6 @@ class Variants2ParquetTool:
     VARIANTS_LOADER_CLASS = None
     VARIANTS_TOOL = None
     VARIANTS_FREQUENCIES = False
-    VARIANTS_GENOTYPES = True
 
     BUCKET_INDEX_DEFAULT = 1000
 
@@ -357,6 +369,20 @@ class Variants2ParquetTool:
         return ' '.join(command)
 
     @classmethod
+    def build_make_reports_command(
+            cls, study_id, argv):
+        output = argv.output
+        if output is None:
+            output = '.'
+        output = os.path.abspath(output)
+
+        command = [
+            f'generate_common_report.py --studies {study_id}'
+        ]
+
+        return ' && '.join(command)
+
+    @classmethod
     def main(
             cls, argv=sys.argv[1:],
             gpf_instance=None,
@@ -413,10 +439,13 @@ class Variants2ParquetTool:
                 study_id, argv, families_loader)
             load_command = cls.build_make_impala_load_command(
                 study_id, argv)
-
+            reports_command = cls.build_make_reports_command(
+                study_id, argv
+            )
             with open(os.path.join(dirname, 'Makefile'), 'wt') as output:
                 generator.generate_makefile(
                     families_command, variants_command, load_command,
+                    reports_command,
                     target_chromosomes,
                     output=output
                 )
