@@ -309,7 +309,7 @@ Restart the `wdaemanage.py`::
     wdaemanage.py runserver 0.0.0.0:8000
 
 Now when you navigate to the iossifov_2014 study in the browser, you should be able to
-use the enrichment tool under the `Enrichment Tool` tab.
+use the `Enrichment Tool` under the 'Enrichment Tool' tab.
 
 
 Getting Started with Preview Columns
@@ -401,7 +401,7 @@ Options used in this command are as follows:
    are located;
 
 * | ``-o`` options specifies the name of the output phenotype database that
-   will be used in phenotype browser;
+   will be used in the Phenotype Browser;
 
 * | ``--regression`` option specifies a path to a pheno regression config which
    describes a list of measures to make regressions against
@@ -462,7 +462,7 @@ After this, the configuration file should look like:
     phenotypeBrowser = yes
 
 When you restart the server, you should be
-able to see the `Phenotype Browser` tab in the `comp_all` study.
+able to see the 'Phenotype Browser' tab in the `comp_all` study.
 
 Configure Phenotype Filters in Genotype Browser
 +++++++++++++++++++++++++++++++++++++++++++++++
@@ -487,7 +487,7 @@ Phenotype Filters. Each phenotype filter is expected to have a
 The required configuration options for each pheno filter are:
 
 * | ``phenoFilters.<pheno_filter_id>.name`` - name to use when showing the
-   pheno filter in the Genotype Browser Table Preview.
+   pheno filter in the Genotype Browser table preview.
 
 * | ``phenoFilters.<pheno_filter_id>.measureType`` - the measure type of the
    pheno filter. One of ``continuous``, ``categorical``, ``ordinal`` or
@@ -518,7 +518,7 @@ Configure Phenotype Columns in Genotype Browser
 +++++++++++++++++++++++++++++++++++++++++++++++
 
 Phenotype Columns are values from the Phenotype Database for each variant
-displayed in :ref:`genotype_browser_ui` preview table. They can be added when a phenotype database
+displayed in :ref:`genotype_browser_ui` table preview. They can be added when a phenotype database
 is attached to a study or a dataset.
 
 To add a Phenotype Column you need to define it in the study or dataset config:
@@ -538,7 +538,7 @@ each Pheno Column to display. Each Pheno Column has to have a
 ``pheno.<measure_id>`` configuration with the following properties:
 
 * | ``pheno.<measure_id>.name`` - the display name of the pheno column group
-   used in the Genotype Browser Preview table.
+   used in the Genotype Browser table preview.
 
 * | ``pheno.<measure_id>.slots`` - comma separated definitions for all pheno
    columns.
@@ -554,9 +554,8 @@ The Phenotype Column definition has the following structure:
 
 * ``<name>`` - the name of the sub-column to be displayed.
 
-For the Phenotype Columns to be in the Genotype Browser Preview table or the
-Genotype Browser Download file, they have to be present in the
-``previewColumns`` or the ``downloadColumns`` in the Genotype Browser
+For the Phenotype Columns to be in the Genotype Browser table preview or download file, 
+they have to be present in the ``previewColumns`` or the ``downloadColumns`` in the Genotype Browser
 configuration.
 
 .. code::
@@ -567,7 +566,7 @@ configuration.
 In the above ``comp_all`` configuration, the last column ``pheno`` is a
 Phenotype Column.
 
-Enabling the Phenotype tool
+Enabling the Phenotype Tool
 +++++++++++++++++++++++++++
 
 To enable the :ref:`phenotype_tool_ui` for a study, you must edit
@@ -582,7 +581,7 @@ the Phenotype browser. Open the configuration file ``comp_all.conf``:
     phenotypeBrowser = yes
 
 
-And you can enable the Phenotype tool by adding the following line:
+And you can enable the Phenotype Tool by adding the following line:
 
 .. code::
 
