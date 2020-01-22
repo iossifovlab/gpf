@@ -19,7 +19,7 @@ from dae.variants.attributes import Sex, GeneticModel
 
 from dae.variants.attributes import TransmissionType
 
-from dae.utils.variant_utils import get_locus_ploidy, best2gt
+from dae.utils.variant_utils import get_locus_ploidy, best2gt, mat2str
 
 
 class FamiliesGenotypes:
@@ -486,8 +486,15 @@ class VariantsGenotypesLoader(VariantsLoader):
                 # have two alternative alleles, therefore there
                 # must be one or two reference alleles left over
                 # from the simple best state calculation
-                assert best_state[0, idx] in (1, 2)
-                best_state[0, idx] -= 1
+                if best_state[0, idx] in (1, 2):
+                    best_state[0, idx] -= 1
+                elif np.any(best_state[:, idx] == 2):
+                    best_state[best_state[:, idx] == 2] -= 1
+                else:
+                    print(
+                        "WARN: can't handle broken X best state:",
+                        family_variant, mat2str(family_variant.gt),
+                        file=sys.stderr)
 
         return best_state
 
