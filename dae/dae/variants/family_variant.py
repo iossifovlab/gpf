@@ -82,7 +82,8 @@ class FamilyAllele(Allele, FamilyDelegate):
         self.summary_allele = summary_allele
 
         self.gt = genotype
-        assert self.gt.dtype == GENOTYPE_TYPE, (self.gt, self.gt.dtype)
+
+        # assert self.gt.dtype == GENOTYPE_TYPE, (self.gt, self.gt.dtype)
         self._best_state = best_state
         self._genetic_model = genetic_model
 
@@ -357,45 +358,17 @@ class FamilyVariant(Variant, FamilyDelegate):
             genotype: Any,
             best_state: Any):
 
-        self.gt = np.copy(genotype)
-
-        family_alleles = [
-            FamilyAllele(sum_allele, family, genotype, best_state)
-            for sum_allele in summary_variant.alleles
-        ]
-
         assert family is not None
-        assert genotype is not None
         assert isinstance(family, Family)
-        assert isinstance(family_alleles, list)
-        assert all([isinstance(a, FamilyAllele) for a in family_alleles]), \
-            family_alleles
+        FamilyDelegate.__init__(self, family)
 
         self.summary_variant = summary_variant
-
-        FamilyDelegate.__init__(self, family)
-        self.gt = np.copy(genotype)
-        self._genetic_model = None
-
         self.summary_alleles = self.summary_variant.alleles
 
-        alleles = [
-            family_alleles[0]
-        ]
-        for ai in self.calc_alt_alleles(self.gt):
-            allele = None
-            for fa in family_alleles:
-                if fa.allele_index == ai:
-                    allele = fa
-                    break
-            if allele is None:
-                continue
-            assert allele.allele_index == ai, \
-                (allele.allele_index, ai)
+        self.gt = genotype
+        self._genetic_model = None
 
-            alleles.append(allele)
-
-        self._family_alleles = alleles
+        self._family_alleles = None
         self._best_state = best_state
         self._matched_alleles = []
 
@@ -425,6 +398,30 @@ class FamilyVariant(Variant, FamilyDelegate):
 
     @property
     def alleles(self) -> List[FamilyAllele]:
+        if self._family_alleles is None:
+            family_alleles = [
+                FamilyAllele(
+                    sum_allele, self.family, self.gt, self._best_state)
+                for sum_allele in self.summary_variant.alleles
+            ]
+            alleles = [
+                family_alleles[0]
+            ]
+            for ai in self.calc_alt_alleles(self.gt):
+                allele = None
+                for fa in family_alleles:
+                    if fa.allele_index == ai:
+                        allele = fa
+                        break
+                if allele is None:
+                    continue
+                assert allele.allele_index == ai, \
+                    (allele.allele_index, ai)
+
+                alleles.append(allele)
+
+            self._family_alleles = alleles
+
         return self._family_alleles
 
     def set_matched_alleles(self, alleles_indexes):

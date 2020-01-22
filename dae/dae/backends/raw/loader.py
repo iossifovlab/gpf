@@ -11,6 +11,7 @@ from typing import Iterator, Tuple, List, Dict, Any, Optional
 from dae.GenomeAccess import GenomicSequence
 
 from dae.pedigrees.family import FamiliesData
+
 from dae.variants.variant import SummaryVariant
 from dae.variants.family_variant import FamilyVariant, \
     calculate_simple_best_state
@@ -18,7 +19,7 @@ from dae.variants.attributes import Sex, GeneticModel
 
 from dae.variants.attributes import TransmissionType
 
-from dae.utils.variant_utils import get_locus_ploidy
+from dae.utils.variant_utils import get_locus_ploidy, best2gt
 
 
 class FamiliesGenotypes:
@@ -608,6 +609,43 @@ class VariantsGenotypesLoader(VariantsLoader):
 
         return best_state
 
+    @classmethod
+    def _calc_genotype(
+        cls, family_variant: FamilyVariant, genome: GenomicSequence
+    ) -> np.array:
+        best_state = family_variant._best_state
+        genotype = best2gt(best_state)
+        male_ploidy = get_locus_ploidy(
+            family_variant.chromosome,
+            family_variant.position,
+            Sex.M,
+            genome
+        )
+        ploidy = np.sum(best_state, 0)
+        genetic_model = GeneticModel.autosomal
+
+        if family_variant.chromosome in ('X', 'chrX'):
+            genetic_model = GeneticModel.X
+            if male_ploidy == 2:
+                genetic_model = GeneticModel.pseudo_autosomal
+
+            male_ids = [
+                person_id
+                for person_id, person
+                in family_variant.family.persons.items()
+                if person.sex == Sex.M
+            ]
+            male_indices = family_variant.family.members_index(male_ids)
+            for idx in male_indices:
+                if ploidy[idx] != male_ploidy:
+                    genetic_model = GeneticModel.X_broken
+                    break
+
+        elif np.any(ploidy == 1):
+            genetic_model = GeneticModel.autosomal_broken
+
+        return genotype, genetic_model
+
     def full_variants_iterator(
             self) -> Iterator[Tuple[SummaryVariant, List[FamilyVariant]]]:
         full_iterator = self._full_variants_iterator_impl()
@@ -631,6 +669,16 @@ class VariantsGenotypesLoader(VariantsLoader):
                         )
                     for fa in family_variant.alleles:
                         fa._best_state = family_variant.best_state
+                        fa._genetic_model = family_variant.genetic_model
+                elif self.expect_best_state:
+                    assert family_variant._best_state is not None
+                    assert family_variant._genetic_model is None
+                    assert family_variant.gt is None
+
+                    family_variant.gt, family_variant._genetic_model = \
+                        self._calc_genotype(family_variant, self.genome)
+                    for fa in family_variant.alleles:
+                        fa.gt = family_variant.gt
                         fa._genetic_model = family_variant.genetic_model
 
             yield summary_variant, family_variants

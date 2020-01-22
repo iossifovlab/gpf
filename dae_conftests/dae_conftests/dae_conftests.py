@@ -16,6 +16,9 @@ from dae.gpf_instance.gpf_instance import GPFInstance, cached
 
 from dae.annotation.annotation_pipeline import PipelineAnnotator
 
+from dae.variants.variant import SummaryVariant, SummaryAllele
+from dae.variants.family_variant import FamilyVariant, FamilyAllele
+
 from dae.backends.raw.loader import AlleleFrequencyDecorator, \
     AnnotationPipelineDecorator
 from dae.backends.raw.raw_variants import RawMemoryVariants
@@ -392,9 +395,9 @@ def dae_transmitted(
     variants_loader = DaeTransmittedLoader(
         families,
         dae_transmitted_config.summary_filename,
-        dae_transmitted_config.toomany_filename,
+        # dae_transmitted_config.toomany_filename,
         genome=genome_2013,
-        region=None,
+        regions=None,
     )
     variants_loader = AnnotationPipelineDecorator(
         variants_loader,
@@ -798,3 +801,65 @@ def calc_gene_sets(request, variants_db_fixture):
                 os.remove(cache_file)
 
     request.addfinalizer(remove_gene_sets)
+
+
+PED1 = '''
+# SIMPLE TRIO
+familyId,    personId,    dadId,    momId,    sex,   status,    role
+f1,          m1,          0,        0,        2,     1,         mom
+f1,          d1,          0,        0,        1,     1,         dad
+f1,          p1,          d1,       m1,       1,     2,         prb
+'''
+
+
+@pytest.fixture(scope='session')
+def fam1():
+    families_loader = FamiliesLoader(StringIO(PED1), ped_sep=',')
+    families = families_loader.load()
+    family = families['f1']
+    assert len(family.trios) == 1
+    return family
+
+
+@pytest.fixture(scope='session')
+def sv1():
+    return SummaryVariant([
+        SummaryAllele('1', 11539, 'T', None, 0, 0),
+        SummaryAllele('1', 11539, 'T', 'TA', 0, 1),
+        SummaryAllele('1', 11539, 'T', 'TG', 0, 2)
+    ])
+
+
+@pytest.fixture(scope='session')
+def svX1():
+    return SummaryVariant([
+        SummaryAllele('X', 154931050, 'T', None, 0, 0),
+        SummaryAllele('X', 154931050, 'T', 'A', 0, 1),
+    ])
+
+
+@pytest.fixture(scope='session')
+def svX2():
+    return SummaryVariant([
+        SummaryAllele('X', 3_000_000, 'C', None, 0, 0),
+        SummaryAllele('X', 3_000_000, 'C', 'A', 0, 1),
+    ])
+
+@pytest.fixture
+def fv1(fam1, sv1):
+    def build(gt, best_st):
+        return FamilyVariant(sv1, fam1, gt, best_st)
+    return build
+
+
+@pytest.fixture
+def fvX1(fam1, svX1):
+    def build(gt, best_st):
+        return FamilyVariant(svX1, fam1, gt, best_st)
+    return build
+
+@pytest.fixture
+def fvX2(fam1, svX2):
+    def build(gt, best_st):
+        return FamilyVariant(svX2, fam1, gt, best_st)
+    return build

@@ -31,19 +31,26 @@ def str2mat(mat, col_sep="", row_sep="/"):
          for r in mat.split(row_sep)], dtype=GENOTYPE_TYPE)
 
 
-def best2gt(mat):
-    rows, cols = mat.shape
-    res = np.zeros(shape=(2, cols), dtype=GENOTYPE_TYPE)
-    res[1, :] = -2
-    for allele_index in range(rows):
-        row = mat[allele_index, :]
-        for col in range(cols):
-            if row[col] == 2:
-                res[:, col] = allele_index
-            elif row[col] == 1:
-                res[0, col] = allele_index
+def best2gt(best_state):
+    rows, cols = best_state.shape
 
-    return res
+    genotype = np.zeros(shape=(2, cols), dtype=GENOTYPE_TYPE)
+    # genotype[1, :] = -2
+    ploidy = np.sum(best_state, 0)
+    for allele_index in range(rows):
+        best_state_row = best_state[allele_index, :]
+        for col in range(cols):
+            if best_state_row[col] == 2:
+                genotype[:, col] = allele_index
+            elif best_state_row[col] == 1:
+                if genotype[0, col] == 0:
+                    genotype[0, col] = allele_index
+                    if ploidy[col] == 1:
+                        genotype[1, col] = -2
+                else:
+                    genotype[1, col] = allele_index
+
+    return genotype
 
 
 def reference_genotype(size):

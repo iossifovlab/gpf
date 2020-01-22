@@ -302,9 +302,10 @@ class VariantType(enum.Enum):
 
 class GeneticModel(enum.Enum):
     autosomal = 1
-    pseudo_autosomal = 2
-    X = 3
-    X_broken = 4
+    autosomal_broken = 2
+    pseudo_autosomal = 3
+    X = 4
+    X_broken = 5
 
 
 class TransmissionType(enum.Enum):
