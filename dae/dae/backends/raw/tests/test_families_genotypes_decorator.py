@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 from dae.pedigrees.loader import FamiliesLoader
 
-from dae.backends.raw.loader import FamiliesGenotypesDecorator
+from dae.backends.raw.loader import VariantsGenotypesDecorator
 from dae.backends.dae.loader import DenovoLoader
 from dae.variants.attributes import GeneticModel
 
@@ -28,7 +28,7 @@ def test_get_diploid_males(vcf, expected, variants_vcf):
     counter = 0
     for sv, fvs in fvars.full_variants_iterator():
         for fv in fvs:
-            assert FamiliesGenotypesDecorator._get_diploid_males(fv) == \
+            assert VariantsGenotypesDecorator._get_diploid_males(fv) == \
                 expected[counter]
             counter += 1
 
@@ -122,18 +122,6 @@ def test_vcf_loader_best_state(
             counter += 1
 
 
-def test_families_genotypes_decorator_expect_none_flag(
-    iossifov2014_loader, genome_2013
-):
-    decorator = FamiliesGenotypesDecorator(
-        iossifov2014_loader, genome_2013, False, True
-    )
-    with pytest.raises(AssertionError):
-        for sv, fvs in decorator.full_variants_iterator():
-            for fv in fvs:
-                pass
-
-
 def test_families_genotypes_decorator_broken_x(
     fixture_dirname, genome_2013
 ):
@@ -150,10 +138,7 @@ def test_families_genotypes_decorator_broken_x(
         genome_2013
     )
 
-    decorator = FamiliesGenotypesDecorator(
-        variants_loader, genome_2013
-    )
-    for sv, fvs in decorator.full_variants_iterator():
+    for sv, fvs in variants_loader.full_variants_iterator():
         for fv in fvs:
             print(fv, fv.genetic_model)
             assert fv.genetic_model == GeneticModel.X_broken

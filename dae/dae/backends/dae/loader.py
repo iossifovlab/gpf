@@ -18,7 +18,7 @@ from dae.pedigrees.family import Family, FamiliesData
 from dae.variants.variant import SummaryVariantFactory
 from dae.variants.family_variant import FamilyVariant
 
-from dae.backends.raw.loader import VariantsGenotypesLoader, VariantsLoader, \
+from dae.backends.raw.loader import VariantsGenotypesLoader, \
     TransmissionType, FamiliesGenotypes
 
 from dae.variants.attributes import VariantType
@@ -44,16 +44,22 @@ class DenovoFamiliesGenotypes(FamiliesGenotypes):
         yield self.family, self.gt, self.best_state
 
 
-class DenovoLoader(VariantsLoader):
+class DenovoLoader(VariantsGenotypesLoader):
 
     def __init__(
-            self, families: FamiliesData,
-            denovo_filename: str, genome: GenomicSequence,
+            self,
+            families: FamiliesData,
+            denovo_filename: str,
+            genome: GenomicSequence,
             params: Dict[str, Any] = {}):
         super(DenovoLoader, self).__init__(
             families=families,
             filenames=[denovo_filename],
             transmission_type=TransmissionType.denovo,
+            genome=genome,
+            overwrite=False,
+            expect_genotype=False,
+            expect_best_state=False,
             params=params)
 
         self.set_attribute('source_type', 'denovo')
@@ -65,7 +71,14 @@ class DenovoLoader(VariantsLoader):
             denovo_filename, genome, families=families, **self.params
         )
 
-    def full_variants_iterator(self):
+        if np.all(pd.isnull(self.denovo_df['genotype'])):
+            self.expect_best_state = True
+        elif np.all(pd.isnull(self.denovo_df['best_state'])):
+            self.expect_genotype = True
+        else:
+            assert False
+
+    def _full_variants_iterator_impl(self):
 
         for index, rec in enumerate(self.denovo_df.to_dict(orient='records')):
             family_id = rec.pop('family_id')
