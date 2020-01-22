@@ -1,6 +1,9 @@
 import pytest
 import numpy as np
+from dae.pedigrees.loader import FamiliesLoader
+
 from dae.backends.raw.loader import FamiliesGenotypesDecorator
+from dae.backends.dae.loader import DenovoLoader
 from dae.variants.attributes import GeneticModel
 
 
@@ -132,10 +135,23 @@ def test_families_genotypes_decorator_expect_none_flag(
 
 
 def test_families_genotypes_decorator_broken_x(
-    denovo_X_broken_loader, genome_2013
+    fixture_dirname, genome_2013
 ):
+
+    families_loader = FamiliesLoader(
+        fixture_dirname('backends/denovo_families.txt'),
+        params={'ped_file_format': 'simple'}
+    )
+    families = families_loader.load()
+
+    variants_loader = DenovoLoader(
+        families,
+        fixture_dirname('backends/denovo_X_broken.txt'),
+        genome_2013
+    )
+
     decorator = FamiliesGenotypesDecorator(
-        denovo_X_broken_loader, genome_2013
+        variants_loader, genome_2013
     )
     for sv, fvs in decorator.full_variants_iterator():
         for fv in fvs:

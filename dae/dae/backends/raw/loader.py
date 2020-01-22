@@ -323,7 +323,7 @@ class StoredAnnotationDecorator(AnnotationDecorator):
                 dtype={
                     'chrom': str,
                     'position': np.int32,
-                    'effects': str,
+                    # 'effects': str,
                 },
                 converters={
                     'cshl_variant': cls._convert_string,
