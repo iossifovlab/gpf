@@ -30,6 +30,10 @@ class FamilyRoleBuilder:
 
     def build_roles(self):
         proband = self._get_family_proband()
+        if proband is None:
+            self._assign_unknown_roles()
+            return
+
         assert proband is not None
         self._set_person_role(proband, Role.prb)
 
@@ -185,10 +189,14 @@ class FamilyRoleBuilder:
         return matings
 
     def _assign_roles_step_parents_and_half_siblings(self, proband):
+        if proband.mom is None or proband.dad is None:
+            return
         if proband.mom is not None:
             mom_mates = filter(lambda x: x.dad_id != proband.dad.person_id,
                                self._find_parent_matings(proband.mom))
             for mating in mom_mates:
+                if mating.dad_id is None:
+                    continue
                 step_dad = self.family.persons[mating.dad_id]
                 self._set_person_role(step_dad, Role.step_dad)
                 maternal_halfsiblings_ids = mating.children
@@ -201,6 +209,8 @@ class FamilyRoleBuilder:
             dad_mates = filter(lambda x: x.mom_id != proband.mom.person_id,
                                self._find_parent_matings(proband.dad))
             for mating in dad_mates:
+                if mating.mom_id is None:
+                    continue
                 step_mom = self.family.persons[mating.mom_id]
                 self._set_person_role(step_mom, Role.step_mom)
                 paternal_halfsiblings_ids = mating.children

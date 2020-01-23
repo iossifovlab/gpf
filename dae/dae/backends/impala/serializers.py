@@ -396,6 +396,12 @@ class ParquetSerializer(object):
         genotype = self.deserialize_variant_genotype(
             genotype_data)
         rows, cols = genotype.shape
+        if cols != len(family):
+            print(
+                f"problem: {chrom},{position},{reference},{alternatives}: "
+                f"{family}")
+            return None
+
         assert cols == len(family)
 
         best_state = self.deserialize_variant_best_state(

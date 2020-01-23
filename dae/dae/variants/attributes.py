@@ -85,16 +85,17 @@ class Role(enum.Enum):
 
     @staticmethod
     def from_name(name):
-        assert name is not None
-        if isinstance(name, Role):
+        if name is None:
+            return None
+        elif isinstance(name, Role):
             return name
         elif isinstance(name, int):
             return Role.from_value(name)
         elif name in Role.__members__:
             return Role[name]
         else:
-            print(f"Role '{name}' is unknown")
-            return Role.unknown
+            # print(f"Role '{name}' is unknown")
+            return None
 
     @staticmethod
     def from_value(val):

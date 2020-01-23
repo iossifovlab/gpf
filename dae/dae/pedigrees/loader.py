@@ -42,11 +42,9 @@ class FamiliesLoader:
         )
         families = FamiliesData.from_pedigree_df(ped_df)
         if pedigree_format.get('ped_no_role'):
-            print(pedigree_format)
             for family in families.values():
                 role_build = FamilyRoleBuilder(family)
                 role_build.build_roles()
-
         return families
 
     @staticmethod
@@ -357,6 +355,7 @@ class FamiliesLoader:
             raise ValueError(
                 f"pedigree file missing missing columns {missing_columns}"
             )
+
         return ped_df
 
     @staticmethod

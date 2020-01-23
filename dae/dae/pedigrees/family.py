@@ -63,6 +63,9 @@ class Person(object):
         self._generated = attributes.get('generated', False)
 
     def __repr__(self):
+        if self.generated:
+            return "Person([G] {} ({}); {}; {})".format(
+                self.person_id, self.family_id, self.role, self.sex)
         return "Person({} ({}); {}; {})".format(
             self.person_id, self.family_id, self.role, self.sex)
 
@@ -126,11 +129,16 @@ class Family(object):
         self._trios = None
 
     def _connect_family(self):
-        for index, member in enumerate(self.persons.values()):
+        index = 0
+        for member in self.persons.values():
             member.family = self
-            member.index = index
             member.mom = self.get_member(member.mom_id, None)
             member.dad = self.get_member(member.dad_id, None)
+            if member.generated:
+                member.index = -1
+            else:
+                member.index = index
+                index += 1
 
     @staticmethod
     def from_persons(persons):
@@ -150,7 +158,7 @@ class Family(object):
         return len(self.members_in_order)
 
     def __repr__(self):
-        return f'Family({self.family_id}, {self.members_in_order})'
+        return f'Family({self.family_id}, {list(self.persons.values())})'
 
     def add_members(self, persons):
         assert all([isinstance(p, Person) for p in persons])
@@ -158,13 +166,13 @@ class Family(object):
 
         for p in persons:
             self.persons[p.person_id] = p
-        self._connect_family()
         self.redefine()
 
     def redefine(self):
         self._members_in_order = None
         self._trios = None
         self._samples_index = None
+        self._connect_family()
 
     @property
     def full_members(self):
@@ -227,6 +235,10 @@ class FamiliesData(Mapping):
         self._families = {}
         self.persons = {}
 
+    def redefine(self):
+        for family in self._families.values():
+            family.redefine()
+
     @staticmethod
     def from_family_persons(family_persons):
         families_data = FamiliesData()
@@ -239,6 +251,7 @@ class FamiliesData(Mapping):
 
     @staticmethod
     def from_pedigree_df(ped_df):
+
         persons = defaultdict(list)
         for rec in ped_df.to_dict(orient='record'):
             person = Person(**rec)
@@ -250,7 +263,6 @@ class FamiliesData(Mapping):
                 for family_id, family_persons in persons.items()
             ]
         )
-        fams._ped_df = ped_df
         return fams
 
     @staticmethod

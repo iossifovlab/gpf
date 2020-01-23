@@ -106,6 +106,7 @@ class VcfLoader(VariantsGenotypesLoader):
         samples = np.array(samples)
 
         self._match_pedigree_to_samples(families, samples)
+
         self._init_chromosome_order()
         self.set_attribute('source_type', 'vcf')
         self._init_denovo_mode()
@@ -242,6 +243,7 @@ class VcfLoader(VariantsGenotypesLoader):
             else:
                 person._generated = True
                 families[person.family_id].redefine()
+        families.redefine()
 
     def _build_summary_variant(self, summary_index, vcf_variant):
         records = []

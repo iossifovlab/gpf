@@ -110,6 +110,8 @@ class ImpalaFamilyVariants:
                     genetic_model_data, inheritance_data,
                     frequency_data, genomic_scores_data,
                 )
+                if v is None:
+                    continue
 
                 matched_alleles = [int(a) for a in matched_alleles.split(',')]
                 v.set_matched_alleles(matched_alleles)

@@ -680,13 +680,19 @@ def add_missing_parquet_fields(pps, ped_df):
             pa.field('family_bin', pa.int8()))
         missing_fields = missing_fields - set(['family_bin'])
 
+    rename = {}
     for column in missing_fields:
-        pps = pps.append(pa.field(column, pa.string()))
-    return pps
+        name = column.lower().replace('.', '_')
+        print(f"pedigree adding column {column}:{name}")
+        pps = pps.append(pa.field(name, pa.string()))
+        rename[column] = name
+    ped_df = ped_df.rename(columns=rename)
+    return ped_df, pps
 
 
 def save_ped_df_to_parquet(ped_df, filename, filesystem=None):
     ped_df = ped_df.copy()
+
     ped_df.role = ped_df.role.apply(lambda r: r.value)
     ped_df.sex = ped_df.sex.apply(lambda s: s.value)
     ped_df.status = ped_df.status.apply(lambda s: s.value)
@@ -696,7 +702,7 @@ def save_ped_df_to_parquet(ped_df, filename, filesystem=None):
         ped_df['layout'] = None
 
     pps = pedigree_parquet_schema()
-    pps = add_missing_parquet_fields(pps, ped_df)
+    ped_df, pps = add_missing_parquet_fields(pps, ped_df)
 
     table = pa.Table.from_pandas(ped_df, schema=pps)
     pq.write_table(table, filename, filesystem=filesystem)

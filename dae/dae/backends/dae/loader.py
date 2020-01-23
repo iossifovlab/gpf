@@ -90,7 +90,9 @@ class DenovoLoader(VariantsGenotypesLoader):
 
             summary_variant = SummaryVariantFactory \
                 .summary_variant_from_records([rec], self.transmission_type)
-            family = self.families[family_id]
+            family = self.families.get(family_id)
+            if family is None:
+                continue
 
             family_genotypes = DenovoFamiliesGenotypes(family, gt, best_state)
 
