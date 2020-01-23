@@ -14,17 +14,17 @@
     <div class="form-block">
       <div class="btn-toolbar justify-content-between" role="toolbar" aria-label="Toolbar with button groups">
         <div class="btn-group">
-          <button type="button" class="btn btn-md btn-primary" (click)="submitQuery()">
+          <button type="button" class="btn btn-md btn-primary" (click)="submitQuery()" [disabled]="disableQueryButtons">
             Report
           </button>
-          <gpf-save-query-button queryType="phenotool"></gpf-save-query-button>
+          <gpf-save-query-button queryType="phenotool" [disabled]="disableQueryButtons"></gpf-save-query-button>
         </div>
         <div class="btn-group">
           <form
               (ngSubmit)="onDownload($event)"
               action="{{ configService.baseUrl }}pheno_tool/download" method="post">
             <input name="queryData" type="hidden" />
-            <button class="btn btn-md btn-primary" type="submit">Download</button>
+            <button class="btn btn-md btn-primary" [disabled]="disableQueryButtons" type="submit">Download</button>
           </form>
         </div>
       </div>

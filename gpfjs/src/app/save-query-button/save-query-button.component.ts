@@ -14,6 +14,8 @@ export class SaveQueryButtonComponent implements OnInit {
   @Input()
   queryType: string;
 
+  @Input() disabled: boolean;
+
   @ViewChild(NgbDropdown)
   dropdown: NgbDropdown;
 

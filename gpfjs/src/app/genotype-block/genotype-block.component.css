@@ -4,6 +4,9 @@
 	background-color: #fafafa;
 }
 
+.genotype-block > .row > div {
+	margin-bottom: 20px;
+}
 
 :host /deep/ .card-block {
 	flex: none;

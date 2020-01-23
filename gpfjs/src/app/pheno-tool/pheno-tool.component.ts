@@ -26,6 +26,8 @@ export class PhenoToolComponent extends QueryStateCollector
   phenoToolResults: PhenoToolResults;
   private phenoToolState: Object;
 
+  private disableQueryButtons = false;
+
   constructor(
     private route: ActivatedRoute,
     private datasetsService: DatasetsService,
@@ -52,8 +54,10 @@ export class PhenoToolComponent extends QueryStateCollector
       this.getCurrentState()
         .subscribe(state => {
           this.phenoToolState = state;
+          this.disableQueryButtons = false;
         },
         error => {
+          this.disableQueryButtons = true;
           console.warn(error);
         });
     });

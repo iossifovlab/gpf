@@ -1,6 +1,12 @@
+<div *ngIf="showFloatingHeader" class="table-header-sticky-div" [style.min-width.px]="calculateMinWidth(columnsChildren)">
+    <gpf-table-view-header
+        [columns]="columnsChildren"
+        [(sortingInfo)]="sortingInfo">
+    </gpf-table-view-header>
+</div>
+
 <div #table style="width: 100%; display: table; border-collapse: collapse;">
     <gpf-table-view-header
-        [style.visibility] = "showFloatingHeader ? 'hidden' : 'visible'"
         style="display: table-header-group"
         [columns]="columnsChildren"
         [(sortingInfo)]="sortingInfo">
@@ -32,17 +38,7 @@
     </div>
 </div>
 
-<div style="display: table; border-collapse: collapse; position: fixed; top: 0px;  background-color: white;"
-  [style.visibility] = "showFloatingHeader ? 'visible' : 'hidden'">
-    <gpf-table-view-header
-        [columns]="columnsChildren"
-        [(sortingInfo)]="sortingInfo">
-    </gpf-table-view-header>
-</div>
-
-
-<div style="position: fixed; bottom: 100px; right: 100px; background-color: white;"
-  [style.visibility] = "showFloatingHeader ? 'visible' : 'hidden'">
+<div *ngIf="showFloatingHeader" class="legend-div">
     <ng-template *ngIf="legend?.templateRef" [ngTemplateOutlet]="legend.templateRef">
     </ng-template>
 </div>

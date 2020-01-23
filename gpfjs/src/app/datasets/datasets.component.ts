@@ -94,6 +94,8 @@ export class DatasetsComponent implements OnInit {
   }
 
   selectDataset(dataset: Dataset) {
-    this.router.navigate(['/', 'datasets', dataset.id, this.findFirstTool(dataset)]);
+    if (dataset !== undefined) {
+      this.router.navigate(['/', 'datasets', dataset.id, this.findFirstTool(dataset)]);
+    }
   }
 }

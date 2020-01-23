@@ -25,6 +25,8 @@ export class GenotypeBrowserComponent extends QueryStateCollector
   genotypePreviewInfo: GenotypePreviewInfo;
   tablePreview: boolean;
 
+  private disableQueryButtons = false;
+
   @Input()
   selectedDatasetId: string;
   selectedDataset$: Observable<Dataset>;
@@ -59,9 +61,11 @@ export class GenotypeBrowserComponent extends QueryStateCollector
           state => {
             this.genotypePreviewVariantsArray = null;
             this.genotypeBrowserState = state;
+            this.disableQueryButtons = false;
           },
           error => {
             this.genotypePreviewVariantsArray = null;
+            this.disableQueryButtons = true;
             console.warn(error);
           });
       });

@@ -1,59 +1,49 @@
 import { Injectable } from '@angular/core';
-import { Http, Headers, Response, URLSearchParams, RequestOptions } from '@angular/http';
-
+import { HttpClient, HttpParams } from '@angular/common/http';
 // tslint:disable-next-line:import-blacklist
 import { Observable } from 'rxjs';
 import { CookieService } from 'ngx-cookie';
 
 import { PhenoInstruments, PhenoInstrument, PhenoMeasures } from './pheno-browser';
-
 import { ConfigService } from '../config/config.service';
 
 @Injectable()
 export class PhenoBrowserService {
-
-  private instrumentsUrl = 'pheno_browser/instruments';
-  private measuresUrl = 'pheno_browser/measures';
-  private downloadUrl = 'pheno_browser/download';
+  private readonly instrumentsUrl = 'pheno_browser/instruments';
+  private readonly measuresUrl = 'pheno_browser/measures';
+  private readonly downloadUrl = 'pheno_browser/download';
 
   constructor(
-    private http: Http,
+    private http: HttpClient,
     private cookieService: CookieService,
     private config: ConfigService
   ) {}
 
-  private getOptions(): RequestOptions {
+  private getHeaders() {
     const csrfToken = this.cookieService.get('csrftoken');
-    const headers = new Headers({ 'X-CSRFToken': csrfToken });
-    const options = new RequestOptions({ headers: headers, withCredentials: true });
+    const headers = { 'X-CSRFToken': csrfToken };
 
-    return options;
+    return headers;
   }
 
   getInstruments(datasetId: string): Observable<PhenoInstruments> {
-
-    const options = this.getOptions();
-    options.search = new URLSearchParams();
-
-    options.search.set('dataset_id', datasetId);
+    const headers = this.getHeaders();
+    const searchParams = new HttpParams().set('dataset_id', datasetId);
+    const options = {headers: headers, withCredentials: true, params: searchParams};
 
     return this.http
-      .get(this.instrumentsUrl, options)
-      .map((response: Response) => response.json() as PhenoInstruments);
+      .get(this.config.baseUrl + this.instrumentsUrl, options)
+      .map(response => response as PhenoInstruments);
   }
 
   getMeasures(datasetId: string, instrument: PhenoInstrument, search: string): Observable<PhenoMeasures> {
-
-    const options = this.getOptions();
-    options.search = new URLSearchParams();
-
-    options.search.set('dataset_id', datasetId);
-    options.search.set('instrument', instrument);
-    options.search.set('search', search);
+    const headers = this.getHeaders();
+    const searchParams = new HttpParams().set('dataset_id', datasetId).set('instrument', instrument).set('search', search);
+    const options = {headers: headers, withCredentials: true, params: searchParams};
 
     return this.http
-      .get(this.measuresUrl, options)
-      .map((response) => PhenoMeasures.fromJson(response.json()))
+      .get(this.config.baseUrl + this.measuresUrl, options)
+      .map(response => PhenoMeasures.fromJson(response))
       .map(PhenoMeasures.addBasePath);
   }
 

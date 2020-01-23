@@ -1,49 +1,49 @@
 import { Injectable } from '@angular/core';
-import { Http, RequestOptions } from '@angular/http';
+import { HttpClient } from '@angular/common/http';
 import { UserGroup } from './users-groups';
 import { Dataset } from '../datasets/datasets';
+import { ConfigService } from '../config/config.service';
 
 @Injectable()
 export class UsersGroupsService {
-
-  private groupsUrl = 'groups';
-  private groupGrantPermissionUrl = 'groups/grant-permission';
-  private groupRevokePermissionUrl = 'groups/revoke-permission';
+  private readonly groupsUrl = 'groups';
+  private readonly groupGrantPermissionUrl = 'groups/grant-permission';
+  private readonly groupRevokePermissionUrl = 'groups/revoke-permission';
 
   constructor(
-    private http: Http,
-  ) { }
+    private http: HttpClient,
+    private config: ConfigService,
+  ) {}
 
   getAllGroups() {
-    const options = new RequestOptions({ withCredentials: true });
+    const options = { withCredentials: true };
 
-    return this.http.get(this.groupsUrl, options)
-      .map(response => UserGroup.fromJsonArray(response.json()));
+    return this.http.get(this.config.baseUrl + this.groupsUrl, options)
+      .map((response: any) => UserGroup.fromJsonArray(response));
   }
 
   getGroup(groupId: number) {
-    const options = new RequestOptions({ withCredentials: true });
+    const options = { withCredentials: true };
 
-    return this.http.get(`${this.groupsUrl}/${groupId}`, options)
-      .map(response => UserGroup.fromJson(response.json()));
+    return this.http.get(`${this.config.baseUrl}${this.groupsUrl}/${groupId}`, options)
+      .map((response: any) => UserGroup.fromJson(response));
   }
 
   grantPermission(groupName: string, dataset: Dataset) {
-    const options = new RequestOptions({ withCredentials: true });
+    const options = { withCredentials: true };
 
-    return this.http.post(this.groupGrantPermissionUrl, {
+    return this.http.post(this.config.baseUrl + this.groupGrantPermissionUrl, {
       groupName: groupName,
       datasetId: dataset.id
     }, options);
   }
 
   revokePermission(group: UserGroup, dataset: Dataset) {
-    const options = new RequestOptions({ withCredentials: true });
+    const options = { withCredentials: true };
 
-    return this.http.post(this.groupRevokePermissionUrl, {
+    return this.http.post(this.config.baseUrl + this.groupRevokePermissionUrl, {
       groupId: group.id,
       datasetId: dataset.id
     }, options);
   }
-
 }
