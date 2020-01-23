@@ -835,6 +835,7 @@ def svX1():
     return SummaryVariant([
         SummaryAllele('X', 154931050, 'T', None, 0, 0),
         SummaryAllele('X', 154931050, 'T', 'A', 0, 1),
+        SummaryAllele('X', 154931050, 'T', 'G', 0, 2),
     ])
 
 
@@ -843,6 +844,7 @@ def svX2():
     return SummaryVariant([
         SummaryAllele('X', 3_000_000, 'C', None, 0, 0),
         SummaryAllele('X', 3_000_000, 'C', 'A', 0, 1),
+        SummaryAllele('X', 3_000_000, 'C', 'A', 0, 2),
     ])
 
 

@@ -489,12 +489,12 @@ class VariantsGenotypesLoader(VariantsLoader):
                 if best_state[0, idx] in (1, 2):
                     best_state[0, idx] -= 1
                 elif np.any(best_state[:, idx] == 2):
-                    best_state[best_state[:, idx] == 2] -= 1
-                else:
-                    print(
-                        "WARN: can't handle broken X best state:",
-                        family_variant, mat2str(family_variant.gt),
-                        file=sys.stderr)
+                    best_state[best_state[:, idx] == 2, idx] -= 1
+                # else:
+                #     print(
+                #         "WARN: can't handle broken X best state:",
+                #         family_variant, mat2str(family_variant.gt),
+                #         file=sys.stderr)
 
         return best_state
 
