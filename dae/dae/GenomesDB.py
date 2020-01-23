@@ -41,7 +41,7 @@ class GenomesDB(object):
     def get_genome_file(self, genome_id=None):
         if not genome_id:
             genome_id = self.default_genome
-        genome_file = self.config.genome[genome_id].chr_all_file
+        genome_file = getattr(self.config.genome, genome_id).chr_all_file
         return genome_file
 
     def get_gene_model_id(self, genome_id=None):

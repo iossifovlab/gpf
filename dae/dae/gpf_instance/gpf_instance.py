@@ -1,3 +1,4 @@
+import os
 from dae.GenomesDB import GenomesDB
 
 from dae.common_reports.common_report_facade import CommonReportFacade
@@ -41,6 +42,7 @@ class GPFInstance(object):
                 print('DEFAULTS GOTTA BE FIXED!')
                 print(defaults)
                 assert False
+            config_file = os.path.join(work_dir, config_file)
             dae_config = GPFConfigParser.load_config(config_file)
 
         self.dae_config = dae_config

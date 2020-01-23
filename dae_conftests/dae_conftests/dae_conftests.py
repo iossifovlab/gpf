@@ -64,10 +64,14 @@ def default_dae_config(request):
         shutil.rmtree(studies_dirname)
 
     request.addfinalizer(fin)
-    dae_conf_path = os.path.join(os.environ.get('DAE_DB_DIR', None), 'DAE.conf')
-    print(dae_conf_path)
+    dae_conf_path = \
+        os.path.join(os.environ.get('DAE_DB_DIR', None), 'DAE.conf')
     dae_config = GPFConfigParser.load_config(dae_conf_path)
-    dae_config.studies_db.dir = studies_dirname
+    GPFConfigParser.modify_tuple(
+        dae_config,
+        {'studies_db': {'dir': studies_dirname}}
+    )
+    # dae_config.studies_db.dir = studies_dirname
     return dae_config
 
 

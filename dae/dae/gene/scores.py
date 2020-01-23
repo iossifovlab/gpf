@@ -46,7 +46,7 @@ class ScoresFactory(object):
         return result
 
     def _load(self):
-        for score_config in self.config.genomic_scores.values():
+        for score_config in self.config.genomic_scores:
             s = Scores(score_config)
             self.scores[score_config.id] = s
 

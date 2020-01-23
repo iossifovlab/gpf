@@ -162,7 +162,7 @@ class GeneWeightsDb(object):
         return self[weight_id]
 
     def _load(self):
-        for weight_config in self.config.values():
+        for weight_config in self.config:
             w = GeneWeight(weight_config)
             self.weights[weight_config.id] = w
 

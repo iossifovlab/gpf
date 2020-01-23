@@ -30,7 +30,7 @@ class FilesystemGenotypeStorage(GenotypeStorage):
         return True
 
     def build_backend(self, study_config, genomes_db):
-        if study_config.files is None:
+        if getattr(study_config, "files", None) is None:
             data_dir = self.get_data_dir(study_config.id, 'data')
             vcf_filename = os.path.join(
                 data_dir, "{}.vcf".format(study_config.id))

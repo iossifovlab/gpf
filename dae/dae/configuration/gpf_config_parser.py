@@ -8,7 +8,7 @@ import toml
 
 from copy import deepcopy
 from collections import namedtuple
-from typing import Union, List, Tuple, Any, Callable
+from typing import Union, List, Tuple, Any, Callable, Dict
 from cerberus import Validator
 
 from dae.utils.dict_utils import recursive_dict_update
@@ -54,6 +54,15 @@ class GPFConfigParser:
         return tup_ctor(*input_dict.values())
 
     @classmethod
+    def _namedtuple_to_dict(cls, tup: Tuple[Any]) -> Dict[str, Any]:
+        output = tup._asdict()
+        for k, v in output.items():
+            print(k, ' ', v)
+            if isinstance(v, tuple):
+                output[k] = cls._namedtuple_to_dict(v)
+        return output
+
+    @classmethod
     def _interpolate(cls, input_dict: dict, **interpolation_vars: str) -> dict:
         result_dict = deepcopy(input_dict)
 
@@ -80,7 +89,7 @@ class GPFConfigParser:
     def _read_config(cls, filename: str) -> dict:
         ext = os.path.splitext(filename)[1]
         assert ext in cls.filetype_parsers, f"Unsupported filetype {filename}!"
-        with open(filename, 'r') as infile:
+        with open(filename, "r") as infile:
             conf_dict = cls.filetype_parsers[ext](infile.read())
         if "vars" in conf_dict:
             conf_dict = cls._interpolate(conf_dict, **conf_dict["vars"])
@@ -92,8 +101,9 @@ class GPFConfigParser:
         config_files = list()
         for filetype in cls.filetype_parsers.keys():
             config_files += glob.glob(
-                os.path.join(dirname, f"*{filetype}"), recursive=True
+                os.path.join(dirname, f"**/*{filetype}"), recursive=True
             )
+        print('asdf', config_files)
         return config_files
 
     @classmethod
@@ -107,6 +117,9 @@ class GPFConfigParser:
         cls, filename: str, schema: dict = None, default_filename: str = None
     ) -> Tuple[Any]:
 
+        print('==================================')
+        print(filename)
+        print('==================================')
         if schema:
             config = cls._validate_config(cls._read_config(filename), schema)
         else:
@@ -125,9 +138,29 @@ class GPFConfigParser:
 
     @classmethod
     def load_directory_configs(
-        cls, dirname: str, schema: dict, default_filename: str = None
+        cls, dirname: str, schema: dict = None, default_filename: str = None
     ) -> List[Tuple[Any]]:
+        print('++++++++++++++++++++++++++++++++++')
+        print(dirname)
+        print('++++++++++++++++++++++++++++++++++')
         return [
             cls.load_config(config_path, schema, default_filename)
             for config_path in cls._collect_directory_configs(dirname)
         ]
+
+    @classmethod
+    def _update_dict(cls, d: Dict[str, Any], updated_vals: Dict[str, Any]):
+        for k, v in updated_vals.items():
+            if isinstance(v, dict):
+                d[k] = cls._update_dict(d.get(k), v)
+            else:
+                d[k] = v
+        return d
+
+    @classmethod
+    def modify_tuple(
+        cls, t: Tuple[Any], new_values: Dict[str, Any]
+    ) -> Tuple[Any]:
+        t_dict = cls._namedtuple_to_dict(t)
+        updated_dict = cls._update_dict(t_dict, new_values)
+        return cls._dict_to_namedtuple(updated_dict)

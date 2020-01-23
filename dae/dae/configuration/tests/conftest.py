@@ -1,6 +1,5 @@
 import pytest
 import os
-from cerberus import Validator  # type: ignore
 from dae.configuration.gpf_config_parser import environ_override
 
 sample_conf_schema_1 = {
@@ -53,15 +52,20 @@ def fixtures_dir():
 
 
 @pytest.fixture(scope="session")
-def conf_validator_basic():
-    return Validator(sample_conf_schema_1)
+def conf_schema_basic():
+    return sample_conf_schema_1
 
 
 @pytest.fixture(scope="session")
-def conf_validator_set():
-    return Validator(sample_conf_schema_2)
+def conf_schema_set():
+    return sample_conf_schema_2
 
 
 @pytest.fixture(scope="session")
-def conf_validator_environ():
-    return Validator(sample_conf_schema_3)
+def conf_schema_environ():
+    return sample_conf_schema_3
+
+
+@pytest.fixture(scope="session")
+def conf_schema_path():
+    pass

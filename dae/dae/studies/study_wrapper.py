@@ -50,7 +50,7 @@ class StudyWrapper(object):
         pheno_filters = []
         present_in_role = []
 
-        if self.config.genotype_browser_config:
+        if hasattr(self.config, "genotype_browser_config"):
             genotype_browser_config = self.config.genotype_browser_config
             preview_column_slots = genotype_browser_config.preview_column_slots
             download_column_slots = \
@@ -70,7 +70,7 @@ class StudyWrapper(object):
         self.gene_weight_column_sources = gene_weight_column_sources
         self.in_role_columns = in_role_columns
 
-        if self.config.people_group_config:
+        if hasattr(self.config, "people_group_config"):
             people_group = self.config.people_group_config.people_group
 
         self.people_group = people_group
@@ -111,8 +111,8 @@ class StudyWrapper(object):
         self.pheno_filter_builder = None
 
         self.pheno_filters_in_config = set()
-        phenotype_data = self.config.phenotype_data
-        if phenotype_data:
+        if hasattr(self.config, 'phenotype_data'):
+            phenotype_data = self.config.phenotype_data
             self.phenotype_data = pheno_db.get_phenotype_data(phenotype_data)
 
             if self.pheno_filters:

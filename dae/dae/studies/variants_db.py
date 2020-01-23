@@ -2,8 +2,7 @@ from deprecation import deprecated
 
 from dae.studies.study import GenotypeDataStudy, GenotypeDataGroup
 from dae.studies.study_wrapper import StudyWrapper
-from dae.studies.study_config_parser import GenotypeDataStudyConfigParser
-from dae.studies.dataset_config_parser import GenotypeDataGroupConfigParser
+from dae.configuration.gpf_config_parser import GPFConfigParser
 
 
 class VariantsDb(object):
@@ -32,19 +31,23 @@ class VariantsDb(object):
                 dae_config.default_configuration.conf_file:
             defaults['conf'] = dae_config.default_configuration.conf_file
 
-        self.genotype_data_study_configs = GenotypeDataStudyConfigParser.\
-            read_and_parse_directory_configurations(
-                dae_config.studies_db.dir,
-                defaults=defaults
-            )
+        study_configs = GPFConfigParser.load_directory_configs(
+            dae_config.studies_db.dir,
+        )
 
-        self.genotype_data_group_configs = GenotypeDataGroupConfigParser.\
-            read_and_parse_directory_configurations(
-                dae_config.datasets_db.dir,
-                self.genotype_data_study_configs,
-                defaults=defaults,
-                fail_silently=True
-            )
+        self.genotype_data_study_configs = {
+            ds.genotype_data_study.id: ds.genotype_data_study
+            for ds in study_configs
+        }
+
+        data_groups = GPFConfigParser.load_directory_configs(
+            dae_config.datasets_db.dir,
+        )
+
+        self.genotype_data_group_configs = {
+            dg.genotype_data_group.id: dg.genotype_data_group
+            for dg in data_groups
+        }
 
         self._genotype_data_study_cache = {}
         self._genotype_data_study_wrapper_cache = {}

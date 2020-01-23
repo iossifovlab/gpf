@@ -39,7 +39,7 @@ class GenotypeStorageFactory:
                 self._load_genotype_storage_in_cache(genotype_storage_id)
 
     def _load_genotype_storage_in_cache(self, genotype_storage_id):
-        conf = self.dae_config.storage.get(genotype_storage_id)
+        conf = getattr(self.dae_config.storage, genotype_storage_id)
         if not conf:
             return
 

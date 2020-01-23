@@ -9,7 +9,7 @@ from collections import defaultdict, OrderedDict
 from dae.pedigrees.family import Person, Family
 from dae.pheno.db import DbManager
 from dae.pheno.common import MeasureType
-from dae.pheno.utils.config import PhenoConfigParser
+from dae.configuration.gpf_config_parser import GPFConfigParser
 
 from dae.variants.attributes import Sex, Status, Role
 
@@ -650,8 +650,15 @@ class PhenoDb(object):
         super(PhenoDb, self).__init__()
         assert dae_config
 
-        self.config = PhenoConfigParser.read_directory_configurations(
-            dae_config.phenotype_data.dir)
+        configs = GPFConfigParser.load_directory_configs(
+            dae_config.phenotype_data.dir
+        )
+
+        self.config = {
+            config.phenotypeData.name: config.phenotypeData
+            for config in configs
+            if config
+        }
 
         self.pheno_cache = {}
 
