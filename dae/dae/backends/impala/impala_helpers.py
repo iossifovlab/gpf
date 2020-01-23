@@ -109,19 +109,19 @@ class ImpalaHelpers(object):
             DROP TABLE IF EXISTS {db}.{table}
         """.format(db=db, table=table))
 
-        partitions = '(region_bin string'
+        partitions = ['region_bin string']
 
-        if not partition_description.family_bin_size <= 0:
-            partitions += ', family_bin tinyint'
-        if not partition_description.coding_effect_types == []:
-            partitions += ', coding_bin tinyint'
         if not partition_description.rare_boundary <= 0:
-            partitions += ', frequency_bin tinyint'
+            partitions.append('frequency_bin tinyint')
+        if not partition_description.coding_effect_types == []:
+            partitions.append('coding_bin tinyint')
+        if not partition_description.family_bin_size <= 0:
+            partitions.append('family_bin tinyint')
 
-        partitions += ')'
+        partitions = ", ".join(partitions)
         cursor.execute(f"""
             CREATE EXTERNAL TABLE {db}.{table} LIKE PARQUET '{sample_file}'
-            PARTITIONED BY {partitions}
+            PARTITIONED BY ({partitions})
             STORED AS PARQUET LOCATION '{hdfs_path}'
         """)
         cursor.execute(f"""

@@ -297,7 +297,6 @@ class ParquetSerializer(object):
 
     @staticmethod
     def deserialize_variant_inheritance(data, col_count):
-        print("inheritance_data:", data)
 
         data = bytes(data, 'latin1')
         data = np.frombuffer(data, dtype=np.int16)
