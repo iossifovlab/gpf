@@ -444,7 +444,6 @@ class FamiliesGroups(Mapping):
     @staticmethod
     def from_config(families, people_groups_config):
         result = FamiliesGroups(families)
-        print(f"people groups building: {list(people_groups_config.keys())}")
         for people_group_id in people_groups_config:
             people_group = PeopleGroup.from_config(
                 people_group_id,

@@ -1,3 +1,4 @@
+import time
 from collections import OrderedDict
 
 from dae.variants.attributes import Role
@@ -16,10 +17,6 @@ class CommonReport(object):
         effect_groups = config.effect_groups
         effect_types = config.effect_types
 
-        print(f"denovo reports groups: {list(people_groups_info.keys())}")
-        print(f"denovo reports groups: {[pg.name for pg in people_groups_info.values()]}")
-        print(f"all reports groups   : {list(config.groups.keys())}")
-
         self.genotype_data_study = genotype_data_study
         self.families_groups = FamiliesGroups.from_config(
             genotype_data_study.families,
@@ -31,24 +28,30 @@ class CommonReport(object):
         people_filters = FilterCollection.build_filter_objects(
             self.families_groups, config.groups
         )
-        print(
-            f"people_filters: "
-            f"{[f.id for f in people_filters]}")
         denovo_people_filters = [
             pf for pf in people_filters if pf.group_id in people_groups_info
         ]
-        print(
-            f"denovo_people_filters: "
-            f"{[f.id for f in denovo_people_filters]}")
 
         self.id = genotype_data_study.id
+
+        start = time.time()
         self.families_report = FamiliesReport(
             config.people_groups, self.families_groups, people_filters,
             config.draw_all_families, config.families_count_show_id
         )
+        elapsed = time.time() - start
+        print(
+            f"COMMON REPORTS family report "
+            f"build in {elapsed:.2f} sec")
+
+        start = time.time()
         self.denovo_report = DenovoReport(
             genotype_data_study, effect_groups, effect_types,
             denovo_people_filters)
+        elapsed = time.time() - start
+        print(
+            f"COMMON REPORTS denovo report "
+            f"build in {elapsed:.2f} sec")
 
         self.study_name = genotype_data_study.name
         self.phenotype = self._get_phenotype()

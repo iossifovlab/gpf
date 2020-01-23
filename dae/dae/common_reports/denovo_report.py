@@ -78,23 +78,6 @@ class EffectCell:
             set(family_allele.variant_in_members) &
             self.people_with_parents_and_filter_ids)
 
-    # def _count_variants_and_people(self):
-    #     print(
-    #         f"DENOVO COUNT VARIANTS "
-    #         f"<{self.effect}> <{self.people_filter.filter_name}> "
-    #         f"started")
-    #     start = time.time()
-
-    #     for v in self.denovo_variants:
-    #         for aa in v.alt_alleles:
-    #             self.count_variant(v, aa)
-
-    #     elapsed = time.time() - start
-    #     print(
-    #         f"DENOVO COUNT VARIANTS "
-    #         f"<{self.effect}> <{self.people_filter.filter_name}> "
-    #         f"build in {elapsed:.2f} sec")
-
     def is_empty(self):
         return self.number_of_observed_events == 0 and\
             self.number_of_children_with_event == 0 and\
@@ -218,20 +201,11 @@ class DenovoReportTable(object):
             )
             for effect in self.effects
         ]
-        print(
-            f"DENOVO COUNT VARIANTS "
-            f"started")
-        start = time.time()
 
         for fv in self.denovo_variants:
             for fa in fv.alt_alleles:
                 for effect_row in effect_rows:
                     effect_row.count_variant(fv, fa)
-
-        elapsed = time.time() - start
-        print(
-            f"DENOVO COUNT VARIANTS "
-            f"build in {elapsed:.2f} sec")
 
         effect_rows_empty_columns = list(map(
             all, np.array([effect_row.get_empty()
@@ -262,33 +236,35 @@ class DenovoReport(object):
         self.effect_types = effect_types
         self.filter_objects = filter_objects
 
+        start = time.time()
         denovo_variants = genotype_data.query_variants(
             limit=None,
             inheritance='denovo',
         )
         self.denovo_variants = list(denovo_variants)
+        elapsed = time.time() - start
+        print(
+            f"DENOVO REPORTS variants loaded "
+            f"in {elapsed:.2f} sec")
 
-        self.tables = self._get_tables()
+        start = time.time()
+        self.tables = self._build_tables()
+        elapsed = time.time() - start
+        print(
+            f"DENOVO REPORTS build "
+            f"in {elapsed:.2f} sec")
 
     def to_dict(self):
         return OrderedDict([
             ('tables', [t.to_dict() for t in self.tables])
         ])
 
-    def _get_tables(self):
+    def _build_tables(self):
         if len(self.denovo_variants) == 0:
             return []
 
-        print(
-            f"COMMON REPORTS denovo reports "
-            f"started")
-        start = time.time()
-
         denovo_report_tables = []
         for filter_object in self.filter_objects:
-            print(
-                f"DENOVO REPORT with filter: "
-                f"{filter_object.get_filter_names()}")
             denovo_report_table = DenovoReportTable(
                 self.genotype_data,
                 self.denovo_variants,
@@ -298,11 +274,6 @@ class DenovoReport(object):
             )
             if not denovo_report_table.is_empty():
                 denovo_report_tables.append(denovo_report_table)
-
-        elapsed = time.time() - start
-        print(
-            f"COMMON REPORTS denovo reports "
-            f"build in {elapsed:.2f} sec")
 
         return denovo_report_tables
 
