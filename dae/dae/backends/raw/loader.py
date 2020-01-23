@@ -539,13 +539,15 @@ class VariantsGenotypesLoader(VariantsLoader):
     def _reset_chrom(self, chrom):
         result = chrom
         if self.chrom_prefix:
-            result = f'{self.chrom_prefix}chrom'
+            result = f'{self.chrom_prefix}{chrom}'
         return result
 
     def full_variants_iterator(
             self) -> Iterator[Tuple[SummaryVariant, List[FamilyVariant]]]:
         full_iterator = self._full_variants_iterator_impl()
         for summary_variant, family_variants in full_iterator:
+            # print(summary_variant)
+            # print(self.chrom_prefix)
             if self.chrom_prefix is not None:
                 chrom = self._reset_chrom(summary_variant.chromosome)
                 summary_variant._chromosome = chrom
@@ -553,6 +555,7 @@ class VariantsGenotypesLoader(VariantsLoader):
                     summary_allele._chromosome = chrom
 
             for family_variant in family_variants:
+
                 if self.expect_genotype:
                     assert family_variant._best_state is None
                     assert family_variant._genetic_model is None

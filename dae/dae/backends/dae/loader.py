@@ -51,12 +51,14 @@ class DenovoLoader(VariantsGenotypesLoader):
             families: FamiliesData,
             denovo_filename: str,
             genome: GenomicSequence,
+            chrom_prefix=None,
             params: Dict[str, Any] = {}):
         super(DenovoLoader, self).__init__(
             families=families,
             filenames=[denovo_filename],
             transmission_type=TransmissionType.denovo,
             genome=genome,
+            chrom_prefix=chrom_prefix,
             overwrite=False,
             expect_genotype=False,
             expect_best_state=False,

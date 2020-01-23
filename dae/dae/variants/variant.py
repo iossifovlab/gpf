@@ -247,11 +247,11 @@ class Variant:
 
     @property
     def chrom(self) -> str:
-        raise NotImplementedError()
+        return self.chromosome
 
     @property
     def chromosome(self) -> str:
-        return self.chrom
+        raise NotImplementedError()
 
     @property
     def position(self) -> int:
@@ -524,7 +524,7 @@ class SummaryVariant(Variant):
         self._reference = self.ref_allele.reference
 
     @property
-    def chrom(self) -> str:
+    def chromosome(self) -> str:
         return self._chromosome
 
     @property

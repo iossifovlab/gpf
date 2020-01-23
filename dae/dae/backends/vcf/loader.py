@@ -70,6 +70,7 @@ class VcfLoader(VariantsGenotypesLoader):
             families,
             vcf_files,
             genome: GenomicSequence,
+            chrom_prefix=None,
             regions=None,
             params={},
             **kwargs):
@@ -78,6 +79,7 @@ class VcfLoader(VariantsGenotypesLoader):
             filenames=vcf_files,
             transmission_type=TransmissionType.transmitted,
             genome=genome,
+            chrom_prefix=chrom_prefix,
             overwrite=False,
             expect_genotype=True,
             expect_best_state=False,

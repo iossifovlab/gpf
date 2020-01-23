@@ -380,8 +380,8 @@ class FamilyVariant(Variant, FamilyDelegate):
         return self._fvuid
 
     @property
-    def chrom(self) -> str:
-        return self.summary_variant.chrom
+    def chromosome(self) -> str:
+        return self.summary_variant.chromosome
 
     @property
     def position(self) -> int:
