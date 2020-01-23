@@ -349,9 +349,14 @@ class FamiliesLoader:
             ped_sample_id: PEDIGREE_COLUMN_NAMES['sample id'],
         })
 
-        assert set(PED_COLUMNS_REQUIRED) <= set(ped_df.columns), \
-            ped_df.columns
-
+        if not set(PED_COLUMNS_REQUIRED) <= set(ped_df.columns):
+            missing_columns = \
+                set(PED_COLUMNS_REQUIRED).difference(set(ped_df.columns))
+            missing_columns = ', '.join(missing_columns)
+            print(f"pedigree file missing missing columns {missing_columns}")
+            raise ValueError(
+                f"pedigree file missing missing columns {missing_columns}"
+            )
         return ped_df
 
     @staticmethod
