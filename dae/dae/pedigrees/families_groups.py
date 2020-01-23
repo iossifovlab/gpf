@@ -416,9 +416,6 @@ class FamiliesGroups(Mapping):
 
     def add_families_group(self, people_group):
         if people_group.id in self._families_groups:
-            print(
-                f"WARN: adding {people_group.id} more than once! "
-                "Skipping...")
             return
         families_group = FamiliesGroup(self.families, people_group)
         self._families_groups[families_group.id] = families_group
@@ -447,7 +444,7 @@ class FamiliesGroups(Mapping):
     @staticmethod
     def from_config(families, people_groups_config):
         result = FamiliesGroups(families)
-
+        print(f"people groups building: {list(people_groups_config.keys())}")
         for people_group_id in people_groups_config:
             people_group = PeopleGroup.from_config(
                 people_group_id,

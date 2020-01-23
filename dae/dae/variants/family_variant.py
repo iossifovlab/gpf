@@ -371,6 +371,14 @@ class FamilyVariant(Variant, FamilyDelegate):
         self._family_alleles = None
         self._best_state = best_state
         self._matched_alleles = []
+        self._fvuid = None
+
+    @property
+    def fvuid(self) -> str:
+        if self._fvuid is None:
+            self._fvuid = f'{self.family_id}.{self.location}'\
+                f'.{self.reference}.{self.alternative}'
+        return self._fvuid
 
     @property
     def chrom(self) -> str:

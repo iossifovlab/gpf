@@ -1,3 +1,4 @@
+import time
 from collections import OrderedDict
 
 from dae.common_reports.people_counter import PeopleCounters
@@ -37,7 +38,9 @@ class FamiliesReport(object):
         ]
 
     def _build_families_counters(self):
-        return [
+        print("COMMON REPORTS family counters build started")
+        start = time.time()
+        result = [
             FamiliesGroupCounters(
                 self.families_groups,
                 self.families_groups[families_group_id],
@@ -45,3 +48,9 @@ class FamiliesReport(object):
                 self.families_count_show_id)
             for families_group_id in self.selected_groups
         ]
+        elapsed = time.time() - start
+        print(
+            f"COMMON REPORTS family counters "
+            f"build in {elapsed:.2f} sec")
+
+        return result
