@@ -264,6 +264,8 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
             config['frequency_bin']['rare_boundary'] = str(self._rare_boundary)
 
         filename = os.path.join(self.output, '_PARTITION_DESCRIPTION')
+        os.makedirs(os.path.dirname(filename), exist_ok=True)
+
         with open(filename, 'w') as configfile:
             config.write(configfile)
 
