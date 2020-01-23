@@ -151,3 +151,39 @@ def test_family_variant_X_best2gt(bs, gt, gm1, gm2, fvX1, fvX2, genome_2013):
 
     assert np.all(genotype == gt)
     assert genetic_model == gm2
+
+
+@pytest.mark.xfail(reason="handling of best state for X is broken")
+@pytest.mark.parametrize("gt,bs1,gm1,bs2,gm2", [
+    (
+        np.array([[0, 0, 1], [0, 0, 0]], dtype='int8'),
+        "221/001", GeneticModel.pseudo_autosomal,
+        "210/001", GeneticModel.X_broken
+    ),
+    (
+        np.array([[1, 1, 1], [1, 1, 1]], dtype='int8'),
+        "000/222", GeneticModel.pseudo_autosomal,
+        "000/211", GeneticModel.X_broken
+    ),
+    # (np.array([[0, 0, 1], [0, 0, 0]], dtype='int8'), "221/001/000"),
+    # (np.array([[0, 0, 0], [0, 0, 2]], dtype='int8'), "221/000/001"),
+    # (np.array([[0, 0, 0], [0, 0, 0]], dtype='int8'), "222/000/000"),
+])
+def test_family_variant_X_gt2best_st(
+        fvX1, fvX2, gt, bs1, gm1, bs2, gm2, genome_2013):
+    v = fvX1(gt, None)
+    best_state = VariantsGenotypesLoader._calc_best_state(v, genome_2013)
+    print(v)
+    print(mat2str(best_state))
+    assert mat2str(best_state) == bs1
+    genetic_model = VariantsGenotypesLoader._calc_genetic_model(v, genome_2013)
+    assert genetic_model == gm1
+
+    v = fvX2(gt, None)
+    best_state = VariantsGenotypesLoader._calc_best_state(v, genome_2013)
+    print(v)
+    print(mat2str(best_state))
+    assert mat2str(best_state) == bs2
+
+    genetic_model = VariantsGenotypesLoader._calc_genetic_model(v, genome_2013)
+    assert genetic_model == gm2
