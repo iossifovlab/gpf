@@ -23,11 +23,49 @@ class GPFConfigValidator(Validator):
         self, path: Union[List[str], Tuple[str]], field: str, value: str
     ):
         assert path in ("relative", "absolute")
-        if path == "relative":
-            raise NotImplementedError("Relative paths are not yet supported.")
-        elif path == "absolute":
+        if path == "absolute":
             assert os.path.isabs(value)
             assert os.path.exists(value)
+        else:
+            assert not os.path.isabs(value)
+
+
+class GPFConfigNormalizer:
+    """
+    Custom normalizer which utilizes the schema provided to
+    Cerberus' validator.
+    """
+
+    def __init__(self, config_file_directory: str):
+        self.config_file_directory = config_file_directory
+
+    def resolve_relative_path(self, relative_path: str):
+        abspath = os.path.join(self.config_file_path, relative_path)
+        assert os.path.isabs(abspath), abspath
+        assert os.path.exists(abspath), abspath
+        return abspath
+
+    def normalize_value(self, field: str, value: Any, rules: dict) -> Any:
+        if rules.get("path") == "relative":
+            return self.resolve_relative_path(value)
+
+    def normalize(
+        self, config: dict, schema: dict, default_rules: dict = None
+    ) -> dict:
+        normalized_config = dict()
+        for key, value in config.items():
+            rules = schema[key] if key in schema else default_rules
+            if isinstance(value, dict):
+                normalized_config[key] = self.normalize(
+                    config[key],
+                    rules.get("schema", dict()),
+                    rules.get("valuesrules", None),
+                )
+            else:
+                normalized_config[key] = self.normalize_value(
+                    key, value, rules
+                )
+        return normalized_config
 
 
 class GPFConfigParser:
@@ -57,7 +95,6 @@ class GPFConfigParser:
     def _namedtuple_to_dict(cls, tup: Tuple[Any]) -> Dict[str, Any]:
         output = tup._asdict()
         for k, v in output.items():
-            print(k, ' ', v)
             if isinstance(v, tuple):
                 output[k] = cls._namedtuple_to_dict(v)
         return output
@@ -91,9 +128,6 @@ class GPFConfigParser:
         assert ext in cls.filetype_parsers, f"Unsupported filetype {filename}!"
         with open(filename, "r") as infile:
             conf_dict = cls.filetype_parsers[ext](infile.read())
-        if "vars" in conf_dict:
-            conf_dict = cls._interpolate(conf_dict, **conf_dict["vars"])
-            del conf_dict["vars"]
         return conf_dict
 
     @classmethod
@@ -103,46 +137,40 @@ class GPFConfigParser:
             config_files += glob.glob(
                 os.path.join(dirname, f"**/*{filetype}"), recursive=True
             )
-        print('asdf', config_files)
         return config_files
-
-    @classmethod
-    def _validate_config(cls, config: dict, schema: dict) -> dict:
-        v = GPFConfigValidator(schema)
-        assert v.validate(config), v.errors
-        return v.document
 
     @classmethod
     def load_config(
         cls, filename: str, schema: dict = None, default_filename: str = None
     ) -> Tuple[Any]:
 
-        print('==================================')
-        print(filename)
-        print('==================================')
+        validator = GPFConfigValidator(schema)
+        normalizer = GPFConfigNormalizer(os.path.dirname(filename))
+
+        config = cls._read_config(filename)
+        default_config = (
+            cls._read_config(default_filename) if default_filename else dict()
+        )
+
+        config = recursive_dict_update(config, default_config)
+        if "vars" in config:
+            config = cls._interpolate(config, **config["vars"])
+            del config["vars"]
+
         if schema:
-            config = cls._validate_config(cls._read_config(filename), schema)
-        else:
             # TODO Remove this behaviour! (and schema default value None)
             # This is a temporary crutch to fix the unit tests
             # without creating all schemas beforehand.
             # We do NOT want to allow lack of validation.
-            config = cls._read_config(filename)
+            assert validator.validate(config), validator.errors
+            config = normalizer.normalize(validator.document, schema)
 
-        if default_filename:
-            default_config = cls._validate_config(
-                cls._read_config(default_filename), schema
-            )
-            config = recursive_dict_update(config, default_config)
         return cls._dict_to_namedtuple(config)
 
     @classmethod
     def load_directory_configs(
         cls, dirname: str, schema: dict = None, default_filename: str = None
     ) -> List[Tuple[Any]]:
-        print('++++++++++++++++++++++++++++++++++')
-        print(dirname)
-        print('++++++++++++++++++++++++++++++++++')
         return [
             cls.load_config(config_path, schema, default_filename)
             for config_path in cls._collect_directory_configs(dirname)
