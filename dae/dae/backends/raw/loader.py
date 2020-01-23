@@ -397,6 +397,7 @@ class VariantsGenotypesLoader(VariantsLoader):
         filenames: List[str],
         transmission_type: TransmissionType,
         genome: GenomicSequence,
+        chrom_prefix:str = None,
         overwrite: bool = False,
         expect_genotype: bool = True,
         expect_best_state: bool = False,
@@ -409,7 +410,7 @@ class VariantsGenotypesLoader(VariantsLoader):
             params=params)
 
         self.genome = genome
-
+        self.chrom_prefix = chrom_prefix
         self.overwrite = overwrite
         self.expect_genotype = expect_genotype
         self.expect_best_state = expect_best_state
@@ -535,10 +536,22 @@ class VariantsGenotypesLoader(VariantsLoader):
 
         return genotype, genetic_model
 
+    def _reset_chrom(self, chrom):
+        result = chrom
+        if self.chrom_prefix:
+            result = f'{self.chrom_prefix}chrom'
+        return result
+
     def full_variants_iterator(
             self) -> Iterator[Tuple[SummaryVariant, List[FamilyVariant]]]:
         full_iterator = self._full_variants_iterator_impl()
         for summary_variant, family_variants in full_iterator:
+            if self.chrom_prefix is not None:
+                chrom = self._reset_chrom(summary_variant.chromosome)
+                summary_variant._chromosome = chrom
+                for summary_allele in summary_variant.alleles:
+                    summary_allele._chromosome = chrom
+
             for family_variant in family_variants:
                 if self.expect_genotype:
                     assert family_variant._best_state is None

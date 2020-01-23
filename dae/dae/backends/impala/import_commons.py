@@ -69,7 +69,8 @@ def construct_import_annotation_pipeline(
 
 class MakefileGenerator:
 
-    def __init__(self, partition_descriptor, genome):
+    def __init__(self, partition_descriptor, genome, chrom_prefix):
+        self.chrom_prefix = chrom_prefix
         self.genome = genome
         self.partition_descriptor = partition_descriptor
         self.chromosome_lengths = dict(self.genome.get_all_chr_lengths())
@@ -80,14 +81,22 @@ class MakefileGenerator:
             self.partition_descriptor.region_length)
         return result
 
+    def reset_target(self, target):
+        result = target
+        if self.chrom_prefix and target.startswith(self.chrom_prefix):
+            result = target[len(self.chrom_prefix):]
+        return result
+
     def generate_chrom_targets(self, chrom):
         target = chrom
         if chrom not in self.partition_descriptor.chromosomes:
             target = 'other'
         region_bins_count = self.region_bins_count(chrom)
 
+        target = self.reset_target(target)
+
         if region_bins_count == 1:
-            return [(f'{target}_0', chrom)]
+            return [(f'{target}_0', target)]
         result = []
         for region_index in range(region_bins_count):
             start = region_index * self.partition_descriptor.region_length + 1
@@ -95,17 +104,22 @@ class MakefileGenerator:
             if end > self.chromosome_lengths[chrom]:
                 end = self.chromosome_lengths[chrom]
             result.append(
-                (f'{target}_{region_index}', f'{chrom}:{start}-{end}')
+                (f'{target}_{region_index}', f'{target}:{start}-{end}')
             )
         return result
 
     def generate_variants_targets(self, target_chromosomes):
+
         if len(self.partition_descriptor.chromosomes) == 0:
             return {
                 'none': [self.partition_descriptor.output]
             }
 
         targets = defaultdict(list)
+        if self.chrom_prefix is not None:
+            target_chromosomes = [
+                f'{self.chrom_prefix}{tg}' for tg in target_chromosomes
+            ]
 
         for chrom in target_chromosomes:
             if chrom not in self.chromosome_lengths:
@@ -117,7 +131,9 @@ class MakefileGenerator:
             assert chrom in self.chromosome_lengths, \
                 (chrom, self.chromosome_lengths)
             region_targets = self.generate_chrom_targets(chrom)
+
             for target, region in region_targets:
+                target = self.reset_target(target)
                 targets[target].append(region)
         return targets
 
@@ -240,6 +256,12 @@ class Variants2ParquetTool:
             help='Path to an annotation config file to use when annotating'
         )
 
+        parser.add_argument(
+            '--add-chrom-prefix', type=str, default=None,
+            help='Add specified prefix to each chromosome name in '
+            'variants file'
+        )
+
     @classmethod
     def cli_arguments(cls, gpf_instance):
         parser = argparse.ArgumentParser(
@@ -326,6 +348,8 @@ class Variants2ParquetTool:
         if argv.partition_description is not None:
             pd = os.path.abspath(argv.partition_description)
             command.append(f'--pd {pd}')
+        if argv.add_chrom_prefix is not None:
+            command.append(f'--add-chrom-prefix {argv.add_chrom_prefix}')
 
         return ' '.join(command)
 
@@ -415,9 +439,12 @@ class Variants2ParquetTool:
         else:
             partition_description = NoPartitionDescriptor(argv.output)
 
+        chrom_prefix = argv.add_chrom_prefix
         generator = MakefileGenerator(
             partition_description,
-            gpf_instance.genomes_db.get_genome())
+            gpf_instance.genomes_db.get_genome(),
+            chrom_prefix=chrom_prefix)
+
         target_chromosomes = variants_loader.chromosomes
         variants_targets = generator.generate_variants_targets(
             target_chromosomes)
