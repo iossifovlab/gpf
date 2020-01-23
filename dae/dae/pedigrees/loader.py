@@ -41,10 +41,12 @@ class FamiliesLoader:
             pedigree_filename, **pedigree_format
         )
         families = FamiliesData.from_pedigree_df(ped_df)
+        families._ped_df = ped_df
         if pedigree_format.get('ped_no_role'):
             for family in families.values():
                 role_build = FamilyRoleBuilder(family)
                 role_build.build_roles()
+            families._ped_df = None
         return families
 
     @staticmethod
