@@ -40,7 +40,7 @@ class GPFConfigNormalizer:
         self.config_file_directory = config_file_directory
 
     def resolve_relative_path(self, relative_path: str):
-        abspath = os.path.join(self.config_file_path, relative_path)
+        abspath = os.path.join(self.config_file_directory, relative_path)
         assert os.path.isabs(abspath), abspath
         assert os.path.exists(abspath), abspath
         return abspath
