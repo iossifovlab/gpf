@@ -11,8 +11,12 @@ from dae.pedigrees.family import Person, Family
 
 class FamilyConnections(object):
 
-    def __init__(self, pedigree, id_to_individual, id_to_mating_unit):
-        self.pedigree = pedigree
+    def __init__(self, family, id_to_individual, id_to_mating_unit):
+        assert family is not None
+        assert '0' not in id_to_individual
+        assert '' not in id_to_individual
+
+        self.family = family
         self.id_to_individual = id_to_individual
         self.id_to_mating_unit = id_to_mating_unit
 
@@ -31,18 +35,18 @@ class FamilyConnections(object):
         return True
 
     @staticmethod
-    def add_missing_members(pedigree):
+    def add_missing_members(family):
         new_members = []
         id_to_individual = defaultdict(Individual)
 
-        for member in pedigree.full_members:
+        for member in family.full_members:
             individual = id_to_individual[member.person_id]
             individual.member = member
 
         missing_father_mothers = {}
         missing_mother_fathers = {}
 
-        for member in pedigree.full_members:
+        for member in family.full_members:
             if member.mom_id == member.dad_id:
                 continue
             if member.mom_id is None:
@@ -50,7 +54,7 @@ class FamilyConnections(object):
                 if member.dad_id not in missing_mother_fathers:
                     missing_mother_fathers[member.dad_id] = Person(
                         person_id=member.dad_id + ".mother",
-                        family_id=pedigree.family_id,
+                        family_id=family.family_id,
                         mom_id="0",
                         dad_id="0",
                         sex="2",
@@ -64,7 +68,7 @@ class FamilyConnections(object):
                 if member.mom_id not in missing_father_mothers:
                     missing_father_mothers[member.mom_id] = Person(
                         person_id=member.mom_id + ".father",
-                        family_id=pedigree.family_id,
+                        family_id=family.family_id,
                         mom_id="0",
                         dad_id="0",
                         sex="1",
@@ -79,7 +83,7 @@ class FamilyConnections(object):
             if mother.member is None and mother not in new_members:
                 mother.member = Person(
                     person_id=member.mom_id,
-                    family_id=pedigree.family_id,
+                    family_id=family.family_id,
                     mom_id="0",
                     dad_id="0",
                     sex=Sex.F,
@@ -90,7 +94,7 @@ class FamilyConnections(object):
             if father.member is None and father not in new_members:
                 father.member = Person(
                     person_id=member.dad_id,
-                    family_id=pedigree.family_id,
+                    family_id=family.family_id,
                     mom_id="0",
                     dad_id="0",
                     sex="1",
@@ -99,13 +103,15 @@ class FamilyConnections(object):
                     generated=True)
                 new_members.append(father.member)
 
+        unique_new_members_ids = set([])
         unique_new_members = []
-        for elem in new_members:
-            if elem.person_id not in [
-                    member.person_id for member in unique_new_members]:
-                unique_new_members.append(elem)
+        for person in new_members:
+            if person.person_id in unique_new_members_ids:
+                continue
+            unique_new_members.append(person)
+            unique_new_members_ids.add(person.person_id)
 
-        pedigree.add_members(unique_new_members)
+        family.add_members(unique_new_members)
 
     @classmethod
     def from_family(cls, family, add_missing_members=True):
@@ -263,9 +269,9 @@ class FamilyConnections(object):
 
     @property
     def members(self):
-        if not self.pedigree:
+        if not self.family:
             return []
-        return self.pedigree.full_members
+        return self.family.full_members
 
     def add_ranks(self):
         if len(self.id_to_mating_unit) == 0:
