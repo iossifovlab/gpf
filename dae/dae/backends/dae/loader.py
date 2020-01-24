@@ -514,13 +514,16 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
             families,
             summary_filename,
             genome,
+            chrom_prefix=None,
             regions=None,
-            params={}):
+            params={},
+            **kwargs):
         super(DaeTransmittedLoader, self).__init__(
             families=families,
             filenames=[summary_filename],
             transmission_type=TransmissionType.transmitted,
             genome=genome,
+            chrom_prefix=chrom_prefix,
             overwrite=False,
             expect_genotype=False,
             expect_best_state=True,
