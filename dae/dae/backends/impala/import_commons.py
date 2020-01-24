@@ -87,6 +87,21 @@ class MakefileGenerator:
             result = chrom[len(self.chrom_prefix):]
         return result
 
+    def prefix_chrom(self, chrom):
+        result = chrom
+        if self.chrom_prefix:
+            result = f'{self.chrom_prefix}{chrom}'
+        return result
+
+    def build_target_chromosomes(self, target_chromosomes):
+        if self.chrom_prefix is None:
+            return target_chromosomes
+        else:
+            return [
+                self.prefix_chrom(tg)
+                for tg in target_chromosomes
+            ]
+
     def generate_chrom_targets(self, target_chrom):
         target = target_chrom
         if target_chrom not in self.partition_descriptor.chromosomes:
@@ -119,11 +134,11 @@ class MakefileGenerator:
         generated_target_chromosomes = target_chromosomes[:]
         if self.chrom_prefix is not None:
             generated_target_chromosomes = [
-                f'{self.chrom_prefix}{tg}'
-                for tg in generated_target_chromosomes
+                self.prefix_chrom(tg)
+                for tg in target_chromosomes
             ]
 
-        for target_chrom in target_chromosomes:
+        for target_chrom in generated_target_chromosomes:
             if target_chrom not in self.chromosome_lengths:
                 print(
                     f"WARNING: contig {target_chrom} not found in specified genome",

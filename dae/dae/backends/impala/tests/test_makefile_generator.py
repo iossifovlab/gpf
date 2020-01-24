@@ -192,7 +192,7 @@ def test_target_generator_chrom_prefix_target_other(
     print(generator.chromosome_lengths)
     assert len(generator.chromosome_lengths) == 4
 
-    result = generator.generate_variants_targets(['chr3', 'chr4'])
+    result = generator.generate_variants_targets(['3', '4'])
     print(result)
     assert set(result.keys()) == targets
     for regions in result.values():
@@ -227,7 +227,7 @@ def test_target_generator_chrom_prefix_target_chrom(
     print(generator.chromosome_lengths)
     assert len(generator.chromosome_lengths) == 4
 
-    result = generator.generate_variants_targets(['chr1', 'chr2'])
+    result = generator.generate_variants_targets(['1', '2'])
     print(result)
     assert set(result.keys()) == targets
     for regions in result.values():
