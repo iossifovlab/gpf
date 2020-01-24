@@ -15,7 +15,7 @@ class EffectCell:
         self.families = genotype_data.families
         self.denovo_variants = denovo_variants
         assert isinstance(people_filter, PeopleFilter)
-        assert len(people_filter.people_with_parents_and_filter_ids) > 0
+        assert len(people_filter.people_with_filter_ids) > 0
         self.people_filter = people_filter
         self.effect = effect
         self.effect_types = set(EffectTypesMixin().get_effect_types(
@@ -23,10 +23,10 @@ class EffectCell:
 
         self.observed_variants_ids = set()
         self.observed_people_with_event = set([])
-        self.people_with_parents_and_filter_ids = \
-            self.people_filter.people_with_parents_and_filter_ids
 
-        # self._count_variants_and_people()
+    @property
+    def people_with_filter_ids(self):
+        return self.people_filter.people_with_filter_ids
 
     @property
     def number_of_observed_events(self):
@@ -37,18 +37,18 @@ class EffectCell:
         return len(self.observed_people_with_event)
 
     @property
-    def number_of_people_with_filter_and_parents(self):
-        return len(self.people_with_parents_and_filter_ids)
+    def number_of_people_with_filter(self):
+        return len(self.people_with_filter_ids)
 
     @property
     def observed_rate_per_child(self):
         return self.number_of_observed_events \
-            / self.number_of_people_with_filter_and_parents
+            / self.number_of_people_with_filter
 
     @property
     def percent_of_children_with_events(self):
         return self.number_of_children_with_event \
-            / self.number_of_people_with_filter_and_parents
+            / self.number_of_people_with_filter
 
     @property
     def column_name(self):
@@ -67,7 +67,7 @@ class EffectCell:
 
     def count_variant(self, family_variant, family_allele):
         if not (set(family_allele.variant_in_members) &
-                self.people_with_parents_and_filter_ids):
+                self.people_with_filter_ids):
             return
         if not family_allele.effect:
             return
@@ -76,7 +76,7 @@ class EffectCell:
         self.observed_variants_ids.add(family_variant.fvuid)
         self.observed_people_with_event.update(
             set(family_allele.variant_in_members) &
-            self.people_with_parents_and_filter_ids)
+            self.people_with_filter_ids)
 
     def is_empty(self):
         return self.number_of_observed_events == 0 and\
@@ -133,23 +133,15 @@ class DenovoReportTable(object):
         self.denovo_variants = denovo_variants
         self.families = self.genotype_data.families
 
-        people_with_parents = \
-            genotype_data.families.persons_with_parents()
-        people_with_parents_ids = \
-            set(sorted([p.person_id for p in people_with_parents]))
-
-        self.filter_collection = filter_collection
         self.people_filters = []
         for people_filter in filter_collection.filters:
             people_with_filter = people_filter.filter(
                 self.families.persons.values())
             people_with_filter_ids = set([
                 p.person_id for p in people_with_filter])
-            people_with_parents_and_filter_ids = people_with_parents_ids \
-                & people_with_filter_ids
-            if len(people_with_parents_and_filter_ids) > 0:
-                people_filter.people_with_parents_and_filter_ids = \
-                    people_with_parents_and_filter_ids
+            if len(people_with_filter_ids) > 0:
+                people_filter.people_with_filter_ids = \
+                    people_with_filter_ids
                 self.people_filters.append(people_filter)
 
         self.effects = effect_groups + effect_types
@@ -244,7 +236,7 @@ class DenovoReport(object):
         self.denovo_variants = list(denovo_variants)
         elapsed = time.time() - start
         print(
-            f"DENOVO REPORTS variants loaded "
+            f"DENOVO REPORTS denovo variants query "
             f"in {elapsed:.2f} sec")
 
         start = time.time()
