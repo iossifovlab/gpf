@@ -3,6 +3,7 @@ from deprecation import deprecated
 from dae.studies.study import GenotypeDataStudy, GenotypeDataGroup
 from dae.studies.study_wrapper import StudyWrapper
 from dae.configuration.gpf_config_parser import GPFConfigParser
+from dae.configuration.schemas.study_config import study_config_schema
 
 
 class VariantsDb(object):
@@ -27,12 +28,13 @@ class VariantsDb(object):
                 'dae_data_dir': self.dae_config.dae_data_dir
             }
         }
-        if dae_config.default_configuration and \
-                dae_config.default_configuration.conf_file:
-            defaults['conf'] = dae_config.default_configuration.conf_file
+        if dae_config.default_study_config and \
+                dae_config.default_study_config.conf_file:
+            defaults['conf'] = dae_config.default_study_config.conf_file
 
         study_configs = GPFConfigParser.load_directory_configs(
             dae_config.studies_db.dir,
+            study_config_schema
         )
 
         self.genotype_data_study_configs = {
@@ -42,6 +44,7 @@ class VariantsDb(object):
 
         data_groups = GPFConfigParser.load_directory_configs(
             dae_config.datasets_db.dir,
+            study_config_schema
         )
 
         self.genotype_data_group_configs = {

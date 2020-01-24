@@ -14,6 +14,7 @@ from dae.GenomesDB import GenomesDB
 from dae.gpf_instance.gpf_instance import GPFInstance, cached
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
+from dae.configuration.schemas.dae_conf import dae_conf_schema
 
 from dae.annotation.annotation_pipeline import PipelineAnnotator
 
@@ -66,7 +67,7 @@ def default_dae_config(request):
     request.addfinalizer(fin)
     dae_conf_path = \
         os.path.join(os.environ.get('DAE_DB_DIR', None), 'DAE.conf')
-    dae_config = GPFConfigParser.load_config(dae_conf_path)
+    dae_config = GPFConfigParser.load_config(dae_conf_path, dae_conf_schema)
     GPFConfigParser.modify_tuple(
         dae_config,
         {'studies_db': {'dir': studies_dirname}}

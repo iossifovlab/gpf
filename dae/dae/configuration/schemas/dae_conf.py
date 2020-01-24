@@ -1,6 +1,17 @@
+from dae.configuration.gpf_config_parser import validate_path
+
 config_reference_schema = {
-    "confFile": {"type": "string", "required": True, "path": True},
-    "dir": {"type": "string"},
+    "conf_file": {
+        "type": "string",
+        "required": True,
+        "check_with": validate_path,
+        "coerce": "abspath",
+    },
+    "dir": {
+        "type": "string",
+        "check_with": validate_path,
+        "coerce": "abspath",
+    },
 }
 
 impala_schema = {
@@ -13,45 +24,72 @@ impala_schema = {
 hdfs_schema = {
     "host": {"type": "string"},
     "port": {"type": "integer"},
-    "base_dir": {"type": "string", "path": True},
+    "base_dir": {"type": "string"},
 }
 
 
 storage_schema = {
-    "type": {"type": "string", "allowed": ["impala", "filesystem"]},
-    "dir": {"type": "string", "path": True},
+    "storage_type": {"type": "string", "allowed": ["impala", "filesystem"]},
+    "dir": {
+        "type": "string",
+        "check_with": validate_path,
+        "coerce": "abspath",
+    },
     "impala": {
         "type": "dict",
-        "dependencies": {"type": "impala"},
+        "dependencies": {"storage_type": "impala"},
         "schema": impala_schema,
     },
     "hdfs": {
         "type": "dict",
-        "dependencies": {"type": "impala"},
+        "dependencies": {"storage_type": "impala"},
         "schema": hdfs_schema,
     },
 }
 
 
 dae_conf_schema = {
-    "instance_id": {"type": "string"},
+    "dae_data_dir": {
+        "type": "string",
+        "check_with": validate_path,
+        "coerce": "abspath",
+    },
     "genotype_storage": {
         "type": "dict",
         "schema": {"default": {"type": "string"}},
     },
-    "storage": {"type": "dict", "schema": storage_schema},
-    "studiesDB": {"type": "dict", "schema": config_reference_schema},
-    "datasetsDB": {"type": "dict", "schema": config_reference_schema},
-    "genomesDB": {"type": "dict", "schema": config_reference_schema},
-    "genomicScoresDB": {"type": "dict", "schema": config_reference_schema},
+    "storage": {
+        "type": "dict",
+        "valuesrules": {"type": "dict", "schema": storage_schema},
+    },
+    "studies_db": {"type": "dict", "schema": config_reference_schema},
+    "datasets_db": {"type": "dict", "schema": config_reference_schema},
+    "genomes_db": {"type": "dict", "schema": config_reference_schema},
+    "genomic_scores_db": {"type": "dict", "schema": config_reference_schema},
     "annotation": {"type": "dict", "schema": config_reference_schema},
-    "phenotypeData": {"type": "dict", "schema": {"dir": {"type": "string"}}},
-    "geneInfoDB": {"type": "dict", "schema": config_reference_schema},
-    "defaultStudyConfig": {"type": "dict", "schema": config_reference_schema},
+    "phenotype_data": {
+        "type": "dict",
+        "schema": {
+            "dir": {
+                "type": "string",
+                "check_with": validate_path,
+                "coerce": "abspath",
+            }
+        },
+    },
+    "gene_info_db": {"type": "dict", "schema": config_reference_schema},
+    "default_study_config": {
+        "type": "dict",
+        "schema": config_reference_schema,
+    },
     "gpfjs": {
         "type": "dict",
         "schema": {
-            "permissionDeniedPromptFile": {"type": "string", "path": True}
+            "permission_denied_prompt_file": {
+                "type": "string",
+                "check_with": validate_path,
+                "coerce": "abspath",
+            }
         },
     },
 }

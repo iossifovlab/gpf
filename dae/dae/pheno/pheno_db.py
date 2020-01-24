@@ -10,6 +10,7 @@ from dae.pedigrees.family import Person, Family
 from dae.pheno.db import DbManager
 from dae.pheno.common import MeasureType
 from dae.configuration.gpf_config_parser import GPFConfigParser
+from dae.configuration.schemas.phenotype_data import pheno_conf_schema
 
 from dae.variants.attributes import Sex, Status, Role
 
@@ -651,11 +652,11 @@ class PhenoDb(object):
         assert dae_config
 
         configs = GPFConfigParser.load_directory_configs(
-            dae_config.phenotype_data.dir
+            dae_config.phenotype_data.dir, pheno_conf_schema
         )
 
         self.config = {
-            config.phenotypeData.name: config.phenotypeData
+            config.phenotype_data.name: config.phenotype_data
             for config in configs
             if config
         }

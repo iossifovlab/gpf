@@ -1,34 +1,54 @@
+from dae.configuration.gpf_config_parser import validate_path
+
 gene_weight_schema = {
-    "file": {"type ": "string", "path": True},
-    "desc ": {"type ": "string"},
-    "bins ": {"type ": "integer"},
-    "yscale ": {"type ": "string", "allowed": ["linear", "log"]},
-    "xscale ": {"type ": "string", "allowed": ["linear", "log"]},
-}
-gene_term_schema = {
-    "file": {"type ": "string", "path": True},
-    "webFormatStr": {"type ": "string"},
-    "webLabel": {"type ": "string"},
-}
-gene_info_conf = {
-    "geneInfo": {
-        "type": "dict",
-        "schema": {"geneInfoFile": {"type": "string"}},
+    "file": {
+        "type": "string",
+        "check_with": validate_path,
+        "coerce": "abspath",
     },
-    "geneTerms": {"type": "dict", "schema": gene_term_schema},
-    "geneWeights": {
+    "desc": {"type": "string"},
+    "bins": {"type": "integer"},
+    "yscale": {"type": "string", "allowed": ["linear", "log"]},
+    "xscale": {"type": "string", "allowed": ["linear", "log"]},
+}
+
+gene_term_schema = {
+    "file": {
+        "type": "string",
+        "check_with": validate_path,
+        "coerce": "abspath",
+    },
+    "web_format_str": {"type": "string"},
+    "web_label": {"type": "string"},
+}
+
+gene_info_conf = {
+    "gene_info": {
         "type": "dict",
-        "valuesrules": {"type": ["list", gene_weight_schema]},
         "schema": {
-            "weights": {
-                "type": "list",
-                "required": True,
-                "schema": {"type": "string"},
-            }
+            "gene_info_file": {
+                "type": "string",
+                "check_with": validate_path,
+                "coerce": "abspath",
+            },
         },
+    },
+    "gene_terms": {
+        "type": "dict",
+        "valuesrules": {"type": "dict", "schema": gene_term_schema},
+    },
+    "gene_weights": {
+        "type": "dict",
+        "valuesrules": {"type": "dict", "schema": gene_weight_schema},
     },
     "chromosomes": {
         "type": "dict",
-        "schema": {"file": {"type": "string", "path": True}},
+        "schema": {
+            "file": {
+                "type": "string",
+                "check_with": validate_path,
+                "coerce": "abspath",
+            }
+        },
     },
 }

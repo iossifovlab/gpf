@@ -18,6 +18,9 @@ from dae.backends.storage.genotype_storage_factory import \
     GenotypeStorageFactory
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
+from dae.configuration.schemas.dae_conf import dae_conf_schema
+from dae.configuration.schemas.gene_info import gene_info_conf
+from dae.configuration.schemas.genomic_scores import genomic_scores_schema
 
 
 def cached(prop):
@@ -43,7 +46,9 @@ class GPFInstance(object):
                 print(defaults)
                 assert False
             config_file = os.path.join(work_dir, config_file)
-            dae_config = GPFConfigParser.load_config(config_file)
+            dae_config = GPFConfigParser.load_config(
+                config_file, dae_conf_schema
+            )
 
         self.dae_config = dae_config
 
@@ -77,7 +82,10 @@ class GPFInstance(object):
     @property
     @cached
     def _gene_info_config(self):
-        return GPFConfigParser.load_config(self.dae_config.gene_info_db.conf_file)
+        return GPFConfigParser.load_config(
+            self.dae_config.gene_info_db.conf_file,
+            gene_info_conf
+        )
 
     @property
     @cached
@@ -87,7 +95,10 @@ class GPFInstance(object):
     @property
     @cached
     def _score_config(self):
-        return GPFConfigParser.load_config(self.dae_config.genomic_scores_db.conf_file)
+        return GPFConfigParser.load_config(
+            self.dae_config.genomic_scores_db.conf_file,
+            genomic_scores_schema
+        )
 
     @property
     @cached

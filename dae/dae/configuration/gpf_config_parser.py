@@ -8,65 +8,25 @@ import toml
 
 from copy import deepcopy
 from collections import namedtuple
-from typing import Union, List, Tuple, Any, Callable, Dict
+from typing import List, Tuple, Any, Dict
 from cerberus import Validator
 
 from dae.utils.dict_utils import recursive_dict_update
 
 
-def environ_override(field: str) -> Callable:
-    return lambda value: os.environ.get(field, None) or value
+def validate_path(field: str, value: str, error: str):
+    if not os.path.isabs(value):
+        error(field, "is not an absolute path!")
+    if not os.path.exists(value):
+        error(field, "does not exist!")
 
 
 class GPFConfigValidator(Validator):
-    def _validate_path(
-        self, path: Union[List[str], Tuple[str]], field: str, value: str
-    ):
-        assert path in ("relative", "absolute")
-        if path == "absolute":
-            assert os.path.isabs(value)
-            assert os.path.exists(value)
-        else:
-            assert not os.path.isabs(value)
-
-
-class GPFConfigNormalizer:
-    """
-    Custom normalizer which utilizes the schema provided to
-    Cerberus' validator.
-    """
-
-    def __init__(self, config_file_directory: str):
-        self.config_file_directory = config_file_directory
-
-    def resolve_relative_path(self, relative_path: str):
-        abspath = os.path.join(self.config_file_directory, relative_path)
-        assert os.path.isabs(abspath), abspath
-        assert os.path.exists(abspath), abspath
-        return abspath
-
-    def normalize_value(self, field: str, value: Any, rules: dict) -> Any:
-        if rules.get("path") == "relative":
-            return self.resolve_relative_path(value)
-        return value
-
-    def normalize(
-        self, config: dict, schema: dict, default_rules: dict = None
-    ) -> dict:
-        normalized_config = dict()
-        for key, value in config.items():
-            rules = schema[key] if key in schema else default_rules
-            if isinstance(value, dict):
-                normalized_config[key] = self.normalize(
-                    config[key],
-                    rules.get("schema", dict()),
-                    rules.get("valuesrules", None),
-                )
-            else:
-                normalized_config[key] = self.normalize_value(
-                    key, value, rules
-                )
-        return normalized_config
+    def _normalize_coerce_abspath(self, value: str) -> str:
+        directory = self._config["conf_dir"]
+        if not os.path.isabs(value):
+            value = os.path.join(directory, value)
+        return os.path.normpath(value)
 
 
 class GPFConfigParser:
@@ -183,11 +143,11 @@ class GPFConfigParser:
 
     @classmethod
     def load_config(
-        cls, filename: str, schema: dict = None, default_filename: str = None
+        cls, filename: str, schema: dict, default_filename: str = None
     ) -> Tuple[Any]:
-
-        validator = GPFConfigValidator(schema)
-        normalizer = GPFConfigNormalizer(os.path.dirname(filename))
+        validator = GPFConfigValidator(
+            schema, conf_dir=os.path.dirname(filename)
+        )
 
         config = cls._read_config(filename)
         default_config = (
@@ -201,19 +161,12 @@ class GPFConfigParser:
             config = cls._interpolate_vars(config, **config["vars"])
             del config["vars"]
 
-        if schema:
-            # TODO Remove this behaviour! (and schema default value None)
-            # This is a temporary crutch to fix the unit tests
-            # without creating all schemas beforehand.
-            # We do NOT want to allow lack of validation.
-            assert validator.validate(config), validator.errors
-            config = normalizer.normalize(validator.document, schema)
-
-        return cls._dict_to_namedtuple(config)
+        assert validator.validate(config), validator.errors
+        return cls._dict_to_namedtuple(validator.document)
 
     @classmethod
     def load_directory_configs(
-        cls, dirname: str, schema: dict = None, default_filename: str = None
+        cls, dirname: str, schema: dict, default_filename: str = None
     ) -> List[Tuple[Any]]:
         return [
             cls.load_config(config_path, schema, default_filename)

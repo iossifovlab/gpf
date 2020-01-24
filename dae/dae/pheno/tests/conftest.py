@@ -6,7 +6,7 @@ import tempfile
 import shutil
 from box import Box
 
-from dae.configuration.dae_config_parser import DAEConfigParser
+from dae.configuration.gpf_config_parser import GPFConfigParser
 
 from dae.pheno.prepare.ped2individuals import SPARKCsvPedigreeReader
 from dae.pheno.prepare.individuals2ped import InternalCsvIndividualsReader
@@ -57,8 +57,8 @@ def family_pedigree(csv_pedigree_reader, family_pedigree_file):
 
 @pytest.fixture(scope='session')
 def fake_dae_conf():
-    return DAEConfigParser.read_and_parse_file_configuration(
-        work_dir=relative_to_this_folder('fixtures')
+    return GPFConfigParser.load_configuration(
+        relative_to_this_folder('fixtures/DAE.conf')
     )
 
 
