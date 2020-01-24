@@ -48,6 +48,7 @@ class GPFConfigNormalizer:
     def normalize_value(self, field: str, value: Any, rules: dict) -> Any:
         if rules.get("path") == "relative":
             return self.resolve_relative_path(value)
+        return value
 
     def normalize(
         self, config: dict, schema: dict, default_rules: dict = None
