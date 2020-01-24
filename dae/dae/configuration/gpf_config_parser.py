@@ -114,7 +114,7 @@ class GPFConfigParser:
                         f"Undefined var '{interpolation}'!"
                         " Defined vars: {interpolation_vars.keys()}"
                     )
-                    result_dict[key] = val.replace(
+                    result_dict[key] = result_dict[key].replace(
                         f"%({interpolation})s",
                         interpolation_vars[interpolation],
                     )
