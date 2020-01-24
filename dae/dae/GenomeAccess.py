@@ -79,7 +79,7 @@ class GenomicSequence(object):
         R = []
         for chrom in self.allChromosomes:
             R.append((chrom, self._Indexing[chrom]['length']))
-        return(R)
+        return R
 
     def getSequence(self, chrom, start, stop):
         if chrom not in self.allChromosomes:

@@ -2,6 +2,8 @@ import pytest
 import io
 import re
 
+from dae.GenomeAccess import GenomicSequence
+
 from dae.backends.impala.parquet_io import ParquetPartitionDescriptor, \
     NoPartitionDescriptor
 from dae.backends.impala.import_commons import MakefileGenerator
@@ -161,3 +163,74 @@ def test_no_parition_description_simple(temp_filename, genomes_db_2019):
         ('1'), output=output)
 
     print(output.getvalue())
+
+
+@pytest.mark.parametrize('region_length,targets', [
+    (3_000_000_000, set(['other_0'])),
+    (300_000_000, set(['other_0', 'other_1'])),
+    (150_000_000, set(['other_0', 'other_1', 'other_2'])),
+    (100_000_000, set(['other_0', 'other_1', 'other_2', 'other_3', ])),
+])
+def test_target_generator_chrom_prefix_target_other(
+        region_length, targets, genomes_db_2019, mocker):
+
+    mocker.patch.object(
+        GenomicSequence, 'get_all_chr_lengths', return_value=[
+            ('chr1', 100_000_000),
+            ('chr2', 200_000_000),
+            ('chr3', 300_000_000),
+            ('chr4', 400_000_000),
+        ])
+
+    partition_descriptor = ParquetPartitionDescriptor(
+            ['chr1', 'chr2'], region_length)
+
+    generator = MakefileGenerator(
+        partition_descriptor,
+        genomes_db_2019.get_genome(),
+        chrom_prefix='chr')
+    print(generator.chromosome_lengths)
+    assert len(generator.chromosome_lengths) == 4
+
+    result = generator.generate_variants_targets(['chr3', 'chr4'])
+    print(result)
+    assert set(result.keys()) == targets
+    for regions in result.values():
+        for region in regions:
+            print(region)
+            assert 'chr' not in region
+
+
+@pytest.mark.parametrize('region_length,targets', [
+    (3_000_000_000, set(['chr1_0', 'chr2_0'])),
+    (150_000_000, set(['chr1_0', 'chr2_0', 'chr2_1'])),
+    (90_000_000, set(['chr1_0', 'chr1_1', 'chr2_0', 'chr2_1', 'chr2_2'])),
+])
+def test_target_generator_chrom_prefix_target_chrom(
+        region_length, targets, genomes_db_2019, mocker):
+
+    mocker.patch.object(
+        GenomicSequence, 'get_all_chr_lengths', return_value=[
+            ('chr1', 100_000_000),
+            ('chr2', 200_000_000),
+            ('chr3', 300_000_000),
+            ('chr4', 400_000_000),
+        ])
+
+    partition_descriptor = ParquetPartitionDescriptor(
+            ['chr1', 'chr2'], region_length)
+
+    generator = MakefileGenerator(
+        partition_descriptor,
+        genomes_db_2019.get_genome(),
+        chrom_prefix='chr')
+    print(generator.chromosome_lengths)
+    assert len(generator.chromosome_lengths) == 4
+
+    result = generator.generate_variants_targets(['chr1', 'chr2'])
+    print(result)
+    assert set(result.keys()) == targets
+    for regions in result.values():
+        for region in regions:
+            print(region)
+            assert 'chr' not in region

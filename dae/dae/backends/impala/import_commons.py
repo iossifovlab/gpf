@@ -81,30 +81,30 @@ class MakefileGenerator:
             self.partition_descriptor.region_length)
         return result
 
-    def reset_target(self, target):
-        result = target
-        if self.chrom_prefix and target.startswith(self.chrom_prefix):
-            result = target[len(self.chrom_prefix):]
+    def reset_chrom(self, chrom):
+        result = chrom
+        if self.chrom_prefix and chrom.startswith(self.chrom_prefix):
+            result = chrom[len(self.chrom_prefix):]
         return result
 
-    def generate_chrom_targets(self, chrom):
-        target = chrom
-        if chrom not in self.partition_descriptor.chromosomes:
+    def generate_chrom_targets(self, target_chrom):
+        target = target_chrom
+        if target_chrom not in self.partition_descriptor.chromosomes:
             target = 'other'
-        region_bins_count = self.region_bins_count(chrom)
+        region_bins_count = self.region_bins_count(target_chrom)
 
-        target = self.reset_target(target)
+        chrom = self.reset_chrom(target_chrom)
 
         if region_bins_count == 1:
-            return [(f'{target}_0', target)]
+            return [(f'{target}_0', chrom)]
         result = []
         for region_index in range(region_bins_count):
             start = region_index * self.partition_descriptor.region_length + 1
             end = (region_index + 1) * self.partition_descriptor.region_length
-            if end > self.chromosome_lengths[chrom]:
-                end = self.chromosome_lengths[chrom]
+            if end > self.chromosome_lengths[target_chrom]:
+                end = self.chromosome_lengths[target_chrom]
             result.append(
-                (f'{target}_{region_index}', f'{target}:{start}-{end}')
+                (f'{target}_{region_index}', f'{chrom}:{start}-{end}')
             )
         return result
 
@@ -116,24 +116,26 @@ class MakefileGenerator:
             }
 
         targets = defaultdict(list)
+        generated_target_chromosomes = target_chromosomes[:]
         if self.chrom_prefix is not None:
-            target_chromosomes = [
-                f'{self.chrom_prefix}{tg}' for tg in target_chromosomes
+            generated_target_chromosomes = [
+                f'{self.chrom_prefix}{tg}'
+                for tg in generated_target_chromosomes
             ]
 
-        for chrom in target_chromosomes:
-            if chrom not in self.chromosome_lengths:
+        for target_chrom in target_chromosomes:
+            if target_chrom not in self.chromosome_lengths:
                 print(
-                    f"WARNING: contig {chrom} not found in specified genome",
+                    f"WARNING: contig {target_chrom} not found in specified genome",
                     file=sys.stderr)
                 continue
 
-            assert chrom in self.chromosome_lengths, \
-                (chrom, self.chromosome_lengths)
-            region_targets = self.generate_chrom_targets(chrom)
+            assert target_chrom in self.chromosome_lengths, \
+                (target_chrom, self.chromosome_lengths)
+            region_targets = self.generate_chrom_targets(target_chrom)
 
             for target, region in region_targets:
-                target = self.reset_target(target)
+                # target = self.reset_target(target)
                 targets[target].append(region)
         return targets
 
