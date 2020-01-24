@@ -19,7 +19,7 @@ from dae.variants.attributes import Sex, GeneticModel
 
 from dae.variants.attributes import TransmissionType
 
-from dae.utils.variant_utils import get_locus_ploidy, best2gt, mat2str
+from dae.utils.variant_utils import get_locus_ploidy, best2gt
 
 
 class FamiliesGenotypes:
@@ -397,7 +397,6 @@ class VariantsGenotypesLoader(VariantsLoader):
         filenames: List[str],
         transmission_type: TransmissionType,
         genome: GenomicSequence,
-        chrom_prefix:str = None,
         overwrite: bool = False,
         expect_genotype: bool = True,
         expect_best_state: bool = False,
@@ -410,7 +409,7 @@ class VariantsGenotypesLoader(VariantsLoader):
             params=params)
 
         self.genome = genome
-        self.chrom_prefix = chrom_prefix
+        self.chrom_prefix = params.get('add_chrom_prefix', None)
         self.overwrite = overwrite
         self.expect_genotype = expect_genotype
         self.expect_best_state = expect_best_state
@@ -546,8 +545,6 @@ class VariantsGenotypesLoader(VariantsLoader):
             self) -> Iterator[Tuple[SummaryVariant, List[FamilyVariant]]]:
         full_iterator = self._full_variants_iterator_impl()
         for summary_variant, family_variants in full_iterator:
-            # print(summary_variant)
-            # print(self.chrom_prefix)
             if self.chrom_prefix is not None:
                 chrom = self._reset_chrom(summary_variant.chromosome)
                 summary_variant._chromosome = chrom

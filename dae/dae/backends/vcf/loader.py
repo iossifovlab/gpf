@@ -70,7 +70,6 @@ class VcfLoader(VariantsGenotypesLoader):
             families,
             vcf_files,
             genome: GenomicSequence,
-            chrom_prefix=None,
             regions=None,
             params={},
             **kwargs):
@@ -79,7 +78,6 @@ class VcfLoader(VariantsGenotypesLoader):
             filenames=vcf_files,
             transmission_type=TransmissionType.transmitted,
             genome=genome,
-            chrom_prefix=chrom_prefix,
             overwrite=False,
             expect_genotype=True,
             expect_best_state=False,
@@ -384,6 +382,7 @@ class VcfLoader(VariantsGenotypesLoader):
             'vcf_multi_loader_fill_in_mode': 'reference',
             'vcf_denovo_mode': 'possible_denovo',
             'vcf_omission_mode': 'possible_omission',
+            'add_chrom_prefix': None,
         }
 
     @staticmethod
@@ -396,7 +395,8 @@ class VcfLoader(VariantsGenotypesLoader):
                 param = key.replace('_', '-')
                 if key in {'vcf_multi_loader_fill_in_mode',
                            'vcf_denovo_mode',
-                           'vcf_omission_mode'}:
+                           'vcf_omission_mode',
+                           'add_chrom_prefix'}:
                     result.append(f'--{param}')
                     result.append(f'{value}')
                 else:
@@ -457,6 +457,11 @@ class VcfLoader(VariantsGenotypesLoader):
             'supported values are: `omission`, `possible_omission`, `ignore`; '
             '[default: %(default)s]',
         )
+        parser.add_argument(
+            '--add-chrom-prefix', type=str, default=None,
+            help='Add specified prefix to each chromosome name in '
+            'variants file'
+        )
 
     @staticmethod
     def parse_cli_arguments(argv):
@@ -483,5 +488,7 @@ class VcfLoader(VariantsGenotypesLoader):
             argv.vcf_denovo_mode,
             'vcf_omission_mode':
             argv.vcf_omission_mode,
+            'add_chrom_prefix':
+            argv.add_chrom_prefix
         }
         return filenames, params

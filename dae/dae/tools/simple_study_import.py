@@ -143,7 +143,6 @@ def main(argv, gpf_instance=None):
     families = families_loader.load()
     elapsed = time.time() - start
     print(f"Families loaded in in {elapsed:.2f} sec", file=sys.stderr)
-    chrom_prefix = argv.add_chrom_prefix
 
     variant_loaders = []
     if argv.denovo_file is not None:
@@ -152,7 +151,6 @@ def main(argv, gpf_instance=None):
             families,
             denovo_filename,
             genome=genome,
-            chrom_prefix=chrom_prefix,
             params=denovo_params
         )
         denovo_loader = AnnotationPipelineDecorator(
@@ -166,7 +164,6 @@ def main(argv, gpf_instance=None):
             families,
             vcf_files,
             genome,
-            chrom_prefix=chrom_prefix,
             params=vcf_params
         )
         vcf_loader = AnnotationPipelineDecorator(

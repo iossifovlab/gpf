@@ -256,12 +256,6 @@ class Variants2ParquetTool:
             help='Path to an annotation config file to use when annotating'
         )
 
-        parser.add_argument(
-            '--add-chrom-prefix', type=str, default=None,
-            help='Add specified prefix to each chromosome name in '
-            'variants file'
-        )
-
     @classmethod
     def cli_arguments(cls, gpf_instance):
         parser = argparse.ArgumentParser(
@@ -426,12 +420,10 @@ class Variants2ParquetTool:
 
         variants_filenames, variants_params = \
             cls.VARIANTS_LOADER_CLASS.parse_cli_arguments(argv)
-        chrom_prefix = argv.add_chrom_prefix
         variants_loader = cls.VARIANTS_LOADER_CLASS(
             families, variants_filenames,
             params=variants_params,
-            genome=gpf_instance.genomes_db.get_genome(),
-            chrom_prefix=chrom_prefix)
+            genome=gpf_instance.genomes_db.get_genome())
 
         if argv.partition_description is not None:
             partition_description = ParquetPartitionDescriptor.from_config(
@@ -441,6 +433,7 @@ class Variants2ParquetTool:
         else:
             partition_description = NoPartitionDescriptor(argv.output)
 
+        chrom_prefix = argv.add_chrom_prefix
         generator = MakefileGenerator(
             partition_description,
             gpf_instance.genomes_db.get_genome(),

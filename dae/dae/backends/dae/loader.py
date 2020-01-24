@@ -51,14 +51,12 @@ class DenovoLoader(VariantsGenotypesLoader):
             families: FamiliesData,
             denovo_filename: str,
             genome: GenomicSequence,
-            chrom_prefix=None,
             params: Dict[str, Any] = {}):
         super(DenovoLoader, self).__init__(
             families=families,
             filenames=[denovo_filename],
             transmission_type=TransmissionType.denovo,
             genome=genome,
-            chrom_prefix=chrom_prefix,
             overwrite=False,
             expect_genotype=False,
             expect_best_state=False,
@@ -200,6 +198,12 @@ class DenovoLoader(VariantsGenotypesLoader):
             'person\'s ID. [Default: none]',
         )
 
+        parser.add_argument(
+            '--add-chrom-prefix', type=str, default=None,
+            help='Add specified prefix to each chromosome name in '
+            'variants file'
+        )
+
     @staticmethod
     def cli_defaults():
         return {
@@ -211,7 +215,8 @@ class DenovoLoader(VariantsGenotypesLoader):
             'denovo_pos': None,
             'denovo_family_id': 'familyId',
             'denovo_best_state': 'bestState',
-            'denovo_person_id': None
+            'denovo_person_id': None,
+            'add_chrom_prefix': None,
         }
 
     @staticmethod
@@ -288,6 +293,7 @@ class DenovoLoader(VariantsGenotypesLoader):
             'denovo_person_id': argv.denovo_person_id,
             'denovo_family_id': argv.denovo_family_id,
             'denovo_best_state': argv.denovo_best_state,
+            'add_chrom_prefix': argv.add_chrom_prefix,
         }
 
         return argv.denovo_file, params
@@ -307,7 +313,8 @@ class DenovoLoader(VariantsGenotypesLoader):
             denovo_person_id: Optional[str] = None,
             denovo_family_id: Optional[str] = None,
             denovo_best_state: Optional[str] = None,
-            denovo_sep: str = '\t') -> pd.DataFrame:
+            denovo_sep: str = '\t',
+            **kwargs) -> pd.DataFrame:
 
         """
         Read a text file containing variants in the form
@@ -514,7 +521,6 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
             families,
             summary_filename,
             genome,
-            chrom_prefix=None,
             regions=None,
             params={},
             **kwargs):
@@ -523,7 +529,6 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
             filenames=[summary_filename],
             transmission_type=TransmissionType.transmitted,
             genome=genome,
-            chrom_prefix=chrom_prefix,
             overwrite=False,
             expect_genotype=False,
             expect_best_state=True,
@@ -730,6 +735,7 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
     def cli_defaults():
         return {
             'dae_include_reference_genotypes': False,
+            'add_chrom_prefix': None,
         }
 
     @staticmethod
@@ -763,6 +769,12 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
             action='store_true'
         )
 
+        parser.add_argument(
+            '--add-chrom-prefix', type=str, default=None,
+            help='Add specified prefix to each chromosome name in '
+            'variants file'
+        )
+
     @staticmethod
     def parse_cli_arguments(argv):
         filename = argv.summary_filename
@@ -770,5 +782,6 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
         params = {
             'dae_include_reference_genotypes':
             str2bool(argv.dae_include_reference_genotypes),
+            'add_chrom_prefix': argv.add_chrom_prefix,
         }
         return filename, params

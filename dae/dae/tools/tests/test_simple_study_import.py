@@ -308,3 +308,53 @@ def test_import_comp_all_into_filesystem(
 
     vs = list(study.query_variants())
     assert len(vs) == 35
+
+
+def test_add_chrom_prefix_simple(
+        genomes_db_2013, fixture_dirname, default_dae_config,
+        gpf_instance_2013, temp_dirname):
+
+    pedigree_filename = fixture_dirname('study_import/comp.ped')
+    vcf_filename = fixture_dirname('study_import/comp.vcf')
+    denovo_filename = fixture_dirname('study_import/comp.tsv')
+
+    study_id = 'test_comp_all_fs_prefix'
+    genotype_storage_id = 'test_filesystem'
+
+    storage_config = default_dae_config.storage[genotype_storage_id]
+    assert storage_config.type == 'filesystem'
+
+    argv = [
+        pedigree_filename,
+        '--id', study_id,
+        '--skip-reports',
+        '--vcf-files', vcf_filename,
+        '--denovo-file', denovo_filename,
+        '--denovo-location', 'location',
+        '--denovo-variant', 'variant',
+        '--denovo-family-id', 'familyId',
+        '--denovo-best-state', 'bestState',
+        '--genotype-storage', genotype_storage_id,
+        '-o', temp_dirname,
+        '--add-chrom-prefix', 'ala_bala',
+    ]
+
+    main(argv, gpf_instance_2013)
+
+    storage_config = default_dae_config.storage[genotype_storage_id]
+    assert storage_config.type == 'filesystem'
+
+    gpf_instance_2013.reload()
+
+    study = gpf_instance_2013.get_genotype_data(study_id)
+    assert study is not None
+
+    vs = list(study.query_variants())
+    assert len(vs) == 35
+
+    for v in vs:
+        print(v)
+        assert v.chromosome.startswith('ala_bala')
+        for va in v.alleles:
+            print('\t', va)
+            assert va.chromosome.startswith('ala_bala')
