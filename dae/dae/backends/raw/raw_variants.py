@@ -80,50 +80,56 @@ class RawFamilyVariants:
         return False
 
     @classmethod
-    def filter_allele(cls, allele, **kwargs):
-        assert isinstance(allele, FamilyAllele)
+    def filter_allele(
+            cls, allele,
+            inheritance=None,
+            real_attr_filter=None,
+            ultra_rare=None,
+            genes=None,
+            effect_types=None,
+            variant_type=None,
+            person_ids=None,
+            roles=None,
+            sexes=None,
+            **kwargs):
 
-        if kwargs.get('real_attr_filter') is not None:
-            if not cls.filter_real_attr(allele, kwargs['real_attr_filter']):
+        assert isinstance(allele, FamilyAllele)
+        if inheritance is not None:
+            # if v.is_reference_allele:
+            #     return False
+            if not inheritance.match(allele.inheritance_in_members):
                 return False
-        if kwargs.get('ultra_rare'):
+
+        if real_attr_filter is not None:
+            if not cls.filter_real_attr(allele, real_attr_filter):
+                return False
+        if ultra_rare:
             if not cls.filter_real_attr(
                     allele, [("af_allele_count", (1, 1))]):
                 return False
 
-        if kwargs.get('genes') is not None or \
-                kwargs.get('effect_types') is not None:
+        if genes is not None or effect_types is not None:
             if not cls.filter_gene_effects(
-                    allele, kwargs.get('effect_types'), kwargs.get('genes')):
+                    allele, effect_types, genes):
                 return False
-        if kwargs.get('variant_type') is not None:
-            query = kwargs['variant_type']
-            if not query.match(
+        if variant_type is not None:
+            if not variant_type.match(
                     [allele.variant_type]):
                 return False
-        if kwargs.get('person_ids') is not None:
+        if person_ids is not None:
             if allele.is_reference_allele:
                 return False
-            person_ids = kwargs['person_ids']
             if not set(allele.variant_in_members) & set(person_ids):
                 return False
-        if kwargs.get('roles') is not None:
+        if roles is not None:
             if allele.is_reference_allele:
                 return False
-            query = kwargs['roles']
-            if not query.match(allele.variant_in_roles):
+            if not roles.match(allele.variant_in_roles):
                 return False
-        if kwargs.get('sexes') is not None:
+        if sexes is not None:
             if allele.is_reference_allele:
                 return False
-            query = kwargs['sexes']
-            if not query.match(allele.variant_in_sexes):
-                return False
-        if kwargs.get('inheritance') is not None:
-            # if v.is_reference_allele:
-            #     return False
-            query = kwargs['inheritance']
-            if not query.match(allele.inheritance_in_members):
+            if not sexes.match(allele.variant_in_sexes):
                 return False
         return True
 
