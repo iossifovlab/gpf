@@ -72,6 +72,7 @@ class GPFConfigNormalizer:
 class GPFConfigParser:
 
     interpolation_var_regex: str = r"%\(([A-Za-z0-9_]+)\)s"
+    interpolation_env_regex: str = r"%\(([A-Za-z0-9_]+)\)e"
 
     filetype_parsers: dict = {
         ".yaml": yaml.safe_load,
@@ -101,15 +102,17 @@ class GPFConfigParser:
         return output
 
     @classmethod
-    def _interpolate(cls, input_dict: dict, **interpolation_vars: str) -> dict:
+    def _interpolate_vars(
+        cls, input_dict: dict, **interpolation_vars: str
+    ) -> dict:
         result_dict = deepcopy(input_dict)
 
         for key, val in result_dict.items():
             if isinstance(val, str):
-                matched_interpolations = re.findall(
+                matched_var_interpolations = re.findall(
                     cls.interpolation_var_regex, val
                 )
-                for interpolation in matched_interpolations:
+                for interpolation in matched_var_interpolations:
                     assert interpolation in interpolation_vars, (
                         f"Undefined var '{interpolation}'!"
                         " Defined vars: {interpolation_vars.keys()}"
@@ -118,8 +121,46 @@ class GPFConfigParser:
                         f"%({interpolation})s",
                         interpolation_vars[interpolation],
                     )
+
+                matched_env_interpolations = re.findall(
+                    cls.interpolation_env_regex, val
+                )
+                for interpolation in matched_env_interpolations:
+                    assert (
+                        interpolation in os.environ.keys()
+                    ), f"Environment variable '{interpolation}' not found!"
+                    env_value = os.environ.get(interpolation)
+                    result_dict[key] = result_dict[key].replace(
+                        f"%({interpolation})e", env_value
+                    )
+
             elif isinstance(val, dict):
-                result_dict[key] = cls._interpolate(val, **interpolation_vars)
+                result_dict[key] = cls._interpolate_vars(
+                    val, **interpolation_vars
+                )
+
+        return result_dict
+
+    @classmethod
+    def _interpolate_env(cls, input_dict: dict) -> dict:
+        result_dict = deepcopy(input_dict)
+
+        for key, val in result_dict.items():
+            if isinstance(val, str):
+                matched_env_interpolations = re.findall(
+                    cls.interpolation_env_regex, val
+                )
+                for interpolation in matched_env_interpolations:
+                    assert (
+                        interpolation in os.environ.keys()
+                    ), f"Environment variable '{interpolation}' not found!"
+                    env_value = os.environ.get(interpolation)
+                    result_dict[key] = result_dict[key].replace(
+                        f"%({interpolation})e", env_value
+                    )
+
+            elif isinstance(val, dict):
+                result_dict[key] = cls._interpolate_env(val)
 
         return result_dict
 
@@ -154,8 +195,10 @@ class GPFConfigParser:
         )
 
         config = recursive_dict_update(config, default_config)
+
+        config = cls._interpolate_env(config)
         if "vars" in config:
-            config = cls._interpolate(config, **config["vars"])
+            config = cls._interpolate_vars(config, **config["vars"])
             del config["vars"]
 
         if schema:
