@@ -26,10 +26,8 @@ def test_vcf_loader(
     conf = vcf_loader_data(fixture_data)
     print(conf)
 
-    fvars = variants_vcf(fixture_data)
-
-    ped_df = FamiliesLoader.flexible_pedigree_read(conf.pedigree)
-    families = FamiliesData.from_pedigree_df(ped_df)
+    families_loader = FamiliesLoader(conf.pedigree)
+    families = families_loader.load()
 
     loader = VcfLoader(
         families, [conf.vcf],
@@ -41,14 +39,10 @@ def test_vcf_loader(
         })
     assert loader is not None
 
-    vars_old = list(fvars.query_variants(
-        return_reference=True, return_unknown=True))
     vars_new = list(loader.family_variants_iterator())
 
-    for nfv, ofv in zip(vars_new, vars_old):
-        print(nfv, ofv)
-
-        assert nfv == ofv
+    for nfv in vars_new:
+        print(nfv)
 
 
 @pytest.mark.parametrize('multivcf_files', [

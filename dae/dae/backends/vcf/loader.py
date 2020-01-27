@@ -237,12 +237,13 @@ class VcfLoader(VariantsGenotypesLoader):
             if person.sample_id in vcf_samples:
                 if person.sample_id in seen:
                     continue
-                person.sample_index = \
-                    vcf_samples_index.index(person.sample_id)
+                person.set_attr(
+                    'sample_index',
+                    int(vcf_samples_index.index(person.sample_id)))
                 seen.add(person.sample_id)
             else:
-                person._generated = True
-                families[person.family_id].redefine()
+                person.set_attr(
+                    'generated',  True)
         families.redefine()
 
     def _build_summary_variant(self, summary_index, vcf_variant):

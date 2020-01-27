@@ -33,7 +33,6 @@ class Person(object):
         self.family = None
         self.person_id = attributes['person_id']
         self.sample_id = attributes.get('sample_id', None)
-        self.sample_index = attributes.get('samples_index', None)
         self.index = attributes.get('index', None)
 
         self._sex = Sex.from_name(attributes['sex'])
@@ -89,6 +88,10 @@ class Person(object):
     @property
     def family_bin(self):
         return self._attributes.get('family_bin', None)
+
+    @property
+    def sample_index(self):
+        return self._attributes.get('sample_index', None)
 
     def has_mom(self):
         return self.mom is not None
