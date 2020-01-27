@@ -77,6 +77,7 @@ class FamiliesLoader:
             'ped_file_format': 'pedigree',
             'ped_sep': '\t',
             'ped_no_header': False,
+            'ped_proband': None,
             'ped_no_role': False,
         }
 
@@ -171,6 +172,15 @@ class FamiliesLoader:
         )
 
         parser.add_argument(
+            '--ped-proband',
+            default=None,
+            help='specify the name of the column in the pedigree file that '
+            'specifies persons with role `proband`; this columns is used '
+            'only when option `--ped-no-role` is specified. '
+            '[default: %(default)s]'
+        )
+
+        parser.add_argument(
             '--ped-no-header',
             action='store_true',
             help='indicates that the provided pedigree file has no header. '
@@ -207,6 +217,7 @@ class FamiliesLoader:
             'ped_role',
             'ped_file_format',
             'ped_sep',
+            'ped_proband',
         ]
         res = {}
 
@@ -226,16 +237,17 @@ class FamiliesLoader:
 
     @staticmethod
     def produce_header_from_indices(
-       ped_family,
-       ped_person,
-       ped_mom,
-       ped_dad,
-       ped_sex,
-       ped_status,
-       ped_role,
-       ped_layout,
-       ped_generated,
-       ped_sample_id,
+       ped_family=None,
+       ped_person=None,
+       ped_mom=None,
+       ped_dad=None,
+       ped_sex=None,
+       ped_status=None,
+       ped_role=None,
+       ped_proband=None,
+       ped_layout=None,
+       ped_generated=None,
+       ped_sample_id=None,
     ):
         header = (
             (ped_family, PEDIGREE_COLUMN_NAMES['family']),
@@ -245,6 +257,7 @@ class FamiliesLoader:
             (ped_sex, PEDIGREE_COLUMN_NAMES['sex']),
             (ped_status, PEDIGREE_COLUMN_NAMES['status']),
             (ped_role, PEDIGREE_COLUMN_NAMES['role']),
+            (ped_proband, PEDIGREE_COLUMN_NAMES['proband']),
             (ped_layout, PEDIGREE_COLUMN_NAMES['layout']),
             (ped_generated, PEDIGREE_COLUMN_NAMES['generated']),
             (ped_sample_id, PEDIGREE_COLUMN_NAMES['sample id']),
@@ -267,6 +280,7 @@ class FamiliesLoader:
             ped_sex='sex',
             ped_status='status',
             ped_role='role',
+            ped_proband='proband',
             ped_layout='layout',
             ped_generated='generated',
             ped_sample_id='sampleId',
@@ -289,6 +303,7 @@ class FamiliesLoader:
                 ped_status: Status.from_name,
                 ped_layout: lambda lc: lc.split(':')[-1],
                 ped_generated: lambda g: True if g == '1.0' else False,
+                ped_proband: lambda v: str2bool(v),
             },
             dtype=str,
             comment='#',
@@ -303,9 +318,17 @@ class FamiliesLoader:
 
             if not ped_has_header:
                 _, file_header = FamiliesLoader.produce_header_from_indices(
-                    ped_family, ped_person, ped_mom,
-                    ped_dad, ped_sex, ped_status,
-                    ped_role, ped_layout, ped_generated, ped_sample_id,
+                    ped_family=ped_family,
+                    ped_person=ped_person,
+                    ped_mom=ped_mom,
+                    ped_dad=ped_dad,
+                    ped_sex=ped_sex,
+                    ped_status=ped_status,
+                    ped_role=ped_role,
+                    ped_proband=ped_proband,
+                    ped_layout=ped_layout,
+                    ped_generated=ped_generated,
+                    ped_sample_id=ped_sample_id,
                 )
                 ped_family = PEDIGREE_COLUMN_NAMES['family']
                 ped_person = PEDIGREE_COLUMN_NAMES['person']
@@ -314,6 +337,7 @@ class FamiliesLoader:
                 ped_sex = PEDIGREE_COLUMN_NAMES['sex']
                 ped_status = PEDIGREE_COLUMN_NAMES['status']
                 ped_role = PEDIGREE_COLUMN_NAMES['role']
+                ped_proband = PEDIGREE_COLUMN_NAMES['proband']
                 ped_layout = PEDIGREE_COLUMN_NAMES['layout']
                 ped_generated = PEDIGREE_COLUMN_NAMES['generated']
                 ped_sample_id = PEDIGREE_COLUMN_NAMES['sample id']
@@ -346,6 +370,7 @@ class FamiliesLoader:
             ped_sex: PEDIGREE_COLUMN_NAMES['sex'],
             ped_status: PEDIGREE_COLUMN_NAMES['status'],
             ped_role: PEDIGREE_COLUMN_NAMES['role'],
+            ped_proband: PEDIGREE_COLUMN_NAMES['proband'],
             ped_sample_id: PEDIGREE_COLUMN_NAMES['sample id'],
         })
 

@@ -20,6 +20,7 @@ PEDIGREE_COLUMN_NAMES = {
     'sample id': 'sample_id',
     'layout': 'layout',
     'generated': 'generated',
+    'proband': 'proband',
 }
 
 
@@ -113,7 +114,7 @@ class Person(object):
         return key in self._attributes
 
     def get_attr(self, key, default=None):
-        return str(self._attributes.get(key, default))
+        return self._attributes.get(key, default)
 
     def set_attr(self, key, value):
         self._attributes[key] = value

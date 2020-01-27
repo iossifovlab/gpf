@@ -57,6 +57,12 @@ class FamilyRoleBuilder:
         probands = self.family.get_members_with_roles([Role.prb])
         if len(probands) > 0:
             return probands[0]
+        for person in self.family.full_members:
+            is_proband = person.get_attr('proband', False)
+            assert isinstance(is_proband, bool)
+            if is_proband:
+                return person
+
         affected = self.family.get_members_with_statuses([Status.affected])
         if len(affected) > 0:
             return affected[0]

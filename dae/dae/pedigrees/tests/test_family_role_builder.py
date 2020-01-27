@@ -157,3 +157,47 @@ def test_handling_of_large_family_with_only_prb_role(fixture_dirname):
     assert members[11].role == Role.sib
     assert members[12].role == Role.maternal_cousin
     assert members[13].role == Role.paternal_cousin
+
+
+def test_proband_column(fixture_dirname):
+    ped_file = fixture_dirname('pedigrees/pedigree_no_role_F.ped')
+    loader = FamiliesLoader(
+        ped_file,
+        params={
+            'ped_no_role': True
+        })
+    families = loader.load()
+
+    for person in families.persons.values():
+        assert not person.has_attr('proband')
+
+    ped_file = fixture_dirname('pedigrees/pedigree_no_role_H.ped')
+    loader = FamiliesLoader(
+        ped_file,
+        params={
+            'ped_no_role': True
+        })
+    families = loader.load()
+
+    for person in families.persons.values():
+        assert person.has_attr('proband')
+
+    family = families.get('f1')
+    assert family is not None
+
+    members = family.full_members
+
+    assert members[0].role == Role.maternal_grandfather
+    assert members[1].role == Role.maternal_grandmother
+    assert members[2].role == Role.paternal_grandfather
+    assert members[3].role == Role.paternal_grandmother
+    assert members[4].role == Role.dad
+    assert members[5].role == Role.mom
+    assert members[6].role == Role.maternal_aunt
+    assert members[7].role == Role.unknown
+    assert members[8].role == Role.unknown
+    assert members[9].role == Role.paternal_uncle
+    assert members[10].role == Role.prb
+    assert members[11].role == Role.sib
+    assert members[12].role == Role.maternal_cousin
+    assert members[13].role == Role.paternal_cousin
