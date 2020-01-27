@@ -1,18 +1,18 @@
 import itertools
-from collections import OrderedDict
 
 
 class FamilyCounter(object):
 
-    def __init__(self, pedigree, pedigrees_label):
+    def __init__(self, family, pedigree, family_label):
+        self.family = family
         self.pedigree = pedigree
-        self.pedigrees_label = pedigrees_label
+        self.pedigrees_label = family_label
 
     def to_dict(self):
-        return OrderedDict([
-            ('pedigree', self.pedigree),
-            ('pedigrees_count', self.pedigrees_label)
-        ])
+        return {
+            'pedigree': self.pedigree,
+            'pedigrees_count': self.pedigrees_label,
+        }
 
 
 class FamiliesGroupCounters(object):
@@ -36,6 +36,7 @@ class FamiliesGroupCounters(object):
             result = {}
             for family in self.families.values():
                 fc = FamilyCounter(
+                    family,
                     self.selected_families_group.family_pedigree(family),
                     family.family_id)
                 result[family.family_id] = fc
@@ -72,9 +73,15 @@ class FamiliesGroupCounters(object):
                     self.families.values(), families_types):
                 assert family_type in families_types_counters, family_type
                 families_types_counters[family_type].append(family)
-
+            sorted_families_types = [
+                (family_type, families)
+                for family_type, families in families_types_counters.items()
+            ]
+            sorted_family_types = sorted(
+                sorted_families_types, key=lambda item: - len(item[1])
+            )
             result = {}
-            for family_type, families in families_types_counters.items():
+            for family_type, families in sorted_family_types:
                 if len(families) == 0:
                     continue
                 if self.families_count_show_id is True:
@@ -83,6 +90,7 @@ class FamiliesGroupCounters(object):
                     pedigree_label = str(len(families))
                 family = families[0]
                 fc = FamilyCounter(
+                    family,
                     self.selected_families_group.family_pedigree(family),
                     pedigree_label)
 

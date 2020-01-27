@@ -18,19 +18,18 @@ class PDFLayoutDrawer(object):
         self._filename = filename
         self._pages = []
 
+    def __enter__(self):
+        self.pdf = PdfPages(self._filename)
+        return self.pdf
+
     def add_page(self, figure, title=None):
         if title:
             figure.text(0.5, 0.9, title, horizontalalignment="center")
-        self._pages.append(figure)
+        self.pdf.savefig(figure)
+        plt.close(figure)
 
-    def add_pages(self, figures, title=None):
-        self._pages += figures
-
-    def save_file(self):
-        with PdfPages(self._filename) as pdf:
-            for page in self._pages:
-                pdf.savefig(page)
-                plt.close(page)
+    def __exit__(self, exc_type, exc_value, exc_traceback):
+        self.pdf.close()
 
 
 class OffsetLayoutDrawer(object):

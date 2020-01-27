@@ -1,72 +1,32 @@
 #!/usr/bin/env python
 import sys
 import argparse
-import pandas as pd
+
+import matplotlib as mpl; mpl.use('PS')  # noqa
+import matplotlib.pyplot as plt; plt.ioff()  # noqa
 
 from dae.pedigrees.loader import FamiliesLoader
 from dae.pedigrees.families_groups import FamiliesGroups
 
 from dae.pedigrees.drawing import OffsetLayoutDrawer, PDFLayoutDrawer
 from dae.pedigrees.layout import Layout
-from dae.pedigrees.family import FamiliesData
 from dae.common_reports.family_report import FamiliesReport
 from dae.common_reports.people_filters import FilterCollection
 
 
-def draw_family_pedigree(family, show_id=False):
-    layout = Layout.from_family(family)
-    if layout is None:
-        return 'Invalid coordinates' + " in family " + family.family_id
-    else:
-        layout_drawer = OffsetLayoutDrawer(layout, 0, 0, show_id)
-        return layout_drawer.draw()
-
-
-def draw_pedigree(layouts, show_id, show_family, family):
-    layout = layouts[family.family_id]
-
-    if layout is None:
-        layout_drawer = OffsetLayoutDrawer(
-            layout, 0, 0, show_id=show_id, show_family=show_family)
-        draw_layout = layout_drawer.draw_family(
-            family.members,
-            title='Invalid coordinates in family ' + family.family_id)
-        return draw_layout
-    else:
-        layout_drawer = OffsetLayoutDrawer(
-            layout, 0, 0, show_id=show_id, show_family=show_family)
-        draw_layout = layout_drawer.draw(title=family.family_id)
-        return draw_layout
-
-
-def get_families_report(pedigrees):
-    pedigrees_df = pd.concat([pedigree.get_pedigree_dataframe()
-                              for pedigree in pedigrees])
-
-    families = FamiliesData(pedigrees_df)
-    families.families_build(pedigrees_df)
+def build_families_report(families):
 
     families_groups = FamiliesGroups(families)
-    families_groups.add_predefined_groups(['status'])
+    # families_groups.add_predefined_groups(['status'])
+    families_groups.add_predefined_groups(
+            ['status', 'sex', 'role', 'role.sex', 'family_size'])
     filter_collections = FilterCollection.build_filter_objects(
         families_groups, {'Status': ['status']})
 
     families_report = FamiliesReport(
-        families, families_groups, filter_collections)
+        ['status'], families_groups, filter_collections)
 
     return families_report
-
-
-def build_families_layout(families):
-    result = {}
-    for family in families.values():
-        layout = Layout.from_family(family)
-        if layout is None:
-            print(f"can't draw family {family.family_id}")
-            continue
-        layout.apply_to_family(family)
-        result[family.family_id] = layout
-    return result
 
 
 def draw_family(layout, family):
@@ -78,21 +38,39 @@ def draw_family(layout, family):
     return draw_layout
 
 
-def my_draw_pedigree(layout, family, show_id=True, show_family=True):
+def draw_pedigree(layout, title, show_id=True, show_family=True):
 
-    if layout is None:
-        layout_drawer = OffsetLayoutDrawer(
-            layout, 0, 0, show_id=show_id, show_family=show_family)
+    layout_drawer = OffsetLayoutDrawer(
+        layout, 0, 0, show_id=show_id, show_family=show_family)
+    figure = layout_drawer.draw(title=title)
+    return figure
 
-        draw_layout = layout_drawer.draw_family_table(
-            family,
-            title='Invalid coordinates in family ' + family.family_id)
-        return draw_layout
-    else:
-        layout_drawer = OffsetLayoutDrawer(
-            layout, 0, 0, show_id=show_id, show_family=show_family)
-        draw_layout = layout_drawer.draw(title=family.family_id)
-        return draw_layout
+
+def draw_families_report(families):
+    families_report = build_families_report(families)
+    assert len(families_report.families_counters) == 1
+    family_counters = families_report.families_counters[0]
+
+    for family_counter in family_counters.counters.values():
+        family = family_counter.family
+        # print(family)
+        label = family_counter.pedigrees_label
+        layout = Layout.from_family(family)
+        figure = draw_pedigree(layout, title=label)
+        yield figure
+
+
+def draw_families(families):
+    for family_id, family in families.items():
+        print(family_id)
+        layout = Layout.from_family(family)
+        if layout is None:
+            print(f"can't draw family {family.family_id}")
+        else:
+            layout.apply_to_family(family)
+
+        figure = draw_pedigree(layout, title=family.family_id)
+        yield figure
 
 
 def main(argv=sys.argv[1:]):
@@ -131,53 +109,15 @@ def main(argv=sys.argv[1:]):
     filename, params = FamiliesLoader.parse_cli_arguments(argv)
     families_loader = FamiliesLoader(filename, params=params)
     families = families_loader.load()
-    # layouts = build_families_layout(families)
 
-    pdf_drawer = PDFLayoutDrawer(argv.output)
+    generator = draw_families_report(families)
+    # generator = draw_families(families)
 
-    # families_report = get_families_report(families)
+    with PDFLayoutDrawer(argv.output) as pdf_drawer:
 
-    # layouts = {}
-    # with multiprocessing.Pool(processes=argv.processes) as pool:
-    #     for layout in tqdm(pool.imap(
-    #         get_layout, sorted(families, key=lambda x: x.family_id)),
-    #             total=len(families)):
-    #         layouts.update(layout)
-
-    figures = []
-    for family_id, family in families.items():
-        print(family_id)
-        layout = Layout.from_family(family)
-        if layout is None:
-            print(f"can't draw family {family.family_id}")
-        else:
-            layout.apply_to_family(family)
-
-        fig = my_draw_pedigree(layout, family)
-        figures.append(fig)
-
-        if len(figures) == 100:
-            break
-
-    pdf_drawer.add_pages(figures)
-
-    # for family_id, layout in layouts.items():
-    #     family = families[family_id]
-
-    #     fig = draw_family(layout, family)
-    #     figures.append(fig)
-
-    #     if len(figures) == 10:
-    #         break
-
-    # with multiprocessing.Pool(processes=argv.processes) as pool:
-    #     for figure in tqdm(pool.imap(
-    #         functools.partial(draw_pedigree, layouts, show_id, show_family),
-    #         sorted(families, key=lambda x: x.family_id)),
-    #             total=len(families)):
-    #         pdf_drawer.add_page(figure)
-
-    pdf_drawer.save_file()
+        for fig in generator:
+            pdf_drawer.savefig(fig)
+            plt.close(fig)
 
 
 if __name__ == '__main__':
