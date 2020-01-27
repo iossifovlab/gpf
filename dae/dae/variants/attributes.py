@@ -6,40 +6,71 @@ Created on Feb 13, 2018
 import enum
 
 
+_ROLE_DISPLAY_NAME = {
+    'maternal_grandmother': 'Maternal Grandmother',
+    'maternal_grandfather': 'Maternal Grandfather',
+    'paternal_grandmother': 'Paternal Grandmother',
+    'paternal_grandfather': 'Paternal Grandfather',
+
+    'mom': 'Mom',
+    'dad': 'Dad',
+    'parent': 'Parent',
+
+    'prb': 'Proband',
+    'sib': 'Sibling',
+    'child': 'Child',
+
+    'maternal_half_sibling': 'Maternal Half Sibling',
+    'paternal_half_sibling': 'Paternal Half Sibling',
+    'half_sibling': 'Half Sibling',
+
+    'maternal_aunt': 'Maternal Aunt',
+    'maternal_uncle': 'Maternal Uncle',
+    'paternal_aunt': 'Paternal Aunt',
+    'paternal_uncle': 'Paternal Uncle',
+
+    'maternal_cousin': 'Maternal Cousin',
+    'paternal_cousin': 'Paternal Cousin',
+
+    'step_mom': 'Step Mom',
+    'step_dad': 'Step Dad',
+    'spouse': 'Spouse',
+
+    'unknown': 'Unknown'
+}
+
+_ROLE_SYNONYMS = {
+    'maternal grandmother': 'maternal_grandmother',
+    'maternal grandfather': 'maternal_grandfather',
+    'paternal grandmother': 'paternal_grandmother',
+    'paternal grandfather': 'paternal_grandfather',
+
+    'mother': 'mom',
+    'father': 'dad',
+
+    'proband': 'prb',
+    'sibling': 'sib',
+
+    'maternal half sibling': 'maternal_half_sibling',
+    'paternal half sibling': 'paternal_half_sibling',
+    'half Sibling': 'half_sibling',
+
+    'maternal aunt': 'maternal_aunt',
+    'maternal uncle': 'maternal_uncle',
+    'paternal aunt': 'paternal_aunt',
+    'paternal uncle': 'paternal_uncle',
+
+    'maternal cousin': 'maternal_cousin',
+    'paternal cousin': 'paternal_cousin',
+
+    'step mom': 'step_mom',
+    'step dad': 'step_dad',
+    'step mother': 'step_mom',
+    'step father': 'step_dad',
+}
+
+
 class Role(enum.Enum):
-
-    DISPLAY_NAME = {
-        'maternal_grandmother': 'Maternal Grandmother',
-        'maternal_grandfather': 'Maternal Grandfather',
-        'paternal_grandmother': 'Paternal Grandmother',
-        'paternal_grandfather': 'Paternal Grandfather',
-
-        'mom': 'Mom',
-        'dad': 'Dad',
-        'parent': 'Parent',
-
-        'prb': 'Proband',
-        'sib': 'Sibling',
-        'child': 'Child',
-
-        'maternal_half_sibling': 'Maternal Half Sibling',
-        'paternal_half_sibling': 'Paternal Half Sibling',
-        'half_sibling': 'Half Sibling',
-
-        'maternal_aunt': 'Maternal Aunt',
-        'maternal_uncle': 'Maternal Uncle',
-        'paternal_aunt': 'Paternal Aunt',
-        'paternal_uncle': 'Paternal Uncle',
-
-        'maternal_cousin': 'Maternal Cousin',
-        'paternal_cousin': 'Paternal Cousin',
-
-        'step_mom': 'Step Mom',
-        'step_dad': 'Step Dad',
-        'spouse': 'Spouse',
-
-        'unknown': 'Unknown'
-    }
 
     maternal_grandmother = 1
     maternal_grandfather = 1 << 1
@@ -74,7 +105,7 @@ class Role(enum.Enum):
 
     @property
     def display_name(self):
-        return Role.DISPLAY_NAME.value[self.name]
+        return _ROLE_DISPLAY_NAME.value[self.name]
 
     def __repr__(self):
         return self.name
@@ -91,11 +122,14 @@ class Role(enum.Enum):
             return name
         elif isinstance(name, int):
             return Role.from_value(name)
-        elif name in Role.__members__:
-            return Role[name]
-        else:
-            # print(f"Role '{name}' is unknown")
-            return None
+        elif isinstance(name, str):
+            key = name.lower()
+            if key in Role.__members__:
+                return Role[key]
+            if key in _ROLE_SYNONYMS:
+                return Role[_ROLE_SYNONYMS[key]]
+
+        return None
 
     @staticmethod
     def from_value(val):
