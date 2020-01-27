@@ -63,43 +63,38 @@ class GPFConfigParser:
 
     @classmethod
     def _interpolate_vars(
-        cls, input_dict: dict, **interpolation_vars: str
+        cls, input: Any, **interpolation_vars: str
     ) -> dict:
-        result_dict = deepcopy(input_dict)
-
-        for key, val in result_dict.items():
-            if isinstance(val, str):
-                matched_var_interpolations = re.findall(
-                    cls.interpolation_var_regex, val
+        if isinstance(input, str):
+            matched_var_interpolations = re.findall(
+                cls.interpolation_var_regex, input
+            )
+            for interpolation in matched_var_interpolations:
+                assert interpolation in interpolation_vars, (
+                    f"Undefined var '{interpolation}'!"
+                    " Defined vars: {interpolation_vars.keys()}"
                 )
-                for interpolation in matched_var_interpolations:
-                    assert interpolation in interpolation_vars, (
-                        f"Undefined var '{interpolation}'!"
-                        " Defined vars: {interpolation_vars.keys()}"
-                    )
-                    result_dict[key] = result_dict[key].replace(
-                        f"%({interpolation})s",
-                        interpolation_vars[interpolation],
-                    )
-
-                matched_env_interpolations = re.findall(
-                    cls.interpolation_env_regex, val
+                input = input.replace(
+                    f"%({interpolation})s",
+                    interpolation_vars[interpolation],
                 )
-                for interpolation in matched_env_interpolations:
-                    assert (
-                        interpolation in os.environ.keys()
-                    ), f"Environment variable '{interpolation}' not found!"
-                    env_value = os.environ.get(interpolation)
-                    result_dict[key] = result_dict[key].replace(
-                        f"%({interpolation})e", env_value
-                    )
+            return input
 
-            elif isinstance(val, dict):
+        elif isinstance(input, dict):
+            result_dict = deepcopy(input)
+            for key, val in result_dict.items():
                 result_dict[key] = cls._interpolate_vars(
                     val, **interpolation_vars
                 )
-
-        return result_dict
+            return result_dict
+        elif isinstance(input, list):
+            result_list = deepcopy(input)
+            for idx, val in enumerate(result_list):
+                result_list[idx] = cls._interpolate_vars(
+                    val, **interpolation_vars
+                )
+            return result_list
+        return input
 
     @classmethod
     def _interpolate_env(cls, input_dict: dict) -> dict:
