@@ -627,7 +627,7 @@ class StudyWrapper(object):
 
                 if filter_option != 'neither':
                     new_roles = \
-                        ContainsNode(Role.from_display_name(filter_option))
+                        ContainsNode(Role.from_name(filter_option))
 
                 if filter_option == 'neither':
                     new_roles = AndNode([

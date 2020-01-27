@@ -1,8 +1,3 @@
-'''
-Created on Feb 13, 2018
-
-@author: lubo
-'''
 import enum
 
 
@@ -105,7 +100,7 @@ class Role(enum.Enum):
 
     @property
     def display_name(self):
-        return _ROLE_DISPLAY_NAME.value[self.name]
+        return _ROLE_DISPLAY_NAME[self.name]
 
     def __repr__(self):
         return self.name
@@ -134,23 +129,6 @@ class Role(enum.Enum):
     def from_value(val):
         return Role(int(val))
 
-    @classmethod
-    def from_name_or_value(cls, name_or_value):
-        try:
-            return cls.from_name(name_or_value)
-        except ValueError:
-            return cls.from_value(name_or_value)
-
-    @staticmethod
-    def from_display_name(display_name):
-        if display_name in Role.DISPLAY_NAME.value.values():
-            for name, display_name_value in Role.DISPLAY_NAME.value.items():
-                if display_name_value == display_name:
-                    return Role.from_name(name)
-            return Role.unknown
-        else:
-            return Role.unknown
-
 
 class Sex(enum.Enum):
     M = 1
@@ -178,13 +156,6 @@ class Sex(enum.Enum):
     @staticmethod
     def from_value(val):
         return Sex(int(val))
-
-    @classmethod
-    def from_name_or_value(cls, name_or_value):
-        try:
-            return cls.from_name(name_or_value)
-        except ValueError:
-            return cls.from_value(name_or_value)
 
     def __repr__(self):
         return self.name
@@ -219,13 +190,6 @@ class Status(enum.Enum):
     @staticmethod
     def from_value(val):
         return Status(int(val))
-
-    @classmethod
-    def from_name_or_value(cls, name_or_value):
-        try:
-            return cls.from_name(name_or_value)
-        except ValueError:
-            return cls.from_value(name_or_value)
 
     def __repr__(self):
         return self.name
