@@ -53,16 +53,20 @@ def draw_families_report(families):
 
     for family_counter in family_counters.counters.values():
         family = family_counter.family
-        # print(family)
-        label = family_counter.pedigrees_label
         layout = Layout.from_family(family)
-        figure = draw_pedigree(layout, title=label)
+
+        if len(family_counter.families) > 5:
+            count = len(family_counter.families)
+            title = f'Number of families: {count}'
+        else:
+            title = ', '.join([f.family_id for f in family_counter.families])
+
+        figure = draw_pedigree(layout, title=title)
         yield figure
 
 
 def draw_families(families):
     for family_id, family in families.items():
-        print(family_id)
         layout = Layout.from_family(family)
         if layout is None:
             print(f"can't draw family {family.family_id}")
@@ -86,32 +90,32 @@ def main(argv=sys.argv[1:]):
     parser.add_argument(
         "--output", metavar="o", help="the output filename file",
         default="output.pdf")
+
+    # parser.add_argument(
+    #     '--show-id', help='show individual id in pedigree', dest='show_id',
+    #     action='store_true', default=False)
+    # parser.add_argument(
+    #     '--show-family', help='show family info below pedigree',
+    #     dest='show_family', action='store_true', default=False)
+
     parser.add_argument(
-        '--show-id', help='show individual id in pedigree', dest='show_id',
-        action='store_true', default=False)
-    parser.add_argument(
-        '--show-family', help='show family info below pedigree',
-        dest='show_family', action='store_true', default=False)
-    parser.add_argument(
-        "--generated-column", metavar="m", default="generated",
-        help="name of the column that contains an "
-             "indicator for generated individuals")
-    parser.add_argument(
-        '--processes', type=int, default=4, dest='processes',
-        help='Number of processes', action='store'
+        '--mode', type=str, default='families', dest='mode',
+        help='mode of drawing; supported modes are `families` and `report`; '
+        'defaults: families'
     )
 
     argv = parser.parse_args(argv)
-
-    show_id = argv.show_id
-    show_family = argv.show_family
 
     filename, params = FamiliesLoader.parse_cli_arguments(argv)
     families_loader = FamiliesLoader(filename, params=params)
     families = families_loader.load()
 
-    generator = draw_families_report(families)
-    # generator = draw_families(families)
+    mode = argv.mode
+    assert mode in ('families', 'report')
+    if mode == 'report':
+        generator = draw_families_report(families)
+    else:
+        generator = draw_families(families)
 
     with PDFLayoutDrawer(argv.output) as pdf_drawer:
 

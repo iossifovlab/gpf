@@ -127,14 +127,18 @@ class Layout(object):
             family, add_missing_members=add_missing_members)
 
         if family_connections is None:
-            print(f"Missing family connections for family: {family.family_id}")
+            print(
+                f"Missing family connections for family: {family.family_id}",
+                file=sys.stderr)
             return Layout._handle_broken_family_connections(family)
 
         sandwich_instance = family_connections.create_sandwich_instance()
         intervals = SandwichSolver.solve(sandwich_instance)
 
         if intervals is None:
-            print(f"No intervals for family: {family.family_id}")
+            print(
+                f"No intervals for family: {family.family_id}",
+                file=sys.stderr)
             return Layout._handle_broken_family_connections(family)
 
         individuals_intervals = [

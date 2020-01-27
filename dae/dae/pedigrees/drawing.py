@@ -313,9 +313,10 @@ class OffsetLayoutDrawer(object):
                         ha='center', va='center')
 
     def _draw_family(self, axes, family):
-        col_labels =\
-            ["familyId", "individualId", "father", "mother", "sex", "status",
-             "role", "layout"]
+        col_labels =[
+            "familyId", "individualId", "father", "mother", "sex", "status",
+            "role", "layout", "generated"
+        ]
         table_vals = []
 
         for member in family:
@@ -323,7 +324,8 @@ class OffsetLayoutDrawer(object):
                 [member.family_id, member.person_id,
                  member.dad_id, member.mom_id,
                  Sex.from_name(member.sex), member.status,
-                 member.role, member.layout])
+                 member.role, member.layout,
+                 'G' if member.generated else ''])
 
         axes.table = plt.table(
             cellText=table_vals, colLabels=col_labels, loc='center')

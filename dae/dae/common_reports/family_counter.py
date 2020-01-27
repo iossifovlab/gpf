@@ -3,10 +3,14 @@ import itertools
 
 class FamilyCounter(object):
 
-    def __init__(self, family, pedigree, family_label):
-        self.family = family
+    def __init__(self, families, pedigree, family_label):
+        self.families = families
         self.pedigree = pedigree
         self.pedigrees_label = family_label
+
+    @property
+    def family(self):
+        return self.families[0]
 
     def to_dict(self):
         return {
@@ -36,7 +40,7 @@ class FamiliesGroupCounters(object):
             result = {}
             for family in self.families.values():
                 fc = FamilyCounter(
-                    family,
+                    [family],
                     self.selected_families_group.family_pedigree(family),
                     family.family_id)
                 result[family.family_id] = fc
@@ -90,7 +94,7 @@ class FamiliesGroupCounters(object):
                     pedigree_label = str(len(families))
                 family = families[0]
                 fc = FamilyCounter(
-                    family,
+                    families,
                     self.selected_families_group.family_pedigree(family),
                     pedigree_label)
 

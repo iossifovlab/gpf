@@ -45,10 +45,12 @@ _ROLE_SYNONYMS = {
 
     'proband': 'prb',
     'sibling': 'sib',
+    'younger sibling': 'sib',
+    'older sibling': 'sib',
 
     'maternal half sibling': 'maternal_half_sibling',
     'paternal half sibling': 'paternal_half_sibling',
-    'half Sibling': 'half_sibling',
+    'half sibling': 'half_sibling',
 
     'maternal aunt': 'maternal_aunt',
     'maternal uncle': 'maternal_uncle',

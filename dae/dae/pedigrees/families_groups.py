@@ -175,7 +175,7 @@ PEOPLE_GROUP_ROLES = PeopleGroup.from_config(
             str(r): {
                 'id': str(r),
                 'name': str(r),
-                'color': PeopleGroup.grayscale32(index)
+                'color': PeopleGroup.grayscale32(index + 1)
             } for index, r in enumerate(Role.__members__)
         },
         'default': {
