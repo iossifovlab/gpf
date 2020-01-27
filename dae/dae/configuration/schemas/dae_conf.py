@@ -92,4 +92,5 @@ dae_conf_schema = {
             }
         },
     },
+    "enrichment": {"type": "dict", "schema": config_reference_schema},
 }

@@ -16,7 +16,7 @@ class GeneWeight(GenomicValues):
     """
 
     def __init__(self, config):
-        super(GeneWeight, self).__init__(config.id)
+        super(GeneWeight, self).__init__(type(config).__name__)
         self.config = config
 
         self.genomic_values_col = 'gene'
@@ -26,7 +26,7 @@ class GeneWeight(GenomicValues):
         self.xscale = self.config.xscale
         self.yscale = self.config.yscale
         self.filename = self.config.file
-        self.range = self.config.range
+        self.range = getattr(self.config, "range", None)
 
         self._load_data()
         self.df.dropna(inplace=True)
@@ -164,7 +164,7 @@ class GeneWeightsDb(object):
     def _load(self):
         for weight_config in self.config:
             w = GeneWeight(weight_config)
-            self.weights[weight_config.id] = w
+            self.weights[type(weight_config).__name__] = w
 
     def __getitem__(self, weight_id):
         if weight_id not in self.weights:

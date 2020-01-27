@@ -26,8 +26,6 @@ phenotype_data_schema = {
     },
     "browser_images_url": {
         "type": "string",
-        "check_with": validate_path,
-        "coerce": "abspath",
     },
 }
 

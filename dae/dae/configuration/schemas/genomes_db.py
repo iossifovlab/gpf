@@ -9,7 +9,7 @@ genome_schema = {
     "default_gene_model": {"type": "string"},
     "gene_model": {
         "type": "dict",
-        "valueschema": {
+        "valuesrules": {
             "type": "dict",
             "schema": {
                 "file": {
@@ -36,7 +36,7 @@ genomes_db_conf = {
         "schema": {
             "regions": {
                 "type": "dict",
-                "valueschema": {"type": "list", "schema": {"type": "string"}},
+                "valuesrules": {"type": "list", "schema": {"type": "string"}},
             }
         },
     },
