@@ -10,14 +10,12 @@ import pandas as pd
 from dae.pedigrees.loader import FamiliesLoader
 from dae.pedigrees.family import FamiliesData
 
-from .conftest import relative_to_this_folder
-
 
 @pytest.mark.parametrize("fixture_name", [
-    "fixtures/pedigrees/family_simple.txt"
+    "pedigrees/family_simple.txt"
 ])
-def test_load_family_simple(fixture_name, temp_filename):
-    family_filename = relative_to_this_folder(fixture_name)
+def test_load_family_simple(fixture_name, temp_filename, fixture_dirname):
+    family_filename = fixture_dirname(fixture_name)
     assert os.path.exists(family_filename)
 
     fam_df = FamiliesLoader.load_simple_family_file(family_filename)

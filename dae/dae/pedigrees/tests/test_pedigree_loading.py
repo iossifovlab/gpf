@@ -4,7 +4,6 @@ import pandas as pd
 
 from dae.variants.attributes import Sex, Status, Role
 from dae.pedigrees.loader import FamiliesLoader
-from dae.pedigrees.tests.conftest import relative_to_this_folder
 
 
 expected_pedigree_df = pd.DataFrame([
@@ -77,18 +76,18 @@ def test_flexible_pedigree_read(infile, pedigree):
     ('pedigree_B2.ped'),
     ('pedigree_C.ped'),
 ])
-def test_flexible_pedigree_read_from_filesystem(filepath):
+def test_flexible_pedigree_read_from_filesystem(filepath, fixture_dirname):
     expected_df = expected_pedigree_df.copy()
     expected_df['sample_id'] = expected_df['person_id']
 
-    absolute_filepath = relative_to_this_folder(
-        'fixtures/pedigrees/{}'.format(filepath)
+    absolute_filepath = fixture_dirname(
+        'pedigrees/{}'.format(filepath)
     )
     pedigree_df = FamiliesLoader.flexible_pedigree_read(absolute_filepath)
     assert pedigree_df.equals(expected_df)
 
 
-def test_flexible_pedigree_read_additional_columns():
+def test_flexible_pedigree_read_additional_columns(fixture_dirname):
     expected_df = expected_pedigree_df.copy()
     expected_df['phenotype'] = [
         'healthy',
@@ -103,14 +102,14 @@ def test_flexible_pedigree_read_additional_columns():
     ]
     expected_df['sample_id'] = expected_df['person_id']
 
-    absolute_filepath = relative_to_this_folder(
-        'fixtures/pedigrees/pedigree_D.ped'
+    absolute_filepath = fixture_dirname(
+        'pedigrees/pedigree_D.ped'
     )
     pedigree_df = FamiliesLoader.flexible_pedigree_read(absolute_filepath)
     assert pedigree_df.equals(expected_df)
 
 
-def test_flexible_pedigree_read_do_not_override_sample_id_column():
+def test_flexible_pedigree_read_do_not_override_sample_id_column(fixture_dirname):
     expected_df = expected_pedigree_df.copy()
     expected_df['sample_id'] = [
         'f1_father',
@@ -124,19 +123,19 @@ def test_flexible_pedigree_read_do_not_override_sample_id_column():
         'f2_sibling1',
     ]
 
-    absolute_filepath = relative_to_this_folder(
-        'fixtures/pedigrees/pedigree_E.ped'
+    absolute_filepath = fixture_dirname(
+        'pedigrees/pedigree_E.ped'
     )
     pedigree_df = FamiliesLoader.flexible_pedigree_read(absolute_filepath)
     assert pedigree_df.equals(expected_df)
 
 
-def test_flexible_pedigree_read_no_header():
+def test_flexible_pedigree_read_no_header(fixture_dirname):
     expected_df = expected_pedigree_df.copy()
     expected_df['sample_id'] = expected_df['person_id']
 
-    absolute_filepath = relative_to_this_folder(
-        'fixtures/pedigrees/pedigree_no_header.ped'
+    absolute_filepath = fixture_dirname(
+        'pedigrees/pedigree_no_header.ped'
     )
     pedigree_df = FamiliesLoader.flexible_pedigree_read(
         absolute_filepath,

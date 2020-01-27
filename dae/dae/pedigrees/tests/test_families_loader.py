@@ -4,7 +4,6 @@ from pandas.api.types import is_string_dtype
 from pandas.testing import assert_frame_equal
 
 from dae.variants.attributes import Role
-from dae.pedigrees.tests.conftest import relative_to_this_folder
 
 from dae.pedigrees.family import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
@@ -16,8 +15,8 @@ from dae.pedigrees.loader import FamiliesLoader
     ('pedigree_B2.ped'),
     ('pedigree_C.ped'),
 ])
-def test_famlies_loader_simple(pedigree):
-    filename = relative_to_this_folder(f'fixtures/pedigrees/{pedigree}')
+def test_famlies_loader_simple(pedigree, fixture_dirname):
+    filename = fixture_dirname(f'pedigrees/{pedigree}')
     assert os.path.exists(filename)
     loader = FamiliesLoader(filename)
     families = loader.load()
@@ -25,8 +24,8 @@ def test_famlies_loader_simple(pedigree):
     assert families is not None
 
 
-def test_families_loader_phenotype():
-    filename = relative_to_this_folder('fixtures/pedigrees/pedigree_D.ped')
+def test_families_loader_phenotype(fixture_dirname):
+    filename = fixture_dirname('pedigrees/pedigree_D.ped')
     assert os.path.exists(filename)
 
     loader = FamiliesLoader(filename)
@@ -43,9 +42,9 @@ def test_families_loader_phenotype():
             assert person.has_attr('phenotype')
 
 
-def test_families_loader_phenos():
-    filename = relative_to_this_folder(
-        'fixtures/pedigrees/pedigree_phenos.ped')
+def test_families_loader_phenos(fixture_dirname):
+    filename = fixture_dirname(
+        'pedigrees/pedigree_phenos.ped')
     assert os.path.exists(filename)
 
     loader = FamiliesLoader(filename)
@@ -72,8 +71,8 @@ def test_families_loader_phenos():
     ('pedigree_no_role_B.ped'),
     ('pedigree_no_role_C.ped'),
 ])
-def test_families_loader_no_role(pedigree):
-    filename = relative_to_this_folder(f'fixtures/pedigrees/{pedigree}')
+def test_families_loader_no_role(pedigree, fixture_dirname):
+    filename = fixture_dirname(f'pedigrees/{pedigree}')
     assert os.path.exists(filename)
 
     params = {
@@ -101,9 +100,9 @@ def test_families_loader_no_role(pedigree):
     assert person.person_id == 'f1.sib'
 
 
-def test_families_loader_roles_testing():
-    filename = relative_to_this_folder(
-        'fixtures/pedigrees/pedigree_no_role_C.ped')
+def test_families_loader_roles_testing(fixture_dirname):
+    filename = fixture_dirname(
+        'pedigrees/pedigree_no_role_C.ped')
     assert os.path.exists(filename)
 
     params = {
@@ -124,9 +123,9 @@ def test_families_loader_roles_testing():
     ('pedigree_B2.ped'),
     ('pedigree_C.ped'),
 ])
-def test_families_ped_df(pedigree, temp_filename):
-    filename = relative_to_this_folder(
-        f'fixtures/pedigrees/{pedigree}')
+def test_families_ped_df(pedigree, temp_filename, fixture_dirname):
+    filename = fixture_dirname(
+        f'pedigrees/{pedigree}')
     assert os.path.exists(filename)
 
     loader = FamiliesLoader(filename, params={})
