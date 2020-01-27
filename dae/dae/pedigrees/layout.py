@@ -4,7 +4,7 @@ import re
 from collections import defaultdict
 from functools import reduce
 
-from dae.pedigrees.pedigrees import FamilyConnections
+from dae.pedigrees.pedigrees import FamilyConnections, Individual
 from dae.pedigrees.interval_sandwich import SandwichSolver
 
 
@@ -109,20 +109,33 @@ class Layout(object):
             self._generate_from_intervals()
 
     @staticmethod
+    def _handle_broken_family_connections(family, x_offset=15):
+        individuals = []
+        for person in family.full_members:
+            individuals.append(Individual(member=person))
+
+        layout = Layout()
+        layout._individuals_by_rank = [individuals]
+        layout._id_to_position = layout._generate_simple_layout([individuals])
+        layout.positions = [list(layout._id_to_position.values())]
+
+        return layout
+
+    @staticmethod
     def from_family(family, add_missing_members=True):
         family_connections = FamilyConnections.from_family(
             family, add_missing_members=add_missing_members)
 
         if family_connections is None:
             print(f"Missing family connections for family: {family.family_id}")
-            return None
+            return Layout._handle_broken_family_connections(family)
 
         sandwich_instance = family_connections.create_sandwich_instance()
         intervals = SandwichSolver.solve(sandwich_instance)
 
         if intervals is None:
             print(f"No intervals for family: {family.family_id}")
-            return None
+            return Layout._handle_broken_family_connections(family)
 
         individuals_intervals = [
             interval for interval in intervals
@@ -144,7 +157,7 @@ class Layout(object):
         for person in family_connections.members:
             position = layout_parser(person.layout)
             if position is None:
-                return None
+                return Layout._handle_broken_family_connections(family)
             individual = family_connections.get_individual(person.person_id)
 
             layout_positions[position['level']].append(
@@ -592,12 +605,14 @@ class Layout(object):
         return None
 
     @staticmethod
-    def _generate_simple_layout(levels, level_heigh=30.0,
-                                x_offset=20.0, y_offset=20.0, gap=8.0):
+    def _generate_simple_layout(
+            individuals_by_rank, level_heigh=30.0,
+            x_offset=20.0, y_offset=20.0, gap=8.0):
+
         result = {}
         original_x_offset = x_offset
 
-        for rank, individuals in enumerate(levels):
+        for rank, individuals in enumerate(individuals_by_rank):
             x_offset = original_x_offset
             for individual in individuals:
                 position = IndividualWithCoordinates(

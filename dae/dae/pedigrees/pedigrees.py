@@ -145,15 +145,8 @@ class FamilyConnections(object):
         if cls.is_valid_family(id_to_mating_unit) is False:
             return None
 
-        try:
-            del id_to_individual["0"]
-        except KeyError:
-            pass
-
-        try:
-            del id_to_individual[""]
-        except KeyError:
-            pass
+        assert '0' not in id_to_individual
+        assert '' not in id_to_individual
 
         return FamilyConnections(family, id_to_individual, id_to_mating_unit)
 

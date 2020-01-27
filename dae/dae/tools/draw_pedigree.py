@@ -5,8 +5,6 @@ import pandas as pd
 
 from dae.pedigrees.loader import FamiliesLoader
 from dae.pedigrees.families_groups import FamiliesGroups
-from dae.pedigrees.pedigrees import FamilyConnections
-from dae.pedigrees.interval_sandwich import SandwichSolver
 
 from dae.pedigrees.drawing import OffsetLayoutDrawer, PDFLayoutDrawer
 from dae.pedigrees.layout import Layout
@@ -59,29 +57,10 @@ def get_families_report(pedigrees):
     return families_report
 
 
-def build_layout(family):
-    family_connections = FamilyConnections.from_family(family)
-    if family_connections is None:
-        print(f"Missing family connections for family: {family.family_id}")
-        return None
-
-    sandwich_instance = family_connections.create_sandwich_instance()
-    intervals = SandwichSolver.solve(sandwich_instance)
-
-    if intervals is None:
-        print(f"No intervals for family: {family.family_id}")
-        return None
-
-    individuals_intervals = [
-        interval for interval in intervals if interval.vertex.is_individual()]
-
-    return Layout(individuals_intervals)
-
-
 def build_families_layout(families):
     result = {}
     for family in families.values():
-        layout = build_layout(family)
+        layout = Layout.from_family(family)
         if layout is None:
             print(f"can't draw family {family.family_id}")
             continue
@@ -122,7 +101,7 @@ def main(argv=sys.argv[1:]):
             description="Produce a pedigree drawing in PDF format "
             "from a pedigree file with layout coordinates.",
             conflict_handler='resolve',
-            formatter_class=argparse.RawDescriptionHelpFormatter)    
+            formatter_class=argparse.RawDescriptionHelpFormatter)
 
     FamiliesLoader.cli_arguments(parser)
 
@@ -168,7 +147,7 @@ def main(argv=sys.argv[1:]):
     figures = []
     for family_id, family in families.items():
         print(family_id)
-        layout = build_layout(family)
+        layout = Layout.from_family(family)
         if layout is None:
             print(f"can't draw family {family.family_id}")
         else:
