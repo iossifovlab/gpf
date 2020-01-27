@@ -252,7 +252,7 @@ class OffsetLayoutDrawer(object):
                 else:
                     individual_color = "purple"
 
-                if Sex.from_name_or_value(
+                if Sex.from_name(
                         individual.individual.member.sex) == Sex.male:
                     coords = [individual.x + self._x_offset,
                               individual.y + self._y_offset]
@@ -265,7 +265,7 @@ class OffsetLayoutDrawer(object):
 
                     dlx = coords[0]
                     dly = coords[1]
-                elif Sex.from_name_or_value(
+                elif Sex.from_name(
                         individual.individual.member.sex) == Sex.female:
                     coords = [individual.x_center + self._x_offset,
                               individual.y_center + self._y_offset]
@@ -322,7 +322,7 @@ class OffsetLayoutDrawer(object):
             table_vals.append(
                 [member.family_id, member.person_id,
                  member.dad_id, member.mom_id,
-                 Sex.from_name_or_value(member.sex), member.status,
+                 Sex.from_name(member.sex), member.status,
                  member.role, member.layout])
 
         axes.table = plt.table(

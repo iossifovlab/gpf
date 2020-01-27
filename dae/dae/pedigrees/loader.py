@@ -285,8 +285,8 @@ class FamiliesLoader:
             skipinitialspace=True,
             converters={
                 ped_role: Role.from_name,
-                ped_sex: Sex.from_name_or_value,
-                ped_status: Status.from_name_or_value,
+                ped_sex: Sex.from_name,
+                ped_status: Status.from_name,
                 ped_layout: lambda lc: lc.split(':')[-1],
                 ped_generated: lambda g: True if g == '1.0' else False,
             },
