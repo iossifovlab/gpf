@@ -1,6 +1,11 @@
+import sys
+import re
+
 from collections import defaultdict
 from functools import reduce
-import re
+
+from dae.pedigrees.pedigrees import FamilyConnections
+from dae.pedigrees.interval_sandwich import SandwichSolver
 
 
 def layout_parser(layout):
@@ -104,12 +109,70 @@ class Layout(object):
             self._generate_from_intervals()
 
     @staticmethod
-    def get_layout_from_positions(positions):
+    def from_family(family, add_missing_members=True):
+        family_connections = FamilyConnections.from_family(
+            family, add_missing_members=add_missing_members)
+
+        if family_connections is None:
+            print(f"Missing family connections for family: {family.family_id}")
+            return None
+
+        sandwich_instance = family_connections.create_sandwich_instance()
+        intervals = SandwichSolver.solve(sandwich_instance)
+
+        if intervals is None:
+            print(f"No intervals for family: {family.family_id}")
+            return None
+
+        individuals_intervals = [
+            interval for interval in intervals
+            if interval.vertex.is_individual()]
+
+        return Layout(individuals_intervals)
+
+    @staticmethod
+    def from_family_layout(family):
+        if any([p.layout is None for p in family.full_members]):
+            print(
+                f"family {family.family_id} has member without layout",
+                file=sys.stderr)
+            return None
+
+        family_connections = FamilyConnections.from_family(
+            family, add_missing_members=False)
+        layout_positions = defaultdict(list)
+        for person in family_connections.members:
+            position = layout_parser(person.layout)
+            if position is None:
+                return None
+            individual = family_connections.get_individual(person.person_id)
+
+            layout_positions[position['level']].append(
+                IndividualWithCoordinates(
+                    individual,
+                    position['x'], position['y'])
+                )
+
+        individual_positions = [[]] * len(layout_positions)
+        for level, iwc in layout_positions.items():
+            individual_positions[level - 1] = iwc
+
+        individual_positions = [
+            sorted(level, key=lambda x: x.x) for level in individual_positions]
+
         layout = Layout()
-        layout.positions = positions
+        layout.positions = individual_positions
         layout._create_lines()
 
         return layout
+
+    # @staticmethod
+    # def get_layout_from_positions(positions):
+    #     layout = Layout()
+    #     layout.positions = positions
+    #     layout._create_lines()
+
+    #     return layout
 
     @property
     def id_to_position(self):
@@ -122,6 +185,15 @@ class Layout(object):
         return {individual.member.person_id: rank for rank, individuals in
                 enumerate(self._individuals_by_rank, start=1)
                 for individual in individuals}
+
+    def apply_to_family(self, family):
+        for person_id, person in family.persons.items():
+            assert person_id in self.id_to_position, \
+                (person_id, family, self.id_to_position)
+            position = self.id_to_position[person_id]
+            rank = self.individuals_by_rank[person_id]
+            position_value = f'{rank}:{position.x},{position.y}'
+            person.set_attr('layout', position_value)
 
     def _generate_from_intervals(self):
 

@@ -36,8 +36,10 @@ class PDFLayoutDrawer(object):
 class OffsetLayoutDrawer(object):
 
     def __init__(
-            self, layout, x_offset, y_offset, gap=4.0, show_id=False,
-            show_family=False, figsize=(7, 10)):
+            self, layout, x_offset, y_offset, gap=4.0,
+            show_id=False, show_family=False,
+            figsize=(7, 10)):
+
         self._x_offset = x_offset
         self._y_offset = y_offset
         self._gap = gap
@@ -88,6 +90,25 @@ class OffsetLayoutDrawer(object):
             self._draw_family(ax_family, family)
 
             ax_family.plot()
+
+        if title:
+            self._draw_title(figure, title)
+
+        return figure
+
+    def draw_family_table(self, family, figure=None, ax=None, title=None):
+        if figure is None:
+            figure = plt.figure(figsize=self.figsize)
+
+        ax_family = figure.add_axes((0.1, 0.1, 0.8, 0.3))
+        ax_family.axis("off")
+        ax_family.set_aspect(
+            aspect="equal", adjustable="datalim", anchor="C")
+        ax_family.autoscale_view()
+
+        self._draw_family(ax_family, family.full_members)
+
+        ax_family.plot()
 
         if title:
             self._draw_title(figure, title)

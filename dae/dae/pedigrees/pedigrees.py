@@ -269,8 +269,9 @@ class FamilyConnections(object):
 
     @property
     def members(self):
-        if not self.family:
-            return []
+        assert self.family is not None
+        # for person in self.family.full_members:
+        #     yield self.id_to_individual[person.person_id]
         return self.family.full_members
 
     def add_ranks(self):
@@ -298,6 +299,9 @@ class FamilyConnections(object):
         return reduce(
             lambda acc, i: max(acc, i.rank),
             self.id_to_individual.values(), 0)
+
+    def get_individual(self, person_id):
+        return self.id_to_individual.get(person_id)
 
     def get_individuals_with_rank(self, rank):
         return {i for i in self.id_to_individual.values() if i.rank == rank}

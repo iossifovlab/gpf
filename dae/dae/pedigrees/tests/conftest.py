@@ -4,7 +4,6 @@ from io import StringIO
 import csv
 
 from dae.pedigrees.layout_saver import LayoutSaver
-from dae.pedigrees.layout_loader import LayoutLoader
 from dae.pedigrees.family import Family
 from dae.pedigrees.loader import FamiliesLoader
 
@@ -337,32 +336,32 @@ fam1\tdad1\t0\t0\t1\t1\tdad\tError\t1
 """
 
 
-@pytest.fixture(scope='function')
-def layout_loader1(family1):
-    return LayoutLoader(family1)
+# @pytest.fixture(scope='function')
+# def layout_loader1(family1):
+#     return Layout.from_family_layout(family1)
 
 
-@pytest.fixture(scope='function')
-def layout_loader2(family2):
-    return LayoutLoader(family2)
+# @pytest.fixture(scope='function')
+# def layout_loader2(family2):
+#     return Layout.from_family_layout(family2)
 
 
-@pytest.fixture(scope='function')
-def layout_positions2(member4, member5, member6):
-    return [
-        [IndividualWithCoordinates(Individual(member=member6), 50.0, 100.0),
-         IndividualWithCoordinates(Individual(member=member5), 50.0, 50.0)],
-        [IndividualWithCoordinates(Individual(member=member4), 100.0, 75.0)]
-    ]
+# @pytest.fixture(scope='function')
+# def layout_positions2(member4, member5, member6):
+#     return [
+#         [IndividualWithCoordinates(Individual(member=member6), 50.0, 100.0),
+#          IndividualWithCoordinates(Individual(member=member5), 50.0, 50.0)],
+#         [IndividualWithCoordinates(Individual(member=member4), 100.0, 75.0)]
+#     ]
 
 
-@pytest.fixture(scope='function')
-def loaded_layout2(layout_positions2):
-    layout = Layout()
+# @pytest.fixture(scope='function')
+# def loaded_layout2(layout_positions2):
+#     layout = Layout()
 
-    layout.positions = layout_positions2
+#     layout.positions = layout_positions2
 
-    return layout
+#     return layout
 
 
 @pytest.fixture(scope='session')

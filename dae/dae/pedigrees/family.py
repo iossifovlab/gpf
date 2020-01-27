@@ -59,9 +59,6 @@ class Person(object):
         self.mom = None
         self.dad = None
 
-        self._layout = attributes.get('layout', None)
-        self._generated = attributes.get('generated', False)
-
     def __repr__(self):
         if self.generated:
             return "Person([G] {} ({}); {}; {})".format(
@@ -83,11 +80,11 @@ class Person(object):
 
     @property
     def layout(self):
-        return self._layout
+        return self._attributes.get('layout', None)
 
     @property
     def generated(self):
-        return self._generated
+        return self._attributes.get('generated', False)
 
     @property
     def family_bin(self):
