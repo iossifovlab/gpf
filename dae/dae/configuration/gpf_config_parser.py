@@ -5,25 +5,11 @@ import yaml
 import json
 import toml
 
-from collections import namedtuple, UserDict
-from collections.abc import Collection, Mapping
+from collections import namedtuple
 from typing import List, Tuple, Any, Dict
 from cerberus import Validator
 
 from dae.utils.dict_utils import recursive_dict_update
-
-
-def recursive_map(input_val, function):
-    def apply_func(i):
-        return recursive_map(i, function)
-
-    if isinstance(input_val, Mapping):
-        input_val = type(input_val)(
-            {key: apply_func(val) for key, val in input_val.items()}
-        )
-    elif isinstance(input_val, Collection) and not isinstance(input_val, str):
-        input_val = type(input_val)(apply_func(item) for item in input_val)
-    return function(input_val)
 
 
 def validate_path(field: str, value: str, error: str):
@@ -31,17 +17,6 @@ def validate_path(field: str, value: str, error: str):
         error(field, "is not an absolute path!")
     if not os.path.exists(value):
         error(field, "does not exist!")
-
-
-class LenientInterpolationDict(UserDict):
-    """
-    If a key is missing from the dictionary, returns
-    it surrounded by curly braces. Allows interpolation
-    of strings without providing all interpolation vars.
-    """
-
-    def __missing__(self, key):
-        return "{%s}" % key
 
 
 class GPFConfigValidator(Validator):
@@ -65,14 +40,29 @@ class GPFConfigParser:
     def _dict_to_namedtuple(
         cls, input_dict: dict, dict_name: str = "root"
     ) -> Tuple[Any]:
-        if not isinstance(input_dict, dict):
-            return input_dict
         tup_ctor = namedtuple(dict_name, input_dict.keys())
 
         class DefaultValueTuple(tup_ctor):
             def __getattr__(self, name):
                 print(f'WARNING: Attempting to get non-existent attribute {name} on tuple!')
                 return None
+
+            def __repr__(self):
+                retval = super(DefaultValueTuple, self).__repr__()
+                return retval.replace('DefaultValueTuple', self.section_id())
+
+            def section_id(self):
+                return dict_name
+
+        for key, value in input_dict.items():
+            if isinstance(value, dict):
+                input_dict[key] = cls._dict_to_namedtuple(value, key)
+            elif isinstance(value, list):
+                input_dict[key] = [
+                    (cls._dict_to_namedtuple(item)
+                     if isinstance(item, dict) else item)
+                    for item in value
+                ]
 
         return DefaultValueTuple(*input_dict.values())
 
@@ -85,29 +75,6 @@ class GPFConfigParser:
         return output
 
     @classmethod
-    def _interpolate_vars(
-        cls, input_string: str, interpolation_vars: dict
-    ) -> str:
-        if not isinstance(input_string, str):
-            return input_string
-        return input_string.format_map(interpolation_vars)
-
-    @classmethod
-    def _interpolate_env(cls, input_string: str) -> str:
-        env_vars = LenientInterpolationDict(
-            {f"${key}": val for key, val in os.environ.items()}
-        )
-        return cls._interpolate_vars(input_string, env_vars)
-
-    @classmethod
-    def _read_config(cls, filename: str) -> dict:
-        ext = os.path.splitext(filename)[1]
-        assert ext in cls.filetype_parsers, f"Unsupported filetype {filename}!"
-        with open(filename, "r") as infile:
-            conf_dict = cls.filetype_parsers[ext](infile.read())
-        return conf_dict
-
-    @classmethod
     def _collect_directory_configs(cls, dirname: str) -> List[str]:
         config_files = list()
         for filetype in cls.filetype_parsers.keys():
@@ -117,6 +84,22 @@ class GPFConfigParser:
         return config_files
 
     @classmethod
+    def parse_config(cls, filename: str) -> dict:
+        ext = os.path.splitext(filename)[1]
+        assert ext in cls.filetype_parsers, f"Unsupported filetype {filename}!"
+        with open(filename, "r") as infile:
+            file_contents = infile.read()
+
+        interpol_vars = cls.filetype_parsers[ext](file_contents).get("vars", {})
+        env_vars = {f"${key}": val for key, val in os.environ.items()}
+        interpol_vars.update(env_vars)
+
+        interpolated_text = file_contents.format_map(interpol_vars)
+        config = cls.filetype_parsers[ext](interpolated_text)
+        config.pop("vars", None)
+        return config
+
+    @classmethod
     def load_config(
         cls, filename: str, schema: dict, default_filename: str = None
     ) -> Tuple[Any]:
@@ -124,22 +107,13 @@ class GPFConfigParser:
             schema, conf_dir=os.path.dirname(filename)
         )
 
-        config = cls._read_config(filename)
-        default_config = (
-            cls._read_config(default_filename) if default_filename else dict()
-        )
-
-        config = recursive_dict_update(config, default_config)
-
-        config = recursive_map(config, cls._interpolate_env)
-        if "vars" in config:
-            config = recursive_map(
-                config, lambda c: cls._interpolate_vars(c, config["vars"])
-            )
-            del config["vars"]
+        config = cls.parse_config(filename)
+        if default_filename:
+            default_config = cls.parse_config(default_filename)
+            config = recursive_dict_update(config, default_config)
 
         assert validator.validate(config), validator.errors
-        return recursive_map(validator.document, cls._dict_to_namedtuple)
+        return cls._dict_to_namedtuple(validator.document)
 
     @classmethod
     def load_directory_configs(
@@ -156,4 +130,4 @@ class GPFConfigParser:
     ) -> Tuple[Any]:
         t_dict = cls._namedtuple_to_dict(t)
         updated_dict = recursive_dict_update(t_dict, new_values)
-        return recursive_map(updated_dict, cls._dict_to_namedtuple)
+        return cls._dict_to_namedtuple(updated_dict)
