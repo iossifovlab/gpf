@@ -1,7 +1,5 @@
 from box import Box
 
-from dae.pedigrees.drawing import PDFLayoutDrawer
-
 
 def test_drawing(drawing_from_family2, layout_from_family2):
     assert drawing_from_family2 is not None

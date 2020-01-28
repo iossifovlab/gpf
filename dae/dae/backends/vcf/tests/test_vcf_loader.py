@@ -3,7 +3,6 @@ import os
 import numpy as np
 
 from dae.pedigrees.loader import FamiliesLoader
-from dae.pedigrees.family import FamiliesData
 
 from dae.variants.attributes import Inheritance
 

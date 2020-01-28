@@ -168,7 +168,8 @@ class Layout(object):
             family, add_missing_members=False)
         if family_connections is None:
             print(
-                f"can't build family connections for family {family.family_id}",
+                f"can't build family connections for family "
+                f"{family.family_id}",
                 file=sys.stderr)
             return None
 

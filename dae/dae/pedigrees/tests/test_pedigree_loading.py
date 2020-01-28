@@ -109,7 +109,8 @@ def test_flexible_pedigree_read_additional_columns(fixture_dirname):
     assert pedigree_df.equals(expected_df)
 
 
-def test_flexible_pedigree_read_do_not_override_sample_id_column(fixture_dirname):
+def test_flexible_pedigree_read_do_not_override_sample_id_column(
+        fixture_dirname):
     expected_df = expected_pedigree_df.copy()
     expected_df['sample_id'] = [
         'f1_father',

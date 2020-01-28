@@ -139,7 +139,8 @@ class MakefileGenerator:
         for target_chrom in generated_target_chromosomes:
             if target_chrom not in self.chromosome_lengths:
                 print(
-                    f"WARNING: contig {target_chrom} not found in specified genome",
+                    f"WARNING: contig {target_chrom} not found in specified "
+                    f"genome",
                     file=sys.stderr)
                 continue
 

@@ -227,7 +227,7 @@ class FamiliesLoader:
             '--ped-layout-mode',
             default='load',
             help='Layout mode specifies how pedigrees drawing of each family '
-            'is handled. Available options are `generate` and `load`. When ' 
+            'is handled. Available options are `generate` and `load`. When '
             'layout mode option is set to generate the loader'
             'tryes to generate a layout for the family pedigree. '
             'When `load` is specified, the loader tryes to load the layout '

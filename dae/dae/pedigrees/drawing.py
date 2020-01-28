@@ -313,7 +313,7 @@ class OffsetLayoutDrawer(object):
                         ha='center', va='center')
 
     def _draw_family(self, axes, family):
-        col_labels =[
+        col_labels = [
             "familyId", "individualId", "father", "mother", "sex", "status",
             "role", "layout", "generated"
         ]
