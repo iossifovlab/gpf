@@ -50,7 +50,7 @@ class FamiliesLoader:
 
     @staticmethod
     def _build_families_layouts(families, pedigree_format):
-        ped_layout_mode = pedigree_format.get('ped_layout_mode')
+        ped_layout_mode = pedigree_format.get('ped_layout_mode', 'load')
         if ped_layout_mode == 'generate':
             for family in families.values():
                 layout = Layout.from_family(family)
