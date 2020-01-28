@@ -29,7 +29,7 @@ def test_load_family_simple(fixture_name, temp_filename, fixture_dirname):
 
     assert families is not None
 
-    FamiliesLoader.save_pedigree(fam_df, temp_filename)
+    FamiliesLoader.save_pedigree(families, temp_filename)
     assert fam_df is not None
 
     ped_df = FamiliesLoader.flexible_pedigree_read(temp_filename)
@@ -38,4 +38,4 @@ def test_load_family_simple(fixture_name, temp_filename, fixture_dirname):
     print(ped_df)
     print("-------------------------")
 
-    pd.testing.assert_frame_equal(fam_df, ped_df)
+    pd.testing.assert_frame_equal(fam_df, ped_df, check_like=True)

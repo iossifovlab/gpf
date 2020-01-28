@@ -24,8 +24,8 @@ def test_generate_layout(family1, family2):
 
 def test_load_from_family_layout(family1, family2, layout2):
     layout1 = Layout.from_family_layout(family1)
-    assert layout1 is not None
-    assert len(layout1.positions) == 1
+    assert layout1 is None
+    # assert len(layout1.positions) == 1
 
     layout2_loaded = Layout.from_family_layout(family2)
     assert layout2_loaded is not None

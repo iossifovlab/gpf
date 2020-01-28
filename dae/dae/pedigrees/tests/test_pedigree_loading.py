@@ -40,7 +40,7 @@ familyId\tpersonId\tdadId\tmomId\tsex\tstatus\trole\tlayout
         'sex': [Sex.female, Sex.male, Sex.female],
         'status': [Status.unaffected, Status.unaffected, Status.affected],
         'role': [Role.mom, Role.dad, Role.prb],
-        'layout': ['53.5,50.0', '10.0,50.0', '31.75,80.0'],
+        'layout': ['1:53.5,50.0', '1:10.0,50.0', '2:31.75,80.0'],
         'sample_id': ['1.x1', '1.x2', '1.x3']
     })),
     (StringIO("""
@@ -56,7 +56,7 @@ familyId\tpersonId\tdadId\tmomId\tsex\tstatus\trole\tlayout\tsampleId
         'sex': [Sex.female, Sex.male, Sex.female],
         'status': [Status.unaffected, Status.unaffected, Status.affected],
         'role': [Role.mom, Role.dad, Role.prb],
-        'layout': ['53.5,50.0', '10.0,50.0', '31.75,80.0'],
+        'layout': ['1:53.5,50.0', '1:10.0,50.0', '2:31.75,80.0'],
         'sample_id': ['1.x1', '1.x2', '1.x3']
     })),
 ])

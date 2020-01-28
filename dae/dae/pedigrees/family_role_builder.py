@@ -66,7 +66,7 @@ class FamilyRoleBuilder:
             return probands[0]
         for person in self.family.full_members:
             is_proband = person.get_attr('proband', False)
-            assert isinstance(is_proband, bool)
+            # assert isinstance(is_proband, bool), is_proband
             if is_proband:
                 return person
 

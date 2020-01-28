@@ -82,16 +82,14 @@ class MakefileGenerator:
         return result
 
     def reset_chrom(self, chrom):
-        result = chrom
         if self.chrom_prefix and chrom.startswith(self.chrom_prefix):
-            result = chrom[len(self.chrom_prefix):]
-        return result
+            return chrom[len(self.chrom_prefix):]
+        return chrom
 
     def prefix_chrom(self, chrom):
-        result = chrom
-        if self.chrom_prefix:
-            result = f'{self.chrom_prefix}{chrom}'
-        return result
+        if self.chrom_prefix and chrom.startswith(self.chrom_prefix):
+            return f'{self.chrom_prefix}{chrom}'
+        return chrom
 
     def build_target_chromosomes(self, target_chromosomes):
         if self.chrom_prefix is None:
