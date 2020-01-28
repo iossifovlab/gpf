@@ -28,7 +28,7 @@ class PeopleGroup:
         if getter is not None:
             self._getter = getter
         else:
-            self._getter = lambda person: person.get_attr(self.source)
+            self._getter = lambda person: str(person.get_attr(self.source))
 
     @property
     def domain(self):
