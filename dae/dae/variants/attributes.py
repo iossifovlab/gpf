@@ -182,15 +182,19 @@ class Status(enum.Enum):
 
     @staticmethod
     def from_name(name):
-        if isinstance(name, Status):
+        if name is None:
+            return Status.unspecified
+        elif isinstance(name, Status):
             return name
         elif isinstance(name, int):
             return Status.from_value(name)
-        elif name == 'unaffected' or name == '1':
+        assert isinstance(name, str)
+        name = name.lower()
+        if name in set(['unaffected', '1']):
             return Status.unaffected
-        elif name == 'affected' or name == '2':
+        elif name in set(['affected', '2']):
             return Status.affected
-        elif name == 'unspecified' or name == '-' or name == '0':
+        elif name in set(['unspecified', '-', '0']):
             return Status.unspecified
         raise ValueError("unexpected status type: " + name)
 
