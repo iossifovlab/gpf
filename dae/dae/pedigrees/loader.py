@@ -492,7 +492,8 @@ class FamiliesLoader:
         df.sex = df.sex.apply(lambda v: v.name)
         df.role = df.role.apply(lambda v: v.name)
         df.status = df.status.apply(lambda v: v.name)
-
+        if 'generated' in df.columns:
+            df.generated = df.generated.apply(lambda v: 'Y' if v else '')
         df.to_csv(filename, index=False, sep='\t')
 
     @staticmethod

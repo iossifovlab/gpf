@@ -288,7 +288,6 @@ class FamiliesData(Mapping):
                     rec = copy.deepcopy(person._attributes)
                     rec['mom_id'] = person.mom_id if person.mom_id else '0'
                     rec['dad_id'] = person.dad_id if person.dad_id else '0'
-                    rec['generated'] = 'Y' if person.generated else ''
                     column_names = column_names.union(set(rec.keys()))
                     records.append(rec)
 
