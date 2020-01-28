@@ -199,6 +199,11 @@ class DenovoLoader(VariantsGenotypesLoader):
         )
 
         parser.add_argument(
+            '--denovo-sep', type=str, default=None,
+            help='Denovo file field separator [default: `\\t`]'
+        )
+
+        parser.add_argument(
             '--add-chrom-prefix', type=str, default=None,
             help='Add specified prefix to each chromosome name in '
             'variants file'
@@ -217,6 +222,7 @@ class DenovoLoader(VariantsGenotypesLoader):
             'denovo_best_state': 'bestState',
             'denovo_person_id': None,
             'add_chrom_prefix': None,
+            'denovo_sep': '\t',
         }
 
     @staticmethod
@@ -294,6 +300,7 @@ class DenovoLoader(VariantsGenotypesLoader):
             'denovo_family_id': argv.denovo_family_id,
             'denovo_best_state': argv.denovo_best_state,
             'add_chrom_prefix': argv.add_chrom_prefix,
+            'denovo_sep': argv.denovo_sep,
         }
 
         return argv.denovo_file, params

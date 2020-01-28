@@ -1,10 +1,5 @@
 import pytest
 
-from io import StringIO
-import csv
-
-from dae.pedigrees.layout_saver import LayoutSaver
-from dae.pedigrees.layout_loader import LayoutLoader
 from dae.pedigrees.family import Family
 from dae.pedigrees.loader import FamiliesLoader
 
@@ -16,49 +11,9 @@ from dae.pedigrees.interval_sandwich import SandwichSolver
 from dae.pedigrees.layout import IndividualWithCoordinates, Layout
 from dae.pedigrees.drawing import OffsetLayoutDrawer
 
-from dae_conftests.dae_conftests import \
-    relative_to_this_test_folder as relative_to_this_folder
-
-
-@pytest.fixture(scope='session')
-def input_filename():
-    return relative_to_this_folder('fixtures/pedigrees/test.ped')
-
-
-@pytest.fixture(scope='session')
-def output_filename():
-    return StringIO()
-
-
-@pytest.fixture(scope='session')
-def output():
-    return StringIO()
-
-
-@pytest.fixture(scope='session')
-def generated_column():
-    return 'generated'
-
-
-@pytest.fixture(scope='session')
-def layout_column():
-    return 'layout'
-
-
-@pytest.fixture
-def layout_saver(
-        input_filename, output_filename, generated_column, layout_column):
-    return LayoutSaver(
-        input_filename, output_filename, generated_column, layout_column)
-
-
-@pytest.fixture(scope='session')
-def error_message():
-    return 'Error'
-
 
 @pytest.fixture(scope='function')
-def member1(error_message):
+def member1():
     return Person(
         person_id='id1',
         family_id='fam1',
@@ -67,7 +22,7 @@ def member1(error_message):
         sex='2',
         status='2',
         role='prb',
-        layout=error_message,
+        layout='error',
         generated=False)
 
 
@@ -81,7 +36,7 @@ def member2():
         sex='2',
         status='1',
         role='mom',
-        layout=error_message,
+        layout='error',
         generated=False)
 
 
@@ -95,7 +50,7 @@ def member3():
         sex='1',
         status='1',
         role='dad',
-        layout=error_message,
+        layout='error',
         generated=True)
 
 
@@ -194,43 +149,6 @@ def mating_unit2(individual5, individual6, sibship_unit2):
 
 
 @pytest.fixture(scope='function')
-def people_with_layout_error(layout_column, generated_column, error_message):
-    return {
-        'fam1;id1': {
-            layout_column: error_message,
-            generated_column: ''
-        },
-        'fam1;mom1': {
-            layout_column: error_message,
-            generated_column: ''
-        },
-        'fam1;dad1': {
-            layout_column: error_message,
-            generated_column: '1'
-        }
-    }
-
-
-@pytest.fixture(scope='function')
-def people_with_layout(
-        layout_column, generated_column, member4, member5, member6):
-    return {
-        'fam2;id2': {
-            layout_column: member4.layout,
-            generated_column: ''
-        },
-        'fam2;mom2': {
-            layout_column: member5.layout,
-            generated_column: ''
-        },
-        'fam2;dad2': {
-            layout_column: member6.layout,
-            generated_column: '1'
-        }
-    }
-
-
-@pytest.fixture(scope='function')
 def people1(member1, member2, member3):
     return {
         'fam1;id1': member1,
@@ -297,77 +215,8 @@ def drawing_from_family2(layout_from_family2):
 
 
 @pytest.fixture(scope='session')
-def columns_labels():
-    return {
-        'family_id': 'familyId',
-        'id': 'personId',
-        'father': 'dadId',
-        'mother': 'momId',
-        'sex': 'sex',
-        'status': 'status',
-        'layout': 'layout',
-        'role': 'role'
-    }
-
-
-@pytest.fixture(scope='session')
-def header():
-    return ['familyId', 'personId', 'dadId', 'momId', 'sex', 'status',
-            'role']
-
-
-@pytest.fixture(scope='session')
-def dict_writer(output, header, layout_column, generated_column):
-    dict_header = header + [layout_column, generated_column]
-    return csv.DictWriter(
-        output, dict_header, delimiter='\t',
-        lineterminator='\n')
-
-
-@pytest.fixture(scope='session')
-def test_output():
-    return """familyId\tpersonId\tdadId\tmomId\tsex\tstatus\trole\tlayout\tgenerated
-fam1\tid1\tdad1\tmom1\t1\t2\tprb\tError\t
-fam1\tmom1\t0\t0\t2\t1\tmom\tError\t
-fam2\tid2\tdad2\tmom2\t1\t2\tprb\t2:100.0,75.0\t
-fam2\tdad2\t0\t0\t1\t1\tdad\t1:50.0,100.0\t1
-fam2\tmom2\t0\t0\t2\t1\tmom\t1:50.0,50.0\t
-fam3\tid3\tdad3\tmom3\t2\t2\tprb\t\t
-fam1\tdad1\t0\t0\t1\t1\tdad\tError\t1
-"""
-
-
-@pytest.fixture(scope='function')
-def layout_loader1(family1):
-    return LayoutLoader(family1)
-
-
-@pytest.fixture(scope='function')
-def layout_loader2(family2):
-    return LayoutLoader(family2)
-
-
-@pytest.fixture(scope='function')
-def layout_positions2(member4, member5, member6):
-    return [
-        [IndividualWithCoordinates(Individual(member=member6), 50.0, 100.0),
-         IndividualWithCoordinates(Individual(member=member5), 50.0, 50.0)],
-        [IndividualWithCoordinates(Individual(member=member4), 100.0, 75.0)]
-    ]
-
-
-@pytest.fixture(scope='function')
-def loaded_layout2(layout_positions2):
-    layout = Layout()
-
-    layout.positions = layout_positions2
-
-    return layout
-
-
-@pytest.fixture(scope='session')
-def pedigree_test(input_filename):
-    loader = FamiliesLoader(input_filename)
+def pedigree_test(fixture_dirname):
+    loader = FamiliesLoader(fixture_dirname('pedigrees/test.ped'))
     families = loader.load()
     return families
 
@@ -380,8 +229,3 @@ def fam1(pedigree_test):
 @pytest.fixture(scope='session')
 def fam1_family_connections(fam1):
     return FamilyConnections.from_family(fam1)
-
-
-@pytest.fixture(scope='session')
-def sample_nuc_family():
-    return relative_to_this_folder('fixtures/sample_nuc_family.ped')

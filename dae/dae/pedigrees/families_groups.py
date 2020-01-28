@@ -28,7 +28,7 @@ class PeopleGroup:
         if getter is not None:
             self._getter = getter
         else:
-            self._getter = lambda person: person.get_attr(self.source)
+            self._getter = lambda person: str(person.get_attr(self.source))
 
     @property
     def domain(self):
@@ -175,7 +175,7 @@ PEOPLE_GROUP_ROLES = PeopleGroup.from_config(
             str(r): {
                 'id': str(r),
                 'name': str(r),
-                'color': PeopleGroup.grayscale32(index)
+                'color': PeopleGroup.grayscale32(index + 1)
             } for index, r in enumerate(Role.__members__)
         },
         'default': {

@@ -20,6 +20,7 @@ PEDIGREE_COLUMN_NAMES = {
     'sample id': 'sample_id',
     'layout': 'layout',
     'generated': 'generated',
+    'proband': 'proband',
 }
 
 
@@ -33,7 +34,6 @@ class Person(object):
         self.family = None
         self.person_id = attributes['person_id']
         self.sample_id = attributes.get('sample_id', None)
-        self.sample_index = attributes.get('samples_index', None)
         self.index = attributes.get('index', None)
 
         self._sex = Sex.from_name(attributes['sex'])
@@ -59,9 +59,6 @@ class Person(object):
         self.mom = None
         self.dad = None
 
-        self._layout = attributes.get('layout', None)
-        self._generated = attributes.get('generated', False)
-
     def __repr__(self):
         if self.generated:
             return "Person([G] {} ({}); {}; {})".format(
@@ -83,15 +80,19 @@ class Person(object):
 
     @property
     def layout(self):
-        return self._layout
+        return self._attributes.get('layout', None)
 
     @property
     def generated(self):
-        return self._generated
+        return self._attributes.get('generated', False)
 
     @property
     def family_bin(self):
         return self._attributes.get('family_bin', None)
+
+    @property
+    def sample_index(self):
+        return self._attributes.get('sample_index', None)
 
     def has_mom(self):
         return self.mom is not None
@@ -113,7 +114,7 @@ class Person(object):
         return key in self._attributes
 
     def get_attr(self, key, default=None):
-        return str(self._attributes.get(key, default))
+        return self._attributes.get(key, default)
 
     def set_attr(self, key, value):
         self._attributes[key] = value
@@ -236,8 +237,12 @@ class FamiliesData(Mapping):
         self.persons = {}
 
     def redefine(self):
+        self.persons = {}
+        self._ped_df = None
         for family in self._families.values():
             family.redefine()
+            for person in family.full_members:
+                self.persons[person.person_id] = person
 
     @staticmethod
     def from_family_persons(family_persons):
@@ -251,7 +256,6 @@ class FamiliesData(Mapping):
 
     @staticmethod
     def from_pedigree_df(ped_df):
-
         persons = defaultdict(list)
         for rec in ped_df.to_dict(orient='record'):
             person = Person(**rec)
@@ -279,19 +283,20 @@ class FamiliesData(Mapping):
             # build ped_df
             column_names = set()
             records = []
-            for person in self.persons.values():
-                rec = copy.deepcopy(person._attributes)
-                rec['mom_id'] = person.mom_id if person.mom_id else '0'
-                rec['dad_id'] = person.dad_id if person.dad_id else '0'
+            for family in self.values():
+                for person in family.full_members:
+                    rec = copy.deepcopy(person._attributes)
+                    rec['mom_id'] = person.mom_id if person.mom_id else '0'
+                    rec['dad_id'] = person.dad_id if person.dad_id else '0'
+                    column_names = column_names.union(set(rec.keys()))
+                    records.append(rec)
 
-                column_names = column_names.union(set(rec.keys()))
-                records.append(rec)
             columns = [
                 col for col in PEDIGREE_COLUMN_NAMES.values()
                 if col in column_names
             ]
-            columns.extend(column_names.difference(set(columns)))
-
+            extention_columns = column_names.difference(set(columns))
+            columns.extend(extention_columns)
             ped_df = pd.DataFrame.from_records(records, columns=columns)
             self._ped_df = ped_df
 

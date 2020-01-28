@@ -1,3 +1,6 @@
+from dae.pedigrees.layout import Layout
+
+
 def assert_positions(expected, resulted):
     for expected_level, resulted_level in zip(expected, resulted):
         expected_level.sort(
@@ -10,21 +13,20 @@ def assert_positions(expected, resulted):
             assert str(expected_layout) == str(resulted_layout)
 
 
-def test_get_positions_from_family(
-        layout_loader1, layout_loader2, layout_positions2):
-    positions1 = layout_loader1.get_positions_from_family()
-    layout_loader1.family_connections = None
-    positions1_none = layout_loader1.get_positions_from_family()
-    positions2 = layout_loader2.get_positions_from_family()
+def test_generate_layout(family1, family2):
+    layout1 = Layout.from_family(family1)
+    layout2 = Layout.from_family(family2)
 
-    assert positions1 is None
-    assert positions1_none is None
-    assert_positions(layout_positions2, positions2)
+    assert layout1.positions is not None
+    assert layout2.positions is not None
+    assert_positions(layout1.positions, layout2.positions)
 
 
-def test_load(layout_loader1, layout_loader2, loaded_layout2):
-    positions1 = layout_loader1.load()
-    positions2 = layout_loader2.load()
+def test_load_from_family_layout(family1, family2, layout2):
+    layout1 = Layout.from_family_layout(family1)
+    assert layout1 is None
+    # assert len(layout1.positions) == 1
 
-    assert positions1 is None
-    assert_positions(loaded_layout2.positions, positions2.positions)
+    layout2_loaded = Layout.from_family_layout(family2)
+    assert layout2_loaded is not None
+    assert_positions(layout2_loaded.positions, layout2.positions)

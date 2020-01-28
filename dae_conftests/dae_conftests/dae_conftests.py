@@ -502,8 +502,8 @@ def vcf_variants_loader(
             }):
         conf = vcf_loader_data(path)
 
-        ped_df = FamiliesLoader.flexible_pedigree_read(conf.pedigree)
-        families = FamiliesData.from_pedigree_df(ped_df)
+        families_loader = FamiliesLoader(conf.pedigree)
+        families = families_loader.load()
 
         loader = VcfLoader(
             families, [conf.vcf],

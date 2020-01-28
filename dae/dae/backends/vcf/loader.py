@@ -1,11 +1,13 @@
+import os
 import sys
-from cyvcf2 import VCF
 
 import numpy as np
 
-from dae.GenomeAccess import GenomicSequence
+from cyvcf2 import VCF
+import pysam
 
 from dae.utils.helpers import str2bool
+from dae.GenomeAccess import GenomicSequence
 
 from dae.utils.variant_utils import is_all_reference_genotype, \
     is_all_unknown_genotype, is_unknown_genotype, GENOTYPE_TYPE
@@ -220,7 +222,18 @@ class VcfLoader(VariantsGenotypesLoader):
             chrom_order[seq] = idx
 
         self.chrom_order = chrom_order
-        self.chromosomes = seqnames
+
+    @property
+    def chromosomes(self):
+        assert len(self.vcfs) > 0
+
+        seqnames = self.vcfs[0].seqnames
+        filename = self.filenames[0]
+        tabix_index_filename = f'{filename}.tbi'
+        if not os.path.exists(tabix_index_filename):
+            return seqnames
+        with pysam.Tabixfile(filename) as tbx:
+            return list(tbx.contigs)
 
     @staticmethod
     def _match_pedigree_to_samples(families, vcf_samples):
@@ -237,12 +250,13 @@ class VcfLoader(VariantsGenotypesLoader):
             if person.sample_id in vcf_samples:
                 if person.sample_id in seen:
                     continue
-                person.sample_index = \
-                    vcf_samples_index.index(person.sample_id)
+                person.set_attr(
+                    'sample_index',
+                    int(vcf_samples_index.index(person.sample_id)))
                 seen.add(person.sample_id)
             else:
-                person._generated = True
-                families[person.family_id].redefine()
+                person.set_attr(
+                    'generated',  True)
         families.redefine()
 
     def _build_summary_variant(self, summary_index, vcf_variant):

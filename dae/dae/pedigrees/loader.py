@@ -9,6 +9,7 @@ from dae.variants.attributes import Role, Sex, Status
 
 from dae.pedigrees.family import FamiliesData, PEDIGREE_COLUMN_NAMES
 from dae.pedigrees.family_role_builder import FamilyRoleBuilder
+from dae.pedigrees.layout import Layout
 
 
 PED_COLUMNS_REQUIRED = (
@@ -41,13 +42,37 @@ class FamiliesLoader:
             pedigree_filename, **pedigree_format
         )
         families = FamiliesData.from_pedigree_df(ped_df)
-        families._ped_df = ped_df
-        if pedigree_format.get('ped_no_role'):
+
+        FamiliesLoader._build_families_layouts(families, pedigree_format)
+        FamiliesLoader._build_families_roles(families, pedigree_format)
+
+        return families
+
+    @staticmethod
+    def _build_families_layouts(families, pedigree_format):
+        ped_layout_mode = pedigree_format.get('ped_layout_mode', 'load')
+        if ped_layout_mode == 'generate':
+            for family in families.values():
+                layout = Layout.from_family(family)
+                layout.apply_to_family(family)
+        elif ped_layout_mode == 'load':
+            pass
+        else:
+            raise ValueError(
+                f"unexpected `--ped-layout-mode` option value "
+                f"`{ped_layout_mode}`")
+
+    @staticmethod
+    def _build_families_roles(families, pedigree_format):
+        has_unknown_roles = any([
+            p.role is None or p.role == Role.unknown
+            for p in families.persons.values()])
+
+        if has_unknown_roles or pedigree_format.get('ped_no_role'):
             for family in families.values():
                 role_build = FamilyRoleBuilder(family)
                 role_build.build_roles()
             families._ped_df = None
-        return families
 
     @staticmethod
     def load_simple_families_file(families_filename):
@@ -77,7 +102,9 @@ class FamiliesLoader:
             'ped_file_format': 'pedigree',
             'ped_sep': '\t',
             'ped_no_header': False,
+            'ped_proband': None,
             'ped_no_role': False,
+            'ped_layout_mode': 'load',
         }
 
     @staticmethod
@@ -171,6 +198,15 @@ class FamiliesLoader:
         )
 
         parser.add_argument(
+            '--ped-proband',
+            default=None,
+            help='specify the name of the column in the pedigree file that '
+            'specifies persons with role `proband`; this columns is used '
+            'only when option `--ped-no-role` is specified. '
+            '[default: %(default)s]'
+        )
+
+        parser.add_argument(
             '--ped-no-header',
             action='store_true',
             help='indicates that the provided pedigree file has no header. '
@@ -185,6 +221,18 @@ class FamiliesLoader:
             default='pedigree',
             help='Families file format. It should `pedigree` or `simple`'
             'for simple family format [default: %(default)s]'
+        )
+
+        parser.add_argument(
+            '--ped-layout-mode',
+            default='load',
+            help='Layout mode specifies how pedigrees drawing of each family '
+            'is handled. Available options are `generate` and `load`. When '
+            'layout mode option is set to generate the loader'
+            'tryes to generate a layout for the family pedigree. '
+            'When `load` is specified, the loader tryes to load the layout '
+            'from the layout column of the pedigree. '
+            '[default: %(default)s]'
         )
 
         parser.add_argument(
@@ -207,7 +255,13 @@ class FamiliesLoader:
             'ped_role',
             'ped_file_format',
             'ped_sep',
+            'ped_proband',
+            'ped_layout_mode',
         ]
+
+        assert argv.ped_file_format in ('simple', 'pedigree')
+        assert argv.ped_layout_mode in ('generate', 'load')
+
         res = {}
 
         res['ped_no_header'] = str2bool(argv.ped_no_header)
@@ -226,16 +280,17 @@ class FamiliesLoader:
 
     @staticmethod
     def produce_header_from_indices(
-       ped_family,
-       ped_person,
-       ped_mom,
-       ped_dad,
-       ped_sex,
-       ped_status,
-       ped_role,
-       ped_layout,
-       ped_generated,
-       ped_sample_id,
+       ped_family=None,
+       ped_person=None,
+       ped_mom=None,
+       ped_dad=None,
+       ped_sex=None,
+       ped_status=None,
+       ped_role=None,
+       ped_proband=None,
+       ped_layout=None,
+       ped_generated=None,
+       ped_sample_id=None,
     ):
         header = (
             (ped_family, PEDIGREE_COLUMN_NAMES['family']),
@@ -245,6 +300,7 @@ class FamiliesLoader:
             (ped_sex, PEDIGREE_COLUMN_NAMES['sex']),
             (ped_status, PEDIGREE_COLUMN_NAMES['status']),
             (ped_role, PEDIGREE_COLUMN_NAMES['role']),
+            (ped_proband, PEDIGREE_COLUMN_NAMES['proband']),
             (ped_layout, PEDIGREE_COLUMN_NAMES['layout']),
             (ped_generated, PEDIGREE_COLUMN_NAMES['generated']),
             (ped_sample_id, PEDIGREE_COLUMN_NAMES['sample id']),
@@ -267,6 +323,7 @@ class FamiliesLoader:
             ped_sex='sex',
             ped_status='status',
             ped_role='role',
+            ped_proband='proband',
             ped_layout='layout',
             ped_generated='generated',
             ped_sample_id='sampleId',
@@ -285,10 +342,10 @@ class FamiliesLoader:
             skipinitialspace=True,
             converters={
                 ped_role: Role.from_name,
-                ped_sex: Sex.from_name_or_value,
-                ped_status: Status.from_name_or_value,
-                ped_layout: lambda lc: lc.split(':')[-1],
-                ped_generated: lambda g: True if g == '1.0' else False,
+                ped_sex: Sex.from_name,
+                ped_status: Status.from_name,
+                ped_generated: lambda v: str2bool(v),
+                ped_proband: lambda v: str2bool(v),
             },
             dtype=str,
             comment='#',
@@ -303,9 +360,17 @@ class FamiliesLoader:
 
             if not ped_has_header:
                 _, file_header = FamiliesLoader.produce_header_from_indices(
-                    ped_family, ped_person, ped_mom,
-                    ped_dad, ped_sex, ped_status,
-                    ped_role, ped_layout, ped_generated, ped_sample_id,
+                    ped_family=ped_family,
+                    ped_person=ped_person,
+                    ped_mom=ped_mom,
+                    ped_dad=ped_dad,
+                    ped_sex=ped_sex,
+                    ped_status=ped_status,
+                    ped_role=ped_role,
+                    ped_proband=ped_proband,
+                    ped_layout=ped_layout,
+                    ped_generated=ped_generated,
+                    ped_sample_id=ped_sample_id,
                 )
                 ped_family = PEDIGREE_COLUMN_NAMES['family']
                 ped_person = PEDIGREE_COLUMN_NAMES['person']
@@ -314,6 +379,7 @@ class FamiliesLoader:
                 ped_sex = PEDIGREE_COLUMN_NAMES['sex']
                 ped_status = PEDIGREE_COLUMN_NAMES['status']
                 ped_role = PEDIGREE_COLUMN_NAMES['role']
+                ped_proband = PEDIGREE_COLUMN_NAMES['proband']
                 ped_layout = PEDIGREE_COLUMN_NAMES['layout']
                 ped_generated = PEDIGREE_COLUMN_NAMES['generated']
                 ped_sample_id = PEDIGREE_COLUMN_NAMES['sample id']
@@ -346,6 +412,7 @@ class FamiliesLoader:
             ped_sex: PEDIGREE_COLUMN_NAMES['sex'],
             ped_status: PEDIGREE_COLUMN_NAMES['status'],
             ped_role: PEDIGREE_COLUMN_NAMES['role'],
+            ped_proband: PEDIGREE_COLUMN_NAMES['proband'],
             ped_sample_id: PEDIGREE_COLUMN_NAMES['sample id'],
         })
 
@@ -353,11 +420,10 @@ class FamiliesLoader:
             missing_columns = \
                 set(PED_COLUMNS_REQUIRED).difference(set(ped_df.columns))
             missing_columns = ', '.join(missing_columns)
-            print(f"pedigree file missing missing columns {missing_columns}")
+            print(f"pedigree file missing columns {missing_columns}")
             raise ValueError(
-                f"pedigree file missing missing columns {missing_columns}"
+                f"pedigree file missing columns {missing_columns}"
             )
-
         return ped_df
 
     @staticmethod
@@ -413,8 +479,8 @@ class FamiliesLoader:
         return fam_df
 
     @staticmethod
-    def save_pedigree(ped_df, filename):
-        df = ped_df.copy()
+    def save_pedigree(families, filename):
+        df = families.ped_df.copy()
 
         df = df.rename(columns={
             'person_id': 'personId',
@@ -433,16 +499,3 @@ class FamiliesLoader:
     def save_families(families, filename):
         assert isinstance(families, FamiliesData)
         FamiliesLoader.save_pedigree(families.ped_df, filename)
-
-    @staticmethod
-    def get_default_colum_labels():
-        return {
-            "family_id": "familyId",
-            "person_id": "personId",
-            "father": "dadId",
-            "mother": "momId",
-            "sex": "sex",
-            "status": "status",
-            "role": "role",
-            "layout": "layout"
-        }
