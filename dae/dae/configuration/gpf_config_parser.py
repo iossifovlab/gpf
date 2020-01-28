@@ -13,6 +13,7 @@ from dae.utils.dict_utils import recursive_dict_update
 
 
 def validate_path(field: str, value: str, error: str):
+    print(field, value)
     if not os.path.isabs(value):
         error(field, "is not an absolute path!")
     if not os.path.exists(value):
@@ -94,7 +95,7 @@ class GPFConfigParser:
         env_vars = {f"${key}": val for key, val in os.environ.items()}
         interpol_vars.update(env_vars)
 
-        interpolated_text = file_contents.format_map(interpol_vars)
+        interpolated_text = file_contents % interpol_vars
         config = cls.filetype_parsers[ext](interpolated_text)
         config.pop("vars", None)
         return config
