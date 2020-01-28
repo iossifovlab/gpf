@@ -45,6 +45,10 @@ class GPFConfigParser:
 
         class DefaultValueTuple(tup_ctor):
             def __getattr__(self, name):
+                # FIXME Temporary hack to enable default values
+                # only for public attributes
+                if name[0:2] == '__':
+                    raise AttributeError()
                 print(f'WARNING: Attempting to get non-existent attribute {name} on tuple!')
                 return None
 
