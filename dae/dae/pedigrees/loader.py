@@ -43,8 +43,8 @@ class FamiliesLoader:
         )
         families = FamiliesData.from_pedigree_df(ped_df)
 
-        FamiliesLoader._build_families_roles(families, pedigree_format)
         FamiliesLoader._build_families_layouts(families, pedigree_format)
+        FamiliesLoader._build_families_roles(families, pedigree_format)
 
         return families
 
@@ -420,9 +420,9 @@ class FamiliesLoader:
             missing_columns = \
                 set(PED_COLUMNS_REQUIRED).difference(set(ped_df.columns))
             missing_columns = ', '.join(missing_columns)
-            print(f"pedigree file missing missing columns {missing_columns}")
+            print(f"pedigree file missing columns {missing_columns}")
             raise ValueError(
-                f"pedigree file missing missing columns {missing_columns}"
+                f"pedigree file missing columns {missing_columns}"
             )
         return ped_df
 
@@ -492,8 +492,7 @@ class FamiliesLoader:
         df.sex = df.sex.apply(lambda v: v.name)
         df.role = df.role.apply(lambda v: v.name)
         df.status = df.status.apply(lambda v: v.name)
-        if 'generated' in df.columns:
-            df.generated = df.generated.apply(lambda v: 'Y' if v else '')
+
         df.to_csv(filename, index=False, sep='\t')
 
     @staticmethod

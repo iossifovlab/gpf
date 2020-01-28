@@ -87,7 +87,7 @@ class MakefileGenerator:
         return chrom
 
     def prefix_chrom(self, chrom):
-        if self.chrom_prefix and chrom.startswith(self.chrom_prefix):
+        if self.chrom_prefix and not chrom.startswith(self.chrom_prefix):
             return f'{self.chrom_prefix}{chrom}'
         return chrom
 

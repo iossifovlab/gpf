@@ -52,13 +52,14 @@ class FamilyRoleBuilder:
     def _set_person_role(cls, person, role):
         assert isinstance(person, Person)
         assert isinstance(role, Role)
-        if person.role is not None or person.role != Role.unknown:
-            print(
-                f"changing role for {person} from {person.role} to {role}",
-                file=sys.stderr
-            )
-        person._role = role
-        person._attributes['role'] = role
+        if person.role is None or person.role == Role.unknown:
+            if role != person.role:
+                print(
+                    f"changing role for {person} from {person.role} to {role}",
+                    file=sys.stderr
+                )
+                person._role = role
+                person._attributes['role'] = role
 
     def _get_family_proband(self):
         probands = self.family.get_members_with_roles([Role.prb])

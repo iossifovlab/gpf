@@ -295,8 +295,8 @@ class FamiliesData(Mapping):
                 col for col in PEDIGREE_COLUMN_NAMES.values()
                 if col in column_names
             ]
-
-            columns.extend(column_names.difference(set(columns)))
+            extention_columns = column_names.difference(set(columns))
+            columns.extend(extention_columns)
             ped_df = pd.DataFrame.from_records(records, columns=columns)
             self._ped_df = ped_df
 

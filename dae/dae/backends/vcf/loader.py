@@ -1,11 +1,13 @@
+import os
 import sys
-from cyvcf2 import VCF
 
 import numpy as np
 
-from dae.GenomeAccess import GenomicSequence
+from cyvcf2 import VCF
+import pysam
 
 from dae.utils.helpers import str2bool
+from dae.GenomeAccess import GenomicSequence
 
 from dae.utils.variant_utils import is_all_reference_genotype, \
     is_all_unknown_genotype, is_unknown_genotype, GENOTYPE_TYPE
@@ -220,7 +222,18 @@ class VcfLoader(VariantsGenotypesLoader):
             chrom_order[seq] = idx
 
         self.chrom_order = chrom_order
-        self.chromosomes = seqnames
+
+    @property
+    def chromosomes(self):
+        assert len(self.vcfs) > 0
+
+        seqnames = self.vcfs[0].seqnames
+        filename = self.filenames[0]
+        tabix_index_filename = f'{filename}.tbi'
+        if not os.path.exists(tabix_index_filename):
+            return seqnames
+        with pysam.Tabixfile(filename) as tbx:
+            return list(tbx.contigs)
 
     @staticmethod
     def _match_pedigree_to_samples(families, vcf_samples):
