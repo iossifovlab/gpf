@@ -68,7 +68,13 @@ class GPFConfigParser:
         if not isinstance(input_dict, dict):
             return input_dict
         tup_ctor = namedtuple(dict_name, input_dict.keys())
-        return tup_ctor(*input_dict.values())
+
+        class DefaultValueTuple(tup_ctor):
+            def __getattr__(self, name):
+                print(f'WARNING: Attempting to get non-existent attribute {name} on tuple!')
+                return None
+
+        return DefaultValueTuple(*input_dict.values())
 
     @classmethod
     def _namedtuple_to_dict(cls, tup: Tuple[Any]) -> Dict[str, Any]:
