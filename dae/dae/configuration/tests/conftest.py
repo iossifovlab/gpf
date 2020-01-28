@@ -1,6 +1,7 @@
 import pytest
 import os
-from dae.configuration.gpf_config_parser import environ_override
+
+from dae.configuration.gpf_config_parser import validate_path
 
 sample_conf_schema_1 = {
     "id": {"type": "string"},
@@ -45,20 +46,19 @@ sample_conf_schema_3 = {
     },
 }
 
-sample_conf_schema_4 = {
-    "id": {"type": "string"},
-    "name": {"type": "string"},
-    "some_environ_var": {
-        "type": "string",
-        "coerce": environ_override("environ_test"),
-    },
-}
-
 sample_conf_schema_5 = {
     "id": {"type": "string"},
     "name": {"type": "string"},
-    "some_abs_path": {"type": "string", "path": "absolute"},
-    "some_rel_path": {"type": "string", "path": "relative"},
+    "some_abs_path": {
+        "type": "string",
+        "check_with": validate_path,
+        "coerce": "abspath",
+    },
+    "some_rel_path": {
+        "type": "string",
+        "check_with": validate_path,
+        "coerce": "abspath",
+    }
 }
 
 
@@ -84,11 +84,6 @@ def conf_schema_strings():
 @pytest.fixture(scope="session")
 def conf_schema_set():
     return sample_conf_schema_3
-
-
-@pytest.fixture(scope="session")
-def conf_schema_environ():
-    return sample_conf_schema_4
 
 
 @pytest.fixture(scope="session")

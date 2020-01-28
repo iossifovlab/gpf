@@ -22,14 +22,15 @@ def test_config_parser_load_directory(conf_schema_basic, fixtures_dir):
     print(configs)
 
     assert len(configs) == 4
-    assert configs[0].id == "4"
-    assert configs[0].name == "conf4"
-    assert configs[1].id == "1"
-    assert configs[1].name == "conf1"
+    configs = sorted(configs, key=lambda x: x.id)
+    assert configs[0].id == "1"
+    assert configs[0].name == "conf1"
+    assert configs[1].id == "2"
+    assert configs[1].name == "conf2"
     assert configs[2].id == "3"
     assert configs[2].name == "conf3"
-    assert configs[3].id == "2"
-    assert configs[3].name == "conf2"
+    assert configs[3].id == "4"
+    assert configs[3].name == "conf4"
 
 
 def test_config_parser_string_interpolation(conf_schema_strings, fixtures_dir):
@@ -39,7 +40,7 @@ def test_config_parser_string_interpolation(conf_schema_strings, fixtures_dir):
     print(config)
     assert config.id == "152135"
     assert config.name == "Vars test config"
-    assert not hasattr(config, "vars")
+    assert config.vars is None
     assert config.section1.someval1 == "asdf"
     assert config.section1.someval2 == "ghjkl"
     assert config.section1.someval3 == "qwertyasdfghjk"
@@ -56,21 +57,6 @@ def test_config_parser_set_config(conf_schema_set, fixtures_dir):
     assert isinstance(config.section1.someval2, set)
     assert (config.section1.someval2 ^ {"a", "b", "c", "d"}) == set()
     assert config.section1.someval3 == 123
-
-
-def test_config_parser_load_environment_variable(
-    conf_schema_environ, fixtures_dir, mocker
-):
-    mocker.patch.dict(os.environ, {"environ_test": "test_asdf"})
-
-    config = GPFConfigParser.load_config(
-        os.path.join(fixtures_dir, "environ_conf.toml"), conf_schema_environ
-    )
-
-    print(config)
-    assert config.id == "152135"
-    assert config.name == "Environment test config"
-    assert config.some_environ_var == "test_asdf"
 
 
 def test_config_parser_load_paths(conf_schema_path, fixtures_dir, mocker):
@@ -120,3 +106,11 @@ def test_config_parser_env_interpolation_missing(
         os.path.join(fixtures_dir, "env_interpolation_conf.toml"),
         conf_schema_basic,
     )
+
+
+def test_tupleization_default_value():
+    sample_dict = {"a": 1, "b": 2}
+    tupleized = GPFConfigParser._dict_to_namedtuple(sample_dict)
+    assert tupleized.a == 1
+    assert tupleized.b == 2
+    assert tupleized.c is None

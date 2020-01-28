@@ -1,3 +1,0 @@
-id = "152135"
-name = "Environment test config"
-some_environ_var = "thisshouldgetchangedtosomethingelse"

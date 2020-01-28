@@ -1,6 +1,6 @@
 id = "152135"
 name = "Environment interpolation test config"
 [section1]
-someval1 = "%(test_env_var)e"
+someval1 = "{$test_env_var}"
 someval2 = 1.23
 someval3 = 52345
