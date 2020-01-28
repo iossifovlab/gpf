@@ -34,55 +34,210 @@ Role:
 Preparing the pedigree data
 ###########################
 
-The pedigree data may require preparation beforehand. This section describes the requirements for pedigree data that must be met in order to use the tools.
+The pedigree data may require preparation beforehand. This section describes
+ the requirements for pedigree data that must be met in order to use the tools.
 
-In some cases, the initial pedigree file must be expanded with additional individuals in order to correctly form some families. Following that, individuals must be connected to their parents from the newly added individuals.
+In some cases, the initial pedigree file must be expanded with additional
+individuals in order to correctly form some families. Following that,
+individuals must be connected to their parents from the newly added
+individuals.
 
-Next, we need to replace the values in the sex, role and status columns with those used by the GPF system -
-:ref:`sex <allowed_values_sex>`, :ref:`role <allowed_values_role>`, :ref:`status <allowed_values_status>`.
+Next, we need to replace the values in the sex, role and status columns
+with those supported by the GPF system -
+:ref:`sex <allowed_values_sex>`, :ref:`role <allowed_values_role>`,
+:ref:`status <allowed_values_status>`. Each of these properties supports
+synonyms, that are listed in the tables below.
 
-Adding the layout column
-########################
 
-You will need to use the tool 'save_pedigree.py', which can be found in 'DAE/tools'.
+Supported values for roles
+++++++++++++++++++++++++++
 
-The tool has a '-h' or '--help' option, which brings out a list of possible arguments and brief descriptions.
+====================================    ========================================================================================================
+Role column canonical values            Synonyms (case insensitive)
+====================================    ========================================================================================================
+prb                                     proband, prb
 
-For most cases, the default values should be sufficient, but it is recommended to look through and make sure.
+sib                                     sibling, younger sibling, older sibling, sib
+
+maternal_grandmother                    maternal grandmother, maternal_grandmother
+
+maternal_grandfather                    maternal grandfather, maternal_grandfather
+
+paternal_grandmother                    paternal grandmother, paternal_grandmother
+
+paternal_grandfather                    paternal grandfather, paternal_grandfather
+
+mom                                     mom, mother
+
+dad                                     dad, father
+
+child                                   child
+
+maternal_half_sibling                   maternal half sibling, maternal_half_sibling
+
+paternal_half_sibling                   paternal half sibling, paternal_half_sibling
+
+half_sibling                            half sibling, half_sibling
+
+maternal_aunt                           maternal aunt, maternal_aunt
+
+maternal_uncle                          maternal uncle, maternal_uncle
+
+paternal_aunt                           paternal aunt, paternal_aunt
+
+paternal_uncle                          paternal uncle, paternal_uncle
+
+maternal_cousin                         maternal cousin, maternal_cousin
+
+paternal_cousin                         paternal cousin, paternal_cousin
+
+step_mom                                step mom, step_mom, step mother
+
+step_dad                                step dad, step_dad, step father
+
+spouse                                  spouse
+
+unknown                                 unknown
+====================================    ========================================================================================================
+
+
+Supported values for sex
+++++++++++++++++++++++++
+
+====================================    ========================================================================================================
+Sex column canonical values             Synonyms (case insensitive)
+====================================    ========================================================================================================
+F                                       female, F, 2
+
+M                                       male, M, 1
+
+U                                       unspecified, U, 0
+====================================    ========================================================================================================
+
+
+Supported values for status
++++++++++++++++++++++++++++
+
+====================================    ========================================================================================================
+Sex column canonical values             Synonyms (case insensitive)
+====================================    ========================================================================================================
+affected                                affected, 2
+
+unaffected                              unaffected, 1
+
+unspecified                             unspecified, -, 0
+====================================    ========================================================================================================
+
+
+Common arguments for pedigree tools
+###################################
+
+
+positional arguments:                                                                                                                                                                                                                                                                                                                                                                     
+  <families filename>   families filename in pedigree or simple family format                                                                                                                                                                                                                                                                                                             
+                                                                                                                                                                                                                                                                                                                                                                                          
+optional arguments:
+    --ped-family PED_FAMILY                                                                                                                                                                                                                                                                                                                                                                 
+        specify the name of the column in the pedigree file                                                                                                                                                                                                                                                                                                               
+        that holds the ID of the family the person belongs to                                                                                                                                                                                                                                                                                                             
+        [default: familyId]                                                                                                                                                                                                                                                                                                                                               
+
+    --ped-person PED_PERSON                                                                                                                                                                                                                                                                                                                                                                 
+        specify the name of the column in the pedigree file                                                                                                                                                                                                                                                                                                               
+        that holds the person's ID [default: personId]
+
+    --ped-mom PED_MOM   
+        specify the name of the column in the pedigree file                                                                                                                                                                                                                                                                                                               
+        that holds the ID of the person's mother [default:                                                                                                                                                                                                                                                                                                                
+        momId]
+
+    --ped-dad PED_DAD
+        specify the name of the column in the pedigree file                                                                                                                                                                                                                                                                                                               
+        that holds the ID of the person's father [default:                                                                                                                                                                                                                                                                                                                
+        dadId]                                                                                                                                                                                                                                                                                                                                                            
+
+    --ped-sex PED_SEX
+        specify the name of the column in the pedigree file                                                                                                                                                                                                                                                                                                               
+        that holds the sex of the person [default: sex]                                                                                                                                                                                                                                                                                                                   
+
+    --ped-status PED_STATUS                                                                                                                                                                                                                                                                                                                                                                 
+        specify the name of the column in the pedigree file                                                                                                                                                                                                                                                                                                               
+        that holds the status of the person [default: status]                                                                                                                                                                                                                                                                                                             
+
+    --ped-role PED_ROLE
+        specify the name of the column in the pedigree file
+        that holds the role of the person [default: role]
+
+    --ped-no-role
+        indicates that the provided pedigree file has no role
+        column. If this argument is provided, the import tool
+        will guess the roles of individuals and write them in
+        a "role" column.
+
+    --ped-proband PED_PROBAND
+        specify the name of the column in the pedigree file
+        that specifies persons with role `proband`; this
+        columns is used only when option `--ped-no-role` is
+        specified. [default: None]
+
+    --ped-no-header
+        indicates that the provided pedigree file has no
+        header. The pedigree column arguments will accept
+        indices if this argument is given. [default: False]
+
+    --ped-file-format PED_FILE_FORMAT
+        Families file format. It should `pedigree` or
+        `simple`for simple family format [default: pedigree]
+
+    --ped-layout-mode PED_LAYOUT_MODE
+        Layout mode specifies how pedigrees drawing of each
+        family is handled. Available options are `generate`
+        and `load`. When layout mode option is set to generate
+        the loadertryes to generate a layout for the family
+        pedigree. When `load` is specified, the loader tryes
+        to load the layout from the layout column of the
+        pedigree. [default: load]
+
+    --ped-sep PED_SEP
+        Families file field separator [default: `\t`]
+
+
+Transform a pedigree file into default GPF form
+###############################################
+
+To transform a pedigree file into default GPF form one can use `ped2ped.py`
+tool.
+
+The tool has a '-h' or '--help' option, which brings out a list of possible
+arguments and brief descriptions.
+
 
 .. code-block:: bash
 
-    save_pedigree.py inital_pedigree_file.ped -o output_pedigree_file.ped
+    ped2ped.py inital_pedigree_file.ped \
+        ...<additional ped options>... \
+        -o output_pedigree_file.ped
 
 
-Adding a status to generated individuals
-########################################
+Visualize a pedigree file into PDF file
+#######################################
 
-Generated and added individuals must have a '-' status to indicate their origin. This will result in them being colored gray in the pedigree drawing. Individuals that are generated by the save_pedigree tool will have their status set to '-' automatically, but individuals that are added must have their status manually set to '-' beforehand. A script should be ran after save_pedigree to indicate individuals with the '-' status as generated, by setting the appropriate values in the 'generated' column.
-
-
-Drawing the pedigree
-####################
-
-Next, you will need the tool 'draw_pedigree', which can be found again in 'DAE/tools'.
-
-As before, this tool has a help argument detailing its arguments.
-
-You will need to use the output pedigree file from the previous step.
+To visualize a pedigree file into PDF file, that contains drawing of the
+families pedigrees one can use `draw_pedigrees.py` tool:
 
 .. code-block:: bash
 
-    draw_pedigree.py pedigree_file_with_layout.ped -o pedigree_drawing.pdf
+    draw_pedigree.py pedigree_file_with_layout.ped \
+        --mode report \
+        ...<additional ped options>... \
+        -o pedigree_drawing.pdf
 
+The `--mode` option supports two values:
 
-Some notes regarding multigenerational pedigrees
-################################################
+* `report`
+    the tool will generate a family pedigree drawing for each **type**
+    of family;
 
-Generating a pedigree layout and drawing for multigenerational pedigrees involves more steps, and problems may occur during the process. 
+* `families`
+    the tool will generate a family pedigree drawing for each  family.
 
-Potential errors during layout generation
-*****************************************
-
-Although uncommon, errors can occur during layout generation (save_pedigree.py tool). Problems are usually caused by incomplete families. Single, detached individuals are not a problem, as they will be drawn in a separate group containing only that individual. However, an incomplete family - one that is missing an individual to make a connection between two multi-individual groups - will cause problems. This is resolved either by adding additional existing individuals or generation of dummy individuals.
-
-If errors are encountered, the pedigree file will be generated, but some entries in the layout column will contain an error message instead of coordinates. Resolving this is done through manual insertion of layout coordinates.
