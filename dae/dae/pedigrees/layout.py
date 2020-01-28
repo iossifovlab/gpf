@@ -8,15 +8,23 @@ from dae.pedigrees.pedigrees import FamilyConnections, Individual
 from dae.pedigrees.interval_sandwich import SandwichSolver
 
 
+_LAYOUT_REGEX = re.compile(
+    r'(?P<rank>\d):(?P<x>\d*\.?\d+),(?P<y>\d*\.?\d+)'
+)
+
+
 def layout_parser(layout):
-    layout_groups = re.search(
-        r'(?P<level>\d):(?P<x>\d*\.?\d+),(?P<y>\d*\.?\d+)', str(layout))
+    layout_groups = _LAYOUT_REGEX.search(str(layout))
+
     if layout_groups:
-        layout_groups = layout_groups.groupdict()
-        layout_groups['level'] = int(layout_groups['level'])
-        layout_groups['x'] = float(layout_groups['x'])
-        layout_groups['y'] = float(layout_groups['y'])
-    return layout_groups
+        parsed = layout_groups.groupdict()
+        result = {}
+        result['rank'] = int(parsed['rank'])
+        result['x'] = float(parsed['x'])
+        result['y'] = float(parsed['y'])
+        return result
+    else:
+        return None
 
 
 class IndividualWithCoordinates(object):
@@ -123,6 +131,7 @@ class Layout(object):
 
     @staticmethod
     def from_family(family, add_missing_members=True):
+
         family_connections = FamilyConnections.from_family(
             family, add_missing_members=add_missing_members)
 
@@ -157,14 +166,26 @@ class Layout(object):
 
         family_connections = FamilyConnections.from_family(
             family, add_missing_members=False)
+        if family_connections is None:
+            print(
+                f"can't build family connections for family {family.family_id}",
+                file=sys.stderr)
+            return None
+
         layout_positions = defaultdict(list)
         for person in family_connections.members:
             position = layout_parser(person.layout)
             if position is None:
-                return Layout._handle_broken_family_connections(family)
+                print(
+                    f"can't parse layout for person {person}: {person.layout}",
+                    file=sys.stderr)
+                return None
             individual = family_connections.get_individual(person.person_id)
 
-            layout_positions[position['level']].append(
+            assert isinstance(position['rank'], int), \
+                (person, person.layout, position)
+
+            layout_positions[position['rank']].append(
                 IndividualWithCoordinates(
                     individual,
                     position['x'], position['y'])
@@ -182,14 +203,6 @@ class Layout(object):
         layout._create_lines()
 
         return layout
-
-    # @staticmethod
-    # def get_layout_from_positions(positions):
-    #     layout = Layout()
-    #     layout.positions = positions
-    #     layout._create_lines()
-
-    #     return layout
 
     @property
     def id_to_position(self):

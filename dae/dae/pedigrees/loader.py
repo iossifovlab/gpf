@@ -9,6 +9,7 @@ from dae.variants.attributes import Role, Sex, Status
 
 from dae.pedigrees.family import FamiliesData, PEDIGREE_COLUMN_NAMES
 from dae.pedigrees.family_role_builder import FamilyRoleBuilder
+from dae.pedigrees.layout import Layout
 
 
 PED_COLUMNS_REQUIRED = (
@@ -41,13 +42,37 @@ class FamiliesLoader:
             pedigree_filename, **pedigree_format
         )
         families = FamiliesData.from_pedigree_df(ped_df)
-        families._ped_df = ped_df
-        if pedigree_format.get('ped_no_role'):
+
+        FamiliesLoader._build_families_roles(families, pedigree_format)
+        FamiliesLoader._build_families_layouts(families, pedigree_format)
+
+        return families
+
+    @staticmethod
+    def _build_families_layouts(families, pedigree_format):
+        ped_layout_mode = pedigree_format.get('ped_layout_mode')
+        if ped_layout_mode == 'generate':
+            for family in families.values():
+                layout = Layout.from_family(family)
+                layout.apply_to_family(family)
+        elif ped_layout_mode == 'load':
+            pass
+        else:
+            raise ValueError(
+                f"unexpected `--ped-layout-mode` option value "
+                f"`{ped_layout_mode}`")
+
+    @staticmethod
+    def _build_families_roles(families, pedigree_format):
+        has_unknown_roles = any([
+            p.role is None or p.role == Role.unknown
+            for p in families.persons.values()])
+
+        if has_unknown_roles or pedigree_format.get('ped_no_role'):
             for family in families.values():
                 role_build = FamilyRoleBuilder(family)
                 role_build.build_roles()
             families._ped_df = None
-        return families
 
     @staticmethod
     def load_simple_families_file(families_filename):
@@ -79,6 +104,7 @@ class FamiliesLoader:
             'ped_no_header': False,
             'ped_proband': None,
             'ped_no_role': False,
+            'ped_layout_mode': 'load',
         }
 
     @staticmethod
@@ -198,6 +224,18 @@ class FamiliesLoader:
         )
 
         parser.add_argument(
+            '--ped-layout-mode',
+            default='load',
+            help='Layout mode specifies how pedigrees drawing of each family '
+            'is handled. Available options are `generate` and `load`. When ' 
+            'layout mode option is set to generate the loader'
+            'tryes to generate a layout for the family pedigree. '
+            'When `load` is specified, the loader tryes to load the layout '
+            'from the layout column of the pedigree. '
+            '[default: %(default)s]'
+        )
+
+        parser.add_argument(
             '--ped-sep',
             default='\t',
             help='Families file field separator [default: `\\t`]'
@@ -218,7 +256,12 @@ class FamiliesLoader:
             'ped_file_format',
             'ped_sep',
             'ped_proband',
+            'ped_layout_mode',
         ]
+
+        assert argv.ped_file_format in ('simple', 'pedigree')
+        assert argv.ped_layout_mode in ('generate', 'load')
+
         res = {}
 
         res['ped_no_header'] = str2bool(argv.ped_no_header)
@@ -301,8 +344,7 @@ class FamiliesLoader:
                 ped_role: Role.from_name,
                 ped_sex: Sex.from_name,
                 ped_status: Status.from_name,
-                ped_layout: lambda lc: lc.split(':')[-1],
-                ped_generated: lambda g: True if g == '1.0' else False,
+                ped_generated: lambda v: str2bool(v),
                 ped_proband: lambda v: str2bool(v),
             },
             dtype=str,
@@ -382,7 +424,6 @@ class FamiliesLoader:
             raise ValueError(
                 f"pedigree file missing missing columns {missing_columns}"
             )
-
         return ped_df
 
     @staticmethod
@@ -438,8 +479,8 @@ class FamiliesLoader:
         return fam_df
 
     @staticmethod
-    def save_pedigree(ped_df, filename):
-        df = ped_df.copy()
+    def save_pedigree(families, filename):
+        df = families.ped_df.copy()
 
         df = df.rename(columns={
             'person_id': 'personId',
@@ -458,16 +499,3 @@ class FamiliesLoader:
     def save_families(families, filename):
         assert isinstance(families, FamiliesData)
         FamiliesLoader.save_pedigree(families.ped_df, filename)
-
-    @staticmethod
-    def get_default_colum_labels():
-        return {
-            "family_id": "familyId",
-            "person_id": "personId",
-            "father": "dadId",
-            "mother": "momId",
-            "sex": "sex",
-            "status": "status",
-            "role": "role",
-            "layout": "layout"
-        }

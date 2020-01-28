@@ -4,7 +4,7 @@ import os
 import sys
 import argparse
 from dae.backends.impala.parquet_io import \
-    ParquetPartitionDescriptor, ParquetManager
+    ParquetPartitionDescriptor
 from dae.pedigrees.loader import FamiliesLoader
 
 
@@ -54,7 +54,7 @@ def main(argv):
     else:
         output_filename = argv.output_filename
 
-    ParquetManager.families_to_parquet(families, output_filename)
+    FamiliesLoader.save_pedigree(families, output_filename)
 
 
 if __name__ == '__main__':

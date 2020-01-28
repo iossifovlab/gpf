@@ -29,21 +29,18 @@ def build_families_report(families):
     return families_report
 
 
-def draw_family(layout, family):
-    assert layout is not None
-
-    layout_drawer = OffsetLayoutDrawer(
-        layout, 0, 0, show_id=True, show_family=True)
-    draw_layout = layout_drawer.draw(title=family.family_id)
-    return draw_layout
-
-
 def draw_pedigree(layout, title, show_id=True, show_family=True):
 
     layout_drawer = OffsetLayoutDrawer(
         layout, 0, 0, show_id=show_id, show_family=show_family)
     figure = layout_drawer.draw(title=title)
     return figure
+
+
+def build_family_layout(family):
+    # layout = Layout.from_family_layout(family)
+    # if layout is None:
+    return Layout.from_family(family)
 
 
 def draw_families_report(families):
@@ -53,8 +50,7 @@ def draw_families_report(families):
 
     for family_counter in family_counters.counters.values():
         family = family_counter.family
-        layout = Layout.from_family(family)
-
+        layout = build_family_layout(family)
         if len(family_counter.families) > 5:
             count = len(family_counter.families)
             title = f'Number of families: {count}'
@@ -67,11 +63,7 @@ def draw_families_report(families):
 
 def draw_families(families):
     for family_id, family in families.items():
-        layout = Layout.from_family(family)
-        if layout is None:
-            print(f"can't draw family {family.family_id}")
-        else:
-            layout.apply_to_family(family)
+        layout = build_family_layout(family)
 
         figure = draw_pedigree(layout, title=family.family_id)
         yield figure
@@ -88,20 +80,13 @@ def main(argv=sys.argv[1:]):
     FamiliesLoader.cli_arguments(parser)
 
     parser.add_argument(
-        "--output", metavar="o", help="the output filename file",
+        "--output", "-o", metavar="o", help="the output filename file",
         default="output.pdf")
-
-    # parser.add_argument(
-    #     '--show-id', help='show individual id in pedigree', dest='show_id',
-    #     action='store_true', default=False)
-    # parser.add_argument(
-    #     '--show-family', help='show family info below pedigree',
-    #     dest='show_family', action='store_true', default=False)
 
     parser.add_argument(
         '--mode', type=str, default='families', dest='mode',
         help='mode of drawing; supported modes are `families` and `report`; '
-        'defaults: families'
+        'defaults: `report`'
     )
 
     argv = parser.parse_args(argv)

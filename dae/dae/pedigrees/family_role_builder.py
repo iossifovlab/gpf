@@ -1,3 +1,5 @@
+import sys
+
 from collections import defaultdict
 
 from dae.variants.attributes import Role, Status, Sex
@@ -50,6 +52,11 @@ class FamilyRoleBuilder:
     def _set_person_role(cls, person, role):
         assert isinstance(person, Person)
         assert isinstance(role, Role)
+        if person.role is not None or person.role != Role.unknown:
+            print(
+                f"changing role for {person} from {person.role} to {role}",
+                file=sys.stderr
+            )
         person._role = role
         person._attributes['role'] = role
 
