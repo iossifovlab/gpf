@@ -4,6 +4,9 @@ from dae.studies.genotype_browser_config_parser import \
     GenotypeBrowserConfigParser, verify_inheritance_types
 
 
+pytestmark = pytest.mark.skip
+
+
 def test_genotype_browser_parse_variables():
     assert GenotypeBrowserConfigParser.SECTION == 'genotypeBrowser'
     assert GenotypeBrowserConfigParser.CAST_TO_BOOL == (

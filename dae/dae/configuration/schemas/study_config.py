@@ -1,9 +1,18 @@
 from dae.configuration.gpf_config_parser import validate_path
 
+phenotype_schema = {
+    "type": "dict",
+    "schema": {
+        "id": {"type": "string"},
+        "name": {"type": "string"},
+        "color": {"type": "string"},
+    }
+}
+
 people_group_schema = {
     "name": {"type": "string"},
-    "domain": {"type": "list", "schema": {"type": "string"}},
-    "default": {"type": "string"},
+    "domain": {"type": "list", "schema": phenotype_schema},
+    "default": phenotype_schema,
     "source": {"type": "string"},
 }
 
@@ -12,10 +21,44 @@ in_roles_schema = {
     "roles": {"type": "list", "schema": {"type": "string"}},
 }
 
+genotype_slot_schema = {
+    "type": "dict",
+    "schema": {
+        "name": {"type": "string"},
+        "source": {"type": "string"},
+        "format": {"type": "string"},
+    }
+}
+
+pheno_slot_schema = {
+    "type": "dict",
+    "schema": {
+        "role": {"type": "string"},
+        "name": {"type": "string"},
+        "measure": {"type": "string"},
+        "format": {"type": "string"},
+    }
+}
+
+pheno_filter_schema = {
+    "type": "dict",
+    "schema": {
+        "filter_type": {"type": "string"},
+        "role": {"type": "string"},
+        "measure": {"type": "string"},
+    }
+}
+
 genotype_schema = {
     "name": {"type": "string"},
     "source": {"type": "string"},
-    "slots": {"type": "list", "schema": {"type": "string"}},
+    "slots": {"type": "list", "schema": genotype_slot_schema},
+}
+
+pheno_schema = {
+    "name": {"type": "string"},
+    "source": {"type": "string"},
+    "slots": {"type": "list", "schema": pheno_slot_schema},
 }
 
 criteria_schema = {"segments": {"type": "list", "schema": {"type": "string"}}}
@@ -43,7 +86,7 @@ present_in_role_schema = {
 pheno_filters_schema = {
     "name": {"type": "string"},
     "measure_type": {"type": "string"},
-    "filter": {"type": "string"},
+    "filter": {"type": "list", "schema": pheno_filter_schema},
 }
 
 
@@ -187,7 +230,7 @@ study_config_schema = {
             },
             "pheno": {
                 "type": "dict",
-                "valuesrules": {"type": "dict", "schema": genotype_schema},
+                "valuesrules": {"type": "dict", "schema": pheno_schema},
             },
             "selected_genotype_column_values": {
                 "type": "list",
