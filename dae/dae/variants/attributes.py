@@ -144,15 +144,19 @@ class Sex(enum.Enum):
 
     @staticmethod
     def from_name(name):
+        if name is None:
+            return Sex.U
         if isinstance(name, Sex):
             return name
         elif isinstance(name, int):
             return Sex.from_value(name)
-        elif name == 'male' or name == 'M' or name == '1':
+        assert isinstance(name, str)
+        name = name.lower()
+        if name in set(['male', 'm', '1']):
             return Sex.male
-        elif name == 'female' or name == 'F' or name == '2':
+        elif name in set(['female', 'f', '2']):
             return Sex.female
-        elif name == 'unspecified' or name == 'U' or name == '0':
+        elif name in set(['unspecified', 'u', '0']):
             return Sex.unspecified
         raise ValueError("unexpected sex type: " + str(name))
 
@@ -178,15 +182,19 @@ class Status(enum.Enum):
 
     @staticmethod
     def from_name(name):
-        if isinstance(name, Status):
+        if name is None:
+            return Status.unspecified
+        elif isinstance(name, Status):
             return name
         elif isinstance(name, int):
             return Status.from_value(name)
-        elif name == 'unaffected' or name == '1':
+        assert isinstance(name, str)
+        name = name.lower()
+        if name in set(['unaffected', '1']):
             return Status.unaffected
-        elif name == 'affected' or name == '2':
+        elif name in set(['affected', '2']):
             return Status.affected
-        elif name == 'unspecified' or name == '-' or name == '0':
+        elif name in set(['unspecified', '-', '0']):
             return Status.unspecified
         raise ValueError("unexpected status type: " + name)
 

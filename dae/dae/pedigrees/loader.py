@@ -394,8 +394,24 @@ class FamiliesLoader:
                 w.message, w.category, w.filename, w.lineno)
 
         if ped_sample_id in ped_df:
+            if ped_generated in ped_df:
+                def fill_sample_id(r):
+                    if not pd.isna(r.sampleId):
+                        return r.sampleId
+                    else:
+                        if r.generated:
+                            return None
+                        else:
+                            return r.personId
+            else:
+                def fill_sample_id(r):
+                    if not pd.isna(r.sampleId):
+                        return r.sampleId
+                    else:
+                        return r.personId
+
             sample_ids = ped_df.apply(
-                lambda r: r.personId if pd.isna(r.sampleId) else r.sampleId,
+                lambda r: fill_sample_id(r),
                 axis=1,
                 result_type='reduce',
             )
@@ -403,6 +419,10 @@ class FamiliesLoader:
         else:
             sample_ids = pd.Series(data=ped_df[ped_person].values)
             ped_df[ped_sample_id] = sample_ids
+        if ped_generated in ped_df:
+            ped_df[ped_generated] = ped_df[ped_generated].apply(
+                lambda v: v if v else None
+            )
 
         ped_df = ped_df.rename(columns={
             ped_family: PEDIGREE_COLUMN_NAMES['family'],

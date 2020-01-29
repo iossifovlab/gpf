@@ -84,7 +84,7 @@ class Person(object):
 
     @property
     def generated(self):
-        return self._attributes.get('generated', False)
+        return self._attributes.get('generated', None)
 
     @property
     def family_bin(self):
@@ -296,7 +296,7 @@ class FamiliesData(Mapping):
                 if col in column_names
             ]
             extention_columns = column_names.difference(set(columns))
-            columns.extend(extention_columns)
+            columns.extend(sorted(extention_columns))
             ped_df = pd.DataFrame.from_records(records, columns=columns)
             self._ped_df = ped_df
 

@@ -232,8 +232,12 @@ class VcfLoader(VariantsGenotypesLoader):
         tabix_index_filename = f'{filename}.tbi'
         if not os.path.exists(tabix_index_filename):
             return seqnames
-        with pysam.Tabixfile(filename) as tbx:
-            return list(tbx.contigs)
+
+        try:
+            with pysam.Tabixfile(filename) as tbx:
+                return list(tbx.contigs)
+        except Exception:
+            return seqnames
 
     @staticmethod
     def _match_pedigree_to_samples(families, vcf_samples):

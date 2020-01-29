@@ -1,7 +1,6 @@
 import os
 import pytest
 from pandas.api.types import is_string_dtype
-from pandas.testing import assert_frame_equal
 
 from dae.variants.attributes import Role
 
