@@ -13,7 +13,6 @@ from dae.utils.dict_utils import recursive_dict_update
 
 
 def validate_path(field: str, value: str, error: str):
-    print(field, value)
     if not os.path.isabs(value):
         error(field, "is not an absolute path!")
     if not os.path.exists(value):
@@ -131,8 +130,8 @@ class GPFConfigParser:
 
     @classmethod
     def modify_tuple(
-        cls, t: Tuple[Any], new_values: Dict[str, Any]
-    ) -> Tuple[Any]:
+        cls, t: namedtuple, new_values: Dict[str, Any]
+    ) -> namedtuple:
         t_dict = cls._namedtuple_to_dict(t)
         updated_dict = recursive_dict_update(t_dict, new_values)
         return cls._dict_to_namedtuple(updated_dict)

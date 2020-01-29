@@ -8,11 +8,12 @@ import numpy as np
 import pandas as pd
 from collections import defaultdict
 
+from dae.configuration.gpf_config_parser import GPFConfigParser
+from dae.configuration.schemas.score_file_conf import score_file_conf_schema
+
 from dae.annotation.tools.file_io_tsv import TSVFormat, TabixReader, \
         handle_chrom_prefix
 from dae.annotation.tools.schema import Schema
-
-from dae.annotation.tools.annotator_config import ScoreFileConfigParser
 
 try:
     bigwig_enabled = True
@@ -72,14 +73,17 @@ class ScoreFile(object):
         if config_filename is None:
             config_filename = "{}.conf".format(self.score_filename)
 
-        self.config = ScoreFileConfigParser.read_and_parse_file_configuration(
-            config_filename, '')
-        assert 'header' in self.config.general
-        assert 'score' in self.config.columns
+        self.config = GPFConfigParser.load_config(
+            config_filename, score_file_conf_schema
+        )
+
+        assert self.config.general.header is not None
+        assert self.config.columns.score is not None
         self.header = self.config.general.header
         self.score_names = self.config.columns.score
 
-        self.schema = Schema.from_dict(dict(self.config.schema)) \
+
+        self.schema = Schema.from_dict(self.config.score_schema._asdict()) \
                             .order_as(self.header)
 
         assert all([sn in self.schema for sn in self.score_names]), \

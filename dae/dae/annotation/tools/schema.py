@@ -43,7 +43,7 @@ class Schema(object):
     @classmethod
     def from_dict(cls, schema_dict):
         new_schema = Schema()
-        assert type(schema_dict) is dict
+        assert isinstance(schema_dict, dict)
         for col_type in cls.type_map.keys():
             if col_type not in schema_dict:
                 # TODO Should this skip the faulty col_type

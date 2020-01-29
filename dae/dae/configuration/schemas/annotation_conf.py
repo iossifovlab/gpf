@@ -1,70 +1,39 @@
+from dae.configuration.gpf_config_parser import validate_path
+
+# TODO Add additional rules for specific option fields
+
+annotation_section_schema = {
+    "annotator": {"type": "string"},
+    "options": {
+        "type": "dict",
+        "default": dict(),
+        "schema": {
+            "mode": {"type": "string"},
+            "scores_file": {
+                "type": "string",
+                "check_with": validate_path,
+                "coerce": "abspath",
+            },
+            "vcf": {"type": "boolean", "default": False},
+            "prom_len": {"type": "integer", "default": 0},
+            "c": {"type": "string", "required": False},
+            "p": {"type": "string", "required": False},
+            "r": {"type": "string", "required": False},
+            "a": {"type": "string", "required": False},
+            "v": {"type": "string", "required": False},
+            "x": {"type": "string", "required": False},
+        },
+    },
+    "columns": {"type": "dict", "default": dict(), "valuesrules": {"type": "string"}},
+    "virtual_columns": {"type": "list", "default": list(), "schema": {"type": "string"}},
+}
+
 annotation_conf_schema = {
-    "Variant Effect Annotation": {
-        "type": "dict",
+    "sections": {
+        "type": "list",
         "schema": {
-            "annotator": {"type": "string"},
-            "columns.effect_type": {"type": "string"},
-            "columns.effect_genes": {"type": "string"},
-            "columns.effect_gene_genes": {"type": "string"},
-            "columns.effect_gene_types": {"type": "string"},
-            "columns.effect_details": {"type": "string"},
-            "columns.effect_details_transcript_ids": {"type": "string"},
-            "columns.effect_details_details": {"type": "string"},
-        },
-    },
-    "CADD Score": {
-        "type": "dict",
-        "schema": {
-            "annotator": {"type": "string"},
-            "options.scores_file": {"type": "string"},
-            "columns.raw": {"type": "string"},
-            "columns.phred": {"type": "string"},
-        },
-    },
-    "MPC Score": {
-        "type": "dict",
-        "schema": {
-            "annotator": {"type": "string"},
-            "options.scores_file": {"type": "string"},
-            "columns.MPC": {"type": "string"},
-        },
-    },
-    "gnomAD Genome Frequency": {
-        "type": "dict",
-        "schema": {
-            "annotator": {"type": "string"},
-            "options.scores_file": {"type": "string"},
-            "columns.AF": {"type": "string"},
-            "columns.AF_percent": {"type": "string"},
-            "columns.AC": {"type": "string"},
-            "columns.AN": {"type": "string"},
-            "columns.controls_AC": {"type": "string"},
-            "columns.controls_AN": {"type": "string"},
-            "columns.controls_AF": {"type": "string"},
-            "columns.non_neuro_AC": {"type": "string"},
-            "columns.non_neuro_AN": {"type": "string"},
-            "columns.non_neuro_AF": {"type": "string"},
-            "columns.controls_AF_percent": {"type": "string"},
-            "columns.non_neuro_AF_percent": {"type": "string"},
-        },
-    },
-    "gnomAD Exome Frequency": {
-        "type": "dict",
-        "schema": {
-            "annotator": {"type": "string"},
-            "options.scores_file": {"type": "string"},
-            "columns.AF": {"type": "string"},
-            "columns.AF_percent": {"type": "string"},
-            "columns.AC": {"type": "string"},
-            "columns.AN": {"type": "string"},
-            "columns.controls_AC": {"type": "string"},
-            "columns.controls_AN": {"type": "string"},
-            "columns.controls_AF": {"type": "string"},
-            "columns.non_neuro_AC": {"type": "string"},
-            "columns.non_neuro_AN": {"type": "string"},
-            "columns.non_neuro_AF": {"type": "string"},
-            "columns.controls_AF_percent": {"type": "string"},
-            "columns.non_neuro_AF_percent": {"type": "string"},
-        },
-    },
+            "type": "dict",
+            "schema": annotation_section_schema
+        }
+    }
 }

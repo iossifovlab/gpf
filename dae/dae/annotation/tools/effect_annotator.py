@@ -24,7 +24,7 @@ class EffectAnnotatorBase(VariantAnnotatorBase):
         self.columns = OrderedDict()
         for col_name, col_type in self.COLUMNS_SCHEMA:
             self.columns[col_name] = \
-                self.config.columns.get(col_name, None)
+                getattr(self.config.columns, col_name)
 
     def collect_annotator_schema(self, schema):
         super(EffectAnnotatorBase, self).collect_annotator_schema(schema)

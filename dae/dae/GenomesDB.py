@@ -1,3 +1,4 @@
+from dae.RegionOperations import Region
 from dae.GenomeAccess import openRef
 from dae.GeneModelFiles import load_gene_models
 
@@ -35,6 +36,22 @@ class GenomesDB(object):
 
         self.config = GPFConfigParser.load_config(conf_file, genomes_db_conf)
 
+        regions_x = [
+            Region.from_str(region)
+            for region in self.config.PARs.regions.X
+        ]
+        regions_y = [
+            Region.from_str(region)
+            for region in self.config.PARs.regions.X
+        ]
+        regions = {"X": regions_x, "Y": regions_y}
+
+        self.config = GPFConfigParser.modify_tuple(
+            self.config, {"PARs": GPFConfigParser.modify_tuple(
+                self.config.PARs, {"regions": regions}
+            )}
+        )
+
         self.default_genome = self.config.genomes.default_genome
         self._gene_models = {}
         self._mito_gene_models = {}
@@ -66,10 +83,9 @@ class GenomesDB(object):
         return openRef(genome_file)
 
     def get_gene_model(self, gene_model_id, genome_id):
-        gene_model_file = \
-            self.config.genome[genome_id].gene_model[gene_model_id].file
-
-        return load_gene_models(gene_model_file)
+        genome = getattr(self.config.genome, genome_id)
+        gene_model = getattr(genome.gene_model, gene_model_id)
+        return load_gene_models(gene_model.file)
 
     def get_pars_x_test(self):
         regions_x = self.config.PARs.regions.x.region

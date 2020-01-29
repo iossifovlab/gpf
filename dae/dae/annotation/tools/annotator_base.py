@@ -3,9 +3,9 @@ import traceback
 
 import pandas as pd
 
-from box import Box
 from copy import deepcopy
 
+from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.annotation.tools.utils import LineMapper
 
 from dae.utils.dae_utils import dae2vcf_variant
@@ -19,8 +19,6 @@ class AnnotatorBase(object):
     '''
 
     def __init__(self, config):
-        assert isinstance(config, Box)
-
         self.config = config
 
         self.mode = 'replace'
@@ -63,7 +61,6 @@ class AnnotatorBase(object):
                 file_io_manager.line_write(line)
                 continue
             annotation_line = line_mapper.map(line)
-            # print(annotation_line)
 
             try:
                 self.line_annotation(annotation_line)
@@ -111,7 +108,6 @@ class CopyAnnotator(AnnotatorBase):
 
 class VariantBuilder(object):
     def __init__(self, config, genome):
-        assert isinstance(config, Box)
         self.config = config
         self.genome = genome
 
@@ -212,8 +208,6 @@ class VariantAnnotatorBase(AnnotatorBase):
     def __init__(self, config):
         super(VariantAnnotatorBase, self).__init__(config)
 
-        assert isinstance(config, Box)
-
         self.genome = self.config.genome
 
         if self.config.options.vcf:
@@ -222,16 +216,18 @@ class VariantAnnotatorBase(AnnotatorBase):
             self.variant_builder = DAEBuilder(self.config, self.genome)
 
         if not self.config.virtual_columns:
-            self.config.virtual_columns = [
-                'CSHL:location',
-                'CSHL:chr',
-                'CSHL:position',
-                'CSHL:variant',
-                'VCF:chr',
-                'VCF:position',
-                'VCF:ref',
-                'VCF:alt',
-            ]
+            self.config = GPFConfigParser.modify_tuple(
+                self.config, {"virtual_columns": [
+                    'CSHL:location',
+                    'CSHL:chr',
+                    'CSHL:position',
+                    'CSHL:variant',
+                    'VCF:chr',
+                    'VCF:position',
+                    'VCF:ref',
+                    'VCF:alt',
+                ]}
+            )
 
     def collect_annotator_schema(self, schema):
         for vcol in self.config.virtual_columns:
