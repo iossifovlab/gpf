@@ -130,7 +130,6 @@ class GeneWeightsDb(object):
     def __init__(self, config):
         super(GeneWeightsDb, self).__init__()
         self.config = config
-
         self.weights = OrderedDict()
         self._load()
 
@@ -164,7 +163,7 @@ class GeneWeightsDb(object):
     def _load(self):
         for weight_config in self.config:
             w = GeneWeight(weight_config)
-            self.weights[type(weight_config).__name__] = w
+            self.weights[weight_config.section_id()] = w
 
     def __getitem__(self, weight_id):
         if weight_id not in self.weights:
