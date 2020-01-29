@@ -235,12 +235,22 @@ class FamiliesData(Mapping):
         self._ped_df = None
         self._families = {}
         self.persons = {}
+        self._broken = {}
 
     def redefine(self):
         self.persons = {}
         self._ped_df = None
-        for family in self._families.values():
+
+        all_families = self._families.values()
+        self._families = {}
+        for family in all_families:
             family.redefine()
+
+            if len(family) == 0:
+                self._broken[family.family_id] = family
+            else:
+                self._families[family.family_id] = family
+
             for person in family.full_members:
                 self.persons[person.person_id] = person
 

@@ -63,7 +63,7 @@ def is_reference_genotype(gt):
 
 
 def is_all_reference_genotype(gt):
-    return np.all(gt == 0)
+    return not np.any(gt != 0)
 
 
 def is_unknown_genotype(gt):

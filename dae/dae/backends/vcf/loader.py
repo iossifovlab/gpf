@@ -21,45 +21,26 @@ from dae.backends.raw.loader import VariantsGenotypesLoader, \
 
 class VcfFamiliesGenotypes(FamiliesGenotypes):
 
-    def __init__(self, families, families_genotypes, params={}):
+    def __init__(self, loader, families_genotypes):
         super(VcfFamiliesGenotypes, self).__init__()
-        self.families = families
+
+        self.loader = loader
         self.families_genotypes = families_genotypes
-        self.include_reference_genotypes = \
-            params.get('vcf_include_reference_genotypes', False)
-        self.include_unknown_family_genotypes = \
-            params.get('vcf_include_unknown_family_genotypes', False)
-        self.include_unknown_person_genotypes = \
-            params.get('vcf_include_unknown_person_genotypes', False)
-        self.multi_loader_fill_in_mode = \
-            params.get('vcf_multi_loader_fill_in_mode', 'reference')
-
-    def get_family_genotype(self, family):
-        gt = self.families_genotypes[0:2, family.samples_index]
-        assert gt.shape == (2, len(family)), \
-            f"{gt.shape} == (2, {len(family)})"
-        return gt
-
-    def get_family_best_state(self, family):
-        return None
 
     def family_genotype_iterator(self):
-        for fam in self.families.values():
-            if len(fam) == 0:
+        for family, samples_index in self.loader.families_samples_indexes:
+            gt = self.families_genotypes[0:2, samples_index]
+            if not self.loader.include_reference_genotypes and \
+                    is_all_reference_genotype(gt):
                 continue
-            gt = self.get_family_genotype(fam)
-            if is_all_reference_genotype(gt) \
-                    and not self.include_reference_genotypes:
+            if not self.loader.include_unknown_person_genotypes and \
+                    is_unknown_genotype(gt):
                 continue
-            if is_unknown_genotype(gt) \
-                    and not self.include_unknown_person_genotypes:
+            if not self.loader.include_unknown_family_genotypes and \
+                    is_all_unknown_genotype(gt):
                 continue
-            if is_all_unknown_genotype(gt) \
-                    and not self.include_unknown_family_genotypes:
-                continue
-            bs = self.get_family_best_state(fam)
 
-            yield fam, gt, bs
+            yield family, gt, None
 
     def full_families_genotypes(self):
         return self.families_genotypes
@@ -107,12 +88,22 @@ class VcfLoader(VariantsGenotypesLoader):
             samples += vcf.samples
         samples = np.array(samples)
 
-        self._match_pedigree_to_samples(families, samples)
+        self.families_samples_indexes = \
+            self._match_pedigree_to_samples(families, samples)
 
         self._init_chromosome_order()
         self.set_attribute('source_type', 'vcf')
         self._init_denovo_mode()
         self._init_omission_mode()
+
+        self.include_reference_genotypes = \
+            params.get('vcf_include_reference_genotypes', False)
+        self.include_unknown_family_genotypes = \
+            params.get('vcf_include_unknown_family_genotypes', False)
+        self.include_unknown_person_genotypes = \
+            params.get('vcf_include_unknown_person_genotypes', False)
+        self.multi_loader_fill_in_mode = \
+            params.get('vcf_multi_loader_fill_in_mode', 'reference')
 
     def _init_denovo_mode(self):
         denovo_mode = self.params.get('vcf_denovo_mode', 'possible_denovo')
@@ -262,6 +253,11 @@ class VcfLoader(VariantsGenotypesLoader):
                 person.set_attr(
                     'generated',  True)
         families.redefine()
+        families_samples_indexes = [
+            (family, family.samples_index)
+            for family in families.values()
+        ]
+        return families_samples_indexes
 
     def _build_summary_variant(self, summary_index, vcf_variant):
         records = []
@@ -336,6 +332,7 @@ class VcfLoader(VariantsGenotypesLoader):
         return gt
 
     def _full_variants_iterator_impl(self):
+
         summary_variant_index = 0
         for region in self.regions:
             vcf_iterators = self._build_vcf_iterators(region)
@@ -363,9 +360,7 @@ class VcfLoader(VariantsGenotypesLoader):
                         )
 
                 family_genotypes = VcfFamiliesGenotypes(
-                    self.families,
-                    VcfLoader.transform_vcf_genotypes(genotypes),
-                    params=self.params)
+                    self, VcfLoader.transform_vcf_genotypes(genotypes))
 
                 family_variants = []
                 for fam, gt, bs in family_genotypes.family_genotype_iterator():
