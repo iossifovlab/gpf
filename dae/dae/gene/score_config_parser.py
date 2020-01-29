@@ -1,7 +1,3 @@
-from dae.configuration.config_parser_base import ConfigParserBase
-from dae.configuration.utils import IMPALA_RESERVED_WORDS
-
-
 def verify_impala_identifier(value):
     errs = []
     errmsg = "ERROR: The value '{}' ".format(value)
@@ -33,7 +29,7 @@ def verify_impala_identifier(value):
     return value
 
 
-class ScoreConfigParser(ConfigParserBase):
+class ScoreConfigParser():
 
     CAST_TO_INT = (
         'bins',

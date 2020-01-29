@@ -54,6 +54,13 @@ dae_conf_schema = {
         "check_with": validate_path,
         "coerce": "abspath",
     },
+    "annotation_defaults": {
+        "type": "dict",
+        "schema": {
+            "wd": {"type": "string"},
+            "data_dir": {"type": "string"},
+        }
+    },
     "genotype_storage": {
         "type": "dict",
         "schema": {"default": {"type": "string"}},

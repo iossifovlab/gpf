@@ -40,46 +40,99 @@ present_in_role_schema = {
     "roles": {"type": "list", "schema": {"type": "string"}},
 }
 
-pheno_filtes_schema = {
+pheno_filters_schema = {
     "name": {"type": "string"},
     "measure_type": {"type": "string"},
     "filter": {"type": "string"},
 }
 
-genotype_data_study_schema = {
+
+family_schema = {
+    "path": {
+        "type": "string",
+        "check_with": validate_path,
+        "coerce": "abspath",
+        "required": True,
+    },
+    "params": {"type": "dict", "valuesrules": {"type": "string"}},
+}
+
+variants_file = {
+    "path": {
+        "type": "string",
+        "check_with": validate_path,
+        "coerce": "abspath",
+        "required": True,
+    },
+    "format": {
+        "type": "string",
+        "allowed": ["dae", "vcf", "denovo"],
+        "required": True,
+    },
+    "params": {"type": "dict", "valuesrules": {"type": "string"}},
+}
+
+genotype_storage_schema = {
+    "id": {"type": "string"},
+    "files": {
+        "type": "dict",
+        "schema": {
+            "pedigree": {"type": "dict", "schema": family_schema},
+            "variants": {
+                "type": "list",
+                "schema": {"type": "dict", "schema": variants_file},
+            },
+        },
+        "excludes": "tables",
+    },
+    "tables": {
+        "type": "dict",
+        "schema": {
+            "pedigree": {"type": "string"},
+            "variants": {"type": "string"},
+        },
+        "excludes": "files",
+    },
+}
+
+
+study_config_schema = {
     "id": {"type": "string"},
     "name": {"type": "string"},
+    "enabled": {"type": "boolean"},
+    "work_dir": {
+        "type": "string",
+        "check_with": validate_path,
+        "coerce": "abspath",
+    },
     "phenotype_data": {"type": "string"},
-    "genotype_browser": {"type": "boolean"},
     "phenotype_browser": {"type": "boolean"},
     "phenotype_tool": {"type": "boolean"},
     "enrichment_tool": {"type": "boolean"},
-    "common_report": {"type": "boolean"},
-    "description": {"type": "string"},
-    "people_groups": {"type": "string"},
+    "description": {"type": "string", "excludes": "description_file"},
+    "description_file": {
+        "type": "string",
+        "check_with": validate_path,
+        "coerce": "abspath",
+        "excludes": "description",
+    },
+    "selected_people_groups": {"type": "string"},
     "study_type": {"type": "string"},
-    "year": {"type": "integer"},
-    "pub_med": {"type": "string"},
+    "year": {"type": "list", "schema": {"type": "integer"}},
+    "pub_med": {"type": "list", "schema": {"type": "string"}},
     "has_denovo": {"type": "boolean"},
     "has_transmitted": {"type": "boolean"},
     "has_complex": {"type": "boolean"},
     "has_cnv": {"type": "boolean"},
-    "genotype_storage": {"type": "string"},
-}
-
-genotype_data_group_schema = {
-    **genotype_data_study_schema,
-    "studies": {"type": "list", "schema": {"type": "string"}},
-}
-
-study_config_schema = {
-    "genotype_data_study": {
+    "genotype_storage": {
         "type": "dict",
-        "schema": genotype_data_study_schema,
+        "schema": genotype_storage_schema,
+        "excludes": "studies",
     },
-    "genotype_data_group": {
-        "type": "dict",
-        "schema": genotype_data_group_schema,
+    "studies": {
+        "type": "list",
+        "schema": {"type": "string"},
+        "excludes": "genotype_storage",
     },
     "people_group": {
         "type": "dict",
@@ -93,6 +146,7 @@ study_config_schema = {
     "genotype_browser": {
         "type": "dict",
         "schema": {
+            "enabled": {"type": "boolean"},
             "has_cnv": {"type": "boolean"},
             "has_complex": {"type": "boolean"},
             "has_family_filters": {"type": "boolean"},
@@ -100,6 +154,7 @@ study_config_schema = {
             "has_present_in_child": {"type": "boolean"},
             "has_present_in_parent": {"type": "boolean"},
             "has_pedigree_selector": {"type": "boolean"},
+            "has_study_types": {"type": "boolean"},
             "selected_pheno_column_values": {
                 "type": "list",
                 "schema": {"type": "string"},
@@ -153,7 +208,10 @@ study_config_schema = {
             },
             "pheno_filters": {
                 "type": "dict",
-                "valuesrules": {"type": "dict", "schema": pheno_filtes_schema},
+                "valuesrules": {
+                    "type": "dict",
+                    "schema": pheno_filters_schema,
+                },
             },
             "selected_pheno_filters_values": {
                 "type": "list",
@@ -164,16 +222,25 @@ study_config_schema = {
     "common_report": {
         "type": "dict",
         "schema": {
-            "people_groups": {"type": "list", "schema": {"type": "string"}},
+            "enabled": {"type": "boolean"},
+            "selected_people_groups": {
+                "type": "list",
+                "schema": {"type": "string"},
+            },
             "groups": {"type": "list", "schema": {"type": "string"}},
             "effect_groups": {"type": "list", "schema": {"type": "string"}},
             "effect_types": {"type": "list", "schema": {"type": "string"}},
+            "families_count_show_id": {"type": "integer"},
+            "draw_all_families": {"type": "boolean"},
         },
     },
     "denovo_gene_sets": {
         "type": "dict",
         "schema": {
-            "people_groups": {"type": "list", "schema": {"type": "string"}},
+            "selected_people_groups": {
+                "type": "list",
+                "schema": {"type": "string"},
+            },
             "standard_criterias": {
                 "type": "dict",
                 "valuesrules": {"type": "dict", "schema": criteria_schema},
@@ -188,7 +255,10 @@ study_config_schema = {
     "enrichment": {
         "type": "dict",
         "schema": {
-            "people_groups": {"type": "list", "schema": {"type": "string"}},
+            "selected_people_groups": {
+                "type": "list",
+                "schema": {"type": "string"},
+            },
             "selected_background_values": {
                 "type": "list",
                 "schema": {"type": "string"},

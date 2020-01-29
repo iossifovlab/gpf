@@ -16,7 +16,7 @@ class GeneWeight(GenomicValues):
     """
 
     def __init__(self, config):
-        super(GeneWeight, self).__init__(type(config).__name__)
+        super(GeneWeight, self).__init__(config.section_id())
         self.config = config
 
         self.genomic_values_col = 'gene'

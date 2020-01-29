@@ -38,7 +38,7 @@ class VariantsDb(object):
         )
 
         self.genotype_data_study_configs = {
-            ds.genotype_data_study.id: ds.genotype_data_study
+            ds.id: ds
             for ds in study_configs
         }
 
@@ -48,7 +48,7 @@ class VariantsDb(object):
         )
 
         self.genotype_data_group_configs = {
-            dg.genotype_data_group.id: dg.genotype_data_group
+            dg.id: dg
             for dg in data_groups
         }
 
@@ -247,7 +247,7 @@ class VariantsDb(object):
             return None
 
         genotype_storage = self.genotype_storage_factory. \
-            get_genotype_storage(study_config.genotype_storage)
+            get_genotype_storage(study_config.genotype_storage.id)
 
         if genotype_storage is None:
             raise ValueError(
@@ -280,5 +280,4 @@ class VariantsDb(object):
                     ))
             genotype_studies.append(genotype_data_study)
         assert genotype_studies
-
         return GenotypeDataGroup(genotype_data_group_config, genotype_studies)

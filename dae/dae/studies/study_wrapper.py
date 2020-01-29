@@ -50,8 +50,8 @@ class StudyWrapper(object):
         pheno_filters = []
         present_in_role = []
 
-        if hasattr(self.config, "genotype_browser_config"):
-            genotype_browser_config = self.config.genotype_browser_config
+        genotype_browser_config = self.config.genotype_browser
+        if genotype_browser_config:
             preview_column_slots = genotype_browser_config.preview_column_slots
             download_column_slots = \
                 genotype_browser_config.download_column_slots
@@ -60,7 +60,7 @@ class StudyWrapper(object):
             gene_weight_column_sources = \
                 genotype_browser_config.gene_weight_column_sources
             in_role_columns = \
-                self.config.genotype_browser_config.in_role_columns
+                genotype_browser_config.in_role_columns
 
             pheno_filters = genotype_browser_config.pheno_filters
             if genotype_browser_config.present_in_role:
@@ -70,7 +70,7 @@ class StudyWrapper(object):
         self.gene_weight_column_sources = gene_weight_column_sources
         self.in_role_columns = in_role_columns
 
-        if hasattr(self.config, "people_group_config"):
+        if self.config.people_group_config:
             people_group = self.config.people_group_config.people_group
 
         self.people_group = people_group
@@ -85,20 +85,20 @@ class StudyWrapper(object):
         else:
             self.legend = {}
 
-        self.preview_columns = []
-        self.preview_sources = []
-        self.download_columns = []
-        self.download_sources = []
+        preview_slots = ()
+        download_slots = ()
 
-        preview_slots = tuple(map(list, zip(*[
-            (attr['id'], attr['source'])
-            for attr in preview_column_slots.values()
-        ])))
+        if preview_column_slots:
+            preview_slots = tuple(map(list, zip(*[
+                (attr['id'], attr['source'])
+                for attr in preview_column_slots.values()
+            ])))
 
-        download_slots = tuple(map(list, zip(*[
-            (attr['name'], attr['source'])
-            for attr in download_column_slots.values()
-        ])))
+        if download_column_slots:
+            download_slots = tuple(map(list, zip(*[
+                (attr['name'], attr['source'])
+                for attr in download_column_slots.values()
+            ])))
 
         if len(preview_slots) > 0:
             self.preview_columns, self.preview_sources = preview_slots
@@ -111,15 +111,16 @@ class StudyWrapper(object):
         self.pheno_filter_builder = None
 
         self.pheno_filters_in_config = set()
-        if hasattr(self.config, 'phenotype_data'):
-            phenotype_data = self.config.phenotype_data
+        phenotype_data = self.config.phenotype_data
+        if phenotype_data:
             self.phenotype_data = pheno_db.get_phenotype_data(phenotype_data)
 
             if self.pheno_filters:
                 self.pheno_filters_in_config = {
                     self._get_pheno_filter_key(pf.measureFilter)
                     for pf in self.pheno_filters
-                    if pf['measureFilter']['filterType'] == 'single'
+                    if pf.measure_filter and
+                    pf.measure_filter.filter_type == 'single'
                 }
                 self.pheno_filter_builder = PhenoFilterBuilder(
                     self.phenotype_data
@@ -394,6 +395,8 @@ class StudyWrapper(object):
         return list(zip(pheno_column_dfs, pheno_column_names))
 
     def _get_gene_weights_values(self, allele):
+        if not self.gene_weight_column_sources:
+            return {}
         genes = gene_effect_get_genes(allele.effects).split(';')
         gene = genes[0]
 
@@ -628,9 +631,8 @@ class StudyWrapper(object):
 
                 if filter_option == 'neither':
                     new_roles = AndNode([
-                        NotNode(ContainsNode(Role.from_display_name(role)))
-                        for role in self.get_present_in_role(pir_id)
-                                        .get('roles')
+                        NotNode(ContainsNode(Role.from_name(role)))
+                        for role in self.get_present_in_role(pir_id).roles
                     ])
 
                 if new_roles:
@@ -719,7 +721,7 @@ class StudyWrapper(object):
             return {}
 
         present_in_role = list(filter(
-            lambda present_in_role: present_in_role.get('id') ==
+            lambda present_in_role: present_in_role.section_id() ==
             present_in_role_id, self.present_in_role))
 
         return present_in_role[0] if present_in_role else {}

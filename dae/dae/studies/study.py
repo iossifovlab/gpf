@@ -12,19 +12,20 @@ class GenotypeData:
 
         self.id = self.config.id
         self.name = self.config.name
-        self.description = self.config.description
-        self.year = getattr(self.config, "year", None)
-        self.pub_med = getattr(self.config, "pub_med", None)
+        if self.config.description_file:
+            with open(self.config.description_file, "r") as infile:
+                self.description = infile.read()
+        else:
+            self.description = self.config.description
+        self.year = self.config.year
+        self.pub_med = self.config.pub_med
 
-        self.has_denovo = getattr(self.config, "has_denovo", False)
-        self.has_transmitted = getattr(self.config, "has_transmitted", False)
-        self.has_cnv = getattr(self.config, "has_cnv", False)
-        self.has_complex = getattr(self.config, "has_complex", False)
+        self.has_denovo = self.config.has_denovo
+        self.has_transmitted = self.config.has_transmitted
+        self.has_cnv = self.config.has_cnv
+        self.has_complex = self.config.has_complex
 
-        self.study_type = getattr(self.config, "study_type", None)
-        self.study_types = getattr(self.config, "study_types", None)
-        self.years = getattr(self.config, "years", None)
-        self.pub_meds = getattr(self.config, "pub_meds", None)
+        self.study_type = self.config.study_type
         self.families_groups = None
 
     def query_variants(
