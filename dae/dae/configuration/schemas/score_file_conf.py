@@ -14,6 +14,8 @@ score_file_conf_schema = {
             "chr": {"type": "string"},
             "pos_begin": {"type": "string"},
             "pos_end": {"type": "string"},
+            "ref": {"type": "string"},
+            "alt": {"type": "string"},
             "score": {"type": "list", "schema": {"type": "string"}},
         }
     },

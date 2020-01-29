@@ -52,7 +52,7 @@ def test_annotator_base_simple(genomes_db_2013):
 
     section_config = AnnotationConfigParser.parse_section(
         Box({
-            'options': opts,
+            'options': {},
             'columns': {
                 'CSHL:chr': 'chr',
                 'CSHL:position': 'pos'
@@ -71,7 +71,7 @@ def test_copy_annotator_simple(capsys, variants_io1, genomes_db_2013):
 
     section_config = AnnotationConfigParser.parse_section(
         Box({
-            'options': opts,
+            'options': {},
             'columns': {
                 'location': 'loc1',
                 'variant': 'var1'
