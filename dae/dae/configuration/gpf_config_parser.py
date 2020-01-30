@@ -63,6 +63,12 @@ class GPFConfigParser:
             def section_id(self):
                 return dict_name
 
+            def field_values_iterator(self):
+                return zip(
+                    self._fields,
+                    self
+                )
+
         for key, value in input_dict.items():
             if isinstance(value, dict):
                 input_dict[key] = cls._dict_to_namedtuple(value, key)
