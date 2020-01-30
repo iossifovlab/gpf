@@ -460,11 +460,9 @@ class VariantsGenotypesLoader(VariantsLoader):
 
     @classmethod
     def _calc_best_state(
-        cls, family_variant: FamilyVariant, genome: GenomicSequence
+        cls, family_variant: FamilyVariant, genome: GenomicSequence,
+        force: bool = True
     ) -> np.array:
-        best_state = calculate_simple_best_state(
-            family_variant.gt, family_variant.allele_count
-        )
 
         male_ploidy = get_locus_ploidy(
             family_variant.chromosome,
@@ -474,6 +472,9 @@ class VariantsGenotypesLoader(VariantsLoader):
         )
 
         if family_variant.chromosome in ('X', 'chrX') and male_ploidy == 1:
+            best_state = calculate_simple_best_state(
+                family_variant.gt, family_variant.allele_count
+            )
             male_ids = [
                 person_id
                 for person_id, person
@@ -496,7 +497,11 @@ class VariantsGenotypesLoader(VariantsLoader):
                 #         family_variant, mat2str(family_variant.gt),
                 #         file=sys.stderr)
 
-        return best_state
+            return best_state
+        elif force:
+            return calculate_simple_best_state(
+                family_variant.gt, family_variant.allele_count
+            )
 
     @classmethod
     def _calc_genotype(
@@ -567,7 +572,8 @@ class VariantsGenotypesLoader(VariantsLoader):
                     family_variant._best_state = \
                         self._calc_best_state(
                             family_variant,
-                            self.genome
+                            self.genome,
+                            force=False
                         )
                     for fa in family_variant.alleles:
                         fa._best_state = family_variant.best_state

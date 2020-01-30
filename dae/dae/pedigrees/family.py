@@ -203,8 +203,9 @@ class Family(object):
     @property
     def samples_index(self):
         if self._samples_index is None:
-            self._samples_index = np.array([
-                m.sample_index for m in self.members_in_order])
+            self._samples_index = tuple([
+                    m.sample_index for m in self.members_in_order
+                ])
         return self._samples_index
 
     def members_index(self, person_ids):
@@ -235,12 +236,22 @@ class FamiliesData(Mapping):
         self._ped_df = None
         self._families = {}
         self.persons = {}
+        self._broken = {}
 
     def redefine(self):
         self.persons = {}
         self._ped_df = None
-        for family in self._families.values():
+
+        all_families = self._families.values()
+        self._families = {}
+        for family in all_families:
             family.redefine()
+
+            if len(family) == 0:
+                self._broken[family.family_id] = family
+            else:
+                self._families[family.family_id] = family
+
             for person in family.full_members:
                 self.persons[person.person_id] = person
 
@@ -296,6 +307,8 @@ class FamiliesData(Mapping):
                 if col in column_names
             ]
             extention_columns = column_names.difference(set(columns))
+            extention_columns = extention_columns.difference(
+                set(['sample_index']))
             columns.extend(sorted(extention_columns))
             ped_df = pd.DataFrame.from_records(records, columns=columns)
             self._ped_df = ped_df
