@@ -44,9 +44,9 @@ def test_quads_f1_config_attr_access(
     ('has_present_in_parent', False),
     ('has_family_filters', False),
     ('has_pedigree_selector', True),
-    ('has_cnv', None),
-    ('has_complex', None),
-    ('has_study_filters', None),
+    ('has_cnv', False),
+    ('has_complex', False),
+    ('has_study_filters', True),
 ])
 def test_quads_f1_config_genotype_browser(
         quads_f1_config, option_name, expected_value):

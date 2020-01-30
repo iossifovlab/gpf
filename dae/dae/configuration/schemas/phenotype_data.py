@@ -1,4 +1,4 @@
-from dae.configuration.gpf_config_parser import validate_path
+from dae.configuration.gpf_config_parser import validate_existing_path
 
 regression_schema = {
     "instrument_name": {"type": "string"},
@@ -11,17 +11,17 @@ phenotype_data_schema = {
     "name": {"type": "string"},
     "dbfile": {
         "type": "string",
-        "check_with": validate_path,
+        "check_with": validate_existing_path,
         "coerce": "abspath",
     },
     "browser_dbfile": {
         "type": "string",
-        "check_with": validate_path,
+        "check_with": validate_existing_path,
         "coerce": "abspath",
     },
     "browser_images_dir": {
         "type": "string",
-        "check_with": validate_path,
+        "check_with": validate_existing_path,
         "coerce": "abspath",
     },
     "browser_images_url": {

@@ -34,7 +34,8 @@ class VariantsDb(object):
 
         study_configs = GPFConfigParser.load_directory_configs(
             dae_config.studies_db.dir,
-            study_config_schema
+            study_config_schema,
+            default_filename=defaults.get('conf', None)
         )
 
         self.genotype_data_study_configs = {
@@ -44,7 +45,8 @@ class VariantsDb(object):
 
         data_groups = GPFConfigParser.load_directory_configs(
             dae_config.datasets_db.dir,
-            study_config_schema
+            study_config_schema,
+            default_filename=defaults.get('conf', None)
         )
 
         self.genotype_data_group_configs = {

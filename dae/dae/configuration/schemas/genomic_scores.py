@@ -1,10 +1,10 @@
-from dae.configuration.gpf_config_parser import validate_path
+from dae.configuration.gpf_config_parser import validate_existing_path
 
 genomic_score_schema = {
     "id ": {"type": "string"},
     "file ": {
         "type": "string",
-        "check_with": validate_path,
+        "check_with": validate_existing_path,
         "coerce": "abspath",
     },
     "desc ": {"type": "string"},
@@ -13,7 +13,7 @@ genomic_score_schema = {
     "xscale ": {"type": "string", "allowed": ["linear", "log"]},
     "help_file ": {
         "type": "string",
-        "check_with": validate_path,
+        "check_with": validate_existing_path,
         "coerce": "abspath",
     },
 }

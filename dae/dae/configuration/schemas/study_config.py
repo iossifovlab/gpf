@@ -1,4 +1,5 @@
-from dae.configuration.gpf_config_parser import validate_path
+from dae.configuration.gpf_config_parser import validate_existing_path, \
+        validate_path
 
 phenotype_schema = {
     "type": "dict",
@@ -6,7 +7,7 @@ phenotype_schema = {
         "id": {"type": "string"},
         "name": {"type": "string"},
         "color": {"type": "string"},
-    }
+    },
 }
 
 people_group_schema = {
@@ -27,7 +28,7 @@ genotype_slot_schema = {
         "name": {"type": "string"},
         "source": {"type": "string"},
         "format": {"type": "string", "default": "%s"},
-    }
+    },
 }
 
 pheno_slot_schema = {
@@ -37,7 +38,7 @@ pheno_slot_schema = {
         "name": {"type": "string"},
         "measure": {"type": "string"},
         "format": {"type": "string", "default": "%s"},
-    }
+    },
 }
 
 pheno_filter_schema = {
@@ -46,7 +47,7 @@ pheno_filter_schema = {
         "filter_type": {"type": "string"},
         "role": {"type": "string"},
         "measure": {"type": "string"},
-    }
+    },
 }
 
 genotype_schema = {
@@ -61,7 +62,14 @@ pheno_schema = {
     "slots": {"type": "list", "schema": pheno_slot_schema},
 }
 
-criteria_schema = {"segments": {"type": "list", "schema": {"type": "string"}}}
+standard_criteria_schema = {
+    "segments": {"type": "dict", "valuesrules": {"type": "string"}}
+}
+
+recurrency_criteria_schema = {
+    "type": "dict",
+    "schema": {"start": {"type": "integer"}, "end": {"type": "integer"}},
+}
 
 background_model_schema = {
     "file": {
@@ -93,7 +101,7 @@ pheno_filters_schema = {
 family_schema = {
     "path": {
         "type": "string",
-        "check_with": validate_path,
+        "check_with": validate_existing_path,
         "coerce": "abspath",
         "required": True,
     },
@@ -103,7 +111,7 @@ family_schema = {
 variants_file = {
     "path": {
         "type": "string",
-        "check_with": validate_path,
+        "check_with": validate_existing_path,
         "coerce": "abspath",
         "required": True,
     },
@@ -145,7 +153,7 @@ study_config_schema = {
     "enabled": {"type": "boolean"},
     "work_dir": {
         "type": "string",
-        "check_with": validate_path,
+        "check_with": validate_existing_path,
         "coerce": "abspath",
     },
     "phenotype_data": {"type": "string"},
@@ -155,7 +163,7 @@ study_config_schema = {
     "description": {"type": "string", "excludes": "description_file"},
     "description_file": {
         "type": "string",
-        "check_with": validate_path,
+        "check_with": validate_existing_path,
         "coerce": "abspath",
         "excludes": "description",
     },
@@ -198,6 +206,7 @@ study_config_schema = {
             "has_present_in_parent": {"type": "boolean"},
             "has_pedigree_selector": {"type": "boolean"},
             "has_study_types": {"type": "boolean"},
+            "has_graphical_preview": {"type": "boolean"},
             "selected_pheno_column_values": {
                 "type": "list",
                 "schema": {"type": "string"},
@@ -284,13 +293,25 @@ study_config_schema = {
                 "type": "list",
                 "schema": {"type": "string"},
             },
+            "selected_standard_criterias_values": {
+                "type": "list",
+                "schema": {"type": "string"},
+            },
             "standard_criterias": {
                 "type": "dict",
-                "valuesrules": {"type": "dict", "schema": criteria_schema},
+                "valuesrules": {
+                    "type": "dict",
+                    "schema": standard_criteria_schema,
+                },
             },
             "recurrency_criteria": {
                 "type": "dict",
-                "valuesrules": {"type": "dict", "schema": criteria_schema},
+                "schema": {
+                    "segments": {
+                        "type": "dict",
+                        "valuesrules": recurrency_criteria_schema,
+                    }
+                },
             },
             "gene_sets_names": {"type": "list", "schema": {"type": "string"}},
         },
@@ -322,7 +343,7 @@ study_config_schema = {
                 "type": "dict",
                 "valuesrules": {"type": "dict", "schema": counting_schema},
             },
-            "default_counting_values": {"type": "string"},
+            "default_counting_model": {"type": "string"},
             "effect_types": {"type": "list", "schema": {"type": "string"}},
         },
     },

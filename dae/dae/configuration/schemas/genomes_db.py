@@ -1,9 +1,9 @@
-from dae.configuration.gpf_config_parser import validate_path
+from dae.configuration.gpf_config_parser import validate_existing_path
 
 genome_schema = {
     "chr_all_file": {
         "type": "string",
-        "check_with": validate_path,
+        "check_with": validate_existing_path,
         "coerce": "abspath",
     },
     "default_gene_model": {"type": "string"},
@@ -14,7 +14,7 @@ genome_schema = {
             "schema": {
                 "file": {
                     "type": "string",
-                    "check_with": validate_path,
+                    "check_with": validate_existing_path,
                     "coerce": "abspath",
                 }
             },

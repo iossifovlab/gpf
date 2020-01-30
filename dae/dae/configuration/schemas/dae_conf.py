@@ -1,15 +1,15 @@
-from dae.configuration.gpf_config_parser import validate_path
+from dae.configuration.gpf_config_parser import validate_existing_path
 
 config_reference_schema = {
     "conf_file": {
         "type": "string",
         "required": True,
-        "check_with": validate_path,
+        "check_with": validate_existing_path,
         "coerce": "abspath",
     },
     "dir": {
         "type": "string",
-        "check_with": validate_path,
+        "check_with": validate_existing_path,
         "coerce": "abspath",
     },
 }
@@ -32,7 +32,7 @@ storage_schema = {
     "storage_type": {"type": "string", "allowed": ["impala", "filesystem"]},
     "dir": {
         "type": "string",
-        "check_with": validate_path,
+        "check_with": validate_existing_path,
         "coerce": "abspath",
     },
     "impala": {
@@ -51,7 +51,7 @@ storage_schema = {
 dae_conf_schema = {
     "dae_data_dir": {
         "type": "string",
-        "check_with": validate_path,
+        "check_with": validate_existing_path,
         "coerce": "abspath",
     },
     "annotation_defaults": {
@@ -79,7 +79,7 @@ dae_conf_schema = {
         "schema": {
             "dir": {
                 "type": "string",
-                "check_with": validate_path,
+                "check_with": validate_existing_path,
                 "coerce": "abspath",
             }
         },
@@ -94,7 +94,7 @@ dae_conf_schema = {
         "schema": {
             "permission_denied_prompt_file": {
                 "type": "string",
-                "check_with": validate_path,
+                "check_with": validate_existing_path,
                 "coerce": "abspath",
             }
         },

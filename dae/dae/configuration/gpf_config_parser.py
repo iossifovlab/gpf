@@ -12,11 +12,16 @@ from cerberus import Validator
 from dae.utils.dict_utils import recursive_dict_update
 
 
-def validate_path(field: str, value: str, error: str):
+def validate_existing_path(field: str, value: str, error: str):
     if not os.path.isabs(value):
         error(field, "is not an absolute path!")
     if not os.path.exists(value):
         error(field, "does not exist!")
+
+
+def validate_path(field: str, value: str, error: str):
+    if not os.path.isabs(value):
+        error(field, "is not an absolute path!")
 
 
 class GPFConfigValidator(Validator):
@@ -114,7 +119,7 @@ class GPFConfigParser:
         config = cls.parse_config(filename)
         if default_filename:
             default_config = cls.parse_config(default_filename)
-            config = recursive_dict_update(config, default_config)
+            config = recursive_dict_update(default_config, config)
 
         assert validator.validate(config), validator.errors
         return cls._dict_to_namedtuple(validator.document)

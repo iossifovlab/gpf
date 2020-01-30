@@ -34,8 +34,8 @@ def test_genotype_data_group_quads_composite_dict(
     ('description', 'QUADS COMPOSITE DESCRIPTION'),
     ('studies', ['quads_in_child', 'quads_in_parent']),
 
-    ('phenotype_tool', None),
-    ('phenotype_browser', None),
+    ('phenotype_tool', False),
+    ('phenotype_browser', False),
     ('year', None),
     ('pub_med', None),
 ])
@@ -60,7 +60,7 @@ def test_composite_genotype_data_group_config_genotype_browser(
         composite_dataset_config):
     assert composite_dataset_config is not None
 
-    assert composite_dataset_config.genotype_browser is None
+    assert composite_dataset_config.genotype_browser is not None
 
 
 def test_composite_genotype_data_group_config_enrichment_tool(

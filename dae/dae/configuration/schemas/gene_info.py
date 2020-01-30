@@ -1,9 +1,9 @@
-from dae.configuration.gpf_config_parser import validate_path
+from dae.configuration.gpf_config_parser import validate_existing_path
 
 gene_weight_schema = {
     "file": {
         "type": "string",
-        "check_with": validate_path,
+        "check_with": validate_existing_path,
         "coerce": "abspath",
     },
     "desc": {"type": "string"},
@@ -15,7 +15,7 @@ gene_weight_schema = {
 gene_term_schema = {
     "file": {
         "type": "string",
-        "check_with": validate_path,
+        "check_with": validate_existing_path,
         "coerce": "abspath",
     },
     "web_format_str": {"type": "string"},
@@ -28,7 +28,7 @@ gene_info_conf = {
         "schema": {
             "gene_info_file": {
                 "type": "string",
-                "check_with": validate_path,
+                "check_with": validate_existing_path,
                 "coerce": "abspath",
             },
         },
@@ -46,7 +46,7 @@ gene_info_conf = {
         "schema": {
             "file": {
                 "type": "string",
-                "check_with": validate_path,
+                "check_with": validate_existing_path,
                 "coerce": "abspath",
             }
         },
