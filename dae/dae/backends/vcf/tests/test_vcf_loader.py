@@ -181,24 +181,24 @@ def test_multivcf_loader_fill_missing(
     assert(svs_fvs[5][0].ref_allele.position == 865691)
 
 
-def test_transform_vcf_genotype():
-    genotypes = [
-        [0, 0, False],
-        [0, 1, False],
-        [1, 0, False],
-        [1, 1, False],
-        [0, True],
-        [1, True],
-    ]
-    expected = np.array([
-        [0, 0, 1, 1, 0, 1],
-        [0, 1, 0, 1, -2, -2],
-        [False, False, False, False, True, True]
-    ], dtype=GENOTYPE_TYPE)
+# def test_transform_vcf_genotype():
+#     genotypes = [
+#         [0, 0, False],
+#         [0, 1, False],
+#         [1, 0, False],
+#         [1, 1, False],
+#         [0, True],
+#         [1, True],
+#     ]
+#     expected = np.array([
+#         [0, 0, 1, 1, 0, 1],
+#         [0, 1, 0, 1, -2, -2],
+#         [False, False, False, False, True, True]
+#     ], dtype=GENOTYPE_TYPE)
 
-    assert np.array_equal(
-        expected, VcfLoader.transform_vcf_genotypes(genotypes)
-    )
+#     assert np.array_equal(
+#         expected, VcfLoader.transform_vcf_genotypes(genotypes)
+#     )
 
 
 @pytest.mark.parametrize(

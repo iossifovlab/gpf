@@ -86,6 +86,8 @@ class FamilyAllele(Allele, FamilyDelegate):
         # assert self.gt.dtype == GENOTYPE_TYPE, (self.gt, self.gt.dtype)
         self._best_state = best_state
         self._genetic_model = genetic_model
+        if self._genetic_model is None:
+            self._genetic_model = GeneticModel.autosomal
 
         self._inheritance_in_members = inheritance_in_members
         self._variant_in_members = None
@@ -168,8 +170,6 @@ class FamilyAllele(Allele, FamilyDelegate):
 
     @property
     def genetic_model(self):
-        if self._genetic_model is None:
-            self._genetic_model = GeneticModel.autosomal
         return self._genetic_model
 
     def gt_flatten(self):
