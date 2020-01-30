@@ -55,7 +55,6 @@ def test_vcf_loader(
 ])
 def test_vcf_loader_multi(fixture_dirname, multivcf_files, genomes_db_2013):
     ped_file = fixture_dirname('backends/multivcf.ped')
-    single_vcf = fixture_dirname('backends/multivcf_original.vcf')
 
     multivcf_files = list(map(
         lambda x: os.path.join(fixture_dirname('backends'), x), multivcf_files
@@ -64,14 +63,20 @@ def test_vcf_loader_multi(fixture_dirname, multivcf_files, genomes_db_2013):
     families = FamiliesLoader(ped_file).load()
     families_multi = FamiliesLoader(ped_file).load()
 
-    single_loader = VcfLoader(
-        families, [single_vcf], genomes_db_2013.get_genome())
-    assert single_loader is not None
     multi_vcf_loader = VcfLoader(
         families_multi, multivcf_files,
         genomes_db_2013.get_genome(),
         fill_missing_ref=False)
     assert multi_vcf_loader is not None
+
+    # for sv, fvs in multi_vcf_loader.full_variants_iterator():
+    #     print(sv, fvs)
+
+    single_vcf = fixture_dirname('backends/multivcf_original.vcf')
+    single_loader = VcfLoader(
+        families, [single_vcf], genomes_db_2013.get_genome())
+    assert single_loader is not None
+
     single_it = single_loader.full_variants_iterator()
     multi_it = multi_vcf_loader.full_variants_iterator()
     for s, m in zip(single_it, multi_it):

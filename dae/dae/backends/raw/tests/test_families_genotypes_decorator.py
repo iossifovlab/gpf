@@ -23,10 +23,11 @@ from dae.variants.attributes import GeneticModel
         ]
     ]
 ])
-def test_get_diploid_males(vcf, expected, variants_vcf):
-    fvars = variants_vcf(vcf)
+def test_get_diploid_males(vcf, expected, vcf_variants_loader):
+    loader = vcf_variants_loader(vcf)
+    assert loader is not None
     counter = 0
-    for sv, fvs in fvars.full_variants_iterator():
+    for sv, fvs in loader.full_variants_iterator():
         for fv in fvs:
             assert VariantsGenotypesLoader._get_diploid_males(fv) == \
                 expected[counter]
