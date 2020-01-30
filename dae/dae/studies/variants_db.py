@@ -52,6 +52,8 @@ class VariantsDb(object):
             for dg in data_groups
         }
 
+        self._filter_disabled()
+
         self._genotype_data_study_cache = {}
         self._genotype_data_study_wrapper_cache = {}
 
@@ -59,6 +61,20 @@ class VariantsDb(object):
         self._genotype_data_group_wrapper_cache = {}
 
         self._configuration_check()
+
+    def _filter_disabled(self):
+        to_remove = []
+        for k, v in self.genotype_data_study_configs.items():
+            if v.enabled is False:
+                to_remove.append(k)
+        for disabled_study_id in to_remove:
+            del self.genotype_data_study_configs[disabled_study_id]
+        to_remove.clear()
+        for k, v in self.genotype_data_group_configs.items():
+            if v.enabled is False:
+                to_remove.append(k)
+        for disabled_group_id in to_remove:
+            del self.genotype_data_group_configs[disabled_group_id]
 
     def _configuration_check(self):
         studies_ids = set(self.get_genotype_studies_ids())

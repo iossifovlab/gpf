@@ -50,7 +50,7 @@ class GenotypeData:
 
     def _build_study_groups(self):
         if self.families_groups is None:
-            config = self.config.people_group_config['peopleGroup']
+            config = self.config.people_group
 
             self.families_groups = FamiliesGroups.from_config(
                 self.families, config

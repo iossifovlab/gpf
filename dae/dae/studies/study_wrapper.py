@@ -55,12 +55,18 @@ class StudyWrapper(object):
             preview_column_slots = genotype_browser_config.preview_column_slots
             download_column_slots = \
                 genotype_browser_config.download_column_slots
-            if genotype_browser_config.pheno_column_slots:
-                pheno_column_slots = genotype_browser_config.pheno_column_slots
+            if genotype_browser_config.pheno:
+                pheno_column_slots = list(map(
+                    lambda x: x.slots,
+                    genotype_browser_config.pheno)
+                )
+                pheno_column_slots = [
+                    slot for slots in pheno_column_slots for slot in slots
+                ]
             gene_weight_column_sources = \
                 genotype_browser_config.gene_weight_column_sources
             in_role_columns = \
-                genotype_browser_config.in_role_columns
+                genotype_browser_config.in_roles
 
             pheno_filters = genotype_browser_config.pheno_filters
             if genotype_browser_config.present_in_role:
@@ -385,12 +391,13 @@ class StudyWrapper(object):
         pheno_column_names = []
 
         for slot in self.pheno_column_slots:
+            source = '{}.{}'.format(slot.role, slot.measure)
             pheno_column_dfs.append(
                 self.phenotype_data.get_measure_values_df(
                     slot.measure,
                     family_ids=list(families),
                     roles=[slot.role]))
-            pheno_column_names.append(slot.source)
+            pheno_column_names.append(source)
 
         return list(zip(pheno_column_dfs, pheno_column_names))
 
@@ -428,9 +435,9 @@ class StudyWrapper(object):
     def _get_roles_value(self, allele, roles):
         result = []
         variant_in_members = allele.variant_in_members_objects
-
         for role in roles:
             for member in variant_in_members:
+                role = Role.from_name(role)
                 if member.role == role:
                     result.append(str(role) + member.sex.short())
 

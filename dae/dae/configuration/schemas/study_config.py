@@ -26,7 +26,7 @@ genotype_slot_schema = {
     "schema": {
         "name": {"type": "string"},
         "source": {"type": "string"},
-        "format": {"type": "string"},
+        "format": {"type": "string", "default": "%s"},
     }
 }
 
@@ -36,7 +36,7 @@ pheno_slot_schema = {
         "role": {"type": "string"},
         "name": {"type": "string"},
         "measure": {"type": "string"},
-        "format": {"type": "string"},
+        "format": {"type": "string", "default": "%s"},
     }
 }
 
