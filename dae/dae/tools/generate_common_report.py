@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import time
 import argparse
 
 from dae.gpf_instance.gpf_instance import GPFInstance
@@ -18,7 +19,7 @@ def main(gpf_instance=None, argv=None):
         default=None, action='store')
 
     args = parser.parse_args(argv)
-
+    start = time.time()
     if gpf_instance is None:
         gpf_instance = GPFInstance()
 
@@ -28,6 +29,8 @@ def main(gpf_instance=None, argv=None):
         for study_id in common_report_facade.get_all_common_report_ids():
             print(study_id)
     else:
+        elapsed = time.time() - start
+        print(f"started common reports generation after {elapsed:0.2f} sec")
         if args.studies:
             studies = args.studies.split(',')
             print("generating common reports for:", studies)

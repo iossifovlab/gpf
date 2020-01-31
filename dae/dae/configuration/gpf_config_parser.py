@@ -37,7 +37,7 @@ class GPFConfigParser:
 
     filetype_parsers: dict = {
         ".yaml": yaml.safe_load,
-        ".json": json.loads,
+        # ".json": json.loads,
         ".toml": toml.loads,
         ".conf": toml.loads,  # TODO FIXME Rename all .conf to .toml
     }

@@ -11,6 +11,7 @@ import pyarrow.parquet as pq
 import configparser
 
 from dae.utils.variant_utils import GENOTYPE_TYPE
+from dae.variants.attributes import TransmissionType
 from dae.variants.family_variant import FamilyAllele, FamilyVariant, \
     calculate_simple_best_state
 from dae.variants.variant import SummaryVariant, SummaryAllele
@@ -208,7 +209,10 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
     def _evaluate_frequency_bin(self, family_allele):
         count = family_allele.get_attribute('af_allele_count')
         frequency = family_allele.get_attribute('af_allele_freq')
-        if count and int(count) == 1:  # Ultra rare
+        transmission_type = family_allele.transmission_type
+        if transmission_type == TransmissionType.denovo:
+            frequency_bin = 0
+        elif count and int(count) == 1:  # Ultra rare
             frequency_bin = 1
         elif frequency and float(frequency) < self._rare_boundary:  # Rare
             frequency_bin = 2
@@ -260,6 +264,8 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
             config['frequency_bin']['rare_boundary'] = str(self._rare_boundary)
 
         filename = os.path.join(self.output, '_PARTITION_DESCRIPTION')
+        os.makedirs(os.path.dirname(filename), exist_ok=True)
+
         with open(filename, 'w') as configfile:
             config.write(configfile)
 
@@ -330,21 +336,21 @@ class ContinuousParquetFileWriter():
 class VariantsParquetWriter():
 
     def __init__(
-            self, fvars,
+            self, variants_loader,
             partition_descriptor,
             bucket_index=1,
             rows=100000, include_reference=True,
             include_unknown=True, filesystem=None):
 
-        self.fvars = fvars
-        self.families = fvars.families
-        self.full_variants_iterator = fvars.full_variants_iterator()
+        self.variants_loader = variants_loader
+        self.families = variants_loader.families
+        self.full_variants_iterator = variants_loader.full_variants_iterator()
 
         self.bucket_index = bucket_index
         self.rows = rows
         self.filesystem = filesystem
 
-        self.schema = fvars.annotation_schema
+        self.schema = variants_loader.get_attribute('annotation_schema')
         self.parquet_serializer = ParquetSerializer(
             self.schema, include_reference=True)
 
@@ -421,9 +427,15 @@ class VariantsParquetWriter():
             )
         best_state_data = \
             self.parquet_serializer.serialize_variant_best_state(
-                family_variant.best_st
+                family_variant.best_state
             )
         genetic_model_data = family_variant.genetic_model.value
+
+        inheritance_data = \
+            self.parquet_serializer.serialize_variant_inheritance(
+                family_variant
+            )
+
         frequency_data = \
             self.parquet_serializer.serialize_variant_frequency(
                 family_variant
@@ -454,6 +466,7 @@ class VariantsParquetWriter():
             family = self.parquet_serializer.serialize_family(
                 family_variant_index, family_allele,
                 genotype_data, best_state_data, genetic_model_data,
+                inheritance_data,
             )
             member = self.parquet_serializer.serialize_members(
                 family_variant_index, family_allele)
@@ -607,7 +620,6 @@ class ParquetManager:
             partition_descriptor,
             bucket_index=bucket_index,
             rows=rows)
-        print('[DONE] going to create variants writer...')
 
         variants_writer.write_dataset()
         end = time.time()
@@ -623,11 +635,10 @@ class ParquetManager:
             variants_loader, partition_descriptor,
             bucket_index=1, rows=100000):
 
-        assert variants_loader.annotation_schema is not None
+        assert variants_loader.get_attribute('annotation_schema') is not None
 
         start = time.time()
 
-        print('[DONE] going to create variants partition writer...')
         variants_writer = VariantsParquetWriter(
             variants_loader,
             partition_descriptor,
@@ -669,13 +680,24 @@ def add_missing_parquet_fields(pps, ped_df):
             pa.field('family_bin', pa.int8()))
         missing_fields = missing_fields - set(['family_bin'])
 
+    rename = {}
     for column in missing_fields:
-        pps = pps.append(pa.field(column, pa.string()))
-    return pps
+        name = column.lower().replace('.', '_')
+        pps = pps.append(pa.field(name, pa.string()))
+        rename[column] = name
+
+    ped_df = ped_df.rename(columns=rename)
+    missing_fields = [rename[col] for col in missing_fields]
+
+    for column in missing_fields:
+        ped_df[column] = ped_df[column].apply(lambda v: str(v))
+
+    return ped_df, pps
 
 
 def save_ped_df_to_parquet(ped_df, filename, filesystem=None):
     ped_df = ped_df.copy()
+
     ped_df.role = ped_df.role.apply(lambda r: r.value)
     ped_df.sex = ped_df.sex.apply(lambda s: s.value)
     ped_df.status = ped_df.status.apply(lambda s: s.value)
@@ -685,7 +707,7 @@ def save_ped_df_to_parquet(ped_df, filename, filesystem=None):
         ped_df['layout'] = None
 
     pps = pedigree_parquet_schema()
-    pps = add_missing_parquet_fields(pps, ped_df)
+    ped_df, pps = add_missing_parquet_fields(pps, ped_df)
 
     table = pa.Table.from_pandas(ped_df, schema=pps)
     pq.write_table(table, filename, filesystem=filesystem)

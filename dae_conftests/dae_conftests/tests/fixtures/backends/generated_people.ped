@@ -5,4 +5,4 @@ f1	unknown1	0	0	1	1	unknown
 f1	dad1	0	0	1	-	dad	1.0
 f2	mom2	0	0	2	-	mom	
 f2	prb2	dad2	mom2	1	1	prb	
-f2	dad2	0	0	1	-	dad
+f2	dad2	0	0	1	-	dad	

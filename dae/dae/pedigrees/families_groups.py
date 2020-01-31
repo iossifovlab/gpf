@@ -28,7 +28,7 @@ class PeopleGroup:
         if getter is not None:
             self._getter = getter
         else:
-            self._getter = lambda person: person.get_attr(self.source)
+            self._getter = lambda person: str(person.get_attr(self.source))
 
     @property
     def domain(self):
@@ -181,7 +181,7 @@ PEOPLE_GROUP_ROLES = PeopleGroup.from_config(
             {
                 'id': str(r),
                 'name': str(r),
-                'color': PeopleGroup.grayscale32(index)
+                'color': PeopleGroup.grayscale32(index + 1)
             } for index, r in enumerate(Role.__members__)
         ],
         'default': {
@@ -422,9 +422,6 @@ class FamiliesGroups(Mapping):
 
     def add_families_group(self, people_group):
         if people_group.id in self._families_groups:
-            print(
-                f"WARN: adding {people_group.id} more than once! "
-                "Skipping...")
             return
         families_group = FamiliesGroup(self.families, people_group)
         self._families_groups[families_group.id] = families_group
@@ -453,7 +450,6 @@ class FamiliesGroups(Mapping):
     @staticmethod
     def from_config(families, people_groups_config):
         result = FamiliesGroups(families)
-
         for people_group in people_groups_config:
             people_group = PeopleGroup.from_config(
                 people_group.section_id(),

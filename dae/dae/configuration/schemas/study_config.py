@@ -120,7 +120,12 @@ variants_file = {
         "allowed": ["dae", "vcf", "denovo"],
         "required": True,
     },
-    "params": {"type": "dict", "valuesrules": {"type": "string"}},
+    "params": {
+        "type": "dict",
+        "valuesrules": {
+            "type": ["string", "boolean"],
+        }
+    },
 }
 
 genotype_storage_schema = {
@@ -231,7 +236,6 @@ study_config_schema = {
             "selected_inheritance_type_filter_values": {
                 "type": "list",
                 "schema": {"type": "string"},
-                "default": [],
                 "dependencies": {"inheritance_type_filter": True},
             },
             "in_roles": {

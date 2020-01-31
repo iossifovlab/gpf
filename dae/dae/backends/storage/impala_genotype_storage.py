@@ -200,6 +200,8 @@ class ImpalaGenotypeStorage(GenotypeStorage):
             f'pedigrees from {pedigree_paths}', file=sys.stderr
         )
         start = time()
+        self.impala_helpers.drop_table(db, variant_table)
+        self.impala_helpers.drop_table(db, pedigree_table)
         self.impala_helpers.import_variants(
             db,
             variant_table, pedigree_table,
@@ -247,8 +249,13 @@ class ImpalaGenotypeStorage(GenotypeStorage):
         variants_table = f'{study_id}_variants'
         pedigree_table = f'{study_id}_pedigree'
 
+        db = self.storage_config.impala.db
+
+        self.impala_helpers.drop_table(db, variants_table)
+        self.impala_helpers.drop_table(db, pedigree_table)
+
         self.impala_helpers.import_dataset_into_db(
-            self.storage_config.impala.db,
+            db,
             variants_table,
             pedigree_table,
             partition_description,

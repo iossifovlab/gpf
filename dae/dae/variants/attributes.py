@@ -45,10 +45,12 @@ _ROLE_SYNONYMS = {
 
     'proband': 'prb',
     'sibling': 'sib',
+    'younger sibling': 'sib',
+    'older sibling': 'sib',
 
     'maternal half sibling': 'maternal_half_sibling',
     'paternal half sibling': 'paternal_half_sibling',
-    'half Sibling': 'half_sibling',
+    'half sibling': 'half_sibling',
 
     'maternal aunt': 'maternal_aunt',
     'maternal uncle': 'maternal_uncle',
@@ -111,8 +113,9 @@ class Role(enum.Enum):
 
     @staticmethod
     def from_name(name):
-        assert name is not None
-        if isinstance(name, Role):
+        if name is None:
+            return None
+        elif isinstance(name, Role):
             return name
         elif isinstance(name, int):
             return Role.from_value(name)
@@ -141,15 +144,19 @@ class Sex(enum.Enum):
 
     @staticmethod
     def from_name(name):
+        if name is None:
+            return Sex.U
         if isinstance(name, Sex):
             return name
         elif isinstance(name, int):
             return Sex.from_value(name)
-        elif name == 'male' or name == 'M' or name == '1':
+        assert isinstance(name, str)
+        name = name.lower()
+        if name in set(['male', 'm', '1']):
             return Sex.male
-        elif name == 'female' or name == 'F' or name == '2':
+        elif name in set(['female', 'f', '2']):
             return Sex.female
-        elif name == 'unspecified' or name == 'U' or name == '0':
+        elif name in set(['unspecified', 'u', '0']):
             return Sex.unspecified
         raise ValueError("unexpected sex type: " + str(name))
 
@@ -175,15 +182,19 @@ class Status(enum.Enum):
 
     @staticmethod
     def from_name(name):
-        if isinstance(name, Status):
+        if name is None:
+            return Status.unspecified
+        elif isinstance(name, Status):
             return name
         elif isinstance(name, int):
             return Status.from_value(name)
-        elif name == 'unaffected' or name == '1':
+        assert isinstance(name, str)
+        name = name.lower()
+        if name in set(['unaffected', '1']):
             return Status.unaffected
-        elif name == 'affected' or name == '2':
+        elif name in set(['affected', '2']):
             return Status.affected
-        elif name == 'unspecified' or name == '-' or name == '0':
+        elif name in set(['unspecified', '-', '0']):
             return Status.unspecified
         raise ValueError("unexpected status type: " + name)
 
@@ -227,17 +238,21 @@ class Inheritance(enum.Enum):
     denovo = 1 << 2
     possible_denovo = 1 << 3
     omission = 1 << 4
-    other = 1 << 5
-    missing = 1 << 6
-    unknown = 1 << 7
+    possible_omission = 1 << 5
+    other = 1 << 6
+    missing = 1 << 7
 
-    MASK = 127
+    unknown = 1 << 8
 
     @staticmethod
     def from_name(name):
         assert name in Inheritance.__members__, \
             'Inheritance type {} does not exist!'.format(name)
         return Inheritance[name]
+
+    @staticmethod
+    def from_value(value):
+        return Inheritance(value)
 
     def __repr__(self):
         return self.name
@@ -296,9 +311,10 @@ class VariantType(enum.Enum):
 
 class GeneticModel(enum.Enum):
     autosomal = 1
-    pseudo_autosomal = 2
-    X = 3
-    X_broken = 4
+    autosomal_broken = 2
+    pseudo_autosomal = 3
+    X = 4
+    X_broken = 5
 
 
 class TransmissionType(enum.Enum):

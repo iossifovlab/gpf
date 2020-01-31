@@ -2,7 +2,7 @@ from dae.tools.impala_parquet_loader import main
 
 
 def test_impala_parquet_loader_partitioned(fixture_dirname, gpf_instance_2013):
-    
+
     pedigree_path = fixture_dirname('backends/test_partition/pedigree.parquet')
     variants_path = fixture_dirname('backends/test_partition/variants.parquet')
 

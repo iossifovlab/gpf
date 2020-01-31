@@ -74,6 +74,12 @@ def cli_arguments(dae_config, argv=sys.argv[1:]):
         action='store'
     )
 
+    parser.add_argument(
+        '--add-chrom-prefix', type=str, default=None,
+        help='Add specified prefix to each chromosome name in '
+        'variants file'
+    )
+
     DenovoLoader.cli_options(parser)
     VcfLoader.cli_options(parser)
 
@@ -117,7 +123,7 @@ def main(argv, gpf_instance=None):
     if argv.id is not None:
         study_id = argv.id
     else:
-        study_id, _ = os.path.splitext(os.path.basename(argv.pedigree))
+        study_id, _ = os.path.splitext(os.path.basename(argv.families))
 
     if argv.output is None:
         output = dae_config.studies_db.dir
@@ -151,11 +157,13 @@ def main(argv, gpf_instance=None):
             denovo_loader, annotation_pipeline
         )
         variant_loaders.append(denovo_loader)
+
     if argv.vcf_files is not None:
         vcf_files, vcf_params = VcfLoader.parse_cli_arguments(argv)
         vcf_loader = VcfLoader(
             families,
             vcf_files,
+            genome,
             params=vcf_params
         )
         vcf_loader = AnnotationPipelineDecorator(

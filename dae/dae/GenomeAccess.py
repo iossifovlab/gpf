@@ -11,7 +11,7 @@ from typing import List
 from dae.RegionOperations import Region
 
 
-class GenomicSequence_Ivan(object):
+class GenomicSequence(object):
 
     genomicFile = None
     genomicIndexFile = None
@@ -79,7 +79,7 @@ class GenomicSequence_Ivan(object):
         R = []
         for chrom in self.allChromosomes:
             R.append((chrom, self._Indexing[chrom]['length']))
-        return(R)
+        return R
 
     def getSequence(self, chrom, start, stop):
         if chrom not in self.allChromosomes:
@@ -127,7 +127,7 @@ def openRef(filename):
 
     if filename.endswith('.fa'):
         # ivan's method
-        g_a = GenomicSequence_Ivan()
+        g_a = GenomicSequence()
         return(g_a._load_genome(filename))
     else:
         print("Unrecognizable format of the file: " + filename,

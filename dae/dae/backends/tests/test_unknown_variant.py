@@ -24,7 +24,7 @@ def test_variant_in_members(variants_impl, variants, region, count, members):
     vs = list(fvars.query_variants(regions=[region]))
     assert len(vs) == count
     for v in vs:
-        print(v, mat2str(v.best_st))
+        print(v, mat2str(v.best_state))
         for aa in v.alt_alleles:
             print(aa, aa.variant_in_members)
             assert list(aa.variant_in_members) == members

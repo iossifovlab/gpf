@@ -1,7 +1,5 @@
 import pytest
 
-from dae.backends.storage.tests.conftest import relative_to_this_test_folder
-
 
 def test_build_backend(
         filesystem_genotype_storage, quads_f1_vcf_config, genomes_db_2013):
@@ -24,11 +22,19 @@ def test_is_filestorage(filesystem_genotype_storage):
     assert filesystem_genotype_storage.is_filestorage() is True
 
 
-@pytest.mark.parametrize('abs_path,path', [
-    ('fixtures/data_dir/study_id', ['study_id']),
-    ('fixtures/data_dir/study_id/data/study_id',
-     ['study_id', 'data', 'study_id']),
+@pytest.mark.parametrize('expected_path,build_path', [
+    (
+        'data_dir/study_id',
+        ['study_id']
+    ),
+    (
+        'data_dir/study_id/data/study_id',
+        ['study_id', 'data', 'study_id']
+    ),
 ])
-def test_get_data_dir(filesystem_genotype_storage, abs_path, path):
-    assert filesystem_genotype_storage.get_data_dir(*path) == \
-        relative_to_this_test_folder(abs_path)
+def test_get_data_dir(
+        fixture_dirname, filesystem_genotype_storage,
+        expected_path, build_path):
+    assert filesystem_genotype_storage.get_data_dir(
+        *build_path
+    ) == fixture_dirname(expected_path)

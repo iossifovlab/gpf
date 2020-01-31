@@ -12,7 +12,7 @@ def main(argv):
     parser = argparse.ArgumentParser()
     FamiliesLoader.cli_arguments(parser)
     parser.add_argument(
-        '-o',
+        '-o', '--output',
         dest='output_filename',
         help='output families parquet filename '
         '(default is [basename(families_filename).parquet])'

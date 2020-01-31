@@ -1,6 +1,9 @@
 import pytest
 import numpy as np
-from dae.backends.raw.loader import FamiliesGenotypesDecorator
+from dae.pedigrees.loader import FamiliesLoader
+
+from dae.backends.raw.loader import VariantsGenotypesLoader
+from dae.backends.dae.loader import DenovoLoader
 from dae.variants.attributes import GeneticModel
 
 
@@ -20,12 +23,13 @@ from dae.variants.attributes import GeneticModel
         ]
     ]
 ])
-def test_get_diploid_males(vcf, expected, variants_vcf):
-    fvars = variants_vcf(vcf)
+def test_get_diploid_males(vcf, expected, vcf_variants_loader):
+    loader = vcf_variants_loader(vcf)
+    assert loader is not None
     counter = 0
-    for sv, fvs in fvars.full_variants_iterator():
+    for sv, fvs in loader.full_variants_iterator():
         for fv in fvs:
-            assert FamiliesGenotypesDecorator._get_diploid_males(fv) == \
+            assert VariantsGenotypesLoader._get_diploid_males(fv) == \
                 expected[counter]
             counter += 1
 
@@ -46,16 +50,19 @@ def test_get_diploid_males(vcf, expected, variants_vcf):
         ]
     ]
 ])
-def test_calc_genetic_model(vcf, expected, variants_vcf, genome_2013):
-    fvars = variants_vcf(vcf)
+def test_vcf_loader_genetic_model(
+        vcf, expected, vcf_variants_loader, genome_2013):
+    loader = vcf_variants_loader(vcf)
     counter = 0
-    for sv, fvs in fvars.full_variants_iterator():
+    for sv, fvs in loader.full_variants_iterator():
         for fv in fvs:
-            genetic_model = FamiliesGenotypesDecorator._calc_genetic_model(
-                fv,
-                genome_2013
-            )
-            assert genetic_model == expected[counter]
+            assert fv._genetic_model is not None
+            for fa in fv.alleles:
+                assert fa._genetic_model is not None
+
+            assert fv.genetic_model == expected[counter]
+            for fa in fv.alleles:
+                assert fa._genetic_model == expected[counter]
             counter += 1
 
 
@@ -99,38 +106,40 @@ def test_calc_genetic_model(vcf, expected, variants_vcf, genome_2013):
         ]
     ]
 ])
-def test_calc_best_state(vcf, expected, variants_vcf, genome_2013):
-    fvars = variants_vcf(vcf)
+def test_vcf_loader_best_state(
+        vcf, expected, vcf_variants_loader, genome_2013):
+    loader = vcf_variants_loader(vcf)
     counter = 0
-    for sv, fvs in fvars.full_variants_iterator():
+    for sv, fvs in loader.full_variants_iterator():
         for fv in fvs:
-            best_state = FamiliesGenotypesDecorator._calc_best_state(
-                fv,
-                genome_2013
-            )
-            assert np.array_equal(best_state, expected[counter])
+            assert fv._best_state is not None
+            for fa in fv.alleles:
+                assert fa._best_state is not None
+
+            assert np.array_equal(fv.best_state, expected[counter]), counter
+            for fa in fv.alleles:
+                assert np.array_equal(fa.best_state, expected[counter])
+
             counter += 1
 
 
-def test_families_genotypes_decorator_expect_none_flag(
-    iossifov2014_loader, genome_2013
-):
-    decorator = FamiliesGenotypesDecorator(
-        iossifov2014_loader, genome_2013, False, True
-    )
-    with pytest.raises(AssertionError):
-        for sv, fvs in decorator.full_variants_iterator():
-            for fv in fvs:
-                pass
-
-
 def test_families_genotypes_decorator_broken_x(
-    denovo_X_broken_loader, genome_2013
+    fixture_dirname, genome_2013
 ):
-    decorator = FamiliesGenotypesDecorator(
-        denovo_X_broken_loader, genome_2013
+
+    families_loader = FamiliesLoader(
+        fixture_dirname('backends/denovo_families.txt'),
+        params={'ped_file_format': 'simple'}
     )
-    for sv, fvs in decorator.full_variants_iterator():
+    families = families_loader.load()
+
+    variants_loader = DenovoLoader(
+        families,
+        fixture_dirname('backends/denovo_X_broken.txt'),
+        genome_2013
+    )
+
+    for sv, fvs in variants_loader.full_variants_iterator():
         for fv in fvs:
             print(fv, fv.genetic_model)
             assert fv.genetic_model == GeneticModel.X_broken

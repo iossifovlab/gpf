@@ -1,13 +1,15 @@
-import numpy as np
-from typing import Any, Dict, Optional, List
-
-from dae.variants.variant import Variant, Allele, SummaryVariant, \
-    SummaryAllele, Effect
-from dae.pedigrees.family import Family
-from dae.variants.attributes import Inheritance, GeneticModel, TransmissionType
 import itertools
-from dae.utils.variant_utils import GENOTYPE_TYPE, is_all_unknown_genotype, \
-    is_reference_genotype
+from typing import Any, Dict, List, Optional
+
+import numpy as np
+from deprecation import deprecated
+
+from dae.pedigrees.family import Family
+from dae.utils.variant_utils import (GENOTYPE_TYPE, is_all_unknown_genotype,
+                                     is_reference_genotype)
+from dae.variants.attributes import GeneticModel, Inheritance, TransmissionType
+from dae.variants.variant import (Allele, Effect, SummaryAllele,
+                                  SummaryVariant, Variant)
 
 
 def calculate_simple_best_state(
@@ -69,7 +71,9 @@ class FamilyAllele(Allele, FamilyDelegate):
             summary_allele: SummaryAllele,
             family: Family,
             genotype,
-            best_state):
+            best_state,
+            genetic_model=None,
+            inheritance_in_members=None):
         assert isinstance(family, Family)
 
         FamilyDelegate.__init__(self, family)
@@ -78,11 +82,14 @@ class FamilyAllele(Allele, FamilyDelegate):
         self.summary_allele = summary_allele
 
         self.gt = genotype
-        assert self.gt.dtype == GENOTYPE_TYPE, (self.gt, self.gt.dtype)
-        self._best_st = best_state
-        self._genetic_model = None
 
-        self._inheritance_in_members = None
+        # assert self.gt.dtype == GENOTYPE_TYPE, (self.gt, self.gt.dtype)
+        self._best_state = best_state
+        self._genetic_model = genetic_model
+        if self._genetic_model is None:
+            self._genetic_model = GeneticModel.autosomal
+
+        self._inheritance_in_members = inheritance_in_members
         self._variant_in_members = None
         self._variant_in_members_objects = None
         self._variant_in_roles = None
@@ -149,17 +156,20 @@ class FamilyAllele(Allele, FamilyDelegate):
         return self.gt.T
 
     @property
-    def best_st(self):
-        if self._best_st is None:
-            self._best_st = calculate_simple_best_state(
+    def best_state(self):
+        if self._best_state is None:
+            self._best_state = calculate_simple_best_state(
                 self.gt, self.attributes['allele_count']
             )
-        return self._best_st
+        return self._best_state
+
+    @deprecated(details="Replace `best_st` with `best_state`")
+    @property
+    def best_st(self):
+        return self.best_state
 
     @property
     def genetic_model(self):
-        if self._genetic_model is None:
-            self._genetic_model = GeneticModel.autosomal
         return self._genetic_model
 
     def gt_flatten(self):
@@ -180,7 +190,6 @@ class FamilyAllele(Allele, FamilyDelegate):
                     continue
                 trio = self.family.trios[pid]
                 trio_index = self.family.members_index(trio)
-
                 trio_gt = self.gt[:, trio_index]
                 if np.any(trio_gt == -1):
                     inh = Inheritance.unknown
@@ -348,51 +357,31 @@ class FamilyVariant(Variant, FamilyDelegate):
             genotype: Any,
             best_state: Any):
 
-        self.gt = np.copy(genotype)
-
-        family_alleles = [
-            FamilyAllele(sum_allele, family, genotype, best_state)
-            for sum_allele in summary_variant.alleles
-        ]
-
         assert family is not None
-        assert genotype is not None
         assert isinstance(family, Family)
-        assert isinstance(family_alleles, list)
-        assert all([isinstance(a, FamilyAllele) for a in family_alleles]), \
-            family_alleles
+        FamilyDelegate.__init__(self, family)
 
         self.summary_variant = summary_variant
-
-        FamilyDelegate.__init__(self, family)
-        self.gt = np.copy(genotype)
-        self._genetic_model = None
-
         self.summary_alleles = self.summary_variant.alleles
 
-        alleles = [
-            family_alleles[0]
-        ]
-        for ai in self.calc_alt_alleles(self.gt):
-            allele = None
-            for fa in family_alleles:
-                if fa.allele_index == ai:
-                    allele = fa
-                    break
-            if allele is None:
-                continue
-            assert allele.allele_index == ai, \
-                (allele.allele_index, ai)
+        self.gt = genotype
+        self._genetic_model = None
 
-            alleles.append(allele)
-
-        self._family_alleles = alleles
-        self._best_st = best_state
+        self._family_alleles = None
+        self._best_state = best_state
         self._matched_alleles = []
+        self._fvuid = None
 
     @property
-    def chrom(self) -> str:
-        return self.summary_variant.chrom
+    def fvuid(self) -> str:
+        if self._fvuid is None:
+            self._fvuid = f'{self.family_id}.{self.location}'\
+                f'.{self.reference}.{self.alternative}'
+        return self._fvuid
+
+    @property
+    def chromosome(self) -> str:
+        return self.summary_variant.chromosome
 
     @property
     def position(self) -> int:
@@ -416,6 +405,30 @@ class FamilyVariant(Variant, FamilyDelegate):
 
     @property
     def alleles(self) -> List[FamilyAllele]:
+        if self._family_alleles is None:
+            family_alleles = [
+                FamilyAllele(
+                    sum_allele, self.family, self.gt, self._best_state)
+                for sum_allele in self.summary_variant.alleles
+            ]
+            alleles = [
+                family_alleles[0]
+            ]
+            for ai in self.calc_alt_alleles(self.gt):
+                allele = None
+                for fa in family_alleles:
+                    if fa.allele_index == ai:
+                        allele = fa
+                        break
+                if allele is None:
+                    continue
+                assert allele.allele_index == ai, \
+                    (allele.allele_index, ai)
+
+                alleles.append(allele)
+
+            self._family_alleles = alleles
+
         return self._family_alleles
 
     def set_matched_alleles(self, alleles_indexes):
@@ -484,12 +497,17 @@ class FamilyVariant(Variant, FamilyDelegate):
                 self.family_id)
 
     @property
-    def best_st(self):
-        if self._best_st is None:
-            self._best_st = calculate_simple_best_state(
+    def best_state(self):
+        if self._best_state is None:
+            self._best_state = calculate_simple_best_state(
                 self.gt, self.allele_count
             )
-        return self._best_st
+        return self._best_state
+
+    @property
+    @deprecated(details="Replace usage of `best_st` with `best_state`")
+    def best_st(self):
+        return self.best_state
 
     @staticmethod
     def calc_alt_alleles(gt):

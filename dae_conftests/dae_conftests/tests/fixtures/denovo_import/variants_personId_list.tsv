@@ -1,4 +1,4 @@
 personId	chrom	pos	ref	alt
 f1.p1,f1.s2	1	123	A	G
-f1.p1	2	234	T	T
-f2.s1	2	234	G	A
+f1.p1	2	234	T	C
+f2.s1	2	235	G	A

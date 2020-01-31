@@ -7,8 +7,9 @@ def test_get_genotype_storage_ids(genotype_storage_factory):
     genotype_storage_ids = \
         genotype_storage_factory.get_genotype_storage_ids()
 
-    assert len(genotype_storage_ids) == 2
-    assert genotype_storage_ids == ['genotype_impala', 'genotype_filesystem']
+    assert len(genotype_storage_ids) == 3
+    assert genotype_storage_ids == \
+        ['genotype_impala', 'genotype_filesystem', 'genotype_filesystem2']
 
 
 def test_get_genotype_storage_impala(genotype_storage_factory):

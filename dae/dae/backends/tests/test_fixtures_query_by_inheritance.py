@@ -24,7 +24,7 @@ def test_inheritance_trio_full(variants_impl, variants, inheritance, count):
         inheritance=inheritance,
         return_reference=False))
     for v in vs:
-        assert len(mat2str(v.best_st)) == 7
+        assert len(mat2str(v.best_state)) == 7
     assert len(vs) == count
 
 
@@ -44,7 +44,7 @@ def test_inheritance_quad_full(variants_impl, variants, count, inheritance):
         return_reference=False))
     assert len(vs) == count
     for v in vs:
-        assert len(mat2str(v.best_st)) == 9
+        assert len(mat2str(v.best_state)) == 9
 
 
 @pytest.mark.parametrize('variants', [

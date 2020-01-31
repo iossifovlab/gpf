@@ -1,22 +1,157 @@
-from cyvcf2 import VCF
+import os
+import sys
 
 import numpy as np
 
+from cyvcf2 import VCF
+import pysam
+
 from dae.utils.helpers import str2bool
+from dae.GenomeAccess import GenomicSequence
 
 from dae.utils.variant_utils import is_all_reference_genotype, \
     is_all_unknown_genotype, is_unknown_genotype, GENOTYPE_TYPE
+from dae.variants.attributes import Inheritance
 from dae.variants.variant import SummaryVariantFactory
-from dae.backends.raw.loader import VariantsLoader, TransmissionType, \
+from dae.variants.family_variant import FamilyVariant
+from dae.backends.raw.loader import VariantsGenotypesLoader, \
+    TransmissionType, \
     FamiliesGenotypes
 
 
 class VcfFamiliesGenotypes(FamiliesGenotypes):
 
-    def __init__(self, families, families_genotypes, params={}):
+    def __init__(self, loader, vcf_variants):
         super(VcfFamiliesGenotypes, self).__init__()
-        self.families = families
-        self.families_genotypes = families_genotypes
+
+        self.loader = loader
+        self.vcf_variants = vcf_variants
+
+    def _build_check_families(self):
+        check_families = np.zeros(
+            len(self.loader.all_families_ids), dtype=np.bool)
+
+        for vcf_index, vcf_variant in enumerate(self.vcf_variants):
+            if vcf_variant is None:
+                genotypes_to_check = np.ones(
+                    len(self.loader.vcfs[vcf_index].samples),
+                    np.bool
+                )
+                check_index = self.loader.reverse_families_index[
+                    vcf_index][genotypes_to_check]
+                if self.loader._fill_missing_value == 0 and \
+                        self.loader.include_reference_genotypes:
+                    check_families[check_index] = True
+                if self.loader._fill_missing_value == -1 and \
+                        (self.loader.include_unknown_person_genotypes or \
+                         self.loader.include_unknown_family_genotypes):
+                    check_families[check_index] = True
+            else:
+                genotypes_to_check = np.logical_or(
+                    vcf_variant.gt_types == 1,  # HET=1
+                    vcf_variant.gt_types == 2)  # HOM_ALT=2
+
+                check_index = self.loader.reverse_families_index[
+                    vcf_index][genotypes_to_check]
+                check_families[check_index] = True
+                if self.loader.include_reference_genotypes:
+                    genotypes_to_check = vcf_variant.gt_types == 0  # HOM_REF=0
+                    check_index = self.loader.reverse_families_index[
+                        vcf_index][genotypes_to_check]
+                    check_families[check_index] = True
+                if self.loader.include_unknown_person_genotypes or \
+                        self.loader.include_unknown_family_genotypes:
+                    genotypes_to_check = vcf_variant.gt_types == 3  # UKNOWN=3
+                    check_index = self.loader.reverse_families_index[
+                        vcf_index][genotypes_to_check]
+                    check_families[check_index] = True
+
+        return set(self.loader.all_families_ids[check_families])
+
+    def _build_genotypes(self):
+        genotypes = []
+        for vcf_index, vcf_variant in enumerate(self.vcf_variants):
+            if vcf_variant is not None:
+                genotypes.append(vcf_variant.genotypes)
+            else:
+                fill_value = self.loader._fill_missing_value
+                samples_count = len(self.loader.vcfs[vcf_index].samples)
+                genotypes.append(
+                    [[fill_value, fill_value, False]] * samples_count)
+        return genotypes
+
+    def family_genotype_iterator(self):
+        genotypes = self._build_genotypes()
+        check_families = self._build_check_families()
+
+        for family, samples_indexes in self.loader.families_samples_indexes:
+            if family.family_id not in check_families:
+                continue
+
+            gt = []
+            for vcf_index, sample_index in samples_indexes:
+                sample_genotype = genotypes[vcf_index][sample_index]
+                if len(sample_genotype) == 2:
+                    sample_genotype.insert(1, -2)
+                gt.append(sample_genotype[0:2])
+            gt = np.array(gt, np.int8)
+            gt = gt.T
+
+            if not self.loader.include_reference_genotypes and \
+                    is_all_reference_genotype(gt):
+                continue
+            if not self.loader.include_unknown_person_genotypes and \
+                    is_unknown_genotype(gt):
+                continue
+            if not self.loader.include_unknown_family_genotypes and \
+                    is_all_unknown_genotype(gt):
+                continue
+
+            yield family, gt, None
+
+
+class VcfLoader(VariantsGenotypesLoader):
+
+    def __init__(
+            self,
+            families,
+            vcf_files,
+            genome: GenomicSequence,
+            regions=None,
+            params={},
+            **kwargs):
+        super(VcfLoader, self).__init__(
+            families=families,
+            filenames=vcf_files,
+            transmission_type=TransmissionType.transmitted,
+            genome=genome,
+            overwrite=False,
+            expect_genotype=True,
+            expect_best_state=False,
+            params=params)
+
+        assert len(vcf_files)
+        self.reset_regions(regions)
+        fill_in_mode = params.get(
+            "vcf_multi_loader_fill_in_mode", "reference")
+        if fill_in_mode == 'reference':
+            self._fill_missing_value = 0
+        elif fill_in_mode == 'unknown':
+            self._fill_missing_value = -1
+        else:
+            print(
+                f"unexpected `vcf_multi_loader_fill_in_mode` value",
+                f"{fill_in_mode}; "
+                f"expected values are `reference` or `unknown`",
+                file=sys.stderr)
+            self._fill_missing_value = 0
+        self._init_vcf_readers()
+        self._match_pedigree_to_samples()
+        self._init_chromosome_order()
+        self.set_attribute('source_type', 'vcf')
+        self._init_denovo_mode()
+        self._init_omission_mode()
+
         self.include_reference_genotypes = \
             params.get('vcf_include_reference_genotypes', False)
         self.include_unknown_family_genotypes = \
@@ -26,62 +161,90 @@ class VcfFamiliesGenotypes(FamiliesGenotypes):
         self.multi_loader_fill_in_mode = \
             params.get('vcf_multi_loader_fill_in_mode', 'reference')
 
-    def get_family_genotype(self, family):
-        gt = self.families_genotypes[0:2, family.samples_index]
-        assert gt.shape == (2, len(family)), \
-            f"{gt.shape} == (2, {len(family)})"
-        return gt
+    def _init_denovo_mode(self):
+        denovo_mode = self.params.get('vcf_denovo_mode', 'possible_denovo')
+        if denovo_mode == 'possible_denovo':
+            self._denovo_handler = self._possible_denovo_mode_handler
+        elif denovo_mode == 'denovo':
+            self._denovo_handler = self._denovo_mode_handler
+        elif denovo_mode == 'ignore':
+            self._denovo_handler = self._ignore_denovo_mode_handler
+        else:
+            print(
+                f"unexpected denovo mode: {denovo_mode}; "
+                f"using possible_denovo")
+            self._denovo_handler = self._possible_denovo_mode_handler
 
-    def get_family_best_state(self, family):
-        return None
+    @staticmethod
+    def _possible_denovo_mode_handler(
+            family_variant: FamilyVariant) -> bool:
+        for fa in family_variant.alleles:
+            inheritance_in_members = fa.inheritance_in_members
+            inheritance_in_members = [
+                inh
+                if inh != Inheritance.denovo else Inheritance.possible_denovo
+                for inh in inheritance_in_members
+            ]
+            fa._inheritance_in_members = inheritance_in_members
+        return False
 
-    def family_genotype_iterator(self):
-        for fam in self.families.values():
-            if len(fam) == 0:
-                continue
-            gt = self.get_family_genotype(fam)
-            if is_all_reference_genotype(gt) \
-                    and not self.include_reference_genotypes:
-                continue
-            if is_unknown_genotype(gt) \
-                    and not self.include_unknown_person_genotypes:
-                continue
-            if is_all_unknown_genotype(gt) \
-                    and not self.include_unknown_family_genotypes:
-                continue
-            bs = self.get_family_best_state(fam)
+    @staticmethod
+    def _ignore_denovo_mode_handler(
+            family_variant: FamilyVariant) -> bool:
+        for fa in family_variant.alleles:
+            if Inheritance.denovo in fa.inheritance_in_members:
+                return True
+        return False
 
-            yield fam, gt, bs
+    @staticmethod
+    def _denovo_mode_handler(
+            family_vairant: FamilyVariant) -> bool:
+        return False
 
-    def full_families_genotypes(self):
-        return self.families_genotypes
+    def _init_omission_mode(self):
+        omission_mode = self.params.get(
+            'vcf_omission_mode', 'possible_omission')
+        if omission_mode == 'possible_omission':
+            self._omission_handler = self._possible_omission_mode_handler
+        elif omission_mode == 'omission':
+            self._omission_handler = self._omission_mode_handler
+        elif omission_mode == 'ignore':
+            self._omission_handler = self._ignore_omission_mode_handler
+        else:
+            print(
+                f"unexpected omission mode: {omission_mode}; "
+                f"using possible_omission")
+            self._omission_handler = self._possible_omission_mode_handler
 
+    @staticmethod
+    def _possible_omission_mode_handler(
+            family_variant: FamilyVariant) -> bool:
+        for fa in family_variant.alleles:
+            inheritance_in_members = fa.inheritance_in_members
+            inheritance_in_members = [
+                inh
+                if inh != Inheritance.omission
+                else Inheritance.possible_omission
+                for inh in inheritance_in_members
+            ]
+            fa._inheritance_in_members = inheritance_in_members
+        return False
 
-class VcfLoader(VariantsLoader):
+    @staticmethod
+    def _ignore_omission_mode_handler(
+            family_variant: FamilyVariant) -> bool:
+        for fa in family_variant.alleles:
+            print(
+                "ignore_omission:",
+                Inheritance.omission, fa.inheritance_in_members)
+            if Inheritance.omission in fa.inheritance_in_members:
+                return True
+        return False
 
-    def __init__(
-            self, families, vcf_files,
-            regions=None, fill_missing_ref=True, params={},
-            **kwargs):
-        super(VcfLoader, self).__init__(
-            families=families,
-            filenames=vcf_files,
-            source_type='vcf',
-            transmission_type=TransmissionType.transmitted,
-            params=params)
-
-        assert len(vcf_files)
-        self.reset_regions(regions)
-        self._fill_missing_value = 0 if fill_missing_ref else -1
-        self._init_vcf_readers()
-
-        samples = list()
-        for vcf in self.vcfs:
-            samples += vcf.samples
-        samples = np.array(samples)
-
-        self._match_pedigree_to_samples(families, samples)
-        self._init_chromosome_order()
+    @staticmethod
+    def _omission_mode_handler(
+            family_vairant: FamilyVariant) -> bool:
+        return False
 
     def reset_regions(self, regions):
         if regions is None or isinstance(regions, str):
@@ -92,7 +255,8 @@ class VcfLoader(VariantsLoader):
     def _init_vcf_readers(self):
         self.vcfs = list()
         for file in self.filenames:
-            self.vcfs.append(VCF(file, lazy=True))
+            self.vcfs.append(
+                VCF(file, gts012=True, strict_gt=True, lazy=True))
 
     def _build_vcf_iterators(self, region):
         return [vcf(region) for vcf in self.vcfs]
@@ -106,29 +270,75 @@ class VcfLoader(VariantsLoader):
             chrom_order[seq] = idx
 
         self.chrom_order = chrom_order
-        self.chromosomes = seqnames
 
-    @staticmethod
-    def _match_pedigree_to_samples(families, vcf_samples):
-        vcf_samples_index = list(vcf_samples)
+    @property
+    def chromosomes(self):
+        assert len(self.vcfs) > 0
+
+        seqnames = self.vcfs[0].seqnames
+        filename = self.filenames[0]
+        tabix_index_filename = f'{filename}.tbi'
+        if not os.path.exists(tabix_index_filename):
+            return seqnames
+
+        try:
+            with pysam.Tabixfile(filename) as tbx:
+                return list(tbx.contigs)
+        except Exception:
+            return seqnames
+
+    def _match_pedigree_to_samples(self):
+        vcf_samples = list()
+        for vcf in self.vcfs:
+            vcf_samples += vcf.samples
+        vcf_samples = np.array(vcf_samples)
+
+        vcf_samples_index = [
+            list(vcf.samples) for vcf in self.vcfs
+        ]
         vcf_samples = set(vcf_samples)
-        pedigree_samples = set(families.ped_df['sample_id'].values)
+        pedigree_samples = set(self.families.ped_df['sample_id'].values)
         missing_samples = vcf_samples.difference(pedigree_samples)
 
         vcf_samples = vcf_samples.difference(missing_samples)
         assert vcf_samples.issubset(pedigree_samples)
 
         seen = set()
-        for person_id, person in families.persons.items():
+        for person in self.families.persons.values():
             if person.sample_id in vcf_samples:
                 if person.sample_id in seen:
                     continue
-                person.sample_index = \
-                    vcf_samples_index.index(person.sample_id)
-                seen.add(person.sample_id)
+                for vcf_index, samples_index in enumerate(vcf_samples_index):
+                    if person.sample_id in samples_index:
+                        person.set_attr(
+                            'sample_index',
+                            (vcf_index, samples_index.index(person.sample_id)))
+                        seen.add(person.sample_id)
+                        break
             else:
-                person._generated = True
-                families[person.family_id].redefine()
+                person.set_attr(
+                    'generated',  True)
+        self.families.redefine()
+        self.all_families_ids = np.array([
+            family.family_id for family in self.families.values()],
+            dtype=str)
+
+        self.families_samples_indexes = [
+            (family, family.samples_index)
+            for family in self.families.values()
+        ]
+        self.reverse_families_index = [
+            -1 * np.ones(len(vcf.samples), dtype=np.int32)
+            for vcf in self.vcfs
+        ]
+
+        for family_index, family in enumerate(self.families.values()):
+            for vcf_index, sample_index in family.samples_index:
+                self.reverse_families_index[vcf_index][sample_index] = \
+                    family_index
+        # print(
+        #     "reverse_family_index:", type(self.reverse_families_index),
+        #     self.reverse_families_index)
 
     def _build_summary_variant(self, summary_index, vcf_variant):
         records = []
@@ -193,16 +403,17 @@ class VcfLoader(VariantsLoader):
                 min_index = index
         return vcf_variants[min_index]
 
-    def _generate_missing_genotype(self, vcf):
-        sample_count = len(vcf.samples)
+    # def _generate_missing_genotype(self, vcf):
+    #     sample_count = len(vcf.samples)
 
-        gt = np.array([[0] * 3] * sample_count, dtype=np.int8)
+    #     gt = np.array([[0] * 3] * sample_count, dtype=np.int8)        
 
-        gt[0:sample_count] = self._fill_missing_value
+    #     gt[0:sample_count] = self._fill_missing_value
 
-        return gt
+    #     return gt
 
-    def summary_genotypes_iterator(self):
+    def _full_variants_iterator_impl(self):
+
         summary_variant_index = 0
         for region in self.regions:
             vcf_iterators = self._build_vcf_iterators(region)
@@ -218,36 +429,39 @@ class VcfLoader(VariantsLoader):
                     summary_variant_index, current_vcf_variant)
 
                 vcf_iterator_idexes_to_advance = list()
-                genotypes = tuple()
+                vcf_gt_variants = list()
                 for idx, vcf_variant in enumerate(vcf_variants):
                     if self._compare_vcf_variants_eq(
                             current_vcf_variant, vcf_variant):
-                        genotypes += tuple(vcf_variant.genotypes)
+                        vcf_gt_variants.append(vcf_variant)
                         vcf_iterator_idexes_to_advance.append(idx)
                     else:
-                        genotypes += tuple(
-                            self._generate_missing_genotype(self.vcfs[idx])
-                        )
+                        vcf_gt_variants.append(None)
+                family_genotypes = VcfFamiliesGenotypes(self, vcf_gt_variants)
 
-                family_genotypes = VcfFamiliesGenotypes(
-                    self.families,
-                    VcfLoader.transform_vcf_genotypes(genotypes),
-                    params=self.params)
+                family_variants = []
+                for fam, gt, bs in family_genotypes.family_genotype_iterator():
+                    fv = FamilyVariant(current_summary_variant, fam, gt, bs)
+                    if self._denovo_handler(fv):
+                        continue
+                    if self._omission_handler(fv):
+                        continue
+                    family_variants.append(fv)
 
-                yield current_summary_variant, family_genotypes
+                yield current_summary_variant, family_variants
 
                 for idx in vcf_iterator_idexes_to_advance:
                     vcf_variants[idx] = next(vcf_iterators[idx], None)
                 summary_variant_index += 1
 
-    @staticmethod
-    def transform_vcf_genotypes(genotypes):
-        new_genotypes = []
-        for genotype in genotypes:
-            if len(genotype) == 2:  # Handle haploid genotypes
-                genotype.insert(1, -2)
-            new_genotypes.append(genotype)
-        return np.array(new_genotypes, dtype=GENOTYPE_TYPE).T
+    # @staticmethod
+    # def transform_vcf_genotypes(genotypes):
+    #     new_genotypes = []
+    #     for genotype in genotypes:
+    #         if len(genotype) == 2:  # Handle haploid genotypes
+    #             genotype.insert(1, -2)
+    #         new_genotypes.append(genotype)
+    #     return np.array(new_genotypes, dtype=GENOTYPE_TYPE).T
 
     @staticmethod
     def cli_defaults():
@@ -256,6 +470,9 @@ class VcfLoader(VariantsLoader):
             'vcf_include_unknown_family_genotypes': False,
             'vcf_include_unknown_person_genotypes': False,
             'vcf_multi_loader_fill_in_mode': 'reference',
+            'vcf_denovo_mode': 'possible_denovo',
+            'vcf_omission_mode': 'possible_omission',
+            'add_chrom_prefix': None,
         }
 
     @staticmethod
@@ -266,7 +483,10 @@ class VcfLoader(VariantsLoader):
             assert key in param_defaults, (key, list(param_defaults.keys()))
             if value != param_defaults[key]:
                 param = key.replace('_', '-')
-                if key in ('vcf_multi_loader_fill_in_mode'):
+                if key in {'vcf_multi_loader_fill_in_mode',
+                           'vcf_denovo_mode',
+                           'vcf_omission_mode',
+                           'add_chrom_prefix'}:
                     result.append(f'--{param}')
                     result.append(f'{value}')
                 else:
@@ -312,6 +532,26 @@ class VcfLoader(VariantsLoader):
             'supported values are `reference` or `unknown`'
             '[default: %(default)s]',
         )
+        parser.add_argument(
+            '--vcf-denovo-mode', default='possible_denovo',
+            dest='vcf_denovo_mode',
+            help='used for handling family variants with denovo inheritance; '
+            'supported values are: `denovo`, `possible_denovo`, `ignore`; '
+            '[default: %(default)s]',
+        )
+        parser.add_argument(
+            '--vcf-omission-mode', default='possible_omission',
+            dest='vcf_omission_mode',
+            help='used for handling family variants with omission '
+            'inheritance; '
+            'supported values are: `omission`, `possible_omission`, `ignore`; '
+            '[default: %(default)s]',
+        )
+        parser.add_argument(
+            '--add-chrom-prefix', type=str, default=None,
+            help='Add specified prefix to each chromosome name in '
+            'variants file'
+        )
 
     @staticmethod
     def parse_cli_arguments(argv):
@@ -319,6 +559,12 @@ class VcfLoader(VariantsLoader):
 
         assert argv.vcf_multi_loader_fill_in_mode \
             in set(['reference', 'unknown'])
+        assert argv.vcf_denovo_mode \
+            in set(['denovo', 'possible_denovo', 'ignore']), \
+            argv.vcf_denovo_mode
+        assert argv.vcf_omission_mode \
+            in set(['omission', 'possible_omission', 'ignore']), \
+            argv.vcf_omission_mode
         params = {
             'vcf_include_reference_genotypes':
             str2bool(argv.vcf_include_reference_genotypes),
@@ -328,5 +574,11 @@ class VcfLoader(VariantsLoader):
             str2bool(argv.vcf_include_unknown_person_genotypes),
             'vcf_multi_loader_fill_in_mode':
             argv.vcf_multi_loader_fill_in_mode,
+            'vcf_denovo_mode':
+            argv.vcf_denovo_mode,
+            'vcf_omission_mode':
+            argv.vcf_omission_mode,
+            'add_chrom_prefix':
+            argv.add_chrom_prefix
         }
         return filenames, params

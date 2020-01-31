@@ -124,4 +124,4 @@ def test_allele_best_state(
         None
     )
     fa.update_attributes({'allele_count': allele_count})
-    assert np.array_equal(fa.best_st, expected)
+    assert np.array_equal(fa.best_state, expected)

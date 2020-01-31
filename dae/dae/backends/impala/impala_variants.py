@@ -97,7 +97,8 @@ class ImpalaFamilyVariants:
                 chrom, position, reference, transmission_type, \
                     alternatives_data, \
                     effect_data, family_id, genotype_data, best_state_data, \
-                    genetic_model_data, frequency_data, genomic_scores_data, \
+                    genetic_model_data, inheritance_data, \
+                    frequency_data, genomic_scores_data, \
                     matched_alleles = row
 
                 family = self.families[family_id]
@@ -106,8 +107,11 @@ class ImpalaFamilyVariants:
                     chrom, position, reference, transmission_type,
                     alternatives_data, effect_data,
                     genotype_data, best_state_data,
-                    genetic_model_data, frequency_data, genomic_scores_data,
+                    genetic_model_data, inheritance_data,
+                    frequency_data, genomic_scores_data,
                 )
+                if v is None:
+                    continue
 
                 matched_alleles = [int(a) for a in matched_alleles.split(',')]
                 v.set_matched_alleles(matched_alleles)
@@ -403,52 +407,6 @@ class ImpalaFamilyVariants:
         return "region_bin IN ({})".format(','.join([
             "'{}'".format(rb) for rb in region_bins]))
 
-    @deprecated(
-        details="'coding2' heuristic is deprecated in favor of 'coding_bin' "
-        "heuristic")
-    def _build_coding2_heuristic(self, effect_types):
-        if effect_types is None:
-            return ''
-        if 'coding2' not in self.schema:
-            return ''
-        intersection = set(effect_types) & set([
-            'splice-site',
-            'frame-shift',
-            'nonsense',
-            'no-frame-shift-newStop',
-            'noStart',
-            'noEnd',
-            'missense',
-            'no-frame-shift',
-            'CDS',
-            'synonymous',
-            'coding_unknown',
-            'regulatory',
-            "3'UTR",
-            "5'UTR",
-            'intron',
-            'non-coding',
-            "5'UTR-intron",
-            "3'UTR-intron",
-            "promoter",
-            "non-coding-intron",
-        ])
-        if intersection == set(effect_types):
-            return 'coding2 = 1'
-        if not intersection:
-            return 'coding2 = 0'
-        return ''
-
-    @deprecated(
-        details="'ultra_rare' heuristic is deprecated in favor of "
-        "'frequency_bin' heuristic")
-    def _build_ultra_rare_heuristic(self, ultra_rare):
-        if 'ultra_rare' not in self.schema:
-            return ''
-        if ultra_rare:
-            return 'ultra_rare = 1'
-        return ''
-
     def _build_family_bin_heuristic(self, family_ids, person_ids):
         if 'family_bin' not in self.schema:
             return ''
@@ -542,27 +500,15 @@ class ImpalaFamilyVariants:
         where.append(self._build_return_reference_and_return_unknown(
             return_reference, return_unknown
         ))
-#        where.append(
-#            self._build_rare_heuristic(ultra_rare, real_attr_filter)
-#        )
         where.append(
             self._build_frequency_bin_heuristic(ultra_rare, real_attr_filter)
         )
-#        where.append(
-#            self._build_ultra_rare_heuristic(ultra_rare)
-#        )
         where.append(
             self._build_family_bin_heuristic(family_ids, person_ids)
         )
         where.append(
             self._build_coding_heuristic(effect_types)
         )
-#        where.append(
-#            self._build_coding2_heuristic(effect_types)
-#        )
-#        where.append(
-#            self._build_chrom_bin_heuristic(regions)
-#        )
         where.append(
             self._build_region_bin_heuristic(regions)
         )
@@ -613,6 +559,7 @@ class ImpalaFamilyVariants:
                 genotype_data,
                 best_state_data,
                 genetic_model_data,
+                inheritance_data,
                 frequency_data,
                 genomic_scores_data,
                 GROUP_CONCAT(DISTINCT CAST(allele_index AS string))
@@ -632,6 +579,7 @@ class ImpalaFamilyVariants:
                 genotype_data,
                 best_state_data,
                 genetic_model_data,
+                inheritance_data,
                 frequency_data,
                 genomic_scores_data
             {limit_clause}

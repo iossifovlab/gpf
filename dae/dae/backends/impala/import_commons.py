@@ -66,7 +66,8 @@ def construct_import_annotation_pipeline(
 
 class MakefileGenerator:
 
-    def __init__(self, partition_descriptor, genome):
+    def __init__(self, partition_descriptor, genome, chrom_prefix=None):
+        self.chrom_prefix = chrom_prefix
         self.genome = genome
         self.partition_descriptor = partition_descriptor
         self.chromosome_lengths = dict(self.genome.get_all_chr_lengths())
@@ -77,11 +78,32 @@ class MakefileGenerator:
             self.partition_descriptor.region_length)
         return result
 
-    def generate_chrom_targets(self, chrom):
-        target = chrom
-        if chrom not in self.partition_descriptor.chromosomes:
+    def reset_chrom(self, chrom):
+        if self.chrom_prefix and chrom.startswith(self.chrom_prefix):
+            return chrom[len(self.chrom_prefix):]
+        return chrom
+
+    def prefix_chrom(self, chrom):
+        if self.chrom_prefix and not chrom.startswith(self.chrom_prefix):
+            return f'{self.chrom_prefix}{chrom}'
+        return chrom
+
+    def build_target_chromosomes(self, target_chromosomes):
+        if self.chrom_prefix is None:
+            return target_chromosomes
+        else:
+            return [
+                self.prefix_chrom(tg)
+                for tg in target_chromosomes
+            ]
+
+    def generate_chrom_targets(self, target_chrom):
+        target = target_chrom
+        if target_chrom not in self.partition_descriptor.chromosomes:
             target = 'other'
-        region_bins_count = self.region_bins_count(chrom)
+        region_bins_count = self.region_bins_count(target_chrom)
+
+        chrom = self.reset_chrom(target_chrom)
 
         if region_bins_count == 1:
             return [(f'{target}_0', chrom)]
@@ -89,32 +111,42 @@ class MakefileGenerator:
         for region_index in range(region_bins_count):
             start = region_index * self.partition_descriptor.region_length + 1
             end = (region_index + 1) * self.partition_descriptor.region_length
-            if end > self.chromosome_lengths[chrom]:
-                end = self.chromosome_lengths[chrom]
+            if end > self.chromosome_lengths[target_chrom]:
+                end = self.chromosome_lengths[target_chrom]
             result.append(
                 (f'{target}_{region_index}', f'{chrom}:{start}-{end}')
             )
         return result
 
     def generate_variants_targets(self, target_chromosomes):
+
         if len(self.partition_descriptor.chromosomes) == 0:
             return {
                 'none': [self.partition_descriptor.output]
             }
 
         targets = defaultdict(list)
+        generated_target_chromosomes = target_chromosomes[:]
+        if self.chrom_prefix is not None:
+            generated_target_chromosomes = [
+                self.prefix_chrom(tg)
+                for tg in target_chromosomes
+            ]
 
-        for chrom in target_chromosomes:
-            if chrom not in self.chromosome_lengths:
+        for target_chrom in generated_target_chromosomes:
+            if target_chrom not in self.chromosome_lengths:
                 print(
-                    f"WARNING: contig {chrom} not found in specified genome",
+                    f"WARNING: contig {target_chrom} not found in specified "
+                    f"genome",
                     file=sys.stderr)
                 continue
 
-            assert chrom in self.chromosome_lengths, \
-                (chrom, self.chromosome_lengths)
-            region_targets = self.generate_chrom_targets(chrom)
+            assert target_chrom in self.chromosome_lengths, \
+                (target_chrom, self.chromosome_lengths)
+            region_targets = self.generate_chrom_targets(target_chrom)
+
             for target, region in region_targets:
+                # target = self.reset_target(target)
                 targets[target].append(region)
         return targets
 
@@ -125,23 +157,22 @@ class MakefileGenerator:
         all_bins = ' '.join(list(variants_targets.keys()))
 
         print(
-            f'all_bins={all_bins}\n',
+            f'all_bins={all_bins}',
             file=output)
         print(
             f'all_bins_flags=$(foreach bin, $(all_bins), $(bin).flag)\n',
             file=output)
         print(
-            f'\n'
             f'variants: $(all_bins_flags)\n',
             file=output)
         print(
-            f'\n'
             f'%.flag:\n'
             f'\t{command} --rb $* && touch $@\n',
             file=output
         )
 
     def generate_pedigree_make(self, command, output=sys.stdout):
+        print('\n', file=output)
         print(
             f'pedigree: ped.flag\n',
             file=output)
@@ -151,16 +182,28 @@ class MakefileGenerator:
             file=output)
 
     def generate_impala_load_make(self, command, output=sys.stdout):
+        print('\n', file=output)
         print(
-            f'impala: load.flag\n',
+            f'load: load.flag\n',
             file=output)
         print(
-            f'load.flag:\n'
+            f'load.flag: ped.flag $(all_bins_flags)\n'
+            f'\t{command} && touch $@',
+            file=output)
+
+    def generate_reports_make(self, command, output=sys.stdout):
+        print('\n', file=output)
+        print(
+            f'reports: reports.flag\n',
+            file=output)
+        print(
+            f'reports.flag: load.flag\n'
             f'\t{command} && touch $@',
             file=output)
 
     def generate_makefile(
             self, families_command, variants_command, load_command,
+            reports_command,
             target_chromosomes,
             output=sys.stdout):
 
@@ -174,14 +217,17 @@ class MakefileGenerator:
             families_command, output=output)
         self.generate_impala_load_make(
             load_command, output=output)
+        self.generate_reports_make(
+            reports_command, output=output)
 
 
 class Variants2ParquetTool:
 
     VARIANTS_LOADER_CLASS = None
     VARIANTS_TOOL = None
-    BUCKET_INDEX_DEFAULT = 100
     VARIANTS_FREQUENCIES = False
+
+    BUCKET_INDEX_DEFAULT = 1000
 
     @classmethod
     def cli_common_arguments(cls, gpf_instance, parser):
@@ -309,6 +355,8 @@ class Variants2ParquetTool:
         if argv.partition_description is not None:
             pd = os.path.abspath(argv.partition_description)
             command.append(f'--pd {pd}')
+        if argv.add_chrom_prefix is not None:
+            command.append(f'--add-chrom-prefix {argv.add_chrom_prefix}')
 
         return ' '.join(command)
 
@@ -352,11 +400,24 @@ class Variants2ParquetTool:
         return ' '.join(command)
 
     @classmethod
+    def build_make_reports_command(
+            cls, study_id, argv):
+        output = argv.output
+        if output is None:
+            output = '.'
+        output = os.path.abspath(output)
+
+        command = [
+            f'generate_common_report.py --studies {study_id}'
+        ]
+
+        return ' && '.join(command)
+
+    @classmethod
     def main(
             cls, argv=sys.argv[1:],
             gpf_instance=None,
             annotation_defaults={}):
-        print("argv:", argv)
 
         if gpf_instance is None:
             gpf_instance = GPFInstance()
@@ -385,9 +446,12 @@ class Variants2ParquetTool:
         else:
             partition_description = NoPartitionDescriptor(argv.output)
 
+        chrom_prefix = argv.add_chrom_prefix
         generator = MakefileGenerator(
             partition_description,
-            gpf_instance.genomes_db.get_genome())
+            gpf_instance.genomes_db.get_genome(),
+            chrom_prefix=chrom_prefix)
+
         target_chromosomes = variants_loader.chromosomes
         variants_targets = generator.generate_variants_targets(
             target_chromosomes)
@@ -409,10 +473,13 @@ class Variants2ParquetTool:
                 study_id, argv, families_loader)
             load_command = cls.build_make_impala_load_command(
                 study_id, argv)
-
+            reports_command = cls.build_make_reports_command(
+                study_id, argv
+            )
             with open(os.path.join(dirname, 'Makefile'), 'wt') as output:
                 generator.generate_makefile(
                     families_command, variants_command, load_command,
+                    reports_command,
                     target_chromosomes,
                     output=output
                 )
@@ -442,12 +509,12 @@ class Variants2ParquetTool:
                 print("resetting regions:", regions)
                 variants_loader.reset_regions(regions)
 
-            if cls.VARIANTS_FREQUENCIES:
-                variants_loader = AlleleFrequencyDecorator(variants_loader)
-
             variants_loader = AnnotationPipelineDecorator(
                 variants_loader, annotation_pipeline
             )
+
+            if cls.VARIANTS_FREQUENCIES:
+                variants_loader = AlleleFrequencyDecorator(variants_loader)
 
             ParquetManager.variants_to_parquet_partition(
                 variants_loader, partition_description,

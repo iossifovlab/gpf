@@ -10,8 +10,8 @@ def test_trios_multi_single_allele1(variants_vcf):
         return_unknown=True))
     assert len(vs) == 1
     for v in vs:
-        assert v.best_st.shape == (3, 3)
-        assert len(mat2str(v.best_st)) == 11
+        assert v.best_state.shape == (3, 3)
+        assert len(mat2str(v.best_state)) == 11
 
 
 def test_trios_multi_all_reference(variants_vcf):
@@ -22,5 +22,5 @@ def test_trios_multi_all_reference(variants_vcf):
         return_unknown=True))
     assert len(vs) == 1
     for v in vs:
-        assert v.best_st.shape == (3, 3)
-        assert len(mat2str(v.best_st)) == 11
+        assert v.best_state.shape == (3, 3)
+        assert len(mat2str(v.best_state)) == 11

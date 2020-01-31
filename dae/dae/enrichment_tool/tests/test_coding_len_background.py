@@ -1,7 +1,7 @@
 import numpy as np
 
 from dae.variants.attributes import Inheritance
-
+# from dae.backends.raw.loader import StoredAnnotationDecorator
 from dae.enrichment_tool.tests.conftest import fixtures_dir
 
 from dae.enrichment_tool.background import CodingLenBackground
@@ -27,8 +27,16 @@ def test_load(f1_trio_coding_len_background):
 
 
 def test_calc_stats(f1_trio, f1_trio_coding_len_background):
+
     variants = list(f1_trio.query_variants(
         inheritance=str(Inheritance.denovo.name)))
+
+    for fv in variants:
+        print(80*'-')
+        print(fv, fv.effects)
+        for fa in fv.alleles:
+            print('\t', fa, fa.effects)
+
     event_counter = EventsCounter()
 
     pg = f1_trio.get_families_group('phenotype')
@@ -109,3 +117,27 @@ def test_use_cache(f1_trio_enrichment_config):
     assert np.all(b1 == b2)
 
     assert coding_len_background.is_ready is True
+
+
+def test_effects(f1_trio):
+    vs = f1_trio.query_variants()
+    for v in vs:
+        print(30*'-')
+        print(v, v.effects)
+        for fa in v.alleles:
+            print('\t', fa, fa.effect)
+
+
+# def test_effects_annotate(f1_trio):
+#     loader = f1_trio._backend.variants_loaders[0]
+#     print(loader.filenames)
+#     annotation_filename = StoredAnnotationDecorator\
+#           .build_annotation_filename(
+#               loader.filenames[0]
+#           )
+#     annotation_filename += '_new'
+
+#     print(loader.filenames[0], annotation_filename)
+
+#     StoredAnnotationDecorator.save_annotation_file(
+#         loader, annotation_filename)
