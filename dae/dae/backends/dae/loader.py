@@ -390,6 +390,9 @@ class DenovoLoader(VariantsGenotypesLoader):
             denovo_family_id = 'familyId'
             denovo_best_state = 'bestState'
 
+        if denovo_sep is None:
+            denovo_sep = '\t'
+
         raw_df = pd.read_csv(
             filepath,
             sep=denovo_sep,
