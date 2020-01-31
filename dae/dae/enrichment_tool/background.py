@@ -10,7 +10,6 @@ import numpy as np
 import pandas as pd
 
 from dae.enrichment_tool.event_counters import overlap_enrichment_result_dict
-from dae.configuration.gpf_config_parser import GPFConfigParser
 # from dae.variants.attributes import Inheritance
 
 
@@ -24,13 +23,22 @@ class BackgroundBase(object):
             'samochaBackgroundModel': SamochaBackground
         }
 
+    @staticmethod
+    def enrichment_cache_file(config, name=''):
+        cache_file = os.path.join(
+            config.conf_dir,
+            'enrichment-{}.pckl'.format(name)
+        )
+
+        return cache_file
+
     def __init__(self, name, config):
         self.background = None
         self.name = name
         assert self.name is not None
         self.config = config
 
-        self.cache_filename = GPFConfigParser.enrichment_cache_file(
+        self.cache_filename = BackgroundBase.enrichment_cache_file(
             self.config, self.name)
 
         self.load()
@@ -180,7 +188,7 @@ class CodingLenBackground(BackgroundCommon):
 
     @property
     def filename(self):
-        return self.config.backgrounds[self.name].filename
+        return getattr(self.config.enrichment.background, self.name).file
 
     def _load_and_prepare_build(self):
         filename = self.filename
@@ -234,7 +242,7 @@ class SamochaBackground(BackgroundBase):
 
     @property
     def filename(self):
-        return self.config.backgrounds[self.name].filename
+        return getattr(self.config.enrichment.background, self.name).file
 
     def _load_and_prepare_build(self):
         filename = self.filename

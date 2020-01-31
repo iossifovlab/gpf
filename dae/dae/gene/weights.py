@@ -161,7 +161,7 @@ class GeneWeightsDb(object):
         return self[weight_id]
 
     def _load(self):
-        if self.config:
+        if self.config and self.config.gene_weights:
             for weight_config in self.config.gene_weights:
                 if weight_config.section_id() in \
                         self.config.gene_info.selected_gene_weights:
