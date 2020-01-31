@@ -289,6 +289,9 @@ class DenovoLoader(VariantsGenotypesLoader):
             if not argv.denovo_best_state:
                 argv.denovo_best_state = 'bestState'
 
+        if argv.denovo_sep is None:
+            argv.denovo_sep = '\t'
+
         params = {
             'denovo_location': argv.denovo_location,
             'denovo_variant': argv.denovo_variant,
@@ -516,7 +519,9 @@ class DaeTransmittedFamiliesGenotypes(FamiliesGenotypes):
 
     def family_genotype_iterator(self):
         for family_id, bs in self.families_best_states.items():
-            fam = self.families[family_id]
+            fam = self.families.get(family_id)
+            if fam is None:
+                continue
             yield fam, bs
 
     def full_families_genotypes(self):
