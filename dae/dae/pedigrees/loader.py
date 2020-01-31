@@ -258,7 +258,16 @@ class FamiliesLoader:
             'ped_proband',
             'ped_layout_mode',
         ]
-
+        columns = set([
+            'ped_family',
+            'ped_person',
+            'ped_mom',
+            'ped_dad',
+            'ped_sex',
+            'ped_status',
+            'ped_role',
+            'ped_proband',
+        ])
         assert argv.ped_file_format in ('simple', 'pedigree')
         assert argv.ped_layout_mode in ('generate', 'load')
 
@@ -269,11 +278,11 @@ class FamiliesLoader:
 
         for col in ped_ped_args:
             ped_value = getattr(argv, col)
-            if not res['ped_no_header']:
+            if not res['ped_no_header'] or col not in columns:
                 res[col] = ped_value
-            else:
-                assert ped_value.isnumeric(), \
-                    '{} must hold an integer value!'.format(col)
+            elif ped_value is not None and col in columns:
+                # assert ped_value.isnumeric(), \
+                #     '{} must hold an integer value!'.format(col)
                 res[col] = int(ped_value)
 
         return filename, res
@@ -309,13 +318,14 @@ class FamiliesLoader:
         for col in header:
             assert type(col[0]) is int, col[0]
         header = tuple(sorted(header, key=lambda col: col[0]))
+
         return zip(*header)
 
     @staticmethod
     def flexible_pedigree_read(
             pedigree_filepath,
             ped_sep='\t',
-            ped_has_header=True,
+            ped_no_header=False,
             ped_family='familyId',
             ped_person='personId',
             ped_mom='momId',
@@ -332,8 +342,8 @@ class FamiliesLoader:
 
         if type(ped_no_role) == str:
             ped_no_role = str2bool(ped_no_role)
-        if type(ped_has_header) == str:
-            ped_has_header = str2bool(ped_has_header)
+        if type(ped_no_header) == str:
+            ped_no_header = str2bool(ped_no_header)
 
         read_csv_func = partial(
             pd.read_csv,
@@ -358,7 +368,7 @@ class FamiliesLoader:
                 message="Both a converter and dtype were specified"
             )
 
-            if not ped_has_header:
+            if ped_no_header:
                 _, file_header = FamiliesLoader.produce_header_from_indices(
                     ped_family=ped_family,
                     ped_person=ped_person,
