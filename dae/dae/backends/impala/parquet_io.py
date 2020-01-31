@@ -685,7 +685,10 @@ def add_missing_parquet_fields(pps, ped_df):
         name = column.lower().replace('.', '_')
         pps = pps.append(pa.field(name, pa.string()))
         rename[column] = name
+
     ped_df = ped_df.rename(columns=rename)
+    missing_fields = [rename[col] for col in missing_fields]
+
     for column in missing_fields:
         ped_df[column] = ped_df[column].apply(lambda v: str(v))
 
