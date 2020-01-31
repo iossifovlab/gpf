@@ -2,7 +2,7 @@ import sys
 import os
 import glob
 
-from box import Box
+from dae.configuration.gpf_config_parser import GPFConfigParser
 
 from dae.variants.attributes import VariantType
 
@@ -38,7 +38,7 @@ class VariantScoreAnnotatorBase(VariantAnnotatorBase):
 
     def collect_annotator_schema(self, schema):
         super(VariantScoreAnnotatorBase, self).collect_annotator_schema(schema)
-        for native, output in self.config.columns._asdict().items():
+        for native, output in self.config.columns.field_values_iterator():
             type_name = self.score_file.schema.columns[native].type_name
             schema.create_column(output, type_name)
 
@@ -207,19 +207,20 @@ class PositionMultiScoreAnnotator(CompositeVariantAnnotator):
             self.config.options.scores_directory
 
         score_filename = self._get_score_file(score_name)
-        options = Box(
-            self.config.options.to_dict(),
-            default_box=True, default_box_attr=None)
-        options.scores_file = score_filename
+
+        options = GPFConfigParser.modify_tuple(
+            self.config.options, {"scores_file": score_filename}
+        )
         columns = {
             score_name: getattr(self.config.columns, score_name)
         }
 
         variant_config = AnnotationConfigParser.parse_section(
-            Box({
+            GPFConfigParser._dict_to_namedtuple({
                 'options': options,
                 'columns': columns,
-                'annotator': 'score_annotator.VariantScoreAnnotator'
+                'annotator': 'score_annotator.VariantScoreAnnotator',
+                'virtual_columns': [],
             }),
             self.config.genomes_db
         )

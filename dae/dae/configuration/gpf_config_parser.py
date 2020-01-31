@@ -1,3 +1,4 @@
+import sys
 import os
 import glob
 
@@ -53,7 +54,7 @@ class GPFConfigParser:
                 # only for public attributes
                 if name[0:2] == '__':
                     raise AttributeError()
-                print(f'WARNING: Attempting to get non-existent attribute {name} on tuple!')
+                print(f'WARNING: Attempting to get non-existent attribute {name} on tuple!', file=sys.stderr)
                 return None
 
             def __repr__(self):

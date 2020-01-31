@@ -3,28 +3,25 @@ import pytest
 import pandas as pd
 import numpy as np
 
-from box import Box
 
-from ..tools.annotator_config import AnnotationConfigParser
-from ..tools.effect_annotator import EffectAnnotator, VariantEffectAnnotator
+from dae.configuration.gpf_config_parser import GPFConfigParser
+from dae.annotation.tools.annotator_config import AnnotationConfigParser
+from dae.annotation.tools.effect_annotator import EffectAnnotator, VariantEffectAnnotator
 
-from .conftest import relative_to_this_test_folder
+from dae.annotation.tests.conftest import relative_to_this_test_folder
 
 
 @pytest.fixture(scope='session')
 def effect_annotator(genomes_db_2013):
-    options = Box({
+    options = GPFConfigParser._dict_to_namedtuple({
         'vcf': True,
         'direct': False,
         'r': 'reference',
         'a': 'alternative',
         'c': 'chrom',
         'p': 'position',
-
-        # 'c': 'CSHL:chr',
-        # 'p': 'CSHL:position',
-        # 'v': 'CSHL:variant',
-    }, default_box=True, default_box_attr=None)
+        'prom_len': 0,
+    })
 
     columns = {
         'effect_type': 'effect_type',
@@ -33,10 +30,11 @@ def effect_annotator(genomes_db_2013):
     }
 
     config = AnnotationConfigParser.parse_section(
-        Box({
+        GPFConfigParser._dict_to_namedtuple({
             'options': options,
             'columns': columns,
-            'annotator': 'effect_annotator.EffectAnnotator'
+            'annotator': 'effect_annotator.EffectAnnotator',
+            'virtual_columns': [],
         }),
         genomes_db_2013
     )
@@ -49,14 +47,15 @@ def effect_annotator(genomes_db_2013):
 
 @pytest.fixture(scope='session')
 def variant_effect_annotator(genomes_db_2013):
-    options = Box({
+    options = GPFConfigParser._dict_to_namedtuple({
         'direct': False,
         'vcf': True,
         'r': 'reference',
         'a': 'alternative',
         'c': 'chrom',
         'p': 'position',
-    }, default_box=True, default_box_attr=None)
+        'prom_len': 0,
+    })
 
     columns = {
         'effect_type': 'effect_type',
@@ -72,10 +71,11 @@ def variant_effect_annotator(genomes_db_2013):
     }
 
     config = AnnotationConfigParser.parse_section(
-        Box({
+        GPFConfigParser._dict_to_namedtuple({
             'options': options,
             'columns': columns,
-            'annotator': 'effect_annotator.VariantEffectAnnotator'
+            'annotator': 'effect_annotator.VariantEffectAnnotator',
+            'virtual_columns': [],
         }),
         genomes_db_2013
     )
@@ -159,10 +159,10 @@ def test_effect_annotators_compare(
     df2 = variant_effect_annotator.annotate_df(df)
 
     columns = [
-        'VCF:chr',
-        'VCF:position',
-        'CSHL:location',
-        'CSHL:variant',
+        'VCF_chr',
+        'VCF_position',
+        'CSHL_location',
+        'CSHL_variant',
         'effect_type',
         'effect_genes',
     ]

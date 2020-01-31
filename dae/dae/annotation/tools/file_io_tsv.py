@@ -4,7 +4,6 @@ import gzip
 
 import pysam
 from abc import ABCMeta, abstractmethod
-from box import Box
 from dae.annotation.tools.schema import Schema
 from dae.annotation.tools.utils import handle_header
 
@@ -83,8 +82,7 @@ class AbstractFormat(object):
     __metaclass__ = ABCMeta
 
     def __init__(self, opts):
-        options = Box(opts.to_dict(), default_box=True, default_box_attr=None)
-        self.options = options
+        self.options = opts
 
         self.linecount = 0
         self.linecount_threshold = 1000

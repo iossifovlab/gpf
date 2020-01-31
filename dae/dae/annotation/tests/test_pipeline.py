@@ -1,113 +1,10 @@
 import pytest
 import pandas as pd
 
-from box import Box
-
 from dae.annotation.annotation_pipeline import PipelineAnnotator
-from dae.annotation.tools.annotator_config import AnnotationConfigParser
 from dae.annotation.tools.annotator_base import VariantAnnotatorBase
 
 from .conftest import relative_to_this_test_folder
-
-
-@pytest.fixture
-def empty_options():
-    return Box({'vcf': True}, default_box=True, default_box_attr=None)
-
-
-def test_parse_pipeline_config(genomes_db_2013):
-    filename = relative_to_this_test_folder('fixtures/annotation_test.conf')
-    work_dir = relative_to_this_test_folder('fixtures')
-    configuration = AnnotationConfigParser.read_file_configuration(
-        filename, work_dir
-    )
-
-    assert len(list(configuration.keys())) == 6
-    assert list(configuration.keys()) == [
-        'Step1', 'Step2', 'Step3', 'Step4', 'Step5', 'config_file']
-
-
-@pytest.fixture
-def error_pipeline_sections_configuration(genomes_db_2013):
-    filename = relative_to_this_test_folder(
-        'fixtures/error_annotation_sections.conf')
-    work_dir = relative_to_this_test_folder('fixtures')
-    configuration = AnnotationConfigParser.read_file_configuration(
-        filename, work_dir
-    )
-
-    return configuration
-
-
-@pytest.fixture
-def pipeline_sections_configuration(genomes_db_2013):
-    filename = relative_to_this_test_folder(
-        'fixtures/annotation_test.conf')
-    work_dir = relative_to_this_test_folder('fixtures')
-    configuration = AnnotationConfigParser.read_file_configuration(
-        filename, work_dir
-    )
-
-    assert len(list(configuration.keys())) == 6
-    assert list(configuration.keys()) == [
-        'Step1', 'Step2', 'Step3', 'Step4', 'Step5', 'config_file']
-    return configuration
-
-
-def test_parse_error_pipeline_section_missing_annotator(
-        error_pipeline_sections_configuration, empty_options, genomes_db_2013):
-    error_configuration = error_pipeline_sections_configuration
-    configuration = error_configuration['Step0']
-    configuration['options'] = empty_options
-
-    with pytest.raises(AssertionError):
-        AnnotationConfigParser.parse_section(configuration, genomes_db_2013)
-
-
-def test_parse_annotation_section_sections(
-        pipeline_sections_configuration, empty_options, genomes_db_2013):
-    configuration = pipeline_sections_configuration
-
-    step1_configuration = configuration['Step1']
-    step1_configuration['options'] = empty_options
-
-    section1 = \
-        AnnotationConfigParser.parse_section(
-            step1_configuration, genomes_db_2013)
-    assert section1.annotator == \
-        'relabel_chromosome.RelabelChromosomeAnnotator'
-
-    step3_configuration = configuration['Step3']
-    step3_configuration['options'] = empty_options
-
-    section3 = \
-        AnnotationConfigParser.parse_section(
-            step3_configuration, genomes_db_2013)
-    assert section3.annotator == 'annotator_base.CopyAnnotator'
-
-
-def test_build_pipeline_configuration(genomes_db_2013):
-    options = Box({
-            'default_arguments': None,
-            'vcf': True,
-            'mode': 'overwrite',
-        },
-        default_box=True,
-        default_box_attr=None)
-
-    filename = relative_to_this_test_folder('fixtures/annotation_test.conf')
-    work_dir = relative_to_this_test_folder('fixtures')
-
-    config = AnnotationConfigParser.read_and_parse_file_configuration(
-        options, filename, work_dir, genomes_db_2013
-    )
-    assert config is not None
-
-    for section in config.sections:
-        print(section.annotator, '->', section.output_columns)
-
-    # assert config.output_length() == 21
-    # assert config.default_options.region is None
 
 
 input2_copy_expected = '''chr\tposition
@@ -145,13 +42,10 @@ def test_build_pipeline(
         expected_df, variants_io, capsys, config_file, expected,
         genomes_db_2013):
 
-    options = Box({
-            'default_arguments': None,
-            'vcf': True,
-            'mode': 'overwrite',
-        },
-        default_box=True,
-        default_box_attr=None)
+    options = {
+        'vcf': True,
+        'mode': 'overwrite',
+    }
 
     filename = relative_to_this_test_folder(config_file)
 
@@ -178,8 +72,6 @@ def test_build_pipeline(
 
 
 def dummy_variant_annotate(annotator, aline, variant):
-    # print(variant)
-
     aline['changed_chrom'] = 'test'
     aline['changed_position'] = 42
 
@@ -204,13 +96,11 @@ test	42	test	42	test	42
 def test_pipeline_change_variants_position(
         variants_io, capsys, expected_df, genomes_db_2013):
 
-    options = Box({
-            'default_arguments': None,
-            'vcf': True,
-            'mode': 'overwrite',
-        },
-        default_box=True,
-        default_box_attr=None)
+    options = {
+        'default_arguments': None,
+        'vcf': True,
+        'mode': 'overwrite',
+    }
 
     filename = relative_to_this_test_folder(
         'fixtures/variant_coordinates_change.conf')

@@ -1,6 +1,6 @@
 import pandas as pd
-from box import Box
 
+from dae.configuration.gpf_config_parser import GPFConfigParser
 from .conftest import relative_to_this_test_folder
 from dae.annotation.tools.dbnsfp_annotator import dbNSFPAnnotator
 from dae.annotation.tools.annotator_config import AnnotationConfigParser
@@ -19,7 +19,7 @@ expected_result_dbNSFP = \
 
 
 def test_dbNSFP_annotator(variants_io, expected_df, capsys, genomes_db_2013):
-    options = Box({
+    options = {
         'vcf': True,
         'direct': False,
         'mode': 'overwrite',
@@ -27,7 +27,7 @@ def test_dbNSFP_annotator(variants_io, expected_df, capsys, genomes_db_2013):
             'fixtures/TESTdbNSFP/'),
         'dbNSFP_filename': 'test_missense_chr*.tsv.gz',
         'dbNSFP_config': 'test_missense_config.conf'
-    }, default_box=True, default_box_attr=None)
+    }
 
     columns = {
         'score': 'RESULT_dbNSFP',
@@ -35,10 +35,11 @@ def test_dbNSFP_annotator(variants_io, expected_df, capsys, genomes_db_2013):
     }
 
     config = AnnotationConfigParser.parse_section(
-        Box({
+        GPFConfigParser._dict_to_namedtuple({
             'options': options,
             'columns': columns,
-            'annotator': 'dbNSFP_annotator.dbNSFPAnnotator'
+            'annotator': 'dbNSFP_annotator.dbNSFPAnnotator',
+            'virtual_columns': [],
         }),
         genomes_db_2013
     )
