@@ -8,11 +8,11 @@ from box import Box
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.dae_conf import dae_conf_schema
+from dae.configuration.schemas.phenotype_data import pheno_conf_schema
 
 from dae.pheno.prepare.ped2individuals import SPARKCsvPedigreeReader
 from dae.pheno.prepare.individuals2ped import InternalCsvIndividualsReader
 from dae.pheno.common import default_config
-from dae.pheno.utils.config import PhenoConfigParser
 from dae.pheno.pheno_db import PhenoDb
 
 
@@ -104,8 +104,9 @@ def dummy_pheno_missing_files_conf():
 
 @pytest.fixture(scope='session')
 def fake_pheno_config(fake_dae_conf):
-    return PhenoConfigParser.read_directory_configurations(
-        fake_dae_conf.phenotype_data.dir)
+    return GPFConfigParser.load_directory_configs(
+        fake_dae_conf.phenotype_data.dir, pheno_conf_schema
+    )
 
 
 @pytest.fixture(scope='session')
