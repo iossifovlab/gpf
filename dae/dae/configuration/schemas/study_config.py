@@ -171,7 +171,6 @@ study_config_schema = {
         "coerce": "abspath",
         "excludes": "description",
     },
-    "selected_people_groups": {"type": "string"},
     "study_type": {"type": "string"},
     "year": {"type": "list", "schema": {"type": "integer"}},
     "pub_med": {"type": "list", "schema": {"type": "string"}},
@@ -213,6 +212,7 @@ study_config_schema = {
             "selected_pheno_column_values": {
                 "type": "list",
                 "schema": {"type": "string"},
+                "default": []
             },
             "family_filters": {
                 "type": "list",
@@ -222,6 +222,7 @@ study_config_schema = {
             "selected_in_roles_values": {
                 "type": "list",
                 "schema": {"type": "string"},
+                "default": []
             },
             "inheritance_type_filter": {
                 "type": "list",
@@ -230,6 +231,7 @@ study_config_schema = {
             "selected_inheritance_type_filter_values": {
                 "type": "list",
                 "schema": {"type": "string"},
+                "default": [],
                 "dependencies": {"inheritance_type_filter": True},
             },
             "in_roles": {
@@ -247,6 +249,7 @@ study_config_schema = {
             "selected_genotype_column_values": {
                 "type": "list",
                 "schema": {"type": "string"},
+                "default": []
             },
             "preview_columns": {"type": "list", "schema": {"type": "string"}},
             "download_columns": {"type": "list", "schema": {"type": "string"}},
@@ -260,6 +263,7 @@ study_config_schema = {
             "selected_present_in_role_values": {
                 "type": "list",
                 "schema": {"type": "string"},
+                "default": []
             },
             "pheno_filters": {
                 "type": "dict",
@@ -271,6 +275,7 @@ study_config_schema = {
             "selected_pheno_filters_values": {
                 "type": "list",
                 "schema": {"type": "string"},
+                "default": []
             },
         },
     },
@@ -281,6 +286,7 @@ study_config_schema = {
             "selected_people_groups": {
                 "type": "list",
                 "schema": {"type": "string"},
+                "default": []
             },
             "groups": {"type": "list", "schema": {"type": "string"}},
             "effect_groups": {"type": "list", "schema": {"type": "string"}},
@@ -301,6 +307,7 @@ study_config_schema = {
             "selected_standard_criterias_values": {
                 "type": "list",
                 "schema": {"type": "string"},
+                "default": []
             },
             "standard_criterias": {
                 "type": "dict",
@@ -328,10 +335,12 @@ study_config_schema = {
             "selected_people_groups": {
                 "type": "list",
                 "schema": {"type": "string"},
+                "default": []
             },
             "selected_background_values": {
                 "type": "list",
                 "schema": {"type": "string"},
+                "default": []
             },
             "background": {
                 "type": "dict",
@@ -344,6 +353,7 @@ study_config_schema = {
             "selected_counting_values": {
                 "type": "list",
                 "schema": {"type": "string"},
+                "default": []
             },
             "counting": {
                 "type": "dict",

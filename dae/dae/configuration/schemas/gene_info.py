@@ -34,6 +34,7 @@ gene_info_conf = {
             "selected_gene_weights": {
                 "type": "list",
                 "schema": {"type": "string"},
+                "default": []
             },
         },
     },
