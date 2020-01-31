@@ -1,6 +1,5 @@
 from dae.gene.denovo_gene_set_collection import cached
 
-from dae.gene.denovo_gene_set_config import DenovoGeneSetConfigParser
 from dae.gene.denovo_gene_set_collection import DenovoGeneSetCollection
 from dae.gene.denovo_gene_set_collection_factory import \
     DenovoGeneSetCollectionFactory
@@ -73,7 +72,9 @@ class DenovoGeneSetsDb:
         result = set()
         for genotype_data_id in genotype_data_ids:
             gtd_config = self.variants_db.get_config(genotype_data_id)
-            if DenovoGeneSetConfigParser.parse(gtd_config):
+            if gtd_config.denovo_gene_sets \
+                    and gtd_config.denovo_gene_sets.enabled \
+                    and gtd_config.denovo_gene_sets.selected_people_groups:
                 result.add(genotype_data_id)
 
         return result

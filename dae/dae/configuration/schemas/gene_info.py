@@ -31,6 +31,10 @@ gene_info_conf = {
                 "check_with": validate_existing_path,
                 "coerce": "abspath",
             },
+            "selected_gene_weights": {
+                "type": "list",
+                "schema": {"type": "string"},
+            },
         },
     },
     "gene_terms": {

@@ -5,7 +5,6 @@ import shutil
 
 from dae.utils.fixtures import change_environment
 
-from dae.gene.denovo_gene_set_config import DenovoGeneSetConfigParser
 from dae.gene.denovo_gene_set_collection_factory import \
     DenovoGeneSetCollectionFactory
 
@@ -102,9 +101,10 @@ def calc_gene_sets(request, variants_db_fixture, genotype_data_names):
     def remove_gene_sets():
         for dgs in genotype_data_names:
             genotype_data = variants_db_fixture.get(dgs)
-            config = DenovoGeneSetConfigParser.parse(genotype_data.config)
-            os.remove(DenovoGeneSetConfigParser.denovo_gene_set_cache_file(
-                config, 'phenotype')
+            os.remove(
+                DenovoGeneSetCollectionFactory.denovo_gene_set_cache_file(
+                    genotype_data.config, 'phenotype'
+                )
             )
     request.addfinalizer(remove_gene_sets)
 
@@ -130,6 +130,4 @@ def denovo_gene_set_f4(variants_db_fixture):
 
 @pytest.fixture(scope='session')
 def f4_trio_denovo_gene_set_config(variants_db_fixture):
-    return DenovoGeneSetConfigParser.parse(
-        variants_db_fixture.get_config('f4_trio')
-    )
+    return variants_db_fixture.get_config('f4_trio')

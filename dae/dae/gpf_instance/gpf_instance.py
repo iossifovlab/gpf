@@ -104,7 +104,7 @@ class GPFInstance(object):
     @property
     @cached
     def gene_weights_db(self):
-        return GeneWeightsDb(self._gene_info_config.gene_weights)
+        return GeneWeightsDb(self._gene_info_config)
 
     @property
     @cached
