@@ -52,13 +52,12 @@ class GeneInfoConfigParser():
 
     @staticmethod
     def getGeneTermAtt(config, gt_id, attName):
-        if gt_id in config.gene_terms and \
-                config.gene_terms[gt_id].get(attName, None):
-            return config.gene_terms[gt_id][attName]
+        gene_term = getattr(config.gene_terms, gt_id)
+        return getattr(gene_term, attName)
 
     @classmethod
     def getGeneTerms(cls, config, gt_id='main', inNS='sym'):
-        fl = config.gene_terms[gt_id].file
+        fl = getattr(config.gene_terms, gt_id).file
         gt = loadGeneTerm(fl)
         try:
             gt = GeneInfoConfigParser._rename_gene_terms(config, gt, inNS)

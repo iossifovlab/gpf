@@ -161,10 +161,12 @@ class GeneWeightsDb(object):
         return self[weight_id]
 
     def _load(self):
-        if self.config:
-            for weight_config in self.config:
-                w = GeneWeight(weight_config)
-                self.weights[weight_config.section_id()] = w
+        if self.config and self.config.gene_weights:
+            for weight_config in self.config.gene_weights:
+                if weight_config.section_id() in \
+                        self.config.gene_info.selected_gene_weights:
+                    w = GeneWeight(weight_config)
+                    self.weights[weight_config.section_id()] = w
 
     def __getitem__(self, weight_id):
         if weight_id not in self.weights:

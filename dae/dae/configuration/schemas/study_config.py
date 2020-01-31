@@ -156,10 +156,14 @@ study_config_schema = {
         "check_with": validate_existing_path,
         "coerce": "abspath",
     },
+    "conf_dir": {
+        "type": "string",
+        "check_with": validate_existing_path,
+        "coerce": "abspath",
+    },
     "phenotype_data": {"type": "string"},
     "phenotype_browser": {"type": "boolean"},
     "phenotype_tool": {"type": "boolean"},
-    "enrichment_tool": {"type": "boolean"},
     "description": {"type": "string", "excludes": "description_file"},
     "description_file": {
         "type": "string",
@@ -171,7 +175,6 @@ study_config_schema = {
     "study_type": {"type": "string"},
     "year": {"type": "list", "schema": {"type": "integer"}},
     "pub_med": {"type": "list", "schema": {"type": "string"}},
-    "has_denovo": {"type": "boolean"},
     "has_transmitted": {"type": "boolean"},
     "has_complex": {"type": "boolean"},
     "has_cnv": {"type": "boolean"},
@@ -197,7 +200,7 @@ study_config_schema = {
     "genotype_browser": {
         "type": "dict",
         "schema": {
-            "enabled": {"type": "boolean"},
+            "enabled": {"type": "boolean", "required": True},
             "has_cnv": {"type": "boolean"},
             "has_complex": {"type": "boolean"},
             "has_family_filters": {"type": "boolean"},
@@ -274,7 +277,7 @@ study_config_schema = {
     "common_report": {
         "type": "dict",
         "schema": {
-            "enabled": {"type": "boolean"},
+            "enabled": {"type": "boolean", "required": True},
             "selected_people_groups": {
                 "type": "list",
                 "schema": {"type": "string"},
@@ -289,9 +292,11 @@ study_config_schema = {
     "denovo_gene_sets": {
         "type": "dict",
         "schema": {
+            "enabled": {"type": "boolean", "required": True},
             "selected_people_groups": {
                 "type": "list",
                 "schema": {"type": "string"},
+                "default": []
             },
             "selected_standard_criterias_values": {
                 "type": "list",
@@ -319,6 +324,7 @@ study_config_schema = {
     "enrichment": {
         "type": "dict",
         "schema": {
+            "enabled": {"type": "boolean", "required": True},
             "selected_people_groups": {
                 "type": "list",
                 "schema": {"type": "string"},

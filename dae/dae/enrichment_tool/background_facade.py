@@ -1,4 +1,3 @@
-from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.enrichment_tool.background import BackgroundBase
 
 
@@ -64,8 +63,7 @@ class BackgroundFacade(object):
                     self._load_background_in_cache(study_id, background_id)
 
     def _load_enrichment_config_in_cache(self, study_id):
-        enrichment_config = GPFConfigParser.load_config(
-            self.variants_db.get_config(study_id))
+        enrichment_config = self.variants_db.get_config(study_id)
         if enrichment_config is None:
             return
 
