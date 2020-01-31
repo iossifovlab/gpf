@@ -3,11 +3,19 @@ from dae.configuration.gpf_config_parser import validate_existing_path
 regression_schema = {
     "instrument_name": {"type": "string"},
     "measure_name": {"type": "string"},
-    "jitter": {"type": "float"},
+    "jitter": {"type": "float", "default": 0.1},
     "display_name": {"type": "string"},
 }
 
+regression_conf_schema = {
+    "regression": {
+        "type": "dict",
+        "valuesrules": {"type": "dict", "schema": regression_schema},
+    },
+}
+
 phenotype_data_schema = {
+    "enabled": {"type": "boolean", "default": True},
     "name": {"type": "string"},
     "dbfile": {
         "type": "string",
@@ -31,8 +39,5 @@ phenotype_data_schema = {
 
 pheno_conf_schema = {
     "phenotype_data": {"type": "dict", "schema": phenotype_data_schema},
-    "regression": {
-        "type": "dict",
-        "valuesrules": {"type": "dict", "schema": regression_schema},
-    },
+    **regression_conf_schema,
 }

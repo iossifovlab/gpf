@@ -5,7 +5,8 @@ import shutil
 import os
 
 
-from dae.configuration.dae_config_parser import DAEConfigParser
+from dae.configuration.gpf_config_parser import GPFConfigParser
+from dae.configuration.schemas.dae_conf import dae_conf_schema
 
 from dae.pheno.pheno_db import PhenoDb
 
@@ -30,8 +31,8 @@ def output_dir(request):
 
 @pytest.fixture(scope='session')
 def dae_config_fixture():
-    return DAEConfigParser.read_and_parse_file_configuration(
-        work_dir=relative_to_this_folder('fixtures')
+    return GPFConfigParser.load_config(
+        relative_to_this_folder('fixtures/DAE.conf'), dae_conf_schema
     )
 
 
