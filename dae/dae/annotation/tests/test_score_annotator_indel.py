@@ -1,11 +1,11 @@
 import pytest
 import pandas as pd
 
-from box import Box
 from collections import OrderedDict
 
 from .conftest import relative_to_this_test_folder
 
+from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.annotation.tools.annotator_config import AnnotationConfigParser
 from dae.annotation.tools.score_annotator import NPScoreAnnotator, \
     PositionScoreAnnotator
@@ -43,13 +43,13 @@ def test_np_score_annotator_indels(
     score_filename = \
         'fixtures/TEST3CADD/TEST3whole_genome_SNVs.tsv.gz'
 
-    options = Box({
+    options = GPFConfigParser._dict_to_namedtuple({
         'mode': 'replace',
         'vcf': True,
         'direct': direct,
         'region': None,
         'scores_file': relative_to_this_test_folder(score_filename)
-    }, default_box=True, default_box_attr=None)
+    })
 
     columns = OrderedDict([
         ('RawScore',  'RESULT_RawScore'),
@@ -57,10 +57,11 @@ def test_np_score_annotator_indels(
     ])
 
     config = AnnotationConfigParser.parse_section(
-        Box({
+        GPFConfigParser._dict_to_namedtuple({
             'options': options,
             'columns': columns,
-            'annotator': 'score_annotator.NPScoreAnnotator'
+            'annotator': 'score_annotator.NPScoreAnnotator',
+            'virtual_columns': [],
         }),
         genomes_db_2013
     )
@@ -113,23 +114,24 @@ def test_position_score_annotator_indels(
     score_filename = \
         'fixtures/TEST3phyloP100way/TEST3phyloP100way.bedGraph.gz'
 
-    options = Box({
+    options = GPFConfigParser._dict_to_namedtuple({
         'mode': 'replace',
         'vcf': True,
         'direct': direct,
         'region': None,
         'scores_file': relative_to_this_test_folder(score_filename)
-    }, default_box=True, default_box_attr=None)
+    })
 
     columns = {
         'TESTphyloP100way': 'RESULT_phyloP100way',
     }
 
     config = AnnotationConfigParser.parse_section(
-        Box({
+        GPFConfigParser._dict_to_namedtuple({
             'options': options,
             'columns': columns,
-            'annotator': 'score_annotator.NPScoreAnnotator'
+            'annotator': 'score_annotator.NPScoreAnnotator',
+            'virtual_columns': [],
         }),
         genomes_db_2013
     )
@@ -167,13 +169,13 @@ def test_np_score_annotator_indels_test_score(
     score_filename = \
         'fixtures/TESTCADD/TESTwhole_genome_SNVs.tsv.gz'
 
-    options = Box({
+    options = GPFConfigParser._dict_to_namedtuple({
         'mode': 'replace',
         'vcf': True,
         'direct': False,
         'region': None,
         'scores_file': relative_to_this_test_folder(score_filename)
-    }, default_box=True, default_box_attr=None)
+    })
 
     columns = OrderedDict([
         ('TEST',  'TEST'),
@@ -182,10 +184,11 @@ def test_np_score_annotator_indels_test_score(
     ])
 
     config = AnnotationConfigParser.parse_section(
-        Box({
+        GPFConfigParser._dict_to_namedtuple({
             'options': options,
             'columns': columns,
-            'annotator': 'score_annotator.NPScoreAnnotator'
+            'annotator': 'score_annotator.PositionScoreAnnotator',
+            'virtual_columns': [],
         }),
         genomes_db_2013
     )
@@ -221,13 +224,13 @@ def test_position_score_annotator_indels_test_score(
     score_filename = \
         'fixtures/TESTphyloP100way/TESTphyloP100way.bedGraph.gz'
 
-    options = Box({
+    options = GPFConfigParser._dict_to_namedtuple({
         'mode': 'replace',
         'vcf': True,
         'direct': False,
         'region': None,
         'scores_file': relative_to_this_test_folder(score_filename)
-    }, default_box=True, default_box_attr=None)
+    })
 
     columns = OrderedDict([
         ('TEST',  'TEST'),
@@ -236,10 +239,11 @@ def test_position_score_annotator_indels_test_score(
     ])
 
     config = AnnotationConfigParser.parse_section(
-        Box({
+        GPFConfigParser._dict_to_namedtuple({
             'options': options,
             'columns': columns,
-            'annotator': 'score_annotator.NPScoreAnnotator'
+            'annotator': 'score_annotator.PositionScoreAnnotator',
+            'virtual_columns': [],
         }),
         genomes_db_2013
     )

@@ -4,7 +4,7 @@ score_file_conf_schema = {
         "schema": {
             'header': {"type": "list", "schema": {"type": "string"}},
             'score': {"type": "list", "schema": {"type": "string"}},
-            'noScoreValue': {"type": "string"},
+            'no_score_value': {"type": "string"},
             'chr_prefix': {"type": "boolean"},
         }
     },
@@ -16,6 +16,7 @@ score_file_conf_schema = {
             "pos_end": {"type": "string"},
             "ref": {"type": "string"},
             "alt": {"type": "string"},
+            "variant": {"type": "string"},
             "score": {"type": "list", "schema": {"type": "string"}},
         }
     },
@@ -37,6 +38,8 @@ score_file_conf_schema = {
             "pos_base": {"type": "integer"},
             "format": {"type": "string"},
             "compression": {"type": "string"},
+            "no_header": {"type": "boolean"},
+            "tabix": {"type": "string"},
         }
     }
 }

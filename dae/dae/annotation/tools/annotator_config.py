@@ -99,6 +99,10 @@ class AnnotationConfigParser():
                 continue
             config_section = cls.parse_section(config_section, genomes_db)
             config_section = GPFConfigParser.modify_tuple(
+                # TODO / FIXME
+                # This should be fine since the defaults_dict is updated
+                # with the values of options, but should be double-checked
+                # and perhaps written in a clearer way
                 config_section, defaults_dict
             )
             parsed_sections.append(config_section)

@@ -48,9 +48,11 @@ class AnnotatorBase(object):
 
         line_mapper = LineMapper(file_io_manager.header)
         if self.mode == 'replace':
-            self.config.output_columns = \
-                [col for col in self.schema.columns
-                 if col not in self.config.virtual_columns]
+            output_columns = [col for col in self.schema.columns
+                              if col not in self.config.virtual_columns]
+            self.config = GPFConfigParser.modify_tuple(
+                self.config, {"output_columns": output_columns}
+            )
 
         file_io_manager.header_write(self.config.output_columns)
 
@@ -95,13 +97,13 @@ class CopyAnnotator(AnnotatorBase):
         super(CopyAnnotator, self).__init__(config)
 
     def collect_annotator_schema(self, schema):
-        for key, value in self.config.columns.items():
+        for key, value in self.config.columns.field_values_iterator():
             assert key in schema.columns, [key, schema.columns]
             schema.columns[value] = schema.columns[key]
 
     def line_annotation(self, annotation_line, variant=None):
         data = {}
-        for key, value in self.config.columns.items():
+        for key, value in self.config.columns.field_values_iterator():
             data[value] = annotation_line[key]
         annotation_line.update(data)
 
@@ -118,25 +120,25 @@ class VariantBuilder(object):
         summary = self.build_variant(annotation_line)
         if summary is None:
             data = {
-                'CSHL:location': None,
-                'CSHL:chr': None,
-                'CSHL:position': None,
-                'CSHL:variant': None,
-                'VCF:chr': None,
-                'VCF:position': None,
-                'VCF:ref': None,
-                'VCF:alt': None,
+                'CSHL_location': None,
+                'CSHL_chr': None,
+                'CSHL_position': None,
+                'CSHL_variant': None,
+                'VCF_chr': None,
+                'VCF_position': None,
+                'VCF_ref': None,
+                'VCF_alt': None,
             }
         else:
             data = {
-                'CSHL:location': summary.cshl_location,
-                'CSHL:chr': summary.chromosome,
-                'CSHL:position': summary.cshl_position,
-                'CSHL:variant': summary.cshl_variant,
-                'VCF:chr': summary.chromosome,
-                'VCF:position': summary.position,
-                'VCF:ref': summary.reference,
-                'VCF:alt': summary.alternative,
+                'CSHL_location': summary.cshl_location,
+                'CSHL_chr': summary.chromosome,
+                'CSHL_position': summary.cshl_position,
+                'CSHL_variant': summary.cshl_variant,
+                'VCF_chr': summary.chromosome,
+                'VCF_position': summary.position,
+                'VCF_ref': summary.reference,
+                'VCF_alt': summary.alternative,
             }
         annotation_line.update(data)
         return summary
@@ -146,18 +148,10 @@ class DAEBuilder(VariantBuilder):
 
     def __init__(self, config, genome):
         super(DAEBuilder, self).__init__(config, genome)
-        self.variant = self.config.options.v
-        self.chrom = self.config.options.c
-        self.position = self.config.options.p
-        self.location = self.config.options.x
-        if self.variant is None:
-            self.variant = 'variant'
-        if self.location is None:
-            self.location = 'location'
-        if self.chrom is None:
-            self.chrom = 'chr'
-        if self.position is None:
-            self.position = 'position'
+        self.variant = self.config.options.v or 'variant'
+        self.chrom = self.config.options.c or 'chr'
+        self.position = self.config.options.p or 'position'
+        self.location = self.config.options.x or 'location'
 
     def build_variant(self, aline):
         variant = aline[self.variant]
@@ -218,14 +212,14 @@ class VariantAnnotatorBase(AnnotatorBase):
         if not self.config.virtual_columns:
             self.config = GPFConfigParser.modify_tuple(
                 self.config, {"virtual_columns": [
-                    'CSHL:location',
-                    'CSHL:chr',
-                    'CSHL:position',
-                    'CSHL:variant',
-                    'VCF:chr',
-                    'VCF:position',
-                    'VCF:ref',
-                    'VCF:alt',
+                    'CSHL_location',
+                    'CSHL_chr',
+                    'CSHL_position',
+                    'CSHL_variant',
+                    'VCF_chr',
+                    'VCF_position',
+                    'VCF_ref',
+                    'VCF_alt',
                 ]}
             )
 

@@ -5,7 +5,8 @@ class CleanupAnnotator(AnnotatorBase):
 
     def __init__(self, config):
         super(CleanupAnnotator, self).__init__(config)
-        self.cleanup_columns = self.config.columns['cleanup'].split(',')
+        # TODO Fix this - should be split in the configuration schema!
+        self.cleanup_columns = self.config.columns.cleanup.split(',')
         self.cleanup_columns = [
             col.strip() for col in self.cleanup_columns
         ]

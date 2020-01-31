@@ -24,14 +24,14 @@ class LiftOverAnnotator(VariantAnnotatorBase):
             assert self.pos is not None
 
         self.columns = self.config.columns
-        assert 'new_x' in self.columns or \
-            ('new_c' in self.columns and 'new_p' in self.columns)
+        assert self.columns.new_x or \
+            (self.columns.new_c and self.columns.new_p)
 
         self.lift_over = self.build_lift_over(self.config.options.chain_file)
 
     def collect_annotator_schema(self, schema):
         super(LiftOverAnnotator, self).collect_annotator_schema(schema)
-        for key, value in self.columns.items():
+        for key, value in self.columns.field_values_iterator():
             if key == 'new_x' or key == 'new_c':
                 schema.columns[value] = \
                     Schema.produce_type('str')
@@ -90,9 +90,9 @@ class LiftOverAnnotator(VariantAnnotatorBase):
             new_p = converted_coordinates[0][1] + 1
             new_x = '{}:{}'.format(new_c, new_p)
 
-        if 'new_x' in self.columns:
-            aline[self.columns['new_x']] = new_x
-        if 'new_c' in self.columns:
-            aline[self.columns['new_c']] = new_c
-        if 'new_p' in self.columns:
-            aline[self.columns['new_p']] = new_p
+        if self.columns.new_x:
+            aline[self.columns.new_x] = new_x
+        if self.columns.new_c:
+            aline[self.columns.new_c] = new_c
+        if self.columns.new_p:
+            aline[self.columns.new_p] = new_p
