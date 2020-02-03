@@ -2,8 +2,10 @@ export class PedigreeData {
 
   static parsePosition(position: string) {
     if (position != null) {
-      const result = position.split(',').map(x => parseFloat(x));
-      return result as [number, number];
+        const layout = position.split(':');
+        const coordinates = layout[layout.length - 1];
+        const result = coordinates.split(',').map(x => parseFloat(x));
+        return result as [number, number];
     }
     return null;
   }
