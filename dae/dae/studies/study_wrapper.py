@@ -292,15 +292,22 @@ class StudyWrapper(object):
                 kwargs.pop(key)
 
         if 'sexes' in kwargs:
-            sexes = kwargs['sexes']
-            sexes = [ContainsNode(sex_converter(sex)) for sex in sexes]
-            kwargs['sexes'] = OrNode(sexes)
+            sexes = set(kwargs['sexes'])
+            if sexes != set(['female', 'male', 'unspecified']):
+                sexes = [ContainsNode(sex_converter(sex)) for sex in sexes]
+                kwargs['sexes'] = OrNode(sexes)
+            else:
+                kwargs['sexes'] = None
 
         if 'variant_type' in kwargs:
-            variant_types = kwargs['variant_type']
-            variant_types = [ContainsNode(variant_type_converter(t))
-                             for t in variant_types]
-            kwargs['variant_type'] = OrNode(variant_types)
+            variant_types = set(kwargs['variant_type'])
+            if variant_types != {'ins', 'del', 'sub'}:
+                variant_types = [
+                    ContainsNode(variant_type_converter(t))
+                    for t in variant_types]
+                kwargs['variant_type'] = OrNode(variant_types)
+            else:
+                kwargs['variant_type'] = None
 
         if 'effect_types' in kwargs:
             kwargs['effect_types'] = expand_effect_types(
@@ -579,39 +586,41 @@ class StudyWrapper(object):
 
     def _transform_present_in_parent(self, kwargs):
         roles_query = []
+        present_in_parent = set(kwargs['presentInParent']['presentInParent'])
+        if present_in_parent != set([
+                'father only', 'mother only', 'mother and father', 'neither']):
 
-        for filter_option in kwargs['presentInParent']['presentInParent']:
-            new_roles = None
+            for filter_option in present_in_parent:
+                new_roles = None
 
-            if filter_option == 'mother only':
-                new_roles = AndNode([
-                    NotNode(ContainsNode(Role.dad)),
-                    ContainsNode(Role.mom)
-                ])
+                if filter_option == 'mother only':
+                    new_roles = AndNode([
+                        NotNode(ContainsNode(Role.dad)),
+                        ContainsNode(Role.mom)
+                    ])
 
-            if filter_option == 'father only':
-                new_roles = AndNode([
-                    ContainsNode(Role.dad),
-                    NotNode(ContainsNode(Role.mom))
-                ])
+                if filter_option == 'father only':
+                    new_roles = AndNode([
+                        ContainsNode(Role.dad),
+                        NotNode(ContainsNode(Role.mom))
+                    ])
 
-            if filter_option == 'mother and father':
-                new_roles = AndNode([
-                    ContainsNode(Role.dad),
-                    ContainsNode(Role.mom)
-                ])
+                if filter_option == 'mother and father':
+                    new_roles = AndNode([
+                        ContainsNode(Role.dad),
+                        ContainsNode(Role.mom)
+                    ])
 
-            if filter_option == 'neither':
-                new_roles = AndNode([
-                    NotNode(ContainsNode(Role.dad)),
-                    NotNode(ContainsNode(Role.mom))
-                ])
+                if filter_option == 'neither':
+                    new_roles = AndNode([
+                        NotNode(ContainsNode(Role.dad)),
+                        NotNode(ContainsNode(Role.mom))
+                    ])
 
-            if new_roles:
-                roles_query.append(new_roles)
+                if new_roles:
+                    roles_query.append(new_roles)
 
         kwargs.pop('presentInParent')
-
         self._add_roles_to_query(roles_query, kwargs)
 
     def _transform_present_in_role(self, kwargs):

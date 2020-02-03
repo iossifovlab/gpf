@@ -521,9 +521,14 @@ def vcf_variants_loader(
 
 @pytest.fixture(scope='session')
 def variants_vcf(vcf_variants_loader):
-    def builder(path):
-        loader = vcf_variants_loader(path)
-
+    def builder(path, params={
+            'vcf_include_reference_genotypes': True,
+            'vcf_include_unknown_family_genotypes': True,
+            'vcf_include_unknown_person_genotypes': True,
+            'vcf_denovo_mode': 'denovo',
+            'vcf_omission_mode': 'omission'
+        }):
+        loader = vcf_variants_loader(path, params=params)
         fvars = RawMemoryVariants([loader])
         return fvars
 

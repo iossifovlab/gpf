@@ -48,9 +48,10 @@ class FilesystemGenotypeStorage(GenotypeStorage):
 
         else:
             start = time.time()
+            ped_params = study_config.files.pedigree.params
             families_loader = FamiliesLoader(
                 study_config.files.pedigree.path,
-                params=study_config.files.pedigree.params)
+                params=ped_params)
             families = families_loader.load()
             elapsed = time.time() - start
             print(f"Families loaded in in {elapsed:.2f} sec")
@@ -59,10 +60,12 @@ class FilesystemGenotypeStorage(GenotypeStorage):
             if study_config.files.vcf:
                 start = time.time()
                 variants_filename = study_config.files.vcf[0].path
+                vcf_params = study_config.files.vcf[0].params
+
                 variants_loader = VcfLoader(
                     families, [variants_filename],
                     genomes_db.get_genome(),
-                    params=study_config.files.vcf[0].params)
+                    params=vcf_params)
                 variants_loader = StoredAnnotationDecorator.decorate(
                     variants_loader, variants_filename
                 )
@@ -113,7 +116,7 @@ class FilesystemGenotypeStorage(GenotypeStorage):
         )
 
         params = copy.deepcopy(families_loader.params)
-        params['file_format'] = families_loader.file_format
+        # params['file_format'] = families_loader.file_format
         config = STUDY_PEDIGREE_TEMPLATE.format(
             path=destination_filename,
             params=",\n\t".join([

@@ -10,7 +10,7 @@ from dae.utils.helpers import str2bool
 from dae.GenomeAccess import GenomicSequence
 
 from dae.utils.variant_utils import is_all_reference_genotype, \
-    is_all_unknown_genotype, is_unknown_genotype, GENOTYPE_TYPE
+    is_all_unknown_genotype, is_unknown_genotype
 from dae.variants.attributes import Inheritance
 from dae.variants.variant import SummaryVariantFactory
 from dae.variants.family_variant import FamilyVariant
@@ -43,7 +43,7 @@ class VcfFamiliesGenotypes(FamiliesGenotypes):
                         self.loader.include_reference_genotypes:
                     check_families[check_index] = True
                 if self.loader._fill_missing_value == -1 and \
-                        (self.loader.include_unknown_person_genotypes or \
+                        (self.loader.include_unknown_person_genotypes or
                          self.loader.include_unknown_family_genotypes):
                     check_families[check_index] = True
             else:
@@ -97,14 +97,14 @@ class VcfFamiliesGenotypes(FamiliesGenotypes):
             gt = np.array(gt, np.int8)
             gt = gt.T
 
-            if not self.loader.include_reference_genotypes and \
-                    is_all_reference_genotype(gt):
+            if is_all_reference_genotype(gt) and \
+                    not self.loader.include_reference_genotypes:
                 continue
-            if not self.loader.include_unknown_person_genotypes and \
-                    is_unknown_genotype(gt):
+            if is_unknown_genotype(gt) and \
+                    not self.loader.include_unknown_person_genotypes:
                 continue
-            if not self.loader.include_unknown_family_genotypes and \
-                    is_all_unknown_genotype(gt):
+            if is_all_unknown_genotype(gt) and \
+                    not self.loader.include_unknown_family_genotypes:
                 continue
 
             yield family, gt, None
@@ -153,11 +153,11 @@ class VcfLoader(VariantsGenotypesLoader):
         self._init_omission_mode()
 
         self.include_reference_genotypes = \
-            params.get('vcf_include_reference_genotypes', False)
+            str2bool(params.get('vcf_include_reference_genotypes', False))
         self.include_unknown_family_genotypes = \
-            params.get('vcf_include_unknown_family_genotypes', False)
+            str2bool(params.get('vcf_include_unknown_family_genotypes', False))
         self.include_unknown_person_genotypes = \
-            params.get('vcf_include_unknown_person_genotypes', False)
+            str2bool(params.get('vcf_include_unknown_person_genotypes', False))
         self.multi_loader_fill_in_mode = \
             params.get('vcf_multi_loader_fill_in_mode', 'reference')
 
@@ -402,15 +402,6 @@ class VcfLoader(VariantsGenotypesLoader):
                     vcf_variants[index]):
                 min_index = index
         return vcf_variants[min_index]
-
-    # def _generate_missing_genotype(self, vcf):
-    #     sample_count = len(vcf.samples)
-
-    #     gt = np.array([[0] * 3] * sample_count, dtype=np.int8)        
-
-    #     gt[0:sample_count] = self._fill_missing_value
-
-    #     return gt
 
     def _full_variants_iterator_impl(self):
 
