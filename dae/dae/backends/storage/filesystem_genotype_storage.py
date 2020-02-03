@@ -142,7 +142,7 @@ class FilesystemGenotypeStorage(GenotypeStorage):
                 os.path.basename(source_filename)
             )
             params = ",\n\t".join([
-                "{}:{}".format(k, v)
+                "{}:{}".format(k, str(v).replace('\t', '\\t'))
                 for k, v in variants_loader.params.items() if v is not None])
             source_type = variants_loader.get_attribute('source_type')
             config = STUDY_VARIANTS_TEMPLATE.format(
