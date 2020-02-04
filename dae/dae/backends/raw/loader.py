@@ -590,3 +590,14 @@ class VariantsGenotypesLoader(VariantsLoader):
                         fa._genetic_model = family_variant.genetic_model
 
             yield summary_variant, family_variants
+
+    @classmethod
+    def build_cli_params(cls, params):
+        param_defaults = cls.cli_defaults()
+        result = {}
+        for key, value in params.items():
+            assert key in param_defaults, (key, list(param_defaults.keys()))
+            if value != param_defaults[key]:
+                result[key] = value
+
+        return result

@@ -281,11 +281,20 @@ class FamiliesLoader:
             if not res['ped_no_header'] or col not in columns:
                 res[col] = ped_value
             elif ped_value is not None and col in columns:
-                # assert ped_value.isnumeric(), \
-                #     '{} must hold an integer value!'.format(col)
                 res[col] = int(ped_value)
 
         return filename, res
+
+    @classmethod
+    def build_cli_params(cls, params):
+        param_defaults = cls.cli_defaults()
+        result = {}
+        for key, value in params.items():
+            assert key in param_defaults, (key, list(param_defaults.keys()))
+            if value != param_defaults[key]:
+                result[key] = value
+
+        return result
 
     @staticmethod
     def produce_header_from_indices(

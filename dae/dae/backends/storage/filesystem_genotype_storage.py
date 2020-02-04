@@ -71,12 +71,12 @@ class FilesystemGenotypeStorage(GenotypeStorage):
                 )
                 loaders.append(variants_loader)
             if study_config.files.denovo:
-
+                denovo_params = study_config.files.denovo[0].params
                 variants_filename = study_config.files.denovo[0].path
                 variants_loader = DenovoLoader(
                     families, variants_filename,
                     genomes_db.get_genome(),
-                    params=study_config.files.denovo[0].params)
+                    params=denovo_params)
 
                 variants_loader = StoredAnnotationDecorator.decorate(
                     variants_loader, variants_filename
@@ -91,9 +91,6 @@ class FilesystemGenotypeStorage(GenotypeStorage):
             families_loader=None,
             variant_loaders=None,
             **kwargs):
-
-        # assert len(variant_loaders) == 1, \
-        #     'Filesystem genotype storage supports only one variant file'
 
         families_config = self._import_families_file(
             study_id, families_loader)
@@ -115,13 +112,13 @@ class FilesystemGenotypeStorage(GenotypeStorage):
             os.path.basename(source_filename)
         )
 
-        params = copy.deepcopy(families_loader.params)
-        # params['file_format'] = families_loader.file_format
+        params = families_loader.build_cli_params(families_loader.params)
+        params = ",\n\t".join([
+                f"{key}:{value}"
+                for key, value in params.items() if value is not None])
         config = STUDY_PEDIGREE_TEMPLATE.format(
             path=destination_filename,
-            params=",\n\t".join([
-                "{}:{}".format(k, str(v).replace('\t', '\\t'))
-                for k, v in params.items()])
+            params=params
         )
 
         os.makedirs(
@@ -133,7 +130,6 @@ class FilesystemGenotypeStorage(GenotypeStorage):
     def _import_variants_files(self, study_id, loaders):
         result_config = []
         for index, variants_loader in enumerate(loaders):
-            # assert isinstance(variants_loader, AnnotationPipelineDecorator)
             assert variants_loader.get_attribute("annotation_schema") \
                 is not None
 
@@ -144,9 +140,11 @@ class FilesystemGenotypeStorage(GenotypeStorage):
                 'data',
                 os.path.basename(source_filename)
             )
+            params = variants_loader.build_cli_params(variants_loader.params)
+
             params = ",\n\t".join([
-                "{}:{}".format(k, str(v).replace('\t', '\\t'))
-                for k, v in variants_loader.params.items() if v is not None])
+                f"{key}:{value}"
+                for key, value in params.items() if value is not None])
             source_type = variants_loader.get_attribute('source_type')
             config = STUDY_VARIANTS_TEMPLATE.format(
                 index=index,
