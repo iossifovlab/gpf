@@ -106,7 +106,7 @@ export class GenotypePreviewVariantsArray {
     let variantsCount: string;
 
     if (this.genotypePreviews.length > maxVariantsCount) {
-      variantsCount = `more than ${maxVariantsCount} variant selected (${maxVariantsCount} shown)`;
+      variantsCount = `more than ${maxVariantsCount} variants selected (${maxVariantsCount} shown)`;
     } else if (this.genotypePreviews.length !== 1) {
       variantsCount = `${this.genotypePreviews.length} variants selected (${this.genotypePreviews.length} shown)`;
     } else {
