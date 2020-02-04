@@ -205,18 +205,18 @@ To import this data as a study into the GPF instance:
 * Run ``simple_study_import.py`` to import the VCF variants; this command uses
   three arguments - study ID to use, pedigree file name and VCF file name::
 
-        simple_study_import.py --id comp_vcf \
-            --vcf-files comp.vcf \
-            comp.ped
+        simple_study_import.py comp.ped \
+            --id comp_vcf \
+            --vcf-files comp.vcf
 
   | This command creates a study with ID `comp_vcf` that contains all VCF variants.
 
 * Run ``simple_study_import.py`` to import the de Novo variants; this command
   uses three arguments - study ID to use, pedigree file name and de Novo variants file name::
 
-        simple_study_import.py --id comp_denovo \
-            --denovo-file comp.tsv \
-            comp.ped
+        simple_study_import.py comp.ped \
+            --id comp_denovo \
+            --denovo-file comp.tsv
 
   | This command creates a study with ID `comp_denovo` that contains all de Novo variants.
 
@@ -224,10 +224,10 @@ To import this data as a study into the GPF instance:
   this command uses four arguments - study ID to use, pedigree file name,
   VCF file name and de Novo variants file name::
 
-        simple_study_import.py --id comp_all \
+        simple_study_import.py comp.ped \
+            --id comp_all \
             --denovo-file comp.tsv \
-            --vcf-files comp.vcf \
-            comp.ped
+            --vcf-files comp.vcf
 
   This command creates a study with ID `comp_all` that contains all
   VCF and de Novo variants.
@@ -271,9 +271,9 @@ Enter into the created directory ``iossifov_2014``::
 
 and run ``simple_study_import.py`` tool::
 
-    simple_study_import.py --id iossifov_2014 \
-        --denovo-file IossifovWE2014.tsv \
-        IossifovWE2014.ped
+    simple_study_import.py IossifovWE2014.ped \
+        --id iossifov_2014 \
+        --denovo-file IossifovWE2014.tsv
 
 To see the imported variants, restart the GPF development web server and find the
 `iossifov_2014` study.
@@ -771,9 +771,9 @@ And run the ``simple_study_import.py`` command:
 
 .. code::
 
-    simple_study_import.py --id iossifov_2014 \
-        --denovo-file IossifovWE2014.tsv \
-        IossifovWE2014.ped
+    simple_study_import.py IossifovWE2014.ped \
+        --id iossifov_2014 \
+        --denovo-file IossifovWE2014.tsv
 
 After the import is finished, restart the GPF development server:
 
