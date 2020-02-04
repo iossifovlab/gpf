@@ -555,6 +555,7 @@ class VariantsGenotypesLoader(VariantsLoader):
                 summary_variant._chromosome = chrom
                 for summary_allele in summary_variant.alleles:
                     summary_allele._chromosome = chrom
+                    summary_allele._attributes["chrom"] = chrom
 
             for family_variant in family_variants:
 
