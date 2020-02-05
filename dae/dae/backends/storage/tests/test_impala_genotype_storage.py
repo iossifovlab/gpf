@@ -151,7 +151,7 @@ def test_impala_partition_import(
         rows = list(cursor)
         assert any(
                 row[1] == 'gpf_partitioning_coding_bin_coding_effect_types'
-                and row[2] == 'missense, nonsense, frame-shift, synonymous'
+                and row[2] == 'missense,nonsense,frame-shift,synonymous'
                 for row in rows)
         assert any(
                 row[1] == 'gpf_partitioning_family_bin_family_bin_size'
