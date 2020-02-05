@@ -587,6 +587,8 @@ class StudyWrapper(object):
     def _transform_present_in_parent(self, kwargs):
         roles_query = []
         present_in_parent = set(kwargs['presentInParent']['presentInParent'])
+        rarity = kwargs['presentInParent'].get('rarity', None)
+
         if present_in_parent != set([
                 'father only', 'mother only', 'mother and father', 'neither']):
 
@@ -619,9 +621,24 @@ class StudyWrapper(object):
 
                 if new_roles:
                     roles_query.append(new_roles)
-
-        kwargs.pop('presentInParent')
         self._add_roles_to_query(roles_query, kwargs)
+
+        if rarity is not None:
+            ultra_rare = rarity.get('ultraRare', None)
+            ultra_rare = bool(ultra_rare)
+            if ultra_rare:
+                kwargs['ultra_rare'] = True
+            else:
+
+                max_alt_freq = rarity.get('maxFreq', None)
+                min_alt_freq = rarity.get('minFreq', None)
+                if min_alt_freq is not None or max_alt_freq is not None:
+                    real_attr_filter = kwargs.get('real_attr_filter', [])
+                    real_attr_filter.append(
+                        ('af_allele_freq', (min_alt_freq, max_alt_freq))
+                    )
+                    kwargs['real_attr_filter'] = real_attr_filter
+        kwargs.pop('presentInParent')
 
     def _transform_present_in_role(self, kwargs):
         roles_query = []
