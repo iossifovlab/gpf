@@ -572,6 +572,12 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
         with pysam.Tabixfile(self.summary_filename) as tbx:
             self.chromosomes = list(tbx.contigs)
 
+    def reset_regions(self, regions):
+        if regions is None or isinstance(regions, str):
+            self.regions = [regions]
+        else:
+            self.regions = regions
+
     @staticmethod
     def _build_toomany_filename(summary_filename):
         assert os.path.exists(f'{summary_filename}.tbi'), \
