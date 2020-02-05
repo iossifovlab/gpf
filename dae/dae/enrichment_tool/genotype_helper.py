@@ -45,7 +45,7 @@ class GenotypeHelper(object):
                 iid = "{}:{}".format(p.family_id, p.person_id)
                 if iid in seen:
                     continue
-                
+
                 if str(p.get_attr(self.people_group.source)) != \
                         self.people_group_value:
                     continue
