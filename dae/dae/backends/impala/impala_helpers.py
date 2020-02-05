@@ -87,11 +87,13 @@ class ImpalaHelpers(object):
             f"'{partition_description.family_bin_size}'"
             ")"
         )
+        coding_effect_types = ",".join(
+            partition_description.coding_effect_types)
         cursor.execute(
             f"ALTER TABLE {db}.{table} "
             "SET TBLPROPERTIES("
             f"'gpf_partitioning_coding_bin_coding_effect_types' = "
-            f"'{partition_description.coding_effect_types}'"
+            f"'{coding_effect_types}'"
             ")"
         )
         cursor.execute(
