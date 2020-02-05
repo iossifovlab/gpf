@@ -421,9 +421,8 @@ class VariantsGenotypesLoader(VariantsLoader):
     def _get_diploid_males(cls, family_variant: FamilyVariant) -> List[bool]:
         res = []
 
-        assert family_variant.gt.shape == (
-            2, len(family_variant.family.persons)
-        )
+        assert family_variant.gt.shape == (2, len(family_variant.family))
+
         for member_idx, member in enumerate(
             family_variant.family.members_in_order
         ):
