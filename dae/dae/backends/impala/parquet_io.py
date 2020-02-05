@@ -529,7 +529,8 @@ class VariantsParquetWriter():
             if family_variant_index % 1000 == 0:
                 elapsed = time.time() - self.start
                 print(
-                    'Bucket {}; {}.{}: {} family variants imported for {:.2f} sec'.
+                    'Bucket {}; {}.{}: '
+                    '{} family variants imported for {:.2f} sec'.
                     format(
                         self.bucket_index,
                         summary_variant.chromosome,
