@@ -69,11 +69,32 @@ def construct_import_annotation_pipeline(
 
 class MakefileGenerator:
 
-    def __init__(self, partition_descriptor, genome, chrom_prefix=None):
-        self.chrom_prefix = chrom_prefix
+    def __init__(
+            self, partition_descriptor, genome, 
+            add_chrom_prefix=None, del_chrom_prefix=None):
+
         self.genome = genome
         self.partition_descriptor = partition_descriptor
         self.chromosome_lengths = dict(self.genome.get_all_chr_lengths())
+
+        self._build_adjust_chrom(add_chrom_prefix, del_chrom_prefix)
+
+    def _build_adjust_chrom(self, add_chrom_prefix, del_chrom_prefix):
+        self._chrom_prefix = None
+
+        def same_chrom(chrom):
+            return chrom
+        self._adjust_chrom = same_chrom
+        self._unadjust_chrom = same_chrom
+
+        if add_chrom_prefix is not None:
+            self._chrom_prefix = add_chrom_prefix
+            self._adjust_chrom = self._prepend_chrom_prefix
+            self._unadjust_chrom = self._remove_chrom_prefix
+        elif del_chrom_prefix is not None:
+            self._chrom_prefix = del_chrom_prefix
+            self._adjust_chrom = self._remove_chrom_prefix
+            self._unadjust_chrom = self._prepend_chrom_prefix
 
     def region_bins_count(self, chrom):
         result = ceil(
@@ -81,24 +102,23 @@ class MakefileGenerator:
             self.partition_descriptor.region_length)
         return result
 
-    def reset_chrom(self, chrom):
-        if self.chrom_prefix and chrom.startswith(self.chrom_prefix):
-            return chrom[len(self.chrom_prefix):]
+    def _remove_chrom_prefix(self, chrom):
+        assert self._chrom_prefix
+        if chrom.startswith(self._chrom_prefix):
+            return chrom[len(self._chrom_prefix):]
         return chrom
 
-    def prefix_chrom(self, chrom):
-        if self.chrom_prefix and not chrom.startswith(self.chrom_prefix):
-            return f'{self.chrom_prefix}{chrom}'
+    def _prepend_chrom_prefix(self, chrom):
+        assert self._chrom_prefix
+        if not chrom.startswith(self._chrom_prefix):
+            return f'{self._chrom_prefix}{chrom}'
         return chrom
 
     def build_target_chromosomes(self, target_chromosomes):
-        if self.chrom_prefix is None:
-            return target_chromosomes
-        else:
-            return [
-                self.prefix_chrom(tg)
-                for tg in target_chromosomes
-            ]
+        return [
+            self._adjust_chrom(tg)
+            for tg in target_chromosomes
+        ]
 
     def generate_chrom_targets(self, target_chrom):
         target = target_chrom
@@ -106,7 +126,7 @@ class MakefileGenerator:
             target = 'other'
         region_bins_count = self.region_bins_count(target_chrom)
 
-        chrom = self.reset_chrom(target_chrom)
+        chrom = self._unadjust_chrom(target_chrom)
 
         if region_bins_count == 1:
             return [(f'{target}_0', chrom)]
@@ -138,14 +158,13 @@ class MakefileGenerator:
                 'none': [self.partition_descriptor.output]
             }
 
-        targets = defaultdict(list)
-        generated_target_chromosomes = target_chromosomes[:]
-        if self.chrom_prefix is not None:
-            generated_target_chromosomes = [
-                self.prefix_chrom(tg)
-                for tg in target_chromosomes
-            ]
+        generated_target_chromosomes = [
+            self._adjust_chrom(tg)
+            for tg in target_chromosomes[:]
+        ]
+        print("generated_target_chromosomes:", generated_target_chromosomes)
 
+        targets = defaultdict(list)
         for target_chrom in generated_target_chromosomes:
             if target_chrom not in self.chromosome_lengths:
                 print(
@@ -381,6 +400,8 @@ class Variants2ParquetTool:
             command.append(f'--pd {pd}')
         if argv.add_chrom_prefix is not None:
             command.append(f'--add-chrom-prefix {argv.add_chrom_prefix}')
+        if argv.del_chrom_prefix is not None:
+            command.append(f'--del-chrom-prefix {argv.del_chrom_prefix}')
 
         return ' '.join(command)
 
@@ -563,11 +584,14 @@ class Variants2ParquetTool:
     @staticmethod
     def _build_makefile_generator(argv, gpf_instance, partition_description):
 
-        chrom_prefix = argv.add_chrom_prefix
+        add_chrom_prefix = argv.add_chrom_prefix
+        del_chrom_prefix = argv.del_chrom_prefix
+
         generator = MakefileGenerator(
             partition_description,
             gpf_instance.genomes_db.get_genome(),
-            chrom_prefix=chrom_prefix)
+            add_chrom_prefix=add_chrom_prefix,
+            del_chrom_prefix=del_chrom_prefix)
         return generator
 
     @staticmethod
