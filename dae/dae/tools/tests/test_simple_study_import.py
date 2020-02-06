@@ -500,3 +500,95 @@ def test_import_comp_all_into_impala_add_chrom_prefix(
 
     for v in vs:
         assert v.chromosome == 'chr1', v
+
+
+def test_import_comp_all_into_impala_del_chrom_prefix(
+        genomes_db_2013, fixture_dirname, default_dae_config,
+        gpf_instance_2013, temp_dirname):
+
+    pedigree_filename = fixture_dirname('study_import/comp_chromprefix.ped')
+    vcf_filename = fixture_dirname('study_import/comp_chromprefix.vcf')
+    denovo_filename = fixture_dirname('study_import/comp_chromprefix.tsv')
+
+    study_id = 'test_comp_all_del_chrom_prefix_impala'
+    genotype_storage_id = 'test_impala'
+
+    storage_config = default_dae_config.storage[genotype_storage_id]
+    assert storage_config.type == 'impala'
+    impala_storage = ImpalaGenotypeStorage(storage_config)
+
+    impala_storage.impala_drop_study_tables(
+        Box({"id": study_id}, default_box=True)
+    )
+
+    argv = [
+        pedigree_filename,
+        '--id', study_id,
+        # '--skip-reports',
+        '--vcf-files', vcf_filename,
+        '--denovo-file', denovo_filename,
+        '--denovo-location', 'location',
+        '--denovo-variant', 'variant',
+        '--denovo-family-id', 'familyId',
+        '--denovo-best-state', 'bestState',
+        '--genotype-storage', genotype_storage_id,
+        '--del-chrom-prefix', 'chr',
+        '-o', temp_dirname,
+    ]
+
+    main(argv, gpf_instance_2013)
+
+    fvars = impala_storage.build_backend(
+        Box({'id': study_id}, default_box=True),
+        genomes_db_2013
+    )
+
+    vs = list(fvars.query_variants())
+    assert len(vs) == 35
+
+    for v in vs:
+        assert v.chromosome == '1', v
+
+
+def test_import_comp_all_into_filesystem_del_chrom_prefix(
+        genomes_db_2013, fixture_dirname, default_dae_config,
+        gpf_instance_2013, temp_dirname):
+
+    pedigree_filename = fixture_dirname('study_import/comp_chromprefix.ped')
+    vcf_filename = fixture_dirname('study_import/comp_chromprefix.vcf')
+    denovo_filename = fixture_dirname('study_import/comp_chromprefix.tsv')
+
+    study_id = 'test_comp_all_fs_del_chrom_prefix'
+    genotype_storage_id = 'test_filesystem'
+
+    storage_config = default_dae_config.storage[genotype_storage_id]
+    assert storage_config.type == 'filesystem'
+
+    argv = [
+        pedigree_filename,
+        '--id', study_id,
+        '--skip-reports',
+        '--vcf-files', vcf_filename,
+        '--denovo-file', denovo_filename,
+        '--denovo-location', 'location',
+        '--denovo-variant', 'variant',
+        '--denovo-family-id', 'familyId',
+        '--denovo-best-state', 'bestState',
+        '--genotype-storage', genotype_storage_id,
+        '--del-chrom-prefix', 'chr',
+        '-o', temp_dirname,
+    ]
+
+    main(argv, gpf_instance_2013)
+
+    storage_config = default_dae_config.storage[genotype_storage_id]
+    assert storage_config.type == 'filesystem'
+
+    gpf_instance_2013.reload()
+    study = gpf_instance_2013._variants_db.get_study(study_id)
+    assert study is not None
+
+    vs = list(study.query_variants())
+    assert len(vs) == 35
+    for v in vs:
+        assert v.chromosome == '1', v

@@ -29,7 +29,7 @@ def cli_arguments(dae_config, argv=sys.argv[1:]):
     FamiliesLoader.cli_arguments(parser)
 
     parser.add_argument(
-        '--id', type=str,
+        '--id', '--study-id', type=str,
         metavar='<study ID>',
         dest="id",
         help='Unique study ID to use. '

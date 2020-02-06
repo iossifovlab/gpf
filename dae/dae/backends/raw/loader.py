@@ -409,7 +409,14 @@ class VariantsGenotypesLoader(VariantsLoader):
             params=params)
 
         self.genome = genome
-        self.chrom_prefix = params.get('add_chrom_prefix', None)
+        self._adjust_chrom_prefix = None
+        if params.get('add_chrom_prefix', None):
+            self._chrom_prefix = params['add_chrom_prefix']
+            self._adjust_chrom_prefix = self._add_chrom_prefix
+        elif params.get('del_chrom_prefix', None):
+            self._chrom_prefix = params['del_chrom_prefix']
+            self._adjust_chrom_prefix = self._del_chrom_prefix
+
         self.overwrite = overwrite
         self.expect_genotype = expect_genotype
         self.expect_best_state = expect_best_state
@@ -539,18 +546,26 @@ class VariantsGenotypesLoader(VariantsLoader):
 
         return genotype, genetic_model
 
-    def _reset_chrom(self, chrom):
-        result = chrom
-        if self.chrom_prefix:
-            result = f'{self.chrom_prefix}{chrom}'
-        return result
+    def _add_chrom_prefix(self, chrom):
+        assert self._chrom_prefix is not None
+        if self._chrom_prefix not in chrom:
+            return f'{self._chrom_prefix}{chrom}'
+        else:
+            return chrom
+
+    def _del_chrom_prefix(self, chrom):
+        assert self._chrom_prefix is not None
+        if self._chrom_prefix in chrom:
+            return chrom[len(self._chrom_prefix):]
+        else:
+            return chrom
 
     def full_variants_iterator(
             self) -> Iterator[Tuple[SummaryVariant, List[FamilyVariant]]]:
         full_iterator = self._full_variants_iterator_impl()
         for summary_variant, family_variants in full_iterator:
-            if self.chrom_prefix is not None:
-                chrom = self._reset_chrom(summary_variant.chromosome)
+            if self._adjust_chrom_prefix is not None:
+                chrom = self._adjust_chrom_prefix(summary_variant.chromosome)
                 summary_variant._chromosome = chrom
                 for summary_allele in summary_variant.alleles:
                     summary_allele._chromosome = chrom

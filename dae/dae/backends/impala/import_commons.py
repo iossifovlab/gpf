@@ -69,11 +69,32 @@ def construct_import_annotation_pipeline(
 
 class MakefileGenerator:
 
-    def __init__(self, partition_descriptor, genome, chrom_prefix=None):
-        self.chrom_prefix = chrom_prefix
+    def __init__(
+            self, partition_descriptor, genome, 
+            add_chrom_prefix=None, del_chrom_prefix=None):
+
         self.genome = genome
         self.partition_descriptor = partition_descriptor
         self.chromosome_lengths = dict(self.genome.get_all_chr_lengths())
+
+        self._build_adjust_chrom(add_chrom_prefix, del_chrom_prefix)
+
+    def _build_adjust_chrom(self, add_chrom_prefix, del_chrom_prefix):
+        self._chrom_prefix = None
+
+        def same_chrom(chrom):
+            return chrom
+        self._adjust_chrom = same_chrom
+        self._unadjust_chrom = same_chrom
+
+        if add_chrom_prefix is not None:
+            self._chrom_prefix = add_chrom_prefix
+            self._adjust_chrom = self._prepend_chrom_prefix
+            self._unadjust_chrom = self._remove_chrom_prefix
+        elif del_chrom_prefix is not None:
+            self._chrom_prefix = del_chrom_prefix
+            self._adjust_chrom = self._remove_chrom_prefix
+            self._unadjust_chrom = self._prepend_chrom_prefix
 
     def region_bins_count(self, chrom):
         result = ceil(
@@ -81,24 +102,23 @@ class MakefileGenerator:
             self.partition_descriptor.region_length)
         return result
 
-    def reset_chrom(self, chrom):
-        if self.chrom_prefix and chrom.startswith(self.chrom_prefix):
-            return chrom[len(self.chrom_prefix):]
+    def _remove_chrom_prefix(self, chrom):
+        assert self._chrom_prefix
+        if chrom.startswith(self._chrom_prefix):
+            return chrom[len(self._chrom_prefix):]
         return chrom
 
-    def prefix_chrom(self, chrom):
-        if self.chrom_prefix and not chrom.startswith(self.chrom_prefix):
-            return f'{self.chrom_prefix}{chrom}'
+    def _prepend_chrom_prefix(self, chrom):
+        assert self._chrom_prefix
+        if not chrom.startswith(self._chrom_prefix):
+            return f'{self._chrom_prefix}{chrom}'
         return chrom
 
     def build_target_chromosomes(self, target_chromosomes):
-        if self.chrom_prefix is None:
-            return target_chromosomes
-        else:
-            return [
-                self.prefix_chrom(tg)
-                for tg in target_chromosomes
-            ]
+        return [
+            self._adjust_chrom(tg)
+            for tg in target_chromosomes
+        ]
 
     def generate_chrom_targets(self, target_chrom):
         target = target_chrom
@@ -106,7 +126,7 @@ class MakefileGenerator:
             target = 'other'
         region_bins_count = self.region_bins_count(target_chrom)
 
-        chrom = self.reset_chrom(target_chrom)
+        chrom = self._unadjust_chrom(target_chrom)
 
         if region_bins_count == 1:
             return [(f'{target}_0', chrom)]
@@ -121,6 +141,16 @@ class MakefileGenerator:
             )
         return result
 
+    def bucket_index(self, region_bin):
+        genome_chromosomes = [
+            chrom for chrom, _ in self.genome.get_all_chr_lengths()
+        ]
+        variants_targets = self.generate_variants_targets(genome_chromosomes)
+        assert region_bin in variants_targets
+
+        variants_targets = list(variants_targets.keys())
+        return variants_targets.index(region_bin)
+
     def generate_variants_targets(self, target_chromosomes):
 
         if len(self.partition_descriptor.chromosomes) == 0:
@@ -128,14 +158,13 @@ class MakefileGenerator:
                 'none': [self.partition_descriptor.output]
             }
 
-        targets = defaultdict(list)
-        generated_target_chromosomes = target_chromosomes[:]
-        if self.chrom_prefix is not None:
-            generated_target_chromosomes = [
-                self.prefix_chrom(tg)
-                for tg in target_chromosomes
-            ]
+        generated_target_chromosomes = [
+            self._adjust_chrom(tg)
+            for tg in target_chromosomes[:]
+        ]
+        print("generated_target_chromosomes:", generated_target_chromosomes)
 
+        targets = defaultdict(list)
         for target_chrom in generated_target_chromosomes:
             if target_chrom not in self.chromosome_lengths:
                 print(
@@ -239,7 +268,7 @@ class Variants2ParquetTool:
         cls.VARIANTS_LOADER_CLASS.cli_arguments(parser)
 
         parser.add_argument(
-            '--study-id', type=str, default=None,
+            '--study-id', '--id', type=str, default=None,
             dest='study_id', metavar='<study id>',
             help='Study ID. '
             'If none specified, the basename of families filename is used to '
@@ -331,6 +360,17 @@ class Variants2ParquetTool:
             '[default: %(default)s]',
         )
 
+        make_parser.add_argument(
+            '--target-chromosomes', '--tc',
+            type=str, nargs='+',
+            dest='target_chromosomes',
+            default=None,
+            help='specified which targets to build; by default target '
+            'chromosomes are extracted from variants file and/or default '
+            'reference genome used in GPF instance; '
+            '[default: None]',
+        )
+
         return parser
 
     @classmethod
@@ -360,6 +400,8 @@ class Variants2ParquetTool:
             command.append(f'--pd {pd}')
         if argv.add_chrom_prefix is not None:
             command.append(f'--add-chrom-prefix {argv.add_chrom_prefix}')
+        if argv.del_chrom_prefix is not None:
+            command.append(f'--del-chrom-prefix {argv.del_chrom_prefix}')
 
         return ' '.join(command)
 
@@ -434,28 +476,14 @@ class Variants2ParquetTool:
             families_filename, params=families_params)
         families = families_loader.load()
 
-        variants_filenames, variants_params = \
-            cls.VARIANTS_LOADER_CLASS.parse_cli_arguments(argv)
-        variants_loader = cls.VARIANTS_LOADER_CLASS(
-            families, variants_filenames,
-            params=variants_params,
-            genome=gpf_instance.genomes_db.get_genome())
+        variants_loader = cls._load_variants(argv, families, gpf_instance)
 
-        if argv.partition_description is not None:
-            partition_description = ParquetPartitionDescriptor.from_config(
-                argv.partition_description,
-                root_dirname=argv.output
-            )
-        else:
-            partition_description = NoPartitionDescriptor(argv.output)
+        partition_description = cls._build_partition_description(argv)
+        generator = cls._build_makefile_generator(
+            argv, gpf_instance, partition_description)
 
-        chrom_prefix = argv.add_chrom_prefix
-        generator = MakefileGenerator(
-            partition_description,
-            gpf_instance.genomes_db.get_genome(),
-            chrom_prefix=chrom_prefix)
-
-        target_chromosomes = variants_loader.chromosomes
+        target_chromosomes = cls._collect_target_chromosomes(
+            argv, variants_loader)
         variants_targets = generator.generate_variants_targets(
             target_chromosomes)
 
@@ -488,11 +516,6 @@ class Variants2ParquetTool:
                 )
 
         elif argv.type == 'variants':
-            annotation_pipeline = construct_import_annotation_pipeline(
-                gpf_instance,
-                annotation_configfile=argv.annotation_config,
-                defaults=annotation_defaults)
-
             bucket_index = argv.bucket_index
             if argv.region_bin is not None:
                 if argv.region_bin == 'none':
@@ -503,7 +526,7 @@ class Variants2ParquetTool:
 
                     regions = variants_targets[argv.region_bin]
                     bucket_index = cls.BUCKET_INDEX_DEFAULT + \
-                        list(variants_targets.keys()).index(argv.region_bin)
+                        generator.bucket_index(argv.region_bin)
                     print("resetting regions:", regions)
                     variants_loader.reset_regions(regions)
 
@@ -512,15 +535,70 @@ class Variants2ParquetTool:
                 print("resetting regions:", regions)
                 variants_loader.reset_regions(regions)
 
-            variants_loader = AnnotationPipelineDecorator(
-                variants_loader, annotation_pipeline
-            )
-
-            if cls.VARIANTS_FREQUENCIES:
-                variants_loader = AlleleFrequencyDecorator(variants_loader)
+            variants_loader = cls._build_variants_loader_pipeline(
+                    gpf_instance, argv, annotation_defaults, variants_loader)
 
             ParquetManager.variants_to_parquet_partition(
                 variants_loader, partition_description,
                 bucket_index=bucket_index,
                 rows=argv.rows
             )
+
+    @classmethod
+    def _build_variants_loader_pipeline(
+            cls, gpf_instance, argv, annotation_defaults, variants_loader):
+        annotation_pipeline = construct_import_annotation_pipeline(
+            gpf_instance,
+            annotation_configfile=argv.annotation_config,
+            defaults=annotation_defaults)
+
+        variants_loader = AnnotationPipelineDecorator(
+            variants_loader, annotation_pipeline
+        )
+
+        if cls.VARIANTS_FREQUENCIES:
+            variants_loader = AlleleFrequencyDecorator(variants_loader)
+        return variants_loader
+
+    @classmethod
+    def _load_variants(cls, argv, families, gpf_instance):
+        variants_filenames, variants_params = \
+            cls.VARIANTS_LOADER_CLASS.parse_cli_arguments(argv)
+        variants_loader = cls.VARIANTS_LOADER_CLASS(
+            families, variants_filenames,
+            params=variants_params,
+            genome=gpf_instance.genomes_db.get_genome())
+        return variants_loader
+
+    @staticmethod
+    def _build_partition_description(argv):
+        if argv.partition_description is not None:
+            partition_description = ParquetPartitionDescriptor.from_config(
+                argv.partition_description,
+                root_dirname=argv.output
+            )
+        else:
+            partition_description = NoPartitionDescriptor(argv.output)
+        return partition_description
+
+    @staticmethod
+    def _build_makefile_generator(argv, gpf_instance, partition_description):
+
+        add_chrom_prefix = argv.add_chrom_prefix
+        del_chrom_prefix = argv.del_chrom_prefix
+
+        generator = MakefileGenerator(
+            partition_description,
+            gpf_instance.genomes_db.get_genome(),
+            add_chrom_prefix=add_chrom_prefix,
+            del_chrom_prefix=del_chrom_prefix)
+        return generator
+
+    @staticmethod
+    def _collect_target_chromosomes(argv, variants_loader):
+        if 'target_chromosomes' in argv and \
+                argv.target_chromosomes is not None:
+            target_chromosomes = argv.target_chromosomes
+        else:
+            target_chromosomes = variants_loader.chromosomes
+        return target_chromosomes

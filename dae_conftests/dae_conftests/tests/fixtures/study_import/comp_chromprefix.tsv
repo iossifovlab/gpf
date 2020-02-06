@@ -1,0 +1,11 @@
+familyId	location	variant	bestState
+f1	chr1:865664	sub(G->A)	2 2 1 2/0 0 1 0
+f1	chr1:865691	sub(C->T)	2 2 1 2/0 0 1 0
+f2	chr1:865664	sub(G->A)	2 2 2 2/0 0 0 0
+f2	chr1:865691	sub(C->T)	2 2 1 2/0 0 1 0
+f3	chr1:865664	sub(G->A)	2 2 1 2/0 0 1 0
+f3	chr1:865691	sub(C->T)	2 2 1 2/0 0 1 0
+f4	chr1:865664	sub(G->A)	2 2 2 2/0 0 0 0
+f4	chr1:865691	sub(C->T)	2 2 2 2/0 0 0 0
+f5	chr1:865664	sub(G->A)	2 2 2 2/0 0 0 0
+f5	chr1:865691	sub(C->T)	2 2 2 2/0 0 0 0

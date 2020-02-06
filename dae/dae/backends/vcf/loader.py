@@ -464,6 +464,7 @@ class VcfLoader(VariantsGenotypesLoader):
             'vcf_denovo_mode': 'possible_denovo',
             'vcf_omission_mode': 'possible_omission',
             'add_chrom_prefix': None,
+            'del_chrom_prefix': None,
         }
 
     @staticmethod
@@ -477,7 +478,8 @@ class VcfLoader(VariantsGenotypesLoader):
                 if key in {'vcf_multi_loader_fill_in_mode',
                            'vcf_denovo_mode',
                            'vcf_omission_mode',
-                           'add_chrom_prefix'}:
+                           'add_chrom_prefix',
+                           'del_chrom_prefix'}:
                     result.append(f'--{param}')
                     result.append(f'{value}')
                 else:
@@ -543,6 +545,11 @@ class VcfLoader(VariantsGenotypesLoader):
             help='Add specified prefix to each chromosome name in '
             'variants file'
         )
+        parser.add_argument(
+            '--del-chrom-prefix', type=str, default=None,
+            help='Removes specified prefix from each chromosome name in '
+            'variants file'
+        )
 
     @staticmethod
     def parse_cli_arguments(argv):
@@ -570,6 +577,8 @@ class VcfLoader(VariantsGenotypesLoader):
             'vcf_omission_mode':
             argv.vcf_omission_mode,
             'add_chrom_prefix':
-            argv.add_chrom_prefix
+            argv.add_chrom_prefix,
+            'del_chrom_prefix':
+            argv.del_chrom_prefix,
         }
         return filenames, params
