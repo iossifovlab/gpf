@@ -239,7 +239,7 @@ class Variants2ParquetTool:
         cls.VARIANTS_LOADER_CLASS.cli_arguments(parser)
 
         parser.add_argument(
-            '--study-id', type=str, default=None,
+            '--study-id', '--id', type=str, default=None,
             dest='study_id', metavar='<study id>',
             help='Study ID. '
             'If none specified, the basename of families filename is used to '
