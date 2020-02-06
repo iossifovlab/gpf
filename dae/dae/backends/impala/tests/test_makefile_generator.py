@@ -234,3 +234,87 @@ def test_target_generator_chrom_prefix_target_chrom(
         for region in regions:
             print(region)
             assert 'chr' not in region
+
+
+@pytest.mark.parametrize('region_length,targets', [
+    (3_000_000_000, [
+        ('chr1_0', 0), ('chr2_0', 1),
+        ('other_0', 2)
+        ]),
+    (150_000_000, [
+        ('chr1_0', 0), ('chr2_0', 1), ('chr2_1', 2),
+        ('other_0', 3), ('other_1', 4), ('other_2', 5)]),
+    (100_000_000, [
+        ('chr1_0', 0),
+        ('chr2_0', 1), ('chr2_1', 2),
+        ('other_0', 3), ('other_1', 4), ('other_2', 5), ('other_3', 6),
+        ]),
+])
+def test_makefile_generator_bucket_numbering(
+        region_length, targets, genomes_db_2019, mocker):
+
+    mocker.patch.object(
+        GenomicSequence, 'get_all_chr_lengths', return_value=[
+            ('chr1', 100_000_000),
+            ('chr2', 200_000_000),
+            ('chr3', 300_000_000),
+            ('chr4', 400_000_000),
+        ])
+
+    partition_descriptor = ParquetPartitionDescriptor(
+            ['chr1', 'chr2'], region_length)
+
+    generator = MakefileGenerator(
+        partition_descriptor,
+        genomes_db_2019.get_genome(),
+        chrom_prefix='chr')
+    print(generator.chromosome_lengths)
+    assert len(generator.chromosome_lengths) == 4
+
+    for (region_bin, bucket_index) in targets:
+        assert bucket_index == generator.bucket_index(region_bin)
+
+
+@pytest.mark.parametrize('region_length,targets', [
+    (3_000_000_000, [
+        ('chr1_0', ['chr1']),
+        ('chr2_0', ['chr2']),
+        ('other_0', ['chr3', 'chr4'])
+        ]),
+    (150_000_000, [
+        ('chr1_0', ['chr1']),
+        ('chr2_0', ['chr2:1-150000000']),
+        ('chr2_1', ['chr2:150000001-200000000']),
+        ('other_0', ['chr3:1-150000000', 'chr4:1-150000000']),
+        ('other_1', ['chr3:150000001-300000000', 'chr4:150000001-300000000']),
+        ('other_2', ['chr4:300000001-400000000'])
+    ]),
+])
+def test_makefile_generator_regions(
+        region_length, targets, genomes_db_2019, mocker):
+
+    mocker.patch.object(
+        GenomicSequence, 'get_all_chr_lengths', return_value=[
+            ('chr1', 100_000_000),
+            ('chr2', 200_000_000),
+            ('chr3', 300_000_000),
+            ('chr4', 400_000_000),
+        ])
+
+    partition_descriptor = ParquetPartitionDescriptor(
+            ['chr1', 'chr2'], region_length)
+
+    generator = MakefileGenerator(
+        partition_descriptor,
+        genomes_db_2019.get_genome())
+
+    print(generator.chromosome_lengths)
+    assert len(generator.chromosome_lengths) == 4
+
+    variants_targets = generator.generate_variants_targets([
+        'chr1', 'chr2', 'chr3', 'chr4'
+    ])
+
+    for (region_bin, regions) in targets:
+        assert region_bin in variants_targets
+        assert regions == variants_targets[region_bin]

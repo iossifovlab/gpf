@@ -121,6 +121,16 @@ class MakefileGenerator:
             )
         return result
 
+    def bucket_index(self, region_bin):
+        genome_chromosomes = [
+            chrom for chrom, _ in self.genome.get_all_chr_lengths()
+        ]
+        variants_targets = self.generate_variants_targets(genome_chromosomes)
+        assert region_bin in variants_targets
+
+        variants_targets = list(variants_targets.keys())
+        return variants_targets.index(region_bin)
+
     def generate_variants_targets(self, target_chromosomes):
 
         if len(self.partition_descriptor.chromosomes) == 0:
@@ -495,7 +505,7 @@ class Variants2ParquetTool:
 
                     regions = variants_targets[argv.region_bin]
                     bucket_index = cls.BUCKET_INDEX_DEFAULT + \
-                        list(variants_targets.keys()).index(argv.region_bin)
+                        generator.bucket_index(argv.region_bin)
                     print("resetting regions:", regions)
                     variants_loader.reset_regions(regions)
 
