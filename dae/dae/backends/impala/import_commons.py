@@ -331,6 +331,17 @@ class Variants2ParquetTool:
             '[default: %(default)s]',
         )
 
+        make_parser.add_argument(
+            '--target-chromosomes', '--tc',
+            type=str, nargs='+',
+            dest='target_chromosomes',
+            default=None,
+            help='specified which targets to build; by default target '
+            'chromosomes are extracted from variants file and/or default '
+            'reference genome used in GPF instance; '
+            '[default: None]',
+        )
+
         return parser
 
     @classmethod
@@ -434,28 +445,14 @@ class Variants2ParquetTool:
             families_filename, params=families_params)
         families = families_loader.load()
 
-        variants_filenames, variants_params = \
-            cls.VARIANTS_LOADER_CLASS.parse_cli_arguments(argv)
-        variants_loader = cls.VARIANTS_LOADER_CLASS(
-            families, variants_filenames,
-            params=variants_params,
-            genome=gpf_instance.genomes_db.get_genome())
+        variants_loader = cls._load_variants(argv, families, gpf_instance)
 
-        if argv.partition_description is not None:
-            partition_description = ParquetPartitionDescriptor.from_config(
-                argv.partition_description,
-                root_dirname=argv.output
-            )
-        else:
-            partition_description = NoPartitionDescriptor(argv.output)
+        partition_description = cls._build_partition_description(argv)
+        generator = cls._build_makefile_generator(
+            argv, gpf_instance, partition_description)
 
-        chrom_prefix = argv.add_chrom_prefix
-        generator = MakefileGenerator(
-            partition_description,
-            gpf_instance.genomes_db.get_genome(),
-            chrom_prefix=chrom_prefix)
-
-        target_chromosomes = variants_loader.chromosomes
+        target_chromosomes = cls._collect_target_chromosomes(
+            argv, variants_loader)
         variants_targets = generator.generate_variants_targets(
             target_chromosomes)
 
@@ -488,11 +485,6 @@ class Variants2ParquetTool:
                 )
 
         elif argv.type == 'variants':
-            annotation_pipeline = construct_import_annotation_pipeline(
-                gpf_instance,
-                annotation_configfile=argv.annotation_config,
-                defaults=annotation_defaults)
-
             bucket_index = argv.bucket_index
             if argv.region_bin is not None:
                 if argv.region_bin == 'none':
@@ -512,15 +504,67 @@ class Variants2ParquetTool:
                 print("resetting regions:", regions)
                 variants_loader.reset_regions(regions)
 
-            variants_loader = AnnotationPipelineDecorator(
-                variants_loader, annotation_pipeline
-            )
-
-            if cls.VARIANTS_FREQUENCIES:
-                variants_loader = AlleleFrequencyDecorator(variants_loader)
+            variants_loader = cls._build_variants_loader_pipeline(
+                    gpf_instance, argv, annotation_defaults, variants_loader)
 
             ParquetManager.variants_to_parquet_partition(
                 variants_loader, partition_description,
                 bucket_index=bucket_index,
                 rows=argv.rows
             )
+
+    @classmethod
+    def _build_variants_loader_pipeline(
+            cls, gpf_instance, argv, annotation_defaults, variants_loader):
+        annotation_pipeline = construct_import_annotation_pipeline(
+            gpf_instance,
+            annotation_configfile=argv.annotation_config,
+            defaults=annotation_defaults)
+
+        variants_loader = AnnotationPipelineDecorator(
+            variants_loader, annotation_pipeline
+        )
+
+        if cls.VARIANTS_FREQUENCIES:
+            variants_loader = AlleleFrequencyDecorator(variants_loader)
+        return variants_loader
+
+    @classmethod
+    def _load_variants(cls, argv, families, gpf_instance):
+        variants_filenames, variants_params = \
+            cls.VARIANTS_LOADER_CLASS.parse_cli_arguments(argv)
+        variants_loader = cls.VARIANTS_LOADER_CLASS(
+            families, variants_filenames,
+            params=variants_params,
+            genome=gpf_instance.genomes_db.get_genome())
+        return variants_loader
+
+    @staticmethod
+    def _build_partition_description(argv):
+        if argv.partition_description is not None:
+            partition_description = ParquetPartitionDescriptor.from_config(
+                argv.partition_description,
+                root_dirname=argv.output
+            )
+        else:
+            partition_description = NoPartitionDescriptor(argv.output)
+        return partition_description
+
+    @staticmethod
+    def _build_makefile_generator(argv, gpf_instance, partition_description):
+
+        chrom_prefix = argv.add_chrom_prefix
+        generator = MakefileGenerator(
+            partition_description,
+            gpf_instance.genomes_db.get_genome(),
+            chrom_prefix=chrom_prefix)
+        return generator
+
+    @staticmethod
+    def _collect_target_chromosomes(argv, variants_loader):
+        if 'target_chromosomes' in argv and \
+                argv.target_chromosomes is not None:
+            target_chromosomes = argv.target_chromosomes
+        else:
+            target_chromosomes = variants_loader.chromosomes
+        return target_chromosomes
