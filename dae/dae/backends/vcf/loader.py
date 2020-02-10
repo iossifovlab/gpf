@@ -125,7 +125,6 @@ class VcfLoader(VariantsGenotypesLoader):
             filenames=vcf_files,
             transmission_type=TransmissionType.transmitted,
             genome=genome,
-            overwrite=False,
             expect_genotype=True,
             expect_best_state=False,
             params=params)

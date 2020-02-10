@@ -8,6 +8,8 @@ import pysam
 import numpy as np
 import pandas as pd
 
+from dae.RegionOperations import Region
+
 from dae.GenomeAccess import GenomicSequence
 from dae.utils.variant_utils import str2mat, GENOTYPE_TYPE
 from dae.utils.helpers import str2bool
@@ -51,13 +53,14 @@ class DenovoLoader(VariantsGenotypesLoader):
             families: FamiliesData,
             denovo_filename: str,
             genome: GenomicSequence,
+            regions: List[str] = None,
             params: Dict[str, Any] = {}):
         super(DenovoLoader, self).__init__(
             families=families,
             filenames=[denovo_filename],
             transmission_type=TransmissionType.denovo,
             genome=genome,
-            overwrite=False,
+            regions=regions,
             expect_genotype=False,
             expect_best_state=False,
             params=params)
@@ -78,7 +81,17 @@ class DenovoLoader(VariantsGenotypesLoader):
         else:
             assert False
 
+    def _is_in_regions(self, summary_variant):
+        isin = [
+            r.isin(summary_variant.chrom, summary_variant.position)
+            if r is not None else True
+            for r in self.regions
+        ]
+        return any(isin)
+
     def _full_variants_iterator_impl(self):
+        self.regions = [Region.from_str(r) for r in self.regions]
+        print("regions:", self.regions)
 
         for index, rec in enumerate(self.denovo_df.to_dict(orient='records')):
             family_id = rec.pop('family_id')
@@ -90,6 +103,9 @@ class DenovoLoader(VariantsGenotypesLoader):
 
             summary_variant = SummaryVariantFactory \
                 .summary_variant_from_records([rec], self.transmission_type)
+            if not self._is_in_regions(summary_variant):
+                continue
+
             family = self.families.get(family_id)
             if family is None:
                 continue
@@ -551,7 +567,7 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
             filenames=[summary_filename],
             transmission_type=TransmissionType.transmitted,
             genome=genome,
-            overwrite=False,
+            regions=regions,
             expect_genotype=False,
             expect_best_state=True,
             params=params)
@@ -567,10 +583,6 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
         self.set_attribute('source_type', 'dae')
 
         self.genome = genome
-        if regions is None or isinstance(regions, str):
-            self.regions = [regions]
-        else:
-            self.regions = regions
 
         self.params = params
         self.include_reference = self.params.get(
@@ -578,12 +590,6 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
 
         with pysam.Tabixfile(self.summary_filename) as tbx:
             self.chromosomes = list(tbx.contigs)
-
-    def reset_regions(self, regions):
-        if regions is None or isinstance(regions, str):
-            self.regions = [regions]
-        else:
-            self.regions = regions
 
     @staticmethod
     def _build_toomany_filename(summary_filename):

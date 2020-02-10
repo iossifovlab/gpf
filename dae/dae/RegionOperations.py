@@ -33,7 +33,7 @@ def rgns2BedFile(rgns, bedFN):
 class Region(object):
 
     REGION_REGEXP2 = re.compile(
-        r"^(chr)?(\d+|[XxYy]):([\d]{1,3}(,?[\d]{3})*)(-([\d]{1,3}(,?[\d]{3})*))?$")  # noqa
+        r"^(chr)?(.+):([\d]{1,3}(,?[\d]{3})*)(-([\d]{1,3}(,?[\d]{3})*))?$")  # noqa
 
     def __init__(self, chrom=None, start=None, stop=None, chr=None):
 
@@ -69,7 +69,7 @@ class Region(object):
         return str(self).__hash__()
 
     def __eq__(self, other):
-        return self.chr == other.chrom and \
+        return self.chrom == other.chrom and \
             self.start == other.start and self.stop == other.stop
 
     def __ne__(self, other):
@@ -88,7 +88,8 @@ class Region(object):
         m = cls.REGION_REGEXP2.match(region_str)
         if not m:
             return None
-        chrome, start, end = m.group(2), m.group(3), m.group(6)
+        prefix, chrom, start, end = \
+            m.group(1), m.group(2), m.group(3), m.group(6)
         if not start:
             return None
         start = int(start.replace(',', ''))
@@ -99,10 +100,15 @@ class Region(object):
 
         if start > end:
             return None
-        return chrome, start, end
+        if prefix:
+            return f"{prefix}{chrom}", start, end
+        else:
+            return chrom, start, end
 
     @staticmethod
     def from_str(region_str):
+        if region_str is None:
+            return None
         parsed = Region.parse_str(region_str)
         if not parsed:
             return None

@@ -162,7 +162,6 @@ class MakefileGenerator:
             self._adjust_chrom(tg)
             for tg in target_chromosomes[:]
         ]
-        print("generated_target_chromosomes:", generated_target_chromosomes)
 
         targets = defaultdict(list)
         for target_chrom in generated_target_chromosomes:
