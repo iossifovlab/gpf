@@ -30,10 +30,11 @@ class DatasetView(QueryBaseView):
             datasets = self.variants_db.get_all_genotype_data_wrappers()
             res = sorted(list(dataset.get_genotype_data_group_description()
                          for dataset in datasets),
-                         key=lambda dataset: dataset['name'])
+                         key=lambda dataset: dataset['name'] or dataset['id'])
 
             res = [self.augment_accessibility(ds, user) for ds in res]
             res = [self.augment_with_groups(ds) for ds in res]
+
             return Response({'data': res})
         else:
             dataset = self.variants_db.get_wdae_wrapper(dataset_id)
@@ -54,8 +55,11 @@ class PermissionDeniedPromptView(QueryBaseView):
     def __init__(self):
         super(PermissionDeniedPromptView, self).__init__()
 
-        self.permission_denied_prompt = \
-            self.gpf_instance.dae_config.gpfjs.permission_denied_prompt
+        prompt_filepath = \
+            self.gpf_instance.dae_config.gpfjs.permission_denied_prompt_file
+
+        with open(prompt_filepath, "r") as infile:
+            self.permission_denied_prompt = infile.read()
 
     def get(self, request):
         return Response({'data': self.permission_denied_prompt})

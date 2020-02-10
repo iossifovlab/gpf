@@ -1,7 +1,6 @@
 import os
 import pytest
 from dae.studies.tests.conftest import studies_dir
-from box import Box
 
 
 def test_study_config_simple(genotype_data_study_configs):
@@ -174,8 +173,7 @@ def test_quads_f1_config_genotype_browser_columns(
                 'id': 'continuous.Continuous',
                 'name': 'Continuous',
                 'role': 'prb',
-                'measure': 'instrument1.continuous',
-                'source': 'prb.instrument1.continuous',
+                'source': 'instrument1.continuous',
                 'format': '%s'
             }
         ]),
@@ -184,8 +182,7 @@ def test_quads_f1_config_genotype_browser_columns(
                 'id': 'categorical.Categorical',
                 'name': 'Categorical',
                 'role': 'prb',
-                'measure': 'instrument1.categorical',
-                'source': 'prb.instrument1.categorical',
+                'source': 'instrument1.categorical',
                 'format': '%s'
             }
         ]),
@@ -194,8 +191,7 @@ def test_quads_f1_config_genotype_browser_columns(
                 'id': 'ordinal.Ordinal',
                 'name': 'Ordinal',
                 'role': 'prb',
-                'measure': 'instrument1.ordinal',
-                'source': 'prb.instrument1.ordinal',
+                'source': 'instrument1.ordinal',
                 'format': '%s'
             }
         ]),
@@ -204,8 +200,7 @@ def test_quads_f1_config_genotype_browser_columns(
                 'id': 'raw.Raw',
                 'name': 'Raw',
                 'role': 'prb',
-                'measure': 'instrument1.raw',
-                'source': 'prb.instrument1.raw',
+                'source': 'instrument1.raw',
                 'format': '%s'
             }
         ]),
@@ -234,7 +229,7 @@ def test_quads_f1_config_genotype_browser_pheno_columns(
         assert len(genotype_column.slots) == len(expected_slots)
 
         for gc_slot, e_slot in zip(genotype_column.slots, expected_slots):
-            assert gc_slot.measure == e_slot['measure']
+            assert gc_slot.source == e_slot['source']
             assert gc_slot.name == e_slot['name']
             assert gc_slot.format == e_slot['format']
 

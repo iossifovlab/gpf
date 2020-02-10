@@ -74,7 +74,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
             pedigree_table = study_config.tables.pedigree
         else:
             # default study tables
-            variant_table = '{}_variant'.format(study_config.id)
+            variant_table = '{}_variants'.format(study_config.id)
             pedigree_table = '{}_pedigree'.format(study_config.id)
         return variant_table, pedigree_table
 
@@ -126,7 +126,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
 
         study_config = STUDY_CONFIG_TEMPLATE.format(
                 id=study_id,
-                genotype_storage=self.id,
+                genotype_storage=self.storage_config.section_id(),
                 pedigree_table=pedigree_table,
                 variant_table=variant_table)
         return study_config
@@ -191,7 +191,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
 
         db = self.storage_config.impala.db
         pedigree_table = '{}_pedigree'.format(study_id)
-        variant_table = '{}_variant'.format(study_id)
+        variant_table = '{}_variants'.format(study_id)
 
         print(
             f'Loading `{study_id}` study in impala '
@@ -269,12 +269,13 @@ class ImpalaGenotypeStorage(GenotypeStorage):
 
 
 STUDY_CONFIG_TEMPLATE = '''
-[genotypeDataStudy]
-id = {id}
-genotype_storage = {genotype_storage}
+id = "{id}"
+conf_dir = "."
 
+[genotype_storage]
+id = "{genotype_storage}"
 
-[tables]
-pedigree = {pedigree_table}
-variant = {variant_table}
+[genotype_storage.tables]
+pedigree = "{pedigree_table}"
+variants = "{variant_table}"
 '''

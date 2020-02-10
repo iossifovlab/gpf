@@ -64,21 +64,22 @@ class GeneSetsDb(object):
     @cached
     def collections_descriptions(self):
         gene_sets_collections_desc = []
-        for gsc_id in self.config.gene_terms._fields:
-            label = GeneInfoConfigParser.getGeneTermAtt(
-                self.config, gsc_id, 'web_label')
-            format_str = GeneInfoConfigParser.getGeneTermAtt(
-                self.config, gsc_id, 'web_format_str')
-            if not label or not format_str:
-                continue
-            gene_sets_collections_desc.append(
-                {
-                    'desc': label,
-                    'name': gsc_id,
-                    'format': format_str.split('|'),
-                    'types': [],
-                }
-            )
+        if self.config.gene_terms:
+            for gsc_id in self.config.gene_terms._fields:
+                label = GeneInfoConfigParser.getGeneTermAtt(
+                    self.config, gsc_id, 'web_label')
+                format_str = GeneInfoConfigParser.getGeneTermAtt(
+                    self.config, gsc_id, 'web_format_str')
+                if not label or not format_str:
+                    continue
+                gene_sets_collections_desc.append(
+                    {
+                        'desc': label,
+                        'name': gsc_id,
+                        'format': format_str.split('|'),
+                        'types': [],
+                    }
+                )
         return gene_sets_collections_desc
 
     @staticmethod

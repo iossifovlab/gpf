@@ -13,7 +13,7 @@ from dae.common_reports.people_filters import FilterCollection
 class CommonReport(object):
 
     def __init__(self, genotype_data_study, config):
-        people_groups_info = config.people_groups_info
+        people_groups_info = config.people_group
         effect_groups = config.effect_groups
         effect_types = config.effect_types
 
@@ -36,7 +36,7 @@ class CommonReport(object):
 
         start = time.time()
         self.families_report = FamiliesReport(
-            config.people_groups, self.families_groups, people_filters,
+            config.selected_people_groups, self.families_groups, people_filters,
             config.draw_all_families, config.families_count_show_id
         )
         elapsed = time.time() - start
@@ -55,8 +55,8 @@ class CommonReport(object):
 
         self.study_name = genotype_data_study.name
         self.phenotype = self._get_phenotype()
-        self.study_type = ','.join(genotype_data_study.study_types)\
-            if genotype_data_study.study_types else None
+        self.study_type = ','.join(genotype_data_study.study_type)\
+            if genotype_data_study.study_type else None
         self.study_year = genotype_data_study.year
         self.pub_med = genotype_data_study.pub_med
 

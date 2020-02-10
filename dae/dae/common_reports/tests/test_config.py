@@ -1,6 +1,10 @@
 import os
+import pytest
 
 from dae.common_reports.config import CommonReportsConfigParser
+
+
+pytestmark = pytest.mark.skip
 
 
 def test_common_reports_config(

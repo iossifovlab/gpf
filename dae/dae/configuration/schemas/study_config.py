@@ -36,7 +36,7 @@ pheno_slot_schema = {
     "schema": {
         "role": {"type": "string"},
         "name": {"type": "string"},
-        "measure": {"type": "string"},
+        "source": {"type": "string"},
         "format": {"type": "string", "default": "%s"},
     },
 }
@@ -105,7 +105,7 @@ family_schema = {
         "coerce": "abspath",
         "required": True,
     },
-    "params": {"type": "dict", "valuesrules": {"type": "string"}},
+    "params": {"type": "dict", "valuesrules": {"type": ["string", "boolean"]}},
 }
 
 variants_file = {
@@ -176,9 +176,11 @@ study_config_schema = {
         "coerce": "abspath",
         "excludes": "description",
     },
-    "study_type": {"type": "string"},
+    "selected_people_groups": {"type": "string"},
+    "study_type": {"type": "list", "schema": {"type": "string"}},
     "year": {"type": "list", "schema": {"type": "integer"}},
     "pub_med": {"type": "list", "schema": {"type": "string"}},
+    "has_denovo": {"type": "boolean", "default": True},
     "has_transmitted": {"type": "boolean"},
     "has_complex": {"type": "boolean"},
     "has_cnv": {"type": "boolean"},
@@ -236,7 +238,7 @@ study_config_schema = {
             "selected_inheritance_type_filter_values": {
                 "type": "list",
                 "schema": {"type": "string"},
-                "dependencies": {"inheritance_type_filter": True},
+                "dependencies": ["inheritance_type_filter"],
             },
             "in_roles": {
                 "type": "dict",
@@ -292,11 +294,23 @@ study_config_schema = {
                 "schema": {"type": "string"},
                 "default": []
             },
-            "groups": {"type": "list", "schema": {"type": "string"}},
-            "effect_groups": {"type": "list", "schema": {"type": "string"}},
-            "effect_types": {"type": "list", "schema": {"type": "string"}},
+            "groups": {"type": "list", "schema": {
+                "type": "dict",
+                "schema": {
+                    "name": {"type": "string"},
+                    "people_group_ids": {"type": "list", "schema": {"type": "string"}},
+                }}
+            },
+            "effect_groups": {"type": "list", "schema": {"type": "string"}, "default": []},
+            "effect_types": {"type": "list", "schema": {"type": "string"}, "default": []},
             "families_count_show_id": {"type": "integer"},
-            "draw_all_families": {"type": "boolean"},
+            "draw_all_families": {"type": "boolean", "default": False},
+            "file_path": {
+                "type": "string",
+                "check_with": validate_path,
+                "coerce": "abspath",
+                "default": "common_report.json",
+            },
         },
     },
     "denovo_gene_sets": {

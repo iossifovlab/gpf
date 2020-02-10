@@ -3,6 +3,7 @@ import copy
 import shutil
 import time
 
+from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.pedigrees.loader import FamiliesLoader
 
 from dae.backends.storage.genotype_storage import GenotypeStorage
@@ -29,7 +30,7 @@ class FilesystemGenotypeStorage(GenotypeStorage):
         return True
 
     def build_backend(self, study_config, genomes_db):
-        if getattr(study_config, "files", None) is None:
+        if not study_config.genotype_storage.files:
             data_dir = self.get_data_dir(study_config.id, 'data')
             vcf_filename = os.path.join(
                 data_dir, "{}.vcf".format(study_config.id))
@@ -49,31 +50,31 @@ class FilesystemGenotypeStorage(GenotypeStorage):
         else:
             start = time.time()
             families_loader = FamiliesLoader(
-                study_config.files.pedigree.path,
-                params=study_config.files.pedigree.params)
+                study_config.genotype_storage.files.pedigree.path,
+                params=GPFConfigParser._namedtuple_to_dict(
+                    study_config.genotype_storage.files.pedigree.params
+                ))
             families = families_loader.load()
             elapsed = time.time() - start
             print(f"Families loaded in in {elapsed:.2f} sec")
 
             loaders = []
-            if study_config.files.vcf:
+            for file_conf in study_config.genotype_storage.files.variants:
                 start = time.time()
-                variants_filename = study_config.files.vcf[0].path
-                variants_loader = VcfLoader(
-                    families, [variants_filename],
-                    genomes_db.get_genome(),
-                    params=study_config.files.vcf[0].params)
-                variants_loader = StoredAnnotationDecorator.decorate(
-                    variants_loader, variants_filename
+                variants_filename = file_conf.path
+                variants_params = GPFConfigParser._namedtuple_to_dict(
+                    file_conf.params
                 )
-                loaders.append(variants_loader)
-            if study_config.files.denovo:
-
-                variants_filename = study_config.files.denovo[0].path
-                variants_loader = DenovoLoader(
-                    families, variants_filename,
-                    genomes_db.get_genome(),
-                    params=study_config.files.denovo[0].params)
+                if file_conf.format == "vcf":
+                    variants_loader = VcfLoader(
+                        families, [variants_filename],
+                        genomes_db.get_genome(),
+                        params=variants_params)
+                if file_conf.format == "denovo":
+                    variants_loader = DenovoLoader(
+                        families, variants_filename,
+                        genomes_db.get_genome(),
+                        params=variants_params)
 
                 variants_loader = StoredAnnotationDecorator.decorate(
                     variants_loader, variants_filename
@@ -99,8 +100,8 @@ class FilesystemGenotypeStorage(GenotypeStorage):
 
         return STUDY_CONFIG_TEMPLATE.format(
             study_id=study_id,
-            genotype_storage=self.id,
-            files="\n\n".join([families_config, variants_config])
+            genotype_storage=self.storage_config.section_id(),
+            files="\n".join([families_config, variants_config])
         )
 
     def _import_families_file(self, study_id, families_loader):
@@ -116,9 +117,9 @@ class FilesystemGenotypeStorage(GenotypeStorage):
         params['file_format'] = families_loader.file_format
         config = STUDY_PEDIGREE_TEMPLATE.format(
             path=destination_filename,
-            params=",\n\t".join([
-                "{}:{}".format(k, str(v).replace('\t', '\\t'))
-                for k, v in params.items()])
+            params="{" + ", ".join([
+                '{} = "{}"'.format(k, str(v).replace('\t', '\\t'))
+                for k, v in params.items()]) + "}"
         )
 
         os.makedirs(
@@ -141,14 +142,14 @@ class FilesystemGenotypeStorage(GenotypeStorage):
                 'data',
                 os.path.basename(source_filename)
             )
-            params = ",\n\t".join([
-                "{}:{}".format(k, v)
+            params = ", ".join([
+                '{} = "{}"'.format(k, v)
                 for k, v in variants_loader.params.items() if v is not None])
             source_type = variants_loader.get_attribute('source_type')
             config = STUDY_VARIANTS_TEMPLATE.format(
                 index=index,
                 path=destination_filename,
-                params=params,
+                params="{" + params + "}",
                 source_type=source_type
             )
             result_config.append(config)
@@ -167,24 +168,23 @@ class FilesystemGenotypeStorage(GenotypeStorage):
 
 
 STUDY_PEDIGREE_TEMPLATE = '''
-
-family.path = {path}
-family.format = pedigree
-family.params = {params}
+pedigree.path = "{path}"
+pedigree.params = {params}
 '''
 
 STUDY_VARIANTS_TEMPLATE = '''
-{index}.path = {path}
-{index}.format = {source_type}
-{index}.params = {params}
+[[genotype_storage.files.variants]]
+path = "{path}"
+format = "{source_type}"
+params = {params}
 '''
 
 STUDY_CONFIG_TEMPLATE = '''
-[genotypeDataStudy]
-id = {study_id}
-genotype_storage = {genotype_storage}
+id = "{study_id}"
+conf_dir = "."
+[genotype_storage]
+id = "{genotype_storage}"
 
-
-[files]
+[genotype_storage.files]
 {files}
 '''

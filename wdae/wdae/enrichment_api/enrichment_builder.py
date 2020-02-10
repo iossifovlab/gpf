@@ -49,7 +49,7 @@ class EnrichmentBuilder(object):
 
         effect_types = enrichment_config.effect_types
 
-        people_group_id = enrichment_config.people_groups[0]
+        people_group_id = enrichment_config.selected_people_groups[0]
         people_group = self.dataset.get_families_group(people_group_id)
 
         if people_group:

@@ -1,4 +1,3 @@
-import os
 from copy import deepcopy
 
 from dae.variants.attributes import Sex
@@ -21,11 +20,7 @@ class DenovoGeneSetConfigParser():
 
     @staticmethod
     def denovo_gene_set_cache_file(config, people_group_id=''):
-        cache_path = os.path.join(
-            os.path.split(config.config_file)[0],
-            'denovo-cache-' + people_group_id + '.json'
-        )
-
+        cache_path = 'denovo-cache-' + people_group_id + '.json'
         return cache_path
 
     @staticmethod

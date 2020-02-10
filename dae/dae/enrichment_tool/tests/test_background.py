@@ -9,6 +9,6 @@ def test_background_base_backgrounds():
 
     # assert len(backgrounds) == 3
     assert len(backgrounds) == 2
-    # assert backgrounds['synonymousBackgroundModel'] == SynonymousBackground
-    assert backgrounds['codingLenBackgroundModel'] == CodingLenBackground
-    assert backgrounds['samochaBackgroundModel'] == SamochaBackground
+    # assert backgrounds['synonymous_background_model'] == SynonymousBackground
+    assert backgrounds['coding_len_background_model'] == CodingLenBackground
+    assert backgrounds['samocha_background_model'] == SamochaBackground

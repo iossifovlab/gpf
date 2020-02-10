@@ -17,9 +17,7 @@ from dae.variants.attributes import Role
 from dae.backends.attributes_query import role_query, variant_type_converter, \
     sex_converter, AndNode, NotNode, OrNode, ContainsNode
 
-from dae.studies.genotype_browser_config_parser import \
-    GenotypeBrowserConfigParser
-from dae.studies.people_group_config_parser import PeopleGroupConfigParser
+from dae.configuration.gpf_config_parser import GPFConfigParser
 
 
 class StudyWrapper(object):
@@ -40,77 +38,79 @@ class StudyWrapper(object):
         self.gene_weights_db = gene_weights_db
 
     def _init_wdae_config(self):
-        preview_column_slots = {}
-        download_column_slots = {}
-        pheno_column_slots = []
-        gene_weight_column_sources = []
-        in_role_columns = []
-
-        people_group = {}
-        pheno_filters = []
-        present_in_role = []
-
         genotype_browser_config = self.config.genotype_browser
-        if genotype_browser_config:
-            preview_column_slots = genotype_browser_config.preview_column_slots
-            download_column_slots = \
-                genotype_browser_config.download_column_slots
-            if genotype_browser_config.pheno:
-                pheno_column_slots = list(map(
-                    lambda x: x.slots,
-                    genotype_browser_config.pheno)
-                )
-                pheno_column_slots = [
-                    slot for slots in pheno_column_slots for slot in slots
-                ]
-            gene_weight_column_sources = \
-                genotype_browser_config.gene_weight_column_sources
-            in_role_columns = \
-                genotype_browser_config.in_roles
+        if not genotype_browser_config:
+            return
 
-            pheno_filters = genotype_browser_config.pheno_filters
-            if genotype_browser_config.present_in_role:
-                present_in_role = genotype_browser_config.present_in_role
+        # PHENO
+        pheno_column_slots = []
+        if genotype_browser_config.pheno:
+            for col_id, pheno_col in genotype_browser_config.pheno.field_values_iterator():
+                for slot in pheno_col.slots:
+                    slot = GPFConfigParser.modify_tuple(
+                        slot, {"id": f"{col_id}.{slot.name}"}
+                    )
+                    pheno_column_slots.append(slot)
+        self.pheno_column_slots = pheno_column_slots or []
 
-        self.pheno_column_slots = pheno_column_slots
-        self.gene_weight_column_sources = gene_weight_column_sources
-        self.in_role_columns = in_role_columns
+        # PHENO FILTERS
+        self.pheno_filters = genotype_browser_config.pheno_filters or []
 
-        if self.config.people_group_config:
-            people_group = self.config.people_group_config.people_group
+        # GENE WEIGHTS
+        self.gene_weight_column_sources = \
+            genotype_browser_config.gene_weight_column_sources or []
 
-        self.people_group = people_group
-        self.pheno_filters = pheno_filters
-        self.present_in_role = present_in_role
+        # IN ROLE
+        self.in_role_columns = genotype_browser_config.in_roles or []
 
+        # PRESENT IN ROLE
+        self.present_in_role = genotype_browser_config.present_in_role or []
+
+        # PEOPLE GROUP
+        self.people_group = self.config.people_group or {}
+
+        # LEGEND
         if len(self.people_group) != 0:
             self.legend = {
-                ps['id']: list(ps['domain'].values()) + [ps['default']]
-                for ps in self.people_group.values()
+                pg_id: pg.domain + [pg.default]
+                for pg_id, pg in self.people_group.field_values_iterator()
+                if hasattr(pg, "domain")
             }
         else:
             self.legend = {}
 
-        preview_slots = ()
-        download_slots = ()
+        # PREVIEW AND DOWNLOAD COLUMNS
+        preview_column_names = genotype_browser_config.preview_columns
+        download_column_names = genotype_browser_config.download_columns
 
-        if preview_column_slots:
-            preview_slots = tuple(map(list, zip(*[
-                (attr['id'], attr['source'])
-                for attr in preview_column_slots.values()
-            ])))
+        def unpack_columns(selected_columns, use_id=True):
+            columns, sources = [], []
 
-        if download_column_slots:
-            download_slots = tuple(map(list, zip(*[
-                (attr['name'], attr['source'])
-                for attr in download_column_slots.values()
-            ])))
+            def inner(cols):
+                for col_id, col in cols.field_values_iterator():
+                    if col_id not in selected_columns:
+                        continue
+                    if col.source is not None:
+                        columns.append(col_id if use_id else col.name)
+                        sources.append(col.source)
+                    if col.slots is not None:
+                        for slot in col.slots:
+                            columns.append(f"{col_id}.{slot.name}"
+                                           if use_id else f"{slot.name}")
+                            sources.append(slot.source)
+            inner(genotype_browser_config.genotype)
+            if genotype_browser_config.pheno:
+                inner(genotype_browser_config.pheno)
+            return columns, sources
 
-        if len(preview_slots) > 0:
-            self.preview_columns, self.preview_sources = preview_slots
-
-        if len(download_slots) > 0:
-            self.download_columns, self.download_sources = download_slots
+        if genotype_browser_config.genotype:
+            self.preview_columns, self.preview_sources = \
+                unpack_columns(preview_column_names)
+            self.download_columns, self.download_sources = \
+                unpack_columns(download_column_names, use_id=False)
+        else:
+            self.preview_columns, self.preview_sources = [], []
+            self.download_columns, self.download_sources = [], []
 
     def _init_pheno(self, pheno_db):
         self.phenotype_data = None
@@ -123,18 +123,14 @@ class StudyWrapper(object):
 
             if self.pheno_filters:
                 self.pheno_filters_in_config = {
-                    self._get_pheno_filter_key(pf.measureFilter)
+                    f'{f.role}.{f.measure}'
                     for pf in self.pheno_filters
-                    if pf.measure_filter and
-                    pf.measure_filter.filter_type == 'single'
+                    for f in pf.filter
+                    if f.measure and f.filter_type == 'single'
                 }
                 self.pheno_filter_builder = PhenoFilterBuilder(
                     self.phenotype_data
                 )
-
-    @staticmethod
-    def _get_pheno_filter_key(pheno_filter, measure_key='measure'):
-        return '{}.{}'.format(pheno_filter['role'], pheno_filter[measure_key])
 
     def __getattr__(self, name):
         return getattr(self.genotype_data_study, name)
@@ -336,8 +332,7 @@ class StudyWrapper(object):
         variants_from_studies = itertools.islice(
             self.genotype_data_study.query_variants(**kwargs), limit)
 
-        for variant in \
-                self._add_additional_columns(variants_from_studies):
+        for variant in self._add_additional_columns(variants_from_studies):
             yield variant
 
     def _add_additional_columns(self, variants_iterable):
@@ -387,17 +382,16 @@ class StudyWrapper(object):
         if not self.phenotype_data or not self.pheno_column_slots:
             return None
 
-        pheno_column_dfs = []
         pheno_column_names = []
+        pheno_column_dfs = []
 
         for slot in self.pheno_column_slots:
-            source = '{}.{}'.format(slot.role, slot.measure)
+            pheno_column_names.append(slot.source)
             pheno_column_dfs.append(
                 self.phenotype_data.get_measure_values_df(
-                    slot.measure,
+                    slot.source,
                     family_ids=list(families),
                     roles=[slot.role]))
-            pheno_column_names.append(source)
 
         return list(zip(pheno_column_dfs, pheno_column_names))
 
@@ -675,7 +669,7 @@ class StudyWrapper(object):
         return functools.reduce(set.intersection, people_ids)
 
     def _transform_pheno_filter(self, kwargs):
-        pheno_filter_args = kwargs['phenoFilters']
+        pheno_filter_args = kwargs.pop('phenoFilters')
 
         assert isinstance(pheno_filter_args, list)
         assert self.phenotype_data
@@ -736,62 +730,18 @@ class StudyWrapper(object):
     @staticmethod
     def _get_description_keys():
         return [
-            'id', 'name', 'description', 'phenotypeBrowser', 'phenotypeTool',
-            'phenotypeData', 'enrichmentTool', 'genotypeBrowser',
-            'peopleGroupConfig', 'genotypeBrowserConfig', 'commonReport',
-            'studyTypes', 'studies', 'hasPresentInChild', 'hasPresentInParent'
+            'id', 'name', 'description', 'phenotype_browser', 'phenotype_tool',
+            'phenotype_data', 'enrichment_tool', 'people_group', 'common_report',
+            'study_type', 'studies', 'has_present_in_child', 'has_present_in_parent'
         ]
-
-    @staticmethod
-    def _get_section_config_keys():
-        return {
-            'genotypeBrowserConfig': GenotypeBrowserConfigParser,
-            'peopleGroupConfig': PeopleGroupConfigParser
-        }
 
     def get_genotype_data_group_description(self):
         keys = self._get_description_keys()
-        config = self.config
-
-        result = {key: config.get(key, None) for key in keys}
-
-        self._augment_pheno_filters_domain(result)
-        section_configs = self._get_section_config_keys()
-        self._filter_section_configs(result, section_configs)
-
+        # TODO Add domain to pheno filters
+        result = {key: getattr(self.config, key, None) for key in keys}
+        result['genotype_browser_config'] = self.config.genotype_browser
+        result['genotype_browser'] = self.config.genotype_browser.enabled or False
         return result
-
-    def _augment_pheno_filters_domain(self, genotype_data_group_description):
-        genotype_browser_config = \
-            genotype_data_group_description['genotypeBrowserConfig']
-        if not genotype_browser_config:
-            return
-
-        pheno_filters = genotype_browser_config.pheno_filters
-        if not pheno_filters:
-            return
-
-        for pheno_filter in pheno_filters:
-            measure_filter = pheno_filter.get('measureFilter', None)
-            if measure_filter is None or 'measure' not in measure_filter:
-                continue
-
-            if self.phenotype_data is None:
-                continue
-
-            measure = self.phenotype_data.get_measure(
-                measure_filter['measure'])
-            measure_filter['domain'] = measure.values_domain.split(",")
-
-    def _filter_section_configs(self, genotype_data_group_description,
-                                config_keys={}):
-        for config_key, parser in config_keys.items():
-            config = genotype_data_group_description.get(config_key, None)
-            if not config:
-                continue
-
-            genotype_data_group_description[config_key] = \
-                parser.get_config_description(config)
 
     def _get_wdae_member(self, member, people_group, best_st):
         return [

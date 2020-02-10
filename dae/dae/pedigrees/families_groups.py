@@ -3,7 +3,7 @@ from collections import namedtuple
 from collections.abc import Mapping
 from functools import lru_cache
 
-from box import Box
+from dae.configuration.gpf_config_parser import GPFConfigParser
 
 from dae.variants.attributes import Role
 from dae.pedigrees.family import FamiliesData
@@ -68,8 +68,8 @@ class PeopleGroup:
             domain=domains,
             default=PeopleGroup.ValueDescriptor(
                 id=people_group_config.default.id,
-                name=people_group_config.default.id,
-                color=people_group_config.default.id,
+                name=people_group_config.default.name,
+                color=people_group_config.default.color,
                 index=999_999_999),
             source=people_group_config.source,
             getter=getter
@@ -175,7 +175,7 @@ class PeopleMultiGroup(PeopleGroup):
 
 PEOPLE_GROUP_ROLES = PeopleGroup.from_config(
     'role',
-    Box({
+    GPFConfigParser._dict_to_namedtuple({
         'name': 'Role',
         'domain': [
             {
@@ -196,7 +196,7 @@ PEOPLE_GROUP_ROLES = PeopleGroup.from_config(
 
 PEOPLE_GROUP_FAMILY_SIZES = PeopleGroup.from_config(
     'family_size',
-    Box({
+    GPFConfigParser._dict_to_namedtuple({
         'name': 'Family Size',
         'domain': [
             {
@@ -218,7 +218,7 @@ PEOPLE_GROUP_FAMILY_SIZES = PeopleGroup.from_config(
 
 PEOPLE_GROUP_SEXES = PeopleGroup.from_config(
     'sex',
-    Box({
+    GPFConfigParser._dict_to_namedtuple({
         'name': 'Sex',
         'domain': [
             {
@@ -243,7 +243,7 @@ PEOPLE_GROUP_SEXES = PeopleGroup.from_config(
             'color': '#aaaaaa',
         },
         'source': 'sex',
-    }, default_box=True))
+    }))
 
 
 PEOPLE_GROUP_ROLES_SEXES = PeopleMultiGroup([
@@ -254,7 +254,7 @@ PEOPLE_GROUP_ROLES_SEXES = PeopleMultiGroup([
 
 PEOPLE_GROUP_STATUS = PeopleGroup.from_config(
     'status',
-    Box({
+    GPFConfigParser._dict_to_namedtuple({
         'name': 'Status',
         'domain': [
             {
@@ -279,7 +279,7 @@ PEOPLE_GROUP_STATUS = PeopleGroup.from_config(
             'color': '#bbbbbb',
         },
         'source': 'status',
-    }, default_box=True))
+    }))
 
 
 class FamiliesGroup(PeopleGroup):

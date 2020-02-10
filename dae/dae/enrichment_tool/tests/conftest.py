@@ -23,7 +23,7 @@ def variants_db_fixture(local_gpf_instance):
 
 @pytest.fixture(scope='session')
 def f1_trio_enrichment_config(variants_db_fixture):
-    return variants_db_fixture.get_config('f1_trio')
+    return variants_db_fixture.get_config('f1_trio').enrichment
 
 
 @pytest.fixture(scope='session')

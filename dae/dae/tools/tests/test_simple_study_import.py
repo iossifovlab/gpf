@@ -15,8 +15,8 @@ def test_import_denovo_dae_style_into_impala(
     genotype_storage_id = 'test_impala'
     study_id = 'test_denovo_dae_style'
 
-    storage_config = default_dae_config.storage[genotype_storage_id]
-    assert storage_config.type == 'impala'
+    storage_config = getattr(default_dae_config.storage, genotype_storage_id)
+    assert storage_config.storage_type == 'impala'
     impala_storage = ImpalaGenotypeStorage(storage_config)
 
     impala_storage.impala_drop_study_tables(
@@ -38,8 +38,8 @@ def test_import_denovo_dae_style_into_impala(
 
     main(argv, gpf_instance_2013)
 
-    storage_config = default_dae_config.storage[genotype_storage_id]
-    assert storage_config.type == 'impala'
+    storage_config = getattr(default_dae_config.storage, genotype_storage_id)
+    assert storage_config.storage_type == 'impala'
 
     impala_storage = ImpalaGenotypeStorage(storage_config)
     fvars = impala_storage.build_backend(
@@ -60,8 +60,8 @@ def test_import_comp_vcf_into_impala(
     study_id = 'test_comp_vcf'
     genotype_storage_id = 'test_impala'
 
-    storage_config = default_dae_config.storage[genotype_storage_id]
-    assert storage_config.type == 'impala'
+    storage_config = getattr(default_dae_config.storage, genotype_storage_id)
+    assert storage_config.storage_type == 'impala'
     impala_storage = ImpalaGenotypeStorage(storage_config)
 
     impala_storage.impala_drop_study_tables(
@@ -97,8 +97,8 @@ def test_import_comp_denovo_into_impala(
     study_id = 'test_comp_denovo'
     genotype_storage_id = 'test_impala'
 
-    storage_config = default_dae_config.storage[genotype_storage_id]
-    assert storage_config.type == 'impala'
+    storage_config = getattr(default_dae_config.storage, genotype_storage_id)
+    assert storage_config.storage_type == 'impala'
     impala_storage = ImpalaGenotypeStorage(storage_config)
 
     impala_storage.impala_drop_study_tables(
@@ -140,8 +140,8 @@ def test_import_comp_all_into_impala(
     study_id = 'test_comp_all'
     genotype_storage_id = 'test_impala'
 
-    storage_config = default_dae_config.storage[genotype_storage_id]
-    assert storage_config.type == 'impala'
+    storage_config = getattr(default_dae_config.storage, genotype_storage_id)
+    assert storage_config.storage_type == 'impala'
     impala_storage = ImpalaGenotypeStorage(storage_config)
 
     impala_storage.impala_drop_study_tables(
@@ -188,8 +188,8 @@ def test_import_denovo_dae_style_into_filesystem(
     genotype_storage_id = 'test_filesystem'
     study_id = 'test_denovo_dae_style'
 
-    storage_config = default_dae_config.storage[genotype_storage_id]
-    assert storage_config.type == 'filesystem'
+    storage_config = getattr(default_dae_config.storage, genotype_storage_id)
+    assert storage_config.storage_type == 'filesystem'
     genotype_storage = FilesystemGenotypeStorage(storage_config)
     assert genotype_storage
 
@@ -208,8 +208,8 @@ def test_import_denovo_dae_style_into_filesystem(
 
     main(argv, gpf_instance_2013)
 
-    storage_config = default_dae_config.storage[genotype_storage_id]
-    assert storage_config.type == 'filesystem'
+    storage_config = getattr(default_dae_config.storage, genotype_storage_id)
+    assert storage_config.storage_type == 'filesystem'
 
     gpf_instance_2013.reload()
     study = gpf_instance_2013._variants_db.get_study(study_id)
@@ -233,8 +233,8 @@ def test_import_denovo_dae_style_denov_sep_into_filesystem(
     genotype_storage_id = 'test_filesystem'
     study_id = 'test_denovo_dae_style'
 
-    storage_config = default_dae_config.storage[genotype_storage_id]
-    assert storage_config.type == 'filesystem'
+    storage_config = getattr(default_dae_config.storage, genotype_storage_id)
+    assert storage_config.storage_type == 'filesystem'
     genotype_storage = FilesystemGenotypeStorage(storage_config)
     assert genotype_storage
 
@@ -256,8 +256,8 @@ def test_import_denovo_dae_style_denov_sep_into_filesystem(
 
     main(argv, gpf_instance_2013)
 
-    storage_config = default_dae_config.storage[genotype_storage_id]
-    assert storage_config.type == 'filesystem'
+    storage_config = getattr(default_dae_config.storage, genotype_storage_id)
+    assert storage_config.storage_type == 'filesystem'
 
     gpf_instance_2013.reload()
     study = gpf_instance_2013._variants_db.get_study(study_id)
@@ -282,8 +282,8 @@ def test_import_iossifov2014_filesystem(
     genotype_storage_id = 'test_filesystem'
     study_id = 'test_denovo_iossifov2014_fs'
 
-    storage_config = default_dae_config.storage[genotype_storage_id]
-    assert storage_config.type == 'filesystem'
+    storage_config = getattr(default_dae_config.storage, genotype_storage_id)
+    assert storage_config.storage_type == 'filesystem'
     genotype_storage = FilesystemGenotypeStorage(storage_config)
     assert genotype_storage
 
@@ -302,8 +302,8 @@ def test_import_iossifov2014_filesystem(
 
     main(argv, gpf_instance_2013)
 
-    storage_config = default_dae_config.storage[genotype_storage_id]
-    assert storage_config.type == 'filesystem'
+    storage_config = getattr(default_dae_config.storage, genotype_storage_id)
+    assert storage_config.storage_type == 'filesystem'
 
     gpf_instance_2013.reload()
     study = gpf_instance_2013._variants_db.get_study(study_id)
@@ -330,8 +330,8 @@ def test_import_comp_all_into_filesystem(
     study_id = 'test_comp_all_fs'
     genotype_storage_id = 'test_filesystem'
 
-    storage_config = default_dae_config.storage[genotype_storage_id]
-    assert storage_config.type == 'filesystem'
+    storage_config = getattr(default_dae_config.storage, genotype_storage_id)
+    assert storage_config.storage_type == 'filesystem'
 
     argv = [
         pedigree_filename,
@@ -349,8 +349,8 @@ def test_import_comp_all_into_filesystem(
 
     main(argv, gpf_instance_2013)
 
-    storage_config = default_dae_config.storage[genotype_storage_id]
-    assert storage_config.type == 'filesystem'
+    storage_config = getattr(default_dae_config.storage, genotype_storage_id)
+    assert storage_config.storage_type == 'filesystem'
 
     gpf_instance_2013.reload()
     study = gpf_instance_2013._variants_db.get_study(study_id)
@@ -371,8 +371,8 @@ def test_add_chrom_prefix_simple(
     study_id = 'test_comp_all_fs_prefix'
     genotype_storage_id = 'test_filesystem'
 
-    storage_config = default_dae_config.storage[genotype_storage_id]
-    assert storage_config.type == 'filesystem'
+    storage_config = getattr(default_dae_config.storage, genotype_storage_id)
+    assert storage_config.storage_type == 'filesystem'
 
     argv = [
         pedigree_filename,
@@ -391,8 +391,8 @@ def test_add_chrom_prefix_simple(
 
     main(argv, gpf_instance_2013)
 
-    storage_config = default_dae_config.storage[genotype_storage_id]
-    assert storage_config.type == 'filesystem'
+    storage_config = getattr(default_dae_config.storage, genotype_storage_id)
+    assert storage_config.storage_type == 'filesystem'
 
     gpf_instance_2013.reload()
 

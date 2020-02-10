@@ -41,10 +41,10 @@ class GPFInstance(object):
             defaults=None, load_eagerly=False):
 
         if dae_config is None:
-            if defaults:
-                print('DEFAULTS GOTTA BE FIXED!')
-                print(defaults)
-                assert False
+            # FIXME Merge defaults with newly-loaded config
+            assert not defaults, defaults
+            if work_dir is None:
+                work_dir = os.environ["DAE_DB_DIR"]
             config_file = os.path.join(work_dir, config_file)
             dae_config = GPFConfigParser.load_config(
                 config_file, dae_conf_schema

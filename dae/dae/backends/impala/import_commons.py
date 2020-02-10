@@ -314,10 +314,9 @@ class Variants2ParquetTool:
         # make subcommand
         make_parser = subparsers.add_parser('make')
         cls.cli_common_arguments(gpf_instance, make_parser)
+        
         default_genotype_storage_id = \
-            gpf_instance.dae_config.\
-            get('genotype_storage', {}).\
-            get('default', None)
+            gpf_instance.dae_config.genotype_storage.default
 
         make_parser.add_argument(
             '--genotype-storage', '--gs',

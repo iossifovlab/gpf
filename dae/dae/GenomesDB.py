@@ -42,7 +42,7 @@ class GenomesDB(object):
         ]
         regions_y = [
             Region.from_str(region)
-            for region in self.config.PARs.regions.X
+            for region in self.config.PARs.regions.Y
         ]
         regions = {"X": regions_x, "Y": regions_y}
 
@@ -65,7 +65,7 @@ class GenomesDB(object):
     def get_gene_model_id(self, genome_id=None):
         if not genome_id:
             genome_id = self.default_genome
-        gene_model_id = self.config.genome[genome_id].default_gene_model
+        gene_model_id = getattr(self.config.genome, genome_id).default_gene_model
 
         return gene_model_id
 

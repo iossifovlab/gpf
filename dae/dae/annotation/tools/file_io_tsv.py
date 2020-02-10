@@ -260,7 +260,7 @@ class TabixReader(TSVFormat):
         assert self.is_gzip(self.filename)
         assert os.path.exists("{}.tbi".format(self.filename))
         self.separator = '\t'
-        self.region = self.options.region
+        self.region = self.options.region or None
         self._has_chrom_prefix = None
 
     def _region_reset(self, region):

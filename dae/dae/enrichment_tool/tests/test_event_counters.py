@@ -92,8 +92,8 @@ def test_counter_base_counters():
     counters = CounterBase.counters()
 
     assert len(counters) == 2
-    assert counters['enrichmentEventsCounting'] == EventsCounter
-    assert counters['enrichmentGeneCounting'] == GeneEventsCounter
+    assert counters['enrichment_events_counting'] == EventsCounter
+    assert counters['enrichment_gene_counting'] == GeneEventsCounter
 
 
 def test_events_counter(f1_trio):

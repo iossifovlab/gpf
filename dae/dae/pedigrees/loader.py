@@ -24,12 +24,13 @@ PED_COLUMNS_REQUIRED = (
 
 class FamiliesLoader:
 
-    def __init__(self, families_filename, params={}, ped_sep='\t'):
+    def __init__(self, families_filename, params=dict(), ped_sep='\t'):
 
         self.filename = families_filename
+        # TODO FIXME Params should be able to accept namedtuple instances
         self.params = params
         self.params['ped_sep'] = ped_sep
-        self.file_format = params.get('ped_file_format', 'pedigree')
+        self.file_format = self.params.get('ped_file_format', 'pedigree')
 
     @staticmethod
     def load_pedigree_file(pedigree_filename, pedigree_format={}):
