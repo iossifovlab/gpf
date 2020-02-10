@@ -160,11 +160,13 @@ study_config_schema = {
         "type": "string",
         "check_with": validate_existing_path,
         "coerce": "abspath",
+        "default": "."
     },
     "conf_dir": {
         "type": "string",
         "check_with": validate_existing_path,
         "coerce": "abspath",
+        "default": "."
     },
     "phenotype_data": {"type": "string"},
     "phenotype_browser": {"type": "boolean"},

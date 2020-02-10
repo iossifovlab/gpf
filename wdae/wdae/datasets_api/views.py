@@ -30,7 +30,7 @@ class DatasetView(QueryBaseView):
             datasets = self.variants_db.get_all_genotype_data_wrappers()
             res = sorted(list(dataset.get_genotype_data_group_description()
                          for dataset in datasets),
-                         key=lambda dataset: dataset['name'] or dataset['id'])
+                         key=lambda dataset: dataset['name'])
 
             res = [self.augment_accessibility(ds, user) for ds in res]
             res = [self.augment_with_groups(ds) for ds in res]

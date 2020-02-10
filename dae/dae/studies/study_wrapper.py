@@ -753,21 +753,53 @@ class StudyWrapper(object):
 
         return present_in_role[0] if present_in_role else {}
 
-    @staticmethod
-    def _get_description_keys():
-        return [
+    def get_genotype_data_group_description(self):
+        keys = [
             'id', 'name', 'description', 'phenotype_browser', 'phenotype_tool',
             'phenotype_data', 'enrichment_tool', 'people_group', 'common_report',
             'study_type', 'studies', 'has_present_in_child', 'has_present_in_parent'
         ]
-
-    def get_genotype_data_group_description(self):
-        keys = self._get_description_keys()
         # TODO Add domain to pheno filters
         result = {key: getattr(self.config, key, None) for key in keys}
-        result['genotype_browser_config'] = self.config.genotype_browser
+        result['genotype_browser_config'] = GPFConfigParser._namedtuple_to_dict(self.config.genotype_browser)
         result['genotype_browser'] = self.config.genotype_browser.enabled or False
-        return result
+
+        def camelize(input_dict):
+            new_result = dict()
+            for k, v in input_dict.items():
+                new_key = k.split('_')
+                new_key = ''.join([new_key[0], *[w.title() for w in new_key[1:]]])
+                if isinstance(v, dict):
+                    v = camelize(v)
+                elif isinstance(v, list):
+                    newlist = []
+                    for item in v:
+                        if isinstance(item, tuple):
+                            newitem = camelize(GPFConfigParser._namedtuple_to_dict(item))
+                        else:
+                            newitem = item
+                        newlist.append(newitem)
+                    v = newlist
+                new_result[new_key] = v
+            return new_result
+
+        # new_result = dict()
+        # for k, v in result.items():
+        #     new_key = k.split('_')
+        #     new_key = ''.join([new_key[0], *[w.title() for w in new_key[1:]]])
+        #     new_result[new_key] = v
+
+        new_result = camelize(result)
+
+        new_result['studyTypes'] = new_result['studyType']
+        new_result['commonReport'] = camelize(GPFConfigParser._namedtuple_to_dict(new_result['commonReport']))
+        new_result['peopleGroup'] = camelize(GPFConfigParser._namedtuple_to_dict(new_result['peopleGroup']))
+        new_result['name'] = new_result['name'] or new_result['id']
+
+
+        from pprint import pprint
+        pprint(new_result)
+        return new_result
 
     def _get_wdae_member(self, member, people_group, best_st):
         return [
