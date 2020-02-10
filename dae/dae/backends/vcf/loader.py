@@ -388,6 +388,10 @@ class VcfLoader(VariantsGenotypesLoader):
         Returns true if left vcf variant position in file is
         equal to right vcf variant position in file
         """
+        assert lhs is not None
+
+        if rhs is None:
+            return False
         return lhs.CHROM == rhs.CHROM and lhs.POS == rhs.POS
 
     def _find_current_vcf_variant(self, vcf_variants):
