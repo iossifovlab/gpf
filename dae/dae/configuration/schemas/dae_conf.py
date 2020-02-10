@@ -61,6 +61,8 @@ dae_conf_schema = {
             "data_dir": {"type": "string"},
         }
     },
+    # FIXME This is only used for the default genotype storage param
+    # It should be a key in the root section
     "genotype_storage": {
         "type": "dict",
         "schema": {"default": {"type": "string"}},
