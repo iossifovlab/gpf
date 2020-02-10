@@ -165,6 +165,13 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
             family_bin_size = int(config['family_bin']['family_bin_size'])
         if 'coding_bin' in config:
             coding_effect_types = config['coding_bin']['coding_effect_types']
+            coding_effect_types = [
+                et.strip() for et in coding_effect_types.split(',')
+            ]
+            coding_effect_types = [
+                et for et in coding_effect_types if et
+            ]
+
         if 'frequency_bin' in config:
             rare_boundary = int(config['frequency_bin']['rare_boundary'])
 
@@ -522,9 +529,12 @@ class VariantsParquetWriter():
             if family_variant_index % 1000 == 0:
                 elapsed = time.time() - self.start
                 print(
-                    'Bucket {}: {} family variants imported for {:.2f} sec'.
+                    'Bucket {}; {}.{}: '
+                    '{} family variants imported for {:.2f} sec'.
                     format(
                         self.bucket_index,
+                        summary_variant.chromosome,
+                        summary_variant.position,
                         family_variant_index, elapsed),
                     file=sys.stderr)
 

@@ -46,7 +46,7 @@ class GenotypeHelper(object):
                 if iid in seen:
                     continue
 
-                if p.get_attr(self.people_group.source) != \
+                if str(p.get_attr(self.people_group.source)) != \
                         self.people_group_value:
                     continue
 

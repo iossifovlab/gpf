@@ -3,7 +3,6 @@ import copy
 from collections import defaultdict
 from collections.abc import Mapping
 
-import numpy as np
 import pandas as pd
 
 from dae.variants.attributes import Role, Sex, Status

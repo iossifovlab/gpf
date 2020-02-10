@@ -141,7 +141,7 @@ def test_flexible_pedigree_read_no_header(fixture_dirname):
     )
     pedigree_df = FamiliesLoader.flexible_pedigree_read(
         absolute_filepath,
-        ped_has_header=False,
+        ped_no_header=True,
         ped_family=0,
         ped_person=1,
         ped_dad=2,

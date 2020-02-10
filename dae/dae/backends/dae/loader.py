@@ -134,8 +134,8 @@ class DenovoLoader(VariantsGenotypesLoader):
 
         return genotype
 
-    @staticmethod
-    def cli_arguments(parser):
+    @classmethod
+    def cli_arguments(cls, parser):
         parser.add_argument(
             'denovo_file', type=str,
             metavar='<variants filename>',
@@ -143,8 +143,8 @@ class DenovoLoader(VariantsGenotypesLoader):
         )
         DenovoLoader.cli_options(parser)
 
-    @staticmethod
-    def cli_options(parser):
+    @classmethod
+    def cli_options(cls, parser):
         variant_group = parser.add_argument_group('variant specification')
 
         variant_group.add_argument(
@@ -208,9 +208,14 @@ class DenovoLoader(VariantsGenotypesLoader):
             help='Add specified prefix to each chromosome name in '
             'variants file'
         )
+        parser.add_argument(
+            '--del-chrom-prefix', type=str, default=None,
+            help='Removes specified prefix from each chromosome name in '
+            'variants file'
+        )
 
-    @staticmethod
-    def cli_defaults():
+    @classmethod
+    def cli_defaults(cls):
         return {
             'denovo_variant': 'variant',
             'denovo_ref': None,
@@ -222,11 +227,12 @@ class DenovoLoader(VariantsGenotypesLoader):
             'denovo_best_state': 'bestState',
             'denovo_person_id': None,
             'add_chrom_prefix': None,
+            'del_chrom_prefix': None,
             'denovo_sep': '\t',
         }
 
-    @staticmethod
-    def build_cli_arguments(params):
+    @classmethod
+    def build_cli_arguments(cls, params):
         param_defaults = DenovoLoader.cli_defaults()
         result = []
         for k, v in params.items():
@@ -238,8 +244,8 @@ class DenovoLoader(VariantsGenotypesLoader):
 
         return ' '.join(result)
 
-    @staticmethod
-    def parse_cli_arguments(argv):
+    @classmethod
+    def parse_cli_arguments(cls, argv):
         if argv.denovo_location and (argv.denovo_chrom or argv.denovo_pos):
             print(
                 "--denovo-location and (--denovo-chorm, --denovo-pos) "
@@ -289,6 +295,9 @@ class DenovoLoader(VariantsGenotypesLoader):
             if not argv.denovo_best_state:
                 argv.denovo_best_state = 'bestState'
 
+        if argv.denovo_sep is None:
+            argv.denovo_sep = '\t'
+
         params = {
             'denovo_location': argv.denovo_location,
             'denovo_variant': argv.denovo_variant,
@@ -300,6 +309,7 @@ class DenovoLoader(VariantsGenotypesLoader):
             'denovo_family_id': argv.denovo_family_id,
             'denovo_best_state': argv.denovo_best_state,
             'add_chrom_prefix': argv.add_chrom_prefix,
+            'del_chrom_prefix': argv.del_chrom_prefix,
             'denovo_sep': argv.denovo_sep,
         }
 
@@ -389,6 +399,9 @@ class DenovoLoader(VariantsGenotypesLoader):
         if not (denovo_person_id or (denovo_family_id and denovo_best_state)):
             denovo_family_id = 'familyId'
             denovo_best_state = 'bestState'
+
+        if denovo_sep is None:
+            denovo_sep = '\t'
 
         raw_df = pd.read_csv(
             filepath,
@@ -513,7 +526,9 @@ class DaeTransmittedFamiliesGenotypes(FamiliesGenotypes):
 
     def family_genotype_iterator(self):
         for family_id, bs in self.families_best_states.items():
-            fam = self.families[family_id]
+            fam = self.families.get(family_id)
+            if fam is None:
+                continue
             yield fam, bs
 
     def full_families_genotypes(self):
@@ -563,6 +578,12 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
 
         with pysam.Tabixfile(self.summary_filename) as tbx:
             self.chromosomes = list(tbx.contigs)
+
+    def reset_regions(self, regions):
+        if regions is None or isinstance(regions, str):
+            self.regions = [regions]
+        else:
+            self.regions = regions
 
     @staticmethod
     def _build_toomany_filename(summary_filename):
@@ -738,15 +759,16 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
                     yield summary_variant, family_variants
                     summary_index += 1
 
-    @staticmethod
-    def cli_defaults():
+    @classmethod
+    def cli_defaults(cls):
         return {
             'dae_include_reference_genotypes': False,
             'add_chrom_prefix': None,
+            'del_chrom_prefix': None,
         }
 
-    @staticmethod
-    def build_cli_arguments(params):
+    @classmethod
+    def build_cli_arguments(cls, params):
         param_defaults = DaeTransmittedLoader.cli_defaults()
         result = []
         for key, value in params.items():
@@ -761,8 +783,8 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
                     result.append(f'{value}')
         return ' '.join(result)
 
-    @staticmethod
-    def cli_arguments(parser):
+    @classmethod
+    def cli_arguments(cls, parser):
         parser.add_argument(
             'summary_filename', type=str,
             metavar='<summary filename>',
@@ -781,14 +803,20 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
             help='Add specified prefix to each chromosome name in '
             'variants file'
         )
+        parser.add_argument(
+            '--del-chrom-prefix', type=str, default=None,
+            help='Removes specified prefix from each chromosome name in '
+            'variants file'
+        )
 
-    @staticmethod
-    def parse_cli_arguments(argv):
+    @classmethod
+    def parse_cli_arguments(cls, argv):
         filename = argv.summary_filename
 
         params = {
             'dae_include_reference_genotypes':
             str2bool(argv.dae_include_reference_genotypes),
             'add_chrom_prefix': argv.add_chrom_prefix,
+            'del_chrom_prefix': argv.del_chrom_prefix,
         }
         return filename, params

@@ -156,7 +156,6 @@ class ImpalaGenotypeStorage(GenotypeStorage):
             parquet_filenames = ParquetManager.build_parquet_filenames(
                 output, bucket_index=bucket_index, study_id=study_id
             )
-
             ParquetManager.variants_to_parquet_filename(
                 variant_loader, parquet_filenames.variant,
                 bucket_index=bucket_index

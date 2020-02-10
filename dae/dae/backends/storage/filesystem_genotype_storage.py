@@ -1,5 +1,4 @@
 import os
-import copy
 import shutil
 import time
 
@@ -49,11 +48,13 @@ class FilesystemGenotypeStorage(GenotypeStorage):
 
         else:
             start = time.time()
+            ped_params = GPFConfigParser._namedtuple_to_dict(
+                study_config.genotype_storage.files.pedigree.params
+            )
             families_loader = FamiliesLoader(
                 study_config.genotype_storage.files.pedigree.path,
-                params=GPFConfigParser._namedtuple_to_dict(
-                    study_config.genotype_storage.files.pedigree.params
-                ))
+                params=ped_params
+            )
             families = families_loader.load()
             elapsed = time.time() - start
             print(f"Families loaded in in {elapsed:.2f} sec")
@@ -90,9 +91,6 @@ class FilesystemGenotypeStorage(GenotypeStorage):
             variant_loaders=None,
             **kwargs):
 
-        # assert len(variant_loaders) == 1, \
-        #     'Filesystem genotype storage supports only one variant file'
-
         families_config = self._import_families_file(
             study_id, families_loader)
         variants_config = self._import_variants_files(
@@ -113,13 +111,13 @@ class FilesystemGenotypeStorage(GenotypeStorage):
             os.path.basename(source_filename)
         )
 
-        params = copy.deepcopy(families_loader.params)
-        params['file_format'] = families_loader.file_format
+        params = families_loader.build_cli_params(families_loader.params)
+        params = "{" + ", ".join([
+            '{} = "{}"'.format(k, str(v).replace('\t', '\\t'))
+            for k, v in params.items()]) + "}"
         config = STUDY_PEDIGREE_TEMPLATE.format(
             path=destination_filename,
-            params="{" + ", ".join([
-                '{} = "{}"'.format(k, str(v).replace('\t', '\\t'))
-                for k, v in params.items()]) + "}"
+            params=params
         )
 
         os.makedirs(
@@ -131,7 +129,6 @@ class FilesystemGenotypeStorage(GenotypeStorage):
     def _import_variants_files(self, study_id, loaders):
         result_config = []
         for index, variants_loader in enumerate(loaders):
-            # assert isinstance(variants_loader, AnnotationPipelineDecorator)
             assert variants_loader.get_attribute("annotation_schema") \
                 is not None
 
@@ -142,6 +139,7 @@ class FilesystemGenotypeStorage(GenotypeStorage):
                 'data',
                 os.path.basename(source_filename)
             )
+            params = variants_loader.build_cli_params(variants_loader.params)
             params = ", ".join([
                 '{} = "{}"'.format(k, v)
                 for k, v in variants_loader.params.items() if v is not None])
