@@ -67,7 +67,7 @@ def construct_import_annotation_pipeline(
     return pipeline
 
 
-class MakefileGenerator:
+class MakefilePartitionHelper:
 
     def __init__(
             self, partition_descriptor, genome,
@@ -252,6 +252,68 @@ class MakefileGenerator:
             reports_command, output=output)
 
 
+class MakefileGenerator:
+
+    def __init__(self, gpf_instance, variants_loaders_class, tool_command):
+        self.gpf_instance = gpf_instance
+        self.tool_command = tool_command
+        self.VARIANTS_LOADERS_CLASS = variants_loaders_class
+
+        self.study_id = None
+        self.variants_loaders = None
+        self.families_loader = None
+        self._families = None
+        self.partition_description = None
+
+    @property
+    def families(self):
+        if self._families is None:
+            assert self.families_loader is not None
+            self._families = self.families_loader.load()
+        return self._families
+
+    def build_familes_loader(self, argv):
+        families_filename, families_params = \
+            FamiliesLoader.parse_cli_arguments(argv)
+        families_loader = FamiliesLoader(
+            families_filename, params=families_params)
+        self.families_loader = families_loader
+        return self
+
+    def build_variants_loaders(self, argv):
+        variants_filenames, variants_params = \
+            self.VARIANTS_LOADERS_CLASS.parse_cli_arguments(argv)
+
+        assert argv.files_replacements is None
+        variants_loader = self.VARIANTS_LOADERS_CLASS(
+            self.families, variants_filenames,
+            params=variants_params,
+            genome=self.gpf_instance.genomes_db.get_genome())
+        self.variants_loaders = [variants_loader]
+        return self
+
+    def build_study_id(self, argv):
+        assert self.families_loader is not None
+        if argv.study_id is not None:
+            study_id = argv.study_id
+        else:
+            families_filename = self.families_loader.filename
+            study_id, _ = os.path.splitext(os.path.basename(families_filename))
+        self.study_id = study_id
+        return self
+
+    def build_partition_description(self, argv):
+        if argv.partition_description is not None:
+            partition_description = ParquetPartitionDescriptor.from_config(
+                argv.partition_description,
+                root_dirname=argv.output
+            )
+        else:
+            partition_description = NoPartitionDescriptor(argv.output)
+        self.partition_description = partition_description
+        return self
+
+
 class Variants2ParquetTool:
 
     VARIANTS_LOADER_CLASS = None
@@ -301,7 +363,7 @@ class Variants2ParquetTool:
         )
 
     @classmethod
-    def cli_arguments(cls, gpf_instance):
+    def cli_arguments_parser(cls, gpf_instance):
         parser = argparse.ArgumentParser(
             description='Convert variants file to parquet',
             conflict_handler='resolve',
@@ -367,6 +429,20 @@ class Variants2ParquetTool:
             help='specified which targets to build; by default target '
             'chromosomes are extracted from variants file and/or default '
             'reference genome used in GPF instance; '
+            '[default: None]',
+        )
+
+        make_parser.add_argument(
+            '--files-replacements', '--fr',
+            type=str,
+            dest='files_replacements',
+            default=None,
+            help='specified comma separated list of filename template '
+            'substitutions; when specified variant filename(s) are treated '
+            'as templates and each occurent of `{fr}` is replaced '
+            'consecutively by elements of files replacements list; '
+            'by default the list is empty and no substitution '
+            'takes place. '
             '[default: None]',
         )
 
@@ -586,7 +662,7 @@ class Variants2ParquetTool:
         add_chrom_prefix = argv.add_chrom_prefix
         del_chrom_prefix = argv.del_chrom_prefix
 
-        generator = MakefileGenerator(
+        generator = MakefilePartitionHelper(
             partition_description,
             gpf_instance.genomes_db.get_genome(),
             add_chrom_prefix=add_chrom_prefix,
