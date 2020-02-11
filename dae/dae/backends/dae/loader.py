@@ -17,6 +17,8 @@ from dae.utils.helpers import str2bool
 from dae.utils.dae_utils import dae2vcf_variant
 
 from dae.pedigrees.family import Family, FamiliesData
+from dae.variants.attributes import Inheritance
+
 from dae.variants.variant import SummaryVariantFactory
 from dae.variants.family_variant import FamilyVariant
 
@@ -91,7 +93,6 @@ class DenovoLoader(VariantsGenotypesLoader):
 
     def _full_variants_iterator_impl(self):
         self.regions = [Region.from_str(r) for r in self.regions]
-        print("regions:", self.regions)
 
         for index, rec in enumerate(self.denovo_df.to_dict(orient='records')):
             family_id = rec.pop('family_id')
@@ -114,10 +115,24 @@ class DenovoLoader(VariantsGenotypesLoader):
 
             family_variants = []
             for fam, gt, bs in family_genotypes.family_genotype_iterator():
-                family_variants.append(
-                    FamilyVariant(summary_variant, fam, gt, bs))
+                fv = FamilyVariant(summary_variant, fam, gt, bs)
+                family_variants.append(fv)
 
             yield summary_variant, family_variants
+
+    def full_variants_iterator(self):
+        full_iterator = super(DenovoLoader, self).full_variants_iterator()
+        for summary_vairants, family_variants in full_iterator:
+            for fv in family_variants:
+                for fa in fv.alt_alleles:
+                    inheritance = [
+                        Inheritance.denovo if mem is not None else inh
+                        for inh, mem in zip(
+                            fa.inheritance_in_members, fa.variant_in_members)
+                    ]
+                    fa._inheritance_in_members = inheritance
+
+            yield summary_vairants, family_variants
 
     @staticmethod
     def split_location(location):
