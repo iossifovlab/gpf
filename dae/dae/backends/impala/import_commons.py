@@ -70,7 +70,7 @@ def construct_import_annotation_pipeline(
 class MakefileGenerator:
 
     def __init__(
-            self, partition_descriptor, genome, 
+            self, partition_descriptor, genome,
             add_chrom_prefix=None, del_chrom_prefix=None):
 
         self.genome = genome
