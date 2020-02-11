@@ -2,6 +2,8 @@ import pytest
 import pandas as pd
 import numpy as np
 
+from dae.variants.attributes import Inheritance
+
 from dae.pedigrees.loader import FamiliesLoader
 from dae.pedigrees.family import FamiliesData
 
@@ -219,23 +221,6 @@ def test_read_variants_person_ids(
         denovo_ref='ref', denovo_alt='alt', denovo_person_id='personId'
     )
 
-    # expected_df = pd.DataFrame({
-    #     'chrom': ['1', '2', '2'],
-    #     'position': [123, 234, 235],
-    #     'reference': ['A', 'T', 'G'],
-    #     'alternative': ['G', 'C', 'A'],
-    #     'family_id': ['f1', 'f1', 'f2'],
-    #     'genotype': [
-    #         np.array([[0, 0, 0, 0, 0], [0, 0, 0, 1, 1]]),
-    #         np.array([[0, 0, 0, 0, 0], [0, 0, 0, 1, 0]]),
-    #         np.array([[0, 0, 0, 0], [0, 0, 0, 1]]),
-    #     ],
-    #     'best_state': [
-    #         None,
-    #         None,
-    #         None,
-    #     ],
-    # })
     expected_df = pd.DataFrame({
         'chrom': ['1', '2', '2', '3'],
         'position': [123, 234, 235, 345],
@@ -317,3 +302,78 @@ def test_read_variants_genome_assertion(fixture_dirname, fake_families):
         )
 
     assert str(excinfo.value) == 'You must provide a genome object!'
+
+
+@pytest.mark.parametrize('filename,params', [
+    ('variants_DAE_style.tsv',
+     {
+        'denovo_location': 'location',
+        'denovo_variant': 'variant',
+        'denovo_family_id': 'familyId',
+        'denovo_best_state': 'bestState',
+     }),
+    ('variants_VCF_style.tsv',
+     {
+        'denovo_chrom': 'chrom',
+        'denovo_pos': 'pos',
+        'denovo_ref': 'ref',
+        'denovo_alt': 'alt',
+        'denovo_family_id': 'familyId',
+        'denovo_best_state': 'bestState'
+     }),
+    ('variants_mixed_style_A.tsv',
+     {
+        'denovo_location': 'location',
+        'denovo_ref': 'ref',
+        'denovo_alt': 'alt',
+        'denovo_family_id': 'familyId',
+        'denovo_best_state': 'bestState'
+     })
+])
+def test_denovo_loader(
+        genome_2013, fixture_dirname, fake_families, filename, params):
+    denovo_filename = fixture_dirname(f'denovo_import/{filename}')
+    variants_loader = DenovoLoader(
+        fake_families, denovo_filename,
+        genome=genome_2013,
+        params=params
+    )
+
+    vs = list(variants_loader.full_variants_iterator())
+    print(vs)
+
+    def falt_allele(index):
+        return vs[index][1][0].alt_alleles[0]
+    fa = falt_allele(0)
+    print(fa, fa.variant_in_members, fa.inheritance_in_members)
+    assert fa.inheritance_in_members[2] == Inheritance.denovo
+    assert fa.inheritance_in_members[4] == Inheritance.denovo
+    assert fa.inheritance_in_members == \
+        [Inheritance.unknown, Inheritance.unknown, Inheritance.denovo, Inheritance.missing, Inheritance.denovo]
+
+    fa = falt_allele(1)
+    print(fa, fa.variant_in_members, fa.inheritance_in_members)
+    assert fa.inheritance_in_members[2] == Inheritance.denovo
+    assert fa.inheritance_in_members == \
+        [Inheritance.unknown, Inheritance.unknown, Inheritance.denovo, Inheritance.missing, Inheritance.missing]
+
+    fa = falt_allele(2)
+    print(fa, fa.variant_in_members, fa.inheritance_in_members)
+    assert fa.inheritance_in_members[3] == Inheritance.denovo
+    assert fa.inheritance_in_members == \
+        [Inheritance.unknown, Inheritance.unknown, Inheritance.missing, Inheritance.denovo] 
+
+    fa = falt_allele(3)
+    print(fa, fa.variant_in_members, fa.inheritance_in_members)
+
+    assert fa.inheritance_in_members[0] == Inheritance.denovo
+    assert fa.inheritance_in_members == \
+        [Inheritance.denovo]
+
+    # for sv, fvs in variants_loader.full_variants_iterator():
+    #     print(sv)
+    #     for fv in fvs:
+    #         print('\t', fv, mat2str(fv.gt))
+    #         for fa in fv.alt_alleles:
+    #             print('\t', '\t', "=>", fa.inheritance_in_members)
+
