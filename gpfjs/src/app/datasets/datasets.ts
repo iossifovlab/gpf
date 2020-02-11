@@ -32,25 +32,26 @@ export class SelectorValue extends IdName {
 }
 
 export class PedigreeSelector extends IdName {
-  static fromJson(json: any): PedigreeSelector {
+  static fromJson(json: any): PedigreeSelector[] {
     if (!json) {
       return undefined;
     }
 
-    return new PedigreeSelector(
-      json['id'],
-      json['name'],
-      json['source'],
-      SelectorValue.fromJson(json['defaultValue']),
-      SelectorValue.fromJsonArray(json['domain']),
-    );
-  }
-  static fromJsonArray(jsonArray: Array<Object>): Array<PedigreeSelector> {
-    if (!jsonArray) {
-      return undefined;
+    const pedigreeSelectors: PedigreeSelector[] = [];
+
+    for (let k in json) {
+      let v = json[k];
+      pedigreeSelectors.push(new PedigreeSelector(
+        k,
+        v['name'],
+        k,
+        SelectorValue.fromJson(v['default']),
+        SelectorValue.fromJsonArray(v['domain']),
+      ))
     }
 
-    return jsonArray.map((json) => PedigreeSelector.fromJson(json));
+    return pedigreeSelectors;
+
   }
 
   constructor(
@@ -189,11 +190,12 @@ export class GenotypeBrowser {
 
   static fromJson(json: any): GenotypeBrowser {
     return new GenotypeBrowser(
-      json['hasPedigreeSelector'],
+      //json['hasPedigreeSelector'],
+      true,
       json['hasPresentInChild'],
       json['hasPresentInParent'],
       json['hasPresentInRole'],
-      json['hasCNV'],
+      json['hasCnv'],
       json['hasComplex'],
       json['hasFamilyFilters'],
       json['hasStudyFilters'],
@@ -236,8 +238,9 @@ export class GenotypeBrowser {
 export class PeopleGroup {
 
   static fromJson(json: any): PeopleGroup {
+    console.log(json);
     return new PeopleGroup(
-      PedigreeSelector.fromJsonArray(json['peopleGroup'])
+      PedigreeSelector.fromJson(json)
     );
   }
 
@@ -251,6 +254,7 @@ export class Dataset extends IdName {
     if (!json) {
       return undefined;
     }
+    console.log(json);
     return new Dataset(
       json['id'],
       json['description'],
@@ -265,7 +269,7 @@ export class Dataset extends IdName {
       json['phenotypeBrowser'],
       json['commonReport'],
       json['genotypeBrowserConfig'] ? GenotypeBrowser.fromJson(json['genotypeBrowserConfig']) : null,
-      json['peopleGroupConfig'] ? PeopleGroup.fromJson(json['peopleGroupConfig']) : null,
+      json['peopleGroup'] ? PeopleGroup.fromJson(json['peopleGroup']) : null,
       UserGroup.fromJsonArray(json['groups']),
     );
   }
