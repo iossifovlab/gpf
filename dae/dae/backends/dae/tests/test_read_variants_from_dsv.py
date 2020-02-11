@@ -228,8 +228,8 @@ def test_read_variants_person_ids(
         'alternative': ['G', 'A', 'A', 'A'],
         'family_id': ['f1', 'f1', 'f2', 'f3'],
         'genotype': [
-            np.array([[0, 0, 0, 0, 0], [0, 0, 0, 1, 1]]),
-            np.array([[0, 0, 0, 0, 0], [0, 0, 0, 1, 0]]),
+            np.array([[0, 0, 0, 0, 0], [0, 0, 1, 0, 1]]),
+            np.array([[0, 0, 0, 0, 0], [0, 0, 1, 0, 0]]),
             np.array([[0, 0, 0, 0], [0, 0, 0, 1]]),
             np.array([[0], [1]]),
         ],
@@ -328,7 +328,41 @@ def test_read_variants_genome_assertion(fixture_dirname, fake_families):
         'denovo_alt': 'alt',
         'denovo_family_id': 'familyId',
         'denovo_best_state': 'bestState'
-     })
+     }),
+    ('variants_mixed_style_B.tsv',
+     {
+        'denovo_chrom': 'chrom',
+        'denovo_pos': 'pos',
+        'denovo_variant': 'variant',
+        'denovo_family_id': 'familyId',
+        'denovo_best_state': 'bestState'
+     }),
+    ('variants_personId_single.tsv',
+     {
+        'denovo_chrom': 'chrom',
+        'denovo_pos': 'pos',
+        'denovo_ref': 'ref',
+        'denovo_alt': 'alt',
+        'denovo_person_id': 'personId'
+     }),
+    ('variants_personId_list.tsv',
+     {
+        'denovo_chrom': 'chrom',
+        'denovo_pos': 'pos',
+        'denovo_ref': 'ref',
+        'denovo_alt': 'alt',
+        'denovo_person_id': 'personId'
+     }),
+    ('variants_different_separator.dsv',
+     {
+        'denovo_sep': '$',
+        'denovo_chrom': 'chrom',
+        'denovo_pos': 'pos',
+        'denovo_ref': 'ref',
+        'denovo_alt': 'alt',
+        'denovo_family_id': 'familyId',
+        'denovo_best_state': 'bestState'
+     }),
 ])
 def test_denovo_loader(
         genome_2013, fixture_dirname, fake_families, filename, params):
@@ -349,19 +383,22 @@ def test_denovo_loader(
     assert fa.inheritance_in_members[2] == Inheritance.denovo
     assert fa.inheritance_in_members[4] == Inheritance.denovo
     assert fa.inheritance_in_members == \
-        [Inheritance.unknown, Inheritance.unknown, Inheritance.denovo, Inheritance.missing, Inheritance.denovo]
+        [Inheritance.unknown, Inheritance.unknown, Inheritance.denovo,
+         Inheritance.missing, Inheritance.denovo]
 
     fa = falt_allele(1)
     print(fa, fa.variant_in_members, fa.inheritance_in_members)
     assert fa.inheritance_in_members[2] == Inheritance.denovo
     assert fa.inheritance_in_members == \
-        [Inheritance.unknown, Inheritance.unknown, Inheritance.denovo, Inheritance.missing, Inheritance.missing]
+        [Inheritance.unknown, Inheritance.unknown, Inheritance.denovo,
+         Inheritance.missing, Inheritance.missing]
 
     fa = falt_allele(2)
     print(fa, fa.variant_in_members, fa.inheritance_in_members)
     assert fa.inheritance_in_members[3] == Inheritance.denovo
     assert fa.inheritance_in_members == \
-        [Inheritance.unknown, Inheritance.unknown, Inheritance.missing, Inheritance.denovo] 
+        [Inheritance.unknown, Inheritance.unknown, Inheritance.missing,
+         Inheritance.denovo]
 
     fa = falt_allele(3)
     print(fa, fa.variant_in_members, fa.inheritance_in_members)
@@ -369,11 +406,3 @@ def test_denovo_loader(
     assert fa.inheritance_in_members[0] == Inheritance.denovo
     assert fa.inheritance_in_members == \
         [Inheritance.denovo]
-
-    # for sv, fvs in variants_loader.full_variants_iterator():
-    #     print(sv)
-    #     for fv in fvs:
-    #         print('\t', fv, mat2str(fv.gt))
-    #         for fa in fv.alt_alleles:
-    #             print('\t', '\t', "=>", fa.inheritance_in_members)
-

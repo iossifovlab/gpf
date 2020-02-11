@@ -134,7 +134,6 @@ class DenovoLoader(VariantsGenotypesLoader):
 
             yield summary_vairants, family_variants
 
-
     @staticmethod
     def split_location(location):
         chrom, position = location.split(":")
