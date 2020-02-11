@@ -48,7 +48,7 @@ def test_import_denovo_dae_style_into_impala(
     )
 
     vs = list(fvars.query_variants())
-    assert len(vs) == 3
+    assert len(vs) == 5
 
 
 def test_import_comp_vcf_into_impala(
@@ -214,10 +214,10 @@ def test_import_denovo_dae_style_into_filesystem(
     gpf_instance_2013.reload()
     study = gpf_instance_2013._variants_db.get_study(study_id)
     vs = list(study.query_variants())
-    assert len(vs) == 3
+    assert len(vs) == 5
 
 
-def test_import_denovo_dae_style_denov_sep_into_filesystem(
+def test_import_denovo_dae_style_denovo_sep_into_filesystem(
         genomes_db_2013, fixture_dirname,
         default_dae_config, gpf_instance_2013, temp_dirname):
 
@@ -264,7 +264,7 @@ def test_import_denovo_dae_style_denov_sep_into_filesystem(
     print(study.config.files)
 
     vs = list(study.query_variants())
-    assert len(vs) == 3
+    assert len(vs) == 5
 
 
 def test_import_iossifov2014_filesystem(
