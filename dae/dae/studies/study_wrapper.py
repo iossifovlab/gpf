@@ -57,8 +57,11 @@ class StudyWrapper(object):
         self.pheno_filters = genotype_browser_config.pheno_filters or []
 
         # GENE WEIGHTS
-        self.gene_weight_column_sources = \
-            genotype_browser_config.gene_weight_column_sources or []
+        self.gene_weight_column_sources = [
+            slot.source
+            for slot
+            in (genotype_browser_config.genotype.weights.slots or [])
+        ]
 
         # IN ROLE
         self.in_role_columns = genotype_browser_config.in_roles or []
