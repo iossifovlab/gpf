@@ -71,8 +71,13 @@ class StudyWrapper(object):
 
         # LEGEND
         if len(self.people_group) != 0:
+            def pg_to_dict(pg):
+                return [
+                    GPFConfigParser._namedtuple_to_dict(domain)
+                    for domain in pg.domain + [pg.default]
+                ]
             self.legend = {
-                pg_id: pg.domain + [pg.default]
+                pg_id: pg_to_dict(pg)
                 for pg_id, pg in self.people_group.field_values_iterator()
                 if hasattr(pg, "domain")
             }
@@ -761,7 +766,12 @@ class StudyWrapper(object):
         ]
         # TODO Add domain to pheno filters
         result = {key: getattr(self.config, key, None) for key in keys}
-        result['genotype_browser_config'] = GPFConfigParser._namedtuple_to_dict(self.config.genotype_browser)
+
+
+        bs_config = GPFConfigParser._namedtuple_to_dict(self.config.genotype_browser)
+        bs_config["columns"] = bs_config["genotype"]
+
+        result['genotype_browser_config'] = bs_config
         result['genotype_browser'] = self.config.genotype_browser.enabled or False
 
         def camelize(input_dict):
@@ -796,9 +806,6 @@ class StudyWrapper(object):
         new_result['peopleGroup'] = camelize(GPFConfigParser._namedtuple_to_dict(new_result['peopleGroup']))
         new_result['name'] = new_result['name'] or new_result['id']
 
-
-        from pprint import pprint
-        pprint(new_result)
         return new_result
 
     def _get_wdae_member(self, member, people_group, best_st):
