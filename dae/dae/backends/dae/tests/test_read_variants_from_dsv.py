@@ -31,12 +31,22 @@ def compare_variant_dfs(res_df, expected_df):
         del(res_df[col])
         del(expected_df[col])
 
+        assert len(res_genotype) == len(expected_genotype)
+
         equal = equal and len(res_genotype) == len(expected_genotype)
         for i in range(0, len(res_genotype)):
+            assert np.array_equal(
+                res_genotype[i],
+                expected_genotype[i]
+            ), (expected_df.loc[i, :], res_df.loc[i, :])
+
             equal = equal and np.array_equal(
                 res_genotype[i],
                 expected_genotype[i]
             )
+    print(res_df)
+    print(expected_df)
+    assert res_df.equals(expected_df)
 
     return equal and res_df.equals(expected_df)
 
@@ -76,12 +86,13 @@ def test_read_variants_DAE_style(genome_2013, fixture_dirname, fake_families):
     )
 
     expected_df = pd.DataFrame({
-        'chrom': ['1', '2', '2'],
-        'position': [123, 234, 234],
-        'reference': ['A', 'T', 'G'],
-        'alternative': ['G', 'T', 'A'],
-        'family_id': ['f1', 'f1', 'f2'],
+        'chrom': ['1', '2', '2', '3'],
+        'position': [123, 234, 234, 345],
+        'reference': ['A', 'T', 'G', 'G'],
+        'alternative': ['G', 'A', 'A', 'A'],
+        'family_id': ['f1', 'f1', 'f2', 'f3'],
         'genotype': [
+            None,
             None,
             None,
             None,
@@ -90,6 +101,7 @@ def test_read_variants_DAE_style(genome_2013, fixture_dirname, fake_families):
             np.array([[2, 2, 1, 2, 1], [0, 0, 1, 0, 1]]),
             np.array([[2, 2, 1, 2, 2], [0, 0, 1, 0, 0]]),
             np.array([[2, 2, 2, 1], [0, 0, 0, 1]]),
+            np.array([[1], [1]]),
         ],
     })
 
@@ -108,12 +120,13 @@ def test_read_variants_a_la_VCF_style(
     )
 
     expected_df = pd.DataFrame({
-        'chrom': ['1', '2', '2'],
-        'position': [123, 234, 234],
-        'reference': ['A', 'T', 'G'],
-        'alternative': ['G', 'T', 'A'],
-        'family_id': ['f1', 'f1', 'f2'],
+        'chrom': ['1', '2', '2', '3'],
+        'position': [123, 234, 234, 345],
+        'reference': ['A', 'T', 'G', 'G'],
+        'alternative': ['G', 'A', 'A', 'A'],
+        'family_id': ['f1', 'f1', 'f2', 'f3'],
         'genotype': [
+            None,
             None,
             None,
             None,
@@ -122,6 +135,7 @@ def test_read_variants_a_la_VCF_style(
             np.array([[2, 2, 1, 2, 1], [0, 0, 1, 0, 1]]),
             np.array([[2, 2, 1, 2, 2], [0, 0, 1, 0, 0]]),
             np.array([[2, 2, 2, 1], [0, 0, 0, 1]]),
+            np.array([[1], [1]]),
         ],
     })
 
@@ -139,12 +153,13 @@ def test_read_variants_mixed_A(genome_2013, fixture_dirname, fake_families):
     )
 
     expected_df = pd.DataFrame({
-        'chrom': ['1', '2', '2'],
-        'position': [123, 234, 234],
-        'reference': ['A', 'T', 'G'],
-        'alternative': ['G', 'T', 'A'],
-        'family_id': ['f1', 'f1', 'f2'],
+        'chrom': ['1', '2', '2', '3'],
+        'position': [123, 234, 234, 345],
+        'reference': ['A', 'T', 'G', 'G'],
+        'alternative': ['G', 'A', 'A', 'A'],
+        'family_id': ['f1', 'f1', 'f2', 'f3'],
         'genotype': [
+            None,
             None,
             None,
             None,
@@ -153,9 +168,9 @@ def test_read_variants_mixed_A(genome_2013, fixture_dirname, fake_families):
             np.array([[2, 2, 1, 2, 1], [0, 0, 1, 0, 1]]),
             np.array([[2, 2, 1, 2, 2], [0, 0, 1, 0, 0]]),
             np.array([[2, 2, 2, 1], [0, 0, 0, 1]]),
+            np.array([[1], [1]]),
         ],
     })
-
     assert compare_variant_dfs(res_df, expected_df)
 
 
@@ -169,12 +184,13 @@ def test_read_variants_mixed_B(genome_2013, fixture_dirname, fake_families):
     )
 
     expected_df = pd.DataFrame({
-        'chrom': ['1', '2', '2'],
-        'position': [123, 234, 234],
-        'reference': ['A', 'T', 'G'],
-        'alternative': ['G', 'T', 'A'],
-        'family_id': ['f1', 'f1', 'f2'],
+        'chrom': ['1', '2', '2', '3'],
+        'position': [123, 234, 234, 345],
+        'reference': ['A', 'T', 'G', 'G'],
+        'alternative': ['G', 'A', 'A', 'A'],
+        'family_id': ['f1', 'f1', 'f2', 'f3'],
         'genotype': [
+            None,
             None,
             None,
             None,
@@ -183,6 +199,7 @@ def test_read_variants_mixed_B(genome_2013, fixture_dirname, fake_families):
             np.array([[2, 2, 1, 2, 1], [0, 0, 1, 0, 1]]),
             np.array([[2, 2, 1, 2, 2], [0, 0, 1, 0, 0]]),
             np.array([[2, 2, 2, 1], [0, 0, 0, 1]]),
+            np.array([[1], [1]]),
         ],
     })
 
@@ -202,30 +219,53 @@ def test_read_variants_person_ids(
         denovo_ref='ref', denovo_alt='alt', denovo_person_id='personId'
     )
 
+    # expected_df = pd.DataFrame({
+    #     'chrom': ['1', '2', '2'],
+    #     'position': [123, 234, 235],
+    #     'reference': ['A', 'T', 'G'],
+    #     'alternative': ['G', 'C', 'A'],
+    #     'family_id': ['f1', 'f1', 'f2'],
+    #     'genotype': [
+    #         np.array([[0, 0, 0, 0, 0], [0, 0, 0, 1, 1]]),
+    #         np.array([[0, 0, 0, 0, 0], [0, 0, 0, 1, 0]]),
+    #         np.array([[0, 0, 0, 0], [0, 0, 0, 1]]),
+    #     ],
+    #     'best_state': [
+    #         None,
+    #         None,
+    #         None,
+    #     ],
+    # })
     expected_df = pd.DataFrame({
-        'chrom': ['1', '2', '2'],
-        'position': [123, 234, 235],
-        'reference': ['A', 'T', 'G'],
-        'alternative': ['G', 'C', 'A'],
-        'family_id': ['f1', 'f1', 'f2'],
+        'chrom': ['1', '2', '2', '3'],
+        'position': [123, 234, 235, 345],
+        'reference': ['A', 'T', 'G', 'G'],
+        'alternative': ['G', 'A', 'A', 'A'],
+        'family_id': ['f1', 'f1', 'f2', 'f3'],
         'genotype': [
             np.array([[0, 0, 0, 0, 0], [0, 0, 0, 1, 1]]),
             np.array([[0, 0, 0, 0, 0], [0, 0, 0, 1, 0]]),
             np.array([[0, 0, 0, 0], [0, 0, 0, 1]]),
+            np.array([[0], [1]]),
         ],
         'best_state': [
             None,
             None,
             None,
+            None,
         ],
     })
+
     print(res_df)
     print(expected_df)
 
-    res_df = res_df.sort_values(['position', 'reference'])
+    res_df = res_df.sort_values(['chrom', 'position', 'reference'])
     res_df = res_df.reset_index(drop=True)
-    expected_df = expected_df.sort_values(['position', 'reference'])
+    expected_df = expected_df.sort_values(['chrom', 'position', 'reference'])
     expected_df = expected_df.reset_index(drop=True)
+
+    print(res_df)
+    print(expected_df)
 
     assert compare_variant_dfs(res_df, expected_df)
 
@@ -244,12 +284,13 @@ def test_read_variants_different_separator(
     )
 
     expected_df = pd.DataFrame({
-        'chrom': ['1', '2', '2'],
-        'position': [123, 234, 234],
-        'reference': ['A', 'T', 'G'],
-        'alternative': ['G', 'T', 'A'],
-        'family_id': ['f1', 'f1', 'f2'],
+        'chrom': ['1', '2', '2', '3'],
+        'position': [123, 234, 234, 345],
+        'reference': ['A', 'T', 'G', 'G'],
+        'alternative': ['G', 'A', 'A', 'A'],
+        'family_id': ['f1', 'f1', 'f2', 'f3'],
         'genotype': [
+            None,
             None,
             None,
             None,
@@ -258,9 +299,9 @@ def test_read_variants_different_separator(
             np.array([[2, 2, 1, 2, 1], [0, 0, 1, 0, 1]]),
             np.array([[2, 2, 1, 2, 2], [0, 0, 1, 0, 0]]),
             np.array([[2, 2, 2, 1], [0, 0, 0, 1]]),
+            np.array([[1], [1]]),
         ],
     })
-
     assert compare_variant_dfs(res_df, expected_df)
 
 
