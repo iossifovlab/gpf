@@ -904,8 +904,7 @@ This should return a list of all studies' IDs:
 
 .. code-block:: python3
 
-    ['multi',
-     'comp_vcf',
+    ['comp_vcf',
      'comp_denovo',
      'comp_all',
      'iossifov_2014']
