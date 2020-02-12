@@ -763,8 +763,8 @@ class StudyWrapper(object):
     def get_genotype_data_group_description(self):
         keys = [
             'id', 'name', 'description', 'phenotype_browser', 'phenotype_tool',
-            'phenotype_data', 'enrichment_tool', 'people_group', 'common_report',
-            'study_type', 'studies', 'has_present_in_child', 'has_present_in_parent'
+            'phenotype_data', 'people_group', 'common_report', 'study_type',
+            'studies', 'has_present_in_child', 'has_present_in_parent'
         ]
         # TODO Add domain to pheno filters
         result = {key: getattr(self.config, key, None) for key in keys}
@@ -798,6 +798,7 @@ class StudyWrapper(object):
         new_result = camelize(result)
 
         new_result['studyTypes'] = new_result['studyType']
+        new_result['enrichmentTool'] = self.config.enrichment.enabled
         new_result['commonReport'] = camelize(GPFConfigParser._namedtuple_to_dict(new_result['commonReport']))
         new_result['peopleGroup'] = camelize(GPFConfigParser._namedtuple_to_dict(new_result['peopleGroup']))
         new_result['name'] = new_result['name'] or new_result['id']
