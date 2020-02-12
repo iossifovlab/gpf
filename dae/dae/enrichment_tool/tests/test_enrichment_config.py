@@ -1,4 +1,3 @@
-from dae.enrichment_tool.tests.conftest import fixtures_dir
 
 
 def test_enrichment_config_people_groups(f1_trio_enrichment_config):
@@ -9,7 +8,7 @@ def test_enrichment_config_people_groups(f1_trio_enrichment_config):
 def test_enrichment_config_default_values(f1_trio_enrichment_config):
     enrichment_config = f1_trio_enrichment_config
     assert enrichment_config.default_background_model == \
-        'synonymous_background_model'
+        'coding_len_background_model'
     assert enrichment_config.default_counting_model == \
         'enrichment_gene_counting'
 
@@ -20,7 +19,8 @@ def test_enrichment_config_effect_types(f1_trio_enrichment_config):
         ['LGDs', 'missense', 'synonymous']
 
 
-def test_enrichment_config_backgrounds(f1_trio_enrichment_config):
+def test_enrichment_config_backgrounds(
+        f1_trio_enrichment_config, fixture_dirname):
     enrichment_config = f1_trio_enrichment_config
     assert enrichment_config.selected_background_values == [
         'synonymous_background_model',
@@ -39,15 +39,15 @@ def test_enrichment_config_backgrounds(f1_trio_enrichment_config):
     coding_len_background_model = \
         enrichment_config.background.coding_len_background_model
     assert coding_len_background_model.name == 'coding_len_background_model'
-    assert coding_len_background_model.file == fixtures_dir() + \
-        '/studies/f1_trio/enrichment/codingLenBackgroundModel.csv'
+    assert coding_len_background_model.file == fixture_dirname(
+        'studies/f1_trio/enrichment/codingLenBackgroundModel.csv')
     assert coding_len_background_model.desc == 'Coding Len Background Model'
 
     samocha_background_model = \
         enrichment_config.background.samocha_background_model
     assert samocha_background_model.name == 'samocha_background_model'
-    assert samocha_background_model.file == fixtures_dir() + \
-        '/studies/f1_trio/enrichment/samochaBackgroundModel.csv'
+    assert samocha_background_model.file == fixture_dirname(
+        'studies/f1_trio/enrichment/samochaBackgroundModel.csv')
     assert samocha_background_model.desc == 'Samocha Background Model'
 
 
@@ -58,7 +58,7 @@ def test_enrichment_config_counting(f1_trio_enrichment_config):
         'enrichment_gene_counting',
     ]
 
-    assert len(enrichment_config.counting) == 3
+    assert len(enrichment_config.counting) == 2
     assert len(
         list(filter(
             lambda x: x.name in enrichment_config.selected_counting_values,

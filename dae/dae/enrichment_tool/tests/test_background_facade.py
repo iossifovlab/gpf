@@ -39,6 +39,7 @@ def test_get_study_enrichment_config(background_facade):
 
 
 def test_get_all_study_ids(background_facade):
+    print(background_facade.get_all_study_ids())
     assert background_facade.get_all_study_ids() == ['f1_trio']
 
 
