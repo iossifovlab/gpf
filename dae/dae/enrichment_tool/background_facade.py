@@ -64,10 +64,15 @@ class BackgroundFacade(object):
 
     def _load_enrichment_config_in_cache(self, study_id):
         genotype_data_config = self.variants_db.get_config(study_id)
-        if genotype_data_config is None or genotype_data_config.enrichment is None:
+        if genotype_data_config is None \
+                or genotype_data_config.enrichment is None:
             return
 
-        self._enrichment_config_cache[study_id] = genotype_data_config.enrichment
+        if not genotype_data_config.enrichment.enabled:
+            return
+
+        self._enrichment_config_cache[study_id] = \
+            genotype_data_config.enrichment
 
     def _load_background_in_cache(self, study_id, background_id):
         self._load_enrichment_config_in_cache(study_id)
