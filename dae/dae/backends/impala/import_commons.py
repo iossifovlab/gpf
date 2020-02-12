@@ -365,6 +365,233 @@ class MakefileGenerator:
             .build_partition_helper(argv)
         return self
 
+    def _create_output_directory(self, argv):
+        dirname = argv.output
+        if dirname is None:
+            dirname = '.'
+        os.makedirs(dirname, exist_ok=True)
+        return dirname
+
+    def generate_makefile(self, argv):
+        dirname = self._create_output_directory(argv)
+        with open(os.path.join(dirname, 'Makefile'), 'w') as outfile:
+            self.generate_all_targets(argv, outfile)
+            self.generate_variants_targets(argv, outfile)
+            self.generate_pedigree_targets(argv, outfile)
+            self.generate_vcf_targets(argv, outfile)
+            self.generate_denovo_targets(argv, outfile)
+            self.generate_dae_targets(argv, outfile)
+            self.generate_load_targets(argv, outfile)
+            self.generate_report_targets(argv, outfile)
+
+    def _collect_variants_targets(self):
+        variants_targets = []
+        if self.denovo_loader is not None:
+            variants_targets.append('denovo_variants')
+        if self.vcf_loader is not None:
+            variants_targets.append('vcf_variants')
+        if self.dae_loader is not None:
+            variants_targets.append('dae_variants')
+        return variants_targets
+
+    def generate_all_targets(self, argv, outfile=sys.stdout):
+        targets = ['pedigree']
+        targets.extend(self._collect_variants_targets())
+
+        print('\n', file=outfile)
+        print(
+            'all:', ' '.join(targets),
+            file=outfile
+        )
+
+    def generate_variants_targets(self, argv, outfile=sys.stdout):
+        variants_targets = self._collect_variants_targets()
+        if len(variants_targets) > 0:
+            print('\n', file=outfile)
+            print(
+                'variants:', ' '.join(variants_targets),
+                file=outfile
+            )
+
+    def _construct_families_command(self, argv):
+        families_params = FamiliesLoader.build_cli_arguments(
+            self.families_loader.params)
+        families_filename = self.families_loader.filename
+        families_filename = os.path.abspath(families_filename)
+
+        command = [
+            f'ped2parquet.py {families_params} {families_filename}',
+            f'--study-id {self.study_id}',
+            f'-o {self.study_id}_pedigree.parquet'
+        ]
+        if argv.partition_description is not None:
+            pd = os.path.abspath(argv.partition_description)
+            command.append(f'--pd {pd}')
+
+        return ' '.join(command)
+
+    def generate_pedigree_targets(self, argv, outfile=sys.stdout):
+        print('\n', file=outfile)
+        print(
+            f'pedigree: ped.flag\n',
+            file=outfile)
+
+        command = self._construct_families_command(argv)
+        print(
+            f'ped.flag:\n'
+            f'\t{command} && touch $@',
+            file=outfile)
+
+    def _construct_variants_command(self, argv, variants_loader, tool_command):
+        families_params = FamiliesLoader.build_cli_arguments(
+            self.families_loader.params)
+        families_filename = self.families_loader.filename
+        families_filename = os.path.abspath(families_filename)
+
+        variants_params = variants_loader.build_cli_arguments(
+            variants_loader.params)
+        variants_filenames = [
+            os.path.abspath(fn) for fn in variants_loader.filenames
+        ]
+        variants_filenames = ' '.join(variants_filenames)
+
+        command = [
+            f'{tool_command}',
+            f'{families_params} {families_filename}',
+            f'{variants_params} {variants_filenames}',
+            f'--study-id {self.study_id}',
+            f'-o {self.study_id}_variants.parquet'
+        ]
+        if argv.partition_description is not None:
+            pd = os.path.abspath(argv.partition_description)
+            command.append(f'--pd {pd}')
+        if argv.add_chrom_prefix is not None:
+            command.append(f'--add-chrom-prefix {argv.add_chrom_prefix}')
+        if argv.del_chrom_prefix is not None:
+            command.append(f'--del-chrom-prefix {argv.del_chrom_prefix}')
+
+        return ' '.join(command)
+
+    def _generate_variants_targets(
+            self, argv, target_prefix, variants_loader, variants_tool,
+            outfile=sys.stdout):
+
+        if 'target_chromosomes' in argv and \
+                argv.target_chromosomes is not None:
+            target_chromosomes = argv.target_chromosomes
+        else:
+            target_chromosomes = variants_loader.chromosomes
+
+        variants_targets = self.partition_helper.generate_variants_targets(
+            target_chromosomes)
+
+        bins = ' '.join(list(variants_targets.keys()))
+
+        print(
+            f'{target_prefix}_bins={bins}',
+            file=outfile)
+        print(
+            f'{target_prefix}_bins_flags=$(foreach bin, $(vcf_bins), '
+            f'{target_prefix}_$(bin).flag)\n',
+            file=outfile)
+        print(
+            f'{target_prefix}_variants: $({target_prefix}_bins_flags)\n',
+            file=outfile)
+        command = self._construct_variants_command(
+            argv, variants_loader, variants_tool)
+        print(
+            f'{target_prefix}_%.flag:\n'
+            f'\t{command} --rb $* && touch $@\n',
+            file=outfile
+        )
+
+    def generate_vcf_targets(self, argv, outfile=sys.stdout):
+        if self.vcf_loader is None:
+            return
+
+        self._generate_variants_targets(
+            argv, 'vcf', self.vcf_loader, 'vcf2parquet.py variants',
+            outfile=outfile
+        )
+
+    def generate_denovo_targets(self, argv, outfile=sys.stdout):
+        if self.denovo_loader is None:
+            return
+
+        self._generate_variants_targets(
+            argv, 'denovo', self.denovo_loader, 'denovo2parquet.py variants',
+            outfile=outfile
+        )
+
+    def generate_dae_targets(self, argv, outfile=sys.stdout):
+        if self.dae_loader is None:
+            return
+
+        self._generate_variants_targets(
+            argv, 'dae', self.dae_loader, 'dae2parquet.py variants',
+            outfile=outfile
+        )
+
+    def _construct_load_command(self, argv):
+        output = argv.output
+        if output is None:
+            output = '.'
+        output = os.path.abspath(output)
+
+        command = [
+            f'impala_parquet_loader.py {self.study_id}',
+            os.path.join(output, f'{self.study_id}_pedigree.parquet'),
+            os.path.join(output, f'{self.study_id}_variants.parquet'),
+        ]
+        if argv.genotype_storage is not None:
+            command.append(
+                f'--gs {argv.genotype_storage}'
+            )
+
+        return ' '.join(command)
+
+    def generate_load_targets(self, argv, outfile=sys.stdout):
+        print('\n', file=outfile)
+        print(
+            f'load: load.flag\n',
+            file=outfile)
+
+        command = self._construct_load_command(argv)
+        variants_targets = self._collect_variants_targets()
+        if len(variants_targets) > 0:
+            print(
+                f'load.flag: pedigree variants\n'
+                f'\t{command} && touch $@',
+                file=outfile)
+        else:
+            print(
+                f'load.flag: pedigree\n'
+                f'\t{command} && touch $@',
+                file=outfile)
+
+    def _construct_report_command(self, argv):
+        output = argv.output
+        if output is None:
+            output = '.'
+        output = os.path.abspath(output)
+
+        command = [
+            f'generate_common_report.py --studies {self.study_id}'
+        ]
+
+        return ' && '.join(command)
+
+    def generate_report_targets(self, argv, outfile=sys.stdout):
+        print('\n', file=outfile)
+        print(
+            f'reports: reports.flag\n',
+            file=outfile)
+        command = self._construct_report_command(argv)
+        print(
+            f'reports.flag: load.flag\n'
+            f'\t{command} && touch $@',
+            file=outfile)
+
     @classmethod
     def cli_arguments_parser(cls, gpf_instance):
         parser = argparse.ArgumentParser(
@@ -500,7 +727,7 @@ class Variants2ParquetTool:
         )
 
     @classmethod
-    def cli_arguments(cls, gpf_instance):
+    def cli_arguments_parser(cls, gpf_instance):
         parser = argparse.ArgumentParser(
             description='Convert variants file to parquet',
             conflict_handler='resolve',
@@ -679,7 +906,7 @@ class Variants2ParquetTool:
         if gpf_instance is None:
             gpf_instance = GPFInstance()
 
-        parser = cls.cli_arguments(gpf_instance)
+        parser = cls.cli_arguments_parser(gpf_instance)
         argv = parser.parse_args(argv)
 
         families_filename, families_params = \

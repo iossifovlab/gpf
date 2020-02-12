@@ -1,3 +1,4 @@
+import os
 import pytest
 
 from dae.backends.impala.import_commons import MakefileGenerator
@@ -89,3 +90,11 @@ def test_makefile_generator_denovo_and_dae(
     assert generator.vcf_loader is None
     assert generator.denovo_loader is not None
     assert generator.dae_loader is not None
+
+    generator.generate_makefile(argv)
+
+    assert os.path.exists(os.path.join(temp_dirname, 'Makefile'))
+    with open(os.path.join(temp_dirname, 'Makefile'), 'rt') as infile:
+        makefile = infile.read()
+
+    print(makefile)
