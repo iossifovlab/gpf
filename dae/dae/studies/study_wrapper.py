@@ -638,10 +638,9 @@ class StudyWrapper(object):
         if rarity is not None:
             ultra_rare = rarity.get('ultraRare', None)
             ultra_rare = bool(ultra_rare)
-            if ultra_rare:
+            if ultra_rare and present_in_parent != {'neither'}:
                 kwargs['ultra_rare'] = True
             else:
-
                 max_alt_freq = rarity.get('maxFreq', None)
                 min_alt_freq = rarity.get('minFreq', None)
                 if min_alt_freq is not None or max_alt_freq is not None:
@@ -795,12 +794,6 @@ class StudyWrapper(object):
                     v = newlist
                 new_result[new_key] = v
             return new_result
-
-        # new_result = dict()
-        # for k, v in result.items():
-        #     new_key = k.split('_')
-        #     new_key = ''.join([new_key[0], *[w.title() for w in new_key[1:]]])
-        #     new_result[new_key] = v
 
         new_result = camelize(result)
 
