@@ -300,11 +300,22 @@ study_config_schema = {
                 "type": "dict",
                 "schema": {
                     "name": {"type": "string"},
-                    "people_group_ids": {"type": "list", "schema": {"type": "string"}},
+                    "people_group_ids": {
+                        "type": "list",
+                        "schema": {"type": "string"}
+                    },
                 }}
             },
-            "effect_groups": {"type": "list", "schema": {"type": "string"}, "default": []},
-            "effect_types": {"type": "list", "schema": {"type": "string"}, "default": []},
+            "effect_groups": {
+                "type": "list", 
+                "schema": {"type": "string"},
+                "default": []
+            },
+            "effect_types": {
+                "type": "list",
+                "schema": {"type": "string"},
+                "default": []
+            },
             "families_count_show_id": {"type": "integer"},
             "draw_all_families": {"type": "boolean", "default": False},
             "file_path": {

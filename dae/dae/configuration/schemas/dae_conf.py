@@ -1,4 +1,5 @@
-from dae.configuration.gpf_config_parser import validate_existing_path
+from dae.configuration.gpf_config_parser import validate_existing_path, \
+    validate_path
 
 config_reference_schema = {
     "conf_file": {
@@ -24,7 +25,10 @@ impala_schema = {
 hdfs_schema = {
     "host": {"type": "string"},
     "port": {"type": "integer"},
-    "base_dir": {"type": "string"},
+    "base_dir": {
+        "type": "string",
+        "check_with": validate_path,
+    },
 }
 
 
@@ -32,7 +36,7 @@ storage_schema = {
     "storage_type": {"type": "string", "allowed": ["impala", "filesystem"]},
     "dir": {
         "type": "string",
-        "check_with": validate_existing_path,
+        "check_with": validate_path,
         "coerce": "abspath",
     },
     "impala": {
@@ -69,8 +73,12 @@ dae_conf_schema = {
     },
     "storage": {
         "type": "dict",
-        "valuesrules": {"type": "dict", "schema": storage_schema},
+        "valuesrules": {
+            "type": "dict",
+            "schema": storage_schema
+        }
     },
+
     "studies_db": {"type": "dict", "schema": config_reference_schema},
     "datasets_db": {"type": "dict", "schema": config_reference_schema},
     "genomes_db": {"type": "dict", "schema": config_reference_schema},
