@@ -3,7 +3,6 @@ import os
 import glob
 
 import yaml
-import json
 import toml
 
 from collections import namedtuple
@@ -15,14 +14,14 @@ from dae.utils.dict_utils import recursive_dict_update
 
 def validate_existing_path(field: str, value: str, error: str):
     if not os.path.isabs(value):
-        error(field, "is not an absolute path!")
+        error(field, f"path <{value}> is not an absolute path!")
     if not os.path.exists(value):
-        error(field, "does not exist!")
+        error(field, f"path <{value}> does not exist!")
 
 
 def validate_path(field: str, value: str, error: str):
     if not os.path.isabs(value):
-        error(field, "is not an absolute path!")
+        error(field, f"path <{value}> is not an absolute path!")
 
 
 class GPFConfigValidator(Validator):
@@ -54,7 +53,9 @@ class GPFConfigParser:
                 # only for public attributes
                 if name[0:2] == '__':
                     raise AttributeError()
-                print(f'WARNING: Attempting to get non-existent attribute {name} on tuple!', file=sys.stderr)
+                print(
+                    f'WARNING: Attempting to get non-existent attribute '
+                    f'{name} on tuple!', file=sys.stderr)
                 return None
 
             def __repr__(self):
@@ -106,8 +107,15 @@ class GPFConfigParser:
         with open(filename, "r") as infile:
             file_contents = infile.read()
 
-        interpol_vars = cls.filetype_parsers[ext](file_contents).get("vars", {})
         env_vars = {f"${key}": val for key, val in os.environ.items()}
+        # interpolated_text = file_contents % env_vars
+
+        interpol_vars = \
+            cls.filetype_parsers[ext](file_contents).get("vars", {})
+        interpol_vars = {
+            key: value % env_vars
+            for key, value in interpol_vars.items()
+        }
         interpol_vars.update(env_vars)
 
         interpolated_text = file_contents % interpol_vars
