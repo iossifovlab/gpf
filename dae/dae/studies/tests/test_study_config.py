@@ -130,7 +130,7 @@ def test_quads_f1_config_genotype_browser_present_in_role(quads_f1_config):
             },
             {
                 'source': 'genes',
-                'name': None,
+                'name': 'genes',
                 'id': 'effect.genes',
                 'format': '%s'
             }
@@ -143,7 +143,7 @@ def test_quads_f1_config_genotype_browser_columns(
         expected_slots):
     genotype_browser_config = quads_f1_config.genotype_browser
 
-    assert len(genotype_browser_config.genotype) == 14
+    assert len(genotype_browser_config.genotype) == 19
 
     genotype_column = list(filter(
         lambda gc: gc.section_id() == option_name,
@@ -211,7 +211,7 @@ def test_quads_f1_config_genotype_browser_pheno_columns(
         expected_slots):
     genotype_browser_config = quads_f1_config.genotype_browser
 
-    assert len(genotype_browser_config.genotype) == 14
+    assert len(genotype_browser_config.genotype) == 19
 
     genotype_column = list(filter(
         lambda gc: gc.section_id() == option_name,
