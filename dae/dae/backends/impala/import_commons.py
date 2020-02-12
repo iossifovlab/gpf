@@ -15,6 +15,10 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.pedigrees.loader import FamiliesLoader
 from dae.backends.raw.loader import AnnotationPipelineDecorator, \
     AlleleFrequencyDecorator
+
+from dae.backends.dae.loader import DenovoLoader, DaeTransmittedLoader
+from dae.backends.vcf.loader import VcfLoader
+
 from dae.backends.impala.parquet_io import ParquetManager, \
     ParquetPartitionDescriptor, NoPartitionDescriptor
 
@@ -254,16 +258,14 @@ class MakefilePartitionHelper:
 
 class MakefileGenerator:
 
-    def __init__(self, gpf_instance, variants_loaders_class, tool_command):
+    def __init__(self, gpf_instance):
         self.gpf_instance = gpf_instance
-        self.tool_command = tool_command
-        self.VARIANTS_LOADERS_CLASS = variants_loaders_class
 
         self.study_id = None
-        self.variants_loaders = None
+        self.vcf_loaders = None
         self.families_loader = None
         self._families = None
-        self.partition_description = None
+        self.partition_helper = None
 
     @property
     def families(self):
@@ -280,16 +282,16 @@ class MakefileGenerator:
         self.families_loader = families_loader
         return self
 
-    def build_variants_loaders(self, argv):
+    def build_vcf_loaders(self, argv):
         variants_filenames, variants_params = \
-            self.VARIANTS_LOADERS_CLASS.parse_cli_arguments(argv)
+            VcfLoader.parse_cli_arguments(argv)
 
-        assert argv.files_replacements is None
-        variants_loader = self.VARIANTS_LOADERS_CLASS(
+        assert argv.files_wildcard is None
+        variants_loader = VcfLoader(
             self.families, variants_filenames,
             params=variants_params,
             genome=self.gpf_instance.genomes_db.get_genome())
-        self.variants_loaders = [variants_loader]
+        self.vcf_loaders = [variants_loader]
         return self
 
     def build_study_id(self, argv):
@@ -302,7 +304,7 @@ class MakefileGenerator:
         self.study_id = study_id
         return self
 
-    def build_partition_description(self, argv):
+    def build_partition_helper(self, argv):
         if argv.partition_description is not None:
             partition_description = ParquetPartitionDescriptor.from_config(
                 argv.partition_description,
@@ -310,8 +312,116 @@ class MakefileGenerator:
             )
         else:
             partition_description = NoPartitionDescriptor(argv.output)
-        self.partition_description = partition_description
+
+        add_chrom_prefix = argv.add_chrom_prefix
+        del_chrom_prefix = argv.del_chrom_prefix
+
+        self.partition_helper = MakefilePartitionHelper(
+            partition_description,
+            self.gpf_instance.genomes_db.get_genome(),
+            add_chrom_prefix=add_chrom_prefix,
+            del_chrom_prefix=del_chrom_prefix)
+
         return self
+
+    @classmethod
+    def cli_arguments_parser(cls, gpf_instance):
+        parser = argparse.ArgumentParser(
+            description='Convert variants file to parquet',
+            conflict_handler='resolve',
+            formatter_class=argparse.RawDescriptionHelpFormatter)
+
+        FamiliesLoader.cli_arguments(parser)
+        DenovoLoader.cli_options(parser)
+        VcfLoader.cli_options(parser)
+        DaeTransmittedLoader.cli_options(parser)
+
+        parser.add_argument(
+            '--vcf-files', type=str, nargs='+',
+            metavar='<VCF filename>',
+            help='VCF file to import'
+        )
+
+        parser.add_argument(
+            '--denovo-file', type=str,
+            metavar='<de Novo variants filename>',
+            help='DAE denovo variants file'
+        )
+
+        parser.add_argument(
+            '--dae-summary-file', type=str,
+            metavar='<summary filename>',
+            help='summary variants file to import'
+        )
+
+        parser.add_argument(
+            '--study-id', '--id', type=str, default=None,
+            dest='study_id', metavar='<study id>',
+            help='Study ID. '
+            'If none specified, the basename of families filename is used to '
+            'construct study id [default: basename(families filename)]'
+        )
+
+        parser.add_argument(
+            '-o', '--out', type=str, default='.',
+            dest='output', metavar='<output directory>',
+            help='output directory. '
+            'If none specified, current directory is used '
+            '[default: %(default)s]'
+        )
+
+        parser.add_argument(
+            '--pd', '--partition-description',
+            type=str, default=None,
+            dest='partition_description',
+            help='Path to a config file containing the partition description'
+        )
+
+        parser.add_argument(
+            '--annotation-config', type=str, default=None,
+            help='Path to an annotation config file to use when annotating'
+        )
+
+        default_genotype_storage_id = \
+            gpf_instance.dae_config.\
+            get('genotype_storage', {}).\
+            get('default', None)
+
+        parser.add_argument(
+            '--genotype-storage', '--gs',
+            type=str,
+            dest='genotype_storage',
+            default=default_genotype_storage_id,
+            help='Genotype Storage which will be used for import '
+            '[default: %(default)s]',
+        )
+
+        parser.add_argument(
+            '--target-chromosomes', '--tc',
+            type=str, nargs='+',
+            dest='target_chromosomes',
+            default=None,
+            help='specified which targets to build; by default target '
+            'chromosomes are extracted from variants file and/or default '
+            'reference genome used in GPF instance; '
+            '[default: None]',
+        )
+
+        parser.add_argument(
+            '--files-wildcard', '--fw',
+            type=str,
+            dest='files_wildcard',
+            default=None,
+            help='specified comma separated list of filename template '
+            'substitutions; when specified variant filename(s) are treated '
+            'as templates and each occurent of `{fw}` is replaced '
+            'consecutively by elements of files wildcard list; '
+            'by default the list is empty and no substitution '
+            'takes place. '
+            '[default: None]',
+        )
+
+        return parser
 
 
 class Variants2ParquetTool:

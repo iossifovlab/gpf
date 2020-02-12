@@ -807,11 +807,14 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
     @classmethod
     def cli_arguments(cls, parser):
         parser.add_argument(
-            'summary_filename', type=str,
+            'dae_summary_filename', type=str,
             metavar='<summary filename>',
             help='summary variants file to import'
         )
+        cls.cli_options(parser)
 
+    @classmethod
+    def cli_options(cls, parser):
         parser.add_argument(
             '--dae-include-reference-genotypes', default=False,
             dest='dae_include_reference_genotypes',
@@ -832,7 +835,7 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
 
     @classmethod
     def parse_cli_arguments(cls, argv):
-        filename = argv.summary_filename
+        filename = argv.dae_summary_file
 
         params = {
             'dae_include_reference_genotypes':

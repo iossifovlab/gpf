@@ -1,16 +1,13 @@
 import pytest
 
-from dae.backends.vcf.loader import VcfLoader
-from dae.backends.impala.import_commons import Variants2ParquetTool, \
-    MakefileGenerator
+from dae.backends.impala.import_commons import MakefileGenerator
 
 
 @pytest.fixture
 def cli_parse(gpf_instance_2013):
 
     def parser(argv):
-        Variants2ParquetTool.VARIANTS_LOADER_CLASS = VcfLoader
-        parser = Variants2ParquetTool.cli_arguments_parser(gpf_instance_2013)
+        parser = MakefileGenerator.cli_arguments_parser(gpf_instance_2013)
         return parser.parse_args(argv)
 
     return parser
@@ -18,12 +15,7 @@ def cli_parse(gpf_instance_2013):
 
 @pytest.fixture
 def generator(gpf_instance_2013):
-    result = MakefileGenerator(
-        gpf_instance_2013,
-        VcfLoader,
-        'my_tool variants'
-    )
-
+    result = MakefileGenerator(gpf_instance_2013)
     assert result is not None
     return result
 
@@ -32,17 +24,16 @@ def test_makefile_generator_simple(
         fixture_dirname, cli_parse, generator, temp_dirname):
     prefix = fixture_dirname('vcf_import/effects_trio')
     argv = cli_parse([
-        'make',
         '-o', temp_dirname,
         f'{prefix}.ped',
-        f'{prefix}.vcf.gz',
+        '--vcf-files', f'{prefix}.vcf.gz',
     ])
 
     generator\
         .build_familes_loader(argv) \
-        .build_variants_loaders(argv) \
+        .build_vcf_loaders(argv) \
         .build_study_id(argv) \
-        .build_partition_description(argv)
+        .build_partition_helper(argv)
 
     assert generator.study_id == 'effects_trio'
 
@@ -58,17 +49,17 @@ def test_makefile_generator_multivcf_simple(
         'backends/example_partition_configuration.conf')
 
     argv = cli_parse([
-        'make',
         '-o', temp_dirname,
         ped_file,
-        vcf_file1, vcf_file2,
+        '--vcf-files', vcf_file1, vcf_file2,
         '--pd', partition_description,
     ])
 
     generator\
         .build_familes_loader(argv) \
-        .build_variants_loaders(argv) \
+        .build_vcf_loaders(argv) \
         .build_study_id(argv) \
-        .build_partition_description(argv)
+        .build_partition_helper(argv)
 
     assert generator.study_id == 'multivcf'
+    assert generator.partition_helper is not None
