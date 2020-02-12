@@ -43,15 +43,17 @@ def test_vcf2parquet_vcf(
 def test_vcf2parquet_vcf_partition(
         fixture_dirname, annotation_pipeline_config,
         annotation_scores_dirname, temp_dirname,
-        gpf_instance_2013,
-        parquet_partition_configuration):
+        gpf_instance_2013):
+
+    partition_description = fixture_dirname(
+        'backends/example_partition_configuration.conf')
 
     prefix = fixture_dirname('vcf_import/effects_trio')
     argv = [
         'variants',
         '--annotation', annotation_pipeline_config,
         '-o', temp_dirname,
-        '--pd', parquet_partition_configuration,
+        '--pd', partition_description,
         f'{prefix}.ped',
         f'{prefix}.vcf.gz'
     ]
@@ -96,15 +98,16 @@ def test_vcf2parquet_make(
 def test_vcf2parquet_make_partition(
         fixture_dirname, annotation_pipeline_default_config,
         annotation_scores_dirname, temp_dirname,
-        gpf_instance_2013, default_dae_config, genome_2013,
-        parquet_partition_configuration):
+        gpf_instance_2013, default_dae_config, genome_2013):
 
     prefix = fixture_dirname('vcf_import/effects_trio')
+    partition_description = fixture_dirname(
+        'backends/example_partition_configuration.conf')
     argv = [
         'make',
         '--annotation', annotation_pipeline_default_config,
         '-o', temp_dirname,
-        '--pd', parquet_partition_configuration,
+        '--pd', partition_description,
         f'{prefix}.ped',
         f'{prefix}.vcf.gz',
     ]
@@ -129,15 +132,16 @@ def test_vcf2parquet_make_partition(
 def test_vcf2parquet_make_partition_target_chromosomes(
         fixture_dirname, annotation_pipeline_default_config,
         annotation_scores_dirname, temp_dirname,
-        gpf_instance_2013, default_dae_config, genome_2013,
-        parquet_partition_configuration):
+        gpf_instance_2013, default_dae_config, genome_2013):
 
     prefix = fixture_dirname('vcf_import/effects_trio')
+    partition_description = fixture_dirname(
+        'backends/example_partition_configuration.conf')
     argv = [
         'make',
         '--annotation', annotation_pipeline_default_config,
         '-o', temp_dirname,
-        '--pd', parquet_partition_configuration,
+        '--pd', partition_description,
         f'{prefix}.ped',
         f'{prefix}.vcf.gz',
         '--tc', '1',

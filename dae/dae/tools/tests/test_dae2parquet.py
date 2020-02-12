@@ -58,19 +58,20 @@ def test_dae2parquet_make(
 
 
 def test_dae2parquet_make_partition(
-        dae_transmitted_config, annotation_pipeline_default_config,
+        fixture_dirname, dae_transmitted_config,
         annotation_scores_dirname, temp_dirname,
-        genomes_db_2013,
-        parquet_partition_configuration):
+        genomes_db_2013):
+
+    partition_description = fixture_dirname(
+        'backends/example_partition_configuration.conf')
 
     argv = [
         'make',
         dae_transmitted_config.family_filename,
         dae_transmitted_config.summary_filename,
-        # '--annotation', annotation_pipeline_default_config,
         '--ped-file-format', 'simple',
         '-o', temp_dirname,
-        '--pd', parquet_partition_configuration
+        '--pd', partition_description
     ]
 
     main(argv)
@@ -90,18 +91,19 @@ def test_dae2parquet_make_partition(
 
 
 def test_dae2parquet_dae_partition(
-        dae_transmitted_config, annotation_pipeline_default_config,
-        temp_dirname, parquet_partition_configuration):
+        fixture_dirname, dae_transmitted_config,
+        temp_dirname):
+
+    partition_description = fixture_dirname(
+        'backends/example_partition_configuration.conf')
 
     argv = [
         'variants',
         dae_transmitted_config.family_filename,
         dae_transmitted_config.summary_filename,
-        # dae_transmitted_config.toomany_filename,
-        # '--annotation', annotation_pipeline_default_config,
         '--ped-file-format', 'simple',
         '-o', temp_dirname,
-        '--pd', parquet_partition_configuration
+        '--pd', partition_description
     ]
 
     main(argv)

@@ -67,15 +67,16 @@ def test_denovo2parquet_denovo_make(
 
 
 def test_denovo2parquet_denovo_partition(
-        dae_denovo_config, annotation_pipeline_default_config,
-        temp_dirname, genomes_db_2013, parquet_partition_configuration):
+        fixture_dirname, dae_denovo_config,
+        temp_dirname, genomes_db_2013):
+
+    partition_description = fixture_dirname(
+        'backends/example_partition_configuration.conf')
 
     argv = [
         'variants',
-        # '--denovo',
-        # '--annotation', annotation_pipeline_default_config,
         '--ped-file-format', 'simple',
-        '--pd', parquet_partition_configuration,
+        '--pd', partition_description,
         '-o', temp_dirname,
         dae_denovo_config.family_filename,
         dae_denovo_config.denovo_filename,
@@ -83,8 +84,7 @@ def test_denovo2parquet_denovo_partition(
 
     main(argv)
 
-    pd = ParquetPartitionDescriptor.from_config(
-        parquet_partition_configuration)
+    pd = ParquetPartitionDescriptor.from_config(partition_description)
     file_glob = os.path.join(temp_dirname, pd.generate_file_access_glob())
     partition_files = glob.glob(file_glob)
     assert len(partition_files) == 15
@@ -93,16 +93,17 @@ def test_denovo2parquet_denovo_partition(
 
 
 def test_denovo2parquet_denovo_partition_make(
-        dae_denovo_config, annotation_pipeline_default_config,
-        temp_dirname, parquet_partition_configuration,
+        fixture_dirname, dae_denovo_config,
+        temp_dirname,
         genomes_db_2013):
+
+    partition_description = fixture_dirname(
+        'backends/example_partition_configuration.conf')
 
     argv = [
         'make',
-        # '--denovo',
-        # '--annotation', annotation_pipeline_default_config,
         '--ped-file-format', 'simple',
-        '--pd', parquet_partition_configuration,
+        '--pd', partition_description,
         '-o', temp_dirname,
         dae_denovo_config.family_filename,
         dae_denovo_config.denovo_filename,
@@ -118,7 +119,7 @@ def test_denovo2parquet_denovo_partition_make(
         assert 'all_bins_flags=$(foreach bin, $(all_bins), $(bin).flag)' \
                in text
         assert 'variants:' in text
-        assert f'--pd {parquet_partition_configuration}' in text
+        assert f'--pd {partition_description}' in text
         assert '%.flag' in text
         assert 'pedigree:' in text
         assert 'ped.flag:' in text
