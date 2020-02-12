@@ -807,7 +807,7 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
     @classmethod
     def cli_arguments(cls, parser):
         parser.add_argument(
-            'dae_summary_filename', type=str,
+            'dae_summary_file', type=str,
             metavar='<summary filename>',
             help='summary variants file to import'
         )

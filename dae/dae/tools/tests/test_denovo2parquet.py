@@ -10,14 +10,10 @@ from dae.backends.impala.parquet_io import ParquetPartitionDescriptor
 
 
 def test_denovo2parquet_denovo(
-        dae_denovo_config, annotation_pipeline_default_config,
-        temp_filename,
-        genomes_db_2013):
+        dae_denovo_config, temp_filename, genomes_db_2013):
 
     argv = [
         'variants',
-        # '--denovo',
-        # '--annotation', annotation_pipeline_default_config,
         '--ped-file-format', 'simple',
         '-o', temp_filename,
         dae_denovo_config.family_filename,
@@ -37,14 +33,10 @@ def test_denovo2parquet_denovo(
 
 
 def test_denovo2parquet_denovo_make(
-        dae_denovo_config, annotation_pipeline_default_config,
-        temp_dirname,
-        genomes_db_2013):
+        dae_denovo_config, temp_dirname, genomes_db_2013):
 
     argv = [
         'make',
-        # '--denovo',
-        # '--annotation', annotation_pipeline_default_config,
         '--ped-file-format', 'simple',
         '-o', temp_dirname,
         dae_denovo_config.family_filename,
@@ -87,7 +79,8 @@ def test_denovo2parquet_denovo_partition(
     pd = ParquetPartitionDescriptor.from_config(partition_description)
     file_glob = os.path.join(temp_dirname, pd.generate_file_access_glob())
     partition_files = glob.glob(file_glob)
-    assert len(partition_files) == 15
+
+    assert len(partition_files) == 8
     for file in partition_files:
         assert 'frequency_bin=0' in file
 

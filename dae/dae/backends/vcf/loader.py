@@ -448,15 +448,6 @@ class VcfLoader(VariantsGenotypesLoader):
                     vcf_variants[idx] = next(vcf_iterators[idx], None)
                 summary_variant_index += 1
 
-    # @staticmethod
-    # def transform_vcf_genotypes(genotypes):
-    #     new_genotypes = []
-    #     for genotype in genotypes:
-    #         if len(genotype) == 2:  # Handle haploid genotypes
-    #             genotype.insert(1, -2)
-    #         new_genotypes.append(genotype)
-    #     return np.array(new_genotypes, dtype=GENOTYPE_TYPE).T
-
     @staticmethod
     def cli_defaults():
         return {
@@ -466,6 +457,7 @@ class VcfLoader(VariantsGenotypesLoader):
             'vcf_multi_loader_fill_in_mode': 'reference',
             'vcf_denovo_mode': 'possible_denovo',
             'vcf_omission_mode': 'possible_omission',
+            'vcf_wildcards': None,
             'add_chrom_prefix': None,
             'del_chrom_prefix': None,
         }
@@ -481,6 +473,7 @@ class VcfLoader(VariantsGenotypesLoader):
                 if key in {'vcf_multi_loader_fill_in_mode',
                            'vcf_denovo_mode',
                            'vcf_omission_mode',
+                           'vcf_wildcards',
                            'add_chrom_prefix',
                            'del_chrom_prefix'}:
                     result.append(f'--{param}')
@@ -553,9 +546,22 @@ class VcfLoader(VariantsGenotypesLoader):
             help='Removes specified prefix from each chromosome name in '
             'variants file'
         )
+        parser.add_argument(
+            '--vcf-wildcards', '--vw',
+            type=str,
+            dest='vcf_wildcards',
+            default=None,
+            help='specifies comma separated list of filename template '
+            'substitutions; then specified variant filename(s) are treated '
+            'as templates and each occurent of `{fw}` is replaced '
+            'consecutively by elements of VCF wildcard list; '
+            'by default the list is empty and no substitution '
+            'takes place. '
+            '[default: None]',
+        )
 
-    @staticmethod
-    def parse_cli_arguments(argv):
+    @classmethod
+    def parse_cli_arguments(cls, argv):
         filenames = argv.vcf_files
 
         assert argv.vcf_multi_loader_fill_in_mode \
@@ -579,6 +585,8 @@ class VcfLoader(VariantsGenotypesLoader):
             argv.vcf_denovo_mode,
             'vcf_omission_mode':
             argv.vcf_omission_mode,
+            'vcf_wildcards':
+            argv.vcf_wildcards,
             'add_chrom_prefix':
             argv.add_chrom_prefix,
             'del_chrom_prefix':

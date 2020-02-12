@@ -262,10 +262,14 @@ class MakefileGenerator:
         self.gpf_instance = gpf_instance
 
         self.study_id = None
-        self.vcf_loaders = None
+        self.partition_helper = None
+
         self.families_loader = None
         self._families = None
-        self.partition_helper = None
+
+        self.vcf_loader = None
+        self.denovo_loader = None
+        self.dae_loader = None
 
     @property
     def families(self):
@@ -282,16 +286,44 @@ class MakefileGenerator:
         self.families_loader = families_loader
         return self
 
-    def build_vcf_loaders(self, argv):
+    def build_vcf_loader(self, argv):
         variants_filenames, variants_params = \
             VcfLoader.parse_cli_arguments(argv)
 
-        assert argv.files_wildcard is None
+        if variants_filenames is None:
+            return self
+
         variants_loader = VcfLoader(
             self.families, variants_filenames,
             params=variants_params,
             genome=self.gpf_instance.genomes_db.get_genome())
-        self.vcf_loaders = [variants_loader]
+        self.vcf_loader = variants_loader
+        return self
+
+    def build_denovo_loader(self, argv):
+        variants_filename, variants_params = \
+            DenovoLoader.parse_cli_arguments(argv)
+
+        if variants_filename is None:
+            return self
+        variants_loader = DenovoLoader(
+            self.families, variants_filename,
+            params=variants_params,
+            genome=self.gpf_instance.genomes_db.get_genome())
+        self.denovo_loader = variants_loader
+        return self
+
+    def build_dae_loader(self, argv):
+        variants_filename, variants_params = \
+            DaeTransmittedLoader.parse_cli_arguments(argv)
+
+        if variants_filename is None:
+            return self
+        variants_loader = DaeTransmittedLoader(
+            self.families, variants_filename,
+            params=variants_params,
+            genome=self.gpf_instance.genomes_db.get_genome())
+        self.dae_loader = variants_loader
         return self
 
     def build_study_id(self, argv):
@@ -322,6 +354,15 @@ class MakefileGenerator:
             add_chrom_prefix=add_chrom_prefix,
             del_chrom_prefix=del_chrom_prefix)
 
+        return self
+
+    def build(self, argv):
+        self.build_familes_loader(argv) \
+            .build_denovo_loader(argv) \
+            .build_vcf_loader(argv) \
+            .build_dae_loader(argv) \
+            .build_study_id(argv) \
+            .build_partition_helper(argv)
         return self
 
     @classmethod
@@ -407,20 +448,6 @@ class MakefileGenerator:
             '[default: None]',
         )
 
-        parser.add_argument(
-            '--files-wildcard', '--fw',
-            type=str,
-            dest='files_wildcard',
-            default=None,
-            help='specified comma separated list of filename template '
-            'substitutions; when specified variant filename(s) are treated '
-            'as templates and each occurent of `{fw}` is replaced '
-            'consecutively by elements of files wildcard list; '
-            'by default the list is empty and no substitution '
-            'takes place. '
-            '[default: None]',
-        )
-
         return parser
 
 
@@ -473,7 +500,7 @@ class Variants2ParquetTool:
         )
 
     @classmethod
-    def cli_arguments_parser(cls, gpf_instance):
+    def cli_arguments(cls, gpf_instance):
         parser = argparse.ArgumentParser(
             description='Convert variants file to parquet',
             conflict_handler='resolve',

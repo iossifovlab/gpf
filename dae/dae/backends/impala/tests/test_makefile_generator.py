@@ -29,13 +29,12 @@ def test_makefile_generator_simple(
         '--vcf-files', f'{prefix}.vcf.gz',
     ])
 
-    generator\
-        .build_familes_loader(argv) \
-        .build_vcf_loaders(argv) \
-        .build_study_id(argv) \
-        .build_partition_helper(argv)
+    generator.build(argv)
 
     assert generator.study_id == 'effects_trio'
+    assert generator.vcf_loader is not None
+    assert generator.denovo_loader is None
+    assert generator.dae_loader is None
 
 
 def test_makefile_generator_multivcf_simple(
@@ -55,11 +54,38 @@ def test_makefile_generator_multivcf_simple(
         '--pd', partition_description,
     ])
 
-    generator\
-        .build_familes_loader(argv) \
-        .build_vcf_loaders(argv) \
-        .build_study_id(argv) \
-        .build_partition_helper(argv)
+    generator.build(argv)
 
     assert generator.study_id == 'multivcf'
     assert generator.partition_helper is not None
+    assert generator.vcf_loader is not None
+    assert generator.denovo_loader is None
+    assert generator.dae_loader is None
+
+
+def test_makefile_generator_denovo_and_dae(
+        fixture_dirname, cli_parse, generator, temp_dirname):
+
+    denovo_file = fixture_dirname('dae_denovo/denovo.txt')
+    dae_file = fixture_dirname('dae_transmitted/transmission.txt.gz')
+    ped_file = fixture_dirname('dae_denovo/denovo_families.ped')
+
+    partition_description = fixture_dirname(
+        'backends/example_partition_configuration.conf')
+
+    argv = cli_parse([
+        '-o', temp_dirname,
+        ped_file,
+        '--id', 'dae_denovo_and_transmitted',
+        '--denovo-file', denovo_file,
+        '--dae-summary-file', dae_file,
+        '--pd', partition_description,
+    ])
+
+    generator.build(argv)
+
+    assert generator.study_id == 'dae_denovo_and_transmitted'
+    assert generator.partition_helper is not None
+    assert generator.vcf_loader is None
+    assert generator.denovo_loader is not None
+    assert generator.dae_loader is not None
