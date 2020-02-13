@@ -4,8 +4,8 @@ from dae.annotation.tools.annotator_base import AnnotatorBase
 
 class VCFInfoExtractor(AnnotatorBase):
 
-    def __init__(self, config):
-        super(VCFInfoExtractor, self).__init__(config)
+    def __init__(self, config, genomes_db):
+        super(VCFInfoExtractor, self).__init__(config, genomes_db)
 
     def collect_annotator_schema(self, schema):
         for info_key, output_col in self.config.columns.field_values_iterator():

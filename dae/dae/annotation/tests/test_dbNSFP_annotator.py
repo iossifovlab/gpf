@@ -41,11 +41,10 @@ def test_dbNSFP_annotator(variants_io, expected_df, capsys, genomes_db_2013):
             'annotator': 'dbNSFP_annotator.dbNSFPAnnotator',
             'virtual_columns': [],
         }),
-        genomes_db_2013
     )
 
     with variants_io('fixtures/multi_chrom_input.tsv') as io_manager:
-        dbNSFP_annotator = dbNSFPAnnotator(config)
+        dbNSFP_annotator = dbNSFPAnnotator(config, genomes_db_2013)
         assert dbNSFP_annotator is not None
 
         captured = capsys.readouterr()

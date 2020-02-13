@@ -41,12 +41,11 @@ def test_frequency_annotator(
             'columns': columns,
             'annotator': 'frequency_annotator.FrequencyAnnotator',
             'virtual_columns': [],
-        }),
-        genomes_db_2013
+        })
     )
 
     with variants_io('fixtures/freq_test_1.tsv') as io_manager:
-        freq_annotator = FrequencyAnnotator(config)
+        freq_annotator = FrequencyAnnotator(config, genomes_db_2013)
         assert freq_annotator is not None
 
         captured = capsys.readouterr()

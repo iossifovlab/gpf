@@ -14,8 +14,8 @@ from dae.annotation.tools.score_file_io import ScoreFile
 
 class VariantScoreAnnotatorBase(VariantAnnotatorBase):
 
-    def __init__(self, config):
-        super(VariantScoreAnnotatorBase, self).__init__(config)
+    def __init__(self, config, genomes_db):
+        super(VariantScoreAnnotatorBase, self).__init__(config, genomes_db)
 
         self._init_score_file()
 
@@ -75,8 +75,8 @@ class VariantScoreAnnotatorBase(VariantAnnotatorBase):
 
 class PositionScoreAnnotator(VariantScoreAnnotatorBase):
 
-    def __init__(self, config):
-        super(PositionScoreAnnotator, self).__init__(config)
+    def __init__(self, config, genomes_db):
+        super(PositionScoreAnnotator, self).__init__(config, genomes_db)
 
     def do_annotate(self, aline, variant):
         if variant is None:
@@ -106,8 +106,8 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
 
 class NPScoreAnnotator(VariantScoreAnnotatorBase):
 
-    def __init__(self, config):
-        super(NPScoreAnnotator, self).__init__(config)
+    def __init__(self, config, genomes_db):
+        super(NPScoreAnnotator, self).__init__(config, genomes_db)
         assert self.score_file.ref_name is not None
         assert self.score_file.alt_name is not None
         self.ref_name = self.score_file.ref_name
@@ -185,8 +185,8 @@ class NPScoreAnnotator(VariantScoreAnnotatorBase):
 
 class PositionMultiScoreAnnotator(CompositeVariantAnnotator):
 
-    def __init__(self, config):
-        super(PositionMultiScoreAnnotator, self).__init__(config)
+    def __init__(self, config, genomes_db):
+        super(PositionMultiScoreAnnotator, self).__init__(config, genomes_db)
         assert self.config.options.scores_directory is not None
 
         for score_name in self.config.columns._fields:
@@ -221,9 +221,8 @@ class PositionMultiScoreAnnotator(CompositeVariantAnnotator):
                 'columns': columns,
                 'annotator': 'score_annotator.VariantScoreAnnotator',
                 'virtual_columns': [],
-            }),
-            self.config.genomes_db
+            })
         )
 
-        annotator = PositionScoreAnnotator(variant_config)
+        annotator = PositionScoreAnnotator(variant_config, self.genomes_db)
         return annotator

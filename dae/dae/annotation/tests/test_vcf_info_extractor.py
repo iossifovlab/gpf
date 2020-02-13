@@ -43,12 +43,11 @@ def test_vcf_info_extractor(capsys, vcf_io, genomes_db_2013):
             },
             'annotator': 'vcf_info_extractor.VCFInfoExtractor',
             'virtual_columns': [],
-        }),
-        genomes_db_2013
+        })
     )
 
     with vcf_io as io_manager:
-        annotator = VCFInfoExtractor(section_config)
+        annotator = VCFInfoExtractor(section_config, genomes_db_2013)
         assert annotator is not None
         capsys.readouterr()
         annotator.annotate_file(io_manager)

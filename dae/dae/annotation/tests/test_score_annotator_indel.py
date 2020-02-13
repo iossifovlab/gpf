@@ -62,12 +62,11 @@ def test_np_score_annotator_indels(
             'columns': columns,
             'annotator': 'score_annotator.NPScoreAnnotator',
             'virtual_columns': [],
-        }),
-        genomes_db_2013
+        })
     )
 
     with variants_io(infile, options) as io_manager:
-        score_annotator = NPScoreAnnotator(config)
+        score_annotator = NPScoreAnnotator(config, genomes_db_2013)
         assert score_annotator is not None
 
         captured = capsys.readouterr()
@@ -132,12 +131,11 @@ def test_position_score_annotator_indels(
             'columns': columns,
             'annotator': 'score_annotator.NPScoreAnnotator',
             'virtual_columns': [],
-        }),
-        genomes_db_2013
+        })
     )
 
     with variants_io(infile, options) as io_manager:
-        score_annotator = PositionScoreAnnotator(config)
+        score_annotator = PositionScoreAnnotator(config, genomes_db_2013)
         assert score_annotator is not None
 
         captured = capsys.readouterr()
@@ -189,11 +187,10 @@ def test_np_score_annotator_indels_test_score(
             'columns': columns,
             'annotator': 'score_annotator.PositionScoreAnnotator',
             'virtual_columns': [],
-        }),
-        genomes_db_2013
+        })
     )
 
-    score_annotator = NPScoreAnnotator(config)
+    score_annotator = NPScoreAnnotator(config, genomes_db_2013)
     assert score_annotator is not None
 
     line = {
@@ -244,11 +241,10 @@ def test_position_score_annotator_indels_test_score(
             'columns': columns,
             'annotator': 'score_annotator.PositionScoreAnnotator',
             'virtual_columns': [],
-        }),
-        genomes_db_2013
+        })
     )
 
-    score_annotator = PositionScoreAnnotator(config)
+    score_annotator = PositionScoreAnnotator(config, genomes_db_2013)
     assert score_annotator is not None
 
     line = {

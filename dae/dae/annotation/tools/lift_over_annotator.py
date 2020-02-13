@@ -11,8 +11,8 @@ from dae.annotation.tools.schema import Schema
 
 class LiftOverAnnotator(VariantAnnotatorBase):
 
-    def __init__(self, config):
-        super(LiftOverAnnotator, self).__init__(config)
+    def __init__(self, config, genomes_db):
+        super(LiftOverAnnotator, self).__init__(config, genomes_db)
 
         self.chrom = self.config.options.c
         self.pos = self.config.options.p

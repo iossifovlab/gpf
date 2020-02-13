@@ -33,11 +33,10 @@ def effect_annotator(genomes_db_2013):
             'columns': columns,
             'annotator': 'effect_annotator.VariantEffectAnnotator',
             'virtual_columns': [],
-        }),
-        genomes_db_2013
+        })
     )
 
-    annotator = VariantEffectAnnotator(config)
+    annotator = VariantEffectAnnotator(config, genomes_db_2013)
     assert annotator is not None
 
     return annotator

@@ -34,14 +34,13 @@ def test_lift_over(mocker, chrom, pos, lift_over, expected, genomes_db_2013):
             'columns': columns,
             'annotator': 'lift_over_annotator.LiftOverAnnotator',
             'virtual_columns': [],
-        }),
-        genomes_db_2013
+        })
     )
     with mocker.patch(
             'dae.annotation.tools.lift_over_annotator.'
             'LiftOverAnnotator.build_lift_over'):
 
-        annotator = LiftOverAnnotator(config)
+        annotator = LiftOverAnnotator(config, genomes_db_2013)
         assert annotator is not None
 
         annotator.lift_over = mocker.Mock()

@@ -30,8 +30,6 @@ def test_annotation_config_options_parsing(gpf_instance_2013):
         AnnotationConfigParser.read_and_parse_file_configuration(
             {},
             relative_to_this_test_folder('fixtures/dummy_annotator.conf'),
-            relative_to_this_test_folder(''),
-            gpf_instance_2013.genomes_db
         )
 
     assert annotator_config.sections[0].options.vcf is False

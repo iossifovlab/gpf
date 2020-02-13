@@ -5,8 +5,7 @@ from dae.annotation.tools.score_annotator import NPScoreAnnotator
 
 
 class dbNSFPAnnotator(NPScoreAnnotator):
-
-    def __init__(self, config):
+    def __init__(self, config, genomes_db):
         self.current_chr = None
         self.dbNSFP_files = glob.glob(
                 os.path.join(config.options.dbNSFP_path,
@@ -35,7 +34,7 @@ class dbNSFPAnnotator(NPScoreAnnotator):
             config, {"options": options}
         )
 
-        super(dbNSFPAnnotator, self).__init__(config)
+        super(dbNSFPAnnotator, self).__init__(config, genomes_db)
 
     def _init_score_file(self):
         if self.current_chr:

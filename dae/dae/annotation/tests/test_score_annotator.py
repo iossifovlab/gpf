@@ -60,12 +60,11 @@ def test_variant_score_annotator_simple(
             'columns': columns,
             'annotator': 'score_annotator.VariantScoreAnnotator',
             'virtual_columns': [],
-        }),
-        genomes_db_2013
+        })
     )
 
     with variants_io('fixtures/input2.tsv') as io_manager:
-        score_annotator = PositionScoreAnnotator(config)
+        score_annotator = PositionScoreAnnotator(config, genomes_db_2013)
         assert score_annotator is not None
 
         captured = capsys.readouterr()
@@ -106,14 +105,13 @@ def test_variant_multi_score_annotator_simple(
             'columns': columns,
             'annotator': 'score_annotator.VariantScoreAnnotator',
             'virtual_columns': [],
-        }),
-        genomes_db_2013
+        })
     )
     print(config.options)
     print(type(config.options))
 
     with variants_io('fixtures/input2.tsv') as io_manager:
-        score_annotator = PositionMultiScoreAnnotator(config)
+        score_annotator = PositionMultiScoreAnnotator(config, genomes_db_2013)
         assert score_annotator is not None
 
         captured = capsys.readouterr()
@@ -156,14 +154,13 @@ def test_variant_multi_score_annotator_multi(
             'columns': columns,
             'annotator': 'score_annotator.VariantScoreAnnotator',
             'virtual_columns': [],
-        }),
-        genomes_db_2013
+        })
     )
     print(config.options)
     print(type(config.options))
 
     with variants_io('fixtures/input2.tsv') as io_manager:
-        score_annotator = PositionMultiScoreAnnotator(config)
+        score_annotator = PositionMultiScoreAnnotator(config, genomes_db_2013)
         assert score_annotator is not None
 
         captured = capsys.readouterr()
@@ -215,14 +212,13 @@ def test_variant_score_annotator_cadd(
             'columns': columns,
             'annotator': 'score_annotator.VariantScoreAnnotator',
             'virtual_columns': [],
-        }),
-        genomes_db_2013
+        })
     )
     print(config.options)
     print(type(config.options))
 
     with variants_io('fixtures/input2.tsv') as io_manager:
-        score_annotator = NPScoreAnnotator(config)
+        score_annotator = NPScoreAnnotator(config, genomes_db_2013)
         assert score_annotator is not None
 
         captured = capsys.readouterr()

@@ -19,12 +19,11 @@ def test_cleanup_annotator(capsys, variants_io, genomes_db_2013):
             },
             'annotator': 'cleanup_annotator.CleanupAnnotator',
             'virtual_columns': [],
-        }),
-        genomes_db_2013
+        })
     )
 
     with variants_io('fixtures/input.tsv') as io_manager:
-        annotator = CleanupAnnotator(section_config)
+        annotator = CleanupAnnotator(section_config, genomes_db_2013)
         assert annotator is not None
         capsys.readouterr()
         annotator.annotate_file(io_manager)

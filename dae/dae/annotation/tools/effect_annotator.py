@@ -10,11 +10,8 @@ from dae.annotation.tools.annotator_base import VariantAnnotatorBase
 
 class EffectAnnotatorBase(VariantAnnotatorBase):
 
-    def __init__(self, config, **kwargs):
-        super(EffectAnnotatorBase, self).__init__(config)
-
-        self.genome = config.genome
-        self.gene_models = config.gene_models
+    def __init__(self, config, genomes_db, **kwargs):
+        super(EffectAnnotatorBase, self).__init__(config, genomes_db)
 
         self.effect_annotator = VariantAnnotator(
             self.genome, self.gene_models,
@@ -49,8 +46,8 @@ class EffectAnnotator(EffectAnnotatorBase):
         ('effect_details', 'list(str)'),
     ]
 
-    def __init__(self, config, **kwargs):
-        super(EffectAnnotator, self).__init__(config, **kwargs)
+    def __init__(self, config, genomes_db, **kwargs):
+        super(EffectAnnotator, self).__init__(config, genomes_db, **kwargs)
 
     def do_annotate(self, aline, variant):
         if variant is None:
@@ -89,8 +86,8 @@ class VariantEffectAnnotator(EffectAnnotatorBase):
         ('effect_details', 'list(str)'),
     ]
 
-    def __init__(self, config, **kwargs):
-        super(VariantEffectAnnotator, self).__init__(config, **kwargs)
+    def __init__(self, config, genomes_db, **kwargs):
+        super(VariantEffectAnnotator, self).__init__(config, genomes_db, **kwargs)
 
     def do_annotate(self, aline, variant):
         if variant is None:

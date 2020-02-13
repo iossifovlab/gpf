@@ -55,11 +55,10 @@ def test_annotator_base_simple(genomes_db_2013):
             },
             'virtual_columns': [],
             'annotator': 'annotator_base.AnnotatorBase'
-        }),
-        genomes_db_2013
+        })
     )
 
-    annotator = AnnotatorBase(section_config)
+    annotator = AnnotatorBase(section_config, genomes_db_2013)
     assert annotator is not None
 
 
@@ -73,12 +72,11 @@ def test_copy_annotator_simple(capsys, variants_io1, genomes_db_2013):
             },
             'virtual_columns': [],
             'annotator': 'annotator_base.CopyAnnotator'
-        }),
-        genomes_db_2013
+        })
     )
 
     with variants_io1 as io_manager:
-        annotator = CopyAnnotator(section_config)
+        annotator = CopyAnnotator(section_config, genomes_db_2013)
         assert annotator is not None
         capsys.readouterr()
         annotator.annotate_file(io_manager)
@@ -102,8 +100,7 @@ def test_copy_annotator_multi(
             },
             'virtual_columns': [],
             'annotator': 'annotator_base.CopyAnnotator'
-        }),
-        genomes_db_2013
+        })
     )
 
     df = pd.read_csv(
@@ -114,7 +111,7 @@ def test_copy_annotator_multi(
     print(df[['test1', 'test2']])
 
     with variants_io_m as io_manager:
-        annotator = CopyAnnotator(section_config)
+        annotator = CopyAnnotator(section_config, genomes_db_2013)
         assert annotator is not None
         capsys.readouterr()
         annotator.annotate_file(io_manager)

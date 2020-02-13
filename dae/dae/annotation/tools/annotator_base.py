@@ -18,8 +18,14 @@ class AnnotatorBase(object):
     `AnnotatorBase` is base class of all `Annotators`.
     '''
 
-    def __init__(self, config):
+    def __init__(self, config, genomes_db):
         self.config = config
+        self.genomes_db = genomes_db
+        self.genome = self.genomes_db.get_genome_from_file(config.options.Graw)
+        self.gene_models = self.genomes_db.get_gene_models(config.options.Traw)
+        assert self.genomes_db is not None
+        assert self.genome is not None
+        assert self.gene_models is not None
 
         self.mode = 'replace'
         if self.config.options.mode == 'replace':
@@ -93,8 +99,8 @@ class AnnotatorBase(object):
 
 class CopyAnnotator(AnnotatorBase):
 
-    def __init__(self, config):
-        super(CopyAnnotator, self).__init__(config)
+    def __init__(self, config, genomes_db):
+        super(CopyAnnotator, self).__init__(config, genomes_db)
 
     def collect_annotator_schema(self, schema):
         for key, value in self.config.columns.field_values_iterator():
@@ -181,6 +187,7 @@ class VCFBuilder(VariantBuilder):
         self.alt = self.config.options.a
 
     def build_variant(self, aline):
+        assert self.chrom, self.chrom
         chrom = aline[self.chrom]
         position = aline[self.position]
         ref = aline[self.ref]
@@ -199,10 +206,8 @@ class VCFBuilder(VariantBuilder):
 
 class VariantAnnotatorBase(AnnotatorBase):
 
-    def __init__(self, config):
-        super(VariantAnnotatorBase, self).__init__(config)
-
-        self.genome = self.config.genome
+    def __init__(self, config, genomes_db):
+        super(VariantAnnotatorBase, self).__init__(config, genomes_db)
 
         if self.config.options.vcf:
             self.variant_builder = VCFBuilder(self.config, self.genome)
@@ -246,8 +251,8 @@ class VariantAnnotatorBase(AnnotatorBase):
 
 class CompositeAnnotator(AnnotatorBase):
 
-    def __init__(self, config):
-        super(CompositeAnnotator, self).__init__(config)
+    def __init__(self, config, genomes_db):
+        super(CompositeAnnotator, self).__init__(config, genomes_db)
         self.annotators = []
 
     def add_annotator(self, annotator):
@@ -265,8 +270,8 @@ class CompositeAnnotator(AnnotatorBase):
 
 class CompositeVariantAnnotator(VariantAnnotatorBase):
 
-    def __init__(self, config):
-        super(CompositeVariantAnnotator, self).__init__(config)
+    def __init__(self, config, genomes_db):
+        super(CompositeVariantAnnotator, self).__init__(config, genomes_db)
         self.annotators = []
 
     def add_annotator(self, annotator):

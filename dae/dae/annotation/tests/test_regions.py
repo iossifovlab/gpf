@@ -66,12 +66,11 @@ def test_regions_parameterized(
             'columns': columns,
             'annotator': 'score_annotator.PositionScoreAnnotator',
             'virtual_columns': [],
-        }),
-        genomes_db_2013
+        })
     )
 
     with variants_io('fixtures/input3.tsv.gz', config.options) as io_manager:
-        score_annotator = PositionScoreAnnotator(config)
+        score_annotator = PositionScoreAnnotator(config, genomes_db_2013)
         assert score_annotator is not None
 
         captured = capsys.readouterr()
@@ -135,12 +134,11 @@ def test_regions_parameterized_missing_scores(
             'columns': columns,
             'annotator': 'score_annotator.VariantScoreAnnotator',
             'virtual_columns': [],
-        }),
-        genomes_db_2013
+        })
     )
 
     with variants_io('fixtures/input3.tsv.gz', config.options) as io_manager:
-        score_annotator = PositionScoreAnnotator(config)
+        score_annotator = PositionScoreAnnotator(config, genomes_db_2013)
         assert score_annotator is not None
 
         captured = capsys.readouterr()
@@ -186,12 +184,11 @@ def test_regions_simple(expected_df, variants_io, capsys, genomes_db_2013):
             'columns': columns,
             'annotator': 'score_annotator.VariantScoreAnnotator',
             'virtual_columns': [],
-        }),
-        genomes_db_2013
+        })
     )
 
     with variants_io('fixtures/input3.tsv.gz', config.options) as io_manager:
-        score_annotator = PositionScoreAnnotator(config)
+        score_annotator = PositionScoreAnnotator(config, genomes_db_2013)
         assert score_annotator is not None
 
         captured = capsys.readouterr()

@@ -54,7 +54,7 @@ class AnnotationConfigParser():
 
     @classmethod
     def read_and_parse_file_configuration(
-            cls, options, config_file, work_dir, genomes_db, defaults=None):
+            cls, options, config_file, defaults=None):
 
         if defaults is None:
             defaults = {}
@@ -78,7 +78,8 @@ class AnnotationConfigParser():
         config = GPFConfigParser.modify_tuple(
             config, {"options": options}
         )
-        config = cls._setup_defaults(config, genomes_db)
+
+        config = cls._setup_defaults(config)
 
         config = GPFConfigParser.modify_tuple(
             config, {"columns": {}}
@@ -97,7 +98,7 @@ class AnnotationConfigParser():
         for config_section in config.sections:
             if config_section.annotator is None:
                 continue
-            config_section = cls.parse_section(config_section, genomes_db)
+            config_section = cls.parse_section(config_section)
             config_section = GPFConfigParser.modify_tuple(
                 # TODO / FIXME
                 # This should be fine since the defaults_dict is updated
@@ -112,8 +113,8 @@ class AnnotationConfigParser():
         return config
 
     @classmethod
-    def parse_section(cls, config_section, genomes_db):
-        config_section = cls._setup_defaults(config_section, genomes_db)
+    def parse_section(cls, config_section):
+        config_section = cls._setup_defaults(config_section)
 
         config_section = GPFConfigParser.modify_tuple(
             config_section, {"sections": []}
@@ -138,7 +139,7 @@ class AnnotationConfigParser():
         return config_section
 
     @staticmethod
-    def _setup_defaults(config, genomes_db):
+    def _setup_defaults(config):
         def modify_config_options(config, new_vals):
             config_opts = config.options
             config_opts = GPFConfigParser.modify_tuple(
@@ -164,19 +165,5 @@ class AnnotationConfigParser():
                 config = modify_config_options(config, {"x": "location"})
             if config.options.v is None:
                 config = modify_config_options(config, {"v": "variant"})
-
-        config = GPFConfigParser.modify_tuple(
-            config, {"genomes_db": genomes_db}
-        )
-        config = GPFConfigParser.modify_tuple(
-            config, {"genome": genomes_db.get_genome_from_file(config.options.Graw)}
-        )
-        config = GPFConfigParser.modify_tuple(
-            config, {"gene_models": genomes_db.get_gene_models(config.options.Traw)}
-        )
-
-        assert config.genomes_db is not None
-        assert config.genome is not None
-        assert config.gene_models is not None
 
         return config
