@@ -90,11 +90,11 @@ class DenovoLoader(VariantsGenotypesLoader):
             ]
 
         all_chromosomes = self.genome.allChromosomes
-        assert all([
-            chrom in set(all_chromosomes) for chrom in self.chromosomes])
-        self.chromosomes = sorted(
-            self.chromosomes, key=lambda chrom: all_chromosomes.index(chrom)
-        )
+        if all([chrom in set(all_chromosomes) for chrom in self.chromosomes]):
+            self.chromosomes = sorted(
+                self.chromosomes,
+                key=lambda chrom: all_chromosomes.index(chrom)
+            )
 
     def _is_in_regions(self, summary_variant):
         isin = [
