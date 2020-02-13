@@ -13,7 +13,6 @@ def test_denovo2parquet_denovo(
         dae_denovo_config, temp_filename, genomes_db_2013):
 
     argv = [
-        'variants',
         '--ped-file-format', 'simple',
         '-o', temp_filename,
         dae_denovo_config.family_filename,
@@ -32,30 +31,30 @@ def test_denovo2parquet_denovo(
     assert 'effect_data' in schema.names
 
 
-def test_denovo2parquet_denovo_make(
-        dae_denovo_config, temp_dirname, genomes_db_2013):
+# def test_denovo2parquet_denovo_make(
+#         dae_denovo_config, temp_dirname, genomes_db_2013):
 
-    argv = [
-        'make',
-        '--ped-file-format', 'simple',
-        '-o', temp_dirname,
-        dae_denovo_config.family_filename,
-        dae_denovo_config.denovo_filename,
-    ]
+#     argv = [
+#         'make',
+#         '--ped-file-format', 'simple',
+#         '-o', temp_dirname,
+#         dae_denovo_config.family_filename,
+#         dae_denovo_config.denovo_filename,
+#     ]
 
-    main(argv)
-    assert os.path.exists(temp_dirname)
+#     main(argv)
+#     assert os.path.exists(temp_dirname)
 
-    with open(os.path.join(temp_dirname, 'Makefile'), 'r') as makefile:
-        text = makefile.read()
-        assert 'all:' in text
-        assert 'all_bins=none' in text
-        assert 'all_bins_flags=$(foreach bin, $(all_bins), $(bin).flag)' \
-               in text
-        assert 'variants:' in text
-        assert '%.flag' in text
-        assert 'pedigree:' in text
-        assert 'ped.flag:' in text
+#     with open(os.path.join(temp_dirname, 'Makefile'), 'r') as makefile:
+#         text = makefile.read()
+#         assert 'all:' in text
+#         assert 'all_bins=none' in text
+#         assert 'all_bins_flags=$(foreach bin, $(all_bins), $(bin).flag)' \
+#                in text
+#         assert 'variants:' in text
+#         assert '%.flag' in text
+#         assert 'pedigree:' in text
+#         assert 'ped.flag:' in text
 
 
 def test_denovo2parquet_denovo_partition(
@@ -66,7 +65,6 @@ def test_denovo2parquet_denovo_partition(
         'backends/example_partition_configuration.conf')
 
     argv = [
-        'variants',
         '--ped-file-format', 'simple',
         '--pd', partition_description,
         '-o', temp_dirname,
@@ -85,37 +83,37 @@ def test_denovo2parquet_denovo_partition(
         assert 'frequency_bin=0' in file
 
 
-def test_denovo2parquet_denovo_partition_make(
-        fixture_dirname, dae_denovo_config,
-        temp_dirname,
-        genomes_db_2013):
+# def test_denovo2parquet_denovo_partition_make(
+#         fixture_dirname, dae_denovo_config,
+#         temp_dirname,
+#         genomes_db_2013):
 
-    partition_description = fixture_dirname(
-        'backends/example_partition_configuration.conf')
+#     partition_description = fixture_dirname(
+#         'backends/example_partition_configuration.conf')
 
-    argv = [
-        'make',
-        '--ped-file-format', 'simple',
-        '--pd', partition_description,
-        '-o', temp_dirname,
-        dae_denovo_config.family_filename,
-        dae_denovo_config.denovo_filename,
-    ]
+#     argv = [
+#         'make',
+#         '--ped-file-format', 'simple',
+#         '--pd', partition_description,
+#         '-o', temp_dirname,
+#         dae_denovo_config.family_filename,
+#         dae_denovo_config.denovo_filename,
+#     ]
 
-    main(argv)
-    assert os.path.exists(temp_dirname)
+#     main(argv)
+#     assert os.path.exists(temp_dirname)
 
-    with open(os.path.join(temp_dirname, 'Makefile'), 'r') as makefile:
-        text = makefile.read()
-        assert 'all:' in text
-        assert 'all_bins=1_0' in text
-        assert 'all_bins_flags=$(foreach bin, $(all_bins), $(bin).flag)' \
-               in text
-        assert 'variants:' in text
-        assert f'--pd {partition_description}' in text
-        assert '%.flag' in text
-        assert 'pedigree:' in text
-        assert 'ped.flag:' in text
+#     with open(os.path.join(temp_dirname, 'Makefile'), 'r') as makefile:
+#         text = makefile.read()
+#         assert 'all:' in text
+#         assert 'all_bins=1_0' in text
+#         assert 'all_bins_flags=$(foreach bin, $(all_bins), $(bin).flag)' \
+#                in text
+#         assert 'variants:' in text
+#         assert f'--pd {partition_description}' in text
+#         assert '%.flag' in text
+#         assert 'pedigree:' in text
+#         assert 'ped.flag:' in text
 
 
 @pytest.mark.parametrize('variants', [
