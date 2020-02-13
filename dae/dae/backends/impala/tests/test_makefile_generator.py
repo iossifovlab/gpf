@@ -28,6 +28,7 @@ def test_makefile_generator_simple(
         '-o', temp_dirname,
         f'{prefix}.ped',
         '--vcf-files', f'{prefix}.vcf.gz',
+        '--gs', 'genotype_impala',
     ])
 
     generator.build(argv)
@@ -53,6 +54,7 @@ def test_makefile_generator_multivcf_simple(
         ped_file,
         '--vcf-files', vcf_file1, vcf_file2,
         '--pd', partition_description,
+        '--gs', 'genotype_impala',
     ])
 
     generator.build(argv)
@@ -81,6 +83,7 @@ def test_makefile_generator_denovo_and_dae(
         '--denovo-file', denovo_file,
         '--dae-summary-file', dae_file,
         '--pd', partition_description,
+        '--gs', 'genotype_impala',
     ])
 
     generator.build(argv)

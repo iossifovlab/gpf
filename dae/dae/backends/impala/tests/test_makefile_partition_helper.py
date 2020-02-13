@@ -123,48 +123,6 @@ def test_target_generator_chrom_other(
     assert set(result.keys()) == targets
 
 
-@pytest.mark.parametrize('region_length,target_chroms,all_bins', [
-    (3_000_000_000, ('1', '3'), '1_0 other_0'),
-    (240_000_000, ('1', '3'), '1_0 1_1 other_0'),
-])
-def test_generator_make_variants(
-        region_length, target_chroms, all_bins, genomes_db_2019):
-
-    partition_descriptor = ParquetPartitionDescriptor(
-            ['1', '2'], region_length)
-
-    generator = MakefilePartitionHelper(
-        partition_descriptor,
-        genomes_db_2019.get_genome())
-
-    output = io.StringIO()
-
-    generator.generate_variants_make(
-        'vcf2parquet.py ped.ped vcf.vcf --pd partition_description.conf',
-        target_chroms, output=output)
-
-    print(output.getvalue())
-    search_string = f'all_bins={all_bins}'
-    pattern = re.compile(search_string)
-    assert pattern.search(output.getvalue())
-
-
-def test_no_parition_description_simple(temp_filename, genomes_db_2019):
-    partition_descriptor = NoPartitionDescriptor(temp_filename)
-
-    generator = MakefilePartitionHelper(
-        partition_descriptor,
-        genomes_db_2019.get_genome())
-
-    output = io.StringIO()
-
-    generator.generate_variants_make(
-        'vcf2parquet.py ped.ped vcf.vcf',
-        ('1'), output=output)
-
-    print(output.getvalue())
-
-
 @pytest.mark.parametrize('region_length,targets', [
     (3_000_000_000, set(['other_0'])),
     (300_000_000, set(['other_0', 'other_1'])),
