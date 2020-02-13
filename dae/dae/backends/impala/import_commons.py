@@ -270,6 +270,7 @@ class MakefileGenerator:
         self.vcf_loader = None
         self.denovo_loader = None
         self.dae_loader = None
+        self.genotype_storage_id = None
 
     @property
     def families(self):
@@ -356,13 +357,35 @@ class MakefileGenerator:
 
         return self
 
+    def build_genotype_storage(self, argv):
+        if argv.genotype_storage is None:
+            genotype_storage_id = \
+                self.gpf_instance.dae_config.\
+                get('genotype_storage', {}).\
+                get('default', None)
+        else:
+            genotype_storage_id = argv.genotype_storage
+
+        genotype_storage = self.gpf_instance.genotype_storage_db \
+            .get_genotype_storage(genotype_storage_id)
+        if genotype_storage is None:
+            raise ValueError(
+                f"genotype storage {genotype_storage_id} not found")
+        if not genotype_storage.is_impala():
+            raise ValueError(
+                f"genotype storage {genotype_storage_id} is not "
+                f"Impala Genotype Storage")
+        self.genotype_storage_id = genotype_storage_id
+        return self
+
     def build(self, argv):
         self.build_familes_loader(argv) \
             .build_denovo_loader(argv) \
             .build_vcf_loader(argv) \
             .build_dae_loader(argv) \
             .build_study_id(argv) \
-            .build_partition_helper(argv)
+            .build_partition_helper(argv) \
+            .build_genotype_storage(argv)
         return self
 
     def _create_output_directory(self, argv):
@@ -487,11 +510,13 @@ class MakefileGenerator:
 
         bins = ' '.join(list(variants_targets.keys()))
 
+        print('\n', file=outfile)
         print(
             f'{target_prefix}_bins={bins}',
             file=outfile)
         print(
-            f'{target_prefix}_bins_flags=$(foreach bin, $(vcf_bins), '
+            f'{target_prefix}_bins_flags='
+            f'$(foreach bin, $({target_prefix}_bins), '
             f'{target_prefix}_$(bin).flag)\n',
             file=outfile)
         print(
@@ -533,6 +558,8 @@ class MakefileGenerator:
         )
 
     def _construct_load_command(self, argv):
+        assert self.genotype_storage_id is not None
+
         output = argv.output
         if output is None:
             output = '.'
@@ -542,11 +569,8 @@ class MakefileGenerator:
             f'impala_parquet_loader.py {self.study_id}',
             os.path.join(output, f'{self.study_id}_pedigree.parquet'),
             os.path.join(output, f'{self.study_id}_variants.parquet'),
+            f'--gs {self.genotype_storage_id}'
         ]
-        if argv.genotype_storage is not None:
-            command.append(
-                f'--gs {argv.genotype_storage}'
-            )
 
         return ' '.join(command)
 
@@ -676,6 +700,19 @@ class MakefileGenerator:
         )
 
         return parser
+
+    @classmethod
+    def main(cls, argv=sys.argv[1:], gpf_instance=None):
+
+        if gpf_instance is None:
+            gpf_instance = GPFInstance()
+
+        parser = cls.cli_arguments_parser(gpf_instance)
+        argv = parser.parse_args(argv)
+
+        generator = cls(gpf_instance)
+        generator.build(argv)
+        generator.generate_makefile(argv)
 
 
 class Variants2ParquetTool:
