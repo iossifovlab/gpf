@@ -89,3 +89,34 @@ def conf_schema_set():
 @pytest.fixture(scope="session")
 def conf_schema_path():
     return sample_conf_schema_5
+
+
+@pytest.fixture(scope="session")
+def conf_schema_nested():
+    return {
+        "id": {"type": "string"},
+        "name": {"type": "string"},
+        "section1": {
+            "type": "dict",
+            "schema": {
+                "someval1": {"type": "string"},
+                "someval2": {"type": "float"},
+                "someval3": {"type": "integer"},
+            },
+        },
+        "section2": {
+            "type": "dict",
+            "schema": {
+                "someval": {"type": "list", "schema": {"type": "string"}},
+            },
+        },
+        "table_arr": {
+            "type": "list",
+            "schema": {
+                "type": "dict",
+                "schema": {
+                    "someval": {"type": "string"}
+                },
+            },
+        }
+    }

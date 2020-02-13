@@ -6,6 +6,7 @@ import yaml
 import toml
 
 from collections import namedtuple
+from copy import deepcopy, copy
 from typing import List, Tuple, Any, Dict
 from cerberus import Validator
 
@@ -85,7 +86,7 @@ class GPFConfigParser:
 
     @classmethod
     def _namedtuple_to_dict(cls, tup: Tuple[Any]) -> Dict[str, Any]:
-        output = tup._asdict()
+        output = deepcopy(tup)._asdict()
         for k, v in output.items():
             if isinstance(v, tuple):
                 output[k] = cls._namedtuple_to_dict(v)

@@ -100,7 +100,7 @@ def test_config_parser_env_interpolation(
 
 @pytest.mark.xfail()
 def test_config_parser_env_interpolation_missing(
-    conf_schema_basic, fixtures_dir, mocker
+    conf_schema_basic, fixtures_dir
 ):
     GPFConfigParser.load_config(
         os.path.join(fixtures_dir, "env_interpolation_conf.toml"),
@@ -114,3 +114,14 @@ def test_tupleization_default_value():
     assert tupleized.a == 1
     assert tupleized.b == 2
     assert tupleized.c is None
+
+
+def test_config_parser_dict_namedtuple_conversion(
+        conf_schema_nested, fixtures_dir):
+    config = GPFConfigParser.load_config(
+        os.path.join(fixtures_dir, "nested_conf.toml"), conf_schema_nested
+    )
+
+    dict_config = GPFConfigParser._namedtuple_to_dict(config)
+    tup_from_dict_config = GPFConfigParser._dict_to_namedtuple(dict_config)
+    assert tup_from_dict_config == config
