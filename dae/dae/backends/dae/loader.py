@@ -70,11 +70,10 @@ class DenovoLoader(VariantsGenotypesLoader):
         self.set_attribute('source_type', 'denovo')
         self.genome = genome
 
-        self.chromosomes = genome.allChromosomes
-
         self.denovo_df = self.flexible_denovo_load(
             denovo_filename, genome, families=families, **self.params
         )
+        self._init_chromosomes()
 
         if np.all(pd.isnull(self.denovo_df['genotype'])):
             self.expect_best_state = True
@@ -82,6 +81,20 @@ class DenovoLoader(VariantsGenotypesLoader):
             self.expect_genotype = True
         else:
             assert False
+
+    def _init_chromosomes(self):
+        self.chromosomes = list(self.denovo_df.chrom.unique())
+        if self._adjust_chrom_prefix is not None:
+            self.chromosomes = [
+                self._adjust_chrom_prefix(chrom) for chrom in self.chromosomes
+            ]
+
+        all_chromosomes = self.genome.allChromosomes
+        if all([chrom in set(all_chromosomes) for chrom in self.chromosomes]):
+            self.chromosomes = sorted(
+                self.chromosomes,
+                key=lambda chrom: all_chromosomes.index(chrom)
+            )
 
     def _is_in_regions(self, summary_variant):
         isin = [
@@ -807,11 +820,14 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
     @classmethod
     def cli_arguments(cls, parser):
         parser.add_argument(
-            'summary_filename', type=str,
+            'dae_summary_file', type=str,
             metavar='<summary filename>',
             help='summary variants file to import'
         )
+        cls.cli_options(parser)
 
+    @classmethod
+    def cli_options(cls, parser):
         parser.add_argument(
             '--dae-include-reference-genotypes', default=False,
             dest='dae_include_reference_genotypes',
@@ -832,7 +848,7 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
 
     @classmethod
     def parse_cli_arguments(cls, argv):
-        filename = argv.summary_filename
+        filename = argv.dae_summary_file
 
         params = {
             'dae_include_reference_genotypes':

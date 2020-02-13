@@ -627,3 +627,23 @@ class VariantsGenotypesLoader(VariantsLoader):
                 result[key] = value
 
         return result
+
+    @classmethod
+    def cli_options(cls, parser):
+        parser.add_argument(
+            '--add-chrom-prefix', type=str, default=None,
+            help='Add specified prefix to each chromosome name in '
+            'variants file'
+        )
+        parser.add_argument(
+            '--del-chrom-prefix', type=str, default=None,
+            help='Removes specified prefix from each chromosome name in '
+            'variants file'
+        )
+
+    @classmethod
+    def cli_defaults(cls):
+        return {
+            'add_chrom_prefix': None,
+            'del_chrom_prefix': None,
+        }

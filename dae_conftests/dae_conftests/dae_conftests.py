@@ -768,13 +768,6 @@ def variants_impala(
     return builder
 
 
-@pytest.fixture(scope='session')
-def parquet_partition_configuration():
-    filename = relative_to_this_test_folder(
-        'fixtures/backends/example_partition_configuration.conf')
-    return filename
-
-
 @pytest.fixture(scope='function')
 def test_fixture():
     print('start')
