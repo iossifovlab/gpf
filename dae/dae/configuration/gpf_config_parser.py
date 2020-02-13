@@ -89,6 +89,10 @@ class GPFConfigParser:
         for k, v in output.items():
             if isinstance(v, tuple):
                 output[k] = cls._namedtuple_to_dict(v)
+            if isinstance(v, list):
+                for idx, li in enumerate(output[k]):
+                    if isinstance(li, tuple):
+                        output[k][idx] = cls._namedtuple_to_dict(li)
         return output
 
     @classmethod

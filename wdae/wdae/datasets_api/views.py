@@ -12,7 +12,7 @@ class DatasetView(QueryBaseView):
 
     def augment_accessibility(self, dataset, user):
         dataset_object = Dataset.objects.get(dataset_id=dataset['id'])
-        dataset['accessRights'] = user.has_perm('datasets_api.view',
+        dataset['access_rights'] = user.has_perm('datasets_api.view',
                                                 dataset_object)
         return dataset
 

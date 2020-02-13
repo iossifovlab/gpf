@@ -3,6 +3,7 @@ import functools
 import itertools
 import traceback
 import numpy as np
+from copy import deepcopy
 
 from dae.utils.variant_utils import mat2str
 from dae.utils.dae_utils import split_iterable, join_line, \
@@ -767,43 +768,23 @@ class StudyWrapper(object):
             'studies', 'has_present_in_child', 'has_present_in_parent'
         ]
         # TODO Add domain to pheno filters
-        result = {key: getattr(self.config, key, None) for key in keys}
+        result = {key: deepcopy(getattr(self.config, key, None)) for key in keys}
 
 
-        bs_config = GPFConfigParser._namedtuple_to_dict(self.config.genotype_browser)
+        bs_config = GPFConfigParser._namedtuple_to_dict(deepcopy(self.config.genotype_browser))
         bs_config["columns"] = bs_config["genotype"]
 
         result['genotype_browser_config'] = bs_config
         result['genotype_browser'] = self.config.genotype_browser.enabled or False
 
-        def camelize(input_dict):
-            new_result = dict()
-            for k, v in input_dict.items():
-                new_key = k.split('_')
-                new_key = ''.join([new_key[0], *[w.title() for w in new_key[1:]]])
-                if isinstance(v, dict):
-                    v = camelize(v)
-                elif isinstance(v, list):
-                    newlist = []
-                    for item in v:
-                        if isinstance(item, tuple):
-                            newitem = camelize(GPFConfigParser._namedtuple_to_dict(item))
-                        else:
-                            newitem = item
-                        newlist.append(newitem)
-                    v = newlist
-                new_result[new_key] = v
-            return new_result
+        result['study_types'] = result['study_type']
+        result['enrichment_tool'] = self.config.enrichment.enabled
+        result['common_report'] = GPFConfigParser._namedtuple_to_dict(result['common_report'])
+        result['people_group'] = GPFConfigParser._namedtuple_to_dict(result['people_group'])
 
-        new_result = camelize(result)
+        result['name'] = result['name'] or result['id']
 
-        new_result['studyTypes'] = new_result['studyType']
-        new_result['enrichmentTool'] = self.config.enrichment.enabled
-        new_result['commonReport'] = camelize(GPFConfigParser._namedtuple_to_dict(new_result['commonReport']))
-        new_result['peopleGroup'] = camelize(GPFConfigParser._namedtuple_to_dict(new_result['peopleGroup']))
-        new_result['name'] = new_result['name'] or new_result['id']
-
-        return new_result
+        return result
 
     def _get_wdae_member(self, member, people_group, best_st):
         return [
