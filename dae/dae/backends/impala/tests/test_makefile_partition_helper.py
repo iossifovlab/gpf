@@ -1,11 +1,8 @@
 import pytest
-import io
-import re
 
 from dae.GenomeAccess import GenomicSequence
 
-from dae.backends.impala.parquet_io import ParquetPartitionDescriptor, \
-    NoPartitionDescriptor
+from dae.backends.impala.parquet_io import ParquetPartitionDescriptor
 from dae.backends.impala.import_commons import MakefilePartitionHelper
 
 

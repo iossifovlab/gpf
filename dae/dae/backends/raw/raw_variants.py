@@ -1,6 +1,5 @@
 import sys
 import time
-import itertools
 
 from dae.variants.family_variant import FamilyAllele
 
