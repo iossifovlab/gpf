@@ -58,11 +58,14 @@ class StudyWrapper(object):
         self.pheno_filters = genotype_browser_config.pheno_filters or []
 
         # GENE WEIGHTS
-        self.gene_weight_column_sources = [
-            slot.source
-            for slot
-            in (genotype_browser_config.genotype.weights.slots or [])
-        ]
+        if genotype_browser_config.genotype:
+            self.gene_weight_column_sources = [
+                slot.source
+                for slot
+                in (genotype_browser_config.genotype.weights.slots or [])
+            ]
+        else:
+            self.gene_weight_column_sources = []
 
         # IN ROLE
         self.in_role_columns = genotype_browser_config.in_roles or []
@@ -769,7 +772,6 @@ class StudyWrapper(object):
         ]
         # TODO Add domain to pheno filters
         result = {key: deepcopy(getattr(self.config, key, None)) for key in keys}
-
 
         bs_config = GPFConfigParser._namedtuple_to_dict(deepcopy(self.config.genotype_browser))
         bs_config["columns"] = bs_config["genotype"]
