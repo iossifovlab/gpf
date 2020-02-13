@@ -463,12 +463,12 @@ class VcfLoader(VariantsGenotypesLoader):
             params={},
             **kwargs):
 
-        if params.get('vcf_wildcards', None) is not None:
+        if params.get('vcf_wildcards', None):
             filenames = [
                 [vcf_file.format(vw=vw) for vcf_file in vcf_files]
                 for vw in params.get('vcf_wildcards')
             ]
-            all_filenames = list(itertools.chain(*filenames))
+            all_filenames = list(itertools.chain.from_iterable(filenames))
         else:
             filenames = [vcf_files]
             all_filenames = vcf_files
@@ -482,6 +482,7 @@ class VcfLoader(VariantsGenotypesLoader):
             expect_best_state=False,
             params=params)
 
+        self.set_attribute('source_type', 'vcf')
         self.vcf_loaders = [
             SingleVcfLoader(
                 families,
@@ -503,13 +504,15 @@ class VcfLoader(VariantsGenotypesLoader):
         return all_chromosomes
 
     def _full_variants_iterator_impl(self):
-        summary_variant_index = 0
+        summary_index = 0
         for vcf_loader in self.vcf_loaders:
-            full_iterator = vcf_loader._full_variants_iterator_impl(
-                summary_variant_index)
-            for summary_variant, family_variants in full_iterator:
-                yield summary_variant, family_variants
-                summary_variant_index += 1
+            iterator = vcf_loader._full_variants_iterator_impl(summary_index)
+            try:
+                for summary_variant, family_variants in iterator:
+                    yield summary_variant, family_variants
+                    summary_index += 1
+            except StopIteration:
+                pass
 
     @classmethod
     def cli_defaults(cls):
