@@ -133,7 +133,7 @@ export class MeasureFilter {
   static fromJson(json: any): MeasureFilter {
     return new MeasureFilter(
       json['role'],
-      json['filterType'],
+      json['filter_type'],
       json['measure'],
       json['domain']
     );
@@ -151,8 +151,8 @@ export class PhenoFilter {
   static fromJson(json: any): PhenoFilter {
     return new PhenoFilter(
       json['name'],
-      json['measureType'],
-      MeasureFilter.fromJson(json['measureFilter']),
+      json['measure_type'],
+      MeasureFilter.fromJson(json['measure_filter']),
     );
   }
 
@@ -176,24 +176,23 @@ export class GenotypeBrowser {
 
   static fromJson(json: any): GenotypeBrowser {
     return new GenotypeBrowser(
-      //json['hasPedigreeSelector'],
-      true,
-      json['hasPresentInChild'],
-      json['hasPresentInParent'],
-      json['hasPresentInRole'],
-      json['hasCnv'],
-      json['hasComplex'],
-      json['hasFamilyFilters'],
-      json['hasStudyFilters'],
-      json['hasStudyTypes'],
-      json['hasGraphicalPreview'],
-      json['previewColumns'],
+      json['has_pedigree_selector'],
+      json['has_present_in_child'],
+      json['has_present_in_parent'],
+      json['has_present_in_role'],
+      json['has_cnv'],
+      json['has_complex'],
+      json['has_family_filters'],
+      json['has_study_filters'],
+      json['has_study_types'],
+      json['has_graphical_preview'],
+      json['preview_columns'],
       [...AdditionalColumn.fromJson(json['columns'])],
-      PhenoFilter.fromJsonArray(json['phenoFilters']),
-      PhenoFilter.fromJsonArray(json['familyFilters']),
-      PresentInRole.fromJsonArray(json['presentInRole']),
-      json['inheritanceTypeFilter'],
-      json['selectedInheritanceTypeFilterValues'],
+      PhenoFilter.fromJsonArray(json['pheno_filters']),
+      PhenoFilter.fromJsonArray(json['family_filters']),
+      PresentInRole.fromJsonArray(json['present_in_role']),
+      json['inheritance_type_filter'],
+      json['selected_inheritance_type_filter_values'],
     );
   }
 
@@ -245,17 +244,17 @@ export class Dataset extends IdName {
       json['id'],
       json['description'],
       json['name'],
-      json['accessRights'],
+      json['access_rights'],
       json['studies'],
-      json['studyTypes'],
-      json['phenotypeData'],
-      json['genotypeBrowser'],
-      json['phenotypeTool'],
-      json['enrichmentTool'],
-      json['phenotypeBrowser'],
-      json['commonReport'],
-      json['genotypeBrowserConfig'] ? GenotypeBrowser.fromJson(json['genotypeBrowserConfig']) : null,
-      json['peopleGroup'] ? PeopleGroup.fromJson(json['peopleGroup']) : null,
+      json['study_types'],
+      json['phenotype_data'],
+      json['genotype_browser'],
+      json['phenotype_tool'],
+      json['enrichment_tool'],
+      json['phenotype_browser'],
+      json['common_report'],
+      json['genotype_browser_config'] ? GenotypeBrowser.fromJson(json['genotype_browser_config']) : null,
+      json['people_group'] ? PeopleGroup.fromJson(json['people_group']) : null,
       UserGroup.fromJsonArray(json['groups']),
     );
   }
