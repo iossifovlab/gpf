@@ -463,7 +463,7 @@ class VcfLoader(VariantsGenotypesLoader):
             params={},
             **kwargs):
 
-        if 'vcf_wildcards' in params:
+        if params.get('vcf_wildcards', None) is not None:
             filenames = [
                 [vcf_file.format(vw=vw) for vcf_file in vcf_files]
                 for vw in params.get('vcf_wildcards')
