@@ -8,6 +8,8 @@ import pysam
 import numpy as np
 import pandas as pd
 
+from dae.RegionOperations import Region
+
 from dae.GenomeAccess import GenomicSequence
 from dae.utils.variant_utils import str2mat, GENOTYPE_TYPE
 from dae.utils.helpers import str2bool
@@ -15,6 +17,8 @@ from dae.utils.helpers import str2bool
 from dae.utils.dae_utils import dae2vcf_variant
 
 from dae.pedigrees.family import Family, FamiliesData
+from dae.variants.attributes import Inheritance
+
 from dae.variants.variant import SummaryVariantFactory
 from dae.variants.family_variant import FamilyVariant
 
@@ -51,13 +55,14 @@ class DenovoLoader(VariantsGenotypesLoader):
             families: FamiliesData,
             denovo_filename: str,
             genome: GenomicSequence,
+            regions: List[str] = None,
             params: Dict[str, Any] = {}):
         super(DenovoLoader, self).__init__(
             families=families,
             filenames=[denovo_filename],
             transmission_type=TransmissionType.denovo,
             genome=genome,
-            overwrite=False,
+            regions=regions,
             expect_genotype=False,
             expect_best_state=False,
             params=params)
@@ -65,11 +70,10 @@ class DenovoLoader(VariantsGenotypesLoader):
         self.set_attribute('source_type', 'denovo')
         self.genome = genome
 
-        self.chromosomes = genome.allChromosomes
-
         self.denovo_df = self.flexible_denovo_load(
             denovo_filename, genome, families=families, **self.params
         )
+        self._init_chromosomes()
 
         if np.all(pd.isnull(self.denovo_df['genotype'])):
             self.expect_best_state = True
@@ -78,7 +82,30 @@ class DenovoLoader(VariantsGenotypesLoader):
         else:
             assert False
 
+    def _init_chromosomes(self):
+        self.chromosomes = list(self.denovo_df.chrom.unique())
+        if self._adjust_chrom_prefix is not None:
+            self.chromosomes = [
+                self._adjust_chrom_prefix(chrom) for chrom in self.chromosomes
+            ]
+
+        all_chromosomes = self.genome.allChromosomes
+        if all([chrom in set(all_chromosomes) for chrom in self.chromosomes]):
+            self.chromosomes = sorted(
+                self.chromosomes,
+                key=lambda chrom: all_chromosomes.index(chrom)
+            )
+
+    def _is_in_regions(self, summary_variant):
+        isin = [
+            r.isin(summary_variant.chrom, summary_variant.position)
+            if r is not None else True
+            for r in self.regions
+        ]
+        return any(isin)
+
     def _full_variants_iterator_impl(self):
+        self.regions = [Region.from_str(r) for r in self.regions]
 
         for index, rec in enumerate(self.denovo_df.to_dict(orient='records')):
             family_id = rec.pop('family_id')
@@ -90,6 +117,9 @@ class DenovoLoader(VariantsGenotypesLoader):
 
             summary_variant = SummaryVariantFactory \
                 .summary_variant_from_records([rec], self.transmission_type)
+            if not self._is_in_regions(summary_variant):
+                continue
+
             family = self.families.get(family_id)
             if family is None:
                 continue
@@ -98,10 +128,24 @@ class DenovoLoader(VariantsGenotypesLoader):
 
             family_variants = []
             for fam, gt, bs in family_genotypes.family_genotype_iterator():
-                family_variants.append(
-                    FamilyVariant(summary_variant, fam, gt, bs))
+                fv = FamilyVariant(summary_variant, fam, gt, bs)
+                family_variants.append(fv)
 
             yield summary_variant, family_variants
+
+    def full_variants_iterator(self):
+        full_iterator = super(DenovoLoader, self).full_variants_iterator()
+        for summary_vairants, family_variants in full_iterator:
+            for fv in family_variants:
+                for fa in fv.alt_alleles:
+                    inheritance = [
+                        Inheritance.denovo if mem is not None else inh
+                        for inh, mem in zip(
+                            fa.inheritance_in_members, fa.variant_in_members)
+                    ]
+                    fa._inheritance_in_members = inheritance
+
+            yield summary_vairants, family_variants
 
     @staticmethod
     def split_location(location):
@@ -546,20 +590,22 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
             regions=None,
             params={},
             **kwargs):
+
+        toomany_filename = DaeTransmittedLoader._build_toomany_filename(
+            summary_filename)
+
         super(DaeTransmittedLoader, self).__init__(
             families=families,
-            filenames=[summary_filename],
+            filenames=[
+                summary_filename,
+                toomany_filename,
+            ],
             transmission_type=TransmissionType.transmitted,
             genome=genome,
-            overwrite=False,
+            regions=regions,
             expect_genotype=False,
             expect_best_state=True,
             params=params)
-
-        assert os.path.exists(summary_filename), summary_filename
-
-        toomany_filename = self._build_toomany_filename(summary_filename)
-        assert os.path.exists(toomany_filename), toomany_filename
 
         self.summary_filename = summary_filename
         self.toomany_filename = toomany_filename
@@ -567,28 +613,24 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
         self.set_attribute('source_type', 'dae')
 
         self.genome = genome
-        if regions is None or isinstance(regions, str):
-            self.regions = [regions]
-        else:
-            self.regions = regions
 
         self.params = params
         self.include_reference = self.params.get(
             'dae_include_reference_genotypes', False)
+        try:
+            with pysam.Tabixfile(self.summary_filename) as tbx:
+                self.chromosomes = list(tbx.contigs)
+        except Exception:
+            self.chromosomes = self.genome.allChromosomes
 
-        with pysam.Tabixfile(self.summary_filename) as tbx:
-            self.chromosomes = list(tbx.contigs)
-
-    def reset_regions(self, regions):
-        if regions is None or isinstance(regions, str):
-            self.regions = [regions]
-        else:
-            self.regions = regions
+    @property
+    def variants_filenames(self):
+        return [self.summary_filename]
 
     @staticmethod
     def _build_toomany_filename(summary_filename):
         assert os.path.exists(f'{summary_filename}.tbi'), \
-            "Summary filename tabix index missing"
+            f"summary filename tabix index missing {summary_filename}"
 
         dirname = os.path.dirname(summary_filename)
         basename = os.path.basename(summary_filename)
@@ -602,12 +644,14 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
                 f'{basename[:-7]}-TOOMANY.txt.gz'
             )
         else:
-            assert False, "Bad summary filename - unexpected extention"
+            assert False, \
+                f"Bad summary filename {summary_filename}: " \
+                f"unexpected extention"
 
         assert os.path.exists(result), \
-            f'Missing TOOMANY file {result}'
+            f'missing TOOMANY file {result}'
         assert os.path.exists(f'{result}.tbi'), \
-            f'Missing tabix index for TOOMANY file {result}'
+            f'missing tabix index for TOOMANY file {result}'
 
         return result
 
@@ -786,11 +830,14 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
     @classmethod
     def cli_arguments(cls, parser):
         parser.add_argument(
-            'summary_filename', type=str,
+            'dae_summary_file', type=str,
             metavar='<summary filename>',
             help='summary variants file to import'
         )
+        cls.cli_options(parser)
 
+    @classmethod
+    def cli_options(cls, parser):
         parser.add_argument(
             '--dae-include-reference-genotypes', default=False,
             dest='dae_include_reference_genotypes',
@@ -811,7 +858,7 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
 
     @classmethod
     def parse_cli_arguments(cls, argv):
-        filename = argv.summary_filename
+        filename = argv.dae_summary_file
 
         params = {
             'dae_include_reference_genotypes':

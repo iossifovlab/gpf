@@ -60,7 +60,7 @@ def assert_proper_flexible_short_variants(vs):
         assert a.position == 80137553
         assert a.reference == 'T'
         assert a.alternative == 'TA'
-        assert a.family_id == '13590'
+        assert a.family_id == 'f1'
         assert len(a.effect.transcripts) == 4
 
     v = vs[1]
@@ -72,7 +72,7 @@ def assert_proper_flexible_short_variants(vs):
         assert a.position == 56627767
         assert a.reference == 'AAAGT'
         assert a.alternative == 'A'
-        assert a.family_id == '13060'
+        assert a.family_id == 'f2'
         assert len(a.effect.transcripts) == 28
 
     v = vs[2]
@@ -83,7 +83,7 @@ def assert_proper_flexible_short_variants(vs):
         assert a.position == 83276456
         assert a.reference == 'C'
         assert a.alternative == 'T'
-        assert a.family_id == '13590'
+        assert a.family_id == 'f1'
         assert len(a.effect.transcripts) == 4
 
 

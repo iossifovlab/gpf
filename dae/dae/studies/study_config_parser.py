@@ -124,6 +124,7 @@ class FilesConfigParser():
         pedigree = []
         denovo = []
         vcf = []
+        dae = []
         for key, file_config in config_section.items():
             if not file_config.params:
                 file_config.params = {}
@@ -137,6 +138,8 @@ class FilesConfigParser():
                 vcf.append(file_config)
             elif file_config.format == 'denovo':
                 denovo.append(file_config)
+            elif file_config.format == 'dae':
+                dae.append(file_config)
             else:
                 assert False, file_config
 
@@ -145,6 +148,7 @@ class FilesConfigParser():
         config_section = Box({
             'pedigree': pedigree[0],
             'vcf': vcf,
+            'dae': dae,
             'denovo': denovo
         }, default_box=True)
 

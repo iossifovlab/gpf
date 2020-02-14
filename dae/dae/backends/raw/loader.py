@@ -50,7 +50,7 @@ class VariantsLoader:
 
         assert isinstance(families, FamiliesData)
         self.families = families
-        assert all([os.path.exists(fn) for fn in filenames])
+        assert all([os.path.exists(fn) for fn in filenames]), filenames
         self.filenames = filenames
 
         assert isinstance(transmission_type, TransmissionType)
@@ -60,6 +60,10 @@ class VariantsLoader:
             self._attributes = {}
         else:
             self._attributes = copy.deepcopy(attributes)
+
+    # @property
+    # def variants_filenames(self):
+    #     return self.filenames
 
     def full_variants_iterator(self):
         raise NotImplementedError()
@@ -397,7 +401,7 @@ class VariantsGenotypesLoader(VariantsLoader):
         filenames: List[str],
         transmission_type: TransmissionType,
         genome: GenomicSequence,
-        overwrite: bool = False,
+        regions: List[str] = None,
         expect_genotype: bool = True,
         expect_best_state: bool = False,
         params: Dict[str, Any] = {},
@@ -409,6 +413,12 @@ class VariantsGenotypesLoader(VariantsLoader):
             params=params)
 
         self.genome = genome
+
+        if regions is None or isinstance(regions, str):
+            self.regions = [regions]
+        else:
+            self.regions = regions
+
         self._adjust_chrom_prefix = None
         if params.get('add_chrom_prefix', None):
             self._chrom_prefix = params['add_chrom_prefix']
@@ -417,12 +427,21 @@ class VariantsGenotypesLoader(VariantsLoader):
             self._chrom_prefix = params['del_chrom_prefix']
             self._adjust_chrom_prefix = self._del_chrom_prefix
 
-        self.overwrite = overwrite
         self.expect_genotype = expect_genotype
         self.expect_best_state = expect_best_state
 
+    @property
+    def variants_filenames(self):
+        return self.filenames
+
     def _full_variants_iterator_impl(self):
         raise NotImplementedError()
+
+    def reset_regions(self, regions):
+        if regions is None or isinstance(regions, str):
+            self.regions = [regions]
+        else:
+            self.regions = regions
 
     @classmethod
     def _get_diploid_males(cls, family_variant: FamilyVariant) -> List[bool]:
@@ -616,3 +635,23 @@ class VariantsGenotypesLoader(VariantsLoader):
                 result[key] = value
 
         return result
+
+    @classmethod
+    def cli_options(cls, parser):
+        parser.add_argument(
+            '--add-chrom-prefix', type=str, default=None,
+            help='Add specified prefix to each chromosome name in '
+            'variants file'
+        )
+        parser.add_argument(
+            '--del-chrom-prefix', type=str, default=None,
+            help='Removes specified prefix from each chromosome name in '
+            'variants file'
+        )
+
+    @classmethod
+    def cli_defaults(cls):
+        return {
+            'add_chrom_prefix': None,
+            'del_chrom_prefix': None,
+        }

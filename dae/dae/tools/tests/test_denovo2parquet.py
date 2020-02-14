@@ -10,14 +10,9 @@ from dae.backends.impala.parquet_io import ParquetPartitionDescriptor
 
 
 def test_denovo2parquet_denovo(
-        dae_denovo_config, annotation_pipeline_default_config,
-        temp_filename,
-        genomes_db_2013):
+        dae_denovo_config, temp_filename, genomes_db_2013):
 
     argv = [
-        'variants',
-        # '--denovo',
-        # '--annotation', annotation_pipeline_default_config,
         '--ped-file-format', 'simple',
         '-o', temp_filename,
         dae_denovo_config.family_filename,
@@ -36,46 +31,42 @@ def test_denovo2parquet_denovo(
     assert 'effect_data' in schema.names
 
 
-def test_denovo2parquet_denovo_make(
-        dae_denovo_config, annotation_pipeline_default_config,
-        temp_dirname,
-        genomes_db_2013):
+# def test_denovo2parquet_denovo_make(
+#         dae_denovo_config, temp_dirname, genomes_db_2013):
 
-    argv = [
-        'make',
-        # '--denovo',
-        # '--annotation', annotation_pipeline_default_config,
-        '--ped-file-format', 'simple',
-        '-o', temp_dirname,
-        dae_denovo_config.family_filename,
-        dae_denovo_config.denovo_filename,
-    ]
+#     argv = [
+#         'make',
+#         '--ped-file-format', 'simple',
+#         '-o', temp_dirname,
+#         dae_denovo_config.family_filename,
+#         dae_denovo_config.denovo_filename,
+#     ]
 
-    main(argv)
-    assert os.path.exists(temp_dirname)
+#     main(argv)
+#     assert os.path.exists(temp_dirname)
 
-    with open(os.path.join(temp_dirname, 'Makefile'), 'r') as makefile:
-        text = makefile.read()
-        assert 'all:' in text
-        assert 'all_bins=none' in text
-        assert 'all_bins_flags=$(foreach bin, $(all_bins), $(bin).flag)' \
-               in text
-        assert 'variants:' in text
-        assert '%.flag' in text
-        assert 'pedigree:' in text
-        assert 'ped.flag:' in text
+#     with open(os.path.join(temp_dirname, 'Makefile'), 'r') as makefile:
+#         text = makefile.read()
+#         assert 'all:' in text
+#         assert 'all_bins=none' in text
+#         assert 'all_bins_flags=$(foreach bin, $(all_bins), $(bin).flag)' \
+#                in text
+#         assert 'variants:' in text
+#         assert '%.flag' in text
+#         assert 'pedigree:' in text
+#         assert 'ped.flag:' in text
 
 
 def test_denovo2parquet_denovo_partition(
-        dae_denovo_config, annotation_pipeline_default_config,
-        temp_dirname, genomes_db_2013, parquet_partition_configuration):
+        fixture_dirname, dae_denovo_config,
+        temp_dirname, genomes_db_2013):
+
+    partition_description = fixture_dirname(
+        'backends/example_partition_configuration.conf')
 
     argv = [
-        'variants',
-        # '--denovo',
-        # '--annotation', annotation_pipeline_default_config,
         '--ped-file-format', 'simple',
-        '--pd', parquet_partition_configuration,
+        '--pd', partition_description,
         '-o', temp_dirname,
         dae_denovo_config.family_filename,
         dae_denovo_config.denovo_filename,
@@ -83,45 +74,46 @@ def test_denovo2parquet_denovo_partition(
 
     main(argv)
 
-    pd = ParquetPartitionDescriptor.from_config(
-        parquet_partition_configuration)
+    pd = ParquetPartitionDescriptor.from_config(partition_description)
     file_glob = os.path.join(temp_dirname, pd.generate_file_access_glob())
     partition_files = glob.glob(file_glob)
-    assert len(partition_files) == 15
+
+    assert len(partition_files) == 8
     for file in partition_files:
         assert 'frequency_bin=0' in file
 
 
-def test_denovo2parquet_denovo_partition_make(
-        dae_denovo_config, annotation_pipeline_default_config,
-        temp_dirname, parquet_partition_configuration,
-        genomes_db_2013):
+# def test_denovo2parquet_denovo_partition_make(
+#         fixture_dirname, dae_denovo_config,
+#         temp_dirname,
+#         genomes_db_2013):
 
-    argv = [
-        'make',
-        # '--denovo',
-        # '--annotation', annotation_pipeline_default_config,
-        '--ped-file-format', 'simple',
-        '--pd', parquet_partition_configuration,
-        '-o', temp_dirname,
-        dae_denovo_config.family_filename,
-        dae_denovo_config.denovo_filename,
-    ]
+#     partition_description = fixture_dirname(
+#         'backends/example_partition_configuration.conf')
 
-    main(argv)
-    assert os.path.exists(temp_dirname)
+#     argv = [
+#         'make',
+#         '--ped-file-format', 'simple',
+#         '--pd', partition_description,
+#         '-o', temp_dirname,
+#         dae_denovo_config.family_filename,
+#         dae_denovo_config.denovo_filename,
+#     ]
 
-    with open(os.path.join(temp_dirname, 'Makefile'), 'r') as makefile:
-        text = makefile.read()
-        assert 'all:' in text
-        assert 'all_bins=1_0' in text
-        assert 'all_bins_flags=$(foreach bin, $(all_bins), $(bin).flag)' \
-               in text
-        assert 'variants:' in text
-        assert f'--pd {parquet_partition_configuration}' in text
-        assert '%.flag' in text
-        assert 'pedigree:' in text
-        assert 'ped.flag:' in text
+#     main(argv)
+#     assert os.path.exists(temp_dirname)
+
+#     with open(os.path.join(temp_dirname, 'Makefile'), 'r') as makefile:
+#         text = makefile.read()
+#         assert 'all:' in text
+#         assert 'all_bins=1_0' in text
+#         assert 'all_bins_flags=$(foreach bin, $(all_bins), $(bin).flag)' \
+#                in text
+#         assert 'variants:' in text
+#         assert f'--pd {partition_description}' in text
+#         assert '%.flag' in text
+#         assert 'pedigree:' in text
+#         assert 'ped.flag:' in text
 
 
 @pytest.mark.parametrize('variants', [

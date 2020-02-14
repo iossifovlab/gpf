@@ -42,6 +42,7 @@ setuptools.setup(
         'dae/tools/ped2parquet.py',
         'dae/tools/ped2ped.py',
         'dae/tools/draw_pedigree.py',
+        'dae/tools/impala_batch_import.py',
     ],
 
     classifiers=[

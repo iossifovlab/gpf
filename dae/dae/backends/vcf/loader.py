@@ -1,5 +1,6 @@
 import os
 import sys
+import itertools
 
 import numpy as np
 
@@ -110,7 +111,7 @@ class VcfFamiliesGenotypes(FamiliesGenotypes):
             yield family, gt, None
 
 
-class VcfLoader(VariantsGenotypesLoader):
+class SingleVcfLoader(VariantsGenotypesLoader):
 
     def __init__(
             self,
@@ -120,18 +121,19 @@ class VcfLoader(VariantsGenotypesLoader):
             regions=None,
             params={},
             **kwargs):
-        super(VcfLoader, self).__init__(
+        super(SingleVcfLoader, self).__init__(
             families=families,
             filenames=vcf_files,
             transmission_type=TransmissionType.transmitted,
             genome=genome,
-            overwrite=False,
             expect_genotype=True,
             expect_best_state=False,
             params=params)
 
         assert len(vcf_files)
+        self.set_attribute('source_type', 'vcf')
         self.reset_regions(regions)
+
         fill_in_mode = params.get(
             "vcf_multi_loader_fill_in_mode", "reference")
         if fill_in_mode == 'reference':
@@ -145,10 +147,10 @@ class VcfLoader(VariantsGenotypesLoader):
                 f"expected values are `reference` or `unknown`",
                 file=sys.stderr)
             self._fill_missing_value = 0
+
         self._init_vcf_readers()
         self._match_pedigree_to_samples()
         self._init_chromosome_order()
-        self.set_attribute('source_type', 'vcf')
         self._init_denovo_mode()
         self._init_omission_mode()
 
@@ -389,6 +391,10 @@ class VcfLoader(VariantsGenotypesLoader):
         Returns true if left vcf variant position in file is
         equal to right vcf variant position in file
         """
+        assert lhs is not None
+
+        if rhs is None:
+            return False
         return lhs.CHROM == rhs.CHROM and lhs.POS == rhs.POS
 
     def _find_current_vcf_variant(self, vcf_variants):
@@ -403,9 +409,9 @@ class VcfLoader(VariantsGenotypesLoader):
                 min_index = index
         return vcf_variants[min_index]
 
-    def _full_variants_iterator_impl(self):
+    def _full_variants_iterator_impl(self, initial_summary_variant_index=0):
 
-        summary_variant_index = 0
+        summary_variant_index = initial_summary_variant_index
         for region in self.regions:
             vcf_iterators = self._build_vcf_iterators(region)
             vcf_variants = [next(it, None) for it in vcf_iterators]
@@ -445,31 +451,94 @@ class VcfLoader(VariantsGenotypesLoader):
                     vcf_variants[idx] = next(vcf_iterators[idx], None)
                 summary_variant_index += 1
 
-    # @staticmethod
-    # def transform_vcf_genotypes(genotypes):
-    #     new_genotypes = []
-    #     for genotype in genotypes:
-    #         if len(genotype) == 2:  # Handle haploid genotypes
-    #             genotype.insert(1, -2)
-    #         new_genotypes.append(genotype)
-    #     return np.array(new_genotypes, dtype=GENOTYPE_TYPE).T
 
-    @staticmethod
-    def cli_defaults():
-        return {
+class VcfLoader(VariantsGenotypesLoader):
+
+    def __init__(
+            self,
+            families,
+            vcf_files,
+            genome: GenomicSequence,
+            regions=None,
+            params={},
+            **kwargs):
+
+        if params.get('vcf_wildcards', None):
+            vcf_wildcards = [
+                wc.strip() for wc in params.get('vcf_wildcards').split(';')
+            ]
+            filenames = [
+                [vcf_file.format(vw=vw) for vcf_file in vcf_files]
+                for vw in vcf_wildcards
+            ]
+            all_filenames = list(itertools.chain.from_iterable(filenames))
+        else:
+            filenames = [vcf_files]
+            all_filenames = vcf_files
+
+        super(VcfLoader, self).__init__(
+            families=families,
+            filenames=all_filenames,
+            transmission_type=TransmissionType.transmitted,
+            genome=genome,
+            expect_genotype=True,
+            expect_best_state=False,
+            params=params)
+
+        self.set_attribute('source_type', 'vcf')
+        self.vcf_files = vcf_files
+        self.vcf_loaders = [
+            SingleVcfLoader(
+                families,
+                vcf_files,
+                genome,
+                regions=regions,
+                params=params
+            ) for vcf_files in filenames
+        ]
+
+    @property
+    def variants_filenames(self):
+        return self.vcf_files
+
+    @property
+    def chromosomes(self):
+        assert len(self.vcf_loaders) > 0
+        all_chromosomes = []
+        for loader in self.vcf_loaders:
+            for chrom in loader.chromosomes:
+                if chrom not in all_chromosomes:
+                    all_chromosomes.append(chrom)
+        return all_chromosomes
+
+    def _full_variants_iterator_impl(self):
+        summary_index = 0
+        for vcf_loader in self.vcf_loaders:
+            iterator = vcf_loader._full_variants_iterator_impl(summary_index)
+            try:
+                for summary_variant, family_variants in iterator:
+                    yield summary_variant, family_variants
+                    summary_index += 1
+            except StopIteration:
+                pass
+
+    @classmethod
+    def cli_defaults(cls):
+        defaults = super(cls, VcfLoader).cli_defaults()
+        defaults.update({
             'vcf_include_reference_genotypes': False,
             'vcf_include_unknown_family_genotypes': False,
             'vcf_include_unknown_person_genotypes': False,
             'vcf_multi_loader_fill_in_mode': 'reference',
             'vcf_denovo_mode': 'possible_denovo',
             'vcf_omission_mode': 'possible_omission',
-            'add_chrom_prefix': None,
-            'del_chrom_prefix': None,
-        }
+            'vcf_wildcards': None,
+        })
+        return defaults
 
-    @staticmethod
-    def build_cli_arguments(params):
-        param_defaults = VcfLoader.cli_defaults()
+    @classmethod
+    def build_cli_arguments(cls, params):
+        param_defaults = cls.cli_defaults()
         result = []
         for key, value in params.items():
             assert key in param_defaults, (key, list(param_defaults.keys()))
@@ -478,6 +547,7 @@ class VcfLoader(VariantsGenotypesLoader):
                 if key in {'vcf_multi_loader_fill_in_mode',
                            'vcf_denovo_mode',
                            'vcf_omission_mode',
+                           'vcf_wildcards',
                            'add_chrom_prefix',
                            'del_chrom_prefix'}:
                     result.append(f'--{param}')
@@ -487,17 +557,19 @@ class VcfLoader(VariantsGenotypesLoader):
                         result.append(f'--{param}')
         return ' '.join(result)
 
-    @staticmethod
-    def cli_arguments(parser):
+    @classmethod
+    def cli_arguments(cls, parser):
         parser.add_argument(
             'vcf_files', type=str, nargs='+',
             metavar='<VCF filenames>',
             help='VCF files to import'
         )
-        VcfLoader.cli_options(parser)
+        cls.cli_options(parser)
 
-    @staticmethod
-    def cli_options(parser):
+    @classmethod
+    def cli_options(cls, parser):
+        super(cls, VcfLoader).cli_options(parser)
+
         parser.add_argument(
             '--vcf-include-reference-genotypes', default=False,
             dest='vcf_include_reference_genotypes',
@@ -541,18 +613,21 @@ class VcfLoader(VariantsGenotypesLoader):
             '[default: %(default)s]',
         )
         parser.add_argument(
-            '--add-chrom-prefix', type=str, default=None,
-            help='Add specified prefix to each chromosome name in '
-            'variants file'
-        )
-        parser.add_argument(
-            '--del-chrom-prefix', type=str, default=None,
-            help='Removes specified prefix from each chromosome name in '
-            'variants file'
+            '--vcf-wildcards', '--vw',
+            type=str,
+            dest='vcf_wildcards',
+            default=None,
+            help='specifies a list of filename template '
+            'substitutions; then specified variant filename(s) are treated '
+            'as templates and each occurent of `{vw}` is replaced '
+            'consecutively by elements of VCF wildcards list; '
+            'by default the list is empty and no substitution '
+            'takes place. '
+            '[default: None]',
         )
 
-    @staticmethod
-    def parse_cli_arguments(argv):
+    @classmethod
+    def parse_cli_arguments(cls, argv):
         filenames = argv.vcf_files
 
         assert argv.vcf_multi_loader_fill_in_mode \
@@ -576,6 +651,8 @@ class VcfLoader(VariantsGenotypesLoader):
             argv.vcf_denovo_mode,
             'vcf_omission_mode':
             argv.vcf_omission_mode,
+            'vcf_wildcards':
+            argv.vcf_wildcards,
             'add_chrom_prefix':
             argv.add_chrom_prefix,
             'del_chrom_prefix':

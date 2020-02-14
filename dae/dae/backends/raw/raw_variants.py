@@ -1,6 +1,5 @@
 import sys
 import time
-import itertools
 
 from dae.variants.family_variant import FamilyAllele
 
@@ -219,11 +218,11 @@ class RawMemoryVariants(RawFamilyVariants):
     def full_variants(self):
         if self._full_variants is None:
             start = time.time()
-            self._full_variants = list(itertools.chain.from_iterable(
-                [
-                    loader.full_variants_iterator()
-                    for loader in self.variants_loaders
-                ]))
+            self._full_variants = []
+            for loader in self.variants_loaders:
+                for sv, fvs in loader.full_variants_iterator():
+                    self._full_variants.append((sv, fvs))
+
             elapsed = time.time() - start
             print(f"Variants loaded in in {elapsed:.2f} sec", file=sys.stderr)
         return self._full_variants

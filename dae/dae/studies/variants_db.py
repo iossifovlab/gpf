@@ -289,6 +289,9 @@ class VariantsDb(object):
                 f"{study_config.id}",
                 ex
             )
+            import traceback
+            traceback.print_exc()
+
             return None
 
     def make_genotype_data_group(self, genotype_data_group_config):
