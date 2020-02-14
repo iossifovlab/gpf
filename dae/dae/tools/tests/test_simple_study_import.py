@@ -329,7 +329,7 @@ def test_import_comp_all_del_chrom_prefix(
     vs = list(study.query_variants())
     assert len(vs) == 35
     for v in vs:
-        assert v.chromosome == 'chr1', v
+        assert v.chromosome == '1', v
 
 
 @pytest.mark.parametrize('genotype_storage_id,storage_type', [
@@ -380,8 +380,6 @@ def test_import_wild_multivcf_into_genotype_storage(
     vcf_file2 = fixture_dirname('multi_vcf/multivcf_missing2_chr{vw}.vcf.gz')
     ped_file = fixture_dirname('multi_vcf/multivcf.ped')
 
-    storage_config = default_dae_config.storage.test_filesystem
-    assert storage_config.storage_type == 'filesystem'
     study_id = f'test_wile_multivcf_{genotype_storage_id}'
 
     argv = [

@@ -602,9 +602,7 @@ class MakefileGenerator:
         )
 
         default_genotype_storage_id = \
-            gpf_instance.dae_config.\
-            get('genotype_storage', {}).\
-            get('default', None)
+            gpf_instance.dae_config.genotype_storage.default
 
         parser.add_argument(
             '--genotype-storage', '--gs',

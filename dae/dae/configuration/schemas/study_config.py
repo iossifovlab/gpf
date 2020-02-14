@@ -111,7 +111,7 @@ family_schema = {
 variants_file = {
     "path": {
         "type": "string",
-        "check_with": validate_existing_path,
+        "check_with": validate_path,
         "coerce": "abspath",
         "required": True,
     },
@@ -307,7 +307,7 @@ study_config_schema = {
                 }}
             },
             "effect_groups": {
-                "type": "list", 
+                "type": "list",
                 "schema": {"type": "string"},
                 "default": []
             },

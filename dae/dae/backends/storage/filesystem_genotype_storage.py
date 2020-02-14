@@ -67,32 +67,29 @@ class FilesystemGenotypeStorage(GenotypeStorage):
                 variants_params = GPFConfigParser._namedtuple_to_dict(
                     file_conf.params
                 )
+                annotation_filename = variants_filename
                 if file_conf.format == "vcf":
+                    variants_filenames = [
+                        fn.strip() for fn in variants_filename.split(' ')
+                    ]
                     variants_loader = VcfLoader(
-                        families, [variants_filename],
+                        families, variants_filenames,
                         genomes_db.get_genome(),
                         params=variants_params)
+                    annotation_filename = variants_filenames[0]
                 if file_conf.format == "denovo":
                     variants_loader = DenovoLoader(
                         families, variants_filename,
                         genomes_db.get_genome(),
                         params=variants_params)
+                if file_conf.format == "dae":
+                    variants_loader = DaeTransmittedLoader(
+                        families, variants_filename,
+                        genomes_db.get_genome(),
+                        params=variants_params)
 
                 variants_loader = StoredAnnotationDecorator.decorate(
-                    variants_loader, variants_filename
-                )
-                loaders.append(variants_loader)
-
-            if study_config.files.dae:
-                dae_params = study_config.files.dae[0].params
-                variants_filename = study_config.files.dae[0].path
-                variants_loader = DaeTransmittedLoader(
-                    families, variants_filename,
-                    genomes_db.get_genome(),
-                    params=dae_params)
-
-                variants_loader = StoredAnnotationDecorator.decorate(
-                    variants_loader, variants_filename
+                    variants_loader, annotation_filename
                 )
                 loaders.append(variants_loader)
 
