@@ -82,7 +82,11 @@ pipeline {
                 }
                 sh '''
                     tar zxf builds/data-hg19-startup-*.tar.gz -C $WD
-		    sed -i "s/localhost/impala/" $WD/data-hg19-startup/DAE.conf /code/dae_conftests/dae_conftests/tests/fixtures/DAE.conf
+		    sed -i "s/localhost/impala/" $WD/data-hg19-startup/DAE.conf
+                    docker run -d --rm \
+                        -v ${SOURCE_DIR}:/code \
+                        busybox:latest \
+			/bin/sh -c "sed -i \"s/localhost/impala/\" /code/dae_conftests/dae_conftests/tests/fixtures/DAE.conf"
                 '''
             }
         }
