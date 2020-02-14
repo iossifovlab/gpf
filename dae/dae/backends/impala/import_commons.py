@@ -185,76 +185,6 @@ class MakefilePartitionHelper:
                 targets[target].append(region)
         return targets
 
-    # def generate_variants_make(
-    #         self, command, target_chromosomes, output=sys.stdout):
-    #     variants_targets = self.generate_variants_targets(target_chromosomes)
-
-    #     all_bins = ' '.join(list(variants_targets.keys()))
-
-    #     print(
-    #         f'all_bins={all_bins}',
-    #         file=output)
-    #     print(
-    #         f'all_bins_flags=$(foreach bin, $(all_bins), $(bin).flag)\n',
-    #         file=output)
-    #     print(
-    #         f'variants: $(all_bins_flags)\n',
-    #         file=output)
-    #     print(
-    #         f'%.flag:\n'
-    #         f'\t{command} --rb $* && touch $@\n',
-    #         file=output
-    #     )
-
-    # def generate_pedigree_make(self, command, output=sys.stdout):
-    #     print('\n', file=output)
-    #     print(
-    #         f'pedigree: ped.flag\n',
-    #         file=output)
-    #     print(
-    #         f'ped.flag:\n'
-    #         f'\t{command} && touch $@',
-    #         file=output)
-
-    # def generate_impala_load_make(self, command, output=sys.stdout):
-    #     print('\n', file=output)
-    #     print(
-    #         f'load: load.flag\n',
-    #         file=output)
-    #     print(
-    #         f'load.flag: ped.flag $(all_bins_flags)\n'
-    #         f'\t{command} && touch $@',
-    #         file=output)
-
-    # def generate_reports_make(self, command, output=sys.stdout):
-    #     print('\n', file=output)
-    #     print(
-    #         f'reports: reports.flag\n',
-    #         file=output)
-    #     print(
-    #         f'reports.flag: load.flag\n'
-    #         f'\t{command} && touch $@',
-    #         file=output)
-
-    # def generate_makefile(
-    #         self, families_command, variants_command, load_command,
-    #         reports_command,
-    #         target_chromosomes,
-    #         output=sys.stdout):
-
-    #     print(
-    #         f'all: pedigree variants\n',
-    #         file=output)
-
-    #     self.generate_variants_make(
-    #         variants_command, target_chromosomes, output=output)
-    #     self.generate_pedigree_make(
-    #         families_command, output=output)
-    #     self.generate_impala_load_make(
-    #         load_command, output=output)
-    #     self.generate_reports_make(
-    #         reports_command, output=output)
-
 
 class MakefileGenerator:
 
@@ -474,7 +404,7 @@ class MakefileGenerator:
         variants_params = variants_loader.build_cli_arguments(
             variants_loader.params)
         variants_filenames = [
-            os.path.abspath(fn) for fn in variants_loader.filenames
+            os.path.abspath(fn) for fn in variants_loader.variants_filenames
         ]
         variants_filenames = ' '.join(variants_filenames)
 

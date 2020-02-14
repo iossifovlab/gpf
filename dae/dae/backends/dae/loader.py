@@ -590,20 +590,22 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
             regions=None,
             params={},
             **kwargs):
+
+        toomany_filename = DaeTransmittedLoader._build_toomany_filename(
+            summary_filename)
+
         super(DaeTransmittedLoader, self).__init__(
             families=families,
-            filenames=[summary_filename],
+            filenames=[
+                summary_filename,
+                toomany_filename,
+            ],
             transmission_type=TransmissionType.transmitted,
             genome=genome,
             regions=regions,
             expect_genotype=False,
             expect_best_state=True,
             params=params)
-
-        assert os.path.exists(summary_filename), summary_filename
-
-        toomany_filename = self._build_toomany_filename(summary_filename)
-        assert os.path.exists(toomany_filename), toomany_filename
 
         self.summary_filename = summary_filename
         self.toomany_filename = toomany_filename
@@ -615,14 +617,20 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
         self.params = params
         self.include_reference = self.params.get(
             'dae_include_reference_genotypes', False)
+        try:
+            with pysam.Tabixfile(self.summary_filename) as tbx:
+                self.chromosomes = list(tbx.contigs)
+        except Exception:
+            self.chromosomes = self.genome.allChromosomes
 
-        with pysam.Tabixfile(self.summary_filename) as tbx:
-            self.chromosomes = list(tbx.contigs)
+    @property
+    def variants_filenames(self):
+        return [self.summary_filename]
 
     @staticmethod
     def _build_toomany_filename(summary_filename):
         assert os.path.exists(f'{summary_filename}.tbi'), \
-            "Summary filename tabix index missing"
+            f"summary filename tabix index missing {summary_filename}"
 
         dirname = os.path.dirname(summary_filename)
         basename = os.path.basename(summary_filename)
@@ -636,12 +644,14 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
                 f'{basename[:-7]}-TOOMANY.txt.gz'
             )
         else:
-            assert False, "Bad summary filename - unexpected extention"
+            assert False, \
+                f"Bad summary filename {summary_filename}: " \
+                f"unexpected extention"
 
         assert os.path.exists(result), \
-            f'Missing TOOMANY file {result}'
+            f'missing TOOMANY file {result}'
         assert os.path.exists(f'{result}.tbi'), \
-            f'Missing tabix index for TOOMANY file {result}'
+            f'missing tabix index for TOOMANY file {result}'
 
         return result
 

@@ -50,7 +50,7 @@ class VariantsLoader:
 
         assert isinstance(families, FamiliesData)
         self.families = families
-        assert all([os.path.exists(fn) for fn in filenames])
+        assert all([os.path.exists(fn) for fn in filenames]), filenames
         self.filenames = filenames
 
         assert isinstance(transmission_type, TransmissionType)
@@ -60,6 +60,10 @@ class VariantsLoader:
             self._attributes = {}
         else:
             self._attributes = copy.deepcopy(attributes)
+
+    # @property
+    # def variants_filenames(self):
+    #     return self.filenames
 
     def full_variants_iterator(self):
         raise NotImplementedError()
@@ -425,6 +429,10 @@ class VariantsGenotypesLoader(VariantsLoader):
 
         self.expect_genotype = expect_genotype
         self.expect_best_state = expect_best_state
+
+    @property
+    def variants_filenames(self):
+        return self.filenames
 
     def _full_variants_iterator_impl(self):
         raise NotImplementedError()
