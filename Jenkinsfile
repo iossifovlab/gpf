@@ -82,7 +82,7 @@ pipeline {
                 }
                 sh '''
                     tar zxf builds/data-hg19-startup-*.tar.gz -C $WD
-		    sed -i "s/localhost/impala/" $WD/DAE.conf
+		    sed -i "s/localhost/impala/" $WD/data-hg19-startup/DAE.conf
                 '''
             }
         }
