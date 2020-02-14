@@ -234,7 +234,6 @@ def test_import_iossifov2014_into_genotype_storage(
     assert len(vs) == 2
 
 
-
 @pytest.mark.parametrize('genotype_storage_id,storage_type', [
     ('test_impala', 'impala'),
     ('test_filesystem', 'filesystem'),
