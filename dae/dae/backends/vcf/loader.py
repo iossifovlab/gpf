@@ -464,9 +464,12 @@ class VcfLoader(VariantsGenotypesLoader):
             **kwargs):
 
         if params.get('vcf_wildcards', None):
+            vcf_wildcards = [
+                wc.strip() for wc in params.get('vcf_wildcards').split(';')
+            ]
             filenames = [
                 [vcf_file.format(vw=vw) for vcf_file in vcf_files]
-                for vw in params.get('vcf_wildcards')
+                for vw in vcf_wildcards
             ]
             all_filenames = list(itertools.chain.from_iterable(filenames))
         else:
@@ -614,10 +617,10 @@ class VcfLoader(VariantsGenotypesLoader):
             type=str,
             dest='vcf_wildcards',
             default=None,
-            help='specifies comma separated list of filename template '
+            help='specifies a list of filename template '
             'substitutions; then specified variant filename(s) are treated '
-            'as templates and each occurent of `{fw}` is replaced '
-            'consecutively by elements of VCF wildcard list; '
+            'as templates and each occurent of `{vw}` is replaced '
+            'consecutively by elements of VCF wildcards list; '
             'by default the list is empty and no substitution '
             'takes place. '
             '[default: None]',

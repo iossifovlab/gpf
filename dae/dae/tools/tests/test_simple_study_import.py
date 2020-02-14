@@ -359,3 +359,38 @@ def test_import_transmitted_dae_into_genotype_storage(
 
     vs = list(study.query_variants())
     assert len(vs) == 33
+
+
+@pytest.mark.parametrize('genotype_storage_id,storage_type', [
+    ('test_impala', 'impala'),
+    ('test_filesystem', 'filesystem'),
+])
+def test_import_wild_multivcf_into_genotype_storage(
+        genotype_storage_id, storage_type,
+        genomes_db_2013, fixture_dirname,
+        default_dae_config, gpf_instance_2013, temp_dirname):
+
+    vcf_file1 = fixture_dirname('multi_vcf/multivcf_missing1_chr{vw}.vcf.gz')
+    vcf_file2 = fixture_dirname('multi_vcf/multivcf_missing2_chr{vw}.vcf.gz')
+    ped_file = fixture_dirname('multi_vcf/multivcf.ped')
+
+    study_id = f'test_wile_multivcf_{genotype_storage_id}'
+
+    argv = [
+        ped_file,
+        '--id', study_id,
+        '--skip-reports',
+        '--vcf-files', vcf_file1, vcf_file2,
+        '--vcf-wildcards', '1;2',
+        '--genotype-storage', genotype_storage_id,
+        '-o', temp_dirname,
+    ]
+
+    main(argv, gpf_instance_2013)
+
+    gpf_instance_2013.reload()
+    study = gpf_instance_2013.get_genotype_data(study_id)
+    assert study is not None
+
+    vs = list(study.query_variants())
+    assert len(vs) == 48

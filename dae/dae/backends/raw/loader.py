@@ -50,7 +50,7 @@ class VariantsLoader:
 
         assert isinstance(families, FamiliesData)
         self.families = families
-        assert all([os.path.exists(fn) for fn in filenames])
+        assert all([os.path.exists(fn) for fn in filenames]), filenames
         self.filenames = filenames
 
         assert isinstance(transmission_type, TransmissionType)

@@ -59,15 +59,18 @@ class FilesystemGenotypeStorage(GenotypeStorage):
             loaders = []
             if study_config.files.vcf:
                 start = time.time()
-                variants_filename = study_config.files.vcf[0].path
+                variants_filenames = [
+                    fn.strip()
+                    for fn in study_config.files.vcf[0].path.split(' ')
+                ]
                 vcf_params = study_config.files.vcf[0].params
 
                 variants_loader = VcfLoader(
-                    families, [variants_filename],
+                    families, variants_filenames,
                     genomes_db.get_genome(),
                     params=vcf_params)
                 variants_loader = StoredAnnotationDecorator.decorate(
-                    variants_loader, variants_filename
+                    variants_loader, variants_filenames[0]
                 )
                 loaders.append(variants_loader)
             if study_config.files.denovo:
