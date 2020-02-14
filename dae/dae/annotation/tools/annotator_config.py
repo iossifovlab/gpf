@@ -98,7 +98,6 @@ class AnnotationConfigParser():
         for config_section in config.sections:
             if config_section.annotator is None:
                 continue
-            config_section = cls.parse_section(config_section)
             config_section = GPFConfigParser.modify_tuple(
                 # TODO / FIXME
                 # This should be fine since the defaults_dict is updated
@@ -106,6 +105,7 @@ class AnnotationConfigParser():
                 # and perhaps written in a clearer way
                 config_section, defaults_dict
             )
+            config_section = cls.parse_section(config_section)
             parsed_sections.append(config_section)
         config = GPFConfigParser.modify_tuple(
             config, {"sections": parsed_sections}
