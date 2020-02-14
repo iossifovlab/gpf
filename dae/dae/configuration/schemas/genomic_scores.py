@@ -1,7 +1,7 @@
 from dae.configuration.gpf_config_parser import validate_existing_path
 
 genomic_score_schema = {
-    "id": {"type": "string"},
+    "id": {"type": "string", "required": True},
     "file": {
         "type": "string",
         "check_with": validate_existing_path,
