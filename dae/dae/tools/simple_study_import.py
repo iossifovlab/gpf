@@ -71,7 +71,7 @@ def cli_arguments(dae_config, argv=sys.argv[1:]):
     )
 
     parser.add_argument(
-        '--genotype-storage', type=str,
+        '--genotype-storage', '--gs', type=str,
         metavar='<genotype storage id>',
         dest='genotype_storage',
         help='Id of defined in DAE.conf genotype storage '

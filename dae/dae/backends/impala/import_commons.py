@@ -404,7 +404,7 @@ class MakefileGenerator:
         variants_params = variants_loader.build_cli_arguments(
             variants_loader.params)
         variants_filenames = [
-            os.path.abspath(fn) for fn in variants_loader.filenames
+            os.path.abspath(fn) for fn in variants_loader.variants_filenames
         ]
         variants_filenames = ' '.join(variants_filenames)
 
