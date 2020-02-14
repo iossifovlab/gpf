@@ -10,7 +10,7 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.backends.impala.import_commons import \
     construct_import_annotation_pipeline, save_study_config
 
-from dae.backends.dae.loader import DenovoLoader
+from dae.backends.dae.loader import DenovoLoader, DaeTransmittedLoader
 from dae.backends.vcf.loader import VcfLoader
 from dae.backends.raw.loader import AnnotationPipelineDecorator
 
@@ -50,6 +50,12 @@ def cli_arguments(dae_config, argv=sys.argv[1:]):
     )
 
     parser.add_argument(
+        '--dae-summary-file', type=str,
+        metavar='<summary filename>',
+        help='DAE transmitted summary variants file to import'
+    )
+
+    parser.add_argument(
         '-o', '--out', type=str, default=None,
         dest='output', metavar='<output directory>',
         help='output directory for storing intermediate parquet files. '
@@ -82,6 +88,7 @@ def cli_arguments(dae_config, argv=sys.argv[1:]):
 
     DenovoLoader.cli_options(parser)
     VcfLoader.cli_options(parser)
+    DaeTransmittedLoader.cli_options(parser)
 
     parser_args = parser.parse_args(argv)
     return parser_args
@@ -134,7 +141,7 @@ def main(argv, gpf_instance=None):
     os.makedirs(output, exist_ok=True)
 
     assert output is not None
-    assert argv.vcf_files is not None or argv.denovo_file is not None
+    # assert argv.vcf_files is not None or argv.denovo_file is not None
 
     start = time.time()
     families_filename, families_params = \
@@ -170,6 +177,19 @@ def main(argv, gpf_instance=None):
             vcf_loader, annotation_pipeline
         )
         variant_loaders.append(vcf_loader)
+
+    if argv.dae_summary_file is not None:
+        dae_files, dae_params = DaeTransmittedLoader.parse_cli_arguments(argv)
+        dae_loader = DaeTransmittedLoader(
+            families,
+            dae_files,
+            genome,
+            params=dae_params
+        )
+        dae_loader = AnnotationPipelineDecorator(
+            dae_loader, annotation_pipeline
+        )
+        variant_loaders.append(dae_loader)
 
     study_config = genotype_storage.simple_study_import(
         study_id,

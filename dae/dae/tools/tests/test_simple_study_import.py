@@ -1,3 +1,5 @@
+import pytest
+
 from box import Box
 
 from dae.backends.storage.impala_genotype_storage import ImpalaGenotypeStorage
@@ -592,3 +594,53 @@ def test_import_comp_all_into_filesystem_del_chrom_prefix(
     assert len(vs) == 35
     for v in vs:
         assert v.chromosome == '1', v
+
+
+@pytest.mark.parametrize('genotype_storage_id,storage_type', [
+    ('test_impala', 'impala'),
+    ('test_filesystem', 'filesystem'),
+])
+def test_import_transmitted_dae_into_genotype_storage(
+        genotype_storage_id, storage_type,
+        genomes_db_2013, fixture_dirname,
+        default_dae_config, gpf_instance_2013, temp_dirname):
+
+    families_filename = fixture_dirname(
+        'dae_transmitted/transmission.families.txt')
+    summary_filename = fixture_dirname(
+        'dae_transmitted/transmission.txt.gz')
+    study_id = f'test_dae_transmitted_{genotype_storage_id}'
+
+    storage_config = default_dae_config.storage[genotype_storage_id]
+    assert storage_config.type == storage_type
+
+    genotype_storage = gpf_instance_2013.genotype_storage_db.\
+        get_genotype_storage(genotype_storage_id)
+    assert genotype_storage is not None
+
+    argv = [
+        families_filename,
+        '--ped-file-format', 'simple',
+        '--id', study_id,
+        '--skip-reports',
+        '--dae-summary-file', summary_filename,
+        '--genotype-storage', genotype_storage_id,
+        '-o', temp_dirname,
+    ]
+
+    main(argv, gpf_instance_2013)
+
+    storage_config = default_dae_config.storage[genotype_storage_id]
+    assert storage_config.type == storage_type
+
+    genotype_storage = gpf_instance_2013.genotype_storage_db.\
+        get_genotype_storage(genotype_storage_id)
+    assert genotype_storage is not None
+
+    gpf_instance_2013.reload()
+    study = gpf_instance_2013._variants_db.get_study(study_id)
+    assert study is not None, (
+        study_id, gpf_instance_2013.get_genotype_data_ids())
+
+    vs = list(study.query_variants())
+    assert len(vs) == 33

@@ -483,6 +483,7 @@ class VcfLoader(VariantsGenotypesLoader):
             params=params)
 
         self.set_attribute('source_type', 'vcf')
+        self.vcf_files = vcf_files
         self.vcf_loaders = [
             SingleVcfLoader(
                 families,
@@ -492,6 +493,10 @@ class VcfLoader(VariantsGenotypesLoader):
                 params=params
             ) for vcf_files in filenames
         ]
+
+    @property
+    def variants_filenames(self):
+        return self.vcf_files
 
     @property
     def chromosomes(self):

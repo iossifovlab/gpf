@@ -1,6 +1,7 @@
 import os
 import shutil
 import time
+import glob
 
 from dae.pedigrees.loader import FamiliesLoader
 
@@ -10,7 +11,7 @@ from dae.backends.raw.loader import StoredAnnotationDecorator
 from dae.backends.raw.raw_variants import RawMemoryVariants
 
 from dae.backends.vcf.loader import VcfLoader
-from dae.backends.dae.loader import DenovoLoader
+from dae.backends.dae.loader import DenovoLoader, DaeTransmittedLoader
 
 
 class FilesystemGenotypeStorage(GenotypeStorage):
@@ -82,6 +83,19 @@ class FilesystemGenotypeStorage(GenotypeStorage):
                 )
                 loaders.append(variants_loader)
 
+            if study_config.files.dae:
+                dae_params = study_config.files.dae[0].params
+                variants_filename = study_config.files.dae[0].path
+                variants_loader = DaeTransmittedLoader(
+                    families, variants_filename,
+                    genomes_db.get_genome(),
+                    params=dae_params)
+
+                variants_loader = StoredAnnotationDecorator.decorate(
+                    variants_loader, variants_filename
+                )
+                loaders.append(variants_loader)
+
             assert len(loaders) > 0
             return RawMemoryVariants(loaders)
 
@@ -132,36 +146,48 @@ class FilesystemGenotypeStorage(GenotypeStorage):
             assert variants_loader.get_attribute("annotation_schema") \
                 is not None
 
-            source_filename = ' '.join(variants_loader.filenames)
-            destination_filename = os.path.join(
-                self.data_dir,
-                study_id,
-                'data',
-                os.path.basename(source_filename)
-            )
+            destination_dirname = os.path.join(
+                    self.data_dir,
+                    study_id,
+                    'data')
+
+            def construct_destination_filename(fn):
+                return os.path.join(
+                    destination_dirname,
+                    os.path.basename(fn)
+                )
+
+            source_filenames = variants_loader.variants_filenames
+            destination_filenames = list(
+                map(construct_destination_filename, source_filenames))
             params = variants_loader.build_cli_params(variants_loader.params)
 
             params = ",\n\t".join([
                 f"{key}:{value}"
                 for key, value in params.items() if value is not None])
             source_type = variants_loader.get_attribute('source_type')
+
             config = STUDY_VARIANTS_TEMPLATE.format(
                 index=index,
-                path=destination_filename,
+                path=' '.join(destination_filenames),
                 params=params,
                 source_type=source_type
             )
+            print(config)
             result_config.append(config)
 
-            os.makedirs(
-                os.path.dirname(destination_filename),
-                exist_ok=True)
+            os.makedirs(destination_dirname, exist_ok=True)
             annotation_filename = StoredAnnotationDecorator\
-                .build_annotation_filename(destination_filename)
+                .build_annotation_filename(destination_filenames[0])
             StoredAnnotationDecorator.save_annotation_file(
                 variants_loader, annotation_filename)
 
-            shutil.copyfile(source_filename, destination_filename)
+            for filename in variants_loader.filenames:
+                source_filenames = glob.glob(f'{filename}*')
+                print("source filenames:", source_filenames)
+                for fn in source_filenames:
+                    print("copying:", fn, construct_destination_filename(fn))
+                    shutil.copyfile(fn, construct_destination_filename(fn))
 
         return "\n\n".join(result_config)
 
