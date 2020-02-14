@@ -551,7 +551,7 @@ class VcfLoader(VariantsGenotypesLoader):
                            'add_chrom_prefix',
                            'del_chrom_prefix'}:
                     result.append(f'--{param}')
-                    result.append(f'{value}')
+                    result.append(f'"{value}"')
                 else:
                     if value:
                         result.append(f'--{param}')
