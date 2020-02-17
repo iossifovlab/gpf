@@ -413,7 +413,6 @@ class VariantsGenotypesLoader(VariantsLoader):
             params=params)
 
         self.genome = genome
-
         if regions is None or isinstance(regions, str):
             self.regions = [regions]
         else:
@@ -438,6 +437,7 @@ class VariantsGenotypesLoader(VariantsLoader):
         raise NotImplementedError()
 
     def reset_regions(self, regions):
+        # print("resetting regions to:", regions)
         if regions is None or isinstance(regions, str):
             self.regions = [regions]
         else:
@@ -632,7 +632,10 @@ class VariantsGenotypesLoader(VariantsLoader):
         for key, value in params.items():
             assert key in param_defaults, (key, list(param_defaults.keys()))
             if value != param_defaults[key]:
-                result[key] = value
+                if value is None:
+                    result[key] = ''
+                else:
+                    result[key] = f'{value}'
 
         return result
 

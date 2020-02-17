@@ -126,13 +126,13 @@ class SingleVcfLoader(VariantsGenotypesLoader):
             filenames=vcf_files,
             transmission_type=TransmissionType.transmitted,
             genome=genome,
+            regions=regions,
             expect_genotype=True,
             expect_best_state=False,
             params=params)
 
         assert len(vcf_files)
         self.set_attribute('source_type', 'vcf')
-        self.reset_regions(regions)
 
         fill_in_mode = params.get(
             "vcf_multi_loader_fill_in_mode", "reference")
@@ -248,12 +248,6 @@ class SingleVcfLoader(VariantsGenotypesLoader):
             family_vairant: FamilyVariant) -> bool:
         return False
 
-    def reset_regions(self, regions):
-        if regions is None or isinstance(regions, str):
-            self.regions = [regions]
-        else:
-            self.regions = regions
-
     def _init_vcf_readers(self):
         self.vcfs = list()
         for file in self.filenames:
@@ -261,6 +255,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                 VCF(file, gts012=True, strict_gt=True, lazy=True))
 
     def _build_vcf_iterators(self, region):
+        # print(f"build vcf iterator for {self.filenames} for region:", region)
         return [vcf(region) for vcf in self.vcfs]
 
     def _init_chromosome_order(self):
@@ -511,6 +506,10 @@ class VcfLoader(VariantsGenotypesLoader):
                     all_chromosomes.append(chrom)
         return all_chromosomes
 
+    def reset_regions(self, regions):
+        for single_loader in self.vcf_loaders:
+            single_loader.reset_regions(regions)
+
     def _full_variants_iterator_impl(self):
         summary_index = 0
         for vcf_loader in self.vcf_loaders:
@@ -551,7 +550,7 @@ class VcfLoader(VariantsGenotypesLoader):
                            'add_chrom_prefix',
                            'del_chrom_prefix'}:
                     result.append(f'--{param}')
-                    result.append(f'{value}')
+                    result.append(f'"{value}"')
                 else:
                     if value:
                         result.append(f'--{param}')
