@@ -1,5 +1,5 @@
 import pytest
-from box import Box
+from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.annotation.tools.annotator_config import AnnotationConfigParser
 from dae.annotation.tools.lift_over_annotator import LiftOverAnnotator
 from dae.annotation.annotation_pipeline import PipelineAnnotator
@@ -14,7 +14,7 @@ from .conftest import relative_to_this_test_folder
 ])
 def test_lift_over(mocker, chrom, pos, lift_over, expected, genomes_db_2013):
 
-    options = Box({
+    options = {
         'mode': 'replace',
         'vcf': True,
         'direct': True,
@@ -22,27 +22,25 @@ def test_lift_over(mocker, chrom, pos, lift_over, expected, genomes_db_2013):
         'chain_file': 'fake_chain_file',
         'c': 'chrom',
         'p': 'pos',
-    }, default_box=True, default_box_attr=None)
+    }
 
     columns = {
         'new_x': 'hg19_location',
-        # 'new_c': 'hg19_chr',
-        # 'new_p': 'hg19_pos',
     }
 
     config = AnnotationConfigParser.parse_section(
-        Box({
+        GPFConfigParser._dict_to_namedtuple({
             'options': options,
             'columns': columns,
-            'annotator': 'lift_over_annotator.LiftOverAnnotator'
-        }),
-        genomes_db_2013
+            'annotator': 'lift_over_annotator.LiftOverAnnotator',
+            'virtual_columns': [],
+        })
     )
     with mocker.patch(
             'dae.annotation.tools.lift_over_annotator.'
             'LiftOverAnnotator.build_lift_over'):
 
-        annotator = LiftOverAnnotator(config)
+        annotator = LiftOverAnnotator(config, genomes_db_2013)
         assert annotator is not None
 
         annotator.lift_over = mocker.Mock()
@@ -67,12 +65,10 @@ def test_lift_over(mocker, chrom, pos, lift_over, expected, genomes_db_2013):
 def test_pipeline_with_liftover(
         mocker, location, lift_over, expected_location, genomes_db_2013):
 
-    options = Box({
+    options = {
             'default_arguments': None,
             'vcf': True,
-        },
-        default_box=True,
-        default_box_attr=None)
+    }
 
     filename = relative_to_this_test_folder(
         'fixtures/lift_over_test_annotator.conf')

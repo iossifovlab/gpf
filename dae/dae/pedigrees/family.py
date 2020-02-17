@@ -3,7 +3,6 @@ import copy
 from collections import defaultdict
 from collections.abc import Mapping
 
-import numpy as np
 import pandas as pd
 
 from dae.variants.attributes import Role, Sex, Status
@@ -20,6 +19,7 @@ PEDIGREE_COLUMN_NAMES = {
     'sample id': 'sample_id',
     'layout': 'layout',
     'generated': 'generated',
+    'proband': 'proband',
 }
 
 
@@ -33,7 +33,6 @@ class Person(object):
         self.family = None
         self.person_id = attributes['person_id']
         self.sample_id = attributes.get('sample_id', None)
-        self.sample_index = attributes.get('samples_index', None)
         self.index = attributes.get('index', None)
 
         self._sex = Sex.from_name(attributes['sex'])
@@ -59,10 +58,10 @@ class Person(object):
         self.mom = None
         self.dad = None
 
-        self._layout = attributes.get('layout', None)
-        self._generated = attributes.get('generated', False)
-
     def __repr__(self):
+        if self.generated:
+            return "Person([G] {} ({}); {}; {})".format(
+                self.person_id, self.family_id, self.role, self.sex)
         return "Person({} ({}); {}; {})".format(
             self.person_id, self.family_id, self.role, self.sex)
 
@@ -80,15 +79,19 @@ class Person(object):
 
     @property
     def layout(self):
-        return self._layout
+        return self._attributes.get('layout', None)
 
     @property
     def generated(self):
-        return self._generated
+        return self._attributes.get('generated', None)
 
     @property
     def family_bin(self):
         return self._attributes.get('family_bin', None)
+
+    @property
+    def sample_index(self):
+        return self._attributes.get('sample_index', None)
 
     def has_mom(self):
         return self.mom is not None
@@ -110,7 +113,7 @@ class Person(object):
         return key in self._attributes
 
     def get_attr(self, key, default=None):
-        return str(self._attributes.get(key, default))
+        return self._attributes.get(key, default)
 
     def set_attr(self, key, value):
         self._attributes[key] = value
@@ -126,11 +129,16 @@ class Family(object):
         self._trios = None
 
     def _connect_family(self):
-        for index, member in enumerate(self.persons.values()):
+        index = 0
+        for member in self.persons.values():
             member.family = self
-            member.index = index
             member.mom = self.get_member(member.mom_id, None)
             member.dad = self.get_member(member.dad_id, None)
+            if member.generated:
+                member.index = -1
+            else:
+                member.index = index
+                index += 1
 
     @staticmethod
     def from_persons(persons):
@@ -150,7 +158,7 @@ class Family(object):
         return len(self.members_in_order)
 
     def __repr__(self):
-        return f'Family({self.family_id}, {self.members_in_order})'
+        return f'Family({self.family_id}, {list(self.persons.values())})'
 
     def add_members(self, persons):
         assert all([isinstance(p, Person) for p in persons])
@@ -158,13 +166,13 @@ class Family(object):
 
         for p in persons:
             self.persons[p.person_id] = p
-        self._connect_family()
         self.redefine()
 
     def redefine(self):
         self._members_in_order = None
         self._trios = None
         self._samples_index = None
+        self._connect_family()
 
     @property
     def full_members(self):
@@ -194,8 +202,9 @@ class Family(object):
     @property
     def samples_index(self):
         if self._samples_index is None:
-            self._samples_index = np.array([
-                m.sample_index for m in self.members_in_order])
+            self._samples_index = tuple([
+                    m.sample_index for m in self.members_in_order
+                ])
         return self._samples_index
 
     def members_index(self, person_ids):
@@ -226,6 +235,24 @@ class FamiliesData(Mapping):
         self._ped_df = None
         self._families = {}
         self.persons = {}
+        self._broken = {}
+
+    def redefine(self):
+        self.persons = {}
+        self._ped_df = None
+
+        all_families = self._families.values()
+        self._families = {}
+        for family in all_families:
+            family.redefine()
+
+            if len(family) == 0:
+                self._broken[family.family_id] = family
+            else:
+                self._families[family.family_id] = family
+
+            for person in family.full_members:
+                self.persons[person.person_id] = person
 
     @staticmethod
     def from_family_persons(family_persons):
@@ -250,7 +277,6 @@ class FamiliesData(Mapping):
                 for family_id, family_persons in persons.items()
             ]
         )
-        fams._ped_df = ped_df
         return fams
 
     @staticmethod
@@ -267,19 +293,22 @@ class FamiliesData(Mapping):
             # build ped_df
             column_names = set()
             records = []
-            for person in self.persons.values():
-                rec = copy.deepcopy(person._attributes)
-                rec['mom_id'] = person.mom_id if person.mom_id else '0'
-                rec['dad_id'] = person.dad_id if person.dad_id else '0'
+            for family in self.values():
+                for person in family.full_members:
+                    rec = copy.deepcopy(person._attributes)
+                    rec['mom_id'] = person.mom_id if person.mom_id else '0'
+                    rec['dad_id'] = person.dad_id if person.dad_id else '0'
+                    column_names = column_names.union(set(rec.keys()))
+                    records.append(rec)
 
-                column_names = column_names.union(set(rec.keys()))
-                records.append(rec)
             columns = [
                 col for col in PEDIGREE_COLUMN_NAMES.values()
                 if col in column_names
             ]
-            columns.extend(column_names.difference(set(columns)))
-
+            extention_columns = column_names.difference(set(columns))
+            extention_columns = extention_columns.difference(
+                set(['sample_index']))
+            columns.extend(sorted(extention_columns))
             ped_df = pd.DataFrame.from_records(records, columns=columns)
             self._ped_df = ped_df
 

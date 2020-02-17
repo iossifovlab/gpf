@@ -1,0 +1,6 @@
+id = "152135"
+name = "Set test config"
+[section1]
+someval1 = "ala"
+someval2 = ["a", "b", "c", "d", "d"]
+someval3 = 123

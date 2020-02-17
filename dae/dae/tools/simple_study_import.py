@@ -8,9 +8,9 @@ import argparse
 from dae.gpf_instance.gpf_instance import GPFInstance
 
 from dae.backends.impala.import_commons import \
-    construct_import_annotation_pipeline
+    construct_import_annotation_pipeline, save_study_config
 
-from dae.backends.dae.loader import DenovoLoader
+from dae.backends.dae.loader import DenovoLoader, DaeTransmittedLoader
 from dae.backends.vcf.loader import VcfLoader
 from dae.backends.raw.loader import AnnotationPipelineDecorator
 
@@ -18,8 +18,7 @@ from dae.pedigrees.loader import FamiliesLoader
 
 
 def cli_arguments(dae_config, argv=sys.argv[1:]):
-    default_genotype_storage_id = \
-        dae_config.get('genotype_storage', {}).get('default', None)
+    default_genotype_storage_id = dae_config.genotype_storage.default
 
     parser = argparse.ArgumentParser(
         description='simple import of new study data',
@@ -29,7 +28,7 @@ def cli_arguments(dae_config, argv=sys.argv[1:]):
     FamiliesLoader.cli_arguments(parser)
 
     parser.add_argument(
-        '--id', type=str,
+        '--id', '--study-id', type=str,
         metavar='<study ID>',
         dest="id",
         help='Unique study ID to use. '
@@ -50,6 +49,12 @@ def cli_arguments(dae_config, argv=sys.argv[1:]):
     )
 
     parser.add_argument(
+        '--dae-summary-file', type=str,
+        metavar='<summary filename>',
+        help='DAE transmitted summary variants file to import'
+    )
+
+    parser.add_argument(
         '-o', '--out', type=str, default=None,
         dest='output', metavar='<output directory>',
         help='output directory for storing intermediate parquet files. '
@@ -65,7 +70,7 @@ def cli_arguments(dae_config, argv=sys.argv[1:]):
     )
 
     parser.add_argument(
-        '--genotype-storage', type=str,
+        '--genotype-storage', '--gs', type=str,
         metavar='<genotype storage id>',
         dest='genotype_storage',
         help='Id of defined in DAE.conf genotype storage '
@@ -74,25 +79,18 @@ def cli_arguments(dae_config, argv=sys.argv[1:]):
         action='store'
     )
 
+    parser.add_argument(
+        '--add-chrom-prefix', type=str, default=None,
+        help='Add specified prefix to each chromosome name in '
+        'variants file'
+    )
+
     DenovoLoader.cli_options(parser)
     VcfLoader.cli_options(parser)
+    DaeTransmittedLoader.cli_options(parser)
 
     parser_args = parser.parse_args(argv)
     return parser_args
-
-
-def save_study_config(dae_config, study_id, study_config):
-    dirname = os.path.join(dae_config.studies_db.dir, study_id)
-    filename = os.path.join(dirname, '{}.conf'.format(study_id))
-
-    if os.path.exists(filename):
-        print('configuration file already exists:', filename)
-        print('skipping generation of default study config for:', study_id)
-        return
-
-    os.makedirs(dirname, exist_ok=True)
-    with open(filename, 'w') as outfile:
-        outfile.write(study_config)
 
 
 def generate_common_report(gpf_instance, study_id):
@@ -115,7 +113,7 @@ def main(argv, gpf_instance=None):
 
     argv = cli_arguments(dae_config, argv)
 
-    genotype_storage_factory = gpf_instance._genotype_storage_factory
+    genotype_storage_factory = gpf_instance.genotype_storage_db
     genomes_db = gpf_instance.genomes_db
     genome = genomes_db.get_genome()
 
@@ -131,7 +129,7 @@ def main(argv, gpf_instance=None):
     if argv.id is not None:
         study_id = argv.id
     else:
-        study_id, _ = os.path.splitext(os.path.basename(argv.pedigree))
+        study_id, _ = os.path.splitext(os.path.basename(argv.families))
 
     if argv.output is None:
         output = dae_config.studies_db.dir
@@ -142,7 +140,7 @@ def main(argv, gpf_instance=None):
     os.makedirs(output, exist_ok=True)
 
     assert output is not None
-    assert argv.vcf_files is not None or argv.denovo_file is not None
+    # assert argv.vcf_files is not None or argv.denovo_file is not None
 
     start = time.time()
     families_filename, families_params = \
@@ -165,17 +163,32 @@ def main(argv, gpf_instance=None):
             denovo_loader, annotation_pipeline
         )
         variant_loaders.append(denovo_loader)
+
     if argv.vcf_files is not None:
         vcf_files, vcf_params = VcfLoader.parse_cli_arguments(argv)
         vcf_loader = VcfLoader(
             families,
             vcf_files,
+            genome,
             params=vcf_params
         )
         vcf_loader = AnnotationPipelineDecorator(
             vcf_loader, annotation_pipeline
         )
         variant_loaders.append(vcf_loader)
+
+    if argv.dae_summary_file is not None:
+        dae_files, dae_params = DaeTransmittedLoader.parse_cli_arguments(argv)
+        dae_loader = DaeTransmittedLoader(
+            families,
+            dae_files,
+            genome,
+            params=dae_params
+        )
+        dae_loader = AnnotationPipelineDecorator(
+            dae_loader, annotation_pipeline
+        )
+        variant_loaders.append(dae_loader)
 
     study_config = genotype_storage.simple_study_import(
         study_id,

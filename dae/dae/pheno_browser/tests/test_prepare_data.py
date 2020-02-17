@@ -5,7 +5,8 @@ import pandas as pd
 from dae.pheno_browser.prepare_data import PreparePhenoBrowserBase
 
 from dae.variants.attributes import Role, Sex
-from dae.configuration.config_parser_base import ConfigParserBase
+from dae.configuration.gpf_config_parser import GPFConfigParser
+from dae.configuration.schemas.phenotype_data import pheno_conf_schema
 
 
 def test_augment_measure(fake_phenotype_data, output_dir):
@@ -206,8 +207,8 @@ def test_handle_regressions(
                           'PreparePhenoBrowserBase.build_regression',
                           side_effect=fake_build_regression)
 
-    reg = ConfigParserBase.read_file_configuration(
-        fake_phenotype_data_desc_conf, ''
+    reg = GPFConfigParser.load_config(
+        fake_phenotype_data_desc_conf, pheno_conf_schema
     )
     prep = PreparePhenoBrowserBase(
         'fake', fake_phenotype_data, output_dir, reg
@@ -231,8 +232,8 @@ def test_handle_regressions(
 
 def test_handle_regressions_non_continuous_or_ordinal_measure(
         fake_phenotype_data, output_dir, fake_phenotype_data_desc_conf):
-    reg = ConfigParserBase.read_file_configuration(
-        fake_phenotype_data_desc_conf, ''
+    reg = GPFConfigParser.load_config(
+        fake_phenotype_data_desc_conf, pheno_conf_schema
     )
     prep = PreparePhenoBrowserBase(
         'fake', fake_phenotype_data, output_dir, reg
@@ -249,8 +250,8 @@ def test_handle_regressions_non_continuous_or_ordinal_measure(
 
 def test_handle_regressions_regressand_is_regressor(
         fake_phenotype_data, output_dir, fake_phenotype_data_desc_conf):
-    reg = ConfigParserBase.read_file_configuration(
-        fake_phenotype_data_desc_conf, ''
+    reg = GPFConfigParser.load_config(
+        fake_phenotype_data_desc_conf, pheno_conf_schema
     )
     prep = PreparePhenoBrowserBase(
         'fake', fake_phenotype_data, output_dir, reg
@@ -272,8 +273,8 @@ def test_handle_regressions_default_jitter(
                           'PreparePhenoBrowserBase.build_regression',
                           side_effect=fake_build_regression)
 
-    reg = ConfigParserBase.read_file_configuration(
-        fake_phenotype_data_desc_conf, ''
+    reg = GPFConfigParser.load_config(
+        fake_phenotype_data_desc_conf, pheno_conf_schema
     )
     prep = PreparePhenoBrowserBase(
         'fake', fake_phenotype_data, output_dir, reg

@@ -1,7 +1,7 @@
 import pytest
 
-from box import Box
 
+from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.annotation.tests.conftest import relative_to_this_test_folder
 from dae.annotation.tools.file_io import TSVGzipReader, \
         TabixReaderVariants, parquet_enabled
@@ -35,7 +35,7 @@ def test_column_coercion():
 def test_tabix_reader_header(filename):
     filename = relative_to_this_test_folder(filename)
 
-    options = Box({}, default_box=True, default_box_attr=None)
+    options = GPFConfigParser._dict_to_namedtuple({})
 
     with TabixReaderVariants(options, filename) as reader:
         assert reader is not None
@@ -75,9 +75,9 @@ def test_tabix_chrom_prefix(
         filename, has_prefix, region, total_count, check_region):
     filename = relative_to_this_test_folder(filename)
 
-    options = Box({
+    options = GPFConfigParser._dict_to_namedtuple({
         'region': region,
-    }, default_box=True, default_box_attr=None)
+    })
 
     with TabixReaderVariants(options, filename) as reader:
         assert reader is not None
@@ -101,14 +101,14 @@ def test_tabix_region_strictness():
 
     filename = relative_to_this_test_folder('fixtures/long_variant.vcf.gz')
 
-    options = Box({
+    options = GPFConfigParser._dict_to_namedtuple({
         'vcf': True,
         'c': 'CHROM',
         'p': 'POS',
         'r': 'REF',
         'a': 'ALT',
         'region': '4:47788570',
-    }, default_box=True, default_box_attr=None)
+    })
 
     with TSVGzipReader(options, filename) as reader:
         assert reader is not None

@@ -1,0 +1,6 @@
+id = "2"
+name = "conf2"
+[section1]
+someval1 = "asdf"
+someval2 = 1.23
+someval3 = 52345

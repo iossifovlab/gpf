@@ -1,7 +1,9 @@
+from dae.RegionOperations import Region
 from dae.GenomeAccess import openRef
 from dae.GeneModelFiles import load_gene_models
 
-from dae.genomes_db_config_parser import GenomesDBConfigParser
+from dae.configuration.gpf_config_parser import GPFConfigParser
+from dae.configuration.schemas.genomes_db import genomes_db_conf
 
 '''
 GA = genomesDB.get_GA()
@@ -32,8 +34,23 @@ class GenomesDB(object):
         if not conf_file:
             conf_file = dae_dir + '/genomesDB.conf'
 
-        self.config = GenomesDBConfigParser.read_and_parse_file_configuration(
-            conf_file, dae_dir)
+        self.config = GPFConfigParser.load_config(conf_file, genomes_db_conf)
+
+        regions_x = [
+            Region.from_str(region)
+            for region in self.config.PARs.regions.X
+        ]
+        regions_y = [
+            Region.from_str(region)
+            for region in self.config.PARs.regions.Y
+        ]
+        regions = {"X": regions_x, "Y": regions_y}
+
+        self.config = GPFConfigParser.modify_tuple(
+            self.config, {"PARs": GPFConfigParser.modify_tuple(
+                self.config.PARs, {"regions": regions}
+            )}
+        )
 
         self.default_genome = self.config.genomes.default_genome
         self._gene_models = {}
@@ -42,20 +59,22 @@ class GenomesDB(object):
     def get_genome_file(self, genome_id=None):
         if not genome_id:
             genome_id = self.default_genome
-        genome_file = self.config.genome[genome_id].chr_all_file
+        genome_file = getattr(self.config.genome, genome_id).chr_all_file
         return genome_file
 
     def get_gene_model_id(self, genome_id=None):
         if not genome_id:
             genome_id = self.default_genome
-        gene_model_id = self.config.genome[genome_id].default_gene_model
+        gene_model_id = getattr(self.config.genome, genome_id).default_gene_model
 
         return gene_model_id
 
     def get_genome(self, genome_id=None):
         genome_file = self.get_genome_file(genome_id)
+        genome = self.get_genome_from_file(genome_file)
+        genome.pseudo_autosomal_regions = self.config.PARs.regions
 
-        return self.get_genome_from_file(genome_file)
+        return genome
 
     def get_genome_from_file(self, genome_file=None):
         if genome_file is None:
@@ -64,10 +83,9 @@ class GenomesDB(object):
         return openRef(genome_file)
 
     def get_gene_model(self, gene_model_id, genome_id):
-        gene_model_file = \
-            self.config.genome[genome_id].gene_model[gene_model_id].file
-
-        return load_gene_models(gene_model_file)
+        genome = getattr(self.config.genome, genome_id)
+        gene_model = getattr(genome.gene_model, gene_model_id)
+        return load_gene_models(gene_model.file)
 
     def get_pars_x_test(self):
         regions_x = self.config.PARs.regions.x.region

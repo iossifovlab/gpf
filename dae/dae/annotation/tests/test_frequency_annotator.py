@@ -1,7 +1,6 @@
 import pandas as pd
 
-from box import Box
-
+from dae.configuration.gpf_config_parser import GPFConfigParser
 from .conftest import relative_to_this_test_folder
 from dae.annotation.tools.frequency_annotator import FrequencyAnnotator
 from dae.annotation.tools.annotator_config import AnnotationConfigParser
@@ -23,13 +22,13 @@ expected_result_freq = \
 
 def test_frequency_annotator(
         variants_io, expected_df, capsys, genomes_db_2013):
-    options = Box({
+    options = GPFConfigParser._dict_to_namedtuple({
         'vcf': True,
         'direct': False,
         'mode': 'overwrite',
         'scores_file': relative_to_this_test_folder(
                 'fixtures/TESTFreq/test_freq.tsv.gz')
-    }, default_box=True, default_box_attr=None)
+    })
 
     columns = {
         'all_altFreq': 'RESULT_FREQ',
@@ -37,16 +36,16 @@ def test_frequency_annotator(
     }
 
     config = AnnotationConfigParser.parse_section(
-        Box({
+        GPFConfigParser._dict_to_namedtuple({
             'options': options,
             'columns': columns,
-            'annotator': 'frequency_annotator.FrequencyAnnotator'
-        }),
-        genomes_db_2013
+            'annotator': 'frequency_annotator.FrequencyAnnotator',
+            'virtual_columns': [],
+        })
     )
 
     with variants_io('fixtures/freq_test_1.tsv') as io_manager:
-        freq_annotator = FrequencyAnnotator(config)
+        freq_annotator = FrequencyAnnotator(config, genomes_db_2013)
         assert freq_annotator is not None
 
         captured = capsys.readouterr()

@@ -21,7 +21,7 @@ def test_multi_alt_allele_effects(variants_vcf, region, worst_effect, count):
         effects=['missense']))
     for v in vs:
         print("------------------")
-        print(mat2str(v.best_st))
+        print(mat2str(v.best_state))
         print(mat2str(v.gt))
         assert len(v.effects) == 2
         assert v.effects[1].worst == worst_effect[0]

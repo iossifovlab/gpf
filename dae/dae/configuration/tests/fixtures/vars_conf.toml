@@ -1,0 +1,10 @@
+id = "152135"
+name = "Vars test config"
+[vars]
+var1 = "asdf"
+var2 = "ghjk"
+var3 = "qwerty"
+[section1]
+someval1 = "%(var1)s"
+someval2 = "%(var2)sl"
+someval3 = "%(var3)s%(var1)s%(var2)s"

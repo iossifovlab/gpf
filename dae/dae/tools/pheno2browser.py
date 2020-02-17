@@ -11,7 +11,8 @@ import traceback
 
 from dae.pheno import pheno_db
 from dae.pheno_browser.prepare_data import PreparePhenoBrowserBase
-from dae.pheno.utils.config import PhenoRegressionConfigParser
+from dae.configuration.gpf_config_parser import GPFConfigParser
+from dae.configuration.schemas.phenotype_data import regression_conf_schema
 
 from dae.utils.filehash import sha256sum
 
@@ -129,8 +130,7 @@ USAGE
             raise CLIError(
                 "pheno db file name must be specified")
 
-        regressions = PhenoRegressionConfigParser.\
-            read_and_parse_file_configuration(args.regression, '') \
+        regressions = GPFConfigParser.load_config(args.regression, regression_conf_schema) \
             if args.regression else None
 
         build_pheno_browser(

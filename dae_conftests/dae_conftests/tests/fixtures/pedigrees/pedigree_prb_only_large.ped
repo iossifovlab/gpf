@@ -1,0 +1,15 @@
+familyId	personId	dadId	momId	sex	status	role
+f1	f1.mg_dad	0	0	male	1	
+f1	f1.mg_mom	0	0	female	1	
+f1	f1.pg_dad	0	0	male	1	
+f1	f1.pg_mom	0	0	female	1	
+f1	f1.dad	f1.pg_dad	f1.pg_mom	male	1	
+f1	f1.mom	f1.mg_dad	f1.mg_mom	female	1	
+f1	f1.m_aunt	f1.mg_dad	f1.mg_mom	female	1	
+f1	f1.aunt_spouse	0	0	male	1	
+f1	f1.uncle_spouse	0	0	female	1	
+f1	f1.p_uncle	f1.pg_dad	f1.pg_mom	male	1	
+f1	f1.prb	f1.dad	f1.mom	male	2	prb
+f1	f1.sib	f1.dad	f1.mom	female	1	
+f1	f1.m_cousin	f1.aunt_spouse	f1.m_aunt	male	1	
+f1	f1.p_cousin	f1.p_uncle	f1.uncle_spouse	female	1	

@@ -3,8 +3,6 @@ import os
 
 from box import Box
 
-from dae.backends.storage.tests.conftest import relative_to_this_test_folder
-
 
 def test_build_backend(
         impala_genotype_storage, quads_f1_config, genomes_db_2013):
@@ -65,17 +63,18 @@ def test_hdfs_helpers(impala_genotype_storage, hdfs_host):
     assert hdfs_helpers.hdfs is not None
 
 
-def test_impala_load_study(impala_genotype_storage, genomes_db_2013):
+def test_impala_load_study(
+        impala_genotype_storage, genomes_db_2013, fixture_dirname):
     impala_genotype_storage.impala_helpers.drop_database(
         'impala_storage_test_db'
     )
 
     impala_genotype_storage.impala_load_study(
         'study_id',
-        [relative_to_this_test_folder(
-            'fixtures/studies/quads_f1_impala/data/variants')],
-        [relative_to_this_test_folder(
-            'fixtures/studies/quads_f1_impala/data/pedigree')]
+        [fixture_dirname(
+            'studies/quads_f1_impala/data/variants')],
+        [fixture_dirname(
+            'studies/quads_f1_impala/data/pedigree')]
     )
 
     backend = impala_genotype_storage.build_backend(
@@ -90,16 +89,14 @@ def test_impala_load_study(impala_genotype_storage, genomes_db_2013):
 
 def test_impala_partition_import(
         impala_genotype_storage, genomes_db_2013,
-        sample_parquet_partition_root, fixture_dirname):
-
-    configuration = os.path.join(
-            sample_parquet_partition_root, '_PARTITION_DESCRIPTION')
+        fixture_dirname):
 
     ped_file = fixture_dirname('backends/test_partition/pedigree.parquet')
+    variants_path = fixture_dirname('backends/test_partition/variants.parquet')
 
-    impala_genotype_storage.dataset_import(
+    impala_genotype_storage.impala_load_dataset(
         'test_study',
-        configuration,
+        variants_path,
         ped_file)
 
     hdfs = impala_genotype_storage.hdfs_helpers
@@ -107,36 +104,42 @@ def test_impala_partition_import(
 
     assert hdfs.exists(os.path.join(
         root,
-        'test_study/region_bin=1_8/family_bin=6/coding_bin=0/frequency_bin=3'))
+        'test_study/variants/region_bin=1_8/family_bin=6/coding_bin=0/'
+        'frequency_bin=3'))
     assert hdfs.exists(os.path.join(
         root,
-        'test_study/region_bin=1_8/family_bin=6/coding_bin=0/frequency_bin=3/'
+        'test_study/variants/region_bin=1_8/family_bin=6/coding_bin=0/'
+        'frequency_bin=3/'
         'variants_region_bin_1_8_family_bin_6_'
         'coding_bin_0_frequency_bin_3.parquet'))
     assert hdfs.exists(os.path.join(
         root,
-        'test_study/region_bin=1_8/family_bin=69'
+        'test_study/variants/region_bin=1_8/family_bin=69'
         '/coding_bin=0/frequency_bin=3'))
     assert hdfs.exists(os.path.join(
         root,
-        'test_study/region_bin=1_8/family_bin=69/coding_bin=0/frequency_bin=3/'
+        'test_study/variants/region_bin=1_8/family_bin=69/coding_bin=0/'
+        'frequency_bin=3/'
         'variants_region_bin_1_8_family_bin_69_'
         'coding_bin_0_frequency_bin_3.parquet'))
     assert hdfs.exists(os.path.join(
         root,
-        'test_study/region_bin=2_9/family_bin=6/coding_bin=0/frequency_bin=3'))
+        'test_study/variants/region_bin=2_9/family_bin=6/coding_bin=0/'
+        'frequency_bin=3'))
     assert hdfs.exists(os.path.join(
         root,
-        'test_study/region_bin=2_9/family_bin=6/coding_bin=0/frequency_bin=3/'
+        'test_study/variants/region_bin=2_9/family_bin=6/coding_bin=0/'
+        'frequency_bin=3/'
         'variants_region_bin_2_9_family_bin_6_'
         'coding_bin_0_frequency_bin_3.parquet'))
     assert hdfs.exists(os.path.join(
         root,
-        'test_study/region_bin=2_9/family_bin=69'
+        'test_study/variants/region_bin=2_9/family_bin=69'
         '/coding_bin=0/frequency_bin=3'))
     assert hdfs.exists(os.path.join(
         root,
-        'test_study/region_bin=2_9/family_bin=69/coding_bin=0/frequency_bin=3/'
+        'test_study/variants/region_bin=2_9/family_bin=69/coding_bin=0/'
+        'frequency_bin=3/'
         'variants_region_bin_2_9_family_bin_69_'
         'coding_bin_0_frequency_bin_3.parquet'))
 
@@ -144,11 +147,11 @@ def test_impala_partition_import(
     db = impala_genotype_storage.storage_config.impala.db
 
     with impala.connection.cursor() as cursor:
-        cursor.execute(f'DESCRIBE EXTENDED {db}.test_study_partition')
+        cursor.execute(f'DESCRIBE EXTENDED {db}.test_study_variants')
         rows = list(cursor)
         assert any(
                 row[1] == 'gpf_partitioning_coding_bin_coding_effect_types'
-                and row[2] == 'missense, nonsense, frame-shift, synonymous'
+                and row[2] == 'missense,nonsense,frame-shift,synonymous'
                 for row in rows)
         assert any(
                 row[1] == 'gpf_partitioning_family_bin_family_bin_size'

@@ -12,7 +12,7 @@ def main(argv):
     parser = argparse.ArgumentParser()
     FamiliesLoader.cli_arguments(parser)
     parser.add_argument(
-        '-o',
+        '-o', '--output',
         dest='output_filename',
         help='output families parquet filename '
         '(default is [basename(families_filename).parquet])'
@@ -21,9 +21,20 @@ def main(argv):
         '--partition-description', '--pd',
         help='input partition description filename'
     )
-    args = parser.parse_args(argv)
+    parser.add_argument(
+        '--study-id', type=str, default=None,
+        dest='study_id', metavar='<study id>',
+        help='Study ID. '
+        'If none specified, the basename of families filename is used to '
+        'construct study id [default: basename(families filename)]'
+    )
+    argv = parser.parse_args(argv)
 
-    filename, params = FamiliesLoader.parse_cli_arguments(args)
+    filename, params = FamiliesLoader.parse_cli_arguments(argv)
+    if argv.study_id is not None:
+        study_id = argv.study_id
+    else:
+        study_id, _ = os.path.splitext(os.path.basename(filename))
 
     loader = FamiliesLoader(
         filename,
@@ -31,20 +42,20 @@ def main(argv):
     )
     families = loader.load()
 
-    if args.partition_description:
+    if argv.partition_description:
         partition_description = ParquetPartitionDescriptor.from_config(
-            args.partition_description
+            argv.partition_description
         )
         families = partition_description.add_family_bins_to_families(families)
 
-    if not args.output_filename:
+    if not argv.output_filename:
         output_filename, _ = os.path.splitext(os.path.basename(filename))
         output_filename = f'{output_filename}.parquet'
     else:
-        output_filename = args.output_filename
+        output_filename = argv.output_filename
 
     ParquetManager.families_to_parquet(families, output_filename)
 
 
 if __name__ == '__main__':
-    main(sys.argv)
+    main(sys.argv[1:])

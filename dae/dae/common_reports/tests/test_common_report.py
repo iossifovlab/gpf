@@ -11,8 +11,8 @@ def test_common_report(study4, common_reports_config):
     assert common_report.phenotype == \
         ['phenotype1', 'unaffected']
     assert common_report.study_type == 'WE'
-    assert common_report.study_year == ''
-    assert common_report.pub_med == ''
+    assert not common_report.study_year
+    assert not common_report.pub_med
     assert common_report.families == 3
     assert common_report.number_of_probands == 3
     assert common_report.number_of_siblings == 9

@@ -12,19 +12,20 @@ class GenotypeData:
 
         self.id = self.config.id
         self.name = self.config.name
-        self.description = self.config.description
+        if self.config.description_file:
+            with open(self.config.description_file, "r") as infile:
+                self.description = infile.read()
+        else:
+            self.description = self.config.description
         self.year = self.config.year
         self.pub_med = self.config.pub_med
 
         self.has_denovo = self.config.has_denovo
         self.has_transmitted = self.config.has_transmitted
-        self.has_cnv = self.config.hasCNV
+        self.has_cnv = self.config.has_cnv
         self.has_complex = self.config.has_complex
 
         self.study_type = self.config.study_type
-        self.study_types = self.config.study_types
-        self.years = self.config.years
-        self.pub_meds = self.config.pub_meds
         self.families_groups = None
 
     def query_variants(
@@ -49,7 +50,7 @@ class GenotypeData:
 
     def _build_study_groups(self):
         if self.families_groups is None:
-            config = self.config.people_group_config['peopleGroup']
+            config = self.config.people_group
 
             self.families_groups = FamiliesGroups.from_config(
                 self.families, config

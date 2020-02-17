@@ -1,5 +1,7 @@
+import pytest
 import numpy as np
 
+from dae.utils.variant_utils import mat2str
 from dae.variants.family_variant import FamilyAllele as FA
 
 
@@ -43,3 +45,16 @@ def test_omission_and_denovo():
     assert FA.check_denovo_trio(*trio, allele_index=0)
     # assert not FA.check_denovo_trio(*trio, allele_index=1)
     # assert not FA.check_mendelian_trio(*trio, allele_index=1)
+
+
+@pytest.mark.parametrize('variants', [
+    'variants_impala',
+    'variants_vcf'
+])
+def test_omission(variants_impl, variants):
+    fvars = variants_impl(variants)(
+        "backends/inheritance_omission")
+    for fv in fvars.query_variants(inheritance="any(mendelian,denovo)"):
+        print(fv, fv.matched_alleles)
+        for fa in fv.alleles:
+            print(fa, mat2str(fa.best_state), fa.inheritance_in_members)

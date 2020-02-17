@@ -18,26 +18,27 @@ class PDFLayoutDrawer(object):
         self._filename = filename
         self._pages = []
 
+    def __enter__(self):
+        self.pdf = PdfPages(self._filename)
+        return self.pdf
+
     def add_page(self, figure, title=None):
         if title:
             figure.text(0.5, 0.9, title, horizontalalignment="center")
-        self._pages.append(figure)
+        self.pdf.savefig(figure)
+        plt.close(figure)
 
-    def add_pages(self, figures, title=None):
-        self._pages += figures
-
-    def save_file(self):
-        with PdfPages(self._filename) as pdf:
-            for page in self._pages:
-                pdf.savefig(page)
-                plt.close(page)
+    def __exit__(self, exc_type, exc_value, exc_traceback):
+        self.pdf.close()
 
 
 class OffsetLayoutDrawer(object):
 
     def __init__(
-            self, layout, x_offset, y_offset, gap=4.0, show_id=False,
-            show_family=False, figsize=(7, 10)):
+            self, layout, x_offset, y_offset, gap=4.0,
+            show_id=False, show_family=False,
+            figsize=(7, 10)):
+
         self._x_offset = x_offset
         self._y_offset = y_offset
         self._gap = gap
@@ -88,6 +89,25 @@ class OffsetLayoutDrawer(object):
             self._draw_family(ax_family, family)
 
             ax_family.plot()
+
+        if title:
+            self._draw_title(figure, title)
+
+        return figure
+
+    def draw_family_table(self, family, figure=None, ax=None, title=None):
+        if figure is None:
+            figure = plt.figure(figsize=self.figsize)
+
+        ax_family = figure.add_axes((0.1, 0.1, 0.8, 0.3))
+        ax_family.axis("off")
+        ax_family.set_aspect(
+            aspect="equal", adjustable="datalim", anchor="C")
+        ax_family.autoscale_view()
+
+        self._draw_family(ax_family, family.full_members)
+
+        ax_family.plot()
 
         if title:
             self._draw_title(figure, title)
@@ -232,7 +252,7 @@ class OffsetLayoutDrawer(object):
                 else:
                     individual_color = "purple"
 
-                if Sex.from_name_or_value(
+                if Sex.from_name(
                         individual.individual.member.sex) == Sex.male:
                     coords = [individual.x + self._x_offset,
                               individual.y + self._y_offset]
@@ -245,7 +265,7 @@ class OffsetLayoutDrawer(object):
 
                     dlx = coords[0]
                     dly = coords[1]
-                elif Sex.from_name_or_value(
+                elif Sex.from_name(
                         individual.individual.member.sex) == Sex.female:
                     coords = [individual.x_center + self._x_offset,
                               individual.y_center + self._y_offset]
@@ -293,17 +313,19 @@ class OffsetLayoutDrawer(object):
                         ha='center', va='center')
 
     def _draw_family(self, axes, family):
-        col_labels =\
-            ["familyId", "individualId", "father", "mother", "sex", "status",
-             "role", "layout"]
+        col_labels = [
+            "familyId", "individualId", "father", "mother", "sex", "status",
+            "role", "layout", "generated"
+        ]
         table_vals = []
 
         for member in family:
             table_vals.append(
                 [member.family_id, member.person_id,
                  member.dad_id, member.mom_id,
-                 Sex.from_name_or_value(member.sex), member.status,
-                 member.role, member.layout])
+                 Sex.from_name(member.sex), member.status,
+                 member.role, member.layout,
+                 'G' if member.generated else ''])
 
         axes.table = plt.table(
             cellText=table_vals, colLabels=col_labels, loc='center')

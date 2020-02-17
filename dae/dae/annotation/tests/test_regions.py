@@ -1,10 +1,10 @@
 import pytest
 import pandas as pd
 
-from box import Box
 
 from .conftest import relative_to_this_test_folder
 
+from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.annotation.tools.annotator_config import AnnotationConfigParser
 from dae.annotation.tools.score_annotator import PositionScoreAnnotator
 
@@ -48,29 +48,29 @@ def test_regions_parameterized(
         'fixtures/TEST3{score_name}/TEST3{score_name}.bedGraph.gz'.\
         format(score_name=score_name)
 
-    options = Box({
+    options = GPFConfigParser._dict_to_namedtuple({
         'mode': 'replace',
         'vcf': True,
         'direct': direct,
         'region': region,
         'scores_file': relative_to_this_test_folder(score_filename)
-    }, default_box=True, default_box_attr=None)
+    })
 
     columns = {
         'TEST{}'.format(score_name): 'RESULT_{}'.format(score_name),
     }
 
     config = AnnotationConfigParser.parse_section(
-        Box({
+        GPFConfigParser._dict_to_namedtuple({
             'options': options,
             'columns': columns,
-            'annotator': 'score_annotator.VariantScoreAnnotator'
-        }),
-        genomes_db_2013
+            'annotator': 'score_annotator.PositionScoreAnnotator',
+            'virtual_columns': [],
+        })
     )
 
-    with variants_io('fixtures/input3.tsv.gz', options) as io_manager:
-        score_annotator = PositionScoreAnnotator(config)
+    with variants_io('fixtures/input3.tsv.gz', config.options) as io_manager:
+        score_annotator = PositionScoreAnnotator(config, genomes_db_2013)
         assert score_annotator is not None
 
         captured = capsys.readouterr()
@@ -116,29 +116,29 @@ def test_regions_parameterized_missing_scores(
         'fixtures/TEST{score_name}/TEST{score_name}.bedGraph.gz'.\
         format(score_name=score_name)
 
-    options = Box({
+    options = GPFConfigParser._dict_to_namedtuple({
         'mode': 'replace',
         'vcf': True,
         'direct': direct,
         'region': region,
         'scores_file': relative_to_this_test_folder(score_filename)
-    }, default_box=True, default_box_attr=None)
+    })
 
     columns = {
         'TEST{}'.format(score_name): 'RESULT_{}'.format(score_name),
     }
 
     config = AnnotationConfigParser.parse_section(
-        Box({
+        GPFConfigParser._dict_to_namedtuple({
             'options': options,
             'columns': columns,
-            'annotator': 'score_annotator.VariantScoreAnnotator'
-        }),
-        genomes_db_2013
+            'annotator': 'score_annotator.VariantScoreAnnotator',
+            'virtual_columns': [],
+        })
     )
 
-    with variants_io('fixtures/input3.tsv.gz', options) as io_manager:
-        score_annotator = PositionScoreAnnotator(config)
+    with variants_io('fixtures/input3.tsv.gz', config.options) as io_manager:
+        score_annotator = PositionScoreAnnotator(config, genomes_db_2013)
         assert score_annotator is not None
 
         captured = capsys.readouterr()
@@ -166,29 +166,29 @@ def test_regions_simple(expected_df, variants_io, capsys, genomes_db_2013):
         'fixtures/TEST3{score_name}/TEST3{score_name}.bedGraph.gz'.\
         format(score_name=score_name)
 
-    options = Box({
+    options = GPFConfigParser._dict_to_namedtuple({
         'mode': 'replace',
         'vcf': True,
         'direct': direct,
         'region': region,
         'scores_file': relative_to_this_test_folder(score_filename)
-    }, default_box=True, default_box_attr=None)
+    })
 
     columns = {
         f'TEST{score_name}': f'RESULT_{score_name}',
     }
 
     config = AnnotationConfigParser.parse_section(
-        Box({
+        GPFConfigParser._dict_to_namedtuple({
             'options': options,
             'columns': columns,
-            'annotator': 'score_annotator.VariantScoreAnnotator'
-        }),
-        genomes_db_2013
+            'annotator': 'score_annotator.VariantScoreAnnotator',
+            'virtual_columns': [],
+        })
     )
 
-    with variants_io('fixtures/input3.tsv.gz', options) as io_manager:
-        score_annotator = PositionScoreAnnotator(config)
+    with variants_io('fixtures/input3.tsv.gz', config.options) as io_manager:
+        score_annotator = PositionScoreAnnotator(config, genomes_db_2013)
         assert score_annotator is not None
 
         captured = capsys.readouterr()

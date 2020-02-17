@@ -1,11 +1,5 @@
-from dae.configuration.config_parser_base import ConfigParserBase
-
-
-def verify_bool(inp_val):
-    if type(inp_val) is bool:
-        return inp_val
-    else:
-        return ConfigParserBase._str_to_bool(inp_val)
+from dae.configuration.gpf_config_parser import GPFConfigParser
+from dae.configuration.schemas.annotation_conf import annotation_conf_schema
 
 
 def annotation_config_cli_options(gpf_instance):
@@ -56,141 +50,120 @@ def annotation_config_cli_options(gpf_instance):
     return options
 
 
-class AnnotationConfigParser(ConfigParserBase):
-
-    SPLIT_STR_LISTS = (
-        'virtual_columns',
-    )
+class AnnotationConfigParser():
 
     @classmethod
     def read_and_parse_file_configuration(
-            cls, options, config_file, work_dir, genomes_db, defaults=None):
+            cls, options, config_file, defaults=None):
+
         if defaults is None:
             defaults = {}
         if 'values' not in defaults:
             defaults['values'] = {}
-        for key, option in options.items():
-            defaults['values'][f'options.{key}'] = option
+        if 'options' not in defaults:
+            defaults['values']['options'] = {}
 
-        config = super(AnnotationConfigParser, cls).read_file_configuration(
-            config_file, work_dir, defaults
+        defaults['values']['options'].update(options)
+
+        defaults_dict = defaults["values"]
+
+        config = GPFConfigParser.load_config(
+            config_file, annotation_conf_schema
         )
 
-        config.options = options
+        config = GPFConfigParser.modify_tuple(
+            config, defaults_dict
+        )
 
-        config = cls.parse(config, genomes_db)
+        config = GPFConfigParser.modify_tuple(
+            config, {"options": options}
+        )
 
+        config = cls._setup_defaults(config)
+
+        config = GPFConfigParser.modify_tuple(
+            config, {"columns": {}}
+        )
+        config = GPFConfigParser.modify_tuple(
+            config, {"native_columns": []}
+        )
+        config = GPFConfigParser.modify_tuple(
+            config, {"virtual_columns": []}
+        )
+        config = GPFConfigParser.modify_tuple(
+            config, {"output_columns": []}
+        )
+
+        parsed_sections = list()
+        for config_section in config.sections:
+            if config_section.annotator is None:
+                continue
+            config_section = GPFConfigParser.modify_tuple(
+                # TODO / FIXME
+                # This should be fine since the defaults_dict is updated
+                # with the values of options, but should be double-checked
+                # and perhaps written in a clearer way
+                config_section, defaults_dict
+            )
+            config_section = cls.parse_section(config_section)
+            parsed_sections.append(config_section)
+        config = GPFConfigParser.modify_tuple(
+            config, {"sections": parsed_sections}
+        )
         return config
 
     @classmethod
-    def parse(cls, config, genomes_db):
-        config = cls._setup_defaults(config, genomes_db)
+    def parse_section(cls, config_section):
+        config_section = cls._setup_defaults(config_section)
 
-        config['columns'] = {}
-        config['native_columns'] = []
-        config['virtual_columns'] = []
-        config['output_columns'] = []
-        config['sections'] = []
+        config_section = GPFConfigParser.modify_tuple(
+            config_section, {"sections": []}
+        )
 
-        for config_section in config.values():
-            if not isinstance(config_section, dict):
-                continue
-            if 'annotator' not in config_section:
-                continue
-            config_section = cls.parse_section(config_section, genomes_db)
-
-            config['sections'].append(config_section)
-
-        return config
-
-    @classmethod
-    def parse_section(cls, config_section, genomes_db):
-        assert 'annotator' in config_section, config_section
-
-        # TODO Fix this!
-        # Keep this before calling _setup_defaults
-        # This is a bit of a hack right now, since _setup_defaults
-        # needs the options to have been parsed properly
-        config_section.options = AnnotationOptionsSectionParser.parse_section(
-            config_section.get('options', {}))
-
-        config_section = cls._setup_defaults(config_section, genomes_db)
-
-        config_section = \
-            super(AnnotationConfigParser, cls).parse_section(config_section)
-
-        config_section['sections'] = []
-
-        config_section.columns = config_section.get('columns', {})
-
-        config_section.native_columns = list(config_section.columns.keys())
-        config_section.virtual_columns = \
-            config_section.get('virtual_columns', [])
+        native_columns = list(config_section.columns._fields)
+        config_section = GPFConfigParser.modify_tuple(
+            config_section, {"native_columns": native_columns}
+        )
         assert all([
-            c in config_section.columns.values()
+            c in config_section.columns
             for c in config_section.virtual_columns])
 
-        config_section.output_columns = [
-            c for c in config_section.columns.values()
+        output_columns = [
+            c for c in config_section.columns
             if c not in config_section.virtual_columns
         ]
+        config_section = GPFConfigParser.modify_tuple(
+            config_section, {"output_columns": output_columns}
+        )
 
         return config_section
 
     @staticmethod
-    def _setup_defaults(config, genomes_db):
+    def _setup_defaults(config):
+        def modify_config_options(config, new_vals):
+            config_opts = config.options
+            config_opts = GPFConfigParser.modify_tuple(
+                config_opts, new_vals
+            )
+            return GPFConfigParser.modify_tuple(
+                config, {"options": config_opts}
+            )
+
         if config.options.vcf:
             assert not config.options.v, [config.annotator, config.options.v]
 
             if config.options.c is None:
-                config.options.c = 'CHROM'
+                config = modify_config_options(config, {"c": "CHROM"})
             if config.options.p is None:
-                config.options.p = 'POS'
+                config = modify_config_options(config, {"p": "POS"})
             if config.options.r is None:
-                config.options.r = 'REF'
+                config = modify_config_options(config, {"r": "REF"})
             if config.options.a is None:
-                config.options.a = 'ALT'
+                config = modify_config_options(config, {"a": "ALT"})
         else:
             if config.options.x is None and config.options.c is None:
-                config.options.x = 'location'
+                config = modify_config_options(config, {"x": "location"})
             if config.options.v is None:
-                config.options.v = 'variant'
-
-        if config.options.prom_len is None:
-            config.options.prom_len = 0
-
-        config.genomes_db = genomes_db
-        config.genome = genomes_db.get_genome_from_file(config.options.Graw)
-        config.gene_models = genomes_db.get_gene_models(config.options.Traw)
-        assert config.genomes_db is not None
-        assert config.genome is not None
-        assert config.gene_models is not None
+                config = modify_config_options(config, {"v": "variant"})
 
         return config
-
-
-class AnnotationOptionsSectionParser(ConfigParserBase):
-
-    # TODO
-    # very hacky, fix asap
-    VERIFY_VALUES = {
-        'vcf': verify_bool
-    }
-
-
-class ScoreFileConfigParser(ConfigParserBase):
-
-    SPLIT_STR_LISTS = (
-        'header',
-        'score',
-        'str',
-        'float',
-        'int',
-        'list(str)',
-        'list(float)',
-        'list(int)',
-    )
-
-    CAST_TO_BOOL = (
-        'chr_prefix',
-    )

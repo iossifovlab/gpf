@@ -1,3 +1,4 @@
+import time
 from collections import OrderedDict
 
 from dae.variants.attributes import Role
@@ -12,7 +13,7 @@ from dae.common_reports.people_filters import FilterCollection
 class CommonReport(object):
 
     def __init__(self, genotype_data_study, config):
-        people_groups_info = config.people_groups_info
+        people_groups_info = config.people_group
         effect_groups = config.effect_groups
         effect_types = config.effect_types
 
@@ -24,21 +25,38 @@ class CommonReport(object):
         self.families_groups.add_predefined_groups(
             ['status', 'sex', 'role', 'role.sex', 'family_size'])
 
-        filter_objects = FilterCollection.build_filter_objects(
+        people_filters = FilterCollection.build_filter_objects(
             self.families_groups, config.groups
         )
+        denovo_people_filters = [
+            pf for pf in people_filters if pf.group_id in people_groups_info
+        ]
 
         self.id = genotype_data_study.id
+
+        start = time.time()
         self.families_report = FamiliesReport(
-            config.people_groups, self.families_groups, filter_objects,
+            config.selected_people_groups, self.families_groups, people_filters,
             config.draw_all_families, config.families_count_show_id
         )
+        elapsed = time.time() - start
+        print(
+            f"COMMON REPORTS family report "
+            f"build in {elapsed:.2f} sec")
+
+        start = time.time()
         self.denovo_report = DenovoReport(
-            genotype_data_study, effect_groups, effect_types, filter_objects)
+            genotype_data_study, effect_groups, effect_types,
+            denovo_people_filters)
+        elapsed = time.time() - start
+        print(
+            f"COMMON REPORTS denovo report "
+            f"build in {elapsed:.2f} sec")
+
         self.study_name = genotype_data_study.name
         self.phenotype = self._get_phenotype()
-        self.study_type = ','.join(genotype_data_study.study_types)\
-            if genotype_data_study.study_types else None
+        self.study_type = ','.join(genotype_data_study.study_type)\
+            if genotype_data_study.study_type else None
         self.study_year = genotype_data_study.year
         self.pub_med = genotype_data_study.pub_med
 

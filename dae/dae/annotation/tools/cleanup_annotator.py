@@ -3,9 +3,10 @@ from dae.annotation.tools.annotator_base import AnnotatorBase
 
 class CleanupAnnotator(AnnotatorBase):
 
-    def __init__(self, config):
-        super(CleanupAnnotator, self).__init__(config)
-        self.cleanup_columns = self.config.columns['cleanup'].split(',')
+    def __init__(self, config, genomes_db):
+        super(CleanupAnnotator, self).__init__(config, genomes_db)
+        # TODO Fix this - should be split in the configuration schema!
+        self.cleanup_columns = self.config.columns.cleanup.split(',')
         self.cleanup_columns = [
             col.strip() for col in self.cleanup_columns
         ]

@@ -5,17 +5,34 @@ import argparse
 from math import ceil
 from collections import defaultdict
 
-from box import Box
-
 from dae.annotation.annotation_pipeline import PipelineAnnotator
 from dae.utils.dict_utils import recursive_dict_update
 
 from dae.gpf_instance.gpf_instance import GPFInstance
 
 from dae.pedigrees.loader import FamiliesLoader
-from dae.backends.raw.loader import AnnotationPipelineDecorator
+from dae.backends.raw.loader import AnnotationPipelineDecorator, \
+    AlleleFrequencyDecorator
+
+from dae.backends.dae.loader import DenovoLoader, DaeTransmittedLoader
+from dae.backends.vcf.loader import VcfLoader
+
 from dae.backends.impala.parquet_io import ParquetManager, \
     ParquetPartitionDescriptor, NoPartitionDescriptor
+
+
+def save_study_config(dae_config, study_id, study_config):
+    dirname = os.path.join(dae_config.studies_db.dir, study_id)
+    filename = os.path.join(dirname, '{}.conf'.format(study_id))
+
+    if os.path.exists(filename):
+        print('configuration file already exists:', filename)
+        print('skipping generation of default study config for:', study_id)
+        return
+
+    os.makedirs(dirname, exist_ok=True)
+    with open(filename, 'w') as outfile:
+        outfile.write(study_config)
 
 
 def construct_import_annotation_pipeline(
@@ -37,10 +54,9 @@ def construct_import_annotation_pipeline(
         'r': 'reference',
         'a': 'alternative',
     }
-    options = Box(options, default_box=True, default_box_attr=None)
 
     annotation_defaults = {
-        'values': gpf_instance.dae_config.annotation_defaults
+        'values': gpf_instance.dae_config.annotation_defaults._asdict()
     }
     annotation_defaults = recursive_dict_update(annotation_defaults, defaults)
 
@@ -52,28 +68,34 @@ def construct_import_annotation_pipeline(
     return pipeline
 
 
-def generate_region_argument_string(chrom, start, end):
-    if start is None and end is None:
-        return f'{chrom}'
-    else:
-        assert start and end, f'{start}-{end} is an invalid region!'
-        return f'{chrom}:{start}-{end}'
+class MakefilePartitionHelper:
 
+    def __init__(
+            self, partition_descriptor, genome,
+            add_chrom_prefix=None, del_chrom_prefix=None):
 
-def generate_region_argument(fa, description):
-    segment = fa.position // description.region_length
-    start = (segment * description.region_length) + 1
-    end = (segment + 1) * description.region_length
-
-    return (fa.chromosome, start, end)
-
-
-class MakefileGenerator:
-
-    def __init__(self, partition_descriptor, genome):
         self.genome = genome
         self.partition_descriptor = partition_descriptor
         self.chromosome_lengths = dict(self.genome.get_all_chr_lengths())
+
+        self._build_adjust_chrom(add_chrom_prefix, del_chrom_prefix)
+
+    def _build_adjust_chrom(self, add_chrom_prefix, del_chrom_prefix):
+        self._chrom_prefix = None
+
+        def same_chrom(chrom):
+            return chrom
+        self._adjust_chrom = same_chrom
+        self._unadjust_chrom = same_chrom
+
+        if add_chrom_prefix is not None:
+            self._chrom_prefix = add_chrom_prefix
+            self._adjust_chrom = self._prepend_chrom_prefix
+            self._unadjust_chrom = self._remove_chrom_prefix
+        elif del_chrom_prefix is not None:
+            self._chrom_prefix = del_chrom_prefix
+            self._adjust_chrom = self._remove_chrom_prefix
+            self._unadjust_chrom = self._prepend_chrom_prefix
 
     def region_bins_count(self, chrom):
         result = ceil(
@@ -81,11 +103,31 @@ class MakefileGenerator:
             self.partition_descriptor.region_length)
         return result
 
-    def generate_chrom_targets(self, chrom):
-        target = chrom
-        if chrom not in self.partition_descriptor.chromosomes:
+    def _remove_chrom_prefix(self, chrom):
+        assert self._chrom_prefix
+        if chrom.startswith(self._chrom_prefix):
+            return chrom[len(self._chrom_prefix):]
+        return chrom
+
+    def _prepend_chrom_prefix(self, chrom):
+        assert self._chrom_prefix
+        if not chrom.startswith(self._chrom_prefix):
+            return f'{self._chrom_prefix}{chrom}'
+        return chrom
+
+    def build_target_chromosomes(self, target_chromosomes):
+        return [
+            self._adjust_chrom(tg)
+            for tg in target_chromosomes
+        ]
+
+    def generate_chrom_targets(self, target_chrom):
+        target = target_chrom
+        if target_chrom not in self.partition_descriptor.chromosomes:
             target = 'other'
-        region_bins_count = self.region_bins_count(chrom)
+        region_bins_count = self.region_bins_count(target_chrom)
+
+        chrom = self._unadjust_chrom(target_chrom)
 
         if region_bins_count == 1:
             return [(f'{target}_0', chrom)]
@@ -93,181 +135,456 @@ class MakefileGenerator:
         for region_index in range(region_bins_count):
             start = region_index * self.partition_descriptor.region_length + 1
             end = (region_index + 1) * self.partition_descriptor.region_length
-            if end > self.chromosome_lengths[chrom]:
-                end = self.chromosome_lengths[chrom]
+            if end > self.chromosome_lengths[target_chrom]:
+                end = self.chromosome_lengths[target_chrom]
             result.append(
                 (f'{target}_{region_index}', f'{chrom}:{start}-{end}')
             )
         return result
 
+    def bucket_index(self, region_bin):
+        genome_chromosomes = [
+            chrom for chrom, _ in self.genome.get_all_chr_lengths()
+        ]
+        variants_targets = self.generate_variants_targets(genome_chromosomes)
+        assert region_bin in variants_targets
+
+        variants_targets = list(variants_targets.keys())
+        return variants_targets.index(region_bin)
+
     def generate_variants_targets(self, target_chromosomes):
+
         if len(self.partition_descriptor.chromosomes) == 0:
             return {
                 'none': [self.partition_descriptor.output]
             }
 
-        targets = defaultdict(list)
+        generated_target_chromosomes = [
+            self._adjust_chrom(tg)
+            for tg in target_chromosomes[:]
+        ]
 
-        for chrom in target_chromosomes:
-            if chrom not in self.chromosome_lengths:
-                print(
-                    f"WARNING: contig {chrom} not found in specified genome",
-                    file=sys.stderr)
+        targets = defaultdict(list)
+        for target_chrom in generated_target_chromosomes:
+            if target_chrom not in self.chromosome_lengths:
+                # print(
+                #     f"WARNING: contig {target_chrom} not found in specified "
+                #     f"genome",
+                #     file=sys.stderr)
                 continue
 
-            assert chrom in self.chromosome_lengths, \
-                (chrom, self.chromosome_lengths)
-            region_targets = self.generate_chrom_targets(chrom)
+            assert target_chrom in self.chromosome_lengths, \
+                (target_chrom, self.chromosome_lengths)
+            region_targets = self.generate_chrom_targets(target_chrom)
+
             for target, region in region_targets:
+                # target = self.reset_target(target)
                 targets[target].append(region)
         return targets
 
-    def generate_variants_make(
-            self, command, target_chromosomes, output=sys.stdout):
-        variants_targets = self.generate_variants_targets(target_chromosomes)
 
-        all_bins = ' '.join(list(variants_targets.keys()))
+class MakefileGenerator:
 
+    def __init__(self, gpf_instance):
+        self.gpf_instance = gpf_instance
+
+        self.study_id = None
+        self.partition_helper = None
+
+        self.families_loader = None
+        self._families = None
+
+        self.vcf_loader = None
+        self.denovo_loader = None
+        self.dae_loader = None
+        self.genotype_storage_id = None
+
+    @property
+    def families(self):
+        if self._families is None:
+            assert self.families_loader is not None
+            self._families = self.families_loader.load()
+        return self._families
+
+    def build_familes_loader(self, argv):
+        families_filename, families_params = \
+            FamiliesLoader.parse_cli_arguments(argv)
+        families_loader = FamiliesLoader(
+            families_filename, params=families_params)
+        self.families_loader = families_loader
+        return self
+
+    def build_vcf_loader(self, argv):
+        variants_filenames, variants_params = \
+            VcfLoader.parse_cli_arguments(argv)
+
+        if variants_filenames is None:
+            return self
+
+        variants_loader = VcfLoader(
+            self.families, variants_filenames,
+            params=variants_params,
+            genome=self.gpf_instance.genomes_db.get_genome())
+        self.vcf_loader = variants_loader
+        return self
+
+    def build_denovo_loader(self, argv):
+        variants_filename, variants_params = \
+            DenovoLoader.parse_cli_arguments(argv)
+
+        if variants_filename is None:
+            return self
+        variants_loader = DenovoLoader(
+            self.families, variants_filename,
+            params=variants_params,
+            genome=self.gpf_instance.genomes_db.get_genome())
+        self.denovo_loader = variants_loader
+        return self
+
+    def build_dae_loader(self, argv):
+        variants_filename, variants_params = \
+            DaeTransmittedLoader.parse_cli_arguments(argv)
+
+        if variants_filename is None:
+            return self
+        variants_loader = DaeTransmittedLoader(
+            self.families, variants_filename,
+            params=variants_params,
+            genome=self.gpf_instance.genomes_db.get_genome())
+        self.dae_loader = variants_loader
+        return self
+
+    def build_study_id(self, argv):
+        assert self.families_loader is not None
+        if argv.study_id is not None:
+            study_id = argv.study_id
+        else:
+            families_filename = self.families_loader.filename
+            study_id, _ = os.path.splitext(os.path.basename(families_filename))
+        self.study_id = study_id
+        return self
+
+    def build_partition_helper(self, argv):
+        if argv.partition_description is not None:
+            partition_description = ParquetPartitionDescriptor.from_config(
+                argv.partition_description,
+                root_dirname=argv.output
+            )
+        else:
+            partition_description = NoPartitionDescriptor(argv.output)
+
+        add_chrom_prefix = argv.add_chrom_prefix
+        del_chrom_prefix = argv.del_chrom_prefix
+
+        self.partition_helper = MakefilePartitionHelper(
+            partition_description,
+            self.gpf_instance.genomes_db.get_genome(),
+            add_chrom_prefix=add_chrom_prefix,
+            del_chrom_prefix=del_chrom_prefix)
+
+        return self
+
+    def build_genotype_storage(self, argv):
+        if argv.genotype_storage is None:
+            genotype_storage_id = \
+                self.gpf_instance.dae_config.\
+                get('genotype_storage', {}).\
+                get('default', None)
+        else:
+            genotype_storage_id = argv.genotype_storage
+
+        genotype_storage = self.gpf_instance.genotype_storage_db \
+            .get_genotype_storage(genotype_storage_id)
+        if genotype_storage is None:
+            raise ValueError(
+                f"genotype storage {genotype_storage_id} not found")
+        if not genotype_storage.is_impala():
+            raise ValueError(
+                f"genotype storage {genotype_storage_id} is not "
+                f"Impala Genotype Storage")
+        self.genotype_storage_id = genotype_storage_id
+        return self
+
+    def build(self, argv):
+        self.build_familes_loader(argv) \
+            .build_denovo_loader(argv) \
+            .build_vcf_loader(argv) \
+            .build_dae_loader(argv) \
+            .build_study_id(argv) \
+            .build_partition_helper(argv) \
+            .build_genotype_storage(argv)
+        return self
+
+    def _create_output_directory(self, argv):
+        dirname = argv.output
+        if dirname is None:
+            dirname = '.'
+        os.makedirs(dirname, exist_ok=True)
+        return dirname
+
+    def generate_makefile(self, argv):
+        dirname = self._create_output_directory(argv)
+        with open(os.path.join(dirname, 'Makefile'), 'w') as outfile:
+            self.generate_all_targets(argv, outfile)
+            self.generate_variants_targets(argv, outfile)
+            self.generate_pedigree_targets(argv, outfile)
+            self.generate_vcf_targets(argv, outfile)
+            self.generate_denovo_targets(argv, outfile)
+            self.generate_dae_targets(argv, outfile)
+            self.generate_load_targets(argv, outfile)
+            self.generate_report_targets(argv, outfile)
+
+    def _collect_variants_targets(self):
+        variants_targets = []
+        if self.denovo_loader is not None:
+            variants_targets.append('denovo_variants')
+        if self.vcf_loader is not None:
+            variants_targets.append('vcf_variants')
+        if self.dae_loader is not None:
+            variants_targets.append('dae_variants')
+        return variants_targets
+
+    def generate_all_targets(self, argv, outfile=sys.stdout):
+        targets = ['pedigree']
+        targets.extend(self._collect_variants_targets())
+
+        print('\n', file=outfile)
         print(
-            f'all_bins={all_bins}\n',
-            file=output)
-        print(
-            f'all_bins_flags=$(foreach bin, $(all_bins), $(bin).flag)\n',
-            file=output)
-        print(
-            f'\n'
-            f'variants: $(all_bins_flags)\n',
-            file=output)
-        print(
-            f'\n'
-            f'%.flag\n'
-            f'\t{command} --rb $* && touch $@\n',
-            file=output
+            'all:', ' '.join(targets),
+            file=outfile
         )
 
-    def generate_pedigree_make(self, command, output=sys.stdout):
+    def generate_variants_targets(self, argv, outfile=sys.stdout):
+        variants_targets = self._collect_variants_targets()
+        if len(variants_targets) > 0:
+            print('\n', file=outfile)
+            print(
+                'variants:', ' '.join(variants_targets),
+                file=outfile
+            )
+
+    def _construct_families_command(self, argv):
+        families_params = FamiliesLoader.build_cli_arguments(
+            self.families_loader.params)
+        families_filename = self.families_loader.filename
+        families_filename = os.path.abspath(families_filename)
+
+        command = [
+            f'ped2parquet.py {families_params} {families_filename}',
+            f'--study-id {self.study_id}',
+            f'-o {self.study_id}_pedigree.parquet'
+        ]
+        if argv.partition_description is not None:
+            pd = os.path.abspath(argv.partition_description)
+            command.append(f'--pd {pd}')
+
+        return ' '.join(command)
+
+    def generate_pedigree_targets(self, argv, outfile=sys.stdout):
+        print('\n', file=outfile)
         print(
             f'pedigree: ped.flag\n',
-            file=output)
+            file=outfile)
+
+        command = self._construct_families_command(argv)
         print(
             f'ped.flag:\n'
             f'\t{command} && touch $@',
-            file=output)
+            file=outfile)
 
-    def generate_makefile(
-            self, families_command, variants_command, target_chromosomes,
-            output=sys.stdout):
+    def _construct_variants_command(self, argv, variants_loader, tool_command):
+        families_params = FamiliesLoader.build_cli_arguments(
+            self.families_loader.params)
+        families_filename = self.families_loader.filename
+        families_filename = os.path.abspath(families_filename)
 
+        variants_params = variants_loader.build_cli_arguments(
+            variants_loader.params)
+        variants_filenames = [
+            os.path.abspath(fn) for fn in variants_loader.variants_filenames
+        ]
+        variants_filenames = ' '.join(variants_filenames)
+
+        command = [
+            f'{tool_command}',
+            f'{families_params} {families_filename}',
+            f'{variants_params} {variants_filenames}',
+            f'--study-id {self.study_id}',
+            f'-o {self.study_id}_variants.parquet'
+        ]
+        if argv.partition_description is not None:
+            pd = os.path.abspath(argv.partition_description)
+            command.append(f'--pd {pd}')
+        if argv.add_chrom_prefix is not None:
+            command.append(f'--add-chrom-prefix {argv.add_chrom_prefix}')
+        if argv.del_chrom_prefix is not None:
+            command.append(f'--del-chrom-prefix {argv.del_chrom_prefix}')
+
+        return ' '.join(command)
+
+    def _generate_variants_targets(
+            self, argv, target_prefix, variants_loader, variants_tool,
+            outfile=sys.stdout):
+
+        if 'target_chromosomes' in argv and \
+                argv.target_chromosomes is not None:
+            target_chromosomes = argv.target_chromosomes
+        else:
+            target_chromosomes = variants_loader.chromosomes
+
+        variants_targets = self.partition_helper.generate_variants_targets(
+            target_chromosomes)
+
+        bins = ' '.join(list(variants_targets.keys()))
+
+        print('\n', file=outfile)
         print(
-            f'all: ped.flag $(all_bins_flags)\n',
-            file=output)
+            f'{target_prefix}_bins={bins}',
+            file=outfile)
+        print(
+            f'{target_prefix}_bins_flags='
+            f'$(foreach bin, $({target_prefix}_bins), '
+            f'{target_prefix}_$(bin).flag)\n',
+            file=outfile)
+        print(
+            f'{target_prefix}_variants: $({target_prefix}_bins_flags)\n',
+            file=outfile)
+        command = self._construct_variants_command(
+            argv, variants_loader, variants_tool)
+        print(
+            f'{target_prefix}_%.flag:\n'
+            f'\t{command} --rb $* && touch $@\n',
+            file=outfile
+        )
 
-        self.generate_variants_make(
-            variants_command, target_chromosomes, output=output)
-        self.generate_pedigree_make(
-            families_command, output=output)
+    def generate_vcf_targets(self, argv, outfile=sys.stdout):
+        if self.vcf_loader is None:
+            return
 
+        self._generate_variants_targets(
+            argv, 'vcf', self.vcf_loader, 'vcf2parquet.py',
+            outfile=outfile
+        )
 
-def generate_makefile(genome, contigs, tool, argv):
-    if argv.partition_description is None:
-        output = 'all: \n'
-        output += f'\t{tool}' \
-            f'--o {argv.output} '
-        print(output)
-        return
+    def generate_denovo_targets(self, argv, outfile=sys.stdout):
+        if self.denovo_loader is None:
+            return
 
-    description = ParquetPartitionDescriptor.from_config(
-        argv.partition_description)
+        self._generate_variants_targets(
+            argv, 'denovo', self.denovo_loader, 'denovo2parquet.py',
+            outfile=outfile
+        )
 
-    assert set(description.chromosomes).issubset(contigs), \
-        (description.chromosomes, contigs)
+    def generate_dae_targets(self, argv, outfile=sys.stdout):
+        if self.dae_loader is None:
+            return
 
-    targets = dict()
-    other_regions = dict()
-    contig_lengths = dict(genome.get_all_chr_lengths())
+        self._generate_variants_targets(
+            argv, 'dae', self.dae_loader, 'dae2parquet.py',
+            outfile=outfile
+        )
 
-    for contig in description.chromosomes:
-        assert contig in contig_lengths, (contig, contig_lengths)
-        region_bins = contig_lengths[contig] // description.region_length \
-            + bool(contig_lengths[contig] % description.region_length)
-        for rb_idx in range(0, region_bins):
+    def _construct_load_command(self, argv):
+        assert self.genotype_storage_id is not None
 
-            if description.region_length < contig_lengths[contig]:
-                start = rb_idx * description.region_length + 1
-                end = (rb_idx + 1) * description.region_length
-            else:
-                start, end = None, None
+        output = argv.output
+        if output is None:
+            output = '.'
+        output = os.path.abspath(output)
 
-            if contig in description.chromosomes:
-                region_bin = f'{contig}_{rb_idx}'
-                targets[region_bin] = (contig, start, end)
-            else:
-                region_bin = f'other_{rb_idx}'
-                other_regions.setdefault(region_bin, set()).add(
-                    (contig, start, end)
-                )
+        command = [
+            f'impala_parquet_loader.py {self.study_id}',
+            os.path.join(output, f'{self.study_id}_pedigree.parquet'),
+            os.path.join(output, f'{self.study_id}_variants.parquet'),
+            f'--gs {self.genotype_storage_id}'
+        ]
 
-    output = ''
-    all_target = 'all:'
-    main_targets = ''
-    other_targets = ''
+        return ' '.join(command)
 
-    common_command = f'{tool} ' \
-        f'--skip-pedigree --o {argv.output}' \
-        f' --pd {argv.partition_description}' \
-        f' --ped-file-format {argv.ped_file_format}'
-    if 'annotation_config' in argv:
-        common_command += f' --annotation-config {argv.annotation_config}'
+    def generate_load_targets(self, argv, outfile=sys.stdout):
+        print('\n', file=outfile)
+        print(
+            f'load: load.flag\n',
+            file=outfile)
 
-    for target_name in targets.keys():
-        all_target += f' {target_name}'
+        command = self._construct_load_command(argv)
+        variants_targets = self._collect_variants_targets()
+        if len(variants_targets) > 0:
+            print(
+                f'load.flag: pedigree variants\n'
+                f'\t{command} && touch $@',
+                file=outfile)
+        else:
+            print(
+                f'load.flag: pedigree\n'
+                f'\t{command} && touch $@',
+                file=outfile)
 
-    bucket_index = 100
+    def _construct_report_command(self, argv):
+        output = argv.output
+        if output is None:
+            output = '.'
+        output = os.path.abspath(output)
 
-    for target_name, target_args in targets.items():
-        main_targets += f'{target_name}:\n'
-        main_targets += f'\t{common_command} '
-        main_targets += \
-            f'-b {bucket_index} '
-        main_targets += \
-            f' --region {generate_region_argument_string(*target_args)}\n\n'
-        bucket_index += 1
+        command = [
+            f'generate_common_report.py --studies {self.study_id}'
+        ]
 
-    if len(other_regions) > 0:
-        for region_bin, command_args in other_regions.items():
-            all_target += f' {region_bin}'
-            other_targets += f'{region_bin}:\n'
-            regions = ' '.join(
-                map(
-                    lambda x: generate_region_argument_string(*x),
-                    command_args
-                )
-            )
-            other_targets += f'\t{common_command}'
-            other_targets += f' --region {regions}\n\n'
+        return ' && '.join(command)
 
-    output += f'{all_target}\n'
-    output += '.PHONY: all\n\n'
-    output += main_targets
-    output += other_targets
-    print(output)
-
-
-class Variants2ParquetTool:
-
-    VARIANTS_LOADER_CLASS = None
-    VARIANTS_TOOL = None
+    def generate_report_targets(self, argv, outfile=sys.stdout):
+        print('\n', file=outfile)
+        print(
+            f'reports: reports.flag\n',
+            file=outfile)
+        command = self._construct_report_command(argv)
+        print(
+            f'reports.flag: load.flag\n'
+            f'\t{command} && touch $@',
+            file=outfile)
 
     @classmethod
-    def cli_common_arguments(cls, gpf_instance, parser):
+    def cli_arguments_parser(cls, gpf_instance):
+        parser = argparse.ArgumentParser(
+            description='Convert variants file to parquet',
+            conflict_handler='resolve',
+            formatter_class=argparse.RawDescriptionHelpFormatter)
 
         FamiliesLoader.cli_arguments(parser)
-        cls.VARIANTS_LOADER_CLASS.cli_arguments(parser)
+        DenovoLoader.cli_options(parser)
+        VcfLoader.cli_options(parser)
+        DaeTransmittedLoader.cli_options(parser)
+
+        parser.add_argument(
+            '--vcf-files', type=str, nargs='+',
+            metavar='<VCF filename>',
+            help='VCF file to import'
+        )
+
+        parser.add_argument(
+            '--denovo-file', type=str,
+            metavar='<de Novo variants filename>',
+            help='DAE denovo variants file'
+        )
+
+        parser.add_argument(
+            '--dae-summary-file', type=str,
+            metavar='<summary filename>',
+            help='summary variants file to import'
+        )
+
+        parser.add_argument(
+            '--study-id', '--id', type=str, default=None,
+            dest='study_id', metavar='<study id>',
+            help='Study ID. '
+            'If none specified, the basename of families filename is used to '
+            'construct study id [default: basename(families filename)]'
+        )
 
         parser.add_argument(
             '-o', '--out', type=str, default='.',
-            dest='output', metavar='<output filepath>',
-            help='output filepath. '
+            dest='output', metavar='<output directory>',
+            help='output directory. '
             'If none specified, current directory is used '
             '[default: %(default)s]'
         )
@@ -278,6 +595,92 @@ class Variants2ParquetTool:
             dest='partition_description',
             help='Path to a config file containing the partition description'
         )
+
+        parser.add_argument(
+            '--annotation-config', type=str, default=None,
+            help='Path to an annotation config file to use when annotating'
+        )
+
+        default_genotype_storage_id = \
+            gpf_instance.dae_config.genotype_storage.default
+
+        parser.add_argument(
+            '--genotype-storage', '--gs',
+            type=str,
+            dest='genotype_storage',
+            default=default_genotype_storage_id,
+            help='Genotype Storage which will be used for import '
+            '[default: %(default)s]',
+        )
+
+        parser.add_argument(
+            '--target-chromosomes', '--tc',
+            type=str, nargs='+',
+            dest='target_chromosomes',
+            default=None,
+            help='specified which targets to build; by default target '
+            'chromosomes are extracted from variants file and/or default '
+            'reference genome used in GPF instance; '
+            '[default: None]',
+        )
+
+        return parser
+
+    @classmethod
+    def main(cls, argv=sys.argv[1:], gpf_instance=None):
+
+        if gpf_instance is None:
+            gpf_instance = GPFInstance()
+
+        parser = cls.cli_arguments_parser(gpf_instance)
+        argv = parser.parse_args(argv)
+
+        generator = cls(gpf_instance)
+        generator.build(argv)
+        generator.generate_makefile(argv)
+
+
+class Variants2ParquetTool:
+
+    VARIANTS_LOADER_CLASS = None
+    VARIANTS_TOOL = None
+    VARIANTS_FREQUENCIES = False
+
+    BUCKET_INDEX_DEFAULT = 1000
+
+    @classmethod
+    def cli_arguments_parser(cls, gpf_instance):
+        parser = argparse.ArgumentParser(
+            description='Convert variants file to parquet',
+            conflict_handler='resolve',
+            formatter_class=argparse.RawDescriptionHelpFormatter)
+
+        FamiliesLoader.cli_arguments(parser)
+        cls.VARIANTS_LOADER_CLASS.cli_arguments(parser)
+
+        parser.add_argument(
+            '--study-id', '--id', type=str, default=None,
+            dest='study_id', metavar='<study id>',
+            help='Study ID. '
+            'If none specified, the basename of families filename is used to '
+            'construct study id [default: basename(families filename)]'
+        )
+
+        parser.add_argument(
+            '-o', '--out', type=str, default='.',
+            dest='output', metavar='<output directory>',
+            help='output directory. '
+            'If none specified, current directory is used '
+            '[default: %(default)s]'
+        )
+
+        parser.add_argument(
+            '--pd', '--partition-description',
+            type=str, default=None,
+            dest='partition_description',
+            help='Path to a config file containing the partition description'
+        )
+
         parser.add_argument(
             '--rows', type=int, default=100000,
             dest='rows',
@@ -289,29 +692,14 @@ class Variants2ParquetTool:
             help='Path to an annotation config file to use when annotating'
         )
 
-    @classmethod
-    def cli_arguments(cls, gpf_instance):
-        parser = argparse.ArgumentParser(
-            description='Convert variants file to parquet',
-            conflict_handler='resolve',
-            formatter_class=argparse.RawDescriptionHelpFormatter)
-
-        subparsers = parser.add_subparsers(
-            dest='type',
-            title='subcommands',
-            description='choose what type of data to convert',
-            help='variants import or make generation for variants import')
-
-        # variants subcommand
-        variants_parser = subparsers.add_parser('variants')
-        cls.cli_common_arguments(gpf_instance, variants_parser)
-        variants_parser.add_argument(
-            '-b', '--bucket-index', type=int, default=1,
+        parser.add_argument(
+            '-b', '--bucket-index',
+            type=int, default=cls.BUCKET_INDEX_DEFAULT,
             dest='bucket_index', metavar='bucket index',
             help='bucket index [default: %(default)s]'
         )
 
-        variants_parser.add_argument(
+        parser.add_argument(
             '--region-bin', '--rb', type=str, default=None,
             dest='region_bin', metavar='region bin',
             help='region bin [default: %(default)s] '
@@ -320,7 +708,7 @@ class Variants2ParquetTool:
             'the `--region-bin` option takes precedence'
         )
 
-        variants_parser.add_argument(
+        parser.add_argument(
             '--regions', type=str,
             dest='regions', metavar='region',
             default=None, nargs='+',
@@ -330,51 +718,18 @@ class Variants2ParquetTool:
             'the `--region-bin` option takes precedence'
         )
 
-        # make subcommand
-        make_parser = subparsers.add_parser('make')
-        cls.cli_common_arguments(gpf_instance, make_parser)
-
         return parser
-
-    @classmethod
-    def build_make_variants_command(
-            cls, argv, families_loader, variants_loader):
-        families_params = FamiliesLoader.build_cli_arguments(
-            families_loader.params)
-        families_filename = families_loader.filename
-
-        variants_params = cls.VARIANTS_LOADER_CLASS.build_cli_arguments(
-            variants_loader.params)
-        variants_filenames = ' '.join(variants_loader.filenames)
-
-        command = f'{cls.VARIANTS_TOOL} variants '\
-            f'{families_params} {families_filename} ' \
-            f'{variants_params} {variants_filenames}'
-        if argv.partition_description is not None:
-            command = f'{command} --pd {argv.partition_description}'
-
-        return command
-
-    @classmethod
-    def build_make_families_command(cls, argv, families_loader):
-        families_params = FamiliesLoader.build_cli_arguments(
-            families_loader.params)
-        families_filename = families_loader.filename
-
-        command = f'ped2parquet.py {families_params} {families_filename}'
-        return command
 
     @classmethod
     def main(
             cls, argv=sys.argv[1:],
             gpf_instance=None,
             annotation_defaults={}):
-        print("argv:", argv)
 
         if gpf_instance is None:
             gpf_instance = GPFInstance()
 
-        parser = cls.cli_arguments(gpf_instance)
+        parser = cls.cli_arguments_parser(gpf_instance)
         argv = parser.parse_args(argv)
 
         families_filename, families_params = \
@@ -383,13 +738,78 @@ class Variants2ParquetTool:
             families_filename, params=families_params)
         families = families_loader.load()
 
+        variants_loader = cls._load_variants(argv, families, gpf_instance)
+
+        partition_description = cls._build_partition_description(argv)
+        generator = cls._build_partition_helper(
+            argv, gpf_instance, partition_description)
+
+        target_chromosomes = cls._collect_target_chromosomes(
+            argv, variants_loader)
+        variants_targets = generator.generate_variants_targets(
+            target_chromosomes)
+
+        if argv.study_id is not None:
+            study_id = argv.study_id
+        else:
+            study_id, _ = os.path.splitext(os.path.basename(families_filename))
+
+        bucket_index = argv.bucket_index
+        if argv.region_bin is not None:
+            if argv.region_bin == 'none':
+                pass
+            else:
+                assert argv.region_bin in variants_targets, \
+                    (argv.region_bin, list(variants_targets.keys()))
+
+                regions = variants_targets[argv.region_bin]
+                bucket_index = cls.BUCKET_INDEX_DEFAULT + \
+                    generator.bucket_index(argv.region_bin)
+                print(f"resetting regions (rb: {argv.region_bin}):", regions)
+                variants_loader.reset_regions(regions)
+
+        elif argv.regions is not None:
+            regions = argv.regions
+            print("resetting regions (region):", regions)
+            variants_loader.reset_regions(regions)
+
+        variants_loader = cls._build_variants_loader_pipeline(
+                gpf_instance, argv, annotation_defaults, variants_loader)
+
+        ParquetManager.variants_to_parquet_partition(
+            variants_loader, partition_description,
+            bucket_index=bucket_index,
+            rows=argv.rows
+        )
+
+    @classmethod
+    def _build_variants_loader_pipeline(
+            cls, gpf_instance, argv, annotation_defaults, variants_loader):
+        annotation_pipeline = construct_import_annotation_pipeline(
+            gpf_instance,
+            annotation_configfile=argv.annotation_config,
+            defaults=annotation_defaults)
+
+        variants_loader = AnnotationPipelineDecorator(
+            variants_loader, annotation_pipeline
+        )
+
+        if cls.VARIANTS_FREQUENCIES:
+            variants_loader = AlleleFrequencyDecorator(variants_loader)
+        return variants_loader
+
+    @classmethod
+    def _load_variants(cls, argv, families, gpf_instance):
         variants_filenames, variants_params = \
             cls.VARIANTS_LOADER_CLASS.parse_cli_arguments(argv)
         variants_loader = cls.VARIANTS_LOADER_CLASS(
             families, variants_filenames,
             params=variants_params,
             genome=gpf_instance.genomes_db.get_genome())
+        return variants_loader
 
+    @staticmethod
+    def _build_partition_description(argv):
         if argv.partition_description is not None:
             partition_description = ParquetPartitionDescriptor.from_config(
                 argv.partition_description,
@@ -397,59 +817,26 @@ class Variants2ParquetTool:
             )
         else:
             partition_description = NoPartitionDescriptor(argv.output)
+        return partition_description
 
-        generator = MakefileGenerator(
+    @staticmethod
+    def _build_partition_helper(argv, gpf_instance, partition_description):
+
+        add_chrom_prefix = argv.add_chrom_prefix
+        del_chrom_prefix = argv.del_chrom_prefix
+
+        generator = MakefilePartitionHelper(
             partition_description,
-            gpf_instance.genomes_db.get_genome())
-        target_chromosomes = variants_loader.chromosomes
-        variants_targets = generator.generate_variants_targets(
-            target_chromosomes)
+            gpf_instance.genomes_db.get_genome(),
+            add_chrom_prefix=add_chrom_prefix,
+            del_chrom_prefix=del_chrom_prefix)
+        return generator
 
-        if argv.type == 'make':
-            variants_command = cls.build_make_variants_command(
-                argv, families_loader, variants_loader
-            )
-            families_command = cls.build_make_families_command(
-                argv, families_loader
-            )
-            dirname = argv.output
-            if dirname is None:
-                dirname = '.'
-
-            os.makedirs(dirname, exist_ok=True)
-            with open(os.path.join(dirname, 'Makefile'), 'wt') as output:
-                generator.generate_makefile(
-                    families_command, variants_command, target_chromosomes,
-                    output=output
-                )
-
-        elif argv.type == 'variants':
-            annotation_pipeline = construct_import_annotation_pipeline(
-                gpf_instance,
-                annotation_configfile=argv.annotation_config,
-                defaults=annotation_defaults)
-
-            if argv.region_bin is not None:
-                if argv.region_bin == 'none':
-                    pass
-                else:
-                    assert argv.region_bin in variants_targets, \
-                        (argv.region_bin, list(variants_targets.keys()))
-
-                    regions = variants_targets[argv.region_bin]
-                    print("resetting regions:", regions)
-                    variants_loader.reset_regions(regions)
-            elif argv.regions is not None:
-                regions = argv.regions
-                print("resetting regions:", regions)
-                variants_loader.reset_regions(regions)
-
-            variants_loader = AnnotationPipelineDecorator(
-                variants_loader, annotation_pipeline
-            )
-
-            ParquetManager.variants_to_parquet_partition(
-                variants_loader, partition_description,
-                bucket_index=argv.bucket_index,
-                rows=argv.rows
-            )
+    @staticmethod
+    def _collect_target_chromosomes(argv, variants_loader):
+        if 'target_chromosomes' in argv and \
+                argv.target_chromosomes is not None:
+            target_chromosomes = argv.target_chromosomes
+        else:
+            target_chromosomes = variants_loader.chromosomes
+        return target_chromosomes

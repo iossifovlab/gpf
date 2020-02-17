@@ -2,8 +2,8 @@ from deprecation import deprecated
 
 from dae.studies.study import GenotypeDataStudy, GenotypeDataGroup
 from dae.studies.study_wrapper import StudyWrapper
-from dae.studies.study_config_parser import GenotypeDataStudyConfigParser
-from dae.studies.dataset_config_parser import GenotypeDataGroupConfigParser
+from dae.configuration.gpf_config_parser import GPFConfigParser
+from dae.configuration.schemas.study_config import study_config_schema
 
 
 class VariantsDb(object):
@@ -23,28 +23,34 @@ class VariantsDb(object):
         self.genomes_db = genomes_db
         self.genotype_storage_factory = genotype_storage_factory
 
-        defaults = {
-            'values': {
-                'dae_data_dir': self.dae_config.dae_data_dir
-            }
+        default_config_filename = None
+        if dae_config.default_study_config and \
+                dae_config.default_study_config.conf_file:
+            default_config_filename = dae_config.default_study_config.conf_file
+
+        study_configs = GPFConfigParser.load_directory_configs(
+            dae_config.studies_db.dir,
+            study_config_schema,
+            default_config_filename=default_config_filename
+        )
+
+        self.genotype_data_study_configs = {
+            ds.id: ds
+            for ds in study_configs
         }
-        if dae_config.default_configuration and \
-                dae_config.default_configuration.conf_file:
-            defaults['conf'] = dae_config.default_configuration.conf_file
 
-        self.genotype_data_study_configs = GenotypeDataStudyConfigParser.\
-            read_and_parse_directory_configurations(
-                dae_config.studies_db.dir,
-                defaults=defaults
-            )
+        data_groups = GPFConfigParser.load_directory_configs(
+            dae_config.datasets_db.dir,
+            study_config_schema,
+            default_config_filename=default_config_filename
+        )
 
-        self.genotype_data_group_configs = GenotypeDataGroupConfigParser.\
-            read_and_parse_directory_configurations(
-                dae_config.datasets_db.dir,
-                self.genotype_data_study_configs,
-                defaults=defaults,
-                fail_silently=True
-            )
+        self.genotype_data_group_configs = {
+            dg.id: dg
+            for dg in data_groups
+        }
+
+        self._filter_disabled()
 
         self._genotype_data_study_cache = {}
         self._genotype_data_study_wrapper_cache = {}
@@ -53,6 +59,20 @@ class VariantsDb(object):
         self._genotype_data_group_wrapper_cache = {}
 
         self._configuration_check()
+
+    def _filter_disabled(self):
+        to_remove = []
+        for k, v in self.genotype_data_study_configs.items():
+            if v.enabled is False:
+                to_remove.append(k)
+        for disabled_study_id in to_remove:
+            del self.genotype_data_study_configs[disabled_study_id]
+        to_remove.clear()
+        for k, v in self.genotype_data_group_configs.items():
+            if v.enabled is False:
+                to_remove.append(k)
+        for disabled_group_id in to_remove:
+            del self.genotype_data_group_configs[disabled_group_id]
 
     def _configuration_check(self):
         studies_ids = set(self.get_genotype_studies_ids())
@@ -193,10 +213,6 @@ class VariantsDb(object):
             for study_id in to_load:
                 self._load_study_in_cache(study_id)
 
-    # def wrap_study(self, genotype_data_study):
-    #     return StudyWrapper(genotype_data_study, self.pheno_db,
-    #                         self.gene_weights_db)
-
     def _load_study_in_cache(self, study_id):
         conf = self.genotype_data_study_configs.get(study_id)
         if not conf:
@@ -240,23 +256,35 @@ class VariantsDb(object):
         if study_config is None:
             return None
 
-        genotype_storage = self.genotype_storage_factory. \
-            get_genotype_storage(study_config.genotype_storage)
+        try:
+            genotype_storage = self.genotype_storage_factory. \
+                get_genotype_storage(study_config.genotype_storage.id)
 
-        if genotype_storage is None:
-            raise ValueError(
-                "Unknown genotype storage: {}\nKnown ones: {}"
-                .format(
-                    study_config.genotype_storage,
-                    self.genotype_storage_factory.get_genotype_storage_ids()
+            if genotype_storage is None:
+                storage_ids = self.genotype_storage_factory\
+                    .get_genotype_storage_ids()
+                print(
+                    f"Unknown genotype storage id: "
+                    f"{study_config.genotype_storage.id}; "
+                    f"Known ones: {storage_ids}"
                 )
+                return None
+
+            variants = genotype_storage.build_backend(
+                study_config, self.genomes_db
             )
 
-        variants = genotype_storage.build_backend(
-            study_config, self.genomes_db
-        )
+            return GenotypeDataStudy(study_config, variants)
+        except Exception as ex:
+            print(
+                "Error: can't create genotype data study:",
+                f"{study_config.id}",
+                ex
+            )
+            import traceback
+            traceback.print_exc()
 
-        return GenotypeDataStudy(study_config, variants)
+            return None
 
     def make_genotype_data_group(self, genotype_data_group_config):
         if genotype_data_group_config is None:
@@ -274,5 +302,4 @@ class VariantsDb(object):
                     ))
             genotype_studies.append(genotype_data_study)
         assert genotype_studies
-
         return GenotypeDataGroup(genotype_data_group_config, genotype_studies)

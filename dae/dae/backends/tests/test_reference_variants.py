@@ -30,7 +30,7 @@ def test_reference_variant_single_allele(
     v = vs[0]
     print(v)
 
-    print("best_st:", mat2str(v.best_st))
+    print("best_st:", mat2str(v.best_state))
     print("freq:   ", v.frequencies)
     print("effects:", v.effects)
     print("alleles:", v.alleles)

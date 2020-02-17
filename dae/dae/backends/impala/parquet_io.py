@@ -11,7 +11,10 @@ import pyarrow.parquet as pq
 import configparser
 
 from dae.utils.variant_utils import GENOTYPE_TYPE
-from dae.variants.family_variant import FamilyAllele, FamilyVariant
+from dae.variants.attributes import TransmissionType
+from dae.variants.family_variant import FamilyAllele, FamilyVariant, \
+    calculate_simple_best_state
+from dae.variants.variant import SummaryVariant, SummaryAllele
 from dae.backends.impala.serializers import ParquetSerializer
 
 
@@ -140,6 +143,8 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
 
     @staticmethod
     def from_config(config_path, root_dirname=''):
+        assert os.path.exists(config_path), config_path
+
         config = configparser.ConfigParser()
         config.read(config_path)
         assert config['region_bin'] is not None
@@ -160,6 +165,13 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
             family_bin_size = int(config['family_bin']['family_bin_size'])
         if 'coding_bin' in config:
             coding_effect_types = config['coding_bin']['coding_effect_types']
+            coding_effect_types = [
+                et.strip() for et in coding_effect_types.split(',')
+            ]
+            coding_effect_types = [
+                et for et in coding_effect_types if et
+            ]
+
         if 'frequency_bin' in config:
             rare_boundary = int(config['frequency_bin']['rare_boundary'])
 
@@ -204,9 +216,12 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
     def _evaluate_frequency_bin(self, family_allele):
         count = family_allele.get_attribute('af_allele_count')
         frequency = family_allele.get_attribute('af_allele_freq')
-        if count and count == 1:  # Ultra rare
+        transmission_type = family_allele.transmission_type
+        if transmission_type == TransmissionType.denovo:
+            frequency_bin = 0
+        elif count and int(count) == 1:  # Ultra rare
             frequency_bin = 1
-        elif frequency and frequency < self._rare_boundary:  # Rare
+        elif frequency and float(frequency) < self._rare_boundary:  # Rare
             frequency_bin = 2
         else:  # Common
             frequency_bin = 3
@@ -218,18 +233,18 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
         filepath = os.path.join(self.output, f'region_bin={current_bin}')
 
         filename = f'variants_region_bin_{current_bin}'
-        if self._family_bin_size > 0:
-            current_bin = self._evaluate_family_bin(family_allele)
-            filepath = os.path.join(filepath, f'family_bin={current_bin}')
-            filename += f'_family_bin_{current_bin}'
-        if len(self._coding_effect_types) > 0:
-            current_bin = self._evaluate_coding_bin(family_allele)
-            filepath = os.path.join(filepath, f'coding_bin={current_bin}')
-            filename += f'_coding_bin_{current_bin}'
         if self._rare_boundary > 0:
             current_bin = self._evaluate_frequency_bin(family_allele)
             filepath = os.path.join(filepath, f'frequency_bin={current_bin}')
             filename += f'_frequency_bin_{current_bin}'
+        if len(self._coding_effect_types) > 0:
+            current_bin = self._evaluate_coding_bin(family_allele)
+            filepath = os.path.join(filepath, f'coding_bin={current_bin}')
+            filename += f'_coding_bin_{current_bin}'
+        if self._family_bin_size > 0:
+            current_bin = self._evaluate_family_bin(family_allele)
+            filepath = os.path.join(filepath, f'family_bin={current_bin}')
+            filename += f'_family_bin_{current_bin}'
         filename += '.parquet'
 
         return os.path.join(filepath, filename)
@@ -256,6 +271,8 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
             config['frequency_bin']['rare_boundary'] = str(self._rare_boundary)
 
         filename = os.path.join(self.output, '_PARTITION_DESCRIPTION')
+        os.makedirs(os.path.dirname(filename), exist_ok=True)
+
         with open(filename, 'w') as configfile:
             config.write(configfile)
 
@@ -292,9 +309,10 @@ class ContinuousParquetFileWriter():
                 filesystem=None, rows=10000):
         self._data = ParquetData(schema)
         schema = schema.to_arrow()
-        path = os.path.dirname(filepath)
-        if not os.path.exists(path):
-            os.makedirs(path)
+        dirname = os.path.dirname(filepath)
+        if dirname and not os.path.exists(dirname):
+            os.makedirs(dirname)
+
         self._writer = pq.ParquetWriter(
                 filepath,
                 schema,
@@ -325,21 +343,21 @@ class ContinuousParquetFileWriter():
 class VariantsParquetWriter():
 
     def __init__(
-            self, fvars,
+            self, variants_loader,
             partition_descriptor,
             bucket_index=1,
             rows=100000, include_reference=True,
             include_unknown=True, filesystem=None):
 
-        self.fvars = fvars
-        self.families = fvars.families
-        self.full_variants_iterator = fvars.full_variants_iterator()
+        self.variants_loader = variants_loader
+        self.families = variants_loader.families
+        self.full_variants_iterator = variants_loader.full_variants_iterator()
 
         self.bucket_index = bucket_index
         self.rows = rows
         self.filesystem = filesystem
 
-        self.schema = fvars.annotation_schema
+        self.schema = variants_loader.get_attribute('annotation_schema')
         self.parquet_serializer = ParquetSerializer(
             self.schema, include_reference=True)
 
@@ -352,28 +370,36 @@ class VariantsParquetWriter():
     def _setup_reference_allele(self, summary_variant, family):
         genotype = -1 * np.ones(
             shape=(2, len(family)), dtype=GENOTYPE_TYPE)
+        best_state = calculate_simple_best_state(
+            genotype, summary_variant.allele_count
+        )
 
         ra = summary_variant.ref_allele
-        reference_allele = FamilyAllele.from_summary_allele(
-            ra, family, genotype)
+        reference_allele = FamilyAllele(ra, family, genotype, best_state)
         return reference_allele
 
     def _setup_all_unknown_allele(self, summary_variant, family):
         genotype = -1 * np.ones(
             shape=(2, len(family)), dtype=GENOTYPE_TYPE)
+        best_state = calculate_simple_best_state(
+            genotype, summary_variant.allele_count
+        )
 
         ra = summary_variant.ref_allele
         unknown_allele = FamilyAllele(
-            ra.chromosome,
-            ra.position,
-            ra.reference,
-            ra.reference,
-            None,  # summary_allele.summary_index,
-            -1,
-            ra.transmission_type,
-            {},
+            SummaryAllele(
+                ra.chromosome,
+                ra.position,
+                ra.reference,
+                ra.reference,
+                None,  # summary_allele.summary_index,
+                -1,
+                ra.transmission_type,
+                {},
+            ),
             family,
-            genotype
+            genotype,
+            best_state
         )
         return unknown_allele
 
@@ -385,8 +411,12 @@ class VariantsParquetWriter():
             self._setup_reference_allele(summary_variant, family),
             self._setup_all_unknown_allele(summary_variant, family)
         ]
+        best_state = -1 * np.ones(
+            shape=(len(alleles), len(family)),
+            dtype=GENOTYPE_TYPE
+        )
         return FamilyVariant(
-            alleles, family, genotype
+            SummaryVariant(alleles), family, genotype, best_state
         )
 
     def _process_family_variant(
@@ -402,6 +432,17 @@ class VariantsParquetWriter():
             self.parquet_serializer.serialize_variant_genotype(
                 family_variant.gt
             )
+        best_state_data = \
+            self.parquet_serializer.serialize_variant_best_state(
+                family_variant.best_state
+            )
+        genetic_model_data = family_variant.genetic_model.value
+
+        inheritance_data = \
+            self.parquet_serializer.serialize_variant_inheritance(
+                family_variant
+            )
+
         frequency_data = \
             self.parquet_serializer.serialize_variant_frequency(
                 family_variant
@@ -430,7 +471,10 @@ class VariantsParquetWriter():
                 self.parquet_serializer.serialize_effects(
                     family_allele, effect_data)
             family = self.parquet_serializer.serialize_family(
-                family_variant_index, family_allele, genotype_data)
+                family_variant_index, family_allele,
+                genotype_data, best_state_data, genetic_model_data,
+                inheritance_data,
+            )
             member = self.parquet_serializer.serialize_members(
                 family_variant_index, family_allele)
 
@@ -485,9 +529,12 @@ class VariantsParquetWriter():
             if family_variant_index % 1000 == 0:
                 elapsed = time.time() - self.start
                 print(
-                    'Bucket {}: {} family variants imported for {:.2f} sec'.
+                    'Bucket {}; {}:{}: '
+                    '{} family variants imported for {:.2f} sec'.
                     format(
                         self.bucket_index,
+                        summary_variant.chromosome,
+                        summary_variant.position,
                         family_variant_index, elapsed),
                     file=sys.stderr)
 
@@ -556,9 +603,10 @@ class ParquetManager:
             families, pedigree_filename):
 
         dirname = os.path.dirname(pedigree_filename)
-        os.makedirs(
-            dirname, exist_ok=True
-        )
+        if dirname:
+            os.makedirs(
+                dirname, exist_ok=True
+            )
 
         save_ped_df_to_parquet(
             families.ped_df, pedigree_filename
@@ -582,7 +630,6 @@ class ParquetManager:
             partition_descriptor,
             bucket_index=bucket_index,
             rows=rows)
-        print('[DONE] going to create variants writer...')
 
         variants_writer.write_dataset()
         end = time.time()
@@ -598,11 +645,10 @@ class ParquetManager:
             variants_loader, partition_descriptor,
             bucket_index=1, rows=100000):
 
-        assert variants_loader.annotation_schema is not None
+        assert variants_loader.get_attribute('annotation_schema') is not None
 
         start = time.time()
 
-        print('[DONE] going to create variants partition writer...')
         variants_writer = VariantsParquetWriter(
             variants_loader,
             partition_descriptor,
@@ -644,13 +690,24 @@ def add_missing_parquet_fields(pps, ped_df):
             pa.field('family_bin', pa.int8()))
         missing_fields = missing_fields - set(['family_bin'])
 
+    rename = {}
     for column in missing_fields:
-        pps = pps.append(pa.field(column, pa.string()))
-    return pps
+        name = column.lower().replace('.', '_')
+        pps = pps.append(pa.field(name, pa.string()))
+        rename[column] = name
+
+    ped_df = ped_df.rename(columns=rename)
+    missing_fields = [rename[col] for col in missing_fields]
+
+    for column in missing_fields:
+        ped_df[column] = ped_df[column].apply(lambda v: str(v))
+
+    return ped_df, pps
 
 
 def save_ped_df_to_parquet(ped_df, filename, filesystem=None):
     ped_df = ped_df.copy()
+
     ped_df.role = ped_df.role.apply(lambda r: r.value)
     ped_df.sex = ped_df.sex.apply(lambda s: s.value)
     ped_df.status = ped_df.status.apply(lambda s: s.value)
@@ -660,7 +717,7 @@ def save_ped_df_to_parquet(ped_df, filename, filesystem=None):
         ped_df['layout'] = None
 
     pps = pedigree_parquet_schema()
-    pps = add_missing_parquet_fields(pps, ped_df)
+    ped_df, pps = add_missing_parquet_fields(pps, ped_df)
 
     table = pa.Table.from_pandas(ped_df, schema=pps)
     pq.write_table(table, filename, filesystem=filesystem)

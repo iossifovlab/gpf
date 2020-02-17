@@ -1,14 +1,11 @@
+import os
 from dae.GenomesDB import GenomesDB
 
 from dae.common_reports.common_report_facade import CommonReportFacade
 
-from dae.configuration.dae_config_parser import DAEConfigParser
-
 from dae.enrichment_tool.background_facade import BackgroundFacade
 
-from dae.gene.gene_info_config import GeneInfoConfigParser
 from dae.gene.weights import GeneWeightsDb
-from dae.gene.score_config_parser import ScoreConfigParser
 from dae.gene.scores import ScoresFactory
 from dae.gene.gene_sets_db import GeneSetsDb
 from dae.gene.denovo_gene_sets_db import DenovoGeneSetsDb
@@ -19,6 +16,11 @@ from dae.pheno.pheno_db import PhenoDb
 
 from dae.backends.storage.genotype_storage_factory import \
     GenotypeStorageFactory
+
+from dae.configuration.gpf_config_parser import GPFConfigParser
+from dae.configuration.schemas.dae_conf import dae_conf_schema
+from dae.configuration.schemas.gene_info import gene_info_conf
+from dae.configuration.schemas.genomic_scores import genomic_scores_schema
 
 
 def cached(prop):
@@ -39,10 +41,30 @@ class GPFInstance(object):
             defaults=None, load_eagerly=False):
 
         if dae_config is None:
-            dae_config = DAEConfigParser.read_and_parse_file_configuration(
-                config_file=config_file, work_dir=work_dir, defaults=defaults
+            # FIXME Merge defaults with newly-loaded config
+            assert not defaults, defaults
+            if work_dir is None:
+                work_dir = os.environ["DAE_DB_DIR"]
+            config_file = os.path.join(work_dir, config_file)
+            dae_config = GPFConfigParser.load_config(
+                config_file, dae_conf_schema
             )
+
         self.dae_config = dae_config
+
+        # TODO Remove this hack, figure out
+        # better place / way to do this
+        self.dae_config = GPFConfigParser.modify_tuple(
+            self.dae_config,
+            {
+                'annotation_defaults': {
+                    'wd': dae_config.dae_data_dir,
+                    'data_dir': dae_config.dae_data_dir,
+                    'scores_hg19_dir': None,
+                    'scores_hg38_dir': None,
+                }
+            }
+        )
 
         if load_eagerly:
             self.genomes_db
@@ -54,7 +76,7 @@ class GPFInstance(object):
             self.denovo_gene_sets_db
             self._score_config
             self._scores_factory
-            self._genotype_storage_factory
+            self.genotype_storage_db
             self._common_report_facade
             self._background_facade
 
@@ -74,22 +96,22 @@ class GPFInstance(object):
     @property
     @cached
     def _gene_info_config(self):
-        return GeneInfoConfigParser.read_and_parse_file_configuration(
+        return GPFConfigParser.load_config(
             self.dae_config.gene_info_db.conf_file,
-            self.dae_config.dae_data_dir
+            gene_info_conf
         )
 
     @property
     @cached
     def gene_weights_db(self):
-        return GeneWeightsDb(self._gene_info_config.gene_weights)
+        return GeneWeightsDb(self._gene_info_config)
 
     @property
     @cached
     def _score_config(self):
-        return ScoreConfigParser.read_and_parse_file_configuration(
+        return GPFConfigParser.load_config(
             self.dae_config.genomic_scores_db.conf_file,
-            self.dae_config.dae_data_dir
+            genomic_scores_schema
         )
 
     @property
@@ -99,7 +121,7 @@ class GPFInstance(object):
 
     @property
     @cached
-    def _genotype_storage_factory(self):
+    def genotype_storage_db(self):
         return GenotypeStorageFactory(self.dae_config)
 
     @property
@@ -107,7 +129,7 @@ class GPFInstance(object):
     def _variants_db(self):
         return VariantsDb(
             self.dae_config, self._pheno_db, self.gene_weights_db,
-            self.genomes_db, self._genotype_storage_factory
+            self.genomes_db, self.genotype_storage_db
         )
 
     def reload(self):

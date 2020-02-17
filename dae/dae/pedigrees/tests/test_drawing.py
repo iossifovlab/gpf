@@ -1,7 +1,5 @@
 from box import Box
 
-from dae.pedigrees.drawing import PDFLayoutDrawer
-
 
 def test_drawing(drawing_from_family2, layout_from_family2):
     assert drawing_from_family2 is not None
@@ -69,7 +67,7 @@ def test_drawing_draw(drawing_from_family2):
     assert axes2.table._loc == 9
 
     table_cells = axes2.table._cells
-    assert len(table_cells) == 32
+    assert len(table_cells) == 36
 
     assert table_cells[(0, 0)]._text._text == 'familyId'
     assert table_cells[(0, 1)]._text._text == 'individualId'
@@ -265,21 +263,3 @@ def test_draw_families_report(drawing_from_family2, layout_from_family2):
     assert figure2.texts[0]._text == 'Families counters'
     assert figure2.texts[0]._x == 0.5
     assert figure2.texts[0]._y == 0.95
-
-
-def test_drawing_pdf_add_page(drawing_from_family2):
-    figure1 = drawing_from_family2.draw()
-    figure2 = drawing_from_family2.draw()
-    pdf_drawer = PDFLayoutDrawer('temp.pdf')
-
-    pdf_drawer.add_page(figure1, 'New Figure')
-    pdf_drawer.add_pages([figure2])
-    assert len(pdf_drawer._pages) == 2
-
-    assert len(pdf_drawer._pages[0].texts) == 1
-    assert pdf_drawer._pages[0].texts[0]._text == 'New Figure'
-    assert pdf_drawer._pages[0].texts[0]._horizontalalignment == 'center'
-    assert pdf_drawer._pages[0].texts[0]._x == 0.5
-    assert pdf_drawer._pages[0].texts[0]._y == 0.9
-
-    assert len(pdf_drawer._pages[1].texts) == 0

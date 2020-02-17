@@ -15,3 +15,6 @@ f4	f4.mo	F	mom
 f4	f4.fa	M	dad
 f4	f4.p1	F	prb
 f4	f4.s1	M	sib
+f5	f5.mo	F	mom
+f5	f5.fa	M	dad
+f5	f5.p1	M	prb

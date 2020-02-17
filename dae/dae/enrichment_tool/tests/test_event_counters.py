@@ -92,15 +92,15 @@ def test_counter_base_counters():
     counters = CounterBase.counters()
 
     assert len(counters) == 2
-    assert counters['enrichmentEventsCounting'] == EventsCounter
-    assert counters['enrichmentGeneCounting'] == GeneEventsCounter
+    assert counters['enrichment_events_counting'] == EventsCounter
+    assert counters['enrichment_gene_counting'] == GeneEventsCounter
 
 
 def test_events_counter(f1_trio):
     variants = list(f1_trio.query_variants(
         inheritance=str(Inheritance.denovo.name)))
     pg = f1_trio.get_families_group('phenotype')
-    gh = GenotypeHelper(f1_trio, pg, 'autism')
+    gh = GenotypeHelper(f1_trio, pg, 'phenotype1')
     # children_stats = gh.get_children_stats()
     children_by_sex = gh.children_by_sex()
     effect_types = set(['missense', 'synonymous'])
@@ -124,7 +124,7 @@ def test_gene_events_counter(f1_trio):
     variants = list(f1_trio.query_variants(
         inheritance=str(Inheritance.denovo.name)))
     pg = f1_trio.get_families_group('phenotype')
-    gh = GenotypeHelper(f1_trio, pg, 'autism')
+    gh = GenotypeHelper(f1_trio, pg, 'phenotype1')
     # children_stats = gh.get_children_stats()
     children_by_sex = gh.children_by_sex()
     effect_types = set(['missense', 'synonymous'])

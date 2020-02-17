@@ -1,0 +1,4 @@
+id = "152135"
+name = "Path test config"
+some_abs_path = "/tmp/maybesomeconf.toml"
+some_rel_path = "environ_conf.toml"

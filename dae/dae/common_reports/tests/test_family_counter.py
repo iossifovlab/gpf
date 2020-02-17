@@ -10,14 +10,14 @@ def test_family_counter(study1, families_groups):
     family = study1.families['f5']
 
     pedigree = fg.family_pedigree(family)
-    family_counter = FamilyCounter(pedigree, 1)
+    family_counter = FamilyCounter(family, pedigree, 1)
 
     assert family_counter.pedigree[0] == \
-        ['f5', 'mom5', '0', '0', 'F', 'mom', '#e35252', None, False, '', '']
+        ['f5', 'mom5', '0', '0', 'F', 'mom', '#e35252', None, None, '', '']
     assert family_counter.pedigree[1] == \
-        ['f5', 'dad5', '0', '0', 'M', 'dad', '#aaaaaa', None, False, '', '']
+        ['f5', 'dad5', '0', '0', 'M', 'dad', '#aaaaaa', None, None, '', '']
     assert family_counter.pedigree[2] == \
-        ['f5', 'ch5', 'mom5', 'dad5', 'F', 'prb', '#e35252', None, False, '',
+        ['f5', 'ch5', 'mom5', 'dad5', 'F', 'prb', '#e35252', None, None, '',
          '']
     assert family_counter.pedigree[3] == \
         ['f5', 'ch5.1', 'mom5', 'dad5', 'F', 'sib', '#E0E0E0', None, True, '',

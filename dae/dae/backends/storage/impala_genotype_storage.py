@@ -74,7 +74,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
             pedigree_table = study_config.tables.pedigree
         else:
             # default study tables
-            variant_table = '{}_variant'.format(study_config.id)
+            variant_table = '{}_variants'.format(study_config.id)
             pedigree_table = '{}_pedigree'.format(study_config.id)
         return variant_table, pedigree_table
 
@@ -95,42 +95,6 @@ class ImpalaGenotypeStorage(GenotypeStorage):
             self.impala_helpers.drop_table(
                 self.get_db(), table
             )
-
-    def impala_load_study(
-            self, study_id,
-            variant_paths=[],
-            pedigree_paths=[]):
-        assert variant_paths
-        assert pedigree_paths
-
-        variant_hdfs_path, pedigree_hdfs_path = \
-            self._hdfs_parquet_put_study_files(
-                study_id, variant_paths, pedigree_paths)
-
-        db = self.storage_config.impala.db
-        pedigree_table = '{}_pedigree'.format(study_id)
-        variant_table = '{}_variant'.format(study_id)
-
-        print(
-            f'Loading `{study_id}` study in impala '
-            f'`{db}` db; '
-            f'variants from {variant_paths}; '
-            f'pedigrees from {pedigree_paths}', file=sys.stderr
-        )
-        start = time()
-        self.impala_helpers.import_variants(
-            db,
-            variant_table, pedigree_table,
-            variant_hdfs_path, pedigree_hdfs_path)
-
-        end = time()
-        total = end - start
-        print(
-            f'Loaded `{study_id}` study in impala `{db}` '
-            f'db for {total:.2f} sec', file=sys.stderr
-        )
-        return self._generate_study_config(
-            study_id, variant_table, pedigree_table)
 
     def _hdfs_parquet_put_files(self, study_id, paths, dirname):
         hdfs_dirname = self.get_hdfs_dir(study_id, dirname)
@@ -162,14 +126,10 @@ class ImpalaGenotypeStorage(GenotypeStorage):
 
         study_config = STUDY_CONFIG_TEMPLATE.format(
                 id=study_id,
-                genotype_storage=self.id,
+                genotype_storage=self.storage_config.section_id(),
                 pedigree_table=pedigree_table,
                 variant_table=variant_table)
         return study_config
-
-    def _put_partition_file(self, filename, hdfs_path):
-        self.hdfs_helpers.makedirs(hdfs_path)
-        self.hdfs_helpers.put_in_directory(filename, hdfs_path)
 
     def simple_study_import(
             self, study_id,
@@ -203,7 +163,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
             parquet_variants.append(parquet_filenames.variant)
 
         assert parquet_filenames is not None
-        print("families save in:", parquet_filenames)
+        print("variants and families saved in:", parquet_filenames)
         families = families_loader.load()
 
         ParquetManager.families_to_parquet(
@@ -217,74 +177,104 @@ class ImpalaGenotypeStorage(GenotypeStorage):
             variant_paths=parquet_variants,
             pedigree_paths=parquet_pedigrees)
 
-    def impala_load_dataset(
-            self, study_id, partition_description, hdfs_pedigree_file,
-            db, partition_hdfs_path, files):
-        partition_table = f'{study_id}_partition'
-        pedigree_table = f'{study_id}_pedigree'
+    def impala_load_study(
+            self, study_id,
+            variant_paths=[],
+            pedigree_paths=[]):
+        assert variant_paths
+        assert pedigree_paths
+
+        variant_hdfs_path, pedigree_hdfs_path = \
+            self._hdfs_parquet_put_study_files(
+                study_id, variant_paths, pedigree_paths)
+
+        db = self.storage_config.impala.db
+        pedigree_table = '{}_pedigree'.format(study_id)
+        variant_table = '{}_variants'.format(study_id)
 
         print(
-            f'Loading partition with study_id `{study_id}` in impala '
-            f'in db {db};'
+            f'Loading `{study_id}` study in impala '
+            f'`{db}` db; '
+            f'variants from {variant_paths}; '
+            f'pedigrees from {pedigree_paths}', file=sys.stderr
         )
-
         start = time()
-
-        self.impala_helpers.import_dataset_into_db(
+        self.impala_helpers.drop_table(db, variant_table)
+        self.impala_helpers.drop_table(db, pedigree_table)
+        self.impala_helpers.import_variants(
             db,
-            partition_table,
-            pedigree_table,
-            partition_description,
-            hdfs_pedigree_file,
-            partition_hdfs_path,
-            files
-        )
+            variant_table, pedigree_table,
+            variant_hdfs_path, pedigree_hdfs_path)
 
         end = time()
-        duration = end - start
-        print(duration)
+        total = end - start
+        print(
+            f'Loaded `{study_id}` study in impala `{db}` '
+            f'db for {total:.2f} sec', file=sys.stderr
+        )
+        return self._generate_study_config(
+            study_id, variant_table, pedigree_table)
 
-    def dataset_import(self, study_id, partition_config_file, pedigree_file,
-                       pedigree_local_hdfs_path=None):
-        db = self.storage_config.impala.db
-        part_desc = ParquetPartitionDescriptor.from_config(
-            partition_config_file)
-        root_dir = os.path.dirname(partition_config_file)
-        files_glob = part_desc.generate_file_access_glob()
-        files_glob = os.path.join(root_dir, files_glob)
-        files = glob.glob(files_glob)
+    def impala_load_dataset(self, study_id, variants_path, pedigree_file):
+        partition_config_file = os.path.join(
+            variants_path, '_PARTITION_DESCRIPTION')
+        assert os.path.exists(partition_config_file)
 
-        partition_path = self.storage_config.hdfs.base_dir
-        partition_path = os.path.join(partition_path, study_id)
-        for file in files:
-            file_dir = os.path.dirname(file)
+        partition_description = ParquetPartitionDescriptor.from_config(
+            partition_config_file, root_dirname=variants_path)
+
+        files_glob = partition_description.generate_file_access_glob()
+        files_glob = os.path.join(variants_path, files_glob)
+        variants_files = glob.glob(files_glob)
+
+        study_path = os.path.join(
+            self.storage_config.hdfs.base_dir, study_id)
+        variants_hdfs_path = os.path.join(study_path, 'variants')
+        for parquet_file in variants_files:
+            file_dir = os.path.dirname(parquet_file)
             file_dir = file_dir[file_dir.find('region_bin'):]
-            file_dir = os.path.join(partition_path, file_dir)
-            self._put_partition_file(file, file_dir)
+            file_hdfs_dir = os.path.join(variants_hdfs_path, file_dir)
+            self.hdfs_helpers.makedirs(file_hdfs_dir)
+            self.hdfs_helpers.put_in_directory(parquet_file, file_hdfs_dir)
 
-        if not pedigree_local_hdfs_path:
-            pedigree_hdfs_path = os.path.join(
-                    partition_path, 'pedigree', 'pedigree.ped')
-        else:
-            pedigree_hdfs_path = os.path.join(
-                partition_path, pedigree_local_hdfs_path)
+        pedigree_hdfs_path = os.path.join(
+                study_path, 'pedigree', 'pedigree.ped')
 
         self.hdfs_helpers.put(pedigree_file, pedigree_hdfs_path)
 
-        files = list(map(lambda f: f[f.find('region_bin'):], files))
+        variants_files = list(
+            map(lambda f: f[f.find('region_bin'):], variants_files))
 
-        self.impala_load_dataset(
-            study_id, part_desc, pedigree_hdfs_path, db, partition_path, files
+        variants_table = f'{study_id}_variants'
+        pedigree_table = f'{study_id}_pedigree'
+
+        db = self.storage_config.impala.db
+
+        self.impala_helpers.drop_table(db, variants_table)
+        self.impala_helpers.drop_table(db, pedigree_table)
+
+        self.impala_helpers.import_dataset_into_db(
+            db,
+            variants_table,
+            pedigree_table,
+            partition_description,
+            pedigree_hdfs_path,
+            variants_hdfs_path,
+            variants_files
         )
+
+        return self._generate_study_config(
+            study_id, variants_table, pedigree_table)
 
 
 STUDY_CONFIG_TEMPLATE = '''
-[genotypeDataStudy]
-id = {id}
-genotype_storage = {genotype_storage}
+id = "{id}"
+conf_dir = "."
 
+[genotype_storage]
+id = "{genotype_storage}"
 
-[tables]
-pedigree = {pedigree_table}
-variant = {variant_table}
+[genotype_storage.tables]
+pedigree = "{pedigree_table}"
+variants = "{variant_table}"
 '''

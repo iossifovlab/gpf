@@ -1,12 +1,12 @@
 def test_all_in_role_columns_are_present_in_config(
         quads_f1_genotype_data_group_wrapper):
     in_role_cols = quads_f1_genotype_data_group_wrapper.\
-        config.genotype_browser_config.in_role_columns
+        config.genotype_browser.in_roles
 
     assert in_role_cols
-    in_role_cols_ids = [role.id for role in in_role_cols]
+    in_role_cols_ids = [role.section_id() for role in in_role_cols]
 
-    assert in_role_cols_ids == ['inChild', 'fromParent']
+    assert in_role_cols_ids == ['inChild', 'fromParent', 'inSib']
 
 
 def test_alleles_have_roles_columns(quads_f1_genotype_data_group_wrapper):
@@ -24,7 +24,7 @@ def test_alleles_have_roles_columns(quads_f1_genotype_data_group_wrapper):
 def test_chr1_variant_has_corrent_roles_values(
         quads_f1_genotype_data_group_wrapper):
     variants = list(quads_f1_genotype_data_group_wrapper.query_variants(
-        regions=["chr1:0-999999999999999"]))
+        regions=["1:0-999999999999999"]))
 
     assert len(variants) == 1
     variant = variants[0]
@@ -39,7 +39,7 @@ def test_chr1_variant_has_corrent_roles_values(
 def test_chr2_variant_has_corrent_roles_values(
         quads_f1_genotype_data_group_wrapper):
     variants = list(quads_f1_genotype_data_group_wrapper.query_variants(
-        regions=["chr2:0-999999999999999"]))
+        regions=["2:0-999999999999999"]))
 
     assert len(variants) == 1
     variant = variants[0]
@@ -53,7 +53,7 @@ def test_chr2_variant_has_corrent_roles_values(
 
 def test_chr3_variant_has_both_siblings(quads_f1_genotype_data_group_wrapper):
     variants = list(quads_f1_genotype_data_group_wrapper.query_variants(
-        regions=["chr3:0-999999999999999"]))
+        regions=["3:0-999999999999999"]))
 
     assert len(variants) == 1
     variant = variants[0]

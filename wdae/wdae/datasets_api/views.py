@@ -12,7 +12,7 @@ class DatasetView(QueryBaseView):
 
     def augment_accessibility(self, dataset, user):
         dataset_object = Dataset.objects.get(dataset_id=dataset['id'])
-        dataset['accessRights'] = user.has_perm('datasets_api.view',
+        dataset['access_rights'] = user.has_perm('datasets_api.view',
                                                 dataset_object)
         return dataset
 
@@ -34,6 +34,7 @@ class DatasetView(QueryBaseView):
 
             res = [self.augment_accessibility(ds, user) for ds in res]
             res = [self.augment_with_groups(ds) for ds in res]
+
             return Response({'data': res})
         else:
             dataset = self.variants_db.get_wdae_wrapper(dataset_id)
@@ -54,8 +55,11 @@ class PermissionDeniedPromptView(QueryBaseView):
     def __init__(self):
         super(PermissionDeniedPromptView, self).__init__()
 
-        self.permission_denied_prompt = \
-            self.gpf_instance.dae_config.gpfjs.permission_denied_prompt
+        prompt_filepath = \
+            self.gpf_instance.dae_config.gpfjs.permission_denied_prompt_file
+
+        with open(prompt_filepath, "r") as infile:
+            self.permission_denied_prompt = infile.read()
 
     def get(self, request):
         return Response({'data': self.permission_denied_prompt})

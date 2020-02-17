@@ -37,7 +37,7 @@ class FamiliesReport(object):
         ]
 
     def _build_families_counters(self):
-        return [
+        result = [
             FamiliesGroupCounters(
                 self.families_groups,
                 self.families_groups[families_group_id],
@@ -45,3 +45,5 @@ class FamiliesReport(object):
                 self.families_count_show_id)
             for families_group_id in self.selected_groups
         ]
+
+        return result

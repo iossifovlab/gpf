@@ -3,11 +3,21 @@ import os
 from itertools import product
 
 from dae.variants.attributes import Inheritance
-from dae.gene.denovo_gene_set_config import DenovoGeneSetConfigParser
 from dae.gene.denovo_gene_set_collection import DenovoGeneSetCollection
+from dae.variants.attributes import Sex
+from dae.utils.effect_utils import expand_effect_types
 
 
 class DenovoGeneSetCollectionFactory():
+
+    @staticmethod
+    def denovo_gene_set_cache_file(config, people_group_id=''):
+        cache_path = os.path.join(
+            config.conf_dir,
+            'denovo-cache-' + people_group_id + '.json'
+        )
+
+        return cache_path
 
     @classmethod
     def load_collection(cls, genotype_data_study):
@@ -15,15 +25,14 @@ class DenovoGeneSetCollectionFactory():
         Loads a denovo gene set collection (from the filesystem)
         for a given study.
         '''
-        config = DenovoGeneSetConfigParser.parse(genotype_data_study.config)
+        config = genotype_data_study.config
         assert config is not None, genotype_data_study.id
-
         collection = DenovoGeneSetCollection(
             genotype_data_study.id, genotype_data_study.name, config
         )
 
-        for people_group_id in config.people_groups:
-            cache_dir = DenovoGeneSetConfigParser.denovo_gene_set_cache_file(
+        for people_group_id in config.denovo_gene_sets.selected_people_groups:
+            cache_dir = cls.denovo_gene_set_cache_file(
                 config, people_group_id
             )
             if not os.path.exists(cache_dir):
@@ -44,17 +53,43 @@ class DenovoGeneSetCollectionFactory():
         Builds a denovo gene set collection for the given study and
         writes it to the filesystem.
         '''
-        config = DenovoGeneSetConfigParser.parse(genotype_data_study.config)
+        config = genotype_data_study.config
         assert config is not None, genotype_data_study.id
 
-        for people_group_id in config.people_groups:
+        for people_group_id in config.denovo_gene_sets.selected_people_groups:
             gene_set_cache = cls._generate_gene_set_for(
-                genotype_data_study, config, people_group_id
+                genotype_data_study, config.denovo_gene_sets, people_group_id
             )
-            cache_path = DenovoGeneSetConfigParser.denovo_gene_set_cache_file(
+            cache_path = cls.denovo_gene_set_cache_file(
                 config, people_group_id
             )
             cls._save_cache(gene_set_cache, cache_path)
+
+    @classmethod
+    def _format_criterias(cls, standard_criterias):
+        '''
+        Replicates functionality from denovo gene set config parser.
+        Given a TOML config's standard criterias, it does additional formatting
+        which was done before in the parser.
+        '''
+
+        effect_type_criterias = []
+        for criteria in \
+                standard_criterias[0].segments.field_values_iterator():
+            effect_type_criterias.append({
+                "property": "effect_types",
+                "name": criteria[0],
+                "value": expand_effect_types(criteria[1])
+            })
+        sex_criterias = []
+        for criteria in \
+                standard_criterias[1].segments.field_values_iterator():
+            sex_criterias.append({
+                "property": "sexes",
+                "name": criteria[0],
+                "value": [Sex.from_name(criteria[1])]
+            })
+        return (effect_type_criterias, sex_criterias)
 
     @classmethod
     def _generate_gene_set_for(cls, genotype_data, config,
@@ -73,7 +108,9 @@ class DenovoGeneSetCollectionFactory():
             inheritance=str(Inheritance.denovo.name)
         ))
 
-        for criteria_combination in product(*config.standard_criterias):
+        criterias = product(*cls._format_criterias(config.standard_criterias))
+
+        for criteria_combination in criterias:
             search_args = {criteria['property']: criteria['value']
                            for criteria in criteria_combination}
             for people_group_value in people_group_values:

@@ -2,16 +2,15 @@ import numpy as np
 
 from dae.variants.attributes import Inheritance
 
-from dae.enrichment_tool.tests.conftest import fixtures_dir
-
 from dae.enrichment_tool.background import CodingLenBackground
 from dae.enrichment_tool.event_counters import EventsCounter
 from dae.enrichment_tool.genotype_helper import GenotypeHelper
 
 
-def test_filename(f1_trio_coding_len_background):
-    assert f1_trio_coding_len_background.filename == fixtures_dir() + \
-        '/studies/f1_trio/enrichment/codingLenBackgroundModel.csv'
+def test_filename(f1_trio_coding_len_background, fixture_dirname):
+    assert f1_trio_coding_len_background.filename == \
+        fixture_dirname(
+            'studies/f1_trio/enrichment/codingLenBackgroundModel.csv')
 
 
 def test_load(f1_trio_coding_len_background):
@@ -27,12 +26,20 @@ def test_load(f1_trio_coding_len_background):
 
 
 def test_calc_stats(f1_trio, f1_trio_coding_len_background):
+
     variants = list(f1_trio.query_variants(
         inheritance=str(Inheritance.denovo.name)))
+
+    for fv in variants:
+        print(80*'-')
+        print(fv, fv.effects)
+        for fa in fv.alleles:
+            print('\t', fa, fa.effects)
+
     event_counter = EventsCounter()
 
     pg = f1_trio.get_families_group('phenotype')
-    gh = GenotypeHelper(f1_trio, pg, 'autism')
+    gh = GenotypeHelper(f1_trio, pg, 'phenotype1')
     children_stats = gh.get_children_stats()
     children_by_sex = gh.children_by_sex()
 
@@ -109,3 +116,27 @@ def test_use_cache(f1_trio_enrichment_config):
     assert np.all(b1 == b2)
 
     assert coding_len_background.is_ready is True
+
+
+def test_effects(f1_trio):
+    vs = f1_trio.query_variants()
+    for v in vs:
+        print(30*'-')
+        print(v, v.effects)
+        for fa in v.alleles:
+            print('\t', fa, fa.effect)
+
+
+# def test_effects_annotate(f1_trio):
+#     loader = f1_trio._backend.variants_loaders[0]
+#     print(loader.filenames)
+#     annotation_filename = StoredAnnotationDecorator\
+#           .build_annotation_filename(
+#               loader.filenames[0]
+#           )
+#     annotation_filename += '_new'
+
+#     print(loader.filenames[0], annotation_filename)
+
+#     StoredAnnotationDecorator.save_annotation_file(
+#         loader, annotation_filename)
