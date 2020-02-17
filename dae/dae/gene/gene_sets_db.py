@@ -1,7 +1,7 @@
 import os
 import logging
 
-from dae.gene.gene_info_config import GeneInfoConfigParser
+from dae.gene.utils import getGeneTerms, getGeneTermAtt, rename_gene_terms
 from dae.gene.gene_term import loadGeneTerm
 
 LOGGER = logging.getLogger(__name__)
@@ -29,7 +29,7 @@ class GeneSetCollection(object):
 
         self.gsc_id = gene_sets_collection_id
 
-        self.gene_terms = GeneInfoConfigParser.getGeneTerms(
+        self.gene_terms = getGeneTerms(
             config, self.gsc_id, inNS='sym'
         )
         assert self.gene_terms, self.gsc_id
@@ -66,9 +66,9 @@ class GeneSetsDb(object):
         gene_sets_collections_desc = []
         if self.config.gene_terms:
             for gsc_id in self.config.gene_terms._fields:
-                label = GeneInfoConfigParser.getGeneTermAtt(
+                label = getGeneTermAtt(
                     self.config, gsc_id, 'web_label')
-                format_str = GeneInfoConfigParser.getGeneTermAtt(
+                format_str = getGeneTermAtt(
                     self.config, gsc_id, 'web_format_str')
                 if not label or not format_str:
                     continue
@@ -86,7 +86,7 @@ class GeneSetsDb(object):
     def load_gene_set_from_file(filename, config):
         assert os.path.exists(filename) and os.path.isfile(filename)
         gene_term = loadGeneTerm(filename)
-        gene_term = GeneInfoConfigParser._rename_gene_terms(
+        gene_term = rename_gene_terms(
             config, gene_term, inNS='sym'
         )
         return gene_term

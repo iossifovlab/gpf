@@ -8,7 +8,6 @@ import tempfile
 import pandas as pd
 from io import StringIO
 
-from box import Box
 from dae.GenomesDB import GenomesDB
 
 from dae.gpf_instance.gpf_instance import GPFInstance, cached
@@ -37,7 +36,6 @@ from dae.utils.helpers import study_id_from_path
 
 from dae.backends.impala.parquet_io import ParquetManager
 from dae.backends.storage.impala_genotype_storage import ImpalaGenotypeStorage
-from dae.gene.denovo_gene_set_config import DenovoGeneSetConfigParser
 from dae.gene.denovo_gene_set_collection_factory import \
     DenovoGeneSetCollectionFactory
 
@@ -793,8 +791,10 @@ def calc_gene_sets(request, variants_db_fixture):
     def remove_gene_sets():
         for dgs in genotype_data_names:
             genotype_data = variants_db_fixture.get(dgs)
-            cache_file = DenovoGeneSetConfigParser.denovo_gene_set_cache_file(
-                genotype_data.config, 'phenotype')
+            cache_file = os.path.join(
+                os.path.split(genotype_data.config)[0],
+                'denovo-cache-phenotype.json'
+            )
             if os.path.exists(cache_file):
                 os.remove(cache_file)
 

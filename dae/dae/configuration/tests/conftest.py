@@ -52,7 +52,6 @@ sample_conf_schema_5 = {
     "some_abs_path": {
         "type": "string",
         "check_with": validate_path,
-        "coerce": "abspath",
     },
     "some_rel_path": {
         "type": "string",

@@ -113,7 +113,6 @@ class GPFConfigParser:
             file_contents = infile.read()
 
         env_vars = {f"${key}": val for key, val in os.environ.items()}
-        # interpolated_text = file_contents % env_vars
 
         interpol_vars = \
             cls.filetype_parsers[ext](file_contents).get("vars", {})
@@ -132,6 +131,8 @@ class GPFConfigParser:
     def load_config(
         cls, filename: str, schema: dict, default_filename: str = None
     ) -> Tuple[Any]:
+        assert os.path.exists(filename), f"{filename} does not exist!"
+
         validator = GPFConfigValidator(
             schema, conf_dir=os.path.dirname(filename)
         )

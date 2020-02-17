@@ -89,7 +89,7 @@ def groups():
 
 
 @pytest.fixture(scope='session')
-def selected_people_groups(groups):
+def selected_people_groups():
     return ['phenotype']
 
 
@@ -149,8 +149,6 @@ def denovo_variants_st1(study1):
     denovo_variants = list(denovo_variants)
 
     assert len(denovo_variants) == 3
-    print(denovo_variants)
-
     return denovo_variants
 
 
@@ -163,8 +161,6 @@ def denovo_variants_ds1(genotype_data_group1):
     denovo_variants = list(denovo_variants)
 
     assert len(denovo_variants) == 8
-    print(denovo_variants)
-
     return denovo_variants
 
 

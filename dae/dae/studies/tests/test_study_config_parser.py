@@ -1,7 +1,3 @@
-import pytest
-
-pytestmark = pytest.mark.skip
-
 def test_fixture_study_config_parser_is_loaded(genotype_data_study_configs):
     expected = {
         'f1_study', 'f1_trio', 'f2_recurrent',
