@@ -23,19 +23,15 @@ class VariantsDb(object):
         self.genomes_db = genomes_db
         self.genotype_storage_factory = genotype_storage_factory
 
-        defaults = {
-            'values': {
-                'dae_data_dir': self.dae_config.dae_data_dir
-            }
-        }
+        default_config_filename = None
         if dae_config.default_study_config and \
                 dae_config.default_study_config.conf_file:
-            defaults['conf'] = dae_config.default_study_config.conf_file
+            default_config_filename = dae_config.default_study_config.conf_file
 
         study_configs = GPFConfigParser.load_directory_configs(
             dae_config.studies_db.dir,
             study_config_schema,
-            default_filename=defaults.get('conf', None)
+            default_config_filename=default_config_filename
         )
 
         self.genotype_data_study_configs = {
@@ -46,7 +42,7 @@ class VariantsDb(object):
         data_groups = GPFConfigParser.load_directory_configs(
             dae_config.datasets_db.dir,
             study_config_schema,
-            default_filename=defaults.get('conf', None)
+            default_config_filename=default_config_filename
         )
 
         self.genotype_data_group_configs = {
@@ -216,10 +212,6 @@ class VariantsDb(object):
             to_load = study_ids - cached_ids
             for study_id in to_load:
                 self._load_study_in_cache(study_id)
-
-    # def wrap_study(self, genotype_data_study):
-    #     return StudyWrapper(genotype_data_study, self.pheno_db,
-    #                         self.gene_weights_db)
 
     def _load_study_in_cache(self, study_id):
         conf = self.genotype_data_study_configs.get(study_id)
