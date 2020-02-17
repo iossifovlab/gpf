@@ -8,6 +8,10 @@
     border: 0.1px solid #aaaaaa;
 }
 
+.text-wrap {
+    white-space: normal;
+}
+
 .gene-sets-types {
     display: block;
     margin-top: 15px;

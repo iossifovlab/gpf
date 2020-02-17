@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Headers, Http, RequestOptions } from '@angular/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 // tslint:disable-next-line:import-blacklist
 import { Observable, ReplaySubject, BehaviorSubject } from 'rxjs';
 import { Scheduler } from 'rxjs-compat';
@@ -12,16 +12,16 @@ import { ConfigService } from '../config/config.service';
 export class DatasetsService {
   private readonly datasetUrl = 'datasets';
   private readonly permissionDeniedPromptUrl = 'datasets/denied_prompt';
-  private readonly datasetsDetailsUrl = 'datasets/details'
+  private readonly datasetsDetailsUrl = 'datasets/details';
 
-  private readonly headers = new Headers({ 'Content-Type': 'application/json' });
+  private readonly headers = new HttpHeaders({ 'Content-Type': 'application/json' });
   private datasets$ = new ReplaySubject<Array<Dataset>>(1);
   private selectedDataset$ = new ReplaySubject<Dataset>(1);
   private selectedDatasetId$ = new BehaviorSubject<string>(null);
   private selectedDatasetDetails$ = new BehaviorSubject<DatasetDetails>(null);
 
   constructor(
-    private http: Http,
+    private http: HttpClient,
     private config: ConfigService,
     private usersService: UsersService
   ) {
@@ -52,10 +52,11 @@ export class DatasetsService {
   }
 
   getDatasets(): Observable<Dataset[]> {
-    const options = new RequestOptions({ withCredentials: true });
-    return this.http.get(this.datasetUrl, options)
+    const options = { withCredentials: true };
+
+    return this.http.get(this.config.baseUrl + this.datasetUrl, options)
       .map(res => {
-        const datasets = Dataset.fromJsonArray(res.json().data);
+        const datasets = Dataset.fromJsonArray(res['data']);
         this.datasets$.next(datasets);
         return datasets;
       });
@@ -63,11 +64,11 @@ export class DatasetsService {
 
   getDataset(datasetId: string): Observable<Dataset> {
     const url = `${this.datasetUrl}/${datasetId}`;
-    const options = new RequestOptions({ withCredentials: true });
+    const options = { withCredentials: true };
 
-    return this.http.get(url, options)
+    return this.http.get(this.config.baseUrl + url, options)
       .map(res => {
-        return Dataset.fromJson(res.json().data);
+        return Dataset.fromJson(res['data']);
       });
   }
 
@@ -108,18 +109,19 @@ export class DatasetsService {
   }
 
   getPermissionDeniedPrompt() {
-    const options = new RequestOptions({ withCredentials: true });
+    const options = { withCredentials: true };
 
-    return this.http.get(this.permissionDeniedPromptUrl, options)
-      .map(res => res.json().data);
+    return this.http.get(this.config.baseUrl + this.permissionDeniedPromptUrl, options)
+      .map(res => res['data']);
   }
 
   getDatasetDetails(datasetId: string): Observable<DatasetDetails> {
-    const options = new RequestOptions({ headers: this.headers, withCredentials: true });
+    const options = { headers: this.headers, withCredentials: true };
+
     return this.http
-      .get(`${this.datasetsDetailsUrl}/${datasetId}`, options)
+      .get(`${this.config.baseUrl}${this.datasetsDetailsUrl}/${datasetId}`, options)
       .map(res => {
-        return DatasetDetails.fromJson(res.json())
+        return DatasetDetails.fromJson(res);
       });
   }
 }

@@ -31,7 +31,7 @@ export class SaveQueryComponent implements OnInit {
                    this.queryService.saveUserQuery(response['uuid'], name, description)
                     .take(1)
                     .subscribe(response => {
-                      if(response.status == 201) {
+                      if (response.hasOwnProperty('uuid')) {
                         this.queryWasSaved = true;
                         this.nameInputRef.nativeElement.value = '';
                         this.descInputRef.nativeElement.value = '';

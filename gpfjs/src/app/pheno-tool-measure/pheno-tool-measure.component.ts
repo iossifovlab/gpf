@@ -1,4 +1,4 @@
-import { Component, OnInit, forwardRef } from '@angular/core';
+import { Component, OnInit, forwardRef, ElementRef, QueryList, ViewChildren } from '@angular/core';
 import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query-state-provider';
 // tslint:disable-next-line:import-blacklist
 import { Observable, ReplaySubject } from 'rxjs';
@@ -18,6 +18,8 @@ import { DatasetsService } from '../datasets/datasets.service';
   }]
 })
 export class PhenoToolMeasureComponent extends QueryStateWithErrorsProvider implements OnInit {
+  @ViewChildren('checkboxes') inputs: QueryList<ElementRef>;
+
   phenoToolMeasure = new PhenoToolMeasure();
 
   measuresLoaded$ = new ReplaySubject<Array<ContinuousMeasure>>();
@@ -87,4 +89,15 @@ export class PhenoToolMeasureComponent extends QueryStateWithErrorsProvider impl
     return Object.getOwnPropertyNames(this.regressions);
   }
 
+  uncheckCheckboxes(event) {
+    if (event === null) {
+      return;
+    }
+
+    if (event.name.includes('age')) {
+      this.inputs.find(input => input.nativeElement.id === 'age').nativeElement.checked = false;
+    } else if (event.name.includes('iq')) {
+      this.inputs.find(input => input.nativeElement.id === 'nonverbal_iq').nativeElement.checked = false;
+    }
+  }
 }

@@ -23,8 +23,7 @@
 }
 .button > input, gpf-share-query-button {
   display: inline-block;
-  margin-left: 0.3%;
-  margin-right: 0.3%;
+  margin-right: 5px;
 }
 
 .loader {

@@ -45,6 +45,10 @@ export class DatasetsTableComponent implements OnInit {
     this.datasetsRefresh$.next(true);
   }
 
+  datasetComparator(leftDataset: any, rightDataset: any) {
+    return leftDataset.dataset.name.localeCompare(rightDataset.dataset.name);
+  }
+
   toDatasetTableRow(datasets: Dataset[], users: User[]) {
     let result = new Array<DatasetTableRow>();
     let groupsToUsers = users.reduce((acc, user) => {

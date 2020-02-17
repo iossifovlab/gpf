@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Headers, Http, Response, RequestOptions } from '@angular/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Location } from '@angular/common';
 // tslint:disable-next-line:import-blacklist
@@ -8,23 +8,21 @@ import { Observable, Subject } from 'rxjs';
 const oboe = require('oboe');
 
 import { environment } from 'environments/environment';
-
 import { QueryData } from './query';
 import { ConfigService } from '../config/config.service';
 import { GenotypePreviewInfo, GenotypePreviewVariantsArray } from '../genotype-preview-model/genotype-preview';
 
-
 @Injectable()
 export class QueryService {
-  private genotypePreviewVariantsUrl = 'genotype_browser/preview/variants';
-  private saveQueryEndpoint = 'query_state/save';
-  private loadQueryEndpoint = 'query_state/load';
-  private deleteQueryEndpoint = 'query_state/delete';
+  private readonly genotypePreviewUrl = 'genotype_browser/preview';
+  private readonly genotypePreviewVariantsUrl = 'genotype_browser/preview/variants';
+  private readonly saveQueryEndpoint = 'query_state/save';
+  private readonly loadQueryEndpoint = 'query_state/load';
+  private readonly deleteQueryEndpoint = 'query_state/delete';
+  private readonly userSaveQueryEndpoint = 'user_queries/save';
+  private readonly userCollectQueriesEndpoint = 'user_queries/collect';
 
-  private userSaveQueryEndpoint = 'user_queries/save';
-  private userCollectQueriesEndpoint = 'user_queries/collect';
-
-  private headers = new Headers({ 'Content-Type': 'application/json' });
+  private readonly headers = new HttpHeaders({ 'Content-Type': 'application/json' });
 
   private connectionEstablished = false;
   private oboeInstance = null;
@@ -33,14 +31,14 @@ export class QueryService {
   constructor(
     private location: Location,
     private router: Router,
-    private http: Http,
+    private http: HttpClient,
     private config: ConfigService
-  ) {
-  }
+  ) {}
 
   private parseGenotypePreviewInfoResponse(response: Response): GenotypePreviewInfo {
-    const data = response.json();
+    const data = response;
     const genotypePreviewInfoArray = GenotypePreviewInfo.fromJson(data);
+
     return genotypePreviewInfoArray;
   }
 
@@ -52,11 +50,9 @@ export class QueryService {
   }
 
   getGenotypePreviewInfo(filter: QueryData): Observable<GenotypePreviewInfo> {
-    const options = new RequestOptions({
-      headers: this.headers, withCredentials: true
-    });
+    const options = {headers: this.headers, withCredentials: true};
 
-    return this.http.post(this.genotypePreviewVariantsUrl, filter, options)
+    return this.http.post(this.config.baseUrl + this.genotypePreviewUrl, filter, options)
       .map(this.parseGenotypePreviewInfoResponse);
   }
 
@@ -69,7 +65,7 @@ export class QueryService {
     this.oboeInstance = oboe({
       url: `${environment.apiPath}${url}`,
       method: 'POST',
-      headers: this.headers.toJSON(),
+      headers: { 'Content-Type': 'application/json' },
       body: filter,
       withCredentials: true
     }).start(data => {
@@ -85,6 +81,7 @@ export class QueryService {
       console.warn('oboejs encountered a fail event while streaming');
       streamingSubject.next(null);
     });
+
     return streamingSubject;
   }
 
@@ -101,45 +98,38 @@ export class QueryService {
   }
 
   saveQuery(queryData: {}, page: string) {
-    const options = new RequestOptions({
-      headers: this.headers
-    });
+    const options = {headers: this.headers};
     const data = {
       data: queryData,
       page: page
     };
 
     return this.http
-      .post(this.saveQueryEndpoint, data, options)
-      .map(response => response.json());
-
+      .post(this.config.baseUrl + this.saveQueryEndpoint, data, options)
+      .map(response => response);
   }
 
   loadQuery(uuid: string) {
-    const options = new RequestOptions({
-      headers: this.headers,
-      withCredentials: true
-    });
+    const options = {headers: this.headers, withCredentials: true};
 
     return this.http
-      .post(this.loadQueryEndpoint, { uuid: uuid }, options)
-      .map(response => response.json());
-
+      .post(this.config.baseUrl + this.loadQueryEndpoint, { uuid: uuid }, options)
+      .map(response => response);
   }
 
   deleteQuery(uuid:string) {
-    const options = new RequestOptions({
-        headers: this.headers,
-        withCredentials: true
-    });
+    const options = {headers: this.headers, withCredentials: true};
 
-    return this.http.post(this.deleteQueryEndpoint, { uuid: uuid }, options)
+    return this.http
+      .post(this.config.baseUrl + this.deleteQueryEndpoint, { uuid: uuid }, options)
+      .map(response => response);
   }
 
   getLoadUrl(uuid: string) {
     let pathname = this.router.createUrlTree(
       ['load-query', uuid]).toString();
     pathname = this.location.prepareExternalUrl(pathname);
+
     return window.location.origin + pathname;
   }
 
@@ -148,9 +138,7 @@ export class QueryService {
   }
 
   saveUserQuery(uuid: string, query_name: string, query_description: string) {
-    const options = new RequestOptions({
-      headers: this.headers, withCredentials: true
-    });
+    const options = {headers: this.headers, withCredentials: true};
 
     const data = {
       query_uuid: uuid,
@@ -159,13 +147,14 @@ export class QueryService {
     };
 
     return this.http
-      .post(this.userSaveQueryEndpoint, data, options);
+      .post(this.config.baseUrl + this.userSaveQueryEndpoint, data, options)
+      .map(response => response);
   }
 
   collectUserSavedQueries() {
-    const options = new RequestOptions({withCredentials: true});
+    const options = {withCredentials: true};
     return this.http
-      .get(this.userCollectQueriesEndpoint, options)
-      .map(response => response.json());
+      .get(this.config.baseUrl + this.userCollectQueriesEndpoint, options)
+      .map(response => response);
   }
 }

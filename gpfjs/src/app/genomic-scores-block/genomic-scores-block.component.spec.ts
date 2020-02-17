@@ -1,6 +1,5 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
-import { HttpModule } from '@angular/http';
 
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
@@ -70,8 +69,7 @@ describe('GenomicScoresBlockComponent', () => {
       imports: [
         NgbModule.forRoot(),
         FormsModule,
-        NgxMdModule,
-        HttpModule
+        NgxMdModule
       ],
       providers: [
         { provide: GenomicScoresBlockService, useClass: MockGenomicScoresBlockService },

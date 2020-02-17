@@ -1,0 +1,7 @@
+.button {
+    display: flex;
+  }
+  .btn-group > button, gpf-save-query-button {
+    display: inline-block;
+    margin-right: 5px;
+  }

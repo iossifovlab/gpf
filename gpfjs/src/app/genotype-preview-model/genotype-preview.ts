@@ -2,8 +2,10 @@ export class PedigreeData {
 
   static parsePosition(position: string) {
     if (position != null) {
-      const result = position.split(',').map(x => parseFloat(x));
-      return result as [number, number];
+        const layout = position.split(':');
+        const coordinates = layout[layout.length - 1];
+        const result = coordinates.split(',').map(x => parseFloat(x));
+        return result as [number, number];
     }
     return null;
   }
@@ -90,23 +92,27 @@ export class GenotypePreviewInfo {
 
 export class GenotypePreviewVariantsArray {
   genotypePreviews: GenotypePreview[] = [];
-  moreThan: Boolean = false;
 
   constructor() { }
 
   addPreviewVariant(row: Array<string>, genotypePreviewInfo: GenotypePreviewInfo) {
-    if (this.genotypePreviews.length === genotypePreviewInfo.maxVariantsCount) {
-      this.moreThan = true;
-      return;
-    }
     const genotypePreview = GenotypePreview.fromJson(row, genotypePreviewInfo.columns);
     if (genotypePreview.data.size) {
       this.genotypePreviews.push(genotypePreview);
     }
   }
 
-  variantsCount() {
-    const total = this.moreThan ? 'more than 1000' : this.genotypePreviews.length;
-    return `${total} variants selected (${this.genotypePreviews.length} shown)`;
+  getVariantsCount(maxVariantsCount: number) {
+    let variantsCount: string;
+
+    if (this.genotypePreviews.length > maxVariantsCount) {
+      variantsCount = `more than ${maxVariantsCount} variants selected (${maxVariantsCount} shown)`;
+    } else if (this.genotypePreviews.length !== 1) {
+      variantsCount = `${this.genotypePreviews.length} variants selected (${this.genotypePreviews.length} shown)`;
+    } else {
+      variantsCount = '1 variant selected (1 shown)';
+    }
+
+    return variantsCount;
   }
 }

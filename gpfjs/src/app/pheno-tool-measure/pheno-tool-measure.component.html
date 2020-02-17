@@ -2,14 +2,18 @@
   <div class="row">
     <div class="col-lg-6">
       Proband Pheno Measure
-  	  <gpf-pheno-measure-selector [(selectedMeasure)]="phenoToolMeasure.measure" (measuresChange)="measuresUpdate($event)">
+  	  <gpf-pheno-measure-selector [(selectedMeasure)]="phenoToolMeasure.measure" (measuresChange)="measuresUpdate($event)" (selectedMeasureChange)="uncheckCheckboxes($event)">
       </gpf-pheno-measure-selector>
+
+      <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
     </div>
     <div class="col-lg-6">
       Normalized by:
       <div *ngFor="let reg of getRegressionNames()">
           <label>
-              <input
+              <input 
+                #checkboxes
+                id = "{{ reg }}"
                 type="checkbox"
                 [checked]="phenoToolMeasure.normalizeBy.indexOf(reg) !== -1"
                 (change)="onNormalizeByChange(regressions[reg], $event);"
@@ -18,7 +22,5 @@
           </label>
       </div>
     </div>
-
-    <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
   </div>
 </div>

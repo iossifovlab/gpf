@@ -34,7 +34,7 @@ export class InheritancetypesComponent extends QueryStateWithErrorsProvider
       .take(1)
       .subscribe(state => {
         if (state['inheritanceTypeFilter']) {
-          this.inheritanceTypes.selected = state['inheritanceTypeFilter'];
+          this.inheritanceTypes.selected = new Set(state['inheritanceTypeFilter'] as string[]);
         }
       });
   }
@@ -72,5 +72,4 @@ export class InheritancetypesComponent extends QueryStateWithErrorsProvider
   selectNone() {
     this.inheritanceTypes.selected = new Set();
   }
-
 }
