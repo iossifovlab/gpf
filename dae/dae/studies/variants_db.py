@@ -2,8 +2,8 @@ from deprecation import deprecated
 
 from dae.studies.study import GenotypeDataStudy, GenotypeDataGroup
 from dae.studies.study_wrapper import StudyWrapper
-from dae.studies.study_config_parser import GenotypeDataStudyConfigParser
-from dae.studies.dataset_config_parser import GenotypeDataGroupConfigParser
+from dae.configuration.gpf_config_parser import GPFConfigParser
+from dae.configuration.schemas.study_config import study_config_schema
 
 
 class VariantsDb(object):
@@ -28,23 +28,33 @@ class VariantsDb(object):
                 'dae_data_dir': self.dae_config.dae_data_dir
             }
         }
-        if dae_config.default_configuration and \
-                dae_config.default_configuration.conf_file:
-            defaults['conf'] = dae_config.default_configuration.conf_file
+        if dae_config.default_study_config and \
+                dae_config.default_study_config.conf_file:
+            defaults['conf'] = dae_config.default_study_config.conf_file
 
-        self.genotype_data_study_configs = GenotypeDataStudyConfigParser.\
-            read_and_parse_directory_configurations(
-                dae_config.studies_db.dir,
-                defaults=defaults
-            )
+        study_configs = GPFConfigParser.load_directory_configs(
+            dae_config.studies_db.dir,
+            study_config_schema,
+            default_filename=defaults.get('conf', None)
+        )
 
-        self.genotype_data_group_configs = GenotypeDataGroupConfigParser.\
-            read_and_parse_directory_configurations(
-                dae_config.datasets_db.dir,
-                self.genotype_data_study_configs,
-                defaults=defaults,
-                fail_silently=True
-            )
+        self.genotype_data_study_configs = {
+            ds.id: ds
+            for ds in study_configs
+        }
+
+        data_groups = GPFConfigParser.load_directory_configs(
+            dae_config.datasets_db.dir,
+            study_config_schema,
+            default_filename=defaults.get('conf', None)
+        )
+
+        self.genotype_data_group_configs = {
+            dg.id: dg
+            for dg in data_groups
+        }
+
+        self._filter_disabled()
 
         self._genotype_data_study_cache = {}
         self._genotype_data_study_wrapper_cache = {}
@@ -53,6 +63,20 @@ class VariantsDb(object):
         self._genotype_data_group_wrapper_cache = {}
 
         self._configuration_check()
+
+    def _filter_disabled(self):
+        to_remove = []
+        for k, v in self.genotype_data_study_configs.items():
+            if v.enabled is False:
+                to_remove.append(k)
+        for disabled_study_id in to_remove:
+            del self.genotype_data_study_configs[disabled_study_id]
+        to_remove.clear()
+        for k, v in self.genotype_data_group_configs.items():
+            if v.enabled is False:
+                to_remove.append(k)
+        for disabled_group_id in to_remove:
+            del self.genotype_data_group_configs[disabled_group_id]
 
     def _configuration_check(self):
         studies_ids = set(self.get_genotype_studies_ids())
@@ -242,14 +266,14 @@ class VariantsDb(object):
 
         try:
             genotype_storage = self.genotype_storage_factory. \
-                get_genotype_storage(study_config.genotype_storage)
+                get_genotype_storage(study_config.genotype_storage.id)
 
             if genotype_storage is None:
                 storage_ids = self.genotype_storage_factory\
                     .get_genotype_storage_ids()
                 print(
                     f"Unknown genotype storage id: "
-                    f"{study_config.genotype_storage}; "
+                    f"{study_config.genotype_storage.id}; "
                     f"Known ones: {storage_ids}"
                 )
                 return None
@@ -286,5 +310,4 @@ class VariantsDb(object):
                     ))
             genotype_studies.append(genotype_data_study)
         assert genotype_studies
-
         return GenotypeDataGroup(genotype_data_group_config, genotype_studies)

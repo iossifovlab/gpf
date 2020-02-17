@@ -147,7 +147,9 @@ class FilterCollection(object):
     @staticmethod
     def build_filter_objects(families_groups, groups):
         filter_objects = []
-        for name, people_group_ids in groups.items():
+        for group in groups:
+            name = group.name
+            people_group_ids = group.people_group_ids
             filters = []
             for people_group_id in people_group_ids:
                 assert people_group_id in families_groups, \

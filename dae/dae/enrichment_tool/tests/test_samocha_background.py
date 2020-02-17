@@ -2,15 +2,13 @@ import pytest
 
 from dae.variants.attributes import Inheritance
 
-from dae.enrichment_tool.tests.conftest import fixtures_dir
-
 from dae.enrichment_tool.event_counters import EventsCounter
 from dae.enrichment_tool.genotype_helper import GenotypeHelper
 
 
-def test_filename(f1_trio_samocha_background):
-    assert f1_trio_samocha_background.filename == fixtures_dir() + \
-        '/studies/f1_trio/enrichment/samochaBackgroundModel.csv'
+def test_filename(f1_trio_samocha_background, fixture_dirname):
+    assert f1_trio_samocha_background.filename == fixture_dirname(
+        'studies/f1_trio/enrichment/samochaBackgroundModel.csv')
 
 
 def test_load(f1_trio_samocha_background):
@@ -46,7 +44,7 @@ def test_calc_stats(f1_trio, f1_trio_samocha_background):
     event_counter = EventsCounter()
 
     pg = f1_trio.get_families_group('phenotype')
-    gh = GenotypeHelper(f1_trio, pg, 'autism')
+    gh = GenotypeHelper(f1_trio, pg, 'phenotype1')
     # children_stats = gh.get_children_stats()
     children_by_sex = gh.children_by_sex()
 

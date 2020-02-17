@@ -20,23 +20,23 @@ def test_enrichment_models(admin_client):
     background = result['background']
     background.sort(key=lambda x: x['name'])
     assert len(background[0]) == 2
-    assert background[0]['name'] == 'codingLenBackgroundModel'
+    assert background[0]['name'] == 'coding_len_background_model'
     assert background[0]['desc'] == 'Coding Len Background Model'
     assert len(background[1]) == 2
-    assert background[1]['name'] == 'samochaBackgroundModel'
+    assert background[1]['name'] == 'samocha_background_model'
     assert background[1]['desc'] == 'Samocha Background Model'
     assert len(background[2]) == 2
-    assert background[2]['name'] == 'synonymousBackgroundModel'
+    assert background[2]['name'] == 'synonymous_background_model'
     assert background[2]['desc'] == 'Synonymous Background Model'
 
     assert len(result['counting']) == 2
     counting = result['counting']
     counting.sort(key=lambda x: x['name'])
     assert len(counting[0]) == 2
-    assert counting[0]['name'] == 'enrichmentEventsCounting'
+    assert counting[0]['name'] == 'enrichment_events_counting'
     assert counting[0]['desc'] == 'Enrichment Events Counting'
     assert len(counting[1]) == 2
-    assert counting[1]['name'] == 'enrichmentGeneCounting'
+    assert counting[1]['name'] == 'enrichment_gene_counting'
     assert counting[1]['desc'] == 'Enrichment Gene Counting'
 
 
@@ -56,8 +56,8 @@ def test_enrichment_models_missing_study(admin_client):
 def test_enrichment_test_missing_dataset_id(admin_client):
     url = '/api/v3/enrichment/test'
     query = {
-        'enrichmentBackgroundModel': 'synonymousBackgroundModel',
-        'enrichmentCountingModel': 'enrichmentGeneCounting',
+        'enrichmentBackgroundModel': 'synonymous_background_model',
+        'enrichmentCountingModel': 'enrichment_gene_counting',
         'geneSymbols': [
             'POGZ'
         ]
@@ -73,8 +73,8 @@ def test_enrichment_test_missing_study(admin_client):
     url = '/api/v3/enrichment/test'
     query = {
         'datasetId': 'f1',
-        'enrichmentBackgroundModel': 'synonymousBackgroundModel',
-        'enrichmentCountingModel': 'enrichmentGeneCounting',
+        'enrichmentBackgroundModel': 'synonymous_background_model',
+        'enrichmentCountingModel': 'enrichment_gene_counting',
         'geneSymbols': [
             'POGZ'
         ]
@@ -90,8 +90,8 @@ def test_enrichment_test_missing_gene_symbols(admin_client):
     url = '/api/v3/enrichment/test'
     query = {
         'datasetId': 'f1_trio',
-        'enrichmentBackgroundModel': 'synonymousBackgroundModel',
-        'enrichmentCountingModel': 'enrichmentGeneCounting',
+        'enrichmentBackgroundModel': 'synonymous_background_model',
+        'enrichmentCountingModel': 'enrichment_gene_counting',
     }
     response = admin_client.post(
         url, json.dumps(query), content_type='application/json', format='json')
@@ -105,8 +105,8 @@ def test_enrichment_test_gene_symbols(admin_client):
     url = '/api/v3/enrichment/test'
     query = {
         'datasetId': 'f1_trio',
-        'enrichmentBackgroundModel': 'codingLenBackgroundModel',
-        'enrichmentCountingModel': 'enrichmentGeneCounting',
+        'enrichmentBackgroundModel': 'coding_len_background_model',
+        'enrichmentCountingModel': 'enrichment_gene_counting',
         'geneSymbols': [
             'SAMD11',
             'PLEKHN1',
@@ -171,8 +171,8 @@ def test_enrichment_test_gene_set(admin_client, wdae_gpf_instance):
     url = '/api/v3/enrichment/test'
     query = {
         'datasetId': 'f1_trio',
-        'enrichmentBackgroundModel': 'codingLenBackgroundModel',
-        'enrichmentCountingModel': 'enrichmentGeneCounting',
+        'enrichmentBackgroundModel': 'coding_len_background_model',
+        'enrichmentCountingModel': 'enrichment_gene_counting',
         'geneSet': {
             'geneSetsCollection': 'denovo',
             'geneSet': 'Missense',

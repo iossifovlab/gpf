@@ -26,10 +26,10 @@ class AnnotatorFactory(object):
         return clazz
 
     @classmethod
-    def make_annotator(cls, annotator_config):
+    def make_annotator(cls, annotator_config, genomes_db):
         clazz = cls._name_to_class(annotator_config.annotator)
         assert clazz is not None
-        return clazz(annotator_config)
+        return clazz(annotator_config, genomes_db)
 
 
 def handle_header(source_header):

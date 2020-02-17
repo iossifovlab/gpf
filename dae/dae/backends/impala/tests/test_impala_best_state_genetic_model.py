@@ -17,7 +17,7 @@ def test_best_state_genetic_model(variants_impala, impala_genotype_storage):
     with impala.connection.cursor() as cursor:
         cursor.execute(
             f'SELECT best_state_data, genetic_model_data '
-            f'FROM {db}.quads_f1_variant'
+            f'FROM {db}.quads_f1_variants'
         )
         rows = list(cursor)
         assert np.array([

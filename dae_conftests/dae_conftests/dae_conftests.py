@@ -8,11 +8,12 @@ import tempfile
 import pandas as pd
 from io import StringIO
 
-from box import Box
 from dae.GenomesDB import GenomesDB
 
-from dae.configuration.dae_config_parser import DAEConfigParser
 from dae.gpf_instance.gpf_instance import GPFInstance, cached
+
+from dae.configuration.gpf_config_parser import GPFConfigParser
+from dae.configuration.schemas.dae_conf import dae_conf_schema
 
 from dae.annotation.annotation_pipeline import PipelineAnnotator
 
@@ -35,7 +36,6 @@ from dae.utils.helpers import study_id_from_path
 
 from dae.backends.impala.parquet_io import ParquetManager
 from dae.backends.storage.impala_genotype_storage import ImpalaGenotypeStorage
-from dae.gene.denovo_gene_set_config import DenovoGeneSetConfigParser
 from dae.gene.denovo_gene_set_collection_factory import \
     DenovoGeneSetCollectionFactory
 
@@ -66,8 +66,13 @@ def default_dae_config(request):
         shutil.rmtree(studies_dirname)
 
     request.addfinalizer(fin)
-    dae_config = DAEConfigParser.read_and_parse_file_configuration()
-    dae_config.studies_db.dir = studies_dirname
+    dae_conf_path = \
+        os.path.join(os.environ.get('DAE_DB_DIR', None), 'DAE.conf')
+    dae_config = GPFConfigParser.load_config(dae_conf_path, dae_conf_schema)
+    dae_config = GPFConfigParser.modify_tuple(
+        dae_config,
+        {'studies_db': {'dir': studies_dirname}}
+    )
     return dae_config
 
 
@@ -226,16 +231,14 @@ def default_annotation_pipeline(
         default_dae_config, genomes_db_2013):
     filename = default_dae_config.annotation.conf_file
 
-    options = Box({
+    options = {
             'default_arguments': None,
             'vcf': True,
             'r': 'reference',
             'a': 'alternative',
             'c': 'chrom',
             'p': 'position',
-        },
-        default_box=True,
-        default_box_attr=None)
+    }
 
     pipeline = PipelineAnnotator.build(
         options, filename, '.', genomes_db_2013,
@@ -256,13 +259,11 @@ def annotation_pipeline_vcf(genomes_db_2013):
     filename = relative_to_this_test_folder(
         'fixtures/annotation_pipeline/import_annotation.conf')
 
-    options = Box({
+    options = {
             'default_arguments': None,
             'vcf': True,
             # 'mode': 'overwrite',
-        },
-        default_box=True,
-        default_box_attr=None)
+    }
 
     work_dir = relative_to_this_test_folder('fixtures/')
 
@@ -282,16 +283,14 @@ def annotation_pipeline_internal(genomes_db_2013):
     filename = relative_to_this_test_folder(
         'fixtures/annotation_pipeline/import_annotation.conf')
 
-    options = Box({
+    options = {
             'default_arguments': None,
             'vcf': True,
             'c': 'chrom',
             'p': 'position',
             'r': 'reference',
             'a': 'alternative',
-        },
-        default_box=True,
-        default_box_attr=None)
+    }
 
     work_dir = relative_to_this_test_folder('fixtures/')
 
@@ -314,7 +313,7 @@ def from_prefix_denovo(prefix):
             'family_filename': family_filename,
         }
     }
-    return Box(conf, default_box=True)
+    return GPFConfigParser._dict_to_namedtuple(conf)
 
 
 def from_prefix_vcf(prefix):
@@ -328,7 +327,7 @@ def from_prefix_vcf(prefix):
         'annotation': '{}-vcf-eff.txt'.format(prefix),
         'prefix': prefix
     }
-    return Box(conf, default_box=True)
+    return GPFConfigParser._dict_to_namedtuple(conf)
 
 
 @pytest.fixture
@@ -371,7 +370,7 @@ def from_prefix_dae(prefix):
             'family_filename': family_filename,
         }
     }
-    return Box(conf, default_box=True)
+    return GPFConfigParser._dict_to_namedtuple(conf)
 
 
 @pytest.fixture
@@ -471,7 +470,7 @@ def iossifov2014_impala(
     )
 
     fvars = impala_genotype_storage.build_backend(
-        Box({'id': study_id}, default_box=True),
+        GPFConfigParser._dict_to_namedtuple({'id': study_id}),
         genomes_db_2013)
     return fvars
 
@@ -642,7 +641,7 @@ def test_impala_helpers(request, impala_host):
 
 @pytest.fixture(scope='session')
 def impala_genotype_storage(hdfs_host, impala_host):
-    storage_config = Box({
+    storage_config = GPFConfigParser._dict_to_namedtuple({
         'id': 'impala_test_storage',
         'type': 'impala',
         'impala': {
@@ -710,7 +709,7 @@ def data_import(
             study_id = os.path.splitext(filename)[0]
 
             variant_table, pedigree_table = impala_genotype_storage. \
-                study_tables(Box({'id': study_id}, default_box=True))
+                study_tables(GPFConfigParser._dict_to_namedtuple({'id': study_id}))
 
             if not reimport and \
                     test_impala_helpers.check_table(
@@ -760,7 +759,7 @@ def variants_impala(
     def builder(path):
         study_id = os.path.basename(path)
         fvars = impala_genotype_storage.build_backend(
-            Box({'id': study_id}, default_box=True),
+            GPFConfigParser._dict_to_namedtuple({'id': study_id}),
             genomes_db_2013
         )
         return fvars
@@ -792,9 +791,10 @@ def calc_gene_sets(request, variants_db_fixture):
     def remove_gene_sets():
         for dgs in genotype_data_names:
             genotype_data = variants_db_fixture.get(dgs)
-            config = DenovoGeneSetConfigParser.parse(genotype_data.config)
-            cache_file = DenovoGeneSetConfigParser.denovo_gene_set_cache_file(
-                config, 'phenotype')
+            cache_file = os.path.join(
+                os.path.split(genotype_data.config)[0],
+                'denovo-cache-phenotype.json'
+            )
             if os.path.exists(cache_file):
                 os.remove(cache_file)
 

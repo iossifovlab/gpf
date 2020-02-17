@@ -4,24 +4,22 @@ Created on Nov 7, 2016
 @author: lubo
 '''
 from collections import Counter
-import os
 from scipy import stats
 import numpy as np
 import pandas as pd
 
 from dae.enrichment_tool.event_counters import overlap_enrichment_result_dict
-from dae.enrichment_tool.config import EnrichmentConfigParser
 # from dae.variants.attributes import Inheritance
 
 
-class BackgroundBase(object):
+class BackgroundBase():
 
     @staticmethod
     def backgrounds():
         return {
             # 'synonymousBackgroundModel': SynonymousBackground,
-            'codingLenBackgroundModel': CodingLenBackground,
-            'samochaBackgroundModel': SamochaBackground
+            'coding_len_background_model': CodingLenBackground,
+            'samocha_background_model': SamochaBackground
         }
 
     def __init__(self, name, config):
@@ -29,21 +27,7 @@ class BackgroundBase(object):
         self.name = name
         assert self.name is not None
         self.config = config
-
-        self.cache_filename = EnrichmentConfigParser.enrichment_cache_file(
-            self.config, self.name)
-
         self.load()
-
-    def cache_clear(self):
-        assert self.name is not None
-        if not os.path.exists(self.cache_filename):
-            return False
-        os.remove(self.cache_filename)
-        return True
-
-    def is_cache_exist(self):
-        return True if os.path.exists(self.cache_filename) else False
 
     @property
     def is_ready(self):
@@ -180,7 +164,7 @@ class CodingLenBackground(BackgroundCommon):
 
     @property
     def filename(self):
-        return self.config.backgrounds[self.name].filename
+        return getattr(self.config.background, self.name).file
 
     def _load_and_prepare_build(self):
         filename = self.filename
@@ -198,7 +182,7 @@ class CodingLenBackground(BackgroundCommon):
 
     def __init__(self, config, variants_db=None):
         super(CodingLenBackground, self).__init__(
-            'codingLenBackgroundModel', config)
+            'coding_len_background_model', config)
 
     def load(self):
         self.background = self._load_and_prepare_build()
@@ -234,7 +218,7 @@ class SamochaBackground(BackgroundBase):
 
     @property
     def filename(self):
-        return self.config.backgrounds[self.name].filename
+        return getattr(self.config.background, self.name).file
 
     def _load_and_prepare_build(self):
         filename = self.filename
@@ -249,7 +233,7 @@ class SamochaBackground(BackgroundBase):
 
     def __init__(self, config, variants_db=None):
         super(SamochaBackground, self).__init__(
-            'samochaBackgroundModel', config)
+            'samocha_background_model', config)
 
     def load(self):
         self.background = self._load_and_prepare_build()

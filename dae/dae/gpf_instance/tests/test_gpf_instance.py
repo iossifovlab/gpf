@@ -17,6 +17,7 @@ def test_init(local_gpf_instance):
     assert local_gpf_instance
 
     assert local_gpf_instance.dae_config
+    print(local_gpf_instance.dae_config)
     assert local_gpf_instance.genomes_db
     assert local_gpf_instance._pheno_db
     assert local_gpf_instance._gene_info_config

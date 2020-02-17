@@ -5,8 +5,6 @@ import argparse
 from math import ceil
 from collections import defaultdict
 
-from box import Box
-
 from dae.annotation.annotation_pipeline import PipelineAnnotator
 from dae.utils.dict_utils import recursive_dict_update
 
@@ -56,10 +54,9 @@ def construct_import_annotation_pipeline(
         'r': 'reference',
         'a': 'alternative',
     }
-    options = Box(options, default_box=True, default_box_attr=None)
 
     annotation_defaults = {
-        'values': gpf_instance.dae_config.annotation_defaults
+        'values': gpf_instance.dae_config.annotation_defaults._asdict()
     }
     annotation_defaults = recursive_dict_update(annotation_defaults, defaults)
 
@@ -605,9 +602,7 @@ class MakefileGenerator:
         )
 
         default_genotype_storage_id = \
-            gpf_instance.dae_config.\
-            get('genotype_storage', {}).\
-            get('default', None)
+            gpf_instance.dae_config.genotype_storage.default
 
         parser.add_argument(
             '--genotype-storage', '--gs',

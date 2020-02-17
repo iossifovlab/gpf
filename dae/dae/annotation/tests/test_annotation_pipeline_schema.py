@@ -11,7 +11,6 @@ def test_pipeline_schema(genomes_db_2013):
 
     options = Box({
             'default_arguments': None,
-            'vcf': True,
             'mode': 'overwrite',
         },
         default_box=True,

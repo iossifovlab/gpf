@@ -24,8 +24,7 @@ expected_bw_output = '''RESULT_bigwig_score
 '''
 
 
-@pytest.mark.skipif(bigwig_enabled is False,
-                    reason='pyBigWig module is not installed')
+@pytest.mark.skip
 def test_bigwig_line_adapter():
     score_filename = relative_to_this_test_folder(
         'fixtures/TESTbigwig/TEST_bigwig_score.bw')
@@ -40,8 +39,7 @@ def test_bigwig_line_adapter():
     assert bwline[1] == bwline.pos_begin
 
 
-@pytest.mark.skipif(bigwig_enabled is False,
-                    reason='pyBigWig module is not installed')
+@pytest.mark.skip
 def test_bigwig_header():
     score_filename = relative_to_this_test_folder(
         'fixtures/TESTbigwig/TEST_bigwig_score.bw')
@@ -52,8 +50,7 @@ def test_bigwig_header():
                                     'TEST_bigwig_score']
 
 
-@pytest.mark.skipif(bigwig_enabled is False,
-                    reason='pyBigWig module is not installed')
+@pytest.mark.skip
 def test_bigwig_access_simple():
     score_filename = relative_to_this_test_folder(
         'fixtures/TESTbigwig/TEST_bigwig_score.bw')
@@ -80,8 +77,7 @@ def test_bigwig_access_simple():
         pytest.approx(22.7, 1E-3)
 
 
-@pytest.mark.skipif(bigwig_enabled is False,
-                    reason='pyBigWig module is not installed')
+@pytest.mark.skip
 def test_bigwig_access_indels(
         expected_df, capsys, variants_io, genomes_db_2013):
 

@@ -109,8 +109,8 @@ class CounterBase(object):
     @staticmethod
     def counters():
         return {
-            'enrichmentEventsCounting': EventsCounter,
-            'enrichmentGeneCounting': GeneEventsCounter
+            'enrichment_events_counting': EventsCounter,
+            'enrichment_gene_counting': GeneEventsCounter
         }
 
     # def get_variants(self, denovo_studies, in_child, effect_types):

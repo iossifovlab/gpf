@@ -4,9 +4,9 @@ from dae.enrichment_tool.genotype_helper import GenotypeHelper
 
 
 @pytest.mark.parametrize('people_group,effect_types,count', [
-    ('autism', 'missense', 2),
-    ('autism', 'synonymous', 2),
-    ('autism', ['missense', 'synonymous'], 4),
+    ('phenotype1', 'missense', 2),
+    ('phenotype1', 'synonymous', 2),
+    ('phenotype1', ['missense', 'synonymous'], 4),
     ('unaffected', 'missense', 0),
     ('unaffected', 'synonymous', 1),
     ('unaffected', ['missense', 'synonymous'], 1),
@@ -19,7 +19,7 @@ def test_get_variants(f1_trio, people_group, effect_types, count):
 
 
 @pytest.mark.parametrize('people_group,male,female,unspecified,count', [
-    ('autism', 1, 1, 0, 2),
+    ('phenotype1', 1, 1, 0, 2),
     ('unaffected', 0, 1, 0, 1),
 ])
 def test_get_children_stats(

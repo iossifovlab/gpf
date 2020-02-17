@@ -16,7 +16,7 @@ def test_datasets_api_get_one(admin_client):
     print(response.data)
     assert response
     assert response.status_code == 200
-    assert response.data['data']['accessRights'] is True
+    assert response.data['data']['access_rights'] is True
     assert response.data['data']['name'] == 'QUADS_IN_PARENT'
 
 
@@ -33,7 +33,7 @@ def test_datasets_api_get_forbidden(user_client):
 
     assert response
     assert response.status_code == 200
-    assert response.data['data']['accessRights'] is False
+    assert response.data['data']['access_rights'] is False
     assert response.data['data']['name'] == 'QUADS_IN_PARENT'
 
 

@@ -49,6 +49,8 @@ def test_import_denovo_dae_style_denovo_sep(
         genomes_db_2013, fixture_dirname,
         default_dae_config, gpf_instance_2013, temp_dirname):
 
+    storage_config = default_dae_config.storage.test_impala
+    assert storage_config.storage_type == 'impala'
     pedigree_filename = fixture_dirname('denovo_import/fake_pheno.ped')
     denovo_filename = fixture_dirname(
         'denovo_import/variants_different_separator.dsv')
@@ -94,6 +96,7 @@ def test_import_comp_vcf_into_genotype_storage(
     vcf_filename = fixture_dirname('study_import/comp.vcf')
 
     study_id = f'test_comp_vcf_{genotype_storage_id}'
+    genotype_storage_id = 'test_impala'
 
     argv = [
         pedigree_filename,
@@ -242,12 +245,15 @@ def test_add_chrom_prefix_simple(
         genotype_storage_id, storage_type,
         genomes_db_2013, fixture_dirname,
         default_dae_config, gpf_instance_2013, temp_dirname):
-
     pedigree_filename = fixture_dirname('study_import/comp.ped')
     vcf_filename = fixture_dirname('study_import/comp.vcf')
     denovo_filename = fixture_dirname('study_import/comp.tsv')
 
     study_id = f'test_comp_all_prefix_{genotype_storage_id}'
+    genotype_storage_id = 'test_filesystem'
+
+    storage_config = default_dae_config.storage.test_filesystem
+    assert storage_config.storage_type == 'filesystem'
 
     argv = [
         pedigree_filename,
@@ -295,6 +301,8 @@ def test_import_comp_all_del_chrom_prefix(
     vcf_filename = fixture_dirname('study_import/comp_chromprefix.vcf')
     denovo_filename = fixture_dirname('study_import/comp_chromprefix.tsv')
 
+    storage_config = default_dae_config.storage.test_filesystem
+    assert storage_config.storage_type == 'filesystem'
     study_id = f'test_comp_all_del_chrom_prefix_{genotype_storage_id}'
 
     argv = [
@@ -320,7 +328,6 @@ def test_import_comp_all_del_chrom_prefix(
 
     vs = list(study.query_variants())
     assert len(vs) == 35
-
     for v in vs:
         assert v.chromosome == '1', v
 

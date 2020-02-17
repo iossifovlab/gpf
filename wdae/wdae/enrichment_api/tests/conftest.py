@@ -24,7 +24,7 @@ def enrichment_builder(f1_trio, background_facade):
     enrichment_config = \
         background_facade.get_study_enrichment_config('f1_trio')
     backgorund = background_facade.get_study_background(
-        'f1_trio', 'codingLenBackgroundModel')
+        'f1_trio', 'coding_len_background_model')
     counter = EventsCounter()
     enrichment_tool = EnrichmentTool(enrichment_config, backgorund, counter)
     builder = EnrichmentBuilder(

@@ -243,7 +243,7 @@ class PreparePhenoBrowserBase(object):
         return res
 
     def _has_regression_measure(self, measure_name, instrument_name):
-        for _, reg in self.pheno_regressions.regression.items():
+        for _, reg in self.pheno_regressions.regression.field_values_iterator():
             if measure_name == reg.measure_name:
                 if instrument_name and reg.instrument_name and \
                         instrument_name != reg.instrument_name:
@@ -255,7 +255,7 @@ class PreparePhenoBrowserBase(object):
         if measure.measure_type not in [MeasureType.continuous,
                                         MeasureType.ordinal]:
             return
-        for reg_id, reg in self.pheno_regressions.regression.items():
+        for reg_id, reg in self.pheno_regressions.regression.field_values_iterator():
             res = {'measure_id': measure.measure_id}
             reg_measure = self._get_measure_by_name(reg.measure_name,
                                                     reg.instrument_name or
@@ -267,8 +267,7 @@ class PreparePhenoBrowserBase(object):
                 continue
 
             res['regression_id'] = reg_id
-            jitter = float(reg.get('jitter', 0.1))
-            res.update(self.build_regression(measure, reg_measure, jitter))
+            res.update(self.build_regression(measure, reg_measure, reg.jitter))
             if res.get('pvalue_regression_male') is not None or \
                res.get('pvalue_regression_female') is not None:
                 yield res
@@ -278,7 +277,7 @@ class PreparePhenoBrowserBase(object):
         db.build()
 
         if self.pheno_regressions:
-            for reg_id, reg_data in self.pheno_regressions.regression.items():
+            for reg_id, reg_data in self.pheno_regressions.regression.field_values_iterator():
                 db.save_regression({
                     'regression_id': reg_id,
                     'instrument_name': reg_data.instrument_name,

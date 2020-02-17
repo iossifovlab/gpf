@@ -3,38 +3,14 @@ import os
 from collections import OrderedDict
 from copy import deepcopy
 
-from dae.configuration.config_parser_base import ConfigParserBase
 
-
-class CommonReportsConfigParser(ConfigParserBase):
-
-    SECTION = 'commonReport'
-
-    SPLIT_STR_LISTS = (
-        'peopleGroups',
-        'effect_groups',
-        'effect_types',
-    )
-
-    CAST_TO_BOOL = (
-        'draw_all_families',
-    )
-
-    CAST_TO_INT = (
-        'families_count_show_id',
-    )
-
-    FILTER_SELECTORS = {
-        'people_groups_info': 'peopleGroups'
-    }
-
-    DRAW_ALL_FAMILIES_DEFAULT = False
+class CommonReportsConfigParser():
 
     @classmethod
     def parse(cls, config):
-        if not config or not config.study_config or \
-                not config.study_config.get(cls.SECTION, None):
-            return None
+        # if not config or not config.study_config or \
+        #         not config.study_config.get(cls.SECTION, None):
+        #     return None
 
         study_config = config.study_config
         config_section = deepcopy(study_config.get(cls.SECTION, None))

@@ -1,14 +1,12 @@
 import pytest
 
 import os
-from box import Box
-from copy import deepcopy
 
+from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.pedigrees.families_groups import FamiliesGroups
 
 from dae.common_reports.people_filters import PeopleGroupFilter, \
     MultiFilter, FilterCollection
-# from dae.common_reports.people_group_info import PeopleGroupsInfo
 
 
 def fixtures_dir():
@@ -84,19 +82,20 @@ def genotype_data_group4_config(vdb_fixture):
 
 @pytest.fixture(scope='session')
 def groups():
-    return {
-        'Role and Diagnosis': ['role', 'phenotype']
-    }
+    return [GPFConfigParser._dict_to_namedtuple({
+        "name": 'Role and Diagnosis',
+        "people_group_ids": ['role', 'phenotype']
+    })]
 
 
 @pytest.fixture(scope='session')
-def selected_people_groups(groups):
+def selected_people_groups():
     return ['phenotype']
 
 
 @pytest.fixture(scope='session')
 def people_groups(study1_config):
-    return study1_config.people_group_config.people_group
+    return study1_config.people_group
 
 
 @pytest.fixture(scope='session')
@@ -150,8 +149,6 @@ def denovo_variants_st1(study1):
     denovo_variants = list(denovo_variants)
 
     assert len(denovo_variants) == 3
-    print(denovo_variants)
-
     return denovo_variants
 
 
@@ -164,30 +161,12 @@ def denovo_variants_ds1(genotype_data_group1):
     denovo_variants = list(denovo_variants)
 
     assert len(denovo_variants) == 8
-    print(denovo_variants)
-
     return denovo_variants
 
 
 @pytest.fixture(scope='session')
-def common_reports_config(
-        study1, study1_config, people_groups, selected_people_groups, groups):
-    common_report_config = \
-        deepcopy(study1_config.study_config.get('commonReport', None))
-    common_report_config.families_count_show_id = \
-        int(common_report_config.families_count_show_id)
-    common_report_config['id'] = 'Study1'
-    common_report_config['file_path'] = '/path/to/common_report'
-    common_report_config['effect_groups'] = ['Missense']
-    common_report_config['effect_types'] = ['Frame-shift']
-    common_report_config['people_groups_info'] = people_groups
-    common_report_config['people_groups'] = selected_people_groups
-    common_report_config['groups'] = groups
-
-    return Box(
-        common_report_config, camel_killer_box=True, default_box=True,
-        default_box_attr=None
-    )
+def common_reports_config(common_report_facade):
+    return common_report_facade.get_common_report_config("Study1")
 
 
 @pytest.fixture(scope='session')

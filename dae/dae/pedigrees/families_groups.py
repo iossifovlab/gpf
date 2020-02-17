@@ -3,7 +3,7 @@ from collections import namedtuple
 from collections.abc import Mapping
 from functools import lru_cache
 
-from box import Box
+from dae.configuration.gpf_config_parser import GPFConfigParser
 
 from dae.variants.attributes import Role
 from dae.pedigrees.family import FamiliesData
@@ -54,16 +54,22 @@ class PeopleGroup:
 
     @staticmethod
     def from_config(people_group_id, people_group_config, getter=None):
+        domains = dict()
+        for index, domain in enumerate(people_group_config.domain):
+            domains[domain.id] = PeopleGroup.ValueDescriptor(
+                id=domain.id,
+                name=domain.name,
+                color=domain.color,
+                index=index
+            )
         return PeopleGroup(
             people_group_id,
             name=people_group_config.name,
-            domain={
-                value['id']: PeopleGroup.ValueDescriptor(index=index, **value)
-                for index, value in enumerate(
-                    people_group_config.domain.values())
-            },
+            domain=domains,
             default=PeopleGroup.ValueDescriptor(
-                **people_group_config.default,
+                id=people_group_config.default.id,
+                name=people_group_config.default.name,
+                color=people_group_config.default.color,
                 index=999_999_999),
             source=people_group_config.source,
             getter=getter
@@ -169,15 +175,15 @@ class PeopleMultiGroup(PeopleGroup):
 
 PEOPLE_GROUP_ROLES = PeopleGroup.from_config(
     'role',
-    Box({
+    GPFConfigParser._dict_to_namedtuple({
         'name': 'Role',
-        'domain': {
-            str(r): {
+        'domain': [
+            {
                 'id': str(r),
                 'name': str(r),
                 'color': PeopleGroup.grayscale32(index + 1)
             } for index, r in enumerate(Role.__members__)
-        },
+        ],
         'default': {
             'id': 'unknown',
             'name': 'unknown',
@@ -190,15 +196,15 @@ PEOPLE_GROUP_ROLES = PeopleGroup.from_config(
 
 PEOPLE_GROUP_FAMILY_SIZES = PeopleGroup.from_config(
     'family_size',
-    Box({
+    GPFConfigParser._dict_to_namedtuple({
         'name': 'Family Size',
-        'domain': {
-            str(size): {
+        'domain': [
+            {
                 'id': str(size),
                 'name': str(size),
                 'color': PeopleGroup.grayscale32(size)
             } for size in range(32, 1, -1)
-        },
+        ],
         'default': {
             'id': '>=32',
             'name': '>=32',
@@ -212,32 +218,32 @@ PEOPLE_GROUP_FAMILY_SIZES = PeopleGroup.from_config(
 
 PEOPLE_GROUP_SEXES = PeopleGroup.from_config(
     'sex',
-    Box({
+    GPFConfigParser._dict_to_namedtuple({
         'name': 'Sex',
-        'domain': {
-            'M': {
+        'domain': [
+            {
                 'id': 'M',
                 'name': 'M',
                 'color': '#e35252',
             },
-            'F': {
+            {
                 'id': 'F',
                 'name': 'F',
                 'color': '#b8008a',
             },
-            'U': {
+            {
                 'id': 'U',
                 'name': 'U',
                 'color': '#aaaaaa',
             }
-        },
+        ],
         'default': {
             'id': 'U',
             'name': 'U',
             'color': '#aaaaaa',
         },
         'source': 'sex',
-    }, default_box=True))
+    }))
 
 
 PEOPLE_GROUP_ROLES_SEXES = PeopleMultiGroup([
@@ -248,32 +254,32 @@ PEOPLE_GROUP_ROLES_SEXES = PeopleMultiGroup([
 
 PEOPLE_GROUP_STATUS = PeopleGroup.from_config(
     'status',
-    Box({
+    GPFConfigParser._dict_to_namedtuple({
         'name': 'Status',
-        'domain': {
-            'affected': {
+        'domain': [
+            {
                 'id': 'affected',
                 'name': 'affected',
                 'color': '#e35252',
             },
-            'unaffected': {
+            {
                 'id': 'unaffected',
                 'name': 'unaffected',
                 'color': '#b8008a',
             },
-            'unspecified': {
+            {
                 'id': 'unspecified',
                 'name': 'unspecified',
                 'color': '#aaaaaa',
             }
-        },
+        ],
         'default': {
             'id': 'unknown',
             'name': 'unknown',
             'color': '#bbbbbb',
         },
         'source': 'status',
-    }, default_box=True))
+    }))
 
 
 class FamiliesGroup(PeopleGroup):
@@ -444,10 +450,10 @@ class FamiliesGroups(Mapping):
     @staticmethod
     def from_config(families, people_groups_config):
         result = FamiliesGroups(families)
-        for people_group_id in people_groups_config:
+        for people_group in people_groups_config:
             people_group = PeopleGroup.from_config(
-                people_group_id,
-                people_groups_config[people_group_id]
+                people_group.section_id(),
+                people_group
             )
             result.add_families_group(people_group)
         return result

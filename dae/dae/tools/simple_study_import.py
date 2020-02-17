@@ -18,8 +18,7 @@ from dae.pedigrees.loader import FamiliesLoader
 
 
 def cli_arguments(dae_config, argv=sys.argv[1:]):
-    default_genotype_storage_id = \
-        dae_config.get('genotype_storage', {}).get('default', None)
+    default_genotype_storage_id = dae_config.genotype_storage.default
 
     parser = argparse.ArgumentParser(
         description='simple import of new study data',

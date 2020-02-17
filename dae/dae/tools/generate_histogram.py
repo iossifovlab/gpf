@@ -11,7 +11,8 @@ import numpy as np
 import matplotlib as mpl; mpl.use('PS')  # noqa
 import matplotlib.pyplot as plt; plt.ioff()  # noqa
 
-from dae.gene.score_config_parser import ScoreConfigParser
+from dae.configuration.gpf_config_parser import GPFConfigParser
+from dae.configuration.schemas.score_file_conf import score_file_conf_schema
 
 
 def get_argument_parser():
@@ -230,8 +231,7 @@ def main():
 
     opts = get_argument_parser().parse_args()
 
-    config = ScoreConfigParser.read_and_parse_file_configuration(
-        opts.config, '')
+    config = GPFConfigParser.load_config(opts.config, score_file_conf_schema)
 
     score_histograms_info = []
 

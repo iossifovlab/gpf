@@ -1,5 +1,4 @@
-from box import Box
-
+from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.annotation.tools.cleanup_annotator import CleanupAnnotator
 from dae.annotation.tools.annotator_config import AnnotationConfigParser
 
@@ -12,21 +11,19 @@ Y:4372
 
 
 def test_cleanup_annotator(capsys, variants_io, genomes_db_2013):
-    opts = Box({}, default_box=True, default_box_attr=None)
-
     section_config = AnnotationConfigParser.parse_section(
-        Box({
-            'options': opts,
+        GPFConfigParser._dict_to_namedtuple({
+            'options': {},
             'columns': {
                 'cleanup': 'id, variant',
             },
-            'annotator': 'cleanup_annotator.CleanupAnnotator'
-        }),
-        genomes_db_2013
+            'annotator': 'cleanup_annotator.CleanupAnnotator',
+            'virtual_columns': [],
+        })
     )
 
     with variants_io('fixtures/input.tsv') as io_manager:
-        annotator = CleanupAnnotator(section_config)
+        annotator = CleanupAnnotator(section_config, genomes_db_2013)
         assert annotator is not None
         capsys.readouterr()
         annotator.annotate_file(io_manager)

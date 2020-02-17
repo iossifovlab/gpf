@@ -108,11 +108,11 @@ class GenomicSequence(object):
         chrom = chrom.replace('chr', '')
         if chrom == 'X':
             return in_any_region(
-                chrom, pos, self.pseudo_autosomal_regions.x['region']
+                chrom, pos, self.pseudo_autosomal_regions.X
             )
         elif chrom == 'Y':
             return in_any_region(
-                chrom, pos, self.pseudo_autosomal_regions.y['region']
+                chrom, pos, self.pseudo_autosomal_regions.Y
             )
         else:
             return False

@@ -7,7 +7,7 @@ from dae.gene.weights import GeneWeight
 
 
 def test_weights_default(gene_info_config):
-    config = gene_info_config.gene_weights.get('RVIS_rank')
+    config = gene_info_config.gene_weights.RVIS_rank
     w = GeneWeight(config)
 
     assert w.df is not None
@@ -16,7 +16,7 @@ def test_weights_default(gene_info_config):
 
 
 def test_weights_min_max(gene_info_config):
-    config = gene_info_config.gene_weights.get('LGD_rank')
+    config = gene_info_config.gene_weights.LGD_rank
     w = GeneWeight(config)
 
     assert 1.0 == w.min()
@@ -24,7 +24,7 @@ def test_weights_min_max(gene_info_config):
 
 
 def test_weights_get_genes(gene_info_config):
-    config = gene_info_config.gene_weights.get('LGD_rank')
+    config = gene_info_config.gene_weights.LGD_rank
     w = GeneWeight(config)
 
     genes = w.get_genes(1.5, 5.0)

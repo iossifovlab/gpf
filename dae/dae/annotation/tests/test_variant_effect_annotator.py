@@ -1,25 +1,21 @@
 import pytest
 
-from box import Box
-
+from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.annotation.tools.annotator_config import AnnotationConfigParser
 from dae.annotation.tools.effect_annotator import VariantEffectAnnotator
 
 
 @pytest.fixture(scope='session')
 def effect_annotator(genomes_db_2013):
-    options = Box({
+    options = GPFConfigParser._dict_to_namedtuple({
         'vcf': True,
         'direct': False,
         'r': 'reference',
         'a': 'alternative',
         'c': 'chrom',
         'p': 'position',
-
-        # 'c': 'CSHL:chr',
-        # 'p': 'CSHL:position',
-        # 'v': 'CSHL:variant',
-    }, default_box=True, default_box_attr=None)
+        'prom_len': 0,
+    })
 
     columns = {
         'effect_type': 'effect_type_1',
@@ -32,15 +28,15 @@ def effect_annotator(genomes_db_2013):
     }
 
     config = AnnotationConfigParser.parse_section(
-        Box({
+        GPFConfigParser._dict_to_namedtuple({
             'options': options,
             'columns': columns,
-            'annotator': 'effect_annotator.VariantEffectAnnotator'
-        }),
-        genomes_db_2013
+            'annotator': 'effect_annotator.VariantEffectAnnotator',
+            'virtual_columns': [],
+        })
     )
 
-    annotator = VariantEffectAnnotator(config)
+    annotator = VariantEffectAnnotator(config, genomes_db_2013)
     assert annotator is not None
 
     return annotator

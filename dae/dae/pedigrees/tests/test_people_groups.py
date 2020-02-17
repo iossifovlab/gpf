@@ -1,7 +1,7 @@
 import os
 import pytest
-from box import Box
 # from dae.pedigrees.tests.conftest import relative_to_this_folder
+from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.pedigrees.loader import FamiliesLoader
 from dae.pedigrees.families_groups import PeopleGroup, \
     FamiliesGroup, FamiliesSizeGroup, \
@@ -11,7 +11,7 @@ from dae.pedigrees.families_groups import PeopleGroup, \
 
 @pytest.fixture
 def people_group_config1():
-    return Box({
+    return GPFConfigParser._dict_to_namedtuple({
         'name': 'Study phenotype',
         'domain': {
             'healthy': {
@@ -31,12 +31,12 @@ def people_group_config1():
             'color': '#aaaaaa',
         },
         'source': 'phenotype',
-    }, default_box=True)
+    })
 
 
 @pytest.fixture
 def people_group_config2():
-    return Box({
+    return GPFConfigParser._dict_to_namedtuple({
         'name': 'Study phenotype2',
         'domain': {
             'a': {
@@ -61,12 +61,12 @@ def people_group_config2():
             'color': '#aaaaaa',
         },
         'source': 'pheno2',
-    }, default_box=True)
+    })
 
 
 @pytest.fixture
 def people_group_role():
-    return Box({
+    return GPFConfigParser._dict_to_namedtuple({
         'name': 'Role',
         'domain': {
             'prb': {
@@ -96,12 +96,12 @@ def people_group_role():
             'color': '#aaaaaa',
         },
         'source': 'role',
-    }, default_box=True)
+    })
 
 
 @pytest.fixture
 def people_group_status():
-    return Box({
+    return GPFConfigParser._dict_to_namedtuple({
         'name': 'Status',
         'domain': {
             'affected': {
@@ -121,7 +121,7 @@ def people_group_status():
             'color': '#aaaaaa',
         },
         'source': 'status',
-    }, default_box=True)
+    })
 
 
 def test_peple_group_config(people_group_config1):

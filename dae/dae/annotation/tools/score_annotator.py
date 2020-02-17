@@ -2,7 +2,7 @@ import sys
 import os
 import glob
 
-from box import Box
+from dae.configuration.gpf_config_parser import GPFConfigParser
 
 from dae.variants.attributes import VariantType
 
@@ -14,8 +14,8 @@ from dae.annotation.tools.score_file_io import ScoreFile
 
 class VariantScoreAnnotatorBase(VariantAnnotatorBase):
 
-    def __init__(self, config):
-        super(VariantScoreAnnotatorBase, self).__init__(config)
+    def __init__(self, config, genomes_db):
+        super(VariantScoreAnnotatorBase, self).__init__(config, genomes_db)
 
         self._init_score_file()
 
@@ -38,13 +38,13 @@ class VariantScoreAnnotatorBase(VariantAnnotatorBase):
 
     def collect_annotator_schema(self, schema):
         super(VariantScoreAnnotatorBase, self).collect_annotator_schema(schema)
-        for native, output in self.config.columns.items():
+        for native, output in self.config.columns.field_values_iterator():
             type_name = self.score_file.schema.columns[native].type_name
             schema.create_column(output, type_name)
 
     def _scores_not_found(self, aline):
         values = {
-            self.config.columns[score_name]:
+            getattr(self.config.columns, score_name):
             self.score_file.no_score_value
             for score_name in self.score_names}
         aline.update(values)
@@ -75,8 +75,8 @@ class VariantScoreAnnotatorBase(VariantAnnotatorBase):
 
 class PositionScoreAnnotator(VariantScoreAnnotatorBase):
 
-    def __init__(self, config):
-        super(PositionScoreAnnotator, self).__init__(config)
+    def __init__(self, config, genomes_db):
+        super(PositionScoreAnnotator, self).__init__(config, genomes_db)
 
     def do_annotate(self, aline, variant):
         if variant is None:
@@ -93,7 +93,7 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
         total_count = sum(counts)
 
         for score_name in self.score_names:
-            column_name = self.config.columns[score_name]
+            column_name = getattr(self.config.columns, score_name)
             values = scores[score_name]
             assert len(values) > 0
             if len(values) == 1:
@@ -106,8 +106,8 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
 
 class NPScoreAnnotator(VariantScoreAnnotatorBase):
 
-    def __init__(self, config):
-        super(NPScoreAnnotator, self).__init__(config)
+    def __init__(self, config, genomes_db):
+        super(NPScoreAnnotator, self).__init__(config, genomes_db)
         assert self.score_file.ref_name is not None
         assert self.score_file.alt_name is not None
         self.ref_name = self.score_file.ref_name
@@ -126,7 +126,7 @@ class NPScoreAnnotator(VariantScoreAnnotatorBase):
             self._scores_not_found(res)
         else:
             for score_name in self.score_names:
-                column_name = self.config.columns[score_name]
+                column_name = getattr(self.config.columns, score_name)
                 res[column_name] = matched_df[score_name].mean()
         return res
 
@@ -145,7 +145,7 @@ class NPScoreAnnotator(VariantScoreAnnotatorBase):
         count = group_df['COUNT'].sum()
         res = {}
         for score_name in self.score_names:
-            column_name = self.config.columns[score_name]
+            column_name = getattr(self.config.columns, score_name)
             total_df = group_df[score_name] * group_df['COUNT']
             res[column_name] = total_df.sum()/count
 
@@ -185,11 +185,11 @@ class NPScoreAnnotator(VariantScoreAnnotatorBase):
 
 class PositionMultiScoreAnnotator(CompositeVariantAnnotator):
 
-    def __init__(self, config):
-        super(PositionMultiScoreAnnotator, self).__init__(config)
+    def __init__(self, config, genomes_db):
+        super(PositionMultiScoreAnnotator, self).__init__(config, genomes_db)
         assert self.config.options.scores_directory is not None
 
-        for score_name in self.config.columns.keys():
+        for score_name in self.config.columns._fields:
             annotator = self._build_annotator_for(score_name)
             self.add_annotator(annotator)
 
@@ -207,22 +207,22 @@ class PositionMultiScoreAnnotator(CompositeVariantAnnotator):
             self.config.options.scores_directory
 
         score_filename = self._get_score_file(score_name)
-        options = Box(
-            self.config.options.to_dict(),
-            default_box=True, default_box_attr=None)
-        options.scores_file = score_filename
+
+        options = GPFConfigParser.modify_tuple(
+            self.config.options, {"scores_file": score_filename}
+        )
         columns = {
-            score_name: self.config.columns[score_name]
+            score_name: getattr(self.config.columns, score_name)
         }
 
         variant_config = AnnotationConfigParser.parse_section(
-            Box({
+            GPFConfigParser._dict_to_namedtuple({
                 'options': options,
                 'columns': columns,
-                'annotator': 'score_annotator.VariantScoreAnnotator'
-            }),
-            self.config.genomes_db
+                'annotator': 'score_annotator.VariantScoreAnnotator',
+                'virtual_columns': [],
+            })
         )
 
-        annotator = PositionScoreAnnotator(variant_config)
+        annotator = PositionScoreAnnotator(variant_config, self.genomes_db)
         return annotator

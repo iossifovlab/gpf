@@ -33,10 +33,7 @@ def parse_cli_arguments(argv, gpf_instance):
         help='path to directory which contains variants parquet data files'
     )
 
-    default_genotype_storage_id = \
-        gpf_instance.dae_config.\
-        get('genotype_storage', {}).\
-        get('default', None)
+    default_genotype_storage_id = gpf_instance.dae_config.genotype_storage.default
 
     parser.add_argument(
         '--genotype-storage', '--gs', type=str,

@@ -1,7 +1,8 @@
 import os
 import json
 
-from dae.common_reports.config import CommonReportsConfigParser
+from dae.configuration.gpf_config_parser import GPFConfigParser
+from dae.configuration.schemas.study_config import study_config_schema
 from dae.common_reports.common_report import CommonReport
 
 from dae.utils.dae_utils import join_line
@@ -118,14 +119,23 @@ class CommonReportFacade(object):
         if common_report_ids != cached_ids:
             to_load = common_report_ids - cached_ids
             for common_report_id in to_load:
-                self._load_common_report_config_in_cache(common_report_id)
                 self._load_common_report_in_cache(common_report_id)
 
     def _load_common_report_config_in_cache(self, common_report_id):
-        common_report_config = CommonReportsConfigParser.parse(
-            self.gpf_instance.get_genotype_data_config(common_report_id))
-        if common_report_config is None:
+        genotype_data_config = self.gpf_instance.get_genotype_data_config(common_report_id)
+
+        if genotype_data_config is None:
             return
+
+        common_report_config = genotype_data_config.common_report
+
+        if not common_report_config.enabled:
+            return
+
+        common_report_config = GPFConfigParser.modify_tuple(
+            common_report_config,
+            {"people_group": genotype_data_config.people_group}
+        )
 
         self._common_report_config_cache[common_report_id] = \
             common_report_config
@@ -141,7 +151,7 @@ class CommonReportFacade(object):
 
         common_reports_path = common_report_config.file_path
 
-        if not os.path.exists(common_reports_path):
+        if not common_reports_path or not os.path.exists(common_reports_path):
             return
 
         with open(common_reports_path, 'r') as crf:

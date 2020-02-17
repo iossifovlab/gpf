@@ -67,20 +67,20 @@ class PipelineAnnotator(CompositeVariantAnnotator):
         # schema = annotation_schema.to_arrow()
         # return schema
 
-    def __init__(self, config):
-        super(PipelineAnnotator, self).__init__(config)
+    def __init__(self, config, genomes_db):
+        super(PipelineAnnotator, self).__init__(config, genomes_db)
 
     @staticmethod
     def build(options, config_file, work_dir, genomes_db, defaults=None):
         pipeline_config = \
             AnnotationConfigParser.read_and_parse_file_configuration(
-                options, config_file, work_dir, genomes_db, defaults
+                options, config_file, defaults
             )
         assert pipeline_config.sections
 
-        pipeline = PipelineAnnotator(pipeline_config)
+        pipeline = PipelineAnnotator(pipeline_config, genomes_db)
         for section_config in pipeline_config.sections:
-            annotator = AnnotatorFactory.make_annotator(section_config)
+            annotator = AnnotatorFactory.make_annotator(section_config, genomes_db)
             pipeline.add_annotator(annotator)
             output_columns = [
                 col for col in annotator.config.output_columns

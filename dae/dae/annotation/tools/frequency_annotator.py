@@ -6,8 +6,8 @@ from dae.annotation.tools.score_annotator import VariantScoreAnnotatorBase
 
 class FrequencyAnnotator(VariantScoreAnnotatorBase):
 
-    def __init__(self, config):
-        super(FrequencyAnnotator, self).__init__(config)
+    def __init__(self, config, genomes_db):
+        super(FrequencyAnnotator, self).__init__(config, genomes_db)
 
     def _init_score_file(self):
         super(FrequencyAnnotator, self)._init_score_file()
@@ -44,7 +44,7 @@ class FrequencyAnnotator(VariantScoreAnnotatorBase):
                       file=sys.stderr)
 
             variant_index = scores[self.variant_col_name].index(variant)
-            for native, output in self.config.columns.items():
+            for native, output in self.config.columns.field_values_iterator():
                 # FIXME: this conversion should come from schema
                 val = scores[native][variant_index]
                 try:

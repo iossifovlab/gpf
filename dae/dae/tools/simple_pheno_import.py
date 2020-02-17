@@ -14,7 +14,8 @@ from dae.pheno.prepare.ped_prepare import PrepareVariables
 from dae.tools.pheno2browser import build_pheno_browser
 
 from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.pheno.utils.config import PhenoRegressionConfigParser
+from dae.configuration.gpf_config_parser import GPFConfigParser
+from dae.configuration.schemas.phenotype_data import regression_conf_schema
 
 
 def pheno_cli_parser():
@@ -156,8 +157,7 @@ def main(argv):
             os.makedirs(args.browser_dir)
 
         config = parse_phenotype_data_config(args)
-        regressions = PhenoRegressionConfigParser.\
-            read_and_parse_file_configuration(args.regression, '') \
+        regressions = GPFConfigParser.load_config(args.regression, regression_conf_schema) \
             if args.regression else None
 
         prep = PrepareVariables(config)
