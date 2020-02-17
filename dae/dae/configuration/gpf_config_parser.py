@@ -46,22 +46,22 @@ class GPFConfigParser:
     def _dict_to_namedtuple(
         cls, input_dict: dict, dict_name: str = "root"
     ) -> Tuple[Any]:
-        tup_ctor = namedtuple(dict_name, input_dict.keys())
+        CONFIG_TUPLE = namedtuple(dict_name, input_dict.keys())
 
-        class DefaultValueTuple(tup_ctor):
+        class ConfigTuple(CONFIG_TUPLE):
             def __getattr__(self, name):
                 # FIXME Temporary hack to enable default values
                 # only for public attributes
                 if name[0:2] == '__':
                     raise AttributeError()
-                print(
-                    f'WARNING: Attempting to get non-existent attribute '
-                    f'{name} on tuple!', file=sys.stderr)
+                # print(
+                #     f'WARNING: Attempting to get non-existent attribute '
+                #     f'{name} on tuple!', file=sys.stderr)
                 return None
 
             def __repr__(self):
-                retval = super(DefaultValueTuple, self).__repr__()
-                return retval.replace('DefaultValueTuple', self.section_id())
+                retval = super(ConfigTuple, self).__repr__()
+                return retval.replace('ConfigTuple', self.section_id())
 
             def section_id(self):
                 return dict_name
@@ -82,7 +82,7 @@ class GPFConfigParser:
                     for item in value
                 ]
 
-        return DefaultValueTuple(*input_dict.values())
+        return ConfigTuple(*input_dict.values())
 
     @classmethod
     def _namedtuple_to_dict(cls, tup: Tuple[Any]) -> Dict[str, Any]:
@@ -129,7 +129,7 @@ class GPFConfigParser:
 
     @classmethod
     def load_config(
-        cls, filename: str, schema: dict, default_filename: str = None
+        cls, filename: str, schema: dict, default_config_filename: str = None
     ) -> Tuple[Any]:
         assert os.path.exists(filename), f"{filename} does not exist!"
 
@@ -138,8 +138,8 @@ class GPFConfigParser:
         )
 
         config = cls.parse_config(filename)
-        if default_filename:
-            default_config = cls.parse_config(default_filename)
+        if default_config_filename:
+            default_config = cls.parse_config(default_config_filename)
             config = recursive_dict_update(default_config, config)
 
         assert validator.validate(config), validator.errors
@@ -147,10 +147,10 @@ class GPFConfigParser:
 
     @classmethod
     def load_directory_configs(
-        cls, dirname: str, schema: dict, default_filename: str = None
+        cls, dirname: str, schema: dict, default_config_filename: str = None
     ) -> List[Tuple[Any]]:
         return [
-            cls.load_config(config_path, schema, default_filename)
+            cls.load_config(config_path, schema, default_config_filename)
             for config_path in cls._collect_directory_configs(dirname)
         ]
 
