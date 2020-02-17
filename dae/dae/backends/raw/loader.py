@@ -632,7 +632,10 @@ class VariantsGenotypesLoader(VariantsLoader):
         for key, value in params.items():
             assert key in param_defaults, (key, list(param_defaults.keys()))
             if value != param_defaults[key]:
-                result[key] = f'{value}'
+                if value is None:
+                    result[key] = ''
+                else:
+                    result[key] = f'{value}'
 
         return result
 
