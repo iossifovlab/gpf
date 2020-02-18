@@ -1,0 +1,20 @@
+<gpf-table noScrollOptimization="true" [dataSource]="queries" style="display: inline-block">
+      <gpf-table-column>
+        <gpf-table-header caption=""></gpf-table-header>
+        <gpf-table-content>
+            <span *gpfTableCellContent="let data">
+                <a href="{{data.url}}" class="btn btn-primary">Load</a>
+                <a href="{{data.url}}" class="btn btn-secondary">Copy link</a>
+                <button class="btn btn-danger" (click)="deleteQuery(data.uuid)">Delete</button>
+            </span>
+        </gpf-table-content>
+      </gpf-table-column>
+      <gpf-table-column>
+        <gpf-table-header caption="Query name" field="name"></gpf-table-header>
+        <gpf-table-content field="name"></gpf-table-content>
+      </gpf-table-column>
+      <gpf-table-column>
+        <gpf-table-header caption="Query description" field="description"></gpf-table-header>
+        <gpf-table-content field="description"></gpf-table-content>
+      </gpf-table-column>
+</gpf-table>

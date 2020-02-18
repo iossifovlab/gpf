@@ -28,7 +28,6 @@ export class LoadQueryComponent implements OnInit {
   ) { }
 
   ngOnInit() {
-      console.log('LoadQueryComponent loaded');
       this.route.params.subscribe(
           params => {
               if (!params['uuid']) {
@@ -51,7 +50,6 @@ export class LoadQueryComponent implements OnInit {
   }
 
   private restoreQuery(queryData: {}, page: string) {
-      console.log(queryData, page);
       if (page in PAGE_TYPE_TO_NAVIGATE) {
           let navigationParams = 
               PAGE_TYPE_TO_NAVIGATE[page](queryData['datasetId']);

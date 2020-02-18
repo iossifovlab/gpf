@@ -132,7 +132,7 @@ import { GenotypeBrowserSingleViewComponent } from './genotype-browser-single-vi
 import { GenotypePreviewFieldComponent } from './genotype-preview-field/genotype-preview-field.component';
 import { ErrorsAlertComponent } from './errors-alert/errors-alert.component';
 import { SmallRemoveButtonComponent } from './small-remove-button/small-remove-button.component';
-import { SaveQueryButtonComponent } from './save-query-button/save-query-button.component';
+import { ShareQueryButtonComponent } from './share-query-button/share-query-button.component';
 import { LoadQueryComponent } from './load-query/load-query.component';
 import { PerfectlyDrawablePedigreeComponent } from './perfectly-drawable-pedigree/perfectly-drawable-pedigree.component';
 import { PedigreeMockService } from './perfectly-drawable-pedigree/pedigree-mock.service';
@@ -144,6 +144,9 @@ import { AddButtonComponent } from './add-button/add-button.component';
 import { RemoveButtonComponent } from './remove-button/remove-button.component';
 import { PopupComponent } from './popup/popup.component';
 import { PresentInRoleComponent } from './present-in-role/present-in-role.component';
+import { SaveQueryComponent } from './save-query/save-query.component';
+import { SavedQueriesTableComponent } from './saved-queries-table/saved-queries-table.component';
+import { SavedQueriesComponent } from './saved-queries/saved-queries.component';
 import { InheritancetypesComponent } from './inheritancetypes/inheritancetypes.component';
 
 const appRoutes: Routes = [
@@ -218,6 +221,10 @@ const appRoutes: Routes = [
   {
     path: 'load-query/:uuid',
     component: LoadQueryComponent
+  },
+  {
+    path: 'queries',
+    component: SavedQueriesComponent
   },
   {
     path: '**',
@@ -310,7 +317,7 @@ const appRoutes: Routes = [
     GenotypeBrowserSingleViewComponent,
     GenotypePreviewFieldComponent,
     ErrorsAlertComponent,
-    SaveQueryButtonComponent,
+    ShareQueryButtonComponent,
     LoadQueryComponent,
     PerfectlyDrawablePedigreeComponent,
     NonPdpPedigreesComponent,
@@ -321,6 +328,9 @@ const appRoutes: Routes = [
     RemoveButtonComponent,
     PopupComponent,
     PresentInRoleComponent,
+    SaveQueryComponent,
+    SavedQueriesTableComponent,
+    SavedQueriesComponent,
     InheritancetypesComponent,
   ],
   imports: [

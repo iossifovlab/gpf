@@ -17,7 +17,8 @@
           <button type="button" class="btn btn-md btn-primary" (click)="submitQuery()" [disabled]="disableQueryButtons">
             Report
           </button>
-          <gpf-save-query-button queryType="phenotool" [disabled]="disableQueryButtons"></gpf-save-query-button>
+          <gpf-share-query-button queryType="phenotool"></gpf-share-query-button>
+          <gpf-save-query queryType="phenotool"></gpf-save-query>
         </div>
         <div class="btn-group">
           <form

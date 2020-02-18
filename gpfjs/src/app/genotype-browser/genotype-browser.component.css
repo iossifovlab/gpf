@@ -21,7 +21,7 @@
 .button {
   display: flex;
 }
-.button > input, gpf-save-query-button {
+.button > input, gpf-share-query-button {
   display: inline-block;
   margin-right: 5px;
 }
