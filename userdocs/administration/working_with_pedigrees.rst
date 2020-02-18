@@ -217,28 +217,28 @@ To see the tool's full functionality use::
     ped2ped.py --help
 
 To demonstrate how it works, we will use the sample data.
-To standardize the `example_families.ped` file use:
+To standardize the ``example_families.ped`` file use:
 
 .. code-block:: bash
 
     ped2ped.py example_families.ped \
     --ped-layout-mode generate -o example_family_standardized.ped
 
-The output `example_family_standardized.ped` file has two newly generated columns - `sampleId` and `layout`, which
+The output ``example_family_standardized.ped`` file has two newly generated columns - `sampleId` and `layout`, which
 are used by the GPF system.
 
 The `ped2ped.py` tool can also process pedigree files with noncanonical column names.
 For such cases it has arguments that can be used to specify which column contains the
-family id / role / sex / etc. For example, see the case of the ``example_families_with_unexpected_column_names.ped`` file:
+family id / role / sex / etc. For example, see the case of the ``example_families_with_noncanonical_column_names.ped`` file:
 
 .. code-block:: bash
 
     ped2ped.py example_families_with_noncanonical_column_names.ped \
     --ped-family Family_id --ped-person Person_id --ped-dad Dad_id --ped-mom Mom_id \
     --ped-sex Sex --ped-status Status --ped-role Role \
-    --ped-layout-mode generate -o example_families_from_unexpected_column_names.ped
+    --ped-layout-mode generate -o example_families_from_noncanonical_column_names.ped
 
-The `ped2ped.py` tool can also process pedigree files without headers. One such file is `example_families_without_header.ped`.
+The `ped2ped.py` tool can also process pedigree files without headers. One such file is ``example_families_without_header.ped``.
 In this case we have to map the column's index to a specific column name. The same way we mapped
 'Family_id' to the family id column in the upper example, here we map the first column to family id
 (Keep in mind the column indices begin from 0). See the example below:
@@ -270,10 +270,10 @@ In addition to that, it has a ``--mode`` flag, which supports two values:
 * `families`
     the tool will generate a family pedigree drawing for **every individual** family
 
-To demonstrate how to use the `draw_pedigree.py` tool we will visualize the `example_families.ped` file:
+To demonstrate how to use the `draw_pedigree.py` tool we will visualize the ``example_families.ped`` file:
 
 .. code-block:: bash
 
     draw_pedigree.py example_families.ped -o example_families_visualization.pdf
 
-This command outputs `example_families_visualization.pdf` file with the pedigree drawings.
+This command outputs ``example_families_visualization.pdf`` file with the pedigree drawings.
