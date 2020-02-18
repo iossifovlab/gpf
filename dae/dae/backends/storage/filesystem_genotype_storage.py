@@ -45,7 +45,7 @@ class FilesystemGenotypeStorage(GenotypeStorage):
                 variants_loader, vcf_filename
             )
 
-            return RawMemoryVariants([variants_loader])
+            return RawMemoryVariants([variants_loader], families)
 
         else:
             start = time.time()
@@ -93,8 +93,7 @@ class FilesystemGenotypeStorage(GenotypeStorage):
                 )
                 loaders.append(variants_loader)
 
-            assert len(loaders) > 0
-            return RawMemoryVariants(loaders)
+            return RawMemoryVariants(loaders, families)
 
     def simple_study_import(
             self, study_id,
