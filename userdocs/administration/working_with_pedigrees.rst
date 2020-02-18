@@ -1,56 +1,86 @@
-Pedigree Generation Guide
-=========================
+Working With Pedigrees Guide
+============================
 
 
 Brief outline
 #############
-
-Starting off with a pedigree file that contains information about families and their individuals, we will run the file through two tools - the first one will add a column to the pedigree file - a layout column that contains the coordinates of each individual in the pedigree drawing that will be produced - and the second tool will generate a PDF file which contains the pedigree drawing, as well as some optional info.
-
-This guide covers most cases; some specific notes regarding usage with studies containing multigenerational pedigrees are given at the end.
+Starting off with a pedigree file that contains information about families and their individuals, we will run the file through two tools.
+The first one is `ped2ped.py` whose task is to standardize the pedigree file to suit the GPF system. It can add a layout column that
+contains the coordinates of each individual in the pedigree drawing. It can also add headers to files that don't have them.
+The second tool is `draw_pedigree.py` which will generate a PDF file with the pedigree drawings.
+There are provided examples in the end of this guide demonstrating how to use these tools.
 
 
 Prerequisites
 #############
+The sample data used in the examples of this guide can be found here - ...
 
-You will need a pedigree file (usually found with a .ped extension), which is a text file with delimiter-separated values (comma, tab, etc.), that contains the following columns:
+A pedigree file (usually found with a .ped extension) is a text file with delimiter-separated values (comma, tab, etc.),
+that contains the following columns:
 
 Family ID:
-  The values in this column must contain valid family IDs.
-ID:
+  IDs for families.
+Person ID:
   IDs for separate individuals.
 Father ID:
-  A column that specifies the ID of the individual's father.
+  IDs of the individual's father.
 Mother ID:
-  A column that specifies the ID of the individual's mother.
+  IDs of the individual's mother.
 Sex:
   The sex of the individual.
 Status:
-  A column that specifies the status of the individual - whether he is affected or not.
+  The status of the individual - whether they are affected or not.
 Role:
-  The role of the individual within his family.
+  The role of the individual within their family.
 
 
 Preparing the pedigree data
 ###########################
 
 The pedigree data may require preparation beforehand. This section describes
- the requirements for pedigree data that must be met in order to use the tools.
+the requirements for pedigree data that must be met in order to use the tools.
 
 In some cases, the initial pedigree file must be expanded with additional
 individuals in order to correctly form some families. Following that,
 individuals must be connected to their parents from the newly added
 individuals.
 
-Next, we need to replace the values in the sex, role and status columns
-with those supported by the GPF system -
-:ref:`sex <allowed_values_sex>`, :ref:`role <allowed_values_role>`,
-:ref:`status <allowed_values_status>`. Each of these properties supports
-synonyms, that are listed in the tables below.
+We must ensure the values in the sex, status and role columns in the file are supported by
+the GPF system. You can see a list of the supported values here - :ref:`sex <allowed_values_sex>`, :ref:`status <allowed_values_status>`,
+:ref:`role <allowed_values_role>`. Also these properties support synonyms, which are listed on the tables below:
 
 
-Supported values for roles
+Supported values for `sex`
 ++++++++++++++++++++++++++
+
+====================================    ========================================================================================================
+Sex column canonical values             Synonyms (case insensitive)
+====================================    ========================================================================================================
+F                                       female, F, 2
+
+M                                       male, M, 1
+
+U                                       unspecified, U, 0
+====================================    ========================================================================================================
+
+
+Supported values for `status`
++++++++++++++++++++++++++++++
+
+====================================    ========================================================================================================
+Sex column canonical values             Synonyms (case insensitive)
+====================================    ========================================================================================================
+affected                                affected, 2
+
+unaffected                              unaffected, 1
+
+unspecified                             unspecified, -, 0
+====================================    ========================================================================================================
+
+
+
+Supported values for `role`
+++++++++++++++++++++++++++++
 
 ====================================    ========================================================================================================
 Role column canonical values            Synonyms (case insensitive)
@@ -101,36 +131,8 @@ unknown                                 unknown
 ====================================    ========================================================================================================
 
 
-Supported values for sex
-++++++++++++++++++++++++
-
-====================================    ========================================================================================================
-Sex column canonical values             Synonyms (case insensitive)
-====================================    ========================================================================================================
-F                                       female, F, 2
-
-M                                       male, M, 1
-
-U                                       unspecified, U, 0
-====================================    ========================================================================================================
-
-
-Supported values for status
-+++++++++++++++++++++++++++
-
-====================================    ========================================================================================================
-Sex column canonical values             Synonyms (case insensitive)
-====================================    ========================================================================================================
-affected                                affected, 2
-
-unaffected                              unaffected, 1
-
-unspecified                             unspecified, -, 0
-====================================    ========================================================================================================
-
-
-Common arguments for pedigree tools
-###################################
+Common arguments for the pedigree tools
+#######################################
 
 
 positional arguments:                                                                                                                                                                                                                                                                                                                                                                     
@@ -187,7 +189,7 @@ optional arguments:
 
     --ped-file-format PED_FILE_FORMAT
         Families file format. It should `pedigree` or
-        `simple`for simple family format [default: pedigree]
+        `simple` for simple family format [default: pedigree]
 
     --ped-layout-mode PED_LAYOUT_MODE
         Layout mode specifies how pedigrees drawing of each
@@ -201,43 +203,77 @@ optional arguments:
     --ped-sep PED_SEP
         Families file field separator [default: `\t`]
 
+    -o OUTPUT_FILENAME
+        specify the name of the output file
 
-Transform a pedigree file into default GPF form
+
+Transform a pedigree file into canonical GPF form
 ###############################################
 
-To transform a pedigree file into default GPF form one can use `ped2ped.py`
+To transform a pedigree file into canonical GPF form you can use the `ped2ped.py`
 tool.
+To see the tool's full functionality use::
 
-The tool has a '-h' or '--help' option, which brings out a list of possible
-arguments and brief descriptions.
+    ped2ped.py --help
 
+To demonstrate how it works, we will use the sample data.
+To standardize the `example_families.ped` file use:
 
 .. code-block:: bash
 
-    ped2ped.py inital_pedigree_file.ped \
-        ...<additional ped options>... \
-        -o output_pedigree_file.ped
+    ped2ped.py example_families.ped \
+    --ped-layout-mode generate -o example_family_standardized.ped
 
+The output `example_family_standardized.ped` file has two newly generated columns - `sampleId` and `layout`, which
+are used by the GPF system.
+
+The `ped2ped.py` tool can also process pedigree files with noncanonical column names.
+For such cases it has arguments that can be used to specify which column contains the
+family id / role / sex / etc. For example, see the case of the ``example_families_with_unexpected_column_names.ped`` file:
+
+.. code-block:: bash
+
+    ped2ped.py example_families_with_noncanonical_column_names.ped \
+    --ped-family Family_id --ped-person Person_id --ped-dad Dad_id --ped-mom Mom_id \
+    --ped-sex Sex --ped-status Status --ped-role Role \
+    --ped-layout-mode generate -o example_families_from_unexpected_column_names.ped
+
+The `ped2ped.py` tool can also process pedigree files without headers. One such file is `example_families_without_header.ped`.
+In this case we have to map the column's index to a specific column name. The same way we mapped
+'Family_id' to the family id column in the upper example, here we map the first column to family id
+(Keep in mind the column indices begin from 0). See the example below:
+
+.. code-block::
+
+    ped2ped.py example_families_without_header.ped \
+    --ped-no-header --ped-family 0 --ped-person 1 --ped-dad 2 --ped-mom 3 \
+    --ped-sex 4 --ped-status 5 --ped-role 6 \
+    --ped-layout-mode generate -o example_families_from_no_header.ped
 
 Visualize a pedigree file into PDF file
 #######################################
 
-To visualize a pedigree file into PDF file, that contains drawing of the
-families pedigrees one can use `draw_pedigrees.py` tool:
+To visualize a pedigree file into a PDF file, containing drawings of the
+family pedigrees you can use the `draw_pedigrees.py` tool.
+To see its full functionality use::
+
+    draw_pedigree.py --help
+
+Notice that it shares a lot of common flags with the `ped2ped.py` tool. Similar to the `ped2ped.py` tool,
+it can also process pedigree files with noncanonically named columns or without a header.
+
+In addition to that, it has a ``--mode`` flag, which supports two values:
+
+* `report`
+    the tool will generate a family pedigree drawing for **each unique family structure** family
+
+* `families`
+    the tool will generate a family pedigree drawing for **every individual** family
+
+To demonstrate how to use the `draw_pedigree.py` tool we will visualize the `example_families.ped` file:
 
 .. code-block:: bash
 
-    draw_pedigree.py pedigree_file_with_layout.ped \
-        --mode report \
-        ...<additional ped options>... \
-        -o pedigree_drawing.pdf
+    draw_pedigree.py example_families.ped -o example_families_visualization.pdf
 
-The `--mode` option supports two values:
-
-* `report`
-    the tool will generate a family pedigree drawing for each **type**
-    of family;
-
-* `families`
-    the tool will generate a family pedigree drawing for each  family.
-
+This command outputs `example_families_visualization.pdf` file with the pedigree drawings.
