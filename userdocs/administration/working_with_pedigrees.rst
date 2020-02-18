@@ -6,11 +6,9 @@ Brief outline
 #############
 Starting off with a pedigree file that contains information about families and their individuals, we will run the file through two tools.
 The first one is `ped2ped.py` whose task is to standardize the pedigree file to suit the GPF system. It can add a layout column that
-contains the coordinates of each individual in the pedigree drawing. It can also add columns and headers to files without such.
+contains the coordinates of each individual in the pedigree drawing. It can also add headers to files that don't have them.
 The second tool is `draw_pedigree.py` which will generate a PDF file with the pedigree drawings.
 There are provided examples in the end of this guide demonstrating how to use these tools.
-
-This guide covers most cases; some specific notes regarding usage with studies containing multigenerational pedigrees are given at the end.
 
 
 Prerequisites
@@ -33,7 +31,7 @@ Sex:
 Status:
   The status of the individual - whether they are affected or not.
 Role:
-  The role of the individual within his family.
+  The role of the individual within their family.
 
 
 Preparing the pedigree data
@@ -209,10 +207,10 @@ optional arguments:
         specify the name of the output file
 
 
-Transform a pedigree file into default GPF form
+Transform a pedigree file into canonical GPF form
 ###############################################
 
-To transform a pedigree file into default GPF form you can use the `ped2ped.py`
+To transform a pedigree file into canonical GPF form you can use the `ped2ped.py`
 tool.
 To see the tool's full functionality use::
 
@@ -226,27 +224,24 @@ To standardize the `example_families.ped` file use:
     ped2ped.py example_families.ped \
     --ped-layout-mode generate -o example_family_standardized.ped
 
-The outputed `example_family_standardized.ped` file has two newly generated columns - sampleId and layout - which
+The output `example_family_standardized.ped` file has two newly generated columns - `sampleId` and `layout`, which
 are used by the GPF system.
 
-The `ped2ped.py` tool can also process pedigree files with columns named differently than expected. For example see the
-`example_families_with_unexpected_column_names.ped` file. The family id column is expected to be named 'familyId', but
-here it's called 'Family_id'. For such cases the `ped2ped.py` tool has a flag for each column to map to a different name.
-For example, for the family id field, this flag would be '--ped-family', which takes one argument - the name of the column
-in the pedigree file that is supposed to be family id. In the example below you can see how to process the
-`example_families_with_unexpected_column_names.ped` file:
+The `ped2ped.py` tool can also process pedigree files with noncanonical column names.
+For such cases it has arguments that can be used to specify which column contains the
+family id / role / sex / etc. For example, see the case of the ``example_families_with_unexpected_column_names.ped`` file:
 
 .. code-block:: bash
 
-    ped2ped.py example_families_with_unexpected_column_names.ped \
+    ped2ped.py example_families_with_noncanonical_column_names.ped \
     --ped-family Family_id --ped-person Person_id --ped-dad Dad_id --ped-mom Mom_id \
     --ped-sex Sex --ped-status Status --ped-role Role \
     --ped-layout-mode generate -o example_families_from_unexpected_column_names.ped
 
-The `ped2ped.py` tool can also process pedigree files without headers. Such file is `example_families_without_header.ped`.
-In this case we have to map the column's order to a specific column name. The same way we mapped
+The `ped2ped.py` tool can also process pedigree files without headers. One such file is `example_families_without_header.ped`.
+In this case we have to map the column's index to a specific column name. The same way we mapped
 'Family_id' to the family id column in the upper example, here we map the first column to family id
-(Keep in mind the columns begin from 0, not from 1). See the example below:
+(Keep in mind the column indices begin from 0). See the example below:
 
 .. code-block::
 
@@ -259,23 +254,23 @@ Visualize a pedigree file into PDF file
 #######################################
 
 To visualize a pedigree file into a PDF file, containing drawings of the
-family pedigrees, you can use the `draw_pedigrees.py` tool.
+family pedigrees you can use the `draw_pedigrees.py` tool.
 To see its full functionality use::
 
     draw_pedigree.py --help
 
 Notice that it shares a lot of common flags with the `ped2ped.py` tool. Similar to the `ped2ped.py` tool,
-it can also process pedigree files without precisely named columns or without a header.
+it can also process pedigree files with noncanonically named columns or without a header.
 
-In addition to that, it has a '--mode' flag, which supports two values:
+In addition to that, it has a ``--mode`` flag, which supports two values:
 
 * `report`
-    the tool will generate a family pedigree drawing for **each type** of family
+    the tool will generate a family pedigree drawing for **each unique family structure** family
 
 * `families`
     the tool will generate a family pedigree drawing for **every individual** family
 
-To demonstrate how to use the `draw_pedigree.py` tool we will visualize the `example_families.ped` file. To do so use:
+To demonstrate how to use the `draw_pedigree.py` tool we will visualize the `example_families.ped` file:
 
 .. code-block:: bash
 
