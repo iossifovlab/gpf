@@ -36,7 +36,6 @@ class ImpalaFamilyVariants:
 
         super(ImpalaFamilyVariants, self).__init__()
         assert db, db
-        assert variant_table, variant_table
         assert pedigree_table, pedigree_table
 
         self.db = db
@@ -62,6 +61,8 @@ class ImpalaFamilyVariants:
         self._fetch_tblproperties()
 
     def count_variants(self, **kwargs):
+        if not self.variant_table:
+            return 0
         with self.impala.cursor() as cursor:
             query = self.build_count_query(**kwargs)
             # print('COUNT QUERY:', query)
@@ -79,6 +80,8 @@ class ImpalaFamilyVariants:
             return_unknown=None,
             limit=None):
 
+        if not self.variant_table:
+            return None
         with self.impala.cursor() as cursor:
             query = self.build_query(
                 regions=regions, genes=genes, effect_types=effect_types,
@@ -147,6 +150,8 @@ class ImpalaFamilyVariants:
         return ped_df
 
     def variant_schema(self):
+        if not self.variant_table:
+            return None
         with self.impala.cursor() as cursor:
             q = '''
                 DESCRIBE {db}.{variant}
@@ -175,6 +180,8 @@ class ImpalaFamilyVariants:
             return schema
 
     def _fetch_tblproperties(self):
+        if not self.variant_table:
+            return None
         with self.impala.cursor() as cursor:
             cursor.execute(f'DESCRIBE EXTENDED {self.db}.{self.variant_table}')
             rows = list(cursor)

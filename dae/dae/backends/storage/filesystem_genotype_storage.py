@@ -3,7 +3,10 @@ import shutil
 import time
 import glob
 
+import toml
+
 from dae.configuration.gpf_config_parser import GPFConfigParser
+from dae.configuration.study_config_builder import StudyConfigBuilder
 from dae.pedigrees.loader import FamiliesLoader
 
 from dae.backends.storage.genotype_storage import GenotypeStorage
@@ -106,11 +109,31 @@ class FilesystemGenotypeStorage(GenotypeStorage):
         variants_config = self._import_variants_files(
             study_id, variant_loaders)
 
-        return STUDY_CONFIG_TEMPLATE.format(
-            study_id=study_id,
-            genotype_storage=self.storage_config.section_id(),
-            files="\n".join([families_config, variants_config])
-        )
+        study_config = {
+            "id": study_id,
+            "conf_dir": ".",
+            "has_denovo": False,
+            "genotype_storage": {
+                "id": self.storage_config.section_id(),
+                "files": {
+                    "variants": variants_config,
+                    "pedigree": families_config,
+                }
+            },
+            "genotype_browser": {
+                "enabled": True
+            }
+        }
+        if not variant_loaders:
+            study_config['genotype_browser']['enabled'] = False
+        else:
+            variant_loaders[0].get_attribute('source_type')
+            if any([l.get_attribute('source_type') == 'denovo'
+                    for l in variant_loaders]):
+                study_config['has_denovo'] = True
+        study_dir = os.path.join(self.data_dir, study_id)
+        config_builder = StudyConfigBuilder(study_config, study_dir)
+        return config_builder.build_config()
 
     def _import_families_file(self, study_id, families_loader):
         source_filename = families_loader.filename
@@ -122,13 +145,11 @@ class FilesystemGenotypeStorage(GenotypeStorage):
         )
 
         params = families_loader.build_cli_params(families_loader.params)
-        params = "{" + ", ".join([
-            '{} = "{}"'.format(k, str(v).replace('\t', '\\t'))
-            for k, v in params.items()]) + "}"
-        config = STUDY_PEDIGREE_TEMPLATE.format(
-            path=destination_filename,
-            params=params
-        )
+
+        config = {
+            "path": destination_filename,
+            "params": params
+        }
 
         os.makedirs(
             os.path.dirname(destination_filename),
@@ -157,18 +178,14 @@ class FilesystemGenotypeStorage(GenotypeStorage):
             destination_filenames = list(
                 map(construct_destination_filename, source_filenames))
             params = variants_loader.build_cli_params(variants_loader.params)
-            params = ", ".join([
-                '{} = "{}"'.format(k, v)
-                for k, v in variants_loader.params.items() if v is not None])
             source_type = variants_loader.get_attribute('source_type')
 
-            config = STUDY_VARIANTS_TEMPLATE.format(
-                index=index,
-                path=' '.join(destination_filenames),
-                params="{" + params + "}",
-                source_type=source_type
-            )
-            print(config)
+            config = {
+                "path": ' '.join(destination_filenames),
+                "params": params,
+                "format": source_type
+            }
+
             result_config.append(config)
 
             os.makedirs(destination_dirname, exist_ok=True)
@@ -184,27 +201,4 @@ class FilesystemGenotypeStorage(GenotypeStorage):
                     print("copying:", fn, construct_destination_filename(fn))
                     shutil.copyfile(fn, construct_destination_filename(fn))
 
-        return "\n\n".join(result_config)
-
-
-STUDY_PEDIGREE_TEMPLATE = '''
-pedigree.path = "{path}"
-pedigree.params = {params}
-'''
-
-STUDY_VARIANTS_TEMPLATE = '''
-[[genotype_storage.files.variants]]
-path = "{path}"
-format = "{source_type}"
-params = {params}
-'''
-
-STUDY_CONFIG_TEMPLATE = '''
-id = "{study_id}"
-conf_dir = "."
-[genotype_storage]
-id = "{genotype_storage}"
-
-[genotype_storage.files]
-{files}
-'''
+        return result_config

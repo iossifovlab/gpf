@@ -141,28 +141,32 @@ class ImpalaGenotypeStorage(GenotypeStorage):
         parquet_variants = []
 
         parquet_filenames = None
-        for index, variant_loader in enumerate(variant_loaders):
-            assert isinstance(variant_loader, VariantsLoader), \
-                type(variant_loader)
+        if variant_loaders:
+            for index, variant_loader in enumerate(variant_loaders):
+                assert isinstance(variant_loader, VariantsLoader), \
+                    type(variant_loader)
 
-            if variant_loader.transmission_type == TransmissionType.denovo:
-                assert index < 100
+                if variant_loader.transmission_type == TransmissionType.denovo:
+                    assert index < 100
 
-                bucket_index = index  # denovo buckets < 100
-            elif variant_loader.transmission_type == \
-                    TransmissionType.transmitted:
-                bucket_index = index + 100  # transmitted buckets (>=100)
+                    bucket_index = index  # denovo buckets < 100
+                elif variant_loader.transmission_type == \
+                        TransmissionType.transmitted:
+                    bucket_index = index + 100  # transmitted buckets (>=100)
 
+                parquet_filenames = ParquetManager.build_parquet_filenames(
+                    output, bucket_index=bucket_index, study_id=study_id
+                )
+                ParquetManager.variants_to_parquet_filename(
+                    variant_loader, parquet_filenames.variant,
+                    bucket_index=bucket_index
+                )
+                parquet_variants.append(parquet_filenames.variant)
+        else:
             parquet_filenames = ParquetManager.build_parquet_filenames(
-                output, bucket_index=bucket_index, study_id=study_id
+                output, bucket_index=0, study_id=study_id
             )
-            ParquetManager.variants_to_parquet_filename(
-                variant_loader, parquet_filenames.variant,
-                bucket_index=bucket_index
-            )
-            parquet_variants.append(parquet_filenames.variant)
 
-        assert parquet_filenames is not None
         print("variants and families saved in:", parquet_filenames)
         families = families_loader.load()
 
@@ -181,7 +185,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
             self, study_id,
             variant_paths=[],
             pedigree_paths=[]):
-        assert variant_paths
+        assert variant_paths is not None
         assert pedigree_paths
 
         variant_hdfs_path, pedigree_hdfs_path = \
