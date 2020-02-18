@@ -137,6 +137,7 @@ genotype_storage_schema = {
             "variants": {
                 "type": "list",
                 "schema": {"type": "dict", "schema": variants_file},
+                "default": []
             },
         },
         "excludes": "tables",
