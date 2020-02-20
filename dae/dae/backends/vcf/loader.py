@@ -495,7 +495,8 @@ class VcfLoader(VariantsGenotypesLoader):
                 for vc in vcf_chromosomes
             ]
         else:
-            filenames = [vcf_files]
+            glob_filenames = [vcf_files]
+
         result = []
         for batches_globnames in glob_filenames:
             batches_result = []
