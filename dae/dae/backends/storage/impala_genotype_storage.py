@@ -71,11 +71,13 @@ class ImpalaGenotypeStorage(GenotypeStorage):
 
     @staticmethod
     def study_tables(study_config):
-        if study_config.tables and \
-                study_config.tables.pedigree and study_config.tables.variants:
+        storage_config = study_config.genotype_storage
+        if storage_config.tables and \
+                storage_config.tables.pedigree and \
+                storage_config.tables.variants:
             variant_table = study_config.tables.variants
             pedigree_table = study_config.tables.pedigree
-        elif study_config.tables and study_config.tables.pedigree:
+        elif storage_config.tables and storage_config.tables.pedigree:
             variant_table = None
             pedigree_table = study_config.tables.pedigree
         else:
@@ -86,7 +88,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
 
     def build_backend(self, study_config, genomes_db):
         variant_table, pedigree_table = \
-            self.study_tables(study_config.genotype_storage)
+            self.study_tables(study_config)
         family_variants = ImpalaFamilyVariants(
             self.impala_connection,
             self.storage_config.impala.db,
