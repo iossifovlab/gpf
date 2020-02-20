@@ -68,6 +68,7 @@ class DenovoLoader(VariantsGenotypesLoader):
             params=params)
 
         self.genome = genome
+        self.set_attribute('source_type', 'denovo')
 
         self.denovo_df = self.flexible_denovo_load(
             denovo_filename, genome, families=families,
