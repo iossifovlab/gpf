@@ -528,7 +528,7 @@ def variants_vcf(vcf_variants_loader):
             'vcf_omission_mode': 'omission'}):
 
         loader = vcf_variants_loader(path, params=params)
-        fvars = RawMemoryVariants([loader])
+        fvars = RawMemoryVariants([loader], loader.families)
         return fvars
 
     return builder
@@ -537,7 +537,7 @@ def variants_vcf(vcf_variants_loader):
 @pytest.fixture(scope='session')
 def variants_mem():
     def builder(loader):
-        fvars = RawMemoryVariants([loader])
+        fvars = RawMemoryVariants([loader], loader.families)
         return fvars
 
     return builder
