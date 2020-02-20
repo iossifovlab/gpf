@@ -107,6 +107,8 @@ class DenovoLoader(VariantsGenotypesLoader):
     def _full_variants_iterator_impl(self):
         self.regions = [Region.from_str(r) for r in self.regions]
         for region in self.regions:
+            if region is None:
+                continue
             region.chrom = self._adjust_chrom_prefix(region.chrom)
 
         for index, rec in enumerate(self.denovo_df.to_dict(orient='records')):
