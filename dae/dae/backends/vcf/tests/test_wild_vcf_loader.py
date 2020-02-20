@@ -5,8 +5,8 @@ from dae.backends.vcf.loader import VcfLoader
 def test_wild_vcf_loader_simple(
         fixture_dirname, gpf_instance_2013, temp_dirname):
 
-    vcf_file1 = fixture_dirname('multi_vcf/multivcf_missing1_chr{vw}.vcf.gz')
-    vcf_file2 = fixture_dirname('multi_vcf/multivcf_missing2_chr{vw}.vcf.gz')
+    vcf_file1 = fixture_dirname('multi_vcf/multivcf_missing1_chr{vc}.vcf.gz')
+    vcf_file2 = fixture_dirname('multi_vcf/multivcf_missing2_chr{vc}.vcf.gz')
     ped_file = fixture_dirname('multi_vcf/multivcf.ped')
 
     families_loader = FamiliesLoader(ped_file)

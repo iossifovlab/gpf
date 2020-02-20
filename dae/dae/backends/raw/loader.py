@@ -418,7 +418,7 @@ class VariantsGenotypesLoader(VariantsLoader):
         else:
             self.regions = regions
 
-        self._adjust_chrom_prefix = None
+        self._adjust_chrom_prefix = lambda chrom: chrom
         if params.get('add_chrom_prefix', None):
             self._chrom_prefix = params['add_chrom_prefix']
             self._adjust_chrom_prefix = self._add_chrom_prefix
@@ -583,12 +583,11 @@ class VariantsGenotypesLoader(VariantsLoader):
             self) -> Iterator[Tuple[SummaryVariant, List[FamilyVariant]]]:
         full_iterator = self._full_variants_iterator_impl()
         for summary_variant, family_variants in full_iterator:
-            if self._adjust_chrom_prefix is not None:
-                chrom = self._adjust_chrom_prefix(summary_variant.chromosome)
-                summary_variant._chromosome = chrom
-                for summary_allele in summary_variant.alleles:
-                    summary_allele._chromosome = chrom
-                    summary_allele._attributes["chrom"] = chrom
+            chrom = self._adjust_chrom_prefix(summary_variant.chromosome)
+            summary_variant._chromosome = chrom
+            for summary_allele in summary_variant.alleles:
+                summary_allele._chromosome = chrom
+                summary_allele._attributes["chrom"] = chrom
 
             for family_variant in family_variants:
 
