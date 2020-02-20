@@ -376,8 +376,8 @@ def test_import_wild_multivcf_into_genotype_storage(
         genomes_db_2013, fixture_dirname,
         default_dae_config, gpf_instance_2013, temp_dirname):
 
-    vcf_file1 = fixture_dirname('multi_vcf/multivcf_missing1_chr{vw}.vcf.gz')
-    vcf_file2 = fixture_dirname('multi_vcf/multivcf_missing2_chr{vw}.vcf.gz')
+    vcf_file1 = fixture_dirname('multi_vcf/multivcf_missing1_chr{vc}.vcf.gz')
+    vcf_file2 = fixture_dirname('multi_vcf/multivcf_missing2_chr{vc}.vcf.gz')
     ped_file = fixture_dirname('multi_vcf/multivcf.ped')
 
     study_id = f'test_wile_multivcf_{genotype_storage_id}'
