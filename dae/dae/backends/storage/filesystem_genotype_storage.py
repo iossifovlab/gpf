@@ -160,7 +160,7 @@ class FilesystemGenotypeStorage(GenotypeStorage):
             params = variants_loader.build_cli_params(variants_loader.params)
             params = ", ".join([
                 '{} = "{}"'.format(k, v)
-                for k, v in variants_loader.params.items() if v is not None])
+                for k, v in params.items() if v is not None])
             source_type = variants_loader.get_attribute('source_type')
 
             config = STUDY_VARIANTS_TEMPLATE.format(
