@@ -1,4 +1,3 @@
-import sys
 import os
 import glob
 
@@ -6,7 +5,7 @@ import yaml
 import toml
 
 from collections import namedtuple
-from copy import deepcopy, copy
+from copy import deepcopy
 from typing import List, Tuple, Any, Dict
 from cerberus import Validator
 
@@ -48,7 +47,7 @@ class GPFConfigParser:
     ) -> Tuple[Any]:
         CONFIG_TUPLE = namedtuple(dict_name, input_dict.keys())
 
-        class ConfigTuple(CONFIG_TUPLE):
+        class ConfigTuple(CONFIG_TUPLE):  # noqa
             def __getattr__(self, name):
                 # FIXME Temporary hack to enable default values
                 # only for public attributes
