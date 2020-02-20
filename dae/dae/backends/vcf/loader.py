@@ -458,13 +458,13 @@ class VcfLoader(VariantsGenotypesLoader):
             params={},
             **kwargs):
 
-        if params.get('vcf_wildcards', None):
-            vcf_wildcards = [
-                wc.strip() for wc in params.get('vcf_wildcards').split(';')
+        if params.get('vcf_chromosomes', None):
+            vcf_chromosomes = [
+                wc.strip() for wc in params.get('vcf_chromosomes').split(';')
             ]
             filenames = [
-                [vcf_file.format(vw=vw) for vcf_file in vcf_files]
-                for vw in vcf_wildcards
+                [vcf_file.format(vc=vc) for vcf_file in vcf_files]
+                for vc in vcf_chromosomes
             ]
             all_filenames = list(itertools.chain.from_iterable(filenames))
         else:
@@ -531,7 +531,7 @@ class VcfLoader(VariantsGenotypesLoader):
             'vcf_multi_loader_fill_in_mode': 'reference',
             'vcf_denovo_mode': 'possible_denovo',
             'vcf_omission_mode': 'possible_omission',
-            'vcf_wildcards': None,
+            'vcf_chromosomes': None,
         })
         return defaults
 
@@ -546,7 +546,7 @@ class VcfLoader(VariantsGenotypesLoader):
                 if key in {'vcf_multi_loader_fill_in_mode',
                            'vcf_denovo_mode',
                            'vcf_omission_mode',
-                           'vcf_wildcards',
+                           'vcf_chromosomes',
                            'add_chrom_prefix',
                            'del_chrom_prefix'}:
                     result.append(f'--{param}')
@@ -612,13 +612,13 @@ class VcfLoader(VariantsGenotypesLoader):
             '[default: %(default)s]',
         )
         parser.add_argument(
-            '--vcf-wildcards', '--vw',
+            '--vcf-chromosomes', '--vc',
             type=str,
-            dest='vcf_wildcards',
+            dest='vcf_chromosomes',
             default=None,
             help='specifies a list of filename template '
             'substitutions; then specified variant filename(s) are treated '
-            'as templates and each occurent of `{vw}` is replaced '
+            'as templates and each occurent of `{vc}` is replaced '
             'consecutively by elements of VCF wildcards list; '
             'by default the list is empty and no substitution '
             'takes place. '
@@ -650,8 +650,8 @@ class VcfLoader(VariantsGenotypesLoader):
             argv.vcf_denovo_mode,
             'vcf_omission_mode':
             argv.vcf_omission_mode,
-            'vcf_wildcards':
-            argv.vcf_wildcards,
+            'vcf_chromosomes':
+            argv.vcf_chromosomes,
             'add_chrom_prefix':
             argv.add_chrom_prefix,
             'del_chrom_prefix':

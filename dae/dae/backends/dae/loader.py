@@ -67,11 +67,12 @@ class DenovoLoader(VariantsGenotypesLoader):
             expect_best_state=False,
             params=params)
 
-        self.set_attribute('source_type', 'denovo')
         self.genome = genome
 
         self.denovo_df = self.flexible_denovo_load(
-            denovo_filename, genome, families=families, **self.params
+            denovo_filename, genome, families=families,
+            adjust_chrom_prefix=self._adjust_chrom_prefix,
+            **self.params
         )
         self._init_chromosomes()
 
@@ -84,10 +85,9 @@ class DenovoLoader(VariantsGenotypesLoader):
 
     def _init_chromosomes(self):
         self.chromosomes = list(self.denovo_df.chrom.unique())
-        if self._adjust_chrom_prefix is not None:
-            self.chromosomes = [
-                self._adjust_chrom_prefix(chrom) for chrom in self.chromosomes
-            ]
+        self.chromosomes = [
+            self._adjust_chrom_prefix(chrom) for chrom in self.chromosomes
+        ]
 
         all_chromosomes = self.genome.allChromosomes
         if all([chrom in set(all_chromosomes) for chrom in self.chromosomes]):
@@ -106,6 +106,10 @@ class DenovoLoader(VariantsGenotypesLoader):
 
     def _full_variants_iterator_impl(self):
         self.regions = [Region.from_str(r) for r in self.regions]
+        for region in self.regions:
+            if region is None:
+                continue
+            region.chrom = self._adjust_chrom_prefix(region.chrom)
 
         for index, rec in enumerate(self.denovo_df.to_dict(orient='records')):
             family_id = rec.pop('family_id')
@@ -375,6 +379,7 @@ class DenovoLoader(VariantsGenotypesLoader):
             denovo_family_id: Optional[str] = None,
             denovo_best_state: Optional[str] = None,
             denovo_sep: str = '\t',
+            adjust_chrom_prefix=None,
             **kwargs) -> pd.DataFrame:
 
         """
@@ -465,6 +470,9 @@ class DenovoLoader(VariantsGenotypesLoader):
         else:
             chrom_col = raw_df.loc[:, denovo_chrom]
             pos_col = raw_df.loc[:, denovo_pos]
+
+        if adjust_chrom_prefix is not None:
+            chrom_col = tuple(map(adjust_chrom_prefix, chrom_col))
 
         if denovo_variant:
             variant_col = raw_df.loc[:, denovo_variant]
@@ -687,7 +695,8 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
     def _summary_variant_from_dae_record(self, summary_index, rec):
         rec['cshl_position'] = int(rec['cshl_position'])
         position, reference, alternative = dae2vcf_variant(
-            rec['chrom'], rec['cshl_position'], rec['cshl_variant'],
+            self._adjust_chrom_prefix(rec['chrom']), rec['cshl_position'],
+            rec['cshl_variant'],
             self.genome
         )
         rec['position'] = position

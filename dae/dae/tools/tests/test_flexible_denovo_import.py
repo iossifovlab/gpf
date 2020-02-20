@@ -98,7 +98,8 @@ def test_flexible_denovo_default(
     genotype_storage_id = 'test_filesystem'
     study_id = 'test_flexible_denovo_default'
 
-    storage_config = getattr(gpf_instance_2019.dae_config.storage, genotype_storage_id)
+    storage_config = getattr(
+        gpf_instance_2019.dae_config.storage, genotype_storage_id)
     assert storage_config.storage_type == 'filesystem'
     genotype_storage = FilesystemGenotypeStorage(storage_config)
     assert genotype_storage
@@ -114,7 +115,8 @@ def test_flexible_denovo_default(
 
     main(argv, gpf_instance_2019)
 
-    storage_config = getattr(gpf_instance_2019.dae_config.storage, genotype_storage_id)
+    storage_config = getattr(
+        gpf_instance_2019.dae_config.storage, genotype_storage_id)
     assert storage_config.storage_type == 'filesystem'
 
     gpf_instance_2019.reload()
@@ -136,7 +138,8 @@ def test_flexible_denovo_vcf(
     genotype_storage_id = 'test_filesystem'
     study_id = 'test_flexible_denovo_vcf'
 
-    storage_config = getattr(gpf_instance_2019.dae_config.storage, genotype_storage_id)
+    storage_config = getattr(
+        gpf_instance_2019.dae_config.storage, genotype_storage_id)
     assert storage_config.storage_type == 'filesystem'
     genotype_storage = FilesystemGenotypeStorage(storage_config)
     assert genotype_storage
@@ -157,7 +160,8 @@ def test_flexible_denovo_vcf(
 
     main(argv, gpf_instance_2019)
 
-    storage_config = getattr(gpf_instance_2019.dae_config.storage, genotype_storage_id)
+    storage_config = getattr(
+        gpf_instance_2019.dae_config.storage, genotype_storage_id)
     assert storage_config.storage_type == 'filesystem'
 
     gpf_instance_2019.reload()
@@ -180,7 +184,8 @@ def test_flexible_denovo_vcf_location(
     genotype_storage_id = 'test_filesystem'
     study_id = 'test_flexible_denovo_vcf_location'
 
-    storage_config = getattr(gpf_instance_2019.dae_config.storage, genotype_storage_id)
+    storage_config = getattr(
+        gpf_instance_2019.dae_config.storage, genotype_storage_id)
     assert storage_config.storage_type == 'filesystem'
     genotype_storage = FilesystemGenotypeStorage(storage_config)
     assert genotype_storage
@@ -200,7 +205,8 @@ def test_flexible_denovo_vcf_location(
 
     main(argv, gpf_instance_2019)
 
-    storage_config = getattr(gpf_instance_2019.dae_config.storage, genotype_storage_id)
+    storage_config = getattr(
+        gpf_instance_2019.dae_config.storage, genotype_storage_id)
     assert storage_config.storage_type == 'filesystem'
 
     gpf_instance_2019.reload()
@@ -223,7 +229,8 @@ def test_flexible_denovo_vcf_best_state(
     genotype_storage_id = 'test_filesystem'
     study_id = 'test_flexible_denovo_vcf_best_state'
 
-    storage_config = getattr(gpf_instance_2019.dae_config.storage, genotype_storage_id)
+    storage_config = getattr(
+        gpf_instance_2019.dae_config.storage, genotype_storage_id)
     assert storage_config.storage_type == 'filesystem'
     genotype_storage = FilesystemGenotypeStorage(storage_config)
     assert genotype_storage
@@ -244,7 +251,8 @@ def test_flexible_denovo_vcf_best_state(
 
     main(argv, gpf_instance_2019)
 
-    storage_config = getattr(gpf_instance_2019.dae_config.storage, genotype_storage_id)
+    storage_config = getattr(
+        gpf_instance_2019.dae_config.storage, genotype_storage_id)
     assert storage_config.storage_type == 'filesystem'
 
     gpf_instance_2019.reload()
@@ -267,7 +275,8 @@ def test_flexible_denovo_dae_chrom_pos(
     genotype_storage_id = 'test_filesystem'
     study_id = 'test_flexible_denovo_dae_chrom_pos'
 
-    storage_config = getattr(gpf_instance_2019.dae_config.storage, genotype_storage_id)
+    storage_config = getattr(
+        gpf_instance_2019.dae_config.storage, genotype_storage_id)
     assert storage_config.storage_type == 'filesystem'
     genotype_storage = FilesystemGenotypeStorage(storage_config)
     assert genotype_storage
@@ -288,7 +297,8 @@ def test_flexible_denovo_dae_chrom_pos(
 
     main(argv, gpf_instance_2019)
 
-    storage_config = getattr(gpf_instance_2019.dae_config.storage, genotype_storage_id)
+    storage_config = getattr(
+        gpf_instance_2019.dae_config.storage, genotype_storage_id)
     assert storage_config.storage_type == 'filesystem'
 
     gpf_instance_2019.reload()
@@ -311,7 +321,8 @@ def test_flexible_denovo_dae_person(
     genotype_storage_id = 'test_filesystem'
     study_id = 'test_flexible_denovo_dae_person'
 
-    storage_config = getattr(gpf_instance_2019.dae_config.storage, genotype_storage_id)
+    storage_config = getattr(
+        gpf_instance_2019.dae_config.storage, genotype_storage_id)
     assert storage_config.storage_type == 'filesystem'
     genotype_storage = FilesystemGenotypeStorage(storage_config)
     assert genotype_storage
@@ -329,7 +340,8 @@ def test_flexible_denovo_dae_person(
 
     main(argv, gpf_instance_2019)
 
-    storage_config = getattr(gpf_instance_2019.dae_config.storage, genotype_storage_id)
+    storage_config = getattr(
+        gpf_instance_2019.dae_config.storage, genotype_storage_id)
     assert storage_config.storage_type == 'filesystem'
 
     gpf_instance_2019.reload()

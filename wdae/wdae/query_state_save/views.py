@@ -36,3 +36,12 @@ class QueryStateLoadView(views.APIView):
             "data": json.loads(query_state.data),
             "page": query_state.page
         }, status=status.HTTP_200_OK)
+
+
+class QueryStateDeleteView(views.APIView):
+
+    def post(self, request):
+        query_state = get_object_or_404(QueryState, uuid=request.data["uuid"])
+        query_state.delete()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
