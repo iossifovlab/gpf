@@ -46,7 +46,8 @@ class StudyWrapper(object):
         # PHENO
         pheno_column_slots = []
         if genotype_browser_config.pheno:
-            for col_id, pheno_col in genotype_browser_config.pheno.field_values_iterator():
+            for col_id, pheno_col in \
+                    genotype_browser_config.pheno.field_values_iterator():
                 for slot in pheno_col.slots:
                     slot = GPFConfigParser.modify_tuple(
                         slot, {"id": f"{col_id}.{slot.name}"}
@@ -771,18 +772,26 @@ class StudyWrapper(object):
             'studies', 'has_present_in_child', 'has_present_in_parent'
         ]
         # TODO Add domain to pheno filters
-        result = {key: deepcopy(getattr(self.config, key, None)) for key in keys}
+        result = {
+            key: deepcopy(getattr(self.config, key, None))
+            for key in keys
+        }
 
-        bs_config = GPFConfigParser._namedtuple_to_dict(deepcopy(self.config.genotype_browser))
+        bs_config = GPFConfigParser._namedtuple_to_dict(
+            deepcopy(self.config.genotype_browser))
+
         bs_config["columns"] = bs_config["genotype"]
 
         result['genotype_browser_config'] = bs_config
-        result['genotype_browser'] = self.config.genotype_browser.enabled or False
+        result['genotype_browser'] = \
+            self.config.genotype_browser.enabled or False
 
         result['study_types'] = result['study_type']
         result['enrichment_tool'] = self.config.enrichment.enabled
-        result['common_report'] = GPFConfigParser._namedtuple_to_dict(result['common_report'])
-        result['people_group'] = GPFConfigParser._namedtuple_to_dict(result['people_group'])
+        result['common_report'] = GPFConfigParser._namedtuple_to_dict(
+            result['common_report'])
+        result['people_group'] = GPFConfigParser._namedtuple_to_dict(
+            result['people_group'])
 
         result['name'] = result['name'] or result['id']
 
