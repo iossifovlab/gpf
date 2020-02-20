@@ -48,7 +48,8 @@ class ImpalaFamilyVariants:
         self.families = FamiliesData.from_pedigree_df(self.ped_df)
 
         self.schema = self.variant_schema()
-        self.serializer = ParquetSerializer(schema=self.schema)
+        if self.variant_table:
+            self.serializer = ParquetSerializer(schema=self.schema)
 
         assert gene_models is not None
         self.gene_models = gene_models

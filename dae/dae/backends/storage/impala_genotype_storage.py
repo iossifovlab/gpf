@@ -12,11 +12,14 @@ from dae.backends.impala.impala_variants import ImpalaFamilyVariants
 from dae.backends.impala.parquet_io import ParquetManager, \
     ParquetPartitionDescriptor
 
+from dae.configuration.study_config_builder import StudyConfigBuilder
+
 
 class ImpalaGenotypeStorage(GenotypeStorage):
 
     def __init__(self, storage_config):
         super(ImpalaGenotypeStorage, self).__init__(storage_config)
+        self.data_dir = self.storage_config.dir
 
         self._impala_connection = None
         self._impala_helpers = None
@@ -69,8 +72,11 @@ class ImpalaGenotypeStorage(GenotypeStorage):
     @staticmethod
     def study_tables(study_config):
         if study_config.tables and \
-                study_config.tables.pedigree and study_config.tables.variant:
-            variant_table = study_config.tables.variant
+                study_config.tables.pedigree and study_config.tables.variants:
+            variant_table = study_config.tables.variants
+            pedigree_table = study_config.tables.pedigree
+        elif study_config.tables and study_config.tables.pedigree:
+            variant_table = None
             pedigree_table = study_config.tables.pedigree
         else:
             # default study tables
@@ -79,8 +85,8 @@ class ImpalaGenotypeStorage(GenotypeStorage):
         return variant_table, pedigree_table
 
     def build_backend(self, study_config, genomes_db):
-        variant_table, pedigree_table = self.study_tables(study_config)
-
+        variant_table, pedigree_table = \
+            self.study_tables(study_config.genotype_storage)
         family_variants = ImpalaFamilyVariants(
             self.impala_connection,
             self.storage_config.impala.db,
@@ -121,14 +127,30 @@ class ImpalaGenotypeStorage(GenotypeStorage):
 
         return variant_files, pedigree_files
 
-    def _generate_study_config(self, study_id, variant_table, pedigree_table):
+    def _generate_study_config(
+            self, study_id, pedigree_table, variant_table=None):
         assert study_id is not None
 
-        study_config = STUDY_CONFIG_TEMPLATE.format(
-                id=study_id,
-                genotype_storage=self.storage_config.section_id(),
-                pedigree_table=pedigree_table,
-                variant_table=variant_table)
+        study_config = {
+            "id": study_id,
+            "conf_dir": ".",
+            "has_denovo": False,
+            "genotype_storage": {
+                "id": self.storage_config.section_id(),
+                "tables": {
+                    "pedigree": pedigree_table,
+                }
+            },
+            "genotype_browser": {
+                "enabled": False
+            }
+        }
+
+        if variant_table:
+            storage_config = study_config["genotype_storage"]
+            storage_config["tables"]["variants"] = variant_table
+            study_config["genotype_browser"]["enabled"] = True
+
         return study_config
 
     def simple_study_import(
@@ -139,12 +161,15 @@ class ImpalaGenotypeStorage(GenotypeStorage):
 
         parquet_pedigrees = []
         parquet_variants = []
-
         parquet_filenames = None
+        has_denovo = False
         if variant_loaders:
             for index, variant_loader in enumerate(variant_loaders):
                 assert isinstance(variant_loader, VariantsLoader), \
                     type(variant_loader)
+
+                if variant_loader.get_attribute('source_type') == 'denovo':
+                    has_denovo = True
 
                 if variant_loader.transmission_type == TransmissionType.denovo:
                     assert index < 100
@@ -176,10 +201,18 @@ class ImpalaGenotypeStorage(GenotypeStorage):
 
         parquet_pedigrees.append(parquet_filenames.pedigree)
 
-        return self.impala_load_study(
+        study_dir = os.path.join(self.data_dir, study_id)
+
+        config_dict = self.impala_load_study(
             study_id,
             variant_paths=parquet_variants,
             pedigree_paths=parquet_pedigrees)
+
+        config_dict["has_denovo"] = has_denovo
+
+        config_builder = StudyConfigBuilder(config_dict, study_dir)
+
+        return config_builder.build_config()
 
     def impala_load_study(
             self, study_id,
@@ -216,8 +249,9 @@ class ImpalaGenotypeStorage(GenotypeStorage):
             f'Loaded `{study_id}` study in impala `{db}` '
             f'db for {total:.2f} sec', file=sys.stderr
         )
+        has_variants = len(variant_paths)
         return self._generate_study_config(
-            study_id, variant_table, pedigree_table)
+            study_id, pedigree_table, variant_table if has_variants else None)
 
     def impala_load_dataset(self, study_id, variants_path, pedigree_file):
         partition_config_file = os.path.join(
@@ -267,8 +301,14 @@ class ImpalaGenotypeStorage(GenotypeStorage):
             variants_files
         )
 
-        return self._generate_study_config(
-            study_id, variants_table, pedigree_table)
+        config_dict = self._generate_study_config(
+            study_id, pedigree_table, variants_table)
+
+        study_dir = os.path.join(self.data_dir, study_id)
+
+        config_builder = StudyConfigBuilder(config_dict, study_dir)
+
+        return config_builder.build_config()
 
 
 STUDY_CONFIG_TEMPLATE = '''

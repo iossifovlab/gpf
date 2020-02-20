@@ -32,7 +32,10 @@ class StudyConfigBuilder:
 
     def build_storage_data_impala(self) -> str:
         tables = self._config_dict["genotype_storage"]["tables"]
-        variants = "" if not tables["variants"] else tables["variants"]
+        if "variants" in tables:
+            variants = f'variants = "{tables["variants"]}"'
+        else:
+            variants = ""
         return STUDY_IMPALA_CONFIG_TEMPLATE.format(
             pedigree_table=tables["pedigree"], variants=variants
         )
