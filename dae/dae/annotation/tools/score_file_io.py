@@ -107,10 +107,10 @@ class ScoreFile(object):
         self._init_access()
 
     def _init_access(self):
-        if self.config.misc.format:
-            score_format = self.config.misc.format.lower()
-        else:
-            score_format = 'tsv'
+        if self.config.misc:
+            score_format = self.config.misc.format or 'tsv'
+
+        score_format = score_format.lower()
         assert score_format in ['bedgraph', 'tsv', 'bigwig', 'bw'], \
             (score_format, self.config.options.scores_config_file)
 
