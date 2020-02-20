@@ -791,10 +791,10 @@ def calc_gene_sets(request, variants_db_fixture):
     def remove_gene_sets():
         for dgs in genotype_data_names:
             genotype_data = variants_db_fixture.get(dgs)
-            cache_file = os.path.join(
-                os.path.split(genotype_data.config)[0],
-                'denovo-cache-phenotype.json'
-            )
+            cache_file = \
+                DenovoGeneSetCollectionFactory.denovo_gene_set_cache_file(
+                    genotype_data.config, 'phenotype'
+                )
             if os.path.exists(cache_file):
                 os.remove(cache_file)
 

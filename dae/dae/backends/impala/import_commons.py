@@ -344,11 +344,11 @@ class MakefileGenerator:
     def _collect_variants_targets(self):
         variants_targets = []
         if self.denovo_loader is not None:
-            variants_targets.append('denovo_variants')
+            variants_targets.append('$(denovo_bins_flags)')
         if self.vcf_loader is not None:
-            variants_targets.append('vcf_variants')
+            variants_targets.append('$(vcf_bins_flags)')
         if self.dae_loader is not None:
-            variants_targets.append('dae_variants')
+            variants_targets.append('$(dae_bins_flags)')
         return variants_targets
 
     def generate_all_targets(self, argv, outfile=sys.stdout):
@@ -517,13 +517,14 @@ class MakefileGenerator:
         command = self._construct_load_command(argv)
         variants_targets = self._collect_variants_targets()
         if len(variants_targets) > 0:
+            variants_targets = ' '.join(variants_targets)
             print(
-                f'load.flag: pedigree variants\n'
+                f'load.flag: ped.flag {variants_targets}\n'
                 f'\t{command} && touch $@',
                 file=outfile)
         else:
             print(
-                f'load.flag: pedigree\n'
+                f'load.flag: ped.flag\n'
                 f'\t{command} && touch $@',
                 file=outfile)
 

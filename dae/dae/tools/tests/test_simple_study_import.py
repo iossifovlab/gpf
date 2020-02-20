@@ -387,7 +387,7 @@ def test_import_wild_multivcf_into_genotype_storage(
         '--id', study_id,
         '--skip-reports',
         '--vcf-files', vcf_file1, vcf_file2,
-        '--vcf-wildcards', '1;2',
+        '--vcf-chromosomes', '1;2',
         '--genotype-storage', genotype_storage_id,
         '-o', temp_dirname,
     ]
