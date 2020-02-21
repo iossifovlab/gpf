@@ -98,7 +98,6 @@ export class PhenoToolComponent extends QueryStateCollector
     this.getCurrentState()
       .subscribe(state => {
         event.target.queryData.value = JSON.stringify(state);
-        console.log(event.target);
         event.target.submit();
       },
       error => null

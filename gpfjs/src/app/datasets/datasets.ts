@@ -223,7 +223,6 @@ export class GenotypeBrowser {
 export class PeopleGroup {
 
   static fromJson(json: any): PeopleGroup {
-    console.log(json);
     return new PeopleGroup(
       PedigreeSelector.fromJson(json)
     );
@@ -239,7 +238,6 @@ export class Dataset extends IdName {
     if (!json) {
       return undefined;
     }
-    console.log(json);
     return new Dataset(
       json['id'],
       json['description'],
