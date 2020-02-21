@@ -28,8 +28,7 @@ def save_study_config(dae_config, study_id, study_config):
 
     if os.path.exists(filename):
         print('configuration file already exists:', filename)
-        split = os.path.splitext(filename)
-        new_name = os.path.basename(split[0]) + '_' + str(time.time_ns()) + split[1]
+        new_name = os.path.basename(filename) + '.' + str(time.time_ns())
         new_path = os.path.join(
             os.path.dirname(filename),
             new_name
