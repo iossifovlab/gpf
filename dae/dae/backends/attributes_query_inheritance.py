@@ -12,6 +12,7 @@ INHERITANCE_QUERY_GRAMMAR = r"""
     denovo: "denovo"
     possible_denovo: "possible_denovo"
     omission: "omission"
+    possible_omission: "possible_omission"
     other: "other"
     missing: "missing"
     unknown: "unknown"
@@ -21,6 +22,7 @@ INHERITANCE_QUERY_GRAMMAR = r"""
         | denovo
         | possible_denovo
         | omission
+        | possible_omission
         | other
         | missing
         | unknown
@@ -78,6 +80,9 @@ class InheritanceTransformer(Transformer):
 
     def possible_denovo(self, items):
         return Inheritance.possible_denovo.value
+
+    def possible_omission(self, items):
+        return Inheritance.possible_omission.value
 
     def reference(self, items):
         return Inheritance.reference.value
