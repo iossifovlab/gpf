@@ -131,8 +131,7 @@ class FilesystemGenotypeStorage(GenotypeStorage):
             if any([l.get_attribute('source_type') == 'denovo'
                     for l in variant_loaders]):
                 study_config['has_denovo'] = True
-        study_dir = os.path.join(self.data_dir, study_id)
-        config_builder = StudyConfigBuilder(study_config, study_dir)
+        config_builder = StudyConfigBuilder(study_config)
         return config_builder.build_config()
 
     def _import_families_file(self, study_id, families_loader):

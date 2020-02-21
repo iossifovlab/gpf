@@ -72,14 +72,15 @@ class ImpalaGenotypeStorage(GenotypeStorage):
     @staticmethod
     def study_tables(study_config):
         storage_config = study_config.genotype_storage
-        if storage_config.tables and \
+        if storage_config and storage_config.tables and \
                 storage_config.tables.pedigree and \
                 storage_config.tables.variants:
-            variant_table = study_config.tables.variants
-            pedigree_table = study_config.tables.pedigree
-        elif storage_config.tables and storage_config.tables.pedigree:
+            variant_table = storage_config.tables.variants
+            pedigree_table = storage_config.tables.pedigree
+        elif storage_config and storage_config.tables and \
+                storage_config.tables.pedigree:
             variant_table = None
-            pedigree_table = study_config.tables.pedigree
+            pedigree_table = storage_config.tables.pedigree
         else:
             # default study tables
             variant_table = '{}_variants'.format(study_config.id)
@@ -212,7 +213,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
 
         config_dict["has_denovo"] = has_denovo
 
-        config_builder = StudyConfigBuilder(config_dict, study_dir)
+        config_builder = StudyConfigBuilder(config_dict)
 
         return config_builder.build_config()
 
@@ -308,7 +309,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
 
         study_dir = os.path.join(self.data_dir, study_id)
 
-        config_builder = StudyConfigBuilder(config_dict, study_dir)
+        config_builder = StudyConfigBuilder(config_dict)
 
         return config_builder.build_config()
 

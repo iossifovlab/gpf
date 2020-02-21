@@ -1,21 +1,14 @@
 from typing import Dict, Any
-from dae.configuration.gpf_config_parser import GPFConfigValidator
-from dae.configuration.schemas.study_config import study_config_schema
 
 
 class StudyConfigBuilder:
-    def __init__(self, config_dict: Dict[str, Any], config_dir: str):
+    def __init__(self, config_dict: Dict[str, Any]):
         assert config_dict
         assert config_dict["genotype_storage"]
         self._config_dict = config_dict
-        self._config_dir = config_dir
         self.is_impala = "tables" in config_dict["genotype_storage"]
 
     def build_config(self) -> str:
-        validator = GPFConfigValidator(
-            study_config_schema, conf_dir=self._config_dir
-        )
-        assert validator.validate(self._config_dict), validator.errors
         storage_data = (
             self.build_storage_data_impala()
             if self.is_impala
