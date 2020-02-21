@@ -193,9 +193,10 @@ class StudyWrapper(object):
                 self._get_wdae_member(member, people_group, best_st[index])
             )
         for member in allele.family.full_members:
-            result.append(
-                self._get_wdae_member(member, people_group, 0)
-            )
+            if member.generated:
+                result.append(
+                    self._get_wdae_member(member, people_group, 0)
+                )
 
         return result
 
