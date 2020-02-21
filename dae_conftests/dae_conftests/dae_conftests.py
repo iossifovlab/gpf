@@ -436,7 +436,9 @@ def iossifov2014_loader(
 @pytest.fixture(scope='session')
 def iossifov2014_raw_denovo(iossifov2014_loader):
 
-    fvars = RawMemoryVariants([iossifov2014_loader])
+    fvars = RawMemoryVariants(
+        [iossifov2014_loader],
+        iossifov2014_loader.families)
 
     return fvars
 
