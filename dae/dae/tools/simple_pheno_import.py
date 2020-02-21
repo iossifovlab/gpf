@@ -96,7 +96,7 @@ def generate_phenotype_data_config(args, regressions):
         },
     }
     if regressions:
-        config["regression"] = regressions_dict
+        config["regression"] = regressions_dict["regression"]
     return config
 
 
