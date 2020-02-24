@@ -13,6 +13,8 @@ from dae.backends.impala.parquet_io import ParquetManager, \
     ParquetPartitionDescriptor
 
 from dae.configuration.study_config_builder import StudyConfigBuilder
+from dae.configuration.gpf_config_parser import GPFConfigParser
+from dae.utils.dict_utils import recursive_dict_update
 
 
 class ImpalaGenotypeStorage(GenotypeStorage):
@@ -160,6 +162,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
             self, study_id,
             families_loader=None,
             variant_loaders=None,
+            study_config=None,
             output='.'):
 
         parquet_pedigrees = []
@@ -212,6 +215,11 @@ class ImpalaGenotypeStorage(GenotypeStorage):
             pedigree_paths=parquet_pedigrees)
 
         config_dict["has_denovo"] = has_denovo
+
+        if study_config is not None:
+            study_config_dict = GPFConfigParser.load_config_raw(study_config)
+            config_dict = \
+                recursive_dict_update(config_dict, study_config_dict)
 
         config_builder = StudyConfigBuilder(config_dict)
 

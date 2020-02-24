@@ -18,5 +18,6 @@ class GenotypeStorage:
             study_id,
             families_loader=None,
             variant_loaders=None,
+            study_config=None,
             **kwargs):
         raise NotImplementedError()

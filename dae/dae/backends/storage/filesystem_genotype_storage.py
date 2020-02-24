@@ -17,6 +17,8 @@ from dae.backends.raw.raw_variants import RawMemoryVariants
 from dae.backends.vcf.loader import VcfLoader
 from dae.backends.dae.loader import DenovoLoader, DaeTransmittedLoader
 
+from dae.utils.dict_utils import recursive_dict_update
+
 
 class FilesystemGenotypeStorage(GenotypeStorage):
 
@@ -102,6 +104,7 @@ class FilesystemGenotypeStorage(GenotypeStorage):
             self, study_id,
             families_loader=None,
             variant_loaders=None,
+            study_config=None,
             **kwargs):
 
         families_config = self._import_families_file(
@@ -109,7 +112,7 @@ class FilesystemGenotypeStorage(GenotypeStorage):
         variants_config = self._import_variants_files(
             study_id, variant_loaders)
 
-        study_config = {
+        config_dict = {
             "id": study_id,
             "conf_dir": ".",
             "has_denovo": False,
@@ -125,13 +128,19 @@ class FilesystemGenotypeStorage(GenotypeStorage):
             }
         }
         if not variant_loaders:
-            study_config['genotype_browser']['enabled'] = False
+            config_dict['genotype_browser']['enabled'] = False
         else:
             variant_loaders[0].get_attribute('source_type')
             if any([l.get_attribute('source_type') == 'denovo'
                     for l in variant_loaders]):
-                study_config['has_denovo'] = True
-        config_builder = StudyConfigBuilder(study_config)
+                config_dict['has_denovo'] = True
+
+        if study_config is not None:
+            study_config_dict = GPFConfigParser.load_config_raw(study_config)
+            config_dict = \
+                recursive_dict_update(config_dict, study_config_dict)
+
+        config_builder = StudyConfigBuilder(config_dict)
         return config_builder.build_config()
 
     def _import_families_file(self, study_id, families_loader):

@@ -85,6 +85,12 @@ def cli_arguments(dae_config, argv=sys.argv[1:]):
         'variants file'
     )
 
+    parser.add_argument(
+        '--study-config', type=str, default=None,
+        dest='base_config',
+        help='Config used to overwrite values in generated configuration'
+    )
+
     DenovoLoader.cli_options(parser)
     VcfLoader.cli_options(parser)
     DaeTransmittedLoader.cli_options(parser)
@@ -194,7 +200,8 @@ def main(argv, gpf_instance=None):
         study_id,
         families_loader=families_loader,
         variant_loaders=variant_loaders,
-        output=output
+        output=output,
+        study_config=argv.study_config
     )
     save_study_config(dae_config, study_id, study_config)
 
