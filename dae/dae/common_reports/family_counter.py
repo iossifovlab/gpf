@@ -88,8 +88,10 @@ class FamiliesGroupCounters(object):
             for family_type, families in sorted_family_types:
                 if len(families) == 0:
                     continue
-                if self.families_count_show_id is True:
-                    pedigree_label = ",".join(families)
+                if self.families_count_show_id and \
+                        len(families) <= self.families_count_show_id:
+                    pedigree_label = ", ".join([
+                        fam.family_id for fam in families])
                 else:
                     pedigree_label = str(len(families))
                 family = families[0]
