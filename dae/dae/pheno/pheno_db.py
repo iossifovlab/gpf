@@ -658,7 +658,7 @@ class PhenoDb(object):
         self.config = {
             config.phenotype_data.name: config.phenotype_data
             for config in configs
-            if config.phenotype_data.enabled
+            if config.phenotype_data and config.phenotype_data.enabled
         }
 
         self.pheno_cache = {}
