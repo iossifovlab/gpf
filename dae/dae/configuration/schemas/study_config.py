@@ -11,6 +11,7 @@ phenotype_schema = {
 }
 
 people_group_schema = {
+    "id": {"type": "string"},
     "name": {"type": "string"},
     "domain": {"type": "list", "schema": phenotype_schema},
     "default": phenotype_schema,

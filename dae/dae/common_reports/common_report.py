@@ -13,14 +13,14 @@ from dae.common_reports.people_filters import FilterCollection
 class CommonReport(object):
 
     def __init__(self, genotype_data_study, config):
-        people_groups_info = config.people_group
+        people_groups = config.people_group
         effect_groups = config.effect_groups
         effect_types = config.effect_types
 
         self.genotype_data_study = genotype_data_study
         self.families_groups = FamiliesGroups.from_config(
             genotype_data_study.families,
-            people_groups_info
+            people_groups
         )
         self.families_groups.add_predefined_groups(
             ['status', 'sex', 'role', 'role.sex', 'family_size'])
@@ -29,14 +29,16 @@ class CommonReport(object):
             self.families_groups, config.groups
         )
         denovo_people_filters = [
-            pf for pf in people_filters if pf.group_id in people_groups_info
+            pf for pf in people_filters
+            if pf.group_id in config.selected_people_groups
         ]
 
         self.id = genotype_data_study.id
 
         start = time.time()
         self.families_report = FamiliesReport(
-            config.selected_people_groups, self.families_groups, people_filters,
+            config.selected_people_groups, self.families_groups,
+            people_filters,
             config.draw_all_families, config.families_count_show_id
         )
         elapsed = time.time() - start

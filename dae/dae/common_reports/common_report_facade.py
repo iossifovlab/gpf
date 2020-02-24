@@ -2,7 +2,6 @@ import os
 import json
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
-from dae.configuration.schemas.study_config import study_config_schema
 from dae.common_reports.common_report import CommonReport
 
 from dae.utils.dae_utils import join_line
@@ -122,7 +121,8 @@ class CommonReportFacade(object):
                 self._load_common_report_in_cache(common_report_id)
 
     def _load_common_report_config_in_cache(self, common_report_id):
-        genotype_data_config = self.gpf_instance.get_genotype_data_config(common_report_id)
+        genotype_data_config = self.gpf_instance.get_genotype_data_config(
+            common_report_id)
 
         if genotype_data_config is None:
             return
