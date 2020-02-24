@@ -1,6 +1,7 @@
 import os
 import sys
 import itertools
+import glob
 
 import numpy as np
 
@@ -371,6 +372,9 @@ class SingleVcfLoader(VariantsGenotypesLoader):
         larger than right vcf variant position in file
         """
         # TODO: Change this to use a dict
+        if lhs is None:
+            return True
+
         l_chrom_idx = self.chrom_order.get(lhs.CHROM)
         r_chrom_idx = self.chrom_order.get(rhs.CHROM)
 
@@ -458,18 +462,7 @@ class VcfLoader(VariantsGenotypesLoader):
             params={},
             **kwargs):
 
-        if params.get('vcf_chromosomes', None):
-            vcf_chromosomes = [
-                wc.strip() for wc in params.get('vcf_chromosomes').split(';')
-            ]
-            filenames = [
-                [vcf_file.format(vc=vc) for vcf_file in vcf_files]
-                for vc in vcf_chromosomes
-            ]
-            all_filenames = list(itertools.chain.from_iterable(filenames))
-        else:
-            filenames = [vcf_files]
-            all_filenames = vcf_files
+        all_filenames, filenames = self._collect_filenames(params, vcf_files)
 
         super(VcfLoader, self).__init__(
             families=families,
@@ -491,6 +484,31 @@ class VcfLoader(VariantsGenotypesLoader):
                 params=params
             ) for vcf_files in filenames
         ]
+
+    def _collect_filenames(self, params, vcf_files):
+        if params.get('vcf_chromosomes', None):
+            vcf_chromosomes = [
+                wc.strip() for wc in params.get('vcf_chromosomes').split(';')
+            ]
+            glob_filenames = [
+                [vcf_file.format(vc=vc) for vcf_file in vcf_files]
+                for vc in vcf_chromosomes
+            ]
+        else:
+            glob_filenames = [vcf_files]
+
+        result = []
+        for batches_globnames in glob_filenames:
+            batches_result = []
+            for globname in batches_globnames:
+                filenames = glob.glob(globname)
+                assert len(filenames) == 1, \
+                    (globname, filenames)
+                batches_result.append(filenames[0])
+            result.append(batches_result)
+        filenames = result
+        all_filenames = list(itertools.chain.from_iterable(filenames))
+        return all_filenames, filenames
 
     @property
     def variants_filenames(self):

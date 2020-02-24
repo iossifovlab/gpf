@@ -527,28 +527,32 @@ class MakefileGenerator:
                 f'\t{command} && touch $@',
                 file=outfile)
 
-    def _construct_report_command(self, argv):
+    def _construct_reports_commands(self, argv):
         output = argv.output
         if output is None:
             output = '.'
         output = os.path.abspath(output)
 
         command = [
-            f'generate_common_report.py --studies {self.study_id}'
+            f'generate_common_report.py --studies {self.study_id}',
+            f'generate_denovo_gene_sets.py --studies {self.study_id}'
         ]
 
-        return ' && '.join(command)
+        return command
 
     def generate_report_targets(self, argv, outfile=sys.stdout):
         print('\n', file=outfile)
         print(
             f'reports: reports.flag\n',
             file=outfile)
-        command = self._construct_report_command(argv)
-        print(
-            f'reports.flag: load.flag\n'
-            f'\t{command} && touch $@',
-            file=outfile)
+        commands = self._construct_reports_commands(argv)
+        print(f'reports.flag: load.flag', file=outfile)
+        for command in commands:
+            print(
+                f'\t{command} && touch $@',
+                file=outfile)
+        print(f'\n', file=outfile)
+
 
     @classmethod
     def cli_arguments_parser(cls, gpf_instance):

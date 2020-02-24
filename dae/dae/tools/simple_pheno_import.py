@@ -4,7 +4,7 @@
 import sys
 import os
 import traceback
-from configparser import ConfigParser
+import toml
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
 
@@ -75,21 +75,28 @@ def verify_phenotype_data_name(input_name):
     return phenotype_data_name
 
 
-def generate_phenotype_data_config(args):
-    config = ConfigParser()
-    config['phenotypeData'] = {}
-    section = config['phenotypeData']
-    section['name'] = args.pheno_name
-    section['dbfile'] = os.path.join(
-        '%(wd)s', os.path.basename(args.pheno_db_filename))
-    # TODO
-    # Should the regression config be written to the pheno db config?
-    section['browser_dbfile'] = os.path.join(
-        '%(wd)s', 'browser', '{}_browser.db'.format(args.pheno_name))
-    section['browser_images_dir'] = os.path.join(
-        '%(wd)s', 'browser', 'images')
-    section['browser_images_url'] = \
-        '/static/{}/browser/images/'.format(args.pheno_name)
+def generate_phenotype_data_config(args, regressions):
+    dbfile = os.path.join("%(wd)s", os.path.basename(args.pheno_db_filename))
+    browser_dbfile = os.path.join(
+        '%(wd)s',
+        'browser',
+        '{}_browser.db'.format(args.pheno_name)
+    )
+    regressions_dict = GPFConfigParser._namedtuple_to_dict(regressions)
+    config = {
+        "vars": {
+            "wd": "."
+        },
+        "phenotype_data": {
+            "name": args.pheno_name,
+            "dbfile": dbfile,
+            "browser_dbfile": browser_dbfile,
+            "browser_images_dir": os.path.join("%(wd)s", "browser", "images"),
+            "browser_images_url": f"/static/{args.pheno_name}/browser/images"
+        },
+    }
+    if regressions:
+        config["regression"] = regressions_dict["regression"]
     return config
 
 
@@ -157,7 +164,8 @@ def main(argv):
             os.makedirs(args.browser_dir)
 
         config = parse_phenotype_data_config(args)
-        regressions = GPFConfigParser.load_config(args.regression, regression_conf_schema) \
+        regressions = GPFConfigParser.load_config(
+                args.regression, regression_conf_schema) \
             if args.regression else None
 
         prep = PrepareVariables(config)
@@ -176,7 +184,9 @@ def main(argv):
         )
 
         with open(pheno_conf_path, 'w') as pheno_conf_file:
-            generate_phenotype_data_config(args).write(pheno_conf_file)
+            pheno_conf_file.write(
+                toml.dumps(generate_phenotype_data_config(args, regressions))
+            )
 
         return 0
     except KeyboardInterrupt:

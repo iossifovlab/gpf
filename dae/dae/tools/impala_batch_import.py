@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import sys
 
 from dae.backends.impala.import_commons import MakefileGenerator
