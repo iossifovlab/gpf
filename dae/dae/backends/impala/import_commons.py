@@ -331,12 +331,11 @@ class MakefileGenerator:
     def generate_makefile(self, argv):
         dirname = self._create_output_directory(argv)
         with open(os.path.join(dirname, 'Makefile'), 'w') as outfile:
+            self.generate_variants_bins(argv, outfile)
             self.generate_all_targets(argv, outfile)
             self.generate_variants_targets(argv, outfile)
-            self.generate_pedigree_targets(argv, outfile)
-            self.generate_vcf_targets(argv, outfile)
-            self.generate_denovo_targets(argv, outfile)
-            self.generate_dae_targets(argv, outfile)
+            self.generate_pedigree_rule(argv, outfile)
+            self.generate_variants_rules(argv, outfile)
             self.generate_load_targets(argv, outfile)
             self.generate_report_targets(argv, outfile)
 
@@ -351,7 +350,7 @@ class MakefileGenerator:
         return variants_targets
 
     def generate_all_targets(self, argv, outfile=sys.stdout):
-        targets = ['pedigree']
+        targets = ['ped.flag', 'load.flag', 'reports.flag']
         targets.extend(self._collect_variants_targets())
 
         print('\n', file=outfile)
@@ -386,7 +385,7 @@ class MakefileGenerator:
 
         return ' '.join(command)
 
-    def generate_pedigree_targets(self, argv, outfile=sys.stdout):
+    def generate_pedigree_rule(self, argv, outfile=sys.stdout):
         print('\n', file=outfile)
         print(
             f'pedigree: ped.flag\n',
@@ -428,10 +427,9 @@ class MakefileGenerator:
 
         return ' '.join(command)
 
-    def _generate_variants_targets(
-            self, argv, target_prefix, variants_loader, variants_tool,
+    def _generate_variants_bins(
+            self, argv, target_prefix, variants_loader,
             outfile=sys.stdout):
-
         if 'target_chromosomes' in argv and \
                 argv.target_chromosomes is not None:
             target_chromosomes = argv.target_chromosomes
@@ -452,6 +450,43 @@ class MakefileGenerator:
             f'$(foreach bin, $({target_prefix}_bins), '
             f'{target_prefix}_$(bin).flag)\n',
             file=outfile)
+
+    def generate_vcf_bins(self, argv, outfile=sys.stdout):
+        if self.vcf_loader is None:
+            return
+
+        self._generate_variants_bins(
+            argv, 'vcf', self.vcf_loader,
+            outfile=outfile
+        )
+
+    def generate_denovo_bins(self, argv, outfile=sys.stdout):
+        if self.denovo_loader is None:
+            return
+
+        self._generate_variants_bins(
+            argv, 'denovo', self.denovo_loader,
+            outfile=outfile
+        )
+
+    def generate_dae_bins(self, argv, outfile=sys.stdout):
+        if self.dae_loader is None:
+            return
+
+        self._generate_variants_bins(
+            argv, 'dae', self.dae_loader,
+            outfile=outfile
+        )
+
+    def generate_variants_bins(self, argv, outfile=sys.stdout):
+        self.generate_vcf_bins(argv, outfile)
+        self.generate_dae_bins(argv, outfile)
+        self.generate_denovo_bins(argv, outfile)
+
+    def _generate_variants_rule(
+            self, argv, target_prefix, variants_loader, variants_tool,
+            outfile=sys.stdout):
+
         print(
             f'{target_prefix}_variants: $({target_prefix}_bins_flags)\n',
             file=outfile)
@@ -463,32 +498,37 @@ class MakefileGenerator:
             file=outfile
         )
 
-    def generate_vcf_targets(self, argv, outfile=sys.stdout):
+    def generate_vcf_rule(self, argv, outfile=sys.stdout):
         if self.vcf_loader is None:
             return
 
-        self._generate_variants_targets(
+        self._generate_variants_rule(
             argv, 'vcf', self.vcf_loader, 'vcf2parquet.py',
             outfile=outfile
         )
 
-    def generate_denovo_targets(self, argv, outfile=sys.stdout):
+    def generate_denovo_rule(self, argv, outfile=sys.stdout):
         if self.denovo_loader is None:
             return
 
-        self._generate_variants_targets(
+        self._generate_variants_rule(
             argv, 'denovo', self.denovo_loader, 'denovo2parquet.py',
             outfile=outfile
         )
 
-    def generate_dae_targets(self, argv, outfile=sys.stdout):
+    def generate_dae_rule(self, argv, outfile=sys.stdout):
         if self.dae_loader is None:
             return
 
-        self._generate_variants_targets(
+        self._generate_variants_rule(
             argv, 'dae', self.dae_loader, 'dae2parquet.py',
             outfile=outfile
         )
+
+    def generate_variants_rules(self, argv, outfile=sys.stdout):
+        self.generate_vcf_rule(argv, outfile)
+        self.generate_dae_rule(argv, outfile)
+        self.generate_denovo_rule(argv, outfile)
 
     def _construct_load_command(self, argv):
         assert self.genotype_storage_id is not None
@@ -552,7 +592,6 @@ class MakefileGenerator:
                 f'\t{command} && touch $@',
                 file=outfile)
         print(f'\n', file=outfile)
-
 
     @classmethod
     def cli_arguments_parser(cls, gpf_instance):
