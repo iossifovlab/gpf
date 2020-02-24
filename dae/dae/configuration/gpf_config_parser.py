@@ -105,11 +105,15 @@ class GPFConfigParser:
         return config_files
 
     @classmethod
+    def _get_file_contents(cls, filename: str) -> str:
+        with open(filename, "r") as infile:
+            return infile.read()
+
+    @classmethod
     def parse_config(cls, filename: str) -> dict:
         ext = os.path.splitext(filename)[1]
         assert ext in cls.filetype_parsers, f"Unsupported filetype {filename}!"
-        with open(filename, "r") as infile:
-            file_contents = infile.read()
+        file_contents = cls._get_file_contents(filename)
 
         env_vars = {f"${key}": val for key, val in os.environ.items()}
 
@@ -143,6 +147,13 @@ class GPFConfigParser:
 
         assert validator.validate(config), validator.errors
         return cls._dict_to_namedtuple(validator.document)
+
+    @classmethod
+    def load_config_raw(cls, filename: str) -> Dict[str, Any]:
+        ext = os.path.splitext(filename)[1]
+        assert ext in cls.filetype_parsers, f"Unsupported filetype {filename}!"
+        file_contents = cls._get_file_contents(filename)
+        return cls.filetype_parsers[ext](file_contents)
 
     @classmethod
     def load_directory_configs(
