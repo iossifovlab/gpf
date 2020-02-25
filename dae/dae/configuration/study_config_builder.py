@@ -160,11 +160,11 @@ studies = {{ studies }}
 [genotype_storage]
 id = "{{ genotype_storage.id }}"
 {% if genotype_storage.tables %}
-[tables]
+[genotype_storage.tables]
 pedigree = "{{ genotype_storage.tables.pedigree }}"
-{% if genotype_storage.tables.variants %}
+{%- if genotype_storage.tables.variants %}
 variants = "{{ genotype_storage.tables.variants }}"
-{% endif %}
+{%- endif %}
 {% elif genotype_storage.files %}
 [genotype_storage.files]
 pedigree.path = "{{ genotype_storage.files.pedigree.path }}"
