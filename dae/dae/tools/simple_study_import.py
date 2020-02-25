@@ -87,7 +87,7 @@ def cli_arguments(dae_config, argv=sys.argv[1:]):
 
     parser.add_argument(
         '--study-config', type=str, default=None,
-        dest='base_config',
+        dest='study_config',
         help='Config used to overwrite values in generated configuration'
     )
 
