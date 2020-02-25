@@ -100,8 +100,11 @@ class StudyWrapper(object):
             columns, sources = [], []
 
             def inner(cols):
-                for col_id, col in cols.field_values_iterator():
-                    if col_id not in selected_columns:
+                cols_dict = cols._asdict()
+
+                for col_id in selected_columns:
+                    col = cols_dict.get(col_id, None)
+                    if not col:
                         continue
                     if col.source is not None:
                         columns.append(col_id if use_id else col.name)
@@ -111,6 +114,7 @@ class StudyWrapper(object):
                             columns.append(f"{col_id}.{slot.name}"
                                            if use_id else f"{slot.name}")
                             sources.append(slot.source)
+
             inner(genotype_browser_config.genotype)
             if genotype_browser_config.pheno:
                 inner(genotype_browser_config.pheno)
@@ -174,7 +178,7 @@ class StudyWrapper(object):
         'genes': lambda aa: gene_effect_get_genes(aa.effect),
         'worst_effect': lambda aa: gene_effect_get_worst_effect(aa.effect),
         'effect_details': lambda aa: gd2str(aa.effect),
-        'best_st': lambda aa: mat2str(aa.best_st),
+        'best_st': lambda aa: mat2str(aa.best_state),
         'family_structure': lambda aa:
             members_in_order_get_family_structure(aa.members_in_order)
     }
