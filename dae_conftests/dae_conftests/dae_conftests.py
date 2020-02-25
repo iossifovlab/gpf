@@ -633,6 +633,7 @@ def impala_genotype_storage(hdfs_host, impala_host):
     storage_config = GPFConfigParser._dict_to_namedtuple({
         'id': 'impala_test_storage',
         'type': 'impala',
+        'dir': "/tmp",
         'impala': {
             'host': impala_host,
             'port': 21050,
@@ -663,7 +664,7 @@ DATA_IMPORT_COUNT = 0
 
 @pytest.fixture(scope='session')
 def data_import(
-        request, hdfs_host,
+        request, hdfs_host, impala_host,
         impala_genotype_storage, reimport, default_dae_config,
         gpf_instance_2013):
 
@@ -705,7 +706,9 @@ def data_import(
             study_id = os.path.splitext(filename)[0]
 
             variant_table, pedigree_table = impala_genotype_storage. \
-                study_tables(GPFConfigParser._dict_to_namedtuple({'id': study_id}))
+                study_tables(
+                    GPFConfigParser._dict_to_namedtuple(
+                        {'id': study_id}))
 
             if not reimport and \
                     impala_helpers.check_table(
