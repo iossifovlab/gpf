@@ -12,7 +12,8 @@ from dae.backends.impala.import_commons import \
 
 from dae.backends.dae.loader import DenovoLoader, DaeTransmittedLoader
 from dae.backends.vcf.loader import VcfLoader
-from dae.backends.raw.loader import AnnotationPipelineDecorator
+from dae.backends.raw.loader import AnnotationPipelineDecorator, \
+    AlleleFrequencyDecorator
 
 from dae.pedigrees.loader import FamiliesLoader
 
@@ -179,8 +180,9 @@ def main(argv, gpf_instance=None):
             params=vcf_params
         )
         vcf_loader = AnnotationPipelineDecorator(
-            vcf_loader, annotation_pipeline
-        )
+            vcf_loader, annotation_pipeline)
+        vcf_loader = AlleleFrequencyDecorator(vcf_loader)
+
         variant_loaders.append(vcf_loader)
 
     if argv.dae_summary_file is not None:

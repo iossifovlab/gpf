@@ -131,6 +131,7 @@ class AlleleFrequencyDecorator(VariantsLoaderDecorator):
             n_alleles = 0  # np.sum(gt == allele_index)
             allele_freq = 0.0
             n_parents_called = 0
+            percent_parents_called = 0.0
 
             for fv in family_variants:
                 independent_indexes = list()
@@ -144,8 +145,9 @@ class AlleleFrequencyDecorator(VariantsLoaderDecorator):
                     person_gt = fv.genotype[idx]
                     n_alleles += np.sum(person_gt == allele_index)
 
-            percent_parents_called = \
-                (100.0 * n_parents_called) / n_independent_parents
+            if n_independent_parents > 0:
+                percent_parents_called = \
+                    (100.0 * n_parents_called) / n_independent_parents
             if n_parents_called > 0:
                 allele_freq = \
                     (100.0 * n_alleles) / (2.0 * n_parents_called)

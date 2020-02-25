@@ -445,8 +445,11 @@ def iossifov2014_raw_denovo(iossifov2014_loader):
 
 @pytest.fixture(scope='session')
 def iossifov2014_impala(
-        request, iossifov2014_loader, genomes_db_2013,
-        test_hdfs, impala_genotype_storage):
+        request, iossifov2014_loader, genomes_db_2013, hdfs_host,
+        impala_genotype_storage):
+
+    from dae.backends.impala.hdfs_helpers import HdfsHelpers
+    test_hdfs = HdfsHelpers(hdfs_host, 8020)
 
     temp_dirname = test_hdfs.tempdir(prefix='variants_', suffix='_data')
     test_hdfs.mkdir(temp_dirname)
@@ -623,22 +626,6 @@ def hdfs_host():
 @pytest.fixture(scope='session')
 def impala_host():
     return os.environ.get('DAE_IMPALA_HOST', '127.0.0.1')
-
-
-# Impala backend
-@pytest.fixture(scope='session')
-def test_hdfs(request, hdfs_host):
-    from dae.backends.impala.hdfs_helpers import HdfsHelpers
-    hdfs = HdfsHelpers(hdfs_host, 8020)
-    return hdfs
-
-
-@pytest.fixture(scope='session')
-def test_impala_helpers(request, impala_host):
-    from dae.backends.impala.impala_helpers import ImpalaHelpers
-    helpers = ImpalaHelpers(impala_host=impala_host, impala_port=21050)
-
-    return helpers
 
 
 @pytest.fixture(scope='session')
