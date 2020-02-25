@@ -623,22 +623,6 @@ def impala_host():
     return os.environ.get('DAE_IMPALA_HOST', '127.0.0.1')
 
 
-# Impala backend
-@pytest.fixture(scope='session')
-def test_hdfs(request, hdfs_host):
-    from dae.backends.impala.hdfs_helpers import HdfsHelpers
-    hdfs = HdfsHelpers(hdfs_host, 8020)
-    return hdfs
-
-
-@pytest.fixture(scope='session')
-def test_impala_helpers(request, impala_host):
-    from dae.backends.impala.impala_helpers import ImpalaHelpers
-    helpers = ImpalaHelpers(impala_host=impala_host, impala_port=21050)
-
-    return helpers
-
-
 @pytest.fixture(scope='session')
 def impala_genotype_storage(hdfs_host, impala_host):
     storage_config = GPFConfigParser._dict_to_namedtuple({
