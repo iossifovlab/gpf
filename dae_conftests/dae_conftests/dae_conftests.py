@@ -663,7 +663,7 @@ DATA_IMPORT_COUNT = 0
 
 @pytest.fixture(scope='session')
 def data_import(
-        request, hdfs_host, test_impala_helpers,
+        request, hdfs_host,
         impala_genotype_storage, reimport, default_dae_config,
         gpf_instance_2013):
 
@@ -685,10 +685,14 @@ def data_import(
         hdfs.delete(temp_dirname, recursive=True)
     request.addfinalizer(fin)
 
+    from dae.backends.impala.impala_helpers import ImpalaHelpers
+    impala_helpers = ImpalaHelpers(impala_host=impala_host, impala_port=21050)
+
+
     def build(dirname):
 
-        if not test_impala_helpers.check_database(impala_test_dbname()):
-            test_impala_helpers.create_database(impala_test_dbname())
+        if not impala_helpers.check_database(impala_test_dbname()):
+            impala_helpers.create_database(impala_test_dbname())
 
         vcfdirname = relative_to_this_test_folder(
             os.path.join('fixtures', dirname))
@@ -704,9 +708,9 @@ def data_import(
                 study_tables(GPFConfigParser._dict_to_namedtuple({'id': study_id}))
 
             if not reimport and \
-                    test_impala_helpers.check_table(
+                    impala_helpers.check_table(
                         impala_test_dbname(), variant_table) and \
-                    test_impala_helpers.check_table(
+                    impala_helpers.check_table(
                         impala_test_dbname(), pedigree_table):
                 continue
 
