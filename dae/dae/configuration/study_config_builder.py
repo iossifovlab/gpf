@@ -8,7 +8,6 @@ class StudyConfigBuilder:
         assert config_dict
         assert config_dict["genotype_storage"]
         self._config_dict = TOMLDict.from_dict(config_dict)
-        self.is_impala = "tables" in config_dict["genotype_storage"]
 
     def build_config(self) -> str:
         return STUDY_CONFIG_TEMPLATE.render(self._config_dict)
