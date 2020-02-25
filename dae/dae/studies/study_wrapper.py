@@ -240,6 +240,8 @@ class StudyWrapper(object):
 
         if max_variants_count is not None:
             limited_rows = itertools.islice(rows, max_variants_count)
+        else:
+            limited_rows = rows
 
         return limited_rows
 
