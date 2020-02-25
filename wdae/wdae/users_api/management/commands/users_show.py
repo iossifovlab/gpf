@@ -4,12 +4,12 @@ from .export_base import ExportUsersBase
 
 
 class Command(BaseCommand, ExportUsersBase):
-    args = '<email>'
-    help = 'Shows all information about user'
+    args = "<email>"
+    help = "Shows all information about user"
 
     def handle(self, *args, **options):
-        if(len(args) != 1):
-            raise CommandError('One argument is required')
+        if len(args) != 1:
+            raise CommandError("One argument is required")
 
         try:
             UserModel = get_user_model()
@@ -17,10 +17,13 @@ class Command(BaseCommand, ExportUsersBase):
             for user in users:
                 groups = ",".join(self.get_visible_groups(user))
 
-                print("User email: {}\n"
-                      "name: {}\n"
-                      "groups: {}\n"
-                      "password: {}".format(user.email, user.name, groups,
-                                            user.password))
+                print(
+                    "User email: {}\n"
+                    "name: {}\n"
+                    "groups: {}\n"
+                    "password: {}".format(
+                        user.email, user.name, groups, user.password
+                    )
+                )
         except UserModel.DoesNotExist:
             raise CommandError("User not found")

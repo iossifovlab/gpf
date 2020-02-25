@@ -6,81 +6,50 @@ from dae.pheno_tool.pheno_common import PhenoResult
 from pheno_tool_api.views import PhenoToolView
 
 
-pytestmark = pytest.mark.usefixtures('wdae_gpf_instance', 'calc_gene_sets')
+pytestmark = pytest.mark.usefixtures("wdae_gpf_instance", "calc_gene_sets")
 
 
 def test_pheno_tool_view_build_report_description():
-    desc = PhenoToolView._build_report_description('measure', [])
-    assert desc == 'measure'
-    desc = PhenoToolView._build_report_description('measure', ['norm1'])
-    assert desc == 'measure ~ norm1'
+    desc = PhenoToolView._build_report_description("measure", [])
+    assert desc == "measure"
+    desc = PhenoToolView._build_report_description("measure", ["norm1"])
+    assert desc == "measure ~ norm1"
     desc = PhenoToolView._build_report_description(
-        'measure', ['norm1', 'norm2'])
-    assert desc == 'measure ~ norm1 + norm2'
+        "measure", ["norm1", "norm2"]
+    )
+    assert desc == "measure ~ norm1 + norm2"
 
 
 def test_pheno_tool_view_align_NA_results_valid():
     results = {
-        'maleResults': {
-            'positive': {
-                'count': 0,
-                'mean': 0,
-                'deviation': 0
-            },
-            'negative': {
-               'count': 1,
-               'mean': 1,
-               'deviation': 0
-            },
-            'pValue': 'NA'
+        "maleResults": {
+            "positive": {"count": 0, "mean": 0, "deviation": 0},
+            "negative": {"count": 1, "mean": 1, "deviation": 0},
+            "pValue": "NA",
         },
-        'femaleResults': {
-            'positive': {
-                'count': 0,
-                'mean': 0,
-                'deviation': 0
-            },
-            'negative': {
-               'count': 1,
-               'mean': 1,
-               'deviation': 0
-            },
-            'pValue': 'NA'
-        }
+        "femaleResults": {
+            "positive": {"count": 0, "mean": 0, "deviation": 0},
+            "negative": {"count": 1, "mean": 1, "deviation": 0},
+            "pValue": "NA",
+        },
     }
     PhenoToolView._align_NA_results([results])
-    assert results['maleResults']['positive']['mean'] == 1
-    assert results['femaleResults']['positive']['mean'] == 1
+    assert results["maleResults"]["positive"]["mean"] == 1
+    assert results["femaleResults"]["positive"]["mean"] == 1
 
 
 def test_pheno_tool_view_align_NA_results_invalid():
     results = {
-        'maleResults': {
-            'positive': {
-                'count': 0,
-                'mean': 5,
-                'deviation': 0.2
-            },
-            'negative': {
-                'count': 0,
-                'mean': 1,
-                'deviation': 0.3
-            },
-            'pValue': 0.02
+        "maleResults": {
+            "positive": {"count": 0, "mean": 5, "deviation": 0.2},
+            "negative": {"count": 0, "mean": 1, "deviation": 0.3},
+            "pValue": 0.02,
         },
-        'femaleResults': {
-            'positive': {
-                'count': 0,
-                'mean': 5,
-                'deviation': 0.2
-            },
-            'negative': {
-                'count': 0,
-                'mean': 1,
-                'deviation': 0.3
-            },
-            'pValue': 0.02
-        }
+        "femaleResults": {
+            "positive": {"count": 0, "mean": 5, "deviation": 0.2},
+            "negative": {"count": 0, "mean": 1, "deviation": 0.3},
+            "pValue": 0.02,
+        },
     }
     with pytest.raises(AssertionError):
         PhenoToolView._align_NA_results([results])
@@ -88,17 +57,9 @@ def test_pheno_tool_view_align_NA_results_invalid():
 
 def test_pheno_tool_view_get_result_by_sex():
     expected_result = {
-        'positive': {
-            'count': 1,
-            'mean': 2,
-            'deviation': 3
-        },
-        'negative': {
-            'count': 4,
-            'mean': 5,
-            'deviation': 6
-        },
-        'pValue': 7
+        "positive": {"count": 1, "mean": 2, "deviation": 3},
+        "negative": {"count": 4, "mean": 5, "deviation": 6},
+        "pValue": 7,
     }
     result = PhenoResult()
     result._set_positive_stats(1, 2, 3)
@@ -117,12 +78,13 @@ def test_pheno_tool_view_calc_by_effect():
             pr_f = PhenoResult()
             pr_f._set_positive_stats(4, 5, 6)
             return {Sex.M.name: pr_m, Sex.F.name: pr_f}
+
     mocked_tool = MockPhenoTool()
-    res = PhenoToolView.calc_by_effect('effectName', mocked_tool, dict())
-    assert res['effect'] == 'effectName'
-    assert res['maleResults']['positive']['count'] == 1
-    assert res['maleResults']['positive']['mean'] == 2
-    assert res['maleResults']['positive']['deviation'] == 3
-    assert res['femaleResults']['positive']['count'] == 4
-    assert res['femaleResults']['positive']['mean'] == 5
-    assert res['femaleResults']['positive']['deviation'] == 6
+    res = PhenoToolView.calc_by_effect("effectName", mocked_tool, dict())
+    assert res["effect"] == "effectName"
+    assert res["maleResults"]["positive"]["count"] == 1
+    assert res["maleResults"]["positive"]["mean"] == 2
+    assert res["maleResults"]["positive"]["deviation"] == 3
+    assert res["femaleResults"]["positive"]["count"] == 4
+    assert res["femaleResults"]["positive"]["mean"] == 5
+    assert res["femaleResults"]["positive"]["deviation"] == 6

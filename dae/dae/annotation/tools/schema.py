@@ -6,13 +6,16 @@ from box import Box
 class Schema(object):
 
     # New types only need to be added here.
-    type_map = OrderedDict([
-                ('str', str),
-                ('float', float),
-                ('int', int),
-                ('list(str)', str),
-                ('list(float)', float),
-                ('list(int)', int)])
+    type_map = OrderedDict(
+        [
+            ("str", str),
+            ("float", float),
+            ("int", int),
+            ("list(str)", str),
+            ("list(float)", float),
+            ("list(int)", int),
+        ]
+    )
 
     def __init__(self):
         self.columns = OrderedDict()
@@ -20,10 +23,11 @@ class Schema(object):
     @classmethod
     def produce_type(cls, type_name):
         assert type_name in cls.type_map
-        return Box({'type_name': type_name,
-                    'type_py': cls.type_map[type_name]},
-                   default_box=True,
-                   default_box_attr=None)
+        return Box(
+            {"type_name": type_name, "type_py": cls.type_map[type_name]},
+            default_box=True,
+            default_box_attr=None,
+        )
 
     def create_column(self, col_name, col_type):
         if col_name not in self.columns:
@@ -31,7 +35,7 @@ class Schema(object):
 
     def remove_column(self, col_name):
         if col_name in self.columns:
-            del(self.columns[col_name])
+            del self.columns[col_name]
 
     def order_as(self, ordered_col_names):
         ordered_schema = Schema()
@@ -81,7 +85,7 @@ class Schema(object):
     def __str__(self):
         ret_str = ""
         for col, col_type in self.columns.items():
-            ret_str += '{} -> [{}]\n'.format(col, col_type.type_py)
+            ret_str += "{} -> [{}]\n".format(col, col_type.type_py)
         return ret_str
 
     def __contains__(self, key):

@@ -6,14 +6,15 @@ from dae.configuration.gpf_config_parser import GPFConfigParser
 
 from dae.variants.attributes import VariantType
 
-from dae.annotation.tools.annotator_base import VariantAnnotatorBase, \
-    CompositeVariantAnnotator
+from dae.annotation.tools.annotator_base import (
+    VariantAnnotatorBase,
+    CompositeVariantAnnotator,
+)
 from dae.annotation.tools.annotator_config import AnnotationConfigParser
 from dae.annotation.tools.score_file_io import ScoreFile
 
 
 class VariantScoreAnnotatorBase(VariantAnnotatorBase):
-
     def __init__(self, config, genomes_db):
         super(VariantScoreAnnotatorBase, self).__init__(config, genomes_db)
 
@@ -22,10 +23,13 @@ class VariantScoreAnnotatorBase(VariantAnnotatorBase):
         assert len(self.config.native_columns) >= 1
         self.score_names = self.config.native_columns
 
-        assert all([
-            sn in self.score_file.score_names for sn in self.score_names]), \
-            (self.score_names, self.score_file.score_names,
-             self.score_file.score_filename)
+        assert all(
+            [sn in self.score_file.score_names for sn in self.score_names]
+        ), (
+            self.score_names,
+            self.score_file.score_names,
+            self.score_file.score_filename,
+        )
 
     def _init_score_file(self):
         assert self.config.options.scores_file, self.config.annotator
@@ -33,8 +37,9 @@ class VariantScoreAnnotatorBase(VariantAnnotatorBase):
         scores_filename = os.path.abspath(self.config.options.scores_file)
         assert os.path.exists(scores_filename), scores_filename
 
-        self.score_file = ScoreFile(scores_filename,
-                                    self.config.options.scores_config_file)
+        self.score_file = ScoreFile(
+            scores_filename, self.config.options.scores_config_file
+        )
 
     def collect_annotator_schema(self, schema):
         super(VariantScoreAnnotatorBase, self).collect_annotator_schema(schema)
@@ -44,37 +49,39 @@ class VariantScoreAnnotatorBase(VariantAnnotatorBase):
 
     def _scores_not_found(self, aline):
         values = {
-            getattr(self.config.columns, score_name):
-            self.score_file.no_score_value
-            for score_name in self.score_names}
+            getattr(
+                self.config.columns, score_name
+            ): self.score_file.no_score_value
+            for score_name in self.score_names
+        }
         aline.update(values)
 
     def _fetch_scores(self, variant):
         scores = None
         if variant.variant_type == VariantType.substitution:
             scores = self.score_file.fetch_scores(
-                variant.chromosome,
-                variant.position,
-                variant.position
+                variant.chromosome, variant.position, variant.position
             )
-        elif variant.variant_type in set([
-                VariantType.insertion, VariantType.deletion,
-                VariantType.complex]):
+        elif variant.variant_type in set(
+            [VariantType.insertion, VariantType.deletion, VariantType.complex]
+        ):
 
             scores = self.score_file.fetch_scores(
                 variant.chromosome,
                 variant.position,
-                variant.position + len(variant.reference)
+                variant.position + len(variant.reference),
             )
         else:
-            print("Unexpected variant type: {}, {}".format(
-                variant, variant.variant_type
-            ), file=sys.stderr)
+            print(
+                "Unexpected variant type: {}, {}".format(
+                    variant, variant.variant_type
+                ),
+                file=sys.stderr,
+            )
         return scores
 
 
 class PositionScoreAnnotator(VariantScoreAnnotatorBase):
-
     def __init__(self, config, genomes_db):
         super(PositionScoreAnnotator, self).__init__(config, genomes_db)
 
@@ -89,7 +96,7 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
             self._scores_not_found(aline)
             return
 
-        counts = scores['COUNT']
+        counts = scores["COUNT"]
         total_count = sum(counts)
 
         for score_name in self.score_names:
@@ -99,13 +106,13 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
             if len(values) == 1:
                 aline[column_name] = float(values[0])
             else:
-                total_sum = sum([
-                    c * float(v) for (c, v) in zip(counts, values)])
+                total_sum = sum(
+                    [c * float(v) for (c, v) in zip(counts, values)]
+                )
                 aline[column_name] = total_sum / total_count
 
 
 class NPScoreAnnotator(VariantScoreAnnotatorBase):
-
     def __init__(self, config, genomes_db):
         super(NPScoreAnnotator, self).__init__(config, genomes_db)
         assert self.score_file.ref_name is not None
@@ -119,8 +126,9 @@ class NPScoreAnnotator(VariantScoreAnnotatorBase):
         assert variant.variant_type == VariantType.substitution
 
         res = {}
-        matched = (scores_df[self.ref_name] == variant.reference) & \
-            (scores_df[self.alt_name] == variant.alternative)
+        matched = (scores_df[self.ref_name] == variant.reference) & (
+            scores_df[self.alt_name] == variant.alternative
+        )
         matched_df = scores_df[matched]
         if len(matched_df) == 0:
             self._scores_not_found(res)
@@ -131,23 +139,22 @@ class NPScoreAnnotator(VariantScoreAnnotatorBase):
         return res
 
     def _aggregate_indel(self, variant, scores_df):
-        assert variant.variant_type in set([
-            VariantType.insertion, VariantType.deletion,
-            VariantType.complex])
+        assert variant.variant_type in set(
+            [VariantType.insertion, VariantType.deletion, VariantType.complex]
+        )
 
-        aggregate = {
-            sn: 'max' for sn in self.score_names
-        }
+        aggregate = {sn: "max" for sn in self.score_names}
 
-        aggregate['COUNT'] = 'max'
+        aggregate["COUNT"] = "max"
         group_df = scores_df.groupby(
-            by=[self.chr_name, self.pos_begin_name]).agg(aggregate)
-        count = group_df['COUNT'].sum()
+            by=[self.chr_name, self.pos_begin_name]
+        ).agg(aggregate)
+        count = group_df["COUNT"].sum()
         res = {}
         for score_name in self.score_names:
             column_name = getattr(self.config.columns, score_name)
-            total_df = group_df[score_name] * group_df['COUNT']
-            res[column_name] = total_df.sum()/count
+            total_df = group_df[score_name] * group_df["COUNT"]
+            res[column_name] = total_df.sum() / count
 
         return res
 
@@ -169,22 +176,24 @@ class NPScoreAnnotator(VariantScoreAnnotatorBase):
             agg = self._aggregate_substitution(variant, scores_df)
             aline.update(agg)
 
-        elif variant.variant_type in set([
-                VariantType.insertion, VariantType.deletion,
-                VariantType.complex]):
+        elif variant.variant_type in set(
+            [VariantType.insertion, VariantType.deletion, VariantType.complex]
+        ):
 
             agg = self._aggregate_indel(variant, scores_df)
             aline.update(agg)
 
         else:
-            print("Unexpected variant type: {}, {}".format(
-                variant, variant.variant_type
-            ), file=sys.stderr)
+            print(
+                "Unexpected variant type: {}, {}".format(
+                    variant, variant.variant_type
+                ),
+                file=sys.stderr,
+            )
             self._scores_not_found(aline)
 
 
 class PositionMultiScoreAnnotator(CompositeVariantAnnotator):
-
     def __init__(self, config, genomes_db):
         super(PositionMultiScoreAnnotator, self).__init__(config, genomes_db)
         assert self.config.options.scores_directory is not None
@@ -195,33 +204,34 @@ class PositionMultiScoreAnnotator(CompositeVariantAnnotator):
 
     def _get_score_file(self, score_name):
         dirname = "{}/{}".format(
-            os.path.abspath(self.config.options.scores_directory),
-            score_name)
+            os.path.abspath(self.config.options.scores_directory), score_name
+        )
         globname = "{}/{}*gz".format(dirname, score_name)
         filenames = glob.glob(globname)
         assert len(filenames) == 1
         return filenames[0]
 
     def _build_annotator_for(self, score_name):
-        assert os.path.exists(self.config.options.scores_directory), \
+        assert os.path.exists(
             self.config.options.scores_directory
+        ), self.config.options.scores_directory
 
         score_filename = self._get_score_file(score_name)
 
         options = GPFConfigParser.modify_tuple(
             self.config.options, {"scores_file": score_filename}
         )
-        columns = {
-            score_name: getattr(self.config.columns, score_name)
-        }
+        columns = {score_name: getattr(self.config.columns, score_name)}
 
         variant_config = AnnotationConfigParser.parse_section(
-            GPFConfigParser._dict_to_namedtuple({
-                'options': options,
-                'columns': columns,
-                'annotator': 'score_annotator.VariantScoreAnnotator',
-                'virtual_columns': [],
-            })
+            GPFConfigParser._dict_to_namedtuple(
+                {
+                    "options": options,
+                    "columns": columns,
+                    "annotator": "score_annotator.VariantScoreAnnotator",
+                    "virtual_columns": [],
+                }
+            )
         )
 
         annotator = PositionScoreAnnotator(variant_config, self.genomes_db)

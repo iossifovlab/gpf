@@ -5,7 +5,6 @@ from dae.annotation.tools.score_annotator import VariantScoreAnnotatorBase
 
 
 class FrequencyAnnotator(VariantScoreAnnotatorBase):
-
     def __init__(self, config, genomes_db):
         super(FrequencyAnnotator, self).__init__(config, genomes_db)
 
@@ -15,9 +14,11 @@ class FrequencyAnnotator(VariantScoreAnnotatorBase):
         self.score_filename_base = basename(self.score_file.score_filename)
         self.variant_col_name = self.score_file.config.columns.variant
         assert self.variant_col_name
-        assert self.variant_col_name in self.score_file.schema.col_names, \
-            "'{}' not in score file schema!".format(
-                    self.variant_col_name, self.score_file.schema.col_names)
+        assert (
+            self.variant_col_name in self.score_file.schema.col_names
+        ), "'{}' not in score file schema!".format(
+            self.variant_col_name, self.score_file.schema.col_names
+        )
 
     def collect_annotator_schema(self, schema):
         super(FrequencyAnnotator, self).collect_annotator_schema(schema)
@@ -38,23 +39,34 @@ class FrequencyAnnotator(VariantScoreAnnotatorBase):
         variant_occurrences = scores[self.variant_col_name].count(variant)
         if variant_occurrences > 0:
             if variant_occurrences > 1:
-                print('WARNING {}: multiple variant occurrences of {}:{} {}'.
-                      format(self.score_filename_base,
-                             str(chrom), str(pos), str(variant)),
-                      file=sys.stderr)
+                print(
+                    "WARNING {}: multiple variant occurrences of {}:{} {}".format(
+                        self.score_filename_base,
+                        str(chrom),
+                        str(pos),
+                        str(variant),
+                    ),
+                    file=sys.stderr,
+                )
 
             variant_index = scores[self.variant_col_name].index(variant)
             for native, output in self.config.columns.field_values_iterator():
                 # FIXME: this conversion should come from schema
                 val = scores[native][variant_index]
                 try:
-                    if val in set(['', ' ']):
+                    if val in set(["", " "]):
                         aline[output] = self.score_file.no_score_value
                     else:
                         aline[output] = float(val)
                 except ValueError as ex:
-                    print("problem with: ", output, chrom, pos, [val],
-                          file=sys.stderr)
+                    print(
+                        "problem with: ",
+                        output,
+                        chrom,
+                        pos,
+                        [val],
+                        file=sys.stderr,
+                    )
                     raise ex
         # else:
         #     print('{}: frequency score not found for variant {}:{} {}'.

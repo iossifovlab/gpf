@@ -1,43 +1,46 @@
 import pytest
-from dae.common_reports.denovo_report import EffectCell, EffectRow, \
-    DenovoReportTable, DenovoReport
+from dae.common_reports.denovo_report import (
+    EffectCell,
+    EffectRow,
+    DenovoReportTable,
+    DenovoReport,
+)
 
 
 @pytest.mark.xfail
 def test_families_group_filter_people(study1, families_groups):
     fg = families_groups(study1)
     families_group = fg.get_default_families_group()
-    assert families_group.id == 'phenotype'
-    assert len(list(families_group.get_people_with_propvalues(
-        ('phenotype2',)))) == 2
-    print(list(families_group.get_people_with_propvalues(
-        ('phenotype2',))))
+    assert families_group.id == "phenotype"
+    assert (
+        len(list(families_group.get_people_with_propvalues(("phenotype2",))))
+        == 2
+    )
+    print(list(families_group.get_people_with_propvalues(("phenotype2",))))
 
-    families_group = fg.get('role')
-    assert families_group.id == 'role'
-    assert len(list(families_group.get_people_with_propvalues(
-        ('sib',)))) == 4
-    print(list(families_group.get_people_with_propvalues(
-        ('sib',))))
+    families_group = fg.get("role")
+    assert families_group.id == "role"
+    assert len(list(families_group.get_people_with_propvalues(("sib",)))) == 4
+    print(list(families_group.get_people_with_propvalues(("sib",))))
 
 
 @pytest.mark.xfail(reason="denovo report reorganized")
 def test_effect_cell_missense_study1(
-        study1, denovo_variants_st1, filter_objects):
+    study1, denovo_variants_st1, filter_objects
+):
 
-    filter_object = filter_objects[0].get_filter_by_name(
-        'sib and phenotype2')
+    filter_object = filter_objects[0].get_filter_by_name("sib and phenotype2")
     assert filter_object
 
     effect_cell = EffectCell(
-        study1, denovo_variants_st1, filter_object, 'Missense'
+        study1, denovo_variants_st1, filter_object, "Missense"
     )
 
     assert effect_cell.number_of_observed_events == 1
     assert effect_cell.number_of_children_with_event == 1
     assert effect_cell.observed_rate_per_child == 1.0 / 1
     assert effect_cell.percent_of_children_with_events == 1.0 / 1
-    assert effect_cell.column == 'sib and phenotype2'
+    assert effect_cell.column == "sib and phenotype2"
 
     assert effect_cell.is_empty() is False
 
@@ -46,21 +49,21 @@ def test_effect_cell_missense_study1(
 
 @pytest.mark.xfail(reason="denovo report reorganized")
 def test_effect_cell_missense(
-        genotype_data_group1, denovo_variants_ds1, filter_objects):
+    genotype_data_group1, denovo_variants_ds1, filter_objects
+):
 
-    filter_object = filter_objects[0].get_filter_by_name(
-        'sib and phenotype2')
+    filter_object = filter_objects[0].get_filter_by_name("sib and phenotype2")
     assert filter_object
 
     effect_cell = EffectCell(
-        genotype_data_group1, denovo_variants_ds1, filter_object, 'Missense'
+        genotype_data_group1, denovo_variants_ds1, filter_object, "Missense"
     )
 
     assert effect_cell.number_of_observed_events == 2
     assert effect_cell.number_of_children_with_event == 1
     assert effect_cell.observed_rate_per_child == 2.0 / 1
     assert effect_cell.percent_of_children_with_events == 1.0 / 1
-    assert effect_cell.column == 'sib and phenotype2'
+    assert effect_cell.column == "sib and phenotype2"
 
     assert effect_cell.is_empty() is False
 
@@ -69,20 +72,20 @@ def test_effect_cell_missense(
 
 @pytest.mark.xfail(reason="denovo report reorganized")
 def test_effect_cell_frame_shift(
-        genotype_data_group1, denovo_variants_ds1, filter_objects):
-    filter_object = filter_objects[0].get_filter_by_name(
-        'prb and phenotype1')
+    genotype_data_group1, denovo_variants_ds1, filter_objects
+):
+    filter_object = filter_objects[0].get_filter_by_name("prb and phenotype1")
     assert filter_object
 
     effect_cell = EffectCell(
-        genotype_data_group1, denovo_variants_ds1, filter_object, 'Frame-shift'
+        genotype_data_group1, denovo_variants_ds1, filter_object, "Frame-shift"
     )
 
     assert effect_cell.number_of_observed_events == 2
     assert effect_cell.number_of_children_with_event == 2
     assert effect_cell.observed_rate_per_child == 2.0 / 7.0
     assert effect_cell.percent_of_children_with_events == 2.0 / 7.0
-    assert effect_cell.column == 'prb and phenotype1'
+    assert effect_cell.column == "prb and phenotype1"
 
     assert effect_cell.is_empty() is False
 
@@ -90,21 +93,21 @@ def test_effect_cell_frame_shift(
 
 
 @pytest.mark.xfail(reason="denovo report reorganized")
-def test_effect_cell_empty(genotype_data_group1, denovo_variants_ds1,
-                           filter_objects):
-    filter_object = filter_objects[0].get_filter_by_name(
-        'dad and unknown')
+def test_effect_cell_empty(
+    genotype_data_group1, denovo_variants_ds1, filter_objects
+):
+    filter_object = filter_objects[0].get_filter_by_name("dad and unknown")
     assert filter_object
 
     effect_cell = EffectCell(
-        genotype_data_group1, denovo_variants_ds1, filter_object, 'Frame-shift'
+        genotype_data_group1, denovo_variants_ds1, filter_object, "Frame-shift"
     )
 
     assert effect_cell.number_of_observed_events == 0
     assert effect_cell.number_of_children_with_event == 0
     assert effect_cell.observed_rate_per_child == 0
     assert effect_cell.percent_of_children_with_events == 0
-    assert effect_cell.column == 'dad and unknown'
+    assert effect_cell.column == "dad and unknown"
 
     assert effect_cell.is_empty() is True
 
@@ -114,11 +117,13 @@ def test_effect_cell_empty(genotype_data_group1, denovo_variants_ds1,
 @pytest.mark.xfail(reason="denovo report reorganized")
 def test_effect_row(genotype_data_group1, denovo_variants_ds1, filter_objects):
     effect_row = EffectRow(
-        genotype_data_group1, denovo_variants_ds1, 'Missense',
-        filter_objects[0]
+        genotype_data_group1,
+        denovo_variants_ds1,
+        "Missense",
+        filter_objects[0],
     )
 
-    assert effect_row.effect_type == 'Missense'
+    assert effect_row.effect_type == "Missense"
     assert len(effect_row.row) == 16
 
     assert effect_row.is_row_empty() is False
@@ -136,18 +141,23 @@ def test_effect_row(genotype_data_group1, denovo_variants_ds1, filter_objects):
     assert len(effect_row.to_dict()) == 2
 
 
-def test_denovo_report_table(genotype_data_group1, denovo_variants_ds1,
-                             filter_objects):
+def test_denovo_report_table(
+    genotype_data_group1, denovo_variants_ds1, filter_objects
+):
     denovo_report_table = DenovoReportTable(
-        genotype_data_group1, denovo_variants_ds1, ['Missense', 'Splice-site'],
-        ['Frame-shift', 'Nonsense'], filter_objects[0]
+        genotype_data_group1,
+        denovo_variants_ds1,
+        ["Missense", "Splice-site"],
+        ["Frame-shift", "Nonsense"],
+        filter_objects[0],
     )
 
-    assert denovo_report_table.group_name == 'Role and Diagnosis'
-    assert sorted(denovo_report_table.columns) == \
-        sorted(['sib and phenotype2', 'prb and phenotype1'])
-    assert denovo_report_table.effect_groups == ['Missense']
-    assert denovo_report_table.effect_types == ['Frame-shift']
+    assert denovo_report_table.group_name == "Role and Diagnosis"
+    assert sorted(denovo_report_table.columns) == sorted(
+        ["sib and phenotype2", "prb and phenotype1"]
+    )
+    assert denovo_report_table.effect_groups == ["Missense"]
+    assert denovo_report_table.effect_types == ["Frame-shift"]
     assert len(denovo_report_table.rows) == 2
 
     assert denovo_report_table.is_empty() is False
@@ -155,10 +165,11 @@ def test_denovo_report_table(genotype_data_group1, denovo_variants_ds1,
     assert len(denovo_report_table.to_dict()) == 5
 
 
-def test_denovo_report(genotype_data_group1, filter_objects,
-                       denovo_variants_ds1):
+def test_denovo_report(
+    genotype_data_group1, filter_objects, denovo_variants_ds1
+):
     denovo_report = DenovoReport(
-        genotype_data_group1, ['Missense'], ['Frame-shift'], filter_objects
+        genotype_data_group1, ["Missense"], ["Frame-shift"], filter_objects
     )
 
     assert len(denovo_report.denovo_variants) == 8
@@ -172,7 +183,7 @@ def test_denovo_report(genotype_data_group1, filter_objects,
 
 def test_denovo_report_empty(study2, filter_objects):
     denovo_report = DenovoReport(
-        study2, ['Missense'], ['Frame-shift'], filter_objects
+        study2, ["Missense"], ["Frame-shift"], filter_objects
     )
 
     assert len(denovo_report.denovo_variants) == 0

@@ -1,5 +1,7 @@
-from dae.configuration.gpf_config_parser import validate_existing_path, \
-    validate_path
+from dae.configuration.gpf_config_parser import (
+    validate_existing_path,
+    validate_path,
+)
 
 config_reference_schema = {
     "conf_file": {
@@ -25,10 +27,7 @@ impala_schema = {
 hdfs_schema = {
     "host": {"type": "string"},
     "port": {"type": "integer"},
-    "base_dir": {
-        "type": "string",
-        "check_with": validate_path,
-    },
+    "base_dir": {"type": "string", "check_with": validate_path,},
 }
 
 
@@ -60,10 +59,7 @@ dae_conf_schema = {
     },
     "annotation_defaults": {
         "type": "dict",
-        "schema": {
-            "wd": {"type": "string"},
-            "data_dir": {"type": "string"},
-        }
+        "schema": {"wd": {"type": "string"}, "data_dir": {"type": "string"},},
     },
     # FIXME This is only used for the default genotype storage param
     # It should be a key in the root section
@@ -73,12 +69,8 @@ dae_conf_schema = {
     },
     "storage": {
         "type": "dict",
-        "valuesrules": {
-            "type": "dict",
-            "schema": storage_schema
-        }
+        "valuesrules": {"type": "dict", "schema": storage_schema},
     },
-
     "studies_db": {"type": "dict", "schema": config_reference_schema},
     "datasets_db": {"type": "dict", "schema": config_reference_schema},
     "genomes_db": {"type": "dict", "schema": config_reference_schema},

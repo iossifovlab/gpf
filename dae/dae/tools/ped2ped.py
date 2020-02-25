@@ -3,8 +3,7 @@
 import os
 import sys
 import argparse
-from dae.backends.impala.parquet_io import \
-    ParquetPartitionDescriptor
+from dae.backends.impala.parquet_io import ParquetPartitionDescriptor
 from dae.pedigrees.loader import FamiliesLoader
 
 
@@ -12,21 +11,26 @@ def main(argv):
     parser = argparse.ArgumentParser()
     FamiliesLoader.cli_arguments(parser)
     parser.add_argument(
-        '-o', '--output',
-        dest='output_filename',
-        help='output families parquet filename '
-        '(default is [basename(families_filename).parquet])'
+        "-o",
+        "--output",
+        dest="output_filename",
+        help="output families parquet filename "
+        "(default is [basename(families_filename).parquet])",
     )
     parser.add_argument(
-        '--partition-description', '--pd',
-        help='input partition description filename'
+        "--partition-description",
+        "--pd",
+        help="input partition description filename",
     )
     parser.add_argument(
-        '--study-id', type=str, default=None,
-        dest='study_id', metavar='<study id>',
-        help='Study ID. '
-        'If none specified, the basename of families filename is used to '
-        'construct study id [default: basename(families filename)]'
+        "--study-id",
+        type=str,
+        default=None,
+        dest="study_id",
+        metavar="<study id>",
+        help="Study ID. "
+        "If none specified, the basename of families filename is used to "
+        "construct study id [default: basename(families filename)]",
     )
     argv = parser.parse_args(argv)
 
@@ -36,10 +40,7 @@ def main(argv):
     else:
         study_id, _ = os.path.splitext(os.path.basename(filename))
 
-    loader = FamiliesLoader(
-        filename,
-        params=params
-    )
+    loader = FamiliesLoader(filename, params=params)
     families = loader.load()
 
     if argv.partition_description:
@@ -50,12 +51,12 @@ def main(argv):
 
     if not argv.output_filename:
         output_filename, _ = os.path.splitext(os.path.basename(filename))
-        output_filename = f'{output_filename}.parquet'
+        output_filename = f"{output_filename}.parquet"
     else:
         output_filename = argv.output_filename
 
     FamiliesLoader.save_pedigree(families, output_filename)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main(sys.argv[1:])

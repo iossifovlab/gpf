@@ -7,13 +7,21 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('query_state_save', '0001_initial'),
+        ("query_state_save", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='querystate',
-            name='page',
-            field=models.CharField(choices=[('genotype', 'Genotype browser'), ('phenotype', 'Phenotype browser'), ('enrichment', 'Enrichment tool'), ('phenotool', 'Phenotype tool')], max_length=10),
+            model_name="querystate",
+            name="page",
+            field=models.CharField(
+                choices=[
+                    ("genotype", "Genotype browser"),
+                    ("phenotype", "Phenotype browser"),
+                    ("enrichment", "Enrichment tool"),
+                    ("phenotool", "Phenotype tool"),
+                ],
+                max_length=10,
+            ),
         ),
     ]

@@ -4,13 +4,11 @@ import itertools
 import argparse
 import csv
 from collections import defaultdict
-from dae.pheno.prepare.individuals2ped import \
-    IndividualUnit, MatingUnit
+from dae.pheno.prepare.individuals2ped import IndividualUnit, MatingUnit
 from dae.variants.attributes import Role, Sex, Status
 
 
 class PedigreeError(Exception):
-
     def __init__(self, msg):
         self.msg = msg
 
@@ -23,10 +21,9 @@ class NoProband(PedigreeError):
 
 
 class PedigreeMember(object):
-
     def __init__(
-            self, family_id, individual_id, mother_id, father_id, sex,
-            status, role):
+        self, family_id, individual_id, mother_id, father_id, sex, status, role
+    ):
         self.family_id = family_id
         self.individual_id = individual_id
         self.mother_id = mother_id
@@ -39,9 +36,9 @@ class PedigreeMember(object):
         return self.individual_id
 
     def assign_role(self, role):
-        assert not self.has_role() or self.role == role, \
-            "{},{},{}!={}".format(
-                self.family_id, self.individual_id, self.role, role)
+        assert not self.has_role() or self.role == role, "{},{},{}!={}".format(
+            self.family_id, self.individual_id, self.role, role
+        )
         self.role = role
 
     def has_role(self):
@@ -80,11 +77,14 @@ class CsvPedigreeReader:
             }
 
             kwargs["individual_id"] = self.convert_individual_id(
-                kwargs["family_id"], kwargs["individual_id"])
+                kwargs["family_id"], kwargs["individual_id"]
+            )
             kwargs["mother_id"] = self.convert_individual_id(
-                kwargs["family_id"], kwargs["mother_id"])
+                kwargs["family_id"], kwargs["mother_id"]
+            )
             kwargs["father_id"] = self.convert_individual_id(
-                kwargs["family_id"], kwargs["father_id"])
+                kwargs["family_id"], kwargs["father_id"]
+            )
 
             kwargs["status"] = self.convert_status(kwargs["status"])
             kwargs["sex"] = self.convert_sex(kwargs["sex"])
@@ -104,7 +104,6 @@ class CsvPedigreeReader:
 
 
 class SPARKCsvPedigreeReader(CsvPedigreeReader):
-
     @property
     def COLUMNS_TO_FIELDS(self):
         return {
@@ -113,7 +112,7 @@ class SPARKCsvPedigreeReader(CsvPedigreeReader):
             "momId": "mother_id",
             "dadId": "father_id",
             "sex": "sex",
-            "status": "status"
+            "status": "status",
         }
 
     def convert_status(self, val):
@@ -127,7 +126,6 @@ class SPARKCsvPedigreeReader(CsvPedigreeReader):
 
 
 class AGRERawCsvPedigreeReader(CsvPedigreeReader):
-
     @property
     def COLUMNS_TO_FIELDS(self):
         return {
@@ -136,7 +134,7 @@ class AGRERawCsvPedigreeReader(CsvPedigreeReader):
             "Mother": "mother_id",
             "Father": "father_id",
             "Sex": "sex",
-            "Scored Affected Status": "status"
+            "Scored Affected Status": "status",
         }
 
     def convert_status(self, val):
@@ -163,7 +161,6 @@ class AGRERawCsvPedigreeReader(CsvPedigreeReader):
 
 
 class VIPCsvPedigreeReader(CsvPedigreeReader):
-
     @property
     def COLUMNS_TO_FIELDS(self):
         return {
@@ -172,17 +169,13 @@ class VIPCsvPedigreeReader(CsvPedigreeReader):
             "mother": "mother_id",
             "father": "father_id",
             "sex": "sex",
-            "genetic_status_16p": "status"
+            "genetic_status_16p": "status",
         }
 
-    SEX_TO_ENUM = {
-        "male": Sex.male,
-        "female": Sex.female
-    }
+    SEX_TO_ENUM = {"male": Sex.male, "female": Sex.female}
 
     def convert_status(self, status):
-        return Status.unaffected if status == 'negative' \
-            else Status.affected
+        return Status.unaffected if status == "negative" else Status.affected
 
     def convert_sex(self, sex):
         return self.SEX_TO_ENUM[sex]
@@ -192,7 +185,6 @@ class VIPCsvPedigreeReader(CsvPedigreeReader):
 
 
 class PedigreeToFamily(object):
-
     def _get_or_create_new_individual(self, individuals_by_id, individual_id):
         if individual_id == "0":
             result = IndividualUnit()
@@ -216,14 +208,19 @@ class PedigreeToFamily(object):
             father_id = individual.individual.father_id
             mother_id = individual.individual.mother_id
             mother = self._get_or_create_new_individual(
-                individuals_by_id, mother_id)
+                individuals_by_id, mother_id
+            )
             father = self._get_or_create_new_individual(
-                individuals_by_id, father_id)
+                individuals_by_id, father_id
+            )
 
             mating_unit_id = "{},{}".format(mother_id, father_id)
 
-            if (mother.has_individual() and father.has_individual()
-                    and mating_unit_id in mating_units_by_id):
+            if (
+                mother.has_individual()
+                and father.has_individual()
+                and mating_unit_id in mating_units_by_id
+            ):
                 assert len(mating_units_by_id[mating_unit_id]) == 1
                 parents = mating_units_by_id[mating_unit_id][0]
             else:
@@ -252,15 +249,19 @@ class PedigreeToFamily(object):
 
             if grandparents.father.has_individual():
                 grandparents.father.individual.assign_role(
-                    Role.paternal_grandfather)
+                    Role.paternal_grandfather
+                )
 
             if grandparents.mother.has_individual():
                 grandparents.mother.individual.assign_role(
-                    Role.paternal_grandmother)
+                    Role.paternal_grandmother
+                )
 
             for individual in grandparents.children.individuals:
-                if (not individual.has_individual()
-                        or individual.individual.has_role()):
+                if (
+                    not individual.has_individual()
+                    or individual.individual.has_role()
+                ):
                     continue
 
                 if individual.individual.sex == Sex.male:
@@ -289,15 +290,19 @@ class PedigreeToFamily(object):
 
             if grandparents.father.has_individual():
                 grandparents.father.individual.assign_role(
-                    Role.maternal_grandfather)
+                    Role.maternal_grandfather
+                )
 
             if grandparents.mother.has_individual():
                 grandparents.mother.individual.assign_role(
-                    Role.maternal_grandmother)
+                    Role.maternal_grandmother
+                )
 
             for individual in grandparents.children.individuals:
-                if (not individual.has_individual()
-                        or individual.individual.has_role()):
+                if (
+                    not individual.has_individual()
+                    or individual.individual.has_role()
+                ):
                     continue
 
                 if individual.individual.sex == Sex.male:
@@ -326,11 +331,15 @@ class PedigreeToFamily(object):
 
     def _assign_roles_mates(self, proband):
         for mating_unit in proband.mating_units:
-            if (mating_unit.father != proband
-                    and mating_unit.father.has_individual()):
+            if (
+                mating_unit.father != proband
+                and mating_unit.father.has_individual()
+            ):
                 mating_unit.father.individual.assign_role(Role.spouse)
-            elif (mating_unit.mother != proband
-                    and mating_unit.mother.has_individual()):
+            elif (
+                mating_unit.mother != proband
+                and mating_unit.mother.has_individual()
+            ):
                 mating_unit.mother.individual.assign_role(Role.spouse)
 
     def _assign_roles(self, proband):
@@ -364,7 +373,7 @@ class PedigreeToFamily(object):
             mother = proband.get_mother_individual()
             self._assign_roles_maternal(father, mother)
 
-    def to_family(self, members, family_id='unknown'):
+    def to_family(self, members, family_id="unknown"):
         individuals = self._link_pedigree_members(members)
 
         proband = self.get_proband(individuals)
@@ -383,8 +392,7 @@ class PedigreeToFamily(object):
 
     def get_affected(self, individuals):
         return [
-            x for x in individuals
-            if x.individual.status == Status.affected
+            x for x in individuals if x.individual.status == Status.affected
         ]
 
     def build_families(self, families):
@@ -401,7 +409,6 @@ class PedigreeToFamily(object):
 
 
 class AGREPedigreeToFamily(PedigreeToFamily):
-
     def get_proband(self, individuals):
         individuals[0].add_ranks()
         affected = self.get_affected(individuals)
@@ -411,16 +418,23 @@ class AGREPedigreeToFamily(PedigreeToFamily):
 
 
 class FamilyToCsv(object):
-
     def __init__(self, filename):
         self.filename = filename
 
     def write_pedigrees(self, pedigrees):
         with open(self.filename, "w") as csv_file:
             writer = csv.writer(csv_file, delimiter="\t")
-            writer.writerow([
-                "familyId", "personId", "dadId", "momId",
-                "sex", "status", "role"])
+            writer.writerow(
+                [
+                    "familyId",
+                    "personId",
+                    "dadId",
+                    "momId",
+                    "sex",
+                    "status",
+                    "role",
+                ]
+            )
             writer.writerows(list(map(self.get_row, pedigrees)))
 
     @staticmethod
@@ -432,26 +446,28 @@ class FamilyToCsv(object):
             individual.get_mother_id(),
             individual.get_sex(),
             individual.get_status(),
-            individual.get_role()
+            individual.get_role(),
         ]
 
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("file", type=str)
-    parser.add_argument("--output", dest="output", default="output.ped",
-                        type=str)
+    parser.add_argument(
+        "--output", dest="output", default="output.ped", type=str
+    )
     parser.add_argument("--pheno", dest="pheno", type=str)
-    parser.add_argument("--delimiter", dest="delimiter", default="\t",
-                        type=str)
+    parser.add_argument(
+        "--delimiter", dest="delimiter", default="\t", type=str
+    )
     args = parser.parse_args()
 
     reader = None
-    if args.pheno == 'spark':
+    if args.pheno == "spark":
         reader = SPARKCsvPedigreeReader()
-    elif args.pheno == 'svip':
+    elif args.pheno == "svip":
         reader = VIPCsvPedigreeReader()
-    elif args.pheno == 'agre':
+    elif args.pheno == "agre":
         reader = AGRERawCsvPedigreeReader()
     assert reader is not None
 

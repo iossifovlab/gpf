@@ -20,6 +20,7 @@ class GenomicSequence(object):
 
     def __createIndexFile(self, file):
         from pysam import faidx
+
         faidx(file)
 
     def __chromNames(self):
@@ -38,21 +39,21 @@ class GenomicSequence(object):
 
     def __initiate(self):
         self._Indexing = {}
-        f = open(self.genomicIndexFile, 'r')
+        f = open(self.genomicIndexFile, "r")
         while True:
             line = f.readline()
             if not line:
                 break
             line = line.split()
             self._Indexing[line[0]] = {
-                'length': int(line[1]),
-                'startBit': int(line[2]),
-                'seqLineLength': int(line[3]),
-                'lineLength': int(line[4])
+                "length": int(line[1]),
+                "startBit": int(line[2]),
+                "seqLineLength": int(line[3]),
+                "lineLength": int(line[4]),
             }
         f.close()
 
-        self.__f = open(self.genomicFile, 'r')
+        self.__f = open(self.genomicFile, "r")
 
     def close(self):
         self.__f.close()
@@ -66,19 +67,19 @@ class GenomicSequence(object):
         self.__chromNames()
         self.__initiate()
 
-        return(self)
+        return self
 
     def get_chr_length(self, chrom):
 
         try:
-            return(self._Indexing[chrom]['length'])
+            return self._Indexing[chrom]["length"]
         except KeyError:
             print("Unknown chromosome!", chrom, file=sys.stderr)
 
     def get_all_chr_lengths(self):
         R = []
         for chrom in self.allChromosomes:
-            R.append((chrom, self._Indexing[chrom]['length']))
+            R.append((chrom, self._Indexing[chrom]["length"]))
         return R
 
     def getSequence(self, chrom, start, stop):
@@ -87,11 +88,14 @@ class GenomicSequence(object):
             return -1
 
         self.__f.seek(
-            self._Indexing[chrom]['startBit'] + start - 1 +
-            (start-1) / self._Indexing[chrom]['seqLineLength'])
+            self._Indexing[chrom]["startBit"]
+            + start
+            - 1
+            + (start - 1) / self._Indexing[chrom]["seqLineLength"]
+        )
 
-        ll = stop-start+1
-        x = 1 + ll // self._Indexing[chrom]['seqLineLength']
+        ll = stop - start + 1
+        x = 1 + ll // self._Indexing[chrom]["seqLineLength"]
 
         w = self.__f.read(ll + x)
         w = w.replace("\n", "")[:ll]
@@ -105,15 +109,11 @@ class GenomicSequence(object):
         def in_any_region(chrom: str, pos: int, regions: List[Region]) -> bool:
             return any(map(lambda x: x.isin(chrom, pos), regions))
 
-        chrom = chrom.replace('chr', '')
-        if chrom == 'X':
-            return in_any_region(
-                chrom, pos, self.pseudo_autosomal_regions.X
-            )
-        elif chrom == 'Y':
-            return in_any_region(
-                chrom, pos, self.pseudo_autosomal_regions.Y
-            )
+        chrom = chrom.replace("chr", "")
+        if chrom == "X":
+            return in_any_region(chrom, pos, self.pseudo_autosomal_regions.X)
+        elif chrom == "Y":
+            return in_any_region(chrom, pos, self.pseudo_autosomal_regions.Y)
         else:
             return False
 
@@ -121,15 +121,17 @@ class GenomicSequence(object):
 def openRef(filename):
 
     if not os.path.exists(filename):
-        print("The input file: " + filename + " does NOT exist!",
-              file=sys.stderr)
+        print(
+            "The input file: " + filename + " does NOT exist!", file=sys.stderr
+        )
         sys.exit(-1)
 
-    if filename.endswith('.fa'):
+    if filename.endswith(".fa"):
         # ivan's method
         g_a = GenomicSequence()
-        return(g_a._load_genome(filename))
+        return g_a._load_genome(filename)
     else:
-        print("Unrecognizable format of the file: " + filename,
-              file=sys.stderr)
+        print(
+            "Unrecognizable format of the file: " + filename, file=sys.stderr
+        )
         sys.exit(-1)

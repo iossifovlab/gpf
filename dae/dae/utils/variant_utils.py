@@ -1,8 +1,8 @@
-'''
+"""
 Created on Mar 5, 2018
 
 @author: lubo
-'''
+"""
 import numpy as np
 
 from dae.GenomeAccess import GenomicSequence
@@ -14,21 +14,24 @@ BEST_STATE_TYPE = np.int8
 
 
 def mat2str(mat, col_sep="", row_sep="/"):
-    return row_sep.join([
-        col_sep.join(
-            [str(n) if n >= 0 else "?" for n in mat[i, :]]
-        )
-        for i in range(mat.shape[0])])
+    return row_sep.join(
+        [
+            col_sep.join([str(n) if n >= 0 else "?" for n in mat[i, :]])
+            for i in range(mat.shape[0])
+        ]
+    )
 
 
 def str2mat(mat, col_sep="", row_sep="/"):
     if col_sep == "":
         return np.array(
-            [[int(c) for c in r]
-             for r in mat.split(row_sep)], dtype=GENOTYPE_TYPE)
+            [[int(c) for c in r] for r in mat.split(row_sep)],
+            dtype=GENOTYPE_TYPE,
+        )
     return np.array(
-        [[int(v) for v in r.split(col_sep)]
-         for r in mat.split(row_sep)], dtype=GENOTYPE_TYPE)
+        [[int(v) for v in r.split(col_sep)] for r in mat.split(row_sep)],
+        dtype=GENOTYPE_TYPE,
+    )
 
 
 def best2gt(best_state):
@@ -58,8 +61,7 @@ def reference_genotype(size):
 
 
 def is_reference_genotype(gt):
-    return np.any(gt == 0) and \
-        np.all(np.logical_or(gt == 0, gt == -1))
+    return np.any(gt == 0) and np.all(np.logical_or(gt == 0, gt == -1))
 
 
 def is_all_reference_genotype(gt):
@@ -80,9 +82,9 @@ def trim_str_front(pos, ref, alt):
             break
 
     if ref[n] == alt[n]:
-        ref = ref[n + 1:]
-        alt = alt[n + 1:]
-        pos += (n + 1)
+        ref = ref[n + 1 :]
+        alt = alt[n + 1 :]
+        pos += n + 1
     else:
         ref = ref[n:]
         alt = alt[n:]
@@ -96,7 +98,7 @@ def trim_str_front(pos, ref, alt):
             break
     # not made simple
     if ref[-(n + 1)] == alt[-(n + 1)]:
-        r, a = ref[:-(n + 1)], alt[:-(n + 1)]
+        r, a = ref[: -(n + 1)], alt[: -(n + 1)]
     else:
         if n == 0:
             r, a = ref[:], alt[:]
@@ -116,8 +118,8 @@ def trim_str_back(pos, ref, alt):
         if s[0] != s[1]:
             break
     # not made simple
-    if ref[-(n+1)] == alt[-(n+1)]:
-        r, a = ref[:-(n+1)], alt[:-(n+1)]
+    if ref[-(n + 1)] == alt[-(n + 1)]:
+        r, a = ref[: -(n + 1)], alt[: -(n + 1)]
     else:
         if n == 0:
             r, a = ref[:], alt[:]
@@ -132,9 +134,9 @@ def trim_str_back(pos, ref, alt):
             break
 
     if r[n] == a[n]:
-        return pos+n+1, r[n+1:], a[n+1:]
+        return pos + n + 1, r[n + 1 :], a[n + 1 :]
 
-    return pos+n, r[n:], a[n:]
+    return pos + n, r[n:], a[n:]
 
 
 def cshl_format(pos, ref, alt, trimmer=trim_str_front):
@@ -142,22 +144,22 @@ def cshl_format(pos, ref, alt, trimmer=trim_str_front):
     if len(r) == len(a) and len(r) == 0:
         # print('ref {:s} is the same as alt {:s}'.format(
         #     ref, alt), file=sys.stderr)
-        return p, 'complex(' + r + '->' + a + ')', 0
+        return p, "complex(" + r + "->" + a + ")", 0
 
     if len(r) == len(a) and len(r) == 1:
-        wx = 'sub(' + r + '->' + a + ')'
+        wx = "sub(" + r + "->" + a + ")"
         return p, wx, 1
 
     if len(r) > len(a) and len(a) == 0:
-        wx = 'del(' + str(len(r)) + ')'
+        wx = "del(" + str(len(r)) + ")"
         return p, wx, len(r)
 
     # len(ref) < len(alt):
     if len(r) < len(a) and len(r) == 0:
-        wx = 'ins(' + a + ')'
+        wx = "ins(" + a + ")"
         return p, wx, len(a)
 
-    return p, 'complex(' + r + '->' + a + ')', max(len(r), len(a))
+    return p, "complex(" + r + "->" + a + ")", max(len(r), len(a))
 
 
 def vcf2cshl(pos, ref, alt, trimmer=trim_str_front):
@@ -169,7 +171,7 @@ def vcf2cshl(pos, ref, alt, trimmer=trim_str_front):
 def get_locus_ploidy(
     chrom: str, pos: int, sex: Sex, genome: GenomicSequence
 ) -> int:
-    if chrom in ('chrX', 'X') and sex == Sex.M:
+    if chrom in ("chrX", "X") and sex == Sex.M:
         if not genome.is_pseudoautosomal(chrom, pos):
             return 1
     return 2

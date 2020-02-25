@@ -11,9 +11,9 @@ genomes_db = gpf_instance.genomes_db
 
 GENOME = genomes_db.get_genome()
 
-subRE = re.compile(r'^sub\(([ACGT])->([ACGT])\)$')
-insRE = re.compile(r'^ins\(([ACGT]+)\)$')
-delRE = re.compile(r'^del\((\d+)\)$')
+subRE = re.compile(r"^sub\(([ACGT])->([ACGT])\)$")
+insRE = re.compile(r"^ins\(([ACGT]+)\)$")
+delRE = re.compile(r"^del\((\d+)\)$")
 
 
 def vcfVarFormat(loc, var):
@@ -27,28 +27,29 @@ def vcfVarFormat(loc, var):
     mI = insRE.match(var)
     if mI:
         sq = mI.group(1)
-        rfS = GENOME.getSequence(chrom, pos-1, pos-1)
-        return chrom, pos-1, rfS, rfS+sq
+        rfS = GENOME.getSequence(chrom, pos - 1, pos - 1)
+        return chrom, pos - 1, rfS, rfS + sq
 
     mD = delRE.match(var)
     if mD:
         ln = int(mD.group(1))
         rfS = GENOME.getSequence(chrom, pos - 1, pos + ln - 1)
-        return chrom, pos-1, rfS, rfS[0]
+        return chrom, pos - 1, rfS, rfS[0]
 
-    raise Exception('weird variant:' + var)
+    raise Exception("weird variant:" + var)
 
 
 if __name__ == "__main__":
     with open(sys.argv[1], "r") as csvfile, open(sys.argv[2], "w") as output:
-        reader = csv.DictReader(csvfile, delimiter='\t')
+        reader = csv.DictReader(csvfile, delimiter="\t")
         fieldnames = reader.fieldnames
         fieldnames.extend(["chr", "pos", "ref", "alt"])
-        writer = csv.DictWriter(output, delimiter='\t', fieldnames=fieldnames)
+        writer = csv.DictWriter(output, delimiter="\t", fieldnames=fieldnames)
         writer.writeheader()
         for row in reader:
-            chromosome, pos, ref, alt = vcfVarFormat(row["location"],
-                                                     row["variant"])
+            chromosome, pos, ref, alt = vcfVarFormat(
+                row["location"], row["variant"]
+            )
             row["chr"] = chromosome
             row["pos"] = pos
             row["ref"] = ref

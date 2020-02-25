@@ -10,7 +10,6 @@ from dae.pheno.common import RoleMapping
 
 
 class Individual(object):
-
     def __init__(self, individual_id, family_id, sex, role, status):
         self.sex = sex
         self.individual_id = individual_id
@@ -20,15 +19,18 @@ class Individual(object):
 
     def __repr__(self):
         return "Individual({})".format(
-            str(self.individual_id) if self.individual_id is not None
-            else "UNKNOWN")
+            str(self.individual_id)
+            if self.individual_id is not None
+            else "UNKNOWN"
+        )
 
 
 class IndividualUnit(object):
     NO_RANK = -3673473456
 
-    def __init__(self, individual=None, mating_units=None,
-                 parents=None, rank=NO_RANK):
+    def __init__(
+        self, individual=None, mating_units=None, parents=None, rank=NO_RANK
+    ):
 
         if mating_units is None:
             mating_units = []
@@ -132,32 +134,32 @@ class IndividualUnit(object):
     def get_individual_id(self):
         if self.individual:
             return self.individual.individual_id
-        return '0'
+        return "0"
 
     def get_father_id(self):
         if not self.parents:
-            return '0'
+            return "0"
         return self.parents.father.get_individual_id()
 
     def get_mother_id(self):
         if not self.parents:
-            return '0'
+            return "0"
         return self.parents.mother.get_individual_id()
 
     def get_sex(self):
         if not self.individual:
-            return 'UNKNOWN'
+            return "UNKNOWN"
 
         return self.individual.sex.value
 
     def get_status(self):
         if not self.individual:
-            return 'UNKNOWN'
+            return "UNKNOWN"
         return self.individual.status.value
 
     def get_role(self):
         if not self.individual or not self.individual.role:
-            return 'UNKNOWN'
+            return "UNKNOWN"
         return self.individual.role.name
 
 
@@ -170,7 +172,6 @@ class SibshipUnit(object):
 
 
 class MatingUnit(object):
-
     def __init__(self, mother=None, father=None, children=None):
         if children is None:
             children = SibshipUnit()
@@ -222,12 +223,12 @@ class CsvIndividualsReader:
         for row in reader:
             kwargs = {
                 field: row[column]
-                for (field, column)
-                in list(self.FIELDS_TO_COLUMNS.items())
+                for (field, column) in list(self.FIELDS_TO_COLUMNS.items())
             }
             kwargs["family_id"] = self.convert_family_id(kwargs["family_id"])
             kwargs["individual_id"] = self.convert_individual_id(
-                kwargs["family_id"], kwargs["individual_id"])
+                kwargs["family_id"], kwargs["individual_id"]
+            )
             kwargs["status"] = self.convert_status(kwargs["status"])
             kwargs["role"] = self.convert_role(kwargs["role"])
             kwargs["sex"] = self.convert_sex(kwargs["sex"])
@@ -244,7 +245,6 @@ class CsvIndividualsReader:
 
 
 class SPARKCsvIndividualsReader(CsvIndividualsReader):
-
     @property
     def FIELDS_TO_COLUMNS(self):
         return {
@@ -252,18 +252,12 @@ class SPARKCsvIndividualsReader(CsvIndividualsReader):
             "family_id": "family_id",
             "individual_id": "subject_sp_id",
             "sex": "sex",
-            "status": "asd"
+            "status": "asd",
         }
 
-    STATUS_TO_ENUM = {
-        "True": Status.affected,
-        "False": Status.unaffected
-    }
+    STATUS_TO_ENUM = {"True": Status.affected, "False": Status.unaffected}
 
-    SEX_TO_ENUM = {
-        "Male": Sex.male,
-        "Female": Sex.female
-    }
+    SEX_TO_ENUM = {"Male": Sex.male, "Female": Sex.female}
 
     def convert_status(self, status):
         return self.STATUS_TO_ENUM[status]
@@ -275,12 +269,14 @@ class SPARKCsvIndividualsReader(CsvIndividualsReader):
         return individual_id
 
     def convert_role(self, role):
-        return RoleMapping.SPARK[role] \
-            if role in RoleMapping.SPARK else Role.unknown
+        return (
+            RoleMapping.SPARK[role]
+            if role in RoleMapping.SPARK
+            else Role.unknown
+        )
 
 
 class InternalCsvIndividualsReader(CsvIndividualsReader):
-
     @property
     def FIELDS_TO_COLUMNS(self):
         return {
@@ -288,18 +284,12 @@ class InternalCsvIndividualsReader(CsvIndividualsReader):
             "family_id": "family_id",
             "individual_id": "individual_id",
             "sex": "sex",
-            "status": "affected"
+            "status": "affected",
         }
 
-    STATUS_TO_ENUM = {
-        "True": Status.affected,
-        "False": Status.unaffected
-    }
+    STATUS_TO_ENUM = {"True": Status.affected, "False": Status.unaffected}
 
-    SEX_TO_ENUM = {
-        "Male": Sex.male,
-        "Female": Sex.female
-    }
+    SEX_TO_ENUM = {"Male": Sex.male, "Female": Sex.female}
 
     def convert_status(self, status):
         return self.STATUS_TO_ENUM[status]
@@ -311,12 +301,14 @@ class InternalCsvIndividualsReader(CsvIndividualsReader):
         return individual_id
 
     def convert_role(self, role):
-        return RoleMapping.INTERNAL[role] \
-            if role in RoleMapping.INTERNAL else Role.unknown
+        return (
+            RoleMapping.INTERNAL[role]
+            if role in RoleMapping.INTERNAL
+            else Role.unknown
+        )
 
 
 class VIPCsvIndividualsReader(CsvIndividualsReader):
-
     @property
     def FIELDS_TO_COLUMNS(self):
         return {
@@ -328,10 +320,7 @@ class VIPCsvIndividualsReader(CsvIndividualsReader):
             "status": "genetic_status_16p",
         }
 
-    SEX_TO_ENUM = {
-        "Male": Sex.male,
-        "Female": Sex.female
-    }
+    SEX_TO_ENUM = {"Male": Sex.male, "Female": Sex.female}
 
     def convert_family_id(self, family_id):
         return family_id.split("-")[0]
@@ -340,15 +329,17 @@ class VIPCsvIndividualsReader(CsvIndividualsReader):
         return individual_id
 
     def convert_role(self, role):
-        return RoleMapping.VIP[role] \
-            if role in RoleMapping.VIP else Role.unknown
+        return (
+            RoleMapping.VIP[role] if role in RoleMapping.VIP else Role.unknown
+        )
 
     def convert_sex(self, sex):
         return self.SEX_TO_ENUM[sex]
 
     def convert_status(self, status):
-        return Status.unaffected if status == 'negative' \
-            else Status.affected
+        return Status.unaffected if status == "negative" else Status.affected
+
+
 #         return Status.unaffected if status == 'Negative (normal)' \
 #             else Status.affected
 
@@ -356,8 +347,10 @@ class VIPCsvIndividualsReader(CsvIndividualsReader):
 class FamilyToPedigree(object):
 
     AMBIGUOUS_ROLES = [
-        Role.maternal_cousin, Role.paternal_cousin,
-        Role.maternal_half_sibling, Role.paternal_half_sibling
+        Role.maternal_cousin,
+        Role.paternal_cousin,
+        Role.maternal_half_sibling,
+        Role.paternal_half_sibling,
     ]
 
     def get_individual(self, proband, role):
@@ -414,9 +407,8 @@ class FamilyToPedigree(object):
     def print_ambiguous_warning(self, individual, verbose=True):
         if verbose and individual.role in self.AMBIGUOUS_ROLES:
             msg = "family {} (person {}) with ambiguous role: {}\n".format(
-                individual.family_id,
-                individual.individual_id,
-                individual.role)
+                individual.family_id, individual.individual_id, individual.role
+            )
             sys.stderr.write(msg)
 
     def assert_propper_family(self, family_members):
@@ -426,59 +418,77 @@ class FamilyToPedigree(object):
 
         moms = [fm for fm in family_members if fm.role == Role.mom]
         moms_count = len(moms)
-        assert moms_count < 2, \
-            "{}: {} moms - {}".format(family_name, moms_count, moms)
+        assert moms_count < 2, "{}: {} moms - {}".format(
+            family_name, moms_count, moms
+        )
 
         dads = [fm for fm in family_members if fm.role == Role.dad]
         dads_count = len(dads)
-        assert dads_count < 2, \
-            "{}: {} dads - {}".format(family_name, dads_count, dads)
+        assert dads_count < 2, "{}: {} dads - {}".format(
+            family_name, dads_count, dads
+        )
 
         probands = [fm for fm in family_members if fm.role == Role.prb]
         probands_count = len(probands)
-        assert probands_count < 2, \
-            "{}: {} probands - {}".format(family_name,
-                                          probands_count, probands)
+        assert probands_count < 2, "{}: {} probands - {}".format(
+            family_name, probands_count, probands
+        )
 
     def to_pedigree(self, family_members):
         self.assert_propper_family(family_members)
 
         individual_id_to_individual_unit = OrderedDict()
-        probands = [individual for individual in family_members
-                    if individual.role == Role.prb]
-        other = [individual for individual in family_members
-                 if individual.role != Role.prb]
+        probands = [
+            individual
+            for individual in family_members
+            if individual.role == Role.prb
+        ]
+        other = [
+            individual
+            for individual in family_members
+            if individual.role != Role.prb
+        ]
 
         proband_unit = IndividualUnit()
         if len(probands) == 1:
             proband = probands[0]
             proband_unit.individual = proband
 
-            individual_id_to_individual_unit[proband.individual_id] = \
-                proband_unit
+            individual_id_to_individual_unit[
+                proband.individual_id
+            ] = proband_unit
 
         for individual in other:
             self.print_ambiguous_warning(individual)
             individual_unit = self.get_individual(
-                proband_unit, individual.role)
+                proband_unit, individual.role
+            )
             individual_unit.individual = individual
-            individual_id_to_individual_unit[individual.individual_id] = \
-                individual_unit
+            individual_id_to_individual_unit[
+                individual.individual_id
+            ] = individual_unit
 
         return list(individual_id_to_individual_unit.values())
 
 
 class PedigreeToCsv(object):
-
     def __init__(self, filename):
         self.filename = filename
 
     def write_pedigrees(self, pedigrees):
         with open(self.filename, "w") as csv_file:
-            writer = csv.writer(csv_file, delimiter='\t')
-            writer.writerow([
-                "familyId", "personId", "dadId", "momId", "sex",
-                "status", "role"])
+            writer = csv.writer(csv_file, delimiter="\t")
+            writer.writerow(
+                [
+                    "familyId",
+                    "personId",
+                    "dadId",
+                    "momId",
+                    "sex",
+                    "status",
+                    "role",
+                ]
+            )
             writer.writerows(list(map(self.get_row, pedigrees)))
 
     @staticmethod
@@ -490,7 +500,7 @@ class PedigreeToCsv(object):
             individual.get_mother_id(),
             individual.get_sex(),
             individual.get_status(),
-            individual.get_role()
+            individual.get_role(),
         ]
 
 
@@ -498,12 +508,13 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("file", type=str)
     parser.add_argument(
-        "--output", dest="output", default="output.ped", type=str)
+        "--output", dest="output", default="output.ped", type=str
+    )
     parser.add_argument("--pheno", dest="pheno", type=str)
     args = parser.parse_args()
 
     reader = None
-    if args.pheno == 'spark':
+    if args.pheno == "spark":
         reader = SPARKCsvIndividualsReader()
 
     assert reader is not None
@@ -518,7 +529,8 @@ def main():
             pedigrees[family_name] = pedigree
         except AssertionError as e:
             sys.stderr.write(
-                "skipping {}; reason: {}\n".format(family_name, str(e)))
+                "skipping {}; reason: {}\n".format(family_name, str(e))
+            )
 
     pedigrees_list = list(itertools.chain(*list(pedigrees.values())))
 
