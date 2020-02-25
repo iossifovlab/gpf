@@ -10,19 +10,19 @@ from dae.utils.effect_utils import expand_effect_types
 
 class DenovoGeneSetCollectionFactory:
     @staticmethod
-    def denovo_gene_set_cache_file(config, people_group_id=''):
+    def denovo_gene_set_cache_file(config, people_group_id=""):
         cache_path = os.path.join(
-            config.conf_dir, 'denovo-cache-' + people_group_id + '.json'
+            config.conf_dir, "denovo-cache-" + people_group_id + ".json"
         )
 
         return cache_path
 
     @classmethod
     def load_collection(cls, genotype_data_study):
-        '''
+        """
         Loads a denovo gene set collection (from the filesystem)
         for a given study.
-        '''
+        """
         config = genotype_data_study.config
         assert config is not None, genotype_data_study.id
         collection = DenovoGeneSetCollection(
@@ -33,11 +33,11 @@ class DenovoGeneSetCollectionFactory:
             cache_dir = cls.denovo_gene_set_cache_file(config, people_group_id)
             if not os.path.exists(cache_dir):
                 raise EnvironmentError(
-                    'Denovo gene sets caches dir "{}" '
-                    'does not exists'.format(cache_dir)
+                    "Denovo gene sets caches dir '{}' "
+                    "does not exists".format(cache_dir)
                 )
 
-            with open(cache_dir, 'r') as f:
+            with open(cache_dir, "r") as f:
                 contents = json.load(f)
             # change all list to sets after loading from json
             contents = cls._convert_cache_innermost_types(contents, list, set)
@@ -46,10 +46,10 @@ class DenovoGeneSetCollectionFactory:
 
     @classmethod
     def build_collection(cls, genotype_data_study):
-        '''
+        """
         Builds a denovo gene set collection for the given study and
         writes it to the filesystem.
-        '''
+        """
         config = genotype_data_study.config
         assert config is not None, genotype_data_study.id
 
@@ -64,39 +64,39 @@ class DenovoGeneSetCollectionFactory:
 
     @classmethod
     def _format_criterias(cls, standard_criterias):
-        '''
+        """
         Replicates functionality from denovo gene set config parser.
-        Given a TOML config"s standard criterias, it does additional formatting
+        Given a TOML config's standard criterias, it does additional formatting
         which was done before in the parser.
-        '''
+        """
 
         effect_type_criterias = []
         for criteria in standard_criterias[0].segments.field_values_iterator():
             effect_type_criterias.append(
                 {
-                    'property': 'effect_types',
-                    'name': criteria[0],
-                    'value': expand_effect_types(criteria[1]),
+                    "property": "effect_types",
+                    "name": criteria[0],
+                    "value": expand_effect_types(criteria[1]),
                 }
             )
         sex_criterias = []
         for criteria in standard_criterias[1].segments.field_values_iterator():
             sex_criterias.append(
                 {
-                    'property': 'sexes',
-                    'name': criteria[0],
-                    'value': [Sex.from_name(criteria[1])],
+                    "property": "sexes",
+                    "name": criteria[0],
+                    "value": [Sex.from_name(criteria[1])],
                 }
             )
         return (effect_type_criterias, sex_criterias)
 
     @classmethod
     def _generate_gene_set_for(cls, genotype_data, config, people_group_id):
-        '''
+        """
         Produces a nested dictionary which represents a denovo gene set.
         It maps denovo gene set criteria to an innermost dictionary mapping
         gene set symbols to lists of family IDs.
-        '''
+        """
         families_group = genotype_data.get_families_group(people_group_id)
         people_group_values = families_group.available_values
 
@@ -112,14 +112,14 @@ class DenovoGeneSetCollectionFactory:
 
         for criteria_combination in criterias:
             search_args = {
-                criteria['property']: criteria['value']
+                criteria["property"]: criteria["value"]
                 for criteria in criteria_combination
             }
             for people_group_value in people_group_values:
                 innermost_cache = cache[people_group_value]
                 for criteria in criteria_combination:
                     innermost_cache = innermost_cache.setdefault(
-                        criteria['name'], {}
+                        criteria["name"], {}
                     )
 
                 assert families_group is not None
@@ -139,9 +139,9 @@ class DenovoGeneSetCollectionFactory:
 
     @classmethod
     def _save_cache(cls, cache, cache_path):
-        '''
+        """
         Write a denovo gene set cache to the filesystem in JSON format.
-        '''
+        """
         # change all sets to lists so they can be saved in json
         cache = cls._convert_cache_innermost_types(
             cache, set, list, sort_values=True
@@ -149,19 +149,19 @@ class DenovoGeneSetCollectionFactory:
 
         if not os.path.exists(os.path.dirname(cache_path)):
             os.makedirs(os.path.dirname(cache_path))
-        with open(cache_path, 'w') as f:
+        with open(cache_path, "w") as f:
             json.dump(
-                cache, f, sort_keys=True, indent=4, separators=(',', ': ')
+                cache, f, sort_keys=True, indent=4, separators=(",", ": ")
             )
 
     @classmethod
     def _convert_cache_innermost_types(
         cls, cache, from_type, to_type, sort_values=False
     ):
-        '''
+        """
         Recursively coerce all values of a given type in a dictionary
         to another type.
-        '''
+        """
         if isinstance(cache, from_type):
             if sort_values is True:
                 return sorted(to_type(cache))
@@ -169,7 +169,7 @@ class DenovoGeneSetCollectionFactory:
 
         assert isinstance(
             cache, dict
-        ), 'expected type "dict", got "{}"'.format(type(cache))
+        ), "expected type 'dict', got '{}'".format(type(cache))
 
         res = {}
         for key, value in cache.items():
@@ -181,12 +181,12 @@ class DenovoGeneSetCollectionFactory:
 
     @staticmethod
     def _add_genes_families(variants, people_with_people_group, search_args):
-        '''
+        """
         For the given variants and people with a certain people group,
         produce a dictionary which maps the gene symbols of those variants
         matching the given search_args to the IDs of the families in which
         those variants are found.
-        '''
+        """
         cache = {}
 
         for variant in variants:
@@ -199,14 +199,14 @@ class DenovoGeneSetCollectionFactory:
 
                 filter_flag = False
                 for search_arg_name, search_arg_value in search_args.items():
-                    if search_arg_name == 'effect_types':
+                    if search_arg_name == "effect_types":
                         if not (
                             aa.effect
                             and aa.effect.types & set(search_arg_value)
                         ):
                             filter_flag = True
                             break
-                    elif search_arg_name == 'sexes':
+                    elif search_arg_name == "sexes":
                         if not (
                             set(aa.variant_in_sexes) & set(search_arg_value)
                         ):
@@ -218,7 +218,7 @@ class DenovoGeneSetCollectionFactory:
 
                 effect = aa.effect
                 for gene in effect.genes:
-                    if gene.effect in search_args.get('effect_types', set()):
+                    if gene.effect in search_args.get("effect_types", set()):
                         cache.setdefault(gene.symbol, set()).add(family_id)
 
         return cache
