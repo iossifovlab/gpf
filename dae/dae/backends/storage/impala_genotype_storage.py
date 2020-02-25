@@ -109,7 +109,8 @@ class ImpalaGenotypeStorage(GenotypeStorage):
 
     def _hdfs_parquet_put_files(self, study_id, paths, dirname):
         hdfs_dirname = self.get_hdfs_dir(study_id, dirname)
-
+        if self.hdfs_helpers.exists(hdfs_dirname):
+            self.hdfs_helpers.delete(hdfs_dirname, recursive=True)
         for path in paths:
             self.hdfs_helpers.put_content(path, hdfs_dirname)
 
