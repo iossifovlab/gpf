@@ -77,6 +77,7 @@ class FamilyAllele(Allele, FamilyDelegate):
             genetic_model=None,
             inheritance_in_members=None):
         assert isinstance(family, Family)
+        assert genotype or best_state
 
         FamilyDelegate.__init__(self, family)
 
@@ -155,6 +156,8 @@ class FamilyAllele(Allele, FamilyDelegate):
         """
         Returns genotype of the family.
         """
+        if self.gt is None:
+            self.gt = best2gt(self.best_state)
         return self.gt.T
 
     @property
