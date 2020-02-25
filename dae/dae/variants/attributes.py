@@ -261,13 +261,15 @@ class Inheritance(enum.Enum):
         return self.name
 
 
+# TODO: Better string representations
 class VariantType(enum.Enum):
     invalid = 0
     substitution = 1
     insertion = 1 << 1
     deletion = 1 << 2
-    complex = 1 << 3
-    CNV = 1 << 4
+    comp = 1 << 3
+    cnv_p = 1 << 4
+    cnv_m = 1 << 5
 
     @staticmethod
     def from_name(name):
@@ -277,10 +279,12 @@ class VariantType(enum.Enum):
             return VariantType.insertion
         elif name == 'del' or name == 'deletion':
             return VariantType.deletion
-        elif name == 'complex':
-            return VariantType.complex
-        elif name == 'CNV':
-            return VariantType.CNV
+        elif name == 'comp' or name == 'complex':
+            return VariantType.comp
+        elif name == 'cnv_p ' or name == 'CNV+':
+            return VariantType.cnv_p
+        elif name == 'cnv_m' or name == 'CNV-':
+            return VariantType.cnv_m
         raise ValueError("unexpected variant type: {}".format(name))
 
     @staticmethod
@@ -303,10 +307,10 @@ class VariantType(enum.Enum):
             raise ValueError("unexpected variant type: {}".format(variant))
 
     def __repr__(self):
-        return self.name[:3]
+        return self.name
 
     def __str__(self):
-        return self.name[:3]
+        return self.name
 
 
 class GeneticModel(enum.Enum):
