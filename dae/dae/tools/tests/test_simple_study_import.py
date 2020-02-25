@@ -96,7 +96,6 @@ def test_import_comp_vcf_into_genotype_storage(
     vcf_filename = fixture_dirname('study_import/comp.vcf')
 
     study_id = f'test_comp_vcf_{genotype_storage_id}'
-    genotype_storage_id = 'test_impala'
 
     argv = [
         pedigree_filename,
