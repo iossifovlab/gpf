@@ -163,8 +163,8 @@ class FamilyAllele(Allele, FamilyDelegate):
             )
         return self._best_state
 
-    @deprecated(details="Replace `best_st` with `best_state`")
     @property
+    @deprecated(details="Replace `best_st` with `best_state`")
     def best_st(self):
         return self.best_state
 

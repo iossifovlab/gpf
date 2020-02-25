@@ -449,10 +449,10 @@ def iossifov2014_impala(
         impala_genotype_storage):
 
     from dae.backends.impala.hdfs_helpers import HdfsHelpers
-    test_hdfs = HdfsHelpers(hdfs_host, 8020)
+    hdfs = HdfsHelpers(hdfs_host, 8020)
 
-    temp_dirname = test_hdfs.tempdir(prefix='variants_', suffix='_data')
-    test_hdfs.mkdir(temp_dirname)
+    temp_dirname = hdfs.tempdir(prefix='variants_', suffix='_data')
+    hdfs.mkdir(temp_dirname)
 
     study_id = 'iossifov_we2014_test'
     parquet_filenames = ParquetManager.build_parquet_filenames(
@@ -663,7 +663,7 @@ DATA_IMPORT_COUNT = 0
 
 @pytest.fixture(scope='session')
 def data_import(
-        request, test_hdfs, test_impala_helpers,
+        request, hdfs_host, test_impala_helpers,
         impala_genotype_storage, reimport, default_dae_config,
         gpf_instance_2013):
 
@@ -672,14 +672,17 @@ def data_import(
 
     assert DATA_IMPORT_COUNT == 1
 
-    temp_dirname = test_hdfs.tempdir(prefix='variants_', suffix='_data')
-    test_hdfs.mkdir(temp_dirname)
+    from dae.backends.impala.hdfs_helpers import HdfsHelpers
+    hdfs = HdfsHelpers(hdfs_host, 8020)
+
+    temp_dirname = hdfs.tempdir(prefix='variants_', suffix='_data')
+    hdfs.mkdir(temp_dirname)
 
     annotation_pipeline = \
         construct_import_annotation_pipeline(gpf_instance_2013)
 
     def fin():
-        test_hdfs.delete(temp_dirname, recursive=True)
+        hdfs.delete(temp_dirname, recursive=True)
     request.addfinalizer(fin)
 
     def build(dirname):
