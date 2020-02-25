@@ -11,7 +11,7 @@ from dae.variants.effects import Effect
 import itertools
 
 
-class AltAlleleItems(object):
+class AltAlleleItems:
     """
     1-based list for representing list of items relevant to the list
     of alternative alleles.
@@ -74,7 +74,7 @@ class AltAlleleItems(object):
             all([s == o for (s, o) in zip(self.items, other.items)])
 
 
-class VariantDetail(object):
+class VariantDetail:
     def __init__(self, chrom: str, position, variant, length):
         self.length = length
         self.type = None
@@ -117,6 +117,10 @@ class Allele:
 
     @property
     def position(self) -> int:
+        raise NotImplementedError()
+
+    @property
+    def end_position(self) -> int:
         raise NotImplementedError()
 
     @property
@@ -258,6 +262,10 @@ class Variant:
         raise NotImplementedError()
 
     @property
+    def end_position(self) -> int:
+        raise NotImplementedError()
+
+    @property
     def reference(self) -> str:
         raise NotImplementedError()
 
@@ -396,6 +404,7 @@ class SummaryAllele(Allele):
             self,
             chromosome: str,
             position: int,
+            end_position: int,
             reference: str,
             alternative: Optional[str] = None,
             summary_index: int = -1,
@@ -405,6 +414,7 @@ class SummaryAllele(Allele):
 
         self._chromosome = chromosome
         self._position = position
+        self._end_position = end_position
         self._reference = reference
         self._alternative = alternative
 
@@ -429,6 +439,10 @@ class SummaryAllele(Allele):
     @property
     def position(self) -> int:
         return self._position
+
+    @property
+    def end_position(self) -> int:
+        return self._end_position
 
     @property
     def reference(self) -> str:
@@ -522,6 +536,8 @@ class SummaryVariant(Variant):
         self._chromosome = self.ref_allele.chromosome
         self._position = self.ref_allele.position
         self._reference = self.ref_allele.reference
+        if len(alleles) > 1:
+            self._end_position = alleles[1].end_position
 
     @property
     def chromosome(self) -> str:
