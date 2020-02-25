@@ -167,14 +167,154 @@ variants = "{{ genotype_storage.tables.variants }}"
 {% elif genotype_storage.files %}
 [genotype_storage.files]
 pedigree.path = "{{ genotype_storage.files.pedigree.path }}"
-pedigree.params = {{ genotype_storage.files.pedigree.params }}
+{%- if genotype_storage.files.pedigree.params %}
+
+
+{%- if genotype_storage.files.pedigree.params.ped_family %}
+pedigree.params.ped_family = \
+"{{ genotype_storage.files.pedigree.params.ped_family }}"
+{%- endif %}
+
+{%- if genotype_storage.files.pedigree.params.ped_person %}
+pedigree.params.ped_person = \
+"{{ genotype_storage.files.pedigree.params.ped_person }}"
+{%- endif %}
+
+{%- if genotype_storage.files.pedigree.params.ped_mom %}
+pedigree.params.ped_mom = \
+"{{ genotype_storage.files.pedigree.params.ped_mom }}"
+{%- endif %}
+
+{%- if genotype_storage.files.pedigree.params.ped_dad %}
+pedigree.params.ped_dad = \
+"{{ genotype_storage.files.pedigree.params.ped_dad }}"
+{%- endif %}
+
+{%- if genotype_storage.files.pedigree.params.ped_sex %}
+pedigree.params.ped_sex = \
+"{{ genotype_storage.files.pedigree.params.ped_sex }}"
+{%- endif %}
+
+{%- if genotype_storage.files.pedigree.params.ped_status %}
+pedigree.params.ped_status = \
+"{{ genotype_storage.files.pedigree.params.ped_status }}"
+{%- endif %}
+
+{%- if genotype_storage.files.pedigree.params.ped_role %}
+pedigree.params.ped_role = \
+"{{ genotype_storage.files.pedigree.params.ped_role }}"
+{%- endif %}
+
+{%- if genotype_storage.files.pedigree.params.ped_no_role %}
+pedigree.params.ped_no_role = \
+"{{ genotype_storage.files.pedigree.params.ped_no_role }}"
+{%- endif %}
+
+{%- if genotype_storage.files.pedigree.params.ped_proband %}
+pedigree.params.ped_proband = \
+"{{ genotype_storage.files.pedigree.params.ped_proband }}"
+{%- endif %}
+
+{%- if genotype_storage.files.pedigree.params.ped_no_header %}
+pedigree.params.ped_no_header = \
+"{{ genotype_storage.files.pedigree.params.ped_no_header }}"
+{%- endif %}
+
+{%- if genotype_storage.files.pedigree.params.ped_file_format %}
+pedigree.params.ped_file_format = \
+"{{ genotype_storage.files.pedigree.params.ped_file_format }}"
+{%- endif %}
+
+{%- if genotype_storage.files.pedigree.params.ped_layout_mode %}
+pedigree.params.ped_layout_mode = \
+"{{ genotype_storage.files.pedigree.params.ped_layout_mode }}"
+{%- endif %}
+
+{%- if genotype_storage.files.pedigree.params.ped_sep %}
+pedigree.params.ped_sep = \
+"{{ genotype_storage.files.pedigree.params.ped_sep }}"
+{%- endif %}
+
+{%- else %}
+pedigree.params = {}
+{%- endif %}
 {% for variant in genotype_storage.files.variants %}
 [[genotype_storage.files.variants]]
 path = "{{ variant.path }}"
 format = "{{ variant.format }}"
-params = {{ variant.params }}
+{%- if variant.params %}
+
+{%- if variant.params.add_chrom_prefix %}
+params.add_chrom_prefix = "{{ variant.params.add_chrom_prefix }}"
+{%- endif %}
+{%- if variant.params.del_chrom_prefix %}
+params.del_chrom_prefix = "{{ variant.params.del_chrom_prefix }}"
+{%- endif %}
+{%- if variant.params.dae_include_reference_genotypes %}
+params.dae_include_reference_genotypes = \
+"{{ variant.params.dae_include_reference_genotypes }}"
+{%- endif %}
+{%- if variant.params.denovo_location %}
+params.denovo_location = "{{ variant.params.denovo_location }}"
+{%- endif %}
+{%- if variant.params.denovo_variant %}
+params.denovo_variant = "{{ variant.params.denovo_variant }}"
+{%- endif %}
+{%- if variant.params.denovo_chrom %}
+params.denovo_chrom = "{{ variant.params.denovo_chrom }}"
+{%- endif %}
+{%- if variant.params.denovo_pos %}
+params.denovo_pos = "{{ variant.params.denovo_pos }}"
+{%- endif %}
+{%- if variant.params.denovo_ref %}
+params.denovo_ref = "{{ variant.params.denovo_ref }}"
+{%- endif %}
+{%- if variant.params.denovo_alt %}
+params.denovo_alt = "{{ variant.params.denovo_alt }}"
+{%- endif %}
+{%- if variant.params.denovo_person_id %}
+params.denovo_person_id = "{{ variant.params.denovo_person_id }}"
+{%- endif %}
+{%- if variant.params.denovo_family_id %}
+params.denovo_family_id = "{{ variant.params.denovo_family_id }}"
+{%- endif %}
+{%- if variant.params.denovo_best_state %}
+params.denovo_best_state = "{{ variant.params.denovo_best_state }}"
+{%- endif %}
+{%- if variant.params.denovo_sep %}
+params.denovo_sep = "{{ variant.params.denovo_sep }}"
+{%- endif %}
+{%- if variant.params.vcf_include_reference_genotypes %}
+params.vcf_include_reference_genotypes = \
+"{{ variant.params.vcf_include_reference_genotypes }}"
+{%- endif %}
+{%- if variant.params.vcf_include_unknown_family_genotypes %}
+params.vcf_include_unknown_family_genotypes = \
+"{{ variant.params.vcf_include_unknown_family_genotypes }}"
+{%- endif %}
+{%- if variant.params.vcf_include_unknown_person_genotypes %}
+params.vcf_include_unknown_person_genotypes = \
+"{{ variant.params.vcf_include_unknown_person_genotypes }}"
+{%- endif %}
+{%- if variant.params.vcf_multi_loader_fill_in_mode %}
+params.vcf_multi_loader_fill_in_mode = \
+"{{ variant.params.vcf_multi_loader_fill_in_mode }}"
+{%- endif %}
+{%- if variant.params.vcf_denovo_mode %}
+params.vcf_denovo_mode = "{{ variant.params.vcf_denovo_mode }}"
+{%- endif %}
+{%- if variant.params.vcf_omission_mode %}
+params.vcf_omission_mode = "{{ variant.params.vcf_omission_mode }}"
+{%- endif %}
+{%- if variant.params.vcf_chromosomes %}
+params.vcf_chromosomes = "{{ variant.params.vcf_chromosomes }}"
+{%- endif %}
+
+{%- else %}
+params = {}
+{%- endif %}
 {% endfor %}
-{% endif %}
+{%- endif %}
 
 {%- if people_group %}
 [people_group]
