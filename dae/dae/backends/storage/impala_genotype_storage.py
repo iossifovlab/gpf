@@ -90,6 +90,8 @@ class ImpalaGenotypeStorage(GenotypeStorage):
         return variant_table, pedigree_table
 
     def build_backend(self, study_config, genomes_db):
+        assert study_config is not None
+
         variant_table, pedigree_table = \
             self.study_tables(study_config)
         family_variants = ImpalaFamilyVariants(
@@ -208,7 +210,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
 
         parquet_pedigrees.append(parquet_filenames.pedigree)
 
-        study_dir = os.path.join(self.data_dir, study_id)
+        # study_dir = os.path.join(self.data_dir, study_id)
 
         config_dict = self.impala_load_study(
             study_id,
