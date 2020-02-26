@@ -60,7 +60,7 @@ class GeneSetsDb(object):
         self.config = config
         self.gene_set_collections = dict()
 
-    @property
+    @property  # type: ignore
     @cached
     def collections_descriptions(self):
         gene_sets_collections_desc = []
