@@ -51,6 +51,12 @@ def cli_arguments(dae_config, argv=sys.argv[1:]):
     )
 
     parser.add_argument(
+        '--cnv-file', type=str,
+        metavar='<CNV variants filename>',
+        help='CNV variants file'
+    )
+
+    parser.add_argument(
         '--dae-summary-file', type=str,
         metavar='<summary filename>',
         help='DAE transmitted summary variants file to import'

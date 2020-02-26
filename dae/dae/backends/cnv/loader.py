@@ -37,7 +37,7 @@ class CNVLoader(VariantsGenotypesLoader):
         self.genome = genome
         self.set_attribute("source_type", "cnv")
 
-        self.cnv_df = self.flexible_cnv_load(
+        self.cnv_df = self.load_cnv(
             cnv_filename,
             families=families,
             adjust_chrom_prefix=self._adjust_chrom_prefix,
@@ -93,11 +93,11 @@ class CNVLoader(VariantsGenotypesLoader):
         ref_row = np.fromstring(best_state, dtype=GENOTYPE_TYPE, sep=" ")
         alt_row = np.zeros(len(ref_row), dtype=GENOTYPE_TYPE)
         if variant_type == VariantType.cnv_p:
-            assert all(ref_row >= 2)
+            assert all(ref_row >= 2), ref_row
             alt_row[ref_row > 2] = 1
             ref_row[ref_row > 2] = 1
         elif variant_type == VariantType.cnv_m:
-            assert all(ref_row <= 2)
+            assert all(ref_row <= 2), ref_row
             alt_row[ref_row < 2] = 1
         else:
             assert (
@@ -143,8 +143,8 @@ class CNVLoader(VariantsGenotypesLoader):
         )
 
         location = raw_df[cnv_location]
-        chrom_col, full_pos = zip(*map(str.split(":"), location))
-        start_col, end_col = zip(*map(str.split("-"), full_pos))
+        chrom_col, full_pos = zip(*map(lambda x: x.split(":"), location))
+        start_col, end_col = zip(*map(lambda x: x.split("-"), full_pos))
 
         if adjust_chrom_prefix is not None:
             chrom_col = tuple(map(adjust_chrom_prefix, chrom_col))
@@ -157,7 +157,7 @@ class CNVLoader(VariantsGenotypesLoader):
 
         best_state_col = tuple(
             map(
-                cls._calc_cnv_best_state,
+                lambda x: cls._calc_cnv_best_state(x[0], x[1]),
                 zip(raw_df[cnv_best_state], variant_type_col),
             )
         )
@@ -212,6 +212,12 @@ class CNVLoader(VariantsGenotypesLoader):
             default="bestState",
             help="The label or index of the column containing the variant's"
             " best state. [Default: bestState]",
+        )
+        parser.add_argument(
+            "--cnv-sep",
+            type=str,
+            default="\t",
+            help="CNV file field separator. [Default: `\\t`]"
         )
         parser.add_argument(
             "--add-chrom-prefix",
