@@ -6,7 +6,7 @@ import os
 
 class MissenseScoresDB(object):
     chromosomes = [str(x) for x in range(1, 23)] + ['X', 'Y']
-    columns = {}
+    columns: dict = {}
 
     def __init__(self, path=None):
         self.path = path

@@ -40,7 +40,7 @@ class ReferenceGenomeMock(object):
 
 class CodeMock(object):
     startCodons = ['ABC', 'DEF']
-    CodonsAaKeys = {}
+    CodonsAaKeys: dict = {}
 
 
 class AnnotatorMock(object):
