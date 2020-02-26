@@ -404,9 +404,9 @@ class SummaryAllele(Allele):
             self,
             chromosome: str,
             position: int,
-            end_position: int,
             reference: str,
             alternative: Optional[str] = None,
+            end_position: int = -1,
             summary_index: int = -1,
             allele_index: int = 0,
             transmission_type: TransmissionType = TransmissionType.transmitted,
@@ -571,12 +571,15 @@ class SummaryVariantFactory(object):
             record, transmission_type=TransmissionType.transmitted):
         record['transmission_type'] = transmission_type
         alternative = record['alternative']
+        if "end_position" not in record:
+            record["end_position"] = -1
 
         return SummaryAllele(
             record['chrom'], record['position'],
             record['reference'],
             alternative=alternative,
             summary_index=record['summary_variant_index'],
+            end_position=record['end_position'],
             allele_index=record['allele_index'],
             transmission_type=transmission_type,
             attributes=record)
