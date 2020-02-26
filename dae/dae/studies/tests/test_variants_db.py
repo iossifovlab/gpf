@@ -225,7 +225,7 @@ def test_get_all(fixtures_gpf_instance, variants_db_fixture):
 
 def test_get_all_studies_ids(fixtures_gpf_instance, variants_db_fixture):
     studies = fixtures_gpf_instance.get_genotype_data_ids()
-    assert len(studies) == 33
+    assert len(studies) == 32
 
 
 def test_get_bad_study(fixtures_gpf_instance):

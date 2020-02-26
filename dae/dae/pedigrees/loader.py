@@ -231,7 +231,7 @@ class FamiliesLoader:
             'is handled. Available options are `generate` and `load`. When '
             'layout mode option is set to generate the loader'
             'tryes to generate a layout for the family pedigree. '
-            'When `load` is specified, the loader tryes to load the layout '
+            'When `load` is specified, the loader tries to load the layout '
             'from the layout column of the pedigree. '
             '[default: %(default)s]'
         )

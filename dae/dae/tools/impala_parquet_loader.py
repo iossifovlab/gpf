@@ -5,6 +5,7 @@ import argparse
 
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.backends.impala.import_commons import save_study_config
+from dae.configuration.study_config_builder import StudyConfigBuilder
 
 
 def parse_cli_arguments(argv, gpf_instance):
@@ -75,6 +76,7 @@ def main(argv=sys.argv[1:], gpf_instance=None):
         study_config = genotype_storage.impala_load_study(
             argv.study_id, [argv.variants], [argv.pedigree]
         )
+        study_config = StudyConfigBuilder(study_config).build_config()
     assert study_config is not None
     save_study_config(gpf_instance.dae_config, argv.study_id, study_config)
 

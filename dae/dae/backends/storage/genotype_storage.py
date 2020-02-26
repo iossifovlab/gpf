@@ -1,7 +1,6 @@
 class GenotypeStorage:
 
     def __init__(self, storage_config):
-        print(storage_config)
         self.storage_config = storage_config
         self.id = self.storage_config.section_id()
 
@@ -19,5 +18,6 @@ class GenotypeStorage:
             study_id,
             families_loader=None,
             variant_loaders=None,
+            study_config=None,
             **kwargs):
         raise NotImplementedError()

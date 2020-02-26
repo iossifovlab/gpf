@@ -1,5 +1,7 @@
-from dae.configuration.gpf_config_parser import validate_existing_path, \
-        validate_path
+from dae.configuration.gpf_config_parser import (
+    validate_existing_path,
+    validate_path,
+)
 
 phenotype_schema = {
     "type": "dict",
@@ -106,7 +108,25 @@ family_schema = {
         "coerce": "abspath",
         "required": True,
     },
-    "params": {"type": "dict", "valuesrules": {"type": ["string", "boolean"]}},
+    "params": {
+        "type": "dict",
+        "schema": {
+            "ped_family": {"type": "string"},
+            "ped_person": {"type": "string"},
+            "ped_mom": {"type": "string"},
+            "ped_dad": {"type": "string"},
+            "ped_sex": {"type": "string"},
+            "ped_status": {"type": "string"},
+            "ped_role": {"type": "string"},
+            "ped_no_role": {"type": "string"},
+            "ped_proband": {"type": "string"},
+            "ped_no_header": {"type": "string"},
+            "ped_file_format": {"type": "string"},
+            "ped_layout_mode": {"type": "string"},
+            "ped_sep": {"type": "string"},
+        },
+        "default": {},
+    },
 }
 
 variants_file = {
@@ -123,9 +143,29 @@ variants_file = {
     },
     "params": {
         "type": "dict",
-        "valuesrules": {
-            "type": ["string", "boolean"],
-        }
+        "schema": {
+            "add_chrom_prefix": {"type": "string"},
+            "del_chrom_prefix": {"type": "string"},
+            "dae_include_reference_genotypes": {"type": "boolean"},
+            "denovo_location": {"type": "string"},
+            "denovo_variant": {"type": "string"},
+            "denovo_chrom": {"type": "string"},
+            "denovo_pos": {"type": "string"},
+            "denovo_ref": {"type": "string"},
+            "denovo_alt": {"type": "string"},
+            "denovo_person_id": {"type": "string"},
+            "denovo_family_id": {"type": "string"},
+            "denovo_best_state": {"type": "string"},
+            "denovo_sep": {"type": "string"},
+            "vcf_include_reference_genotypes": {"type": "boolean"},
+            "vcf_include_unknown_family_genotypes": {"type": "boolean"},
+            "vcf_include_unknown_person_genotypes": {"type": "boolean"},
+            "vcf_multi_loader_fill_in_mode": {"type": "string"},
+            "vcf_denovo_mode": {"type": "string"},
+            "vcf_omission_mode": {"type": "string"},
+            "vcf_chromosomes": {"type": "string"},
+        },
+        "default": {}
     },
 }
 
@@ -138,6 +178,7 @@ genotype_storage_schema = {
             "variants": {
                 "type": "list",
                 "schema": {"type": "dict", "schema": variants_file},
+                "default": [],
             },
         },
         "excludes": "tables",
@@ -161,13 +202,13 @@ study_config_schema = {
         "type": "string",
         "check_with": validate_existing_path,
         "coerce": "abspath",
-        "default": "."
+        "default": ".",
     },
     "conf_dir": {
         "type": "string",
         "check_with": validate_existing_path,
         "coerce": "abspath",
-        "default": "."
+        "default": ".",
     },
     "phenotype_data": {"type": "string"},
     "phenotype_browser": {"type": "boolean"},
@@ -222,7 +263,7 @@ study_config_schema = {
             "selected_pheno_column_values": {
                 "type": "list",
                 "schema": {"type": "string"},
-                "default": []
+                "default": [],
             },
             "family_filters": {
                 "type": "list",
@@ -232,7 +273,7 @@ study_config_schema = {
             "selected_in_roles_values": {
                 "type": "list",
                 "schema": {"type": "string"},
-                "default": []
+                "default": [],
             },
             "inheritance_type_filter": {
                 "type": "list",
@@ -258,7 +299,7 @@ study_config_schema = {
             "selected_genotype_column_values": {
                 "type": "list",
                 "schema": {"type": "string"},
-                "default": []
+                "default": [],
             },
             "preview_columns": {"type": "list", "schema": {"type": "string"}},
             "download_columns": {"type": "list", "schema": {"type": "string"}},
@@ -272,7 +313,7 @@ study_config_schema = {
             "selected_present_in_role_values": {
                 "type": "list",
                 "schema": {"type": "string"},
-                "default": []
+                "default": [],
             },
             "pheno_filters": {
                 "type": "dict",
@@ -284,7 +325,7 @@ study_config_schema = {
             "selected_pheno_filters_values": {
                 "type": "list",
                 "schema": {"type": "string"},
-                "default": []
+                "default": [],
             },
         },
     },
@@ -295,27 +336,30 @@ study_config_schema = {
             "selected_people_groups": {
                 "type": "list",
                 "schema": {"type": "string"},
-                "default": []
+                "default": [],
             },
-            "groups": {"type": "list", "schema": {
-                "type": "dict",
+            "groups": {
+                "type": "list",
                 "schema": {
-                    "name": {"type": "string"},
-                    "people_group_ids": {
-                        "type": "list",
-                        "schema": {"type": "string"}
+                    "type": "dict",
+                    "schema": {
+                        "name": {"type": "string"},
+                        "people_group_ids": {
+                            "type": "list",
+                            "schema": {"type": "string"},
+                        },
                     },
-                }}
+                },
             },
             "effect_groups": {
                 "type": "list",
                 "schema": {"type": "string"},
-                "default": []
+                "default": [],
             },
             "effect_types": {
                 "type": "list",
                 "schema": {"type": "string"},
-                "default": []
+                "default": [],
             },
             "families_count_show_id": {"type": "integer"},
             "draw_all_families": {"type": "boolean", "default": False},
@@ -334,12 +378,12 @@ study_config_schema = {
             "selected_people_groups": {
                 "type": "list",
                 "schema": {"type": "string"},
-                "default": []
+                "default": [],
             },
             "selected_standard_criterias_values": {
                 "type": "list",
                 "schema": {"type": "string"},
-                "default": []
+                "default": [],
             },
             "standard_criterias": {
                 "type": "dict",
@@ -367,12 +411,12 @@ study_config_schema = {
             "selected_people_groups": {
                 "type": "list",
                 "schema": {"type": "string"},
-                "default": []
+                "default": [],
             },
             "selected_background_values": {
                 "type": "list",
                 "schema": {"type": "string"},
-                "default": []
+                "default": [],
             },
             "background": {
                 "type": "dict",
@@ -385,7 +429,7 @@ study_config_schema = {
             "selected_counting_values": {
                 "type": "list",
                 "schema": {"type": "string"},
-                "default": []
+                "default": [],
             },
             "counting": {
                 "type": "dict",

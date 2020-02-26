@@ -207,12 +207,14 @@ class RawFamilyVariants:
 
 class RawMemoryVariants(RawFamilyVariants):
 
-    def __init__(
-            self, loaders):
-        assert len(loaders) > 0
-        super(RawMemoryVariants, self).__init__(loaders[0].families)
+    def __init__(self, loaders, families):
+        super(RawMemoryVariants, self).__init__(families)
         self.variants_loaders = loaders
-        self._full_variants = None
+        if len(loaders) > 0:
+            self._full_variants = None
+        else:
+            print("No variants to load")
+            self._full_variants = []
 
     @property
     def full_variants(self):

@@ -38,9 +38,10 @@ class ImpalaHelpers(object):
             self.import_files(
                 cursor, db, pedigree_table,
                 pedigree_hdfs_path)
-            self.import_files(
-                cursor, db, variant_table,
-                variant_hdfs_path)
+            if variant_hdfs_path:
+                self.import_files(
+                    cursor, db, variant_table,
+                    variant_hdfs_path)
 
     def import_files(self, cursor, dbname, table_name, import_files):
 
