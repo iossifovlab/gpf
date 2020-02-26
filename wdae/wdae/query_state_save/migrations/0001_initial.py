@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # flake8: noqa
+# type: ignore
 from django.db import migrations, models
 import uuid
 

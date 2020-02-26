@@ -1,4 +1,5 @@
 import copy
+from typing import Dict, Any
 from collections import OrderedDict
 from box import Box
 
@@ -6,7 +7,7 @@ from box import Box
 class Schema(object):
 
     # New types only need to be added here.
-    type_map = OrderedDict([
+    type_map: Dict[str, Any] = OrderedDict([
                 ('str', str),
                 ('float', float),
                 ('int', int),

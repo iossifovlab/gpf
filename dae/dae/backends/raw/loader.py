@@ -6,7 +6,7 @@ import copy
 import numpy as np
 import pandas as pd
 
-from typing import Iterator, Tuple, List, Dict, Any, Optional
+from typing import Iterator, Tuple, List, Dict, Any, Optional, Sequence
 
 from dae.GenomeAccess import GenomicSequence
 
@@ -415,6 +415,8 @@ class VariantsGenotypesLoader(VariantsLoader):
             params=params)
 
         self.genome = genome
+
+        self.regions: Sequence[Optional[str]]
         if regions is None or isinstance(regions, str):
             self.regions = [regions]
         else:

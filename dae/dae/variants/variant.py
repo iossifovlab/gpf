@@ -160,12 +160,12 @@ class Allele:
         raise NotImplementedError()
 
     @property
-    def effects(self) -> Effect:
+    def effects(self) -> Optional[Effect]:
         return self.effect
 
     @property
-    def frequency(self) -> float:
-        return self.get_attribute('af_allele_freq')
+    def frequency(self) -> Optional[float]:
+        return self.attributes.get('af_allele_freq')
 
     @property
     def details(self) -> Optional[VariantDetail]:
@@ -177,7 +177,7 @@ class Allele:
             return None
         if self.details is None:
             return None
-        return self.details.cshl_variant
+        return self.details.cshl_variant  # type: ignore
 
     @property
     def cshl_location(self) -> Optional[str]:
@@ -185,7 +185,7 @@ class Allele:
             return None
         if self.details is None:
             return None
-        return self.details.cshl_location
+        return self.details.cshl_location  # type: ignore
 
     @property
     def cshl_position(self) -> Optional[str]:
@@ -193,7 +193,7 @@ class Allele:
             return None
         if self.details is None:
             return None
-        return self.details.cshl_position
+        return self.details.cshl_position  # type: ignore
 
     @property
     def variant_type(self) -> Optional[VariantType]:
@@ -201,7 +201,7 @@ class Allele:
             return None
         if self.details is None:
             return None
-        return self.details.variant_type
+        return self.details.variant_type  # type: ignore
 
     @property
     def is_reference_allele(self) -> bool:
@@ -240,7 +240,7 @@ class Allele:
         """
         checks if additional variant attributes contain value for key `item`.
         """
-        return item in self.attribute
+        return item in self.attributes
 
 
 class Variant:
@@ -270,7 +270,7 @@ class Variant:
                 aa.alternative is None
                 for aa in self.alt_alleles])
             return None
-        return ','.join([aa.alternative for aa in self.alt_alleles])
+        return ','.join([aa.alternative for aa in self.alt_alleles if aa.alternative])
 
     @property
     def allele_count(self) -> int:
@@ -330,11 +330,10 @@ class Variant:
         return AltAlleleItems([sa.effect for sa in self.alt_alleles])
 
     @property
-    def frequencies(self) -> List[float]:
+    def frequencies(self) -> List[Optional[float]]:
         """
         0-base list of frequencies for variant.
         """
-        print("frequencies:", self.alleles)
         return [sa.frequency for sa in self.alleles]
 
     @property
@@ -353,7 +352,7 @@ class Variant:
     def has_attribute(self, item: Any) -> bool:
         return any([sa.has_attribute(item) for sa in self.alleles])
 
-    def __getitem__(self, item: Any) -> List[any]:
+    def __getitem__(self, item: Any) -> List[Any]:
         return self.get_attribute(item)
 
     def __contains__(self, item: Any) -> bool:
@@ -403,23 +402,21 @@ class SummaryAllele(Allele):
             transmission_type: TransmissionType = TransmissionType.transmitted,
             attributes: Dict[str, Any] = None):
 
-        self._chromosome = chromosome
-        self._position = position
-        self._reference = reference
-        self._alternative = alternative
+        self._chromosome: str = chromosome
+        self._position: int = position
+        self._reference: str = reference
+        self._alternative: Optional[str] = alternative
 
-        self._summary_index = summary_index
-        self._allele_index = allele_index
-        self._transmission_type = transmission_type
+        self._summary_index: int = summary_index
+        self._allele_index: int = allele_index
+        self._transmission_type: TransmissionType = transmission_type
 
         self._details = None
 
         self._effect = None
 
-        if attributes is None:
-            self._attributes = {}
-        else:
-            self._attributes = {}
+        self._attributes: Dict[str, Any] = {}
+        if attributes is not None:
             self.update_attributes(attributes)
 
     @property
@@ -435,7 +432,7 @@ class SummaryAllele(Allele):
         return self._reference
 
     @property
-    def alternative(self) -> str:
+    def alternative(self) -> Optional[str]:
         return self._alternative
 
     @property
@@ -516,12 +513,12 @@ class SummaryVariant(Variant):
         assert len(set([sa.position for sa in alleles])) == 1
 
         assert alleles[0].is_reference_allele
-        self._alleles = alleles
-        self._allele_count = len(self.alleles)
+        self._alleles: List[Allele] = alleles
+        self._allele_count: int = len(self.alleles)
 
-        self._chromosome = self.ref_allele.chromosome
-        self._position = self.ref_allele.position
-        self._reference = self.ref_allele.reference
+        self._chromosome: str = self.ref_allele.chromosome
+        self._position: int = self.ref_allele.position
+        self._reference: str = self.ref_allele.reference
 
     @property
     def chromosome(self) -> str:
@@ -544,7 +541,7 @@ class SummaryVariant(Variant):
         return self.ref_allele.summary_index
 
     @property
-    def alleles(self) -> Any:
+    def alleles(self):
         return self._alleles
 
 

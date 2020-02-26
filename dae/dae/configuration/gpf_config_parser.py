@@ -6,20 +6,20 @@ import toml
 
 from collections import namedtuple
 from copy import deepcopy
-from typing import List, Tuple, Any, Dict
+from typing import List, Any, Dict, NamedTuple
 from cerberus import Validator
 
 from dae.utils.dict_utils import recursive_dict_update
 
 
-def validate_existing_path(field: str, value: str, error: str):
+def validate_existing_path(field: str, value: str, error):
     if not os.path.isabs(value):
         error(field, f"path <{value}> is not an absolute path!")
     if not os.path.exists(value):
         error(field, f"path <{value}> does not exist!")
 
 
-def validate_path(field: str, value: str, error: str):
+def validate_path(field: str, value: str, error):
     if not os.path.isabs(value):
         error(field, f"path <{value}> is not an absolute path!")
 
@@ -44,8 +44,8 @@ class GPFConfigParser:
     @classmethod
     def _dict_to_namedtuple(
         cls, input_dict: dict, dict_name: str = "root"
-    ) -> Tuple[Any]:
-        CONFIG_TUPLE = namedtuple(dict_name, input_dict.keys())
+    ) -> NamedTuple:
+        CONFIG_TUPLE = namedtuple(dict_name, input_dict.keys())  # type: ignore
 
         class ConfigTuple(CONFIG_TUPLE):  # noqa
             def __getattr__(self, name):
@@ -81,23 +81,23 @@ class GPFConfigParser:
                     for item in value
                 ]
 
-        return ConfigTuple(*input_dict.values())
+        return ConfigTuple(*input_dict.values())  # type: ignore
 
     @classmethod
-    def _namedtuple_to_dict(cls, tup: Tuple[Any]) -> Dict[str, Any]:
+    def _namedtuple_to_dict(cls, tup: NamedTuple) -> Dict[str, Any]:
         output = deepcopy(tup)._asdict()
         for k, v in output.items():
             if isinstance(v, tuple):
-                output[k] = cls._namedtuple_to_dict(v)
+                output[k] = cls._namedtuple_to_dict(v)  # type: ignore
             if isinstance(v, list):
                 for idx, li in enumerate(output[k]):
                     if isinstance(li, tuple):
-                        output[k][idx] = cls._namedtuple_to_dict(li)
+                        output[k][idx] = cls._namedtuple_to_dict(li)  # type: ignore
         return output
 
     @classmethod
     def _collect_directory_configs(cls, dirname: str) -> List[str]:
-        config_files = list()
+        config_files: List[str] = list()
         for filetype in cls.filetype_parsers.keys():
             config_files += glob.glob(
                 os.path.join(dirname, f"**/*{filetype}"), recursive=True
@@ -128,12 +128,12 @@ class GPFConfigParser:
         interpolated_text = file_contents % interpol_vars
         config = cls.filetype_parsers[ext](interpolated_text)
         config.pop("vars", None)
-        return config
+        return config  # type: ignore
 
     @classmethod
     def load_config(
         cls, filename: str, schema: dict, default_config_filename: str = None
-    ) -> Tuple[Any]:
+    ) -> NamedTuple:
         assert os.path.exists(filename), f"{filename} does not exist!"
 
         validator = GPFConfigValidator(
@@ -153,12 +153,12 @@ class GPFConfigParser:
         ext = os.path.splitext(filename)[1]
         assert ext in cls.filetype_parsers, f"Unsupported filetype {filename}!"
         file_contents = cls._get_file_contents(filename)
-        return cls.filetype_parsers[ext](file_contents)
+        return cls.filetype_parsers[ext](file_contents)  # type: ignore
 
     @classmethod
     def load_directory_configs(
         cls, dirname: str, schema: dict, default_config_filename: str = None
-    ) -> List[Tuple[Any]]:
+    ) -> List[NamedTuple]:
         return [
             cls.load_config(config_path, schema, default_config_filename)
             for config_path in cls._collect_directory_configs(dirname)
@@ -166,8 +166,8 @@ class GPFConfigParser:
 
     @classmethod
     def modify_tuple(
-        cls, t: namedtuple, new_values: Dict[str, Any]
-    ) -> namedtuple:
+        cls, t: NamedTuple, new_values: Dict[str, Any]
+    ) -> NamedTuple:
         t_dict = cls._namedtuple_to_dict(t)
         updated_dict = recursive_dict_update(t_dict, new_values)
         return cls._dict_to_namedtuple(updated_dict)

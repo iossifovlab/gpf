@@ -80,7 +80,7 @@ class GPFInstance(object):
             self._common_report_facade
             self._background_facade
 
-    @property
+    @property  # type: ignore
     @cached
     def genomes_db(self):
         return GenomesDB(
@@ -88,12 +88,12 @@ class GPFInstance(object):
             self.dae_config.genomes_db.conf_file
         )
 
-    @property
+    @property  # type: ignore
     @cached
     def _pheno_db(self):
         return PhenoDb(dae_config=self.dae_config)
 
-    @property
+    @property  # type: ignore
     @cached
     def _gene_info_config(self):
         return GPFConfigParser.load_config(
@@ -101,12 +101,12 @@ class GPFInstance(object):
             gene_info_conf
         )
 
-    @property
+    @property  # type: ignore
     @cached
     def gene_weights_db(self):
         return GeneWeightsDb(self._gene_info_config)
 
-    @property
+    @property  # type: ignore
     @cached
     def _score_config(self):
         return GPFConfigParser.load_config(
@@ -114,17 +114,17 @@ class GPFInstance(object):
             genomic_scores_schema
         )
 
-    @property
+    @property  # type: ignore
     @cached
     def _scores_factory(self):
         return ScoresFactory(self._score_config)
 
-    @property
+    @property  # type: ignore
     @cached
     def genotype_storage_db(self):
         return GenotypeStorageFactory(self.dae_config)
 
-    @property
+    @property  # type: ignore
     @cached
     def _variants_db(self):
         return VariantsDb(
@@ -139,22 +139,22 @@ class GPFInstance(object):
         for cached_val_name in reload_properties:
             setattr(self, cached_val_name, None)
 
-    @property
+    @property  # type: ignore
     @cached
     def _common_report_facade(self):
         return CommonReportFacade(self)
 
-    @property
+    @property  # type: ignore
     @cached
     def gene_sets_db(self):
         return GeneSetsDb(self._gene_info_config)
 
-    @property
+    @property  # type: ignore
     @cached
     def denovo_gene_sets_db(self):
         return DenovoGeneSetsDb(self._variants_db)
 
-    @property
+    @property  # type: ignore
     @cached
     def _background_facade(self):
         return BackgroundFacade(self._variants_db)

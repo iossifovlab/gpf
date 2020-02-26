@@ -8,20 +8,21 @@ from dae.RegionOperations import Region, \
 import gzip
 import pickle
 import sys
+from typing import Dict, List, Any
 from collections import defaultdict, \
     namedtuple, OrderedDict
 
 
 class TranscriptModel(object):
 
-    attr = {}
+    attr: Dict[str, Any] = {}
     gene = None
     trID = None
     chr = None
-    cds = []
+    cds: List = []
     strand = None
-    exons = []
-    tx = []
+    exons: List = []
+    tx: List = []
 
     def is_coding(self):
         if self.cds[0] >= self.cds[1]:

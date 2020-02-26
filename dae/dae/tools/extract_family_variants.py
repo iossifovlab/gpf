@@ -11,10 +11,11 @@ Created on Jan 19, 2018
 '''
 import sys
 import os
+from typing import List
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
 import gzip
 
-__all__ = []
+__all__: List = []
 __version__ = 0.1
 __date__ = '2018-01-19'
 __updated__ = '2018-01-19'

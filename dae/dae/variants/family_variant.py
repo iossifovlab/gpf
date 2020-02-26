@@ -1,5 +1,5 @@
 import itertools
-from typing import Any, Dict, List, Optional
+from typing import Any, List, Optional
 
 import numpy as np
 from deprecation import deprecated
@@ -29,10 +29,10 @@ def calculate_simple_best_state(
         best_st[0] = best_st[0] - alt
         best_st.append(alt)
 
-    best_st = np.stack(best_st, axis=0)
-    best_st[:, unknown] = -1
+    best_st_arr = np.stack(best_st, axis=0)
+    best_st_arr[:, unknown] = -1
 
-    return best_st
+    return best_st_arr
 
 
 class FamilyDelegate(object):
@@ -79,7 +79,7 @@ class FamilyAllele(Allele, FamilyDelegate):
         FamilyDelegate.__init__(self, family)
 
         #: summary allele that corresponds to this allele in family variant
-        self.summary_allele = summary_allele
+        self.summary_allele: SummaryAllele = summary_allele
 
         self.gt = genotype
 
@@ -95,7 +95,7 @@ class FamilyAllele(Allele, FamilyDelegate):
         self._variant_in_roles = None
         self._variant_in_sexes = None
 
-        self.matched_gene_effects = []
+        self.matched_gene_effects: List = []
 
     def __repr__(self):
         if not self.alternative:
@@ -109,27 +109,27 @@ class FamilyAllele(Allele, FamilyDelegate):
                 self.family_id)
 
     @property
-    def chromosome(self) -> str:
+    def chromosome(self):
         return self.summary_allele.chromosome
 
     @property
-    def position(self) -> int:
+    def position(self):
         return self.summary_allele.position
 
     @property
-    def reference(self) -> str:
+    def reference(self):
         return self.summary_allele.reference
 
     @property
-    def alternative(self) -> str:
+    def alternative(self):
         return self.summary_allele.alternative
 
     @property
-    def summary_index(self) -> int:
+    def summary_index(self):
         return self.summary_allele.summary_index
 
     @property
-    def allele_index(self) -> int:
+    def allele_index(self):
         return self.summary_allele.allele_index
 
     @property
@@ -137,7 +137,7 @@ class FamilyAllele(Allele, FamilyDelegate):
         return self.summary_allele.transmission_type
 
     @property
-    def attributes(self) -> Dict[str, Any]:
+    def attributes(self):
         return self.summary_allele.attributes
 
     @property
@@ -163,7 +163,7 @@ class FamilyAllele(Allele, FamilyDelegate):
             )
         return self._best_state
 
-    @property
+    @property  # type: ignore
     @deprecated(details="Replace `best_st` with `best_state`")
     def best_st(self):
         return self.best_state
@@ -367,28 +367,28 @@ class FamilyVariant(Variant, FamilyDelegate):
         self.gt = genotype
         self._genetic_model = None
 
-        self._family_alleles = None
+        self._family_alleles: Optional[List[FamilyAllele]] = None
         self._best_state = best_state
-        self._matched_alleles = []
-        self._fvuid = None
+        self._matched_alleles: List[Allele] = []
+        self._fvuid: Optional[str] = None
 
     @property
-    def fvuid(self) -> str:
+    def fvuid(self) -> Optional[str]:
         if self._fvuid is None:
             self._fvuid = f'{self.family_id}.{self.location}'\
                 f'.{self.reference}.{self.alternative}'
         return self._fvuid
 
     @property
-    def chromosome(self) -> str:
+    def chromosome(self):
         return self.summary_variant.chromosome
 
     @property
-    def position(self) -> int:
+    def position(self):
         return self.summary_variant.position
 
     @property
-    def reference(self) -> str:
+    def reference(self):
         return self.summary_variant.reference
 
     # @property
@@ -400,11 +400,11 @@ class FamilyVariant(Variant, FamilyDelegate):
         return self.summary_variant.allele_count
 
     @property
-    def summary_index(self) -> int:
+    def summary_index(self):
         return self.summary_variant.summary_index
 
     @property
-    def alleles(self) -> List[FamilyAllele]:
+    def alleles(self):
         if self._family_alleles is None:
             family_alleles = [
                 FamilyAllele(
@@ -504,7 +504,7 @@ class FamilyVariant(Variant, FamilyDelegate):
             )
         return self._best_state
 
-    @property
+    @property  # type: ignore
     @deprecated(details="Replace usage of `best_st` with `best_state`")
     def best_st(self):
         return self.best_state

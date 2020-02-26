@@ -43,3 +43,4 @@ data-hg19-startup.tar.gz
 data-hg19-startup-latest.tar.gz
 data-hg19-startup
 __pycache__
+.mypy_cache
