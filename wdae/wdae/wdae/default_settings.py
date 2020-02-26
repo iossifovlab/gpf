@@ -97,8 +97,9 @@ APPEND_SLASH = False
 
 
 PHENO_BROWSER_CACHE = os.path.join(
-    os.environ.get('DAE_DB_DIR'),
-    'pheno')
+    os.environ.get('DAE_DB_DIR') or '',
+    'pheno'
+)
 PHENO_BROWSER_BASE_URL = "/static/"
 
 # Additional locations of static files
