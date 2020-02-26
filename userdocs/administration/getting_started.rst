@@ -291,18 +291,10 @@ study is located::
 
     cd gpf_test/studies/iossifov_2014
 
-Edit the study configuration file ``iossifov_2014.conf`` and add this line under the `[genotypeDataStudy]` section::
+Edit the study configuration file ``iossifov_2014.conf`` and add this new section in the end of the file::
 
-    enrichmentTool = yes
-
-After this, the configuration file should look like::
-
-    [genotypeDataStudy]
-
-    id = iossifov_2014
-    genotype_storage = genotype_impala
-
-    enrichmentTool = yes
+    [enrichment]
+    enabled = true
 
 Restart the `wdaemanage.py`::
 
@@ -330,12 +322,12 @@ Edit the configuration file ``comp_vcf.conf`` and add the following lines:
 
 .. code::
 
-    [genotypeBrowser]
-
-    genotype.freq.name = Frequency
-    genotype.freq.slots = exome_gnomad_af_percent:exome gnomad:E %%.3f,
-        genome_gnomad_af_percent:genome gnomad:G %%.3f,
-        af_allele_freq:study freq:S %%.3f
+    [genotype_browser]
+    genotype.freq.name = "Frequency"
+    genotype.freq.slots = 
+        [{source = "exome_gnomad_af_percent", name = "exome gnomad", format = "E %%.3f"},
+        {source = "genome_gnomad_af_percent", name = "genome gnomad", format = "G %%.3f"},
+        {source = " af_allele_freq", name = "study freq", format = "S %%.3f"}]
 
 This overwrites the definition of existing preview column `Frequency` to
 include not only the gnomAD frequencies, but also to include allele frequency.
@@ -422,12 +414,27 @@ to see the configuration file generated from the import tool:
 
 .. code::
 
-    [phenotypeData]
-    name = comp_pheno
-    dbfile = %(wd)s/comp_pheno.db
-    browser_dbfile = %(wd)s/browser/comp_pheno_browser.db
-    browser_images_dir = %(wd)s/browser/images
-    browser_images_url = /static/comp_pheno/browser/images/
+    [vars]
+    wd = "."
+
+    [phenotype_data]
+    name = "comp_pheno"
+    dbfile = "%(wd)s/comp_pheno.db"
+    browser_dbfile = "%(wd)s/browser/comp_pheno_browser.db"
+    browser_images_dir = "%(wd)s/browser/images"
+    browser_images_url = "/static/comp_pheno/browser/images"
+
+    [regression.age]
+    instrument_name = "i1"
+    measure_name = "age"
+    display_name = "Age"
+    jitter = 0.1
+
+    [regression.iq]
+    instrument_name = "i1"
+    measure_name = "iq"
+    display_name = "Non verbal IQ"
+    jitter = 0.1
 
 Configure Phenotype Browser
 +++++++++++++++++++++++++++
@@ -439,27 +446,52 @@ The phenotype databases could be attached to one or more studies and datasets.
 If you want to attach ``comp_pheno`` phenotype
 database to ``comp_all`` study, you need to specify it in the study's
 configuration file ``comp_all.conf``, which can be found at gpf_test/studies/comp_all.
+Edit the file to add this line at the bottom of the file. Make sure it's separated and
+not part of any section. 
 
 .. code::
 
-    [genotypeDataStudy]
-    id = comp_all
-    genotype_storage = genotype_filesystem
+    phenotype_data = "comp_pheno"
 
-To enable the :ref:`phenotype_browser_ui` you must add this line below the `[genotypeDataStudy]` section:
+To enable the :ref:`phenotype_browser_ui`, add this line:
 
 .. code::
 
-    phenotypeBrowser = yes
+    phenotype_browser = true
 
-After this, the configuration file should look like:
+After this, the configuration file should look like this:
 
 .. code::
 
-    [genotypeDataStudy]
-    id = comp_all
-    genotype_storage = genotype_filesystem
-    phenotypeBrowser = yes
+    id = "comp_all"
+    conf_dir = "."
+    has_denovo = true
+
+    [genotype_storage]
+    id = "genotype_filesystem"
+
+    [genotype_storage.files]
+    pedigree.path = "".../gpf_test/studies/comp_all/data/comp.ped"
+    pedigree.params = {}
+
+    [[genotype_storage.files.variants]]
+    path = "".../gpf_test/studies/comp_all/data/comp.tsv"
+    format = "denovo"
+    params = {}
+
+    [[genotype_storage.files.variants]]
+    path = "".../gpf_test/studies/comp_all/data/comp.vcf"
+    format = "vcf"
+    params = {}
+
+    [genotype_browser]
+    enabled = true
+
+    phenotype_browser = true
+    phenotype_data = "comp_pheno"
+
+.. note::
+    Your paths will be different than the ones shown in the configuration above.
 
 When you restart the server, you should be
 able to see the 'Phenotype Browser' tab in the `comp_all` study.
@@ -571,21 +603,12 @@ Enabling the Phenotype Tool
 
 To enable the :ref:`phenotype_tool_ui` for a study, you must edit
 its configuration file and set the appropriate property, as with
-the Phenotype browser. Open the configuration file ``comp_all.conf``:
+the Phenotype browser. Open the configuration file ``comp_all.conf``
+and add the following line, separated from other sections:
 
 .. code::
 
-    [genotypeDataStudy]
-    id = comp_all
-    genotype_storage = genotype_filesystem
-    phenotypeBrowser = yes
-
-
-And you can enable the Phenotype Tool by adding the following line:
-
-.. code::
-
-   phenotypeTool = yes
+   phenotype_tool = true
 
 
 Restart the GPF development web server and select the `comp_all` study.
