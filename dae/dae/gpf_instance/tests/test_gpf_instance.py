@@ -4,10 +4,11 @@ import os
 
 
 def fixtures_dir():
-    return os.path.abspath(os.path.join(os.path.dirname(__file__), "fixtures"))
+    return os.path.abspath(
+        os.path.join(os.path.dirname(__file__), 'fixtures'))
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture(scope='function')
 def local_gpf_instance(gpf_instance):
     return gpf_instance(fixtures_dir())
 
@@ -32,8 +33,7 @@ def test_init(local_gpf_instance):
 
 def test_eager_init(gpf_instance):
     local_gpf_instance = gpf_instance(
-        work_dir=fixtures_dir(), load_eagerly=True
-    )
+        work_dir=fixtures_dir(), load_eagerly=True)
     assert local_gpf_instance
 
     assert local_gpf_instance.dae_config
@@ -62,9 +62,8 @@ def test_mocker_genomes_db(local_gpf_instance):
     assert genomes_db.get_genome()
     assert genomes_db.get_genome_from_file()
     assert genomes_db.get_genome_file().endswith(
-        "genomes/GATK_ResourceBundle_5777_b37_phiX174/chrAll.fa"
-    )
-    assert genomes_db.get_gene_model_id() == "RefSeq2013"
+        'genomes/GATK_ResourceBundle_5777_b37_phiX174/chrAll.fa')
+    assert genomes_db.get_gene_model_id() == 'RefSeq2013'
 
 
 def test_variants_db(local_gpf_instance):

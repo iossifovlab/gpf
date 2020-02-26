@@ -13,7 +13,10 @@ genomic_score_schema = {
     "xscale": {"type": "string", "allowed": ["linear", "log"]},
     "range": {
         "type": "dict",
-        "schema": {"start": {"type": "float"}, "end": {"type": "float"}},
+        "schema": {
+            "start": {"type": "float"},
+            "end": {"type": "float"}
+        }
     },
     "help_file": {
         "type": "string",
@@ -28,5 +31,5 @@ genomic_scores_schema = {
     "genomic_scores": {
         "type": "dict",
         "valuesrules": {"type": "dict", "schema": genomic_score_schema},
-    },
+    }
 }

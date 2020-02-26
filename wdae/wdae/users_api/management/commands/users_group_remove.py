@@ -4,18 +4,18 @@ from django.core.management.base import BaseCommand, CommandError
 
 
 class Command(BaseCommand):
-    args = "<email> <group>:<group>:"
-    help = "Removes user from group(s)"
+    args = '<email> <group>:<group>:'
+    help = 'Removes user from group(s)'
 
     def handle(self, *args, **options):
-        if len(args) != 2:
-            raise CommandError("Two arguments are required")
+        if(len(args) != 2):
+            raise CommandError('Two arguments are required')
 
         try:
             UserModel = get_user_model()
             users = UserModel.objects.filter(groups__name=args[0])
             for user in users:
-                groups = args[1].split(":")
+                groups = args[1].split(':')
                 for group_name in set(groups):
                     if group_name == "":
                         continue

@@ -51,7 +51,9 @@ INHERITANCE_QUERY_GRAMMAR = r"""
 """
 
 
-inheritance_parser = Lark(INHERITANCE_QUERY_GRAMMAR, start="expression")
+inheritance_parser = Lark(
+    INHERITANCE_QUERY_GRAMMAR,
+    start='expression')
 
 
 class Atom:
@@ -68,6 +70,7 @@ class Expression:
 
 
 class InheritanceTransformer(Transformer):
+
     def __init__(self, attr_name, *args, **kwargs):
         super(InheritanceTransformer, self).__init__(*args, **kwargs)
         self.attr_name = attr_name
@@ -122,9 +125,7 @@ class InheritanceTransformer(Transformer):
         mask = items[0].value
         return Expression(
             "BITAND({mask}, {attr}) = {mask}".format(
-                mask=mask, attr=self.attr_name
-            )
-        )
+                mask=mask, attr=self.attr_name))
 
     def any(self, items):
         assert len(items) == 1
@@ -132,9 +133,7 @@ class InheritanceTransformer(Transformer):
         mask = items[0].value
         return Expression(
             "BITAND({mask}, {attr}) != 0".format(
-                mask=mask, attr=self.attr_name
-            )
-        )
+                mask=mask, attr=self.attr_name))
 
     def logical_or(self, items):
         return self.any([self.atomlist(items)])

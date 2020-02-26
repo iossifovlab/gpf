@@ -12,7 +12,7 @@ def groups_model():
 
 @pytest.fixture()
 def group(db, groups_model):
-    return groups_model.objects.create(name="New Group")
+    return groups_model.objects.create(name='New Group')
 
 
 @pytest.fixture()
@@ -24,4 +24,4 @@ def group_with_user(db, group, user):
 
 @pytest.fixture()
 def dataset(db):
-    return Dataset.objects.create(dataset_id="My Dataset")
+    return Dataset.objects.create(dataset_id='My Dataset')

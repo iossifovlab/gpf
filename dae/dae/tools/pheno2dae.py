@@ -1,26 +1,22 @@
 #!/usr/bin/env python
 # encoding: utf-8
-"""
+'''
 pheno2dae -- prepares a DAE pheno DB cache
 
-"""
+'''
 import sys
 import os
 
 from argparse import ArgumentParser
-
 # from argparse import ArgumentDefaultsHelpFormatter
 import traceback
-from dae.pheno.common import (
-    dump_config,
-    check_phenotype_data_config,
-    default_config,
-)
+from dae.pheno.common import dump_config,\
+    check_phenotype_data_config, default_config
 from dae.pheno.prepare.ped_prepare import PrepareVariables
 
 
 class CLIError(Exception):
-    """Generic exception to raise and log different fatal errors."""
+    '''Generic exception to raise and log different fatal errors.'''
 
     def __init__(self, msg):
         super(CLIError).__init__(type(self))
@@ -43,12 +39,14 @@ def parse_config(args):
     skip_columns = set([])
     if args.skip_file:
         assert os.path.exists(args.skip_file)
-        with open(args.skip_file, "r") as infile:
+        with open(args.skip_file, 'r') as infile:
             columns = infile.readlines()
             columns = [col.strip() for col in columns]
             skip_columns = skip_columns | set(columns)
     if args.skip_columns:
-        columns = set([col for col in args.skip_columns.split(",")])
+        columns = set([
+            col for col in args.skip_columns.split(',')
+        ])
         skip_columns = skip_columns | columns
 
     config.skip.measures = skip_columns
@@ -57,11 +55,11 @@ def parse_config(args):
 
     if args.role:
         config.person.role.type = args.role
-    assert config.person.role.type in set(["column", "guess"])
+    assert config.person.role.type in set(['column', 'guess'])
 
     if args.role_mapping:
         config.person.role.mapping = args.role_mapping
-    assert config.person.role.mapping in set(["SPARK", "SSC", "INTERNAL"])
+    assert config.person.role.mapping in set(['SPARK', 'SSC', 'INTERNAL'])
 
     if args.person_column:
         config.person.column = args.person_column
@@ -82,7 +80,7 @@ def parse_config(args):
         config.instruments.tab_separated = True
 
     if args.report_only:
-        config.db.filename = "memory"
+        config.db.filename = 'memory'
         config.report_only = args.report_only
 
     if args.parallel:
@@ -92,7 +90,7 @@ def parse_config(args):
 
 
 def main(argv=None):  # IGNORE:C0111
-    """Command line options."""
+    '''Command line options.'''
 
     if argv is None:
         argv = sys.argv
@@ -100,181 +98,160 @@ def main(argv=None):  # IGNORE:C0111
         sys.argv.extend(argv)
 
     program_name = os.path.basename(sys.argv[0])
-    program_shortdesc = __import__("__main__").__doc__.split("\n")[1]
-    program_license = """%s
+    program_shortdesc = __import__('__main__').__doc__.split("\n")[1]
+    program_license = '''%s
 
 USAGE
-""" % (
-        program_shortdesc,
-    )
+''' % (program_shortdesc, )
 
     try:
         defaults = default_config()
 
         # Setup argument parser
-        parser = ArgumentParser(description=program_license)
+        parser = ArgumentParser(
+            description=program_license)
         # formatter_class=RawDescriptionHelpFormatter
         # formatter_class=ArgumentDefaultsHelpFormatter)
         parser.add_argument(
-            "-v",
-            "--verbose",
+            "-v", "--verbose",
             dest="verbose",
             action="count",
-            help="set verbosity level",
-        )
+            help="set verbosity level")
         parser.add_argument(
-            "-i",
-            "--instruments",
+            "-i", "--instruments",
             dest="instruments",
             help="directory where all instruments are located",
-            metavar="path",
-        )
+            metavar="path")
         parser.add_argument(
-            "-p",
-            "--pedigree",
+            "-p", "--pedigree",
             dest="pedigree",
             help="pedigree file where families descriptions are located",
-            metavar="path",
-        )
+            metavar="path")
         parser.add_argument(
-            "-d",
-            "--description",
-            help="standardized tsv file that contains measure descriptions",
-        )
+            '-d', '--description',
+            help="standardized tsv file that contains measure descriptions")
         parser.add_argument(
-            "-o",
-            "--output",
-            dest="output",
-            help="output file",
-            metavar="filename",
-        )
+            '-o', '--output',
+            dest='output',
+            help='output file',
+            metavar='filename')
         parser.add_argument(
-            "-C",
-            "--continuous",
+            '-C', '--continuous',
             type=int,
-            dest="continuous",
-            default=defaults["classification"]["continuous"]["min_rank"],
-            help="minimal count of unique values for a measure to be "
-            "classified as continuous (default: %(default)s)",
-        )
+            dest='continuous',
+            default=defaults['classification']['continuous']['min_rank'],
+            help='minimal count of unique values for a measure to be '
+            'classified as continuous (default: %(default)s)')
         parser.add_argument(
-            "-O",
-            "--ordinal",
+            '-O', '--ordinal',
             type=int,
-            dest="ordinal",
-            default=defaults["classification"]["ordinal"]["min_rank"],
-            help="minimal count of unique values for a measure to be "
-            "classified as ordinal (default: %(default)s)",
-        )
+            dest='ordinal',
+            default=defaults['classification']['ordinal']['min_rank'],
+            help='minimal count of unique values for a measure to be '
+            'classified as ordinal (default: %(default)s)')
 
         parser.add_argument(
-            "-A",
-            "--categorical",
+            '-A', '--categorical',
             type=int,
-            dest="categorical",
-            default=defaults["classification"]["categorical"]["min_rank"],
-            help="minimal count of unique values for a measure to be "
-            "classified as categorical (default: %(default)s)",
-        )
+            dest='categorical',
+            default=defaults['classification']['categorical']['min_rank'],
+            help='minimal count of unique values for a measure to be '
+            'classified as categorical (default: %(default)s)')
 
         parser.add_argument(
-            "-I",
-            "--min-individuals",
+            '-I', '--min-individuals',
             type=int,
-            dest="min_individuals",
-            default=defaults["classification"]["min_individuals"],
-            help="minimal number of individuals for a measure to be "
-            "considered for classification (default: %(default)s)",
-        )
+            dest='min_individuals',
+            default=defaults['classification']['min_individuals'],
+            help='minimal number of individuals for a measure to be '
+            'considered for classification (default: %(default)s)')
 
         parser.add_argument(
-            "-S",
-            "--skip-columns",
+            '-S', '--skip-columns',
             type=str,
             dest="skip_columns",
-            help="comma separated list of instruments columns to skip",
-        )
+            help="comma separated list of instruments columns to skip")
 
         parser.add_argument(
-            "--skip-file",
+            '--skip-file',
             type=str,
             dest="skip_file",
-            help="file with list of instruments columns to skip",
-        )
+            help="file with list of instruments columns to skip")
 
         parser.add_argument(
-            "--composite-fids",
+            '--composite-fids',
             action="store_true",
-            dest="composite_fids",
+            dest='composite_fids',
             help="builds composite family IDs from parents' IDs"
-            " (default: %(default)s)",
+            ' (default: %(default)s)'
         )
 
         parser.add_argument(
-            "-r",
-            "--role",
-            dest="role",
-            default=defaults["person"]["role"]["type"],
+            '-r', '--role',
+            dest='role',
+            default=defaults['person']['role']['type'],
             help='sets role handling; available choices: "column", "guess"'
-            " (default: %(default)s)",
+            ' (default: %(default)s)'
         )
 
         parser.add_argument(
-            "--role-mapping",
-            dest="role_mapping",
-            default=defaults["person"]["role"]["mapping"],
-            help="sets role column mapping rules; "
+            '--role-mapping',
+            dest='role_mapping',
+            default=defaults['person']['role']['mapping'],
+            help='sets role column mapping rules; '
             'available choices "SPARK", "SSC", "INTERNAL"'
-            " (default: %(default)s)",
+            ' (default: %(default)s)'
         )
 
         parser.add_argument(
-            "-P",
-            "--person-column",
-            dest="person_column",
+            '-P', '--person-column',
+            dest='person_column',
             # default=defaults['person']['role']['column'],
             help="sets name of a column in instrument's files, "
-            "containing personId (default: %(default)s)",
+            "containing personId (default: %(default)s)"
         )
 
         parser.add_argument(
-            "-T",
-            "--tab-separated",
-            dest="tab_separated",
+            '-T', '--tab-separated',
+            dest='tab_separated',
             action="store_true",
             help="instruments file are tab separated"
-            " (default: %(default)s)",
+                 " (default: %(default)s)"
         )
 
         parser.add_argument(
-            "--report-only",
-            dest="report_only",
-            action="store_true",
-            help="runs the tool in report only mode (default: %(default)s)",
+            '--report-only',
+            dest='report_only',
+            action='store_true',
+            help='runs the tool in report only mode (default: %(default)s)'
         )
 
         parser.add_argument(
-            "--parallel",
+            '--parallel',
             type=int,
             dest="parallel",
-            default=defaults["parallel"],
+            default=defaults['parallel'],
             help="size of executors pool to use for processing"
-            " (default: %(default)s)",
+                 " (default: %(default)s)"
         )
 
         # Process arguments
         args = parser.parse_args()
 
         if not args.output and not args.report_only:
-            raise CLIError("output filename should be specified")
+            raise CLIError(
+                "output filename should be specified"
+            )
 
         if not args.output:
-            args.output = "output.db"
+            args.output = 'output.db'
 
         if not args.pedigree:
-            raise CLIError("pedigree file must be specified")
+            raise CLIError(
+                "pedigree file must be specified")
         if not args.instruments:
-            raise CLIError("instruments directory should be specified")
+            raise CLIError(
+                "instruments directory should be specified")
 
         config = parse_config(args)
         dump_config(config)
@@ -283,7 +260,7 @@ USAGE
             raise Exception("bad classification boundaries")
 
         if os.path.exists(args.output):
-            raise CLIError("output file already exists")
+            raise CLIError('output file already exists')
 
         prep = PrepareVariables(config)
         prep.build_pedigree(args.pedigree)

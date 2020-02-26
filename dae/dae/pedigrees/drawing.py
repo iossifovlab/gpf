@@ -2,12 +2,8 @@ from copy import deepcopy
 import math
 from itertools import zip_longest
 
-import matplotlib as mpl
-
-mpl.use("PS")  # noqa
-import matplotlib.pyplot as plt
-
-plt.ioff()  # noqa
+import matplotlib as mpl; mpl.use('PS')  # noqa
+import matplotlib.pyplot as plt; plt.ioff()  # noqa
 import matplotlib.patches as mpatches
 import matplotlib.lines as mlines
 from matplotlib.path import Path
@@ -17,6 +13,7 @@ from dae.variants.attributes import Sex, Role, Status
 
 
 class PDFLayoutDrawer(object):
+
     def __init__(self, filename):
         self._filename = filename
         self._pages = []
@@ -36,16 +33,11 @@ class PDFLayoutDrawer(object):
 
 
 class OffsetLayoutDrawer(object):
+
     def __init__(
-        self,
-        layout,
-        x_offset,
-        y_offset,
-        gap=4.0,
-        show_id=False,
-        show_family=False,
-        figsize=(7, 10),
-    ):
+            self, layout, x_offset, y_offset, gap=4.0,
+            show_id=False, show_family=False,
+            figsize=(7, 10)):
 
         self._x_offset = x_offset
         self._y_offset = y_offset
@@ -71,8 +63,7 @@ class OffsetLayoutDrawer(object):
             ax_pedigree = figure.add_axes(pedigree_axes_rect)
             ax_pedigree.axis("off")
             ax_pedigree.set_aspect(
-                aspect="equal", adjustable="datalim", anchor="C"
-            )
+                aspect="equal", adjustable="datalim", anchor="C")
             ax_pedigree.autoscale_view()
 
         self._draw_lines(ax_pedigree)
@@ -89,15 +80,11 @@ class OffsetLayoutDrawer(object):
             ax_family = figure.add_axes((0.1, 0.1, 0.8, 0.3))
             ax_family.axis("off")
             ax_family.set_aspect(
-                aspect="equal", adjustable="datalim", anchor="C"
-            )
+                aspect="equal", adjustable="datalim", anchor="C")
             ax_family.autoscale_view()
 
-            family = [
-                member.individual.member
-                for layer in self._layout.positions
-                for member in layer
-            ]
+            family = [member.individual.member
+                      for layer in self._layout.positions for member in layer]
 
             self._draw_family(ax_family, family)
 
@@ -114,7 +101,8 @@ class OffsetLayoutDrawer(object):
 
         ax_family = figure.add_axes((0.1, 0.1, 0.8, 0.3))
         ax_family.axis("off")
-        ax_family.set_aspect(aspect="equal", adjustable="datalim", anchor="C")
+        ax_family.set_aspect(
+            aspect="equal", adjustable="datalim", anchor="C")
         ax_family.autoscale_view()
 
         self._draw_family(ax_family, family.full_members)
@@ -139,9 +127,8 @@ class OffsetLayoutDrawer(object):
 
     def draw_families_report(self, families_report, layout):
         people_counters = self.draw_people_counters(families_report)
-        families_counters = self.draw_families_counters(
-            families_report, layout
-        )
+        families_counters =\
+            self.draw_families_counters(families_report, layout)
 
         return people_counters + families_counters
 
@@ -152,12 +139,8 @@ class OffsetLayoutDrawer(object):
             ax.axis("off")
 
             table_vals = [
-                [people_counter.group_name],
-                ["People Male"],
-                ["People Female"],
-                ["People Unspecified"],
-                ["People Total"],
-            ]
+                [people_counter.group_name], ['People Male'],
+                ['People Female'], ['People Unspecified'], ['People Total']]
 
             for phenotype in people_counter.counters:
                 table_vals[0].append(phenotype.column)
@@ -167,20 +150,15 @@ class OffsetLayoutDrawer(object):
                 table_vals[4].append(phenotype.people_total)
 
             ax.table = plt.table(
-                cellText=table_vals[1:], colLabels=table_vals[0], loc="center"
-            )
+                cellText=table_vals[1:], colLabels=table_vals[0], loc='center')
 
             ax.plot()
 
-            figure.text(
-                0.1,
-                0.7,
-                "Total number of families: "
-                + str(families_report.families_total),
-                horizontalalignment="left",
-            )
+            figure.text(0.1, 0.7, 'Total number of families: ' +
+                        str(families_report.families_total),
+                        horizontalalignment='left')
 
-            self._draw_title(figure, "People counters")
+            self._draw_title(figure, 'People counters')
 
             pcf.append(figure)
 
@@ -188,23 +166,18 @@ class OffsetLayoutDrawer(object):
 
     def draw_families_counters(self, families_report, layout):
         fcf = []
-        families_counters = [
-            counter
-            for fc in families_report.families_counters
-            for c in fc.counters
-            for counter in c.counters
-        ]
+        families_counters =\
+            [counter for fc in families_report.families_counters
+             for c in fc.counters for counter in c.counters]
         for families in zip_longest(*(iter(families_counters),) * 9):
             figure, ax = plt.subplots(3, 3, figsize=self.figsize)
 
-            for row, families_row in enumerate(
-                zip_longest(*(iter(families),) * 3)
-            ):
+            for row, families_row in\
+                    enumerate(zip_longest(*(iter(families),) * 3)):
                 for col, family in enumerate(families_row):
                     ax[row][col].axis("off")
                     ax[row][col].set_aspect(
-                        aspect="equal", adjustable="datalim", anchor="C"
-                    )
+                        aspect="equal", adjustable="datalim", anchor="C")
                     ax[row][col].autoscale_view()
 
                     if family is None:
@@ -213,28 +186,19 @@ class OffsetLayoutDrawer(object):
 
                     if family_layout is None:
                         self._draw_title(
-                            ax[row][col],
-                            "Invalid coordinates",
-                            x=0.5,
-                            y=1.1,
-                            fontsize=6,
-                            transform=ax[row][col].transAxes,
-                        )
+                            ax[row][col], 'Invalid coordinates', x=0.5, y=1.1,
+                            fontsize=6, transform=ax[row][col].transAxes)
                     else:
                         layout_drawer = OffsetLayoutDrawer(family_layout, 0, 0)
                         layout_drawer.draw(ax=ax[row][col])
                         self._draw_title(
-                            ax[row][col],
-                            "Pedigrees Count: " + str(family.pedigrees_count),
-                            x=0.5,
-                            y=1.1,
-                            fontsize=6,
-                            transform=ax[row][col].transAxes,
-                        )
+                            ax[row][col], 'Pedigrees Count: ' +
+                            str(family.pedigrees_count), x=0.5, y=1.1,
+                            fontsize=6, transform=ax[row][col].transAxes)
 
                     ax[row][col].plot()
 
-            self._draw_title(figure, "Families counters", x=0.5, y=0.95)
+            self._draw_title(figure, 'Families counters', x=0.5, y=0.95)
 
             fcf.append(figure)
 
@@ -243,13 +207,11 @@ class OffsetLayoutDrawer(object):
     def _draw_lines(self, axes):
         for line in self._layout.lines:
             if not line.curved:
-                axes.add_line(
-                    mlines.Line2D(
-                        [line.x1 + self._x_offset, line.x2 + self._x_offset],
-                        [line.y1 + self._y_offset, line.y2 + self._y_offset],
-                        color="black",
-                    )
-                )
+                axes.add_line(mlines.Line2D(
+                    [line.x1 + self._x_offset, line.x2 + self._x_offset],
+                    [line.y1 + self._y_offset, line.y2 + self._y_offset],
+                    color="black"
+                ))
 
     def _draw_rounded_lines(self, axes):
         def elementwise_sum(x, y):
@@ -262,14 +224,19 @@ class OffsetLayoutDrawer(object):
                     elementwise_sum(line.curve_p0(), offset),
                     elementwise_sum(line.curve_p1(), offset),
                     elementwise_sum(line.curve_p2(), offset),
-                    elementwise_sum(line.curve_p3(), offset),
+                    elementwise_sum(line.curve_p3(), offset)
                 ]
 
-                codes = [Path.MOVETO, Path.CURVE4, Path.CURVE4, Path.CURVE4]
+                codes = [
+                    Path.MOVETO,
+                    Path.CURVE4,
+                    Path.CURVE4,
+                    Path.CURVE4
+                ]
 
                 path = Path(verts, codes)
 
-                axes.add_patch(mpatches.PathPatch(path, facecolor="none"))
+                axes.add_patch(mpatches.PathPatch(path, facecolor='none'))
 
                 # line = ()
 
@@ -285,68 +252,43 @@ class OffsetLayoutDrawer(object):
                 else:
                     individual_color = "purple"
 
-                if Sex.from_name(individual.individual.member.sex) == Sex.male:
-                    coords = [
-                        individual.x + self._x_offset,
-                        individual.y + self._y_offset,
-                    ]
-                    axes.add_patch(
-                        mpatches.Rectangle(
-                            coords,
-                            individual.size,
-                            individual.size,
-                            facecolor=individual_color,
-                            edgecolor="black",
-                        )
-                    )
+                if Sex.from_name(
+                        individual.individual.member.sex) == Sex.male:
+                    coords = [individual.x + self._x_offset,
+                              individual.y + self._y_offset]
+                    axes.add_patch(mpatches.Rectangle(
+                        coords, individual.size, individual.size,
+                        facecolor=individual_color, edgecolor="black"))
 
                     cx = coords[0] + individual.size / 2.0
                     cy = coords[1] + individual.size / 2.0
 
                     dlx = coords[0]
                     dly = coords[1]
-                elif (
-                    Sex.from_name(individual.individual.member.sex)
-                    == Sex.female
-                ):
-                    coords = [
-                        individual.x_center + self._x_offset,
-                        individual.y_center + self._y_offset,
-                    ]
-                    axes.add_patch(
-                        mpatches.Circle(
-                            coords,
-                            individual.size / 2,
-                            facecolor=individual_color,
-                            edgecolor="black",
-                        )
-                    )
+                elif Sex.from_name(
+                        individual.individual.member.sex) == Sex.female:
+                    coords = [individual.x_center + self._x_offset,
+                              individual.y_center + self._y_offset]
+                    axes.add_patch(mpatches.Circle(
+                        coords, individual.size / 2,
+                        facecolor=individual_color, edgecolor="black"))
 
                     cx = coords[0]
                     cy = coords[1]
 
-                    dlx = coords[0] + (individual.size / 2.0) * math.cos(
-                        math.radians(225)
-                    )
-                    dly = coords[1] + (individual.size / 2.0) * math.sin(
-                        math.radians(225)
-                    )
+                    dlx = coords[0] + (individual.size / 2.0) *\
+                        math.cos(math.radians(225))
+                    dly = coords[1] + (individual.size / 2.0) *\
+                        math.sin(math.radians(225))
                 else:
                     size = math.sqrt((individual.size ** 2) / 2)
-                    coords = [
-                        individual.x + self._x_offset + (individual.size / 2),
-                        individual.y + self._y_offset,
-                    ]
-                    axes.add_patch(
-                        mpatches.Rectangle(
-                            coords,
-                            size,
-                            size,
-                            facecolor=individual_color,
-                            edgecolor="black",
-                            angle=45.0,
-                        )
-                    )
+                    coords =\
+                        [individual.x + self._x_offset + (individual.size / 2),
+                         individual.y + self._y_offset]
+                    axes.add_patch(mpatches.Rectangle(
+                        coords, size, size,
+                        facecolor=individual_color, edgecolor="black",
+                        angle=45.0))
 
                     cx = coords[0]
                     cy = coords[1] + individual.size / 2.0
@@ -355,75 +297,52 @@ class OffsetLayoutDrawer(object):
                     dly = coords[1] + individual.size / 4
 
                 if individual.individual.member.role == Role.prb:
-                    axes.add_patch(
-                        mpatches.FancyArrow(
-                            dlx - self._gap,
-                            dly - self._gap,
-                            self._gap,
-                            self._gap,
-                            length_includes_head=True,
-                            color="black",
-                            head_width=2.0,
-                            linewidth=0.1,
-                        )
-                    )
+                    axes.add_patch(mpatches.FancyArrow(
+                        dlx - self._gap, dly - self._gap,
+                        self._gap, self._gap,
+                        length_includes_head=True,
+                        color='black',
+                        head_width=2.0,
+                        linewidth=0.1
+                    ))
 
                 if self.show_id:
                     axes.annotate(
-                        individual.individual.member.person_id,
-                        (cx, cy),
-                        color="black",
-                        weight="bold",
-                        fontsize=2,
-                        ha="center",
-                        va="center",
-                    )
+                        individual.individual.member.person_id, (cx, cy),
+                        color='black', weight='bold', fontsize=2,
+                        ha='center', va='center')
 
     def _draw_family(self, axes, family):
         col_labels = [
-            "familyId",
-            "individualId",
-            "father",
-            "mother",
-            "sex",
-            "status",
-            "role",
-            "layout",
-            "generated",
+            "familyId", "individualId", "father", "mother", "sex", "status",
+            "role", "layout", "generated"
         ]
         table_vals = []
 
         for member in family:
             table_vals.append(
-                [
-                    member.family_id,
-                    member.person_id,
-                    member.dad_id,
-                    member.mom_id,
-                    Sex.from_name(member.sex),
-                    member.status,
-                    member.role,
-                    member.layout,
-                    "G" if member.generated else "",
-                ]
-            )
+                [member.family_id, member.person_id,
+                 member.dad_id, member.mom_id,
+                 Sex.from_name(member.sex), member.status,
+                 member.role, member.layout,
+                 'G' if member.generated else ''])
 
         axes.table = plt.table(
-            cellText=table_vals, colLabels=col_labels, loc="center"
-        )
+            cellText=table_vals, colLabels=col_labels, loc='center')
 
     def _draw_title(self, figure, title, x=0.5, y=0.9, **kwargs):
         figure.text(x, y, title, horizontalalignment="center", **kwargs)
 
     def _horizontal_mirror_layout(self):
-        highest_y = (
-            max([i.y for level in self._layout.positions for i in level]) + 10
-        )
+        highest_y = max([i.y for level in self._layout.positions
+                         for i in level]) + 10
 
         for level in self._layout.positions:
             for individual in level:
                 individual.y = highest_y - individual.y
 
         for line in self._layout.lines:
-            line.y1 = highest_y - line.y1 + self._layout.positions[0][0].size
-            line.y2 = highest_y - line.y2 + self._layout.positions[0][0].size
+            line.y1 = highest_y - line.y1 + \
+                self._layout.positions[0][0].size
+            line.y2 = highest_y - line.y2 + \
+                self._layout.positions[0][0].size

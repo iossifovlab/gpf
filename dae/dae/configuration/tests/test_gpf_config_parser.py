@@ -117,8 +117,7 @@ def test_tupleization_default_value():
 
 
 def test_config_parser_dict_namedtuple_conversion(
-    conf_schema_nested, fixtures_dir
-):
+        conf_schema_nested, fixtures_dir):
     config = GPFConfigParser.load_config(
         os.path.join(fixtures_dir, "nested_conf.toml"), conf_schema_nested
     )

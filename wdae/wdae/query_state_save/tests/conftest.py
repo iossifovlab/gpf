@@ -7,22 +7,26 @@ from rest_framework import status
 
 
 def save_object(data, page, client):
-    url = "/api/v3/query_state/save"
-    query = {"data": data, "page": page}
+    url = '/api/v3/query_state/save'
+    query = {
+        'data': data,
+        'page': page
+    }
     response = client.post(
-        url, json.dumps(query), content_type="application/json", format="json"
-    )
+        url, json.dumps(query), content_type='application/json', format='json')
 
     assert response.status_code == status.HTTP_201_CREATED
 
-    return response.data.get("uuid")
+    return response.data.get('uuid')
 
 
 def load_object(url_code, client):
-    url = "/api/v3/query_state/load"
-    query = {"uuid": url_code}
+    url = '/api/v3/query_state/load'
+    query = {
+        'uuid': url_code
+    }
 
-    response = client.post(url, query, format="json")
+    response = client.post(url, query, format='json')
 
     assert response.status_code == status.HTTP_200_OK
 
@@ -42,4 +46,7 @@ def query_save(db, user_client):
 
 @pytest.fixture()
 def simple_query_data():
-    return {"some": "data", "list": [1, 2, 3]}
+    return {
+        'some': 'data',
+        'list': [1, 2, 3]
+    }

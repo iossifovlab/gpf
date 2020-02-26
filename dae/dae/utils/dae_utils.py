@@ -1,8 +1,8 @@
 import re
 
-SUB_COMPLEX_RE = re.compile(r"^(sub|complex)\(([NACGT]+)->([NACGT]+)\)$")
-INS_RE = re.compile(r"^ins\(([NACGT]+)\)$")
-DEL_RE = re.compile(r"^del\((\d+)\)$")
+SUB_COMPLEX_RE = re.compile(r'^(sub|complex)\(([NACGT]+)->([NACGT]+)\)$')
+INS_RE = re.compile(r'^ins\(([NACGT]+)\)$')
+DEL_RE = re.compile(r'^del\((\d+)\)$')
 
 
 def dae2vcf_variant(chrom, position, var, genome):
@@ -20,12 +20,11 @@ def dae2vcf_variant(chrom, position, var, genome):
     if match:
         count = int(match.group(1))
         reference = genome.getSequence(
-            chrom, position - 1, position + count - 1
-        )
+            chrom, position - 1, position + count - 1)
         assert len(reference) == count + 1, reference
         return position - 1, reference, reference[0]
 
-    raise NotImplementedError("weird variant: " + var)
+    raise NotImplementedError('weird variant: ' + var)
 
 
 def split_iterable(iterable, max_chunk_length=5000):
@@ -45,10 +44,10 @@ def split_iterable(iterable, max_chunk_length=5000):
         yield result
 
 
-def join_line(l, sep="\t"):
-    tl = map(lambda v: "" if v is None or v == "None" else str(v), l)
-    return sep.join(tl) + "\n"
+def join_line(l, sep='\t'):
+    tl = map(lambda v: '' if v is None or v == 'None' else str(v), l)
+    return sep.join(tl) + '\n'
 
 
 def members_in_order_get_family_structure(mio):
-    return "".join([f"{p.role.name}{p.sex.short()}" for p in mio])
+    return ''.join([f'{p.role.name}{p.sex.short()}' for p in mio])

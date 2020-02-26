@@ -11,19 +11,13 @@ from dae.pedigrees.family import FamiliesData
 
 class PeopleGroup:
 
-    ValueDescriptor = namedtuple(
-        "ValueDescriptor", ["id", "name", "color", "index"]
-    )
+    ValueDescriptor = namedtuple("ValueDescriptor", [
+        'id', 'name', 'color', 'index'
+    ])
 
     def __init__(
-        self,
-        people_group_id,
-        name=None,
-        domain=None,
-        default=None,
-        source=None,
-        getter=None,
-    ):
+            self, people_group_id, name=None, domain=None, default=None,
+            source=None, getter=None):
         self.id = people_group_id
         self.name = name
         self._domain = domain
@@ -55,7 +49,7 @@ class PeopleGroup:
     @staticmethod
     def grayscale32(index):
         val = 255 - 8 * (index % 32)
-        res = f"#{val:x}{val:x}{val:x}"
+        res = f'#{val:x}{val:x}{val:x}'
         return res
 
     @staticmethod
@@ -63,7 +57,10 @@ class PeopleGroup:
         domains = dict()
         for index, domain in enumerate(people_group_config.domain):
             domains[domain.id] = PeopleGroup.ValueDescriptor(
-                id=domain.id, name=domain.name, color=domain.color, index=index
+                id=domain.id,
+                name=domain.name,
+                color=domain.color,
+                index=index
             )
         return PeopleGroup(
             people_group_id,
@@ -73,18 +70,17 @@ class PeopleGroup:
                 id=people_group_config.default.id,
                 name=people_group_config.default.name,
                 color=people_group_config.default.color,
-                index=999_999_999,
-            ),
+                index=999_999_999),
             source=people_group_config.source,
-            getter=getter,
+            getter=getter
         )
 
     missing_person = ValueDescriptor(
-        id="missing-person",
-        name="missing-person",
-        color="#E0E0E0",
-        index=1_000_000_000,
-    )
+            id='missing-person',
+            name='missing-person',
+            color='#E0E0E0',
+            index=1_000_000_000,
+        )
 
     def person_color(self, person):
         if person.generated:
@@ -99,7 +95,11 @@ class PeopleGroup:
             result.append(self.default)
             result.append(self.missing_person)
             self._legend = [
-                {"id": dv.id, "name": dv.name, "color": dv.color}
+                {
+                    "id": dv.id,
+                    "name": dv.name,
+                    "color": dv.color
+                }
                 for dv in result
             ]
         return self._legend
@@ -109,52 +109,46 @@ class PeopleGroup:
             [
                 p.family_id,
                 p.person_id,
-                p.mom_id if p.mom_id else "0",
-                p.dad_id if p.dad_id else "0",
+                p.mom_id if p.mom_id else '0',
+                p.dad_id if p.dad_id else '0',
                 p.sex.short(),
                 str(p.role),
                 self.person_color(p),
                 p.layout,
                 p.generated,
-                "",
-                "",
+                '',
+                ''
             ]
-            for p in family.persons.values()
-        ]
+            for p in family.persons.values()]
         return result
 
 
 class PeopleMultiGroup(PeopleGroup):
-    def __init__(self, people_groups):
+
+    def __init__(
+            self, people_groups):
         super(PeopleMultiGroup, self).__init__(
             ".".join([pg.id for pg in people_groups]),
             name=" and ".join([pg.name for pg in people_groups]),
             domain=None,
             default=None,
             source=None,
-            getter=None,
-        )
+            getter=None)
         self.people_groups = people_groups
 
     @property
     def domain(self):
         if self._domain is None:
             domain = {
-                str(
-                    tuple([dv.id for dv in value])
-                ): PeopleGroup.ValueDescriptor(
-                    index=index,
-                    **{
-                        "id": str(tuple([dv.id for dv in value])),
-                        "name": tuple([dv.name for dv in value]),
-                        "color": value[0].color,
-                    },
-                )
-                for index, value in enumerate(
-                    itertools.product(
-                        *[pg.domain.values() for pg in self.people_groups]
-                    )
-                )
+                str(tuple([dv.id for dv in value])):
+                    PeopleGroup.ValueDescriptor(index=index, **{
+                        'id': str(tuple([dv.id for dv in value])),
+                        'name': tuple([dv.name for dv in value]),
+                        'color': value[0].color
+                    })
+                for index, value in enumerate(itertools.product(*[
+                    pg.domain.values()
+                    for pg in self.people_groups]))
             }
             self._domain = domain
         return self._domain
@@ -168,111 +162,124 @@ class PeopleMultiGroup(PeopleGroup):
                 index=999_999_999,
                 id=str(tuple([dv.id for dv in defaults])),
                 name=tuple([dv.name for dv in defaults]),
-                color=defaults[0].color,
+                color=defaults[0].color
             )
         return self._default
 
     @property
     def getter(self):
-        return lambda person: str(
-            tuple([pg.getter(person) for pg in self.people_groups])
-        )
+        return lambda person: str(tuple(
+            [pg.getter(person) for pg in self.people_groups]
+        ))
 
 
 PEOPLE_GROUP_ROLES = PeopleGroup.from_config(
-    "role",
-    GPFConfigParser._dict_to_namedtuple(
-        {
-            "name": "Role",
-            "domain": [
-                {
-                    "id": str(r),
-                    "name": str(r),
-                    "color": PeopleGroup.grayscale32(index + 1),
-                }
-                for index, r in enumerate(Role.__members__)
-            ],
-            "default": {
-                "id": "unknown",
-                "name": "unknown",
-                "color": "#bbbbbb",
-            },
-            "source": "role",
-        }
-    ),
+    'role',
+    GPFConfigParser._dict_to_namedtuple({
+        'name': 'Role',
+        'domain': [
+            {
+                'id': str(r),
+                'name': str(r),
+                'color': PeopleGroup.grayscale32(index + 1)
+            } for index, r in enumerate(Role.__members__)
+        ],
+        'default': {
+            'id': 'unknown',
+            'name': 'unknown',
+            'color': '#bbbbbb'
+        },
+        'source': 'role'
+    })
 )
 
 
 PEOPLE_GROUP_FAMILY_SIZES = PeopleGroup.from_config(
-    "family_size",
-    GPFConfigParser._dict_to_namedtuple(
-        {
-            "name": "Family Size",
-            "domain": [
-                {
-                    "id": str(size),
-                    "name": str(size),
-                    "color": PeopleGroup.grayscale32(size),
-                }
-                for size in range(32, 1, -1)
-            ],
-            "default": {"id": ">=32", "name": ">=32", "color": "#bbbbbb"},
-            "source": "size",
-        }
-    ),
-    getter=lambda person: str(len(person.family)),
+    'family_size',
+    GPFConfigParser._dict_to_namedtuple({
+        'name': 'Family Size',
+        'domain': [
+            {
+                'id': str(size),
+                'name': str(size),
+                'color': PeopleGroup.grayscale32(size)
+            } for size in range(32, 1, -1)
+        ],
+        'default': {
+            'id': '>=32',
+            'name': '>=32',
+            'color': '#bbbbbb'
+        },
+        'source': 'size'
+    }),
+    getter=lambda person: str(len(person.family))
 )
 
 
 PEOPLE_GROUP_SEXES = PeopleGroup.from_config(
-    "sex",
-    GPFConfigParser._dict_to_namedtuple(
-        {
-            "name": "Sex",
-            "domain": [
-                {"id": "M", "name": "M", "color": "#e35252",},
-                {"id": "F", "name": "F", "color": "#b8008a",},
-                {"id": "U", "name": "U", "color": "#aaaaaa",},
-            ],
-            "default": {"id": "U", "name": "U", "color": "#aaaaaa",},
-            "source": "sex",
-        }
-    ),
-)
+    'sex',
+    GPFConfigParser._dict_to_namedtuple({
+        'name': 'Sex',
+        'domain': [
+            {
+                'id': 'M',
+                'name': 'M',
+                'color': '#e35252',
+            },
+            {
+                'id': 'F',
+                'name': 'F',
+                'color': '#b8008a',
+            },
+            {
+                'id': 'U',
+                'name': 'U',
+                'color': '#aaaaaa',
+            }
+        ],
+        'default': {
+            'id': 'U',
+            'name': 'U',
+            'color': '#aaaaaa',
+        },
+        'source': 'sex',
+    }))
 
 
-PEOPLE_GROUP_ROLES_SEXES = PeopleMultiGroup(
-    [PEOPLE_GROUP_ROLES, PEOPLE_GROUP_SEXES]
-)
+PEOPLE_GROUP_ROLES_SEXES = PeopleMultiGroup([
+    PEOPLE_GROUP_ROLES,
+    PEOPLE_GROUP_SEXES
+])
 
 
 PEOPLE_GROUP_STATUS = PeopleGroup.from_config(
-    "status",
-    GPFConfigParser._dict_to_namedtuple(
-        {
-            "name": "Status",
-            "domain": [
-                {"id": "affected", "name": "affected", "color": "#e35252",},
-                {
-                    "id": "unaffected",
-                    "name": "unaffected",
-                    "color": "#b8008a",
-                },
-                {
-                    "id": "unspecified",
-                    "name": "unspecified",
-                    "color": "#aaaaaa",
-                },
-            ],
-            "default": {
-                "id": "unknown",
-                "name": "unknown",
-                "color": "#bbbbbb",
+    'status',
+    GPFConfigParser._dict_to_namedtuple({
+        'name': 'Status',
+        'domain': [
+            {
+                'id': 'affected',
+                'name': 'affected',
+                'color': '#e35252',
             },
-            "source": "status",
-        }
-    ),
-)
+            {
+                'id': 'unaffected',
+                'name': 'unaffected',
+                'color': '#b8008a',
+            },
+            {
+                'id': 'unspecified',
+                'name': 'unspecified',
+                'color': '#aaaaaa',
+            }
+        ],
+        'default': {
+            'id': 'unknown',
+            'name': 'unknown',
+            'color': '#bbbbbb',
+        },
+        'source': 'status',
+    }))
 
 
 class FamiliesGroup(PeopleGroup):
@@ -283,8 +290,7 @@ class FamiliesGroup(PeopleGroup):
             domain=people_group.domain,
             default=people_group.default,
             source=people_group.source,
-            getter=people_group.getter,
-        )
+            getter=people_group.getter)
 
         assert isinstance(families, FamiliesData)
 
@@ -297,24 +303,31 @@ class FamiliesGroup(PeopleGroup):
     @property
     def available_values(self):
         if self._available_values is None:
-            values = set(
-                [self.getter(p) for p in self.families.persons.values()]
-            )
-            values = set(
-                [self.domain.get(str(v), self.default).id for v in values]
-            )
+            values = set([
+                self.getter(p)
+                for p in self.families.persons.values()
+            ])
+            values = set([
+                self.domain.get(str(v), self.default).id
+                for v in values
+            ])
             self._available_values = sorted(
                 list(values),
-                key=lambda dv: self.domain.get(dv, self.default).index,
-            )
+                key=lambda dv: self.domain.get(dv, self.default).index)
         return self._available_values
 
     def calc_family_type(self, family):
-        values = [self.getter(p) for p in family.members_in_order]
-        values = [self.domain.get(str(v), self.default).id for v in values]
+        values = [
+            self.getter(p)
+            for p in family.members_in_order
+        ]
+        values = [
+            self.domain.get(str(v), self.default).id
+            for v in values
+        ]
         values = sorted(
-            values, key=lambda dv: self.domain.get(dv, self.default).index
-        )
+            values,
+            key=lambda dv: self.domain.get(dv, self.default).index)
         result = tuple(values)
         return result
 
@@ -334,31 +347,32 @@ class FamiliesGroup(PeopleGroup):
 
             def ft_key(ft):
                 return tuple(
-                    map(lambda dv: self.domain.get(dv, self.default).index, ft)
+                    map(
+                        lambda dv: self.domain.get(
+                            dv, self.default).index,
+                        ft
+                    )
                 )
 
             self._available_families_types = sorted(
-                list(families_types), key=ft_key
-            )
+                list(families_types), key=ft_key)
         return self._available_families_types
 
     @lru_cache(maxsize=32)
     def get_people_with_propvalues(self, propvalues):
-        propvalues = set(
-            [self.domain.get(str(dv), self.default).id for dv in propvalues]
-        )
-        return list(
-            filter(
-                lambda p: not p.generated and self.getter(p) in propvalues,
-                self.families.persons.values(),
-            )
-        )
+        propvalues = set([
+            self.domain.get(str(dv), self.default).id for dv in propvalues
+        ])
+        return list(filter(
+            lambda p: not p.generated and self.getter(p) in propvalues,
+            self.families.persons.values()))
 
 
 class FamiliesSizeGroup(FamiliesGroup):
     def __init__(self, families):
         super(FamiliesSizeGroup, self).__init__(
-            families, PEOPLE_GROUP_FAMILY_SIZES
+            families,
+            PEOPLE_GROUP_FAMILY_SIZES
         )
 
     def calc_family_type(self, family):
@@ -367,6 +381,7 @@ class FamiliesSizeGroup(FamiliesGroup):
 
 
 class FamiliesGroups(Mapping):
+
     def __init__(self, families):
         assert isinstance(families, FamiliesData)
         self.families = families
@@ -414,31 +429,31 @@ class FamiliesGroups(Mapping):
     def add_predefined_groups(self, attributes):
         # assert attribute in {'role', 'status', 'sex'}, attribute
         for attribute in attributes:
-            if attribute == "role":
+            if attribute == 'role':
                 self.add_families_group(PEOPLE_GROUP_ROLES)
-            elif attribute == "sex":
+            elif attribute == 'sex':
                 self.add_families_group(PEOPLE_GROUP_SEXES)
-            elif attribute == "role.sex":
+            elif attribute == 'role.sex':
                 self.add_families_group(PEOPLE_GROUP_ROLES_SEXES)
-            elif attribute == "status":
+            elif attribute == 'status':
                 self.add_families_group(PEOPLE_GROUP_STATUS)
-            elif attribute == "family_size":
-                self._families_groups["family_size"] = FamiliesSizeGroup(
+            elif attribute == 'family_size':
+                self._families_groups['family_size'] = FamiliesSizeGroup(
                     self.families
                 )
             else:
                 raise ValueError(
                     f"unexpected predefined people group attribute: "
                     "{attribute}; supported predefined attributes are "
-                    "'role', 'sex', 'status"
-                )
+                    "'role', 'sex', 'status")
 
     @staticmethod
     def from_config(families, people_groups_config):
         result = FamiliesGroups(families)
         for people_group in people_groups_config:
             people_group = PeopleGroup.from_config(
-                people_group.section_id(), people_group
+                people_group.section_id(),
+                people_group
             )
             result.add_families_group(people_group)
         return result

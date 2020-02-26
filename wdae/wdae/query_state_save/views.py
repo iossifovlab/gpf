@@ -11,34 +11,35 @@ from .serializers import QueryStateSerializer
 
 
 class QueryStateSaveView(views.APIView):
+
     def post(self, request):
         serializer = QueryStateSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(
-                serializer.error_messages, status=status.HTTP_400_BAD_REQUEST
-            )
+                serializer.error_messages, status=status.HTTP_400_BAD_REQUEST)
 
         query_state = QueryState.objects.create(
             data=json.dumps(serializer.data["data"]),
-            page=serializer.data["page"],
-        )
+            page=serializer.data["page"])
 
-        return Response(
-            {"uuid": query_state.uuid}, status=status.HTTP_201_CREATED
-        )
+        return Response({
+           "uuid": query_state.uuid
+        }, status=status.HTTP_201_CREATED)
 
 
 class QueryStateLoadView(views.APIView):
+
     def post(self, request):
         query_state = get_object_or_404(QueryState, uuid=request.data["uuid"])
 
-        return Response(
-            {"data": json.loads(query_state.data), "page": query_state.page},
-            status=status.HTTP_200_OK,
-        )
+        return Response({
+            "data": json.loads(query_state.data),
+            "page": query_state.page
+        }, status=status.HTTP_200_OK)
 
 
 class QueryStateDeleteView(views.APIView):
+
     def post(self, request):
         query_state = get_object_or_404(QueryState, uuid=request.data["uuid"])
         query_state.delete()

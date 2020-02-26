@@ -9,9 +9,8 @@ class SpliceSiteEffectChecker(object):
 
     def get_effect(self, request):
         coding_regions = request.transcript_model.exons
-        last_position = request.variant.position + len(
-            request.variant.reference
-        )
+        last_position = request.variant.position + \
+            len(request.variant.reference)
         prev = None
 
         for i, j in enumerate(coding_regions):
@@ -19,27 +18,18 @@ class SpliceSiteEffectChecker(object):
                 prev = j.stop
                 continue
 
-            self.logger.debug(
-                "pos: %d-%d checking intronic region %d-%d %d",
-                request.variant.position,
-                last_position,
-                prev,
-                j.start,
-                j.stop,
-            )
+            self.logger.debug("pos: %d-%d checking intronic region %d-%d %d",
+                              request.variant.position, last_position,
+                              prev, j.start, j.stop)
 
-            if (
-                request.variant.position < prev + self.splice_site_length + 1
-                and prev + 1 < last_position
-            ):
+            if (request.variant.position < prev + self.splice_site_length + 1
+                    and prev + 1 < last_position):
                 return EffectFactory.create_intronic_effect(
                     "splice-site", request, prev, j.start, i
                 )
 
-            if (
-                request.variant.position < j.start
-                and j.start - self.splice_site_length < last_position
-            ):
+            if (request.variant.position < j.start
+                    and j.start - self.splice_site_length < last_position):
                 return EffectFactory.create_intronic_effect(
                     "splice-site", request, prev, j.start, i
                 )

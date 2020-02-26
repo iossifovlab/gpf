@@ -10,7 +10,9 @@ class Dataset(models.Model):
     DEFAULT_GROUPS_FOR_DATASET = ["any_dataset"]
 
     class Meta(object):
-        permissions = (("view", "View dataset"),)
+        permissions = (
+            ('view', 'View dataset'),
+        )
 
     @property
     def default_groups(self):
@@ -29,4 +31,4 @@ class Dataset(models.Model):
         LOGGER.info("recreating groups: {}".format(groups))
         for group_name in set(groups):
             group, _created = Group.objects.get_or_create(name=group_name)
-            assign_perm("view", group, datasetObject)
+            assign_perm('view', group, datasetObject)

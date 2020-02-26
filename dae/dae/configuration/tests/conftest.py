@@ -49,12 +49,15 @@ sample_conf_schema_3 = {
 sample_conf_schema_5 = {
     "id": {"type": "string"},
     "name": {"type": "string"},
-    "some_abs_path": {"type": "string", "check_with": validate_path,},
+    "some_abs_path": {
+        "type": "string",
+        "check_with": validate_path,
+    },
     "some_rel_path": {
         "type": "string",
         "check_with": validate_path,
         "coerce": "abspath",
-    },
+    }
 }
 
 
@@ -110,7 +113,9 @@ def conf_schema_nested():
             "type": "list",
             "schema": {
                 "type": "dict",
-                "schema": {"someval": {"type": "string"}},
+                "schema": {
+                    "someval": {"type": "string"}
+                },
             },
-        },
+        }
     }

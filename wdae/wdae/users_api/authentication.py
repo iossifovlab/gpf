@@ -17,7 +17,7 @@ class SessionAuthenticationWithUnauthenticatedCSRF(SessionAuthentication):
         """
 
         # Get the session-based user from the underlying HttpRequest object
-        user = getattr(request._request, "user", None)
+        user = getattr(request._request, 'user', None)
 
         self.enforce_csrf(request)
 

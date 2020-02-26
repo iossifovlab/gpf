@@ -31,8 +31,8 @@ def test_splits_left_to_right():
     val1 = next(gen)
     val2 = next(gen)
 
-    assert val1 == ["a", "s", "d"]
-    assert val2 == ["d", "s", "a"]
+    assert val1 == ['a', 's', 'd']
+    assert val2 == ['d', 's', 'a']
 
 
 def test_imperfectly_yields_all_parts():

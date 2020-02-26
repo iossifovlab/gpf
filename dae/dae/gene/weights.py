@@ -19,7 +19,7 @@ class GeneWeight(GenomicValues):
         super(GeneWeight, self).__init__(config.section_id())
         self.config = config
 
-        self.genomic_values_col = "gene"
+        self.genomic_values_col = 'gene'
 
         self.desc = self.config.desc
         self.bins = self.config.bins
@@ -35,7 +35,7 @@ class GeneWeight(GenomicValues):
 
     def _bins_bars(self):
         step = 1.0 * (self.max() - self.min()) / (self.bins - 1)
-        dec = -np.log10(step)
+        dec = - np.log10(step)
         dec = dec if dec >= 0 else 0
         dec = int(dec)
 
@@ -51,15 +51,14 @@ class GeneWeight(GenomicValues):
                 if ((self.values()) < 10 ** bleft).sum() < max_count:
                     break
 
-            bins_in = [0] + list(
-                np.logspace(bleft, np.log10(bright), self.bins)
-            )
+            bins_in = [0] + list(np.logspace(bleft, np.log10(bright),
+                                             self.bins))
         else:
             bins_in = self.bins
 
         bars, bins = np.histogram(
-            list(self.values()), bins_in, range=[bleft, bright]
-        )
+            list(self.values()), bins_in,
+            range=[bleft, bright])
         # bins = np.round(bins, -int(np.log(step)))
 
         return (bins, bars)
@@ -70,7 +69,7 @@ class GeneWeight(GenomicValues):
         Returns dictionary of all defined weights keyed by gene symbol.
         """
         if self._dict is None:
-            self._dict = self.df.set_index("gene")[self.id].to_dict()
+            self._dict = self.df.set_index('gene')[self.id].to_dict()
         return self._dict
 
     @cached
@@ -135,22 +134,16 @@ class GeneWeightsDb(object):
         self._load()
 
     @staticmethod
-    def load_gene_weight_from_file(
-        filename,
-        bins=150,
-        xscale="linear",
-        yscale="linear",
-        desc=None,
-        range=None,
-    ):
+    def load_gene_weight_from_file(filename, bins=150, xscale='linear',
+                                   yscale='linear', desc=None, range=None):
         config = namedtuple(
-            id=filename.split(".")[0],
+            id=filename.split('.')[0],
             file=filename,
             desc=desc,
             bins=bins,
             xscale=xscale,
             yscale=yscale,
-            range=range,
+            range=range
         )
         return GeneWeight(config)
 
@@ -160,7 +153,8 @@ class GeneWeightsDb(object):
 
     @cached
     def get_gene_weights(self):
-        return [self.get_gene_weight(weight_id) for weight_id in self.weights]
+        return [self.get_gene_weight(weight_id)
+                for weight_id in self.weights]
 
     def get_gene_weight(self, weight_id):
         assert self[weight_id].df is not None
@@ -169,10 +163,8 @@ class GeneWeightsDb(object):
     def _load(self):
         if self.config and self.config.gene_weights:
             for weight_config in self.config.gene_weights:
-                if (
-                    weight_config.section_id()
-                    in self.config.gene_info.selected_gene_weights
-                ):
+                if weight_config.section_id() in \
+                        self.config.gene_info.selected_gene_weights:
                     w = GeneWeight(weight_config)
                     self.weights[weight_config.section_id()] = w
 

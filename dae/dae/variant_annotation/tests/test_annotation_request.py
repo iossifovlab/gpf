@@ -6,13 +6,13 @@ from dae.variant_annotation.annotator import Variant
 from dae.variant_annotation.annotation_request import AnnotationRequestFactory
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope='session')
 def transcript_model(exons, coding):
-    return TranscriptModelMock("+", 65, 2000, exons, coding)
+    return TranscriptModelMock('+', 65, 2000, exons, coding)
 
 
 def test_exonic_distance(annotator, transcript_model):
-    variant = Variant(loc="1:64", ref="A", alt="")
+    variant = Variant(loc='1:64', ref='A', alt='')
     request = AnnotationRequestFactory.create_annotation_request(
         annotator, variant, transcript_model
     )
@@ -23,7 +23,7 @@ def test_exonic_distance(annotator, transcript_model):
 
 
 def test_exonic_pos_first_exon(annotator, transcript_model):
-    variant = Variant(loc="1:64", ref="A", alt="")
+    variant = Variant(loc='1:64', ref='A', alt='')
     request = AnnotationRequestFactory.create_annotation_request(
         annotator, variant, transcript_model
     )
@@ -32,7 +32,7 @@ def test_exonic_pos_first_exon(annotator, transcript_model):
 
 
 def test_exonic_pos_last_in_first_exon(annotator, transcript_model):
-    variant = Variant(loc="1:70", ref="A", alt="")
+    variant = Variant(loc='1:70', ref='A', alt='')
     request = AnnotationRequestFactory.create_annotation_request(
         annotator, variant, transcript_model
     )
@@ -41,7 +41,7 @@ def test_exonic_pos_last_in_first_exon(annotator, transcript_model):
 
 
 def test_exonic_pos_second_exon(annotator, transcript_model):
-    variant = Variant(loc="1:80", ref="A", alt="")
+    variant = Variant(loc='1:80', ref='A', alt='')
     request = AnnotationRequestFactory.create_annotation_request(
         annotator, variant, transcript_model
     )
@@ -50,7 +50,7 @@ def test_exonic_pos_second_exon(annotator, transcript_model):
 
 
 def test_exonic_pos_last_exon(annotator, transcript_model):
-    variant = Variant(loc="1:110", ref="A", alt="")
+    variant = Variant(loc='1:110', ref='A', alt='')
     request = AnnotationRequestFactory.create_annotation_request(
         annotator, variant, transcript_model
     )

@@ -2,12 +2,8 @@
 import sys
 import argparse
 
-import matplotlib as mpl
-
-mpl.use("PS")  # noqa
-import matplotlib.pyplot as plt
-
-plt.ioff()  # noqa
+import matplotlib as mpl; mpl.use('PS')  # noqa
+import matplotlib.pyplot as plt; plt.ioff()  # noqa
 
 from dae.pedigrees.loader import FamiliesLoader
 from dae.pedigrees.families_groups import FamiliesGroups
@@ -23,15 +19,12 @@ def build_families_report(families):
     families_groups = FamiliesGroups(families)
     # families_groups.add_predefined_groups(['status'])
     families_groups.add_predefined_groups(
-        ["status", "sex", "role", "role.sex", "family_size"]
-    )
+            ['status', 'sex', 'role', 'role.sex', 'family_size'])
     filter_collections = FilterCollection.build_filter_objects(
-        families_groups, {"Status": ["status"]}
-    )
+        families_groups, {'Status': ['status']})
 
     families_report = FamiliesReport(
-        ["status"], families_groups, filter_collections
-    )
+        ['status'], families_groups, filter_collections)
 
     return families_report
 
@@ -39,8 +32,7 @@ def build_families_report(families):
 def draw_pedigree(layout, title, show_id=True, show_family=True):
 
     layout_drawer = OffsetLayoutDrawer(
-        layout, 0, 0, show_id=show_id, show_family=show_family
-    )
+        layout, 0, 0, show_id=show_id, show_family=show_family)
     figure = layout_drawer.draw(title=title)
     return figure
 
@@ -61,9 +53,9 @@ def draw_families_report(families):
         layout = build_family_layout(family)
         if len(family_counter.families) > 5:
             count = len(family_counter.families)
-            title = f"Number of families: {count}"
+            title = f'Number of families: {count}'
         else:
-            title = ", ".join([f.family_id for f in family_counter.families])
+            title = ', '.join([f.family_id for f in family_counter.families])
 
         figure = draw_pedigree(layout, title=title)
         yield figure
@@ -80,29 +72,21 @@ def draw_families(families):
 def main(argv=sys.argv[1:]):
 
     parser = argparse.ArgumentParser(
-        description="Produce a pedigree drawing in PDF format "
-        "from a pedigree file with layout coordinates.",
-        conflict_handler="resolve",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-    )
+            description="Produce a pedigree drawing in PDF format "
+            "from a pedigree file with layout coordinates.",
+            conflict_handler='resolve',
+            formatter_class=argparse.RawDescriptionHelpFormatter)
 
     FamiliesLoader.cli_arguments(parser)
 
     parser.add_argument(
-        "--output",
-        "-o",
-        metavar="o",
-        help="the output filename file",
-        default="output.pdf",
-    )
+        "--output", "-o", metavar="o", help="the output filename file",
+        default="output.pdf")
 
     parser.add_argument(
-        "--mode",
-        type=str,
-        default="families",
-        dest="mode",
-        help="mode of drawing; supported modes are `families` and `report`; "
-        "defaults: `report`",
+        '--mode', type=str, default='families', dest='mode',
+        help='mode of drawing; supported modes are `families` and `report`; '
+        'defaults: `report`'
     )
 
     argv = parser.parse_args(argv)
@@ -112,8 +96,8 @@ def main(argv=sys.argv[1:]):
     families = families_loader.load()
 
     mode = argv.mode
-    assert mode in ("families", "report")
-    if mode == "report":
+    assert mode in ('families', 'report')
+    if mode == 'report':
         generator = draw_families_report(families)
     else:
         generator = draw_families(families)
@@ -125,5 +109,5 @@ def main(argv=sys.argv[1:]):
             plt.close(fig)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

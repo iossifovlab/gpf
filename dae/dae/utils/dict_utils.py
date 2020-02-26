@@ -14,8 +14,7 @@ def recursive_dict_update(input_dict: dict, updater_dict: dict) -> dict:
         if key in result_dict and isinstance(val, dict):
             assert isinstance(result_dict[key], dict), result_dict[key]
             result_dict[key] = recursive_dict_update(
-                result_dict[key], updater_dict[key]
-            )
+                result_dict[key], updater_dict[key])
         else:
             result_dict[key] = updater_dict[key]
     return result_dict

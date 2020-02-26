@@ -7,6 +7,7 @@ from guardian.utils import get_anonymous_user
 
 
 class IsDatasetAllowed(permissions.BasePermission):
+
     def has_permission(self, request, view):
         dataset_id = find_dataset_id_in_request(request)
 
@@ -25,19 +26,14 @@ class IsDatasetAllowed(permissions.BasePermission):
         except Dataset.DoesNotExist:
             print("dataset ", dataset_id, "does not exists...")
             return False
-        return user.has_perm(
-            "datasets_api.view", dataset_object
-        ) or get_anonymous_user().has_perm("datasets_api.view", dataset_object)
+        return user.has_perm('datasets_api.view', dataset_object) or\
+            get_anonymous_user().has_perm('datasets_api.view', dataset_object)
 
     @staticmethod
     def permitted_datasets(user):
         dataset_ids = get_gpf_instance().get_genotype_data_ids()
 
-        return list(
-            filter(
-                lambda dataset_id: IsDatasetAllowed.user_has_permission(
-                    user, dataset_id
-                ),
-                dataset_ids,
-            )
-        )
+        return list(filter(
+            lambda dataset_id: IsDatasetAllowed.user_has_permission(
+                user, dataset_id),
+            dataset_ids))

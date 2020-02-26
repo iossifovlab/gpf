@@ -1,8 +1,8 @@
-"""
+'''
 Created on Jul 1, 2018
 
 @author: lubo
-"""
+'''
 
 
 class EffectGene(object):
@@ -35,7 +35,8 @@ class EffectGene(object):
     def __eq__(self, other):
         assert isinstance(other, EffectGene)
 
-        return self.symbol == other.symbol and self.effect == other.effect
+        return self.symbol == other.symbol and \
+            self.effect == other.effect
 
     def __hash__(self):
         return hash(tuple([self.symbol, self.effect]))
@@ -54,6 +55,7 @@ class EffectGene(object):
 
 
 class EffectTranscript(object):
+
     def __init__(self, transcript_id, details):
         self.transcript_id = transcript_id
         self.details = details
@@ -76,10 +78,8 @@ class EffectTranscript(object):
     def __eq__(self, other):
         assert isinstance(other, EffectTranscript)
 
-        return (
-            self.transcript_id == other.transcript_id
-            and self.details == other.details
-        )
+        return self.transcript_id == other.transcript_id and \
+            self.details == other.details
 
     @classmethod
     def from_tuple(cls, t):
@@ -91,8 +91,7 @@ class EffectTranscript(object):
         result = {}
         for transcript_id, details in effect_transcripts:
             result[transcript_id] = EffectTranscript.from_tuple(
-                (transcript_id, details)
-            )
+                (transcript_id, details))
         return result
 
 
@@ -105,8 +104,10 @@ class Effect(object):
 
     def __repr__(self):
         effects = "|".join([str(g) for g in self.genes])
-        transcripts = "|".join([str(t) for t in self.transcripts.values()])
-        return "{}!{}!{}".format(self.worst, effects, transcripts)
+        transcripts = "|".join([
+            str(t) for t in self.transcripts.values()])
+        return '{}!{}!{}'.format(
+            self.worst, effects, transcripts)
 
     def __str__(self):
         return repr(self)
@@ -114,16 +115,16 @@ class Effect(object):
     def __eq__(self, other):
         assert isinstance(other, Effect)
 
-        return (
-            self.worst == other.worst
-            and self.genes == other.genes
-            and self.transcripts == other.transcripts
-        )
+        return self.worst == other.worst and \
+            self.genes == other.genes and \
+            self.transcripts == other.transcripts
 
     @property
     def types(self):
         if self._effect_types is None:
-            self._effect_types = set([eg.effect for eg in self.genes])
+            self._effect_types = set([
+                eg.effect for eg in self.genes
+            ])
         return self._effect_types
 
     @classmethod
@@ -143,7 +144,8 @@ class Effect(object):
         assert len(parts) == 3, parts
         worst = parts[0].strip()
         effect_genes = [
-            EffectGene.from_string(eg.strip()) for eg in parts[1].split("|")
+            EffectGene.from_string(eg.strip())
+            for eg in parts[1].split("|")
         ]
         effect_genes = [eg for eg in filter(None, effect_genes)]
         transcripts = [
@@ -151,7 +153,9 @@ class Effect(object):
             for et in parts[2].split("|")
         ]
         transcripts = filter(None, transcripts)
-        transcripts = {t.transcript_id: t for t in transcripts}
+        transcripts = {
+            t.transcript_id: t for t in transcripts
+        }
         if not effect_genes and not transcripts:
             return None
         return Effect(worst, effect_genes, transcripts)

@@ -10,6 +10,7 @@ from dae.annotation.tools.schema import Schema
 
 
 class LiftOverAnnotator(VariantAnnotatorBase):
+
     def __init__(self, config, genomes_db):
         super(LiftOverAnnotator, self).__init__(config, genomes_db)
 
@@ -23,19 +24,20 @@ class LiftOverAnnotator(VariantAnnotatorBase):
             assert self.pos is not None
 
         self.columns = self.config.columns
-        assert self.columns.new_x or (
-            self.columns.new_c and self.columns.new_p
-        )
+        assert self.columns.new_x or \
+            (self.columns.new_c and self.columns.new_p)
 
         self.lift_over = self.build_lift_over(self.config.options.chain_file)
 
     def collect_annotator_schema(self, schema):
         super(LiftOverAnnotator, self).collect_annotator_schema(schema)
         for key, value in self.columns.field_values_iterator():
-            if key == "new_x" or key == "new_c":
-                schema.columns[value] = Schema.produce_type("str")
-            elif key == "new_p":
-                schema.columns[value] = Schema.produce_type("str")
+            if key == 'new_x' or key == 'new_c':
+                schema.columns[value] = \
+                    Schema.produce_type('str')
+            elif key == 'new_p':
+                schema.columns[value] = \
+                    Schema.produce_type('str')
 
     @staticmethod
     def build_lift_over(chain_filename):
@@ -57,56 +59,36 @@ class LiftOverAnnotator(VariantAnnotatorBase):
         # positions = [int(p) - 1 for p in position.split('-')]
         liftover_pos = pos - 1
         converted_coordinates = self.lift_over.convert_coordinate(
-            chrom, liftover_pos
-        )
+            chrom, liftover_pos)
 
         if converted_coordinates is None:
-            print(
-                "position: chrom=",
-                chrom,
-                "; pos=",
-                pos,
-                "(0-pos=",
-                liftover_pos,
-                ")",
-                "can not be converted into target reference genome",
-                file=sys.stderr,
-            )
+            print("position: chrom=", chrom, "; pos=", pos,
+                  "(0-pos=", liftover_pos, ")",
+                  "can not be converted into target reference genome",
+                  file=sys.stderr)
             new_c = None
             new_p = None
             new_x = None
 
         elif len(converted_coordinates) == 0:
-            print(
-                "position: chrom=",
-                chrom,
-                "; pos=",
-                pos,
-                "(0-pos=",
-                liftover_pos,
-                ")",
-                "can not be converted into target reference genome",
-                file=sys.stderr,
-            )
+            print("position: chrom=", chrom, "; pos=", pos,
+                  "(0-pos=", liftover_pos, ")",
+                  "can not be converted into target reference genome",
+                  file=sys.stderr)
             new_c = None
             new_p = None
             new_x = None
         else:
             if len(converted_coordinates) > 1:
                 print(
-                    "position: chrom=",
-                    chrom,
-                    "; pos=",
-                    pos,
+                    "position: chrom=", chrom, "; pos=", pos,
                     "has more than one corresponding position "
-                    "into target reference genome",
-                    converted_coordinates,
-                    file=sys.stderr,
-                )
+                    "into target reference genome", converted_coordinates,
+                    file=sys.stderr)
 
             new_c = converted_coordinates[0][0]
             new_p = converted_coordinates[0][1] + 1
-            new_x = "{}:{}".format(new_c, new_p)
+            new_x = '{}:{}'.format(new_c, new_p)
 
         if self.columns.new_x:
             aline[self.columns.new_x] = new_x

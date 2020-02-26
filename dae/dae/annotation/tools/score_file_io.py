@@ -11,11 +11,8 @@ from collections import defaultdict
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.score_file_conf import score_file_conf_schema
 
-from dae.annotation.tools.file_io_tsv import (
-    TSVFormat,
-    TabixReader,
-    handle_chrom_prefix,
-)
+from dae.annotation.tools.file_io_tsv import TSVFormat, TabixReader, \
+        handle_chrom_prefix
 from dae.annotation.tools.schema import Schema
 
 try:
@@ -68,6 +65,7 @@ class NoLine(object):
 
 
 class ScoreFile(object):
+
     def __init__(self, score_filename, config_filename=None):
         self.score_filename = score_filename
         assert os.path.exists(self.score_filename), self.score_filename
@@ -84,42 +82,38 @@ class ScoreFile(object):
         self.header = self.config.general.header
         self.score_names = self.config.columns.score
 
-        self.schema = Schema.from_dict(
-            self.config.score_schema._asdict()
-        ).order_as(self.header)
+        self.schema = Schema.from_dict(self.config.score_schema._asdict()) \
+                            .order_as(self.header)
 
-        assert all([sn in self.schema for sn in self.score_names]), [
-            self.score_filename,
-            self.score_names,
-            self.schema.col_names,
-        ]
+        assert all([sn in self.schema for sn in self.score_names]), \
+            [self.score_filename, self.score_names, self.schema.col_names]
 
-        self.chr_index = self.schema.col_names.index(self.chr_name)
-        self.pos_begin_index = self.schema.col_names.index(self.pos_begin_name)
-        self.pos_end_index = self.schema.col_names.index(self.pos_end_name)
+        self.chr_index = \
+            self.schema.col_names.index(self.chr_name)
+        self.pos_begin_index = \
+            self.schema.col_names.index(self.pos_begin_name)
+        self.pos_end_index = \
+            self.schema.col_names.index(self.pos_end_name)
 
-        if "chr_prefix" in self.config.general:
+        if 'chr_prefix' in self.config.general:
             self.chr_prefix = self.config.general.chr_prefix
         else:
             self.chr_prefix = False
 
-        self.no_score_value = self.config.general.no_score_value or "na"
-        if self.no_score_value.lower() in ("na", "none"):
+        self.no_score_value = self.config.general.no_score_value or 'na'
+        if self.no_score_value.lower() in ('na', 'none'):
             self.no_score_value = None
 
         self._init_access()
 
     def _init_access(self):
-        score_format = (
-            self.config.misc.format.lower() if self.config.misc else "tsv"
-        )
-        assert score_format in ["bedgraph", "tsv", "bigwig", "bw"], (
-            score_format,
-            self.config.options.scores_config_file,
-        )
+        score_format = \
+            self.config.misc.format.lower() if self.config.misc else 'tsv'
+        assert score_format in ['bedgraph', 'tsv', 'bigwig', 'bw'], \
+            (score_format, self.config.options.scores_config_file)
 
-        if score_format == "bigwig" or score_format == "bw":
-            assert bigwig_enabled, "pyBigWig module is not installed"
+        if score_format == 'bigwig' or score_format == 'bw':
+            assert bigwig_enabled, 'pyBigWig module is not installed'
             self.accessor = BigWigAccess(self)
         else:
             self.accessor = TabixAccess(self)
@@ -151,7 +145,7 @@ class ScoreFile(object):
     def scores_to_dataframe(self, scores):
         df = pd.DataFrame(scores)
         for score_name in self.score_names:
-            df[score_name] = df[score_name].replace(["NA"], np.nan)
+            df[score_name] = df[score_name].replace(['NA'], np.nan)
             df[score_name] = df[score_name].astype("float32")
         return df
 
@@ -162,9 +156,8 @@ class ScoreFile(object):
         result = defaultdict(list)
 
         for line in score_lines:
-            count = (
-                min(pos_end, line.pos_end) - max(line.pos_begin, pos_begin) + 1
-            )
+            count = min(pos_end, line.pos_end) - \
+                    max(line.pos_begin, pos_begin) + 1
             assert count >= 1
             result["COUNT"].append(count)
             for index, column in enumerate(self.schema.col_names):
@@ -173,6 +166,7 @@ class ScoreFile(object):
 
 
 class LineBufferAdapter(object):
+
     def __init__(self, score_file, access):
         self.score_file = score_file
         self.access = access
@@ -246,7 +240,8 @@ class LineBufferAdapter(object):
 
         for line in self.access.lines_iterator:
             line = LineAdapter(self.score_file, line)
-            assert line.chrom == self.chrom, (line.chrom, self.chrom)
+            assert line.chrom == self.chrom, \
+                (line.chrom, self.chrom)
             self.append(line)
             if line.pos_end > pos_end:
                 break
@@ -269,8 +264,7 @@ class LineBufferAdapter(object):
             if line.chrom != chrom:
                 continue
             if self.regions_intersect(
-                pos_begin, pos_end, line.pos_begin, line.pos_end
-            ):
+                    pos_begin, pos_end, line.pos_begin, line.pos_end):
                 result.append(line)
         return result
 
@@ -280,12 +274,10 @@ class TabixAccess(TabixReader):
     ACCESS_SWITCH_THRESHOLD = 1500
 
     def __init__(self, score_file):
-        assert TSVFormat.is_gzip(
+        assert TSVFormat.is_gzip(score_file.score_filename), \
+             score_file.score_filename
+        assert os.path.exists("{}.tbi".format(score_file.score_filename)), \
             score_file.score_filename
-        ), score_file.score_filename
-        assert os.path.exists(
-            "{}.tbi".format(score_file.score_filename)
-        ), score_file.score_filename
         self.infile = pysam.TabixFile(score_file.score_filename)
         self.direct_infile = pysam.TabixFile(score_file.score_filename)
         self.score_file = score_file
@@ -307,11 +299,9 @@ class TabixAccess(TabixReader):
             return self._fetch_sequential(chrom, pos_begin, pos_end)
 
     def _fetch_sequential(self, chrom, pos_begin, pos_end):
-        if (
-            chrom != self.buffer.chrom
-            or pos_begin < self.buffer.pos_begin
-            or (pos_begin - self.buffer.pos_end) > self.LONG_JUMP_THRESHOLD
-        ):
+        if chrom != self.buffer.chrom or \
+                pos_begin < self.buffer.pos_begin or \
+                (pos_begin - self.buffer.pos_end) > self.LONG_JUMP_THRESHOLD:
             self._reset(chrom, pos_begin)
 
         if self.lines_iterator is None:
@@ -325,17 +315,10 @@ class TabixAccess(TabixReader):
         try:
             result = []
             for line in self.direct_infile.fetch(
-                str(chrom), pos_begin - 1, pos_end, parser=pysam.asTuple()
-            ):
+                    str(chrom), pos_begin-1, pos_end, parser=pysam.asTuple()):
                 result.append(LineAdapter(self.score_file, line))
             return result
         except ValueError as ex:
-            print(
-                "could not find region: ",
-                chrom,
-                pos_begin,
-                pos_end,
-                ex,
-                file=sys.stderr,
-            )
+            print("could not find region: ", chrom, pos_begin, pos_end,
+                  ex, file=sys.stderr)
             return []

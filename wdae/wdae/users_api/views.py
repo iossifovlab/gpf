@@ -15,7 +15,8 @@ from rest_framework.authentication import SessionAuthentication
 from rest_framework import permissions
 from rest_framework import filters
 
-from .authentication import SessionAuthenticationWithUnauthenticatedCSRF
+from .authentication import \
+    SessionAuthenticationWithUnauthenticatedCSRF
 from .models import VerificationPath
 from .serializers import UserSerializer
 from .serializers import UserWithoutEmailSerializer
@@ -31,18 +32,18 @@ class UserViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.IsAdminUser,)
     pagination_class = None
     filter_backends = (filters.SearchFilter,)
-    search_fields = ("groups__name", "email", "name")
+    search_fields = ('groups__name', 'email', 'name')
 
     def get_serializer_class(self):
         serializer_class = self.serializer_class
 
-        if self.action == "update" or self.action == "partial_update":
+        if self.action == 'update' or self.action == 'partial_update':
             serializer_class = UserWithoutEmailSerializer
 
         return serializer_class
 
     @request_logging(LOGGER)
-    @action(detail=True, methods=["post"])
+    @action(detail=True, methods=['post'])
     def password_remove(self, request, pk=None):
         self.check_permissions(request)
         user = get_object_or_404(get_user_model(), pk=pk)
@@ -55,7 +56,7 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @request_logging(LOGGER)
-    @action(detail=True, methods=["post"])
+    @action(detail=True, methods=['post'])
     def password_reset(self, request, pk=None):
         self.check_permissions(request)
         user = get_object_or_404(get_user_model(), pk=pk)
@@ -66,7 +67,7 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @request_logging(LOGGER)
-    @action(detail=False, methods=["post"])
+    @action(detail=False, methods=['post'])
     def bulk_add_group(self, request):
         self.check_permissions(request)
 
@@ -75,30 +76,30 @@ class UserViewSet(viewsets.ModelViewSet):
 
         data = serializer.validated_data
 
-        users = get_list_or_404(get_user_model(), id__in=data["userIds"])
-        if len(users) != len(data["userIds"]):
+        users = get_list_or_404(get_user_model(), id__in=data['userIds'])
+        if len(users) != len(data['userIds']):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         with transaction.atomic():
-            group, _ = Group.objects.get_or_create(name=data["group"])
+            group, _ = Group.objects.get_or_create(name=data['group'])
 
             group.user_set.add(*users)
 
         return Response(status=status.HTTP_200_OK)
 
     @request_logging(LOGGER)
-    @action(detail=False, methods=["post"])
+    @action(detail=False, methods=['post'])
     def bulk_remove_group(self, request):
         serializer = BulkGroupOperationSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         data = serializer.validated_data
 
-        users = get_list_or_404(get_user_model(), id__in=data["userIds"])
-        if len(users) != len(data["userIds"]):
+        users = get_list_or_404(get_user_model(), id__in=data['userIds'])
+        if len(users) != len(data['userIds']):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        group = get_object_or_404(Group, name=data["group"])
+        group = get_object_or_404(Group, name=data['group'])
         with transaction.atomic():
             group.user_set.remove(*users)
 
@@ -106,9 +107,9 @@ class UserViewSet(viewsets.ModelViewSet):
 
 
 @request_logging_function_view(LOGGER)
-@api_view(["POST"])
+@api_view(['POST'])
 def reset_password(request):
-    email = request.data["email"]
+    email = request.data['email']
     user_model = get_user_model()
     try:
         user = user_model.objects.get(email=email)
@@ -119,14 +120,15 @@ def reset_password(request):
 
         return Response({}, status.HTTP_200_OK)
     except user_model.DoesNotExist:
-        return Response({}, status=status.HTTP_200_OK)
+        return Response({},
+                        status=status.HTTP_200_OK)
 
 
 @request_logging_function_view(LOGGER)
-@api_view(["POST"])
+@api_view(['POST'])
 def change_password(request):
-    password = request.data["password"]
-    verif_path = request.data["verifPath"]
+    password = request.data['password']
+    verif_path = request.data['verifPath']
 
     get_user_model().change_password(verif_path, password)
 
@@ -134,95 +136,74 @@ def change_password(request):
 
 
 @request_logging_function_view(LOGGER)
-@api_view(["POST"])
+@api_view(['POST'])
 def register(request):
     user_model = get_user_model()
 
     try:
-        email = BaseUserManager.normalize_email(request.data["email"])
-        researcher_id = request.data["researcherId"]
+        email = BaseUserManager.normalize_email(request.data['email'])
+        researcher_id = request.data['researcherId']
         group_name = user_model.get_group_name_for_researcher_id(researcher_id)
 
-        preexisting_user = user_model.objects.get(
-            email__iexact=email, groups__name=group_name
-        )
+        preexisting_user = user_model.objects.get(email__iexact=email,
+                                                  groups__name=group_name)
         if preexisting_user.is_active:
             return Response({}, status=status.HTTP_201_CREATED)
 
-        preexisting_user.register_preexisting_user(request.data.get("name"))
-        LOGGER.info(
-            log_filter(
-                request,
-                "registration succeded; "
-                "email: '"
-                + str(email)
-                + "'; researcher id: '"
-                + str(researcher_id)
-                + "'",
-            )
-        )
+        preexisting_user.register_preexisting_user(request.data.get('name'))
+        LOGGER.info(log_filter(
+            request, "registration succeded; "
+            "email: '" + str(email) + "'; researcher id: '" +
+            str(researcher_id) + "'"
+        ))
         return Response({}, status=status.HTTP_201_CREATED)
     except IntegrityError:
-        LOGGER.error(
-            log_filter(
-                request,
-                "Registration failed: IntegrityError; "
-                "email: '"
-                + str(email)
-                + "'; researcher id: '"
-                + str(researcher_id)
-                + "'",
-            )
-        )
+        LOGGER.error(log_filter(
+            request, "Registration failed: IntegrityError; "
+            "email: '" + str(email) + "'; researcher id: '" +
+            str(researcher_id) + "'"
+        ))
         return Response({}, status=status.HTTP_201_CREATED)
     except user_model.DoesNotExist:
-        LOGGER.error(
-            log_filter(
-                request,
-                "Registration failed: Email or Researcher Id not found; "
-                "email: '"
-                + str(email)
-                + "'; researcher id: '"
-                + str(researcher_id)
-                + "'",
-            )
-        )
+        LOGGER.error(log_filter(
+            request, "Registration failed: Email or Researcher Id not found; "
+            "email: '" + str(email) + "'; researcher id: '" +
+            str(researcher_id) + "'"
+        ))
         return Response({}, status=status.HTTP_201_CREATED)
     except KeyError:
-        LOGGER.error(
-            log_filter(
-                request, "Registration failed: KeyError; " + str(request.data)
-            )
-        )
+        LOGGER.error(log_filter(
+            request, "Registration failed: KeyError; " + str(request.data)
+        ))
         return Response({}, status=status.HTTP_201_CREATED)
 
 
 @request_logging_function_view(LOGGER)
-@api_view(["POST"])
-@authentication_classes((SessionAuthenticationWithUnauthenticatedCSRF,))
+@api_view(['POST'])
+@authentication_classes((SessionAuthenticationWithUnauthenticatedCSRF, ))
 def login(request):
-    username = request.data["username"]
-    password = request.data["password"]
+    username = request.data['username']
+    password = request.data['password']
     user_model = get_user_model()
     userfound = user_model.objects.filter(email__iexact=username)
 
     if userfound:
         assert len(userfound) == 1
-        user = django.contrib.auth.authenticate(
-            username=userfound[0].email, password=password
-        )
+        user = django.contrib.auth.authenticate(username=userfound[0].email,
+                                                password=password)
         if user is not None and user.is_active:
             django.contrib.auth.login(request, user)
             LOGGER.info(log_filter(request, "login success: " + str(username)))
             return Response(status=status.HTTP_204_NO_CONTENT)
 
-    LOGGER.info(log_filter(request, "login failure: " + str(username)))
+    LOGGER.info(log_filter(request, "login failure: " +
+                           str(username)))
     return Response(status=status.HTTP_404_NOT_FOUND)
 
 
 @request_logging_function_view(LOGGER)
-@api_view(["POST"])
-@authentication_classes((SessionAuthentication,))
+@api_view(['POST'])
+@authentication_classes((SessionAuthentication, ))
 def logout(request):
     django.contrib.auth.logout(request)
     return Response(status=status.HTTP_204_NO_CONTENT)
@@ -230,31 +211,25 @@ def logout(request):
 
 @request_logging_function_view(LOGGER)
 @ensure_csrf_cookie
-@api_view(["GET"])
+@api_view(['GET'])
 def get_user_info(request):
     user = request.user
     if user.is_authenticated:
-        return Response(
-            {
-                "loggedIn": True,
-                "email": user.email,
-                "isAdministrator": user.is_staff,
-            },
-            status.HTTP_200_OK,
-        )
+        return Response({'loggedIn': True, 'email': user.email,
+                         'isAdministrator': user.is_staff},
+                        status.HTTP_200_OK)
     else:
-        return Response({"loggedIn": False}, status.HTTP_200_OK)
+        return Response({'loggedIn': False}, status.HTTP_200_OK)
 
 
 @request_logging_function_view(LOGGER)
-@api_view(["POST"])
+@api_view(['POST'])
 def check_verif_path(request):
-    verif_path = request.data["verifPath"]
+    verif_path = request.data['verifPath']
     try:
         VerificationPath.objects.get(path=verif_path)
         return Response({}, status=status.HTTP_200_OK)
     except VerificationPath.DoesNotExist:
-        return Response(
-            {"errors": "Verification path does not exist."},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
+        return Response({
+            'errors': 'Verification path does not exist.'},
+            status=status.HTTP_400_BAD_REQUEST)

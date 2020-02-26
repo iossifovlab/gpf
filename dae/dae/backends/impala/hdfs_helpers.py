@@ -5,6 +5,7 @@ import pyarrow as pa
 
 
 class HdfsHelpers(object):
+
     def __init__(self, hdfs_host, hdfs_port):
         assert hdfs_host
         assert hdfs_port
@@ -26,10 +27,10 @@ class HdfsHelpers(object):
     def makedirs(self, path):
         if path[0] == os.sep:
             paths = path[1:].split(os.sep)
-            paths[0] = "/" + paths[0]
+            paths[0] = '/' + paths[0]
         else:
             paths = path.split(os.sep)
-        current_path = ""
+        current_path = ''
         for directory in paths:
             current_path = os.path.join(current_path, directory)
             if not self.exists(current_path):
@@ -37,7 +38,7 @@ class HdfsHelpers(object):
 
         return self.exists(current_path)
 
-    def tempdir(self, prefix="", suffix=""):
+    def tempdir(self, prefix='', suffix=''):
         dirname = tempfile.mktemp(prefix=prefix, suffix=suffix)
         self.mkdir(dirname)
         assert self.exists(dirname)
@@ -56,7 +57,7 @@ class HdfsHelpers(object):
     def put(self, local_filename, hdfs_filename):
         assert os.path.exists(local_filename)
 
-        with open(local_filename, "rb") as infile:
+        with open(local_filename, 'rb') as infile:
             self.hdfs.upload(hdfs_filename, infile)
 
     def put_in_directory(self, local_file, hdfs_dirname):

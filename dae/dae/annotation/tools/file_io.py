@@ -1,17 +1,9 @@
-from dae.annotation.tools.file_io_tsv import (
-    TSVFormat,
-    TSVReader,
-    TSVWriter,
-    TabixReaderVariants,
-    TSVGzipReader,
-)
-
+from dae.annotation.tools.file_io_tsv import TSVFormat, \
+        TSVReader, TSVWriter, TabixReaderVariants, TSVGzipReader
 try:
     parquet_enabled = True
-    from dae.annotation.tools.file_io_parquet import (
-        ParquetReader,
-        ParquetWriter,
-    )
+    from dae.annotation.tools.file_io_parquet import ParquetReader, \
+        ParquetWriter
 except ImportError:
     parquet_enabled = False
 
@@ -44,6 +36,7 @@ class IOType:
 
 
 class IOManager(object):
+
     def __init__(self, opts, io_type_r, io_type_w):
         self.options = opts
         self.reader = io_type_r.instance_r(self.options)

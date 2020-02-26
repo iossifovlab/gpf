@@ -14,9 +14,8 @@ from dae.studies.variants_db import VariantsDb
 
 from dae.pheno.pheno_db import PhenoDb
 
-from dae.backends.storage.genotype_storage_factory import (
-    GenotypeStorageFactory,
-)
+from dae.backends.storage.genotype_storage_factory import \
+    GenotypeStorageFactory
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.dae_conf import dae_conf_schema
@@ -25,7 +24,7 @@ from dae.configuration.schemas.genomic_scores import genomic_scores_schema
 
 
 def cached(prop):
-    cached_val_name = "_" + prop.__name__
+    cached_val_name = '_' + prop.__name__
 
     def wrap(self):
         if getattr(self, cached_val_name, None) is None:
@@ -36,14 +35,10 @@ def cached(prop):
 
 
 class GPFInstance(object):
+
     def __init__(
-        self,
-        dae_config=None,
-        config_file="DAE.conf",
-        work_dir=None,
-        defaults=None,
-        load_eagerly=False,
-    ):
+            self, dae_config=None, config_file='DAE.conf', work_dir=None,
+            defaults=None, load_eagerly=False):
 
         if dae_config is None:
             # FIXME Merge defaults with newly-loaded config
@@ -62,13 +57,13 @@ class GPFInstance(object):
         self.dae_config = GPFConfigParser.modify_tuple(
             self.dae_config,
             {
-                "annotation_defaults": {
-                    "wd": dae_config.dae_data_dir,
-                    "data_dir": dae_config.dae_data_dir,
-                    "scores_hg19_dir": None,
-                    "scores_hg38_dir": None,
+                'annotation_defaults': {
+                    'wd': dae_config.dae_data_dir,
+                    'data_dir': dae_config.dae_data_dir,
+                    'scores_hg19_dir': None,
+                    'scores_hg38_dir': None,
                 }
-            },
+            }
         )
 
         if load_eagerly:
@@ -89,7 +84,8 @@ class GPFInstance(object):
     @cached
     def genomes_db(self):
         return GenomesDB(
-            self.dae_config.dae_data_dir, self.dae_config.genomes_db.conf_file
+            self.dae_config.dae_data_dir,
+            self.dae_config.genomes_db.conf_file
         )
 
     @property
@@ -101,7 +97,8 @@ class GPFInstance(object):
     @cached
     def _gene_info_config(self):
         return GPFConfigParser.load_config(
-            self.dae_config.gene_info_db.conf_file, gene_info_conf
+            self.dae_config.gene_info_db.conf_file,
+            gene_info_conf
         )
 
     @property
@@ -113,7 +110,8 @@ class GPFInstance(object):
     @cached
     def _score_config(self):
         return GPFConfigParser.load_config(
-            self.dae_config.genomic_scores_db.conf_file, genomic_scores_schema
+            self.dae_config.genomic_scores_db.conf_file,
+            genomic_scores_schema
         )
 
     @property
@@ -130,20 +128,14 @@ class GPFInstance(object):
     @cached
     def _variants_db(self):
         return VariantsDb(
-            self.dae_config,
-            self._pheno_db,
-            self.gene_weights_db,
-            self.genomes_db,
-            self.genotype_storage_db,
+            self.dae_config, self._pheno_db, self.gene_weights_db,
+            self.genomes_db, self.genotype_storage_db
         )
 
     def reload(self):
         reload_properties = [
-            "__variants_db",
-            "__common_report_facade",
-            "_denovo_gene_sets_db",
-            "_gene_sets_db",
-        ]
+            '__variants_db', '__common_report_facade', '_denovo_gene_sets_db',
+            '_gene_sets_db']
         for cached_val_name in reload_properties:
             setattr(self, cached_val_name, None)
 
@@ -168,10 +160,8 @@ class GPFInstance(object):
         return BackgroundFacade(self._variants_db)
 
     def get_genotype_data_ids(self):
-        return (
-            self._variants_db.get_genotype_studies_ids()
-            + self._variants_db.get_genotype_data_groups_ids()
-        )
+        return self._variants_db.get_genotype_studies_ids() + \
+            self._variants_db.get_genotype_data_groups_ids()
 
     def get_genotype_data(self, genotype_data_id):
         genotype_data_study = self._variants_db.get_study(genotype_data_id)
@@ -189,8 +179,7 @@ class GPFInstance(object):
         if config is not None:
             return config
         return self._variants_db.get_genotype_data_group_config(
-            genotype_data_id
-        )
+            genotype_data_id)
 
     def get_phenotype_data_ids(self):
         return self._pheno_db.get_phenotype_data_ids()

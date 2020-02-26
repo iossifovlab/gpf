@@ -4,5 +4,5 @@ from chromosome.views import ChromosomeView
 
 
 urlpatterns = [
-    url(r"^$", ChromosomeView.as_view()),
+    url(r'^$', ChromosomeView.as_view()),
 ]

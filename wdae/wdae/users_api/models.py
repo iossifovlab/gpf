@@ -1,19 +1,15 @@
-"""
+'''
 Created on Aug 10, 2016
 
 @author: lubo
-"""
+'''
 import uuid
 
 from django.db import models, transaction
 from django.core.mail import send_mail
-
 # from django.contrib.auth import get_user_model
-from django.contrib.auth.models import (
-    AbstractBaseUser,
-    BaseUserManager,
-    PermissionsMixin,
-)
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, \
+    PermissionsMixin
 from django.contrib.sessions.models import Session
 from django.utils import timezone
 from django.conf import settings
@@ -25,12 +21,13 @@ from utils.logger import LOGGER
 
 
 class WdaeUserManager(BaseUserManager):
+
     def _create_user(self, email, password, researcher_id=None, **kwargs):
         """
         Creates and saves a User with the given email and password.
         """
         if not email:
-            raise ValueError("The given email must be set")
+            raise ValueError('The given email must be set')
 
         email = self.normalize_email(email)
         email = email.lower()
@@ -45,8 +42,7 @@ class WdaeUserManager(BaseUserManager):
 
         if researcher_id is not None:
             groups.append(
-                self.model.get_group_name_for_researcher_id(researcher_id)
-            )
+                self.model.get_group_name_for_researcher_id(researcher_id))
 
         for group_name in groups:
             group, _ = Group.objects.get_or_create(name=group_name)
@@ -75,7 +71,7 @@ class WdaeUserManager(BaseUserManager):
 
 
 class WdaeUser(AbstractBaseUser, PermissionsMixin):
-    app_label = "api"
+    app_label = 'api'
     name = models.CharField(max_length=100)
     email = models.EmailField(unique=True)
 
@@ -83,13 +79,13 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=False)
     date_joined = models.DateTimeField(null=True)
 
-    USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = ["name"]
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['name']
 
-    DEFAULT_GROUPS_FOR_USER = ("any_user",)
-    RESEARCHER_GROUP_PREFIX = "SFID#"
-    SUPERUSER_GROUP = "admin"
-    UMLIMITTED_DOWNLOAD_GROUP = "unlimitted"
+    DEFAULT_GROUPS_FOR_USER = ('any_user', )
+    RESEARCHER_GROUP_PREFIX = 'SFID#'
+    SUPERUSER_GROUP = 'admin'
+    UMLIMITTED_DOWNLOAD_GROUP = 'unlimitted'
 
     objects = WdaeUserManager()
 
@@ -104,10 +100,9 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
         if not self.is_researcher:
             return None
         group = self.groups.get(
-            name__startswith=WdaeUser.RESEARCHER_GROUP_PREFIX
-        )
+            name__startswith=WdaeUser.RESEARCHER_GROUP_PREFIX)
 
-        return group.name[len(WdaeUser.RESEARCHER_GROUP_PREFIX) :]
+        return group.name[len(WdaeUser.RESEARCHER_GROUP_PREFIX):]
 
     def get_protected_group_names(self):
         return self.DEFAULT_GROUPS_FOR_USER + (self.email,)
@@ -118,9 +113,8 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
 
     @property
     def has_unlimitted_download(self):
-        return (
-            self.groups.filter(name=self.UMLIMITTED_DOWNLOAD_GROUP).count() > 0
-        )
+        return self.groups.filter(
+            name=self.UMLIMITTED_DOWNLOAD_GROUP).count() > 0
 
     def email_user(self, subject, message, from_email=None):
         override = None
@@ -171,12 +165,12 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
         all_sessions = Session.objects.all()
         for session in all_sessions:
             session_data = session.get_decoded()
-            if self.pk == session_data.get("_auth_user_id"):
+            if self.pk == session_data.get('_auth_user_id'):
                 session.delete()
 
     def register_preexisting_user(self, name):
         self.date_joined = timezone.now()
-        if name is not None and name != "":
+        if name is not None and name != '':
             self.name = name
 
         verif_path = _create_verif_path(self)
@@ -204,99 +198,92 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
         return self.email
 
     class Meta(object):
-        db_table = "users"
+        db_table = 'users'
 
 
 def send_verif_email(user, verif_path):
     email = _create_verif_email(
         settings.EMAIL_VERIFICATION_HOST,
-        settings.EMAIL_VERIFICATION_PATH,
-        str(verif_path.path),
-    )
-    user.email_user(email["subject"], email["message"])
+        settings.EMAIL_VERIFICATION_PATH, str(verif_path.path))
+    user.email_user(email['subject'], email['message'])
 
 
 def send_reset_email(user, verif_path, by_admin=False):
-    """ Returns dict - subject and message of the email """
+    ''' Returns dict - subject and message of the email '''
     email = _create_reset_mail(
         settings.EMAIL_VERIFICATION_HOST,
-        settings.EMAIL_VERIFICATION_PATH,
-        str(verif_path.path),
-        by_admin,
-    )
+        settings.EMAIL_VERIFICATION_PATH, str(verif_path.path), by_admin)
 
-    user.email_user(email["subject"], email["message"])
+    user.email_user(email['subject'], email['message'])
 
 
 def _create_verif_email(host, path, verification_path):
     settings = {
-        "subject": "GPF: Registration validation",
-        "initial_message": "Hello. Follow this link to validate "
-        "your account in GPF: Genotype and Phenotype in Families "
-        "and to set your new password: ",
-        "host": host,
-        "path": path,
-        "verification_path": verification_path,
+        'subject': 'GPF: Registration validation',
+        'initial_message': 'Hello. Follow this link to validate '
+        'your account in GPF: Genotype and Phenotype in Families '
+        'and to set your new password: ',
+        'host': host,
+        'path': path,
+        'verification_path': verification_path
     }
 
     return _build_email_template(settings)
 
 
 def _create_reset_mail(host, path, verification_path, by_admin=False):
-    message = (
-        "Hello. To change your password in "
-        "GPF: Genotype and Phenotype in Families "
-        "please follow this link: "
-    )
+    message = 'Hello. To change your password in ' \
+        'GPF: Genotype and Phenotype in Families ' \
+        'please follow this link: '
     if by_admin:
-        message = (
-            "Hello. Your password has been reset by an admin. Your old "
-            "password will not work. To set a new password in "
-            "GPF: Genotype and Phenotype in Families "
-            "please follow this link: "
-        )
+        message = \
+            'Hello. Your password has been reset by an admin. Your old ' \
+            'password will not work. To set a new password in ' \
+            'GPF: Genotype and Phenotype in Families ' \
+            'please follow this link: '
     settings = {
-        "subject": "GPF: Password reset",
-        "initial_message": message,
-        "host": host,
-        "path": path,
-        "verification_path": verification_path,
+        'subject': 'GPF: Password reset',
+        'initial_message': message,
+        'host': host,
+        'path': path,
+        'verification_path': verification_path
     }
 
     return _build_email_template(settings)
-
 
 # ''' settings[dict] must contain :
 # subject, initial_message, host, path, verification_path'''
 
 
 def _build_email_template(settings):
-    subject = settings["subject"]
-    message = settings["initial_message"]
-    path = settings["path"].format(settings["verification_path"])
+    subject = settings['subject']
+    message = settings['initial_message']
+    path = settings['path'].format(settings['verification_path'])
 
-    message += "{0}{1}".format(settings["host"], path)
+    message += '{0}{1}'.format(settings['host'], path)
 
-    return {"subject": subject, "message": message}
+    return {
+        'subject': subject,
+        'message': message
+    }
 
 
 def _create_verif_path(user):
-    verif_path, _ = VerificationPath.objects.get_or_create(
-        user=user, defaults={"path": uuid.uuid4()}
-    )
+    verif_path, _ = \
+        VerificationPath.objects.get_or_create(
+            user=user,
+            defaults={'path': uuid.uuid4()})
     return verif_path
 
 
 def get_anonymous_user_instance(CurrentUserModel):
     try:
         user = CurrentUserModel.objects.get(
-            email=guardian_settings.ANONYMOUS_USER_NAME
-        )
+            email=guardian_settings.ANONYMOUS_USER_NAME)
         return user
     except CurrentUserModel.DoesNotExist:
         user = CurrentUserModel.objects.create_user(
-            email=guardian_settings.ANONYMOUS_USER_NAME
-        )
+            email=guardian_settings.ANONYMOUS_USER_NAME)
         user.set_unusable_password()
         user.is_active = True
         user.save()
@@ -304,31 +291,30 @@ def get_anonymous_user_instance(CurrentUserModel):
 
 
 def staff_update(sender, **kwargs):
-    for key in ["action", "instance", "reverse"]:
+    for key in ['action', 'instance', 'reverse']:
         if key not in kwargs:
             return
-    if kwargs["action"] not in ["post_add", "post_remove", "post_clear"]:
+    if kwargs['action'] not in ['post_add', 'post_remove', 'post_clear']:
         return
 
-    if kwargs["reverse"]:
-        users = WdaeUser.objects.filter(pk__in=kwargs["pk_set"])
+    if kwargs['reverse']:
+        users = WdaeUser.objects.filter(pk__in=kwargs['pk_set'])
     else:
-        users = [kwargs["instance"]]
+        users = [kwargs['instance']]
 
     with transaction.atomic():
         for user in users:
-            should_be_staff = user.groups.filter(
-                name=WdaeUser.SUPERUSER_GROUP
-            ).exists()
+            should_be_staff = user.groups \
+                .filter(name=WdaeUser.SUPERUSER_GROUP).exists()
             if user.is_staff != should_be_staff:
                 user.is_staff = should_be_staff
                 user.save()
 
 
 def group_post_delete(sender, **kwargs):
-    if "instance" not in kwargs:
+    if 'instance' not in kwargs:
         return
-    group = kwargs["instance"]
+    group = kwargs['instance']
     if group.name != WdaeUser.SUPERUSER_GROUP:
         return
     if not hasattr(group, "_user_ids"):
@@ -342,9 +328,9 @@ def group_post_delete(sender, **kwargs):
 
 # a hack to save the users the group had, used in the post_delete signal
 def group_pre_delete(sender, **kwargs):
-    if "instance" not in kwargs:
+    if 'instance' not in kwargs:
         return
-    group = kwargs["instance"]
+    group = kwargs['instance']
     if group.name == WdaeUser.SUPERUSER_GROUP:
         group._user_ids = [u.pk for u in group.user_set.all()]
 
@@ -362,4 +348,4 @@ class VerificationPath(models.Model):
         return str(self.path)
 
     class Meta(object):
-        db_table = "verification_paths"
+        db_table = 'verification_paths'

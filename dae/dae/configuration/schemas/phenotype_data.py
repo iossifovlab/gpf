@@ -32,7 +32,9 @@ phenotype_data_schema = {
         "check_with": validate_existing_path,
         "coerce": "abspath",
     },
-    "browser_images_url": {"type": "string",},
+    "browser_images_url": {
+        "type": "string",
+    },
 }
 
 pheno_conf_schema = {

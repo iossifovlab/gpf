@@ -35,8 +35,7 @@ class Instrument(object):
 
     def __repr__(self):
         return "Instrument({}, {})".format(
-            self.instrument_name, len(self.measures)
-        )
+            self.instrument_name, len(self.measures))
 
 
 class Measure(object):
@@ -71,38 +70,37 @@ class Measure(object):
 
     def __repr__(self):
         return "Measure({}, {}, {})".format(
-            self.measure_id, self.measure_type, self.values_domain
-        )
+            self.measure_id, self.measure_type, self.values_domain)
 
     @classmethod
     def _from_dict(cls, row):
         """
         Creates `Measure` object from pandas data frame row.
         """
-        assert row["measure_type"] is not None
+        assert row['measure_type'] is not None
 
-        m = Measure(row["measure_name"])
-        m.measure_id = row["measure_id"]
-        m.instrument_name = row["instrument_name"]
-        m.measure_name = row["measure_name"]
-        m.measure_type = row["measure_type"]
+        m = Measure(row['measure_name'])
+        m.measure_id = row['measure_id']
+        m.instrument_name = row['instrument_name']
+        m.measure_name = row['measure_name']
+        m.measure_type = row['measure_type']
 
-        m.description = row["description"]
-        m.default_filter = row["default_filter"]
-        m.values_domain = row.get("values_domain")
-        m.min_value = row.get("min_value")
-        m.max_value = row.get("max_value")
+        m.description = row['description']
+        m.default_filter = row['default_filter']
+        m.values_domain = row.get('values_domain')
+        m.min_value = row.get('min_value')
+        m.max_value = row.get('max_value')
 
         return m
 
 
-class PhenotypeData:
+class PhenotypeData():
+
     def get_persons_df(self, roles, person_ids, family_ids):
         raise NotImplementedError()
 
-    def get_persons_values_df(
-        self, measure_ids, person_ids, family_ids, roles
-    ):
+    def get_persons_values_df(self, measure_ids, person_ids,
+                              family_ids, roles):
         raise NotImplementedError()
 
     def get_persons(self, roles, person_ids, family_ids):
@@ -129,14 +127,12 @@ class PhenotypeData:
     def get_values(self, measure_ids, person_ids, family_ids, roles):
         raise NotImplementedError()
 
-    def get_instrument_values_df(
-        self, instrument_df, person_ids, family_ids, roles
-    ):
+    def get_instrument_values_df(self, instrument_df, person_ids,
+                                 family_ids, roles):
         raise NotImplementedError()
 
-    def get_instrument_values(
-        self, instrument_df, person_ids, family_ids, roles
-    ):
+    def get_instrument_values(self, instrument_df, person_ids,
+                              family_ids, roles):
         raise NotImplementedError()
 
 
@@ -187,9 +183,9 @@ class PhenotypeDataStudy(PhenotypeData):
         `default_filter`.
         """
         assert instrument is None or instrument in self.instruments
-        assert measure_type is None or measure_type in set(
-            ["continuous", "ordinal", "categorical", "unknown"]
-        )
+        assert measure_type is None or \
+            measure_type in set([
+                'continuous', 'ordinal', 'categorical', 'unknown'])
 
         measure = self.db.measure
         columns = [
@@ -214,21 +210,18 @@ class PhenotypeDataStudy(PhenotypeData):
         df = pd.read_sql(s, self.db.engine)
 
         df_columns = [
-            "measure_id",
-            "measure_name",
-            "instrument_name",
-            "description",
-            "individuals",
-            "measure_type",
-            "default_filter",
-            "values_domain",
-            "min_value",
-            "max_value",
+            'measure_id', 'measure_name', 'instrument_name',
+            'description', 'individuals', 'measure_type',
+            'default_filter',
+            'values_domain',
+            'min_value',
+            'max_value',
         ]
         res_df = df[df_columns]
         return res_df
 
-    def get_measures(self, instrument=None, measure_type=None):
+    def get_measures(
+            self, instrument=None, measure_type=None):
         """
         Returns a dictionary of measures objects.
 
@@ -240,10 +233,11 @@ class PhenotypeDataStudy(PhenotypeData):
         type of measures are returned.
 
         """
-        df = self._get_measures_df(instrument, measure_type)
+        df = self._get_measures_df(
+            instrument, measure_type)
 
         res = OrderedDict()
-        for row in df.to_dict("records"):
+        for row in df.to_dict('records'):
             m = Measure._from_dict(row)
             res[m.measure_id] = m
         return res
@@ -260,7 +254,7 @@ class PhenotypeDataStudy(PhenotypeData):
             measures = OrderedDict()
             measures_df = df[df.instrument_name == instrument_name]
 
-            for row in measures_df.to_dict("records"):
+            for row in measures_df.to_dict('records'):
                 m = Measure._from_dict(row)
                 measures[m.measure_name] = m
                 self.measures[m.measure_id] = m
@@ -286,10 +280,10 @@ class PhenotypeDataStudy(PhenotypeData):
             self.families[family_id] = f
 
     def _load(self):
-        """
+        '''
         Loads basic families, instruments and measures data from
         the phenotype database.
-        """
+        '''
         if self.families is None:
             self._load_families()
         if self.instruments is None:
@@ -324,16 +318,22 @@ class PhenotypeDataStudy(PhenotypeData):
             self.db.person.c.sex,
         ]
         s = select(columns)
-        s = s.select_from(self.db.family.join(self.db.person))
+        s = s.select_from(
+            self.db.family.join(self.db.person)
+        )
         if roles is not None:
             s = s.where(self.db.person.c.role.in_(roles))
         if person_ids is not None:
-            s = s.where(self.db.person.c.person_id.in_(person_ids))
+            s = s.where(
+                self.db.person.c.person_id.in_(person_ids)
+            )
         if family_ids is not None:
-            s = s.where(self.db.family.c.family_id.in_(family_ids))
+            s = s.where(
+                self.db.family.c.family_id.in_(family_ids)
+            )
         df = pd.read_sql(s, self.db.engine)
         # df.rename(columns={'sex': 'sex'}, inplace=True)
-        return df[["person_id", "family_id", "role", "sex", "status"]]
+        return df[['person_id', 'family_id', 'role', 'sex', 'status']]
 
     def get_persons(self, roles=None, person_ids=None, family_ids=None):
         """Returns individuals data from phenotype database.
@@ -352,23 +352,21 @@ class PhenotypeDataStudy(PhenotypeData):
         the `Person` object is the same object used into `VariantDB` families.
         """
         persons = {}
-        df = self.get_persons_df(
-            roles=roles, person_ids=person_ids, family_ids=family_ids
-        )
+        df = self.get_persons_df(roles=roles, person_ids=person_ids,
+                                 family_ids=family_ids)
 
-        for row in df.to_dict("records"):
-            person_id = row["person_id"]
+        for row in df.to_dict('records'):
+            person_id = row['person_id']
 
             p = Person(**row)
             # p.person_id = person_id
             # p.family_id = family_id
-            assert row["role"] in Role, "{} not a valid role".format(
-                row["role"]
-            )
-            assert row["sex"] in Sex, "{} not a valid sex".format(row["sex"])
-            assert row["status"] in Status, "{} not a valid status".format(
-                row["status"]
-            )
+            assert row['role'] in Role, \
+                "{} not a valid role".format(row['role'])
+            assert row['sex'] in Sex, \
+                "{} not a valid sex".format(row['sex'])
+            assert row['status'] in Status, \
+                "{} not a valid status".format(row['status'])
 
             persons[person_id] = p
         return persons
@@ -381,33 +379,25 @@ class PhenotypeDataStudy(PhenotypeData):
         return self.measures[measure_id]
 
     def _build_default_filter_clause(self, m, default_filter):
-        if default_filter == "skip" or m.default_filter is None:
+        if default_filter == 'skip' or m.default_filter is None:
             return None
-        elif default_filter == "apply":
+        elif default_filter == 'apply':
             return "value {}".format(m.default_filter)
-        elif default_filter == "invert":
+        elif default_filter == 'invert':
             return "NOT (value {})".format(m.default_filter)
         else:
             raise ValueError(
-                "bad default_filter value: {}".format(default_filter)
-            )
+                "bad default_filter value: {}".format(default_filter))
 
     def _raw_get_measure_values_df(
-        self,
-        measure,
-        person_ids=None,
-        family_ids=None,
-        roles=None,
-        default_filter="skip",
-    ):
+            self, measure, person_ids=None, family_ids=None, roles=None,
+            default_filter='skip'):
 
         measure_type = measure.measure_type
         if measure_type is None:
             raise ValueError(
                 "bad measure: {}; unknown value type".format(
-                    measure.measure_id
-                )
-            )
+                    measure.measure_id))
         value_table = self.db.get_value_table(measure_type)
         columns = [
             self.db.family.c.family_id,
@@ -419,38 +409,38 @@ class PhenotypeDataStudy(PhenotypeData):
 
         s = select(columns)
         s = s.select_from(
-            value_table.join(self.db.measure)
-            .join(self.db.person)
-            .join(self.db.family)
+            value_table.
+            join(self.db.measure).
+            join(self.db.person).
+            join(self.db.family)
         )
         s = s.where(self.db.measure.c.measure_id == measure.measure_id)
 
         if roles is not None:
             s = s.where(self.db.person.c.role.in_(roles))
         if person_ids is not None:
-            s = s.where(self.db.person.c.person_id.in_(person_ids))
+            s = s.where(
+                self.db.person.c.person_id.in_(person_ids)
+            )
         if family_ids is not None:
-            s = s.where(self.db.family.c.family_id.in_(family_ids))
+            s = s.where(
+                self.db.family.c.family_id.in_(family_ids)
+            )
 
         if measure.default_filter is not None:
             filter_clause = self._build_default_filter_clause(
-                measure, default_filter
-            )
+                measure, default_filter)
             if filter_clause is not None:
                 s = s.where(text(filter_clause))
 
         df = pd.read_sql(s, self.db.engine)
-        df.rename(columns={"value": measure.measure_id}, inplace=True)
+        df.rename(columns={'value': measure.measure_id}, inplace=True)
         return df
 
-    def get_measure_values_df(
-        self,
-        measure_id,
-        person_ids=None,
-        family_ids=None,
-        roles=None,
-        default_filter="apply",
-    ):
+    def get_measure_values_df(self, measure_id,
+                              person_ids=None, family_ids=None,
+                              roles=None,
+                              default_filter='apply'):
         """
         Returns a data frame with values for the specified `measure_id`.
 
@@ -482,19 +472,13 @@ class PhenotypeDataStudy(PhenotypeData):
             person_ids=person_ids,
             family_ids=family_ids,
             roles=roles,
-            default_filter=default_filter,
-        )
+            default_filter=default_filter)
 
-        return df[["person_id", measure_id]]
+        return df[['person_id', measure_id]]
 
-    def get_measure_values(
-        self,
-        measure_id,
-        person_ids=None,
-        family_ids=None,
-        roles=None,
-        default_filter="apply",
-    ):
+    def get_measure_values(self, measure_id, person_ids=None, family_ids=None,
+                           roles=None,
+                           default_filter='apply'):
         """
         Returns a dictionary with values for the specified `measure_id`.
 
@@ -518,22 +502,17 @@ class PhenotypeDataStudy(PhenotypeData):
         each individual. The person_id is used as key in the dictionary.
         """
 
-        df = self.get_measure_values_df(
-            measure_id, person_ids, family_ids, roles, default_filter
-        )
+        df = self.get_measure_values_df(measure_id, person_ids, family_ids,
+                                        roles,
+                                        default_filter)
         res = {}
-        for row in df.to_dict("records"):
-            res[row["person_id"]] = row[measure_id]
+        for row in df.to_dict('records'):
+            res[row['person_id']] = row[measure_id]
         return res
 
-    def get_values_df(
-        self,
-        measure_ids,
-        person_ids=None,
-        family_ids=None,
-        roles=None,
-        default_filter="apply",
-    ):
+    def get_values_df(self, measure_ids, person_ids=None, family_ids=None,
+                      roles=None,
+                      default_filter='apply'):
         """
         Returns a data frame with values for given list of measures.
 
@@ -557,35 +536,28 @@ class PhenotypeDataStudy(PhenotypeData):
         assert len(measure_ids) >= 1
         assert all([self.has_measure(m) for m in measure_ids])
 
-        dfs = [
-            self.get_measure_values_df(
-                m, person_ids, family_ids, roles, default_filter
-            )
-            for m in measure_ids
-        ]
+        dfs = [self.get_measure_values_df(m, person_ids, family_ids,
+                                          roles, default_filter)
+               for m in measure_ids]
 
         res_df = dfs[0]
         for i, df in enumerate(dfs[1:]):
             res_df = res_df.join(
-                df.set_index("person_id"),
-                on="person_id",
-                how="outer",
-                rsuffix="_val_{}".format(i),
-            )
+                df.set_index('person_id'), on='person_id', how='outer',
+                rsuffix='_val_{}'.format(i))
 
         return res_df
 
     def _values_df_to_dict(self, df):
         res = {}
-        for row in df.to_dict("records"):
-            person_id = row["person_id"]
+        for row in df.to_dict('records'):
+            person_id = row['person_id']
             res[person_id] = row
 
         return res
 
-    def get_values(
-        self, measure_ids, person_ids=None, family_ids=None, roles=None
-    ):
+    def get_values(self, measure_ids, person_ids=None, family_ids=None,
+                   roles=None):
         """
         Returns dictionary dictionaries with values for all `measure_ids`.
 
@@ -609,30 +581,24 @@ class PhenotypeDataStudy(PhenotypeData):
         df = self.get_values_df(measure_ids, person_ids, family_ids, roles)
         return self._values_df_to_dict(df)
 
-    def get_persons_values_df(
-        self, measure_ids, person_ids=None, family_ids=None, roles=None
-    ):
+    def get_persons_values_df(self, measure_ids, person_ids=None,
+                              family_ids=None, roles=None):
         """
         Returns a data frame with values for all measures in `measure_ids`
         joined with a data frame returned by `get_persons_df`.
         """
-        persons_df = self.get_persons_df(
-            roles=roles, person_ids=person_ids, family_ids=family_ids
-        )
+        persons_df = self.get_persons_df(roles=roles, person_ids=person_ids,
+                                         family_ids=family_ids)
 
         value_df = self.get_values_df(
             measure_ids,
             person_ids=person_ids,
             family_ids=family_ids,
-            roles=roles,
-        )
+            roles=roles)
 
         df = persons_df.join(
-            value_df.set_index("person_id"),
-            on="person_id",
-            how="right",
-            rsuffix="_val",
-        )
+            value_df.set_index('person_id'),
+            on='person_id', how='right', rsuffix='_val')
 
         return df
 
@@ -648,8 +614,7 @@ class PhenotypeDataStudy(PhenotypeData):
         return measure_ids
 
     def get_instrument_values_df(
-        self, instrument_id, person_ids=None, family_ids=None, role=None
-    ):
+            self, instrument_id, person_ids=None, family_ids=None, role=None):
         """
         Returns a dataframe with values for all measures in given
         instrument (see **get_values_df**).
@@ -659,8 +624,7 @@ class PhenotypeDataStudy(PhenotypeData):
         return res
 
     def get_instrument_values(
-        self, instrument_id, person_ids=None, family_ids=None, role=None
-    ):
+            self, instrument_id, person_ids=None, family_ids=None, role=None):
         """
         Returns a dictionary with values for all measures in given
         instrument (see :func:`get_values`).
@@ -682,6 +646,7 @@ class PhenotypeDataGroup(PhenotypeData):
 
 
 class PhenoDb(object):
+
     def __init__(self, dae_config):
         super(PhenoDb, self).__init__()
         assert dae_config
@@ -712,16 +677,14 @@ class PhenoDb(object):
 
     def get_phenotype_data(self, pheno_data_id):
         if not self.has_phenotype_data(pheno_data_id):
-            raise ValueError(
-                "cannot find phenotype data {};"
-                " available phenotype data: {}".format(
-                    pheno_data_id, self.get_phenotype_data_ids()
-                )
-            )
+            raise ValueError('cannot find phenotype data {};'
+                             ' available phenotype data: {}'
+                             .format(pheno_data_id,
+                                     self.get_phenotype_data_ids()))
         if pheno_data_id in self.pheno_cache:
             phenotype_data = self.pheno_cache[pheno_data_id]
         else:
-            LOGGER.info("loading pheno db <{}>".format(pheno_data_id))
+            LOGGER.info('loading pheno db <{}>'.format(pheno_data_id))
             phenotype_data = PhenotypeDataStudy(
                 dbfile=self.get_dbfile(pheno_data_id)
             )

@@ -1,8 +1,8 @@
-"""
+'''
 Created on Feb 23, 2018
 
 @author: lubo
-"""
+'''
 from dae.variants.attributes import Sex
 import pytest
 
@@ -10,16 +10,16 @@ import pytest
 def test_sex_attribute():
 
     assert Sex.from_value(1) == Sex.male
-    assert Sex.from_name("M") == Sex.male
-    assert Sex.from_name("male") == Sex.male
+    assert Sex.from_name('M') == Sex.male
+    assert Sex.from_name('male') == Sex.male
 
     assert Sex.from_value(2) == Sex.female
-    assert Sex.from_name("F") == Sex.female
-    assert Sex.from_name("female") == Sex.female
+    assert Sex.from_name('F') == Sex.female
+    assert Sex.from_name('female') == Sex.female
 
     assert Sex.from_value(0) == Sex.unspecified
-    assert Sex.from_name("U") == Sex.unspecified
-    assert Sex.from_name("unspecified") == Sex.unspecified
+    assert Sex.from_name('U') == Sex.unspecified
+    assert Sex.from_name('unspecified') == Sex.unspecified
 
 
 def test_bad_sex_value():

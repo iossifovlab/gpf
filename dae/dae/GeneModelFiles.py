@@ -3,11 +3,13 @@
 # July 12th 2013
 # written by Ewa
 
-from dae.RegionOperations import Region, collapse_noChr
+from dae.RegionOperations import Region, \
+    collapse_noChr
 import gzip
 import pickle
 import sys
-from collections import defaultdict, namedtuple, OrderedDict
+from collections import defaultdict, \
+    namedtuple, OrderedDict
 
 
 class TranscriptModel(object):
@@ -29,7 +31,7 @@ class TranscriptModel(object):
     def CDS_regions(self, ss=0):
 
         if self.cds[0] >= self.cds[1]:
-            return []
+            return([])
 
         CDS_regions = []
         k = 0
@@ -41,8 +43,7 @@ class TranscriptModel(object):
             return CDS_regions
 
         CDS_regions.append(
-            Region(self.chr, self.cds[0], self.exons[k].stop + ss)
-        )
+            Region(self.chr, self.cds[0], self.exons[k].stop + ss))
         k += 1
         while k < len(self.exons) and self.exons[k].stop <= self.cds[1]:
             if self.exons[k].stop < self.cds[1]:
@@ -50,31 +51,29 @@ class TranscriptModel(object):
                     Region(
                         self.chr,
                         self.exons[k].start - ss,
-                        stop=self.exons[k].stop + ss,
-                    )
-                )
+                        stop=self.exons[k].stop + ss))
                 k += 1
             else:
                 CDS_regions.append(
                     Region(
                         self.chr,
                         self.exons[k].start - ss,
-                        stop=self.exons[k].stop,
-                    )
-                )
+                        stop=self.exons[k].stop))
                 return CDS_regions
 
         if k < len(self.exons) and self.exons[k].start <= self.cds[1]:
             CDS_regions.append(
-                Region(self.chr, self.exons[k].start - ss, stop=self.cds[1])
-            )
+                Region(
+                    self.chr,
+                    self.exons[k].start - ss,
+                    stop=self.cds[1]))
 
         return CDS_regions
 
     def UTR5_regions(self):
 
         if self.cds[0] >= self.cds[1]:
-            return []
+            return([])
 
         utr5_regions = []
         k = 0
@@ -84,18 +83,14 @@ class TranscriptModel(object):
                     Region(
                         chrom=self.chr,
                         start=self.exons[k].start,
-                        stop=self.exons[k].stop,
-                    )
-                )
+                        stop=self.exons[k].stop))
                 k += 1
             if self.exons[k].start < self.cds[0]:
                 utr5_regions.append(
                     Region(
                         chrom=self.chr,
                         start=self.exons[k].start,
-                        stop=self.cds[0] - 1,
-                    )
-                )
+                        stop=self.cds[0]-1))
 
         else:
             while self.exons[k].stop < self.cds[1]:
@@ -107,22 +102,19 @@ class TranscriptModel(object):
                     Region(
                         chrom=self.chr,
                         start=self.cds[1] + 1,
-                        stop=self.exons[k].stop,
-                    )
-                )
+                        stop=self.exons[k].stop))
                 k += 1
 
             for e in self.exons[k:]:
                 utr5_regions.append(
-                    Region(chrom=self.chr, start=e.start, stop=e.stop)
-                )
+                    Region(chrom=self.chr, start=e.start, stop=e.stop))
 
         return utr5_regions
 
     def UTR3_regions(self):
 
         if self.cds[0] >= self.cds[1]:
-            return []
+            return([])
 
         utr3_regions = []
         k = 0
@@ -132,18 +124,14 @@ class TranscriptModel(object):
                     Region(
                         chrom=self.chr,
                         start=self.exons[k].start,
-                        stop=self.exons[k].stop,
-                    )
-                )
+                        stop=self.exons[k].stop))
                 k += 1
             if self.exons[k].start < self.cds[0]:
                 utr3_regions.append(
                     Region(
                         chrom=self.chr,
                         start=self.exons[k].start,
-                        stop=self.cds[0] - 1,
-                    )
-                )
+                        stop=self.cds[0]-1))
 
         else:
             while self.exons[k].stop < self.cds[1]:
@@ -154,16 +142,13 @@ class TranscriptModel(object):
                 utr3_regions.append(
                     Region(
                         chrom=self.chr,
-                        start=self.cds[1] + 1,
-                        stop=self.exons[k].stop,
-                    )
-                )
+                        start=self.cds[1]+1,
+                        stop=self.exons[k].stop))
                 k += 1
 
             for e in self.exons[k:]:
                 utr3_regions.append(
-                    Region(chrom=self.chr, start=e.start, stop=e.stop)
-                )
+                    Region(chrom=self.chr, start=e.start, stop=e.stop))
 
         return utr3_regions
 
@@ -174,58 +159,50 @@ class TranscriptModel(object):
         if ss == 0:
             for e in self.exons:
                 all_regions.append(
-                    Region(chrom=self.chr, start=e.start, stop=e.stop)
-                )
+                    Region(chrom=self.chr, start=e.start, stop=e.stop))
         else:
             for e in self.exons:
                 if e.stop <= self.cds[0]:
                     all_regions.append(
-                        Region(chrom=self.chr, start=e.start, stop=e.stop)
-                    )
+                        Region(chrom=self.chr, start=e.start, stop=e.stop))
                 elif e.start <= self.cds[0]:
                     if e.stop >= self.cds[1]:
                         all_regions.append(
-                            Region(chrom=self.chr, start=e.start, stop=e.stop)
-                        )
-                    else:
-                        all_regions.append(
-                            Region(
-                                chrom=self.chr, start=e.start, stop=e.stop + ss
-                            )
-                        )
-                elif e.start > self.cds[1]:
-                    all_regions.append(
-                        Region(chrom=self.chr, start=e.start, stop=e.stop)
-                    )
-                else:
-                    if e.stop >= self.cds[1]:
-                        all_regions.append(
-                            Region(
-                                chrom=self.chr, start=e.start - ss, stop=e.stop
-                            )
-                        )
+                            Region(chrom=self.chr, start=e.start, stop=e.stop))
                     else:
                         all_regions.append(
                             Region(
                                 chrom=self.chr,
+                                start=e.start,
+                                stop=e.stop + ss))
+                elif e.start > self.cds[1]:
+                    all_regions.append(
+                        Region(chrom=self.chr, start=e.start, stop=e.stop))
+                else:
+                    if e.stop >= self.cds[1]:
+                        all_regions.append(
+                            Region(
+                                chrom=self.chr,
                                 start=e.start - ss,
-                                stop=e.stop + ss,
-                            )
-                        )
+                                stop=e.stop))
+                    else:
+                        all_regions.append(
+                            Region(
+                                chrom=self.chr,
+                                start=e.start-ss,
+                                stop=e.stop+ss))
 
         if prom != 0:
             if self.strand == "+":
                 all_regions[0] = Region(
                     chrom=all_regions[0].chr,
                     start=all_regions[0].start - prom,
-                    stop=all_regions[0].stop,
-                )
+                    stop=all_regions[0].stop)
             else:
                 all_regions[-1] = Region(
                     chrom=all_regions[-1].chr,
                     start=all_regions[-1].start,
-                    stop=all_regions[-1].stop + prom,
-                )
+                    stop=all_regions[-1].stop + prom)
 
         return all_regions
 
@@ -243,7 +220,7 @@ class TranscriptModel(object):
         length = 0
         for c in cds_region:
             length += c.stop - c.start + 1
-        return length
+        return(length)
 
     def UTR3_len(self):
 
@@ -269,9 +246,8 @@ class TranscriptModel(object):
         for e in self.exons:
             if e.start > pos_stop:
                 return False
-            if (e.start <= pos_start <= e.stop) or (
-                pos_start < e.start and pos_stop >= e.start
-            ):
+            if (e.start <= pos_start <= e.stop) or \
+                    (pos_start < e.start and pos_stop >= e.start):
                 return True
         return False
 
@@ -313,10 +289,8 @@ class TranscriptModel(object):
                 return "3'UTR-intron"
             return "5'UTR-intron"
 
-        if (
-            pos_start <= self.exons[0].start
-            and pos_stop >= self.exons[-1].stop
-        ):
+        if pos_start <= self.exons[0].start and \
+                pos_stop >= self.exons[-1].stop:
             return "all"
 
         if self.__check_if_exon(pos_start, pos_stop):
@@ -375,7 +349,7 @@ class GeneModels:
                 trId = line[1]
                 trName = trId + "_1"
 
-            Frame = list(map(int, line[-1].split(",")[:-1]))
+            Frame = list(map(int, line[-1].split(',')[:-1]))
 
         else:
             if line[10] != "":
@@ -401,8 +375,8 @@ class GeneModels:
         transcription_end = line[4 + self._shift]
         cds_start = line[5 + self._shift]
         cds_end = line[6 + self._shift]
-        exon_starts = line[8 + self._shift].split(",")[:-1]
-        exon_ends = line[9 + self._shift].split(",")[:-1]
+        exon_starts = line[8 + self._shift].split(',')[:-1]
+        exon_ends = line[9 + self._shift].split(',')[:-1]
         exon_count = int(line[7 + self._shift])
 
         ll = len(exon_starts)
@@ -412,7 +386,7 @@ class GeneModels:
 
             for i in range(0, ll):
                 ex = Exon()
-                ex.start = int(exon_starts[i]) + 1
+                ex.start = int(exon_starts[i])+1
                 ex.stop = int(exon_ends[i])
                 ex.frame = int(Frame[i])
                 exons.append(ex)
@@ -431,26 +405,21 @@ class GeneModels:
                 if int(cds_end) > int(exon_ends[k]):
                     Frame.append((int(exon_ends[k]) - int(cds_start)) % 3)
                 if int(cds_end) <= int(exon_ends[k]):
-                    for e in exon_ends[k + 1 :]:
+                    for e in exon_ends[k+1:]:
                         Frame.append(-1)
                 else:
                     k += 1
                     while k < ll and int(exon_ends[k]) < int(cds_end):
                         Frame.append(
-                            (
-                                Frame[k]
-                                + int(exon_ends[k])
-                                - int(exon_starts[k])
-                            )
-                            % 3
-                        )
+                            (Frame[k] + int(exon_ends[k]) -
+                             int(exon_starts[k])) % 3)
                         k += 1
                     k += 1
                     for e in exon_ends[k:]:
                         Frame.append(-1)
 
             else:
-                k = len(exon_ends) - 1
+                k = len(exon_ends)-1
                 while int(exon_starts[k]) > int(cds_end):
                     Frame.append(-1)
                     k -= 1
@@ -463,23 +432,17 @@ class GeneModels:
                 else:
                     k -= 1
                     while k > -1 and int(exon_starts[k]) > int(cds_start):
-                        Frame.append(
-                            (
-                                Frame[-1]
-                                + int(exon_ends[k])
-                                - int(exon_starts[k])
-                            )
-                            % 3
-                        )
+                        Frame.append((Frame[-1] + int(exon_ends[k]) -
+                                      int(exon_starts[k])) % 3)
                         k -= 1
                     k -= 1
-                    for e in exon_ends[: k + 1]:
+                    for e in exon_ends[:k+1]:
                         Frame.append(-1)
                     Frame = Frame[::-1]
 
             for i in range(0, ll):
                 ex = Exon()
-                ex.start = int(exon_starts[i]) + 1
+                ex.start = int(exon_starts[i])+1
                 ex.stop = int(exon_ends[i])
                 ex.frame = Frame[i]
                 exons.append(ex)
@@ -491,37 +454,37 @@ class GeneModels:
         tm.chr = chrom
         tm.strand = strand
         tm.tx = (transcription_start + 1, int(transcription_end))
-        tm.cds = (int(cds_start) + 1, int(cds_end))
+        tm.cds = (int(cds_start)+1, int(cds_end))
         tm.exons = exons
         tm.attr = OrderedDict()
 
         try:
-            tm.attr["exonCount"] = exon_count
+            tm.attr['exonCount'] = exon_count
         except Exception:
             pass
 
         try:
-            tm.attr["bin"] = bin
+            tm.attr['bin'] = bin
         except Exception:
             pass
 
         try:
-            tm.attr["cdsStartStat"] = cdsStartStatus
+            tm.attr['cdsStartStat'] = cdsStartStatus
         except Exception:
             pass
 
         try:
-            tm.attr["cdsEndStat"] = cdsEndStatus
+            tm.attr['cdsEndStat'] = cdsEndStatus
         except Exception:
             pass
 
         try:
-            tm.attr["score"] = score
+            tm.attr['score'] = score
         except Exception:
             pass
 
         try:
-            tm.attr["proteinID"] = proteinId
+            tm.attr['proteinID'] = proteinId
         except Exception:
             pass
 
@@ -534,15 +497,14 @@ class GeneModels:
 
         try:
             self._utrModels[chrom][
-                (transcription_start + 1, int(transcription_end))
-            ].append(tm)
+                (transcription_start + 1,
+                 int(transcription_end))].append(tm)
         except KeyError:
             # if e.args[0] == chrom:
             #     self._utrModels[chrom] = OrderedDict()
             self._utrModels[chrom] = OrderedDict()
             self._utrModels[chrom][
-                (transcription_start + 1, int(transcription_end))
-            ] = [tm]
+                (transcription_start + 1, int(transcription_end))] = [tm]
 
         return -1
 
@@ -550,19 +512,19 @@ class GeneModels:
         self._Alternative_names = OrderedDict()
         if gene_mapping_file is not None:
             if gene_mapping_file.endswith(".gz"):
-                dict_file = gzip.open(gene_mapping_file, "rt")
+                dict_file = gzip.open(gene_mapping_file, 'rt')
             else:
-                dict_file = open(gene_mapping_file, "rt")
+                dict_file = open(gene_mapping_file, 'rt')
             dict_file.readline()
-            self._Alternative_names = dict(
-                [(line.split()[0], line.split()[1]) for line in dict_file]
-            )
+            self._Alternative_names = \
+                dict([(line.split()[0], line.split()[1])
+                      for line in dict_file])
             dict_file.close()
 
         if location is None:
             location = self.location
 
-        geneModelFile = gzip.open(location, "rt")
+        geneModelFile = gzip.open(location, 'rt')
 
         for line in geneModelFile:
             if line[0] == "#":
@@ -575,17 +537,13 @@ class GeneModels:
 
     def save(self, outputFile, gzipped=True):
         if gzipped:
-            f = gzip.open(outputFile + ".gz", "wt")
+            f = gzip.open(outputFile + ".gz", 'wt')
         else:
-            f = open(outputFile, "wt")
+            f = open(outputFile, 'wt')
 
-        f.write(
-            "\t".join(
-                "chr trID trOrigId gene strand tsBeg txEnd cdsStart cdsEnd "
-                "exonStarts exonEnds exonFrames atts".split()
-            )
-            + "\n"
-        )
+        f.write("\t".join(
+            "chr trID trOrigId gene strand tsBeg txEnd cdsStart cdsEnd "
+            "exonStarts exonEnds exonFrames atts".split())+"\n")
 
         for tmId, tm in sorted(self.transcriptModels.items()):
             eStarts = ",".join([str(e.start) for e in tm.exons])
@@ -593,8 +551,7 @@ class GeneModels:
             eFrames = ",".join([str(e.frame) for e in tm.exons])
 
             add_atts = ";".join(
-                [k + ":" + str(v) for k, v in list(tm.attr.items())]
-            )
+                [k+":"+str(v) for k, v in list(tm.attr.items())])
 
             cs = [
                 tm.chr,
@@ -611,57 +568,38 @@ class GeneModels:
                 eFrames,
                 add_atts,
             ]
-            f.write(
-                "\t".join([str(x) if x is not None else "" for x in cs]) + "\n"
-            )
+            f.write("\t".join([
+                str(x) if x is not None else "" for x in cs]) + "\n")
         f.close()
 
     def load(self, inFile):
         self.location = inFile
-        f = gzip.open(inFile, mode="rt")
+        f = gzip.open(inFile, mode='rt')
         line = f.readline()
-        cs = line[:-1].split("\t")
+        cs = line[:-1].split('\t')
 
         if len(cs) == 13:
-
             def parse_line(cs):
                 assert len(cs) == 13
                 return cs
-
         elif len(cs) == 12:
-
             def parse_line(cs):
                 line = cs[:]
                 line.insert(2, cs[1])
                 assert len(line) == 13
                 return line
-
         else:
             raise ValueError("unxpected gene model format")
 
         for line in f:
             line = str(line)
-            cs = line[:-1].split("\t")
-            (
-                chrom,
-                trID,
-                trOrigId,
-                gene,
-                strand,
-                txB,
-                txE,
-                cdsB,
-                cdsE,
-                eStarts,
-                eEnds,
-                eFrames,
-                add_attrs,
-            ) = parse_line(cs)
+            cs = line[:-1].split('\t')
+            chrom, trID, trOrigId, gene, strand, txB, txE, cdsB, cdsE, \
+                eStarts, eEnds, eFrames, add_attrs = parse_line(cs)
 
             exons = []
-            for frm, sr, sp in zip(
-                *[x.split(",") for x in [eFrames, eStarts, eEnds]]
-            ):
+            for frm, sr, sp in zip(*[
+                    x.split(",") for x in [eFrames, eStarts, eEnds]]):
                 e = Exon()
                 e.frame = int(frm)
                 e.start = int(sr)
@@ -704,8 +642,7 @@ class GeneModels:
             print(
                 "Gene Models haven't been created/uploaded yet! "
                 "Use either loadGeneModels function or "
-                "self.createGeneModelDict function"
-            )
+                "self.createGeneModelDict function")
             return None
         return list(self._geneModels.keys())
 
@@ -714,15 +651,14 @@ class GeneModels:
             print(
                 "Gene Models haven't been created/uploaded yet! "
                 "Use either loadGeneModels function or "
-                "self.createGeneModelDict function"
-            )
+                "self.createGeneModelDict function")
             return None
 
         return list(self.transcriptModels.keys())
 
     def gene_models_by_gene_name(self, name):
         try:
-            return self._geneModels[name]
+            return(self._geneModels[name])
         except Exception:
             pass
 
@@ -737,22 +673,19 @@ class GeneModels:
             if pos2 < pos1:
                 pos1, pos2 = pos2, pos1
             for key in self._utrModels[chr]:
-                if (pos1 <= key[0] and pos2 >= key[0]) or (
-                    pos1 >= key[0] and pos1 <= key[1]
-                ):
+                if (pos1 <= key[0] and pos2 >= key[0]) or \
+                        (pos1 >= key[0] and pos1 <= key[1]):
                     R.extend(self._utrModels[chr][key])
         return R
 
     def relabel_chromosomes(
-        self, file="/data/unsafe/autism/genomes/hg19/ucsc2gatk.txt"
-    ):
+            self, file="/data/unsafe/autism/genomes/hg19/ucsc2gatk.txt"):
 
         if self.transcriptModels is None:
             print(
                 "Gene Models haven't been created/uploaded yet! "
                 "Use either loadGeneModels function or "
-                "self.createGeneModelDict function"
-            )
+                "self.createGeneModelDict function")
             return None
 
         f = open(file)
@@ -775,9 +708,8 @@ class GeneModels:
         transcriptsToDelete = []
         for trID in self.transcriptModels:
             try:
-                self.transcriptModels[trID].chr = Relabel[
-                    self.transcriptModels[trID].chr
-                ]
+                self.transcriptModels[trID].chr = \
+                    Relabel[self.transcriptModels[trID].chr]
             except KeyError:
                 transcriptsToDelete.append(trID)
 
@@ -790,48 +722,47 @@ class RefSeq(GeneModels):
         super(RefSeq, self).__init__()
 
         self.name = "refseq"
-        self.location = (
+        self.location = \
             "/data/unsafe/autism/genomes/hg19/geneModels/refGene.txt.gz"
-        )
         self._shift = 1
         self._Alternative_names = None
 
 
 class KnownGene(GeneModels):
+
     def __init__(self):
         super(KnownGene, self).__init__()
 
         self.name = "knowngene"
-        self.location = (
+        self.location = \
             "/data/unsafe/autism/genomes/hg19/geneModels/knownGene.txt.gz"
-        )
         self._shift = 0
         self._Alternative_names = None
 
 
 class Ccds(GeneModels):
+
     def __init__(self):
         super(Ccds, self).__init__()
         self.name = "ccds"
-        self.location = (
+        self.location = \
             "/data/unsafe/autism/genomes/hg19/geneModels/ccdsGene.txt.gz"
-        )
         self._shift = 1
         self._Alternative_names = None
 
 
 class MitoModel(GeneModels):
+
     def __init__(self):
         super(MitoModel, self).__init__()
         self.name = "mitomap"
-        self.location = (
+        self.location = \
             "/data/unsafe/autism/genomes/hg19/geneModels/mitomap.txt"
-        )
         self._Alternative_names = None
 
     def _create_gene_model_dict(self, file_name):
 
-        self._utrModels["chrM"] = OrderedDict()
+        self._utrModels['chrM'] = OrderedDict()
         if file_name is None:
             file = open(self.location)
         else:
@@ -855,7 +786,7 @@ class MitoModel(GeneModels):
                 e.stop = int(line[3])
                 e.frame = 0
                 mm.exons = [e]
-                self._utrModels["chrM"][mm.tx] = [mm]
+                self._utrModels['chrM'][mm.tx] = [mm]
                 self.transcriptModels[mm.trID] = mm
                 self._geneModels[mm.gene] = [mm]
 
@@ -872,7 +803,7 @@ class MitoModel(GeneModels):
                 e.stop = int(line[3])
                 e.frame = -1
                 mm.exons = [e]
-                self._utrModels["chrM"][mm.tx] = [mm]
+                self._utrModels['chrM'][mm.tx] = [mm]
                 self.transcriptModels[mm.trID] = mm
                 self._geneModels[mm.gene] = [mm]
 
@@ -884,14 +815,14 @@ class MitoModel(GeneModels):
                 mm.cds = (int(line[2]), int(line[2]))
                 mm.tx = (int(line[2]), int(line[3]))
                 mm.attr = {}
-                mm.attr["anticodonB"] = line[4]
-                mm.attr["anticodonE"] = line[5]
+                mm.attr['anticodonB'] = line[4]
+                mm.attr['anticodonE'] = line[5]
                 e = Exon()
                 e.start = int(line[2])
                 e.stop = int(line[3])
                 e.frame = -1
                 mm.exons = [e]
-                self._utrModels["chrM"][mm.tx] = [mm]
+                self._utrModels['chrM'][mm.tx] = [mm]
                 self.transcriptModels[mm.trID] = mm
                 self._geneModels[mm.gene] = [mm]
 
@@ -901,25 +832,23 @@ class MitoModel(GeneModels):
 
 
 def save_pickled_dicts(gm, outputFile="./geneModels"):
-    pickle.dump(
-        [gm._utrModels, gm.transcriptModels, gm._geneModels],
-        open(outputFile + ".dump", "wb"),
-        protocol=2,
-    )
+    pickle.dump([
+        gm._utrModels, gm.transcriptModels,
+        gm._geneModels], open(outputFile + ".dump", 'wb'), protocol=2)
 
 
 def load_pickled_dicts(inputFile):
     gm = GeneModels()
     gm.location = inputFile
-    pkl_file = open(inputFile, "rb")
+    pkl_file = open(inputFile, 'rb')
     gm._utrModels, gm.transcriptModels, gm._geneModels = pickle.load(pkl_file)
     pkl_file.close()
     return gm
 
 
 def create_region(chrom, b, e):
-    reg = namedtuple("reg", "start stop chr")
-    return reg(chr=chrom, start=b, stop=e)
+    reg = namedtuple('reg', 'start stop chr')
+    return(reg(chr=chrom, start=b, stop=e))
 
 
 def join_gene_models(*gene_models):
@@ -972,14 +901,12 @@ def get_gene_regions(GMs, autosomes=False, basic23=False):
 
 
 def load_gene_models(
-    file_name="/data/unsafe/autism/genomes/hg19/geneModels/refGene.txt.gz",
-    gene_mapping_file="default",
-    format=None,
-):
+        file_name="/data/unsafe/autism/genomes/hg19/geneModels/refGene.txt.gz",
+        gene_mapping_file="default", format=None):
 
     if not format:
         if file_name.endswith("refGene.txt.gz"):
-            format = "refseq"
+            format = 'refseq'
         # elif file_name.endswith("ccdsGene.txt.gz"):
         #     format = 'ccds'
         # elif file_name.endswith("knownGene.txt.gz"):
@@ -989,7 +916,7 @@ def load_gene_models(
         # elif file_name.endswith("mitomap.txt"):
         #     format = 'mito'
         else:
-            format = "default"
+            format = 'default'
 
     if format.lower() == "refseq":
         gm = RefSeq()
@@ -1031,8 +958,7 @@ def load_gene_models(
     else:
         print(
             "Unrecognizable format! Choose between: "
-            "'refseq', 'ccds', 'knowngene', 'pickled', 'mito' or 'default'"
-        )
+            "'refseq', 'ccds', 'knowngene', 'pickled', 'mito' or 'default'")
         sys.exit(-1098)
 
     return gm

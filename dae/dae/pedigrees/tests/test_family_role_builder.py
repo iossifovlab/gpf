@@ -6,12 +6,11 @@ from dae.variants.attributes import Role
 
 # TODO: Organize into 1 test
 @pytest.mark.parametrize(
-    "ped_file",
-    ["pedigrees/pedigree_no_role_A.ped", "pedigrees/pedigree_no_role_B.ped"],
-)
+    'ped_file',
+    ['pedigrees/pedigree_no_role_A.ped', 'pedigrees/pedigree_no_role_B.ped'])
 def test_mom_dad_child_sibling_roles(fixture_dirname, ped_file):
     families = FamiliesLoader.load_pedigree_file(fixture_dirname(ped_file))
-    family = families.get("f1")
+    family = families.get('f1')
     role_builder = FamilyRoleBuilder(family)
     role_builder.build_roles()
     members = family.full_members
@@ -23,9 +22,9 @@ def test_mom_dad_child_sibling_roles(fixture_dirname, ped_file):
 
 
 def test_paternal_and_maternal_grandparents(fixture_dirname):
-    ped_file = fixture_dirname("pedigrees/pedigree_no_role_C.ped")
+    ped_file = fixture_dirname('pedigrees/pedigree_no_role_C.ped')
     families = FamiliesLoader.load_pedigree_file(ped_file)
-    family = families.get("f1")
+    family = families.get('f1')
     role_builder = FamilyRoleBuilder(family)
     role_builder.build_roles()
     members = family.full_members
@@ -41,9 +40,9 @@ def test_paternal_and_maternal_grandparents(fixture_dirname):
 
 
 def test_child_and_spouse(fixture_dirname):
-    ped_file = fixture_dirname("pedigrees/pedigree_no_role_D.ped")
+    ped_file = fixture_dirname('pedigrees/pedigree_no_role_D.ped')
     families = FamiliesLoader.load_pedigree_file(ped_file)
-    family = families.get("f1")
+    family = families.get('f1')
     role_builder = FamilyRoleBuilder(family)
     role_builder.build_roles()
     members = family.full_members
@@ -57,9 +56,9 @@ def test_child_and_spouse(fixture_dirname):
 
 
 def test_maternal_and_paternal_aunts_and_uncles(fixture_dirname):
-    ped_file = fixture_dirname("pedigrees/pedigree_no_role_E.ped")
+    ped_file = fixture_dirname('pedigrees/pedigree_no_role_E.ped')
     families = FamiliesLoader.load_pedigree_file(ped_file)
-    family = families.get("f1")
+    family = families.get('f1')
     role_builder = FamilyRoleBuilder(family)
     role_builder.build_roles()
     members = family.full_members
@@ -79,9 +78,9 @@ def test_maternal_and_paternal_aunts_and_uncles(fixture_dirname):
 
 
 def test_maternal_and_paternal_cousins(fixture_dirname):
-    ped_file = fixture_dirname("pedigrees/pedigree_no_role_F.ped")
+    ped_file = fixture_dirname('pedigrees/pedigree_no_role_F.ped')
     families = FamiliesLoader.load_pedigree_file(ped_file)
-    family = families.get("f1")
+    family = families.get('f1')
     role_builder = FamilyRoleBuilder(family)
     role_builder.build_roles()
     members = family.full_members
@@ -103,9 +102,9 @@ def test_maternal_and_paternal_cousins(fixture_dirname):
 
 
 def test_stepmom_and_stepdad(fixture_dirname):
-    ped_file = fixture_dirname("pedigrees/pedigree_no_role_G.ped")
+    ped_file = fixture_dirname('pedigrees/pedigree_no_role_G.ped')
     families = FamiliesLoader.load_pedigree_file(ped_file)
-    family = families.get("f1")
+    family = families.get('f1')
     role_builder = FamilyRoleBuilder(family)
     role_builder.build_roles()
     members = family.full_members
@@ -123,9 +122,9 @@ def test_stepmom_and_stepdad(fixture_dirname):
 
 
 def test_handling_of_family_with_only_prb_role(fixture_dirname):
-    ped_file = fixture_dirname("pedigrees/pedigree_prb_only.ped")
+    ped_file = fixture_dirname('pedigrees/pedigree_prb_only.ped')
     families = FamiliesLoader.load_pedigree_file(ped_file)
-    family = families.get("f1")
+    family = families.get('f1')
     role_builder = FamilyRoleBuilder(family)
     role_builder.build_roles()
     members = family.full_members
@@ -137,9 +136,9 @@ def test_handling_of_family_with_only_prb_role(fixture_dirname):
 
 
 def test_handling_of_large_family_with_only_prb_role(fixture_dirname):
-    ped_file = fixture_dirname("pedigrees/pedigree_prb_only_large.ped")
+    ped_file = fixture_dirname('pedigrees/pedigree_prb_only_large.ped')
     families = FamiliesLoader.load_pedigree_file(ped_file)
-    family = families.get("f1")
+    family = families.get('f1')
     role_builder = FamilyRoleBuilder(family)
     role_builder.build_roles()
     members = family.full_members
@@ -161,21 +160,29 @@ def test_handling_of_large_family_with_only_prb_role(fixture_dirname):
 
 
 def test_proband_column(fixture_dirname):
-    ped_file = fixture_dirname("pedigrees/pedigree_no_role_F.ped")
-    loader = FamiliesLoader(ped_file, params={"ped_no_role": True})
+    ped_file = fixture_dirname('pedigrees/pedigree_no_role_F.ped')
+    loader = FamiliesLoader(
+        ped_file,
+        params={
+            'ped_no_role': True
+        })
     families = loader.load()
 
     for person in families.persons.values():
-        assert not person.has_attr("proband")
+        assert not person.has_attr('proband')
 
-    ped_file = fixture_dirname("pedigrees/pedigree_no_role_H.ped")
-    loader = FamiliesLoader(ped_file, params={"ped_no_role": True})
+    ped_file = fixture_dirname('pedigrees/pedigree_no_role_H.ped')
+    loader = FamiliesLoader(
+        ped_file,
+        params={
+            'ped_no_role': True
+        })
     families = loader.load()
 
     for person in families.persons.values():
-        assert person.has_attr("proband")
+        assert person.has_attr('proband')
 
-    family = families.get("f1")
+    family = families.get('f1')
     assert family is not None
 
     members = family.full_members

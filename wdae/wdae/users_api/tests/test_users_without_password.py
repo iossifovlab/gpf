@@ -12,7 +12,7 @@ def test_is_inactive_when_password_is_set_to_none(user_without_password):
 
 
 def test_is_active_when_password_is_set(user_without_password):
-    user_without_password.set_password("alabala")
+    user_without_password.set_password('alabala')
     user_without_password.save()
 
     user_without_password.refresh_from_db()

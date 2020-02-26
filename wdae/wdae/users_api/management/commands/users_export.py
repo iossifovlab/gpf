@@ -1,8 +1,8 @@
-"""
+'''
 Created on Jun 3, 2015
 
 @author: lubo
-"""
+'''
 from django.core.management.base import BaseCommand, CommandError
 from django.contrib.auth import get_user_model
 import csv
@@ -11,8 +11,8 @@ from .export_base import ExportUsersBase
 
 
 class Command(BaseCommand, ExportUsersBase):
-    args = "[file]"
-    help = "Export all users to stdout/csv file."
+    args = '[file]'
+    help = 'Export all users to stdout/csv file.'
 
     def handle_user(self, user, writer):
         groups_str = ":".join(self.get_visible_groups(user))
@@ -22,18 +22,16 @@ class Command(BaseCommand, ExportUsersBase):
         else:
             password = ""
 
-        writer.writerow(
-            {
-                "Email": user.email,
-                "Name": user.name,
-                "Groups": groups_str,
-                "Password": password,
-            }
-        )
+        writer.writerow({
+            "Email": user.email,
+            "Name": user.name,
+            "Groups": groups_str,
+            "Password": password
+        })
 
     def handle(self, *args, **options):
-        if len(args) > 1:
-            raise CommandError("Expected maximum one argument")
+        if(len(args) > 1):
+            raise CommandError('Expected maximum one argument')
 
         User = get_user_model()
         users = User.objects.all()

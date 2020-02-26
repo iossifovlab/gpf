@@ -13,6 +13,7 @@ from query_base.query_base import QueryBaseView
 
 
 class GeneSetsBaseView(QueryBaseView):
+
     def __init__(self):
         super(GeneSetsBaseView, self).__init__()
         self.gene_sets_db = self.gpf_instance.gene_sets_db
@@ -20,6 +21,7 @@ class GeneSetsBaseView(QueryBaseView):
 
 
 class GeneSetsCollectionsView(GeneSetsBaseView):
+
     def __init__(self):
         super(GeneSetsCollectionsView, self).__init__()
 
@@ -49,36 +51,35 @@ class GeneSetsView(GeneSetsBaseView):
         "limit": 100
         }
     """
-
     def __init__(self):
         super(GeneSetsView, self).__init__()
 
     @staticmethod
     def _build_download_url(query):
-        url = "gene_sets/gene_set_download"
+        url = 'gene_sets/gene_set_download'
 
-        if query["geneSetsCollection"] == "denovo":
-            query["geneSetsTypes"] = json.dumps(query["geneSetsTypes"])
-            query["geneSetsTypes"] = query["geneSetsTypes"].replace(" ", "")
-        return "{}?{}".format(url, urlencode(query))
+        if query['geneSetsCollection'] == 'denovo':
+            query['geneSetsTypes'] = json.dumps(query['geneSetsTypes'])
+            query['geneSetsTypes'] = query['geneSetsTypes'].replace(' ', '')
+        return '{}?{}'.format(url, urlencode(query))
 
     def post(self, request):
         data = request.data
-        if "geneSetsCollection" not in data:
+        if 'geneSetsCollection' not in data:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        gene_sets_collection_id = data["geneSetsCollection"]
-        gene_sets_types = data.get("geneSetsTypes", [])
+        gene_sets_collection_id = data['geneSetsCollection']
+        gene_sets_types = data.get('geneSetsTypes', [])
 
-        if gene_sets_collection_id == "denovo":
+        if gene_sets_collection_id == 'denovo':
             if len(self.denovo_gene_sets_db) == 0:
                 return Response(status=status.HTTP_404_NOT_FOUND)
             gene_sets = self.denovo_gene_sets_db.get_all_gene_sets(
-                gene_sets_types, self.get_permitted_datasets(request.user)
+                gene_sets_types,
+                self.get_permitted_datasets(request.user)
             )
         else:
             if not self.gene_sets_db.has_gene_set_collection(
-                gene_sets_collection_id
-            ):
+                    gene_sets_collection_id):
                 return Response(status=status.HTTP_404_NOT_FOUND)
 
             gene_sets = self.gene_sets_db.get_all_gene_sets(
@@ -86,30 +87,27 @@ class GeneSetsView(GeneSetsBaseView):
             )
 
         response = gene_sets
-        if "filter" in data:
-            f = data["filter"].lower()
+        if 'filter' in data:
+            f = data['filter'].lower()
             response = [
-                r
-                for r in response
-                if f in r["name"].lower() or f in r["desc"].lower()
+                r for r in response
+                if f in r['name'].lower() or f in r['desc'].lower()
             ]
 
-        if "limit" in data:
-            limit = int(data["limit"])
+        if 'limit' in data:
+            limit = int(data['limit'])
             response = response[:limit]
 
         response = [
             {
-                "count": gs["count"],
-                "name": gs["name"],
-                "desc": gs["desc"],
-                "download": self._build_download_url(
-                    {
-                        "geneSetsCollection": gene_sets_collection_id,
-                        "geneSet": gs["name"],
-                        "geneSetsTypes": gene_sets_types,
-                    }
-                ),
+                'count': gs['count'],
+                'name': gs['name'],
+                'desc': gs['desc'],
+                'download': self._build_download_url({
+                    'geneSetsCollection': gene_sets_collection_id,
+                    'geneSet': gs['name'],
+                    'geneSetsTypes': gene_sets_types
+                })
             }
             for gs in response
         ]
@@ -135,52 +133,55 @@ class GeneSetDownloadView(GeneSetsBaseView):
         return self._build_response(request.data, request.user)
 
     def _build_response(self, data, user):
-        if "geneSetsCollection" not in data or "geneSet" not in data:
+        if 'geneSetsCollection' not in data or 'geneSet' not in data:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        gene_sets_collection_id = data["geneSetsCollection"]
-        gene_set_id = data["geneSet"]
-        gene_sets_types = data.get("geneSetsTypes", {})
+        gene_sets_collection_id = data['geneSetsCollection']
+        gene_set_id = data['geneSet']
+        gene_sets_types = data.get('geneSetsTypes', {})
 
         permitted_datasets = self.get_permitted_datasets(user)
 
-        if gene_sets_collection_id == "denovo":
+        if gene_sets_collection_id == 'denovo':
             if len(self.denovo_gene_sets_db) == 0:
                 return Response(status=status.HTTP_404_NOT_FOUND)
             gene_set = self.denovo_gene_sets_db.get_gene_set(
-                gene_set_id, gene_sets_types, permitted_datasets
+                gene_set_id,
+                gene_sets_types,
+                permitted_datasets
             )
         else:
             if not self.gene_sets_db.has_gene_set_collection(
-                gene_sets_collection_id
-            ):
-                return Response(
-                    {"unknown gene set collection": gene_sets_collection_id},
-                    status=status.HTTP_404_NOT_FOUND,
-                )
+                    gene_sets_collection_id):
+                return Response({
+                    "unknown gene set collection": gene_sets_collection_id
+                }, status=status.HTTP_404_NOT_FOUND)
 
             gene_set = self.gene_sets_db.get_gene_set(
-                gene_sets_collection_id, gene_set_id,
+                gene_sets_collection_id,
+                gene_set_id,
             )
 
         if gene_set is None:
             print("GENE SET NOT FOUND", permitted_datasets)
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        gene_syms = ["{}\r\n".format(s) for s in gene_set["syms"]]
-        title = '"{}: {}"\r\n'.format(gene_set["name"], gene_set["desc"])
+        gene_syms = ["{}\r\n".format(s) for s in gene_set['syms']]
+        title = '"{}: {}"\r\n'.format(gene_set['name'], gene_set['desc'])
         result = itertools.chain([title], gene_syms)
 
-        response = StreamingHttpResponse(result, content_type="text/csv")
+        response = StreamingHttpResponse(
+            result,
+            content_type='text/csv')
 
-        response["Content-Disposition"] = "attachment; filename=geneset.csv"
-        response["Expires"] = "0"
+        response['Content-Disposition'] = 'attachment; filename=geneset.csv'
+        response['Expires'] = '0'
 
         return response
 
     def _parse_query_params(self, data):
         res = {str(k): str(v) for k, v in list(data.items())}
-        if "geneSetsTypes" in res:
-            res["geneSetsTypes"] = ast.literal_eval(res["geneSetsTypes"])
+        if 'geneSetsTypes' in res:
+            res['geneSetsTypes'] = ast.literal_eval(res['geneSetsTypes'])
         return res
 
     def get(self, request):

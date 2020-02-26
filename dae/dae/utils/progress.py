@@ -1,19 +1,19 @@
-"""
+'''
 Created on May 26, 2017
 
 @author: lubo
-"""
+'''
 import sys
 
 
-def progress(text=".", verbose=1):
+def progress(text='.', verbose=1):
     if verbose:
         sys.stderr.write(text)
 
 
 def progress_nl(verbose=1):
     if verbose:
-        sys.stderr.write("\n")
+        sys.stderr.write('\n')
 
 
 RED = "\033[1;31m"
@@ -30,4 +30,4 @@ def red_print(message):
     sys.stdout.write(RED)
     sys.stdout.write(message)
     sys.stdout.write(RESET)
-    sys.stdout.write("\n")
+    sys.stdout.write('\n')

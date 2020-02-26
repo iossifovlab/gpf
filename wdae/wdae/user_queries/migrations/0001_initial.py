@@ -10,39 +10,19 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ("query_state_save", "0002_auto_20190205_0736"),
+        ('query_state_save', '0002_auto_20190205_0736'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name="UserQuery",
+            name='UserQuery',
             fields=[
-                (
-                    "id",
-                    models.AutoField(
-                        auto_created=True,
-                        primary_key=True,
-                        serialize=False,
-                        verbose_name="ID",
-                    ),
-                ),
-                ("name", models.CharField(max_length=256)),
-                ("description", models.CharField(max_length=1024)),
-                (
-                    "query",
-                    models.ForeignKey(
-                        on_delete=django.db.models.deletion.CASCADE,
-                        to="query_state_save.QueryState",
-                    ),
-                ),
-                (
-                    "user",
-                    models.ForeignKey(
-                        on_delete=django.db.models.deletion.CASCADE,
-                        to=settings.AUTH_USER_MODEL,
-                    ),
-                ),
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('name', models.CharField(max_length=256)),
+                ('description', models.CharField(max_length=1024)),
+                ('query', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='query_state_save.QueryState')),
+                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
         ),
     ]

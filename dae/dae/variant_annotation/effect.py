@@ -1,3 +1,4 @@
+
 class Effect(object):
     gene = None
     transcript_id = None
@@ -24,123 +25,62 @@ class Effect(object):
         self.effect = effect_name
 
     def __repr__(self):
-        return (
-            "Effect gene:{} trID:{} strand:{} effect:{} "
+        return "Effect gene:{} trID:{} strand:{} effect:{} " \
             "protein pos:{}/{} aa: {}".format(
-                self.gene,
-                self.transcript_id,
-                self.strand,
-                self.effect,
-                self.prot_pos,
-                self.prot_length,
-                self.aa_change,
-            )
-        )
+                self.gene, self.transcript_id, self.strand, self.effect,
+                self.prot_pos, self.prot_length, self.aa_change)
 
     def create_effect_details(self):
         eff_data = [
-            (["noStart", "noEnd", "CDS", "all"], str(self.prot_length)),
-            (
-                [
-                    "intron",
-                    "5'UTR-intron",
-                    "3'UTR-intron",
-                    "non-coding-intron",
-                ],
-                str(self.which_intron) + "/" + str(self.how_many_introns),
-            ),
-            (
-                [
-                    "intron",
-                    "5'UTR-intron",
-                    "3'UTR-intron",
-                    "non-coding-intron",
-                ],
-                "[" + str(self.dist_from_coding) + "]",
-            ),
-            (
-                [
-                    "no-frame-shift",
-                    "no-frame-shift-newStop",
-                    "frame-shift",
-                    "splice-site",
-                    "synonymous",
-                    "missense",
-                    "nonsense",
-                    "coding_unknown",
-                ],
-                str(self.prot_pos) + "/" + str(self.prot_length),
-            ),
-            (
-                [
-                    "no-frame-shift",
-                    "no-frame-shift-newStop",
-                    "missense",
-                    "nonsense",
-                    "coding_unknown",
-                ],
-                "(" + str(self.aa_change) + ")",
-            ),
+            (["noStart", "noEnd", "CDS", "all"],
+             str(self.prot_length)),
+            (["intron", "5'UTR-intron", "3'UTR-intron", "non-coding-intron"],
+             str(self.which_intron) + "/" + str(self.how_many_introns)),
+            (["intron", "5'UTR-intron", "3'UTR-intron", "non-coding-intron"],
+             "[" + str(self.dist_from_coding) + "]"),
+            (["no-frame-shift", "no-frame-shift-newStop", "frame-shift",
+              "splice-site", "synonymous", "missense", "nonsense",
+              "coding_unknown"],
+             str(self.prot_pos) + "/" + str(self.prot_length)),
+            (["no-frame-shift", "no-frame-shift-newStop", "missense",
+              "nonsense", "coding_unknown"],
+             "(" + str(self.aa_change) + ")"),
             (["no-mutation"], "no-mutation"),
             (["5'UTR", "3'UTR"], str(self.dist_from_coding)),
-            (["non-coding", "unknown", "tRNA:ANTICODON"], str(self.length)),
-            (["promoter"], str(self.dist_from_5utr)),
+            (["non-coding", "unknown", "tRNA:ANTICODON"],
+             str(self.length)),
+            (["promoter"],
+             str(self.dist_from_5utr))
         ]
 
-        return "".join(
-            [data for cond, data in eff_data if self.effect in cond]
-        )
+        return "".join([data
+                        for cond, data in eff_data
+                        if self.effect in cond])
 
     def effect_details(self):
         eff_data = [
-            (["noStart", "noEnd", "CDS", "all"], str(self.prot_length)),
-            (
-                [
-                    "intron",
-                    "5'UTR-intron",
-                    "3'UTR-intron",
-                    "non-coding-intron",
-                ],
-                str(self.which_intron) + "/" + str(self.how_many_introns),
-            ),
-            (
-                [
-                    "intron",
-                    "5'UTR-intron",
-                    "3'UTR-intron",
-                    "non-coding-intron",
-                ],
-                "[" + str(self.dist_from_coding) + "]",
-            ),
-            (
-                [
-                    "no-frame-shift",
-                    "no-frame-shift-newStop",
-                    "frame-shift",
-                    "splice-site",
-                    "synonymous",
-                    "missense",
-                    "nonsense",
-                    "coding_unknown",
-                ],
-                str(self.prot_pos) + "/" + str(self.prot_length),
-            ),
-            (
-                [
-                    "no-frame-shift",
-                    "no-frame-shift-newStop",
-                    "missense",
-                    "nonsense",
-                    "coding_unknown",
-                ],
-                "(" + str(self.aa_change) + ")",
-            ),
+            (["noStart", "noEnd", "CDS", "all"],
+             str(self.prot_length)),
+            (["intron", "5'UTR-intron", "3'UTR-intron", "non-coding-intron"],
+             str(self.which_intron) + "/" + str(self.how_many_introns)),
+            (["intron", "5'UTR-intron", "3'UTR-intron", "non-coding-intron"],
+             "[" + str(self.dist_from_coding) + "]"),
+            (["no-frame-shift", "no-frame-shift-newStop", "frame-shift",
+              "splice-site", "synonymous", "missense", "nonsense",
+              "coding_unknown"],
+             str(self.prot_pos) + "/" + str(self.prot_length)),
+            (["no-frame-shift", "no-frame-shift-newStop", "missense",
+              "nonsense", "coding_unknown"],
+             "(" + str(self.aa_change) + ")"),
             (["no-mutation"], "no-mutation"),
             (["5'UTR", "3'UTR"], str(self.dist_from_coding)),
-            (["non-coding", "unknown", "tRNA:ANTICODON"], str(self.length)),
-            (["promoter"], str(self.dist_from_5utr)),
+            (["non-coding", "unknown", "tRNA:ANTICODON"],
+             str(self.length)),
+            (["promoter"],
+             str(self.dist_from_5utr))
         ]
-        return [data for cond, data in eff_data if self.effect in cond]
+        return [data for cond, data in eff_data
+                if self.effect in cond]
 
 
 class EffectFactory(object):
@@ -182,7 +122,10 @@ class EffectFactory(object):
         # ef.prot_pos, _ = request.get_protein_position()
 
         ref_aa, alt_aa = request.get_amino_acids()
-        ef.aa_change = "{}->{}".format(",".join(ref_aa), ",".join(alt_aa))
+        ef.aa_change = "{}->{}".format(
+            ",".join(ref_aa),
+            ",".join(alt_aa)
+        )
 
         ef.ref_aa = ref_aa
         ef.alt_aa = alt_aa
@@ -190,9 +133,8 @@ class EffectFactory(object):
         return ef
 
     @classmethod
-    def create_intronic_non_coding_effect(
-        cls, effect_type, request, start, end, index
-    ):
+    def create_intronic_non_coding_effect(cls, effect_type, request, start,
+                                          end, index):
         ef = cls.create_effect_with_prot_length(effect_type, request)
         dist_left = request.variant.position - start - 1
         dist_right = end - request.variant.ref_position_last
@@ -207,7 +149,8 @@ class EffectFactory(object):
         else:
             ef.dist_from_acceptor = dist_left
             ef.dist_from_donor = dist_right
-            ef.which_intron = ef.how_many_introns - index + 1
+            ef.which_intron = ef.how_many_introns - \
+                index + 1
         return ef
 
     @classmethod

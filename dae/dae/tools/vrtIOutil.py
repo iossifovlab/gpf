@@ -16,8 +16,8 @@ def RefAltsIndex(ra):
     alts = []
     nIdx = {}
     for r, a in ra:
-        s = ref[len(r) :]
-        an = [x + s for x in a]  # new alternative
+        s = ref[len(r):]
+        an = [x+s for x in a]  # new alternative
 
         nIdx[(r, a)] = an
         alts += an
@@ -26,7 +26,7 @@ def RefAltsIndex(ra):
     # print nIdx
     iAlt = {}
     for k, v in list(nIdx.items()):
-        ix = [0] + [alts.index(a) + 1 for a in v]
+        ix = [0] + [alts.index(a)+1 for a in v]
         # print k,v,alts,ix
         iAlt[k] = numpy.array(ix)  # (lambda x: tuple( [ix[n] for n in x] ) )
     # if r[0] != r[-1]: print 'Note >', ra, 'OUT >', ref, alts, iAlt;
@@ -55,33 +55,33 @@ def RefAltsIndex(ra):
 #   genotype                       read depth  GT qual
 def getGQ(dx):
     try:
-        return list(dx["GQ"])
+        return list(dx['GQ'])
     except TypeError:
-        return [dx["GQ"]]
+        return [dx['GQ']]
     except KeyError:
-        if ("QR" in dx) and ("QA" in dx):
-            return [dx["QR"]] + list(dx["QA"])
+        if ('QR' in dx) and ('QA' in dx):
+            return [dx['QR']] + list(dx['QA'])
         else:
             return []
 
 
 def getCount(sx):
     # special case of modified counts
-    if "CNT" in sx:
-        return sx["CNT"]
+    if 'CNT' in sx:
+        return sx['CNT']
 
-    if ("RO" in sx) and ("AO" in sx):
-        return [sx["RO"]] + list(sx["AO"])
+    if ('RO' in sx) and ('AO' in sx):
+        return [sx['RO']] + list(sx['AO'])
 
-    if "AD" in sx:
-        return list(sx["AD"])
+    if 'AD' in sx:
+        return list(sx['AD'])
 
-    if ("NR" in sx) and ("NV" in sx):
+    if ('NR' in sx) and ('NV' in sx):
         # NR Number of reads covering variant location in this sample
         # NV Number of reads containing variant in this sample
         # print data.ref, data.alts, dx['GT'], dx['NR'], dx['NV']
-        if len(sx["NR"]) == 1 and len(sx["NV"]) == 1:
-            return [sx["NR"][0] - sx["NV"][0], sx["NV"][0]]
+        if len(sx['NR']) == 1 and len(sx['NV']) == 1:
+            return [sx['NR'][0] - sx['NV'][0], sx['NV'][0]]
         # the other cases are difficult to figure out what those numbers
         # ar mean
 
@@ -92,23 +92,24 @@ def getCount(sx):
 # sx: sample info, such as genotype
 # alts: alts at the site (not the same as the original "sx"
 def modifyData(nIx, sx, alts):
-    if None in sx["GT"]:
+    if None in sx['GT']:
         return sx
 
-    cnt = numpy.zeros((len(alts) + 1,), dtype=int) - 1
+    cnt = numpy.zeros((len(alts)+1,), dtype=int) - 1
     # default for no info
     cx = numpy.array(getCount(sx), dtype=int)
     if len(cx) == len(nIx):
         cnt[nIx] = cx
 
     sample = dict(sx)
-    sample["GT"] = tuple(list(nIx[list(sx["GT"])]))
-    sample["CNT"] = list(cnt)
+    sample['GT'] = tuple(list(nIx[list(sx['GT'])]))
+    sample['CNT'] = list(cnt)
     # print alts, nIx, sample
     return sample
 
 
-VrtRcrd2 = namedtuple("VariantRecord", "chrom,pos,ref,alts,samples".split(","))
+VrtRcrd2 = namedtuple(
+    'VariantRecord', 'chrom,pos,ref,alts,samples'.split(','))
 
 
 # RX is array of pysam.VariantFile.VariantRecord
@@ -129,9 +130,9 @@ def universalRefAlt(RX, sI, missingInfoAsRef=True):
                 samples[s] = dict(RX[i].samples[s])
             except AttributeError:
                 if missingInfoAsRef:
-                    samples[s] = {"GT": (0, 0)}
+                    samples[s] = {'GT': (0, 0)}
                 else:
-                    samples[s] = {"GT": (None, None)}
+                    samples[s] = {'GT': (None, None)}
                     # default and only supplies GT
 
         ra = ra[0]
@@ -151,9 +152,9 @@ def universalRefAlt(RX, sI, missingInfoAsRef=True):
                 samples[s] = modifyData(iAlt[idx], sx, alts)
             except AttributeError:
                 if missingInfoAsRef:
-                    samples[s] = {"GT": (0, 0)}
+                    samples[s] = {'GT': (0, 0)}
                 else:
-                    samples[s] = {"GT": (None, None)}
+                    samples[s] = {'GT': (None, None)}
                     # default and only supplies GT
 
         ra = ra[0]
@@ -164,11 +165,11 @@ def procFileNames(fNames):
     if isinstance(fNames, list):
         return fNames
 
-    if not fNames.endswith(".txt"):
-        return fNames.split(",")
+    if not fNames.endswith('.txt'):
+        return fNames.split(',')
 
     with open(fNames) as lfile:
-        fNS = [line.strip("\n") for line in lfile]
+        fNS = [line.strip('\n') for line in lfile]
         return fNS
 
 
@@ -179,10 +180,10 @@ class Reader(object):
             if not fname:
                 return
 
-            if fname.endswith(".gz") or fname.endswith(".bgz"):
-                self.file = gzip.open(fname, "rb")
+            if fname.endswith('.gz') or fname.endswith('.bgz'):
+                self.file = gzip.open(fname, 'rb')
             else:
-                self.file = open(fname, "r")
+                self.file = open(fname, 'r')
         except IOError:
             pass
 
@@ -197,7 +198,7 @@ class Reader(object):
         try:
             self.file
         except AttributeError:
-            print(self.fname + " not exist")
+            print(self.fname + ' not exist')
             exit(1)
 
     def readline(self):
@@ -221,51 +222,49 @@ class ReaderStat(Reader):
         if not self.exists():
             return
 
-        self.head = self.file.readline().strip("\n")
-        hdr = self.head.split("\t")
+        self.head = self.file.readline().strip('\n')
+        hdr = self.head.split('\t')
         self.dct = dict((hdr[n], n) for n in range(len(hdr)))
 
         self.idxID = [
-            self.dct["chr"],
-            self.dct["position"],
-            self.dct["variant"],
+            self.dct['chr'], self.dct['position'], self.dct['variant']
         ]
 
         line = self.file.readline()
-        if line == "":
+        if line == '':
             return
 
-        self.cLine = line.strip("\n")
-        self.cTerms = self.cLine.split("\t")
-        self.cID = ":".join([self.cTerms[n] for n in self.idxID])
+        self.cLine = line.strip('\n')
+        self.cTerms = self.cLine.split('\t')
+        self.cID = ':'.join([self.cTerms[n] for n in self.idxID])
 
     def readLine(self):
         while self.file:
-            self.cLine = self.file.readline().strip("\n")
-            if len(self.cLine) < 1 or self.cLine[0] != "#":
+            self.cLine = self.file.readline().strip('\n')
+            if len(self.cLine) < 1 or self.cLine[0] != '#':
                 break
 
-        if self.cLine == "" or not self.file:
-            self.cLine = ""
+        if self.cLine == '' or not self.file:
+            self.cLine = ''
             self.cTerm = []
-            self.cId = ""
+            self.cId = ''
             return False
 
-        self.cTerms = self.cLine.split("\t")
-        self.cID = ":".join([self.cTerms[n] for n in self.idxID])
+        self.cTerms = self.cLine.split('\t')
+        self.cID = ':'.join([self.cTerms[n] for n in self.idxID])
         return True
 
     def getFamilyData(self):
-        return self.cTerms[self.dct["familyData"]]
+        return self.cTerms[self.dct['familyData']]
 
     def getStat(self):
         v = [
             int(self.cTerms[self.dct[x]])
-            for x in ["all.nParCalled", "all.nAltAlls"]
+            for x in ['all.nParCalled', 'all.nAltAlls']
         ]
         w = [
-            float(self.cTerms[self.dct[x]]) / 100.0
-            for x in ["all.prcntParCalled", "all.altFreq"]
+            float(self.cTerms[self.dct[x]]) / 100.
+            for x in ['all.prcntParCalled', 'all.altFreq']
         ]
 
         return v, w
@@ -278,16 +277,16 @@ class Writer(object):
         if not fname:
             self.file = sys.stdout
         else:
-            if fname.endswith(".bgz"):
+            if fname.endswith('.bgz'):
                 self.bgzFlag = True
 
-                terms = fname.split(".")
-                self.filename = ".".join(terms[0 : (len(terms) - 1)])
-                self.file = open(self.filename, "w")
-            elif fname.endswith(".gz"):
-                self.file = gzip.open(fname, "wb")
+                terms = fname.split('.')
+                self.filename = '.'.join(terms[0:(len(terms)-1)])
+                self.file = open(self.filename, 'w')
+            elif fname.endswith('.gz'):
+                self.file = gzip.open(fname, 'wb')
             else:
-                self.file = open(fname, "w")
+                self.file = open(fname, 'w')
 
     def __del__(self):
         if not self.bgzFlag:
@@ -297,8 +296,8 @@ class Writer(object):
         try:
             fname = self.filename
             os.system(
-                "bgzip " + fname + "; mv " + fname + ".gz " + fname + ".bgz"
-            )  # self.filename+'.bgz' )
+                'bgzip ' + fname + '; mv ' + fname + '.gz ' +
+                fname + '.bgz')  # self.filename+'.bgz' )
         except IOError as e:
             print(e)
 
@@ -307,15 +306,15 @@ class Writer(object):
 
 
 def tooManyFile(xstr):
-    if xstr.endswith(".txt.gz") or xstr.endswith(".txt.bgz"):
+    if xstr.endswith('.txt.gz') or xstr.endswith('.txt.bgz'):
         xloc = 3
     else:
         xloc = 2
 
-    terms = xstr.split(".")
-    terms[len(terms) - xloc] += "-TOOMANY"
+    terms = xstr.split('.')
+    terms[len(terms)-xloc] += '-TOOMANY'
 
-    return ".".join(terms)
+    return '.'.join(terms)
 
 
 # def main():

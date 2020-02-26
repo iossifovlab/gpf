@@ -15,14 +15,13 @@ def user_model():
 
 @pytest.fixture()
 def empty_group(db):
-    return Group.objects.create(name="Empty group")
+    return Group.objects.create(name='Empty group')
 
 
 @pytest.fixture()
 def active_user(db, user_model):
     user = user_model.objects.create_user(
-        email="new@new.com", password="secret"
-    )
+        email='new@new.com', password='secret')
 
     assert user.is_active
     return user
@@ -30,7 +29,7 @@ def active_user(db, user_model):
 
 @pytest.fixture()
 def inactive_user(db, user_model):
-    user = user_model.objects.create_user(email="new@new.com")
+    user = user_model.objects.create_user(email='new@new.com')
 
     assert not user.is_active
     return user
@@ -39,7 +38,7 @@ def inactive_user(db, user_model):
 @pytest.fixture()
 def logged_in_user(client, active_user):
     client = APIClient()
-    client.login(email=active_user.email, password="secret")
+    client.login(email=active_user.email, password='secret')
     return active_user, client
 
 
@@ -47,9 +46,8 @@ def logged_in_user(client, active_user):
 def three_new_users(db, user_model):
     users = []
     for email_id in range(3):
-        user = user_model.objects.create(
-            email="user{}@example.com".format(email_id + 1)
-        )
+        user = user_model.objects \
+            .create(email='user{}@example.com'.format(email_id+1))
         users.append(user)
 
     return users
@@ -73,13 +71,13 @@ def admin_group(user):
 
 @pytest.fixture()
 def researcher(db):
-    res = WdaeUser.objects.create_user(email="fake@fake.com")
-    res.name = "fname"
-    res.email = "fake@fake.com"
-    res.set_password("alabala")
+    res = WdaeUser.objects.create_user(email='fake@fake.com')
+    res.name = 'fname'
+    res.email = 'fake@fake.com'
+    res.set_password('alabala')
     res.save()
 
-    researcher_id = "11aa--bb"
+    researcher_id = '11aa--bb'
 
     group_name = WdaeUser.get_group_name_for_researcher_id(researcher_id)
     group, _ = Group.objects.get_or_create(name=group_name)
@@ -90,12 +88,12 @@ def researcher(db):
 
 @pytest.fixture()
 def researcher_without_password(db):
-    res = WdaeUser.objects.create_user(email="fake@fake.com")
-    res.name = "fname"
-    res.email = "fake@fake.com"
+    res = WdaeUser.objects.create_user(email='fake@fake.com')
+    res.name = 'fname'
+    res.email = 'fake@fake.com'
     res.save()
 
-    researcher_id = "11aa--bb"
+    researcher_id = '11aa--bb'
 
     group_name = WdaeUser.get_group_name_for_researcher_id(researcher_id)
     group, _ = Group.objects.get_or_create(name=group_name)

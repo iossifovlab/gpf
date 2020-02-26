@@ -3,12 +3,12 @@ from django.core.management.base import BaseCommand, CommandError
 
 
 class Command(BaseCommand):
-    args = "<email>"
-    help = "Deletes user"
+    args = '<email>'
+    help = 'Deletes user'
 
     def handle(self, *args, **options):
-        if len(args) != 1:
-            raise CommandError("One argument is required")
+        if(len(args) != 1):
+            raise CommandError('One argument is required')
 
         try:
             UserModel = get_user_model()

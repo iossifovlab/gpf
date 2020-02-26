@@ -5,7 +5,7 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 from datasets_api.models import Dataset
 
 
-__all__ = ["get_gpf_instance"]
+__all__ = ['get_gpf_instance']
 
 
 _gpf_instance = None

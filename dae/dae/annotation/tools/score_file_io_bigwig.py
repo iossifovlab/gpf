@@ -1,7 +1,8 @@
 import pyBigWig
 
 
-class BigWigLineAdapter:
+class BigWigLineAdapter():
+
     def __init__(self, score_file, chromosome, line):
         self.chromosome = chromosome
         self.line = line
@@ -32,6 +33,7 @@ class BigWigLineAdapter:
 
 
 class BigWigAccess(object):
+
     def __init__(self, score_file):
         self.score_file = score_file
         self.bwfile = pyBigWig.open(score_file.score_filename)
@@ -47,9 +49,8 @@ class BigWigAccess(object):
             score_values = self.bwfile.intervals(chrom, pos_begin - 1, pos_end)
             if score_values:
                 for line in score_values:
-                    result.append(
-                        BigWigLineAdapter(self.score_file, chrom, line)
-                    )
+                    result.append(BigWigLineAdapter(self.score_file,
+                                                    chrom, line))
         except RuntimeError:
             pass  # no scores found by the intervals() method
         return result

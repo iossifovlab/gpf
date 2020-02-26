@@ -47,9 +47,13 @@ def test_omission_and_denovo():
     # assert not FA.check_mendelian_trio(*trio, allele_index=1)
 
 
-@pytest.mark.parametrize("variants", ["variants_impala", "variants_vcf"])
+@pytest.mark.parametrize('variants', [
+    'variants_impala',
+    'variants_vcf'
+])
 def test_omission(variants_impl, variants):
-    fvars = variants_impl(variants)("backends/inheritance_omission")
+    fvars = variants_impl(variants)(
+        "backends/inheritance_omission")
     for fv in fvars.query_variants(inheritance="any(mendelian,denovo)"):
         print(fv, fv.matched_alleles)
         for fa in fv.alleles:

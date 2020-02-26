@@ -2,11 +2,11 @@ score_file_conf_schema = {
     "general": {
         "type": "dict",
         "schema": {
-            "header": {"type": "list", "schema": {"type": "string"}},
-            "score": {"type": "list", "schema": {"type": "string"}},
-            "no_score_value": {"type": "string"},
-            "chr_prefix": {"type": "boolean"},
-        },
+            'header': {"type": "list", "schema": {"type": "string"}},
+            'score': {"type": "list", "schema": {"type": "string"}},
+            'no_score_value': {"type": "string"},
+            'chr_prefix': {"type": "boolean"},
+        }
     },
     "columns": {
         "type": "dict",
@@ -18,18 +18,18 @@ score_file_conf_schema = {
             "alt": {"type": "string"},
             "variant": {"type": "string"},
             "score": {"type": "list", "schema": {"type": "string"}},
-        },
+        }
     },
     "score_schema": {
         "type": "dict",
         "schema": {
-            "str": {"type": "list", "schema": {"type": "string"}},
-            "float": {"type": "list", "schema": {"type": "string"}},
-            "int": {"type": "list", "schema": {"type": "string"}},
-            "list(str)": {"type": "list", "schema": {"type": "string"}},
-            "list(float)": {"type": "list", "schema": {"type": "string"}},
-            "list(int)": {"type": "list", "schema": {"type": "string"}},
-        },
+            'str': {"type": "list", "schema": {"type": "string"}},
+            'float': {"type": "list", "schema": {"type": "string"}},
+            'int': {"type": "list", "schema": {"type": "string"}},
+            'list(str)': {"type": "list", "schema": {"type": "string"}},
+            'list(float)': {"type": "list", "schema": {"type": "string"}},
+            'list(int)': {"type": "list", "schema": {"type": "string"}},
+        }
     },
     "misc": {
         "type": "dict",
@@ -40,6 +40,6 @@ score_file_conf_schema = {
             "compression": {"type": "string"},
             "no_header": {"type": "boolean"},
             "tabix": {"type": "string"},
-        },
-    },
+        }
+    }
 }

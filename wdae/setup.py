@@ -1,3 +1,4 @@
+
 import setuptools
 
 with open("README.md", "r") as fh:
@@ -14,15 +15,22 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/IossifovLab/gpf",
     packages=setuptools.find_packages(
-        where="wdae/", exclude=["docs", "*.tests.*", "tests",]
+        where='wdae/',
+        exclude=[
+            'docs',
+            '*.tests.*',
+            'tests',
+        ]
     ),
     include_package_data=True,
-    package_dir={"": "wdae"},
-    package_data={"gpfjs": ["static/gpfjs/*", "static/gpfjs/assets/*"],},
+    package_dir={'': 'wdae'},
+    package_data={
+        'gpfjs': ['static/gpfjs/*', 'static/gpfjs/assets/*'],
+    },
     scripts=[
-        "wdae/wdaemanage.py",
-        "wdae/wdae_create_dev_users.sh",
-        "wdae/wdae_bootstrap.sh",
+        'wdae/wdaemanage.py',
+        'wdae/wdae_create_dev_users.sh',
+        'wdae/wdae_bootstrap.sh',
     ],
     # entry_points={
     #     'console_scripts': [
@@ -35,5 +43,5 @@ setuptools.setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    python_requires=">=3.6",
+    python_requires='>=3.6',
 )

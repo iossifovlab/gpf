@@ -2,8 +2,7 @@ import pandas as pd
 
 
 def test_annotation_pipeline(
-    annotation_pipeline_vcf, vcf_variants_io, capsys, result_df
-):
+        annotation_pipeline_vcf, vcf_variants_io, capsys, result_df):
 
     assert annotation_pipeline_vcf is not None
 
@@ -16,17 +15,20 @@ def test_annotation_pipeline(
     print(df)
 
     pd.testing.assert_series_equal(
-        df["score0"], df["POS"] / 1.0, check_less_precise=1, check_names=False,
-    )
-    pd.testing.assert_series_equal(
-        df["score2"],
-        df["POS"] / 100.0,
+        df['score0'],
+        df['POS']/1.0,
         check_less_precise=1,
         check_names=False,
     )
     pd.testing.assert_series_equal(
-        df["score4"],
-        df["POS"] / 10000.0,
+        df['score2'],
+        df['POS']/100.0,
+        check_less_precise=1,
+        check_names=False,
+    )
+    pd.testing.assert_series_equal(
+        df['score4'],
+        df['POS']/10000.0,
         check_less_precise=1,
         check_names=False,
     )

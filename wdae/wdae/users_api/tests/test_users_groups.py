@@ -35,7 +35,8 @@ def test_deleting_admin_group_unsets_is_staff(user, admin_group):
     admin_group.delete()
 
     user.refresh_from_db()
-    assert not user.groups.filter(name=WdaeUser.SUPERUSER_GROUP).exists()
+    assert not user.groups.filter(name=WdaeUser.SUPERUSER_GROUP)\
+        .exists()
     assert not user.is_staff
 
 
@@ -48,8 +49,7 @@ def test_adding_through_admin_group_sets_is_staff(user, admin_group):
 
 
 def test_adding_multiple_users_through_admin_group_sets_is_staff(
-    user, admin_group
-):
+        user, admin_group):
     other_user = WdaeUser.objects.create(email="email@test.com")
     admin_group.user_set.add(user, other_user)
 

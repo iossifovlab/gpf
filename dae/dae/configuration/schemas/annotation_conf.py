@@ -21,7 +21,7 @@ annotation_section_schema = {
             },
             "vcf": {"type": "boolean", "default": False},
             "prom_len": {"type": "integer", "default": 0},
-            "direct": {"type": "boolean"},
+            'direct': {"type": "boolean"},
             "region": {"type": "string", "required": False},
             "c": {"type": "string", "required": False},
             "p": {"type": "string", "required": False},
@@ -31,21 +31,16 @@ annotation_section_schema = {
             "x": {"type": "string", "required": False},
         },
     },
-    "columns": {
-        "type": "dict",
-        "default": dict(),
-        "valuesrules": {"type": "string"},
-    },
-    "virtual_columns": {
-        "type": "list",
-        "default": list(),
-        "schema": {"type": "string"},
-    },
+    "columns": {"type": "dict", "default": dict(), "valuesrules": {"type": "string"}},
+    "virtual_columns": {"type": "list", "default": list(), "schema": {"type": "string"}},
 }
 
 annotation_conf_schema = {
     "sections": {
         "type": "list",
-        "schema": {"type": "dict", "schema": annotation_section_schema},
+        "schema": {
+            "type": "dict",
+            "schema": annotation_section_schema
+        }
     }
 }

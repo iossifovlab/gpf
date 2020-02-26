@@ -5,17 +5,14 @@ import logging
 class StopLossEffectChecker(object):
     def get_effect(self, request):
         logger = logging.getLogger(__name__)
-        last_position = request.variant.position + len(
-            request.variant.reference
-        )
+        last_position = request.variant.position + \
+            len(request.variant.reference)
 
-        logger.debug(
-            "position check %d <= %d-%d <= %d",
-            request.transcript_model.cds[1] - 2,
-            request.variant.position,
-            last_position,
-            request.transcript_model.cds[0],
-        )
+        logger.debug("position check %d <= %d-%d <= %d",
+                     request.transcript_model.cds[1] - 2,
+                     request.variant.position,
+                     last_position,
+                     request.transcript_model.cds[0])
 
         if request.is_stop_codon_affected():
             try:

@@ -7,6 +7,7 @@ from dae.pedigrees.family import Person
 
 
 class Mating:
+
     def __init__(self, mom_id, dad_id):
         self.mom_id = mom_id
         self.dad_id = dad_id
@@ -15,7 +16,7 @@ class Mating:
 
     @staticmethod
     def build_id(mom_id, dad_id):
-        return f"{mom_id},{dad_id}"
+        return f'{mom_id},{dad_id}'
 
     @staticmethod
     def parents_id(person):
@@ -23,6 +24,7 @@ class Mating:
 
 
 class FamilyRoleBuilder:
+
     def __init__(self, family):
         self.family = family
         self.family_matings = self._build_family_matings()
@@ -54,17 +56,17 @@ class FamilyRoleBuilder:
             if role != person.role:
                 print(
                     f"changing role for {person} from {person.role} to {role}",
-                    file=sys.stderr,
+                    file=sys.stderr
                 )
                 person._role = role
-                person._attributes["role"] = role
+                person._attributes['role'] = role
 
     def _get_family_proband(self):
         probands = self.family.get_members_with_roles([Role.prb])
         if len(probands) > 0:
             return probands[0]
         for person in self.family.full_members:
-            is_proband = person.get_attr("proband", False)
+            is_proband = person.get_attr('proband', False)
             # assert isinstance(is_proband, bool), is_proband
             if is_proband:
                 return person
@@ -108,16 +110,12 @@ class FamilyRoleBuilder:
     def _assign_roles_mates(self, proband):
         for mating_id in self.members_matings[proband.person_id]:
             mating = self.family_matings[mating_id]
-            if (
-                mating.dad_id is not None
-                and mating.dad_id != proband.person_id
-            ):
+            if mating.dad_id is not None \
+                    and mating.dad_id != proband.person_id:
                 person = self.family.persons[mating.dad_id]
                 self._set_person_role(person, Role.spouse)
-            elif (
-                mating.mom_id is not None
-                and mating.mom_id != proband.person_id
-            ):
+            elif mating.mom_id is not None \
+                    and mating.mom_id != proband.person_id:
                 person = self.family.persons[mating.mom_id]
                 self._set_person_role(person, Role.spouse)
 
@@ -208,10 +206,8 @@ class FamilyRoleBuilder:
         if proband.mom is None or proband.dad is None:
             return
         if proband.mom is not None:
-            mom_mates = filter(
-                lambda x: x.dad_id != proband.dad.person_id,
-                self._find_parent_matings(proband.mom),
-            )
+            mom_mates = filter(lambda x: x.dad_id != proband.dad.person_id,
+                               self._find_parent_matings(proband.mom))
             for mating in mom_mates:
                 if mating.dad_id is None:
                     continue
@@ -221,13 +217,11 @@ class FamilyRoleBuilder:
                 for halfsibling_id in maternal_halfsiblings_ids:
                     halfsibling = self.family.persons[halfsibling_id]
                     self._set_person_role(
-                        halfsibling, Role.maternal_half_sibling
-                    )
+                            halfsibling,
+                            Role.maternal_half_sibling)
         if proband.dad is not None:
-            dad_mates = filter(
-                lambda x: x.mom_id != proband.mom.person_id,
-                self._find_parent_matings(proband.dad),
-            )
+            dad_mates = filter(lambda x: x.mom_id != proband.mom.person_id,
+                               self._find_parent_matings(proband.dad))
             for mating in dad_mates:
                 if mating.mom_id is None:
                     continue
@@ -237,8 +231,8 @@ class FamilyRoleBuilder:
                 for halfsibling_id in paternal_halfsiblings_ids:
                     halfsibling = self.family.persons[halfsibling_id]
                     self._set_person_role(
-                        halfsibling, Role.paternal_half_sibling
-                    )
+                            halfsibling,
+                            Role.paternal_half_sibling)
 
     def _assign_unknown_roles(self):
         for person in self.family.persons.values():

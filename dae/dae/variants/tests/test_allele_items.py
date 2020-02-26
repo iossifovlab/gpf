@@ -1,8 +1,8 @@
-"""
+'''
 Created on Mar 20, 2018
 
 @author: lubo
-"""
+'''
 import pytest
 from dae.variants.variant import AltAlleleItems
 
@@ -97,5 +97,5 @@ def test_allele_items_iter():
 
 
 def test_allele_items_join():
-    all_items = AltAlleleItems(["A", "B"])
+    all_items = AltAlleleItems(['A', 'B'])
     assert "A,B" == ",".join(all_items)
