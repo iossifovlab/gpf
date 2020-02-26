@@ -14,6 +14,7 @@ from dae.backends.dae.loader import DenovoLoader, DaeTransmittedLoader
 from dae.backends.vcf.loader import VcfLoader
 from dae.backends.raw.loader import AnnotationPipelineDecorator, \
     AlleleFrequencyDecorator
+from dae.backends.cnv.loader import CNVLoader
 
 from dae.pedigrees.loader import FamiliesLoader
 
@@ -89,6 +90,7 @@ def cli_arguments(dae_config, argv=sys.argv[1:]):
     DenovoLoader.cli_options(parser)
     VcfLoader.cli_options(parser)
     DaeTransmittedLoader.cli_options(parser)
+    CNVLoader.cli_options(parser)
 
     parser_args = parser.parse_args(argv)
     return parser_args
@@ -164,6 +166,17 @@ def main(argv, gpf_instance=None):
             denovo_loader, annotation_pipeline
         )
         variant_loaders.append(denovo_loader)
+
+    if argv.cnv_file is not None:
+        cnv_filename, cnv_params = CNVLoader.parse_cli_arguments(argv)
+        cnv_loader = CNVLoader(
+            families,
+            cnv_filename,
+            genome=genome,
+            params=cnv_params
+        )
+        # TODO: Annotate
+        variant_loaders.append(cnv_loader)
 
     if argv.vcf_files is not None:
         vcf_files, vcf_params = VcfLoader.parse_cli_arguments(argv)
