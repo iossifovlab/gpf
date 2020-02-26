@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 #
+# type: ignore
 # wdae documentation build configuration file, created by
 # sphinx-quickstart on Tue Aug 21 14:50:04 2018.
 #
