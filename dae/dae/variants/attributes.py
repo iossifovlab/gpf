@@ -281,9 +281,9 @@ class VariantType(enum.Enum):
             return VariantType.deletion
         elif name == 'comp' or name == 'complex':
             return VariantType.comp
-        elif name == 'cnv_p ' or name == 'CNV+':
+        elif name == 'cnv_p ' or name.lower() == 'CNV+':
             return VariantType.cnv_p
-        elif name == 'cnv_m' or name == 'CNV-':
+        elif name == 'cnv_m' or name.lower() == 'CNV-':
             return VariantType.cnv_m
         raise ValueError("unexpected variant type: {}".format(name))
 
