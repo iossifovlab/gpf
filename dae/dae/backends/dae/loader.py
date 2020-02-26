@@ -541,7 +541,8 @@ class DenovoLoader(VariantsGenotypesLoader):
             family_col = raw_df.loc[:, denovo_family_id]
 
             best_state_col = list(map(
-                lambda bs: str2mat(bs, col_sep=' '), raw_df[denovo_best_state]
+                lambda bs: str2mat(bs, col_sep=' '),  # type: ignore
+                raw_df[denovo_best_state]
             ))
             # genotype_col = list(map(best2gt, best_state_col))
 
