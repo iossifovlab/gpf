@@ -6,6 +6,8 @@ import os.path
 import time
 import datetime
 
+from typing import List, Optional
+
 from dae.gpf_instance.gpf_instance import GPFInstance
 
 from dae import GenomeAccess
@@ -138,6 +140,7 @@ if infile == '-':
 else:
     variantFile = open(infile)
 
+first_line: Optional[List[str]]
 if not opts.no_header:
     first_line_str = variantFile.readline()
     first_line = first_line_str.split()

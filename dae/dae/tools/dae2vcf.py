@@ -42,8 +42,7 @@ def vcfVarFormat(loc, var):
 if __name__ == "__main__":
     with open(sys.argv[1], "r") as csvfile, open(sys.argv[2], "w") as output:
         reader = csv.DictReader(csvfile, delimiter='\t')
-        fieldnames = reader.fieldnames
-        fieldnames.extend(["chr", "pos", "ref", "alt"])
+        fieldnames = list((*reader.fieldnames, "chr", "pos", "ref", "alt"))
         writer = csv.DictWriter(output, delimiter='\t', fieldnames=fieldnames)
         writer.writeheader()
         for row in reader:

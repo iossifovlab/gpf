@@ -108,7 +108,7 @@ def modifyData(nIx, sx, alts):
     return sample
 
 
-VrtRcrd2 = namedtuple(
+VrtRcrd2 = namedtuple(  # type: ignore
     'VariantRecord', 'chrom,pos,ref,alts,samples'.split(','))
 
 

@@ -3,8 +3,10 @@ import os
 import sys
 import glob
 
-from box import Box
+from typing import List, Dict, Any
 from collections import OrderedDict
+
+from box import Box
 
 from dae.gpf_instance.gpf_instance import GPFInstance
 
@@ -17,10 +19,10 @@ from dae.configuration.utils import parser_to_dict, flatten_dict
 
 class PipelineConfigWrapper(VariantAnnotatorConfig):
 
-    non_freq_scores = []
-    freq_scores = []
-    score_groups = {'ungrouped': []}
-    score_genotype_browser_names = {}
+    non_freq_scores: List[str] = []
+    freq_scores: List[str] = []
+    score_groups: Dict[str, Any] = {'ungrouped': []}
+    score_genotype_browser_names: Dict[str, str] = {}
 
     def __init__(self, name, annotator_name, options,
                  columns_config, virtuals):
