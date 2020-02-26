@@ -1,8 +1,8 @@
-'''
+"""
 Created on Nov 9, 2016
 
 @author: lubo
-'''
+"""
 from collections import Counter
 
 import logging
@@ -68,15 +68,18 @@ class PhenoToolHelper(object):
         assert isinstance(pheno_filters, list)
 
         return self.genotype_data._transform_pheno_filters_to_people_ids(
-            pheno_filters)
+            pheno_filters
+        )
 
     def genotype_data_variants(self, data):
-        assert 'effectTypes' in data
+        assert "effectTypes" in data
 
-        queried_effect_types = set(self.effect_types_mixin.
-                                   get_effect_types(**data))
-        variants_by_effect = {effect: Counter() for effect in
-                              queried_effect_types}
+        queried_effect_types = set(
+            self.effect_types_mixin.get_effect_types(**data)
+        )
+        variants_by_effect = {
+            effect: Counter() for effect in queried_effect_types
+        }
 
         for variant in self.genotype_data.query_variants(**data):
             for allele in variant.matched_alleles:
@@ -85,12 +88,15 @@ class PhenoToolHelper(object):
                         if effect in queried_effect_types:
                             variants_by_effect[effect][person] = 1
 
-        for effect_type in data['effectTypes']:
+        for effect_type in data["effectTypes"]:
             effect_type = effect_type.lower()
             if effect_type not in self.effect_types_mixin.EFFECT_GROUPS:
                 continue
-            variants_by_effect.update(self._package_effect_type_group(
-                                      effect_type, variants_by_effect))
+            variants_by_effect.update(
+                self._package_effect_type_group(
+                    effect_type, variants_by_effect
+                )
+            )
 
         return variants_by_effect
 
@@ -112,15 +118,17 @@ class PhenoTool(object):
     an empty list
     """
 
-    def __init__(self, phenotype_data, measure_id, person_ids=None,
-                 normalize_by=[]):
+    def __init__(
+        self, phenotype_data, measure_id, person_ids=None, normalize_by=[]
+    ):
 
         self.phenotype_data = phenotype_data
         self.measure_id = measure_id
 
         assert self.phenotype_data.has_measure(measure_id)
-        assert self.phenotype_data.get_measure(self.measure_id).measure_type \
-            in [MeasureType.continuous, MeasureType.ordinal]
+        assert self.phenotype_data.get_measure(
+            self.measure_id
+        ).measure_type in [MeasureType.continuous, MeasureType.ordinal]
 
         self.normalize_by = self._init_normalize_measures(normalize_by)
 
@@ -129,7 +137,8 @@ class PhenoTool(object):
         all_measures = [self.measure_id] + self.normalize_by
 
         pheno_df = self.phenotype_data.get_persons_values_df(
-            all_measures, person_ids=person_ids, roles=[Role.prb])
+            all_measures, person_ids=person_ids, roles=[Role.prb]
+        )
 
         self.pheno_df = pheno_df.dropna()
 
@@ -139,28 +148,45 @@ class PhenoTool(object):
             )
 
     def _init_normalize_measures(self, normalize_by):
-        normalize_by = [self._get_normalize_measure_id(normalize_measure)
-                        for normalize_measure in normalize_by]
+        normalize_by = [
+            self._get_normalize_measure_id(normalize_measure)
+            for normalize_measure in normalize_by
+        ]
         normalize_by = list(filter(None, normalize_by))
 
-        assert all([self.phenotype_data.get_measure(m).measure_type
-                    == MeasureType.continuous
-                    for m in normalize_by])
+        assert all(
+            [
+                self.phenotype_data.get_measure(m).measure_type
+                == MeasureType.continuous
+                for m in normalize_by
+            ]
+        )
         return normalize_by
 
     def _get_normalize_measure_id(self, normalize_measure):
         assert isinstance(normalize_measure, dict)
-        assert all(['measure_name' in normalize_measure,
-                    'instrument_name' in normalize_measure])
+        assert all(
+            [
+                "measure_name" in normalize_measure,
+                "instrument_name" in normalize_measure,
+            ]
+        )
 
-        if not normalize_measure['instrument_name']:
-            normalize_measure['instrument_name'] = \
-                self.measure_id.split('.')[0]
+        if not normalize_measure["instrument_name"]:
+            normalize_measure["instrument_name"] = self.measure_id.split(".")[
+                0
+            ]
 
-        normalize_id = '.'.join([normalize_measure['instrument_name'],
-                                 normalize_measure['measure_name']])
-        if self.phenotype_data.has_measure(normalize_id) and \
-           normalize_id != self.measure_id:
+        normalize_id = ".".join(
+            [
+                normalize_measure["instrument_name"],
+                normalize_measure["measure_name"],
+            ]
+        )
+        if (
+            self.phenotype_data.has_measure(normalize_id)
+            and normalize_id != self.measure_id
+        ):
             return normalize_id
         else:
             return None
@@ -171,12 +197,13 @@ class PhenoTool(object):
         assert isinstance(variants, Counter)
 
         persons_variants = pd.DataFrame(
-            data=list(variants.items()),
-            columns=['person_id', 'variant_count'])
-        persons_variants = persons_variants.set_index('person_id')
+            data=list(variants.items()), columns=["person_id", "variant_count"]
+        )
+        persons_variants = persons_variants.set_index("person_id")
 
-        merged_df = pd.merge(pheno_df, persons_variants,
-                             how='left', on=['person_id'])
+        merged_df = pd.merge(
+            pheno_df, persons_variants, how="left", on=["person_id"]
+        )
         merged_df = merged_df.fillna(0)
         return merged_df
 
@@ -188,9 +215,8 @@ class PhenoTool(object):
         assert all([measure_id in df for measure_id in normalize_by])
 
         if not normalize_by:
-            dn = pd.Series(
-                index=df.index, data=df[measure_id].to_numpy())
-            df.loc[:, 'normalized'] = dn
+            dn = pd.Series(index=df.index, data=df[measure_id].to_numpy())
+            df.loc[:, "normalized"] = dn
             return df
         else:
             X = sm.add_constant(df[normalize_by].to_numpy())
@@ -199,7 +225,7 @@ class PhenoTool(object):
             fitted = model.fit()
 
             dn = pd.Series(index=df.index, data=fitted.resid)
-            df.loc[:, 'normalized'] = dn
+            df.loc[:, "normalized"] = dn
             return df
 
     @staticmethod
@@ -210,14 +236,13 @@ class PhenoTool(object):
             std = 0
         else:
             mean = np.mean(arr, dtype=np.float64)
-            std = 1.96 * \
-                np.std(arr, dtype=np.float64) / np.sqrt(count)
+            std = 1.96 * np.std(arr, dtype=np.float64) / np.sqrt(count)
         return count, mean, std
 
     @staticmethod
     def _calc_pv(positive, negative):
         if len(positive) < 2 or len(negative) < 2:
-            return 'NA'
+            return "NA"
         tt = ttest_ind(positive, negative)
         pv = tt[1]
         return pv
@@ -233,27 +258,27 @@ class PhenoTool(object):
             result.negative_count = 0
             result.negative_mean = 0
             result.negative_deviation = 0
-            result.pvalue = 'NA'
+            result.pvalue = "NA"
             return result
 
         positive_index = np.logical_and(
-            data['variant_count'] != 0, ~np.isnan(data['variant_count']))
+            data["variant_count"] != 0, ~np.isnan(data["variant_count"])
+        )
 
-        negative_index = data['variant_count'] == 0
+        negative_index = data["variant_count"] == 0
 
         if sex is None:
             sex_index = None
             positive_sex_index = positive_index
             negative_sex_index = negative_index
         else:
-            sex_index = data['sex'] == sex
-            positive_sex_index = np.logical_and(
-                positive_index, sex_index)
-            negative_sex_index = np.logical_and(negative_index,
-                                                sex_index)
+            sex_index = data["sex"] == sex
+            positive_sex_index = np.logical_and(positive_index, sex_index)
+            negative_sex_index = np.logical_and(negative_index, sex_index)
 
-            assert not np.any(np.logical_and(positive_sex_index,
-                                             negative_sex_index))
+            assert not np.any(
+                np.logical_and(positive_sex_index, negative_sex_index)
+            )
 
         positive = data[positive_sex_index].normalized.values
         negative = data[negative_sex_index].normalized.values

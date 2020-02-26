@@ -1,8 +1,8 @@
-'''
+"""
 Created on Nov 8, 2016
 
 @author: lubo
-'''
+"""
 from dae.enrichment_tool.background import poisson_test
 import pytest
 from scipy import stats
@@ -14,14 +14,14 @@ def test_experiments():
     expected_pvalue = 0.5546078
 
     pvalue = poisson_test(observed, expected)
-    assert expected_pvalue == pytest.approx(pvalue, abs=1E-3)
+    assert expected_pvalue == pytest.approx(pvalue, abs=1e-3)
 
     observed = 4
     expected = 3.3
     expected_pvalue = 0.839
 
     pvalue = poisson_test(observed, expected)
-    assert expected_pvalue == pytest.approx(pvalue, abs=1E-3)
+    assert expected_pvalue == pytest.approx(pvalue, abs=1e-3)
 
 
 def test_samocha_poisson_vs_binom():

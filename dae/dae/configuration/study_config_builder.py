@@ -89,7 +89,8 @@ class TOMLList(UserList):
         return output
 
 
-STUDY_CONFIG_TEMPLATE = Template("""\
+STUDY_CONFIG_TEMPLATE = Template(
+    """\
 id = "{{ id }}"
 
 {%- if name %}
@@ -525,4 +526,5 @@ gene_sets_names = "{{ denovo_gene_sets.gene_sets_names }}"
 
 {%- endif %}
 
-""")
+"""
+)

@@ -6,14 +6,17 @@ from dae.pedigrees.loader import FamiliesLoader
 from dae.backends.impala.parquet_io import ParquetManager
 
 
-@pytest.mark.parametrize('pedigree', [
-    ('pedigree_A.ped'),
-    ('pedigree_B.ped'),
-    ('pedigree_B2.ped'),
-    ('pedigree_C.ped'),
-])
+@pytest.mark.parametrize(
+    "pedigree",
+    [
+        ("pedigree_A.ped"),
+        ("pedigree_B.ped"),
+        ("pedigree_B2.ped"),
+        ("pedigree_C.ped"),
+    ],
+)
 def test_ped2parquet(pedigree, temp_dirname, global_dae_fixtures_dir):
-    pedigree_filename = f'{global_dae_fixtures_dir}/pedigrees/{pedigree}'
+    pedigree_filename = f"{global_dae_fixtures_dir}/pedigrees/{pedigree}"
     assert os.path.exists(pedigree_filename)
 
     families_loader = FamiliesLoader(pedigree_filename)
@@ -21,25 +24,26 @@ def test_ped2parquet(pedigree, temp_dirname, global_dae_fixtures_dir):
 
     assert families is not None
 
-    parquet_filename = os.path.join(
-        temp_dirname,
-        'pedigree.parquet'
-    )
+    parquet_filename = os.path.join(temp_dirname, "pedigree.parquet")
 
     ParquetManager.families_to_parquet(families, parquet_filename)
 
     assert os.path.exists(parquet_filename)
 
 
-@pytest.mark.parametrize('pedigree, outfile, dirname', [
-    ('pedigree_A.ped', './pedigree.parquet', '.'),
-    ('pedigree_A.ped', '/tmp/pedigree.parquet', '/tmp'),
-    ('pedigree_A.ped', 'tmp/pedigree.parquet', 'tmp'),
-])
+@pytest.mark.parametrize(
+    "pedigree, outfile, dirname",
+    [
+        ("pedigree_A.ped", "./pedigree.parquet", "."),
+        ("pedigree_A.ped", "/tmp/pedigree.parquet", "/tmp"),
+        ("pedigree_A.ped", "tmp/pedigree.parquet", "tmp"),
+    ],
+)
 def test_ped2parquet_mock(
-        mocker, pedigree, outfile, dirname, global_dae_fixtures_dir):
+    mocker, pedigree, outfile, dirname, global_dae_fixtures_dir
+):
 
-    pedigree_filename = f'{global_dae_fixtures_dir}/pedigrees/{pedigree}'
+    pedigree_filename = f"{global_dae_fixtures_dir}/pedigrees/{pedigree}"
     assert os.path.exists(pedigree_filename)
 
     families_loader = FamiliesLoader(pedigree_filename)

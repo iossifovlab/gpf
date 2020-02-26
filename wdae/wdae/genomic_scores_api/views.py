@@ -4,7 +4,6 @@ from query_base.query_base import QueryBaseView
 
 
 class GenomicScoresView(QueryBaseView):
-
     def __init__(self):
         super(GenomicScoresView, self).__init__()
 
@@ -13,15 +12,16 @@ class GenomicScoresView(QueryBaseView):
     def get_genomic_scores(self, scores):
         return [
             {
-                'score': score.id,
-                'desc': score.desc,
-                'bars': score.values(),
-                'bins': score.get_scores(),
-                'xscale': score.xscale,
-                'yscale': score.yscale,
-                'range': score.range,
-                'help': score.help
-            } for score in scores
+                "score": score.id,
+                "desc": score.desc,
+                "bars": score.values(),
+                "bins": score.get_scores(),
+                "xscale": score.xscale,
+                "yscale": score.yscale,
+                "range": score.range,
+                "help": score.help,
+            }
+            for score in scores
         ]
 
     def get(self, request):

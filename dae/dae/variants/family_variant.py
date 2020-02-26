@@ -5,11 +5,19 @@ import numpy as np
 from deprecation import deprecated
 
 from dae.pedigrees.family import Family
-from dae.utils.variant_utils import (GENOTYPE_TYPE, is_all_unknown_genotype,
-                                     is_reference_genotype)
+from dae.utils.variant_utils import (
+    GENOTYPE_TYPE,
+    is_all_unknown_genotype,
+    is_reference_genotype,
+)
 from dae.variants.attributes import GeneticModel, Inheritance, TransmissionType
-from dae.variants.variant import (Allele, Effect, SummaryAllele,
-                                  SummaryVariant, Variant)
+from dae.variants.variant import (
+    Allele,
+    Effect,
+    SummaryAllele,
+    SummaryVariant,
+    Variant,
+)
 
 
 def calculate_simple_best_state(
@@ -17,7 +25,7 @@ def calculate_simple_best_state(
 ) -> np.array:
     # Simple best state calculation
     # Treats every genotype as diploid (including male X non-PAR)
-    ref = (2 * np.ones(genotype.shape[1], dtype=GENOTYPE_TYPE))
+    ref = 2 * np.ones(genotype.shape[1], dtype=GENOTYPE_TYPE)
     unknown = np.any(genotype == -1, axis=0)
 
     best_st = [ref]
@@ -36,7 +44,6 @@ def calculate_simple_best_state(
 
 
 class FamilyDelegate(object):
-
     def __init__(self, family):
         self.family = family
 
@@ -65,15 +72,15 @@ class FamilyDelegate(object):
 
 
 class FamilyAllele(Allele, FamilyDelegate):
-
     def __init__(
-            self,
-            summary_allele: SummaryAllele,
-            family: Family,
-            genotype,
-            best_state,
-            genetic_model=None,
-            inheritance_in_members=None):
+        self,
+        summary_allele: SummaryAllele,
+        family: Family,
+        genotype,
+        best_state,
+        genetic_model=None,
+        inheritance_in_members=None,
+    ):
         assert isinstance(family, Family)
 
         FamilyDelegate.__init__(self, family)
@@ -99,14 +106,17 @@ class FamilyAllele(Allele, FamilyDelegate):
 
     def __repr__(self):
         if not self.alternative:
-            return '{}:{} {}(ref) {}'.format(
-                self.chromosome, self.position,
-                self.reference, self.family_id)
+            return "{}:{} {}(ref) {}".format(
+                self.chromosome, self.position, self.reference, self.family_id
+            )
         else:
-            return '{}:{} {}->{} {}'.format(
-                self.chromosome, self.position,
-                self.reference, self.alternative,
-                self.family_id)
+            return "{}:{} {}->{} {}".format(
+                self.chromosome,
+                self.position,
+                self.reference,
+                self.alternative,
+                self.family_id,
+            )
 
     @property
     def chromosome(self):
@@ -159,7 +169,7 @@ class FamilyAllele(Allele, FamilyDelegate):
     def best_state(self):
         if self._best_state is None:
             self._best_state = calculate_simple_best_state(
-                self.gt, self.attributes['allele_count']
+                self.gt, self.attributes["allele_count"]
             )
         return self._best_state
 
@@ -177,7 +187,7 @@ class FamilyAllele(Allele, FamilyDelegate):
         Return genotype of the family variant flattened to 1-dimensional
         array.
         """
-        return self.gt.flatten(order='F')
+        return self.gt.flatten(order="F")
 
     @property
     def inheritance_in_members(self):
@@ -200,8 +210,9 @@ class FamilyAllele(Allele, FamilyDelegate):
                     p1 = trio_gt[:, 1]
                     p2 = trio_gt[:, 2]
                     inh = self.calc_inheritance_trio(p1, p2, ch, allele_index)
-                    if inh != Inheritance.omission and \
-                            np.all(ch != allele_index):
+                    if inh != Inheritance.omission and np.all(
+                        ch != allele_index
+                    ):
                         inh = Inheritance.missing
                 result.append(inh)
             self._inheritance_in_members = result
@@ -280,10 +291,12 @@ class FamilyAllele(Allele, FamilyDelegate):
         if ai not in set(ch):
             return False
 
-        m1 = (ch[0] == p1[0] == ai or ch[0] == p1[1] == ai) or \
-            (ch[1] == p2[0] == ai or ch[1] == p2[1] == ai)
-        m2 = (ch[0] == p2[0] == ai or ch[0] == p2[1] == ai) or \
-            (ch[1] == p1[0] == ai or ch[1] == p1[1] == ai)
+        m1 = (ch[0] == p1[0] == ai or ch[0] == p1[1] == ai) or (
+            ch[1] == p2[0] == ai or ch[1] == p2[1] == ai
+        )
+        m2 = (ch[0] == p2[0] == ai or ch[0] == p2[1] == ai) or (
+            ch[1] == p1[0] == ai or ch[1] == p1[1] == ai
+        )
 
         return m1 or m2
 
@@ -349,13 +362,13 @@ class FamilyAllele(Allele, FamilyDelegate):
 
 
 class FamilyVariant(Variant, FamilyDelegate):
-
     def __init__(
-            self,
-            summary_variant: SummaryVariant,
-            family: Family,
-            genotype: Any,
-            best_state: Any):
+        self,
+        summary_variant: SummaryVariant,
+        family: Family,
+        genotype: Any,
+        best_state: Any,
+    ):
 
         assert family is not None
         assert isinstance(family, Family)
@@ -375,8 +388,10 @@ class FamilyVariant(Variant, FamilyDelegate):
     @property
     def fvuid(self) -> Optional[str]:
         if self._fvuid is None:
-            self._fvuid = f'{self.family_id}.{self.location}'\
-                f'.{self.reference}.{self.alternative}'
+            self._fvuid = (
+                f"{self.family_id}.{self.location}"
+                f".{self.reference}.{self.alternative}"
+            )
         return self._fvuid
 
     @property
@@ -408,12 +423,11 @@ class FamilyVariant(Variant, FamilyDelegate):
         if self._family_alleles is None:
             family_alleles = [
                 FamilyAllele(
-                    sum_allele, self.family, self.gt, self._best_state)
+                    sum_allele, self.family, self.gt, self._best_state
+                )
                 for sum_allele in self.summary_variant.alleles
             ]
-            alleles = [
-                family_alleles[0]
-            ]
+            alleles = [family_alleles[0]]
             for ai in self.calc_alt_alleles(self.gt):
                 allele = None
                 for fa in family_alleles:
@@ -422,8 +436,7 @@ class FamilyVariant(Variant, FamilyDelegate):
                         break
                 if allele is None:
                     continue
-                assert allele.allele_index == ai, \
-                    (allele.allele_index, ai)
+                assert allele.allele_index == ai, (allele.allele_index, ai)
 
                 alleles.append(allele)
 
@@ -437,7 +450,8 @@ class FamilyVariant(Variant, FamilyDelegate):
     @property
     def matched_alleles(self):
         return [
-            aa for aa in self.alleles
+            aa
+            for aa in self.alleles
             if aa.allele_index in self._matched_alleles
         ]
 
@@ -447,9 +461,11 @@ class FamilyVariant(Variant, FamilyDelegate):
 
     @property
     def matched_gene_effects(self):
-        return set(itertools.chain.from_iterable([
-            ma.matched_gene_effects for ma in self.matched_alleles
-        ]))
+        return set(
+            itertools.chain.from_iterable(
+                [ma.matched_gene_effects for ma in self.matched_alleles]
+            )
+        )
 
     @property
     def genotype(self):
@@ -469,7 +485,7 @@ class FamilyVariant(Variant, FamilyDelegate):
         Return genotype of the family variant flattened to 1-dimensional
         array.
         """
-        return self.gt.flatten(order='F')
+        return self.gt.flatten(order="F")
 
     def is_reference(self):
         """
@@ -487,14 +503,17 @@ class FamilyVariant(Variant, FamilyDelegate):
 
     def __repr__(self):
         if not self.alternative:
-            return '{}:{} {}(ref) {}'.format(
-                self.chromosome, self.position,
-                self.reference, self.family_id)
+            return "{}:{} {}(ref) {}".format(
+                self.chromosome, self.position, self.reference, self.family_id
+            )
         else:
-            return '{}:{} {}->{} {}'.format(
-                self.chromosome, self.position,
-                self.reference, self.alternative,
-                self.family_id)
+            return "{}:{} {}->{} {}".format(
+                self.chromosome,
+                self.position,
+                self.reference,
+                self.alternative,
+                self.family_id,
+            )
 
     @property
     def best_state(self):

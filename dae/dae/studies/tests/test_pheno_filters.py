@@ -5,9 +5,7 @@ FILTER_QUERY_CATEGORICAL = {
     "measureType": "categorical",
     "role": "prb",
     "measure": "instrument1.categorical",
-    "selection": {
-        "selection": ["option2"]
-    }
+    "selection": {"selection": ["option2"]},
 }
 
 FILTER_QUERY_CONTINUOUS = {
@@ -15,10 +13,7 @@ FILTER_QUERY_CONTINUOUS = {
     "measureType": "continuous",
     "role": "prb",
     "measure": "instrument1.continuous",
-    "selection": {
-        "min": 3,
-        "max": 4
-    }
+    "selection": {"min": 3, "max": 4},
 }
 
 FILTER_QUERY_BOGUS = {
@@ -26,10 +21,7 @@ FILTER_QUERY_BOGUS = {
     "measureType": "continuous",
     "role": "prb",
     "measure": "wrontinstrument.wrongmeasure",
-    "selection": {
-        "min": 3,
-        "max": 4
-    }
+    "selection": {"min": 3, "max": 4},
 }
 
 FILTER_QUERY_ORDINAL = {
@@ -37,22 +29,24 @@ FILTER_QUERY_ORDINAL = {
     "measureType": "ordinal",
     "role": "prb",
     "measure": "instrument1.ordinal",
-    "selection": {
-        "min": 1,
-        "max": 5
-    }
+    "selection": {"min": 1, "max": 5},
 }
 
 
-@pytest.mark.parametrize("pheno_query,variants_count", [
-    ([FILTER_QUERY_CATEGORICAL], 2),
-    ([FILTER_QUERY_CONTINUOUS], 2),
-    ([FILTER_QUERY_CATEGORICAL, FILTER_QUERY_CONTINUOUS], 2),
-])
+@pytest.mark.parametrize(
+    "pheno_query,variants_count",
+    [
+        ([FILTER_QUERY_CATEGORICAL], 2),
+        ([FILTER_QUERY_CONTINUOUS], 2),
+        ([FILTER_QUERY_CATEGORICAL, FILTER_QUERY_CONTINUOUS], 2),
+    ],
+)
 def test_query_with_pheno_filters_work(
-        quads_f1_genotype_data_group_wrapper, pheno_query, variants_count):
+    quads_f1_genotype_data_group_wrapper, pheno_query, variants_count
+):
     variants = quads_f1_genotype_data_group_wrapper.query_variants(
-        phenoFilters=pheno_query)
+        phenoFilters=pheno_query
+    )
     variants = list(variants)
 
     assert len(variants) == variants_count
@@ -62,31 +56,37 @@ def test_query_with_pheno_filters_work(
 
 
 def test_query_with_pheno_filters_and_people_ids_filter(
-        quads_f1_genotype_data_group_wrapper):
+    quads_f1_genotype_data_group_wrapper,
+):
     pheno_query = [FILTER_QUERY_CONTINUOUS]
 
-    variants = quads_f1_genotype_data_group_wrapper\
-        .query_variants(phenoFilters=pheno_query, person_ids=['mom1'])
+    variants = quads_f1_genotype_data_group_wrapper.query_variants(
+        phenoFilters=pheno_query, person_ids=["mom1"]
+    )
     variants = list(variants)
 
     assert len(variants) == 0
 
 
 def test_query_with_bogus_pheno_filters_is_ignored(
-        quads_f1_genotype_data_group_wrapper):
+    quads_f1_genotype_data_group_wrapper,
+):
     pheno_query = [FILTER_QUERY_BOGUS]
 
-    variants = quads_f1_genotype_data_group_wrapper \
-        .query_variants(phenoFilters=pheno_query)
+    variants = quads_f1_genotype_data_group_wrapper.query_variants(
+        phenoFilters=pheno_query
+    )
     variants = list(variants)
     assert len(variants) == 0
 
 
 def test_query_with_query_not_in_config_passes(
-        quads_f1_genotype_data_group_wrapper):
+    quads_f1_genotype_data_group_wrapper,
+):
     pheno_query = [FILTER_QUERY_ORDINAL]
-    variants = quads_f1_genotype_data_group_wrapper \
-        .query_variants(phenoFilters=pheno_query)
+    variants = quads_f1_genotype_data_group_wrapper.query_variants(
+        phenoFilters=pheno_query
+    )
     variants = list(variants)
 
     assert len(variants) == 2

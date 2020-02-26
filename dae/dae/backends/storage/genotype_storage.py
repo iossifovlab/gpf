@@ -1,5 +1,4 @@
 class GenotypeStorage:
-
     def __init__(self, storage_config):
         self.storage_config = storage_config
         self.id = self.storage_config.section_id()
@@ -14,10 +13,11 @@ class GenotypeStorage:
         raise NotImplementedError()
 
     def simple_study_import(
-            self,
-            study_id,
-            families_loader=None,
-            variant_loaders=None,
-            study_config=None,
-            **kwargs):
+        self,
+        study_id,
+        families_loader=None,
+        variant_loaders=None,
+        study_config=None,
+        **kwargs,
+    ):
         raise NotImplementedError()

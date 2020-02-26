@@ -1,8 +1,8 @@
-'''
+"""
 Created on Nov 16, 2017
 
 @author: lubo
-'''
+"""
 import numpy as np
 import pandas as pd
 
@@ -11,9 +11,7 @@ from dae.pheno.common import default_config, MeasureType
 
 
 def test_classifier_non_numeric():
-    values = pd.Series(data=[
-        '1', '2', '3', '4.4', 'a'
-    ])
+    values = pd.Series(data=["1", "2", "3", "4.4", "a"])
 
     res = MeasureClassifier.meta_measures(values)
     print(res)
@@ -29,9 +27,7 @@ def test_classifier_non_numeric():
 
 
 def test_classifier_nan():
-    values = pd.Series(data=[
-        ' ', None, np.nan, '1', '2.2'
-    ])
+    values = pd.Series(data=[" ", None, np.nan, "1", "2.2"])
     res = MeasureClassifier.meta_measures(values)
     print(res)
 
@@ -46,9 +42,7 @@ def test_classifier_nan():
 
 
 def test_classifier_float():
-    values = pd.Series(data=[
-        ' ', None, np.nan, 1, 2.2
-    ])
+    values = pd.Series(data=[" ", None, np.nan, 1, 2.2])
     res = MeasureClassifier.meta_measures(values)
     print(res)
 
@@ -63,9 +57,7 @@ def test_classifier_float():
 
 
 def test_classifier_all_float():
-    values = pd.Series(data=[
-        3.3, 1, 2.2
-    ])
+    values = pd.Series(data=[3.3, 1, 2.2])
     res = MeasureClassifier.meta_measures(values)
     print(res)
 
@@ -80,9 +72,7 @@ def test_classifier_all_float():
 
 
 def test_classifier_all_float_again():
-    values = pd.Series(data=[
-        3.3, 1, 2.2, 3.3, 1, 1
-    ])
+    values = pd.Series(data=[3.3, 1, 2.2, 3.3, 1, 1])
     res = MeasureClassifier.meta_measures(values)
     assert res.count_with_values == 6
     assert res.count_without_values == 0
@@ -95,9 +85,7 @@ def test_classifier_all_float_again():
 
 
 def test_classifier_all_bool():
-    values = pd.Series(data=[
-        True, False, True
-    ])
+    values = pd.Series(data=[True, False, True])
     res = MeasureClassifier.meta_measures(values)
     assert res.count_with_values == 3
     assert res.count_without_values == 0
@@ -109,9 +97,7 @@ def test_classifier_all_bool():
 
 
 def test_classifier_bool_and_nan():
-    values = pd.Series(data=[
-        True, False, True, np.nan, None, ' '
-    ])
+    values = pd.Series(data=[True, False, True, np.nan, None, " "])
     res = MeasureClassifier.meta_measures(values)
     print(res)
     assert res.count_with_values == 3
@@ -125,9 +111,7 @@ def test_classifier_bool_and_nan():
 
 
 def test_should_convert_to_numeric_cutoff():
-    values = pd.Series(data=[
-        '1', '2', '1', '1', '1', '1', '2', '2', 'a'
-    ])
+    values = pd.Series(data=["1", "2", "1", "1", "1", "1", "2", "2", "a"])
     report = MeasureClassifier.meta_measures(values)
 
     config = default_config()
@@ -145,9 +129,7 @@ def test_should_convert_to_numeric_cutoff():
 
 
 def test_clasify_minus_values():
-    values = pd.Series(data=[
-        '-', '-', '-', np.nan, None, ' ', '-',
-    ])
+    values = pd.Series(data=["-", "-", "-", np.nan, None, " ", "-",])
     print(values)
 
     report = MeasureClassifier.meta_measures(values)

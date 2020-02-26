@@ -1,8 +1,8 @@
-'''
+"""
 Created on Nov 7, 2016
 
 @author: lubo
-'''
+"""
 from dae.gene.weights import GeneWeight
 
 
@@ -12,7 +12,7 @@ def test_weights_default(gene_info_config):
 
     assert w.df is not None
 
-    assert 'RVIS_rank' in w.df.columns
+    assert "RVIS_rank" in w.df.columns
 
 
 def test_weights_min_max(gene_info_config):

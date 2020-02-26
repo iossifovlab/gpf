@@ -4,7 +4,6 @@ from dae.variants.attributes import Inheritance
 
 
 class GenotypeHelper(object):
-
     def __init__(self, genotype_data_group, people_group, people_group_value):
         self.genotype_data_group = genotype_data_group
         self.people_group = people_group
@@ -20,18 +19,20 @@ class GenotypeHelper(object):
         people_with_people_group = families_group.get_people_with_propvalues(
             (self.people_group_value,)
         )
-        people_with_people_group = set([
-            p.person_id for p in people_with_people_group])
+        people_with_people_group = set(
+            [p.person_id for p in people_with_people_group]
+        )
 
         # TODO: Remove this when genotype_data_study.query_variants can
         # support non expand_effect_types as LGDs
         from dae.utils.effect_utils import expand_effect_types
+
         effect_types = expand_effect_types(effect_types)
 
         variants = self.genotype_data_group.query_variants(
             inheritance=str(Inheritance.denovo.name),
             person_ids=people_with_people_group,
-            effect_types=set(effect_types)
+            effect_types=set(effect_types),
         )
 
         return list(variants)
@@ -46,8 +47,10 @@ class GenotypeHelper(object):
                 if iid in seen:
                     continue
 
-                if str(p.get_attr(self.people_group.source)) != \
-                        self.people_group_value:
+                if (
+                    str(p.get_attr(self.people_group.source))
+                    != self.people_group_value
+                ):
                     continue
 
                 self._children_by_sex[p.sex.name].add(p.person_id)

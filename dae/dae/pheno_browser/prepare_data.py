@@ -1,15 +1,19 @@
-'''
+"""
 Created on Apr 10, 2017
 
 @author: lubo
-'''
+"""
 import os
-import matplotlib as mpl; mpl.use('PS')  # noqa
+import matplotlib as mpl
+
+mpl.use("PS")  # noqa
 import numpy as np
 
 from dae.pheno.pheno_db import Measure
 
-import matplotlib.pyplot as plt; plt.ioff()  # noqa
+import matplotlib.pyplot as plt
+
+plt.ioff()  # noqa
 
 from dae.pheno_browser.db import DbManager
 from dae.pheno.common import Role, MeasureType
@@ -27,12 +31,17 @@ class PreparePhenoBrowserBase(object):
     SMALL_DPI = 16
 
     def __init__(
-            self, pheno_name, phenotype_data, output_dir,
-            pheno_regressions=None, images_dir=None):
+        self,
+        pheno_name,
+        phenotype_data,
+        output_dir,
+        pheno_regressions=None,
+        images_dir=None,
+    ):
         assert os.path.exists(output_dir)
         self.output_dir = output_dir
         if images_dir is None:
-            images_dir = os.path.join(self.output_dir, 'images')
+            images_dir = os.path.join(self.output_dir, "images")
         if not os.path.exists(images_dir):
             os.makedirs(images_dir)
 
@@ -44,8 +53,7 @@ class PreparePhenoBrowserBase(object):
         self.pheno_regressions = pheno_regressions
 
         self.browser_db = os.path.join(
-            output_dir,
-            "{}_browser.db".format(pheno_name)
+            output_dir, "{}_browser.db".format(pheno_name)
         )
 
     def load_measure(self, measure):
@@ -60,11 +68,11 @@ class PreparePhenoBrowserBase(object):
         augment_measure = augment.measure_name
 
         if augment_instrument is not None:
-            augment_id = '{}.{}'.format(
-                augment_instrument, augment_measure)
+            augment_id = "{}.{}".format(augment_instrument, augment_measure)
         else:
-            augment_id = '{}.{}'.format(
-                measure.instrument_name, augment_measure)
+            augment_id = "{}.{}".format(
+                measure.instrument_name, augment_measure
+            )
 
         if augment_id == measure.measure_id:
             return None
@@ -72,9 +80,10 @@ class PreparePhenoBrowserBase(object):
             return None
 
         df = self.phenotype_data.get_persons_values_df(
-            [augment_id, measure.measure_id])
-        df.loc[df.role == Role.mom, 'role'] = Role.parent
-        df.loc[df.role == Role.dad, 'role'] = Role.parent
+            [augment_id, measure.measure_id]
+        )
+        df.loc[df.role == Role.mom, "role"] = Role.parent
+        df.loc[df.role == Role.dad, "role"] = Role.parent
 
         df.rename(columns={augment_id: augment_name}, inplace=True)
         return df
@@ -82,12 +91,12 @@ class PreparePhenoBrowserBase(object):
     @staticmethod
     def _measure_to_dict(measure):
         return {
-            'measure_id': measure.measure_id,
-            'instrument_name': measure.instrument_name,
-            'measure_name': measure.measure_name,
-            'measure_type': measure.measure_type,
-            'description': measure.description,
-            'values_domain': measure.values_domain
+            "measure_id": measure.measure_id,
+            "instrument_name": measure.instrument_name,
+            "measure_name": measure.measure_name,
+            "measure_type": measure.measure_type,
+            "description": measure.description,
+            "values_domain": measure.values_domain,
         }
 
     def figure_filepath(self, measure, suffix):
@@ -105,25 +114,23 @@ class PreparePhenoBrowserBase(object):
         return filepath
 
     def save_fig(self, measure, suffix):
-        if '/' in measure.measure_id:
+        if "/" in measure.measure_id:
             return (None, None)
 
         small_filepath = self.figure_filepath(
-            measure, "{}_small".format(suffix))
+            measure, "{}_small".format(suffix)
+        )
         plt.savefig(small_filepath, dpi=self.SMALL_DPI)
 
         filepath = self.figure_filepath(measure, suffix)
         plt.savefig(filepath, dpi=self.LARGE_DPI)
         plt.close()
         return (
-            self.figure_path(
-                measure, "{}_small".format(suffix)),
-            self.figure_path(
-                measure, suffix)
+            self.figure_path(measure, "{}_small".format(suffix)),
+            self.figure_path(measure, suffix),
         )
 
-    def build_regression(self, dependent_measure,
-                         independent_measure, jitter):
+    def build_regression(self, dependent_measure, independent_measure, jitter):
         MIN_VALUES = 5
         MIN_UNIQUE_VALUES = 2
 
@@ -135,9 +142,8 @@ class PreparePhenoBrowserBase(object):
         aug_col_name = independent_measure.measure_name
 
         aug_df = self._augment_measure_values_df(
-            independent_measure,
-            aug_col_name,
-            dependent_measure)
+            independent_measure, aug_col_name, dependent_measure
+        )
 
         if aug_df is None:
             return res
@@ -146,22 +152,31 @@ class PreparePhenoBrowserBase(object):
         aug_df.loc[:, aug_col_name] = aug_df[aug_col_name].astype(np.float32)
         aug_df = aug_df[np.isfinite(aug_df[aug_col_name])]
 
-        if aug_df[dependent_measure.measure_id].nunique() < MIN_UNIQUE_VALUES \
-           or len(aug_df) <= MIN_VALUES:
+        if (
+            aug_df[dependent_measure.measure_id].nunique() < MIN_UNIQUE_VALUES
+            or len(aug_df) <= MIN_VALUES
+        ):
             return res
 
         res_male, res_female = draw_linregres(
-            aug_df, aug_col_name, dependent_measure.measure_id, jitter)
-        res['pvalue_regression_male'] = res_male.pvalues[aug_col_name] \
-            if res_male is not None else None
-        res['pvalue_regression_female'] = res_female.pvalues[aug_col_name] \
-            if res_female is not None else None
+            aug_df, aug_col_name, dependent_measure.measure_id, jitter
+        )
+        res["pvalue_regression_male"] = (
+            res_male.pvalues[aug_col_name] if res_male is not None else None
+        )
+        res["pvalue_regression_female"] = (
+            res_female.pvalues[aug_col_name]
+            if res_female is not None
+            else None
+        )
 
         if res_male is not None or res_female is not None:
-            (res['figure_regression_small'],
-             res['figure_regression']) = \
-                self.save_fig(dependent_measure,
-                              "prb_regression_by_{}".format(aug_col_name))
+            (
+                res["figure_regression_small"],
+                res["figure_regression"],
+            ) = self.save_fig(
+                dependent_measure, "prb_regression_by_{}".format(aug_col_name)
+            )
         return res
 
     def build_values_violinplot(self, measure):
@@ -171,8 +186,10 @@ class PreparePhenoBrowserBase(object):
         res = {}
 
         if drawn:
-            (res['figure_distribution_small'],
-             res['figure_distribution']) = self.save_fig(measure, "violinplot")
+            (
+                res["figure_distribution_small"],
+                res["figure_distribution"],
+            ) = self.save_fig(measure, "violinplot")
 
         return res
 
@@ -182,9 +199,10 @@ class PreparePhenoBrowserBase(object):
 
         res = {}
         if drawn:
-            (res['figure_distribution_small'],
-             res['figure_distribution']) = \
-                self.save_fig(measure, "distribution")
+            (
+                res["figure_distribution_small"],
+                res["figure_distribution"],
+            ) = self.save_fig(measure, "distribution")
 
         return res
 
@@ -194,9 +212,10 @@ class PreparePhenoBrowserBase(object):
 
         res = {}
         if drawn:
-            (res['figure_distribution_small'],
-             res['figure_distribution']) = \
-                self.save_fig(measure, "distribution")
+            (
+                res["figure_distribution_small"],
+                res["figure_distribution"],
+            ) = self.save_fig(measure, "distribution")
 
         return res
 
@@ -206,26 +225,27 @@ class PreparePhenoBrowserBase(object):
 
         res = {}
         if drawn:
-            (res['figure_distribution_small'],
-             res['figure_distribution']) = \
-                self.save_fig(measure, "distribution")
+            (
+                res["figure_distribution_small"],
+                res["figure_distribution"],
+            ) = self.save_fig(measure, "distribution")
 
         return res
 
     def dump_browser_variable(self, var):
-        print('-------------------------------------------')
-        print(var['measure_id'])
-        print('-------------------------------------------')
-        print('instrument:  {}'.format(var['instrument_name']))
-        print('measure:     {}'.format(var['measure_name']))
-        print('type:        {}'.format(var['measure_type']))
-        print('description: {}'.format(var['description']))
-        print('domain:      {}'.format(var['values_domain']))
-        print('-------------------------------------------')
+        print("-------------------------------------------")
+        print(var["measure_id"])
+        print("-------------------------------------------")
+        print("instrument:  {}".format(var["instrument_name"]))
+        print("measure:     {}".format(var["measure_name"]))
+        print("type:        {}".format(var["measure_type"]))
+        print("description: {}".format(var["description"]))
+        print("domain:      {}".format(var["values_domain"]))
+        print("-------------------------------------------")
 
     def _get_measure_by_name(self, measure_name, instrument_name):
         if instrument_name:
-            measure_id = '.'.join([instrument_name, measure_name])
+            measure_id = ".".join([instrument_name, measure_name])
             if self.phenotype_data.has_measure(measure_id):
                 return self.phenotype_data.get_measure(measure_id)
         return None
@@ -243,33 +263,48 @@ class PreparePhenoBrowserBase(object):
         return res
 
     def _has_regression_measure(self, measure_name, instrument_name):
-        for _, reg in self.pheno_regressions.regression.field_values_iterator():
+        for (
+            _,
+            reg,
+        ) in self.pheno_regressions.regression.field_values_iterator():
             if measure_name == reg.measure_name:
-                if instrument_name and reg.instrument_name and \
-                        instrument_name != reg.instrument_name:
+                if (
+                    instrument_name
+                    and reg.instrument_name
+                    and instrument_name != reg.instrument_name
+                ):
                     continue
                 return True
         return False
 
     def handle_regressions(self, measure):
-        if measure.measure_type not in [MeasureType.continuous,
-                                        MeasureType.ordinal]:
+        if measure.measure_type not in [
+            MeasureType.continuous,
+            MeasureType.ordinal,
+        ]:
             return
-        for reg_id, reg in self.pheno_regressions.regression.field_values_iterator():
-            res = {'measure_id': measure.measure_id}
-            reg_measure = self._get_measure_by_name(reg.measure_name,
-                                                    reg.instrument_name or
-                                                    measure.instrument_name)
+        for (
+            reg_id,
+            reg,
+        ) in self.pheno_regressions.regression.field_values_iterator():
+            res = {"measure_id": measure.measure_id}
+            reg_measure = self._get_measure_by_name(
+                reg.measure_name,
+                reg.instrument_name or measure.instrument_name,
+            )
             if not reg_measure:
                 continue
             if self._has_regression_measure(
-                    measure.measure_name, measure.instrument_name):
+                measure.measure_name, measure.instrument_name
+            ):
                 continue
 
-            res['regression_id'] = reg_id
+            res["regression_id"] = reg_id
             res.update(self.build_regression(measure, reg_measure, reg.jitter))
-            if res.get('pvalue_regression_male') is not None or \
-               res.get('pvalue_regression_female') is not None:
+            if (
+                res.get("pvalue_regression_male") is not None
+                or res.get("pvalue_regression_female") is not None
+            ):
                 yield res
 
     def run(self):
@@ -277,13 +312,18 @@ class PreparePhenoBrowserBase(object):
         db.build()
 
         if self.pheno_regressions:
-            for reg_id, reg_data in self.pheno_regressions.regression.field_values_iterator():
-                db.save_regression({
-                    'regression_id': reg_id,
-                    'instrument_name': reg_data.instrument_name,
-                    'measure_name': reg_data.measure_name,
-                    'display_name': reg_data.display_name
-                })
+            for (
+                reg_id,
+                reg_data,
+            ) in self.pheno_regressions.regression.field_values_iterator():
+                db.save_regression(
+                    {
+                        "regression_id": reg_id,
+                        "instrument_name": reg_data.instrument_name,
+                        "measure_name": reg_data.measure_name,
+                        "display_name": reg_data.display_name,
+                    }
+                )
 
         for instrument in list(self.phenotype_data.instruments.values()):
             progress_nl()

@@ -165,7 +165,7 @@ variants_file = {
             "vcf_omission_mode": {"type": "string"},
             "vcf_chromosomes": {"type": "string"},
         },
-        "default": {}
+        "default": {},
     },
 }
 

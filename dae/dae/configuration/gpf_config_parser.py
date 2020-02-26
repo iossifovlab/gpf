@@ -51,7 +51,7 @@ class GPFConfigParser:
             def __getattr__(self, name):
                 # FIXME Temporary hack to enable default values
                 # only for public attributes
-                if name[0:2] == '__':
+                if name[0:2] == "__":
                     raise AttributeError()
                 # print(
                 #     f'WARNING: Attempting to get non-existent attribute '
@@ -60,24 +60,24 @@ class GPFConfigParser:
 
             def __repr__(self):
                 retval = super(ConfigTuple, self).__repr__()
-                return retval.replace('ConfigTuple', self.section_id())
+                return retval.replace("ConfigTuple", self.section_id())
 
             def section_id(self):
                 return dict_name
 
             def field_values_iterator(self):
-                return zip(
-                    self._fields,
-                    self
-                )
+                return zip(self._fields, self)
 
         for key, value in input_dict.items():
             if isinstance(value, dict):
                 input_dict[key] = cls._dict_to_namedtuple(value, key)
             elif isinstance(value, list):
                 input_dict[key] = [
-                    (cls._dict_to_namedtuple(item)
-                     if isinstance(item, dict) else item)
+                    (
+                        cls._dict_to_namedtuple(item)
+                        if isinstance(item, dict)
+                        else item
+                    )
                     for item in value
                 ]
 
@@ -117,11 +117,11 @@ class GPFConfigParser:
 
         env_vars = {f"${key}": val for key, val in os.environ.items()}
 
-        interpol_vars = \
-            cls.filetype_parsers[ext](file_contents).get("vars", {})
+        interpol_vars = cls.filetype_parsers[ext](file_contents).get(
+            "vars", {}
+        )
         interpol_vars = {
-            key: value % env_vars
-            for key, value in interpol_vars.items()
+            key: value % env_vars for key, value in interpol_vars.items()
         }
         interpol_vars.update(env_vars)
 

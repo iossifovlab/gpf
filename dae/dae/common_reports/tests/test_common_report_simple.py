@@ -8,17 +8,17 @@ from dae.common_reports.common_report import CommonReport
 def test_common_report_simple(vdb_fixture, common_report_facade):
     assert common_report_facade is not None
 
-    study_wrapper = vdb_fixture.get_wdae_wrapper('Study3')
+    study_wrapper = vdb_fixture.get_wdae_wrapper("Study3")
     assert study_wrapper is not None
 
-    config = common_report_facade.get_common_report_config('Study3')
+    config = common_report_facade.get_common_report_config("Study3")
     assert config is not None
     print(config)
 
     common_report = CommonReport(study_wrapper, config)
 
     assert common_report is not None
-    assert common_report.id == 'Study3'
+    assert common_report.id == "Study3"
 
     print(config.people_groups_info)
     print(config.people_groups)
@@ -37,36 +37,32 @@ def test_common_report_simple(vdb_fixture, common_report_facade):
     pprint(row0.to_dict())
     pprint(row1.to_dict())
 
-    assert row0.effect_type == 'Frame-shift'
+    assert row0.effect_type == "Frame-shift"
     assert len(row0.row) == 2
 
-    cells = sorted(
-        row0.row,
-        key=lambda c: c.column_name)
+    cells = sorted(row0.row, key=lambda c: c.column_name)
 
     cell = cells[0]
-    assert cell.column_name == 'prb'
+    assert cell.column_name == "prb"
     assert cell.number_of_observed_events == 2
     assert cell.number_of_children_with_event == 2
 
     cell = cells[1]
-    assert cell.column_name == 'sib'
+    assert cell.column_name == "sib"
     assert cell.number_of_observed_events == 0
     assert cell.number_of_children_with_event == 0
 
-    assert row1.effect_type == 'Missense'
+    assert row1.effect_type == "Missense"
     assert len(row1.row) == 2
 
-    cells = sorted(
-        row1.row,
-        key=lambda c: c.column)
+    cells = sorted(row1.row, key=lambda c: c.column)
 
     cell = cells[0]
-    assert cell.column_name == 'prb'
+    assert cell.column_name == "prb"
     assert cell.number_of_observed_events == 2
     assert cell.number_of_children_with_event == 1
 
     cell = cells[1]
-    assert cell.column_name == 'sib'
+    assert cell.column_name == "sib"
     assert cell.number_of_observed_events == 1
     assert cell.number_of_children_with_event == 1

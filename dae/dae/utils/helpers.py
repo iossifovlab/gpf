@@ -10,4 +10,4 @@ def str2bool(value):
         return False
     if isinstance(value, bool):
         return value
-    return value.lower() in {'true', 'yes', '1', '1.0', 't', 'y'}
+    return value.lower() in {"true", "yes", "1", "1.0", "t", "y"}

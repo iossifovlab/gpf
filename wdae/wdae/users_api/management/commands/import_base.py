@@ -5,11 +5,11 @@ from django.contrib.auth.models import BaseUserManager, Group
 
 class ImportUsersBase(object):
     def handle_user(self, res):
-        email = BaseUserManager.normalize_email(res['Email'])
+        email = BaseUserManager.normalize_email(res["Email"])
         user = WdaeUser.objects.create_user(email=email)
 
         if "Groups" in res:
-            groups = res['Groups'].split(':')
+            groups = res["Groups"].split(":")
             groups = [g for g in groups if g != "superuser"]
 
             for group_name in set(groups):
@@ -18,7 +18,7 @@ class ImportUsersBase(object):
                 group, _ = Group.objects.get_or_create(name=group_name)
                 group.user_set.add(user)
 
-            if WdaeUser.SUPERUSER_GROUP in res['Groups']:
+            if WdaeUser.SUPERUSER_GROUP in res["Groups"]:
                 user.is_superuser = True
                 user.is_staff = True
 

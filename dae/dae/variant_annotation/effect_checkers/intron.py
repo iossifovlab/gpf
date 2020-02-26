@@ -16,20 +16,30 @@ class IntronicEffectChecker(object):
 
         intron_regions_before_coding = 0
         for j in request.transcript_model.exons:
-            logger.debug("reg %d-%d cds:%d", j.start, j.stop,
-                         request.transcript_model.cds[0])
-            if (request.transcript_model.cds[0] <= j.stop):
+            logger.debug(
+                "reg %d-%d cds:%d",
+                j.start,
+                j.stop,
+                request.transcript_model.cds[0],
+            )
+            if request.transcript_model.cds[0] <= j.stop:
                 break
             intron_regions_before_coding += 1
 
         for i, j in enumerate(coding_regions):
-            logger.debug("pos: %d-%d checking intronic region %d-%d",
-                         request.variant.position, last_position, prev,
-                         j.start)
-            if (prev < request.variant.position
-                    and last_position < j.start):
+            logger.debug(
+                "pos: %d-%d checking intronic region %d-%d",
+                request.variant.position,
+                last_position,
+                prev,
+                j.start,
+            )
+            if prev < request.variant.position and last_position < j.start:
                 return EffectFactory.create_intronic_effect(
-                    "intron", request, prev, j.start,
-                    intron_regions_before_coding + i
+                    "intron",
+                    request,
+                    prev,
+                    j.start,
+                    intron_regions_before_coding + i,
                 )
             prev = j.stop

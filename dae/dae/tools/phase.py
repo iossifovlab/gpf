@@ -11,13 +11,15 @@ def checkConsistency(inp):
     L, P, nCpies = getDims(inp)
     for l, m in enumerate(inp):
         if m.shape != (2, P):
-            raise Exception('The matrix for the ',
-                            l, 'th locus has inconsisten shape')
+            raise Exception(
+                "The matrix for the ", l, "th locus has inconsisten shape"
+            )
 
         lNC = sum(m, 0)
         if not np.array_equal(lNC, nCpies):
-            raise Exception('The ', l, 'th loci has inconsisten',
-                            'copynumber profile')
+            raise Exception(
+                "The ", l, "th loci has inconsisten", "copynumber profile"
+            )
     return True
 
 
@@ -27,19 +29,19 @@ def possiblePersonPhasingR(inp, L, P, p, ll, cPh, posPhs, seenHet):
         return
     if inp[ll][0, p] == 0:
         cPh[:, ll] = 1
-        possiblePersonPhasingR(inp, L, P, p, ll+1, cPh, posPhs, seenHet)
+        possiblePersonPhasingR(inp, L, P, p, ll + 1, cPh, posPhs, seenHet)
     elif inp[ll][1, p] == 0:
         cPh[:, ll] = 0
-        possiblePersonPhasingR(inp, L, P, p, ll+1, cPh, posPhs, seenHet)
+        possiblePersonPhasingR(inp, L, P, p, ll + 1, cPh, posPhs, seenHet)
     elif seenHet:
         cPh[:, ll] = [0, 1]
-        possiblePersonPhasingR(inp, L, P, p, ll+1, cPh, posPhs, True)
+        possiblePersonPhasingR(inp, L, P, p, ll + 1, cPh, posPhs, True)
         cPhB = np.array(cPh)
         cPhB[:, ll] = [1, 0]
-        possiblePersonPhasingR(inp, L, P, p, ll+1, cPhB, posPhs, True)
+        possiblePersonPhasingR(inp, L, P, p, ll + 1, cPhB, posPhs, True)
     else:
         cPh[:, ll] = [0, 1]
-        possiblePersonPhasingR(inp, L, P, p, ll+1, cPh, posPhs, True)
+        possiblePersonPhasingR(inp, L, P, p, ll + 1, cPh, posPhs, True)
 
 
 def possiblePersonPhasing(inp, L, P, nCpies, p):
@@ -90,11 +92,8 @@ if __name__ == "__main__":
     print("hi")
 
     inpR = [
-        [[1, 2, 2, 1],
-         [1, 0, 0, 1]],
-        [[1, 2, 1, 2],
-         [1, 0, 1, 0]],
-
+        [[1, 2, 2, 1], [1, 0, 0, 1]],
+        [[1, 2, 1, 2], [1, 0, 1, 0]],
     ]
     inp = [np.array(x) for x in inpR]
     print("inp", inp)

@@ -13,12 +13,14 @@ class FrameShiftEffectChecker(object):
                     effect_name = "no-frame-shift-newStop"
                 else:
                     effect_name = "no-frame-shift"
-                ef = EffectFactory.create_effect_with_aa_change(effect_name,
-                                                                request)
+                ef = EffectFactory.create_effect_with_aa_change(
+                    effect_name, request
+                )
             else:
                 effect_name = "frame-shift"
-                ef = EffectFactory.create_effect_with_aa_change(effect_name,
-                                                                request)
+                ef = EffectFactory.create_effect_with_aa_change(
+                    effect_name, request
+                )
             return ef
         return None
 
@@ -66,17 +68,26 @@ class FrameShiftEffectChecker(object):
             if len(request.variant.reference) == 0:
                 stop += 1
 
-            self.logger.debug("frameshift %d<=%d<=%d cds:%d-%d exon:%d-%d",
-                              start, request.variant.position, stop,
-                              request.transcript_model.cds[0],
-                              request.transcript_model.cds[1],
-                              j.start, j.stop)
+            self.logger.debug(
+                "frameshift %d<=%d<=%d cds:%d-%d exon:%d-%d",
+                start,
+                request.variant.position,
+                stop,
+                request.transcript_model.cds[0],
+                request.transcript_model.cds[1],
+                j.start,
+                j.stop,
+            )
 
-            if (start <= request.variant.position <= stop):
-                self.logger.debug("fs detected %d<=%d-%d<=%d cds:%d-%d",
-                                  start, request.variant.position,
-                                  request.variant.ref_position_last, stop,
-                                  request.transcript_model.cds[0],
-                                  request.transcript_model.cds[1])
+            if start <= request.variant.position <= stop:
+                self.logger.debug(
+                    "fs detected %d<=%d-%d<=%d cds:%d-%d",
+                    start,
+                    request.variant.position,
+                    request.variant.ref_position_last,
+                    stop,
+                    request.transcript_model.cds[0],
+                    request.transcript_model.cds[1],
+                )
 
                 return self.create_effect(request, length)

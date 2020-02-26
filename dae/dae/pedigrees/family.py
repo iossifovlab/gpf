@@ -9,61 +9,62 @@ from dae.variants.attributes import Role, Sex, Status
 
 
 PEDIGREE_COLUMN_NAMES = {
-    'family': 'family_id',
-    'person': 'person_id',
-    'mother': 'mom_id',
-    'father': 'dad_id',
-    'sex': 'sex',
-    'status': 'status',
-    'role': 'role',
-    'sample id': 'sample_id',
-    'layout': 'layout',
-    'generated': 'generated',
-    'proband': 'proband',
+    "family": "family_id",
+    "person": "person_id",
+    "mother": "mom_id",
+    "father": "dad_id",
+    "sex": "sex",
+    "status": "status",
+    "role": "role",
+    "sample id": "sample_id",
+    "layout": "layout",
+    "generated": "generated",
+    "proband": "proband",
 }
 
 
 class Person(object):
-
     def __init__(self, **attributes):
         self._attributes = attributes
 
-        assert 'person_id' in attributes
-        self.family_id = attributes['family_id']
+        assert "person_id" in attributes
+        self.family_id = attributes["family_id"]
         self.family = None
-        self.person_id = attributes['person_id']
-        self.sample_id = attributes.get('sample_id', None)
-        self.index = attributes.get('index', None)
+        self.person_id = attributes["person_id"]
+        self.sample_id = attributes.get("sample_id", None)
+        self.index = attributes.get("index", None)
 
-        self._sex = Sex.from_name(attributes['sex'])
-        if 'role' not in attributes:
+        self._sex = Sex.from_name(attributes["sex"])
+        if "role" not in attributes:
             self._role = None
         else:
-            self._role = Role.from_name(attributes.get('role'))
+            self._role = Role.from_name(attributes.get("role"))
 
-        self._status = Status.from_name(attributes['status'])
+        self._status = Status.from_name(attributes["status"])
 
-        self._attributes['sex'] = self._sex
-        self._attributes['role'] = self._role
-        self._attributes['status'] = self._status
+        self._attributes["sex"] = self._sex
+        self._attributes["role"] = self._role
+        self._attributes["status"] = self._status
 
-        self.mom_id = attributes.get('mom_id', None)
-        if self.mom_id == '0':
+        self.mom_id = attributes.get("mom_id", None)
+        if self.mom_id == "0":
             self.mom_id = None
-            self._attributes['mom_id'] = None
-        self.dad_id = attributes.get('dad_id', None)
-        if self.dad_id == '0':
+            self._attributes["mom_id"] = None
+        self.dad_id = attributes.get("dad_id", None)
+        if self.dad_id == "0":
             self.dad_id = None
-            self._attributes['dad_id'] = None
+            self._attributes["dad_id"] = None
         self.mom = None
         self.dad = None
 
     def __repr__(self):
         if self.generated:
             return "Person([G] {} ({}); {}; {})".format(
-                self.person_id, self.family_id, self.role, self.sex)
+                self.person_id, self.family_id, self.role, self.sex
+            )
         return "Person({} ({}); {}; {})".format(
-            self.person_id, self.family_id, self.role, self.sex)
+            self.person_id, self.family_id, self.role, self.sex
+        )
 
     @property
     def role(self):
@@ -79,19 +80,19 @@ class Person(object):
 
     @property
     def layout(self):
-        return self._attributes.get('layout', None)
+        return self._attributes.get("layout", None)
 
     @property
     def generated(self):
-        return self._attributes.get('generated', None)
+        return self._attributes.get("generated", None)
 
     @property
     def family_bin(self):
-        return self._attributes.get('family_bin', None)
+        return self._attributes.get("family_bin", None)
 
     @property
     def sample_index(self):
-        return self._attributes.get('sample_index', None)
+        return self._attributes.get("sample_index", None)
 
     def has_mom(self):
         return self.mom is not None
@@ -106,8 +107,9 @@ class Person(object):
         return self.has_dad() and self.has_mom()
 
     def has_generated_parent(self):
-        return ((self.has_dad() and self.dad.generated) or
-                (self.has_mom() and self.mom.generated))
+        return (self.has_dad() and self.dad.generated) or (
+            self.has_mom() and self.mom.generated
+        )
 
     def has_attr(self, key):
         return key in self._attributes
@@ -120,7 +122,6 @@ class Person(object):
 
 
 class Family(object):
-
     def __init__(self, family_id):
         self.family_id = family_id
         self.persons = {}
@@ -158,7 +159,7 @@ class Family(object):
         return len(self.members_in_order)
 
     def __repr__(self):
-        return f'Family({self.family_id}, {list(self.persons.values())})'
+        return f"Family({self.family_id}, {list(self.persons.values())})"
 
     def add_members(self, persons):
         assert all([isinstance(p, Person) for p in persons])
@@ -182,7 +183,8 @@ class Family(object):
     def members_in_order(self):
         if self._members_in_order is None:
             self._members_in_order = list(
-                filter(lambda m: not m.generated, self.persons.values()))
+                filter(lambda m: not m.generated, self.persons.values())
+            )
         return self._members_in_order
 
     @property
@@ -202,9 +204,9 @@ class Family(object):
     @property
     def samples_index(self):
         if self._samples_index is None:
-            self._samples_index = tuple([
-                    m.sample_index for m in self.members_in_order
-                ])
+            self._samples_index = tuple(
+                [m.sample_index for m in self.members_in_order]
+            )
         return self._samples_index
 
     def members_index(self, person_ids):
@@ -219,18 +221,17 @@ class Family(object):
     def get_members_with_roles(self, roles):
         if not isinstance(roles[0], Role):
             roles = [Role.from_name(role) for role in roles]
-        return list(filter(
-            lambda m: m.role in roles, self.members_in_order))
+        return list(filter(lambda m: m.role in roles, self.members_in_order))
 
     def get_members_with_statuses(self, statuses):
         if not isinstance(statuses[0], Status):
             statuses = [Status.from_name(status) for status in statuses]
-        return list(filter(
-            lambda m: m.status in statuses, self.members_in_order))
+        return list(
+            filter(lambda m: m.status in statuses, self.members_in_order)
+        )
 
 
 class FamiliesData(Mapping):
-
     def __init__(self):
         self._ped_df = None
         self._families = {}
@@ -267,7 +268,7 @@ class FamiliesData(Mapping):
     @staticmethod
     def from_pedigree_df(ped_df):
         persons = defaultdict(list)
-        for rec in ped_df.to_dict(orient='record'):
+        for rec in ped_df.to_dict(orient="record"):
             person = Person(**rec)
             persons[person.family_id].append(person)
 
@@ -282,9 +283,7 @@ class FamiliesData(Mapping):
     @staticmethod
     def from_families(families):
         return FamiliesData.from_family_persons(
-            [
-                (fam.family_id, fam.full_members) for fam in families.values()
-            ]
+            [(fam.family_id, fam.full_members) for fam in families.values()]
         )
 
     @property
@@ -296,18 +295,20 @@ class FamiliesData(Mapping):
             for family in self.values():
                 for person in family.full_members:
                     rec = copy.deepcopy(person._attributes)
-                    rec['mom_id'] = person.mom_id if person.mom_id else '0'
-                    rec['dad_id'] = person.dad_id if person.dad_id else '0'
+                    rec["mom_id"] = person.mom_id if person.mom_id else "0"
+                    rec["dad_id"] = person.dad_id if person.dad_id else "0"
                     column_names = column_names.union(set(rec.keys()))
                     records.append(rec)
 
             columns = [
-                col for col in PEDIGREE_COLUMN_NAMES.values()
+                col
+                for col in PEDIGREE_COLUMN_NAMES.values()
                 if col in column_names
             ]
             extention_columns = column_names.difference(set(columns))
             extention_columns = extention_columns.difference(
-                set(['sample_index']))
+                set(["sample_index"])
+            )
             columns.extend(sorted(extention_columns))
             ped_df = pd.DataFrame.from_records(records, columns=columns)
             self._ped_df = ped_df
@@ -367,5 +368,4 @@ class FamiliesData(Mapping):
     def persons_with_roles(self, roles):
         if not isinstance(roles[0], Role):
             roles = [Role.from_name(role) for role in roles]
-        return list(filter(
-            lambda m: m.role in roles, self.persons.values()))
+        return list(filter(lambda m: m.role in roles, self.persons.values()))

@@ -8,31 +8,34 @@ class dbNSFPAnnotator(NPScoreAnnotator):
     def __init__(self, config, genomes_db):
         self.current_chr = None
         self.dbNSFP_files = glob.glob(
-                os.path.join(config.options.dbNSFP_path,
-                             config.options.dbNSFP_filename))
+            os.path.join(
+                config.options.dbNSFP_path, config.options.dbNSFP_filename
+            )
+        )
         assert self.dbNSFP_files
 
         options = config.options
 
         if options.dbNSFP_filename:
             options = GPFConfigParser.modify_tuple(
-                options, {
-                    "dbNSFP_filename": options.dbNSFP_filename.replace('*', '{}')
-                }
+                options,
+                {
+                    "dbNSFP_filename": options.dbNSFP_filename.replace(
+                        "*", "{}"
+                    )
+                },
             )
 
         scores_config_file = os.path.join(
-                config.options.dbNSFP_path,
-                config.options.dbNSFP_config)
+            config.options.dbNSFP_path, config.options.dbNSFP_config
+        )
         options = GPFConfigParser.modify_tuple(
             options, {"scores_config_file": scores_config_file}
         )
         options = GPFConfigParser.modify_tuple(
             options, {"scores_file": self.dbNSFP_files[0]}
         )
-        config = GPFConfigParser.modify_tuple(
-            config, {"options": options}
-        )
+        config = GPFConfigParser.modify_tuple(config, {"options": options})
 
         super(dbNSFPAnnotator, self).__init__(config, genomes_db)
 
@@ -41,7 +44,8 @@ class dbNSFPAnnotator(NPScoreAnnotator):
             options = self.config.options
             scores_file = os.path.join(
                 self.config.options.dbNSFP_path,
-                self.config.options.dbNSFP_filename.format(self.current_chr))
+                self.config.options.dbNSFP_filename.format(self.current_chr),
+            )
             options = GPFConfigParser.modify_tuple(
                 options, {"scores_file": scores_file}
             )

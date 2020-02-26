@@ -4,6 +4,7 @@ from functools import wraps
 
 def inject_dataset(func):
     """Injects a dataset property into the request of a view method"""
+
     @wraps(func)
     def wrapper(self, request, *args, **kwargs):
         dataset_id = find_dataset_id_in_request(request)
@@ -11,4 +12,5 @@ def inject_dataset(func):
 
         request.dataset = dataset
         return func(self, request, *args, **kwargs)
+
     return wrapper

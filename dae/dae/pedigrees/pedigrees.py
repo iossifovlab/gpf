@@ -10,11 +10,10 @@ from dae.pedigrees.family import Person, Family
 
 
 class FamilyConnections(object):
-
     def __init__(self, family, id_to_individual, id_to_mating_unit):
         assert family is not None
-        assert '0' not in id_to_individual
-        assert '' not in id_to_individual
+        assert "0" not in id_to_individual
+        assert "" not in id_to_individual
 
         self.family = family
         self.id_to_individual = id_to_individual
@@ -60,7 +59,8 @@ class FamilyConnections(object):
                         sex="2",
                         status="-",
                         role=Role.mom,
-                        generated=True)
+                        generated=True,
+                    )
                     new_members.append(missing_mother_fathers[member.dad_id])
                 member.mom_id = member.dad_id + ".mother"
             elif member.dad_id is None:
@@ -74,7 +74,8 @@ class FamilyConnections(object):
                         sex="1",
                         status="-",
                         role=Role.dad,
-                        generated=True)
+                        generated=True,
+                    )
                     new_members.append(missing_father_mothers[member.mom_id])
                 member.dad_id = member.mom_id + ".father"
 
@@ -89,7 +90,8 @@ class FamilyConnections(object):
                     sex=Sex.F,
                     status=Status.unspecified,
                     role=Role.mom,
-                    generated=True)
+                    generated=True,
+                )
                 new_members.append(mother.member)
             if father.member is None and father not in new_members:
                 father.member = Person(
@@ -100,7 +102,8 @@ class FamilyConnections(object):
                     sex="1",
                     status="-",
                     role=Role.dad,
-                    generated=True)
+                    generated=True,
+                )
                 new_members.append(father.member)
 
         unique_new_members_ids = set([])
@@ -145,8 +148,8 @@ class FamilyConnections(object):
         if cls.is_valid_family(id_to_mating_unit) is False:
             return None
 
-        assert '0' not in id_to_individual
-        assert '' not in id_to_individual
+        assert "0" not in id_to_individual
+        assert "" not in id_to_individual
 
         return FamilyConnections(family, id_to_individual, id_to_mating_unit)
 
@@ -213,19 +216,19 @@ class FamilyConnections(object):
             (i, s)
             for i in individuals
             for s in sibship_units
-            if i.parents is not None and
-            i.generation_ranks() == s.generation_ranks()
+            if i.parents is not None
+            and i.generation_ranks() == s.generation_ranks()
         }
-        same_generation_not_siblings = same_generation_not_siblings \
-            - sibship_edges
+        same_generation_not_siblings = (
+            same_generation_not_siblings - sibship_edges
+        )
 
         # Ed+: mating units and corresponding sibships should intersect
         mates_siblings_edges = {
             (m, s)
             for m in mating_units
             for s in sibship_units
-            if(m.children.individual_set() is
-                s.individual_set())
+            if (m.children.individual_set() is s.individual_set())
         }
 
         # Ee-: mating units and sibship or mating units of different ranks
@@ -234,15 +237,19 @@ class FamilyConnections(object):
             (m, a)
             for m in mating_units
             for a in sibship_units | mating_units
-            if (m.generation_ranks() & a.generation_ranks() == set()) and
-            (m.individual_set() & a.individual_set() == set())
+            if (m.generation_ranks() & a.generation_ranks() == set())
+            and (m.individual_set() & a.individual_set() == set())
             # this check seems redundant
         }
         intergenerational_edges -= mates_siblings_edges
 
         required_set = mating_edges | sibship_edges | mates_siblings_edges
-        forbidden_set = same_rank_edges | same_generation_not_mates \
-            | same_generation_not_siblings | intergenerational_edges
+        forbidden_set = (
+            same_rank_edges
+            | same_generation_not_mates
+            | same_generation_not_siblings
+            | intergenerational_edges
+        )
 
         # print("same_rank_edges", len(same_rank_edges), same_rank_edges)
         # print("same_generation_not_mates",
@@ -258,7 +265,8 @@ class FamilyConnections(object):
         # print("forbidden edges", len(forbidden_set), forbidden_set)
 
         return SandwichInstance.from_sets(
-            all_vertices, required_set, forbidden_set)
+            all_vertices, required_set, forbidden_set
+        )
 
     @property
     def members(self):
@@ -290,8 +298,8 @@ class FamilyConnections(object):
 
     def max_rank(self):
         return reduce(
-            lambda acc, i: max(acc, i.rank),
-            self.id_to_individual.values(), 0)
+            lambda acc, i: max(acc, i.rank), self.id_to_individual.values(), 0
+        )
 
     def get_individual(self, person_id):
         return self.id_to_individual.get(person_id)
@@ -306,8 +314,9 @@ class FamilyConnections(object):
         return set(self.id_to_mating_unit.values())
 
     def get_sibship_units(self):
-        return set([mu.children
-                    for mu in list(self.id_to_mating_unit.values())])
+        return set(
+            [mu.children for mu in list(self.id_to_mating_unit.values())]
+        )
 
 
 class IndividualGroup(metaclass=abc.ABCMeta):
@@ -323,9 +332,12 @@ class IndividualGroup(metaclass=abc.ABCMeta):
         return {}
 
     def __repr__(self):
-        return\
-            self.__class__.__name__[0].lower() + \
-            "{" + ",".join(sorted(map(repr, self.individual_set()))) + "}"
+        return (
+            self.__class__.__name__[0].lower()
+            + "{"
+            + ",".join(sorted(map(repr, self.individual_set())))
+            + "}"
+        )
 
     def __lt__(self, other):
         return repr(self) < repr(other)
@@ -337,8 +349,9 @@ class IndividualGroup(metaclass=abc.ABCMeta):
 class Individual(IndividualGroup):
     NO_RANK = -3673473456
 
-    def __init__(self, mating_units=None, member=None, parents=None,
-                 rank=NO_RANK):
+    def __init__(
+        self, mating_units=None, member=None, parents=None, rank=NO_RANK
+    ):
 
         if mating_units is None:
             mating_units = []
@@ -377,12 +390,16 @@ class Individual(IndividualGroup):
         return str(self.member.person_id)
 
     def are_siblings(self, other_individual):
-        return (self.parents is not None and
-                self.parents == other_individual.parents)
+        return (
+            self.parents is not None
+            and self.parents == other_individual.parents
+        )
 
     def are_mates(self, other_individual):
-        return len(set(self.mating_units) &
-                   set(other_individual.mating_units)) == 1
+        return (
+            len(set(self.mating_units) & set(other_individual.mating_units))
+            == 1
+        )
 
     def is_individual(self):
         return True
@@ -403,7 +420,6 @@ class SibshipUnit(IndividualGroup):
 
 
 class MatingUnit(IndividualGroup):
-
     def __init__(self, mother, father, children=None):
         if children is None:
             children = SibshipUnit()
@@ -431,46 +447,81 @@ class MatingUnit(IndividualGroup):
 def get_argument_parser(description):
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-        description=description)
+        description=description,
+    )
 
+    parser.add_argument("file", metavar="f", help="the .ped file")
     parser.add_argument(
-        "file", metavar="f", help="the .ped file")
+        "--output",
+        metavar="o",
+        help="the output filename file",
+        default="output.pdf",
+    )
     parser.add_argument(
-        "--output", metavar="o", help="the output filename file",
-        default="output.pdf")
+        "--delimiter",
+        help="delimiter used in pedigree file; defaults to " '"\\t"',
+        default="\t",
+        action="store",
+    )
     parser.add_argument(
-        '--delimiter', help='delimiter used in pedigree file; defaults to '
-        '"\\t"', default='\t', action='store')
+        "--family_id",
+        help="Specify family id column label.",
+        default="familyId",
+        action="store",
+    )
     parser.add_argument(
-        '--family_id', help='Specify family id column label.',
-        default='familyId', action='store')
+        "--id",
+        help="Specify id column label.",
+        default="personId",
+        action="store",
+    )
     parser.add_argument(
-        '--id', help='Specify id column label.',
-        default='personId', action='store')
+        "--father",
+        help="Specify father column label",
+        default="dadId",
+        action="store",
+    )
     parser.add_argument(
-        '--father', help='Specify father column label',
-        default='dadId', action='store')
+        "--mother",
+        help="Specify mother column label",
+        default="momId",
+        action="store",
+    )
     parser.add_argument(
-        '--mother', help='Specify mother column label',
-        default='momId', action='store')
+        "--sex",
+        help="Specify sex column label.",
+        default="sex",
+        action="store",
+    )
     parser.add_argument(
-        '--sex', help='Specify sex column label.',
-        default='sex', action='store')
+        "--status",
+        help="Specify status column label.",
+        default="status",
+        action="store",
+    )
     parser.add_argument(
-        '--status', help='Specify status column label.',
-        default='status', action='store')
+        "--role",
+        help="Specify role column label.",
+        default="role",
+        action="store",
+    )
     parser.add_argument(
-        '--role', help='Specify role column label.',
-        default='role', action='store')
+        "--no-header-order",
+        help="Comma separated order of columns in header "
+        "when header is not in the input file. Values for columns are "
+        "familyId, personId, dadId, momId, sex, status. You can replace "
+        "unnecessary column with `_`.",
+        dest="no_header_order",
+        default=None,
+        action="store",
+    )
     parser.add_argument(
-        '--no-header-order', help='Comma separated order of columns in header '
-        'when header is not in the input file. Values for columns are '
-        'familyId, personId, dadId, momId, sex, status. You can replace '
-        'unnecessary column with `_`.', dest='no_header_order', default=None,
-        action='store')
-    parser.add_argument(
-        '--processes', type=int, default=4, dest='processes',
-        help='Number of processes', action='store'
+        "--processes",
+        type=int,
+        default=4,
+        dest="processes",
+        help="Number of processes",
+        action="store",
     )
 
     return parser

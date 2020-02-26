@@ -6,24 +6,26 @@ from dae.gene.gene_term import loadGeneTerm
 
 
 def rename_gene_terms(config, gene_terms, inNS):
-    assert {gene_terms.geneNS, inNS} <= {'id', 'sym'}, \
-        (f'The provided namespaces "{gene_terms.geneNS}",'
-         ' "{inNS}" must be either "id" or "sym"!')
+    assert {gene_terms.geneNS, inNS} <= {"id", "sym"}, (
+        f'The provided namespaces "{gene_terms.geneNS}",'
+        ' "{inNS}" must be either "id" or "sym"!'
+    )
 
     result = deepcopy(gene_terms)
 
     if result.geneNS == inNS:
         return result
-    elif result.geneNS == 'id' and inNS == 'sym':
+    elif result.geneNS == "id" and inNS == "sym":
+
         def rF(x):
             genes = getGenes(config.gene_info)
             if x in genes:
                 return genes[x].sym
-        result.renameGenes('sym', rF)
-    elif result.geneNS == 'sym' and inNS == 'id':
+
+        result.renameGenes("sym", rF)
+    elif result.geneNS == "sym" and inNS == "id":
         result.renameGenes(
-            'id',
-            lambda x: getCleanGeneId(config.gene_info, 'sym', x)
+            "id", lambda x: getCleanGeneId(config.gene_info, "sym", x)
         )
     return result
 
@@ -33,15 +35,17 @@ def getGeneTermAtt(config, gt_id, attName):
     return getattr(gene_term, attName)
 
 
-def getGeneTerms(config, gt_id='main', inNS='sym'):
+def getGeneTerms(config, gt_id="main", inNS="sym"):
     fl = getattr(config.gene_terms, gt_id).file
     gt = loadGeneTerm(fl)
     try:
         gt = rename_gene_terms(config, gt, inNS)
     except AssertionError:
         raise Exception(
-            (f'Unknown namespace(s) for the {gt_id} gene terms:'
-             ' |{gt.geneNS}| -> |{inNS}|')
+            (
+                f"Unknown namespace(s) for the {gt_id} gene terms:"
+                " |{gt.geneNS}| -> |{inNS}|"
+            )
         )
     return gt
 
@@ -57,7 +61,8 @@ def _parseNCBIGeneInfo(config):
             cs = line.strip().split("\t")
             if len(cs) != 15:
                 raise Exception(
-                    'Unexpected line in the ' + config.gene_info_file)
+                    "Unexpected line in the " + config.gene_info_file
+                )
 
             # Format: tax_id GeneID Symbol LocusTag Synonyms dbXrefs
             # chromosome map_location description
@@ -65,11 +70,23 @@ def _parseNCBIGeneInfo(config):
             # Full_name_from_nomenclature_authority Nomenclature_status
             # Other_designations Modification_date
             # (tab is used as a separator, pound sign - start of a comment)
-            (tax_id, GeneID, Symbol, LocusTag, Synonyms, dbXrefs,
-                chromosome, map_location, description, type_of_gene,
+            (
+                tax_id,
+                GeneID,
+                Symbol,
+                LocusTag,
+                Synonyms,
+                dbXrefs,
+                chromosome,
+                map_location,
+                description,
+                type_of_gene,
                 Symbol_from_nomenclature_authority,
-                Full_name_from_nomenclature_authority, Nomenclature_status,
-                Other_designations, Modification_date) = cs
+                Full_name_from_nomenclature_authority,
+                Nomenclature_status,
+                Other_designations,
+                Modification_date,
+            ) = cs
 
             gi = Box()
             gi.id = GeneID
@@ -77,10 +94,14 @@ def _parseNCBIGeneInfo(config):
             gi.syns = set(Synonyms.split("|"))
             gi.desc = description
 
-            if (gi.id in genes):
+            if gi.id in genes:
                 raise Exception(
-                    'The gene ' + gi.id + ' is repeated twice in the ' +
-                    config.gene_info_file + ' file')
+                    "The gene "
+                    + gi.id
+                    + " is repeated twice in the "
+                    + config.gene_info_file
+                    + " file"
+                )
 
             genes[gi.id] = gi
             _addNSTokenToGeneInfo(nsTokens, "id", gi.id, gi)

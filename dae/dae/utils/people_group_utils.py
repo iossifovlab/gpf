@@ -4,10 +4,11 @@ def select_people_groups(available_groups, specified_groups):
 
     result = {
         pg.section_id(): {
-            'name': pg.name,
-            'source': pg.source,
-            'domain': pg.domain
-        } for pg in available_groups
+            "name": pg.name,
+            "source": pg.source,
+            "domain": pg.domain,
+        }
+        for pg in available_groups
         if pg.section_id() in specified_groups
     }
 

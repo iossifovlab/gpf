@@ -8,15 +8,15 @@ from .validators import SomeSuperuserLeftValidator
 
 
 class CreatableSlugRelatedField(serializers.SlugRelatedField):
-
     def to_internal_value(self, data):
         try:
-            return self.get_queryset() \
-                .get_or_create(**{self.slug_field: data})[0]
+            return self.get_queryset().get_or_create(
+                **{self.slug_field: data}
+            )[0]
         except serializers.ObjectDoesNotExist:
-            self.fail('does_not_exist', slug_name=self.slug_field, value=data)
+            self.fail("does_not_exist", slug_name=self.slug_field, value=data)
         except (TypeError, ValueError):
-            self.fail('invalid')
+            self.fail("invalid")
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -25,21 +25,24 @@ class UserSerializer(serializers.ModelSerializer):
 
     groups = serializers.ListSerializer(
         child=CreatableSlugRelatedField(
-            slug_field='name', queryset=Group.objects.all()),
+            slug_field="name", queryset=Group.objects.all()
+        ),
         validators=[ProtectedGroupsValidator(), SomeSuperuserLeftValidator()],
-        default=[])
+        default=[],
+    )
 
-    hasPassword = serializers.BooleanField(source='is_active', read_only=True)
+    hasPassword = serializers.BooleanField(source="is_active", read_only=True)
 
     class Meta(object):
         model = get_user_model()
-        fields = ('id', 'email', 'name', 'hasPassword', 'groups')
+        fields = ("id", "email", "name", "hasPassword", "groups")
 
     def validate(self, data):
         unknown_keys = set(self.initial_data.keys()) - set(self.fields.keys())
         if unknown_keys:
             raise serializers.ValidationError(
-                "Got unknown fields: {}".format(unknown_keys))
+                "Got unknown fields: {}".format(unknown_keys)
+            )
 
         return super(UserSerializer, self).validate(data)
 
@@ -47,7 +50,7 @@ class UserSerializer(serializers.ModelSerializer):
     def _check_groups_exist(groups):
         if groups:
             db_groups_count = Group.objects.filter(name__in=groups).count()
-            assert db_groups_count == len(groups), 'Not all groups exists..'
+            assert db_groups_count == len(groups), "Not all groups exists.."
 
     @staticmethod
     def _update_groups(user, new_groups):
@@ -65,7 +68,7 @@ class UserSerializer(serializers.ModelSerializer):
             user.groups.remove(*old_ids)
 
     def update(self, instance, validated_data):
-        groups = validated_data.pop('groups', None)
+        groups = validated_data.pop("groups", None)
 
         self._check_groups_exist(groups)
 
@@ -79,7 +82,7 @@ class UserSerializer(serializers.ModelSerializer):
         return instance
 
     def create(self, validated_data):
-        groups = validated_data.pop('groups', None)
+        groups = validated_data.pop("groups", None)
 
         self._check_groups_exist(groups)
 
@@ -94,10 +97,9 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class UserWithoutEmailSerializer(UserSerializer):
-
     class Meta(object):
         model = get_user_model()
-        fields = tuple(x for x in UserSerializer.Meta.fields if x != 'email')
+        fields = tuple(x for x in UserSerializer.Meta.fields if x != "email")
 
 
 class BulkGroupOperationSerializer(serializers.Serializer):
@@ -115,5 +117,6 @@ class BulkGroupOperationSerializer(serializers.Serializer):
         raise NotImplementedError()
 
     def to_internal_value(self, data):
-        return super(BulkGroupOperationSerializer, self).\
-            to_internal_value(data)
+        return super(BulkGroupOperationSerializer, self).to_internal_value(
+            data
+        )
