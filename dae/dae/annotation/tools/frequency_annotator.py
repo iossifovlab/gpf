@@ -16,8 +16,10 @@ class FrequencyAnnotator(VariantScoreAnnotatorBase):
         self.variant_col_name = self.score_file.config.columns.variant
         assert self.variant_col_name
         assert self.variant_col_name in self.score_file.schema.col_names, \
-            "'{}' not in score file schema!".format(
-                    self.variant_col_name, self.score_file.schema.col_names)
+            "'{}' not in score file schema! Schema columns: {}".format(
+                    self.variant_col_name,
+                    self.score_file.schema.col_names
+            )
 
     def collect_annotator_schema(self, schema):
         super(FrequencyAnnotator, self).collect_annotator_schema(schema)
