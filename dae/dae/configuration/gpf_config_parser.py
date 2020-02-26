@@ -87,12 +87,12 @@ class GPFConfigParser:
     def _namedtuple_to_dict(cls, tup: NamedTuple) -> Dict[str, Any]:
         output = deepcopy(tup)._asdict()
         for k, v in output.items():
-            if isinstance(v, NamedTuple):
-                output[k] = cls._namedtuple_to_dict(v)
+            if isinstance(v, tuple):
+                output[k] = cls._namedtuple_to_dict(v)  # type: ignore
             if isinstance(v, list):
                 for idx, li in enumerate(output[k]):
-                    if isinstance(li, NamedTuple):
-                        output[k][idx] = cls._namedtuple_to_dict(li)
+                    if isinstance(li, tuple):
+                        output[k][idx] = cls._namedtuple_to_dict(li)  # type: ignore
         return output
 
     @classmethod
