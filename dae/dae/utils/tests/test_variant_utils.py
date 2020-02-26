@@ -1,9 +1,11 @@
 import pytest
 
+from typing import List, Union
+
 from dae.utils.variant_utils import get_locus_ploidy
 from dae.variants.attributes import Sex
 
-chroms = list(range(1, 23))
+chroms: List[Union[int, str]] = list(range(1, 23))
 chroms.append('Y')
 
 test_data = [
