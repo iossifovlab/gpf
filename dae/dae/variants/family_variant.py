@@ -77,7 +77,7 @@ class FamilyAllele(Allele, FamilyDelegate):
             genetic_model=None,
             inheritance_in_members=None):
         assert isinstance(family, Family)
-        assert genotype or best_state
+        assert genotype is not None or best_state is not None
 
         FamilyDelegate.__init__(self, family)
 
@@ -364,7 +364,7 @@ class FamilyVariant(Variant, FamilyDelegate):
 
         assert family is not None
         assert isinstance(family, Family)
-        assert genotype or best_state
+        assert genotype is not None or best_state is not None
         FamilyDelegate.__init__(self, family)
 
         self.summary_variant = summary_variant

@@ -61,7 +61,7 @@ class CNVLoader(VariantsGenotypesLoader):
 
     def _full_variants_iterator_impl(
         self,
-    ) -> Tuple[SummaryVariant, FamilyVariant]:
+    ) -> Tuple[SummaryVariant, List[FamilyVariant]]:
         for index, rec in enumerate(self.cnv_df.to_dict(orient="records")):
             family_id = rec.pop("family_id")
             best_state = rec.pop("best_state")
@@ -84,7 +84,7 @@ class CNVLoader(VariantsGenotypesLoader):
                 sv, family, None, best_state
             )
 
-            yield sv, fv
+            yield sv, [fv]
 
     @classmethod
     def _calc_cnv_best_state(
