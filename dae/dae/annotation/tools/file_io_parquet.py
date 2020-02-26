@@ -1,6 +1,8 @@
 import sys
 import os
 
+from typing import Dict, Any
+
 import pyarrow as pa
 import pyarrow.parquet as pq
 from box import Box
@@ -53,7 +55,7 @@ class ParquetSchema(Schema):
     ])
 
     # New types only need to be added here.
-    type_map = OrderedDict([
+    type_map: Dict[str, Any] = OrderedDict([
         ('str', (str, pa.string())),
         ('float', (float, pa.float32())),
         ('float32', (float, pa.float32())),
