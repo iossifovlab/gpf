@@ -3,6 +3,8 @@ import sys
 import argparse
 import time
 
+from typing import Optional, Any
+
 from math import ceil
 from collections import defaultdict
 
@@ -692,9 +694,9 @@ class MakefileGenerator:
 
 class Variants2ParquetTool:
 
-    VARIANTS_LOADER_CLASS = None
-    VARIANTS_TOOL = None
-    VARIANTS_FREQUENCIES = False
+    VARIANTS_LOADER_CLASS: Any = None
+    VARIANTS_TOOL: Optional[str] = None
+    VARIANTS_FREQUENCIES: bool = False
 
     BUCKET_INDEX_DEFAULT = 1000
 
