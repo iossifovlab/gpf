@@ -121,6 +121,16 @@ pipeline {
             }
         }
 
+        stage('Type Check') {
+            steps {
+                sh '''
+                export PATH=$HOME/anaconda3/envs/gpf3/bin:$PATH
+
+                docker-compose -f docker-compose.yml exec -T tests /code/jenkins_mypy.sh
+                '''
+            }
+        }
+
         stage('Test') {
             steps {
                 sh """
@@ -151,6 +161,8 @@ pipeline {
 
         }
         success {
+	    archiveArtifacts artifacts: 'mypy_report.tar.gz'
+
             slackSend (
                 color: '#00FF00',
                 message: "SUCCESSFUL: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' ${env.BUILD_URL}"
