@@ -1,6 +1,7 @@
 import os
 import sys
 import argparse
+import time
 
 from math import ceil
 from collections import defaultdict
@@ -27,8 +28,13 @@ def save_study_config(dae_config, study_id, study_config):
 
     if os.path.exists(filename):
         print('configuration file already exists:', filename)
-        print('skipping generation of default study config for:', study_id)
-        return
+        new_name = os.path.basename(filename) + '.' + str(time.time_ns())
+        new_path = os.path.join(
+            os.path.dirname(filename),
+            new_name
+        )
+        print(f'Backing up configuration for {study_id} in {new_path}')
+        os.rename(filename, new_path)
 
     os.makedirs(dirname, exist_ok=True)
     with open(filename, 'w') as outfile:

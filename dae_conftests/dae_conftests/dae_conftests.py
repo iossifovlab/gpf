@@ -436,18 +436,23 @@ def iossifov2014_loader(
 @pytest.fixture(scope='session')
 def iossifov2014_raw_denovo(iossifov2014_loader):
 
-    fvars = RawMemoryVariants([iossifov2014_loader])
+    fvars = RawMemoryVariants(
+        [iossifov2014_loader],
+        iossifov2014_loader.families)
 
     return fvars
 
 
 @pytest.fixture(scope='session')
 def iossifov2014_impala(
-        request, iossifov2014_loader, genomes_db_2013,
-        test_hdfs, impala_genotype_storage):
+        request, iossifov2014_loader, genomes_db_2013, hdfs_host,
+        impala_genotype_storage):
 
-    temp_dirname = test_hdfs.tempdir(prefix='variants_', suffix='_data')
-    test_hdfs.mkdir(temp_dirname)
+    from dae.backends.impala.hdfs_helpers import HdfsHelpers
+    hdfs = HdfsHelpers(hdfs_host, 8020)
+
+    temp_dirname = hdfs.tempdir(prefix='variants_', suffix='_data')
+    hdfs.mkdir(temp_dirname)
 
     study_id = 'iossifov_we2014_test'
     parquet_filenames = ParquetManager.build_parquet_filenames(
@@ -528,7 +533,7 @@ def variants_vcf(vcf_variants_loader):
             'vcf_omission_mode': 'omission'}):
 
         loader = vcf_variants_loader(path, params=params)
-        fvars = RawMemoryVariants([loader])
+        fvars = RawMemoryVariants([loader], loader.families)
         return fvars
 
     return builder
@@ -537,7 +542,7 @@ def variants_vcf(vcf_variants_loader):
 @pytest.fixture(scope='session')
 def variants_mem():
     def builder(loader):
-        fvars = RawMemoryVariants([loader])
+        fvars = RawMemoryVariants([loader], loader.families)
         return fvars
 
     return builder
@@ -623,27 +628,12 @@ def impala_host():
     return os.environ.get('DAE_IMPALA_HOST', '127.0.0.1')
 
 
-# Impala backend
-@pytest.fixture(scope='session')
-def test_hdfs(request, hdfs_host):
-    from dae.backends.impala.hdfs_helpers import HdfsHelpers
-    hdfs = HdfsHelpers(hdfs_host, 8020)
-    return hdfs
-
-
-@pytest.fixture(scope='session')
-def test_impala_helpers(request, impala_host):
-    from dae.backends.impala.impala_helpers import ImpalaHelpers
-    helpers = ImpalaHelpers(impala_host=impala_host, impala_port=21050)
-
-    return helpers
-
-
 @pytest.fixture(scope='session')
 def impala_genotype_storage(hdfs_host, impala_host):
     storage_config = GPFConfigParser._dict_to_namedtuple({
         'id': 'impala_test_storage',
         'type': 'impala',
+        'dir': "/tmp",
         'impala': {
             'host': impala_host,
             'port': 21050,
@@ -674,7 +664,7 @@ DATA_IMPORT_COUNT = 0
 
 @pytest.fixture(scope='session')
 def data_import(
-        request, test_hdfs, test_impala_helpers,
+        request, hdfs_host, impala_host,
         impala_genotype_storage, reimport, default_dae_config,
         gpf_instance_2013):
 
@@ -683,20 +673,27 @@ def data_import(
 
     assert DATA_IMPORT_COUNT == 1
 
-    temp_dirname = test_hdfs.tempdir(prefix='variants_', suffix='_data')
-    test_hdfs.mkdir(temp_dirname)
+    from dae.backends.impala.hdfs_helpers import HdfsHelpers
+    hdfs = HdfsHelpers(hdfs_host, 8020)
+
+    temp_dirname = hdfs.tempdir(prefix='variants_', suffix='_data')
+    hdfs.mkdir(temp_dirname)
 
     annotation_pipeline = \
         construct_import_annotation_pipeline(gpf_instance_2013)
 
     def fin():
-        test_hdfs.delete(temp_dirname, recursive=True)
+        hdfs.delete(temp_dirname, recursive=True)
     request.addfinalizer(fin)
+
+    from dae.backends.impala.impala_helpers import ImpalaHelpers
+    impala_helpers = ImpalaHelpers(impala_host=impala_host, impala_port=21050)
+
 
     def build(dirname):
 
-        if not test_impala_helpers.check_database(impala_test_dbname()):
-            test_impala_helpers.create_database(impala_test_dbname())
+        if not impala_helpers.check_database(impala_test_dbname()):
+            impala_helpers.create_database(impala_test_dbname())
 
         vcfdirname = relative_to_this_test_folder(
             os.path.join('fixtures', dirname))
@@ -709,12 +706,14 @@ def data_import(
             study_id = os.path.splitext(filename)[0]
 
             variant_table, pedigree_table = impala_genotype_storage. \
-                study_tables(GPFConfigParser._dict_to_namedtuple({'id': study_id}))
+                study_tables(
+                    GPFConfigParser._dict_to_namedtuple(
+                        {'id': study_id}))
 
             if not reimport and \
-                    test_impala_helpers.check_table(
+                    impala_helpers.check_table(
                         impala_test_dbname(), variant_table) and \
-                    test_impala_helpers.check_table(
+                    impala_helpers.check_table(
                         impala_test_dbname(), pedigree_table):
                 continue
 

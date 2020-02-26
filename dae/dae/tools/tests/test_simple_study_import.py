@@ -96,7 +96,6 @@ def test_import_comp_vcf_into_genotype_storage(
     vcf_filename = fixture_dirname('study_import/comp.vcf')
 
     study_id = f'test_comp_vcf_{genotype_storage_id}'
-    genotype_storage_id = 'test_impala'
 
     argv = [
         pedigree_filename,
@@ -400,3 +399,37 @@ def test_import_wild_multivcf_into_genotype_storage(
 
     vs = list(study.query_variants())
     assert len(vs) == 48
+
+
+def test_import_study_config_arg(
+        genomes_db_2013, fixture_dirname,
+        default_dae_config, gpf_instance_2013, temp_dirname):
+
+    genotype_storage_id = "test_filesystem"
+    pedigree_filename = fixture_dirname('study_import/comp.ped')
+    vcf_filename = fixture_dirname('study_import/comp.vcf')
+    study_config = fixture_dirname('study_import/study_config.conf')
+
+    study_id = f'test_comp_vcf_{genotype_storage_id}'
+
+    argv = [
+        pedigree_filename,
+        '--id', study_id,
+        '--skip-reports',
+        '--vcf-files', vcf_filename,
+        '--genotype-storage', genotype_storage_id,
+        '--study-config', study_config,
+        '-o', temp_dirname,
+    ]
+
+    main(argv, gpf_instance_2013)
+
+    gpf_instance_2013.reload()
+    study = gpf_instance_2013.get_genotype_data(study_id)
+    assert study is not None
+    config = gpf_instance_2013.get_genotype_data_config(study_id)
+    assert config.name == "asdf"
+    assert config.description == "Description from study config given to tool"
+
+    vs = list(study.query_variants())
+    assert len(vs) == 30

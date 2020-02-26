@@ -12,7 +12,8 @@ from dae.backends.impala.import_commons import \
 
 from dae.backends.dae.loader import DenovoLoader, DaeTransmittedLoader
 from dae.backends.vcf.loader import VcfLoader
-from dae.backends.raw.loader import AnnotationPipelineDecorator
+from dae.backends.raw.loader import AnnotationPipelineDecorator, \
+    AlleleFrequencyDecorator
 
 from dae.pedigrees.loader import FamiliesLoader
 
@@ -83,6 +84,12 @@ def cli_arguments(dae_config, argv=sys.argv[1:]):
         '--add-chrom-prefix', type=str, default=None,
         help='Add specified prefix to each chromosome name in '
         'variants file'
+    )
+
+    parser.add_argument(
+        '--study-config', type=str, default=None,
+        dest='study_config',
+        help='Config used to overwrite values in generated configuration'
     )
 
     DenovoLoader.cli_options(parser)
@@ -173,8 +180,9 @@ def main(argv, gpf_instance=None):
             params=vcf_params
         )
         vcf_loader = AnnotationPipelineDecorator(
-            vcf_loader, annotation_pipeline
-        )
+            vcf_loader, annotation_pipeline)
+        vcf_loader = AlleleFrequencyDecorator(vcf_loader)
+
         variant_loaders.append(vcf_loader)
 
     if argv.dae_summary_file is not None:
@@ -194,7 +202,8 @@ def main(argv, gpf_instance=None):
         study_id,
         families_loader=families_loader,
         variant_loaders=variant_loaders,
-        output=output
+        output=output,
+        study_config=argv.study_config
     )
     save_study_config(dae_config, study_id, study_config)
 
