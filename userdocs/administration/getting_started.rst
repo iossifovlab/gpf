@@ -422,7 +422,7 @@ to see the configuration file generated from the import tool:
     dbfile = "%(wd)s/comp_pheno.db"
     browser_dbfile = "%(wd)s/browser/comp_pheno_browser.db"
     browser_images_dir = "%(wd)s/browser/images"
-    browser_images_url = "/static/comp_pheno/browser/images"
+    browser_images_url = "/static/comp_pheno/browser/images/"
 
     [regression.age]
     instrument_name = "i1"
@@ -446,8 +446,8 @@ The phenotype databases could be attached to one or more studies and datasets.
 If you want to attach ``comp_pheno`` phenotype
 database to ``comp_all`` study, you need to specify it in the study's
 configuration file ``comp_all.conf``, which can be found at gpf_test/studies/comp_all.
-Edit the file to add this line at the bottom of the file. Make sure it's separated and
-not part of any section. 
+Edit the file to add this line at the bottom of it. Make sure the line is separated and
+that it isn't part of any section. 
 
 .. code::
 
