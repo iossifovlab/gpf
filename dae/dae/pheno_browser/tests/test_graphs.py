@@ -35,6 +35,7 @@ def test_linregres_notcorrelated():
     assert res_female.pvalues["age"] == pytest.approx(expected_value)
 
 
+@pytest.mark.skip("Debugging Jenkins segfault")
 def test_linregres_positive():
     df = pd.DataFrame(
         {
