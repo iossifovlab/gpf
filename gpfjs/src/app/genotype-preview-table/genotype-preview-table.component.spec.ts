@@ -56,7 +56,7 @@ describe('GenotypePreviewTableComponent', () => {
       addPreviewVariant(['value21', 'value22'], component.genotypePreviewInfo);
     component.genotypePreviewVariantsArray.
       addPreviewVariant(['value31', 'value32'], component.genotypePreviewInfo);
-    component.columns = AdditionalColumn.fromJsonArray([
+    component.columns = AdditionalColumn.fromJson([
       {
         id: 'column1',
         name: 'column1',
