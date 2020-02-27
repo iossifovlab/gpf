@@ -117,7 +117,7 @@
         </div>
 
         <div class="col-sm-3" class="variants-report-selector">
-          <select class="form-control" [(ngModel)]="this.currentDenovoReport">
+          <select id="denovo-variants-dropdown" class="form-control" [(ngModel)]="this.currentDenovoReport">
             <option value="" selected="selected"></option>
             <option *ngFor="let denovoReport of variantReport.denovoReport.tables" [ngValue]="denovoReport">
               {{ denovoReport.groupName }}
