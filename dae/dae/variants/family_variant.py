@@ -11,8 +11,6 @@ from dae.variants.attributes import GeneticModel, Inheritance, TransmissionType
 from dae.variants.variant import (Allele, Effect, SummaryAllele,
                                   SummaryVariant, Variant)
 
-from dae.utils.variant_utils import best2gt
-
 
 def calculate_simple_best_state(
     genotype: np.array, allele_count: int
@@ -361,7 +359,6 @@ class FamilyVariant(Variant, FamilyDelegate):
 
         assert family is not None
         assert isinstance(family, Family)
-        assert genotype is not None or best_state is not None
         FamilyDelegate.__init__(self, family)
 
         self.summary_variant = summary_variant
@@ -459,8 +456,6 @@ class FamilyVariant(Variant, FamilyDelegate):
         """
         Returns genotype of the family.
         """
-        if self.gt is None:
-            self.gt = best2gt(self.best_state)
         return self.gt.T
 
     @property
