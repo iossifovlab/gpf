@@ -73,7 +73,7 @@ class StudyWrapper(object):
         self.pheno_column_slots = pheno_column_slots or []
 
         # PHENO FILTERS
-        self.pheno_filters = genotype_browser_config.pheno_filters or []
+        self.pheno_filters = genotype_browser_config.pheno_filters or None
 
         # GENE WEIGHTS
         if genotype_browser_config.genotype:
@@ -163,12 +163,29 @@ class StudyWrapper(object):
         if phenotype_data:
             self.phenotype_data = pheno_db.get_phenotype_data(phenotype_data)
 
+            # TODO
+            # This should probably be done in the front-end by making a query
+            # to get the measure assigned to this filter and its respective domain
             if self.pheno_filters:
+                pheno_filters_dict = GPFConfigParser._namedtuple_to_dict(
+                    self.pheno_filters
+                )
+                for k, pheno_filter in pheno_filters_dict.items():
+                    if "measure" in pheno_filter:
+                        pheno_filters_dict[k][
+                            "domain"
+                        ] = self.phenotype_data.get_measure(
+                            pheno_filter["measure"]
+                        ).domain
+
+                self.pheno_filters = GPFConfigParser._dict_to_namedtuple(
+                    pheno_filters_dict
+                )
+
                 self.pheno_filters_in_config = {
-                    f"{f.role}.{f.measure}"
+                    f"{pf.role}.{pf.measure}"
                     for pf in self.pheno_filters
-                    for f in pf.filter
-                    if f.measure and f.filter_type == "single"
+                    if pf.measure and pf.filter_type == "single"
                 }
                 self.pheno_filter_builder = PhenoFilterBuilder(
                     self.phenotype_data
@@ -844,7 +861,6 @@ class StudyWrapper(object):
             "has_present_in_child",
             "has_present_in_parent",
         ]
-        # TODO Add domain to pheno filters
         result = {
             key: deepcopy(getattr(self.config, key, None)) for key in keys
         }
@@ -855,10 +871,13 @@ class StudyWrapper(object):
 
         bs_config["columns"] = bs_config["genotype"]
 
+        if self.pheno_filters:
+            bs_config["pheno_filters"] = GPFConfigParser._namedtuple_to_dict(
+                self.pheno_filters
+            )
+
         result["genotype_browser_config"] = bs_config
-        result["genotype_browser"] = (
-            self.config.genotype_browser.enabled or False
-        )
+        result["genotype_browser"] = self.config.genotype_browser.enabled
 
         result["study_types"] = result["study_type"]
         result["enrichment_tool"] = self.config.enrichment.enabled

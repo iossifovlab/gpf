@@ -59,7 +59,7 @@ class Measure(object):
 
     * `max_value` - for 'continuous' and 'ordinal' measures
 
-    * `value_domain` - string that represents the values
+    * `values_domain` - string that represents the values
 
     """
 
@@ -72,6 +72,21 @@ class Measure(object):
     def __repr__(self):
         return "Measure({}, {}, {})".format(
             self.measure_id, self.measure_type, self.values_domain
+        )
+
+    @property
+    def domain(self):
+        # FIXME !
+        # This must be re-done in a better way, perhaps by
+        # changing how the values domain string is stored in the database...
+        return list(
+            map(
+                float,
+                self.values_domain.replace("[", "")
+                .replace("]", "")
+                .replace(" ", "")
+                .split(","),
+            )
         )
 
     @classmethod
