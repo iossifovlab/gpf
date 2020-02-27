@@ -38,8 +38,8 @@ export class PhenoFiltersComponent extends QueryStateWithErrorsProvider implemen
           const continuousFilterState = new ContinuousFilterState(
             phenoFilter.name,
             phenoFilter.measureType,
-            phenoFilter.measureFilter.role,
-            phenoFilter.measureFilter.measure,
+            phenoFilter.role,
+            phenoFilter.measure,
           );
           return [
             phenoFilter, continuousFilterState
@@ -48,8 +48,8 @@ export class PhenoFiltersComponent extends QueryStateWithErrorsProvider implemen
           const categoricalFilterState = new CategoricalFilterState(
             phenoFilter.name,
             phenoFilter.measureType,
-            phenoFilter.measureFilter.role,
-            phenoFilter.measureFilter.measure,
+            phenoFilter.role,
+            phenoFilter.measure,
           );
 
           return [

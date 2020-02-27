@@ -129,44 +129,34 @@ export class AdditionalColumn {
   ) {}
 }
 
-export class MeasureFilter {
-  static fromJson(json: any): MeasureFilter {
-    return new MeasureFilter(
-      json['role'],
-      json['filter_type'],
-      json['measure'],
-      json['domain']
-    );
-  }
-
-  constructor(
-    readonly role: string,
-    readonly filterType: string,
-    readonly measure: string,
-    readonly domain: Array<string>
-  ) {}
-}
-
 export class PhenoFilter {
-  static fromJson(json: any): PhenoFilter {
-    return new PhenoFilter(
-      json['name'],
-      json['measure_type'],
-      MeasureFilter.fromJson(json['measure_filter']),
-    );
-  }
+  static fromJson(json: any): Array<PhenoFilter> {
+    let filters = [];
 
-  static fromJsonArray(jsonArray: Array<Object>): Array<PhenoFilter> {
-    if (!jsonArray) {
-      return undefined;
+    for (let prop in json) {
+      if (json.hasOwnProperty(prop)) {
+        filters.push(
+          new PhenoFilter(
+            json[prop]['name'],
+            json[prop]['measure_type'],
+            json[prop]['role'],
+            json[prop]['filter_type'],
+            json[prop]['measure'],
+            json[prop]['domain']
+          )
+        );
+      }
     }
-    return jsonArray.map((json) => PhenoFilter.fromJson(json));
+    return filters;
   }
 
   constructor(
     readonly name: string,
     readonly measureType: string,
-    readonly measureFilter: MeasureFilter
+    readonly role: string,
+    readonly filterType: string,
+    readonly measure: string,
+    readonly domain: Array<string>
   ) {}
 }
 
@@ -188,8 +178,8 @@ export class GenotypeBrowser {
       json['has_graphical_preview'],
       json['preview_columns'],
       [...AdditionalColumn.fromJson(json['columns'])],
-      PhenoFilter.fromJsonArray(json['pheno_filters']),
-      PhenoFilter.fromJsonArray(json['family_filters']),
+      PhenoFilter.fromJson(json['pheno_filters']),
+      PhenoFilter.fromJson(json['family_filters']),
       PresentInRole.fromJsonArray(json['present_in_role']),
       json['inheritance_type_filter'],
       json['selected_inheritance_type_filter_values'],
