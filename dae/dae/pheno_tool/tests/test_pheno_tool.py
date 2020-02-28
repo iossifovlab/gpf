@@ -6,6 +6,9 @@ from dae.pheno_tool.pheno_common import PhenoResult
 from dae.variants.attributes import Sex
 
 
+pytestmark = pytest.mark.skip
+
+
 def test_init_pheno_df(fake_phenotype_data):
     pheno_tool = PhenoTool(
         fake_phenotype_data,
