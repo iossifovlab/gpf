@@ -65,31 +65,20 @@ def test_quads_f1_config_genotype_browser_pheno_filters(quads_f1_config):
     genotype_browser_config = quads_f1_config.genotype_browser
 
     first = genotype_browser_config.pheno_filters[0]._asdict()
-    print(first)
-    first["filter"] = list(map(lambda x: x._asdict(), first["filter"]))
     assert first == {
         "name": "Categorical",
         "measure_type": "categorical",
-        "filter": [
-            {
-                "filter_type": "single",
-                "role": "prb",
-                "measure": "instrument1.categorical",
-            }
-        ],
+        "filter_type": "single",
+        "role": "prb",
+        "measure": "instrument1.categorical",
     }
     second = genotype_browser_config.pheno_filters[1]._asdict()
-    second["filter"] = list(map(lambda x: x._asdict(), second["filter"]))
     assert second == {
         "name": "Continuous",
         "measure_type": "continuous",
-        "filter": [
-            {
-                "filter_type": "single",
-                "role": "prb",
-                "measure": "instrument1.continuous",
-            }
-        ],
+        "filter_type": "single",
+        "role": "prb",
+        "measure": "instrument1.continuous",
     }
 
 
