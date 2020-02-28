@@ -81,7 +81,6 @@ class VariantDetail:
         self.chrom = chrom
         self.cshl_position = position
         self.cshl_variant = variant
-        self._variant_type = None
 
     def __repr__(self):
         return "{} {}".format(
@@ -91,13 +90,6 @@ class VariantDetail:
     @property
     def cshl_location(self):
         return "{}:{}".format(self.chrom, self.cshl_position)
-
-    @property
-    def variant_type(self):
-        if self._variant_type is None:
-            self._variant_type = VariantType.from_cshl_variant(
-                self.cshl_variant)
-        return self._variant_type
 
     @staticmethod
     def from_vcf(chrom, position, reference, alternative):
@@ -168,6 +160,13 @@ class Allele:
         return self.effect
 
     @property
+    def variant_type(self) -> Optional[VariantType]:
+        if self._variant_type is None and self._details:
+            self._variant_type = VariantType.from_cshl_variant(
+                self._details.cshl_variant)
+        return self._variant_type
+
+    @property
     def frequency(self) -> float:
         return self.get_attribute('af_allele_freq')
 
@@ -198,14 +197,6 @@ class Allele:
         if self.details is None:
             return None
         return self.details.cshl_position
-
-    @property
-    def variant_type(self) -> Optional[VariantType]:
-        if self.alternative is None:
-            return None
-        if self.details is None:
-            return None
-        return self.details.variant_type
 
     @property
     def is_reference_allele(self) -> bool:
@@ -246,6 +237,15 @@ class Allele:
         """
         return item in self.attribute
 
+    def __repr__(self) -> str:
+        if VariantType.is_cnv(self.variant_type):
+            return f"{self.chromosome}:{self.position}-{self.end_position}"
+        elif not self.alternative:
+            return f"{self.chrom}:{self.position} {self.reference}(ref)"
+        else:
+            return f"{self.chrom}:{self.position}" \
+                f" {self.reference}->{self.alternative}"
+
 
 class Variant:
 
@@ -262,7 +262,7 @@ class Variant:
         raise NotImplementedError()
 
     @property
-    def end_position(self) -> int:
+    def end_position(self) -> Optional[int]:
         raise NotImplementedError()
 
     @property
@@ -286,7 +286,10 @@ class Variant:
 
     @property
     def location(self) -> str:
-        return '{}:{}'.format(self.chromosome, self.position)
+        if self.end_position:
+            return f"{self.chromosome}:{self.position}-{self.end_position}"
+        else:
+            return f"{self.chromosome}:{self.position}"
 
     @property
     def variant(self) -> str:
@@ -350,7 +353,7 @@ class Variant:
         """
         returns set of variant types.
         """
-        return set([aa.variant_type for aa in self.alt_alleles])
+        return set([aa.variant_type for aa in self.alleles])
 
     def get_attribute(
             self,
@@ -375,7 +378,12 @@ class Variant:
                 sa.update_attributes({key: val})
 
     def __repr__(self):
-        return '{} {}'.format(self.location, self.variant)
+        types = self.variant_types
+        if VariantType.cnv_m in types or VariantType.cnv_p in types:
+            types_str = ", ".join(map(str, types))
+            return f"{self.location} {types_str}"
+        else:
+            return f"{self.location} {self.variant}"
 
     def __eq__(self, other):
         return self.chromosome == other.chromosome and \
@@ -410,6 +418,7 @@ class SummaryAllele(Allele):
             summary_index: int = -1,
             allele_index: int = 0,
             transmission_type: TransmissionType = TransmissionType.transmitted,
+            variant_type=None,
             attributes: Dict[str, Any] = None):
 
         self._chromosome = chromosome
@@ -421,6 +430,7 @@ class SummaryAllele(Allele):
         self._summary_index = summary_index
         self._allele_index = allele_index
         self._transmission_type = transmission_type
+        self._variant_type = variant_type
 
         self._details = None
 
@@ -535,6 +545,7 @@ class SummaryVariant(Variant):
 
         self._chromosome = self.ref_allele.chromosome
         self._position = self.ref_allele.position
+        self._end_position = self.ref_allele.end_position
         self._reference = self.ref_allele.reference
         if len(alleles) > 1:
             self._end_position = alleles[1].end_position
@@ -546,6 +557,10 @@ class SummaryVariant(Variant):
     @property
     def position(self) -> int:
         return self._position
+
+    @property
+    def end_position(self) -> Optional[int]:
+        return self._end_position
 
     @property
     def reference(self) -> str:
@@ -571,15 +586,14 @@ class SummaryVariantFactory(object):
             record, transmission_type=TransmissionType.transmitted):
         record['transmission_type'] = transmission_type
         alternative = record['alternative']
-        if "end_position" not in record:
-            record["end_position"] = -1
 
         return SummaryAllele(
             record['chrom'], record['position'],
             record['reference'],
             alternative=alternative,
             summary_index=record['summary_variant_index'],
-            end_position=record['end_position'],
+            end_position=record.get('end_position', -1),
+            variant_type=record.get('variant_type', None),
             allele_index=record['allele_index'],
             transmission_type=transmission_type,
             attributes=record)

@@ -1,5 +1,16 @@
+from __future__ import annotations
+from typing import Optional
 import enum
 
+_VARIANT_TYPE_DISPLAY_NAME = {
+    "invalid": "inv",
+    "substitution": "sub",
+    "insertion": "ins",
+    "deletion": "del",
+    "comp": "complex",
+    "cnv_p": "cnv+",
+    "cnv_m": "cnv-"
+}
 
 _ROLE_DISPLAY_NAME = {
     'maternal_grandmother': 'Maternal Grandmother',
@@ -261,7 +272,6 @@ class Inheritance(enum.Enum):
         return self.name
 
 
-# TODO: Better string representations
 class VariantType(enum.Enum):
     invalid = 0
     substitution = 1
@@ -272,7 +282,7 @@ class VariantType(enum.Enum):
     cnv_m = 1 << 5
 
     @staticmethod
-    def from_name(name):
+    def from_name(name) -> Optional[VariantType]:
         if name == 'sub' or name == 'substitution':
             return VariantType.substitution
         elif name == 'ins' or name == 'insertion':
@@ -288,7 +298,8 @@ class VariantType(enum.Enum):
         raise ValueError("unexpected variant type: {}".format(name))
 
     @staticmethod
-    def from_cshl_variant(variant):
+    def from_cshl_variant(variant) -> Optional[VariantType]:
+        # FIXME: Change logic to use entire string
         if variant is None:
             return VariantType.none
 
@@ -306,11 +317,15 @@ class VariantType(enum.Enum):
         else:
             raise ValueError("unexpected variant type: {}".format(variant))
 
-    def __repr__(self):
-        return self.name
+    @staticmethod
+    def is_cnv(vt: VariantType) -> bool:
+        return vt == VariantType.cnv_m or vt == VariantType.cnv_p
 
-    def __str__(self):
-        return self.name
+    def __repr__(self) -> str:
+        return _VARIANT_TYPE_DISPLAY_NAME[self.name]
+
+    def __str__(self) -> str:
+        return _VARIANT_TYPE_DISPLAY_NAME[self.name]
 
 
 class GeneticModel(enum.Enum):
