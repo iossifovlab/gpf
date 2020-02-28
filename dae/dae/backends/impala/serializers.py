@@ -125,7 +125,7 @@ class ParquetSerializer(object):
                 allele.end_position,
                 allele.reference,
                 None,
-                allele.variant_type.value,
+                None,
                 allele.transmission_type.value,
                 alternatives_data,
             )

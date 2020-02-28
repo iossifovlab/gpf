@@ -1,5 +1,6 @@
 from argparse import ArgumentParser
 from typing import List, Optional, Dict, Any, Tuple
+from copy import copy
 import numpy as np
 import pandas as pd
 
@@ -78,8 +79,19 @@ class CNVLoader(VariantsGenotypesLoader):
 
             rec["summary_variant_index"] = index
             rec["allele_index"] = 0
+
+            alt_rec = copy(rec)
+            del rec["end_position"]
+            del rec["variant_type"]
+            del rec["effect_type"]
+            del rec["effect_gene_genes"]
+            del rec["effect_gene_types"]
+            del rec["effect_details_transcript_ids"]
+            del rec["effect_details_details"]
+            alt_rec["allele_index"] = 1
+
             sv = SummaryVariantFactory.summary_variant_from_records(
-                [rec], self.transmission_type
+                [rec, alt_rec], self.transmission_type
             )
             if not self._is_in_regions(sv):
                 continue
@@ -127,6 +139,7 @@ class CNVLoader(VariantsGenotypesLoader):
         adjust_chrom_prefix=None,
         **kwargs
     ) -> pd.DataFrame:
+        # TODO: Remove effect types when effect annotation is made
         assert families is not None
         assert isinstance(families, FamiliesData)
 
@@ -147,6 +160,8 @@ class CNVLoader(VariantsGenotypesLoader):
                 cnv_family_id: str,
                 cnv_variant_type: str,
                 cnv_best_state: str,
+                "effectType": str,
+                "effectGene": str
             },
         )
 
@@ -163,6 +178,23 @@ class CNVLoader(VariantsGenotypesLoader):
             map(VariantType.from_name, raw_df[cnv_variant_type])
         )
 
+        effect_genes_col = list(map(lambda x: x.split("|"), raw_df["effectGene"]))
+        effect_gene_genes = []
+        effect_gene_types = []
+        for idx, egs in enumerate(effect_genes_col):
+            effect_genes = []
+            effect_types = []
+            for eg in egs:
+                split = eg.split(":")
+                if len(split) == 1:
+                    effect_genes.append(None)
+                    effect_types.append(split[0])
+                else:
+                    effect_genes.append(split[0])
+                    effect_types.append(split[1])
+            effect_gene_genes.append(effect_genes)
+            effect_gene_types.append(effect_types)
+
         best_state_col = tuple(
             map(
                 lambda x: cls._calc_cnv_best_state(x[0], x[1]),
@@ -178,6 +210,11 @@ class CNVLoader(VariantsGenotypesLoader):
                 "variant_type": variant_type_col,
                 "family_id": family_id_col,
                 "best_state": best_state_col,
+                "effect_type": raw_df["effectType"],
+                "effect_gene_genes": effect_gene_genes,
+                "effect_gene_types": effect_gene_types,
+                "effect_details_transcript_ids": [""]*len(chrom_col),
+                "effect_details_details": [""]*len(chrom_col),
             }
         )
 

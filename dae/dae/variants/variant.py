@@ -200,7 +200,7 @@ class Allele:
 
     @property
     def is_reference_allele(self) -> bool:
-        return self.alternative is None
+        return self.allele_index == 0
 
     def get_attribute(self, item: str, default=None):
         """
