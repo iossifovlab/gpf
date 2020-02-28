@@ -14,6 +14,8 @@ from dae.configuration.schemas.phenotype_data import pheno_conf_schema
 
 from dae.variants.attributes import Sex, Status, Role
 
+from typing import Optional, Sequence, Union
+
 
 LOGGER = logging.getLogger(__name__)
 
@@ -67,7 +69,7 @@ class Measure(object):
         self.name = name
         self.measure_name = name
         self.measure_type = MeasureType.other
-        self.values_domain = None
+        self.values_domain: Optional[str] = None
 
     def __repr__(self):
         return "Measure({}, {}, {})".format(
@@ -75,19 +77,24 @@ class Measure(object):
         )
 
     @property
-    def domain(self) -> list:
+    def domain(self) -> Sequence[Union[str, float]]:
         # FIXME !
         # This must be re-done in a better way, perhaps by
         # changing how the values domain string is stored in the database...
-        domain = (
-            self.values_domain.replace("[", "")
-            .replace("]", "")
-            .replace(" ", "")
-        )
-        domain = domain.split(",")
-        if self.measure_type in (MeasureType.continuous, MeasureType.ordinal):
-            domain = list(map(float, domain))
-        return domain
+        domain_list: Sequence[Union[str, float]] = list()
+        if self.values_domain is not None:
+            domain = (
+                self.values_domain.replace("[", "")
+                .replace("]", "")
+                .replace(" ", "")
+            )
+            domain_list = domain.split(",")
+            if self.measure_type in (
+                MeasureType.continuous,
+                MeasureType.ordinal,
+            ):
+                return list(map(lambda x: float(x), domain_list))
+        return domain_list
 
     @classmethod
     def _from_dict(cls, row):
