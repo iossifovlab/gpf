@@ -161,9 +161,9 @@ class Allele:
 
     @property
     def variant_type(self) -> Optional[VariantType]:
-        if self._variant_type is None and self._details:
+        if self._variant_type is None and self.details:
             self._variant_type = VariantType.from_cshl_variant(
-                self._details.cshl_variant)
+                self.details.cshl_variant)
         return self._variant_type
 
     @property

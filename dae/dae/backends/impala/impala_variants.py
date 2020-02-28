@@ -556,6 +556,7 @@ class ImpalaFamilyVariants:
             SELECT
                 chrom,
                 `position`,
+                end_position,
                 reference,
                 transmission_type,
                 alternatives_data,
@@ -576,6 +577,7 @@ class ImpalaFamilyVariants:
                 family_variant_index,
                 chrom,
                 `position`,
+                end_position,
                 reference,
                 transmission_type,
                 alternatives_data,
