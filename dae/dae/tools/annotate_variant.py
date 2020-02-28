@@ -2,7 +2,6 @@
 
 import sys
 import optparse
-import os.path
 import time
 import datetime
 
@@ -10,10 +9,7 @@ from typing import List, Optional
 
 from dae.gpf_instance.gpf_instance import GPFInstance
 
-import sys, os
-import optparse
-from subprocess import call
-import re, os.path
+import os
 from dae import GenomeAccess
 from dae.GeneModelFiles import load_gene_models
 from dae.variant_annotation.annotator import (
@@ -236,7 +232,7 @@ if opts.G is None and opts.Graw is None:
     else:
         variantFile = open(infile)
 
-    if opts.no_header == False:
+    if not opts.no_header:
         first_line_str = variantFile.readline()
         first_line = first_line_str.split()
     else:
