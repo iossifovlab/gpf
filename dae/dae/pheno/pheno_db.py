@@ -83,8 +83,8 @@ class Measure(object):
             self.values_domain.replace("[", "")
             .replace("]", "")
             .replace(" ", "")
-            .split(","),
         )
+        domain = domain.split(",")
         if self.measure_type in (MeasureType.continuous, MeasureType.ordinal):
             domain = list(map(float, domain))
         return domain
