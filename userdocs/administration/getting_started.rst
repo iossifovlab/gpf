@@ -2,13 +2,12 @@ GPF Getting Started Guide
 =========================
 
 
-Prerequisites [WIP]
-###################
+Prerequisites
+#############
 
-.. note::
-    wget
+This guide assumes that you are working on a Linux distribution.
 
-If you are using Ubuntu, you can run:
+You need wget to follow this guide - you can use your system's package manager to install it. For example, on Ubuntu:
 
 .. code-block:: bash
 
@@ -18,13 +17,13 @@ If you are using Ubuntu, you can run:
 GPF Installation
 ################
 
-The GPF system is developed in Python and supports Python 3.6 and up. The
+The GPF system is developed in Python and supports Python 3.7 and up. The
 recommended way to setup the GPF development environment is to use Anaconda.
 
 Download and install Anaconda
 +++++++++++++++++++++++++++++
 
-Download Anaconda from the Anaconda's `distribution page <https://www.anaconda.com/distribution>`_.
+Download Anaconda from Anaconda's `distribution page <https://www.anaconda.com/distribution>`_ using the following command:
 
 .. code-block:: bash
 
@@ -47,7 +46,7 @@ and install it in your local environment, following the installer instructions:
 Install GPF
 +++++++++++
 
-Create an empty conda `gpf` environment:
+Create an empty Anaconda environment named `gpf`:
 
 .. code-block:: bash
 
@@ -66,7 +65,7 @@ environment:
 
     conda install -c conda-forge -c bioconda -c iossifovlab gpf_wdae
 
-This command is going to install GPF and all its dependencies.
+This command is going to install GPF and all of its dependencies.
 
 
 Bootstrap GPF
@@ -76,13 +75,10 @@ To start working with GPF, you will need a startup data instance. There are
 two GPF startup instances that are aligned with different versions of the
 reference human genome - for HG19 and HG38.
 
-Besides the startup data instance some initial bootstrapping of GPF is also
+Besides the startup data instance, some initial bootstrapping of GPF is also
 necessary.
 
-To make bootstrapping easier, the script ``wdae_bootstrap.sh`` is provided,
-which prepares GPF for initial start.
-
-The bootstrap script creates a working directory where the data will be
+The bootstrap script ``wdae_bootstrap.sh`` creates a working directory where the data will be
 stored. You can provide the name of the working directory as a parameter
 to the boostrap script. For example, if you want the working directory to
 be named `gpf_test`, use the following command:
@@ -98,7 +94,7 @@ be named `gpf_test`, use the following command:
 
         wdae_bootstrap.sh hg38 gpf_test
 
-As a result, a directory named `gpf_test` should be created with following
+As a result, a directory named `gpf_test` will be created with the following
 structure:
 
 .. code-block:: bash
@@ -126,11 +122,11 @@ structure:
 Run GPF web server
 ##################
 
-Enter into ``gpf_test/`` and source ``setenv.sh`` file:
+Enter into the newly created ``gpf_test`` directory and source the ``setenv.sh`` file:
 
 .. code-block:: bash
 
-    cd gpf_test/
+    cd gpf_test
     source ./setenv.sh
 
 To run the GPF development web server, use the ``wdaemanage.py``
@@ -148,34 +144,35 @@ provided to the wdaemanage.py command. In this case:
     http://localhost:8000
 
 Once loaded, you will be greeted by a blank page. To demonstrate how to import new study data into
-the GPF instance, we will reproduce the necessary steps for importing
-the `comp` study data.
+the GPF instance, we will reproduce the necessary steps for importing a sample study.
 
 Data Storage
 ++++++++++++
 
 By default, GPF uses the filesystem for storing imported genotype data.
-This is fine for smaller sized studies - however, there is an option to use
+This is fine for smaller sized studies, however, there is an option to use
 Apache Impala as storage. This can be especially useful for larger studies.
-If you wish to use Apache Impala as storage, refer to :ref:`impala-storage`.
+If you wish to use Apache Impala as storage, refer to :ref:`impala_storage`.
 
 Simple study import
 +++++++++++++++++++
 
-Importing study data into a GPF instance usually involves multiple steps. To
-make initial bootstraping easier you can use the ``simple_study_import.py``
-tool that combines all the necessary steps in one tool.
+Importing study data into a GPF instance involves multiple steps. To
+make initial bootstraping easier, you can use the ``simple_study_import.py``
+tool which combines all the necessary steps in one tool.
 
 `simple_study_import.py` tool
 *****************************
 
-This tool supports variants import from two input formats:
+This tool supports importing variants from three formats:
 
-* VCF format
+* Variant Call Format (VCF)
 
-* DAE de Novo list of variants
+* CSHL transmitted variants format
 
-To see the available options supported by this tools use::
+* :ref:`List of de Novo variants <denovo_format>`
+
+To see the available options supported by this tool use::
 
     simple_study_import.py --help
 
@@ -183,31 +180,30 @@ To see the available options supported by this tools use::
 Example import of variants
 **************************
 
-Let's say you have a pedigree file ``comp.ped`` describing family information,
-a VCF file ``comp.vcf`` with transmitted variants and a list of de Novo
-variants ``comp.tsv``. The example data can be downloaded from `here <https://iossifovlab.com/distribution/public/studies/>`_.
+.. warning::
+    Make sure not to extract the downloaded study in the gpf_test/studies folder,
+    as this is where the system imports and reads its data to/from.
 
-.. note::
-    Make sure not to download in the gpf_test/studies folder, as this is where
-    the system imports and reads its data to/from.
-
-To import this data as a study into the GPF instance:
-
-* Download the ``comp`` demo study and extract the download archive::
+* Download the sample study and extract it::
 
     wget -c https://iossifovlab.com/distribution/public/studies/genotype-comp-latest.tar.gz
     tar zxvf genotype-comp-latest.tar.gz
+
+It contains a pedigree file ``comp.ped`` with family information,
+a VCF file ``comp.vcf`` with transmitted variants and a list of de Novo
+variants ``comp.tsv``.
+
 
 * Enter into the created directory ``comp``::
 
     cd comp
 
 * Run ``simple_study_import.py`` to import the VCF variants; this command uses
-  three arguments - study ID to use, pedigree file name and VCF file name::
+  three arguments - pedigree file name, a VCF file name and an id to assign to the imported study in the system::
 
         simple_study_import.py comp.ped \
-            --id comp_vcf \
-            --vcf-files comp.vcf
+            --vcf-files comp.vcf \
+            --id comp_vcf
 
   | This command creates a study with ID `comp_vcf` that contains all VCF variants.
 
@@ -215,8 +211,8 @@ To import this data as a study into the GPF instance:
   uses three arguments - study ID to use, pedigree file name and de Novo variants file name::
 
         simple_study_import.py comp.ped \
-            --id comp_denovo \
-            --denovo-file comp.tsv
+            --denovo-file comp.tsv \
+            --id comp_denovo
 
   | This command creates a study with ID `comp_denovo` that contains all de Novo variants.
 
@@ -225,19 +221,20 @@ To import this data as a study into the GPF instance:
   VCF file name and de Novo variants file name::
 
         simple_study_import.py comp.ped \
-            --id comp_all \
             --denovo-file comp.tsv \
-            --vcf-files comp.vcf
+            --vcf-files comp.vcf \
+            --id comp_all
 
   This command creates a study with ID `comp_all` that contains all
   VCF and de Novo variants.
 
+.. _denovo_format:
 
 .. note::
-    The expected format for the de Novo variants file is a tab separated
-    file that contains following columns:
+    The expected format for the de Novo variants file is a tab-separated
+    file that contains the following columns:
 
-    - familyId - family Id matching a family from the pedigree file
+    - familyId - family id matching a family from the pedigree file
     - location - location of the variant
     - variant - description of the variant
     - bestState - best state of the variant in the family
@@ -259,7 +256,7 @@ To import this data as a study into the GPF instance:
 Example import of de Novo variants
 **********************************
 
-As an example of importing study with de Novo variants, you can use the `iossifov_2014` study.
+As an example of importing a study with de Novo variants, you can use the `iossifov_2014` study.
 Download and extract the study::
 
     wget -c https://iossifovlab.com/distribution/public/studies/genotype-iossifov_2014-latest.tar.gz
@@ -269,20 +266,20 @@ Enter into the created directory ``iossifov_2014``::
 
     cd iossifov_2014
 
-and run ``simple_study_import.py`` tool::
+and run the ``simple_study_import.py`` tool::
 
     simple_study_import.py IossifovWE2014.ped \
         --id iossifov_2014 \
         --denovo-file IossifovWE2014.tsv
 
-To see the imported variants, restart the GPF development web server and find the
+To see the imported variants, restart the GPF development web server and navigate to the
 `iossifov_2014` study.
 
 
 Getting Started with Enrichment Tool
 ####################################
 
-For studies, that include de Novo variants you can enable the :ref:`enrichment_tool_ui`.
+For studies that include de Novo variants, you can enable the :ref:`enrichment_tool_ui`.
 As an example, let us enable it for the already imported
 `iossifov_2014` study.
 
@@ -291,27 +288,27 @@ study is located::
 
     cd gpf_test/studies/iossifov_2014
 
-Edit the study configuration file ``iossifov_2014.conf`` and add this new section in the end of the file::
+Edit the study configuration file ``iossifov_2014.conf`` and add the following section in the end of the file::
 
     [enrichment]
     enabled = true
 
-Restart the `wdaemanage.py`::
+Restart the GPF web server::
 
     wdaemanage.py runserver 0.0.0.0:8000
 
-Now when you navigate to the iossifov_2014 study in the browser, you should be able to
-use the `Enrichment Tool` under the 'Enrichment Tool' tab.
-
+Now when you navigate to the iossifov_2014 study in the browser,
+the Enrichment Tool tab will be available.
 
 Getting Started with Preview Columns
 ####################################
 
-For each study we can specify the columns that are shown in the preview of
-variants and in the downloaded variants.
+For each study you can specify which columns are shown in the variants' table preview, as well as those which will be downloaded.
 
-As an example we are going to redefine `Frequency` column in `comp_vcf`
-study imported in previous example.
+As an example we are going to redefine the `Frequency` column in the `comp_vcf`
+study imported in the previous example.
+
+Navigate to the `comp_vcf` study folder:
 
 .. code::
 
@@ -324,13 +321,14 @@ Edit the configuration file ``comp_vcf.conf`` and add the following lines:
 
     [genotype_browser]
     genotype.freq.name = "Frequency"
-    genotype.freq.slots = 
-        [{source = "exome_gnomad_af_percent", name = "exome gnomad", format = "E %%.3f"},
+    genotype.freq.slots = [
+        {source = "exome_gnomad_af_percent", name = "exome gnomad", format = "E %%.3f"},
         {source = "genome_gnomad_af_percent", name = "genome gnomad", format = "G %%.3f"},
-        {source = " af_allele_freq", name = "study freq", format = "S %%.3f"}]
+        {source = "af_allele_freq", name = "study freq", format = "S %%.3f"}
+    ]
 
-This overwrites the definition of existing preview column `Frequency` to
-include not only the gnomAD frequencies, but also to include allele frequency.
+This overwrites the definition of the default preview column `Frequency` to
+include not only the gnomAD frequencies, but also the allele frequencies.
 
 
 Getting Started with Phenotype Data
@@ -342,75 +340,67 @@ Simple Pheno Import Tool
 The GPF simple pheno import tool prepares phenotype data to be used by the GPF
 system.
 
-As and example we are going to show how to import simulated demo phenotype 
-data into our demo GPF instance. We are going to use simulated
-phenotype data available `here <https://iossifovlab.com/distribution/public/pheno/phenotype-comp-data-latest.tar.gz>`_.
+As an example, we are going to show how to import simulated phenotype 
+data into our GPF instance.
 
-Download the archive and extract it outside of GPF instance data directory:
+Download the archive and extract it outside of the GPF instance data directory:
 
 .. code::
 
     wget -c https://iossifovlab.com/distribution/public/pheno/phenotype-comp-data-latest.tar.gz
     tar zxvf phenotype-comp-data-latest.tar.gz
 
-Enter into the created directory ``comp-data``::
+Navigate to the newly created ``comp-data`` directory::
 
     cd comp-data
 
-Files that are available in that directory are:
+Inside you can find the following files:
 
-* | ``comp_pheno.ped`` - the pedigree file for all families included into the
-   database;
+* ``comp_pheno.ped`` - the pedigree file for all families included into the database
 
-* ``instruments`` - directory, containing all instruments;
+* ``instruments`` - directory, containing all instruments
 
-* ``instruments/i1.csv`` - all measurements for instrument ``i1``.
+* ``instruments/i1.csv`` - all measurements for instrument ``i1``
 
 * ``comp_pheno_data_dictionary.tsv`` - descriptions for all measurements
 
 * ``comp_pheno_regressions.conf`` - regression configuration file
 
-The easiest way to import this phenotype database into the GPF instance is to
-use the `simple_pheno_import.py` tool. It combines converting phenotype
-instruments and measures into a GPF phenotype database and generates data and
-figures needed for the :ref:`phenotype_browser_ui`. It will import the phenotype database
-directly to the DAE data directory specified in your environment.
+To import the phenotype data, you can use the ``simple_pheno_import.py`` tool. It will import
+the phenotype database directly to the DAE data directory specified in your environment:
 
 .. code::
 
-    simple_pheno_import.py -p comp_pheno.ped \
-        -i instruments/ -d comp_pheno_data_dictionary.tsv -o comp_pheno \
+    simple_pheno_import.py \
+        -p comp_pheno.ped \
+        -d comp_pheno_data_dictionary.tsv \
+        -i instruments/ \
+        -o comp_pheno \
         --regression comp_pheno_regressions.conf
 
 Options used in this command are as follows:
 
-* ``-p`` option allows to specify the pedigree file;
+* ``-p`` specifies the pedigree file
 
-* | ``-d`` option specifies the name of the data dictionary file for the
-   phenotype database
+* ``-d`` specifies the name of the data dictionary file for the phenotype database
 
-* | ``-i`` option allows to specify the directory where instruments
-   are located;
+* ``-i`` specifies the directory where the instruments are located
 
-* | ``-o`` options specifies the name of the output phenotype database that
-   will be used in the Phenotype Browser;
+* ``-o`` specifies the name of the output phenotype database that will be used in the Phenotype Browser
 
-* | ``--regression`` option specifies a path to a pheno regression config which
-   describes a list of measures to make regressions against
+* ``--regression`` specifies the path to the pheno regression config, describing a list of measures to make regressions against
 
-You can use ``-h`` option to see all options supported by the
-``simple_pheno_import.py`` tool.
+You can use the ``-h`` option to see all options supported by the tool.
 
 Configure Phenotype Database
 ++++++++++++++++++++++++++++
 
-Phenotype databases have a short configuration file (whose filenames
-usually end with the extension ``.conf``) which points
-the system to their files, as well as specifying some
-other properties. When importing a phenotype database through the
-`simple_pheno_import.py` tool, a configuration file is automatically
-generated. You may inspect the ``gpf_test/pheno/comp_pheno`` directory
-to see the configuration file generated from the import tool:
+Phenotype databases have a short configuration file which points
+the system to their files, as well as specifying additional properties.
+When importing a phenotype database through the
+``simple_pheno_import.py`` tool, a configuration file is automatically
+generated. You may inspect the ``gpf_test/pheno/comp_pheno/comp_pheno.conf``
+configuration file generated from the import tool:
 
 .. code::
 
@@ -440,14 +430,14 @@ Configure Phenotype Browser
 +++++++++++++++++++++++++++
 
 To demonstrate how a study is configured with a phenotype database, we will
-be working with the manually imported ``comp_all`` study.
+be working with the already imported ``comp_all`` study.
 
-The phenotype databases could be attached to one or more studies and datasets.
-If you want to attach ``comp_pheno`` phenotype
-database to ``comp_all`` study, you need to specify it in the study's
-configuration file ``comp_all.conf``, which can be found at gpf_test/studies/comp_all.
-Edit the file to add this line at the bottom of it. Make sure the line is separated and
-that it isn't part of any section. 
+The phenotype databases can be attached to one or more studies and/or datasets.
+If you want to attach the ``comp_pheno`` phenotype
+database to the ``comp_all`` study, you need to specify it in the study's
+configuration file, which can be found at ``gpf_test/studies/comp_all/comp_all.conf``.
+
+Add the following line at the beginning of the file, outside of any section:
 
 .. code::
 
@@ -466,32 +456,28 @@ After this, the configuration file should look like this:
     id = "comp_all"
     conf_dir = "."
     has_denovo = true
+    phenotype_browser = true
+    phenotype_data = "comp_pheno"
 
     [genotype_storage]
     id = "genotype_filesystem"
 
     [genotype_storage.files]
-    pedigree.path = "".../gpf_test/studies/comp_all/data/comp.ped"
+    pedigree.path = "data/comp.ped"
     pedigree.params = {}
 
     [[genotype_storage.files.variants]]
-    path = "".../gpf_test/studies/comp_all/data/comp.tsv"
+    path = "data/comp.tsv"
     format = "denovo"
     params = {}
 
     [[genotype_storage.files.variants]]
-    path = "".../gpf_test/studies/comp_all/data/comp.vcf"
+    path = "data/comp.vcf"
     format = "vcf"
     params = {}
 
     [genotype_browser]
     enabled = true
-
-    phenotype_browser = true
-    phenotype_data = "comp_pheno"
-
-.. note::
-    Your paths will be different than the ones shown in the configuration above.
 
 When you restart the server, you should be
 able to see the 'Phenotype Browser' tab in the `comp_all` study.
@@ -499,119 +485,80 @@ able to see the 'Phenotype Browser' tab in the `comp_all` study.
 Configure Phenotype Filters in Genotype Browser
 +++++++++++++++++++++++++++++++++++++++++++++++
 
-A study or a dataset can have Phenotype Filters configured for its :ref:`genotype_browser_ui`
+A study or a dataset can have phenotype filters configured for its :ref:`genotype_browser_ui`
 when it has a phenotype database attached to it. The configuration looks like this:
 
 .. code::
 
-    [genotypeBrowser]
+    [genotype_browser]
 
-    selectedPhenoFiltersValues = sampleContinuousFilter
+    selected_pheno_filters_values = ["sample_continuous_filter"]
 
-    phenoFilters.sampleContinuousFilter.name = sampleFilterName
-    phenoFilters.sampleContinuousFilter.measureType = continuous
-    phenoFilters.sampleContinuousFilter.filter = multi:prb
+    pheno_filters.sample_continuous_filter.name = "Sample Filter Name"
+    pheno_filters.sample_continuous_filter.measure_type = "continuous"
+    pheno_filters.sample_continuous_filter.filter_type = "multi"
+    pheno_filters.sample_continuous_filter.role = "prb"
 
-``selectedPhenoFiltersValues`` is a comma separated list of ids of the defined
-Phenotype Filters. Each phenotype filter is expected to have a
-``phenoFilters.<pheno_filter_id>`` configuration.
-
-The required configuration options for each pheno filter are:
-
-* | ``phenoFilters.<pheno_filter_id>.name`` - name to use when showing the
-   pheno filter in the Genotype Browser table preview.
-
-* | ``phenoFilters.<pheno_filter_id>.measureType`` - the measure type of the
-   pheno filter. One of ``continuous``, ``categorical``, ``ordinal`` or
-   ``raw``.
-
-* ``phenoFilters.<pheno_filter_id>.filter`` - the definition of the filter.
-
-The definition of a pheno filter has the format
-``<filter_type>:<role>(:<measure_id>)``. Each of these
-
-* | ``filter_type`` - either ``single`` or ``multiple``. A single filter is
-   used to filter on only one specified measure (specified by
-   ``<measure_id>``). A ``multiple`` pheno filter allows the user to choose
-   which measure to use for filtering. The available measures depend on the
-   ``phenoFilters.<pheno_filter_id>.type`` field.
-
-* | ``role`` - which persons' phenotype data to use for this filter. Ex.
-   ``prb`` uses the probands' values for filtering. When the role matches more
-   than one person the first is chosen.
-
-* | ``measure_id`` - id of the measure to be used for a ``single`` filter. Not
-   used when a ``multiple`` filter is being defined.
-
-After adding the configuration for Phenotype Filters and reloading the Genotype
-Browser the Advanced option of the Family Filters should be present.
+After adding the phenotype filters configuration, restart the web server and
+navigate to the Genotype Browser. You should be able to see the Advanced option
+under the Family Filters - this is where the phenotype filters can be applied.
 
 Configure Phenotype Columns in Genotype Browser
 +++++++++++++++++++++++++++++++++++++++++++++++
 
-Phenotype Columns are values from the Phenotype Database for each variant
-displayed in :ref:`genotype_browser_ui` table preview. They can be added when a phenotype database
-is attached to a study or a dataset.
+Phenotype columns contain values from a phenotype database.
+These values are selected from the individual who has the variant displayed in the :ref:`genotype_browser_ui`'s table preview.
+They can be added when a phenotype database is attached to a study.
 
-To add a Phenotype Column you need to define it in the study or dataset config:
+Let's add a phenotype column. To do this, you need to define it in the study's config,
+at the beginning of the genotype browser section:
 
 .. code::
 
-    [genotypeBrowser]
+    [genotype_browser]
 
-    selectedPhenoColumnValues = pheno
+    selected_pheno_column_values = ["pheno"]
 
-    pheno.pheno.name = Measures
-    pheno.pheno.slots = prb:i1.age:Age,
-        prb:i1.iq:Iq
+    pheno.pheno.name = "Measures"
+    pheno.pheno.slots = [
+        {role = "prb", source = "i1.age", name = "Age"},
+        {role = "prb", source = "i1.iq", name = "Iq"}
+    ]
 
-The ``selectedPhenoColumnValues`` property is a comma separated list of ids for
-each Pheno Column to display. Each Pheno Column has to have a
-``pheno.<measure_id>`` configuration with the following properties:
-
-* | ``pheno.<measure_id>.name`` - the display name of the pheno column group
-   used in the Genotype Browser table preview.
-
-* | ``pheno.<measure_id>.slots`` - comma separated definitions for all pheno
-   columns.
-
-The Phenotype Column definition has the following structure:
-``<role>:<measure_id>:<name>``, where:
-
-* | ``<role>`` - role of the person whose pheno values will be displayed. If
-   the role matches two or more people all of their values will be shown,
-   separated with a comma.
-
-* ``<measure_id>`` - id of the measure whose values will be displayed.
-
-* ``<name>`` - the name of the sub-column to be displayed.
-
-For the Phenotype Columns to be in the Genotype Browser table preview or download file, 
-they have to be present in the ``previewColumns`` or the ``downloadColumns`` in the Genotype Browser
+For the phenotype columns to be in the Genotype Browser table preview or download file, 
+they have to be present in the ``preview_columns`` or the ``download_columns`` in the Genotype Browser
 configuration.
 
 .. code::
 
-    previewColumns = family,variant,genotype,effect,weights,mpc_cadd,freq,pheno
+    preview_columns = ["family", "variant", "genotype", "effect", "weights", "mpc_cadd", "freq", "pheno"]
 
-
-In the above ``comp_all`` configuration, the last column ``pheno`` is a
-Phenotype Column.
 
 Enabling the Phenotype Tool
 +++++++++++++++++++++++++++
 
 To enable the :ref:`phenotype_tool_ui` for a study, you must edit
-its configuration file and set the appropriate property, as with
-the Phenotype browser. Open the configuration file ``comp_all.conf``
-and add the following line, separated from other sections:
+the study's configuration file and set the appropriate property, as with
+the :ref:`phenotype_browser_ui`. Open the configuration file ``comp_all.conf``
+and add the following line:
 
 .. code::
 
-   phenotype_tool = true
+    phenotype_tool = true
+
+After editing, it should look like this:
+
+.. code::
+
+    id = "comp_all"
+    conf_dir = "."
+    has_denovo = true
+    phenotype_browser = true
+    phenotype_data = "comp_pheno"
+    phenotype_tool = true
 
 
-Restart the GPF development web server and select the `comp_all` study.
+Restart the GPF web server and select the ``comp_all`` study.
 You should see the :ref:`phenotype_tool_ui` tab. Once you have selected it, you
 can select a phenotype measure of your choice. To get the tool to acknowledge
 the variants in the ``comp_all`` study, select the `All` option of the
@@ -627,52 +574,46 @@ Click on the `Report` button to produce the results.
 Dataset Statitistics and de Novo Gene Sets
 ##########################################
 
-Generate Variant Reports (optional)
-+++++++++++++++++++++++++++++++++++
+.. _reports_tool:
 
-To generate families and de Novo variants report, you should use
-``generate_common_report.py``. This tool supports the option ``--show-studies``
+Generate Variant Reports
+++++++++++++++++++++++++
+
+To generate family and de Novo variant reports, you can use
+the ``generate_common_report.py`` tool. It supports the option ``--show-studies``
 to list all studies and datasets configured in the GPF instance::
 
     generate_common_report.py --show-studies
 
-To generate the families and variants reports for a given configured study
-or dataset, you can use the ``--studies`` option.
-For example, to generate the families and
-variants reports for the `quad` study, you should use::
+To generate the reports for a given configured study, you can use the ``--studies`` option.
+For example, to generate the reports for the `comp_all` study, you should use::
 
-    generate_common_report.py --studies comp
+    generate_common_report.py --studies comp_all
 
 
-Generate Denovo Gene Sets (optional)
-++++++++++++++++++++++++++++++++++++
+Generate Denovo Gene Sets
++++++++++++++++++++++++++
 
-To generate de Novo Gene sets, you should use the
-``generate_denovo_gene_sets.py`` tool. This tool supports the option
-``--show-studies`` to list all studies and datasets configured in the
-GPF instance::
+To generate de Novo gene sets, you can use the
+``generate_denovo_gene_sets.py`` tool. Similar to :ref:`reports_tool` above, you
+can use the ``--show-studies`` and ``--studies`` option. You can list them using ``--help``.
 
-    generate_denovo_gene_sets.py --show-studies
+To generate the de Novo gene sets for the `comp_all` study::
 
-To generate the de Novo gene sets for a given configured study
-or dataset, you can use ``--studies`` option.
-For example, to generate the de Novo
-gene sets for the `quad` study, you should use::
-
-    generate_denovo_gene_sets.py --studies comp
+    generate_denovo_gene_sets.py --studies comp_all
 
 
 Getting Started with Annotation Pipeline
 ########################################
 
-Get Genomic Scores Database (optional)
-++++++++++++++++++++++++++++++++++++++
+Get Genomic Scores Database
++++++++++++++++++++++++++++
 
-To annotate variants with genomic scores you will need a genomic scores
+To annotate variants with genomic scores, you will need a genomic scores
 database or at least genomic scores you plan to use. You can find some
 genomic scores for HG19 `here <https://iossifovlab.com/distribution/public/genomic-scores-hg19/>`_.
 
-Navigate into the genomic-scores-hg19 folder:
+Navigate to the genomic-scores-hg19 folder:
 
 .. code::
 
@@ -680,7 +621,7 @@ Navigate into the genomic-scores-hg19 folder:
 
 
 Download and untar the genomic scores you want to use. For example, if you want to use
-`gnomAD_exome` and `gnomAD_genome` frequencies:
+`gnomAD_exome` and `MPC` frequencies:
 
 .. code:: bash
 
@@ -690,14 +631,14 @@ Download and untar the genomic scores you want to use. For example, if you want 
     tar xvf MPC-hg19-latest.tar
 
 This will create two subdirectories inside the ``genomic-scores-hg19``
-directory, that contain `gnomAD_exome` frequencies and `MPC` genomic scores
-prepared to be used by GPF annotation pipeline and GPF import tools.
+directory, which contain `gnomAD_exome` frequencies and `MPC` genomic scores
+prepared to be used by GPF annotation pipeline and import tools.
 
 Annotation configuration
 ++++++++++++++++++++++++
 
-If you want to use some genomic scores for annotation of the variants
-you are importing, you must make appropriate changes in GPF annotation
+If you want to use genomic scores for annotation of the variants
+you are importing, you must make appropriate changes in the GPF annotation
 pipeline configuration file:
 
 .. code::
@@ -727,60 +668,58 @@ For example if you want to annotate variants with `gnomAD_exome` frequencies and
 `MPC` genomic scores the ``annotation.conf`` file should be edited in the following
 way:
 
+
 .. code::
-    
-    [DEFAULT]
 
-    ################################
-    [VariantEffectAnnotation]
-
-    annotator=effect_annotator.VariantEffectAnnotator
-
-    columns.effect_type=effect_type
-
-    columns.effect_genes=effect_genes
-    columns.effect_gene_genes=effect_gene_genes
-    columns.effect_gene_types=effect_gene_types
-
-    columns.effect_details=effect_details
-    columns.effect_details_transcript_ids=effect_details_transcript_ids
-    columns.effect_details_details=effect_details_details
+    [vars]
+    scores_hg19_dir = "/home/iordan/genomic-scores-hg19"
 
     ##############################
-    [MPC Genomic Score]
-    
-    annotator=score_annotator.NPScoreAnnotator
-    
-    options.scores_file=%(scores_hg19_dir)s/MPC/fordist_constraint_official_mpc_values_v2.txt.gz
-    
-    columns.MPC=mpc
+    [[sections]]
 
-    ######################################
-    [gnomAD Exome Frequencies]
+    annotator = "effect_annotator.VariantEffectAnnotator"
 
-    annotator=frequency_annotator.FrequencyAnnotator
+    options.mode = "replace"
 
-    options.scores_file=%(scores_hg19_dir)s/gnomAD_exome/gnomad.exomes.r2.1.sites.tsv.gz
+    columns.effect_type = "effect_type"
 
-    columns.AF=exome_gnomad_af
-    columns.AF_percent=exome_gnomad_af_percent
+    columns.effect_genes = "effect_genes"
+    columns.effect_gene_genes = "effect_gene_genes"
+    columns.effect_gene_types = "effect_gene_types"
 
-    columns.AC=exome_gnomad_ac
-    columns.AN=exome_gnomad_an
-    columns.controls_AC=exome_gnomad_controls_ac
-    columns.controls_AN=exome_gnomad_controls_an
-    columns.controls_AF=exome_gnomad_controls_af
-    columns.non_neuro_AC=exome_gnomad_non_neuro_ac
-    columns.non_neuro_AN=exome_gnomad_non_neuro_an
-    columns.non_neuro_AF=exome_gnomad_non_neuro_af
-    columns.controls_AF_percent=exome_gnomad_controls_af_percent
-    columns.non_neuro_AF_percent=exome_gnomad_non_neuro_af_percent
+    columns.effect_details = "effect_details"
+    columns.effect_details_transcript_ids = "effect_details_transcript_ids"
+    columns.effect_details_details = "effect_details_details"
 
-The ``VariantEffectAnnotation`` section defines how the variant effect 
-annotation and should not be changed. Next section ``MPC Genomic Score``
-defines annotation with MPC genomic score. The last section 
-``gnomAD Exome Frequencies`` specifies which of the gnomAD exome frequencies
-are used in the annotation.
+    ##############################
+    [[sections]]
+
+    annotator = "score_annotator.NPScoreAnnotator"
+
+    options.scores_file = "%(scores_hg19_dir)s/MPC/fordist_constraint_official_mpc_values_v2.txt.gz"
+
+    columns.MPC = "mpc"
+
+    ##############################
+    [[sections]]
+
+    annotator = "frequency_annotator.FrequencyAnnotator"
+
+    options.scores_file = "%(scores_hg19_dir)s/gnomAD_exome/gnomad.exomes.r2.1.sites.tsv.gz"
+
+    columns.AF = "exome_gnomad_af"
+    columns.AF_percent = "exome_gnomad_af_percent"
+
+    columns.AC = "exome_gnomad_ac"
+    columns.AN = "exome_gnomad_an"
+    columns.controls_AC = "exome_gnomad_controls_ac"
+    columns.controls_AN = "exome_gnomad_controls_an"
+    columns.controls_AF = "exome_gnomad_controls_af"
+    columns.non_neuro_AC = "exome_gnomad_non_neuro_ac"
+    columns.non_neuro_AN = "exome_gnomad_non_neuro_an"
+    columns.non_neuro_AF = "exome_gnomad_non_neuro_af"
+    columns.controls_AF_percent = "exome_gnomad_controls_af_percent"
+    columns.non_neuro_AF_percent = "exome_gnomad_non_neuro_af_percent"
 
 After updating the annotation configuration file,
 we need to reimport the studies in order for the changes to take effect.
@@ -798,12 +737,14 @@ And run the ``simple_study_import.py`` command:
         --id iossifov_2014 \
         --denovo-file IossifovWE2014.tsv
 
-After the import is finished, restart the GPF development server:
+After the import is finished, restart the GPF web server:
 
 .. code::
 
     wdaemanage.py runserver 0.0.0.0:8000
 
+
+.. _impala_storage:
 
 Using Apache Impala as storage
 ##############################
