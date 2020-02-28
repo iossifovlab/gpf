@@ -305,55 +305,56 @@ class TranscriptModel:
 
         return length
 
-    def calc_frames(self, tm):
-        length = len(tm.exons)
+    def calc_frames(self):
+        length = len(self.exons)
         fms = []
 
-        if tm.cds[0] > tm.cds[1]:
+        if self.cds[0] > self.cds[1]:
             fms = [-1] * length
-        elif tm.strand == "+":
+        elif self.strand == "+":
             k = 0
-            while tm.exons[k].stop < tm.cds[0]:
+            while self.exons[k].stop < self.cds[0]:
                 fms.append(-1)
                 k += 1
             fms.append(0)
-            if tm.exons[k].stop < tm.cds[1]:
-                fms.append((tm.exons[k].stop - tm.cds[0] + 1) % 3)
+            if self.exons[k].stop < self.cds[1]:
+                fms.append((self.exons[k].stop - self.cds[0] + 1) % 3)
                 k += 1
-            while tm.exons[k].stop < tm.cds[1] and k < length:
+            while self.exons[k].stop < self.cds[1] and k < length:
                 fms.append(
-                    (fms[k] + tm.exons[k].stop - tm.exons[k].start + 1) % 3
+                    (fms[k] + self.exons[k].stop - self.exons[k].start + 1) % 3
                 )
                 k += 1
             fms += [-1] * (length - len(fms))
         else:
             k = length - 1
-            while tm.exons[k].start > tm.cds[1]:
+            while self.exons[k].start > self.cds[1]:
                 fms.append(-1)
                 k -= 1
             fms.append(0)
-            if tm.cds[0] < tm.exons[k].start:
-                fms.append((tm.cds[1] - tm.exons[k].start + 1) % 3)
+            if self.cds[0] < self.exons[k].start:
+                fms.append((self.cds[1] - self.exons[k].start + 1) % 3)
                 k -= 1
-            while tm.cds[0] < tm.exons[k].start and k > -1:
+            while self.cds[0] < self.exons[k].start and k > -1:
                 fms.append(
-                    (fms[-1] + tm.exons[k].stop - tm.exons[k].start + 1) % 3
+                    (fms[-1] + self.exons[k].stop - self.exons[k].start + 1)
+                    % 3
                 )
                 k -= 1
             fms += [-1] * (length - len(fms))
             fms = fms[::-1]
 
-        assert len(tm.exons) == len(fms)
+        assert len(self.exons) == len(fms)
         return fms
 
-    def update_frames(self, tm):
-        fms = tm.calc_frames()
-        for e, f in zip(tm.exons, fms):
+    def update_frames(self):
+        fms = self.calc_frames()
+        for e, f in zip(self.exons, fms):
             e.frame = f
 
-    def test_frames(self, tm, update=False):
-        fms = tm.calc_frames()
-        for e, f in zip(tm.exons, fms):
+    def test_frames(self, update=False):
+        fms = self.calc_frames()
+        for e, f in zip(self.exons, fms):
             if e.frame != f:
                 return False
         return True
@@ -1040,7 +1041,7 @@ def refSeqParser(gm, location=None, gene_mapping_file=None, testMode=False):
         return True
 
 
-def refFlatParser(gm, file_name, gene_mapping_file, testMode=False):
+def refFlatParser(gm, file_name, gene_mapping_file="default", testMode=False):
     assert gene_mapping_file == "default"
 
     # column names
@@ -1223,11 +1224,11 @@ KNOWN_FORMAT = {
     "default": FORMAT(*["default", defaultGeneModelParser]),
     "ucscgenepred": FORMAT(*["ucscgenepred", ucscGenePredParser]),
 }
-
-KNOWN_FORMAT_NAME = (
-    "refflat,refseq,ccds,knowngene,gtf,pickled,mito,"
+# fmt: off
+KNOWN_FORMAT_NAME = \
+    "refflat,refseq,ccds,knowngene,gtf,pickled,mito," \
     "default,ucscgenepred".split(",")
-)
+# fmt: on
 
 
 def infer_format(file_name="refGene.txt.gz", file_format=None):
@@ -1303,10 +1304,10 @@ def save_pickled_dicts(gm, outputFile="./geneModels"):
     )
 
 
-def create_region(chrom, b, e):
-    reg = namedtuple("reg", "start stop chr")
+# def create_region(chrom, b, e):
+#     reg = namedtuple("reg", "start stop chr")
 
-    return reg(chr=chrom, start=b, stop=e)
+#     return reg(chr=chrom, start=b, stop=e)
 
 
 # def join_gene_models(*gene_models):
