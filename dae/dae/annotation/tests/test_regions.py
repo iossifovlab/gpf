@@ -54,8 +54,8 @@ def test_regions_parameterized(
     expected,
 ):
 
-    score_filename = "fixtures/TEST3{score_name}/TEST3{score_name}.bedGraph.gz".format(
-        score_name=score_name
+    score_filename = (
+        f"fixtures/TEST3{score_name}/TEST3{score_name}.bedGraph.gz"
     )
 
     options = GPFConfigParser._dict_to_namedtuple(
@@ -135,9 +135,7 @@ def test_regions_parameterized_missing_scores(
     expected,
 ):
 
-    score_filename = "fixtures/TEST{score_name}/TEST{score_name}.bedGraph.gz".format(
-        score_name=score_name
-    )
+    score_filename = f"fixtures/TEST{score_name}/TEST{score_name}.bedGraph.gz"
 
     options = GPFConfigParser._dict_to_namedtuple(
         {
@@ -190,8 +188,8 @@ def test_regions_simple(expected_df, variants_io, capsys, genomes_db_2013):
     region = "chr1:20003-20004"
     expected = phast_chr1_2
 
-    score_filename = "fixtures/TEST3{score_name}/TEST3{score_name}.bedGraph.gz".format(
-        score_name=score_name
+    score_filename = (
+        f"fixtures/TEST3{score_name}/TEST3{score_name}.bedGraph.gz"
     )
 
     options = GPFConfigParser._dict_to_namedtuple(

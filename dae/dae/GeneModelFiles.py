@@ -51,6 +51,10 @@ class TranscriptModel:
 
         self._is_coding = False  # it can be derivable from cds' start and end
 
+    @property
+    def trID(self):
+        return self.tr_id
+
     def is_coding(self):
         if self.cds[0] >= self.cds[1]:
             return False
@@ -1310,23 +1314,23 @@ def save_pickled_dicts(gm, outputFile="./geneModels"):
 #     return reg(chr=chrom, start=b, stop=e)
 
 
-# def join_gene_models(*gene_models):
+def join_gene_models(*gene_models):
 
-#     if len(gene_models) < 2:
-#         raise Exception("The function needs at least 2 arguments!")
+    if len(gene_models) < 2:
+        raise Exception("The function needs at least 2 arguments!")
 
-#     gm = GeneModels()
-#     gm._utrModels = {}
-#     gm._geneModels = {}
+    gm = GeneModelDB()
+    gm._utrModels = {}
+    gm._geneModels = {}
 
-#     gm.transcriptModels = gene_models[0].transcriptModels.copy()
+    gm.transcriptModels = gene_models[0].transcriptModels.copy()
 
-#     for i in gene_models[1:]:
-#         gm.transcriptModels.update(i.transcriptModels)
+    for i in gene_models[1:]:
+        gm.transcriptModels.update(i.transcriptModels)
 
-#     gm._updateIndexes()
+    gm._updateIndexes()
 
-#     return gm
+    return gm
 
 
 if __name__ == "__main__":
