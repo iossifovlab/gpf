@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
-from dae.RegionOperations import Region, collapse_noChr
+from dae.RegionOperations import Region
 import gzip
 import pickle
-import sys
-from collections import defaultdict, namedtuple, OrderedDict
+import os
+from collections import defaultdict, namedtuple
 
 
 NumOfLine2Read4Test = 100
@@ -38,7 +38,7 @@ class TranscriptModel:
         self.attr = {}
         self.gene = None
         self.trID = None
-        self.chr = None
+        self.chrom = None
         self.cds = []
         self.strand = None
         self.exons = []
@@ -62,77 +62,79 @@ class TranscriptModel:
         if self.cds[0] >= self.cds[1]:
             return []
 
-        CDS_reg = namedtuple("CDS_reg", "start stop chr")
-        CDS_regions = []
+        # CDS_reg = namedtuple("CDS_reg", "start stop chr")
+        cds_regions = []
         k = 0
         while self.exons[k].stop < self.cds[0]:
             k += 1
 
         if self.cds[1] <= self.exons[k].stop:
-            CDS_regions.append(
-                CDS_reg(chr=self.chr, start=self.cds[0], stop=self.cds[1])
+            cds_regions.append(
+                Region(chrom=self.chrom, start=self.cds[0], stop=self.cds[1])
             )
-            return CDS_regions
+            return cds_regions
 
-        CDS_regions.append(
-            CDS_reg(
-                chr=self.chr, start=self.cds[0], stop=self.exons[k].stop + ss
+        cds_regions.append(
+            Region(
+                chrom=self.chrom,
+                start=self.cds[0],
+                stop=self.exons[k].stop + ss,
             )
         )
         k += 1
         while k < len(self.exons) and self.exons[k].stop <= self.cds[1]:
             if self.exons[k].stop < self.cds[1]:
-                CDS_regions.append(
-                    CDS_reg(
-                        chr=self.chr,
+                cds_regions.append(
+                    Region(
+                        chrom=self.chrom,
                         start=self.exons[k].start - ss,
                         stop=self.exons[k].stop + ss,
                     )
                 )
                 k += 1
             else:
-                CDS_regions.append(
-                    CDS_reg(
-                        chr=self.chr,
+                cds_regions.append(
+                    Region(
+                        chrom=self.chrom,
                         start=self.exons[k].start - ss,
                         stop=self.exons[k].stop,
                     )
                 )
-                return CDS_regions
+                return cds_regions
 
         if k < len(self.exons) and self.exons[k].start <= self.cds[1]:
-            CDS_regions.append(
-                CDS_reg(
-                    chr=self.chr,
+            cds_regions.append(
+                Region(
+                    chrom=self.chrom,
                     start=self.exons[k].start - ss,
                     stop=self.cds[1],
                 )
             )
 
-        return CDS_regions
+        return cds_regions
 
     def UTR5_regions(self):
 
         if self.cds[0] >= self.cds[1]:
             return []
 
-        UTR5_reg = namedtuple("UTR5_reg", "start stop chr")
-        UTR5_regions = []
+        # UTR5_reg = namedtuple("UTR5_reg", "start stop chr")
+        utr5_regions = []
         k = 0
         if self.strand == "+":
             while self.exons[k].stop < self.cds[0]:
-                UTR5_regions.append(
-                    UTR5_reg(
-                        chr=self.chr,
+                utr5_regions.append(
+                    Region(
+                        chrom=self.chrom,
                         start=self.exons[k].start,
                         stop=self.exons[k].stop,
                     )
                 )
                 k += 1
             if self.exons[k].start < self.cds[0]:
-                UTR5_regions.append(
-                    UTR5_reg(
-                        chr=self.chr,
+                utr5_regions.append(
+                    Region(
+                        chr=self.chrom,
                         start=self.exons[k].start,
                         stop=self.cds[0] - 1,
                     )
@@ -144,9 +146,9 @@ class TranscriptModel:
             if self.exons[k].stop == self.cds[1]:
                 k += 1
             else:
-                UTR5_regions.append(
-                    UTR5_reg(
-                        chr=self.chr,
+                utr5_regions.append(
+                    Region(
+                        chrom=self.chrom,
                         start=self.cds[1] + 1,
                         stop=self.exons[k].stop,
                     )
@@ -154,34 +156,33 @@ class TranscriptModel:
                 k += 1
 
             for e in self.exons[k:]:
-                UTR5_regions.append(
-                    UTR5_reg(chr=self.chr, start=e.start, stop=e.stop)
+                utr5_regions.append(
+                    Region(chrom=self.chrom, start=e.start, stop=e.stop)
                 )
 
-        return UTR5_regions
+        return utr5_regions
 
     def UTR3_regions(self):
 
         if self.cds[0] >= self.cds[1]:
             return []
 
-        UTR3_reg = namedtuple("UTR3_reg", "start stop chr")
-        UTR3_regions = []
+        utr3_regions = []
         k = 0
         if self.strand == "-":
             while self.exons[k].stop < self.cds[0]:
-                UTR3_regions.append(
-                    UTR3_reg(
-                        chr=self.chr,
+                utr3_regions.append(
+                    Region(
+                        chrom=self.chrom,
                         start=self.exons[k].start,
                         stop=self.exons[k].stop,
                     )
                 )
                 k += 1
             if self.exons[k].start < self.cds[0]:
-                UTR3_regions.append(
-                    UTR3_reg(
-                        chr=self.chr,
+                utr3_regions.append(
+                    Region(
+                        chrom=self.chrom,
                         start=self.exons[k].start,
                         stop=self.cds[0] - 1,
                     )
@@ -193,9 +194,9 @@ class TranscriptModel:
             if self.exons[k].stop == self.cds[1]:
                 k += 1
             else:
-                UTR3_regions.append(
-                    UTR3_reg(
-                        chr=self.chr,
+                utr3_regions.append(
+                    Region(
+                        chrom=self.chrom,
                         start=self.cds[1] + 1,
                         stop=self.exons[k].stop,
                     )
@@ -203,55 +204,60 @@ class TranscriptModel:
                 k += 1
 
             for e in self.exons[k:]:
-                UTR3_regions.append(
-                    UTR3_reg(chr=self.chr, start=e.start, stop=e.stop)
+                utr3_regions.append(
+                    Region(chrom=self.chrom, start=e.start, stop=e.stop)
                 )
 
-        return UTR3_regions
+        return utr3_regions
 
     def all_regions(self, ss=0, prom=0):
 
         all_regions = []
-        all_reg = namedtuple("all_reg", "start stop chr")
 
         if ss == 0:
             for e in self.exons:
                 all_regions.append(
-                    all_reg(chr=self.chr, start=e.start, stop=e.stop)
+                    Region(chrom=self.chrom, start=e.start, stop=e.stop)
                 )
 
         else:
             for e in self.exons:
                 if e.stop <= self.cds[0]:
                     all_regions.append(
-                        all_reg(chr=self.chr, start=e.start, stop=e.stop)
+                        Region(chrom=self.chrom, start=e.start, stop=e.stop)
                     )
                 elif e.start <= self.cds[0]:
                     if e.stop >= self.cds[1]:
                         all_regions.append(
-                            all_reg(chr=self.chr, start=e.start, stop=e.stop)
+                            Region(
+                                chrom=self.chrom, start=e.start, stop=e.stop
+                            )
                         )
                     else:
                         all_regions.append(
-                            all_reg(
-                                chr=self.chr, start=e.start, stop=e.stop + ss
+                            Region(
+                                chrom=self.chrom,
+                                start=e.start,
+                                stop=e.stop + ss,
                             )
                         )
                 elif e.start > self.cds[1]:
                     all_regions.append(
-                        all_reg(chr=self.chr, start=e.start, stop=e.stop)
+                        Region(chrom=self.chrom, start=e.start, stop=e.stop)
                     )
                 else:
                     if e.stop >= self.cds[1]:
                         all_regions.append(
-                            all_reg(
-                                chr=self.chr, start=e.start - ss, stop=e.stop
+                            Region(
+                                chrom=self.chrom,
+                                start=e.start - ss,
+                                stop=e.stop,
                             )
                         )
                     else:
                         all_regions.append(
-                            all_reg(
-                                chr=self.chr,
+                            Region(
+                                chrom=self.chrom,
                                 start=e.start - ss,
                                 stop=e.stop + ss,
                             )
@@ -259,14 +265,14 @@ class TranscriptModel:
 
         if prom != 0:
             if self.strand == "+":
-                all_regions[0] = all_reg(
-                    chr=all_regions[0].chr,
+                all_regions[0] = Region(
+                    chrom=all_regions[0].chrom,
                     start=all_regions[0].start - prom,
                     stop=all_regions[0].stop,
                 )
             else:
-                all_regions[-1] = all_reg(
-                    chr=all_regions[-1].chr,
+                all_regions[-1] = Region(
+                    chrom=all_regions[-1].chrom,
                     start=all_regions[-1].start,
                     stop=all_regions[-1].stop + prom,
                 )
@@ -274,49 +280,40 @@ class TranscriptModel:
         return all_regions
 
     def total_len(self):
-
         length = 0
-        for e in self.exons:
-            length += e.stop - e.start + 1
+        for reg in self.exons:
+            length += reg.stop - reg.start + 1
         return length
 
     def CDS_len(self):
-
         cds_region = self.CDS_regions()
-
         length = 0
-        for c in cds_region:
-            length += c[1] - c[0] + 1
+        for reg in cds_region:
+            length += reg.stop - reg.start + 1
         return length
 
     def UTR3_len(self):
-
         utr3 = self.UTR3_regions()
+        length = 0
+        for reg in utr3:
+            length += reg.stop - reg.start + 1
 
-        l = 0
-
-        for i in utr3:
-            l += i[1] - i[0] + 1
-
-        return l
+        return length
 
     def UTR5_len(self):
-
         utr5 = self.UTR5_regions()
+        length = 0
+        for reg in utr5:
+            length += reg.stop - reg.start + 1
 
-        l = 0
-
-        for i in utr5:
-            l += i[1] - i[0] + 1
-
-        return l
+        return length
 
     def calc_frames(self, tm):
-        l = len(tm.exons)
+        length = len(tm.exons)
         fms = []
 
         if tm.cds[0] > tm.cds[1]:
-            fms = [-1] * l
+            fms = [-1] * length
         elif tm.strand == "+":
             k = 0
             while tm.exons[k].stop < tm.cds[0]:
@@ -326,12 +323,12 @@ class TranscriptModel:
             if tm.exons[k].stop < tm.cds[1]:
                 fms.append((tm.exons[k].stop - tm.cds[0] + 1) % 3)
                 k += 1
-            while tm.exons[k].stop < tm.cds[1] and k < l:
+            while tm.exons[k].stop < tm.cds[1] and k < length:
                 fms.append(
                     (fms[k] + tm.exons[k].stop - tm.exons[k].start + 1) % 3
                 )
                 k += 1
-            fms += [-1] * (l - len(fms))
+            fms += [-1] * (length - len(fms))
         else:
             k = l - 1
             while tm.exons[k].start > tm.cds[1]:
@@ -346,7 +343,7 @@ class TranscriptModel:
                     (fms[-1] + tm.exons[k].stop - tm.exons[k].start + 1) % 3
                 )
                 k -= 1
-            fms += [-1] * (l - len(fms))
+            fms += [-1] * (length - len(fms))
             fms = fms[::-1]
 
         assert len(tm.exons) == len(fms)
@@ -368,30 +365,24 @@ class TranscriptModel:
 # column names that expected to have on certain formats
 # in order
 Columns4FileFormat = {
-    "commonGTF": "seqname,source,feature,start,end,score,strand,phase,attributes,comments".split(
-        ","
-    ),
-    "commonDefault": "chr,trID,gene,strand,tsBeg,txEnd,cdsStart,cdsEnd,exonStarts,exonEnds,exonFrames,atts".split(
-        ","
-    ),
-    "commonGenePredUCSC": "name,chrom,strand,txStart,txEnd,cdsStart,cdsEnd,exonStarts,exonEnds".split(
-        ","
-    ),
-    "ucscGenePred": "name,chrom,strand,txStart,txEnd,cdsStart,cdsEnd,exonCount,exonStarts,exonEnds".split(
-        ","
-    ),
-    "refSeq": "bin,name,chrom,strand,txStart,txEnd,cdsStart,cdsEnd,exonCount,exonStarts,exonEnds,score,name2,cdsStartStat,cdsEndStat,exonFrames".split(
-        ","
-    ),
-    "refFlat": "geneName,name,chrom,strand,txStart,txEnd,cdsStart,cdsEnd,exonCount,exonStarts,exonEnds".split(
-        ","
-    ),
-    "knownGene": "name,chrom,strand,txStart,txEnd,cdsStart,cdsEnd,exonCount,exonStarts,exonEnds,proteinID,alignID".split(
-        ","
-    ),
-    "ccds": "bin,name,chrom,strand,txStart,txEnd,cdsStart,cdsEnd,exonCount,exonStarts,exonEnds,score,name2,cdsStartStat,cdsEndStat,exonFrames".split(
-        ","
-    ),
+    "commonGTF": "seqname,source,feature,start,end,score,strand,phase,"
+    "attributes,comments".split(","),
+    "commonDefault": "chr,trID,gene,strand,tsBeg,txEnd,cdsStart,cdsEnd,"
+    "exonStarts,exonEnds,exonFrames,atts".split(","),
+    "commonGenePredUCSC": "name,chrom,strand,txStart,txEnd,cdsStart,cdsEnd,"
+    "exonStarts,exonEnds".split(","),
+    "ucscGenePred": "name,chrom,strand,txStart,txEnd,cdsStart,cdsEnd,"
+    "exonCount,exonStarts,exonEnds".split(","),
+    "refSeq": "bin,name,chrom,strand,txStart,txEnd,cdsStart,cdsEnd,"
+    "exonCount,exonStarts,exonEnds,score,name2,"
+    "cdsStartStat,cdsEndStat,exonFrames".split(","),
+    "refFlat": "geneName,name,chrom,strand,txStart,txEnd,cdsStart,cdsEnd,"
+    "exonCount,exonStarts,exonEnds".split(","),
+    "knownGene": "name,chrom,strand,txStart,txEnd,cdsStart,cdsEnd,"
+    "exonCount,exonStarts,exonEnds,proteinID,alignID".split(","),
+    "ccds": "bin,name,chrom,strand,txStart,txEnd,cdsStart,cdsEnd,"
+    "exonCount,exonStarts,exonEnds,score,name2,cdsStartStat,cdsEndStat,"
+    "exonFrames".split(","),
 }
 
 
@@ -403,11 +394,11 @@ class GeneModelDB:
         self.name = None
         self.location = None
         self._shift = None
-        self._Alternative_names = None
+        self._alternative_names = None
 
         self._utrModels = {}
         self.transcriptModels = {}
-        self._geneModels = {}
+        self._geneModels = defaultdict(list)
 
     # from orgininal without editing
     def addModelToDict(self, tm):
@@ -415,18 +406,14 @@ class GeneModelDB:
         assert tm.trID not in self.transcriptModels
 
         self.transcriptModels[tm.trID] = tm
+        self._geneModels[tm.gene].append(tm)
 
         try:
-            self._geneModels[tm.gene].append(tm)
-        except:
-            self._geneModels[tm.gene] = [tm]
-
-        try:
-            self._utrModels[tm.chr][tm.tx].append(tm)
+            self._utrModels[tm.chrom][tm.tx].append(tm)
         except KeyError as e:
-            if e.args[0] == tm.chr:
-                self._utrModels[tm.chr] = {}
-            self._utrModels[tm.chr][tm.tx] = [tm]
+            if e.args[0] == tm.chrom:
+                self._utrModels[tm.chrom] = {}
+            self._utrModels[tm.chrom][tm.tx] = [tm]
 
         return -1
 
@@ -435,12 +422,14 @@ class GeneModelDB:
         self._utrModels = defaultdict(lambda: defaultdict(list))
         for tm in self.transcriptModels.values():
             self._geneModels[tm.gene].append(tm)
-            self._utrModels[tm.chr][tm.tx].append(tm)
+            self._utrModels[tm.chrom][tm.tx].append(tm)
 
     def gene_names(self):
         if self._geneModels is None:
             print(
-                "Gene Models haven't been created/uploaded yet! Use either loadGeneModels function or self.createGeneModelDict function"
+                "Gene Models haven't been created/uploaded yet! "
+                "Use either loadGeneModels function or "
+                "self.createGeneModelDict function"
             )
             return None
 
@@ -471,9 +460,11 @@ class GeneModelDB:
 
     def relabel_chromosomes_chr(self, Relabel):
 
-        if self.transcriptModels == None:
+        if self.transcriptModels is None:
             print(
-                "Gene Models haven't been created/uploaded yet! Use either loadGeneModels function or self.createGeneModelDict function"
+                "Gene Models haven't been created/uploaded yet! "
+                "Use either loadGeneModels function or "
+                "self.createGeneModelDict function"
             )
             return None
 
@@ -495,27 +486,29 @@ class GeneModelDB:
 
     def relabel_chromosomes(self, file="ucsc2gatk.txt"):
 
-        if self.transcriptModels == None:
+        if self.transcriptModels is None:
             print(
-                "Gene Models haven't been created/uploaded yet! Use either loadGeneModels function or self.createGeneModelDict function"
+                "Gene Models haven't been created/uploaded yet! "
+                "Use either loadGeneModels function or "
+                "self.createGeneModelDict function"
             )
             return None
 
         f = open(file)
-        Relabel = dict([(line.split()[0], line.split()[1]) for line in f])
+        relabel = dict([(line.split()[0], line.split()[1]) for line in f])
 
         for chrom in self._utrModels.keys():
 
             try:
-                self._utrModels[Relabel[chrom]] = self._utrModels[chrom]
+                self._utrModels[relabel[chrom]] = self._utrModels[chrom]
                 self._utrModels.pop(chrom)
             except KeyError:
                 pass
 
         for trID in self.transcriptModels:
             try:
-                self.transcriptModels[trID].chr = Relabel[
-                    self.transcriptModels[trID].chr
+                self.transcriptModels[trID].chr = relabel[
+                    self.transcriptModels[trID].chrom
                 ]
             except KeyError:
                 pass
@@ -544,7 +537,7 @@ class GeneModelDB:
             )
 
             cs = [
-                tm.chr,
+                tm.chrom,
                 tm.trID,
                 tm.gene,
                 tm.strand,
@@ -573,8 +566,9 @@ def openFile(fileName):
 
 
 class GtfFileReader:
-    colNames = "seqname,source,feature,start,end,score,strand,phase,attributes,comments".split(
-        ","
+    colNames = (
+        "seqname,source,feature,start,end,score,strand,phase,"
+        "attributes,comments".split(",")
     )
 
     @staticmethod
@@ -712,7 +706,7 @@ def defaultGeneModelParser(
         tm = TranscriptModel()
         tm.gene = gene
         tm.trID = trID
-        tm.chr = chr
+        tm.chrom = chr
         tm.strand = strand
         tm.tx = (int(txB), int(txE))
         tm.cds = (int(cdsB), int(cdsE))
@@ -744,7 +738,8 @@ def pickledGeneModelParser(
 
 def gtfGeneModelParser(gm, file_name, gene_mapping_file=None, testMode=False):
     gm.name = "GTF"
-    # print( 'GeneModel format: ', gm.name, '\timporting: ', file_name, file=sys.stderr )
+    # print( 'GeneModel format: ', gm.name, '\timporting: ',
+    # file_name, file=sys.stderr )
     gm.location = file_name
 
     f = GtfFileReader(file_name)
@@ -755,7 +750,8 @@ def gtfGeneModelParser(gm, file_name, gene_mapping_file=None, testMode=False):
         if testMode and nLR > NumOfLine2Read4Test:
             return True
 
-        # if 'transcript_support_level' in rx['attributes']  and rx['attributes']['transcript_support_level'] != '1': continue
+        # if 'transcript_support_level' in rx['attributes']  and
+        # rx['attributes']['transcript_support_level'] != '1': continue
 
         trID = rx["attributes"]["transcript_id"]
         if rx["feature"] in ["transcript", "Selenocysteine"]:
@@ -775,7 +771,7 @@ def gtfGeneModelParser(gm, file_name, gene_mapping_file=None, testMode=False):
             tm = TranscriptModel()
             tm.gene = rx["attributes"]["gene_name"]
             tm.trID = trID
-            tm.chr = rx["seqname"]
+            tm.chrom = rx["seqname"]
             tm.strand = rx["strand"]
             tm.tx = (rx["start"], rx["end"])
             tm.cds = (rx["end"], rx["start"])
@@ -796,7 +792,8 @@ def gtfGeneModelParser(gm, file_name, gene_mapping_file=None, testMode=False):
             ix = (
                 int(rx["attributes"]["exon_number"]) - 1
             )  # 1-based to 0-based indexing
-            # print trID, len(gm.transcriptModels[trID].exons), ix, rx['attributes']['exon_number']
+            # print trID, len(gm.transcriptModels[trID].exons), ix,
+            # rx['attributes']['exon_number']
             if len(gm.transcriptModels[trID].exons) <= ix:
                 gm.transcriptModels[trID].exons.append(Exon())
 
@@ -818,7 +815,8 @@ def gtfGeneModelParser(gm, file_name, gene_mapping_file=None, testMode=False):
                 gm.transcriptModels[trID]._is_coding = True
 
                 # cx = gm.transcriptModels[trID].cds
-                # gm.transcriptModels[trID].cds = (min(cx[0],rx['start']), max(cx[1],rx['end']))
+                # gm.transcriptModels[trID].cds =
+                # (min(cx[0],rx['start']), max(cx[1],rx['end']))
 
                 continue
 
@@ -880,7 +878,7 @@ def gtfGeneModelParser(gm, file_name, gene_mapping_file=None, testMode=False):
 #
 def mitoGeneModelParser(gm, file_name, gene_mapping_file=None, testMode=False):
     gm.name = "mitomap"
-    gm._Alternative_names = None
+    gm._alternative_names = None
 
     gm._utrModels["chrM"] = {}
     file = openFile(file_name)
@@ -921,7 +919,8 @@ def mitoGeneModelParser(gm, file_name, gene_mapping_file=None, testMode=False):
         # commented on original ewa version
         # elif mode == "regulatory_elements":
         #   mm.cds = (int(line[2]), int(line[2]))
-        #   mm.tx = (int(line[1]), int(line[2]))    #note about original: line is different from others
+        #   mm.tx = (int(line[1]), int(line[2]))
+        # note about original: line is different from others
         #   mm.exons = []
 
         else:  # TODO: something wrong message
@@ -967,7 +966,7 @@ class parserLine4UCSC_genePred:
 
         # tm.gene   = # TODO implimented outside
         tm.trID = cs["name"]
-        tm.chr = cs["chrom"]
+        tm.chrom = cs["chrom"]
         tm.strand = cs["strand"]
         tm.tx = (int(cs["txStart"]) + 1, int(cs["txEnd"]))
         tm.cds = (int(cs["cdsStart"]) + 1, int(cs["cdsEnd"]))
@@ -1060,9 +1059,7 @@ def refFlatParser(gm, file_name, gene_mapping_file, testMode=False):
             hcs = line[1:].strip("\n\r").split("\t")
             if hcs != Columns4FileFormat["refFlat"]:
                 raise Exception(
-                    "The file "
-                    + file_name
-                    + " doesn't look like a refFlat file"
+                    f"The file {file_name} doesn't look like a refFlat file"
                 )
 
             continue
@@ -1092,26 +1089,28 @@ def knownGeneParser(
     lR = parserLine4UCSC_genePred(colNames)
 
     if gene_mapping_file == "default":
-        gene_mapping_file = os.path.dirname(file_name) + "/kgId2Sym.txt.gz"
+        gene_mapping_file = os.path.join(
+            os.path.dirname(file_name), "kgId2Sym.txt.gz"
+        )
 
     if not testMode:
-        gm._Alternative_names = geneMapping(gene_mapping_file)
+        gm._alternative_names = geneMapping(gene_mapping_file)
 
-    GMF = openFile(file_name)
+    gmf = openFile(file_name)
 
     trIdC = defaultdict(int)
-    for nLR, line in enumerate(GMF):
+    for nLR, line in enumerate(gmf):
         if line[0] == "#":
             continue
 
         if testMode and nLR > NumOfLine2Read4Test:
-            GMF.close()
+            gmf.close()
             return True
 
         tm, cs = lR.parse(line)
         try:
             if not testMode:
-                tm.gene = gm._Alternative_names[cs["name"]]
+                tm.gene = gm._alternative_names[cs["name"]]
         except KeyError as e:
             tm.gene = cs["name"]
 
@@ -1121,7 +1120,7 @@ def knownGeneParser(
 
         gm.addModelToDict(tm)
 
-    GMF.close()
+    gmf.close()
     if testMode:
         return True
 
@@ -1131,6 +1130,7 @@ def knownGeneParser(
 #  o = GeneModelDB()
 #  CCC[format](o,file, geneMapFile)
 #
+
 
 # ccdsGene
 def ccdsParser(gm, file_name, gene_mapping_file="default", testMode=False):
@@ -1172,9 +1172,6 @@ def ccdsParser(gm, file_name, gene_mapping_file="default", testMode=False):
         return True
 
 
-#
-# similar to refFlat except geneName (missing column)
-#
 def ucscGenePredParser(
     gm, file_name, gene_mapping_file="default", testMode=False
 ):
@@ -1247,20 +1244,21 @@ def infer_format(file_name="refGene.txt.gz", file_format=None):
         gm = GeneModelDB()
         fm = KNOWN_FORMAT[fn]
         try:
-            flag = fm.parser(
+            fm.parser(
                 gm, file_name, gene_mapping_file="default", testMode=True
             )
-        except Exception as e:
-            # print( "\t\t", fn,e)
+        except Exception:
             continue
 
         acceptedFormat.append(fn)
 
     if len(acceptedFormat) != 1:
+        accepted_formats = ",".join(acceptedFormat)
         raise Exception(
-            '[{}:"{}"] non-mataching/more than 1 match/match-not-found from known formats [{}]\nplease specify by --TrawFormat'.format(
-                file_name, ",".join(acceptedFormat), ",".join(known_format)
-            )
+            f"[{file_name}:'{accepted_formats}'] non-mataching/more "
+            f"than 1 match/match-not-found "
+            f"from known formats [{known_format}]\nplease specify by "
+            f"--TrawFormat"
         )
 
     acceptedFormat = acceptedFormat[0]
