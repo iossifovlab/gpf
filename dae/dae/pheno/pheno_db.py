@@ -75,19 +75,19 @@ class Measure(object):
         )
 
     @property
-    def domain(self):
+    def domain(self) -> list:
         # FIXME !
         # This must be re-done in a better way, perhaps by
         # changing how the values domain string is stored in the database...
-        return list(
-            map(
-                float,
-                self.values_domain.replace("[", "")
-                .replace("]", "")
-                .replace(" ", "")
-                .split(","),
-            )
+        domain = (
+            self.values_domain.replace("[", "")
+            .replace("]", "")
+            .replace(" ", "")
+            .split(","),
         )
+        if self.measure_type in (MeasureType.continuous, MeasureType.ordinal):
+            domain = list(map(float, domain))
+        return domain
 
     @classmethod
     def _from_dict(cls, row):
