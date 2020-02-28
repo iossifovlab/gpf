@@ -752,7 +752,7 @@ Using Apache Impala as storage
 Starting Apache Impala
 ++++++++++++++++++++++
 
-To start a local instance of Apache Impala you will need an `installed Docker <https://www.docker.com/get-started>`_.
+To start a local instance of Apache Impala you will need an installed `Docker <https://www.docker.com/get-started>`_.
 
 .. note::
    If you are using Ubuntu, you can use the following `instructions <https://docs.docker.com/install/linux/docker-ce/ubuntu/>`_
@@ -766,9 +766,9 @@ can use the script::
 
 This script pulls out Apache Impala image from
 `dockerhub <https://cloud.docker.com/u/seqpipe/repository/docker/seqpipe/seqpipe-docker-impala>`_,
-creates and starts Docker container named `gpf_impala`
-containing all the components needed for running Apache Impala. When the
-Apache Impala container is ready for use the script will print a message::
+creates and starts a Docker container named `gpf_impala`
+containing all the components needed for running Apache Impala. When the container is ready,
+the script will print the following message::
 
     ...
     ===============================================
@@ -777,38 +777,34 @@ Apache Impala container is ready for use the script will print a message::
 
 
 .. note::
-    In case you need to stop this container you can
-    use Docker commands `docker stop gpf_impala`. For starting the `gpf_impala`
-    container use `run_gpf_impala.sh`.
+    In case you need to stop this container, you can use the Docker command `docker stop gpf_impala`.
+    For starting the `gpf_impala` container, use `run_gpf_impala.sh`.
 
 .. note::
     Here is a list of some useful Docker commands:
 
-        - `docker ps` shows all running docker containers;
+        - ``docker ps`` shows all running docker containers
 
-        - `docker logs -f gpf_impala` shows log from `gpf_impala` container;
+        - ``docker logs -f gpf_impala`` shows the log from the `gpf_impala` container
 
-        - `docker stop gpf_impala` stops the running `gpf_impala` container;
+        - ``docker start gpf_impala`` starts `gpf_impala` container
 
-        - `docker start gpf_impala` starts existing stopped `gpf_impala`
-          container;
+        - ``docker stop gpf_impala`` stops the `gpf_impala` container
 
-        - `docker rm gpf_impala` removes existing and stopped `gpf_impala`
-          container.
+        - ``docker rm gpf_impala`` removes the `gpf_impala` container (only if stopped)
 
 .. note::
-    Following ports are used by `gpf_impala` container:
+    The following ports are used by the `gpf_impala` container:
 
-        - 8020 - port for accessing HDFS
-        - 9870 - port for Web interface to HDFS Named Node
-        - 9864 - port for Web interface to HDFS Data Node
-        - 21050 - port for accessing Impala
-        - 25000 - port for Web interface to Impala daemon
-        - 25010 - port for Web interface to Impala state store
-        - 25020 - port for Web interface to Impala catalog
+        - 8020 - for accessing HDFS
+        - 9870 - for Web interface to HDFS Named Node
+        - 9864 - for Web interface to HDFS Data Node
+        - 21050 - for accessing Impala
+        - 25000 - for Web interface to Impala daemon
+        - 25010 - for Web interface to Impala state store
+        - 25020 - for Web interface to Impala catalog
 
-    Please make sure that this ports are not in use on the host where you are
-    starting `gpf_impala` container.
+    Please make sure that these ports are not in use on the host where you are going to start the `gpf_impala` container.
 
 
 Configuring the Apache Impala storage
@@ -829,8 +825,8 @@ This is an example section which configures an Apache Impala storage.
     hdfs.base_dir = /user/test_impala/studies
     dir = /tmp/test_impala/studies
 
-Import the study into Impala
-++++++++++++++++++++++++++++
+Importing studies into Impala
++++++++++++++++++++++++++++++
 
 The simple study import tool has an optional argument to specify the storage
 you wish to use. You can pass the ID of the Apache Impala storage configured
@@ -864,7 +860,7 @@ For example, to list all studies configured in the startup GPF instance, use:
 
     gpf_instance.get_genotype_data_ids()
 
-This should return a list of all studies' IDs:
+This will return a list the ids of all configured studies:
 
 .. code-block:: python3
 
@@ -911,8 +907,8 @@ can use:
 
     >> 85
 
-Or, if you are interested in 'splice-site' variants only in people with role
-'prb' you can use:
+Or, if you are interested in 'splice-site' variants only in people with
+'prb' role, you can use:
 
 .. code-block:: python3
 
