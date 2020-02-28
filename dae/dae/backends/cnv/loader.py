@@ -50,6 +50,10 @@ class CNVLoader(VariantsGenotypesLoader):
                 continue
             region.chrom = self._adjust_chrom_prefix(region.chrom)
 
+        self.annotation_schema = ParquetSchema.from_arrow(
+            ParquetSchema.BASE_SCHEMA)
+        self.set_attribute("annotation_schema", self.annotation_schema)
+
     def _is_in_regions(self, summary_variant: SummaryVariant) -> bool:
         isin = [
             r.isin(summary_variant.chrom, summary_variant.position)
