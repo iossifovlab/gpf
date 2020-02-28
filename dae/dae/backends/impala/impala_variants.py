@@ -98,7 +98,7 @@ class ImpalaFamilyVariants:
             # print('FINAL QUERY: ', query)
             cursor.execute(query)
             for row in cursor:
-                chrom, position, reference, transmission_type, \
+                chrom, position, end_position, reference, transmission_type, \
                     alternatives_data, \
                     effect_data, family_id, genotype_data, best_state_data, \
                     genetic_model_data, inheritance_data, \
@@ -108,8 +108,8 @@ class ImpalaFamilyVariants:
                 family = self.families[family_id]
                 v = self.serializer.deserialize_variant(
                     family,
-                    chrom, position, reference, transmission_type,
-                    alternatives_data, effect_data,
+                    chrom, position, end_position, reference,
+                    transmission_type, alternatives_data, effect_data,
                     genotype_data, best_state_data,
                     genetic_model_data, inheritance_data,
                     frequency_data, genomic_scores_data,

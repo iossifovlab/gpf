@@ -18,6 +18,7 @@ class ParquetSchema(Schema):
         pa.field("allele_index", pa.int8()),
         pa.field("chrom", pa.string()),
         pa.field("position", pa.int32()),
+        pa.field("end_position", pa.int32()),
         pa.field("reference", pa.string()),
         pa.field("alternative", pa.string()),
         pa.field("variant_type", pa.int8()),

@@ -73,6 +73,9 @@ class CNVLoader(VariantsGenotypesLoader):
             rec["reference"] = None
             rec["alternative"] = None
 
+            rec["position"] = int(rec["position"])
+            rec["end_position"] = int(rec["end_position"])
+
             rec["summary_variant_index"] = index
             rec["allele_index"] = 0
             sv = SummaryVariantFactory.summary_variant_from_records(

@@ -35,6 +35,7 @@ class ParquetSerializer(object):
             'allele_index',
             'chrom',
             'position',
+            'end_position',
             'reference',
             'alternative',
             'variant_type',
@@ -121,9 +122,10 @@ class ParquetSerializer(object):
                 allele.allele_index,
                 allele.chrom,
                 allele.position,
+                allele.end_position,
                 allele.reference,
                 None,
-                None,
+                allele.variant_type.value,
                 allele.transmission_type.value,
                 alternatives_data,
             )
@@ -133,6 +135,7 @@ class ParquetSerializer(object):
                 allele.allele_index,
                 allele.chrom,
                 allele.position,
+                allele.end_position,
                 allele.reference,
                 allele.alternative,
                 allele.variant_type.value,
@@ -378,7 +381,7 @@ class ParquetSerializer(object):
 
     def deserialize_variant(
             self, family,
-            chrom, position, reference, transmission_type,
+            chrom, position, end_position, reference, transmission_type,
             alternatives_data, effect_data,
             genotype_data, best_state_data,
             genetic_model_data, inheritance_data,
