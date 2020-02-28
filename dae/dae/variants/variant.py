@@ -545,10 +545,11 @@ class SummaryVariant(Variant):
 
         self._chromosome = self.ref_allele.chromosome
         self._position = self.ref_allele.position
-        self._end_position = self.ref_allele.end_position
         self._reference = self.ref_allele.reference
         if len(alleles) > 1:
             self._end_position = alleles[1].end_position
+        else:
+            self._end_position = -1
 
     @property
     def chromosome(self) -> str:

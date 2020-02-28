@@ -399,7 +399,7 @@ class FamilyVariant(Variant, FamilyDelegate):
 
     @property
     def end_position(self) -> Optional[int]:
-        return self.summary_variant._end_position
+        return self.summary_variant.end_position
 
     @property
     def allele_count(self):
