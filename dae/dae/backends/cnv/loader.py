@@ -9,6 +9,7 @@ from dae.pedigrees.family import FamiliesData
 from dae.variants.attributes import VariantType
 from dae.variants.variant import SummaryVariantFactory, SummaryVariant
 from dae.variants.family_variant import FamilyVariant
+from dae.annotation.tools.file_io_parquet import ParquetSchema
 
 from dae.RegionOperations import Region
 from dae.utils.variant_utils import GENOTYPE_TYPE
@@ -73,7 +74,7 @@ class CNVLoader(VariantsGenotypesLoader):
             rec["alternative"] = None
 
             rec["summary_variant_index"] = index
-            rec["allele_index"] = 1
+            rec["allele_index"] = 0
             sv = SummaryVariantFactory.summary_variant_from_records(
                 [rec], self.transmission_type
             )
@@ -250,4 +251,16 @@ class CNVLoader(VariantsGenotypesLoader):
             "cnv_sep": argv.cnv_sep,
             'add_chrom_prefix': argv.add_chrom_prefix,
             'del_chrom_prefix': argv.del_chrom_prefix
+        }
+
+    @classmethod
+    def cli_defaults(cls):
+        return {
+            "cnv_location": "location",
+            "cnv_family_id": "familyId",
+            "cnv_variant_type": "variant",
+            "cnv_best_state": "bestState",
+            "cnv_sep": "\t",
+            'add_chrom_prefix': None,
+            'del_chrom_prefix': None
         }

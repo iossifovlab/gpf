@@ -138,7 +138,7 @@ variants_file = {
     },
     "format": {
         "type": "string",
-        "allowed": ["dae", "vcf", "denovo"],
+        "allowed": ["dae", "vcf", "denovo", "cnv"],
         "required": True,
     },
     "params": {
