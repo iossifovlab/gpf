@@ -311,7 +311,7 @@ class VariantType(enum.Enum):
         elif vt == 'd':
             return VariantType.deletion
         elif vt == 'c':
-            return VariantType.complex
+            return VariantType.comp
         elif vt == 'C':
             return VariantType.CNV
         else:

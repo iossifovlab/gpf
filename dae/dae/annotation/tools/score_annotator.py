@@ -59,7 +59,7 @@ class VariantScoreAnnotatorBase(VariantAnnotatorBase):
             )
         elif variant.variant_type in set([
                 VariantType.insertion, VariantType.deletion,
-                VariantType.complex]):
+                VariantType.comp]):
 
             scores = self.score_file.fetch_scores(
                 variant.chromosome,
@@ -133,7 +133,7 @@ class NPScoreAnnotator(VariantScoreAnnotatorBase):
     def _aggregate_indel(self, variant, scores_df):
         assert variant.variant_type in set([
             VariantType.insertion, VariantType.deletion,
-            VariantType.complex])
+            VariantType.comp])
 
         aggregate = {
             sn: 'max' for sn in self.score_names
@@ -171,7 +171,7 @@ class NPScoreAnnotator(VariantScoreAnnotatorBase):
 
         elif variant.variant_type in set([
                 VariantType.insertion, VariantType.deletion,
-                VariantType.complex]):
+                VariantType.comp]):
 
             agg = self._aggregate_indel(variant, scores_df)
             aline.update(agg)
