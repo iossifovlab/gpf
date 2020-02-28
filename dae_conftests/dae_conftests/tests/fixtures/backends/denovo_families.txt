@@ -1,0 +1,5 @@
+familyId	personId	role	gender
+f1	f1.mo	mom	F
+f1	f1.fa	dad	M
+f1	f1.p1	prb	M
+f1	f1.s1	sib	M

@@ -1,48 +1,66 @@
 import pytest
 
-pytestmark = pytest.mark.usefixtures('mock_gpf_instance')
+pytestmark = pytest.mark.usefixtures("wdae_gpf_instance", "calc_gene_sets")
 
 
 def test_datasets_api_get_all(admin_client):
-    response = admin_client.get('/api/v3/datasets')
+    response = admin_client.get("/api/v3/datasets")
 
     assert response
     assert response.status_code == 200
-    assert len(response.data['data']) == 6
+    assert len(response.data["data"]) == 32
 
 
 def test_datasets_api_get_one(admin_client):
-    response = admin_client.get('/api/v3/datasets/quads_in_parent')
+    response = admin_client.get("/api/v3/datasets/quads_in_parent")
     print(response.data)
     assert response
     assert response.status_code == 200
-    assert response.data['data']['accessRights'] is True
-    assert response.data['data']['name'] == 'QUADS_IN_PARENT'
+    assert response.data["data"]["access_rights"] is True
+    assert response.data["data"]["name"] == "QUADS_IN_PARENT"
 
 
 def test_datasets_api_get_404(admin_client):
-    response = admin_client.get('/api/v3/datasets/alabala')
+    response = admin_client.get("/api/v3/datasets/alabala")
 
     assert response
     assert response.status_code == 404
-    assert response.data['error'] == 'Dataset alabala not found'
+    assert response.data["error"] == "Dataset alabala not found"
 
 
 def test_datasets_api_get_forbidden(user_client):
-    response = user_client.get('/api/v3/datasets/quads_in_parent')
+    response = user_client.get("/api/v3/datasets/quads_in_parent")
 
     assert response
     assert response.status_code == 200
-    assert response.data['data']['accessRights'] is False
-    assert response.data['data']['name'] == 'QUADS_IN_PARENT'
+    assert response.data["data"]["access_rights"] is False
+    assert response.data["data"]["name"] == "QUADS_IN_PARENT"
 
 
 def test_datasets_name_ordering(admin_client):
-    response = admin_client.get('/api/v3/datasets')
+    response = admin_client.get("/api/v3/datasets")
 
     assert response
     assert response.status_code == 200
 
-    sorted_response_data = sorted(response.data['data'],
-                                  key=lambda d: d['name'])
-    assert response.data['data'] == sorted_response_data
+    sorted_response_data = sorted(
+        response.data["data"], key=lambda d: d["name"]
+    )
+    assert response.data["data"] == sorted_response_data
+
+
+def test_user_client_get_dataset_details(user_client, wdae_gpf_instance):
+    response = user_client.get("/api/v3/datasets/details/inheritance_trio")
+
+    assert response
+    assert response.status_code == 200
+    assert response.data["hasDenovo"]
+
+
+def test_user_client_get_nonexistant_dataset_details(
+    user_client, wdae_gpf_instance
+):
+    response = user_client.get("/api/v3/datasets/details/asdfghjkl")
+
+    assert response
+    assert response.status_code == 400

@@ -8,17 +8,27 @@ from django.conf.urls import url
 
 
 router = SimpleRouter(trailing_slash=False)
-router.register(r'groups', GroupsViewSet, basename='groups')
+router.register(r"groups", GroupsViewSet, basename="groups")
 
 urlpatterns = [
-    url(r'^groups/grant-permission$', GrantPermissionToGroupView.as_view(),
-        name="grant_permission"),
-    url(r'^groups/revoke-permission$', RevokePermissionToGroupView.as_view(),
-        name="revoke_permission"),
-    url(r'^groups/(\d+)/user/(\d+)', GroupUsersManagementView.as_view(),
-        name='group_users_management'),
-    url(r'^groups/(\d+)/dataset/([\w ]+)',
+    url(
+        r"^groups/grant-permission$",
+        GrantPermissionToGroupView.as_view(),
+        name="grant_permission",
+    ),
+    url(
+        r"^groups/revoke-permission$",
+        RevokePermissionToGroupView.as_view(),
+        name="revoke_permission",
+    ),
+    url(
+        r"^groups/(\d+)/user/(\d+)",
+        GroupUsersManagementView.as_view(),
+        name="group_users_management",
+    ),
+    url(
+        r"^groups/(\d+)/dataset/([\w ]+)",
         GroupDatasetsManagementView.as_view(),
-        name='group_datasets_management'),
-
+        name="group_datasets_management",
+    ),
 ] + router.urls

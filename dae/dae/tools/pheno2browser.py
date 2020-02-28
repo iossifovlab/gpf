@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # encoding: utf-8
-'''
+"""
 pheno2browser -- prepares a DAE pheno browser data
 
-'''
+"""
 import sys
 import os
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
@@ -11,13 +11,14 @@ import traceback
 
 from dae.pheno import pheno_db
 from dae.pheno_browser.prepare_data import PreparePhenoBrowserBase
-from dae.pheno.utils.config import PhenoRegressionConfigParser
+from dae.configuration.gpf_config_parser import GPFConfigParser
+from dae.configuration.schemas.phenotype_data import regression_conf_schema
 
 from dae.utils.filehash import sha256sum
 
 
 class CLIError(Exception):
-    '''Generic exception to raise and log different fatal errors.'''
+    """Generic exception to raise and log different fatal errors."""
 
     def __init__(self, msg):
         super(CLIError).__init__(type(self))
@@ -34,30 +35,32 @@ def calc_dbfile_hashsum(dbfilename):
     assert os.path.exists(dbfilename)
 
     base, _ext = os.path.splitext(dbfilename)
-    hashfilename = '{}.hash'.format(base)
+    hashfilename = "{}.hash".format(base)
     if not os.path.exists(hashfilename):
         hash_sum = sha256sum(dbfilename)
-        with open(hashfilename, 'w') as f:
+        with open(hashfilename, "w") as f:
             f.write(hash_sum)
     else:
         dbtime = os.path.getmtime(dbfilename)
         hashtime = os.path.getmtime(hashfilename)
         if hashtime >= dbtime:
-            with open(hashfilename, 'r') as f:
+            with open(hashfilename, "r") as f:
                 hash_sum = f.read().strip()
         else:
             hash_sum = sha256sum(dbfilename)
-            with open(hashfilename, 'w') as f:
+            with open(hashfilename, "w") as f:
                 f.write(hash_sum)
     return hash_sum
 
 
-def build_pheno_browser(dbfile, pheno_name, output_dir,
-                        pheno_regressions=None):
+def build_pheno_browser(
+    dbfile, pheno_name, output_dir, pheno_regressions=None
+):
     phenodb = pheno_db.PhenotypeDataStudy(dbfile=dbfile)
 
-    prep = PreparePhenoBrowserBase(pheno_name, phenodb,
-                                   output_dir, pheno_regressions)
+    prep = PreparePhenoBrowserBase(
+        pheno_name, phenodb, output_dir, pheno_regressions
+    )
     prep.run()
 
     # hash_sum = calc_dbfile_hashsum(dbfile)
@@ -69,7 +72,7 @@ def build_pheno_browser(dbfile, pheno_name, output_dir,
 
 
 def main(argv=None):  # IGNORE:C0111
-    '''Command line options.'''
+    """Command line options."""
 
     if argv is None:
         argv = sys.argv
@@ -77,64 +80,73 @@ def main(argv=None):  # IGNORE:C0111
         sys.argv.extend(argv)
 
     program_name = os.path.basename(sys.argv[0])
-    program_shortdesc = __import__('__main__').__doc__.split("\n")[1]
-    program_license = '''%s
+    program_shortdesc = __import__("__main__").__doc__.split("\n")[1]
+    program_license = """%s
 
 USAGE
-''' % (program_shortdesc, )
+""" % (
+        program_shortdesc,
+    )
 
     try:
         # Setup argument parser
         parser = ArgumentParser(
             description=program_license,
-            formatter_class=RawDescriptionHelpFormatter)
+            formatter_class=RawDescriptionHelpFormatter,
+        )
         parser.add_argument(
-            "-v", "--verbose", dest="verbose",
-            action="count", help="set verbosity level [default: %(default)s]")
+            "-v",
+            "--verbose",
+            dest="verbose",
+            action="count",
+            help="set verbosity level [default: %(default)s]",
+        )
         parser.add_argument(
-            "-d", "--dbfile",
+            "-d",
+            "--dbfile",
             dest="dbfile",
             help="pheno db file anme",
-            metavar="path"
+            metavar="path",
         )
         parser.add_argument(
-            "-p", "--pheno",
-            dest="pheno_name",
-            help="pheno name"
+            "-p", "--pheno", dest="pheno_name", help="pheno name"
         )
         parser.add_argument(
-            '-o', '--output',
-            dest='output',
-            help='output base dir',
-            metavar='path')
+            "-o",
+            "--output",
+            dest="output",
+            help="output base dir",
+            metavar="path",
+        )
 
         parser.add_argument(
-            '--regression',
+            "--regression",
             help=("path to a regression configuration file"),
-            type=str
+            type=str,
         )
 
         # Process arguments
         args = parser.parse_args()
 
         if not args.output or not os.path.exists(args.output):
-            raise CLIError(
-                "output directory should be specified and empty"
-            )
+            raise CLIError("output directory should be specified and empty")
 
         if not args.pheno_name:
-            raise CLIError(
-                "pheno name must be specified")
+            raise CLIError("pheno name must be specified")
         if not args.dbfile or not os.path.exists(args.dbfile):
-            raise CLIError(
-                "pheno db file name must be specified")
+            raise CLIError("pheno db file name must be specified")
 
-        regressions = PhenoRegressionConfigParser.\
-            read_and_parse_file_configuration(args.regression, '') \
-            if args.regression else None
+        regressions = (
+            GPFConfigParser.load_config(
+                args.regression, regression_conf_schema
+            )
+            if args.regression
+            else None
+        )
 
         build_pheno_browser(
-            args.dbfile, args.pheno_name, args.output, regressions)
+            args.dbfile, args.pheno_name, args.output, regressions
+        )
 
         return 0
     except KeyboardInterrupt:

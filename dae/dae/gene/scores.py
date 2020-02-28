@@ -8,7 +8,7 @@ class Scores(GenomicValues):
         super(Scores, self).__init__(config.id)
 
         self.config = config
-        self.genomic_values_col = 'scores'
+        self.genomic_values_col = "scores"
 
         self.desc = self.config.desc
         self.bins = self.config.bins
@@ -16,18 +16,20 @@ class Scores(GenomicValues):
         self.yscale = self.config.yscale
         self.filename = self.config.file
         self.help_filename = self.config.help_file
-        self.range = self.config.range
+        if self.config.range:
+            self.range = (self.config.range.start, self.config.range.end)
+        else:
+            self.range = None
         self.help = self.config.help
 
         self._load_data()
         self.df.fillna(value=0, inplace=True)
 
     def get_scores(self):
-        return self.df['scores'].values
+        return self.df["scores"].values
 
 
 class ScoresFactory(object):
-
     def __init__(self, config):
         super(ScoresFactory, self).__init__()
         self.config = config
@@ -46,9 +48,10 @@ class ScoresFactory(object):
         return result
 
     def _load(self):
-        for score_config in self.config.genomic_scores.values():
+        for score_config in self.config.genomic_scores:
             s = Scores(score_config)
-            self.scores[score_config.id] = s
+            if s.id in self.config.scores:
+                self.scores[score_config.id] = s
 
     def __getitem__(self, score_id):
         if score_id not in self.scores:

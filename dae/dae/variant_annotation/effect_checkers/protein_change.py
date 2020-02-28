@@ -3,7 +3,7 @@ from ..effect import EffectFactory
 
 class ProteinChangeEffectChecker(object):
     def mutation_type(self, aaref, aaalt):
-        assert(len(aaref) == len(aaalt))
+        assert len(aaref) == len(aaalt)
 
         if "End" in aaalt and "End" not in aaref:
             return "nonsense"
@@ -25,7 +25,7 @@ class ProteinChangeEffectChecker(object):
             return None
 
         for j in coding_regions:
-            if (j.start <= request.variant.position <= j.stop):
+            if j.start <= request.variant.position <= j.stop:
                 if length == 0:
                     ref_aa, alt_aa = request.get_amino_acids()
                     return EffectFactory.create_effect_with_aa_change(

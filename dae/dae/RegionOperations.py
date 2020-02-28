@@ -13,7 +13,7 @@ def bedFile2Rgns(bedFN):
     F = open(bedFN)
     r = []
     for l in F:
-        if l[0] == '#':
+        if l[0] == "#":
             continue
         chrom, beg, end = l.strip().split("\t")
         beg = int(beg)
@@ -33,7 +33,8 @@ def rgns2BedFile(rgns, bedFN):
 class Region(object):
 
     REGION_REGEXP2 = re.compile(
-        r"^(chr)?(\d+|[XxYy]):([\d]{1,3}(,?[\d]{3})*)(-([\d]{1,3}(,?[\d]{3})*))?$")  # noqa
+        r"^(chr)?(.+):([\d]{1,3}(,?[\d]{3})*)(-([\d]{1,3}(,?[\d]{3})*))?$"
+    )  # noqa
 
     def __init__(self, chrom=None, start=None, stop=None, chr=None):
 
@@ -54,8 +55,15 @@ class Region(object):
         return self.stop
 
     def __repr__(self):
-        return "Region(" + self.chrom + "," + \
-            str(self.start) + "," + str(self.stop) + ")"
+        return (
+            "Region("
+            + self.chrom
+            + ","
+            + str(self.start)
+            + ","
+            + str(self.stop)
+            + ")"
+        )
 
     def __str__(self):
         if self.start is None:
@@ -69,8 +77,11 @@ class Region(object):
         return str(self).__hash__()
 
     def __eq__(self, other):
-        return self.chr == other.chrom and \
-            self.start == other.start and self.stop == other.stop
+        return (
+            self.chrom == other.chrom
+            and self.start == other.start
+            and self.stop == other.stop
+        )
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -88,21 +99,31 @@ class Region(object):
         m = cls.REGION_REGEXP2.match(region_str)
         if not m:
             return None
-        chrome, start, end = m.group(2), m.group(3), m.group(6)
+        prefix, chrom, start, end = (
+            m.group(1),
+            m.group(2),
+            m.group(3),
+            m.group(6),
+        )
         if not start:
             return None
-        start = int(start.replace(',', ''))
+        start = int(start.replace(",", ""))
         if not end:
             end = start
         else:
-            end = int(end.replace(',', ''))
+            end = int(end.replace(",", ""))
 
         if start > end:
             return None
-        return chrome, start, end
+        if prefix:
+            return f"{prefix}{chrom}", start, end
+        else:
+            return chrom, start, end
 
     @staticmethod
     def from_str(region_str):
+        if region_str is None:
+            return None
         parsed = Region.parse_str(region_str)
         if not parsed:
             return None
@@ -143,7 +164,7 @@ def connected_component(R):
                 else:
                     break
     CC = nx.connected_components(G)
-    return(CC)
+    return CC
 
 
 def collapse(r, is_sorted=False):
@@ -259,7 +280,7 @@ def intersection(s1, s2):
 def union(*r):
     """Collapses many lists"""
     r_sum = [el for list in r for el in list]
-    return(collapse(r_sum))
+    return collapse(r_sum)
 
 
 def _diff(A, B):
@@ -288,7 +309,7 @@ def _diff(A, B):
         if prev <= a.stop:
             D.append(Region(a.chr, prev, a.stop))
 
-    return(D)
+    return D
 
 
 def difference(s1, s2, symmetric=False):
@@ -304,4 +325,4 @@ def difference(s1, s2, symmetric=False):
 
     D = _diff(A, B)
 
-    return(D)
+    return D

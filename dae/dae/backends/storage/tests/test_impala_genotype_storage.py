@@ -3,18 +3,23 @@ import os
 
 from box import Box
 
-from dae.backends.storage.tests.conftest import relative_to_this_test_folder
 
-
-def test_build_backend(impala_genotype_storage, quads_f1_config, genomes_db):
+@pytest.mark.xfail(
+    reason="impala genotype storage impala_load_study does not create "
+    "study config"
+)
+def test_build_backend(
+    impala_genotype_storage, quads_f1_config, genomes_db_2013
+):
     assert impala_genotype_storage
+    assert quads_f1_config is not None
 
     backend = impala_genotype_storage.build_backend(
-        quads_f1_config, genomes_db
+        quads_f1_config, genomes_db_2013
     )
 
-    assert len(backend.families.families_list()) == 1
-    assert len(backend.families.get_family('f1').members_ids) == 5
+    assert len(backend.families) == 1
+    assert len(backend.families["f1"].members_ids) == 5
     assert len(list(backend.query_variants())) == 3
 
 
@@ -26,10 +31,13 @@ def test_is_filestorage(impala_genotype_storage):
     assert impala_genotype_storage.is_filestorage() is False
 
 
-@pytest.mark.parametrize('hdfs_dir,path', [
-    ('/tmp/test_data/study_id', ['study_id']),
-    ('/tmp/test_data/study_id/pedigree', ['study_id', 'pedigree']),
-])
+@pytest.mark.parametrize(
+    "hdfs_dir,path",
+    [
+        ("/tmp/test_data/study_id", ["study_id"]),
+        ("/tmp/test_data/study_id/pedigree", ["study_id", "pedigree"]),
+    ],
+)
 def test_get_hdfs_dir(impala_genotype_storage, hdfs_dir, path):
     if impala_genotype_storage.hdfs_helpers.exists(hdfs_dir):
         impala_genotype_storage.hdfs_helpers.delete(hdfs_dir, recursive=True)
@@ -64,107 +72,139 @@ def test_hdfs_helpers(impala_genotype_storage, hdfs_host):
     assert hdfs_helpers.hdfs is not None
 
 
-def test_impala_load_study(impala_genotype_storage, genomes_db):
+def test_impala_load_study(
+    impala_genotype_storage, genomes_db_2013, fixture_dirname
+):
     impala_genotype_storage.impala_helpers.drop_database(
-        'impala_storage_test_db'
+        "impala_storage_test_db"
     )
 
     impala_genotype_storage.impala_load_study(
-        'study_id',
-        [relative_to_this_test_folder(
-            'fixtures/studies/quads_f1_impala/data/variants')],
-        [relative_to_this_test_folder(
-            'fixtures/studies/quads_f1_impala/data/pedigree')]
+        "study_id",
+        [fixture_dirname("studies/quads_f1_impala/data/variants")],
+        [fixture_dirname("studies/quads_f1_impala/data/pedigree")],
     )
 
     backend = impala_genotype_storage.build_backend(
-        Box({'id': 'study_id'}, default_box=True),
-        genomes_db
+        Box({"id": "study_id"}, default_box=True), genomes_db_2013
     )
 
-    assert len(backend.families.families_list()) == 1
-    assert len(backend.families.get_family('f1').members_ids) == 5
+    assert len(backend.families) == 1
+    assert len(backend.families["f1"].members_ids) == 5
     assert len(list(backend.query_variants())) == 3
 
 
 def test_impala_partition_import(
-        impala_genotype_storage, genomes_db,
-        sample_parquet_partition_root, fixture_dirname):
+    impala_genotype_storage, genomes_db_2013, fixture_dirname
+):
 
-    configuration = os.path.join(
-            sample_parquet_partition_root, '_PARTITION_DESCRIPTION')
+    ped_file = fixture_dirname("backends/test_partition/pedigree.parquet")
+    variants_path = fixture_dirname("backends/test_partition/variants.parquet")
 
-    ped_file = fixture_dirname('backends/test_partition/pedigree.parquet')
-
-    impala_genotype_storage.dataset_import(
-        'test_study',
-        configuration,
-        ped_file)
+    impala_genotype_storage.impala_load_dataset(
+        "test_study", variants_path, ped_file
+    )
 
     hdfs = impala_genotype_storage.hdfs_helpers
     root = impala_genotype_storage.storage_config.hdfs.base_dir
 
-    assert hdfs.exists(os.path.join(
-        root,
-        'test_study/region_bin=1_8/family_bin=6/coding_bin=0/frequency_bin=3'))
-    assert hdfs.exists(os.path.join(
-        root,
-        'test_study/region_bin=1_8/family_bin=6/coding_bin=0/frequency_bin=3/'
-        'variants_region_bin_1_8_family_bin_6_'
-        'coding_bin_0_frequency_bin_3.parquet'))
-    assert hdfs.exists(os.path.join(
-        root,
-        'test_study/region_bin=1_8/family_bin=69'
-        '/coding_bin=0/frequency_bin=3'))
-    assert hdfs.exists(os.path.join(
-        root,
-        'test_study/region_bin=1_8/family_bin=69/coding_bin=0/frequency_bin=3/'
-        'variants_region_bin_1_8_family_bin_69_'
-        'coding_bin_0_frequency_bin_3.parquet'))
-    assert hdfs.exists(os.path.join(
-        root,
-        'test_study/region_bin=2_9/family_bin=6/coding_bin=0/frequency_bin=3'))
-    assert hdfs.exists(os.path.join(
-        root,
-        'test_study/region_bin=2_9/family_bin=6/coding_bin=0/frequency_bin=3/'
-        'variants_region_bin_2_9_family_bin_6_'
-        'coding_bin_0_frequency_bin_3.parquet'))
-    assert hdfs.exists(os.path.join(
-        root,
-        'test_study/region_bin=2_9/family_bin=69'
-        '/coding_bin=0/frequency_bin=3'))
-    assert hdfs.exists(os.path.join(
-        root,
-        'test_study/region_bin=2_9/family_bin=69/coding_bin=0/frequency_bin=3/'
-        'variants_region_bin_2_9_family_bin_69_'
-        'coding_bin_0_frequency_bin_3.parquet'))
+    assert hdfs.exists(
+        os.path.join(
+            root,
+            "test_study/variants/region_bin=1_8/family_bin=6/coding_bin=0/"
+            "frequency_bin=3",
+        )
+    )
+    assert hdfs.exists(
+        os.path.join(
+            root,
+            "test_study/variants/region_bin=1_8/family_bin=6/coding_bin=0/"
+            "frequency_bin=3/"
+            "variants_region_bin_1_8_family_bin_6_"
+            "coding_bin_0_frequency_bin_3.parquet",
+        )
+    )
+    assert hdfs.exists(
+        os.path.join(
+            root,
+            "test_study/variants/region_bin=1_8/family_bin=69"
+            "/coding_bin=0/frequency_bin=3",
+        )
+    )
+    assert hdfs.exists(
+        os.path.join(
+            root,
+            "test_study/variants/region_bin=1_8/family_bin=69/coding_bin=0/"
+            "frequency_bin=3/"
+            "variants_region_bin_1_8_family_bin_69_"
+            "coding_bin_0_frequency_bin_3.parquet",
+        )
+    )
+    assert hdfs.exists(
+        os.path.join(
+            root,
+            "test_study/variants/region_bin=2_9/family_bin=6/coding_bin=0/"
+            "frequency_bin=3",
+        )
+    )
+    assert hdfs.exists(
+        os.path.join(
+            root,
+            "test_study/variants/region_bin=2_9/family_bin=6/coding_bin=0/"
+            "frequency_bin=3/"
+            "variants_region_bin_2_9_family_bin_6_"
+            "coding_bin_0_frequency_bin_3.parquet",
+        )
+    )
+    assert hdfs.exists(
+        os.path.join(
+            root,
+            "test_study/variants/region_bin=2_9/family_bin=69"
+            "/coding_bin=0/frequency_bin=3",
+        )
+    )
+    assert hdfs.exists(
+        os.path.join(
+            root,
+            "test_study/variants/region_bin=2_9/family_bin=69/coding_bin=0/"
+            "frequency_bin=3/"
+            "variants_region_bin_2_9_family_bin_69_"
+            "coding_bin_0_frequency_bin_3.parquet",
+        )
+    )
 
     impala = impala_genotype_storage.impala_helpers
     db = impala_genotype_storage.storage_config.impala.db
 
     with impala.connection.cursor() as cursor:
-        cursor.execute(f'DESCRIBE EXTENDED {db}.test_study_partition')
+        cursor.execute(f"DESCRIBE EXTENDED {db}.test_study_variants")
         rows = list(cursor)
         assert any(
-                row[1] == 'gpf_partitioning_coding_bin_coding_effect_types'
-                and row[2] == 'missense, nonsense, frame-shift, synonymous'
-                for row in rows)
+            row[1] == "gpf_partitioning_coding_bin_coding_effect_types"
+            and row[2] == "missense,nonsense,frame-shift,synonymous"
+            for row in rows
+        )
         assert any(
-                row[1] == 'gpf_partitioning_family_bin_family_bin_size'
-                and int(row[2]) == 100
-                for row in rows)
+            row[1] == "gpf_partitioning_family_bin_family_bin_size"
+            and int(row[2]) == 100
+            for row in rows
+        )
         assert any(
-                row[1] == 'gpf_partitioning_frequency_bin_rare_boundary'
-                and int(row[2]) == 30
-                for row in rows)
+            row[1] == "gpf_partitioning_frequency_bin_rare_boundary"
+            and int(row[2]) == 30
+            for row in rows
+        )
         assert any(
-                row[1] == 'gpf_partitioning_region_bin_chromosomes'
-                and '1, 2' in row[2]
-                for row in rows)
+            row[1] == "gpf_partitioning_region_bin_chromosomes"
+            and "1, 2" in row[2]
+            for row in rows
+        )
         assert any(
-                row[1] == 'gpf_partitioning_region_bin_region_length'
-                and int(row[2]) == 100000
-                for row in rows)
+            row[1] == "gpf_partitioning_region_bin_region_length"
+            and int(row[2]) == 100000
+            for row in rows
+        )
+
 
 # def test_impala_config(impala_genotype_storage):
 #     impala_config = impala_genotype_storage._impala_config(

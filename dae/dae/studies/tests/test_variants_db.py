@@ -9,57 +9,76 @@ def test_fixture_variants_db_can_be_loaded(variants_db_fixture):
 
 
 def test_variants_db_can_create_study_from_config(
-        genotype_data_study_configs, variants_db_fixture):
-    test_config = genotype_data_study_configs.get('quads_f1')
+    genotype_data_study_configs, variants_db_fixture
+):
+    test_config = genotype_data_study_configs.get("quads_f1")
 
-    assert variants_db_fixture.make_genotype_data_study(test_config) is not None
+    assert (
+        variants_db_fixture.make_genotype_data_study(test_config) is not None
+    )
 
 
 ##############################################################
 
 
 def test_variants_db_studies_simple(
-        dae_config_fixture, pheno_db, gene_weights_db,
-        mocked_gene_models, genotype_storage_factory):
+    dae_config_fixture,
+    pheno_db,
+    gene_weights_db,
+    mocked_gene_models,
+    genotype_storage_factory,
+):
     assert dae_config_fixture is not None
     assert dae_config_fixture.studies_db.dir is not None
 
-    assert dae_config_fixture.studies_db.dir == \
-        os.path.join(fixtures_dir(), "studies")
+    assert dae_config_fixture.studies_db.dir == os.path.join(
+        fixtures_dir(), "studies"
+    )
 
     vdb = VariantsDb(
-        dae_config_fixture, pheno_db, gene_weights_db, mocked_gene_models,
-        genotype_storage_factory
+        dae_config_fixture,
+        pheno_db,
+        gene_weights_db,
+        mocked_gene_models,
+        genotype_storage_factory,
     )
     assert vdb is not None
 
 
 def test_variants_db_genotype_data_groups_simple(
-        dae_config_fixture, pheno_db, gene_weights_db,
-        mocked_gene_models, genotype_storage_factory):
+    dae_config_fixture,
+    pheno_db,
+    gene_weights_db,
+    mocked_gene_models,
+    genotype_storage_factory,
+):
     assert dae_config_fixture is not None
     assert dae_config_fixture.datasets_db.dir is not None
 
-    assert dae_config_fixture.datasets_db.dir == \
-        os.path.join(fixtures_dir(), "datasets")
+    assert dae_config_fixture.datasets_db.dir == os.path.join(
+        fixtures_dir(), "datasets"
+    )
 
     vdb = VariantsDb(
-        dae_config_fixture, pheno_db, gene_weights_db, mocked_gene_models,
-        genotype_storage_factory
+        dae_config_fixture,
+        pheno_db,
+        gene_weights_db,
+        mocked_gene_models,
+        genotype_storage_factory,
     )
     assert vdb is not None
 
 
 def test_get_existing_study_config(variants_db_fixture):
-    assert variants_db_fixture.get_study_config('quads_f1') is not None
+    assert variants_db_fixture.get_study_config("quads_f1") is not None
 
 
 def test_get_non_existing_study_config(variants_db_fixture):
-    assert variants_db_fixture.get_study_config('ala bala') is None
+    assert variants_db_fixture.get_study_config("ala bala") is None
 
 
 def test_get_existing_study(variants_db_fixture):
-    study = variants_db_fixture.get_study('inheritance_trio')
+    study = variants_db_fixture.get_study("inheritance_trio")
     assert study is not None
     vs = study.query_variants()
     vs = list(vs)
@@ -67,12 +86,12 @@ def test_get_existing_study(variants_db_fixture):
 
 
 def test_get_non_existing_study(variants_db_fixture):
-    study = variants_db_fixture.get_study('ala bala')
+    study = variants_db_fixture.get_study("ala bala")
     assert study is None
 
 
 def test_get_existing_study_wrapper(variants_db_fixture):
-    study = variants_db_fixture.get_study_wdae_wrapper('inheritance_trio')
+    study = variants_db_fixture.get_study_wdae_wrapper("inheritance_trio")
     assert study is not None
     vs = study.query_variants()
     vs = list(vs)
@@ -80,7 +99,7 @@ def test_get_existing_study_wrapper(variants_db_fixture):
 
 
 def test_get_non_existing_study_wrapper(variants_db_fixture):
-    study = variants_db_fixture.get_study_wdae_wrapper('ala bala')
+    study = variants_db_fixture.get_study_wdae_wrapper("ala bala")
     assert study is None
 
 
@@ -93,36 +112,53 @@ def test_get_non_existing_study_wrapper(variants_db_fixture):
 
 
 def test_get_genotype_data_groups_ids(variants_db_fixture):
-    assert sorted(variants_db_fixture.get_genotype_data_groups_ids()) == \
-        sorted([
-            'quads_in_parent_ds', 'composite_dataset_ds', 'quads_in_child_ds',
-            'quads_composite_ds', 'inheritance_trio_ds',
-            'quads_two_families_ds', 'quads_variant_types_ds', 'quads_f1_ds',
-            'quads_f2_ds'
-        ])
+    assert set(variants_db_fixture.get_genotype_data_groups_ids()) == set(
+        [
+            "quads_in_parent_ds",
+            "composite_dataset_ds",
+            "quads_in_child_ds",
+            "quads_composite_ds",
+            "inheritance_trio_ds",
+            "quads_two_families_ds",
+            "quads_variant_types_ds",
+            "quads_f1_ds",
+            "quads_f2_ds",
+            "f2_group",
+            "Dataset3",
+            "f1_group",
+            "Dataset2",
+            "Dataset1",
+            "f3_group",
+            "Dataset4",
+        ]
+    )
 
 
 def test_get_existing_genotype_data_group_config(variants_db_fixture):
     vdb = variants_db_fixture
-    assert vdb.get_genotype_data_group_config(
-        'inheritance_trio_ds') is not None
+    assert (
+        vdb.get_genotype_data_group_config("inheritance_trio_ds") is not None
+    )
 
 
 def test_get_non_existing_genotype_data_group_config(variants_db_fixture):
-    assert variants_db_fixture.get_genotype_data_group_config(
-        'ala bala') is None
+    assert (
+        variants_db_fixture.get_genotype_data_group_config("ala bala") is None
+    )
 
 
 def test_get_genotype_data_group(variants_db_fixture):
-    genotype_data_group = \
-        variants_db_fixture.get_genotype_data_group('quads_in_parent_ds')
+    genotype_data_group = variants_db_fixture.get_genotype_data_group(
+        "quads_in_parent_ds"
+    )
     assert genotype_data_group is not None
-    assert genotype_data_group.id == 'quads_in_parent_ds'
+    assert genotype_data_group.id == "quads_in_parent_ds"
 
 
 def test_get_existing_genotype_data_group(variants_db_fixture):
-    genotype_data_group = \
-        variants_db_fixture.get_genotype_data_group('inheritance_trio_ds')
+    genotype_data_group = variants_db_fixture.get_genotype_data_group(
+        "inheritance_trio_ds"
+    )
     assert genotype_data_group is not None
     vs = genotype_data_group.query_variants()
     vs = list(vs)
@@ -130,15 +166,16 @@ def test_get_existing_genotype_data_group(variants_db_fixture):
 
 
 def test_get_non_existing_genotype_data_group(variants_db_fixture):
-    genotype_data_group = \
-        variants_db_fixture.get_genotype_data_group('ala bala')
+    genotype_data_group = variants_db_fixture.get_genotype_data_group(
+        "ala bala"
+    )
     assert genotype_data_group is None
 
 
 def test_get_existing_genotype_data_group_wrapper(variants_db_fixture):
-    genotype_data_group = \
-        variants_db_fixture.get_genotype_data_group_wdae_wrapper(
-            'inheritance_trio_ds')
+    genotype_data_group = variants_db_fixture.get_genotype_data_group_wdae_wrapper(
+        "inheritance_trio_ds"
+    )
     assert genotype_data_group is not None
     vs = genotype_data_group.query_variants()
     vs = list(vs)
@@ -146,19 +183,20 @@ def test_get_existing_genotype_data_group_wrapper(variants_db_fixture):
 
 
 def test_get_non_existing_genotype_data_group_wrapper(variants_db_fixture):
-    genotype_data_group = \
-        variants_db_fixture.get_genotype_data_group_wdae_wrapper('ala bala')
+    genotype_data_group = variants_db_fixture.get_genotype_data_group_wdae_wrapper(
+        "ala bala"
+    )
     assert genotype_data_group is None
 
 
 def test_get_all_genotype_data_groups(variants_db_fixture):
     genotype_data_groups = variants_db_fixture.get_all_genotype_data_groups()
-    assert len(genotype_data_groups) == 9
+    assert len(genotype_data_groups) == 16
 
 
 def test_get_all_genotype_data_group_configs(variants_db_fixture):
     configs = variants_db_fixture.get_all_genotype_data_group_configs()
-    assert len(configs) == 9
+    assert len(configs) == 16
 
 
 ##############################################################
@@ -166,21 +204,21 @@ def test_get_all_genotype_data_group_configs(variants_db_fixture):
 
 def test_get_existing_config(variants_db_fixture):
     vdb = variants_db_fixture
-    assert vdb.get_config('inheritance_trio') is not None
+    assert vdb.get_config("inheritance_trio") is not None
 
 
 def test_get_non_existing_config(variants_db_fixture):
-    assert variants_db_fixture.get_config('ala bala') is None
+    assert variants_db_fixture.get_config("ala bala") is None
 
 
 def test_get_existing(variants_db_fixture):
-    study = variants_db_fixture.get('inheritance_trio')
+    study = variants_db_fixture.get("inheritance_trio")
     assert study is not None
     vs = study.query_variants()
     vs = list(vs)
     assert len(vs) == 14
 
-    genotype_data_group = variants_db_fixture.get('inheritance_trio_ds')
+    genotype_data_group = variants_db_fixture.get("inheritance_trio_ds")
     assert genotype_data_group is not None
     vs = genotype_data_group.query_variants()
     vs = list(vs)
@@ -188,20 +226,20 @@ def test_get_existing(variants_db_fixture):
 
 
 def test_get_non_existing(variants_db_fixture):
-    study = variants_db_fixture.get('ala bala')
+    study = variants_db_fixture.get("ala bala")
     assert study is None
 
 
 def test_get_existing_wrapper(variants_db_fixture):
-    study = variants_db_fixture.get_wdae_wrapper(
-        'inheritance_trio')
+    study = variants_db_fixture.get_wdae_wrapper("inheritance_trio")
     assert study is not None
     vs = study.query_variants()
     vs = list(vs)
     assert len(vs) == 14
 
     genotype_data_group = variants_db_fixture.get_wdae_wrapper(
-        'inheritance_trio_ds')
+        "inheritance_trio_ds"
+    )
     assert genotype_data_group is not None
     vs = genotype_data_group.query_variants()
     vs = list(vs)
@@ -209,10 +247,23 @@ def test_get_existing_wrapper(variants_db_fixture):
 
 
 def test_get_non_existing_wrapper(variants_db_fixture):
-    study = variants_db_fixture.get_wdae_wrapper('ala bala')
+    study = variants_db_fixture.get_wdae_wrapper("ala bala")
     assert study is None
 
 
-def test_get_all(variants_db_fixture):
+def test_get_all(fixtures_gpf_instance, variants_db_fixture):
     studies = variants_db_fixture.get_all_genotype_data()
-    assert len(studies) == 16
+    assert len(studies) == 32
+
+    studies = fixtures_gpf_instance.get_all_genotype_data()
+    assert len(studies) == 32
+
+
+def test_get_all_studies_ids(fixtures_gpf_instance, variants_db_fixture):
+    studies = fixtures_gpf_instance.get_genotype_data_ids()
+    assert len(studies) == 32
+
+
+def test_get_bad_study(fixtures_gpf_instance):
+    genotype_data = fixtures_gpf_instance.get_genotype_data("quads_f1_impala")
+    assert genotype_data is None

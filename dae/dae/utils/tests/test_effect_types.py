@@ -1,13 +1,13 @@
-'''
+"""
 Created on Feb 6, 2017
 
 @author: lubo
-'''
+"""
 import pytest
 from dae.utils.effect_utils import EffectTypesMixin
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def query_base(request):
     query = EffectTypesMixin()
     return query
@@ -18,7 +18,7 @@ def test_build_effect_types(query_base):
 
     res = query_base.build_effect_types(effect_types)
     assert res is not None
-    assert ['frame-shift', 'nonsense', 'splice-site', 'non-coding'] == res
+    assert ["frame-shift", "nonsense", "splice-site", "non-coding"] == res
 
 
 def test_build_effect_types_lgds(query_base):
@@ -26,12 +26,9 @@ def test_build_effect_types_lgds(query_base):
 
     res = query_base.build_effect_types(effect_types)
     assert res is not None
-    assert set([
-        'frame-shift',
-        'nonsense',
-        'splice-site',
-        'no-frame-shift-newStop'
-    ]) == set(res)
+    assert set(
+        ["frame-shift", "nonsense", "splice-site", "no-frame-shift-newStop"]
+    ) == set(res)
 
 
 def test_build_effect_types_mixed(query_base):
@@ -39,10 +36,17 @@ def test_build_effect_types_mixed(query_base):
 
     res = query_base.build_effect_types(effect_types)
     assert res is not None
-    assert set([
-        'frame-shift', 'nonsense', 'splice-site',
-        'no-frame-shift-newStop',
-        'CNV+', 'CNV-', 'noStart']) == set(res)
+    assert set(
+        [
+            "frame-shift",
+            "nonsense",
+            "splice-site",
+            "no-frame-shift-newStop",
+            "CNV+",
+            "CNV-",
+            "noStart",
+        ]
+    ) == set(res)
 
 
 def test_build_effect_types_bad(query_base):
@@ -56,24 +60,23 @@ def test_build_effect_types_bad_not_safe(query_base):
     effect_types = "LGDs, not-an-effect-type"
 
     res = query_base.build_effect_types(effect_types, safe=False)
-    assert set([
-        'frame-shift',
-        'nonsense',
-        'splice-site',
-        'no-frame-shift-newStop',
-    ]) == set(res)
+    assert set(
+        ["frame-shift", "nonsense", "splice-site", "no-frame-shift-newStop",]
+    ) == set(res)
 
 
 def test_build_effect_types_naming(query_base):
     effect_types_arguments = [
-        ('nonsense', ['Nonsense']),
-        (['nonsense'], ['Nonsense']),
-        (['frame-shift', 'nonsense', 'splice-site', ],
-         ['Frame-shift', 'Nonsense', 'Splice-site', ]),
-        (['noStart'], ['noStart']),
-        (['Synonymous'], ['Synonymous']),
-        (['Intron'], ['Intron']),
-        ('non-coding', ["Non coding"])
+        ("nonsense", ["Nonsense"]),
+        (["nonsense"], ["Nonsense"]),
+        (
+            ["frame-shift", "nonsense", "splice-site",],
+            ["Frame-shift", "Nonsense", "Splice-site",],
+        ),
+        (["noStart"], ["noStart"]),
+        (["Synonymous"], ["Synonymous"]),
+        (["Intron"], ["Intron"]),
+        ("non-coding", ["Non coding"]),
     ]
 
     for effect_types, should_become in effect_types_arguments:
@@ -82,15 +85,11 @@ def test_build_effect_types_naming(query_base):
 
 
 def test_build_effect_types_naming_should_raise(query_base):
-    effect_types_arguments = [
-        ['ala bala']
-    ]
+    effect_types_arguments = [["ala bala"]]
     for effect_types in effect_types_arguments:
         with pytest.raises(AssertionError):
-            query_base.build_effect_types_naming(
-                effect_types, safe=True)
+            query_base.build_effect_types_naming(effect_types, safe=True)
 
     for effect_types in effect_types_arguments:
-        result = query_base.build_effect_types_naming(
-            effect_types, safe=False)
+        result = query_base.build_effect_types_naming(effect_types, safe=False)
         assert result == effect_types

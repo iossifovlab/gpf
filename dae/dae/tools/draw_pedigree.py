@@ -1,177 +1,129 @@
 #!/usr/bin/env python
-from tqdm import tqdm
-import multiprocessing
-import functools
-import pandas as pd
-from box import Box
+import sys
+import argparse
 
-from dae.pedigrees.family import PedigreeReader
-from dae.pedigrees.pedigrees import get_argument_parser
+import matplotlib as mpl
+
+mpl.use("PS")  # noqa
+import matplotlib.pyplot as plt
+
+plt.ioff()  # noqa
+
+from dae.pedigrees.loader import FamiliesLoader
+from dae.pedigrees.families_groups import FamiliesGroups
+
 from dae.pedigrees.drawing import OffsetLayoutDrawer, PDFLayoutDrawer
-from dae.pedigrees.layout_loader import LayoutLoader
-from dae.pedigrees.family import FamiliesData
+from dae.pedigrees.layout import Layout
 from dae.common_reports.family_report import FamiliesReport
-from dae.common_reports.people_group_info import PeopleGroupInfo
-from dae.common_reports.filter import FilterObjects, FilterObject
+from dae.common_reports.people_filters import FilterCollection
 
 
-def draw_family_pedigree(family, show_id=False):
-    layout_loader = LayoutLoader(family)
-    layout = layout_loader.load()
-    if layout is None:
-        return 'Invalid coordinates' + " in family " + family.family_id
-    else:
-        layout_drawer = OffsetLayoutDrawer(layout, 0, 0, show_id)
-        return layout_drawer.draw()
+def build_families_report(families):
 
-
-def get_layout(family):
-    layout_loader = LayoutLoader(family)
-    layout = layout_loader.load()
-    return {family.family_id: layout}
-
-
-def draw_pedigree(layouts, show_id, show_family, family):
-    layout = layouts[family.family_id]
-
-    if layout is None:
-        layout_drawer = OffsetLayoutDrawer(layout, 0, 0)
-        draw_layout = layout_drawer.draw_family(
-            family.members,
-            title='Invalid coordinates in family ' + family.family_id)
-        return draw_layout
-    else:
-        layout_drawer = OffsetLayoutDrawer(
-            layout, 0, 0, show_id=show_id, show_family=show_family)
-        draw_layout = layout_drawer.draw(title=family.family_id)
-        return draw_layout
-
-
-def get_families_report(pedigrees):
-    pedigrees_df = pd.concat([pedigree.get_pedigree_dataframe()
-                              for pedigree in pedigrees])
-
-    families = FamiliesData(pedigrees_df)
-    families.families_build(pedigrees_df)
-
-    people_group_info = {
-        'domain': {
-            'affected': {
-                'id': 'affected',
-                'name': 'affected',
-                'color': '#e35252'
-            }
-        },
-        'unaffected': {
-            'id': 'unaffected',
-            'name': 'unaffected',
-            'color': '#ffffff'
-        },
-        'default': {
-            'id': 'unknown',
-            'name': 'unknown',
-            'color': '#aaaaaa'
-        },
-        'source': 'phenotype',
-        'name': 'Phenotype'
-    }
-
-    people_groups = ['affected', 'unaffected', 'unknown']
-
-    people_group_info = PeopleGroupInfo(
-        people_group_info, 'Phenotype', people_groups=people_groups)
-
-    people_groups_info = Box({'people_groups_info': [people_group_info]})
-
-    filters_objects = []
-
-    filter_objects = FilterObjects('Status')
-    filter_object1 = FilterObject([])
-    filter_object1.add_filter('phenotype', 'unaffected')
-    filter_objects.add_filter_object(filter_object1)
-    filter_object2 = FilterObject([])
-    filter_object2.add_filter('phenotype', 'affected')
-    filter_objects.add_filter_object(filter_object2)
-    filter_object3 = FilterObject([])
-    filter_object3.add_filter('phenotype', 'unknown')
-    filter_objects.add_filter_object(filter_object3)
-    filters_objects.append(filter_objects)
+    families_groups = FamiliesGroups(families)
+    # families_groups.add_predefined_groups(['status'])
+    families_groups.add_predefined_groups(
+        ["status", "sex", "role", "role.sex", "family_size"]
+    )
+    filter_collections = FilterCollection.build_filter_objects(
+        families_groups, {"Status": ["status"]}
+    )
 
     families_report = FamiliesReport(
-        families, people_groups_info, filters_objects)
+        ["status"], families_groups, filter_collections
+    )
 
     return families_report
 
 
-def main():
-    parser = get_argument_parser(
-        "Produce a pedigree drawing in PDF format "
-        "from a pedigree file with layout coordinates.")
+def draw_pedigree(layout, title, show_id=True, show_family=True):
+
+    layout_drawer = OffsetLayoutDrawer(
+        layout, 0, 0, show_id=show_id, show_family=show_family
+    )
+    figure = layout_drawer.draw(title=title)
+    return figure
+
+
+def build_family_layout(family):
+    # layout = Layout.from_family_layout(family)
+    # if layout is None:
+    return Layout.from_family(family)
+
+
+def draw_families_report(families):
+    families_report = build_families_report(families)
+    assert len(families_report.families_counters) == 1
+    family_counters = families_report.families_counters[0]
+
+    for family_counter in family_counters.counters.values():
+        family = family_counter.family
+        layout = build_family_layout(family)
+        if len(family_counter.families) > 5:
+            count = len(family_counter.families)
+            title = f"Number of families: {count}"
+        else:
+            title = ", ".join([f.family_id for f in family_counter.families])
+
+        figure = draw_pedigree(layout, title=title)
+        yield figure
+
+
+def draw_families(families):
+    for family_id, family in families.items():
+        layout = build_family_layout(family)
+
+        figure = draw_pedigree(layout, title=family.family_id)
+        yield figure
+
+
+def main(argv=sys.argv[1:]):
+
+    parser = argparse.ArgumentParser(
+        description="Produce a pedigree drawing in PDF format "
+        "from a pedigree file with layout coordinates.",
+        conflict_handler="resolve",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+
+    FamiliesLoader.cli_arguments(parser)
+
     parser.add_argument(
-        "--layout-column", metavar="l", default="layout",
-        help="name of the column containing layout coordinates. "
-        "Default to layout.")
+        "--output",
+        "-o",
+        metavar="o",
+        help="the output filename file",
+        default="output.pdf",
+    )
+
     parser.add_argument(
-        '--show-id', help='show individual id in pedigree', dest='show_id',
-        action='store_true', default=False)
-    parser.add_argument(
-        '--show-family', help='show family info below pedigree',
-        dest='show_family', action='store_true', default=False)
-    parser.add_argument(
-        "--generated-column", metavar="m", default="generated",
-        help="name of the column that contains an "
-             "indicator for generated individuals")
+        "--mode",
+        type=str,
+        default="families",
+        dest="mode",
+        help="mode of drawing; supported modes are `families` and `report`; "
+        "defaults: `report`",
+    )
 
-    args = parser.parse_args()
+    argv = parser.parse_args(argv)
 
-    columns_labels = {
-        "family_id": args.family_id,
-        "id": args.id,
-        "father": args.father,
-        "mother": args.mother,
-        "sex": args.sex,
-        "status": args.status,
-        "role": args.role,
-        "layout": args.layout_column
-    }
-    if args.generated_column:
-        columns_labels["generated"] = args.generated_column
+    filename, params = FamiliesLoader.parse_cli_arguments(argv)
+    families_loader = FamiliesLoader(filename, params=params)
+    families = families_loader.load()
 
-    header = args.no_header_order
-    if header:
-        header = header.split(',')
-    delimiter = args.delimiter
+    mode = argv.mode
+    assert mode in ("families", "report")
+    if mode == "report":
+        generator = draw_families_report(families)
+    else:
+        generator = draw_families(families)
 
-    show_id = args.show_id
-    show_family = args.show_family
+    with PDFLayoutDrawer(argv.output) as pdf_drawer:
 
-    pedigrees = PedigreeReader().read_file(
-        args.file, columns_labels, header, delimiter)
-
-    pdf_drawer = PDFLayoutDrawer(args.output)
-
-    families_report = get_families_report(pedigrees)
-
-    layouts = {}
-    with multiprocessing.Pool(processes=args.processes) as pool:
-        for layout in tqdm(pool.imap(
-            get_layout, sorted(pedigrees, key=lambda x: x.family_id)),
-                total=len(pedigrees)):
-            layouts.update(layout)
-
-    layout_drawer = OffsetLayoutDrawer(None, 0, 0)
-    draw_layout = layout_drawer.draw_families_report(families_report, layouts)
-    pdf_drawer.add_pages(draw_layout)
-
-    with multiprocessing.Pool(processes=args.processes) as pool:
-        for figure in tqdm(pool.imap(
-            functools.partial(draw_pedigree, layouts, show_id, show_family),
-            sorted(pedigrees, key=lambda x: x.family_id)),
-                total=len(pedigrees)):
-            pdf_drawer.add_page(figure)
-
-    pdf_drawer.save_file()
+        for fig in generator:
+            pdf_drawer.savefig(fig)
+            plt.close(fig)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

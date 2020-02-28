@@ -32,7 +32,6 @@ test_data/
 *.temp
 wdae/docs/_build
 gpf-dist.tar.gz
-test-eff.txt
 DAE/*.json
 .coverage*
 coverage/
@@ -43,5 +42,5 @@ denovo-cache
 data-hg19-startup.tar.gz
 data-hg19-startup-latest.tar.gz
 data-hg19-startup
-*-eff.txt
 __pycache__
+.mypy_cache

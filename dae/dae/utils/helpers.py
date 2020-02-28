@@ -6,4 +6,8 @@ def study_id_from_path(filepath):
 
 
 def str2bool(value):
-    return value.lower() in {'true', 'yes', '1', 't', 'y'}
+    if value is None:
+        return False
+    if isinstance(value, bool):
+        return value
+    return value.lower() in {"true", "yes", "1", "1.0", "t", "y"}

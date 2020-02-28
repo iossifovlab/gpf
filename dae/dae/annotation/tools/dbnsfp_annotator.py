@@ -1,33 +1,57 @@
 import glob
 import os.path
+from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.annotation.tools.score_annotator import NPScoreAnnotator
 
 
 class dbNSFPAnnotator(NPScoreAnnotator):
-
-    def __init__(self, config):
+    def __init__(self, config, genomes_db):
         self.current_chr = None
         self.dbNSFP_files = glob.glob(
-                os.path.join(config.options.dbNSFP_path,
-                             config.options.dbNSFP_filename))
+            os.path.join(
+                config.options.dbNSFP_path, config.options.dbNSFP_filename
+            )
+        )
         assert self.dbNSFP_files
 
-        if config.options.dbNSFP_filename:
-            config.options.dbNSFP_filename = \
-                config.options.dbNSFP_filename.replace('*', '{}')
+        options = config.options
 
-        config.options.scores_config_file = os.path.join(
-                config.options.dbNSFP_path,
-                config.options.dbNSFP_config)
-        config.options.scores_file = self.dbNSFP_files[0]
+        if options.dbNSFP_filename:
+            options = GPFConfigParser.modify_tuple(
+                options,
+                {
+                    "dbNSFP_filename": options.dbNSFP_filename.replace(
+                        "*", "{}"
+                    )
+                },
+            )
 
-        super(dbNSFPAnnotator, self).__init__(config)
+        scores_config_file = os.path.join(
+            config.options.dbNSFP_path, config.options.dbNSFP_config
+        )
+        options = GPFConfigParser.modify_tuple(
+            options, {"scores_config_file": scores_config_file}
+        )
+        options = GPFConfigParser.modify_tuple(
+            options, {"scores_file": self.dbNSFP_files[0]}
+        )
+        config = GPFConfigParser.modify_tuple(config, {"options": options})
+
+        super(dbNSFPAnnotator, self).__init__(config, genomes_db)
 
     def _init_score_file(self):
         if self.current_chr:
-            self.config.options.scores_file = os.path.join(
+            options = self.config.options
+            scores_file = os.path.join(
                 self.config.options.dbNSFP_path,
-                self.config.options.dbNSFP_filename.format(self.current_chr))
+                self.config.options.dbNSFP_filename.format(self.current_chr),
+            )
+            options = GPFConfigParser.modify_tuple(
+                options, {"scores_file": scores_file}
+            )
+            self.config = GPFConfigParser.modify_tuple(
+                self.config, {"options": options}
+            )
             assert self.config.options.scores_file in self.dbNSFP_files
         super(dbNSFPAnnotator, self)._init_score_file()
 

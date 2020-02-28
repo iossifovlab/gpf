@@ -2,7 +2,7 @@ pipeline {
     agent {
         label 'dory'
     }
-    options { 
+    options {
         disableConcurrentBuilds()
     }
     triggers {
@@ -11,9 +11,9 @@ pipeline {
     }
     parameters {
         string(
-            name: 'DATA_HG19_BUILD', defaultValue: '0', 
+            name: 'DATA_HG19_BUILD', defaultValue: '0',
             description: 'data-hg19-startup build number to use for testing')
-    }    
+    }
 
     environment {
         WD="${env.WORKSPACE}"
@@ -49,6 +49,7 @@ pipeline {
                         /bin/sh -c "rm -rf /code/wdae-*.log && rm -rf /code/wdae_django*.cache"
 
                     mkdir -p test_results
+                    mkdir -p data-hg19-startup
                 '''
                 script {
                     docker.build(
@@ -56,7 +57,7 @@ pipeline {
                 }
                 sh '''
                     export PATH=$HOME/anaconda3/envs/gpf3/bin:$PATH
-                    docker-compose -f docker-compose.yml up -d                
+                    docker-compose -f docker-compose.yml up -d
                 '''
             }
         }
@@ -81,6 +82,11 @@ pipeline {
                 }
                 sh '''
                     tar zxf builds/data-hg19-startup-*.tar.gz -C $WD
+		    sed -i "s/localhost/impala/" $WD/data-hg19-startup/DAE.conf
+                    docker run -d --rm \
+                        -v ${SOURCE_DIR}:/code \
+                        busybox:latest \
+			/bin/sh -c "sed -i \"s/localhost/impala/\" /code/dae_conftests/dae_conftests/tests/fixtures/DAE.conf"
                 '''
             }
         }
@@ -95,12 +101,32 @@ pipeline {
           }
         }
 
+        stage('Format') {
+            steps {
+                sh '''
+                export PATH=$HOME/anaconda3/envs/gpf3/bin:$PATH
+
+                docker-compose -f docker-compose.yml exec -T tests /code/jenkins_black.sh
+                '''
+            }
+        }
+
         stage('Lint') {
             steps {
                 sh '''
                 export PATH=$HOME/anaconda3/envs/gpf3/bin:$PATH
 
                 docker-compose -f docker-compose.yml exec -T tests /code/jenkins_flake8.sh
+                '''
+            }
+        }
+
+        stage('Type Check') {
+            steps {
+                sh '''
+                export PATH=$HOME/anaconda3/envs/gpf3/bin:$PATH
+
+                docker-compose -f docker-compose.yml exec -T tests /code/jenkins_mypy.sh
                 '''
             }
         }
@@ -120,7 +146,7 @@ pipeline {
         always {
             junit 'test_results/wdae-junit.xml, test_results/dae-junit.xml'
             step([
-                $class: 'CoberturaPublisher', 
+                $class: 'CoberturaPublisher',
                 coberturaReportFile: 'test_results/coverage.xml'])
             warnings(
                 parserConfigurations: [[parserName: 'PyLint', pattern: 'test_results/pyflakes.report']],
@@ -135,6 +161,8 @@ pipeline {
 
         }
         success {
+	    archiveArtifacts artifacts: 'mypy_report.tar.gz'
+
             slackSend (
                 color: '#00FF00',
                 message: "SUCCESSFUL: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' ${env.BUILD_URL}"

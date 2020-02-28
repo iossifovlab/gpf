@@ -1,0 +1,6 @@
+id = "152135"
+name = "Basic test config"
+[section1]
+someval1 = "beep"
+someval2 = 1.23
+someval3 = 52345

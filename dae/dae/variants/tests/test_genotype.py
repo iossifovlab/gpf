@@ -1,8 +1,8 @@
-'''
+"""
 Created on Feb 15, 2018
 
 @author: lubo
-'''
+"""
 import pytest
 
 from dae.RegionOperations import Region
@@ -16,14 +16,16 @@ def test_11540_gt(ustudy_vcf):
     assert v.position == 11540
 
     print(v.gt)
-    assert np.all(np.array(
-        [[0, 0, 0, 0, 0, 0, 0, 0, 0],
-         [0, 1, 0, 0, 0, 1, 0, 0, 0]]) == v.gt)
+    assert np.all(
+        np.array([[0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 1, 0, 0, 0, 1, 0, 0, 0]])
+        == v.gt
+    )
 
     print(v.best_st)
-    assert np.all(np.array(
-        [[2, 1, 2, 2, 2, 1, 2, 2, 2],
-         [0, 1, 0, 0, 0, 1, 0, 0, 0]]) == v.best_st)
+    assert np.all(
+        np.array([[2, 1, 2, 2, 2, 1, 2, 2, 2], [0, 1, 0, 0, 0, 1, 0, 0, 0]])
+        == v.best_st
+    )
 
 
 # def test_130000_gt(ustudy_vcf):

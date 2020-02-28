@@ -4,62 +4,74 @@
 import sys
 import os
 import traceback
-from configparser import ConfigParser
+import toml
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
 
-from dae.pheno.common import default_config, dump_config, \
-    check_phenotype_data_config
+from dae.pheno.common import (
+    default_config,
+    dump_config,
+    check_phenotype_data_config,
+)
 from dae.pheno.prepare.ped_prepare import PrepareVariables
 from dae.tools.pheno2browser import build_pheno_browser
 
 from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.pheno.utils.config import PhenoRegressionConfigParser
+from dae.configuration.gpf_config_parser import GPFConfigParser
+from dae.configuration.schemas.phenotype_data import regression_conf_schema
 
 
 def pheno_cli_parser():
     parser = ArgumentParser(
         description="simple phenotype database import tool",
-        formatter_class=RawDescriptionHelpFormatter)
-
-    parser.add_argument(
-        "-v", "--verbose", dest="verbose",
-        action="count", help="set verbosity level [default: %(default)s]")
-
-    parser.add_argument(
-        "-i", "--instruments",
-        dest="instruments",
-        help="directory where all instruments are located",
-        metavar="<instruments dir>")
-
-    parser.add_argument(
-        "-p", "--pedigree",
-        dest="pedigree",
-        help="pedigree file where families descriptions are located",
-        metavar="<pedigree file>")
-
-    parser.add_argument(
-        "-d", "--data-dictionary",
-        dest="data_dictionary",
-        help="tab separated file that contains descriptions of measures",
-        metavar="<data dictionary file>")
-
-    parser.add_argument(
-        "-o", "--pheno",
-        dest="pheno_name",
-        help="output pheno database name"
+        formatter_class=RawDescriptionHelpFormatter,
     )
 
     parser.add_argument(
-        '--regression',
-        help="absolute path to a regression configuration file"
+        "-v",
+        "--verbose",
+        dest="verbose",
+        action="count",
+        help="set verbosity level [default: %(default)s]",
+    )
+
+    parser.add_argument(
+        "-i",
+        "--instruments",
+        dest="instruments",
+        help="directory where all instruments are located",
+        metavar="<instruments dir>",
+    )
+
+    parser.add_argument(
+        "-p",
+        "--pedigree",
+        dest="pedigree",
+        help="pedigree file where families descriptions are located",
+        metavar="<pedigree file>",
+    )
+
+    parser.add_argument(
+        "-d",
+        "--data-dictionary",
+        dest="data_dictionary",
+        help="tab separated file that contains descriptions of measures",
+        metavar="<data dictionary file>",
+    )
+
+    parser.add_argument(
+        "-o", "--pheno", dest="pheno_name", help="output pheno database name"
+    )
+
+    parser.add_argument(
+        "--regression", help="absolute path to a regression configuration file"
     )
 
     parser.add_argument(
         "--force",
         dest="force",
         help="overwrites already existing pheno db file",
-        action="store_true"
+        action="store_true",
     )
 
     return parser
@@ -69,26 +81,30 @@ def verify_phenotype_data_name(input_name):
     phenotype_data_name = os.path.normpath(input_name)
     # check that the given pheno name is not a directory path
     split_path = os.path.split(phenotype_data_name)
-    assert not split_path[0], \
-        '"{}" is a directory path!'.format(phenotype_data_name)
+    assert not split_path[0], '"{}" is a directory path!'.format(
+        phenotype_data_name
+    )
     return phenotype_data_name
 
 
-def generate_phenotype_data_config(args):
-    config = ConfigParser()
-    config['phenotypeData'] = {}
-    section = config['phenotypeData']
-    section['name'] = args.pheno_name
-    section['dbfile'] = os.path.join(
-        '%(wd)s', os.path.basename(args.pheno_db_filename))
-    # TODO
-    # Should the regression config be written to the pheno db config?
-    section['browser_dbfile'] = os.path.join(
-        '%(wd)s', 'browser', '{}_browser.db'.format(args.pheno_name))
-    section['browser_images_dir'] = os.path.join(
-        '%(wd)s', 'browser', 'images')
-    section['browser_images_url'] = \
-        '/static/{}/browser/images/'.format(args.pheno_name)
+def generate_phenotype_data_config(args, regressions):
+    dbfile = os.path.join("%(wd)s", os.path.basename(args.pheno_db_filename))
+    browser_dbfile = os.path.join(
+        "%(wd)s", "browser", "{}_browser.db".format(args.pheno_name)
+    )
+    regressions_dict = GPFConfigParser._namedtuple_to_dict(regressions)
+    config = {
+        "vars": {"wd": "."},
+        "phenotype_data": {
+            "name": args.pheno_name,
+            "dbfile": dbfile,
+            "browser_dbfile": browser_dbfile,
+            "browser_images_dir": os.path.join("%(wd)s", "browser", "images"),
+            "browser_images_url": f"/static/{args.pheno_name}/browser/images/",
+        },
+    }
+    if regressions:
+        config["regression"] = regressions_dict["regression"]
     return config
 
 
@@ -130,53 +146,55 @@ def main(argv):
         args.pheno_name = verify_phenotype_data_name(args.pheno_name)
 
         pheno_db_dir = os.path.join(
-            dae_conf.phenotype_data.dir,
-            args.pheno_name
+            dae_conf.phenotype_data.dir, args.pheno_name
         )
         if not os.path.exists(pheno_db_dir):
             os.makedirs(pheno_db_dir)
 
         args.pheno_db_filename = os.path.join(
-            pheno_db_dir,
-            "{}.db".format(args.pheno_name)
+            pheno_db_dir, "{}.db".format(args.pheno_name)
         )
         if os.path.exists(args.pheno_db_filename):
             if not args.force:
-                print("pheno db filename already exists:",
-                      args.pheno_db_filename)
+                print(
+                    "pheno db filename already exists:", args.pheno_db_filename
+                )
                 raise ValueError()
             else:
                 os.remove(args.pheno_db_filename)
 
-        args.browser_dir = os.path.join(
-            pheno_db_dir,
-            "browser"
-        )
+        args.browser_dir = os.path.join(pheno_db_dir, "browser")
         if not os.path.exists(args.browser_dir):
             os.makedirs(args.browser_dir)
 
         config = parse_phenotype_data_config(args)
-        regressions = PhenoRegressionConfigParser.\
-            read_and_parse_file_configuration(args.regression, '') \
-            if args.regression else None
+        regressions = (
+            GPFConfigParser.load_config(
+                args.regression, regression_conf_schema
+            )
+            if args.regression
+            else None
+        )
 
         prep = PrepareVariables(config)
         prep.build_pedigree(args.pedigree)
         prep.build_variables(args.instruments, args.data_dictionary)
 
         build_pheno_browser(
-            args.pheno_db_filename, args.pheno_name,
+            args.pheno_db_filename,
+            args.pheno_name,
             args.browser_dir,
-            regressions
+            regressions,
         )
 
         pheno_conf_path = os.path.join(
-            pheno_db_dir,
-            '{}.conf'.format(args.pheno_name)
+            pheno_db_dir, "{}.conf".format(args.pheno_name)
         )
 
-        with open(pheno_conf_path, 'w') as pheno_conf_file:
-            generate_phenotype_data_config(args).write(pheno_conf_file)
+        with open(pheno_conf_path, "w") as pheno_conf_file:
+            pheno_conf_file.write(
+                toml.dumps(generate_phenotype_data_config(args, regressions))
+            )
 
         return 0
     except KeyboardInterrupt:

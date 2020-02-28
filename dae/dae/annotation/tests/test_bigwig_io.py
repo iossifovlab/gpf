@@ -6,104 +6,114 @@ from box import Box
 from dae.annotation.tools.score_file_io import ScoreFile
 from dae.annotation.tools.score_annotator import PositionScoreAnnotator
 from dae.annotation.tools.annotator_config import AnnotationConfigParser
+
 try:
     bigwig_enabled = True
-    from dae.annotation.tools.score_file_io_bigwig import \
-        BigWigAccess, BigWigLineAdapter
+    from dae.annotation.tools.score_file_io_bigwig import (
+        BigWigAccess,
+        BigWigLineAdapter,
+    )
 except ImportError:
     bigwig_enabled = False
 
 
-expected_bw_output = '''RESULT_bigwig_score
+expected_bw_output = """RESULT_bigwig_score
 0.8166
 1.05
 22.0111
 21.7
 22.7
 23.05
-'''
+"""
 
 
-@pytest.mark.skipif(bigwig_enabled is False,
-                    reason='pyBigWig module is not installed')
+@pytest.mark.skip
 def test_bigwig_line_adapter():
     score_filename = relative_to_this_test_folder(
-        'fixtures/TESTbigwig/TEST_bigwig_score.bw')
+        "fixtures/TESTbigwig/TEST_bigwig_score.bw"
+    )
 
     bw_score_file = ScoreFile(score_filename)
-    bwline = BigWigLineAdapter(bw_score_file, 'chr1', [0, 1, 0.1234])
+    bwline = BigWigLineAdapter(bw_score_file, "chr1", [0, 1, 0.1234])
 
-    assert bwline.chrom == 'chr1'
+    assert bwline.chrom == "chr1"
     assert bwline.pos_begin == 1
     assert bwline.pos_end == 1
 
     assert bwline[1] == bwline.pos_begin
 
 
-@pytest.mark.skipif(bigwig_enabled is False,
-                    reason='pyBigWig module is not installed')
+@pytest.mark.skip
 def test_bigwig_header():
     score_filename = relative_to_this_test_folder(
-        'fixtures/TESTbigwig/TEST_bigwig_score.bw')
+        "fixtures/TESTbigwig/TEST_bigwig_score.bw"
+    )
 
     bw_score_file = ScoreFile(score_filename)
     assert bw_score_file is not None
-    assert bw_score_file.header == ['chrom', 'chromStart', 'chromEnd',
-                                    'TEST_bigwig_score']
+    assert bw_score_file.header == [
+        "chrom",
+        "chromStart",
+        "chromEnd",
+        "TEST_bigwig_score",
+    ]
 
 
-@pytest.mark.skipif(bigwig_enabled is False,
-                    reason='pyBigWig module is not installed')
+@pytest.mark.skip
 def test_bigwig_access_simple():
     score_filename = relative_to_this_test_folder(
-        'fixtures/TESTbigwig/TEST_bigwig_score.bw')
+        "fixtures/TESTbigwig/TEST_bigwig_score.bw"
+    )
 
     bw_score_file = ScoreFile(score_filename)
     assert bw_score_file is not None
 
-    res = bw_score_file.fetch_scores_df('1', 1, 1)
+    res = bw_score_file.fetch_scores_df("1", 1, 1)
     print(res)
     assert len(res) == 1
-    assert float(res['TEST_bigwig_score'][0]) == \
-        pytest.approx(0.7, 1E-3)
+    assert float(res["TEST_bigwig_score"][0]) == pytest.approx(0.7, 1e-3)
 
-    res = bw_score_file.fetch_scores_df('20', 207, 207)
+    res = bw_score_file.fetch_scores_df("20", 207, 207)
     print(res)
     assert len(res) == 1
-    assert float(res['TEST_bigwig_score'][0]) == \
-        pytest.approx(22.4, 1E-3)
+    assert float(res["TEST_bigwig_score"][0]) == pytest.approx(22.4, 1e-3)
 
-    res = bw_score_file.fetch_scores_df('X', 235, 235)
+    res = bw_score_file.fetch_scores_df("X", 235, 235)
     print(res)
     assert len(res) == 1
-    assert float(res['TEST_bigwig_score'][0]) == \
-        pytest.approx(22.7, 1E-3)
+    assert float(res["TEST_bigwig_score"][0]) == pytest.approx(22.7, 1e-3)
 
 
-@pytest.mark.skipif(bigwig_enabled is False,
-                    reason='pyBigWig module is not installed')
-def test_bigwig_access_indels(expected_df, capsys, variants_io, genomes_db):
+@pytest.mark.skip
+def test_bigwig_access_indels(
+    expected_df, capsys, variants_io, genomes_db_2013
+):
 
-    options = Box({
-        'mode': 'overwrite',
-        'scores_file': relative_to_this_test_folder(
-            'fixtures/TESTbigwig/TEST_bigwig_score.bw')
-    }, default_box=True, default_box_attr=None)
+    options = Box(
+        {
+            "mode": "overwrite",
+            "scores_file": relative_to_this_test_folder(
+                "fixtures/TESTbigwig/TEST_bigwig_score.bw"
+            ),
+        },
+        default_box=True,
+        default_box_attr=None,
+    )
 
     config = AnnotationConfigParser.parse_section(
-        Box({
-            'options': options,
-            'columns': {
-                'TEST_bigwig_score': 'RESULT_bigwig_score'
-            },
-            'annotator': 'score_annotator.PositionScoreAnnotator'
-        }),
-        genomes_db
+        Box(
+            {
+                "options": options,
+                "columns": {"TEST_bigwig_score": "RESULT_bigwig_score"},
+                "annotator": "score_annotator.PositionScoreAnnotator",
+            }
+        ),
+        genomes_db_2013,
     )
     print(config.options)
     print(type(config.options))
 
-    with variants_io('fixtures/bigwig_indels.tsv') as io_manager:
+    with variants_io("fixtures/bigwig_indels.tsv") as io_manager:
         score_annotator = PositionScoreAnnotator(config)
         assert score_annotator is not None
         assert isinstance(score_annotator.score_file.accessor, BigWigAccess)
@@ -116,4 +126,5 @@ def test_bigwig_access_indels(expected_df, capsys, variants_io, genomes_db):
     pd.testing.assert_frame_equal(
         expected_df(captured.out),
         expected_df(expected_bw_output),
-        check_less_precise=3)
+        check_less_precise=3,
+    )

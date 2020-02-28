@@ -1,18 +1,17 @@
 from dae.backends.storage.impala_genotype_storage import ImpalaGenotypeStorage
-from dae.backends.storage.filesystem_genotype_storage import \
-    FilesystemGenotypeStorage
+from dae.backends.storage.filesystem_genotype_storage import (
+    FilesystemGenotypeStorage,
+)
 
 
 class GenotypeStorageFactory:
-
     def __init__(self, dae_config):
         self.dae_config = dae_config
 
         self._genotype_storage_cache = {}
 
     def get_default_genotype_storage(self):
-        default_genotype_storage_id = \
-            self.dae_config.get('genotype_storage', {}).get('default', None)
+        default_genotype_storage_id = self.dae_config.genotype_storage.default
         return self.get_genotype_storage(default_genotype_storage_id)
 
     def get_genotype_storage(self, genotype_storage_id):
@@ -24,7 +23,7 @@ class GenotypeStorageFactory:
         return self._genotype_storage_cache[genotype_storage_id]
 
     def get_genotype_storage_ids(self):
-        return list(self.dae_config.get('storage', {}).keys())
+        return list(getattr(self.dae_config, "storage")._fields)
 
     def _load_genotype_storage(self, genotype_storage_ids=None):
         if genotype_storage_ids is None:
@@ -39,14 +38,14 @@ class GenotypeStorageFactory:
                 self._load_genotype_storage_in_cache(genotype_storage_id)
 
     def _load_genotype_storage_in_cache(self, genotype_storage_id):
-        conf = self.dae_config.storage.get(genotype_storage_id)
+        conf = getattr(self.dae_config.storage, genotype_storage_id, None)
         if not conf:
             return
 
         genotype_storage = None
-        if conf.type == 'impala':
+        if conf.storage_type == "impala":
             genotype_storage = ImpalaGenotypeStorage(conf)
-        elif conf.type == 'filesystem':
+        elif conf.storage_type == "filesystem":
             genotype_storage = FilesystemGenotypeStorage(conf)
 
         assert genotype_storage

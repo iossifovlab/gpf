@@ -19,18 +19,19 @@ def test_impala_connection_simple(impala_host):
         assert conn is not None
 
 
-def test_impala_query_build(impala_host, genomes_db):
+def test_impala_query_build(impala_host, genomes_db_2013):
     connection = ImpalaHelpers.create_impala_connection(impala_host, 21050)
     ifv = ImpalaFamilyVariants(
         connection,
-        'impala_storage_test_db',
-        'test_study_partition',
-        'test_study_pedigree',
-        genomes_db.get_gene_models())
-    regions = [Region('1', 1, 199999), Region('2', 1, 199999)]
-    families = ['f1', 'f2']
-    coding_effects = ['missense', 'frame-shift']
-    real_attr_filter = [('af_allele_freq', (1, 50))]
+        "impala_storage_test_db",
+        "test_study_variants",
+        "test_study_pedigree",
+        genomes_db_2013.get_gene_models(),
+    )
+    regions = [Region("1", 1, 199999), Region("2", 1, 199999)]
+    families = ["f1", "f2"]
+    coding_effects = ["missense", "frame-shift"]
+    real_attr_filter = [("af_allele_freq", (1, 50))]
 
     q = ifv.build_query(regions=regions)
     print(q)
@@ -44,14 +45,12 @@ def test_impala_query_build(impala_host, genomes_db):
         regions=regions,
         family_ids=families,
         effect_types=coding_effects,
-        real_attr_filter=real_attr_filter
+        real_attr_filter=real_attr_filter,
     )
     print(q)
 
 
-@pytest.mark.parametrize("fixture_name", [
-    "backends/a",
-])
+@pytest.mark.parametrize("fixture_name", ["backends/a",])
 def test_impala_variants_simple(variants_impala, fixture_name):
     fvars = variants_impala(fixture_name)
 

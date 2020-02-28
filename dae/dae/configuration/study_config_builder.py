@@ -1,0 +1,530 @@
+from typing import Dict, Any
+from jinja2 import Template
+from collections import UserDict, UserList
+
+
+class StudyConfigBuilder:
+    def __init__(self, config_dict: Dict[str, Any]):
+        assert config_dict
+        assert config_dict["genotype_storage"]
+        self._config_dict = TOMLDict.from_dict(config_dict)
+
+    def build_config(self) -> str:
+        return STUDY_CONFIG_TEMPLATE.render(self._config_dict)
+
+
+class TOMLDict(UserDict):
+    @staticmethod
+    def from_dict(input_dict):
+        output = TOMLDict(input_dict)
+        for k, v in output.items():
+            if isinstance(v, dict):
+                output[k] = TOMLDict.from_dict(v)
+            elif isinstance(v, list):
+                output[k] = TOMLList.from_list(v)
+            elif isinstance(v, bool):
+                output[k] = "true" if v else "false"
+        return output
+
+    def _get_val_str(self, val):
+        if isinstance(val, str):
+            output = f'"{val}"'
+        elif isinstance(val, bool):
+            output = "true" if val else "false"
+        else:
+            output = str(val)
+        return output
+
+    def __str__(self):
+        if len(self) == 0:
+            return "{}"
+        output = "{ "
+        first = True
+        for k, v in self.items():
+            if not first:
+                output += ", "
+
+            output += f"{k} = {self._get_val_str(v)}"
+            first = False
+
+        output += " }"
+        return output
+
+
+class TOMLList(UserList):
+    @staticmethod
+    def from_list(input_list):
+        output = TOMLList(input_list)
+        for idx, el in enumerate(output):
+            if isinstance(el, dict):
+                output[idx] = TOMLDict.from_dict(el)
+            elif isinstance(el, list):
+                output[idx] = TOMLList.from_list(el)
+            elif isinstance(el, bool):
+                output[idx] = "true" if el else "false"
+        return output
+
+    def _get_val_str(self, val):
+        if isinstance(val, str):
+            output = f'"{val}"'
+        elif isinstance(val, bool):
+            output = "true" if val else "false"
+        else:
+            output = str(val)
+        return output
+
+    def __str__(self):
+        if len(self) == 0:
+            return "[]"
+        output = "["
+        first = True
+        for el in self:
+            if not first:
+                output += ", "
+
+            output += f"{self._get_val_str(el)}"
+            first = False
+
+        output += "]"
+        return output
+
+
+STUDY_CONFIG_TEMPLATE = Template(
+    """\
+id = "{{ id }}"
+
+{%- if name %}
+name = "{{ name }}"
+{%- endif %}
+
+{%- if work_dir %}
+work_dir = "{{ work_dir }}"
+{%- endif %}\
+
+conf_dir = "."
+
+{%- if phenotype_data %}
+phenotype_data = "{{ phenotype_data }}"
+{%- endif %}
+
+{%- if phenotype_browser %}
+phenotype_browser = {{ phenotype_browser }}
+{%- endif %}
+
+{%- if phenotype_tool %}
+phenotype_tool = {{ phenotype_tool }}
+{%- endif %}
+
+{%- if description %}
+description = "{{ description }}"
+{%- endif %}
+
+{%- if description_file %}
+description_file = "{{ description_file }}"
+{%- endif %}
+
+{%- if selected_people_groups %}
+selected_people_groups = "{{ selected_people_groups }}"
+{%- endif %}
+
+{%- if study_type %}
+study_type = {{ study_type }}
+{%- endif %}
+
+{%- if year %}
+year = {{ year }}
+{%- endif %}
+
+{%- if pub_med %}
+pub_med = {{ pub_med }}
+{%- endif %}\
+
+has_denovo = {{ has_denovo }}
+
+{%- if has_transmitted %}
+has_transmitted = {{ has_transmitted }}
+{%- endif %}
+
+{%- if has_complex %}
+has_complex = {{ has_complex }}
+{%- endif %}
+
+{%- if has_cnv %}
+has_cnv = {{ has_cnv }}
+{%- endif %}
+
+{%- if studies %}
+studies = {{ studies }}
+{%- endif %}
+
+[genotype_storage]
+id = "{{ genotype_storage.id }}"
+{% if genotype_storage.tables %}
+[genotype_storage.tables]
+pedigree = "{{ genotype_storage.tables.pedigree }}"
+{%- if genotype_storage.tables.variants %}
+variants = "{{ genotype_storage.tables.variants }}"
+{%- endif %}
+{% elif genotype_storage.files %}
+[genotype_storage.files]
+pedigree.path = "{{ genotype_storage.files.pedigree.path }}"
+{%- if genotype_storage.files.pedigree.params %}
+
+
+{%- if genotype_storage.files.pedigree.params.ped_family %}
+pedigree.params.ped_family = \
+"{{ genotype_storage.files.pedigree.params.ped_family }}"
+{%- endif %}
+
+{%- if genotype_storage.files.pedigree.params.ped_person %}
+pedigree.params.ped_person = \
+"{{ genotype_storage.files.pedigree.params.ped_person }}"
+{%- endif %}
+
+{%- if genotype_storage.files.pedigree.params.ped_mom %}
+pedigree.params.ped_mom = \
+"{{ genotype_storage.files.pedigree.params.ped_mom }}"
+{%- endif %}
+
+{%- if genotype_storage.files.pedigree.params.ped_dad %}
+pedigree.params.ped_dad = \
+"{{ genotype_storage.files.pedigree.params.ped_dad }}"
+{%- endif %}
+
+{%- if genotype_storage.files.pedigree.params.ped_sex %}
+pedigree.params.ped_sex = \
+"{{ genotype_storage.files.pedigree.params.ped_sex }}"
+{%- endif %}
+
+{%- if genotype_storage.files.pedigree.params.ped_status %}
+pedigree.params.ped_status = \
+"{{ genotype_storage.files.pedigree.params.ped_status }}"
+{%- endif %}
+
+{%- if genotype_storage.files.pedigree.params.ped_role %}
+pedigree.params.ped_role = \
+"{{ genotype_storage.files.pedigree.params.ped_role }}"
+{%- endif %}
+
+{%- if genotype_storage.files.pedigree.params.ped_no_role %}
+pedigree.params.ped_no_role = \
+"{{ genotype_storage.files.pedigree.params.ped_no_role }}"
+{%- endif %}
+
+{%- if genotype_storage.files.pedigree.params.ped_proband %}
+pedigree.params.ped_proband = \
+"{{ genotype_storage.files.pedigree.params.ped_proband }}"
+{%- endif %}
+
+{%- if genotype_storage.files.pedigree.params.ped_no_header %}
+pedigree.params.ped_no_header = \
+"{{ genotype_storage.files.pedigree.params.ped_no_header }}"
+{%- endif %}
+
+{%- if genotype_storage.files.pedigree.params.ped_file_format %}
+pedigree.params.ped_file_format = \
+"{{ genotype_storage.files.pedigree.params.ped_file_format }}"
+{%- endif %}
+
+{%- if genotype_storage.files.pedigree.params.ped_layout_mode %}
+pedigree.params.ped_layout_mode = \
+"{{ genotype_storage.files.pedigree.params.ped_layout_mode }}"
+{%- endif %}
+
+{%- if genotype_storage.files.pedigree.params.ped_sep %}
+pedigree.params.ped_sep = \
+"{{ genotype_storage.files.pedigree.params.ped_sep }}"
+{%- endif %}
+
+{%- else %}
+pedigree.params = {}
+{%- endif %}
+{% for variant in genotype_storage.files.variants %}
+[[genotype_storage.files.variants]]
+path = "{{ variant.path }}"
+format = "{{ variant.format }}"
+{%- if variant.params %}
+
+{%- if variant.params.add_chrom_prefix %}
+params.add_chrom_prefix = "{{ variant.params.add_chrom_prefix }}"
+{%- endif %}
+{%- if variant.params.del_chrom_prefix %}
+params.del_chrom_prefix = "{{ variant.params.del_chrom_prefix }}"
+{%- endif %}
+{%- if variant.params.dae_include_reference_genotypes %}
+params.dae_include_reference_genotypes = \
+"{{ variant.params.dae_include_reference_genotypes }}"
+{%- endif %}
+{%- if variant.params.denovo_location %}
+params.denovo_location = "{{ variant.params.denovo_location }}"
+{%- endif %}
+{%- if variant.params.denovo_variant %}
+params.denovo_variant = "{{ variant.params.denovo_variant }}"
+{%- endif %}
+{%- if variant.params.denovo_chrom %}
+params.denovo_chrom = "{{ variant.params.denovo_chrom }}"
+{%- endif %}
+{%- if variant.params.denovo_pos %}
+params.denovo_pos = "{{ variant.params.denovo_pos }}"
+{%- endif %}
+{%- if variant.params.denovo_ref %}
+params.denovo_ref = "{{ variant.params.denovo_ref }}"
+{%- endif %}
+{%- if variant.params.denovo_alt %}
+params.denovo_alt = "{{ variant.params.denovo_alt }}"
+{%- endif %}
+{%- if variant.params.denovo_person_id %}
+params.denovo_person_id = "{{ variant.params.denovo_person_id }}"
+{%- endif %}
+{%- if variant.params.denovo_family_id %}
+params.denovo_family_id = "{{ variant.params.denovo_family_id }}"
+{%- endif %}
+{%- if variant.params.denovo_best_state %}
+params.denovo_best_state = "{{ variant.params.denovo_best_state }}"
+{%- endif %}
+{%- if variant.params.denovo_sep %}
+params.denovo_sep = "{{ variant.params.denovo_sep }}"
+{%- endif %}
+{%- if variant.params.vcf_include_reference_genotypes %}
+params.vcf_include_reference_genotypes = \
+"{{ variant.params.vcf_include_reference_genotypes }}"
+{%- endif %}
+{%- if variant.params.vcf_include_unknown_family_genotypes %}
+params.vcf_include_unknown_family_genotypes = \
+"{{ variant.params.vcf_include_unknown_family_genotypes }}"
+{%- endif %}
+{%- if variant.params.vcf_include_unknown_person_genotypes %}
+params.vcf_include_unknown_person_genotypes = \
+"{{ variant.params.vcf_include_unknown_person_genotypes }}"
+{%- endif %}
+{%- if variant.params.vcf_multi_loader_fill_in_mode %}
+params.vcf_multi_loader_fill_in_mode = \
+"{{ variant.params.vcf_multi_loader_fill_in_mode }}"
+{%- endif %}
+{%- if variant.params.vcf_denovo_mode %}
+params.vcf_denovo_mode = "{{ variant.params.vcf_denovo_mode }}"
+{%- endif %}
+{%- if variant.params.vcf_omission_mode %}
+params.vcf_omission_mode = "{{ variant.params.vcf_omission_mode }}"
+{%- endif %}
+{%- if variant.params.vcf_chromosomes %}
+params.vcf_chromosomes = "{{ variant.params.vcf_chromosomes }}"
+{%- endif %}
+
+{%- else %}
+params = {}
+{%- endif %}
+{% endfor %}
+{%- endif %}
+
+{%- if people_group %}
+[people_group]
+{% for key, value in people_group.items() %}
+{%- if value is mapping -%}
+{{key}}.id = "{{ value.id }}"
+{{key}}.name = "{{ value.name }}"
+{{key}}.domain = {{ value.domain }}
+{{key}}.default = {{ value.default }}
+{{key}}.source = "{{ value.source }}"
+{% else %}
+{{ key }} = {{ value }}
+{% endif %}
+{%- endfor %}
+{%- endif %}
+
+
+{%- if genotype_browser %}
+[genotype_browser]
+{%- if genotype_browser.enabled %}
+enabled = {{ genotype_browser.enabled }}
+{%- endif %}
+
+{%- if genotype_browser.has_cnv %}
+has_cnv = {{ genotype_browser.has_cnv }}
+{%- endif %}
+
+{%- if genotype_browser.has_complex %}
+has_complex = {{ genotype_browser.has_complex }}
+{%- endif %}
+
+{%- if genotype_browser.has_family_filters %}
+has_family_filters = {{ genotype_browser.has_family_filters }}
+{%- endif %}
+
+{%- if genotype_browser.has_study_filters %}
+has_study_filters = {{ genotype_browser.has_study_filters }}
+{%- endif %}
+
+{%- if genotype_browser.has_present_in_child %}
+has_present_in_child = {{ genotype_browser.has_present_in_child }}
+{%- endif %}
+
+{%- if genotype_browser.has_present_in_parent %}
+has_present_in_parent = {{ genotype_browser.has_present_in_parent }}
+{%- endif %}
+
+{%- if genotype_browser.has_pedigree_selector %}
+has_pedigree_selector = {{ genotype_browser.has_pedigree_selector }}
+{%- endif %}
+
+{%- if genotype_browser.has_study_types %}
+has_study_types = {{ genotype_browser.has_study_types }}
+{%- endif %}
+
+{%- if genotype_browser.has_graphical_preview %}
+has_graphical_preview = {{ genotype_browser.has_graphical_preview }}
+{%- endif %}
+
+{%- if genotype_browser.family_filters %}
+family_filters = {{ genotype_browser.family_filters }}
+{%- endif %}
+
+{%- if genotype_browser.selected_in_roles_values %}
+selected_in_roles_values = "{{ genotype_browser.selected_in_roles_values }}"
+{%- endif %}
+
+{%- if genotype_browser.inheritance_type_filter %}
+inheritance_type_filter = "{{ genotype_browser.inheritance_type_filter }}"
+{%- endif %}
+
+{%- if genotype_browser.selected_inheritance_type_filter_values %}
+selected_inheritance_type_filter_values =\
+"{{ genotype_browser.selected_inheritance_type_filter_values }}"
+{%- endif %}
+
+{%- if genotype_browser.in_roles %}
+{%- for k, v in genotype_browser.in_roles.items() %}
+in_roles.{{ k }}.destination = "{{ v.destination }}"
+in_roles.{{ k }}.roles = {{ v.roles }}
+{%- endfor %}
+{%- endif %}
+
+{%- if genotype_browser.genotype %}
+{%- for k, v in genotype_browser.genotype.items() %}
+genotype.{{ k }}.name = "{{ v.name }}"
+{%- if v.source %}
+genotype.{{ k }}.source = "{{ v.source }}"
+{%- endif %}
+
+{%- if v.slots %}
+genotype.{{ k }}.slots = "{{ v.slots }}"
+{%- endif %}
+{%- endfor %}
+{%- endif %}
+
+
+{%- if genotype_browser.pheno %}
+{%- for k, v in genotype_browser.pheno.items() %}
+pheno.{{ k }}.name = "{{ v.name }}"
+{%- if v.source %}
+pheno.{{ k }}.source = "{{ v.source }}"
+{%- endif %}
+
+{%- if v.slots %}
+pheno.{{ k }}.slots = "{{ v.slots }}"
+{%- endif %}
+{%- endfor %}
+{%- endif %}
+
+{%- if genotype_browser.selected_genotype_column_values %}
+selected_genotype_column_values = \
+"{{ genotype_browser.selected_genotype_column_values }}"
+{%- endif %}
+
+{%- if genotype_browser.preview_columns %}
+preview_columns = "{{ genotype_browser.preview_columns }}"
+{%- endif %}
+
+{%- if genotype_browser.download_columns %}
+download_columns = "{{ genotype_browser.download_columns }}"
+{%- endif %}
+
+
+{%- if genotype_browser.present_in_role %}
+present_in_role = "{{ genotype_browser.present_in_role }}"
+{%- endif %}
+
+{%- if genotype_browser.pheno_filters %}
+pheno_filters = "{{ genotype_browser.pheno_filters }}"
+{%- endif %}
+
+{%- if genotype_browser.selected_pheno_filters_values %}
+selected_pheno_filters_values = \
+"{{ genotype_browser.selected_pheno_filters_values }}"
+{%- endif %}
+
+
+{%- endif %}
+
+{%- if common_report %}
+[common_report]
+
+{%- if common_report.enabled %}
+enabled = {{ common_report.enabled }}
+{%- endif %}
+
+{%- if common_report.groups %}
+groups = "{{ common_report.groups }}"
+{%- endif %}
+
+{%- if common_report.effect_groups %}
+effect_groups = "{{ common_report.effect_groups }}"
+{%- endif %}
+
+{%- if common_report.effect_types %}
+effect_types = "{{ common_report.effect_types }}"
+{%- endif %}
+
+{%- if common_report.families_count_show_id %}
+families_count_show_id = {{ common_report.families_count_show_id }}
+{%- endif %}
+
+{%- if common_report.draw_all_families %}
+draw_all_families = {{ common_report.draw_all_families }}
+{%- endif %}
+
+{%- if common_report.file_path %}
+file_path = "{{ common_report.file_path }}"
+{%- endif %}
+
+{%- endif %}
+
+
+{%- if denovo_gene_sets %}
+[denovo_gene_sets]
+
+{%- if denovo_gene_sets.enabled %}
+enabled = {{ denovo_gene_sets.enabled }}
+{%- endif %}
+
+{%- if denovo_gene_sets.selected_people_groups %}
+selected_people_groups = "{{ denovo_gene_sets.selected_people_groups }}"
+{%- endif %}
+
+{%- if denovo_gene_sets.selected_standard_criterias_values %}
+selected_standard_criterias_values = \
+"{{ denovo_gene_sets.selected_standard_criterias_values }}"
+{%- endif %}
+
+{%- if denovo_gene_sets.standard_criteria %}
+{%- for k, v in denovo_gene_sets.standard_criterias.items() %}
+standard_criteria.{{ k }}.segments = {{ v.segments }}
+{%- endfor %}
+{%- endif %}
+
+
+{%- if denovo_gene_sets.recurrency_criteria %}
+{%- for k, v in denovo_gene_sets.recurrency_criteria.items() %}
+recurrency_criteria.segments.{{ k }} = {{ v }}
+{%- endfor %}
+{%- endif %}
+
+
+{%- if denovo_gene_sets.gene_sets_names %}
+gene_sets_names = "{{ denovo_gene_sets.gene_sets_names }}"
+{%- endif %}
+
+{%- endif %}
+
+"""
+)

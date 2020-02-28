@@ -12,6 +12,7 @@ INHERITANCE_QUERY_GRAMMAR = r"""
     denovo: "denovo"
     possible_denovo: "possible_denovo"
     omission: "omission"
+    possible_omission: "possible_omission"
     other: "other"
     missing: "missing"
     unknown: "unknown"
@@ -21,6 +22,7 @@ INHERITANCE_QUERY_GRAMMAR = r"""
         | denovo
         | possible_denovo
         | omission
+        | possible_omission
         | other
         | missing
         | unknown
@@ -49,9 +51,7 @@ INHERITANCE_QUERY_GRAMMAR = r"""
 """
 
 
-inheritance_parser = Lark(
-    INHERITANCE_QUERY_GRAMMAR,
-    start='expression')
+inheritance_parser = Lark(INHERITANCE_QUERY_GRAMMAR, start="expression")
 
 
 class Atom:
@@ -68,7 +68,6 @@ class Expression:
 
 
 class InheritanceTransformer(Transformer):
-
     def __init__(self, attr_name, *args, **kwargs):
         super(InheritanceTransformer, self).__init__(*args, **kwargs)
         self.attr_name = attr_name
@@ -78,6 +77,9 @@ class InheritanceTransformer(Transformer):
 
     def possible_denovo(self, items):
         return Inheritance.possible_denovo.value
+
+    def possible_omission(self, items):
+        return Inheritance.possible_omission.value
 
     def reference(self, items):
         return Inheritance.reference.value
@@ -120,7 +122,9 @@ class InheritanceTransformer(Transformer):
         mask = items[0].value
         return Expression(
             "BITAND({mask}, {attr}) = {mask}".format(
-                mask=mask, attr=self.attr_name))
+                mask=mask, attr=self.attr_name
+            )
+        )
 
     def any(self, items):
         assert len(items) == 1
@@ -128,7 +132,9 @@ class InheritanceTransformer(Transformer):
         mask = items[0].value
         return Expression(
             "BITAND({mask}, {attr}) != 0".format(
-                mask=mask, attr=self.attr_name))
+                mask=mask, attr=self.attr_name
+            )
+        )
 
     def logical_or(self, items):
         return self.any([self.atomlist(items)])

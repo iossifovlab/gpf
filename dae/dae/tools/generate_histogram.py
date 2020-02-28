@@ -8,41 +8,76 @@ from os.path import exists
 import pandas as pd
 import numpy as np
 
-import matplotlib as mpl; mpl.use('PS')  # noqa
-import matplotlib.pyplot as plt; plt.ioff()  # noqa
+import matplotlib as mpl
 
-from dae.gene.score_config_parser import ScoreConfigParser
+mpl.use("PS")  # noqa
+import matplotlib.pyplot as plt
+
+plt.ioff()  # noqa
+
+from dae.configuration.gpf_config_parser import GPFConfigParser
+from dae.configuration.schemas.score_file_conf import score_file_conf_schema
 
 
 def get_argument_parser():
     desc = """Program to generate histogram data by given score files"""
     parser = argparse.ArgumentParser(description=desc)
-    parser.add_argument('--config', required=True, action='store',
-                        help='config file location')
-    parser.add_argument('--scores', required=False, action='store',
-                        help='comma separated list of scores')
-    parser.add_argument('-s', required=False, action='store',
-                        help='start column')
-    parser.add_argument('-e', required=False, action='store',
-                        help='end column')
-    parser.add_argument('-r', required=False, action='store',
-                        help='Number of decimal places to round min and max')
-    parser.add_argument('--chunk-size', required=False, action='store',
-                        help='size of chunks to process')
-    parser.add_argument('infile', nargs='?', action='store', default='-',
-                        help='comma separated list of paths for input files')
-    parser.add_argument('outfile', nargs='?', action='store', default='-',
-                        help='comma separated list of paths for outfile files;'
-                             'default to score names')
+    parser.add_argument(
+        "--config", required=True, action="store", help="config file location"
+    )
+    parser.add_argument(
+        "--scores",
+        required=False,
+        action="store",
+        help="comma separated list of scores",
+    )
+    parser.add_argument(
+        "-s", required=False, action="store", help="start column"
+    )
+    parser.add_argument(
+        "-e", required=False, action="store", help="end column"
+    )
+    parser.add_argument(
+        "-r",
+        required=False,
+        action="store",
+        help="Number of decimal places to round min and max",
+    )
+    parser.add_argument(
+        "--chunk-size",
+        required=False,
+        action="store",
+        help="size of chunks to process",
+    )
+    parser.add_argument(
+        "infile",
+        nargs="?",
+        action="store",
+        default="-",
+        help="comma separated list of paths for input files",
+    )
+    parser.add_argument(
+        "outfile",
+        nargs="?",
+        action="store",
+        default="-",
+        help="comma separated list of paths for outfile files;"
+        "default to score names",
+    )
 
     return parser
 
 
 class GenerateScoresHistograms(object):
-
     def __init__(
-            self, input_files, score_histograms_info, round_pos=None,
-            chunk_size=None, start=None, end=None):
+        self,
+        input_files,
+        score_histograms_info,
+        round_pos=None,
+        chunk_size=None,
+        start=None,
+        end=None,
+    ):
         self.genomic_score_files = input_files
         self.score_histograms_info = score_histograms_info
         self.round_pos = round_pos
@@ -52,24 +87,26 @@ class GenerateScoresHistograms(object):
 
     def get_variant_length(self, data):
         if self.start is not None and self.end is not None:
-            data[self.start] = pd.to_numeric(data[self.start], errors='coerce')
-            data[self.end] = pd.to_numeric(data[self.end], errors='coerce')
-            data['length'] = data[self.end] - data[self.start]
-            data['length'] += 1
+            data[self.start] = pd.to_numeric(data[self.start], errors="coerce")
+            data[self.end] = pd.to_numeric(data[self.end], errors="coerce")
+            data["length"] = data[self.end] - data[self.start]
+            data["length"] += 1
             data = data.drop(columns=[self.start, self.end], axis=1)
         else:
-            data['length'] = 1
+            data["length"] = 1
 
         return data
 
     def get_empty_bars_and_bins(self, histogram_info):
         bin_num = histogram_info.bin_num
 
-        if histogram_info.xscale == 'linear':
+        if histogram_info.xscale == "linear":
             bins = np.linspace(
-                histogram_info.bin_range[0], histogram_info.bin_range[1],
-                bin_num)
-        elif histogram_info.xscale == 'log':
+                histogram_info.bin_range[0],
+                histogram_info.bin_range[1],
+                bin_num,
+            )
+        elif histogram_info.xscale == "log":
             bins = []
             min_bin_range = histogram_info.bin_range[0]
             max_bin_range = histogram_info.bin_range[1]
@@ -79,8 +116,11 @@ class GenerateScoresHistograms(object):
                 bins = [0.0]
                 bin_num -= 1
             print(min_bin_range, max_bin_range)
-            bins = bins + list(np.logspace(
-                np.log10(min_bin_range), np.log10(max_bin_range), bin_num))
+            bins = bins + list(
+                np.logspace(
+                    np.log10(min_bin_range), np.log10(max_bin_range), bin_num
+                )
+            )
 
         bars = np.zeros(len(bins) - 1)
         bins = np.array(bins)
@@ -88,9 +128,11 @@ class GenerateScoresHistograms(object):
         return bars, bins
 
     def fill_bars(self, histogram_info, values, bars, bins):
-        for s, l in zip(values[histogram_info.score_column], values['length']):
-            if s < histogram_info.bin_range[0] or\
-                    s > histogram_info.bin_range[1]:
+        for s, l in zip(values[histogram_info.score_column], values["length"]):
+            if (
+                s < histogram_info.bin_range[0]
+                or s > histogram_info.bin_range[1]
+            ):
                 continue
             idx = (np.abs(bins - s)).argmin()
             if idx == histogram_info.bin_num - 1:
@@ -102,18 +144,23 @@ class GenerateScoresHistograms(object):
     def get_bars_and_bins_with_chunking(self, histogram_info, use_columns):
         if not histogram_info.bin_range:
             histogram_info.set_bin_range_from_files(
-                self.genomic_score_files, self.chunk_size, self.round_pos)
+                self.genomic_score_files, self.chunk_size, self.round_pos
+            )
         bars, bins = self.get_empty_bars_and_bins(histogram_info)
 
         for genomic_score_file in self.genomic_score_files:
             for chunk in pd.read_csv(
-                genomic_score_file, usecols=use_columns, sep='\t',
-                    header=histogram_info.header, chunksize=self.chunk_size,
-                    low_memory=True):
+                genomic_score_file,
+                usecols=use_columns,
+                sep="\t",
+                header=histogram_info.header,
+                chunksize=self.chunk_size,
+                low_memory=True,
+            ):
                 chunk = self.get_variant_length(chunk)
                 chunk[histogram_info.score_column] = pd.to_numeric(
-                    chunk[histogram_info.score_column],
-                    errors='coerce')
+                    chunk[histogram_info.score_column], errors="coerce"
+                )
 
                 bars = self.fill_bars(histogram_info, chunk, bars, bins)
 
@@ -124,11 +171,15 @@ class GenerateScoresHistograms(object):
 
         for genomic_score_file in self.genomic_score_files:
             v = pd.read_csv(
-                genomic_score_file, usecols=use_columns, sep='\t',
-                header=histogram_info.header)
+                genomic_score_file,
+                usecols=use_columns,
+                sep="\t",
+                header=histogram_info.header,
+            )
             v = self.get_variant_length(v)
             v[histogram_info.score_column] = pd.to_numeric(
-                v[histogram_info.score_column], errors='coerce')
+                v[histogram_info.score_column], errors="coerce"
+            )
             v = pd.DataFrame(v)
             values = pd.concat([values, v], sort=True)
 
@@ -138,24 +189,26 @@ class GenerateScoresHistograms(object):
 
         # bars = self.fill_bars(histogram_info, values, bars, bins)
         bars, bins = np.histogram(
-            values[histogram_info.score_column].values, bins=bins,
-            range=histogram_info.bin_range)
+            values[histogram_info.score_column].values,
+            bins=bins,
+            range=histogram_info.bin_range,
+        )
 
         return (bars, bins)
 
     def save_histogram(self, bars, bins, histogram_info):
-        scores = pd.Series(bins, name='scores')
+        scores = pd.Series(bins, name="scores")
         data = pd.Series(bars, name=histogram_info.score)
         histogram = pd.concat([data, scores], axis=1, sort=True)
         histogram.to_csv(histogram_info.output_file, index=False)
 
         histogram.dropna(inplace=True)
-        bins = list(histogram['scores'].values)
+        bins = list(histogram["scores"].values)
         bars = list(map(int, histogram[histogram_info.score].values))
         fig, ax = plt.subplots()
         plt.yscale(histogram_info.yscale)
         ax.bar(bins, bars, width=0.01)
-        plt.savefig(histogram_info.output_file + '.png')
+        plt.savefig(histogram_info.output_file + ".png")
 
     def generate_scores_histograms(self):
         for histogram_info in self.score_histograms_info:
@@ -165,21 +218,29 @@ class GenerateScoresHistograms(object):
 
             if self.chunk_size:
                 bars, bins = self.get_bars_and_bins_with_chunking(
-                    histogram_info, use_columns)
+                    histogram_info, use_columns
+                )
             else:
                 bars, bins = self.get_bars_and_bins_without_chunking(
-                    histogram_info, use_columns)
+                    histogram_info, use_columns
+                )
 
             self.save_histogram(bars, bins, histogram_info)
 
-            print('Generating {} finished'.format(histogram_info.score))
+            print("Generating {} finished".format(histogram_info.score))
 
 
 class ScoreHistogramInfo(object):
-
     def __init__(
-            self, score, score_column, output_file, xscale, yscale, bin_num,
-            bin_range=None):
+        self,
+        score,
+        score_column,
+        output_file,
+        xscale,
+        yscale,
+        bin_num,
+        bin_range=None,
+    ):
         self.score = score
         self.score_column = score_column
         self.output_file = output_file
@@ -188,7 +249,7 @@ class ScoreHistogramInfo(object):
         self.bin_num = bin_num
         self.bin_range = bin_range
 
-        self.header = 'infer' if type(self.score_column) is not int else None
+        self.header = "infer" if type(self.score_column) is not int else None
 
     def set_bin_range(self, min_value, max_value, round_pos):
         if round_pos is not None:
@@ -203,11 +264,16 @@ class ScoreHistogramInfo(object):
 
         for filename in filenames:
             for chunk in pd.read_csv(
-                filename, usecols=[self.score_column], sep='\t',
-                    header=self.header, chunksize=chunk_size,
-                    low_memory=True):
+                filename,
+                usecols=[self.score_column],
+                sep="\t",
+                header=self.header,
+                chunksize=chunk_size,
+                low_memory=True,
+            ):
                 chunk[self.score_column] = pd.to_numeric(
-                    chunk[self.score_column], errors='coerce')
+                    chunk[self.score_column], errors="coerce"
+                )
                 min_chunk = chunk[self.score_column].min()
                 max_chunk = chunk[self.score_column].max()
 
@@ -230,35 +296,44 @@ def main():
 
     opts = get_argument_parser().parse_args()
 
-    config = ScoreConfigParser.read_and_parse_file_configuration(
-        opts.config, '')
+    config = GPFConfigParser.load_config(opts.config, score_file_conf_schema)
 
     score_histograms_info = []
 
     score_columns = opts.scores
     if score_columns is not None:
-        score_columns = [int(el) if el.isdigit() else el
-                         for el in score_columns.split(',')]
+        score_columns = [
+            int(el) if el.isdigit() else el for el in score_columns.split(",")
+        ]
     else:
         score_columns = list(config.genomic_scores.keys())
 
-    for score, score_column in \
-            zip(config.genomic_scores.keys(), score_columns):
+    for score, score_column in zip(
+        config.genomic_scores.keys(), score_columns
+    ):
         histogram_info = config.genomic_scores[score]
 
         bin_range = None
         if histogram_info.range:
             bin_range = list(map(float, histogram_info.range))
 
-        score_histograms_info.append(ScoreHistogramInfo(
-            score, score_column, histogram_info.file, histogram_info.xscale,
-            histogram_info.yscale, histogram_info.bins, bin_range))
+        score_histograms_info.append(
+            ScoreHistogramInfo(
+                score,
+                score_column,
+                histogram_info.file,
+                histogram_info.xscale,
+                histogram_info.yscale,
+                histogram_info.bins,
+                bin_range,
+            )
+        )
 
-    if opts.infile == '-':
+    if opts.infile == "-":
         sys.stderr.write("You must provide input file!\n")
         sys.exit(-78)
 
-    input_files = opts.infile.split(',')
+    input_files = opts.infile.split(",")
 
     start = opts.s
     end = opts.e
@@ -282,13 +357,16 @@ def main():
             sys.exit(-78)
 
     gsh = GenerateScoresHistograms(
-        input_files, score_histograms_info, round_pos, chunk_size, start, end)
+        input_files, score_histograms_info, round_pos, chunk_size, start, end
+    )
     gsh.generate_scores_histograms()
 
     sys.stderr.write(
-        "The program was running for [h:m:s]: " + str(datetime.timedelta(
-            seconds=round(time.time() - start_time, 0))) + "\n")
+        "The program was running for [h:m:s]: "
+        + str(datetime.timedelta(seconds=round(time.time() - start_time, 0)))
+        + "\n"
+    )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -5,7 +5,6 @@ import copy
 
 
 class Interval(object):
-
     def __init__(self, left=0.0, right=1.0):
         self.left = left
         self.right = right
@@ -14,13 +13,11 @@ class Interval(object):
         if self.left < other.right:
             return None
         return Interval(
-            max(self.left, other.left),
-            min(self.right, other.right)
+            max(self.left, other.left), min(self.right, other.right)
         )
 
 
 class IntervalForVertex(Interval):
-
     def __init__(self, vertex, left=0.0, right=1.0):
         super(IntervalForVertex, self).__init__(left, right)
         self.vertex = vertex
@@ -30,10 +27,19 @@ class IntervalForVertex(Interval):
 
 
 class Realization(object):
-    def __init__(self, graph, forbidden_graph, intervals=None, domain=None,
-                 max_width=3, _cached_active_vertices=None,
-                 _cached_maximal_set=None, _graph_neighbors_cache=None,
-                 _cached_dangling_set=None, _cached_vertex_degree=None):
+    def __init__(
+        self,
+        graph,
+        forbidden_graph,
+        intervals=None,
+        domain=None,
+        max_width=3,
+        _cached_active_vertices=None,
+        _cached_maximal_set=None,
+        _graph_neighbors_cache=None,
+        _cached_dangling_set=None,
+        _cached_vertex_degree=None,
+    ):
         if domain is None:
             domain = []
         if intervals is None:
@@ -57,15 +63,15 @@ class Realization(object):
         if _graph_neighbors_cache is None:
             # print("_graph_neighbors_cache recomputed")
             _graph_neighbors_cache = {
-                v: set(self.graph.neighbors(v))
-                for v in self.graph.nodes()
+                v: set(self.graph.neighbors(v)) for v in self.graph.nodes()
             }
 
         self._graph_neighbors_cache = _graph_neighbors_cache
 
     def copy(self):
         return Realization(
-            self.graph, self.forbidden_graph,
+            self.graph,
+            self.forbidden_graph,
             list(map(copy.copy, self.intervals)),
             copy.copy(self.domain),
             self.max_width,
@@ -73,7 +79,7 @@ class Realization(object):
             self._cached_maximal_set,
             self._graph_neighbors_cache,
             self._cached_dangling_set,
-            self._cached_vertex_degree
+            self._cached_vertex_degree,
         )
 
     def __repr__(self):
@@ -91,8 +97,9 @@ class Realization(object):
 
     def force_extend(self, vertex):
 
-        max_right = next(self.get_interval(v).right
-                         for v in self.get_maximal_set())
+        max_right = next(
+            self.get_interval(v).right for v in self.get_maximal_set()
+        )
 
         p = 0.5 + max_right
 
@@ -115,7 +122,7 @@ class Realization(object):
             self.forbidden_graph,
             self.intervals + [IntervalForVertex(new_vertex)],
             self.domain + [new_vertex],
-            _graph_neighbors_cache=self._graph_neighbors_cache
+            _graph_neighbors_cache=self._graph_neighbors_cache,
         )
 
         if self._has_forbidden_edge(new_vertex):
@@ -151,7 +158,8 @@ class Realization(object):
                 return True
 
         active_vertices = self.get_active_vertices().intersection(
-            new_realization.get_active_vertices())
+            new_realization.get_active_vertices()
+        )
         for active in active_vertices:
             if new_realization.degree(active) != self.degree(active) + 1:
                 return True
@@ -170,16 +178,19 @@ class Realization(object):
     def _new_active_valid(self, new_vertex, new_realization):
         new_active = new_realization.get_active_vertices()
         old_active_and_new_vertex = self.get_active_vertices() | {new_vertex}
-        expected_new_active = \
-            {v for v in old_active_and_new_vertex
-                if len(new_realization.dangling(v)) != 0}
+        expected_new_active = {
+            v
+            for v in old_active_and_new_vertex
+            if len(new_realization.dangling(v)) != 0
+        }
 
         return new_active == expected_new_active
 
     def _new_dangling_valid(self, new_vertex, new_realization):
         new_dangling = new_realization.dangling(new_vertex)
-        new_edges = set(self.graph.neighbors(new_vertex)) - \
-            self.get_active_vertices()
+        new_edges = (
+            set(self.graph.neighbors(new_vertex)) - self.get_active_vertices()
+        )
         return new_dangling == new_edges
 
     def _old_dangling_same(self, new_vertex, new_realization):
@@ -216,7 +227,8 @@ class Realization(object):
             return self._cached_maximal_set
 
         self._cached_maximal_set = {
-            v for i, v in enumerate(self.domain) if self.is_maximal(i)}
+            v for i, v in enumerate(self.domain) if self.is_maximal(i)
+        }
 
         return self._cached_maximal_set
 
@@ -251,8 +263,10 @@ class Realization(object):
             return self._cached_dangling_set
 
         self._cached_dangling_set = set(
-            v for active in self.get_active_vertices()
-            for v in self.dangling(active))
+            v
+            for active in self.get_active_vertices()
+            for v in self.dangling(active)
+        )
 
         return self._cached_dangling_set
 
@@ -261,9 +275,16 @@ class Realization(object):
             return self._cached_vertex_degree[vertex]
 
         v_interval = self.get_interval(vertex)
-        result = len([
-            1 for i in self.intervals
-            if v_interval.intersection(i) is not None]) - 1
+        result = (
+            len(
+                [
+                    1
+                    for i in self.intervals
+                    if v_interval.intersection(i) is not None
+                ]
+            )
+            - 1
+        )
 
         self._cached_vertex_degree[vertex] = result
 
@@ -298,7 +319,6 @@ def copy_graph(g):
 
 
 class SandwichSolver(object):
-
     @staticmethod
     def solve(sandwich_instance):
         forbidden_graph = sandwich_instance.forbidden_graph
@@ -308,8 +328,8 @@ class SandwichSolver(object):
             return SandwichSolver.try_solve(sandwich_instance)
         for count in range(0, len(forbidden_graph.edges())):
             for edges_to_remove in itertools.combinations(
-                    sorted(forbidden_graph.edges()),
-                    count):
+                sorted(forbidden_graph.edges()), count
+            ):
                 # if count == 2:
                 #     return
 
@@ -321,7 +341,8 @@ class SandwichSolver(object):
                 current_instance = SandwichInstance(
                     sandwich_instance.vertices,
                     sandwich_instance.required_graph,
-                    current_forbidden_graph)
+                    current_forbidden_graph,
+                )
 
                 result = SandwichSolver.try_solve(current_instance)
 
@@ -341,9 +362,11 @@ class SandwichSolver(object):
                     sandwich_instance.forbidden_graph,
                     [IntervalForVertex(vertex)],
                     [vertex],
-                    _graph_neighbors_cache=initial_realization[0]
-                    ._graph_neighbors_cache
-                    if i > 0 else None
+                    _graph_neighbors_cache=initial_realization[
+                        0
+                    ]._graph_neighbors_cache
+                    if i > 0
+                    else None,
                 )
             )
 
@@ -367,8 +390,9 @@ class SandwichSolver(object):
             #     )
             #     return None
 
-            other_vertices = sandwich_instance.vertices \
-                .difference(realization.domain)
+            other_vertices = sandwich_instance.vertices.difference(
+                realization.domain
+            )
 
             # other_vertices = sorted(other_vertices, key=str)
             can_extend_f = realization.can_extend

@@ -3,9 +3,9 @@ import traceback
 
 import pandas as pd
 
-from box import Box
 from copy import deepcopy
 
+from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.annotation.tools.utils import LineMapper
 
 from dae.utils.dae_utils import dae2vcf_variant
@@ -14,70 +14,75 @@ from dae.variants.variant import SummaryAllele
 
 class AnnotatorBase(object):
 
-    '''
+    """
     `AnnotatorBase` is base class of all `Annotators`.
-    '''
+    """
 
-    def __init__(self, config):
-        assert isinstance(config, Box)
-
+    def __init__(self, config, genomes_db):
         self.config = config
+        self.genomes_db = genomes_db
+        self.genome = self.genomes_db.get_genome_from_file(config.options.Graw)
+        self.gene_models = self.genomes_db.get_gene_models(config.options.Traw)
+        assert self.genomes_db is not None
+        assert self.genome is not None
+        assert self.gene_models is not None
 
-        self.mode = 'replace'
-        if self.config.options.mode == 'replace':
-            self.mode = 'replace'
-        elif self.config.options.mode == 'append':
-            self.mode = 'append'
-        elif self.config.options.mode == 'overwrite':
-            self.mode = 'overwrite'
+        self.mode = "replace"
+        if self.config.options.mode == "replace":
+            self.mode = "replace"
+        elif self.config.options.mode == "append":
+            self.mode = "append"
+        elif self.config.options.mode == "overwrite":
+            self.mode = "overwrite"
 
     def build_output_line(self, annotation_line):
         output_columns = self.config.output_columns
-        return [
-            annotation_line.get(key, '') for key in output_columns
-        ]
+        return [annotation_line.get(key, "") for key in output_columns]
 
     def collect_annotator_schema(self, schema):
         raise NotImplementedError()
 
     def annotate_file(self, file_io_manager):
-        '''
+        """
             Method for annotating file from `Annotator`.
-        '''
+        """
         self.schema = deepcopy(file_io_manager.reader.schema)
         self.collect_annotator_schema(self.schema)
         file_io_manager.writer.schema = self.schema
 
         line_mapper = LineMapper(file_io_manager.header)
-        if self.mode == 'replace':
-            self.config.output_columns = \
-                [col for col in self.schema.columns
-                 if col not in self.config.virtual_columns]
+        if self.mode == "replace":
+            output_columns = [
+                col
+                for col in self.schema.columns
+                if col not in self.config.virtual_columns
+            ]
+            self.config = GPFConfigParser.modify_tuple(
+                self.config, {"output_columns": output_columns}
+            )
 
         file_io_manager.header_write(self.config.output_columns)
 
         for line in file_io_manager.lines_read_iterator():
             # TODO How will additional headers behave
             # with column type support (and coercion)?
-            if '#' in line[0]:
+            if "#" in line[0]:
                 file_io_manager.line_write(line)
                 continue
             annotation_line = line_mapper.map(line)
-            # print(annotation_line)
 
             try:
                 self.line_annotation(annotation_line)
             except Exception:
-                print('Problems annotating line:', line, file=sys.stderr)
+                print("Problems annotating line:", line, file=sys.stderr)
                 print(annotation_line, file=sys.stderr)
                 traceback.print_exc(file=sys.stderr)
 
-            file_io_manager.line_write(
-                self.build_output_line(annotation_line))
+            file_io_manager.line_write(self.build_output_line(annotation_line))
 
     def annotate_df(self, df):
         result = []
-        for line in df.to_dict(orient='records'):
+        for line in df.to_dict(orient="records"):
             self.line_annotation(line)
             result.append(line)
 
@@ -85,33 +90,31 @@ class AnnotatorBase(object):
         return res_df
 
     def line_annotation(self, annotation_line):
-        '''
+        """
             Method returning annotations for the given line
             in the order from new_columns parameter.
-        '''
+        """
         raise NotImplementedError()
 
 
 class CopyAnnotator(AnnotatorBase):
-
-    def __init__(self, config):
-        super(CopyAnnotator, self).__init__(config)
+    def __init__(self, config, genomes_db):
+        super(CopyAnnotator, self).__init__(config, genomes_db)
 
     def collect_annotator_schema(self, schema):
-        for key, value in self.config.columns.items():
+        for key, value in self.config.columns.field_values_iterator():
             assert key in schema.columns, [key, schema.columns]
             schema.columns[value] = schema.columns[key]
 
     def line_annotation(self, annotation_line, variant=None):
         data = {}
-        for key, value in self.config.columns.items():
+        for key, value in self.config.columns.field_values_iterator():
             data[value] = annotation_line[key]
         annotation_line.update(data)
 
 
 class VariantBuilder(object):
     def __init__(self, config, genome):
-        assert isinstance(config, Box)
         self.config = config
         self.genome = genome
 
@@ -122,52 +125,43 @@ class VariantBuilder(object):
         summary = self.build_variant(annotation_line)
         if summary is None:
             data = {
-                'CSHL:location': None,
-                'CSHL:chr': None,
-                'CSHL:position': None,
-                'CSHL:variant': None,
-                'VCF:chr': None,
-                'VCF:position': None,
-                'VCF:ref': None,
-                'VCF:alt': None,
+                "CSHL_location": None,
+                "CSHL_chr": None,
+                "CSHL_position": None,
+                "CSHL_variant": None,
+                "VCF_chr": None,
+                "VCF_position": None,
+                "VCF_ref": None,
+                "VCF_alt": None,
             }
         else:
             data = {
-                'CSHL:location': summary.cshl_location,
-                'CSHL:chr': summary.chromosome,
-                'CSHL:position': summary.cshl_position,
-                'CSHL:variant': summary.cshl_variant,
-                'VCF:chr': summary.chromosome,
-                'VCF:position': summary.position,
-                'VCF:ref': summary.reference,
-                'VCF:alt': summary.alternative,
+                "CSHL_location": summary.cshl_location,
+                "CSHL_chr": summary.chromosome,
+                "CSHL_position": summary.cshl_position,
+                "CSHL_variant": summary.cshl_variant,
+                "VCF_chr": summary.chromosome,
+                "VCF_position": summary.position,
+                "VCF_ref": summary.reference,
+                "VCF_alt": summary.alternative,
             }
         annotation_line.update(data)
         return summary
 
 
 class DAEBuilder(VariantBuilder):
-
     def __init__(self, config, genome):
         super(DAEBuilder, self).__init__(config, genome)
-        self.variant = self.config.options.v
-        self.chrom = self.config.options.c
-        self.position = self.config.options.p
-        self.location = self.config.options.x
-        if self.variant is None:
-            self.variant = 'variant'
-        if self.location is None:
-            self.location = 'location'
-        if self.chrom is None:
-            self.chrom = 'chr'
-        if self.position is None:
-            self.position = 'position'
+        self.variant = self.config.options.v or "variant"
+        self.chrom = self.config.options.c or "chr"
+        self.position = self.config.options.p or "position"
+        self.location = self.config.options.x or "location"
 
     def build_variant(self, aline):
         variant = aline[self.variant]
         if self.location in aline:
             location = aline[self.location]
-            chrom, position = location.split(':')
+            chrom, position = location.split(":")
         else:
             assert self.chrom in aline
             assert self.position in aline
@@ -182,7 +176,6 @@ class DAEBuilder(VariantBuilder):
 
 
 class VCFBuilder(VariantBuilder):
-
     def __init__(self, config, genome):
         super(VCFBuilder, self).__init__(config, genome)
         self.chrom = self.config.options.c
@@ -191,6 +184,7 @@ class VCFBuilder(VariantBuilder):
         self.alt = self.config.options.a
 
     def build_variant(self, aline):
+        assert self.chrom, self.chrom
         chrom = aline[self.chrom]
         position = aline[self.position]
         ref = aline[self.ref]
@@ -201,20 +195,13 @@ class VCFBuilder(VariantBuilder):
         if not alt:
             return None
 
-        summary = SummaryAllele(
-            chrom, int(position), ref, alt
-        )
+        summary = SummaryAllele(chrom, int(position), ref, alt)
         return summary
 
 
 class VariantAnnotatorBase(AnnotatorBase):
-
-    def __init__(self, config):
-        super(VariantAnnotatorBase, self).__init__(config)
-
-        assert isinstance(config, Box)
-
-        self.genome = self.config.genome
+    def __init__(self, config, genomes_db):
+        super(VariantAnnotatorBase, self).__init__(config, genomes_db)
 
         if self.config.options.vcf:
             self.variant_builder = VCFBuilder(self.config, self.genome)
@@ -222,23 +209,28 @@ class VariantAnnotatorBase(AnnotatorBase):
             self.variant_builder = DAEBuilder(self.config, self.genome)
 
         if not self.config.virtual_columns:
-            self.config.virtual_columns = [
-                'CSHL:location',
-                'CSHL:chr',
-                'CSHL:position',
-                'CSHL:variant',
-                'VCF:chr',
-                'VCF:position',
-                'VCF:ref',
-                'VCF:alt',
-            ]
+            self.config = GPFConfigParser.modify_tuple(
+                self.config,
+                {
+                    "virtual_columns": [
+                        "CSHL_location",
+                        "CSHL_chr",
+                        "CSHL_position",
+                        "CSHL_variant",
+                        "VCF_chr",
+                        "VCF_position",
+                        "VCF_ref",
+                        "VCF_alt",
+                    ]
+                },
+            )
 
     def collect_annotator_schema(self, schema):
         for vcol in self.config.virtual_columns:
-            if 'position' in vcol:
-                schema.create_column(vcol, 'int')
+            if "position" in vcol:
+                schema.create_column(vcol, "int")
             else:
-                schema.create_column(vcol, 'str')
+                schema.create_column(vcol, "str")
 
     def line_annotation(self, aline):
         variant = self.variant_builder.build(aline)
@@ -255,9 +247,8 @@ class VariantAnnotatorBase(AnnotatorBase):
 
 
 class CompositeAnnotator(AnnotatorBase):
-
-    def __init__(self, config):
-        super(CompositeAnnotator, self).__init__(config)
+    def __init__(self, config, genomes_db):
+        super(CompositeAnnotator, self).__init__(config, genomes_db)
         self.annotators = []
 
     def add_annotator(self, annotator):
@@ -274,9 +265,8 @@ class CompositeAnnotator(AnnotatorBase):
 
 
 class CompositeVariantAnnotator(VariantAnnotatorBase):
-
-    def __init__(self, config):
-        super(CompositeVariantAnnotator, self).__init__(config)
+    def __init__(self, config, genomes_db):
+        super(CompositeVariantAnnotator, self).__init__(config, genomes_db)
         self.annotators = []
 
     def add_annotator(self, annotator):

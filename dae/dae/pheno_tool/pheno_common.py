@@ -3,7 +3,6 @@ from dae.pheno.common import MeasureType
 
 
 class PhenoFilter(object):
-
     def __init__(self, phenotype_data, measure_id):
         assert phenotype_data.has_measure(measure_id)
 
@@ -12,7 +11,6 @@ class PhenoFilter(object):
 
 
 class PhenoFilterSet(PhenoFilter):
-
     def __init__(self, phenotype_data, measure_id, values_set):
         super(PhenoFilterSet, self).__init__(phenotype_data, measure_id)
 
@@ -27,23 +25,27 @@ class PhenoFilterSet(PhenoFilter):
 
 
 class PhenoFilterRange(PhenoFilter):
-
     def __init__(self, phenotype_data, measure_id, values_range):
         super(PhenoFilterRange, self).__init__(phenotype_data, measure_id)
         measure_type = phenotype_data.get_measure(measure_id).measure_type
-        assert measure_type == MeasureType.continuous or \
-            measure_type == MeasureType.ordinal
+        assert (
+            measure_type == MeasureType.continuous
+            or measure_type == MeasureType.ordinal
+        )
 
-        assert isinstance(values_range, list) or \
-            isinstance(values_range, tuple)
+        assert isinstance(values_range, list) or isinstance(
+            values_range, tuple
+        )
         self.values_min, self.values_max = values_range
 
     def apply(self, df):
         if self.values_min is not None and self.values_max is not None:
-            return df[np.logical_and(
-                df[self.measure_id] >= self.values_min,
-                df[self.measure_id] <= self.values_max
-            )]
+            return df[
+                np.logical_and(
+                    df[self.measure_id] >= self.values_min,
+                    df[self.measure_id] <= self.values_max,
+                )
+            ]
         elif self.values_min is not None:
             return df[df[self.measure_id] >= self.values_min]
         elif self.values_max is not None:
@@ -53,7 +55,6 @@ class PhenoFilterRange(PhenoFilter):
 
 
 class PhenoFilterBuilder(object):
-
     def __init__(self, phenotype_data):
         self.phenotype_data = phenotype_data
 
@@ -63,11 +64,12 @@ class PhenoFilterBuilder(object):
         if measure.measure_type == MeasureType.categorical:
             return PhenoFilterSet(self.phenotype_data, measure_id, constraints)
         else:
-            return PhenoFilterRange(self.phenotype_data, measure_id, constraints)
+            return PhenoFilterRange(
+                self.phenotype_data, measure_id, constraints
+            )
 
 
 class PhenoResult(object):
-
     def __init__(self):
         self.pvalue = np.nan
         self.positive_count = np.nan
@@ -89,4 +91,5 @@ class PhenoResult(object):
 
     def __repr__(self):
         return "PhenoResult: pvalue={:.3g}; pos={} (neg={})".format(
-            self.pvalue, self.positive_count, self.negative_count)
+            self.pvalue, self.positive_count, self.negative_count
+        )

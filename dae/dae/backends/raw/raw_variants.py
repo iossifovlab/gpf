@@ -1,24 +1,18 @@
-import enum
-import itertools
+import sys
+import time
 
 from dae.variants.family_variant import FamilyAllele
 
-from dae.backends.attributes_query import role_query, sex_query, \
-    inheritance_query,\
-    variant_type_query
-
-
-class TransmissionType(enum.Enum):
-
-    unknown = 0
-    transmitted = 1
-    denovo = 2
+from dae.backends.attributes_query import (
+    role_query,
+    sex_query,
+    inheritance_query,
+    variant_type_query,
+)
 
 
 class RawFamilyVariants:
-
-    def __init__(
-            self, families):
+    def __init__(self, families):
         self.families = families
 
     def full_variants_iterator(self):
@@ -27,8 +21,7 @@ class RawFamilyVariants:
     @staticmethod
     def filter_regions(v, regions):
         for reg in regions:
-            if reg.chr == v.chromosome and \
-                    reg.start <= v.position <= reg.stop:
+            if reg.chr == v.chromosome and reg.start <= v.position <= reg.stop:
                 return True
         return False
 
@@ -48,9 +41,7 @@ class RawFamilyVariants:
             elif rmax is None:
                 result.append(val >= rmin)
             else:
-                result.append(
-                    (val >= rmin) and (val <= rmax)
-                )
+                result.append((val >= rmin) and (val <= rmax))
         if all(result):
             return True
 
@@ -65,123 +56,132 @@ class RawFamilyVariants:
         gene_effects = v.effect.genes
 
         if effect_types is None:
-            result = [
-                ge for ge in gene_effects if ge.symbol in genes]
+            result = [ge for ge in gene_effects if ge.symbol in genes]
             if result:
                 v.matched_gene_effects = result
                 return True
         elif genes is None:
-            result = [
-                ge for ge in gene_effects if ge.effect in effect_types]
+            result = [ge for ge in gene_effects if ge.effect in effect_types]
             if result:
                 v.matched_gene_effects = result
                 return True
         else:
             result = [
-                ge for ge in gene_effects
-                if ge.effect in effect_types and ge.symbol in genes]
+                ge
+                for ge in gene_effects
+                if ge.effect in effect_types and ge.symbol in genes
+            ]
             if result:
                 v.matched_gene_effects = result
                 return True
         return False
 
     @classmethod
-    def filter_allele(cls, allele, **kwargs):
+    def filter_allele(
+        cls,
+        allele,
+        inheritance=None,
+        real_attr_filter=None,
+        ultra_rare=None,
+        genes=None,
+        effect_types=None,
+        variant_type=None,
+        person_ids=None,
+        roles=None,
+        sexes=None,
+        **kwargs,
+    ):
+
         assert isinstance(allele, FamilyAllele)
-
-        if kwargs.get('real_attr_filter') is not None:
-            if not cls.filter_real_attr(allele, kwargs['real_attr_filter']):
-                return False
-        if kwargs.get('ultra_rare'):
-            if not cls.filter_real_attr(
-                    allele, [("af_allele_count", (1, 1))]):
-                return False
-
-        if kwargs.get('genes') is not None or \
-                kwargs.get('effect_types') is not None:
-            if not cls.filter_gene_effects(
-                    allele, kwargs.get('effect_types'), kwargs.get('genes')):
-                return False
-        if kwargs.get('variant_type') is not None:
-            query = kwargs['variant_type']
-            if not query.match(
-                    [allele.variant_type]):
-                return False
-        if kwargs.get('person_ids') is not None:
-            if allele.is_reference_allele:
-                return False
-            person_ids = kwargs['person_ids']
-            if not set(allele.variant_in_members) & set(person_ids):
-                return False
-        if kwargs.get('roles') is not None:
-            if allele.is_reference_allele:
-                return False
-            query = kwargs['roles']
-            if not query.match(allele.variant_in_roles):
-                return False
-        if kwargs.get('sexes') is not None:
-            if allele.is_reference_allele:
-                return False
-            query = kwargs['sexes']
-            if not query.match(allele.variant_in_sexes):
-                return False
-        if kwargs.get('inheritance') is not None:
+        if inheritance is not None:
             # if v.is_reference_allele:
             #     return False
-            query = kwargs['inheritance']
-            if not query.match(allele.inheritance_in_members):
+            if not inheritance.match(allele.inheritance_in_members):
+                return False
+
+        if real_attr_filter is not None:
+            if not cls.filter_real_attr(allele, real_attr_filter):
+                return False
+        if ultra_rare:
+            if not cls.filter_real_attr(allele, [("af_allele_count", (1, 1))]):
+                return False
+
+        if genes is not None or effect_types is not None:
+            if not cls.filter_gene_effects(allele, effect_types, genes):
+                return False
+        if variant_type is not None:
+            if not variant_type.match([allele.variant_type]):
+                return False
+        if person_ids is not None:
+            if allele.is_reference_allele:
+                return False
+            if not set(allele.variant_in_members) & set(person_ids):
+                return False
+        if roles is not None:
+            if allele.is_reference_allele:
+                return False
+            if not roles.match(allele.variant_in_roles):
+                return False
+        if sexes is not None:
+            if allele.is_reference_allele:
+                return False
+            if not sexes.match(allele.variant_in_sexes):
                 return False
         return True
 
     @classmethod
     def filter_variant(cls, v, **kwargs):
-        if kwargs.get('regions') is not None:
-            if not cls.filter_regions(v, kwargs['regions']):
+        if kwargs.get("regions") is not None:
+            if not cls.filter_regions(v, kwargs["regions"]):
                 return False
-        if 'family_ids' in kwargs and kwargs['family_ids'] is not None:
-            family_ids = kwargs['family_ids']
+        if "family_ids" in kwargs and kwargs["family_ids"] is not None:
+            family_ids = kwargs["family_ids"]
             if v.family_id not in family_ids:
                 return False
-        if 'filter' in kwargs:
-            func = kwargs['filter']
+        if "filter" in kwargs:
+            func = kwargs["filter"]
             if not func(v):
                 return False
         return True
 
     def query_variants(self, **kwargs):
         if kwargs.get("roles") is not None:
-            parsed = kwargs['roles']
+            parsed = kwargs["roles"]
             if isinstance(parsed, list):
-                parsed = 'any({})'.format(','.join(parsed))
+                parsed = "any({})".format(",".join(parsed))
             if isinstance(parsed, str):
                 parsed = role_query.transform_query_string_to_tree(parsed)
 
-            kwargs['roles'] = role_query.transform_tree_to_matcher(parsed)
+            kwargs["roles"] = role_query.transform_tree_to_matcher(parsed)
 
-        if kwargs.get('sexes') is not None:
-            parsed = kwargs['sexes']
+        if kwargs.get("sexes") is not None:
+            parsed = kwargs["sexes"]
             if isinstance(parsed, str):
                 parsed = sex_query.transform_query_string_to_tree(parsed)
 
-            kwargs['sexes'] = sex_query.transform_tree_to_matcher(parsed)
+            kwargs["sexes"] = sex_query.transform_tree_to_matcher(parsed)
 
-        if kwargs.get('inheritance') is not None:
-            parsed = kwargs['inheritance']
+        if kwargs.get("inheritance") is not None:
+            parsed = kwargs["inheritance"]
             if isinstance(parsed, str):
                 parsed = inheritance_query.transform_query_string_to_tree(
-                    parsed)
+                    parsed
+                )
 
-            kwargs['inheritance'] = inheritance_query.\
-                transform_tree_to_matcher(parsed)
+            kwargs[
+                "inheritance"
+            ] = inheritance_query.transform_tree_to_matcher(parsed)
 
-        if kwargs.get('variant_type') is not None:
-            parsed = kwargs['variant_type']
-            if isinstance(kwargs['variant_type'], str):
+        if kwargs.get("variant_type") is not None:
+            parsed = kwargs["variant_type"]
+            if isinstance(kwargs["variant_type"], str):
                 parsed = variant_type_query.transform_query_string_to_tree(
-                    parsed)
+                    parsed
+                )
 
-            kwargs['variant_type'] = variant_type_query.\
-                transform_tree_to_matcher(parsed)
+            kwargs[
+                "variant_type"
+            ] = variant_type_query.transform_tree_to_matcher(parsed)
 
         return_reference = kwargs.get("return_reference", False)
         return_unknown = kwargs.get("return_unknown", False)
@@ -207,14 +207,27 @@ class RawFamilyVariants:
 
 
 class RawMemoryVariants(RawFamilyVariants):
+    def __init__(self, loaders, families):
+        super(RawMemoryVariants, self).__init__(families)
+        self.variants_loaders = loaders
+        if len(loaders) > 0:
+            self._full_variants = None
+        else:
+            print("No variants to load")
+            self._full_variants = []
 
-    def __init__(
-            self, loaders):
-        assert len(loaders) > 0
-        super(RawMemoryVariants, self).__init__(loaders[0].families)
+    @property
+    def full_variants(self):
+        if self._full_variants is None:
+            start = time.time()
+            self._full_variants = []
+            for loader in self.variants_loaders:
+                for sv, fvs in loader.full_variants_iterator():
+                    self._full_variants.append((sv, fvs))
 
-        self.full_variants = list(itertools.chain.from_iterable(
-            [loader.full_variants_iterator() for loader in loaders]))
+            elapsed = time.time() - start
+            print(f"Variants loaded in in {elapsed:.2f} sec", file=sys.stderr)
+        return self._full_variants
 
     def full_variants_iterator(self):
         for sv, fvs in self.full_variants:

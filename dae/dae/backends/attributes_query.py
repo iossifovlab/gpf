@@ -60,7 +60,7 @@ QUERY_GRAMMAR = """
     %ignore WS
 """
 
-parser_with_ambiguity = Lark(QUERY_GRAMMAR, ambiguity='explicit')
+parser_with_ambiguity = Lark(QUERY_GRAMMAR, ambiguity="explicit")
 
 PARSER = Lark(QUERY_GRAMMAR)
 
@@ -91,8 +91,9 @@ class Matcher(object):
 class BaseQueryTransformerMatcher(object):
     def __init__(self, parser=PARSER, token_converter=None):
         self.parser = parser
-        self.transformer = StringQueryToTreeTransformer(parser,
-                                                        token_converter)
+        self.transformer = StringQueryToTreeTransformer(
+            parser, token_converter
+        )
         self.transformer2 = None
 
     def parse(self, expression):
@@ -114,8 +115,7 @@ class BaseQueryTransformerMatcher(object):
 
 class QueryTransformerMatcher(BaseQueryTransformerMatcher):
     def __init__(self, parser=PARSER, token_converter=None):
-        super(QueryTransformerMatcher, self).__init__(
-            parser, token_converter)
+        super(QueryTransformerMatcher, self).__init__(parser, token_converter)
         self.transformer2 = QueryTreeToLambdaTransformer()
 
     def transform_tree_to_matcher(self, tree):
@@ -124,12 +124,13 @@ class QueryTransformerMatcher(BaseQueryTransformerMatcher):
 
 
 class StringQueryToTreeTransformer(InlineTransformer):
-
     def __init__(self, parser=PARSER, token_converter=None):
         super(StringQueryToTreeTransformer, self).__init__()
 
         if token_converter is None:
-            def token_converter(x): return x
+
+            def token_converter(x):
+                return x
 
         self.token_converter = token_converter
 
@@ -312,10 +313,12 @@ role_query = QueryTransformerMatcher(token_converter=roles_converter)
 sex_query = QueryTransformerMatcher(token_converter=sex_converter)
 
 inheritance_query = QueryTransformerMatcher(
-    token_converter=inheritance_converter)
+    token_converter=inheritance_converter
+)
 
 variant_type_query = QueryTransformerMatcher(
-    token_converter=variant_type_converter)
+    token_converter=variant_type_converter
+)
 
 
 class QueryTreeToSQLTransformer(BaseTreeTransformer):
@@ -363,28 +366,41 @@ class QueryTreeToSQLTransformer(BaseTreeTransformer):
 
 class QueryTreeToSQLListTransformer(QueryTreeToSQLTransformer):
     def ContainsNode(self, arg):
-        return "array_contains(" + self.column_name + ", " + \
-            self.token_converter(arg) + ")"
+        return (
+            "array_contains("
+            + self.column_name
+            + ", "
+            + self.token_converter(arg)
+            + ")"
+        )
 
     def ElementOfNode(self, arg):
         if not arg:
             return self.column_name + " IS NULL"
-        return self.column_name + " IN (" + \
-            ",".join([self.token_converter(a) for a in arg]) + ")"
+        return (
+            self.column_name
+            + " IN ("
+            + ",".join([self.token_converter(a) for a in arg])
+            + ")"
+        )
 
     def EqualsNode(self, arg):
         arg = [self.token_converter(a) for a in arg]
-        return "concat_ws('|'," + self.column_name + ")" + \
-            " = concat_ws('|', array(" + \
-            reduce((lambda x, y: x + ", " + y), arg) + "))"
+        return (
+            "concat_ws('|',"
+            + self.column_name
+            + ")"
+            + " = concat_ws('|', array("
+            + reduce((lambda x, y: x + ", " + y), arg)
+            + "))"
+        )
 
 
 class QueryTreeToSQLBitwiseTransformer(QueryTreeToSQLTransformer):
-
     def ContainsNode(self, arg):
         res = "(BITAND({}, {}) != 0)".format(
-            self.column_name,
-            self.token_converter(arg))
+            self.column_name, self.token_converter(arg)
+        )
         return res
 
     def LessThanNode(self, arg):
@@ -401,8 +417,8 @@ class QueryTreeToSQLBitwiseTransformer(QueryTreeToSQLTransformer):
 
     def ElementOfNode(self, arg):
         res = "(BITAND({}, {}) != 0)".format(
-            self.column_name,
-            self.token_converter(arg))
+            self.column_name, self.token_converter(arg)
+        )
         return res
 
     def EqualsNode(self, arg):
@@ -413,15 +429,11 @@ class QueryTreeToSQLBitwiseTransformer(QueryTreeToSQLTransformer):
         return "(NOT ({}))".format(children[0])
 
     def AndNode(self, children):
-        res = reduce(
-            lambda x, y: "({}) AND ({})".format(x, y),
-            children)
+        res = reduce(lambda x, y: "({}) AND ({})".format(x, y), children)
         return res
 
     def OrNode(self, children):
-        res = reduce(
-            lambda x, y: "({}) OR ({})".format(x, y),
-            children)
+        res = reduce(lambda x, y: "({}) OR ({})".format(x, y), children)
         return res
 
 
@@ -449,8 +461,8 @@ class StringQueryToTreeTransformerWrapper(object):
     def __init__(self, parser=PARSER, token_converter=None):
         self.parser = parser
         self.transformer = StringQueryToTreeTransformer(
-            parser,
-            token_converter)
+            parser, token_converter
+        )
 
     def parse(self, expression):
         return self.parser.parse(expression)
@@ -472,7 +484,6 @@ class StringListQueryToTreeTransformer(object):
 
 
 class BitwiseTreeTransformer(Interpreter):
-
     def __init__(self, token_converter):
         super(BitwiseTreeTransformer, self).__init__()
         self.parser = PARSER

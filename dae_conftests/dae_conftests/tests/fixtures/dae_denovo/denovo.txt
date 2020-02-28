@@ -1,0 +1,10 @@
+familyId	location	variant	inChild	fromParent	bestState
+f1	1:897349	sub(G->A)	prbM		2 2 1 2/0 0 1 0
+f2	1:1222518	sub(C->A)	prbM		2 2 1 2/0 0 1 0
+f3	1:1225729	sub(G->A)	sibF		2 2 2 1/0 0 0 1
+f4	1:1230203	sub(G->A)	sibM		2 2 2 1/0 0 0 1
+f1	1:1246368	sub(G->C)	sibF		2 2 2 1/0 0 0 1
+f2	1:1558774	sub(G->A)	sibM		2 2 2 1/0 0 0 1
+f3	1:1854141	sub(T->C)	prbM	dad	2 2 1 2/0 0 1 0
+f4	1:1886352	sub(C->T)	prbM		2 2 1 2/0 0 1 0
+f5	1:1886352	sub(C->T)	prbM		2 2 1/0 0 1
