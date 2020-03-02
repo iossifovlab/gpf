@@ -31,10 +31,15 @@ def test_annotate_variant_simple(temp_filename, genomes_db_2013):
     assert expected_df is not None
     assert len(expected_df) == 8
 
+    genome_id = genomes_db_2013.config.genomes.default_genome
+    genome_config = getattr(genomes_db_2013.config.genome, genome_id)
+    ref_seq_gene_model = getattr(genome_config.gene_model, "RefSeq2013")
+    gene_model_file = ref_seq_gene_model.file
+
     command = (
-        "cut -f 1-3 {} "
-        "| annotate_variant.py -T RefSeq2013 "
-        "| head -n 9 > {}".format(denovo_filename, temp_filename)
+        f"cut -f 1-3 {denovo_filename} "
+        f"| annotate_variant.py --Traw {gene_model_file} --TrawFormat default"
+        f"| head -n 9 > {temp_filename}"
     )
     print(command)
     res = os.system(command)

@@ -695,7 +695,6 @@ def defaultGeneModelParser(
             return True
 
         cs = lineR.read(line)  # l[:-1].split('\t')
-        print(cs)
 
         (
             chrom,
@@ -1328,9 +1327,9 @@ def infer_format(file_name="refGene.txt.gz", file_format=None):
                 gm, file_name, gene_mapping_file="default", testMode=True
             )
         except Exception:
-            import traceback
+            # import traceback
 
-            traceback.print_exc()
+            # traceback.print_exc()
             continue
 
         acceptedFormat.append(fn)

@@ -2,6 +2,7 @@
 
 import sys
 import optparse
+import os.path
 import time
 import datetime
 
@@ -9,7 +10,6 @@ from typing import List, Optional
 
 from dae.gpf_instance.gpf_instance import GPFInstance
 
-import os
 from dae import GenomeAccess
 from dae.GeneModelFiles import load_gene_models
 from dae.variant_annotation.annotator import (
@@ -230,11 +230,15 @@ if opts.G is None and opts.Graw is None:
     elif opts.Traw is None:
         gmDB = genomes_db.get_gene_models(opts.T)
     else:
-        variantFile = open(infile)
+        gmDB = load_gene_models(opts.Traw, None, opts.TrawFormat)
 
-    if not opts.no_header:
-        first_line_str = variantFile.readline()
-        first_line = first_line_str.split()
+
+elif opts.Graw is None:
+    GA = genomes_db.get_genome(opts.G)
+    if opts.T is None and opts.Traw is None:
+        gmDB = genomes_db.get_gene_models(genomeId=opts.G)
+    elif opts.Traw is None:
+        gmDB = genomes_db.get_gene_models(opts.T, genomeId=opts.G)
     else:
         gmDB = load_gene_models(opts.Traw, None, opts.TrawFormat)
 
@@ -248,8 +252,8 @@ else:
     gmDB = load_gene_models(opts.Traw, None, opts.TrawFormat)
 
 
-if "1" in GA.allChromosomes and "1" not in gmDB._utrModels.keys():
-    gmDB.relabel_chromosomes()
+# if "1" in GA.allChromosomes and "1" not in gmDB._utrModels.keys():
+#     gmDB.relabel_chromosomes()
 
 
 sys.stderr.write("GENOME: " + GA.genomicFile + "\n")
