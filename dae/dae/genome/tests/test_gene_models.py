@@ -9,6 +9,8 @@ from dae.GeneModelFiles import (
     refFlatParser,
     ccdsParser,
     knownGeneParser,
+    load_default_gene_models_format,
+    defaultGeneModelParser,
 )
 
 
@@ -77,3 +79,25 @@ def test_gene_models_from_ref_gene_2013(fixture_dirname):
     refSeqParser(gm, filename)
     assert len(gm.transcriptModels) == 19
     assert len(gm._geneModels) == 19
+
+
+def test_default_gene_models_loader_ref_seq_2019(genomes_db_2019):
+    genome_id = genomes_db_2019.config.genomes.default_genome
+    genome_config = getattr(genomes_db_2019.config.genome, genome_id)
+    ref_seq_gene_model = getattr(genome_config.gene_model, "RefSeq")
+
+    gm = load_default_gene_models_format(ref_seq_gene_model.file)
+    assert gm is not None
+
+
+def test_default_gene_models_loader_ref_seq_2013(genomes_db_2019):
+    genome_id = genomes_db_2019.config.genomes.default_genome
+    genome_config = getattr(genomes_db_2019.config.genome, genome_id)
+    ref_seq_gene_model = getattr(genome_config.gene_model, "RefSeq2013")
+
+    gm = load_default_gene_models_format(ref_seq_gene_model.file)
+    assert gm is not None
+
+    gm_yoonha = GeneModelDB()
+    defaultGeneModelParser(gm_yoonha, ref_seq_gene_model.file)
+    assert len(gm.transcriptModels) == len(gm_yoonha.transcriptModels)

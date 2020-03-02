@@ -4,6 +4,7 @@ import tempfile
 import shutil
 
 import pandas as pd
+from dae.GeneModelFiles import load_gene_models
 
 
 def relative_to_this_test_folder(path):
@@ -58,6 +59,29 @@ def test_gene_models_orig_transcript_id(genomes_db_2019):
 
     for count, tr in enumerate(gene_models.transcriptModels.values()):
         # print(dir(tr))
-        assert tr.trID != tr.trOrigId
+        assert tr.tr_id != tr.tr_name
+        assert tr.tr_name in tr.tr_id
+
         if count >= 1000:
             break
+
+
+def test_gene_models_load_default(genomes_db_2019):
+
+    print(genomes_db_2019.config)
+    print(genomes_db_2019.config.genomes.default_genome)
+    genome_id = genomes_db_2019.config.genomes.default_genome
+    genome_config = getattr(genomes_db_2019.config.genome, genome_id)
+    print(80 * "-")
+    print(genome_config)
+    print(80 * "-")
+    print(getattr(genome_config, "gene_model"))
+    print(genome_config.gene_model)
+    print(80 * "-")
+    ref_seq_gene_model = getattr(genome_config.gene_model, "RefSeq")
+    print(ref_seq_gene_model)
+    print(ref_seq_gene_model.file)
+    print(80 * "-")
+
+    # gene_models = load_gene_models(ref_seq_gene_model.file, format="default")
+    # assert gene_models is not None

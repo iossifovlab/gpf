@@ -1,10 +1,12 @@
 #!/usr/bin/env python
-
-from dae.RegionOperations import Region
 import gzip
 import pickle
 import os
 from collections import defaultdict, namedtuple
+
+import pandas as pd
+
+from dae.RegionOperations import Region
 
 
 NumOfLine2Read4Test = 100
@@ -34,22 +36,40 @@ class Exon:
 
 
 class TranscriptModel:
-    def __init__(self):
-        self.attr = {}
-        self.gene = None
-        self.tr_id = None
-        self.chrom = None
-        self.cds = []
-        self.strand = None
-        self.exons = []
-        self.tx = []
+    def __init__(
+        self,
+        gene=None,
+        tr_id=None,
+        tr_name=None,
+        chrom=None,
+        cds=[],
+        strand=None,
+        exons=[],
+        tx=None,
+        utrs=[],
+        start_codon=None,
+        stop_codon=None,
+        is_coding=False,
+        attributes={},
+    ):
+        self.gene = gene
+        self.tr_id = tr_id
+        self.tr_name = tr_name
+        self.chrom = chrom
+        self.cds = cds
+        self.strand = strand
+        self.exons = exons
+        self.tx = tx
 
         # for GTF
-        self.utrs = []
-        self.start_codon = None
-        self.stop_codon = None
+        self.utrs = utrs
+        self.start_codon = start_codon
+        self.stop_codon = stop_codon
 
-        self._is_coding = False  # it can be derivable from cds' start and end
+        self._is_coding = (
+            is_coding  # it can be derivable from cds' start and end
+        )
+        self.attributes = attributes
 
     def is_coding(self):
         if self.cds[0] >= self.cds[1]:
@@ -116,7 +136,6 @@ class TranscriptModel:
         if self.cds[0] >= self.cds[1]:
             return []
 
-        # UTR5_reg = namedtuple("UTR5_reg", "start stop chr")
         utr5_regions = []
         k = 0
         if self.strand == "+":
@@ -365,7 +384,7 @@ class TranscriptModel:
 Columns4FileFormat = {
     "commonGTF": "seqname,source,feature,start,end,score,strand,phase,"
     "attributes,comments".split(","),
-    "commonDefault": "chr,trID,gene,strand,tsBeg,txEnd,cdsStart,cdsEnd,"
+    "commonDefault": "chr,trID,gene,strand,txBeg,txEnd,cdsStart,cdsEnd,"
     "exonStarts,exonEnds,exonFrames,atts".split(","),
     "commonGenePredUCSC": "name,chrom,strand,txStart,txEnd,cdsStart,cdsEnd,"
     "exonStarts,exonEnds".split(","),
@@ -384,13 +403,16 @@ Columns4FileFormat = {
 }
 
 
+FILE_FORMAT_COLUMNS = {}
+
+
 #
 # GeneModel's database
 #
 class GeneModelDB:
-    def __init__(self):
-        self.name = None
-        self.location = None
+    def __init__(self, name=None, location=None):
+        self.name = name
+        self.location = location
         self._shift = None
         self._alternative_names = None
 
@@ -630,17 +652,17 @@ class GtfFileReader:
 
         return GtfFileReader.gtfParseStr(line)  # rx
 
-    # TODO: delete after migrate to python3
-    # make code compatible to python2
-    def next(self):
-        line = self._file.readline()
-        while line and (line[0] == "#"):
-            line = self._file.readline()
+    # # TODO: delete after migrate to python3
+    # # make code compatible to python2
+    # def next(self):
+    #     line = self._file.readline()
+    #     while line and (line[0] == "#"):
+    #         line = self._file.readline()
 
-        if line == "":
-            raise StopIteration
+    #     if line == "":
+    #         raise StopIteration
 
-        return GtfFileReader.gtfParseStr(line)  # rx
+    #     return GtfFileReader.gtfParseStr(line)  # rx
 
 
 class defaultFileReader:
@@ -673,6 +695,8 @@ def defaultGeneModelParser(
             return True
 
         cs = lineR.read(line)  # l[:-1].split('\t')
+        print(cs)
+
         (
             chrom,
             trID,
@@ -703,6 +727,7 @@ def defaultGeneModelParser(
         tm = TranscriptModel()
         tm.gene = gene
         tm.tr_id = trID
+        tm.tr_name = trID
         tm.chrom = chrom
         tm.strand = strand
         tm.tx = (int(txB), int(txE))
@@ -717,6 +742,61 @@ def defaultGeneModelParser(
 
     if testMode:
         return True
+
+
+def load_default_gene_models_format(filename, gene_mapping_file=None):
+    df = pd.read_csv(filename, sep="\t")
+    expected_columns = [
+        "chr",
+        "trID",
+        "gene",
+        "strand",
+        "tsBeg",
+        "txEnd",
+        "cdsStart",
+        "cdsEnd",
+        "exonStarts",
+        "exonEnds",
+        "exonFrames",
+        "atts",
+    ]
+
+    assert set(expected_columns) <= set(df.columns)
+    if "trOrigID" not in df.columns:
+        tr_names = pd.Series(data=df["trID"].values)
+        df["trOrigID"] = tr_names
+
+    gm = GeneModelDB(location=filename)
+
+    records = df.to_dict(orient="records")
+    for line in records:
+        exon_starts = list(map(int, line["exonStarts"].split(",")))
+        exon_ends = list(map(int, line["exonEnds"].split(",")))
+        exon_frames = list(map(int, line["exonFrames"].split(",")))
+        assert len(exon_starts) == len(exon_ends) == len(exon_frames)
+        exons = []
+        for start, end, frame in zip(exon_starts, exon_ends, exon_frames):
+            exons.append(Exon(start=start, stop=end, frame=frame))
+        attributes = {}
+        if line.get("atts") is not None:
+            attributes = dict(
+                [a.split(":") for a in line.get("atts").split(";")]
+            )
+        tm = TranscriptModel(
+            gene=line["gene"],
+            tr_id=line["trID"],
+            tr_name=line["trOrigID"],
+            chrom=line["chr"],
+            strand=line["strand"],
+            tx=(line["tsBeg"], line["txEnd"]),
+            cds=(line["cdsStart"], line["cdsEnd"]),
+            exons=exons,
+            attributes=attributes,
+        )
+        gm.addModelToDict(tm)
+
+    gm._updateIndexes()
+    return gm
 
 
 def pickledGeneModelParser(
@@ -879,6 +959,8 @@ def mitoGeneModelParser(gm, file_name, gene_mapping_file=None, testMode=False):
 
     gm._utrModels["chrM"] = {}
     file = openFile(file_name)
+
+    mode = None
 
     for line in file:
         line = line.split()
@@ -1246,6 +1328,9 @@ def infer_format(file_name="refGene.txt.gz", file_format=None):
                 gm, file_name, gene_mapping_file="default", testMode=True
             )
         except Exception:
+            import traceback
+
+            traceback.print_exc()
             continue
 
         acceptedFormat.append(fn)
