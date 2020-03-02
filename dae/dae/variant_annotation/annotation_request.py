@@ -72,7 +72,7 @@ class BaseAnnotationRequest(object):
             return ""
 
         return self.annotator.reference_genome.getSequence(
-            self.transcript_model.chr, start_position, end_position
+            self.transcript_model.chrom, start_position, end_position
         )
 
     def CDS_regions(self):

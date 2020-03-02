@@ -156,7 +156,7 @@ class EffectFactory(object):
         try:
             ef.transcript_id = transcript_model.trOrigId
         except AttributeError:
-            ef.transcript_id = transcript_model.trID
+            ef.transcript_id = transcript_model.tr_id
 
         return ef
 

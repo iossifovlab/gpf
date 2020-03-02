@@ -89,7 +89,7 @@ class VariantAnnotator(object):
                     logger.debug(
                         "========: %s-%s :====================",
                         tm.gene,
-                        tm.trID,
+                        tm.tr_id,
                     )
                     effect = self.get_effect_for_transcript(variant, tm)
 

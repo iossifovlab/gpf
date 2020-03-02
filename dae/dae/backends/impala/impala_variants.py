@@ -385,7 +385,7 @@ class ImpalaFamilyVariants:
                 for gm in self.gene_models.gene_models_by_gene_name(gs):
                     regions.append(
                         Region(
-                            gm.chr,
+                            gm.chrom,
                             gm.tx[0] - self.GENE_REGIONS_HEURISTIC_EXTEND,
                             gm.tx[1] + self.GENE_REGIONS_HEURISTIC_EXTEND,
                         )

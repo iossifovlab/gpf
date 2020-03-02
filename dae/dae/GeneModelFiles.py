@@ -51,10 +51,6 @@ class TranscriptModel:
 
         self._is_coding = False  # it can be derivable from cds' start and end
 
-    @property
-    def trID(self):
-        return self.tr_id
-
     def is_coding(self):
         if self.cds[0] >= self.cds[1]:
             return False
