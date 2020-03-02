@@ -172,6 +172,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
         parquet_variants = []
         parquet_filenames = None
         has_denovo = False
+        has_cnv = False
         if variant_loaders:
             for index, variant_loader in enumerate(variant_loaders):
                 assert isinstance(variant_loader, VariantsLoader), \
