@@ -176,6 +176,8 @@ class Allele:
 
     @property
     def cshl_variant(self) -> Optional[str]:
+        if self.end_position and self.end_position != -1:
+            return str(self.variant_type)
         if self.alternative is None:
             return None
         if self.details is None:
@@ -184,6 +186,8 @@ class Allele:
 
     @property
     def cshl_location(self) -> Optional[str]:
+        if self.end_position and self.end_position != -1:
+            return f"{self.chrom}:{self.position}-{self.end_position}"
         if self.alternative is None:
             return None
         if self.details is None:
@@ -286,7 +290,7 @@ class Variant:
 
     @property
     def location(self) -> str:
-        if self.end_position:
+        if self.end_position and self.end_position != -1:
             return f"{self.chromosome}:{self.position}-{self.end_position}"
         else:
             return f"{self.chromosome}:{self.position}"
