@@ -180,6 +180,10 @@ class ImpalaGenotypeStorage(GenotypeStorage):
                 if variant_loader.get_attribute('source_type') == 'denovo':
                     has_denovo = True
 
+                if variant_loader.get_attribute('source_type') == 'cnv':
+                    has_denovo = True
+                    has_cnv = True
+
                 if variant_loader.transmission_type == TransmissionType.denovo:
                     assert index < 100
 
@@ -218,6 +222,8 @@ class ImpalaGenotypeStorage(GenotypeStorage):
             pedigree_paths=parquet_pedigrees)
 
         config_dict["has_denovo"] = has_denovo
+        config_dict["has_cnv"] = has_cnv
+        config_dict["genotype_browser"]["has_cnv"] = has_cnv
 
         if study_config is not None:
             study_config_dict = GPFConfigParser.load_config_raw(study_config)
@@ -317,8 +323,6 @@ class ImpalaGenotypeStorage(GenotypeStorage):
 
         config_dict = self._generate_study_config(
             study_id, pedigree_table, variants_table)
-
-        study_dir = os.path.join(self.data_dir, study_id)
 
         config_builder = StudyConfigBuilder(config_dict)
 

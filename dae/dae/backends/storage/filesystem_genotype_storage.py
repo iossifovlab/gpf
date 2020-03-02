@@ -121,6 +121,7 @@ class FilesystemGenotypeStorage(GenotypeStorage):
             "id": study_id,
             "conf_dir": ".",
             "has_denovo": False,
+            "has_cnv": False,
             "genotype_storage": {
                 "id": self.storage_config.section_id(),
                 "files": {
@@ -129,7 +130,8 @@ class FilesystemGenotypeStorage(GenotypeStorage):
                 }
             },
             "genotype_browser": {
-                "enabled": True
+                "enabled": True,
+                "has_cnv": False
             }
         }
         if not variant_loaders:
@@ -139,6 +141,10 @@ class FilesystemGenotypeStorage(GenotypeStorage):
             if any([l.get_attribute('source_type') == 'denovo'
                     for l in variant_loaders]):
                 config_dict['has_denovo'] = True
+            if any([l.get_attribute('source_type') == 'cnv'
+                    for l in variant_loaders]):
+                config_dict['has_denovo'] = True
+                config_dict['has_cnv'] = True
 
         if study_config is not None:
             study_config_dict = GPFConfigParser.load_config_raw(study_config)
