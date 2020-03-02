@@ -1351,6 +1351,6 @@ def join_gene_models(*gene_models):
 if __name__ == "__main__":
     fn = "../../../tests/gtf/genePred.gtf"
     gm = GeneModelDB()
-    print(gtfGeneModelParser(gm, fn, testMode=True))
+    print(gtfGeneModelParser(gm, fn))
     print(infer_format(fn))
     load_gene_models(fn)
