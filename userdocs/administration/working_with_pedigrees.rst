@@ -208,7 +208,7 @@ optional arguments:
 
 
 Transform a pedigree file into canonical GPF form
-###############################################
+#################################################
 
 To transform a pedigree file into canonical GPF form you can use the `ped2ped.py`
 tool.
