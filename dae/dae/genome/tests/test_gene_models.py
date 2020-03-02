@@ -90,9 +90,9 @@ def test_default_gene_models_loader_ref_seq_2019(genomes_db_2019):
     assert gm is not None
 
 
-def test_default_gene_models_loader_ref_seq_2013(genomes_db_2019):
-    genome_id = genomes_db_2019.config.genomes.default_genome
-    genome_config = getattr(genomes_db_2019.config.genome, genome_id)
+def test_default_gene_models_loader_ref_seq_2013(genomes_db_2013):
+    genome_id = genomes_db_2013.config.genomes.default_genome
+    genome_config = getattr(genomes_db_2013.config.genome, genome_id)
     ref_seq_gene_model = getattr(genome_config.gene_model, "RefSeq2013")
 
     gm = load_default_gene_models_format(ref_seq_gene_model.file)
@@ -101,3 +101,16 @@ def test_default_gene_models_loader_ref_seq_2013(genomes_db_2019):
     gm_yoonha = GeneModelDB()
     defaultGeneModelParser(gm_yoonha, ref_seq_gene_model.file)
     assert len(gm.transcriptModels) == len(gm_yoonha.transcriptModels)
+
+
+def test_yoonha_default_gene_models_loader(genomes_db_2013):
+    # genome_id = genomes_db_2013.config.genomes.default_genome
+    # genome_config = getattr(genomes_db_2013.config.genome, genome_id)
+    # ref_seq_gene_model = getattr(genome_config.gene_model, "RefSeq2013")
+
+    # gm_yoonha = GeneModelDB()
+    # defaultGeneModelParser(gm_yoonha, ref_seq_gene_model.file)
+    # assert len(gm.transcriptModels) == len(gm_yoonha.transcriptModels)
+
+    gm = genomes_db_2013.get_gene_models()
+    assert gm is not None

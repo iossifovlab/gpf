@@ -9,9 +9,6 @@ import pandas as pd
 from dae.RegionOperations import Region
 
 
-NumOfLine2Read4Test = 100
-
-
 #
 # Exon
 #
@@ -680,9 +677,7 @@ class defaultFileReader:
         return [terms[n] for n in self.index]
 
 
-def defaultGeneModelParser(
-    gm, file_name, gene_mapping_file=None, testMode=False
-):
+def defaultGeneModelParser(gm, file_name, gene_mapping_file=None):
     gm.location = file_name
 
     f = openFile(file_name)
@@ -690,9 +685,6 @@ def defaultGeneModelParser(
     line = f.readline()
     lineR = defaultFileReader(line)
     for nLR, line in enumerate(f):
-        if testMode and nLR > NumOfLine2Read4Test:
-            f.close()
-            return True
 
         cs = lineR.read(line)  # l[:-1].split('\t')
 
@@ -738,9 +730,6 @@ def defaultGeneModelParser(
 
     f.close()
     gm._updateIndexes()
-
-    if testMode:
-        return True
 
 
 def load_default_gene_models_format(filename, gene_mapping_file=None):
@@ -798,9 +787,7 @@ def load_default_gene_models_format(filename, gene_mapping_file=None):
     return gm
 
 
-def pickledGeneModelParser(
-    gm, file_name, gene_mapping_file=None, testMode=False
-):
+def pickledGeneModelParser(gm, file_name, gene_mapping_file=None):
     import pickle
 
     gm.location = file_name
@@ -808,11 +795,8 @@ def pickledGeneModelParser(
     gm._utrModels, gm.transcriptModels, gm._geneModels = pickle.load(pkl_file)
     pkl_file.close()
 
-    if testMode:
-        return True
 
-
-def gtfGeneModelParser(gm, file_name, gene_mapping_file=None, testMode=False):
+def gtfGeneModelParser(gm, file_name, gene_mapping_file=None):
     gm.name = "GTF"
     # print( 'GeneModel format: ', gm.name, '\timporting: ',
     # file_name, file=sys.stderr )
@@ -822,9 +806,6 @@ def gtfGeneModelParser(gm, file_name, gene_mapping_file=None, testMode=False):
     for nLR, rx in enumerate(f):
         if rx["feature"] in ["gene"]:
             continue
-
-        if testMode and nLR > NumOfLine2Read4Test:
-            return True
 
         # if 'transcript_support_level' in rx['attributes']  and
         # rx['attributes']['transcript_support_level'] != '1': continue
@@ -945,14 +926,12 @@ def gtfGeneModelParser(gm, file_name, gene_mapping_file=None, testMode=False):
     #   if gID not in gm._geneModels: gm._geneModels[gID] = []
     #
     #   gm._geneModels[gID].append( gx )
-    if testMode:
-        return True
 
 
 #
 #  MT chromosome
 #
-def mitoGeneModelParser(gm, file_name, gene_mapping_file=None, testMode=False):
+def mitoGeneModelParser(gm, file_name, gene_mapping_file=None):
     gm.name = "mitomap"
     gm._alternative_names = None
 
@@ -1011,9 +990,6 @@ def mitoGeneModelParser(gm, file_name, gene_mapping_file=None, testMode=False):
         gm._geneModels[mm.gene] = [mm]
 
     file.close()
-
-    if testMode:
-        return True
 
 
 class parserLine4UCSC_genePred:
@@ -1090,7 +1066,7 @@ def geneMapping(fileName=None):
     return altName
 
 
-def refSeqParser(gm, location=None, gene_mapping_file=None, testMode=False):
+def refSeqParser(gm, location=None, gene_mapping_file=None):
     colNames = Columns4FileFormat["refSeq"]
     lR = parserLine4UCSC_genePred(colNames)
 
@@ -1104,10 +1080,6 @@ def refSeqParser(gm, location=None, gene_mapping_file=None, testMode=False):
         if line[0] == "#":
             continue
 
-        if testMode and nLR > NumOfLine2Read4Test:
-            GMF.close()
-            return True
-
         tm, cs = lR.parse(line)
         tm.gene = cs["name2"]
 
@@ -1118,11 +1090,9 @@ def refSeqParser(gm, location=None, gene_mapping_file=None, testMode=False):
         gm.addModelToDict(tm)
 
     GMF.close()
-    if testMode:
-        return True
 
 
-def refFlatParser(gm, file_name, gene_mapping_file="default", testMode=False):
+def refFlatParser(gm, file_name, gene_mapping_file="default"):
     assert gene_mapping_file == "default"
 
     # column names
@@ -1142,10 +1112,6 @@ def refFlatParser(gm, file_name, gene_mapping_file="default", testMode=False):
 
             continue
 
-        if testMode and nLR > NumOfLine2Read4Test:
-            GMF.close()
-            return True
-
         tm, cs = lR.parse(line)
         tm.gene = cs["geneName"]
 
@@ -1156,13 +1122,9 @@ def refFlatParser(gm, file_name, gene_mapping_file="default", testMode=False):
         gm.addModelToDict(tm)
 
     GMF.close()
-    if testMode:
-        return True
 
 
-def knownGeneParser(
-    gm, file_name, gene_mapping_file="default", testMode=False
-):
+def knownGeneParser(gm, file_name, gene_mapping_file="default"):
     colNames = Columns4FileFormat["knownGene"]
     lR = parserLine4UCSC_genePred(colNames)
 
@@ -1171,9 +1133,6 @@ def knownGeneParser(
             os.path.dirname(file_name), "kgId2Sym.txt.gz"
         )
 
-    if not testMode:
-        gm._alternative_names = geneMapping(gene_mapping_file)
-
     gmf = openFile(file_name)
 
     trIdC = defaultdict(int)
@@ -1181,14 +1140,9 @@ def knownGeneParser(
         if line[0] == "#":
             continue
 
-        if testMode and nLR > NumOfLine2Read4Test:
-            gmf.close()
-            return True
-
         tm, cs = lR.parse(line)
         try:
-            if not testMode:
-                tm.gene = gm._alternative_names[cs["name"]]
+            tm.gene = gm._alternative_names[cs["name"]]
         except KeyError:
             tm.gene = cs["name"]
 
@@ -1199,8 +1153,6 @@ def knownGeneParser(
         gm.addModelToDict(tm)
 
     gmf.close()
-    if testMode:
-        return True
 
 
 #  format = refseq
@@ -1211,15 +1163,14 @@ def knownGeneParser(
 
 
 # ccdsGene
-def ccdsParser(gm, file_name, gene_mapping_file="default", testMode=False):
+def ccdsParser(gm, file_name, gene_mapping_file="default"):
     colNames = Columns4FileFormat["ccds"]
     lR = parserLine4UCSC_genePred(colNames)
 
     if gene_mapping_file == "default":
         gene_mapping_file = os.path.dirname(file_name) + "/ccdsId2Sym.txt.gz"
 
-    if not testMode:
-        gm._alternative_names = geneMapping(gene_mapping_file)
+    gm._alternative_names = geneMapping(gene_mapping_file)
 
     GMF = openFile(file_name)
 
@@ -1228,14 +1179,9 @@ def ccdsParser(gm, file_name, gene_mapping_file="default", testMode=False):
         if line[0] == "#":
             continue
 
-        if testMode and nLR > NumOfLine2Read4Test:
-            GMF.close()
-            return True
-
         tm, cs = lR.parse(line)
         try:
-            if not testMode:
-                tm.gene = gm._alternative_names[cs["name"]]
+            tm.gene = gm._alternative_names[cs["name"]]
         except KeyError:
             tm.gene = cs["name"]
 
@@ -1246,17 +1192,13 @@ def ccdsParser(gm, file_name, gene_mapping_file="default", testMode=False):
         gm.addModelToDict(tm)
 
     GMF.close()
-    if testMode:
-        return True
 
 
-def ucscGenePredParser(
-    gm, file_name, gene_mapping_file="default", testMode=False
-):
+def ucscGenePredParser(gm, file_name, gene_mapping_file="default"):
     colNames = Columns4FileFormat["ucscGenePred"]
     lR = parserLine4UCSC_genePred(colNames)
 
-    if (not testMode) and (gene_mapping_file != "default"):
+    if gene_mapping_file != "default":
         gm._alternative_names = geneMapping(gene_mapping_file)
 
     GMF = openFile(file_name)
@@ -1265,10 +1207,6 @@ def ucscGenePredParser(
     for nLR, line in enumerate(GMF):
         if line[0] == "#":
             continue
-
-        if testMode and nLR > NumOfLine2Read4Test:
-            GMF.close()
-            return True
 
         tm, cs = lR.parse(line)
         try:
@@ -1283,8 +1221,6 @@ def ucscGenePredParser(
         gm.addModelToDict(tm)
 
     GMF.close()
-    if testMode:
-        return True
 
 
 FORMAT = namedtuple("format", "name parser")
@@ -1301,45 +1237,44 @@ KNOWN_FORMAT = {
     "gtf": FORMAT(*["gtf", gtfGeneModelParser]),
     "pickled": FORMAT(*["pickled", pickledGeneModelParser]),
     "mitomap.txt": FORMAT(*["mito", mitoGeneModelParser]),
-    "mito": FORMAT(*["mito", mitoGeneModelParser]),
+    # "mito": FORMAT(*["mito", mitoGeneModelParser]),
     "default": FORMAT(*["default", defaultGeneModelParser]),
     "ucscgenepred": FORMAT(*["ucscgenepred", ucscGenePredParser]),
 }
 # fmt: off
 KNOWN_FORMAT_NAME = \
-    "refflat,refseq,ccds,knowngene,gtf,pickled,mito," \
-    "default,ucscgenepred".split(",")
+    "refflat,refseq,ccds,knowngene,gtf,pickled," \
+    "default,ucscgenepred".split(",")   # "mito," \
 # fmt: on
 
 
 def infer_format(file_name="refGene.txt.gz", file_format=None):
     acceptedFormat = []
 
-    known_format = KNOWN_FORMAT_NAME
+    known_formats = KNOWN_FORMAT_NAME
     if file_format:
-        known_format = [file_format]
+        known_formats = [file_format]
 
-    for fn in known_format:
+    for format_name in known_formats:
         gm = GeneModelDB()
-        fm = KNOWN_FORMAT[fn]
+        fm = KNOWN_FORMAT[format_name]
+        print("trying format parser:", format_name)
         try:
-            fm.parser(
-                gm, file_name, gene_mapping_file="default", testMode=True
-            )
+            print("trying format parser:", fm.name)
+            fm.parser(gm, file_name, gene_mapping_file="default")
         except Exception:
             # import traceback
-
             # traceback.print_exc()
             continue
 
-        acceptedFormat.append(fn)
+        acceptedFormat.append(format_name)
 
     if len(acceptedFormat) != 1:
         accepted_formats = ",".join(acceptedFormat)
         raise Exception(
             f"[{file_name}:'{accepted_formats}'] non-mataching/more "
             f"than 1 match/match-not-found "
-            f"from known formats [{known_format}]\nplease specify by "
+            f"from known formats [{known_formats}]\nplease specify by "
             f"--TrawFormat"
         )
 

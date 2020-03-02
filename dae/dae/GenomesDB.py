@@ -104,6 +104,7 @@ class GenomesDB(object):
             gene_model_id = self.get_gene_model_id(genome_id)
 
         key = genome_id + gene_model_id
+
         if key not in self._gene_models:
             gene_model = self.get_gene_model(gene_model_id, genome_id)
             self._gene_models[key] = gene_model
