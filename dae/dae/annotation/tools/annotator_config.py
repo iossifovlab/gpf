@@ -1,5 +1,6 @@
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.annotation_conf import annotation_conf_schema
+from dae.utils.dict_utils import recursive_dict_update
 
 
 def annotation_config_cli_options(gpf_instance):
@@ -94,14 +95,9 @@ class AnnotationConfigParser:
         for config_section in config.sections:
             if config_section.annotator is None:
                 continue
-            config_section = GPFConfigParser.modify_tuple(
-                # TODO / FIXME
-                # This should be fine since the defaults_dict is updated
-                # with the values of options, but should be double-checked
-                # and perhaps written in a clearer way
-                config_section,
-                defaults_dict,
-            )
+            config_dict = GPFConfigParser._namedtuple_to_dict(config_section)
+            config_dict = recursive_dict_update(defaults_dict, config_dict)
+            config_section = GPFConfigParser._dict_to_namedtuple(config_dict)
             config_section = cls.parse_section(config_section)
             parsed_sections.append(config_section)
         config = GPFConfigParser.modify_tuple(

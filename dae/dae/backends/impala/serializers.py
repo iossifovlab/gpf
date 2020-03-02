@@ -27,6 +27,7 @@ class ParquetSerializer(object):
         "chrome_bin",
         "coding2",
         "region_bin",
+        "coding_bin",
     ]
 
     summary = namedtuple(
