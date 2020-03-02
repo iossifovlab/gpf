@@ -403,7 +403,7 @@ Columns4FileFormat = {
 }
 
 
-FILE_FORMAT_COLUMNS = {}
+# FILE_FORMAT_COLUMNS = {}
 
 
 #
