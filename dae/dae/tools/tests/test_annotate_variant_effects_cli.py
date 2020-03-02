@@ -4,7 +4,8 @@ import tempfile
 import shutil
 
 import pandas as pd
-from dae.GeneModelFiles import load_gene_models
+
+# from dae.GeneModelFiles import load_gene_models
 
 
 def relative_to_this_test_folder(path):

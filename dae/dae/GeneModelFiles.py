@@ -596,7 +596,6 @@ class GtfFileReader:
 
             if not dx:
                 continue
-            # print(x, dx)
             n, d = dx
             d = d.strip('"')
 
@@ -607,7 +606,6 @@ class GtfFileReader:
                     atx[n] = [atx[n], d]
             else:
                 atx[n] = d
-        # print( atx )
         return atx
 
     @staticmethod
