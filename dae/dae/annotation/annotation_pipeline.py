@@ -73,9 +73,12 @@ class PipelineAnnotator(CompositeVariantAnnotator):
 
     @staticmethod
     def build(options, config_file, work_dir, genomes_db, defaults=None):
-        pipeline_config = AnnotationConfigParser.read_and_parse_file_configuration(
-            options, config_file, defaults
-        )
+        # fmt: off
+        pipeline_config = \
+                AnnotationConfigParser.read_and_parse_file_configuration(
+                    options, config_file, defaults
+                )
+        # fmt: on
         assert pipeline_config.sections
 
         pipeline = PipelineAnnotator(pipeline_config, genomes_db)

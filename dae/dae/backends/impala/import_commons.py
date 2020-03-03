@@ -69,7 +69,6 @@ def construct_import_annotation_pipeline(
         "values": gpf_instance.dae_config.annotation_defaults._asdict()
     }
     annotation_defaults = recursive_dict_update(annotation_defaults, defaults)
-
     pipeline = PipelineAnnotator.build(
         options,
         config_filename,
@@ -847,6 +846,7 @@ class Variants2ParquetTool:
             families_filename,
             families_params,
         ) = FamiliesLoader.parse_cli_arguments(argv)
+
         families_loader = FamiliesLoader(
             families_filename, params=families_params
         )
@@ -914,7 +914,7 @@ class Variants2ParquetTool:
             annotation_configfile=argv.annotation_config,
             defaults=annotation_defaults,
         )
-
+        print("annotation_defaults", annotation_defaults)
         variants_loader = AnnotationPipelineDecorator(
             variants_loader, annotation_pipeline
         )
@@ -929,6 +929,7 @@ class Variants2ParquetTool:
             variants_filenames,
             variants_params,
         ) = cls.VARIANTS_LOADER_CLASS.parse_cli_arguments(argv)
+
         variants_loader = cls.VARIANTS_LOADER_CLASS(
             families,
             variants_filenames,
