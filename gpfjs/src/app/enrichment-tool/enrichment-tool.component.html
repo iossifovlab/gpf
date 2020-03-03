@@ -1,7 +1,7 @@
 <div *ngIf="selectedDataset$ | async as dataset">
   <div *ngIf="dataset.accessRights">
 
-    <div class="container">
+    <div class="container" style="margin-bottom: 20px;">
       <gpf-genes-block [showAllTab]="false"></gpf-genes-block>
       <gpf-enrichment-models-block [selectedDatasetId]="selectedDatasetId"></gpf-enrichment-models-block>
       
