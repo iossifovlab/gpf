@@ -44,7 +44,6 @@ class GPFInstance(object):
         defaults=None,
         load_eagerly=False,
     ):
-
         if dae_config is None:
             # FIXME Merge defaults with newly-loaded config
             assert not defaults, defaults

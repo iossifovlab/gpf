@@ -81,9 +81,7 @@ class AnnotationConfigParser:
         )
 
         config = GPFConfigParser.modify_tuple(config, defaults_dict)
-
         config = GPFConfigParser.modify_tuple(config, {"options": options})
-
         config = cls._setup_defaults(config)
 
         config = GPFConfigParser.modify_tuple(config, {"columns": {}})
@@ -96,7 +94,7 @@ class AnnotationConfigParser:
             if config_section.annotator is None:
                 continue
             config_dict = GPFConfigParser._namedtuple_to_dict(config_section)
-            config_dict = recursive_dict_update(defaults_dict, config_dict)
+            config_dict = recursive_dict_update(config_dict, defaults_dict)
             config_section = GPFConfigParser._dict_to_namedtuple(config_dict)
             config_section = cls.parse_section(config_section)
             parsed_sections.append(config_section)

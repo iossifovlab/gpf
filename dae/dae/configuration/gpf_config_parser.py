@@ -1,4 +1,5 @@
 import os
+import sys
 import glob
 
 import yaml
@@ -49,13 +50,16 @@ class GPFConfigParser:
 
         class ConfigTuple(CONFIG_TUPLE):  # noqa
             def __getattr__(self, name):
+                # print(
+                #     f"WARNING: Attempting to get non-existent attribute "
+                #     f"{name} on tuple!",
+                #     file=sys.stderr,
+                # )
+
                 # FIXME Temporary hack to enable default values
                 # only for public attributes
                 if name[0:2] == "__":
                     raise AttributeError()
-                # print(
-                #     f'WARNING: Attempting to get non-existent attribute '
-                #     f'{name} on tuple!', file=sys.stderr)
                 return None
 
             def __repr__(self):
