@@ -2,6 +2,7 @@
 import gzip
 import pickle
 import os
+import sys
 from collections import defaultdict, namedtuple
 
 import pandas as pd
@@ -730,8 +731,10 @@ def defaultGeneModelParser(gm, file_name, gene_mapping_file=None):
     gm._updateIndexes()
 
 
-def load_default_gene_models_format(filename, gene_mapping_file=None):
-    df = pd.read_csv(filename, sep="\t")
+def load_default_gene_models_format(
+    filename, gene_mapping_file=None, nrows=None
+):
+    df = pd.read_csv(filename, sep="\t", nrows=nrows)
     expected_columns = [
         "chr",
         "trID",
@@ -760,6 +763,7 @@ def load_default_gene_models_format(filename, gene_mapping_file=None):
         exon_ends = list(map(int, line["exonEnds"].split(",")))
         exon_frames = list(map(int, line["exonFrames"].split(",")))
         assert len(exon_starts) == len(exon_ends) == len(exon_frames)
+
         exons = []
         for start, end, frame in zip(exon_starts, exon_ends, exon_frames):
             exons.append(Exon(start=start, stop=end, frame=frame))
@@ -779,19 +783,163 @@ def load_default_gene_models_format(filename, gene_mapping_file=None):
             exons=exons,
             attributes=attributes,
         )
-        gm.addModelToDict(tm)
+        gm.transcriptModels[tm.tr_id] = tm
 
     gm._updateIndexes()
+    if nrows is not None:
+        return True
+
     return gm
 
 
-def pickledGeneModelParser(gm, file_name, gene_mapping_file=None):
-    import pickle
+def load_ref_flat_gene_models_format(
+    filename, gene_mapping_file=None, nrows=None
+):
+    df = pd.read_csv(filename, sep="\t", nrows=nrows)
+    expected_columns = [
+        "#geneName",
+        "name",
+        "chrom",
+        "strand",
+        "txStart",
+        "txEnd",
+        "cdsStart",
+        "cdsEnd",
+        "exonCount",
+        "exonStarts",
+        "exonEnds",
+    ]
+    assert set(expected_columns) == set(df.columns), (
+        set(df.columns),
+        set(expected_columns),
+    )
 
-    gm.location = file_name
-    pkl_file = open(file_name, "rb")
-    gm._utrModels, gm.transcriptModels, gm._geneModels = pickle.load(pkl_file)
-    pkl_file.close()
+    gm = GeneModelDB(location=filename)
+    records = df.to_dict(orient="records")
+
+    transcript_ids_counter = defaultdict(int)
+
+    for rec in records:
+        gene = rec["#geneName"]
+        tr_name = rec["name"]
+        chrom = rec["chrom"]
+        strand = rec["strand"]
+        tx = (int(rec["txStart"]) + 1, int(rec["txEnd"]))
+        cds = (int(rec["cdsStart"]) + 1, int(rec["cdsEnd"]))
+
+        exon_starts = list(map(int, rec["exonStarts"].strip(",").split(",")))
+        exon_ends = list(map(int, rec["exonEnds"].strip(",").split(",")))
+        assert len(exon_starts) == len(exon_ends)
+
+        exons = [
+            Exon(start + 1, end) for start, end in zip(exon_starts, exon_ends)
+        ]
+
+        transcript_ids_counter[tr_name] += 1
+        tr_id = f"{tr_name}_{transcript_ids_counter[tr_name]}"
+
+        tm = TranscriptModel(
+            gene=gene,
+            tr_id=tr_id,
+            tr_name=tr_name,
+            chrom=chrom,
+            strand=strand,
+            tx=tx,
+            cds=cds,
+            exons=exons,
+        )
+        tm.update_frames()
+        gm.addModelToDict(tm)
+
+    return gm
+
+
+def load_ref_seq_gene_models_format(
+    filename, gene_mapping_file=None, nrows=None
+):
+    df = pd.read_csv(filename, sep="\t", nrows=nrows)
+    expected_columns = [
+        "#bin",
+        "name",
+        "chrom",
+        "strand",
+        "txStart",
+        "txEnd",
+        "cdsStart",
+        "cdsEnd",
+        "exonCount",
+        "exonStarts",
+        "exonEnds",
+        "score",
+        "name2",
+        "cdsStartStat",
+        "cdsEndStat",
+        "exonFrames",
+    ]
+    assert set(expected_columns) == set(df.columns), (
+        set(df.columns),
+        set(expected_columns),
+    )
+
+    gm = GeneModelDB(location=filename)
+    records = df.to_dict(orient="records")
+
+    transcript_ids_counter = defaultdict(int)
+
+    for rec in records:
+        gene = rec["name2"]
+        tr_name = rec["name"]
+        chrom = rec["chrom"]
+        strand = rec["strand"]
+        tx = (int(rec["txStart"]) + 1, int(rec["txEnd"]))
+        cds = (int(rec["cdsStart"]) + 1, int(rec["cdsEnd"]))
+
+        exon_starts = list(map(int, rec["exonStarts"].strip(",").split(",")))
+        exon_ends = list(map(int, rec["exonEnds"].strip(",").split(",")))
+        assert len(exon_starts) == len(exon_ends)
+
+        exons = [
+            Exon(start + 1, end) for start, end in zip(exon_starts, exon_ends)
+        ]
+
+        transcript_ids_counter[tr_name] += 1
+        tr_id = f"{tr_name}_{transcript_ids_counter[tr_name]}"
+
+        attributes = {
+            k: rec[k]
+            for k in [
+                "#bin",
+                "score",
+                "exonCount",
+                "cdsStartStat",
+                "cdsEndStat",
+                "exonFrames",
+            ]
+        }
+        tm = TranscriptModel(
+            gene=gene,
+            tr_id=tr_id,
+            tr_name=tr_name,
+            chrom=chrom,
+            strand=strand,
+            tx=tx,
+            cds=cds,
+            exons=exons,
+            attributes=attributes,
+        )
+        tm.update_frames()
+        gm.addModelToDict(tm)
+
+    return gm
+
+
+# def pickledGeneModelParser(gm, file_name, gene_mapping_file=None):
+#     import pickle
+
+#     gm.location = file_name
+#     pkl_file = open(file_name, "rb")
+#     gm._utrModels, gm.transcriptModels, gm._geneModels = pickle.load(pkl_file)
+#     pkl_file.close()
 
 
 def gtfGeneModelParser(gm, file_name, gene_mapping_file=None):
@@ -1010,7 +1158,7 @@ class parserLine4UCSC_genePred:
      """
         terms = line.strip("\n").split("\t")
 
-        assert len(terms) == len(self.header)
+        assert len(terms) == len(self.header), (self.header, terms)
 
         cs = {k: v for k, v in zip(self.header, terms)}
 
@@ -1233,7 +1381,7 @@ KNOWN_FORMAT = {
     "knownGene.txt.gz": FORMAT(*["knowngene", knownGeneParser]),
     "knowngene": FORMAT(*["knowngene", knownGeneParser]),
     "gtf": FORMAT(*["gtf", gtfGeneModelParser]),
-    "pickled": FORMAT(*["pickled", pickledGeneModelParser]),
+    # "pickled": FORMAT(*["pickled", pickledGeneModelParser]),
     "mitomap.txt": FORMAT(*["mito", mitoGeneModelParser]),
     # "mito": FORMAT(*["mito", mitoGeneModelParser]),
     "default": FORMAT(*["default", defaultGeneModelParser]),
@@ -1256,13 +1404,12 @@ def infer_format(file_name="refGene.txt.gz", file_format=None):
     for format_name in known_formats:
         gm = GeneModelDB()
         fm = KNOWN_FORMAT[format_name]
-        print("trying format parser:", format_name)
         try:
-            print("trying format parser:", fm.name)
             fm.parser(gm, file_name, gene_mapping_file="default")
         except Exception:
-            # import traceback
-            # traceback.print_exc()
+            import traceback
+
+            traceback.print_exc(file=sys.stderr)
             continue
 
         acceptedFormat.append(format_name)

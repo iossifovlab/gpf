@@ -9,8 +9,10 @@ from dae.GeneModelFiles import (
     refFlatParser,
     ccdsParser,
     knownGeneParser,
-    load_default_gene_models_format,
     defaultGeneModelParser,
+    load_default_gene_models_format,
+    load_ref_flat_gene_models_format,
+    load_ref_seq_gene_models_format,
 )
 
 
@@ -33,6 +35,20 @@ def test_gene_models_from_ref_gene(fixture_dirname):
     assert len(gm._geneModels) == 12
 
 
+def test_gene_models_from_ref_seq_orig(fixture_dirname):
+    filename = fixture_dirname("gene_models/test_ref_seq_hg38.txt")
+    assert os.path.exists(filename)
+    gm = GeneModelDB()
+    refSeqParser(gm, filename)
+    assert len(gm.transcriptModels) == 20
+    assert len(gm._geneModels) == 8
+
+    gm1 = load_ref_seq_gene_models_format(filename)
+    assert gm1 is not None
+    assert len(gm1.transcriptModels) == 20
+    assert len(gm1._geneModels) == 8
+
+
 def test_gene_models_from_gencode(fixture_dirname):
     filename = fixture_dirname("gene_models/test_gencode.gtf")
     assert os.path.exists(filename)
@@ -50,15 +66,19 @@ def test_gene_models_from_ref_flat(fixture_dirname):
     assert len(gm.transcriptModels) == 19
     assert len(gm._geneModels) == 19
 
+    gm1 = load_ref_flat_gene_models_format(filename)
+    assert gm1 is not None
+    assert len(gm1.transcriptModels) == 19
+    assert len(gm1._geneModels) == 19
 
-@pytest.mark.xfail(reason="CCDS file format parser is broken")
+
 def test_gene_models_from_ccds(fixture_dirname):
     filename = fixture_dirname("gene_models/test_ccds.txt")
     assert os.path.exists(filename)
     gm = GeneModelDB()
     ccdsParser(gm, filename, gene_mapping_file=None)
-    assert len(gm.transcriptModels) == 19
-    assert len(gm._geneModels) == 19
+    assert len(gm.transcriptModels) == 21
+    assert len(gm._geneModels) == 21
 
 
 @pytest.mark.xfail(reason="KnownGene file format parser is broken")
@@ -101,16 +121,3 @@ def test_default_gene_models_loader_ref_seq_2013(genomes_db_2013):
     gm_yoonha = GeneModelDB()
     defaultGeneModelParser(gm_yoonha, ref_seq_gene_model.file)
     assert len(gm.transcriptModels) == len(gm_yoonha.transcriptModels)
-
-
-def test_yoonha_default_gene_models_loader(genomes_db_2013):
-    # genome_id = genomes_db_2013.config.genomes.default_genome
-    # genome_config = getattr(genomes_db_2013.config.genome, genome_id)
-    # ref_seq_gene_model = getattr(genome_config.gene_model, "RefSeq2013")
-
-    # gm_yoonha = GeneModelDB()
-    # defaultGeneModelParser(gm_yoonha, ref_seq_gene_model.file)
-    # assert len(gm.transcriptModels) == len(gm_yoonha.transcriptModels)
-
-    gm = genomes_db_2013.get_gene_models()
-    assert gm is not None

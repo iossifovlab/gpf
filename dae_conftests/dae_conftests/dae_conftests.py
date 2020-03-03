@@ -197,7 +197,7 @@ def temp_filename(request):
     def fin():
         shutil.rmtree(dirname)
 
-    request.addfinalizer(fin)
+    # request.addfinalizer(fin)
     output = os.path.join(dirname, "temp_filename.tmp")
     return output
 
