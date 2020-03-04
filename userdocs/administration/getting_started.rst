@@ -102,6 +102,8 @@ structure:
     gpf_test
     ├── annotation.conf
     ├── DAE.conf
+    ├── datasets
+    ├── datasetsDB.conf
     ├── defaultConfiguration.conf
     ├── enrichment
     ├── geneInfo
@@ -116,6 +118,7 @@ structure:
     ├── pheno
     ├── setenv.sh
     ├── studies
+    ├── studiesDB.conf
     └── wdae
 
 
@@ -315,11 +318,12 @@ Navigate to the `comp_vcf` study folder:
     cd gpf_test/studies/comp_vcf
 
 
-Edit the configuration file ``comp_vcf.conf`` and add the following lines:
+Edit the "genotype_browser" section in the configuration file ``comp_vcf.conf`` to looks like this:
 
 .. code::
 
     [genotype_browser]
+    enabled = true
     genotype.freq.name = "Frequency"
     genotype.freq.slots = [
         {source = "exome_gnomad_af_percent", name = "exome gnomad", format = "E %%.3f"},
@@ -511,7 +515,7 @@ These values are selected from the individual who has the variant displayed in t
 They can be added when a phenotype database is attached to a study.
 
 Let's add a phenotype column. To do this, you need to define it in the study's config,
-at the beginning of the genotype browser section:
+in the genotype browser section:
 
 .. code::
 
@@ -723,7 +727,8 @@ way:
 
 After updating the annotation configuration file,
 we need to reimport the studies in order for the changes to take effect.
-To demonstrate, let's reimport the `iossifov_2014` study. Go to the iossifov_2014 directory:
+To demonstrate, let's reimport the `iossifov_2014` study. Go to the directory
+in which you downloaded it:
 
 .. code::
 
