@@ -14,13 +14,20 @@ from dae.enrichment_tool.event_counters import overlap_enrichment_result_dict
 
 
 class BackgroundBase:
+    # @staticmethod
+    # def backgrounds():
+    #     return {
+    #         # 'synonymousBackgroundModel': SynonymousBackground,
+    #         "coding_len_background_model": CodingLenBackground,
+    #         "samocha_background_model": SamochaBackground,
+    #     }
+
     @staticmethod
-    def backgrounds():
-        return {
-            # 'synonymousBackgroundModel': SynonymousBackground,
-            "coding_len_background_model": CodingLenBackground,
-            "samocha_background_model": SamochaBackground,
-        }
+    def build_background(background_id, enrichment_config):
+        if background_id == "coding_len_background_model":
+            return CodingLenBackground(enrichment_config)
+        elif background_id == "samocha_background_model":
+            return SamochaBackground(enrichment_config)
 
     def __init__(self, name, config):
         self.background = None
@@ -188,7 +195,7 @@ class CodingLenBackground(BackgroundCommon):
 
         return df
 
-    def __init__(self, config, variants_db=None):
+    def __init__(self, config):
         super(CodingLenBackground, self).__init__(
             "coding_len_background_model", config
         )
@@ -239,7 +246,7 @@ class SamochaBackground(BackgroundBase):
 
         return df
 
-    def __init__(self, config, variants_db=None):
+    def __init__(self, config):
         super(SamochaBackground, self).__init__(
             "samocha_background_model", config
         )
