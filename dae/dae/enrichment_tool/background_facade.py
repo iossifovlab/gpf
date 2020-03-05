@@ -66,6 +66,8 @@ class BackgroundFacade(object):
                 enrichment_config = self._load_enrichment_config_in_cache(
                     study_id
                 )
+                if enrichment_config is None:
+                    continue
                 for (
                     background_id
                 ) in enrichment_config.selected_background_values:
