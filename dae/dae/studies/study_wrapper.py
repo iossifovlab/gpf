@@ -466,10 +466,14 @@ class StudyWrapper(object):
         pheno_column_dfs = []
 
         for slot in self.pheno_column_slots:
+            kwargs = {"family_ids": list(families)}
+            if slot.role:
+                kwargs["roles"] = [slot.role]
+
             pheno_column_names.append(slot.source)
             pheno_column_dfs.append(
                 self.phenotype_data.get_measure_values_df(
-                    slot.source, family_ids=list(families), roles=[slot.role]
+                    slot.source, **kwargs
                 )
             )
 
@@ -869,7 +873,14 @@ class StudyWrapper(object):
             deepcopy(self.config.genotype_browser)
         )
 
-        bs_config["columns"] = bs_config["genotype"]
+        bs_config["columns"] = dict()
+        for column in bs_config["preview_columns"]:
+            assert (
+                column in bs_config["genotype"] or column in bs_config["pheno"]
+            )
+            bs_config["columns"][column] = (
+                bs_config["genotype"].get(column) or bs_config["pheno"][column]
+            )
 
         if self.pheno_filters:
             bs_config["pheno_filters"] = GPFConfigParser._namedtuple_to_dict(
