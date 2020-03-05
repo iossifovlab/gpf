@@ -182,7 +182,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
                 if variant_loader.get_attribute("source_type") == "denovo":
                     has_denovo = True
 
-                if variant_loader.get_attribute('source_type') == 'cnv':
+                if variant_loader.get_attribute("source_type") == "cnv":
                     has_denovo = True
                     has_cnv = True
 

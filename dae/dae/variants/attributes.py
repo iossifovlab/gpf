@@ -9,7 +9,7 @@ _VARIANT_TYPE_DISPLAY_NAME = {
     "deletion": "del",
     "comp": "complex",
     "cnv_p": "cnv+",
-    "cnv_m": "cnv-"
+    "cnv_m": "cnv-",
 }
 
 _ROLE_DISPLAY_NAME = {
@@ -277,11 +277,11 @@ class VariantType(enum.Enum):
             return VariantType.insertion
         elif name == "del" or name == "deletion":
             return VariantType.deletion
-        elif name == 'comp' or name == 'complex':
+        elif name == "comp" or name == "complex":
             return VariantType.comp
-        elif name == 'cnv_p ' or name.lower() == 'cnv+':
+        elif name == "cnv_p " or name.lower() == "cnv+":
             return VariantType.cnv_p
-        elif name == 'cnv_m' or name.lower() == 'cnv-':
+        elif name == "cnv_m" or name.lower() == "cnv-":
             return VariantType.cnv_m
         raise ValueError("unexpected variant type: {}".format(name))
 
@@ -298,9 +298,9 @@ class VariantType(enum.Enum):
             return VariantType.insertion
         elif vt == "d":
             return VariantType.deletion
-        elif vt == 'c':
+        elif vt == "c":
             return VariantType.comp
-        elif vt == 'C':
+        elif vt == "C":
             return VariantType.CNV
         else:
             raise ValueError("unexpected variant type: {}".format(variant))

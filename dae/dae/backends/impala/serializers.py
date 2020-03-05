@@ -37,7 +37,7 @@ class ParquetSerializer(object):
             "allele_index",
             "chrom",
             "position",
-            'end_position',
+            "end_position",
             "reference",
             "alternative",
             "variant_type",

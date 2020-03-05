@@ -99,9 +99,10 @@ class FilesystemGenotypeStorage(GenotypeStorage):
                     )
                 if file_conf.format == "cnv":
                     variants_loader = CNVLoader(
-                        families, variants_filename,
+                        families,
+                        variants_filename,
                         genomes_db.get_genome(),
-                        params=variants_params
+                        params=variants_params,
                     )
 
                 variants_loader = StoredAnnotationDecorator.decorate(
@@ -137,10 +138,7 @@ class FilesystemGenotypeStorage(GenotypeStorage):
                     "pedigree": families_config,
                 },
             },
-            "genotype_browser": {
-                "enabled": True,
-                "has_cnv": False
-            }
+            "genotype_browser": {"enabled": True, "has_cnv": False},
         }
         if not variant_loaders:
             config_dict["genotype_browser"]["enabled"] = False

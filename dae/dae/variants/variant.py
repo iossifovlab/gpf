@@ -169,7 +169,8 @@ class Allele:
     def variant_type(self) -> Optional[VariantType]:
         if self._variant_type is None and self.details:
             self._variant_type = VariantType.from_cshl_variant(
-                self.details.cshl_variant)
+                self.details.cshl_variant
+            )
         return self._variant_type
 
     @property
@@ -253,8 +254,10 @@ class Allele:
         elif not self.alternative:
             return f"{self.chrom}:{self.position} {self.reference}(ref)"
         else:
-            return f"{self.chrom}:{self.position}" \
+            return (
+                f"{self.chrom}:{self.position}"
                 f" {self.reference}->{self.alternative}"
+            )
 
 
 class Variant:

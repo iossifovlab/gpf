@@ -43,7 +43,7 @@ class CNVLoader(VariantsGenotypesLoader):
             cnv_filename,
             families=families,
             adjust_chrom_prefix=self._adjust_chrom_prefix,
-            **self.params
+            **self.params,
         )
 
         self.regions = [Region.from_str(r) for r in self.regions]
@@ -53,7 +53,8 @@ class CNVLoader(VariantsGenotypesLoader):
             region.chrom = self._adjust_chrom_prefix(region.chrom)
 
         self.annotation_schema = ParquetSchema.from_arrow(
-            ParquetSchema.BASE_SCHEMA)
+            ParquetSchema.BASE_SCHEMA
+        )
         self.set_attribute("annotation_schema", self.annotation_schema)
 
     def _is_in_regions(self, summary_variant: SummaryVariant) -> bool:
@@ -100,9 +101,7 @@ class CNVLoader(VariantsGenotypesLoader):
             if family is None:
                 continue
 
-            fv = FamilyVariant(
-                sv, family, None, best_state
-            )
+            fv = FamilyVariant(sv, family, None, best_state)
 
             yield sv, [fv]
 
@@ -137,7 +136,7 @@ class CNVLoader(VariantsGenotypesLoader):
         cnv_best_state: Optional[str] = None,
         cnv_sep: str = "\t",
         adjust_chrom_prefix=None,
-        **kwargs
+        **kwargs,
     ) -> pd.DataFrame:
         # TODO: Remove effect types when effect annotation is made
         assert families is not None
@@ -161,7 +160,7 @@ class CNVLoader(VariantsGenotypesLoader):
                 cnv_variant_type: str,
                 cnv_best_state: str,
                 "effectType": str,
-                "effectGene": str
+                "effectGene": str,
             },
         )
 
@@ -178,7 +177,9 @@ class CNVLoader(VariantsGenotypesLoader):
             map(VariantType.from_name, raw_df[cnv_variant_type])
         )
 
-        effect_genes_col = list(map(lambda x: x.split("|"), raw_df["effectGene"]))
+        effect_genes_col = list(
+            map(lambda x: x.split("|"), raw_df["effectGene"])
+        )
         effect_gene_genes = []
         effect_gene_types = []
         for idx, egs in enumerate(effect_genes_col):
@@ -213,8 +214,8 @@ class CNVLoader(VariantsGenotypesLoader):
                 "effect_type": raw_df["effectType"],
                 "effect_gene_genes": effect_gene_genes,
                 "effect_gene_types": effect_gene_types,
-                "effect_details_transcript_ids": [""]*len(chrom_col),
-                "effect_details_details": [""]*len(chrom_col),
+                "effect_details_transcript_ids": [""] * len(chrom_col),
+                "effect_details_details": [""] * len(chrom_col),
             }
         )
 
@@ -262,7 +263,7 @@ class CNVLoader(VariantsGenotypesLoader):
             "--cnv-sep",
             type=str,
             default="\t",
-            help="CNV file field separator. [Default: `\\t`]"
+            help="CNV file field separator. [Default: `\\t`]",
         )
         parser.add_argument(
             "--add-chrom-prefix",
@@ -283,15 +284,18 @@ class CNVLoader(VariantsGenotypesLoader):
     def parse_cli_arguments(
         cls, argv: Dict[str, Any]
     ) -> Tuple[str, Dict[str, Any]]:
-        return argv.cnv_file, {
-            "cnv_location": argv.cnv_location,
-            "cnv_family_id": argv.cnv_family_id,
-            "cnv_variant_type": argv.cnv_variant_type,
-            "cnv_best_state": argv.cnv_best_state,
-            "cnv_sep": argv.cnv_sep,
-            'add_chrom_prefix': argv.add_chrom_prefix,
-            'del_chrom_prefix': argv.del_chrom_prefix
-        }
+        return (
+            argv.cnv_file,
+            {
+                "cnv_location": argv.cnv_location,
+                "cnv_family_id": argv.cnv_family_id,
+                "cnv_variant_type": argv.cnv_variant_type,
+                "cnv_best_state": argv.cnv_best_state,
+                "cnv_sep": argv.cnv_sep,
+                "add_chrom_prefix": argv.add_chrom_prefix,
+                "del_chrom_prefix": argv.del_chrom_prefix,
+            },
+        )
 
     @classmethod
     def cli_defaults(cls):
@@ -301,6 +305,6 @@ class CNVLoader(VariantsGenotypesLoader):
             "cnv_variant_type": "variant",
             "cnv_best_state": "bestState",
             "cnv_sep": "\t",
-            'add_chrom_prefix': None,
-            'del_chrom_prefix': None
+            "add_chrom_prefix": None,
+            "del_chrom_prefix": None,
         }

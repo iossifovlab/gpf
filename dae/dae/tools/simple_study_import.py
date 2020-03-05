@@ -61,17 +61,17 @@ def cli_arguments(dae_config, argv=sys.argv[1:]):
     )
 
     parser.add_argument(
-        '--cnv-file',
+        "--cnv-file",
         type=str,
-        metavar='<CNV variants filename>',
-        help='CNV variants file'
+        metavar="<CNV variants filename>",
+        help="CNV variants file",
     )
 
     parser.add_argument(
-        '--dae-summary-file',
+        "--dae-summary-file",
         type=str,
-        metavar='<summary filename>',
-        help='DAE transmitted summary variants file to import'
+        metavar="<summary filename>",
+        help="DAE transmitted summary variants file to import",
     )
 
     parser.add_argument(
@@ -205,10 +205,7 @@ def main(argv, gpf_instance=None):
     if argv.cnv_file is not None:
         cnv_filename, cnv_params = CNVLoader.parse_cli_arguments(argv)
         cnv_loader = CNVLoader(
-            families,
-            cnv_filename,
-            genome=genome,
-            params=cnv_params
+            families, cnv_filename, genome=genome, params=cnv_params
         )
         # TODO: Annotate
         variant_loaders.append(cnv_loader)
