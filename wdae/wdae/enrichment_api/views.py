@@ -46,9 +46,11 @@ class EnrichmentModelsView(QueryBaseView):
     def get(self, request, dataset_id=None):
         result = {
             "background": self.get_from_config(
-                dataset_id, "background", "selected_background_values"),
+                dataset_id, "background", "selected_background_values"
+            ),
             "counting": self.get_from_config(
-                dataset_id, "counting", "selected_counting_values"),
+                dataset_id, "counting", "selected_counting_values"
+            ),
         }
         return Response(result)
 
