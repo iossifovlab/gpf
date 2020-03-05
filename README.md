@@ -1,5 +1,7 @@
 # GPF: Genotypes and Phenotypes in Families
 
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
 The Genotype and Phenotype in Families (GPF) system manages large databases
 of genetic variants and phenotypic measurements obtained from collections
 of families and individual family members.
@@ -8,13 +10,19 @@ The main application of the system has been in managing the data gathered from
 the Simons Simplex Collection, a collection of ~2,600 families with one child
 diagnosed with autism.
 
-Information on how to use GPF could be found in the
-[GPF documentation](https://iossifovlab.com/gpfuserdocs/)
+Information on how to use GPF can be found in the [GPF documentation](https://iossifovlab.com/gpfuserdocs/).
 
 ## Development
 
 We recommend to use [Anaconda environment](https://www.anaconda.com/) as a GPF
 development environment.
+
+We use [pre-commit](https://pre-commit.com/) to enforce formatting and type checking.
+It is included in the conda package dependencies below.
+Once you have cloned the repository, run the following command within it to install the hooks:
+```bash
+pre-commit install
+```
 
 ### Install GPF dependencies
 

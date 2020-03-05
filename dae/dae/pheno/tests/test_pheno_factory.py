@@ -1,8 +1,8 @@
-'''
+"""
 Created on Dec 8, 2016
 
 @author: lubo
-'''
+"""
 
 
 def test_pheno_factory_simple(fake_pheno_db):
@@ -10,11 +10,11 @@ def test_pheno_factory_simple(fake_pheno_db):
 
 
 def test_check_pheno_db(fake_pheno_db):
-    assert fake_pheno_db.has_phenotype_data('fake')
+    assert fake_pheno_db.has_phenotype_data("fake")
 
 
 def test_get_pheno_db(fake_pheno_db):
-    pheno_data = fake_pheno_db.get_phenotype_data('fake')
+    pheno_data = fake_pheno_db.get_phenotype_data("fake")
     assert pheno_data is not None
     assert pheno_data.families is not None
     assert pheno_data.instruments is not None

@@ -1,11 +1,9 @@
 import itertools
 from dae.variants.attributes import Sex
-from dae.pedigrees.families_groups import PeopleGroup, \
-    PEOPLE_GROUP_SEXES
+from dae.pedigrees.families_groups import PeopleGroup, PEOPLE_GROUP_SEXES
 
 
 class PeopleFilter:
-
     @property
     def id(self):
         raise NotImplementedError()
@@ -30,7 +28,6 @@ class PeopleFilter:
 
 
 class PeopleGroupFilter(PeopleFilter):
-
     def __init__(self, people_group, specified_value, name):
         assert isinstance(people_group, PeopleGroup)
 
@@ -62,17 +59,16 @@ class PeopleGroupFilter(PeopleFilter):
     def sex_filter(sex):
         assert isinstance(sex, Sex)
         if sex == Sex.M:
-            return PeopleGroupFilter(PEOPLE_GROUP_SEXES, Sex.M, 'Male')
+            return PeopleGroupFilter(PEOPLE_GROUP_SEXES, Sex.M, "Male")
         elif sex == Sex.F:
-            return PeopleGroupFilter(PEOPLE_GROUP_SEXES, Sex.F, 'Female')
+            return PeopleGroupFilter(PEOPLE_GROUP_SEXES, Sex.F, "Female")
         elif sex == Sex.U:
-            return PeopleGroupFilter(PEOPLE_GROUP_SEXES, Sex.U, 'Unspecified')
+            return PeopleGroupFilter(PEOPLE_GROUP_SEXES, Sex.U, "Unspecified")
         else:
-            raise ValueError(f'unexpeced sex: {sex}')
+            raise ValueError(f"unexpeced sex: {sex}")
 
 
 class MultiFilter(PeopleFilter):
-
     def __init__(self, filters=[]):
         assert all([isinstance(f, PeopleFilter) for f in filters])
         self._filters = filters
@@ -80,11 +76,11 @@ class MultiFilter(PeopleFilter):
 
     @property
     def group_id(self):
-        return '&'.join(set([f.group_id for f in self._filters]))
+        return "&".join(set([f.group_id for f in self._filters]))
 
     @property
     def id(self):
-        return ';'.join([f.id for f in self._filters])
+        return ";".join([f.id for f in self._filters])
 
     def add_filter(self, filt):
         assert isinstance(filt, PeopleFilter)
@@ -92,14 +88,11 @@ class MultiFilter(PeopleFilter):
 
     @property
     def title(self):
-        return ' and '.join([
-            filt.people_group.name for filt in self._filters
-        ])
+        return " and ".join([filt.people_group.name for filt in self._filters])
 
     @property
     def filter_name(self):
-        return ' and '.join(
-            [filt.filter_name for filt in self._filters])
+        return " and ".join([filt.filter_name for filt in self._filters])
 
     @staticmethod
     def from_list(filters):
@@ -110,7 +103,6 @@ class MultiFilter(PeopleFilter):
 
 
 class FilterCollection(object):
-
     def __init__(self, name, filters=[]):
         self.name = name
         assert all([isinstance(fo, PeopleFilter) for fo in filters])
@@ -118,11 +110,11 @@ class FilterCollection(object):
 
     @property
     def group_id(self):
-        return '&'.join(set([f.group_id for f in self._filters]))
+        return "&".join(set([f.group_id for f in self._filters]))
 
     @property
     def id(self):
-        return '#'.join([f.id for f in self._filters])
+        return "#".join([f.id for f in self._filters])
 
     @property
     def filters(self):
@@ -133,8 +125,7 @@ class FilterCollection(object):
         self._filters.append(filt)
 
     def get_filter_names(self):
-        assert all(
-            [isinstance(fo, PeopleFilter) for fo in self._filters])
+        assert all([isinstance(fo, PeopleFilter) for fo in self._filters])
 
         return [filt.filter_name for filt in self._filters]
 
@@ -152,20 +143,25 @@ class FilterCollection(object):
             people_group_ids = group.people_group_ids
             filters = []
             for people_group_id in people_group_ids:
-                assert people_group_id in families_groups, \
-                    f'{people_group_id} not in {families_groups.keys()}'
-                families_group = \
-                    families_groups.get(people_group_id)
+                assert (
+                    people_group_id in families_groups
+                ), f"{people_group_id} not in {families_groups.keys()}"
+                families_group = families_groups.get(people_group_id)
 
                 filt = []
                 for group_value in families_group.available_values:
-                    filt.append(PeopleGroupFilter(
-                        families_group, group_value, name=group_value))
+                    filt.append(
+                        PeopleGroupFilter(
+                            families_group, group_value, name=group_value
+                        )
+                    )
                 filters.append(filt)
 
-            filter_objects.append(FilterCollection(
-                name,
-                MultiFilter.from_list(
-                    list(itertools.product(*filters)))))
+            filter_objects.append(
+                FilterCollection(
+                    name,
+                    MultiFilter.from_list(list(itertools.product(*filters))),
+                )
+            )
 
         return filter_objects

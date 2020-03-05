@@ -3,11 +3,12 @@ from dae.backends.vcf.loader import VcfLoader
 
 
 def test_wild_vcf_loader_simple(
-        fixture_dirname, gpf_instance_2013, temp_dirname):
+    fixture_dirname, gpf_instance_2013, temp_dirname
+):
 
-    vcf_file1 = fixture_dirname('multi_vcf/multivcf_missing1_chr{vc}.vcf.gz')
-    vcf_file2 = fixture_dirname('multi_vcf/multivcf_missing2_chr{vc}.vcf.gz')
-    ped_file = fixture_dirname('multi_vcf/multivcf.ped')
+    vcf_file1 = fixture_dirname("multi_vcf/multivcf_missing1_chr{vc}.vcf.gz")
+    vcf_file2 = fixture_dirname("multi_vcf/multivcf_missing2_chr{vc}.vcf.gz")
+    ped_file = fixture_dirname("multi_vcf/multivcf.ped")
 
     families_loader = FamiliesLoader(ped_file)
     families = families_loader.load()
@@ -16,9 +17,7 @@ def test_wild_vcf_loader_simple(
         families,
         [vcf_file1, vcf_file2],
         gpf_instance_2013.genomes_db.get_genome(),
-        params={
-            'vcf_chromosomes': '1;2',
-        }
+        params={"vcf_chromosomes": "1;2",},
     )
     assert variants_loader is not None
 

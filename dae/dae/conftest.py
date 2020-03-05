@@ -1,1 +1,1 @@
-pytest_plugins = ['dae_conftests.dae_conftests']
+pytest_plugins = ["dae_conftests.dae_conftests"]

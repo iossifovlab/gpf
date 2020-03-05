@@ -1,29 +1,24 @@
-'''
+"""
 Created on Jun 15, 2018
 
 @author: lubo
-'''
+"""
 import pytest
 from dae.utils.variant_utils import mat2str
 
 
-@pytest.mark.parametrize('variants', [
-    'variants_impala',
-    'variants_vcf'
-])
-@pytest.mark.parametrize("fixture_name", [
-    "backends/trios2_11541",
-])
+@pytest.mark.parametrize("variants", ["variants_impala", "variants_vcf"])
+@pytest.mark.parametrize("fixture_name", ["backends/trios2_11541",])
 def test_reference_variant_single_allele(
-        variants_impl, variants, fixture_name):
+    variants_impl, variants, fixture_name
+):
 
     dfvars = variants_impl(variants)(fixture_name)
     assert dfvars is not None
 
     vs = dfvars.query_variants(
-        family_ids=['f1'],
-        return_reference=True,
-        return_unknown=True)
+        family_ids=["f1"], return_reference=True, return_unknown=True
+    )
     vs = list(vs)
     assert len(vs) == 1
 
@@ -51,15 +46,15 @@ def test_reference_variant_single_allele(
     # assert len(sv.effects) == 1
 
 
-@pytest.mark.parametrize('variants', [
-    # 'variants_impala',
-    'variants_vcf'
-])
-@pytest.mark.parametrize("fixture_name", [
-    "backends/trios2_11541",
-])
-def test_full_variants_iterator(
-        variants_impl, variants, fixture_name):
+@pytest.mark.parametrize(
+    "variants",
+    [
+        # 'variants_impala',
+        "variants_vcf"
+    ],
+)
+@pytest.mark.parametrize("fixture_name", ["backends/trios2_11541",])
+def test_full_variants_iterator(variants_impl, variants, fixture_name):
 
     fvars = variants_impl(variants)(fixture_name)
     assert fvars is not None

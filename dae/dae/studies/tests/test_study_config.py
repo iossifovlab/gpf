@@ -9,7 +9,7 @@ def test_study_config_simple(genotype_data_study_configs):
 
 
 def test_study_config_year(genotype_data_study_configs):
-    study_config = genotype_data_study_configs.get('inheritance_trio')
+    study_config = genotype_data_study_configs.get("inheritance_trio")
     assert study_config is not None
     assert study_config.year is None
 
@@ -17,38 +17,45 @@ def test_study_config_year(genotype_data_study_configs):
 def test_quads_f1_config_genotype_storage(quads_f1_config):
     assert quads_f1_config is not None
 
-    assert quads_f1_config.genotype_storage.id == 'genotype_filesystem'
+    assert quads_f1_config.genotype_storage.id == "genotype_filesystem"
 
 
-@pytest.mark.parametrize('option_name,expected_value', [
-    ('name', 'QUADS_F1'),
-    ('id', 'quads_f1'),
-    ('description', 'QUADS F1'),
-
-    ('phenotype_tool', True),
-    ('phenotype_browser', False),
-    ('phenotype_data', 'quads_f1'),
-    ('year', None),
-    ('pub_med', None),
-])
+@pytest.mark.parametrize(
+    "option_name,expected_value",
+    [
+        ("name", "QUADS_F1"),
+        ("id", "quads_f1"),
+        ("description", "QUADS F1"),
+        ("phenotype_tool", True),
+        ("phenotype_browser", False),
+        ("phenotype_data", "quads_f1"),
+        ("year", None),
+        ("pub_med", None),
+    ],
+)
 def test_quads_f1_config_attr_access(
-        quads_f1_config, option_name, expected_value):
+    quads_f1_config, option_name, expected_value
+):
     assert quads_f1_config is not None
 
     assert getattr(quads_f1_config, option_name) == expected_value
 
 
-@pytest.mark.parametrize('option_name,expected_value', [
-    ('has_present_in_child', False),
-    ('has_present_in_parent', False),
-    ('has_family_filters', False),
-    ('has_pedigree_selector', True),
-    ('has_cnv', False),
-    ('has_complex', False),
-    ('has_study_filters', True),
-])
+@pytest.mark.parametrize(
+    "option_name,expected_value",
+    [
+        ("has_present_in_child", False),
+        ("has_present_in_parent", False),
+        ("has_family_filters", False),
+        ("has_pedigree_selector", True),
+        ("has_cnv", False),
+        ("has_complex", False),
+        ("has_study_filters", True),
+    ],
+)
 def test_quads_f1_config_genotype_browser(
-        quads_f1_config, option_name, expected_value):
+    quads_f1_config, option_name, expected_value
+):
     genotype_browser_config = quads_f1_config.genotype_browser
 
     assert getattr(genotype_browser_config, option_name) == expected_value
@@ -58,31 +65,20 @@ def test_quads_f1_config_genotype_browser_pheno_filters(quads_f1_config):
     genotype_browser_config = quads_f1_config.genotype_browser
 
     first = genotype_browser_config.pheno_filters[0]._asdict()
-    print(first)
-    first["filter"] = list(map(lambda x: x._asdict(), first["filter"]))
     assert first == {
-        'name': 'Categorical',
-        'measure_type': 'categorical',
-        'filter': [
-            {
-                'filter_type': 'single',
-                'role': 'prb',
-                'measure': 'instrument1.categorical'
-            }
-        ]
+        "name": "Categorical",
+        "measure_type": "categorical",
+        "filter_type": "single",
+        "role": "prb",
+        "measure": "instrument1.categorical",
     }
     second = genotype_browser_config.pheno_filters[1]._asdict()
-    second["filter"] = list(map(lambda x: x._asdict(), second["filter"]))
     assert second == {
-        'name': 'Continuous',
-        'measure_type': 'continuous',
-        'filter': [
-            {
-                'filter_type': 'single',
-                'role': 'prb',
-                'measure': 'instrument1.continuous'
-            }
-        ]
+        "name": "Continuous",
+        "measure_type": "continuous",
+        "filter_type": "single",
+        "role": "prb",
+        "measure": "instrument1.continuous",
     }
 
 
@@ -90,65 +86,83 @@ def test_quads_f1_config_genotype_browser_present_in_role(quads_f1_config):
     genotype_browser_config = quads_f1_config.genotype_browser
 
     assert len(genotype_browser_config.present_in_role) == 2
-    assert genotype_browser_config.present_in_role[0].section_id() == 'prb'
-    assert genotype_browser_config.present_in_role[0].name == \
-        'Present in Proband and Sibling'
+    assert genotype_browser_config.present_in_role[0].section_id() == "prb"
+    assert (
+        genotype_browser_config.present_in_role[0].name
+        == "Present in Proband and Sibling"
+    )
     assert len(genotype_browser_config.present_in_role[0].roles) == 2
-    assert genotype_browser_config.present_in_role[0].roles[0] == 'prb'
-    assert genotype_browser_config.present_in_role[0].roles[1] == 'sib'
+    assert genotype_browser_config.present_in_role[0].roles[0] == "prb"
+    assert genotype_browser_config.present_in_role[0].roles[1] == "sib"
 
-    assert genotype_browser_config.present_in_role[1].section_id() == 'parent'
-    assert genotype_browser_config.present_in_role[1].name == \
-        'Parents'
+    assert genotype_browser_config.present_in_role[1].section_id() == "parent"
+    assert genotype_browser_config.present_in_role[1].name == "Parents"
     assert len(genotype_browser_config.present_in_role[1].roles) == 2
-    assert genotype_browser_config.present_in_role[1].roles[0] == 'mom'
-    assert genotype_browser_config.present_in_role[1].roles[1] == 'dad'
+    assert genotype_browser_config.present_in_role[1].roles[0] == "mom"
+    assert genotype_browser_config.present_in_role[1].roles[1] == "dad"
 
 
 @pytest.mark.parametrize(
-    'option_name,expected_name,expected_source,expected_slots', [
-        ('genotype', 'genotype', 'pedigree', [
-            {
-                'source': 'inChS',
-                'name': 'in child',
-                'id': 'genotype.in child',
-                'format': '%s'
-            },
-            {
-                'source': 'fromParentS',
-                'name': 'from parent',
-                'id': 'genotype.from parent',
-                'format': '%s'
-            }
-        ]),
-        ('effect', 'effect', None, [
-            {
-                'source': 'worstEffect',
-                'name': 'worst effect type',
-                'id': 'effect.worst effect type',
-                'format': '%s'
-            },
-            {
-                'source': 'genes',
-                'name': 'genes',
-                'id': 'effect.genes',
-                'format': '%s'
-            }
-        ]),
-        ('best', 'family genotype', 'bestSt', []),
-    ]
+    "option_name,expected_name,expected_source,expected_slots",
+    [
+        (
+            "genotype",
+            "genotype",
+            "pedigree",
+            [
+                {
+                    "source": "inChS",
+                    "name": "in child",
+                    "id": "genotype.in child",
+                    "format": "%s",
+                },
+                {
+                    "source": "fromParentS",
+                    "name": "from parent",
+                    "id": "genotype.from parent",
+                    "format": "%s",
+                },
+            ],
+        ),
+        (
+            "effect",
+            "effect",
+            None,
+            [
+                {
+                    "source": "worstEffect",
+                    "name": "worst effect type",
+                    "id": "effect.worst effect type",
+                    "format": "%s",
+                },
+                {
+                    "source": "genes",
+                    "name": "genes",
+                    "id": "effect.genes",
+                    "format": "%s",
+                },
+            ],
+        ),
+        ("best", "family genotype", "bestSt", []),
+    ],
 )
 def test_quads_f1_config_genotype_browser_columns(
-        quads_f1_config, option_name, expected_name, expected_source,
-        expected_slots):
+    quads_f1_config,
+    option_name,
+    expected_name,
+    expected_source,
+    expected_slots,
+):
     genotype_browser_config = quads_f1_config.genotype_browser
 
     assert len(genotype_browser_config.genotype) == 19
 
-    genotype_column = list(filter(
-        lambda gc: gc.section_id() == option_name,
-        genotype_browser_config.genotype
-    ))
+    genotype_column = list(
+        filter(
+            lambda gc: gc.section_id() == option_name,
+            genotype_browser_config.genotype,
+        )
+    )
 
     assert len(genotype_column) == 1
     genotype_column = genotype_column[0]
@@ -161,62 +175,89 @@ def test_quads_f1_config_genotype_browser_columns(
         assert len(genotype_column.slots) == len(expected_slots)
 
         for gc_slot, e_slot in zip(genotype_column.slots, expected_slots):
-            assert gc_slot.source == e_slot['source']
-            assert gc_slot.name == e_slot['name']
-            assert gc_slot.format == e_slot['format']
+            assert gc_slot.source == e_slot["source"]
+            assert gc_slot.name == e_slot["name"]
+            assert gc_slot.format == e_slot["format"]
 
 
 @pytest.mark.parametrize(
-    'option_name,expected_name,expected_source,expected_slots', [
-        ('continuous', 'Continuous', None, [
-            {
-                'id': 'continuous.Continuous',
-                'name': 'Continuous',
-                'role': 'prb',
-                'source': 'instrument1.continuous',
-                'format': '%s'
-            }
-        ]),
-        ('categorical', 'Categorical', None, [
-            {
-                'id': 'categorical.Categorical',
-                'name': 'Categorical',
-                'role': 'prb',
-                'source': 'instrument1.categorical',
-                'format': '%s'
-            }
-        ]),
-        ('ordinal', 'Ordinal', None, [
-            {
-                'id': 'ordinal.Ordinal',
-                'name': 'Ordinal',
-                'role': 'prb',
-                'source': 'instrument1.ordinal',
-                'format': '%s'
-            }
-        ]),
-        ('raw', 'Raw', None, [
-            {
-                'id': 'raw.Raw',
-                'name': 'Raw',
-                'role': 'prb',
-                'source': 'instrument1.raw',
-                'format': '%s'
-            }
-        ]),
-    ]
+    "option_name,expected_name,expected_source,expected_slots",
+    [
+        (
+            "continuous",
+            "Continuous",
+            None,
+            [
+                {
+                    "id": "continuous.Continuous",
+                    "name": "Continuous",
+                    "role": "prb",
+                    "source": "instrument1.continuous",
+                    "format": "%s",
+                }
+            ],
+        ),
+        (
+            "categorical",
+            "Categorical",
+            None,
+            [
+                {
+                    "id": "categorical.Categorical",
+                    "name": "Categorical",
+                    "role": "prb",
+                    "source": "instrument1.categorical",
+                    "format": "%s",
+                }
+            ],
+        ),
+        (
+            "ordinal",
+            "Ordinal",
+            None,
+            [
+                {
+                    "id": "ordinal.Ordinal",
+                    "name": "Ordinal",
+                    "role": "prb",
+                    "source": "instrument1.ordinal",
+                    "format": "%s",
+                }
+            ],
+        ),
+        (
+            "raw",
+            "Raw",
+            None,
+            [
+                {
+                    "id": "raw.Raw",
+                    "name": "Raw",
+                    "role": "prb",
+                    "source": "instrument1.raw",
+                    "format": "%s",
+                }
+            ],
+        ),
+    ],
 )
 def test_quads_f1_config_genotype_browser_pheno_columns(
-        quads_f1_config, option_name, expected_name, expected_source,
-        expected_slots):
+    quads_f1_config,
+    option_name,
+    expected_name,
+    expected_source,
+    expected_slots,
+):
     genotype_browser_config = quads_f1_config.genotype_browser
 
     assert len(genotype_browser_config.genotype) == 19
 
-    genotype_column = list(filter(
-        lambda gc: gc.section_id() == option_name,
-        genotype_browser_config.pheno
-    ))
+    genotype_column = list(
+        filter(
+            lambda gc: gc.section_id() == option_name,
+            genotype_browser_config.pheno,
+        )
+    )
 
     assert len(genotype_column) == 1
     genotype_column = genotype_column[0]
@@ -229,16 +270,18 @@ def test_quads_f1_config_genotype_browser_pheno_columns(
         assert len(genotype_column.slots) == len(expected_slots)
 
         for gc_slot, e_slot in zip(genotype_column.slots, expected_slots):
-            assert gc_slot.source == e_slot['source']
-            assert gc_slot.name == e_slot['name']
-            assert gc_slot.format == e_slot['format']
+            assert gc_slot.source == e_slot["source"]
+            assert gc_slot.name == e_slot["name"]
+            assert gc_slot.format == e_slot["format"]
 
 
 def test_quads_f1_files_and_tables(quads_f1_config):
     assert quads_f1_config.genotype_storage.files.variants[0].path.endswith(
-        'data/quads_f1.vcf')
+        "data/quads_f1.vcf"
+    )
     assert quads_f1_config.genotype_storage.files.pedigree.path.endswith(
-        'data/quads_f1.ped')
+        "data/quads_f1.ped"
+    )
     # assert quads_f1_config.files.denovo[0].path.endswith(
     #     'data/quads_f1_denovo.tsv')
 
@@ -247,13 +290,13 @@ def test_quads_f1_files_and_tables(quads_f1_config):
 
 
 def test_quads_f1_config_work_dir(quads_f1_config):
-    assert quads_f1_config.work_dir == \
-        os.path.join(studies_dir(), 'quads_f1')
+    assert quads_f1_config.work_dir == os.path.join(studies_dir(), "quads_f1")
 
 
 def test_quads_f1_config_files(quads_f1_config):
     assert quads_f1_config.genotype_storage.files is not None
     assert quads_f1_config.genotype_storage.files.pedigree is not None
     assert quads_f1_config.genotype_storage.files.pedigree.path.endswith(
-        '/data/quads_f1.ped')
+        "/data/quads_f1.ped"
+    )
     assert len(quads_f1_config.genotype_storage.files.pedigree.params) == 3

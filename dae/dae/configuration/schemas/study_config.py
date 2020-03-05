@@ -44,15 +44,6 @@ pheno_slot_schema = {
     },
 }
 
-pheno_filter_schema = {
-    "type": "dict",
-    "schema": {
-        "filter_type": {"type": "string"},
-        "role": {"type": "string"},
-        "measure": {"type": "string"},
-    },
-}
-
 genotype_schema = {
     "name": {"type": "string"},
     "source": {"type": "string"},
@@ -97,9 +88,10 @@ present_in_role_schema = {
 pheno_filters_schema = {
     "name": {"type": "string"},
     "measure_type": {"type": "string"},
-    "filter": {"type": "list", "schema": pheno_filter_schema},
+    "filter_type": {"type": "string"},
+    "role": {"type": "string"},
+    "measure": {"type": "string"},
 }
-
 
 family_schema = {
     "path": {
@@ -165,7 +157,7 @@ variants_file = {
             "vcf_omission_mode": {"type": "string"},
             "vcf_chromosomes": {"type": "string"},
         },
-        "default": {}
+        "default": {},
     },
 }
 

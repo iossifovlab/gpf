@@ -14,7 +14,7 @@ def convert(obj):
 
 
 def iterator_to_json(variants):
-    yield '['
+    yield "["
     curr = next(variants, None)
     post = next(variants, None)
     while curr is not None:
@@ -23,8 +23,8 @@ def iterator_to_json(variants):
             yield yieldval
             break
         else:
-            yield yieldval + ','
+            yield yieldval + ","
         curr = post
         post = next(variants, None)
-    yield ']'
+    yield "]"
     return 0

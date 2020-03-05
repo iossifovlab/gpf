@@ -8,7 +8,7 @@ class Scores(GenomicValues):
         super(Scores, self).__init__(config.id)
 
         self.config = config
-        self.genomic_values_col = 'scores'
+        self.genomic_values_col = "scores"
 
         self.desc = self.config.desc
         self.bins = self.config.bins
@@ -26,11 +26,10 @@ class Scores(GenomicValues):
         self.df.fillna(value=0, inplace=True)
 
     def get_scores(self):
-        return self.df['scores'].values
+        return self.df["scores"].values
 
 
 class ScoresFactory(object):
-
     def __init__(self, config):
         super(ScoresFactory, self).__init__()
         self.config = config

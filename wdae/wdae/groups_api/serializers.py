@@ -12,10 +12,13 @@ class GroupCreateSerializer(serializers.ModelSerializer):
 
     class Meta(object):
         model = Group
-        fields = ('id', 'name',)
+        fields = (
+            "id",
+            "name",
+        )
 
     def create(self, validated_data):
-        group = Group.objects.create(name=validated_data['name'])
+        group = Group.objects.create(name=validated_data["name"])
         return group
 
 
@@ -25,59 +28,58 @@ class GroupSerializer(serializers.ModelSerializer):
 
     class Meta(object):
         model = Group
-        fields = ('id', 'name',)
+        fields = (
+            "id",
+            "name",
+        )
 
 
 class GroupRetrieveSerializer(GroupSerializer):
 
     users = serializers.SlugRelatedField(
-        many=True, read_only=True, slug_field='email', source='user_set')
+        many=True, read_only=True, slug_field="email", source="user_set"
+    )
 
     datasets = serializers.SerializerMethodField()
 
     class Meta(object):
         model = Group
-        fields = ('id', 'name', 'users', 'datasets')
+        fields = ("id", "name", "users", "datasets")
 
     def get_datasets(self, group):
         datasets = shortcuts.get_objects_for_group(
-            group, 'view', klass=Dataset)
+            group, "view", klass=Dataset
+        )
         return [d.dataset_id for d in datasets]
 
 
 class PermissionChangeSerializer(serializers.Serializer):
 
     groupName = CreatableSlugRelatedField(
-        slug_field='name', queryset=Group.objects.all(), read_only=False
+        slug_field="name", queryset=Group.objects.all(), read_only=False
     )
 
     datasetId = serializers.SlugRelatedField(
         queryset=Dataset.objects.all(),
         # read_only=True,
-        slug_field='dataset_id'
-
+        slug_field="dataset_id",
     )
 
 
 class PermissionRevokeSerializer(serializers.Serializer):
 
-    groupId = serializers.PrimaryKeyRelatedField(
-        queryset=Group.objects.all()
-    )
+    groupId = serializers.PrimaryKeyRelatedField(queryset=Group.objects.all())
 
     datasetId = serializers.SlugRelatedField(
         queryset=Dataset.objects.all(),
         # read_only=True,
-        slug_field='dataset_id'
-
+        slug_field="dataset_id",
     )
 
 
 class GroupUserPermissionSerializer(serializers.Serializer):
 
-    groupId = serializers.PrimaryKeyRelatedField(
-        queryset=Group.objects.all()
-    )
+    groupId = serializers.PrimaryKeyRelatedField(queryset=Group.objects.all())
 
     Id = serializers.PrimaryKeyRelatedField(
         queryset=get_user_model().objects.all()
@@ -86,12 +88,10 @@ class GroupUserPermissionSerializer(serializers.Serializer):
 
 class GroupDatasetPermissionSerializer(serializers.Serializer):
 
-    groupId = serializers.PrimaryKeyRelatedField(
-        queryset=Group.objects.all()
-    )
+    groupId = serializers.PrimaryKeyRelatedField(queryset=Group.objects.all())
 
     datasetId = serializers.SlugRelatedField(
         queryset=Dataset.objects.all(),
         # read_only=True,
-        slug_field='dataset_id'
+        slug_field="dataset_id",
     )

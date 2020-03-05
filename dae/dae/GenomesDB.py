@@ -5,7 +5,7 @@ from dae.GeneModelFiles import load_gene_models
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.genomes_db import genomes_db_conf
 
-'''
+"""
 GA = genomesDB.get_GA()
 GA = genomesDB.getGA("hg19")
 ?? GA = genomesDB.getGA("/data/unsafe/autism/genomes/hg19/chrAll.fa") ??
@@ -24,32 +24,32 @@ gmDB = genomesDB.get_gene_models_db(
 
 gmDB = GeneModels("/home/ivan/ccdsGene.txt.gz",geneMappingFile="")
 gmDB.....
-'''
+"""
 
 
 class GenomesDB(object):
-
     def __init__(self, dae_dir, conf_file=None):
         self.dae_dir = dae_dir
         if not conf_file:
-            conf_file = dae_dir + '/genomesDB.conf'
+            conf_file = dae_dir + "/genomesDB.conf"
 
         self.config = GPFConfigParser.load_config(conf_file, genomes_db_conf)
 
         regions_x = [
-            Region.from_str(region)
-            for region in self.config.PARs.regions.X
+            Region.from_str(region) for region in self.config.PARs.regions.X
         ]
         regions_y = [
-            Region.from_str(region)
-            for region in self.config.PARs.regions.Y
+            Region.from_str(region) for region in self.config.PARs.regions.Y
         ]
         regions = {"X": regions_x, "Y": regions_y}
 
         self.config = GPFConfigParser.modify_tuple(
-            self.config, {"PARs": GPFConfigParser.modify_tuple(
-                self.config.PARs, {"regions": regions}
-            )}
+            self.config,
+            {
+                "PARs": GPFConfigParser.modify_tuple(
+                    self.config.PARs, {"regions": regions}
+                )
+            },
         )
 
         self.default_genome = self.config.genomes.default_genome
@@ -65,7 +65,9 @@ class GenomesDB(object):
     def get_gene_model_id(self, genome_id=None):
         if not genome_id:
             genome_id = self.default_genome
-        gene_model_id = getattr(self.config.genome, genome_id).default_gene_model
+        gene_model_id = getattr(
+            self.config.genome, genome_id
+        ).default_gene_model
 
         return gene_model_id
 
@@ -118,12 +120,16 @@ class GenomesDB(object):
         if not mito_genome_id:
             mito_genome_id = self.config.mito_genomes.default_mito_genome
         if not mito_gene_model_id:
-            mito_gene_model_id = \
-                self.config.mito_genome[mito_genome_id].default_gene_model
+            mito_gene_model_id = self.config.mito_genome[
+                mito_genome_id
+            ].default_gene_model
         key = mito_genome_id + mito_gene_model_id
         if key not in self._mito_gene_models:
-            mito_gene_model_file = self.config.mito_genome[mito_genome_id]. \
-                gene_model[mito_gene_model_id].file
+            mito_gene_model_file = (
+                self.config.mito_genome[mito_genome_id]
+                .gene_model[mito_gene_model_id]
+                .file
+            )
             mmDb = load_gene_models(mito_gene_model_file)
             self._mito_gene_models[key] = mmDb
         return self._mito_gene_models[key]

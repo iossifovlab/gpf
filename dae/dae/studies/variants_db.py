@@ -7,10 +7,14 @@ from dae.configuration.schemas.study_config import study_config_schema
 
 
 class VariantsDb(object):
-
     def __init__(
-            self, dae_config, pheno_db, gene_weights_db, genomes_db,
-            genotype_storage_factory):
+        self,
+        dae_config,
+        pheno_db,
+        gene_weights_db,
+        genomes_db,
+        genotype_storage_factory,
+    ):
         self.dae_config = dae_config
 
         assert pheno_db is not None
@@ -24,31 +28,27 @@ class VariantsDb(object):
         self.genotype_storage_factory = genotype_storage_factory
 
         default_config_filename = None
-        if dae_config.default_study_config and \
-                dae_config.default_study_config.conf_file:
+        if (
+            dae_config.default_study_config
+            and dae_config.default_study_config.conf_file
+        ):
             default_config_filename = dae_config.default_study_config.conf_file
 
         study_configs = GPFConfigParser.load_directory_configs(
             dae_config.studies_db.dir,
             study_config_schema,
-            default_config_filename=default_config_filename
+            default_config_filename=default_config_filename,
         )
 
-        self.genotype_data_study_configs = {
-            ds.id: ds
-            for ds in study_configs
-        }
+        self.genotype_data_study_configs = {ds.id: ds for ds in study_configs}
 
         data_groups = GPFConfigParser.load_directory_configs(
             dae_config.datasets_db.dir,
             study_config_schema,
-            default_config_filename=default_config_filename
+            default_config_filename=default_config_filename,
         )
 
-        self.genotype_data_group_configs = {
-            dg.id: dg
-            for dg in data_groups
-        }
+        self.genotype_data_group_configs = {dg.id: dg for dg in data_groups}
 
         self._filter_disabled()
 
@@ -80,10 +80,9 @@ class VariantsDb(object):
 
         overlapping = studies_ids.intersection(genotype_data_group_ids)
 
-        assert overlapping == set(), \
-            "Overlapping studies and groups ids: {}".format(
-                overlapping
-            )
+        assert (
+            overlapping == set()
+        ), "Overlapping studies and groups ids: {}".format(overlapping)
 
     def get_genotype_studies_ids(self):
         return list(self.genotype_data_study_configs.keys())
@@ -119,9 +118,10 @@ class VariantsDb(object):
     def get_all_study_configs(self):
         self._load_study_cache()
 
-        return [genotype_data_study.config
-                for genotype_data_study
-                in self._genotype_data_study_cache.values()]
+        return [
+            genotype_data_study.config
+            for genotype_data_study in self._genotype_data_study_cache.values()
+        ]
 
     def get_genotype_data_groups_ids(self):
         return list(self.genotype_data_group_configs.keys())
@@ -140,8 +140,10 @@ class VariantsDb(object):
     def get_genotype_data_group_wdae_wrapper(self, genotype_data_group_id):
         self._load_genotype_data_group_cache({genotype_data_group_id})
 
-        if genotype_data_group_id not in \
-                self._genotype_data_group_wrapper_cache:
+        if (
+            genotype_data_group_id
+            not in self._genotype_data_group_wrapper_cache
+        ):
             return None
 
         return self._genotype_data_group_wrapper_cache[genotype_data_group_id]
@@ -159,35 +161,44 @@ class VariantsDb(object):
     def get_all_genotype_data_group_configs(self):
         self._load_genotype_data_group_cache()
 
-        return [genotype_data_group.config
-                for genotype_data_group
-                in self._genotype_data_group_cache.values()]
+        return [
+            genotype_data_group.config
+            for genotype_data_group in self._genotype_data_group_cache.values()
+        ]
 
     @deprecated(details="start using GPFInstance methods")
     def get_all_ids(self):
-        return self.get_genotype_studies_ids() \
+        return (
+            self.get_genotype_studies_ids()
             + self.get_genotype_data_groups_ids()
+        )
 
     @deprecated(details="start using GPFInstance methods")
     def get_config(self, config_id):
         study_config = self.get_study_config(config_id)
-        genotype_data_group_config = \
-            self.get_genotype_data_group_config(config_id)
+        genotype_data_group_config = self.get_genotype_data_group_config(
+            config_id
+        )
         return study_config if study_config else genotype_data_group_config
 
     @deprecated(details="start using GPFInstance methods")
     def get(self, object_id):
         genotype_data_study = self.get_study(object_id)
         genotype_data_group = self.get_genotype_data_group(object_id)
-        return genotype_data_study if genotype_data_study \
-            else genotype_data_group
+        return (
+            genotype_data_study if genotype_data_study else genotype_data_group
+        )
 
     def get_wdae_wrapper(self, wdae_wrapper_id):
         study_wdae_wrapper = self.get_study_wdae_wrapper(wdae_wrapper_id)
-        genotype_data_group_wdae_wrapper = \
-            self.get_genotype_data_group_wdae_wrapper(wdae_wrapper_id)
-        return study_wdae_wrapper\
-            if study_wdae_wrapper else genotype_data_group_wdae_wrapper
+        genotype_data_group_wdae_wrapper = self.get_genotype_data_group_wdae_wrapper(
+            wdae_wrapper_id
+        )
+        return (
+            study_wdae_wrapper
+            if study_wdae_wrapper
+            else genotype_data_group_wdae_wrapper
+        )
 
     @deprecated(details="start using GPFInstance methods")
     def get_all_genotype_data(self):
@@ -197,8 +208,9 @@ class VariantsDb(object):
 
     def get_all_genotype_data_wrappers(self):
         study_wrappers = self.get_all_studies_wrapper()
-        genotype_data_group_wrappers = \
+        genotype_data_group_wrappers = (
             self.get_all_genotype_data_groups_wrapper()
+        )
         return study_wrappers + genotype_data_group_wrappers
 
     def _load_study_cache(self, study_ids=None):
@@ -222,9 +234,9 @@ class VariantsDb(object):
         if genotype_data_study is None:
             return
         self._genotype_data_study_cache[study_id] = genotype_data_study
-        self._genotype_data_study_wrapper_cache[study_id] = \
-            StudyWrapper(genotype_data_study, self.pheno_db,
-                         self.gene_weights_db)
+        self._genotype_data_study_wrapper_cache[study_id] = StudyWrapper(
+            genotype_data_study, self.pheno_db, self.gene_weights_db
+        )
 
     def _load_genotype_data_group_cache(self, genotype_data_group_ids=None):
         if genotype_data_group_ids is None:
@@ -246,22 +258,27 @@ class VariantsDb(object):
         genotype_data_group = self.make_genotype_data_group(conf)
         if genotype_data_group is None:
             return
-        self._genotype_data_group_cache[genotype_data_group_id] = \
-            genotype_data_group
-        self._genotype_data_group_wrapper_cache[genotype_data_group_id] = \
-            StudyWrapper(genotype_data_group, self.pheno_db,
-                         self.gene_weights_db)
+        self._genotype_data_group_cache[
+            genotype_data_group_id
+        ] = genotype_data_group
+        self._genotype_data_group_wrapper_cache[
+            genotype_data_group_id
+        ] = StudyWrapper(
+            genotype_data_group, self.pheno_db, self.gene_weights_db
+        )
 
     def make_genotype_data_study(self, study_config):
         if study_config is None:
             return None
 
-        genotype_storage = self.genotype_storage_factory. \
-            get_genotype_storage(study_config.genotype_storage.id)
+        genotype_storage = self.genotype_storage_factory.get_genotype_storage(
+            study_config.genotype_storage.id
+        )
 
         if genotype_storage is None:
-            storage_ids = self.genotype_storage_factory\
-                .get_genotype_storage_ids()
+            storage_ids = (
+                self.genotype_storage_factory.get_genotype_storage_ids()
+            )
             print(
                 f"Unknown genotype storage id: "
                 f"{study_config.genotype_storage.id}; "
@@ -287,8 +304,9 @@ class VariantsDb(object):
                 raise ValueError(
                     "Unknown study: {}, known studies: [{}]".format(
                         genotype_data_group_config.studies,
-                        ",".join(self.get_genotype_data_groups_ids())
-                    ))
+                        ",".join(self.get_genotype_data_groups_ids()),
+                    )
+                )
             genotype_studies.append(genotype_data_study)
         assert genotype_studies
         return GenotypeDataGroup(genotype_data_group_config, genotype_studies)

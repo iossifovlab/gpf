@@ -6,15 +6,17 @@ import copy
 import numpy as np
 import pandas as pd
 
-from typing import Iterator, Tuple, List, Dict, Any, Optional
+from typing import Iterator, Tuple, List, Dict, Any, Optional, Sequence
 
 from dae.GenomeAccess import GenomicSequence
 
 from dae.pedigrees.family import FamiliesData
 
 from dae.variants.variant import SummaryVariant
-from dae.variants.family_variant import FamilyVariant, \
-    calculate_simple_best_state
+from dae.variants.family_variant import (
+    FamilyVariant,
+    calculate_simple_best_state,
+)
 from dae.variants.attributes import Sex, GeneticModel
 
 from dae.variants.attributes import TransmissionType
@@ -40,13 +42,14 @@ class FamiliesGenotypes:
 
 
 class VariantsLoader:
-
     def __init__(
-            self, families: FamiliesData,
-            filenames: List[str],
-            transmission_type: TransmissionType,
-            params: Dict[str, Any] = {},
-            attributes: Optional[Dict[str, Any]] = None):
+        self,
+        families: FamiliesData,
+        filenames: List[str],
+        transmission_type: TransmissionType,
+        params: Dict[str, Any] = {},
+        attributes: Optional[Dict[str, Any]] = None,
+    ):
 
         assert isinstance(families, FamiliesData)
         self.families = families
@@ -81,16 +84,14 @@ class VariantsLoader:
 
 
 class VariantsLoaderDecorator(VariantsLoader):
-
-    def __init__(
-            self, variants_loader: VariantsLoader):
+    def __init__(self, variants_loader: VariantsLoader):
 
         super(VariantsLoaderDecorator, self).__init__(
             variants_loader.families,
             variants_loader.filenames,
             variants_loader.transmission_type,
             params=variants_loader.params,
-            attributes=variants_loader._attributes
+            attributes=variants_loader._attributes,
         )
         self.variants_loader = variants_loader
 
@@ -107,10 +108,10 @@ class VariantsLoaderDecorator(VariantsLoader):
 
 class AlleleFrequencyDecorator(VariantsLoaderDecorator):
     COLUMNS = [
-        'af_parents_called_count',
-        'af_parents_called_percent',
-        'af_allele_count',
-        'af_allele_freq',
+        "af_parents_called_count",
+        "af_parents_called_percent",
+        "af_allele_count",
+        "af_allele_freq",
     ]
 
     def __init__(self, variants_loader: VariantsLoader):
@@ -127,7 +128,7 @@ class AlleleFrequencyDecorator(VariantsLoaderDecorator):
         n_independent_parents = self.n_independent_parents
 
         for allele in summary_variant.alleles:
-            allele_index = allele['allele_index']
+            allele_index = allele["allele_index"]
             n_alleles = 0  # np.sum(gt == allele_index)
             allele_freq = 0.0
             n_parents_called = 0
@@ -146,54 +147,59 @@ class AlleleFrequencyDecorator(VariantsLoaderDecorator):
                     n_alleles += np.sum(person_gt == allele_index)
 
             if n_independent_parents > 0:
-                percent_parents_called = \
-                    (100.0 * n_parents_called) / n_independent_parents
+                percent_parents_called = (
+                    100.0 * n_parents_called
+                ) / n_independent_parents
             if n_parents_called > 0:
-                allele_freq = \
-                    (100.0 * n_alleles) / (2.0 * n_parents_called)
+                allele_freq = (100.0 * n_alleles) / (2.0 * n_parents_called)
 
             freq = {
-                'af_parents_called_count': n_parents_called,
-                'af_parents_called_percent': percent_parents_called,
-                'af_allele_count': n_alleles,
-                'af_allele_freq': allele_freq,
+                "af_parents_called_count": n_parents_called,
+                "af_parents_called_percent": percent_parents_called,
+                "af_allele_count": n_alleles,
+                "af_allele_freq": allele_freq,
             }
             allele.update_attributes(freq)
         return summary_variant
 
     def full_variants_iterator(self):
-        for summary_variant, fvs in \
-                self.variants_loader.full_variants_iterator():
+        for (
+            summary_variant,
+            fvs,
+        ) in self.variants_loader.full_variants_iterator():
 
             summary_variant = self.annotate_summary_variant(
-                summary_variant, fvs)
+                summary_variant, fvs
+            )
 
             yield summary_variant, fvs
 
 
 class AnnotationDecorator(VariantsLoaderDecorator):
 
-    SEP1 = '!'
-    SEP2 = '|'
-    SEP3 = ':'
+    SEP1 = "!"
+    SEP2 = "|"
+    SEP3 = ":"
 
-    CLEAN_UP_COLUMNS = set([
-        'alternatives_data',
-        'family_variant_index',
-        'family_id',
-        'variant_sexes',
-        'variant_roles',
-        'variant_inheritance',
-        'variant_in_member',
-        'genotype_data',
-        'best_state_data',
-        'genetic_model_data',
-        'inheritance_data',
-        'frequency_data',
-        'genomic_scores_data',
-        'effect_type',
-        'effect_gene'
-    ])
+    CLEAN_UP_COLUMNS = set(
+        [
+            "alternatives_data",
+            "family_variant_index",
+            "family_id",
+            "variant_sexes",
+            "variant_roles",
+            "variant_inheritance",
+            "variant_in_member",
+            "genotype_data",
+            "best_state_data",
+            "genetic_model_data",
+            "inheritance_data",
+            "frequency_data",
+            "genomic_scores_data",
+            "effect_type",
+            "effect_gene",
+        ]
+    )
 
     def __init__(self, variants_loader):
         super(AnnotationDecorator, self).__init__(variants_loader)
@@ -204,13 +210,13 @@ class AnnotationDecorator(VariantsLoaderDecorator):
         suffixes = path.suffixes
 
         if not suffixes:
-            return f'{filename}-eff.txt'
+            return f"{filename}-eff.txt"
         else:
-            suffix = ''.join(suffixes)
-            replace_with = suffix.replace('.', '-')
+            suffix = "".join(suffixes)
+            replace_with = suffix.replace(".", "-")
             filename = filename.replace(suffix, replace_with)
 
-            return f'{filename}-eff.txt'
+            return f"{filename}-eff.txt"
 
     @staticmethod
     def has_annotation_file(annotation_filename):
@@ -224,66 +230,71 @@ class AnnotationDecorator(VariantsLoaderDecorator):
             return AnnotationDecorator.SEP1.join(a)
 
         common_columns = [
-            'chrom', 'position', 'reference', 'alternative',
-            'bucket_index', 'summary_variant_index',
-            'allele_index', 'allele_count',
+            "chrom",
+            "position",
+            "reference",
+            "alternative",
+            "bucket_index",
+            "summary_variant_index",
+            "allele_index",
+            "allele_count",
         ]
 
         if variants_loader.annotation_schema is not None:
             other_columns = filter(
                 lambda col: col not in common_columns
                 and col not in AnnotationDecorator.CLEAN_UP_COLUMNS,
-                variants_loader.annotation_schema.col_names)
+                variants_loader.annotation_schema.col_names,
+            )
         else:
             other_columns = []
 
         header = common_columns[:]
-        header.extend(['effects'])
+        header.extend(["effects"])
         header.extend(other_columns)
 
-        with open(filename, 'w') as outfile:
+        with open(filename, "w") as outfile:
             outfile.write(sep.join(header))
-            outfile.write('\n')
+            outfile.write("\n")
 
             for summary_variant, _ in variants_loader.full_variants_iterator():
-                for allele_index, summary_allele in \
-                        enumerate(summary_variant.alleles):
+                for allele_index, summary_allele in enumerate(
+                    summary_variant.alleles
+                ):
                     line = []
                     rec = summary_allele.attributes
-                    rec['allele_index'] = allele_index
+                    rec["allele_index"] = allele_index
 
                     for col in common_columns:
-                        line.append(str(rec.get(col, '')))
+                        line.append(str(rec.get(col, "")))
                     if summary_allele.effect is None:
-                        line.append('')
+                        line.append("")
                     else:
-                        line.append(
-                            str(summary_allele.effect)
-                        )
+                        line.append(str(summary_allele.effect))
                     for col in other_columns:
-                        line.append(str(rec.get(col, '')))
+                        line.append(str(rec.get(col, "")))
                     outfile.write(sep.join(line))
-                    outfile.write('\n')
+                    outfile.write("\n")
 
 
 class AnnotationPipelineDecorator(AnnotationDecorator):
-
     def __init__(self, variants_loader, annotation_pipeline):
         super(AnnotationPipelineDecorator, self).__init__(variants_loader)
 
         self.annotation_pipeline = annotation_pipeline
         self.annotation_schema = annotation_pipeline.build_annotation_schema()
-        self.set_attribute('annotation_schema', self.annotation_schema)
+        self.set_attribute("annotation_schema", self.annotation_schema)
 
     def full_variants_iterator(self):
-        for summary_variant, family_variants in \
-                self.variants_loader.full_variants_iterator():
+        for (
+            summary_variant,
+            family_variants,
+        ) in self.variants_loader.full_variants_iterator():
             self.annotation_pipeline.annotate_summary_variant(summary_variant)
             yield summary_variant, family_variants
 
 
 class StoredAnnotationDecorator(AnnotationDecorator):
-
     def __init__(self, variants_loader, annotation_filename):
         super(StoredAnnotationDecorator, self).__init__(variants_loader)
 
@@ -292,18 +303,16 @@ class StoredAnnotationDecorator(AnnotationDecorator):
 
     @staticmethod
     def decorate(variants_loader, source_filename):
-        annotation_filename = \
-            StoredAnnotationDecorator.build_annotation_filename(
-                    source_filename
-                )
+        annotation_filename = StoredAnnotationDecorator.build_annotation_filename(
+            source_filename
+        )
         # assert os.path.exists(annotation_filename), \
         #     annotation_filename
         if not os.path.exists(annotation_filename):
             return variants_loader
         else:
             variants_loader = StoredAnnotationDecorator(
-                variants_loader,
-                annotation_filename
+                variants_loader, annotation_filename
             )
             return variants_loader
 
@@ -322,35 +331,37 @@ class StoredAnnotationDecorator(AnnotationDecorator):
         return token
 
     @classmethod
-    def _load_annotation_file(cls, filename, sep='\t'):
+    def _load_annotation_file(cls, filename, sep="\t"):
         assert os.path.exists(filename)
-        with open(filename, 'r') as infile:
+        with open(filename, "r") as infile:
             annot_df = pd.read_csv(
-                infile, sep=sep, index_col=False,
+                infile,
+                sep=sep,
+                index_col=False,
                 dtype={
-                    'chrom': str,
-                    'position': np.int32,
+                    "chrom": str,
+                    "position": np.int32,
                     # 'effects': str,
                 },
                 converters={
-                    'cshl_variant': cls._convert_string,
-                    'effects': cls._convert_string,
-                    'effect_gene_genes':
-                    cls._convert_array_of_strings,
-                    'effect_gene_types':
-                    cls._convert_array_of_strings,
-                    'effect_details_transcript_ids':
-                    cls._convert_array_of_strings,
-                    'effect_details_details':
-                    cls._convert_array_of_strings,
+                    "cshl_variant": cls._convert_string,
+                    "effects": cls._convert_string,
+                    "effect_gene_genes": cls._convert_array_of_strings,
+                    "effect_gene_types": cls._convert_array_of_strings,
+                    "effect_details_transcript_ids": cls._convert_array_of_strings,
+                    "effect_details_details": cls._convert_array_of_strings,
                 },
-                encoding="utf-8"
+                encoding="utf-8",
             )
-        special_columns = set(annot_df.columns) \
-            & set(['alternative', 'effect_type'])
+        special_columns = set(annot_df.columns) & set(
+            ["alternative", "effect_type"]
+        )
         for col in special_columns:
-            annot_df[col] = annot_df[col].astype(object). \
-                where(pd.notnull(annot_df[col]), None)
+            annot_df[col] = (
+                annot_df[col]
+                .astype(object)
+                .where(pd.notnull(annot_df[col]), None)
+            )
         return annot_df
 
     def full_variants_iterator(self):
@@ -360,10 +371,11 @@ class StoredAnnotationDecorator(AnnotationDecorator):
         elapsed = time.time() - start
         print(
             f"Storred annotation file loaded in in {elapsed:.2f} sec",
-            file=sys.stderr)
+            file=sys.stderr,
+        )
 
         start = time.time()
-        records = annot_df.to_dict(orient='record')
+        records = annot_df.to_dict(orient="record")
         index = 0
 
         while index < len(records):
@@ -371,8 +383,7 @@ class StoredAnnotationDecorator(AnnotationDecorator):
             variant_records = []
 
             current_record = records[index]
-            while current_record['summary_variant_index'] \
-                    == sv.summary_index:
+            while current_record["summary_variant_index"] == sv.summary_index:
                 variant_records.append(current_record)
                 index += 1
                 if index >= len(records):
@@ -388,7 +399,8 @@ class StoredAnnotationDecorator(AnnotationDecorator):
         elapsed = time.time() - start
         print(
             f"Storred annotation file parsed in {elapsed:.2f} sec",
-            file=sys.stderr)
+            file=sys.stderr,
+        )
 
 
 class VariantsGenotypesLoader(VariantsLoader):
@@ -412,20 +424,23 @@ class VariantsGenotypesLoader(VariantsLoader):
             families=families,
             filenames=filenames,
             transmission_type=transmission_type,
-            params=params)
+            params=params,
+        )
 
         self.genome = genome
+
+        self.regions: Sequence[Optional[str]]
         if regions is None or isinstance(regions, str):
             self.regions = [regions]
         else:
             self.regions = regions
 
         self._adjust_chrom_prefix = lambda chrom: chrom
-        if params.get('add_chrom_prefix', None):
-            self._chrom_prefix = params['add_chrom_prefix']
+        if params.get("add_chrom_prefix", None):
+            self._chrom_prefix = params["add_chrom_prefix"]
             self._adjust_chrom_prefix = self._add_chrom_prefix
-        elif params.get('del_chrom_prefix', None):
-            self._chrom_prefix = params['del_chrom_prefix']
+        elif params.get("del_chrom_prefix", None):
+            self._chrom_prefix = params["del_chrom_prefix"]
             self._adjust_chrom_prefix = self._del_chrom_prefix
 
         self.expect_genotype = expect_genotype
@@ -456,21 +471,19 @@ class VariantsGenotypesLoader(VariantsLoader):
         ):
             if member.sex in (Sex.F, Sex.U):
                 continue
-            res.append(bool(
-                family_variant.gt[1, member_idx] != -2)
-            )
+            res.append(bool(family_variant.gt[1, member_idx] != -2))
         return res
 
     @classmethod
     def _calc_genetic_model(
         cls, family_variant: FamilyVariant, genome: GenomicSequence
     ) -> GeneticModel:
-        if family_variant.chromosome in ('X', 'chrX'):
+        if family_variant.chromosome in ("X", "chrX"):
             male_ploidy = get_locus_ploidy(
                 family_variant.chromosome,
                 family_variant.position,
                 Sex.M,
-                genome
+                genome,
             )
             if male_ploidy == 2:
                 if not all(cls._get_diploid_males(family_variant)):
@@ -487,25 +500,23 @@ class VariantsGenotypesLoader(VariantsLoader):
 
     @classmethod
     def _calc_best_state(
-        cls, family_variant: FamilyVariant, genome: GenomicSequence,
-        force: bool = True
+        cls,
+        family_variant: FamilyVariant,
+        genome: GenomicSequence,
+        force: bool = True,
     ) -> np.array:
 
         male_ploidy = get_locus_ploidy(
-            family_variant.chromosome,
-            family_variant.position,
-            Sex.M,
-            genome
+            family_variant.chromosome, family_variant.position, Sex.M, genome
         )
 
-        if family_variant.chromosome in ('X', 'chrX') and male_ploidy == 1:
+        if family_variant.chromosome in ("X", "chrX") and male_ploidy == 1:
             best_state = calculate_simple_best_state(
                 family_variant.gt, family_variant.allele_count
             )
             male_ids = [
                 person_id
-                for person_id, person
-                in family_variant.family.persons.items()
+                for person_id, person in family_variant.family.persons.items()
                 if person.sex == Sex.M
             ]
             male_indices = family_variant.family.members_index(male_ids)
@@ -537,23 +548,19 @@ class VariantsGenotypesLoader(VariantsLoader):
         best_state = family_variant._best_state
         genotype = best2gt(best_state)
         male_ploidy = get_locus_ploidy(
-            family_variant.chromosome,
-            family_variant.position,
-            Sex.M,
-            genome
+            family_variant.chromosome, family_variant.position, Sex.M, genome
         )
         ploidy = np.sum(best_state, 0)
         genetic_model = GeneticModel.autosomal
 
-        if family_variant.chromosome in ('X', 'chrX'):
+        if family_variant.chromosome in ("X", "chrX"):
             genetic_model = GeneticModel.X
             if male_ploidy == 2:
                 genetic_model = GeneticModel.pseudo_autosomal
 
             male_ids = [
                 person_id
-                for person_id, person
-                in family_variant.family.persons.items()
+                for person_id, person in family_variant.family.persons.items()
                 if person.sex == Sex.M
             ]
             male_indices = family_variant.family.members_index(male_ids)
@@ -570,19 +577,20 @@ class VariantsGenotypesLoader(VariantsLoader):
     def _add_chrom_prefix(self, chrom):
         assert self._chrom_prefix is not None
         if self._chrom_prefix not in chrom:
-            return f'{self._chrom_prefix}{chrom}'
+            return f"{self._chrom_prefix}{chrom}"
         else:
             return chrom
 
     def _del_chrom_prefix(self, chrom):
         assert self._chrom_prefix is not None
         if self._chrom_prefix in chrom:
-            return chrom[len(self._chrom_prefix):]
+            return chrom[len(self._chrom_prefix) :]
         else:
             return chrom
 
     def full_variants_iterator(
-            self) -> Iterator[Tuple[SummaryVariant, List[FamilyVariant]]]:
+        self,
+    ) -> Iterator[Tuple[SummaryVariant, List[FamilyVariant]]]:
         full_iterator = self._full_variants_iterator_impl()
         for summary_variant, family_variants in full_iterator:
             chrom = self._adjust_chrom_prefix(summary_variant.chromosome)
@@ -598,18 +606,13 @@ class VariantsGenotypesLoader(VariantsLoader):
                     assert family_variant._genetic_model is None
                     assert family_variant.gt is not None
 
-                    family_variant._genetic_model = \
-                        self._calc_genetic_model(
-                            family_variant,
-                            self.genome
-                        )
+                    family_variant._genetic_model = self._calc_genetic_model(
+                        family_variant, self.genome
+                    )
 
-                    family_variant._best_state = \
-                        self._calc_best_state(
-                            family_variant,
-                            self.genome,
-                            force=False
-                        )
+                    family_variant._best_state = self._calc_best_state(
+                        family_variant, self.genome, force=False
+                    )
                     for fa in family_variant.alleles:
                         fa._best_state = family_variant.best_state
                         fa._genetic_model = family_variant.genetic_model
@@ -618,8 +621,10 @@ class VariantsGenotypesLoader(VariantsLoader):
                     assert family_variant._genetic_model is None
                     assert family_variant.gt is None
 
-                    family_variant.gt, family_variant._genetic_model = \
-                        self._calc_genotype(family_variant, self.genome)
+                    (
+                        family_variant.gt,
+                        family_variant._genetic_model,
+                    ) = self._calc_genotype(family_variant, self.genome)
                     for fa in family_variant.alleles:
                         fa.gt = family_variant.gt
                         fa._genetic_model = family_variant.genetic_model
@@ -634,28 +639,32 @@ class VariantsGenotypesLoader(VariantsLoader):
             assert key in param_defaults, (key, list(param_defaults.keys()))
             if value != param_defaults[key]:
                 if value is None:
-                    result[key] = ''
+                    result[key] = ""
                 else:
-                    result[key] = f'{value}'
+                    result[key] = f"{value}"
 
         return result
 
     @classmethod
     def cli_options(cls, parser):
         parser.add_argument(
-            '--add-chrom-prefix', type=str, default=None,
-            help='Add specified prefix to each chromosome name in '
-            'variants file'
+            "--add-chrom-prefix",
+            type=str,
+            default=None,
+            help="Add specified prefix to each chromosome name in "
+            "variants file",
         )
         parser.add_argument(
-            '--del-chrom-prefix', type=str, default=None,
-            help='Removes specified prefix from each chromosome name in '
-            'variants file'
+            "--del-chrom-prefix",
+            type=str,
+            default=None,
+            help="Removes specified prefix from each chromosome name in "
+            "variants file",
         )
 
     @classmethod
     def cli_defaults(cls):
         return {
-            'add_chrom_prefix': None,
-            'del_chrom_prefix': None,
+            "add_chrom_prefix": None,
+            "del_chrom_prefix": None,
         }

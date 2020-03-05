@@ -5,17 +5,23 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 
 
 def main(gpf_instance=None, argv=None):
-    description = 'Generate genovo gene sets tool'
+    description = "Generate genovo gene sets tool"
     parser = argparse.ArgumentParser(description=description)
 
     parser.add_argument(
-        '--show-studies', help='This option will print available '
-        'genotype studies and groups names', default=False,
-        action='store_true')
+        "--show-studies",
+        help="This option will print available "
+        "genotype studies and groups names",
+        default=False,
+        action="store_true",
+    )
     parser.add_argument(
-        '--studies', help='Specify genotype studies and groups '
-        'names for generating denovo gene sets. Default to all.',
-        default=None, action='store')
+        "--studies",
+        help="Specify genotype studies and groups "
+        "names for generating denovo gene sets. Default to all.",
+        default=None,
+        action="store",
+    )
 
     args = parser.parse_args(argv)
 
@@ -29,7 +35,7 @@ def main(gpf_instance=None, argv=None):
     else:
         if args.studies:
             filter_studies_ids = None
-            studies = args.studies.split(',')
+            studies = args.studies.split(",")
             print("generating de Novo gene sets for studies:", studies)
             filter_studies_ids = [
                 study_id
@@ -39,5 +45,5 @@ def main(gpf_instance=None, argv=None):
             denovo_gene_sets_db._build_cache(filter_studies_ids)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -1,8 +1,8 @@
-'''
+"""
 Created on Jul 23, 2018
 
 @author: lubo
-'''
+"""
 import os
 import pytest
 import pandas as pd
@@ -11,9 +11,7 @@ from dae.pedigrees.loader import FamiliesLoader
 from dae.pedigrees.family import FamiliesData
 
 
-@pytest.mark.parametrize("fixture_name", [
-    "pedigrees/family_simple.txt"
-])
+@pytest.mark.parametrize("fixture_name", ["pedigrees/family_simple.txt"])
 def test_load_family_simple(fixture_name, temp_filename, fixture_dirname):
     family_filename = fixture_dirname(fixture_name)
     assert os.path.exists(family_filename)

@@ -13,68 +13,55 @@ _VARIANT_TYPE_DISPLAY_NAME = {
 }
 
 _ROLE_DISPLAY_NAME = {
-    'maternal_grandmother': 'Maternal Grandmother',
-    'maternal_grandfather': 'Maternal Grandfather',
-    'paternal_grandmother': 'Paternal Grandmother',
-    'paternal_grandfather': 'Paternal Grandfather',
-
-    'mom': 'Mom',
-    'dad': 'Dad',
-    'parent': 'Parent',
-
-    'prb': 'Proband',
-    'sib': 'Sibling',
-    'child': 'Child',
-
-    'maternal_half_sibling': 'Maternal Half Sibling',
-    'paternal_half_sibling': 'Paternal Half Sibling',
-    'half_sibling': 'Half Sibling',
-
-    'maternal_aunt': 'Maternal Aunt',
-    'maternal_uncle': 'Maternal Uncle',
-    'paternal_aunt': 'Paternal Aunt',
-    'paternal_uncle': 'Paternal Uncle',
-
-    'maternal_cousin': 'Maternal Cousin',
-    'paternal_cousin': 'Paternal Cousin',
-
-    'step_mom': 'Step Mom',
-    'step_dad': 'Step Dad',
-    'spouse': 'Spouse',
-
-    'unknown': 'Unknown'
+    "maternal_grandmother": "Maternal Grandmother",
+    "maternal_grandfather": "Maternal Grandfather",
+    "paternal_grandmother": "Paternal Grandmother",
+    "paternal_grandfather": "Paternal Grandfather",
+    "mom": "Mom",
+    "dad": "Dad",
+    "parent": "Parent",
+    "prb": "Proband",
+    "sib": "Sibling",
+    "child": "Child",
+    "maternal_half_sibling": "Maternal Half Sibling",
+    "paternal_half_sibling": "Paternal Half Sibling",
+    "half_sibling": "Half Sibling",
+    "maternal_aunt": "Maternal Aunt",
+    "maternal_uncle": "Maternal Uncle",
+    "paternal_aunt": "Paternal Aunt",
+    "paternal_uncle": "Paternal Uncle",
+    "maternal_cousin": "Maternal Cousin",
+    "paternal_cousin": "Paternal Cousin",
+    "step_mom": "Step Mom",
+    "step_dad": "Step Dad",
+    "spouse": "Spouse",
+    "unknown": "Unknown",
 }
 
 _ROLE_SYNONYMS = {
-    'maternal grandmother': 'maternal_grandmother',
-    'maternal grandfather': 'maternal_grandfather',
-    'paternal grandmother': 'paternal_grandmother',
-    'paternal grandfather': 'paternal_grandfather',
-
-    'mother': 'mom',
-    'father': 'dad',
-
-    'proband': 'prb',
-    'sibling': 'sib',
-    'younger sibling': 'sib',
-    'older sibling': 'sib',
-
-    'maternal half sibling': 'maternal_half_sibling',
-    'paternal half sibling': 'paternal_half_sibling',
-    'half sibling': 'half_sibling',
-
-    'maternal aunt': 'maternal_aunt',
-    'maternal uncle': 'maternal_uncle',
-    'paternal aunt': 'paternal_aunt',
-    'paternal uncle': 'paternal_uncle',
-
-    'maternal cousin': 'maternal_cousin',
-    'paternal cousin': 'paternal_cousin',
-
-    'step mom': 'step_mom',
-    'step dad': 'step_dad',
-    'step mother': 'step_mom',
-    'step father': 'step_dad',
+    "maternal grandmother": "maternal_grandmother",
+    "maternal grandfather": "maternal_grandfather",
+    "paternal grandmother": "paternal_grandmother",
+    "paternal grandfather": "paternal_grandfather",
+    "mother": "mom",
+    "father": "dad",
+    "proband": "prb",
+    "sibling": "sib",
+    "younger sibling": "sib",
+    "older sibling": "sib",
+    "maternal half sibling": "maternal_half_sibling",
+    "paternal half sibling": "paternal_half_sibling",
+    "half sibling": "half_sibling",
+    "maternal aunt": "maternal_aunt",
+    "maternal uncle": "maternal_uncle",
+    "paternal aunt": "paternal_aunt",
+    "paternal uncle": "paternal_uncle",
+    "maternal cousin": "maternal_cousin",
+    "paternal cousin": "paternal_cousin",
+    "step mom": "step_mom",
+    "step dad": "step_dad",
+    "step mother": "step_mom",
+    "step father": "step_dad",
 }
 
 
@@ -163,11 +150,11 @@ class Sex(enum.Enum):
             return Sex.from_value(name)
         assert isinstance(name, str)
         name = name.lower()
-        if name in set(['male', 'm', '1']):
+        if name in set(["male", "m", "1"]):
             return Sex.male
-        elif name in set(['female', 'f', '2']):
+        elif name in set(["female", "f", "2"]):
             return Sex.female
-        elif name in set(['unspecified', 'u', '0']):
+        elif name in set(["unspecified", "u", "0"]):
             return Sex.unspecified
         raise ValueError("unexpected sex type: " + str(name))
 
@@ -201,11 +188,11 @@ class Status(enum.Enum):
             return Status.from_value(name)
         assert isinstance(name, str)
         name = name.lower()
-        if name in set(['unaffected', '1']):
+        if name in set(["unaffected", "1"]):
             return Status.unaffected
-        elif name in set(['affected', '2']):
+        elif name in set(["affected", "2"]):
             return Status.affected
-        elif name in set(['unspecified', '-', '0']):
+        elif name in set(["unspecified", "-", "0"]):
             return Status.unspecified
         raise ValueError("unexpected status type: " + name)
 
@@ -257,8 +244,9 @@ class Inheritance(enum.Enum):
 
     @staticmethod
     def from_name(name):
-        assert name in Inheritance.__members__, \
-            'Inheritance type {} does not exist!'.format(name)
+        assert (
+            name in Inheritance.__members__
+        ), "Inheritance type {} does not exist!".format(name)
         return Inheritance[name]
 
     @staticmethod
@@ -283,11 +271,11 @@ class VariantType(enum.Enum):
 
     @staticmethod
     def from_name(name) -> Optional[VariantType]:
-        if name == 'sub' or name == 'substitution':
+        if name == "sub" or name == "substitution":
             return VariantType.substitution
-        elif name == 'ins' or name == 'insertion':
+        elif name == "ins" or name == "insertion":
             return VariantType.insertion
-        elif name == 'del' or name == 'deletion':
+        elif name == "del" or name == "deletion":
             return VariantType.deletion
         elif name == 'comp' or name == 'complex':
             return VariantType.comp
@@ -304,11 +292,11 @@ class VariantType(enum.Enum):
             return VariantType.none
 
         vt = variant[0]
-        if vt == 's':
+        if vt == "s":
             return VariantType.substitution
-        elif vt == 'i':
+        elif vt == "i":
             return VariantType.insertion
-        elif vt == 'd':
+        elif vt == "d":
             return VariantType.deletion
         elif vt == 'c':
             return VariantType.comp

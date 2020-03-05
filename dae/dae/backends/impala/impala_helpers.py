@@ -3,20 +3,18 @@ import os
 
 
 class ImpalaHelpers(object):
-
     @staticmethod
     def create_impala_connection(impala_host, impala_port):
         assert impala_host
         assert impala_port
 
-        impala_connection = dbapi.connect(
-            host=impala_host,
-            port=impala_port)
+        impala_connection = dbapi.connect(host=impala_host, port=impala_port)
 
         return impala_connection
 
     def __init__(
-            self, impala_host=None, impala_port=None, impala_connection=None):
+        self, impala_host=None, impala_port=None, impala_connection=None
+    ):
         if impala_connection is None:
             assert impala_host
             assert impala_port
@@ -27,46 +25,59 @@ class ImpalaHelpers(object):
         self.connection = impala_connection
 
     def import_variants(
-            self, db,
-            variant_table, pedigree_table,
-            variant_hdfs_path, pedigree_hdfs_path):
+        self,
+        db,
+        variant_table,
+        pedigree_table,
+        variant_hdfs_path,
+        pedigree_hdfs_path,
+    ):
 
         with self.connection.cursor() as cursor:
-            cursor.execute("""
+            cursor.execute(
+                """
                 CREATE DATABASE IF NOT EXISTS {db}
-            """.format(db=db))
-            self.import_files(
-                cursor, db, pedigree_table,
-                pedigree_hdfs_path)
+            """.format(
+                    db=db
+                )
+            )
+            self.import_files(cursor, db, pedigree_table, pedigree_hdfs_path)
             if variant_hdfs_path:
-                self.import_files(
-                    cursor, db, variant_table,
-                    variant_hdfs_path)
+                self.import_files(cursor, db, variant_table, variant_hdfs_path)
 
     def import_files(self, cursor, dbname, table_name, import_files):
 
-        cursor.execute("""
+        cursor.execute(
+            """
             DROP TABLE IF EXISTS {db}.{table_name}
-        """.format(db=dbname, table_name=table_name))
+        """.format(
+                db=dbname, table_name=table_name
+            )
+        )
 
-        cursor.execute("""
+        cursor.execute(
+            """
             CREATE TABLE {db}.{table_name} LIKE PARQUET '{import_file}'
             STORED AS PARQUET
         """.format(
-            db=dbname, import_file=import_files[0],
-            table_name=table_name))
+                db=dbname, import_file=import_files[0], table_name=table_name
+            )
+        )
 
         for import_file in import_files:
-            cursor.execute("""
+            cursor.execute(
+                """
                 LOAD DATA INPATH '{import_file}'
                 INTO TABLE {db}.{table_name}
             """.format(
-                db=dbname, import_file=import_file,
-                table_name=table_name))
+                    db=dbname, import_file=import_file, table_name=table_name
+                )
+            )
 
     def add_partition_properties(
-            self, cursor, db, table, partition_description):
-        chromosomes = ', '.join(partition_description.chromosomes)
+        self, cursor, db, table, partition_description
+    ):
+        chromosomes = ", ".join(partition_description.chromosomes)
         cursor.execute(
             f"ALTER TABLE {db}.{table} "
             "SET TBLPROPERTIES("
@@ -89,7 +100,8 @@ class ImpalaHelpers(object):
             ")"
         )
         coding_effect_types = ",".join(
-            partition_description.coding_effect_types)
+            partition_description.coding_effect_types
+        )
         cursor.execute(
             f"ALTER TABLE {db}.{table} "
             "SET TBLPROPERTIES("
@@ -106,43 +118,61 @@ class ImpalaHelpers(object):
         )
 
     def create_dataset_table(
-            self, cursor, db, table, hdfs_path, sample_file,
-            partition_description):
-        cursor.execute("""
+        self, cursor, db, table, hdfs_path, sample_file, partition_description
+    ):
+        cursor.execute(
+            """
             DROP TABLE IF EXISTS {db}.{table}
-        """.format(db=db, table=table))
+        """.format(
+                db=db, table=table
+            )
+        )
 
-        partitions = ['region_bin string']
+        partitions = ["region_bin string"]
 
         if not partition_description.rare_boundary <= 0:
-            partitions.append('frequency_bin tinyint')
+            partitions.append("frequency_bin tinyint")
         if not partition_description.coding_effect_types == []:
-            partitions.append('coding_bin tinyint')
+            partitions.append("coding_bin tinyint")
         if not partition_description.family_bin_size <= 0:
-            partitions.append('family_bin tinyint')
+            partitions.append("family_bin tinyint")
 
         partitions = ", ".join(partitions)
-        cursor.execute(f"""
+        cursor.execute(
+            f"""
             CREATE EXTERNAL TABLE {db}.{table} LIKE PARQUET '{sample_file}'
             PARTITIONED BY ({partitions})
             STORED AS PARQUET LOCATION '{hdfs_path}'
-        """)
-        cursor.execute(f"""
+        """
+        )
+        cursor.execute(
+            f"""
             ALTER TABLE {db}.{table} RECOVER PARTITIONS
-        """)
-        cursor.execute(f"""
+        """
+        )
+        cursor.execute(
+            f"""
             REFRESH {db}.{table}
-        """)
+        """
+        )
 
     def import_dataset_into_db(
-            self, db, partition_table, pedigree_table,
-            partition_description, pedigree_hdfs_path,
-            dataset_hdfs_path, files):
+        self,
+        db,
+        partition_table,
+        pedigree_table,
+        partition_description,
+        pedigree_hdfs_path,
+        dataset_hdfs_path,
+        files,
+    ):
 
         with self.connection.cursor() as cursor:
-            cursor.execute(f"""
+            cursor.execute(
+                f"""
                 CREATE DATABASE IF NOT EXISTS {db}
-            """)
+            """
+            )
             sample_file = os.path.join(dataset_hdfs_path, files[0])
             self.create_dataset_table(
                 cursor,
@@ -150,22 +180,14 @@ class ImpalaHelpers(object):
                 partition_table,
                 dataset_hdfs_path,
                 sample_file,
-                partition_description
+                partition_description,
             )
 
             self.add_partition_properties(
-                cursor,
-                db,
-                partition_table,
-                partition_description
+                cursor, db, partition_table, partition_description
             )
 
-            self.import_files(
-                cursor,
-                db,
-                pedigree_table,
-                [pedigree_hdfs_path]
-            )
+            self.import_files(cursor, db, pedigree_table, [pedigree_hdfs_path])
 
     def check_database(self, dbname):
         with self.connection.cursor() as cursor:
@@ -202,12 +224,18 @@ class ImpalaHelpers(object):
         with self.connection.cursor() as cursor:
             q = """
                 CREATE DATABASE IF NOT EXISTS {db}
-            """.format(db=dbname)
+            """.format(
+                db=dbname
+            )
 
             cursor.execute(q)
 
     def drop_database(self, dbname):
         with self.connection.cursor() as cursor:
-            cursor.execute("""
+            cursor.execute(
+                """
                 DROP DATABASE IF EXISTS {db} CASCADE
-            """.format(db=dbname))
+            """.format(
+                    db=dbname
+                )
+            )

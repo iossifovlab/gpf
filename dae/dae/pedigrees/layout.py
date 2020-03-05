@@ -8,9 +8,7 @@ from dae.pedigrees.pedigrees import FamilyConnections, Individual
 from dae.pedigrees.interval_sandwich import SandwichSolver
 
 
-_LAYOUT_REGEX = re.compile(
-    r'(?P<rank>\d):(?P<x>\d*\.?\d+),(?P<y>\d*\.?\d+)'
-)
+_LAYOUT_REGEX = re.compile(r"(?P<rank>\d):(?P<x>\d*\.?\d+),(?P<y>\d*\.?\d+)")
 
 
 def layout_parser(layout):
@@ -19,16 +17,15 @@ def layout_parser(layout):
     if layout_groups:
         parsed = layout_groups.groupdict()
         result = {}
-        result['rank'] = int(parsed['rank'])
-        result['x'] = float(parsed['x'])
-        result['y'] = float(parsed['y'])
+        result["rank"] = int(parsed["rank"])
+        result["x"] = float(parsed["x"])
+        result["y"] = float(parsed["y"])
         return result
     else:
         return None
 
 
 class IndividualWithCoordinates(object):
-
     def __init__(self, individual, x=0.0, y=0.0, size=21.0, scale=1.0):
         self.individual = individual
         self.x = x
@@ -49,7 +46,6 @@ class IndividualWithCoordinates(object):
 
 
 class Line(object):
-
     def __init__(self, x1, y1, x2, y2, curved=False, curve_base_height=None):
         self.x1 = x1
         self.y1 = y1
@@ -64,7 +60,7 @@ class Line(object):
         return (self.x1, self.y1)
 
     def curve_p1(self):
-        return (self.x1 + 10, self.y1 + self.curve_base_height*3.0)
+        return (self.x1 + 10, self.y1 + self.curve_base_height * 3.0)
 
     def curve_p2(self):
         return (self.x2, self.y2)
@@ -73,7 +69,7 @@ class Line(object):
         return (self.x2, self.y2)
 
     def inverse_curve_p1(self):
-        return (self.x1 + 10, self.y1 - self.curve_base_height*3.0)
+        return (self.x1 + 10, self.y1 - self.curve_base_height * 3.0)
 
     def inverse_curve_p2(self):
         return (self.x2, self.y2)
@@ -83,27 +79,30 @@ class Line(object):
 
         one_minus_t = 1.0 - t
 
-        return (one_minus_t**3) * self.curve_p0()[1] + \
-            3 * (one_minus_t**2) * t * self.curve_p1()[1] + \
-            3 * one_minus_t * (t**2) * self.curve_p2()[1] + \
-            (t**3) * self.curve_p3()[1]
+        return (
+            (one_minus_t ** 3) * self.curve_p0()[1]
+            + 3 * (one_minus_t ** 2) * t * self.curve_p1()[1]
+            + 3 * one_minus_t * (t ** 2) * self.curve_p2()[1]
+            + (t ** 3) * self.curve_p3()[1]
+        )
 
     def inverse_curve_y_at(self, t):
         assert 0 <= t <= 1
 
         one_minus_t = 1.0 - t
 
-        return (one_minus_t**3) * self.curve_p0()[1] + \
-            3 * (one_minus_t**2) * t * self.inverse_curve_p1()[1] + \
-            3 * one_minus_t * (t**2) * self.inverse_curve_p2()[1] + \
-            (t**3) * self.curve_p3()[1]
+        return (
+            (one_minus_t ** 3) * self.curve_p0()[1]
+            + 3 * (one_minus_t ** 2) * t * self.inverse_curve_p1()[1]
+            + 3 * one_minus_t * (t ** 2) * self.inverse_curve_p2()[1]
+            + (t ** 3) * self.curve_p3()[1]
+        )
 
     def __repr__(self):
         return "[({},{}) - ({},{})]".format(self.x1, self.y1, self.x2, self.y2)
 
 
 class Layout(object):
-
     def __init__(self, intervals=None):
         self._intervals = intervals
         self.lines = []
@@ -113,7 +112,8 @@ class Layout(object):
         if intervals is not None:
             self._individuals_by_rank = self._intervals_by_ranks()
             self._id_to_position = self._generate_simple_layout(
-                self._individuals_by_rank)
+                self._individuals_by_rank
+            )
             self._generate_from_intervals()
 
     @staticmethod
@@ -133,12 +133,14 @@ class Layout(object):
     def from_family(family, add_missing_members=True):
 
         family_connections = FamilyConnections.from_family(
-            family, add_missing_members=add_missing_members)
+            family, add_missing_members=add_missing_members
+        )
 
         if family_connections is None:
             print(
                 f"Missing family connections for family: {family.family_id}",
-                file=sys.stderr)
+                file=sys.stderr,
+            )
             return Layout._handle_broken_family_connections(family)
 
         sandwich_instance = family_connections.create_sandwich_instance()
@@ -146,13 +148,15 @@ class Layout(object):
 
         if intervals is None:
             print(
-                f"No intervals for family: {family.family_id}",
-                file=sys.stderr)
+                f"No intervals for family: {family.family_id}", file=sys.stderr
+            )
             return Layout._handle_broken_family_connections(family)
 
         individuals_intervals = [
-            interval for interval in intervals
-            if interval.vertex.is_individual()]
+            interval
+            for interval in intervals
+            if interval.vertex.is_individual()
+        ]
 
         return Layout(individuals_intervals)
 
@@ -161,16 +165,19 @@ class Layout(object):
         if any([p.layout is None for p in family.full_members]):
             print(
                 f"family {family.family_id} has member without layout",
-                file=sys.stderr)
+                file=sys.stderr,
+            )
             return None
 
         family_connections = FamilyConnections.from_family(
-            family, add_missing_members=False)
+            family, add_missing_members=False
+        )
         if family_connections is None:
             print(
                 f"can't build family connections for family "
                 f"{family.family_id}",
-                file=sys.stderr)
+                file=sys.stderr,
+            )
             return None
 
         layout_positions = defaultdict(list)
@@ -179,25 +186,30 @@ class Layout(object):
             if position is None:
                 print(
                     f"can't parse layout for person {person}: {person.layout}",
-                    file=sys.stderr)
+                    file=sys.stderr,
+                )
                 return None
             individual = family_connections.get_individual(person.person_id)
 
-            assert isinstance(position['rank'], int), \
-                (person, person.layout, position)
+            assert isinstance(position["rank"], int), (
+                person,
+                person.layout,
+                position,
+            )
 
-            layout_positions[position['rank']].append(
+            layout_positions[position["rank"]].append(
                 IndividualWithCoordinates(
-                    individual,
-                    position['x'], position['y'])
+                    individual, position["x"], position["y"]
                 )
+            )
 
         individual_positions = [[]] * len(layout_positions)
         for level, iwc in layout_positions.items():
             individual_positions[level - 1] = iwc
 
         individual_positions = [
-            sorted(level, key=lambda x: x.x) for level in individual_positions]
+            sorted(level, key=lambda x: x.x) for level in individual_positions
+        ]
 
         layout = Layout()
         layout.positions = individual_positions
@@ -209,22 +221,30 @@ class Layout(object):
     def id_to_position(self):
         return {
             k.member.person_id: v
-            for k, v in list(self._id_to_position.items())}
+            for k, v in list(self._id_to_position.items())
+        }
 
     @property
     def individuals_by_rank(self):
-        return {individual.member.person_id: rank for rank, individuals in
-                enumerate(self._individuals_by_rank, start=1)
-                for individual in individuals}
+        return {
+            individual.member.person_id: rank
+            for rank, individuals in enumerate(
+                self._individuals_by_rank, start=1
+            )
+            for individual in individuals
+        }
 
     def apply_to_family(self, family):
         for person_id, person in family.persons.items():
-            assert person_id in self.id_to_position, \
-                (person_id, family, self.id_to_position)
+            assert person_id in self.id_to_position, (
+                person_id,
+                family,
+                self.id_to_position,
+            )
             position = self.id_to_position[person_id]
             rank = self.individuals_by_rank[person_id]
-            position_value = f'{rank}:{position.x},{position.y}'
-            person.set_attr('layout', position_value)
+            position_value = f"{rank}:{position.x},{position.y}"
+            person.set_attr("layout", position_value)
 
     def _generate_from_intervals(self):
 
@@ -266,54 +286,71 @@ class Layout(object):
 
     def _create_positioned_individuals(self):
         for level in self._individuals_by_rank:
-            self.positions.append(
-                [self._id_to_position[x] for x in level])
+            self.positions.append([self._id_to_position[x] for x in level])
 
     def _create_lines(self, y_offset=15):
         for level in self.positions:
             for start, individual in enumerate(level):
                 if individual.individual.parents:
-                    self.lines.append(Line(
-                        individual.x_center, individual.y,
-                        individual.x_center, individual.y_center - y_offset
-                    ))
+                    self.lines.append(
+                        Line(
+                            individual.x_center,
+                            individual.y,
+                            individual.x_center,
+                            individual.y_center - y_offset,
+                        )
+                    )
 
-                for i, other_individual in enumerate(level[start+1:]):
-                    are_next_to_eachother = (i == 0)
-                    if (individual.individual.are_mates(
-                            other_individual.individual)):
-                        middle_x = \
-                            (individual.x_center
-                             + other_individual.x_center)/2.0
+                for i, other_individual in enumerate(level[start + 1 :]):
+                    are_next_to_eachother = i == 0
+                    if individual.individual.are_mates(
+                        other_individual.individual
+                    ):
+                        middle_x = (
+                            individual.x_center + other_individual.x_center
+                        ) / 2.0
                         if are_next_to_eachother:
-                            self.lines.append(Line(
-                                individual.x + individual.size,
-                                individual.y_center,
-                                other_individual.x, other_individual.y_center
-                            ))
-                            self.lines.append(Line(
-                                middle_x, individual.y_center,
-                                middle_x, individual.y_center + y_offset
-                            ))
+                            self.lines.append(
+                                Line(
+                                    individual.x + individual.size,
+                                    individual.y_center,
+                                    other_individual.x,
+                                    other_individual.y_center,
+                                )
+                            )
+                            self.lines.append(
+                                Line(
+                                    middle_x,
+                                    individual.y_center,
+                                    middle_x,
+                                    individual.y_center + y_offset,
+                                )
+                            )
                             continue
 
                         line = Line(
                             individual.x + individual.size,
                             individual.y_center,
-                            other_individual.x, other_individual.y_center,
-                            True, y_offset
+                            other_individual.x,
+                            other_individual.y_center,
+                            True,
+                            y_offset,
                         )
                         self.lines.append(line)
 
-                        percent_x = \
-                            (middle_x - individual.x_center) / \
-                            (other_individual.x_center - individual.x_center)
+                        percent_x = (middle_x - individual.x_center) / (
+                            other_individual.x_center - individual.x_center
+                        )
                         center_y = line.inverse_curve_y_at(percent_x)
 
-                        self.lines.append(Line(
-                            middle_x, center_y,
-                            middle_x, individual.y_center + y_offset
-                        ))
+                        self.lines.append(
+                            Line(
+                                middle_x,
+                                center_y,
+                                middle_x,
+                                individual.y_center + y_offset,
+                            )
+                        )
 
             i = 0
             while i < len(level) - 1:
@@ -321,14 +358,17 @@ class Layout(object):
                 while i < j:
                     individual = level[i]
                     other_individual = level[j]
-                    if (individual.individual.are_siblings(
-                            other_individual.individual)):
-                        self.lines.append(Line(
-                            individual.x_center,
-                            individual.y_center - y_offset,
-                            other_individual.x_center,
-                            other_individual.y_center - y_offset
-                        ))
+                    if individual.individual.are_siblings(
+                        other_individual.individual
+                    ):
+                        self.lines.append(
+                            Line(
+                                individual.x_center,
+                                individual.y_center - y_offset,
+                                other_individual.x_center,
+                                other_individual.y_center - y_offset,
+                            )
+                        )
                         i = j
                         break
                     j -= 1
@@ -346,15 +386,17 @@ class Layout(object):
             for individual in level:
                 if len(individual.mating_units) > 2:
                     moved += self._align_multiple_mates_of_individual(
-                        individual, level)
+                        individual, level
+                    )
 
         return moved
 
     def _align_multiple_mates_of_individual(self, individual, level):
         moved = 0
 
-        others = {mu.other_parent(individual)
-                  for mu in individual.mating_units}
+        others = {
+            mu.other_parent(individual) for mu in individual.mating_units
+        }
         individual_position = self._id_to_position[individual]
 
         ordered = list(others)
@@ -365,10 +407,12 @@ class Layout(object):
         common_parent_index = level.index(individual)
 
         left_of_common_parent = [i for i in indices if i < common_parent_index]
-        right_of_common_parent =\
-            [i for i in indices if i > common_parent_index]
-        right_of_common_parent_reversed =\
-            list(reversed(right_of_common_parent))
+        right_of_common_parent = [
+            i for i in indices if i > common_parent_index
+        ]
+        right_of_common_parent_reversed = list(
+            reversed(right_of_common_parent)
+        )
 
         # print(indices)
         # print(left_of_common_parent)
@@ -381,12 +425,16 @@ class Layout(object):
 
             arch_width = individual_position.x - parent_position.x
 
-            compare_width = individual_position.x - \
-                self._id_to_position[to_compare].x + individual_position.size
+            compare_width = (
+                individual_position.x
+                - self._id_to_position[to_compare].x
+                + individual_position.size
+            )
 
-            if arch_width < 2*compare_width:
+            if arch_width < 2 * compare_width:
                 moved += self._move(
-                    [parent_position], -(2*compare_width - arch_width))
+                    [parent_position], -(2 * compare_width - arch_width)
+                )
 
         for i, parent_index in enumerate(right_of_common_parent_reversed[:-1]):
             parent = level[parent_index]
@@ -396,12 +444,16 @@ class Layout(object):
 
             arch_width = parent_position.x - individual_position.x
 
-            compare_width = self._id_to_position[to_compare].x - \
-                individual_position.x + individual_position.size
+            compare_width = (
+                self._id_to_position[to_compare].x
+                - individual_position.x
+                + individual_position.size
+            )
 
             if arch_width < 2 * compare_width:
                 moved += self._move(
-                    [parent_position], 2*compare_width - arch_width)
+                    [parent_position], 2 * compare_width - arch_width
+                )
 
         return moved
 
@@ -411,10 +463,12 @@ class Layout(object):
         for level in self._individuals_by_rank:
             mating_units = self._get_mates_on_level(level)
 
-            dual_mating_units = {(mu1, mu2) for mu1 in mating_units
-                                 for mu2 in mating_units
-                                 if (mu1.father is mu2.father) ^
-                                    (mu1.mother is mu2.mother)}
+            dual_mating_units = {
+                (mu1, mu2)
+                for mu1 in mating_units
+                for mu2 in mating_units
+                if (mu1.father is mu2.father) ^ (mu1.mother is mu2.mother)
+            }
 
             for mu1, mu2 in dual_mating_units:
                 if mu1.father is mu2.father:
@@ -422,12 +476,15 @@ class Layout(object):
                 else:
                     ordered_parents = [mu1.father, mu1.mother, mu2.father]
 
-                ordered_parents =\
-                    [self._id_to_position[i] for i in ordered_parents]
+                ordered_parents = [
+                    self._id_to_position[i] for i in ordered_parents
+                ]
 
                 if ordered_parents[0].x > ordered_parents[2].x:
-                    ordered_parents[0], ordered_parents[2] = \
-                        ordered_parents[2], ordered_parents[0]
+                    ordered_parents[0], ordered_parents[2] = (
+                        ordered_parents[2],
+                        ordered_parents[0],
+                    )
 
                 dist1 = ordered_parents[1].x - ordered_parents[0].x
                 dist2 = ordered_parents[2].x - ordered_parents[1].x
@@ -448,13 +505,14 @@ class Layout(object):
     def _move_overlaps(self, gap_size=8.0):
         moved = 0
         first_individual_position = self._id_to_position[
-            self._individuals_by_rank[0][0]]
+            self._individuals_by_rank[0][0]
+        ]
         min_gap = first_individual_position.size + gap_size
 
         for level in self._individuals_by_rank:
             level_with_positions = [self._id_to_position[i] for i in level]
             for index, individual1 in enumerate(level_with_positions):
-                for individual2 in level_with_positions[index+1:index+2]:
+                for individual2 in level_with_positions[index + 1 : index + 2]:
                     diff = individual2.x - individual1.x
                     if min_gap - diff > 1:
                         moved += self._move([individual2], min_gap - diff)
@@ -531,15 +589,21 @@ class Layout(object):
 
         individuals = list(set(individuals) - already_moved)
 
-        min_individual = reduce(lambda a, b: a if a.x < b.x else b,
-                                individuals)
-        max_individual = reduce(lambda a, b: a if a.x > b.x else b,
-                                individuals)
+        min_individual = reduce(
+            lambda a, b: a if a.x < b.x else b, individuals
+        )
+        max_individual = reduce(
+            lambda a, b: a if a.x > b.x else b, individuals
+        )
 
         level = self._get_level_of_individual(min_individual.individual)
 
-        individuals = level[level.index(min_individual.individual):
-                            level.index(max_individual.individual) + 1]
+        individuals = level[
+            level.index(min_individual.individual) : level.index(
+                max_individual.individual
+            )
+            + 1
+        ]
         individuals = [self._id_to_position[x] for x in individuals]
 
         individuals = list(set(individuals) - already_moved)
@@ -553,26 +617,36 @@ class Layout(object):
             start = min_individual.x
             end = max_individual.x
             new_end = end + offset
-            to_move = {i for x in level for i in [self._id_to_position[x]]
-                       if start <= i.x <= new_end}
+            to_move = {
+                i
+                for x in level
+                for i in [self._id_to_position[x]]
+                if start <= i.x <= new_end
+            }
             to_move -= already_moved
             to_move -= set(individuals)
 
             if to_move != set():
-                to_move_offset = max([new_end - i.x + min_gap*2.0 + i.size
-                                      for i in to_move])
+                to_move_offset = max(
+                    [new_end - i.x + min_gap * 2.0 + i.size for i in to_move]
+                )
         else:
             start = min_individual.x
             end = max_individual.x
             new_start = start + offset
-            to_move = {i for x in level for i in [self._id_to_position[x]]
-                       if new_start <= i.x <= end}
+            to_move = {
+                i
+                for x in level
+                for i in [self._id_to_position[x]]
+                if new_start <= i.x <= end
+            }
             to_move -= already_moved
             to_move -= set(individuals)
 
             if to_move != set():
-                to_move_offset = min([new_start - i.x - min_gap*2.0 - i.size
-                                      for i in to_move])
+                to_move_offset = min(
+                    [new_start - i.x - min_gap * 2.0 - i.size for i in to_move]
+                )
 
         for individual in individuals:
             individual.x += offset
@@ -582,7 +656,8 @@ class Layout(object):
         other_moved = 0
         if to_move != set():
             other_moved = self._move(
-                to_move, to_move_offset, already_moved | set(individuals))
+                to_move, to_move_offset, already_moved | set(individuals)
+            )
 
         return len(individuals) + other_moved
 
@@ -595,8 +670,10 @@ class Layout(object):
         children_positions = [self._id_to_position[x] for x in children]
         children_positions = sorted(children_positions, key=lambda x: x.x)
 
-        return [children_positions[0],
-                children_positions[len(children_positions) - 1]]
+        return [
+            children_positions[0],
+            children_positions[len(children_positions) - 1],
+        ]
 
     @staticmethod
     def _get_sibships_on_level(level):
@@ -624,8 +701,12 @@ class Layout(object):
 
     @staticmethod
     def _generate_simple_layout(
-            individuals_by_rank, level_heigh=30.0,
-            x_offset=20.0, y_offset=20.0, gap=8.0):
+        individuals_by_rank,
+        level_heigh=30.0,
+        x_offset=20.0,
+        y_offset=20.0,
+        gap=8.0,
+    ):
 
         result = {}
         original_x_offset = x_offset
@@ -634,7 +715,8 @@ class Layout(object):
             x_offset = original_x_offset
             for individual in individuals:
                 position = IndividualWithCoordinates(
-                    individual, x_offset, (rank + 1) * level_heigh + y_offset)
+                    individual, x_offset, (rank + 1) * level_heigh + y_offset
+                )
                 result[individual] = position
 
                 x_offset += position.size + gap
@@ -649,8 +731,9 @@ class Layout(object):
             rank_to_individuals[interval.vertex.rank].append(interval)
 
         for key in sorted(rank_to_individuals.keys()):
-            sorted_intervals = sorted(rank_to_individuals[key],
-                                      key=lambda x: (x.left, x.right))
+            sorted_intervals = sorted(
+                rank_to_individuals[key], key=lambda x: (x.left, x.right)
+            )
             # print(list(map(lambda x: x.vertex, sorted_intervals)))
             result.append([x.vertex for x in sorted_intervals])
 

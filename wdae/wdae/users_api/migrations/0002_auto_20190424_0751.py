@@ -6,18 +6,18 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('users_api', '0001_initial'),
+        ("users_api", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='verificationpath',
-            name='path',
+            model_name="verificationpath",
+            name="path",
             field=models.CharField(max_length=255, unique=True),
         ),
         migrations.AlterField(
-            model_name='wdaeuser',
-            name='name',
+            model_name="wdaeuser",
+            name="name",
             field=models.CharField(max_length=100),
         ),
     ]
