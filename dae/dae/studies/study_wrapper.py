@@ -875,12 +875,18 @@ class StudyWrapper(object):
 
         bs_config["columns"] = dict()
         for column in bs_config["preview_columns"]:
-            assert (
-                column in bs_config["genotype"] or column in bs_config["pheno"]
-            )
-            bs_config["columns"][column] = (
-                bs_config["genotype"].get(column) or bs_config["pheno"][column]
-            )
+            if "pheno" in bs_config:
+                assert (
+                    column in bs_config["genotype"]
+                    or column in bs_config["pheno"]
+                ), column
+                bs_config["columns"][column] = (
+                    bs_config["genotype"].get(column, None)
+                    or bs_config["pheno"][column]
+                )
+            else:
+                assert column in bs_config["genotype"], column
+                bs_config["columns"][column] = bs_config["genotype"][column]
 
         if self.pheno_filters:
             bs_config["pheno_filters"] = GPFConfigParser._namedtuple_to_dict(
