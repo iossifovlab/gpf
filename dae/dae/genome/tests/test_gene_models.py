@@ -13,6 +13,10 @@ from dae.GeneModelFiles import (
     load_default_gene_models_format,
     load_ref_flat_gene_models_format,
     load_ref_seq_gene_models_format,
+    load_ccds_gene_models_format,
+    probe_header,
+    probe_columns,
+    GENE_MODELS_FORMAT_COLUMNS,
 )
 
 
@@ -79,6 +83,20 @@ def test_gene_models_from_ccds(fixture_dirname):
     ccdsParser(gm, filename, gene_mapping_file=None)
     assert len(gm.transcriptModels) == 21
     assert len(gm._geneModels) == 21
+
+    gm1 = load_ccds_gene_models_format(filename)
+    assert gm1 is not None
+    assert len(gm1.transcriptModels) == 21
+    assert len(gm1._geneModels) == 21
+
+
+def test_gene_models_probe_header(fixture_dirname):
+    filename = fixture_dirname("gene_models/test_ccds.txt")
+    assert not probe_header(filename, GENE_MODELS_FORMAT_COLUMNS['ccds'])
+    assert probe_columns(filename, GENE_MODELS_FORMAT_COLUMNS['ccds'])
+
+    filename = fixture_dirname("gene_models/test_ref_flat.txt")
+    assert probe_header(filename, GENE_MODELS_FORMAT_COLUMNS['refflat'])
 
 
 @pytest.mark.xfail(reason="KnownGene file format parser is broken")

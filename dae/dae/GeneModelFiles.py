@@ -149,7 +149,7 @@ class TranscriptModel:
             if self.exons[k].start < self.cds[0]:
                 utr5_regions.append(
                     Region(
-                        chr=self.chrom,
+                        chrom=self.chrom,
                         start=self.exons[k].start,
                         stop=self.cds[0] - 1,
                     )
@@ -933,12 +933,148 @@ def load_ref_seq_gene_models_format(
     return gm
 
 
+def probe_header(filename, expected_columns):
+    df = pd.read_csv(filename, sep="\t", nrows=1, header=None)
+    return list(df.iloc[0, :]) == expected_columns
+
+
+def probe_columns(filename, expected_columns):
+    df = pd.read_csv(filename, sep="\t", nrows=1, header=None)
+    return list(df.columns) == list(range(0, len(expected_columns)))
+
+
+def parse_raw(filename, expected_columns, nrows=None):
+    if probe_header(filename, expected_columns):
+        df = pd.read_csv(filename, sep="\t", nrows=nrows)
+        assert list(df.columns) == expected_columns
+
+        return df
+    elif probe_columns(filename, expected_columns):
+        df = pd.read_csv(
+            filename, sep="\t", nrows=nrows, header=None,
+            names=expected_columns)
+        assert list(df.columns) == expected_columns
+        return df
+
+
+GENE_MODELS_FORMAT_COLUMNS = {
+    "ccds": [  # CCDS is identical with RefSeq
+        "#bin",
+        "name",
+        "chrom",
+        "strand",
+        "txStart",
+        "txEnd",
+        "cdsStart",
+        "cdsEnd",
+        "exonCount",
+        "exonStarts",
+        "exonEnds",
+        "score",
+        "name2",
+        "cdsStartStat",
+        "cdsEndStat",
+        "exonFrames",
+    ],
+
+    "refseq": [
+        "#bin",
+        "name",
+        "chrom",
+        "strand",
+        "txStart",
+        "txEnd",
+        "cdsStart",
+        "cdsEnd",
+        "exonCount",
+        "exonStarts",
+        "exonEnds",
+        "score",
+        "name2",
+        "cdsStartStat",
+        "cdsEndStat",
+        "exonFrames",
+    ],
+
+    "refflat": [
+        "#geneName",
+        "name",
+        "chrom",
+        "strand",
+        "txStart",
+        "txEnd",
+        "cdsStart",
+        "cdsEnd",
+        "exonCount",
+        "exonStarts",
+        "exonEnds",
+    ]
+}
+
+
+def load_ccds_gene_models_format(filename, gene_mapping_file=None, nrows=None):
+    df = parse_raw(filename, GENE_MODELS_FORMAT_COLUMNS["ccds"])
+    assert df is not None
+
+    gm = GeneModelDB(location=filename)
+    records = df.to_dict(orient="records")
+
+    transcript_ids_counter = defaultdict(int)
+
+    for rec in records:
+        gene = rec["name2"]
+        tr_name = rec["name"]
+        chrom = rec["chrom"]
+        strand = rec["strand"]
+        tx = (int(rec["txStart"]) + 1, int(rec["txEnd"]))
+        cds = (int(rec["cdsStart"]) + 1, int(rec["cdsEnd"]))
+
+        exon_starts = list(map(int, rec["exonStarts"].strip(",").split(",")))
+        exon_ends = list(map(int, rec["exonEnds"].strip(",").split(",")))
+        assert len(exon_starts) == len(exon_ends)
+
+        exons = [
+            Exon(start + 1, end) for start, end in zip(exon_starts, exon_ends)
+        ]
+
+        transcript_ids_counter[tr_name] += 1
+        tr_id = f"{tr_name}_{transcript_ids_counter[tr_name]}"
+
+        attributes = {
+            k: rec[k]
+            for k in [
+                "#bin",
+                "score",
+                "exonCount",
+                "cdsStartStat",
+                "cdsEndStat",
+                "exonFrames",
+            ]
+        }
+        tm = TranscriptModel(
+            gene=gene,
+            tr_id=tr_id,
+            tr_name=tr_name,
+            chrom=chrom,
+            strand=strand,
+            tx=tx,
+            cds=cds,
+            exons=exons,
+            attributes=attributes,
+        )
+        tm.update_frames()
+        gm.addModelToDict(tm)
+
+    return gm
+
+
 # def pickledGeneModelParser(gm, file_name, gene_mapping_file=None):
 #     import pickle
 
 #     gm.location = file_name
 #     pkl_file = open(file_name, "rb")
-#     gm._utrModels, gm.transcriptModels, gm._geneModels = pickle.load(pkl_file)
+#     gm._utrModels, gm.transcriptModels, gm._geneModels = 
+#       pickle.load(pkl_file)
 #     pkl_file.close()
 
 
@@ -1389,8 +1525,8 @@ KNOWN_FORMAT = {
 }
 # fmt: off
 KNOWN_FORMAT_NAME = \
-    "refflat,refseq,ccds,knowngene,gtf,pickled," \
-    "default,ucscgenepred".split(",")   # "mito," \
+    "refflat,refseq,ccds,knowngene,gtf," \
+    "default,ucscgenepred".split(",")   # "pickled,mito," \
 # fmt: on
 
 
