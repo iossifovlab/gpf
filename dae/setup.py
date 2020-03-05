@@ -36,6 +36,7 @@ setuptools.setup(
         "dae/tools/ped2ped.py",
         "dae/tools/draw_pedigree.py",
         "dae/tools/impala_batch_import.py",
+        "dae/pheno/prepare/individuals2ped.py",
     ],
     classifiers=[
         "Development Status :: 4 - Beta",
