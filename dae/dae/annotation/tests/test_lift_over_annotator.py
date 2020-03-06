@@ -97,15 +97,7 @@ def test_pipeline_with_liftover(
         "dae.annotation.tools.lift_over_annotator."
         "LiftOverAnnotator.build_lift_over"
     ):
-        work_dir = relative_to_this_test_folder("fixtures/")
-
-        pipeline = PipelineAnnotator.build(
-            options,
-            filename,
-            work_dir,
-            genomes_db_2013,
-            defaults={"values": {"fixtures_dir": work_dir}},
-        )
+        pipeline = PipelineAnnotator.build(options, filename, genomes_db_2013,)
         assert pipeline is not None
         assert len(pipeline.annotators) == 3
 

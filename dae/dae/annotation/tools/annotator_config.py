@@ -61,40 +61,32 @@ def annotation_config_cli_options(gpf_instance):
 
 class AnnotationConfigParser:
     @classmethod
-    def read_and_parse_file_configuration(
-        cls, options, config_file, defaults=None
-    ):
-
-        if defaults is None:
-            defaults = {}
-        if "values" not in defaults:
-            defaults["values"] = {}
-        if "options" not in defaults:
-            defaults["values"]["options"] = {}
-
-        defaults["values"]["options"].update(options)
-
-        defaults_dict = defaults["values"]
+    def read_and_parse_file_configuration(cls, options, config_file):
 
         config = GPFConfigParser.load_config(
             config_file, annotation_conf_schema
         )
 
-        config = GPFConfigParser.modify_tuple(config, defaults_dict)
-        config = GPFConfigParser.modify_tuple(config, {"options": options})
+        config = GPFConfigParser.modify_tuple(
+            config,
+            {
+                "options": options,
+                "columns": {},
+                "native_columns": [],
+                "virtual_columns": [],
+                "output_columns": [],
+            },
+        )
         config = cls._setup_defaults(config)
-
-        config = GPFConfigParser.modify_tuple(config, {"columns": {}})
-        config = GPFConfigParser.modify_tuple(config, {"native_columns": []})
-        config = GPFConfigParser.modify_tuple(config, {"virtual_columns": []})
-        config = GPFConfigParser.modify_tuple(config, {"output_columns": []})
 
         parsed_sections = list()
         for config_section in config.sections:
             if config_section.annotator is None:
                 continue
             config_dict = GPFConfigParser._namedtuple_to_dict(config_section)
-            config_dict = recursive_dict_update(config_dict, defaults_dict)
+            config_dict = recursive_dict_update(
+                {"options": options}, config_dict
+            )
             config_section = GPFConfigParser._dict_to_namedtuple(config_dict)
             config_section = cls.parse_section(config_section)
             parsed_sections.append(config_section)

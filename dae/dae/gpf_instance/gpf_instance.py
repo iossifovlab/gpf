@@ -56,20 +56,6 @@ class GPFInstance(object):
 
         self.dae_config = dae_config
 
-        # TODO Remove this hack, figure out
-        # better place / way to do this
-        self.dae_config = GPFConfigParser.modify_tuple(
-            self.dae_config,
-            {
-                "annotation_defaults": {
-                    "wd": dae_config.dae_data_dir,
-                    "data_dir": dae_config.dae_data_dir,
-                    "scores_hg19_dir": None,
-                    "scores_hg38_dir": None,
-                }
-            },
-        )
-
         if load_eagerly:
             self.genomes_db
             self.gene_sets_db

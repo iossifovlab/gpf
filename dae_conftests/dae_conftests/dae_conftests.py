@@ -236,9 +236,7 @@ def default_annotation_pipeline(default_dae_config, genomes_db_2013):
         "p": "position",
     }
 
-    pipeline = PipelineAnnotator.build(
-        options, filename, ".", genomes_db_2013, defaults={}
-    )
+    pipeline = PipelineAnnotator.build(options, filename, ".", genomes_db_2013)
 
     return pipeline
 
@@ -258,23 +256,16 @@ def annotation_pipeline_vcf(genomes_db_2013):
     options = {
         "default_arguments": None,
         "vcf": True,
+        "scores_dirname": relative_to_this_test_folder(
+            "fixtures/annotation_pipeline/"
+        )
         # 'mode': 'overwrite',
     }
 
     work_dir = relative_to_this_test_folder("fixtures/")
 
     pipeline = PipelineAnnotator.build(
-        options,
-        filename,
-        work_dir,
-        genomes_db_2013,
-        defaults={
-            "values": {
-                "scores_dirname": relative_to_this_test_folder(
-                    "fixtures/annotation_pipeline/"
-                )
-            }
-        },
+        options, filename, work_dir, genomes_db_2013,
     )
     return pipeline
 
@@ -294,22 +285,15 @@ def annotation_pipeline_internal(genomes_db_2013):
         "p": "position",
         "r": "reference",
         "a": "alternative",
+        "scores_dirname": relative_to_this_test_folder(
+            "fixtures/annotation_pipeline/"
+        ),
     }
 
     work_dir = relative_to_this_test_folder("fixtures/")
 
     pipeline = PipelineAnnotator.build(
-        options,
-        filename,
-        work_dir,
-        genomes_db_2013,
-        defaults={
-            "values": {
-                "scores_dirname": relative_to_this_test_folder(
-                    "fixtures/annotation_pipeline/"
-                )
-            }
-        },
+        options, filename, work_dir, genomes_db_2013,
     )
     return pipeline
 

@@ -72,11 +72,11 @@ class PipelineAnnotator(CompositeVariantAnnotator):
         super(PipelineAnnotator, self).__init__(config, genomes_db)
 
     @staticmethod
-    def build(options, config_file, work_dir, genomes_db, defaults=None):
+    def build(options, config_file, genomes_db):
         # fmt: off
         pipeline_config = \
                 AnnotationConfigParser.read_and_parse_file_configuration(
-                    options, config_file, defaults
+                    options, config_file
                 )
         # fmt: on
         assert pipeline_config.sections
@@ -223,13 +223,7 @@ def pipeline_main(argv):
 
     start = time.time()
 
-    pipeline = PipelineAnnotator.build(
-        options,
-        config_filename,
-        dae_config.dae_data_dir,
-        genomes_db,
-        defaults={"values": dae_config.annotation_defaults},
-    )
+    pipeline = PipelineAnnotator.build(options, config_filename, genomes_db,)
     assert pipeline is not None
 
     with IOManager(options, reader_type, writer_type) as io_manager:

@@ -9,7 +9,6 @@ from math import ceil
 from collections import defaultdict
 
 from dae.annotation.annotation_pipeline import PipelineAnnotator
-from dae.utils.dict_utils import recursive_dict_update
 
 from dae.gpf_instance.gpf_instance import GPFInstance
 
@@ -46,11 +45,9 @@ def save_study_config(dae_config, study_id, study_config):
 
 
 def construct_import_annotation_pipeline(
-    gpf_instance, annotation_configfile=None, defaults=None
+    gpf_instance, annotation_configfile=None
 ):
 
-    if defaults is None:
-        defaults = {}
     if annotation_configfile is not None:
         config_filename = annotation_configfile
     else:
@@ -65,16 +62,8 @@ def construct_import_annotation_pipeline(
         "a": "alternative",
     }
 
-    annotation_defaults = {
-        "values": gpf_instance.dae_config.annotation_defaults._asdict()
-    }
-    annotation_defaults = recursive_dict_update(annotation_defaults, defaults)
     pipeline = PipelineAnnotator.build(
-        options,
-        config_filename,
-        gpf_instance.dae_config.dae_data_dir,
-        gpf_instance.genomes_db,
-        defaults=annotation_defaults,
+        options, config_filename, gpf_instance.genomes_db,
     )
     return pipeline
 
@@ -910,11 +899,8 @@ class Variants2ParquetTool:
         cls, gpf_instance, argv, annotation_defaults, variants_loader
     ):
         annotation_pipeline = construct_import_annotation_pipeline(
-            gpf_instance,
-            annotation_configfile=argv.annotation_config,
-            defaults=annotation_defaults,
+            gpf_instance, annotation_configfile=argv.annotation_config,
         )
-        print("annotation_defaults", annotation_defaults)
         variants_loader = AnnotationPipelineDecorator(
             variants_loader, annotation_pipeline
         )
