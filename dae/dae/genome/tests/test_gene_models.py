@@ -92,11 +92,11 @@ def test_gene_models_from_ccds(fixture_dirname):
 
 def test_gene_models_probe_header(fixture_dirname):
     filename = fixture_dirname("gene_models/test_ccds.txt")
-    assert not probe_header(filename, GENE_MODELS_FORMAT_COLUMNS['ccds'])
-    assert probe_columns(filename, GENE_MODELS_FORMAT_COLUMNS['ccds'])
+    assert not probe_header(filename, GENE_MODELS_FORMAT_COLUMNS["ccds"])
+    assert probe_columns(filename, GENE_MODELS_FORMAT_COLUMNS["ccds"])
 
     filename = fixture_dirname("gene_models/test_ref_flat.txt")
-    assert probe_header(filename, GENE_MODELS_FORMAT_COLUMNS['refflat'])
+    assert probe_header(filename, GENE_MODELS_FORMAT_COLUMNS["refflat"])
 
 
 @pytest.mark.xfail(reason="KnownGene file format parser is broken")

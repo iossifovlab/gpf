@@ -951,8 +951,12 @@ def parse_raw(filename, expected_columns, nrows=None):
         return df
     elif probe_columns(filename, expected_columns):
         df = pd.read_csv(
-            filename, sep="\t", nrows=nrows, header=None,
-            names=expected_columns)
+            filename,
+            sep="\t",
+            nrows=nrows,
+            header=None,
+            names=expected_columns,
+        )
         assert list(df.columns) == expected_columns
         return df
 
@@ -976,7 +980,6 @@ GENE_MODELS_FORMAT_COLUMNS = {
         "cdsEndStat",
         "exonFrames",
     ],
-
     "refseq": [
         "#bin",
         "name",
@@ -995,7 +998,6 @@ GENE_MODELS_FORMAT_COLUMNS = {
         "cdsEndStat",
         "exonFrames",
     ],
-
     "refflat": [
         "#geneName",
         "name",
@@ -1008,7 +1010,7 @@ GENE_MODELS_FORMAT_COLUMNS = {
         "exonCount",
         "exonStarts",
         "exonEnds",
-    ]
+    ],
 }
 
 
@@ -1073,7 +1075,7 @@ def load_ccds_gene_models_format(filename, gene_mapping_file=None, nrows=None):
 
 #     gm.location = file_name
 #     pkl_file = open(file_name, "rb")
-#     gm._utrModels, gm.transcriptModels, gm._geneModels = 
+#     gm._utrModels, gm.transcriptModels, gm._geneModels =
 #       pickle.load(pkl_file)
 #     pkl_file.close()
 
