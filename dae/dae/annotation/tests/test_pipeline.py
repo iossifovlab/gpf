@@ -53,14 +53,7 @@ def test_build_pipeline(
 
     captured = capsys.readouterr()
     with variants_io("fixtures/input2.tsv") as io_manager:
-        work_dir = relative_to_this_test_folder("fixtures/")
-        pipeline = PipelineAnnotator.build(
-            options,
-            filename,
-            work_dir,
-            genomes_db_2013,
-            defaults={"values": {"fixtures_dir": work_dir}},
-        )
+        pipeline = PipelineAnnotator.build(options, filename, genomes_db_2013,)
         assert pipeline is not None
         pipeline.annotate_file(io_manager)
     captured = capsys.readouterr()
@@ -114,14 +107,7 @@ def test_pipeline_change_variants_position(
     )
 
     with variants_io("fixtures/input2.tsv") as io_manager:
-        work_dir = relative_to_this_test_folder("fixtures/")
-        pipeline = PipelineAnnotator.build(
-            options,
-            filename,
-            work_dir,
-            genomes_db_2013,
-            defaults={"values": {"fixtures_dir": work_dir}},
-        )
+        pipeline = PipelineAnnotator.build(options, filename, genomes_db_2013,)
         assert pipeline is not None
 
         pipeline.annotate_file(io_manager)

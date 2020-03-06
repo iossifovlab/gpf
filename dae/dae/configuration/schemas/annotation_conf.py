@@ -24,7 +24,7 @@ annotation_section_schema = {
                 "check_with": validate_path,
                 "coerce": "abspath",
             },
-            "vcf": {"type": "boolean", "default": False},
+            "vcf": {"type": "boolean"},
             "prom_len": {"type": "integer", "default": 0},
             "direct": {"type": "boolean"},
             "region": {"type": "string", "required": False},

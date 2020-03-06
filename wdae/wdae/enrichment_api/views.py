@@ -32,10 +32,9 @@ class EnrichmentModelsView(QueryBaseView):
         enrichment_config = self.background_facade.get_study_enrichment_config(
             dataset_id
         )
-        selected_properties = getattr(enrichment_config, selected)
-
         if enrichment_config is None:
             return []
+        selected_properties = getattr(enrichment_config, selected)
 
         return [
             {"name": el.name, "desc": el.desc}
