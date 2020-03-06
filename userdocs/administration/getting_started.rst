@@ -495,7 +495,7 @@ when it has a phenotype database attached to it. The configuration looks like th
 .. code::
 
     [genotype_browser]
-
+    enabled = true
     selected_pheno_filters_values = ["sample_continuous_filter"]
 
     pheno_filters.sample_continuous_filter.name = "Sample Filter Name"
@@ -520,6 +520,7 @@ in the genotype browser section:
 .. code::
 
     [genotype_browser]
+    (...)
 
     selected_pheno_column_values = ["pheno"]
 
@@ -531,7 +532,7 @@ in the genotype browser section:
 
 For the phenotype columns to be in the Genotype Browser table preview or download file, 
 they have to be present in the ``preview_columns`` or the ``download_columns`` in the Genotype Browser
-configuration.
+configuration. Add this in the genotype section:
 
 .. code::
 
