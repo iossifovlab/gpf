@@ -121,16 +121,6 @@ pipeline {
             }
         }
 
-        stage('Type Check') {
-            steps {
-                sh '''
-                export PATH=$HOME/anaconda3/envs/gpf3/bin:$PATH
-
-                docker-compose -f docker-compose.yml exec -T tests /code/jenkins_mypy.sh
-                '''
-            }
-        }
-
         stage('Test') {
             steps {
                 sh """
