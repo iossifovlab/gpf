@@ -795,24 +795,8 @@ def load_default_gene_models_format(
 def load_ref_flat_gene_models_format(
     filename, gene_mapping_file=None, nrows=None
 ):
-    df = pd.read_csv(filename, sep="\t", nrows=nrows)
-    expected_columns = [
-        "#geneName",
-        "name",
-        "chrom",
-        "strand",
-        "txStart",
-        "txEnd",
-        "cdsStart",
-        "cdsEnd",
-        "exonCount",
-        "exonStarts",
-        "exonEnds",
-    ]
-    assert set(expected_columns) == set(df.columns), (
-        set(df.columns),
-        set(expected_columns),
-    )
+    df = parse_raw(filename, GENE_MODELS_FORMAT_COLUMNS["refflat"])
+    assert df is not None
 
     gm = GeneModelDB(location=filename)
     records = df.to_dict(orient="records")
@@ -857,29 +841,8 @@ def load_ref_flat_gene_models_format(
 def load_ref_seq_gene_models_format(
     filename, gene_mapping_file=None, nrows=None
 ):
-    df = pd.read_csv(filename, sep="\t", nrows=nrows)
-    expected_columns = [
-        "#bin",
-        "name",
-        "chrom",
-        "strand",
-        "txStart",
-        "txEnd",
-        "cdsStart",
-        "cdsEnd",
-        "exonCount",
-        "exonStarts",
-        "exonEnds",
-        "score",
-        "name2",
-        "cdsStartStat",
-        "cdsEndStat",
-        "exonFrames",
-    ]
-    assert set(expected_columns) == set(df.columns), (
-        set(df.columns),
-        set(expected_columns),
-    )
+    df = parse_raw(filename, GENE_MODELS_FORMAT_COLUMNS["refseq"])
+    assert df is not None
 
     gm = GeneModelDB(location=filename)
     records = df.to_dict(orient="records")
@@ -1011,6 +974,20 @@ GENE_MODELS_FORMAT_COLUMNS = {
         "exonStarts",
         "exonEnds",
     ],
+    "knowngene": [
+        "name",
+        "chrom",
+        "strand",
+        "txStart",
+        "txEnd",
+        "cdsStart",
+        "cdsEnd",
+        "exonCount",
+        "exonStarts",
+        "exonEnds",
+        "proteinID",
+        "alignID",
+    ],
 }
 
 
@@ -1022,9 +999,14 @@ def load_ccds_gene_models_format(filename, gene_mapping_file=None, nrows=None):
     records = df.to_dict(orient="records")
 
     transcript_ids_counter = defaultdict(int)
+    gm._alternative_names = {}
+    if gene_mapping_file is not None:
+        gm._alternative_names = geneMapping(gene_mapping_file)
 
     for rec in records:
-        gene = rec["name2"]
+        gene = rec["name"]
+        gene = gm._alternative_names.get(gene, gene)
+
         tr_name = rec["name"]
         chrom = rec["chrom"]
         strand = rec["strand"]
@@ -1053,6 +1035,59 @@ def load_ccds_gene_models_format(filename, gene_mapping_file=None, nrows=None):
                 "exonFrames",
             ]
         }
+        tm = TranscriptModel(
+            gene=gene,
+            tr_id=tr_id,
+            tr_name=tr_name,
+            chrom=chrom,
+            strand=strand,
+            tx=tx,
+            cds=cds,
+            exons=exons,
+            attributes=attributes,
+        )
+        tm.update_frames()
+        gm.addModelToDict(tm)
+
+    return gm
+
+
+def load_known_gene_models_format(
+    filename, gene_mapping_file=None, nrows=None
+):
+    df = parse_raw(filename, GENE_MODELS_FORMAT_COLUMNS["knowngene"])
+    assert df is not None
+
+    gm = GeneModelDB(location=filename)
+    records = df.to_dict(orient="records")
+
+    transcript_ids_counter = defaultdict(int)
+    gm._alternative_names = {}
+    if gene_mapping_file is not None:
+        gm._alternative_names = geneMapping(gene_mapping_file)
+
+    for rec in records:
+        gene = rec["name"]
+        gene = gm._alternative_names.get(gene, gene)
+
+        tr_name = rec["name"]
+        chrom = rec["chrom"]
+        strand = rec["strand"]
+        tx = (int(rec["txStart"]) + 1, int(rec["txEnd"]))
+        cds = (int(rec["cdsStart"]) + 1, int(rec["cdsEnd"]))
+
+        exon_starts = list(map(int, rec["exonStarts"].strip(",").split(",")))
+        exon_ends = list(map(int, rec["exonEnds"].strip(",").split(",")))
+        assert len(exon_starts) == len(exon_ends)
+
+        exons = [
+            Exon(start + 1, end) for start, end in zip(exon_starts, exon_ends)
+        ]
+
+        transcript_ids_counter[tr_name] += 1
+        tr_id = f"{tr_name}_{transcript_ids_counter[tr_name]}"
+
+        attributes = {k: rec[k] for k in ["proteinID", "alignID",]}
         tm = TranscriptModel(
             gene=gene,
             tr_id=tr_id,
@@ -1414,8 +1449,10 @@ def knownGeneParser(gm, file_name, gene_mapping_file="default"):
 
     if gene_mapping_file == "default":
         gene_mapping_file = os.path.join(
-            os.path.dirname(file_name), "kgId2Sym.txt.gz"
+            os.path.dirname(file_name), "kg_id2sym.txt.gz"
         )
+
+    gm._alternative_names = geneMapping(gene_mapping_file)
 
     gmf = openFile(file_name)
 
@@ -1452,7 +1489,9 @@ def ccdsParser(gm, file_name, gene_mapping_file="default"):
     lR = parserLine4UCSC_genePred(colNames)
 
     if gene_mapping_file == "default":
-        gene_mapping_file = os.path.dirname(file_name) + "/ccdsId2Sym.txt.gz"
+        gene_mapping_file = os.path.join(
+            os.path.dirname(file_name), "ccds_id2sym.txt.gz"
+        )
 
     gm._alternative_names = geneMapping(gene_mapping_file)
 
@@ -1464,9 +1503,8 @@ def ccdsParser(gm, file_name, gene_mapping_file="default"):
             continue
 
         tm, cs = lR.parse(line)
-        try:
-            tm.gene = gm._alternative_names[cs["name"]]
-        except KeyError:
+        tm.gene = gm._alternative_names.get(cs["name"])
+        if tm.gene is None:
             tm.gene = cs["name"]
 
         trIdC[tm.tr_id] += 1
@@ -1530,80 +1568,99 @@ KNOWN_FORMAT_NAME = \
     "refflat,refseq,ccds,knowngene,gtf," \
     "default,ucscgenepred".split(",")   # "pickled,mito," \
 # fmt: on
+SUPPORTED_GENE_MODELS_FILE_FORMATS = {
+    "refflat": load_ref_flat_gene_models_format,
+    "refseq": load_ref_seq_gene_models_format,
+    "ccds": load_ccds_gene_models_format,
+    "knowngene": load_known_gene_models_format,
+    "gtf": None,
+    "default": load_default_gene_models_format,
+    "ucscgenepred": None,
+}
 
 
-def infer_format(file_name="refGene.txt.gz", file_format=None):
-    acceptedFormat = []
+def infer_gene_model_parser(filename, fileformat=None):
 
-    known_formats = KNOWN_FORMAT_NAME
-    if file_format:
-        known_formats = [file_format]
-
-    for format_name in known_formats:
-        gm = GeneModelDB()
-        fm = KNOWN_FORMAT[format_name]
-        try:
-            fm.parser(gm, file_name, gene_mapping_file="default")
-        except Exception:
-            import traceback
-
-            traceback.print_exc(file=sys.stderr)
+    parser = SUPPORTED_GENE_MODELS_FILE_FORMATS.get(fileformat, None)
+    if parser is not None:
+        return parser
+    for fileformat, parser in SUPPORTED_GENE_MODELS_FILE_FORMATS.items():
+        if parser is None:
             continue
+        gm = parser(filename, nrows=50)
+        if gm is not None:
+            return parser
 
-        acceptedFormat.append(format_name)
+    print(f"can't find gene model parser for {filename}")
+    return None
 
-    if len(acceptedFormat) != 1:
-        accepted_formats = ",".join(acceptedFormat)
-        raise Exception(
-            f"[{file_name}:'{accepted_formats}'] non-mataching/more "
-            f"than 1 match/match-not-found "
-            f"from known formats [{known_formats}]\nplease specify by "
-            f"--TrawFormat"
-        )
+    # known_formats = KNOWN_FORMAT_NAME
+    # if file_format:
+    #     known_formats = [file_format]
 
-    acceptedFormat = acceptedFormat[0]
-    if (file_name.endswith(".gtf") or file_name.endswith(".gtf.gz")) and (
-        acceptedFormat != "gtf"
-    ):
-        raise Exception("{} is not GTF format".format(file_name))
+    # for format_name in known_formats:
+    #     gm = GeneModelDB()
+    #     fm = KNOWN_FORMAT[format_name]
+    #     try:
+    #         fm.parser(gm, file_name, gene_mapping_file="default")
+    #     except Exception:
+    #         import traceback
 
-    if file_name.endswith(".dump") and (acceptedFormat != "pickled"):
-        raise Exception('{} is not "pickled" format'.format(file_name))
+    #         traceback.print_exc(file=sys.stderr)
+    #         continue
 
-    fn = file_name.split("/")[-1]
-    if fn in KNOWN_FORMAT:
-        fm = KNOWN_FORMAT[fn].name
-        if fm != acceptedFormat:
-            raise Exception(
-                '"{}:{}": conflict with Database [{}:{}]'.format(
-                    fn, acceptedFormat, fn, fm
-                )
-            )
+    #     acceptedFormat.append(format_name)
 
-    return acceptedFormat
+    # if len(acceptedFormat) != 1:
+    #     accepted_formats = ",".join(acceptedFormat)
+    #     raise Exception(
+    #         f"[{file_name}:'{accepted_formats}'] non-mataching/more "
+    #         f"than 1 match/match-not-found "
+    #         f"from known formats [{known_formats}]\nplease specify by "
+    #         f"--TrawFormat"
+    #     )
+
+    # acceptedFormat = acceptedFormat[0]
+    # if (file_name.endswith(".gtf") or file_name.endswith(".gtf.gz")) and (
+    #     acceptedFormat != "gtf"
+    # ):
+    #     raise Exception("{} is not GTF format".format(file_name))
+
+    # if file_name.endswith(".dump") and (acceptedFormat != "pickled"):
+    #     raise Exception('{} is not "pickled" format'.format(file_name))
+
+    # fn = file_name.split("/")[-1]
+    # if fn in KNOWN_FORMAT:
+    #     fm = KNOWN_FORMAT[fn].name
+    #     if fm != acceptedFormat:
+    #         raise Exception(
+    #             '"{}:{}": conflict with Database [{}:{}]'.format(
+    #                 fn, acceptedFormat, fn, fm
+    #             )
+    #         )
+
+    # return acceptedFormat
 
 
-def load_gene_models(
-    file_name="/data/unsafe/autism/genomes/hg19/geneModels/refGene.txt.gz",
-    gene_mapping_file="default",
-    format=None,
-):
+def load_gene_models(filename, gene_mapping_file=None, fileformat=None):
 
-    fm = KNOWN_FORMAT[infer_format(file_name, file_format=format)]
+    if fileformat is None:
+        parser = infer_gene_model_parser(filename)
+    else:
+        parser = SUPPORTED_GENE_MODELS_FILE_FORMATS.get(fileformat)
+        if parser is None:
+            print(f"unsupported gene model file format: {fileformat}")
+            return None
 
-    gm = GeneModelDB()
-    gm.location = file_name
-    fm.parser(gm, file_name, gene_mapping_file)
-
-    return gm
+    return parser(filename, gene_mapping_file=gene_mapping_file)
 
 
-def save_pickled_dicts(gm, outputFile="./geneModels"):
-    pickle.dump(
-        [gm._utrModels, gm.transcriptModels, gm._geneModels],
-        open(outputFile + ".dump", "wb"),
-        2,
-    )
+# def save_pickled_dicts(gm, outputFile="./geneModels"):
+#     pickle.dump(
+#         [gm._utrModels, gm.transcriptModels, gm._geneModels],
+#         open(outputFile + ".dump", "wb"),
+#         2,
+#     )
 
 
 # def create_region(chrom, b, e):
@@ -1631,9 +1688,9 @@ def join_gene_models(*gene_models):
     return gm
 
 
-if __name__ == "__main__":
-    fn = "../../../tests/gtf/genePred.gtf"
-    gm = GeneModelDB()
-    print(gtfGeneModelParser(gm, fn))
-    print(infer_format(fn))
-    load_gene_models(fn)
+# if __name__ == "__main__":
+#     fn = "../../../tests/gtf/genePred.gtf"
+#     gm = GeneModelDB()
+#     print(gtfGeneModelParser(gm, fn))
+#     print(infer_format(fn))
+#     load_gene_models(fn)
