@@ -1006,7 +1006,7 @@ def load_ccds_gene_models_format(filename, gene_mapping_file=None, nrows=None):
     transcript_ids_counter = defaultdict(int)
     gm._alternative_names = {}
     if gene_mapping_file is not None:
-        gm._alternative_names = geneMapping(gene_mapping_file)
+        gm._alternative_names = gene_mapping(gene_mapping_file)
 
     for rec in records:
         gene = rec["name"]
@@ -1070,7 +1070,7 @@ def load_known_gene_models_format(
     transcript_ids_counter = defaultdict(int)
     gm._alternative_names = {}
     if gene_mapping_file is not None:
-        gm._alternative_names = geneMapping(gene_mapping_file)
+        gm._alternative_names = gene_mapping(gene_mapping_file)
 
     for rec in records:
         gene = rec["name"]
@@ -1371,24 +1371,24 @@ class parserLine4UCSC_genePred:
         return tm, cs
 
 
-def geneMapping(fileName=None):
+def gene_mapping(filename):
     """
       alternative names for genes
       assume that its first line has two column names
    """
-    if not fileName:
-        return {}
 
-    inF = openFile(fileName)
+    df = pd.read_csv(filename, sep="\t")
+    assert len(df.columns) == 2
 
-    inF.readline()
+    df = df.rename(columns={df.columns[0]: "tr_id", df.columns[1]: "gene"})
 
-    altName = {}
-    for line in inF:
-        k, v = line.strip("\n").split("\t")
-        altName[k] = v
+    records = df.to_dict(orient="records")
 
-    return altName
+    alt_names = {}
+    for rec in records:
+        alt_names[rec["tr_id"]] = rec["gene"]
+
+    return alt_names
 
 
 def refSeqParser(gm, location=None, gene_mapping_file=None):
@@ -1458,7 +1458,7 @@ def knownGeneParser(gm, file_name, gene_mapping_file="default"):
             os.path.dirname(file_name), "kg_id2sym.txt.gz"
         )
 
-    gm._alternative_names = geneMapping(gene_mapping_file)
+    gm._alternative_names = gene_mapping(gene_mapping_file)
 
     gmf = openFile(file_name)
 
@@ -1499,7 +1499,7 @@ def ccdsParser(gm, file_name, gene_mapping_file="default"):
             os.path.dirname(file_name), "ccds_id2sym.txt.gz"
         )
 
-    gm._alternative_names = geneMapping(gene_mapping_file)
+    gm._alternative_names = gene_mapping(gene_mapping_file)
 
     GMF = openFile(file_name)
 
@@ -1527,7 +1527,7 @@ def ucscGenePredParser(gm, file_name, gene_mapping_file="default"):
     lR = parserLine4UCSC_genePred(colNames)
 
     if gene_mapping_file != "default":
-        gm._alternative_names = geneMapping(gene_mapping_file)
+        gm._alternative_names = gene_mapping(gene_mapping_file)
 
     GMF = openFile(file_name)
 
