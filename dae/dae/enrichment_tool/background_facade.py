@@ -99,7 +99,12 @@ class BackgroundFacade(object):
             return
         if background_id not in enrichment_config.selected_background_values:
             return
+        background_config = getattr(
+            enrichment_config.background, background_id
+        )
 
         self._background_cache[study_id][
             background_id
-        ] = BackgroundBase.build_background(background_id, enrichment_config)
+        ] = BackgroundBase.build_background(
+            background_config.kind, enrichment_config
+        )

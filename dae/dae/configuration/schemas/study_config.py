@@ -72,6 +72,10 @@ background_model_schema = {
         "coerce": "abspath",
     },
     "name": {"type": "string"},
+    "kind": {
+        "type": "string",
+        "allowed": ["coding_len_background_model", "samocha_background_model"],
+    },
     "desc": {"type": "string"},
 }
 
