@@ -12,7 +12,7 @@ class TranscriptModelMock(object):
         self.strand = strand
         self.cds = [cds_start, cds_end]
         self.exons = exons
-        self.chr = "1"
+        self.chrom = "1"
         self.gene = "B"
         self.trID = "123"
         self.trOrigId = "123"
