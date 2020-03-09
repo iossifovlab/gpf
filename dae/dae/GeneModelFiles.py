@@ -753,9 +753,9 @@ def load_default_gene_models_format(
     if not set(expected_columns) <= set(df.columns):
         return None
 
-    if "trOrigID" not in df.columns:
+    if "trOrigId" not in df.columns:
         tr_names = pd.Series(data=df["trID"].values)
-        df["trOrigID"] = tr_names
+        df["trOrigId"] = tr_names
 
     gm = GeneModelDB(location=filename)
 
@@ -777,7 +777,7 @@ def load_default_gene_models_format(
         tm = TranscriptModel(
             gene=line["gene"],
             tr_id=line["trID"],
-            tr_name=line["trOrigID"],
+            tr_name=line["trOrigId"],
             chrom=line["chr"],
             strand=line["strand"],
             tx=(line["tsBeg"], line["txEnd"]),

@@ -165,6 +165,19 @@ def test_gene_models_from_default_ref_gene_2013(fixture_dirname):
     assert len(gm1._geneModels) == 19
 
 
+def test_gene_models_from_default_with_transcript_orig_id(fixture_dirname):
+    filename = fixture_dirname(
+        "gene_models/test_default_ref_gene_20190220.txt"
+    )
+    gm1 = load_default_gene_models_format(filename)
+    assert gm1 is not None
+    assert len(gm1.transcriptModels) == 19
+    assert len(gm1._geneModels) == 19
+
+    for tm in gm1.transcriptModels.values():
+        assert tm.tr_id != tm.tr_name
+
+
 def test_default_gene_models_loader_ref_seq_2019(genomes_db_2019):
     genome_id = genomes_db_2019.config.genomes.default_genome
     genome_config = getattr(genomes_db_2019.config.genome, genome_id)
