@@ -7,6 +7,6 @@ GPF Administration
 
    getting_started
    configurations
-   pedigree_generation
+   working_with_pedigrees
    pheno
    data_appendix
