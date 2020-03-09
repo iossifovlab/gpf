@@ -750,7 +750,9 @@ def load_default_gene_models_format(
         "atts",
     ]
 
-    assert set(expected_columns) <= set(df.columns)
+    if not set(expected_columns) <= set(df.columns):
+        return None
+
     if "trOrigID" not in df.columns:
         tr_names = pd.Series(data=df["trID"].values)
         df["trOrigID"] = tr_names
@@ -796,7 +798,8 @@ def load_ref_flat_gene_models_format(
     filename, gene_mapping_file=None, nrows=None
 ):
     df = parse_raw(filename, GENE_MODELS_FORMAT_COLUMNS["refflat"])
-    assert df is not None
+    if df is None:
+        return None
 
     gm = GeneModelDB(location=filename)
     records = df.to_dict(orient="records")
@@ -842,7 +845,8 @@ def load_ref_seq_gene_models_format(
     filename, gene_mapping_file=None, nrows=None
 ):
     df = parse_raw(filename, GENE_MODELS_FORMAT_COLUMNS["refseq"])
-    assert df is not None
+    if df is None:
+        return None
 
     gm = GeneModelDB(location=filename)
     records = df.to_dict(orient="records")
@@ -993,7 +997,8 @@ GENE_MODELS_FORMAT_COLUMNS = {
 
 def load_ccds_gene_models_format(filename, gene_mapping_file=None, nrows=None):
     df = parse_raw(filename, GENE_MODELS_FORMAT_COLUMNS["ccds"])
-    assert df is not None
+    if df is None:
+        return None
 
     gm = GeneModelDB(location=filename)
     records = df.to_dict(orient="records")
@@ -1056,7 +1061,8 @@ def load_known_gene_models_format(
     filename, gene_mapping_file=None, nrows=None
 ):
     df = parse_raw(filename, GENE_MODELS_FORMAT_COLUMNS["knowngene"])
-    assert df is not None
+    if df is None:
+        return None
 
     gm = GeneModelDB(location=filename)
     records = df.to_dict(orient="records")
@@ -1569,12 +1575,12 @@ KNOWN_FORMAT_NAME = \
     "default,ucscgenepred".split(",")   # "pickled,mito," \
 # fmt: on
 SUPPORTED_GENE_MODELS_FILE_FORMATS = {
+    "default": load_default_gene_models_format,
     "refflat": load_ref_flat_gene_models_format,
     "refseq": load_ref_seq_gene_models_format,
     "ccds": load_ccds_gene_models_format,
     "knowngene": load_known_gene_models_format,
     "gtf": None,
-    "default": load_default_gene_models_format,
     "ucscgenepred": None,
 }
 
@@ -1583,13 +1589,16 @@ def infer_gene_model_parser(filename, fileformat=None):
 
     parser = SUPPORTED_GENE_MODELS_FILE_FORMATS.get(fileformat, None)
     if parser is not None:
-        return parser
+        return fileformat
     for fileformat, parser in SUPPORTED_GENE_MODELS_FILE_FORMATS.items():
         if parser is None:
             continue
-        gm = parser(filename, nrows=50)
-        if gm is not None:
-            return parser
+        try:
+            gm = parser(filename, nrows=50)
+            if gm is not None:
+                return fileformat
+        except Exception:
+            pass
 
     print(f"can't find gene model parser for {filename}")
     return None
@@ -1645,12 +1654,14 @@ def infer_gene_model_parser(filename, fileformat=None):
 def load_gene_models(filename, gene_mapping_file=None, fileformat=None):
 
     if fileformat is None:
-        parser = infer_gene_model_parser(filename)
-    else:
-        parser = SUPPORTED_GENE_MODELS_FILE_FORMATS.get(fileformat)
-        if parser is None:
-            print(f"unsupported gene model file format: {fileformat}")
+        fileformat = infer_gene_model_parser(filename)
+        if filename is None:
             return None
+
+    parser = SUPPORTED_GENE_MODELS_FILE_FORMATS.get(fileformat)
+    if parser is None:
+        print(f"unsupported gene model file format: {fileformat}")
+        return None
 
     return parser(filename, gene_mapping_file=gene_mapping_file)
 

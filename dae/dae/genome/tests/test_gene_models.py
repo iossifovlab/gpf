@@ -17,6 +17,7 @@ from dae.GeneModelFiles import (
     load_known_gene_models_format,
     probe_header,
     probe_columns,
+    infer_gene_model_parser,
     load_gene_models,
     GENE_MODELS_FORMAT_COLUMNS,
 )
@@ -203,3 +204,25 @@ def test_load_gene_models(fixture_dirname, filename, fileformat):
     filename = fixture_dirname(filename)
     gm = load_gene_models(filename, fileformat=fileformat)
     assert gm is not None
+
+
+@pytest.mark.parametrize(
+    "filename,fileformat",
+    [
+        ("gene_models/test_ref_flat.txt", "refflat"),
+        ("gene_models/test_ref_flat_no_header.txt", "refflat"),
+        ("gene_models/test_ccds.txt", "ccds"),
+        ("gene_models/test_ref_gene.txt", "refseq"),
+        ("gene_models/test_ref_seq_hg38.txt", "refseq"),
+        ("gene_models/test_known_gene.txt", "knowngene"),
+        ("gene_models/test_default_ref_gene_201309.txt", "default"),
+    ],
+)
+def test_infer_gene_models(fixture_dirname, filename, fileformat):
+
+    filename = fixture_dirname(filename)
+    inferred_fileformat = infer_gene_model_parser(
+        filename, fileformat=fileformat
+    )
+    assert inferred_fileformat is not None
+    assert inferred_fileformat == fileformat
