@@ -166,6 +166,14 @@ class Allele:
         return self.effect
 
     @property
+    def effect_types(self):
+        return self.effect.types
+
+    @property
+    def effect_genes(self):
+        return self.effect.genes
+
+    @property
     def variant_type(self) -> Optional[VariantType]:
         if self._variant_type is None and self.details:
             self._variant_type = VariantType.from_cshl_variant(

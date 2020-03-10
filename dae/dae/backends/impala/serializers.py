@@ -1,3 +1,5 @@
+import io
+import struct
 import functools
 import operator
 import itertools
@@ -11,7 +13,345 @@ from dae.annotation.tools.file_io_parquet import ParquetSchema
 
 from dae.variants.variant import SummaryAllele, SummaryVariant
 from dae.variants.family_variant import FamilyAllele, FamilyVariant
-from dae.variants.attributes import GeneticModel, Inheritance
+from dae.variants.attributes import (
+    GeneticModel,
+    Inheritance,
+    VariantType,
+    TransmissionType,
+)
+
+from typing import Dict, Any, Tuple
+import pyarrow as pa
+
+
+def write_int8(stream, num):
+    stream.write(num.to_bytes(1, "big", signed=False))
+
+
+def write_int32(stream, num):
+    stream.write(num.to_bytes(4, "big", signed=False))
+
+
+def write_np_int64(stream, num):
+    stream.write(num.tobytes())
+
+
+def write_float(stream, num):
+    stream.write(struct.pack("f", num))
+
+
+def write_string(stream, string):
+    length = len(string)
+    stream.write(length.to_bytes(4, "big", signed=False))
+    stream.write(string.encode("ascii"))
+
+
+def write_string_list(stream, li):
+    length = len(li)
+    write_int32(stream, length)
+    for string in li:
+        write_string(stream, string)
+
+
+def write_effects(stream, allele):
+    effect_data = allele.effects
+    effect_genes = None
+    if not allele.is_reference_allele and allele.allele_index != -1:
+        effect_genes = allele.effect.genes
+    if effect_genes:
+        write_int8(stream, 1)
+        write_string_list(stream, [eg.effect for eg in effect_genes])
+        write_string_list(stream, [eg.symbol for eg in effect_genes])
+    else:
+        write_int8(stream, 0)
+    write_string_list(effect_data)
+
+
+def write_genotype(stream, gt):
+    rows, _ = gt.shape
+    assert rows == 2
+    flat = gt.flatten(order="F")
+    buff = flat.tobytes()
+
+    write_int32(stream, len(buff))
+    stream.write(buff)
+
+
+def write_best_state(stream, best_state):
+    _, col_count = best_state.shape
+    flat = best_state.flatten(order="F")
+    buff = flat.tobytes()
+
+    write_int32(stream, len(buff))
+    write_int32(stream, col_count)
+    stream.write(buff)
+
+
+def write_enum(stream, enum):
+    write_int8(stream, enum.value)
+
+
+def read_int8(stream):
+    return int.from_bytes(stream.read(1), "big", signed=False)
+
+
+def read_int32(stream):
+    return int.from_bytes(stream.read(4), "big", signed=False)
+
+
+def read_np_int64(stream):
+    return np.frombuffer(stream.read(8), dtype=np.int64)[0]
+
+
+def read_float(stream):
+    return [struct.unpack("f", stream.read(4))]
+
+
+def read_string(stream):
+    length = read_int32(stream)
+    return stream.read(length).decode("ascii")
+
+
+def read_string_list(stream):
+    length = int.from_bytes(stream.read(4), "big", signed=False)
+    out = []
+    for i in range(0, length):
+        out.append(read_string(stream))
+    return out
+
+
+def read_effects(stream):
+    assert False
+    res = [{"effects": None}]
+    data = read_string_list(stream)
+    if not data:
+        return res
+    res.extend([{"effects": e} for e in data.split("#")])
+
+    return res
+
+
+def read_genotype(stream):
+    length = read_int32(stream)
+    buff = stream.read(length)
+    gt = np.frombuffer(buff, dtype=np.int8)
+    assert len(gt) % 2 == 0
+
+    size = len(gt) // 2
+    gt = gt.reshape([2, size], order="F")
+    return gt
+
+
+def read_best_state(stream):
+    length = read_int32(stream)
+    col_count = read_int32(stream)
+    buff = stream.read(length)
+    best_state = np.frombuffer(buff, dtype=np.int8)
+    assert len(best_state) % col_count == 0
+
+    size = len(best_state) // col_count
+    best_state = best_state.reshape([size, col_count], order="F")
+    return best_state
+
+
+def read_variant_type(stream):
+    return VariantType(read_int8(stream))
+
+
+def read_genetic_model(stream):
+    return GeneticModel(read_int8(stream))
+
+
+def read_transmission_type(stream):
+    return TransmissionType(read_int8(stream))
+
+
+Serializer = namedtuple("Serializer", ["serialize", "deserialize"])
+StringSerializer = Serializer(write_string, read_string)
+IntSerializer = Serializer(write_int32, read_int32)
+Int8Serializer = Serializer(write_int8, read_int8)
+NpInt64Serializer = Serializer(write_np_int64, read_np_int64)
+FloatSerializer = Serializer(write_float, read_float)
+VariantTypeSerializer = Serializer(write_enum, read_variant_type)
+StringListSerializer = Serializer(write_string_list, read_string_list)
+GenotypeSerializer = Serializer(write_genotype, read_genotype)
+BestStateserializer = Serializer(write_best_state, read_best_state)
+GeneticModelSerializer = Serializer(write_enum, read_genetic_model)
+TransmissionTypeSerializer = Serializer(write_enum, read_transmission_type)
+
+
+class AlleleParquetSerializer:
+
+    BASE_SEARCHABLE_PROPERTIES_TYPES = {
+        "chromosome": pa.string(),
+        "position": pa.int32(),
+        "end_position": pa.int32(),
+        "genes": pa.list_(pa.string()),
+        "effects": pa.list_(pa.string()),
+    }
+
+    def __init__(
+        self,
+        summary_properties_serializers: Dict[str, Tuple[Any]],
+        annotation_properties_serializers: Dict[str, Tuple[Any]],
+        family_properties_serializers: Dict[str, Tuple[Any]],
+        member_properties_serializers: Dict[str, Tuple[Any]],
+        additional_searchable_properties_types: Dict[str, pa.DataType],
+    ):
+        self.summary_properties_serializers = summary_properties_serializers
+        self.annotation_properties_serializers = (
+            annotation_properties_serializers
+        )
+        self.family_properties_serializers = family_properties_serializers
+        self.member_properties_serializers = member_properties_serializers
+
+        self.property_serializers_list = [
+            self.summary_properties_serializers,
+            self.annotation_properties_serializers,
+            self.family_properties_serializers,
+            self.member_properties_serializers,
+        ]
+
+        self.searchable_properties_types = {
+            **self.BASE_SEARCHABLE_PROPERTIES_TYPES,
+            **additional_searchable_properties_types,
+        }
+
+    @property
+    def summary_properties(self):
+        return self.summary_properties_serializers.keys()
+
+    @property
+    def annotation_properties(self):
+        return self.annotation_properties_serializers.keys()
+
+    @property
+    def family_properties(self):
+        return self.family_properties_serializers.keys()
+
+    @property
+    def member_properties(self):
+        return self.member_properties_serializers.keys()
+
+    @property
+    def searchable_properties(self):
+        return self.searchable_properties_types.keys()
+
+    def allele_to_table(self, allele):
+        schema = self.get_schema()
+        data = {}
+        for spr in self.searchable_properties:
+            data[spr] = [getattr(allele, spr, None)]
+            if data[spr] is None:
+                data[spr] = [allele.get_attribute(spr)]
+        data["data"] = [self.serialize_allele(allele)]
+        table = pa.Table.from_pydict(data, schema)
+        return table
+
+    def serialize_allele(self, allele):
+        stream = io.BytesIO()
+        for property_serializers in self.property_serializers_list:
+            for prop, serializer in property_serializers.items():
+                print(f"Serializing {prop}")
+                value = getattr(allele, prop, None)
+                if value is None:
+                    value = allele.get_attribute(prop)
+                self.write_property(stream, value, serializer)
+
+        stream.seek(0)
+        output = stream.read()
+        stream.close()
+        return output
+
+    def write_property(self, stream, value, serializer):
+        if value is None:
+            write_int8(stream, 0)
+        else:
+            write_int8(stream, 1)
+            serializer.serialize(stream, value)
+
+    def deserialize_allele(self, data):
+        stream = io.BytesIO(data)
+        for property_serializers in self.property_serializers_list:
+            for prop, serializer in property_serializers.items():
+                is_not_none = read_int8(stream)
+                if is_not_none:
+                    print(f"{prop}: {serializer.deserialize(stream)}")
+                else:
+                    print(f"{prop}: None")
+
+    def get_schema(self):
+        fields = []
+        for spr in self.searchable_properties:
+            field = pa.field(spr, self.searchable_properties_types[spr])
+            fields.append(field)
+        fields.append(pa.field("data", pa.binary()))
+        schema = pa.schema(fields)
+        return schema
+
+    @staticmethod
+    def from_variant(variant, annotation_schema=None):
+        summary_prop_serializers = {
+            "chromosome": StringSerializer,
+            "position": IntSerializer,
+            "end_position": IntSerializer,
+            "variant_type": VariantTypeSerializer,
+            "reference": StringSerializer,
+            "alternative": StringListSerializer,
+            "allele_index": Int8Serializer,
+            "summary_index": IntSerializer,
+            "transmission_type": TransmissionTypeSerializer,
+        }
+
+        family_prop_serializers = {
+            "family_id": StringSerializer,
+            "gt": GenotypeSerializer,
+            "best_state": BestStateserializer,
+            "genetic_model": GeneticModelSerializer,
+        }
+
+        annotation_prop_serializers = {}
+
+        if variant.get_attribute("af_allele_freq"):
+            annotation_prop_serializers["af_allele_freq"] = FloatSerializer
+            annotation_prop_serializers["af_allele_count"] = NpInt64Serializer
+            annotation_prop_serializers[
+                "af_parents_called_count"
+            ] = IntSerializer
+            annotation_prop_serializers[
+                "af_parents_called_percent"
+            ] = FloatSerializer
+
+        if variant.get_attribute("effect_type"):
+            annotation_prop_serializers["effect_type"] = StringSerializer
+            annotation_prop_serializers[
+                "effect_gene_genes"
+            ] = StringListSerializer
+            annotation_prop_serializers[
+                "effect_gene_types"
+            ] = StringListSerializer
+            annotation_prop_serializers[
+                "effect_details_details"
+            ] = StringListSerializer
+            annotation_prop_serializers[
+                "effect_details_transcript_ids"
+            ] = StringListSerializer
+
+        if annotation_schema:
+            # TODO: Handling of genomic scores by searching for floats
+            pass
+
+        member_prop_serializers = {}
+
+        additional_searchable_properties_types = {}
+
+        return AlleleParquetSerializer(
+            summary_prop_serializers,
+            annotation_prop_serializers,
+            family_prop_serializers,
+            member_prop_serializers,
+            additional_searchable_properties_types,
+        )
 
 
 class ParquetSerializer(object):
