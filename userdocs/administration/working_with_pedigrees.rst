@@ -1,6 +1,8 @@
+.. _working_with_pedigrees:
+
+
 Working With Pedigrees Guide
 ============================
-
 
 Brief outline
 #############
