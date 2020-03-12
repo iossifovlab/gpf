@@ -535,7 +535,10 @@ class GeneModelDB:
             exon_frames = ",".join([str(e.frame) for e in tm.exons])
 
             add_atts = ";".join(
-                [k + ":" + str(v) for k, v in list(tm.attributes.items())]
+                [
+                    k + ":" + str(v).replace(":", "_")
+                    for k, v in list(tm.attributes.items())
+                ]
             )
 
             cs = [
