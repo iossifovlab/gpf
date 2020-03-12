@@ -15,6 +15,7 @@ from dae.GeneModelFiles import (
     load_ref_seq_gene_models_format,
     load_ccds_gene_models_format,
     load_known_gene_models_format,
+    load_gtf_gene_modles_format,
     probe_header,
     probe_columns,
     infer_gene_model_parser,
@@ -25,12 +26,68 @@ from dae.GeneModelFiles import (
 
 def test_gene_models_from_gtf(fixture_dirname):
     gtf_filename = fixture_dirname("gene_models/test_ref_gene.gtf")
+    print(gtf_filename)
+
     assert os.path.exists(gtf_filename)
     gm = GeneModelDB()
     gtfGeneModelParser(gm, gtf_filename)
 
     assert len(gm.transcriptModels) == 12
     assert len(gm._geneModels) == 12
+
+    gm1 = load_gtf_gene_modles_format(gtf_filename)
+    assert gm1 is not None
+
+
+@pytest.mark.parametrize(
+    "filename",
+    [
+        "gene_models/test_gencode_selenon.gtf",
+        "gene_models/test_ref_gene.gtf",
+        "gene_models/test_gencode.gtf",
+    ],
+)
+def test_gene_models_from_gtf_selenon(fixture_dirname, filename):
+    gtf_filename = fixture_dirname(filename)
+    print(gtf_filename)
+
+    gm = GeneModelDB()
+    gtfGeneModelParser(gm, gtf_filename)
+
+    # assert len(gm.transcriptModels) == 5
+    # assert len(gm._geneModels) == 1
+
+    gm1 = load_gtf_gene_modles_format(gtf_filename)
+    assert gm1 is not None
+    # assert len(gm1.transcriptModels) == 5
+    # assert len(gm1._geneModels) == 1
+
+    for tr_id, tm in gm.transcriptModels.items():
+        tm1 = gm1.transcriptModels[tr_id]
+
+        assert tm.tr_id == tm1.tr_id
+        assert tm.tr_name == tm1.tr_name
+        assert tm.gene == tm1.gene
+        assert tm.chrom == tm1.chrom
+        assert tm.cds == tm1.cds
+        assert tm.strand == tm1.strand
+        assert tm.tx == tm1.tx
+        assert len(tm.utrs) == len(tm1.utrs), (len(tm.utrs), len(tm1.utrs))
+        assert tm.utrs == tm1.utrs, (tm.utrs, tm1.utrs)
+        assert tm.start_codon == tm1.start_codon
+        assert tm.stop_codon == tm1.stop_codon
+
+        assert len(tm.exons) == len(tm1.exons)
+        for index, (exon, exon1) in enumerate(zip(tm.exons, tm1.exons)):
+            assert exon.start == exon1.start, (
+                tm.exons[: index + 2],
+                tm1.exons[: index + 2],
+            )
+            assert exon.stop == exon1.stop
+            assert exon.frame == exon1.frame
+            assert exon.number == exon1.number
+            assert exon.cds_start == exon1.cds_start
+            assert exon.cds_stop == exon1.cds_stop
 
 
 def test_gene_models_from_ref_gene_ref_seq(fixture_dirname):
@@ -128,7 +185,6 @@ def test_gene_models_probe_header(fixture_dirname):
     assert probe_header(filename, GENE_MODELS_FORMAT_COLUMNS["refflat"])
 
 
-# @pytest.mark.xfail(reason="KnownGene file format parser is broken")
 def test_gene_models_from_known_gene(fixture_dirname):
     filename = fixture_dirname("gene_models/test_known_gene.txt")
     gene_mapping_file = fixture_dirname("gene_models/kg_id2sym.txt.gz")
