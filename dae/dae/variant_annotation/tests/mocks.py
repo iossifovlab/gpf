@@ -14,8 +14,8 @@ class TranscriptModelMock(object):
         self.exons = exons
         self.chrom = "1"
         self.gene = "B"
-        self.trID = "123"
-        self.trOrigId = "123"
+        self.tr_id = "123"
+        self.tr_name = "123"
 
         if coding is None:
             self.coding = self.exons

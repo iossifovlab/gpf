@@ -629,9 +629,21 @@ def load_default_gene_models_format(
 def load_ref_flat_gene_models_format(
     filename, gene_mapping_file=None, nrows=None
 ):
-    df = parse_raw(
-        filename, GENE_MODELS_FORMAT_COLUMNS["refflat"], nrows=nrows
-    )
+    expected_columns = [
+        "#geneName",
+        "name",
+        "chrom",
+        "strand",
+        "txStart",
+        "txEnd",
+        "cdsStart",
+        "cdsEnd",
+        "exonCount",
+        "exonStarts",
+        "exonEnds",
+    ]
+
+    df = parse_raw(filename, expected_columns, nrows=nrows)
     if df is None:
         return None
 
@@ -678,7 +690,26 @@ def load_ref_flat_gene_models_format(
 def load_ref_seq_gene_models_format(
     filename, gene_mapping_file=None, nrows=None
 ):
-    df = parse_raw(filename, GENE_MODELS_FORMAT_COLUMNS["refseq"], nrows=nrows)
+    expected_columns = [
+        "#bin",
+        "name",
+        "chrom",
+        "strand",
+        "txStart",
+        "txEnd",
+        "cdsStart",
+        "cdsEnd",
+        "exonCount",
+        "exonStarts",
+        "exonEnds",
+        "score",
+        "name2",
+        "cdsStartStat",
+        "cdsEndStat",
+        "exonFrames",
+    ]
+
+    df = parse_raw(filename, expected_columns, nrows=nrows)
     if df is None:
         return None
 
@@ -736,17 +767,23 @@ def load_ref_seq_gene_models_format(
 
 def probe_header(filename, expected_columns, comment=None):
     df = pd.read_csv(filename, sep="\t", nrows=1, header=None, comment=comment)
+    print(df.head())
+    print(list(df.iloc[0, :]), expected_columns)
     return list(df.iloc[0, :]) == expected_columns
 
 
 def probe_columns(filename, expected_columns, comment=None):
     df = pd.read_csv(filename, sep="\t", nrows=1, header=None, comment=comment)
+    print(df.head())
+    print(list(df.columns), list(range(0, len(expected_columns))))
     return list(df.columns) == list(range(0, len(expected_columns)))
 
 
 def parse_raw(filename, expected_columns, nrows=None, comment=None):
     if probe_header(filename, expected_columns, comment=comment):
         df = pd.read_csv(filename, sep="\t", nrows=nrows, comment=comment)
+        print(df.head())
+        print(list(df.columns), expected_columns)
         assert list(df.columns) == expected_columns
 
         return df
@@ -763,87 +800,28 @@ def parse_raw(filename, expected_columns, nrows=None, comment=None):
         return df
 
 
-GENE_MODELS_FORMAT_COLUMNS = {
-    "gtf": [
-        "seqname",
-        "source",
-        "feature",
-        "start",
-        "end",
-        "score",
-        "strand",
-        "phase",
-        "attributes",
-        # "comments",
-    ],
-    "ccds": [  # CCDS is identical with RefSeq
-        "#bin",
-        "name",
-        "chrom",
-        "strand",
-        "txStart",
-        "txEnd",
-        "cdsStart",
-        "cdsEnd",
-        "exonCount",
-        "exonStarts",
-        "exonEnds",
-        "score",
-        "name2",
-        "cdsStartStat",
-        "cdsEndStat",
-        "exonFrames",
-    ],
-    "refseq": [
-        "#bin",
-        "name",
-        "chrom",
-        "strand",
-        "txStart",
-        "txEnd",
-        "cdsStart",
-        "cdsEnd",
-        "exonCount",
-        "exonStarts",
-        "exonEnds",
-        "score",
-        "name2",
-        "cdsStartStat",
-        "cdsEndStat",
-        "exonFrames",
-    ],
-    "refflat": [
-        "#geneName",
-        "name",
-        "chrom",
-        "strand",
-        "txStart",
-        "txEnd",
-        "cdsStart",
-        "cdsEnd",
-        "exonCount",
-        "exonStarts",
-        "exonEnds",
-    ],
-    "knowngene": [
-        "name",
-        "chrom",
-        "strand",
-        "txStart",
-        "txEnd",
-        "cdsStart",
-        "cdsEnd",
-        "exonCount",
-        "exonStarts",
-        "exonEnds",
-        "proteinID",
-        "alignID",
-    ],
-}
-
-
 def load_ccds_gene_models_format(filename, gene_mapping_file=None, nrows=None):
-    df = parse_raw(filename, GENE_MODELS_FORMAT_COLUMNS["ccds"], nrows=nrows)
+    expected_columns = [
+        # CCDS is identical with RefSeq
+        "#bin",
+        "name",
+        "chrom",
+        "strand",
+        "txStart",
+        "txEnd",
+        "cdsStart",
+        "cdsEnd",
+        "exonCount",
+        "exonStarts",
+        "exonEnds",
+        "score",
+        "name2",
+        "cdsStartStat",
+        "cdsEndStat",
+        "exonFrames",
+    ]
+
+    df = parse_raw(filename, expected_columns, nrows=nrows)
     if df is None:
         return None
 
@@ -907,9 +885,22 @@ def load_ccds_gene_models_format(filename, gene_mapping_file=None, nrows=None):
 def load_known_gene_models_format(
     filename, gene_mapping_file=None, nrows=None
 ):
-    df = parse_raw(
-        filename, GENE_MODELS_FORMAT_COLUMNS["knowngene"], nrows=nrows
-    )
+    expected_columns = [
+        "name",
+        "chrom",
+        "strand",
+        "txStart",
+        "txEnd",
+        "cdsStart",
+        "cdsEnd",
+        "exonCount",
+        "exonStarts",
+        "exonEnds",
+        "proteinID",
+        "alignID",
+    ]
+
+    df = parse_raw(filename, expected_columns, nrows=nrows)
     if df is None:
         return None
 
@@ -960,8 +951,19 @@ def load_known_gene_models_format(
     return gm
 
 
-def load_gtf_gene_modles_format(filename, gene_mapping_file=None, nrows=None):
-    expected_columns = GENE_MODELS_FORMAT_COLUMNS["gtf"]
+def load_gtf_gene_models_format(filename, gene_mapping_file=None, nrows=None):
+    expected_columns = [
+        "seqname",
+        "source",
+        "feature",
+        "start",
+        "end",
+        "score",
+        "strand",
+        "phase",
+        "attributes",
+        # "comments",
+    ]
     df = parse_raw(filename, expected_columns, nrows=nrows, comment="#",)
 
     if df is None:
@@ -1084,7 +1086,7 @@ SUPPORTED_GENE_MODELS_FILE_FORMATS = {
     "refseq": load_ref_seq_gene_models_format,
     "ccds": load_ccds_gene_models_format,
     "knowngene": load_known_gene_models_format,
-    "gtf": load_gtf_gene_modles_format,
+    "gtf": load_gtf_gene_models_format,
     "ucscgenepred": None,
 }
 
