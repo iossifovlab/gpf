@@ -2,6 +2,7 @@ from dae.configuration.gpf_config_parser import (
     validate_existing_path,
     validate_path,
 )
+from dae.configuration.schemas.person_sets import person_set_collections_schema
 
 phenotype_schema = {
     "type": "dict",
@@ -435,4 +436,5 @@ study_config_schema = {
             "effect_types": {"type": "list", "schema": {"type": "string"}},
         },
     },
+    "person_set_collections": person_set_collections_schema,
 }
