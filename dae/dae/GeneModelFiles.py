@@ -488,8 +488,8 @@ class GeneModelDB:
             )
             return None
 
-        f = open(file)
-        relabel = dict([(line.split()[0], line.split()[1]) for line in f])
+        with open(file) as f:
+            relabel = dict([(line.split()[0], line.split()[1]) for line in f])
 
         for chrom in self._utrModels.keys():
 
@@ -499,21 +499,16 @@ class GeneModelDB:
             except KeyError:
                 pass
 
-        for trID in self.transcriptModels:
+        for tr_id in self.transcriptModels:
             try:
-                self.transcriptModels[trID].chr = relabel[
-                    self.transcriptModels[trID].chrom
+                self.transcriptModels[tr_id].chrom = relabel[
+                    self.transcriptModels[tr_id].chrom
                 ]
             except KeyError:
                 pass
 
-    def save(self, outputFile, gzipped=True):
-        if gzipped:
-            f = gzip.open(outputFile + ".gz", "wt")
-        else:
-            f = open(outputFile, "wt")
-
-        f.write(
+    def _save_gene_models(self, outfile):
+        outfile.write(
             "\t".join(
                 [
                     "chr",
@@ -532,7 +527,7 @@ class GeneModelDB:
                 ]
             )
         )
-        f.write("\n")
+        outfile.write("\n")
 
         for tm in self.transcriptModels.values():
             exon_starts = ",".join([str(e.start) for e in tm.exons])
@@ -540,13 +535,13 @@ class GeneModelDB:
             exon_frames = ",".join([str(e.frame) for e in tm.exons])
 
             add_atts = ";".join(
-                [k + ":" + str(v) for k, v in list(tm.attr.items())]
+                [k + ":" + str(v) for k, v in list(tm.attributes.items())]
             )
 
             cs = [
                 tm.chrom,
                 tm.tr_id,
-                tm.name,
+                tm.tr_name,
                 tm.gene,
                 tm.strand,
                 tm.tx[0],
@@ -558,15 +553,24 @@ class GeneModelDB:
                 exon_frames,
                 add_atts,
             ]
-            f.write("\t".join([str(x) if x is not None else "" for x in cs]))
-            f.write("\n")
-        f.close()
+            outfile.write("\t".join([str(x) if x else "" for x in cs]))
+            outfile.write("\n")
+
+    def save(self, output_filename, gzipped=True):
+        if gzipped:
+            with gzip.open(f"{output_filename}.gz", "wt") as outfile:
+                self._save_gene_models(outfile)
+        else:
+
+            with open(output_filename, "wt") as outfile:
+                self._save_gene_models(outfile)
 
 
 def load_default_gene_models_format(
     filename, gene_mapping_file=None, nrows=None
 ):
-    df = pd.read_csv(filename, sep="\t", nrows=nrows)
+    df = pd.read_csv(filename, sep="\t", nrows=nrows, dtype={"atts": str,})
+
     expected_columns = [
         "chr",
         "trID",
@@ -581,6 +585,7 @@ def load_default_gene_models_format(
         "exonFrames",
         "atts",
     ]
+    assert set(expected_columns) <= set(df.columns)
 
     if not set(expected_columns) <= set(df.columns):
         return None
@@ -602,7 +607,8 @@ def load_default_gene_models_format(
         for start, end, frame in zip(exon_starts, exon_ends, exon_frames):
             exons.append(Exon(start=start, stop=end, frame=frame))
         attributes = {}
-        if line.get("atts") is not None:
+        atts = line.get("atts")
+        if atts and isinstance(atts, str):
             attributes = dict(
                 [a.split(":") for a in line.get("atts").split(";")]
             )

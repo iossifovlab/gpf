@@ -295,3 +295,57 @@ def test_infer_gene_models(fixture_dirname, filename, fileformat):
     )
     assert inferred_fileformat is not None
     assert inferred_fileformat == fileformat
+
+
+@pytest.mark.parametrize(
+    "filename,fileformat",
+    [
+        ("gene_models/test_ref_flat.txt", "refflat"),
+        ("gene_models/test_ref_flat_no_header.txt", "refflat"),
+        ("gene_models/test_ccds.txt", "ccds"),
+        ("gene_models/test_ref_gene.txt", "refseq"),
+        ("gene_models/test_ref_seq_hg38.txt", "refseq"),
+        ("gene_models/test_known_gene.txt", "knowngene"),
+        ("gene_models/test_default_ref_gene_201309.txt", "default"),
+    ],
+)
+def test_save_load_gene_models(
+    fixture_dirname, filename, fileformat, temp_filename
+):
+
+    filename = fixture_dirname(filename)
+    gm = load_gene_models(filename, fileformat=fileformat)
+    assert gm is not None
+    assert len(gm.transcriptModels) > 0
+
+    gm.save(temp_filename, gzipped=False)
+
+    gm1 = load_default_gene_models_format(temp_filename)
+    assert gm1 is not None
+
+    for tr_id, tm in gm.transcriptModels.items():
+        tm1 = gm1.transcriptModels[tr_id]
+
+        assert tm.tr_id == tm1.tr_id
+        assert tm.tr_name == tm1.tr_name
+        assert tm.gene == tm1.gene
+        assert tm.chrom == tm1.chrom
+        assert tm.cds == tm1.cds
+        assert tm.strand == tm1.strand
+        assert tm.tx == tm1.tx
+        assert len(tm.utrs) == len(tm1.utrs), (len(tm.utrs), len(tm1.utrs))
+        assert tm.utrs == tm1.utrs, (tm.utrs, tm1.utrs)
+        assert tm.start_codon == tm1.start_codon
+        assert tm.stop_codon == tm1.stop_codon
+
+        assert len(tm.exons) == len(tm1.exons)
+        for index, (exon, exon1) in enumerate(zip(tm.exons, tm1.exons)):
+            assert exon.start == exon1.start, (
+                tm.exons[: index + 2],
+                tm1.exons[: index + 2],
+            )
+            assert exon.stop == exon1.stop
+            assert exon.frame == exon1.frame
+            assert exon.number == exon1.number
+            assert exon.cds_start == exon1.cds_start
+            assert exon.cds_stop == exon1.cds_stop
