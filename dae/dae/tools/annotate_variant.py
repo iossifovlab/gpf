@@ -252,10 +252,6 @@ else:
     gmDB = load_gene_models(opts.Traw, None, opts.TrawFormat)
 
 
-# if "1" in GA.allChromosomes and "1" not in gmDB._utrModels.keys():
-#     gmDB.relabel_chromosomes()
-
-
 sys.stderr.write("GENOME: " + GA.genomicFile + "\n")
 
 sys.stderr.write("GENE MODEL FILES: " + gmDB.location + "\n")

@@ -381,45 +381,37 @@ class TranscriptModel:
 
 
 #
-# GeneModel's database
+# GeneModel's
 #
-class GeneModelDB:
+class GeneModels:
     def __init__(self, name=None, location=None):
         self.name = name
         self.location = location
         self._shift = None
         self._alternative_names = None
 
-        self._utrModels = {}
-        self.transcriptModels = {}
-        self._geneModels = defaultdict(list)
+        self.utr_models = defaultdict(lambda: defaultdict(list))
+        self.transcript_models = {}
+        self.gene_models = defaultdict(list)
 
-    # from orgininal without editing
-    def addModelToDict(self, tm):
+    def _add_transcript_model(self, tm):
 
-        assert tm.tr_id not in self.transcriptModels
+        assert tm.tr_id not in self.transcript_models
 
-        self.transcriptModels[tm.tr_id] = tm
-        self._geneModels[tm.gene].append(tm)
+        self.transcript_models[tm.tr_id] = tm
+        self.gene_models[tm.gene].append(tm)
 
-        try:
-            self._utrModels[tm.chrom][tm.tx].append(tm)
-        except KeyError as e:
-            if e.args[0] == tm.chrom:
-                self._utrModels[tm.chrom] = {}
-            self._utrModels[tm.chrom][tm.tx] = [tm]
+        self.utr_models[tm.chrom][tm.tx].append(tm)
 
-        return -1
-
-    def _updateIndexes(self):
-        self._geneModels = defaultdict(list)
-        self._utrModels = defaultdict(lambda: defaultdict(list))
-        for tm in self.transcriptModels.values():
-            self._geneModels[tm.gene].append(tm)
-            self._utrModels[tm.chrom][tm.tx].append(tm)
+    def _update_indexes(self):
+        self.gene_models = defaultdict(list)
+        self.utr_models = defaultdict(lambda: defaultdict(list))
+        for tm in self.transcript_models.values():
+            self.gene_models[tm.gene].append(tm)
+            self.utr_models[tm.chrom][tm.tx].append(tm)
 
     def gene_names(self):
-        if self._geneModels is None:
+        if self.gene_models is None:
             print(
                 "Gene Models haven't been created/uploaded yet! "
                 "Use either loadGeneModels function or "
@@ -427,60 +419,60 @@ class GeneModelDB:
             )
             return None
 
-        return self._geneModels.keys()
+        return list(self.gene_models.keys())
 
     def gene_models_by_gene_name(self, name):
-        return self._geneModels.get(name, None)
+        return self.gene_models.get(name, None)
 
-    def gene_models_by_location(self, chr, pos1, pos2=None):
-        R = []
+    # def gene_models_by_location(self, chrom, pos1, pos2=None):
+    #     result = []
 
-        if pos2 is None:
-            for key in self._utrModels[chr]:
-                if pos1 >= key[0] and pos1 <= key[1]:
-                    R.extend(self._utrModels[chr][key])
+    #     if pos2 is None:
+    #         for key in self.utr_models[chrom]:
+    #             if pos1 >= key[0] and pos1 <= key[1]:
+    #                 result.extend(self.utr_models[chrom][key])
 
-        else:
-            if pos2 < pos1:
-                pos1, pos2 = pos2, pos1
+    #     else:
+    #         if pos2 < pos1:
+    #             pos1, pos2 = pos2, pos1
 
-            for key in self._utrModels[chr]:
-                if (pos1 <= key[0] and pos2 >= key[0]) or (
-                    pos1 >= key[0] and pos1 <= key[1]
-                ):
-                    R.extend(self._utrModels[chr][key])
+    #         for key in self.utr_models[chrom]:
+    #             if (pos1 <= key[0] and pos2 >= key[0]) or (
+    #                 pos1 >= key[0] and pos1 <= key[1]
+    #             ):
+    #                 result.extend(self.utr_models[chrom][key])
 
-        return R
+    #     return result
 
-    def relabel_chromosomes_chr(self, Relabel):
+    # def relabel_chromosomes_chr(self, relabel):
 
-        if self.transcriptModels is None:
-            print(
-                "Gene Models haven't been created/uploaded yet! "
-                "Use either loadGeneModels function or "
-                "self.createGeneModelDict function"
-            )
-            return None
+    #     if self.transcript_models is None:
+    #         print(
+    #             "Gene Models haven't been created/uploaded yet! "
+    #             "Use either loadGeneModels function or "
+    #             "self.createGeneModelDict function"
+    #         )
+    #         return None
 
-        for chrom in self._utrModels.keys():
+    #     for chrom in self.utr_models.keys():
 
-            try:
-                self._utrModels[Relabel[chrom]] = self._utrModels[chrom]
-                self._utrModels.pop(chrom)
-            except KeyError:
-                pass
+    #         try:
+    #             self.utr_models[relabel[chrom]] = self.utr_models[chrom]
+    #             self.utr_models.pop(chrom)
+    #         except KeyError:
+    #             pass
 
-        for trID in self.transcriptModels:
-            try:
-                self.transcriptModels[trID].chr = Relabel[
-                    self.transcriptModels[trID].chr
-                ]
-            except KeyError:
-                pass
+    #     for tr_id in self.transcript_models:
+    #         try:
+    #             self.transcript_models[tr_id].chrom = relabel[
+    #                 self.transcript_models[tr_id].chrom
+    #             ]
+    #         except KeyError:
+    #             pass
 
     def relabel_chromosomes(self, file="ucsc2gatk.txt"):
 
-        if self.transcriptModels is None:
+        if self.transcript_models is None:
             print(
                 "Gene Models haven't been created/uploaded yet! "
                 "Use either loadGeneModels function or "
@@ -491,21 +483,20 @@ class GeneModelDB:
         with open(file) as f:
             relabel = dict([(line.split()[0], line.split()[1]) for line in f])
 
-        for chrom in self._utrModels.keys():
+        for chrom in self.utr_models.keys():
 
-            try:
-                self._utrModels[relabel[chrom]] = self._utrModels[chrom]
-                self._utrModels.pop(chrom)
-            except KeyError:
-                pass
+            new_chrom = relabel.get(chrom)
+            if new_chrom is None:
+                continue
+            self.utr_models[new_chrom] = self.utr_models[chrom]
+            self.utr_models.pop(chrom)
 
-        for tr_id in self.transcriptModels:
-            try:
-                self.transcriptModels[tr_id].chrom = relabel[
-                    self.transcriptModels[tr_id].chrom
-                ]
-            except KeyError:
-                pass
+        for tr_id in self.transcript_models:
+            new_chrom = relabel.get(self.transcript_models[tr_id].chrom)
+            if new_chrom is None:
+                continue
+
+            self.transcript_models[tr_id].chrom = new_chrom
 
     def _save_gene_models(self, outfile):
         outfile.write(
@@ -529,7 +520,7 @@ class GeneModelDB:
         )
         outfile.write("\n")
 
-        for tm in self.transcriptModels.values():
+        for tm in self.transcript_models.values():
             exon_starts = ",".join([str(e.start) for e in tm.exons])
             exon_ends = ",".join([str(e.stop) for e in tm.exons])
             exon_frames = ",".join([str(e.frame) for e in tm.exons])
@@ -597,7 +588,7 @@ def load_default_gene_models_format(
         tr_names = pd.Series(data=df["trID"].values)
         df["trOrigId"] = tr_names
 
-    gm = GeneModelDB(location=filename)
+    gm = GeneModels(location=filename)
 
     records = df.to_dict(orient="records")
     for line in records:
@@ -626,9 +617,9 @@ def load_default_gene_models_format(
             exons=exons,
             attributes=attributes,
         )
-        gm.transcriptModels[tm.tr_id] = tm
+        gm.transcript_models[tm.tr_id] = tm
 
-    gm._updateIndexes()
+    gm._update_indexes()
     if nrows is not None:
         return True
 
@@ -644,7 +635,7 @@ def load_ref_flat_gene_models_format(
     if df is None:
         return None
 
-    gm = GeneModelDB(location=filename)
+    gm = GeneModels(location=filename)
     records = df.to_dict(orient="records")
 
     transcript_ids_counter = defaultdict(int)
@@ -679,7 +670,7 @@ def load_ref_flat_gene_models_format(
             exons=exons,
         )
         tm.update_frames()
-        gm.addModelToDict(tm)
+        gm._add_transcript_model(tm)
 
     return gm
 
@@ -691,7 +682,7 @@ def load_ref_seq_gene_models_format(
     if df is None:
         return None
 
-    gm = GeneModelDB(location=filename)
+    gm = GeneModels(location=filename)
     records = df.to_dict(orient="records")
 
     transcript_ids_counter = defaultdict(int)
@@ -738,7 +729,7 @@ def load_ref_seq_gene_models_format(
             attributes=attributes,
         )
         tm.update_frames()
-        gm.addModelToDict(tm)
+        gm._add_transcript_model(tm)
 
     return gm
 
@@ -856,7 +847,7 @@ def load_ccds_gene_models_format(filename, gene_mapping_file=None, nrows=None):
     if df is None:
         return None
 
-    gm = GeneModelDB(location=filename)
+    gm = GeneModels(location=filename)
     records = df.to_dict(orient="records")
 
     transcript_ids_counter = defaultdict(int)
@@ -908,7 +899,7 @@ def load_ccds_gene_models_format(filename, gene_mapping_file=None, nrows=None):
             attributes=attributes,
         )
         tm.update_frames()
-        gm.addModelToDict(tm)
+        gm._add_transcript_model(tm)
 
     return gm
 
@@ -922,7 +913,7 @@ def load_known_gene_models_format(
     if df is None:
         return None
 
-    gm = GeneModelDB(location=filename)
+    gm = GeneModels(location=filename)
     records = df.to_dict(orient="records")
 
     transcript_ids_counter = defaultdict(int)
@@ -964,19 +955,9 @@ def load_known_gene_models_format(
             attributes=attributes,
         )
         tm.update_frames()
-        gm.addModelToDict(tm)
+        gm._add_transcript_model(tm)
 
     return gm
-
-
-# def pickledGeneModelParser(gm, file_name, gene_mapping_file=None):
-#     import pickle
-
-#     gm.location = file_name
-#     pkl_file = open(file_name, "rb")
-#     gm._utrModels, gm.transcriptModels, gm._geneModels =
-#       pickle.load(pkl_file)
-#     pkl_file.close()
 
 
 def load_gtf_gene_modles_format(filename, gene_mapping_file=None, nrows=None):
@@ -999,7 +980,7 @@ def load_gtf_gene_modles_format(filename, gene_mapping_file=None, nrows=None):
             result[key.strip()] = value.strip('"').strip()
         return result
 
-    gm = GeneModelDB(location=filename)
+    gm = GeneModels(location=filename)
 
     records = df.to_dict(orient="records")
     for rec in records:
@@ -1009,9 +990,9 @@ def load_gtf_gene_modles_format(filename, gene_mapping_file=None, nrows=None):
         attributes = parse_gtf_attributes(rec["attributes"])
         tr_id = attributes["transcript_id"]
         if feature in set(["transcript", "Selenocysteine"]):
-            if feature == "Selenocysteine" and tr_id in gm.transcriptModels:
+            if feature == "Selenocysteine" and tr_id in gm.transcript_models:
                 continue
-            if tr_id in gm.transcriptModels:
+            if tr_id in gm.transcript_models:
                 raise ValueError(
                     f"{tr_id} of {feature} already in transcript models"
                 )
@@ -1025,16 +1006,16 @@ def load_gtf_gene_modles_format(filename, gene_mapping_file=None, nrows=None):
                 cds=(rec["end"], rec["start"]),
                 attributes=attributes,
             )
-            gm.addModelToDict(tm)
+            gm._add_transcript_model(tm)
             continue
         if feature in {"CDS", "exon"}:
-            if tr_id not in gm.transcriptModels:
+            if tr_id not in gm.transcript_models:
                 raise ValueError(
                     f"exon or CDS transcript {tr_id} not found "
                     f"in transctipt models"
                 )
             exon_number = int(attributes["exon_number"])
-            tm = gm.transcriptModels[tr_id]
+            tm = gm.transcript_models[tr_id]
             if len(tm.exons) < exon_number:
                 tm.exons.append(Exon())
             assert len(tm.exons) >= exon_number
@@ -1054,7 +1035,7 @@ def load_gtf_gene_modles_format(filename, gene_mapping_file=None, nrows=None):
                 continue
         if feature in {"UTR", "5UTR", "3UTR", "start_codon", "stop_codon"}:
             exon_number = int(attributes["exon_number"])
-            tm = gm.transcriptModels[tr_id]
+            tm = gm.transcript_models[tr_id]
 
             if feature in {"UTR", "5UTR", "3UTR"}:
                 tm.utrs.append((rec["start"], rec["end"], exon_number))
@@ -1069,7 +1050,7 @@ def load_gtf_gene_modles_format(filename, gene_mapping_file=None, nrows=None):
 
         raise ValueError(f"unknown feature {feature} found in {filename}")
 
-    for tm in gm.transcriptModels.values():
+    for tm in gm.transcript_models.values():
         tm.exons = sorted(tm.exons, key=lambda x: x.start)
         tm.utrs = sorted(tm.utrs, key=lambda x: x[0])
         tm.update_frames()
@@ -1097,7 +1078,6 @@ def gene_mapping(filename):
     return alt_names
 
 
-# fmt: on
 SUPPORTED_GENE_MODELS_FILE_FORMATS = {
     "default": load_default_gene_models_format,
     "refflat": load_ref_flat_gene_models_format,
@@ -1155,45 +1135,23 @@ def load_gene_models(filename, gene_mapping_file=None, fileformat=None):
     return parser(filename, gene_mapping_file=gene_mapping_file)
 
 
-# def save_pickled_dicts(gm, outputFile="./geneModels"):
-#     pickle.dump(
-#         [gm._utrModels, gm.transcriptModels, gm._geneModels],
-#         open(outputFile + ".dump", "wb"),
-#         2,
-#     )
-
-
-# def create_region(chrom, b, e):
-#     reg = namedtuple("reg", "start stop chr")
-
-#     return reg(chr=chrom, start=b, stop=e)
-
-
 def join_gene_models(*gene_models):
 
     if len(gene_models) < 2:
         raise Exception("The function needs at least 2 arguments!")
 
-    gm = GeneModelDB()
-    gm._utrModels = {}
-    gm._geneModels = {}
+    gm = GeneModels()
+    gm.utr_models = {}
+    gm.gene_models = {}
 
-    gm.transcriptModels = gene_models[0].transcriptModels.copy()
+    gm.transcript_models = gene_models[0].transcript_models.copy()
 
     for i in gene_models[1:]:
-        gm.transcriptModels.update(i.transcriptModels)
+        gm.transcript_models.update(i.transcript_models)
 
-    gm._updateIndexes()
+    gm._update_indexes()
 
     return gm
-
-
-# if __name__ == "__main__":
-#     fn = "../../../tests/gtf/genePred.gtf"
-#     gm = GeneModelDB()
-#     print(gtfGeneModelParser(gm, fn))
-#     print(infer_format(fn))
-#     load_gene_models(fn)
 
 
 # column names that expected to have on certain formats
@@ -1284,10 +1242,10 @@ def defaultGeneModelParser(gm, file_name, gene_mapping_file=None):
         tm.exons = exons
         tm.attr = attrs
 
-        gm.transcriptModels[tm.tr_id] = tm
+        gm.transcript_models[tm.tr_id] = tm
 
     f.close()
-    gm._updateIndexes()
+    gm._update_indexes()
 
 
 def openFile(fileName):
@@ -1364,18 +1322,6 @@ class GtfFileReader:
 
         return GtfFileReader.gtfParseStr(line)  # rx
 
-    # # TODO: delete after migrate to python3
-    # # make code compatible to python2
-    # def next(self):
-    #     line = self._file.readline()
-    #     while line and (line[0] == "#"):
-    #         line = self._file.readline()
-
-    #     if line == "":
-    #         raise StopIteration
-
-    #     return GtfFileReader.gtfParseStr(line)  # rx
-
 
 def refSeqParser(gm, location=None, gene_mapping_file=None):
     colNames = Columns4FileFormat["refSeq"]
@@ -1398,7 +1344,7 @@ def refSeqParser(gm, location=None, gene_mapping_file=None):
         tm.tr_id += "_" + str(trIdC[tm.tr_id])
         tm.update_frames()
 
-        gm.addModelToDict(tm)
+        gm._add_transcript_model(tm)
 
     GMF.close()
 
@@ -1430,7 +1376,7 @@ def refFlatParser(gm, file_name, gene_mapping_file="default"):
         tm.tr_id += "_" + str(trIdC[tm.tr_id])
         tm.update_frames()
 
-        gm.addModelToDict(tm)
+        gm._add_transcript_model(tm)
 
     GMF.close()
 
@@ -1463,14 +1409,14 @@ def knownGeneParser(gm, file_name, gene_mapping_file="default"):
         tm.tr_id += "_" + str(trIdC[tm.tr_id])
         tm.update_frames()
 
-        gm.addModelToDict(tm)
+        gm._add_transcript_model(tm)
 
     gmf.close()
 
 
 #  format = refseq
 #  CCC = {"refseq":refseqParser, ....}
-#  o = GeneModelDB()
+#  o = GeneModels()
 #  CCC[format](o,file, geneMapFile)
 #
 
@@ -1503,7 +1449,7 @@ def ccdsParser(gm, file_name, gene_mapping_file="default"):
         tm.tr_id += "_" + str(trIdC[tm.tr_id])
         tm.update_frames()
 
-        gm.addModelToDict(tm)
+        gm._add_transcript_model(tm)
 
     GMF.close()
 
@@ -1532,7 +1478,7 @@ def ucscGenePredParser(gm, file_name, gene_mapping_file="default"):
         tm.tr_id += "_" + str(trIdC[tm.tr_id])
         tm.update_frames()
 
-        gm.addModelToDict(tm)
+        gm._add_transcript_model(tm)
 
     GMF.close()
 
@@ -1555,13 +1501,13 @@ def gtfGeneModelParser(gm, file_name, gene_mapping_file=None):
         if rx["feature"] in ["transcript", "Selenocysteine"]:
             if (
                 rx["feature"] in ["Selenocysteine"]
-                and trID in gm.transcriptModels
+                and trID in gm.transcript_models
             ):
                 continue
 
-            if trID in gm.transcriptModels:
+            if trID in gm.transcript_models:
                 raise Exception(
-                    "{} of {}: already existed on transcriptModels".format(
+                    "{} of {}: already existed on transcript_models".format(
                         trID, rx["feature"]
                     )
                 )
@@ -1576,14 +1522,14 @@ def gtfGeneModelParser(gm, file_name, gene_mapping_file=None):
             tm.cds = (rx["end"], rx["start"])
             tm.attr = rx["attributes"]
 
-            gm.addModelToDict(tm)
-            # gm.transcriptModels[tm.tr_id] = tm
+            gm._add_transcript_model(tm)
+            # gm.transcript_models[tm.tr_id] = tm
             continue
 
         if rx["feature"] in ["CDS", "exon"]:
-            if trID not in gm.transcriptModels:
+            if trID not in gm.transcript_models:
                 raise Exception(
-                    "{}: exon or CDS not existed on transcriptModels".format(
+                    "{}: exon or CDS not existed on transcript_models".format(
                         trID
                     )
                 )
@@ -1591,30 +1537,30 @@ def gtfGeneModelParser(gm, file_name, gene_mapping_file=None):
             ix = (
                 int(rx["attributes"]["exon_number"]) - 1
             )  # 1-based to 0-based indexing
-            # print trID, len(gm.transcriptModels[trID].exons), ix,
+            # print trID, len(gm.transcript_models[trID].exons), ix,
             # rx['attributes']['exon_number']
-            if len(gm.transcriptModels[trID].exons) <= ix:
-                gm.transcriptModels[trID].exons.append(Exon())
+            if len(gm.transcript_models[trID].exons) <= ix:
+                gm.transcript_models[trID].exons.append(Exon())
 
             if rx["feature"] == "exon":
-                gm.transcriptModels[trID].exons[ix].start = rx["start"]
-                gm.transcriptModels[trID].exons[ix].stop = rx["end"]
-                gm.transcriptModels[trID].exons[ix].frame = -1
-                gm.transcriptModels[trID].exons[ix].number = (
+                gm.transcript_models[trID].exons[ix].start = rx["start"]
+                gm.transcript_models[trID].exons[ix].stop = rx["end"]
+                gm.transcript_models[trID].exons[ix].frame = -1
+                gm.transcript_models[trID].exons[ix].number = (
                     ix + 1
                 )  # return to 1-base indexing
 
                 continue
 
             if rx["feature"] == "CDS":
-                gm.transcriptModels[trID].exons[ix].cds_start = rx["start"]
-                gm.transcriptModels[trID].exons[ix].cds_stop = rx["end"]
-                gm.transcriptModels[trID].exons[ix].frame = int(rx["phase"])
+                gm.transcript_models[trID].exons[ix].cds_start = rx["start"]
+                gm.transcript_models[trID].exons[ix].cds_stop = rx["end"]
+                gm.transcript_models[trID].exons[ix].frame = int(rx["phase"])
 
-                gm.transcriptModels[trID]._is_coding = True
+                gm.transcript_models[trID]._is_coding = True
 
-                # cx = gm.transcriptModels[trID].cds
-                # gm.transcriptModels[trID].cds =
+                # cx = gm.transcript_models[trID].cds
+                # gm.transcript_models[trID].cds =
                 # (min(cx[0],rx['start']), max(cx[1],rx['end']))
 
                 continue
@@ -1628,26 +1574,26 @@ def gtfGeneModelParser(gm, file_name, gene_mapping_file=None):
         ]:
             ix = int(rx["attributes"]["exon_number"])  # 1-based
             if "UTR" in rx["feature"]:
-                gm.transcriptModels[trID].utrs.append(
+                gm.transcript_models[trID].utrs.append(
                     (rx["start"], rx["end"], ix)
                 )
                 continue
 
             if rx["feature"] == "start_codon":
-                gm.transcriptModels[trID].start_codon = (
+                gm.transcript_models[trID].start_codon = (
                     rx["start"],
                     rx["end"],
                     ix,
                 )
             if rx["feature"] == "stop_codon":
-                gm.transcriptModels[trID].stop_codon = (
+                gm.transcript_models[trID].stop_codon = (
                     rx["start"],
                     rx["end"],
                     ix,
                 )
 
-            cx = gm.transcriptModels[trID].cds
-            gm.transcriptModels[trID].cds = (
+            cx = gm.transcript_models[trID].cds
+            gm.transcript_models[trID].cds = (
                 min(cx[0], rx["start"]),
                 max(cx[1], rx["end"]),
             )
@@ -1656,18 +1602,18 @@ def gtfGeneModelParser(gm, file_name, gene_mapping_file=None):
 
         raise Exception("unknown {} found".format(rx["feature"]))
 
-    for k in gm.transcriptModels.keys():
-        tm = gm.transcriptModels[k]
+    for k in gm.transcript_models.keys():
+        tm = gm.transcript_models[k]
         tm.exons = sorted(tm.exons, key=lambda x: x.start)
         tm.utrs = sorted(tm.utrs, key=lambda x: x[0])
         tm.update_frames()
 
-    # TODO: no needed: done by gm.addModelToDict(tm)
-    # for k, gx in gm.transcriptModels.items():
+    # TODO: no needed: done by gm._add_transcript_model(tm)
+    # for k, gx in gm.transcript_models.items():
     #   gID = gx.gene
-    #   if gID not in gm._geneModels: gm._geneModels[gID] = []
+    #   if gID not in gm.gene_models: gm.gene_models[gID] = []
     #
-    #   gm._geneModels[gID].append( gx )
+    #   gm.gene_models[gID].append( gx )
 
 
 #
@@ -1677,7 +1623,7 @@ def mitoGeneModelParser(gm, file_name, gene_mapping_file=None):
     gm.name = "mitomap"
     gm._alternative_names = None
 
-    gm._utrModels["chrM"] = {}
+    gm.utr_models["chrM"] = {}
     file = openFile(file_name)
 
     mode = None
@@ -1727,9 +1673,9 @@ def mitoGeneModelParser(gm, file_name, gene_mapping_file=None):
 
         mm.exons = [e]
 
-        gm._utrModels["chrM"][mm.tx] = [mm]
-        gm.transcriptModels[mm.tr_id] = mm
-        gm._geneModels[mm.gene] = [mm]
+        gm.utr_models["chrM"][mm.tx] = [mm]
+        gm.transcript_models[mm.tr_id] = mm
+        gm.gene_models[mm.gene] = [mm]
 
     file.close()
 
@@ -1784,5 +1730,5 @@ class parserLine4UCSC_genePred:
         # trIdC[tm.tr_id] += 1                       #TODO implimented outside
         # tm.tr_id += "_" + str(trIdC[tm.tr_id])      #TODO implimented outside
 
-        # cls.addModelToDict(tm)                   #TODO should be done outside
+        # cls._add_transcript_model(tm)                   #TODO should be done outside
         return tm, cs

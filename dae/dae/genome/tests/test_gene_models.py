@@ -3,7 +3,7 @@ import pytest
 import os
 
 from dae.GeneModelFiles import (
-    GeneModelDB,
+    GeneModels,
     gtfGeneModelParser,
     refSeqParser,
     refFlatParser,
@@ -29,11 +29,11 @@ def test_gene_models_from_gtf(fixture_dirname):
     print(gtf_filename)
 
     assert os.path.exists(gtf_filename)
-    gm = GeneModelDB()
+    gm = GeneModels()
     gtfGeneModelParser(gm, gtf_filename)
 
-    assert len(gm.transcriptModels) == 12
-    assert len(gm._geneModels) == 12
+    assert len(gm.transcript_models) == 12
+    assert len(gm.gene_models) == 12
 
     gm1 = load_gtf_gene_modles_format(gtf_filename)
     assert gm1 is not None
@@ -51,19 +51,19 @@ def test_gene_models_from_gtf_selenon(fixture_dirname, filename):
     gtf_filename = fixture_dirname(filename)
     print(gtf_filename)
 
-    gm = GeneModelDB()
+    gm = GeneModels()
     gtfGeneModelParser(gm, gtf_filename)
 
-    # assert len(gm.transcriptModels) == 5
-    # assert len(gm._geneModels) == 1
+    # assert len(gm.transcript_models) == 5
+    # assert len(gm.gene_models) == 1
 
     gm1 = load_gtf_gene_modles_format(gtf_filename)
     assert gm1 is not None
-    # assert len(gm1.transcriptModels) == 5
-    # assert len(gm1._geneModels) == 1
+    # assert len(gm1.transcript_models) == 5
+    # assert len(gm1.gene_models) == 1
 
-    for tr_id, tm in gm.transcriptModels.items():
-        tm1 = gm1.transcriptModels[tr_id]
+    for tr_id, tm in gm.transcript_models.items():
+        tm1 = gm1.transcript_models[tr_id]
 
         assert tm.tr_id == tm1.tr_id
         assert tm.tr_name == tm1.tr_name
@@ -93,41 +93,41 @@ def test_gene_models_from_gtf_selenon(fixture_dirname, filename):
 def test_gene_models_from_ref_gene_ref_seq(fixture_dirname):
     filename = fixture_dirname("gene_models/test_ref_gene.txt")
     assert os.path.exists(filename)
-    gm = GeneModelDB()
+    gm = GeneModels()
     refSeqParser(gm, filename)
-    assert len(gm.transcriptModels) == 12
-    assert len(gm._geneModels) == 12
+    assert len(gm.transcript_models) == 12
+    assert len(gm.gene_models) == 12
 
     gm1 = load_ref_seq_gene_models_format(filename)
     assert gm1 is not None
-    assert len(gm1.transcriptModels) == 12
-    assert len(gm1._geneModels) == 12
+    assert len(gm1.transcript_models) == 12
+    assert len(gm1.gene_models) == 12
 
 
 def test_gene_models_from_ref_seq_orig(fixture_dirname):
     filename = fixture_dirname("gene_models/test_ref_seq_hg38.txt")
     assert os.path.exists(filename)
-    gm = GeneModelDB()
+    gm = GeneModels()
     refSeqParser(gm, filename)
-    assert len(gm.transcriptModels) == 20
-    assert len(gm._geneModels) == 8
+    assert len(gm.transcript_models) == 20
+    assert len(gm.gene_models) == 8
 
     gm1 = load_ref_seq_gene_models_format(filename)
     assert gm1 is not None
-    assert len(gm1.transcriptModels) == 20
-    assert len(gm1._geneModels) == 8
+    assert len(gm1.transcript_models) == 20
+    assert len(gm1.gene_models) == 8
 
-    assert gm._geneModels.keys() == gm1._geneModels.keys()
-    assert gm.transcriptModels.keys() == gm1.transcriptModels.keys()
+    assert gm.gene_models.keys() == gm1.gene_models.keys()
+    assert gm.transcript_models.keys() == gm1.transcript_models.keys()
 
 
 def test_gene_models_from_gencode(fixture_dirname):
     filename = fixture_dirname("gene_models/test_gencode.gtf")
     assert os.path.exists(filename)
-    gm = GeneModelDB()
+    gm = GeneModels()
     gtfGeneModelParser(gm, filename)
-    assert len(gm.transcriptModels) == 19
-    assert len(gm._geneModels) == 10
+    assert len(gm.transcript_models) == 19
+    assert len(gm.gene_models) == 10
 
 
 @pytest.mark.parametrize(
@@ -140,18 +140,18 @@ def test_gene_models_from_gencode(fixture_dirname):
 def test_gene_models_from_ref_flat(fixture_dirname, filename):
     filename = fixture_dirname(filename)
     assert os.path.exists(filename)
-    gm = GeneModelDB()
+    gm = GeneModels()
     refFlatParser(gm, filename)
-    assert len(gm.transcriptModels) == 19
-    assert len(gm._geneModels) == 19
+    assert len(gm.transcript_models) == 19
+    assert len(gm.gene_models) == 19
 
     gm1 = load_ref_flat_gene_models_format(filename)
     assert gm1 is not None
-    assert len(gm1.transcriptModels) == 19
-    assert len(gm1._geneModels) == 19
+    assert len(gm1.transcript_models) == 19
+    assert len(gm1.gene_models) == 19
 
-    assert gm._geneModels.keys() == gm1._geneModels.keys()
-    assert gm.transcriptModels.keys() == gm1.transcriptModels.keys()
+    assert gm.gene_models.keys() == gm1.gene_models.keys()
+    assert gm.transcript_models.keys() == gm1.transcript_models.keys()
 
 
 def test_gene_models_from_ccds(fixture_dirname):
@@ -159,21 +159,21 @@ def test_gene_models_from_ccds(fixture_dirname):
     gene_mapping_file = fixture_dirname("gene_models/ccds_id2sym.txt.gz")
 
     assert os.path.exists(filename)
-    gm = GeneModelDB()
+    gm = GeneModels()
     ccdsParser(gm, filename, gene_mapping_file=gene_mapping_file)
-    assert len(gm.transcriptModels) == 20
-    assert len(gm._geneModels) == 15
+    assert len(gm.transcript_models) == 20
+    assert len(gm.gene_models) == 15
 
     gm1 = load_ccds_gene_models_format(
         filename, gene_mapping_file=gene_mapping_file
     )
 
     assert gm1 is not None
-    assert len(gm1.transcriptModels) == 20
-    assert len(gm1._geneModels) == 15
+    assert len(gm1.transcript_models) == 20
+    assert len(gm1.gene_models) == 15
 
-    assert gm._geneModels.keys() == gm1._geneModels.keys()
-    assert gm.transcriptModels.keys() == gm1.transcriptModels.keys()
+    assert gm.gene_models.keys() == gm1.gene_models.keys()
+    assert gm.transcript_models.keys() == gm1.transcript_models.keys()
 
 
 def test_gene_models_probe_header(fixture_dirname):
@@ -190,35 +190,35 @@ def test_gene_models_from_known_gene(fixture_dirname):
     gene_mapping_file = fixture_dirname("gene_models/kg_id2sym.txt.gz")
 
     assert os.path.exists(filename)
-    gm = GeneModelDB()
+    gm = GeneModels()
     knownGeneParser(gm, filename, gene_mapping_file=gene_mapping_file)
-    assert len(gm.transcriptModels) == 20
-    assert len(gm._geneModels) == 14
+    assert len(gm.transcript_models) == 20
+    assert len(gm.gene_models) == 14
 
     gm1 = load_known_gene_models_format(
         filename, gene_mapping_file=gene_mapping_file
     )
 
     assert gm1 is not None
-    assert len(gm1.transcriptModels) == 20
-    assert len(gm1._geneModels) == 14
+    assert len(gm1.transcript_models) == 20
+    assert len(gm1.gene_models) == 14
 
-    assert gm._geneModels.keys() == gm1._geneModels.keys()
-    assert gm.transcriptModels.keys() == gm1.transcriptModels.keys()
+    assert gm.gene_models.keys() == gm1.gene_models.keys()
+    assert gm.transcript_models.keys() == gm1.transcript_models.keys()
 
 
 def test_gene_models_from_default_ref_gene_2013(fixture_dirname):
     filename = fixture_dirname("gene_models/test_default_ref_gene_201309.txt")
     assert os.path.exists(filename)
-    gm = GeneModelDB()
+    gm = GeneModels()
     defaultGeneModelParser(gm, filename)
-    assert len(gm.transcriptModels) == 19
-    assert len(gm._geneModels) == 19
+    assert len(gm.transcript_models) == 19
+    assert len(gm.gene_models) == 19
 
     gm1 = load_default_gene_models_format(filename)
     assert gm1 is not None
-    assert len(gm1.transcriptModels) == 19
-    assert len(gm1._geneModels) == 19
+    assert len(gm1.transcript_models) == 19
+    assert len(gm1.gene_models) == 19
 
 
 def test_gene_models_from_default_with_transcript_orig_id(fixture_dirname):
@@ -227,10 +227,10 @@ def test_gene_models_from_default_with_transcript_orig_id(fixture_dirname):
     )
     gm1 = load_default_gene_models_format(filename)
     assert gm1 is not None
-    assert len(gm1.transcriptModels) == 19
-    assert len(gm1._geneModels) == 19
+    assert len(gm1.transcript_models) == 19
+    assert len(gm1.gene_models) == 19
 
-    for tm in gm1.transcriptModels.values():
+    for tm in gm1.transcript_models.values():
         assert tm.tr_id != tm.tr_name
 
 
@@ -251,9 +251,9 @@ def test_default_gene_models_loader_ref_seq_2013(genomes_db_2013):
     gm = load_default_gene_models_format(ref_seq_gene_model.file)
     assert gm is not None
 
-    gm_yoonha = GeneModelDB()
+    gm_yoonha = GeneModels()
     defaultGeneModelParser(gm_yoonha, ref_seq_gene_model.file)
-    assert len(gm.transcriptModels) == len(gm_yoonha.transcriptModels)
+    assert len(gm.transcript_models) == len(gm_yoonha.transcript_models)
 
 
 @pytest.mark.parametrize(
@@ -322,15 +322,15 @@ def test_save_load_gene_models(
     filename = fixture_dirname(filename)
     gm = load_gene_models(filename, fileformat=fileformat)
     assert gm is not None
-    assert len(gm.transcriptModels) > 0
+    assert len(gm.transcript_models) > 0
 
     gm.save(temp_filename, gzipped=False)
 
     gm1 = load_default_gene_models_format(temp_filename)
     assert gm1 is not None
 
-    for tr_id, tm in gm.transcriptModels.items():
-        tm1 = gm1.transcriptModels[tr_id]
+    for tr_id, tm in gm.transcript_models.items():
+        tm1 = gm1.transcript_models[tr_id]
 
         assert tm.tr_id == tm1.tr_id
         assert tm.tr_name == tm1.tr_name

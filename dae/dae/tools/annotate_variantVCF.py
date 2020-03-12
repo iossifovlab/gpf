@@ -132,7 +132,7 @@ def getGenomicInfo(opts):
             sys.exit(1)
         gmDB = load_gene_models(opts.Traw, opts.I, opts.TrawFormat)
 
-    if "1" in GA.allChromosomes and "1" not in gmDB._utrModels.keys():
+    if "1" in GA.allChromosomes and "1" not in gmDB.utr_models.keys():
         gmDB.relabel_chromosomes()
 
     return GA, gmDB

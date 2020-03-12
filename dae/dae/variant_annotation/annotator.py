@@ -76,16 +76,16 @@ class VariantAnnotator(object):
     def annotate(self, variant):
         effects = []
         logger = logging.getLogger(__name__)
-        if variant.chromosome not in self.gene_models._utrModels:
+        if variant.chromosome not in self.gene_models.utr_models:
             effects.append(EffectFactory.create_effect("intergenic"))
             return effects
 
-        for key in self.gene_models._utrModels[variant.chromosome]:
+        for key in self.gene_models.utr_models[variant.chromosome]:
             if (
                 variant.position <= key[1] + self.promoter_len
                 and variant.ref_position_last >= key[0] - self.promoter_len
             ):
-                for tm in self.gene_models._utrModels[variant.chromosome][key]:
+                for tm in self.gene_models.utr_models[variant.chromosome][key]:
                     logger.debug(
                         "========: %s-%s :====================",
                         tm.gene,

@@ -63,7 +63,7 @@ def test_gene_models_orig_transcript_id(genomes_db_2019):
         "refGene-20190211.gz"
     ), gene_models.location
 
-    for count, tr in enumerate(gene_models.transcriptModels.values()):
+    for count, tr in enumerate(gene_models.transcript_models.values()):
         # print(dir(tr))
         assert tr.tr_id != tr.tr_name
         assert tr.tr_name in tr.tr_id
