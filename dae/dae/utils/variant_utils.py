@@ -5,7 +5,7 @@ Created on Mar 5, 2018
 """
 import numpy as np
 
-from dae.GenomeAccess import GenomicSequence
+from dae.genome.genome_access import GenomicSequence
 from dae.variants.attributes import Sex
 
 

@@ -34,7 +34,7 @@ class TranscriptModelMock(object):
 
 
 class ReferenceGenomeMock(object):
-    def getSequence(self, chromosome, pos, pos_last):
+    def get_sequence(self, chromosome, pos, pos_last):
         print(("get", chromosome, pos, pos_last))
         return "".join([chr(i) for i in range(pos, pos_last + 1)])
 

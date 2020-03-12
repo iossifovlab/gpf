@@ -767,23 +767,17 @@ def load_ref_seq_gene_models_format(
 
 def probe_header(filename, expected_columns, comment=None):
     df = pd.read_csv(filename, sep="\t", nrows=1, header=None, comment=comment)
-    print(df.head())
-    print(list(df.iloc[0, :]), expected_columns)
     return list(df.iloc[0, :]) == expected_columns
 
 
 def probe_columns(filename, expected_columns, comment=None):
     df = pd.read_csv(filename, sep="\t", nrows=1, header=None, comment=comment)
-    print(df.head())
-    print(list(df.columns), list(range(0, len(expected_columns))))
     return list(df.columns) == list(range(0, len(expected_columns)))
 
 
 def parse_raw(filename, expected_columns, nrows=None, comment=None):
     if probe_header(filename, expected_columns, comment=comment):
         df = pd.read_csv(filename, sep="\t", nrows=nrows, comment=comment)
-        print(df.head())
-        print(list(df.columns), expected_columns)
         assert list(df.columns) == expected_columns
 
         return df

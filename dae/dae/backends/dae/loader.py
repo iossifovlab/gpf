@@ -10,7 +10,7 @@ import pandas as pd
 
 from dae.utils.regions import Region
 
-from dae.GenomeAccess import GenomicSequence
+from dae.genome.genome_access import GenomicSequence
 from dae.utils.variant_utils import str2mat, GENOTYPE_TYPE
 from dae.utils.helpers import str2bool
 
@@ -95,7 +95,7 @@ class DenovoLoader(VariantsGenotypesLoader):
             self._adjust_chrom_prefix(chrom) for chrom in self.chromosomes
         ]
 
-        all_chromosomes = self.genome.allChromosomes
+        all_chromosomes = self.genome.chromosomes
         if all([chrom in set(all_chromosomes) for chrom in self.chromosomes]):
             self.chromosomes = sorted(
                 self.chromosomes,
@@ -665,7 +665,7 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
             with pysam.Tabixfile(self.summary_filename) as tbx:
                 self.chromosomes = list(tbx.contigs)
         except Exception:
-            self.chromosomes = self.genome.allChromosomes
+            self.chromosomes = self.genome.chromosomes
 
     @property
     def variants_filenames(self):

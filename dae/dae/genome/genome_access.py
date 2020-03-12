@@ -3,8 +3,6 @@
 # June 6th 2013
 # by Ewa
 
-from __future__ import print_function
-
 import sys
 import os
 
@@ -14,40 +12,40 @@ from dae.utils.regions import Region
 
 
 class GenomicSequence(object):
+    def __init__(self):
+        self.genomic_file = None
+        self.genomic_index_file = None
+        self.chromosomes = None
+        self.pseudo_autosomal_regions = None
+        self._indexing = {}
 
-    genomicFile = None
-    genomicIndexFile = None
-    allChromosomes = None
-    pseudo_autosomal_regions = None
-
-    def __createIndexFile(self, file):
+    def __create_index_file(self, file):
         from pysam import faidx
 
         faidx(file)
 
     def __chromNames(self):
-        file = open(self.genomicIndexFile)
-        Chr = []
+        with open(self.genomic_index_file) as infile:
+            chroms = []
 
-        while True:
-            line = file.readline()
-            if not line:
-                break
-            line = line.split()
-            Chr.append(line[0])
+            while True:
+                line = infile.readline()
+                if not line:
+                    break
+                line = line.split()
+                chroms.append(line[0])
 
-        file.close()
-        self.allChromosomes = Chr
+        self.chromosomes = chroms
 
     def __initiate(self):
-        self._Indexing = {}
-        f = open(self.genomicIndexFile, "r")
+        self._indexing = {}
+        f = open(self.genomic_index_file, "r")
         while True:
             line = f.readline()
             if not line:
                 break
             line = line.split()
-            self._Indexing[line[0]] = {
+            self._indexing[line[0]] = {
                 "length": int(line[1]),
                 "startBit": int(line[2]),
                 "seqLineLength": int(line[3]),
@@ -55,17 +53,17 @@ class GenomicSequence(object):
             }
         f.close()
 
-        self.__f = open(self.genomicFile, "r")
+        self.__f = open(self.genomic_file, "r")
 
     def close(self):
         self.__f.close()
 
     def _load_genome(self, file):
         if not os.path.exists(file + ".fai"):
-            self.__createIndexFile(file)
+            self.__create_index_file(file)
 
-        self.genomicIndexFile = file + ".fai"
-        self.genomicFile = file
+        self.genomic_index_file = file + ".fai"
+        self.genomic_file = file
         self.__chromNames()
         self.__initiate()
 
@@ -74,30 +72,30 @@ class GenomicSequence(object):
     def get_chr_length(self, chrom):
 
         try:
-            return self._Indexing[chrom]["length"]
+            return self._indexing[chrom]["length"]
         except KeyError:
             print("Unknown chromosome!", chrom, file=sys.stderr)
 
     def get_all_chr_lengths(self):
-        R = []
-        for chrom in self.allChromosomes:
-            R.append((chrom, self._Indexing[chrom]["length"]))
-        return R
+        result = []
+        for chrom in self.chromosomes:
+            result.append((chrom, self._indexing[chrom]["length"]))
+        return result
 
-    def getSequence(self, chrom, start, stop):
-        if chrom not in self.allChromosomes:
+    def get_sequence(self, chrom, start, stop):
+        if chrom not in self.chromosomes:
             print("Unknown chromosome!", chrom, file=sys.stderr)
             return -1
 
         self.__f.seek(
-            self._Indexing[chrom]["startBit"]
+            self._indexing[chrom]["startBit"]
             + start
             - 1
-            + (start - 1) / self._Indexing[chrom]["seqLineLength"]
+            + (start - 1) / self._indexing[chrom]["seqLineLength"]
         )
 
         ll = stop - start + 1
-        x = 1 + ll // self._Indexing[chrom]["seqLineLength"]
+        x = 1 + ll // self._indexing[chrom]["seqLineLength"]
 
         w = self.__f.read(ll + x)
         w = w.replace("\n", "")[:ll]
@@ -125,19 +123,8 @@ class GenomicSequence(object):
 
 
 def openRef(filename):
+    assert os.path.exists(filename), filename
+    assert filename.endswith(".fa")
 
-    if not os.path.exists(filename):
-        print(
-            "The input file: " + filename + " does NOT exist!", file=sys.stderr
-        )
-        sys.exit(-1)
-
-    if filename.endswith(".fa"):
-        # ivan's method
-        g_a = GenomicSequence()
-        return g_a._load_genome(filename)
-    else:
-        print(
-            "Unrecognizable format of the file: " + filename, file=sys.stderr
-        )
-        sys.exit(-1)
+    g_a = GenomicSequence()
+    return g_a._load_genome(filename)

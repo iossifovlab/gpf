@@ -71,7 +71,7 @@ class BaseAnnotationRequest(object):
         if end_position < start_position:
             return ""
 
-        return self.annotator.reference_genome.getSequence(
+        return self.annotator.reference_genome.get_sequence(
             self.transcript_model.chrom, start_position, end_position
         )
 

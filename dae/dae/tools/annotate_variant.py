@@ -10,7 +10,7 @@ from typing import List, Optional
 
 from dae.gpf_instance.gpf_instance import GPFInstance
 
-from dae import GenomeAccess
+from dae.genome import genome_access
 from dae.genome.gene_models import load_gene_models
 from dae.variant_annotation.annotator import (
     VariantAnnotator as VariantAnnotation,
@@ -243,7 +243,7 @@ elif opts.Graw is None:
         gmDB = load_gene_models(opts.Traw, None, opts.TrawFormat)
 
 else:
-    GA = GenomeAccess.openRef(opts.Graw)
+    GA = genome_access.openRef(opts.Graw)
     if opts.Traw is None:
         print(
             "This genome requires gene models (--Traw option)", file=sys.stderr
@@ -252,7 +252,7 @@ else:
     gmDB = load_gene_models(opts.Traw, None, opts.TrawFormat)
 
 
-sys.stderr.write("GENOME: " + GA.genomicFile + "\n")
+sys.stderr.write("GENOME: " + GA.genomic_file + "\n")
 
 sys.stderr.write("GENE MODEL FILES: " + gmDB.location + "\n")
 

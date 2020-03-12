@@ -8,7 +8,7 @@ import pandas as pd
 
 from typing import Iterator, Tuple, List, Dict, Any, Optional, Sequence
 
-from dae.GenomeAccess import GenomicSequence
+from dae.genome.genome_access import GenomicSequence
 
 from dae.pedigrees.family import FamiliesData
 

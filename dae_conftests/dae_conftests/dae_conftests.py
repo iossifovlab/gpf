@@ -8,7 +8,7 @@ import tempfile
 import pandas as pd
 from io import StringIO
 
-from dae.GenomesDB import GenomesDB
+from dae.genome.genomes_db import GenomesDB
 
 from dae.gpf_instance.gpf_instance import GPFInstance, cached
 
