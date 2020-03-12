@@ -3,7 +3,7 @@
 import sys
 import os
 from dae import GenomeAccess
-from dae.GeneModelFiles import load_gene_models
+from dae.genome.gene_models import load_gene_models
 from dae.variant_annotation.annotator import (
     VariantAnnotator as VariantAnnotation,
 )

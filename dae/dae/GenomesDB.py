@@ -1,6 +1,6 @@
-from dae.RegionOperations import Region
+from dae.utils.regions import Region
 from dae.GenomeAccess import openRef
-from dae.GeneModelFiles import load_gene_models
+from dae.genome.gene_models import load_gene_models
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.genomes_db import genomes_db_conf

@@ -1,6 +1,6 @@
 from dae.configuration.config_parser_base import ConfigParserBase
 
-from dae.RegionOperations import Region
+from dae.utils.regions import Region
 
 
 class GenomesDBConfigParser(ConfigParserBase):

@@ -1,5 +1,5 @@
 from dae.utils.variant_utils import mat2str
-from dae.RegionOperations import Region
+from dae.utils.regions import Region
 
 
 def test_trios_multi_single_allele1(variants_vcf):

@@ -4,8 +4,8 @@ from dae.backends.impala.parquet_io import ParquetSerializer
 
 from impala.util import as_pandas
 
-from dae.RegionOperations import Region
-import dae.RegionOperations
+from dae.utils.regions import Region
+import dae.utils.regions
 
 from ..attributes_query import (
     QueryTreeToSQLBitwiseTransformer,
@@ -391,7 +391,7 @@ class ImpalaFamilyVariants:
                         )
                     )
             if regions:
-                regions = dae.RegionOperations.collapse(regions)
+                regions = dae.utils.regions.collapse(regions)
             return regions
 
     @deprecated(

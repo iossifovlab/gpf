@@ -8,7 +8,7 @@ import pysam
 import numpy as np
 import pandas as pd
 
-from dae.RegionOperations import Region
+from dae.utils.regions import Region
 
 from dae.GenomeAccess import GenomicSequence
 from dae.utils.variant_utils import str2mat, GENOTYPE_TYPE

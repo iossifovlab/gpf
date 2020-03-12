@@ -2,7 +2,7 @@ import pytest
 
 import os
 
-from dae.GeneModelFiles import (
+from dae.genome.gene_models import (
     GeneModels,
     gtfGeneModelParser,
     refSeqParser,

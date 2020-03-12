@@ -19,7 +19,7 @@ from dae.utils.effect_utils import (
     gene_effect_get_genes,
 )
 
-from dae.RegionOperations import Region
+from dae.utils.regions import Region
 from dae.pheno.common import MeasureType
 from dae.pheno_tool.pheno_common import PhenoFilterBuilder
 from dae.variants.attributes import Role

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from dae.GeneModelFiles import load_gene_models
+from dae.genome.gene_models import load_gene_models
 import sys
 import optparse
 
