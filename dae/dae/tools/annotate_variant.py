@@ -243,7 +243,7 @@ elif opts.Graw is None:
         gmDB = load_gene_models(opts.Traw, None, opts.TrawFormat)
 
 else:
-    GA = genome_access.openRef(opts.Graw)
+    GA = genome_access.open_ref(opts.Graw)
     if opts.Traw is None:
         print(
             "This genome requires gene models (--Traw option)", file=sys.stderr

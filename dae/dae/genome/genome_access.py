@@ -1,5 +1,3 @@
-#!/bin/env python
-
 # June 6th 2013
 # by Ewa
 
@@ -11,7 +9,7 @@ from typing import List
 from dae.utils.regions import Region
 
 
-class GenomicSequence(object):
+class GenomicSequence:
     def __init__(self):
         self.genomic_file = None
         self.genomic_index_file = None
@@ -24,7 +22,7 @@ class GenomicSequence(object):
 
         faidx(file)
 
-    def __chromNames(self):
+    def __chrom_names(self):
         with open(self.genomic_index_file) as infile:
             chroms = []
 
@@ -39,44 +37,54 @@ class GenomicSequence(object):
 
     def __initiate(self):
         self._indexing = {}
-        f = open(self.genomic_index_file, "r")
-        while True:
-            line = f.readline()
-            if not line:
-                break
-            line = line.split()
-            self._indexing[line[0]] = {
-                "length": int(line[1]),
-                "startBit": int(line[2]),
-                "seqLineLength": int(line[3]),
-                "lineLength": int(line[4]),
-            }
-        f.close()
+        with open(self.genomic_index_file, "r") as infile:
+            while True:
+                line = infile.readline()
+                if not line:
+                    break
+                line = line.split()
+                self._indexing[line[0]] = {
+                    "length": int(line[1]),
+                    "startBit": int(line[2]),
+                    "seqLineLength": int(line[3]),
+                    "lineLength": int(line[4]),
+                }
 
         self.__f = open(self.genomic_file, "r")
 
     def close(self):
         self.__f.close()
 
-    def _load_genome(self, file):
-        if not os.path.exists(file + ".fai"):
-            self.__create_index_file(file)
+    @staticmethod
+    def load_genome(filename):
+        genome = GenomicSequence()
+        genome._load_genome(filename)
+        return genome
 
-        self.genomic_index_file = file + ".fai"
-        self.genomic_file = file
-        self.__chromNames()
+    def _load_genome(self, filename):
+        assert os.path.exists(filename), filename
+        assert filename.endswith(".fa")
+
+        self.genomic_index_file = f"{filename}.fai"
+        self.genomic_file = filename
+
+        if not os.path.exists(self.genomic_index_file):
+            self.__create_index_file(filename)
+
+        self.__chrom_names()
         self.__initiate()
 
         return self
 
-    def get_chr_length(self, chrom):
+    def get_chrom_length(self, chrom):
 
         try:
             return self._indexing[chrom]["length"]
         except KeyError:
             print("Unknown chromosome!", chrom, file=sys.stderr)
+            return None
 
-    def get_all_chr_lengths(self):
+    def get_all_chrom_lengths(self):
         result = []
         for chrom in self.chromosomes:
             result.append((chrom, self._indexing[chrom]["length"]))
@@ -122,9 +130,5 @@ class GenomicSequence(object):
             return False
 
 
-def openRef(filename):
-    assert os.path.exists(filename), filename
-    assert filename.endswith(".fa")
-
-    g_a = GenomicSequence()
-    return g_a._load_genome(filename)
+def open_ref(filename):
+    return GenomicSequence.load_genome(filename)

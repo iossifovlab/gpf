@@ -2,7 +2,7 @@
 
 import sys
 import os
-from dae import GenomeAccess
+from dae.genome import genome_access
 from dae.genome.gene_models import load_gene_models
 from dae.variant_annotation.annotator import (
     VariantAnnotator as VariantAnnotation,
@@ -123,7 +123,7 @@ def getGenomicInfo(opts):
             gmDB = load_gene_models(opts.Traw, opts.I, opts.TrawFormat)
 
     else:
-        GA = GenomeAccess.openRef(opts.Graw)
+        GA = genome_access.open_ref(opts.Graw)
         if opts.Traw is None:
             print(
                 "This genome requires gene models (--Traw option)",

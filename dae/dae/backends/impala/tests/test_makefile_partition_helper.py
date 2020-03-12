@@ -160,7 +160,7 @@ def test_target_generator_chrom_prefix_target_other(
 
     mocker.patch.object(
         GenomicSequence,
-        "get_all_chr_lengths",
+        "get_all_chrom_lengths",
         return_value=[
             ("chr1", 100_000_000),
             ("chr2", 200_000_000),
@@ -204,7 +204,7 @@ def test_target_generator_add_chrom_prefix_target_chrom(
 
     mocker.patch.object(
         GenomicSequence,
-        "get_all_chr_lengths",
+        "get_all_chrom_lengths",
         return_value=[
             ("chr1", 100_000_000),
             ("chr2", 200_000_000),
@@ -248,7 +248,7 @@ def test_target_generator_del_chrom_prefix_target_chrom(
 
     mocker.patch.object(
         GenomicSequence,
-        "get_all_chr_lengths",
+        "get_all_chrom_lengths",
         return_value=[
             ("1", 100_000_000),
             ("2", 200_000_000),
@@ -312,7 +312,7 @@ def test_makefile_generator_bucket_numbering(
 
     mocker.patch.object(
         GenomicSequence,
-        "get_all_chr_lengths",
+        "get_all_chrom_lengths",
         return_value=[
             ("chr1", 100_000_000),
             ("chr2", 200_000_000),
@@ -370,7 +370,7 @@ def test_makefile_generator_regions(
 
     mocker.patch.object(
         GenomicSequence,
-        "get_all_chr_lengths",
+        "get_all_chrom_lengths",
         return_value=[
             ("chr1", 100_000_000),
             ("chr2", 200_000_000),
@@ -432,7 +432,7 @@ def test_makefile_generator_regions_del_chrom_prefix(
 
     mocker.patch.object(
         GenomicSequence,
-        "get_all_chr_lengths",
+        "get_all_chrom_lengths",
         return_value=[
             ("1", 100_000_000),
             ("2", 200_000_000),
@@ -492,7 +492,7 @@ def test_makefile_generator_regions_add_chrom_prefix(
 
     mocker.patch.object(
         GenomicSequence,
-        "get_all_chr_lengths",
+        "get_all_chrom_lengths",
         return_value=[
             ("chr1", 100_000_000),
             ("chr2", 200_000_000),

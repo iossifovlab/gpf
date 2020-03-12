@@ -1,5 +1,5 @@
 from dae.utils.regions import Region
-from dae.genome.genome_access import openRef
+from dae.genome.genome_access import open_ref
 from dae.genome.gene_models import load_gene_models
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
@@ -82,7 +82,7 @@ class GenomesDB(object):
         if genome_file is None:
             genome_file = self.get_genome_file()
 
-        return openRef(genome_file)
+        return open_ref(genome_file)
 
     def get_gene_model(self, gene_model_id, genome_id):
         genome = getattr(self.config.genome, genome_id)
@@ -115,7 +115,7 @@ class GenomesDB(object):
         if not mito_genome_id:
             mito_genome_id = self.config.mito_genomes.default_mito_genome
         mito_genome_file = self.config.mito_genome[mito_genome_id].chr_all_file
-        return openRef(mito_genome_file)
+        return open_ref(mito_genome_file)
 
     def get_mt_gene_models(self, mito_gene_model_id=None, mito_genome_id=None):
         if not mito_genome_id:
