@@ -27,7 +27,7 @@ impala_schema = {
 hdfs_schema = {
     "host": {"type": "string"},
     "port": {"type": "integer"},
-    "base_dir": {"type": "string", "check_with": validate_path,},
+    "base_dir": {"type": "string", "check_with": validate_path},
 }
 
 
@@ -59,7 +59,7 @@ dae_conf_schema = {
     },
     "annotation_defaults": {
         "type": "dict",
-        "schema": {"wd": {"type": "string"}, "data_dir": {"type": "string"},},
+        "schema": {"wd": {"type": "string"}, "data_dir": {"type": "string"}},
     },
     # FIXME This is only used for the default genotype storage param
     # It should be a key in the root section

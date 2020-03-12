@@ -241,10 +241,12 @@ class AnnotationDecorator(VariantsLoaderDecorator):
         ]
 
         if variants_loader.annotation_schema is not None:
-            other_columns = filter(
-                lambda col: col not in common_columns
-                and col not in AnnotationDecorator.CLEAN_UP_COLUMNS,
-                variants_loader.annotation_schema.col_names,
+            other_columns = list(
+                filter(
+                    lambda col: col not in common_columns
+                    and col not in AnnotationDecorator.CLEAN_UP_COLUMNS,
+                    variants_loader.annotation_schema.col_names,
+                )
             )
         else:
             other_columns = []

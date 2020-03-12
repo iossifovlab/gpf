@@ -23,10 +23,10 @@ class BackgroundBase:
     #     }
 
     @staticmethod
-    def build_background(background_id, enrichment_config):
-        if background_id == "coding_len_background_model":
+    def build_background(background_kind, enrichment_config):
+        if background_kind == "coding_len_background_model":
             return CodingLenBackground(enrichment_config)
-        elif background_id == "samocha_background_model":
+        elif background_kind == "samocha_background_model":
             return SamochaBackground(enrichment_config)
 
     def __init__(self, name, config):

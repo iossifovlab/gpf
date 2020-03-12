@@ -372,10 +372,12 @@ def dae_transmitted(
     dae_transmitted_config, genome_2013, annotation_pipeline_internal
 ):
 
-    ped_df = FamiliesLoader.load_simple_family_file(
+    # ped_df = FamiliesLoader.load_simple_family_file(
+    #     dae_transmitted_config.family_filename
+    # )
+    families = FamiliesLoader.load_simple_families_file(
         dae_transmitted_config.family_filename
     )
-    families = FamiliesData.from_pedigree_df(ped_df)
 
     variants_loader = DaeTransmittedLoader(
         families,
