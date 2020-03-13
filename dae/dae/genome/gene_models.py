@@ -444,59 +444,19 @@ class GeneModels:
 
     #     return result
 
-    # def relabel_chromosomes_chr(self, relabel):
+    def relabel_chromosomes(self, relabel=None, map_file=None):
+        assert relabel or map_file
+        if not relabel:
+            with open(map_file) as f:
+                relabel = dict([line.strip("\n\r").split()[:2] for line in f])
 
-    #     if self.transcript_models is None:
-    #         print(
-    #             "Gene Models haven't been created/uploaded yet! "
-    #             "Use either loadGeneModels function or "
-    #             "self.createGeneModelDict function"
-    #         )
-    #         return None
+        self.utr_models = {relabel[chrom]:v for chrom,v in self.utr_models.items() if chrom in relabel}
 
-    #     for chrom in self.utr_models.keys():
+        self.transcript_models = {tid:tm for tid,tm in self.transcript_models.items() if tm.chrom in relabel} 
 
-    #         try:
-    #             self.utr_models[relabel[chrom]] = self.utr_models[chrom]
-    #             self.utr_models.pop(chrom)
-    #         except KeyError:
-    #             pass
+        for tm in self.transcript_models.values():
+            tm.chrom = relabel[tm.chrom]
 
-    #     for tr_id in self.transcript_models:
-    #         try:
-    #             self.transcript_models[tr_id].chrom = relabel[
-    #                 self.transcript_models[tr_id].chrom
-    #             ]
-    #         except KeyError:
-    #             pass
-
-    def relabel_chromosomes(self, file="ucsc2gatk.txt"):
-
-        if self.transcript_models is None:
-            print(
-                "Gene Models haven't been created/uploaded yet! "
-                "Use either loadGeneModels function or "
-                "self.createGeneModelDict function"
-            )
-            return None
-
-        with open(file) as f:
-            relabel = dict([(line.split()[0], line.split()[1]) for line in f])
-
-        for chrom in self.utr_models.keys():
-
-            new_chrom = relabel.get(chrom)
-            if new_chrom is None:
-                continue
-            self.utr_models[new_chrom] = self.utr_models[chrom]
-            self.utr_models.pop(chrom)
-
-        for tr_id in self.transcript_models:
-            new_chrom = relabel.get(self.transcript_models[tr_id].chrom)
-            if new_chrom is None:
-                continue
-
-            self.transcript_models[tr_id].chrom = new_chrom
 
     def _save_gene_models(self, outfile):
         outfile.write(
