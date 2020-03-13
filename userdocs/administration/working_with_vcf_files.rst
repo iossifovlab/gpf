@@ -2,10 +2,10 @@ Working With VCF Files Guide
 ============================
 
 
-How to import data from the '1000 Genome Project'
-#################################################
+Import data from the "1000 Genome Project"
+##########################################
 
-The data used in this guide is from the '1000 Genome Project'.
+The data used in this guide is from the "1000 Genome Project".
 For more information, visit `IGSR <https://www.internationalgenome.org/about>`_.
 
 Begin by making a new directory, in which you can download and create files:
@@ -45,8 +45,9 @@ Creating the pedigree file
 
 Information about the individual's relationships within their family can be found
 in the spreadsheet file ``20130606_sample_info.xlsx``, in the 'Sample Info' tab.
-Let's create a pedigree file for the family with id "PR05". For more information on working with pedigree files,
-refer to the :ref:`Working With Pedigrees Guide <working_with_pedigrees>`.
+Let's create a pedigree file for the family with id "PR05". For more information
+on working with pedigree files, refer to the
+:ref:`Working With Pedigrees Guide <working_with_pedigrees>`.
 
 First, create the pedigree file:
 
@@ -54,8 +55,9 @@ First, create the pedigree file:
 
     touch PR05.ped
 
-Then open it in a text editor and add the necessary columns - familyId, personId, momId, dadId, sex, status and role.
-Fill in the individuals and the values in each column, by refering to the spreadsheet for information.
+Then open it in a text editor and add the necessary columns - familyId,
+personId, momId, dadId, sex, status and role. Fill in the individuals and
+the values in each column, by referring to the spreadshee's information.
 After the editing, the pedigree file should look like this:
 
 .. code-block::
@@ -77,8 +79,8 @@ by the GPF system. Now the pedigree file is ready for importing.
 Creating the VCF files
 ######################
 
-Now with the pedigree file ready, you can create the files with the variants data.
-To do so, you can use `Bcftools <https://samtools.github.io/bcftools/>`_.
+To create the files with the variants data you
+can use `Bcftools <https://samtools.github.io/bcftools/>`_.
 
 To install bcftools into your anaconda environment, use::
 
@@ -91,9 +93,10 @@ To install bcftools into your anaconda environment, use::
         bcftools --help
 
 
-The two .vcf files you downloaded earlier contain a lot of inviduals. Let's start with the related samples first,
-which are in the ``ALL.chr1.phase3_shapeit2_mvncall_integrated_v5_related_samples.20130502.genotypes.vcf.gz`` file.
-Use bcftools' ``view`` command to inspect the files. 
+The two .vcf files you downloaded earlier contain a lot of inviduals.
+Let's start with the related samples first, which are in the
+``ALL.chr1.phase3_shapeit2_mvncall_integrated_v5_related_samples.20130502.genotypes.vcf.gz``
+file. Use bcftools' ``view`` command to inspect the files. 
 
 This command will print the first 250 lines of the vcf (`head -n 250`) in the terminal::
 
@@ -107,7 +110,8 @@ You can also use this command to only print the 250th line::
     | sed -n '250p'
 
 
-Keep in mind that vcf files are tab separated and have rows and columns. To extract individual `HG00733`'s data from the file,
+Keep in mind that vcf files are tab separated and have rows and columns.
+To extract individual `HG00733`'s data from the file,
 firstly we need to know their column's index. If you run::
 
     bcftools view ALL.chr1.phase3_shapeit2_mvncall_integrated_v5_related_samples.20130502.genotypes.vcf.gz \
@@ -115,17 +119,19 @@ firstly we need to know their column's index. If you run::
     | cut -f 1,2,3,4,5,6,7,8,9
 
 
-You will see the first 250 rows of the first 9 columns (cut -f 1,2,3...9). The individual you are interested in
-is in the 14th column. Remove the `head -n 250` to get all the data, add `14` to the `cut -f` list and
-use `> HG00733.vcf` in the end, to save the result of this command into a file, named ``HG00733.vcf``::
+You will see the first 250 rows of the first 9 columns (cut -f 1,2,3...9).
+The individual you are interested in is located in the 14th column. Remove
+the `head -n 250` to get all the data, add `14` to the `cut -f` list and
+use `> HG00733.vcf` in the end, to save the result of this command into
+a file, named ``HG00733.vcf``::
 
     bcftools view ALL.chr1.phase3_shapeit2_mvncall_integrated_v5_related_samples.20130502.genotypes.vcf.gz \
     | cut -f 1,2,3,4,5,6,7,8,9,14 \
     > HG00733.vcf
 
 
-The data for individuals HG00731 and HG00732 is in the second
-vcf file - ``ALL.chr1.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz``.
+The data for individuals HG00731 and HG00732 is in the second vcf file -
+``ALL.chr1.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz``.
 
 To extract the variants data for the other two individuals, run::
 
@@ -134,7 +140,6 @@ To extract the variants data for the other two individuals, run::
     > HG00731_HG00732.vcf
 
 This command will save the variants data into a file named ``HG00731_HG00732.vcf``.
-It will take more time than the previous command.
 
 
 Importing the data into GPF
@@ -163,4 +168,13 @@ and run this command to initiate the importing::
 
     make -j 10
 
-This command will take some time.
+This command will take some time to complete.
+
+Afer it's done, run the GPF web server::
+
+    wdaemanage.py runserver 0.0.0.0:8000
+
+
+Now you should be able to see the "1KGP" dataset. To view
+the imported variants, navigate to the :ref:`genotype_browser_ui`
+tab and click on the `Table Preview` button.
