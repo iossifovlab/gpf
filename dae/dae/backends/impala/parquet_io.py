@@ -1,7 +1,6 @@
 import os
 import sys
 import time
-import itertools
 import hashlib
 from box import Box
 
@@ -18,7 +17,7 @@ from dae.variants.family_variant import (
     calculate_simple_best_state,
 )
 from dae.variants.variant import SummaryVariant, SummaryAllele
-from dae.backends.impala.serializers import ParquetSerializer
+from dae.backends.impala.serializers import AlleleParquetSerializer
 
 
 class ParquetData:
@@ -300,9 +299,9 @@ class ContinuousParquetFileWriter:
     enough data. Automatically dumps leftover data when closing into the file
     """
 
-    def __init__(self, filepath, schema, filesystem=None, rows=10000):
-        self._data = ParquetData(schema)
-        schema = schema.to_arrow()
+    def __init__(self, filepath, variant_loader, filesystem=None, rows=10000):
+        self.serializer = AlleleParquetSerializer.from_loader(variant_loader)
+        schema = self.serializer.get_schema()
         dirname = os.path.dirname(filepath)
         if dirname and not os.path.exists(dirname):
             os.makedirs(dirname)
@@ -313,17 +312,16 @@ class ContinuousParquetFileWriter:
         self.rows = rows
 
     def _write_table(self):
-        self._writer.write_table(self._data.build_table())
+        self._writer.write_table(self.serializer.build_table())
 
-    def data_append(self, attributes):
+    def append_allele(self, allele):
         """
         Appends the data for an entire variant to the buffer
 
         :param list attributes: List of key-value tuples containing the data
         """
-        for attr_name, value in attributes:
-            self._data.data_append(attr_name, value)
-        if len(self._data) >= self.rows:
+        self.serializer.add_allele_to_batch_dict(allele)
+        if len(self.serializer._data) >= self.rows:
             self._write_table()
 
     def close(self):
@@ -352,13 +350,12 @@ class VariantsParquetWriter:
         self.rows = rows
         self.filesystem = filesystem
 
-        self.schema = variants_loader.get_attribute("annotation_schema")
-        self.parquet_serializer = ParquetSerializer(
-            self.schema, include_reference=True
-        )
+        # self.schema = variants_loader.get_attribute("annotation_schema")
+        # self.parquet_serializer = ParquetSerializer(
+        #     self.schema, include_reference=True
+        # )
 
         self.start = time.time()
-        # self.data = ParquetData(self.schema)
         self.data_writers = {}
         assert isinstance(partition_descriptor, PartitionDescriptor)
         self.partition_descriptor = partition_descriptor
@@ -411,88 +408,13 @@ class VariantsParquetWriter:
             SummaryVariant(alleles), family, genotype, best_state
         )
 
-    def _process_family_variant(
-        self,
-        summary_variant_index,
-        summary_variant,
-        family_variant_index,
-        family_variant,
-    ):
-
-        effect_data = self.parquet_serializer.serialize_variant_effects(
-            family_variant.effects
-        )
-        alternatives_data = family_variant.alternative
-        genotype_data = self.parquet_serializer.serialize_variant_genotype(
-            family_variant.gt
-        )
-        best_state_data = self.parquet_serializer.serialize_variant_best_state(
-            family_variant.best_state
-        )
-        genetic_model_data = family_variant.genetic_model.value
-
-        inheritance_data = self.parquet_serializer.serialize_variant_inheritance(
-            family_variant
-        )
-
-        frequency_data = self.parquet_serializer.serialize_variant_frequency(
-            family_variant
-        )
-        genomic_scores_data = self.parquet_serializer.serialize_variant_genomic_scores(
-            family_variant
-        )
-
-        for family_allele in family_variant.alleles:
-
-            summary = self.parquet_serializer.serialize_summary(
-                summary_variant_index, family_allele, alternatives_data
-            )
-            frequency = self.parquet_serializer.serialize_alelle_frequency(
-                family_allele, frequency_data
-            )
-            genomic_scores = self.parquet_serializer.serialize_genomic_scores(
-                family_allele, genomic_scores_data
-            )
-            effect_genes = self.parquet_serializer.serialize_effects(
-                family_allele, effect_data
-            )
-            family = self.parquet_serializer.serialize_family(
-                family_variant_index,
-                family_allele,
-                genotype_data,
-                best_state_data,
-                genetic_model_data,
-                inheritance_data,
-            )
-            member = self.parquet_serializer.serialize_members(
-                family_variant_index, family_allele
-            )
-
-            for (s, freq, gs, e, f, m) in itertools.product(
-                [summary],
-                [frequency],
-                [genomic_scores],
-                effect_genes,
-                [family],
-                member,
-            ):
-
-                writer_data = []
-                writer_data.append(("bucket_index", self.bucket_index))
-
-                for d in (s, freq, gs, e, f, m):
-                    for key, val in d._asdict().items():
-                        writer_data.append((key, val))
-
-                yield (family_allele, writer_data)
-
     def _get_bin_writer(self, family_allele):
         filename = self.partition_descriptor.variant_filename(family_allele)
 
         if filename not in self.data_writers:
             self.data_writers[filename] = ContinuousParquetFileWriter(
                 filename,
-                self.schema,
+                self.variants_loader,
                 filesystem=self.filesystem,
                 rows=self.rows,
             )
@@ -515,16 +437,11 @@ class VariantsParquetWriter:
                     )
                     fv = unknown_variant
 
-                data_gen = self._process_family_variant(
-                    summary_variant_index,
-                    summary_variant,
-                    family_variant_index,
-                    fv,
-                )
+                fv.summary_variant._summary_index = summary_variant_index
 
-                for (family_allele, data) in data_gen:
+                for family_allele in fv.alleles:
                     bin_writer = self._get_bin_writer(family_allele)
-                    bin_writer.data_append(data)
+                    bin_writer.append_allele(family_allele)
 
             if family_variant_index % 1000 == 0:
                 elapsed = time.time() - self.start
