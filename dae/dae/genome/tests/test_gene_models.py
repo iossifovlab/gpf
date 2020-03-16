@@ -16,8 +16,8 @@ from dae.genome.gene_models import (
     load_ccds_gene_models_format,
     load_known_gene_models_format,
     load_gtf_gene_models_format,
-    probe_header,
-    probe_columns,
+    # probe_header,
+    # probe_columns,
     infer_gene_model_parser,
     load_gene_models,
     # GENE_MODELS_FORMAT_COLUMNS,
@@ -232,7 +232,7 @@ def test_gene_models_from_default_with_transcript_orig_id(fixture_dirname):
 def test_default_gene_models_loader_ref_seq_2019(genomes_db_2019):
     genome_id = genomes_db_2019.config.genomes.default_genome
     genome_config = getattr(genomes_db_2019.config.genome, genome_id)
-    ref_seq_gene_model = getattr(genome_config.gene_model, "RefSeq")
+    ref_seq_gene_model = getattr(genome_config.gene_models, "RefSeq")
 
     gm = load_default_gene_models_format(ref_seq_gene_model.file)
     assert gm is not None
@@ -241,7 +241,7 @@ def test_default_gene_models_loader_ref_seq_2019(genomes_db_2019):
 def test_default_gene_models_loader_ref_seq_2013(genomes_db_2013):
     genome_id = genomes_db_2013.config.genomes.default_genome
     genome_config = getattr(genomes_db_2013.config.genome, genome_id)
-    ref_seq_gene_model = getattr(genome_config.gene_model, "RefSeq2013")
+    ref_seq_gene_model = getattr(genome_config.gene_models, "RefSeq2013")
 
     gm = load_default_gene_models_format(ref_seq_gene_model.file)
     assert gm is not None

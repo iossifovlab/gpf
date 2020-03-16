@@ -224,7 +224,7 @@ seqCol = assign_values(opts.q)
 lengthCol = assign_values(opts.l)
 
 if opts.G is None and opts.Graw is None:
-    GA = genomes_db.get_genome()
+    GA = genomes_db.load_genomic_sequence()
     if opts.T is None and opts.Traw is None:
         gmDB = genomes_db.get_gene_models()
     elif opts.Traw is None:
@@ -234,11 +234,11 @@ if opts.G is None and opts.Graw is None:
 
 
 elif opts.Graw is None:
-    GA = genomes_db.get_genome(opts.G)
+    GA = genomes_db.load_genomic_sequence(opts.G)
     if opts.T is None and opts.Traw is None:
-        gmDB = genomes_db.get_gene_models(genomeId=opts.G)
+        gmDB = genomes_db.get_gene_models(genome_id=opts.G)
     elif opts.Traw is None:
-        gmDB = genomes_db.get_gene_models(opts.T, genomeId=opts.G)
+        gmDB = genomes_db.get_gene_models(opts.T, genome_id=opts.G)
     else:
         gmDB = load_gene_models(opts.Traw, None, opts.TrawFormat)
 

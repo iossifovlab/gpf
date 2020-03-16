@@ -95,7 +95,7 @@ class DenovoLoader(VariantsGenotypesLoader):
             self._adjust_chrom_prefix(chrom) for chrom in self.chromosomes
         ]
 
-        all_chromosomes = self.genome.chromosomes
+        all_chromosomes = self.genome.get_genomic_sequence().chromosomes
         if all([chrom in set(all_chromosomes) for chrom in self.chromosomes]):
             self.chromosomes = sorted(
                 self.chromosomes,
@@ -126,9 +126,12 @@ class DenovoLoader(VariantsGenotypesLoader):
             rec["summary_variant_index"] = index
             rec["allele_index"] = 1
 
-            summary_variant = SummaryVariantFactory.summary_variant_from_records(
-                [rec], self.transmission_type
-            )
+            # fmt: off
+            summary_variant = SummaryVariantFactory.\
+                summary_variant_from_records(
+                    [rec], self.transmission_type
+                )
+            # fmt: on
             if not self._is_in_regions(summary_variant):
                 continue
 
@@ -505,7 +508,7 @@ class DenovoLoader(VariantsGenotypesLoader):
         if denovo_variant:
             variant_col = raw_df.loc[:, denovo_variant]
             ref_alt_tuples = [
-                dae2vcf_variant(*variant_tuple, genome)
+                dae2vcf_variant(*variant_tuple, genome.get_genomic_sequence())
                 for variant_tuple in zip(chrom_col, pos_col, variant_col)
             ]
             pos_col, ref_col, alt_col = zip(*ref_alt_tuples)
@@ -641,7 +644,7 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
 
         super(DaeTransmittedLoader, self).__init__(
             families=families,
-            filenames=[summary_filename, toomany_filename,],
+            filenames=[summary_filename, toomany_filename],
             transmission_type=TransmissionType.transmitted,
             genome=genome,
             regions=regions,

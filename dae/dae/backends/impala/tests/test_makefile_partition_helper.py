@@ -102,7 +102,7 @@ def test_target_generator_other_0(
         (3_000_000_000, set(["1_0"])),
         (300_000_000, set(["1_0"])),
         (200_000_000, set(["1_0", "1_1"])),
-        (50_000_000, set(["1_0", "1_1", "1_2", "1_3", "1_4",])),
+        (50_000_000, set(["1_0", "1_1", "1_2", "1_3", "1_4"])),
     ],
 )
 def test_target_generator_chrom_1(region_length, targets, genomes_db_2019):
@@ -126,7 +126,7 @@ def test_target_generator_chrom_1(region_length, targets, genomes_db_2019):
         (3_000_000_000, set(["other_0"])),
         (300_000_000, set(["other_0"])),
         (190_000_000, set(["other_0", "other_1"])),
-        (50_000_000, set(["other_0", "other_1", "other_2", "other_3",])),
+        (50_000_000, set(["other_0", "other_1", "other_2", "other_3"])),
     ],
 )
 def test_target_generator_chrom_other(region_length, targets, genomes_db_2019):
@@ -151,7 +151,7 @@ def test_target_generator_chrom_other(region_length, targets, genomes_db_2019):
         (3_000_000_000, set(["other_0"])),
         (300_000_000, set(["other_0", "other_1"])),
         (150_000_000, set(["other_0", "other_1", "other_2"])),
-        (100_000_000, set(["other_0", "other_1", "other_2", "other_3",])),
+        (100_000_000, set(["other_0", "other_1", "other_2", "other_3"])),
     ],
 )
 def test_target_generator_chrom_prefix_target_other(

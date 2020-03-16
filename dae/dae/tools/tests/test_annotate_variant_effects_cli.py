@@ -34,7 +34,7 @@ def test_annotate_variant_simple(temp_filename, genomes_db_2013):
 
     genome_id = genomes_db_2013.config.genomes.default_genome
     genome_config = getattr(genomes_db_2013.config.genome, genome_id)
-    ref_seq_gene_model = getattr(genome_config.gene_model, "RefSeq2013")
+    ref_seq_gene_model = getattr(genome_config.gene_models, "RefSeq2013")
     gene_model_file = ref_seq_gene_model.file
 
     command = (
@@ -56,9 +56,7 @@ def test_annotate_variant_simple(temp_filename, genomes_db_2013):
 
 def test_gene_models_orig_transcript_id(genomes_db_2019):
 
-    gene_models = genomes_db_2019.get_gene_model(
-        "RefSeq", genomes_db_2019.default_genome
-    )
+    gene_models = genomes_db_2019.get_gene_models("RefSeq")
     assert gene_models.location.endswith(
         "refGene-20190211.gz"
     ), gene_models.location
@@ -74,20 +72,10 @@ def test_gene_models_orig_transcript_id(genomes_db_2019):
 
 def test_gene_models_load_default(genomes_db_2019):
 
-    print(genomes_db_2019.config)
-    print(genomes_db_2019.config.genomes.default_genome)
     genome_id = genomes_db_2019.config.genomes.default_genome
     genome_config = getattr(genomes_db_2019.config.genome, genome_id)
-    print(80 * "-")
-    print(genome_config)
-    print(80 * "-")
-    print(getattr(genome_config, "gene_model"))
-    print(genome_config.gene_model)
-    print(80 * "-")
-    ref_seq_gene_model = getattr(genome_config.gene_model, "RefSeq")
-    print(ref_seq_gene_model)
-    print(ref_seq_gene_model.file)
-    print(80 * "-")
+    ref_seq_gene_model = getattr(genome_config.gene_models, "RefSeq")
 
+    assert ref_seq_gene_model is not None
     # gene_models = load_gene_models(ref_seq_gene_model.file, format="default")
     # assert gene_models is not None

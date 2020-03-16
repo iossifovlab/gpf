@@ -79,7 +79,9 @@ class MakefilePartitionHelper:
 
         self.genome = genome
         self.partition_descriptor = partition_descriptor
-        self.chromosome_lengths = dict(self.genome.get_all_chrom_lengths())
+        self.chromosome_lengths = dict(
+            self.genome.get_genomic_sequence().get_all_chrom_lengths()
+        )
 
         self._build_adjust_chrom(add_chrom_prefix, del_chrom_prefix)
 
@@ -111,7 +113,9 @@ class MakefilePartitionHelper:
     def _remove_chrom_prefix(self, chrom):
         assert self._chrom_prefix
         if chrom.startswith(self._chrom_prefix):
-            return chrom[len(self._chrom_prefix) :]
+            # fmt: off
+            return chrom[len(self._chrom_prefix):]
+            # fmt: on
         return chrom
 
     def _prepend_chrom_prefix(self, chrom):
@@ -145,9 +149,13 @@ class MakefilePartitionHelper:
         return result
 
     def bucket_index(self, region_bin):
+        # fmt: off
         genome_chromosomes = [
-            chrom for chrom, _ in self.genome.get_all_chrom_lengths()
+            chrom
+            for chrom, _ in
+            self.genome.get_genomic_sequence().get_all_chrom_lengths()
         ]
+        # fmt: on
         variants_targets = self.generate_variants_targets(genome_chromosomes)
         assert region_bin in variants_targets
 
@@ -304,10 +312,12 @@ class MakefileGenerator:
             ).get("default", None)
         else:
             genotype_storage_id = argv.genotype_storage
-
-        genotype_storage = self.gpf_instance.genotype_storage_db.get_genotype_storage(
-            genotype_storage_id
-        )
+        # fmt: off
+        genotype_storage = self.gpf_instance.genotype_storage_db \
+            .get_genotype_storage(
+                genotype_storage_id
+            )
+        # fmt: on
         if genotype_storage is None:
             raise ValueError(
                 f"genotype storage {genotype_storage_id} not found"
@@ -855,10 +865,11 @@ class Variants2ParquetTool:
             target_chromosomes
         )
 
-        if argv.study_id is not None:
-            study_id = argv.study_id
-        else:
-            study_id, _ = os.path.splitext(os.path.basename(families_filename))
+        # if argv.study_id is not None:
+        #     study_id = argv.study_id
+        # else:
+        #     study_id, _ = os.path.splitext(
+        #         os.path.basename(families_filename))
 
         bucket_index = argv.bucket_index
         if argv.region_bin is not None:
