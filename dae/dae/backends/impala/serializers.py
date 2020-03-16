@@ -188,6 +188,7 @@ class AlleleParquetSerializer:
         "end_position": pa.int32(),
         "genes": pa.list_(pa.string()),
         "effects": pa.list_(pa.string()),
+        "summary_index": pa.int32(),
     }
 
     def __init__(
@@ -217,6 +218,12 @@ class AlleleParquetSerializer:
             **additional_searchable_properties_types,
         }
 
+        self.schema = None
+        self._data_reset()
+
+    def _data_reset(self):
+        self._data = {name: [] for name in self.get_schema().names}
+
     @property
     def summary_properties(self):
         return self.summary_properties_serializers.keys()
@@ -237,16 +244,25 @@ class AlleleParquetSerializer:
     def searchable_properties(self):
         return self.searchable_properties_types.keys()
 
-    def allele_to_table(self, allele):
-        schema = self.get_schema()
-        data = {}
+    def build_table(self):
+        batch_data = []
+        for index, name in enumerate(self.schema.names):
+            assert name in self.data
+            column = self.data[name]
+            field = self.schema.field(name)
+            batch_data.append(pa.array(column, type=field.type))
+            if index > 0:
+                assert len(batch_data[index]) == len(batch_data[0]), name
+        batch = pa.RecordBatch.from_arrays(batch_data, self.schema.names)
+        return batch
+
+    def add_allele_to_batch_dict(self, allele):
         for spr in self.searchable_properties:
-            data[spr] = [getattr(allele, spr, None)]
-            if data[spr] is None:
-                data[spr] = [allele.get_attribute(spr)]
-        data["data"] = [self.serialize_allele(allele)]
-        table = pa.Table.from_pydict(data, schema)
-        return table
+            prop_value = [getattr(allele, spr, None)]
+            if prop_value is None:
+                prop_value = [allele.get_attribute(spr)]
+            self._data[spr].append(prop_value)
+        self._data["data"].append(self.serialize_allele(allele))
 
     def serialize_allele(self, allele):
         stream = io.BytesIO()
@@ -281,12 +297,13 @@ class AlleleParquetSerializer:
                     print(f"{prop}: None")
 
     def get_schema(self):
-        fields = []
-        for spr in self.searchable_properties:
-            field = pa.field(spr, self.searchable_properties_types[spr])
-            fields.append(field)
-        fields.append(pa.field("data", pa.binary()))
-        schema = pa.schema(fields)
+        if self.schema is None:
+            fields = []
+            for spr in self.searchable_properties:
+                field = pa.field(spr, self.searchable_properties_types[spr])
+                fields.append(field)
+            fields.append(pa.field("data", pa.binary()))
+            schema = pa.schema(fields)
         return schema
 
     @staticmethod
@@ -352,6 +369,13 @@ class AlleleParquetSerializer:
             member_prop_serializers,
             additional_searchable_properties_types,
         )
+
+    @staticmethod
+    def from_loader(loader):
+        schema = loader.get_attribute("annotation_schema")
+        variant = next(loader.full_variants_iterator())[1][0]
+
+        return AlleleParquetSerializer.from_variant(variant, schema)
 
 
 class ParquetSerializer(object):
