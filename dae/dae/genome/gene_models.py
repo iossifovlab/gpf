@@ -530,7 +530,7 @@ class GeneModels:
 def load_default_gene_models_format(
     filename, gene_mapping_file=None, nrows=None
 ):
-    df = pd.read_csv(filename, sep="\t", nrows=nrows, dtype={"atts": str,})
+    df = pd.read_csv(filename, sep="\t", nrows=nrows, dtype={"atts": str})
 
     expected_columns = [
         "chr",
@@ -894,7 +894,7 @@ def load_known_gene_models_format(
         transcript_ids_counter[tr_name] += 1
         tr_id = f"{tr_name}_{transcript_ids_counter[tr_name]}"
 
-        attributes = {k: rec[k] for k in ["proteinID", "alignID",]}
+        attributes = {k: rec[k] for k in ["proteinID", "alignID"]}
         tm = TranscriptModel(
             gene=gene,
             tr_id=tr_id,
@@ -1163,7 +1163,7 @@ def defaultGeneModelParser(gm, file_name, gene_mapping_file=None):
 
     line = f.readline()
     lineR = defaultFileReader(line)
-    for nLR, line in enumerate(f):
+    for _nLR, line in enumerate(f):
 
         cs = lineR.read(line)  # l[:-1].split('\t')
 
@@ -1296,7 +1296,7 @@ def refSeqParser(gm, location=None, gene_mapping_file=None):
     GMF = openFile(location)
 
     trIdC = defaultdict(int)
-    for nLR, line in enumerate(GMF):
+    for _nLR, line in enumerate(GMF):
         if line[0] == "#":
             continue
 
@@ -1322,7 +1322,7 @@ def refFlatParser(gm, file_name, gene_mapping_file="default"):
     GMF = openFile(file_name)
 
     trIdC = defaultdict(int)
-    for nLR, line in enumerate(GMF):
+    for _nLR, line in enumerate(GMF):
         if line[0] == "#":
             hcs = line[1:].strip("\n\r").split("\t")
             if hcs != Columns4FileFormat["refFlat"]:
@@ -1358,7 +1358,7 @@ def knownGeneParser(gm, file_name, gene_mapping_file="default"):
     gmf = openFile(file_name)
 
     trIdC = defaultdict(int)
-    for nLR, line in enumerate(gmf):
+    for _nLR, line in enumerate(gmf):
         if line[0] == "#":
             continue
 
@@ -1399,7 +1399,7 @@ def ccdsParser(gm, file_name, gene_mapping_file="default"):
     GMF = openFile(file_name)
 
     trIdC = defaultdict(int)
-    for nLR, line in enumerate(GMF):
+    for _nLR, line in enumerate(GMF):
         if line[0] == "#":
             continue
 
@@ -1427,7 +1427,7 @@ def ucscGenePredParser(gm, file_name, gene_mapping_file="default"):
     GMF = openFile(file_name)
 
     trIdC = defaultdict(int)
-    for nLR, line in enumerate(GMF):
+    for _nLR, line in enumerate(GMF):
         if line[0] == "#":
             continue
 
@@ -1453,7 +1453,7 @@ def gtfGeneModelParser(gm, file_name, gene_mapping_file=None):
     gm.location = file_name
 
     f = GtfFileReader(file_name)
-    for nLR, rx in enumerate(f):
+    for _nLR, rx in enumerate(f):
         if rx["feature"] in ["gene"]:
             continue
 
@@ -1690,8 +1690,4 @@ class parserLine4UCSC_genePred:
         }
         tm.update_frames()
 
-        # trIdC[tm.tr_id] += 1                       #TODO implimented outside
-        # tm.tr_id += "_" + str(trIdC[tm.tr_id])      #TODO implimented outside
-
-        # cls._add_transcript_model(tm)                   #TODO should be done outside
         return tm, cs
