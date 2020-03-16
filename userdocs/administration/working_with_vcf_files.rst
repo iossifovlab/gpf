@@ -67,6 +67,11 @@ After the editing, the pedigree file should look like this:
     PR05	HG00732	0	0	F	unaffected	mom
     PR05	HG00733	HG00732	HG00731	M	affected	prb
 
+
+.. warning::
+    The columns should be separated by tabs, not spaces.
+
+
 Next, you have to standardize the pedigree file, using the ``ped2ped.py`` tool::
 
     ped2ped.py PR05.ped -o PR05_standardized.ped --ped-layout-mode generate
