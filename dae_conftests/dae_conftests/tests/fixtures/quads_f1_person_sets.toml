@@ -1,0 +1,20 @@
+[person_set_collections]
+selected_person_set_collections = ["status", "role"]
+
+status.id = "status"
+status.name = "Affected Status"
+status.source.pedigree.column = "status"
+status.domain = [
+   {id = "unaffected", name = "Unaffected", value = "unaffected", color = "#ffffff"}
+   {id = "affected", name = "Affected", value = "affected", color = "#000000"},
+]
+
+role.id = "role"
+role.name = "Role"
+role.source.pedigree.column = "role"
+role.domain = [
+   {id = "mom", name = "Mother", value = "mom", color = "#ffffff"},
+   {id = "dad", name = "Father", value = "dad", color = "#ffffff"},
+   {id = "prb", name = "Proband", value = "prb", color = "#ffffff"},
+   {id = "sib", name = "Sibling", value = "sib", color = "#ffffff"}
+]

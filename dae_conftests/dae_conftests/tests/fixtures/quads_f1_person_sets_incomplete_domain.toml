@@ -1,0 +1,9 @@
+[person_set_collections]
+selected_person_set_collections = ["status"]
+
+status.id = "status"
+status.name = "Affected Status"
+status.source.pedigree.column = "status"
+status.domain = [
+   {id = "unaffected", name = "Unaffected", value = "unaffected", color = "#ffffff"}
+]
