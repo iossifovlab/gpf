@@ -450,13 +450,20 @@ class GeneModels:
             with open(map_file) as f:
                 relabel = dict([line.strip("\n\r").split()[:2] for line in f])
 
-        self.utr_models = {relabel[chrom]:v for chrom,v in self.utr_models.items() if chrom in relabel}
+        self.utr_models = {
+            relabel[chrom]: v
+            for chrom, v in self.utr_models.items()
+            if chrom in relabel
+        }
 
-        self.transcript_models = {tid:tm for tid,tm in self.transcript_models.items() if tm.chrom in relabel} 
+        self.transcript_models = {
+            tid: tm
+            for tid, tm in self.transcript_models.items()
+            if tm.chrom in relabel
+        }
 
         for tm in self.transcript_models.values():
             tm.chrom = relabel[tm.chrom]
-
 
     def _save_gene_models(self, outfile):
         outfile.write(
