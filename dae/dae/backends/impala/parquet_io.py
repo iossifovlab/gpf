@@ -325,7 +325,7 @@ class ContinuousParquetFileWriter:
             self._write_table()
 
     def close(self):
-        if len(self._data) > 0:
+        if len(self.serializer._data) > 0:
             self._write_table()
         self._writer.close()
 

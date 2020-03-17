@@ -187,7 +187,8 @@ class AlleleParquetSerializer:
         "position": pa.int32(),
         "end_position": pa.int32(),
         "genes": pa.list_(pa.string()),
-        "effects": pa.list_(pa.string()),
+        "effect_types": pa.string(),
+        "effect_genes": pa.string(),
         "summary_index": pa.int32(),
     }
 
@@ -245,22 +246,14 @@ class AlleleParquetSerializer:
         return self.searchable_properties_types.keys()
 
     def build_table(self):
-        batch_data = []
-        for index, name in enumerate(self.schema.names):
-            assert name in self.data
-            column = self.data[name]
-            field = self.schema.field(name)
-            batch_data.append(pa.array(column, type=field.type))
-            if index > 0:
-                assert len(batch_data[index]) == len(batch_data[0]), name
-        batch = pa.RecordBatch.from_arrays(batch_data, self.schema.names)
-        return batch
+        table = pa.Table.from_pydict(self._data, self.get_schema())
+        return table
 
     def add_allele_to_batch_dict(self, allele):
         for spr in self.searchable_properties:
-            prop_value = [getattr(allele, spr, None)]
+            prop_value = getattr(allele, spr, None)
             if prop_value is None:
-                prop_value = [allele.get_attribute(spr)]
+                prop_value = allele.get_attribute(spr)
             self._data[spr].append(prop_value)
         self._data["data"].append(self.serialize_allele(allele))
 
@@ -303,11 +296,15 @@ class AlleleParquetSerializer:
                 field = pa.field(spr, self.searchable_properties_types[spr])
                 fields.append(field)
             fields.append(pa.field("data", pa.binary()))
-            schema = pa.schema(fields)
-        return schema
+            self.schema = pa.schema(fields)
+        return self.schema
 
     @staticmethod
-    def from_variant(variant, annotation_schema=None):
+    def from_loader(variant_loader):
+        annotation_schema = variant_loader.get_attribute("annotation_schema")
+
+        assert annotation_schema is not None
+
         summary_prop_serializers = {
             "chromosome": StringSerializer,
             "position": IntSerializer,
@@ -329,7 +326,7 @@ class AlleleParquetSerializer:
 
         annotation_prop_serializers = {}
 
-        if variant.get_attribute("af_allele_freq"):
+        if "af_allele_freq" in annotation_schema.col_names:
             annotation_prop_serializers["af_allele_freq"] = FloatSerializer
             annotation_prop_serializers["af_allele_count"] = NpInt64Serializer
             annotation_prop_serializers[
@@ -339,7 +336,7 @@ class AlleleParquetSerializer:
                 "af_parents_called_percent"
             ] = FloatSerializer
 
-        if variant.get_attribute("effect_type"):
+        if "effect_type" in annotation_schema.col_names:
             annotation_prop_serializers["effect_type"] = StringSerializer
             annotation_prop_serializers[
                 "effect_gene_genes"
@@ -369,13 +366,6 @@ class AlleleParquetSerializer:
             member_prop_serializers,
             additional_searchable_properties_types,
         )
-
-    @staticmethod
-    def from_loader(loader):
-        schema = loader.get_attribute("annotation_schema")
-        variant = next(loader.full_variants_iterator())[1][0]
-
-        return AlleleParquetSerializer.from_variant(variant, schema)
 
 
 class ParquetSerializer(object):
