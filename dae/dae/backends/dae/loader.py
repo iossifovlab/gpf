@@ -735,7 +735,7 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
             self._adjust_chrom_prefix(rec["chrom"]),
             rec["cshl_position"],
             rec["cshl_variant"],
-            self.genome,
+            self.genome.get_genomic_sequence(),
         )
         rec["position"] = position
         rec["reference"] = reference
