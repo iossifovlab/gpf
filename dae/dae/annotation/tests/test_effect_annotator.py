@@ -110,7 +110,7 @@ def test_effect_annotator(effect_annotator, variants_io, capsys):
 def test_effect_annotator_df(variant_effect_annotator):
     df = pd.read_csv(
         relative_to_this_test_folder("fixtures/effects_trio_multi-effect.txt"),
-        dtype={"chrom": str, "position": np.int32,},
+        dtype={"chrom": str, "position": np.int32},
         sep="\t",
     )
 
@@ -124,10 +124,10 @@ def test_effect_annotator_df(variant_effect_annotator):
         "effect_details_details",
     ]
     df[columns] = df[columns].fillna("")
-    print(df[["effect_type", "effect_gene_types", "effect_gene_genes",]])
+    print(df[["effect_type", "effect_gene_types", "effect_gene_genes"]])
 
     res_df = variant_effect_annotator.annotate_df(df)
-    print(res_df[["effect_type", "effect_gene_types", "effect_gene_genes",]])
+    print(res_df[["effect_type", "effect_gene_types", "effect_gene_genes"]])
 
     assert list(res_df.effect_type.values) == list(df["effect_type"].values)
 
@@ -139,7 +139,7 @@ def test_effect_annotators_compare(
     assert variant_effect_annotator is not None
     df = pd.read_csv(
         relative_to_this_test_folder("fixtures/effects_trio_multi-effect.txt"),
-        dtype={"chrom": str, "position": np.int32,},
+        dtype={"chrom": str, "position": np.int32},
         sep="\t",
     )
     columns = [

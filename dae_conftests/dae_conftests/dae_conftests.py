@@ -8,7 +8,7 @@ import tempfile
 import pandas as pd
 from io import StringIO
 
-from dae.GenomesDB import GenomesDB
+from dae.genome.genomes_db import GenomesDB
 
 from dae.gpf_instance.gpf_instance import GPFInstance, cached
 
@@ -50,6 +50,14 @@ def relative_to_this_test_folder(path):
     )
 
 
+@pytest.fixture(scope="session")
+def fixture_dirname(request):
+    def builder(relpath):
+        return relative_to_this_test_folder(os.path.join("fixtures", relpath))
+
+    return builder
+
+
 def get_global_dae_fixtures_dir():
     return relative_to_this_test_folder("fixtures")
 
@@ -80,7 +88,7 @@ def default_dae_config(request):
 @pytest.fixture(scope="session")
 def gpf_instance(default_dae_config):
     class GenomesDbInternal(GenomesDB):
-        def get_gene_model_id(self, genome_id=None):
+        def get_default_gene_models_id(self, genome_id=None):
             return "RefSeq2013"
 
     class GPFInstanceInternal(GPFInstance):
@@ -137,6 +145,11 @@ def genomes_db_2013(gpf_instance_2013):
 @pytest.fixture(scope="session")
 def genome_2013(gpf_instance_2013):
     return gpf_instance_2013.genomes_db.get_genome()
+
+
+@pytest.fixture(scope="session")
+def genomic_sequence_2013(genome_2013):
+    return genome_2013.get_genomic_sequence()
 
 
 @pytest.fixture(scope="session")
@@ -197,17 +210,9 @@ def temp_filename(request):
     def fin():
         shutil.rmtree(dirname)
 
-    request.addfinalizer(fin)
+    # request.addfinalizer(fin)
     output = os.path.join(dirname, "temp_filename.tmp")
     return output
-
-
-@pytest.fixture(scope="session")
-def fixture_dirname(request):
-    def builder(relpath):
-        return relative_to_this_test_folder(os.path.join("fixtures", relpath))
-
-    return builder
 
 
 @pytest.fixture(scope="session")
@@ -809,9 +814,12 @@ def calc_gene_sets(request, variants_db_fixture):
     def remove_gene_sets():
         for dgs in genotype_data_names:
             genotype_data = variants_db_fixture.get(dgs)
-            cache_file = DenovoGeneSetCollectionFactory.denovo_gene_set_cache_file(
-                genotype_data.config, "phenotype"
-            )
+            # fmt:off
+            cache_file = \
+                DenovoGeneSetCollectionFactory.denovo_gene_set_cache_file(
+                    genotype_data.config, "phenotype"
+                )
+            # fmt:on
             if os.path.exists(cache_file):
                 os.remove(cache_file)
 

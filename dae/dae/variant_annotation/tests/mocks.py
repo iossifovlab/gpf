@@ -12,10 +12,10 @@ class TranscriptModelMock(object):
         self.strand = strand
         self.cds = [cds_start, cds_end]
         self.exons = exons
-        self.chr = "1"
+        self.chrom = "1"
         self.gene = "B"
-        self.trID = "123"
-        self.trOrigId = "123"
+        self.tr_id = "123"
+        self.tr_name = "123"
 
         if coding is None:
             self.coding = self.exons
@@ -34,7 +34,7 @@ class TranscriptModelMock(object):
 
 
 class ReferenceGenomeMock(object):
-    def getSequence(self, chromosome, pos, pos_last):
+    def get_sequence(self, chromosome, pos, pos_last):
         print(("get", chromosome, pos, pos_last))
         return "".join([chr(i) for i in range(pos, pos_last + 1)])
 

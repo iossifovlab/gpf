@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 import abc
 from collections import defaultdict
-import argparse
+
+# import argparse
 from functools import reduce
 
 from dae.pedigrees.interval_sandwich import SandwichInstance
@@ -444,84 +445,84 @@ class MatingUnit(IndividualGroup):
         return self.mother
 
 
-def get_argument_parser(description):
-    parser = argparse.ArgumentParser(
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-        description=description,
-    )
+# def get_argument_parser(description):
+#     parser = argparse.ArgumentParser(
+#         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+#         description=description,
+#     )
 
-    parser.add_argument("file", metavar="f", help="the .ped file")
-    parser.add_argument(
-        "--output",
-        metavar="o",
-        help="the output filename file",
-        default="output.pdf",
-    )
-    parser.add_argument(
-        "--delimiter",
-        help="delimiter used in pedigree file; defaults to " '"\\t"',
-        default="\t",
-        action="store",
-    )
-    parser.add_argument(
-        "--family_id",
-        help="Specify family id column label.",
-        default="familyId",
-        action="store",
-    )
-    parser.add_argument(
-        "--id",
-        help="Specify id column label.",
-        default="personId",
-        action="store",
-    )
-    parser.add_argument(
-        "--father",
-        help="Specify father column label",
-        default="dadId",
-        action="store",
-    )
-    parser.add_argument(
-        "--mother",
-        help="Specify mother column label",
-        default="momId",
-        action="store",
-    )
-    parser.add_argument(
-        "--sex",
-        help="Specify sex column label.",
-        default="sex",
-        action="store",
-    )
-    parser.add_argument(
-        "--status",
-        help="Specify status column label.",
-        default="status",
-        action="store",
-    )
-    parser.add_argument(
-        "--role",
-        help="Specify role column label.",
-        default="role",
-        action="store",
-    )
-    parser.add_argument(
-        "--no-header-order",
-        help="Comma separated order of columns in header "
-        "when header is not in the input file. Values for columns are "
-        "familyId, personId, dadId, momId, sex, status. You can replace "
-        "unnecessary column with `_`.",
-        dest="no_header_order",
-        default=None,
-        action="store",
-    )
-    parser.add_argument(
-        "--processes",
-        type=int,
-        default=4,
-        dest="processes",
-        help="Number of processes",
-        action="store",
-    )
+#     parser.add_argument("file", metavar="f", help="the .ped file")
+#     parser.add_argument(
+#         "--output",
+#         metavar="o",
+#         help="the output filename file",
+#         default="output.pdf",
+#     )
+#     parser.add_argument(
+#         "--delimiter",
+#         help="delimiter used in pedigree file; defaults to " '"\\t"',
+#         default="\t",
+#         action="store",
+#     )
+#     parser.add_argument(
+#         "--family_id",
+#         help="Specify family id column label.",
+#         default="familyId",
+#         action="store",
+#     )
+#     parser.add_argument(
+#         "--id",
+#         help="Specify id column label.",
+#         default="personId",
+#         action="store",
+#     )
+#     parser.add_argument(
+#         "--father",
+#         help="Specify father column label",
+#         default="dadId",
+#         action="store",
+#     )
+#     parser.add_argument(
+#         "--mother",
+#         help="Specify mother column label",
+#         default="momId",
+#         action="store",
+#     )
+#     parser.add_argument(
+#         "--sex",
+#         help="Specify sex column label.",
+#         default="sex",
+#         action="store",
+#     )
+#     parser.add_argument(
+#         "--status",
+#         help="Specify status column label.",
+#         default="status",
+#         action="store",
+#     )
+#     parser.add_argument(
+#         "--role",
+#         help="Specify role column label.",
+#         default="role",
+#         action="store",
+#     )
+#     parser.add_argument(
+#         "--no-header-order",
+#         help="Comma separated order of columns in header "
+#         "when header is not in the input file. Values for columns are "
+#         "familyId, personId, dadId, momId, sex, status. You can replace "
+#         "unnecessary column with `_`.",
+#         dest="no_header_order",
+#         default=None,
+#         action="store",
+#     )
+#     parser.add_argument(
+#         "--processes",
+#         type=int,
+#         default=4,
+#         dest="processes",
+#         help="Number of processes",
+#         action="store",
+#     )
 
-    return parser
+#     return parser

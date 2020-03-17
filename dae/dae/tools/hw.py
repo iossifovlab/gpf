@@ -150,7 +150,7 @@ def pval_count_X(cnt):
     return pv, eCnt
 
 
-par_x_test = genomes_db.get_pars_x_test()
+par_x_test = genomes_db.get_genome().is_pseudoautosomal
 
 
 def isPseudoAutosomalX(chrom, pos):
@@ -159,7 +159,7 @@ def isPseudoAutosomalX(chrom, pos):
 
 
 def Rx(xstr, pp, AXY, pos):
-    xcnt, di_flag = xMF(xstr, pp)
+    xcnt, _di_flag = xMF(xstr, pp)
     cnt = [xcnt[0][n] + xcnt[1][n] for n in range(len(xcnt[0]))]
 
     if (AXY == "X") and (not isPseudoAutosomalX(AXY, pos)):
@@ -209,10 +209,10 @@ def main():
                 print("wrong", ref.cID, mny.cID)
                 exit(1)
 
-        cnt, pcnt = ref.getStat()
+        cnt, _pcnt = ref.getStat()
 
         terms = ref.cID.split(":")
-        pv, cnt, eCnt = Rx(fi, cnt[0], terms[0], int(terms[1]))
+        pv, cnt, _eCnt = Rx(fi, cnt[0], terms[0], int(terms[1]))
 
         gzW.write(ref.cLine + "\t{0:.4f}".format(pv) + "\n")
 

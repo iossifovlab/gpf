@@ -5,7 +5,7 @@ Created on Feb 15, 2018
 """
 import pytest
 
-from dae.RegionOperations import Region
+from dae.utils.regions import Region
 import numpy as np
 
 

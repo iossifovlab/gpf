@@ -40,20 +40,24 @@ def annotation_config_cli_options(gpf_instance):
                 "action": "store_true",
             },
         ),
+        # fmt: off
         (
             "--Graw",
             {
                 "help": "genome file location [default: %(default)s]",
-                "default": gpf_instance.genomes_db.get_genome_file(),
+                "default":
+                gpf_instance.genomes_db.get_genomic_sequence_filename(),
             },
         ),
         (
             "--Traw",
             {
                 "help": "gene model id [default: %(default)s]",
-                "default": gpf_instance.genomes_db.get_gene_model_id(),
+                "default":
+                gpf_instance.genomes_db.get_default_gene_models_id(),
             },
         ),
+        # fmt: on
     ]
 
     return options

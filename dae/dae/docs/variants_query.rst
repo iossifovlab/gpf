@@ -33,7 +33,7 @@ list of regions.
 
     .. code-block:: python
 
-        from RegionOperations import Region
+        from dae.utils.regions import Region
 
         vs = fvars.query_variants(regions=[Region("1", 878109, 878109)])
 
@@ -41,7 +41,7 @@ list of regions.
 
     .. code-block:: python
 
-        from RegionOperations import Region
+        from dae.utils.regions import Region
 
         vs = fvars.query_variants(
             regions=[Region("1", 11539, 11539), Region("1", 11550, 11550)])

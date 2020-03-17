@@ -1,6 +1,6 @@
 import pytest
 
-from dae.GenomeAccess import GenomicSequence
+from dae.genome.genome_access import GenomicSequence
 
 from dae.backends.impala.parquet_io import ParquetPartitionDescriptor
 from dae.backends.impala.import_commons import MakefilePartitionHelper
@@ -102,7 +102,7 @@ def test_target_generator_other_0(
         (3_000_000_000, set(["1_0"])),
         (300_000_000, set(["1_0"])),
         (200_000_000, set(["1_0", "1_1"])),
-        (50_000_000, set(["1_0", "1_1", "1_2", "1_3", "1_4",])),
+        (50_000_000, set(["1_0", "1_1", "1_2", "1_3", "1_4"])),
     ],
 )
 def test_target_generator_chrom_1(region_length, targets, genomes_db_2019):
@@ -126,7 +126,7 @@ def test_target_generator_chrom_1(region_length, targets, genomes_db_2019):
         (3_000_000_000, set(["other_0"])),
         (300_000_000, set(["other_0"])),
         (190_000_000, set(["other_0", "other_1"])),
-        (50_000_000, set(["other_0", "other_1", "other_2", "other_3",])),
+        (50_000_000, set(["other_0", "other_1", "other_2", "other_3"])),
     ],
 )
 def test_target_generator_chrom_other(region_length, targets, genomes_db_2019):
@@ -151,7 +151,7 @@ def test_target_generator_chrom_other(region_length, targets, genomes_db_2019):
         (3_000_000_000, set(["other_0"])),
         (300_000_000, set(["other_0", "other_1"])),
         (150_000_000, set(["other_0", "other_1", "other_2"])),
-        (100_000_000, set(["other_0", "other_1", "other_2", "other_3",])),
+        (100_000_000, set(["other_0", "other_1", "other_2", "other_3"])),
     ],
 )
 def test_target_generator_chrom_prefix_target_other(
@@ -160,7 +160,7 @@ def test_target_generator_chrom_prefix_target_other(
 
     mocker.patch.object(
         GenomicSequence,
-        "get_all_chr_lengths",
+        "get_all_chrom_lengths",
         return_value=[
             ("chr1", 100_000_000),
             ("chr2", 200_000_000),
@@ -204,7 +204,7 @@ def test_target_generator_add_chrom_prefix_target_chrom(
 
     mocker.patch.object(
         GenomicSequence,
-        "get_all_chr_lengths",
+        "get_all_chrom_lengths",
         return_value=[
             ("chr1", 100_000_000),
             ("chr2", 200_000_000),
@@ -248,7 +248,7 @@ def test_target_generator_del_chrom_prefix_target_chrom(
 
     mocker.patch.object(
         GenomicSequence,
-        "get_all_chr_lengths",
+        "get_all_chrom_lengths",
         return_value=[
             ("1", 100_000_000),
             ("2", 200_000_000),
@@ -312,7 +312,7 @@ def test_makefile_generator_bucket_numbering(
 
     mocker.patch.object(
         GenomicSequence,
-        "get_all_chr_lengths",
+        "get_all_chrom_lengths",
         return_value=[
             ("chr1", 100_000_000),
             ("chr2", 200_000_000),
@@ -370,7 +370,7 @@ def test_makefile_generator_regions(
 
     mocker.patch.object(
         GenomicSequence,
-        "get_all_chr_lengths",
+        "get_all_chrom_lengths",
         return_value=[
             ("chr1", 100_000_000),
             ("chr2", 200_000_000),
@@ -432,7 +432,7 @@ def test_makefile_generator_regions_del_chrom_prefix(
 
     mocker.patch.object(
         GenomicSequence,
-        "get_all_chr_lengths",
+        "get_all_chrom_lengths",
         return_value=[
             ("1", 100_000_000),
             ("2", 200_000_000),
@@ -492,7 +492,7 @@ def test_makefile_generator_regions_add_chrom_prefix(
 
     mocker.patch.object(
         GenomicSequence,
-        "get_all_chr_lengths",
+        "get_all_chrom_lengths",
         return_value=[
             ("chr1", 100_000_000),
             ("chr2", 200_000_000),

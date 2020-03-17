@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from GeneModelFiles import load_gene_models
+from dae.genome.gene_models import load_gene_models
 import sys
 import optparse
 
@@ -44,7 +44,7 @@ toGMFile = args[1]
 
 
 gmDB = load_gene_models(
-    fromGMFile, gene_mapping_file=opts.gm_names, format=opts.gm_format
+    fromGMFile, gene_mapping_file=opts.gm_names, fileformat=opts.gm_format
 )
 if opts.chr_names is not None:
     gmDB.relabel_chromosomes(opts.chr_names)

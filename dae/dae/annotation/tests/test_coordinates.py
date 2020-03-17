@@ -17,7 +17,7 @@ def test_dae2vcf(
 ):
 
     genome = mocker.Mock()
-    genome.getSequence = lambda _, start, end: "A" * (end - start + 1)
+    genome.get_sequence = lambda _, start, end: "A" * (end - start + 1)
 
     pos, ref, alt = dae2vcf_variant("chr1", 150013938, variant, genome)
 

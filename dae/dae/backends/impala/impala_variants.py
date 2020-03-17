@@ -4,8 +4,8 @@ from dae.backends.impala.parquet_io import ParquetSerializer
 
 from impala.util import as_pandas
 
-from dae.RegionOperations import Region
-import dae.RegionOperations
+from dae.utils.regions import Region
+import dae.utils.regions
 
 from ..attributes_query import (
     QueryTreeToSQLBitwiseTransformer,
@@ -385,13 +385,13 @@ class ImpalaFamilyVariants:
                 for gm in self.gene_models.gene_models_by_gene_name(gs):
                     regions.append(
                         Region(
-                            gm.chr,
+                            gm.chrom,
                             gm.tx[0] - self.GENE_REGIONS_HEURISTIC_EXTEND,
                             gm.tx[1] + self.GENE_REGIONS_HEURISTIC_EXTEND,
                         )
                     )
             if regions:
-                regions = dae.RegionOperations.collapse(regions)
+                regions = dae.utils.regions.collapse(regions)
             return regions
 
     @deprecated(

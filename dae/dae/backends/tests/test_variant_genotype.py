@@ -6,7 +6,7 @@ Created on Mar 27, 2018
 import pytest
 import numpy as np
 
-from dae.RegionOperations import Region
+from dae.utils.regions import Region
 
 
 @pytest.mark.parametrize(

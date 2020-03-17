@@ -1,338 +1,352 @@
 #!/usr/bin/env python
 
 import sys
-import optparse
 import os.path
 import time
 import datetime
 
 from typing import List, Optional
 
+import argparse
+
+import pysam
+
 from dae.gpf_instance.gpf_instance import GPFInstance
 
-from dae import GenomeAccess
-from dae.GeneModelFiles import load_gene_models
+from dae.genome import genome_access
+from dae.genome.gene_models import load_gene_models
 from dae.variant_annotation.annotator import (
     VariantAnnotator as VariantAnnotation,
 )
 
 
-start = time.time()
+def cli_genome_options(parser):
+    genome_group = parser.add_argument_group("genome specification")
 
-gpf_instance = GPFInstance()
-genomes_db = gpf_instance.genomes_db
-
-
-desc = """Program to annotate variants (substitutions & indels & cnvs)"""
-parser = optparse.OptionParser(
-    version="%prog version 2.2 10/October/2013",
-    description=desc,
-    add_help_option=False,
-)
-parser.add_option("-h", "--help", default=False, action="store_true")
-parser.add_option("-c", help="chromosome column number/name", action="store")
-parser.add_option("-p", help="position column number/name", action="store")
-parser.add_option(
-    "-x", help="location (chr:pos) column number/name", action="store"
-)
-parser.add_option("-v", help="variant column number/name", action="store")
-parser.add_option(
-    "-a",
-    help="alternative allele (FOR SUBSTITUTIONS ONLY) column number/name",
-    action="store",
-)
-parser.add_option(
-    "-r",
-    help="reference allele (FOR SUBSTITUTIONS ONLY) column number/name",
-    action="store",
-)
-parser.add_option(
-    "-t", help="type of mutation column number/name", action="store"
-)
-parser.add_option("-q", help="seq column number/name", action="store")
-parser.add_option("-l", help="length column number/name", action="store")
-
-parser.add_option(
-    "-P",
-    help="promoter length",
-    default=0,
-    action="store",
-    type="int",
-    dest="prom_len",
-)
-parser.add_option(
-    "-H",
-    help="no header in the input file",
-    default=False,
-    action="store_true",
-    dest="no_header",
-)
-
-parser.add_option(
-    "-T",
-    help="gene models ID <RefSeq, CCDS, knownGene>",
-    type="string",
-    action="store",
-)
-parser.add_option(
-    "--Traw",
-    help="outside gene models file path",
-    type="string",
-    action="store",
-)
-parser.add_option(
-    "--TrawFormat",
-    help="outside gene models format (refseq, ccds, knowngene)",
-    type="string",
-    action="store",
-)
-
-parser.add_option(
-    "-G",
-    help="genome ID <GATK_ResourceBundle_5777_b37_phiX174, hg19> ",
-    type="string",
-    action="store",
-)
-parser.add_option(
-    "--Graw", help="outside genome file", type="string", action="store"
-)
-
-(opts, args) = parser.parse_args()
-
-if opts.help:
-    print("\n------------------------------------------------------------\n")
-    print("Program to annotate genomic variants - by Ewa, v2.2, 10/Oct/2013")
-    print("BASIC USAGE: annotate_variant.py INFILE <OUTFILE> <options>\n")
-    print(
-        "-h, --help                       " "show this help message and exit"
+    genome_group.add_argument(
+        "--gene-models-id",
+        "-T",
+        help="gene models ID <RefSeq, CCDS, knownGene>",
     )
-    print("-c CHROM                         " "chromosome column number/name ")
-    print("-p POS                           " "position column number/name")
-    print(
-        "-x LOC                           "
-        "location (chr:pos) column number/name "
+    genome_group.add_argument(
+        "--gene-models-filename",
+        "--Traw",
+        help="outside gene models file path",
     )
-    print("-v VAR                           " "variant column number/name ")
-    print(
-        "-a ALT                           "
-        "alternative allele (FOR SUBSTITUTIONS ONLY) column number/name"
+    genome_group.add_argument(
+        "--gene-models-fileformat",
+        "--TrawFormat",
+        help="outside gene models format (refseq, ccds, knowngene)",
+        action="store",
     )
-    print(
-        "-r REF                           "
-        "reference allele (FOR SUBSTITUTIONS ONLY) column number/name"
+    genome_group.add_argument(
+        "--gene-mapping-filename",
+        "-I",
+        help="geneIDs mapping file",
+        default=None,
+        action="store",
     )
-    print(
-        "-t TYPE                          "
-        "type of mutation column number/name "
+    genome_group.add_argument(
+        "--genome-id",
+        "-G",
+        help="genome ID <GATK_ResourceBundle_5777_b37_phiX174, hg19> ",
+        action="store",
     )
-    print("-q SEQ                           " "seq column number/name ")
-    print("-l LEN                           " "length column number/name")
-    print("-P PROM_LEN                      " "promoter length ")
-    print("-H                               " "no header in the input file ")
-    print(
-        "-T T                             "
-        "gene models ID <RefSeq, CCDS, knownGene> "
+    genome_group.add_argument(
+        "--genome-filename",
+        "--Graw",
+        help="outside genome file name",
+        action="store",
     )
-    print("--Traw=TRAW                      " "outside gene models file path")
-    print(
-        "--TrawFormat=TRAWFORMAT          "
-        "outside gene models format (refseq, ccds, knowngene)"
+
+    genome_group.add_argument(
+        "--promoter-len",
+        "-P",
+        help="promoter length",
+        default=0,
+        type=int,
+        dest="promoter_len",
     )
-    print(
-        "-G G                             "
-        "genome ID (GATK_ResourceBundle_5777_b37_phiX174, hg19)"
-    )
-    print("--Graw=GRAW                      " "outside genome file ")
-    print(
-        "-I I                             "
-        "geneIDs mapping file; use None for no gene name mapping "
-    )
-    print("\n------------------------------------------------------------\n")
-    sys.exit(0)
+
+    return parser
 
 
-infile = "-"
-outfile = None
-
-if len(args) > 0:
-    infile = args[0]
-
-if infile != "-" and not os.path.exists(infile):
-    sys.stderr.write("The given input file does not exist!\n")
-    sys.exit(-78)
-
-if len(args) > 1:
-    outfile = args[1]
-if outfile == "-":
-    outfile = None
-
-if infile == "-":
-    variantFile = sys.stdin
-else:
-    variantFile = open(infile)
-
-first_line: Optional[List[str]]
-if not opts.no_header:
-    first_line_str = variantFile.readline()
-    first_line = first_line_str.split()
-else:
-    first_line = None
-
-
-def give_column_number(s, header):
-    try:
-        c = header.index(s)
-        return c + 1
-    except Exception:
-        sys.stderr.write(
-            "Used parameter: " + s + " does NOT exist in the "
-            "input file header\n"
+def parse_cli_genome_options(args):
+    genomic_sequence = None
+    gene_models = None
+    if args.gene_models_filename:
+        gene_models = load_gene_models(
+            args.gene_models_filename,
+            fileformat=args.gene_models_fileformat,
+            gene_mapping_file=args.gene_mapping_filename,
         )
-        sys.exit(-678)
+    if args.genome_filename:
+        genomic_sequence = genome_access.open_ref(args.genome_filename)
+    if gene_models and genomic_sequence:
+        return genomic_sequence, gene_models
 
+    if genomic_sequence is None or gene_models is None:
+        from dae import GPFInstance
 
-def assign_values(param):
-    if param is None:
-        return param
-    try:
-        param = int(param)
-    except Exception:
-        if first_line is None:
-            sys.stderr.write(
-                "You cannot use column names when the file doesn't have a "
-                "header (-H option set)!\n"
+        gpf = GPFInstance()
+        genome = gpf.genomes_db.get_genome(args.genome_id)
+        if genomic_sequence is None:
+            genomic_sequence = genome.get_genomic_sequence()
+        if gene_models is None:
+            gene_models = gpf.genomes_db.get_gene_models(
+                args.gene_models_id, args.genome_id
             )
-            sys.exit(-49)
-        param = give_column_number(param, first_line)
-    return param
+        return genomic_sequence, gene_models
 
 
-if opts.x is None and opts.c is None:
-    opts.x = "location"
-if (opts.v is None and opts.a is None) and (opts.v is None and opts.t is None):
-    opts.v = "variant"
-
-
-chrCol = assign_values(opts.c)
-posCol = assign_values(opts.p)
-locCol = assign_values(opts.x)
-varCol = assign_values(opts.v)
-altCol = assign_values(opts.a)
-refCol = assign_values(opts.r)
-typeCol = assign_values(opts.t)
-seqCol = assign_values(opts.q)
-lengthCol = assign_values(opts.l)
-
-if opts.G is None and opts.Graw is None:
-    GA = genomes_db.get_genome()
-    if opts.T is None and opts.Traw is None:
-        gmDB = genomes_db.get_gene_models()
-    elif opts.Traw is None:
-        gmDB = genomes_db.get_gene_models(opts.T)
-    else:
-        gmDB = load_gene_models(opts.Traw, None, opts.TrawFormat)
-
-
-elif opts.Graw is None:
-    GA = genomes_db.get_genome(opts.G)
-    if opts.T is None and opts.Traw is None:
-        gmDB = genomes_db.get_gene_models(genomeId=opts.G)
-    elif opts.Traw is None:
-        gmDB = genomes_db.get_gene_models(opts.T, genomeId=opts.G)
-    else:
-        gmDB = load_gene_models(opts.Traw, None, opts.TrawFormat)
-
-else:
-    GA = GenomeAccess.openRef(opts.Graw)
-    if opts.Traw is None:
-        print(
-            "This genome requires gene models (--Traw option)", file=sys.stderr
-        )
-        sys.exit(-783)
-    gmDB = load_gene_models(opts.Traw, None, opts.TrawFormat)
-
-
-if "1" in GA.allChromosomes and "1" not in gmDB._utrModels.keys():
-    gmDB.relabel_chromosomes()
-
-
-sys.stderr.write("GENOME: " + GA.genomicFile + "\n")
-
-sys.stderr.write("GENE MODEL FILES: " + gmDB.location + "\n")
-
-if outfile is not None:
-    out = open(outfile, "w")
-
-if not opts.no_header:
-    if outfile is None:
-        print(first_line_str[:-1] + "\teffectType\teffectGene\teffectDetails")
-    else:
-        out.write(
-            first_line_str[:-1] + "\teffectType\teffectGene\teffectDetails\n"
-        )
-
-argColumnNs = [
-    chrCol,
-    posCol,
-    locCol,
-    varCol,
-    refCol,
-    altCol,
-    lengthCol,
-    seqCol,
-    typeCol,
-]
-
-sys.stderr.write("...processing....................\n")
-k = 0
-
-annotator = VariantAnnotation(GA, gmDB, promoter_len=opts.prom_len)
-
-for l in variantFile:
-    if l[0] == "#":
-        if outfile is None:
-            print(l, end="")
-        else:
-            out.write(l)
-        continue
-    k += 1
-    if k % 1000 == 0:
-        sys.stderr.write(str(k) + " lines processed\n")
-
-    line = l[:-1].split("\t")
-    params = [line[i - 1] if i is not None else None for i in argColumnNs]
-
-    effects = annotator.do_annotate_variant(*params)
-    desc = annotator.effect_description(effects)
-
-    if outfile is None:
-        print(l[:-1] + "\t" + "\t".join(desc))
-    else:
-        out.write(l[:-1] + "\t" + "\t".join(desc) + "\n")
-
-if infile != "-":
-    variantFile.close()
-
-if outfile is not None:
-    out.write("# PROCESSING DETAILS:\n")
-    out.write("# " + time.asctime() + "\n")
-    out.write("# " + " ".join(sys.argv) + "\n")
-    sys.stderr.write("Output file saved as: " + outfile + "\n")
-else:
-    print(
-        "# PROCESSING DETAILS:\n# "
-        + time.asctime()
-        + "\n# "
-        + " ".join(sys.argv)
+def cli_variants_options(parser):
+    location_group = parser.add_argument_group("variants location")
+    location_group.add_argument(
+        "--chrom", "-c", help="chromosome column number/name", action="store"
+    )
+    location_group.add_argument(
+        "--pos", "-p", help="position column number/name", action="store"
+    )
+    location_group.add_argument(
+        "--location",
+        "-x",
+        help="location (chr:pos) column number/name",
+        action="store",
     )
 
+    variants_group = parser.add_argument_group("variants specification")
+    variants_group.add_argument(
+        "--variant", "-v", help="variant column number/name", action="store"
+    )
+    variants_group.add_argument(
+        "--ref",
+        "-r",
+        help="reference allele column number/name",
+        action="store",
+    )
+    variants_group.add_argument(
+        "--alt",
+        "-a",
+        help="alternative allele column number/name",
+        action="store",
+    )
 
-if outfile is not None:
-    out.close()
+    parser.add_argument(
+        "--no-header",
+        "-H",
+        help="no header in the input file",
+        default=False,
+        action="store_true",
+    )
+
+    # variants_group.add_argument(
+    #     "-t", help="type of mutation column number/name", action="store"
+    # )
+    # variants_group.add_argument(
+    #     "-q", help="seq column number/name", action="store"
+    # )
+    # variants_group.add_argument(
+    #     "-l", help="length column number/name", action="store"
+    # )
 
 
-sys.stderr.write(
-    "The program was running for [h:m:s]: "
-    + str(datetime.timedelta(seconds=round(time.time() - start, 0)))
-    + "\n"
-)
+def parse_cli_variants_options(args):
+    columns = {}
+    if args.location is None:
+        if args.chrom is None and args.pos is None:
+            # default is location
+            columns["loc"] = "location"
+        else:
+            assert args.chrom is not None and args.pos is not None
+            columns["chrom"] = args.chrom
+            columns["position"] = args.pos
+    else:
+        assert args.chrom is None and args.pos is None
+        columns["loc"] = args.location
+
+    if args.variant is None:
+        if args.ref is None and args.alt is None:
+            # default is variant
+            columns["var"] = "variant"
+        else:
+            assert args.ref is not None and args.alt is not None
+            columns["ref"] = args.ref
+            columns["alt"] = args.alt
+    else:
+        assert args.ref is None and args.alt is None
+        columns["var"] = args.variant
+    return columns
+
+
+def cli(argv=sys.argv[1:]):
+    parser = argparse.ArgumentParser(
+        description="variants effect annotator",
+        conflict_handler="resolve",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    cli_genome_options(parser)
+    cli_variants_options(parser)
+
+    parser.add_argument(
+        "input_filename", nargs="?", help="input variants file name"
+    )
+    parser.add_argument(
+        "output_filename", nargs="?", help="output file name (default: stdout)"
+    )
+
+    args = parser.parse_args(argv)
+    genomic_sequence, gene_models = parse_cli_genome_options(args)
+    assert genomic_sequence is not None
+    assert gene_models is not None
+    annotator = VariantAnnotation(
+        genomic_sequence, gene_models, promoter_len=args.promoter_len
+    )
+
+    variant_columns = parse_cli_variants_options(args)
+
+    if args.input_filename == "-" or args.input_filename is None:
+        infile = sys.stdin
+    else:
+        assert os.path.exists(args.input_filename), args.input_filename
+        infile = open(args.input_filename, "r")
+
+    if args.output_filename is None:
+        outfile = sys.stdout
+    else:
+        outfile = open(args.output_filename, "w")
+
+    start = time.time()
+    header = None
+    if args.no_header:
+        for key, value in variant_columns.items():
+            variant_columns[key] = int(value)
+    else:
+        line = infile.readline().strip()
+        header = [c.strip() for c in line.split("\t")]
+        for key, value in variant_columns.items():
+            assert value in header
+            variant_columns[key] = header.index(value)
+        header.extend(["effectType", "effectGene", "effectDetails"])
+        print("\t".join(header), file=outfile)
+
+    for counter, line in enumerate(infile):
+        if line[0] == "#":
+            continue
+        columns = [c.strip() for c in line.split("\t")]
+        variant = {
+            key: columns[value] for key, value in variant_columns.items()
+        }
+        effects = annotator.do_annotate_variant(**variant)
+        desc = annotator.effect_description(effects)
+        columns.extend(desc)
+        print("\t".join(columns), file=outfile)
+
+        if (counter + 1) % 1000 == 0:
+            elapsed = time.time() - start
+            print(
+                f"processed {counter + 1} lines in {elapsed:0.2f} sec",
+                file=sys.stderr,
+            )
+
+    infile.close()
+    if args.output_filename:
+        outfile.close()
+
+    elapsed = time.time() - start
+    print(80 * "=", file=sys.stderr)
+    print(
+        f"DONE: {counter + 1} variants in {elapsed:0.2f} sec", file=sys.stderr,
+    )
+    print(80 * "=", file=sys.stderr)
+
+
+def cli_vcf(argv=sys.argv[1:]):
+    parser = argparse.ArgumentParser(
+        description="VCF variants effect annotator",
+        conflict_handler="resolve",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    cli_genome_options(parser)
+    parser.add_argument("input_filename", help="input VCF variants file name")
+    parser.add_argument(
+        "output_filename", nargs="?", help="output file name (default: stdout)"
+    )
+
+    args = parser.parse_args(argv)
+    genomic_sequence, gene_models = parse_cli_genome_options(args)
+    assert genomic_sequence is not None
+    assert gene_models is not None
+    annotator = VariantAnnotation(
+        genomic_sequence, gene_models, promoter_len=args.promoter_len
+    )
+
+    assert os.path.exists(args.input_filename), args.input_filename
+    infile = pysam.VariantFile(args.input_filename)
+
+    if args.output_filename is None:
+        outfile = sys.stdout
+    else:
+        outfile = open(args.output_filename, "w")
+
+    start = time.time()
+    # Transfer VCF header
+    header = infile.header
+    header.add_meta(
+        "variant_effect_annotation", "GPF variant effects annotation"
+    )
+    header.add_meta(
+        "variant_effect_annotation_command", '"{}"'.format(" ".join(sys.argv))
+    )
+
+    header.info.add("ET", ".", "String", "effected type")
+    header.info.add("EG", ".", "String", "effected gene")
+    header.info.add("ED", ".", "String", "effect details")
+
+    print(str(header), file=outfile, end="")
+
+    for counter, variant in enumerate(infile):
+        effect_types = []
+        effect_genes = []
+        effect_details = []
+        for alt in variant.alts:
+            effects = annotator.do_annotate_variant(
+                chrom=variant.chrom,
+                position=variant.pos,
+                ref=variant.ref,
+                alt=alt,
+            )
+            et, eg, ed = annotator.effect_description(effects)
+            ed = ed.replace(";", "|")
+            effect_types.append(et)
+            effect_genes.append(eg)
+            effect_details.append(ed)
+
+        effect_types = ",".join(effect_types)
+        effect_genes = ",".join(effect_genes)
+        effect_details = ",".join(effect_details)
+        variant.info["ET"] = effect_types
+        variant.info["EG"] = eg
+        variant.info["ED"] = ed
+
+        print(str(variant), file=outfile, end="")
+        if (counter + 1) % 1000 == 0:
+            elapsed = time.time() - start
+            print(
+                f"processed {counter + 1} variants in {elapsed:0.2f} sec",
+                file=sys.stderr,
+            )
+
+    infile.close()
+    if args.output_filename:
+        outfile.close()
+
+    elapsed = time.time() - start
+    print(80 * "=", file=sys.stderr)
+    print(
+        f"DONE: {counter + 1} variants in {elapsed:0.2f} sec", file=sys.stderr,
+    )
+    print(80 * "=", file=sys.stderr)
+
+
+if __name__ == "__main__":
+    cli(sys.argv[1:])
