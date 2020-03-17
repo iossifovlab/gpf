@@ -278,6 +278,8 @@ class StudyWrapper(object):
     def get_variant_web_rows(self, query, sources, max_variants_count=None):
         people_group_id = query.get("peopleGroup", {}).get("id", None)
         people_group = self.get_families_group(people_group_id)
+        if max_variants_count is not None:
+            query["limit"] = max_variants_count
 
         rows = self.query_list_variants(sources, people_group, **query)
 
