@@ -29,6 +29,29 @@ class PersonSetCollection(NamedTuple):
     families: FamiliesData
 
 
+def get_person_color(
+    person: Person, person_set_collection: PersonSetCollection
+):
+    if person.generated:
+        return "#E0E0E0"
+
+    if person_set_collection is None:
+        return "#FFFFFF"
+
+    person_value = person.get_attribute(
+        person_set_collection.source.pedigree.column
+    )
+
+    for person_set in person_set_collection.person_sets:
+        if person_set.value == person_value:
+            return person_set.color
+
+    assert False, (
+        f"Person '{person.person_id}' has value '{person_value}'"
+        "for '{person_set_collection.id}' outside of its domain!"
+    )
+
+
 def produce_sets(config: NamedTuple) -> Dict[str, PersonSet]:
     """Initializes a dictionary of person set IDs
     mapped to empty PersonSet instances from a given configuration.

@@ -1,7 +1,9 @@
 import itertools
 import functools
+from typing import Dict
 from dae.pedigrees.family import FamiliesData
 from dae.pedigrees.families_groups import FamiliesGroups
+from dae.person_sets import from_pedigree, PersonSetCollection
 
 
 class GenotypeData:
@@ -26,6 +28,7 @@ class GenotypeData:
 
         self.study_type = self.config.study_type
         self.families_groups = None
+        self.person_set_collections: Dict[str, PersonSetCollection] = dict()
 
     def query_variants(
         self,
@@ -66,18 +69,22 @@ class GenotypeData:
                 ["status", "role", "sex", "role.sex", "family_size"]
             )
 
+    def _build_person_set_collection(self, person_set_collection_id):
+        collection_config = getattr(
+            self.config.person_set_collections, person_set_collection_id
+        )
+        self.person_set_collections[person_set_collection_id] = from_pedigree(
+            collection_config, self.families
+        )
+
     def get_families_group(self, families_group_id):
         self._build_study_groups()
         return self.families_groups.get(families_group_id)
 
-    def _get_person_color(self, person, people_group):
-        if person.generated:
-            return "#E0E0E0"
-        # print(people_group)
-
-        if people_group is None:
-            return "#FFFFFF"
-        return people_group.person_color(person)
+    def get_person_set_collection(self, person_set_collection_id):
+        if person_set_collection_id not in self.person_set_collections:
+            self._build_person_set_collection(person_set_collection_id)
+        return self.person_set_collections[person_set_collection_id]
 
 
 class GenotypeDataGroup(GenotypeData):

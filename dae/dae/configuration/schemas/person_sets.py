@@ -30,6 +30,7 @@ person_set_collection = {
         "type": "list",
         "schema": {"type": "dict", "schema": person_set},
     },
+    "default": {"type": "dict", "schema": person_set},
 }
 
 person_set_collections_schema = {

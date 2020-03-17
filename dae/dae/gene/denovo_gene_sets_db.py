@@ -5,6 +5,9 @@ from dae.gene.denovo_gene_set_collection_factory import (
     DenovoGeneSetCollectionFactory,
 )
 
+# TODO Document the denovo gene set spec somehow - what it contains,
+# maybe make it a namedtuple subclass
+
 
 class DenovoGeneSetsDb:
     def __init__(self, variants_db):

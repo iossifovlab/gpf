@@ -372,6 +372,11 @@ study_config_schema = {
         "type": "dict",
         "schema": {
             "enabled": {"type": "boolean", "required": True},
+            "selected_person_set_collections": {
+                "type": "list",
+                "schema": {"type": "string"},
+                "default": [],
+            },
             "selected_people_groups": {
                 "type": "list",
                 "schema": {"type": "string"},
