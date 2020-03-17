@@ -519,7 +519,9 @@ class GeneModels:
 
     def save(self, output_filename, gzipped=True):
         if gzipped:
-            with gzip.open(f"{output_filename}.gz", "wt") as outfile:
+            if not output_filename.endswith(".gz"):
+                output_filename = f"{output_filename}.gz"
+            with gzip.open(output_filename, "wt") as outfile:
                 self._save_gene_models(outfile)
         else:
 
@@ -530,7 +532,19 @@ class GeneModels:
 def load_default_gene_models_format(
     filename, gene_mapping_file=None, nrows=None
 ):
-    df = pd.read_csv(filename, sep="\t", nrows=nrows, dtype={"atts": str})
+    df = pd.read_csv(
+        filename,
+        sep="\t",
+        nrows=nrows,
+        dtype={
+            "chr": str,
+            "trID": str,
+            "trOrigId": str,
+            "gene": str,
+            "strand": str,
+            "atts": str,
+        },
+    )
 
     expected_columns = [
         "chr",
@@ -1081,6 +1095,7 @@ def infer_gene_model_parser(filename, fileformat=None):
 
 
 def load_gene_models(filename, gene_mapping_file=None, fileformat=None):
+    assert os.path.exists(filename), filename
 
     if fileformat is None:
         fileformat = infer_gene_model_parser(filename)

@@ -350,3 +350,12 @@ def test_save_load_gene_models(
             # assert exon.number == exon1.number
             # assert exon.cds_start == exon1.cds_start
             # assert exon.cds_stop == exon1.cds_stop
+
+
+@pytest.mark.skip
+def test_mouse_gene_models():
+    dirname = "/home/lubo/Work/seq-pipeline/gpf_validation_data/mouse/mouseStrains/mouse"
+    filename = "mouse.GRCm38.gtf.gz"
+
+    gm = load_gtf_gene_models_format(os.path.join(dirname, filename))
+    assert gm is not None
