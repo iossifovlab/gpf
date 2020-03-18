@@ -9,4 +9,5 @@ GPF Administration
    working_with_pedigree_files
    working_with_vcf_files
    pheno
+   gpf_tools
    data_appendix

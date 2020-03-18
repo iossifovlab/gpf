@@ -600,8 +600,8 @@ Generate Denovo Gene Sets
 +++++++++++++++++++++++++
 
 To generate de Novo gene sets, you can use the
-``generate_denovo_gene_sets.py`` tool. Similar to :ref:`reports_tool` above, you
-can use the ``--show-studies`` and ``--studies`` option. You can list them using ``--help``.
+``generate_denovo_gene_sets.py`` tool. Similar to :ref:`reports_tool` above,
+you can use the ``--show-studies`` and ``--studies`` option.
 
 To generate the de Novo gene sets for the `comp_all` study::
 
