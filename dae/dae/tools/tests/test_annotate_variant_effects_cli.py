@@ -37,7 +37,7 @@ def test_annotate_variant_simple(temp_filename, genomes_db_2013):
 
     command = (
         f"cut -f 1-3 {denovo_filename} "
-        f"| annotate_variants --Traw {gene_model_file} --TrawFormat default"
+        f"| annotate_variants.py --Traw {gene_model_file} --TrawFormat default"
         f"| head -n 9 > {temp_filename}"
     )
     print(command)
