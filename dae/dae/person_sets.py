@@ -28,76 +28,76 @@ class PersonSetCollection(NamedTuple):
     person_sets: Dict[str, PersonSet]
     families: FamiliesData
 
+    @staticmethod
+    def _produce_sets(config: NamedTuple) -> Dict[str, PersonSet]:
+        """Initializes a dictionary of person set IDs
+        mapped to empty PersonSet instances from a given configuration.
+        """
+        return {
+            person_set.id: PersonSet(*person_set, list())
+            for person_set in config.domain
+        }
 
-def get_person_color(
-    person: Person, person_set_collection: PersonSetCollection
-):
-    if person.generated:
-        return "#E0E0E0"
+    @staticmethod
+    def get_person_color(
+        person: Person, person_set_collection: "PersonSetCollection"
+    ):
+        if person.generated:
+            return "#E0E0E0"
 
-    if person_set_collection is None:
-        return "#FFFFFF"
+        if person_set_collection is None:
+            return "#FFFFFF"
 
-    person_value = person.get_attribute(
-        person_set_collection.source.pedigree.column
-    )
-
-    for person_set in person_set_collection.person_sets:
-        if person_set.value == person_value:
-            return person_set.color
-
-    assert False, (
-        f"Person '{person.person_id}' has value '{person_value}'"
-        "for '{person_set_collection.id}' outside of its domain!"
-    )
-
-
-def produce_sets(config: NamedTuple) -> Dict[str, PersonSet]:
-    """Initializes a dictionary of person set IDs
-    mapped to empty PersonSet instances from a given configuration.
-    """
-    return {
-        person_set.id: PersonSet(*person_set, list())
-        for person_set in config.domain
-    }
-
-
-def from_pedigree(
-    collection_config: NamedTuple, families_data: FamiliesData
-) -> PersonSetCollection:
-    """Produce a PersonSetCollection from its given configuration
-    with a pedigree as its source.
-    """
-    person_set_collection = PersonSetCollection(
-        collection_config.id,
-        collection_config.name,
-        produce_sets(collection_config),
-        families_data,
-    )
-    value_to_id = {
-        person_set.value: person_set.id
-        for person_set in collection_config.domain
-    }
-
-    for person_id, person in families_data.persons.items():
-        value = person.get_attr(collection_config.source.pedigree.column)
-
-        assert value is not None, (
-            f"Missing domain value for"
-            f" '{collection_config.source.pedigree.column}'"
-            f" in person '{person_id}'!"
+        person_value = person.get_attribute(
+            person_set_collection.source.pedigree.column
         )
 
-        # Convert to string since some of the person's
-        # attributes can be of an enum type
-        value = str(value)
+        for person_set in person_set_collection.person_sets:
+            if person_set.value == person_value:
+                return person_set.color
 
-        assert value in value_to_id, (
-            f"Domain for '{collection_config.id}'"
-            f" does not have the value '{value}'!"
+        assert False, (
+            f"Person '{person.person_id}' has value '{person_value}'"
+            "for '{person_set_collection.id}' outside of its domain!"
         )
 
-        set_id = value_to_id[value]
-        person_set_collection.person_sets[set_id].persons.append(person)
+    @staticmethod
+    def from_families(
+        collection_config: NamedTuple, families_data: FamiliesData
+    ) -> "PersonSetCollection":
+        """Produce a PersonSetCollection from its given configuration
+        with a pedigree as its source.
+        """
+        person_set_collection = PersonSetCollection(
+            collection_config.id,
+            collection_config.name,
+            PersonSetCollection._produce_sets(collection_config),
+            families_data,
+        )
+        value_to_id = {
+            person_set.value: person_set.id
+            for person_set in collection_config.domain
+        }
 
-    return person_set_collection
+        for person_id, person in families_data.persons.items():
+            value = person.get_attr(collection_config.source.pedigree.column)
+
+            assert value is not None, (
+                f"Missing domain value for"
+                f" '{collection_config.source.pedigree.column}'"
+                f" in person '{person_id}'!"
+            )
+
+            # Convert to string since some of the person's
+            # attributes can be of an enum type
+            value = str(value)
+
+            assert value in value_to_id, (
+                f"Domain for '{collection_config.id}'"
+                f" does not have the value '{value}'!"
+            )
+
+            set_id = value_to_id[value]
+            person_set_collection.person_sets[set_id].persons.append(person)
+
+        return person_set_collection

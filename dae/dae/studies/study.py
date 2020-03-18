@@ -3,7 +3,7 @@ import functools
 from typing import Dict
 from dae.pedigrees.family import FamiliesData
 from dae.pedigrees.families_groups import FamiliesGroups
-from dae.person_sets import from_pedigree, PersonSetCollection
+from dae.person_sets import PersonSetCollection
 
 
 class GenotypeData:
@@ -73,9 +73,9 @@ class GenotypeData:
         collection_config = getattr(
             self.config.person_set_collections, person_set_collection_id
         )
-        self.person_set_collections[person_set_collection_id] = from_pedigree(
-            collection_config, self.families
-        )
+        self.person_set_collections[
+            person_set_collection_id
+        ] = PersonSetCollection.from_families(collection_config, self.families)
 
     def get_families_group(self, families_group_id):
         self._build_study_groups()
