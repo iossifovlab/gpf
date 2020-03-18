@@ -136,7 +136,7 @@ class DenovoGeneSetCollectionFactory:
                         criteria["name"], {}
                     )
 
-                persons_in_set = set((p.person_id for p in person_set.persons))
+                persons_in_set = set(person_set.persons.keys())
                 innermost_cache.update(
                     cls._add_genes_families(
                         variants, persons_in_set, search_args

@@ -17,7 +17,7 @@ class PersonSet(NamedTuple):
     name: str
     value: str
     color: str
-    persons: List[Person]
+    persons: Dict[str, Person]
 
 
 class PersonSetCollection(NamedTuple):
@@ -34,7 +34,7 @@ class PersonSetCollection(NamedTuple):
         mapped to empty PersonSet instances from a given configuration.
         """
         return {
-            person_set.id: PersonSet(*person_set, list())
+            person_set.id: PersonSet(*person_set, dict())
             for person_set in config.domain
         }
 
@@ -98,6 +98,8 @@ class PersonSetCollection(NamedTuple):
             )
 
             set_id = value_to_id[value]
-            person_set_collection.person_sets[set_id].persons.append(person)
+            person_set_collection.person_sets[set_id].persons[
+                person_id
+            ] = person
 
         return person_set_collection
