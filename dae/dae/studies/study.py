@@ -166,18 +166,18 @@ class GenotypeDataGroup(GenotypeData):
         # FIXME This code could and should be rewritten
         # in a clearer, more concise way...
 
+        _ = self.studies[0].get_person_set_collection(person_set_collection_id)
+        collection_name = _.name
+
         new_collection = PersonSetCollection(
-            person_set_collection_id, None, dict(), self.families,
+            person_set_collection_id, collection_name, dict(), self.families,
         )
 
         for study in self.studies:
             collection = study.get_person_set_collection(
                 person_set_collection_id
             )
-            if new_collection.name is None:
-                new_collection.name = collection.name
-            else:
-                assert new_collection.name == collection.name
+            assert new_collection.name == collection.name
 
             for person_set_id, person_set in collection.person_sets.items():
                 if person_set_id not in new_collection.person_sets:
