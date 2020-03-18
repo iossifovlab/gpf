@@ -3,7 +3,7 @@ import functools
 from typing import Dict
 from dae.pedigrees.family import FamiliesData
 from dae.pedigrees.families_groups import FamiliesGroups
-from dae.person_sets import PersonSetCollection
+from dae.person_sets import PersonSet, PersonSetCollection
 
 
 class GenotypeData:
@@ -70,12 +70,7 @@ class GenotypeData:
             )
 
     def _build_person_set_collection(self, person_set_collection_id):
-        collection_config = getattr(
-            self.config.person_set_collections, person_set_collection_id
-        )
-        self.person_set_collections[
-            person_set_collection_id
-        ] = PersonSetCollection.from_families(collection_config, self.families)
+        raise NotImplementedError()
 
     def get_families_group(self, families_group_id):
         self._build_study_groups()
@@ -167,6 +162,40 @@ class GenotypeDataGroup(GenotypeData):
             )
         return combined_dict
 
+    def _build_person_set_collection(self, person_set_collection_id):
+        # FIXME This code could and should be rewritten
+        # in a clearer, more concise way...
+
+        new_collection = PersonSetCollection(
+            person_set_collection_id, None, dict(), self.families,
+        )
+
+        for study in self.studies:
+            collection = study.get_person_set_collection(
+                person_set_collection_id
+            )
+            if new_collection.name is None:
+                new_collection.name = collection.name
+            else:
+                assert new_collection.name == collection.name
+
+            for person_set_id, person_set in collection.person_sets.items():
+                if person_set_id not in new_collection.person_sets:
+                    new_collection.person_sets[person_set_id] = PersonSet(
+                        person_set.id,
+                        person_set.name,
+                        person_set.value,
+                        person_set.color,
+                        dict(),
+                    )
+                for person_id, person in person_set.persons.items():
+                    if person_id in self.families.persons:
+                        new_collection.person_sets[person_set_id].persons[
+                            person_id
+                        ] = person
+
+        self.person_set_collections[person_set_collection_id] = new_collection
+
 
 class GenotypeDataStudy(GenotypeData):
     def __init__(self, config, backend):
@@ -229,3 +258,11 @@ class GenotypeDataStudy(GenotypeData):
     @property
     def families(self):
         return self._backend.families
+
+    def _build_person_set_collection(self, person_set_collection_id):
+        collection_config = getattr(
+            self.config.person_set_collections, person_set_collection_id
+        )
+        self.person_set_collections[
+            person_set_collection_id
+        ] = PersonSetCollection.from_families(collection_config, self.families)
