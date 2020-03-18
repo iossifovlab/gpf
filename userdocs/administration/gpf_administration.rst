@@ -7,5 +7,6 @@ GPF Administration
 
    getting_started
    working_with_pedigree_files
+   working_with_vcf_files
    pheno
    data_appendix

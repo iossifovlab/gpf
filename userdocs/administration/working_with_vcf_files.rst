@@ -63,9 +63,9 @@ After the editing, the pedigree file should look like this:
 .. code-block::
 
     familyId	personId	momId	dadId	sex	status	role
-    PR05	HG00731	0	0	M	unaffected	dad
-    PR05	HG00732	0	0	F	unaffected	mom
-    PR05	HG00733	HG00732	HG00731	M	affected	prb
+    PR05	HG00731	0	0	M	unspecified	dad
+    PR05	HG00732	0	0	F	unspecified	mom
+    PR05	HG00733	HG00732	HG00731	M	unspecified	prb
 
 
 .. warning::
@@ -101,50 +101,40 @@ To install bcftools into your anaconda environment, use::
 The two .vcf files you downloaded earlier contain a lot of inviduals.
 Let's start with the related samples first, which are in the
 ``ALL.chr1.phase3_shapeit2_mvncall_integrated_v5_related_samples.20130502.genotypes.vcf.gz``
-file. Use bcftools' ``view`` command to inspect the files. 
+file. Use bcftools' ``view`` command to inspect the files.
 
-This command will print the first 250 lines of the vcf (`head -n 250`) in the terminal::
+This command will print the header of the vcf in the terminal::
 
-    bcftools view ALL.chr1.phase3_shapeit2_mvncall_integrated_v5_related_samples.20130502.genotypes.vcf.gz \
-    | head -n 250
+    bcftools view --header-only ALL.chr1.phase3_shapeit2_mvncall_integrated_v5_related_samples.20130502.genotypes.vcf.gz
 
+.. note::
+    VCF files are tab separated and have rows and columns.
 
-You can also use this command to only print the 250th line::
+To print individual `HG00733`'s data in the termianl, you can use
+the ``--samples`` argument. This command will filter the other columns,
+without the header and the sample individual column::
 
-    bcftools view ALL.chr1.phase3_shapeit2_mvncall_integrated_v5_related_samples.20130502.genotypes.vcf.gz \
-    | sed -n '250p'
-
-
-Keep in mind that vcf files are tab separated and have rows and columns.
-To extract individual `HG00733`'s data from the file,
-firstly we need to know their column's index. If you run::
-
-    bcftools view ALL.chr1.phase3_shapeit2_mvncall_integrated_v5_related_samples.20130502.genotypes.vcf.gz \
-    | head -n 250 \
-    | cut -f 1,2,3,4,5,6,7,8,9
+    bcftools view --header-only --samples HG00733 ALL.chr1.phase3_shapeit2_mvncall_integrated_v5_related_samples.20130502.genotypes.vcf.gz
 
 
-You will see the first 250 rows of the first 9 columns (cut -f 1,2,3...9).
-The individual you are interested in is located in the 14th column. Remove
-the `head -n 250` to get all the data, add `14` to the `cut -f` list and
-use `> HG00733.vcf` in the end, to save the result of this command into
-a file, named ``HG00733.vcf``::
+To display the first 300 lines of the file. Remove the
+``--header-only`` argument and add `| head -n 300` in the end of the comnnad::
 
-    bcftools view ALL.chr1.phase3_shapeit2_mvncall_integrated_v5_related_samples.20130502.genotypes.vcf.gz \
-    | cut -f 1,2,3,4,5,6,7,8,9,14 \
-    > HG00733.vcf
+    bcftools view --samples HG00733 ALL.chr1.phase3_shapeit2_mvncall_integrated_v5_related_samples.20130502.genotypes.vcf.gz | head -n 300
 
+Now let's retrieve the data into a new file named ``HG00733.vcf``.
+Remove the ``head -n 300`` flag and use ``> HG00733.vcf`` in the end
+to store the command's result into a file::
+
+    bcftools view --samples HG00733 ALL.chr1.phase3_shapeit2_mvncall_integrated_v5_related_samples.20130502.genotypes.vcf.gz > HG00733.vcf
 
 The data for individuals HG00731 and HG00732 is in the second vcf file -
 ``ALL.chr1.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz``.
 
-To extract the variants data for the other two individuals, run::
+To extract the variants data for the other two individuals in
+a file named ``HG00731_HG00732.vcf``, run::
 
-    bcftools view ALL.chr1.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz \
-    | cut -f 1,2,3,4,5,6,7,8,9,307,308 \
-    > HG00731_HG00732.vcf
-
-This command will save the variants data into a file named ``HG00731_HG00732.vcf``.
+    bcftools view --samples HG00731,HG00732 ALL.chr1.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz > HG00731_HG00732.vcf
 
 
 Importing the data into GPF
