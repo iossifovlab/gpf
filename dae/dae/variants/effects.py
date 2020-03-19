@@ -123,7 +123,7 @@ class Effect(object):
     @property
     def types(self):
         if self._effect_types is None:
-            self._effect_types = set([eg.effect for eg in self.genes])
+            self._effect_types = [eg.effect for eg in self.genes]
         return self._effect_types
 
     @classmethod
