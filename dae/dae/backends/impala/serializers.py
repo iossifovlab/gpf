@@ -3,6 +3,7 @@ import struct
 import functools
 import operator
 import itertools
+from copy import copy
 
 from collections import namedtuple
 
@@ -188,9 +189,11 @@ class AlleleParquetSerializer:
         "end_position": pa.int32(),
         "genes": pa.list_(pa.string()),
         "effect_types": pa.string(),
-        "effect_genes": pa.string(),
+        "effect_gene_symbols": pa.string(),
         "summary_index": pa.int32(),
     }
+
+    LIST_TO_ROW_PROPERTIES_LISTS = [["effect_types", "effect_gene_symbols"]]
 
     def __init__(
         self,
@@ -249,13 +252,57 @@ class AlleleParquetSerializer:
         table = pa.Table.from_pydict(self._data, self.get_schema())
         return table
 
+    def _duplicate_allele_data(self, allele_data, amount):
+        for i in range(0, amount):
+            for key, value in allele_data.items():
+                allele_data[key].append(copy(value[0]))
+
     def add_allele_to_batch_dict(self, allele):
+        allele_data = {name: [] for name in self.get_schema().names}
         for spr in self.searchable_properties:
             prop_value = getattr(allele, spr, None)
             if prop_value is None:
                 prop_value = allele.get_attribute(spr)
-            self._data[spr].append(prop_value)
-        self._data["data"].append(self.serialize_allele(allele))
+            allele_data[spr].append(prop_value)
+        allele_data["data"].append(self.serialize_allele(allele))
+
+        # ltr_props_list = self.LIST_TO_ROW_PROPERTIES_LISTS
+
+        # test = [
+        #     {prop: allele_data[prop][0]}
+        #     for ltr_props in ltr_props_list
+        #     for prop in ltr_props
+        # ]
+        # test2 = [
+        #     0
+        #     if allele_data[ltr_props[0]][0] is None
+        #     else len(allele_data[ltr_props[0]][0])
+        #     for ltr_props in ltr_props_list
+        # ]
+
+        # idxs = [list(range(0, length)) for length in test2]
+        # idx_it = itertools.product(*tuple(idxs))
+        # for idx in idx_it:
+        #     print(idx)
+
+        for ltr_props in self.LIST_TO_ROW_PROPERTIES_LISTS:
+            prop_values = [copy(allele_data[prop][0]) for prop in ltr_props]
+            if any([pv is None for pv in prop_values]):
+                continue
+
+            self._duplicate_allele_data(allele_data, len(prop_values[0]) - 1)
+            for prop_idx, values in enumerate(prop_values):
+                prop = ltr_props[prop_idx]
+                allele_data[prop].clear()
+                for value in values:
+                    print(value)
+                    allele_data[prop].append(value)
+
+        for key, value in allele_data.items():
+            self._data[key] = self._data[key] + value
+
+        print("AFTER")
+        print(allele_data)
 
     def serialize_allele(self, allele):
         stream = io.BytesIO()
