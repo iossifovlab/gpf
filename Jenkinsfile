@@ -77,7 +77,7 @@ pipeline {
     stage('Build') {
       steps {
         sh '''
-          docker run --rm ${DOCKER_PARAMETERS} ${DOCKER_IMAGE} /documentation/jenkins_build.sh
+          docker run --rm ${DOCKER_PARAMETERS} ${DOCKER_IMAGE} /documentation/scripts/jenkins_build.sh
         '''
       }
     }
@@ -85,7 +85,7 @@ pipeline {
     stage('Test') {
       steps {
         sh '''
-          docker run --rm ${DOCKER_PARAMETERS} ${DOCKER_IMAGE} /documentation/jenkins_test.sh
+          docker run --rm ${DOCKER_PARAMETERS} ${DOCKER_IMAGE} /documentation/scripts/jenkins_test.sh
         '''
       }
     }
