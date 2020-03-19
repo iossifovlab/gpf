@@ -86,3 +86,22 @@ def test_from_pedigree_nonexistent_domain(fixture_dirname):
         )
 
     assert "Missing domain value for 'invalid' in person" in str(excinfo.value)
+
+
+def test_get_person_color(fixture_dirname):
+    config = get_person_set_collections_config(
+        fixture_dirname("quads_f1_person_sets.toml")
+    )
+    quads_f1_families = FamiliesLoader(
+        fixture_dirname("studies/quads_f1/data/quads_f1.ped")
+    ).load()
+    status_collection = PersonSetCollection.from_families(
+        config.status, quads_f1_families
+    )
+
+    assert (
+        PersonSetCollection.get_person_color(
+            quads_f1_families.persons["prb1"], status_collection
+        )
+        == "#aabbcc"
+    )

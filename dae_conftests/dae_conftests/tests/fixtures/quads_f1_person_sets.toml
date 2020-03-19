@@ -6,7 +6,7 @@ status.name = "Affected Status"
 status.source.pedigree.column = "status"
 status.domain = [
    {id = "unaffected", name = "Unaffected", value = "unaffected", color = "#ffffff"}
-   {id = "affected", name = "Affected", value = "affected", color = "#000000"},
+   {id = "affected", name = "Affected", value = "affected", color = "#aabbcc"},
 ]
 
 role.id = "role"

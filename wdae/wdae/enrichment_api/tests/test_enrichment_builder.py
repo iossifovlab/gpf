@@ -20,13 +20,12 @@ def test_build(enrichment_builder):
 # @pytest.mark.xfail(reason='[gene models] wrong annotation')
 def test_build_people_group_selector(enrichment_builder, f1_trio):
     assert enrichment_builder
-    people_group = f1_trio.get_families_group("phenotype")
-    assert people_group is not None
-    assert len(people_group.domain) == 4
-    print(people_group.domain)
+    person_set_collection = f1_trio.get_person_set_collection("phenotype")
+    assert person_set_collection is not None
+    assert len(person_set_collection.person_sets) == 4
 
     build = enrichment_builder.build_people_group_selector(
-        ["Missense"], people_group, "phenotype1"
+        ["Missense"], person_set_collection, "phenotype1"
     )
 
     assert build
