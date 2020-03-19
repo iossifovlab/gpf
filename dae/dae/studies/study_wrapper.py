@@ -19,7 +19,7 @@ from dae.utils.effect_utils import (
     gene_effect_get_genes,
 )
 
-from dae.RegionOperations import Region
+from dae.utils.regions import Region
 from dae.pheno.common import MeasureType
 from dae.pheno_tool.pheno_common import PhenoFilterBuilder
 from dae.variants.attributes import Role
@@ -286,6 +286,9 @@ class StudyWrapper(object):
         person_set_collection = self.get_families_group(
             person_set_collection_id
         )
+
+        if max_variants_count is not None:
+            query["limit"] = max_variants_count
 
         rows = self.query_list_variants(
             sources, person_set_collection, **query

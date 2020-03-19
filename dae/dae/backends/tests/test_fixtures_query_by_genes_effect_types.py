@@ -5,7 +5,7 @@ Created on Jul 3, 2018
 """
 import pytest
 
-from dae.RegionOperations import Region
+from dae.utils.regions import Region
 
 
 @pytest.mark.parametrize("variants", ["variants_impala", "variants_vcf"])

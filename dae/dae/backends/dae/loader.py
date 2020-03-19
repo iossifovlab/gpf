@@ -8,9 +8,9 @@ import pysam
 import numpy as np
 import pandas as pd
 
-from dae.RegionOperations import Region
+from dae.utils.regions import Region
 
-from dae.GenomeAccess import GenomicSequence
+from dae.genome.genome_access import GenomicSequence
 from dae.utils.variant_utils import str2mat, GENOTYPE_TYPE
 from dae.utils.helpers import str2bool
 
@@ -95,7 +95,7 @@ class DenovoLoader(VariantsGenotypesLoader):
             self._adjust_chrom_prefix(chrom) for chrom in self.chromosomes
         ]
 
-        all_chromosomes = self.genome.allChromosomes
+        all_chromosomes = self.genome.get_genomic_sequence().chromosomes
         if all([chrom in set(all_chromosomes) for chrom in self.chromosomes]):
             self.chromosomes = sorted(
                 self.chromosomes,
@@ -126,9 +126,12 @@ class DenovoLoader(VariantsGenotypesLoader):
             rec["summary_variant_index"] = index
             rec["allele_index"] = 1
 
-            summary_variant = SummaryVariantFactory.summary_variant_from_records(
-                [rec], self.transmission_type
-            )
+            # fmt: off
+            summary_variant = SummaryVariantFactory.\
+                summary_variant_from_records(
+                    [rec], self.transmission_type
+                )
+            # fmt: on
             if not self._is_in_regions(summary_variant):
                 continue
 
@@ -505,7 +508,7 @@ class DenovoLoader(VariantsGenotypesLoader):
         if denovo_variant:
             variant_col = raw_df.loc[:, denovo_variant]
             ref_alt_tuples = [
-                dae2vcf_variant(*variant_tuple, genome)
+                dae2vcf_variant(*variant_tuple, genome.get_genomic_sequence())
                 for variant_tuple in zip(chrom_col, pos_col, variant_col)
             ]
             pos_col, ref_col, alt_col = zip(*ref_alt_tuples)
@@ -641,7 +644,7 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
 
         super(DaeTransmittedLoader, self).__init__(
             families=families,
-            filenames=[summary_filename, toomany_filename,],
+            filenames=[summary_filename, toomany_filename],
             transmission_type=TransmissionType.transmitted,
             genome=genome,
             regions=regions,
@@ -665,7 +668,7 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
             with pysam.Tabixfile(self.summary_filename) as tbx:
                 self.chromosomes = list(tbx.contigs)
         except Exception:
-            self.chromosomes = self.genome.allChromosomes
+            self.chromosomes = self.genome.chromosomes
 
     @property
     def variants_filenames(self):
@@ -732,7 +735,7 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
             self._adjust_chrom_prefix(rec["chrom"]),
             rec["cshl_position"],
             rec["cshl_variant"],
-            self.genome,
+            self.genome.get_genomic_sequence(),
         )
         rec["position"] = position
         rec["reference"] = reference

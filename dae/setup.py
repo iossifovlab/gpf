@@ -17,7 +17,6 @@ setuptools.setup(
     ),
     include_package_data=True,
     scripts=[
-        "dae/tools/annotate_variant.py",
         "dae/tools/dae2parquet.py",
         "dae/tools/vcf2parquet.py",
         "dae/tools/denovo2parquet.py",
@@ -38,6 +37,11 @@ setuptools.setup(
         "dae/tools/impala_batch_import.py",
         "dae/pheno/prepare/individuals2ped.py",
     ],
+    entry_points="""
+    [console_scripts]
+    annotate_variants.py=dae.tools.annotate_variant:cli
+    annotate_variants_vcf.py=dae.tools.annotate_variant:cli_vcf
+    """,
     classifiers=[
         "Development Status :: 4 - Beta",
         "Programming Language :: Python :: 3.6",

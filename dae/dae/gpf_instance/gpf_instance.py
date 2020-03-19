@@ -1,5 +1,5 @@
 import os
-from dae.GenomesDB import GenomesDB
+from dae.genome.genomes_db import GenomesDB
 
 from dae.common_reports.common_report_facade import CommonReportFacade
 

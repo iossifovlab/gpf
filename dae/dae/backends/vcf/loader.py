@@ -9,7 +9,7 @@ from cyvcf2 import VCF
 import pysam
 
 from dae.utils.helpers import str2bool
-from dae.GenomeAccess import GenomicSequence
+from dae.genome.genome_access import GenomicSequence
 
 from dae.utils.variant_utils import (
     is_all_reference_genotype,

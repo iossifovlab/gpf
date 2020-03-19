@@ -4,8 +4,8 @@ from dae.backends.impala.parquet_io import ParquetSerializer
 
 from impala.util import as_pandas
 
-from dae.RegionOperations import Region
-import dae.RegionOperations
+from dae.utils.regions import Region
+import dae.utils.regions
 
 from ..attributes_query import (
     QueryTreeToSQLBitwiseTransformer,
@@ -117,9 +117,10 @@ class ImpalaFamilyVariants:
                 return_unknown=return_unknown,
                 limit=limit,
             )
+            print("inhteritance:", inheritance)
+            print("LIMIT:", limit)
+            print("FINAL QUERY: ", query)
 
-            # print("LIMIT:", limit)
-            # print('FINAL QUERY: ', query)
             cursor.execute(query)
             for row in cursor:
                 (
@@ -371,7 +372,13 @@ class ImpalaFamilyVariants:
         return transformer.transform(parsed)
 
     def _build_inheritance_where(self, column_name, query_value):
+        print(query_value)
         tree = inheritance_parser.parse(query_value)
+        print(tree)
+
+        if query_value == "denovo":
+            pass
+
         transformer = InheritanceTransformer(column_name)
         res = transformer.transform(tree)
         return res
@@ -385,13 +392,13 @@ class ImpalaFamilyVariants:
                 for gm in self.gene_models.gene_models_by_gene_name(gs):
                     regions.append(
                         Region(
-                            gm.chr,
+                            gm.chrom,
                             gm.tx[0] - self.GENE_REGIONS_HEURISTIC_EXTEND,
                             gm.tx[1] + self.GENE_REGIONS_HEURISTIC_EXTEND,
                         )
                     )
             if regions:
-                regions = dae.RegionOperations.collapse(regions)
+                regions = dae.utils.regions.collapse(regions)
             return regions
 
     @deprecated(
@@ -412,9 +419,14 @@ class ImpalaFamilyVariants:
                         return "rare = 0"
         return ""
 
-    def _build_frequency_bin_heuristic(self, ultra_rare, real_attr_filter):
+    def _build_frequency_bin_heuristic(
+        self, inheritance, ultra_rare, real_attr_filter
+    ):
         if "frequency_bin" not in self.schema:
             return ""
+
+        if inheritance == "any(denovo)":
+            return "frequency_bin = 0"
         if ultra_rare:
             return "frequency_bin = 1"
         if real_attr_filter:
@@ -597,7 +609,9 @@ class ImpalaFamilyVariants:
             )
         )
         where.append(
-            self._build_frequency_bin_heuristic(ultra_rare, real_attr_filter)
+            self._build_frequency_bin_heuristic(
+                inheritance, ultra_rare, real_attr_filter
+            )
         )
         where.append(self._build_family_bin_heuristic(family_ids, person_ids))
         where.append(self._build_coding_heuristic(effect_types))

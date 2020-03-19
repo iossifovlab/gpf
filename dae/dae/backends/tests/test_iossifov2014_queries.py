@@ -1,5 +1,5 @@
 import pytest
-from dae.RegionOperations import Region
+from dae.utils.regions import Region
 
 
 @pytest.mark.parametrize(
