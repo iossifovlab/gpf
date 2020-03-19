@@ -3,7 +3,7 @@ individuals from a study or study group into various
 sets based on what value they have in a given mapping.
 """
 
-from typing import List, Dict, NamedTuple
+from typing import Dict, NamedTuple
 
 from dae.pedigrees.family import Person, FamiliesData
 
@@ -48,17 +48,13 @@ class PersonSetCollection(NamedTuple):
         if person_set_collection is None:
             return "#FFFFFF"
 
-        person_value = person.get_attribute(
-            person_set_collection.source.pedigree.column
-        )
-
-        for person_set in person_set_collection.person_sets:
-            if person_set.value == person_value:
+        for person_set in person_set_collection.person_sets.values():
+            if person.person_id in person_set.persons:
                 return person_set.color
 
         assert False, (
-            f"Person '{person.person_id}' has value '{person_value}'"
-            "for '{person_set_collection.id}' outside of its domain!"
+            f"Person '{person.person_id}' could not be found in any"
+            f" domain of '{person_set_collection.id}'!"
         )
 
     @staticmethod

@@ -34,6 +34,7 @@ from dae.backends.attributes_query import (
 )
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
+from dae.person_sets import PersonSetCollection
 
 
 class StudyWrapper(object):
@@ -92,25 +93,24 @@ class StudyWrapper(object):
         # PRESENT IN ROLE
         self.present_in_role = genotype_browser_config.present_in_role or []
 
-        # PEOPLE GROUP
-        self.people_group = self.config.people_group or {}
-
         # LEGEND
-        if len(self.people_group) != 0:
+        self.legend = {}
+        if self.config.people_set_collections is not None:
 
-            def pg_to_dict(pg):
+            def ps_to_dict(ps):
                 return [
                     GPFConfigParser._namedtuple_to_dict(domain)
-                    for domain in pg.domain + [pg.default]
+                    for domain in ps.domain + [ps.default]
                 ]
 
-            self.legend = {
-                pg_id: pg_to_dict(pg)
-                for pg_id, pg in self.people_group.field_values_iterator()
-                if hasattr(pg, "domain")
-            }
-        else:
-            self.legend = {}
+            for (
+                collection_id
+            ) in (
+                self.config.person_set_collections.selected_person_set_collections
+            ):
+                self.legend[collection_id] = getattr(
+                    self.config.person_set_collections, collection_id
+                )
 
         # PREVIEW AND DOWNLOAD COLUMNS
         preview_column_names = genotype_browser_config.preview_columns
@@ -228,21 +228,25 @@ class StudyWrapper(object):
 
     SPECIAL_ATTRS = {**SPECIAL_ATTRS_FORMAT, **STANDARD_ATTRS_LAMBDAS}
 
-    def generate_pedigree(self, allele, people_group):
+    def generate_pedigree(self, allele, person_set_collection):
         result = []
         best_st = np.sum(allele.gt == allele.allele_index, axis=0)
 
         for index, member in enumerate(allele.members_in_order):
             result.append(
-                self._get_wdae_member(member, people_group, best_st[index])
+                self._get_wdae_member(
+                    member, person_set_collection, best_st[index]
+                )
             )
         for member in allele.family.full_members:
             if member.generated:
-                result.append(self._get_wdae_member(member, people_group, 0))
+                result.append(
+                    self._get_wdae_member(member, person_set_collection, 0)
+                )
 
         return result
 
-    def query_list_variants(self, sources, people_group, **kwargs):
+    def query_list_variants(self, sources, person_set_collection, **kwargs):
         for v in self.query_variants(**kwargs):
             for aa in v.matched_alleles:
                 assert not aa.is_reference_allele
@@ -254,7 +258,9 @@ class StudyWrapper(object):
                             row_variant.append(self.SPECIAL_ATTRS[source](aa))
                         elif source == "pedigree":
                             row_variant.append(
-                                self.generate_pedigree(aa, people_group)
+                                self.generate_pedigree(
+                                    aa, person_set_collection
+                                )
                             )
                         else:
                             attribute = aa.get_attribute(source, "")
@@ -276,10 +282,14 @@ class StudyWrapper(object):
                 yield row_variant
 
     def get_variant_web_rows(self, query, sources, max_variants_count=None):
-        people_group_id = query.get("peopleGroup", {}).get("id", None)
-        people_group = self.get_families_group(people_group_id)
+        person_set_collection_id = query.get("peopleGroup", {}).get("id", None)
+        person_set_collection = self.get_families_group(
+            person_set_collection_id
+        )
 
-        rows = self.query_list_variants(sources, people_group, **query)
+        rows = self.query_list_variants(
+            sources, person_set_collection, **query
+        )
 
         if max_variants_count is not None:
             limited_rows = itertools.islice(rows, max_variants_count)
@@ -540,26 +550,33 @@ class StudyWrapper(object):
 
     def _add_people_with_people_group(self, kwargs):
 
-        if "peopleGroup" not in kwargs or kwargs["peopleGroup"] is None:
+        # TODO Rename peopleGroup kwarg to person_set_collections
+        # and all other, relevant keys in the kwargs dict
+
+        if kwargs.get("peopleGroup") is None:
             return kwargs
 
-        people_group_query = kwargs.pop("peopleGroup")
-        people_group_id = people_group_query["id"]
-        people_group_values = set(people_group_query["checkedValues"])
-
-        families_group = self.genotype_data_study.get_families_group(
-            people_group_id
+        person_set_collections_query = kwargs.pop("peopleGroup")
+        person_set_collection_id = person_set_collections_query["id"]
+        selected_person_set_ids = set(
+            person_set_collections_query["checkedValues"]
         )
-        if not families_group:
-            return kwargs
 
-        if set(families_group.domain) == people_group_values:
-            return kwargs
-
-        persons = families_group.get_people_with_propvalues(
-            tuple(people_group_values)
+        person_set_collection = self.genotype_data_study.get_person_set_collection(
+            person_set_collection_id
         )
-        person_ids = set([p.person_id for p in persons])
+
+        if (
+            set(person_set_collection.person_sets.keys())
+            == selected_person_set_ids
+        ):
+            return kwargs
+
+        person_ids = set()
+        for set_id in selected_person_set_ids:
+            person_ids.update(
+                person_set_collection.person_sets[set_id].persons.keys()
+            )
 
         if "person_ids" in kwargs:
             person_ids.intersection(set(kwargs["person_ids"]))
@@ -909,7 +926,7 @@ class StudyWrapper(object):
 
         return result
 
-    def _get_wdae_member(self, member, people_group, best_st):
+    def _get_wdae_member(self, member, person_set_collection, best_st):
         return [
             member.family_id,
             member.person_id,
@@ -917,7 +934,9 @@ class StudyWrapper(object):
             member.dad_id if member.dad_id else "0",
             member.sex.short(),
             str(member.role),
-            self.genotype_data_study._get_person_color(member, people_group),
+            PersonSetCollection.get_person_color(
+                member, person_set_collection
+            ),
             member.layout,
             member.generated,
             best_st,

@@ -415,6 +415,11 @@ study_config_schema = {
                 "schema": {"type": "string"},
                 "default": [],
             },
+            "selected_person_set_collections": {
+                "type": "list",
+                "schema": {"type": "string"},
+                "default": [],
+            },
             "selected_background_values": {
                 "type": "list",
                 "schema": {"type": "string"},

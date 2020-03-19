@@ -8,8 +8,8 @@ LOGGER = logging.getLogger(__name__)
 
 class DenovoGeneSetCollection(object):
     def __init__(self, study_id, study_name, config):
-        if not config.denovo_gene_sets.selected_person_set_collections:
-            return None
+        assert config.denovo_gene_sets is not None
+        assert config.denovo_gene_sets.selected_person_set_collections
 
         self.study_id = study_id
         self.study_name = study_name

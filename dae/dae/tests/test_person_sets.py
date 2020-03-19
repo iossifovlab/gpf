@@ -26,10 +26,10 @@ def test_produce_sets(fixture_dirname):
     people_sets = PersonSetCollection._produce_sets(config.status)
     assert people_sets == {
         "affected": PersonSet(
-            "affected", "Affected", "affected_val", "#aabbcc", list()
+            "affected", "Affected", "affected_val", "#aabbcc", dict()
         ),
         "unaffected": PersonSet(
-            "unaffected", "Unaffected", "unaffected_val", "#ffffff", list()
+            "unaffected", "Unaffected", "unaffected_val", "#ffffff", dict()
         ),
     }
 
@@ -46,10 +46,7 @@ def test_from_pedigree(fixture_dirname):
     )
 
     result_person_ids = set(
-        (
-            person.person_id
-            for person in status_collection.person_sets["affected"].persons
-        )
+        status_collection.person_sets["affected"].persons.keys()
     )
     assert result_person_ids == {
         "prb1",
