@@ -7,7 +7,7 @@ from dae.utils.variant_utils import vcf2cshl
 
 from dae.variants.attributes import VariantType, TransmissionType
 from typing import List, Dict, Set, Any, Optional
-from dae.variants.effects import Effect
+from dae.variants.effects import Effect, EffectGene
 import itertools
 
 
@@ -166,12 +166,16 @@ class Allele:
         return self.effect
 
     @property
-    def effect_types(self):
+    def effect_types(self) -> List[str]:
         return self.effect.types
 
     @property
-    def effect_genes(self):
+    def effect_genes(self) -> List[EffectGene]:
         return self.effect.genes
+
+    @property
+    def effect_gene_symbols(self) -> List[str]:
+        return [eg.symbol for eg in self.effect_genes]
 
     @property
     def variant_type(self) -> Optional[VariantType]:
