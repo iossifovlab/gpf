@@ -166,6 +166,11 @@ class GenotypeDataGroup(GenotypeData):
         # FIXME This code could and should be rewritten
         # in a clearer, more concise way...
 
+        assert (
+            person_set_collection_id
+            in self.config.person_set_collections.selected_person_set_collections
+        )
+
         _ = self.studies[0].get_person_set_collection(person_set_collection_id)
         collection_name = _.name
 
