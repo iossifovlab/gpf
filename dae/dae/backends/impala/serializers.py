@@ -266,43 +266,31 @@ class AlleleParquetSerializer:
             allele_data[spr].append(prop_value)
         allele_data["data"].append(self.serialize_allele(allele))
 
-        # ltr_props_list = self.LIST_TO_ROW_PROPERTIES_LISTS
+        product_values = list()
 
-        # test = [
-        #     {prop: allele_data[prop][0]}
-        #     for ltr_props in ltr_props_list
-        #     for prop in ltr_props
-        # ]
-        # test2 = [
-        #     0
-        #     if allele_data[ltr_props[0]][0] is None
-        #     else len(allele_data[ltr_props[0]][0])
-        #     for ltr_props in ltr_props_list
-        # ]
+        ltr_flat = list(itertools.chain(*self.LIST_TO_ROW_PROPERTIES_LISTS))
 
-        # idxs = [list(range(0, length)) for length in test2]
-        # idx_it = itertools.product(*tuple(idxs))
-        # for idx in idx_it:
-        #     print(idx)
+        for k, v in allele_data.items():
+            if k not in ltr_flat:
+                product_values += [[(k, v)]]
 
         for ltr_props in self.LIST_TO_ROW_PROPERTIES_LISTS:
-            prop_values = [copy(allele_data[prop][0]) for prop in ltr_props]
-            if any([pv is None for pv in prop_values]):
-                continue
+            k = ltr_props
+            v = list(zip(*[allele_data[prop] for prop in ltr_props]))
+            product_values += [[(k, v2) for v2 in v]]
 
-            self._duplicate_allele_data(allele_data, len(prop_values[0]) - 1)
-            for prop_idx, values in enumerate(prop_values):
-                prop = ltr_props[prop_idx]
-                allele_data[prop].clear()
-                for value in values:
-                    print(value)
-                    allele_data[prop].append(value)
+        list_keys = self.LIST_TO_ROW_PROPERTIES_LISTS
 
-        for key, value in allele_data.items():
-            self._data[key] = self._data[key] + value
-
-        print("AFTER")
-        print(allele_data)
+        for kvs in itertools.product(*product_values):
+            for k, v in kvs:
+                if isinstance(k, list):
+                    for i in range(0, len(k)):
+                        if v[i] is None:
+                            self._data[k[i]].append(None)
+                        else:
+                            self._data[k[i]].append(v[i][0])
+                else:
+                    self._data[k].append(v[0])
 
     def serialize_allele(self, allele):
         stream = io.BytesIO()
