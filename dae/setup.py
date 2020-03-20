@@ -39,8 +39,8 @@ setuptools.setup(
     ],
     entry_points="""
     [console_scripts]
-    annotate_variants.py=dae.tools.annotate_variant:cli
-    annotate_variants_vcf.py=dae.tools.annotate_variant:cli_vcf
+    annotate_variants.py=dae.tools.annotate_variants:cli
+    annotate_variants_vcf.py=dae.tools.annotate_variants:cli_vcf
     """,
     classifiers=[
         "Development Status :: 4 - Beta",
