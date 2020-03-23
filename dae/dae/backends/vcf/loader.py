@@ -4,6 +4,7 @@ import itertools
 import glob
 
 import numpy as np
+from collections import namedtuple
 
 from cyvcf2 import VCF
 import pysam
@@ -347,6 +348,14 @@ class SingleVcfLoader(VariantsGenotypesLoader):
         self.families_samples_indexes = [
             (family, family.samples_index) for family in self.families.values()
         ]
+        self.samples = []
+        self.samples_index = []
+        for family in self.families.values():
+            for member in family.members_in_order:
+                self.samples.append(member.sample_id)
+                self.samples_index.append(member.sample_index)
+        self.samples_index = np.array(tuple(self.samples_index))
+
         self.reverse_families_index = [
             -1 * np.ones(len(vcf.samples), dtype=np.int32) for vcf in self.vcfs
         ]
@@ -356,6 +365,16 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                 self.reverse_families_index[vcf_index][
                     sample_index
                 ] = family_index
+
+        self.independent = self.families.persons_without_parents()
+        self.independent_index = []
+        for person in self.independent:
+            self.independent_index.append(person.sample_index)
+        self.independent_index = np.array(tuple(self.independent_index))
+        assert len(self.independent_index) == len(self.independent), (
+            len(self.independent_index),
+            len(self.independent),
+        )
         # print(
         #     "reverse_family_index:", type(self.reverse_families_index),
         #     self.reverse_families_index)
@@ -430,6 +449,58 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                 min_index = index
         return vcf_variants[min_index]
 
+    def _calc_allele_frequencies(self, summary_variant, vcf_variants):
+        result = [
+            {
+                "n_parents_called": 0,
+                "n_alleles": [0] * summary_variant.allele_count,
+            }
+            for _ in vcf_variants
+        ]
+
+        for vcf_index, vcf in enumerate(vcf_variants):
+            if vcf is None:
+                continue
+
+            sample_index = self.independent_index[
+                self.independent_index[:, 0] == vcf_index, :
+            ][:, 1].T
+            allele_index = np.stack(
+                [2 * sample_index, 2 * sample_index + 1]
+            ).reshape([1, 2 * len(sample_index)], order="F")[0]
+            vcf_gt = vcf.gt_idxs[allele_index]
+            vcf_gt = vcf_gt.reshape([2, len(sample_index)], order="F")
+
+            unknown = np.any(vcf_gt == -1, axis=0)
+            vcf_gt = vcf_gt[:, np.logical_not(unknown)]
+            result[vcf_index]["n_parents_called"] += vcf_gt.shape[1]
+
+            for allele in summary_variant.alleles:
+                allele_index = allele["allele_index"]
+                matched_alleles = (vcf_gt == allele_index).astype(np.int32)
+                result[vcf_index]["n_alleles"][allele_index] += np.sum(
+                    matched_alleles
+                )
+        n_independent_parents = len(self.independent_index)
+        n_parents_called = sum([r["n_parents_called"] for r in result])
+        for allele in summary_variant.alleles:
+            if n_independent_parents > 0:
+                percent_parents_called = (
+                    100.0 * n_parents_called
+                ) / n_independent_parents
+            allele_index = allele["allele_index"]
+            n_alleles = sum([r["n_alleles"][allele_index] for r in result])
+            allele_freq = 0
+            if n_parents_called > 0:
+                allele_freq = (100.0 * n_alleles) / (2.0 * n_parents_called)
+            freq = {
+                "af_parents_called_count": n_parents_called,
+                "af_parents_called_percent": percent_parents_called,
+                "af_allele_count": n_alleles,
+                "af_allele_freq": allele_freq,
+            }
+            allele.update_attributes(freq)
+
     def _full_variants_iterator_impl(self, initial_summary_variant_index=0):
 
         summary_variant_index = initial_summary_variant_index
@@ -458,6 +529,9 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                         vcf_iterator_idexes_to_advance.append(idx)
                     else:
                         vcf_gt_variants.append(None)
+                self._calc_allele_frequencies(
+                    current_summary_variant, vcf_gt_variants
+                )
                 family_genotypes = VcfFamiliesGenotypes(self, vcf_gt_variants)
 
                 family_variants = []
