@@ -1,6 +1,7 @@
 from collections import Counter, defaultdict
 
 from dae.variants.attributes import Inheritance
+from dae.utils.effect_utils import expand_effect_types
 
 
 class GenotypeHelper(object):
@@ -18,17 +19,14 @@ class GenotypeHelper(object):
             self.person_set_collection.id
         )
         assert families_group is not None
-        people_with_people_group = set(self.person_set.persons.keys())
 
         # TODO: Remove this when genotype_data_study.query_variants can
         # support non expand_effect_types as LGDs
-        from dae.utils.effect_utils import expand_effect_types
-
         effect_types = expand_effect_types(effect_types)
 
         variants = self.genotype_data_group.query_variants(
             inheritance=str(Inheritance.denovo.name),
-            person_ids=people_with_people_group,
+            person_ids=set(self.person_set.persons.keys()),
             effect_types=set(effect_types),
         )
 
