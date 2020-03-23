@@ -50,6 +50,7 @@ extensions = [
     'sphinx.ext.imgmath',
     'sphinx.ext.viewcode',
     'sphinx_copybutton',
+    'sphinx_autorun',
 ]
 
 # Add any paths that contain templates here, relative to this directory.

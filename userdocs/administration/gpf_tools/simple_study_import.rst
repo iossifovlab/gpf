@@ -1,5 +1,7 @@
 Simple Study Import
 ===================
 
-.. auto-generated code for simple_study_import.py --help
+.. runblock:: console
+
+    $ simple_study_import.py --help
 
