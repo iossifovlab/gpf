@@ -2,7 +2,7 @@
 # $ conda create --name <env> --file <this file>
 # platform: linux-64
 # conda create -c conda-forge -c bioconda -n <env name> --file <this file>
-cyvcf2=0.11.5
+cyvcf2=0.11.6sp
 impyla=0.15.0
 lark-parser=0.6.7
 matplotlib=3.1.1
