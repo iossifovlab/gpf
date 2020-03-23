@@ -105,3 +105,66 @@ def test_get_person_color(fixture_dirname):
         )
         == "#aabbcc"
     )
+
+
+def test_genotype_group_person_sets(variants_db_fixture):
+    genotype_data_group = variants_db_fixture.get_genotype_data_group(
+        "person_sets_dataset_1"
+    )
+
+    phenotype_collection = genotype_data_group.get_person_set_collection(
+        "phenotype"
+    )
+
+    expected_unaffected_persons = set(
+        ["person1", "person2", "person5", "person6"]
+    )
+    assert (
+        set(phenotype_collection.person_sets["unaffected"].persons.keys())
+        == expected_unaffected_persons
+    )
+
+
+def test_genotype_group_person_sets_overlapping(variants_db_fixture):
+    genotype_data_group = variants_db_fixture.get_genotype_data_group(
+        "person_sets_dataset_2"
+    )
+
+    phenotype_collection = genotype_data_group.get_person_set_collection(
+        "phenotype"
+    )
+
+    unaffected_persons = set(
+        phenotype_collection.person_sets["unaffected"].persons.keys()
+    )
+    phenotype1_persons = set(
+        phenotype_collection.person_sets["phenotype1"].persons.keys()
+    )
+    assert "person3" in unaffected_persons and "person3" in phenotype1_persons
+
+
+def test_genotype_group_person_sets_subset(variants_db_fixture):
+    genotype_data_group_config = variants_db_fixture.get_genotype_data_group_config(
+        "person_sets_dataset_1"
+    )
+    genotype_data_group = variants_db_fixture.make_genotype_data_group(
+        genotype_data_group_config
+    )
+
+    # Remove a person to simulate a subset of people being used
+    del genotype_data_group.families.persons["person4"]
+
+    phenotype_collection = genotype_data_group.get_person_set_collection(
+        "phenotype"
+    )
+
+    unaffected_persons = set(
+        phenotype_collection.person_sets["unaffected"].persons.keys()
+    )
+    phenotype1_persons = set(
+        phenotype_collection.person_sets["phenotype1"].persons.keys()
+    )
+    assert (
+        "person4" not in unaffected_persons
+        and "person4" not in phenotype1_persons
+    )

@@ -130,6 +130,8 @@ def test_get_genotype_data_groups_ids(variants_db_fixture):
             "Dataset1",
             "f3_group",
             "Dataset4",
+            "person_sets_dataset_1",
+            "person_sets_dataset_2",
         ]
     )
 
@@ -191,12 +193,12 @@ def test_get_non_existing_genotype_data_group_wrapper(variants_db_fixture):
 
 def test_get_all_genotype_data_groups(variants_db_fixture):
     genotype_data_groups = variants_db_fixture.get_all_genotype_data_groups()
-    assert len(genotype_data_groups) == 16
+    assert len(genotype_data_groups) == 18
 
 
 def test_get_all_genotype_data_group_configs(variants_db_fixture):
     configs = variants_db_fixture.get_all_genotype_data_group_configs()
-    assert len(configs) == 16
+    assert len(configs) == 18
 
 
 ##############################################################
@@ -253,15 +255,15 @@ def test_get_non_existing_wrapper(variants_db_fixture):
 
 def test_get_all(fixtures_gpf_instance, variants_db_fixture):
     studies = variants_db_fixture.get_all_genotype_data()
-    assert len(studies) == 32
+    assert len(studies) == 37
 
     studies = fixtures_gpf_instance.get_all_genotype_data()
-    assert len(studies) == 32
+    assert len(studies) == 37
 
 
 def test_get_all_studies_ids(fixtures_gpf_instance, variants_db_fixture):
     studies = fixtures_gpf_instance.get_genotype_data_ids()
-    assert len(studies) == 32
+    assert len(studies) == 37
 
 
 def test_get_bad_study(fixtures_gpf_instance):

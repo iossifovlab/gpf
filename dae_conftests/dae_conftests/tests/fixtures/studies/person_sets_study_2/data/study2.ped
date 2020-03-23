@@ -1,0 +1,5 @@
+familyId	personId	dadId	momId	sex	status	role	phenotype
+f2	person5	0	0	2	1	mom	unaffected
+f2	person6	0	0	1	1	dad	unaffected
+f2	person7	person6	person5	1	2	prb	phenotype2
+f2	person8	person6	person5	2	2	sib	phenotype2

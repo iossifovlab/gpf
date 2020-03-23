@@ -1,0 +1,6 @@
+##fileformat=VCFv4.2
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##contig=<ID=1>
+##contig=<ID=2>
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	person5	person6	person7	person8
+1	11539	.	T	G	.	.	.	GT	0/1	0/0	0/1	0/0
