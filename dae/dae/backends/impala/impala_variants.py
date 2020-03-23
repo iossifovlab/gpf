@@ -433,7 +433,7 @@ class ImpalaFamilyVariants:
             for name, (begin, end) in real_attr_filter:
                 if name == "af_allele_freq":
                     if end < self.rare_boundary:
-                        return "frequency_bin = 2"
+                        return "frequency_bin IN (0,1,2)"
                     if begin >= self.rare_boundary:
                         return "frequency_bin = 3"
         return ""
