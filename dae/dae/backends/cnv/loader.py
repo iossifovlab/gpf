@@ -4,7 +4,7 @@ from copy import copy
 import numpy as np
 import pandas as pd
 
-from dae.GenomeAccess import GenomicSequence
+from dae.genome.genome_access import GenomicSequence
 from dae.backends.raw.loader import VariantsGenotypesLoader, TransmissionType
 from dae.pedigrees.family import FamiliesData
 from dae.variants.attributes import VariantType
@@ -12,7 +12,7 @@ from dae.variants.variant import SummaryVariantFactory, SummaryVariant
 from dae.variants.family_variant import FamilyVariant
 from dae.annotation.tools.file_io_parquet import ParquetSchema
 
-from dae.RegionOperations import Region
+from dae.utils.regions import Region
 from dae.utils.variant_utils import GENOTYPE_TYPE
 
 
