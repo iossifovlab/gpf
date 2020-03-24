@@ -3,7 +3,9 @@ individuals from a study or study group into various
 sets based on what value they have in a given mapping.
 """
 
-from typing import Dict, NamedTuple
+from typing import List, Dict, NamedTuple
+from functools import reduce
+from itertools import product
 
 from dae.pedigrees.family import Person, FamiliesData
 
@@ -18,6 +20,38 @@ class PersonSet(NamedTuple):
     value: str
     color: str
     persons: Dict[str, Person]
+
+
+class CompositePersonSet(NamedTuple):
+    """A PersonSet whose persons satisfy multiple
+    values from different sources.
+    """
+
+    id: str
+    name: str
+    values: List[str]
+    color: str
+    persons: Dict[str, Person]
+
+    @staticmethod
+    def compose(*person_sets, id=None, name="composite set", color="#FFFFFF"):
+        # get the intersection of persons in the provided person sets
+        key_intersection = reduce(
+            lambda x, y: set(x.persons.keys()) & set(y.persons.keys()),
+            person_sets,
+        )
+        common_persons = dict()
+        for person_set in person_sets:
+            for person_id in key_intersection:
+                if person_id in person_set.persons:
+                    common_persons[person_id] = person_set.persons[person_id]
+
+        if id is None:
+            id = ".".join([person_set.id for person_set in person_sets])
+
+        values = [person_set.value for person_set in person_sets]
+
+        return CompositePersonSet(id, name, values, color, common_persons)
 
 
 class PersonSetCollection(NamedTuple):
@@ -99,3 +133,36 @@ class PersonSetCollection(NamedTuple):
             ] = person
 
         return person_set_collection
+
+    @staticmethod
+    def compose(*person_set_collections, id=None, name="composite collection"):
+        if id is None:
+            id = ".".join(
+                [collection.id for collection in person_set_collections]
+            )
+
+        def merge_families(f1, f2):
+            families = dict(f1)
+            families.update(f2)
+            return families
+
+        merged_families = reduce(
+            merge_families,
+            [collection.families for collection in person_set_collections],
+        )
+
+        person_sets_product = product(
+            *[
+                list(collection.person_sets.values())
+                for collection in person_set_collections
+            ]
+        )
+
+        composed_person_sets = dict()
+        for set_combination in person_sets_product:
+            composed_set = CompositePersonSet.compose(*set_combination)
+            composed_person_sets[composed_set.id] = composed_set
+
+        return PersonSetCollection(
+            id, name, composed_person_sets, merged_families
+        )
