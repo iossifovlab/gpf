@@ -30,10 +30,10 @@ test_data.append(("X", 154931050, Sex.M, 2))
 test_data.append(("X", 155260560, Sex.M, 2))
 test_data.append(("X", 155260600, Sex.M, 1))
 
-test_data_chr_prefix = list(
-    map(lambda x: ("chr" + x[0], x[1], x[2], x[3]), test_data)
-)
-test_data.extend(test_data_chr_prefix)
+# test_data_chr_prefix = list(
+#     map(lambda x: ("chr" + x[0], x[1], x[2], x[3]), test_data)
+# )
+# test_data.extend(test_data_chr_prefix)
 
 
 @pytest.mark.parametrize("chrom,pos,sex,expected", [*test_data])

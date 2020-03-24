@@ -19,7 +19,7 @@ from dae.utils.effect_utils import (
     gene_effect_get_genes,
 )
 
-from dae.RegionOperations import Region
+from dae.utils.regions import Region
 from dae.pheno.common import MeasureType
 from dae.pheno_tool.pheno_common import PhenoFilterBuilder
 from dae.variants.attributes import Role
@@ -278,6 +278,8 @@ class StudyWrapper(object):
     def get_variant_web_rows(self, query, sources, max_variants_count=None):
         people_group_id = query.get("peopleGroup", {}).get("id", None)
         people_group = self.get_families_group(people_group_id)
+        if max_variants_count is not None:
+            query["limit"] = max_variants_count
 
         rows = self.query_list_variants(sources, people_group, **query)
 
@@ -466,10 +468,14 @@ class StudyWrapper(object):
         pheno_column_dfs = []
 
         for slot in self.pheno_column_slots:
+            kwargs = {"family_ids": list(families)}
+            if slot.role:
+                kwargs["roles"] = [slot.role]
+
             pheno_column_names.append(slot.source)
             pheno_column_dfs.append(
                 self.phenotype_data.get_measure_values_df(
-                    slot.source, family_ids=list(families), roles=[slot.role]
+                    slot.source, **kwargs
                 )
             )
 
@@ -869,7 +875,20 @@ class StudyWrapper(object):
             deepcopy(self.config.genotype_browser)
         )
 
-        bs_config["columns"] = bs_config["genotype"]
+        bs_config["columns"] = dict()
+        for column in bs_config["preview_columns"]:
+            if "pheno" in bs_config:
+                assert (
+                    column in bs_config["genotype"]
+                    or column in bs_config["pheno"]
+                ), column
+                bs_config["columns"][column] = (
+                    bs_config["genotype"].get(column, None)
+                    or bs_config["pheno"][column]
+                )
+            else:
+                assert column in bs_config["genotype"], column
+                bs_config["columns"][column] = bs_config["genotype"][column]
 
         if self.pheno_filters:
             bs_config["pheno_filters"] = GPFConfigParser._namedtuple_to_dict(

@@ -19,10 +19,10 @@ test_data.append(("Y", 59035000, True))
 test_data.append(("Y", 59363566, True))
 test_data.append(("Y", 59363600, False))
 
-test_data_chr_prefix = list(
-    map(lambda x: ("chr" + x[0], x[1], x[2]), test_data)
-)
-test_data.extend(test_data_chr_prefix)
+# test_data_chr_prefix = list(
+#     map(lambda x: ("chr" + x[0], x[1], x[2]), test_data)
+# )
+# test_data.extend(test_data_chr_prefix)
 
 
 @pytest.mark.parametrize("chrom,pos,expected", [*test_data])

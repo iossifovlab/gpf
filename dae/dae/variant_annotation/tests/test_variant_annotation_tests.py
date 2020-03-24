@@ -1,9 +1,12 @@
 from dae.variant_annotation.annotator import VariantAnnotator
 
 
-def test_synonymous_complex_var(genome_2013, gene_models_2013):
+def test_synonymous_complex_var(genomic_sequence_2013, gene_models_2013):
     [effect] = VariantAnnotator.annotate_variant(
-        gene_models_2013, genome_2013, loc="1:897349", var="complex(GG->AA)"
+        gene_models_2013,
+        genomic_sequence_2013,
+        loc="1:897349",
+        var="complex(GG->AA)",
     )
 
     assert effect.gene == "KLHL17"
@@ -15,9 +18,9 @@ def test_synonymous_complex_var(genome_2013, gene_models_2013):
     assert effect.aa_change == "Lys,Ala->Lys,Thr"
 
 
-def test_just_next_to_splice_site_var(genome_2013, gene_models_2013):
+def test_just_next_to_splice_site_var(genomic_sequence_2013, gene_models_2013):
     effects = VariantAnnotator.annotate_variant(
-        gene_models_2013, genome_2013, loc="5:86705101", var="del(4)"
+        gene_models_2013, genomic_sequence_2013, loc="5:86705101", var="del(4)"
     )
 
     assert len(effects) == 2
@@ -40,10 +43,10 @@ def test_just_next_to_splice_site_var(genome_2013, gene_models_2013):
     assert effects_sorted[1].aa_change is None
 
 
-def test_chr2_32853362_ins_var(genome_2013, gene_models_2013):
+def test_chr2_32853362_ins_var(genomic_sequence_2013, gene_models_2013):
     effects = VariantAnnotator.annotate_variant(
         gene_models_2013,
-        genome_2013,
+        genomic_sequence_2013,
         loc="6:157527729",
         var="complex(CTGG->ATAG)",
     )
@@ -68,9 +71,12 @@ def test_chr2_32853362_ins_var(genome_2013, gene_models_2013):
     assert effects_sorted[1].aa_change == "His,Trp->Gln,End"
 
 
-def test_chr5_75902128_sub_var(genome_2013, gene_models_2013):
+def test_chr5_75902128_sub_var(genomic_sequence_2013, gene_models_2013):
     [effect] = VariantAnnotator.annotate_variant(
-        gene_models_2013, genome_2013, loc="5:75902128", var="sub(C->T)"
+        gene_models_2013,
+        genomic_sequence_2013,
+        loc="5:75902128",
+        var="sub(C->T)",
     )
 
     assert effect.gene == "IQGAP2"

@@ -425,7 +425,8 @@ class ParquetSerializer(object):
         rows, cols = genotype.shape
         if cols != len(family):
             print(
-                f"problem: {chrom},{position},{reference},{alternatives}: "
+                f"problem: can't deserialize genotype {genotype} for "
+                f"{chrom},{position},{reference},{alternatives}: "
                 f"{family}"
             )
             return None

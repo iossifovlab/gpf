@@ -1,5 +1,3 @@
-# from enrichment_tool.background import SynonymousBackground, \
-#     CodingLenBackground, SamochaBackground
 from dae.enrichment_tool.background import (
     CodingLenBackground,
     SamochaBackground,
@@ -31,7 +29,6 @@ def test_get_study_background(background_facade):
 def test_get_all_study_backgrounds(background_facade):
     backgrounds = background_facade.get_all_study_backgrounds("f1_trio")
 
-    # assert len(backgrounds) == 3
     assert len(backgrounds) == 2
     # assert isinstance(
     #     backgrounds['synonymous_background_model'], SynonymousBackground)

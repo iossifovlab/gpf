@@ -16,7 +16,7 @@ def test_enrichment_models(admin_client):
     assert result
     assert len(result) == 2
 
-    assert len(result["background"]) == 3
+    assert len(result["background"]) == 2
     background = result["background"]
     background.sort(key=lambda x: x["name"])
     assert len(background[0]) == 2
@@ -25,9 +25,9 @@ def test_enrichment_models(admin_client):
     assert len(background[1]) == 2
     assert background[1]["name"] == "samocha_background_model"
     assert background[1]["desc"] == "Samocha Background Model"
-    assert len(background[2]) == 2
-    assert background[2]["name"] == "synonymous_background_model"
-    assert background[2]["desc"] == "Synonymous Background Model"
+    # assert len(background[2]) == 2
+    # assert background[2]["name"] == "synonymous_background_model"
+    # assert background[2]["desc"] == "Synonymous Background Model"
 
     assert len(result["counting"]) == 2
     counting = result["counting"]

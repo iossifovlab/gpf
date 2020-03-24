@@ -49,6 +49,28 @@ def test_vcf_loader(
         print(nfv)
 
 
+def test_simple_vcf_loader_multi(fixture_dirname, genomes_db_2013):
+    vcf_filenames = [
+        fixture_dirname("backends/multivcf_split1.vcf"),
+        fixture_dirname("backends/multivcf_split2.vcf"),
+    ]
+    assert all([os.path.exists(fn) for fn in vcf_filenames])
+    ped_filename = fixture_dirname("backends/multivcf.ped")
+    assert os.path.exists(ped_filename)
+
+    families = FamiliesLoader(ped_filename).load()
+
+    vcf_loader = VcfLoader(
+        families,
+        vcf_filenames,
+        genomes_db_2013.get_genome(),
+        fill_missing_ref=False,
+    )
+    assert vcf_loader is not None
+    vs = list(vcf_loader.full_variants_iterator())
+    assert len(vs) == 6
+
+
 @pytest.mark.parametrize(
     "multivcf_files",
     [

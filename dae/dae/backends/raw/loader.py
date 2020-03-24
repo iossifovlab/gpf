@@ -8,7 +8,7 @@ import pandas as pd
 
 from typing import Iterator, Tuple, List, Dict, Any, Optional, Sequence
 
-from dae.GenomeAccess import GenomicSequence
+from dae.genome.genome_access import GenomicSequence
 
 from dae.pedigrees.family import FamiliesData
 
@@ -106,75 +106,6 @@ class VariantsLoaderDecorator(VariantsLoader):
         return getattr(self.variants_loader, attr, None)
 
 
-class AlleleFrequencyDecorator(VariantsLoaderDecorator):
-    COLUMNS = [
-        "af_parents_called_count",
-        "af_parents_called_percent",
-        "af_allele_count",
-        "af_allele_freq",
-    ]
-
-    def __init__(self, variants_loader: VariantsLoader):
-        super(AlleleFrequencyDecorator, self).__init__(variants_loader)
-        assert self.transmission_type == TransmissionType.transmitted
-
-        self.independent = self.families.persons_without_parents()
-        self.n_independent_parents = len(self.independent)
-
-    # def get_vcf_variant(self, allele):
-    #     return self.vcf.vars[allele['summary_variant_index']]
-
-    def annotate_summary_variant(self, summary_variant, family_variants):
-        n_independent_parents = self.n_independent_parents
-
-        for allele in summary_variant.alleles:
-            allele_index = allele["allele_index"]
-            n_alleles = 0  # np.sum(gt == allele_index)
-            allele_freq = 0.0
-            n_parents_called = 0
-            percent_parents_called = 0.0
-
-            for fv in family_variants:
-                independent_indexes = list()
-
-                for idx, person in enumerate(fv.members_in_order):
-                    if person in self.independent:
-                        independent_indexes.append(idx)
-                        n_parents_called += 1
-
-                for idx in independent_indexes:
-                    person_gt = fv.genotype[idx]
-                    n_alleles += np.sum(person_gt == allele_index)
-
-            if n_independent_parents > 0:
-                percent_parents_called = (
-                    100.0 * n_parents_called
-                ) / n_independent_parents
-            if n_parents_called > 0:
-                allele_freq = (100.0 * n_alleles) / (2.0 * n_parents_called)
-
-            freq = {
-                "af_parents_called_count": n_parents_called,
-                "af_parents_called_percent": percent_parents_called,
-                "af_allele_count": n_alleles,
-                "af_allele_freq": allele_freq,
-            }
-            allele.update_attributes(freq)
-        return summary_variant
-
-    def full_variants_iterator(self):
-        for (
-            summary_variant,
-            fvs,
-        ) in self.variants_loader.full_variants_iterator():
-
-            summary_variant = self.annotate_summary_variant(
-                summary_variant, fvs
-            )
-
-            yield summary_variant, fvs
-
-
 class AnnotationDecorator(VariantsLoaderDecorator):
 
     SEP1 = "!"
@@ -241,10 +172,12 @@ class AnnotationDecorator(VariantsLoaderDecorator):
         ]
 
         if variants_loader.annotation_schema is not None:
-            other_columns = filter(
-                lambda col: col not in common_columns
-                and col not in AnnotationDecorator.CLEAN_UP_COLUMNS,
-                variants_loader.annotation_schema.col_names,
+            other_columns = list(
+                filter(
+                    lambda col: col not in common_columns
+                    and col not in AnnotationDecorator.CLEAN_UP_COLUMNS,
+                    variants_loader.annotation_schema.col_names,
+                )
             )
         else:
             other_columns = []

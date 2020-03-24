@@ -27,13 +27,13 @@ def vcfVarFormat(loc, var):
     mI = insRE.match(var)
     if mI:
         sq = mI.group(1)
-        rfS = GENOME.getSequence(chrom, pos - 1, pos - 1)
+        rfS = GENOME.get_sequence(chrom, pos - 1, pos - 1)
         return chrom, pos - 1, rfS, rfS + sq
 
     mD = delRE.match(var)
     if mD:
         ln = int(mD.group(1))
-        rfS = GENOME.getSequence(chrom, pos - 1, pos + ln - 1)
+        rfS = GENOME.get_sequence(chrom, pos - 1, pos + ln - 1)
         return chrom, pos - 1, rfS, rfS[0]
 
     raise Exception("weird variant:" + var)

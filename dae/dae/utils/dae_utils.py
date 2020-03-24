@@ -13,13 +13,13 @@ def dae2vcf_variant(chrom, position, var, genome):
     match = INS_RE.match(var)
     if match:
         alt_suffix = match.group(1)
-        reference = genome.getSequence(chrom, position - 1, position - 1)
+        reference = genome.get_sequence(chrom, position - 1, position - 1)
         return position - 1, reference, reference + alt_suffix
 
     match = DEL_RE.match(var)
     if match:
         count = int(match.group(1))
-        reference = genome.getSequence(
+        reference = genome.get_sequence(
             chrom, position - 1, position + count - 1
         )
         assert len(reference) == count + 1, reference

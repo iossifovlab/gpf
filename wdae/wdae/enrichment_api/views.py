@@ -28,23 +28,28 @@ class EnrichmentModelsView(QueryBaseView):
 
         self.background_facade = self.gpf_instance._background_facade
 
-    def get_from_config(self, dataset_id, key):
+    def get_from_config(self, dataset_id, property_name, selected):
         enrichment_config = self.background_facade.get_study_enrichment_config(
             dataset_id
         )
-
         if enrichment_config is None:
             return []
+        selected_properties = getattr(enrichment_config, selected)
 
         return [
             {"name": el.name, "desc": el.desc}
-            for el in getattr(enrichment_config, key)
+            for el in getattr(enrichment_config, property_name)
+            if el.name in selected_properties
         ]
 
     def get(self, request, dataset_id=None):
         result = {
-            "background": self.get_from_config(dataset_id, "background"),
-            "counting": self.get_from_config(dataset_id, "counting"),
+            "background": self.get_from_config(
+                dataset_id, "background", "selected_background_values"
+            ),
+            "counting": self.get_from_config(
+                dataset_id, "counting", "selected_counting_values"
+            ),
         }
         return Response(result)
 
@@ -94,7 +99,8 @@ class EnrichmentTestView(QueryBaseView):
     def get_enrichment_tool(self, enrichment_config, query):
         dataset_id = query.get("datasetId", None)
 
-        background_name = query.get("enrichment_background_model", None)
+        background_name = query.get("enrichmentBackgroundModel", None)
+
         if (
             background_name is None
             or not self.background_facade.has_background(
@@ -103,7 +109,7 @@ class EnrichmentTestView(QueryBaseView):
         ):
             background_name = enrichment_config.default_background_model
         counting_name = query.get(
-            "enrichment_counting_model",
+            "enrichmentCountingModel",
             enrichment_config.default_counting_model,
         )
 

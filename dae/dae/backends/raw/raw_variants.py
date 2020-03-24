@@ -21,7 +21,10 @@ class RawFamilyVariants:
     @staticmethod
     def filter_regions(v, regions):
         for reg in regions:
-            if reg.chr == v.chromosome and reg.start <= v.position <= reg.stop:
+            if (
+                reg.chrom == v.chromosome
+                and reg.start <= v.position <= reg.stop
+            ):
                 return True
         return False
 

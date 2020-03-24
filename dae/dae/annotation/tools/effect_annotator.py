@@ -9,17 +9,19 @@ from dae.annotation.tools.annotator_base import VariantAnnotatorBase
 
 
 class EffectAnnotatorBase(VariantAnnotatorBase):
+    COLUMNS_SCHEMA = None
+
     def __init__(self, config, genomes_db, **kwargs):
         super(EffectAnnotatorBase, self).__init__(config, genomes_db)
 
         self.effect_annotator = VariantAnnotator(
-            self.genome,
+            self.genomic_sequence,
             self.gene_models,
             promoter_len=self.config.options.prom_len,
         )
 
         self.columns = OrderedDict()
-        for col_name, col_type in self.COLUMNS_SCHEMA:
+        for col_name, _col_type in self.COLUMNS_SCHEMA:
             self.columns[col_name] = getattr(self.config.columns, col_name)
 
     def collect_annotator_schema(self, schema):
@@ -29,7 +31,7 @@ class EffectAnnotatorBase(VariantAnnotatorBase):
                 schema.create_column(self.columns[col_name], col_type)
 
     def _not_found(self, aline):
-        for col_name, col_conf in self.columns.items():
+        for _col_name, col_conf in self.columns.items():
             if col_conf:
                 aline[col_conf] = ""
 

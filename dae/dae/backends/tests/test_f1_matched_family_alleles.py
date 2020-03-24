@@ -5,7 +5,7 @@ Created on Jul 18, 2018
 """
 import pytest
 
-from dae.RegionOperations import Region
+from dae.utils.regions import Region
 
 from dae.variants.effects import EffectGene
 

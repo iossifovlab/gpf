@@ -6,8 +6,8 @@ genome_schema = {
         "check_with": validate_existing_path,
         "coerce": "abspath",
     },
-    "default_gene_model": {"type": "string"},
-    "gene_model": {
+    "default_gene_models": {"type": "string"},
+    "gene_models": {
         "type": "dict",
         "valuesrules": {
             "type": "dict",
@@ -16,9 +16,26 @@ genome_schema = {
                     "type": "string",
                     "check_with": validate_existing_path,
                     "coerce": "abspath",
-                }
+                },
+                "fileformat": {
+                    "type": "string",
+                    "allowed": [
+                        "default",
+                        "gtf",
+                        "refseq",
+                        "refflat",
+                        "ccds",
+                        "knowngene",
+                        "ucscgenepred",
+                        "mito",
+                    ],
+                },
             },
         },
+    },
+    "pars": {
+        "type": "dict",
+        "valuesrules": {"type": "list", "schema": {"type": "string"}},
     },
 }
 
@@ -30,14 +47,5 @@ genomes_db_conf = {
     "genome": {
         "type": "dict",
         "valuesrules": {"type": "dict", "schema": genome_schema},
-    },
-    "PARs": {
-        "type": "dict",
-        "schema": {
-            "regions": {
-                "type": "dict",
-                "valuesrules": {"type": "list", "schema": {"type": "string"}},
-            }
-        },
     },
 }

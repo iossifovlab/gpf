@@ -9,7 +9,7 @@ from cyvcf2 import VCF
 import pysam
 
 from dae.utils.helpers import str2bool
-from dae.GenomeAccess import GenomicSequence
+from dae.genome.genome_access import GenomicSequence
 
 from dae.utils.variant_utils import (
     is_all_reference_genotype,
@@ -33,86 +33,33 @@ class VcfFamiliesGenotypes(FamiliesGenotypes):
         self.loader = loader
         self.vcf_variants = vcf_variants
 
-    def _build_check_families(self):
-        check_families = np.zeros(
-            len(self.loader.all_families_ids), dtype=np.bool
-        )
-
-        for vcf_index, vcf_variant in enumerate(self.vcf_variants):
-            if vcf_variant is None:
-                genotypes_to_check = np.ones(
-                    len(self.loader.vcfs[vcf_index].samples), np.bool
-                )
-                check_index = self.loader.reverse_families_index[vcf_index][
-                    genotypes_to_check
-                ]
-                if (
-                    self.loader._fill_missing_value == 0
-                    and self.loader.include_reference_genotypes
-                ):
-                    check_families[check_index] = True
-                if self.loader._fill_missing_value == -1 and (
-                    self.loader.include_unknown_person_genotypes
-                    or self.loader.include_unknown_family_genotypes
-                ):
-                    check_families[check_index] = True
-            else:
-                genotypes_to_check = np.logical_or(
-                    vcf_variant.gt_types == 1,  # HET=1
-                    vcf_variant.gt_types == 2,
-                )  # HOM_ALT=2
-
-                check_index = self.loader.reverse_families_index[vcf_index][
-                    genotypes_to_check
-                ]
-                check_families[check_index] = True
-                if self.loader.include_reference_genotypes:
-                    genotypes_to_check = vcf_variant.gt_types == 0  # HOM_REF=0
-                    check_index = self.loader.reverse_families_index[
-                        vcf_index
-                    ][genotypes_to_check]
-                    check_families[check_index] = True
-                if (
-                    self.loader.include_unknown_person_genotypes
-                    or self.loader.include_unknown_family_genotypes
-                ):
-                    genotypes_to_check = vcf_variant.gt_types == 3  # UKNOWN=3
-                    check_index = self.loader.reverse_families_index[
-                        vcf_index
-                    ][genotypes_to_check]
-                    check_families[check_index] = True
-
-        return set(self.loader.all_families_ids[check_families])
-
     def _build_genotypes(self):
         genotypes = []
         for vcf_index, vcf_variant in enumerate(self.vcf_variants):
             if vcf_variant is not None:
-                genotypes.append(vcf_variant.genotypes)
+                # genotypes.append(vcf_variant.genotypes)
+                gt = vcf_variant.gt_idxs
+                gt[gt < -1] = -2
+                genotypes.append(vcf_variant.gt_idxs)
             else:
                 fill_value = self.loader._fill_missing_value
                 samples_count = len(self.loader.vcfs[vcf_index].samples)
                 genotypes.append(
-                    [[fill_value, fill_value, False]] * samples_count
+                    fill_value * np.ones(2 * samples_count, dtype=np.int16)
                 )
-        return genotypes
+        genotypes = np.hstack(genotypes)
+        return genotypes.astype(np.int8)
 
     def family_genotype_iterator(self):
         genotypes = self._build_genotypes()
-        check_families = self._build_check_families()
 
-        for family, samples_indexes in self.loader.families_samples_indexes:
-            if family.family_id not in check_families:
-                continue
+        # fmt: off
+        for family, allele_indexes in \
+                self.loader.families_allele_indexes:
+            # fmt: on
 
-            gt = []
-            for vcf_index, sample_index in samples_indexes:
-                sample_genotype = genotypes[vcf_index][sample_index]
-                if len(sample_genotype) == 2:
-                    sample_genotype.insert(1, -2)
-                gt.append(sample_genotype[0:2])
-            gt = np.array(gt, np.int8)
-            gt = gt.T
+            gt = genotypes[allele_indexes]
+            gt = gt.reshape([2, len(allele_indexes)//2], order="F")
 
             if (
                 is_all_reference_genotype(gt)
@@ -173,6 +120,8 @@ class SingleVcfLoader(VariantsGenotypesLoader):
 
         self._init_vcf_readers()
         self._match_pedigree_to_samples()
+        self._build_family_alleles_indexes()
+        self._build_independent_persons_indexes()
         self._init_chromosome_order()
         self._init_denovo_mode()
         self._init_omission_mode()
@@ -316,7 +265,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
             vcf_samples += vcf.samples
         vcf_samples = np.array(vcf_samples)
 
-        vcf_samples_index = [list(vcf.samples) for vcf in self.vcfs]
+        vcf_samples_order = [list(vcf.samples) for vcf in self.vcfs]
         vcf_samples = set(vcf_samples)
         pedigree_samples = set(self.families.ped_df["sample_id"].values)
         missing_samples = vcf_samples.difference(pedigree_samples)
@@ -329,36 +278,54 @@ class SingleVcfLoader(VariantsGenotypesLoader):
             if person.sample_id in vcf_samples:
                 if person.sample_id in seen:
                     continue
-                for vcf_index, samples_index in enumerate(vcf_samples_index):
-                    if person.sample_id in samples_index:
+                for vcf_index, samples_order in enumerate(vcf_samples_order):
+                    if person.sample_id in samples_order:
                         person.set_attr(
                             "sample_index",
-                            (vcf_index, samples_index.index(person.sample_id)),
+                            (
+                                vcf_index,
+                                samples_order.index(person.sample_id)
+                            )
                         )
                         seen.add(person.sample_id)
                         break
             else:
                 person.set_attr("generated", True)
         self.families.redefine()
-        self.all_families_ids = np.array(
-            [family.family_id for family in self.families.values()], dtype=str
-        )
 
-        self.families_samples_indexes = [
-            (family, family.samples_index) for family in self.families.values()
-        ]
-        self.reverse_families_index = [
-            -1 * np.ones(len(vcf.samples), dtype=np.int32) for vcf in self.vcfs
-        ]
+    def _build_family_alleles_indexes(self):
+        vcf_offsets = [0] * len(self.vcfs)
+        for vcf_index in range(1, len(self.vcfs)):
+            vcf_offsets[vcf_index] = vcf_offsets[vcf_index - 1] + len(
+                self.vcfs[vcf_index - 1].samples
+            )
 
-        for family_index, family in enumerate(self.families.values()):
+        self.families_allele_indexes = []
+
+        for family in self.families.values():
+            samples_indexes = []
             for vcf_index, sample_index in family.samples_index:
-                self.reverse_families_index[vcf_index][
-                    sample_index
-                ] = family_index
-        # print(
-        #     "reverse_family_index:", type(self.reverse_families_index),
-        #     self.reverse_families_index)
+                offset = vcf_offsets[vcf_index]
+                samples_indexes.append(sample_index + offset)
+            samples_indexes = np.array(tuple(samples_indexes))
+            allele_indexes = np.stack(
+                [2 * samples_indexes, 2 * samples_indexes + 1]
+            ).reshape([1, 2 * len(samples_indexes)], order="F")[0]
+
+            self.families_allele_indexes.append(
+                (family, allele_indexes)
+            )
+
+    def _build_independent_persons_indexes(self):
+        self.independent = self.families.persons_without_parents()
+        self.independent_indexes = []
+        for person in self.independent:
+            self.independent_indexes.append(person.sample_index)
+        self.independent_indexes = np.array(tuple(self.independent_indexes))
+        assert len(self.independent_indexes) == len(self.independent), (
+            len(self.independent_indexes),
+            len(self.independent),
+        )
 
     def _build_summary_variant(self, summary_index, vcf_variant):
         records = []
@@ -430,6 +397,58 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                 min_index = index
         return vcf_variants[min_index]
 
+    def _calc_allele_frequencies(self, summary_variant, vcf_variants):
+        result = [
+            {
+                "n_parents_called": 0,
+                "n_alleles": [0] * summary_variant.allele_count,
+            }
+            for _ in vcf_variants
+        ]
+
+        for vcf_index, vcf in enumerate(vcf_variants):
+            if vcf is None:
+                continue
+
+            sample_index = self.independent_indexes[
+                self.independent_indexes[:, 0] == vcf_index, :
+            ][:, 1].T
+            allele_index = np.stack(
+                [2 * sample_index, 2 * sample_index + 1]
+            ).reshape([1, 2 * len(sample_index)], order="F")[0]
+            vcf_gt = vcf.gt_idxs[allele_index]
+            vcf_gt = vcf_gt.reshape([2, len(sample_index)], order="F")
+
+            unknown = np.any(vcf_gt == -1, axis=0)
+            vcf_gt = vcf_gt[:, np.logical_not(unknown)]
+            result[vcf_index]["n_parents_called"] += vcf_gt.shape[1]
+
+            for allele in summary_variant.alleles:
+                allele_index = allele["allele_index"]
+                matched_alleles = (vcf_gt == allele_index).astype(np.int32)
+                result[vcf_index]["n_alleles"][allele_index] += np.sum(
+                    matched_alleles
+                )
+        n_independent_parents = len(self.independent_indexes)
+        n_parents_called = sum([r["n_parents_called"] for r in result])
+        for allele in summary_variant.alleles:
+            if n_independent_parents > 0:
+                percent_parents_called = (
+                    100.0 * n_parents_called
+                ) / n_independent_parents
+            allele_index = allele["allele_index"]
+            n_alleles = sum([r["n_alleles"][allele_index] for r in result])
+            allele_freq = 0
+            if n_parents_called > 0:
+                allele_freq = (100.0 * n_alleles) / (2.0 * n_parents_called)
+            freq = {
+                "af_parents_called_count": n_parents_called,
+                "af_parents_called_percent": percent_parents_called,
+                "af_allele_count": n_alleles,
+                "af_allele_freq": allele_freq,
+            }
+            allele.update_attributes(freq)
+
     def _full_variants_iterator_impl(self, initial_summary_variant_index=0):
 
         summary_variant_index = initial_summary_variant_index
@@ -458,6 +477,9 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                         vcf_iterator_idexes_to_advance.append(idx)
                     else:
                         vcf_gt_variants.append(None)
+                self._calc_allele_frequencies(
+                    current_summary_variant, vcf_gt_variants
+                )
                 family_genotypes = VcfFamiliesGenotypes(self, vcf_gt_variants)
 
                 family_variants = []
@@ -701,7 +723,8 @@ class VcfLoader(VariantsGenotypesLoader):
             "vcf_include_unknown_person_genotypes": str2bool(
                 argv.vcf_include_unknown_person_genotypes
             ),
-            "vcf_multi_loader_fill_in_mode": argv.vcf_multi_loader_fill_in_mode,
+            "vcf_multi_loader_fill_in_mode": 
+            argv.vcf_multi_loader_fill_in_mode,
             "vcf_denovo_mode": argv.vcf_denovo_mode,
             "vcf_omission_mode": argv.vcf_omission_mode,
             "vcf_chromosomes": argv.vcf_chromosomes,

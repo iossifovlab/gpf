@@ -101,15 +101,15 @@ pipeline {
           }
         }
 
-        stage('Format') {
-            steps {
-                sh '''
-                export PATH=$HOME/anaconda3/envs/gpf3/bin:$PATH
+        // stage('Format') {
+        //     steps {
+        //         sh '''
+        //         export PATH=$HOME/anaconda3/envs/gpf3/bin:$PATH
 
-                docker-compose -f docker-compose.yml exec -T tests /code/jenkins_black.sh
-                '''
-            }
-        }
+        //         docker-compose -f docker-compose.yml exec -T tests /code/jenkins_black.sh
+        //         '''
+        //     }
+        // }
 
         stage('Lint') {
             steps {
@@ -117,16 +117,6 @@ pipeline {
                 export PATH=$HOME/anaconda3/envs/gpf3/bin:$PATH
 
                 docker-compose -f docker-compose.yml exec -T tests /code/jenkins_flake8.sh
-                '''
-            }
-        }
-
-        stage('Type Check') {
-            steps {
-                sh '''
-                export PATH=$HOME/anaconda3/envs/gpf3/bin:$PATH
-
-                docker-compose -f docker-compose.yml exec -T tests /code/jenkins_mypy.sh
                 '''
             }
         }
@@ -161,8 +151,6 @@ pipeline {
 
         }
         success {
-	    archiveArtifacts artifacts: 'mypy_report.tar.gz'
-
             slackSend (
                 color: '#00FF00',
                 message: "SUCCESSFUL: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' ${env.BUILD_URL}"

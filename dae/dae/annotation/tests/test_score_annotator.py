@@ -210,7 +210,6 @@ def test_variant_score_annotator_cadd(
             "scores_file": relative_to_this_test_folder(
                 "fixtures/TESTCADD/TESTwhole_genome_SNVs.tsv.gz"
             ),
-            "search_columns": "VCF:ref,VCF:alt",
         }
     )
 
