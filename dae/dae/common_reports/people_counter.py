@@ -1,30 +1,21 @@
 from dae.variants.attributes import Sex
-from dae.common_reports.people_filters import PeopleGroupFilter
 
 
 class PeopleCounter(object):
-    def __init__(self, families, people_filter):
+    def __init__(self, families, person_set):
         self.families = families
-        self.people_filter = people_filter
+        self.person_set = person_set
 
-        matched_people = list(
-            self.people_filter.filter(self.families.persons.values())
-        )
+        matched_people = list(self.person_set.persons.values())
 
         self.people_male = len(
-            list(PeopleGroupFilter.sex_filter(Sex.male).filter(matched_people))
+            list(filter(lambda p: p.sex == Sex.male, matched_people))
         )
         self.people_female = len(
-            list(
-                PeopleGroupFilter.sex_filter(Sex.female).filter(matched_people)
-            )
+            list(filter(lambda p: p.sex == Sex.female, matched_people))
         )
         self.people_unspecified = len(
-            list(
-                PeopleGroupFilter.sex_filter(Sex.unspecified).filter(
-                    matched_people
-                )
-            )
+            list(filter(lambda p: p.sex == Sex.unspecified, matched_people))
         )
         self.people_total = len(matched_people)
 
@@ -33,11 +24,9 @@ class PeopleCounter(object):
             == self.people_male + self.people_female + self.people_unspecified
         )
 
-        self.filter_name = people_filter.filter_name
-
     def to_dict(self, rows):
         people_counter_dict = {row: getattr(self, row) for row in rows}
-        people_counter_dict["column"] = self.filter_name
+        people_counter_dict["column"] = self.person_set.name
         return people_counter_dict
 
     def is_empty(self):
@@ -54,30 +43,30 @@ class PeopleCounter(object):
 
 
 class PeopleCounters(object):
-    def __init__(self, families, filter_collection):
+    def __init__(self, families, person_set_collection):
         self.families = families
-        self.filter_collection = filter_collection
+        self.person_set_collection = person_set_collection
 
         self.counters = self._build_counters()
 
-        self.group_name = filter_collection.name
+        self.group_name = person_set_collection.name
         self.rows = self._get_row_names()
-        self.filter_names = [
-            people_counter.filter_name for people_counter in self.counters
+        self.column_names = [
+            people_counter.person_set.id for people_counter in self.counters
         ]
 
     def to_dict(self):
         return {
             "group_name": self.group_name,
-            "columns": self.filter_names,
+            "columns": self.column_names,
             "rows": self.rows,
             "counters": [c.to_dict(self.rows) for c in self.counters],
         }
 
     def _build_counters(self):
         people_counters = [
-            PeopleCounter(self.families, filters)
-            for filters in self.filter_collection.filters
+            PeopleCounter(self.families, person_set)
+            for person_set in self.person_set_collection.person_sets.values()
         ]
 
         return list(
