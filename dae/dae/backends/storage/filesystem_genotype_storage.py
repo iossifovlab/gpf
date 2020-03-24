@@ -3,8 +3,6 @@ import shutil
 import time
 import glob
 
-import toml
-
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.study_config_builder import StudyConfigBuilder
 from dae.pedigrees.loader import FamiliesLoader
@@ -16,6 +14,7 @@ from dae.backends.raw.raw_variants import RawMemoryVariants
 
 from dae.backends.vcf.loader import VcfLoader
 from dae.backends.dae.loader import DenovoLoader, DaeTransmittedLoader
+from dae.backends.cnv.loader import CNVLoader
 
 from dae.utils.dict_utils import recursive_dict_update
 
@@ -98,6 +97,13 @@ class FilesystemGenotypeStorage(GenotypeStorage):
                         genomes_db.get_genome(),
                         params=variants_params,
                     )
+                if file_conf.format == "cnv":
+                    variants_loader = CNVLoader(
+                        families,
+                        variants_filename,
+                        genomes_db.get_genome(),
+                        params=variants_params,
+                    )
 
                 variants_loader = StoredAnnotationDecorator.decorate(
                     variants_loader, annotation_filename
@@ -124,6 +130,7 @@ class FilesystemGenotypeStorage(GenotypeStorage):
             "id": study_id,
             "conf_dir": ".",
             "has_denovo": False,
+            "has_cnv": False,
             "genotype_storage": {
                 "id": self.storage_config.section_id(),
                 "files": {
@@ -131,7 +138,7 @@ class FilesystemGenotypeStorage(GenotypeStorage):
                     "pedigree": families_config,
                 },
             },
-            "genotype_browser": {"enabled": True},
+            "genotype_browser": {"enabled": True, "has_cnv": False},
         }
         if not variant_loaders:
             config_dict["genotype_browser"]["enabled"] = False
@@ -144,6 +151,14 @@ class FilesystemGenotypeStorage(GenotypeStorage):
                 ]
             ):
                 config_dict["has_denovo"] = True
+            if any(
+                [
+                    l.get_attribute("source_type") == "cnv"
+                    for l in variant_loaders
+                ]
+            ):
+                config_dict["has_denovo"] = True
+                config_dict["has_cnv"] = True
 
         if study_config is not None:
             study_config_dict = GPFConfigParser.load_config_raw(study_config)

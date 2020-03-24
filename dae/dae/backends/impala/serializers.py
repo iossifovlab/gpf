@@ -37,6 +37,7 @@ class ParquetSerializer(object):
             "allele_index",
             "chrom",
             "position",
+            "end_position",
             "reference",
             "alternative",
             "variant_type",
@@ -47,7 +48,7 @@ class ParquetSerializer(object):
     )
 
     effect_gene = namedtuple(
-        "effect_gene", ["effect_type", "effect_gene", "effect_data",]
+        "effect_gene", ["effect_type", "effect_gene", "effect_data"]
     )
 
     Family = namedtuple(
@@ -119,6 +120,7 @@ class ParquetSerializer(object):
                 allele.allele_index,
                 allele.chrom,
                 allele.position,
+                allele.end_position,
                 allele.reference,
                 None,
                 None,
@@ -131,6 +133,7 @@ class ParquetSerializer(object):
                 allele.allele_index,
                 allele.chrom,
                 allele.position,
+                allele.end_position,
                 allele.reference,
                 allele.alternative,
                 allele.variant_type.value,
@@ -400,6 +403,7 @@ class ParquetSerializer(object):
         family,
         chrom,
         position,
+        end_position,
         reference,
         transmission_type,
         alternatives_data,
@@ -414,11 +418,11 @@ class ParquetSerializer(object):
 
         effects = self.deserialize_variant_effects(effect_data)
         alternatives = self.deserialize_variant_alternatives(alternatives_data)
-        assert len(effects) == len(alternatives), (effects, alternatives)
+        # assert len(effects) == len(alternatives), (effects, alternatives)
         assert family is not None
 
         genotype = self.deserialize_variant_genotype(genotype_data)
-        rows, cols = genotype.shape
+        _rows, cols = genotype.shape
         if cols != len(family):
             print(
                 f"problem: can't deserialize genotype {genotype} for "
@@ -436,11 +440,12 @@ class ParquetSerializer(object):
         genetic_model = GeneticModel(genetic_model_data)
 
         frequencies = self.deserialize_variant_frequency(frequency_data)
-        assert len(frequencies) == len(alternatives)
+        # assert len(frequencies) == len(alternatives)
         inheritance = self.deserialize_variant_inheritance(
             inheritance_data, len(family)
         )
-        assert len(inheritance) == len(alternatives)
+        # assert len(inheritance) == len(alternatives), \
+        #     (inheritance, alternatives)
 
         genomic_scores = self.deserialize_variant_genomic_scores(
             genomic_scores_data
