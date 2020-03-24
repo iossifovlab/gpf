@@ -163,16 +163,15 @@ class GenotypeDataGroup(GenotypeData):
         return combined_dict
 
     def _build_person_set_collection(self, person_set_collection_id):
-        # FIXME This code could and should be rewritten
-        # in a clearer, more concise way...
-
         assert (
             person_set_collection_id
             in self.config.person_set_collections.selected_person_set_collections
         )
 
-        _ = self.studies[0].get_person_set_collection(person_set_collection_id)
-        collection_name = _.name
+        sample_collection = self.studies[0].get_person_set_collection(
+            person_set_collection_id
+        )
+        collection_name = sample_collection.name
 
         new_collection = PersonSetCollection(
             person_set_collection_id, collection_name, dict(), self.families,
