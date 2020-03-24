@@ -289,19 +289,21 @@ class VariantType(enum.Enum):
     def from_cshl_variant(variant) -> Optional[VariantType]:
         # FIXME: Change logic to use entire string
         if variant is None:
-            return VariantType.none
+            return VariantType.invalid
 
-        vt = variant[0]
-        if vt == "s":
+        vt = variant[0:3]
+        if vt == "sub":
             return VariantType.substitution
-        elif vt == "i":
+        elif vt == "ins":
             return VariantType.insertion
-        elif vt == "d":
+        elif vt == "del":
             return VariantType.deletion
-        elif vt == "c":
+        elif vt == "com":
             return VariantType.comp
-        elif vt == "C":
-            return VariantType.CNV
+        elif variant == "CNV+":
+            return VariantType.cnv_p
+        elif variant == "CNV-":
+            return VariantType.cnv_m
         else:
             raise ValueError("unexpected variant type: {}".format(variant))
 

@@ -9,6 +9,7 @@ from dae.utils.variant_utils import (
     GENOTYPE_TYPE,
     is_all_unknown_genotype,
     is_reference_genotype,
+    mat2str,
 )
 from dae.variants.attributes import (
     GeneticModel,
@@ -110,8 +111,8 @@ class FamilyAllele(Allele, FamilyDelegate):
         self.matched_gene_effects: List = []
 
     def __repr__(self):
-        suffix = f" {self.family_id}"
-        return super(Allele, self).__repr__() + suffix
+        allele_repr = Allele.__repr__(self)
+        return f"{allele_repr} {self.family_id}"
 
     @property
     def chromosome(self):
@@ -509,9 +510,8 @@ class FamilyVariant(Variant, FamilyDelegate):
         return is_all_unknown_genotype(self.gt)
 
     def __repr__(self):
-        suffix = f"{self.family_id}"
         output = Variant.__repr__(self)
-        return f"{output} {suffix}"
+        return f"{output} {self.family_id} {mat2str(self.gt)}"
 
     @property
     def best_state(self):
