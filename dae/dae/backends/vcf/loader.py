@@ -4,7 +4,6 @@ import itertools
 import glob
 
 import numpy as np
-from collections import namedtuple
 
 from cyvcf2 import VCF
 import pysam
@@ -89,31 +88,32 @@ class VcfFamiliesGenotypes(FamiliesGenotypes):
         genotypes = []
         for vcf_index, vcf_variant in enumerate(self.vcf_variants):
             if vcf_variant is not None:
-                genotypes.append(vcf_variant.genotypes)
+                # genotypes.append(vcf_variant.genotypes)
+                gt = vcf_variant.gt_idxs
+                gt[gt < -1] = -2
+                genotypes.append(vcf_variant.gt_idxs)
             else:
                 fill_value = self.loader._fill_missing_value
                 samples_count = len(self.loader.vcfs[vcf_index].samples)
                 genotypes.append(
-                    [[fill_value, fill_value, False]] * samples_count
+                    fill_value * np.ones(2 * samples_count, dtype=np.int16)
                 )
-        return genotypes
+        genotypes = np.hstack(genotypes)
+        return genotypes.astype(np.int8)
 
     def family_genotype_iterator(self):
         genotypes = self._build_genotypes()
         check_families = self._build_check_families()
+        # fmt: off
+        for family, allele_indexes in \
+                self.loader.families_allele_indexes:
+            # fmt: on
 
-        for family, samples_indexes in self.loader.families_samples_indexes:
             if family.family_id not in check_families:
                 continue
 
-            gt = []
-            for vcf_index, sample_index in samples_indexes:
-                sample_genotype = genotypes[vcf_index][sample_index]
-                if len(sample_genotype) == 2:
-                    sample_genotype.insert(1, -2)
-                gt.append(sample_genotype[0:2])
-            gt = np.array(gt, np.int8)
-            gt = gt.T
+            gt = genotypes[allele_indexes]
+            gt = gt.reshape([2, len(allele_indexes)//2], order="F")
 
             if (
                 is_all_reference_genotype(gt)
@@ -355,6 +355,44 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                 self.samples.append(member.sample_id)
                 self.samples_index.append(member.sample_index)
         self.samples_index = np.array(tuple(self.samples_index))
+
+        self.full_samples = []
+        self.full_samples_index = []
+
+        vcf_offsets = [0] * len(self.vcfs)
+        for vcf_index in range(1, len(self.vcfs)):
+            vcf_offsets[vcf_index] = vcf_offsets[vcf_index - 1] + len(
+                self.vcfs[vcf_index - 1].samples
+            )
+
+        for sample_id, (vcf_index, sample_index) in zip(
+            self.samples, self.samples_index
+        ):
+            self.full_samples.append(sample_id)
+            offset = vcf_offsets[vcf_index]
+            self.full_samples_index.append(sample_index + offset)
+        self.full_samples_index = np.array(tuple(self.full_samples_index))
+
+        self.families_full_samples_indexes = []
+        self.families_allele_indexes = []
+
+        for family in self.families.values():
+            full_samples_index = []
+            for vcf_index, sample_index in family.samples_index:
+                full_samples_index.append(
+                    sample_index + vcf_offsets[vcf_index]
+                )
+            full_samples_index = np.array(tuple(full_samples_index))
+            self.families_full_samples_indexes.append(
+                (family, full_samples_index)
+            )
+            allele_indexes = np.stack(
+                [2 * full_samples_index, 2 * full_samples_index + 1]
+            ).reshape([1, 2 * len(full_samples_index)], order="F")[0]
+
+            self.families_allele_indexes.append(
+                (family, allele_indexes)
+            )
 
         self.reverse_families_index = [
             -1 * np.ones(len(vcf.samples), dtype=np.int32) for vcf in self.vcfs
@@ -775,7 +813,8 @@ class VcfLoader(VariantsGenotypesLoader):
             "vcf_include_unknown_person_genotypes": str2bool(
                 argv.vcf_include_unknown_person_genotypes
             ),
-            "vcf_multi_loader_fill_in_mode": argv.vcf_multi_loader_fill_in_mode,
+            "vcf_multi_loader_fill_in_mode": 
+            argv.vcf_multi_loader_fill_in_mode,
             "vcf_denovo_mode": argv.vcf_denovo_mode,
             "vcf_omission_mode": argv.vcf_omission_mode,
             "vcf_chromosomes": argv.vcf_chromosomes,
