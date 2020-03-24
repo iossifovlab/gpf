@@ -15,6 +15,7 @@ class Variant(object):
             seq=None,
             variant_type=None):
 
+        self.variant_type = None
         self.set_position(chrom, position, loc)
 
         if VariantType.is_cnv(variant_type):
