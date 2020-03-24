@@ -300,7 +300,8 @@ class ContinuousParquetFileWriter:
     """
 
     def __init__(self, filepath, variant_loader, filesystem=None, rows=10000):
-        self.serializer = AlleleParquetSerializer.from_loader(variant_loader)
+        annotation_schema = variant_loader.get_attribute("annotation_schema")
+        self.serializer = AlleleParquetSerializer(annotation_schema)
         schema = self.serializer.get_schema()
         dirname = os.path.dirname(filepath)
         if dirname and not os.path.exists(dirname):
@@ -314,13 +315,13 @@ class ContinuousParquetFileWriter:
     def _write_table(self):
         self._writer.write_table(self.serializer.build_table())
 
-    def append_allele(self, allele):
+    def append_allele(self, variant, allele):
         """
         Appends the data for an entire variant to the buffer
 
         :param list attributes: List of key-value tuples containing the data
         """
-        self.serializer.add_allele_to_batch_dict(allele)
+        self.serializer.add_allele_to_batch_dict(variant, allele)
         if len(self.serializer._data) >= self.rows:
             self._write_table()
 
@@ -441,7 +442,7 @@ class VariantsParquetWriter:
 
                 for family_allele in fv.alleles:
                     bin_writer = self._get_bin_writer(family_allele)
-                    bin_writer.append_allele(family_allele)
+                    bin_writer.append_allele(fv, family_allele)
 
             if family_variant_index % 1000 == 0:
                 elapsed = time.time() - self.start
