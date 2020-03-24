@@ -48,7 +48,7 @@ class ParquetSerializer(object):
     )
 
     effect_gene = namedtuple(
-        "effect_gene", ["effect_type", "effect_gene", "effect_data",]
+        "effect_gene", ["effect_type", "effect_gene", "effect_data"]
     )
 
     Family = namedtuple(
@@ -422,7 +422,7 @@ class ParquetSerializer(object):
         assert family is not None
 
         genotype = self.deserialize_variant_genotype(genotype_data)
-        rows, cols = genotype.shape
+        _rows, cols = genotype.shape
         if cols != len(family):
             print(
                 f"problem: can't deserialize genotype {genotype} for "

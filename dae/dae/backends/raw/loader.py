@@ -155,10 +155,10 @@ class AnnotationDecorator(VariantsLoaderDecorator):
 
     @staticmethod
     def save_annotation_file(variants_loader, filename, sep="\t"):
-        def convert_array_of_strings_to_string(a):
-            if not a:
-                return None
-            return AnnotationDecorator.SEP1.join(a)
+        # def convert_array_of_strings_to_string(a):
+        #     if not a:
+        #         return None
+        #     return AnnotationDecorator.SEP1.join(a)
 
         common_columns = [
             "chrom",
@@ -236,9 +236,10 @@ class StoredAnnotationDecorator(AnnotationDecorator):
 
     @staticmethod
     def decorate(variants_loader, source_filename):
-        annotation_filename = StoredAnnotationDecorator.build_annotation_filename(
-            source_filename
-        )
+        annotation_filename = StoredAnnotationDecorator \
+            .build_annotation_filename(
+                source_filename
+            )
         # assert os.path.exists(annotation_filename), \
         #     annotation_filename
         if not os.path.exists(annotation_filename):
@@ -281,7 +282,8 @@ class StoredAnnotationDecorator(AnnotationDecorator):
                     "effects": cls._convert_string,
                     "effect_gene_genes": cls._convert_array_of_strings,
                     "effect_gene_types": cls._convert_array_of_strings,
-                    "effect_details_transcript_ids": cls._convert_array_of_strings,
+                    "effect_details_transcript_ids":
+                    cls._convert_array_of_strings,
                     "effect_details_details": cls._convert_array_of_strings,
                 },
                 encoding="utf-8",
@@ -517,7 +519,7 @@ class VariantsGenotypesLoader(VariantsLoader):
     def _del_chrom_prefix(self, chrom):
         assert self._chrom_prefix is not None
         if self._chrom_prefix in chrom:
-            return chrom[len(self._chrom_prefix) :]
+            return chrom[len(self._chrom_prefix):]
         else:
             return chrom
 

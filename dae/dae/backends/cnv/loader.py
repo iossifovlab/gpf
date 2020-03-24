@@ -182,7 +182,7 @@ class CNVLoader(VariantsGenotypesLoader):
         )
         effect_gene_genes = []
         effect_gene_types = []
-        for idx, egs in enumerate(effect_genes_col):
+        for egs in effect_genes_col:
             effect_genes = []
             effect_types = []
             for eg in egs:

@@ -5,25 +5,21 @@ import numpy as np
 from deprecation import deprecated
 
 from dae.pedigrees.family import Family
-from dae.utils.variant_utils import (
-    GENOTYPE_TYPE,
-    is_all_unknown_genotype,
-    is_reference_genotype,
-    mat2str,
-)
-from dae.variants.attributes import (
-    GeneticModel,
-    Inheritance,
-    TransmissionType,
-    VariantType,
-)
-from dae.variants.variant import (
-    Allele,
-    Effect,
-    SummaryAllele,
-    SummaryVariant,
-    Variant,
-)
+from dae.utils.variant_utils import GENOTYPE_TYPE, \
+    is_all_unknown_genotype, \
+    is_reference_genotype, \
+    mat2str
+
+from dae.variants.attributes import GeneticModel, \
+    Inheritance,\
+    TransmissionType,\
+    VariantType
+
+from dae.variants.variant import Allele, \
+    Effect, \
+    SummaryAllele, \
+    SummaryVariant, \
+    Variant
 
 
 def calculate_simple_best_state(
@@ -79,14 +75,14 @@ class FamilyDelegate(object):
 
 class FamilyAllele(Allele, FamilyDelegate):
     def __init__(
-        self,
-        summary_allele: SummaryAllele,
-        family: Family,
-        genotype,
-        best_state,
-        genetic_model=None,
-        inheritance_in_members=None,
-    ):
+            self,
+            summary_allele: SummaryAllele,
+            family: Family,
+            genotype,
+            best_state,
+            genetic_model=None,
+            inheritance_in_members=None):
+
         assert isinstance(family, Family)
 
         FamilyDelegate.__init__(self, family)

@@ -52,11 +52,11 @@ class ImpalaFamilyVariants:
         self.pedigree_table = pedigree_table
 
         self.impala = impala_connection
-        self.pedigree_schema = self.pedigree_schema()
+        self.pedigree_schema = self.load_pedigree_schema()
         self.ped_df = self.load_pedigree()
         self.families = FamiliesData.from_pedigree_df(self.ped_df)
 
-        self.schema = self.variant_schema()
+        self.schema = self.load_variant_schema()
         if self.variant_table:
             self.serializer = ParquetSerializer(schema=self.schema)
 
@@ -198,7 +198,7 @@ class ImpalaFamilyVariants:
 
         return ped_df
 
-    def variant_schema(self):
+    def load_variant_schema(self):
         if not self.variant_table:
             return None
         with self.impala.cursor() as cursor:
@@ -216,7 +216,7 @@ class ImpalaFamilyVariants:
             }
             return ParquetSchema(schema)
 
-    def pedigree_schema(self):
+    def load_pedigree_schema(self):
         with self.impala.cursor() as cursor:
             q = """
                 DESCRIBE {db}.{pedigree}
@@ -350,7 +350,7 @@ class ImpalaFamilyVariants:
 
             where = []
             for i in range(0, len(values), self.MAX_CHILD_NUMBER):
-                chunk_values = values[i : i + self.MAX_CHILD_NUMBER]
+                chunk_values = values[i: i + self.MAX_CHILD_NUMBER]
 
                 w = " {column_name} in ( {values} ) ".format(
                     column_name=column_name, values=",".join(chunk_values)
