@@ -76,6 +76,23 @@ class Region(object):
             return True
         return False
 
+    def intersection(self, other):
+        if self.chrom != other.chrom:
+            return None
+        if self.start > other.stop:
+            return None
+        if other.start > self.stop:
+            return None
+        start = max(self.start, other.start)
+        stop = min(self.stop, other.stop)
+        if start >= stop:
+            return None
+        return Region(self.chrom, start, stop)
+
+    def contains(self, other):
+        return self.chrom == other.chrom and self.start <= other.start \
+            and other.stop <= self.stop
+
     def len(self):
         return self.stop - self.start + 1
 
@@ -140,7 +157,7 @@ def connected_component(R):
     for r in R:
         D[r.chrom].append(r)
 
-    for chr, nds in list(D.items()):
+    for _chrom, nds in list(D.items()):
         nds.sort(key=lambda x: x.stop)
         for k in range(1, len(nds)):
             for j in range(k - 1, -1, -1):

@@ -1,28 +1,40 @@
 import re
+from dae.variants.attributes import VariantType
 
 
 class Variant(object):
     def __init__(
-        self,
-        chrom=None,
-        position=None,
-        loc=None,
-        var=None,
-        ref=None,
-        alt=None,
-        length=None,
-        seq=None,
-        typ=None,
-    ):
+            self,
+            chrom=None,
+            position=None,
+            loc=None,
+            var=None,
+            ref=None,
+            alt=None,
+            length=None,
+            seq=None,
+            variant_type=None):
+
         self.set_position(chrom, position, loc)
-        self.set_ref_alt(var, ref, alt, length, seq, typ)
 
-        self.ref_position_last = self.position + len(self.reference)
-        self.alt_position_last = self.position + len(self.alternate)
+        if VariantType.is_cnv(variant_type):
+            assert self.chromosome is not None
+            assert self.position is not None
 
-        self.corrected_ref_position_last = max(
-            self.position, self.ref_position_last - 1
-        )
+            if self.length is None:
+                assert length is not None
+                self.length = length
+
+            self.variant_type = variant_type
+        else:
+            self.set_ref_alt(var, ref, alt, length, seq, variant_type)
+
+            self.ref_position_last = self.position + len(self.reference)
+            self.alt_position_last = self.position + len(self.alternate)
+
+            self.corrected_ref_position_last = max(
+                self.position, self.ref_position_last - 1
+            )
 
     def set_position(self, chromosome, position, loc):
         if position is not None:
@@ -34,9 +46,15 @@ class Variant(object):
         if loc is not None:
             assert chromosome is None
             assert position is None
-            loc_arr = loc.split(":")
-            self.chromosome = loc_arr[0]
-            self.position = int(loc_arr[1])
+            chrom, loc_position = loc.split(":")
+            self.chromosome = chrom
+            if "-" not in loc_position:
+                self.position = int(loc_position)
+                self.length = None
+            else:
+                start, end = loc_position.split("-")
+                self.position = int(start)
+                self.length = int(end) - self.position
 
         assert self.chromosome is not None
         assert self.position is not None
@@ -71,8 +89,8 @@ class Variant(object):
             else:
                 break
 
-        self.reference = self.reference[start_index + 1 :]
-        self.alternate = self.alternate[start_index + 1 :]
+        self.reference = self.reference[start_index + 1:]
+        self.alternate = self.alternate[start_index + 1:]
         self.position += start_index + 1
 
     def set_ref_alt_from_variant(self, var):
