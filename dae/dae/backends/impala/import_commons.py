@@ -13,11 +13,7 @@ from dae.annotation.annotation_pipeline import PipelineAnnotator
 from dae.gpf_instance.gpf_instance import GPFInstance
 
 from dae.pedigrees.loader import FamiliesLoader
-from dae.backends.raw.loader import (
-    AnnotationPipelineDecorator,
-    AlleleFrequencyDecorator,
-)
-
+from dae.backends.raw.loader import AnnotationPipelineDecorator
 from dae.backends.dae.loader import DenovoLoader, DaeTransmittedLoader
 from dae.backends.vcf.loader import VcfLoader
 
@@ -916,8 +912,6 @@ class Variants2ParquetTool:
             variants_loader, annotation_pipeline
         )
 
-        if cls.VARIANTS_FREQUENCIES:
-            variants_loader = AlleleFrequencyDecorator(variants_loader)
         return variants_loader
 
     @classmethod

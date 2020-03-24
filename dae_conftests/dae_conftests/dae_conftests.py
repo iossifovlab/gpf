@@ -20,10 +20,7 @@ from dae.annotation.annotation_pipeline import PipelineAnnotator
 from dae.variants.variant import SummaryVariant, SummaryAllele
 from dae.variants.family_variant import FamilyVariant
 
-from dae.backends.raw.loader import (
-    AlleleFrequencyDecorator,
-    AnnotationPipelineDecorator,
-)
+from dae.backends.raw.loader import AnnotationPipelineDecorator
 from dae.backends.raw.raw_variants import RawMemoryVariants
 
 from dae.backends.dae.loader import DaeTransmittedLoader, DenovoLoader
@@ -520,7 +517,6 @@ def vcf_variants_loader(
         )
         assert loader is not None
 
-        loader = AlleleFrequencyDecorator(loader)
         loader = AnnotationPipelineDecorator(
             loader, default_annotation_pipeline
         )
@@ -761,7 +757,6 @@ def data_import(
                 },
             )
 
-            loader = AlleleFrequencyDecorator(loader)
             loader = AnnotationPipelineDecorator(loader, annotation_pipeline)
 
             impala_genotype_storage.simple_study_import(
