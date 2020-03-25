@@ -282,11 +282,14 @@ class Variant:
     def alternative(self) -> Optional[str]:
         if not self.alt_alleles:
             return None
-        if any([aa.alternative is None for aa in self.alt_alleles]):
-            assert all([aa.alternative is None for aa in self.alt_alleles])
-            return None
+        # if any([aa.alternative is None for aa in self.alt_alleles]):
+        #     assert all([aa.alternative is None for aa in self.alt_alleles])
+        #     return None
         return ",".join(
-            [aa.alternative for aa in self.alt_alleles if aa.alternative]
+            [
+                aa.alternative if aa.alternative else ""
+                for aa in self.alt_alleles
+            ]
         )
 
     @property
@@ -548,8 +551,7 @@ class SummaryAllele(Allele):
             "position": allele.attributes.get("position"),
             "reference": allele.attributes.get("reference"),
             "summary_variant_index": allele.attributes.get(
-                "summary_variant_index"
-            ),
+                "summary_variant_index"),
             "allele_count": allele.attributes.get("allele_count"),
         }
 
@@ -632,8 +634,8 @@ class SummaryVariantFactory(object):
 
     @staticmethod
     def summary_variant_from_records(
-        records, transmission_type=TransmissionType.transmitted
-    ):
+            records, transmission_type=TransmissionType.transmitted):
+
         assert len(records) > 0
 
         alleles = []

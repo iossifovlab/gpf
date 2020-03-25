@@ -117,12 +117,12 @@ class ImpalaFamilyVariants:
                 return_unknown=return_unknown,
                 limit=limit,
             )
-            print("inhteritance:", inheritance)
             print("LIMIT:", limit)
             print("FINAL QUERY: ", query)
 
             cursor.execute(query)
             for row in cursor:
+
                 (
                     chrom,
                     position,
@@ -130,6 +130,7 @@ class ImpalaFamilyVariants:
                     reference,
                     transmission_type,
                     alternatives_data,
+                    variant_type,
                     effect_data,
                     family_id,
                     genotype_data,
@@ -150,6 +151,7 @@ class ImpalaFamilyVariants:
                     reference,
                     transmission_type,
                     alternatives_data,
+                    variant_type,
                     effect_data,
                     genotype_data,
                     best_state_data,
@@ -158,6 +160,7 @@ class ImpalaFamilyVariants:
                     frequency_data,
                     genomic_scores_data,
                 )
+
                 if v is None:
                     continue
 
@@ -674,6 +677,7 @@ class ImpalaFamilyVariants:
                 reference,
                 transmission_type,
                 alternatives_data,
+                variant_type,
                 effect_data,
                 family_id,
                 genotype_data,
@@ -695,6 +699,7 @@ class ImpalaFamilyVariants:
                 reference,
                 transmission_type,
                 alternatives_data,
+                variant_type,
                 effect_data,
                 family_id,
                 genotype_data,

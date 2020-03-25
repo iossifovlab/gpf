@@ -53,8 +53,7 @@ def count_variants(variants, regions, inheritance, effect_types):
     ],
 )
 def test_f1_simple(
-    variants_impl, variants, regions, inheritance, effect_types, count
-):
+        variants_impl, variants, regions, inheritance, effect_types, count):
 
     vvars = variants_impl(variants)("backends/f1_test")
     assert vvars is not None

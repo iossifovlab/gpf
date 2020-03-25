@@ -17,9 +17,6 @@ setuptools.setup(
     ),
     include_package_data=True,
     scripts=[
-        "dae/tools/dae2parquet.py",
-        "dae/tools/vcf2parquet.py",
-        "dae/tools/denovo2parquet.py",
         "dae/tools/impala_parquet_loader.py",
         "dae/tools/generate_common_report.py",
         "dae/tools/generate_denovo_gene_sets.py",
@@ -41,6 +38,10 @@ setuptools.setup(
     [console_scripts]
     annotate_variants.py=dae.tools.annotate_variants:cli
     annotate_variants_vcf.py=dae.tools.annotate_variants:cli_vcf
+    dae2parquet.py=dae.tools.dae2parquet:main
+    vcf2parquet.py=dae.tools.vcf2parquet:main
+    denovo2parquet.py=dae.tools.denovo2parquet:main
+    cnv2parquet.py=dae.tools.cnv2parquet:main
     """,
     classifiers=[
         "Development Status :: 4 - Beta",

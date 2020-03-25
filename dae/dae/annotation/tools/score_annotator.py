@@ -73,9 +73,8 @@ class VariantScoreAnnotatorBase(VariantAnnotatorBase):
             )
         else:
             print(
-                "Unexpected variant type: {}, {}".format(
-                    variant, variant.variant_type
-                ),
+                f"Unexpected variant type in score annotation: "
+                f"{variant}, {variant.variant_type}",
                 file=sys.stderr,
             )
         return scores

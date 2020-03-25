@@ -436,12 +436,11 @@ def iossifov2014_raw_denovo(iossifov2014_loader):
 
 @pytest.fixture(scope="session")
 def iossifov2014_impala(
-    request,
-    iossifov2014_loader,
-    genomes_db_2013,
-    hdfs_host,
-    impala_genotype_storage,
-):
+        request,
+        iossifov2014_loader,
+        genomes_db_2013,
+        hdfs_host,
+        impala_genotype_storage):
 
     from dae.backends.impala.hdfs_helpers import HdfsHelpers
 

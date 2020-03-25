@@ -431,16 +431,14 @@ class VariantsParquetWriter:
         )
         genetic_model_data = family_variant.genetic_model.value
 
-        inheritance_data = self.parquet_serializer.serialize_variant_inheritance(
-            family_variant
-        )
+        inheritance_data = self.parquet_serializer \
+            .serialize_variant_inheritance(family_variant)
 
         frequency_data = self.parquet_serializer.serialize_variant_frequency(
             family_variant
         )
-        genomic_scores_data = self.parquet_serializer.serialize_variant_genomic_scores(
-            family_variant
-        )
+        genomic_scores_data = self.parquet_serializer \
+            .serialize_variant_genomic_scores(family_variant)
 
         for family_allele in family_variant.alleles:
 
@@ -469,13 +467,8 @@ class VariantsParquetWriter:
             )
 
             for (s, freq, gs, e, f, m) in itertools.product(
-                [summary],
-                [frequency],
-                [genomic_scores],
-                effect_genes,
-                [family],
-                member,
-            ):
+                    [summary], [frequency], [genomic_scores], effect_genes,
+                    [family], member):
 
                 writer_data = []
                 writer_data.append(("bucket_index", self.bucket_index))

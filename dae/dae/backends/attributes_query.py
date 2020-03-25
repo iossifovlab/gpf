@@ -503,27 +503,21 @@ class BitwiseTreeTransformer(Interpreter):
         raise NotImplementedError()
 
     def arg(self, *args):
-        print("arg:", *args)
         return ContainsNode(args[0])
 
     def simple_arg(self, *args):
-        print("simple_arg:", *args)
         return self.token_converter(args[0])
 
     def negation(self, *args):
-        print("negation:", *args)
         return NotNode(args[0])
 
     def logical_and(self, *args):
-        print("logical_and:", *args)
         return AndNode(args)
 
     def logical_or(self, *args):
-        print("logical_or:", *args)
         return OrNode(args)
 
     def start(self, *args):
-        print("start:", *args)
         assert len(args) == 1
         return args[0]
 

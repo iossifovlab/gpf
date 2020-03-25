@@ -307,6 +307,10 @@ class VariantType(enum.Enum):
             raise ValueError("unexpected variant type: {}".format(variant))
 
     @staticmethod
+    def from_value(value):
+        return VariantType(value)
+
+    @staticmethod
     def is_cnv(vt):
         return vt == VariantType.cnv_m or vt == VariantType.cnv_p
 

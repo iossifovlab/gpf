@@ -92,24 +92,24 @@ class GenotypeDataGroup(GenotypeData):
         return self._families
 
     def query_variants(
-        self,
-        regions=None,
-        genes=None,
-        effect_types=None,
-        family_ids=None,
-        person_ids=None,
-        inheritance=None,
-        roles=None,
-        sexes=None,
-        variant_type=None,
-        real_attr_filter=None,
-        ultra_rare=None,
-        return_reference=None,
-        return_unknown=None,
-        limit=None,
-        study_filters=None,
-        **kwargs,
-    ):
+            self,
+            regions=None,
+            genes=None,
+            effect_types=None,
+            family_ids=None,
+            person_ids=None,
+            inheritance=None,
+            roles=None,
+            sexes=None,
+            variant_type=None,
+            real_attr_filter=None,
+            ultra_rare=None,
+            return_reference=None,
+            return_unknown=None,
+            limit=None,
+            study_filters=None,
+            **kwargs):
+
         return itertools.chain(
             *[
                 genotype_data_study.query_variants(
@@ -168,24 +168,23 @@ class GenotypeDataStudy(GenotypeData):
         self._backend = backend
 
     def query_variants(
-        self,
-        regions=None,
-        genes=None,
-        effect_types=None,
-        family_ids=None,
-        person_ids=None,
-        inheritance=None,
-        roles=None,
-        sexes=None,
-        variant_type=None,
-        real_attr_filter=None,
-        ultra_rare=None,
-        return_reference=None,
-        return_unknown=None,
-        limit=None,
-        study_filters=None,
-        **kwargs,
-    ):
+            self,
+            regions=None,
+            genes=None,
+            effect_types=None,
+            family_ids=None,
+            person_ids=None,
+            inheritance=None,
+            roles=None,
+            sexes=None,
+            variant_type=None,
+            real_attr_filter=None,
+            ultra_rare=None,
+            return_reference=None,
+            return_unknown=None,
+            limit=None,
+            study_filters=None,
+            **kwargs):
 
         if len(kwargs):
             # FIXME This will remain so it can be used for discovering
