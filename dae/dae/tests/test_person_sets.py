@@ -31,6 +31,9 @@ def test_produce_sets(fixture_dirname):
         "unaffected": PersonSet(
             "unaffected", "Unaffected", "unaffected_val", "#ffffff", dict()
         ),
+        "unknown": PersonSet(
+            "unknown", "Unknown", "unknown", "#aaaaaa", dict()
+        ),
     }
 
 
@@ -168,3 +171,7 @@ def test_genotype_group_person_sets_subset(variants_db_fixture):
         "person4" not in unaffected_persons
         and "person4" not in phenotype1_persons
     )
+
+
+def test_composite_person_set():
+    pass

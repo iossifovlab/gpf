@@ -67,9 +67,19 @@ class PersonSetCollection(NamedTuple):
         """Initializes a dictionary of person set IDs
         mapped to empty PersonSet instances from a given configuration.
         """
+        person_set_configs = [*config.domain]
+        if config.default is not None:
+            person_set_configs.append(config.default)
+
         return {
-            person_set.id: PersonSet(*person_set, dict())
-            for person_set in config.domain
+            person_set.id: PersonSet(
+                person_set.id,
+                person_set.name,
+                person_set.value,
+                person_set.color,
+                dict(),
+            )
+            for person_set in person_set_configs
         }
 
     @staticmethod
@@ -108,6 +118,10 @@ class PersonSetCollection(NamedTuple):
             person_set.value: person_set.id
             for person_set in collection_config.domain
         }
+        if collection_config.default is not None:
+            value_to_id[
+                collection_config.default.value
+            ] = collection_config.default.id
 
         for person_id, person in families_data.persons.items():
             value = person.get_attr(collection_config.source.pedigree.column)
@@ -122,10 +136,14 @@ class PersonSetCollection(NamedTuple):
             # attributes can be of an enum type
             value = str(value)
 
-            assert value in value_to_id, (
-                f"Domain for '{collection_config.id}'"
-                f" does not have the value '{value}'!"
-            )
+            if value not in value_to_id:
+                if collection_config.default is not None:
+                    value = collection_config.default.value
+                else:
+                    assert value in value_to_id, (
+                        f"Domain for '{collection_config.id}'"
+                        f" does not have the value '{value}'!"
+                    )
 
             set_id = value_to_id[value]
             person_set_collection.person_sets[set_id].persons[
