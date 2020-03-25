@@ -333,6 +333,24 @@ class ParquetSerializer(object):
         return res
 
     @staticmethod
+    def deserialize_variant_types(data):
+        res = [None]
+        if data is None:
+            return res
+        variant_types = [
+            VariantType.from_name(vt) if vt else None
+            for vt in data.split(",")
+        ]
+        res.extend(variant_types)
+        return res
+
+    @staticmethod
+    def serialize_variant_types(variant_types):
+        return ",".join([
+            str(vt) if vt else "" for vt in variant_types
+        ])
+
+    @staticmethod
     def serialize_variant_effects(effects):
         if effects is None:
             return None
@@ -411,7 +429,7 @@ class ParquetSerializer(object):
             reference,
             transmission_type,
             alternatives_data,
-            variant_type,
+            # variant_types_data,
             effect_data,
             genotype_data,
             best_state_data,
@@ -441,7 +459,9 @@ class ParquetSerializer(object):
         best_state = self.deserialize_variant_best_state(
             best_state_data, len(family),
         )
-        variant_type = VariantType(variant_type)
+
+        # variant_type = VariantType.from_value(variant_type)
+        variant_type = None
 
         genetic_model = GeneticModel(genetic_model_data)
 
@@ -466,9 +486,15 @@ class ParquetSerializer(object):
                 attributes.append(f)
             values = zip(alternatives, effects, inheritance, attributes)
 
+        print(80*"=")
+        values = list(values)
+        print(values)
+        print(80*"+")
+        print(variant_type)
+        print(80*"'")
+
         alleles = []
         for allele_index, (alt, effect, inher, attr) in enumerate(values):
-    
             attr.update(effect)
             summary_allele = SummaryAllele(
                 chrom,
@@ -492,6 +518,7 @@ class ParquetSerializer(object):
                 inheritance_in_members=inher,
             )
             alleles.append(family_allele)
+            print(family_allele)
 
         return FamilyVariant(
             SummaryVariant(alleles), family, genotype, best_state

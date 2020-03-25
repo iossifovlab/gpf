@@ -80,7 +80,7 @@ def cnv_impala(
 
     return fvars
 
-
+@pytest.mark.xfail(reason="parquet serialization/deserialization not ready")
 def test_cnv_impala(cnv_impala):
     vs = cnv_impala.query_variants(
         effect_types=["CNV+", "CNV-"],
@@ -92,4 +92,7 @@ def test_cnv_impala(cnv_impala):
     print(vs)
 
     assert len(vs) == 10
-
+    for v in vs:
+        assert v.alt_alleles
+        for aa in v.alt_alleles:
+            assert VariantType.is_cnv(aa.variant_type)

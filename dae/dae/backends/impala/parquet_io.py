@@ -423,9 +423,12 @@ class VariantsParquetWriter:
             family_variant.effects
         )
         alternatives_data = family_variant.alternative
+        variant_types_data = self.parquet_serializer.serialize_variant_types(
+            family_variant.variant_types)
+
         genotype_data = self.parquet_serializer.serialize_variant_genotype(
-            family_variant.gt
-        )
+            family_variant.gt)
+
         best_state_data = self.parquet_serializer.serialize_variant_best_state(
             family_variant.best_state
         )
@@ -434,9 +437,9 @@ class VariantsParquetWriter:
         inheritance_data = self.parquet_serializer \
             .serialize_variant_inheritance(family_variant)
 
-        frequency_data = self.parquet_serializer.serialize_variant_frequency(
-            family_variant
-        )
+        frequency_data = self.parquet_serializer \
+            .serialize_variant_frequency(family_variant)
+
         genomic_scores_data = self.parquet_serializer \
             .serialize_variant_genomic_scores(family_variant)
 

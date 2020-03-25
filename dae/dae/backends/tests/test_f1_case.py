@@ -66,6 +66,8 @@ def test_f1_simple(
         return_unknown=True,
     )
     vs = list(vs)
+    print(vs)
+
     assert len(vs) == count
 
 

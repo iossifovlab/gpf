@@ -308,6 +308,8 @@ class VariantType(enum.Enum):
 
     @staticmethod
     def from_value(value):
+        if value is None:
+            return None
         return VariantType(value)
 
     @staticmethod
