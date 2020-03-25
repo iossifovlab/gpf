@@ -104,6 +104,9 @@ class VariantAnnotator(object):
                     effects.append(
                         EffectFactory.create_effect_with_tm(effect_type, tm))
 
+        if len(effects) == 0:
+            effects.append(EffectFactory.create_effect(effect_type))
+
         return effects
 
     def annotate(self, variant):
@@ -140,17 +143,17 @@ class VariantAnnotator(object):
         return effects
 
     def do_annotate_variant(
-        self,
-        chrom=None,
-        position=None,
-        loc=None,
-        var=None,
-        ref=None,
-        alt=None,
-        length=None,
-        seq=None,
-        variant_type=None,
-    ):
+            self,
+            chrom=None,
+            position=None,
+            loc=None,
+            var=None,
+            ref=None,
+            alt=None,
+            length=None,
+            seq=None,
+            variant_type=None):
+
         variant = Variant(
             chrom, position, loc, var, ref, alt, length, seq, variant_type
         )

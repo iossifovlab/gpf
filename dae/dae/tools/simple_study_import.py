@@ -205,7 +205,9 @@ def main(argv, gpf_instance=None):
         cnv_loader = CNVLoader(
             families, cnv_filename, genome=genome, params=cnv_params
         )
-        # TODO: Annotate
+        cnv_loader = AnnotationPipelineDecorator(
+            cnv_loader, annotation_pipeline
+        )
         variant_loaders.append(cnv_loader)
 
     if argv.vcf_files is not None:

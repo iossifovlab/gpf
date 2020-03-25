@@ -128,11 +128,9 @@ class StringQueryToTreeTransformer(InlineTransformer):
         super(StringQueryToTreeTransformer, self).__init__()
 
         if token_converter is None:
-
-            def token_converter(x):
-                return x
-
-        self.token_converter = token_converter
+            self.token_converter = lambda x: x
+        else:
+            self.token_converter = token_converter
 
     def less_than(self, *args):
         return LessThanNode(args[0])

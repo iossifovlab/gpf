@@ -281,6 +281,7 @@ class VariantType(enum.Enum):
             return VariantType.cnv_p
         elif name == "cnv_m" or name.lower() == "cnv-":
             return VariantType.cnv_m
+
         raise ValueError("unexpected variant type: {}".format(name))
 
     @staticmethod

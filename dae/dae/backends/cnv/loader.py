@@ -67,8 +67,8 @@ class CNVLoader(VariantsGenotypesLoader):
         return any(isin)
 
     def _full_variants_iterator_impl(
-        self,
-    ) -> Tuple[SummaryVariant, List[FamilyVariant]]:
+            self) -> Tuple[SummaryVariant, List[FamilyVariant]]:
+
         for index, rec in enumerate(self.cnv_df.to_dict(orient="records")):
             family_id = rec.pop("family_id")
             best_state = rec.pop("best_state")
@@ -84,11 +84,6 @@ class CNVLoader(VariantsGenotypesLoader):
             alt_rec = copy(rec)
             del rec["end_position"]
             del rec["variant_type"]
-            del rec["effect_type"]
-            del rec["effect_gene_genes"]
-            del rec["effect_gene_types"]
-            del rec["effect_details_transcript_ids"]
-            del rec["effect_details_details"]
             alt_rec["allele_index"] = 1
 
             sv = SummaryVariantFactory.summary_variant_from_records(
@@ -107,12 +102,14 @@ class CNVLoader(VariantsGenotypesLoader):
 
     @classmethod
     def _calc_cnv_best_state(
-        cls, best_state: str, variant_type: VariantType
-    ) -> np.ndarray:
+            cls, best_state: str, variant_type: VariantType) -> np.ndarray:
+
+        # FIXME: handling of X chromosome is broken!!!!
         ref_row = np.fromstring(best_state, dtype=GENOTYPE_TYPE, sep=" ")
         alt_row = np.zeros(len(ref_row), dtype=GENOTYPE_TYPE)
         if variant_type == VariantType.cnv_p:
-            assert all(ref_row >= 2), ref_row
+            # FIXME: handling of X chromosome is broken!!!!
+            # assert all(ref_row >= 2), ref_row
             alt_row[ref_row > 2] = 1
             ref_row[ref_row > 2] = 1
         elif variant_type == VariantType.cnv_m:
@@ -127,17 +124,17 @@ class CNVLoader(VariantsGenotypesLoader):
 
     @classmethod
     def load_cnv(
-        cls,
-        filepath: str,
-        families: FamiliesData,
-        cnv_location: Optional[str] = None,
-        cnv_family_id: Optional[str] = None,
-        cnv_variant_type: Optional[str] = None,
-        cnv_best_state: Optional[str] = None,
-        cnv_sep: str = "\t",
-        adjust_chrom_prefix=None,
-        **kwargs,
-    ) -> pd.DataFrame:
+            cls,
+            filepath: str,
+            families: FamiliesData,
+            cnv_location: Optional[str] = None,
+            cnv_family_id: Optional[str] = None,
+            cnv_variant_type: Optional[str] = None,
+            cnv_best_state: Optional[str] = None,
+            cnv_sep: str = "\t",
+            adjust_chrom_prefix=None,
+            **kwargs) -> pd.DataFrame:
+
         # TODO: Remove effect types when effect annotation is made
         assert families is not None
         assert isinstance(families, FamiliesData)
@@ -159,8 +156,8 @@ class CNVLoader(VariantsGenotypesLoader):
                 cnv_family_id: str,
                 cnv_variant_type: str,
                 cnv_best_state: str,
-                "effectType": str,
-                "effectGene": str,
+                # "effectType": str,
+                # "effectGene": str,
             },
         )
 
@@ -211,11 +208,11 @@ class CNVLoader(VariantsGenotypesLoader):
                 "variant_type": variant_type_col,
                 "family_id": family_id_col,
                 "best_state": best_state_col,
-                "effect_type": raw_df["effectType"],
-                "effect_gene_genes": effect_gene_genes,
-                "effect_gene_types": effect_gene_types,
-                "effect_details_transcript_ids": [""] * len(chrom_col),
-                "effect_details_details": [""] * len(chrom_col),
+                # "effect_type": raw_df["effectType"],
+                # "effect_gene_genes": effect_gene_genes,
+                # "effect_gene_types": effect_gene_types,
+                # "effect_details_transcript_ids": [""] * len(chrom_col),
+                # "effect_details_details": [""] * len(chrom_col),
             }
         )
 

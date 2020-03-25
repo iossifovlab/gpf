@@ -3,8 +3,9 @@
 import itertools
 from collections import OrderedDict
 
-from dae.variant_annotation.annotator import VariantAnnotator
+from dae.variants.attributes import VariantType
 
+from dae.variant_annotation.annotator import VariantAnnotator
 from dae.annotation.tools.annotator_base import VariantAnnotatorBase
 
 
@@ -102,12 +103,17 @@ class VariantEffectAnnotator(EffectAnnotatorBase):
             return
 
         assert variant is not None
+        length = None
+        if VariantType.is_cnv(variant.variant_type):
+            length = variant.end_position - variant.position
 
         effects = self.effect_annotator.do_annotate_variant(
             chrom=variant.chromosome,
             position=variant.position,
             ref=variant.reference,
             alt=variant.alternative,
+            variant_type=variant.variant_type,
+            length=length
         )
 
         r = self.wrap_effects(effects)
