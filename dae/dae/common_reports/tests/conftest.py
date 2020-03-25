@@ -4,6 +4,7 @@ import os
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.pedigrees.families_groups import FamiliesGroups
+from dae.person_sets import PersonSetCollection
 
 from dae.common_reports.people_filters import (
     PeopleGroupFilter,
@@ -198,3 +199,12 @@ def remove_common_reports(common_report_facade):
     for temp_file in temp_files:
         if os.path.exists(temp_file):
             os.remove(temp_file)
+
+
+@pytest.fixture
+def phenotype_role_collection(study1):
+    return PersonSetCollection.compose(
+        study1.get_person_set_collection("phenotype"),
+        study1.get_person_set_collection("role"),
+        name="Role and Diagnosis",
+    )

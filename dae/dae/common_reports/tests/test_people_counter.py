@@ -4,15 +4,6 @@ from dae.common_reports.people_counter import PeopleCounter, PeopleCounters
 from dae.person_sets import PersonSetCollection
 
 
-@pytest.fixture
-def phenotype_role_collection(study1):
-    return PersonSetCollection.compose(
-        study1.get_person_set_collection("phenotype"),
-        study1.get_person_set_collection("role"),
-        name="Role and Diagnosis",
-    )
-
-
 def test_people_counter(study1, phenotype_role_collection):
     people_counter = PeopleCounter(
         study1.families,
