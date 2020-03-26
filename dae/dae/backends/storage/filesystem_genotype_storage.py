@@ -159,6 +159,7 @@ class FilesystemGenotypeStorage(GenotypeStorage):
             ):
                 config_dict["has_denovo"] = True
                 config_dict["has_cnv"] = True
+                config_dict["genotype_browser"]["has_cnv"] = True
 
         if study_config is not None:
             study_config_dict = GPFConfigParser.load_config_raw(study_config)
