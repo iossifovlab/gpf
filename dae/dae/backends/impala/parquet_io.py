@@ -401,6 +401,10 @@ class VariantsParquetWriter:
                 fv.family_index = family_variant_index
 
                 for family_allele in fv.alleles:
+                    extra_atts = {"bucket_index": self.bucket_index}
+                    family_allele.update_attributes(extra_atts)
+
+                for family_allele in fv.alleles:
                     bin_writer = self._get_bin_writer(family_allele)
                     bin_writer.append_allele(fv, family_allele)
 

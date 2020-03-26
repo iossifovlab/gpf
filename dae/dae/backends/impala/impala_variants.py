@@ -664,6 +664,7 @@ class ImpalaFamilyVariants:
             FROM {db}.{variant}
             {where_clause}
             GROUP BY
+                bucket_index,
                 summary_index,
                 family_variant_index,
                 chromosome,
