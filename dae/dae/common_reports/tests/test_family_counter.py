@@ -72,10 +72,12 @@ def test_family_counter(study1, families_groups):
 
 
 @pytest.mark.xfail
-def test_families_group_counter(families_groups, study1):
-    fg = families_groups(study1)
+def test_families_group_counter(study1):
     families_group_counter = FamiliesGroupCounters(
-        fg, fg["phenotype"], False, False
+        study1.families,
+        study1.get_person_set_collection("phenotype"),
+        False,
+        False,
     )
 
     assert len(families_group_counter.counters) == 8
@@ -86,59 +88,62 @@ def test_families_group_counter(families_groups, study1):
     assert len(families_group_counter.to_dict().keys()) == 4
 
 
-def test_families_group_counter_draw_all(study1, families_groups):
-    fg = families_groups(study1)
+def test_families_group_counter_draw_all(study1):
     counter = FamiliesGroupCounters(
-        fg, fg.get_families_group("phenotype"), True, False
+        study1.families,
+        study1.get_person_set_collection("phenotype"),
+        True,
+        False,
     )
     assert len(counter.to_dict().keys()) == 4
+    assert len(counter.counters) == len(study1.families)
 
-    assert len(counter.counters) == len(fg.families)
 
-
-def test_families_group_counter_same(study1, families_groups):
-    # families_list = [
-    #     study1.families['f1'], study1.families['f3'], study1.families['f6'],
-    #     study1.families['f9'], study1.families['f10']
-    # ]
-    fg = families_groups(study1)
-
+def test_families_group_counter_same(study1):
     families_group_counter = FamiliesGroupCounters(
-        fg, fg.get_families_group("phenotype"), False, False
+        study1.families,
+        study1.get_person_set_collection("phenotype"),
+        False,
+        False,
     )
-
+    for k in families_group_counter.counters.keys():
+        mapped_fam_ids = [
+            fam.family_id
+            for fam in families_group_counter.counters[k].families
+        ]
     assert len(families_group_counter.counters) == 8
-
     assert len(families_group_counter.to_dict().keys()) == 4
 
 
-def test_families_group_counters(study1, families_groups):
-    fg = families_groups(study1)
-
+def test_families_group_counters(study1):
     families_group_counters = FamiliesGroupCounters(
-        fg, fg.get_families_group("phenotype"), False, False
+        study1.families,
+        study1.get_person_set_collection("phenotype"),
+        False,
+        False,
     )
 
-    assert families_group_counters.selected_families_group.name == "Diagnosis"
-    assert (
-        families_group_counters.selected_families_group.available_values
-        == ["phenotype1", "phenotype2", "unaffected", "unknown"]
-    )
+    assert families_group_counters.person_set_collection.name == "Diagnosis"
+    assert set(
+        families_group_counters.person_set_collection.person_sets.keys()
+    ) == {"phenotype1", "phenotype2", "unaffected", "unknown"}
 
     assert len(families_group_counters.counters) == 8
-    assert len(families_group_counters.selected_families_group.legend) == 6
+    # assert len(families_group_counters.selected_families_group.legend) == 6
 
-    assert (
-        families_group_counters.selected_families_group.legend[-1]["id"]
-        == "missing-person"
-    )
+    # assert (
+    #     families_group_counters.selected_families_group.legend[-1]["id"]
+    #     == "missing-person"
+    # )
 
     assert len(families_group_counters.to_dict().keys()) == 4
 
 
-def test_families_group_counter_study2(study2, families_groups):
-    fg = families_groups(study2)
+def test_families_group_counter_study2(study2):
     families_group_counters = FamiliesGroupCounters(
-        fg, fg.get_families_group("phenotype"), False, False
+        study2.families,
+        study2.get_person_set_collection("phenotype"),
+        False,
+        False,
     )
     assert len(families_group_counters.counters) == 4

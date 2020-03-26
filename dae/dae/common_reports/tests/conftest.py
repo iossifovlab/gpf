@@ -6,12 +6,6 @@ from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.pedigrees.families_groups import FamiliesGroups
 from dae.person_sets import PersonSetCollection
 
-from dae.common_reports.people_filters import (
-    PeopleGroupFilter,
-    MultiFilter,
-    FilterCollection,
-)
-
 
 def fixtures_dir():
     return os.path.abspath(os.path.join(os.path.dirname(__file__), "fixtures"))
@@ -119,30 +113,6 @@ def families_groups(people_groups):
         return families_groups
 
     return builder
-
-
-@pytest.fixture(scope="session")
-def filter_role(study1, families_groups):
-    fg = families_groups(study1)
-    return PeopleGroupFilter(fg["role"], "mom", name="Mother")
-
-
-@pytest.fixture(scope="session")
-def filter_people_group(study1, families_groups):
-    fg = families_groups(study1)
-    return PeopleGroupFilter(fg["phenotype"], "pheno", name="Pheno")
-
-
-@pytest.fixture(scope="function")
-def filter_object(filter_role):
-    return MultiFilter([filter_role])
-
-
-@pytest.fixture(scope="function")
-def filter_objects(study1, families_groups, groups):
-    return FilterCollection.build_filter_objects(
-        families_groups(study1), groups
-    )
 
 
 @pytest.fixture(scope="session")

@@ -7,6 +7,8 @@ status.domain = [
    {id = "affected", name = "Affected", value = "affected_val", color = "#aabbcc"},
    {id = "unaffected", name = "Unaffected", value = "unaffected_val", color = "#ffffff"},
 ]
+status.default = {id = "unknown", value = "unknown", name = "Unknown", color = "#aaaaaa"}
+
 pheno.id = "pheno"
 pheno.name = "Phenotype Person Set"
 pheno.source.phenotype.instrument = "basic_medical_screening"
@@ -15,3 +17,4 @@ pheno.domain = [
    {id = "val1", name = "Value 1", value = "1", color = "#aabbcc"},
    {id = "val2", name = "Value 2", value = "2", color = "#ffffff"},
 ]
+pheno.default = {id = "unknown", value = "unknown", name = "Unknown", color = "#aaaaaa"}
