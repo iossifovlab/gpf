@@ -29,8 +29,8 @@ def write_int32(stream, num):
     stream.write(num.to_bytes(4, "big", signed=False))
 
 
-def write_np_int64(stream, num):
-    stream.write(num.tobytes())
+# def write_np_int64(stream, num):
+#     stream.write(num.tobytes())
 
 
 def write_float(stream, num):
@@ -130,8 +130,8 @@ def read_int32(stream):
     return int.from_bytes(stream.read(4), "big", signed=False)
 
 
-def read_np_int64(stream):
-    return np.frombuffer(stream.read(8), dtype=np.int64)[0]
+# def read_np_int64(stream):
+#     return np.frombuffer(stream.read(8), dtype=np.int64)[0]
 
 
 def read_float(stream):
@@ -242,7 +242,7 @@ StringSerializer = Serializer(write_string, read_string)
 IntSerializer = Serializer(write_int32, read_int32)
 Int8Serializer = Serializer(write_int8, read_int8)
 SignedInt8Serializer = Serializer(write_int8_signed, read_int8_signed)
-NpInt64Serializer = Serializer(write_np_int64, read_np_int64)
+# NpInt64Serializer = Serializer(write_np_int64, read_np_int64)
 FloatSerializer = Serializer(write_float, read_float)
 VariantTypeSerializer = Serializer(write_enum, read_variant_type)
 StringListSerializer = Serializer(write_string_list, read_string_list)
@@ -357,7 +357,7 @@ class AlleleParquetSerializer:
         }
         self.annotation_prop_serializers = {
             "af_allele_freq": FloatSerializer,
-            "af_allele_count": NpInt64Serializer,
+            "af_allele_count": IntSerializer,
             "af_parents_called_count": IntSerializer,
             "af_parents_called_percent": FloatSerializer,
             "effect_type": StringSerializer,

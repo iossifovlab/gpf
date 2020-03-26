@@ -442,10 +442,10 @@ class SingleVcfLoader(VariantsGenotypesLoader):
             if n_parents_called > 0:
                 allele_freq = (100.0 * n_alleles) / (2.0 * n_parents_called)
             freq = {
-                "af_parents_called_count": n_parents_called,
-                "af_parents_called_percent": percent_parents_called,
-                "af_allele_count": n_alleles,
-                "af_allele_freq": allele_freq,
+                "af_parents_called_count": int(n_parents_called),
+                "af_parents_called_percent": float(percent_parents_called),
+                "af_allele_count": int(n_alleles),
+                "af_allele_freq": float(allele_freq),
             }
             allele.update_attributes(freq)
 
