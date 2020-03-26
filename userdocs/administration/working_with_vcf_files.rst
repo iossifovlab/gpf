@@ -36,9 +36,6 @@ The three downloaded files are:
 
 * ``20130606_sample_info.xlsx`` - contains information about all the examined individuals
 
-.. note::
-    The variants files are in `Variant Call Format` (.vcf) format
-
 
 Creating the pedigree file
 ##########################
@@ -84,57 +81,57 @@ by the GPF system. Now the pedigree file is ready for importing.
 Creating the VCF files
 ######################
 
-To create the files with the variants data you
-can use `Bcftools <https://samtools.github.io/bcftools/>`_.
+To extract the variant data for the individuals
+`HG00731`, `HG00732` and `HG00733` in a separate files, we will
+use `Bcftools <https://samtools.github.io/bcftools/>`_.
 
-To install bcftools into your anaconda environment, use::
-
-    conda install -c bioconda bcftools
-
-.. note::
-
-    To see a list of bcftools' commands, use::
-
-        bcftools --help
-
-
-The two .vcf files you downloaded earlier contain a lot of inviduals.
-Let's start with the related samples first, which are in the
+Let's start with individual `HG00733`, whose variants data is in the
 ``ALL.chr1.phase3_shapeit2_mvncall_integrated_v5_related_samples.20130502.genotypes.vcf.gz``
-file. Use bcftools' ``view`` command to inspect the files.
+file. Use bcftools' ``view`` command to inspect the file.
 
 This command will print the header of the vcf in the terminal::
 
-    bcftools view --header-only ALL.chr1.phase3_shapeit2_mvncall_integrated_v5_related_samples.20130502.genotypes.vcf.gz
-
-.. note::
-    VCF files are tab separated and have rows and columns.
+    bcftools view \
+    --header-only \
+    ALL.chr1.phase3_shapeit2_mvncall_integrated_v5_related_samples.20130502.genotypes.vcf.gz
 
 To print individual `HG00733`'s data in the termianl, you can use
 the ``--samples`` argument. This command will filter the other columns,
 without the header and the sample individual column::
 
-    bcftools view --header-only --samples HG00733 ALL.chr1.phase3_shapeit2_mvncall_integrated_v5_related_samples.20130502.genotypes.vcf.gz
+    bcftools view \
+    --header-only \
+    --samples HG00733 \
+    ALL.chr1.phase3_shapeit2_mvncall_integrated_v5_related_samples.20130502.genotypes.vcf.gz
 
 
 To display the first 300 lines of the file. Remove the
-``--header-only`` argument and add `| head -n 300` in the end of the comnnad::
+``--header-only`` argument and add `| head -n 300` in the end of the command::
 
-    bcftools view --samples HG00733 ALL.chr1.phase3_shapeit2_mvncall_integrated_v5_related_samples.20130502.genotypes.vcf.gz | head -n 300
+    bcftools view \
+    --samples HG00733 \
+    ALL.chr1.phase3_shapeit2_mvncall_integrated_v5_related_samples.20130502.genotypes.vcf.gz |
+    head -n 300
 
 Now let's retrieve the data into a new file named ``HG00733.vcf``.
 Remove the ``head -n 300`` flag and use ``> HG00733.vcf`` in the end
 to store the command's result into a file::
 
-    bcftools view --samples HG00733 ALL.chr1.phase3_shapeit2_mvncall_integrated_v5_related_samples.20130502.genotypes.vcf.gz > HG00733.vcf
+    bcftools view \
+    --samples HG00733 \
+    ALL.chr1.phase3_shapeit2_mvncall_integrated_v5_related_samples.20130502.genotypes.vcf.gz \
+    > HG00733.vcf
 
-The data for individuals HG00731 and HG00732 is in the second vcf file -
+The data for individuals `HG00731` and `HG00732` is in the second vcf file -
 ``ALL.chr1.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz``.
 
 To extract the variants data for the other two individuals in
 a file named ``HG00731_HG00732.vcf``, run::
 
-    bcftools view --samples HG00731,HG00732 ALL.chr1.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz > HG00731_HG00732.vcf
+    bcftools view \
+    --samples HG00731,HG00732 \
+    ALL.chr1.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz \
+    > HG00731_HG00732.vcf
 
 
 Importing the data into GPF
@@ -150,6 +147,7 @@ To import the collected data into the GPF system, it's recommended to use the
     -o parquet
 
 .. note::
+
     To see a list of it's commands, use::
 
         impala_batch_import.py --help
