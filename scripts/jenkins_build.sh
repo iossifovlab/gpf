@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+pip install sphinx_autorun
+
 cd ${DOCUMENTATION_DIR}/userdocs/gpf/dae && pip install -e . && cd -
 cd ${DOCUMENTATION_DIR}/userdocs/gpf/wdae && pip install -e . && cd -
 cd ${DOCUMENTATION_DIR}/userdocs/gpf/dae_conftests && pip install -e . && cd -
