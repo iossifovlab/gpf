@@ -219,10 +219,9 @@ class AnnotationPipelineDecorator(AnnotationDecorator):
         self.set_attribute("annotation_schema", self.annotation_schema)
 
     def full_variants_iterator(self):
-        for (
-            summary_variant,
-            family_variants,
-        ) in self.variants_loader.full_variants_iterator():
+        for (summary_variant, family_variants) in \
+                self.variants_loader.full_variants_iterator():
+
             self.annotation_pipeline.annotate_summary_variant(summary_variant)
             yield summary_variant, family_variants
 

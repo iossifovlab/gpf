@@ -163,10 +163,7 @@ class SynonymousBackground(BackgroundCommon):
 
     def _count(self, gene_syms):
         vpred = np.vectorize(lambda sym: sym in gene_syms)
-        print(self.background["sym"])
         index = vpred(self.background["sym"])
-        print(index)
-        print(np.sum(index))
         base = np.sum(self.background["raw"][index])
         foreground = self._count_foreground_events(gene_syms)
         res = base + foreground

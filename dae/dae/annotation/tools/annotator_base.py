@@ -250,7 +250,9 @@ class VariantAnnotatorBase(AnnotatorBase):
     def annotate_summary_variant(self, summary_variant):
         for alt_allele in summary_variant.alt_alleles:
             attributes = deepcopy(alt_allele.attributes)
-            self.line_annotation(attributes)
+            # self.line_annotation(attributes)
+            self.do_annotate(attributes, alt_allele)
+
             alt_allele.update_attributes(attributes)
 
 
@@ -281,10 +283,13 @@ class CompositeVariantAnnotator(VariantAnnotatorBase):
         assert isinstance(annotator, VariantAnnotatorBase)
         self.annotators.append(annotator)
 
-    def line_annotation(self, aline):
-        variant = self.variant_builder.build(aline)
+    def do_annotate(self, aline, variant):
         for annotator in self.annotators:
             annotator.do_annotate(aline, variant)
+
+    def line_annotation(self, aline):
+        variant = self.variant_builder.build(aline)
+        self.do_annotate(aline, variant)
 
     def collect_annotator_schema(self, schema):
         super(CompositeVariantAnnotator, self).collect_annotator_schema(schema)

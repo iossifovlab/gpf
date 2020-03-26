@@ -165,7 +165,8 @@ class StudyWrapper(object):
 
             # TODO
             # This should probably be done in the front-end by making a query
-            # to get the measure assigned to this filter and its respective domain
+            # to get the measure assigned to this filter and its respective
+            # domain
             if self.pheno_filters:
                 pheno_filters_dict = GPFConfigParser._namedtuple_to_dict(
                     self.pheno_filters
@@ -372,14 +373,20 @@ class StudyWrapper(object):
 
         if "variant_type" in kwargs:
             variant_types = set(kwargs["variant_type"])
-            if variant_types != {"ins", "del", "sub"}:
+
+            if variant_types != {"ins", "del", "sub", "CNV"}:
+                if "CNV" in variant_types:
+                    variant_types.remove("CNV")
+                    variant_types.add("CNV+")
+                    variant_types.add("CNV-")
+
                 variant_types = [
                     ContainsNode(variant_type_converter(t))
                     for t in variant_types
                 ]
                 kwargs["variant_type"] = OrNode(variant_types)
             else:
-                kwargs["variant_type"] = None
+                del kwargs["variant_type"]
 
         if "effect_types" in kwargs:
             kwargs["effect_types"] = expand_effect_types(

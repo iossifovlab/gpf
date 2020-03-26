@@ -7,10 +7,9 @@ import pandas as pd
 from dae.genome.genome_access import GenomicSequence
 from dae.backends.raw.loader import VariantsGenotypesLoader, TransmissionType
 from dae.pedigrees.family import FamiliesData
-from dae.variants.attributes import VariantType
+from dae.variants.attributes import VariantType, Inheritance
 from dae.variants.variant import SummaryVariantFactory, SummaryVariant
 from dae.variants.family_variant import FamilyVariant
-from dae.annotation.tools.file_io_parquet import ParquetSchema
 
 from dae.utils.regions import Region
 from dae.utils.variant_utils import GENOTYPE_TYPE
@@ -18,13 +17,13 @@ from dae.utils.variant_utils import GENOTYPE_TYPE
 
 class CNVLoader(VariantsGenotypesLoader):
     def __init__(
-        self,
-        families: FamiliesData,
-        cnv_filename: str,
-        genome: GenomicSequence,
-        regions: List[str] = None,
-        params: Dict[str, Any] = {},
-    ):
+            self,
+            families: FamiliesData,
+            cnv_filename: str,
+            genome: GenomicSequence,
+            regions: List[str] = None,
+            params: Dict[str, Any] = {}):
+
         super(CNVLoader, self).__init__(
             families=families,
             filenames=[cnv_filename],
@@ -51,11 +50,25 @@ class CNVLoader(VariantsGenotypesLoader):
             if region is None:
                 continue
             region.chrom = self._adjust_chrom_prefix(region.chrom)
+        self._init_chromosomes()
 
-        self.annotation_schema = ParquetSchema.from_arrow(
-            ParquetSchema.BASE_SCHEMA
-        )
-        self.set_attribute("annotation_schema", self.annotation_schema)
+        # self.annotation_schema = ParquetSchema.from_arrow(
+        #     ParquetSchema.BASE_SCHEMA
+        # )
+        # self.set_attribute("annotation_schema", self.annotation_schema)
+
+    def _init_chromosomes(self):
+        self.chromosomes = list(self.cnv_df.chrom.unique())
+        self.chromosomes = [
+            self._adjust_chrom_prefix(chrom) for chrom in self.chromosomes
+        ]
+
+        all_chromosomes = self.genome.get_genomic_sequence().chromosomes
+        if all([chrom in set(all_chromosomes) for chrom in self.chromosomes]):
+            self.chromosomes = sorted(
+                self.chromosomes,
+                key=lambda chrom: all_chromosomes.index(chrom),
+            )
 
     def _is_in_regions(self, summary_variant: SummaryVariant) -> bool:
         isin = [
@@ -67,8 +80,8 @@ class CNVLoader(VariantsGenotypesLoader):
         return any(isin)
 
     def _full_variants_iterator_impl(
-        self,
-    ) -> Tuple[SummaryVariant, List[FamilyVariant]]:
+            self) -> Tuple[SummaryVariant, List[FamilyVariant]]:
+
         for index, rec in enumerate(self.cnv_df.to_dict(orient="records")):
             family_id = rec.pop("family_id")
             best_state = rec.pop("best_state")
@@ -84,11 +97,7 @@ class CNVLoader(VariantsGenotypesLoader):
             alt_rec = copy(rec)
             del rec["end_position"]
             del rec["variant_type"]
-            del rec["effect_type"]
-            del rec["effect_gene_genes"]
-            del rec["effect_gene_types"]
-            del rec["effect_details_transcript_ids"]
-            del rec["effect_details_details"]
+
             alt_rec["allele_index"] = 1
 
             sv = SummaryVariantFactory.summary_variant_from_records(
@@ -105,14 +114,31 @@ class CNVLoader(VariantsGenotypesLoader):
 
             yield sv, [fv]
 
+    def full_variants_iterator(self):
+        full_iterator = super(CNVLoader, self).full_variants_iterator()
+        for summary_vairants, family_variants in full_iterator:
+            for fv in family_variants:
+                for fa in fv.alt_alleles:
+                    inheritance = [
+                        Inheritance.denovo if mem is not None else inh
+                        for inh, mem in zip(
+                            fa.inheritance_in_members, fa.variant_in_members
+                        )
+                    ]
+                    fa._inheritance_in_members = inheritance
+
+            yield summary_vairants, family_variants
+
     @classmethod
     def _calc_cnv_best_state(
-        cls, best_state: str, variant_type: VariantType
-    ) -> np.ndarray:
+            cls, best_state: str, variant_type: VariantType) -> np.ndarray:
+
+        # FIXME: handling of X chromosome is broken!!!!
         ref_row = np.fromstring(best_state, dtype=GENOTYPE_TYPE, sep=" ")
         alt_row = np.zeros(len(ref_row), dtype=GENOTYPE_TYPE)
         if variant_type == VariantType.cnv_p:
-            assert all(ref_row >= 2), ref_row
+            # FIXME: handling of X chromosome is broken!!!!
+            # assert all(ref_row >= 2), ref_row
             alt_row[ref_row > 2] = 1
             ref_row[ref_row > 2] = 1
         elif variant_type == VariantType.cnv_m:
@@ -127,17 +153,17 @@ class CNVLoader(VariantsGenotypesLoader):
 
     @classmethod
     def load_cnv(
-        cls,
-        filepath: str,
-        families: FamiliesData,
-        cnv_location: Optional[str] = None,
-        cnv_family_id: Optional[str] = None,
-        cnv_variant_type: Optional[str] = None,
-        cnv_best_state: Optional[str] = None,
-        cnv_sep: str = "\t",
-        adjust_chrom_prefix=None,
-        **kwargs,
-    ) -> pd.DataFrame:
+            cls,
+            filepath: str,
+            families: FamiliesData,
+            cnv_location: Optional[str] = None,
+            cnv_family_id: Optional[str] = None,
+            cnv_variant_type: Optional[str] = None,
+            cnv_best_state: Optional[str] = None,
+            cnv_sep: str = "\t",
+            adjust_chrom_prefix=None,
+            **kwargs) -> pd.DataFrame:
+
         # TODO: Remove effect types when effect annotation is made
         assert families is not None
         assert isinstance(families, FamiliesData)
@@ -159,8 +185,8 @@ class CNVLoader(VariantsGenotypesLoader):
                 cnv_family_id: str,
                 cnv_variant_type: str,
                 cnv_best_state: str,
-                "effectType": str,
-                "effectGene": str,
+                # "effectType": str,
+                # "effectGene": str,
             },
         )
 
@@ -211,11 +237,11 @@ class CNVLoader(VariantsGenotypesLoader):
                 "variant_type": variant_type_col,
                 "family_id": family_id_col,
                 "best_state": best_state_col,
-                "effect_type": raw_df["effectType"],
-                "effect_gene_genes": effect_gene_genes,
-                "effect_gene_types": effect_gene_types,
-                "effect_details_transcript_ids": [""] * len(chrom_col),
-                "effect_details_details": [""] * len(chrom_col),
+                # "effect_type": raw_df["effectType"],
+                # "effect_gene_genes": effect_gene_genes,
+                # "effect_gene_types": effect_gene_types,
+                # "effect_details_transcript_ids": [""] * len(chrom_col),
+                # "effect_details_details": [""] * len(chrom_col),
             }
         )
 
@@ -282,10 +308,9 @@ class CNVLoader(VariantsGenotypesLoader):
 
     @classmethod
     def parse_cli_arguments(
-        cls, argv: Dict[str, Any]
-    ) -> Tuple[str, Dict[str, Any]]:
-        return (
-            argv.cnv_file,
+            cls, argv: Dict[str, Any]) -> Tuple[str, Dict[str, Any]]:
+
+        return argv.cnv_file, \
             {
                 "cnv_location": argv.cnv_location,
                 "cnv_family_id": argv.cnv_family_id,
@@ -294,8 +319,21 @@ class CNVLoader(VariantsGenotypesLoader):
                 "cnv_sep": argv.cnv_sep,
                 "add_chrom_prefix": argv.add_chrom_prefix,
                 "del_chrom_prefix": argv.del_chrom_prefix,
-            },
-        )
+            }
+
+    @classmethod
+    def build_cli_arguments(cls, params):
+        param_defaults = CNVLoader.cli_defaults()
+        result = []
+        for k, v in params.items():
+            assert k in param_defaults, (k, list(param_defaults.keys()))
+            if v != param_defaults[k]:
+                param = k.replace("_", "-")
+                result.append(f"--{param}")
+                result.append(f"{v}")
+
+        return " ".join(result)
+
 
     @classmethod
     def cli_defaults(cls):

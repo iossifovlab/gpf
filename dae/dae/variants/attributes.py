@@ -1,5 +1,3 @@
-from __future__ import annotations
-from typing import Optional
 import enum
 
 _VARIANT_TYPE_DISPLAY_NAME = {
@@ -270,7 +268,7 @@ class VariantType(enum.Enum):
     cnv_m = 1 << 5
 
     @staticmethod
-    def from_name(name) -> Optional[VariantType]:
+    def from_name(name):
         if name == "sub" or name == "substitution":
             return VariantType.substitution
         elif name == "ins" or name == "insertion":
@@ -283,10 +281,11 @@ class VariantType(enum.Enum):
             return VariantType.cnv_p
         elif name == "cnv_m" or name.lower() == "cnv-":
             return VariantType.cnv_m
+
         raise ValueError("unexpected variant type: {}".format(name))
 
     @staticmethod
-    def from_cshl_variant(variant) -> Optional[VariantType]:
+    def from_cshl_variant(variant):
         # FIXME: Change logic to use entire string
         if variant is None:
             return VariantType.invalid
@@ -308,7 +307,13 @@ class VariantType(enum.Enum):
             raise ValueError("unexpected variant type: {}".format(variant))
 
     @staticmethod
-    def is_cnv(vt: VariantType) -> bool:
+    def from_value(value):
+        if value is None:
+            return None
+        return VariantType(value)
+
+    @staticmethod
+    def is_cnv(vt):
         return vt == VariantType.cnv_m or vt == VariantType.cnv_p
 
     def __repr__(self) -> str:

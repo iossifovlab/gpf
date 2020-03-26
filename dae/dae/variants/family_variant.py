@@ -23,8 +23,7 @@ from dae.variants.variant import Allele, \
 
 
 def calculate_simple_best_state(
-    genotype: np.array, allele_count: int
-) -> np.array:
+        genotype: np.array, allele_count: int) -> np.array:
     # Simple best state calculation
     # Treats every genotype as diploid (including male X non-PAR)
     ref = 2 * np.ones(genotype.shape[1], dtype=GENOTYPE_TYPE)

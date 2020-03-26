@@ -74,7 +74,6 @@ def test_inheritance_serialization_deserialization(variants_vcf, fixture_name):
         inheritance = ParquetSerializer.deserialize_variant_inheritance(
             data, len(v.family)
         )
-        print(inheritance)
         assert len(inheritance) == len(v.alleles)
 
         for allele, inheritance_in_members in zip(v.alleles, inheritance):

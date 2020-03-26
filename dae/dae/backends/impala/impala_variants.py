@@ -117,12 +117,12 @@ class ImpalaFamilyVariants:
                 return_unknown=return_unknown,
                 limit=limit,
             )
-            print("inhteritance:", inheritance)
             print("LIMIT:", limit)
             print("FINAL QUERY: ", query)
 
             cursor.execute(query)
             for row in cursor:
+
                 (
                     chrom,
                     position,
@@ -158,6 +158,7 @@ class ImpalaFamilyVariants:
                     frequency_data,
                     genomic_scores_data,
                 )
+
                 if v is None:
                     continue
 

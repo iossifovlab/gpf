@@ -65,7 +65,9 @@ def test_denovo2parquet_denovo_partition(
 
 
 @pytest.mark.parametrize(
-    "variants", ["iossifov2014_raw_denovo", "iossifov2014_impala",]
+    "variants", [
+        "iossifov2014_raw_denovo",
+        "iossifov2014_impala"]
 )
 @pytest.mark.parametrize(
     "region,cshl_location,effect_type",
@@ -85,13 +87,12 @@ def test_denovo2parquet_denovo_partition(
     ],
 )
 def test_denovo2parquet_iossifov2014_variant_coordinates(
-    variants,
-    iossifov2014_impala,
-    iossifov2014_raw_denovo,
-    region,
-    cshl_location,
-    effect_type,
-):
+        variants,
+        iossifov2014_impala,
+        iossifov2014_raw_denovo,
+        region,
+        cshl_location,
+        effect_type):
 
     if variants == "iossifov2014_impala":
         fvars = iossifov2014_impala
