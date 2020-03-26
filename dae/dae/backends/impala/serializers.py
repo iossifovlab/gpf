@@ -145,7 +145,7 @@ def read_np_int64(stream):
 
 
 def read_float(stream):
-    return [struct.unpack("f", stream.read(4))]
+    return struct.unpack("f", stream.read(4))[0]
 
 
 def read_string(stream):
