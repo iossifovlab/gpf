@@ -22,7 +22,7 @@ def test_build_people_group_selector(enrichment_builder, f1_trio):
     assert enrichment_builder
     person_set_collection = f1_trio.get_person_set_collection("phenotype")
     assert person_set_collection is not None
-    assert len(person_set_collection.person_sets) == 4
+    assert len(person_set_collection.person_sets) == 5
 
     build = enrichment_builder.build_people_group_selector(
         ["Missense"], person_set_collection, "phenotype1"
