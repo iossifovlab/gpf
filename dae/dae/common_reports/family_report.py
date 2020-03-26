@@ -7,18 +7,15 @@ from dae.common_reports.family_counter import FamiliesGroupCounters
 class FamiliesReport(object):
     def __init__(
         self,
-        selected_groups,
-        families_groups,
-        filter_collections,
+        families,
+        person_set_collections,
         draw_all_families=False,
         families_count_show_id=False,
     ):
 
-        self.selected_groups = selected_groups
-        self.families_groups = families_groups
-        self.families = self.families_groups.families
+        self.families = families
 
-        self.filter_collections = filter_collections
+        self.person_set_collections = person_set_collections
         self.draw_all_families = draw_all_families
         self.families_count_show_id = families_count_show_id
 
@@ -43,19 +40,19 @@ class FamiliesReport(object):
 
     def _get_people_counters(self):
         return [
-            PeopleCounters(self.families, filter_collection)
-            for filter_collection in self.filter_collections
+            PeopleCounters(self.families, person_set_collection)
+            for person_set_collection in self.person_set_collections
         ]
 
     def _build_families_counters(self):
         result = [
             FamiliesGroupCounters(
-                self.families_groups,
-                self.families_groups[families_group_id],
+                self.families,
+                person_set_collection,
                 self.draw_all_families,
                 self.families_count_show_id,
             )
-            for families_group_id in self.selected_groups
+            for person_set_collection in self.person_set_collections
         ]
 
         return result
