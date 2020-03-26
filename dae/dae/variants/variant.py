@@ -501,6 +501,10 @@ class SummaryAllele(Allele):
     def summary_index(self) -> int:
         return self._summary_index
 
+    @summary_index.setter
+    def summary_index(self, summary_index):
+        self._summary_index = summary_index
+
     @property
     def allele_index(self) -> int:
         return self._allele_index
@@ -617,6 +621,11 @@ class SummaryVariant(Variant):
     @property
     def summary_index(self):
         return self.ref_allele.summary_index
+
+    @summary_index.setter
+    def summary_index(self, val):
+        for allele in self.alleles:
+            allele.summary_index = val
 
     @property
     def alleles(self):
