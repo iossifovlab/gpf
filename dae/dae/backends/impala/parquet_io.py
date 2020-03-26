@@ -20,46 +20,6 @@ from dae.variants.variant import SummaryVariant, SummaryAllele
 from dae.backends.impala.serializers import AlleleParquetSerializer
 
 
-class ParquetData:
-    def __init__(self, schema):
-        self.schema = schema.to_arrow()
-        self.data_reset()
-
-    def data_reset(self):
-        self.data = {name: [] for name in self.schema.names}
-
-    def data_append(self, attr_name, value):
-        self.data[attr_name].append(value)
-
-    def data_append_enum_array(self, attr_name, value, dtype=np.int8):
-        self.data[attr_name].append(
-            np.asarray([v.value for v in value if v is not None], dtype=dtype)
-        )
-
-    def data_append_str_array(self, attr_name, value):
-        self.data[attr_name].append([str(v) for v in value if v is not None])
-
-    def build_batch(self):
-        batch_data = []
-        for index, name in enumerate(self.schema.names):
-            assert name in self.data
-            column = self.data[name]
-            field = self.schema.field(name)
-            batch_data.append(pa.array(column, type=field.type))
-            if index > 0:
-                assert len(batch_data[index]) == len(batch_data[0]), name
-        batch = pa.RecordBatch.from_arrays(batch_data, self.schema.names)
-        return batch
-
-    def build_table(self):
-        batch = self.build_batch()
-        self.data_reset()
-        return pa.Table.from_batches([batch])
-
-    def __len__(self):
-        return len(self.data["summary_variant_index"])
-
-
 class PartitionDescriptor:
     def __init__(self):
         pass
