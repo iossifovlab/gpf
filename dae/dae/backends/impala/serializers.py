@@ -589,7 +589,7 @@ class AlleleParquetSerializer:
             for spr in self.searchable_properties:
                 field = pa.field(spr, self.searchable_properties_types[spr])
                 fields.append(field)
-            fields.append(pa.field("data", pa.binary()))
+            fields.append(pa.field("variant_data", pa.binary()))
             self.schema = pa.schema(fields)
         return self.schema
 
