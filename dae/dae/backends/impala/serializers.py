@@ -466,9 +466,20 @@ class AlleleParquetSerializer:
             if prop_value is None:
                 prop_value = allele.get_attribute(spr)
             if prop_value and spr in self.ENUM_PROPERTIES:
-                prop_value = prop_value.value
+                if isinstance(prop_value, list):
+                    prop_value = functools.reduce(
+                        operator.or_,
+                        [
+                            enum.value
+                            for enum in prop_value
+                            if enum is not None
+                        ],
+                        0,
+                    )
+                else:
+                    prop_value = prop_value.value
             allele_data[spr].append(prop_value)
-        allele_data["data"].append(self.serialize_variant(variant))
+        allele_data["variant_data"].append(self.serialize_variant(variant))
 
         product_values = list()
 
@@ -480,24 +491,31 @@ class AlleleParquetSerializer:
 
         for ltr_props in self.LIST_TO_ROW_PROPERTIES_LISTS:
             k = ltr_props
-            v = list(zip(*[allele_data[prop] for prop in ltr_props]))
+            if allele_data[k[0]][0]:
+                length = len(allele_data[k[0]][0])
+                v = []
+                for i in range(0, length):
+                    v.append([])
+                    for prop in k:
+                        v[i].append(allele_data[prop][0][i])
+            else:
+                v = [None for _ in k]
             product_values += [[(k, v2) for v2 in v]]
 
         for kvs in itertools.product(*product_values):
             for k, v in kvs:
                 if isinstance(k, list):
                     for i in range(0, len(k)):
-                        if v[i] is None:
+                        if v is None:
                             self._data[k[i]].append(None)
                         else:
-                            self._data[k[i]].append(v[i][0])
+                            self._data[k[i]].append(v[i])
                 else:
                     self._data[k].append(v[0])
 
     def _serialize_allele(self, allele, stream):
         for property_serializers in self.property_serializers_list:
             for prop, serializer in property_serializers.items():
-                print(f"Serializing {prop}")
                 value = getattr(allele, prop, None)
                 if value is None:
                     value = allele.get_attribute(prop)
