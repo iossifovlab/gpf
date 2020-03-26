@@ -546,29 +546,41 @@ class AlleleParquetSerializer:
                 is_not_none = read_int8(stream)
                 if is_not_none:
                     allele_data[prop] = serializer.deserialize(stream)
-                    # print(f"{prop}: {allele_data[prop]}")
                 else:
                     allele_data[prop] = None
-                    # print(f"{prop}: None")
         return allele_data
 
-    def deserialize_family_variant(self, data, families):
+    def deserialize_family_variant(self, data, family):
         summary_alleles = []
         stream = io.BytesIO(data)
         allele_count = read_int8(stream)
         for i in range(0, allele_count):
             allele_data = self.deserialize_allele(stream)
-            sa = SummaryAllele.from_dict()
+            sa = SummaryAllele(
+                allele_data["chromosome"],
+                allele_data["position"],
+                allele_data["reference"],
+                alternative=allele_data["alternative"],
+                end_position=allele_data["end_position"],
+                summary_index=allele_data["summary_index"],
+                allele_index=allele_data["allele_index"],
+                transmission_type=allele_data["transmission_type"],
+                variant_type=allele_data["variant_type"],
+            )
             summary_alleles.append(sa)
+
+            allele_attributes_data = {
+                k: v
+                for (k, v) in allele_data.items()
+                if k not in self.ALLELE_CREATION_PROPERTIES
+            }
+            sa.update_attributes(allele_attributes_data)
 
         sv = SummaryVariant(summary_alleles)
         fv = FamilyVariant(
-            sv,
-            families.get(allele_data["family_id"]),
-            allele_data["genotype"],
-            allele_data["best_state"],
-            genetic_model=allele_data["genetic_model"],
+            sv, family, allele_data["gt"], allele_data["best_state"],
         )
+
         return fv
 
     def get_schema(self):
