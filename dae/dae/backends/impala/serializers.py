@@ -278,25 +278,80 @@ class AlleleParquetSerializer:
         "variant_type": pa.int8(),
         "transmission_type": pa.int8(),
         "reference": pa.string(),
-        "alternative": pa.string(),
         "family_variant_index": pa.int32(),
         "family_id": pa.string(),
         "is_denovo": pa.int8(),
-        "variant_sexes": pa.string(),
-        "variant_roles": pa.string(),
-        "variant_inheritance": pa.string(),
-        "variant_in_member": pa.string(),
+        "variant_in_sexes": pa.int8(),
+        "variant_in_roles": pa.int32(),
+        "inheritance_in_members": pa.int16(),
+        "variant_in_members": pa.string(),
     }
 
     LIST_TO_ROW_PROPERTIES_LISTS = [
         ["effect_types", "effect_gene_symbols"],
-        ["variant_in_member"],
+        ["variant_in_members"],
     ]
 
     ENUM_PROPERTIES = {
         "variant_type": VariantType,
         "transmission_type": TransmissionType,
+        "variant_in_sexes": Sex,
+        "variant_in_roles": Role,
+        "inheritance_in_members": Inheritance,
     }
+
+    ALLELE_CREATION_PROPERTIES = [
+        "chromosome",
+        "position",
+        "end_position",
+        "variant_type",
+        "reference",
+        "alternative",
+        "allele_index",
+        "summary_index",
+        "transmission_type",
+        "variant_type",
+        "family_id",
+        "gt",
+        "best_state",
+        "genetic_model",
+        "variant_in_roles",
+        "variant_in_sexes",
+        "inheritance_in_members",
+        "variant_in_members",
+    ]
+
+    GENOMIC_SCORES_SCHEMA_CLEAN_UP = [
+        "worst_effect",
+        "family_bin",
+        "rare",
+        "genomic_scores_data",
+        "frequency_bin",
+        "coding",
+        "position_bin",
+        "chrome_bin",
+        "coding2",
+        "region_bin",
+        "coding_bin",
+        "effect_data",
+        "genotype_data",
+        "inheritance_data",
+        "genomic_scores_data",
+        "bucket_index",
+        "variant_sexes",
+        "alternatives_data",
+        "chrom",
+        "best_state_data",
+        "summary_variant_index",
+        "effect_type",
+        "effect_gene",
+        "variant_inheritance",
+        "variant_in_member",
+        "variant_roles",
+        "genetic_model_data",
+        "frequency_data",
+        "alternative",
+    ]
 
     def __init__(self, variants_schema):
         self.summary_prop_serializers = {
@@ -305,7 +360,7 @@ class AlleleParquetSerializer:
             "end_position": IntSerializer,
             "variant_type": VariantTypeSerializer,
             "reference": StringSerializer,
-            "alternative": StringListSerializer,
+            "alternative": StringSerializer,
             "allele_index": SignedInt8Serializer,
             "summary_index": IntSerializer,
             "transmission_type": TransmissionTypeSerializer,
@@ -313,6 +368,13 @@ class AlleleParquetSerializer:
         self.annotation_prop_serializers = {
             "af_allele_freq": FloatSerializer,
             "af_allele_count": NpInt64Serializer,
+            "af_parents_called_count": IntSerializer,
+            "af_parents_called_percent": FloatSerializer,
+            "effect_type": StringSerializer,
+            "effect_gene_genes": StringListSerializer,
+            "effect_gene_types": StringListSerializer,
+            "effect_details_transcript_ids": StringListSerializer,
+            "effect_details_details": StringListSerializer,
         }
         self.family_prop_serializers = {
             "family_id": StringSerializer,
@@ -327,23 +389,27 @@ class AlleleParquetSerializer:
             "variant_in_members": StringListSerializer
         }
 
-        if "af_allele_freq" in variants_schema.col_names:
-            self.annotation_prop_serializers[
-                "af_allele_freq"
-            ] = FloatSerializer
-            self.annotation_prop_serializers[
-                "af_allele_count"
-            ] = NpInt64Serializer
-            self.annotation_prop_serializers[
-                "af_parents_called_count"
-            ] = IntSerializer
-            self.annotation_prop_serializers[
-                "af_parents_called_percent"
-            ] = FloatSerializer
+        additional_searchable_props = {}
+        scores = {}
 
         if variants_schema:
-            # TODO: Handling of searchable genomic scores by filtering
-            pass
+            if "af_allele_freq" in variants_schema.col_names:
+                additional_searchable_props["af_allele_freq"] = pa.float32()
+                additional_searchable_props["af_allele_count"] = pa.int32()
+                additional_searchable_props[
+                    "af_parents_called_percent"
+                ] = pa.float32()
+                additional_searchable_props[
+                    "af_parents_called_count"
+                ] = pa.int32()
+            for col_name in variants_schema.col_names:
+                if (
+                    col_name
+                    not in self.BASE_SEARCHABLE_PROPERTIES_TYPES.keys()
+                    and col_name not in additional_searchable_props.keys()
+                    and col_name not in self.GENOMIC_SCORES_SCHEMA_CLEAN_UP
+                ):
+                    scores[col_name] = pa.float32()
 
         self.property_serializers_list = [
             self.summary_prop_serializers,
@@ -354,6 +420,8 @@ class AlleleParquetSerializer:
 
         self.searchable_properties_types = {
             **self.BASE_SEARCHABLE_PROPERTIES_TYPES,
+            **additional_searchable_props,
+            **scores,
         }
 
         self.schema = None
