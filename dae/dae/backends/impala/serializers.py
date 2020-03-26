@@ -258,6 +258,7 @@ InheritanceSerializer = Serializer(write_big_enum_list, read_inheritance)
 class AlleleParquetSerializer:
 
     BASE_SEARCHABLE_PROPERTIES_TYPES = {
+        "bucket_index": pa.int32(),
         "chromosome": pa.string(),
         "position": pa.int32(),
         "end_position": pa.int32(),
@@ -327,7 +328,6 @@ class AlleleParquetSerializer:
         "genotype_data",
         "inheritance_data",
         "genomic_scores_data",
-        "bucket_index",
         "variant_sexes",
         "alternatives_data",
         "chrom",
@@ -345,6 +345,7 @@ class AlleleParquetSerializer:
 
     def __init__(self, variants_schema):
         self.summary_prop_serializers = {
+            "bucket_index": IntSerializer,
             "chromosome": StringSerializer,
             "position": IntSerializer,
             "end_position": IntSerializer,
