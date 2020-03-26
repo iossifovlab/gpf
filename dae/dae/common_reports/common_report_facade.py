@@ -1,7 +1,6 @@
 import os
 import json
 
-from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.common_reports.common_report import CommonReport
 
 from dae.utils.dae_utils import join_line
@@ -138,11 +137,6 @@ class CommonReportFacade(object):
 
         if not common_report_config.enabled:
             return
-
-        common_report_config = GPFConfigParser.modify_tuple(
-            common_report_config,
-            {"people_group": genotype_data_config.people_group},
-        )
 
         self._common_report_config_cache[
             common_report_id

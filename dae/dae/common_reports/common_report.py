@@ -2,45 +2,23 @@ import time
 from collections import OrderedDict
 
 from dae.variants.attributes import Role
-from dae.pedigrees.families_groups import FamiliesGroups
 
 from dae.common_reports.family_report import FamiliesReport
 from dae.common_reports.denovo_report import DenovoReport
 
-# from dae.common_reports.people_group_info import PeopleGroupsInfo
-from dae.common_reports.people_filters import FilterCollection
-
 
 class CommonReport(object):
     def __init__(self, genotype_data_study, config):
-        people_groups = config.people_group
         effect_groups = config.effect_groups
         effect_types = config.effect_types
 
         self.genotype_data_study = genotype_data_study
-        self.families_groups = FamiliesGroups.from_config(
-            genotype_data_study.families, people_groups
-        )
-        self.families_groups.add_predefined_groups(
-            ["status", "sex", "role", "role.sex", "family_size"]
-        )
-
-        people_filters = FilterCollection.build_filter_objects(
-            self.families_groups, config.groups
-        )
-        denovo_people_filters = [
-            pf
-            for pf in people_filters
-            if pf.group_id in config.selected_people_groups
-        ]
-
         self.id = genotype_data_study.id
 
         start = time.time()
         self.families_report = FamiliesReport(
-            config.selected_people_groups,
-            self.families_groups,
-            people_filters,
+            genotype_data_study.families,
+            genotype_data_study.person_set_collections.values(),
             config.draw_all_families,
             config.families_count_show_id,
         )
@@ -52,7 +30,7 @@ class CommonReport(object):
             genotype_data_study,
             effect_groups,
             effect_types,
-            denovo_people_filters,
+            genotype_data_study.person_set_collections.values(),
         )
         elapsed = time.time() - start
         print(f"COMMON REPORTS denovo report " f"build in {elapsed:.2f} sec")
@@ -106,9 +84,20 @@ class CommonReport(object):
         )
 
     def _get_phenotype(self):
-        families_group = self.families_groups.get_default_families_group()
-        return families_group.available_values
+        config = self.genotype_data_study.config.person_set_collections
+        collection = self.genotype_data_study.get_person_set_collection(
+            config.selected_person_set_collections[0]
+        )
+        result = list()
+        for person_set in collection.person_sets.values():
+            if len(person_set.persons) > 0:
+                result.append(person_set.value)
+        return result
 
     def _get_number_of_people_with_role(self, role):
-        role_group = self.families_groups["role"]
-        return len(role_group.get_people_with_propvalues((role,)))
+        counter = 0
+        for family in self.genotype_data_study.families.values():
+            for person in family.members_in_order:
+                if person.role == role:
+                    counter += 1
+        return counter

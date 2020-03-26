@@ -47,7 +47,7 @@ def test_people_counters(study1, phenotype_role_collection):
         study1.families, phenotype_role_collection
     )
 
-    assert len(people_counters.counters) == 8
+    assert len(people_counters.counters) == 9
     assert people_counters.group_name == "Role and Diagnosis"
     assert people_counters.rows == [
         "people_male",
@@ -64,6 +64,7 @@ def test_people_counters(study1, phenotype_role_collection):
             "unaffected.mom",
             "phenotype1.mom",
             "unaffected.dad",
+            "unknown.dad",
         ]
     )
 
