@@ -344,7 +344,7 @@ class VariantsParquetWriter:
                 ra.position,
                 ra.reference,
                 ra.reference,
-                summary_index=None,  # summary_allele.summary_index,
+                summary_index=ra.summary_index,
                 allele_index=-1,
                 transmission_type=ra.transmission_type,
                 attributes={},
@@ -383,10 +383,9 @@ class VariantsParquetWriter:
 
     def _write_internal(self):
         family_variant_index = 0
-        for (
-            summary_variant_index,
-            (summary_variant, family_variants),
-        ) in enumerate(self.full_variants_iterator):
+        for summary_variant_index, (summary_variant, family_variants) in \
+                enumerate(self.full_variants_iterator):
+
             for family_variant in family_variants:
                 family_variant_index += 1
 
@@ -398,7 +397,8 @@ class VariantsParquetWriter:
                     )
                     fv = unknown_variant
 
-                fv.summary_variant._summary_index = summary_variant_index
+                fv.summary_index = summary_variant_index
+                fv.family_index = family_variant_index
 
                 for family_allele in fv.alleles:
                     extra_atts = {"bucket_index": self.bucket_index}
