@@ -1,6 +1,6 @@
 from dae.annotation.tools.file_io_parquet import ParquetSchema
 from dae.pedigrees.family import FamiliesData
-from dae.backends.impala.serializers import ParquetSerializer
+from dae.backends.impala.serializers import AlleleParquetSerializer
 
 from impala.util import as_pandas
 
@@ -58,7 +58,7 @@ class ImpalaFamilyVariants:
 
         self.schema = self.variant_schema()
         if self.variant_table:
-            self.serializer = ParquetSerializer(schema=self.schema)
+            self.serializer = AlleleParquetSerializer(self.schema)
 
         assert gene_models is not None
         self.gene_models = gene_models
@@ -128,34 +128,14 @@ class ImpalaFamilyVariants:
                     end_position,
                     reference,
                     transmission_type,
-                    alternatives_data,
-                    effect_data,
                     family_id,
-                    genotype_data,
-                    best_state_data,
-                    genetic_model_data,
-                    inheritance_data,
-                    frequency_data,
-                    genomic_scores_data,
+                    variant_data,
                     matched_alleles,
                 ) = row
 
                 family = self.families[family_id]
-                v = self.serializer.deserialize_variant(
-                    family,
-                    chrom,
-                    position,
-                    end_position,
-                    reference,
-                    transmission_type,
-                    alternatives_data,
-                    effect_data,
-                    genotype_data,
-                    best_state_data,
-                    genetic_model_data,
-                    inheritance_data,
-                    frequency_data,
-                    genomic_scores_data,
+                v = self.serializer.deserialize_family_variant(
+                    variant_data, family
                 )
                 if v is None:
                     continue
@@ -284,6 +264,8 @@ class ImpalaFamilyVariants:
     def _build_real_attr_where(self, real_attr_filter):
         query = []
         for attr_name, attr_range in real_attr_filter:
+            print(attr_name)
+            print(self.schema)
             if attr_name not in self.schema:
                 query.append("false")
                 continue
@@ -319,7 +301,7 @@ class ImpalaFamilyVariants:
         for region in regions:
             assert isinstance(region, Region)
             where.append(
-                "(`chrom` = {q}{chrom}{q} AND `position` >= {start} AND "
+                "(`chromosome` = {q}{chrom}{q} AND `position` >= {start} AND "
                 "`position` <= {stop})".format(
                     q=self.QUOTE,
                     chrom=region.chrom,
@@ -544,7 +526,9 @@ class ImpalaFamilyVariants:
         if genes is not None:
             regions = self._build_gene_regions_heuristic(genes, regions)
             where.append(
-                self._build_iterable_string_attr_where("effect_gene", genes)
+                self._build_iterable_string_attr_where(
+                    "effect_gene_symbols", genes
+                )
             )
         if regions is not None:
             where.append(self._build_regions_where(regions))
@@ -555,31 +539,31 @@ class ImpalaFamilyVariants:
         if person_ids is not None:
             where.append(
                 self._build_iterable_string_attr_where(
-                    "variant_in_member", person_ids
+                    "variant_in_members", person_ids
                 )
             )
         if effect_types is not None:
             where.append(
                 self._build_iterable_string_attr_where(
-                    "effect_type", effect_types
+                    "effect_types", effect_types
                 )
             )
         if inheritance is not None:
             where.append(
                 self._build_inheritance_where(
-                    "variant_inheritance", inheritance
+                    "inheritance_in_members", inheritance
                 )
             )
         if roles is not None:
             where.append(
                 self._build_bitwise_attr_where(
-                    "variant_roles", roles, role_query
+                    "variant_in_roles", roles, role_query
                 )
             )
         if sexes is not None:
             where.append(
                 self._build_bitwise_attr_where(
-                    "variant_sexes", sexes, sex_query
+                    "variant_in_sexes", sexes, sex_query
                 )
             )
         if variant_type is not None:
@@ -654,41 +638,26 @@ class ImpalaFamilyVariants:
             limit_clause = "LIMIT {}".format(limit)
         return """
             SELECT
-                chrom,
+                chromosome,
                 `position`,
                 end_position,
                 reference,
                 transmission_type,
-                alternatives_data,
-                effect_data,
                 family_id,
-                genotype_data,
-                best_state_data,
-                genetic_model_data,
-                inheritance_data,
-                frequency_data,
-                genomic_scores_data,
+                variant_data,
                 GROUP_CONCAT(DISTINCT CAST(allele_index AS string))
             FROM {db}.{variant}
             {where_clause}
             GROUP BY
-                bucket_index,
-                summary_variant_index,
+                summary_index,
                 family_variant_index,
-                chrom,
+                chromosome,
                 `position`,
                 end_position,
                 reference,
                 transmission_type,
-                alternatives_data,
-                effect_data,
                 family_id,
-                genotype_data,
-                best_state_data,
-                genetic_model_data,
-                inheritance_data,
-                frequency_data,
-                genomic_scores_data
+                variant_data
             {limit_clause}
             """.format(
             db=self.db,
