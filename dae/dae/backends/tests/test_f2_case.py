@@ -4,7 +4,7 @@ Created on Jul 16, 2018
 @author: lubo
 """
 import pytest
-from dae.RegionOperations import Region
+from dae.utils.regions import Region
 
 
 def count_variants(

@@ -81,6 +81,7 @@ class VariantDetail:
         self.chrom = chrom
         self.cshl_position = position
         self.cshl_variant = variant
+        self._variant_type = None
 
     def __repr__(self):
         return "{} {}".format(self.cshl_location, self.cshl_variant)
@@ -179,11 +180,7 @@ class Allele:
 
     @property
     def variant_type(self) -> Optional[VariantType]:
-        if self._variant_type is None and self.details:
-            self._variant_type = VariantType.from_cshl_variant(
-                self.details.cshl_variant
-            )
-        return self._variant_type
+        raise NotImplementedError()
 
     @property
     def frequency(self) -> Optional[float]:
@@ -297,11 +294,14 @@ class Variant:
     def alternative(self) -> Optional[str]:
         if not self.alt_alleles:
             return None
-        if any([aa.alternative is None for aa in self.alt_alleles]):
-            assert all([aa.alternative is None for aa in self.alt_alleles])
-            return None
+        # if any([aa.alternative is None for aa in self.alt_alleles]):
+        #     assert all([aa.alternative is None for aa in self.alt_alleles])
+        #     return None
         return ",".join(
-            [aa.alternative for aa in self.alt_alleles if aa.alternative]
+            [
+                aa.alternative if aa.alternative else ""
+                for aa in self.alt_alleles
+            ]
         )
 
     @property
@@ -314,13 +314,6 @@ class Variant:
             return f"{self.chromosome}:{self.position}-{self.end_position}"
         else:
             return f"{self.chromosome}:{self.position}"
-
-    @property
-    def variant(self) -> str:
-        if self.alternative:
-            return "{}->{}".format(self.reference, self.alternative)
-        else:
-            return "{} (ref)".format(self.reference)
 
     @property
     def summary_index(self) -> int:
@@ -376,7 +369,7 @@ class Variant:
         """
         returns set of variant types.
         """
-        return set([aa.variant_type for aa in self.alleles])
+        return set([aa.variant_type for aa in self.alt_alleles])
 
     def get_attribute(
         self, item: Any, default: Optional[Any] = None
@@ -399,13 +392,20 @@ class Variant:
             for sa, val in zip(self.alt_alleles, itertools.cycle(values)):
                 sa.update_attributes({key: val})
 
+    @property
+    def _variant_repr(self) -> str:
+        if self.alternative:
+            return "{}->{}".format(self.reference, self.alternative)
+        else:
+            return "{} (ref)".format(self.reference)
+
     def __repr__(self):
         types = self.variant_types
         if VariantType.cnv_m in types or VariantType.cnv_p in types:
             types_str = ", ".join(map(str, types))
             return f"{self.location} {types_str}"
         else:
-            return f"{self.location} {self.variant}"
+            return f"{self.location} {self._variant_repr}"
 
     def __eq__(self, other):
         return (
@@ -468,6 +468,14 @@ class SummaryAllele(Allele):
         self._attributes: Dict[str, Any] = {}
         if attributes is not None:
             self.update_attributes(attributes)
+
+    @property
+    def variant_type(self):
+        if self._variant_type is None and self.details:
+            self._variant_type = VariantType.from_cshl_variant(
+                self.details.cshl_variant
+            )
+        return self._variant_type
 
     @property
     def chromosome(self) -> str:
@@ -555,8 +563,7 @@ class SummaryAllele(Allele):
             "position": allele.attributes.get("position"),
             "reference": allele.attributes.get("reference"),
             "summary_variant_index": allele.attributes.get(
-                "summary_variant_index"
-            ),
+                "summary_variant_index"),
             "allele_count": allele.attributes.get("allele_count"),
         }
 
@@ -639,8 +646,8 @@ class SummaryVariantFactory(object):
 
     @staticmethod
     def summary_variant_from_records(
-        records, transmission_type=TransmissionType.transmitted
-    ):
+            records, transmission_type=TransmissionType.transmitted):
+
         assert len(records) > 0
 
         alleles = []

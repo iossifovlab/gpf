@@ -62,14 +62,14 @@ def test_impala_helpers(impala_genotype_storage):
     assert impala_helpers.connection is not None
 
 
-def test_hdfs_helpers(impala_genotype_storage, hdfs_host):
-    hdfs_helpers = impala_genotype_storage.hdfs_helpers
+# def test_hdfs_helpers(impala_genotype_storage, hdfs_host):
+#     hdfs_helpers = impala_genotype_storage.hdfs_helpers
 
-    assert hdfs_helpers is not None
+#     assert hdfs_helpers is not None
 
-    assert hdfs_helpers.host == hdfs_host
-    assert hdfs_helpers.port == 8020
-    assert hdfs_helpers.hdfs is not None
+#     assert hdfs_helpers.host == hdfs_host
+#     assert hdfs_helpers.port == 8020
+#     assert hdfs_helpers.hdfs is not None
 
 
 @pytest.mark.skip("Not bothering to change the binary")

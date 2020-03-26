@@ -24,24 +24,31 @@ def test_enrichment_config_backgrounds(
 ):
     enrichment_config = f1_trio_enrichment_config
     assert enrichment_config.selected_background_values == [
-        "synonymous_background_model",
         "coding_len_background_model",
         "samocha_background_model",
     ]
 
-    assert len(enrichment_config.background) == 3
+    assert len(enrichment_config.background) == 2
+    print(enrichment_config.background)
+    print(enrichment_config.background[0])
+    print(enrichment_config.background[1])
+    for background in enrichment_config.background:
+        assert background.kind in set(
+            ["coding_len_background_model", "samocha_background_model"]
+        )
+    # synonymous_background_model = (
+    #     enrichment_config.background.synonymous_background_model
+    # )
+    # assert synonymous_background_model.name == "synonymous_background_model"
+    # assert synonymous_background_model.file is None
+    # assert synonymous_background_model.desc == "Synonymous Background Model"
 
-    synonymous_background_model = (
-        enrichment_config.background.synonymous_background_model
-    )
-    assert synonymous_background_model.name == "synonymous_background_model"
-    assert synonymous_background_model.file is None
-    assert synonymous_background_model.desc == "Synonymous Background Model"
-
-    coding_len_background_model = (
+    # fmt: off
+    coding_len_background_model = \
         enrichment_config.background.coding_len_background_model
-    )
+    # fmt: on
     assert coding_len_background_model.name == "coding_len_background_model"
+    assert coding_len_background_model.kind == "coding_len_background_model"
     assert coding_len_background_model.file == fixture_dirname(
         "studies/f1_trio/enrichment/codingLenBackgroundModel.csv"
     )
@@ -51,6 +58,7 @@ def test_enrichment_config_backgrounds(
         enrichment_config.background.samocha_background_model
     )
     assert samocha_background_model.name == "samocha_background_model"
+    assert samocha_background_model.kind == "samocha_background_model"
     assert samocha_background_model.file == fixture_dirname(
         "studies/f1_trio/enrichment/samochaBackgroundModel.csv"
     )

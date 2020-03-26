@@ -5,29 +5,25 @@ import numpy as np
 from deprecation import deprecated
 
 from dae.pedigrees.family import Family
-from dae.utils.variant_utils import (
-    GENOTYPE_TYPE,
-    is_all_unknown_genotype,
-    is_reference_genotype,
-)
-from dae.variants.attributes import (
-    GeneticModel,
-    Inheritance,
-    TransmissionType,
-    VariantType,
-)
-from dae.variants.variant import (
-    Allele,
-    Effect,
-    SummaryAllele,
-    SummaryVariant,
-    Variant,
-)
+from dae.utils.variant_utils import GENOTYPE_TYPE, \
+    is_all_unknown_genotype, \
+    is_reference_genotype, \
+    mat2str
+
+from dae.variants.attributes import GeneticModel, \
+    Inheritance,\
+    TransmissionType,\
+    VariantType
+
+from dae.variants.variant import Allele, \
+    Effect, \
+    SummaryAllele, \
+    SummaryVariant, \
+    Variant
 
 
 def calculate_simple_best_state(
-    genotype: np.array, allele_count: int
-) -> np.array:
+        genotype: np.array, allele_count: int) -> np.array:
     # Simple best state calculation
     # Treats every genotype as diploid (including male X non-PAR)
     ref = 2 * np.ones(genotype.shape[1], dtype=GENOTYPE_TYPE)
@@ -78,14 +74,14 @@ class FamilyDelegate(object):
 
 class FamilyAllele(Allele, FamilyDelegate):
     def __init__(
-        self,
-        summary_allele: SummaryAllele,
-        family: Family,
-        genotype,
-        best_state,
-        genetic_model=None,
-        inheritance_in_members=None,
-    ):
+            self,
+            summary_allele: SummaryAllele,
+            family: Family,
+            genotype,
+            best_state,
+            genetic_model=None,
+            inheritance_in_members=None):
+
         assert isinstance(family, Family)
 
         FamilyDelegate.__init__(self, family)
@@ -110,8 +106,8 @@ class FamilyAllele(Allele, FamilyDelegate):
         self.matched_gene_effects: List = []
 
     def __repr__(self):
-        suffix = f" {self.family_id}"
-        return super(Allele, self).__repr__() + suffix
+        allele_repr = Allele.__repr__(self)
+        return f"{allele_repr} {self.family_id}"
 
     @property
     def chromosome(self):
@@ -509,9 +505,8 @@ class FamilyVariant(Variant, FamilyDelegate):
         return is_all_unknown_genotype(self.gt)
 
     def __repr__(self):
-        suffix = f"{self.family_id}"
         output = Variant.__repr__(self)
-        return f"{output} {suffix}"
+        return f"{output} {self.family_id} {mat2str(self.gt)}"
 
     @property
     def best_state(self):

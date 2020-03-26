@@ -3,11 +3,12 @@ import pandas as pd
 import numpy as np
 
 from functools import partial
+from collections import defaultdict
 
 from dae.utils.helpers import str2bool
 from dae.variants.attributes import Role, Sex, Status
 
-from dae.pedigrees.family import FamiliesData, PEDIGREE_COLUMN_NAMES
+from dae.pedigrees.family import FamiliesData, Person, PEDIGREE_COLUMN_NAMES
 from dae.pedigrees.family_role_builder import FamilyRoleBuilder
 from dae.pedigrees.layout import Layout
 
@@ -80,10 +81,10 @@ class FamiliesLoader:
                 role_build.build_roles()
             families._ped_df = None
 
-    @staticmethod
-    def load_simple_families_file(families_filename):
-        ped_df = FamiliesLoader.load_simple_family_file(families_filename)
-        return FamiliesData.from_pedigree_df(ped_df)
+    # @staticmethod
+    # def load_simple_families_file(families_filename):
+    #     ped_df = FamiliesLoader.load_simple_family_file(families_filename)
+    #     return FamiliesData.from_pedigree_df(ped_df)
 
     def load(self):
         if self.file_format == "simple":
@@ -478,7 +479,7 @@ class FamiliesLoader:
         return ped_df
 
     @staticmethod
-    def load_simple_family_file(infile, ped_sep="\t"):
+    def load_simple_families_file(infile, ped_sep="\t"):
         fam_df = pd.read_csv(
             infile,
             sep=ped_sep,
@@ -489,45 +490,57 @@ class FamiliesLoader:
                 "gender": lambda s: Sex.from_name(s),
                 "sex": lambda s: Sex.from_name(s),
             },
-            dtype={"familyId": str, "personId": str,},
+            dtype={"familyId": str, "personId": str},
             comment="#",
         )
 
-        fam_df = fam_df.rename(columns={"gender": "sex"})
-
-        fam_df["status"] = pd.Series(index=fam_df.index, data=1)
-        fam_df.loc[fam_df.role == Role.prb, "status"] = 2
-        fam_df["status"] = fam_df.status.apply(lambda s: Status.from_value(s))
-
-        fam_df["momId"] = pd.Series(index=fam_df.index, data="0")
-        fam_df["dadId"] = pd.Series(index=fam_df.index, data="0")
-        for fid, fam in fam_df.groupby(by="familyId"):
-            mom_id = fam[fam.role == Role.mom]["personId"].iloc[0]
-            dad_id = fam[fam.role == Role.dad]["personId"].iloc[0]
-            children_mask = np.logical_and(
-                fam_df["familyId"] == fid,
-                np.logical_or(
-                    fam_df.role == Role.prb, fam_df.role == Role.sib
-                ),
-            )
-            fam_df.loc[children_mask, "momId"] = mom_id
-            fam_df.loc[children_mask, "dadId"] = dad_id
-
-        if "sampleId" not in fam_df.columns:
-            sample_ids = pd.Series(data=fam_df["personId"].values)
-            fam_df["sampleId"] = sample_ids
-
-        fam_df.rename(
+        fam_df = fam_df.rename(
             columns={
+                "gender": "sex",
                 "personId": "person_id",
                 "familyId": "family_id",
                 "momId": "mom_id",
                 "dadId": "dad_id",
                 "sampleId": "sample_id",
             },
-            inplace=True,
         )
-        return fam_df
+
+        fam_df["status"] = pd.Series(index=fam_df.index, data=1)
+        fam_df.loc[fam_df.role == Role.prb, "status"] = 2
+        fam_df["status"] = fam_df.status.apply(lambda s: Status.from_value(s))
+
+        fam_df["mom_id"] = pd.Series(index=fam_df.index, data="0")
+        fam_df["dad_id"] = pd.Series(index=fam_df.index, data="0")
+
+        if "sample_id" not in fam_df.columns:
+            sample_ids = pd.Series(data=fam_df["person_id"].values)
+            fam_df["sample_id"] = sample_ids
+
+        families = defaultdict(list)
+        for rec in fam_df.to_dict(orient="records"):
+            families[rec["family_id"]].append(rec)
+
+        result = defaultdict(list)
+        for fam_id, members in families.items():
+            mom_id = None
+            dad_id = None
+            children = []
+            for member in members:
+                role = member["role"]
+                if role == Role.mom:
+                    mom_id = member["person_id"]
+                elif role == Role.dad:
+                    dad_id = member["person_id"]
+                else:
+                    assert role in set([Role.prb, Role.sib])
+                    children.append(member)
+            for child in children:
+                child["mom_id"] = mom_id
+                child["dad_id"] = dad_id
+
+            result[fam_id] = [Person(**member) for member in members]
+
+        return FamiliesData.from_family_persons(result.items())
 
     @staticmethod
     def save_pedigree(families, filename):

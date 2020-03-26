@@ -14,6 +14,7 @@ def test_cnv_loader(fixture_dirname, genomes_db_2013):
 
     svs = []
     for sv, fvs in loader.full_variants_iterator():
+        print(sv, fvs)
         svs.append(sv)
 
-    assert len(svs) == 53
+    assert len(svs) == 10

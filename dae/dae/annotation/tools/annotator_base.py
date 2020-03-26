@@ -21,10 +21,14 @@ class AnnotatorBase(object):
     def __init__(self, config, genomes_db):
         self.config = config
         self.genomes_db = genomes_db
-        self.genome = self.genomes_db.get_genome_from_file(config.options.Graw)
-        self.gene_models = self.genomes_db.get_gene_models(config.options.Traw)
+        self.genomic_sequence = self.genomes_db.load_genomic_sequence(
+            config.options.Graw
+        )
+        self.gene_models = self.genomes_db.load_gene_models(
+            config.options.Traw
+        )
         assert self.genomes_db is not None
-        assert self.genome is not None
+        assert self.genomic_sequence is not None
         assert self.gene_models is not None
 
         self.mode = "replace"
@@ -114,9 +118,9 @@ class CopyAnnotator(AnnotatorBase):
 
 
 class VariantBuilder(object):
-    def __init__(self, config, genome):
+    def __init__(self, config, genomic_sequence):
         self.config = config
-        self.genome = genome
+        self.genomic_sequence = genomic_sequence
 
     def build_variant(self, annotation_line):
         raise NotImplementedError()
@@ -169,15 +173,15 @@ class DAEBuilder(VariantBuilder):
             position = aline[self.position]
 
         vcf_position, ref, alt = dae2vcf_variant(
-            chrom, int(position), variant, self.genome
+            chrom, int(position), variant, self.genomic_sequence
         )
         summary = SummaryAllele(chrom, vcf_position, ref, alt)
         return summary
 
 
 class VCFBuilder(VariantBuilder):
-    def __init__(self, config, genome):
-        super(VCFBuilder, self).__init__(config, genome)
+    def __init__(self, config, genomic_sequence):
+        super(VCFBuilder, self).__init__(config, genomic_sequence)
         self.chrom = self.config.options.c
         self.position = self.config.options.p
         self.ref = self.config.options.r
@@ -204,9 +208,13 @@ class VariantAnnotatorBase(AnnotatorBase):
         super(VariantAnnotatorBase, self).__init__(config, genomes_db)
 
         if self.config.options.vcf:
-            self.variant_builder = VCFBuilder(self.config, self.genome)
+            self.variant_builder = VCFBuilder(
+                self.config, self.genomic_sequence
+            )
         else:
-            self.variant_builder = DAEBuilder(self.config, self.genome)
+            self.variant_builder = DAEBuilder(
+                self.config, self.genomic_sequence
+            )
 
         if not self.config.virtual_columns:
             self.config = GPFConfigParser.modify_tuple(
@@ -242,7 +250,9 @@ class VariantAnnotatorBase(AnnotatorBase):
     def annotate_summary_variant(self, summary_variant):
         for alt_allele in summary_variant.alt_alleles:
             attributes = deepcopy(alt_allele.attributes)
-            self.line_annotation(attributes)
+            # self.line_annotation(attributes)
+            self.do_annotate(attributes, alt_allele)
+
             alt_allele.update_attributes(attributes)
 
 
@@ -273,10 +283,13 @@ class CompositeVariantAnnotator(VariantAnnotatorBase):
         assert isinstance(annotator, VariantAnnotatorBase)
         self.annotators.append(annotator)
 
-    def line_annotation(self, aline):
-        variant = self.variant_builder.build(aline)
+    def do_annotate(self, aline, variant):
         for annotator in self.annotators:
             annotator.do_annotate(aline, variant)
+
+    def line_annotation(self, aline):
+        variant = self.variant_builder.build(aline)
+        self.do_annotate(aline, variant)
 
     def collect_annotator_schema(self, schema):
         super(CompositeVariantAnnotator, self).collect_annotator_schema(schema)

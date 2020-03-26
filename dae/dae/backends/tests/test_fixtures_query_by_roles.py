@@ -1,6 +1,6 @@
 import pytest
 
-from dae.RegionOperations import Region
+from dae.utils.regions import Region
 
 from dae.variants.attributes import Role
 

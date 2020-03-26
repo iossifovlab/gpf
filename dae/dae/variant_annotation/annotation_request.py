@@ -57,6 +57,9 @@ class BaseAnnotationRequest(object):
                 break
         return length
 
+    def _get_coding_nucleotide_position(self, position):
+        raise NotImplementedError()
+
     def get_protein_position_for_pos(self, position):
         if position < self.transcript_model.cds[0]:
             return None
@@ -71,8 +74,8 @@ class BaseAnnotationRequest(object):
         if end_position < start_position:
             return ""
 
-        return self.annotator.reference_genome.getSequence(
-            self.transcript_model.chr, start_position, end_position
+        return self.annotator.reference_genome.get_sequence(
+            self.transcript_model.chrom, start_position, end_position
         )
 
     def CDS_regions(self):
@@ -295,12 +298,12 @@ class PositiveStrandAnnotationRequest(BaseAnnotationRequest):
             ref_codons, alt_codons = self.get_codons()
 
             ref_amino_acids = [
-                self.cod2aa(ref_codons[i : i + 3])
+                self.cod2aa(ref_codons[i: i + 3])
                 for i in range(0, len(ref_codons), 3)
             ]
 
             alt_amino_acids = [
-                self.cod2aa(alt_codons[i : i + 3])
+                self.cod2aa(alt_codons[i: i + 3])
                 for i in range(0, len(alt_codons), 3)
             ]
 
@@ -462,12 +465,12 @@ class NegativeStrandAnnotationRequest(BaseAnnotationRequest):
             ref_codons, alt_codons = self.get_codons()
 
             ref_amino_acids = [
-                self.cod2aa(ref_codons[i - 3 : i])
+                self.cod2aa(ref_codons[i - 3: i])
                 for i in range(len(ref_codons), 0, -3)
             ]
 
             alt_amino_acids = [
-                self.cod2aa(alt_codons[i - 3 : i])
+                self.cod2aa(alt_codons[i - 3: i])
                 for i in range(len(alt_codons), 0, -3)
             ]
 

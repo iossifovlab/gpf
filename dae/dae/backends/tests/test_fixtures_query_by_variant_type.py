@@ -24,7 +24,7 @@ def test_single_alt_allele_variant_types(
 @pytest.mark.parametrize("variants", ["variants_impala", "variants_vcf"])
 @pytest.mark.parametrize(
     "variant_type,count",
-    [(None, 3), ("sub", 3), ("del", 1), ("del or sub", 3),],
+    [(None, 3), ("sub", 3), ("del", 1), ("del or sub", 3)],
 )
 def test_multi_alt_allele_variant_types(
     variants_impl, variants, variant_type, count

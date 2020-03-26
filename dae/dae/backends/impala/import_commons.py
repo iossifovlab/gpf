@@ -9,24 +9,18 @@ from math import ceil
 from collections import defaultdict
 
 from dae.annotation.annotation_pipeline import PipelineAnnotator
-from dae.utils.dict_utils import recursive_dict_update
 
 from dae.gpf_instance.gpf_instance import GPFInstance
 
 from dae.pedigrees.loader import FamiliesLoader
-from dae.backends.raw.loader import (
-    AnnotationPipelineDecorator,
-    AlleleFrequencyDecorator,
-)
-
+from dae.backends.raw.loader import AnnotationPipelineDecorator
 from dae.backends.dae.loader import DenovoLoader, DaeTransmittedLoader
 from dae.backends.vcf.loader import VcfLoader
+from dae.backends.cnv.loader import CNVLoader
 
-from dae.backends.impala.parquet_io import (
-    ParquetManager,
-    ParquetPartitionDescriptor,
-    NoPartitionDescriptor,
-)
+from dae.backends.impala.parquet_io import ParquetManager, \
+    ParquetPartitionDescriptor, \
+    NoPartitionDescriptor
 
 
 def save_study_config(dae_config, study_id, study_config):
@@ -46,11 +40,9 @@ def save_study_config(dae_config, study_id, study_config):
 
 
 def construct_import_annotation_pipeline(
-    gpf_instance, annotation_configfile=None, defaults=None
+    gpf_instance, annotation_configfile=None
 ):
 
-    if defaults is None:
-        defaults = {}
     if annotation_configfile is not None:
         config_filename = annotation_configfile
     else:
@@ -65,16 +57,8 @@ def construct_import_annotation_pipeline(
         "a": "alternative",
     }
 
-    annotation_defaults = {
-        "values": gpf_instance.dae_config.annotation_defaults._asdict()
-    }
-    annotation_defaults = recursive_dict_update(annotation_defaults, defaults)
     pipeline = PipelineAnnotator.build(
-        options,
-        config_filename,
-        gpf_instance.dae_config.dae_data_dir,
-        gpf_instance.genomes_db,
-        defaults=annotation_defaults,
+        options, config_filename, gpf_instance.genomes_db,
     )
     return pipeline
 
@@ -90,7 +74,9 @@ class MakefilePartitionHelper:
 
         self.genome = genome
         self.partition_descriptor = partition_descriptor
-        self.chromosome_lengths = dict(self.genome.get_all_chr_lengths())
+        self.chromosome_lengths = dict(
+            self.genome.get_genomic_sequence().get_all_chrom_lengths()
+        )
 
         self._build_adjust_chrom(add_chrom_prefix, del_chrom_prefix)
 
@@ -122,7 +108,9 @@ class MakefilePartitionHelper:
     def _remove_chrom_prefix(self, chrom):
         assert self._chrom_prefix
         if chrom.startswith(self._chrom_prefix):
-            return chrom[len(self._chrom_prefix) :]
+            # fmt: off
+            return chrom[len(self._chrom_prefix):]
+            # fmt: on
         return chrom
 
     def _prepend_chrom_prefix(self, chrom):
@@ -156,9 +144,13 @@ class MakefilePartitionHelper:
         return result
 
     def bucket_index(self, region_bin):
+        # fmt: off
         genome_chromosomes = [
-            chrom for chrom, _ in self.genome.get_all_chr_lengths()
+            chrom
+            for chrom, _ in
+            self.genome.get_genomic_sequence().get_all_chrom_lengths()
         ]
+        # fmt: on
         variants_targets = self.generate_variants_targets(genome_chromosomes)
         assert region_bin in variants_targets
 
@@ -207,6 +199,7 @@ class MakefileGenerator:
 
         self.vcf_loader = None
         self.denovo_loader = None
+        self.cnv_loader = None
         self.dae_loader = None
         self.genotype_storage_id = None
 
@@ -218,10 +211,9 @@ class MakefileGenerator:
         return self._families
 
     def build_familes_loader(self, argv):
-        (
-            families_filename,
-            families_params,
-        ) = FamiliesLoader.parse_cli_arguments(argv)
+        families_filename, families_params = \
+            FamiliesLoader.parse_cli_arguments(argv)
+
         families_loader = FamiliesLoader(
             families_filename, params=families_params
         )
@@ -229,9 +221,8 @@ class MakefileGenerator:
         return self
 
     def build_vcf_loader(self, argv):
-        variants_filenames, variants_params = VcfLoader.parse_cli_arguments(
-            argv
-        )
+        variants_filenames, variants_params = \
+            VcfLoader.parse_cli_arguments(argv)
 
         if variants_filenames is None:
             return self
@@ -246,9 +237,8 @@ class MakefileGenerator:
         return self
 
     def build_denovo_loader(self, argv):
-        variants_filename, variants_params = DenovoLoader.parse_cli_arguments(
-            argv
-        )
+        variants_filename, variants_params = \
+            DenovoLoader.parse_cli_arguments(argv)
 
         if variants_filename is None:
             return self
@@ -261,11 +251,24 @@ class MakefileGenerator:
         self.denovo_loader = variants_loader
         return self
 
-    def build_dae_loader(self, argv):
-        (
+    def build_cnv_loader(self, argv):
+        variants_filename, variants_params = \
+            CNVLoader.parse_cli_arguments(argv)
+
+        if variants_filename is None:
+            return self
+        variants_loader = CNVLoader(
+            self.families,
             variants_filename,
-            variants_params,
-        ) = DaeTransmittedLoader.parse_cli_arguments(argv)
+            params=variants_params,
+            genome=self.gpf_instance.genomes_db.get_genome(),
+        )
+        self.cnv_loader = variants_loader
+        return self
+
+    def build_dae_loader(self, argv):
+        variants_filename, variants_params = \
+            DaeTransmittedLoader.parse_cli_arguments(argv)
 
         if variants_filename is None:
             return self
@@ -316,9 +319,10 @@ class MakefileGenerator:
         else:
             genotype_storage_id = argv.genotype_storage
 
-        genotype_storage = self.gpf_instance.genotype_storage_db.get_genotype_storage(
-            genotype_storage_id
-        )
+        genotype_storage = self.gpf_instance.genotype_storage_db \
+            .get_genotype_storage(
+                genotype_storage_id
+            )
         if genotype_storage is None:
             raise ValueError(
                 f"genotype storage {genotype_storage_id} not found"
@@ -332,15 +336,14 @@ class MakefileGenerator:
         return self
 
     def build(self, argv):
-        self.build_familes_loader(argv).build_denovo_loader(
-            argv
-        ).build_vcf_loader(argv).build_dae_loader(argv).build_study_id(
-            argv
-        ).build_partition_helper(
-            argv
-        ).build_genotype_storage(
-            argv
-        )
+        self.build_familes_loader(argv) \
+            .build_denovo_loader(argv) \
+            .build_cnv_loader(argv) \
+            .build_vcf_loader(argv) \
+            .build_dae_loader(argv) \
+            .build_study_id(argv) \
+            .build_partition_helper(argv) \
+            .build_genotype_storage(argv)
         return self
 
     def _create_output_directory(self, argv):
@@ -365,6 +368,8 @@ class MakefileGenerator:
         variants_targets = []
         if self.denovo_loader is not None:
             variants_targets.append("$(denovo_bins_flags)")
+        if self.cnv_loader is not None:
+            variants_targets.append("$(cnv_bins_flags)")
         if self.vcf_loader is not None:
             variants_targets.append("$(vcf_bins_flags)")
         if self.dae_loader is not None:
@@ -411,14 +416,14 @@ class MakefileGenerator:
 
     def _construct_variants_command(self, argv, variants_loader, tool_command):
         families_params = FamiliesLoader.build_cli_arguments(
-            self.families_loader.params
-        )
+            self.families_loader.params)
+
         families_filename = self.families_loader.filename
         families_filename = os.path.abspath(families_filename)
 
         variants_params = variants_loader.build_cli_arguments(
-            variants_loader.params
-        )
+            variants_loader.params)
+
         variants_filenames = [
             os.path.abspath(fn) for fn in variants_loader.variants_filenames
         ]
@@ -444,10 +449,9 @@ class MakefileGenerator:
     def _generate_variants_bins(
         self, argv, target_prefix, variants_loader, outfile=sys.stdout
     ):
-        if (
-            "target_chromosomes" in argv
-            and argv.target_chromosomes is not None
-        ):
+        if "target_chromosomes" in argv and \
+                argv.target_chromosomes is not None:
+
             target_chromosomes = argv.target_chromosomes
         else:
             target_chromosomes = variants_loader.chromosomes
@@ -483,6 +487,14 @@ class MakefileGenerator:
             argv, "denovo", self.denovo_loader, outfile=outfile
         )
 
+    def generate_cnv_bins(self, argv, outfile=sys.stdout):
+        if self.cnv_loader is None:
+            return
+
+        self._generate_variants_bins(
+            argv, "cnv", self.cnv_loader, outfile=outfile
+        )
+
     def generate_dae_bins(self, argv, outfile=sys.stdout):
         if self.dae_loader is None:
             return
@@ -495,6 +507,7 @@ class MakefileGenerator:
         self.generate_vcf_bins(argv, outfile)
         self.generate_dae_bins(argv, outfile)
         self.generate_denovo_bins(argv, outfile)
+        self.generate_cnv_bins(argv, outfile)
 
     def _generate_variants_rule(
         self,
@@ -537,6 +550,18 @@ class MakefileGenerator:
             outfile=outfile,
         )
 
+    def generate_cnv_rule(self, argv, outfile=sys.stdout):
+        if self.cnv_loader is None:
+            return
+
+        self._generate_variants_rule(
+            argv,
+            "cnv",
+            self.cnv_loader,
+            "cnv2parquet.py",
+            outfile=outfile,
+        )
+
     def generate_dae_rule(self, argv, outfile=sys.stdout):
         if self.dae_loader is None:
             return
@@ -549,6 +574,7 @@ class MakefileGenerator:
         self.generate_vcf_rule(argv, outfile)
         self.generate_dae_rule(argv, outfile)
         self.generate_denovo_rule(argv, outfile)
+        self.generate_cnv_rule(argv, outfile)
 
     def _construct_load_command(self, argv):
         assert self.genotype_storage_id is not None
@@ -618,6 +644,7 @@ class MakefileGenerator:
 
         FamiliesLoader.cli_arguments(parser)
         DenovoLoader.cli_options(parser)
+        CNVLoader.cli_options(parser)
         VcfLoader.cli_options(parser)
         DaeTransmittedLoader.cli_options(parser)
 
@@ -633,7 +660,14 @@ class MakefileGenerator:
             "--denovo-file",
             type=str,
             metavar="<de Novo variants filename>",
-            help="DAE denovo variants file",
+            help="denovo variants file",
+        )
+
+        parser.add_argument(
+            "--cnv-file",
+            type=str,
+            metavar="<CNV variants filename>",
+            help="DAE CNV variants file",
         )
 
         parser.add_argument(
@@ -866,10 +900,11 @@ class Variants2ParquetTool:
             target_chromosomes
         )
 
-        if argv.study_id is not None:
-            study_id = argv.study_id
-        else:
-            study_id, _ = os.path.splitext(os.path.basename(families_filename))
+        # if argv.study_id is not None:
+        #     study_id = argv.study_id
+        # else:
+        #     study_id, _ = os.path.splitext(
+        #         os.path.basename(families_filename))
 
         bucket_index = argv.bucket_index
         if argv.region_bin is not None:
@@ -910,25 +945,18 @@ class Variants2ParquetTool:
         cls, gpf_instance, argv, annotation_defaults, variants_loader
     ):
         annotation_pipeline = construct_import_annotation_pipeline(
-            gpf_instance,
-            annotation_configfile=argv.annotation_config,
-            defaults=annotation_defaults,
+            gpf_instance, annotation_configfile=argv.annotation_config,
         )
-        print("annotation_defaults", annotation_defaults)
         variants_loader = AnnotationPipelineDecorator(
             variants_loader, annotation_pipeline
         )
 
-        if cls.VARIANTS_FREQUENCIES:
-            variants_loader = AlleleFrequencyDecorator(variants_loader)
         return variants_loader
 
     @classmethod
     def _load_variants(cls, argv, families, gpf_instance):
-        (
-            variants_filenames,
-            variants_params,
-        ) = cls.VARIANTS_LOADER_CLASS.parse_cli_arguments(argv)
+        variants_filenames, variants_params = \
+            cls.VARIANTS_LOADER_CLASS.parse_cli_arguments(argv)
 
         variants_loader = cls.VARIANTS_LOADER_CLASS(
             families,

@@ -4,7 +4,7 @@ Created on Mar 5, 2018
 @author: lubo
 """
 import pytest
-from dae.RegionOperations import Region
+from dae.utils.regions import Region
 from dae.utils.variant_utils import mat2str
 
 

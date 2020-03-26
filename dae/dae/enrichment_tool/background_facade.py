@@ -1,9 +1,10 @@
+from collections import defaultdict
 from dae.enrichment_tool.background import BackgroundBase
 
 
 class BackgroundFacade(object):
     def __init__(self, variants_db):
-        self._background_cache = {}
+        self._background_cache = defaultdict(dict)
         self._enrichment_config_cache = {}
 
         self.variants_db = variants_db
@@ -62,11 +63,21 @@ class BackgroundFacade(object):
         if study_ids != cached_ids:
             to_load = study_ids - cached_ids
             for study_id in to_load:
-                self._load_enrichment_config_in_cache(study_id)
-                for background_id in BackgroundBase.backgrounds().keys():
+                enrichment_config = self._load_enrichment_config_in_cache(
+                    study_id
+                )
+                if enrichment_config is None:
+                    continue
+                # fmt: off
+                for background_id in enrichment_config.\
+                        selected_background_values:
                     self._load_background_in_cache(study_id, background_id)
+                # fmt: on
 
     def _load_enrichment_config_in_cache(self, study_id):
+        if study_id in self._enrichment_config_cache:
+            return self._enrichment_config_cache[study_id]
+
         genotype_data_config = self.variants_db.get_config(study_id)
         if (
             genotype_data_config is None
@@ -81,25 +92,20 @@ class BackgroundFacade(object):
             study_id
         ] = genotype_data_config.enrichment
 
+        return genotype_data_config.enrichment
+
     def _load_background_in_cache(self, study_id, background_id):
-        self._load_enrichment_config_in_cache(study_id)
-
-        if (
-            study_id not in self._enrichment_config_cache
-            or background_id not in BackgroundBase.backgrounds()
-        ):
+        enrichment_config = self._load_enrichment_config_in_cache(study_id)
+        if enrichment_config is None:
             return
-
-        if (
-            study_id not in self._background_cache
-            or self._background_cache[study_id] is None
-        ):
-            self._background_cache[study_id] = {}
-
-        enrichment_config = self._enrichment_config_cache[study_id]
+        if background_id not in enrichment_config.selected_background_values:
+            return
+        background_config = getattr(
+            enrichment_config.background, background_id
+        )
 
         self._background_cache[study_id][
             background_id
-        ] = BackgroundBase.backgrounds()[background_id](
-            enrichment_config, self.variants_db
+        ] = BackgroundBase.build_background(
+            background_config.kind, enrichment_config
         )

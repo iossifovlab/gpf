@@ -2,7 +2,7 @@ import pytest
 from dae.backends.impala.impala_variants import ImpalaFamilyVariants
 from dae.backends.impala.hdfs_helpers import HdfsHelpers
 from dae.backends.impala.impala_helpers import ImpalaHelpers
-from dae.RegionOperations import Region
+from dae.utils.regions import Region
 
 
 def test_hdfs_helpers(hdfs_host):

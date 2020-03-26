@@ -8,7 +8,7 @@ import tempfile
 import pandas as pd
 from io import StringIO
 
-from dae.GenomesDB import GenomesDB
+from dae.genome.genomes_db import GenomesDB
 
 from dae.gpf_instance.gpf_instance import GPFInstance, cached
 
@@ -20,10 +20,7 @@ from dae.annotation.annotation_pipeline import PipelineAnnotator
 from dae.variants.variant import SummaryVariant, SummaryAllele
 from dae.variants.family_variant import FamilyVariant
 
-from dae.backends.raw.loader import (
-    AlleleFrequencyDecorator,
-    AnnotationPipelineDecorator,
-)
+from dae.backends.raw.loader import AnnotationPipelineDecorator
 from dae.backends.raw.raw_variants import RawMemoryVariants
 
 from dae.backends.dae.loader import DaeTransmittedLoader, DenovoLoader
@@ -48,6 +45,14 @@ def relative_to_this_test_folder(path):
     return os.path.join(
         os.path.dirname(os.path.realpath(__file__)), "tests", path
     )
+
+
+@pytest.fixture(scope="session")
+def fixture_dirname(request):
+    def builder(relpath):
+        return relative_to_this_test_folder(os.path.join("fixtures", relpath))
+
+    return builder
 
 
 def get_global_dae_fixtures_dir():
@@ -80,7 +85,7 @@ def default_dae_config(request):
 @pytest.fixture(scope="session")
 def gpf_instance(default_dae_config):
     class GenomesDbInternal(GenomesDB):
-        def get_gene_model_id(self, genome_id=None):
+        def get_default_gene_models_id(self, genome_id=None):
             return "RefSeq2013"
 
     class GPFInstanceInternal(GPFInstance):
@@ -137,6 +142,11 @@ def genomes_db_2013(gpf_instance_2013):
 @pytest.fixture(scope="session")
 def genome_2013(gpf_instance_2013):
     return gpf_instance_2013.genomes_db.get_genome()
+
+
+@pytest.fixture(scope="session")
+def genomic_sequence_2013(genome_2013):
+    return genome_2013.get_genomic_sequence()
 
 
 @pytest.fixture(scope="session")
@@ -197,17 +207,9 @@ def temp_filename(request):
     def fin():
         shutil.rmtree(dirname)
 
-    request.addfinalizer(fin)
+    # request.addfinalizer(fin)
     output = os.path.join(dirname, "temp_filename.tmp")
     return output
-
-
-@pytest.fixture(scope="session")
-def fixture_dirname(request):
-    def builder(relpath):
-        return relative_to_this_test_folder(os.path.join("fixtures", relpath))
-
-    return builder
 
 
 @pytest.fixture(scope="session")
@@ -236,9 +238,7 @@ def default_annotation_pipeline(default_dae_config, genomes_db_2013):
         "p": "position",
     }
 
-    pipeline = PipelineAnnotator.build(
-        options, filename, ".", genomes_db_2013, defaults={}
-    )
+    pipeline = PipelineAnnotator.build(options, filename, genomes_db_2013)
 
     return pipeline
 
@@ -258,24 +258,13 @@ def annotation_pipeline_vcf(genomes_db_2013):
     options = {
         "default_arguments": None,
         "vcf": True,
+        "scores_dirname": relative_to_this_test_folder(
+            "fixtures/annotation_pipeline/"
+        )
         # 'mode': 'overwrite',
     }
 
-    work_dir = relative_to_this_test_folder("fixtures/")
-
-    pipeline = PipelineAnnotator.build(
-        options,
-        filename,
-        work_dir,
-        genomes_db_2013,
-        defaults={
-            "values": {
-                "scores_dirname": relative_to_this_test_folder(
-                    "fixtures/annotation_pipeline/"
-                )
-            }
-        },
-    )
+    pipeline = PipelineAnnotator.build(options, filename, genomes_db_2013,)
     return pipeline
 
 
@@ -294,23 +283,12 @@ def annotation_pipeline_internal(genomes_db_2013):
         "p": "position",
         "r": "reference",
         "a": "alternative",
+        "scores_dirname": relative_to_this_test_folder(
+            "fixtures/annotation_pipeline/"
+        ),
     }
 
-    work_dir = relative_to_this_test_folder("fixtures/")
-
-    pipeline = PipelineAnnotator.build(
-        options,
-        filename,
-        work_dir,
-        genomes_db_2013,
-        defaults={
-            "values": {
-                "scores_dirname": relative_to_this_test_folder(
-                    "fixtures/annotation_pipeline/"
-                )
-            }
-        },
-    )
+    pipeline = PipelineAnnotator.build(options, filename, genomes_db_2013,)
     return pipeline
 
 
@@ -396,10 +374,12 @@ def dae_transmitted(
     dae_transmitted_config, genome_2013, annotation_pipeline_internal
 ):
 
-    ped_df = FamiliesLoader.load_simple_family_file(
+    # ped_df = FamiliesLoader.load_simple_family_file(
+    #     dae_transmitted_config.family_filename
+    # )
+    families = FamiliesLoader.load_simple_families_file(
         dae_transmitted_config.family_filename
     )
-    families = FamiliesData.from_pedigree_df(ped_df)
 
     variants_loader = DaeTransmittedLoader(
         families,
@@ -456,12 +436,11 @@ def iossifov2014_raw_denovo(iossifov2014_loader):
 
 @pytest.fixture(scope="session")
 def iossifov2014_impala(
-    request,
-    iossifov2014_loader,
-    genomes_db_2013,
-    hdfs_host,
-    impala_genotype_storage,
-):
+        request,
+        iossifov2014_loader,
+        genomes_db_2013,
+        hdfs_host,
+        impala_genotype_storage):
 
     from dae.backends.impala.hdfs_helpers import HdfsHelpers
 
@@ -537,7 +516,6 @@ def vcf_variants_loader(
         )
         assert loader is not None
 
-        loader = AlleleFrequencyDecorator(loader)
         loader = AnnotationPipelineDecorator(
             loader, default_annotation_pipeline
         )
@@ -778,7 +756,6 @@ def data_import(
                 },
             )
 
-            loader = AlleleFrequencyDecorator(loader)
             loader = AnnotationPipelineDecorator(loader, annotation_pipeline)
 
             impala_genotype_storage.simple_study_import(
@@ -831,9 +808,12 @@ def calc_gene_sets(request, variants_db_fixture):
     def remove_gene_sets():
         for dgs in genotype_data_names:
             genotype_data = variants_db_fixture.get(dgs)
-            cache_file = DenovoGeneSetCollectionFactory.denovo_gene_set_cache_file(
-                genotype_data.config, "phenotype"
-            )
+            # fmt:off
+            cache_file = \
+                DenovoGeneSetCollectionFactory.denovo_gene_set_cache_file(
+                    genotype_data.config, "phenotype"
+                )
+            # fmt:on
             if os.path.exists(cache_file):
                 os.remove(cache_file)
 

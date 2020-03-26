@@ -92,7 +92,6 @@ def generate_phenotype_data_config(args, regressions):
     browser_dbfile = os.path.join(
         "%(wd)s", "browser", "{}_browser.db".format(args.pheno_name)
     )
-    regressions_dict = GPFConfigParser._namedtuple_to_dict(regressions)
     config = {
         "vars": {"wd": "."},
         "phenotype_data": {
@@ -104,6 +103,7 @@ def generate_phenotype_data_config(args, regressions):
         },
     }
     if regressions:
+        regressions_dict = GPFConfigParser._namedtuple_to_dict(regressions)
         config["regression"] = regressions_dict["regression"]
     return config
 

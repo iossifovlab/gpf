@@ -30,10 +30,15 @@ def test_annotate_variant_simple(temp_filename, genomes_db_2013):
     assert expected_df is not None
     assert len(expected_df) == 8
 
+    genome_id = genomes_db_2013.config.genomes.default_genome
+    genome_config = getattr(genomes_db_2013.config.genome, genome_id)
+    ref_seq_gene_model = getattr(genome_config.gene_models, "RefSeq2013")
+    gene_model_file = ref_seq_gene_model.file
+
     command = (
-        "cut -f 1-3 {} "
-        "| annotate_variant.py -T RefSeq2013 "
-        "| head -n 9 > {}".format(denovo_filename, temp_filename)
+        f"cut -f 1-3 {denovo_filename} "
+        f"| annotate_variants.py --Traw {gene_model_file} --TrawFormat default"
+        f"| head -n 9 > {temp_filename}"
     )
     print(command)
     res = os.system(command)
@@ -49,15 +54,47 @@ def test_annotate_variant_simple(temp_filename, genomes_db_2013):
 
 def test_gene_models_orig_transcript_id(genomes_db_2019):
 
-    gene_models = genomes_db_2019.get_gene_model(
-        "RefSeq", genomes_db_2019.default_genome
-    )
+    gene_models = genomes_db_2019.get_gene_models("RefSeq")
     assert gene_models.location.endswith(
         "refGene-20190211.gz"
     ), gene_models.location
 
-    for count, tr in enumerate(gene_models.transcriptModels.values()):
+    for count, tr in enumerate(gene_models.transcript_models.values()):
         # print(dir(tr))
-        assert tr.trID != tr.trOrigId
+        assert tr.tr_id != tr.tr_name
+        assert tr.tr_name in tr.tr_id
+
         if count >= 1000:
             break
+
+
+def test_gene_models_load_default(genomes_db_2019):
+
+    genome_id = genomes_db_2019.config.genomes.default_genome
+    genome_config = getattr(genomes_db_2019.config.genome, genome_id)
+    ref_seq_gene_model = getattr(genome_config.gene_models, "RefSeq")
+
+    assert ref_seq_gene_model is not None
+    # gene_models = load_gene_models(ref_seq_gene_model.file, format="default")
+    # assert gene_models is not None
+
+
+@pytest.mark.skip
+def test_annotate_mouse_variants():
+    dirname = (
+        "/home/lubo/Work/seq-pipeline/gpf_validation_data/mouse/mouseStrains"
+    )
+    genome_filename = "mouse/GRCm38_68.fa"
+    gene_models_filename = "mouse.GRCm38-relabeled.txt.gz"
+    variants_filename = "i.txt"
+
+    argv = [
+        "--Traw",
+        os.path.join(dirname, gene_models_filename),
+        "--Graw",
+        os.path.join(dirname, genome_filename),
+        os.path.join(dirname, variants_filename),
+    ]
+    from dae.tools.annotate_variant import main
+
+    main(argv)

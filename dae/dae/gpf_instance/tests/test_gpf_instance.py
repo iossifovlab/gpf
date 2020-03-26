@@ -60,11 +60,11 @@ def test_mocker_genomes_db(local_gpf_instance):
     genomes_db = local_gpf_instance.genomes_db
 
     assert genomes_db.get_genome()
-    assert genomes_db.get_genome_from_file()
-    assert genomes_db.get_genome_file().endswith(
+    assert genomes_db.load_genomic_sequence()
+    assert genomes_db.get_genomic_sequence_filename().endswith(
         "genomes/GATK_ResourceBundle_5777_b37_phiX174/chrAll.fa"
     )
-    assert genomes_db.get_gene_model_id() == "RefSeq2013"
+    assert genomes_db.get_default_gene_models_id() == "RefSeq2013"
 
 
 def test_variants_db(local_gpf_instance):

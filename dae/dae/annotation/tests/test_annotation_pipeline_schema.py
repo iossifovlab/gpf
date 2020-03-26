@@ -15,15 +15,7 @@ def test_pipeline_schema(genomes_db_2013):
         default_box_attr=None,
     )
 
-    work_dir = relative_to_this_test_folder("fixtures/")
-
-    pipeline = PipelineAnnotator.build(
-        options,
-        filename,
-        work_dir,
-        genomes_db_2013,
-        defaults={"values": {"fixtures_dir": work_dir}},
-    )
+    pipeline = PipelineAnnotator.build(options, filename, genomes_db_2013,)
     assert pipeline is not None
     # print('pipeline annotators:', len(pipeline.annotators))
 

@@ -14,11 +14,9 @@ from dae.backends.impala.import_commons import (
 
 from dae.backends.dae.loader import DenovoLoader, DaeTransmittedLoader
 from dae.backends.vcf.loader import VcfLoader
-from dae.backends.raw.loader import (
-    AnnotationPipelineDecorator,
-    AlleleFrequencyDecorator,
-)
+
 from dae.backends.cnv.loader import CNVLoader
+from dae.backends.raw.loader import AnnotationPipelineDecorator
 
 from dae.pedigrees.loader import FamiliesLoader
 
@@ -207,7 +205,9 @@ def main(argv, gpf_instance=None):
         cnv_loader = CNVLoader(
             families, cnv_filename, genome=genome, params=cnv_params
         )
-        # TODO: Annotate
+        cnv_loader = AnnotationPipelineDecorator(
+            cnv_loader, annotation_pipeline
+        )
         variant_loaders.append(cnv_loader)
 
     if argv.vcf_files is not None:
@@ -216,8 +216,6 @@ def main(argv, gpf_instance=None):
         vcf_loader = AnnotationPipelineDecorator(
             vcf_loader, annotation_pipeline
         )
-        vcf_loader = AlleleFrequencyDecorator(vcf_loader)
-
         variant_loaders.append(vcf_loader)
 
     if argv.dae_summary_file is not None:

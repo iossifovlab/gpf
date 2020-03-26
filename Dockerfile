@@ -5,7 +5,7 @@ ARG SOURCE_DIR="."
 
 ADD ${SOURCE_DIR}/conda-environment.yml /
 
-RUN /opt/conda/bin/conda create -c conda-forge -c bioconda -c iossifovlab \
+RUN /opt/conda/bin/conda create -c iossifovlab -c conda-forge -c bioconda \
     --name gpf --file /conda-environment.yml
 RUN echo "conda activate gpf" >> ~/.bashrc
 

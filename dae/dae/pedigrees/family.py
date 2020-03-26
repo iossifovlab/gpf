@@ -259,6 +259,8 @@ class FamiliesData(Mapping):
     def from_family_persons(family_persons):
         families_data = FamiliesData()
         for family_id, persons in family_persons:
+            assert all([isinstance(p, Person) for p in persons]), persons
+
             family = Family.from_persons(persons)
             families_data._families[family_id] = family
             for person_id, person in family.persons.items():

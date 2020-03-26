@@ -26,7 +26,7 @@ def bedFile2Rgns(bedFN):
 def rgns2BedFile(rgns, bedFN):
     F = open(bedFN, "w")
     for rr in rgns:
-        F.write("%s\t%d\t%d\n" % (rr.chr, rr.start - 1, rr.stop))
+        F.write("%s\t%d\t%d\n" % (rr.chrom, rr.start - 1, rr.stop))
     F.close()
 
 
@@ -36,15 +36,11 @@ class Region(object):
         r"^(chr)?(.+):([\d]{1,3}(,?[\d]{3})*)(-([\d]{1,3}(,?[\d]{3})*))?$"
     )  # noqa
 
-    def __init__(self, chrom=None, start=None, stop=None, chr=None):
+    def __init__(self, chrom=None, start=None, stop=None):
 
-        self.chrom = chrom if not None else chr
+        self.chrom = chrom
         self.start = start
         self.stop = stop
-
-    @property
-    def chr(self):
-        return self.chrom
 
     @property
     def begin(self):
@@ -55,17 +51,6 @@ class Region(object):
         return self.stop
 
     def __repr__(self):
-        return (
-            "Region("
-            + self.chrom
-            + ","
-            + str(self.start)
-            + ","
-            + str(self.stop)
-            + ")"
-        )
-
-    def __str__(self):
         if self.start is None:
             return self.chrom
         elif self.end is None:
@@ -90,6 +75,23 @@ class Region(object):
         if chrom == self.chrom and (pos >= self.start) and (pos <= self.stop):
             return True
         return False
+
+    def intersection(self, other):
+        if self.chrom != other.chrom:
+            return None
+        if self.start > other.stop:
+            return None
+        if other.start > self.stop:
+            return None
+        start = max(self.start, other.start)
+        stop = min(self.stop, other.stop)
+        if start >= stop:
+            return None
+        return Region(self.chrom, start, stop)
+
+    def contains(self, other):
+        return self.chrom == other.chrom and self.start <= other.start \
+            and other.stop <= self.stop
 
     def len(self):
         return self.stop - self.start + 1
@@ -153,9 +155,9 @@ def connected_component(R):
     G.add_nodes_from(R)
     D = defaultdict(list)
     for r in R:
-        D[r.chr].append(r)
+        D[r.chrom].append(r)
 
-    for chr, nds in list(D.items()):
+    for _chrom, nds in list(D.items()):
         nds.sort(key=lambda x: x.stop)
         for k in range(1, len(nds)):
             for j in range(k - 1, -1, -1):
@@ -180,21 +182,21 @@ def collapse(r, is_sorted=False):
 
     C = defaultdict(list)
 
-    C[r_copy[0].chr].append(r_copy[0])
+    C[r_copy[0].chrom].append(r_copy[0])
 
     for i in r_copy[1:]:
         try:
-            j = C[i.chr][-1]
+            j = C[i.chrom][-1]
         except Exception:
-            C[i.chr].append(i)
+            C[i.chrom].append(i)
             continue
 
         if i.start <= j.stop:
             if i.stop > j.stop:
-                C[i.chr][-1].stop = i.stop
+                C[i.chrom][-1].stop = i.stop
             continue
 
-        C[i.chr].append(i)
+        C[i.chrom].append(i)
 
     L = []
     for v in list(C.values()):
@@ -236,8 +238,8 @@ def intersection(s1, s2):
     the intersection. """
     s1_c = collapse(s1)
     s2_c = collapse(s2)
-    s1_c.sort(key=lambda x: (x.chr, x.start))
-    s2_c.sort(key=lambda x: (x.chr, x.start))
+    s1_c.sort(key=lambda x: (x.chrom, x.start))
+    s2_c.sort(key=lambda x: (x.chrom, x.start))
 
     intersect = []
 
@@ -245,8 +247,8 @@ def intersection(s1, s2):
 
     for i in s2_c:
         while k < len(s1_c):
-            if i.chr != s1_c[k].chr:
-                if i.chr > s1_c[k].chr:
+            if i.chrom != s1_c[k].chrom:
+                if i.chrom > s1_c[k].chrom:
                     k += 1
                     continue
                 break
@@ -291,23 +293,23 @@ def _diff(A, B):
         if k >= len(B):
             D.append(a)
             continue
-        if a.chr < B[k].chr:
+        if a.chrom < B[k].chrom:
             D.append(a)
             continue
         if a.stop < B[k].start:
             D.append(a)
             continue
         prev = a.start
-        while k < len(B) and B[k].stop <= a.stop and B[k].chr == a.chr:
+        while k < len(B) and B[k].stop <= a.stop and B[k].chrom == a.chrom:
             if prev < B[k].start:
-                new_a = Region(a.chr, prev, B[k].start - 1)
+                new_a = Region(a.chrom, prev, B[k].start - 1)
                 D.append(new_a)
             prev = B[k].stop + 1
             k += 1
-        if k < len(B) and B[k].chr != a.chr:
+        if k < len(B) and B[k].chrom != a.chrom:
             continue
         if prev <= a.stop:
-            D.append(Region(a.chr, prev, a.stop))
+            D.append(Region(a.chrom, prev, a.stop))
 
     return D
 
@@ -316,10 +318,10 @@ def difference(s1, s2, symmetric=False):
 
     if not symmetric:
         A = collapse(s1)
-        A.sort(key=lambda x: (x.chr, x.start))
+        A.sort(key=lambda x: (x.chrom, x.start))
     else:
         A = union(s1, s2)
-        A.sort(key=lambda x: (x.chr, x.start))
+        A.sort(key=lambda x: (x.chrom, x.start))
 
     B = intersection(s1, s2)
 

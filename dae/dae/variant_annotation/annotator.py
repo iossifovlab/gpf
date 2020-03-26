@@ -1,3 +1,6 @@
+from dae.variants.attributes import VariantType
+from dae.utils.regions import Region
+
 from .gene_codes import NuclearCode
 from .effect_checkers.coding import CodingEffectChecker
 from .effect_checkers.promoter import PromoterEffectChecker
@@ -16,6 +19,8 @@ import logging
 
 class VariantAnnotator(object):
     Severity = {
+        "CNV+": 35,
+        "CNV-": 35,
         "tRNA:ANTICODON": 30,
         "all": 24,
         "splice-site": 23,
@@ -44,8 +49,9 @@ class VariantAnnotator(object):
     }
 
     def __init__(
-        self, reference_genome, gene_models, code=NuclearCode(), promoter_len=0
-    ):
+            self, reference_genome, gene_models, code=NuclearCode(),
+            promoter_len=0):
+
         self.reference_genome = reference_genome
         self.gene_models = gene_models
         self.code = code
@@ -73,23 +79,56 @@ class VariantAnnotator(object):
                 return effect
         return None
 
-    def annotate(self, variant):
+    def _do_annotate_cnv(self, variant):
+        assert VariantType.is_cnv(variant.variant_type)
+        if variant.variant_type == VariantType.cnv_p:
+            effect_type = "CNV+"
+        elif variant.variant_type == VariantType.cnv_m:
+            effect_type = "CNV-"
+        else:
+            raise ValueError(
+                f"unexpected variant type: {variant.variant_type}")
+        assert effect_type is not None
+
         effects = []
+        cnv_region = Region(
+            variant.chromosome,
+            variant.position,
+            variant.position + variant.length)
+
+        for (start, stop), tms in \
+                self.gene_models.utr_models[variant.chromosome].items():
+            if cnv_region.intersection(
+                    Region(variant.chromosome, start, stop)):
+                for tm in tms:
+                    effects.append(
+                        EffectFactory.create_effect_with_tm(effect_type, tm))
+
+        if len(effects) == 0:
+            effects.append(EffectFactory.create_effect(effect_type))
+
+        return effects
+
+    def annotate(self, variant):
         logger = logging.getLogger(__name__)
-        if variant.chromosome not in self.gene_models._utrModels:
+        if VariantType.is_cnv(variant.variant_type):
+            return self._do_annotate_cnv(variant)
+
+        effects = []
+        if variant.chromosome not in self.gene_models.utr_models:
             effects.append(EffectFactory.create_effect("intergenic"))
             return effects
 
-        for key in self.gene_models._utrModels[variant.chromosome]:
+        for key in self.gene_models.utr_models[variant.chromosome]:
             if (
                 variant.position <= key[1] + self.promoter_len
                 and variant.ref_position_last >= key[0] - self.promoter_len
             ):
-                for tm in self.gene_models._utrModels[variant.chromosome][key]:
+                for tm in self.gene_models.utr_models[variant.chromosome][key]:
                     logger.debug(
                         "========: %s-%s :====================",
                         tm.gene,
-                        tm.trID,
+                        tm.tr_id,
                     )
                     effect = self.get_effect_for_transcript(variant, tm)
 
@@ -104,43 +143,43 @@ class VariantAnnotator(object):
         return effects
 
     def do_annotate_variant(
-        self,
-        chrom=None,
-        position=None,
-        loc=None,
-        var=None,
-        ref=None,
-        alt=None,
-        length=None,
-        seq=None,
-        typ=None,
-    ):
+            self,
+            chrom=None,
+            position=None,
+            loc=None,
+            var=None,
+            ref=None,
+            alt=None,
+            length=None,
+            seq=None,
+            variant_type=None):
+
         variant = Variant(
-            chrom, position, loc, var, ref, alt, length, seq, typ
+            chrom, position, loc, var, ref, alt, length, seq, variant_type
         )
         return self.annotate(variant)
 
     @classmethod
     def annotate_variant(
-        cls,
-        gm,
-        refG,
-        chrom=None,
-        position=None,
-        loc=None,
-        var=None,
-        ref=None,
-        alt=None,
-        length=None,
-        seq=None,
-        typ=None,
-        promoter_len=0,
-    ):
+            cls,
+            gm,
+            refG,
+            chrom=None,
+            position=None,
+            loc=None,
+            var=None,
+            ref=None,
+            alt=None,
+            length=None,
+            seq=None,
+            variant_type=None,
+            promoter_len=0):
+
         annotator = VariantAnnotator(refG, gm, promoter_len=promoter_len)
         effects = annotator.do_annotate_variant(
-            chrom, position, loc, var, ref, alt, length, seq, typ
+            chrom, position, loc, var, ref, alt, length, seq, variant_type
         )
-        desc = annotator.effect_description(effects)
+        desc = VariantAnnotator.effect_description(effects)
 
         logger = logging.getLogger(__name__)
         logger.debug("effect: %s", desc)
