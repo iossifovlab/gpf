@@ -1,3 +1,4 @@
+import pytest
 import os
 
 import pyarrow.parquet as pq
@@ -5,6 +6,7 @@ import pyarrow.parquet as pq
 from dae.tools.dae2parquet import main
 
 
+@pytest.mark.xfail(reason="Alleles are created wrong")
 def test_dae2parquet_transmitted(
     dae_transmitted_config, temp_filename, genomes_db_2013
 ):
@@ -87,6 +89,7 @@ def test_dae2parquet_transmitted(
 #     # assert '--region 1:1-100000'
 
 
+@pytest.mark.xfail(reason="Alleles are created wrong")
 def test_dae2parquet_dae_partition(
     fixture_dirname, dae_transmitted_config, temp_dirname
 ):

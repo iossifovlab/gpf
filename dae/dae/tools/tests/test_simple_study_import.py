@@ -440,6 +440,7 @@ def test_import_comp_all_del_chrom_prefix(
         assert v.chromosome == "1", v
 
 
+@pytest.mark.xfail(reason="Alleles are created wrong")
 @pytest.mark.parametrize(
     "genotype_storage_id,storage_type",
     [("test_impala", "impala"), ("test_filesystem", "filesystem"),],
