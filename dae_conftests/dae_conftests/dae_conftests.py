@@ -20,10 +20,7 @@ from dae.annotation.annotation_pipeline import PipelineAnnotator
 from dae.variants.variant import SummaryVariant, SummaryAllele
 from dae.variants.family_variant import FamilyVariant
 
-from dae.backends.raw.loader import (
-    AlleleFrequencyDecorator,
-    AnnotationPipelineDecorator,
-)
+from dae.backends.raw.loader import AnnotationPipelineDecorator
 from dae.backends.raw.raw_variants import RawMemoryVariants
 
 from dae.backends.dae.loader import DaeTransmittedLoader, DenovoLoader
@@ -439,12 +436,11 @@ def iossifov2014_raw_denovo(iossifov2014_loader):
 
 @pytest.fixture(scope="session")
 def iossifov2014_impala(
-    request,
-    iossifov2014_loader,
-    genomes_db_2013,
-    hdfs_host,
-    impala_genotype_storage,
-):
+        request,
+        iossifov2014_loader,
+        genomes_db_2013,
+        hdfs_host,
+        impala_genotype_storage):
 
     from dae.backends.impala.hdfs_helpers import HdfsHelpers
 
@@ -520,7 +516,6 @@ def vcf_variants_loader(
         )
         assert loader is not None
 
-        loader = AlleleFrequencyDecorator(loader)
         loader = AnnotationPipelineDecorator(
             loader, default_annotation_pipeline
         )
@@ -761,7 +756,6 @@ def data_import(
                 },
             )
 
-            loader = AlleleFrequencyDecorator(loader)
             loader = AnnotationPipelineDecorator(loader, annotation_pipeline)
 
             impala_genotype_storage.simple_study_import(

@@ -208,9 +208,10 @@ class DenovoGeneSetCollectionFactory:
                 filter_flag = False
                 for search_arg_name, search_arg_value in search_args.items():
                     if search_arg_name == "effect_types":
+                        # FIXME: Avoid conversion of effect types to set
                         if not (
                             aa.effect
-                            and aa.effect.types & set(search_arg_value)
+                            and set(aa.effect.types) & set(search_arg_value)
                         ):
                             filter_flag = True
                             break

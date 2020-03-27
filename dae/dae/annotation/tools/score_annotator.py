@@ -63,7 +63,7 @@ class VariantScoreAnnotatorBase(VariantAnnotatorBase):
                 variant.chromosome, variant.position, variant.position
             )
         elif variant.variant_type in set(
-            [VariantType.insertion, VariantType.deletion, VariantType.complex]
+            [VariantType.insertion, VariantType.deletion, VariantType.comp]
         ):
 
             scores = self.score_file.fetch_scores(
@@ -73,9 +73,8 @@ class VariantScoreAnnotatorBase(VariantAnnotatorBase):
             )
         else:
             print(
-                "Unexpected variant type: {}, {}".format(
-                    variant, variant.variant_type
-                ),
+                f"Unexpected variant type in score annotation: "
+                f"{variant}, {variant.variant_type}",
                 file=sys.stderr,
             )
         return scores
@@ -140,7 +139,7 @@ class NPScoreAnnotator(VariantScoreAnnotatorBase):
 
     def _aggregate_indel(self, variant, scores_df):
         assert variant.variant_type in set(
-            [VariantType.insertion, VariantType.deletion, VariantType.complex]
+            [VariantType.insertion, VariantType.deletion, VariantType.comp]
         )
 
         aggregate = {sn: "max" for sn in self.score_names}
@@ -177,7 +176,7 @@ class NPScoreAnnotator(VariantScoreAnnotatorBase):
             aline.update(agg)
 
         elif variant.variant_type in set(
-            [VariantType.insertion, VariantType.deletion, VariantType.complex]
+            [VariantType.insertion, VariantType.deletion, VariantType.comp]
         ):
 
             agg = self._aggregate_indel(variant, scores_df)

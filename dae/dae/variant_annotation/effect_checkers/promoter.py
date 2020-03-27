@@ -1,9 +1,10 @@
-from ..effect import Effect
+from ..effect import EffectFactory
 
 
 class PromoterEffectChecker(object):
     def create_effect(self, transcript_model):
-        return Effect("promoter", transcript_model)
+        return EffectFactory.create_effect_with_tm(
+            "promoter", transcript_model)
 
     def create_positive_strand_effect(self, transcript_model, variant):
         ef = self.create_effect(transcript_model)

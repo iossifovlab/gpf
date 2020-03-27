@@ -354,7 +354,8 @@ def test_save_load_gene_models(
 
 @pytest.mark.skip
 def test_mouse_gene_models():
-    dirname = "/home/lubo/Work/seq-pipeline/gpf_validation_data/mouse/mouseStrains/mouse"
+    dirname = "/home/lubo/Work/seq-pipeline/gpf_validation_data/" \
+        "mouse/mouseStrains/mouse"
     filename = "mouse.GRCm38.gtf.gz"
 
     gm = load_gtf_gene_models_format(os.path.join(dirname, filename))

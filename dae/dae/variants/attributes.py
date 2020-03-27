@@ -1,5 +1,14 @@
 import enum
 
+_VARIANT_TYPE_DISPLAY_NAME = {
+    "invalid": "inv",
+    "substitution": "sub",
+    "insertion": "ins",
+    "deletion": "del",
+    "comp": "complex",
+    "cnv_p": "cnv+",
+    "cnv_m": "cnv-",
+}
 
 _ROLE_DISPLAY_NAME = {
     "maternal_grandmother": "Maternal Grandmother",
@@ -254,8 +263,9 @@ class VariantType(enum.Enum):
     substitution = 1
     insertion = 1 << 1
     deletion = 1 << 2
-    complex = 1 << 3
-    CNV = 1 << 4
+    comp = 1 << 3
+    cnv_p = 1 << 4
+    cnv_m = 1 << 5
 
     @staticmethod
     def from_name(name):
@@ -265,36 +275,52 @@ class VariantType(enum.Enum):
             return VariantType.insertion
         elif name == "del" or name == "deletion":
             return VariantType.deletion
-        elif name == "complex":
-            return VariantType.complex
-        elif name == "CNV":
-            return VariantType.CNV
+        elif name == "comp" or name == "complex":
+            return VariantType.comp
+        elif name == "cnv_p " or name.lower() == "cnv+":
+            return VariantType.cnv_p
+        elif name == "cnv_m" or name.lower() == "cnv-":
+            return VariantType.cnv_m
+
         raise ValueError("unexpected variant type: {}".format(name))
 
     @staticmethod
     def from_cshl_variant(variant):
+        # FIXME: Change logic to use entire string
         if variant is None:
-            return VariantType.none
+            return VariantType.invalid
 
-        vt = variant[0]
-        if vt == "s":
+        vt = variant[0:3]
+        if vt == "sub":
             return VariantType.substitution
-        elif vt == "i":
+        elif vt == "ins":
             return VariantType.insertion
-        elif vt == "d":
+        elif vt == "del":
             return VariantType.deletion
-        elif vt == "c":
-            return VariantType.complex
-        elif vt == "C":
-            return VariantType.CNV
+        elif vt == "com":
+            return VariantType.comp
+        elif variant == "CNV+":
+            return VariantType.cnv_p
+        elif variant == "CNV-":
+            return VariantType.cnv_m
         else:
             raise ValueError("unexpected variant type: {}".format(variant))
 
-    def __repr__(self):
-        return self.name[:3]
+    @staticmethod
+    def from_value(value):
+        if value is None:
+            return None
+        return VariantType(value)
 
-    def __str__(self):
-        return self.name[:3]
+    @staticmethod
+    def is_cnv(vt):
+        return vt == VariantType.cnv_m or vt == VariantType.cnv_p
+
+    def __repr__(self) -> str:
+        return _VARIANT_TYPE_DISPLAY_NAME[self.name]
+
+    def __str__(self) -> str:
+        return _VARIANT_TYPE_DISPLAY_NAME[self.name]
 
 
 class GeneticModel(enum.Enum):

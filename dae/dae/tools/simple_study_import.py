@@ -14,10 +14,9 @@ from dae.backends.impala.import_commons import (
 
 from dae.backends.dae.loader import DenovoLoader, DaeTransmittedLoader
 from dae.backends.vcf.loader import VcfLoader
-from dae.backends.raw.loader import (
-    AnnotationPipelineDecorator,
-    AlleleFrequencyDecorator,
-)
+
+from dae.backends.cnv.loader import CNVLoader
+from dae.backends.raw.loader import AnnotationPipelineDecorator
 
 from dae.pedigrees.loader import FamiliesLoader
 
@@ -57,6 +56,13 @@ def cli_arguments(dae_config, argv=sys.argv[1:]):
         type=str,
         metavar="<de Novo variants filename>",
         help="DAE denovo variants file",
+    )
+
+    parser.add_argument(
+        "--cnv-file",
+        type=str,
+        metavar="<CNV variants filename>",
+        help="CNV variants file",
     )
 
     parser.add_argument(
@@ -116,6 +122,7 @@ def cli_arguments(dae_config, argv=sys.argv[1:]):
     DenovoLoader.cli_options(parser)
     VcfLoader.cli_options(parser)
     DaeTransmittedLoader.cli_options(parser)
+    CNVLoader.cli_options(parser)
 
     parser_args = parser.parse_args(argv)
     return parser_args
@@ -193,14 +200,22 @@ def main(argv, gpf_instance=None):
         )
         variant_loaders.append(denovo_loader)
 
+    if argv.cnv_file is not None:
+        cnv_filename, cnv_params = CNVLoader.parse_cli_arguments(argv)
+        cnv_loader = CNVLoader(
+            families, cnv_filename, genome=genome, params=cnv_params
+        )
+        cnv_loader = AnnotationPipelineDecorator(
+            cnv_loader, annotation_pipeline
+        )
+        variant_loaders.append(cnv_loader)
+
     if argv.vcf_files is not None:
         vcf_files, vcf_params = VcfLoader.parse_cli_arguments(argv)
         vcf_loader = VcfLoader(families, vcf_files, genome, params=vcf_params)
         vcf_loader = AnnotationPipelineDecorator(
             vcf_loader, annotation_pipeline
         )
-        vcf_loader = AlleleFrequencyDecorator(vcf_loader)
-
         variant_loaders.append(vcf_loader)
 
     if argv.dae_summary_file is not None:

@@ -3,8 +3,9 @@
 import itertools
 from collections import OrderedDict
 
-from dae.variant_annotation.annotator import VariantAnnotator
+from dae.variants.attributes import VariantType
 
+from dae.variant_annotation.annotator import VariantAnnotator
 from dae.annotation.tools.annotator_base import VariantAnnotatorBase
 
 
@@ -39,43 +40,43 @@ class EffectAnnotatorBase(VariantAnnotatorBase):
         raise NotImplementedError()
 
 
-class EffectAnnotator(EffectAnnotatorBase):
+# class EffectAnnotator(EffectAnnotatorBase):
 
-    COLUMNS_SCHEMA = [
-        ("effect_type", "list(str)"),
-        ("effect_gene", "list(str)"),
-        ("effect_details", "list(str)"),
-    ]
+#     COLUMNS_SCHEMA = [
+#         ("effect_type", "list(str)"),
+#         ("effect_gene", "list(str)"),
+#         ("effect_details", "list(str)"),
+#     ]
 
-    def __init__(self, config, genomes_db, **kwargs):
-        super(EffectAnnotator, self).__init__(config, genomes_db, **kwargs)
+#     def __init__(self, config, genomes_db, **kwargs):
+#         super(EffectAnnotator, self).__init__(config, genomes_db, **kwargs)
 
-    def do_annotate(self, aline, variant):
-        if variant is None:
-            self._not_found(aline)
-            return
+#     def do_annotate(self, aline, variant):
+#         if variant is None:
+#             self._not_found(aline)
+#             return
 
-        assert variant is not None
+#         assert variant is not None
 
-        try:
-            effects = self.effect_annotator.do_annotate_variant(
-                chrom=variant.chromosome,
-                position=variant.position,
-                ref=variant.reference,
-                alt=variant.alternative,
-            )
-            (
-                effect_type,
-                effect_gene,
-                effect_details,
-            ) = self.effect_annotator.effect_description1(effects)
+#         try:
+#             effects = self.effect_annotator.do_annotate_variant(
+#                 chrom=variant.chromosome,
+#                 position=variant.position,
+#                 ref=variant.reference,
+#                 alt=variant.alternative,
+#             )
+#             (
+#                 effect_type,
+#                 effect_gene,
+#                 effect_details,
+#             ) = self.effect_annotator.effect_description1(effects)
 
-            aline[self.columns["effect_type"]] = effect_type
-            aline[self.columns["effect_gene"]] = effect_gene
-            aline[self.columns["effect_details"]] = effect_details
+#             aline[self.columns["effect_type"]] = effect_type
+#             aline[self.columns["effect_gene"]] = effect_gene
+#             aline[self.columns["effect_details"]] = effect_details
 
-        except ValueError:
-            pass
+#         except ValueError:
+#             pass
 
 
 class VariantEffectAnnotator(EffectAnnotatorBase):
@@ -102,12 +103,17 @@ class VariantEffectAnnotator(EffectAnnotatorBase):
             return
 
         assert variant is not None
+        length = None
+        if VariantType.is_cnv(variant.variant_type):
+            length = variant.end_position - variant.position
 
         effects = self.effect_annotator.do_annotate_variant(
             chrom=variant.chromosome,
             position=variant.position,
             ref=variant.reference,
             alt=variant.alternative,
+            variant_type=variant.variant_type,
+            length=length
         )
 
         r = self.wrap_effects(effects)

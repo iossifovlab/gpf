@@ -164,7 +164,8 @@ def main_cli_options(gpf_instance):
             (
                 "--notabix",
                 {
-                    "help": "skip running bgzip and tabix on the annotated files "
+                    "help": "skip running bgzip and tabix on the annotated "
+                    "files "
                     "[default: %(default)s]",
                     "default": False,
                     "action": "store_true",
