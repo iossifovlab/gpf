@@ -102,6 +102,7 @@ class FamilyAllele(Allele, FamilyDelegate):
         self._variant_in_members_objects = None
         self._variant_in_roles = None
         self._variant_in_sexes = None
+        self._family_index = None
 
         self.matched_gene_effects: List = []
 
@@ -128,6 +129,18 @@ class FamilyAllele(Allele, FamilyDelegate):
     @property
     def summary_index(self):
         return self.summary_allele.summary_index
+
+    @summary_index.setter
+    def summary_index(self, val):
+        self.summary_allele.summary_index = val
+
+    @property
+    def family_index(self):
+        return self._family_index
+
+    @family_index.setter
+    def family_index(self, val):
+        self._family_index = val
 
     @property
     def allele_index(self):
@@ -420,6 +433,19 @@ class FamilyVariant(Variant, FamilyDelegate):
     @property
     def summary_index(self):
         return self.summary_variant.summary_index
+
+    @summary_index.setter
+    def summary_index(self, summary_index):
+        self.summary_variant.summary_index = summary_index
+
+    @property
+    def family_index(self):
+        return self.ref_allele.family_index
+
+    @family_index.setter
+    def family_index(self, val):
+        for allele in self.alleles:
+            allele.family_index = val
 
     @property
     def alleles(self):

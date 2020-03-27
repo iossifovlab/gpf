@@ -758,7 +758,7 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
             "position": rec["position"],
             "reference": rec["reference"],
             "alternative": None,
-            "variant_type": 0,
+            "variant_type": None,
             "cshl_position": rec["cshl_position"],
             "cshl_variant": rec["cshl_variant"],
             "summary_variant_index": rec["summary_variant_index"],

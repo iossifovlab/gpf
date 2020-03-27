@@ -12,12 +12,11 @@ class Dae2ParquetTool(Variants2ParquetTool):
     VARIANTS_FREQUENCIES = False
 
 
-def main(argv=sys.argv[1:], gpf_instance=None, annotation_defaults={}):
+def main(argv=sys.argv[1:], gpf_instance=None):
 
     Dae2ParquetTool.main(
         argv,
-        gpf_instance=gpf_instance,
-        annotation_defaults=annotation_defaults,
+        gpf_instance=gpf_instance
     )
 
 
