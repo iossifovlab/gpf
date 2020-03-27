@@ -902,8 +902,7 @@ class Variants2ParquetTool:
 
     @classmethod
     def main(
-        cls, argv=sys.argv[1:], gpf_instance=None, annotation_defaults={}
-    ):
+            cls, argv=sys.argv[1:], gpf_instance=None):
 
         if gpf_instance is None:
             gpf_instance = GPFInstance()
@@ -965,7 +964,7 @@ class Variants2ParquetTool:
             variants_loader.reset_regions(regions)
 
         variants_loader = cls._build_variants_loader_pipeline(
-            gpf_instance, argv, annotation_defaults, variants_loader
+            gpf_instance, argv, variants_loader
         )
 
         ParquetManager.variants_to_parquet_partition(
@@ -977,7 +976,7 @@ class Variants2ParquetTool:
 
     @classmethod
     def _build_variants_loader_pipeline(
-        cls, gpf_instance, argv, annotation_defaults, variants_loader
+        cls, gpf_instance, argv, variants_loader
     ):
         annotation_pipeline = construct_import_annotation_pipeline(
             gpf_instance, annotation_configfile=argv.annotation_config,

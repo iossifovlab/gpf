@@ -7,7 +7,7 @@ from dae.utils.variant_utils import vcf2cshl
 
 from dae.variants.attributes import VariantType, TransmissionType
 from typing import List, Dict, Set, Any, Optional
-from dae.variants.effects import Effect
+from dae.variants.effects import Effect, EffectGene
 import itertools
 
 
@@ -165,6 +165,18 @@ class Allele:
     @property
     def effects(self) -> Optional[Effect]:
         return self.effect
+
+    @property
+    def effect_types(self) -> List[str]:
+        return self.effect.types
+
+    @property
+    def effect_genes(self) -> List[EffectGene]:
+        return self.effect.genes
+
+    @property
+    def effect_gene_symbols(self) -> List[str]:
+        return [eg.symbol for eg in self.effect_genes]
 
     @property
     def variant_type(self) -> Optional[VariantType]:
@@ -489,6 +501,10 @@ class SummaryAllele(Allele):
     def summary_index(self) -> int:
         return self._summary_index
 
+    @summary_index.setter
+    def summary_index(self, summary_index):
+        self._summary_index = summary_index
+
     @property
     def allele_index(self) -> int:
         return self._allele_index
@@ -605,6 +621,11 @@ class SummaryVariant(Variant):
     @property
     def summary_index(self):
         return self.ref_allele.summary_index
+
+    @summary_index.setter
+    def summary_index(self, val):
+        for allele in self.alleles:
+            allele.summary_index = val
 
     @property
     def alleles(self):

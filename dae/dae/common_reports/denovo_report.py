@@ -72,7 +72,8 @@ class EffectCell:
             return
         if not family_allele.effect:
             return
-        if not (family_allele.effect.types & self.effect_types):
+        # FIXME: Avoid conversion of effect types to set
+        if not (set(family_allele.effect.types) & self.effect_types):
             return
         self.observed_variants_ids.add(family_variant.fvuid)
         self.observed_people_with_event.update(
