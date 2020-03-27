@@ -22,6 +22,8 @@ from dae.backends.impala.parquet_io import ParquetManager, \
     ParquetPartitionDescriptor, \
     NoPartitionDescriptor
 
+from dae.configuration.study_config_builder import StudyConfigBuilder
+
 
 def save_study_config(dae_config, study_id, study_config):
     dirname = os.path.join(dae_config.studies_db.dir, study_id)
@@ -363,6 +365,38 @@ class MakefileGenerator:
             self.generate_variants_rules(argv, outfile)
             self.generate_load_targets(argv, outfile)
             self.generate_report_targets(argv, outfile)
+
+    def generate_study_config(self, argv):
+        dirname = argv.output
+        assert os.path.exists(dirname)
+
+        config_dict = {
+            "id": self.study_id,
+            "conf_dir": ".",
+            "has_denovo": False,
+            "has_cnv": False,
+            "genotype_storage": {
+                "id": self.genotype_storage_id,
+                "tables": {
+                    "variants": f'{self.study_id}_variants',
+                    "pedigree": f'{self.study_id}_pedigree',
+                },
+            },
+            "genotype_browser": {"enabled": True, "has_cnv": False},
+        }
+
+        if self.denovo_loader:
+            config_dict["has_denovo"] = True
+        if self.cnv_loader:
+            config_dict["has_denovo"] = True
+            config_dict["has_cnv"] = True
+            config_dict["genotype_browser"]["has_cnv"] = True
+
+        config_builder = StudyConfigBuilder(config_dict)
+        config = config_builder.build_config()
+        with open(os.path.join(
+                dirname, f"{self.study_id}.conf"), "w") as outfile:
+            outfile.write(config)
 
     def _collect_variants_targets(self):
         variants_targets = []
@@ -758,6 +792,7 @@ class MakefileGenerator:
         generator = cls(gpf_instance)
         generator.build(argv)
         generator.generate_makefile(argv)
+        generator.generate_study_config(argv)
 
 
 class Variants2ParquetTool:
