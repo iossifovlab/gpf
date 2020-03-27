@@ -13,12 +13,11 @@ class Cnv2ParquetTool(Variants2ParquetTool):
     BUCKET_INDEX_DEFAULT = 2
 
 
-def main(argv=sys.argv[1:], gpf_instance=None, annotation_defaults={}):
+def main(argv=sys.argv[1:], gpf_instance=None):
 
     Cnv2ParquetTool.main(
         argv,
-        gpf_instance=gpf_instance,
-        annotation_defaults=annotation_defaults,
+        gpf_instance=gpf_instance
     )
 
 
