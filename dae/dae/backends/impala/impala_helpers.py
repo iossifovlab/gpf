@@ -1,3 +1,4 @@
+from sqlalchemy.pool import QueuePool
 from impala import dbapi
 import os
 
@@ -8,7 +9,12 @@ class ImpalaHelpers(object):
         assert impala_host
         assert impala_port
 
-        impala_connection = dbapi.connect(host=impala_host, port=impala_port)
+        def getconn():
+            return dbapi.connect(host=impala_host, port=impala_port)
+
+        pool = QueuePool(getconn, pool_size=5, reset_on_return=False)
+
+        impala_connection = pool.connect()
 
         return impala_connection
 
