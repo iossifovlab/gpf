@@ -171,7 +171,3 @@ def test_genotype_group_person_sets_subset(variants_db_fixture):
         "person4" not in unaffected_persons
         and "person4" not in phenotype1_persons
     )
-
-
-def test_composite_person_set():
-    pass

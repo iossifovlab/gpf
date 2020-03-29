@@ -2,7 +2,6 @@ import itertools
 import functools
 from typing import Dict
 from dae.pedigrees.family import FamiliesData
-from dae.pedigrees.families_groups import FamiliesGroups
 from dae.person_sets import PersonSet, PersonSetCollection
 
 
@@ -27,7 +26,6 @@ class GenotypeData:
         self.has_complex = self.config.has_complex
 
         self.study_type = self.config.study_type
-        self.families_groups = None
         self.person_set_collections: Dict[str, PersonSetCollection] = dict()
 
     def query_variants(
@@ -58,23 +56,8 @@ class GenotypeData:
     def families(self):
         raise NotImplementedError()
 
-    def _build_study_groups(self):
-        if self.families_groups is None:
-            config = self.config.people_group
-
-            self.families_groups = FamiliesGroups.from_config(
-                self.families, config
-            )
-            self.families_groups.add_predefined_groups(
-                ["status", "role", "sex", "role.sex", "family_size"]
-            )
-
     def _build_person_set_collection(self, person_set_collection_id):
         raise NotImplementedError()
-
-    def get_families_group(self, families_group_id):
-        self._build_study_groups()
-        return self.families_groups.get(families_group_id)
 
     def get_person_set_collection(self, person_set_collection_id):
         if person_set_collection_id not in self.person_set_collections:

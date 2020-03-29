@@ -1,6 +1,6 @@
 def test_enrichment_config_people_groups(f1_trio_enrichment_config):
     enrichment_config = f1_trio_enrichment_config
-    assert enrichment_config.selected_people_groups == ["phenotype"]
+    assert enrichment_config.selected_person_set_collections == ["phenotype"]
 
 
 def test_enrichment_config_default_values(f1_trio_enrichment_config):

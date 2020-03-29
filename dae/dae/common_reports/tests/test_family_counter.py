@@ -1,20 +1,19 @@
 import pytest
 
 from dae.common_reports.family_counter import (
+    get_family_pedigree,
     FamilyCounter,
     FamiliesGroupCounters,
 )
 
 
-def test_family_counter(study1, families_groups):
-    fgs = families_groups(study1)
-    fg = fgs.get("phenotype")
+def test_family_counter(study1):
+    person_set_collection = study1.get_person_set_collection("phenotype")
     family = study1.families["f5"]
-
-    pedigree = fg.family_pedigree(family)
+    pedigree = get_family_pedigree(family, person_set_collection)
     family_counter = FamilyCounter(family, pedigree, 1)
 
-    assert family_counter.pedigree[0] == [
+    assert family_counter.pedigree[0] == (
         "f5",
         "mom5",
         "0",
@@ -26,8 +25,8 @@ def test_family_counter(study1, families_groups):
         None,
         "",
         "",
-    ]
-    assert family_counter.pedigree[1] == [
+    )
+    assert family_counter.pedigree[1] == (
         "f5",
         "dad5",
         "0",
@@ -39,8 +38,8 @@ def test_family_counter(study1, families_groups):
         None,
         "",
         "",
-    ]
-    assert family_counter.pedigree[2] == [
+    )
+    assert family_counter.pedigree[2] == (
         "f5",
         "ch5",
         "mom5",
@@ -52,8 +51,8 @@ def test_family_counter(study1, families_groups):
         None,
         "",
         "",
-    ]
-    assert family_counter.pedigree[3] == [
+    )
+    assert family_counter.pedigree[3] == (
         "f5",
         "ch5.1",
         "mom5",
@@ -65,7 +64,7 @@ def test_family_counter(study1, families_groups):
         True,
         "",
         "",
-    ]
+    )
     assert family_counter.pedigrees_label == 1
 
     assert len(family_counter.to_dict().keys()) == 2
@@ -106,11 +105,6 @@ def test_families_group_counter_same(study1):
         False,
         False,
     )
-    for k in families_group_counter.counters.keys():
-        mapped_fam_ids = [
-            fam.family_id
-            for fam in families_group_counter.counters[k].families
-        ]
     assert len(families_group_counter.counters) == 8
     assert len(families_group_counter.to_dict().keys()) == 4
 

@@ -15,11 +15,6 @@ class GenotypeHelper(object):
         self._children_by_sex = None
 
     def get_variants(self, effect_types):
-        families_group = self.genotype_data_group.get_families_group(
-            self.person_set_collection.id
-        )
-        assert families_group is not None
-
         # TODO: Remove this when genotype_data_study.query_variants can
         # support non expand_effect_types as LGDs
         effect_types = expand_effect_types(effect_types)

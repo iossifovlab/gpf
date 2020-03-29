@@ -7,21 +7,6 @@ from dae.common_reports.denovo_report import (
 )
 
 
-@pytest.mark.xfail
-def test_families_group_filter_people(study1, families_groups):
-    fg = families_groups(study1)
-    families_group = fg.get_default_families_group()
-    assert families_group.id == "phenotype"
-    assert (
-        len(list(families_group.get_people_with_propvalues(("phenotype2",))))
-        == 2
-    )
-
-    families_group = fg.get("role")
-    assert families_group.id == "role"
-    assert len(list(families_group.get_people_with_propvalues(("sib",)))) == 4
-
-
 @pytest.mark.xfail(reason="denovo report reorganized")
 def test_effect_cell_missense_study1(
     study1, denovo_variants_st1, phenotype_role_collection

@@ -1,9 +1,6 @@
+import os
 import pytest
 
-import os
-
-from dae.configuration.gpf_config_parser import GPFConfigParser
-from dae.pedigrees.families_groups import FamiliesGroups
 from dae.person_sets import PersonSetCollection
 
 
@@ -77,42 +74,6 @@ def genotype_data_group3_config(vdb_fixture):
 @pytest.fixture(scope="session")
 def genotype_data_group4_config(vdb_fixture):
     return vdb_fixture.get_genotype_data_group_config("Dataset4")
-
-
-@pytest.fixture(scope="session")
-def groups():
-    return [
-        GPFConfigParser._dict_to_namedtuple(
-            {
-                "name": "Role and Diagnosis",
-                "people_group_ids": ["role", "phenotype"],
-            }
-        )
-    ]
-
-
-@pytest.fixture(scope="session")
-def selected_people_groups():
-    return ["phenotype"]
-
-
-@pytest.fixture(scope="session")
-def people_groups(study1_config):
-    return study1_config.people_group
-
-
-@pytest.fixture(scope="session")
-def families_groups(people_groups):
-    def builder(study):
-        families_groups = FamiliesGroups.from_config(
-            study.families, people_groups
-        )
-        families_groups.add_predefined_groups(
-            ["status", "sex", "role", "role.sex", "family_size"]
-        )
-        return families_groups
-
-    return builder
 
 
 @pytest.fixture(scope="session")
