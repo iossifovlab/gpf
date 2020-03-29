@@ -60,6 +60,8 @@ class GenotypeData:
         raise NotImplementedError()
 
     def get_person_set_collection(self, person_set_collection_id):
+        if person_set_collection_id is None:
+            return None
         if person_set_collection_id not in self.person_set_collections:
             self._build_person_set_collection(person_set_collection_id)
         return self.person_set_collections[person_set_collection_id]

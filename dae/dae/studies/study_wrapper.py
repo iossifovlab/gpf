@@ -284,7 +284,7 @@ class StudyWrapper(object):
 
     def get_variant_web_rows(self, query, sources, max_variants_count=None):
         person_set_collection_id = query.get("peopleGroup", {}).get("id", None)
-        person_set_collection = self.get_families_group(
+        person_set_collection = self.get_person_set_collection(
             person_set_collection_id
         )
 
@@ -885,7 +885,7 @@ class StudyWrapper(object):
             "phenotype_browser",
             "phenotype_tool",
             "phenotype_data",
-            "people_group",
+            "person_set_collections",
             "common_report",
             "study_type",
             "studies",
@@ -928,8 +928,8 @@ class StudyWrapper(object):
         result["common_report"] = GPFConfigParser._namedtuple_to_dict(
             result["common_report"]
         )
-        result["people_group"] = GPFConfigParser._namedtuple_to_dict(
-            result["people_group"]
+        result["person_set_collections"] = GPFConfigParser._namedtuple_to_dict(
+            result["person_set_collections"]
         )
 
         result["name"] = result["name"] or result["id"]
