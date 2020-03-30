@@ -123,14 +123,13 @@ def test_families_group_counters(study1):
     ) == {"phenotype1", "phenotype2", "unaffected", "unknown"}
 
     assert len(families_group_counters.counters) == 8
-    # assert len(families_group_counters.selected_families_group.legend) == 6
 
-    # assert (
-    #     families_group_counters.selected_families_group.legend[-1]["id"]
-    #     == "missing-person"
-    # )
-
-    assert len(families_group_counters.to_dict().keys()) == 4
+    fg_dict = families_group_counters.to_dict()
+    assert len(fg_dict.keys()) == 4
+    assert len(fg_dict["legend"]) == 4
+    assert (
+        fg_dict["legend"][-1]["id"] == "unknown"
+    )
 
 
 def test_families_group_counter_study2(study2):

@@ -122,6 +122,8 @@ class FamiliesGroupCounters(object):
                     ],
                 }
             ],
-            # FIXME
-            "legend": None,
+            "legend": [
+                {"id": domain.id, "name": domain.name, "color": domain.color}
+                for domain in self.person_set_collection.person_sets.values()
+            ],
         }
