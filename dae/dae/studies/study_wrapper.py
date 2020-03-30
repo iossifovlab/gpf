@@ -32,6 +32,7 @@ from dae.backends.attributes_query import (
     OrNode,
     ContainsNode,
 )
+from dae.studies.study import GenotypeDataGroup
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
 
@@ -44,6 +45,7 @@ class StudyWrapper(object):
         assert genotype_data_study is not None
 
         self.genotype_data_study = genotype_data_study
+        self.is_group = isinstance(genotype_data_study, GenotypeDataGroup)
         self.config = genotype_data_study.config
         assert self.config is not None
 
@@ -415,9 +417,21 @@ class StudyWrapper(object):
             )
             kwargs.pop("inheritanceTypeFilter")
 
-        variants_from_studies = itertools.islice(
-            self.genotype_data_study.query_variants(**kwargs), limit
-        )
+        if self.is_group:
+            variants_futures = \
+                self.genotype_data_study.query_variants_async(**kwargs)
+
+            variants_from_studies = list()
+            for future in variants_futures:
+                variants_from_studies += future.result()
+
+            variants_from_studies = itertools.islice(
+                variants_from_studies, limit
+            )
+        else:
+            variants_from_studies = itertools.islice(
+                self.genotype_data_study.query_variants(**kwargs), limit
+            )
 
         for variant in self._add_additional_columns(variants_from_studies):
             yield variant
