@@ -5,28 +5,33 @@ import os
 
 class ImpalaHelpers(object):
     @staticmethod
-    def create_impala_connection(impala_host, impala_port):
+    def create_impala_connection(impala_host, impala_port, pool_size=5):
         assert impala_host
         assert impala_port
 
         def getconn():
             return dbapi.connect(host=impala_host, port=impala_port)
 
-        pool = QueuePool(getconn, pool_size=5, reset_on_return=False)
+        print(f"Creating impala pool with {pool_size} connections")
+
+        pool = QueuePool(getconn, pool_size=pool_size, reset_on_return=False)
 
         impala_connection = pool.connect()
+
 
         return impala_connection
 
     def __init__(
-        self, impala_host=None, impala_port=None, impala_connection=None
+        self, impala_host=None,
+        impala_port=None, impala_connection=None,
+        pool_size=5
     ):
         if impala_connection is None:
             assert impala_host
             assert impala_port
 
             impala_connection = self.create_impala_connection(
-                impala_host, impala_port
+                impala_host, impala_port, pool_size=pool_size
             )
         self.connection = impala_connection
 

@@ -47,6 +47,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
             self._impala_connection = ImpalaHelpers.create_impala_connection(
                 self.storage_config.impala.host,
                 self.storage_config.impala.port,
+                pool_size=self.storage_config.impala.pool_size
             )
 
         return self._impala_connection

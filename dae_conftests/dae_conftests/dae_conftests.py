@@ -643,6 +643,7 @@ def impala_genotype_storage(hdfs_host, impala_host):
                 "host": impala_host,
                 "port": 21050,
                 "db": impala_test_dbname(),
+                "pool_size": 5,
             },
             "hdfs": {"host": hdfs_host, "port": 8020, "base_dir": "/tmp"},
         }
