@@ -123,8 +123,8 @@ description = "{{ description }}"
 description_file = "{{ description_file }}"
 {%- endif %}
 
-{%- if selected_people_groups %}
-selected_people_groups = "{{ selected_people_groups }}"
+{%- if selected_person_set_collections %}
+selected_person_set_collections = "{{ selected_person_set_collections }}"
 {%- endif %}
 
 {%- if study_type %}
@@ -317,9 +317,9 @@ params = {}
 {% endfor %}
 {%- endif %}
 
-{%- if people_group %}
-[people_group]
-{% for key, value in people_group.items() %}
+{%- if person_set_collections %}
+[person_set_collections]
+{% for key, value in person_set_collections.items() %}
 {%- if value is mapping -%}
 {{key}}.id = "{{ value.id }}"
 {{key}}.name = "{{ value.name }}"
@@ -497,8 +497,8 @@ file_path = "{{ common_report.file_path }}"
 enabled = {{ denovo_gene_sets.enabled }}
 {%- endif %}
 
-{%- if denovo_gene_sets.selected_people_groups %}
-selected_people_groups = "{{ denovo_gene_sets.selected_people_groups }}"
+{%- if denovo_gene_sets.selected_person_set_collections %}
+selected_person_set_collections = "{{ denovo_gene_sets.selected_person_set_collections }}"
 {%- endif %}
 
 {%- if denovo_gene_sets.selected_standard_criterias_values %}
