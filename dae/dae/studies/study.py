@@ -73,6 +73,8 @@ class GenotypeDataGroup(GenotypeData):
             genotype_data_group_config, studies
         )
         self._families = self._build_families()
+        for collection_id in self.config.person_set_collections.selected_person_set_collections:
+            self._build_person_set_collection(collection_id)
 
     @property
     def families(self):
@@ -191,6 +193,8 @@ class GenotypeDataStudy(GenotypeData):
         super(GenotypeDataStudy, self).__init__(config, [self])
 
         self._backend = backend
+        for collection_id in self.config.person_set_collections.selected_person_set_collections:
+            self._build_person_set_collection(collection_id)
 
     def query_variants(
             self,
