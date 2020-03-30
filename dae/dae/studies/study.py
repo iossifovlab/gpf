@@ -59,11 +59,17 @@ class GenotypeData:
     def _build_person_set_collection(self, person_set_collection_id):
         raise NotImplementedError()
 
+    def _build_person_set_collections(self):
+        collections_config = self.config.person_set_collections
+        if collections_config:
+            selected_collections = \
+                collections_config.selected_person_set_collections or []
+            for collection_id in selected_collections:
+                self._build_person_set_collection(collection_id)
+
     def get_person_set_collection(self, person_set_collection_id):
         if person_set_collection_id is None:
             return None
-        if person_set_collection_id not in self.person_set_collections:
-            self._build_person_set_collection(person_set_collection_id)
         return self.person_set_collections[person_set_collection_id]
 
 
@@ -73,8 +79,7 @@ class GenotypeDataGroup(GenotypeData):
             genotype_data_group_config, studies
         )
         self._families = self._build_families()
-        for collection_id in self.config.person_set_collections.selected_person_set_collections:
-            self._build_person_set_collection(collection_id)
+        self._build_person_set_collections()
 
     @property
     def families(self):
@@ -193,8 +198,7 @@ class GenotypeDataStudy(GenotypeData):
         super(GenotypeDataStudy, self).__init__(config, [self])
 
         self._backend = backend
-        for collection_id in self.config.person_set_collections.selected_person_set_collections:
-            self._build_person_set_collection(collection_id)
+        self._build_person_set_collections()
 
     def query_variants(
             self,

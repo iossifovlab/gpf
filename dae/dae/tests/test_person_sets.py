@@ -156,6 +156,8 @@ def test_genotype_group_person_sets_subset(variants_db_fixture):
 
     # Remove a person to simulate a subset of people being used
     del genotype_data_group.families.persons["person4"]
+    genotype_data_group.person_set_collections = dict()
+    genotype_data_group._build_person_set_collections()
 
     phenotype_collection = genotype_data_group.get_person_set_collection(
         "phenotype"
