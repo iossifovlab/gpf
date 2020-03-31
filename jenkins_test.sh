@@ -23,6 +23,8 @@ export DAE_HDFS_HOST=impala
 export DAE_IMPALA_HOST=impala
 export HADOOP_HOME=/opt/conda/envs/gpf
 
+export LD_LIBRARY_PATH=/opt/conda/envs/gpf/lib/native:/opt/conda/envs/gpf/lib/server
+
 py.test -v --cov-config coveragerc \
     --reimport \
     --junitxml=./test_results/dae-junit.xml \

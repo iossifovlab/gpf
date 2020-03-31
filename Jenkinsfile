@@ -23,15 +23,8 @@ pipeline {
 
         DOCKER_CONTAINER_IMPALA="gpf_impala_${env.BRANCH_NAME}_${env.BUILD_NUMBER}"
 
-        SOURCE_DIR="${env.WORKSPACE}"
         DAE_DB_DIR="${env.WORKSPACE}/data-hg19-startup"
-        DAE_GENOMIC_SCORES_HG19="/data01/lubo/data/seq-pipeline/genomic-scores-hg19"
-        DAE_GENOMIC_SCORES_HG38="/data01/lubo/data/seq-pipeline/genomic-scores-hg19"
 
-        DOCKER_SOURCE_DIR="/code"
-        DOCKER_DAE_DB_DIR="/data"
-        DOCKER_DAE_GENOMIC_SCORES_HG19="/genomic-scores-hg19"
-        DOCKER_DAE_GENOMIC_SCORES_HG38="/genomic-scores-hg38"
     }
     stages {
         stage ('Start') {
@@ -47,15 +40,15 @@ pipeline {
             steps {
                 sh '''
                     docker run -d --rm \
-                        -v ${SOURCE_DIR}:/code \
+                        -v ${WD}:/code \
                         busybox:latest \
                         /bin/sh -c "rm -rf /code/wdae-*.log && rm -rf /code/wdae_django*.cache"
                     docker run -d --rm \
-                        -v ${SOURCE_DIR}:/code \
+                        -v ${WD}:/code \
                         busybox:latest \
                         /bin/sh -c "/code/jenkins_git_clean.sh"
                     docker run -d --rm \
-                        -v ${SOURCE_DIR}:/code \
+                        -v ${WD}:/code \
                         busybox:latest \
                         /bin/sh -c "rm -rf /code/test_results/*"
                 '''
@@ -66,7 +59,7 @@ pipeline {
             steps {
                 script {
                     docker.build(
-                        "${DOCKER_IMAGE}", ". -f ${SOURCE_DIR}/Dockerfile")
+                        "${DOCKER_IMAGE}", ". -f ${WD}/Dockerfile")
                 }
             }
         }
@@ -102,7 +95,7 @@ pipeline {
 
                     sed -i "s/localhost/impala/" $WD/data-hg19-startup/DAE.conf
                             docker run -d --rm \
-                                -v ${SOURCE_DIR}:/code \
+                                -v ${WD}:/code \
                                 busybox:latest \
                                 /bin/sh -c "sed -i \"s/localhost/impala/\" /code/dae_conftests/dae_conftests/tests/fixtures/DAE.conf"
                 '''
@@ -117,7 +110,7 @@ pipeline {
                         --network ${DOCKER_NETWORK} \
                         --link ${DOCKER_CONTAINER_IMPALA}:impala \
                         -v ${DAE_DB_DIR}:/data \
-                        -v ${SOURCE_DIR}:/code \
+                        -v ${WD}:/code \
                         ${DOCKER_IMAGE} /code/jenkins_flake8.sh
 
                 '''
@@ -132,7 +125,7 @@ pipeline {
                         --network ${DOCKER_NETWORK} \
                         --link ${DOCKER_CONTAINER_IMPALA}:impala \
                         -v ${DAE_DB_DIR}:/data \
-                        -v ${SOURCE_DIR}:/code \
+                        -v ${WD}:/code \
                         ${DOCKER_IMAGE} /code/scripts/wait-for-it.sh impala:21050 --timeout=240
 
                     echo "[DONE] Waiting for impala..."
@@ -145,7 +138,7 @@ pipeline {
                         --network ${DOCKER_NETWORK} \
                         --link ${DOCKER_CONTAINER_IMPALA}:impala \
                         -v ${DAE_DB_DIR}:/data \
-                        -v ${SOURCE_DIR}:/code \
+                        -v ${WD}:/code \
                         ${DOCKER_IMAGE} /code/jenkins_test.sh
 
                     echo "[DONE] Running tests..."
