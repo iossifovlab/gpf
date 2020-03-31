@@ -19,6 +19,10 @@ cd dae && pip install -e . && cd -
 cd wdae && pip install -e . && cd -
 cd dae_conftests && pip install -e . && cd -
 
+export DAE_HDFS_HOST=impala
+export DAE_IMPALA_HOST=impala
+export HADOOP_HOME=/opt/conda/envs/gpf
+
 py.test -v --cov-config coveragerc \
     --reimport \
     --junitxml=./test_results/dae-junit.xml \
