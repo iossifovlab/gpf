@@ -95,25 +95,30 @@ pipeline {
                 }
                 sh '''
                     tar zxf builds/data-hg19-startup-*.tar.gz -C $WD
-		    sed -i "s/localhost/impala/" $WD/data-hg19-startup/DAE.conf
-                    docker run -d --rm \
-                        -v ${SOURCE_DIR}:/code \
-                        busybox:latest \
-			/bin/sh -c "sed -i \"s/localhost/impala/\" /code/dae_conftests/dae_conftests/tests/fixtures/DAE.conf"
+
+                    sed -i "s/localhost/impala/" $WD/data-hg19-startup/DAE.conf
+                            docker run -d --rm \
+                                -v ${SOURCE_DIR}:/code \
+                                busybox:latest \
+                                /bin/sh -c "sed -i \"s/localhost/impala/\" /code/dae_conftests/dae_conftests/tests/fixtures/DAE.conf"
                 '''
             }
         }
 
 
-        // stage('Lint') {
-        //     steps {
-        //         sh '''
-        //         export PATH=$HOME/anaconda3/envs/gpf3/bin:$PATH
+        stage('Lint') {
+            steps {
+                sh '''
+                    docker run --rm \
+                        --network ${DOCKER_NETWORK} \
+                        --link ${DOCKER_CONTAINER_IMPALA}:impala \
+                        -v ${DATA}:/data \
+                        -v ${SOURCE_DIR}:/code \
+                        ${DOCKER_IMAGE} /code/jenkins_flake8.sh
 
-        //         docker-compose -f docker-compose.yml exec -T tests /code/jenkins_flake8.sh
-        //         '''
-        //     }
-        // }
+                '''
+            }
+        }
 
         // stage('Test') {
         //     steps {
@@ -128,10 +133,10 @@ pipeline {
     }
     post {
         always {
-            junit 'test_results/wdae-junit.xml, test_results/dae-junit.xml'
-            step([
-                $class: 'CoberturaPublisher',
-                coberturaReportFile: 'test_results/coverage.xml'])
+            // junit 'test_results/wdae-junit.xml, test_results/dae-junit.xml'
+            // step([
+            //     $class: 'CoberturaPublisher',
+            //     coberturaReportFile: 'test_results/coverage.xml'])
             warnings(
                 parserConfigurations: [[parserName: 'PyLint', pattern: 'test_results/pyflakes.report']],
                 excludePattern: '.*site-packages.*',
