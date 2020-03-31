@@ -26,7 +26,11 @@ def get_family_type(family, person_to_set):
     family_type = list()
     # get family size
     family_type.append(str(len(family.members_in_order)))
-    for person in sorted(family.members_in_order, key=lambda p: str(p.role)):
+    members_by_role = sorted(
+        family.members_in_order, key=lambda p: str(p.role)
+    )
+    members_by_role_and_sex = sorted(members_by_role, key=lambda p: str(p.sex))
+    for person in members_by_role_and_sex:
         # get person set collection value
         set_value = person_to_set[person.person_id]
         family_type.append(
@@ -90,6 +94,11 @@ class FamiliesGroupCounters(object):
                 families_to_types[
                     get_family_type(family, person_to_set)
                 ].append(family)
+
+            families_to_types = {
+                    k: v for k, v in sorted(families_to_types.items(), key=lambda item: len(item[1]), reverse=True)
+            }
+
             for family_type, families in families_to_types.items():
                 if (
                     self.families_count_show_id
