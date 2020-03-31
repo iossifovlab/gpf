@@ -27,6 +27,7 @@ class GenotypeData:
 
         self.study_type = self.config.study_type
         self.person_set_collections: Dict[str, PersonSetCollection] = dict()
+        self.person_set_collection_configs = dict()
 
     def query_variants(
         self,
@@ -66,6 +67,24 @@ class GenotypeData:
                 collections_config.selected_person_set_collections or []
             for collection_id in selected_collections:
                 self._build_person_set_collection(collection_id)
+
+            # build person set collection configs
+            for collection_id, collection in self.person_set_collections.items():
+                domain = list()
+                for person_set in collection.person_sets.values():
+                    domain.append({
+                        "id": person_set.id,
+                        "name": person_set.name,
+                        "value": person_set.value,
+                        "color": person_set.color,
+                    })
+                collection_conf = {
+                    "id": collection.id,
+                    "name": collection.name,
+                    "domain": domain
+                }
+                self.person_set_collection_configs[collection_id] = \
+                    collection_conf
 
     def get_person_set_collection(self, person_set_collection_id):
         if person_set_collection_id is None:

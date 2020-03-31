@@ -7,7 +7,7 @@ LOGGER = logging.getLogger(__name__)
 
 
 class DenovoGeneSetCollection(object):
-    def __init__(self, study_id, study_name, config):
+    def __init__(self, study_id, study_name, config, person_set_collections):
         assert config.denovo_gene_sets is not None
         assert config.denovo_gene_sets.selected_person_set_collections
 
@@ -19,15 +19,7 @@ class DenovoGeneSetCollection(object):
         self.recurrency_criteria = self.config.recurrency_criteria
         self.gene_sets_names = self.config.gene_sets_names
 
-        self.person_set_collections = dict()
-        for collection_id in self.config.selected_person_set_collections:
-            collection = getattr(config.person_set_collections, collection_id)
-            self.person_set_collections[collection_id] = {
-                "name": collection.name,
-                "source": collection.source,
-                "domain": collection.domain,
-            }
-
+        self.person_set_collections = person_set_collections
         self.cache = {}
 
     @cached
@@ -54,10 +46,7 @@ class DenovoGeneSetCollection(object):
             person_set_collection_id
         )
         if person_set_collection:
-            return [
-                {"id": domain.id, "name": domain.name, "color": domain.color}
-                for domain in person_set_collection["domain"]
-            ]
+            return person_set_collection["domain"]
         else:
             return []
 

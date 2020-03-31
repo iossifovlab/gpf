@@ -178,7 +178,10 @@ class PersonSetCollection(NamedTuple):
 
         composed_person_sets = dict()
         for set_combination in person_sets_product:
-            composed_set = CompositePersonSet.compose(*set_combination)
+            set_name = ".".join([ps.value for ps in set_combination])
+            composed_set = CompositePersonSet.compose(
+                *set_combination, name=set_name
+            )
             composed_person_sets[composed_set.id] = composed_set
 
         return PersonSetCollection(

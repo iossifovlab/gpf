@@ -927,25 +927,8 @@ class StudyWrapper(object):
         result["common_report"] = GPFConfigParser._namedtuple_to_dict(
             result["common_report"]
         )
-        # add person set collections
-        result["person_set_collections"] = dict()
-        for collection_id, collection in self.person_set_collections.items():
-            domain = list()
-            for person_set in collection.person_sets.values():
-                domain.append({
-                    "id": person_set.id,
-                    "name": person_set.name,
-                    "value": person_set.value,
-                    "color": person_set.color,
-                })
-
-            collection_conf = {
-                "id": collection.id,
-                "name": collection.name,
-                "domain": domain
-            }
-            result["person_set_collections"][collection_id] = collection_conf
-
+        result["person_set_collections"] = \
+            self.genotype_data_study.person_set_collection_configs
         result["name"] = result["name"] or result["id"]
 
         return result
