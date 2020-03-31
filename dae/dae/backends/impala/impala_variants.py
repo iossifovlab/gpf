@@ -133,6 +133,11 @@ class ImpalaFamilyVariants:
                     variant_data,
                     matched_alleles,
                 ) = row
+                if type(variant_data) == str:
+                    print(
+                        "variant_data is string!!!!", family_id,
+                        chrom, position, end_position, reference)
+                    variant_data = bytes(variant_data, "latin1")
 
                 family = self.families[family_id]
                 v = self.serializer.deserialize_family_variant(

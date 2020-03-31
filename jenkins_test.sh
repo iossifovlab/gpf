@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -e
+
 # export PATH=${DAE_SOURCE_DIR}/dae/tools:$PATH
 # export PATH=${DAE_SOURCE_DIR}/dae/tests:$PATH
 # export PYTHONPATH=${DAE_SOURCE_DIR}/dae:$PYTHONPATH
@@ -16,6 +18,10 @@ rm -rf \
 cd dae && pip install -e . && cd -
 cd wdae && pip install -e . && cd -
 cd dae_conftests && pip install -e . && cd -
+
+export DAE_HDFS_HOST=impala
+export DAE_IMPALA_HOST=impala
+export HADOOP_HOME=/opt/conda/envs/gpf
 
 py.test -v --cov-config coveragerc \
     --reimport \

@@ -10,6 +10,9 @@ class HdfsHelpers(object):
         assert hdfs_port
 
         print("hdfs connecting to:", hdfs_host, hdfs_port)
+        if os.environ.get("DAE_HDFS_HOST", None) is not None:
+            hdfs_host = os.environ.get("DAE_HDFS_HOST")
+            print("hdfs overwrite connecting to:", hdfs_host, hdfs_port)
 
         self.host = hdfs_host
         self.port = hdfs_port

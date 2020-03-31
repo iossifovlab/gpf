@@ -43,7 +43,7 @@ class Genome:
         self.genomic_sequence = None
 
     GeneModelsConfig = namedtuple(
-        "GeneModelConfig", ["id", "filename", "fileformat", "gene_models"]
+        "GeneModelConfig", ["id", "file", "fileformat", "gene_models"]
     )
 
     @staticmethod
@@ -88,13 +88,15 @@ class Genome:
         if gene_models_id is None:
             gene_models_id = self.default_gene_models_id
         gene_models_config = self._gene_models[gene_models_id]
+
         if gene_models_config.gene_models is None:
             gene_models = load_gene_models(
-                gene_models_config.filename, gene_models_config.fileformat
+                gene_models_config.file,
+                fileformat=gene_models_config.fileformat
             )
             gene_models_config = self.GeneModelsConfig(
                 gene_models_id,
-                gene_models_config.filename,
+                gene_models_config.file,
                 gene_models_config.fileformat,
                 gene_models,
             )
