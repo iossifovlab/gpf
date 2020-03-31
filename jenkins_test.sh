@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -e
+
 # export PATH=${DAE_SOURCE_DIR}/dae/tools:$PATH
 # export PATH=${DAE_SOURCE_DIR}/dae/tests:$PATH
 # export PYTHONPATH=${DAE_SOURCE_DIR}/dae:$PYTHONPATH
@@ -17,7 +19,7 @@ cd dae && pip install -e . && cd -
 cd wdae && pip install -e . && cd -
 cd dae_conftests && pip install -e . && cd -
 
-py.test -v --cov-config coveragerc \
+py.test -x -v --cov-config coveragerc \
     --reimport \
     --junitxml=./test_results/dae-junit.xml \
     --cov-report=html:./test_results/coverage.html \

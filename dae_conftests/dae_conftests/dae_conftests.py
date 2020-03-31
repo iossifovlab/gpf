@@ -607,10 +607,6 @@ def raw_dae(config_dae, genome_2013):
     return builder
 
 
-def impala_test_dbname():
-    return "impala_test_db"
-
-
 def pytest_addoption(parser):
     parser.addoption(
         "--reimport", action="store_true", default=False, help="force reimport"
@@ -630,6 +626,10 @@ def hdfs_host():
 @pytest.fixture(scope="session")
 def impala_host():
     return os.environ.get("DAE_IMPALA_HOST", "127.0.0.1")
+
+
+def impala_test_dbname():
+    return "impala_test_db"
 
 
 @pytest.fixture(scope="session")

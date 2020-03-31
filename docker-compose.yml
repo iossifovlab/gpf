@@ -6,6 +6,7 @@ services:
 
   tests:
     image: ${DOCKER_IMAGE}
+    
     volumes:
       - type: bind
         source: ${SOURCE_DIR}
