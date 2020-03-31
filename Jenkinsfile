@@ -18,7 +18,7 @@ pipeline {
     environment {
         WD="${env.WORKSPACE}"
 
-        DOCKER_IMAGE="iossifovlab/gpf-base_${env.BRANCH_NAME}:${env.BUILD_NUMBER}"
+        DOCKER_IMAGE="iossifovlab/gpf_base_${env.BRANCH_NAME}:${env.BUILD_NUMBER}"
         DOCKER_NETWORK="gpf_base_${env.BRANCH_NAME}_${env.BUILD_NUMBER}"
 
         DOCKER_CONTAINER_IMPALA="gpf_impala_${env.BRANCH_NAME}_${env.BUILD_NUMBER}"
@@ -54,6 +54,10 @@ pipeline {
                         -v ${SOURCE_DIR}:/code \
                         busybox:latest \
                         /bin/sh -c "/code/jenkins_git_clean.sh"
+                    docker run -d --rm \
+                        -v ${SOURCE_DIR}:/code \
+                        busybox:latest \
+                        /bin/sh -c "rm -rf /code/test_results/*"
                 '''
             }
         }
@@ -123,6 +127,7 @@ pipeline {
         stage('Test') {
             steps {
                 sh """
+                    echo "Waiting for impala..."
                     docker run --rm \
                         --network ${DOCKER_NETWORK} \
                         --link ${DOCKER_CONTAINER_IMPALA}:impala \
@@ -130,9 +135,12 @@ pipeline {
                         -v ${SOURCE_DIR}:/code \
                         ${DOCKER_IMAGE} /code/scripts/wait-for-it.sh impala:21050 --timeout=240
 
+                    echo "[DONE] Waiting for impala..."
                 """
 
                 sh """
+                    echo "Running tests..."
+
                     docker run --rm \
                         --network ${DOCKER_NETWORK} \
                         --link ${DOCKER_CONTAINER_IMPALA}:impala \
@@ -140,6 +148,7 @@ pipeline {
                         -v ${SOURCE_DIR}:/code \
                         ${DOCKER_IMAGE} /code/jenkins_test.sh
 
+                    echo "[DONE] Running tests..."
                 """
 
             }
