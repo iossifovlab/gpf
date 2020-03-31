@@ -31,15 +31,15 @@ py.test -v --cov-config coveragerc \
     --cov-report=html:./test_results/coverage.html \
     --cov-report=xml:./test_results/coverage.xml \
     --cov dae/ \
-    dae/dae/backends/tests
+    dae/dae/
 
-# py.test -v --cov-config coveragerc \
-#     --junitxml=./test_results/wdae-junit.xml \
-#     --cov-append \
-#     --cov-report=html:./test_results/coverage.html \
-#     --cov-report=xml:./test_results/coverage.xml \
-#     --cov wdae/ \
-#     wdae/wdae
+py.test -v --cov-config coveragerc \
+    --junitxml=./test_results/wdae-junit.xml \
+    --cov-append \
+    --cov-report=html:./test_results/coverage.html \
+    --cov-report=xml:./test_results/coverage.xml \
+    --cov wdae/ \
+    wdae/wdae
 
 
 chmod a+rwx -R /code/test_results
