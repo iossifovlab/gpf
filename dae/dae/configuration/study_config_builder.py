@@ -325,7 +325,7 @@ params = {}
 {{key}}.name = "{{ value.name }}"
 {{key}}.domain = {{ value.domain }}
 {{key}}.default = {{ value.default }}
-{{key}}.source = "{{ value.source }}"
+{{key}}.source.pedigree.column = "{{ value.source.pedigree.column }}"
 {% else %}
 {{ key }} = {{ value }}
 {% endif %}
