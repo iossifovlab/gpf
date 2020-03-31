@@ -116,7 +116,7 @@ pipeline {
                     docker run --rm \
                         --network ${DOCKER_NETWORK} \
                         --link ${DOCKER_CONTAINER_IMPALA}:impala \
-                        -v ${DATA}:/data \
+                        -v ${DAE_DB_DIR}:/data \
                         -v ${SOURCE_DIR}:/code \
                         ${DOCKER_IMAGE} /code/jenkins_flake8.sh
 
@@ -126,30 +126,37 @@ pipeline {
 
         stage('Test') {
             steps {
-                sh """
+                sh '''
                     echo "Waiting for impala..."
                     docker run --rm \
                         --network ${DOCKER_NETWORK} \
                         --link ${DOCKER_CONTAINER_IMPALA}:impala \
-                        -v ${DATA}:/data \
+                        -v ${DAE_DB_DIR}:/data \
                         -v ${SOURCE_DIR}:/code \
                         ${DOCKER_IMAGE} /code/scripts/wait-for-it.sh impala:21050 --timeout=240
 
                     echo "[DONE] Waiting for impala..."
-                """
+                '''
 
-                sh """
+                sh '''
                     echo "Running tests..."
 
                     docker run --rm \
                         --network ${DOCKER_NETWORK} \
                         --link ${DOCKER_CONTAINER_IMPALA}:impala \
-                        -v ${DATA}:/data \
+                        -v ${DAE_DB_DIR}:/data \
                         -v ${SOURCE_DIR}:/code \
                         ${DOCKER_IMAGE} /code/jenkins_test.sh
 
                     echo "[DONE] Running tests..."
-                """
+                '''
+
+                sh '''
+                        docker stop ${DOCKER_CONTAINER_IMPALA}
+                        docker rm ${DOCKER_CONTAINER_IMPALA}
+                        docker network prune --force
+                        docker images rm ${DOCKER_IMAGE}
+                '''
 
             }
         }
@@ -166,12 +173,6 @@ pipeline {
                 excludePattern: '.*site-packages.*',
                 usePreviousBuildAsReference: true,
             )
-            sh '''
-                    docker stop ${DOCKER_CONTAINER_IMPALA}
-                    docker rm ${DOCKER_CONTAINER_IMPALA}
-                    docker network prune --force
-                    docker images rm ${DOCKER_IMAGE}
-            '''
 
         }
         success {
