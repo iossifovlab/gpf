@@ -120,23 +120,38 @@ pipeline {
             }
         }
 
-        // stage('Test') {
-        //     steps {
-        //         sh """
-        //         export PATH=$HOME/anaconda3/envs/gpf3/bin:$PATH
+        stage('Test') {
+            steps {
+                sh """
+                    docker run --rm \
+                        --network ${DOCKER_NETWORK} \
+                        --link ${DOCKER_CONTAINER_IMPALA}:impala \
+                        -v ${DATA}:/data \
+                        -v ${SOURCE_DIR}:/code \
+                        ${DOCKER_IMAGE} /code/scripts/wait-for-it.sh impala:21050 --timeout=240
 
-        //         docker-compose -f docker-compose.yml exec -T tests /code/scripts/wait-for-it.sh impala:21050 --timeout=240
-        //         docker-compose -f docker-compose.yml exec -T tests /code/jenkins_test.sh
-        //         """
-        //     }
-        // }
+                """
+
+                sh """
+                    docker run --rm \
+                        --network ${DOCKER_NETWORK} \
+                        --link ${DOCKER_CONTAINER_IMPALA}:impala \
+                        -v ${DATA}:/data \
+                        -v ${SOURCE_DIR}:/code \
+                        ${DOCKER_IMAGE} /code/jenkins_test.sh
+
+                """
+
+            }
+        }
     }
     post {
         always {
-            // junit 'test_results/wdae-junit.xml, test_results/dae-junit.xml'
-            // step([
-            //     $class: 'CoberturaPublisher',
-            //     coberturaReportFile: 'test_results/coverage.xml'])
+            junit 'test_results/wdae-junit.xml, test_results/dae-junit.xml'
+            step([
+                $class: 'CoberturaPublisher',
+                coberturaReportFile: 'test_results/coverage.xml'])
+
             warnings(
                 parserConfigurations: [[parserName: 'PyLint', pattern: 'test_results/pyflakes.report']],
                 excludePattern: '.*site-packages.*',
@@ -146,6 +161,7 @@ pipeline {
                     docker stop ${DOCKER_CONTAINER_IMPALA}
                     docker rm ${DOCKER_CONTAINER_IMPALA}
                     docker network prune --force
+                    docker images rm ${DOCKER_IMAGE}
             '''
 
         }
