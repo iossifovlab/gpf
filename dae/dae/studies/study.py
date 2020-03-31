@@ -111,7 +111,6 @@ class GenotypeDataGroup(GenotypeData):
             study_filters=None,
             **kwargs):
 
-        print(self.studies)
         variants = list()
 
         def thread_function(name, genotype_data_study):
@@ -170,8 +169,6 @@ class GenotypeDataGroup(GenotypeData):
             study_filters=None,
             **kwargs):
 
-        print("CALLING ASYNC")
-        print(self.studies)
         variants_futures = list()
 
         def get_variants(thread_id, genotype_data_study):
