@@ -18,7 +18,10 @@ pipeline {
     environment {
         WD="${env.WORKSPACE}"
 
-        DOCKER_IMAGE="iossifovlab/gpf-base-${env.BRANCH_NAME}:${env.BUILD_NUMBER}"
+        DOCKER_IMAGE="iossifovlab/gpf-base_${env.BRANCH_NAME}:${env.BUILD_NUMBER}"
+        DOCKER_NETWORK="gpf_base_${env.BRANCH_NAME}_${env.BUILD_NUMBER}"
+
+        DOCKER_CONTAINER_IMPALA="gpf_impala_${env.BRANCH_NAME}_${env.BUILD_NUMBER}"
 
         SOURCE_DIR="${env.WORKSPACE}"
         DAE_DB_DIR="${env.WORKSPACE}/data-hg19-startup"
@@ -40,24 +43,34 @@ pipeline {
             }
         }
 
-        stage('Setup') {
+        stage('Clean up') {
             steps {
                 sh '''
                     docker run -d --rm \
                         -v ${SOURCE_DIR}:/code \
                         busybox:latest \
                         /bin/sh -c "rm -rf /code/wdae-*.log && rm -rf /code/wdae_django*.cache"
-
-                    mkdir -p test_results
-                    mkdir -p data-hg19-startup
+                    docker run -d --rm \
+                        -v ${SOURCE_DIR}:/code \
+                        busybox:latest \
+                        /bin/sh -c "/code/jenkins_git_clean.sh"
                 '''
+            }
+        }
+
+        stage('Docker build') {
+            steps {
                 script {
                     docker.build(
                         "${DOCKER_IMAGE}", ". -f ${SOURCE_DIR}/Dockerfile")
                 }
+            }
+        }
+
+        stage('Start gpf impala') {
+            steps {
                 sh '''
-                    export PATH=$HOME/anaconda3/envs/gpf3/bin:$PATH
-                    docker-compose -f docker-compose.yml up -d
+                    ${WD}/scripts/docker_run_gpf_impala.sh
                 '''
             }
         }
@@ -91,46 +104,27 @@ pipeline {
             }
         }
 
-        stage('Git Clean') {
-          steps {
-            sh '''
-                export PATH=$HOME/anaconda3/envs/gpf3/bin:$PATH
 
-                docker-compose -f docker-compose.yml exec -T tests /code/jenkins_git_clean.sh
-            '''
-          }
-        }
-
-        // stage('Format') {
+        // stage('Lint') {
         //     steps {
         //         sh '''
         //         export PATH=$HOME/anaconda3/envs/gpf3/bin:$PATH
 
-        //         docker-compose -f docker-compose.yml exec -T tests /code/jenkins_black.sh
+        //         docker-compose -f docker-compose.yml exec -T tests /code/jenkins_flake8.sh
         //         '''
         //     }
         // }
 
-        stage('Lint') {
-            steps {
-                sh '''
-                export PATH=$HOME/anaconda3/envs/gpf3/bin:$PATH
+        // stage('Test') {
+        //     steps {
+        //         sh """
+        //         export PATH=$HOME/anaconda3/envs/gpf3/bin:$PATH
 
-                docker-compose -f docker-compose.yml exec -T tests /code/jenkins_flake8.sh
-                '''
-            }
-        }
-
-        stage('Test') {
-            steps {
-                sh """
-                export PATH=$HOME/anaconda3/envs/gpf3/bin:$PATH
-
-                docker-compose -f docker-compose.yml exec -T tests /code/scripts/wait-for-it.sh impala:21050 --timeout=240
-                docker-compose -f docker-compose.yml exec -T tests /code/jenkins_test.sh
-                """
-            }
-        }
+        //         docker-compose -f docker-compose.yml exec -T tests /code/scripts/wait-for-it.sh impala:21050 --timeout=240
+        //         docker-compose -f docker-compose.yml exec -T tests /code/jenkins_test.sh
+        //         """
+        //     }
+        // }
     }
     post {
         always {
@@ -144,9 +138,9 @@ pipeline {
                 usePreviousBuildAsReference: true,
             )
             sh '''
-                export PATH=$HOME/anaconda3/envs/gpf3/bin:$PATH
-
-                ./jenkins_clean.sh
+                    docker stop ${DOCKER_CONTAINER_IMPALA}
+                    docker rm ${DOCKER_CONTAINER_IMPALA}
+                    docker network prune --force
             '''
 
         }
