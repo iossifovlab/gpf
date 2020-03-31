@@ -52,7 +52,7 @@ class PeopleCounters(object):
         self.group_name = person_set_collection.name
         self.rows = self._get_row_names()
         self.column_names = [
-            people_counter.person_set.id for people_counter in self.counters
+            people_counter.person_set.name for people_counter in self.counters
         ]
 
     def to_dict(self):
