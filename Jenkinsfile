@@ -59,7 +59,7 @@ pipeline {
             steps {
                 script {
                     docker.build(
-                        "${DOCKER_IMAGE}", ". -f ${WD}/Dockerfile")
+                        "${GPF_DOCKER_IMAGE}", ". -f ${WD}/Dockerfile")
                 }
             }
         }
@@ -101,7 +101,7 @@ pipeline {
                     docker run --rm \
                         -v ${DAE_DB_DIR}:/data \
                         -v ${WD}:/code \
-                        ${DOCKER_IMAGE} /code/jenkins_flake8.sh
+                        ${GPF_DOCKER_IMAGE} /code/jenkins_flake8.sh
 
                 '''
             }
