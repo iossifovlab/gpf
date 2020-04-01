@@ -96,7 +96,7 @@ echo "----------------------------------------------"
 echo "[DONE] Running tests..."
 echo "----------------------------------------------"
 
-fi [[ $CLEANUP ]]; then
+if [[ $CLEANUP ]]; then
 
     echo "----------------------------------------------"
     echo "Cleaning up docker containers"

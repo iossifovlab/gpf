@@ -112,7 +112,6 @@ pipeline {
             steps {
 
                 sh '''
-                    echo "Start impala
                     ${WD}/run_tests.sh
                 '''
             }
