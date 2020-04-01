@@ -25,6 +25,7 @@ pipeline {
 
         DAE_DB_DIR="${env.WORKSPACE}/data-hg19-startup"
 
+        CLEANUP=1
     }
     stages {
         stage ('Start') {
@@ -64,14 +65,6 @@ pipeline {
             }
         }
 
-        // stage('Start gpf impala') {
-        //     steps {
-        //         sh '''
-        //             ${WD}/scripts/docker_run_gpf_impala.sh
-        //         '''
-        //     }
-        // }
-
         stage('Data') {
             steps {
                 sh '''
@@ -107,7 +100,6 @@ pipeline {
             steps {
                 sh '''
                     docker run --rm \
-                        --network ${DOCKER_NETWORK} \
                         -v ${DAE_DB_DIR}:/data \
                         -v ${WD}:/code \
                         ${DOCKER_IMAGE} /code/jenkins_flake8.sh
@@ -118,43 +110,11 @@ pipeline {
 
         stage('Test') {
             steps {
+
                 sh '''
                     echo "Start impala
-                    ${WD}/scripts/docker_run_gpf_impala.sh
+                    ${WD}/run_tests.sh
                 '''
-
-                sh '''
-                    echo "Waiting for impala..."
-                    docker run --rm \
-                        --network ${DOCKER_NETWORK} \
-                        --link ${DOCKER_CONTAINER_IMPALA}:impala \
-                        -v ${DAE_DB_DIR}:/data \
-                        -v ${WD}:/code \
-                        ${DOCKER_IMAGE} /code/scripts/wait-for-it.sh impala:21050 --timeout=240
-
-                    echo "[DONE] Waiting for impala..."
-                '''
-
-                sh '''
-                    echo "Running tests..."
-
-                    docker run --rm \
-                        --network ${DOCKER_NETWORK} \
-                        --link ${DOCKER_CONTAINER_IMPALA}:impala \
-                        -v ${DAE_DB_DIR}:/data \
-                        -v ${WD}:/code \
-                        ${DOCKER_IMAGE} /code/jenkins_test.sh
-
-                    echo "[DONE] Running tests..."
-                '''
-
-                sh '''
-                        docker stop ${DOCKER_CONTAINER_IMPALA}
-                        docker rm ${DOCKER_CONTAINER_IMPALA}
-                        docker network prune --force
-                        docker image rm ${DOCKER_IMAGE}
-                '''
-
             }
         }
     }
