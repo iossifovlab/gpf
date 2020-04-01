@@ -18,10 +18,9 @@ pipeline {
     environment {
         WD="${env.WORKSPACE}"
 
-        DOCKER_IMAGE="iossifovlab/gpf_base_${env.BRANCH_NAME}:${env.BUILD_NUMBER}"
-        DOCKER_NETWORK="gpf_base_${env.BRANCH_NAME}_${env.BUILD_NUMBER}"
-
-        DOCKER_CONTAINER_IMPALA="gpf_impala_${env.BRANCH_NAME}_${env.BUILD_NUMBER}"
+        GPF_DOCKER_NETWORK="gpf_base_${env.BRANCH_NAME}_${env.BUILD_NUMBER}"
+        GPF_DOCKER_IMAGE="iossifovlab/gpf_base_${env.BRANCH_NAME}:${env.BUILD_NUMBER}"
+        GPF_IMPALA_DOCKER_CONTAINER="gpf_impala_${env.BRANCH_NAME}_${env.BUILD_NUMBER}"
 
         DAE_DB_DIR="${env.WORKSPACE}/data-hg19-startup"
 
