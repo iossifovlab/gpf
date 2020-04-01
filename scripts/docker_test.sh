@@ -25,35 +25,45 @@ export HADOOP_HOME=/opt/conda/envs/gpf
 
 export LD_LIBRARY_PATH=/opt/conda/envs/gpf/lib/native:/opt/conda/envs/gpf/lib/server
 
+export MPLBACKEND=PDF
+# export MPLBACKEND=qt5agg
+
+cd /code/
+
 if [[ $CLEANUP ]]; then
     echo "Cleaning up with reimport..."
-    py.test -v --cov-config coveragerc \
+    py.test -v \
+        --cov-config /code/coveragerc \
         --reimport \
         --junitxml=./test_results/dae-junit.xml \
-        --cov-report=html:./test_results/coverage.html \
-        --cov-report=xml:./test_results/coverage.xml \
+        --cov-report=html:/code/test_results/coverage.html \
+        --cov-report=xml:/code/test_results/coverage.xml \
         --cov dae/ \
         dae/dae/
 
 else
 
-    py.test -v --cov-config coveragerc \
+    py.test -v \
+        --cov-config /code/coveragerc \
         --junitxml=./test_results/dae-junit.xml \
-        --cov-report=html:./test_results/coverage.html \
-        --cov-report=xml:./test_results/coverage.xml \
+        --cov-report=html:/code/test_results/coverage.html \
+        --cov-report=xml:/code/test_results/coverage.xml \
         --cov dae/ \
         dae/dae/
 
 fi
 
-py.test -v --cov-config coveragerc \
-    --junitxml=./test_results/wdae-junit.xml \
+cd /code/
+
+py.test -v --cov-config /code/coveragerc \
+    --junitxml=/code/test_results/wdae-junit.xml \
     --cov-append \
-    --cov-report=html:./test_results/coverage.html \
-    --cov-report=xml:./test_results/coverage.xml \
+    --cov-report=html:/code/test_results/coverage.html \
+    --cov-report=xml:/code/test_results/coverage.xml \
     --cov wdae/ \
     wdae/wdae
 
 
+cd /code
 chmod a+rwx -R /code/test_results
 

@@ -6,7 +6,7 @@ Created on Apr 10, 2017
 import textwrap
 import matplotlib as mpl
 
-mpl.use("PS")  # noqa
+mpl.use("PDF")  # noqa
 
 from dae.variants.attributes import Status, Sex
 
