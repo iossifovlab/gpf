@@ -64,13 +64,13 @@ pipeline {
             }
         }
 
-        stage('Start gpf impala') {
-            steps {
-                sh '''
-                    ${WD}/scripts/docker_run_gpf_impala.sh
-                '''
-            }
-        }
+        // stage('Start gpf impala') {
+        //     steps {
+        //         sh '''
+        //             ${WD}/scripts/docker_run_gpf_impala.sh
+        //         '''
+        //     }
+        // }
 
         stage('Data') {
             steps {
@@ -108,7 +108,6 @@ pipeline {
                 sh '''
                     docker run --rm \
                         --network ${DOCKER_NETWORK} \
-                        --link ${DOCKER_CONTAINER_IMPALA}:impala \
                         -v ${DAE_DB_DIR}:/data \
                         -v ${WD}:/code \
                         ${DOCKER_IMAGE} /code/jenkins_flake8.sh
@@ -119,6 +118,11 @@ pipeline {
 
         stage('Test') {
             steps {
+                sh '''
+                    echo "Start impala
+                    ${WD}/scripts/docker_run_gpf_impala.sh
+                '''
+
                 sh '''
                     echo "Waiting for impala..."
                     docker run --rm \
@@ -148,7 +152,7 @@ pipeline {
                         docker stop ${DOCKER_CONTAINER_IMPALA}
                         docker rm ${DOCKER_CONTAINER_IMPALA}
                         docker network prune --force
-                        docker images rm ${DOCKER_IMAGE}
+                        docker image rm ${DOCKER_IMAGE}
                 '''
 
             }
