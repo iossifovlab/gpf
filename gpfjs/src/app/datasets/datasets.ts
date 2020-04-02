@@ -242,7 +242,7 @@ export class Dataset extends IdName {
       json['phenotype_browser'],
       json['common_report'],
       json['genotype_browser_config'] ? GenotypeBrowser.fromJson(json['genotype_browser_config']) : null,
-      json['people_group'] ? PeopleGroup.fromJson(json['people_group']) : null,
+      json['person_set_collections'] ? PeopleGroup.fromJson(json['person_set_collections']) : null,
       UserGroup.fromJsonArray(json['groups']),
     );
   }
