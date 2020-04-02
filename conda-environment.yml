@@ -13,7 +13,7 @@ pyarrow>=0.16.0
 pyliftover>=0.4
 pysam=0.15.4
 pytest>=5.4.1
-python>=3.7.6
+python>=3.7.5
 python-box
 samtools=1.9
 scipy>=1.4.1
@@ -24,10 +24,10 @@ statsmodels>=0.11.1
 thriftpy2>=0.4.11
 thrift>=0.13.0
 django=2.2.8
-django-cors-headers=3.0.0
-django-guardian=2.0.0
-djangorestframework=3.10.1
-pytest-django
+django-cors-headers=3.2.1
+django-guardian>=2.0.0
+djangorestframework>=3.10.1
+pytest-django>=3.9.0
 coverage
 flake8
 pytest-cov
@@ -39,7 +39,7 @@ ipython>=7.8.0
 jupyter=1.0.0
 openjdk=8.0.192
 hadoop=3.1.2
-sphinx=2.4.0
+sphinx>=2.4.0
 sphinx_rtd_theme
 sphinx-copybutton
 pybigwig>=0.3.17

@@ -6,7 +6,7 @@ Created on Apr 10, 2017
 import textwrap
 import matplotlib as mpl
 
-mpl.use("PS")  # noqa
+mpl.use("PDF")  # noqa
 
 from dae.variants.attributes import Status, Sex
 
@@ -139,13 +139,11 @@ def draw_linregres(df, col1, col2, jitter=None, ax=None):
         ms=4,
         label="female",
     )
-
     color_male, color_female = gender_palette()
     if res_male:
         ax.plot(dmale[col1], res_male.predict(), color=color_male)
     if res_female:
         ax.plot(dfemale[col1], res_female.predict(), color=color_female)
-
     male_female_legend(color_male, color_female, ax)
     # plt.tight_layout()
     return res_male, res_female

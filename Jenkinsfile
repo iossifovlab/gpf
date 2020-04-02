@@ -18,17 +18,13 @@ pipeline {
     environment {
         WD="${env.WORKSPACE}"
 
-        DOCKER_IMAGE="iossifovlab/gpf-base-${env.BRANCH_NAME}:${env.BUILD_NUMBER}"
+        GPF_DOCKER_NETWORK="gpf_base_${env.BRANCH_NAME}_${env.BUILD_NUMBER}"
+        GPF_DOCKER_IMAGE="iossifovlab/gpf_base_${env.BRANCH_NAME}:${env.BUILD_NUMBER}"
+        GPF_IMPALA_DOCKER_CONTAINER="gpf_impala_${env.BRANCH_NAME}_${env.BUILD_NUMBER}"
 
-        SOURCE_DIR="${env.WORKSPACE}"
         DAE_DB_DIR="${env.WORKSPACE}/data-hg19-startup"
-        DAE_GENOMIC_SCORES_HG19="/data01/lubo/data/seq-pipeline/genomic-scores-hg19"
-        DAE_GENOMIC_SCORES_HG38="/data01/lubo/data/seq-pipeline/genomic-scores-hg19"
 
-        DOCKER_SOURCE_DIR="/code"
-        DOCKER_DAE_DB_DIR="/data"
-        DOCKER_DAE_GENOMIC_SCORES_HG19="/genomic-scores-hg19"
-        DOCKER_DAE_GENOMIC_SCORES_HG38="/genomic-scores-hg38"
+        CLEANUP=1
     }
     stages {
         stage ('Start') {
@@ -40,25 +36,31 @@ pipeline {
             }
         }
 
-        stage('Setup') {
+        stage('Clean up') {
             steps {
                 sh '''
                     docker run -d --rm \
-                        -v ${SOURCE_DIR}:/code \
+                        -v ${WD}:/code \
                         busybox:latest \
                         /bin/sh -c "rm -rf /code/wdae-*.log && rm -rf /code/wdae_django*.cache"
-
-                    mkdir -p test_results
-                    mkdir -p data-hg19-startup
+                    docker run -d --rm \
+                        -v ${WD}:/code \
+                        busybox:latest \
+                        /bin/sh -c "/code/jenkins_git_clean.sh"
+                    docker run -d --rm \
+                        -v ${WD}:/code \
+                        busybox:latest \
+                        /bin/sh -c "rm -rf /code/test_results/*"
                 '''
+            }
+        }
+
+        stage('Docker build') {
+            steps {
                 script {
                     docker.build(
-                        "${DOCKER_IMAGE}", ". -f ${SOURCE_DIR}/Dockerfile")
+                        "${GPF_DOCKER_IMAGE}", ". -f ${WD}/Dockerfile")
                 }
-                sh '''
-                    export PATH=$HOME/anaconda3/envs/gpf3/bin:$PATH
-                    docker-compose -f docker-compose.yml up -d
-                '''
             }
         }
 
@@ -82,53 +84,35 @@ pipeline {
                 }
                 sh '''
                     tar zxf builds/data-hg19-startup-*.tar.gz -C $WD
-		    sed -i "s/localhost/impala/" $WD/data-hg19-startup/DAE.conf
-                    docker run -d --rm \
-                        -v ${SOURCE_DIR}:/code \
-                        busybox:latest \
-			/bin/sh -c "sed -i \"s/localhost/impala/\" /code/dae_conftests/dae_conftests/tests/fixtures/DAE.conf"
+
+                    sed -i "s/localhost/impala/" $WD/data-hg19-startup/DAE.conf
+                            docker run -d --rm \
+                                -v ${WD}:/code \
+                                busybox:latest \
+                                /bin/sh -c "sed -i \"s/localhost/impala/\" /code/dae_conftests/dae_conftests/tests/fixtures/DAE.conf"
                 '''
             }
         }
 
-        stage('Git Clean') {
-          steps {
-            sh '''
-                export PATH=$HOME/anaconda3/envs/gpf3/bin:$PATH
-
-                docker-compose -f docker-compose.yml exec -T tests /code/jenkins_git_clean.sh
-            '''
-          }
-        }
-
-        // stage('Format') {
-        //     steps {
-        //         sh '''
-        //         export PATH=$HOME/anaconda3/envs/gpf3/bin:$PATH
-
-        //         docker-compose -f docker-compose.yml exec -T tests /code/jenkins_black.sh
-        //         '''
-        //     }
-        // }
 
         stage('Lint') {
             steps {
                 sh '''
-                export PATH=$HOME/anaconda3/envs/gpf3/bin:$PATH
+                    docker run --rm \
+                        -v ${DAE_DB_DIR}:/data \
+                        -v ${WD}:/code \
+                        ${GPF_DOCKER_IMAGE} /code/jenkins_flake8.sh
 
-                docker-compose -f docker-compose.yml exec -T tests /code/jenkins_flake8.sh
                 '''
             }
         }
 
         stage('Test') {
             steps {
-                sh """
-                export PATH=$HOME/anaconda3/envs/gpf3/bin:$PATH
 
-                docker-compose -f docker-compose.yml exec -T tests /code/scripts/wait-for-it.sh impala:21050 --timeout=240
-                docker-compose -f docker-compose.yml exec -T tests /code/jenkins_test.sh
-                """
+                sh '''
+                    ${WD}/run_tests.sh
+                '''
             }
         }
     }
@@ -138,16 +122,12 @@ pipeline {
             step([
                 $class: 'CoberturaPublisher',
                 coberturaReportFile: 'test_results/coverage.xml'])
+
             warnings(
                 parserConfigurations: [[parserName: 'PyLint', pattern: 'test_results/pyflakes.report']],
                 excludePattern: '.*site-packages.*',
                 usePreviousBuildAsReference: true,
             )
-            sh '''
-                export PATH=$HOME/anaconda3/envs/gpf3/bin:$PATH
-
-                ./jenkins_clean.sh
-            '''
 
         }
         success {

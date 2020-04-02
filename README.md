@@ -30,18 +30,23 @@ Create a conda `gpf` environment with all of the conda package dependencies
 from `conda-environment.yml` file:
 
 ```bash
-conda create -c conda-forge -c bioconda -c iossifovlab -n gpf_dev --file conda-environment.yml
+conda create \
+    -c defaults -c conda-forge  -c iossifovlab -c bioconda \
+    -n gpf_dev \
+    --file conda-environment.yml
 ```
 
 To use this environment, you need to activate it using the following command:
 
 ```bash
-conda activate gpf
+conda activate gpf_dev
 ```
 
 If the envirnoment you want to work in is already activeated run:
 ```bash
-conda install -c conda-forge -c bioconda -c iossifovlab --file conda-environment.yml
+conda install \
+    -c defaults -c conda-forge  -c iossifovlab -c bioconda \
+    --file conda-environment.yml
 ```
 
 These commands are going to install GPF dae and wdae packages for development
@@ -49,14 +54,6 @@ usage. (You need to install GPF packages in the conda environment.)
 
 ```bash
 for d in dae wdae dae_conftests; do (cd $d; pip install -e .); done
-
-OLD:
-cd dae
-pip install -e .
-cd -
-cd wdae
-pip install -e .
-cd -
 ```
 
 ### Bootstrap GPF
