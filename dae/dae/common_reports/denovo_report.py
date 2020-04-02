@@ -4,17 +4,15 @@ from copy import deepcopy
 from collections import OrderedDict
 
 from dae.utils.effect_utils import EffectTypesMixin
-from dae.common_reports.people_filters import PeopleFilter
 
 
 class EffectCell:
-    def __init__(self, genotype_data, denovo_variants, people_filter, effect):
+    def __init__(self, genotype_data, denovo_variants, person_set, effect):
         self.genotype_data = genotype_data
         self.families = genotype_data.families
         self.denovo_variants = denovo_variants
-        assert isinstance(people_filter, PeopleFilter)
-        assert len(people_filter.people_with_filter_ids) > 0
-        self.people_filter = people_filter
+        assert len(person_set.persons) > 0
+        self.person_set = person_set
         self.effect = effect
         self.effect_types = set(
             EffectTypesMixin().get_effect_types(effectTypes=effect)
@@ -23,9 +21,7 @@ class EffectCell:
         self.observed_variants_ids = set()
         self.observed_people_with_event = set([])
 
-    @property
-    def people_with_filter_ids(self):
-        return self.people_filter.people_with_filter_ids
+        self.person_set_persons = set(self.person_set.persons.keys())
 
     @property
     def number_of_observed_events(self):
@@ -36,25 +32,18 @@ class EffectCell:
         return len(self.observed_people_with_event)
 
     @property
-    def number_of_people_with_filter(self):
-        return len(self.people_with_filter_ids)
-
-    @property
     def observed_rate_per_child(self):
-        return (
-            self.number_of_observed_events / self.number_of_people_with_filter
-        )
+        return self.number_of_observed_events / len(self.person_set_persons)
 
     @property
     def percent_of_children_with_events(self):
-        return (
-            self.number_of_children_with_event
-            / self.number_of_people_with_filter
+        return self.number_of_children_with_event / len(
+            self.person_set_persons
         )
 
     @property
     def column_name(self):
-        return self.people_filter.filter_name
+        return self.person_set.id
 
     def to_dict(self):
         return {
@@ -67,7 +56,7 @@ class EffectCell:
 
     def count_variant(self, family_variant, family_allele):
         if not (
-            set(family_allele.variant_in_members) & self.people_with_filter_ids
+            set(family_allele.variant_in_members) & self.person_set_persons
         ):
             return
         if not family_allele.effect:
@@ -77,7 +66,7 @@ class EffectCell:
             return
         self.observed_variants_ids.add(family_variant.fvuid)
         self.observed_people_with_event.update(
-            set(family_allele.variant_in_members) & self.people_with_filter_ids
+            set(family_allele.variant_in_members) & self.person_set_persons
         )
 
     def is_empty(self):
@@ -90,10 +79,10 @@ class EffectCell:
 
 
 class EffectRow(object):
-    def __init__(self, genotype_data, denovo_variants, effect, people_filters):
+    def __init__(self, genotype_data, denovo_variants, effect, person_sets):
         self.genotype_data = genotype_data
         self.denovo_variants = denovo_variants
-        self.people_filters = people_filters
+        self.person_sets = person_sets
 
         self.effect_type = effect
         self.row = self._build_row()
@@ -115,10 +104,10 @@ class EffectRow(object):
             EffectCell(
                 self.genotype_data,
                 self.denovo_variants,
-                people_filter,
+                person_set,
                 self.effect_type,
             )
-            for people_filter in self.people_filters
+            for person_set in self.person_sets
         ]
 
     def is_row_empty(self):
@@ -139,33 +128,23 @@ class DenovoReportTable(object):
         denovo_variants,
         effect_groups,
         effect_types,
-        filter_collection,
+        person_set_collection,
     ):
         self.genotype_data = genotype_data
         self.denovo_variants = denovo_variants
         self.families = self.genotype_data.families
 
-        self.people_filters = []
-        for people_filter in filter_collection.filters:
-            people_with_filter = people_filter.filter(
-                self.families.persons.values()
-            )
-            people_with_filter_ids = set(
-                [p.person_id for p in people_with_filter]
-            )
-            if len(people_with_filter_ids) > 0:
-                people_filter.people_with_filter_ids = people_with_filter_ids
-                self.people_filters.append(people_filter)
-
-        self.effects = effect_groups + effect_types
-
-        self.group_name = filter_collection.name
-        self.columns = [
-            people_filter.filter_name for people_filter in self.people_filters
-        ]
+        self.person_set_collection = person_set_collection
+        self.person_sets = []
+        for person_set in person_set_collection.person_sets.values():
+            if len(person_set.persons) > 0:
+                self.person_sets.append(person_set)
 
         self.effect_groups = effect_groups
         self.effect_types = effect_types
+        self.effects = effect_groups + effect_types
+
+        self.columns = [person_set.id for person_set in self.person_sets]
 
         self.rows = self._build_rows()
 
@@ -173,7 +152,7 @@ class DenovoReportTable(object):
         return OrderedDict(
             [
                 ("rows", [r.to_dict() for r in self.rows]),
-                ("group_name", self.group_name),
+                ("group_name", self.person_set_collection.name),
                 ("columns", self.columns),
                 ("effect_groups", self.effect_groups),
                 ("effect_types", self.effect_types),
@@ -209,7 +188,7 @@ class DenovoReportTable(object):
                 self.genotype_data,
                 self.denovo_variants,
                 effect,
-                self.people_filters,
+                self.person_sets,
             )
             for effect in self.effects
         ]
@@ -247,12 +226,16 @@ class DenovoReportTable(object):
 
 class DenovoReport(object):
     def __init__(
-        self, genotype_data, effect_groups, effect_types, filter_objects
+        self,
+        genotype_data,
+        effect_groups,
+        effect_types,
+        person_set_collections,
     ):
         self.genotype_data = genotype_data
         self.effect_groups = effect_groups
         self.effect_types = effect_types
-        self.filter_objects = filter_objects
+        self.person_set_collections = person_set_collections
 
         start = time.time()
         denovo_variants = genotype_data.query_variants(
@@ -275,13 +258,13 @@ class DenovoReport(object):
             return []
 
         denovo_report_tables = []
-        for filter_object in self.filter_objects:
+        for person_set_collection in self.person_set_collections:
             denovo_report_table = DenovoReportTable(
                 self.genotype_data,
                 self.denovo_variants,
                 deepcopy(self.effect_groups),
                 deepcopy(self.effect_types),
-                filter_object,
+                person_set_collection,
             )
             if not denovo_report_table.is_empty():
                 denovo_report_tables.append(denovo_report_table)

@@ -15,8 +15,8 @@ def test_enrichment_tool(
     enrichment_tool = EnrichmentTool(
         f1_trio_enrichment_config, f1_trio_coding_len_background, event_counter
     )
-    pg = f1_trio.get_families_group("phenotype")
-    gh = GenotypeHelper(f1_trio, pg, "phenotype1")
+    psc = f1_trio.get_person_set_collection("phenotype")
+    gh = GenotypeHelper(f1_trio, psc, "phenotype1")
     # children_stats = gh.get_children_stats()
     children_by_sex = gh.children_by_sex()
 

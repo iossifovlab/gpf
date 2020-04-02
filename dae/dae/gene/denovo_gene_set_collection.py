@@ -2,15 +2,14 @@ from itertools import chain
 import logging
 
 from dae.gene.gene_sets_db import cached
-from dae.utils.people_group_utils import select_people_groups
 
 LOGGER = logging.getLogger(__name__)
 
 
 class DenovoGeneSetCollection(object):
-    def __init__(self, study_id, study_name, config):
-        if not config.denovo_gene_sets.selected_people_groups:
-            return None
+    def __init__(self, study_id, study_name, config, person_set_collections):
+        assert config.denovo_gene_sets is not None
+        assert config.denovo_gene_sets.selected_person_set_collections
 
         self.study_id = study_id
         self.study_name = study_name
@@ -20,40 +19,36 @@ class DenovoGeneSetCollection(object):
         self.recurrency_criteria = self.config.recurrency_criteria
         self.gene_sets_names = self.config.gene_sets_names
 
-        self.people_groups = select_people_groups(
-            config.people_group, self.config.selected_people_groups
-        )
-
+        self.person_set_collections = person_set_collections
         self.cache = {}
 
     @cached
     def get_gene_sets_types_legend(self):
         name = self.study_name if self.study_name else self.study_id
+        # TODO Rename these dictionary keys accordingly
         return [
             {
                 "datasetId": self.study_id,
                 "datasetName": name,
-                "peopleGroupId": people_group_id,
-                "peopleGroupName": people_group["name"],
-                "peopleGroupLegend": self.get_people_group_legend(
-                    people_group_id
+                "peopleGroupId": collection_id,
+                "peopleGroupName": person_set_collection["name"],
+                "peopleGroupLegend": self.get_person_set_collection_legend(
+                    collection_id
                 ),
             }
-            for people_group_id, people_group in self.people_groups.items()
+            for collection_id, person_set_collection in self.person_set_collections.items()
         ]
 
-    def get_people_group_legend(self, people_group_id):
-        people_group = self.people_groups.get(people_group_id)
-        if not people_group:
+    def get_person_set_collection_legend(self, person_set_collection_id):
+        # TODO This could probably be removed, it just takes each domain
+        # and returns a dict with a subset of the original keys
+        person_set_collection = self.person_set_collections.get(
+            person_set_collection_id
+        )
+        if person_set_collection:
+            return person_set_collection["domain"]
+        else:
             return []
-
-        legend = []
-        for domain in people_group["domain"]:
-            legend.append(
-                {"id": domain.id, "name": domain.name, "color": domain.color}
-            )
-
-        return legend
 
     @classmethod
     def get_all_gene_sets(cls, denovo_gene_sets, denovo_gene_set_spec={}):
@@ -101,11 +96,14 @@ class DenovoGeneSetCollection(object):
         standard_criteria = criteria - recurrency_criteria
 
         genes_families = dict()
-        for dataset_id, people_group in denovo_gene_set_spec.items():
-            for people_group_id, people_group_values in people_group.items():
-                for people_group_value in people_group_values:
+        for dataset_id, person_set_collection in denovo_gene_set_spec.items():
+            for (
+                person_set_collection_id,
+                person_set_collection_values,
+            ) in person_set_collection.items():
+                for value in person_set_collection_values:
                     all_criteria = standard_criteria.union(
-                        (dataset_id, people_group_id, people_group_value)
+                        (dataset_id, person_set_collection_id, value)
                     )
 
                     genes_to_families = cls._get_genes_to_families(
@@ -250,17 +248,17 @@ class DenovoGeneSetCollection(object):
                     "{}:{}:{}".format(
                         genotype_data, group_id, ",".join(values)
                     )
-                    for genotype_data, people_group in denovo_gene_set_spec.items()
-                    for group_id, values in people_group.items()
+                    for genotype_data, person_set_collection in denovo_gene_set_spec.items()
+                    for group_id, values in person_set_collection.items()
                 ]
             )
 
-        all_people_group_values = ", ".join(
+        all_person_set_collection_values = ", ".join(
             set(
                 chain(
                     *[
-                        people_group.values()
-                        for people_group in denovo_gene_set_spec.values()
+                        person_set_collection.values()
+                        for person_set_collection in denovo_gene_set_spec.values()
                     ]
                 )
             )
@@ -271,16 +269,16 @@ class DenovoGeneSetCollection(object):
                 ", ".join(
                     set(
                         [
-                            f"{genotype_data}:{people_group_id}"
-                            for genotype_data, people_group in denovo_gene_set_spec.items()
-                            for people_group_id in people_group
+                            f"{genotype_data}:{person_set_collection_id}"
+                            for genotype_data, person_set_collection in denovo_gene_set_spec.items()
+                            for person_set_collection_id in person_set_collection
                         ]
                     )
                 ),
-                all_people_group_values,
+                all_person_set_collection_values,
             )
         else:
-            return all_people_group_values
+            return all_person_set_collection_values
 
     @staticmethod
     def _get_gene_sets_names(denovo_gene_set_collections):
