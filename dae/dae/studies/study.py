@@ -70,7 +70,8 @@ class GenotypeData:
                 self._build_person_set_collection(collection_id)
 
             # build person set collection configs
-            for collection_id, collection in self.person_set_collections.items():
+            for collection_id, collection in \
+                    self.person_set_collections.items():
                 domain = list()
                 for person_set in collection.person_sets.values():
                     domain.append({
@@ -148,6 +149,7 @@ class GenotypeDataGroup(GenotypeData):
                     ):
                 variants.append(variant)
             print(f"Thread {name} ending")
+
         threads = []
         for idx, genotype_data_study in enumerate(self.studies):
             t = Thread(
@@ -243,10 +245,8 @@ class GenotypeDataGroup(GenotypeData):
         return combined_dict
 
     def _build_person_set_collection(self, person_set_collection_id):
-        assert (
-            person_set_collection_id
-            in self.config.person_set_collections.selected_person_set_collections
-        )
+        assert person_set_collection_id in \
+            self.config.person_set_collections.selected_person_set_collections
 
         sample_collection = self.studies[0].get_person_set_collection(
             person_set_collection_id

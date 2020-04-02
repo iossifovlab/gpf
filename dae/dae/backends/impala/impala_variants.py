@@ -1,25 +1,23 @@
+from contextlib import closing
+from contextlib import closing
+
+from deprecation import deprecated
+from impala.util import as_pandas
+
 from dae.annotation.tools.file_io_parquet import ParquetSchema
 from dae.pedigrees.family import FamiliesData
 from dae.backends.impala.serializers import AlleleParquetSerializer
 
-from impala.util import as_pandas
 
 from dae.utils.regions import Region
 import dae.utils.regions
 
-from ..attributes_query import (
-    QueryTreeToSQLBitwiseTransformer,
-    role_query,
-    sex_query,
-    variant_type_query,
-)
-from ..attributes_query_inheritance import (
-    InheritanceTransformer,
-    inheritance_parser,
-)
+from ..attributes_query import QueryTreeToSQLBitwiseTransformer, \
+    role_query, sex_query, variant_type_query
+from ..attributes_query_inheritance import InheritanceTransformer, \
+    inheritance_parser
 
 from dae.variants.attributes import Role, Status, Sex
-from deprecation import deprecated
 
 
 class ImpalaFamilyVariants:
@@ -35,13 +33,12 @@ class ImpalaFamilyVariants:
     MAX_CHILD_NUMBER = 9999
 
     def __init__(
-        self,
-        impala_connection,
-        db,
-        variant_table,
-        pedigree_table,
-        gene_models=None,
-    ):
+            self,
+            impala_connection,
+            db,
+            variant_table,
+            pedigree_table,
+            gene_models=None):
 
         super(ImpalaFamilyVariants, self).__init__()
         assert db, db
@@ -73,12 +70,13 @@ class ImpalaFamilyVariants:
     def count_variants(self, **kwargs):
         if not self.variant_table:
             return 0
-        with self.impala.cursor() as cursor:
-            query = self.build_count_query(**kwargs)
-            # print('COUNT QUERY:', query)
-            cursor.execute(query)
-            row = next(cursor)
-            return row[0]
+        with closing(self.impala.connect()) as conn:
+            with conn.cursor() as cursor:
+                query = self.build_count_query(**kwargs)
+                # print('COUNT QUERY:', query)
+                cursor.execute(query)
+                row = next(cursor)
+                return row[0]
 
     def query_variants(
         self,
@@ -100,68 +98,71 @@ class ImpalaFamilyVariants:
 
         if not self.variant_table:
             return None
-        with self.impala.cursor() as cursor:
-            query = self.build_query(
-                regions=regions,
-                genes=genes,
-                effect_types=effect_types,
-                family_ids=family_ids,
-                person_ids=person_ids,
-                inheritance=inheritance,
-                roles=roles,
-                sexes=sexes,
-                variant_type=variant_type,
-                real_attr_filter=real_attr_filter,
-                ultra_rare=ultra_rare,
-                return_reference=return_reference,
-                return_unknown=return_unknown,
-                limit=limit,
-            )
-            print("LIMIT:", limit)
-            print("FINAL QUERY: ", query)
-
-            cursor.execute(query)
-            for row in cursor:
-
-                (
-                    chrom,
-                    position,
-                    end_position,
-                    reference,
-                    transmission_type,
-                    family_id,
-                    variant_data,
-                    matched_alleles,
-                ) = row
-                if type(variant_data) == str:
-                    print(
-                        "variant_data is string!!!!", family_id,
-                        chrom, position, end_position, reference)
-                    variant_data = bytes(variant_data, "latin1")
-
-                family = self.families[family_id]
-                v = self.serializer.deserialize_family_variant(
-                    variant_data, family
+        with closing(self.impala.connect()) as conn:
+            with conn.cursor() as cursor:
+                query = self.build_query(
+                    regions=regions,
+                    genes=genes,
+                    effect_types=effect_types,
+                    family_ids=family_ids,
+                    person_ids=person_ids,
+                    inheritance=inheritance,
+                    roles=roles,
+                    sexes=sexes,
+                    variant_type=variant_type,
+                    real_attr_filter=real_attr_filter,
+                    ultra_rare=ultra_rare,
+                    return_reference=return_reference,
+                    return_unknown=return_unknown,
+                    limit=limit,
                 )
+                print("LIMIT:", limit)
+                print("FINAL QUERY: ", query)
 
-                if v is None:
-                    continue
+                cursor.execute(query)
+                for row in cursor:
 
-                matched_alleles = [int(a) for a in matched_alleles.split(",")]
-                v.set_matched_alleles(matched_alleles)
+                    (
+                        chrom,
+                        position,
+                        end_position,
+                        reference,
+                        transmission_type,
+                        family_id,
+                        variant_data,
+                        matched_alleles,
+                    ) = row
+                    if type(variant_data) == str:
+                        print(
+                            "variant_data is string!!!!", family_id,
+                            chrom, position, end_position, reference)
+                        variant_data = bytes(variant_data, "latin1")
 
-                yield v
+                    family = self.families[family_id]
+                    v = self.serializer.deserialize_family_variant(
+                        variant_data, family
+                    )
+
+                    if v is None:
+                        continue
+
+                    matched_alleles = [int(a)
+                                       for a in matched_alleles.split(",")]
+                    v.set_matched_alleles(matched_alleles)
+
+                    yield v
 
     def load_pedigree(self):
-        with self.impala.cursor() as cursor:
-            q = """
-                SELECT * FROM {db}.{pedigree}
-            """.format(
-                db=self.db, pedigree=self.pedigree_table
-            )
+        with closing(self.impala.connect()) as conn:
+            with conn.cursor() as cursor:
+                q = """
+                    SELECT * FROM {db}.{pedigree}
+                """.format(
+                    db=self.db, pedigree=self.pedigree_table
+                )
 
-            cursor.execute(q)
-            ped_df = as_pandas(cursor)
+                cursor.execute(q)
+                ped_df = as_pandas(cursor)
 
         ped_df = ped_df.rename(
             columns={
@@ -187,15 +188,17 @@ class ImpalaFamilyVariants:
     def load_variant_schema(self):
         if not self.variant_table:
             return None
-        with self.impala.cursor() as cursor:
-            q = """
-                DESCRIBE {db}.{variant}
-            """.format(
-                db=self.db, variant=self.variant_table
-            )
+        with closing(self.impala.connect()) as conn:
+            with conn.cursor() as cursor:
+                q = """
+                    DESCRIBE {db}.{variant}
+                """.format(
+                    db=self.db, variant=self.variant_table
+                )
 
-            cursor.execute(q)
-            df = as_pandas(cursor)
+                cursor.execute(q)
+                df = as_pandas(cursor)
+
             records = df[["name", "type"]].to_records()
             schema = {
                 col_name: col_type for (_, col_name, col_type) in records
@@ -203,70 +206,69 @@ class ImpalaFamilyVariants:
             return ParquetSchema(schema)
 
     def load_pedigree_schema(self):
-        with self.impala.cursor() as cursor:
-            q = """
-                DESCRIBE {db}.{pedigree}
-            """.format(
-                db=self.db, pedigree=self.pedigree_table
-            )
+        with closing(self.impala.connect()) as conn:
+            with conn.cursor() as cursor:
+                q = """
+                    DESCRIBE {db}.{pedigree}
+                """.format(
+                    db=self.db, pedigree=self.pedigree_table
+                )
 
-            cursor.execute(q)
-            df = as_pandas(cursor)
-            records = df[["name", "type"]].to_records()
-            schema = {
-                col_name: col_type for (_, col_name, col_type) in records
-            }
-            return schema
+                cursor.execute(q)
+                df = as_pandas(cursor)
+                records = df[["name", "type"]].to_records()
+                schema = {
+                    col_name: col_type for (_, col_name, col_type) in records
+                }
+                return schema
 
     def _fetch_tblproperties(self):
         if not self.variant_table:
             return None
-        with self.impala.cursor() as cursor:
-            cursor.execute(f"DESCRIBE EXTENDED {self.db}.{self.variant_table}")
-            rows = list(cursor)
-            properties_start, properties_end = -1, -1
-            for row_index, row in enumerate(rows):
-                if row[0].strip() == "Table Parameters:":
-                    properties_start = row_index + 1
+        with closing(self.impala.connect()) as conn:
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    f"DESCRIBE EXTENDED {self.db}.{self.variant_table}")
+                rows = list(cursor)
+                properties_start, properties_end = -1, -1
+                for row_index, row in enumerate(rows):
+                    if row[0].strip() == "Table Parameters:":
+                        properties_start = row_index + 1
 
-                if (
-                    properties_start != -1
-                    and row[0] == ""
-                    and row[1] is None
-                    and row[2] is None
-                ):
-                    properties_end = row_index + 1
+                    if (
+                        properties_start != -1
+                        and row[0] == ""
+                        and row[1] is None
+                        and row[2] is None
+                    ):
+                        properties_end = row_index + 1
 
-            if properties_start == -1:
-                print("No partitioning found")
-                return
+                if properties_start == -1:
+                    print("No partitioning found")
+                    return
 
-            for index in range(properties_start, properties_end):
-                prop_name = rows[index][1]
-                prop_value = rows[index][2]
-                if prop_name == "gpf_partitioning_region_bin_region_length":
-                    self.region_length = int(prop_value)
-                elif prop_name == "gpf_partitioning_region_bin_chromosomes":
-                    self.chromosomes = prop_value.split(",")
-                    self.chromosomes = list(map(str.strip, self.chromosomes))
-                elif (
-                    prop_name == "gpf_partitioning_family_bin_"
-                    "family_bin_size"
-                ):
-                    self.family_bin_size = int(prop_value)
-                elif (
-                    prop_name == "gpf_partitioning_coding_bin_"
-                    "coding_effect_types"
-                ):
-                    self.coding_effect_types = prop_value.split(",")
-                    self.coding_effect_types = list(
-                        map(str.strip, self.coding_effect_types)
-                    )
-                elif (
-                    prop_name == "gpf_partitioning_frequency_bin_"
-                    "rare_boundary"
-                ):
-                    self.rare_boundary = int(prop_value)
+                for index in range(properties_start, properties_end):
+                    prop_name = rows[index][1]
+                    prop_value = rows[index][2]
+                    if prop_name == \
+                            "gpf_partitioning_region_bin_region_length":
+                        self.region_length = int(prop_value)
+                    elif prop_name == \
+                            "gpf_partitioning_region_bin_chromosomes":
+                        self.chromosomes = prop_value.split(",")
+                        self.chromosomes = \
+                            list(map(str.strip, self.chromosomes))
+                    elif prop_name == \
+                            "gpf_partitioning_family_bin_family_bin_size":
+                        self.family_bin_size = int(prop_value)
+                    elif prop_name == \
+                            "gpf_partitioning_coding_bin_coding_effect_types":
+                        self.coding_effect_types = prop_value.split(",")
+                        self.coding_effect_types = list(
+                            map(str.strip, self.coding_effect_types))
+                    elif prop_name == \
+                            "gpf_partitioning_frequency_bin_rare_boundary":
+                        self.rare_boundary = int(prop_value)
 
     def _build_real_attr_where(self, real_attr_filter):
         query = []
