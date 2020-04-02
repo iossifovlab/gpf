@@ -190,16 +190,11 @@ def test_serialize_error(f1_trio, enrichment_builder, enrichment_serializer):
     all_er.expected = 3
     all_er.pvalue = 0.5
 
-    prople_group = f1_trio.get_families_group("phenotype")
-    results = enrichment_builder.build_people_group_selector(
-        ["missense"], prople_group, "autism"
-    )
-
-    with pytest.raises(AssertionError):
-        enrichment_serializer.serialize_male(results, "missense", all_er)
-        enrichment_serializer.serialize_female(results, "missense", all_er)
-        enrichment_serializer.serialize_female(results, "missense", male_er)
-        enrichment_serializer.serialize_all(results, "missense", male_er)
+    person_set_collection = f1_trio.get_person_set_collection("phenotype")
+    with pytest.raises(KeyError):
+        results = enrichment_builder.build_people_group_selector(
+            ["missense"], person_set_collection, "autism"
+        )
 
 
 def test_serialize_enrichment_result(db, enrichment_serializer):

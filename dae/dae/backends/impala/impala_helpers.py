@@ -8,6 +8,9 @@ class ImpalaHelpers(object):
     def create_impala_connection(impala_host, impala_port, pool_size=5):
         assert impala_host
         assert impala_port
+        if os.environ.get("DAE_IMPALA_HOST", None) is not None:
+            impala_host = os.environ.get("DAE_IMPALA_HOST", None)
+            print("impala host overwritten:", impala_host)
 
         def getconn():
             return dbapi.connect(host=impala_host, port=impala_port)

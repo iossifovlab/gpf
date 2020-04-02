@@ -10,30 +10,32 @@ import matplotlib.pyplot as plt
 plt.ioff()  # noqa
 
 from dae.pedigrees.loader import FamiliesLoader
-from dae.pedigrees.families_groups import FamiliesGroups
 
 from dae.pedigrees.drawing import OffsetLayoutDrawer, PDFLayoutDrawer
 from dae.pedigrees.layout import Layout
 from dae.common_reports.family_report import FamiliesReport
-from dae.common_reports.people_filters import FilterCollection
+from dae.configuration.gpf_config_parser import GPFConfigParser
+from dae.person_sets import PersonSetCollection
 
 
 def build_families_report(families):
-
-    families_groups = FamiliesGroups(families)
-    # families_groups.add_predefined_groups(['status'])
-    families_groups.add_predefined_groups(
-        ["status", "sex", "role", "role.sex", "family_size"]
+    status_collection_config = {
+        "id": "status",
+        "name": "Affected status",
+        "domain": [
+            {"id": "affected", "name": "affected", "value": "affected", "color": "#e35252"},
+            {"id": "unaffected", "name": "unaffected", "value": "unaffected", "color": "#ffffff"}
+        ],
+        "default": {"id": "unspecified", "name": "unspecified", "color": "#aaaaaa"},
+        "source": {"pedigree": {"column": "status"}}
+    }
+    status_collection_config = GPFConfigParser._dict_to_namedtuple(
+        status_collection_config
     )
-    filter_collections = FilterCollection.build_filter_objects(
-        families_groups, {"Status": ["status"]}
+    status_collection = PersonSetCollection.from_families(
+        status_collection_config, families
     )
-
-    families_report = FamiliesReport(
-        ["status"], families_groups, filter_collections
-    )
-
-    return families_report
+    return FamiliesReport(families, [status_collection])
 
 
 def draw_pedigree(layout, title, show_id=True, show_family=True):

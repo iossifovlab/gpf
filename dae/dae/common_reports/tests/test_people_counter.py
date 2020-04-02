@@ -1,18 +1,19 @@
+import pytest
+
 from dae.common_reports.people_counter import PeopleCounter, PeopleCounters
+from dae.person_sets import PersonSetCollection
 
 
-def test_people_counter(study1, filter_objects):
-    filter_object = filter_objects[0].get_filter_by_name("mom and phenotype1")
-    assert filter_object
-
-    people_counter = PeopleCounter(study1.families, filter_object)
+def test_people_counter(study1, phenotype_role_collection):
+    people_counter = PeopleCounter(
+        study1.families,
+        phenotype_role_collection.person_sets["phenotype1.mom"],
+    )
 
     assert people_counter.people_male == 0
     assert people_counter.people_female == 4
     assert people_counter.people_unspecified == 0
     assert people_counter.people_total == 4
-
-    assert people_counter.filter_name == "mom and phenotype1"
 
     assert people_counter.is_empty() is False
     assert people_counter.is_empty_field("people_male") is True
@@ -24,18 +25,16 @@ def test_people_counter(study1, filter_objects):
     )
 
 
-def test_people_counter_empty(study1, filter_objects):
-    filter_object = filter_objects[0].get_filter_by_name("dad and phenotype1")
-    assert filter_object
-
-    people_counter = PeopleCounter(study1.families, filter_object)
+def test_people_counter_empty(study1, phenotype_role_collection):
+    people_counter = PeopleCounter(
+        study1.families,
+        phenotype_role_collection.person_sets["phenotype1.dad"],
+    )
 
     assert people_counter.people_male == 0
     assert people_counter.people_female == 0
     assert people_counter.people_unspecified == 0
     assert people_counter.people_total == 0
-
-    assert people_counter.filter_name == "dad and phenotype1"
 
     assert people_counter.is_empty() is True
     assert people_counter.is_empty_field("people_male") is True
@@ -43,27 +42,29 @@ def test_people_counter_empty(study1, filter_objects):
     assert len(people_counter.to_dict([]).keys()) == 1
 
 
-def test_people_counters(study1, filter_objects):
-    people_counters = PeopleCounters(study1.families, filter_objects[0])
+def test_people_counters(study1, phenotype_role_collection):
+    people_counters = PeopleCounters(
+        study1.families, phenotype_role_collection
+    )
 
-    assert len(people_counters.counters) == 8
+    assert len(people_counters.counters) == 9
     assert people_counters.group_name == "Role and Diagnosis"
     assert people_counters.rows == [
         "people_male",
         "people_female",
         "people_total",
     ]
-    assert sorted(people_counters.filter_names) == sorted(
+    assert sorted(people_counters.column_names) == sorted(
         [
-            "sib and phenotype1",
-            "sib and phenotype2",
-            "prb and phenotype1",
-            "prb and phenotype2",
-            "prb and unaffected",
-            "mom and unaffected",
-            "mom and phenotype1",
-            # 'dad and unknown',
-            "dad and unaffected",
+            "phenotype1.sib",
+            "phenotype2.sib",
+            "phenotype1.prb",
+            "phenotype2.prb",
+            "unaffected.prb",
+            "unaffected.mom",
+            "phenotype1.mom",
+            "unaffected.dad",
+            "unknown.dad",
         ]
     )
 

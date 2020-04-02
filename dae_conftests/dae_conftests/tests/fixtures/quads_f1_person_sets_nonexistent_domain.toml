@@ -1,0 +1,9 @@
+[person_set_collections]
+selected_person_set_collections = ["invalid"]
+
+invalid.id = "invalid"
+invalid.name = "Nonexisting domain"
+invalid.source.pedigree.column = "invalid"
+invalid.domain = [
+   {id = "sample", name = "sample", value = "sample", color = "#ffffff"}
+]

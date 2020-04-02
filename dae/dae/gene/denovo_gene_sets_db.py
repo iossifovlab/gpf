@@ -5,6 +5,9 @@ from dae.gene.denovo_gene_set_collection_factory import (
     DenovoGeneSetCollectionFactory,
 )
 
+# TODO Document the denovo gene set spec somehow - what it contains,
+# maybe make it a namedtuple subclass
+
 
 class DenovoGeneSetsDb:
     def __init__(self, variants_db):
@@ -81,7 +84,7 @@ class DenovoGeneSetsDb:
             if (
                 gtd_config.denovo_gene_sets
                 and gtd_config.denovo_gene_sets.enabled
-                and gtd_config.denovo_gene_sets.selected_people_groups
+                and gtd_config.denovo_gene_sets.selected_person_set_collections
             ):
                 result.add(genotype_data_id)
 
@@ -117,7 +120,7 @@ class DenovoGeneSetsDb:
     def _filter_spec(denovo_gene_set_spec, permitted_datasets):
         """
         Filter a denovo gene set spec to remove datasets which
-        are not permitted for access and people groups with no
+        are not permitted for access and person set collections with no
         specified values.
         """
         return {

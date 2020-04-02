@@ -2,6 +2,7 @@ from dae.configuration.gpf_config_parser import (
     validate_existing_path,
     validate_path,
 )
+from dae.configuration.schemas.person_sets import person_set_collections_schema
 
 phenotype_schema = {
     "type": "dict",
@@ -10,14 +11,6 @@ phenotype_schema = {
         "name": {"type": "string"},
         "color": {"type": "string"},
     },
-}
-
-people_group_schema = {
-    "id": {"type": "string"},
-    "name": {"type": "string"},
-    "domain": {"type": "list", "schema": phenotype_schema},
-    "default": phenotype_schema,
-    "source": {"type": "string"},
 }
 
 in_roles_schema = {
@@ -216,7 +209,6 @@ study_config_schema = {
         "coerce": "abspath",
         "excludes": "description",
     },
-    "selected_people_groups": {"type": "string"},
     "study_type": {"type": "list", "schema": {"type": "string"}},
     "year": {"type": "list", "schema": {"type": "integer"}},
     "pub_med": {"type": "list", "schema": {"type": "string"}},
@@ -233,15 +225,6 @@ study_config_schema = {
         "type": "list",
         "schema": {"type": "string"},
         "excludes": "genotype_storage",
-    },
-    "people_group": {
-        "type": "dict",
-        "valuesrules": {
-            "oneof": [
-                {"type": "list", "schema": {"type": "string"}},
-                {"type": "dict", "schema": people_group_schema},
-            ]
-        },
     },
     "genotype_browser": {
         "type": "dict",
@@ -329,24 +312,6 @@ study_config_schema = {
         "type": "dict",
         "schema": {
             "enabled": {"type": "boolean", "required": True},
-            "selected_people_groups": {
-                "type": "list",
-                "schema": {"type": "string"},
-                "default": [],
-            },
-            "groups": {
-                "type": "list",
-                "schema": {
-                    "type": "dict",
-                    "schema": {
-                        "name": {"type": "string"},
-                        "people_group_ids": {
-                            "type": "list",
-                            "schema": {"type": "string"},
-                        },
-                    },
-                },
-            },
             "effect_groups": {
                 "type": "list",
                 "schema": {"type": "string"},
@@ -371,7 +336,7 @@ study_config_schema = {
         "type": "dict",
         "schema": {
             "enabled": {"type": "boolean", "required": True},
-            "selected_people_groups": {
+            "selected_person_set_collections": {
                 "type": "list",
                 "schema": {"type": "string"},
                 "default": [],
@@ -404,7 +369,7 @@ study_config_schema = {
         "type": "dict",
         "schema": {
             "enabled": {"type": "boolean", "required": True},
-            "selected_people_groups": {
+            "selected_person_set_collections": {
                 "type": "list",
                 "schema": {"type": "string"},
                 "default": [],
@@ -435,4 +400,5 @@ study_config_schema = {
             "effect_types": {"type": "list", "schema": {"type": "string"}},
         },
     },
+    "person_set_collections": person_set_collections_schema,
 }

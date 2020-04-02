@@ -1,15 +1,7 @@
+import os
 import pytest
 
-import os
-
-from dae.configuration.gpf_config_parser import GPFConfigParser
-from dae.pedigrees.families_groups import FamiliesGroups
-
-from dae.common_reports.people_filters import (
-    PeopleGroupFilter,
-    MultiFilter,
-    FilterCollection,
-)
+from dae.person_sets import PersonSetCollection
 
 
 def fixtures_dir():
@@ -85,66 +77,6 @@ def genotype_data_group4_config(vdb_fixture):
 
 
 @pytest.fixture(scope="session")
-def groups():
-    return [
-        GPFConfigParser._dict_to_namedtuple(
-            {
-                "name": "Role and Diagnosis",
-                "people_group_ids": ["role", "phenotype"],
-            }
-        )
-    ]
-
-
-@pytest.fixture(scope="session")
-def selected_people_groups():
-    return ["phenotype"]
-
-
-@pytest.fixture(scope="session")
-def people_groups(study1_config):
-    return study1_config.people_group
-
-
-@pytest.fixture(scope="session")
-def families_groups(people_groups):
-    def builder(study):
-        families_groups = FamiliesGroups.from_config(
-            study.families, people_groups
-        )
-        families_groups.add_predefined_groups(
-            ["status", "sex", "role", "role.sex", "family_size"]
-        )
-        return families_groups
-
-    return builder
-
-
-@pytest.fixture(scope="session")
-def filter_role(study1, families_groups):
-    fg = families_groups(study1)
-    return PeopleGroupFilter(fg["role"], "mom", name="Mother")
-
-
-@pytest.fixture(scope="session")
-def filter_people_group(study1, families_groups):
-    fg = families_groups(study1)
-    return PeopleGroupFilter(fg["phenotype"], "pheno", name="Pheno")
-
-
-@pytest.fixture(scope="function")
-def filter_object(filter_role):
-    return MultiFilter([filter_role])
-
-
-@pytest.fixture(scope="function")
-def filter_objects(study1, families_groups, groups):
-    return FilterCollection.build_filter_objects(
-        families_groups(study1), groups
-    )
-
-
-@pytest.fixture(scope="session")
 def families_list(study1):
     return [
         study1.families["f4"],
@@ -198,3 +130,12 @@ def remove_common_reports(common_report_facade):
     for temp_file in temp_files:
         if os.path.exists(temp_file):
             os.remove(temp_file)
+
+
+@pytest.fixture
+def phenotype_role_collection(study1):
+    return PersonSetCollection.compose(
+        study1.get_person_set_collection("phenotype"),
+        study1.get_person_set_collection("role"),
+        name="Role and Diagnosis",
+    )

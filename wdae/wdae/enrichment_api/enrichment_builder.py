@@ -9,10 +9,10 @@ class EnrichmentBuilder(object):
         self.results = None
 
     def build_people_group_selector(
-        self, effect_types, people_group, people_group_value
+        self, effect_types, person_set_collection, person_set_id
     ):
 
-        gh = GenotypeHelper(self.dataset, people_group, people_group_value)
+        gh = GenotypeHelper(self.dataset, person_set_collection, person_set_id)
 
         children_stats = gh.get_children_stats()
         children_count = (
@@ -33,10 +33,10 @@ class EnrichmentBuilder(object):
 
             results[effect_type] = enrichment_results
         results["childrenStats"] = gh.get_children_stats()
-        results["selector"] = people_group_value
+        results["selector"] = person_set_id
         results["geneSymbols"] = list(self.gene_syms)
-        results["peopleGroupId"] = people_group.id
-        results["peopleGroupValue"] = people_group_value
+        results["peopleGroupId"] = person_set_collection.id
+        results["peopleGroupValue"] = person_set_id
         results["datasetId"] = self.dataset.id
 
         return results
@@ -48,15 +48,17 @@ class EnrichmentBuilder(object):
 
         effect_types = enrichment_config.effect_types
 
-        people_group_id = enrichment_config.selected_people_groups[0]
-        people_group = self.dataset.get_families_group(people_group_id)
+        # TODO Why is only one person set collection being used here?
+        person_set_collection = self.dataset.get_person_set_collection(
+            enrichment_config.selected_person_set_collections[0]
+        )
 
-        if people_group:
-            for people_group_selector in people_group.domain.values():
-                res = self.build_people_group_selector(
-                    effect_types, people_group, people_group_selector.id
-                )
-                if res:
-                    results.append(res)
+        for person_set_id in person_set_collection.person_sets:
+            res = self.build_people_group_selector(
+                effect_types, person_set_collection, person_set_id
+            )
+            if res:
+                results.append(res)
+
         self.results = results
         return self.results

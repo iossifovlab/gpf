@@ -303,8 +303,8 @@ class VariantsDb(object):
             if not genotype_data_study:
                 raise ValueError(
                     "Unknown study: {}, known studies: [{}]".format(
-                        genotype_data_group_config.studies,
-                        ",".join(self.get_genotype_data_groups_ids()),
+                        study_id,
+                        ",".join(self.get_genotype_studies_ids()),
                     )
                 )
             genotype_studies.append(genotype_data_study)

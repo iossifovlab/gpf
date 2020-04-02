@@ -1,4 +1,42 @@
-import itertools
+from collections import defaultdict
+
+from dae.person_sets import PersonSetCollection
+
+
+def get_family_pedigree(family, person_set_collection):
+    return [
+        (
+            p.family_id,
+            p.person_id,
+            p.mom_id if p.mom_id else "0",
+            p.dad_id if p.dad_id else "0",
+            p.sex.short(),
+            str(p.role),
+            PersonSetCollection.get_person_color(p, person_set_collection),
+            p.layout,
+            p.generated,
+            "",
+            "",
+        )
+        for p in family.persons.values()
+    ]
+
+
+def get_family_type(family, person_to_set):
+    family_type = list()
+    # get family size
+    family_type.append(str(len(family.members_in_order)))
+    members_by_role = sorted(
+        family.members_in_order, key=lambda p: str(p.role)
+    )
+    members_by_role_and_sex = sorted(members_by_role, key=lambda p: str(p.sex))
+    for person in members_by_role_and_sex:
+        # get person set collection value
+        set_value = person_to_set[person.person_id]
+        family_type.append(
+            f"{set_value}.{person.role}.{person.sex}.{person.status}"
+        )
+    return tuple(family_type)
 
 
 class FamilyCounter(object):
@@ -21,92 +59,47 @@ class FamilyCounter(object):
 class FamiliesGroupCounters(object):
     def __init__(
         self,
-        families_groups,
-        selected_families_group,
+        families,
+        person_set_collection,
         draw_all_families,
         families_count_show_id,
     ):
-        self.families_groups = families_groups
-        self.selected_families_group = selected_families_group
-        self.families = self.selected_families_group.families
-        assert len(self.selected_families_group.families) == len(
-            self.families_groups.families
-        )
-
+        self.families = families
+        self.person_set_collection = person_set_collection
         self.draw_all_families = draw_all_families
         self.families_count_show_id = families_count_show_id
 
         self.counters = self._build_counters()
 
     def _build_counters(self):
-        if self.draw_all_families is True:
-            result = {}
+        result = dict()
+
+        if self.draw_all_families:
             for family in self.families.values():
                 fc = FamilyCounter(
                     [family],
-                    self.selected_families_group.family_pedigree(family),
+                    get_family_pedigree(family, self.person_set_collection),
                     family.family_id,
                 )
                 result[family.family_id] = fc
-            assert len(self.families) == len(result)
-            return result
         else:
-            available_types = list(
-                itertools.product(
-                    *[
-                        self.selected_families_group.available_families_types,
-                        self.families_groups[
-                            "family_size"
-                        ].available_families_types,
-                        self.families_groups[
-                            "role.sex"
-                        ].available_families_types,
-                        self.families_groups[
-                            "status"
-                        ].available_families_types,
-                    ]
-                )
-            )
+            families_to_types = defaultdict(list)
 
-            families_types_counters = {ft: [] for ft in available_types}
-            assert len(self.families) == len(
-                self.families_groups["status"].families_types
-            )
-            assert len(self.families) == len(
-                self.families_groups["role"].families_types
-            )
-            assert len(self.families) == len(
-                self.families_groups["sex"].families_types
-            )
-            assert len(self.families) == len(
-                self.families_groups["family_size"].families_types
-            )
+            person_to_set = dict()
+            for person_set in self.person_set_collection.person_sets.values():
+                for person_id in person_set.persons:
+                    person_to_set[person_id] = person_set.id
 
-            families_types = list(
-                zip(
-                    self.selected_families_group.families_types,
-                    self.families_groups["family_size"].families_types,
-                    self.families_groups["role.sex"].families_types,
-                    self.families_groups["status"].families_types,
-                )
-            )
-            assert len(families_types) == len(self.families)
-            for family, family_type in zip(
-                self.families.values(), families_types
-            ):
-                assert family_type in families_types_counters, family_type
-                families_types_counters[family_type].append(family)
-            sorted_families_types = [
-                (family_type, families)
-                for family_type, families in families_types_counters.items()
-            ]
-            sorted_family_types = sorted(
-                sorted_families_types, key=lambda item: -len(item[1])
-            )
-            result = {}
-            for family_type, families in sorted_family_types:
-                if len(families) == 0:
-                    continue
+            for family in self.families.values():
+                families_to_types[
+                    get_family_type(family, person_to_set)
+                ].append(family)
+
+            families_to_types = {
+                    k: v for k, v in sorted(families_to_types.items(), key=lambda item: len(item[1]), reverse=True)
+            }
+
+            for family_type, families in families_to_types.items():
                 if (
                     self.families_count_show_id
                     and len(families) <= self.families_count_show_id
@@ -116,21 +109,21 @@ class FamiliesGroupCounters(object):
                     )
                 else:
                     pedigree_label = str(len(families))
+
                 family = families[0]
                 fc = FamilyCounter(
                     families,
-                    self.selected_families_group.family_pedigree(family),
+                    get_family_pedigree(family, self.person_set_collection),
                     pedigree_label,
                 )
-
                 result[family_type] = fc
 
-            return result
+        return result
 
     def to_dict(self):
         return {
-            "group_name": self.selected_families_group.name,
-            "phenotypes": self.selected_families_group.available_values,
+            "group_name": self.person_set_collection.name,
+            "phenotypes": list(self.person_set_collection.person_sets.keys()),
             "counters": [
                 {
                     "counters": [
@@ -138,5 +131,8 @@ class FamiliesGroupCounters(object):
                     ],
                 }
             ],
-            "legend": self.selected_families_group.legend,
+            "legend": [
+                {"id": domain.id, "name": domain.name, "color": domain.color}
+                for domain in self.person_set_collection.person_sets.values()
+            ],
         }

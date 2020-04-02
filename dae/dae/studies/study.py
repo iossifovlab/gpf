@@ -1,8 +1,9 @@
 from threading import Thread, local
 from concurrent.futures import ThreadPoolExecutor
 import functools
+from typing import Dict
 from dae.pedigrees.family import FamiliesData
-from dae.pedigrees.families_groups import FamiliesGroups
+from dae.person_sets import PersonSet, PersonSetCollection
 
 
 class GenotypeData:
@@ -26,7 +27,8 @@ class GenotypeData:
         self.has_complex = self.config.has_complex
 
         self.study_type = self.config.study_type
-        self.families_groups = None
+        self.person_set_collections: Dict[str, PersonSetCollection] = dict()
+        self.person_set_collection_configs = dict()
 
     def query_variants(
         self,
@@ -56,29 +58,39 @@ class GenotypeData:
     def families(self):
         raise NotImplementedError()
 
-    def _build_study_groups(self):
-        if self.families_groups is None:
-            config = self.config.people_group
+    def _build_person_set_collection(self, person_set_collection_id):
+        raise NotImplementedError()
 
-            self.families_groups = FamiliesGroups.from_config(
-                self.families, config
-            )
-            self.families_groups.add_predefined_groups(
-                ["status", "role", "sex", "role.sex", "family_size"]
-            )
+    def _build_person_set_collections(self):
+        collections_config = self.config.person_set_collections
+        if collections_config:
+            selected_collections = \
+                collections_config.selected_person_set_collections or []
+            for collection_id in selected_collections:
+                self._build_person_set_collection(collection_id)
 
-    def get_families_group(self, families_group_id):
-        self._build_study_groups()
-        return self.families_groups.get(families_group_id)
+            # build person set collection configs
+            for collection_id, collection in self.person_set_collections.items():
+                domain = list()
+                for person_set in collection.person_sets.values():
+                    domain.append({
+                        "id": person_set.id,
+                        "name": person_set.name,
+                        "value": person_set.value,
+                        "color": person_set.color,
+                    })
+                collection_conf = {
+                    "id": collection.id,
+                    "name": collection.name,
+                    "domain": domain
+                }
+                self.person_set_collection_configs[collection_id] = \
+                    collection_conf
 
-    def _get_person_color(self, person, people_group):
-        if person.generated:
-            return "#E0E0E0"
-        # print(people_group)
-
-        if people_group is None:
-            return "#FFFFFF"
-        return people_group.person_color(person)
+    def get_person_set_collection(self, person_set_collection_id):
+        if person_set_collection_id is None:
+            return None
+        return self.person_set_collections[person_set_collection_id]
 
 
 class GenotypeDataGroup(GenotypeData):
@@ -87,6 +99,7 @@ class GenotypeDataGroup(GenotypeData):
             genotype_data_group_config, studies
         )
         self._families = self._build_families()
+        self._build_person_set_collections()
 
     @property
     def families(self):
@@ -229,12 +242,51 @@ class GenotypeDataGroup(GenotypeData):
             )
         return combined_dict
 
+    def _build_person_set_collection(self, person_set_collection_id):
+        assert (
+            person_set_collection_id
+            in self.config.person_set_collections.selected_person_set_collections
+        )
+
+        sample_collection = self.studies[0].get_person_set_collection(
+            person_set_collection_id
+        )
+        collection_name = sample_collection.name
+
+        new_collection = PersonSetCollection(
+            person_set_collection_id, collection_name, dict(), self.families,
+        )
+
+        for study in self.studies:
+            collection = study.get_person_set_collection(
+                person_set_collection_id
+            )
+            assert new_collection.name == collection.name
+
+            for person_set_id, person_set in collection.person_sets.items():
+                if person_set_id not in new_collection.person_sets:
+                    new_collection.person_sets[person_set_id] = PersonSet(
+                        person_set.id,
+                        person_set.name,
+                        person_set.value,
+                        person_set.color,
+                        dict(),
+                    )
+                for person_id, person in person_set.persons.items():
+                    if person_id in self.families.persons:
+                        new_collection.person_sets[person_set_id].persons[
+                            person_id
+                        ] = person
+
+        self.person_set_collections[person_set_collection_id] = new_collection
+
 
 class GenotypeDataStudy(GenotypeData):
     def __init__(self, config, backend):
         super(GenotypeDataStudy, self).__init__(config, [self])
 
         self._backend = backend
+        self._build_person_set_collections()
 
     def query_variants(
             self,
@@ -290,3 +342,11 @@ class GenotypeDataStudy(GenotypeData):
     @property
     def families(self):
         return self._backend.families
+
+    def _build_person_set_collection(self, person_set_collection_id):
+        collection_config = getattr(
+            self.config.person_set_collections, person_set_collection_id
+        )
+        self.person_set_collections[
+            person_set_collection_id
+        ] = PersonSetCollection.from_families(collection_config, self.families)
