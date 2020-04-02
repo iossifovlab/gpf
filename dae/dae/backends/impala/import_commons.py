@@ -23,6 +23,8 @@ from dae.backends.impala.parquet_io import ParquetManager, \
     NoPartitionDescriptor
 
 from dae.configuration.study_config_builder import StudyConfigBuilder
+from dae.configuration.gpf_config_parser import GPFConfigParser
+from dae.utils.dict_utils import recursive_dict_update
 
 
 def save_study_config(dae_config, study_id, study_config):
@@ -391,6 +393,12 @@ class MakefileGenerator:
             config_dict["has_denovo"] = True
             config_dict["has_cnv"] = True
             config_dict["genotype_browser"]["has_cnv"] = True
+
+        if argv.study_config is not None:
+            study_config_dict = GPFConfigParser.load_config_raw(
+                argv.study_config
+            )
+            config_dict = recursive_dict_update(config_dict, study_config_dict)
 
         config_builder = StudyConfigBuilder(config_dict)
         config = config_builder.build_config()
@@ -776,6 +784,14 @@ class MakefileGenerator:
             "chromosomes are extracted from variants file and/or default "
             "reference genome used in GPF instance; "
             "[default: None]",
+        )
+
+        parser.add_argument(
+            "--study-config",
+            type=str,
+            default=None,
+            dest="study_config",
+            help="Config used to overwrite values in generated configuration",
         )
 
         return parser
