@@ -63,7 +63,7 @@ environment:
 
 .. code-block:: bash
 
-    conda install -c conda-forge -c bioconda -c iossifovlab gpf_wdae
+    conda install -c defaults -c conda-forge -c iossifovlab -c bioconda gpf_wdae
 
 This command is going to install GPF and all of its dependencies.
 
