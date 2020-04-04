@@ -1,7 +1,7 @@
-from dae.annotation.tools.annotator_base import AnnotatorBase
+from dae.annotation.tools.annotator_base import VariantAnnotatorBase
 
 
-class CleanupAnnotator(AnnotatorBase):
+class CleanupAnnotator(VariantAnnotatorBase):
     def __init__(self, config, genomes_db):
         super(CleanupAnnotator, self).__init__(config, genomes_db)
         # TODO Fix this - should be split in the configuration schema!
@@ -16,3 +16,8 @@ class CleanupAnnotator(AnnotatorBase):
         for column in self.cleanup_columns:
             if column in annotation_line:
                 del annotation_line[column]
+
+    def do_annotate(self, aline, variant):
+        for column in self.cleanup_columns:
+            if column in aline:
+                del aline[column]
