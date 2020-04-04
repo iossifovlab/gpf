@@ -101,6 +101,13 @@ class GenotypeDataGroup(GenotypeData):
         )
         self._families = self._build_families()
         self._build_person_set_collections()
+        self._executor = None
+
+    @property
+    def executor(self):
+        if self._executor is None:
+            self._executor = ThreadPoolExecutor(max_workers=len(self.studies))
+        return self._executor
 
     @property
     def families(self):
@@ -125,98 +132,41 @@ class GenotypeDataGroup(GenotypeData):
             study_filters=None,
             **kwargs):
 
-        variants = list()
-
-        def thread_function(name, genotype_data_study):
-            print(f"Thread {name} starting")
-            for variant in genotype_data_study.query_variants(
-                        regions,
-                        genes,
-                        effect_types,
-                        family_ids,
-                        person_ids,
-                        inheritance,
-                        roles,
-                        sexes,
-                        variant_type,
-                        real_attr_filter,
-                        ultra_rare,
-                        return_reference,
-                        return_unknown,
-                        limit,
-                        study_filters,
-                        **kwargs,
-                    ):
-                variants.append(variant)
-            print(f"Thread {name} ending")
-
-        threads = []
-        for idx, genotype_data_study in enumerate(self.studies):
-            t = Thread(
-                target=thread_function,
-                args=(idx, genotype_data_study,)
-            )
-            threads.append(t)
-            t.start()
-
-        for idx, thread in enumerate(threads):
-            print(f"Waiting for thread {idx}")
-            thread.join()
-            print(f"Thread {idx} returned")
-        return variants
-
-    def query_variants_async(
-            self,
-            regions=None,
-            genes=None,
-            effect_types=None,
-            family_ids=None,
-            person_ids=None,
-            inheritance=None,
-            roles=None,
-            sexes=None,
-            variant_type=None,
-            real_attr_filter=None,
-            ultra_rare=None,
-            return_reference=None,
-            return_unknown=None,
-            limit=None,
-            study_filters=None,
-            **kwargs):
-
         variants_futures = list()
 
-        def get_variants(thread_id, genotype_data_study):
-            print(f"Thread {thread_id} starting")
-            thread_data = local()
-            thread_data.variants = list()
-            for variant in genotype_data_study.query_variants(
-                        regions,
-                        genes,
-                        effect_types,
-                        family_ids,
-                        person_ids,
-                        inheritance,
-                        roles,
-                        sexes,
-                        variant_type,
-                        real_attr_filter,
-                        ultra_rare,
-                        return_reference,
-                        return_unknown,
-                        limit,
-                        study_filters,
-                        **kwargs,
-                    ):
-                thread_data.variants.append(variant)
-            print(f"Thread {thread_id} ending")
-            return thread_data.variants
+        def get_variants(genotype_data_study):
+            return genotype_data_study.query_variants(
+                regions,
+                genes,
+                effect_types,
+                family_ids,
+                person_ids,
+                inheritance,
+                roles,
+                sexes,
+                variant_type,
+                real_attr_filter,
+                ultra_rare,
+                return_reference,
+                return_unknown,
+                limit,
+                study_filters,
+                **kwargs,
+            )
 
-        executor = ThreadPoolExecutor()
-        for idx, genotype_data_study in enumerate(self.studies):
-            future = executor.submit(get_variants, idx, genotype_data_study)
+        for genotype_data_study in self.studies:
+            future = self.executor.submit(get_variants, genotype_data_study)
             variants_futures.append(future)
-        return variants_futures
+
+        seen = set()
+        for future in variants_futures:
+            for v in future.result():
+                if v.fvuid in seen:
+                    continue
+                seen.add(v.fvuid)
+                yield v
+                if limit and len(seen) >= limit:
+                    break
 
     def get_studies_ids(self):
         # TODO Use the 'cached' property on this

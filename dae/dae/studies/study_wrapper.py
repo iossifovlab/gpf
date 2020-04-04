@@ -428,21 +428,9 @@ class StudyWrapper(object):
             )
             kwargs.pop("inheritanceTypeFilter")
 
-        if self.is_group:
-            variants_futures = \
-                self.genotype_data_study.query_variants_async(**kwargs)
-
-            variants_from_studies = list()
-            for future in variants_futures:
-                variants_from_studies += future.result()
-
-            variants_from_studies = itertools.islice(
-                variants_from_studies, limit
-            )
-        else:
-            variants_from_studies = itertools.islice(
-                self.genotype_data_study.query_variants(**kwargs), limit
-            )
+        variants_from_studies = itertools.islice(
+            self.genotype_data_study.query_variants(**kwargs), limit
+        )
 
         for variant in self._add_additional_columns(variants_from_studies):
             yield variant
