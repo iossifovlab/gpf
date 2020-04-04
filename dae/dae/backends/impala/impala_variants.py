@@ -128,7 +128,7 @@ class ImpalaFamilyVariants:
                     position,
                     end_position,
                     reference,
-                    transmission_type,
+                    _transmission_type,
                     family_id,
                     variant_data,
                     matched_alleles,

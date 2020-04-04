@@ -97,17 +97,15 @@ class StudyWrapper(object):
         self.legend = {}
         if self.config.people_set_collections is not None:
 
-            def ps_to_dict(ps):
-                return [
-                    GPFConfigParser._namedtuple_to_dict(domain)
-                    for domain in ps.domain + [ps.default]
-                ]
+            # def ps_to_dict(ps):
+            #     return [
+            #         GPFConfigParser._namedtuple_to_dict(domain)
+            #         for domain in ps.domain + [ps.default]
+            #     ]
 
-            for (
-                collection_id
-            ) in (
-                self.config.person_set_collections.selected_person_set_collections
-            ):
+            for collection_id in self.config.person_set_collections \
+                    .selected_person_set_collections:
+
                 self.legend[collection_id] = getattr(
                     self.config.person_set_collections, collection_id
                 )
@@ -572,14 +570,11 @@ class StudyWrapper(object):
             person_set_collections_query["checkedValues"]
         )
 
-        person_set_collection = self.genotype_data_study.get_person_set_collection(
-            person_set_collection_id
-        )
+        person_set_collection = self.genotype_data_study \
+            .get_person_set_collection(person_set_collection_id)
 
-        if (
-            set(person_set_collection.person_sets.keys())
-            == selected_person_set_ids
-        ):
+        if set(person_set_collection.person_sets.keys()) == \
+                selected_person_set_ids:
             return kwargs
 
         person_ids = set()

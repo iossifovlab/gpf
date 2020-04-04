@@ -84,8 +84,8 @@ class PersonSetCollection(NamedTuple):
 
     @staticmethod
     def get_person_color(
-        person: Person, person_set_collection: "PersonSetCollection"
-    ):
+            person: Person, person_set_collection: "PersonSetCollection"):
+
         if person.generated:
             return "#E0E0E0"
 
@@ -103,8 +103,8 @@ class PersonSetCollection(NamedTuple):
 
     @staticmethod
     def from_families(
-        collection_config: NamedTuple, families_data: FamiliesData
-    ) -> "PersonSetCollection":
+            collection_config: NamedTuple,
+            families_data: FamiliesData) -> "PersonSetCollection":
         """Produce a PersonSetCollection from its given configuration
         with a pedigree as its source.
         """
