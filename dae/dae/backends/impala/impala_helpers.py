@@ -7,10 +7,8 @@ from sqlalchemy.pool import QueuePool
 
 class ImpalaHelpers(object):
 
-    @staticmethod
-    def create_impala_connection(impala_host, impala_port, pool_size=5):
-        assert impala_host
-        assert impala_port
+    def __init__(self, impala_host=None, impala_port=None, pool_size=5):
+
         if os.environ.get("DAE_IMPALA_HOST", None) is not None:
             impala_host = os.environ.get("DAE_IMPALA_HOST", None)
             print("impala host overwritten:", impala_host)
@@ -20,25 +18,11 @@ class ImpalaHelpers(object):
 
         print(f"Creating impala pool with {pool_size} connections")
 
-        pool = QueuePool(getconn, pool_size=pool_size, reset_on_return=False)
+        self._connection_pool = QueuePool(
+            getconn, pool_size=pool_size, reset_on_return=False)
 
-        impala_connection = pool.connect()
-
-        return impala_connection
-
-    def __init__(
-            self, impala_host=None,
-            impala_port=None, impala_connection=None,
-            pool_size=5):
-
-        if impala_connection is None:
-            assert impala_host
-            assert impala_port
-
-            impala_connection = self.create_impala_connection(
-                impala_host, impala_port, pool_size=pool_size
-            )
-        self.connection = impala_connection
+    def connection(self):
+        return self._connection_pool.connect()
 
     def import_variants(
             self,
@@ -48,7 +32,7 @@ class ImpalaHelpers(object):
             variant_hdfs_path,
             pedigree_hdfs_path):
 
-        with closing(self.connection.connect()) as conn:
+        with closing(self.connection()) as conn:
             with conn.cursor() as cursor:
                 cursor.execute(
                     """
@@ -185,7 +169,7 @@ class ImpalaHelpers(object):
         files,
     ):
 
-        with closing(self.connection.connect()) as conn:
+        with closing(self.connection()) as conn:
             with conn.cursor() as cursor:
                 cursor.execute(
                     f"""
@@ -210,31 +194,33 @@ class ImpalaHelpers(object):
                     cursor, db, pedigree_table, [pedigree_hdfs_path])
 
     def check_database(self, dbname):
-        with self.connection.cursor() as cursor:
-            q = """
-                SHOW DATABASES
-            """
+        with closing(self.connection()) as conn:
+            with conn.cursor() as cursor:
+                q = """
+                    SHOW DATABASES
+                """
 
-            cursor.execute(q)
-            for row in cursor:
-                if row[0] == dbname:
-                    return True
+                cursor.execute(q)
+                for row in cursor:
+                    if row[0] == dbname:
+                        return True
         return False
 
     def check_table(self, dbname, tablename):
-        with self.connection.cursor() as cursor:
-            q = f"""
-                SHOW TABLES IN {dbname}
-            """
+        with closing(self.connection()) as conn:
+            with conn.cursor() as cursor:
+                q = f"""
+                    SHOW TABLES IN {dbname}
+                """
 
-            cursor.execute(q)
-            for row in cursor:
-                if row[0] == tablename:
-                    return True
+                cursor.execute(q)
+                for row in cursor:
+                    if row[0] == tablename:
+                        return True
         return False
 
     def drop_table(self, dbname, tablename):
-        with closing(self.connection.connect()) as conn:
+        with closing(self.connection()) as conn:
             with conn.cursor() as cursor:
                 q = f"""
                     DROP TABLE IF EXISTS {dbname}.{tablename}
@@ -242,7 +228,7 @@ class ImpalaHelpers(object):
                 cursor.execute(q)
 
     def create_database(self, dbname):
-        with closing(self.connection.connect()) as conn:
+        with closing(self.connection()) as conn:
             with conn.cursor() as cursor:
                 q = """
                     CREATE DATABASE IF NOT EXISTS {db}
@@ -253,7 +239,7 @@ class ImpalaHelpers(object):
                 cursor.execute(q)
 
     def drop_database(self, dbname):
-        with closing(self.connection.connect()) as conn:
+        with closing(self.connection()) as conn:
             with conn.cursor() as cursor:
                 cursor.execute(
                     """

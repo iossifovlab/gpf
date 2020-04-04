@@ -1,5 +1,6 @@
 import pytest
 import os
+from contextlib import closing
 
 from box import Box
 
@@ -47,12 +48,6 @@ def test_get_hdfs_dir(impala_genotype_storage, hdfs_dir, path):
     assert impala_genotype_storage.get_hdfs_dir(*path) == hdfs_dir
 
     assert impala_genotype_storage.hdfs_helpers.exists(hdfs_dir) is True
-
-
-def test_impala_connection(impala_genotype_storage):
-    impala_connection = impala_genotype_storage.impala_connection
-
-    assert impala_connection is not None
 
 
 def test_impala_helpers(impala_genotype_storage):
@@ -174,37 +169,38 @@ def test_impala_partition_import(
         )
     )
 
-    impala = impala_genotype_storage.impala_helpers
+    impala_helpers = impala_genotype_storage.impala_helpers
     db = impala_genotype_storage.storage_config.impala.db
 
-    with impala.connection.cursor() as cursor:
-        cursor.execute(f"DESCRIBE EXTENDED {db}.test_study_variants")
-        rows = list(cursor)
-        assert any(
-            row[1] == "gpf_partitioning_coding_bin_coding_effect_types"
-            and row[2] == "missense,nonsense,frame-shift,synonymous"
-            for row in rows
-        )
-        assert any(
-            row[1] == "gpf_partitioning_family_bin_family_bin_size"
-            and int(row[2]) == 100
-            for row in rows
-        )
-        assert any(
-            row[1] == "gpf_partitioning_frequency_bin_rare_boundary"
-            and int(row[2]) == 30
-            for row in rows
-        )
-        assert any(
-            row[1] == "gpf_partitioning_region_bin_chromosomes"
-            and "1, 2" in row[2]
-            for row in rows
-        )
-        assert any(
-            row[1] == "gpf_partitioning_region_bin_region_length"
-            and int(row[2]) == 100000
-            for row in rows
-        )
+    with closing(impala_helpers.connection()) as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(f"DESCRIBE EXTENDED {db}.test_study_variants")
+            rows = list(cursor)
+            assert any(
+                row[1] == "gpf_partitioning_coding_bin_coding_effect_types"
+                and row[2] == "missense,nonsense,frame-shift,synonymous"
+                for row in rows
+            )
+            assert any(
+                row[1] == "gpf_partitioning_family_bin_family_bin_size"
+                and int(row[2]) == 100
+                for row in rows
+            )
+            assert any(
+                row[1] == "gpf_partitioning_frequency_bin_rare_boundary"
+                and int(row[2]) == 30
+                for row in rows
+            )
+            assert any(
+                row[1] == "gpf_partitioning_region_bin_chromosomes"
+                and "1, 2" in row[2]
+                for row in rows
+            )
+            assert any(
+                row[1] == "gpf_partitioning_region_bin_region_length"
+                and int(row[2]) == 100000
+                for row in rows
+            )
 
 
 # def test_impala_config(impala_genotype_storage):

@@ -26,23 +26,16 @@ class ImpalaGenotypeStorage(GenotypeStorage):
         super(ImpalaGenotypeStorage, self).__init__(storage_config)
         self.data_dir = self.storage_config.dir
 
-        self._hdfs_helpers = None
-
         impala_host = self.storage_config.impala.host
         impala_port = self.storage_config.impala.port
         pool_size = self.storage_config.impala.pool_size
 
-        def getconn():
-            return dbapi.connect(host=impala_host, port=impala_port)
-
-        print(
-            f"Creating impala connection pool to {impala_host}:{impala_port} "
-            f"with {pool_size} connections")
-
-        self._impala_connection_pool = \
-            QueuePool(getconn, pool_size=pool_size, reset_on_return=False)
         self._impala_helpers = ImpalaHelpers(
-            impala_connection=self._impala_connection_pool
+            impala_host=impala_host, impala_port=impala_port,
+            pool_size=pool_size
+        )
+        self._hdfs_helpers = HdfsHelpers(
+            self.storage_config.hdfs.host, self.storage_config.hdfs.port
         )
 
     def get_db(self):
@@ -59,21 +52,13 @@ class ImpalaGenotypeStorage(GenotypeStorage):
         return hdfs_dirname
 
     @property
-    def impala_connection(self):
-        return self._impala_connection_pool
-
-    @property
     def impala_helpers(self):
         assert self._impala_helpers is not None
         return self._impala_helpers
 
     @property
     def hdfs_helpers(self):
-        if self._hdfs_helpers is None:
-            self._hdfs_helpers = HdfsHelpers(
-                self.storage_config.hdfs.host, self.storage_config.hdfs.port
-            )
-
+        assert self._hdfs_helpers is not None
         return self._hdfs_helpers
 
     @staticmethod
@@ -105,7 +90,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
 
         variant_table, pedigree_table = self.study_tables(study_config)
         family_variants = ImpalaFamilyVariants(
-            self.impala_connection,
+            self.impala_helpers,
             self.storage_config.impala.db,
             variant_table,
             pedigree_table,

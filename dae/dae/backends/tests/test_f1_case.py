@@ -71,7 +71,6 @@ def test_f1_simple(
     assert len(vs) == count
 
 
-@pytest.mark.xfail(reason="To fix later")
 @pytest.mark.parametrize("variants", ["variants_impala", "variants_vcf"])
 @pytest.mark.parametrize(
     "regions,inheritance,effect_types,count",

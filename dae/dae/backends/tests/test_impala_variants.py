@@ -14,9 +14,9 @@ def test_hdfs_helpers(hdfs_host):
 
 
 def test_impala_query_build(impala_host, genomes_db_2013):
-    connection = ImpalaHelpers.create_impala_connection(impala_host, 21050)
+    impala_helpers = ImpalaHelpers(impala_host, 21050)
     ifv = ImpalaFamilyVariants(
-        connection,
+        impala_helpers,
         "impala_storage_test_db",
         "test_study_variants",
         "test_study_pedigree",

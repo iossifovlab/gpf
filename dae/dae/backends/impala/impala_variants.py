@@ -34,7 +34,7 @@ class ImpalaFamilyVariants:
 
     def __init__(
             self,
-            impala_connection,
+            impala_helpers,
             db,
             variant_table,
             pedigree_table,
@@ -48,7 +48,7 @@ class ImpalaFamilyVariants:
         self.variant_table = variant_table
         self.pedigree_table = pedigree_table
 
-        self.impala = impala_connection
+        self._impala_helpers = impala_helpers
         self.pedigree_schema = self.load_pedigree_schema()
         self.ped_df = self.load_pedigree()
         self.families = FamiliesData.from_pedigree_df(self.ped_df)
@@ -70,13 +70,16 @@ class ImpalaFamilyVariants:
     def count_variants(self, **kwargs):
         if not self.variant_table:
             return 0
-        with closing(self.impala.connect()) as conn:
+        with closing(self.connection()) as conn:
             with conn.cursor() as cursor:
                 query = self.build_count_query(**kwargs)
                 # print('COUNT QUERY:', query)
                 cursor.execute(query)
                 row = next(cursor)
                 return row[0]
+
+    def connection(self):
+        return self._impala_helpers.connection()
 
     def query_variants(
         self,
@@ -98,7 +101,7 @@ class ImpalaFamilyVariants:
 
         if not self.variant_table:
             return None
-        with closing(self.impala.connect()) as conn:
+        with closing(self.connection()) as conn:
             with conn.cursor() as cursor:
                 query = self.build_query(
                     regions=regions,
@@ -127,7 +130,7 @@ class ImpalaFamilyVariants:
                         position,
                         end_position,
                         reference,
-                        transmission_type,
+                        _transmission_type,
                         family_id,
                         variant_data,
                         matched_alleles,
@@ -153,7 +156,7 @@ class ImpalaFamilyVariants:
                     yield v
 
     def load_pedigree(self):
-        with closing(self.impala.connect()) as conn:
+        with closing(self.connection()) as conn:
             with conn.cursor() as cursor:
                 q = """
                     SELECT * FROM {db}.{pedigree}
@@ -188,7 +191,7 @@ class ImpalaFamilyVariants:
     def load_variant_schema(self):
         if not self.variant_table:
             return None
-        with closing(self.impala.connect()) as conn:
+        with closing(self.connection()) as conn:
             with conn.cursor() as cursor:
                 q = """
                     DESCRIBE {db}.{variant}
@@ -206,7 +209,7 @@ class ImpalaFamilyVariants:
             return ParquetSchema(schema)
 
     def load_pedigree_schema(self):
-        with closing(self.impala.connect()) as conn:
+        with closing(self.connection()) as conn:
             with conn.cursor() as cursor:
                 q = """
                     DESCRIBE {db}.{pedigree}
@@ -225,7 +228,7 @@ class ImpalaFamilyVariants:
     def _fetch_tblproperties(self):
         if not self.variant_table:
             return None
-        with closing(self.impala.connect()) as conn:
+        with closing(self.connection()) as conn:
             with conn.cursor() as cursor:
                 cursor.execute(
                     f"DESCRIBE EXTENDED {self.db}.{self.variant_table}")
