@@ -3,16 +3,17 @@ import sys
 import glob
 from time import time
 
+from impala import dbapi
+from sqlalchemy.pool import QueuePool
+
 from dae.backends.raw.loader import VariantsLoader, TransmissionType
 from dae.backends.storage.genotype_storage import GenotypeStorage
 
 from dae.backends.impala.hdfs_helpers import HdfsHelpers
 from dae.backends.impala.impala_helpers import ImpalaHelpers
 from dae.backends.impala.impala_variants import ImpalaFamilyVariants
-from dae.backends.impala.parquet_io import (
-    ParquetManager,
-    ParquetPartitionDescriptor,
-)
+from dae.backends.impala.parquet_io import ParquetManager, \
+    ParquetPartitionDescriptor
 
 from dae.configuration.study_config_builder import StudyConfigBuilder
 from dae.configuration.gpf_config_parser import GPFConfigParser
@@ -20,13 +21,22 @@ from dae.utils.dict_utils import recursive_dict_update
 
 
 class ImpalaGenotypeStorage(GenotypeStorage):
+
     def __init__(self, storage_config):
         super(ImpalaGenotypeStorage, self).__init__(storage_config)
         self.data_dir = self.storage_config.dir
 
-        self._impala_connection = None
-        self._impala_helpers = None
-        self._hdfs_helpers = None
+        impala_host = self.storage_config.impala.host
+        impala_port = self.storage_config.impala.port
+        pool_size = self.storage_config.impala.pool_size
+
+        self._impala_helpers = ImpalaHelpers(
+            impala_host=impala_host, impala_port=impala_port,
+            pool_size=pool_size
+        )
+        self._hdfs_helpers = HdfsHelpers(
+            self.storage_config.hdfs.host, self.storage_config.hdfs.port
+        )
 
     def get_db(self):
         return self.storage_config.impala.db
@@ -42,31 +52,13 @@ class ImpalaGenotypeStorage(GenotypeStorage):
         return hdfs_dirname
 
     @property
-    def impala_connection(self):
-        if self._impala_connection is None:
-            self._impala_connection = ImpalaHelpers.create_impala_connection(
-                self.storage_config.impala.host,
-                self.storage_config.impala.port,
-            )
-
-        return self._impala_connection
-
-    @property
     def impala_helpers(self):
-        if self._impala_helpers is None:
-            self._impala_helpers = ImpalaHelpers(
-                impala_connection=self.impala_connection
-            )
-
+        assert self._impala_helpers is not None
         return self._impala_helpers
 
     @property
     def hdfs_helpers(self):
-        if self._hdfs_helpers is None:
-            self._hdfs_helpers = HdfsHelpers(
-                self.storage_config.hdfs.host, self.storage_config.hdfs.port
-            )
-
+        assert self._hdfs_helpers is not None
         return self._hdfs_helpers
 
     @staticmethod
@@ -98,7 +90,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
 
         variant_table, pedigree_table = self.study_tables(study_config)
         family_variants = ImpalaFamilyVariants(
-            self.impala_connection,
+            self.impala_helpers,
             self.storage_config.impala.db,
             variant_table,
             pedigree_table,
@@ -147,7 +139,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
             "has_denovo": False,
             "genotype_storage": {
                 "id": self.storage_config.section_id(),
-                "tables": {"pedigree": pedigree_table,},
+                "tables": {"pedigree": pedigree_table},
             },
             "genotype_browser": {"enabled": False},
         }
@@ -243,12 +235,9 @@ class ImpalaGenotypeStorage(GenotypeStorage):
         assert variant_paths is not None
         assert pedigree_paths
 
-        (
-            variant_hdfs_path,
-            pedigree_hdfs_path,
-        ) = self._hdfs_parquet_put_study_files(
-            study_id, variant_paths, pedigree_paths
-        )
+        variant_hdfs_path, pedigree_hdfs_path = \
+            self._hdfs_parquet_put_study_files(
+                study_id, variant_paths, pedigree_paths)
 
         db = self.storage_config.impala.db
         pedigree_table = "{}_pedigree".format(study_id)
@@ -302,7 +291,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
         variants_hdfs_path = os.path.join(study_path, "variants")
         for parquet_file in variants_files:
             file_dir = os.path.dirname(parquet_file)
-            file_dir = file_dir[file_dir.find("region_bin") :]
+            file_dir = file_dir[file_dir.find("region_bin"):]
             file_hdfs_dir = os.path.join(variants_hdfs_path, file_dir)
             self.hdfs_helpers.makedirs(file_hdfs_dir)
             self.hdfs_helpers.put_in_directory(parquet_file, file_hdfs_dir)
@@ -314,7 +303,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
         self.hdfs_helpers.put(pedigree_file, pedigree_hdfs_path)
 
         variants_files = list(
-            map(lambda f: f[f.find("region_bin") :], variants_files)
+            map(lambda f: f[f.find("region_bin"):], variants_files)
         )
 
         variants_table = f"{study_id}_variants"

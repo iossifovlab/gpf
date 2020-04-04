@@ -1,4 +1,5 @@
-import itertools
+from threading import Thread, local
+from concurrent.futures import ThreadPoolExecutor
 import functools
 from typing import Dict
 from dae.pedigrees.family import FamiliesData
@@ -100,6 +101,13 @@ class GenotypeDataGroup(GenotypeData):
         )
         self._families = self._build_families()
         self._build_person_set_collections()
+        self._executor = None
+
+    @property
+    def executor(self):
+        if self._executor is None:
+            self._executor = ThreadPoolExecutor(max_workers=len(self.studies))
+        return self._executor
 
     @property
     def families(self):
@@ -124,29 +132,41 @@ class GenotypeDataGroup(GenotypeData):
             study_filters=None,
             **kwargs):
 
-        return itertools.chain(
-            *[
-                genotype_data_study.query_variants(
-                    regions,
-                    genes,
-                    effect_types,
-                    family_ids,
-                    person_ids,
-                    inheritance,
-                    roles,
-                    sexes,
-                    variant_type,
-                    real_attr_filter,
-                    ultra_rare,
-                    return_reference,
-                    return_unknown,
-                    limit,
-                    study_filters,
-                    **kwargs,
-                )
-                for genotype_data_study in self.studies
-            ]
-        )
+        variants_futures = list()
+
+        def get_variants(genotype_data_study):
+            return genotype_data_study.query_variants(
+                regions,
+                genes,
+                effect_types,
+                family_ids,
+                person_ids,
+                inheritance,
+                roles,
+                sexes,
+                variant_type,
+                real_attr_filter,
+                ultra_rare,
+                return_reference,
+                return_unknown,
+                limit,
+                study_filters,
+                **kwargs,
+            )
+
+        for genotype_data_study in self.studies:
+            future = self.executor.submit(get_variants, genotype_data_study)
+            variants_futures.append(future)
+
+        seen = set()
+        for future in variants_futures:
+            for v in future.result():
+                if v.fvuid in seen:
+                    continue
+                seen.add(v.fvuid)
+                yield v
+                if limit and len(seen) >= limit:
+                    break
 
     def get_studies_ids(self):
         # TODO Use the 'cached' property on this

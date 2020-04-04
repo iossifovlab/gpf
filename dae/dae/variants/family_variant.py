@@ -401,7 +401,7 @@ class FamilyVariant(Variant, FamilyDelegate):
     def fvuid(self) -> Optional[str]:
         if self._fvuid is None:
             self._fvuid = (
-                f"{self.family_id}.{self.location}"
+                f"{self.family_id}.{self.location}.{self.variant_type}"
                 f".{self.reference}.{self.alternative}"
             )
         return self._fvuid

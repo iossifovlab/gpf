@@ -32,6 +32,7 @@ from dae.backends.attributes_query import (
     OrNode,
     ContainsNode,
 )
+from dae.studies.study import GenotypeDataGroup
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.person_sets import PersonSetCollection
@@ -45,6 +46,7 @@ class StudyWrapper(object):
         assert genotype_data_study is not None
 
         self.genotype_data_study = genotype_data_study
+        self.is_group = isinstance(genotype_data_study, GenotypeDataGroup)
         self.config = genotype_data_study.config
         assert self.config is not None
 

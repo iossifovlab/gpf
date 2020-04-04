@@ -21,6 +21,7 @@ impala_schema = {
     "host": {"type": "string"},
     "port": {"type": "integer"},
     "db": {"type": "string"},
+    "pool_size": {"type": "integer", "default": 5}
 }
 
 
