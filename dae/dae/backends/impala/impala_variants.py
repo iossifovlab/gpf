@@ -276,8 +276,6 @@ class ImpalaFamilyVariants:
     def _build_real_attr_where(self, real_attr_filter):
         query = []
         for attr_name, attr_range in real_attr_filter:
-            print(attr_name)
-            print(self.schema)
             if attr_name not in self.schema:
                 query.append("false")
                 continue
@@ -367,9 +365,7 @@ class ImpalaFamilyVariants:
         return transformer.transform(parsed)
 
     def _build_inheritance_where(self, column_name, query_value):
-        print(query_value)
         tree = inheritance_parser.parse(query_value)
-        print(tree)
 
         if query_value == "denovo":
             pass
