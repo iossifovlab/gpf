@@ -125,9 +125,8 @@ class VariantBuilder(object):
     def build_variant(self, annotation_line):
         raise NotImplementedError()
 
-    def build(self, annotation_line):
-        summary = self.build_variant(annotation_line)
-        if summary is None:
+    def fill_variant_coordinates(self, aline, variant):
+        if variant is None:
             data = {
                 "CSHL_location": None,
                 "CSHL_chr": None,
@@ -140,16 +139,23 @@ class VariantBuilder(object):
             }
         else:
             data = {
-                "CSHL_location": summary.cshl_location,
-                "CSHL_chr": summary.chromosome,
-                "CSHL_position": summary.cshl_position,
-                "CSHL_variant": summary.cshl_variant,
-                "VCF_chr": summary.chromosome,
-                "VCF_position": summary.position,
-                "VCF_ref": summary.reference,
-                "VCF_alt": summary.alternative,
+                "CSHL_location": variant.cshl_location,
+                "CSHL_chr": variant.chromosome,
+                "CSHL_position": variant.cshl_position,
+                "CSHL_variant": variant.cshl_variant,
+                "VCF_chr": variant.chromosome,
+                "VCF_position": variant.position,
+                "VCF_ref": variant.reference,
+                "VCF_alt": variant.alternative,
             }
-        annotation_line.update(data)
+        aline.update(data)
+
+    def check_variant_coordiantes(self, aline):
+        return "CSHL_location" in aline
+
+    def build(self, annotation_line):
+        summary = self.build_variant(annotation_line)
+        self.fill_variant_coordinates(annotation_line, summary)
         return summary
 
 
@@ -250,6 +256,8 @@ class VariantAnnotatorBase(AnnotatorBase):
     def annotate_summary_variant(self, summary_variant):
         for alt_allele in summary_variant.alt_alleles:
             attributes = deepcopy(alt_allele.attributes)
+            self.variant_builder.fill_variant_coordinates(
+                attributes, alt_allele)
             # self.line_annotation(attributes)
             self.do_annotate(attributes, alt_allele)
 
