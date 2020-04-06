@@ -99,7 +99,7 @@ def test_enrichment_test_missing_gene_symbols(admin_client):
     assert response.status_code == 400
 
 
-@pytest.mark.xfail(reason="[gene models] wrong annotation")
+# @pytest.mark.xfail(reason="[gene models] wrong annotation")
 def test_enrichment_test_gene_symbols(admin_client):
     url = "/api/v3/enrichment/test"
     query = {
@@ -127,7 +127,7 @@ def test_enrichment_test_gene_symbols(admin_client):
 
     assert len(result["result"]) == 2
     assert len(result["result"][0]) == 6
-    assert result["result"][0]["selector"] == "autism"
+    assert result["result"][0]["selector"] == "phenotype1"
     assert result["result"][0]["peopleGroupId"] == "phenotype"
     assert len(result["result"][0]["childrenStats"]) == 2
     assert result["result"][0]["childrenStats"]["M"] == 1

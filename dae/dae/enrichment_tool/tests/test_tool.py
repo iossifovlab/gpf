@@ -16,9 +16,9 @@ def test_enrichment_tool(
         f1_trio_enrichment_config, f1_trio_coding_len_background, event_counter
     )
     psc = f1_trio.get_person_set_collection("phenotype")
-    gh = GenotypeHelper(f1_trio, psc, "phenotype1")
+    gh = GenotypeHelper(f1_trio, psc)
     # children_stats = gh.get_children_stats()
-    children_by_sex = gh.children_by_sex()
+    children_by_sex = gh.children_by_sex("phenotype1")
 
     enrichment_events = enrichment_tool.calc(
         ["missense", "synonymous"],

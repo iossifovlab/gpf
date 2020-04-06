@@ -6,12 +6,12 @@ from dae.enrichment_tool.event_counters import EnrichmentResult
 pytestmark = pytest.mark.usefixtures("wdae_gpf_instance", "calc_gene_sets")
 
 
-@pytest.mark.xfail(reason="[gene models] wrong annotation")
+# @pytest.mark.xfail(reason="[gene models] wrong annotation")
 def test_serialize(enrichment_serializer):
     serialize = enrichment_serializer.serialize()
 
     assert len(serialize) == 2
-    assert serialize[0]["selector"] == "autism"
+    assert serialize[0]["selector"] == "phenotype1"
     assert serialize[0]["peopleGroupId"] == "phenotype"
     assert len(serialize[0]["childrenStats"]) == 2
     assert serialize[0]["childrenStats"]["M"] == 1
@@ -33,7 +33,7 @@ def test_serialize(enrichment_serializer):
     ]
     assert all_serialized["countFilter"]["peopleGroup"]["id"] == "phenotype"
     assert all_serialized["countFilter"]["peopleGroup"]["checkedValues"] == [
-        "autism"
+        "phenotype1"
     ]
     assert all_serialized["countFilter"]["peopleGroup"]["id"] == "phenotype"
     assert all_serialized["countFilter"]["studyTypes"] == ["we"]
@@ -51,7 +51,7 @@ def test_serialize(enrichment_serializer):
     ]
     assert all_serialized["overlapFilter"]["peopleGroup"]["id"] == "phenotype"
     assert all_serialized["overlapFilter"]["peopleGroup"]["checkedValues"] == [
-        "autism"
+        "phenotype1"
     ]
     assert all_serialized["overlapFilter"]["peopleGroup"]["id"] == "phenotype"
     assert all_serialized["overlapFilter"]["studyTypes"] == ["we"]
@@ -74,7 +74,7 @@ def test_serialize(enrichment_serializer):
     assert rec_serialized["countFilter"]["gender"] == ["male", "female"]
     assert rec_serialized["countFilter"]["peopleGroup"]["id"] == "phenotype"
     assert rec_serialized["countFilter"]["peopleGroup"]["checkedValues"] == [
-        "autism"
+        "phenotype1"
     ]
     assert rec_serialized["countFilter"]["peopleGroup"]["id"] == "phenotype"
     assert rec_serialized["countFilter"]["studyTypes"] == ["we"]
@@ -88,7 +88,7 @@ def test_serialize(enrichment_serializer):
     assert rec_serialized["overlapFilter"]["gender"] == ["male", "female"]
     assert rec_serialized["overlapFilter"]["peopleGroup"]["id"] == "phenotype"
     assert rec_serialized["overlapFilter"]["peopleGroup"]["checkedValues"] == [
-        "autism"
+        "phenotype1"
     ]
     assert rec_serialized["overlapFilter"]["peopleGroup"]["id"] == "phenotype"
     assert rec_serialized["overlapFilter"]["studyTypes"] == ["we"]
@@ -111,7 +111,7 @@ def test_serialize(enrichment_serializer):
     assert male_serialized["countFilter"]["gender"] == ["male"]
     assert male_serialized["countFilter"]["peopleGroup"]["id"] == "phenotype"
     assert male_serialized["countFilter"]["peopleGroup"]["checkedValues"] == [
-        "autism"
+        "phenotype1"
     ]
     assert male_serialized["countFilter"]["peopleGroup"]["id"] == "phenotype"
     assert male_serialized["countFilter"]["studyTypes"] == ["we"]
@@ -126,7 +126,7 @@ def test_serialize(enrichment_serializer):
     assert male_serialized["overlapFilter"]["peopleGroup"]["id"] == "phenotype"
     assert male_serialized["overlapFilter"]["peopleGroup"][
         "checkedValues"
-    ] == ["autism"]
+    ] == ["phenotype1"]
     assert male_serialized["overlapFilter"]["peopleGroup"]["id"] == "phenotype"
     assert male_serialized["overlapFilter"]["studyTypes"] == ["we"]
     assert male_serialized["overlapFilter"]["variantTypes"] == [
@@ -149,7 +149,7 @@ def test_serialize(enrichment_serializer):
     assert female_serialized["countFilter"]["peopleGroup"]["id"] == "phenotype"
     assert female_serialized["countFilter"]["peopleGroup"][
         "checkedValues"
-    ] == ["autism"]
+    ] == ["phenotype1"]
     assert female_serialized["countFilter"]["peopleGroup"]["id"] == "phenotype"
     assert female_serialized["countFilter"]["studyTypes"] == ["we"]
     assert female_serialized["countFilter"]["variantTypes"] == [
@@ -165,7 +165,7 @@ def test_serialize(enrichment_serializer):
     )
     assert female_serialized["overlapFilter"]["peopleGroup"][
         "checkedValues"
-    ] == ["autism"]
+    ] == ["phenotype1"]
     assert (
         female_serialized["overlapFilter"]["peopleGroup"]["id"] == "phenotype"
     )
@@ -190,10 +190,12 @@ def test_serialize_error(f1_trio, enrichment_builder, enrichment_serializer):
     all_er.expected = 3
     all_er.pvalue = 0.5
 
-    person_set_collection = f1_trio.get_person_set_collection("phenotype")
+    # person_set_collection = f1_trio.get_person_set_collection("phenotype")
     with pytest.raises(KeyError):
         results = enrichment_builder.build_people_group_selector(
-            ["missense"], person_set_collection, "autism"
+            ["missense"],
+            # person_set_collection,
+            "autism"
         )
 
 
