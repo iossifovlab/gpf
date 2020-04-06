@@ -866,7 +866,7 @@ class Variants2ParquetTool:
         parser.add_argument(
             "--rows",
             type=int,
-            default=100000,
+            default=10000,
             dest="rows",
             help="Amount of allele rows to write at once",
         )
@@ -924,6 +924,8 @@ class Variants2ParquetTool:
             gpf_instance = GPFInstance()
 
         parser = cls.cli_arguments_parser(gpf_instance)
+        print(argv)
+
         argv = parser.parse_args(argv)
 
         (
@@ -982,6 +984,8 @@ class Variants2ParquetTool:
         variants_loader = cls._build_variants_loader_pipeline(
             gpf_instance, argv, variants_loader
         )
+
+        print("argv.rows:", argv.rows)
 
         ParquetManager.variants_to_parquet_partition(
             variants_loader,

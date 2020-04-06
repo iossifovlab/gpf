@@ -1,4 +1,3 @@
-import pytest
 import os
 
 import pyarrow.parquet as pq
@@ -17,6 +16,7 @@ def test_dae2parquet_transmitted(
         "simple",
         "-o",
         temp_filename,
+        "--rows", "10",
     ]
 
     main(argv)
@@ -28,64 +28,6 @@ def test_dae2parquet_transmitted(
     assert "effect_gene_symbols" in schema.names
     assert "effect_types" in schema.names
     # assert "effect_data" in schema.names
-
-
-# def test_dae2parquet_make(
-#         dae_transmitted_config,
-#         temp_dirname,
-#         genomes_db_2013):
-
-#     argv = [
-#         'make',
-#         dae_transmitted_config.family_filename,
-#         dae_transmitted_config.summary_filename,
-#         '--ped-file-format', 'simple',
-#         '-o', temp_dirname,
-#     ]
-
-#     main(argv)
-
-#     assert os.path.exists(os.path.join(temp_dirname, 'Makefile'))
-#     with open(os.path.join(temp_dirname, 'Makefile'), 'rt') as infile:
-#         makefile = infile.read()
-
-#     print(makefile)
-
-#     assert 'all:' in makefile
-#     assert 'dae2parquet.py variants ' in makefile
-
-
-# def test_dae2parquet_make_partition(
-#         fixture_dirname, dae_transmitted_config,
-#         annotation_scores_dirname, temp_dirname,
-#         genomes_db_2013):
-
-#     partition_description = fixture_dirname(
-#         'backends/example_partition_configuration.conf')
-
-#     argv = [
-#         'make',
-#         dae_transmitted_config.family_filename,
-#         dae_transmitted_config.summary_filename,
-#         '--ped-file-format', 'simple',
-#         '-o', temp_dirname,
-#         '--pd', partition_description
-#     ]
-
-#     main(argv)
-
-#     assert os.path.exists(os.path.join(temp_dirname, 'Makefile'))
-#     with open(os.path.join(temp_dirname, 'Makefile'), 'rt') as infile:
-#         makefile = infile.read()
-
-#     print(makefile)
-
-#     assert 'all:' in makefile
-#     assert 'dae2parquet.py variants ' in makefile
-#     assert '1_8' in makefile
-#     # assert '--region 1:800001-900000'
-#     assert '1_0' in makefile
-#     # assert '--region 1:1-100000'
 
 
 def test_dae2parquet_dae_partition(
@@ -104,6 +46,7 @@ def test_dae2parquet_dae_partition(
         temp_dirname,
         "--pd",
         partition_description,
+        "--rows", "10",
     ]
 
     main(argv)

@@ -15,6 +15,7 @@ def test_vcf2parquet_vcf(
 
     prefix = fixture_dirname("vcf_import/effects_trio")
     argv = [
+        "--rows", "10",
         "--annotation",
         annotation_pipeline_config,
         "-o",
@@ -56,6 +57,7 @@ def test_vcf2parquet_vcf_partition(
 
     prefix = fixture_dirname("vcf_import/effects_trio")
     argv = [
+        "--rows", "10",
         "--annotation",
         annotation_pipeline_config,
         "-o",

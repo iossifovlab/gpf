@@ -274,7 +274,7 @@ class ContinuousParquetFileWriter:
 
     def _write_table(self):
         self._writer.write_table(self.serializer.build_table())
-        self.serializer._data_reset()
+        self.serializer.data_reset()
 
     def append_allele(self, variant, allele):
         """
@@ -283,11 +283,17 @@ class ContinuousParquetFileWriter:
         :param list attributes: List of key-value tuples containing the data
         """
         self.serializer.add_allele_to_batch_dict(variant, allele)
-        if len(self.serializer._data) >= self.rows:
+        if self.serializer.size() >= self.rows:
+            print(
+                "serializer data flushing at len:",
+                self.serializer.size())
             self._write_table()
+            print(
+                "(done) serializer data flushing new len:",
+                self.serializer.size())
 
     def close(self):
-        if len(self.serializer._data) > 0:
+        if self.serializer.size() > 0:
             self._write_table()
         self._writer.close()
 
@@ -520,10 +526,11 @@ class ParquetManager:
 
     @staticmethod
     def variants_to_parquet_partition(
-        variants_loader, partition_descriptor, bucket_index=1, rows=10_000
-    ):
+            variants_loader, partition_descriptor,
+            bucket_index=1, rows=10_000):
 
         assert variants_loader.get_attribute("annotation_schema") is not None
+        print(f"variants to parquet ({rows}) sec", file=sys.stderr)
 
         start = time.time()
 

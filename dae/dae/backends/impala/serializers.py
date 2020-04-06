@@ -416,10 +416,13 @@ class AlleleParquetSerializer:
         }
 
         self.schema = None
-        self._data_reset()
+        self.data_reset()
 
-    def _data_reset(self):
+    def data_reset(self):
         self._data = {name: [] for name in self.get_schema().names}
+
+    def size(self):
+        return len(self._data["chromosome"])
 
     @property
     def summary_properties(self):
