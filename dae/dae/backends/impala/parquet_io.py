@@ -259,7 +259,7 @@ class ContinuousParquetFileWriter:
     enough data. Automatically dumps leftover data when closing into the file
     """
 
-    def __init__(self, filepath, variant_loader, filesystem=None, rows=10000):
+    def __init__(self, filepath, variant_loader, filesystem=None, rows=10_000):
         annotation_schema = variant_loader.get_attribute("annotation_schema")
         self.serializer = AlleleParquetSerializer(annotation_schema)
         schema = self.serializer.get_schema()
@@ -293,15 +293,14 @@ class ContinuousParquetFileWriter:
 
 class VariantsParquetWriter:
     def __init__(
-        self,
-        variants_loader,
-        partition_descriptor,
-        bucket_index=1,
-        rows=100000,
-        include_reference=True,
-        include_unknown=True,
-        filesystem=None,
-    ):
+            self,
+            variants_loader,
+            partition_descriptor,
+            bucket_index=1,
+            rows=10_000,
+            include_reference=True,
+            include_unknown=True,
+            filesystem=None):
 
         self.variants_loader = variants_loader
         self.families = variants_loader.families
@@ -492,7 +491,7 @@ class ParquetManager:
 
     @staticmethod
     def variants_to_parquet_filename(
-        variants_loader, variants_filename, bucket_index=0, rows=100000
+        variants_loader, variants_filename, bucket_index=0, rows=10_000
     ):
 
         assert variants_loader.annotation_schema is not None
@@ -520,7 +519,7 @@ class ParquetManager:
 
     @staticmethod
     def variants_to_parquet_partition(
-        variants_loader, partition_descriptor, bucket_index=1, rows=100000
+        variants_loader, partition_descriptor, bucket_index=1, rows=10_000
     ):
 
         assert variants_loader.get_attribute("annotation_schema") is not None
