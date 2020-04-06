@@ -274,6 +274,7 @@ class ContinuousParquetFileWriter:
 
     def _write_table(self):
         self._writer.write_table(self.serializer.build_table())
+        self.serializer._data_reset()
 
     def append_allele(self, variant, allele):
         """
