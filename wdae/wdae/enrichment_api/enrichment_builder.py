@@ -11,12 +11,15 @@ class EnrichmentBuilder(object):
         self.results = None
         enrichment_config = self.tool.config
         assert enrichment_config is not None
+        effect_types = expand_effect_types(enrichment_config.effect_types)
 
         self.person_set_collection = self.dataset.get_person_set_collection(
             enrichment_config.selected_person_set_collections[0]
         )
 
-        self.gh = GenotypeHelper(self.dataset, self.person_set_collection)
+        self.gh = GenotypeHelper(
+            self.dataset, self.person_set_collection,
+            effect_types=effect_types)
 
     def build_people_group_selector(
             self, effect_types, person_set_id):

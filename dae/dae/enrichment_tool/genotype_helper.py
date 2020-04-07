@@ -5,7 +5,7 @@ from dae.variants.attributes import Inheritance
 
 class GenotypeHelper(object):
     def __init__(
-            self, genotype_data, person_set_collection):
+            self, genotype_data, person_set_collection, effect_types=None):
 
         self.genotype_data = genotype_data
         self.person_set_collection = person_set_collection
@@ -14,6 +14,7 @@ class GenotypeHelper(object):
         self._children_by_sex = {}
 
         self._denovo_variants = self.genotype_data.query_variants(
+            effect_types=effect_types,
             inheritance=str(Inheritance.denovo.name))
         self._denovo_variants = list(self._denovo_variants)
 
