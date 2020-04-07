@@ -40,9 +40,9 @@ def test_calc_stats(f1_trio, f1_trio_coding_len_background):
     event_counter = EventsCounter()
 
     psc = f1_trio.get_person_set_collection("phenotype")
-    gh = GenotypeHelper(f1_trio, psc, "phenotype1")
-    children_stats = gh.get_children_stats()
-    children_by_sex = gh.children_by_sex()
+    gh = GenotypeHelper(f1_trio, psc)
+    children_stats = gh.get_children_stats("phenotype1")
+    children_by_sex = gh.children_by_sex("phenotype1")
 
     enrichment_events = event_counter.events(
         variants, children_by_sex, set(["missense", "synonymous"])

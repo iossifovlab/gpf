@@ -139,7 +139,7 @@ class ImpalaFamilyVariants:
                         print(
                             "variant_data is string!!!!", family_id,
                             chrom, position, end_position, reference)
-                        variant_data = bytes(variant_data, "latin1")
+                        variant_data = bytes(variant_data, "utf8")
 
                     family = self.families[family_id]
                     v = self.serializer.deserialize_family_variant(

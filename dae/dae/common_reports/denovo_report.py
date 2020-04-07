@@ -47,11 +47,16 @@ class EffectCell:
 
     def to_dict(self):
         return {
-            "number_of_observed_events": self.number_of_observed_events,
-            "number_of_children_with_event": self.number_of_children_with_event,
-            "observed_rate_per_child": self.observed_rate_per_child,
-            "percent_of_children_with_events": self.percent_of_children_with_events,
-            "column": self.column_name,
+            "number_of_observed_events":
+            self.number_of_observed_events,
+            "number_of_children_with_event":
+            self.number_of_children_with_event,
+            "observed_rate_per_child":
+            self.observed_rate_per_child,
+            "percent_of_children_with_events":
+            self.percent_of_children_with_events,
+            "column":
+            self.column_name,
         }
 
     def count_variant(self, family_variant, family_allele):
