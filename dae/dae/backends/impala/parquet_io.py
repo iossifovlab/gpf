@@ -286,11 +286,8 @@ class ContinuousParquetFileWriter:
         if self.serializer.size() >= self.rows:
             print(
                 "serializer data flushing at len:",
-                self.serializer.size())
+                self.serializer.size(), file=sys.stderr)
             self._write_table()
-            print(
-                "(done) serializer data flushing new len:",
-                self.serializer.size())
 
     def close(self):
         if self.serializer.size() > 0:
@@ -498,8 +495,7 @@ class ParquetManager:
 
     @staticmethod
     def variants_to_parquet_filename(
-        variants_loader, variants_filename, bucket_index=0, rows=10_000
-    ):
+            variants_loader, variants_filename, bucket_index=0, rows=100_000):
 
         assert variants_loader.annotation_schema is not None
 
