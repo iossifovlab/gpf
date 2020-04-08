@@ -21,10 +21,9 @@ class EnrichmentBuilder(object):
             self.dataset, self.person_set_collection,
             effect_types=effect_types)
 
-    def build_people_group_selector(
-            self, effect_types, person_set_id):
+    def build_people_group_selector(self, effect_types, person_set):
 
-        children_stats = self.gh.get_children_stats(person_set_id)
+        children_stats = self.gh.get_children_stats(person_set.id)
         children_count = (
             children_stats["M"] + children_stats["F"] + children_stats["U"]
         )
@@ -38,15 +37,15 @@ class EnrichmentBuilder(object):
                 effect_type,
                 self.gene_syms,
                 self.gh.get_denovo_variants(),
-                self.gh.children_by_sex(person_set_id),
+                self.gh.children_by_sex(person_set.id),
             )
 
             results[effect_type] = enrichment_results
-        results["childrenStats"] = self.gh.get_children_stats(person_set_id)
-        results["selector"] = person_set_id
+        results["childrenStats"] = self.gh.get_children_stats(person_set.id)
+        results["selector"] = person_set.name
         results["geneSymbols"] = list(self.gene_syms)
         results["peopleGroupId"] = self.person_set_collection.id
-        results["peopleGroupValue"] = person_set_id
+        results["peopleGroupValue"] = person_set.id
         results["datasetId"] = self.dataset.id
 
         return results
@@ -58,9 +57,8 @@ class EnrichmentBuilder(object):
 
         effect_types = enrichment_config.effect_types
 
-        for person_set_id in self.person_set_collection.person_sets:
-            res = self.build_people_group_selector(
-                effect_types, person_set_id)
+        for person_set in self.person_set_collection.person_sets.values():
+            res = self.build_people_group_selector(effect_types, person_set)
             if res:
                 results.append(res)
 
