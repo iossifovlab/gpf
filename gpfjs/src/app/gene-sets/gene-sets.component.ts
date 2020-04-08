@@ -90,7 +90,14 @@ export class GeneSetsComponent extends QueryStateWithErrorsProvider implements O
           geneSetsCollections = geneSetsCollections.filter(
             (geneSet) => {return geneSet.name.toLowerCase().trim() !== 'denovo'}
           )
+        } else {
+          geneSetsCollections.filter(
+            geneSetCollection => geneSetCollection.name === "denovo"
+          )[0].types.sort(
+            (a, b) => a.datasetId.localeCompare(b.datasetId)
+          )
         }
+
         this.geneSetsCollections = geneSetsCollections;
         this.selectedGeneSetsCollection = geneSetsCollections[0];
         this.restoreStateSubscribe();
