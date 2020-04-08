@@ -26,15 +26,14 @@ def test_build_people_group_selector(enrichment_builder, f1_trio):
 
     build = enrichment_builder.build_people_group_selector(
         ["Missense"],
-        # person_set_collection,
-        "phenotype1"
+        person_set_collection.person_sets["phenotype1"],
     )
 
     assert build
     assert len(build["childrenStats"]) == 2
     assert build["childrenStats"]["M"] == 1
     assert build["childrenStats"]["F"] == 1
-    assert build["selector"] == "phenotype1"
+    assert build["selector"] == "phenotype 1"
     assert build["geneSymbols"] == ["SAMD11", "PLEKHN1", "POGZ"]
     assert build["peopleGroupId"] == "phenotype"
     assert build["peopleGroupValue"] == "phenotype1"

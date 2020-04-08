@@ -11,7 +11,7 @@ def test_serialize(enrichment_serializer):
     serialize = enrichment_serializer.serialize()
 
     assert len(serialize) == 2
-    assert serialize[0]["selector"] == "phenotype1"
+    assert serialize[0]["selector"] == "phenotype 1"
     assert serialize[0]["peopleGroupId"] == "phenotype"
     assert len(serialize[0]["childrenStats"]) == 2
     assert serialize[0]["childrenStats"]["M"] == 1
@@ -190,12 +190,11 @@ def test_serialize_error(f1_trio, enrichment_builder, enrichment_serializer):
     all_er.expected = 3
     all_er.pvalue = 0.5
 
-    # person_set_collection = f1_trio.get_person_set_collection("phenotype")
+    person_set_collection = f1_trio.get_person_set_collection("phenotype")
     with pytest.raises(KeyError):
-        results = enrichment_builder.build_people_group_selector(
+        enrichment_builder.build_people_group_selector(
             ["missense"],
-            # person_set_collection,
-            "autism"
+            person_set_collection.person_sets["autism"]
         )
 
 
