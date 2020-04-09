@@ -344,7 +344,9 @@ class FamiliesData(Mapping):
     def families_query_by_person_ids(self, person_ids):
         res = {}
         for person_id in person_ids:
-            person = self.persons[person_id]
+            person = self.persons.get(person_id)
+            if person is None:
+                continue
             if person.family_id in res:
                 continue
             family = self._families[person.family_id]
