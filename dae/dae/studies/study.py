@@ -198,37 +198,23 @@ class GenotypeDataGroup(GenotypeData):
         assert person_set_collection_id in \
             self.config.person_set_collections.selected_person_set_collections
 
+        collections = list()
+        for study in self.studies:
+            collections.append(study.get_person_set_collection(
+                person_set_collection_id
+            ))
+
         sample_collection = self.studies[0].get_person_set_collection(
             person_set_collection_id
         )
-        collection_name = sample_collection.name
 
-        new_collection = PersonSetCollection(
-            person_set_collection_id, collection_name, dict(), self.families,
-        )
-
-        for study in self.studies:
-            collection = study.get_person_set_collection(
-                person_set_collection_id
+        self.person_set_collections[person_set_collection_id] = \
+            PersonSetCollection.merge(
+                collections,
+                self.families,
+                person_set_collection_id,
+                sample_collection.name
             )
-            assert new_collection.name == collection.name
-
-            for person_set_id, person_set in collection.person_sets.items():
-                if person_set_id not in new_collection.person_sets:
-                    new_collection.person_sets[person_set_id] = PersonSet(
-                        person_set.id,
-                        person_set.name,
-                        person_set.value,
-                        person_set.color,
-                        dict(),
-                    )
-                for person_id, person in person_set.persons.items():
-                    if person_id in self.families.persons:
-                        new_collection.person_sets[person_set_id].persons[
-                            person_id
-                        ] = person
-
-        self.person_set_collections[person_set_collection_id] = new_collection
 
 
 class GenotypeDataStudy(GenotypeData):

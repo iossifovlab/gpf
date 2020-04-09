@@ -173,3 +173,39 @@ def test_genotype_group_person_sets_subset(variants_db_fixture):
         "person4" not in unaffected_persons
         and "person4" not in phenotype1_persons
     )
+
+
+def test_collection_merging_ordering(fixture_dirname):
+    config = get_person_set_collections_config(
+        fixture_dirname("quads_f1_person_sets.toml")
+    )
+    config_ext = get_person_set_collections_config(
+        fixture_dirname("quads_f1_person_sets_extended_roles.toml")
+    )
+
+    quads_f1_families = FamiliesLoader(
+        fixture_dirname("studies/quads_f1/data/quads_f1.ped")
+    ).load()
+
+    role_collection = PersonSetCollection.from_families(
+        config.role, quads_f1_families
+    )
+    role_collection_extended = PersonSetCollection.from_families(
+        config_ext.role, quads_f1_families
+    )
+
+    merged_role_collections = PersonSetCollection.merge(
+        [role_collection, role_collection_extended],
+        quads_f1_families,
+        "role",
+        "Merged Roles Collection"
+    )
+
+    assert list(merged_role_collections.person_sets.keys()) == [
+        "0_new_role_first",
+        "dad",
+        "mom",
+        "prb",
+        "sib",
+        "z_new_role_last",
+    ]
