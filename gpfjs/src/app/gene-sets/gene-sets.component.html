@@ -4,9 +4,9 @@
       <option *ngFor="let collection of geneSetsCollections" [ngValue]="collection">{{ collection.desc }}</option>
     </select>
     <!-- style="text-align: left; border: 1px solid #dddddd; width: 100%" -->
-    <ngb-accordion *ngIf="selectedGeneSetsCollection?.types" activeIds="{{selectedDatasetId}}-denovo-geneset" destroyOnHide="false"
+    <ngb-accordion *ngIf="selectedGeneSetsCollection?.types" activeIds="{{defaultSelectedDenovoGeneSetId}}" destroyOnHide="false"
         #acc="ngbAccordion" class="gene-sets-types row-sm-3">
-      <ngb-panel *ngFor="let type of selectedGeneSetsCollection.types; let i = index" id="{{type.datasetName}}-denovo-geneset">
+      <ngb-panel *ngFor="let type of selectedGeneSetsCollection.types" id="{{type.datasetId}}-{{type.peopleGroupId}}-denovo-geneset">
         <ng-template ngbPanelTitle *ngIf="selectedGeneSetsCollection?.types?.length > 0">
           <span class="dropdown-toggle btn-sm text-wrap">{{ getGeneSetName(type) }}</span>
         </ng-template>
