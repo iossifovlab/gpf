@@ -80,36 +80,34 @@ export class GeneSetsComponent extends QueryStateWithErrorsProvider implements O
   ngOnInit() {
     this.geneSetsService.getGeneSetsCollections().subscribe(
       (geneSetsCollections) => {
-        const datasetDetails = this.datasetService.getSelectedDatasetDetails();
-        if(datasetDetails && !datasetDetails.hasDenovo) {
-          geneSetsCollections = geneSetsCollections.filter(
-            (geneSet) => {return geneSet.name.toLowerCase().trim() !== 'denovo'}
-          )
-        }
-
         const dataset$ = this.datasetService.getSelectedDataset();
         dataset$.take(1).subscribe(dataset => {
           this.selectedDatasetId = dataset.id;
 
           const datasetDetails = this.datasetService.getSelectedDatasetDetails();
-          if(datasetDetails && datasetDetails.hasDenovo) {
-            let denovoGeneSetTypes = geneSetsCollections.filter(
-              geneSetCollection => geneSetCollection.name === "denovo"
-            )[0].types;
-  
-            denovoGeneSetTypes.sort((a, b) => a.datasetId.localeCompare(b.datasetId));
-  
-            const selectedStudyTypes = denovoGeneSetTypes.find(
-              type => type.datasetId === this.selectedDatasetId
-            )
-            this.defaultSelectedDenovoGeneSetId = selectedStudyTypes.datasetId + 
-              '-' + selectedStudyTypes.peopleGroupId + '-denovo-geneset';
+          if (datasetDetails) {
+            if(!datasetDetails.hasDenovo) {
+              geneSetsCollections = geneSetsCollections.filter(
+                (geneSet) => {return geneSet.name.toLowerCase().trim() !== 'denovo'}
+              )
+            } else {
+              let denovoGeneSetTypes = geneSetsCollections.filter(
+                geneSetCollection => geneSetCollection.name === "denovo"
+              )[0].types;
+    
+              denovoGeneSetTypes.sort((a, b) => a.datasetId.localeCompare(b.datasetId));
+    
+              const selectedStudyTypes = denovoGeneSetTypes.find(
+                type => type.datasetId === this.selectedDatasetId
+              )
+              this.defaultSelectedDenovoGeneSetId = selectedStudyTypes.datasetId + 
+                '-' + selectedStudyTypes.peopleGroupId + '-denovo-geneset';
+            }
+            this.geneSetsCollections = geneSetsCollections;
+            this.selectedGeneSetsCollection = geneSetsCollections[0];
+            this.restoreStateSubscribe();
           }
         });
-
-        this.geneSetsCollections = geneSetsCollections;
-        this.selectedGeneSetsCollection = geneSetsCollections[0];
-        this.restoreStateSubscribe();
       }
     );
 
@@ -139,7 +137,7 @@ export class GeneSetsComponent extends QueryStateWithErrorsProvider implements O
             }
           }
         );
-      });    
+      });
   }
 
   onSearch(searchTerm = '') {
