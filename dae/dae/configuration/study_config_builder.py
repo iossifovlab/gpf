@@ -468,11 +468,11 @@ groups = "{{ common_report.groups }}"
 {%- endif %}
 
 {%- if common_report.effect_groups %}
-effect_groups = "{{ common_report.effect_groups }}"
+effect_groups = {{ common_report.effect_groups }}
 {%- endif %}
 
 {%- if common_report.effect_types %}
-effect_types = "{{ common_report.effect_types }}"
+effect_types = {{ common_report.effect_types }}
 {%- endif %}
 
 {%- if common_report.families_count_show_id %}
