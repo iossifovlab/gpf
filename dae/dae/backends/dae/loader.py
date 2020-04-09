@@ -212,17 +212,20 @@ class DenovoLoader(VariantsGenotypesLoader):
 
         variant_group.add_argument(
             "--denovo-variant",
+            default=None,
             help="The label or index of the column containing the CSHL-style"
             " representation of the variant."
             "[Default: variant]",
         )
         variant_group.add_argument(
             "--denovo-ref",
+            default=None,
             help="The label or index of the column containing the reference"
             " allele for the variant. [Default: none]",
         )
         variant_group.add_argument(
             "--denovo-alt",
+            default=None,
             help="The label or index of the column containing the alternative"
             " allele for the variant. [Default: none]",
         )
@@ -230,16 +233,19 @@ class DenovoLoader(VariantsGenotypesLoader):
         location_group = parser.add_argument_group("variant location")
         location_group.add_argument(
             "--denovo-location",
+            default=None,
             help="The label or index of the column containing the CSHL-style"
             " location of the variant. [Default: location]",
         )
         location_group.add_argument(
             "--denovo-chrom",
+            default=None,
             help="The label or index of the column containing the chromosome"
             " upon which the variant is located. [Default: none]",
         )
         location_group.add_argument(
             "--denovo-pos",
+            default=None,
             help="The label or index of the column containing the position"
             " upon which the variant is located. [Default: none]",
         )
@@ -286,14 +292,14 @@ class DenovoLoader(VariantsGenotypesLoader):
     @classmethod
     def cli_defaults(cls):
         return {
-            "denovo_variant": "variant",
+            "denovo_variant": None,
             "denovo_ref": None,
             "denovo_alt": None,
-            "denovo_location": "location",
+            "denovo_location": None,
             "denovo_chrom": None,
             "denovo_pos": None,
-            "denovo_family_id": "familyId",
-            "denovo_best_state": "bestState",
+            "denovo_family_id": None,
+            "denovo_best_state": None,
             "denovo_person_id": None,
             "add_chrom_prefix": None,
             "del_chrom_prefix": None,
@@ -317,7 +323,7 @@ class DenovoLoader(VariantsGenotypesLoader):
     def parse_cli_arguments(cls, argv):
         if argv.denovo_location and (argv.denovo_chrom or argv.denovo_pos):
             print(
-                "--denovo-location and (--denovo-chorm, --denovo-pos) "
+                "--denovo-location and (--denovo-chrom, --denovo-pos) "
                 "are mutually exclusive"
             )
             raise ValueError()
@@ -393,24 +399,22 @@ class DenovoLoader(VariantsGenotypesLoader):
 
     @classmethod
     def flexible_denovo_load(
-        cls,
-        filepath: str,
-        genome: GenomicSequence,
-        families: FamiliesData,
-        denovo_location: Optional[str] = None,
-        denovo_variant: Optional[str] = None,
-        denovo_chrom: Optional[str] = None,
-        denovo_pos: Optional[str] = None,
-        denovo_ref: Optional[str] = None,
-        denovo_alt: Optional[str] = None,
-        denovo_person_id: Optional[str] = None,
-        denovo_family_id: Optional[str] = None,
-        denovo_best_state: Optional[str] = None,
-        denovo_sep: str = "\t",
-        adjust_chrom_prefix=None,
-        **kwargs,
-    ) -> pd.DataFrame:
-
+            cls,
+            filepath: str,
+            genome: GenomicSequence,
+            families: FamiliesData,
+            denovo_location: Optional[str] = None,
+            denovo_variant: Optional[str] = None,
+            denovo_chrom: Optional[str] = None,
+            denovo_pos: Optional[str] = None,
+            denovo_ref: Optional[str] = None,
+            denovo_alt: Optional[str] = None,
+            denovo_person_id: Optional[str] = None,
+            denovo_family_id: Optional[str] = None,
+            denovo_best_state: Optional[str] = None,
+            denovo_sep: str = "\t",
+            adjust_chrom_prefix=None,
+            **kwargs) -> pd.DataFrame:
         """
         Read a text file containing variants in the form
         of delimiter-separted values and produce a dataframe.

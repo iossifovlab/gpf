@@ -917,21 +917,16 @@ class Variants2ParquetTool:
         return parser
 
     @classmethod
-    def main(
-            cls, argv=sys.argv[1:], gpf_instance=None):
-
+    def main(cls, argv=sys.argv[1:], gpf_instance=None):
         if gpf_instance is None:
             gpf_instance = GPFInstance()
 
         parser = cls.cli_arguments_parser(gpf_instance)
-        print(argv)
 
         argv = parser.parse_args(argv)
 
-        (
-            families_filename,
-            families_params,
-        ) = FamiliesLoader.parse_cli_arguments(argv)
+        families_filename, families_params = \
+            FamiliesLoader.parse_cli_arguments(argv)
 
         families_loader = FamiliesLoader(
             families_filename, params=families_params
