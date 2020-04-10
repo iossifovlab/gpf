@@ -584,8 +584,9 @@ class MakefileGenerator:
         print(
             f"${{OUTDIR}}/{target_prefix}_%.flag:\n"
             f"\t(time {command} --rb $* "
-            f"> ${{OUTDIR}}/logs/$*_out.txt 2> ${{OUTDIR}}/logs/$*_err.txt) "
-            f"2> ${{OUTDIR}}/logs/$*_time.txt && touch $@\n",
+            f"> ${{OUTDIR}}/logs/{target_prefix}_$*_out.txt "
+            f"2> ${{OUTDIR}}/logs/{target_prefix}_$*_err.txt) "
+            f"2> ${{OUTDIR}}/logs/{target_prefix}_$*_time.txt && touch $@\n",
             file=outfile)
 
     def generate_vcf_rule(self, argv, outfile=sys.stdout):
