@@ -98,10 +98,7 @@ class ScoreFile(object):
         self.pos_begin_index = self.schema.col_names.index(self.pos_begin_name)
         self.pos_end_index = self.schema.col_names.index(self.pos_end_name)
 
-        if "chr_prefix" in self.config.general:
-            self.chr_prefix = self.config.general.chr_prefix
-        else:
-            self.chr_prefix = False
+        self.chr_prefix = getattr(self.config.general, "chr_prefix", False)
 
         self.no_score_value = self.config.general.no_score_value or "na"
         if self.no_score_value.lower() in ("na", "none"):
@@ -294,6 +291,11 @@ class TabixAccess(TabixReader):
         self._has_chrom_prefix = self.score_file.chr_prefix
         self.last_pos = 0
 
+        self.filename = score_file.score_filename
+        self.region = None
+        self.schema = score_file.schema
+        self._setup()
+
     def _reset(self, chrom, pos_begin):
         self.buffer.reset()
         self._region_reset("{}:{}".format(chrom, pos_begin))
@@ -331,10 +333,8 @@ class TabixAccess(TabixReader):
             return result
         except ValueError as ex:
             print(
-                "could not find region: ",
-                chrom,
-                pos_begin,
-                pos_end,
+                f"could not find region {chrom}:{pos_begin}-{pos_end} "
+                f"in {self.filename}: ",
                 ex,
                 file=sys.stderr,
             )

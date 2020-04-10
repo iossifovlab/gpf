@@ -268,7 +268,9 @@ class TabixReader(TSVFormat):
                 region=region, parser=pysam.asTuple()
             )
         except ValueError as ex:
-            print("could not find region: ", region, ex, file=sys.stderr)
+            print(
+                f"could not find region {region} in {self.filename}:",
+                ex, file=sys.stderr)
             self.lines_iterator = None
 
     def _setup(self):
@@ -277,7 +279,8 @@ class TabixReader(TSVFormat):
         self._has_chrom_prefix = contig_name.startswith("chr")
 
         self._region_reset(self.region)
-        self.schema = Schema.from_dict({"str": self._header_read()})
+        if self.schema is not None:
+            self.schema = Schema.from_dict({"str": self._header_read()})
 
     def _header_read(self):
         if self.schema:
