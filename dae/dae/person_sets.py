@@ -187,3 +187,35 @@ class PersonSetCollection(NamedTuple):
         return PersonSetCollection(
             id, name, composed_person_sets, merged_families
         )
+
+    @staticmethod
+    def merge(person_set_collections, families, id, name):
+
+        new_collection = PersonSetCollection(
+            id, name, dict(), families,
+        )
+
+        all_person_sets = list()
+
+        for collection in person_set_collections:
+            assert collection.id == new_collection.id
+            all_person_sets.extend(collection.person_sets.items())
+
+        all_person_sets = sorted(all_person_sets, key=lambda i: i[0])
+
+        for person_set_id, person_set in all_person_sets:
+            if person_set_id not in new_collection.person_sets:
+                new_collection.person_sets[person_set_id] = PersonSet(
+                    person_set.id,
+                    person_set.name,
+                    person_set.value,
+                    person_set.color,
+                    dict(),
+                )
+            for person_id, person in person_set.persons.items():
+                if person_id in families.persons:
+                    new_collection.person_sets[person_set_id].persons[
+                        person_id
+                    ] = person
+
+        return new_collection
