@@ -284,9 +284,9 @@ class ContinuousParquetFileWriter:
         """
         self.serializer.add_allele_to_batch_dict(variant, allele)
         if self.serializer.size() >= self.rows:
-            print(
-                "serializer data flushing at len:",
-                self.serializer.size(), file=sys.stderr)
+            # print(
+            #     "serializer data flushing at len:",
+            #     self.serializer.size(), file=sys.stderr)
             self._write_table()
 
     def close(self):

@@ -44,8 +44,7 @@ def save_study_config(dae_config, study_id, study_config):
 
 
 def construct_import_annotation_pipeline(
-    gpf_instance, annotation_configfile=None
-):
+        gpf_instance, annotation_configfile=None):
 
     if annotation_configfile is not None:
         config_filename = annotation_configfile
@@ -355,11 +354,13 @@ class MakefileGenerator:
         if dirname is None:
             dirname = "."
         os.makedirs(dirname, exist_ok=True)
+        os.makedirs(os.path.join(dirname, "logs"), exist_ok=True)
         return dirname
 
     def generate_makefile(self, argv):
         dirname = self._create_output_directory(argv)
         with open(os.path.join(dirname, "Makefile"), "w") as outfile:
+            self.generate_preamble(argv, outfile)
             self.generate_variants_bins(argv, outfile)
             self.generate_all_targets(argv, outfile)
             self.generate_variants_targets(argv, outfile)
@@ -419,7 +420,11 @@ class MakefileGenerator:
         return variants_targets
 
     def generate_all_targets(self, argv, outfile=sys.stdout):
-        targets = ["ped.flag", "load.flag", "reports.flag"]
+        targets = [
+            f"${{OUTDIR}}/ped.flag",
+            f"${{OUTDIR}}/load.flag",
+            f"${{OUTDIR}}/reports.flag"
+        ]
         targets.extend(self._collect_variants_targets())
 
         print("\n", file=outfile)
@@ -441,7 +446,7 @@ class MakefileGenerator:
         command = [
             f"ped2parquet.py {families_params} {families_filename}",
             f"--study-id {self.study_id}",
-            f"-o {self.study_id}_pedigree.parquet",
+            f"-o ${{OUTDIR}}/{self.study_id}_pedigree.parquet",
         ]
         if argv.partition_description is not None:
             pd = os.path.abspath(argv.partition_description)
@@ -451,10 +456,12 @@ class MakefileGenerator:
 
     def generate_pedigree_rule(self, argv, outfile=sys.stdout):
         print("\n", file=outfile)
-        print(f"pedigree: ped.flag\n", file=outfile)
+        print(f"pedigree: ${{OUTDIR}}/ped.flag\n", file=outfile)
 
         command = self._construct_families_command(argv)
-        print(f"ped.flag:\n" f"\t{command} && touch $@", file=outfile)
+        print(
+            f"${{OUTDIR}}/ped.flag:\n"
+            f"\t{command} && touch $@", file=outfile)
 
     def _construct_variants_command(self, argv, variants_loader, tool_command):
         families_params = FamiliesLoader.build_cli_arguments(
@@ -476,7 +483,7 @@ class MakefileGenerator:
             f"{families_params} {families_filename}",
             f"{variants_params} {variants_filenames}",
             f"--study-id {self.study_id}",
-            f"-o {self.study_id}_variants.parquet",
+            f"-o ${{OUTDIR}}/{self.study_id}_variants.parquet",
         ]
         if argv.partition_description is not None:
             pd = os.path.abspath(argv.partition_description)
@@ -509,7 +516,7 @@ class MakefileGenerator:
         print(
             f"{target_prefix}_bins_flags="
             f"$(foreach bin, $({target_prefix}_bins), "
-            f"{target_prefix}_$(bin).flag)\n",
+            f"${{OUTDIR}}/{target_prefix}_$(bin).flag)\n",
             file=outfile,
         )
 
@@ -545,6 +552,13 @@ class MakefileGenerator:
             argv, "dae", self.dae_loader, outfile=outfile
         )
 
+    def generate_preamble(self, argv, outfile=sys.stdout):
+        print("SHELL=/bin/bash -o pipefail", file=outfile)
+        print(".DELETE_ON_ERROR:", file=outfile)
+        outdir = self._get_output_dir(argv)
+        print(f"OUTDIR={outdir}", file=outfile)
+        print(file=outfile)
+
     def generate_variants_bins(self, argv, outfile=sys.stdout):
         self.generate_vcf_bins(argv, outfile)
         self.generate_dae_bins(argv, outfile)
@@ -562,23 +576,24 @@ class MakefileGenerator:
 
         print(
             f"{target_prefix}_variants: $({target_prefix}_bins_flags)\n",
-            file=outfile,
-        )
+            file=outfile)
+
         command = self._construct_variants_command(
             argv, variants_loader, variants_tool
         )
         print(
-            f"{target_prefix}_%.flag:\n" f"\t{command} --rb $* && touch $@\n",
-            file=outfile,
-        )
+            f"${{OUTDIR}}/{target_prefix}_%.flag:\n"
+            f"\t(time {command} --rb $* "
+            f"> ${{OUTDIR}}/logs/$*_out.txt 2> ${{OUTDIR}}/logs/$*_err.txt) "
+            f"2> ${{OUTDIR}}/logs/$*_time.txt && touch $@\n",
+            file=outfile)
 
     def generate_vcf_rule(self, argv, outfile=sys.stdout):
         if self.vcf_loader is None:
             return
 
         self._generate_variants_rule(
-            argv, "vcf", self.vcf_loader, "vcf2parquet.py", outfile=outfile
-        )
+            argv, "vcf", self.vcf_loader, "vcf2parquet.py", outfile=outfile)
 
     def generate_denovo_rule(self, argv, outfile=sys.stdout):
         if self.denovo_loader is None:
@@ -589,8 +604,7 @@ class MakefileGenerator:
             "denovo",
             self.denovo_loader,
             "denovo2parquet.py",
-            outfile=outfile,
-        )
+            outfile=outfile)
 
     def generate_cnv_rule(self, argv, outfile=sys.stdout):
         if self.cnv_loader is None:
@@ -601,16 +615,14 @@ class MakefileGenerator:
             "cnv",
             self.cnv_loader,
             "cnv2parquet.py",
-            outfile=outfile,
-        )
+            outfile=outfile)
 
     def generate_dae_rule(self, argv, outfile=sys.stdout):
         if self.dae_loader is None:
             return
 
         self._generate_variants_rule(
-            argv, "dae", self.dae_loader, "dae2parquet.py", outfile=outfile
-        )
+            argv, "dae", self.dae_loader, "dae2parquet.py", outfile=outfile)
 
     def generate_variants_rules(self, argv, outfile=sys.stdout):
         self.generate_vcf_rule(argv, outfile)
@@ -621,10 +633,7 @@ class MakefileGenerator:
     def _construct_load_command(self, argv):
         assert self.genotype_storage_id is not None
 
-        output = argv.output
-        if output is None:
-            output = "."
-        output = os.path.abspath(output)
+        output = self._get_output_dir(argv)
 
         command = [
             f"impala_parquet_loader.py {self.study_id}",
@@ -635,30 +644,34 @@ class MakefileGenerator:
 
         return " ".join(command)
 
+    def _get_output_dir(self, argv):
+        output = argv.output
+        if output is None:
+            output = "."
+        output = os.path.abspath(output)
+        return output
+
     def generate_load_targets(self, argv, outfile=sys.stdout):
         print("\n", file=outfile)
-        print(f"load: load.flag\n", file=outfile)
+        print(f"load: ${{OUTDIR}}/load.flag\n", file=outfile)
 
         command = self._construct_load_command(argv)
         variants_targets = self._collect_variants_targets()
         if len(variants_targets) > 0:
             variants_targets = " ".join(variants_targets)
             print(
-                f"load.flag: ped.flag {variants_targets}\n"
+                f"${{OUTDIR}}/load.flag: "
+                f"${{OUTDIR}}/ped.flag {variants_targets}\n"
                 f"\t{command} && touch $@",
                 file=outfile,
             )
         else:
             print(
-                f"load.flag: ped.flag\n" f"\t{command} && touch $@",
-                file=outfile,
-            )
+                f"${{OUTDIR}}/load.flag: ${{OUTDIR}}/ped.flag\n"
+                f"\t{command} && touch $@",
+                file=outfile)
 
     def _construct_reports_commands(self, argv):
-        output = argv.output
-        if output is None:
-            output = "."
-        output = os.path.abspath(output)
 
         command = [
             f"generate_common_report.py --studies {self.study_id}",
@@ -669,9 +682,9 @@ class MakefileGenerator:
 
     def generate_report_targets(self, argv, outfile=sys.stdout):
         print("\n", file=outfile)
-        print(f"reports: reports.flag\n", file=outfile)
+        print(f"reports: ${{OUTDIR}}/reports.flag\n", file=outfile)
         commands = self._construct_reports_commands(argv)
-        print(f"reports.flag: load.flag", file=outfile)
+        print(f"${{OUTDIR}}/reports.flag: ${{OUTDIR}}/load.flag", file=outfile)
         for command in commands:
             print(f"\t{command} && touch $@", file=outfile)
         print(f"\n", file=outfile)
