@@ -292,9 +292,6 @@ class TabixAccess(TabixReader):
         self.last_pos = 0
 
         self.filename = score_file.score_filename
-        self.region = None
-        self.schema = score_file.schema
-        self._setup()
 
     def _reset(self, chrom, pos_begin):
         self.buffer.reset()

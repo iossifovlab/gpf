@@ -279,8 +279,7 @@ class TabixReader(TSVFormat):
         self._has_chrom_prefix = contig_name.startswith("chr")
 
         self._region_reset(self.region)
-        if self.schema is not None:
-            self.schema = Schema.from_dict({"str": self._header_read()})
+        self.schema = Schema.from_dict({"str": self._header_read()})
 
     def _header_read(self):
         if self.schema:
