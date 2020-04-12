@@ -17,4 +17,4 @@ def test_cnv_loader(fixture_dirname, genomes_db_2013):
         print(sv, fvs)
         svs.append(sv)
 
-    assert len(svs) == 10
+    assert len(svs) == 12

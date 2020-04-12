@@ -175,3 +175,11 @@ def get_locus_ploidy(
         if not genome.is_pseudoautosomal(chrom, pos):
             return 1
     return 2
+
+
+def get_interval_locus_ploidy(
+    chrom: str, pos_start: int, pos_end: int, sex: Sex, genome: GenomicSequence
+) -> int:
+    start_ploidy = get_locus_ploidy(chrom, pos_start, sex, genome)
+    end_ploidy = get_locus_ploidy(chrom, pos_end, sex, genome)
+    return max(start_ploidy, end_ploidy)

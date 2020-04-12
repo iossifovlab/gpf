@@ -12,7 +12,7 @@ from dae.variants.variant import SummaryVariantFactory, SummaryVariant
 from dae.variants.family_variant import FamilyVariant
 
 from dae.utils.regions import Region
-from dae.utils.variant_utils import GENOTYPE_TYPE
+from dae.utils.variant_utils import GENOTYPE_TYPE, get_interval_locus_ploidy
 
 
 class CNVLoader(VariantsGenotypesLoader):
@@ -40,7 +40,8 @@ class CNVLoader(VariantsGenotypesLoader):
 
         self.cnv_df = self.load_cnv(
             cnv_filename,
-            families=families,
+            families,
+            genome,
             adjust_chrom_prefix=self._adjust_chrom_prefix,
             **self.params,
         )
@@ -131,24 +132,22 @@ class CNVLoader(VariantsGenotypesLoader):
 
     @classmethod
     def _calc_cnv_best_state(
-            cls, best_state: str, variant_type: VariantType) -> np.ndarray:
-
-        # FIXME: handling of X chromosome is broken!!!!
-        ref_row = np.fromstring(best_state, dtype=GENOTYPE_TYPE, sep=" ")
-        alt_row = np.zeros(len(ref_row), dtype=GENOTYPE_TYPE)
+        cls,
+        best_state: str,
+        variant_type: VariantType,
+        expected_ploidy: np.ndarray,
+    ) -> np.ndarray:
+        actual_ploidy = np.fromstring(best_state, dtype=GENOTYPE_TYPE, sep=" ")
         if variant_type == VariantType.cnv_p:
-            # FIXME: handling of X chromosome is broken!!!!
-            # assert all(ref_row >= 2), ref_row
-            alt_row[ref_row > 2] = 1
-            ref_row[ref_row > 2] = 1
+            alt_row = actual_ploidy - expected_ploidy
         elif variant_type == VariantType.cnv_m:
-            assert all(ref_row <= 2), ref_row
-            alt_row[ref_row < 2] = 1
+            alt_row = expected_ploidy - actual_ploidy
         else:
             assert (
                 False
             ), "Trying to generate CNV best state for non cnv variant"
 
+        ref_row = expected_ploidy - alt_row
         return np.stack((ref_row, alt_row))
 
     @classmethod
@@ -156,6 +155,7 @@ class CNVLoader(VariantsGenotypesLoader):
             cls,
             filepath: str,
             families: FamiliesData,
+            genome: GenomicSequence,
             cnv_location: Optional[str] = None,
             cnv_family_id: Optional[str] = None,
             cnv_variant_type: Optional[str] = None,
@@ -222,10 +222,33 @@ class CNVLoader(VariantsGenotypesLoader):
             effect_gene_genes.append(effect_genes)
             effect_gene_types.append(effect_types)
 
+        def get_expected_ploidy(chrom, pos_start, pos_end, family_id):
+            return np.asarray([
+                get_interval_locus_ploidy(
+                    chrom,
+                    int(pos_start),
+                    int(pos_end),
+                    person.sex,
+                    genome
+                )
+                for person in families[family_id].members_in_order
+            ])
+
+        expected_ploidy_col = tuple(
+            map(
+                lambda row: get_expected_ploidy(*row),
+                zip(chrom_col, start_col, end_col, family_id_col),
+            )
+        )
+
         best_state_col = tuple(
             map(
-                lambda x: cls._calc_cnv_best_state(x[0], x[1]),
-                zip(raw_df[cnv_best_state], variant_type_col),
+                lambda x: cls._calc_cnv_best_state(*x),
+                zip(
+                    raw_df[cnv_best_state],
+                    variant_type_col,
+                    expected_ploidy_col,
+                ),
             )
         )
 
@@ -333,7 +356,6 @@ class CNVLoader(VariantsGenotypesLoader):
                 result.append(f"{v}")
 
         return " ".join(result)
-
 
     @classmethod
     def cli_defaults(cls):

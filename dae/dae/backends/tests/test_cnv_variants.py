@@ -1,5 +1,7 @@
 import pytest
 
+import numpy as np
+
 from dae.variants.attributes import VariantType
 from dae.backends.cnv.loader import CNVLoader
 from dae.pedigrees.loader import FamiliesLoader
@@ -80,6 +82,7 @@ def cnv_impala(
 
     return fvars
 
+
 @pytest.mark.xfail(reason="parquet serialization/deserialization not ready")
 def test_cnv_impala(cnv_impala):
     vs = cnv_impala.query_variants(
@@ -96,3 +99,33 @@ def test_cnv_impala(cnv_impala):
         assert v.alt_alleles
         for aa in v.alt_alleles:
             assert VariantType.is_cnv(aa.variant_type)
+
+
+def test_cnv_best_state_X(cnv_raw):
+    vs = cnv_raw.query_variants(
+        effect_types=["CNV+", "CNV-"],
+        variant_type="cnv+ or cnv-",
+    )
+    vs = [v for v in vs if v.chrom == "X"]
+
+    assert len(vs) == 2
+    for v in vs:
+        assert v.alt_alleles
+        for aa in v.alt_alleles:
+            assert VariantType.is_cnv(aa.variant_type)
+
+    assert np.array_equal(
+        vs[0].best_state,
+        np.asarray([
+            [2, 1, 0, 2],
+            [0, 0, 1, 0]
+        ])
+    )
+
+    assert np.array_equal(
+        vs[1].best_state,
+        np.asarray([
+            [2, 1, 0, 2],
+            [0, 0, 1, 0]
+        ])
+    )
