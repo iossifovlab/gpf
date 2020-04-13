@@ -163,3 +163,47 @@ class CommonReportFacade(object):
             return
 
         self._common_report_cache[common_report_id] = common_report
+
+    def query_person_counters(
+        self,
+        common_report_id,
+        person_set_collection_id,
+        person_set_id,
+        sex=None
+    ):
+        genotype_data_study = \
+            self.gpf_instance._variants_db.get_wdae_wrapper(common_report_id)
+        collections = genotype_data_study.person_set_collections
+        person_set = collections[person_set_collection_id].person_sets[
+            person_set_id
+        ]
+
+        if sex:
+            return list(filter(
+                lambda p: p.sex == sex, person_set.persons.values()
+            ))
+        else:
+            return list(person_set.persons.values())
+
+    def query_denovo_reports(
+        self,
+        common_report_id,
+        person_set_collection_id,
+        person_set_id,
+        effect_type
+    ):
+        genotype_data_study = \
+            self.gpf_instance._variants_db.get_wdae_wrapper(common_report_id)
+        common_report_config = self._common_report_config_cache[
+            common_report_id
+        ]
+        common_report = CommonReport(genotype_data_study, common_report_config)
+        denovo_report = common_report.denovo_report
+
+        for table in denovo_report.tables:
+            if table.person_set_collection.id == person_set_collection_id:
+                for effect_row in table.rows:
+                    if effect_row.effect_type == effect_type:
+                        for cell in effect_row.row:
+                            if cell.person_set.id == person_set_id:
+                                return cell.to_dict()
