@@ -192,6 +192,7 @@ class CommonReportFacade(object):
         person_set_id,
         effect_type
     ):
+        self.load_cache({common_report_id})
         genotype_data_study = \
             self.gpf_instance._variants_db.get_wdae_wrapper(common_report_id)
         common_report_config = self._common_report_config_cache[
