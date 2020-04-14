@@ -65,11 +65,16 @@ class VariantScoreAnnotatorBase(VariantAnnotatorBase):
         elif variant.variant_type in set(
             [VariantType.insertion, VariantType.deletion, VariantType.comp]
         ):
-
             scores = self.score_file.fetch_scores(
                 variant.chromosome,
                 variant.position,
                 variant.position + len(variant.reference),
+            )
+        elif VariantType.is_cnv(variant.variant_type):
+            scores = self.score_file.fetch_scores(
+                variant.chromosome,
+                variant.position,
+                variant.end_position,
             )
         else:
             print(
@@ -114,14 +119,14 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
 class NPScoreAnnotator(VariantScoreAnnotatorBase):
     def __init__(self, config, genomes_db):
         super(NPScoreAnnotator, self).__init__(config, genomes_db)
-        assert self.score_file.ref_name is not None
-        assert self.score_file.alt_name is not None
         self.ref_name = self.score_file.ref_name
         self.alt_name = self.score_file.alt_name
         self.chr_name = self.score_file.chr_name
         self.pos_begin_name = self.score_file.pos_begin_name
 
     def _aggregate_substitution(self, variant, scores_df):
+        assert self.score_file.ref_name is not None
+        assert self.score_file.alt_name is not None
         assert variant.variant_type == VariantType.substitution
 
         res = {}
@@ -157,6 +162,14 @@ class NPScoreAnnotator(VariantScoreAnnotatorBase):
 
         return res
 
+    def _aggregate_cnv(self, variant, scores_df):
+        assert VariantType.is_cnv(variant.variant_type)
+        res = dict()
+        for score_name in self.score_names:
+            column_name = getattr(self.config.columns, score_name)
+            res[column_name] = scores_df[score_name].max()
+        return res
+
     def do_annotate(self, aline, variant):
         if variant is None:
             self._scores_not_found(aline)
@@ -171,17 +184,13 @@ class NPScoreAnnotator(VariantScoreAnnotatorBase):
         scores_df = self.score_file.scores_to_dataframe(scores)
 
         if variant.variant_type == VariantType.substitution:
-
-            agg = self._aggregate_substitution(variant, scores_df)
-            aline.update(agg)
-
+            aline.update(self._aggregate_substitution(variant, scores_df))
         elif variant.variant_type in set(
             [VariantType.insertion, VariantType.deletion, VariantType.comp]
         ):
-
-            agg = self._aggregate_indel(variant, scores_df)
-            aline.update(agg)
-
+            aline.update(self._aggregate_indel(variant, scores_df))
+        elif VariantType.is_cnv(variant.variant_type):
+            aline.update(self._aggregate_cnv(variant, scores_df))
         else:
             print(
                 "Unexpected variant type: {}, {}".format(

@@ -1,0 +1,5 @@
+familyId	location	variant	effectGene	bestState
+f1	1:10918-10923	CNV+	POGZ:CNV+	2 2 3 2
+f1	1:10924-10930	CNV-	POGZ:CNV-	2 2 1 2
+f1	1:10931-10947	CNV+	POGZ:CNV+	2 2 3 2
+f1	7:19999-20003	CNV+	POGZ:CNV+	2 2 3 2
