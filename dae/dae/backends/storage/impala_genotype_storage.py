@@ -158,6 +158,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
         variant_loaders=None,
         study_config=None,
         output=".",
+        include_reference=False,
     ):
 
         parquet_pedigrees = []
@@ -195,6 +196,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
                     variant_loader,
                     parquet_filenames.variant,
                     bucket_index=bucket_index,
+                    include_reference=include_reference
                 )
                 parquet_variants.append(parquet_filenames.variant)
         else:

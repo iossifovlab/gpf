@@ -103,6 +103,9 @@ class Genome:
             self._gene_models[gene_models_id] = gene_models_config
         return gene_models_config.gene_models
 
+    def get_gene_models_ids(self):
+        return list(self._gene_models.keys())
+
     def is_pseudoautosomal(self, chrom: str, pos: int) -> bool:
         # TODO Handle variants which are both inside and outside a PARs
         # Currently, if the position of the reference is within a PAR,

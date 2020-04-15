@@ -2,6 +2,7 @@ import os
 import sys
 import time
 import hashlib
+
 from box import Box
 
 import numpy as np
@@ -260,37 +261,56 @@ class ContinuousParquetFileWriter:
     """
 
     def __init__(self, filepath, variant_loader, filesystem=None, rows=10_000):
+        self.filepath = filepath
         annotation_schema = variant_loader.get_attribute("annotation_schema")
         self.serializer = AlleleParquetSerializer(annotation_schema)
-        schema = self.serializer.get_schema()
+        self.schema = self.serializer.schema
+
         dirname = os.path.dirname(filepath)
         if dirname and not os.path.exists(dirname):
             os.makedirs(dirname)
 
         self._writer = pq.ParquetWriter(
-            filepath, schema, compression="snappy", filesystem=filesystem
+            filepath, self.schema, compression="snappy", filesystem=filesystem
         )
         self.rows = rows
+        self._data = None
+        self.data_reset()
+
+    def data_reset(self):
+        self._data = {name: [] for name in self.schema.names}
+
+    def size(self):
+        return len(self._data["chromosome"])
+
+    def build_table(self):
+        table = pa.Table.from_pydict(self._data, self.schema)
+        return table
 
     def _write_table(self):
-        self._writer.write_table(self.serializer.build_table())
-        self.serializer.data_reset()
+        self._writer.write_table(self.build_table())
+        self.data_reset()
 
-    def append_allele(self, variant, allele):
+    def append_allele(self, variant_data, allele):
         """
         Appends the data for an entire variant to the buffer
 
         :param list attributes: List of key-value tuples containing the data
         """
-        self.serializer.add_allele_to_batch_dict(variant, allele)
-        if self.serializer.size() >= self.rows:
+        data = self.serializer.build_allele_batch_dict(variant_data, allele)
+        for k, v in self._data.items():
+            v.extend(data[k])
+
+        if self.size() >= self.rows:
             # print(
             #     "serializer data flushing at len:",
             #     self.serializer.size(), file=sys.stderr)
             self._write_table()
 
     def close(self):
-        if self.serializer.size() > 0:
+        print(f"closing parquet writer {self.filepath}", file=sys.stderr)
+
+        if self.size() > 0:
             self._write_table()
         self._writer.close()
 
@@ -303,7 +323,6 @@ class VariantsParquetWriter:
             bucket_index=1,
             rows=10_000,
             include_reference=True,
-            include_unknown=True,
             filesystem=None):
 
         self.variants_loader = variants_loader
@@ -314,15 +333,16 @@ class VariantsParquetWriter:
         self.rows = rows
         self.filesystem = filesystem
 
-        # self.schema = variants_loader.get_attribute("annotation_schema")
-        # self.parquet_serializer = ParquetSerializer(
-        #     self.schema, include_reference=True
-        # )
+        self.include_reference = include_reference
 
         self.start = time.time()
         self.data_writers = {}
         assert isinstance(partition_descriptor, PartitionDescriptor)
         self.partition_descriptor = partition_descriptor
+
+        annotation_schema = self.variants_loader.get_attribute(
+            "annotation_schema")
+        self.serializer = AlleleParquetSerializer(annotation_schema)
 
     def _setup_reference_allele(self, summary_variant, family):
         genotype = -1 * np.ones(shape=(2, len(family)), dtype=GENOTYPE_TYPE)
@@ -407,21 +427,23 @@ class VariantsParquetWriter:
                     extra_atts = {"bucket_index": self.bucket_index}
                     family_allele.update_attributes(extra_atts)
 
-                for family_allele in fv.alleles:
+                alleles = fv.alt_alleles
+                if self.include_reference or fv.is_reference():
+                    alleles = fv.alleles
+
+                variant_data = self.serializer.serialize_variant(fv)
+                for family_allele in alleles:
                     bin_writer = self._get_bin_writer(family_allele)
-                    bin_writer.append_allele(fv, family_allele)
+                    bin_writer.append_allele(variant_data, family_allele)
 
             if family_variant_index % 1000 == 0:
                 elapsed = time.time() - self.start
                 print(
-                    "Bucket {}; {}:{}: "
-                    "{} family variants imported for {:.2f} sec".format(
-                        self.bucket_index,
-                        summary_variant.chromosome,
-                        summary_variant.position,
-                        family_variant_index,
-                        elapsed,
-                    ),
+                    f"Bucket {self.bucket_index}; "
+                    f"{summary_variant.chromosome}:"
+                    f"{summary_variant.position}: "
+                    f"{family_variant_index} family variants imported "
+                    f"for {elapsed:.2f} sec ({len(self.data_writers)} files)",
                     file=sys.stderr,
                 )
 
@@ -435,11 +457,11 @@ class VariantsParquetWriter:
         print("-------------------------------------------", file=sys.stderr)
         elapsed = time.time() - self.start
         print(
-            "DONE: {} family variants imported for {:.2f} sec".format(
-                family_variant_index, elapsed
-            ),
+            f"DONE: {family_variant_index} family variants imported "
+            f"for {elapsed:.2f} sec ({len(self.data_writers)} files)",
             file=sys.stderr,
         )
+        print("-------------------------------------------", file=sys.stderr)
 
         return filenames
 
@@ -495,7 +517,8 @@ class ParquetManager:
 
     @staticmethod
     def variants_to_parquet_filename(
-            variants_loader, variants_filename, bucket_index=0, rows=100_000):
+            variants_loader, variants_filename,
+            bucket_index=0, rows=100_000, include_reference=False):
 
         assert variants_loader.annotation_schema is not None
 
@@ -510,7 +533,7 @@ class ParquetManager:
             partition_descriptor,
             bucket_index=bucket_index,
             rows=rows,
-        )
+            include_reference=include_reference)
 
         variants_writer.write_dataset()
         end = time.time()
@@ -523,7 +546,7 @@ class ParquetManager:
     @staticmethod
     def variants_to_parquet_partition(
             variants_loader, partition_descriptor,
-            bucket_index=1, rows=10_000):
+            bucket_index=1, rows=10_000, include_reference=False):
 
         assert variants_loader.get_attribute("annotation_schema") is not None
         print(f"variants to parquet ({rows}) sec", file=sys.stderr)
@@ -535,7 +558,7 @@ class ParquetManager:
             partition_descriptor,
             bucket_index=bucket_index,
             rows=rows,
-        )
+            include_reference=include_reference)
 
         variants_writer.write_dataset()
         elapsed = time.time() - start
