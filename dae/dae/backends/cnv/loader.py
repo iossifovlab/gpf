@@ -62,7 +62,7 @@ class CNVLoader(VariantsGenotypesLoader):
             )
 
     def reset_regions(self, regions):
-        super(DenovoLoader, self).reset_regions(regions)
+        super(CNVLoader, self).reset_regions(regions)
 
         result = []
         for r in self.regions:
