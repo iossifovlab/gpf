@@ -46,17 +46,7 @@ class CNVLoader(VariantsGenotypesLoader):
             **self.params,
         )
 
-        self.regions = [Region.from_str(r) for r in self.regions]
-        for region in self.regions:
-            if region is None:
-                continue
-            region.chrom = self._adjust_chrom_prefix(region.chrom)
         self._init_chromosomes()
-
-        # self.annotation_schema = ParquetSchema.from_arrow(
-        #     ParquetSchema.BASE_SCHEMA
-        # )
-        # self.set_attribute("annotation_schema", self.annotation_schema)
 
     def _init_chromosomes(self):
         self.chromosomes = list(self.cnv_df.chrom.unique())
@@ -70,6 +60,18 @@ class CNVLoader(VariantsGenotypesLoader):
                 self.chromosomes,
                 key=lambda chrom: all_chromosomes.index(chrom),
             )
+
+    def reset_regions(self, regions):
+        super(DenovoLoader, self).reset_regions(regions)
+
+        result = []
+        for r in self.regions:
+            if r is None:
+                result.append(r)
+            else:
+                result.append(Region.from_str(r))
+        self.regions = result
+        print("CNV reset regions:", self.regions)
 
     def _is_in_regions(self, summary_variant: SummaryVariant) -> bool:
         isin = [
