@@ -32,9 +32,9 @@ def rgns2BedFile(rgns, bedFN):
 
 class Region(object):
 
-    REGION_REGEXP2 = re.compile(
-        r"^(chr)?(.+):([\d]{1,3}(,?[\d]{3})*)(-([\d]{1,3}(,?[\d]{3})*))?$"
-    )  # noqa
+    # REGION_REGEXP2 = re.compile(
+    #     r"^(chr)?(.+)(:([\d]{1,3}(,?[\d]{3})*)(-([\d]{1,3}(,?[\d]{3})*))?)?$"
+    # )  # noqa
 
     def __init__(self, chrom=None, start=None, stop=None):
 
@@ -56,12 +56,14 @@ class Region(object):
         elif self.end is None:
             return "{}:{}".format(self.chrom, self.start)
         else:
-            return self.chrom + ":" + str(self.start) + "-" + str(self.stop)
+            return f"{self.chrom}:{self.start}-{self.stop}"
 
     def __hash__(self):
         return str(self).__hash__()
 
     def __eq__(self, other):
+        print(type(self.start), type(other.start))
+        print(type(self.stop), type(other.stop))
         return (
             self.chrom == other.chrom
             and self.start == other.start
@@ -72,9 +74,14 @@ class Region(object):
         return not self.__eq__(other)
 
     def isin(self, chrom, pos):
-        if chrom == self.chrom and (pos >= self.start) and (pos <= self.stop):
-            return True
-        return False
+        if chrom != self.chrom:
+            return False
+
+        if self.start and pos < self.start:
+            return False
+        if self.stop and pos > self.stop:
+            return False
+        return True
 
     def intersection(self, other):
         if self.chrom != other.chrom:
@@ -97,42 +104,58 @@ class Region(object):
         return self.stop - self.start + 1
 
     @classmethod
-    def parse_str(cls, region_str):
-        m = cls.REGION_REGEXP2.match(region_str)
-        if not m:
-            return None
-        prefix, chrom, start, end = (
-            m.group(1),
-            m.group(2),
-            m.group(3),
-            m.group(6),
-        )
-        if not start:
-            return None
-        start = int(start.replace(",", ""))
-        if not end:
-            end = start
-        else:
-            end = int(end.replace(",", ""))
+    def from_str(cls, region):
+        parts = [p.strip() for p in region.split(":")]
+        if len(parts) == 1:
+            return Region(parts[0], None, None)
+        elif len(parts) == 2:
+            chrom = parts[0]
+            parts = [p.strip() for p in parts[1].split("-")]
+            start = int(parts[0].replace(",", ""))
+            if len(parts) == 1:
+                return Region(chrom, start, None)
+            elif len(parts) == 2:
+                stop = int(parts[1].replace(",", ""))
+                return Region(chrom, start, stop)
+        return None
 
-        if start > end:
-            return None
-        if prefix:
-            return f"{prefix}{chrom}", start, end
-        else:
-            return chrom, start, end
+        # m = cls.REGION_REGEXP2.match(region_str)
+        # if not m:
+        #     return None
+        # prefix, chrom, start, end = (
+        #     m.group(1),
+        #     m.group(2),
+        #     m.group(3),
+        #     m.group(6),
+        # )
+        # print(prefix, chrom, start, end)
 
-    @staticmethod
-    def from_str(region_str):
-        if region_str is None:
-            return None
-        parsed = Region.parse_str(region_str)
-        if not parsed:
-            return None
+        # if start:
+        #     start = int(start.replace(",", ""))
+        # if not end:
+        #     end = start
+        # else:
+        #     end = int(end.replace(",", ""))
 
-        chromosome, start, end = parsed
+        # if start and end and start > end:
+        #     return None
 
-        return Region(chromosome, start, end)
+        # if prefix:
+        #     return f"{prefix}{chrom}", start, end
+        # else:
+        #     return chrom, start, end
+
+    # @staticmethod
+    # def from_str(region_str):
+    #     if region_str is None:
+    #         return None
+    #     parsed = Region.parse_str(region_str)
+    #     if not parsed:
+    #         return None
+
+    #     chromosome, start, end = parsed
+
+    #     return Region(chromosome, start, end)
 
 
 def all_regions_from_chr(R, chrom):

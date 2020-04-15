@@ -52,13 +52,12 @@ class DenovoFamiliesGenotypes(FamiliesGenotypes):
 
 class DenovoLoader(VariantsGenotypesLoader):
     def __init__(
-        self,
-        families: FamiliesData,
-        denovo_filename: str,
-        genome: GenomicSequence,
-        regions: List[str] = None,
-        params: Dict[str, Any] = {},
-    ):
+            self,
+            families: FamiliesData,
+            denovo_filename: str,
+            genome: GenomicSequence,
+            regions: List[str] = None,
+            params: Dict[str, Any] = {}):
         super(DenovoLoader, self).__init__(
             families=families,
             filenames=[denovo_filename],
@@ -67,8 +66,7 @@ class DenovoLoader(VariantsGenotypesLoader):
             regions=regions,
             expect_genotype=False,
             expect_best_state=False,
-            params=params,
-        )
+            params=params)
 
         self.genome = genome
         self.set_attribute("source_type", "denovo")
@@ -102,6 +100,18 @@ class DenovoLoader(VariantsGenotypesLoader):
                 key=lambda chrom: all_chromosomes.index(chrom),
             )
 
+    def reset_regions(self, regions):
+        super(DenovoLoader, self).reset_regions(regions)
+
+        result = []
+        for r in self.regions:
+            if r is None:
+                result.append(r)
+            else:
+                result.append(Region.from_str(r))
+        self.regions = result
+        print("denovo reset regions:", self.regions)
+
     def _is_in_regions(self, summary_variant):
         isin = [
             r.isin(summary_variant.chrom, summary_variant.position)
@@ -112,7 +122,6 @@ class DenovoLoader(VariantsGenotypesLoader):
         return any(isin)
 
     def _full_variants_iterator_impl(self):
-        self.regions = [Region.from_str(r) for r in self.regions]
         for region in self.regions:
             if region is None:
                 continue
@@ -496,7 +505,7 @@ class DenovoLoader(VariantsGenotypesLoader):
                 denovo_family_id: str,
                 denovo_best_state: str,
             },
-        )
+            comment="#")
 
         if denovo_location:
             chrom_col, pos_col = zip(
