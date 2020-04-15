@@ -100,18 +100,21 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
             self._scores_not_found(aline)
             return
 
+        scores_df = self.score_file.scores_to_dataframe(scores)
         counts = scores["COUNT"]
         total_count = sum(counts)
 
         for score_name in self.score_names:
             column_name = getattr(self.config.columns, score_name)
-            values = scores[score_name]
+            values = scores_df[score_name]
             assert len(values) > 0
             if len(values) == 1:
-                aline[column_name] = float(values[0])
+                aline[column_name] = values[0]
+            elif VariantType.is_cnv(variant.variant_type):
+                aline[column_name] = values.max()
             else:
                 total_sum = sum(
-                    [c * float(v) for (c, v) in zip(counts, values)]
+                    [c * v for (c, v) in zip(counts, values)]
                 )
                 aline[column_name] = total_sum / total_count
 
