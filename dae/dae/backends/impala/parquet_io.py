@@ -3,11 +3,6 @@ import sys
 import time
 import hashlib
 
-import functools
-import operator
-import itertools
-from copy import copy
-
 from box import Box
 
 import numpy as np
@@ -292,69 +287,6 @@ class ContinuousParquetFileWriter:
         table = pa.Table.from_pydict(self._data, self.schema)
         return table
 
-    def _duplicate_allele_data(self, allele_data, amount):
-        for _ in range(0, amount):
-            for key, value in allele_data.items():
-                allele_data[key].append(copy(value[0]))
-
-    def add_allele_to_batch_dict(self, variant_data, allele):
-        allele_data = {name: [] for name in self.schema.names}
-        for spr in self.serializer.searchable_properties:
-            prop_value = getattr(allele, spr, None)
-            if prop_value is None:
-                prop_value = allele.get_attribute(spr)
-            if prop_value and spr in self.serializer.ENUM_PROPERTIES:
-                if isinstance(prop_value, list):
-                    prop_value = functools.reduce(
-                        operator.or_,
-                        [
-                            enum.value
-                            for enum in prop_value
-                            if enum is not None
-                        ],
-                        0,
-                    )
-                else:
-                    prop_value = prop_value.value
-            if spr == "variant_in_members":
-                prop_value = list(filter(lambda v: v is not None, prop_value))
-
-            allele_data[spr].append(prop_value)
-        allele_data["variant_data"].append(variant_data)
-
-        product_values = list()
-
-        ltr_flat = list(itertools.chain(
-            *self.serializer.LIST_TO_ROW_PROPERTIES_LISTS))
-
-        for k, v in allele_data.items():
-            if k not in ltr_flat:
-                product_values += [[(k, v)]]
-
-        for ltr_props in self.serializer.LIST_TO_ROW_PROPERTIES_LISTS:
-            k = ltr_props
-            if allele_data[k[0]][0]:
-                length = len(allele_data[k[0]][0])
-                v = []
-                for i in range(0, length):
-                    v.append([])
-                    for prop in k:
-                        v[i].append(allele_data[prop][0][i])
-            else:
-                v = [None for _ in k]
-            product_values += [[(k, v2) for v2 in v]]
-
-        for kvs in itertools.product(*product_values):
-            for k, v in kvs:
-                if isinstance(k, list):
-                    for i in range(0, len(k)):
-                        if v is None:
-                            self._data[k[i]].append(None)
-                        else:
-                            self._data[k[i]].append(v[i])
-                else:
-                    self._data[k].append(v[0])
-
     def _write_table(self):
         self._writer.write_table(self.build_table())
         self.data_reset()
@@ -365,7 +297,10 @@ class ContinuousParquetFileWriter:
 
         :param list attributes: List of key-value tuples containing the data
         """
-        self.add_allele_to_batch_dict(variant_data, allele)
+        data = self.serializer.build_allele_batch_dict(variant_data, allele)
+        for k, v in self._data.items():
+            v.extend(data[k])
+
         if self.size() >= self.rows:
             # print(
             #     "serializer data flushing at len:",
@@ -581,8 +516,8 @@ class ParquetManager:
 
     @staticmethod
     def variants_to_parquet_filename(
-            variants_loader, variants_filename, bucket_index=0, rows=100_000,
-            include_reference=False):
+            variants_loader, variants_filename,
+            bucket_index=0, rows=100_000, include_reference=False):
 
         assert variants_loader.annotation_schema is not None
 
