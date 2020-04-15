@@ -453,7 +453,7 @@ class AlleleParquetSerializer:
             for key, value in allele_data.items():
                 allele_data[key].append(copy(value[0]))
 
-    def add_allele_to_batch_dict(self, variant, allele):
+    def add_allele_to_batch_dict(self, variant_data, allele):
         allele_data = {name: [] for name in self.get_schema().names}
         for spr in self.searchable_properties:
             prop_value = getattr(allele, spr, None)
@@ -472,8 +472,11 @@ class AlleleParquetSerializer:
                     )
                 else:
                     prop_value = prop_value.value
+            if spr == "variant_in_members":
+                pass
+
             allele_data[spr].append(prop_value)
-        allele_data["variant_data"].append(self.serialize_variant(variant))
+        allele_data["variant_data"].append(variant_data)
 
         product_values = list()
 

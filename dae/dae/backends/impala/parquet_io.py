@@ -260,6 +260,7 @@ class ContinuousParquetFileWriter:
     """
 
     def __init__(self, filepath, variant_loader, filesystem=None, rows=10_000):
+        self.filepath = filepath
         annotation_schema = variant_loader.get_attribute("annotation_schema")
         self.serializer = AlleleParquetSerializer(annotation_schema)
         schema = self.serializer.get_schema()
@@ -276,13 +277,13 @@ class ContinuousParquetFileWriter:
         self._writer.write_table(self.serializer.build_table())
         self.serializer.data_reset()
 
-    def append_allele(self, variant, allele):
+    def append_allele(self, variant_data, allele):
         """
         Appends the data for an entire variant to the buffer
 
         :param list attributes: List of key-value tuples containing the data
         """
-        self.serializer.add_allele_to_batch_dict(variant, allele)
+        self.serializer.add_allele_to_batch_dict(variant_data, allele)
         if self.serializer.size() >= self.rows:
             # print(
             #     "serializer data flushing at len:",
@@ -290,6 +291,8 @@ class ContinuousParquetFileWriter:
             self._write_table()
 
     def close(self):
+        print(f"closing parquet writer {self.filepath}", file=sys.stderr)
+
         if self.serializer.size() > 0:
             self._write_table()
         self._writer.close()
@@ -314,15 +317,17 @@ class VariantsParquetWriter:
         self.rows = rows
         self.filesystem = filesystem
 
-        # self.schema = variants_loader.get_attribute("annotation_schema")
-        # self.parquet_serializer = ParquetSerializer(
-        #     self.schema, include_reference=True
-        # )
+        self.include_reference = include_reference
+        self.include_unknown = include_unknown
 
         self.start = time.time()
         self.data_writers = {}
         assert isinstance(partition_descriptor, PartitionDescriptor)
         self.partition_descriptor = partition_descriptor
+
+        annotation_schema = self.variants_loader.get_attribute(
+            "annotation_schema")
+        self.serializer = AlleleParquetSerializer(annotation_schema)
 
     def _setup_reference_allele(self, summary_variant, family):
         genotype = -1 * np.ones(shape=(2, len(family)), dtype=GENOTYPE_TYPE)
@@ -394,12 +399,15 @@ class VariantsParquetWriter:
 
                 fv = family_variant
                 if family_variant.is_unknown():
+                    if not self.include_unknown:
+                        continue
+
                     # handle all unknown variants
                     unknown_variant = self._setup_all_unknown_variant(
                         summary_variant, family_variant.family_id
                     )
                     fv = unknown_variant
-
+                
                 fv.summary_index = summary_variant_index
                 fv.family_index = family_variant_index
 
@@ -407,21 +415,24 @@ class VariantsParquetWriter:
                     extra_atts = {"bucket_index": self.bucket_index}
                     family_allele.update_attributes(extra_atts)
 
-                for family_allele in fv.alleles:
+                alleles = fv.alt_alleles
+                if fv.is_reference():
+                    if not self.include_unknown:
+                        continue
+                    alleles = fv.alleles
+
+                variant_data = self.serializer.serialize_variant(fv)
+                for family_allele in alleles:
                     bin_writer = self._get_bin_writer(family_allele)
-                    bin_writer.append_allele(fv, family_allele)
+                    bin_writer.append_allele(variant_data, family_allele)
 
             if family_variant_index % 1000 == 0:
                 elapsed = time.time() - self.start
                 print(
-                    "Bucket {}; {}:{}: "
-                    "{} family variants imported for {:.2f} sec".format(
-                        self.bucket_index,
-                        summary_variant.chromosome,
-                        summary_variant.position,
-                        family_variant_index,
-                        elapsed,
-                    ),
+                    f"Bucket {self.bucket_index}; "
+                    f"{summary_variant.chromosome}:{summary_variant.position}: "
+                    f"{family_variant_index} family variants imported "
+                    f"for {elapsed:.2f} sec ({len(self.data_writers)} files)",
                     file=sys.stderr,
                 )
 
@@ -435,11 +446,11 @@ class VariantsParquetWriter:
         print("-------------------------------------------", file=sys.stderr)
         elapsed = time.time() - self.start
         print(
-            "DONE: {} family variants imported for {:.2f} sec".format(
-                family_variant_index, elapsed
-            ),
+            f"DONE: {family_variant_index} family variants imported "
+            f"for {elapsed:.2f} sec ({len(self.data_writers)} files)",
             file=sys.stderr,
         )
+        print("-------------------------------------------", file=sys.stderr)
 
         return filenames
 
@@ -534,8 +545,7 @@ class ParquetManager:
             variants_loader,
             partition_descriptor,
             bucket_index=bucket_index,
-            rows=rows,
-        )
+            rows=rows)
 
         variants_writer.write_dataset()
         elapsed = time.time() - start

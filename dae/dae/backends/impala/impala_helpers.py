@@ -7,7 +7,7 @@ from sqlalchemy.pool import QueuePool
 
 class ImpalaHelpers(object):
 
-    def __init__(self, impala_host=None, impala_port=None, pool_size=5):
+    def __init__(self, impala_host=None, impala_port=None, pool_size=10):
 
         if os.environ.get("DAE_IMPALA_HOST", None) is not None:
             impala_host = os.environ.get("DAE_IMPALA_HOST", None)
