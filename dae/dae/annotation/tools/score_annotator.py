@@ -1,6 +1,7 @@
 import sys
 import os
 import glob
+# import time
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
 
@@ -101,7 +102,12 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
             self._scores_not_found(aline)
             return
 
+        # start = time.time()
         scores = self._fetch_scores(variant)
+        # elapsed = time.time() - start
+        # print(
+        #     f"fetch POS scores {self.score_names} "
+        #     f"for {variant} in {elapsed:.3f} sec")
 
         if not scores:
             self._scores_not_found(aline)
@@ -189,8 +195,12 @@ class NPScoreAnnotator(VariantScoreAnnotatorBase):
         if variant is None:
             self._scores_not_found(aline)
             return
-
+        # start = time.time()
         scores = self._fetch_scores(variant)
+        # elapsed = time.time() - start
+        # print(
+        #     f"fetch  NP scores {self.score_names} "
+        #     f"for {variant} in {elapsed:.3f} sec")
 
         if not scores:
             self._scores_not_found(aline)

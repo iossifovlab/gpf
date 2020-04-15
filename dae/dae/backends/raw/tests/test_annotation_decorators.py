@@ -34,8 +34,7 @@ def test_stored_annotation_iossifov2014(iossifov2014_loader, temp_filename):
 
 
 def test_stored_annotation_does_not_change_summary_alleles(
-    iossifov2014_loader, temp_filename
-):
+        iossifov2014_loader, temp_filename):
 
     assert iossifov2014_loader.annotation_schema is not None
 

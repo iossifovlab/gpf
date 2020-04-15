@@ -9,14 +9,20 @@ class HdfsHelpers(object):
         assert hdfs_host
         assert hdfs_port
 
-        print("hdfs connecting to:", hdfs_host, hdfs_port)
         if os.environ.get("DAE_HDFS_HOST", None) is not None:
             hdfs_host = os.environ.get("DAE_HDFS_HOST")
             print("hdfs overwrite connecting to:", hdfs_host, hdfs_port)
 
         self.host = hdfs_host
         self.port = hdfs_port
-        self.hdfs = pa.hdfs.connect(host=self.host, port=self.port)
+        self._hdfs = None
+
+    @property
+    def hdfs(self):
+        if self._hdfs is None:        
+            print("hdfs connecting to:", self.host, self.port)
+            self._hdfs = pa.hdfs.connect(host=self.host, port=self.port)
+        return self._hdfs
 
     def exists(self, path):
         return self.hdfs.exists(path)
