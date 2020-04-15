@@ -2,6 +2,12 @@ import os
 import sys
 import time
 import hashlib
+
+import functools
+import operator
+import itertools
+from copy import copy
+
 from box import Box
 
 import numpy as np
@@ -263,19 +269,95 @@ class ContinuousParquetFileWriter:
         self.filepath = filepath
         annotation_schema = variant_loader.get_attribute("annotation_schema")
         self.serializer = AlleleParquetSerializer(annotation_schema)
-        schema = self.serializer.get_schema()
+        self.schema = self.serializer.schema
+
         dirname = os.path.dirname(filepath)
         if dirname and not os.path.exists(dirname):
             os.makedirs(dirname)
 
         self._writer = pq.ParquetWriter(
-            filepath, schema, compression="snappy", filesystem=filesystem
+            filepath, self.schema, compression="snappy", filesystem=filesystem
         )
         self.rows = rows
+        self._data = None
+        self.data_reset()
+
+    def data_reset(self):
+        self._data = {name: [] for name in self.schema.names}
+
+    def size(self):
+        return len(self._data["chromosome"])
+
+    def build_table(self):
+        table = pa.Table.from_pydict(self._data, self.schema)
+        return table
+
+    def _duplicate_allele_data(self, allele_data, amount):
+        for _ in range(0, amount):
+            for key, value in allele_data.items():
+                allele_data[key].append(copy(value[0]))
+
+    def add_allele_to_batch_dict(self, variant_data, allele):
+        allele_data = {name: [] for name in self.schema.names}
+        for spr in self.serializer.searchable_properties:
+            prop_value = getattr(allele, spr, None)
+            if prop_value is None:
+                prop_value = allele.get_attribute(spr)
+            if prop_value and spr in self.serializer.ENUM_PROPERTIES:
+                if isinstance(prop_value, list):
+                    prop_value = functools.reduce(
+                        operator.or_,
+                        [
+                            enum.value
+                            for enum in prop_value
+                            if enum is not None
+                        ],
+                        0,
+                    )
+                else:
+                    prop_value = prop_value.value
+            if spr == "variant_in_members":
+                prop_value = list(filter(lambda v: v is not None, prop_value))
+
+            allele_data[spr].append(prop_value)
+        allele_data["variant_data"].append(variant_data)
+
+        product_values = list()
+
+        ltr_flat = list(itertools.chain(
+            *self.serializer.LIST_TO_ROW_PROPERTIES_LISTS))
+
+        for k, v in allele_data.items():
+            if k not in ltr_flat:
+                product_values += [[(k, v)]]
+
+        for ltr_props in self.serializer.LIST_TO_ROW_PROPERTIES_LISTS:
+            k = ltr_props
+            if allele_data[k[0]][0]:
+                length = len(allele_data[k[0]][0])
+                v = []
+                for i in range(0, length):
+                    v.append([])
+                    for prop in k:
+                        v[i].append(allele_data[prop][0][i])
+            else:
+                v = [None for _ in k]
+            product_values += [[(k, v2) for v2 in v]]
+
+        for kvs in itertools.product(*product_values):
+            for k, v in kvs:
+                if isinstance(k, list):
+                    for i in range(0, len(k)):
+                        if v is None:
+                            self._data[k[i]].append(None)
+                        else:
+                            self._data[k[i]].append(v[i])
+                else:
+                    self._data[k].append(v[0])
 
     def _write_table(self):
-        self._writer.write_table(self.serializer.build_table())
-        self.serializer.data_reset()
+        self._writer.write_table(self.build_table())
+        self.data_reset()
 
     def append_allele(self, variant_data, allele):
         """
@@ -283,8 +365,8 @@ class ContinuousParquetFileWriter:
 
         :param list attributes: List of key-value tuples containing the data
         """
-        self.serializer.add_allele_to_batch_dict(variant_data, allele)
-        if self.serializer.size() >= self.rows:
+        self.add_allele_to_batch_dict(variant_data, allele)
+        if self.size() >= self.rows:
             # print(
             #     "serializer data flushing at len:",
             #     self.serializer.size(), file=sys.stderr)
@@ -293,7 +375,7 @@ class ContinuousParquetFileWriter:
     def close(self):
         print(f"closing parquet writer {self.filepath}", file=sys.stderr)
 
-        if self.serializer.size() > 0:
+        if self.size() > 0:
             self._write_table()
         self._writer.close()
 
@@ -306,7 +388,6 @@ class VariantsParquetWriter:
             bucket_index=1,
             rows=10_000,
             include_reference=True,
-            include_unknown=True,
             filesystem=None):
 
         self.variants_loader = variants_loader
@@ -318,7 +399,6 @@ class VariantsParquetWriter:
         self.filesystem = filesystem
 
         self.include_reference = include_reference
-        self.include_unknown = include_unknown
 
         self.start = time.time()
         self.data_writers = {}
@@ -399,15 +479,12 @@ class VariantsParquetWriter:
 
                 fv = family_variant
                 if family_variant.is_unknown():
-                    if not self.include_unknown:
-                        continue
-
                     # handle all unknown variants
                     unknown_variant = self._setup_all_unknown_variant(
                         summary_variant, family_variant.family_id
                     )
                     fv = unknown_variant
-                
+
                 fv.summary_index = summary_variant_index
                 fv.family_index = family_variant_index
 
@@ -416,9 +493,7 @@ class VariantsParquetWriter:
                     family_allele.update_attributes(extra_atts)
 
                 alleles = fv.alt_alleles
-                if fv.is_reference():
-                    if not self.include_unknown:
-                        continue
+                if self.include_reference or fv.is_reference():
                     alleles = fv.alleles
 
                 variant_data = self.serializer.serialize_variant(fv)
@@ -506,7 +581,8 @@ class ParquetManager:
 
     @staticmethod
     def variants_to_parquet_filename(
-            variants_loader, variants_filename, bucket_index=0, rows=100_000):
+            variants_loader, variants_filename, bucket_index=0, rows=100_000,
+            include_reference=False):
 
         assert variants_loader.annotation_schema is not None
 
@@ -521,7 +597,7 @@ class ParquetManager:
             partition_descriptor,
             bucket_index=bucket_index,
             rows=rows,
-        )
+            include_reference=include_reference)
 
         variants_writer.write_dataset()
         end = time.time()
@@ -534,7 +610,7 @@ class ParquetManager:
     @staticmethod
     def variants_to_parquet_partition(
             variants_loader, partition_descriptor,
-            bucket_index=1, rows=10_000):
+            bucket_index=1, rows=10_000, include_reference=False):
 
         assert variants_loader.get_attribute("annotation_schema") is not None
         print(f"variants to parquet ({rows}) sec", file=sys.stderr)
@@ -545,7 +621,8 @@ class ParquetManager:
             variants_loader,
             partition_descriptor,
             bucket_index=bucket_index,
-            rows=rows)
+            rows=rows,
+            include_reference=include_reference)
 
         variants_writer.write_dataset()
         elapsed = time.time() - start
