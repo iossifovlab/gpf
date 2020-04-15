@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 import sys
 from os.path import basename
+
+from dae.variants.attributes import VariantType
 from dae.annotation.tools.score_annotator import VariantScoreAnnotatorBase
 
 
@@ -27,6 +29,10 @@ class FrequencyAnnotator(VariantScoreAnnotatorBase):
         if variant is None:
             self._scores_not_found(aline)
             return
+        if VariantType.is_cnv(variant.variant_type):
+            self._scores_not_found(aline)
+            return
+
         chrom = variant.chromosome
         pos = variant.details.cshl_position
 

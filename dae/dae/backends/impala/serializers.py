@@ -1,11 +1,11 @@
 import io
 import struct
+
 import functools
 import operator
 import itertools
-from copy import copy
 
-from collections import namedtuple
+from collections import namedtuple, defaultdict
 
 import numpy as np
 import pyarrow as pa
@@ -146,7 +146,7 @@ def read_string(stream):
 def read_string_list(stream):
     length = int.from_bytes(stream.read(4), "big", signed=False)
     out = []
-    for i in range(0, length):
+    for _i in range(0, length):
         is_not_none = read_int8(stream)
         if is_not_none:
             out.append(read_string(stream))
@@ -155,15 +155,15 @@ def read_string_list(stream):
     return out
 
 
-def read_effects(stream):
-    assert False
-    res = [{"effects": None}]
-    data = read_string_list(stream)
-    if not data:
-        return res
-    res.extend([{"effects": e} for e in data.split("#")])
+# def read_effects(stream):
+#     assert False
+#     res = [{"effects": None}]
+#     data = read_string_list(stream)
+#     if not data:
+#         return res
+#     res.extend([{"effects": e} for e in data.split("#")])
 
-    return res
+#     return res
 
 
 def read_genotype(stream):
@@ -204,7 +204,7 @@ def read_transmission_type(stream):
 def read_in_sexes(stream):
     length = int.from_bytes(stream.read(4), "big", signed=False)
     out = []
-    for i in range(0, length):
+    for _i in range(0, length):
         is_not_none = read_int8(stream)
         if is_not_none:
             out.append(Sex(read_int8(stream)))
@@ -216,7 +216,7 @@ def read_in_sexes(stream):
 def read_in_roles(stream):
     length = int.from_bytes(stream.read(4), "big", signed=False)
     out = []
-    for i in range(0, length):
+    for _i in range(0, length):
         is_not_none = read_int8(stream)
         if is_not_none:
             out.append(Role(read_int32(stream)))
@@ -228,7 +228,7 @@ def read_in_roles(stream):
 def read_inheritance(stream):
     length = int.from_bytes(stream.read(4), "big", signed=False)
     out = []
-    for i in range(0, length):
+    for _i in range(0, length):
         is_not_none = read_int8(stream)
         if is_not_none:
             out.append(Inheritance(read_int32(stream)))
@@ -379,10 +379,10 @@ class AlleleParquetSerializer:
         self.member_prop_serializers = {
             "variant_in_members": StringListSerializer
         }
+        self._schema = None
 
         additional_searchable_props = {}
         scores = {}
-
         if variants_schema:
             if "af_allele_freq" in variants_schema.col_names:
                 additional_searchable_props["af_allele_freq"] = pa.float32()
@@ -415,97 +415,36 @@ class AlleleParquetSerializer:
             **scores,
         }
 
-        self.schema = None
-        self.data_reset()
-
-    def data_reset(self):
-        self._data = {name: [] for name in self.get_schema().names}
-
-    def size(self):
-        return len(self._data["chromosome"])
-
     @property
-    def summary_properties(self):
-        return self.summary_properties_serializers.keys()
+    def schema(self):
+        if self._schema is None:
+            fields = []
+            for spr in self.searchable_properties:
+                field = pa.field(spr, self.searchable_properties_types[spr])
+                fields.append(field)
+            fields.append(pa.field("variant_data", pa.binary()))
+            self._schema = pa.schema(fields)
+        return self._schema
 
-    @property
-    def annotation_properties(self):
-        return self.annotation_properties_serializers.keys()
+    # @property
+    # def summary_properties(self):
+    #     return self.summary_properties_serializers.keys()
 
-    @property
-    def family_properties(self):
-        return self.family_properties_serializers.keys()
+    # @property
+    # def annotation_properties(self):
+    #     return self.annotation_properties_serializers.keys()
 
-    @property
-    def member_properties(self):
-        return self.member_properties_serializers.keys()
+    # @property
+    # def family_properties(self):
+    #     return self.family_properties_serializers.keys()
+
+    # @property
+    # def member_properties(self):
+    #     return self.member_properties_serializers.keys()
 
     @property
     def searchable_properties(self):
         return self.searchable_properties_types.keys()
-
-    def build_table(self):
-        table = pa.Table.from_pydict(self._data, self.get_schema())
-        return table
-
-    def _duplicate_allele_data(self, allele_data, amount):
-        for i in range(0, amount):
-            for key, value in allele_data.items():
-                allele_data[key].append(copy(value[0]))
-
-    def add_allele_to_batch_dict(self, variant, allele):
-        allele_data = {name: [] for name in self.get_schema().names}
-        for spr in self.searchable_properties:
-            prop_value = getattr(allele, spr, None)
-            if prop_value is None:
-                prop_value = allele.get_attribute(spr)
-            if prop_value and spr in self.ENUM_PROPERTIES:
-                if isinstance(prop_value, list):
-                    prop_value = functools.reduce(
-                        operator.or_,
-                        [
-                            enum.value
-                            for enum in prop_value
-                            if enum is not None
-                        ],
-                        0,
-                    )
-                else:
-                    prop_value = prop_value.value
-            allele_data[spr].append(prop_value)
-        allele_data["variant_data"].append(self.serialize_variant(variant))
-
-        product_values = list()
-
-        ltr_flat = list(itertools.chain(*self.LIST_TO_ROW_PROPERTIES_LISTS))
-
-        for k, v in allele_data.items():
-            if k not in ltr_flat:
-                product_values += [[(k, v)]]
-
-        for ltr_props in self.LIST_TO_ROW_PROPERTIES_LISTS:
-            k = ltr_props
-            if allele_data[k[0]][0]:
-                length = len(allele_data[k[0]][0])
-                v = []
-                for i in range(0, length):
-                    v.append([])
-                    for prop in k:
-                        v[i].append(allele_data[prop][0][i])
-            else:
-                v = [None for _ in k]
-            product_values += [[(k, v2) for v2 in v]]
-
-        for kvs in itertools.product(*product_values):
-            for k, v in kvs:
-                if isinstance(k, list):
-                    for i in range(0, len(k)):
-                        if v is None:
-                            self._data[k[i]].append(None)
-                        else:
-                            self._data[k[i]].append(v[i])
-                else:
-                    self._data[k].append(v[0])
 
     def _serialize_allele(self, allele, stream):
         for property_serializers in self.property_serializers_list:
@@ -577,12 +516,62 @@ class AlleleParquetSerializer:
 
         return fv
 
-    def get_schema(self):
-        if self.schema is None:
-            fields = []
-            for spr in self.searchable_properties:
-                field = pa.field(spr, self.searchable_properties_types[spr])
-                fields.append(field)
-            fields.append(pa.field("variant_data", pa.binary()))
-            self.schema = pa.schema(fields)
-        return self.schema
+    def build_allele_batch_dict(self, variant_data, allele):
+        allele_data = {name: [] for name in self.schema.names}
+        for spr in self.searchable_properties:
+            prop_value = getattr(allele, spr, None)
+            if prop_value is None:
+                prop_value = allele.get_attribute(spr)
+            if prop_value and spr in self.ENUM_PROPERTIES:
+                if isinstance(prop_value, list):
+                    prop_value = functools.reduce(
+                        operator.or_,
+                        [
+                            enum.value
+                            for enum in prop_value
+                            if enum is not None
+                        ],
+                        0,
+                    )
+                else:
+                    prop_value = prop_value.value
+            if spr == "variant_in_members":
+                prop_value = list(filter(lambda v: v is not None, prop_value))
+
+            allele_data[spr].append(prop_value)
+        allele_data["variant_data"].append(variant_data)
+
+        product_values = list()
+
+        ltr_flat = list(itertools.chain(
+            *self.LIST_TO_ROW_PROPERTIES_LISTS))
+
+        for k, v in allele_data.items():
+            if k not in ltr_flat:
+                product_values += [[(k, v)]]
+
+        for ltr_props in self.LIST_TO_ROW_PROPERTIES_LISTS:
+            k = ltr_props
+            if allele_data[k[0]][0]:
+                length = len(allele_data[k[0]][0])
+                v = []
+                for i in range(0, length):
+                    v.append([])
+                    for prop in k:
+                        v[i].append(allele_data[prop][0][i])
+            else:
+                v = [None for _ in k]
+            product_values += [[(k, v2) for v2 in v]]
+
+        result = defaultdict(list)
+        for kvs in itertools.product(*product_values):
+            for k, v in kvs:
+                if isinstance(k, list):
+                    for i in range(0, len(k)):
+                        if v is None:
+                            result[k[i]].append(None)
+                        else:
+                            result[k[i]].append(v[i])
+                else:
+                    result[k].append(v[0])
+        return result

@@ -667,14 +667,13 @@ DATA_IMPORT_COUNT = 0
 
 @pytest.fixture(scope="session")
 def data_import(
-    request,
-    hdfs_host,
-    impala_host,
-    impala_genotype_storage,
-    reimport,
-    default_dae_config,
-    gpf_instance_2013,
-):
+        request,
+        hdfs_host,
+        impala_host,
+        impala_genotype_storage,
+        reimport,
+        default_dae_config,
+        gpf_instance_2013):
 
     global DATA_IMPORT_COUNT
     DATA_IMPORT_COUNT += 1
@@ -764,7 +763,7 @@ def data_import(
                 families_loader=families_loader,
                 variant_loaders=[loader],
                 output=study_temp_dirname,
-            )
+                include_reference=True)
 
     build("backends/")
     return True
