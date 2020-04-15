@@ -146,7 +146,7 @@ def read_string(stream):
 def read_string_list(stream):
     length = int.from_bytes(stream.read(4), "big", signed=False)
     out = []
-    for i in range(0, length):
+    for _i in range(0, length):
         is_not_none = read_int8(stream)
         if is_not_none:
             out.append(read_string(stream))
@@ -204,7 +204,7 @@ def read_transmission_type(stream):
 def read_in_sexes(stream):
     length = int.from_bytes(stream.read(4), "big", signed=False)
     out = []
-    for i in range(0, length):
+    for _i in range(0, length):
         is_not_none = read_int8(stream)
         if is_not_none:
             out.append(Sex(read_int8(stream)))
@@ -216,7 +216,7 @@ def read_in_sexes(stream):
 def read_in_roles(stream):
     length = int.from_bytes(stream.read(4), "big", signed=False)
     out = []
-    for i in range(0, length):
+    for _i in range(0, length):
         is_not_none = read_int8(stream)
         if is_not_none:
             out.append(Role(read_int32(stream)))
@@ -228,7 +228,7 @@ def read_in_roles(stream):
 def read_inheritance(stream):
     length = int.from_bytes(stream.read(4), "big", signed=False)
     out = []
-    for i in range(0, length):
+    for _i in range(0, length):
         is_not_none = read_int8(stream)
         if is_not_none:
             out.append(Inheritance(read_int32(stream)))

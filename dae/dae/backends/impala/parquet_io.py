@@ -440,7 +440,8 @@ class VariantsParquetWriter:
                 elapsed = time.time() - self.start
                 print(
                     f"Bucket {self.bucket_index}; "
-                    f"{summary_variant.chromosome}:{summary_variant.position}: "
+                    f"{summary_variant.chromosome}:"
+                    f"{summary_variant.position}: "
                     f"{family_variant_index} family variants imported "
                     f"for {elapsed:.2f} sec ({len(self.data_writers)} files)",
                     file=sys.stderr,
