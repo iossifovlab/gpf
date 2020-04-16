@@ -277,7 +277,7 @@ class VariantType(enum.Enum):
             return VariantType.deletion
         elif name == "comp" or name == "complex":
             return VariantType.comp
-        elif name == "cnv_p " or name.lower() == "cnv+":
+        elif name == "cnv_p" or name.lower() == "cnv+":
             return VariantType.cnv_p
         elif name == "cnv_m" or name.lower() == "cnv-":
             return VariantType.cnv_m
