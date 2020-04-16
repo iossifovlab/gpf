@@ -269,6 +269,7 @@ class VariantType(enum.Enum):
 
     @staticmethod
     def from_name(name):
+        name = name.lower().strip()
         if name == "sub" or name == "substitution":
             return VariantType.substitution
         elif name == "ins" or name == "insertion":
@@ -277,9 +278,9 @@ class VariantType(enum.Enum):
             return VariantType.deletion
         elif name == "comp" or name == "complex":
             return VariantType.comp
-        elif name == "cnv_p" or name.lower() == "cnv+":
+        elif name == "cnv_p" or name == "cnv+":
             return VariantType.cnv_p
-        elif name == "cnv_m" or name.lower() == "cnv-":
+        elif name == "cnv_m" or name == "cnv-":
             return VariantType.cnv_m
 
         raise ValueError("unexpected variant type: {}".format(name))
