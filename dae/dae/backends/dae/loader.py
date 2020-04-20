@@ -1,5 +1,6 @@
 import os
 import gzip
+import sys
 
 from typing import List, Optional, Dict, Any
 from contextlib import closing
@@ -823,54 +824,66 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
 
         summary_index = 0
         for region in self.regions:
-            # using a context manager because of
-            # https://stackoverflow.com/a/25968716/2316754
-            with closing(
-                pysam.Tabixfile(self.summary_filename)
-            ) as sum_tbf, closing(
-                pysam.Tabixfile(self.toomany_filename)
-            ) as too_tbf:
-                summary_iterator = sum_tbf.fetch(
-                    region=region, parser=pysam.asTuple()
-                )
-                toomany_iterator = too_tbf.fetch(
-                    region=region, parser=pysam.asTuple()
-                )
+            try:
+                # using a context manager because of
+                # https://stackoverflow.com/a/25968716/2316754
+                with closing(pysam.Tabixfile(self.summary_filename)) \
+                        as sum_tbf, \
+                        closing(pysam.Tabixfile(self.toomany_filename)) \
+                        as too_tbf:
 
-                for summary_line in summary_iterator:
-                    rec = dict(zip(summary_columns, summary_line))
-
-                    summary_variant = self._summary_variant_from_dae_record(
-                        summary_index, rec
+                    summary_iterator = sum_tbf.fetch(
+                        region=region, parser=pysam.asTuple()
+                    )
+                    toomany_iterator = too_tbf.fetch(
+                        region=region, parser=pysam.asTuple()
                     )
 
-                    family_data = rec["familyData"]
-                    if family_data == "TOOMANY":
-                        toomany_line = next(toomany_iterator)
-                        toomany_rec = dict(zip(toomany_columns, toomany_line))
-                        family_data = toomany_rec["familyData"]
+                    for summary_line in summary_iterator:
+                        rec = dict(zip(summary_columns, summary_line))
 
-                        assert rec["cshl_position"] == int(
-                            toomany_rec["cshl_position"]
+                        summary_variant = \
+                            self._summary_variant_from_dae_record(
+                                summary_index, rec)
+
+                        family_data = rec["familyData"]
+                        if family_data == "TOOMANY":
+                            toomany_line = next(toomany_iterator)
+                            toomany_rec = dict(zip(
+                                toomany_columns, toomany_line))
+                            family_data = toomany_rec["familyData"]
+
+                            assert rec["cshl_position"] == int(
+                                toomany_rec["cshl_position"]
+                            )
+
+                        best_states = self._explode_family_best_states(
+                            family_data)
+
+                        families_genotypes = DaeTransmittedFamiliesGenotypes(
+                            self.families, best_states
                         )
 
-                    best_states = self._explode_family_best_states(family_data)
+                        family_variants = []
+                        for (
+                            fam,
+                            bs,
+                        ) in families_genotypes.family_genotype_iterator():
+                            family_variants.append(
+                                FamilyVariant(summary_variant, fam, None, bs)
+                            )
 
-                    families_genotypes = DaeTransmittedFamiliesGenotypes(
-                        self.families, best_states
-                    )
+                        yield summary_variant, family_variants
+                        summary_index += 1
+            except ValueError as ex:
+                print(
+                    f"could not find region {region} in "
+                    f"{self.summary_filename} "
+                    f"or {self.toomany_filename}:",
+                    ex, file=sys.stderr)
 
-                    family_variants = []
-                    for (
-                        fam,
-                        bs,
-                    ) in families_genotypes.family_genotype_iterator():
-                        family_variants.append(
-                            FamilyVariant(summary_variant, fam, None, bs)
-                        )
+            self.lines_iterator = None
 
-                    yield summary_variant, family_variants
-                    summary_index += 1
 
     @classmethod
     def cli_defaults(cls):
