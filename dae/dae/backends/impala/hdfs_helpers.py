@@ -5,7 +5,7 @@ import pyarrow as pa
 
 
 class HdfsHelpers(object):
-    def __init__(self, hdfs_host, hdfs_port):
+    def __init__(self, hdfs_host, hdfs_port, replication=None):
         assert hdfs_host
         assert hdfs_port
 
@@ -15,13 +15,21 @@ class HdfsHelpers(object):
 
         self.host = hdfs_host
         self.port = hdfs_port
+        self.replication = replication
         self._hdfs = None
 
     @property
     def hdfs(self):
-        if self._hdfs is None:        
-            print("hdfs connecting to:", self.host, self.port)
-            self._hdfs = pa.hdfs.connect(host=self.host, port=self.port)
+        if self._hdfs is None:
+            extra_conf = None
+            if self.replication:
+                assert self.replication > 0, self.replication
+                extra_conf = {
+                    "dfs.replication": self.replication
+                }
+            print("hdfs connecting to:", self.host, self.port, extra_conf)
+            self._hdfs = pa.hdfs.connect(
+                host=self.host, port=self.port, extra_conf=extra_conf)
         return self._hdfs
 
     def exists(self, path):

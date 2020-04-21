@@ -28,6 +28,7 @@ impala_schema = {
 hdfs_schema = {
     "host": {"type": "string"},
     "port": {"type": "integer"},
+    "replication": {"type": "integer", "default": 0},
     "base_dir": {"type": "string", "check_with": validate_path},
 }
 
