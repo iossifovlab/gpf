@@ -113,7 +113,7 @@ class Region(object):
             parts = [p.strip() for p in parts[1].split("-")]
             start = int(parts[0].replace(",", ""))
             if len(parts) == 1:
-                return Region(chrom, start, None)
+                return Region(chrom, start, start)
             elif len(parts) == 2:
                 stop = int(parts[1].replace(",", ""))
                 return Region(chrom, start, stop)

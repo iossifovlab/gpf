@@ -13,6 +13,8 @@ from dae.utils.regions import Region
         ("chrUn_GL000218v1:1-2", Region("chrUn_GL000218v1", 1, 2)),
         ("chr4_KI270790v1_alt:1-2", Region("chr4_KI270790v1_alt", 1, 2)),
         ("chr1_KI270706v1_random", Region("chr1_KI270706v1_random")),
+        ("chr1:1", Region("chr1", 1, 1)),
+        ("chr1:1,000,000-2,000,000", Region("chr1", 1_000_000, 2_000_000)),
     ],
 )
 def test_parse_regions(region, expected):
