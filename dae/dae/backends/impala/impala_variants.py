@@ -433,7 +433,10 @@ class ImpalaFamilyVariants:
                 Inheritance.possible_omission]):
 
             if ultra_rare:
-                frequency_bin.add("frequency_bin = 1")
+                frequency_bin.update([
+                    "frequency_bin = 0",
+                    "frequency_bin = 1"
+                ])
             elif real_attr_filter:
                 print("real_attr_filter:", real_attr_filter)
                 for name, (begin, end) in real_attr_filter:
@@ -461,7 +464,7 @@ class ImpalaFamilyVariants:
 
         if len(frequency_bin) == 4:
             return ""
-        return " AND ".join(frequency_bin)
+        return " OR ".join(frequency_bin)
 
     def _build_coding_heuristic(self, effect_types):
         if effect_types is None:

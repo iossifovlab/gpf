@@ -80,38 +80,38 @@ def test_impala_variants_simple(variants_impala, fixture_name):
     ),
     (
         "any(denovo, mendelian)", True, None,
-        " AND ".join(set(["frequency_bin = 0", "frequency_bin = 1"]))
+        " OR ".join(set(["frequency_bin = 0", "frequency_bin = 1"]))
     ),
     (
         None, True, None,
-        " AND ".join(set(["frequency_bin = 1"]))
+        " OR ".join(set(["frequency_bin = 1"]))
     ),
     (
         "any(mendelian)", True, None,
-        " AND ".join(set(["frequency_bin = 1"]))
+        " OR ".join(set(["frequency_bin = 1"]))
     ),
     (
         "any(mendelian)", None, [("af_allele_freq", (0, 3))],
-        " AND ".join(set(["frequency_bin = 1", "frequency_bin = 2"]))
+        " OR ".join(set(["frequency_bin = 1", "frequency_bin = 2"]))
     ),
     (
         "any(denovo, mendelian)", None, [("af_allele_freq", (0, 3))],
-        " AND ".join(set([
+        " OR ".join(set([
             "frequency_bin = 0", "frequency_bin = 1",
             "frequency_bin = 2"]))
     ),
     (
         "any(denovo, mendelian)", None, [("af_allele_freq", (0, 5))],
-        " AND ".join(set([]))
+        " OR ".join(set([]))
     ),
     (
         "any(denovo, mendelian)", None, [("af_allele_freq", (5, 6))],
-        " AND ".join(set([
+        " OR ".join(set([
             "frequency_bin = 0", "frequency_bin = 3"]))
     ),
     (
         None, None, [("af_allele_freq", (0, 3))],
-        " AND ".join(set([
+        " OR ".join(set([
             "frequency_bin = 1",
             "frequency_bin = 2"]))
     ),
