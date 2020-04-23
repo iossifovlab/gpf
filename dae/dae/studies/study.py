@@ -1,9 +1,8 @@
-from threading import Thread, local
 from concurrent.futures import ThreadPoolExecutor
 import functools
 from typing import Dict
 from dae.pedigrees.family import FamiliesData
-from dae.person_sets import PersonSet, PersonSetCollection
+from dae.person_sets import PersonSetCollection
 
 
 class GenotypeData:
@@ -74,12 +73,13 @@ class GenotypeData:
                     self.person_set_collections.items():
                 domain = list()
                 for person_set in collection.person_sets.values():
-                    domain.append({
-                        "id": person_set.id,
-                        "name": person_set.name,
-                        "value": person_set.value,
-                        "color": person_set.color,
-                    })
+                    if person_set.persons:
+                        domain.append({
+                            "id": person_set.id,
+                            "name": person_set.name,
+                            "value": person_set.value,
+                            "color": person_set.color,
+                        })
                 collection_conf = {
                     "id": collection.id,
                     "name": collection.name,
