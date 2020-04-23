@@ -652,6 +652,11 @@ def impala_genotype_storage(hdfs_host, impala_host):
     return ImpalaGenotypeStorage(storage_config)
 
 
+@pytest.fixture(scope="session")
+def impala_helpers(impala_genotype_storage):
+    return impala_genotype_storage.impala_helpers
+
+
 def collect_vcf(dirname):
     result = []
     pattern = os.path.join(dirname, "*.vcf")

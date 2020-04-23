@@ -1,8 +1,10 @@
 from contextlib import closing
-from contextlib import closing
 
 from deprecation import deprecated
 from impala.util import as_pandas
+
+from dae.variants.attributes import Inheritance
+from dae.backends.attributes_query import inheritance_query
 
 from dae.annotation.tools.file_io_parquet import ParquetSchema
 from dae.pedigrees.family import FamiliesData
@@ -49,11 +51,11 @@ class ImpalaFamilyVariants:
         self.pedigree_table = pedigree_table
 
         self._impala_helpers = impala_helpers
-        self.pedigree_schema = self.load_pedigree_schema()
-        self.ped_df = self.load_pedigree()
+        self.pedigree_schema = self._fetch_pedigree_schema()
+        self.ped_df = self._fetch_pedigree()
         self.families = FamiliesData.from_pedigree_df(self.ped_df)
 
-        self.schema = self.load_variant_schema()
+        self.schema = self._fetch_variant_schema()
         if self.variant_table:
             self.serializer = AlleleParquetSerializer(self.schema)
 
@@ -82,22 +84,23 @@ class ImpalaFamilyVariants:
         return self._impala_helpers.connection()
 
     def query_variants(
-        self,
-        regions=None,
-        genes=None,
-        effect_types=None,
-        family_ids=None,
-        person_ids=None,
-        inheritance=None,
-        roles=None,
-        sexes=None,
-        variant_type=None,
-        real_attr_filter=None,
-        ultra_rare=None,
-        return_reference=None,
-        return_unknown=None,
-        limit=None,
-    ):
+            self,
+            regions=None,
+            genes=None,
+            effect_types=None,
+            family_ids=None,
+            person_ids=None,
+            inheritance=None,
+            roles=None,
+            sexes=None,
+            variant_type=None,
+            real_attr_filter=None,
+            ultra_rare=None,
+            return_reference=None,
+            return_unknown=None,
+            limit=None):
+
+        print("query_variants: inheritance=", inheritance)
 
         if not self.variant_table:
             return None
@@ -155,7 +158,7 @@ class ImpalaFamilyVariants:
 
                     yield v
 
-    def load_pedigree(self):
+    def _fetch_pedigree(self):
         with closing(self.connection()) as conn:
             with conn.cursor() as cursor:
                 q = """
@@ -188,7 +191,7 @@ class ImpalaFamilyVariants:
 
         return ped_df
 
-    def load_variant_schema(self):
+    def _fetch_variant_schema(self):
         if not self.variant_table:
             return None
         with closing(self.connection()) as conn:
@@ -208,7 +211,7 @@ class ImpalaFamilyVariants:
             }
             return ParquetSchema(schema)
 
-    def load_pedigree_schema(self):
+    def _fetch_pedigree_schema(self):
         with closing(self.connection()) as conn:
             with conn.cursor() as cursor:
                 q = """
@@ -367,8 +370,8 @@ class ImpalaFamilyVariants:
     def _build_inheritance_where(self, column_name, query_value):
         tree = inheritance_parser.parse(query_value)
 
-        if query_value == "denovo":
-            pass
+        # if query_value == "denovo":
+        #     pass
 
         transformer = InheritanceTransformer(column_name)
         res = transformer.transform(tree)
@@ -411,23 +414,54 @@ class ImpalaFamilyVariants:
         return ""
 
     def _build_frequency_bin_heuristic(
-        self, inheritance, ultra_rare, real_attr_filter
-    ):
+            self, inheritance, ultra_rare, real_attr_filter):
+
         if "frequency_bin" not in self.schema:
             return ""
 
-        if inheritance == "any(denovo)":
-            return "frequency_bin = 0"
-        if ultra_rare:
-            return "frequency_bin = 1"
-        if real_attr_filter:
-            for name, (begin, end) in real_attr_filter:
-                if name == "af_allele_freq":
-                    if end < self.rare_boundary:
-                        return "frequency_bin IN (0,1,2)"
-                    if begin >= self.rare_boundary:
-                        return "frequency_bin = 3"
-        return ""
+        frequency_bin = set()
+        if inheritance is not None:
+            matcher = inheritance_query.transform_tree_to_matcher(
+                inheritance_query.transform_query_string_to_tree(inheritance))
+
+            if matcher.match([Inheritance.denovo]):
+                frequency_bin.add("frequency_bin = 0")
+
+        if inheritance is None or matcher.match(
+            [Inheritance.mendelian,
+                Inheritance.possible_denovo,
+                Inheritance.possible_omission]):
+
+            if ultra_rare:
+                frequency_bin.add("frequency_bin = 1")
+            elif real_attr_filter:
+                print("real_attr_filter:", real_attr_filter)
+                for name, (begin, end) in real_attr_filter:
+                    if name == "af_allele_freq":
+                        print(name, begin, end, self.rare_boundary)
+
+                        if end < self.rare_boundary:
+                            frequency_bin.update([
+                                "frequency_bin = 1",
+                                "frequency_bin = 2"])
+                        elif begin >= self.rare_boundary:
+                            frequency_bin.add("frequency_bin = 3")
+                        elif end >= self.rare_boundary:
+                            frequency_bin.update([
+                                "frequency_bin = 1",
+                                "frequency_bin = 2",
+                                "frequency_bin = 3",
+                            ])
+
+            elif inheritance is not None:
+                frequency_bin.update([
+                    "frequency_bin = 1",
+                    "frequency_bin = 2",
+                    "frequency_bin = 3"])
+
+        if len(frequency_bin) == 4:
+            return ""
+        return " AND ".join(frequency_bin)
 
     def _build_coding_heuristic(self, effect_types):
         if effect_types is None:
@@ -621,22 +655,21 @@ class ImpalaFamilyVariants:
         return where_clause
 
     def build_query(
-        self,
-        regions=None,
-        genes=None,
-        effect_types=None,
-        family_ids=None,
-        person_ids=None,
-        inheritance=None,
-        roles=None,
-        sexes=None,
-        variant_type=None,
-        real_attr_filter=None,
-        ultra_rare=None,
-        return_reference=None,
-        return_unknown=None,
-        limit=None,
-    ):
+            self,
+            regions=None,
+            genes=None,
+            effect_types=None,
+            family_ids=None,
+            person_ids=None,
+            inheritance=None,
+            roles=None,
+            sexes=None,
+            variant_type=None,
+            real_attr_filter=None,
+            ultra_rare=None,
+            return_reference=None,
+            return_unknown=None,
+            limit=None):
 
         where_clause = self._build_where(
             regions=regions,

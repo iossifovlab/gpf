@@ -59,3 +59,77 @@ def test_impala_variants_simple(variants_impala, fixture_name):
             print(">", a)
 
     assert len(vs) == 5
+
+
+@pytest.mark.parametrize("inheritance,ultra_rare,real_attr_filter, result", [
+    (
+        "denovo", None, None,
+        "frequency_bin = 0"
+    ),
+    (
+        None, None, None,
+        ""
+    ),
+    (
+        "any(denovo, mendelian)", None, None,
+        ""
+    ),
+    (
+        "any(denovo)", True, None,
+        "frequency_bin = 0"
+    ),
+    (
+        "any(denovo, mendelian)", True, None,
+        " AND ".join(set(["frequency_bin = 0", "frequency_bin = 1"]))
+    ),
+    (
+        None, True, None,
+        " AND ".join(set(["frequency_bin = 1"]))
+    ),
+    (
+        "any(mendelian)", True, None,
+        " AND ".join(set(["frequency_bin = 1"]))
+    ),
+    (
+        "any(mendelian)", None, [("af_allele_freq", (0, 3))],
+        " AND ".join(set(["frequency_bin = 1", "frequency_bin = 2"]))
+    ),
+    (
+        "any(denovo, mendelian)", None, [("af_allele_freq", (0, 3))],
+        " AND ".join(set([
+            "frequency_bin = 0", "frequency_bin = 1",
+            "frequency_bin = 2"]))
+    ),
+    (
+        "any(denovo, mendelian)", None, [("af_allele_freq", (0, 5))],
+        " AND ".join(set([]))
+    ),
+    (
+        "any(denovo, mendelian)", None, [("af_allele_freq", (5, 6))],
+        " AND ".join(set([
+            "frequency_bin = 0", "frequency_bin = 3"]))
+    ),
+    (
+        None, None, [("af_allele_freq", (0, 3))],
+        " AND ".join(set([
+            "frequency_bin = 1",
+            "frequency_bin = 2"]))
+    ),
+])
+def test_impala_frequency_bin_heuristics(
+        mocker, impala_helpers, genomes_db_2013,
+        inheritance, ultra_rare, real_attr_filter, result):
+
+    ifv = ImpalaFamilyVariants(
+        impala_helpers,
+        "impala_storage_test_db",
+        "test_study_variants",
+        "test_study_pedigree",
+        genomes_db_2013.get_gene_models(),
+    )
+    ifv.rare_boundary = 5
+
+    q = ifv._build_frequency_bin_heuristic(
+        inheritance, ultra_rare, real_attr_filter)
+
+    assert result == q
