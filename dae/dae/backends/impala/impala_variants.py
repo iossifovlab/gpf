@@ -434,14 +434,12 @@ class ImpalaFamilyVariants:
 
             if ultra_rare:
                 frequency_bin.update([
-                    "frequency_bin = 0",
+                    # "frequency_bin = 0",
                     "frequency_bin = 1"
                 ])
             elif real_attr_filter:
-                print("real_attr_filter:", real_attr_filter)
                 for name, (begin, end) in real_attr_filter:
                     if name == "af_allele_freq":
-                        print(name, begin, end, self.rare_boundary)
 
                         if end < self.rare_boundary:
                             frequency_bin.update([
