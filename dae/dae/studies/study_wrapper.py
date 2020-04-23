@@ -231,12 +231,13 @@ class StudyWrapper(object):
 
     def generate_pedigree(self, allele, person_set_collection):
         result = []
-        best_st = np.sum(allele.gt == allele.allele_index, axis=0)
+        # best_st = np.sum(allele.gt == allele.allele_index, axis=0)
+        best_st = allele.best_state[allele.allele_index, :]
 
         for index, member in enumerate(allele.members_in_order):
             result.append(
                 self._get_wdae_member(
-                    member, person_set_collection, best_st[index]
+                    member, person_set_collection, int(best_st[index])
                 )
             )
         for member in allele.family.full_members:
