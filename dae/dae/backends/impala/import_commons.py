@@ -643,6 +643,9 @@ class MakefileGenerator:
             f"--gs {self.genotype_storage_id}",
         ]
 
+        if argv.study_config:
+            command.append(f"--study-config {argv.study_config}")
+
         return " ".join(command)
 
     def _get_output_dir(self, argv):

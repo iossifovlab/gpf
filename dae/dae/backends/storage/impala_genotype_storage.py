@@ -3,9 +3,6 @@ import sys
 import glob
 from time import time
 
-from impala import dbapi
-from sqlalchemy.pool import QueuePool
-
 from dae.backends.raw.loader import VariantsLoader, TransmissionType
 from dae.backends.storage.genotype_storage import GenotypeStorage
 
@@ -326,13 +323,9 @@ class ImpalaGenotypeStorage(GenotypeStorage):
             variants_files,
         )
 
-        config_dict = self._generate_study_config(
+        return self._generate_study_config(
             study_id, pedigree_table, variants_table
         )
-
-        config_builder = StudyConfigBuilder(config_dict)
-
-        return config_builder.build_config()
 
 
 STUDY_CONFIG_TEMPLATE = """
