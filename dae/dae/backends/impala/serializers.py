@@ -341,6 +341,7 @@ class AlleleParquetSerializer:
         "genetic_model_data",
         "frequency_data",
         "alternative",
+        "variant_data"
     ]
 
     def __init__(self, variants_schema):
@@ -382,7 +383,8 @@ class AlleleParquetSerializer:
         self._schema = None
 
         additional_searchable_props = {}
-        scores = {}
+        scores_searchable = {}
+        scores_binary = {}
         if variants_schema:
             if "af_allele_freq" in variants_schema.col_names:
                 additional_searchable_props["af_allele_freq"] = pa.float32()
@@ -400,19 +402,21 @@ class AlleleParquetSerializer:
                     and col_name not in additional_searchable_props.keys()
                     and col_name not in self.GENOMIC_SCORES_SCHEMA_CLEAN_UP
                 ):
-                    scores[col_name] = pa.float32()
+                    scores_binary[col_name] = FloatSerializer
+                    scores_searchable[col_name] = pa.float32()
 
         self.property_serializers_list = [
             self.summary_prop_serializers,
             self.annotation_prop_serializers,
             self.family_prop_serializers,
             self.member_prop_serializers,
+            scores_binary,
         ]
 
         self.searchable_properties_types = {
             **self.BASE_SEARCHABLE_PROPERTIES_TYPES,
             **additional_searchable_props,
-            **scores,
+            **scores_searchable,
         }
 
     @property
