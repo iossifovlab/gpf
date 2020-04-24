@@ -641,6 +641,7 @@ class MakefileGenerator:
             os.path.join(output, f"{self.study_id}_pedigree.parquet"),
             os.path.join(output, f"{self.study_id}_variants.parquet"),
             f"--gs {self.genotype_storage_id}",
+            f"--study-config {argv.study_config}",
         ]
 
         return " ".join(command)
