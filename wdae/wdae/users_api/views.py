@@ -239,6 +239,7 @@ def login(request):
 
 
 @request_logging_function_view(LOGGER)
+@csrf_clear
 @api_view(["POST"])
 @authentication_classes((SessionAuthentication,))
 def logout(request):
