@@ -275,7 +275,9 @@ class StudyWrapper(object):
                 yield row_variant
 
     def get_variant_web_rows(self, query, sources, max_variants_count=None):
-        person_set_collection_id = query.get("peopleGroup", {}).get("id", None)
+        person_set_collection_id = query.get("peopleGroup", {}).get(
+            "id", list(self.legend.keys())[0] if self.legend else None
+        )
         person_set_collection = self.get_person_set_collection(
             person_set_collection_id
         )
