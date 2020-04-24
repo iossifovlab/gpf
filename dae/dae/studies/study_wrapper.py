@@ -2,7 +2,6 @@ import math
 import functools
 import itertools
 import traceback
-import numpy as np
 from copy import deepcopy
 
 from dae.utils.variant_utils import mat2str
@@ -97,21 +96,13 @@ class StudyWrapper(object):
 
         # LEGEND
         self.legend = {}
-        if self.config.people_set_collections is not None:
 
-            # def ps_to_dict(ps):
-            #     return [
-            #         GPFConfigParser._namedtuple_to_dict(domain)
-            #         for domain in ps.domain + [ps.default]
-            #     ]
-
-            for collection_id in self.config.person_set_collections \
-                    .selected_person_set_collections:
-
-                self.legend[collection_id] = getattr(
-                    self.config.person_set_collections, collection_id
-                )
-
+        collections_conf = self.config.person_set_collections
+        if collections_conf and collections_conf.selected_person_set_collections:
+            for collection_id in \
+                    collections_conf.selected_person_set_collections:
+                self.legend[collection_id] = \
+                    self.person_set_collection_configs[collection_id]["domain"]
         # PREVIEW AND DOWNLOAD COLUMNS
         preview_column_names = genotype_browser_config.preview_columns
         download_column_names = genotype_browser_config.download_columns
@@ -858,7 +849,6 @@ class StudyWrapper(object):
             legend = list(self.legend.values())[0] if self.legend else []
         else:
             legend = self.legend.get(kwargs["peopleGroup"]["id"], [])
-
         return legend + self._get_legend_default_values()
 
     def get_present_in_role(self, present_in_role_id):
