@@ -140,7 +140,13 @@ def test_query_present_in_child(
 ):
     variants = list(
         quads_in_child_genotype_data_group_wrapper.query_variants(
-            presentInChild=option
+            presentInChild=option,
+            presentInParent={
+                "presentInParent": [
+                    "mother only", "father only", "mother and father",
+                    "neither"
+                ]
+            }
         )
     )
 
@@ -167,7 +173,13 @@ def test_query_present_in_child_compared_to_raw(
 
     variants = list(
         quads_f1_genotype_data_group_wrapper.query_variants(
-            presentInChild=option
+            presentInChild=option,
+            presentInParent={
+                "presentInParent": [
+                    "mother only", "father only", "mother and father",
+                    "neither"
+                ]
+            }
         )
     )
     assert len(vs) == len(variants)
@@ -178,7 +190,13 @@ def test_query_present_in_child_and_roles(
 ):
     variants = list(
         quads_f1_genotype_data_group_wrapper.query_variants(
-            presentInChild=["proband only"], roles="dad"
+            presentInChild=["proband only"], roles="dad",
+            presentInParent={
+                "presentInParent": [
+                    "mother only", "father only", "mother and father",
+                    "neither"
+                ]
+            }
         )
     )
 
@@ -213,7 +231,10 @@ def test_query_present_in_parent(
 ):
     variants = list(
         quads_in_parent_genotype_data_group_wrapper.query_variants(
-            presentInParent=option
+            presentInParent=option,
+            presentInChild=[
+                "proband only", "sibling only",
+                "proband and sibling", "neither"]
         )
     )
 

@@ -404,6 +404,9 @@ class AlleleParquetSerializer:
                 ):
                     scores_binary[col_name] = FloatSerializer
                     scores_searchable[col_name] = pa.float32()
+        # FIXME:
+        scores_binary = {}
+        # FIXME:
 
         self.property_serializers_list = [
             self.summary_prop_serializers,

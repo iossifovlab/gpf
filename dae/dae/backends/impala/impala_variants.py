@@ -368,7 +368,10 @@ class ImpalaFamilyVariants:
         return transformer.transform(parsed)
 
     def _build_inheritance_where(self, column_name, query_value):
-        tree = inheritance_parser.parse(query_value)
+        if isinstance(query_value, str):
+            tree = inheritance_parser.parse(query_value)
+        else:
+            tree = query_value
 
         # if query_value == "denovo":
         #     pass

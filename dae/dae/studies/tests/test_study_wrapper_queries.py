@@ -90,7 +90,7 @@ def test_query_regions_variants(regions, count, quads_f1_wrapper):
 
 
 @pytest.mark.parametrize(
-    "option,count",
+    "options,count",
     [
         (["proband only"], 1),
         (["sibling only"], 1),
@@ -98,16 +98,26 @@ def test_query_regions_variants(regions, count, quads_f1_wrapper):
         (["neither"], 1),
         (["proband and sibling", "proband only"], 2),
         (["proband only", "neither"], 2),
-        (
-            ["proband only", "sibling only", "proband and sibling", "neither"],
-            4,
-        ),
+        (["proband only", "sibling only", "proband and sibling", "neither"],
+         4,),
     ],
     ids=repr,
 )
-def test_query_present_in_child(option, count, quads_in_child_wrapper):
+def test_query_present_in_child(options, count, quads_in_child_wrapper):
+    vs = list(quads_in_child_wrapper.query_variants())
+    for v in vs:
+        for a in v.alt_alleles:
+            print(a, a.variant_in_roles)
+
     variants = list(
-        quads_in_child_wrapper.query_variants(presentInChild=option)
+        quads_in_child_wrapper.query_variants(
+            presentInChild=options,
+            presentInParent={
+                "presentInParent": [
+                    "mother only", "father only", "mother and father",
+                    "neither"
+                ]
+            })
     )
 
     assert len(variants) == count
@@ -124,27 +134,54 @@ def test_query_present_in_child(option, count, quads_in_child_wrapper):
     ids=repr,
 )
 def test_query_present_in_child_compared_to_raw(
-    option, raw_query, quads_f1_wrapper
-):
+        option, raw_query, quads_f1_wrapper):
+
+    print(80 * "=")
+
+    vs = list(quads_f1_wrapper.query_variants())
+    for v in vs:
+        for a in v.alt_alleles:
+            print(a, a.variant_in_roles, a.inheritance_in_members)
+
     vs = quads_f1_wrapper.genotype_data_study.query_variants(roles=raw_query)
     vs = list(vs)
-
-    variants = list(quads_f1_wrapper.query_variants(presentInChild=option))
+    print(80 * "-")
+    for v in vs:
+        for a in v.alt_alleles:
+            print(a, a.variant_in_roles, a.inheritance_in_members)
+    print(80 * "-")
+    variants = list(quads_f1_wrapper.query_variants(
+        presentInChild=option,
+        presentInParent={
+                "presentInParent": [
+                    "mother only", "father only", "mother and father",
+                    "neither"
+                ]
+            }))
     assert len(vs) == len(variants)
+    for v in vs:
+        for a in v.alt_alleles:
+            print(a, a.variant_in_roles, a.inheritance_in_members)
+    print(80 * "=")
 
 
 def test_query_present_in_child_and_roles(quads_f1_wrapper):
     variants = list(
         quads_f1_wrapper.query_variants(
-            presentInChild=["proband only"], roles="dad"
-        )
+            presentInChild=["proband only"], roles="dad",
+            presentInParent={
+                "presentInParent": [
+                    "mother only", "father only", "mother and father",
+                    "neither"
+                ]
+            })
     )
 
     assert len(variants) == 1
 
 
 @pytest.mark.parametrize(
-    "option,count",
+    "options,count",
     [
         ({"presentInParent": ["mother only"]}, 1),
         ({"presentInParent": ["father only"]}, 1),
@@ -152,23 +189,27 @@ def test_query_present_in_child_and_roles(quads_f1_wrapper):
         ({"presentInParent": ["neither"]}, 1),
         ({"presentInParent": ["mother and father", "mother only"]}, 2),
         ({"presentInParent": ["mother only", "neither"]}, 2),
-        (
-            {
-                "presentInParent": [
+        ({"presentInParent": [
                     "mother only",
                     "father only",
                     "mother and father",
                     "neither",
-                ]
-            },
-            4,
-        ),
+                ]}, 4),
     ],
     ids=repr,
 )
-def test_query_present_in_parent(option, count, quads_in_parent_wrapper):
+def test_query_present_in_parent(options, count, quads_in_parent_wrapper):
+    vs = list(quads_in_parent_wrapper.query_variants())
+    for v in vs:
+        for a in v.alt_alleles:
+            print(a, a.variant_in_roles, a.inheritance_in_members)
+
     variants = list(
-        quads_in_parent_wrapper.query_variants(presentInParent=option)
+        quads_in_parent_wrapper.query_variants(
+            presentInParent=options,
+            presentInChild=[
+                "proband only", "sibling only",
+                "proband and sibling", "neither"])
     )
 
     assert len(variants) == count
