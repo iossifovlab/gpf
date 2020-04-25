@@ -21,15 +21,18 @@ from dae.utils.effect_utils import (
 from dae.utils.regions import Region
 from dae.pheno.common import MeasureType
 from dae.pheno_tool.pheno_common import PhenoFilterBuilder
-from dae.variants.attributes import Role
+from dae.variants.attributes import Role, Inheritance
+
 from dae.backends.attributes_query import (
     role_query,
+    inheritance_query,
     variant_type_converter,
     sex_converter,
     AndNode,
     NotNode,
     OrNode,
     ContainsNode,
+    EqualsNode,
 )
 from dae.studies.study import GenotypeDataGroup
 
@@ -342,11 +345,8 @@ class StudyWrapper(object):
         if "regions" in kwargs:
             kwargs["regions"] = list(map(Region.from_str, kwargs["regions"]))
 
-        if "presentInChild" in kwargs:
-            self._transform_present_in_child(kwargs)
-
-        if "presentInParent" in kwargs:
-            self._transform_present_in_parent(kwargs)
+        if "presentInChild" in kwargs or "presentInParent" in kwargs:
+            self._transform_present_in_child_and_present_in_parent(kwargs)
 
         if "presentInRole" in kwargs:
             self._transform_present_in_role(kwargs)
@@ -648,43 +648,132 @@ class StudyWrapper(object):
 
         kwargs["real_attr_filter"].append((value, value_range))
 
-    def _transform_present_in_child(self, kwargs):
+
+    @staticmethod
+    def _transform_present_in_child_and_present_in_parent(kwargs):
+        if "presentInChild" in kwargs:
+            present_in_child = set(kwargs["presentInChild"])
+            kwargs.pop("presentInChild")
+        else:
+            present_in_child = set()
+
+        if "presentInParent" in kwargs:
+            present_in_parent = set(kwargs["presentInParent"]["presentInParent"])
+            rarity = kwargs["presentInParent"].get("rarity", None)
+            kwargs.pop("presentInParent")
+        else:
+            present_in_parent = set()
+            rarity = None
+
+        roles_query = []
+        roles_query.append(
+            StudyWrapper._present_in_child_to_roles(present_in_child))
+        roles_query.append(
+            StudyWrapper._present_in_parent_to_roles(present_in_parent))
+
+        roles_query = AndNode(roles_query)
+
+        StudyWrapper._add_roles_to_query(roles_query, kwargs)
+
+        inheritance = None
+        if present_in_child == set(["neither"]) and \
+                present_in_parent != set(["neither"]):
+            inheritance = [Inheritance.mendelian, Inheritance.missing]
+        elif present_in_child != set(["neither"]) and \
+                present_in_parent == set(["neither"]):
+            inheritance = [Inheritance.denovo]
+        else:
+            inheritance = [
+                Inheritance.denovo,
+                Inheritance.mendelian,
+                Inheritance.missing]
+        inheritance = [str(inh) for inh in inheritance]
+        StudyWrapper._add_inheritance_to_query(
+            "any({})".format(",".join(inheritance)), kwargs)
+
+        if present_in_parent == {"neither"}:
+            return
+
+        if rarity is not None:
+            ultra_rare = rarity.get("ultraRare", None)
+            ultra_rare = bool(ultra_rare)
+            if ultra_rare:
+                kwargs["ultra_rare"] = True
+            else:
+                max_alt_freq = rarity.get("maxFreq", None)
+                min_alt_freq = rarity.get("minFreq", None)
+                if min_alt_freq is not None or max_alt_freq is not None:
+                    real_attr_filter = kwargs.get("real_attr_filter", [])
+                    real_attr_filter.append(
+                        ("af_allele_freq", (min_alt_freq, max_alt_freq))
+                    )
+                    kwargs["real_attr_filter"] = real_attr_filter
+
+    @staticmethod
+    def _present_in_child_to_roles(present_in_child):
         roles_query = []
 
-        for filter_option in kwargs["presentInChild"]:
-            new_roles = None
+        if "proband only" in present_in_child:
+            roles_query.append(AndNode(
+                [ContainsNode(Role.prb), NotNode(ContainsNode(Role.sib))]
+            ))
 
-            if filter_option == "proband only":
-                new_roles = AndNode(
-                    [ContainsNode(Role.prb), NotNode(ContainsNode(Role.sib))]
-                )
+        if "sibling only" in present_in_child:
+            roles_query.append(AndNode(
+                [NotNode(ContainsNode(Role.prb)), ContainsNode(Role.sib)]
+            ))
 
-            if filter_option == "sibling only":
-                new_roles = AndNode(
-                    [NotNode(ContainsNode(Role.prb)), ContainsNode(Role.sib)]
-                )
+        if "proband and sibling" in present_in_child:
+            roles_query.append(AndNode(
+                [ContainsNode(Role.prb), ContainsNode(Role.sib)]
+            ))
 
-            if filter_option == "proband and sibling":
-                new_roles = AndNode(
-                    [ContainsNode(Role.prb), ContainsNode(Role.sib)]
-                )
+        if "neither" in present_in_child:
+            roles_query.append(AndNode(
+                [
+                    NotNode(ContainsNode(Role.prb)),
+                    NotNode(ContainsNode(Role.sib)),
+                ]
+            ))
+        return OrNode(roles_query)
 
-            if filter_option == "neither":
-                new_roles = AndNode(
-                    [
-                        NotNode(ContainsNode(Role.prb)),
-                        NotNode(ContainsNode(Role.sib)),
-                    ]
-                )
+    @staticmethod
+    def _present_in_parent_to_roles(present_in_parent):
+        roles_query = []
 
-            if new_roles:
-                roles_query.append(new_roles)
+        if "mother only" in present_in_parent:
+            roles_query.append(AndNode(
+                        [
+                            NotNode(ContainsNode(Role.dad)),
+                            ContainsNode(Role.mom),
+                        ]
+                    ))
 
-        kwargs.pop("presentInChild")
+        if "father only" in present_in_parent:
+            roles_query.append(AndNode(
+                        [
+                            ContainsNode(Role.dad),
+                            NotNode(ContainsNode(Role.mom)),
+                        ]
+                    ))
 
-        self._add_roles_to_query(roles_query, kwargs)
+        if "mother and father" in present_in_parent:
+            roles_query.append(AndNode(
+                        [ContainsNode(Role.dad), ContainsNode(Role.mom)]
+                    ))
 
-    def _transform_present_in_parent(self, kwargs):
+        if "neither" in present_in_parent:
+            roles_query.append(AndNode(
+                        [
+                            NotNode(ContainsNode(Role.dad)),
+                            NotNode(ContainsNode(Role.mom)),
+                        ]
+                    ))
+        return OrNode(roles_query)
+
+
+    @staticmethod
+    def _transform_present_in_parent(kwargs):
         roles_query = []
         present_in_parent = set(kwargs["presentInParent"]["presentInParent"])
         rarity = kwargs["presentInParent"].get("rarity", None)
@@ -727,7 +816,7 @@ class StudyWrapper(object):
 
                 if new_roles:
                     roles_query.append(new_roles)
-        self._add_roles_to_query(roles_query, kwargs)
+        StudyWrapper._add_roles_to_query(roles_query, kwargs)
 
         if rarity is not None:
             ultra_rare = rarity.get("ultraRare", None)
@@ -769,7 +858,7 @@ class StudyWrapper(object):
 
         kwargs.pop("presentInRole")
 
-        self._add_roles_to_query(roles_query, kwargs)
+        self._add_roles_to_query(OrNode(roles_query), kwargs)
 
     def _transform_pheno_filters_to_people_ids(self, pheno_filter_args):
         people_ids = []
@@ -821,11 +910,10 @@ class StudyWrapper(object):
 
         return kwargs
 
-    def _add_roles_to_query(self, roles_query, kwargs):
-        if not roles_query:
+    @staticmethod
+    def _add_roles_to_query(query, kwargs):
+        if not query:
             return
-
-        roles_query = OrNode(roles_query)
 
         original_roles = kwargs.get("roles", None)
         if original_roles is not None:
@@ -833,9 +921,23 @@ class StudyWrapper(object):
                 original_roles = role_query.transform_query_string_to_tree(
                     original_roles
                 )
-            kwargs["roles"] = AndNode([original_roles, roles_query])
+            kwargs["roles"] = AndNode([original_roles, query])
         else:
-            kwargs["roles"] = roles_query
+            kwargs["roles"] = query
+
+    @staticmethod
+    def _add_inheritance_to_query(query, kwargs):
+        if not query:
+            return
+
+        original_inheritance = kwargs.get("inheritance", None)
+
+        if original_inheritance is not None:
+            assert isinstance(original_inheritance, str)
+            kwargs["inheritance"] = " and ".join(
+                [original_inheritance, query])
+        else:
+            kwargs["inheritance"] = query
 
     def _get_legend_default_values(self):
         return [
