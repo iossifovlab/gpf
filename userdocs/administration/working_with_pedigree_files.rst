@@ -15,7 +15,7 @@ There are provided examples in the end of this guide demonstrating how to use th
 
 Prerequisites
 #############
-The sample data used in the examples of this guide can be found here - ...
+The sample data used in the examples of this guide can be found `here <https://iossifovlab.com/distribution/public/tutorial_examples/>`_.
 
 A pedigree file (usually found with a .ped extension) is a text file with delimiter-separated values (comma, tab, etc.),
 that contains the following columns:
