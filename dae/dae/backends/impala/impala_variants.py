@@ -477,7 +477,7 @@ class ImpalaFamilyVariants:
         if intersection == effect_types:
             return "coding_bin = 1"
         if not intersection:
-            return "coding = 0"
+            return "coding_bin = 0"
         return ""
 
     @deprecated(
