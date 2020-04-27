@@ -269,7 +269,7 @@ class AlleleParquetSerializer:
         "variant_type": pa.int8(),
         "transmission_type": pa.int8(),
         "reference": pa.string(),
-        "family_variant_index": pa.int32(),
+        "family_index": pa.int32(),
         "family_id": pa.string(),
         "is_denovo": pa.int8(),
         "variant_in_sexes": pa.int8(),

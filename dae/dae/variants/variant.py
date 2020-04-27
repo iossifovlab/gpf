@@ -465,7 +465,10 @@ class SummaryAllele(Allele):
 
         self._effect = None
 
-        self._attributes: Dict[str, Any] = {}
+        self._attributes: Dict[str, Any] = {
+            "allele_index": allele_index,
+            "transmission_type": transmission_type
+        }
         if attributes is not None:
             self.update_attributes(attributes)
 
