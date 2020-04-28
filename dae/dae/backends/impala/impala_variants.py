@@ -120,9 +120,9 @@ class ImpalaFamilyVariants:
                     ultra_rare=ultra_rare,
                     return_reference=return_reference,
                     return_unknown=return_unknown,
-                    limit=limit,
+                    limit=None,
                 )
-                print("LIMIT:", limit)
+                # print("LIMIT:", limit)
                 print("FINAL QUERY: ", query)
 
                 seen = set()
@@ -131,6 +131,9 @@ class ImpalaFamilyVariants:
                 for row in cursor:
 
                     (
+                        bucket_index,
+                        summary_index,
+                        # family_index,
                         chrom,
                         position,
                         end_position,
@@ -139,8 +142,10 @@ class ImpalaFamilyVariants:
                         family_id,
                         variant_data,
                     ) = row
-                    fvuid = f"{chrom}{position}{end_position}{variant_type}" \
-                        f"{family_id}{reference}"
+
+                    # FIXME:
+                    # fvuid = f"{bucket_index}:{summary_index}:{family_index}"
+                    fvuid = f"{bucket_index}:{summary_index}:{family_id}"
                     if fvuid in seen:
                         continue
                     seen.add(fvuid)
@@ -721,6 +726,7 @@ class ImpalaFamilyVariants:
         where.append(self._build_family_bin_heuristic(family_ids, person_ids))
         where.append(self._build_coding_heuristic(effect_types))
         where.append(self._build_region_bin_heuristic(regions))
+
         where = [w for w in where if w]
 
         where_clause = ""
@@ -770,6 +776,8 @@ class ImpalaFamilyVariants:
             limit_clause = "LIMIT {}".format(limit)
         return """
             SELECT
+                bucket_index,
+                summary_index,
                 chromosome,
                 `position`,
                 end_position,
