@@ -86,22 +86,25 @@ export class GeneSetsComponent extends QueryStateWithErrorsProvider implements O
 
           const datasetDetails = this.datasetService.getSelectedDatasetDetails();
           if (datasetDetails) {
-            if(!datasetDetails.hasDenovo) {
+            let denovoGeneSetTypes = geneSetsCollections.filter(
+              geneSetCollection => geneSetCollection.name === "denovo"
+            )[0].types;
+
+            if(!datasetDetails.hasDenovo || !denovoGeneSetTypes.length) {
               geneSetsCollections = geneSetsCollections.filter(
                 (geneSet) => {return geneSet.name.toLowerCase().trim() !== 'denovo'}
               )
             } else {
-              let denovoGeneSetTypes = geneSetsCollections.filter(
-                geneSetCollection => geneSetCollection.name === "denovo"
-              )[0].types;
-    
               denovoGeneSetTypes.sort((a, b) => a.datasetId.localeCompare(b.datasetId));
     
               const selectedStudyTypes = denovoGeneSetTypes.find(
                 type => type.datasetId === this.selectedDatasetId
-              )
-              this.defaultSelectedDenovoGeneSetId = selectedStudyTypes.datasetId + 
-                '-' + selectedStudyTypes.peopleGroupId + '-denovo-geneset';
+              ) || denovoGeneSetTypes[0]
+
+              if (selectedStudyTypes) {
+                this.defaultSelectedDenovoGeneSetId = selectedStudyTypes.datasetId +
+                  '-' + selectedStudyTypes.peopleGroupId + '-denovo-geneset';
+              }
             }
             this.geneSetsCollections = geneSetsCollections;
             this.selectedGeneSetsCollection = geneSetsCollections[0];
@@ -194,7 +197,7 @@ export class GeneSetsComponent extends QueryStateWithErrorsProvider implements O
     if (selectedGeneSetsCollection.types.length > 0) {
       const geneSetType = selectedGeneSetsCollection.types.find(genesetType => {
         return genesetType.datasetId === this.selectedDatasetId;
-      });
+      }) || selectedGeneSetsCollection.types[0];
 
       this.setSelectedGeneType(geneSetType.datasetId, geneSetType.peopleGroupId,
                                geneSetType.peopleGroupLegend[0].id, true);
