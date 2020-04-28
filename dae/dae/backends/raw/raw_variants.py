@@ -18,6 +18,11 @@ class RawFamilyVariants:
     def full_variants_iterator(self):
         raise NotImplementedError()
 
+    def family_variants_iterator(self):
+        for _, vs in self.full_variants_iterator():
+            for v in vs:
+                yield v
+
     @staticmethod
     def filter_regions(v, regions):
         for reg in regions:
@@ -81,19 +86,18 @@ class RawFamilyVariants:
 
     @classmethod
     def filter_allele(
-        cls,
-        allele,
-        inheritance=None,
-        real_attr_filter=None,
-        ultra_rare=None,
-        genes=None,
-        effect_types=None,
-        variant_type=None,
-        person_ids=None,
-        roles=None,
-        sexes=None,
-        **kwargs,
-    ):
+            cls,
+            allele,
+            inheritance=None,
+            real_attr_filter=None,
+            ultra_rare=None,
+            genes=None,
+            effect_types=None,
+            variant_type=None,
+            person_ids=None,
+            roles=None,
+            sexes=None,
+            **kwargs):
 
         assert isinstance(allele, FamilyAllele)
         if inheritance is not None:
@@ -189,24 +193,24 @@ class RawFamilyVariants:
         return_reference = kwargs.get("return_reference", False)
         return_unknown = kwargs.get("return_unknown", False)
 
-        for _, vs in self.full_variants_iterator():
-            for v in vs:
-                if v.is_unknown() and not return_unknown:
-                    continue
+        # for _, vs in self.full_variants_iterator():
+        for v in self.family_variants_iterator():
+            if v.is_unknown() and not return_unknown:
+                continue
 
-                if not self.filter_variant(v, **kwargs):
-                    continue
+            if not self.filter_variant(v, **kwargs):
+                continue
 
-                alleles = v.alleles
-                alleles_matched = []
-                for allele in alleles:
-                    if self.filter_allele(allele, **kwargs):
-                        if allele.allele_index == 0 and not return_reference:
-                            continue
-                        alleles_matched.append(allele.allele_index)
-                if alleles_matched:
-                    v.set_matched_alleles(alleles_matched)
-                    yield v
+            alleles = v.alleles
+            alleles_matched = []
+            for allele in alleles:
+                if self.filter_allele(allele, **kwargs):
+                    if allele.allele_index == 0 and not return_reference:
+                        continue
+                    alleles_matched.append(allele.allele_index)
+            if alleles_matched:
+                v.set_matched_alleles(alleles_matched)
+                yield v
 
 
 class RawMemoryVariants(RawFamilyVariants):
@@ -235,3 +239,13 @@ class RawMemoryVariants(RawFamilyVariants):
     def full_variants_iterator(self):
         for sv, fvs in self.full_variants:
             yield sv, fvs
+
+
+class RawVariantsIterator(RawFamilyVariants):
+    def __init__(self, family_variants, families):
+        super(RawVariantsIterator, self).__init__(families)
+        self.family_variants = family_variants
+
+    def family_variants_iterator(self):
+        for fv in self.family_variants:
+            yield fv

@@ -5,6 +5,7 @@ from impala.util import as_pandas
 
 from dae.variants.attributes import Inheritance
 from dae.backends.attributes_query import inheritance_query
+from dae.backends.raw.raw_variants import RawVariantsIterator
 
 from dae.annotation.tools.file_io_parquet import ParquetSchema
 from dae.pedigrees.family import FamiliesData
@@ -83,6 +84,83 @@ class ImpalaFamilyVariants:
     def connection(self):
         return self._impala_helpers.connection()
 
+    def _family_variants_iterator(
+            self,
+            regions=None,
+            genes=None,
+            effect_types=None,
+            family_ids=None,
+            person_ids=None,
+            inheritance=None,
+            roles=None,
+            sexes=None,
+            variant_type=None,
+            real_attr_filter=None,
+            ultra_rare=None,
+            return_reference=None,
+            return_unknown=None,
+            limit=None):
+
+        if not self.variant_table:
+            return None
+        with closing(self.connection()) as conn:
+
+            with conn.cursor() as cursor:
+                query = self.build_query(
+                    regions=regions,
+                    genes=genes,
+                    effect_types=effect_types,
+                    family_ids=family_ids,
+                    person_ids=person_ids,
+                    inheritance=inheritance,
+                    roles=roles,
+                    sexes=sexes,
+                    variant_type=variant_type,
+                    real_attr_filter=real_attr_filter,
+                    ultra_rare=ultra_rare,
+                    return_reference=return_reference,
+                    return_unknown=return_unknown,
+                    limit=limit,
+                )
+                print("LIMIT:", limit)
+                print("FINAL QUERY: ", query)
+
+                seen = set()
+
+                cursor.execute(query)
+                for row in cursor:
+
+                    (
+                        chrom,
+                        position,
+                        end_position,
+                        variant_type,
+                        reference,
+                        family_id,
+                        variant_data,
+                    ) = row
+                    fvuid = f"{chrom}{position}{end_position}{variant_type}" \
+                        f"{family_id}{reference}"
+                    if fvuid in seen:
+                        continue
+                    seen.add(fvuid)
+
+                    if type(variant_data) == str:
+                        print(
+                            "variant_data is string!!!!", family_id,
+                            chrom, position, end_position, reference)
+                        variant_data = bytes(variant_data, "utf8")
+
+                    family = self.families[family_id]
+                    v = self.serializer.deserialize_family_variant(
+                        variant_data, family
+                    )
+
+                    if v is None:
+                        continue
+
+                    yield v
+
     def query_variants(
             self,
             regions=None,
@@ -104,9 +182,14 @@ class ImpalaFamilyVariants:
 
         if not self.variant_table:
             return None
-        with closing(self.connection()) as conn:
-            with conn.cursor() as cursor:
-                query = self.build_query(
+
+        if limit is None:
+            count = -1
+        else:
+            count = limit
+            limit = 10 * limit
+
+        family_variants_iterator = self._family_variants_iterator(
                     regions=regions,
                     genes=genes,
                     effect_types=effect_types,
@@ -120,43 +203,34 @@ class ImpalaFamilyVariants:
                     ultra_rare=ultra_rare,
                     return_reference=return_reference,
                     return_unknown=return_unknown,
-                    limit=limit,
-                )
-                print("LIMIT:", limit)
-                print("FINAL QUERY: ", query)
+                    limit=limit)
 
-                cursor.execute(query)
-                for row in cursor:
+        raw_variants_iterator = RawVariantsIterator(
+            family_variants_iterator, self.families)
 
-                    (
-                        chrom,
-                        position,
-                        end_position,
-                        reference,
-                        _transmission_type,
-                        family_id,
-                        variant_data,
-                        matched_alleles,
-                    ) = row
-                    if type(variant_data) == str:
-                        print(
-                            "variant_data is string!!!!", family_id,
-                            chrom, position, end_position, reference)
-                        variant_data = bytes(variant_data, "utf8")
+        result = raw_variants_iterator.query_variants(
+            regions=regions,
+            genes=genes,
+            effect_types=effect_types,
+            family_ids=family_ids,
+            person_ids=person_ids,
+            inheritance=inheritance,
+            roles=roles,
+            sexes=sexes,
+            variant_type=variant_type,
+            real_attr_filter=real_attr_filter,
+            ultra_rare=ultra_rare,
+            return_reference=return_reference,
+            return_unknown=return_unknown,
+            limit=count)
 
-                    family = self.families[family_id]
-                    v = self.serializer.deserialize_family_variant(
-                        variant_data, family
-                    )
-
-                    if v is None:
-                        continue
-
-                    matched_alleles = [int(a)
-                                       for a in matched_alleles.split(",")]
-                    v.set_matched_alleles(matched_alleles)
-
-                    yield v
+        for v in result:
+            if v is None:
+                continue
+            yield v
+            count -= 1
+            if count == 0:
+                break
 
     def _fetch_pedigree(self):
         with closing(self.connection()) as conn:
@@ -699,24 +773,12 @@ class ImpalaFamilyVariants:
                 chromosome,
                 `position`,
                 end_position,
+                variant_type,
                 reference,
-                transmission_type,
-                family_id,
-                variant_data,
-                GROUP_CONCAT(DISTINCT CAST(allele_index AS string))
-            FROM {db}.{variant}
-            {where_clause}
-            GROUP BY
-                bucket_index,
-                summary_index,
-                family_variant_index,
-                chromosome,
-                `position`,
-                end_position,
-                reference,
-                transmission_type,
                 family_id,
                 variant_data
+            FROM {db}.{variant}
+            {where_clause}
             {limit_clause}
             """.format(
             db=self.db,
