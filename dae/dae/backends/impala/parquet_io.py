@@ -260,7 +260,9 @@ class ContinuousParquetFileWriter:
     enough data. Automatically dumps leftover data when closing into the file
     """
 
-    def __init__(self, filepath, variant_loader, filesystem=None, rows=10_000):
+    def __init__(
+            self, filepath, variant_loader, filesystem=None, rows=200_000):
+
         self.filepath = filepath
         annotation_schema = variant_loader.get_attribute("annotation_schema")
         self.serializer = AlleleParquetSerializer(annotation_schema)
@@ -321,7 +323,7 @@ class VariantsParquetWriter:
             variants_loader,
             partition_descriptor,
             bucket_index=1,
-            rows=10_000,
+            rows=200_000,
             include_reference=True,
             filesystem=None):
 
@@ -406,6 +408,8 @@ class VariantsParquetWriter:
 
     def _write_internal(self):
         family_variant_index = 0
+        report = False
+
         for summary_variant_index, (summary_variant, family_variants) in \
                 enumerate(self.full_variants_iterator):
 
@@ -436,7 +440,10 @@ class VariantsParquetWriter:
                     bin_writer = self._get_bin_writer(family_allele)
                     bin_writer.append_allele(variant_data, family_allele)
 
-            if family_variant_index % 1000 == 0:
+                if family_variant_index % 1000 == 0:
+                    report = True
+
+            if report:
                 elapsed = time.time() - self.start
                 print(
                     f"Bucket {self.bucket_index}; "
@@ -446,6 +453,7 @@ class VariantsParquetWriter:
                     f"for {elapsed:.2f} sec ({len(self.data_writers)} files)",
                     file=sys.stderr,
                 )
+                report = False
 
         filenames = list(self.data_writers.keys())
 
@@ -518,7 +526,7 @@ class ParquetManager:
     @staticmethod
     def variants_to_parquet_filename(
             variants_loader, variants_filename,
-            bucket_index=0, rows=100_000, include_reference=False):
+            bucket_index=0, rows=200_000, include_reference=False):
 
         assert variants_loader.annotation_schema is not None
 
@@ -546,7 +554,7 @@ class ParquetManager:
     @staticmethod
     def variants_to_parquet_partition(
             variants_loader, partition_descriptor,
-            bucket_index=1, rows=10_000, include_reference=False):
+            bucket_index=1, rows=200_000, include_reference=False):
 
         assert variants_loader.get_attribute("annotation_schema") is not None
         print(f"variants to parquet ({rows}) sec", file=sys.stderr)
