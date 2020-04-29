@@ -1,6 +1,7 @@
 import os
 import gzip
 import sys
+import warnings
 
 from typing import List, Optional, Dict, Any
 from contextlib import closing
@@ -496,17 +497,22 @@ class DenovoLoader(VariantsGenotypesLoader):
         if denovo_sep is None:
             denovo_sep = "\t"
 
-        raw_df = pd.read_csv(
-            filepath,
-            sep=denovo_sep,
-            dtype={
-                denovo_chrom: str,
-                denovo_pos: int,
-                denovo_person_id: str,
-                denovo_family_id: str,
-                denovo_best_state: str,
-            },
-            comment="#")
+        with warnings.catch_warnings(record=True) as ws:
+            warnings.filterwarnings(
+                "ignore",
+                category=pd.errors.ParserWarning,
+                message="Both a converter and dtype were specified",
+            )
+
+            raw_df = pd.read_csv(
+                filepath,
+                sep=denovo_sep,
+                converters={
+                    denovo_pos: lambda p: int(p) if p else None,
+                },
+                dtype=str,
+                comment="#",
+                encoding="utf-8")
 
         if denovo_location:
             chrom_col, pos_col = zip(
