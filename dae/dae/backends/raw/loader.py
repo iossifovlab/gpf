@@ -198,14 +198,15 @@ class AnnotationDecorator(VariantsLoaderDecorator):
                     rec = summary_allele.attributes
                     rec["allele_index"] = allele_index
 
-                    for col in common_columns:
-                        line.append(str(rec.get(col, "")))
-                    if summary_allele.effect is None:
-                        line.append("")
-                    else:
-                        line.append(str(summary_allele.effect))
-                    for col in other_columns:
-                        line.append(str(rec.get(col, "")))
+                    line_values = [
+                        *[rec.get(col, "") for col in common_columns],
+                        summary_allele.effect,
+                        *[rec.get(col, "") for col in other_columns],
+                    ]
+
+                    for value in line_values:
+                        line.append(str(value) if value is not None else "")
+
                     outfile.write(sep.join(line))
                     outfile.write("\n")
 

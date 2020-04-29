@@ -1,3 +1,4 @@
+import numpy as np
 from dae.backends.raw.loader import StoredAnnotationDecorator
 
 
@@ -50,3 +51,27 @@ def test_stored_annotation_does_not_change_summary_alleles(
         for fv in fvs:
             # Effects will be None if the annotator copies the summary allele
             assert fv.effects is not None
+
+
+def test_stored_annotation_saves_nonetype_properly(
+        iossifov2014_loader, temp_filename):
+
+    assert iossifov2014_loader.annotation_schema is not None
+
+    StoredAnnotationDecorator.save_annotation_file(
+        iossifov2014_loader, temp_filename
+    )
+
+    variants_loader = StoredAnnotationDecorator(
+        iossifov2014_loader, temp_filename
+    )
+
+    for sv, _ in variants_loader.full_variants_iterator():
+        assert len(sv.alt_alleles) == 1
+        if sv.chromosome == "3":
+            assert np.isnan(
+                sv.alt_alleles[0].attributes["score0_incomplete_cov"]
+            )
+        else:
+            assert sv.alt_alleles[0].attributes["score0_incomplete_cov"] == \
+                float(sv.position)
