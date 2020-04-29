@@ -422,8 +422,8 @@ class MakefileGenerator:
     def generate_all_targets(self, argv, outfile=sys.stdout):
         targets = [
             f"${{OUTDIR}}/ped.flag",
-            f"${{OUTDIR}}/load.flag",
-            f"${{OUTDIR}}/reports.flag"
+            f"load.flag",
+            f"reports.flag"
         ]
         targets.extend(self._collect_variants_targets())
 
@@ -634,7 +634,8 @@ class MakefileGenerator:
     def _construct_load_command(self, argv):
         assert self.genotype_storage_id is not None
 
-        output = self._get_output_dir(argv)
+        # output = self._get_output_dir(argv)
+        output = "."
 
         command = [
             f"impala_parquet_loader.py {self.study_id}",
@@ -657,21 +658,21 @@ class MakefileGenerator:
 
     def generate_load_targets(self, argv, outfile=sys.stdout):
         print("\n", file=outfile)
-        print(f"load: ${{OUTDIR}}/load.flag\n", file=outfile)
+        print(f"load: load.flag\n", file=outfile)
 
         command = self._construct_load_command(argv)
         variants_targets = self._collect_variants_targets()
         if len(variants_targets) > 0:
             variants_targets = " ".join(variants_targets)
             print(
-                f"${{OUTDIR}}/load.flag: "
+                f"load.flag: "
                 f"${{OUTDIR}}/ped.flag {variants_targets}\n"
                 f"\t{command} && touch $@",
                 file=outfile,
             )
         else:
             print(
-                f"${{OUTDIR}}/load.flag: ${{OUTDIR}}/ped.flag\n"
+                f"load.flag: ${{OUTDIR}}/ped.flag\n"
                 f"\t{command} && touch $@",
                 file=outfile)
 
@@ -686,9 +687,9 @@ class MakefileGenerator:
 
     def generate_report_targets(self, argv, outfile=sys.stdout):
         print("\n", file=outfile)
-        print(f"reports: ${{OUTDIR}}/reports.flag\n", file=outfile)
+        print(f"reports: reports.flag\n", file=outfile)
         commands = self._construct_reports_commands(argv)
-        print(f"${{OUTDIR}}/reports.flag: ${{OUTDIR}}/load.flag", file=outfile)
+        print(f"reports.flag: load.flag", file=outfile)
         for command in commands:
             print(f"\t{command} && touch $@", file=outfile)
         print(f"\n", file=outfile)
@@ -883,7 +884,7 @@ class Variants2ParquetTool:
         parser.add_argument(
             "--rows",
             type=int,
-            default=100_000,
+            default=200_000,
             dest="rows",
             help="Amount of allele rows to write at once",
         )
