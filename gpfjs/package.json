@@ -30,8 +30,6 @@
     "@types/sprintf": "^0.1.0",
     "angular-confirmation-popover": "^3.4.2",
     "bootstrap": "4.0.0-beta",
-    "class-transformer": "^0.1.6",
-    "class-transformer-validator": "^0.4.0",
     "class-validator": "^0.7.0",
     "core-js": "^2.4.1",
     "d3": "^4.7.3",
