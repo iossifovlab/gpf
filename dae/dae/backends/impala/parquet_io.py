@@ -473,10 +473,30 @@ class VariantsParquetWriter:
 
         return filenames
 
+    def write_blob_schema(self):
+        config = configparser.ConfigParser()
+        schema = self.serializer.describe_blob_schema()
+
+        config.add_section("blob")
+        for k, v in schema.items():
+            config["blob"][k] = v
+
+        if os.path.isdir(self.partition_descriptor.output):
+            path = self.partition_descriptor.output
+        else:
+            path = os.path.dirname(self.partition_descriptor.output)
+
+        filename = os.path.join(path, "_VARIANTS_SCHEMA")
+
+        with open(filename, "w") as configfile:
+            config.write(configfile)
+
     def write_dataset(self):
         filenames = self._write_internal()
 
         self.partition_descriptor.write_partition_configuration()
+        self.write_blob_schema()
+
         return filenames
 
 
