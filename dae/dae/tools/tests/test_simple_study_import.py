@@ -558,6 +558,7 @@ def test_import_study_config_arg(
         genotype_storage_id,
         "--study-config",
         study_config,
+        "-F",
         "-o",
         temp_dirname,
     ]

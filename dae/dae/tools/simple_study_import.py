@@ -119,6 +119,15 @@ def cli_arguments(dae_config, argv=sys.argv[1:]):
         help="Config used to overwrite values in generated configuration",
     )
 
+    parser.add_argument(
+        "--force", "-F",
+        dest="force",
+        action="store_true",
+        help="allows overwriting configuration file in case "
+        "target directory already contains such file",
+        default=False
+    )
+
     DenovoLoader.cli_options(parser)
     VcfLoader.cli_options(parser)
     DaeTransmittedLoader.cli_options(parser)
@@ -235,7 +244,8 @@ def main(argv, gpf_instance=None):
         output=output,
         study_config=argv.study_config,
     )
-    save_study_config(dae_config, study_id, study_config)
+    save_study_config(
+        dae_config, study_id, study_config, force=argv.force)
 
     if not argv.skip_reports:
         # needs to reload the configuration, hence gpf_instance=None
