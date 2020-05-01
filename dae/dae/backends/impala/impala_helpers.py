@@ -1,4 +1,6 @@
 import os
+import itertools
+
 from contextlib import closing
 
 from impala import dbapi
@@ -7,13 +9,20 @@ from sqlalchemy.pool import QueuePool
 
 class ImpalaHelpers(object):
 
-    def __init__(self, impala_host=None, impala_port=None, pool_size=10):
+    def __init__(self, impala_hosts, impala_port=21050, pool_size=10):
 
         if os.environ.get("DAE_IMPALA_HOST", None) is not None:
             impala_host = os.environ.get("DAE_IMPALA_HOST", None)
             print("impala host overwritten:", impala_host)
+            if impala_host is not None:
+                impala_hosts = [impala_host]
+        if impala_hosts is None:
+            impala_hosts = []
+   
+        host_generator = itertools.cycle(impala_hosts)
 
         def getconn():
+            impala_host = next(host_generator)
             return dbapi.connect(host=impala_host, port=impala_port)
 
         print(f"Creating impala pool with {pool_size} connections")

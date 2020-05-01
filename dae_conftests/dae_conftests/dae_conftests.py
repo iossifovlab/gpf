@@ -640,7 +640,7 @@ def impala_genotype_storage(hdfs_host, impala_host):
             "type": "impala",
             "dir": "/tmp",
             "impala": {
-                "host": impala_host,
+                "hosts": [impala_host],
                 "port": 21050,
                 "db": impala_test_dbname(),
                 "pool_size": 5,
@@ -703,7 +703,8 @@ def data_import(
 
     from dae.backends.impala.impala_helpers import ImpalaHelpers
 
-    impala_helpers = ImpalaHelpers(impala_host=impala_host, impala_port=21050)
+    impala_helpers = ImpalaHelpers(
+        impala_hosts=[impala_host], impala_port=21050)
 
     def build(dirname):
 

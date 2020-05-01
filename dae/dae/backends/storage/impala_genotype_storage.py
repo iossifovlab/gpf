@@ -23,12 +23,12 @@ class ImpalaGenotypeStorage(GenotypeStorage):
         super(ImpalaGenotypeStorage, self).__init__(storage_config)
         self.data_dir = self.storage_config.dir
 
-        impala_host = self.storage_config.impala.host
+        impala_hosts = self.storage_config.impala.hosts
         impala_port = self.storage_config.impala.port
         pool_size = self.storage_config.impala.pool_size
 
         self._impala_helpers = ImpalaHelpers(
-            impala_host=impala_host, impala_port=impala_port,
+            impala_hosts=impala_hosts, impala_port=impala_port,
             pool_size=pool_size
         )
         self._hdfs_helpers = HdfsHelpers(
