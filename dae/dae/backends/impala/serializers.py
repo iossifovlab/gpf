@@ -237,22 +237,32 @@ def read_inheritance(stream):
     return out
 
 
-Serializer = namedtuple("Serializer", ["serialize", "deserialize"])
-StringSerializer = Serializer(write_string, read_string)
-IntSerializer = Serializer(write_int32, read_int32)
-Int8Serializer = Serializer(write_int8, read_int8)
-SignedInt8Serializer = Serializer(write_int8_signed, read_int8_signed)
-# NpInt64Serializer = Serializer(write_np_int64, read_np_int64)
-FloatSerializer = Serializer(write_float, read_float)
-VariantTypeSerializer = Serializer(write_enum, read_variant_type)
-StringListSerializer = Serializer(write_string_list, read_string_list)
-GenotypeSerializer = Serializer(write_genotype, read_genotype)
-BestStateserializer = Serializer(write_best_state, read_best_state)
-GeneticModelSerializer = Serializer(write_enum, read_genetic_model)
-TransmissionTypeSerializer = Serializer(write_enum, read_transmission_type)
-InSexesSerializer = Serializer(write_enum_list, read_in_sexes)
-InRolesSerializer = Serializer(write_big_enum_list, read_in_roles)
-InheritanceSerializer = Serializer(write_big_enum_list, read_inheritance)
+Serializer = namedtuple("Serializer", ["serialize", "deserialize", "type"])
+StringSerializer = Serializer(write_string, read_string, "string")
+IntSerializer = Serializer(write_int32, read_int32, "int32")
+Int8Serializer = Serializer(write_int8, read_int8, "int8")
+SignedInt8Serializer = Serializer(
+    write_int8_signed, read_int8_signed, "int8 signed")
+# NpInt64Serializer = Serializer(write_np_int64, read_np_int64, "numpy_int64")
+FloatSerializer = Serializer(write_float, read_float, "float")
+VariantTypeSerializer = Serializer(
+    write_enum, read_variant_type, "variant type")
+StringListSerializer = Serializer(
+    write_string_list, read_string_list, "string list")
+GenotypeSerializer = Serializer(
+    write_genotype, read_genotype, "genotype")
+BestStateserializer = Serializer(
+    write_best_state, read_best_state, "best state")
+GeneticModelSerializer = Serializer(
+    write_enum, read_genetic_model, "genetic model")
+TransmissionTypeSerializer = Serializer(
+    write_enum, read_transmission_type, "transmission type")
+InSexesSerializer = Serializer(
+    write_enum_list, read_in_sexes, "in sexes")
+InRolesSerializer = Serializer(
+    write_big_enum_list, read_in_roles, "in roles")
+InheritanceSerializer = Serializer(
+    write_big_enum_list, read_inheritance, "inheritance")
 
 
 class AlleleParquetSerializer:
@@ -579,3 +589,10 @@ class AlleleParquetSerializer:
                 else:
                     result[k].append(v[0])
         return result
+
+    def describe_blob_schema(self):
+        schema_description = dict()
+        for property_serializers in self.property_serializers_list:
+            for prop, serializer in property_serializers.items():
+                schema_description[prop] = serializer.type
+        return schema_description
