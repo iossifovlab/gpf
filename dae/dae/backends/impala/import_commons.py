@@ -27,12 +27,16 @@ from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.utils.dict_utils import recursive_dict_update
 
 
-def save_study_config(dae_config, study_id, study_config):
+def save_study_config(dae_config, study_id, study_config, force=False):
     dirname = os.path.join(dae_config.studies_db.dir, study_id)
     filename = os.path.join(dirname, "{}.conf".format(study_id))
 
     if os.path.exists(filename):
         print("configuration file already exists:", filename)
+        if not force:
+            print("skipping overwring the old config file...")
+            return
+
         new_name = os.path.basename(filename) + "." + str(time.time_ns())
         new_path = os.path.join(os.path.dirname(filename), new_name)
         print(f"Backing up configuration for {study_id} in {new_path}")
