@@ -61,6 +61,15 @@ def parse_cli_arguments(argv, gpf_instance):
         help="Optional study configuration to use instead of default"
     )
 
+    parser.add_argument(
+        "--force", "-F",
+        dest="force",
+        action="store_true",
+        help="allows overwriting configuration file in case "
+        "target directory already contains such file",
+        default=False
+    )
+
     argv = parser.parse_args(argv)
     return argv
 
@@ -83,16 +92,13 @@ def main(argv=sys.argv[1:], gpf_instance=None):
 
     assert os.path.exists(argv.variants)
     if os.path.isdir(argv.variants) and os.path.exists(
-        os.path.join(argv.variants, "_PARTITION_DESCRIPTION")
-    ):
+        os.path.join(argv.variants, "_PARTITION_DESCRIPTION")):
 
         study_config = genotype_storage.impala_load_dataset(
-            argv.study_id, argv.variants, argv.pedigree
-        )
+            argv.study_id, argv.variants, argv.pedigree)
     else:
         study_config = genotype_storage.impala_load_study(
-            argv.study_id, [argv.variants], [argv.pedigree]
-        )
+            argv.study_id, [argv.variants], [argv.pedigree])
 
     if argv.study_config:
         input_config = GPFConfigParser.load_config_raw(argv.study_config)
@@ -100,7 +106,9 @@ def main(argv=sys.argv[1:], gpf_instance=None):
 
     study_config = StudyConfigBuilder(study_config).build_config()
     assert study_config is not None
-    save_study_config(gpf_instance.dae_config, argv.study_id, study_config)
+    save_study_config(
+        gpf_instance.dae_config, argv.study_id, study_config,
+        force=argv.force)
 
 
 if __name__ == "__main__":
