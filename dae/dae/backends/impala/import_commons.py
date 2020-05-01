@@ -649,7 +649,7 @@ class MakefileGenerator:
         ]
 
         if argv.study_config:
-            command.append(f"--study-config {argv.study_config}")
+            command.append(f"--study-config ./{self.study_id}.conf")
 
         return " ".join(command)
 
