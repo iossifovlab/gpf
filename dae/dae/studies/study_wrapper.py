@@ -670,8 +670,13 @@ class StudyWrapper(object):
             StudyWrapper._present_in_child_to_roles(present_in_child))
         roles_query.append(
             StudyWrapper._present_in_parent_to_roles(present_in_parent))
-
-        roles_query = AndNode(roles_query)
+        roles_query = list(filter(lambda rq: rq is not None, roles_query))
+        if len(roles_query) == 2:
+            roles_query = AndNode(roles_query)
+        elif len(roles_query) == 1:
+            roles_query = roles_query[0]
+        else:
+            roles_query = None
 
         StudyWrapper._add_roles_to_query(roles_query, kwargs)
 
@@ -735,6 +740,10 @@ class StudyWrapper(object):
                     NotNode(ContainsNode(Role.sib)),
                 ]
             ))
+        if len(roles_query) == 4 or len(roles_query) == 0:
+            return None
+        if len(roles_query) == 1:
+            return roles_query[0]
         return OrNode(roles_query)
 
     @staticmethod
@@ -769,6 +778,10 @@ class StudyWrapper(object):
                             NotNode(ContainsNode(Role.mom)),
                         ]
                     ))
+        if len(roles_query) == 4 or len(roles_query) == 0:
+            return None
+        if len(roles_query) == 1:
+            return roles_query[0]
         return OrNode(roles_query)
 
 
