@@ -673,6 +673,7 @@ class ImpalaFamilyVariants:
                 self._build_iterable_string_attr_where("family_id", family_ids)
             )
         if person_ids is not None:
+            person_ids = set(person_ids) & set(self.families.persons.keys())
             where.append(
                 self._build_iterable_string_attr_where(
                     "variant_in_members", person_ids
