@@ -149,7 +149,7 @@ def test_tabix_sequential_access_reset_long_jump_ahead(score_file, mocker):
 
 @pytest.mark.parametrize(
     "chrom,pos_start,pos_end,count",
-    [("7", 20000, 20000, 1), ("7", 19999, 20000, 1), ("7", 19999, 20005, 5),],
+    [("7", 20000, 20000, 1), ("7", 19999, 20000, 1), ("7", 19999, 20005, 5)],
 )
 def test_tabix_sequential_access_na_values(
     score_file, chrom, pos_start, pos_end, count
@@ -200,3 +200,23 @@ def test_aggregation_correctness(score_file):
     res = score_file.fetch_scores_df("1", 10937, 10939)
     print(res)
     assert sum(res["COUNT"]) == 3
+
+
+def test_fetch_highest_scores():
+    score_filename = relative_to_this_test_folder(
+        "fixtures/TESTCADD/TESTwhole_genome_SNVs.tsv.gz"
+    )
+    config_filename = relative_to_this_test_folder(
+        "fixtures/TESTCADD/TESTwhole_genome_SNVs.tsv.gz.conf"
+    )
+
+    score = ScoreFile(score_filename, config_filename)
+    highest_scores = score.fetch_highest_scores("1", 10914, 10923)
+
+    assert highest_scores == {
+        "RawScore": 0.558206,
+        "PHRED": 8.178,
+        "TEST": 3,
+        "TEST2": 10,
+        "TEST3": 30,
+    }
