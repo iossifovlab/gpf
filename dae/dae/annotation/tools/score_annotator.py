@@ -72,12 +72,6 @@ class VariantScoreAnnotatorBase(VariantAnnotatorBase):
                 variant.position,
                 variant.position + len(variant.reference),
             )
-        elif VariantType.is_cnv(variant.variant_type):
-            scores = self.score_file.fetch_scores(
-                variant.chromosome,
-                variant.position,
-                variant.end_position,
-            )
         else:
             print(
                 f"Unexpected variant type in score annotation: "
@@ -85,6 +79,19 @@ class VariantScoreAnnotatorBase(VariantAnnotatorBase):
                 file=sys.stderr,
             )
         return scores
+
+    def _annotate_cnv(self, aline, variant):
+        scores = self.score_file.fetch_highest_scores(
+            variant.chromosome,
+            variant.position,
+            variant.end_position,
+        )
+
+        for score_name in self.score_names:
+            column_name = getattr(self.config.columns, score_name)
+            aline[column_name] = scores.get(
+                score_name, self.score_file.no_score_value
+            )
 
 
 class PositionScoreAnnotator(VariantScoreAnnotatorBase):
@@ -101,13 +108,11 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
         if variant is None:
             self._scores_not_found(aline)
             return
+        elif VariantType.is_cnv(variant.variant_type):
+            self._annotate_cnv(aline, variant)
+            return
 
-        # start = time.time()
         scores = self._fetch_scores(variant)
-        # elapsed = time.time() - start
-        # print(
-        #     f"fetch POS scores {self.score_names} "
-        #     f"for {variant} in {elapsed:.3f} sec")
 
         if not scores:
             self._scores_not_found(aline)
@@ -183,29 +188,18 @@ class NPScoreAnnotator(VariantScoreAnnotatorBase):
 
         return res
 
-    def _aggregate_cnv(self, variant, scores_df):
-        assert VariantType.is_cnv(variant.variant_type)
-        res = dict()
-        for score_name in self.score_names:
-            column_name = getattr(self.config.columns, score_name)
-            res[column_name] = scores_df[score_name].max()
-        return res
-
     def do_annotate(self, aline, variant):
         if variant is None:
             self._scores_not_found(aline)
             return
-        # start = time.time()
-        scores = self._fetch_scores(variant)
-        # elapsed = time.time() - start
-        # print(
-        #     f"fetch  NP scores {self.score_names} "
-        #     f"for {variant} in {elapsed:.3f} sec")
+        elif VariantType.is_cnv(variant.variant_type):
+            self._annotate_cnv(aline, variant)
+            return
 
+        scores = self._fetch_scores(variant)
         if not scores:
             self._scores_not_found(aline)
             return
-
         scores_df = self.score_file.scores_to_dataframe(scores)
 
         if variant.variant_type == VariantType.substitution:
@@ -214,8 +208,6 @@ class NPScoreAnnotator(VariantScoreAnnotatorBase):
             [VariantType.insertion, VariantType.deletion, VariantType.comp]
         ):
             aline.update(self._aggregate_indel(variant, scores_df))
-        elif VariantType.is_cnv(variant.variant_type):
-            aline.update(self._aggregate_cnv(variant, scores_df))
         else:
             print(
                 "Unexpected variant type: {}, {}".format(

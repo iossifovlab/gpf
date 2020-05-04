@@ -168,6 +168,24 @@ class ScoreFile(object):
                 result[column].append(line[index])
         return result
 
+    def fetch_highest_scores(self, chrom, pos_begin, pos_end):
+        result = dict()
+
+        stripped_chrom = handle_chrom_prefix(self.chr_prefix, chrom)
+
+        for line in self.accessor.direct_infile.fetch(
+            stripped_chrom, pos_begin - 1, pos_end, parser=pysam.asTuple()
+        ):
+            line = LineAdapter(self.accessor.score_file, line)
+            for column in self.score_names:
+                score_index = self.schema.col_names.index(column)
+                score_value = float(line[score_index]) \
+                    if str.lower(line[score_index]) \
+                    != self.config.general.no_score_value else np.nan
+                result[column] = max(score_value, result.get(column, np.nan))
+
+        return result
+
 
 class LineBufferAdapter(object):
     def __init__(self, score_file, access):
