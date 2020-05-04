@@ -173,18 +173,27 @@ class ScoreFile(object):
 
         stripped_chrom = handle_chrom_prefix(self.chr_prefix, chrom)
 
-        for line in self.accessor.direct_infile.fetch(
-            stripped_chrom, pos_begin - 1, pos_end, parser=pysam.asTuple()
-        ):
-            line = LineAdapter(self.accessor.score_file, line)
-            for column in self.score_names:
-                score_index = self.schema.col_names.index(column)
-                score_value = float(line[score_index]) \
-                    if str.lower(line[score_index]) \
-                    != self.config.general.no_score_value else np.nan
-                result[column] = max(score_value, result.get(column, np.nan))
+        try:
+            for line in self.accessor.direct_infile.fetch(
+                    stripped_chrom, pos_begin - 1, pos_end,
+                    parser=pysam.asTuple()):
+                line = LineAdapter(self.accessor.score_file, line)
+                for column in self.score_names:
+                    score_index = self.schema.col_names.index(column)
+                    score_value = float(line[score_index]) \
+                        if str.lower(line[score_index]) \
+                        != self.config.general.no_score_value else np.nan
+                    result[column] = max(score_value, result.get(column, np.nan))
+            return result
 
-        return result
+        except ValueError as ex:
+            print(
+                f"could not find region {chrom}:{pos_begin}-{pos_end} "
+                f"in {self.score_filename}: ",
+                ex,
+                file=sys.stderr,
+            )
+            return result
 
 
 class LineBufferAdapter(object):
