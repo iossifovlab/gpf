@@ -96,10 +96,21 @@ class PersonSetCollection(NamedTuple):
             if person.person_id in person_set.persons:
                 return person_set.color
 
-        assert False, (
+        print(
             f"Person '{person.person_id}' could not be found in any"
             f" domain of '{person_set_collection.id}'!"
         )
+        return "#AAAAAA"
+
+    @staticmethod
+    def remove_empty_person_sets(person_set_collection):
+        empty_person_sets = set()
+        for set_id, person_set in person_set_collection.person_sets.items():
+            if len(person_set.persons) == 0:
+                empty_person_sets.add(set_id)
+        for set_id in empty_person_sets:
+            del person_set_collection.person_sets[set_id]
+        return person_set_collection
 
     @staticmethod
     def from_families(
@@ -150,7 +161,8 @@ class PersonSetCollection(NamedTuple):
                 person_id
             ] = person
 
-        return person_set_collection
+        return PersonSetCollection.remove_empty_person_sets(
+            person_set_collection)
 
     @staticmethod
     def compose(*person_set_collections, id=None, name="composite collection"):

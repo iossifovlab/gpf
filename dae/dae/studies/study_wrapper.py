@@ -573,17 +573,10 @@ class StudyWrapper(object):
                 selected_person_set_ids:
             return kwargs
 
-        person_ids = set()
-        for set_id in selected_person_set_ids:
-            person_ids.update(
-                person_set_collection.person_sets[set_id].persons.keys()
-            )
-
-        if "person_ids" in kwargs:
-            person_ids.intersection(set(kwargs["person_ids"]))
-
-        kwargs["person_ids"] = list(person_ids)
-
+        person_set_collection_query = (
+            person_set_collection_id, selected_person_set_ids
+        )
+        kwargs["person_set_collection"] = person_set_collection_query
         return kwargs
 
     def _transform_genomic_scores(self, kwargs):

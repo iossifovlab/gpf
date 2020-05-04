@@ -1,4 +1,4 @@
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import functools
 from typing import Dict
 from dae.pedigrees.family import FamiliesData
@@ -36,6 +36,7 @@ class GenotypeData:
         effect_types=None,
         family_ids=None,
         person_ids=None,
+        person_set_collection=None,
         inheritance=None,
         roles=None,
         sexes=None,
@@ -120,6 +121,7 @@ class GenotypeDataGroup(GenotypeData):
             effect_types=None,
             family_ids=None,
             person_ids=None,
+            person_set_collection=None,
             inheritance=None,
             roles=None,
             sexes=None,
@@ -136,21 +138,22 @@ class GenotypeDataGroup(GenotypeData):
 
         def get_variants(genotype_data_study):
             return genotype_data_study.query_variants(
-                regions,
-                genes,
-                effect_types,
-                family_ids,
-                person_ids,
-                inheritance,
-                roles,
-                sexes,
-                variant_type,
-                real_attr_filter,
-                ultra_rare,
-                return_reference,
-                return_unknown,
-                limit,
-                study_filters,
+                regions=regions,
+                genes=genes,
+                effect_types=effect_types,
+                family_ids=family_ids,
+                person_ids=person_ids,
+                person_set_collection=person_set_collection,
+                inheritance=inheritance,
+                roles=roles,
+                sexes=sexes,
+                variant_type=variant_type,
+                real_attr_filter=real_attr_filter,
+                ultra_rare=ultra_rare,
+                return_reference=return_reference,
+                return_unknown=return_unknown,
+                limit=limit,
+                study_filters=study_filters,
                 **kwargs,
             )
 
@@ -159,14 +162,14 @@ class GenotypeDataGroup(GenotypeData):
             variants_futures.append(future)
 
         seen = set()
-        for future in variants_futures:
+        for future in as_completed(variants_futures):
             for v in future.result():
                 if v.fvuid in seen:
                     continue
                 seen.add(v.fvuid)
                 yield v
                 if limit and len(seen) >= limit:
-                    break
+                    return
 
     def get_studies_ids(self):
         # TODO Use the 'cached' property on this
@@ -231,6 +234,7 @@ class GenotypeDataStudy(GenotypeData):
             effect_types=None,
             family_ids=None,
             person_ids=None,
+            person_set_collection=None,
             inheritance=None,
             roles=None,
             sexes=None,
@@ -252,6 +256,12 @@ class GenotypeDataStudy(GenotypeData):
         if study_filters and self.name not in study_filters:
             return
 
+        person_ids = self._transform_person_set_collectino_query(
+            person_set_collection, person_ids)
+
+        if person_ids is not None and len(person_ids) == 0:
+            return
+
         for variant in self._backend.query_variants(
             regions=regions,
             genes=genes,
@@ -271,6 +281,33 @@ class GenotypeDataStudy(GenotypeData):
             for allele in variant.alleles:
                 allele.update_attributes({"studyName": self.name})
             yield variant
+
+    def _transform_person_set_collectino_query(
+            self, person_set_collection, person_ids):
+        if person_set_collection is not None:
+            person_set_collection_id, selected_person_sets = \
+                person_set_collection
+            selected_person_sets = set(selected_person_sets)
+            person_set_collection = self.get_person_set_collection(
+                person_set_collection_id)
+            person_set_ids = set(person_set_collection.person_sets.keys())
+            selected_person_sets = person_set_ids & selected_person_sets
+
+            if selected_person_sets == person_set_ids:
+                # all persons selected
+                pass
+            else:
+                selected_person_ids = set()
+                for set_id in selected_person_sets:
+                    selected_person_ids.update(
+                        person_set_collection.
+                        person_sets[set_id].persons.keys()
+                    )
+                if person_ids is not None:
+                    person_ids = set(person_ids) & selected_person_ids
+                else:
+                    person_ids = selected_person_ids
+        return person_ids
 
     def get_studies_ids(self):
         return [self.id]
