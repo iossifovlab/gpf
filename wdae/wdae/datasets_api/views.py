@@ -27,7 +27,12 @@ class DatasetView(QueryBaseView):
     def get(self, request, dataset_id=None):
         user = request.user
         if dataset_id is None:
-            datasets = self.variants_db.get_all_genotype_data_wrappers()
+            datasets = [
+                self.variants_db.get_wdae_wrapper(genotype_data_id)
+                for genotype_data_id
+                in (self.variants_db.dae_config.gpfjs.selected_genotype_data or
+                    self.gpf_instance.get_genotype_data_ids())
+            ]
             res = sorted(
                 list(
                     dataset.get_genotype_data_group_description()
