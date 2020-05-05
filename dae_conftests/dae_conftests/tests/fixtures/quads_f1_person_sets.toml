@@ -12,6 +12,7 @@ status.domain = [
 role.id = "role"
 role.name = "Role"
 role.source.pedigree.column = "role"
+role.default = {id = "unknown", name = "Unknown", value = "unknown", color="#ffffff"}
 role.domain = [
    {id = "mom", name = "Mother", value = "mom", color = "#ffffff"},
    {id = "dad", name = "Father", value = "dad", color = "#ffffff"},

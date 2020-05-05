@@ -183,6 +183,9 @@ def test_collection_merging_ordering(fixture_dirname):
         fixture_dirname("quads_f1_person_sets_extended_roles.toml")
     )
 
+    filename = fixture_dirname("studies/quads_f1/data/quads_f1.ped")
+    print(filename)
+
     quads_f1_families = FamiliesLoader(
         fixture_dirname("studies/quads_f1/data/quads_f1.ped")
     ).load()
@@ -207,5 +210,6 @@ def test_collection_merging_ordering(fixture_dirname):
         "mom",
         "prb",
         "sib",
+        "unknown",
         "z_new_role_last",
     ]
