@@ -52,9 +52,7 @@ def test_from_pedigree(fixture_dirname):
         status_collection.person_sets["affected"].persons.keys()
     )
     assert result_person_ids == {
-        "prb1",
-        "sib1",
-        "sib2",
+        'prb2', 'sib2_3', 'sib2', 'prb1', 'sib1'
     }
 
 
@@ -147,12 +145,10 @@ def test_genotype_group_person_sets_overlapping(variants_db_fixture):
 
 
 def test_genotype_group_person_sets_subset(variants_db_fixture):
-    genotype_data_group_config = variants_db_fixture.get_genotype_data_group_config(
-        "person_sets_dataset_1"
-    )
+    genotype_data_group_config = variants_db_fixture.\
+        get_genotype_data_group_config("person_sets_dataset_1")
     genotype_data_group = variants_db_fixture.make_genotype_data_group(
-        genotype_data_group_config
-    )
+        genotype_data_group_config)
 
     # Remove a person to simulate a subset of people being used
     del genotype_data_group.families.persons["person4"]
