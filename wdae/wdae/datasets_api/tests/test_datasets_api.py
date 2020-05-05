@@ -64,3 +64,20 @@ def test_user_client_get_nonexistant_dataset_details(
 
     assert response
     assert response.status_code == 400
+
+
+def test_datasets_api_get_all_with_selected_restriction(
+    admin_client, mocker, wdae_gpf_instance
+):
+    gpfjs_dae_config_section = wdae_gpf_instance._variants_db.dae_config.gpfjs
+    mocker.patch.object(
+        gpfjs_dae_config_section,
+        "selected_genotype_data",
+        ["quads_f1", "quads_f2", "f1_group"]
+    )
+
+    response = admin_client.get("/api/v3/datasets")
+
+    assert response
+    assert response.status_code == 200
+    assert len(response.data["data"]) == 3
