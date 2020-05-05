@@ -99,6 +99,10 @@ dae_conf_schema = {
     "gpfjs": {
         "type": "dict",
         "schema": {
+            "selected_genotype_data": {
+                "type": "list",
+                "schema": {"type": "string"}
+            },
             "permission_denied_prompt_file": {
                 "type": "string",
                 "check_with": validate_existing_path,
