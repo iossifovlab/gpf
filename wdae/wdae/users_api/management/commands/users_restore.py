@@ -1,4 +1,5 @@
 import csv
+import os
 from users_api.models import WdaeUser
 from django.core.management.base import BaseCommand, CommandError
 from .import_base import ImportUsersBase
@@ -8,16 +9,21 @@ class Command(ImportUsersBase, BaseCommand):
     args = "<file>"
     help = (
         "Deletes all users and adds new ones from csv. "
-        "Required column names for the csv file - Email."
+        "Required column names for the csv file - Email. "
         "Optional column names - Groups, Name, Password"
     )
 
+    def add_arguments(self, parser):
+        parser.add_argument('file', type=str)
+
     def handle(self, *args, **options):
-        if len(args) != 1:
-            raise CommandError("Exactly one argument is required")
+        print(args, options)
+
+        csvfilename = options["file"]
+        assert os.path.exists(csvfilename)
 
         try:
-            with open(args[0], "rb") as csvfile:
+            with open(csvfilename, "rt") as csvfile:
                 resreader = csv.DictReader(csvfile)
                 WdaeUser.objects.all().delete()
                 for res in resreader:
