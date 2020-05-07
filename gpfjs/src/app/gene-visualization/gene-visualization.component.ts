@@ -9,12 +9,10 @@ import { GeneVisualizationService } from './gene-visualization.service';
 })
 export class GeneVisualizationComponent implements OnInit {
   gene;
+
   svgElement;
   svgWidth = 1000;
   svgHeight = 150;
-
-  exonAndIntronLengths: number[];
-  totalLength: number;
 
   constructor(
     private geneVisualizationService: GeneVisualizationService,
