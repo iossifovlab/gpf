@@ -333,3 +333,16 @@ def composite_dataset(variants_db_fixture, genotype_data_group_configs):
 @pytest.fixture(scope="session")
 def composite_dataset_wrapper(composite_dataset, pheno_db, gene_weights_db):
     return StudyWrapper(composite_dataset, pheno_db, gene_weights_db)
+
+
+@pytest.fixture
+def fake_study_wrapper(
+    variants_db_fixture,
+    genotype_data_study_configs,
+    pheno_db,
+    gene_weights_db
+):
+    fake_study = load_study(
+        variants_db_fixture, genotype_data_study_configs, "fake_study"
+    )
+    return StudyWrapper(fake_study, pheno_db, gene_weights_db)
