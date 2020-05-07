@@ -148,6 +148,7 @@ import { SaveQueryComponent } from './save-query/save-query.component';
 import { SavedQueriesTableComponent } from './saved-queries-table/saved-queries-table.component';
 import { SavedQueriesComponent } from './saved-queries/saved-queries.component';
 import { InheritancetypesComponent } from './inheritancetypes/inheritancetypes.component';
+import { GeneVisualizationComponent } from './gene-visualization/gene-visualization.component';
 
 const appRoutes: Routes = [
   {
@@ -188,6 +189,10 @@ const appRoutes: Routes = [
       {
         path: 'commonReport',
         component: VariantReportsComponent
+      },
+      {
+        path: 'geneVisualization',
+        component: GeneVisualizationComponent
       }
     ]
   },
@@ -332,6 +337,7 @@ const appRoutes: Routes = [
     SavedQueriesTableComponent,
     SavedQueriesComponent,
     InheritancetypesComponent,
+    GeneVisualizationComponent,
   ],
   imports: [
     BrowserModule,
