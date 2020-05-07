@@ -36,9 +36,9 @@ FILTER_QUERY_ORDINAL = {
 @pytest.mark.parametrize(
     "pheno_query,variants_count",
     [
-        ([FILTER_QUERY_CATEGORICAL], 2),
-        ([FILTER_QUERY_CONTINUOUS], 2),
-        ([FILTER_QUERY_CATEGORICAL, FILTER_QUERY_CONTINUOUS], 2),
+        ([FILTER_QUERY_CATEGORICAL], 3),
+        ([FILTER_QUERY_CONTINUOUS], 3),
+        ([FILTER_QUERY_CATEGORICAL, FILTER_QUERY_CONTINUOUS], 3),
     ],
 )
 def test_query_with_pheno_filters_work(
@@ -63,9 +63,9 @@ def test_query_with_pheno_filters_and_people_ids_filter(
     variants = quads_f1_genotype_data_group_wrapper.query_variants(
         phenoFilters=pheno_query, person_ids=["mom1"]
     )
-    variants = list(variants)
 
-    assert len(variants) == 0
+    variants = list(variants)
+    assert len(variants) == 1
 
 
 def test_query_with_bogus_pheno_filters_is_ignored(
@@ -89,4 +89,32 @@ def test_query_with_query_not_in_config_passes(
     )
     variants = list(variants)
 
-    assert len(variants) == 2
+    assert len(variants) == 3
+
+
+def test_query_with_categorical_filter_opposing_roles(fake_study_wrapper):
+    """If the filters are implemented properly, family "f1"
+    whose dad and mom match the filters below should be
+    used in the query, returning at least one variant belonging to "f1.prb"
+    """
+
+    categorical_filters = [
+        {
+            "id": "Categorical",
+            "measureType": "categorical",
+            "role": "dad",
+            "measure": "i1.m5",
+            "selection": {"selection": ["catB"]},
+        },
+        {
+            "id": "Categorical",
+            "measureType": "categorical",
+            "role": "mom",
+            "measure": "i1.m5",
+            "selection": {"selection": ["catA"]},
+        }
+    ]
+    variants = list(
+        fake_study_wrapper.query_variants(phenoFilters=categorical_filters)
+    )
+    assert len(variants)

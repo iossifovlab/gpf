@@ -1,7 +1,7 @@
 import math
-import functools
 import itertools
 import traceback
+from functools import reduce
 from copy import deepcopy
 
 from dae.utils.variant_utils import mat2str
@@ -25,14 +25,12 @@ from dae.variants.attributes import Role, Inheritance
 
 from dae.backends.attributes_query import (
     role_query,
-    inheritance_query,
     variant_type_converter,
     sex_converter,
     AndNode,
     NotNode,
     OrNode,
     ContainsNode,
-    EqualsNode,
 )
 from dae.studies.study import GenotypeDataGroup
 
@@ -102,8 +100,7 @@ class StudyWrapper(object):
 
         collections_conf = self.config.person_set_collections
         if collections_conf and collections_conf.selected_person_set_collections:
-            for collection_id in \
-                    collections_conf.selected_person_set_collections:
+            for collection_id in collections_conf.selected_person_set_collections:
                 self.legend[collection_id] = \
                     self.person_set_collection_configs[collection_id]["domain"]
         # PREVIEW AND DOWNLOAD COLUMNS
@@ -407,7 +404,7 @@ class StudyWrapper(object):
                 del kwargs["studyFilters"]
 
         if "phenoFilters" in kwargs:
-            kwargs = self._transform_pheno_filter(kwargs)
+            kwargs = self._transform_pheno_filters(kwargs)
             if kwargs is None:
                 return
 
@@ -423,7 +420,6 @@ class StudyWrapper(object):
         variants_from_studies = itertools.islice(
             self.genotype_data_study.query_variants(**kwargs), limit
         )
-
         for variant in self._add_additional_columns(variants_from_studies):
             yield variant
 
@@ -537,21 +533,6 @@ class StudyWrapper(object):
 
         return result
 
-    def _merge_with_people_ids(self, kwargs, people_ids_to_query):
-        people_ids_filter = kwargs.pop("person_ids", None)
-        result = people_ids_to_query
-        if people_ids_filter is not None:
-            result = people_ids_to_query.intersection(people_ids_filter)
-
-        return result
-
-    def _get_pheno_filter_constraints(self, pheno_filter):
-        measure_type = MeasureType.from_str(pheno_filter["measureType"])
-        selection = pheno_filter["selection"]
-        if measure_type in (MeasureType.continuous, MeasureType.ordinal):
-            return tuple([selection["min"], selection["max"]])
-        return set(selection["selection"])
-
     def _add_people_with_people_group(self, kwargs):
 
         # TODO Rename peopleGroup kwarg to person_set_collections
@@ -641,7 +622,6 @@ class StudyWrapper(object):
 
         kwargs["real_attr_filter"].append((value, value_range))
 
-
     @staticmethod
     def _transform_present_in_child_and_present_in_parent(kwargs):
         if "presentInChild" in kwargs:
@@ -651,7 +631,8 @@ class StudyWrapper(object):
             present_in_child = set()
 
         if "presentInParent" in kwargs:
-            present_in_parent = set(kwargs["presentInParent"]["presentInParent"])
+            present_in_parent = \
+                set(kwargs["presentInParent"]["presentInParent"])
             rarity = kwargs["presentInParent"].get("rarity", None)
             kwargs.pop("presentInParent")
         else:
@@ -777,7 +758,6 @@ class StudyWrapper(object):
             return roles_query[0]
         return OrNode(roles_query)
 
-
     @staticmethod
     def _transform_present_in_parent(kwargs):
         roles_query = []
@@ -866,8 +846,16 @@ class StudyWrapper(object):
 
         self._add_roles_to_query(OrNode(roles_query), kwargs)
 
-    def _transform_pheno_filters_to_people_ids(self, pheno_filter_args):
-        people_ids = []
+    def _get_pheno_filter_constraints(self, pheno_filter):
+        measure_type = MeasureType.from_str(pheno_filter["measureType"])
+        selection = pheno_filter["selection"]
+        if measure_type in (MeasureType.continuous, MeasureType.ordinal):
+            return tuple([selection["min"], selection["max"]])
+        return set(selection["selection"])
+
+    def _transform_pheno_filters_to_family_ids(self, pheno_filter_args):
+        family_ids = list()
+
         for pheno_filter_arg in pheno_filter_args:
             if not self.phenotype_data.has_measure(
                 pheno_filter_arg["measure"]
@@ -876,44 +864,38 @@ class StudyWrapper(object):
             pheno_constraints = self._get_pheno_filter_constraints(
                 pheno_filter_arg
             )
-
             pheno_filter = self.pheno_filter_builder.make_filter(
                 pheno_filter_arg["measure"], pheno_constraints
             )
-
             measure_df = self.phenotype_data.get_measure_values_df(
                 pheno_filter_arg["measure"], roles=[pheno_filter_arg["role"]]
             )
-
             measure_df = pheno_filter.apply(measure_df)
+            family_ids.append(set(
+                self.families.persons[person_id].family.family_id
+                for person_id in measure_df["person_id"]
+                if person_id in self.families.persons
+            ))
 
-            people_ids.append(set(measure_df["person_id"]))
+        return reduce(set.intersection, family_ids) if family_ids else set()
 
-        if not people_ids:
-            return set()
-
-        return functools.reduce(set.intersection, people_ids)
-
-    def _transform_pheno_filter(self, kwargs):
+    def _transform_pheno_filters(self, kwargs):
         pheno_filter_args = kwargs.pop("phenoFilters")
 
         assert isinstance(pheno_filter_args, list)
         assert self.phenotype_data
 
-        people_ids_to_query = self._transform_pheno_filters_to_people_ids(
+        matching_family_ids = self._transform_pheno_filters_to_family_ids(
             pheno_filter_args
         )
-        people_ids_to_query = self._merge_with_people_ids(
-            kwargs, people_ids_to_query
-        )
 
-        if len(people_ids_to_query) == 0:
-            return None
-        assert not kwargs.get(
-            "person_ids"
-        ), "Rethink how to combine person ids"
-        kwargs["person_ids"] = people_ids_to_query
+        if "family_ids" in kwargs:
+            kwarg_family_ids = kwargs.pop("family_ids")
+            matching_family_ids = set.intersection(
+                matching_family_ids, set(kwarg_family_ids)
+            )
 
+        kwargs["family_ids"] = matching_family_ids
         return kwargs
 
     @staticmethod
