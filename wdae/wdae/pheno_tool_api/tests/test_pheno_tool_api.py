@@ -16,7 +16,7 @@ QUERY = {
     "datasetId": "fake_study",
     "measureId": "i1.m1",
     "normalizeBy": [],
-    "presentInParent": {"presentInParent": ["neither"],},
+    "presentInParent": {"presentInParent": ["neither"]},
     "effectTypes": ["missense", "frame-shift", "synonymous"],
 }
 

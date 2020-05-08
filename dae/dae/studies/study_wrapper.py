@@ -64,10 +64,8 @@ class StudyWrapper(object):
         # PHENO
         pheno_column_slots = []
         if genotype_browser_config.pheno:
-            for (
-                col_id,
-                pheno_col,
-            ) in genotype_browser_config.pheno.field_values_iterator():
+            for col_id, pheno_col \
+                 in genotype_browser_config.pheno.field_values_iterator():
                 for slot in pheno_col.slots:
                     slot = GPFConfigParser.modify_tuple(
                         slot, {"id": f"{col_id}.{slot.name}"}
