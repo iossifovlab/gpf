@@ -28,7 +28,7 @@ def dae2vcf_variant(chrom, position, var, genome):
     raise NotImplementedError("weird variant: " + var)
 
 
-def split_iterable(iterable, max_chunk_length=5000):
+def split_iterable(iterable, max_chunk_length=50):
     i = 0
     result = []
 

@@ -1,6 +1,10 @@
-from concurrent.futures import ThreadPoolExecutor, as_completed
+import time
 import functools
+
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
 from typing import Dict
+
 from dae.pedigrees.family import FamiliesData
 from dae.person_sets import PersonSetCollection
 
@@ -159,10 +163,13 @@ class GenotypeDataGroup(GenotypeData):
 
         for genotype_data_study in self.studies:
             future = self.executor.submit(get_variants, genotype_data_study)
+            future.study_id = genotype_data_study.id
+
             variants_futures.append(future)
 
         seen = set()
         for future in as_completed(variants_futures):
+            started = time.time()
             for v in future.result():
                 if v.fvuid in seen:
                     continue
@@ -170,6 +177,10 @@ class GenotypeDataGroup(GenotypeData):
                 yield v
                 if limit and len(seen) >= limit:
                     return
+            elapsed = time.time() - started
+            print(
+                "processing study", future.study_id,
+                f"elapsed: {elapsed:.3f}")
 
     def get_studies_ids(self):
         # TODO Use the 'cached' property on this

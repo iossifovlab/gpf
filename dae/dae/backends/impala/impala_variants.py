@@ -183,8 +183,6 @@ class ImpalaFamilyVariants:
             return_unknown=None,
             limit=None):
 
-        print("query_variants: inheritance=", inheritance)
-
         if not self.variant_table:
             return None
 
