@@ -27,19 +27,34 @@ class DatasetView(QueryBaseView):
     def get(self, request, dataset_id=None):
         user = request.user
         if dataset_id is None:
-            datasets = [
-                self.variants_db.get_wdae_wrapper(genotype_data_id)
-                for genotype_data_id
-                in (self.variants_db.dae_config.gpfjs.selected_genotype_data or
-                    self.gpf_instance.get_genotype_data_ids())
-            ]
-            res = sorted(
-                list(
+            selected_genotype_data = \
+                self.variants_db.dae_config.gpfjs.selected_genotype_data
+            if selected_genotype_data is not None:
+
+                datasets = [
+                    self.variants_db.get_wdae_wrapper(genotype_data_id)
+                    for genotype_data_id
+                    in selected_genotype_data
+                ]
+                assert all([d is not None for d in datasets]), \
+                    selected_genotype_data
+                res = list(
                     dataset.get_genotype_data_group_description()
                     for dataset in datasets
-                ),
-                key=lambda dataset: dataset["name"],
-            )
+                )
+            else:
+                datasets = [
+                    self.variants_db.get_wdae_wrapper(genotype_data_id)
+                    for genotype_data_id
+                    in self.gpf_instance.get_genotype_data_ids()]
+
+                res = sorted(
+                    list(
+                        dataset.get_genotype_data_group_description()
+                        for dataset in datasets
+                    ),
+                    key=lambda dataset: dataset["name"],
+                )
 
             res = [self.augment_accessibility(ds, user) for ds in res]
             res = [self.augment_with_groups(ds) for ds in res]
