@@ -64,10 +64,8 @@ class PhenoToolHelper(object):
     def pheno_filter_persons(self, pheno_filters):
         if not pheno_filters:
             return None
-
         assert isinstance(pheno_filters, list)
-
-        return self.genotype_data._transform_pheno_filters_to_people_ids(
+        return self.genotype_data._transform_pheno_filters_to_family_ids(
             pheno_filters
         )
 
@@ -119,7 +117,8 @@ class PhenoTool(object):
     """
 
     def __init__(
-        self, phenotype_data, measure_id, person_ids=None, normalize_by=[]
+        self, phenotype_data, measure_id, person_ids=None, family_ids=None,
+        normalize_by=[],
     ):
 
         self.phenotype_data = phenotype_data
@@ -137,7 +136,10 @@ class PhenoTool(object):
         all_measures = [self.measure_id] + self.normalize_by
 
         pheno_df = self.phenotype_data.get_persons_values_df(
-            all_measures, person_ids=person_ids, roles=[Role.prb]
+            all_measures,
+            person_ids=person_ids,
+            family_ids=family_ids,
+            roles=[Role.prb]
         )
 
         self.pheno_df = pheno_df.dropna()

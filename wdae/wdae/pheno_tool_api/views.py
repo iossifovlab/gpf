@@ -55,19 +55,18 @@ class PhenoToolView(QueryBaseView):
 
         helper = PhenoToolHelper(study_wrapper)
 
-        pheno_filter_persons = helper.pheno_filter_persons(
+        pheno_filter_family_ids = helper.pheno_filter_persons(
             data.get("phenoFilters")
         )
         study_persons = helper.genotype_data_persons(data.get("familyIds", []))
 
         person_ids = set(study_persons)
-        if pheno_filter_persons:
-            person_ids &= set(pheno_filter_persons)
 
         tool = PhenoTool(
             helper.genotype_data.phenotype_data,
             measure_id=data["measureId"],
             person_ids=person_ids,
+            family_ids=pheno_filter_family_ids,
             normalize_by=data["normalizeBy"],
         )
         return helper, tool
