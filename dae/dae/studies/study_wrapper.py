@@ -108,7 +108,7 @@ class StudyWrapper(object):
         def unpack_columns(selected_columns, use_id=True):
             columns, sources = [], []
 
-            def inner(cols):
+            def inner(cols, get_source):
                 cols_dict = cols._asdict()
 
                 for col_id in selected_columns:
@@ -117,7 +117,7 @@ class StudyWrapper(object):
                         continue
                     if col.source is not None:
                         columns.append(col_id if use_id else col.name)
-                        sources.append(col.source)
+                        sources.append(get_source(col))
                     if col.slots is not None:
                         for slot in col.slots:
                             columns.append(
@@ -125,11 +125,17 @@ class StudyWrapper(object):
                                 if use_id
                                 else f"{slot.name}"
                             )
-                            sources.append(slot.source)
+                            sources.append(get_source(slot))
 
-            inner(genotype_browser_config.genotype)
+            inner(
+                genotype_browser_config.genotype,
+                lambda x: f"{x.source}"
+            )
             if genotype_browser_config.pheno:
-                inner(genotype_browser_config.pheno)
+                inner(
+                    genotype_browser_config.pheno,
+                    lambda x: f"{x.source}.{x.role}"
+                )
             return columns, sources
 
         if genotype_browser_config.genotype:
@@ -474,11 +480,13 @@ class StudyWrapper(object):
         pheno_column_dfs = []
 
         for slot in self.pheno_column_slots:
-            kwargs = {"family_ids": list(families)}
-            if slot.role:
-                kwargs["roles"] = [slot.role]
+            assert slot.role
+            kwargs = {
+                "family_ids": list(families),
+                "roles": [slot.role]
+            }
 
-            pheno_column_names.append(slot.source)
+            pheno_column_names.append(f"{slot.source}.{slot.role}")
             pheno_column_dfs.append(
                 self.phenotype_data.get_measure_values_df(
                     slot.source, **kwargs
