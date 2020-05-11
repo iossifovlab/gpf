@@ -274,21 +274,21 @@ class GenotypeDataStudy(GenotypeData):
             return
 
         for variant in self._backend.query_variants(
-            regions=regions,
-            genes=genes,
-            effect_types=effect_types,
-            family_ids=family_ids,
-            person_ids=person_ids,
-            inheritance=inheritance,
-            roles=roles,
-            sexes=sexes,
-            variant_type=variant_type,
-            real_attr_filter=real_attr_filter,
-            ultra_rare=ultra_rare,
-            return_reference=return_reference,
-            return_unknown=return_unknown,
-            limit=limit,
-        ):
+                regions=regions,
+                genes=genes,
+                effect_types=effect_types,
+                family_ids=family_ids,
+                person_ids=person_ids,
+                inheritance=inheritance,
+                roles=roles,
+                sexes=sexes,
+                variant_type=variant_type,
+                real_attr_filter=real_attr_filter,
+                ultra_rare=ultra_rare,
+                return_reference=return_reference,
+                return_unknown=return_unknown,
+                limit=limit):
+
             for allele in variant.alleles:
                 allele.update_attributes({"studyName": self.name})
             yield variant
