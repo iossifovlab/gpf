@@ -1,5 +1,8 @@
-from concurrent.futures import ThreadPoolExecutor, as_completed
+import time
 import functools
+
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
 from typing import Dict
 from dae.pedigrees.family import Family, FamiliesData
 from dae.person_sets import PersonSetCollection
@@ -159,10 +162,13 @@ class GenotypeDataGroup(GenotypeData):
 
         for genotype_data_study in self.studies:
             future = self.executor.submit(get_variants, genotype_data_study)
+            future.study_id = genotype_data_study.id
+
             variants_futures.append(future)
 
         seen = set()
         for future in as_completed(variants_futures):
+            started = time.time()
             for v in future.result():
                 if v.fvuid in seen:
                     continue
@@ -170,6 +176,10 @@ class GenotypeDataGroup(GenotypeData):
                 yield v
                 if limit and len(seen) >= limit:
                     return
+            elapsed = time.time() - started
+            print(
+                "processing study", future.study_id,
+                f"elapsed: {elapsed:.3f}")
 
     def get_studies_ids(self):
         # TODO Use the 'cached' property on this
@@ -262,21 +272,21 @@ class GenotypeDataStudy(GenotypeData):
             return
 
         for variant in self._backend.query_variants(
-            regions=regions,
-            genes=genes,
-            effect_types=effect_types,
-            family_ids=family_ids,
-            person_ids=person_ids,
-            inheritance=inheritance,
-            roles=roles,
-            sexes=sexes,
-            variant_type=variant_type,
-            real_attr_filter=real_attr_filter,
-            ultra_rare=ultra_rare,
-            return_reference=return_reference,
-            return_unknown=return_unknown,
-            limit=limit,
-        ):
+                regions=regions,
+                genes=genes,
+                effect_types=effect_types,
+                family_ids=family_ids,
+                person_ids=person_ids,
+                inheritance=inheritance,
+                roles=roles,
+                sexes=sexes,
+                variant_type=variant_type,
+                real_attr_filter=real_attr_filter,
+                ultra_rare=ultra_rare,
+                return_reference=return_reference,
+                return_unknown=return_unknown,
+                limit=limit):
+
             for allele in variant.alleles:
                 allele.update_attributes({"studyName": self.name})
             yield variant

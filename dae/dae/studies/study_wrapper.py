@@ -97,8 +97,10 @@ class StudyWrapper(object):
         self.legend = {}
 
         collections_conf = self.config.person_set_collections
-        if collections_conf and collections_conf.selected_person_set_collections:
-            for collection_id in collections_conf.selected_person_set_collections:
+        if collections_conf and \
+                collections_conf.selected_person_set_collections:
+            for collection_id in \
+                    collections_conf.selected_person_set_collections:
                 self.legend[collection_id] = \
                     self.person_set_collection_configs[collection_id]["domain"]
         # PREVIEW AND DOWNLOAD COLUMNS
@@ -427,8 +429,12 @@ class StudyWrapper(object):
         for variant in self._add_additional_columns(variants_from_studies):
             yield variant
 
+    STREAMING_CHUNK_SIZE = 100
+
     def _add_additional_columns(self, variants_iterable):
-        for variants_chunk in split_iterable(variants_iterable, 5000):
+        for variants_chunk in split_iterable(
+                variants_iterable, self.STREAMING_CHUNK_SIZE):
+
             families = {variant.family_id for variant in variants_chunk}
 
             pheno_column_values = self._get_all_pheno_values(families)
