@@ -1,0 +1,15 @@
+import { Component } from '@angular/core';
+import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
+
+@Component({
+  selector: 'gpf-global-error-display.component',
+  templateUrl: './global-error-display.component.html',
+  styleUrls: ['./global-error-display.component.css']
+})
+export class GlobalErrorDisplayComponent {
+  constructor(private activeModal: NgbActiveModal) { }
+
+  closeModal(): void {
+    this.activeModal.close();
+  }
+}
