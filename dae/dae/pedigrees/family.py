@@ -142,7 +142,7 @@ class Family(object):
                 index += 1
 
     @staticmethod
-    def from_persons(persons):
+    def from_persons(persons) -> "Family":
         assert len(persons) > 0
         assert all([persons[0].family_id == p.family_id for p in persons])
         family_id = persons[0].family_id
@@ -208,6 +208,30 @@ class Family(object):
                 [m.sample_index for m in self.members_in_order]
             )
         return self._samples_index
+
+    @staticmethod
+    def merge(l_fam: "Family", r_fam: "Family") -> "Family":
+        assert l_fam.family_id == r_fam.family_id, \
+            (f"Merging families is only allowed with matching family IDs!"
+             " ({l_fam.family_id} != {r_fam.family_id})")
+
+        people_intersection = \
+            set(l_fam.persons.keys()) & set(r_fam.persons.keys())
+
+        for person_id in people_intersection:
+            l_person = l_fam.persons[person_id]
+            r_person = r_fam.persons[person_id]
+
+            assert (l_person.sex == r_person.sex) \
+                and (l_person.role == r_person.role) \
+                and (l_person.family_id == r_person.family_id), \
+                f"Mismatched attributes for person {person_id}!"
+
+        merged_persons = dict()
+        merged_persons.update(l_fam.persons)
+        merged_persons.update(r_fam.persons)
+
+        return Family.from_persons(list(merged_persons.values()))
 
     def members_index(self, person_ids):
         index = []

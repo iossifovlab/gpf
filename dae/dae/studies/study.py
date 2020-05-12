@@ -1,7 +1,7 @@
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import functools
 from typing import Dict
-from dae.pedigrees.family import FamiliesData
+from dae.pedigrees.family import Family, FamiliesData
 from dae.person_sets import PersonSetCollection
 
 
@@ -178,7 +178,7 @@ class GenotypeDataGroup(GenotypeData):
     def _build_families(self):
         return FamiliesData.from_families(
             functools.reduce(
-                lambda x, y: self._combine_families(x, y),
+                lambda x, y: GenotypeDataGroup._combine_families(x, y),
                 [
                     genotype_data_study.families
                     for genotype_data_study in self.studies
@@ -186,15 +186,14 @@ class GenotypeDataGroup(GenotypeData):
             )
         )
 
-    def _combine_families(self, first, second):
+    @staticmethod
+    def _combine_families(first, second):
         same_families = set(first.keys()) & set(second.keys())
         combined_dict = {}
         combined_dict.update(first)
         combined_dict.update(second)
         for sf in same_families:
-            combined_dict[sf] = (
-                first[sf] if len(first[sf]) > len(second[sf]) else second[sf]
-            )
+            combined_dict[sf] = Family.merge(first[sf], second[sf])
         return combined_dict
 
     def _build_person_set_collection(self, person_set_collection_id):
