@@ -47,6 +47,8 @@ class DatasetView(QueryBaseView):
                     self.variants_db.get_wdae_wrapper(genotype_data_id)
                     for genotype_data_id
                     in self.gpf_instance.get_genotype_data_ids()]
+                assert all([d is not None for d in datasets]), \
+                    self.gpf_instance.get_genotype_data_ids()
 
                 res = sorted(
                     list(
