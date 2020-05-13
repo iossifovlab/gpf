@@ -218,20 +218,31 @@ class Family(object):
         people_intersection = \
             set(l_fam.persons.keys()) & set(r_fam.persons.keys())
 
+        merged_persons = dict()
+        merged_persons.update(l_fam.persons)
+        merged_persons.update(r_fam.persons)
+
         for person_id in people_intersection:
             l_person = l_fam.persons[person_id]
             r_person = r_fam.persons[person_id]
+
+            # Use the other person if this one is generated
+            if l_person.generated:
+                merged_persons[person_id] = r_person
+            elif r_person.generated:
+                merged_persons[person_id] = l_person
 
             assert (l_person.sex == r_person.sex) \
                 and (l_person.role == r_person.role) \
                 and (l_person.family_id == r_person.family_id), \
                 f"Mismatched attributes for person {person_id}!"
 
-        merged_persons = dict()
-        merged_persons.update(l_fam.persons)
-        merged_persons.update(r_fam.persons)
-
-        return Family.from_persons(list(merged_persons.values()))
+        # Construct new instances of Person to avoid
+        # modifying the original family's Person instances
+        return Family.from_persons([
+            Person(**person._attributes)
+            for person in merged_persons.values()
+        ])
 
     def members_index(self, person_ids):
         index = []
