@@ -235,7 +235,10 @@ class Family(object):
             assert (l_person.sex == r_person.sex) \
                 and (l_person.role == r_person.role) \
                 and (l_person.family_id == r_person.family_id), \
-                f"Mismatched attributes for person {person_id}!"
+                f"Mismatched attributes for person {person_id}; " \
+                f"{l_person.sex} == {r_person.sex}, " \
+                f"{l_person.role} == {r_person.role}, " \
+                f"{l_person.family_id} == {r_person.family_id}"
 
         # Construct new instances of Person to avoid
         # modifying the original family's Person instances
