@@ -11,7 +11,7 @@ import numpy as np
 import pyarrow as pa
 
 from dae.variants.variant import SummaryAllele, SummaryVariant
-from dae.variants.family_variant import FamilyVariant
+from dae.variants.family_variant import FamilyVariant, FamilyAllele
 from dae.variants.attributes import GeneticModel, Inheritance, VariantType, \
     TransmissionType, Sex, Role
 
@@ -499,9 +499,11 @@ class AlleleParquetSerializer:
 
     def deserialize_family_variant(self, data, family):
         summary_alleles = []
+        family_alleles = []
+
         stream = io.BytesIO(data)
         allele_count = read_int8(stream)
-        for i in range(0, allele_count):
+        for _i in range(0, allele_count):
             allele_data = self.deserialize_allele(stream)
             sa = SummaryAllele(
                 allele_data["chromosome"],
@@ -522,11 +524,18 @@ class AlleleParquetSerializer:
                 if k not in self.ALLELE_CREATION_PROPERTIES
             }
             sa.update_attributes(allele_attributes_data)
+            fa = FamilyAllele(
+                sa, family, allele_data["gt"], allele_data["best_state"],
+                inheritance_in_members=allele_data["inheritance_in_members"],
+                genetic_model=allele_data["genetic_model"]
+            )
+            family_alleles.append(fa)
 
         sv = SummaryVariant(summary_alleles)
         fv = FamilyVariant(
             sv, family, allele_data["gt"], allele_data["best_state"],
         )
+        fv._family_alleles = family_alleles
 
         return fv
 
