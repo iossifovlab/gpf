@@ -19,4 +19,5 @@ urlpatterns = [
     url(r"^api/v3/", include("groups_api.urls")),
     url(r"^api/v3/query_state", include("query_state_save.urls")),
     url(r"^api/v3/user_queries", include("user_queries.urls")),
+    url(r"^api/v3/genome", include("genomes_api.urls")),
 ]
