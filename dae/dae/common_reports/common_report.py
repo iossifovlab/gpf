@@ -35,7 +35,7 @@ class CommonReport(object):
         elapsed = time.time() - start
         print(f"COMMON REPORTS denovo report " f"build in {elapsed:.2f} sec")
 
-        self.study_name = genotype_data_study.id
+        self.study_name = genotype_data_study.name
         self.phenotype = self._get_phenotype()
         self.study_type = (
             ",".join(genotype_data_study.study_type)
