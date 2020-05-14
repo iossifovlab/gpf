@@ -14,6 +14,8 @@ urlpatterns = [
         name="enrichment_models",
     ),
     url(
-        r"^/test$", views.EnrichmentTestView.as_view(), name="enrichment_test"
+        r"^/test/?$",
+        views.EnrichmentTestView.as_view(),
+        name="enrichment_test"
     ),
 ]

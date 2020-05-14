@@ -8,6 +8,8 @@ from family_counters_api import views
 
 urlpatterns = [
     url(
-        r"^/counters$", views.FamilyCounters.as_view(), name="family_counters"
+        r"^/counters/?$",
+        views.FamilyCounters.as_view(),
+        name="family_counters"
     ),
 ]

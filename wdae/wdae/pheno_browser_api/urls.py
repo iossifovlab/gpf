@@ -9,17 +9,17 @@ from pheno_browser_api import views
 
 urlpatterns = [
     url(
-        r"^/instruments$",
+        r"^/instruments/?$",
         views.PhenoInstrumentsView.as_view(),
         name="pheno_browser_instruments",
     ),
     url(
-        r"^/measures$",
+        r"^/measures/?$",
         views.PhenoMeasuresView.as_view(),
         name="pheno_browser_measures",
     ),
     url(
-        r"^/download$",
+        r"^/download/?$",
         views.PhenoMeasuresDownload.as_view(),
         name="pheno_browser_download",
     ),

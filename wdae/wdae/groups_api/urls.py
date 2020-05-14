@@ -12,12 +12,12 @@ router.register(r"groups", GroupsViewSet, basename="groups")
 
 urlpatterns = [
     url(
-        r"^groups/grant-permission$",
+        r"^groups/grant-permission/?$",
         GrantPermissionToGroupView.as_view(),
         name="grant_permission",
     ),
     url(
-        r"^groups/revoke-permission$",
+        r"^groups/revoke-permission/?$",
         RevokePermissionToGroupView.as_view(),
         name="revoke_permission",
     ),
