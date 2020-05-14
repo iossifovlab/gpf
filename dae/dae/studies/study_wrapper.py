@@ -973,7 +973,6 @@ class StudyWrapper(object):
         keys = [
             "id",
             "name",
-            "description",
             "phenotype_browser",
             "phenotype_tool",
             "phenotype_data",
@@ -986,6 +985,8 @@ class StudyWrapper(object):
         result = {
             key: deepcopy(getattr(self.config, key, None)) for key in keys
         }
+
+        result["description"] = self.description
 
         bs_config = GPFConfigParser._namedtuple_to_dict(
             deepcopy(self.config.genotype_browser)
