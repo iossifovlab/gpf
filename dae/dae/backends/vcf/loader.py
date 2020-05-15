@@ -211,11 +211,6 @@ class SingleVcfLoader(VariantsGenotypesLoader):
     @staticmethod
     def _ignore_omission_mode_handler(family_variant: FamilyVariant) -> bool:
         for fa in family_variant.alleles:
-            print(
-                "ignore_omission:",
-                Inheritance.omission,
-                fa.inheritance_in_members,
-            )
             if Inheritance.omission in fa.inheritance_in_members:
                 return True
         return False
