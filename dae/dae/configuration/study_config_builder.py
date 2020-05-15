@@ -339,14 +339,6 @@ params = {}
 enabled = {{ genotype_browser.enabled }}
 {%- endif %}
 
-{%- if genotype_browser.has_cnv %}
-has_cnv = {{ genotype_browser.has_cnv }}
-{%- endif %}
-
-{%- if genotype_browser.has_complex %}
-has_complex = {{ genotype_browser.has_complex }}
-{%- endif %}
-
 {%- if genotype_browser.has_family_filters %}
 has_family_filters = {{ genotype_browser.has_family_filters }}
 {%- endif %}
@@ -390,6 +382,14 @@ inheritance_type_filter = "{{ genotype_browser.inheritance_type_filter }}"
 {%- if genotype_browser.selected_inheritance_type_filter_values %}
 selected_inheritance_type_filter_values =\
 "{{ genotype_browser.selected_inheritance_type_filter_values }}"
+{%- endif %}
+
+{%- if genotype_browser.variant_types %}
+variant_types = {{ genotype_browser.variant_types }}
+{%- endif %}
+
+{%- if genotype_browser.selected_variant_types %}
+selected_variant_types = {{ genotype_browser.selected_variant_types }}
 {%- endif %}
 
 {%- if genotype_browser.in_roles %}

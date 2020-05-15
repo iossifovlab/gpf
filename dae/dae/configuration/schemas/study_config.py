@@ -230,8 +230,6 @@ study_config_schema = {
         "type": "dict",
         "schema": {
             "enabled": {"type": "boolean", "required": True},
-            "has_cnv": {"type": "boolean"},
-            "has_complex": {"type": "boolean"},
             "has_family_filters": {"type": "boolean"},
             "has_study_filters": {"type": "boolean"},
             "has_present_in_child": {"type": "boolean"},
@@ -305,6 +303,16 @@ study_config_schema = {
                 "type": "list",
                 "schema": {"type": "string"},
                 "default": [],
+            },
+            "variant_types": {
+                "type": "list",
+                "schema": {"type": "string"},
+                "default": ["sub", "ins", "del"],
+            },
+            "selected_variant_types": {
+                "type": "list",
+                "schema": {"type": "string"},
+                "default": ["sub", "ins", "del"],
             },
         },
     },
