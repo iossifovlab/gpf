@@ -25,6 +25,8 @@ export class GenotypeBlockComponent extends QueryStateCollector implements After
   selectedDataset$: Observable<Dataset>;
   inheritanceTypeFilter: Observable<Array<string>>;
   selectedInheritanceTypeFilterValues: Observable<Array<string>>;
+  variantTypes: Observable<Set<string>>;
+  selectedVariantTypes: Observable<Set<string>>;
 
   constructor(
     private datasetsService: DatasetsService
@@ -101,6 +103,18 @@ export class GenotypeBlockComponent extends QueryStateCollector implements After
         return [];
       }
       return dataset.genotypeBrowserConfig.selectedInheritanceTypeFilterValues;
+    });
+    this.variantTypes = selectedDataset$.map(dataset => {
+      if (!dataset || !dataset.genotypeBrowserConfig) {
+        return new Set([]);
+      }
+      return dataset.genotypeBrowserConfig.variantTypes;
+    });
+    this.selectedVariantTypes = selectedDataset$.map(dataset => {
+      if (!dataset || !dataset.genotypeBrowserConfig) {
+        return new Set([]);
+      }
+      return dataset.genotypeBrowserConfig.selectedVariantTypes;
     });
   }
 

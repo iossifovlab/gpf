@@ -29,7 +29,7 @@
 		</div>
 
 		<div class="col-lg-3 panel-row">
-			<gpf-varianttypes [hasCNV]="hasCNV | async" [hasComplex]="hasComplex | async"></gpf-varianttypes>
+			<gpf-varianttypes [variantTypes]="variantTypes | async" [selectedVariantTypes]="selectedVariantTypes | async"></gpf-varianttypes>
 		</div>
 
 		<div *ngIf="hasStudyTypes | async" class="col-lg-3">

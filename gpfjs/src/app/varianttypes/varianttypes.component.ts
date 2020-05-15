@@ -2,10 +2,12 @@ import {
   Input, Component, OnInit, OnChanges, SimpleChanges, forwardRef
 } from '@angular/core';
 
-import { VariantTypes } from './varianttypes';
 import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query-state-provider';
 import { StateRestoreService } from '../store/state-restore.service';
 import { DatasetsService } from '../datasets/datasets.service';
+
+import { Validate } from 'class-validator';
+import { SetNotEmpty } from '../utils/set.validators';
 
 @Component({
   selector: 'gpf-varianttypes',
@@ -19,12 +21,12 @@ import { DatasetsService } from '../datasets/datasets.service';
 export class VarianttypesComponent extends QueryStateWithErrorsProvider
     implements OnInit, OnChanges {
 
-  variantTypes = new VariantTypes();
   @Input()
-  hasCNV = false;
+  variantTypes: Set<string> = new Set([]);
 
   @Input()
-  hasComplex = false;
+  @Validate(SetNotEmpty, {message: 'select at least one'})
+  selectedVariantTypes: Set<string> = new Set([]);
 
   constructor(
     private stateRestoreService: StateRestoreService,
@@ -38,7 +40,7 @@ export class VarianttypesComponent extends QueryStateWithErrorsProvider
       .take(1)
       .subscribe(state => {
         if (state['variantTypes']) {
-          this.variantTypes.selected = new Set(state['variantTypes'] as string[]);
+          this.selectedVariantTypes = new Set(state['variantTypes'] as string[]);
         }
       });
   }
@@ -50,35 +52,26 @@ export class VarianttypesComponent extends QueryStateWithErrorsProvider
   }
 
   selectAll(): void {
-    const selected = new Set(['sub', 'ins', 'del']);
-    if (this.hasComplex) {
-      selected.add('complex');
-    }
-    if (this.hasCNV) {
-      selected.add('CNV');
-    }
-    this.variantTypes.selected = selected;
+    this.selectedVariantTypes = new Set(this.variantTypes);
   }
 
   selectNone(): void {
-    this.variantTypes.selected = new Set();
+    this.selectedVariantTypes = new Set();
   }
 
   variantTypesCheckValue(variantType: string, value: boolean): void {
     if (variantType === 'sub' || variantType === 'ins' || variantType === 'del' ||
         variantType === 'CNV' || variantType === 'complex') {
-      if (value) {
-        this.variantTypes.selected.add(variantType);
+      if (!value) {
+        this.selectedVariantTypes.add(variantType);
       } else {
-        this.variantTypes.selected.delete(variantType);
+        this.selectedVariantTypes.delete(variantType);
       }
     }
   }
 
   getState() {
-    return this.validateAndGetState(this.variantTypes)
-      .map(variantTypes => ({
-        variantTypes: Array.from(variantTypes.selected)
-      }));
+    return this.validateAndGetState(this)
+      .map(_ => ({ "variantTypes": Array.from(this.selectedVariantTypes) }));
   }
 }
