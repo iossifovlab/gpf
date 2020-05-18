@@ -22,12 +22,12 @@ def test_impala_parquet_loader_partitioned(fixture_dirname, gpf_instance_2013):
     assert genotype_data is not None
 
 
-def test_imapala_parquet_loader_no_partition(
+def test_impala_parquet_loader_no_partition(
     fixture_dirname, gpf_instance_2013
 ):
 
     pedigree_path = fixture_dirname("studies/quads_f1_impala/data/pedigree")
-    variants_path = fixture_dirname("studies/quads_f1_impala/data/pedigree")
+    variants_path = fixture_dirname("studies/quads_f1_impala/data/variants")
 
     argv = [
         "test_study_impala_02",
