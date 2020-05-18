@@ -199,3 +199,12 @@ label {
 .popover {
   max-width: 500px;
 }
+
+.global-error-modal {
+  top: 73%;
+  left: 75%;
+}
+
+.modal-backdrop.fade {
+  transition: none;
+}
