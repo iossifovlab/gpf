@@ -9,7 +9,9 @@ export class GlobalErrorHandler implements ErrorHandler {
     private modalService: NgbModal
   ) { }
 
-  handleError(): void {
+  handleError(error: any): void {
+    console.error(error);
+
     this.modalService = this.injector.get(NgbModal);
     if (!this.modalService.hasOpenModals()) {
       this.modalService.open(GlobalErrorDisplayComponent, {centered: true, size: 'sm', backdrop: false});
