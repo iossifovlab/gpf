@@ -10,7 +10,7 @@ import { QueryStateCollector } from '../query/query-state-provider';
 export class PhenoToolGenotypeBlockComponent extends QueryStateCollector  implements OnInit {
 
   @Input()
-  hasCNV = false;
+  variantTypes: Set<string> = new Set([]);
 
   constructor() {
     super();

@@ -45,11 +45,7 @@ export class VarianttypesComponent extends QueryStateWithErrorsProvider
       });
   }
 
-  ngOnChanges(changes: SimpleChanges) {
-    if (changes['hasCNV'] && changes['hasCNV'].previousValue !== null) {
-      this.selectAll();
-    }
-  }
+  ngOnChanges(changes: SimpleChanges) { }
 
   selectAll(): void {
     this.selectedVariantTypes = new Set(this.variantTypes);

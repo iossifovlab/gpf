@@ -13,8 +13,6 @@ import { DatasetsService } from '../datasets/datasets.service';
   providers: [{provide: QueryStateCollector, useExisting: forwardRef(() => GenotypeBlockComponent) }]
 })
 export class GenotypeBlockComponent extends QueryStateCollector implements AfterViewInit {
-  hasCNV: Observable<boolean>;
-  hasComplex: Observable<boolean>;
   hasPedigreeSelector: Observable<boolean>;
   hasPresentInChild: Observable<boolean>;
   hasPresentInParent: Observable<boolean>;
@@ -38,18 +36,6 @@ export class GenotypeBlockComponent extends QueryStateCollector implements After
     this.selectedDataset$ = this.datasetsService.getSelectedDataset();
     const selectedDataset$ = this.selectedDataset$;
 
-    this.hasCNV = selectedDataset$.map(dataset => {
-      if (!dataset || !dataset.genotypeBrowserConfig) {
-        return false;
-      }
-      return dataset.genotypeBrowserConfig.hasCNV;
-    });
-    this.hasComplex = selectedDataset$.map(dataset => {
-      if (!dataset || !dataset.genotypeBrowserConfig) {
-        return false;
-      }
-      return dataset.genotypeBrowserConfig.hasComplex;
-    });
     this.hasPedigreeSelector = selectedDataset$.map(dataset => {
       if (!dataset || !dataset.genotypeBrowserConfig) {
         return false;

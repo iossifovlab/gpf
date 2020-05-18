@@ -14,7 +14,7 @@
 		</div>
 
 		<div class="col-lg-6 panel-row">
-			<gpf-effecttypes [hasCNV]="hasCNV | async"> </gpf-effecttypes>
+			<gpf-effecttypes [variantTypes]="variantTypes | async"> </gpf-effecttypes>
 		</div>
 
 		<div *ngIf="hasPresentInRole | async" class="col-lg-3 panel-row">
