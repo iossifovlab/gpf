@@ -14,17 +14,17 @@ urlpatterns = [
         name="measures_list",
     ),
     url(
-        r"^/partitions$",
+        r"^/partitions/?$",
         views.PhenoMeasurePartitionsView.as_view(),
         name="measure_partitions",
     ),
     url(
-        r"^/histogram$",
+        r"^/histogram/?$",
         views.PhenoMeasureHistogramView.as_view(),
         name="measure_histogram",
     ),
     url(
-        r"^/regressions$",
+        r"^/regressions/?$",
         views.PhenoMeasureRegressionsView.as_view(),
         name="measure_regressions",
     ),
