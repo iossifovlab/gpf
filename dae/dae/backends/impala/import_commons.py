@@ -389,7 +389,7 @@ class MakefileGenerator:
                     "pedigree": f'{self.study_id}_pedigree',
                 },
             },
-            "genotype_browser": {"enabled": True, "has_cnv": False},
+            "genotype_browser": {"enabled": True},
         }
 
         if self.denovo_loader:
@@ -397,7 +397,6 @@ class MakefileGenerator:
         if self.cnv_loader:
             config_dict["has_denovo"] = True
             config_dict["has_cnv"] = True
-            config_dict["genotype_browser"]["has_cnv"] = True
 
         if argv.study_config is not None:
             study_config_dict = GPFConfigParser.load_config_raw(

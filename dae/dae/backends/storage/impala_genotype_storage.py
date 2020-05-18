@@ -226,7 +226,6 @@ class ImpalaGenotypeStorage(GenotypeStorage):
 
         config_dict["has_denovo"] = has_denovo
         config_dict["has_cnv"] = has_cnv
-        config_dict["genotype_browser"]["has_cnv"] = has_cnv
 
         if study_config is not None:
             study_config_dict = GPFConfigParser.load_config_raw(study_config)
