@@ -1,7 +1,5 @@
 # GPF: Genotypes and Phenotypes in Families
 
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-
 The Genotype and Phenotype in Families (GPF) system manages large databases
 of genetic variants and phenotypic measurements obtained from collections
 of families and individual family members.
