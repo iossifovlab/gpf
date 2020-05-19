@@ -65,12 +65,12 @@ def test_simple_query(db, admin_client):
 @pytest.mark.parametrize(
     "pheno_filters,variants_count,pheno_values",
     [
-        ([FILTER_QUERY_CATEGORICAL], 3, [[["option2"]], [["option2"]], [["option2"]]]),
-        ([FILTER_QUERY_CONTINUOUS], 3, [[["3.14"]], [["3.14"]], [["3.14"]]]),
+        ([FILTER_QUERY_CATEGORICAL], 3, [["option2"], ["option2"], ["option2"]]),
+        ([FILTER_QUERY_CONTINUOUS], 3, [["3.14"], ["3.14"], ["3.14"]]),
         (
             [FILTER_QUERY_CATEGORICAL, FILTER_QUERY_CONTINUOUS],
             3,
-            [[["option2"], ["3.14"]], [["option2"], ["3.14"]], [["option2"], ["3.14"]]],
+            [["option2", "3.14"], ["option2", "3.14"], ["option2", "3.14"]],
         ),
     ],
 )

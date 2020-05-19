@@ -30,10 +30,10 @@ def test_all_alleles_have_pheno_values(quads_f1_genotype_data_group_wrapper):
 @pytest.mark.parametrize(
     "roles,column,value",
     [
-        (str(Role.prb.name), "instrument1.continuous.prb", ["3.14"]),
-        (str(Role.prb.name), "instrument1.categorical.prb", ["option2"]),
-        (str(Role.prb.name), "instrument1.ordinal.prb", ["5.0"]),
-        (str(Role.prb.name), "instrument1.raw.prb", ["somevalue"]),
+        (str(Role.prb.name), "instrument1.continuous.prb", "3.14"),
+        (str(Role.prb.name), "instrument1.categorical.prb", "option2"),
+        (str(Role.prb.name), "instrument1.ordinal.prb", "5.0"),
+        (str(Role.prb.name), "instrument1.raw.prb", "somevalue"),
     ],
 )
 def test_alleles_have_pheno_values(

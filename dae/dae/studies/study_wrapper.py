@@ -105,12 +105,14 @@ class StudyWrapper(object):
                     self.person_set_collection_configs[collection_id]["domain"]
         # PREVIEW AND DOWNLOAD COLUMNS
         preview_column_names = genotype_browser_config.preview_columns
-        download_column_names = genotype_browser_config.download_columns
+        download_column_names = \
+            genotype_browser_config.download_columns \
+            + (genotype_browser_config.selected_pheno_column_values or [])
 
         def unpack_columns(selected_columns, use_id=True):
             columns, sources = [], []
 
-            def inner(cols, get_source):
+            def inner(cols, get_source, use_id):
                 cols_dict = cols._asdict()
 
                 for col_id in selected_columns:
@@ -131,12 +133,14 @@ class StudyWrapper(object):
 
             inner(
                 genotype_browser_config.genotype,
-                lambda x: f"{x.source}"
+                lambda x: f"{x.source}",
+                use_id
             )
             if genotype_browser_config.pheno:
                 inner(
                     genotype_browser_config.pheno,
-                    lambda x: f"{x.source}.{x.role}"
+                    lambda x: f"{x.source}.{x.role}",
+                    True
                 )
             return columns, sources
 
@@ -472,9 +476,9 @@ class StudyWrapper(object):
             assert len(variant_pheno_value_df.columns) == 1
             column = variant_pheno_value_df.columns[0]
 
-            pheno_values[pheno_column_name] = list(
+            pheno_values[pheno_column_name] = ':'.join(list(
                 variant_pheno_value_df[column].map(str).tolist()
-            )
+            ))
 
         return pheno_values
 

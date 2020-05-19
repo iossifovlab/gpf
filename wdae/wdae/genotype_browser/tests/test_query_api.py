@@ -103,4 +103,8 @@ def test_simple_query_download(db, admin_client):
         "SSC",
         "EVS",
         "E65",
+        "categorical.Categorical",
+        "continuous.Continuous",
+        "ordinal.Ordinal",
+        "raw.Raw",
     }
