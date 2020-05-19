@@ -92,10 +92,7 @@ export class PedigreeChartComponent implements OnInit, AfterViewInit, OnDestroy 
               this.positionedIndividuals.push(
                 this.generateLayout(individuals[i], i));
             }
-            const start = Date.now();
             this.optimizeDrawing(this.positionedIndividuals);
-
-            console.warn('drawing optimizing', Date.now() - start, 'ms');
           });
       });
 
