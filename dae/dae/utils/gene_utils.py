@@ -55,5 +55,9 @@ class GeneSymsMixin(object):
         weights_id, range_start, range_end = cls.get_gene_weights_query(
             gene_weights_config, **kwargs
         )
+
+        if weights_id is None:
+            return set([])
+
         weights = GeneWeight(getattr(gene_weights_config, weights_id))
         return weights.get_genes(wmin=range_start, wmax=range_end)
