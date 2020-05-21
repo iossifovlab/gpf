@@ -22,7 +22,7 @@ class GeneSymsMixin(object):
         if "weight" not in gene_weights:
             return None, None, None
         weights_id = gene_weights["weight"]
-        if weights_id not in gene_weights_config:
+        if not weights_id or not hasattr(gene_weights_config, weights_id):
             return None, None, None
         range_start = gene_weights.get("rangeStart", None)
         range_end = gene_weights.get("rangeEnd", None)
@@ -56,8 +56,8 @@ class GeneSymsMixin(object):
             gene_weights_config, **kwargs
         )
 
-        if not weights_id or weights_id not in gene_weights_config:
+        if weights_id is None:
             return set([])
 
-        weights = GeneWeight(gene_weights_config.get(weights_id))
+        weights = GeneWeight(getattr(gene_weights_config, weights_id))
         return weights.get_genes(wmin=range_start, wmax=range_end)
