@@ -261,7 +261,7 @@ class ContinuousParquetFileWriter:
     """
 
     def __init__(
-            self, filepath, variant_loader, filesystem=None, rows=200_000):
+            self, filepath, variant_loader, filesystem=None, rows=100_000):
 
         self.filepath = filepath
         annotation_schema = variant_loader.get_attribute("annotation_schema")
@@ -323,7 +323,7 @@ class VariantsParquetWriter:
             variants_loader,
             partition_descriptor,
             bucket_index=1,
-            rows=200_000,
+            rows=100_000,
             include_reference=True,
             filesystem=None):
 
@@ -546,7 +546,7 @@ class ParquetManager:
     @staticmethod
     def variants_to_parquet_filename(
             variants_loader, variants_filename,
-            bucket_index=0, rows=200_000, include_reference=False):
+            bucket_index=0, rows=100_000, include_reference=False):
 
         assert variants_loader.annotation_schema is not None
 
@@ -574,7 +574,7 @@ class ParquetManager:
     @staticmethod
     def variants_to_parquet_partition(
             variants_loader, partition_descriptor,
-            bucket_index=1, rows=200_000, include_reference=False):
+            bucket_index=1, rows=100_000, include_reference=False):
 
         assert variants_loader.get_attribute("annotation_schema") is not None
         print(f"variants to parquet ({rows}) sec", file=sys.stderr)

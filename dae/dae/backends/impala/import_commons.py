@@ -887,7 +887,7 @@ class Variants2ParquetTool:
         parser.add_argument(
             "--rows",
             type=int,
-            default=200_000,
+            default=100_000,
             dest="rows",
             help="Amount of allele rows to write at once",
         )
