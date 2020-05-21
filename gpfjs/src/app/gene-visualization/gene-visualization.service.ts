@@ -1,14 +1,23 @@
 import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { ConfigService } from 'app/config/config.service';
+import { Gene } from './gene';
 
 @Injectable({
   providedIn: 'root'
 })
 export class GeneVisualizationService {
+  private readonly geneVisualizationUrl = 'genome/gene_models/default/';
 
-  constructor() { }
+  constructor(
+    private http: HttpClient,
+    private config: ConfigService,
+  ) { }
 
-  getCHD8() {
-    const CHD8 = require('./CHD8.json');
-    return CHD8;
+  // http://localhost:8000/api/v3/genome/gene_models/default/CHD8
+  getGene(geneSymbol: string) {
+    return this.http
+    .get(this.config.baseUrl + this.geneVisualizationUrl + geneSymbol)
+    .map((response: any) => Gene.fromJson(response));
   }
 }

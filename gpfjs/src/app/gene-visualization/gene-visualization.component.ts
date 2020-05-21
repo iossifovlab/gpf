@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import * as d3 from 'd3';
 import { GeneVisualizationService } from './gene-visualization.service';
+import { Gene } from './gene';
 
 @Component({
   selector: 'gpf-gene-visualization',
@@ -8,8 +9,7 @@ import { GeneVisualizationService } from './gene-visualization.service';
   styleUrls: ['./gene-visualization.component.css']
 })
 export class GeneVisualizationComponent implements OnInit {
-  gene;
-
+  gene: Gene;
   svgElement;
   svgWidth = 1000;
   svgHeight = 150;
@@ -19,14 +19,15 @@ export class GeneVisualizationComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    this.gene = this.geneVisualizationService.getCHD8();
-
     this.svgElement = d3.select('#svg-container')
-      .append('svg')
-      .attr('width', this.svgWidth)
-      .attr('height', this.svgHeight);
+    .append('svg')
+    .attr('width', this.svgWidth)
+    .attr('height', this.svgHeight);
 
-    this.drawGene();
+    this.geneVisualizationService.getGene('CHD8').subscribe((gene) => {
+      this.gene = gene;
+      this.drawGene();
+    });
   }
 
   drawGene() {
