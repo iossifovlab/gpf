@@ -235,14 +235,22 @@ class StudyWrapper(object):
         # best_st = np.sum(allele.gt == allele.allele_index, axis=0)
         best_st = allele.best_state[allele.allele_index, :]
 
+        missing_members = set()
         for index, member in enumerate(allele.members_in_order):
-            result.append(
-                self._get_wdae_member(
-                    member, person_set_collection, int(best_st[index])
+            try:
+                result.append(
+                    self._get_wdae_member(
+                        member, person_set_collection, int(best_st[index])
+                    )
                 )
-            )
+            except IndexError:
+                print(best_st, index, member)
+                import traceback
+                traceback.print_exc()
+                missing_members.add(member.person_id)
+
         for member in allele.family.full_members:
-            if member.generated:
+            if member.generated or member.person_id in missing_members:
                 result.append(
                     self._get_wdae_member(member, person_set_collection, 0)
                 )
@@ -306,7 +314,7 @@ class StudyWrapper(object):
 
         return limited_rows
 
-    def get_wdae_preview_info(self, query, max_variants_count=1000):
+    def get_wdae_preview_info(self, query, max_variants_count=10000):
         preview_info = {}
 
         preview_info["cols"] = self.preview_columns
@@ -316,7 +324,7 @@ class StudyWrapper(object):
 
         return preview_info
 
-    def get_variants_wdae_preview(self, query, max_variants_count=1000):
+    def get_variants_wdae_preview(self, query, max_variants_count=10000):
         variants_data = self.get_variant_web_rows(
             query,
             self.preview_sources,
