@@ -12,7 +12,7 @@ def test_genotype_data_group_configs_simple(genotype_data_group_configs):
         ("name", "QUADS_COMPOSITE"),
         ("id", "quads_composite_ds"),
         ("description", "QUADS COMPOSITE DESCRIPTION"),
-        ("studies", ["quads_in_child", "quads_in_parent"]),
+        ("studies", ("quads_in_child", "quads_in_parent")),
         ("phenotypeTool", None),
         ("phenotypeBrowser", None),
         ("year", None),
@@ -35,7 +35,7 @@ def test_genotype_data_group_quads_composite_dict(
         ("name", "QUADS_COMPOSITE"),
         ("id", "quads_composite_ds"),
         ("description", "QUADS COMPOSITE DESCRIPTION"),
-        ("studies", ["quads_in_child", "quads_in_parent"]),
+        ("studies", ("quads_in_child", "quads_in_parent")),
         ("phenotype_tool", False),
         ("phenotype_browser", False),
         ("year", None),
@@ -107,9 +107,8 @@ def test_composite_genotype_data_group_config_genotype_browser_overwrite(
     assert study_config.genotype_browser != genotype_browser_config
 
     download_columns = genotype_browser_config.download_columns
-    print(download_columns)
 
-    assert download_columns == [
+    assert download_columns == (
         "family",
         "phenotype",
         "variant",
@@ -120,7 +119,7 @@ def test_composite_genotype_data_group_config_genotype_browser_overwrite(
         "count",
         "geneeffect",
         "effectdetails",
-    ]
+    )
 
 
 def test_genotype_data_group_quads_work_dir(

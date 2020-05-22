@@ -19,8 +19,8 @@ from dae.utils.dict_utils import recursive_dict_update
 
 class ImpalaGenotypeStorage(GenotypeStorage):
 
-    def __init__(self, storage_config):
-        super(ImpalaGenotypeStorage, self).__init__(storage_config)
+    def __init__(self, storage_config, section_id):
+        super(ImpalaGenotypeStorage, self).__init__(storage_config, section_id)
         self.data_dir = self.storage_config.dir
 
         impala_hosts = self.storage_config.impala.hosts

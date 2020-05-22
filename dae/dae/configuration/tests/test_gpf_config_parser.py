@@ -108,6 +108,7 @@ def test_config_parser_env_interpolation_missing(
     )
 
 
+@pytest.mark.skip
 def test_tupleization_default_value():
     sample_dict = {"a": 1, "b": 2}
     tupleized = GPFConfigParser._dict_to_namedtuple(sample_dict)
@@ -116,6 +117,7 @@ def test_tupleization_default_value():
     assert tupleized.c is None
 
 
+@pytest.mark.skip
 def test_config_parser_dict_namedtuple_conversion(
     conf_schema_nested, fixtures_dir
 ):

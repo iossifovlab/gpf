@@ -38,15 +38,15 @@ class GenotypeStorageFactory:
                 self._load_genotype_storage_in_cache(genotype_storage_id)
 
     def _load_genotype_storage_in_cache(self, genotype_storage_id):
-        conf = getattr(self.dae_config.storage, genotype_storage_id, None)
+        conf = self.dae_config.storage.get(genotype_storage_id, None)
         if not conf:
             return
 
         genotype_storage = None
         if conf.storage_type == "impala":
-            genotype_storage = ImpalaGenotypeStorage(conf)
+            genotype_storage = ImpalaGenotypeStorage(conf, genotype_storage_id)
         elif conf.storage_type == "filesystem":
-            genotype_storage = FilesystemGenotypeStorage(conf)
+            genotype_storage = FilesystemGenotypeStorage(conf, genotype_storage_id)
 
         assert genotype_storage
 

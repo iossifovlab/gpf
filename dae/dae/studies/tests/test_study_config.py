@@ -62,42 +62,42 @@ def test_quads_f1_config_genotype_browser(
 def test_quads_f1_config_genotype_browser_pheno_filters(quads_f1_config):
     genotype_browser_config = quads_f1_config.genotype_browser
 
-    first = genotype_browser_config.pheno_filters[0]._asdict()
-    assert first == {
-        "name": "Categorical",
-        "measure_type": "categorical",
-        "filter_type": "single",
-        "role": "prb",
-        "measure": "instrument1.categorical",
-    }
-    second = genotype_browser_config.pheno_filters[1]._asdict()
-    assert second == {
-        "name": "Continuous",
-        "measure_type": "continuous",
-        "filter_type": "single",
-        "role": "prb",
-        "measure": "instrument1.continuous",
+    assert genotype_browser_config.pheno_filters == {
+        "categorical": {
+            "name": "Categorical",
+            "measure_type": "categorical",
+            "filter_type": "single",
+            "role": "prb",
+            "measure": "instrument1.categorical",
+        },
+        "continuous": {
+            "name": "Continuous",
+            "measure_type": "continuous",
+            "filter_type": "single",
+            "role": "prb",
+            "measure": "instrument1.continuous",
+        }
     }
 
 
 def test_quads_f1_config_genotype_browser_present_in_role(quads_f1_config):
     genotype_browser_config = quads_f1_config.genotype_browser
 
-    assert len(genotype_browser_config.present_in_role) == 2
-    assert genotype_browser_config.present_in_role[0].section_id() == "prb"
+    assert set(genotype_browser_config.present_in_role.keys()) == {
+        "prb", "parent"
+    }
     assert (
-        genotype_browser_config.present_in_role[0].name
+        genotype_browser_config.present_in_role.prb.name
         == "Present in Proband and Sibling"
     )
-    assert len(genotype_browser_config.present_in_role[0].roles) == 2
-    assert genotype_browser_config.present_in_role[0].roles[0] == "prb"
-    assert genotype_browser_config.present_in_role[0].roles[1] == "sib"
+    assert set(genotype_browser_config.present_in_role.prb.roles) == {
+        "prb", "sib"
+    }
 
-    assert genotype_browser_config.present_in_role[1].section_id() == "parent"
-    assert genotype_browser_config.present_in_role[1].name == "Parents"
-    assert len(genotype_browser_config.present_in_role[1].roles) == 2
-    assert genotype_browser_config.present_in_role[1].roles[0] == "mom"
-    assert genotype_browser_config.present_in_role[1].roles[1] == "dad"
+    assert genotype_browser_config.present_in_role.parent.name == "Parents"
+    assert set(genotype_browser_config.present_in_role.parent.roles) == {
+        "mom", "dad"
+    }
 
 
 @pytest.mark.parametrize(
@@ -155,17 +155,8 @@ def test_quads_f1_config_genotype_browser_columns(
 
     assert len(genotype_browser_config.genotype) == 19
 
-    genotype_column = list(
-        filter(
-            lambda gc: gc.section_id() == option_name,
-            genotype_browser_config.genotype,
-        )
-    )
+    genotype_column = genotype_browser_config.genotype[option_name]
 
-    assert len(genotype_column) == 1
-    genotype_column = genotype_column[0]
-
-    assert genotype_column.section_id() == option_name
     assert genotype_column.name == expected_name
     assert genotype_column.source == expected_source
 
@@ -250,17 +241,7 @@ def test_quads_f1_config_genotype_browser_pheno_columns(
 
     assert len(genotype_browser_config.genotype) == 19
 
-    genotype_column = list(
-        filter(
-            lambda gc: gc.section_id() == option_name,
-            genotype_browser_config.pheno,
-        )
-    )
-
-    assert len(genotype_column) == 1
-    genotype_column = genotype_column[0]
-
-    assert genotype_column.section_id() == option_name
+    genotype_column = genotype_browser_config.pheno[option_name]
     assert genotype_column.name == expected_name
     assert genotype_column.source == expected_source
 
