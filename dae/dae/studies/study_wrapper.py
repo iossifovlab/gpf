@@ -484,9 +484,9 @@ class StudyWrapper(object):
             assert len(variant_pheno_value_df.columns) == 1
             column = variant_pheno_value_df.columns[0]
 
-            pheno_values[pheno_column_name] = ':'.join(list(
+            pheno_values[pheno_column_name] = list(
                 variant_pheno_value_df[column].map(str).tolist()
-            ))
+            )
 
         return pheno_values
 

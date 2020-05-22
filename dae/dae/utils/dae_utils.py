@@ -46,7 +46,8 @@ def split_iterable(iterable, max_chunk_length=50):
 
 
 def join_line(l, sep="\t"):
-    tl = map(lambda v: "" if v is None or v == "None" else str(v), l)
+    lm = map(lambda v: "; ".join(v) if isinstance(v, list) else v, l)
+    tl = map(lambda v: "" if v is None or v == "None" else str(v), lm)
     return sep.join(tl) + "\n"
 
 
