@@ -1,8 +1,6 @@
 import os
 import pytest
 
-from dae.person_sets import PersonSetCollection
-
 
 def fixtures_dir():
     return os.path.abspath(os.path.join(os.path.dirname(__file__), "fixtures"))
@@ -134,8 +132,4 @@ def remove_common_reports(common_report_facade):
 
 @pytest.fixture
 def phenotype_role_collection(study1):
-    return PersonSetCollection.compose(
-        study1.get_person_set_collection("phenotype"),
-        study1.get_person_set_collection("role"),
-        name="Role and Diagnosis",
-    )
+    return study1.get_person_set_collection("phenotype")
