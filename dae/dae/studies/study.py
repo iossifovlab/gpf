@@ -15,6 +15,9 @@ class GenotypeData:
 
         self.id = self.config.id
         self.name = self.config.name
+        if self.name is None:
+            self.name = self.id
+
         if self.config.description_file:
             with open(self.config.description_file, "r") as infile:
                 self.description = infile.read()
