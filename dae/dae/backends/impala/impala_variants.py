@@ -382,7 +382,7 @@ class ImpalaFamilyVariants:
     def _build_ultra_rare_where(self, ultra_rare):
         assert ultra_rare
         return self._build_real_attr_where(
-            real_attr_filter=[("af_allele_count", (1, 1))]
+            real_attr_filter=[("af_allele_count", (0, 1))]
         )
 
     def _build_regions_where(self, regions):

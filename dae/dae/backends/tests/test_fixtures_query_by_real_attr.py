@@ -51,4 +51,6 @@ def test_variant_ultra_rare_frequency_queries(
             ultra_rare=True, return_reference=False, return_unknown=False
         )
     )
-    assert len(vs) == 2
+    print(vs)
+
+    assert len(vs) == 4
