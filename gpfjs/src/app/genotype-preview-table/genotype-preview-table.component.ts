@@ -22,6 +22,9 @@ export class GenotypePreviewTableComponent {
         let leftVal = a.get(field);
         let rightVal = b.get(field);
 
+        if (leftVal == "-") leftVal = null;
+        if (rightVal == "-") rightVal = null;
+
         if (leftVal == null && rightVal == null) {
           return 0;
         }

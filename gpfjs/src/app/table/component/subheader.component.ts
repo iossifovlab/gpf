@@ -27,6 +27,9 @@ export class GpfTableSubheaderComponent implements AfterContentInit {
     const leftVal = a[this.field];
     const rightVal = b[this.field];
 
+    if (leftVal == "-") leftVal = null;
+    if (rightVal == "-") rightVal = null;
+
     if (leftVal == null && rightVal == null) { return 0; }
     if (leftVal == null) { return -1; }
     if (rightVal == null) { return 1; }
