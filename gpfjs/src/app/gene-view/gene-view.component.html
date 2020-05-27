@@ -1,0 +1,9 @@
+<div style="padding: 30px;" >
+    <textarea type="text" placeholder="Gene to preview" [(ngModel)]="geneSymbol" class="form-control"></textarea>
+
+    <div style="margin-top: 20px;">
+        <input type="button" class="btn btn-md btn-primary" value="Gene Preview" (click)="previewGene()">
+    </div>
+
+    <gpf-gene-draw *ngIf="previewGeneFlag" [gene]="gene"></gpf-gene-draw>
+</div>

@@ -1,21 +1,20 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Input, OnChanges } from '@angular/core';
 import * as d3 from 'd3';
-import { GeneVisualizationService } from './gene-visualization.service';
 import { Gene } from './gene';
 
 @Component({
-  selector: 'gpf-gene-visualization',
-  templateUrl: './gene-visualization.component.html',
-  styleUrls: ['./gene-visualization.component.css']
+  selector: 'gpf-gene-draw',
+  templateUrl: './gene-draw.component.html',
+  styleUrls: ['./gene-draw.component.css']
 })
-export class GeneVisualizationComponent implements OnInit {
-  gene: Gene;
+export class GeneDrawComponent implements OnInit, OnChanges {
+  @Input() gene: Gene;
+
   svgElement;
   svgWidth = 1000;
   svgHeight = 150;
 
   constructor(
-    private geneVisualizationService: GeneVisualizationService,
   ) {}
 
   ngOnInit() {
@@ -23,11 +22,13 @@ export class GeneVisualizationComponent implements OnInit {
     .append('svg')
     .attr('width', this.svgWidth)
     .attr('height', this.svgHeight);
+  }
 
-    this.geneVisualizationService.getGene('CHD8').subscribe((gene) => {
-      this.gene = gene;
+  ngOnChanges() {
+    if (this.gene !== undefined) {
+      this.svgElement.selectAll('*').remove();
       this.drawGene();
-    });
+    }
   }
 
   drawGene() {
