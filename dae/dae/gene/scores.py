@@ -20,7 +20,12 @@ class Scores(GenomicValues):
             self.range = (self.config.range.start, self.config.range.end)
         else:
             self.range = None
-        self.help = self.config.help
+
+        if self.help_filename:
+            with open(self.help_filename, "r") as infile:
+                self.help = infile.read()
+        else:
+            self.help = None
 
         self._load_data()
         self.df.fillna(value=0, inplace=True)

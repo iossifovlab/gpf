@@ -15,6 +15,9 @@ class GenotypeData:
 
         self.id = self.config.id
         self.name = self.config.name
+        if self.name is None:
+            self.name = self.id
+
         if self.config.description_file:
             with open(self.config.description_file, "r") as infile:
                 self.description = infile.read()
@@ -202,8 +205,17 @@ class GenotypeDataGroup(GenotypeData):
         combined_dict = {}
         combined_dict.update(first)
         combined_dict.update(second)
+        mismatched_families = []
         for sf in same_families:
-            combined_dict[sf] = Family.merge(first[sf], second[sf])
+            try:
+                combined_dict[sf] = Family.merge(first[sf], second[sf])
+            except AssertionError:
+                import traceback
+                traceback.print_exc()
+
+                mismatched_families.append(sf)
+        assert len(mismatched_families) == 0, mismatched_families
+
         return combined_dict
 
     def _build_person_set_collection(self, person_set_collection_id):
