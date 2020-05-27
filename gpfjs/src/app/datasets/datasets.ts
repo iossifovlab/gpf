@@ -170,8 +170,6 @@ export class GenotypeBrowser {
       json['has_present_in_child'],
       json['has_present_in_parent'],
       json['has_present_in_role'],
-      json['has_cnv'],
-      json['has_complex'],
       json['has_family_filters'],
       json['has_study_filters'],
       json['has_study_types'],
@@ -183,6 +181,8 @@ export class GenotypeBrowser {
       PresentInRole.fromJsonArray(json['present_in_role']),
       json['inheritance_type_filter'],
       json['selected_inheritance_type_filter_values'],
+      new Set(json['variant_types']),
+      new Set(json['selected_variant_types']),
     );
   }
 
@@ -191,8 +191,6 @@ export class GenotypeBrowser {
     readonly hasPresentInChild: boolean,
     readonly hasPresentInParent: boolean,
     readonly hasPresentInRole: boolean,
-    readonly hasCNV: boolean,
-    readonly hasComplex: boolean,
     readonly hasFamilyFilters: boolean,
     readonly hasStudyFilters: boolean,
     readonly hasStudyTypes: boolean,
@@ -204,6 +202,8 @@ export class GenotypeBrowser {
     readonly presentInRole: PresentInRole[],
     readonly inheritanceTypeFilter: string[],
     readonly selectedInheritanceTypeFilterValues: string[],
+    readonly variantTypes: Set<string>,
+    readonly selectedVariantTypes: Set<string>,
   ) {
     this.columns = _.filter(this.allColumns,
       (column: AdditionalColumn) => this.previewColumnsIds.indexOf(column.id) > -1);

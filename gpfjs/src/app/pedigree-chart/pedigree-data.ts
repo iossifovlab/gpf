@@ -38,7 +38,11 @@ export class Individual extends IndividualSet {
   }
 
   toString() {
+    try {
       return this.pedigreeData.id;
+    } catch (exception) {
+      console.error(exception);
+    }
   }
 
   addRank(rank: number) {

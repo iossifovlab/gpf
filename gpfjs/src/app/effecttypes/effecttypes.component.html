@@ -41,7 +41,7 @@
       </gpf-effecttypes-column>
 
       <gpf-effecttypes-column
-        *ngIf="hasCNV"
+        *ngIf="variantTypes && variantTypes.has('CNV')"
         [columnName]="'CNV'"
         [effectTypesLabels]="cnvColumn"
         [effectTypes]="effectTypes"

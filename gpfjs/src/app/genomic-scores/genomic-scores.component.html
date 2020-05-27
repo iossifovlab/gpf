@@ -9,7 +9,7 @@
       </select>
     </div>
     <div>
-      <i [style.visibility]="this.genomicScoreState.score.help !== ''? 'visible': 'hidden'" class="clickable fa fa-question-circle-o fa-2x" (click)="showHelp()"></i>
+      <i [style.visibility]="this.genomicScoreState.score.help ? 'visible': 'hidden'" class="clickable fa fa-question-circle-o fa-2x" (click)="showHelp()"></i>
     </div>
     <div class="col-sm-12">
       <gpf-histogram

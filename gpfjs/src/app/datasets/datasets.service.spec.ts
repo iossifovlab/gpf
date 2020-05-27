@@ -31,7 +31,6 @@ const mockDatasetResponse: Dataset = {
   commonReport: true,
 
   genotypeBrowserConfig: {
-    hasCNV: false,
     hasAdvancedFamilyFilters: false,
     hasPedigreeSelector: true,
     hasStudyTypes: false,

@@ -13,8 +13,6 @@ import { DatasetsService } from '../datasets/datasets.service';
   providers: [{provide: QueryStateCollector, useExisting: forwardRef(() => GenotypeBlockComponent) }]
 })
 export class GenotypeBlockComponent extends QueryStateCollector implements AfterViewInit {
-  hasCNV: Observable<boolean>;
-  hasComplex: Observable<boolean>;
   hasPedigreeSelector: Observable<boolean>;
   hasPresentInChild: Observable<boolean>;
   hasPresentInParent: Observable<boolean>;
@@ -25,6 +23,8 @@ export class GenotypeBlockComponent extends QueryStateCollector implements After
   selectedDataset$: Observable<Dataset>;
   inheritanceTypeFilter: Observable<Array<string>>;
   selectedInheritanceTypeFilterValues: Observable<Array<string>>;
+  variantTypes: Observable<Set<string>>;
+  selectedVariantTypes: Observable<Set<string>>;
 
   constructor(
     private datasetsService: DatasetsService
@@ -36,18 +36,6 @@ export class GenotypeBlockComponent extends QueryStateCollector implements After
     this.selectedDataset$ = this.datasetsService.getSelectedDataset();
     const selectedDataset$ = this.selectedDataset$;
 
-    this.hasCNV = selectedDataset$.map(dataset => {
-      if (!dataset || !dataset.genotypeBrowserConfig) {
-        return false;
-      }
-      return dataset.genotypeBrowserConfig.hasCNV;
-    });
-    this.hasComplex = selectedDataset$.map(dataset => {
-      if (!dataset || !dataset.genotypeBrowserConfig) {
-        return false;
-      }
-      return dataset.genotypeBrowserConfig.hasComplex;
-    });
     this.hasPedigreeSelector = selectedDataset$.map(dataset => {
       if (!dataset || !dataset.genotypeBrowserConfig) {
         return false;
@@ -101,6 +89,18 @@ export class GenotypeBlockComponent extends QueryStateCollector implements After
         return [];
       }
       return dataset.genotypeBrowserConfig.selectedInheritanceTypeFilterValues;
+    });
+    this.variantTypes = selectedDataset$.map(dataset => {
+      if (!dataset || !dataset.genotypeBrowserConfig) {
+        return new Set([]);
+      }
+      return dataset.genotypeBrowserConfig.variantTypes;
+    });
+    this.selectedVariantTypes = selectedDataset$.map(dataset => {
+      if (!dataset || !dataset.genotypeBrowserConfig) {
+        return new Set([]);
+      }
+      return dataset.genotypeBrowserConfig.selectedVariantTypes;
     });
   }
 

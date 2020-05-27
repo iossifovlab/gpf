@@ -10,48 +10,19 @@
         (click)="selectNone()"
         class="btn btn-default">None</button>
     </div>
-    <div class="checkbox">
-      <label> <input
-        #subCheckbox
-        type="checkbox"
-        [checked]="variantTypes.selected.has('sub')"
-        (change)="variantTypesCheckValue('sub', subCheckbox.checked)"> sub
-      </label>
-    </div>
-    <div class="checkbox">
-      <label> <input
-        #insCheckbox
-        type="checkbox"
-        [checked]="variantTypes.selected.has('ins')"
-        (change)="variantTypesCheckValue('ins', insCheckbox.checked)"> ins
-      </label>
-    </div>
-    <div class="checkbox">
-      <label> <input
-        #delCheckbox
-        type="checkbox"
-        [checked]="variantTypes.selected.has('del')"
-        (change)="variantTypesCheckValue('del', delCheckbox.checked)"> del
-      </label>
-    </div>
 
-    <div *ngIf="hasComplex" class="checkbox">
-      <label> <input
-        #complexCheckbox
-        type="checkbox"
-        [checked]="variantTypes.selected.has('complex')"
-        (change)="variantTypesCheckValue('complex', complexCheckbox.checked)"> complex
-      </label>
-    </div>
-    <div *ngIf="hasCNV" class="checkbox">
-      <label> <input
-        #cnvCheckbox
-        type="checkbox"
-        [checked]="variantTypes.selected.has('CNV')"
-        (change)="variantTypesCheckValue('CNV', cnvCheckbox.checked)"> CNV
-      </label>
-    </div>
-  </div>
+    <ng-container *ngIf="variantTypes && selectedVariantTypes !== null">
+        <ng-container *ngFor="let vtype of variantTypes">
+            <div *ngIf="variantTypes.has(vtype)" class="checkbox">
+              <label> <input
+                [id]="vtype + 'Checkbox'"
+                type="checkbox"
+                [checked]="selectedVariantTypes.has(vtype)"
+                (change)="variantTypesCheckValue(vtype, selectedVariantTypes.has(vtype))"> {{vtype}}
+              </label>
+            </div>
+        </ng-container>
+    </ng-container>
 
   <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
 </div>

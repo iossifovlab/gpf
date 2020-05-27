@@ -172,12 +172,9 @@ export class PerfectlyDrawablePedigreeService {
   }
 
   isPDP(family: PedigreeData[]) {
-    const start = Date.now();
     const sandwichInstance = this.createSandwichInstance(family);
     const result: [SandwichInstance<Vertex>, IntervalForVertex<Vertex>[]] =
-      [sandwichInstance, solveSandwich(sandwichInstance)] ;
-
-    console.warn('isPDP took', Date.now() - start, 'ms');
+      [sandwichInstance, solveSandwich(sandwichInstance)];
 
     return result;
 

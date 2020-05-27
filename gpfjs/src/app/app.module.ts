@@ -1,5 +1,5 @@
 import { BrowserModule } from '@angular/platform-browser';
-import { NgModule, Injector } from '@angular/core';
+import { NgModule, Injector, ErrorHandler } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
 
@@ -150,6 +150,8 @@ import { SavedQueriesComponent } from './saved-queries/saved-queries.component';
 import { InheritancetypesComponent } from './inheritancetypes/inheritancetypes.component';
 import { GeneDrawComponent } from './gene-draw/gene-draw.component';
 import { GeneViewComponent } from './gene-view/gene-view.component';
+import { GlobalErrorHandler } from './global-error-handler/global-error-handler';
+import { GlobalErrorDisplayComponent } from './global-error-display/global-error-display.component';
 
 const appRoutes: Routes = [
   {
@@ -340,6 +342,7 @@ const appRoutes: Routes = [
     InheritancetypesComponent,
     GeneDrawComponent,
     GeneViewComponent,
+    GlobalErrorDisplayComponent,
   ],
   imports: [
     BrowserModule,
@@ -381,6 +384,10 @@ const appRoutes: Routes = [
     PedigreeMockService,
     PerfectlyDrawablePedigreeService,
     {
+      provide: ErrorHandler,
+      useClass: GlobalErrorHandler
+    },
+    {
       provide: RouteReuseStrategy,
       useClass: TaggingRouteReuseStrategy
     }
@@ -390,7 +397,8 @@ const appRoutes: Routes = [
     RegistrationComponent,
     ForgotPasswordComponent,
     PhenoBrowserModalContentComponent,
-    PopupComponent
+    PopupComponent,
+    GlobalErrorDisplayComponent
   ],
 
   bootstrap: [AppComponent]

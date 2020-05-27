@@ -2,7 +2,7 @@
 // tslint:disable-next-line:import-blacklist
 import {throwError as observableThrowError,  Observable ,  ReplaySubject } from 'rxjs';
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 
 import { ConfigService } from '../config/config.service';
 import { CookieService } from 'ngx-cookie';
@@ -224,10 +224,9 @@ export class UsersService {
   }
 
   searchUsersByGroup(searchTerm: string) {
-    const searchParams = new URLSearchParams();
-    searchParams.set('search', searchTerm);
+    const searchParams = new HttpParams().set('search', searchTerm);
 
-    const options = { withCredentials: true, search: searchParams };
+    const options = { withCredentials: true, params: searchParams };
 
     return this.http.get(this.config.baseUrl + this.usersUrl, options)
       .map(response => User.fromJsonArray(response));

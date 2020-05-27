@@ -15,19 +15,11 @@ export class GenomicScoresBlockService {
     private config: ConfigService
   ) {}
 
-  getGenomicScoress(): Observable<GenomicScores[]> {
-    return this.http
-      .get(this.config.baseUrl + this.genomicScoresUrl)
-      .map((res: any) => {
-        return GenomicScores.fromJsonArray(res);
-      });
-  }
-
   getGenomicScores(): Observable<GenomicScores[]> {
     return this.http
       .get(this.config.baseUrl + this.genomicScoresUrl)
       .map((res: any) => {
-        return res;
+        return GenomicScores.fromJsonArray(res);
       });
   }
 }
