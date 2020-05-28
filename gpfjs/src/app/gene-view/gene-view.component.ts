@@ -8,9 +8,8 @@ import { Gene } from 'app/gene-draw/gene';
   styleUrls: ['./gene-view.component.css']
 })
 export class GeneViewComponent implements OnInit {
-  gene: Gene;
+  selectedGene: Gene;
   geneSymbol: string;
-  previewGeneFlag = false;
 
   constructor(
     private geneService: GeneService
@@ -19,16 +18,9 @@ export class GeneViewComponent implements OnInit {
   ngOnInit() {
   }
 
-  previewGene() {
-    this.previewGeneFlag = true;
-
-    this.geneSymbol = this.standardizeGeneSymbol(this.geneSymbol);
-    this.geneService.getGene(this.geneSymbol).subscribe((gene) => {
-      this.gene = gene;
+  submitGeneRequest() {
+    this.geneService.getGene(this.geneSymbol.toUpperCase().trim()).subscribe((gene) => {
+      this.selectedGene = gene;
     });
-  }
-
-  standardizeGeneSymbol(geneSymbolToConvert: string): string {
-    return geneSymbolToConvert.toUpperCase().trim();
   }
 }
