@@ -24,8 +24,8 @@ export class GpfTableSubheaderComponent implements AfterContentInit {
   }
 
   defaultComparator(a: any, b: any): number {
-    const leftVal = a[this.field];
-    const rightVal = b[this.field];
+    let leftVal = a[this.field];
+    let rightVal = b[this.field];
 
     if (leftVal == "-") leftVal = null;
     if (rightVal == "-") rightVal = null;
