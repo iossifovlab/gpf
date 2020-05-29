@@ -148,8 +148,8 @@ import { SaveQueryComponent } from './save-query/save-query.component';
 import { SavedQueriesTableComponent } from './saved-queries-table/saved-queries-table.component';
 import { SavedQueriesComponent } from './saved-queries/saved-queries.component';
 import { InheritancetypesComponent } from './inheritancetypes/inheritancetypes.component';
-import { GeneDrawComponent } from './gene-draw/gene-draw.component';
 import { GeneViewComponent } from './gene-view/gene-view.component';
+import { GeneBrowserComponent } from './gene-browser/gene-browser.component';
 import { GlobalErrorHandler } from './global-error-handler/global-error-handler';
 import { GlobalErrorDisplayComponent } from './global-error-display/global-error-display.component';
 
@@ -194,8 +194,8 @@ const appRoutes: Routes = [
         component: VariantReportsComponent
       },
       {
-        path: 'geneView',
-        component: GeneViewComponent
+        path: 'geneBrowser',
+        component: GeneBrowserComponent
       }
     ]
   },
@@ -340,8 +340,8 @@ const appRoutes: Routes = [
     SavedQueriesTableComponent,
     SavedQueriesComponent,
     InheritancetypesComponent,
-    GeneDrawComponent,
     GeneViewComponent,
+    GeneBrowserComponent,
     GlobalErrorDisplayComponent,
   ],
   imports: [

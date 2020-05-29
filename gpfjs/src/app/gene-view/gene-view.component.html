@@ -1,9 +1,3 @@
-<div style="padding: 30px;" >
-    <textarea type="text" placeholder="Gene to preview (e.g. 'CHD8')" [(ngModel)]="geneSymbol" class="form-control"></textarea>
-
-    <div style="margin-top: 20px;">
-        <input type="button" class="btn btn-md btn-primary" value="Gene Preview" (click)="submitGeneRequest()">
-    </div>
-
-    <gpf-gene-draw [gene]="selectedGene"></gpf-gene-draw>
+<div style="padding: 30px;">
+  <div id="svg-container"></div>
 </div>
