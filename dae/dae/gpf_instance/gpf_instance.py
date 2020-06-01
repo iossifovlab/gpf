@@ -191,3 +191,12 @@ class GPFInstance(object):
 
     def get_genomic_scores(self):
         return self._scores_factory.get_scores()
+
+    def has_gene_weight(self, weight_id):
+        return weight_id in self.gene_weights_db
+
+    def get_gene_weight(self, weight_id):
+        return self.gene_weights_db[weight_id]
+
+    def get_all_gene_weights(self):
+        return self.gene_weights_db.get_gene_weights()
