@@ -38,11 +38,18 @@ from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.person_sets import PersonSetCollection
 
 
-class StudyWrapper(object):
+class StudyWrapperBase:
+    def get_variants_wdae_preview(self, query, max_variants_count=10000):
+        raise NotImplementedError
+
+    def get_variants_wdae_download(self, query, max_variants_count=10000):
+        raise NotImplementedError
+
+
+class StudyWrapper(StudyWrapperBase):
     def __init__(
-        self, genotype_data_study, pheno_db, gene_weights_db, *args, **kwargs
+        self, genotype_data_study, pheno_db, gene_weights_db
     ):
-        super(StudyWrapper, self).__init__(*args, **kwargs)
         assert genotype_data_study is not None
 
         self.genotype_data_study = genotype_data_study
