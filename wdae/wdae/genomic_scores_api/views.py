@@ -7,10 +7,8 @@ class GenomicScoresView(QueryBaseView):
     def __init__(self):
         super(GenomicScoresView, self).__init__()
 
-        self.scores_factory = self.gpf_instance._scores_factory
-
-    def get_genomic_scores(self, scores):
-        return [
+    def get(self, request):
+        return Response([
             {
                 "score": score.id,
                 "desc": score.desc,
@@ -21,11 +19,5 @@ class GenomicScoresView(QueryBaseView):
                 "range": score.range,
                 "help": score.help,
             }
-            for score in scores
-        ]
-
-    def get(self, request):
-        scores = self.scores_factory.get_scores()
-        genomic_scores = self.get_genomic_scores(scores)
-
-        return Response(genomic_scores)
+            for score in self.gpf_instance.get_genomic_scores()
+        ])

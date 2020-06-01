@@ -188,3 +188,6 @@ class GPFInstance(object):
 
     def get_phenotype_data_config(self, phenotype_data_id):
         return self._pheno_db.get_phenotype_data_config(phenotype_data_id)
+
+    def get_genomic_scores(self):
+        return self._scores_factory.get_scores()
