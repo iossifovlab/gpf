@@ -110,7 +110,7 @@ class RawFamilyVariants:
             if not cls.filter_real_attr(allele, real_attr_filter):
                 return False
         if ultra_rare:
-            if not cls.filter_real_attr(allele, [("af_allele_count", (1, 1))]):
+            if not cls.filter_real_attr(allele, [("af_allele_count", (0, 1))]):
                 return False
 
         if genes is not None or effect_types is not None:

@@ -281,13 +281,13 @@ class StudyWrapper(StudyWrapperBase):
                                 )
                             )
                         else:
-                            attribute = aa.get_attribute(source, "")
+                            attribute = aa.get_attribute(source, "-")
 
                             if not isinstance(
                                 attribute, str
                             ) and not isinstance(attribute, list):
                                 if attribute is None or math.isnan(attribute):
-                                    attribute = ""
+                                    attribute = "-"
                                 elif math.isinf(attribute):
                                     attribute = "inf"
 

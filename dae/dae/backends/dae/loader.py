@@ -137,6 +137,11 @@ class DenovoLoader(VariantsGenotypesLoader):
             rec["summary_variant_index"] = index
             rec["allele_index"] = 1
 
+            rec["af_parents_called_count"] = 0
+            rec["af_parents_called_percent"] = 0
+            rec["af_allele_count"] = 0
+            rec["af_allele_freq"] = 0
+
             # fmt: off
             summary_variant = SummaryVariantFactory.\
                 summary_variant_from_records(

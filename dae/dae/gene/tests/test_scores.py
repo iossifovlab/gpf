@@ -34,3 +34,5 @@ def test_scores(score_config):
     assert s.help_filename == os.path.join(
         fixtures_dir(), "genomicScores/score_raw_rankscore.md"
     )
+    assert s.help == \
+        "## score_raw_rankscore\nscore_raw_rankscore is raw rankscore score.\n"

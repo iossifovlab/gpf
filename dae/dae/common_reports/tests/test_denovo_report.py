@@ -12,7 +12,7 @@ def test_effect_cell_missense_study1(
     study1, denovo_variants_st1, phenotype_role_collection
 ):
 
-    person_set = phenotype_role_collection.person_sets["phenotype2.sib"]
+    person_set = phenotype_role_collection.person_sets["phenotype2"]
 
     effect_cell = EffectCell(
         study1, denovo_variants_st1, person_set, "Missense"
@@ -22,7 +22,7 @@ def test_effect_cell_missense_study1(
     assert effect_cell.number_of_children_with_event == 1
     assert effect_cell.observed_rate_per_child == 1.0 / 1
     assert effect_cell.percent_of_children_with_events == 1.0 / 1
-    assert effect_cell.column == "sib and phenotype2"
+    assert effect_cell.column == "phenotype2"
 
     assert effect_cell.is_empty() is False
 
@@ -34,7 +34,7 @@ def test_effect_cell_missense(
     genotype_data_group1, denovo_variants_ds1, phenotype_role_collection
 ):
 
-    person_set = phenotype_role_collection.person_sets["phenotype2.sib"]
+    person_set = phenotype_role_collection.person_sets["phenotype2"]
 
     effect_cell = EffectCell(
         genotype_data_group1, denovo_variants_ds1, person_set, "Missense"
@@ -44,7 +44,7 @@ def test_effect_cell_missense(
     assert effect_cell.number_of_children_with_event == 1
     assert effect_cell.observed_rate_per_child == 2.0 / 1
     assert effect_cell.percent_of_children_with_events == 1.0 / 1
-    assert effect_cell.column == "sib and phenotype2"
+    assert effect_cell.column == "phenotype2"
 
     assert effect_cell.is_empty() is False
 
@@ -55,7 +55,7 @@ def test_effect_cell_missense(
 def test_effect_cell_frame_shift(
     genotype_data_group1, denovo_variants_ds1, phenotype_role_collection
 ):
-    person_set = phenotype_role_collection.person_sets["phenotype1.prb"]
+    person_set = phenotype_role_collection.person_sets["phenotype1"]
 
     effect_cell = EffectCell(
         genotype_data_group1, denovo_variants_ds1, person_set, "Frame-shift"
@@ -65,7 +65,7 @@ def test_effect_cell_frame_shift(
     assert effect_cell.number_of_children_with_event == 2
     assert effect_cell.observed_rate_per_child == 2.0 / 7.0
     assert effect_cell.percent_of_children_with_events == 2.0 / 7.0
-    assert effect_cell.column == "prb and phenotype1"
+    assert effect_cell.column == "phenotype1"
 
     assert effect_cell.is_empty() is False
 
@@ -76,7 +76,7 @@ def test_effect_cell_frame_shift(
 def test_effect_cell_empty(
     genotype_data_group1, denovo_variants_ds1, phenotype_role_collection
 ):
-    person_set = phenotype_role_collection.person_sets["unknown.dad"]
+    person_set = phenotype_role_collection.person_sets["unknown"]
 
     effect_cell = EffectCell(
         genotype_data_group1, denovo_variants_ds1, person_set, "Frame-shift"
@@ -86,7 +86,7 @@ def test_effect_cell_empty(
     assert effect_cell.number_of_children_with_event == 0
     assert effect_cell.observed_rate_per_child == 0
     assert effect_cell.percent_of_children_with_events == 0
-    assert effect_cell.column == "dad and unknown"
+    assert effect_cell.column == "unknown"
 
     assert effect_cell.is_empty() is True
 
@@ -134,10 +134,10 @@ def test_denovo_report_table(
     )
 
     assert (
-        denovo_report_table.person_set_collection.name == "Role and Diagnosis"
+        denovo_report_table.person_set_collection.name == "Diagnosis"
     )
     assert sorted(denovo_report_table.columns) == sorted(
-        ["phenotype2.sib", "phenotype1.prb"]
+        ["phenotype2", "phenotype1"]
     )
     assert denovo_report_table.effect_groups == ["Missense"]
     assert denovo_report_table.effect_types == ["Frame-shift"]
