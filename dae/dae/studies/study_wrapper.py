@@ -896,8 +896,13 @@ class StudyWrapper(object):
             pheno_filter = self.pheno_filter_builder.make_filter(
                 pheno_filter_arg["measure"], pheno_constraints
             )
+            roles = [pheno_filter_arg["role"]]
+            person_ids = [
+                p.person_id
+                for p in self.families.persons_with_roles(roles=roles)
+            ]
             measure_df = self.phenotype_data.get_measure_values_df(
-                pheno_filter_arg["measure"], roles=[pheno_filter_arg["role"]]
+                pheno_filter_arg["measure"], person_ids=person_ids
             )
             measure_df = pheno_filter.apply(measure_df)
             family_ids.append(set(
