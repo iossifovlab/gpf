@@ -276,14 +276,14 @@ class StudyWrapper(object):
                         else:
                             attribute = aa.get_attribute(source, "-")
 
-                            if not isinstance(
-                                attribute, str
-                            ) and not isinstance(attribute, list):
+                            if not isinstance(attribute, str) and \
+                                    not isinstance(attribute, list):
                                 if attribute is None or math.isnan(attribute):
                                     attribute = "-"
                                 elif math.isinf(attribute):
                                     attribute = "inf"
-
+                            if not attribute:
+                                attribute = "-"
                             row_variant.append(attribute)
 
                     except (AttributeError, KeyError):
@@ -514,8 +514,6 @@ class StudyWrapper(object):
             )
 
         result = list(zip(pheno_column_dfs, pheno_column_names))
-        print(family_ids, person_ids)
-        print(result)
         return result
 
     def _get_gene_weights_values(self, allele):
