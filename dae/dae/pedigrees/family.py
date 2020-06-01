@@ -407,7 +407,14 @@ class FamiliesData(Mapping):
                     person.append(p)
         return person
 
-    def persons_with_roles(self, roles):
+    def persons_with_roles(self, roles, family_ids=None):
         if not isinstance(roles[0], Role):
             roles = [Role.from_name(role) for role in roles]
-        return list(filter(lambda m: m.role in roles, self.persons.values()))
+        if family_ids is None:
+            persons = self.persons.values()
+        else:
+            family_ids = set(family_ids)
+            persons = filter(
+                lambda p: p.family_id in family_ids,
+                self.persons.values())
+        return list(filter(lambda m: m.role in roles, persons))

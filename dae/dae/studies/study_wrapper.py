@@ -490,18 +490,20 @@ class StudyWrapper(object):
 
         return pheno_values
 
-    def _get_all_pheno_values(self, families):
+    def _get_all_pheno_values(self, family_ids):
         if not self.phenotype_data or not self.pheno_column_slots:
             return None
 
         pheno_column_names = []
         pheno_column_dfs = []
-
         for slot in self.pheno_column_slots:
             assert slot.role
+            persons = self.families.persons_with_roles(
+                [slot.role], family_ids)
+            person_ids = [p.person_id for p in persons]
+
             kwargs = {
-                "family_ids": list(families),
-                "roles": [slot.role]
+                "person_ids": list(person_ids),
             }
 
             pheno_column_names.append(f"{slot.source}.{slot.role}")
@@ -511,7 +513,10 @@ class StudyWrapper(object):
                 )
             )
 
-        return list(zip(pheno_column_dfs, pheno_column_names))
+        result = list(zip(pheno_column_dfs, pheno_column_names))
+        print(family_ids, person_ids)
+        print(result)
+        return result
 
     def _get_gene_weights_values(self, allele):
         if not self.gene_weight_column_sources:
