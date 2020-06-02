@@ -41,6 +41,12 @@ def load_gpf_instance():
     return _gpf_instance
 
 
+def reload_datasets(gpf_instance):
+    from datasets_api.models import Dataset
+    for study_id in gpf_instance.get_genotype_data_ids():
+        Dataset.recreate_dataset_perm(study_id, [])
+
+
 def _recreated_dataset_perm():
     global _gpf_instance
     global _gpf_instance_lock
@@ -54,9 +60,7 @@ def _recreated_dataset_perm():
         assert _gpf_instance is not None
 
         if not _gpf_recreated_dataset_perm:
-            from datasets_api.models import Dataset
-            for study_id in _gpf_instance.get_genotype_data_ids():
-                Dataset.recreate_dataset_perm(study_id, [])
+            reload_datasets(_gpf_instance)
             _gpf_recreated_dataset_perm = True
     finally:
         _gpf_instance_lock.release()
