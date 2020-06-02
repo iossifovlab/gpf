@@ -229,3 +229,28 @@ class GPFInstance(object):
 
     def get_common_report_families_data(self, common_report_id):
         return self._common_report_facade.get_families_data(common_report_id)
+
+    def get_gene_sets_collections(self):
+        return self.gene_sets_db.collections_descriptions
+
+    def has_gene_set_collection(self):
+        return self.gene_sets_db.has_gene_set_collection()
+
+    def get_all_gene_sets(self, collection_id):
+        return self.gene_sets_db.get_all_gene_sets(collection_id)
+
+    def get_gene_set(self, collection_id, gene_set_id):
+        return self.gene_sets_db.get_gene_set(collection_id, gene_set_id)
+
+    def get_denovo_gene_sets(self, datasets):
+        return self.denovo_gene_sets_db.get_gene_set_descriptions(datasets)
+
+    def has_denovo_gene_sets(self):
+        return len(self.denovo_gene_sets_db) > 0
+
+    def get_all_denovo_gene_sets(self, types, datasets):
+        return self.denovo_gene_sets_db.get_all_gene_sets(types, datasets)
+
+    def get_denovo_gene_set(self, gene_set_id, types, datasets):
+        return self.denovo_gene_sets_db.get_gene_set(
+            gene_set_id, types, datasets)
