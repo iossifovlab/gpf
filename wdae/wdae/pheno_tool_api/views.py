@@ -45,7 +45,7 @@ class PhenoToolView(QueryBaseView):
         }
 
     def prepare_pheno_tool(self, data):
-        study_wrapper = self.variants_db.get_wdae_wrapper(data["datasetId"])
+        study_wrapper = self.gpf_instance.get_wdae_wrapper(data["datasetId"])
 
         if not (
             study_wrapper
