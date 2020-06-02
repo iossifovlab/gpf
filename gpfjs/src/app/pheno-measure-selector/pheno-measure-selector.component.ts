@@ -85,7 +85,7 @@ export class PhenoMeasureSelectorComponent implements OnInit, OnDestroy {
 
     this.filteredMeasures = this.measures
       .filter(value => {
-        return value.name.indexOf(searchFieldValue) !== -1;
+        return value.name.toLowerCase().indexOf(searchFieldValue.toLowerCase()) !== -1;
       });
   }
 
