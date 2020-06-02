@@ -6,14 +6,14 @@ from query_base.query_base import QueryBaseView
 
 class DefaultGeneModelsId(QueryBaseView):
     def get(self, request):
-        genome = self.gpf_instance.genomes_db.get_genome()
+        genome = self.gpf_instance.get_genome()
         default_gene_models_id = genome.default_gene_models_id
         return Response(default_gene_models_id, status=status.HTTP_200_OK)
 
 
 class GeneModels(QueryBaseView):
     def get(self, request, gene_symbol):
-        genome = self.gpf_instance.genomes_db.get_genome()
+        genome = self.gpf_instance.get_genome()
         gene_models = genome.get_gene_models().gene_models
         if gene_symbol not in gene_models:
             return Response(None, status=status.HTTP_404_NOT_FOUND)

@@ -220,3 +220,6 @@ class GPFInstance(object):
         )
 
         return [{"name": k, "bands": v} for k, v in reader.items()]
+
+    def get_genome(self):
+        return self.genomes_db.get_genome()
