@@ -26,10 +26,8 @@ class EnrichmentModelsView(QueryBaseView):
     def __init__(self):
         super(EnrichmentModelsView, self).__init__()
 
-        self.background_facade = self.gpf_instance._background_facade
-
     def get_from_config(self, dataset_id, property_name, selected):
-        enrichment_config = self.background_facade.get_study_enrichment_config(
+        enrichment_config = self.gpf_instance.get_study_enrichment_config(
             dataset_id
         )
         if enrichment_config is None:
@@ -58,7 +56,6 @@ class EnrichmentTestView(QueryBaseView):
     def __init__(self):
         super(EnrichmentTestView, self).__init__()
 
-        self.background_facade = self.gpf_instance._background_facade
         self.gene_info_config = self.gpf_instance._gene_info_config
 
     def enrichment_description(self, query):
@@ -103,7 +100,7 @@ class EnrichmentTestView(QueryBaseView):
 
         if (
             background_name is None
-            or not self.background_facade.has_background(
+            or not self.gpf_instance.has_background(
                 dataset_id, background_name
             )
         ):
@@ -113,12 +110,12 @@ class EnrichmentTestView(QueryBaseView):
             enrichment_config.default_counting_model,
         )
 
-        backgorund = self.background_facade.get_study_background(
+        background = self.gpf_instance.get_study_background(
             dataset_id, background_name
         )
         counter = CounterBase.counters()[counting_name]()
         enrichment_tool = EnrichmentTool(
-            enrichment_config, backgorund, counter
+            enrichment_config, background, counter
         )
 
         return enrichment_tool
@@ -130,17 +127,17 @@ class EnrichmentTestView(QueryBaseView):
         dataset_id = query.get("datasetId", None)
         if dataset_id is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        dataset = self.variants_db.get(dataset_id)
+        dataset = self.gpf_instance.get_dataset(dataset_id)
         if not dataset:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        enrichment_config = self.background_facade.get_study_enrichment_config(
+        enrichment_config = self.gpf_instance.get_study_enrichment_config(
             dataset_id
         )
         enrichment_tool = self.get_enrichment_tool(enrichment_config, query)
 
         gene_syms = GeneSymsMixin.get_gene_syms(
-            self.gene_info_config.gene_weights, **query
+            self.gpf_instance.get_gene_info_gene_weights(), **query
         )
         if gene_syms is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)

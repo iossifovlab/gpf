@@ -226,6 +226,9 @@ class GPFInstance(object):
 
         return [{"name": k, "bands": v} for k, v in reader.items()]
 
+    def get_gene_info_gene_weights(self):
+        return self._gene_info_config.gene_weights
+
     # Genomes DB
     def get_genome(self):
         return self.genomes_db.get_genome()
@@ -266,3 +269,18 @@ class GPFInstance(object):
     # Variants DB
     def get_wdae_wrapper(self, dataset_id):
         return self._variants_db.get_wdae_wrapper(dataset_id)
+
+    def get_dataset(self, dataset_id):
+        return self._variants_db.get(dataset_id)
+
+    # Enrichment
+    def get_study_enrichment_config(self, dataset_id):
+        return self._background_facade.get_study_enrichment_config(dataset_id)
+
+    def has_background(self, dataset_id, background_name):
+        return self._background_facade.has_background(
+            dataset_id, background_name)
+
+    def get_study_background(self, dataset_id, background_name):
+        return self._background_facade.get_study_background(
+            dataset_id, background_name)
