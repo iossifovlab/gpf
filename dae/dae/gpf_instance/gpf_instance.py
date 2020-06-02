@@ -223,3 +223,9 @@ class GPFInstance(object):
 
     def get_genome(self):
         return self.genomes_db.get_genome()
+
+    def get_common_report(self, common_report_id):
+        return self._common_report_facade.get_common_report(common_report_id)
+
+    def get_common_report_families_data(self, common_report_id):
+        return self._common_report_facade.get_families_data(common_report_id)
