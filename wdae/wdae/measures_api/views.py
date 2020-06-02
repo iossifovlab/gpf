@@ -1,4 +1,3 @@
-import os
 import logging
 import numpy as np
 
@@ -18,7 +17,7 @@ class PhenoMeasuresView(QueryBaseView):
         data = request.query_params
 
         dataset_id = data["datasetId"]
-        dataset = self.variants_db.get_wdae_wrapper(dataset_id)
+        dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
         assert dataset is not None
 
         if dataset.phenotype_data is None:
@@ -48,7 +47,7 @@ class PhenoMeasureHistogramView(QueryBaseView):
     def post(self, request):
         data = request.data
         dataset_id = data["datasetId"]
-        dataset = self.variants_db.get_wdae_wrapper(dataset_id)
+        dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
 
         assert dataset is not None
         assert dataset.phenotype_data is not None
@@ -83,7 +82,7 @@ class PhenoMeasurePartitionsView(QueryBaseView):
     def post(self, request):
         data = request.data
         dataset_id = data["datasetId"]
-        dataset = self.variants_db.get_wdae_wrapper(dataset_id)
+        dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
         assert dataset is not None
         assert dataset.phenotype_data is not None
         assert "measure" in data
@@ -122,24 +121,20 @@ class PhenoMeasurePartitionsView(QueryBaseView):
 class PhenoMeasureRegressionsView(QueryBaseView):
     def __init__(self):
         super(PhenoMeasureRegressionsView, self).__init__()
-        self.pheno_config = self.pheno_db.config
+        self.pheno_config = self.gpf_instance.get_phenotype_db_config()
 
     def get_browser_dbfile(self, dbname):
         browser_dbfile = self.pheno_config[dbname].browser_dbfile
         assert browser_dbfile is not None
-        assert os.path.exists(browser_dbfile)
         return browser_dbfile
 
     def get(self, request):
         data = request.query_params
 
         dataset_id = data["datasetId"]
+        dataset_config = self.gpf_instance.get_genotype_data_config(dataset_id)
 
-        db = DbManager(
-            self.get_browser_dbfile(
-                self.variants_db.get_config(dataset_id).phenotype_data
-            )
-        )
+        db = DbManager(self.get_browser_dbfile(dataset_config.phenotype_data))
         db.build()
 
         if db is None:

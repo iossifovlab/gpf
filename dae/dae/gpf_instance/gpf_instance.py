@@ -178,6 +178,11 @@ class GPFInstance(object):
             genotype_data_id
         )
 
+    # Phenotype data
+
+    def get_phenotype_db_config(self):
+        return self._pheno_db.config
+
     def get_phenotype_data_ids(self):
         return self._pheno_db.get_phenotype_data_ids()
 
