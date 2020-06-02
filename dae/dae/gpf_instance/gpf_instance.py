@@ -190,8 +190,12 @@ class GPFInstance(object):
     def get_phenotype_data_config(self, phenotype_data_id):
         return self._pheno_db.get_phenotype_data_config(phenotype_data_id)
 
+    # Genomic scores
+
     def get_genomic_scores(self):
         return self._scores_factory.get_scores()
+
+    # Gene weights
 
     def has_gene_weight(self, weight_id):
         return weight_id in self.gene_weights_db
@@ -202,6 +206,7 @@ class GPFInstance(object):
     def get_all_gene_weights(self):
         return self.gene_weights_db.get_gene_weights()
 
+    # Gene info config
     def get_chromosomes(self):
         csvfile = self._gene_info_config.chromosomes.file
         reader = pd.read_csv(csvfile, delimiter="\t")
@@ -221,15 +226,18 @@ class GPFInstance(object):
 
         return [{"name": k, "bands": v} for k, v in reader.items()]
 
+    # Genomes DB
     def get_genome(self):
         return self.genomes_db.get_genome()
 
+    # Common reports
     def get_common_report(self, common_report_id):
         return self._common_report_facade.get_common_report(common_report_id)
 
     def get_common_report_families_data(self, common_report_id):
         return self._common_report_facade.get_families_data(common_report_id)
 
+    # Gene sets
     def get_gene_sets_collections(self):
         return self.gene_sets_db.collections_descriptions
 
@@ -254,3 +262,7 @@ class GPFInstance(object):
     def get_denovo_gene_set(self, gene_set_id, types, datasets):
         return self.denovo_gene_sets_db.get_gene_set(
             gene_set_id, types, datasets)
+
+    # Variants DB
+    def get_wdae_wrapper(self, dataset_id):
+        return self._variants_db.get_wdae_wrapper(dataset_id)
