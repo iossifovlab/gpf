@@ -1,4 +1,5 @@
 import os
+import pandas as pd
 from dae.genome.genomes_db import GenomesDB
 
 from dae.common_reports.common_report_facade import CommonReportFacade
@@ -200,3 +201,22 @@ class GPFInstance(object):
 
     def get_all_gene_weights(self):
         return self.gene_weights_db.get_gene_weights()
+
+    def get_chromosomes(self):
+        csvfile = self._gene_info_config.chromosomes.file
+        reader = pd.read_csv(csvfile, delimiter="\t")
+
+        reader["#chrom"] = reader["#chrom"].map(lambda x: x[3:])
+        col_rename = {"chromStart": "start", "chromEnd": "end"}
+        reader = reader.rename(columns=col_rename)
+
+        cols = ["start", "end", "name", "gieStain"]
+        reader["start"] = pd.to_numeric(reader["start"], downcast="integer")
+        reader["end"] = pd.to_numeric(reader["end"], downcast="integer")
+        reader = (
+            reader.groupby("#chrom")[cols]
+            .apply(lambda x: x.to_dict(orient="records"))
+            .to_dict()
+        )
+
+        return [{"name": k, "bands": v} for k, v in reader.items()]
