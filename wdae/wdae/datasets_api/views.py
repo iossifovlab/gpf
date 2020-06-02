@@ -28,11 +28,10 @@ class DatasetView(QueryBaseView):
         user = request.user
         if dataset_id is None:
             selected_genotype_data = \
-                self.variants_db.dae_config.gpfjs.selected_genotype_data
+                self.gpf_instance.get_selected_genotype_data()
             if selected_genotype_data is not None:
-
                 datasets = [
-                    self.variants_db.get_wdae_wrapper(genotype_data_id)
+                    self.gpf_instance.get_wdae_wrapper(genotype_data_id)
                     for genotype_data_id
                     in selected_genotype_data
                 ]
@@ -44,7 +43,7 @@ class DatasetView(QueryBaseView):
                 )
             else:
                 datasets = [
-                    self.variants_db.get_wdae_wrapper(genotype_data_id)
+                    self.gpf_instance.get_wdae_wrapper(genotype_data_id)
                     for genotype_data_id
                     in self.gpf_instance.get_genotype_data_ids()]
                 assert all([d is not None for d in datasets]), \
@@ -63,7 +62,7 @@ class DatasetView(QueryBaseView):
 
             return Response({"data": res})
         else:
-            dataset = self.variants_db.get_wdae_wrapper(dataset_id)
+            dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
             if dataset:
                 res = dataset.get_genotype_data_group_description()
                 res = self.augment_accessibility(res, user)

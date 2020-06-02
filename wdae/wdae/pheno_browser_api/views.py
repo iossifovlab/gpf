@@ -1,10 +1,8 @@
-import os
 import numpy as np
 
 from rest_framework.response import Response
 from rest_framework import status
 
-from django.conf import settings
 from django.http.response import HttpResponse
 
 from dae.pheno_browser.db import DbManager
@@ -12,38 +10,7 @@ from dae.pheno_browser.db import DbManager
 from query_base.query_base import QueryBaseView
 
 
-class PhenoBrowserBaseView(QueryBaseView):
-    def __init__(self):
-        super(PhenoBrowserBaseView, self).__init__()
-
-        self.pheno_config = self.pheno_db.config
-
-    def get_cache_dir(self, dbname):
-
-        cache_dir = getattr(settings, "PHENO_BROWSER_CACHE", None)
-        dbdir = os.path.join(cache_dir, dbname)
-        return dbdir
-
-    def get_browser_dbfile(self, dbname):
-        browser_dbfile = self.pheno_config[dbname].browser_dbfile
-        assert browser_dbfile is not None
-        assert os.path.exists(browser_dbfile)
-        return browser_dbfile
-
-    def get_browser_images_dir(self, dbname):
-        browser_images_dir = self.pheno_config[dbname].browser_images_dir
-        assert browser_images_dir is not None
-        assert os.path.exists(browser_images_dir)
-        assert os.path.isdir(browser_images_dir)
-        return browser_images_dir
-
-    def get_browser_images_url(self, dbname):
-        browser_images_url = self.pheno_config[dbname].browser_images_url
-        assert browser_images_url is not None
-        return browser_images_url
-
-
-class PhenoInstrumentsView(PhenoBrowserBaseView):
+class PhenoInstrumentsView(QueryBaseView):
     def __init__(self):
         super(PhenoInstrumentsView, self).__init__()
 
@@ -52,7 +19,7 @@ class PhenoInstrumentsView(PhenoBrowserBaseView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
         dataset_id = request.query_params["dataset_id"]
 
-        dataset = self.variants_db.get_wdae_wrapper(dataset_id)
+        dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
         if dataset is None or dataset.phenotype_data is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -64,20 +31,31 @@ class PhenoInstrumentsView(PhenoBrowserBaseView):
         return Response(res)
 
 
-def isnan(val):
-    return val is None or np.isnan(val)
-
-
-class PhenoMeasuresView(PhenoBrowserBaseView):
+class PhenoMeasuresView(QueryBaseView):
     def __init__(self):
         super(PhenoMeasuresView, self).__init__()
+        self.pheno_config = self.gpf_instance.get_phenotype_db_config()
+
+    @staticmethod
+    def isnan(val):
+        return val is None or np.isnan(val)
+
+    def get_browser_dbfile(self, dbname):
+        browser_dbfile = self.pheno_config[dbname].browser_dbfile
+        assert browser_dbfile is not None
+        return browser_dbfile
+
+    def get_browser_images_url(self, dbname):
+        browser_images_url = self.pheno_config[dbname].browser_images_url
+        assert browser_images_url is not None
+        return browser_images_url
 
     def get(self, request):
         if "dataset_id" not in request.query_params:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         dataset_id = request.query_params["dataset_id"]
 
-        dataset = self.variants_db.get_wdae_wrapper(dataset_id)
+        dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
         if dataset is None or dataset.phenotype_data is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -108,9 +86,9 @@ class PhenoMeasuresView(PhenoBrowserBaseView):
 
             for reg in m["regressions"]:
                 reg = dict(reg)
-                if isnan(reg["pvalue_regression_male"]):
+                if self.isnan(reg["pvalue_regression_male"]):
                     reg["pvalue_regression_male"] = "NaN"
-                if isnan(reg["pvalue_regression_female"]):
+                if self.isnan(reg["pvalue_regression_female"]):
                     reg["pvalue_regression_female"] = "NaN"
 
             res.append(m)
@@ -125,7 +103,7 @@ class PhenoMeasuresView(PhenoBrowserBaseView):
         )
 
 
-class PhenoMeasuresDownload(PhenoBrowserBaseView):
+class PhenoMeasuresDownload(QueryBaseView):
     def __init__(self):
         super(PhenoMeasuresDownload, self).__init__()
 
@@ -134,7 +112,7 @@ class PhenoMeasuresDownload(PhenoBrowserBaseView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
         dataset_id = request.query_params["dataset_id"]
 
-        dataset = self.variants_db.get_wdae_wrapper(dataset_id)
+        dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
         if dataset is None or dataset.phenotype_data is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 

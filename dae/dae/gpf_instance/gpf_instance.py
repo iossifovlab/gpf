@@ -178,6 +178,11 @@ class GPFInstance(object):
             genotype_data_id
         )
 
+    # Phenotype data
+
+    def get_phenotype_db_config(self):
+        return self._pheno_db.config
+
     def get_phenotype_data_ids(self):
         return self._pheno_db.get_phenotype_data_ids()
 
@@ -284,3 +289,7 @@ class GPFInstance(object):
     def get_study_background(self, dataset_id, background_name):
         return self._background_facade.get_study_background(
             dataset_id, background_name)
+
+    # DAE config
+    def get_selected_genotype_data(self):
+        return self.dae_config.gpfjs.selected_genotype_data
