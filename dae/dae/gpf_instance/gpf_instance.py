@@ -271,3 +271,6 @@ class GPFInstance(object):
     # Variants DB
     def get_wdae_wrapper(self, dataset_id):
         return self._variants_db.get_wdae_wrapper(dataset_id)
+
+    def get_selected_genotype_data(self):
+        return self.dae_config.gpfjs.selected_genotype_data
