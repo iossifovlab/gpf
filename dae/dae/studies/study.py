@@ -261,6 +261,7 @@ class GenotypeDataStudy(GenotypeData):
             sexes=None,
             variant_type=None,
             real_attr_filter=None,
+            frequency_filter=None,
             ultra_rare=None,
             return_reference=None,
             return_unknown=None,
@@ -295,6 +296,7 @@ class GenotypeDataStudy(GenotypeData):
                 variant_type=variant_type,
                 real_attr_filter=real_attr_filter,
                 ultra_rare=ultra_rare,
+                frequency_filter=frequency_filter,
                 return_reference=return_reference,
                 return_unknown=return_unknown,
                 limit=limit):

@@ -709,11 +709,11 @@ class StudyWrapper(object):
                 max_alt_freq = rarity.get("maxFreq", None)
                 min_alt_freq = rarity.get("minFreq", None)
                 if min_alt_freq is not None or max_alt_freq is not None:
-                    real_attr_filter = kwargs.get("real_attr_filter", [])
-                    real_attr_filter.append(
+                    frequency_filter = kwargs.get("frequency_filter", [])
+                    frequency_filter.append(
                         ("af_allele_freq", (min_alt_freq, max_alt_freq))
                     )
-                    kwargs["real_attr_filter"] = real_attr_filter
+                    kwargs["frequency_filter"] = frequency_filter
 
     @staticmethod
     def _present_in_child_to_roles(present_in_child):
