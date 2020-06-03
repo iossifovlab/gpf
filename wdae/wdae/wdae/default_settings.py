@@ -3,6 +3,7 @@ import os
 
 DEBUG = True
 
+STUDIES_EAGER_LOADING = False
 
 GUARDIAN_GET_INIT_ANONYMOUS_USER = (
     "users_api.models.get_anonymous_user_instance"
@@ -150,7 +151,6 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework.authtoken",
     "utils",
-    "gpf_instance",
     "gene_weights",
     "gene_sets",
     "datasets_api",
@@ -167,6 +167,7 @@ INSTALLED_APPS = [
     "chromosome",
     "query_state_save",
     "user_queries",
+    "gpf_instance.apps.EagerLoadingConfig",
 ]
 
 AUTH_USER_MODEL = "users_api.WdaeUser"
@@ -271,7 +272,7 @@ CACHES = {
         "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
         "LOCATION": "wdae_django_default.cache",
         "TIMEOUT": 86400,
-        "OPTIONS": {"MAX_ENTRIES": 1000,},
+        "OPTIONS": {"MAX_ENTRIES": 1000, },
     },
     "pre": {
         "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
