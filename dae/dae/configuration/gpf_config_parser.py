@@ -24,6 +24,19 @@ def validate_path(field: str, value: str, error):
         error(field, f"path <{value}> is not an absolute path!")
 
 
+class DefaultBox(Box):
+    def __init__(self, *args, **kwargs):
+        kwargs["default_box"] = True
+        kwargs["default_box_attr"] = None
+        super(DefaultBox, self).__init__(*args, **kwargs)
+
+
+class FrozenBox(DefaultBox):
+    def __init__(self, *args, **kwargs):
+        kwargs["frozen_box"] = True
+        super(FrozenBox, self).__init__(*args, **kwargs)
+
+
 class GPFConfigValidator(Validator):
     def _normalize_coerce_abspath(self, value: str) -> str:
         directory = self._config["conf_dir"]
@@ -92,12 +105,7 @@ class GPFConfigParser:
             config = recursive_dict_update(default_config, config)
 
         assert validator.validate(config), validator.errors
-        return Box(
-            validator.document,
-            frozen_box=True,
-            default_box=True,
-            default_box_attr=None,
-        )
+        return FrozenBox(validator.document)
 
     @classmethod
     def load_config_raw(cls, filename: str) -> Dict[str, Any]:
@@ -119,9 +127,4 @@ class GPFConfigParser:
     def modify_tuple(
             cls, t: Box, new_values: Dict[str, Any]
     ) -> Box:
-        return Box(
-            recursive_dict_update(t.to_dict(), new_values),
-            frozen_box=True,
-            default_box=True,
-            default_box_attr=None,
-        )
+        return FrozenBox(recursive_dict_update(t.to_dict(), new_values))

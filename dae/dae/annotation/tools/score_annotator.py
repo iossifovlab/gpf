@@ -44,7 +44,7 @@ class VariantScoreAnnotatorBase(VariantAnnotatorBase):
 
     def collect_annotator_schema(self, schema):
         super(VariantScoreAnnotatorBase, self).collect_annotator_schema(schema)
-        for native, output in self.config.columns.field_values_iterator():
+        for native, output in self.config.columns.items():
             type_name = self.score_file.schema.columns[native].type_name
             schema.create_column(output, type_name)
 

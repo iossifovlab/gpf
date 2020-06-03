@@ -70,15 +70,14 @@ class PipelineAnnotator(CompositeVariantAnnotator):
 
     def __init__(self, config, genomes_db):
         super(PipelineAnnotator, self).__init__(config, genomes_db)
+        self.virtual_columns = list(config.virtual_columns)
 
     @staticmethod
     def build(options, config_file, genomes_db):
-        # fmt: off
         pipeline_config = \
-                AnnotationConfigParser.read_and_parse_file_configuration(
-                    options, config_file
-                )
-        # fmt: on
+            AnnotationConfigParser.read_and_parse_file_configuration(
+                options, config_file
+            )
         assert pipeline_config.sections
 
         pipeline = PipelineAnnotator(pipeline_config, genomes_db)
@@ -87,17 +86,17 @@ class PipelineAnnotator(CompositeVariantAnnotator):
                 section_config, genomes_db
             )
             pipeline.add_annotator(annotator)
-            output_columns = [
-                col
-                for col in annotator.config.output_columns
-                if col not in pipeline.config.output_columns
-            ]
-            pipeline.config.output_columns.extend(output_columns)
+            # output_columns = [
+            #     col
+            #     for col in annotator.config.output_columns
+            #     if col not in pipeline.config.output_columns
+            # ]
+            # pipeline.config.output_columns.extend(output_columns)
         return pipeline
 
     def add_annotator(self, annotator):
         assert isinstance(annotator, AnnotatorBase)
-        self.config.virtual_columns.extend(annotator.config.virtual_columns)
+        self.virtual_columns.extend(annotator.config.virtual_columns)
         self.annotators.append(annotator)
 
     def line_annotation(self, aline):
@@ -107,8 +106,8 @@ class PipelineAnnotator(CompositeVariantAnnotator):
 
     def collect_annotator_schema(self, schema):
         super(PipelineAnnotator, self).collect_annotator_schema(schema)
-        if self.config.virtual_columns:
-            for vcol in self.config.virtual_columns:
+        if self.virtual_columns:
+            for vcol in self.virtual_columns:
                 schema.remove_column(vcol)
 
 

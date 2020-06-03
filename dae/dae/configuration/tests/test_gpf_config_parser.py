@@ -1,6 +1,22 @@
 import pytest
 import os
-from dae.configuration.gpf_config_parser import GPFConfigParser
+
+from box import BoxError
+from dae.configuration.gpf_config_parser import GPFConfigParser, \
+    DefaultBox, FrozenBox
+
+
+def test_default_box():
+    default_box = DefaultBox({"a": 123})
+    assert default_box.a == 123
+    assert default_box.non_existent_attr is None
+
+
+def test_frozen_box():
+    with pytest.raises(BoxError):
+        frozen_box = FrozenBox({"a": 123})
+        assert frozen_box.a == 123
+        frozen_box.a = 456
 
 
 def test_config_parser_load_single(conf_schema_basic, fixtures_dir):
