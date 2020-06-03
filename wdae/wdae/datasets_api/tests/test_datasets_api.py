@@ -1,4 +1,5 @@
 import pytest
+from box import Box
 
 pytestmark = pytest.mark.usefixtures("wdae_gpf_instance", "calc_gene_sets")
 
@@ -69,9 +70,24 @@ def test_user_client_get_nonexistant_dataset_details(
 def test_datasets_api_get_all_with_selected_restriction(
     admin_client, mocker, wdae_gpf_instance
 ):
-    gpfjs_dae_config_section = wdae_gpf_instance._variants_db.dae_config.gpfjs
     mocker.patch.object(
-        gpfjs_dae_config_section,
+        wdae_gpf_instance._variants_db,
+        "dae_config",
+        Box(wdae_gpf_instance._variants_db.dae_config)
+    )
+
+    mocker.patch.object(
+        wdae_gpf_instance._variants_db.dae_config,
+        "gpfjs",
+        Box(
+            wdae_gpf_instance._variants_db.dae_config.gpfjs,
+            default_box=True,
+            default_box_attr=None
+        )
+    )
+
+    mocker.patch.object(
+        wdae_gpf_instance._variants_db.dae_config.gpfjs,
         "selected_genotype_data",
         ["quads_f1", "quads_f2", "f1_group"]
     )

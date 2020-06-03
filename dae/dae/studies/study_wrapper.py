@@ -1002,9 +1002,7 @@ class StudyWrapper(object):
 
         result["description"] = self.description
 
-        bs_config = GPFConfigParser._namedtuple_to_dict(
-            deepcopy(self.config.genotype_browser)
-        )
+        bs_config = Box(self.config.genotype_browser)
 
         bs_config["columns"] = dict()
         for column in bs_config["preview_columns"]:
@@ -1021,19 +1019,11 @@ class StudyWrapper(object):
                 assert column in bs_config["genotype"], column
                 bs_config["columns"][column] = bs_config["genotype"][column]
 
-        if self.pheno_filters:
-            bs_config["pheno_filters"] = GPFConfigParser._namedtuple_to_dict(
-                self.pheno_filters
-            )
-
         result["genotype_browser_config"] = bs_config
         result["genotype_browser"] = self.config.genotype_browser.enabled
 
         result["study_types"] = result["study_type"]
         result["enrichment_tool"] = self.config.enrichment.enabled
-        result["common_report"] = GPFConfigParser._namedtuple_to_dict(
-            result["common_report"]
-        )
         result["person_set_collections"] = \
             self.genotype_data_study.person_set_collection_configs
         result["name"] = result["name"] or result["id"]

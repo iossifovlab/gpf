@@ -34,11 +34,11 @@ class EnrichmentModelsView(QueryBaseView):
         )
         if enrichment_config is None:
             return []
-        selected_properties = getattr(enrichment_config, selected)
+        selected_properties = enrichment_config[selected]
 
         return [
             {"name": el.name, "desc": el.desc}
-            for el in getattr(enrichment_config, property_name)
+            for el in enrichment_config[property_name].values()
             if el.name in selected_properties
         ]
 

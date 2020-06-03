@@ -170,27 +170,22 @@ class DenovoGeneSetCollection(object):
         if len(denovo_gene_set_collections) == 0:
             return {}
 
-        first_criteria = denovo_gene_set_collections[0].recurrency_criteria
-        recurrency_criteria = {
-            field: {
-                "start": getattr(first_criteria.segments, field).start,
-                "end": getattr(first_criteria.segments, field).end,
-            }
-            for field in first_criteria.segments._fields
-        }
+        recurrency_criteria = \
+            denovo_gene_set_collections[0].recurrency_criteria
 
         for collection in denovo_gene_set_collections:
             common_elements = frozenset(
                 recurrency_criteria.keys()
-            ).intersection(collection.recurrency_criteria.segments._fields)
+            ).intersection(collection.recurrency_criteria.segments.keys())
 
             new_recurrency_criteria = {}
             for ce in common_elements:
-                new_recurrency_criteria[
-                    ce
-                ] = DenovoGeneSetCollection._narrowest_criteria(
-                    ce, recurrency_criteria, collection.recurrency_criteria
-                )
+                new_recurrency_criteria[ce] = \
+                    DenovoGeneSetCollection._narrowest_criteria(
+                        ce,
+                        recurrency_criteria,
+                        collection.recurrency_criteria
+                    )
 
             recurrency_criteria = new_recurrency_criteria
 
