@@ -162,8 +162,6 @@ class ImpalaFamilyVariants:
                     v = self.serializer.deserialize_family_variant(
                         variant_data, family
                     )
-                    for aa in v.alt_alleles:
-                        print(aa, aa.inheritance_in_members)
 
                     if v is None:
                         continue
