@@ -370,7 +370,12 @@ class ImpalaFamilyVariants:
                 or self.schema[attr_name].type_py == int
             ), self.schema[attr_name]
             left, right = attr_range
-            if left is None:
+            if left is None and right is None:
+                if not is_frequency:
+                    query.append(
+                        f"({attr_name} is not null)"
+                    )
+            elif left is None:
                 assert right is not None
                 if is_frequency:
                     query.append(

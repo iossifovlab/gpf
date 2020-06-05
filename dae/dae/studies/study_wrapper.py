@@ -593,7 +593,7 @@ class StudyWrapper(object):
         genomic_scores_filter = [
             (score["metric"], (score["rangeStart"], score["rangeEnd"]))
             for score in genomic_scores
-            if score["rangeStart"] or score["rangeEnd"]
+            # if score["rangeStart"] or score["rangeEnd"]
         ]
 
         if "real_attr_filter" not in kwargs:
