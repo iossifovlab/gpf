@@ -49,7 +49,7 @@ export class VariantReportsComponent implements OnInit, OnChanges {
       }
     );
 
-    this.selectedDataset$ = this.datasetsService.getSelectedDataset();
+    this.selectedDataset$ = this.datasetsService.getDataset(this.selectedDatasetId);
 
     this.selectedDataset$.subscribe(
       dataset => {
