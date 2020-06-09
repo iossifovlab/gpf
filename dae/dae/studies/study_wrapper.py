@@ -441,7 +441,7 @@ class StudyWrapper(object):
         for variant in self._add_additional_columns(variants_from_studies):
             yield variant
 
-    STREAMING_CHUNK_SIZE = 100
+    STREAMING_CHUNK_SIZE = 20
 
     def _add_additional_columns(self, variants_iterable):
         for variants_chunk in split_iterable(

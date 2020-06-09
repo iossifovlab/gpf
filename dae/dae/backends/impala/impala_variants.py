@@ -728,8 +728,6 @@ class ImpalaFamilyVariants:
         if real_attr_filter is not None:
             where.append(self._build_real_attr_where(real_attr_filter))
         if frequency_filter is not None:
-            print(frequency_filter)
-
             where.append(
                 self._build_real_attr_where(
                     frequency_filter, is_frequency=True))
