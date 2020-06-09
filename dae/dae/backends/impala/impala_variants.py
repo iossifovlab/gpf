@@ -743,7 +743,7 @@ class ImpalaFamilyVariants:
         )
         where.append(
             self._build_frequency_bin_heuristic(
-                inheritance, ultra_rare, real_attr_filter
+                inheritance, ultra_rare, frequency_filter
             )
         )
         where.append(self._build_family_bin_heuristic(family_ids, person_ids))
