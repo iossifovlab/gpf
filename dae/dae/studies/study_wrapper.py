@@ -39,10 +39,16 @@ from dae.person_sets import PersonSetCollection
 
 
 class StudyWrapperBase:
+    def get_wdae_preview_info(self, query, max_variants_count=10000):
+        raise NotImplementedError
+
     def get_variants_wdae_preview(self, query, max_variants_count=10000):
         raise NotImplementedError
 
     def get_variants_wdae_download(self, query, max_variants_count=10000):
+        raise NotImplementedError
+
+    def get_genotype_data_group_description(self):
         raise NotImplementedError
 
 

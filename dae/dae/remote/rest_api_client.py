@@ -3,8 +3,9 @@ import requests
 
 class RESTClient:
 
-    def __init__(self, host, base_url=None, port=None):
+    def __init__(self, remote_id, host, base_url=None, port=None):
         self.host = host
+        self.remote_id = remote_id
         if base_url:
             if not base_url.endswith("/"):
                 base_url = base_url + "/"
@@ -74,4 +75,8 @@ class RESTClient:
 
     def get_variants_preview(self, data):
         response = self._post("genotype_browser/preview/variants", data=data)
+        return response
+
+    def get_browser_preview_info(self, data):
+        response = self._post("genotype_browser/preview", data=data)
         return response
