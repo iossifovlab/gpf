@@ -23,3 +23,14 @@ CORS_ORIGIN_WHITELIST = [
 ]
 
 CORS_ALLOW_CREDENTIALS = True
+
+REMOTES = [
+    {
+        "id": "REMOTE1",
+        "host": "localhost",
+        "base_url": "api/v3",
+        "port": "8000",
+        "user": "admin@iossifovlab.org",
+        "password": "secret",
+    }
+]

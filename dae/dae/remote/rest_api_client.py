@@ -3,7 +3,10 @@ import requests
 
 class RESTClient:
 
-    def __init__(self, remote_id, host, base_url=None, port=None):
+    def __init__(
+            self, remote_id, host,
+            username, password,
+            base_url=None, port=None):
         self.host = host
         self.remote_id = remote_id
         if base_url:
