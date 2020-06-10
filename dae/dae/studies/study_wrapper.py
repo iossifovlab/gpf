@@ -289,14 +289,14 @@ class StudyWrapper(StudyWrapperBase):
                         else:
                             attribute = aa.get_attribute(source, "-")
 
-                            if not isinstance(
-                                attribute, str
-                            ) and not isinstance(attribute, list):
+                            if not isinstance(attribute, str) and \
+                                    not isinstance(attribute, list):
                                 if attribute is None or math.isnan(attribute):
                                     attribute = "-"
                                 elif math.isinf(attribute):
                                     attribute = "inf"
-
+                            if not attribute:
+                                attribute = "-"
                             row_variant.append(attribute)
 
                     except (AttributeError, KeyError):
@@ -454,7 +454,7 @@ class StudyWrapper(StudyWrapperBase):
         for variant in self._add_additional_columns(variants_from_studies):
             yield variant
 
-    STREAMING_CHUNK_SIZE = 100
+    STREAMING_CHUNK_SIZE = 20
 
     def _add_additional_columns(self, variants_iterable):
         for variants_chunk in split_iterable(
@@ -503,18 +503,20 @@ class StudyWrapper(StudyWrapperBase):
 
         return pheno_values
 
-    def _get_all_pheno_values(self, families):
+    def _get_all_pheno_values(self, family_ids):
         if not self.phenotype_data or not self.pheno_column_slots:
             return None
 
         pheno_column_names = []
         pheno_column_dfs = []
-
         for slot in self.pheno_column_slots:
             assert slot.role
+            persons = self.families.persons_with_roles(
+                [slot.role], family_ids)
+            person_ids = [p.person_id for p in persons]
+
             kwargs = {
-                "family_ids": list(families),
-                "roles": [slot.role]
+                "person_ids": list(person_ids),
             }
 
             pheno_column_names.append(f"{slot.source}.{slot.role}")
@@ -524,7 +526,8 @@ class StudyWrapper(StudyWrapperBase):
                 )
             )
 
-        return list(zip(pheno_column_dfs, pheno_column_names))
+        result = list(zip(pheno_column_dfs, pheno_column_names))
+        return result
 
     def _get_gene_weights_values(self, allele):
         if not self.gene_weight_column_sources:
@@ -603,7 +606,7 @@ class StudyWrapper(StudyWrapperBase):
         genomic_scores_filter = [
             (score["metric"], (score["rangeStart"], score["rangeEnd"]))
             for score in genomic_scores
-            if score["rangeStart"] or score["rangeEnd"]
+            # if score["rangeStart"] or score["rangeEnd"]
         ]
 
         if "real_attr_filter" not in kwargs:
@@ -719,11 +722,11 @@ class StudyWrapper(StudyWrapperBase):
                 max_alt_freq = rarity.get("maxFreq", None)
                 min_alt_freq = rarity.get("minFreq", None)
                 if min_alt_freq is not None or max_alt_freq is not None:
-                    real_attr_filter = kwargs.get("real_attr_filter", [])
-                    real_attr_filter.append(
+                    frequency_filter = kwargs.get("frequency_filter", [])
+                    frequency_filter.append(
                         ("af_allele_freq", (min_alt_freq, max_alt_freq))
                     )
-                    kwargs["real_attr_filter"] = real_attr_filter
+                    kwargs["frequency_filter"] = frequency_filter
 
     @staticmethod
     def _present_in_child_to_roles(present_in_child):
@@ -904,8 +907,13 @@ class StudyWrapper(StudyWrapperBase):
             pheno_filter = self.pheno_filter_builder.make_filter(
                 pheno_filter_arg["measure"], pheno_constraints
             )
+            roles = [pheno_filter_arg["role"]]
+            person_ids = [
+                p.person_id
+                for p in self.families.persons_with_roles(roles=roles)
+            ]
             measure_df = self.phenotype_data.get_measure_values_df(
-                pheno_filter_arg["measure"], roles=[pheno_filter_arg["role"]]
+                pheno_filter_arg["measure"], person_ids=person_ids
             )
             measure_df = pheno_filter.apply(measure_df)
             family_ids.append(set(

@@ -97,6 +97,7 @@ class ImpalaFamilyVariants:
             variant_type=None,
             real_attr_filter=None,
             ultra_rare=None,
+            frequency_filter=None,
             return_reference=None,
             return_unknown=None,
             limit=None):
@@ -118,6 +119,7 @@ class ImpalaFamilyVariants:
                     variant_type=variant_type,
                     real_attr_filter=real_attr_filter,
                     ultra_rare=ultra_rare,
+                    frequency_filter=frequency_filter,
                     return_reference=return_reference,
                     return_unknown=return_unknown,
                     limit=None,
@@ -179,6 +181,7 @@ class ImpalaFamilyVariants:
             variant_type=None,
             real_attr_filter=None,
             ultra_rare=None,
+            frequency_filter=None,
             return_reference=None,
             return_unknown=None,
             limit=None):
@@ -204,6 +207,7 @@ class ImpalaFamilyVariants:
                     variant_type=variant_type,
                     real_attr_filter=real_attr_filter,
                     ultra_rare=ultra_rare,
+                    frequency_filter=frequency_filter,
                     return_reference=return_reference,
                     return_unknown=return_unknown,
                     limit=limit)
@@ -223,6 +227,7 @@ class ImpalaFamilyVariants:
             variant_type=variant_type,
             real_attr_filter=real_attr_filter,
             ultra_rare=ultra_rare,
+            frequency_filter=frequency_filter,
             return_reference=return_reference,
             return_unknown=return_unknown,
             limit=count)
@@ -353,7 +358,7 @@ class ImpalaFamilyVariants:
                             "gpf_partitioning_frequency_bin_rare_boundary":
                         self.rare_boundary = int(prop_value)
 
-    def _build_real_attr_where(self, real_attr_filter):
+    def _build_real_attr_where(self, real_attr_filter, is_frequency=False):
         query = []
         for attr_name, attr_range in real_attr_filter:
             if attr_name not in self.schema:
@@ -365,9 +370,20 @@ class ImpalaFamilyVariants:
                 or self.schema[attr_name].type_py == int
             ), self.schema[attr_name]
             left, right = attr_range
-            if left is None:
+            if left is None and right is None:
+                if not is_frequency:
+                    query.append(
+                        f"({attr_name} is not null)"
+                    )
+            elif left is None:
                 assert right is not None
-                query.append("({} <= {})".format(attr_name, right))
+                if is_frequency:
+                    query.append(
+                        f"({attr_name} <= {right} or {attr_name} is null)")
+                else:
+                    query.append(
+                        f"({attr_name} <= {right})")
+
             elif right is None:
                 assert left is not None
                 query.append("({} >= {})".format(attr_name, left))
@@ -382,7 +398,8 @@ class ImpalaFamilyVariants:
     def _build_ultra_rare_where(self, ultra_rare):
         assert ultra_rare
         return self._build_real_attr_where(
-            real_attr_filter=[("af_allele_count", (0, 1))]
+            real_attr_filter=[("af_allele_count", (None, 1))],
+            is_frequency=True
         )
 
     def _build_regions_where(self, regions):
@@ -653,6 +670,7 @@ class ImpalaFamilyVariants:
         variant_type=None,
         real_attr_filter=None,
         ultra_rare=None,
+        frequency_filter=None,
         return_reference=None,
         return_unknown=None,
     ):
@@ -709,6 +727,10 @@ class ImpalaFamilyVariants:
             )
         if real_attr_filter is not None:
             where.append(self._build_real_attr_where(real_attr_filter))
+        if frequency_filter is not None:
+            where.append(
+                self._build_real_attr_where(
+                    frequency_filter, is_frequency=True))
         if ultra_rare:
             where.append(self._build_ultra_rare_where(ultra_rare))
 
@@ -719,7 +741,7 @@ class ImpalaFamilyVariants:
         )
         where.append(
             self._build_frequency_bin_heuristic(
-                inheritance, ultra_rare, real_attr_filter
+                inheritance, ultra_rare, frequency_filter
             )
         )
         where.append(self._build_family_bin_heuristic(family_ids, person_ids))
@@ -750,6 +772,7 @@ class ImpalaFamilyVariants:
             variant_type=None,
             real_attr_filter=None,
             ultra_rare=None,
+            frequency_filter=None,
             return_reference=None,
             return_unknown=None,
             limit=None):
@@ -766,6 +789,7 @@ class ImpalaFamilyVariants:
             variant_type=variant_type,
             real_attr_filter=real_attr_filter,
             ultra_rare=ultra_rare,
+            frequency_filter=frequency_filter,
             return_reference=return_reference,
             return_unknown=return_unknown,
         )

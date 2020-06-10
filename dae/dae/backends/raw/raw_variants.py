@@ -34,22 +34,28 @@ class RawFamilyVariants:
         return False
 
     @staticmethod
-    def filter_real_attr(va, real_attr_filter):
+    def filter_real_attr(va, real_attr_filter, is_frequency=False):
         result = []
         for key, ranges in real_attr_filter:
             if not va.has_attribute(key):
                 return False
 
             val = va.get_attribute(key)
-            if val is None:
-                continue
+            if val is None and not is_frequency:
+                return False
             rmin, rmax = ranges
-            if rmin is None:
-                result.append(val <= rmax)
+            if rmin is None and rmax is None:
+                result.append(True)
+            elif rmin is None:
+                if is_frequency:
+                    result.append(val is None or val <= rmax)
+                else:
+                    result.append(val is not None and val <= rmax)
             elif rmax is None:
-                result.append(val >= rmin)
+                result.append(val is not None and val >= rmin)
             else:
-                result.append((val >= rmin) and (val <= rmax))
+                result.append(
+                    val is not None and (val >= rmin) and (val <= rmax))
         if all(result):
             return True
 
@@ -90,6 +96,7 @@ class RawFamilyVariants:
             allele,
             inheritance=None,
             real_attr_filter=None,
+            frequency_filter=None,
             ultra_rare=None,
             genes=None,
             effect_types=None,
@@ -108,6 +115,10 @@ class RawFamilyVariants:
 
         if real_attr_filter is not None:
             if not cls.filter_real_attr(allele, real_attr_filter):
+                return False
+        if frequency_filter is not None:
+            if not cls.filter_real_attr(
+                    allele, frequency_filter, is_frequency=True):
                 return False
         if ultra_rare:
             if not cls.filter_real_attr(allele, [("af_allele_count", (0, 1))]):

@@ -70,3 +70,26 @@ def test_combine_families_sex_mismatch():
             families_A,
             families_D
         )
+
+
+def test_combine_families_sex_unspecified_mismatch():
+    families_A = FamiliesLoader.load_pedigree_file(
+        relative_to_this_test_folder("fixtures/pedigree_A.ped")
+    )
+    families_E = FamiliesLoader.load_pedigree_file(
+        relative_to_this_test_folder("fixtures/pedigree_E.ped")
+    )
+
+    new_families = GenotypeDataGroup._combine_families(
+            families_A,
+            families_E
+        )
+
+    merged_f1 = new_families["f1"]
+    assert set(merged_f1.persons.keys()) == {
+        "f1.mom",
+        "f1.dad",
+        "f1.p1",
+        "f1.s1",
+        "f1.s2",
+    }

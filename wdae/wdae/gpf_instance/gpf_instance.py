@@ -1,3 +1,4 @@
+import logging
 from django.conf import settings
 
 from threading import Lock
@@ -6,14 +7,15 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.remote.remote_study_wrapper import RemoteStudyWrapper
 from dae.remote.rest_api_client import RESTClient
 
-from datasets_api.models import Dataset
 from requests.exceptions import ConnectionError
 
 
+logger = logging.getLogger(__name__)
 __all__ = ["get_gpf_instance"]
 
 
 _gpf_instance = None
+_gpf_recreated_dataset_perm = False
 _gpf_instance_lock = Lock()
 
 
@@ -70,6 +72,14 @@ class WGPFInstance(GPFInstance):
 
 
 def get_gpf_instance():
+    load_gpf_instance()
+    _recreated_dataset_perm()
+
+    return _gpf_instance
+
+
+def load_gpf_instance():
+
     global _gpf_instance
     global _gpf_instance_lock
 
@@ -78,7 +88,6 @@ def get_gpf_instance():
         try:
             if _gpf_instance is None:
                 gpf_instance = WGPFInstance(load_eagerly=True)
-                reload_datasets(gpf_instance)
                 _gpf_instance = gpf_instance
         finally:
             _gpf_instance_lock.release()
@@ -87,5 +96,25 @@ def get_gpf_instance():
 
 
 def reload_datasets(gpf_instance):
+    from datasets_api.models import Dataset
     for study_id in gpf_instance.get_genotype_data_ids():
         Dataset.recreate_dataset_perm(study_id, [])
+
+
+def _recreated_dataset_perm():
+    global _gpf_instance
+    global _gpf_instance_lock
+    global _gpf_recreated_dataset_perm
+
+    if _gpf_recreated_dataset_perm:
+        return
+
+    _gpf_instance_lock.acquire()
+    try:
+        assert _gpf_instance is not None
+
+        if not _gpf_recreated_dataset_perm:
+            reload_datasets(_gpf_instance)
+            _gpf_recreated_dataset_perm = True
+    finally:
+        _gpf_instance_lock.release()

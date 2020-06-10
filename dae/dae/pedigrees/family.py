@@ -231,8 +231,14 @@ class Family(object):
                 merged_persons[person_id] = r_person
             elif r_person.generated:
                 merged_persons[person_id] = l_person
+            elif l_person.sex == Sex.unspecified:
+                merged_persons[person_id] = r_person
+            elif r_person.sex == Sex.unspecified:
+                merged_persons[person_id] = l_person
 
-            assert (l_person.sex == r_person.sex) \
+            assert (l_person.sex == r_person.sex or \
+                    l_person.sex == Sex.unspecified or \
+                    r_person.sex == Sex.unspecified) \
                 and (l_person.role == r_person.role) \
                 and (l_person.family_id == r_person.family_id), \
                 f"Mismatched attributes for person {person_id}; " \
@@ -407,7 +413,14 @@ class FamiliesData(Mapping):
                     person.append(p)
         return person
 
-    def persons_with_roles(self, roles):
+    def persons_with_roles(self, roles, family_ids=None):
         if not isinstance(roles[0], Role):
             roles = [Role.from_name(role) for role in roles]
-        return list(filter(lambda m: m.role in roles, self.persons.values()))
+        if family_ids is None:
+            persons = self.persons.values()
+        else:
+            family_ids = set(family_ids)
+            persons = filter(
+                lambda p: p.family_id in family_ids,
+                self.persons.values())
+        return list(filter(lambda m: m.role in roles, persons))

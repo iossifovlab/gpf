@@ -77,7 +77,7 @@ def admin_client(admin, client):
 def wdae_gpf_instance(
     db, mocker, admin_client, fixtures_gpf_instance, gpf_instance_2013
 ):
-    reload_datasets(fixtures_gpf_instance._variants_db)
+    reload_datasets(fixtures_gpf_instance)
     mocker.patch(
         "query_base.query_base.get_gpf_instance",
         return_value=fixtures_gpf_instance,

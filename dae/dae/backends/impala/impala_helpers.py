@@ -1,4 +1,5 @@
 import os
+import sys
 import itertools
 
 from contextlib import closing
@@ -18,14 +19,16 @@ class ImpalaHelpers(object):
                 impala_hosts = [impala_host]
         if impala_hosts is None:
             impala_hosts = []
-   
+
         host_generator = itertools.cycle(impala_hosts)
 
         def getconn():
             impala_host = next(host_generator)
             return dbapi.connect(host=impala_host, port=impala_port)
 
-        print(f"Creating impala pool with {pool_size} connections")
+        print(
+            f"Creating impala pool with {pool_size} connections",
+            file=sys.stderr)
 
         self._connection_pool = QueuePool(
             getconn, pool_size=pool_size, reset_on_return=False)

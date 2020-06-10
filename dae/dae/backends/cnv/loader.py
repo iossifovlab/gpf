@@ -150,7 +150,7 @@ class CNVLoader(VariantsGenotypesLoader):
             ), "Trying to generate CNV best state for non cnv variant"
 
         ref_row = expected_ploidy - alt_row
-        return np.stack((ref_row, alt_row))
+        return np.stack((ref_row, alt_row)).astype(np.int8)
 
     @classmethod
     def load_cnv(

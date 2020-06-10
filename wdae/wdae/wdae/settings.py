@@ -34,3 +34,5 @@ REMOTES = [
         "password": "secret",
     }
 ]
+
+STUDIES_EAGER_LOADING = False

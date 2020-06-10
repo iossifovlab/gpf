@@ -69,6 +69,8 @@ def write_effects(stream, allele):
 
 
 def write_genotype(stream, gt):
+    assert gt.dtype == np.int8
+
     rows, _ = gt.shape
     assert rows == 2
     flat = gt.flatten(order="F")
@@ -79,6 +81,8 @@ def write_genotype(stream, gt):
 
 
 def write_best_state(stream, best_state):
+    assert best_state.dtype == np.int8
+
     _, col_count = best_state.shape
     flat = best_state.flatten(order="F")
     buff = flat.tobytes()
