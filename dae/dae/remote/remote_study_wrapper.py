@@ -1,4 +1,5 @@
 from dae.studies.study_wrapper import StudyWrapperBase
+import json
 
 
 class RemoteStudyWrapper(StudyWrapperBase):
@@ -20,8 +21,12 @@ class RemoteStudyWrapper(StudyWrapperBase):
 
     def get_variants_wdae_preview(self, query, max_variants_count=10000):
         query["datasetId"] = self._remote_study_id
-        variants = self.rest_client.get_variants_preview(query).json()
-        return iter(variants)
+        response = self.rest_client.get_variants_preview(query)
+        for line in response.iter_lines():
+            if line:
+                variants = json.loads(line)
+                for variant in variants:
+                    yield variant
 
     def get_variants_wdae_download(self, query, max_variants_count=10000):
         raise NotImplementedError

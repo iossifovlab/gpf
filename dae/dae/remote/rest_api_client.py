@@ -51,9 +51,9 @@ class RESTClient:
         response = self.session.get(url)
         return response
 
-    def _post(self, url, data=None):
+    def _post(self, url, data=None, stream=False):
         url = self._build_url(url)
-        response = self.session.post(url, json=data)
+        response = self.session.post(url, json=data, stream=stream)
         return response
 
     def _put(self, url, data=None):
@@ -74,7 +74,11 @@ class RESTClient:
             return response.json()["data"]
 
     def get_variants_preview(self, data):
-        response = self._post("genotype_browser/preview/variants", data=data)
+        response = self._post(
+            "genotype_browser/preview/variants",
+            data=data,
+            stream=True
+        )
         return response
 
     def get_browser_preview_info(self, data):
