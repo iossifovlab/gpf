@@ -34,6 +34,28 @@ export class GeneViewComponent implements OnInit, OnChanges {
   drawGene() {
     this.drawTranscript(0);
     this.drawTranscript(1);
+
+    const brush = d3.brushX().extent([[0, 0], [this.svgWidth, this.svgHeight]])
+    .on('start', this.brushStartEvent)
+    .on('brush', this.brushBrushEvent)
+    .on('end', this.brushEndEvent);
+
+    this.svgElement.append('g')
+    .call(brush);
+  }
+
+  brushStartEvent() {
+    console.log('brush start event');
+  }
+
+  brushBrushEvent() {
+    console.log('brush brush event');
+  }
+
+  brushEndEvent() {
+    const extent = d3.event.selection;
+    console.log('brush end event');
+    console.log(extent);
   }
 
   drawTranscript(transcriptId: number) {
