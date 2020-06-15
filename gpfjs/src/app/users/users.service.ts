@@ -82,7 +82,7 @@ export class UsersService {
     const headers = { 'X-CSRFToken': csrfToken };
     const options = { headers: headers, withCredentials: true };
 
-    return this.http.post(this.registerUrl, {
+    return this.http.post(this.config.baseUrl + this.registerUrl, {
       email: email,
       name: name,
       researcherId: researcherId
