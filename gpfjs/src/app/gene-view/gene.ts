@@ -1,8 +1,17 @@
 export class Exon {
   constructor(
-    private start: number,
-    private stop: number
+    private _start: number,
+    private _stop: number
   ) {}
+
+  get start() {
+    return this._start;
+  }
+
+  get stop() {
+    return this._stop;
+  }
+
 
   static fromJson(json: any): Exon {
     return new Exon(json['start'], json['stop']);

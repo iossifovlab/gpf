@@ -13,6 +13,9 @@ export class GeneViewComponent implements OnInit, OnChanges {
   svgElement;
   svgWidth = 1000;
   svgHeight = 150;
+  x;
+  brush;
+  doubleClickTimer;
 
   constructor(
   ) {}
@@ -22,47 +25,56 @@ export class GeneViewComponent implements OnInit, OnChanges {
     .append('svg')
     .attr('width', this.svgWidth)
     .attr('height', this.svgHeight);
+
+    this.x = d3.scaleLinear()
+    .domain([0, 0])
+    .range([0, this.svgWidth]);
   }
 
   ngOnChanges() {
     if (this.gene !== undefined) {
-      this.svgElement.selectAll('*').remove();
+      this.setDefaultScale();
       this.drawGene();
     }
   }
 
   drawGene() {
+    this.svgElement.selectAll('*').remove();
+
     this.drawTranscript(0);
     this.drawTranscript(1);
 
-    const brush = d3.brushX().extent([[0, 0], [this.svgWidth, this.svgHeight]])
-    .on('start', this.brushStartEvent)
-    .on('brush', this.brushBrushEvent)
+    this.brush = d3.brushX().extent([[0, 0], [this.svgWidth, this.svgHeight]])
     .on('end', this.brushEndEvent);
 
     this.svgElement.append('g')
-    .call(brush);
+    .attr('class', 'brush')
+    .call(this.brush);
   }
 
-  brushStartEvent() {
-    console.log('brush start event');
-  }
-
-  brushBrushEvent() {
-    console.log('brush brush event');
-  }
-
-  brushEndEvent() {
+  brushEndEvent = () => {
     const extent = d3.event.selection;
-    console.log('brush end event');
-    console.log(extent);
+
+    if (!extent) {
+      if (!this.doubleClickTimer) {
+        this.doubleClickTimer = setTimeout(this.resetTimer, 250);
+        return;
+      }
+      this.setDefaultScale();
+    } else {
+      this.x.domain([this.x.invert(extent[0]), this.x.invert(extent[1])]);
+      this.svgElement.select('.brush').call(this.brush.move, null);
+    }
+    this.drawGene();
+  }
+
+  resetTimer = () => {
+    this.doubleClickTimer = null;
   }
 
   drawTranscript(transcriptId: number) {
-    let x = 0;
     let y = 0;
-    let exonAndIntronLengths: number[];
-    let isExon = true;
+    let lastEnd = null;
 
     if (transcriptId === 0) {
       y = 20;
@@ -70,76 +82,42 @@ export class GeneViewComponent implements OnInit, OnChanges {
       y = 120;
     }
 
-    exonAndIntronLengths = this.getExonAndIntronLengths(this.gene.transcripts[transcriptId].exons);
-    exonAndIntronLengths = this.scaleDownLengths(exonAndIntronLengths);
-
-    for (const d of exonAndIntronLengths) {
-      if (isExon) {
-        this.svgElement.append('rect')
-        .attr('height', 10)
-        .attr('width', d)
-        .attr('x', x)
-        .attr('y', y)
-        .append('svg:title').text('Exon ?/?');
-      } else {
-        this.svgElement.append('rect')
-        .attr('height', 2)
-        .attr('width', d)
-        .attr('x', x)
-        .attr('y', y + 4)
-        .append('svg:title').text('Intron ?/?');
+    for (const exon of this.gene.transcripts[transcriptId].exons) {
+      if (lastEnd) {
+        this.drawIntron(lastEnd, exon.start, y);
       }
+      this.drawExon(exon.start, exon.stop, y);
 
-      x += d;
-      isExon = !isExon;
+      lastEnd = exon.stop;
     }
   }
 
-  getExonAndIntronLengths(exonsObj: object) {
-    const exonAndIntronLengths: number[] = [];
-    const exons = Object.values(exonsObj);
-    let previousExonStop = 0;
-
-    for (const exon of exons) {
-      exonAndIntronLengths.push(exon.start - previousExonStop);
-      exonAndIntronLengths.push(exon.stop - exon.start);
-      previousExonStop = exon.stop;
-    }
-    exonAndIntronLengths.shift();
-
-    return exonAndIntronLengths;
+  drawExon(xStart: number, xEnd: number, y: number) {
+    this.drawRect(xStart, xEnd, y, 10, 'Exon ?/?');
   }
 
-  scaleDownLengths(lengths: number[]) {
-    const scaledLengths: number[] = [];
-    const scaleIndex = this.calculateScaleIndex();
-
-    for (const len of lengths) {
-      scaledLengths.push(len / scaleIndex);
-    }
-
-    return scaledLengths;
+  drawIntron(xStart: number, xEnd: number, y: number) {
+    this.drawRect(xStart, xEnd, y + 4, 2, 'Intron ?/?');
   }
 
-  calculateScaleIndex(): number {
-    let scaleIndex: number;
-    const firstTranscriptLength = this.calculateTotalLength(this.gene.transcripts[0].exons);
-    const secondTranscriptLength = this.calculateTotalLength(this.gene.transcripts[1].exons);
+  drawRect(xStart: number, xEnd: number, y: number, height: number, svgTitle: string) {
+    const width = this.x(xEnd) - this.x(xStart);
 
-    if (firstTranscriptLength > secondTranscriptLength) {
-      scaleIndex = firstTranscriptLength / this.svgWidth;
-    } else {
-      scaleIndex = secondTranscriptLength / this.svgWidth;
-    }
-
-    return scaleIndex;
+    this.svgElement.append('rect')
+    .attr('height', height)
+    .attr('width', width)
+    .attr('x', this.x(xStart))
+    .attr('y', y)
+    .append('svg:title').text(svgTitle);
   }
 
-  calculateTotalLength(exonsObj: object) {
-    let totalLength: number;
+  setDefaultScale() {
+    const a = this.gene.transcripts[0].exons;
+    const b = this.gene.transcripts[1].exons;
 
-    totalLength = exonsObj[Object.keys(exonsObj).length - 1].stop - exonsObj[0].start;
+    const domainBeginning = Math.min(a[0].start, b[0].start);
+    const domainEnding = Math.max(a[a.length - 1].stop, b[b.length - 1].stop);
 
-    return totalLength;
+    this.x.domain([domainBeginning, domainEnding]);
   }
 }
