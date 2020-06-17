@@ -345,7 +345,7 @@ const appRoutes: Routes = [
     GpfTableModule,
     PedigreeChartModule,
     HistogramModule,
-    RouterModule.forRoot(appRoutes),
+    RouterModule.forRoot(appRoutes, {onSameUrlNavigation: 'reload'}),
     CookieModule.forRoot(),
     BrowserAnimationsModule,
     NgxMdModule.forRoot(),

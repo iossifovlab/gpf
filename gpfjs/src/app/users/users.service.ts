@@ -8,6 +8,9 @@ import { ConfigService } from '../config/config.service';
 import { CookieService } from 'ngx-cookie';
 import { User } from './users';
 
+import { Router } from '@angular/router';
+import { Location } from '@angular/common';
+
 @Injectable()
 export class UsersService {
   private readonly logoutUrl = 'users/logout';
@@ -27,7 +30,9 @@ export class UsersService {
   constructor(
     private http: HttpClient,
     private config: ConfigService,
-    private cookieService: CookieService
+    private cookieService: CookieService,
+    private router: Router,
+    private location: Location,
   ) {}
 
   logout(): Observable<boolean> {
@@ -37,6 +42,7 @@ export class UsersService {
 
     return this.http.post(this.config.baseUrl + this.logoutUrl, {}, options)
       .map(res => {
+        this.router.navigate([this.location.path()]);
         return true;
       });
   }
@@ -48,6 +54,7 @@ export class UsersService {
 
     return this.http.post(this.config.baseUrl + this.loginUrl, { username: username, password: password }, options)
       .map(res => {
+        this.router.navigate([this.location.path()]);
         return true;
       })
       .catch(error => {
