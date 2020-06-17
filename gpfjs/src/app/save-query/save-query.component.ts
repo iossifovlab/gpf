@@ -1,6 +1,7 @@
 import { Component, OnInit, Input, ViewChild, ElementRef } from '@angular/core';
 import { QueryStateCollector } from '../query/query-state-provider';
 import { QueryService } from '../query/query.service';
+import { NgbDropdownMenu } from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
   selector: 'gpf-save-query',
@@ -10,14 +11,14 @@ import { QueryService } from '../query/query.service';
 export class SaveQueryComponent implements OnInit {
 
   @Input() queryType: string;
-  @ViewChild('nameInput') nameInputRef: ElementRef
-  @ViewChild('descInput') descInputRef: ElementRef
-  queryWasSaved: boolean = false;
+  @ViewChild('nameInput') nameInputRef: ElementRef;
+  @ViewChild('descInput') descInputRef: ElementRef;
+  @ViewChild(NgbDropdownMenu) ngbDropdownMenu: NgbDropdownMenu;
 
   constructor(
     private queryService: QueryService,
     private parentComponent: QueryStateCollector
-  ) { };
+  ) { }
 
   ngOnInit() {}
 
@@ -32,14 +33,14 @@ export class SaveQueryComponent implements OnInit {
                     .take(1)
                     .subscribe(response => {
                       if (response.hasOwnProperty('uuid')) {
-                        this.queryWasSaved = true;
                         this.nameInputRef.nativeElement.value = '';
                         this.descInputRef.nativeElement.value = '';
-                        setTimeout(() => { this.queryWasSaved = false }, 2000);
                       }
                     });
                });
        },
        error => {});
+
+    this.ngbDropdownMenu.dropdown.close();
   }
 }
