@@ -1,7 +1,9 @@
+import { Observable } from 'rxjs';
 import { Component, OnInit, Input, ViewChild, ElementRef } from '@angular/core';
 import { QueryStateCollector } from '../query/query-state-provider';
 import { QueryService } from '../query/query.service';
 import { NgbDropdownMenu } from '@ng-bootstrap/ng-bootstrap';
+import { UsersService } from '../users/users.service';
 
 @Component({
   selector: 'gpf-save-query',
@@ -14,13 +16,17 @@ export class SaveQueryComponent implements OnInit {
   @ViewChild('nameInput') nameInputRef: ElementRef;
   @ViewChild('descInput') descInputRef: ElementRef;
   @ViewChild(NgbDropdownMenu) ngbDropdownMenu: NgbDropdownMenu;
+  userInfo$: Observable<any>;
 
   constructor(
     private queryService: QueryService,
-    private parentComponent: QueryStateCollector
+    private parentComponent: QueryStateCollector,
+    private usersService: UsersService,
   ) { }
 
-  ngOnInit() {}
+  ngOnInit() {
+    this.userInfo$ = this.usersService.getUserInfoObservable().share();
+  }
 
   saveUserQuery(name: string, description: string) {
      this.parentComponent.getCurrentState()
