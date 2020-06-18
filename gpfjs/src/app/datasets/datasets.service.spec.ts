@@ -8,8 +8,7 @@ import { Dataset } from '../datasets/datasets';
 import { ConfigService } from '../config/config.service';
 
 import {
-  BaseRequestOptions, Http, HttpModule, XHRBackend,
-  Response, ResponseOptions
+  BaseRequestOptions, XHRBackend, Response, ResponseOptions
 } from '@angular/http';
 
 // import { MockBackend, MockConnection } from '@angular/http/testing/mock_backend';
