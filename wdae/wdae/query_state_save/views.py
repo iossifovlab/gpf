@@ -46,11 +46,8 @@ class QueryStateDeleteView(views.APIView):
 
         stored_queries = UserQuery.objects.filter(user=request.user)
         for user_stored_query in stored_queries:
-            if user_stored_query.uuid == request.data["uuid"]:
-                query_state = get_object_or_404(
-                    QueryState, query=request.data["uuid"]
-                )
-                query_state.delete()
+            if str(user_stored_query.query.uuid) == request.data["uuid"]:
+                user_stored_query.delete()
                 return Response(status=status.HTTP_204_NO_CONTENT)
 
         return Response(status=status.HTTP_404_NOT_FOUND)
