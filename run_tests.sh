@@ -22,6 +22,10 @@ if [[ -z $GPF_IMPALA_DOCKER_CONTAINER ]]; then
     export GPF_IMPALA_DOCKER_CONTAINER="gpf_impala_local_1000"
 fi
 
+if [[ -z $GPF_REMOTE_DOCKER_CONTAINER ]]; then
+    export GPF_REMOTE_DOCKER_CONTAINER="gpf_test_remote"
+fi
+
 
 echo "----------------------------------------------"
 echo "Starting impala gpf container..."
@@ -103,6 +107,7 @@ if [[ $CLEANUP ]]; then
     echo "----------------------------------------------"
     docker stop ${GPF_IMPALA_DOCKER_CONTAINER}
     docker rm ${GPF_IMPALA_DOCKER_CONTAINER}
+    docker stop ${GPF_REMOTE_DOCKER_CONTAINER}
     docker network prune --force
     docker image rm ${GPF_DOCKER_IMAGE}
     echo "----------------------------------------------"
