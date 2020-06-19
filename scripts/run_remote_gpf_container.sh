@@ -21,7 +21,7 @@ docker run --rm -it \
     -d \
     seqpipe/seqpipe-gpf-conda /code/scripts/run_remote_server.sh
 
-docker exec gpf_test_remote /code/scripts/wait-for-it.sh -h localhost -p 21010 -t 300
+docker exec ${GPF_REMOTE_DOCKER_CONTAINER} /code/scripts/wait-for-it.sh -h localhost -p 21010 -t 300
 
 echo ""
 echo "==========================================="
