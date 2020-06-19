@@ -10,8 +10,13 @@ if [[ -z $GPF_REMOTE_DOCKER_CONTAINER ]]; then
     export GPF_REMOTE_DOCKER_CONTAINER="gpf_test_remote"
 fi
 
+if [[ -z $GPF_DOCKER_NETWORK ]]; then
+    export GPF_DOCKER_NETWORK="gpf_base_local_1000"
+fi
+
 docker run --rm -it \
     --name ${GPF_REMOTE_DOCKER_CONTAINER} \
+    --network ${GPF_DOCKER_NETWORK} \
     -v $WD/gpf_remote:/data \
     -v $WD:/code \
     -v $WD/iossifov_2014:/study \
