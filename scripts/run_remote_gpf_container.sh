@@ -28,7 +28,7 @@ docker run --rm -it \
     -p 21010:21010 \
     -e DAE_DB_DIR=/data \
     -e DAE_DATA_DIR=/data \
-    -e TEST_REMOTE_HOST=GPF_TEST_REMOTE_HOSTNAME \
+    -e TEST_REMOTE_HOST=${GPF_TEST_REMOTE_HOSTNAME} \
     -d \
     seqpipe/seqpipe-gpf-conda /code/scripts/run_remote_server.sh
 

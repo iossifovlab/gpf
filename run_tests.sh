@@ -26,6 +26,9 @@ if [[ -z $GPF_REMOTE_DOCKER_CONTAINER ]]; then
     export GPF_REMOTE_DOCKER_CONTAINER="gpf_test_remote"
 fi
 
+if [[ -z $GPF_TEST_REMOTE_HOSTNAME ]]; then
+    export GPF_TEST_REMOTE_HOSTNAME="gpf_test_remote"
+fi
 
 echo "----------------------------------------------"
 echo "Starting impala gpf container..."
@@ -94,6 +97,7 @@ docker run --rm \
     --link ${GPF_IMPALA_DOCKER_CONTAINER}:impala \
     -v ${DAE_DB_DIR}:/data \
     -v ${WD}:/code \
+    -e TEST_REMOTE_HOST=${GPF_TEST_REMOTE_HOSTNAME} \
     ${GPF_DOCKER_IMAGE} /code/scripts/docker_test.sh
 
 echo "----------------------------------------------"
