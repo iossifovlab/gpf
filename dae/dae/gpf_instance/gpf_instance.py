@@ -249,8 +249,8 @@ class GPFInstance(object):
     def get_gene_sets_collections(self):
         return self.gene_sets_db.collections_descriptions
 
-    def has_gene_set_collection(self):
-        return self.gene_sets_db.has_gene_set_collection()
+    def has_gene_set_collection(self, gsc_id):
+        return self.gene_sets_db.has_gene_set_collection(gsc_id)
 
     def get_all_gene_sets(self, collection_id):
         return self.gene_sets_db.get_all_gene_sets(collection_id)
