@@ -19,7 +19,7 @@ docker run --rm -it \
     -e DAE_DB_DIR=/data \
     -e DAE_DATA_DIR=/data \
     -d \
-    seqpipe-gpf-conda /code/scripts/run_remote_server.sh
+    seqpipe/seqpipe-gpf-conda /code/scripts/run_remote_server.sh
 
 docker exec gpf_test_remote /code/scripts/wait-for-it.sh -h localhost -p 21010 -t 300
 
