@@ -1,13 +1,20 @@
 #!/bin/bash
 
+if [[ -z $WD ]]; then
+    SCRIPT_LOCATION=$(readlink -f "$0")
+    SCRIPT_DIR=$(dirname "${SCRIPT_LOCATION}")
+    export WD=$(dirname "${SCRIPT_DIR}")
+fi
+
 if [[ -z $GPF_REMOTE_DOCKER_CONTAINER ]]; then
     export GPF_REMOTE_DOCKER_CONTAINER="gpf_test_remote"
 fi
 
 docker run --rm -it \
     --name ${GPF_REMOTE_DOCKER_CONTAINER} \
-    -v $PWD/gpf_remote:/data \
-    -v $(dirname $PWD):/code \
+    -v $WD/gpf_remote:/data \
+    -v $WD:/code \
+    -v $WD/iossifov_2014:/study \
     -p 21010:21010 \
     -e DAE_DB_DIR=/data \
     -e DAE_DATA_DIR=/data \
