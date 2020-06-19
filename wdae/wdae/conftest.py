@@ -5,7 +5,7 @@ from django.contrib.auth.models import Group
 
 from users_api.models import WdaeUser
 
-from gpf_instance.gpf_instance import reload_datasets
+from gpf_instance.gpf_instance import reload_datasets, load_gpf_instance
 
 
 pytest_plugins = ["dae_conftests.dae_conftests"]
@@ -96,3 +96,18 @@ def wdae_gpf_instance(
     )
 
     return fixtures_gpf_instance
+
+
+@pytest.fixture(scope="function")
+def remote_settings(settings):
+    settings.REMOTES = [{
+        "id": "TEST_REMOTE",
+        "host": "localhost",
+        "base_url": "api/v3",
+        "port": "21010",
+        "user": "admin@iossifovlab.com",
+        "password": "secret",
+        }]
+
+    # FIXME: Find a better workaround
+    reload_datasets(load_gpf_instance())
