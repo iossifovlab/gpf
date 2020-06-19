@@ -95,6 +95,7 @@ echo "----------------------------------------------"
 docker run --rm \
     --network ${GPF_DOCKER_NETWORK} \
     --link ${GPF_IMPALA_DOCKER_CONTAINER}:impala \
+    --link ${GPF_REMOTE_DOCKER_CONTAINER}:${GPF_TEST_REMOTE_HOSTNAME} \
     -v ${DAE_DB_DIR}:/data \
     -v ${WD}:/code \
     -e TEST_REMOTE_HOST=${GPF_TEST_REMOTE_HOSTNAME} \
