@@ -25,7 +25,7 @@ class WGPFInstance(GPFInstance):
         self._remote_study_clients = dict()
         self._remote_study_wrappers = dict()
 
-        if settings.REMOTES:
+        if getattr(settings, "REMOTES", None):
             for remote in settings.REMOTES:
                 print("Creating remote")
                 print(remote)
