@@ -6,6 +6,10 @@ INSTALLED_APPS += [
     "corsheaders",
 ]
 
+ALLOWED_HOSTS += [
+    "gpfremote",
+]
+
 
 MIDDLEWARE += [
     "corsheaders.middleware.CorsMiddleware",

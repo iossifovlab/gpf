@@ -15,7 +15,7 @@ if [[ -z $GPF_DOCKER_NETWORK ]]; then
 fi
 
 if [[ -z $GPF_TEST_REMOTE_HOSTNAME ]]; then
-    export GPF_TEST_REMOTE_HOSTNAME="gpf_test_remote"
+    export GPF_TEST_REMOTE_HOSTNAME="gpfremote"
 fi
 
 docker run --rm -it \
