@@ -19,7 +19,7 @@ class GeneSetsCollectionsView(QueryBaseView):
     def get(self, request):
         permitted_datasets = self.get_permitted_datasets(request.user)
         gene_sets_collections = deepcopy(
-            self.gpf_instance.get_gene_sets_collections
+            self.gpf_instance.get_gene_sets_collections()
         )
         denovo_gene_sets = deepcopy(
             self.gpf_instance.get_denovo_gene_sets(
