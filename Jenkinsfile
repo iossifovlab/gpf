@@ -65,6 +65,14 @@ pipeline {
             }
         }
 
+        stage('Create docker network') {
+            steps {
+                sh '''
+                    ${WD}/create_docker_network.sh
+                '''
+            }
+        }
+
         stage('Start federation remote instance') {
             steps {
                 sh '''

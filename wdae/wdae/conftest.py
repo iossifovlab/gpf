@@ -1,4 +1,5 @@
 import pytest
+import os
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
@@ -100,9 +101,10 @@ def wdae_gpf_instance(
 
 @pytest.fixture(scope="function")
 def remote_settings(settings):
+    host = os.environ.get("TEST_REMOTE_HOST", "localhost")
     settings.REMOTES = [{
         "id": "TEST_REMOTE",
-        "host": "localhost",
+        "host": host,
         "base_url": "api/v3",
         "port": "21010",
         "user": "admin@iossifovlab.com",
