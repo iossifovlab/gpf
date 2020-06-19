@@ -9,6 +9,8 @@ class RESTClient:
             base_url=None, port=None):
         self.host = host
         self.remote_id = remote_id
+        self.username = username
+        self.password = password
         if base_url:
             if not base_url.endswith("/"):
                 base_url = base_url + "/"
@@ -26,13 +28,11 @@ class RESTClient:
         self.session = self._login()
 
     def _login(self):
-        username = "admin@iossifovlab.com"
-        password = "secret"
         login_url = "users/login"
         session = requests.session()
         data = {
-            "username": username,
-            "password": password
+            "username": self.username,
+            "password": self.password
         }
         login_url = self._build_url(login_url)
         response = session.post(login_url, data=data)
