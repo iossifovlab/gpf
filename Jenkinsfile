@@ -22,6 +22,7 @@ pipeline {
         GPF_DOCKER_IMAGE="iossifovlab/gpf_base_${env.BRANCH_NAME}:${env.BUILD_NUMBER}"
         GPF_IMPALA_DOCKER_CONTAINER="gpf_impala_${env.BRANCH_NAME}_${env.BUILD_NUMBER}"
         GPF_REMOTE_DOCKER_CONTAINER="gpf_test_remote_${env.BRANCH_NAME}_${env.BUILD_NUMBER}"
+        GPF_TEST_REMOTE_HOSTNAME="gpf_test_remote"
 
         DAE_DB_DIR="${env.WORKSPACE}/data-hg19-startup"
 
