@@ -20,7 +20,7 @@ fi
 
 docker run --rm -it \
     --name ${GPF_REMOTE_DOCKER_CONTAINER} \
-    --hostname $GPF_TEST_REMOTE_HOSTNAME
+    --hostname $GPF_TEST_REMOTE_HOSTNAME \
     --network ${GPF_DOCKER_NETWORK} \
     -v $WD/gpf_remote:/data \
     -v $WD:/code \
