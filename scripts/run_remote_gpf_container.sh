@@ -1,7 +1,11 @@
 #!/bin/bash
 
+if [[ -z $GPF_REMOTE_DOCKER_CONTAINER ]]; then
+    export GPF_REMOTE_DOCKER_CONTAINER="gpf_test_remote"
+fi
+
 docker run --rm -it \
-    --name gpf_test_remote \
+    --name ${GPF_REMOTE_DOCKER_CONTAINER} \
     -v $PWD/gpf_remote:/data \
     -v $(dirname $PWD):/code \
     -p 21010:21010 \

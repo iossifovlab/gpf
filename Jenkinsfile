@@ -21,6 +21,7 @@ pipeline {
         GPF_DOCKER_NETWORK="gpf_base_${env.BRANCH_NAME}_${env.BUILD_NUMBER}"
         GPF_DOCKER_IMAGE="iossifovlab/gpf_base_${env.BRANCH_NAME}:${env.BUILD_NUMBER}"
         GPF_IMPALA_DOCKER_CONTAINER="gpf_impala_${env.BRANCH_NAME}_${env.BUILD_NUMBER}"
+        GPF_REMOTE_DOCKER_CONTAINER="gpf_test_remote_${env.BRANCH_NAME}_${env.BUILD_NUMBER}"
 
         DAE_DB_DIR="${env.WORKSPACE}/data-hg19-startup"
 
@@ -61,6 +62,15 @@ pipeline {
                     docker.build(
                         "${GPF_DOCKER_IMAGE}", ". -f ${WD}/Dockerfile")
                 }
+            }
+        }
+
+        stage('Start federation remote instance') {
+            steps {
+                sh '''
+                    ${WD}/scripts/setup_remote_gpf_container.sh
+                    ${WD}/scripts/run_remote_gpf_container.sh
+                '''
             }
         }
 
