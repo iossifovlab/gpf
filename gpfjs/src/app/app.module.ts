@@ -46,7 +46,7 @@ import { MinValidatorDirective, MaxValidatorDirective } from './utils/min-max.va
 
 import { StudyTypesComponent } from './study-types/study-types.component';
 
-import { CookieModule } from 'ngx-cookie';
+import { CookieService} from 'ngx-cookie-service';
 
 import { GenotypeBrowserComponent } from './genotype-browser/genotype-browser.component';
 import { GpfTabsetComponent } from './tabset/tabset.component';
@@ -117,7 +117,7 @@ import { UserEditComponent } from './user-edit/user-edit.component';
 import { ManagementComponent } from './management/management.component';
 import { UsersGroupsService } from './users-groups/users-groups.service';
 
-import { Select2Module } from 'ng2-select2';
+// import { Select2Module } from 'ng2-select2';
 import { ConfirmationPopoverModule } from 'angular-confirmation-popover';
 import { UserCreateComponent } from './user-create/user-create.component';
 import { GroupsBulkAddComponent } from './groups-bulk-add/groups-bulk-add.component';
@@ -339,21 +339,20 @@ const appRoutes: Routes = [
   imports: [
     BrowserModule,
     FormsModule,
-    NgbModule.forRoot(),
+    NgbModule,
     GpfTableModule,
     PedigreeChartModule,
     HistogramModule,
     RouterModule.forRoot(appRoutes),
-    CookieModule.forRoot(),
     BrowserAnimationsModule,
     NgxMdModule.forRoot(),
-    Select2Module,
     HttpClientModule,
     ConfirmationPopoverModule.forRoot({
       confirmButtonType: 'danger'
     })
   ],
   providers: [
+    CookieService,
     ConfigService,
     DatasetsService,
     QueryService,

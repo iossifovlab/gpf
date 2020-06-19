@@ -4,7 +4,7 @@ import { FamilyObjectArray } from './family-counters';
 // tslint:disable-next-line:import-blacklist
 import { Observable } from 'rxjs';
 
-import { CookieService } from 'ngx-cookie';
+import { CookieService } from 'ngx-cookie-service';
 import { ConfigService } from 'app/config/config.service';
 
 @Injectable()

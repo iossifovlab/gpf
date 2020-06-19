@@ -3,7 +3,7 @@ import {
   ViewChild
 } from '@angular/core';
 
-import { Select2OptionData, Select2Component } from 'ng2-select2';
+// import { Select2OptionData, Select2Component } from 'ng2-select2';
 
 import { UserGroup } from '../users-groups/users-groups';
 
@@ -13,14 +13,18 @@ import { UserGroup } from '../users-groups/users-groups';
   styleUrls: ['./user-groups-selector.component.css']
 })
 export class UserGroupsSelectorComponent implements OnInit, OnChanges {
-  configurationOptions: Select2Options;
-  data: Select2OptionData[];
-  @ViewChild('selector') selector: Select2Component;
+  // configurationOptions: Select2Options;
+  // data: Select2OptionData[];
+  // @ViewChild('selector') selector: Select2Component;
+  
+  configurationOptions;
+  data;
+  @ViewChild('selector') selector;
 
   @Input() groups: UserGroup[];
   @Output() groupsChange = new EventEmitter(true);
   private lastEmail = '';
-  private element: JQuery;
+  private element;
 
   @Input() alwaysSelectedGroups: string[] = [];
   @Input() selected: string[] = [];
@@ -47,7 +51,7 @@ export class UserGroupsSelectorComponent implements OnInit, OnChanges {
   }
 
   ngOnInit() {
-    this.element = jQuery(this.selector.selector.nativeElement);
+    this.element = this.selector.selector.nativeElement;
 
     this.configurationOptions = {
       width: 'style',
@@ -68,7 +72,7 @@ export class UserGroupsSelectorComponent implements OnInit, OnChanges {
           id: group,
           text: group,
           selected: this.selected.indexOf(group) !== -1
-        } as Select2OptionData;
+        }; // as Select2OptionData;
       });
   }
 

@@ -2,7 +2,7 @@ import { Component, OnInit, SimpleChanges, OnChanges } from '@angular/core';
 import { Router } from '@angular/router';
 
 import { BehaviorSubject } from 'rxjs';
-import { Select2OptionData } from 'ng2-select2';
+// import { Select2OptionData } from 'ng2-select2';
 
 import { User } from '../users/users';
 import { UsersService } from '../users/users.service';
@@ -15,14 +15,14 @@ import { UserGroup } from '../users-groups/users-groups';
   styleUrls: ['../user-edit/user-edit.component.css']
 })
 export class UserCreateComponent implements OnInit {
-  lockedOptions: Select2Options = {
+  lockedOptions = {
     width: 'style',
     theme: 'bootstrap',
     multiple: true,
     tags: true,
     disabled: true,
   };
-  configurationOptions: Select2Options;
+  configurationOptions;
   user$ = new BehaviorSubject<User>(new User(0, '', '', [], false));
   groups$ = new BehaviorSubject<UserGroup[]>(null);
 

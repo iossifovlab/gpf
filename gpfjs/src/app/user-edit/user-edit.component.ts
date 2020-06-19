@@ -15,7 +15,7 @@ import { UsersGroupsService } from '../users-groups/users-groups.service';
   styleUrls: ['./user-edit.component.css']
 })
 export class UserEditComponent implements OnInit {
-  lockedOptions: Select2Options = {
+  lockedOptions = {
     width: 'style',
     theme: 'bootstrap',
     multiple: true,

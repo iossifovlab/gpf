@@ -2,7 +2,7 @@
 import {throwError as observableThrowError,  Observable, BehaviorSubject } from 'rxjs';
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Select2OptionData } from 'ng2-select2';
+// import { Select2OptionData } from 'ng2-select2';
 
 import { User } from '../users/users';
 import { UsersService } from '../users/users.service';
@@ -16,7 +16,8 @@ import { UsersGroupsService } from '../users-groups/users-groups.service';
   styleUrls: ['./groups-bulk-remove.component.css']
 })
 export class GroupsBulkRemoveComponent implements OnInit {
-  configurationOptions: Select2Options;
+  // configurationOptions: Select2Options;
+  configurationOptions;
   users$ = new BehaviorSubject<User[]>(null);
   groups$: Observable<UserGroup[]>;
   group: string;
@@ -76,7 +77,7 @@ export class GroupsBulkRemoveComponent implements OnInit {
       return {
         id: group.name,
         text: group.name
-      } as Select2OptionData;
+      };
     });
   }
 

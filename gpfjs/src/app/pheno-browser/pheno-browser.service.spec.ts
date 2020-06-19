@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { PhenoBrowserService } from './pheno-browser.service';
 import { PhenoInstruments, PhenoMeasures } from './pheno-browser';
 import { ConfigService } from '../config/config.service';
-import { CookieService } from 'ngx-cookie';
+import { CookieService } from 'ngx-cookie-service';
 // tslint:disable-next-line:import-blacklist
 import { Observable, of } from 'rxjs';
 import { fakeJsonMeasure } from './pheno-browser.spec';
