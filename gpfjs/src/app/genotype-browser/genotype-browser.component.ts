@@ -46,9 +46,7 @@ export class GenotypeBrowserComponent extends QueryStateCollector
     const state = super.getCurrentState();
 
     return state.map(current_state => {
-        const stateObject = Object.assign(
-          { datasetId: this.selectedDatasetId },
-          ...current_state);
+        const stateObject = Object.assign({ datasetId: this.selectedDatasetId }, current_state);
         return stateObject;
       });
   }

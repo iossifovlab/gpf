@@ -1,8 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 // tslint:disable-next-line:import-blacklist
-import { Observable, ReplaySubject, BehaviorSubject } from 'rxjs';
-import { Scheduler } from 'rxjs-compat';
+import { Observable, ReplaySubject, BehaviorSubject, asyncScheduler } from 'rxjs';
 
 import { Dataset, DatasetDetails } from '../datasets/datasets';
 import { UsersService } from '../users/users.service';
@@ -89,7 +88,7 @@ export class DatasetsService {
   }
 
   getSelectedDataset() {
-    return this.selectedDataset$.asObservable().subscribeOn(Scheduler.async);
+    return this.selectedDataset$.asObservable().subscribeOn(asyncScheduler);
   }
 
   getDatasetsObservable() {

@@ -10,7 +10,7 @@ export class GlobalErrorHandler implements ErrorHandler {
   ) { }
 
   handleError(error: any): void {
-    // console.error(error);
+    console.error(error);
 
     // this.modalService = this.injector.get(NgbModal);
     // if (!this.modalService.hasOpenModals()) {
