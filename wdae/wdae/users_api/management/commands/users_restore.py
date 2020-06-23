@@ -6,7 +6,6 @@ from .import_base import ImportUsersBase
 
 
 class Command(ImportUsersBase, BaseCommand):
-    args = "<file>"
     help = (
         "Deletes all users and adds new ones from csv. "
         "Required column names for the csv file - Email. "
@@ -17,8 +16,6 @@ class Command(ImportUsersBase, BaseCommand):
         parser.add_argument('file', type=str)
 
     def handle(self, *args, **options):
-        print(args, options)
-
         csvfilename = options["file"]
         assert os.path.exists(csvfilename)
 
@@ -28,6 +25,11 @@ class Command(ImportUsersBase, BaseCommand):
                 WdaeUser.objects.all().delete()
                 for res in resreader:
                     self.handle_user(res)
+            print(
+                "\033[92m"
+                + "Successfully restored users from file!"
+                + "\033[0m"
+            )
 
         except csv.Error:
             raise CommandError(

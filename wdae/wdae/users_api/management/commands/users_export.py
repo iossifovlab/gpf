@@ -3,7 +3,7 @@ Created on Jun 3, 2015
 
 @author: lubo
 """
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
 import csv
 import sys
@@ -11,8 +11,13 @@ from .export_base import ExportUsersBase
 
 
 class Command(BaseCommand, ExportUsersBase):
-    args = "[file]"
     help = "Export all users to stdout/csv file."
+
+    def add_arguments(self, parser):
+        parser.add_argument(
+            "--file",
+            type=str
+        )
 
     def handle_user(self, user, writer):
         groups_str = ":".join(self.get_visible_groups(user))
@@ -32,14 +37,11 @@ class Command(BaseCommand, ExportUsersBase):
         )
 
     def handle(self, *args, **options):
-        if len(args) > 1:
-            raise CommandError("Expected maximum one argument")
-
         User = get_user_model()
         users = User.objects.all()
 
-        if len(args) == 1:
-            csvfile = open(args[0], "w")
+        if options["file"]:
+            csvfile = open(options["file"], "w")
         else:
             csvfile = sys.stdout
 
@@ -50,5 +52,6 @@ class Command(BaseCommand, ExportUsersBase):
         for user in users:
             self.handle_user(user, writer)
 
-        if len(args) == 1:
+        if options["file"]:
             csvfile.close()
+            print("\033[92m" + "Successfully exported the users!" + "\033[0m")

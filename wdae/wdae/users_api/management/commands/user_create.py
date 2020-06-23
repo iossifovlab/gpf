@@ -30,7 +30,6 @@ class Command(BaseCommand, ImportUsersBase):
             "-p",
             action="store",
             dest="password",
-            default="",
             const=None,
             nargs="?",
             help="Sets the password of the user",
@@ -59,3 +58,4 @@ class Command(BaseCommand, ImportUsersBase):
             user.set_password(options["password"])
             user.is_active = True
             user.save()
+        print("\033[92m" + "Successfully created a new user!" + "\033[0m")
