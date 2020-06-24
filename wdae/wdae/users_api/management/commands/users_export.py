@@ -14,10 +14,7 @@ class Command(BaseCommand, ExportUsersBase):
     help = "Export all users to stdout/csv file."
 
     def add_arguments(self, parser):
-        parser.add_argument(
-            "--file",
-            type=str
-        )
+        parser.add_argument("--file", type=str)
 
     def handle_user(self, user, writer):
         groups_str = ":".join(self.get_visible_groups(user))

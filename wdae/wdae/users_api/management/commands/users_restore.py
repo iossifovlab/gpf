@@ -7,7 +7,7 @@ from .import_base import ImportUsersBase
 
 class Command(ImportUsersBase, BaseCommand):
     help = (
-        "Deletes all users and adds new ones from csv. "
+        "Delete all users and adds new ones from csv. "
         "Required column names for the csv file - Email. "
         "Optional column names - Groups, Name, Password"
     )

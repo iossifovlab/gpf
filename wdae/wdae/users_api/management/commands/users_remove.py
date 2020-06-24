@@ -3,10 +3,10 @@ from django.core.management.base import BaseCommand, CommandError
 
 
 class Command(BaseCommand):
-    help = "Deletes user"
+    help = "Delete user"
 
     def add_arguments(self, parser):
-        parser.add_argument("-email", type=str)
+        parser.add_argument("email", type=str)
 
     def handle(self, *args, **options):
         UserModel = get_user_model()

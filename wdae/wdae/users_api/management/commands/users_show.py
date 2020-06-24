@@ -4,10 +4,10 @@ from .export_base import ExportUsersBase
 
 
 class Command(BaseCommand, ExportUsersBase):
-    help = "Shows all information about user"
+    help = "Show all information about user"
 
     def add_arguments(self, parser):
-        parser.add_argument("-email", type=str)
+        parser.add_argument("email", type=str)
 
     def handle(self, *args, **options):
         UserModel = get_user_model()

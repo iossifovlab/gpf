@@ -7,7 +7,7 @@ from .import_base import ImportUsersBase
 
 class Command(ImportUsersBase, BaseCommand):
     help = (
-        "Adds users from csv. "
+        "Add users from csv. "
         "Required column names for the csv file - Email."
         "Optional column names - Groups, Name, Password"
     )

@@ -3,7 +3,7 @@ from django.core.management.base import BaseCommand, CommandError
 
 
 class Command(BaseCommand):
-    help = "Changes the name of the user with the given email"
+    help = "Change the name of the user with the given email"
 
     def add_arguments(self, parser):
         parser.add_argument("email", type=str)

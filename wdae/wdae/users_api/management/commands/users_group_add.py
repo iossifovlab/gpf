@@ -4,22 +4,22 @@ from django.core.management.base import BaseCommand, CommandError
 
 
 class Command(BaseCommand):
-    args = "<email> <group>:<group>:"
-    help = "Adds user into group(s)"
+    help = "Add user into group(s)"
+
+    def add_arguments(self, parser):
+        parser.add_argument("email", type=str)
+        parser.add_argument("groups", type=str)
 
     def handle(self, *args, **options):
-        if len(args) != 2:
-            raise CommandError("Two arguments are required")
-
         try:
             UserModel = get_user_model()
-            users = UserModel.objects.filter(groups__name=args[0])
-            for user in users:
-                groups = args[1].split(":")
-                for group_name in set(groups):
-                    if group_name == "":
-                        continue
-                    group, _ = Group.objects.get_or_create(name=group_name)
-                    group.user_set.add(user)
+            user = UserModel.objects.get(email=options["email"])
+            groups = set(options["groups"].split(":"))
+            for group_name in groups:
+                if group_name == "":
+                    continue
+                group, _ = Group.objects.get_or_create(name=group_name)
+                group.user_set.add(user)
+            print("\033[92m" + "Successfully added group(s)." + "\033[0m")
         except UserModel.DoesNotExist:
             raise CommandError("User not found")

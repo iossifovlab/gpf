@@ -4,7 +4,7 @@ from django.core.management import call_command
 
 
 class Command(BaseCommand):
-    help = "Changes the password of user"
+    help = "Change the password of a user with the given email"
 
     def add_arguments(self, parser):
         parser.add_argument("email", type=str)

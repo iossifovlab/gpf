@@ -5,8 +5,7 @@ from django.core.management import call_command
 
 
 class Command(BaseCommand, ImportUsersBase):
-    args = "[-n <name>] [-g <groups>] <email>"
-    help = "Creates new user"
+    help = "Create new user"
 
     def add_arguments(self, parser):
         parser.add_argument(
