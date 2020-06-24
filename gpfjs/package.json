@@ -26,7 +26,7 @@
     "@angular/router": "^9.1.11",
     "@ng-bootstrap/ng-bootstrap": "^6.1.0",
     "@types/d3": "^5.7.2",
-    "@types/lodash": "^4.14.155",
+    "@types/lodash": "^4.14.156",
     "@types/sprintf": "^0.1.0",
     "angular-confirmation-popover": "^5.0.0",
     "bootstrap": "4.5.0",
@@ -50,7 +50,7 @@
     "sprintf-js": "^1.1.2",
     "tether": "^1.4.7",
     "ts-helpers": "^1.1.2",
-    "vis": "^4.21.0",
+    "vis": "^4.21.0-EOL",
     "zone.js": "^0.10.3"
   },
   "devDependencies": {
@@ -58,7 +58,7 @@
     "@angular/compiler-cli": "^9.1.11",
     "@angular/language-service": "^9.1.11",
     "@types/hammerjs": "^2.0.36",
-    "@types/jasmine": "3.5.10",
+    "@types/jasmine": "^3.5.11",
     "@types/node": "^14.0.13",
     "codelyzer": "^5.2.2",
     "jasmine-core": "~3.5.0",
