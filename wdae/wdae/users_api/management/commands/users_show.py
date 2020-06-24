@@ -10,13 +10,9 @@ class Command(BaseCommand, ExportUsersBase):
         parser.add_argument("email", type=str)
 
     def handle(self, *args, **options):
-        UserModel = get_user_model()
-        users = UserModel.objects.filter(
-            groups__name=options["email"]
-        )
-        if not users:
-            raise CommandError("User not found")
-        for user in users:
+        try:
+            UserModel = get_user_model()
+            user = UserModel.objects.get(email=options["email"])
             groups = ",".join(self.get_visible_groups(user))
 
             print(
@@ -27,3 +23,5 @@ class Command(BaseCommand, ExportUsersBase):
                     user.email, user.name, groups, user.password
                 )
             )
+        except UserModel.DoesNotExist:
+            raise CommandError("User not found")
