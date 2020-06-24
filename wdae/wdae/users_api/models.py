@@ -50,6 +50,12 @@ class WdaeUserManager(BaseUserManager):
 
         return user
 
+    def get_or_create(self, **kwargs):
+        try:
+            return self.get(**kwargs), False
+        except WdaeUser.DoesNotExist:
+            return self.create_user(**kwargs), True
+
     def create(self, **kwargs):
         return self.create_user(**kwargs)
 
