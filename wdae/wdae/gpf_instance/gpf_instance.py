@@ -24,6 +24,7 @@ class WGPFInstance(GPFInstance):
         super(WGPFInstance, self).__init__(*args, **kwargs)
         self._remote_study_clients = dict()
         self._remote_study_wrappers = dict()
+        self._remote_study_ids = dict()
 
         if getattr(settings, "REMOTES", None):
             for remote in settings.REMOTES:
@@ -40,7 +41,8 @@ class WGPFInstance(GPFInstance):
 
                     )
                     self._fetch_remote_studies(client)
-                except ConnectionError:
+                except ConnectionError as err:
+                    print(err)
                     print(f"Failed to create remote {remote['id']}")
 
     def _fetch_remote_studies(self, rest_client):
@@ -48,6 +50,7 @@ class WGPFInstance(GPFInstance):
         for study in studies["data"]:
             study_wrapper = RemoteStudyWrapper(study["id"], rest_client)
             study_id = study_wrapper.study_id
+            self._remote_study_ids[study_id] = study["id"]
             self._remote_study_clients[study_id] = rest_client
             self._remote_study_wrappers[study_id] = study_wrapper
 
@@ -64,7 +67,38 @@ class WGPFInstance(GPFInstance):
         )
 
     def get_genotype_data(self, dataset_id):
-        pass
+        genotype_data = super(WGPFInstance, self).get_genotype_data(dataset_id)
+        if not genotype_data:
+            wrapper = self.get_wdae_wrapper(dataset_id)
+            genotype_data = wrapper.config
+        return genotype_data
+
+    def get_common_report(self, common_report_id):
+        common_report = \
+            super(WGPFInstance, self).get_common_report(common_report_id)
+        if not common_report:
+            client = self._remote_study_clients[common_report_id]
+            common_report_id = self._remote_study_ids[common_report_id]
+            common_report = client.get_common_report(common_report_id)
+        return common_report
+
+    def get_common_report_families_data(self, common_report_id):
+        families_data = \
+            super(WGPFInstance, self).get_common_report_families_data(
+                    common_report_id)
+        if families_data:
+            for family_data in families_data:
+                yield family_data
+        else:
+            client = self._remote_study_clients[common_report_id]
+            common_report_id = self._remote_study_ids[common_report_id]
+            response = client.get_common_report_families_data(
+                common_report_id)
+
+            for line in response.iter_lines():
+                if line:
+                    line += "\n".encode("UTF-8")
+                    yield line.decode("UTF-8")
 
     @property
     def remote_studies(self):

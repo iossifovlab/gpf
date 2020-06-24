@@ -6,8 +6,8 @@ class RemoteStudyWrapper(StudyWrapperBase):
 
     def __init__(self, study_id, rest_client):
         self._remote_study_id = study_id
-        self.study_id = f"{rest_client.remote_id}_{study_id}"
         self.rest_client = rest_client
+        self.study_id = self.rest_client.get_remote_dataset_id(study_id)
         self.config = self.rest_client.get_dataset_config(
             self._remote_study_id)
         del self.config["access_rights"]

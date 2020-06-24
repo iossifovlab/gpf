@@ -159,11 +159,14 @@ class GPFInstance(object):
             + self._variants_db.get_genotype_data_groups_ids()
         )
 
-    def get_genotype_data(self, genotype_data_id):
+    def _get_genotype_data(self, genotype_data_id):
         genotype_data_study = self._variants_db.get_study(genotype_data_id)
         if genotype_data_study:
             return genotype_data_study
         return self._variants_db.get_genotype_data_group(genotype_data_id)
+
+    def get_genotype_data(self, genotype_data_id):
+        return self._get_genotype_data(genotype_data_id)
 
     def get_all_genotype_data(self):
         genotype_studies = self._variants_db.get_all_studies()
@@ -243,7 +246,8 @@ class GPFInstance(object):
         return self._common_report_facade.get_common_report(common_report_id)
 
     def get_common_report_families_data(self, common_report_id):
-        return self._common_report_facade.get_families_data(common_report_id)
+        genotype_data = self._get_genotype_data(common_report_id)
+        return self._common_report_facade.get_families_data(genotype_data)
 
     # Gene sets
     def get_gene_sets_collections(self):

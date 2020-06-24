@@ -49,9 +49,9 @@ class RESTClient:
         result = f"http://{self.host}:{self.port}{self.base_url}{query_url}"
         return result
 
-    def _get(self, url, query_values=None):
+    def _get(self, url, query_values=None, stream=False):
         url = self._build_url(url, query_values)
-        response = self.session.get(url)
+        response = self.session.get(url, stream=stream)
         return response
 
     def _post(self, url, data=None, stream=False):
@@ -65,9 +65,11 @@ class RESTClient:
     def _delete(self, url, data=None):
         pass
 
+    def get_remote_dataset_id(self, dataset_id):
+        return f"{self.remote_id}_{dataset_id}"
+
     def get_datasets(self):
         response = self._get("datasets")
-        print(response.headers)
         if response.status_code == 200:
             return response.json()
 
@@ -86,4 +88,15 @@ class RESTClient:
 
     def get_browser_preview_info(self, data):
         response = self._post("genotype_browser/preview", data=data)
+        return response
+
+    def get_common_report(self, common_report_id):
+        response = self._get(f"common_reports/studies/{common_report_id}")
+        return response.json()
+
+    def get_common_report_families_data(self, common_report_id):
+        response = self._get(
+            f"common_reports/families_data/{common_report_id}",
+            stream=True
+        )
         return response

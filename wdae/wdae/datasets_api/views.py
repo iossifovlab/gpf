@@ -105,5 +105,7 @@ class DatasetDetailsView(QueryBaseView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        dataset_details = {"hasDenovo": genotype_data.has_denovo}
+        has_denovo = getattr(genotype_data, "has_denovo", False)
+
+        dataset_details = {"hasDenovo": has_denovo}
         return Response(dataset_details)
