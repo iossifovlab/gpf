@@ -5,8 +5,7 @@ from guardian.shortcuts import get_perms
 
 
 class Command(BaseCommand):
-    args = "<email>"
-    help = "Shows all information about user"
+    help = "Show all existing datasets"
 
     def handle(self, *args, **options):
         groups = Group.objects.all()

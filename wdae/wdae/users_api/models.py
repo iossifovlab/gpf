@@ -25,7 +25,7 @@ from utils.logger import LOGGER
 
 
 class WdaeUserManager(BaseUserManager):
-    def _create_user(self, email, password, researcher_id=None, **kwargs):
+    def _create_user(self, email, password, **kwargs):
         """
         Creates and saves a User with the given email and password.
         """
@@ -43,17 +43,18 @@ class WdaeUserManager(BaseUserManager):
         groups = list(user.DEFAULT_GROUPS_FOR_USER)
         groups.append(email)
 
-        if researcher_id is not None:
-            groups.append(
-                self.model.get_group_name_for_researcher_id(researcher_id)
-            )
-
         for group_name in groups:
             group, _ = Group.objects.get_or_create(name=group_name)
             group.user_set.add(user)
             group.save()
 
         return user
+
+    def get_or_create(self, **kwargs):
+        try:
+            return self.get(**kwargs), False
+        except WdaeUser.DoesNotExist:
+            return self.create_user(**kwargs), True
 
     def create(self, **kwargs):
         return self.create_user(**kwargs)
@@ -87,27 +88,10 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
     REQUIRED_FIELDS = ["name"]
 
     DEFAULT_GROUPS_FOR_USER = ("any_user",)
-    RESEARCHER_GROUP_PREFIX = "SFID#"
     SUPERUSER_GROUP = "admin"
     UMLIMITTED_DOWNLOAD_GROUP = "unlimitted"
 
     objects = WdaeUserManager()
-
-    @property
-    def is_researcher(self):
-        return self.groups.filter(
-            name__startswith=WdaeUser.RESEARCHER_GROUP_PREFIX
-        ).exists()
-
-    @property
-    def researcher_id(self):
-        if not self.is_researcher:
-            return None
-        group = self.groups.get(
-            name__startswith=WdaeUser.RESEARCHER_GROUP_PREFIX
-        )
-
-        return group.name[len(WdaeUser.RESEARCHER_GROUP_PREFIX) :]
 
     def get_protected_group_names(self):
         return self.DEFAULT_GROUPS_FOR_USER + (self.email,)
@@ -195,10 +179,6 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
         verif_path.delete()
 
         return user
-
-    @classmethod
-    def get_group_name_for_researcher_id(cls, researcher_id):
-        return cls.RESEARCHER_GROUP_PREFIX + researcher_id
 
     def __str__(self):
         return self.email
