@@ -49,7 +49,7 @@ export class VariantReportsComponent implements OnInit, OnChanges {
       }
     );
 
-    this.selectedDataset$ = this.datasetsService.getSelectedDataset();
+    this.selectedDataset$ = this.datasetsService.getDataset(this.selectedDatasetId);
 
     this.selectedDataset$.subscribe(
       dataset => {
@@ -168,8 +168,8 @@ export class VariantReportsComponent implements OnInit, OnChanges {
     return this.orderByColumnOrder(effectType.data, phenotypes);
   }
 
-  getDownloadLink(variantReport: VariantReport) {
-    return this.variantReportsService.getDownloadLink(variantReport);
+  getDownloadLink() {
+    return this.variantReportsService.getDownloadLink();
   }
 
 }

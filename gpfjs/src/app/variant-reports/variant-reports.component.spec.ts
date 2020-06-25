@@ -15,6 +15,9 @@ class MockDatasetsService {
   getSelectedDataset(): Observable<any> {
     return of({accessRights: true})
   }
+  getDataset(): Observable<any> {
+    return of({accessRights: true})
+  }
 }
 
 class ResizeServiceMock {
