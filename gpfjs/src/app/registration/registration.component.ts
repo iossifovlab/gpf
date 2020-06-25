@@ -10,7 +10,6 @@ import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 export class RegistrationComponent implements OnInit {
   email: string;
   name: string;
-  researcherId: string;
 
   registerError = '';
 
@@ -24,13 +23,12 @@ export class RegistrationComponent implements OnInit {
 
   register() {
     this.usersService.register(
-      this.email, this.name, this.researcherId
+      this.email, this.name
     ).subscribe(
       (res) => {
         if (res) {
           this.email = null;
           this.name = null;
-          this.researcherId = null;
           this.registerError = '';
 
           this.activeModal.close('Close click');
