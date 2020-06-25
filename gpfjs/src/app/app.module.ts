@@ -150,6 +150,7 @@ import { SavedQueriesComponent } from './saved-queries/saved-queries.component';
 import { InheritancetypesComponent } from './inheritancetypes/inheritancetypes.component';
 import { GlobalErrorHandler } from './global-error-handler/global-error-handler';
 import { GlobalErrorDisplayComponent } from './global-error-display/global-error-display.component';
+import { DatasetPermissionGuard } from './dataset-permission.guard';
 
 const appRoutes: Routes = [
   {
@@ -166,6 +167,7 @@ const appRoutes: Routes = [
     data: {
       reuse: false
     },
+    canLoad: [DatasetPermissionGuard],
     children: [
       {
         path: 'browser',
@@ -189,7 +191,7 @@ const appRoutes: Routes = [
       },
       {
         path: 'commonReport',
-        component: VariantReportsComponent
+        component: VariantReportsComponent,
       }
     ]
   },
@@ -343,7 +345,7 @@ const appRoutes: Routes = [
     GpfTableModule,
     PedigreeChartModule,
     HistogramModule,
-    RouterModule.forRoot(appRoutes),
+    RouterModule.forRoot(appRoutes, {onSameUrlNavigation: 'reload'}),
     CookieModule.forRoot(),
     BrowserAnimationsModule,
     NgxMdModule.forRoot(),
