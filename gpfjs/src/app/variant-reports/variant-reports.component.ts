@@ -168,8 +168,8 @@ export class VariantReportsComponent implements OnInit, OnChanges {
     return this.orderByColumnOrder(effectType.data, phenotypes);
   }
 
-  getDownloadLink(variantReport: VariantReport) {
-    return this.variantReportsService.getDownloadLink(variantReport);
+  getDownloadLink() {
+    return this.variantReportsService.getDownloadLink();
   }
 
 }
