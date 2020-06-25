@@ -5,6 +5,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import BaseUserManager, Group
 from django.shortcuts import get_object_or_404, get_list_or_404
 from django.views.decorators.csrf import ensure_csrf_cookie
+from django.conf import settings
 import django.contrib.auth
 
 from rest_framework.decorators import action
@@ -26,7 +27,7 @@ from .serializers import BulkGroupOperationSerializer
 from utils.logger import log_filter, LOGGER, request_logging
 from utils.logger import request_logging_function_view
 
-from django.utils.decorators import available_attrs, decorator_from_middleware
+from django.utils.decorators import available_attrs
 
 
 def csrf_clear(view_func):
@@ -157,12 +158,14 @@ def register(request):
 
     try:
         email = BaseUserManager.normalize_email(request.data["email"])
-        researcher_id = request.data["researcherId"]
-        group_name = user_model.get_group_name_for_researcher_id(researcher_id)
 
-        preexisting_user = user_model.objects.get(
-            email__iexact=email, groups__name=group_name
-        )
+        if settings.OPEN_REGISTRATION:
+            preexisting_user, _ = user_model.objects.get_or_create(email=email)
+        else:
+            preexisting_user = user_model.objects.get(
+                email__iexact=email
+            )
+
         if preexisting_user.is_active:
             return Response({}, status=status.HTTP_201_CREATED)
 
@@ -173,8 +176,6 @@ def register(request):
                 "registration succeded; "
                 "email: '"
                 + str(email)
-                + "'; researcher id: '"
-                + str(researcher_id)
                 + "'",
             )
         )
@@ -186,8 +187,6 @@ def register(request):
                 "Registration failed: IntegrityError; "
                 "email: '"
                 + str(email)
-                + "'; researcher id: '"
-                + str(researcher_id)
                 + "'",
             )
         )
@@ -199,12 +198,14 @@ def register(request):
                 "Registration failed: Email or Researcher Id not found; "
                 "email: '"
                 + str(email)
-                + "'; researcher id: '"
-                + str(researcher_id)
                 + "'",
             )
         )
-        return Response({}, status=status.HTTP_201_CREATED)
+        return Response(
+            {"error_msg": ("Registration is closed."
+                           " Please contact an administrator.")},
+            status=status.HTTP_403_FORBIDDEN
+        )
     except KeyError:
         LOGGER.error(
             log_filter(

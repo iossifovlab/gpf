@@ -4,22 +4,27 @@ from django.core.management.base import BaseCommand, CommandError
 
 
 class Command(BaseCommand):
-    args = "<email> <group>:<group>:"
-    help = "Removes user from group(s)"
+    help = "Remove user from group(s)"
+
+    def add_arguments(self, parser):
+        parser.add_argument("email", type=str)
+        parser.add_argument("groups", type=str)
 
     def handle(self, *args, **options):
-        if len(args) != 2:
-            raise CommandError("Two arguments are required")
-
         try:
             UserModel = get_user_model()
-            users = UserModel.objects.filter(groups__name=args[0])
-            for user in users:
-                groups = args[1].split(":")
-                for group_name in set(groups):
-                    if group_name == "":
-                        continue
-                    group, _ = Group.objects.get_or_create(name=group_name)
-                    group.user_set.remove(user)
+            user = UserModel.objects.get(email=options["email"])
+            groups = set(options["groups"].split(":"))
+            group_objects = []
+
+            for group_name in groups:
+                print(f"Collecting group '{group_name}'...")
+                group_objects.append(Group.objects.get(name=group_name))
+
+            for group in group_objects:
+                group.user_set.remove(user)
+            print("\033[92m" + "Successfully removed group(s)." + "\033[0m")
         except UserModel.DoesNotExist:
             raise CommandError("User not found")
+        except Group.DoesNotExist:
+            raise CommandError("Group not found")
