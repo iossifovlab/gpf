@@ -3,7 +3,7 @@ import { FormsModule } from '@angular/forms';
 
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
-import { NgxMdModule } from 'ngx-md';
+import { MarkdownModule } from 'ngx-markdown';
 
 // tslint:disable-next-line:import-blacklist
 import { Observable } from 'rxjs';
@@ -49,7 +49,7 @@ class MockStateRestoreService {
   }
 }
 
-describe('GenomicScoresBlockComponent', () => {
+fdescribe('GenomicScoresBlockComponent', () => {
   let component: GenomicScoresBlockComponent;
   let fixture: ComponentFixture<GenomicScoresBlockComponent>;
 
@@ -67,9 +67,9 @@ describe('GenomicScoresBlockComponent', () => {
         GpfTabsetComponent,
       ],
       imports: [
-        NgbModule.forRoot(),
+        NgbModule,
         FormsModule,
-        NgxMdModule
+        MarkdownModule
       ],
       providers: [
         { provide: GenomicScoresBlockService, useClass: MockGenomicScoresBlockService },

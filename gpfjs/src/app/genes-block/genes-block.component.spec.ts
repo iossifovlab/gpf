@@ -15,7 +15,7 @@ describe('GenesBlockComponent', () => {
     TestBed.configureTestingModule({
       declarations: [GenesBlockComponent],
       imports: [
-        NgbModule.forRoot(),
+        NgbModule,
       ],
     })
       .compileComponents();

@@ -27,8 +27,8 @@ describe('pheno browser service', () => {
       ]
     });
 
-    phenoBrowserService = TestBed.get(PhenoBrowserService);
-    httpSpy = TestBed.get(HttpClient);
+    phenoBrowserService = TestBed.inject(PhenoBrowserService);
+    httpSpy = TestBed.inject(HttpClient);
   });
 
   it('should fetch instruments', () => {

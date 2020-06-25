@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 
 import { NgbModule, NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
 
-import { NgxMdModule } from 'ngx-md';
+import { MarkdownModule } from 'ngx-markdown';
 
 import { GenomicScoresComponent } from './genomic-scores.component';
 import { GenomicScoreState } from './genomic-scores-store';
@@ -14,7 +14,7 @@ import { HistogramRangeSelectorLineComponent } from 'app/histogram/histogram-ran
 import { PopupComponent } from 'app/popup/popup.component';
 import { ErrorsAlertComponent } from 'app/errors-alert/errors-alert.component';
 
-describe('GenomicScoresComponent', () => {
+fdescribe('GenomicScoresComponent', () => {
   let component: GenomicScoresComponent;
   let fixture: ComponentFixture<GenomicScoresComponent>;
   let modalService: NgbModal;
@@ -32,23 +32,19 @@ describe('GenomicScoresComponent', () => {
         ErrorsAlertComponent,
       ],
       imports: [
-        NgbModule.forRoot(),
+        NgbModule,
         FormsModule,
-        NgxMdModule
+        MarkdownModule
       ]
     })
     .overrideModule(BrowserDynamicTestingModule, {
-      set: {
-        entryComponents: [
-          PopupComponent
-        ]
-      }
+      set: {}
     })
     .compileComponents();
   }));
 
   beforeEach(() => {
-    modalService = TestBed.get(NgbModal);
+    modalService = TestBed.inject(NgbModal);
     modalRef = modalService.open(PopupComponent);
 
     fixture = TestBed.createComponent(GenomicScoresComponent);

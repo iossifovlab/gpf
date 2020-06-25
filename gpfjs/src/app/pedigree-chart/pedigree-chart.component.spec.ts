@@ -38,7 +38,7 @@ describe('PedigreeChartComponent', () => {
         PedigreeChartMemberComponent
       ],
       imports: [
-        NgbModule.forRoot(),
+        NgbModule,
       ],
       providers: [
         PerfectlyDrawablePedigreeService,

@@ -108,7 +108,7 @@ import { GenomicScoresComponent } from './genomic-scores/genomic-scores.componen
 import { GenomicScoresBlockComponent } from './genomic-scores-block/genomic-scores-block.component';
 import { GenomicScoresBlockService } from './genomic-scores-block/genomic-scores-block.service';
 
-import { NgxMdModule } from 'ngx-md';
+import { MarkdownModule } from 'ngx-markdown';
 import { UserManagementComponent } from './user-management/user-management.component';
 import { UserInfoPipe } from './users/user-info.pipe';
 import { UsersTableComponent } from './users-table/users-table.component';
@@ -345,7 +345,7 @@ const appRoutes: Routes = [
     HistogramModule,
     RouterModule.forRoot(appRoutes),
     BrowserAnimationsModule,
-    NgxMdModule.forRoot(),
+    MarkdownModule.forRoot(),
     HttpClientModule,
     ConfirmationPopoverModule.forRoot({
       confirmButtonType: 'danger'
@@ -382,14 +382,6 @@ const appRoutes: Routes = [
       provide: RouteReuseStrategy,
       useClass: TaggingRouteReuseStrategy
     }
-  ],
-
-  entryComponents: [
-    RegistrationComponent,
-    ForgotPasswordComponent,
-    PhenoBrowserModalContentComponent,
-    PopupComponent,
-    GlobalErrorDisplayComponent
   ],
 
   bootstrap: [AppComponent]
