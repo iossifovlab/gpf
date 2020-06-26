@@ -59,34 +59,26 @@ class ImpalaHelpers(object):
                     self.import_files(
                         cursor, db, variant_table, variant_hdfs_path)
 
-    def import_files(self, cursor, dbname, table_name, import_files):
+    def import_files(self, cursor, db, table_name, import_files):
 
         cursor.execute(
-            """
+            f"""
             DROP TABLE IF EXISTS {db}.{table_name}
-        """.format(
-                db=dbname, table_name=table_name
-            )
-        )
+            """)
 
         cursor.execute(
-            """
-            CREATE TABLE {db}.{table_name} LIKE PARQUET '{import_file}'
+            f"""
+            CREATE TABLE {db}.{table_name}
+            LIKE PARQUET '{import_files[0]}'
             STORED AS PARQUET
-        """.format(
-                db=dbname, import_file=import_files[0], table_name=table_name
-            )
-        )
+            """)
 
         for import_file in import_files:
             cursor.execute(
-                """
+                f"""
                 LOAD DATA INPATH '{import_file}'
                 INTO TABLE {db}.{table_name}
-            """.format(
-                    db=dbname, import_file=import_file, table_name=table_name
-                )
-            )
+                """)
 
     def add_partition_properties(
         self, cursor, db, table, partition_description
