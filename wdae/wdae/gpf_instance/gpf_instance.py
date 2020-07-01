@@ -5,7 +5,7 @@ from threading import Lock
 
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.remote.remote_study_wrapper import RemoteStudyWrapper
-from dae.remote.rest_api_client import RESTClient
+from dae.remote.rest_api_client import RESTClient, RESTClientRequestError
 
 from requests.exceptions import ConnectionError
 
@@ -42,8 +42,10 @@ class WGPFInstance(GPFInstance):
                     )
                     self._fetch_remote_studies(client)
                 except ConnectionError as err:
-                    print(err)
-                    print(f"Failed to create remote {remote['id']}")
+                    logger.error(err)
+                    logger.error(f"Failed to create remote {remote['id']}")
+                except RESTClientRequestError as err:
+                    logger.error(err.message)
 
     def _fetch_remote_studies(self, rest_client):
         studies = rest_client.get_datasets()

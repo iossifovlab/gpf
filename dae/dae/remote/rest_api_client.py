@@ -1,6 +1,12 @@
 import requests
 
 
+class RESTClientRequestError(Exception):
+    def __init__(self, message):
+        self.message = message
+        super().__init__(self.message)
+
+
 class RESTClient:
 
     def __init__(
@@ -13,9 +19,9 @@ class RESTClient:
         self.password = password
         if base_url:
             if not base_url.endswith("/"):
-                base_url = base_url + "/"
+                base_url = f"{base_url}/"
             if not base_url.startswith("/"):
-                base_url = "/" + base_url
+                base_url = f"/{base_url}"
             self.base_url = base_url
         else:
             self.base_url = "/"
@@ -36,7 +42,10 @@ class RESTClient:
         }
         login_url = self._build_url(login_url)
         response = session.post(login_url, data=data)
-        assert response.status_code == 204
+        if response.status_code != 204:
+            raise RESTClientRequestError(
+                f"Failed to login when creating session for {self.remote_id}"
+            )
         return session
 
     def _build_url(self, url, query_values=None):
