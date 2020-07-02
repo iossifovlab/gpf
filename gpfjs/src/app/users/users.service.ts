@@ -84,10 +84,28 @@ export class UsersService {
       });
   }
 
+  isEmailValid(email: string): boolean {
+    const re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    return re.test(String(email).toLowerCase());
+  }
+
+  isNameValid(name: string): boolean {
+    const re = /^[a-z0-9]+$/i;
+    return re.test(String(name).toLowerCase());
+  }
+
   register(email: string, name: string): Observable<boolean> {
     const csrfToken = this.cookieService.get('csrftoken');
     const headers = { 'X-CSRFToken': csrfToken };
     const options = { headers: headers, withCredentials: true };
+
+    if (!this.isEmailValid(email)) {
+      return observableThrowError(new Error('Invalid email.'));
+    }
+
+    if (!this.isNameValid(name)) {
+      return observableThrowError(new Error('Invalid name.'));
+    }
 
     return this.http.post(this.config.baseUrl + this.registerUrl, {
       email: email,
