@@ -221,16 +221,6 @@ export class UsersService {
     return this.http.delete(url, options);
   }
 
-  removeUserPassword(user: User) {
-    if (!user.id) {
-      return observableThrowError('No user id');
-    }
-    const url = `${this.config.baseUrl}${this.usersUrl}/${user.id}/password_remove`;
-    const options = { withCredentials: true };
-
-    return this.http.post(url, null, options);
-  }
-
   resetUserPassword(user: User) {
     if (!user.id) {
       return observableThrowError('No user id');

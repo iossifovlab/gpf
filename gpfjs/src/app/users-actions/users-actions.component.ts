@@ -30,12 +30,6 @@ export class UsersActionsComponent implements OnInit {
       });
   }
 
-  removePassword(user: User) {
-    this.usersService.removeUserPassword(user).take(1)
-      .subscribe(() => {
-        this.reloadPage();
-      });
-  }
   resetPassword(user: User) {
     this.usersService.resetUserPassword(user).take(1)
       .subscribe(() => {
