@@ -209,11 +209,15 @@ def send_reset_email(user, verif_path, by_admin=False):
 
 
 def _create_verif_email(host, path, verification_path):
+    message = (
+        "Welcome to GPF: Genotype and Phenotype in Families!"
+        "Follow the link below to validate your new account "
+        "and set your password: "
+    )
+
     settings = {
         "subject": "GPF: Registration validation",
-        "initial_message": "Hello. Follow this link to validate "
-        "your account in GPF: Genotype and Phenotype in Families "
-        "and to set your new password: ",
+        "initial_message": message,
         "host": host,
         "path": path,
         "verification_path": verification_path,
@@ -224,19 +228,20 @@ def _create_verif_email(host, path, verification_path):
 
 def _create_reset_mail(host, path, verification_path, by_admin=False):
     message = (
-        "Hello. To change your password in "
-        "GPF: Genotype and Phenotype in Families "
-        "please follow this link: "
+        "Hello. You have requested to reset your password for "
+        "your GPF account. To do so, please follow the link below:\n {link}\n"
+        "If you did not request for your GPF account password to be reset, "
+        "please ignore this email."
     )
     if by_admin:
         message = (
             "Hello. Your password has been reset by an admin. Your old "
             "password will not work. To set a new password in "
             "GPF: Genotype and Phenotype in Families "
-            "please follow this link: "
+            "please follow the link below:\n {link}"
         )
     settings = {
-        "subject": "GPF: Password reset",
+        "subject": "GPF: Password reset request",
         "initial_message": message,
         "host": host,
         "path": path,
@@ -255,7 +260,7 @@ def _build_email_template(settings):
     message = settings["initial_message"]
     path = settings["path"].format(settings["verification_path"])
 
-    message += "{0}{1}".format(settings["host"], path)
+    message = message.format(link="{0}{1}".format(settings["host"], path))
 
     return {"subject": subject, "message": message}
 
