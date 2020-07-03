@@ -104,7 +104,9 @@ export class UsersService {
     const options = { headers: headers, withCredentials: true };
 
     if (!this.isEmailValid(email)) {
-      return observableThrowError(new Error('Invalid email.'));
+      return observableThrowError(new Error(
+        'Invalid email address entered. Please use a valid email address.'
+      ));
     }
 
     if (!this.isNameValid(name)) {
@@ -119,7 +121,7 @@ export class UsersService {
         return true;
       })
       .catch(error => {
-        return observableThrowError(new Error(error.json().error_msg));
+        return observableThrowError(new Error(error.error.error_msg));
       });
   }
 
@@ -133,7 +135,7 @@ export class UsersService {
         return true;
       })
       .catch(error => {
-        return observableThrowError(new Error(error.json().error_msg));
+        return observableThrowError(new Error(error.error.error_msg));
       });
   }
 
