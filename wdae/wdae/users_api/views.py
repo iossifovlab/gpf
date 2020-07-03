@@ -1,3 +1,4 @@
+import re
 from functools import wraps
 
 from django.db import IntegrityError, transaction
@@ -28,6 +29,13 @@ from utils.logger import log_filter, LOGGER, request_logging
 from utils.logger import request_logging_function_view
 
 from django.utils.decorators import available_attrs
+
+
+def is_email_valid(email: str) -> bool:
+    email_regex = \
+        (r"[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:"
+         r"[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?")
+    return bool(re.search(email_regex, email))
 
 
 def csrf_clear(view_func):
@@ -145,6 +153,8 @@ def register(request):
 
     try:
         email = BaseUserManager.normalize_email(request.data["email"])
+        if not is_email_valid(email):
+            raise ValueError
 
         if settings.OPEN_REGISTRATION:
             preexisting_user, _ = user_model.objects.get_or_create(email=email)
@@ -200,6 +210,18 @@ def register(request):
             )
         )
         return Response({}, status=status.HTTP_201_CREATED)
+    except ValueError:
+        LOGGER.error(
+            log_filter(
+                request,
+                f"Registration failed: Invalid email; email: '{str(email)}'"
+            )
+        )
+        return Response(
+            {"error_msg": ("Invalid email address entered."
+                           " Please use a valid email address.")},
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
 
 @request_logging_function_view(LOGGER)
