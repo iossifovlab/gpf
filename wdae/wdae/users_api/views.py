@@ -61,19 +61,6 @@ class UserViewSet(viewsets.ModelViewSet):
 
     @request_logging(LOGGER)
     @action(detail=True, methods=["post"])
-    def password_remove(self, request, pk=None):
-        self.check_permissions(request)
-        user = get_object_or_404(get_user_model(), pk=pk)
-
-        if user.has_usable_password():
-            user.set_unusable_password()
-            user.save()
-            user.deauthenticate()
-
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
-    @request_logging(LOGGER)
-    @action(detail=True, methods=["post"])
     def password_reset(self, request, pk=None):
         self.check_permissions(request)
         user = get_object_or_404(get_user_model(), pk=pk)
