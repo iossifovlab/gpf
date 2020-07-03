@@ -145,11 +145,14 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
             self.is_active = False
 
     def reset_password(self, by_admin=False):
-        self.set_unusable_password()
-        self.save()
+        if not self.is_active:
+            send_reset_inactive_acc_email(self)
+        else:
+            self.set_unusable_password()
+            self.save()
 
-        verif_path = _create_verif_path(self)
-        send_reset_email(self, verif_path, by_admin)
+            verif_path = _create_verif_path(self)
+            send_reset_email(self, verif_path, by_admin)
 
     def deauthenticate(self):
         all_sessions = Session.objects.all()
@@ -159,14 +162,17 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
                 session.delete()
 
     def register_preexisting_user(self, name):
-        self.date_joined = timezone.now()
-        if name is not None and name != "":
-            self.name = name
+        if self.is_active:
+            send_already_existing_email(self)
+        else:
+            self.date_joined = timezone.now()
+            if name is not None and name != "":
+                self.name = name
 
-        verif_path = _create_verif_path(self)
-        send_verif_email(self, verif_path)
+            verif_path = _create_verif_path(self)
+            send_verif_email(self, verif_path)
 
-        self.save()
+            self.save()
 
     @staticmethod
     def change_password(verification_path, new_password):
@@ -194,6 +200,32 @@ def send_verif_email(user, verif_path):
         str(verif_path.path),
     )
     user.email_user(email["subject"], email["message"])
+
+
+def send_already_existing_email(user):
+    subject = "GPF: Attempted registration with email in use"
+    message = (
+        "Hello. Someone has attempted to create an account in GPF "
+        "using an email that your account was registered with.  "
+        "If this was you, you can simply log in to your existing account, "
+        "or if you've forgotten your password, you can reset it "
+        "by using the 'Forgotten password' button on the login window. \n"
+        "Otherwise, please ignore this email."
+    )
+    user.email_user(subject, message)
+
+
+def send_reset_inactive_acc_email(user):
+    subject = "GPF: Password reset for inactive account"
+    message = (
+        "Hello. You've requested a password reset for an inactive account. "
+        "You must first finish your registration by following the "
+        "account validation link in the email you received when registering. "
+        "If you have lost that email or the link in it has expired, you can "
+        "register again to get a new validation email sent. \n"
+        "If you did not request this, please ignore this email."
+    )
+    user.email_user(subject, message)
 
 
 def send_reset_email(user, verif_path, by_admin=False):

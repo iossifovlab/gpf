@@ -125,8 +125,6 @@ def reset_password(request):
     user_model = get_user_model()
     try:
         user = user_model.objects.get(email=email)
-        if not user.is_active:
-            return Response({}, status=status.HTTP_200_OK)
         user.reset_password()
         user.deauthenticate()
 
@@ -162,9 +160,6 @@ def register(request):
             preexisting_user = user_model.objects.get(
                 email__iexact=email
             )
-
-        if preexisting_user.is_active:
-            return Response({}, status=status.HTTP_201_CREATED)
 
         preexisting_user.register_preexisting_user(request.data.get("name"))
         LOGGER.info(
