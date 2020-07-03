@@ -242,9 +242,9 @@ def send_reset_email(user, verif_path, by_admin=False):
 
 def _create_verif_email(host, path, verification_path):
     message = (
-        "Welcome to GPF: Genotype and Phenotype in Families!"
+        "Welcome to GPF: Genotype and Phenotype in Families! "
         "Follow the link below to validate your new account "
-        "and set your password: "
+        "and set your password:\n {link}"
     )
 
     settings = {
