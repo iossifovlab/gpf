@@ -112,39 +112,33 @@ export class PhenoMeasure {
 
 export class PhenoMeasures {
 
+  public addMeasure(measure: any) {
+    const measureJson = measure.measure
+    let basePath = environment.basePath + measure.baseImageUrl;
+    let newMeasure: PhenoMeasure = new PhenoMeasure(
+        measureJson.index,
+        measureJson.instrument_name,
+        measureJson.values_domain,
+
+        addBaseUrlIfNotNull(measureJson.figure_distribution, basePath),
+        addBaseUrlIfNotNull(measureJson.figure_distribution_small, basePath),
+
+        measureJson.measure_id,
+        measureJson.measure_name,
+        measureJson.measure_type,
+        measureJson.description,
+
+        new PhenoRegressions(measureJson.regressions),
+    );
+    this.measures.push(newMeasure);
+  }
+
   static fromJson(json: Object): PhenoMeasures {
     return new PhenoMeasures(
       json['base_image_url'],
-      json['measures'].map((phenoMeasure) => PhenoMeasure.fromJson(phenoMeasure)),
+      [],
       json['has_descriptions'],
       json['regression_names']);
-  }
-
-  static addBasePath(phenoMeasures: PhenoMeasures): PhenoMeasures {
-    let basePath = environment.basePath + phenoMeasures.baseImageUrl;
-
-    phenoMeasures.measures.map(measure => measure.regressions.addBasePath(basePath));
-
-    return new PhenoMeasures(
-      phenoMeasures.baseImageUrl,
-      phenoMeasures.measures.map(phenoMeasure => new PhenoMeasure(
-        phenoMeasure.index,
-        phenoMeasure.instrumentName,
-        phenoMeasure.valuesDomain,
-
-        addBaseUrlIfNotNull(phenoMeasure.figureDistribution, basePath),
-        addBaseUrlIfNotNull(phenoMeasure.figureDistributionSmall, basePath),
-
-        phenoMeasure.measureId,
-        phenoMeasure.measureName,
-        phenoMeasure.measureType,
-        phenoMeasure.description,
-
-        phenoMeasure.regressions,
-      )),
-      phenoMeasures.hasDescriptions,
-      phenoMeasures.regressionNames
-    );
   }
 
   constructor(
