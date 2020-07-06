@@ -70,7 +70,7 @@ export class PhenoMeasureSelectorComponent implements OnInit, OnDestroy {
 
   clear() {
     this.selectedMeasure = null;
-    this.searchBox.nativeElement.value = '';
+    (<HTMLInputElement>document.getElementById('search-box')).value = '';
     this.searchBoxChange('');
   }
 
@@ -88,5 +88,4 @@ export class PhenoMeasureSelectorComponent implements OnInit, OnDestroy {
         return value.name.toLowerCase().indexOf(searchFieldValue.toLowerCase()) !== -1;
       });
   }
-
 }
