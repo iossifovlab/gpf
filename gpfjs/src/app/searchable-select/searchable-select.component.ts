@@ -25,6 +25,7 @@ export class SearchableSelectComponent {
   }
 
   onFocus(event) {
+    this.searchBoxChange('');
     event.stopPropagation();
 
     this.ngZone.run(() => {
