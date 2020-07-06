@@ -3,6 +3,7 @@ import numpy as np
 
 from rest_framework.response import Response
 from rest_framework import status
+from django.http.response import StreamingHttpResponse
 
 from django.conf import settings
 from django.http.response import HttpResponse
@@ -10,6 +11,8 @@ from django.http.response import HttpResponse
 from dae.pheno_browser.db import DbManager
 
 from query_base.query_base import QueryBaseView
+
+from utils.streaming_response_util import iterator_to_json
 
 
 class PhenoBrowserBaseView(QueryBaseView):
@@ -68,9 +71,60 @@ def isnan(val):
     return val is None or np.isnan(val)
 
 
+class PhenoMeasuresInfoView(PhenoBrowserBaseView):
+    def __init__(self):
+        super(PhenoMeasuresInfoView, self).__init__()
+
+    def get(self, request):
+        if "dataset_id" not in request.query_params:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        dataset_id = request.query_params["dataset_id"]
+
+        dataset = self.variants_db.get_wdae_wrapper(dataset_id)
+        if dataset is None or dataset.phenotype_data is None:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        browser_dbfile = self.get_browser_dbfile(dataset.config.phenotype_data)
+        browser_images_url = self.get_browser_images_url(
+            dataset.config.phenotype_data
+        )
+
+        db = DbManager(dbfile=browser_dbfile)
+        db.build()
+
+        res = {
+            "base_image_url": browser_images_url,
+            "has_descriptions": db.has_descriptions,
+            "regression_names": db.regression_display_names,
+        }
+
+        return Response(res)
+
+
 class PhenoMeasuresView(PhenoBrowserBaseView):
     def __init__(self):
         super(PhenoMeasuresView, self).__init__()
+
+    def _format_measures(self, db, measures, browser_images_url):
+        for m in measures:
+            if m["values_domain"] is None:
+                m["values_domain"] = ""
+            m["measure_type"] = m["measure_type"].name
+
+            m["regressions"] = []
+            regressions = db.get_regression_values(m["measure_id"]) or []
+
+            for reg in regressions:
+                reg = dict(reg)
+                if isnan(reg["pvalue_regression_male"]):
+                    reg["pvalue_regression_male"] = "NaN"
+                if isnan(reg["pvalue_regression_female"]):
+                    reg["pvalue_regression_female"] = "NaN"
+                m["regressions"].append(reg)
+
+            yield {
+                "measure": m,
+            }
 
     def get(self, request):
         if "dataset_id" not in request.query_params:
@@ -95,34 +149,17 @@ class PhenoMeasuresView(PhenoBrowserBaseView):
         db = DbManager(dbfile=browser_dbfile)
         db.build()
 
-        df = db.search_measures(instrument, search_term)
+        measures = db.search_measures(instrument, search_term)
 
-        res = []
-        for m in df.to_dict("records"):
+        data = self._format_measures(db, measures, browser_images_url)
 
-            if m["values_domain"] is None:
-                m["values_domain"] = ""
-            m["measure_type"] = m["measure_type"].name
-
-            m["regressions"] = db.get_regression_values(m["measure_id"]) or []
-
-            for reg in m["regressions"]:
-                reg = dict(reg)
-                if isnan(reg["pvalue_regression_male"]):
-                    reg["pvalue_regression_male"] = "NaN"
-                if isnan(reg["pvalue_regression_female"]):
-                    reg["pvalue_regression_female"] = "NaN"
-
-            res.append(m)
-
-        return Response(
-            {
-                "base_image_url": browser_images_url,
-                "measures": res,
-                "has_descriptions": db.has_descriptions,
-                "regression_names": db.regression_display_names,
-            }
+        response = StreamingHttpResponse(
+            iterator_to_json(data),
+            status=status.HTTP_200_OK,
+            content_type="text/event-stream",
         )
+        response["Cache-Control"] = "no-cache"
+        return response
 
 
 class PhenoMeasuresDownload(PhenoBrowserBaseView):
