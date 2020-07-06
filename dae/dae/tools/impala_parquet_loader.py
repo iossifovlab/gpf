@@ -85,8 +85,7 @@ def main(argv=sys.argv[1:], gpf_instance=None):
         argv.genotype_storage
     )
     if not genotype_storage or (
-        genotype_storage and not genotype_storage.is_impala()
-    ):
+            genotype_storage and not genotype_storage.is_impala()):
         print("missing or non-impala genotype storage")
         return
 

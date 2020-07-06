@@ -59,6 +59,12 @@ class NoPartitionDescriptor(PartitionDescriptor):
     def write_partition_configuration(self):
         return None
 
+    def generate_file_access_glob(self):
+        """
+        Generates a glob for accessing every parquet file in the partition
+        """
+        return "*.parquet"
+
 
 class ParquetPartitionDescriptor(PartitionDescriptor):
     def __init__(

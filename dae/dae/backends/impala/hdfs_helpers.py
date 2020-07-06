@@ -1,4 +1,5 @@
 import os
+import re
 import tempfile
 
 import pyarrow as pa
@@ -102,3 +103,34 @@ class HdfsHelpers(object):
 
     def list_dir(self, hdfs_dirname):
         return self.hdfs.ls(hdfs_dirname)
+
+    def isdir(self, hdfs_dirname):
+        if not self.exists(hdfs_dirname):
+            return False
+        info = self.hdfs.info(hdfs_dirname)
+        return info['kind'] == 'directory'
+
+    def isfile(self, hdfs_filename):
+        if not self.exists(hdfs_filename):
+            return False
+        info = self.hdfs.info(hdfs_filename)
+        return info['kind'] == 'file'
+
+    def list_parquet_files(self, hdfs_dirname, regexp=r".*\.parquet"):
+        regexp = re.compile(regexp)
+
+        def list_parquet_files_recursive(dirname, collection):
+            assert self.isdir(dirname)
+            allfiles = self.list_dir(dirname)
+            for hfile in allfiles:
+                if self.isdir(hfile):
+                    list_parquet_files_recursive(hfile, collection)
+                elif self.isfile(hfile) and regexp.match(hfile):
+                    if hfile not in collection:
+                        collection.append(hfile)
+
+        assert self.isdir(hdfs_dirname)
+
+        result = []
+        list_parquet_files_recursive(hdfs_dirname, result)
+        return result
