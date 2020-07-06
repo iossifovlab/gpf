@@ -93,11 +93,6 @@ export class UsersService {
     return re.test(String(email).toLowerCase());
   }
 
-  isNameValid(name: string): boolean {
-    const re = /^[a-z0-9]+$/i;
-    return re.test(String(name).toLowerCase());
-  }
-
   register(email: string, name: string): Observable<boolean> {
     const csrfToken = this.cookieService.get('csrftoken');
     const headers = { 'X-CSRFToken': csrfToken };
@@ -107,10 +102,6 @@ export class UsersService {
       return observableThrowError(new Error(
         'Invalid email address entered. Please use a valid email address.'
       ));
-    }
-
-    if (!this.isNameValid(name)) {
-      return observableThrowError(new Error('Invalid name.'));
     }
 
     return this.http.post(this.config.baseUrl + this.registerUrl, {
