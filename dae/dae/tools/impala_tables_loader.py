@@ -2,7 +2,7 @@
 import os
 import sys
 import argparse
-import glob
+import tempfile
 
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.backends.impala.import_commons import save_study_config
@@ -101,7 +101,6 @@ def main(argv=sys.argv[1:], gpf_instance=None):
     print("HDFS variants directory:", hdfs_variants_dir)
     print("HDFS pedigree file:", hdfs_pedigree_file)
 
-    assert os.path.exists(argv.variants)
     partition_config_file = os.path.join(
         argv.variants, "_PARTITION_DESCRIPTION"
     )
@@ -110,8 +109,18 @@ def main(argv=sys.argv[1:], gpf_instance=None):
     print(len(hdfs_variants_paths))
 
     if hdfs.isfile(partition_config_file):
+        hdfs_file = hdfs.hdfs.open(partition_config_file)
+        data = hdfs_file.read()
+
+        config_filename = os.path.join(
+            tempfile.mkdtemp(), "partition_description.config")
+        print(config_filename)
+        with open(config_filename, "wb") as config_file:
+            config_file.write(data)
+            config_file.seek(0)
+
         partition_descriptor = ParquetPartitionDescriptor.from_config(
-            partition_config_file, root_dirname=argv.variants)
+            config_filename, root_dirname=argv.variants)
 
         study_config = genotype_storage.impala_import_dataset(
             argv.study_id, hdfs_variants_dir,
