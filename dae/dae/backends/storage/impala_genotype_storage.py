@@ -116,8 +116,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
         return self.hdfs_helpers.list_dir(hdfs_dirname)
 
     def _hdfs_parquet_put_study_files(
-        self, study_id, variant_paths, pedigree_paths
-    ):
+            self, study_id, variant_paths, pedigree_paths):
         print("pedigree_path:", pedigree_paths)
         print("variants_path:", variant_paths)
 

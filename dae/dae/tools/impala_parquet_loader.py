@@ -92,7 +92,7 @@ def main(argv=sys.argv[1:], gpf_instance=None):
 
     assert os.path.exists(argv.variants)
     if os.path.isdir(argv.variants) and os.path.exists(
-        os.path.join(argv.variants, "_PARTITION_DESCRIPTION")):
+            os.path.join(argv.variants, "_PARTITION_DESCRIPTION")):
 
         study_config = genotype_storage.impala_load_dataset(
             argv.study_id, argv.variants, argv.pedigree)

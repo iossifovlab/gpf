@@ -16,10 +16,8 @@ def test_invalid_verif_path(client, researcher):
 
 
 def test_reset_pass(client, researcher):
-    res, researcher_id = researcher
-
     url = "/api/v3/users/reset_password"
-    data = {"email": res.email}
+    data = {"email": researcher.email}
     pprint(data)
 
     response = client.post(
@@ -29,13 +27,10 @@ def test_reset_pass(client, researcher):
 
 
 def test_register_existing_user(client, researcher):
-    res, researcher_id = researcher
-
     url = "/api/v3/users/register"
     data = {
-        "name": res.name,
-        "researcherId": researcher_id,
-        "email": res.email,
+        "name": researcher.name,
+        "email": researcher.email,
     }
     pprint(data)
 

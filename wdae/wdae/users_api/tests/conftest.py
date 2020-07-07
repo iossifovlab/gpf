@@ -79,13 +79,7 @@ def researcher(db):
     res.set_password("alabala")
     res.save()
 
-    researcher_id = "11aa--bb"
-
-    group_name = WdaeUser.get_group_name_for_researcher_id(researcher_id)
-    group, _ = Group.objects.get_or_create(name=group_name)
-    group.user_set.add(res)
-
-    return res, researcher_id
+    return res
 
 
 @pytest.fixture()
@@ -95,10 +89,4 @@ def researcher_without_password(db):
     res.email = "fake@fake.com"
     res.save()
 
-    researcher_id = "11aa--bb"
-
-    group_name = WdaeUser.get_group_name_for_researcher_id(researcher_id)
-    group, _ = Group.objects.get_or_create(name=group_name)
-    group.user_set.add(res)
-
-    return res, researcher_id
+    return res
