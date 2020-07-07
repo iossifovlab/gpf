@@ -31,9 +31,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
             impala_hosts=impala_hosts, impala_port=impala_port,
             pool_size=pool_size
         )
-        self._hdfs_helpers = HdfsHelpers(
-            self.storage_config.hdfs.host, self.storage_config.hdfs.port
-        )
+        self._hdfs_helpers = None
 
     def get_db(self):
         return self.storage_config.impala.db
@@ -41,7 +39,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
     def is_impala(self):
         return True
 
-    def get_hdfs_dir(self, *path):
+    def _build_hdfs_dir(self, *path):
         hdfs_dirname = os.path.join(self.storage_config.hdfs.base_dir, *path)
         if not self.hdfs_helpers.hdfs.exists(hdfs_dirname):
             self.hdfs_helpers.hdfs.mkdir(hdfs_dirname)
@@ -55,6 +53,12 @@ class ImpalaGenotypeStorage(GenotypeStorage):
 
     @property
     def hdfs_helpers(self):
+        if self._hdfs_helpers is None:
+            self._hdfs_helpers = HdfsHelpers(
+                self.storage_config.hdfs.host,
+                self.storage_config.hdfs.port
+            )
+
         assert self._hdfs_helpers is not None
         return self._hdfs_helpers
 
@@ -107,7 +111,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
             self.impala_helpers.drop_table(self.get_db(), table)
 
     def _hdfs_parquet_put_files(self, study_id, paths, dirname):
-        hdfs_dirname = self.get_hdfs_dir(study_id, dirname)
+        hdfs_dirname = self._build_hdfs_dir(study_id, dirname)
         if self.hdfs_helpers.exists(hdfs_dirname):
             self.hdfs_helpers.delete(hdfs_dirname, recursive=True)
         for path in paths:
@@ -244,12 +248,14 @@ class ImpalaGenotypeStorage(GenotypeStorage):
     def impala_import_study(
             self, study_id, variant_hdfs_path,
             pedigree_hdfs_path, has_variants):
+
         db = self.storage_config.impala.db
+
         pedigree_table = self._construct_pedigree_table(study_id)
         variant_table = self._construct_variant_table(study_id)
         print(
             f"Loading `{study_id}` study in impala "
-            f"`{self.storage_config.db}` db; "
+            f"`{db}` db; "
             f"variants from hdfs: {variant_hdfs_path}; "
             f"pedigrees from hdfs: {pedigree_hdfs_path}",
             file=sys.stderr,
@@ -315,8 +321,11 @@ class ImpalaGenotypeStorage(GenotypeStorage):
         return (variants_hdfs_path, pedigree_hdfs_path)
 
     def impala_import_dataset(
-            self, study_id, variants_hdfs_dir,
-            pedigree_hdfs_file, partition_descriptor):
+            self, study_id, 
+            pedigree_hdfs_file,
+            variants_hdfs_dir,
+            variants_hdfs_sample_file=None,
+            partition_description=None):
 
         pedigree_table = self._construct_pedigree_table(study_id)
         variants_table = self._construct_variant_table(study_id)
@@ -326,20 +335,19 @@ class ImpalaGenotypeStorage(GenotypeStorage):
         self.impala_helpers.drop_table(db, variants_table)
         self.impala_helpers.drop_table(db, pedigree_table)
 
-        variants_hdfs_files = self.hdfs_helpers.list_parquet_files(
-            variants_hdfs_dir)
-
-        print("variants_hdfs_files:", variants_hdfs_files)
-        print("pedigree_hdfs_file:", pedigree_hdfs_file)
+        if variants_hdfs_sample_file is None:
+            variants_hdfs_files = self.hdfs_helpers.list_parquet_files(
+                variants_hdfs_dir)
+            variants_hdfs_sample_file = variants_hdfs_files[0]
 
         self.impala_helpers.import_dataset_into_db(
             db,
             pedigree_table,
             variants_table,
-            partition_descriptor,
+            partition_description,
             pedigree_hdfs_file,
             variants_hdfs_dir,
-            variants_sample_file=variants_hdfs_files[0]
+            variants_sample_file=variants_hdfs_sample_file
         )
 
         return self._generate_study_config(
@@ -351,21 +359,19 @@ class ImpalaGenotypeStorage(GenotypeStorage):
         )
         assert os.path.exists(partition_config_file)
 
-        partition_descriptor = ParquetPartitionDescriptor.from_config(
+        partition_description = ParquetPartitionDescriptor.from_config(
             partition_config_file, root_dirname=variants_path
         )
 
         variants_hdfs_path, pedigree_hdfs_path = \
             self.hdfs_upload_dataset(
-                study_id, variants_path, pedigree_file, partition_descriptor)
-
-        print(
-            "variants_hdfs_path, pedigree_hdfs_path:",
-            variants_hdfs_path, pedigree_hdfs_path)
+                study_id, variants_path, pedigree_file, partition_description)
 
         return self.impala_import_dataset(
-            study_id, variants_hdfs_path,
-            pedigree_hdfs_path, partition_descriptor)
+            study_id,
+            pedigree_hdfs_path,
+            variants_hdfs_path,
+            partition_description=partition_description)
 
 
 STUDY_CONFIG_TEMPLATE = """

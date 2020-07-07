@@ -43,16 +43,15 @@ class ImpalaHelpers(object):
             pedigree_table,
             variant_hdfs_path,
             pedigree_hdfs_path):
+        assert db is not None
 
         with closing(self.connection()) as conn:
             with conn.cursor() as cursor:
                 cursor.execute(
-                    """
+                    f"""
                     CREATE DATABASE IF NOT EXISTS {db}
-                """.format(
-                        db=db
-                    )
-                )
+                    """)
+
                 self.import_files(
                     cursor, db, pedigree_table, pedigree_hdfs_path)
                 if variant_hdfs_path:
@@ -79,6 +78,21 @@ class ImpalaHelpers(object):
                 LOAD DATA INPATH '{import_file}'
                 INTO TABLE {db}.{table_name}
                 """)
+
+    def import_single_file(self, cursor, db, table, import_file):
+
+        cursor.execute(
+            f"""
+            DROP TABLE IF EXISTS {db}.{table}
+            """)
+
+        dirname = os.path.dirname(import_file)
+        statement = f"""
+            CREATE EXTERNAL TABLE {db}.{table} LIKE PARQUET '{import_file}'
+            STORED AS PARQUET LOCATION '{dirname}'
+        """
+        cursor.execute(statement)
+        cursor.execute(f"REFRESH {db}.{table}")
 
     def add_partition_properties(
             self, cursor, db, table, partition_description):
@@ -181,6 +195,8 @@ class ImpalaHelpers(object):
                     CREATE DATABASE IF NOT EXISTS {db}
                 """
                 )
+                self.import_single_file(
+                    cursor, db, pedigree_table, pedigree_hdfs_file)
 
                 self.create_dataset_table(
                     cursor,
@@ -194,9 +210,6 @@ class ImpalaHelpers(object):
                 self.add_partition_properties(
                     cursor, db, variants_table, partition_description
                 )
-
-                self.import_files(
-                    cursor, db, pedigree_table, [pedigree_hdfs_file])
 
     def check_database(self, dbname):
         with closing(self.connection()) as conn:

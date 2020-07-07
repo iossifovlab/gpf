@@ -55,6 +55,26 @@ def parse_cli_arguments(argv, gpf_instance):
     )
 
     parser.add_argument(
+        "--partition-description",
+        "--pd",
+        type=str,
+        metavar="<Partition Description>",
+        dest="partition_description",
+        help="Partition description file name",
+        default=None,
+    )
+
+    parser.add_argument(
+        "--variants-sample",
+        "--vs",
+        type=str,
+        metavar="<variants sample file>",
+        dest="variants_sample",
+        help="Variants HDFS parquet sample file",
+        default=None,
+    )
+
+    parser.add_argument(
         "--study-config",
         type=str,
         metavar="<study config>",
@@ -91,40 +111,36 @@ def main(argv=sys.argv[1:], gpf_instance=None):
         print("missing or non-impala genotype storage")
         return
 
-    hdfs = genotype_storage.hdfs_helpers
     hdfs_variants_dir = argv.variants
     hdfs_pedigree_file = argv.pedigree
-
-    assert hdfs.isdir(hdfs_variants_dir)
-    assert hdfs.isfile(hdfs_pedigree_file)
 
     print("HDFS variants directory:", hdfs_variants_dir)
     print("HDFS pedigree file:", hdfs_pedigree_file)
 
-    partition_config_file = os.path.join(
-        argv.variants, "_PARTITION_DESCRIPTION"
-    )
+    if argv.partition_description is not None:
+        partition_config_file = argv.partition_description
+        assert os.path.isfile(partition_config_file), partition_config_file
+    else:
+        root, _ = os.path.splitext(hdfs_variants_dir)
+        partition_config_file = f"{root}.partition_description"
+    print("partition_config_file:", partition_config_file)
 
-    hdfs_variants_paths = hdfs.list_parquet_files(hdfs_variants_dir)
-    print(len(hdfs_variants_paths))
+    partition_description = None
+    if os.path.isfile(partition_config_file):
+        partition_description = ParquetPartitionDescriptor.from_config(
+            partition_config_file, root_dirname=argv.variants)
 
-    if hdfs.isfile(partition_config_file):
-        hdfs_file = hdfs.hdfs.open(partition_config_file)
-        data = hdfs_file.read()
-
-        config_filename = os.path.join(
-            tempfile.mkdtemp(), "partition_description.config")
-        print(config_filename)
-        with open(config_filename, "wb") as config_file:
-            config_file.write(data)
-            config_file.seek(0)
-
-        partition_descriptor = ParquetPartitionDescriptor.from_config(
-            config_filename, root_dirname=argv.variants)
+    if partition_description is not None:
+        variants_hdfs_sample_file = None
+        if argv.variants_sample is not None:
+            variants_hdfs_sample_file = argv.variants_sample
 
         study_config = genotype_storage.impala_import_dataset(
-            argv.study_id, hdfs_variants_dir,
-            hdfs_pedigree_file, partition_descriptor)
+            argv.study_id,
+            hdfs_pedigree_file,
+            hdfs_variants_dir,
+            variants_hdfs_sample_file=variants_hdfs_sample_file,
+            partition_description=partition_description)
     else:
         has_variants = argv.variants is not None
         study_config = genotype_storage.impala_import_study(

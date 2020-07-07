@@ -129,7 +129,7 @@ class HdfsHelpers(object):
                     if hfile not in collection:
                         collection.append(hfile)
 
-        assert self.isdir(hdfs_dirname)
+        assert self.isdir(hdfs_dirname), hdfs_dirname
 
         result = []
         list_parquet_files_recursive(hdfs_dirname, result)
