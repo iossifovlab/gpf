@@ -1,87 +1,48 @@
-import {
-  Component, OnInit, Input, EventEmitter, Output, OnChanges, SimpleChanges,
-  ViewChild
-} from '@angular/core';
-
-// import { Select2OptionData, Select2Component } from 'ng2-select2';
-
+import { Component, OnInit, Input, EventEmitter, Output } from '@angular/core';
 import { UserGroup } from '../users-groups/users-groups';
+import { IDropdownSettings } from 'ng-multiselect-dropdown';
 
 @Component({
   selector: 'gpf-user-groups-selector',
   templateUrl: './user-groups-selector.component.html',
   styleUrls: ['./user-groups-selector.component.css']
 })
-export class UserGroupsSelectorComponent implements OnInit, OnChanges {
-  // configurationOptions: Select2Options;
-  // data: Select2OptionData[];
-  // @ViewChild('selector') selector: Select2Component;
-  
-  configurationOptions;
-  data;
-  @ViewChild('selector') selector;
+export class UserGroupsSelectorComponent implements OnInit {
+  data: object;
+  groupsArray: string[] = [];
+  dropdownSettings: IDropdownSettings = {};
 
   @Input() groups: UserGroup[];
   @Output() groupsChange = new EventEmitter(true);
-  private lastEmail = '';
-  private element;
-
   @Input() alwaysSelectedGroups: string[] = [];
   @Input() selected: string[] = [];
 
   constructor() { }
 
-  ngOnChanges(changes: SimpleChanges) {
-    if ('alwaysSelectedGroups' in changes && this.element) {
-      const prev = changes.alwaysSelectedGroups.previousValue;
-      const curr = changes.alwaysSelectedGroups.currentValue;
-
-      if (curr.length !== prev.length || curr.some((v, i) => v !== prev[i])) {
-        this.changeSelectedGroups(this.element.val());
-      }
-    }
-
-    if ('groups' in changes) {
-      const current = changes.groups.currentValue;
-      const previous = changes.groups.previousValue;
-      if (!previous || current.length !== previous.length || current.some((v, i) => v !== previous[i])) {
-        this.data = this.toSelectOptions(changes.groups.currentValue);
-      }
-    }
-  }
-
   ngOnInit() {
-    this.element = this.selector.selector.nativeElement;
-
-    this.configurationOptions = {
-      width: 'style',
-      theme: 'bootstrap',
-      multiple: true,
-      tags: true,
-      allowClear: true,
+    this.dropdownSettings = {
+      idField: 'id',
+      textField: 'text',
+      allowSearchFilter: true
     };
 
     this.data = this.toSelectOptions(this.groups);
   }
 
   toSelectOptions(groups: UserGroup[]) {
-
     return this.filterProtectedGroups(groups.map(group => group.name))
       .map(group => {
         return {
           id: group,
           text: group,
           selected: this.selected.indexOf(group) !== -1
-        }; // as Select2OptionData;
+        };
       });
   }
 
-  changeSelectedGroups(groups) {
-    if (!groups) {
-      return;
-    }
-    const event = groups.slice().concat(this.getProtectedGroups());
-    this.groupsChange.next(event);
+  changeSelectedGroups(group) {
+    this.groupsArray.push(group.text);
+    this.groupsChange.next(this.groupsArray.slice().concat(this.getProtectedGroups()));
   }
 
   getProtectedGroups() {
@@ -93,5 +54,4 @@ export class UserGroupsSelectorComponent implements OnInit, OnChanges {
     return groups.filter(group =>
       this.getProtectedGroups().indexOf(group) === -1);
   }
-
 }

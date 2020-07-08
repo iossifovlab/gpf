@@ -2,7 +2,6 @@ import { Component, OnInit, SimpleChanges, OnChanges } from '@angular/core';
 import { Router } from '@angular/router';
 
 import { BehaviorSubject } from 'rxjs';
-// import { Select2OptionData } from 'ng2-select2';
 
 import { User } from '../users/users';
 import { UsersService } from '../users/users.service';
@@ -22,7 +21,6 @@ export class UserCreateComponent implements OnInit {
     tags: true,
     disabled: true,
   };
-  configurationOptions;
   user$ = new BehaviorSubject<User>(new User(0, '', '', [], false));
   groups$ = new BehaviorSubject<UserGroup[]>(null);
 
@@ -39,21 +37,6 @@ export class UserCreateComponent implements OnInit {
       .getAllGroups()
       .take(1)
       .subscribe(groups => this.groups$.next(groups));
-
-    this.configurationOptions = {
-      multiple: true,
-      theme: 'bootstrap',
-      width: '100%',
-      allowClear: true,
-    };
-  }
-
-  getDefaultGroupsSelect2() {
-    return this.getDefaultGroups().map(group => ({
-        id: group,
-        text: group,
-        selected: true,
-      }));
   }
 
   getDefaultGroups() {
@@ -64,7 +47,6 @@ export class UserCreateComponent implements OnInit {
     this.user$.value.groups = groups;
   }
 
-
   submit(user: User) {
     this.usersService.createUser(user)
       .take(1)
@@ -74,5 +56,4 @@ export class UserCreateComponent implements OnInit {
   goBack() {
     this.router.navigate(['/management']);
   }
-
 }

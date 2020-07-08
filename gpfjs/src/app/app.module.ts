@@ -117,7 +117,6 @@ import { UserEditComponent } from './user-edit/user-edit.component';
 import { ManagementComponent } from './management/management.component';
 import { UsersGroupsService } from './users-groups/users-groups.service';
 
-// import { Select2Module } from 'ng2-select2';
 import { ConfirmationPopoverModule } from 'angular-confirmation-popover';
 import { UserCreateComponent } from './user-create/user-create.component';
 import { GroupsBulkAddComponent } from './groups-bulk-add/groups-bulk-add.component';
@@ -150,6 +149,7 @@ import { SavedQueriesComponent } from './saved-queries/saved-queries.component';
 import { InheritancetypesComponent } from './inheritancetypes/inheritancetypes.component';
 import { GlobalErrorHandler } from './global-error-handler/global-error-handler';
 import { GlobalErrorDisplayComponent } from './global-error-display/global-error-display.component';
+import { NgMultiSelectDropDownModule } from 'ng-multiselect-dropdown';
 
 const appRoutes: Routes = [
   {
@@ -349,7 +349,8 @@ const appRoutes: Routes = [
     HttpClientModule,
     ConfirmationPopoverModule.forRoot({
       confirmButtonType: 'danger'
-    })
+    }),
+    NgMultiSelectDropDownModule.forRoot(),
   ],
   providers: [
     CookieService,

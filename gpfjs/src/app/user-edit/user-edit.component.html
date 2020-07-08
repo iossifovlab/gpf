@@ -69,8 +69,14 @@
         <div class="col-4">
           <div class="form-group">
             <label for="groups">Default groups</label>
-            <div class="groupsInput">
-              <!-- <select2 [data]="getDefaultGroupsSelect2()" [options]="lockedOptions"></select2> -->
+            <div style="cursor: not-allowed;" class="groupsInput">
+              <div style="pointer-events: none; opacity: 0.7; cursor: not-allowed;">
+                <ng-multiselect-dropdown
+                  [settings]="dropdownSettings"
+                  [placeholder]="getDefaultGroups()"
+                >
+                </ng-multiselect-dropdown>
+             </div>
             </div>
           </div>
         </div>

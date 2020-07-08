@@ -8,6 +8,7 @@ import { User } from '../users/users';
 import { UsersService } from '../users/users.service';
 import { UserGroup } from '../users-groups/users-groups';
 import { UsersGroupsService } from '../users-groups/users-groups.service';
+import { IDropdownSettings } from 'ng-multiselect-dropdown';
 
 @Component({
   selector: 'gpf-user-edit',
@@ -15,6 +16,8 @@ import { UsersGroupsService } from '../users-groups/users-groups.service';
   styleUrls: ['./user-edit.component.css']
 })
 export class UserEditComponent implements OnInit {
+  dropdownSettings: IDropdownSettings = {};
+
   lockedOptions = {
     width: 'style',
     theme: 'bootstrap',
@@ -48,14 +51,13 @@ export class UserEditComponent implements OnInit {
       const allGroups = this.usersGroupsService
       .getAllGroups()
       .subscribe(groups => this.groups$.next(groups));
-  }
 
-  getDefaultGroupsSelect2() {
-    return this.getDefaultGroups().map(group => ({
-        id: group,
-        text: group,
-        selected: true,
-      }));
+      this.dropdownSettings = {
+        singleSelection: true,
+        idField: 'id',
+        textField: 'text',
+        allowSearchFilter: true,
+      };
   }
 
   updateGroups(groups) {
