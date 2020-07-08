@@ -8,7 +8,7 @@
     <div style="left: calc(50% - 5px)" class="arrow"></div>
     <h3 class="popover-header" [innerHTML]="options.title"></h3>
     <div class="popover-body">
-      <p [innerHTML]="options.message"></p>
+      <p [innerHTML]="options.popoverMessage"></p>
       <div class="row">
         <div
           class="col-xs-12 col-12 text-center">
@@ -101,7 +101,7 @@
             title="Remove password"
             appendToBody="true"
             [customTemplate]="confirmation"
-            message="Changes on this screen will not be saved."
+            [popoverMessage]="'Changes on this screen will not be saved.'"
             (confirm)="goBack()">Back</button>
           <button class="btn btn-primary" type="submit" (click)="submit(user)">Submit</button>
         </div>

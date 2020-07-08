@@ -11,7 +11,7 @@ import { HttpClient } from '@angular/common/http';
 
 describe('pheno browser service', () => {
   let phenoBrowserService: PhenoBrowserService;
-  let httpSpy: { get: jasmine.Spy };
+  let httpSpy;
 
   beforeEach(() => {
     const cookieSpyObj = jasmine.createSpyObj('CookieService', ['get']);

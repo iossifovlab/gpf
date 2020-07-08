@@ -21,7 +21,7 @@ import { GpfTableSubcontentComponent } from '../table/component/subcontent.compo
 import { GpfTableSubheaderComponent } from '../table/component/subheader.component';
 import { NumberWithExpPipe } from '../utils/number-with-exp.pipe';
 import { PValueIntensityPipe } from '../utils/p-value-intensity.pipe';
-import { ActivatedRoute, Router, Event } from '@angular/router';
+import { ActivatedRoute, Router, Event, UrlTree } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
 import { Location } from '@angular/common';
 import { Observable, of } from 'rxjs';
@@ -77,11 +77,11 @@ class MockActivatedRoute {
   queryParamMap = of(this.params);
 }
 
-class MockRouter {
-  createUrlTree(commands: any[], navigationExtras: any) {
-    return `${navigationExtras.queryParams.instrument}/${navigationExtras.queryParams.search}`;
-  }
-}
+// class MockRouter {
+//   createUrlTree(commands: any[], navigationExtras: any) {
+//     return `${navigationExtras.queryParams.instrument}/${navigationExtras.queryParams.search}`;
+//   }
+// }
 
 function setQuery(fixture: ComponentFixture<PhenoBrowserComponent>, instrument: number, search: string) {
   const selectElem = fixture.nativeElement.querySelector('select');
@@ -98,8 +98,8 @@ function setQuery(fixture: ComponentFixture<PhenoBrowserComponent>, instrument: 
 describe('PhenoBrowserComponent', () => {
   let component: PhenoBrowserComponent;
   let fixture: ComponentFixture<PhenoBrowserComponent>;
-  let router: MockRouter;
-  let location: jasmine.SpyObj<Location>;
+  let router;
+  let location: Location;
   let activatedRoute = new MockActivatedRoute();
   const phenoBrowserServiceMock = new MockPhenoBrowserService();
   const datasetServiceMock = new MockDatasetsService();
@@ -125,7 +125,7 @@ describe('PhenoBrowserComponent', () => {
         { provide: DatasetsService, useValue: datasetServiceMock },
         { provide: PhenoBrowserService, useValue: phenoBrowserServiceMock },
         { provide: ActivatedRoute, useValue: activatedRoute },
-        { provide: Router, useClass: MockRouter },
+        // { provide: Router, useClass: MockRouter },
         { provide: Location, useValue: locationSpy },
         { provide: PValueIntensityPipe, useClass: PValueIntensityPipe },
         { provide: ResizeService, useValue: resizeSpy },

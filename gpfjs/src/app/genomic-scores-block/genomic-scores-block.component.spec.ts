@@ -49,7 +49,7 @@ class MockStateRestoreService {
   }
 }
 
-fdescribe('GenomicScoresBlockComponent', () => {
+describe('GenomicScoresBlockComponent', () => {
   let component: GenomicScoresBlockComponent;
   let fixture: ComponentFixture<GenomicScoresBlockComponent>;
 

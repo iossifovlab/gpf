@@ -14,7 +14,7 @@ import { HistogramRangeSelectorLineComponent } from 'app/histogram/histogram-ran
 import { PopupComponent } from 'app/popup/popup.component';
 import { ErrorsAlertComponent } from 'app/errors-alert/errors-alert.component';
 
-fdescribe('GenomicScoresComponent', () => {
+describe('GenomicScoresComponent', () => {
   let component: GenomicScoresComponent;
   let fixture: ComponentFixture<GenomicScoresComponent>;
   let modalService: NgbModal;
