@@ -8,6 +8,8 @@ export class GlobalErrorHandler implements ErrorHandler {
     private injector: Injector,
   ) { }
 
+  modalService: NgbModal
+
   handleError(error: any): void {
     console.error(error);
 
