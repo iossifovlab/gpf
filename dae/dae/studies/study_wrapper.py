@@ -63,6 +63,8 @@ class StudyWrapper(StudyWrapperBase):
         self.config = genotype_data_study.config
         assert self.config is not None
 
+        self.is_remote = False
+
         self._init_wdae_config()
         self.pheno_db = pheno_db
         self._init_pheno(self.pheno_db)

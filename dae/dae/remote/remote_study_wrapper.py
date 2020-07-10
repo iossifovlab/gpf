@@ -15,6 +15,8 @@ class RemoteStudyWrapper(StudyWrapperBase):
         self.config["id"] = self.study_id
         self.config["name"] = self.study_id
 
+        self.is_remote = True
+
     def get_wdae_preview_info(self, query, max_variants_count=10000):
         query["datasetId"] = self._remote_study_id
         return self.rest_client.get_browser_preview_info(query).json()
