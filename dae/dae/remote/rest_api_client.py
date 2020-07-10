@@ -51,10 +51,13 @@ class RESTClient:
     def _build_url(self, url, query_values=None):
         query_url = url
         if query_values:
-            first = False
+            first = True
             for k, v in query_values.items():
+                if v is None:
+                    continue
                 query_url += "?" if first else "&"
                 query_url += f"{k}={v}"
+                first = False
         result = f"http://{self.host}:{self.port}{self.base_url}{query_url}"
         return result
 
