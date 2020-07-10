@@ -87,6 +87,8 @@ def main(argv=sys.argv[1:]):
     rsync_remote = remote
     if parsed_remote.hostname:
         rsync_remote = f"{parsed_remote.hostname}:{parsed_remote.path}"
+        if parsed_remote.username:
+            rsync_remote = f"{parsed_remote.username}@{rsync_remote}"
 
     output = argv.output
     if not output.endswith("/"):
