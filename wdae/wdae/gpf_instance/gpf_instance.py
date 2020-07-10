@@ -1,3 +1,4 @@
+import json
 import logging
 from django.conf import settings
 
@@ -101,6 +102,58 @@ class WGPFInstance(GPFInstance):
                 if line:
                     line += "\n".encode("UTF-8")
                     yield line.decode("UTF-8")
+
+    def get_pheno_config(self, study_wrapper):
+        print("WARNING: Using is_remote")
+        if not study_wrapper.is_remote:
+            return super(WGPFInstance, self).get_pheno_config(study_wrapper)
+
+        client = study_wrapper.rest_client
+        return client.get_pheno_browser_config(study_wrapper._remote_study_id)
+
+    def has_pheno_data(self, study_wrapper):
+        print("WARNING: Using is_remote")
+        if not study_wrapper.is_remote:
+            return super(WGPFInstance, self).has_pheno_data(study_wrapper)
+
+        return "phenotype_data" in study_wrapper.config
+
+    def get_instruments(self, study_wrapper):
+        print("WARNING: Using is_remote")
+        if not study_wrapper.is_remote:
+            return super(WGPFInstance, self).get_instruments(study_wrapper)
+
+        return study_wrapper.rest_client.get_instruments(
+            study_wrapper._remote_study_id)
+
+    def get_measures_info(self, study_wrapper):
+        print("WARNING: Using is_remote")
+        if not study_wrapper.is_remote:
+            return super(WGPFInstance, self).get_measures_info(study_wrapper)
+
+        client = study_wrapper.rest_client
+        return client.get_browser_measures_info(study_wrapper._remote_study_id)
+
+    def search_measures(self, study_wrapper, instrument, search_term):
+        print("WARNING: Using is_remote")
+        if not study_wrapper.is_remote:
+            measures = super(WGPFInstance, self).search_measures(
+                study_wrapper, instrument, search_term)
+            for m in measures:
+                yield m
+            return
+
+        client = study_wrapper.rest_client
+        response = client.get_browser_measures(
+            study_wrapper._remote_study_id,
+            instrument,
+            search_term
+        )
+        for line in response.iter_lines():
+            if line:
+                measures = json.loads(line)
+                for m in measures:
+                    yield m
 
     @property
     def remote_studies(self):

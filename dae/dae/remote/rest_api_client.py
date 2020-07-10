@@ -112,3 +112,37 @@ class RESTClient:
             stream=True
         )
         return response
+
+    def get_pheno_browser_config(self, db_name):
+        response = self._get(
+            "pheno_browser/config",
+            query_values={"db_name": db_name},
+        )
+        return response.json()
+
+    def get_browser_measures_info(self, dataset_id):
+        response = self._get(
+            "pheno_browser/measures_info",
+            query_values={"dataset_id": dataset_id}
+        )
+
+        return response.json()
+
+    def get_browser_measures(self, dataset_id, instrument, search_term):
+        response = self._get(
+            "pheno_browser/measures",
+            query_values={
+                "dataset_id": dataset_id,
+                "instrument": instrument,
+                "search": search_term
+            },
+            stream=True
+        )
+        return response
+
+    def get_instruments(self, dataset_id):
+        response = self._get(
+            "pheno_browser/instruments",
+            query_values={"dataset_id": dataset_id},
+        )
+        return response.json()["instruments"]
