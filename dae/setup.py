@@ -33,6 +33,7 @@ setuptools.setup(
         "dae/tools/ped2ped.py",
         "dae/tools/draw_pedigree.py",
         "dae/tools/impala_batch_import.py",
+        "dae/tools/remote_instance_mirror.py",
         "dae/pheno/prepare/individuals2ped.py",
     ],
     entry_points="""

@@ -2,7 +2,6 @@
 import os
 import sys
 import argparse
-import tempfile
 
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.backends.impala.import_commons import save_study_config
