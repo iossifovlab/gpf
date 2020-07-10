@@ -14,6 +14,7 @@ from dae.gene.denovo_gene_sets_db import DenovoGeneSetsDb
 from dae.studies.variants_db import VariantsDb
 
 from dae.pheno.pheno_db import PhenoDb
+from dae.pheno_browser.db import DbManager
 
 from dae.backends.storage.genotype_storage_factory import (
     GenotypeStorageFactory,
@@ -23,6 +24,8 @@ from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.dae_conf import dae_conf_schema
 from dae.configuration.schemas.gene_info import gene_info_conf
 from dae.configuration.schemas.genomic_scores import genomic_scores_schema
+
+from dae.utils.helpers import isnan
 
 
 def cached(prop):
@@ -194,6 +197,64 @@ class GPFInstance(object):
 
     def get_phenotype_data_config(self, phenotype_data_id):
         return self._pheno_db.get_phenotype_data_config(phenotype_data_id)
+
+    # Pheno browser
+
+    def get_pheno_config(self, study_wrapper):
+        dbname = study_wrapper.config.phenotype_data
+        return self._pheno_db.config[dbname]
+
+    def has_pheno_data(self, study_wrapper):
+        return study_wrapper.phenotype_data is not None
+
+    def get_instruments(self, study_wrapper):
+        return study_wrapper.phenotype_data.instruments.keys()
+
+    def get_pheno_dbfile(self, study_wrapper):
+        config = self.get_pheno_config(study_wrapper)
+        return config.browser_dbfile
+
+    def get_pheno_images_url(self, study_wrapper):
+        config = self.get_pheno_config(study_wrapper)
+        return config.browser_images_dir
+
+    def get_measures_info(self, study_wrapper):
+        dbfile = self.get_pheno_dbfile(study_wrapper)
+        images_url = self.get_pheno_images_url(study_wrapper)
+        db = DbManager(dbfile=dbfile)
+        db.build()
+        return {
+            "base_image_url": images_url,
+            "has_descriptions": db.has_descriptions,
+            "regression_names": db.regression_display_names,
+        }
+
+    def search_measures(self, study_wrapper, instrument, search_term):
+        dbfile = self.get_pheno_dbfile(study_wrapper)
+        db = DbManager(dbfile=dbfile)
+        db.build()
+
+        measures = db.search_measures(instrument, search_term)
+
+        for m in measures:
+            if m["values_domain"] is None:
+                m["values_domain"] = ""
+            m["measure_type"] = m["measure_type"].name
+
+            m["regressions"] = []
+            regressions = db.get_regression_values(m["measure_id"]) or []
+
+            for reg in regressions:
+                reg = dict(reg)
+                if isnan(reg["pvalue_regression_male"]):
+                    reg["pvalue_regression_male"] = "NaN"
+                if isnan(reg["pvalue_regression_female"]):
+                    reg["pvalue_regression_female"] = "NaN"
+                m["regressions"].append(reg)
+
+            yield {
+                "measure": m,
+            }
 
     # Genomic scores
 
