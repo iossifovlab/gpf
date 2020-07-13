@@ -49,7 +49,6 @@ import { StudyTypesComponent } from './study-types/study-types.component';
 import { CookieService} from 'ngx-cookie-service';
 
 import { GenotypeBrowserComponent } from './genotype-browser/genotype-browser.component';
-import { GpfTabsetComponent } from './tabset/tabset.component';
 
 import { EnrichmentToolComponent } from './enrichment-tool/enrichment-tool.component';
 import { EnrichmentModelsBlockComponent } from './enrichment-models-block/enrichment-models-block.component';
@@ -267,7 +266,6 @@ const appRoutes: Routes = [
     UsersComponent,
     StudyTypesComponent,
     GenotypeBrowserComponent,
-    GpfTabsetComponent,
     EnrichmentToolComponent,
     EnrichmentModelsComponent,
     EnrichmentTableComponent,
