@@ -1,24 +1,25 @@
 <div class="family-filters-block form-block">
   <div class="card">
-    <gpf-tabset #tabset>
-      <div class="gpf-tabset-left">
-        Families
-      </div>
-      <ngb-tab id="all-families" title="All">
-      </ngb-tab>
-      <ngb-tab id="family-ids" title="Family Ids">
-          <ng-template ngbTabContent>
+    <ul ngbNav #nav="ngbNav" class="navbar bg-light nav-pills" style="justify-content: flex-start">
+      <div class="nav-title-custom">Families</div>
+      <li [ngbNavItem]="'allFamilies'">
+          <a ngbNavLink>All</a>
+      </li>
+      <li [ngbNavItem]="'familyIds'">
+          <a ngbNavLink>Family Ids</a>
+          <ng-template ngbNavContent>
               <gpf-family-ids></gpf-family-ids>
           </ng-template>
-      </ngb-tab>
-      <ngb-tab *ngIf="dataset?.genotypeBrowserConfig?.phenoFilters"
-               id="pheno-filters" title="Advanced">
-          <ng-template ngbTabContent>
+      </li>
+      <li [ngbNavItem]="'phenoFilters'" *ngIf="dataset?.genotypeBrowserConfig?.phenoFilters">
+          <a ngbNavLink>Advanced</a>
+          <ng-template ngbNavContent>
               <gpf-pheno-filters [dataset]="dataset">
               </gpf-pheno-filters>
           </ng-template>
-      </ngb-tab>
-    </gpf-tabset>
+      </li>
+    </ul>
+    <div [ngbNavOutlet]="nav" class="card-block"></div>
     <gpf-family-counters
         *ngIf="genotypeBrowserState"
         [genotypeBrowserState]="genotypeBrowserState"

@@ -208,3 +208,9 @@ label {
 .modal-backdrop.fade {
   transition: none;
 }
+
+.nav-title-custom {
+  font-family: Roboto;
+  font-weight: 500;
+  margin-right: 30px;
+}
