@@ -139,8 +139,8 @@ class ImpalaHelpers(object):
 
     def create_dataset_table(
             self, cursor, db, table,
-            hdfs_dir, sample_file,
-            partition_description):
+            sample_file,
+            pd):
 
         cursor.execute(
             """
@@ -150,28 +150,30 @@ class ImpalaHelpers(object):
             )
         )
 
-        partitions = ["region_bin string"]
+        print("pd.has_partitions():", pd, pd.has_partitions())
 
-        if not partition_description.rare_boundary <= 0:
-            partitions.append("frequency_bin tinyint")
-        if not partition_description.coding_effect_types == []:
-            partitions.append("coding_bin tinyint")
-        if not partition_description.family_bin_size <= 0:
-            partitions.append("family_bin tinyint")
-
-        partitions = ", ".join(partitions)
-        statement = f"""
-            CREATE EXTERNAL TABLE {db}.{table} LIKE PARQUET '{sample_file}'
-            PARTITIONED BY ({partitions})
-            STORED AS PARQUET LOCATION '{hdfs_dir}'
-        """
+        hdfs_dir = pd.variants_filename_basedir(sample_file)
+        if not pd.has_partitions():
+            statement = f"""
+                CREATE EXTERNAL TABLE {db}.{table} LIKE PARQUET '{sample_file}'
+                STORED AS PARQUET LOCATION '{hdfs_dir}'
+            """
+        else:
+            partitions = pd.build_impala_partitions()
+            statement = f"""
+                CREATE EXTERNAL TABLE {db}.{table} LIKE PARQUET '{sample_file}'
+                PARTITIONED BY ({partitions})
+                STORED AS PARQUET LOCATION '{hdfs_dir}'
+            """
 
         cursor.execute(statement)
-        cursor.execute(
-            f"""
-            ALTER TABLE {db}.{table} RECOVER PARTITIONS
-        """
-        )
+
+        if pd.has_partitions():
+            cursor.execute(
+                f"""
+                ALTER TABLE {db}.{table} RECOVER PARTITIONS
+            """
+            )
         cursor.execute(
             f"""
             REFRESH {db}.{table}
@@ -183,10 +185,9 @@ class ImpalaHelpers(object):
             db,
             pedigree_table,
             variants_table,
-            partition_description,
             pedigree_hdfs_file,
-            variants_hdfs_dir,
-            variants_sample_file):
+            variants_hdfs_file,
+            partition_description):
 
         with closing(self.connection()) as conn:
             with conn.cursor() as cursor:
@@ -202,14 +203,13 @@ class ImpalaHelpers(object):
                     cursor,
                     db,
                     variants_table,
-                    variants_hdfs_dir,
-                    variants_sample_file,
-                    partition_description,
+                    variants_hdfs_file,
+                    partition_description
                 )
-
-                self.add_partition_properties(
-                    cursor, db, variants_table, partition_description
-                )
+                if partition_description.has_partitions():
+                    self.add_partition_properties(
+                        cursor, db, variants_table, partition_description
+                    )
 
     def check_database(self, dbname):
         with closing(self.connection()) as conn:
