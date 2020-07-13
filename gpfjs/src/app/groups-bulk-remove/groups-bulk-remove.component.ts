@@ -106,4 +106,7 @@ export class GroupsBulkRemoveComponent implements OnInit {
     this.group = group;
   }
 
+  clearSelectedGroup(group: string) {
+    this.group = undefined;
+  }
 }

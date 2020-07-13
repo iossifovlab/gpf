@@ -105,4 +105,8 @@ export class GroupsBulkAddComponent implements OnInit {
   changeSelectedGroup(group: string) {
     this.group = group;
   }
+
+  clearSelectedGroup(group: string) {
+    this.group = undefined;
+  }
 }

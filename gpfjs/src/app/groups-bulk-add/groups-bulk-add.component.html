@@ -14,7 +14,9 @@
             [settings]="dropdownSettings"
             [placeholder]="'Select group'"
             [data]="groupOptions"
-            (onSelect)="changeSelectedGroup($event.text)">
+            (onSelect)="changeSelectedGroup($event.text)"
+            (onDeSelect)="clearSelectedGroup($event.text)"
+          >
           </ng-multiselect-dropdown>
         </div>
       </div>
