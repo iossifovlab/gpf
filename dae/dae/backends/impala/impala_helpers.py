@@ -150,8 +150,6 @@ class ImpalaHelpers(object):
             )
         )
 
-        print("pd.has_partitions():", pd, pd.has_partitions())
-
         hdfs_dir = pd.variants_filename_basedir(sample_file)
         if not pd.has_partitions():
             statement = f"""
