@@ -1,6 +1,7 @@
 import pytest
 import numpy as np
-from dae.backends.impala.parquet_io import ParquetPartitionDescriptor
+from dae.backends.impala.parquet_io import ParquetPartitionDescriptor, \
+    NoPartitionDescriptor
 from dae.variants.family_variant import FamilyVariant
 from dae.variants.variant import SummaryAllele, SummaryVariant
 
@@ -37,7 +38,8 @@ def test_parquet_region_bin(
         assert region_bin == expected
         assert (
             pd.variant_filename(fa)
-            == f"region_bin={region_bin}/variants_region_bin_{region_bin}.parquet"
+            == f"region_bin={region_bin}/variants_region_bin_{region_bin}"
+            f".parquet"
         )
 
 
@@ -158,3 +160,61 @@ def test_parquet_coding_bin(
             == f"region_bin=1_11/coding_bin={ex}/"
             + f"variants_region_bin_1_11_coding_bin_{ex}.parquet"
         )
+
+
+def test_variant_filename_basedir():
+    filename = \
+        "region_bin=1_0/frequency_bin=1/coding_bin=1/family_bin=0/" \
+        "variants_region_bin_1_0_frequency_bin_1_coding_bin_1_family_bin_0" \
+        ".parquet"
+
+    pd = ParquetPartitionDescriptor(
+        ["1"], 30_000_000,
+        family_bin_size=10,
+        coding_effect_types=["missense", "synonymous"],
+        rare_boundary=5
+    )
+
+    assert pd is not None
+    res = pd.variants_filename_basedir(
+        f"AGRE_WG_859_variants.parquet/{filename}")
+    assert res == "AGRE_WG_859_variants.parquet/"
+
+    res = pd.variants_filename_basedir(f"ala/bala/nica/{filename}")
+    assert res == "ala/bala/nica/"
+
+    bad_res = pd.variants_filename_basedir(
+        f"ala/bala/nica/{filename}_tata")
+    assert bad_res is None
+
+    bad_res = pd.variants_filename_basedir(filename)
+    assert bad_res is None
+
+    res = pd.variants_filename_basedir(
+        f"hdfs://localhost:8020/ala/bala/nica/{filename}")
+    assert res == "hdfs://localhost:8020/ala/bala/nica/"
+
+
+def test_no_partition_variant_filename_basedir():
+    filename = "gosho_variants.parquet"
+
+    pd = NoPartitionDescriptor()
+    assert pd is not None
+
+    res = pd.variants_filename_basedir(
+        f"AGRE_WG_859_variants.parquet/{filename}")
+    assert res == "AGRE_WG_859_variants.parquet/"
+
+    res = pd.variants_filename_basedir(f"ala/bala/nica/{filename}")
+    assert res == "ala/bala/nica/"
+
+    bad_res = pd.variants_filename_basedir(
+        f"ala/bala/nica/{filename}_tata")
+    assert bad_res is None
+
+    bad_res = pd.variants_filename_basedir(filename)
+    assert bad_res is None
+
+    res = pd.variants_filename_basedir(
+        f"hdfs://localhost:8020/ala/bala/nica/{filename}")
+    assert res == "hdfs://localhost:8020/ala/bala/nica/"

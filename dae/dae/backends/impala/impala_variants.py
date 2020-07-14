@@ -39,7 +39,7 @@ class ImpalaFamilyVariants:
             self,
             impala_helpers,
             db,
-            variant_table,
+            variants_table,
             pedigree_table,
             gene_models=None):
 
@@ -48,7 +48,7 @@ class ImpalaFamilyVariants:
         assert pedigree_table, pedigree_table
 
         self.db = db
-        self.variant_table = variant_table
+        self.variants_table = variants_table
         self.pedigree_table = pedigree_table
 
         self._impala_helpers = impala_helpers
@@ -57,7 +57,7 @@ class ImpalaFamilyVariants:
         self.families = FamiliesData.from_pedigree_df(self.ped_df)
 
         self.schema = self._fetch_variant_schema()
-        if self.variant_table:
+        if self.variants_table:
             self.serializer = AlleleParquetSerializer(self.schema)
 
         assert gene_models is not None
@@ -71,7 +71,7 @@ class ImpalaFamilyVariants:
         self._fetch_tblproperties()
 
     def count_variants(self, **kwargs):
-        if not self.variant_table:
+        if not self.variants_table:
             return 0
         with closing(self.connection()) as conn:
             with conn.cursor() as cursor:
@@ -102,7 +102,7 @@ class ImpalaFamilyVariants:
             return_unknown=None,
             limit=None):
 
-        if not self.variant_table:
+        if not self.variants_table:
             return None
         with closing(self.connection()) as conn:
 
@@ -186,7 +186,7 @@ class ImpalaFamilyVariants:
             return_unknown=None,
             limit=None):
 
-        if not self.variant_table:
+        if not self.variants_table:
             return None
 
         if limit is None:
@@ -274,14 +274,14 @@ class ImpalaFamilyVariants:
         return ped_df
 
     def _fetch_variant_schema(self):
-        if not self.variant_table:
+        if not self.variants_table:
             return None
         with closing(self.connection()) as conn:
             with conn.cursor() as cursor:
                 q = """
                     DESCRIBE {db}.{variant}
                 """.format(
-                    db=self.db, variant=self.variant_table
+                    db=self.db, variant=self.variants_table
                 )
 
                 cursor.execute(q)
@@ -311,12 +311,12 @@ class ImpalaFamilyVariants:
                 return schema
 
     def _fetch_tblproperties(self):
-        if not self.variant_table:
+        if not self.variants_table:
             return None
         with closing(self.connection()) as conn:
             with conn.cursor() as cursor:
                 cursor.execute(
-                    f"DESCRIBE EXTENDED {self.db}.{self.variant_table}")
+                    f"DESCRIBE EXTENDED {self.db}.{self.variants_table}")
                 rows = list(cursor)
                 properties_start, properties_end = -1, -1
                 for row_index, row in enumerate(rows):
@@ -813,7 +813,7 @@ class ImpalaFamilyVariants:
             {limit_clause}
             """.format(
             db=self.db,
-            variant=self.variant_table,
+            variant=self.variants_table,
             where_clause=where_clause,
             limit_clause=limit_clause,
         )
@@ -863,5 +863,5 @@ class ImpalaFamilyVariants:
             FROM {db}.{variant}
             {where_clause}
             """.format(
-            db=self.db, variant=self.variant_table, where_clause=where_clause
+            db=self.db, variant=self.variants_table, where_clause=where_clause
         )

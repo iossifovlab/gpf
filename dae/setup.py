@@ -18,6 +18,7 @@ setuptools.setup(
     include_package_data=True,
     scripts=[
         "dae/tools/impala_parquet_loader.py",
+        "dae/tools/impala_tables_loader.py",
         "dae/tools/generate_common_report.py",
         "dae/tools/generate_denovo_gene_sets.py",
         "dae/tools/pheno2dae.py",
@@ -32,6 +33,7 @@ setuptools.setup(
         "dae/tools/ped2ped.py",
         "dae/tools/draw_pedigree.py",
         "dae/tools/impala_batch_import.py",
+        "dae/tools/remote_instance_mirror.py",
         "dae/pheno/prepare/individuals2ped.py",
     ],
     entry_points="""

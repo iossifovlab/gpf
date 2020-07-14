@@ -1,4 +1,5 @@
 import pytest
+import os
 
 import numpy as np
 
@@ -67,13 +68,13 @@ def cnv_impala(
     )
 
     ParquetManager.variants_to_parquet_filename(
-        cnv_loader, parquet_filenames.variant
+        cnv_loader, parquet_filenames.variants
     )
 
-    impala_genotype_storage.impala_load_study(
+    impala_genotype_storage.impala_load_dataset(
         study_id,
-        variant_paths=[parquet_filenames.variant],
-        pedigree_paths=[parquet_filenames.pedigree],
+        variants_path=os.path.dirname(parquet_filenames.variants),
+        pedigree_file=parquet_filenames.pedigree,
     )
 
     fvars = impala_genotype_storage.build_backend(

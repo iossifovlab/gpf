@@ -46,26 +46,26 @@ def test_lift_over(mocker, chrom, pos, lift_over, expected, genomes_db_2013):
             }
         )
     )
-    with mocker.patch(
+    mocker.patch(
         "dae.annotation.tools.lift_over_annotator."
         "LiftOverAnnotator.build_lift_over"
-    ):
+    )
 
-        annotator = LiftOverAnnotator(config, genomes_db_2013)
-        assert annotator is not None
+    annotator = LiftOverAnnotator(config, genomes_db_2013)
+    assert annotator is not None
 
-        annotator.lift_over = mocker.Mock()
-        annotator.lift_over.convert_coordinate = lift_over
+    annotator.lift_over = mocker.Mock()
+    annotator.lift_over.convert_coordinate = lift_over
 
-        aline = {
-            "chrom": chrom,
-            "pos": pos,
-        }
+    aline = {
+        "chrom": chrom,
+        "pos": pos,
+    }
 
-        annotator.do_annotate(aline, None)
+    annotator.do_annotate(aline, None)
 
-        assert "hg19_location" in aline
-        assert aline["hg19_location"] == expected
+    assert "hg19_location" in aline
+    assert aline["hg19_location"] == expected
 
 
 @pytest.mark.parametrize(
@@ -93,33 +93,33 @@ def test_pipeline_with_liftover(
         "fixtures/lift_over_test_annotator.conf"
     )
 
-    with mocker.patch(
+    mocker.patch(
         "dae.annotation.tools.lift_over_annotator."
         "LiftOverAnnotator.build_lift_over"
-    ):
-        pipeline = PipelineAnnotator.build(options, filename, genomes_db_2013,)
-        assert pipeline is not None
-        assert len(pipeline.annotators) == 3
+    )
+    pipeline = PipelineAnnotator.build(options, filename, genomes_db_2013,)
+    assert pipeline is not None
+    assert len(pipeline.annotators) == 3
 
-        lift_over_annotator = pipeline.annotators[0]
-        assert isinstance(lift_over_annotator, LiftOverAnnotator)
+    lift_over_annotator = pipeline.annotators[0]
+    assert isinstance(lift_over_annotator, LiftOverAnnotator)
 
-        lift_over_annotator.lift_over = mocker.Mock()
-        lift_over_annotator.lift_over.convert_coordinate = lift_over
+    lift_over_annotator.lift_over = mocker.Mock()
+    lift_over_annotator.lift_over.convert_coordinate = lift_over
 
-        chrom, pos = location.split(":")
-        pos = int(pos)
+    chrom, pos = location.split(":")
+    pos = int(pos)
 
-        aline = {
-            # 'location': location,
-            "CHROM": chrom,
-            "POS": pos,
-            "REF": "A",
-            "ALT": "T",
-        }
+    aline = {
+        # 'location': location,
+        "CHROM": chrom,
+        "POS": pos,
+        "REF": "A",
+        "ALT": "T",
+    }
 
-        pipeline.line_annotation(aline)
-        print(aline)
-        assert aline["RESULT_phastCons100way"] is None
-        assert aline["RESULT_RawScore"] is None
-        assert aline["RESULT_PHRED"] is None
+    pipeline.line_annotation(aline)
+    print(aline)
+    assert aline["RESULT_phastCons100way"] is None
+    assert aline["RESULT_RawScore"] is None
+    assert aline["RESULT_PHRED"] is None

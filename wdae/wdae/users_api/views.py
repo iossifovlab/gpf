@@ -1,3 +1,4 @@
+import re
 from functools import wraps
 
 from django.db import IntegrityError, transaction
@@ -30,6 +31,13 @@ from utils.logger import request_logging_function_view
 from django.utils.decorators import available_attrs
 
 
+def is_email_valid(email: str) -> bool:
+    email_regex = \
+        (r"[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:"
+         r"[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?")
+    return bool(re.search(email_regex, email))
+
+
 def csrf_clear(view_func):
     """
     Skips the CSRF checks by setting the 'csrf_processing_done' to true.
@@ -58,19 +66,6 @@ class UserViewSet(viewsets.ModelViewSet):
             serializer_class = UserWithoutEmailSerializer
 
         return serializer_class
-
-    @request_logging(LOGGER)
-    @action(detail=True, methods=["post"])
-    def password_remove(self, request, pk=None):
-        self.check_permissions(request)
-        user = get_object_or_404(get_user_model(), pk=pk)
-
-        if user.has_usable_password():
-            user.set_unusable_password()
-            user.save()
-            user.deauthenticate()
-
-        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @request_logging(LOGGER)
     @action(detail=True, methods=["post"])
@@ -130,8 +125,6 @@ def reset_password(request):
     user_model = get_user_model()
     try:
         user = user_model.objects.get(email=email)
-        if not user.is_active:
-            return Response({}, status=status.HTTP_200_OK)
         user.reset_password()
         user.deauthenticate()
 
@@ -158,6 +151,8 @@ def register(request):
 
     try:
         email = BaseUserManager.normalize_email(request.data["email"])
+        if not is_email_valid(email):
+            raise ValueError
 
         if settings.OPEN_REGISTRATION:
             preexisting_user, _ = user_model.objects.get_or_create(email=email)
@@ -165,9 +160,6 @@ def register(request):
             preexisting_user = user_model.objects.get(
                 email__iexact=email
             )
-
-        if preexisting_user.is_active:
-            return Response({}, status=status.HTTP_201_CREATED)
 
         preexisting_user.register_preexisting_user(request.data.get("name"))
         LOGGER.info(
@@ -213,6 +205,18 @@ def register(request):
             )
         )
         return Response({}, status=status.HTTP_201_CREATED)
+    except ValueError:
+        LOGGER.error(
+            log_filter(
+                request,
+                f"Registration failed: Invalid email; email: '{str(email)}'"
+            )
+        )
+        return Response(
+            {"error_msg": ("Invalid email address entered."
+                           " Please use a valid email address.")},
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
 
 @request_logging_function_view(LOGGER)

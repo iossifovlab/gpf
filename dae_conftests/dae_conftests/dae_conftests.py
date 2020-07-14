@@ -462,14 +462,13 @@ def iossifov2014_impala(
     )
 
     ParquetManager.variants_to_parquet_filename(
-        iossifov2014_loader, parquet_filenames.variant
+        iossifov2014_loader, parquet_filenames.variants
     )
 
-    impala_genotype_storage.impala_load_study(
+    impala_genotype_storage.impala_load_dataset(
         study_id,
-        variant_paths=[parquet_filenames.variant],
-        pedigree_paths=[parquet_filenames.pedigree],
-    )
+        variants_path=parquet_filenames.variants_dirname,
+        pedigree_file=parquet_filenames.pedigree,)
 
     fvars = impala_genotype_storage.build_backend(
         GPFConfigParser._dict_to_namedtuple({"id": study_id}), genomes_db_2013

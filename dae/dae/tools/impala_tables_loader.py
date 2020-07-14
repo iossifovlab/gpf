@@ -2,13 +2,13 @@
 import os
 import sys
 import argparse
-import glob
 
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.backends.impala.import_commons import save_study_config
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.study_config_builder import StudyConfigBuilder
-from dae.backends.impala.parquet_io import ParquetPartitionDescriptor
+from dae.backends.impala.parquet_io import NoPartitionDescriptor, \
+    ParquetPartitionDescriptor
 from dae.utils.dict_utils import recursive_dict_update
 
 
@@ -30,19 +30,18 @@ def parse_cli_arguments(argv, gpf_instance):
         "pedigree",
         type=str,
         metavar="<Pedigree Filepath>",
-        help="path to the pedigree file",
+        help="HDFS path to the pedigree file",
     )
 
     parser.add_argument(
         "variants",
         type=str,
         metavar="<Variants Parquet Directory>",
-        help="path to directory which contains variants parquet data files",
+        help="HDFS path to directory which contains variants parquet files",
     )
 
     default_genotype_storage_id = (
-        gpf_instance.dae_config.genotype_storage.default
-    )
+        gpf_instance.dae_config.genotype_storage.default)
 
     parser.add_argument(
         "--genotype-storage",
@@ -53,6 +52,16 @@ def parse_cli_arguments(argv, gpf_instance):
         help="Genotype Storage which will be used for import "
         "[default: %(default)s]",
         default=default_genotype_storage_id,
+    )
+
+    parser.add_argument(
+        "--partition-description",
+        "--pd",
+        type=str,
+        metavar="<Partition Description>",
+        dest="partition_description",
+        help="Partition description file name",
+        default=None,
     )
 
     parser.add_argument(
@@ -92,36 +101,30 @@ def main(argv=sys.argv[1:], gpf_instance=None):
         print("missing or non-impala genotype storage")
         return
 
-    assert os.path.exists(argv.variants)
-    partition_config_file = os.path.join(
-        argv.variants, "_PARTITION_DESCRIPTION"
-    )
+    hdfs_variants_file = argv.variants
+    hdfs_pedigree_file = argv.pedigree
 
-    hdfs_variant_dir = genotype_storage.get_hdfs_dir(
-            argv.study_id, "variants")
-    hdfs_pedigree_dir = genotype_storage.get_hdfs_dir(
-            argv.study_id, "pedigree")
+    print("HDFS variants file:", hdfs_variants_file)
+    print("HDFS pedigree file:", hdfs_pedigree_file)
 
-    hdfs = genotype_storage.hdfs_helpers
-    hdfs_variant_paths = hdfs.list_dir(hdfs_variant_dir)
-    hdfs_pedigree_path = hdfs.list_dir(hdfs_pedigree_dir)
+    partition_config_file = None
+    if argv.partition_description is not None:
+        partition_config_file = argv.partition_description
+        assert os.path.isfile(partition_config_file), partition_config_file
+    print("partition_config_file:", partition_config_file)
 
-    if os.path.isdir(argv.variants) and os.path.exists(partition_config_file):
-        partition_descriptor = ParquetPartitionDescriptor.from_config(
-            partition_config_file, root_dirname=argv.variants
-        )
-        files_glob = partition_descriptor.generate_file_access_glob()
-        files_glob = os.path.join(argv.variants, files_glob)
-        variants_files = glob.glob(files_glob)
-
-        study_config = genotype_storage.impala_import_dataset(
-            argv.study_id, variants_files, hdfs_variant_paths,
-            hdfs_pedigree_path, partition_descriptor)
+    if partition_config_file is not None and \
+            os.path.isfile(partition_config_file):
+        partition_description = ParquetPartitionDescriptor.from_config(
+            partition_config_file)
     else:
-        has_variants = argv.variants is not None
-        study_config = genotype_storage.impala_import_study(
-            argv.study_id, hdfs_variant_paths,
-            hdfs_pedigree_path, has_variants)
+        partition_description = NoPartitionDescriptor()
+
+    study_config = genotype_storage.impala_import_dataset(
+        argv.study_id,
+        hdfs_pedigree_file,
+        hdfs_variants_file,
+        partition_description=partition_description)
 
     if argv.study_config:
         input_config = GPFConfigParser.load_config_raw(argv.study_config)
