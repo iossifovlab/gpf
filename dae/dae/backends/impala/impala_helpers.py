@@ -36,50 +36,7 @@ class ImpalaHelpers(object):
     def connection(self):
         return self._connection_pool.connect()
 
-    def import_variants(
-            self,
-            db,
-            variant_table,
-            pedigree_table,
-            variant_hdfs_path,
-            pedigree_hdfs_path):
-        assert db is not None
-
-        with closing(self.connection()) as conn:
-            with conn.cursor() as cursor:
-                cursor.execute(
-                    f"""
-                    CREATE DATABASE IF NOT EXISTS {db}
-                    """)
-
-                self.import_files(
-                    cursor, db, pedigree_table, pedigree_hdfs_path)
-                if variant_hdfs_path:
-                    self.import_files(
-                        cursor, db, variant_table, variant_hdfs_path)
-
-    def import_files(self, cursor, db, table_name, import_files):
-
-        cursor.execute(
-            f"""
-            DROP TABLE IF EXISTS {db}.{table_name}
-            """)
-
-        cursor.execute(
-            f"""
-            CREATE TABLE {db}.{table_name}
-            LIKE PARQUET '{import_files[0]}'
-            STORED AS PARQUET
-            """)
-
-        for import_file in import_files:
-            cursor.execute(
-                f"""
-                LOAD DATA INPATH '{import_file}'
-                INTO TABLE {db}.{table_name}
-                """)
-
-    def import_single_file(self, cursor, db, table, import_file):
+    def _import_single_file(self, cursor, db, table, import_file):
 
         cursor.execute(
             f"""
@@ -94,7 +51,7 @@ class ImpalaHelpers(object):
         cursor.execute(statement)
         cursor.execute(f"REFRESH {db}.{table}")
 
-    def add_partition_properties(
+    def _add_partition_properties(
             self, cursor, db, table, partition_description):
 
         chromosomes = ", ".join(partition_description.chromosomes)
@@ -137,7 +94,7 @@ class ImpalaHelpers(object):
             ")"
         )
 
-    def create_dataset_table(
+    def _create_dataset_table(
             self, cursor, db, table,
             sample_file,
             pd):
@@ -194,10 +151,10 @@ class ImpalaHelpers(object):
                     CREATE DATABASE IF NOT EXISTS {db}
                 """
                 )
-                self.import_single_file(
+                self._import_single_file(
                     cursor, db, pedigree_table, pedigree_hdfs_file)
 
-                self.create_dataset_table(
+                self._create_dataset_table(
                     cursor,
                     db,
                     variants_table,
@@ -205,9 +162,8 @@ class ImpalaHelpers(object):
                     partition_description
                 )
                 if partition_description.has_partitions():
-                    self.add_partition_properties(
-                        cursor, db, variants_table, partition_description
-                    )
+                    self._add_partition_properties(
+                        cursor, db, variants_table, partition_description)
 
     def check_database(self, dbname):
         with closing(self.connection()) as conn:
