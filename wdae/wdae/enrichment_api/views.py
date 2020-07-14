@@ -32,13 +32,21 @@ class EnrichmentModelsView(QueryBaseView):
         )
         if enrichment_config is None:
             return []
-        selected_properties = getattr(enrichment_config, selected)
-
-        return [
-            {"name": el.name, "desc": el.desc}
-            for el in getattr(enrichment_config, property_name)
-            if el.name in selected_properties
-        ]
+        # FIXME: Rewrite this when returning to box
+        if isinstance(enrichment_config, dict):
+            selected_properties = enrichment_config[selected]
+            result = []
+            for prop_name in selected_properties:
+                prop = enrichment_config[property_name][prop_name]
+                result.append(prop)
+            return result
+        else:
+            selected_properties = getattr(enrichment_config, selected)
+            return [
+                {"name": el.name, "desc": el.desc}
+                for el in getattr(enrichment_config, property_name)
+                if el.name in selected_properties
+            ]
 
     def get(self, request, dataset_id=None):
         result = {
