@@ -146,3 +146,10 @@ class RESTClient:
             query_values={"dataset_id": dataset_id},
         )
         return response.json()["instruments"]
+
+    def post_enrichment_test(self, query):
+        response = self._post(
+            "enrichment/test",
+            data=query,
+        )
+        return response.json()

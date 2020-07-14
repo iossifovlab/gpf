@@ -135,9 +135,12 @@ class EnrichmentTestView(QueryBaseView):
         dataset_id = query.get("datasetId", None)
         if dataset_id is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        dataset = self.gpf_instance.get_dataset(dataset_id)
+        dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
         if not dataset:
             return Response(status=status.HTTP_404_NOT_FOUND)
+        if dataset.is_remote:
+            results = self.gpf_instance.test_enrichment(dataset, query)
+            return Response(results)
 
         enrichment_config = self.gpf_instance.get_study_enrichment_config(
             dataset_id

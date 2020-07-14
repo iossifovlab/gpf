@@ -155,6 +155,21 @@ class WGPFInstance(GPFInstance):
                 for m in measures:
                     yield m
 
+    def get_study_enrichment_config(self, dataset_id):
+        result = \
+            super(WGPFInstance, self).get_study_enrichment_config(dataset_id)
+
+        if not result:
+            study_wrapper = self.get_wdae_wrapper(dataset_id)
+            if "enrichment" in study_wrapper.config:
+                result = study_wrapper.config["enrichment"]
+
+        return result
+
+    def test_enrichment(self, study_wrapper, query):
+        query["datasetId"] = study_wrapper._remote_study_id
+        return study_wrapper.rest_client.post_enrichment_test(query)
+
     @property
     def remote_studies(self):
         return list(self._remote_study_clients.keys())
