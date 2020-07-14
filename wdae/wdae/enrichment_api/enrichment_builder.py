@@ -1,8 +1,15 @@
+from .enrichment_serializer import EnrichmentSerializer
+
 from dae.enrichment_tool.genotype_helper import GenotypeHelper
 from dae.utils.effect_utils import expand_effect_types
 
 
-class EnrichmentBuilder(object):
+class BaseEnrichmentBuilder:
+    def build(self):
+        raise NotImplementedError()
+
+
+class EnrichmentBuilder(BaseEnrichmentBuilder):
     def __init__(
             self, dataset, enrichment_tool, gene_syms):
         self.dataset = dataset
@@ -62,5 +69,25 @@ class EnrichmentBuilder(object):
             if res:
                 results.append(res)
 
+        serializer = EnrichmentSerializer(self.tool.config, results)
+        results = serializer.serialize()
+
         self.results = results
         return self.results
+
+
+class RemoteEnrichmentBuilder(BaseEnrichmentBuilder):
+
+    def __init__(
+            self, dataset, client, background_name, counting_name, gene_syms):
+        self.dataset = dataset
+        self.client = client
+        query = dict()
+        query["datasetId"] = dataset._remote_study_id
+        query["geneSymbols"] = list(gene_syms)
+        query["enrichmentBackgroundModel"] = background_name
+        query["enrichmentCountingModel"] = counting_name
+        self.query = query
+
+    def build(self):
+        return self.client.post_enrichment_test(self.query)["result"]

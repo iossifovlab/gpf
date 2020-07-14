@@ -3,17 +3,12 @@ from rest_framework import status
 
 import logging
 
-from .enrichment_builder import EnrichmentBuilder
-from .enrichment_serializer import EnrichmentSerializer
-
 from query_base.query_base import QueryBaseView
 
 from dae.utils.gene_utils import GeneSymsMixin
 
 from gene_sets.expand_gene_set_decorator import expand_gene_set
 
-from dae.enrichment_tool.tool import EnrichmentTool
-from dae.enrichment_tool.event_counters import CounterBase
 
 # from memory_profiler import profile
 # fp = open('memory_profiler_basic_mean.log', 'w+')
@@ -101,33 +96,6 @@ class EnrichmentTestView(QueryBaseView):
 
         return None
 
-    def get_enrichment_tool(self, enrichment_config, query):
-        dataset_id = query.get("datasetId", None)
-
-        background_name = query.get("enrichmentBackgroundModel", None)
-
-        if (
-            background_name is None
-            or not self.gpf_instance.has_background(
-                dataset_id, background_name
-            )
-        ):
-            background_name = enrichment_config.default_background_model
-        counting_name = query.get(
-            "enrichmentCountingModel",
-            enrichment_config.default_counting_model,
-        )
-
-        background = self.gpf_instance.get_study_background(
-            dataset_id, background_name
-        )
-        counter = CounterBase.counters()[counting_name]()
-        enrichment_tool = EnrichmentTool(
-            enrichment_config, background, counter
-        )
-
-        return enrichment_tool
-
     @expand_gene_set
     def post(self, request):
         query = request.data
@@ -138,14 +106,6 @@ class EnrichmentTestView(QueryBaseView):
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
         if not dataset:
             return Response(status=status.HTTP_404_NOT_FOUND)
-        if dataset.is_remote:
-            results = self.gpf_instance.test_enrichment(dataset, query)
-            return Response(results)
-
-        enrichment_config = self.gpf_instance.get_study_enrichment_config(
-            dataset_id
-        )
-        enrichment_tool = self.get_enrichment_tool(enrichment_config, query)
 
         gene_syms = GeneSymsMixin.get_gene_syms(
             self.gpf_instance.get_gene_info_gene_weights(), **query
@@ -156,14 +116,16 @@ class EnrichmentTestView(QueryBaseView):
         desc = self.enrichment_description(query)
         desc = "{} ({})".format(desc, len(gene_syms))
 
-        if enrichment_tool.background is None:
+        background_name = query.get("enrichmentBackgroundModel", None)
+        counting_name = query.get("enrichmentCountingModel", None)
+
+        builder = self.gpf_instance.create_enrichment_builder(
+            dataset_id, background_name, counting_name, gene_syms)
+
+        if builder is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        builder = EnrichmentBuilder(dataset, enrichment_tool, gene_syms)
         results = builder.build()
-
-        serializer = EnrichmentSerializer(enrichment_config, results)
-        results = serializer.serialize()
 
         enrichment = {"desc": desc, "result": results}
         return Response(enrichment)

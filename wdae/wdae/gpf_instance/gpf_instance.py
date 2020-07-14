@@ -6,7 +6,13 @@ from threading import Lock
 
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.remote.remote_study_wrapper import RemoteStudyWrapper
+
 from dae.remote.rest_api_client import RESTClient, RESTClientRequestError
+
+from dae.enrichment_tool.tool import EnrichmentTool
+from dae.enrichment_tool.event_counters import CounterBase
+from enrichment_api.enrichment_builder import \
+    EnrichmentBuilder, RemoteEnrichmentBuilder
 
 from requests.exceptions import ConnectionError
 
@@ -166,9 +172,60 @@ class WGPFInstance(GPFInstance):
 
         return result
 
-    def test_enrichment(self, study_wrapper, query):
-        query["datasetId"] = study_wrapper._remote_study_id
-        return study_wrapper.rest_client.post_enrichment_test(query)
+    def get_enrichment_tool(
+            self, enrichment_config, dataset_id,
+            background_name, counting_name=None):
+        if (
+            background_name is None
+            or not self.has_background(
+                dataset_id, background_name
+            )
+        ):
+            background_name = enrichment_config.default_background_model
+        if not counting_name:
+            counting_name = enrichment_config.default_counting_model
+
+        background = self.get_study_background(
+            dataset_id, background_name
+        )
+        counter = CounterBase.counters()[counting_name]()
+        enrichment_tool = EnrichmentTool(
+            enrichment_config, background, counter
+        )
+
+        return enrichment_tool
+
+    def _create_local_enrichment_builder(
+            self, dataset_id, background_name, counting_name,
+            gene_syms):
+        dataset = GPFInstance.get_wdae_wrapper(self, dataset_id)
+        enrichment_config = GPFInstance.get_study_enrichment_config(
+            self,
+            dataset_id
+        )
+        if enrichment_config is None:
+            return None
+        enrichment_tool = self.get_enrichment_tool(
+            enrichment_config, dataset_id, background_name, counting_name)
+        if enrichment_tool.background is None:
+            return None
+
+        builder = EnrichmentBuilder(dataset, enrichment_tool, gene_syms)
+        return builder
+
+    def create_enrichment_builder(
+            self, dataset_id, background_name, counting_name,
+            gene_syms):
+        builder = self._create_local_enrichment_builder(
+            dataset_id, background_name, counting_name, gene_syms)
+        if not builder:
+            dataset = self.get_wdae_wrapper(dataset_id)
+            builder = RemoteEnrichmentBuilder(
+                dataset, dataset.rest_client,
+                background_name, counting_name,
+                gene_syms)
+
+        return builder
 
     @property
     def remote_studies(self):

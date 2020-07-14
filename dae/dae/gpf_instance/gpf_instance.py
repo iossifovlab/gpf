@@ -352,9 +352,6 @@ class GPFInstance(object):
         return self._background_facade.get_study_background(
             dataset_id, background_name)
 
-    def test_enrichment(self, query):
-        pass
-
     # DAE config
     def get_selected_genotype_data(self):
         return self.dae_config.gpfjs.selected_genotype_data
