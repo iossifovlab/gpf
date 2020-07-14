@@ -84,7 +84,10 @@ class NoPartitionDescriptor(PartitionDescriptor):
             return None
 
         assert "basedir" in match.groupdict()
-        return match.groupdict()["basedir"]
+        basedir = match.groupdict()["basedir"]
+        if basedir and basedir[-1] != "/":
+            basedir += "/"
+        return basedir
 
 
 class ParquetPartitionDescriptor(PartitionDescriptor):
@@ -296,7 +299,10 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
             return None
 
         assert "basedir" in match.groupdict()
-        return match.groupdict()["basedir"]
+        basedir = match.groupdict()["basedir"]
+        if basedir and basedir[-1] != "/":
+            basedir += "/"
+        return basedir
 
     # def variants_filenames(self):
     #     partition_bins = self._variants_partition_bins()
@@ -618,8 +624,8 @@ class VariantsParquetWriter:
 class ParquetManager:
     @staticmethod
     def build_parquet_filenames(
-        prefix, study_id=None, bucket_index=0, suffix=None
-    ):
+            prefix, study_id=None, bucket_index=0, suffix=None):
+
         assert bucket_index >= 0
 
         basename = os.path.basename(os.path.abspath(prefix))
@@ -636,14 +642,16 @@ class ParquetManager:
         else:
             filesuffix = f"_{bucket_index:0>6}{suffix}"
 
+        variants_dirname = os.path.join(prefix, "variants")
         variant_filename = os.path.join(
-            prefix, "variant", f"{study_id}_variant{filesuffix}.parquet"
-        )
+            variants_dirname, f"{study_id}{filesuffix}_variants.parquet")
+
         pedigree_filename = os.path.join(
-            prefix, "pedigree", f"{study_id}_pedigree{filesuffix}.parquet"
-        )
+            prefix, "pedigree", f"{study_id}{filesuffix}_pedigree.parquet")
+
         conf = {
-            "variant": variant_filename,
+            "variants_dirname": variants_dirname,
+            "variants": variant_filename,
             "pedigree": pedigree_filename,
         }
 

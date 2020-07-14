@@ -178,10 +178,10 @@ def test_variant_filename_basedir():
     assert pd is not None
     res = pd.variants_filename_basedir(
         f"AGRE_WG_859_variants.parquet/{filename}")
-    assert res == "AGRE_WG_859_variants.parquet"
+    assert res == "AGRE_WG_859_variants.parquet/"
 
     res = pd.variants_filename_basedir(f"ala/bala/nica/{filename}")
-    assert res == "ala/bala/nica"
+    assert res == "ala/bala/nica/"
 
     bad_res = pd.variants_filename_basedir(
         f"ala/bala/nica/{filename}_tata")
@@ -192,7 +192,7 @@ def test_variant_filename_basedir():
 
     res = pd.variants_filename_basedir(
         f"hdfs://localhost:8020/ala/bala/nica/{filename}")
-    assert res == "hdfs://localhost:8020/ala/bala/nica"
+    assert res == "hdfs://localhost:8020/ala/bala/nica/"
 
 
 def test_no_partition_variant_filename_basedir():
@@ -203,10 +203,10 @@ def test_no_partition_variant_filename_basedir():
 
     res = pd.variants_filename_basedir(
         f"AGRE_WG_859_variants.parquet/{filename}")
-    assert res == "AGRE_WG_859_variants.parquet"
+    assert res == "AGRE_WG_859_variants.parquet/"
 
     res = pd.variants_filename_basedir(f"ala/bala/nica/{filename}")
-    assert res == "ala/bala/nica"
+    assert res == "ala/bala/nica/"
 
     bad_res = pd.variants_filename_basedir(
         f"ala/bala/nica/{filename}_tata")
@@ -217,4 +217,4 @@ def test_no_partition_variant_filename_basedir():
 
     res = pd.variants_filename_basedir(
         f"hdfs://localhost:8020/ala/bala/nica/{filename}")
-    assert res == "hdfs://localhost:8020/ala/bala/nica"
+    assert res == "hdfs://localhost:8020/ala/bala/nica/"

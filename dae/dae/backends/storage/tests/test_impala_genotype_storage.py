@@ -91,17 +91,15 @@ def test_impala_load_study(
 
 
 def test_impala_partition_import(
-    impala_genotype_storage, genomes_db_2013, fixture_dirname
-):
+        impala_genotype_storage, fixture_dirname):
 
     ped_file = fixture_dirname(
-        "backends/test_partition2/pedigree.parquet")
+        "backends/test_partition2/pedigree/pedigree.parquet")
     variants_path = fixture_dirname(
-        "backends/test_partition2/variants.parquet")
+        "backends/test_partition2/variants")
 
     impala_genotype_storage.impala_load_dataset(
-        "test_study", variants_path, ped_file
-    )
+        "test_study", variants_path, ped_file)
 
     hdfs = impala_genotype_storage.hdfs_helpers
     root = impala_genotype_storage.storage_config.hdfs.base_dir

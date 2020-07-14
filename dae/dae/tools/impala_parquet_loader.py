@@ -90,14 +90,9 @@ def main(argv=sys.argv[1:], gpf_instance=None):
         return
 
     assert os.path.exists(argv.variants)
-    if os.path.isdir(argv.variants) and os.path.exists(
-            os.path.join(argv.variants, "_PARTITION_DESCRIPTION")):
 
-        study_config = genotype_storage.impala_load_dataset(
-            argv.study_id, argv.variants, argv.pedigree)
-    else:
-        study_config = genotype_storage.impala_load_study(
-            argv.study_id, [argv.variants], [argv.pedigree])
+    study_config = genotype_storage.impala_load_dataset(
+        argv.study_id, argv.variants, argv.pedigree)
 
     if argv.study_config:
         input_config = GPFConfigParser.load_config_raw(argv.study_config)

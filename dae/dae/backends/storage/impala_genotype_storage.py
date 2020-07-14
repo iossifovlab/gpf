@@ -9,7 +9,8 @@ from dae.backends.storage.genotype_storage import GenotypeStorage
 from dae.backends.impala.hdfs_helpers import HdfsHelpers
 from dae.backends.impala.impala_helpers import ImpalaHelpers
 from dae.backends.impala.impala_variants import ImpalaFamilyVariants
-from dae.backends.impala.parquet_io import ParquetManager, \
+from dae.backends.impala.parquet_io import NoPartitionDescriptor, \
+    ParquetManager, \
     ParquetPartitionDescriptor
 
 from dae.configuration.study_config_builder import StudyConfigBuilder
@@ -121,8 +122,6 @@ class ImpalaGenotypeStorage(GenotypeStorage):
 
     def _hdfs_parquet_put_study_files(
             self, study_id, variant_paths, pedigree_paths):
-        print("pedigree_path:", pedigree_paths)
-        print("variants_path:", variant_paths)
 
         pedigree_files = self._hdfs_parquet_put_files(
             study_id, pedigree_paths, "pedigree"
@@ -158,14 +157,13 @@ class ImpalaGenotypeStorage(GenotypeStorage):
         return study_config
 
     def simple_study_import(
-        self,
-        study_id,
-        families_loader=None,
-        variant_loaders=None,
-        study_config=None,
-        output=".",
-        include_reference=False,
-    ):
+            self,
+            study_id,
+            families_loader=None,
+            variant_loaders=None,
+            study_config=None,
+            output=".",
+            include_reference=False):
 
         parquet_pedigrees = []
         parquet_variants = []
@@ -176,9 +174,8 @@ class ImpalaGenotypeStorage(GenotypeStorage):
 
         if variant_loaders:
             for index, variant_loader in enumerate(variant_loaders):
-                assert isinstance(variant_loader, VariantsLoader), type(
-                    variant_loader
-                )
+                assert isinstance(variant_loader, VariantsLoader), \
+                    type(variant_loader)
 
                 if variant_loader.get_attribute("source_type") == "denovo":
                     has_denovo = True
@@ -187,46 +184,47 @@ class ImpalaGenotypeStorage(GenotypeStorage):
                     has_denovo = True
                     has_cnv = True
 
-                if variant_loader.transmission_type == TransmissionType.denovo:
+                if variant_loader.transmission_type == \
+                        TransmissionType.denovo:
                     assert index < 100
 
                     bucket_index = index  # denovo buckets < 100
-                elif (
-                    variant_loader.transmission_type
-                    == TransmissionType.transmitted
-                ):
-                    bucket_index = index + 100  # transmitted buckets (>=100)
+                elif variant_loader.transmission_type == \
+                        TransmissionType.transmitted:
+                    bucket_index = index + 100  # transmitted buckets >=100
 
                 parquet_filenames = ParquetManager.build_parquet_filenames(
-                    output, bucket_index=bucket_index, study_id=study_id
-                )
+                    output, bucket_index=bucket_index, study_id=study_id)
+
                 ParquetManager.variants_to_parquet_filename(
                     variant_loader,
-                    parquet_filenames.variant,
+                    parquet_filenames.variants,
                     bucket_index=bucket_index,
                     include_reference=include_reference
                 )
-                parquet_variants.append(parquet_filenames.variant)
+                parquet_variants.append(parquet_filenames.variants_dirname)
         else:
             parquet_filenames = ParquetManager.build_parquet_filenames(
                 output, bucket_index=0, study_id=study_id
             )
 
-        print("variants and families saved in:", parquet_filenames)
         families = families_loader.load()
-
         ParquetManager.families_to_parquet(
             families, parquet_filenames.pedigree
         )
 
         parquet_pedigrees.append(parquet_filenames.pedigree)
 
-        # study_dir = os.path.join(self.data_dir, study_id)
+        if parquet_variants:
+            assert all([pv == parquet_variants[0] for pv in parquet_variants])
+            variants_path = parquet_variants[0]
+        else:
+            variants_path = None
 
-        config_dict = self.impala_load_study(
+        config_dict = self.impala_load_dataset(
             study_id,
-            variant_paths=parquet_variants,
-            pedigree_paths=parquet_pedigrees,
+            variants_path=variants_path,
+            pedigree_file=parquet_pedigrees[0]
         )
 
         config_dict["has_denovo"] = has_denovo
@@ -240,87 +238,37 @@ class ImpalaGenotypeStorage(GenotypeStorage):
 
         return config_builder.build_config()
 
-    def hdfs_upload_study(self, study_id, variant_paths=[], pedigree_paths=[]):
-        assert variant_paths is not None
-        assert pedigree_paths
-
-        return self._hdfs_parquet_put_study_files(
-                study_id, variant_paths, pedigree_paths)
-
-    def impala_import_study(
-            self, study_id, variant_hdfs_path,
-            pedigree_hdfs_path, has_variants):
-
-        db = self.storage_config.impala.db
-
-        pedigree_table = self._construct_pedigree_table(study_id)
-        variant_table = self._construct_variant_table(study_id)
-        print(
-            f"Loading `{study_id}` study in impala "
-            f"`{db}` db; "
-            f"variants from hdfs: {variant_hdfs_path}; "
-            f"pedigrees from hdfs: {pedigree_hdfs_path}",
-            file=sys.stderr,
-        )
-        start = time()
-
-        self.impala_helpers.drop_table(db, variant_table)
-        self.impala_helpers.drop_table(db, pedigree_table)
-
-        self.impala_helpers.import_variants(
-            db,
-            variant_table,
-            pedigree_table,
-            variant_hdfs_path,
-            pedigree_hdfs_path,
-        )
-
-        end = time()
-        total = end - start
-        print(
-            f"Loaded `{study_id}` study in impala `{self.storage_config.db}` "
-            f"db for {total:.2f} sec",
-            file=sys.stderr,
-        )
-        return self._generate_study_config(
-            study_id, pedigree_table, variant_table if has_variants else None
-        )
-
-    def impala_load_study(self, study_id, variant_paths=[], pedigree_paths=[]):
-        variant_hdfs_path, pedigree_hdfs_path = \
-                self.hdfs_upload_study(study_id, variant_paths, pedigree_paths)
-
-        has_variants = len(variant_paths)
-
-        return self.impala_import_study(
-            study_id, variant_hdfs_path, pedigree_hdfs_path, has_variants)
-
     def hdfs_upload_dataset(
             self, study_id, variants_dir,
-            pedigree_file, partition_descriptor):
+            pedigree_file, partition_description):
 
-        files_glob = partition_descriptor.generate_file_access_glob()
+        study_path = os.path.join(self.storage_config.hdfs.base_dir, study_id)
+        pedigree_hdfs_path = os.path.join(
+            study_path, "pedigree", "pedigree.parquet"
+        )
+        self.hdfs_helpers.put(pedigree_file, pedigree_hdfs_path)
+
+        if variants_dir is None:
+            return (None, pedigree_hdfs_path)
+
+        files_glob = partition_description.generate_file_access_glob()
         files_glob = os.path.join(variants_dir, files_glob)
         variants_files = glob.glob(files_glob)
 
-        study_path = os.path.join(self.storage_config.hdfs.base_dir, study_id)
         variants_hdfs_path = os.path.join(study_path, "variants")
         variants_hdfs_filenames = []
-        print("variants_hdfs_path:", variants_hdfs_path)
+        basedir = partition_description.variants_filename_basedir(
+            variants_files[0])
+        assert basedir, (variants_files[0], basedir)
+
         for parquet_file in variants_files:
             file_dir = os.path.dirname(parquet_file)
-            file_dir = file_dir[file_dir.find("region_bin"):]
+            file_dir = file_dir[len(basedir):]
             file_hdfs_dir = os.path.join(variants_hdfs_path, file_dir)
             self.hdfs_helpers.makedirs(file_hdfs_dir)
             self.hdfs_helpers.put_in_directory(parquet_file, file_hdfs_dir)
             variants_hdfs_filenames.append(
                 os.path.join(file_hdfs_dir, os.path.basename(parquet_file)))
-
-        pedigree_hdfs_path = os.path.join(
-            study_path, "pedigree", "pedigree.parquet"
-        )
-
-        self.hdfs_helpers.put(pedigree_file, pedigree_hdfs_path)
 
         return (variants_hdfs_filenames[0], pedigree_hdfs_path)
 
@@ -353,11 +301,12 @@ class ImpalaGenotypeStorage(GenotypeStorage):
         partition_config_file = os.path.join(
             variants_path, "_PARTITION_DESCRIPTION"
         )
-        assert os.path.exists(partition_config_file)
-
-        partition_description = ParquetPartitionDescriptor.from_config(
-            partition_config_file, root_dirname=variants_path
-        )
+        if os.path.exists(partition_config_file):
+            partition_description = ParquetPartitionDescriptor.from_config(
+                partition_config_file, root_dirname=variants_path)
+        else:
+            partition_description = NoPartitionDescriptor(
+                root_dirname=variants_path)
 
         variants_hdfs_path, pedigree_hdfs_path = \
             self.hdfs_upload_dataset(

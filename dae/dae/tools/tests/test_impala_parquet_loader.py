@@ -4,9 +4,9 @@ from dae.tools.impala_parquet_loader import main
 def test_impala_parquet_loader_partitioned(fixture_dirname, gpf_instance_2013):
 
     pedigree_path = fixture_dirname(
-        "backends/test_partition2/pedigree.parquet")
+        "backends/test_partition2/pedigree/pedigree.parquet")
     variants_path = fixture_dirname(
-        "backends/test_partition2/variants.parquet")
+        "backends/test_partition2/variants")
 
     argv = [
         "test_study_impala_01",
@@ -28,8 +28,10 @@ def test_impala_parquet_loader_no_partition(
     fixture_dirname, gpf_instance_2013
 ):
 
-    pedigree_path = fixture_dirname("studies/quads_f1_impala/data/pedigree")
-    variants_path = fixture_dirname("studies/quads_f1_impala/data/variants")
+    pedigree_path = fixture_dirname(
+        "studies/quads_f1_impala/data/pedigree/quads_f1_impala_pedigree.parquet")
+    variants_path = fixture_dirname(
+        "studies/quads_f1_impala/data/variants")
 
     argv = [
         "test_study_impala_02",
