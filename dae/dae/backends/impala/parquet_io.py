@@ -1,7 +1,9 @@
 import os
 import sys
 import time
+import re
 import hashlib
+import itertools
 
 from box import Box
 
@@ -25,6 +27,12 @@ class PartitionDescriptor:
     def __init__(self):
         pass
 
+    def has_partitions(self):
+        raise NotImplementedError()
+
+    def build_impala_partitions(self):
+        raise NotImplementedError()
+
     @property
     def chromosomes(self):
         raise NotImplementedError()
@@ -41,9 +49,12 @@ class PartitionDescriptor:
 
 
 class NoPartitionDescriptor(PartitionDescriptor):
-    def __init__(self, output):
+    def __init__(self, root_dirname=""):
         super(NoPartitionDescriptor, self).__init__()
-        self.output = output
+        self.output = root_dirname
+
+    def has_partitions(self):
+        return False
 
     @property
     def chromosomes(self):
@@ -65,6 +76,19 @@ class NoPartitionDescriptor(PartitionDescriptor):
         """
         return "*.parquet"
 
+    def variants_filename_basedir(self, filename):
+        regexp = re.compile(
+            "^(?P<basedir>.+)/(?P<prefix>.+)_variants.parquet$")
+        match = regexp.match(filename)
+        if not match:
+            return None
+
+        assert "basedir" in match.groupdict()
+        basedir = match.groupdict()["basedir"]
+        if basedir and basedir[-1] != "/":
+            basedir += "/"
+        return basedir
+
 
 class ParquetPartitionDescriptor(PartitionDescriptor):
     def __init__(
@@ -84,6 +108,21 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
         self._family_bin_size = family_bin_size
         self._coding_effect_types = coding_effect_types
         self._rare_boundary = rare_boundary
+
+    def has_partitions(self):
+        return True
+
+    def build_impala_partitions(self):
+        partitions = ["region_bin string"]
+
+        if not self.rare_boundary <= 0:
+            partitions.append("frequency_bin tinyint")
+        if not self.coding_effect_types == []:
+            partitions.append("coding_bin tinyint")
+        if not self.family_bin_size <= 0:
+            partitions.append("family_bin tinyint")
+
+        return ", ".join(partitions)
 
     @property
     def chromosomes(self):
@@ -207,6 +246,82 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
         filename += ".parquet"
 
         return os.path.join(filepath, filename)
+
+    def _variants_partition_bins(self):
+        partition_bins = []
+        region_bins = [
+            ("region_bin", f"{chrom}_0") for chrom in self._chromosomes
+        ]
+        partition_bins.append(region_bins)
+
+        if self._rare_boundary > 0:
+            frequency_bins = [
+                ("frequency_bin", "1"),
+                ("frequency_bin", "2"),
+                ("frequency_bin", "3")
+            ]
+            partition_bins.append(frequency_bins)
+        if len(self._coding_effect_types) > 0:
+            coding_bins = [
+                ("coding_bin", "0"),
+                ("coding_bin", "1")
+            ]
+            partition_bins.append(coding_bins)
+        if self._family_bin_size > 0:
+            family_bins = [
+                ("family_bin", f"{fb}")
+                for fb in range(self._family_bin_size)
+            ]
+            partition_bins.append(family_bins)
+        return partition_bins
+
+    def _variants_filenames_regexp(self):
+        partition_bins = self._variants_partition_bins()
+        product = next(itertools.product(*partition_bins))
+        dirname_parts = [
+            f"{p[0]}=(?P<{p[0]}>.+)" for p in product
+        ]
+        filename_parts = [
+            f"{p[0]}_(?P={p[0]})" for p in product
+        ]
+        dirname = "/".join(dirname_parts)
+        dirname = os.path.join(f"^(?P<basedir>.+)", dirname)
+        filename = "_".join(filename_parts)
+        filename = f"variants_{filename}\\.parquet$"
+
+        filename = os.path.join(dirname, filename)
+        return re.compile(filename, re.VERBOSE)
+
+    def variants_filename_basedir(self, filename):
+        regexp = self._variants_filenames_regexp()
+        match = regexp.match(filename)
+        if not match:
+            return None
+
+        assert "basedir" in match.groupdict()
+        basedir = match.groupdict()["basedir"]
+        if basedir and basedir[-1] != "/":
+            basedir += "/"
+        return basedir
+
+    # def variants_filenames(self):
+    #     partition_bins = self._variants_partition_bins()
+
+    #     result = []
+    #     for product in itertools.product(*partition_bins):
+    #         print(product)
+    #         filename_parts = [
+    #             f"{p[0]}_{p[1]}" for p in product
+    #         ]
+    #         dirname_parts = [
+    #             f"{p[0]}={p[1]}" for p in product
+    #         ]
+    #         dirname = "/".join(dirname_parts)
+    #         filename = "_".join(filename_parts)
+    #         filename = f"variants_{filename}.parquet"
+    #         filename = os.path.join(dirname, filename)
+    #         result.append(filename)
+    #     return result
 
     def write_partition_configuration(self):
         config = configparser.ConfigParser()
@@ -509,8 +624,8 @@ class VariantsParquetWriter:
 class ParquetManager:
     @staticmethod
     def build_parquet_filenames(
-        prefix, study_id=None, bucket_index=0, suffix=None
-    ):
+            prefix, study_id=None, bucket_index=0, suffix=None):
+
         assert bucket_index >= 0
 
         basename = os.path.basename(os.path.abspath(prefix))
@@ -527,14 +642,16 @@ class ParquetManager:
         else:
             filesuffix = f"_{bucket_index:0>6}{suffix}"
 
+        variants_dirname = os.path.join(prefix, "variants")
         variant_filename = os.path.join(
-            prefix, "variant", f"{study_id}_variant{filesuffix}.parquet"
-        )
+            variants_dirname, f"{study_id}{filesuffix}_variants.parquet")
+
         pedigree_filename = os.path.join(
-            prefix, "pedigree", f"{study_id}_pedigree{filesuffix}.parquet"
-        )
+            prefix, "pedigree", f"{study_id}{filesuffix}_pedigree.parquet")
+
         conf = {
-            "variant": variant_filename,
+            "variants_dirname": variants_dirname,
+            "variants": variant_filename,
             "pedigree": pedigree_filename,
         }
 

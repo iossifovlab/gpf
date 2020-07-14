@@ -1,15 +1,14 @@
 #!/usr/bin/env python
 import os
+import re
 import sys
 import argparse
 import toml
+import subprocess
 
 # from pprint import pprint
 
-from urllib.parse import urlparse, urlunparse
-
-from dae.configuration.gpf_config_parser import GPFConfigParser
-from dae.configuration.schemas.dae_conf import dae_conf_schema
+from urllib.parse import urlparse
 
 
 def parse_cli_arguments(argv):
@@ -64,8 +63,11 @@ def load_mirror_config(filename):
     return config
 
 
-def update_mirror_config(remote, config_dict):
+def update_mirror_config(remote, work_dir):
     # parsed_remote = urlparse(remote)
+
+    config_filename = os.path.join(work_dir, "DAE.conf")
+    config_dict = load_mirror_config(config_filename)
 
     storage = config_dict["storage"]["genotype_impala"]
     assert storage["storage_type"] == "impala"
@@ -73,15 +75,70 @@ def update_mirror_config(remote, config_dict):
     impala = storage["impala"]
     impala["hosts"] = ["localhost"]
 
+    with open(config_filename, "wt") as outfile:
+        content = toml.dumps(config_dict)
+        outfile.write(content)
+
     return config_dict
+
+
+def get_active_conda_environment():
+    result = subprocess.run(
+        ["conda", "env", "list"],
+        text=True, capture_output=True)
+    assert result.returncode == 0, result
+
+    stdout = result.stdout
+
+    regexp = re.compile("^(?P<env>.+?)\s+(?P<active>\\*)\s+(?P<path>\\/.+$)")
+
+    lines = [ln.strip() for ln in stdout.split("\n")]
+    for line in lines:
+        match = regexp.match(line)
+        if match:
+            return match.groupdict()["env"]
+    return None
+
+
+def build_setenv(work_dir):
+    conda_environment = get_active_conda_environment()
+    dirname = os.path.basename(work_dir)
+
+    content = f"""
+export DAE_DB_DIR={work_dir}
+
+conda activate {conda_environment}
+
+PS1="({dirname}) $PS1"
+export PS1
+
+"""
+
+    with open(os.path.join(work_dir, "setenv.sh"), "wt") as outfile:
+        outfile.write(content)
+
+
+def build_wdae_bootstrap(work_dir):
+
+    content = f"""
+#!/bin/bash
+
+wdaemanage.py migrate
+wdaemanage.py user_create admin@iossifovlab.com -p secret -g any_dataset:admin
+wdaemanage.py user_create research@iossifovlab.com -p secret
+
+"""
+
+    with open(os.path.join(work_dir, "wdae_bootstrap.sh"), "wt") as outfile:
+        outfile.write(content)
 
 
 def main(argv=sys.argv[1:]):
     argv = parse_cli_arguments(argv)
 
     remote = argv.remote_instance
-    if remote.endswith("/"):
-        remote = remote[:-1]
+    if not remote.endswith("/"):
+        remote += "/"
 
     parsed_remote = urlparse(remote)
     rsync_remote = remote
@@ -93,6 +150,9 @@ def main(argv=sys.argv[1:]):
     output = argv.output
     if not output.endswith("/"):
         output += "/"
+    output = os.path.abspath(output)
+
+    os.makedirs(output, exist_ok=True)
 
     exclude = argv.exclude.split(",")
     exclude.extend([
@@ -111,19 +171,9 @@ def main(argv=sys.argv[1:]):
     print(command)
     os.system(command)
 
-    work_dir = os.path.join(
-        output,
-        os.path.basename(remote)
-    )
-
-    config_filename = os.path.join(work_dir, "DAE.conf")
-    config_dict = load_mirror_config(config_filename)
-
-    mirror_config_dict = update_mirror_config(remote, config_dict)
-
-    with open(config_filename, "wt") as outfile:
-        content = toml.dumps(mirror_config_dict)
-        outfile.write(content)
+    update_mirror_config(remote, output)
+    build_setenv(output)
+    build_wdae_bootstrap(output)
 
 
 if __name__ == "__main__":
