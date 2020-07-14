@@ -1059,6 +1059,9 @@ class StudyWrapper(StudyWrapperBase):
             self.genotype_data_study.person_set_collection_configs
         result["name"] = result["name"] or result["id"]
 
+        result["enrichment"] = GPFConfigParser._namedtuple_to_dict(
+            deepcopy(self.config.enrichment))
+
         return result
 
     def _get_wdae_member(self, member, person_set_collection, best_st):
