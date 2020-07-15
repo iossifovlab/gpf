@@ -19,8 +19,12 @@
       </div>
     </div>
   </div>
-  <div *ngIf="registerError" class="alert alert-danger">
+  <div *ngIf="registerError" style="margin-bottom: 0px;" class="alert alert-danger">
     {{ registerError }}
+  </div>
+
+  <div *ngIf="registerSuccess" style="margin-bottom: 0px;" class="alert alert-info" role="alert">
+    An email has been sent to the given address
   </div>
 </div>
 <div class="modal-footer">

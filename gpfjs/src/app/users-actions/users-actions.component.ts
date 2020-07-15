@@ -30,12 +30,6 @@ export class UsersActionsComponent implements OnInit {
       });
   }
 
-  removePassword(user: User) {
-    this.usersService.removeUserPassword(user).take(1)
-      .subscribe(() => {
-        this.reloadPage();
-      });
-  }
   resetPassword(user: User) {
     this.usersService.resetUserPassword(user).take(1)
       .subscribe(() => {
@@ -55,10 +49,6 @@ export class UsersActionsComponent implements OnInit {
       user_string = `(${user.email}) ` + user_string
     }
     return user_string;
-  }
-
-  removePasswordPopoverMessage(user: User) {
-    return `${this.getUserString(user)}'s password will be removed. They won't be able to login.`
   }
 
   resetPasswordPopoverMessage(user: User) {

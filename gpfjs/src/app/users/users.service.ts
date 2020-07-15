@@ -8,6 +8,9 @@ import { ConfigService } from '../config/config.service';
 import { CookieService } from 'ngx-cookie-service';
 import { User } from './users';
 
+import { Router } from '@angular/router';
+import { Location } from '@angular/common';
+
 @Injectable()
 export class UsersService {
   private readonly logoutUrl = 'users/logout';
@@ -27,7 +30,9 @@ export class UsersService {
   constructor(
     private http: HttpClient,
     private config: ConfigService,
-    private cookieService: CookieService
+    private cookieService: CookieService,
+    private router: Router,
+    private location: Location,
   ) {}
 
   logout(): Observable<boolean> {
@@ -37,6 +42,7 @@ export class UsersService {
 
     return this.http.post(this.config.baseUrl + this.logoutUrl, {}, options)
       .map(res => {
+        this.router.navigate([this.location.path()]);
         return true;
       });
   }
@@ -48,6 +54,7 @@ export class UsersService {
 
     return this.http.post(this.config.baseUrl + this.loginUrl, { username: username, password: password }, options)
       .map(res => {
+        this.router.navigate([this.location.path()]);
         return true;
       })
       .catch(error => {
@@ -77,10 +84,25 @@ export class UsersService {
       });
   }
 
+  isEmailValid(email: string): boolean {
+    const re = new RegExp(
+      "[a-z0-9!#$%&\'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&\'*+/=?^_`{" +
+      "|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?" +
+      ":[a-z0-9-]*[a-z0-9])?"
+    );
+    return re.test(String(email).toLowerCase());
+  }
+
   register(email: string, name: string): Observable<boolean> {
     const csrfToken = this.cookieService.get('csrftoken');
     const headers = { 'X-CSRFToken': csrfToken };
     const options = { headers: headers, withCredentials: true };
+
+    if (!this.isEmailValid(email)) {
+      return observableThrowError(new Error(
+        'Invalid email address entered. Please use a valid email address.'
+      ));
+    }
 
     return this.http.post(this.config.baseUrl + this.registerUrl, {
       email: email,
@@ -90,7 +112,7 @@ export class UsersService {
         return true;
       })
       .catch(error => {
-        return observableThrowError(new Error(error.json().error_msg));
+        return observableThrowError(new Error(error.error.error_msg));
       });
   }
 
@@ -104,7 +126,7 @@ export class UsersService {
         return true;
       })
       .catch(error => {
-        return observableThrowError(new Error(error.json().error_msg));
+        return observableThrowError(new Error(error.error.error_msg));
       });
   }
 
@@ -194,16 +216,6 @@ export class UsersService {
     const options = { withCredentials: true };
 
     return this.http.delete(url, options);
-  }
-
-  removeUserPassword(user: User) {
-    if (!user.id) {
-      return observableThrowError('No user id');
-    }
-    const url = `${this.config.baseUrl}${this.usersUrl}/${user.id}/password_remove`;
-    const options = { withCredentials: true };
-
-    return this.http.post(url, null, options);
   }
 
   resetUserPassword(user: User) {

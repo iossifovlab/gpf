@@ -91,6 +91,10 @@ export class DatasetsService {
     return this.selectedDataset$.asObservable().subscribeOn(asyncScheduler);
   }
 
+  getSelectedDatasetId() {
+    return this.selectedDatasetId$.value
+  }
+
   getDatasetsObservable() {
     return this.datasets$.asObservable();
   }
