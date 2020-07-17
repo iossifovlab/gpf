@@ -34,7 +34,7 @@ describe('GenomicScoresComponent', () => {
       imports: [
         NgbModule,
         FormsModule,
-        MarkdownModule
+        MarkdownModule.forRoot()
       ]
     })
     .overrideModule(BrowserDynamicTestingModule, {

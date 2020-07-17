@@ -77,11 +77,11 @@ class MockActivatedRoute {
   queryParamMap = of(this.params);
 }
 
-// class MockRouter {
-//   createUrlTree(commands: any[], navigationExtras: any) {
-//     return `${navigationExtras.queryParams.instrument}/${navigationExtras.queryParams.search}`;
-//   }
-// }
+class MockRouter {
+  createUrlTree(commands: any[], navigationExtras: any) {
+    return `${navigationExtras.queryParams.instrument}/${navigationExtras.queryParams.search}`;
+  }
+}
 
 function setQuery(fixture: ComponentFixture<PhenoBrowserComponent>, instrument: number, search: string) {
   const selectElem = fixture.nativeElement.querySelector('select');
@@ -125,7 +125,7 @@ describe('PhenoBrowserComponent', () => {
         { provide: DatasetsService, useValue: datasetServiceMock },
         { provide: PhenoBrowserService, useValue: phenoBrowserServiceMock },
         { provide: ActivatedRoute, useValue: activatedRoute },
-        // { provide: Router, useClass: MockRouter },
+        { provide: Router, useClass: MockRouter },
         { provide: Location, useValue: locationSpy },
         { provide: PValueIntensityPipe, useClass: PValueIntensityPipe },
         { provide: ResizeService, useValue: resizeSpy },

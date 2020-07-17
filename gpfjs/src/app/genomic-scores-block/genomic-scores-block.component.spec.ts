@@ -19,7 +19,6 @@ import { HistogramRangeSelectorLineComponent } from 'app/histogram/histogram-ran
 import { ErrorsAlertComponent } from 'app/errors-alert/errors-alert.component';
 import { AddButtonComponent } from 'app/add-button/add-button.component';
 import { RemoveButtonComponent } from 'app/remove-button/remove-button.component';
-import { GpfTabsetComponent } from 'app/tabset/tabset.component';
 import { StateRestoreService } from 'app/store/state-restore.service';
 
 const GENOMIC_SCORES_OBJECTS: GenomicScores[] = [GenomicScores.fromJson({
@@ -64,7 +63,6 @@ describe('GenomicScoresBlockComponent', () => {
         ErrorsAlertComponent,
         AddButtonComponent,
         RemoveButtonComponent,
-        GpfTabsetComponent,
       ],
       imports: [
         NgbModule,
