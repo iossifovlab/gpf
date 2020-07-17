@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, EventEmitter, Output } from '@angular/core';
+import { Component, OnInit, Input } from '@angular/core';
 import { UserGroup } from '../users-groups/users-groups';
 import { IDropdownSettings } from 'ng-multiselect-dropdown';
 
@@ -8,14 +8,12 @@ import { IDropdownSettings } from 'ng-multiselect-dropdown';
   styleUrls: ['./user-groups-selector.component.css']
 })
 export class UserGroupsSelectorComponent implements OnInit {
-  data: object;
-  groupsArray: string[] = [];
-  dropdownSettings: IDropdownSettings = {};
+  @Input() allInputtedGroups: UserGroup[];
+  @Input() defaultGroups: string[] = [];
+  @Input() _selectedGroups;
 
-  @Input() groups: UserGroup[];
-  @Output() groupsChange = new EventEmitter(true);
-  @Input() alwaysSelectedGroups: string[] = [];
-  @Input() selected: string[] = [];
+  data: object;
+  dropdownSettings: IDropdownSettings = {};
 
   constructor() { }
 
@@ -26,32 +24,34 @@ export class UserGroupsSelectorComponent implements OnInit {
       allowSearchFilter: true
     };
 
-    this.data = this.toSelectOptions(this.groups);
+    this.data = this.toSelectOptions(this.allInputtedGroups);
+    this._selectedGroups = this.filterOutDefaultGroups(this._selectedGroups);
   }
 
   toSelectOptions(groups: UserGroup[]) {
-    return this.filterProtectedGroups(groups.map(group => group.name))
+    return this.filterOutDefaultGroups(groups.map(group => group.name))
       .map(group => {
         return {
           id: group,
           text: group,
-          selected: this.selected.indexOf(group) !== -1
+          selected: this._selectedGroups.indexOf(group) !== -1
         };
       });
   }
 
-  changeSelectedGroups(group) {
-    this.groupsArray.push(group.text);
-    this.groupsChange.next(this.groupsArray.slice().concat(this.getProtectedGroups()));
-  }
-
-  getProtectedGroups() {
-    return this.alwaysSelectedGroups;
-    // ['any_user', this.user.email];
-  }
-
-  filterProtectedGroups(groups: string[]) {
+  filterOutDefaultGroups(groups: string[]) {
     return groups.filter(group =>
-      this.getProtectedGroups().indexOf(group) === -1);
+      this.defaultGroups.indexOf(group) === -1);
+  }
+
+  // Returns the .text values of the selectedGroups object
+  get selectedGroups() {
+    const groupsArray = [];
+
+    for (const group of this._selectedGroups) {
+      groupsArray.push(group.text);
+    }
+
+    return groupsArray;
   }
 }

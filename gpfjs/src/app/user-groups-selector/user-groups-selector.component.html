@@ -1,7 +1,7 @@
 <ng-multiselect-dropdown
     [settings]="dropdownSettings"
-    [placeholder]="'custom placeholder'"
+    [placeholder]="'Select groups'"
     [data]="data"
-    (onSelect)="changeSelectedGroups($event)"
+    [(ngModel)]="_selectedGroups"
 >
 </ng-multiselect-dropdown>

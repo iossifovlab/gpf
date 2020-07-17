@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 
 // tslint:disable-next-line:import-blacklist
@@ -9,6 +9,7 @@ import { UsersService } from '../users/users.service';
 import { UserGroup } from '../users-groups/users-groups';
 import { UsersGroupsService } from '../users-groups/users-groups.service';
 import { IDropdownSettings } from 'ng-multiselect-dropdown';
+import { UserGroupsSelectorComponent } from 'app/user-groups-selector/user-groups-selector.component';
 
 @Component({
   selector: 'gpf-user-edit',
@@ -16,6 +17,9 @@ import { IDropdownSettings } from 'ng-multiselect-dropdown';
   styleUrls: ['./user-edit.component.css']
 })
 export class UserEditComponent implements OnInit {
+  @ViewChild(UserGroupsSelectorComponent)
+  private userGroupsSelectorComponent: UserGroupsSelectorComponent;
+
   dropdownSettings: IDropdownSettings = {};
 
   lockedOptions = {
@@ -60,15 +64,17 @@ export class UserEditComponent implements OnInit {
       };
   }
 
-  updateGroups(groups) {
-    this.user$.value.groups = groups;
-  }
-
   getDefaultGroups() {
     return ['any_user', this.emailValue];
   }
 
   submit(user) {
+    const selectedGroups = this.userGroupsSelectorComponent.selectedGroups;
+
+    if (!selectedGroups.includes(undefined)) {
+      this.user$.value.groups = this.getDefaultGroups().concat(selectedGroups);
+    }
+
     delete user.email;
     this.usersService.updateUser(user)
       .take(1)

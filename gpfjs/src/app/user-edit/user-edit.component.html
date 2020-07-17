@@ -88,10 +88,10 @@
             <label for="groups">Other Groups</label>
             <div class="groupsInput">
               <gpf-user-groups-selector
-                [groups]="groups"
-                [selected]="user.groups"
-                [alwaysSelectedGroups]="getDefaultGroups()"
-                (groupsChange)="updateGroups($event)">
+                [allInputtedGroups]="groups"
+                [_selectedGroups]="user.groups"
+                [defaultGroups]="getDefaultGroups()"
+              >
               </gpf-user-groups-selector>
             </div>
           </div>
