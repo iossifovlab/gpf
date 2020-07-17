@@ -40,13 +40,6 @@ class ImpalaGenotypeStorage(GenotypeStorage):
     def is_impala(self):
         return True
 
-    def _build_hdfs_dir(self, *path):
-        hdfs_dirname = os.path.join(self.storage_config.hdfs.base_dir, *path)
-        if not self.hdfs_helpers.hdfs.exists(hdfs_dirname):
-            self.hdfs_helpers.hdfs.mkdir(hdfs_dirname)
-
-        return hdfs_dirname
-
     @property
     def impala_helpers(self):
         assert self._impala_helpers is not None
@@ -66,21 +59,19 @@ class ImpalaGenotypeStorage(GenotypeStorage):
     @classmethod
     def study_tables(cls, study_config):
         storage_config = study_config.genotype_storage
-        if (
-            storage_config
-            and storage_config.tables
-            and storage_config.tables.pedigree
-            and storage_config.tables.variants
-        ):
+        if storage_config and storage_config.tables \
+                and storage_config.tables.pedigree \
+                and storage_config.tables.variants:
+
             variants_table = storage_config.tables.variants
             pedigree_table = storage_config.tables.pedigree
-        elif (
-            storage_config
-            and storage_config.tables
-            and storage_config.tables.pedigree
-        ):
+
+        elif storage_config and storage_config.tables \
+                and storage_config.tables.pedigree:
+
             variants_table = None
             pedigree_table = storage_config.tables.pedigree
+
         else:
             # default study tables
             variants_table = cls._construct_variants_table(
@@ -110,32 +101,6 @@ class ImpalaGenotypeStorage(GenotypeStorage):
         )
 
         return family_variants
-
-    # def impala_drop_study_tables(self, study_config):
-    #     for table in self.study_tables(study_config):
-    #         self.impala_helpers.drop_table(self.get_db(), table)
-
-    # def _hdfs_parquet_put_files(self, study_id, paths, dirname):
-    #     hdfs_dirname = self._build_hdfs_dir(study_id, dirname)
-    #     if self.hdfs_helpers.exists(hdfs_dirname):
-    #         self.hdfs_helpers.delete(hdfs_dirname, recursive=True)
-    #     for path in paths:
-    #         self.hdfs_helpers.put_content(path, hdfs_dirname)
-
-    #     return self.hdfs_helpers.list_dir(hdfs_dirname)
-
-    # def _hdfs_parquet_put_study_files(
-    #         self, study_id, variant_paths, pedigree_paths):
-
-    #     pedigree_files = self._hdfs_parquet_put_files(
-    #         study_id, pedigree_paths, "pedigree"
-    #     )
-
-    #     variant_files = self._hdfs_parquet_put_files(
-    #         study_id, variant_paths, "variants"
-    #     )
-
-    #     return variant_files, pedigree_files
 
     def _generate_study_config(
         self, study_id, pedigree_table, variants_table=None

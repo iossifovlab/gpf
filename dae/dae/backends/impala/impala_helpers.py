@@ -187,4 +187,4 @@ class ImpalaHelpers(object):
         with closing(self.connection()) as conn:
             with conn.cursor() as cursor:
                 cursor.execute(
-                    f"DROP DATABASE IF EXISTS {dbname} CASCADE"
+                    f"DROP DATABASE IF EXISTS {dbname} CASCADE")
