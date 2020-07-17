@@ -48,7 +48,8 @@ class RsyncHelpers:
                 remote_subdir = remote_subdir[1:]
             rsync_remote = os.path.join(self.rsync_remote, remote_subdir)
             rsync_path = os.path.join(self.parsed_remote.path, remote_subdir)
-            rsync_path = f'--rsync-path "mkdir -p {rsync_path} && rsync"'
+            rsync_path = f'--rsync-path "rm -rf {rsync_path} && ' \
+                f'mkdir -p {rsync_path} && rsync"'
 
         if self.rsync_remote_shell is None:
             return f"rsync -avPHt {exclude_options} {rsync_path} "\
