@@ -1,7 +1,6 @@
+from dae.backends.impala.rsync_helpers import RsyncHelpers
 import os
-import sys
 import glob
-from time import time
 
 from dae.backends.raw.loader import VariantsLoader, TransmissionType
 from dae.backends.storage.genotype_storage import GenotypeStorage
@@ -22,7 +21,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
 
     def __init__(self, storage_config):
         super(ImpalaGenotypeStorage, self).__init__(storage_config)
-        self.data_dir = self.storage_config.dir
+        # self.data_dir = self.storage_config.dir
 
         impala_hosts = self.storage_config.impala.hosts
         impala_port = self.storage_config.impala.port
@@ -30,9 +29,13 @@ class ImpalaGenotypeStorage(GenotypeStorage):
 
         self._impala_helpers = ImpalaHelpers(
             impala_hosts=impala_hosts, impala_port=impala_port,
-            pool_size=pool_size
-        )
+            pool_size=pool_size)
+
         self._hdfs_helpers = None
+        self._rsync_helpers = None
+        if self.storage_config.rsync:
+            self._rsync_helpers = RsyncHelpers(
+                self.storage_config.rsync.location)
 
     def get_db(self):
         return self.storage_config.impala.db
@@ -55,6 +58,10 @@ class ImpalaGenotypeStorage(GenotypeStorage):
 
         assert self._hdfs_helpers is not None
         return self._hdfs_helpers
+
+    @property
+    def rsync_helpers(self):
+        return self._rsync_helpers
 
     @classmethod
     def study_tables(cls, study_config):
@@ -207,7 +214,37 @@ class ImpalaGenotypeStorage(GenotypeStorage):
 
         return config_builder.build_config()
 
-    def hdfs_upload_dataset(
+    def _build_hdfs_pedigree(
+            self, study_id, pedigree_file):
+        study_path = os.path.join(self.storage_config.hdfs.base_dir, study_id)
+        hdfs_dir = os.path.join(study_path, "pedigree")
+        basename = os.path.basename(pedigree_file)
+        return os.path.join(hdfs_dir, basename)
+
+    def _build_hdfs_variants(
+            self, study_id, variants_dir, partition_description):
+        study_path = os.path.join(self.storage_config.hdfs.base_dir, study_id)
+        hdfs_dir = os.path.join(study_path, "variants")
+
+        files_glob = partition_description.generate_file_access_glob()
+        files_glob = os.path.join(variants_dir, files_glob)
+        local_variants_files = glob.glob(files_glob)
+        print(variants_dir, files_glob, local_variants_files)
+
+        local_basedir = partition_description.variants_filename_basedir(
+            local_variants_files[0])
+        assert local_basedir.endswith("/")
+
+        hdfs_variants_files = []
+        for lvf in local_variants_files:
+            assert lvf.startswith(local_basedir)
+            hdfs_variants_files.append(
+                os.path.join(hdfs_dir, lvf[len(local_basedir):]))
+        print(local_variants_files, hdfs_variants_files)
+
+        return local_variants_files, hdfs_variants_files
+
+    def _native_hdfs_upload_dataset(
             self, study_id, variants_dir,
             pedigree_file, partition_description):
 
@@ -220,26 +257,58 @@ class ImpalaGenotypeStorage(GenotypeStorage):
         if variants_dir is None:
             return (None, pedigree_hdfs_path)
 
-        files_glob = partition_description.generate_file_access_glob()
-        files_glob = os.path.join(variants_dir, files_glob)
-        variants_files = glob.glob(files_glob)
+        local_variants_files, hdfs_variants_files = self._build_hdfs_variants(
+            study_id, variants_dir, partition_description)
 
-        variants_hdfs_path = os.path.join(study_path, "variants")
-        variants_hdfs_filenames = []
-        basedir = partition_description.variants_filename_basedir(
-            variants_files[0])
-        assert basedir, (variants_files[0], basedir)
+        for lvf, hvf in zip(local_variants_files, hdfs_variants_files):
+            hdfs_dir = os.path.dirname(hvf)
+            self.hdfs_helpers.makedirs(hdfs_dir)
+            self.hdfs_helpers.put_in_directory(lvf, hdfs_dir)
 
-        for parquet_file in variants_files:
-            file_dir = os.path.dirname(parquet_file)
-            file_dir = file_dir[len(basedir):]
-            file_hdfs_dir = os.path.join(variants_hdfs_path, file_dir)
-            self.hdfs_helpers.makedirs(file_hdfs_dir)
-            self.hdfs_helpers.put_in_directory(parquet_file, file_hdfs_dir)
-            variants_hdfs_filenames.append(
-                os.path.join(file_hdfs_dir, os.path.basename(parquet_file)))
+        return (hdfs_variants_files[0], pedigree_hdfs_path)
 
-        return (variants_hdfs_filenames[0], pedigree_hdfs_path)
+    def _rsync_hdfs_upload_dataset(
+            self, study_id, variants_dir,
+            pedigree_file, partition_description):
+
+        assert self.rsync_helpers is not None
+
+        study_path = os.path.join(
+            self.storage_config.hdfs.base_dir, study_id)
+        pedigree_rsync_path = os.path.join(
+            study_path, "pedigree")
+        self.rsync_helpers.copy_to_remote(
+            pedigree_file, remote_subdir=pedigree_rsync_path)
+
+        if variants_dir is None:
+            return (None, self._build_hdfs_pedigree(study_id, pedigree_file))
+
+        variants_rsync_path = os.path.join(
+            study_path, "variants/")
+        if not variants_dir.endswith("/"):
+            variants_dir += "/"
+        self.rsync_helpers.copy_to_remote(
+            variants_dir, remote_subdir=variants_rsync_path,
+            exclude=["_*"])
+
+        _, hdfs_variants_files = self._build_hdfs_variants(
+            study_id, variants_dir, partition_description)
+        return (
+            hdfs_variants_files[0],
+            self._build_hdfs_pedigree(study_id, pedigree_file))
+
+    def hdfs_upload_dataset(
+            self, study_id, variants_dir,
+            pedigree_file, partition_description):
+
+        if self.rsync_helpers is not None:
+            return self._rsync_hdfs_upload_dataset(
+                study_id, variants_dir,
+                pedigree_file, partition_description)
+        else:
+            return self._native_hdfs_upload_dataset(
+                study_id, variants_dir,
+                pedigree_file, partition_description)
 
     def impala_import_dataset(
             self, study_id,

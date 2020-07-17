@@ -74,7 +74,7 @@ class NoPartitionDescriptor(PartitionDescriptor):
         """
         Generates a glob for accessing every parquet file in the partition
         """
-        return "*.parquet"
+        return "*_variants.parquet"
 
     def variants_filename_basedir(self, filename):
         regexp = re.compile(

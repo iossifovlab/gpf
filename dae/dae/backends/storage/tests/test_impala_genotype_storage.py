@@ -1,6 +1,10 @@
 import os
 from contextlib import closing
 
+from box import Box
+
+from dae.backends.storage.impala_genotype_storage import ImpalaGenotypeStorage
+
 
 def test_is_impala(impala_genotype_storage):
     assert impala_genotype_storage.is_impala() is True
@@ -128,3 +132,49 @@ def test_impala_partition_import(
                 and int(row[2]) == 100000
                 for row in rows
             )
+
+
+def test_impala_genotype_storate_has_rsync_helpers(mocker):
+    config = {
+        "section_id": "genotype_impala",
+        "impala": {
+            "hosts": ["localhost"],
+            "port": 21050,
+            "pool_size": 3,
+        },
+        "hdfs": {
+            "host": "locahost",
+            "port": 8020,
+        },
+        "rsync": {
+            "location": "ssh://dory:/mnt/hdfs2mnt",
+        },
+    }
+    config = Box(config)
+    mocker.patch.object(config, "section_id", return_value="genotype_impala")
+
+    storage = ImpalaGenotypeStorage(config)
+    assert storage is not None
+    assert storage.rsync_helpers is not None
+
+
+def test_impala_genotype_storate_no_rsync_helpers(mocker):
+    config = {
+        "section_id": "genotype_impala",
+        "impala": {
+            "hosts": ["localhost"],
+            "port": 21050,
+            "pool_size": 3,
+        },
+        "hdfs": {
+            "host": "locahost",
+            "port": 8020,
+        },
+        "rsync": None,
+    }
+    config = Box(config)
+    mocker.patch.object(config, "section_id", return_value="genotype_impala")
+
+    storage = ImpalaGenotypeStorage(config)
+    assert storage is not None
+    assert storage.rsync_helpers is None

@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from dae.backends.impala.rsync_helpers import RsyncHelpers
 import os
 import re
 import sys
@@ -68,6 +69,7 @@ def update_mirror_config(remote, work_dir):
 
     config_filename = os.path.join(work_dir, "DAE.conf")
     config_dict = load_mirror_config(config_filename)
+    config_dict["mirror_of"] = remote
 
     storage = config_dict["storage"]["genotype_impala"]
     assert storage["storage_type"] == "impala"
@@ -136,16 +138,7 @@ wdaemanage.py user_create research@iossifovlab.com -p secret
 def main(argv=sys.argv[1:]):
     argv = parse_cli_arguments(argv)
 
-    remote = argv.remote_instance
-    if not remote.endswith("/"):
-        remote += "/"
-
-    parsed_remote = urlparse(remote)
-    rsync_remote = remote
-    if parsed_remote.hostname:
-        rsync_remote = f"{parsed_remote.hostname}:{parsed_remote.path}"
-        if parsed_remote.username:
-            rsync_remote = f"{parsed_remote.username}@{rsync_remote}"
+    rsync_helpers = RsyncHelpers(argv.remote_instance)
 
     output = argv.output
     if not output.endswith("/"):
@@ -154,24 +147,9 @@ def main(argv=sys.argv[1:]):
 
     os.makedirs(output, exist_ok=True)
 
-    exclude = argv.exclude.split(",")
-    exclude.extend([
-        "wdae/*",
-        "import_data",
-        ".dvc",
-        ".git",
-        ".gitignore",
-    ])
-    exclude = [f"--exclude {ex}" for ex in exclude if ex]
+    rsync_helpers.copy_to_local(output)
 
-    command = ["rsync", "-avPHtb", rsync_remote, output]
-    command.extend(exclude)
-
-    command = " ".join(command)
-    print(command)
-    os.system(command)
-
-    update_mirror_config(remote, output)
+    update_mirror_config(argv.remote_instance, output)
     build_setenv(output)
     build_wdae_bootstrap(output)
 
