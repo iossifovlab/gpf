@@ -721,12 +721,9 @@ def data_import(
             filename = os.path.basename(vcf.pedigree)
             study_id = os.path.splitext(filename)[0]
 
-            (
-                variant_table,
-                pedigree_table,
-            ) = impala_genotype_storage.study_tables(
-                GPFConfigParser._dict_to_namedtuple({"id": study_id})
-            )
+            (variant_table, pedigree_table) = \
+                impala_genotype_storage.study_tables(
+                    GPFConfigParser._dict_to_namedtuple({"id": study_id}))
 
             if (
                 not reimport

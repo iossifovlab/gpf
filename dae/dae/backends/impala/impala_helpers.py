@@ -100,12 +100,7 @@ class ImpalaHelpers(object):
             pd):
 
         cursor.execute(
-            """
-            DROP TABLE IF EXISTS {db}.{table}
-        """.format(
-                db=db, table=table
-            )
-        )
+            f"DROP TABLE IF EXISTS {db}.{table}")
 
         hdfs_dir = pd.variants_filename_basedir(sample_file)
         if not pd.has_partitions():
@@ -120,20 +115,13 @@ class ImpalaHelpers(object):
                 PARTITIONED BY ({partitions})
                 STORED AS PARQUET LOCATION '{hdfs_dir}'
             """
-
         cursor.execute(statement)
 
         if pd.has_partitions():
             cursor.execute(
-                f"""
-                ALTER TABLE {db}.{table} RECOVER PARTITIONS
-            """
-            )
+                f"ALTER TABLE {db}.{table} RECOVER PARTITIONS")
         cursor.execute(
-            f"""
-            REFRESH {db}.{table}
-        """
-        )
+            f"REFRESH {db}.{table}")
 
     def import_dataset_into_db(
             self,
@@ -147,10 +135,8 @@ class ImpalaHelpers(object):
         with closing(self.connection()) as conn:
             with conn.cursor() as cursor:
                 cursor.execute(
-                    f"""
-                    CREATE DATABASE IF NOT EXISTS {db}
-                """
-                )
+                    f"CREATE DATABASE IF NOT EXISTS {db}")
+
                 self._import_single_file(
                     cursor, db, pedigree_table, pedigree_hdfs_file)
 
@@ -168,10 +154,7 @@ class ImpalaHelpers(object):
     def check_database(self, dbname):
         with closing(self.connection()) as conn:
             with conn.cursor() as cursor:
-                q = """
-                    SHOW DATABASES
-                """
-
+                q = "SHOW DATABASES"
                 cursor.execute(q)
                 for row in cursor:
                     if row[0] == dbname:
@@ -181,10 +164,7 @@ class ImpalaHelpers(object):
     def check_table(self, dbname, tablename):
         with closing(self.connection()) as conn:
             with conn.cursor() as cursor:
-                q = f"""
-                    SHOW TABLES IN {dbname}
-                """
-
+                q = f"SHOW TABLES IN {dbname}"
                 cursor.execute(q)
                 for row in cursor:
                     if row[0] == tablename:
@@ -194,29 +174,17 @@ class ImpalaHelpers(object):
     def drop_table(self, dbname, tablename):
         with closing(self.connection()) as conn:
             with conn.cursor() as cursor:
-                q = f"""
-                    DROP TABLE IF EXISTS {dbname}.{tablename}
-                """
+                q = f"DROP TABLE IF EXISTS {dbname}.{tablename}"
                 cursor.execute(q)
 
     def create_database(self, dbname):
         with closing(self.connection()) as conn:
             with conn.cursor() as cursor:
-                q = """
-                    CREATE DATABASE IF NOT EXISTS {db}
-                """.format(
-                    db=dbname
-                )
-
+                q = f"CREATE DATABASE IF NOT EXISTS {dbname}"
                 cursor.execute(q)
 
     def drop_database(self, dbname):
         with closing(self.connection()) as conn:
             with conn.cursor() as cursor:
                 cursor.execute(
-                    """
-                    DROP DATABASE IF EXISTS {db} CASCADE
-                """.format(
-                        db=dbname
-                    )
-                )
+                    f"DROP DATABASE IF EXISTS {dbname} CASCADE"

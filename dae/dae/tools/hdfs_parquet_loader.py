@@ -4,7 +4,7 @@ import sys
 import argparse
 
 from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.backends.impala.parquet_io import ParquetPartitionDescriptor
+from dae.backends.impala.parquet_io import NoPartitionDescriptor, ParquetPartitionDescriptor
 
 
 def parse_cli_arguments(argv, gpf_instance):
@@ -78,12 +78,12 @@ def main(argv=sys.argv[1:], gpf_instance=None):
         partition_descriptor = ParquetPartitionDescriptor.from_config(
             partition_config_file, root_dirname=argv.variants
         )
-
-        genotype_storage.hdfs_upload_dataset(
-            argv.study_id, argv.variants, argv.pedigree, partition_descriptor)
     else:
-        genotype_storage.hdfs_upload_study(
-            argv.study_id, [argv.variants], [argv.pedigree])
+        partition_descriptor = NoPartitionDescriptor(
+            root_dirname=argv.variants)
+
+    genotype_storage.hdfs_upload_dataset(
+        argv.study_id, argv.variants, argv.pedigree, partition_descriptor)
 
     print("Done")
 

@@ -63,8 +63,8 @@ class ImpalaGenotypeStorage(GenotypeStorage):
         assert self._hdfs_helpers is not None
         return self._hdfs_helpers
 
-    @staticmethod
-    def study_tables(study_config):
+    @classmethod
+    def study_tables(cls, study_config):
         storage_config = study_config.genotype_storage
         if (
             storage_config
@@ -72,69 +72,73 @@ class ImpalaGenotypeStorage(GenotypeStorage):
             and storage_config.tables.pedigree
             and storage_config.tables.variants
         ):
-            variant_table = storage_config.tables.variants
+            variants_table = storage_config.tables.variants
             pedigree_table = storage_config.tables.pedigree
         elif (
             storage_config
             and storage_config.tables
             and storage_config.tables.pedigree
         ):
-            variant_table = None
+            variants_table = None
             pedigree_table = storage_config.tables.pedigree
         else:
             # default study tables
-            variant_table = "{}_variants".format(study_config.id)
-            pedigree_table = "{}_pedigree".format(study_config.id)
-        return variant_table, pedigree_table
+            variants_table = cls._construct_variants_table(
+                study_config.id)
+            pedigree_table = cls._construct_pedigree_table(
+                study_config.id)
+        return variants_table, pedigree_table
 
-    def _construct_variant_table(self, study_id):
+    @staticmethod
+    def _construct_variants_table(study_id):
         return f"{study_id}_variants"
 
-    def _construct_pedigree_table(self, study_id):
+    @staticmethod
+    def _construct_pedigree_table(study_id):
         return f"{study_id}_pedigree"
 
     def build_backend(self, study_config, genomes_db):
         assert study_config is not None
 
-        variant_table, pedigree_table = self.study_tables(study_config)
+        variants_table, pedigree_table = self.study_tables(study_config)
         family_variants = ImpalaFamilyVariants(
             self.impala_helpers,
             self.storage_config.impala.db,
-            variant_table,
+            variants_table,
             pedigree_table,
             genomes_db.get_gene_models(),
         )
 
         return family_variants
 
-    def impala_drop_study_tables(self, study_config):
-        for table in self.study_tables(study_config):
-            self.impala_helpers.drop_table(self.get_db(), table)
+    # def impala_drop_study_tables(self, study_config):
+    #     for table in self.study_tables(study_config):
+    #         self.impala_helpers.drop_table(self.get_db(), table)
 
-    def _hdfs_parquet_put_files(self, study_id, paths, dirname):
-        hdfs_dirname = self._build_hdfs_dir(study_id, dirname)
-        if self.hdfs_helpers.exists(hdfs_dirname):
-            self.hdfs_helpers.delete(hdfs_dirname, recursive=True)
-        for path in paths:
-            self.hdfs_helpers.put_content(path, hdfs_dirname)
+    # def _hdfs_parquet_put_files(self, study_id, paths, dirname):
+    #     hdfs_dirname = self._build_hdfs_dir(study_id, dirname)
+    #     if self.hdfs_helpers.exists(hdfs_dirname):
+    #         self.hdfs_helpers.delete(hdfs_dirname, recursive=True)
+    #     for path in paths:
+    #         self.hdfs_helpers.put_content(path, hdfs_dirname)
 
-        return self.hdfs_helpers.list_dir(hdfs_dirname)
+    #     return self.hdfs_helpers.list_dir(hdfs_dirname)
 
-    def _hdfs_parquet_put_study_files(
-            self, study_id, variant_paths, pedigree_paths):
+    # def _hdfs_parquet_put_study_files(
+    #         self, study_id, variant_paths, pedigree_paths):
 
-        pedigree_files = self._hdfs_parquet_put_files(
-            study_id, pedigree_paths, "pedigree"
-        )
+    #     pedigree_files = self._hdfs_parquet_put_files(
+    #         study_id, pedigree_paths, "pedigree"
+    #     )
 
-        variant_files = self._hdfs_parquet_put_files(
-            study_id, variant_paths, "variants"
-        )
+    #     variant_files = self._hdfs_parquet_put_files(
+    #         study_id, variant_paths, "variants"
+    #     )
 
-        return variant_files, pedigree_files
+    #     return variant_files, pedigree_files
 
     def _generate_study_config(
-        self, study_id, pedigree_table, variant_table=None
+        self, study_id, pedigree_table, variants_table=None
     ):
         assert study_id is not None
 
@@ -149,9 +153,9 @@ class ImpalaGenotypeStorage(GenotypeStorage):
             "genotype_browser": {"enabled": False},
         }
 
-        if variant_table:
+        if variants_table:
             storage_config = study_config["genotype_storage"]
-            storage_config["tables"]["variants"] = variant_table
+            storage_config["tables"]["variants"] = variants_table
             study_config["genotype_browser"]["enabled"] = True
 
         return study_config
@@ -279,7 +283,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
             partition_description):
 
         pedigree_table = self._construct_pedigree_table(study_id)
-        variants_table = self._construct_variant_table(study_id)
+        variants_table = self._construct_variants_table(study_id)
 
         db = self.storage_config.impala.db
 
@@ -328,5 +332,5 @@ id = "{genotype_storage}"
 
 [genotype_storage.tables]
 pedigree = "{pedigree_table}"
-variants = "{variant_table}"
+variants = "{variants_table}"
 """
