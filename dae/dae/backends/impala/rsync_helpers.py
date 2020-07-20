@@ -44,6 +44,8 @@ class RsyncHelpers:
 
         if os.path.isdir(local_path):
             local_dir = local_path
+            if not local_path.endswith("/"):
+                local_path += "/"
         else:
             local_dir = os.path.dirname(local_path)
         if not local_dir.endswith("/"):
