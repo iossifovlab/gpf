@@ -200,9 +200,11 @@ label {
   max-width: 500px;
 }
 
-.global-error-modal {
-  top: 73%;
-  left: 75%;
+.modal-content {
+  position: fixed;
+  bottom: 25px;
+  right: 25px;
+  width: 20%;
 }
 
 .modal-backdrop.fade {
