@@ -370,7 +370,7 @@ class MakefileGenerator:
             self.generate_variants_targets(argv, outfile)
             self.generate_pedigree_rule(argv, outfile)
             self.generate_variants_rules(argv, outfile)
-            self.generate_load_targets(argv, outfile)
+            self.generate_hdfs_load_targets(argv, outfile)
             self.generate_report_targets(argv, outfile)
 
     def generate_study_config(self, argv):
@@ -425,7 +425,7 @@ class MakefileGenerator:
     def generate_all_targets(self, argv, outfile=sys.stdout):
         targets = [
             f"${{OUTDIR}}/ped.flag",
-            f"load.flag",
+            f"hdfs_load.flag",
             f"reports.flag"
         ]
         targets.extend(self._collect_variants_targets())
@@ -449,7 +449,7 @@ class MakefileGenerator:
         command = [
             f"ped2parquet.py {families_params} {families_filename}",
             f"--study-id {self.study_id}",
-            f"-o ${{OUTDIR}}/{self.study_id}_pedigree.parquet",
+            f"-o ${{OUTDIR}}/{self.study_id}_pedigree/pedigree.parquet",
         ]
         if argv.partition_description is not None:
             pd = os.path.abspath(argv.partition_description)
@@ -486,7 +486,7 @@ class MakefileGenerator:
             f"{families_params} {families_filename}",
             f"{variants_params} {variants_filenames}",
             f"--study-id {self.study_id}",
-            f"-o ${{OUTDIR}}/{self.study_id}_variants.parquet",
+            f"-o ${{OUTDIR}}/{self.study_id}_variants",
         ]
         if argv.partition_description is not None:
             pd = os.path.abspath(argv.partition_description)
@@ -634,21 +634,21 @@ class MakefileGenerator:
         self.generate_denovo_rule(argv, outfile)
         self.generate_cnv_rule(argv, outfile)
 
-    def _construct_load_command(self, argv):
+    def _construct_hdfs_load_command(self, argv):
         assert self.genotype_storage_id is not None
 
         # output = self._get_output_dir(argv)
         output = "."
 
         command = [
-            f"impala_parquet_loader.py {self.study_id}",
-            os.path.join(output, f"{self.study_id}_pedigree.parquet"),
-            os.path.join(output, f"{self.study_id}_variants.parquet"),
+            f"hdfs_parquet_loader.py {self.study_id}",
+            os.path.join(output, f"{self.study_id}_pedigree/pedigree.parquet"),
+            os.path.join(output, f"{self.study_id}_variants"),
             f"--gs {self.genotype_storage_id}",
         ]
 
-        if argv.study_config:
-            command.append(f"--study-config ./{self.study_id}.conf")
+        # if argv.study_config:
+        #     command.append(f"--study-config ./{self.study_id}.conf")
 
         return " ".join(command)
 
@@ -659,23 +659,23 @@ class MakefileGenerator:
         output = os.path.abspath(output)
         return output
 
-    def generate_load_targets(self, argv, outfile=sys.stdout):
+    def generate_hdfs_load_targets(self, argv, outfile=sys.stdout):
         print("\n", file=outfile)
-        print(f"load: load.flag\n", file=outfile)
+        print(f"hdfs_load: hdfs_load.flag\n", file=outfile)
 
-        command = self._construct_load_command(argv)
+        command = self._construct_hdfs_load_command(argv)
         variants_targets = self._collect_variants_targets()
         if len(variants_targets) > 0:
             variants_targets = " ".join(variants_targets)
             print(
-                f"load.flag: "
+                f"hdfs_load.flag: "
                 f"${{OUTDIR}}/ped.flag {variants_targets}\n"
                 f"\t{command} && touch $@",
                 file=outfile,
             )
         else:
             print(
-                f"load.flag: ${{OUTDIR}}/ped.flag\n"
+                f"hdfs_load.flag: ${{OUTDIR}}/ped.flag\n"
                 f"\t{command} && touch $@",
                 file=outfile)
 
@@ -692,7 +692,7 @@ class MakefileGenerator:
         print("\n", file=outfile)
         print(f"reports: reports.flag\n", file=outfile)
         commands = self._construct_reports_commands(argv)
-        print(f"reports.flag: load.flag", file=outfile)
+        print(f"reports.flag: hdfs_load.flag", file=outfile)
         for command in commands:
             print(f"\t{command} && touch $@", file=outfile)
         print(f"\n", file=outfile)
@@ -1003,7 +1003,7 @@ class Variants2ParquetTool:
 
         print("argv.rows:", argv.rows)
 
-        ParquetManager.variants_to_parquet_partition(
+        ParquetManager.variants_to_parquet(
             variants_loader,
             partition_description,
             bucket_index=bucket_index,

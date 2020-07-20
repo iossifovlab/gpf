@@ -1,4 +1,5 @@
 import os
+import glob
 
 import pyarrow.parquet as pq
 
@@ -23,7 +24,11 @@ def test_dae2parquet_transmitted(
 
     os.path.exists(temp_filename)
 
-    pqfile = pq.ParquetFile(temp_filename)
+    files_glob = os.path.join(temp_filename, "*variants.parquet")
+    parquet_files = glob.glob(files_glob)
+    assert len(parquet_files) == 1
+
+    pqfile = pq.ParquetFile(parquet_files[0])
     schema = pqfile.schema
     assert "effect_gene_symbols" in schema.names
     assert "effect_types" in schema.names
