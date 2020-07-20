@@ -140,7 +140,6 @@ def main(argv=sys.argv[1:], gpf_instance=None):
             content = infile.read()
             schema = toml.loads(content)
             variants_schema = schema["variants_schema"]
-            print(variants_schema)
 
     genotype_storage.impala_import_dataset(
         argv.study_id,

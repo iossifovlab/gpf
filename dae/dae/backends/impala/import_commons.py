@@ -641,13 +641,10 @@ class MakefileGenerator:
     def _construct_hdfs_load_command(self, argv):
         assert self.genotype_storage_id is not None
 
-        # output = self._get_output_dir(argv)
-        output = "."
-
         command = [
             f"hdfs_parquet_loader.py {self.study_id}",
-            os.path.join(output, f"{self.study_id}_pedigree/pedigree.parquet"),
-            os.path.join(output, f"{self.study_id}_variants"),
+            f"${{OUTDIR}}/{self.study_id}_pedigree/pedigree.parquet",
+            f"${{OUTDIR}}/{self.study_id}_variants",
             f"--gs {self.genotype_storage_id}",
         ]
 
@@ -720,7 +717,6 @@ class MakefileGenerator:
 
     def generate_config_targets(self, argv, outfile=sys.stdout):
         dae_config = self.gpf_instance.dae_config
-        print(dae_config)
         if dae_config.mirror_of is not None:
             rsync_helper = RsyncHelpers(dae_config.mirror_of)
         else:
@@ -731,7 +727,6 @@ class MakefileGenerator:
             f"studies/{self.study_id}/",
             ignore_existing=True,
             clear_remote=False)
-        # print(command)
 
         print("\n", file=outfile)
         print(f"config: ${{OUTDIR}}/config.flag\n", file=outfile)

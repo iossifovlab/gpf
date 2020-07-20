@@ -41,7 +41,6 @@ class RsyncHelpers:
             exclude=[],
             ignore_existing=False,
             clear_remote=True):
-        print("clear_remote:", clear_remote)
 
         if os.path.isdir(local_path):
             local_dir = local_path
@@ -63,7 +62,6 @@ class RsyncHelpers:
             clear_remote_option = ""
             if clear_remote:
                 clear_remote_option = f"rm -rf {rsync_path} && "
-            print("clear_remote_option:", clear_remote_option)
 
             rsync_path = f'--rsync-path "{clear_remote_option}' \
                 f'mkdir -p {rsync_path} && rsync"'
