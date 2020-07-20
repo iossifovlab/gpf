@@ -1,27 +1,9 @@
-import pytest
 import os
 from contextlib import closing
 
 from box import Box
 
-
-@pytest.mark.xfail(
-    reason="impala genotype storage impala_load_study does not create "
-    "study config"
-)
-def test_build_backend(
-    impala_genotype_storage, quads_f1_config, genomes_db_2013
-):
-    assert impala_genotype_storage
-    assert quads_f1_config is not None
-
-    backend = impala_genotype_storage.build_backend(
-        quads_f1_config, genomes_db_2013
-    )
-
-    assert len(backend.families) == 1
-    assert len(backend.families["f1"].members_ids) == 5
-    assert len(list(backend.query_variants())) == 3
+from dae.backends.storage.impala_genotype_storage import ImpalaGenotypeStorage
 
 
 def test_is_impala(impala_genotype_storage):
@@ -32,62 +14,11 @@ def test_is_filestorage(impala_genotype_storage):
     assert impala_genotype_storage.is_filestorage() is False
 
 
-@pytest.mark.parametrize(
-    "hdfs_dir,path",
-    [
-        ("/tmp/test_data/study_id", ["study_id"]),
-        ("/tmp/test_data/study_id/pedigree", ["study_id", "pedigree"]),
-    ],
-)
-def test_build_hdfs_dir(impala_genotype_storage, hdfs_dir, path):
-    if impala_genotype_storage.hdfs_helpers.exists(hdfs_dir):
-        impala_genotype_storage.hdfs_helpers.delete(hdfs_dir, recursive=True)
-
-    assert impala_genotype_storage.hdfs_helpers.exists(hdfs_dir) is False
-
-    assert impala_genotype_storage._build_hdfs_dir(*path) == hdfs_dir
-
-    assert impala_genotype_storage.hdfs_helpers.exists(hdfs_dir) is True
-
-
 def test_impala_helpers(impala_genotype_storage):
     impala_helpers = impala_genotype_storage.impala_helpers
 
     assert impala_helpers is not None
     assert impala_helpers.connection is not None
-
-
-# def test_hdfs_helpers(impala_genotype_storage, hdfs_host):
-#     hdfs_helpers = impala_genotype_storage.hdfs_helpers
-
-#     assert hdfs_helpers is not None
-
-#     assert hdfs_helpers.host == hdfs_host
-#     assert hdfs_helpers.port == 8020
-#     assert hdfs_helpers.hdfs is not None
-
-
-@pytest.mark.skip("Not bothering to change the binary")
-def test_impala_load_study(
-    impala_genotype_storage, genomes_db_2013, fixture_dirname
-):
-    impala_genotype_storage.impala_helpers.drop_database(
-        "impala_storage_test_db"
-    )
-
-    impala_genotype_storage.impala_load_study(
-        "study_id",
-        [fixture_dirname("studies/quads_f1_impala/data/variants")],
-        [fixture_dirname("studies/quads_f1_impala/data/pedigree")],
-    )
-
-    backend = impala_genotype_storage.build_backend(
-        Box({"id": "study_id"}, default_box=True), genomes_db_2013
-    )
-
-    assert len(backend.families) == 1
-    assert len(backend.families["f1"].members_ids) == 5
-    assert len(list(backend.query_variants())) == 3
 
 
 def test_impala_partition_import(
@@ -203,46 +134,47 @@ def test_impala_partition_import(
             )
 
 
-# def test_impala_config(impala_genotype_storage):
-#     impala_config = impala_genotype_storage._impala_config(
-#         'study_id',
-#         relative_to_this_test_folder(
-#             'fixtures/studies/quads_f1_impala/data/pedigree'),
-#         relative_to_this_test_folder(
-#             'fixtures/studies/quads_f1_impala/data/variants')
-#     )
+def test_impala_genotype_storate_has_rsync_helpers(mocker):
+    config = {
+        "section_id": "genotype_impala",
+        "impala": {
+            "hosts": ["localhost"],
+            "port": 21050,
+            "pool_size": 3,
+        },
+        "hdfs": {
+            "host": "locahost",
+            "port": 8020,
+        },
+        "rsync": {
+            "location": "ssh://dory:/mnt/hdfs2mnt",
+        },
+    }
+    config = Box(config)
+    mocker.patch.object(config, "section_id", return_value="genotype_impala")
 
-#     assert list(impala_config.keys()) == ['db', 'tables', 'files']
+    storage = ImpalaGenotypeStorage(config)
+    assert storage is not None
+    assert storage.rsync_helpers is not None
 
 
-# def test_impala_storage_config(impala_genotype_storage):
-#     impala_storage_config = \
-#         impala_genotype_storage._impala_storage_config('study_id')
+def test_impala_genotype_storate_no_rsync_helpers(mocker):
+    config = {
+        "section_id": "genotype_impala",
+        "impala": {
+            "hosts": ["localhost"],
+            "port": 21050,
+            "pool_size": 3,
+        },
+        "hdfs": {
+            "host": "locahost",
+            "port": 8020,
+        },
+        "rsync": None,
+    }
+    config = Box(config)
+    mocker.patch.object(config, "section_id", return_value="genotype_impala")
 
-#     assert impala_storage_config.db == 'impala_storage_test_db'
-#     assert impala_storage_config.tables.pedigree == 'study_id_pedigree'
-#     assert impala_storage_config.tables.variant == 'study_id_variant'
-
-
-# def test_hdfs_parquet_files_config(impala_genotype_storage):
-#     if impala_genotype_storage.hdfs_helpers.exists(
-#             '/tmp/test_data/study_id'):
-#         impala_genotype_storage.hdfs_helpers.delete(
-#             '/tmp/test_data/study_id', recursive=True
-#         )
-
-#     hdfs_parquet_files_config = \
-#         impala_genotype_storage._hdfs_parquet_files_config(
-#             'study_id',
-#             relative_to_this_test_folder(
-#                 'fixtures/studies/quads_f1_impala/data/pedigree'),
-#             relative_to_this_test_folder(
-#                 'fixtures/studies/quads_f1_impala/data/variants')
-#         )
-
-#     assert hdfs_parquet_files_config.files.pedigree == \
-#         ['/tmp/test_data/study_id/pedigree/quads_f1_impala_pedigree.parquet']
-#     assert hdfs_parquet_files_config.files.variants == [
-#         '/tmp/test_data/study_id/variants/quads_f1_impala_variant_000001.'
-#         'parquet'
-#     ]
+    storage = ImpalaGenotypeStorage(config)
+    assert storage is not None
+    assert storage.rsync_helpers is None

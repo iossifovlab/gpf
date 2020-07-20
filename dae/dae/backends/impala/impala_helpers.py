@@ -100,12 +100,7 @@ class ImpalaHelpers(object):
             pd):
 
         cursor.execute(
-            """
-            DROP TABLE IF EXISTS {db}.{table}
-        """.format(
-                db=db, table=table
-            )
-        )
+            f"DROP TABLE IF EXISTS {db}.{table}")
 
         hdfs_dir = pd.variants_filename_basedir(sample_file)
         if not pd.has_partitions():
@@ -120,47 +115,132 @@ class ImpalaHelpers(object):
                 PARTITIONED BY ({partitions})
                 STORED AS PARQUET LOCATION '{hdfs_dir}'
             """
-
         cursor.execute(statement)
 
         if pd.has_partitions():
             cursor.execute(
-                f"""
-                ALTER TABLE {db}.{table} RECOVER PARTITIONS
-            """
-            )
+                f"ALTER TABLE {db}.{table} RECOVER PARTITIONS")
         cursor.execute(
-            f"""
-            REFRESH {db}.{table}
-        """
-        )
+            f"REFRESH {db}.{table}")
 
-    def import_dataset_into_db(
-            self,
-            db,
-            pedigree_table,
-            variants_table,
-            pedigree_hdfs_file,
-            variants_hdfs_file,
-            partition_description):
+    # def import_dataset_into_db(
+    #         self,
+    #         db,
+    #         pedigree_table,
+    #         variants_table,
+    #         pedigree_hdfs_file,
+    #         variants_hdfs_file,
+    #         partition_description):
+
+    #     with closing(self.connection()) as conn:
+    #         with conn.cursor() as cursor:
+    #             cursor.execute(
+    #                 f"CREATE DATABASE IF NOT EXISTS {db}")
+
+    #             self._import_single_file(
+    #                 cursor, db, pedigree_table, pedigree_hdfs_file)
+
+    #             self._create_dataset_table(
+    #                 cursor,
+    #                 db,
+    #                 variants_table,
+    #                 variants_hdfs_file,
+    #                 partition_description
+    #             )
+    #             if partition_description.has_partitions():
+    #                 self._add_partition_properties(
+    #                     cursor, db, variants_table, partition_description)
+
+    def import_pedigree_into_db(self, db, pedigree_table, pedigree_hdfs_file):
+        with closing(self.connection()) as conn:
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    f"CREATE DATABASE IF NOT EXISTS {db}")
+
+                self._import_single_file(
+                    cursor, db, pedigree_table, pedigree_hdfs_file)
+
+    def _build_variants_schema(self, variants_schema):
+        TYPE_CONVERTION = {
+            "int32": "INT",
+            "int16": "SMALLINT",
+            "int8": "TINYINT",
+            "float": "FLOAT",
+            "string": "STRING",
+            "binary": "STRING",
+
+        }
+        result = []
+        for field_name, field_type in variants_schema.items():
+            impala_type = TYPE_CONVERTION.get(field_type)
+            assert impala_type is not None, (field_name, field_type)
+            result.append(f"`{field_name}` {impala_type}")
+        statement = ", ".join(result)
+        statement = f"( {statement} )"
+        return statement
+
+    def _build_import_variants_statement(
+            self, db, variants_table, variants_hdfs_dir,
+            partition_description,
+            variants_sample=None,
+            variants_schema=None):
+
+        assert variants_sample is not None or variants_schema is not None
+
+        statement = [
+            "CREATE EXTERNAL TABLE", f"{db}.{variants_table}"]
+        if variants_schema is not None:
+            statement.append(
+                self._build_variants_schema(variants_schema))
+        else:
+            assert variants_sample is not None
+            statement.extend(
+                ["LIKE PARQUET", f"'{variants_sample}'"])
+
+        if partition_description.has_partitions():
+            partitions = partition_description.build_impala_partitions()
+            statement.extend([
+                "PARTITIONED BY", f"({partitions})"
+            ])
+
+        statement.extend([
+            "STORED AS PARQUET LOCATION", 
+            f"'{variants_hdfs_dir}'"
+        ])
+        return " ".join(statement)
+
+    def import_variants_into_db(
+            self, db, variants_table, variants_hdfs_dir,
+            partition_description,
+            variants_sample=None,
+            variants_schema=None):
+
+        assert variants_schema is not None or variants_sample is not None
 
         with closing(self.connection()) as conn:
             with conn.cursor() as cursor:
                 cursor.execute(
-                    f"""
-                    CREATE DATABASE IF NOT EXISTS {db}
-                """
-                )
-                self._import_single_file(
-                    cursor, db, pedigree_table, pedigree_hdfs_file)
+                    f"CREATE DATABASE IF NOT EXISTS {db}")
 
-                self._create_dataset_table(
-                    cursor,
-                    db,
-                    variants_table,
-                    variants_hdfs_file,
-                    partition_description
-                )
+                cursor.execute(
+                    f"DROP TABLE IF EXISTS {db}.{variants_table}")
+
+                statement = self._build_import_variants_statement(
+                    db, variants_table, variants_hdfs_dir,
+                    partition_description,
+                    variants_sample=variants_sample,
+                    variants_schema=variants_schema)
+                # statement = " ".join(statement)
+                print(statement)
+                cursor.execute(statement)
+
+                if partition_description.has_partitions():
+                    cursor.execute(
+                        f"ALTER TABLE {db}.{variants_table} "
+                        f"RECOVER PARTITIONS")
+                cursor.execute(
+                    f"REFRESH {db}.{variants_table}")
+
                 if partition_description.has_partitions():
                     self._add_partition_properties(
                         cursor, db, variants_table, partition_description)
@@ -168,10 +248,7 @@ class ImpalaHelpers(object):
     def check_database(self, dbname):
         with closing(self.connection()) as conn:
             with conn.cursor() as cursor:
-                q = """
-                    SHOW DATABASES
-                """
-
+                q = "SHOW DATABASES"
                 cursor.execute(q)
                 for row in cursor:
                     if row[0] == dbname:
@@ -181,10 +258,7 @@ class ImpalaHelpers(object):
     def check_table(self, dbname, tablename):
         with closing(self.connection()) as conn:
             with conn.cursor() as cursor:
-                q = f"""
-                    SHOW TABLES IN {dbname}
-                """
-
+                q = f"SHOW TABLES IN {dbname}"
                 cursor.execute(q)
                 for row in cursor:
                     if row[0] == tablename:
@@ -194,29 +268,17 @@ class ImpalaHelpers(object):
     def drop_table(self, dbname, tablename):
         with closing(self.connection()) as conn:
             with conn.cursor() as cursor:
-                q = f"""
-                    DROP TABLE IF EXISTS {dbname}.{tablename}
-                """
+                q = f"DROP TABLE IF EXISTS {dbname}.{tablename}"
                 cursor.execute(q)
 
     def create_database(self, dbname):
         with closing(self.connection()) as conn:
             with conn.cursor() as cursor:
-                q = """
-                    CREATE DATABASE IF NOT EXISTS {db}
-                """.format(
-                    db=dbname
-                )
-
+                q = f"CREATE DATABASE IF NOT EXISTS {dbname}"
                 cursor.execute(q)
 
     def drop_database(self, dbname):
         with closing(self.connection()) as conn:
             with conn.cursor() as cursor:
                 cursor.execute(
-                    """
-                    DROP DATABASE IF EXISTS {db} CASCADE
-                """.format(
-                        db=dbname
-                    )
-                )
+                    f"DROP DATABASE IF EXISTS {dbname} CASCADE")

@@ -69,21 +69,3 @@ def test_families_to_parquet(variants_vcf, temp_dirname):
 
     ParquetManager.families_to_parquet(fvars.families, pedigree_path)
     assert os.path.exists(pedigree_path)
-
-
-def test_variant_to_parquet(
-    vcf_variants_loader, annotation_pipeline_default_decorator, temp_dirname
-):
-
-    fvars = annotation_pipeline_default_decorator(
-        vcf_variants_loader("backends/effects_trio")
-    )
-
-    data_dir = temp_dirname
-    variant_path = os.path.join(data_dir, "quads_f1_impala_variant.parquet")
-
-    assert not os.path.exists(variant_path)
-
-    ParquetManager.variants_to_parquet_filename(fvars, variant_path)
-
-    assert os.path.exists(variant_path)

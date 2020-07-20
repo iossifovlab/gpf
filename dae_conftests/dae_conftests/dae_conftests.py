@@ -34,7 +34,8 @@ from dae.pedigrees.family import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
 from dae.utils.helpers import study_id_from_path
 
-from dae.backends.impala.parquet_io import ParquetManager
+from dae.backends.impala.parquet_io import ParquetManager, \
+    NoPartitionDescriptor
 from dae.backends.storage.impala_genotype_storage import ImpalaGenotypeStorage
 from dae.gene.denovo_gene_set_collection_factory import (
     DenovoGeneSetCollectionFactory,
@@ -461,13 +462,16 @@ def iossifov2014_impala(
         iossifov2014_loader.families, parquet_filenames.pedigree
     )
 
-    ParquetManager.variants_to_parquet_filename(
-        iossifov2014_loader, parquet_filenames.variants
+    variants_dir = os.path.join(temp_dirname, "variants")
+    partition_description = NoPartitionDescriptor(variants_dir)
+
+    ParquetManager.variants_to_parquet(
+        iossifov2014_loader, partition_description
     )
 
     impala_genotype_storage.impala_load_dataset(
         study_id,
-        variants_path=parquet_filenames.variants_dirname,
+        variants_dir=parquet_filenames.variants_dirname,
         pedigree_file=parquet_filenames.pedigree,)
 
     fvars = impala_genotype_storage.build_backend(
@@ -721,12 +725,9 @@ def data_import(
             filename = os.path.basename(vcf.pedigree)
             study_id = os.path.splitext(filename)[0]
 
-            (
-                variant_table,
-                pedigree_table,
-            ) = impala_genotype_storage.study_tables(
-                GPFConfigParser._dict_to_namedtuple({"id": study_id})
-            )
+            (variant_table, pedigree_table) = \
+                impala_genotype_storage.study_tables(
+                    GPFConfigParser._dict_to_namedtuple({"id": study_id}))
 
             if (
                 not reimport
