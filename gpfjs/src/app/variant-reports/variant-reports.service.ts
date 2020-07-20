@@ -26,7 +26,6 @@ export class VariantReportsService {
     return this.http
       .get(url, options)
       .map(response => {
-        console.log(response);
         return VariantReport.fromJson(response);
       });
   }
