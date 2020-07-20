@@ -11,7 +11,7 @@
               <gpf-family-ids></gpf-family-ids>
           </ng-template>
       </li>
-      <li [ngbNavItem]="'phenoFilters'" *ngIf="dataset?.genotypeBrowserConfig?.phenoFilters" id="pheno-filters">
+      <li [ngbNavItem]="'phenoFilters'" *ngIf="dataset?.genotypeBrowserConfig?.phenoFilters && dataset.phenotypeData" id="pheno-filters">
           <a ngbNavLink>Advanced</a>
           <ng-template ngbNavContent>
               <gpf-pheno-filters [dataset]="dataset">
