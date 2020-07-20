@@ -2,7 +2,7 @@ import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { PhenoBrowserComponent } from './pheno-browser.component';
 import { DatasetsService } from '../datasets/datasets.service';
 import { PhenoBrowserService } from './pheno-browser.service';
-import { PhenoInstruments, PhenoInstrument, PhenoMeasures } from './pheno-browser';
+import { PhenoInstruments, PhenoInstrument, PhenoMeasures, PhenoMeasure } from './pheno-browser';
 import { fakeJsonMeasureOneRegression } from './pheno-browser.spec';
 import { environment } from '../../environments/environment';
 import { FormsModule } from '@angular/forms';
@@ -50,9 +50,14 @@ class MockPhenoBrowserService {
     return of(new PhenoInstruments('i1', ['i1', 'i2', 'i3']));
   }
 
-  getMeasures(datasetId: string, instrument: PhenoInstrument, search: string): Observable<PhenoMeasures> {
-    let measures = PhenoMeasures.fromJson({'base_image_url': 'base', "measures": [fakeJsonMeasurei1], 'has_descriptions': true, 'regression_names': {'age': 'age'}});
+  getMeasures(datasetId: string, instrument: PhenoInstrument, search: string): Observable<PhenoMeasure> {
+    let measures = PhenoMeasure.fromJson(fakeJsonMeasurei1);
     return of(measures);
+  }
+
+  getMeasuresInfo(datasetId: string): Observable<PhenoMeasures> {
+    let measuresInfo = PhenoMeasures.fromJson({'base_image_url': 'base', 'has_descriptions': true, 'regression_names': {'age': 'age'}});
+    return of(measuresInfo);
   }
 
   getDownloadLink(instrument: PhenoInstrument, datasetId: string) {

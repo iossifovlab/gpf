@@ -86,10 +86,14 @@ describe('pheno measure', () => {
 
 describe('pheno measures', () => {
     
+  let base_path = '/test_base_url/';
+
   let phenoMeasure = PhenoMeasure.fromJson(fakeJsonMeasure);
 
+  phenoMeasure = PhenoMeasure.addBasePath(phenoMeasure, base_path);
+
   let phenoMeasures = PhenoMeasures.fromJson({
-    'base_image_url': '/test_base_url/',
+    'base_image_url': base_path,
     'measures': [fakeJsonMeasure],
     'has_descriptions': true,
   });

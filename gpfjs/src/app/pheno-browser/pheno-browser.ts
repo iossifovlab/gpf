@@ -76,6 +76,7 @@ export class PhenoInstruments {
 export class PhenoMeasure {
 
   static fromJson(json: Object): PhenoMeasure {
+    console.log(json);
     return new PhenoMeasure(
       json['Index'] as number,
       json['instrument_name'],
@@ -91,6 +92,26 @@ export class PhenoMeasure {
 
       new PhenoRegressions(json['regressions'])
     );
+  }
+
+  static addBasePath(measure:PhenoMeasure, basePath: string): PhenoMeasure {
+    basePath = `${environment.basePath}${basePath}`;
+    let newMeasure: PhenoMeasure = new PhenoMeasure(
+        measure.index,
+        measure.instrumentName,
+        measure.valuesDomain,
+
+        addBaseUrlIfNotNull(measure.figureDistribution, basePath),
+        addBaseUrlIfNotNull(measure.figureDistributionSmall, basePath),
+
+        measure.measureId,
+        measure.measureName,
+        measure.measureType,
+        measure.description,
+
+        measure.regressions,
+    );
+    return newMeasure
   }
 
   constructor(
@@ -112,23 +133,22 @@ export class PhenoMeasure {
 
 export class PhenoMeasures {
 
-  public addMeasure(measure: any) {
-    const measureJson = measure.measure
-    let basePath = environment.basePath + measure.baseImageUrl;
+  public _addMeasure(measure: PhenoMeasure) {
+    let basePath = environment.basePath + this.baseImageUrl;
     let newMeasure: PhenoMeasure = new PhenoMeasure(
-        measureJson.index,
-        measureJson.instrument_name,
-        measureJson.values_domain,
+        measure.index,
+        measure.instrumentName,
+        measure.valuesDomain,
 
-        addBaseUrlIfNotNull(measureJson.figure_distribution, basePath),
-        addBaseUrlIfNotNull(measureJson.figure_distribution_small, basePath),
+        addBaseUrlIfNotNull(measure.figureDistribution, basePath),
+        addBaseUrlIfNotNull(measure.figureDistributionSmall, basePath),
 
-        measureJson.measure_id,
-        measureJson.measure_name,
-        measureJson.measure_type,
-        measureJson.description,
+        measure.measureId,
+        measure.measureName,
+        measure.measureType,
+        measure.description,
 
-        new PhenoRegressions(measureJson.regressions),
+        measure.regressions,
     );
     this.measures.push(newMeasure);
   }
@@ -139,8 +159,11 @@ export class PhenoMeasures {
       [],
       json['has_descriptions'],
       json['regression_names']);
-      for(let measure of json['measures']) {
-          measures.addMeasure(measure)
+      if(json['measures']) {
+          for(let measure of json['measures']) {
+              let m = PhenoMeasure.fromJson(measure)
+              measures._addMeasure(m)
+          }
       }
       return measures;
   }

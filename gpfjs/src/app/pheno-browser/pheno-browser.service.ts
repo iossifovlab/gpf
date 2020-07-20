@@ -66,7 +66,7 @@ export class PhenoBrowserService {
     });
 
     return measuresSubject.map(data => {
-        return data
+        return PhenoMeasure.fromJson(data["measure"]);
     });
 
 

@@ -94,15 +94,11 @@ export class PhenoBrowserComponent implements OnInit {
         );
       })
       .switchMap(([searchTerm, newSelection, datasetId, measuresInfo]) => {
-        console.log(measuresInfo);
         this.measuresToShow = measuresInfo;
         return this.phenoBrowserService.getMeasures(datasetId, newSelection, searchTerm);
       })
       .map(measure => {
-          if(!this.measuresToShow) {
-              this.measuresToShow = PhenoMeasures.fromJson(measure)
-          }
-          this.measuresToShow.addMeasure(measure)
+          this.measuresToShow._addMeasure(measure)
           return this.measuresToShow;
       })
       .share();
