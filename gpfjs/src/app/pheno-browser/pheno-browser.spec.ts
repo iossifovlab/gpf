@@ -101,7 +101,7 @@ describe('pheno measures', () => {
   });
 
   it('should be able to add a base path', () => {
-    let bpMeasures = PhenoMeasures.addBasePath(phenoMeasures);
+    let bpMeasures = phenoMeasures;
     let bpMeasure = bpMeasures.measures[0];
     expect(bpMeasure.figureDistribution).toBe(environment.basePath + '/test_base_url/test.jpg');
     expect(bpMeasure.figureDistributionSmall).toBe(null);

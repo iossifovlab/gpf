@@ -134,11 +134,15 @@ export class PhenoMeasures {
   }
 
   static fromJson(json: Object): PhenoMeasures {
-    return new PhenoMeasures(
+    const measures = new PhenoMeasures(
       json['base_image_url'],
       [],
       json['has_descriptions'],
       json['regression_names']);
+      for(let measure of json['measures']) {
+          measures.addMeasure(measure)
+      }
+      return measures;
   }
 
   constructor(

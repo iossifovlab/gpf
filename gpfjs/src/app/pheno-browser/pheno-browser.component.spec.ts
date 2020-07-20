@@ -51,10 +51,7 @@ class MockPhenoBrowserService {
   }
 
   getMeasures(datasetId: string, instrument: PhenoInstrument, search: string): Observable<PhenoMeasures> {
-    let measures = PhenoMeasures.fromJson({'base_image_url': 'base', 'has_descriptions': true, 'regression_names': {'age': 'age'}});
-    for(let measure of fakeJsonMeasurei1) {
-        measures.addMeasure(measure)
-    }
+    let measures = PhenoMeasures.fromJson({'base_image_url': 'base', "measures": [fakeJsonMeasurei1], 'has_descriptions': true, 'regression_names': {'age': 'age'}});
     return of(measures);
   }
 
