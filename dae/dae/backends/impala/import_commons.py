@@ -1,3 +1,4 @@
+from dae.backends.impala.rsync_helpers import RsyncHelpers
 import os
 import sys
 import argparse
@@ -371,6 +372,8 @@ class MakefileGenerator:
             self.generate_pedigree_rule(argv, outfile)
             self.generate_variants_rules(argv, outfile)
             self.generate_hdfs_load_targets(argv, outfile)
+            self.generate_impala_load_targets(argv, outfile)
+            self.generate_config_targets(argv, outfile)
             self.generate_report_targets(argv, outfile)
 
     def generate_study_config(self, argv):
@@ -425,8 +428,9 @@ class MakefileGenerator:
     def generate_all_targets(self, argv, outfile=sys.stdout):
         targets = [
             f"${{OUTDIR}}/ped.flag",
-            f"hdfs_load.flag",
-            f"reports.flag"
+            f"${{OUTDIR}}/hdfs.flag",
+            f"${{OUTDIR}}/impala.flag",
+            f"${{OUTDIR}}/reports.flag"
         ]
         targets.extend(self._collect_variants_targets())
 
@@ -652,6 +656,29 @@ class MakefileGenerator:
 
         return " ".join(command)
 
+    def _construct_impala_load_command(self, argv):
+        assert self.genotype_storage_id is not None
+
+        command = [
+            f"impala_tables_loader.py {self.study_id}",
+            f"--gs {self.genotype_storage_id}",
+            f"--variants-schema", 
+            os.path.join(
+                f"${{OUTDIR}}",
+                f"{self.study_id}_variants",
+                "_VARIANTS_SCHEMA"),
+        ]
+
+        if argv.partition_description is not None:
+            pd = os.path.join(
+                f"${{OUTDIR}}",
+                f"{self.study_id}_variants",
+                "_PARTITION_DESCRIPTION")
+
+            command.append(f"--pd {pd}")
+
+        return " ".join(command)
+
     def _get_output_dir(self, argv):
         output = argv.output
         if output is None:
@@ -661,23 +688,58 @@ class MakefileGenerator:
 
     def generate_hdfs_load_targets(self, argv, outfile=sys.stdout):
         print("\n", file=outfile)
-        print(f"hdfs_load: hdfs_load.flag\n", file=outfile)
+        print(f"hdfs: ${{OUTDIR}}/hdfs.flag\n", file=outfile)
 
         command = self._construct_hdfs_load_command(argv)
         variants_targets = self._collect_variants_targets()
         if len(variants_targets) > 0:
             variants_targets = " ".join(variants_targets)
             print(
-                f"hdfs_load.flag: "
+                f"${{OUTDIR}}/hdfs.flag: "
                 f"${{OUTDIR}}/ped.flag {variants_targets}\n"
                 f"\t{command} && touch $@",
                 file=outfile,
             )
         else:
             print(
-                f"hdfs_load.flag: ${{OUTDIR}}/ped.flag\n"
+                f"hdfs.flag: ${{OUTDIR}}/ped.flag\n"
                 f"\t{command} && touch $@",
                 file=outfile)
+
+    def generate_impala_load_targets(self, argv, outfile=sys.stdout):
+        print("\n", file=outfile)
+        print(f"impala: ${{OUTDIR}}/impala.flag\n", file=outfile)
+
+        command = self._construct_impala_load_command(argv)
+        print(
+            f"${{OUTDIR}}/impala.flag: "
+            f"${{OUTDIR}}/hdfs.flag\n"
+            f"\t{command} && touch $@",
+            file=outfile,
+        )
+
+    def generate_config_targets(self, argv, outfile=sys.stdout):
+        dae_config = self.gpf_instance.dae_config
+        print(dae_config)
+        if dae_config.mirror_of is not None:
+            rsync_helper = RsyncHelpers(dae_config.mirror_of)
+        else:
+            rsync_helper = RsyncHelpers(dae_config.dae_data_dir)
+
+        command = rsync_helper._copy_to_remote_cmd(
+            f"${{OUTDIR}}/{self.study_id}.conf",
+            f"studies/{self.study_id}/",
+            ignore_existing=True,
+            clear_remote=False)
+        # print(command)
+
+        print("\n", file=outfile)
+        print(f"config: ${{OUTDIR}}/config.flag\n", file=outfile)
+        print(
+            f"${{OUTDIR}}/config.flag: ${{OUTDIR}}/impala.flag",
+            file=outfile)
+        print(f"\t{command} && touch $@", file=outfile)
+        print(f"\n", file=outfile)
 
     def _construct_reports_commands(self, argv):
 
@@ -690,9 +752,11 @@ class MakefileGenerator:
 
     def generate_report_targets(self, argv, outfile=sys.stdout):
         print("\n", file=outfile)
-        print(f"reports: reports.flag\n", file=outfile)
+        print(f"reports: ${{OUTDIR}}/reports.flag\n", file=outfile)
         commands = self._construct_reports_commands(argv)
-        print(f"reports.flag: hdfs_load.flag", file=outfile)
+        print(
+            f"${{OUTDIR}}/reports.flag: ${{OUTDIR}}/config.flag",
+            file=outfile)
         for command in commands:
             print(f"\t{command} && touch $@", file=outfile)
         print(f"\n", file=outfile)

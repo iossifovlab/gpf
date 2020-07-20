@@ -36,9 +36,20 @@ class RsyncHelpers:
             return ""
         return " ".join(result)
 
-    def _copy_to_remote_cmd(self, local_path, remote_subdir=None, exclude=[]):
-        if os.path.isdir(local_path) and not local_path.endswith("/"):
-            local_path += "/"
+    def _copy_to_remote_cmd(
+            self, local_path, remote_subdir=None,
+            exclude=[],
+            ignore_existing=False,
+            clear_remote=True):
+        print("clear_remote:", clear_remote)
+
+        if os.path.isdir(local_path):
+            local_dir = local_path
+        else:
+            local_dir = os.path.dirname(local_path)
+        if not local_dir.endswith("/"):
+            local_dir += "/"
+
         exclude_options = self._exclude_options(exclude)
 
         rsync_remote = self.rsync_remote
@@ -48,15 +59,27 @@ class RsyncHelpers:
                 remote_subdir = remote_subdir[1:]
             rsync_remote = os.path.join(self.rsync_remote, remote_subdir)
             rsync_path = os.path.join(self.parsed_remote.path, remote_subdir)
-            rsync_path = f'--rsync-path "rm -rf {rsync_path} && ' \
+
+            clear_remote_option = ""
+            if clear_remote:
+                clear_remote_option = f"rm -rf {rsync_path} && "
+            print("clear_remote_option:", clear_remote_option)
+
+            rsync_path = f'--rsync-path "{clear_remote_option}' \
                 f'mkdir -p {rsync_path} && rsync"'
+
+        ignore_existing_option = ""
+        if ignore_existing:
+            ignore_existing_option = "--ignore-existing"
 
         if self.rsync_remote_shell is None:
             return f"rsync -avPHt {exclude_options} {rsync_path} "\
+                f"{ignore_existing_option} " \
                 f"{local_path} {rsync_remote}"
         else:
             return f'rsync -e "{self.rsync_remote_shell}" '\
                 f'-avPHt {exclude_options} {rsync_path} '\
+                f"{ignore_existing_option} " \
                 f'{local_path} {rsync_remote}'
 
     def _copy_to_local_cmd(self, local_path, remote_subdir=None, exclude=[]):
