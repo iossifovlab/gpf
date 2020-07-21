@@ -5,6 +5,7 @@ import re
 import hashlib
 import itertools
 
+import toml
 from box import Box
 
 import numpy as np
@@ -65,7 +66,9 @@ class NoPartitionDescriptor(PartitionDescriptor):
         return 3_000_000_000
 
     def variant_filename(self, family_allele):
-        return self.output
+        bucket_index = family_allele.get_attribute("bucket_index")
+        filename = f"nopart_{bucket_index:0>6}_variants.parquet"
+        return os.path.join(self.output, filename)
 
     def write_partition_configuration(self):
         return None
@@ -74,11 +77,11 @@ class NoPartitionDescriptor(PartitionDescriptor):
         """
         Generates a glob for accessing every parquet file in the partition
         """
-        return "*.parquet"
+        return "*variants.parquet"
 
     def variants_filename_basedir(self, filename):
         regexp = re.compile(
-            "^(?P<basedir>.+)/(?P<prefix>.+)_variants.parquet$")
+            "^(?P<basedir>.+)/(?P<prefix>.+)variants.parquet$")
         match = regexp.match(filename)
         if not match:
             return None
@@ -92,14 +95,13 @@ class NoPartitionDescriptor(PartitionDescriptor):
 
 class ParquetPartitionDescriptor(PartitionDescriptor):
     def __init__(
-        self,
-        chromosomes,
-        region_length,
-        family_bin_size=0,
-        coding_effect_types=[],
-        rare_boundary=0,
-        root_dirname="",
-    ):
+            self,
+            chromosomes,
+            region_length,
+            family_bin_size=0,
+            coding_effect_types=[],
+            rare_boundary=0,
+            root_dirname=""):
 
         super(ParquetPartitionDescriptor, self).__init__()
         self.output = root_dirname
@@ -303,25 +305,6 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
         if basedir and basedir[-1] != "/":
             basedir += "/"
         return basedir
-
-    # def variants_filenames(self):
-    #     partition_bins = self._variants_partition_bins()
-
-    #     result = []
-    #     for product in itertools.product(*partition_bins):
-    #         print(product)
-    #         filename_parts = [
-    #             f"{p[0]}_{p[1]}" for p in product
-    #         ]
-    #         dirname_parts = [
-    #             f"{p[0]}={p[1]}" for p in product
-    #         ]
-    #         dirname = "/".join(dirname_parts)
-    #         filename = "_".join(filename_parts)
-    #         filename = f"variants_{filename}.parquet"
-    #         filename = os.path.join(dirname, filename)
-    #         result.append(filename)
-    #     return result
 
     def write_partition_configuration(self):
         config = configparser.ConfigParser()
@@ -594,11 +577,17 @@ class VariantsParquetWriter:
 
         return filenames
 
-    def write_blob_schema(self):
-        config = configparser.ConfigParser()
-        schema = self.serializer.describe_blob_schema()
+    def write_schema(self):
+        config = dict()
 
-        config.add_section("blob")
+        schema = self.serializer.schema
+        config["variants_schema"] = {}
+        for k in schema.names:
+            v = schema.field(k)
+            config["variants_schema"][k] = str(v.type)
+
+        schema = self.serializer.describe_blob_schema()
+        config["blob"] = {}
         for k, v in schema.items():
             config["blob"][k] = v
 
@@ -606,17 +595,17 @@ class VariantsParquetWriter:
             path = self.partition_descriptor.output
         else:
             path = os.path.dirname(self.partition_descriptor.output)
-
         filename = os.path.join(path, "_VARIANTS_SCHEMA")
 
         with open(filename, "w") as configfile:
-            config.write(configfile)
+            content = toml.dumps(config)
+            configfile.write(content)
 
     def write_dataset(self):
         filenames = self._write_internal()
 
         self.partition_descriptor.write_partition_configuration()
-        self.write_blob_schema()
+        self.write_schema()
 
         return filenames
 
@@ -667,35 +656,7 @@ class ParquetManager:
         save_ped_df_to_parquet(families.ped_df, pedigree_filename)
 
     @staticmethod
-    def variants_to_parquet_filename(
-            variants_loader, variants_filename,
-            bucket_index=0, rows=100_000, include_reference=False):
-
-        assert variants_loader.annotation_schema is not None
-
-        dirname = os.path.dirname(variants_filename)
-        os.makedirs(dirname, exist_ok=True)
-
-        start = time.time()
-        partition_descriptor = NoPartitionDescriptor(variants_filename)
-
-        variants_writer = VariantsParquetWriter(
-            variants_loader,
-            partition_descriptor,
-            bucket_index=bucket_index,
-            rows=rows,
-            include_reference=include_reference)
-
-        variants_writer.write_dataset()
-        end = time.time()
-
-        print(
-            "DONE: {} for {:.2f} sec".format(variants_filename, end - start),
-            file=sys.stderr,
-        )
-
-    @staticmethod
-    def variants_to_parquet_partition(
+    def variants_to_parquet(
             variants_loader, partition_descriptor,
             bucket_index=1, rows=100_000, include_reference=False):
 

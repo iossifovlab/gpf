@@ -71,6 +71,11 @@ dae_conf_schema = {
         "check_with": validate_existing_path,
         "coerce": "abspath",
     },
+    "mirror_of": {
+        "type": "string",
+        "default": None, 'nullable': True,
+    },
+
     "annotation_defaults": {
         "type": "dict",
         "schema": {"wd": {"type": "string"}, "data_dir": {"type": "string"}},

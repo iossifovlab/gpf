@@ -9,9 +9,7 @@ from dae.tools.denovo2parquet import main
 from dae.backends.impala.parquet_io import ParquetPartitionDescriptor
 
 
-def test_denovo2parquet_denovo(
-    dae_denovo_config, temp_filename, genomes_db_2013
-):
+def test_denovo2parquet_denovo(dae_denovo_config, temp_filename):
 
     argv = [
         "--ped-file-format",
@@ -26,7 +24,11 @@ def test_denovo2parquet_denovo(
 
     assert os.path.exists(temp_filename)
 
-    pqfile = pq.ParquetFile(temp_filename)
+    files_glob = os.path.join(temp_filename, "*variants.parquet")
+    parquet_files = glob.glob(files_glob)
+    assert len(parquet_files) == 1
+
+    pqfile = pq.ParquetFile(parquet_files[0])
     schema = pqfile.schema
 
     assert "effect_gene_symbols" in schema.names
@@ -35,8 +37,7 @@ def test_denovo2parquet_denovo(
 
 
 def test_denovo2parquet_denovo_partition(
-    fixture_dirname, dae_denovo_config, temp_dirname, genomes_db_2013
-):
+        fixture_dirname, dae_denovo_config, temp_dirname):
 
     partition_description = fixture_dirname(
         "backends/example_partition_configuration.conf"
