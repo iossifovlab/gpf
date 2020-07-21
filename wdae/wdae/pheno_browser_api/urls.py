@@ -14,6 +14,11 @@ urlpatterns = [
         name="pheno_browser_instruments",
     ),
     url(
+        r"^/measures_info/?$",
+        views.PhenoMeasuresInfoView.as_view(),
+        name="pheno_browser_measures_info",
+    ),
+    url(
         r"^/measures/?$",
         views.PhenoMeasuresView.as_view(),
         name="pheno_browser_measures",

@@ -92,19 +92,19 @@ def test_search_measures_get_all(fake_phenotype_data_browser_dir):
     db = DbManager(fake_phenotype_data_browser_dir)
     assert db is not None
     db.build()
-    assert len(db.search_measures()) == 15
+    assert len(list(db.search_measures())) == 15
 
 
 def test_search_measures_get_by_instrument(fake_phenotype_data_browser_dir):
     db = DbManager(fake_phenotype_data_browser_dir)
     assert db is not None
     db.build()
-    measure_df = db.search_measures("i1", None)
+    measure_df = db.search_measures_df("i1", None)
     assert len(measure_df) == 12
     for _, row in measure_df.iterrows():
         assert row["instrument_name"] == "i1"
 
-    measure_df = db.search_measures("i2", None)
+    measure_df = db.search_measures_df("i2", None)
     assert len(measure_df) == 3
     print(measure_df)
     for _, row in measure_df.iterrows():
@@ -117,7 +117,7 @@ def test_search_measures_by_keyword_in_description(
     db = DbManager(fake_phenotype_data_browser_dir)
     assert db is not None
     db.build()
-    measure_df = db.search_measures(None, "number")
+    measure_df = db.search_measures_df(None, "number")
     assert len(measure_df) == 3
     for _, row in measure_df.iterrows():
         assert "number" in row["description"]
@@ -129,7 +129,7 @@ def test_search_measures_by_keyword_in_measure_id(
     db = DbManager(fake_phenotype_data_browser_dir)
     assert db is not None
     db.build()
-    measure_df = db.search_measures(None, "i1.m2")
+    measure_df = db.search_measures_df(None, "i1.m2")
     assert len(measure_df) == 1
     assert measure_df.iloc[0]["measure_name"] == "m2"
     assert measure_df.iloc[0]["instrument_name"] == "i1"
@@ -141,7 +141,7 @@ def test_search_measures_by_keyword_in_measure_name(
     db = DbManager(fake_phenotype_data_browser_dir)
     assert db is not None
     db.build()
-    measure_df = db.search_measures(None, "m2")
+    measure_df = db.search_measures_df(None, "m2")
     assert len(measure_df) == 2
     assert measure_df.iloc[0]["measure_name"] == "m2"
     assert measure_df.iloc[0]["instrument_name"] == "i1"
@@ -156,10 +156,10 @@ def test_search_measures_by_keyword_in_instrument_name(
     assert db is not None
     db.build()
 
-    measure_df = db.search_measures(None, "i")
+    measure_df = db.search_measures_df(None, "i")
     assert len(measure_df) == 15
 
-    measure_df = db.search_measures(None, "i1")
+    measure_df = db.search_measures_df(None, "i1")
     assert len(measure_df) == 12
     for _, row in measure_df.iterrows():
         assert row["instrument_name"] == "i1"
@@ -189,14 +189,14 @@ def test_db_search_character_escaping(output_dir):
     db.save(v)
     db.save(v2)
 
-    r = db.search_measures(keyword="test_one")
+    r = db.search_measures_df(keyword="test_one")
     assert r is not None
     assert len(r) == 1
     assert r["measure_id"][0] == "test_one.measure1"
     assert r["instrument_name"][0] == "test_one"
     assert r["measure_name"][0] == "measure1"
 
-    r = db.search_measures(keyword="test%two")
+    r = db.search_measures_df(keyword="test%two")
     assert r is not None
     assert len(r) == 1
     assert r["measure_id"][0] == "test%two.measure2"

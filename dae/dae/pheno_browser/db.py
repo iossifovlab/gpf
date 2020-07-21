@@ -13,6 +13,9 @@ from dae.pheno.common import MeasureType
 
 
 class DbManager(object):
+
+    STREAMING_CHUNK_SIZE = 25
+
     def __init__(self, dbfile):
         # assert os.path.exists(dbfile), dbfile
         self.dbfile = dbfile
@@ -141,6 +144,57 @@ class DbManager(object):
                 return None
 
     def search_measures(self, instrument_name=None, keyword=None):
+
+        query_params = []
+
+        if keyword:
+            keyword = "%{}%".format(
+                keyword.replace("%", r"\%").replace("_", r"\_")
+            )
+            if not instrument_name:
+                query_params.append(
+                    self.variable_browser.c.instrument_name.like(
+                        keyword, escape="\\"
+                    )
+                )
+            query_params.append(
+                self.variable_browser.c.measure_id.like(keyword, escape="\\")
+            )
+            query_params.append(
+                self.variable_browser.c.measure_name.like(keyword, escape="\\")
+            )
+            query_params.append(
+                self.variable_browser.c.description.like(keyword, escape="\\")
+            )
+            query = self.variable_browser.select(or_(*query_params))
+        else:
+            query = self.variable_browser.select()
+
+        if instrument_name:
+            query = query.where(
+                self.variable_browser.c.instrument_name == instrument_name
+            )
+
+        with self.engine.connect() as connection:
+            print(query)
+            cursor = connection.execution_options(stream_results=True)\
+                .execute(query)
+            rows = cursor.fetchmany(self.STREAMING_CHUNK_SIZE)
+            while rows:
+                for row in rows:
+                    yield {
+                        "measure_id": row[0],
+                        "instrument_name": row[1],
+                        "measure_name": row[2],
+                        "measure_type": row[3],
+                        "description": row[4],
+                        "values_domain": row[5],
+                        "figure_distribution_small": row[6],
+                        "figure_distribution": row[7],
+                    }
+                rows = cursor.fetchmany(self.STREAMING_CHUNK_SIZE)
+
+    def search_measures_df(self, instrument_name=None, keyword=None):
 
         query_params = []
 
