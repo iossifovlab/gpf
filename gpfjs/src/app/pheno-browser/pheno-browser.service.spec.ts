@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { PhenoBrowserService } from './pheno-browser.service';
-import { PhenoInstruments, PhenoMeasures } from './pheno-browser';
+import { PhenoInstruments, PhenoMeasures, PhenoMeasure } from './pheno-browser';
 import { ConfigService } from '../config/config.service';
 import { CookieService } from 'ngx-cookie-service';
 // tslint:disable-next-line:import-blacklist
@@ -44,13 +44,13 @@ describe('pheno browser service', () => {
   });
 
   it('should fetch measures by parameters', () => {
-    const phenoMeasuresJson = {'base_image_url': 'base', 'measures': [fakeJsonMeasure], 'has_descriptions': true, 'regression_names': []};
-    const expectedMeasures: PhenoMeasures = PhenoMeasures.fromJson(phenoMeasuresJson);
+    const phenoMeasuresJson = {'base_image_url': 'base', 'has_descriptions': true, 'regression_names': []};
+    const expectedMeasure: PhenoMeasure = PhenoMeasure.fromJson(fakeJsonMeasure);
     const response = phenoMeasuresJson;
 
     httpSpy.get.and.returnValue(of(response));
     phenoBrowserService.getMeasures(null, null, null).subscribe(
-      measures => expect(measures).toEqual(PhenoMeasures.addBasePath(expectedMeasures)),
+      measures => expect(measures).toEqual(expectedMeasure),
       fail
     );
   });

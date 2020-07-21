@@ -3,7 +3,7 @@ import { ActivatedRoute, Router, Params } from '@angular/router';
 import { Location } from '@angular/common';
 
 // tslint:disable-next-line:import-blacklist
-import { Observable, BehaviorSubject, ReplaySubject } from 'rxjs';
+import { Observable, BehaviorSubject, ReplaySubject, combineLatest, of } from 'rxjs';
 
 import { PhenoBrowserService } from './pheno-browser.service';
 import { PhenoInstruments, PhenoInstrument, PhenoMeasures } from './pheno-browser';
@@ -19,6 +19,7 @@ import { DatasetsService } from '../datasets/datasets.service';
 export class PhenoBrowserComponent implements OnInit {
 
   selectedInstrument$: BehaviorSubject<PhenoInstrument> = new BehaviorSubject<PhenoInstrument>(undefined);
+  private measuresToShow: PhenoMeasures;
   measuresToShow$: Observable<PhenoMeasures>;
 
   instruments: Observable<PhenoInstruments>;
@@ -68,6 +69,7 @@ export class PhenoBrowserComponent implements OnInit {
       .distinctUntilChanged()
       .combineLatest(this.selectedInstrument$, datasetId$)
       .do(([searchTerm, newSelection, datasetId]) => {
+        this.measuresToShow = null;
         const queryParamsObject: any = {};
         if (newSelection) {
           queryParamsObject.instrument = newSelection;
@@ -83,7 +85,21 @@ export class PhenoBrowserComponent implements OnInit {
         this.location.go(url);
       })
       .switchMap(([searchTerm, newSelection, datasetId]) => {
+        this.measuresToShow = null;
+        return combineLatest(
+            of(searchTerm),
+            of(newSelection),
+            of(datasetId),
+            this.phenoBrowserService.getMeasuresInfo(datasetId)
+        );
+      })
+      .switchMap(([searchTerm, newSelection, datasetId, measuresInfo]) => {
+        this.measuresToShow = measuresInfo;
         return this.phenoBrowserService.getMeasures(datasetId, newSelection, searchTerm);
+      })
+      .map(measure => {
+          this.measuresToShow._addMeasure(measure)
+          return this.measuresToShow;
       })
       .share();
 
