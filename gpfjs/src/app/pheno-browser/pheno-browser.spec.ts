@@ -86,10 +86,14 @@ describe('pheno measure', () => {
 
 describe('pheno measures', () => {
     
+  let base_path = '/test_base_url/';
+
   let phenoMeasure = PhenoMeasure.fromJson(fakeJsonMeasure);
 
+  phenoMeasure = PhenoMeasure.addBasePath(phenoMeasure, base_path);
+
   let phenoMeasures = PhenoMeasures.fromJson({
-    'base_image_url': '/test_base_url/',
+    'base_image_url': base_path,
     'measures': [fakeJsonMeasure],
     'has_descriptions': true,
   });
@@ -101,7 +105,7 @@ describe('pheno measures', () => {
   });
 
   it('should be able to add a base path', () => {
-    let bpMeasures = PhenoMeasures.addBasePath(phenoMeasures);
+    let bpMeasures = phenoMeasures;
     let bpMeasure = bpMeasures.measures[0];
     expect(bpMeasure.figureDistribution).toBe(environment.basePath + '/test_base_url/test.jpg');
     expect(bpMeasure.figureDistributionSmall).toBe(null);
