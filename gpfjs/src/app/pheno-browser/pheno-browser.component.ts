@@ -98,6 +98,9 @@ export class PhenoBrowserComponent implements OnInit {
         return this.phenoBrowserService.getMeasures(datasetId, newSelection, searchTerm);
       })
       .map(measure => {
+          if(this.measuresToShow === null) {
+            return null;
+          }
           this.measuresToShow._addMeasure(measure)
           return this.measuresToShow;
       })

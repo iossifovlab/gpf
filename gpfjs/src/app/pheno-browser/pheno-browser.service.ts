@@ -55,6 +55,7 @@ export class PhenoBrowserService {
       withCredentials: true,
     }).start(data => {
       this.connectionEstablished = true;
+      this.measuresStreamingFinishedSubject.next(false);
     }).node('!.*', data => {
       measuresSubject.next(data);
     }).done(data => {
