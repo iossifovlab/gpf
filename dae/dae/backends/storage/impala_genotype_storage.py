@@ -203,12 +203,19 @@ class ImpalaGenotypeStorage(GenotypeStorage):
 
         return config_builder.build_config()
 
-    def default_pedigree_hdfs_filename(self, study_id):
+    def default_hdfs_study_path(self, study_id):
         study_path = os.path.join(self.storage_config.hdfs.base_dir, study_id)
+        # study_path = \
+        #     f"hdfs://{self.storage_config.hdfs.host}:" \
+        #     f"{self.storage_config.hdfs.port}{study_path}"
+        return study_path
+
+    def default_pedigree_hdfs_filename(self, study_id):
+        study_path = self.default_hdfs_study_path(study_id)
         return os.path.join(study_path, "pedigree", "pedigree.parquet")
 
     def default_variants_hdfs_dirname(self, study_id):
-        study_path = os.path.join(self.storage_config.hdfs.base_dir, study_id)
+        study_path = self.default_hdfs_study_path(study_id)
         return os.path.join(study_path, "variants")
 
     def _build_hdfs_pedigree(

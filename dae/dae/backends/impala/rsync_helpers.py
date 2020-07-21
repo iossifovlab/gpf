@@ -1,7 +1,7 @@
 import os
 import subprocess
 
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urlunparse
 
 
 class RsyncHelpers:
@@ -27,6 +27,19 @@ class RsyncHelpers:
         self.rsync_remote_shell = None
         if parsed_remote.port and parsed_remote.port != 22:
             self.rsync_remote_shell = f"ssh -p {parsed_remote.port}"
+
+    def hosturl(self):
+        print(self.parsed_remote)
+
+        return urlunparse(
+            (
+                self.parsed_remote.scheme,
+                self.parsed_remote.netloc,
+                "",  # path
+                "",  # params
+                "",  # query
+                "",  # fragment identifier
+            ))
 
     def _exclude_options(self, exclude=[]):
         if not exclude:

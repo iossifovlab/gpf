@@ -1,3 +1,5 @@
+import pytest
+
 from dae.backends.impala.rsync_helpers import RsyncHelpers
 
 
@@ -74,3 +76,21 @@ def test_rsync_remote_subdir(temp_dirname):
         temp_dirname, remote_subdir="/user/data-hg19-test/studies/")
 
     print(cmd)
+
+
+@pytest.mark.parametrize(
+    "location,expected", [
+        (
+            "ssh://root@seqclust0.seqpipe.org/mnt/hdfs2nfs",
+            "ssh://root@seqclust0.seqpipe.org"),
+        (
+            "//seqclust0.seqpipe.org/mnt/hdfs2nfs",
+            "//seqclust0.seqpipe.org"),
+        (
+            "/mnt/hdfs2nfs",
+            ""),
+    ],
+)
+def test_rsync_build_location_base(location, expected):
+    helpers = RsyncHelpers(location)
+    assert helpers.hosturl() == expected
