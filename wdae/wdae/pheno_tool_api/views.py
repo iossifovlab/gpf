@@ -171,3 +171,199 @@ class PhenoToolDownload(PhenoToolView):
         ] = "attachment; filename=pheno_report.csv"
         response["Expires"] = "0"
         return response
+
+
+class PhenoToolPersons(QueryBaseView):
+    def post(self, request):
+        data = request.data
+        dataset_id = data["datasetId"]
+        dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
+        if not dataset:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        result = dataset.phenotype_data.get_persons(
+            data["roles"],
+            data["personIds"],
+            data["familyIds"],
+        )
+
+        for key in result.keys():
+            person = result[key]
+            result[key] = {
+                "family_id": person.family_id,
+                "person_id": person.person_id,
+                "sex": person.sex,
+                "role": person.role,
+                "status": person.status,
+            }
+
+        return Response(result)
+
+
+class PhenoToolPersonsValues(QueryBaseView):
+    def post(self, request):
+        data = request.data
+        dataset_id = data["datasetId"]
+        dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
+        if not dataset:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        result = dataset.phenotype_data.get_persons_values_df(
+            data["measureIds"],
+            data["personIds"],
+            data["familyIds"],
+            data["roles"],
+        )
+
+        return Response(result.to_dict("records"))
+
+
+class PhenoToolMeasure(QueryBaseView):
+    def get(self, request):
+        params = request.GET
+        dataset_id = params.get("datasetId", None)
+        if not dataset_id:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
+        if not dataset:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        measure_id = params.get("measureId", None)
+        if not measure_id:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        if not dataset.phenotype_data.has_measure(measure_id):
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        result = dataset.phenotype_data.get_measure(
+            measure_id,
+        )
+
+        return Response(result.to_dict())
+
+
+class PhenoToolMeasures(QueryBaseView):
+    def get(self, request):
+        params = request.GET
+        dataset_id = params.get("datasetId", None)
+        if not dataset_id:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
+        if not dataset:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        instrument = params.get("instrument", None)
+
+        if instrument not in dataset.phenotype_data.instruments:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        measure_type = params.get("measureType", None)
+        if not measure_type:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        result = dataset.phenotype_data.get_measures(
+            instrument,
+            measure_type,
+        )
+
+        return Response(result.to_dict())
+
+
+class PhenoToolMeasureValues(QueryBaseView):
+    def post(self, request):
+        data = request.data
+        dataset_id = data["datasetId"]
+        dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
+        if not dataset:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        result = dataset.phenotype_data.get_measure_values(
+            data["measureId"],
+            data["personIds"],
+            data["familyIds"],
+            data["roles"],
+        )
+
+        return Response(result)
+
+
+class PhenoToolValues(QueryBaseView):
+    def post(self, request):
+        data = request.data
+        dataset_id = data["datasetId"]
+        dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
+        if not dataset:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        result = dataset.phenotype_data.get_values_df(
+            data["measureIds"],
+            data["personIds"],
+            data["familyIds"],
+            data["roles"],
+        )
+
+        return Response(result.to_dict("records"))
+
+
+class PhenoToolInstruments(QueryBaseView):
+
+    def measure_to_json(self, measure):
+        return {
+            "measureId": measure.measure_id,
+            "instrumentName": measure.instrument_name,
+            "measureName": measure.measure_name,
+            "measureType": measure.measure_type,
+            "description": measure.description,
+            "defaultFilter": measure.default_filter,
+            "valuesDomain": measure.values_domain,
+            "minValue": measure.min_value,
+            "maxValue": measure.max_value
+        }
+
+    def get(self, request):
+        params = request.GET
+        dataset_id = params.get("datasetId", None)
+        if not dataset_id:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
+        if not dataset:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        instruments = dataset.phenotype_data.instruments
+
+        result = dict()
+
+        for i in instruments:
+            result[i.instrument_name] = {
+                "name": i.instrument_name,
+                "measures": [self.measure_to_json(m) for m in i.measures]
+            }
+
+        return Response(result)
+
+
+class PhenoToolInstrumentValues(QueryBaseView):
+    def post(self, request):
+        data = request.data
+        dataset_id = data["datasetId"]
+        if not dataset_id:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
+        if not dataset:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        instrument_name = data["instrumentName"]
+
+        instruments = dataset.phenotype_data.instruments
+
+        if instrument_name not in instruments:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        result = dataset.phenotype_data.instrument_values(
+            instrument_name,
+            data["personIds"],
+            data["familyIds"],
+            data["roles"],
+        )
+
+        return Response(result)
