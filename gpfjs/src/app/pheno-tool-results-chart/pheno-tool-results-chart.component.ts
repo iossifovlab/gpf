@@ -8,7 +8,7 @@ import * as d3 from 'd3';
   styleUrls: ['./pheno-tool-results-chart.component.css']
 })
 export class PhenoToolResultsChartComponent implements OnInit {
-  @ViewChild('innerGroup') innerGroup: any;
+  @ViewChild('innerGroup', {static: true}) innerGroup: any;
   @Input() phenoToolResults: PhenoToolResults;
   @Input() width = 1060;
   @Input() height = 700;

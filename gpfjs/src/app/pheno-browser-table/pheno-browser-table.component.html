@@ -48,7 +48,7 @@
             </gpf-table-subcontent>
         </gpf-table-content>
     </gpf-table-column>
-    <div *ngFor="let regressionId of getRegressionIds()">
+    <ng-container *ngFor="let regressionId of getRegressionIds()">
         <gpf-table-column>
             <gpf-table-header caption="Regression by {{getRegressionName(regressionId)}}"></gpf-table-header>
             <gpf-table-content>
@@ -81,5 +81,5 @@
                 </gpf-table-subcontent>
             </gpf-table-content>
         </gpf-table-column>
-    </div>
+    </ng-container>
 </gpf-table>

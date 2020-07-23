@@ -43,4 +43,20 @@ export class UsersActionsComponent implements OnInit {
     });
   }
 
+  getUserString(user: User) {
+    let user_string = `${user.name || user.email}`
+    if(user.name) {
+      user_string = `(${user.email}) ` + user_string
+    }
+    return user_string;
+  }
+
+  resetPasswordPopoverMessage(user: User) {
+    return `${this.getUserString(user)}'s password will be reset. An email with reset instructions will be sent and they won't be able to login until they set a new password.`
+  }
+
+  deleteUserPopoverMessage(user: User) {
+    return `${this.getUserString(user)} will be deleted. This action is irrevertible!`
+  }
+
 }

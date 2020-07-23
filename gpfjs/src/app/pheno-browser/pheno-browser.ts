@@ -76,7 +76,6 @@ export class PhenoInstruments {
 export class PhenoMeasure {
 
   static fromJson(json: Object): PhenoMeasure {
-    console.log(json);
     return new PhenoMeasure(
       json['Index'] as number,
       json['instrument_name'],

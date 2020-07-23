@@ -8,7 +8,7 @@
     <div style="left: calc(50% - 5px)" class="arrow"></div>
     <h3 class="popover-header" [innerHTML]="options.title"></h3>
     <div class="popover-body">
-      <p [innerHTML]="options.message"></p>
+      <p [innerHTML]="options.popoverMessage"></p>
       <div class="row">
         <div
           class="col-xs-12 col-12 text-center">
@@ -38,7 +38,7 @@
   title="Reset password"
   appendToBody="true"
   [customTemplate]="confirmation"
-  message="{{ user.name }}'s ({{ user.email }}) password will be reset. An email with reset instructions will be sent and they won't be able to login until they set a new password."
+  [popoverMessage]="resetPasswordPopoverMessage(user)"
   (confirm)="resetPassword(user)">
   <i class="fa fa-refresh fa-lg" aria-hidden="true"></i>
 </a>
@@ -51,7 +51,7 @@
   title="Delete user"
   appendToBody="true"
   [customTemplate]="confirmation"
-  message="{{ user.name }} ({{ user.email }}) will be deleted. This action is irrevertible!"
+  [popoverMessage]="deleteUserPopoverMessage(user)"
   (confirm)="deleteUser(user)">
   <i class="fa fa-times fa-lg" aria-hidden="true"></i>
 </a>

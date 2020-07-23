@@ -1,4 +1,6 @@
-<textarea #regionsFilterInput="ngModel" type="text" [(ngModel)]="regionsFilter.regionsFilter" class="form-control">
-</textarea>
+<div id="regions-filter-panel">
+    <textarea #regionsFilterInput="ngModel" type="text" [(ngModel)]="regionsFilter.regionsFilter" class="form-control">
+    </textarea>
 
-<gpf-errors-alert [errors]="errors"></gpf-errors-alert>
+    <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
+</div>

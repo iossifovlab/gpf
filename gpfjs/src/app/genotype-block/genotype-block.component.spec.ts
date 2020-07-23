@@ -26,7 +26,7 @@ describe('GenotypeBlockComponent', () => {
         PedigreeSelectorComponent,
       ],
       imports: [
-        NgbModule.forRoot(),
+        NgbModule,
 
 
       ],

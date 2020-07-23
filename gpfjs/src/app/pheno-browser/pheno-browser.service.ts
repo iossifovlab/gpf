@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 // tslint:disable-next-line:import-blacklist
 import { Observable, Subject } from 'rxjs';
-import { CookieService } from 'ngx-cookie';
+import { CookieService } from 'ngx-cookie-service';
 
 const oboe = require('oboe');
 
@@ -55,6 +55,7 @@ export class PhenoBrowserService {
       withCredentials: true,
     }).start(data => {
       this.connectionEstablished = true;
+      this.measuresStreamingFinishedSubject.next(false);
     }).node('!.*', data => {
       measuresSubject.next(data);
     }).done(data => {

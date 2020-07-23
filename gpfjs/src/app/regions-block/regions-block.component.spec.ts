@@ -15,7 +15,7 @@ describe('RegionsBlockComponent', () => {
     TestBed.configureTestingModule({
       declarations: [RegionsBlockComponent],
       imports: [
-        NgbModule.forRoot(),
+        NgbModule,
 
       ],
     })

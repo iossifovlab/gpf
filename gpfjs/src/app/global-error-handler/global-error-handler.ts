@@ -6,15 +6,16 @@ import { GlobalErrorDisplayComponent } from 'app/global-error-display/global-err
 export class GlobalErrorHandler implements ErrorHandler {
   constructor(
     private injector: Injector,
-    private modalService: NgbModal
   ) { }
 
-  handleError(error: any): void {
-    // console.error(error);
+  modalService: NgbModal;
 
-    // this.modalService = this.injector.get(NgbModal);
-    // if (!this.modalService.hasOpenModals()) {
-    //   this.modalService.open(GlobalErrorDisplayComponent, {centered: true, size: 'sm', windowClass: 'global-error-modal'});
-    // }
+  handleError(error: any): void {
+    console.error(error);
+
+    this.modalService = this.injector.get(NgbModal);
+    if (!this.modalService.hasOpenModals()) {
+      this.modalService.open(GlobalErrorDisplayComponent, {centered: true, size: 'sm', windowClass: 'global-error-modal'});
+    }
   }
 }

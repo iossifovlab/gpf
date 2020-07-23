@@ -3,7 +3,7 @@ import { FormsModule } from '@angular/forms';
 
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
-import { NgxMdModule } from 'ngx-md';
+import { MarkdownModule } from 'ngx-markdown';
 
 // tslint:disable-next-line:import-blacklist
 import { Observable } from 'rxjs';
@@ -19,7 +19,6 @@ import { HistogramRangeSelectorLineComponent } from 'app/histogram/histogram-ran
 import { ErrorsAlertComponent } from 'app/errors-alert/errors-alert.component';
 import { AddButtonComponent } from 'app/add-button/add-button.component';
 import { RemoveButtonComponent } from 'app/remove-button/remove-button.component';
-import { GpfTabsetComponent } from 'app/tabset/tabset.component';
 import { StateRestoreService } from 'app/store/state-restore.service';
 
 const GENOMIC_SCORES_OBJECTS: GenomicScores[] = [GenomicScores.fromJson({
@@ -64,12 +63,11 @@ describe('GenomicScoresBlockComponent', () => {
         ErrorsAlertComponent,
         AddButtonComponent,
         RemoveButtonComponent,
-        GpfTabsetComponent,
       ],
       imports: [
-        NgbModule.forRoot(),
+        NgbModule,
         FormsModule,
-        NgxMdModule
+        MarkdownModule
       ],
       providers: [
         { provide: GenomicScoresBlockService, useClass: MockGenomicScoresBlockService },

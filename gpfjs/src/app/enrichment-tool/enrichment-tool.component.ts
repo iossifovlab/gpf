@@ -47,9 +47,7 @@ export class EnrichmentToolComponent extends QueryStateCollector implements OnIn
 
     return state
       .map(state => {
-        const stateObject = Object.assign(
-          { datasetId: this.selectedDatasetId },
-          ...state);
+        const stateObject = Object.assign({ datasetId: this.selectedDatasetId }, state);
         return stateObject;
       });
   }
@@ -65,6 +63,7 @@ export class EnrichmentToolComponent extends QueryStateCollector implements OnIn
             this.loadingService.setLoadingStop();
           },
           error => {
+            console.error(error);
             this.loadingService.setLoadingStop();
           },
           () => {
@@ -72,6 +71,7 @@ export class EnrichmentToolComponent extends QueryStateCollector implements OnIn
           });
       },
       error => {
+        console.error(error);
         this.loadingService.setLoadingStop();
       }
     );

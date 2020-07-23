@@ -21,7 +21,7 @@ import { GpfTableSubcontentComponent } from '../table/component/subcontent.compo
 import { GpfTableSubheaderComponent } from '../table/component/subheader.component';
 import { NumberWithExpPipe } from '../utils/number-with-exp.pipe';
 import { PValueIntensityPipe } from '../utils/p-value-intensity.pipe';
-import { ActivatedRoute, Router, Event } from '@angular/router';
+import { ActivatedRoute, Router, Event, UrlTree } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
 import { Location } from '@angular/common';
 import { Observable, of } from 'rxjs';
@@ -102,8 +102,8 @@ function setQuery(fixture: ComponentFixture<PhenoBrowserComponent>, instrument: 
 describe('PhenoBrowserComponent', () => {
   let component: PhenoBrowserComponent;
   let fixture: ComponentFixture<PhenoBrowserComponent>;
-  let router: MockRouter;
-  let location: jasmine.SpyObj<Location>;
+  let router;
+  let location: Location;
   let activatedRoute = new MockActivatedRoute();
   const phenoBrowserServiceMock = new MockPhenoBrowserService();
   const datasetServiceMock = new MockDatasetsService();
@@ -137,8 +137,8 @@ describe('PhenoBrowserComponent', () => {
     })
     .compileComponents();
 
-    router = TestBed.get(Router);
-    location = TestBed.get(Location);
+    router = TestBed.inject(Router);
+    location = TestBed.inject(Location);
   
     fixture = TestBed.createComponent(PhenoBrowserComponent);
     component = fixture.componentInstance;

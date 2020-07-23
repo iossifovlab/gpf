@@ -1,17 +1,17 @@
-<div class="input-group" style="width: 100%; max-width: 100%;">
+<div class="input-group mr-3" style="width: 100%; max-width: 100%;">
   <input [hidden]="caption" #searchBox id="search-box" autocomplete="off"
     (keyup)="searchBoxChange(searchBox.value)"
-    style="width: 100%"
+    style="width: 90%"
     placeholder="Select or start typing to search"
     (click)="searchBox.value=''; onFocus($event)" />
 
   <span [hidden]="!caption" id="selected-value"
-    style="width: 100%"
+    style="width: 90%"
     class="clickable"
     (click)="searchBox.value = ''; onFocus($event)">{{ caption }}</span>
 
-  <span ngbDropdown placement="bottom-right" class="input-group-btn" style="position: static;">
-    <button type="button" class="btn" ngbDropdownToggle style="height: 100%;">
+  <div ngbDropdown role="group" placement="bottom-right" class="input-group-append" style="position: static;">
+    <button type="button" class="btn btn-info dropdown-toggle-split" ngbDropdownToggle>
       <span class="caret"></span>
     </button>
     <div ngbDropdownMenu style="width: 100%; overflow-x: hidden; max-height: 300px; overflow-y: scroll;">
@@ -24,5 +24,5 @@
         </ng-template>
        </button>
     </div>
-  </span>
+  </div>
 </div>
