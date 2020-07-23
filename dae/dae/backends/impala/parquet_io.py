@@ -1,8 +1,11 @@
 import os
 import sys
 import time
+import re
 import hashlib
+import itertools
 
+import toml
 from box import Box
 
 import numpy as np
@@ -25,6 +28,12 @@ class PartitionDescriptor:
     def __init__(self):
         pass
 
+    def has_partitions(self):
+        raise NotImplementedError()
+
+    def build_impala_partitions(self):
+        raise NotImplementedError()
+
     @property
     def chromosomes(self):
         raise NotImplementedError()
@@ -41,9 +50,12 @@ class PartitionDescriptor:
 
 
 class NoPartitionDescriptor(PartitionDescriptor):
-    def __init__(self, output):
+    def __init__(self, root_dirname=""):
         super(NoPartitionDescriptor, self).__init__()
-        self.output = output
+        self.output = root_dirname
+
+    def has_partitions(self):
+        return False
 
     @property
     def chromosomes(self):
@@ -54,22 +66,42 @@ class NoPartitionDescriptor(PartitionDescriptor):
         return 3_000_000_000
 
     def variant_filename(self, family_allele):
-        return self.output
+        bucket_index = family_allele.get_attribute("bucket_index")
+        filename = f"nopart_{bucket_index:0>6}_variants.parquet"
+        return os.path.join(self.output, filename)
 
     def write_partition_configuration(self):
         return None
 
+    def generate_file_access_glob(self):
+        """
+        Generates a glob for accessing every parquet file in the partition
+        """
+        return "*variants.parquet"
+
+    def variants_filename_basedir(self, filename):
+        regexp = re.compile(
+            "^(?P<basedir>.+)/(?P<prefix>.+)variants.parquet$")
+        match = regexp.match(filename)
+        if not match:
+            return None
+
+        assert "basedir" in match.groupdict()
+        basedir = match.groupdict()["basedir"]
+        if basedir and basedir[-1] != "/":
+            basedir += "/"
+        return basedir
+
 
 class ParquetPartitionDescriptor(PartitionDescriptor):
     def __init__(
-        self,
-        chromosomes,
-        region_length,
-        family_bin_size=0,
-        coding_effect_types=[],
-        rare_boundary=0,
-        root_dirname="",
-    ):
+            self,
+            chromosomes,
+            region_length,
+            family_bin_size=0,
+            coding_effect_types=[],
+            rare_boundary=0,
+            root_dirname=""):
 
         super(ParquetPartitionDescriptor, self).__init__()
         self.output = root_dirname
@@ -78,6 +110,21 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
         self._family_bin_size = family_bin_size
         self._coding_effect_types = coding_effect_types
         self._rare_boundary = rare_boundary
+
+    def has_partitions(self):
+        return True
+
+    def build_impala_partitions(self):
+        partitions = ["region_bin string"]
+
+        if not self.rare_boundary <= 0:
+            partitions.append("frequency_bin tinyint")
+        if not self.coding_effect_types == []:
+            partitions.append("coding_bin tinyint")
+        if not self.family_bin_size <= 0:
+            partitions.append("family_bin tinyint")
+
+        return ", ".join(partitions)
 
     @property
     def chromosomes(self):
@@ -201,6 +248,63 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
         filename += ".parquet"
 
         return os.path.join(filepath, filename)
+
+    def _variants_partition_bins(self):
+        partition_bins = []
+        region_bins = [
+            ("region_bin", f"{chrom}_0") for chrom in self._chromosomes
+        ]
+        partition_bins.append(region_bins)
+
+        if self._rare_boundary > 0:
+            frequency_bins = [
+                ("frequency_bin", "1"),
+                ("frequency_bin", "2"),
+                ("frequency_bin", "3")
+            ]
+            partition_bins.append(frequency_bins)
+        if len(self._coding_effect_types) > 0:
+            coding_bins = [
+                ("coding_bin", "0"),
+                ("coding_bin", "1")
+            ]
+            partition_bins.append(coding_bins)
+        if self._family_bin_size > 0:
+            family_bins = [
+                ("family_bin", f"{fb}")
+                for fb in range(self._family_bin_size)
+            ]
+            partition_bins.append(family_bins)
+        return partition_bins
+
+    def _variants_filenames_regexp(self):
+        partition_bins = self._variants_partition_bins()
+        product = next(itertools.product(*partition_bins))
+        dirname_parts = [
+            f"{p[0]}=(?P<{p[0]}>.+)" for p in product
+        ]
+        filename_parts = [
+            f"{p[0]}_(?P={p[0]})" for p in product
+        ]
+        dirname = "/".join(dirname_parts)
+        dirname = os.path.join(f"^(?P<basedir>.+)", dirname)
+        filename = "_".join(filename_parts)
+        filename = f"variants_{filename}\\.parquet$"
+
+        filename = os.path.join(dirname, filename)
+        return re.compile(filename, re.VERBOSE)
+
+    def variants_filename_basedir(self, filename):
+        regexp = self._variants_filenames_regexp()
+        match = regexp.match(filename)
+        if not match:
+            return None
+
+        assert "basedir" in match.groupdict()
+        basedir = match.groupdict()["basedir"]
+        if basedir and basedir[-1] != "/":
+            basedir += "/"
+        return basedir
 
     def write_partition_configuration(self):
         config = configparser.ConfigParser()
@@ -473,11 +577,17 @@ class VariantsParquetWriter:
 
         return filenames
 
-    def write_blob_schema(self):
-        config = configparser.ConfigParser()
-        schema = self.serializer.describe_blob_schema()
+    def write_schema(self):
+        config = dict()
 
-        config.add_section("blob")
+        schema = self.serializer.schema
+        config["variants_schema"] = {}
+        for k in schema.names:
+            v = schema.field(k)
+            config["variants_schema"][k] = str(v.type)
+
+        schema = self.serializer.describe_blob_schema()
+        config["blob"] = {}
         for k, v in schema.items():
             config["blob"][k] = v
 
@@ -485,17 +595,17 @@ class VariantsParquetWriter:
             path = self.partition_descriptor.output
         else:
             path = os.path.dirname(self.partition_descriptor.output)
-
         filename = os.path.join(path, "_VARIANTS_SCHEMA")
 
         with open(filename, "w") as configfile:
-            config.write(configfile)
+            content = toml.dumps(config)
+            configfile.write(content)
 
     def write_dataset(self):
         filenames = self._write_internal()
 
         self.partition_descriptor.write_partition_configuration()
-        self.write_blob_schema()
+        self.write_schema()
 
         return filenames
 
@@ -503,8 +613,8 @@ class VariantsParquetWriter:
 class ParquetManager:
     @staticmethod
     def build_parquet_filenames(
-        prefix, study_id=None, bucket_index=0, suffix=None
-    ):
+            prefix, study_id=None, bucket_index=0, suffix=None):
+
         assert bucket_index >= 0
 
         basename = os.path.basename(os.path.abspath(prefix))
@@ -521,14 +631,16 @@ class ParquetManager:
         else:
             filesuffix = f"_{bucket_index:0>6}{suffix}"
 
+        variants_dirname = os.path.join(prefix, "variants")
         variant_filename = os.path.join(
-            prefix, "variant", f"{study_id}_variant{filesuffix}.parquet"
-        )
+            variants_dirname, f"{study_id}{filesuffix}_variants.parquet")
+
         pedigree_filename = os.path.join(
-            prefix, "pedigree", f"{study_id}_pedigree{filesuffix}.parquet"
-        )
+            prefix, "pedigree", f"{study_id}{filesuffix}_pedigree.parquet")
+
         conf = {
-            "variant": variant_filename,
+            "variants_dirname": variants_dirname,
+            "variants": variant_filename,
             "pedigree": pedigree_filename,
         }
 
@@ -544,35 +656,7 @@ class ParquetManager:
         save_ped_df_to_parquet(families.ped_df, pedigree_filename)
 
     @staticmethod
-    def variants_to_parquet_filename(
-            variants_loader, variants_filename,
-            bucket_index=0, rows=100_000, include_reference=False):
-
-        assert variants_loader.annotation_schema is not None
-
-        dirname = os.path.dirname(variants_filename)
-        os.makedirs(dirname, exist_ok=True)
-
-        start = time.time()
-        partition_descriptor = NoPartitionDescriptor(variants_filename)
-
-        variants_writer = VariantsParquetWriter(
-            variants_loader,
-            partition_descriptor,
-            bucket_index=bucket_index,
-            rows=rows,
-            include_reference=include_reference)
-
-        variants_writer.write_dataset()
-        end = time.time()
-
-        print(
-            "DONE: {} for {:.2f} sec".format(variants_filename, end - start),
-            file=sys.stderr,
-        )
-
-    @staticmethod
-    def variants_to_parquet_partition(
+    def variants_to_parquet(
             variants_loader, partition_descriptor,
             bucket_index=1, rows=100_000, include_reference=False):
 

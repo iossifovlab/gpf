@@ -1,4 +1,5 @@
 import os
+import glob
 
 import pyarrow.parquet as pq
 
@@ -29,9 +30,11 @@ def test_vcf2parquet_vcf(
         gpf_instance=gpf_instance_2013
     )
 
-    assert os.path.exists(temp_filename)
+    files_glob = os.path.join(temp_filename, "*variants.parquet")
+    parquet_files = glob.glob(files_glob)
+    assert len(parquet_files) == 1
 
-    pqfile = pq.ParquetFile(temp_filename)
+    pqfile = pq.ParquetFile(parquet_files[0])
     schema = pqfile.schema
 
     assert "score0" in schema.names
