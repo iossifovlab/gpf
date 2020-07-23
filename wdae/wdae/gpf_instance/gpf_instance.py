@@ -167,6 +167,8 @@ class WGPFInstance(GPFInstance):
 
         if not result:
             study_wrapper = self.get_wdae_wrapper(dataset_id)
+            if study_wrapper is None:
+                return None
             if "enrichment" in study_wrapper.config:
                 result = study_wrapper.config["enrichment"]
 
