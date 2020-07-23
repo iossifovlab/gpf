@@ -29,7 +29,6 @@ class EnrichmentBuilder(BaseEnrichmentBuilder):
             effect_types=effect_types)
 
     def build_people_group_selector(self, effect_types, person_set):
-
         children_stats = self.gh.get_children_stats(person_set.id)
         children_count = (
             children_stats["M"] + children_stats["F"] + children_stats["U"]
@@ -57,7 +56,7 @@ class EnrichmentBuilder(BaseEnrichmentBuilder):
 
         return results
 
-    def build(self):
+    def _build_results(self):
         results = []
         enrichment_config = self.tool.config
         assert enrichment_config is not None
@@ -68,6 +67,11 @@ class EnrichmentBuilder(BaseEnrichmentBuilder):
             res = self.build_people_group_selector(effect_types, person_set)
             if res:
                 results.append(res)
+
+        return results
+
+    def build(self):
+        results = self._build_results()
 
         serializer = EnrichmentSerializer(self.tool.config, results)
         results = serializer.serialize()

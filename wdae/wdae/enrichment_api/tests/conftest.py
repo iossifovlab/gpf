@@ -41,7 +41,7 @@ def enrichment_serializer(background_facade, enrichment_builder):
     enrichment_config = background_facade.get_study_enrichment_config(
         "f1_trio"
     )
-    build = enrichment_builder.build()
+    build = enrichment_builder._build_results()
     serializer = EnrichmentSerializer(enrichment_config, build)
 
     return serializer
