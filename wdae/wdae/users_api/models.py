@@ -25,7 +25,7 @@ from utils.logger import LOGGER
 
 
 class WdaeUserManager(BaseUserManager):
-    def _create_user(self, email, password, researcher_id=None, **kwargs):
+    def _create_user(self, email, password, **kwargs):
         """
         Creates and saves a User with the given email and password.
         """
@@ -43,17 +43,18 @@ class WdaeUserManager(BaseUserManager):
         groups = list(user.DEFAULT_GROUPS_FOR_USER)
         groups.append(email)
 
-        if researcher_id is not None:
-            groups.append(
-                self.model.get_group_name_for_researcher_id(researcher_id)
-            )
-
         for group_name in groups:
             group, _ = Group.objects.get_or_create(name=group_name)
             group.user_set.add(user)
             group.save()
 
         return user
+
+    def get_or_create(self, **kwargs):
+        try:
+            return self.get(**kwargs), False
+        except WdaeUser.DoesNotExist:
+            return self.create_user(**kwargs), True
 
     def create(self, **kwargs):
         return self.create_user(**kwargs)
@@ -87,27 +88,10 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
     REQUIRED_FIELDS = ["name"]
 
     DEFAULT_GROUPS_FOR_USER = ("any_user",)
-    RESEARCHER_GROUP_PREFIX = "SFID#"
     SUPERUSER_GROUP = "admin"
     UMLIMITTED_DOWNLOAD_GROUP = "unlimitted"
 
     objects = WdaeUserManager()
-
-    @property
-    def is_researcher(self):
-        return self.groups.filter(
-            name__startswith=WdaeUser.RESEARCHER_GROUP_PREFIX
-        ).exists()
-
-    @property
-    def researcher_id(self):
-        if not self.is_researcher:
-            return None
-        group = self.groups.get(
-            name__startswith=WdaeUser.RESEARCHER_GROUP_PREFIX
-        )
-
-        return group.name[len(WdaeUser.RESEARCHER_GROUP_PREFIX) :]
 
     def get_protected_group_names(self):
         return self.DEFAULT_GROUPS_FOR_USER + (self.email,)
@@ -161,11 +145,14 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
             self.is_active = False
 
     def reset_password(self, by_admin=False):
-        self.set_unusable_password()
-        self.save()
+        if not self.is_active:
+            send_reset_inactive_acc_email(self)
+        else:
+            self.set_unusable_password()
+            self.save()
 
-        verif_path = _create_verif_path(self)
-        send_reset_email(self, verif_path, by_admin)
+            verif_path = _create_verif_path(self)
+            send_reset_email(self, verif_path, by_admin)
 
     def deauthenticate(self):
         all_sessions = Session.objects.all()
@@ -175,14 +162,17 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
                 session.delete()
 
     def register_preexisting_user(self, name):
-        self.date_joined = timezone.now()
-        if name is not None and name != "":
-            self.name = name
+        if self.is_active:
+            send_already_existing_email(self)
+        else:
+            self.date_joined = timezone.now()
+            if name is not None and name != "":
+                self.name = name
 
-        verif_path = _create_verif_path(self)
-        send_verif_email(self, verif_path)
+            verif_path = _create_verif_path(self)
+            send_verif_email(self, verif_path)
 
-        self.save()
+            self.save()
 
     @staticmethod
     def change_password(verification_path, new_password):
@@ -195,10 +185,6 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
         verif_path.delete()
 
         return user
-
-    @classmethod
-    def get_group_name_for_researcher_id(cls, researcher_id):
-        return cls.RESEARCHER_GROUP_PREFIX + researcher_id
 
     def __str__(self):
         return self.email
@@ -216,6 +202,32 @@ def send_verif_email(user, verif_path):
     user.email_user(email["subject"], email["message"])
 
 
+def send_already_existing_email(user):
+    subject = "GPF: Attempted registration with email in use"
+    message = (
+        "Hello. Someone has attempted to create an account in GPF "
+        "using an email that your account was registered with.  "
+        "If this was you, you can simply log in to your existing account, "
+        "or if you've forgotten your password, you can reset it "
+        "by using the 'Forgotten password' button on the login window. \n"
+        "Otherwise, please ignore this email."
+    )
+    user.email_user(subject, message)
+
+
+def send_reset_inactive_acc_email(user):
+    subject = "GPF: Password reset for inactive account"
+    message = (
+        "Hello. You've requested a password reset for an inactive account. "
+        "You must first finish your registration by following the "
+        "account validation link in the email you received when registering. "
+        "If you have lost that email or the link in it has expired, you can "
+        "register again to get a new validation email sent. \n"
+        "If you did not request this, please ignore this email."
+    )
+    user.email_user(subject, message)
+
+
 def send_reset_email(user, verif_path, by_admin=False):
     """ Returns dict - subject and message of the email """
     email = _create_reset_mail(
@@ -229,11 +241,15 @@ def send_reset_email(user, verif_path, by_admin=False):
 
 
 def _create_verif_email(host, path, verification_path):
+    message = (
+        "Welcome to GPF: Genotype and Phenotype in Families! "
+        "Follow the link below to validate your new account "
+        "and set your password:\n {link}"
+    )
+
     settings = {
         "subject": "GPF: Registration validation",
-        "initial_message": "Hello. Follow this link to validate "
-        "your account in GPF: Genotype and Phenotype in Families "
-        "and to set your new password: ",
+        "initial_message": message,
         "host": host,
         "path": path,
         "verification_path": verification_path,
@@ -244,19 +260,20 @@ def _create_verif_email(host, path, verification_path):
 
 def _create_reset_mail(host, path, verification_path, by_admin=False):
     message = (
-        "Hello. To change your password in "
-        "GPF: Genotype and Phenotype in Families "
-        "please follow this link: "
+        "Hello. You have requested to reset your password for "
+        "your GPF account. To do so, please follow the link below:\n {link}\n"
+        "If you did not request for your GPF account password to be reset, "
+        "please ignore this email."
     )
     if by_admin:
         message = (
             "Hello. Your password has been reset by an admin. Your old "
             "password will not work. To set a new password in "
             "GPF: Genotype and Phenotype in Families "
-            "please follow this link: "
+            "please follow the link below:\n {link}"
         )
     settings = {
-        "subject": "GPF: Password reset",
+        "subject": "GPF: Password reset request",
         "initial_message": message,
         "host": host,
         "path": path,
@@ -275,7 +292,7 @@ def _build_email_template(settings):
     message = settings["initial_message"]
     path = settings["path"].format(settings["verification_path"])
 
-    message += "{0}{1}".format(settings["host"], path)
+    message = message.format(link="{0}{1}".format(settings["host"], path))
 
     return {"subject": subject, "message": message}
 

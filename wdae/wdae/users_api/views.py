@@ -1,3 +1,4 @@
+import re
 from functools import wraps
 
 from django.db import IntegrityError, transaction
@@ -5,6 +6,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import BaseUserManager, Group
 from django.shortcuts import get_object_or_404, get_list_or_404
 from django.views.decorators.csrf import ensure_csrf_cookie
+from django.conf import settings
 import django.contrib.auth
 
 from rest_framework.decorators import action
@@ -26,7 +28,14 @@ from .serializers import BulkGroupOperationSerializer
 from utils.logger import log_filter, LOGGER, request_logging
 from utils.logger import request_logging_function_view
 
-from django.utils.decorators import available_attrs, decorator_from_middleware
+from django.utils.decorators import available_attrs
+
+
+def is_email_valid(email: str) -> bool:
+    email_regex = \
+        (r"[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:"
+         r"[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?")
+    return bool(re.search(email_regex, email))
 
 
 def csrf_clear(view_func):
@@ -57,19 +66,6 @@ class UserViewSet(viewsets.ModelViewSet):
             serializer_class = UserWithoutEmailSerializer
 
         return serializer_class
-
-    @request_logging(LOGGER)
-    @action(detail=True, methods=["post"])
-    def password_remove(self, request, pk=None):
-        self.check_permissions(request)
-        user = get_object_or_404(get_user_model(), pk=pk)
-
-        if user.has_usable_password():
-            user.set_unusable_password()
-            user.save()
-            user.deauthenticate()
-
-        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @request_logging(LOGGER)
     @action(detail=True, methods=["post"])
@@ -129,8 +125,6 @@ def reset_password(request):
     user_model = get_user_model()
     try:
         user = user_model.objects.get(email=email)
-        if not user.is_active:
-            return Response({}, status=status.HTTP_200_OK)
         user.reset_password()
         user.deauthenticate()
 
@@ -157,14 +151,15 @@ def register(request):
 
     try:
         email = BaseUserManager.normalize_email(request.data["email"])
-        researcher_id = request.data["researcherId"]
-        group_name = user_model.get_group_name_for_researcher_id(researcher_id)
+        if not is_email_valid(email):
+            raise ValueError
 
-        preexisting_user = user_model.objects.get(
-            email__iexact=email, groups__name=group_name
-        )
-        if preexisting_user.is_active:
-            return Response({}, status=status.HTTP_201_CREATED)
+        if settings.OPEN_REGISTRATION:
+            preexisting_user, _ = user_model.objects.get_or_create(email=email)
+        else:
+            preexisting_user = user_model.objects.get(
+                email__iexact=email
+            )
 
         preexisting_user.register_preexisting_user(request.data.get("name"))
         LOGGER.info(
@@ -173,8 +168,6 @@ def register(request):
                 "registration succeded; "
                 "email: '"
                 + str(email)
-                + "'; researcher id: '"
-                + str(researcher_id)
                 + "'",
             )
         )
@@ -186,8 +179,6 @@ def register(request):
                 "Registration failed: IntegrityError; "
                 "email: '"
                 + str(email)
-                + "'; researcher id: '"
-                + str(researcher_id)
                 + "'",
             )
         )
@@ -199,12 +190,14 @@ def register(request):
                 "Registration failed: Email or Researcher Id not found; "
                 "email: '"
                 + str(email)
-                + "'; researcher id: '"
-                + str(researcher_id)
                 + "'",
             )
         )
-        return Response({}, status=status.HTTP_201_CREATED)
+        return Response(
+            {"error_msg": ("Registration is closed."
+                           " Please contact an administrator.")},
+            status=status.HTTP_403_FORBIDDEN
+        )
     except KeyError:
         LOGGER.error(
             log_filter(
@@ -212,6 +205,18 @@ def register(request):
             )
         )
         return Response({}, status=status.HTTP_201_CREATED)
+    except ValueError:
+        LOGGER.error(
+            log_filter(
+                request,
+                f"Registration failed: Invalid email; email: '{str(email)}'"
+            )
+        )
+        return Response(
+            {"error_msg": ("Invalid email address entered."
+                           " Please use a valid email address.")},
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
 
 @request_logging_function_view(LOGGER)

@@ -39,7 +39,7 @@ class ImpalaFamilyVariants:
             self,
             impala_helpers,
             db,
-            variant_table,
+            variants_table,
             pedigree_table,
             gene_models=None):
 
@@ -48,7 +48,7 @@ class ImpalaFamilyVariants:
         assert pedigree_table, pedigree_table
 
         self.db = db
-        self.variant_table = variant_table
+        self.variants_table = variants_table
         self.pedigree_table = pedigree_table
 
         self._impala_helpers = impala_helpers
@@ -57,7 +57,7 @@ class ImpalaFamilyVariants:
         self.families = FamiliesData.from_pedigree_df(self.ped_df)
 
         self.schema = self._fetch_variant_schema()
-        if self.variant_table:
+        if self.variants_table:
             self.serializer = AlleleParquetSerializer(self.schema)
 
         assert gene_models is not None
@@ -71,7 +71,7 @@ class ImpalaFamilyVariants:
         self._fetch_tblproperties()
 
     def count_variants(self, **kwargs):
-        if not self.variant_table:
+        if not self.variants_table:
             return 0
         with closing(self.connection()) as conn:
             with conn.cursor() as cursor:
@@ -102,7 +102,7 @@ class ImpalaFamilyVariants:
             return_unknown=None,
             limit=None):
 
-        if not self.variant_table:
+        if not self.variants_table:
             return None
         with closing(self.connection()) as conn:
 
@@ -162,8 +162,6 @@ class ImpalaFamilyVariants:
                     v = self.serializer.deserialize_family_variant(
                         variant_data, family
                     )
-                    for aa in v.alt_alleles:
-                        print(aa, aa.inheritance_in_members)
 
                     if v is None:
                         continue
@@ -188,7 +186,7 @@ class ImpalaFamilyVariants:
             return_unknown=None,
             limit=None):
 
-        if not self.variant_table:
+        if not self.variants_table:
             return None
 
         if limit is None:
@@ -276,14 +274,14 @@ class ImpalaFamilyVariants:
         return ped_df
 
     def _fetch_variant_schema(self):
-        if not self.variant_table:
+        if not self.variants_table:
             return None
         with closing(self.connection()) as conn:
             with conn.cursor() as cursor:
                 q = """
                     DESCRIBE {db}.{variant}
                 """.format(
-                    db=self.db, variant=self.variant_table
+                    db=self.db, variant=self.variants_table
                 )
 
                 cursor.execute(q)
@@ -313,12 +311,12 @@ class ImpalaFamilyVariants:
                 return schema
 
     def _fetch_tblproperties(self):
-        if not self.variant_table:
+        if not self.variants_table:
             return None
         with closing(self.connection()) as conn:
             with conn.cursor() as cursor:
                 cursor.execute(
-                    f"DESCRIBE EXTENDED {self.db}.{self.variant_table}")
+                    f"DESCRIBE EXTENDED {self.db}.{self.variants_table}")
                 rows = list(cursor)
                 properties_start, properties_end = -1, -1
                 for row_index, row in enumerate(rows):
@@ -372,7 +370,12 @@ class ImpalaFamilyVariants:
                 or self.schema[attr_name].type_py == int
             ), self.schema[attr_name]
             left, right = attr_range
-            if left is None:
+            if left is None and right is None:
+                if not is_frequency:
+                    query.append(
+                        f"({attr_name} is not null)"
+                    )
+            elif left is None:
                 assert right is not None
                 if is_frequency:
                     query.append(
@@ -725,8 +728,6 @@ class ImpalaFamilyVariants:
         if real_attr_filter is not None:
             where.append(self._build_real_attr_where(real_attr_filter))
         if frequency_filter is not None:
-            print(frequency_filter)
-
             where.append(
                 self._build_real_attr_where(
                     frequency_filter, is_frequency=True))
@@ -740,7 +741,7 @@ class ImpalaFamilyVariants:
         )
         where.append(
             self._build_frequency_bin_heuristic(
-                inheritance, ultra_rare, real_attr_filter
+                inheritance, ultra_rare, frequency_filter
             )
         )
         where.append(self._build_family_bin_heuristic(family_ids, person_ids))
@@ -812,7 +813,7 @@ class ImpalaFamilyVariants:
             {limit_clause}
             """.format(
             db=self.db,
-            variant=self.variant_table,
+            variant=self.variants_table,
             where_clause=where_clause,
             limit_clause=limit_clause,
         )
@@ -862,5 +863,5 @@ class ImpalaFamilyVariants:
             FROM {db}.{variant}
             {where_clause}
             """.format(
-            db=self.db, variant=self.variant_table, where_clause=where_clause
+            db=self.db, variant=self.variants_table, where_clause=where_clause
         )

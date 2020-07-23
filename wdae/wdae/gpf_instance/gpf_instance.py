@@ -23,7 +23,6 @@ def get_gpf_instance():
 
 
 def load_gpf_instance():
-    logger.warn("CALLED: load_gpf_instance() ...")
 
     global _gpf_instance
     global _gpf_instance_lock
@@ -37,7 +36,6 @@ def load_gpf_instance():
         finally:
             _gpf_instance_lock.release()
 
-    logger.warn("DONE: load_gpf_instance() ...")
     return _gpf_instance
 
 

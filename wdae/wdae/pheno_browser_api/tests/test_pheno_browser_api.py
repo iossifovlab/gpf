@@ -1,4 +1,5 @@
 import pytest
+import json
 
 
 pytestmark = pytest.mark.usefixtures("wdae_gpf_instance", "calc_gene_sets")
@@ -6,6 +7,7 @@ pytestmark = pytest.mark.usefixtures("wdae_gpf_instance", "calc_gene_sets")
 
 URL = "/api/v3/pheno_browser/instruments"
 MEASURES_URL = "/api/v3/pheno_browser/measures"
+MEASURES_INFO_URL = "/api/v3/pheno_browser/measures_info"
 DOWNLOAD_URL = "/api/v3/pheno_browser/download"
 
 
@@ -45,17 +47,25 @@ def test_instruments_forbidden(user_client):
     )
 
 
+def test_measures_info(admin_client):
+    url = f"{MEASURES_INFO_URL}?dataset_id=quads_f1_ds"
+    response = admin_client.get(url)
+
+    assert response.status_code == 200
+    assert "base_image_url" in response.data
+    assert "has_descriptions" in response.data
+
+
 def test_measures(admin_client):
     url = "{}?dataset_id=quads_f1_ds&instrument=instrument1".format(
         MEASURES_URL
     )
     response = admin_client.get(url)
-
     assert response.status_code == 200
-    assert "base_image_url" in response.data
-    assert "measures" in response.data
-    assert "has_descriptions" in response.data
-    assert len(response.data["measures"]) == 4
+
+    res = response.streaming_content
+    res = json.loads("".join(map(lambda x: x.decode("utf-8"), res)))
+    assert len(res) == 4
 
 
 def test_measures_forbidden(user_client, user):

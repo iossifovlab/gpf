@@ -42,9 +42,11 @@ class RawFamilyVariants:
 
             val = va.get_attribute(key)
             if val is None and not is_frequency:
-                continue
+                return False
             rmin, rmax = ranges
-            if rmin is None:
+            if rmin is None and rmax is None:
+                result.append(True)
+            elif rmin is None:
                 if is_frequency:
                     result.append(val is None or val <= rmax)
                 else:

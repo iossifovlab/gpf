@@ -6,6 +6,7 @@ from rest_framework import views
 from rest_framework.response import Response
 from rest_framework import status
 
+from user_queries.models import UserQuery
 from .models import QueryState
 from .serializers import QueryStateSerializer
 
@@ -40,7 +41,13 @@ class QueryStateLoadView(views.APIView):
 
 class QueryStateDeleteView(views.APIView):
     def post(self, request):
-        query_state = get_object_or_404(QueryState, uuid=request.data["uuid"])
-        query_state.delete()
+        if not request.user.is_authenticated:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
 
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        stored_queries = UserQuery.objects.filter(user=request.user)
+        for user_stored_query in stored_queries:
+            if str(user_stored_query.query.uuid) == request.data["uuid"]:
+                user_stored_query.delete()
+                return Response(status=status.HTTP_204_NO_CONTENT)
+
+        return Response(status=status.HTTP_404_NOT_FOUND)

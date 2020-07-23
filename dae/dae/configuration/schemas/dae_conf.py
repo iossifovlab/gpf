@@ -35,6 +35,10 @@ hdfs_schema = {
     "base_dir": {"type": "string", "check_with": validate_path},
 }
 
+rsync_schema = {
+    "location": {"type": "string"},
+    "remote_shell": {"type": "string", "default": None, 'nullable': True},
+}
 
 storage_schema = {
     "storage_type": {"type": "string", "allowed": ["impala", "filesystem"]},
@@ -53,6 +57,11 @@ storage_schema = {
         "dependencies": {"storage_type": "impala"},
         "schema": hdfs_schema,
     },
+    "rsync": {
+        "type": "dict",
+        "schema": rsync_schema,
+        "dependencies": {"storage_type": "impala"},
+    }
 }
 
 
@@ -62,6 +71,11 @@ dae_conf_schema = {
         "check_with": validate_existing_path,
         "coerce": "abspath",
     },
+    "mirror_of": {
+        "type": "string",
+        "default": None, 'nullable': True,
+    },
+
     "annotation_defaults": {
         "type": "dict",
         "schema": {"wd": {"type": "string"}, "data_dir": {"type": "string"}},

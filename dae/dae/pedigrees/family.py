@@ -231,8 +231,14 @@ class Family(object):
                 merged_persons[person_id] = r_person
             elif r_person.generated:
                 merged_persons[person_id] = l_person
+            elif l_person.sex == Sex.unspecified:
+                merged_persons[person_id] = r_person
+            elif r_person.sex == Sex.unspecified:
+                merged_persons[person_id] = l_person
 
-            assert (l_person.sex == r_person.sex) \
+            assert (l_person.sex == r_person.sex or \
+                    l_person.sex == Sex.unspecified or \
+                    r_person.sex == Sex.unspecified) \
                 and (l_person.role == r_person.role) \
                 and (l_person.family_id == r_person.family_id), \
                 f"Mismatched attributes for person {person_id}; " \

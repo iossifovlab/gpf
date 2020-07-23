@@ -1,3 +1,4 @@
+from dae.backends.impala.rsync_helpers import RsyncHelpers
 import os
 import sys
 import argparse
@@ -370,7 +371,9 @@ class MakefileGenerator:
             self.generate_variants_targets(argv, outfile)
             self.generate_pedigree_rule(argv, outfile)
             self.generate_variants_rules(argv, outfile)
-            self.generate_load_targets(argv, outfile)
+            self.generate_hdfs_load_targets(argv, outfile)
+            self.generate_impala_load_targets(argv, outfile)
+            self.generate_config_targets(argv, outfile)
             self.generate_report_targets(argv, outfile)
 
     def generate_study_config(self, argv):
@@ -425,8 +428,9 @@ class MakefileGenerator:
     def generate_all_targets(self, argv, outfile=sys.stdout):
         targets = [
             f"${{OUTDIR}}/ped.flag",
-            f"load.flag",
-            f"reports.flag"
+            f"${{OUTDIR}}/hdfs.flag",
+            f"${{OUTDIR}}/impala.flag",
+            f"${{OUTDIR}}/reports.flag"
         ]
         targets.extend(self._collect_variants_targets())
 
@@ -449,7 +453,7 @@ class MakefileGenerator:
         command = [
             f"ped2parquet.py {families_params} {families_filename}",
             f"--study-id {self.study_id}",
-            f"-o ${{OUTDIR}}/{self.study_id}_pedigree.parquet",
+            f"-o ${{OUTDIR}}/{self.study_id}_pedigree/pedigree.parquet",
         ]
         if argv.partition_description is not None:
             pd = os.path.abspath(argv.partition_description)
@@ -486,7 +490,7 @@ class MakefileGenerator:
             f"{families_params} {families_filename}",
             f"{variants_params} {variants_filenames}",
             f"--study-id {self.study_id}",
-            f"-o ${{OUTDIR}}/{self.study_id}_variants.parquet",
+            f"-o ${{OUTDIR}}/{self.study_id}_variants",
         ]
         if argv.partition_description is not None:
             pd = os.path.abspath(argv.partition_description)
@@ -634,21 +638,41 @@ class MakefileGenerator:
         self.generate_denovo_rule(argv, outfile)
         self.generate_cnv_rule(argv, outfile)
 
-    def _construct_load_command(self, argv):
+    def _construct_hdfs_load_command(self, argv):
         assert self.genotype_storage_id is not None
 
-        # output = self._get_output_dir(argv)
-        output = "."
-
         command = [
-            f"impala_parquet_loader.py {self.study_id}",
-            os.path.join(output, f"{self.study_id}_pedigree.parquet"),
-            os.path.join(output, f"{self.study_id}_variants.parquet"),
+            f"hdfs_parquet_loader.py {self.study_id}",
+            f"${{OUTDIR}}/{self.study_id}_pedigree/pedigree.parquet",
+            f"${{OUTDIR}}/{self.study_id}_variants",
             f"--gs {self.genotype_storage_id}",
         ]
 
-        if argv.study_config:
-            command.append(f"--study-config ./{self.study_id}.conf")
+        # if argv.study_config:
+        #     command.append(f"--study-config ./{self.study_id}.conf")
+
+        return " ".join(command)
+
+    def _construct_impala_load_command(self, argv):
+        assert self.genotype_storage_id is not None
+
+        command = [
+            f"impala_tables_loader.py {self.study_id}",
+            f"--gs {self.genotype_storage_id}",
+            f"--variants-schema", 
+            os.path.join(
+                f"${{OUTDIR}}",
+                f"{self.study_id}_variants",
+                "_VARIANTS_SCHEMA"),
+        ]
+
+        if argv.partition_description is not None:
+            pd = os.path.join(
+                f"${{OUTDIR}}",
+                f"{self.study_id}_variants",
+                "_PARTITION_DESCRIPTION")
+
+            command.append(f"--pd {pd}")
 
         return " ".join(command)
 
@@ -659,25 +683,58 @@ class MakefileGenerator:
         output = os.path.abspath(output)
         return output
 
-    def generate_load_targets(self, argv, outfile=sys.stdout):
+    def generate_hdfs_load_targets(self, argv, outfile=sys.stdout):
         print("\n", file=outfile)
-        print(f"load: load.flag\n", file=outfile)
+        print(f"hdfs: ${{OUTDIR}}/hdfs.flag\n", file=outfile)
 
-        command = self._construct_load_command(argv)
+        command = self._construct_hdfs_load_command(argv)
         variants_targets = self._collect_variants_targets()
         if len(variants_targets) > 0:
             variants_targets = " ".join(variants_targets)
             print(
-                f"load.flag: "
+                f"${{OUTDIR}}/hdfs.flag: "
                 f"${{OUTDIR}}/ped.flag {variants_targets}\n"
                 f"\t{command} && touch $@",
                 file=outfile,
             )
         else:
             print(
-                f"load.flag: ${{OUTDIR}}/ped.flag\n"
+                f"hdfs.flag: ${{OUTDIR}}/ped.flag\n"
                 f"\t{command} && touch $@",
                 file=outfile)
+
+    def generate_impala_load_targets(self, argv, outfile=sys.stdout):
+        print("\n", file=outfile)
+        print(f"impala: ${{OUTDIR}}/impala.flag\n", file=outfile)
+
+        command = self._construct_impala_load_command(argv)
+        print(
+            f"${{OUTDIR}}/impala.flag: "
+            f"${{OUTDIR}}/hdfs.flag\n"
+            f"\t{command} && touch $@",
+            file=outfile,
+        )
+
+    def generate_config_targets(self, argv, outfile=sys.stdout):
+        dae_config = self.gpf_instance.dae_config
+        if dae_config.mirror_of is not None:
+            rsync_helper = RsyncHelpers(dae_config.mirror_of)
+        else:
+            rsync_helper = RsyncHelpers(dae_config.dae_data_dir)
+
+        command = rsync_helper._copy_to_remote_cmd(
+            f"${{OUTDIR}}/{self.study_id}.conf",
+            f"studies/{self.study_id}/",
+            ignore_existing=True,
+            clear_remote=False)
+
+        print("\n", file=outfile)
+        print(f"config: ${{OUTDIR}}/config.flag\n", file=outfile)
+        print(
+            f"${{OUTDIR}}/config.flag: ${{OUTDIR}}/impala.flag",
+            file=outfile)
+        print(f"\t{command} && touch $@", file=outfile)
+        print(f"\n", file=outfile)
 
     def _construct_reports_commands(self, argv):
 
@@ -690,9 +747,11 @@ class MakefileGenerator:
 
     def generate_report_targets(self, argv, outfile=sys.stdout):
         print("\n", file=outfile)
-        print(f"reports: reports.flag\n", file=outfile)
+        print(f"reports: ${{OUTDIR}}/reports.flag\n", file=outfile)
         commands = self._construct_reports_commands(argv)
-        print(f"reports.flag: load.flag", file=outfile)
+        print(
+            f"${{OUTDIR}}/reports.flag: ${{OUTDIR}}/config.flag",
+            file=outfile)
         for command in commands:
             print(f"\t{command} && touch $@", file=outfile)
         print(f"\n", file=outfile)
@@ -1003,7 +1062,7 @@ class Variants2ParquetTool:
 
         print("argv.rows:", argv.rows)
 
-        ParquetManager.variants_to_parquet_partition(
+        ParquetManager.variants_to_parquet(
             variants_loader,
             partition_description,
             bucket_index=bucket_index,
