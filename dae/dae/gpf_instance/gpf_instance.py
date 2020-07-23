@@ -216,7 +216,7 @@ class GPFInstance(object):
 
     def get_pheno_images_url(self, study_wrapper):
         config = self.get_pheno_config(study_wrapper)
-        return config.browser_images_dir
+        return config.browser_images_url
 
     def get_measures_info(self, study_wrapper):
         dbfile = self.get_pheno_dbfile(study_wrapper)
