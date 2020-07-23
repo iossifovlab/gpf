@@ -4,6 +4,19 @@ import pytest
 pytestmark = pytest.mark.usefixtures("wdae_gpf_instance", "calc_gene_sets")
 
 
+def test_build_results(enrichment_builder):
+    assert enrichment_builder
+    build = enrichment_builder._build_results()
+    print(build)
+
+    assert build
+    assert len(build) == 2
+
+    assert sorted([b["peopleGroupValue"] for b in build]) == sorted(
+        ["phenotype1", "unaffected"]
+    )
+
+
 def test_build(enrichment_builder):
     assert enrichment_builder
     build = enrichment_builder.build()
@@ -12,8 +25,8 @@ def test_build(enrichment_builder):
     assert build
     assert len(build) == 2
 
-    assert sorted([b["peopleGroupValue"] for b in build]) == sorted(
-        ["phenotype1", "unaffected"]
+    assert sorted([b["selector"] for b in build]) == sorted(
+        ["phenotype 1", "unaffected"]
     )
 
 
