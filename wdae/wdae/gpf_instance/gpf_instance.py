@@ -77,18 +77,30 @@ class WGPFInstance(GPFInstance):
 
     def get_genotype_data(self, dataset_id):
         genotype_data = super(WGPFInstance, self).get_genotype_data(dataset_id)
-        if not genotype_data:
-            wrapper = self.get_wdae_wrapper(dataset_id)
-            genotype_data = wrapper.config
+        if genotype_data is not None:
+            return genotype_data
+
+        wrapper = self.get_wdae_wrapper(dataset_id)
+
+        if wrapper is None:
+            return None
+
+        genotype_data = wrapper.config
         return genotype_data
 
     def get_common_report(self, common_report_id):
         common_report = \
             super(WGPFInstance, self).get_common_report(common_report_id)
-        if not common_report:
-            client = self._remote_study_clients[common_report_id]
-            common_report_id = self._remote_study_ids[common_report_id]
-            common_report = client.get_common_report(common_report_id)
+
+        if common_report is not None:
+            return common_report
+
+        if common_report_id not in self._remote_study_clients:
+            return None
+
+        client = self._remote_study_clients[common_report_id]
+        common_report_id = self._remote_study_ids[common_report_id]
+        common_report = client.get_common_report(common_report_id)
         return common_report
 
     def get_common_report_families_data(self, common_report_id):
@@ -167,6 +179,8 @@ class WGPFInstance(GPFInstance):
 
         if not result:
             study_wrapper = self.get_wdae_wrapper(dataset_id)
+            if study_wrapper is None:
+                return None
             if "enrichment" in study_wrapper.config:
                 result = study_wrapper.config["enrichment"]
 

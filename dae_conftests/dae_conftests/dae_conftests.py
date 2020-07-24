@@ -11,7 +11,6 @@ from io import StringIO
 from dae.genome.genomes_db import GenomesDB
 
 from dae.gpf_instance.gpf_instance import GPFInstance, cached
-from gpf_instance.gpf_instance import WGPFInstance
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.dae_conf import dae_conf_schema
@@ -90,7 +89,7 @@ def gpf_instance(default_dae_config):
         def get_default_gene_models_id(self, genome_id=None):
             return "RefSeq2013"
 
-    class GPFInstanceInternal(WGPFInstance):
+    class GPFInstanceInternal(GPFInstance):
         @property
         @cached
         def genomes_db(self):
