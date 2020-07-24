@@ -9,6 +9,11 @@ from pheno_browser_api import views
 
 urlpatterns = [
     url(
+        r"^/pheno_config/?$",
+        views.PhenoConfigView.as_view(),
+        name="pheno_browser_config",
+    ),
+    url(
         r"^/instruments/?$",
         views.PhenoInstrumentsView.as_view(),
         name="pheno_browser_instruments",

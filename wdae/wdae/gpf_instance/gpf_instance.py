@@ -1,9 +1,20 @@
+import json
 import logging
-from threading import Lock
-
 from django.conf import settings
 
+from threading import Lock
+
 from dae.gpf_instance.gpf_instance import GPFInstance
+from dae.remote.remote_study_wrapper import RemoteStudyWrapper
+
+from dae.remote.rest_api_client import RESTClient, RESTClientRequestError
+
+from dae.enrichment_tool.tool import EnrichmentTool
+from dae.enrichment_tool.event_counters import CounterBase
+from enrichment_api.enrichment_builder import \
+    EnrichmentBuilder, RemoteEnrichmentBuilder
+
+from requests.exceptions import ConnectionError
 
 
 logger = logging.getLogger(__name__)
@@ -13,6 +24,226 @@ __all__ = ["get_gpf_instance"]
 _gpf_instance = None
 _gpf_recreated_dataset_perm = False
 _gpf_instance_lock = Lock()
+
+
+class WGPFInstance(GPFInstance):
+    def __init__(self, *args, **kwargs):
+        super(WGPFInstance, self).__init__(*args, **kwargs)
+        self._remote_study_clients = dict()
+        self._remote_study_wrappers = dict()
+        self._remote_study_ids = dict()
+
+        if getattr(settings, "REMOTES", None):
+            for remote in settings.REMOTES:
+                print("Creating remote")
+                print(remote)
+                try:
+                    client = RESTClient(
+                        remote["id"],
+                        remote["host"],
+                        remote["user"],
+                        remote["password"],
+                        base_url=remote["base_url"],
+                        port=remote["port"],
+
+                    )
+                    self._fetch_remote_studies(client)
+                except ConnectionError as err:
+                    logger.error(err)
+                    logger.error(f"Failed to create remote {remote['id']}")
+                except RESTClientRequestError as err:
+                    logger.error(err.message)
+
+    def _fetch_remote_studies(self, rest_client):
+        studies = rest_client.get_datasets()
+        for study in studies["data"]:
+            study_wrapper = RemoteStudyWrapper(study["id"], rest_client)
+            study_id = study_wrapper.study_id
+            self._remote_study_ids[study_id] = study["id"]
+            self._remote_study_clients[study_id] = rest_client
+            self._remote_study_wrappers[study_id] = study_wrapper
+
+    def get_wdae_wrapper(self, dataset_id):
+        wrapper = super(WGPFInstance, self).get_wdae_wrapper(dataset_id)
+        if not wrapper:
+            wrapper = self._remote_study_wrappers.get(dataset_id, None)
+        return wrapper
+
+    def get_genotype_data_ids(self):
+        return (
+            list(super(WGPFInstance, self).get_genotype_data_ids())
+            + self.remote_studies
+        )
+
+    def get_genotype_data(self, dataset_id):
+        genotype_data = super(WGPFInstance, self).get_genotype_data(dataset_id)
+        if genotype_data is not None:
+            return genotype_data
+
+        wrapper = self.get_wdae_wrapper(dataset_id)
+
+        if wrapper is None:
+            return None
+
+        genotype_data = wrapper.config
+        return genotype_data
+
+    def get_common_report(self, common_report_id):
+        common_report = \
+            super(WGPFInstance, self).get_common_report(common_report_id)
+
+        if common_report is not None:
+            return common_report
+
+        if common_report_id not in self._remote_study_clients:
+            return None
+
+        client = self._remote_study_clients[common_report_id]
+        common_report_id = self._remote_study_ids[common_report_id]
+        common_report = client.get_common_report(common_report_id)
+        return common_report
+
+    def get_common_report_families_data(self, common_report_id):
+        families_data = \
+            super(WGPFInstance, self).get_common_report_families_data(
+                    common_report_id)
+        if families_data:
+            for family_data in families_data:
+                yield family_data
+        else:
+            client = self._remote_study_clients[common_report_id]
+            common_report_id = self._remote_study_ids[common_report_id]
+            response = client.get_common_report_families_data(
+                common_report_id)
+
+            for line in response.iter_lines():
+                if line:
+                    line += "\n".encode("UTF-8")
+                    yield line.decode("UTF-8")
+
+    def get_pheno_config(self, study_wrapper):
+        print("WARNING: Using is_remote")
+        if not study_wrapper.is_remote:
+            return super(WGPFInstance, self).get_pheno_config(study_wrapper)
+
+        client = study_wrapper.rest_client
+        return client.get_pheno_browser_config(study_wrapper._remote_study_id)
+
+    def has_pheno_data(self, study_wrapper):
+        print("WARNING: Using is_remote")
+        if not study_wrapper.is_remote:
+            return super(WGPFInstance, self).has_pheno_data(study_wrapper)
+
+        return "phenotype_data" in study_wrapper.config
+
+    def get_instruments(self, study_wrapper):
+        print("WARNING: Using is_remote")
+        if not study_wrapper.is_remote:
+            return super(WGPFInstance, self).get_instruments(study_wrapper)
+
+        return study_wrapper.rest_client.get_instruments(
+            study_wrapper._remote_study_id)
+
+    def get_measures_info(self, study_wrapper):
+        print("WARNING: Using is_remote")
+        if not study_wrapper.is_remote:
+            return super(WGPFInstance, self).get_measures_info(study_wrapper)
+
+        client = study_wrapper.rest_client
+        return client.get_browser_measures_info(study_wrapper._remote_study_id)
+
+    def search_measures(self, study_wrapper, instrument, search_term):
+        print("WARNING: Using is_remote")
+        if not study_wrapper.is_remote:
+            measures = super(WGPFInstance, self).search_measures(
+                study_wrapper, instrument, search_term)
+            for m in measures:
+                yield m
+            return
+
+        client = study_wrapper.rest_client
+        response = client.get_browser_measures(
+            study_wrapper._remote_study_id,
+            instrument,
+            search_term
+        )
+        for line in response.iter_lines():
+            if line:
+                measures = json.loads(line)
+                for m in measures:
+                    yield m
+
+    def get_study_enrichment_config(self, dataset_id):
+        result = \
+            super(WGPFInstance, self).get_study_enrichment_config(dataset_id)
+
+        if not result:
+            study_wrapper = self.get_wdae_wrapper(dataset_id)
+            if study_wrapper is None:
+                return None
+            if "enrichment" in study_wrapper.config:
+                result = study_wrapper.config["enrichment"]
+
+        return result
+
+    def get_enrichment_tool(
+            self, enrichment_config, dataset_id,
+            background_name, counting_name=None):
+        if (
+            background_name is None
+            or not self.has_background(
+                dataset_id, background_name
+            )
+        ):
+            background_name = enrichment_config.default_background_model
+        if not counting_name:
+            counting_name = enrichment_config.default_counting_model
+
+        background = self.get_study_background(
+            dataset_id, background_name
+        )
+        counter = CounterBase.counters()[counting_name]()
+        enrichment_tool = EnrichmentTool(
+            enrichment_config, background, counter
+        )
+
+        return enrichment_tool
+
+    def _create_local_enrichment_builder(
+            self, dataset_id, background_name, counting_name,
+            gene_syms):
+        dataset = GPFInstance.get_wdae_wrapper(self, dataset_id)
+        enrichment_config = GPFInstance.get_study_enrichment_config(
+            self,
+            dataset_id
+        )
+        if enrichment_config is None:
+            return None
+        enrichment_tool = self.get_enrichment_tool(
+            enrichment_config, dataset_id, background_name, counting_name)
+        if enrichment_tool.background is None:
+            return None
+
+        builder = EnrichmentBuilder(dataset, enrichment_tool, gene_syms)
+        return builder
+
+    def create_enrichment_builder(
+            self, dataset_id, background_name, counting_name,
+            gene_syms):
+        builder = self._create_local_enrichment_builder(
+            dataset_id, background_name, counting_name, gene_syms)
+        if not builder:
+            dataset = self.get_wdae_wrapper(dataset_id)
+            builder = RemoteEnrichmentBuilder(
+                dataset, dataset.rest_client,
+                background_name, counting_name,
+                gene_syms)
+
+        return builder
+
+    @property
+    def remote_studies(self):
+        return list(self._remote_study_clients.keys())
 
 
 def get_gpf_instance():
@@ -31,7 +262,7 @@ def load_gpf_instance():
         _gpf_instance_lock.acquire()
         try:
             if _gpf_instance is None:
-                gpf_instance = GPFInstance(load_eagerly=True)
+                gpf_instance = WGPFInstance(load_eagerly=True)
                 _gpf_instance = gpf_instance
         finally:
             _gpf_instance_lock.release()

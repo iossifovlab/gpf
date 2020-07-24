@@ -38,17 +38,32 @@ from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.person_sets import PersonSetCollection
 
 
-class StudyWrapper(object):
+class StudyWrapperBase:
+    def get_wdae_preview_info(self, query, max_variants_count=10000):
+        raise NotImplementedError
+
+    def get_variants_wdae_preview(self, query, max_variants_count=10000):
+        raise NotImplementedError
+
+    def get_variants_wdae_download(self, query, max_variants_count=10000):
+        raise NotImplementedError
+
+    def get_genotype_data_group_description(self):
+        raise NotImplementedError
+
+
+class StudyWrapper(StudyWrapperBase):
     def __init__(
-        self, genotype_data_study, pheno_db, gene_weights_db, *args, **kwargs
+        self, genotype_data_study, pheno_db, gene_weights_db
     ):
-        super(StudyWrapper, self).__init__(*args, **kwargs)
         assert genotype_data_study is not None
 
         self.genotype_data_study = genotype_data_study
         self.is_group = isinstance(genotype_data_study, GenotypeDataGroup)
         self.config = genotype_data_study.config
         assert self.config is not None
+
+        self.is_remote = False
 
         self._init_wdae_config()
         self.pheno_db = pheno_db
@@ -1043,6 +1058,9 @@ class StudyWrapper(object):
         result["person_set_collections"] = \
             self.genotype_data_study.person_set_collection_configs
         result["name"] = result["name"] or result["id"]
+
+        result["enrichment"] = GPFConfigParser._namedtuple_to_dict(
+            deepcopy(self.config.enrichment))
 
         return result
 
