@@ -19,6 +19,11 @@ def empty_group(db):
 
 
 @pytest.fixture()
+def empty_group_2(db):
+    return Group.objects.create(name="Empty group 2")
+
+
+@pytest.fixture()
 def active_user(db, user_model):
     user = user_model.objects.create_user(
         email="new@new.com", password="secret"
@@ -62,6 +67,16 @@ def three_users_in_a_group(db, three_new_users, empty_group):
         user.refresh_from_db()
 
     return three_new_users, empty_group
+
+
+@pytest.fixture()
+def three_users_in_groups(db, three_new_users, empty_group, empty_group_2):
+    empty_group.user_set.add(*three_new_users)
+    empty_group_2.user_set.add(*three_new_users)
+    for user in three_new_users:
+        user.refresh_from_db()
+
+    return three_new_users, empty_group, empty_group_2
 
 
 @pytest.fixture()
