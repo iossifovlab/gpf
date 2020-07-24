@@ -45,4 +45,9 @@ data-hg19-startup
 __pycache__
 .mypy_cache
 test_results
-gpf_remote
+scripts/gpf_remote/
+scripts/iossifov_2014/
+scripts/genotype-iossifov_2014-latest.tar.gz
+gpf_remote/
+iossifov_2014/
+genotype-iossifov_2014-latest.tar.gz

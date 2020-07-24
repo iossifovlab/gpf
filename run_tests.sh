@@ -22,6 +22,13 @@ if [[ -z $GPF_IMPALA_DOCKER_CONTAINER ]]; then
     export GPF_IMPALA_DOCKER_CONTAINER="gpf_impala_local_1000"
 fi
 
+if [[ -z $GPF_REMOTE_DOCKER_CONTAINER ]]; then
+    export GPF_REMOTE_DOCKER_CONTAINER="gpf_test_remote"
+fi
+
+if [[ -z $GPF_TEST_REMOTE_HOSTNAME ]]; then
+    export GPF_TEST_REMOTE_HOSTNAME="gpf_test_remote"
+fi
 
 echo "----------------------------------------------"
 echo "Starting impala gpf container..."
@@ -88,12 +95,24 @@ echo "----------------------------------------------"
 docker run --rm \
     --network ${GPF_DOCKER_NETWORK} \
     --link ${GPF_IMPALA_DOCKER_CONTAINER}:impala \
+    --link ${GPF_REMOTE_DOCKER_CONTAINER}:${GPF_TEST_REMOTE_HOSTNAME} \
     -v ${DAE_DB_DIR}:/data \
     -v ${WD}:/code \
+    -e TEST_REMOTE_HOST=${GPF_TEST_REMOTE_HOSTNAME} \
     ${GPF_DOCKER_IMAGE} /code/scripts/docker_test.sh
 
 echo "----------------------------------------------"
 echo "[DONE] Running tests..."
+echo "----------------------------------------------"
+
+echo "----------------------------------------------"
+echo "Cleaning up remote container..."
+echo "----------------------------------------------"
+
+docker stop ${GPF_REMOTE_DOCKER_CONTAINER}
+
+echo "----------------------------------------------"
+echo "[DONE] Cleaning up remote container"
 echo "----------------------------------------------"
 
 if [[ $CLEANUP ]]; then

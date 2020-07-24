@@ -28,7 +28,7 @@ class QueryPreviewView(QueryBaseView):
         if dataset_id is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        dataset = self.variants_db.get_wdae_wrapper(dataset_id)
+        dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
 
         # LOGGER.info('dataset ' + str(dataset))
         response = dataset.get_wdae_preview_info(
@@ -55,7 +55,7 @@ class QueryPreviewVariantsView(QueryBaseView):
         if dataset_id is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        dataset = self.variants_db.get_wdae_wrapper(dataset_id)
+        dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
 
         # LOGGER.info('dataset ' + str(dataset))
         response = dataset.get_variants_wdae_preview(
@@ -93,7 +93,7 @@ class QueryDownloadView(QueryBaseView):
 
         dataset_id = data.pop("datasetId")
 
-        dataset = self.variants_db.get_wdae_wrapper(dataset_id)
+        dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
 
         download_limit = None
         if not (user.is_authenticated and user.has_unlimitted_download):

@@ -367,14 +367,16 @@ class MakefileGenerator:
         with open(os.path.join(dirname, "Makefile"), "w") as outfile:
             self.generate_preamble(argv, outfile)
             self.generate_variants_bins(argv, outfile)
+            self.generate_default_targets(argv, outfile)
             self.generate_all_targets(argv, outfile)
             self.generate_variants_targets(argv, outfile)
             self.generate_pedigree_rule(argv, outfile)
             self.generate_variants_rules(argv, outfile)
             self.generate_hdfs_load_targets(argv, outfile)
             self.generate_impala_load_targets(argv, outfile)
-            self.generate_config_targets(argv, outfile)
+            self.generate_setup_instance_targets(argv, outfile)
             self.generate_report_targets(argv, outfile)
+            self.generate_setup_remote_targets(argv, outfile)
 
     def generate_study_config(self, argv):
         dirname = argv.output
@@ -425,13 +427,22 @@ class MakefileGenerator:
             variants_targets.append("$(dae_bins_flags)")
         return variants_targets
 
+    def generate_default_targets(self, argv, outfile=sys.stdout):
+        print("\n", file=outfile)
+        print("default:", "reports", file=outfile)
+
     def generate_all_targets(self, argv, outfile=sys.stdout):
         targets = [
             f"${{OUTDIR}}/ped.flag",
             f"${{OUTDIR}}/hdfs.flag",
             f"${{OUTDIR}}/impala.flag",
-            f"${{OUTDIR}}/reports.flag"
+            f"${{OUTDIR}}/setup_instance.flag",
+            f"${{OUTDIR}}/reports.flag",
         ]
+        if self.gpf_instance.dae_config.mirror_of is not None:
+            targets.append(
+                f"${{OUTDIR}}/setup_remote.flag")
+    
         targets.extend(self._collect_variants_targets())
 
         print("\n", file=outfile)
@@ -715,12 +726,9 @@ class MakefileGenerator:
             file=outfile,
         )
 
-    def generate_config_targets(self, argv, outfile=sys.stdout):
+    def generate_setup_instance_targets(self, argv, outfile=sys.stdout):
         dae_config = self.gpf_instance.dae_config
-        if dae_config.mirror_of is not None:
-            rsync_helper = RsyncHelpers(dae_config.mirror_of)
-        else:
-            rsync_helper = RsyncHelpers(dae_config.dae_data_dir)
+        rsync_helper = RsyncHelpers(dae_config.dae_data_dir)
 
         command = rsync_helper._copy_to_remote_cmd(
             f"${{OUTDIR}}/{self.study_id}.conf",
@@ -729,9 +737,36 @@ class MakefileGenerator:
             clear_remote=False)
 
         print("\n", file=outfile)
-        print(f"config: ${{OUTDIR}}/config.flag\n", file=outfile)
         print(
-            f"${{OUTDIR}}/config.flag: ${{OUTDIR}}/impala.flag",
+            f"setup_instance: ${{OUTDIR}}/setup_instance.flag\n",
+            file=outfile)
+        print(
+            f"${{OUTDIR}}/setup_instance.flag: ${{OUTDIR}}/impala.flag",
+            file=outfile)
+        print(f"\t{command} && touch $@", file=outfile)
+        print(f"\n", file=outfile)
+
+    def generate_setup_remote_targets(self, argv, outfile=sys.stdout):
+        dae_config = self.gpf_instance.dae_config
+        if dae_config.mirror_of is None:
+            return
+
+        study_dir = os.path.join(
+            dae_config.dae_data_dir,
+            "studies",
+            self.study_id)
+
+        rsync_helper = RsyncHelpers(dae_config.mirror_of)
+        command = rsync_helper._copy_to_remote_cmd(
+            study_dir,
+            f"studies/{self.study_id}/",
+            ignore_existing=True,
+            clear_remote=False)
+
+        print("\n", file=outfile)
+        print(f"setup_remote: ${{OUTDIR}}/setup_remote.flag\n", file=outfile)
+        print(
+            f"${{OUTDIR}}/setup_remote.flag: ${{OUTDIR}}/reports.flag",
             file=outfile)
         print(f"\t{command} && touch $@", file=outfile)
         print(f"\n", file=outfile)
@@ -750,7 +785,7 @@ class MakefileGenerator:
         print(f"reports: ${{OUTDIR}}/reports.flag\n", file=outfile)
         commands = self._construct_reports_commands(argv)
         print(
-            f"${{OUTDIR}}/reports.flag: ${{OUTDIR}}/config.flag",
+            f"${{OUTDIR}}/reports.flag: ${{OUTDIR}}/setup_instance.flag",
             file=outfile)
         for command in commands:
             print(f"\t{command} && touch $@", file=outfile)

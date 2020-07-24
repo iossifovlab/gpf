@@ -192,7 +192,12 @@ def main(argv=sys.argv[1:]):
 
     os.makedirs(output, exist_ok=True)
 
-    rsync_helpers.copy_to_local(output)
+    exclude = None
+    if argv.exclude is not None:
+        exclude = [ex.strip() for ex in argv.exclude.split(",")]
+        exclude = [ex for ex in exclude if ex]
+
+    rsync_helpers.copy_to_local(output, exclude=exclude)
 
     update_mirror_config(rsync_helpers, output, argv)
     build_setenv(output)
