@@ -117,6 +117,27 @@ class Measure(object):
 
         return m
 
+    @classmethod
+    def from_json(cls, json):
+        """
+        Creates `Measure` object from a JSON representation.
+        """
+        assert json["measureType"] is not None
+
+        m = Measure(json["measureName"])
+        m.measure_id = json["measureId"]
+        m.instrument_name = json["instrumentName"]
+        m.measure_name = json["measureName"]
+        m.measure_type = json["measureType"]
+
+        m.description = json["description"]
+        m.default_filter = json["defaultFilter"]
+        m.values_domain = json.get("valuesDomain")
+        m.min_value = json.get("minValue")
+        m.max_value = json.get("maxValue")
+
+        return m
+
 
 class PhenotypeData:
     def get_persons_df(self, roles, person_ids, family_ids):
@@ -142,10 +163,12 @@ class PhenotypeData:
     def get_measure_values_df(self, measure_id, person_ids, family_ids, roles):
         raise NotImplementedError()
 
-    def get_measure_values(self, measure_id, person_ids, family_ids, roles):
+    def get_measure_values(
+            self, measure_id, person_ids, family_ids, roles, default_filter):
         raise NotImplementedError()
 
-    def get_values_df(self, measure_ids, person_ids, family_ids, roles):
+    def get_values_df(
+            self, measure_ids, person_ids, family_ids, roles, default_filter):
         raise NotImplementedError()
 
     def get_values(self, measure_ids, person_ids, family_ids, roles):

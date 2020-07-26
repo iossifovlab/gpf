@@ -190,10 +190,10 @@ class PhenoToolPersons(QueryBaseView):
         for key in result.keys():
             person = result[key]
             result[key] = {
-                "family_id": person.family_id,
                 "person_id": person.person_id,
-                "sex": person.sex,
+                "family_id": person.family_id,
                 "role": person.role,
+                "sex": person.sex,
                 "status": person.status,
             }
 
@@ -282,6 +282,7 @@ class PhenoToolMeasureValues(QueryBaseView):
             data["personIds"],
             data["familyIds"],
             data["roles"],
+            data["defaultFilter"],
         )
 
         return Response(result)
@@ -300,6 +301,7 @@ class PhenoToolValues(QueryBaseView):
             data["personIds"],
             data["familyIds"],
             data["roles"],
+            data["defaultFilter"],
         )
 
         return Response(result.to_dict("records"))
@@ -359,7 +361,7 @@ class PhenoToolInstrumentValues(QueryBaseView):
         if instrument_name not in instruments:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        result = dataset.phenotype_data.instrument_values(
+        result = dataset.phenotype_data.get_instrument_values(
             instrument_name,
             data["personIds"],
             data["familyIds"],

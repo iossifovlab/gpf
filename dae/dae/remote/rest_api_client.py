@@ -153,3 +153,120 @@ class RESTClient:
             data=query,
         )
         return response.json()
+
+    def post_pheno_persons(self, dataset_id, roles, person_ids, family_ids):
+        data = {
+            "datasetId": dataset_id,
+            "roles": roles,
+            "personIds": person_ids,
+            "familyIds": family_ids,
+        }
+        response = self._post(
+            "pheno_tool/persons",
+            data=data
+        )
+        return response.json()
+
+    def post_pheno_persons_values(
+            self, dataset_id, roles, person_ids, family_ids):
+        data = {
+            "datasetId": dataset_id,
+            "roles": roles,
+            "personIds": person_ids,
+            "familyIds": family_ids,
+        }
+        response = self._post(
+            "pheno_tool/persons_values",
+            data=data
+        )
+        return response.json()
+
+    def get_instruments_details(self, dataset_id):
+        response = self._get(
+            "pheno_tool/instruments",
+            query_values={"datasetId": dataset_id}
+        )
+
+        return response.json()
+
+    def get_measure(self, dataset_id, measure_id):
+        response = self._get(
+            "pheno_tool/measure",
+            query_values={
+                "datasetId": dataset_id,
+                "measureId": measure_id,
+            }
+        )
+
+        if response.status_code != 200:
+            return None
+
+        return response.json()
+
+    def get_measures(self, dataset_id, instrument_name, measure_type):
+        response = self._get(
+            "pheno_tool/measures",
+            query_values={
+                "datasetId": dataset_id,
+                "instrument": instrument_name,
+                "measureType": measure_type,
+            }
+        )
+
+        if response.status_code != 200:
+            return None
+
+        return response.json()
+
+    def post_measure_values(
+            self, dataset_id, measure_id, person_ids,
+            family_ids, roles, default_filter):
+        data = {
+            "datasetId": dataset_id,
+            "measureId": measure_id,
+            "personIds": person_ids,
+            "familyIds": family_ids,
+            "roles": roles,
+            "defaultFilter": default_filter
+        }
+        response = self._post(
+            "pheno_tool/measure_values",
+            data=data
+        )
+
+        return response.json()
+
+    def post_pheno_values(
+            self, dataset_id, measure_ids, person_ids,
+            family_ids, roles, default_filter):
+        data = {
+            "datasetId": dataset_id,
+            "measureIds": measure_ids,
+            "personIds": person_ids,
+            "familyIds": family_ids,
+            "roles": roles,
+            "defaultFilter": default_filter
+        }
+        response = self._post(
+            "pheno_tool/values",
+            data=data
+        )
+
+        return response.json()
+
+    def post_instrument_values(
+            self, dataset_id, instrument_name,
+            person_ids, family_ids, roles):
+        data = {
+            "datasetId": dataset_id,
+            "instrumentName": instrument_name,
+            "personIds": person_ids,
+            "familyIds": family_ids,
+            "roles": roles,
+        }
+
+        response = self._post(
+            "pheno_tool/instrument_values",
+            data=data
+        )
+        return response.json()
