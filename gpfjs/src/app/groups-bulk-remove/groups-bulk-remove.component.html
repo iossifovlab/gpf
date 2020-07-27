@@ -5,19 +5,15 @@
       <div *ngFor="let user of users">{{ user.name }} ({{ user.email }})</div>
     </div>
   </div>
-  <div *ngIf="groupsToOptions(groups$ | async) as groupOptions" class="row justify-content-center mt-3">
+  <div *ngIf="(groups$ | async) as groupOptions" class="row justify-content-center mt-3">
     <div class="col-4">
       <div class="form-group">
         <label for="groups">Group</label>
         <div class="groupsInput" >
-          <ng-multiselect-dropdown
-            [settings]="dropdownSettings"
-            [placeholder]="'Select group'"
-            [data]="groupOptions"
-            (onSelect)="changeSelectedGroup($event.text)"
-            (onDeSelect)="clearSelectedGroup($event.text)"
+          <gpf-user-groups-selector
+            [allInputtedGroups]="groupOptions"
           >
-          </ng-multiselect-dropdown>
+          </gpf-user-groups-selector>
         </div>
       </div>
     </div>

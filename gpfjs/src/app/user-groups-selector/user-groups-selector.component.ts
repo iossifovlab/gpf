@@ -24,19 +24,23 @@ export class UserGroupsSelectorComponent implements OnInit {
       allowSearchFilter: true
     };
 
-    this.data = this.toSelectOptions(this.allInputtedGroups);
-    this._selectedGroups = this.filterOutDefaultGroups(this._selectedGroups);
+    this.data = this.groupsToOptions(this.allInputtedGroups);
+
+    if (this.defaultGroups.length !== 0) {
+      this._selectedGroups = this.filterOutDefaultGroups(this._selectedGroups);
+    }
   }
 
-  toSelectOptions(groups: UserGroup[]) {
-    return this.filterOutDefaultGroups(groups.map(group => group.name))
-      .map(group => {
-        return {
-          id: group,
-          text: group,
-          selected: this._selectedGroups.indexOf(group) !== -1
-        };
-      });
+  groupsToOptions(groups: UserGroup[]) {
+    if (!groups) {
+      return null;
+    }
+    return groups.map(group => {
+      return {
+        id: group.name,
+        text: group.name
+      };
+    });
   }
 
   filterOutDefaultGroups(groups: string[]) {
@@ -47,6 +51,10 @@ export class UserGroupsSelectorComponent implements OnInit {
   // Returns the .text values of the selectedGroups object
   get selectedGroups() {
     const groupsArray = [];
+
+    if (!this._selectedGroups) {
+      return;
+    }
 
     for (const group of this._selectedGroups) {
       groupsArray.push(group.text);
