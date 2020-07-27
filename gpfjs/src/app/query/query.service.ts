@@ -18,6 +18,9 @@ export class QueryService {
   private readonly genotypePreviewVariantsUrl = 'genotype_browser/preview/variants';
   private readonly saveQueryEndpoint = 'query_state/save';
   private readonly loadQueryEndpoint = 'query_state/load';
+  private readonly deleteQueryEndpoint = 'query_state/delete';
+  private readonly userSaveQueryEndpoint = 'user_queries/save';
+  private readonly userCollectQueriesEndpoint = 'user_queries/collect';
 
   private readonly headers = new HttpHeaders({ 'Content-Type': 'application/json' });
 
@@ -114,6 +117,14 @@ export class QueryService {
       .map(response => response);
   }
 
+  deleteQuery(uuid:string) {
+    const options = {headers: this.headers, withCredentials: true};
+
+    return this.http
+      .post(this.config.baseUrl + this.deleteQueryEndpoint, { uuid: uuid }, options)
+      .map(response => response);
+  }
+
   getLoadUrl(uuid: string) {
     let pathname = this.router.createUrlTree(
       ['load-query', uuid]).toString();
@@ -124,5 +135,26 @@ export class QueryService {
 
   getLoadUrlFromResponse(response: {}) {
     return this.getLoadUrl(response['uuid']);
+  }
+
+  saveUserQuery(uuid: string, query_name: string, query_description: string) {
+    const options = {headers: this.headers, withCredentials: true};
+
+    const data = {
+      query_uuid: uuid,
+      name: query_name,
+      description: query_description
+    };
+
+    return this.http
+      .post(this.config.baseUrl + this.userSaveQueryEndpoint, data, options)
+      .map(response => response);
+  }
+
+  collectUserSavedQueries() {
+    const options = {withCredentials: true};
+    return this.http
+      .get(this.config.baseUrl + this.userCollectQueriesEndpoint, options)
+      .map(response => response);
   }
 }

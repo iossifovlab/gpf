@@ -13,7 +13,7 @@ import { StateRestoreService } from '../store/state-restore.service';
 })
 export class EffecttypesComponent extends QueryStateWithErrorsProvider implements OnInit {
   @Input()
-  hasCNV = false;
+  variantTypes: Set<string> = new Set([]);
 
   codingColumn: string[] = CODING;
   nonCodingColumn: string[] = NONCODING;

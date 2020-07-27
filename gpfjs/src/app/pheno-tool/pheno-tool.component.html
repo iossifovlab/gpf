@@ -1,9 +1,9 @@
 <div *ngIf="selectedDataset?.accessRights">
 
-  <div class="container">
+  <div class="container" style="margin-bottom: 20px;">
     <gpf-genes-block [showAllTab]="true"></gpf-genes-block>
     <gpf-pheno-tool-measure></gpf-pheno-tool-measure>
-    <gpf-pheno-tool-genotype-block [hasCNV]="selectedDataset?.genotypeBrowserConfig?.hasCNV"></gpf-pheno-tool-genotype-block>
+    <gpf-pheno-tool-genotype-block [variantTypes]="selectedDataset?.genotypeBrowserConfig?.variantTypes"></gpf-pheno-tool-genotype-block>
 
     <gpf-family-filters-block
       *ngIf="selectedDataset?.genotypeBrowserConfig?.hasFamilyFilters"
@@ -17,7 +17,8 @@
           <button type="button" class="btn btn-md btn-primary" (click)="submitQuery()" [disabled]="disableQueryButtons">
             Report
           </button>
-          <gpf-save-query-button queryType="phenotool" [disabled]="disableQueryButtons"></gpf-save-query-button>
+          <gpf-share-query-button queryType="phenotool"></gpf-share-query-button>
+          <gpf-save-query queryType="phenotool"></gpf-save-query>
         </div>
         <div class="btn-group">
           <form

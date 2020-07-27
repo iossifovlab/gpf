@@ -1,8 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { PhenoBrowserService } from './pheno-browser.service';
-import { PhenoInstruments, PhenoMeasures } from './pheno-browser';
+import { PhenoInstruments, PhenoMeasures, PhenoMeasure } from './pheno-browser';
 import { ConfigService } from '../config/config.service';
-import { CookieService } from 'ngx-cookie';
+import { CookieService } from 'ngx-cookie-service';
 // tslint:disable-next-line:import-blacklist
 import { Observable, of } from 'rxjs';
 import { fakeJsonMeasure } from './pheno-browser.spec';
@@ -11,7 +11,7 @@ import { HttpClient } from '@angular/common/http';
 
 describe('pheno browser service', () => {
   let phenoBrowserService: PhenoBrowserService;
-  let httpSpy: { get: jasmine.Spy };
+  let httpSpy;
 
   beforeEach(() => {
     const cookieSpyObj = jasmine.createSpyObj('CookieService', ['get']);
@@ -27,8 +27,8 @@ describe('pheno browser service', () => {
       ]
     });
 
-    phenoBrowserService = TestBed.get(PhenoBrowserService);
-    httpSpy = TestBed.get(HttpClient);
+    phenoBrowserService = TestBed.inject(PhenoBrowserService);
+    httpSpy = TestBed.inject(HttpClient);
   });
 
   it('should fetch instruments', () => {
@@ -44,13 +44,13 @@ describe('pheno browser service', () => {
   });
 
   it('should fetch measures by parameters', () => {
-    const phenoMeasuresJson = {'base_image_url': 'base', 'measures': [fakeJsonMeasure], 'has_descriptions': true, 'regression_names': []};
-    const expectedMeasures: PhenoMeasures = PhenoMeasures.fromJson(phenoMeasuresJson);
+    const phenoMeasuresJson = {'base_image_url': 'base', 'has_descriptions': true, 'regression_names': []};
+    const expectedMeasure: PhenoMeasure = PhenoMeasure.fromJson(fakeJsonMeasure);
     const response = phenoMeasuresJson;
 
     httpSpy.get.and.returnValue(of(response));
     phenoBrowserService.getMeasures(null, null, null).subscribe(
-      measures => expect(measures).toEqual(PhenoMeasures.addBasePath(expectedMeasures)),
+      measures => expect(measures).toEqual(expectedMeasure),
       fail
     );
   });

@@ -1,16 +1,19 @@
 <div class="form-block">
   <div class="card">
-      <gpf-tabset>
-        <div class="gpf-tabset-left">
+      <ul ngbNav #nav="ngbNav" class="navbar bg-light nav-pills" style="justify-content: flex-start">
+        <div class="nav-title-custom">
 	        Enrichment Models
 	    </div>
-        <ngb-tab title="Default">
-        </ngb-tab>
-        <ngb-tab title="Select Models">
-            <ng-template ngbTabContent>
+        <li ngbNavItem>
+            <a ngbNavLink>Default</a>
+        </li>
+        <li ngbNavItem>
+            <a ngbNavLink>Select Models</a>
+            <ng-template ngbNavContent>
               <gpf-enrichment-models [selectedDatasetId]="selectedDatasetId"></gpf-enrichment-models>
             </ng-template>
-        </ngb-tab>
-      </gpf-tabset>
+        </li>
+      </ul>
+      <div [ngbNavOutlet]="nav" class="card-block"></div>
   </div>
 </div>

@@ -5,28 +5,26 @@
   </button>
 </div>
 <div class="modal-body">
-  <div style="display: table;">
+  <div style="display: table; border-spacing: 15px;">
     <div style="display: table-row;">
-      <div style="display: table-cell;">Email</div>
+      <label for="email-input" style="display: table-cell;">Email</label>
       <div style="display: table-cell;">
-        <input class="form-control" [(ngModel)]="email" type="text">
+        <input id="email-input" class="form-control" [(ngModel)]="email" type="text">
       </div>
     </div>
     <div style="display: table-row;">
-      <div style="display: table-cell;">Name:</div>
+      <label for="name-input" style="display: table-cell;">Name</label>
       <div style="display: table-cell;">
-          <input class="form-control" [(ngModel)]="name" type="text">
-      </div>
-    </div>
-    <div style="display: table-row;">
-      <div style="display: table-cell;"> Researcher id:</div>
-      <div style="display: table-cell;">
-        <input class="form-control" [(ngModel)]="researcherId" type="text">
+          <input id="name-input" class="form-control" [(ngModel)]="name" type="text">
       </div>
     </div>
   </div>
-  <div *ngIf="registerError" class="alert alert-danger">
+  <div *ngIf="registerError" style="margin-bottom: 0px;" class="alert alert-danger">
     {{ registerError }}
+  </div>
+
+  <div *ngIf="registerSuccess" style="margin-bottom: 0px;" class="alert alert-info" role="alert">
+    An email has been sent to the given address
   </div>
 </div>
 <div class="modal-footer">

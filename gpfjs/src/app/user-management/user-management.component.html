@@ -1,12 +1,13 @@
 <div class="form-block">
   <div class="card">
-    <gpf-tabset>
-      <div class="gpf-tabset-left">
+    <ul ngbNav #nav="ngbNav" class="navbar bg-light nav-pills" style="justify-content: flex-start">
+      <div class="nav-title-custom">
         Management
       </div>
 
-      <ngb-tab id="users" title="Users">
-        <ng-template ngbTabContent>
+      <li ngbNavItem id="users">
+        <a ngbNavLink>Users</a>
+        <ng-template ngbNavContent>
           <div class="row justify-content-between">
             <div class="col-8 btn-toolbar">
               <div class="input-group search-field mr-3">
@@ -50,18 +51,21 @@
             [users]="users$ | async">
             </gpf-users-table>
         </ng-template>
-      </ngb-tab>
+      </li>
 
-      <ngb-tab id="groups" title="Groups">
-        <ng-template ngbTabContent>
+      <li ngbNavItem id="groups">
+        <a ngbNavLink>Groups</a>
+        <ng-template ngbNavContent>
           <gpf-groups-table></gpf-groups-table>
         </ng-template>
-      </ngb-tab>
-      <ngb-tab id="datasets" title="Datasets">
-        <ng-template ngbTabContent>
+      </li>
+      <li ngbNavItem id="datasets">
+        <a ngbNavLink>Datasets</a>
+        <ng-template ngbNavContent>
           <gpf-datasets-table></gpf-datasets-table>
         </ng-template>
-      </ngb-tab>
-    </gpf-tabset>
+      </li>
+    </ul>
+    <div [ngbNavOutlet]="nav" class="card-block"></div>
   </div>
 </div>

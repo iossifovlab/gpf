@@ -7,6 +7,7 @@ export const inheritanceTypeDisplayNames = {
  'denovo': 'Denovo',
  'possible_denovo': 'Possible denovo',
  'omission': 'Omission',
+ 'possible_omission': 'Possible omission',
  'other': 'Other',
  'missing': 'Missing',
  'unknown': 'Unknown'

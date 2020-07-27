@@ -90,14 +90,8 @@ export class PhenoToolMeasureComponent extends QueryStateWithErrorsProvider impl
   }
 
   uncheckCheckboxes(event) {
-    if (event === null) {
-      return;
-    }
-
-    if (event.name.includes('age')) {
-      this.inputs.find(input => input.nativeElement.id === 'age').nativeElement.checked = false;
-    } else if (event.name.includes('iq')) {
-      this.inputs.find(input => input.nativeElement.id === 'nonverbal_iq').nativeElement.checked = false;
-    }
+    this.inputs.forEach((directive, index) => {
+      directive.nativeElement.checked = false;
+    });
   }
 }

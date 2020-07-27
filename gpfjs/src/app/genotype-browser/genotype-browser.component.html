@@ -1,6 +1,6 @@
 <div *ngIf="selectedDataset$ | async as dataset">
   <div *ngIf="dataset.accessRights">
-    <div class="container">
+    <div class="container" style="margin-bottom: 20px;">
       <gpf-genes-block></gpf-genes-block>
       <gpf-regions-block></gpf-regions-block>
       <gpf-genotype-block></gpf-genotype-block>
@@ -29,7 +29,8 @@
             type="button" class="btn btn-md btn-primary"
             value="Graphical Preview"
             (click)="tablePreview = false; submitQuery()">
-          <gpf-save-query-button [disabled]="disableQueryButtons" queryType="genotype"></gpf-save-query-button>
+          <gpf-share-query-button queryType="genotype"></gpf-share-query-button>
+          <gpf-save-query queryType="genotype"></gpf-save-query>
         </div>
       </div>
     </div>

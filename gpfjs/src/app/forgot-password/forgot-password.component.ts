@@ -11,6 +11,7 @@ import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 export class ForgotPasswordComponent implements OnInit {
   email: string;
   resetPasswordError = '';
+  resetPasswordSuccess = false;
 
   constructor(
     readonly activeModal: NgbActiveModal,
@@ -28,10 +29,11 @@ export class ForgotPasswordComponent implements OnInit {
           this.email = null;
           this.resetPasswordError = '';
 
-          this.activeModal.close('Close click');
+          this.resetPasswordSuccess = true;
         }
       },
       (error: any) => {
+        this.resetPasswordSuccess = false;
         if (error) {
           this.resetPasswordError = error;
         } else {

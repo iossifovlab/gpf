@@ -25,6 +25,13 @@
             [routerLinkActiveOptions]="{ exact: false }"
             (click)="hideSidenav()">Datasets</a>
         </li>
+        <li class="nav-item" *ngIf="('' | userInfo)?.loggedIn">
+          <a class="nav-link"
+            routerLink="/queries"
+            routerLinkActive="active"
+            [routerLinkActiveOptions]="{ exact: false }"
+            (click)="hideSidenav()">Saved queries</a>
+        </li>
         <li class="nav-item" *ngIf="('' | userInfo)?.isAdministrator">
           <a class="nav-link"
             routerLink="/management"

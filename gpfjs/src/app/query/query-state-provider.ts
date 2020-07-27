@@ -1,6 +1,5 @@
 
-import {throwError as observableThrowError,  ReplaySubject, Observable, Subscription} from 'rxjs';
-import {Scheduler} from 'rxjs-compat';
+import {throwError as observableThrowError,  ReplaySubject, Observable, Subscription, asyncScheduler, queueScheduler} from 'rxjs';
 import { DoCheck, OnDestroy, QueryList, ViewChildren, forwardRef } from '@angular/core';
 
 import { validationErrorsToStringArray, toValidationObservable } from '../utils/to-observable-with-validation';
@@ -25,7 +24,7 @@ export abstract class QueryStateWithErrorsProvider extends QueryStateProvider {
         this.errors = validationErrorsToStringArray(errors);
         return observableThrowError(
           `${this.constructor.name}: invalid state`,
-          Scheduler.async);
+          asyncScheduler);
       });
   }
 
@@ -42,6 +41,17 @@ export abstract class QueryStateCollector implements DoCheck, OnDestroy, SaveQue
   @ViewChildren(forwardRef(() => QueryStateCollector))
   contentChildren: QueryList<QueryStateCollector>;
 
+  ngDoCheck() {
+    this.stateChange$.next(true);
+  }
+
+  ngOnDestroy() {
+    for (const subscription of this.subscriptions) {
+      subscription.unsubscribe();
+    }
+    this.subscriptions = new Array<Subscription>();
+  }
+
   collectState() {
     let directState = [];
     let indirectState = [];
@@ -54,17 +64,6 @@ export abstract class QueryStateCollector implements DoCheck, OnDestroy, SaveQue
         .reduce((acc, current) => acc.concat(current.collectState()), []);
     }
     return directState.concat(indirectState);
-  }
-
-  ngDoCheck() {
-    this.stateChange$.next(true);
-  }
-
-  ngOnDestroy() {
-    for (const subscruption of this.subscriptions) {
-      subscruption.unsubscribe();
-    }
-    this.subscriptions = new Array<Subscription>();
   }
 
   getCurrentState() {
@@ -84,7 +83,7 @@ export abstract class QueryStateCollector implements DoCheck, OnDestroy, SaveQue
         return stateJSON;
       })
         .map(state => {
-          const stateObject = Object.assign({}, ...state);
+          const stateObject = Object.assign({}, state);
           return stateObject;
         });
     }
@@ -94,7 +93,7 @@ export abstract class QueryStateCollector implements DoCheck, OnDestroy, SaveQue
 
     const observable = Observable
       .merge(this.stateChange$, this.directContentChildren.changes, this.contentChildren.changes)
-      .subscribeOn(Scheduler.queue)
+      .subscribeOn(queueScheduler)
       .share();
 
     return Observable.concat(observable.first(), observable.skip(1).debounceTime(200))
@@ -121,7 +120,7 @@ export abstract class QueryStateCollector implements DoCheck, OnDestroy, SaveQue
               return '';
             }
 
-            const stateString = JSON.stringify(Object.assign({}, ...state));
+            const stateString = JSON.stringify(Object.assign({}, state));
             if (stateString !== this.stateObjectString) {
               this.stateObjectString = stateString;
             }
@@ -129,7 +128,7 @@ export abstract class QueryStateCollector implements DoCheck, OnDestroy, SaveQue
           });
       })
       .distinctUntilChanged()
-      .subscribeOn(Scheduler.queue);
+      .subscribeOn(queueScheduler);
   }
 
   detectNextStateChange(lambda: () => any) {

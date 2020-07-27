@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 
 // tslint:disable-next-line:import-blacklist
@@ -8,6 +8,8 @@ import { User } from '../users/users';
 import { UsersService } from '../users/users.service';
 import { UserGroup } from '../users-groups/users-groups';
 import { UsersGroupsService } from '../users-groups/users-groups.service';
+import { IDropdownSettings } from 'ng-multiselect-dropdown';
+import { UserGroupsSelectorComponent } from 'app/user-groups-selector/user-groups-selector.component';
 
 @Component({
   selector: 'gpf-user-edit',
@@ -15,7 +17,12 @@ import { UsersGroupsService } from '../users-groups/users-groups.service';
   styleUrls: ['./user-edit.component.css']
 })
 export class UserEditComponent implements OnInit {
-  lockedOptions: Select2Options = {
+  @ViewChild(UserGroupsSelectorComponent)
+  private userGroupsSelectorComponent: UserGroupsSelectorComponent;
+
+  dropdownSettings: IDropdownSettings = {};
+
+  lockedOptions = {
     width: 'style',
     theme: 'bootstrap',
     multiple: true,
@@ -48,18 +55,13 @@ export class UserEditComponent implements OnInit {
       const allGroups = this.usersGroupsService
       .getAllGroups()
       .subscribe(groups => this.groups$.next(groups));
-  }
 
-  getDefaultGroupsSelect2() {
-    return this.getDefaultGroups().map(group => ({
-        id: group,
-        text: group,
-        selected: true,
-      }));
-  }
-
-  updateGroups(groups) {
-    this.user$.value.groups = groups;
+      this.dropdownSettings = {
+        singleSelection: true,
+        idField: 'id',
+        textField: 'text',
+        allowSearchFilter: true,
+      };
   }
 
   getDefaultGroups() {
@@ -67,6 +69,12 @@ export class UserEditComponent implements OnInit {
   }
 
   submit(user) {
+    const selectedGroups = this.userGroupsSelectorComponent.selectedGroups;
+
+    if (!selectedGroups.includes(undefined)) {
+      this.user$.value.groups = this.getDefaultGroups().concat(selectedGroups);
+    }
+
     delete user.email;
     this.usersService.updateUser(user)
       .take(1)

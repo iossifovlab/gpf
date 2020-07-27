@@ -6,6 +6,7 @@ import { Observable } from 'rxjs';
 
 import { VariantReport } from './variant-reports';
 import { environment } from '../../environments/environment';
+import { DatasetsService } from 'app/datasets/datasets.service';
 
 @Injectable()
 export class VariantReportsService {
@@ -14,7 +15,8 @@ export class VariantReportsService {
 
   constructor(
     private http: HttpClient,
-    private config: ConfigService
+    private config: ConfigService,
+    private datasetsService: DatasetsService
   ) {}
 
   getVariantReport(datasetId: string): Observable<VariantReport> {
@@ -28,7 +30,8 @@ export class VariantReportsService {
       });
   }
 
-  getDownloadLink(variantReport: VariantReport) {
-    return `${environment.apiPath}${this.downloadUrl}${variantReport.id}`;
+  getDownloadLink() {
+    const selectedDatasetId = this.datasetsService.getSelectedDatasetId();
+    return `${environment.apiPath}${this.downloadUrl}${selectedDatasetId}`;
   }
 }

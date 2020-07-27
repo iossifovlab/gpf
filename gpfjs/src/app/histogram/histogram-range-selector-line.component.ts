@@ -17,7 +17,7 @@ export class HistogramRangeSelectorLineComponent implements OnInit, AfterViewIni
   @Input() minX: number;
   @Input() maxX: number;
 
-  @ViewChild('draggable') draggable: any;
+  @ViewChild('draggable', {static: true}) draggable: any;
   @ViewChildren('triangle') triangles: QueryList<any>;
 
   @Input() text: string;

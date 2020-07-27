@@ -1,0 +1,34 @@
+<div class="container">
+    <div class="form-block">
+      <div class="card">
+        <ul ngbNav #nav="ngbNav" (navChange)="updateQueries()" class="navbar bg-light nav-pills" style="justify-content: flex-start">
+          <div class="nav-title-custom">
+            Saved queries 
+          </div>
+
+          <li ngbNavItem id="genotype">
+            <a ngbNavLink>Genotype browser</a>
+            <ng-template ngbNavContent>
+              <gpf-saved-queries-table [queries]="genotypeQueries"></gpf-saved-queries-table>
+            </ng-template>
+          </li>
+
+          <li ngbNavItem id="phenotool">
+            <a ngbNavLink>Phenotype tool</a>
+            <ng-template ngbNavContent>
+              <gpf-saved-queries-table [queries]="phenotoolQueries"></gpf-saved-queries-table>
+            </ng-template>
+          </li>
+
+          <li ngbNavItem id="enrichment">
+            <a ngbNavLink>Enrichment tool</a>
+            <ng-template ngbNavContent>
+              <gpf-saved-queries-table [queries]="enrichmentQueries"></gpf-saved-queries-table>
+            </ng-template>
+          </li>
+
+        </ul>
+        <div [ngbNavOutlet]="nav" class="card-block"></div>
+      </div>
+    </div>
+</div>

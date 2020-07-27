@@ -199,3 +199,20 @@ label {
 .popover {
   max-width: 500px;
 }
+
+gpf-global-error-display {
+  position: fixed;
+  bottom: 25px;
+  right: 25px;
+  width: 20%;
+}
+
+.modal-backdrop.fade {
+  transition: none;
+}
+
+.nav-title-custom {
+  font-family: Roboto;
+  font-weight: 500;
+  margin-right: 30px;
+}

@@ -2,7 +2,8 @@
   "compileOnSave": false,
   "angularCompilerOptions": {
     "entryModule": "./app/app.module#AppModule",
-    "genDir": "./ngfactory"
+    "genDir": "./ngfactory",
+    "enableIvy": true
   },
   "compilerOptions": {
     "outDir": "./dist/out-tsc",
@@ -12,7 +13,7 @@
     "moduleResolution": "node",
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "target": "es5",
+    "target": "es2018",
     "typeRoots": [
       "node_modules/@types"
     ],
@@ -20,5 +21,5 @@
       "es2017",
       "dom"
     ]
-  }
+    },
 }

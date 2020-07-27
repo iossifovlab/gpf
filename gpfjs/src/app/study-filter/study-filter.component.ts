@@ -7,7 +7,7 @@ import { StudyFilterState } from './study-filter-store';
   templateUrl: './study-filter.component.html',
   styleUrls: ['./study-filter.component.css']
 })
-export class StudyFilterComponent implements OnChanges {
+export class StudyFilterComponent {
   @Input() studyFilterState: StudyFilterState;
   @Input() errors: string[];
   @Input() studies: string[];
@@ -21,9 +21,4 @@ export class StudyFilterComponent implements OnChanges {
   get selectedStudyNames() {
     return this.studyFilterState.studyName;
   }
-
-  ngOnChanges(changes: SimpleChanges) {
-    this.studies = changes.studies.currentValue;
-  }
-
 }

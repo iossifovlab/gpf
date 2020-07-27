@@ -27,7 +27,7 @@ export class HistogramComponent implements OnInit, OnChanges {
   @Input() height: number;
   @Input() marginLeft = 100;
   @Input() marginTop = 10;
-  @ViewChild('histogramContainer') histogramContainer: any;
+  @ViewChild('histogramContainer', {static: true}) histogramContainer: any;
 
   @Input() bins: Array<number>;
   @Input() bars: Array<number>;

@@ -7,10 +7,9 @@ import { IdName } from '../common/idname';
 import { Dataset } from '../datasets/datasets';
 import { ConfigService } from '../config/config.service';
 
-import {
-  BaseRequestOptions, Http, HttpModule, XHRBackend,
-  Response, ResponseOptions
-} from '@angular/http';
+// import {
+//   BaseRequestOptions, XHRBackend, Response, ResponseOptions
+// } from '@angular/http';
 
 // import { MockBackend, MockConnection } from '@angular/http/testing/mock_backend';
 import { Observable } from 'rxjs';
@@ -31,7 +30,6 @@ const mockDatasetResponse: Dataset = {
   commonReport: true,
 
   genotypeBrowserConfig: {
-    hasCNV: false,
     hasAdvancedFamilyFilters: false,
     hasPedigreeSelector: true,
     hasStudyTypes: false,

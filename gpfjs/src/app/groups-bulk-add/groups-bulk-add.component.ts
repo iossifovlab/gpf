@@ -2,12 +2,12 @@
 import {throwError as observableThrowError,  Observable, BehaviorSubject } from 'rxjs';
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Select2OptionData } from 'ng2-select2';
 
 import { User } from '../users/users';
 import { UsersService } from '../users/users.service';
 import { UserGroup } from '../users-groups/users-groups';
 import { UsersGroupsService } from '../users-groups/users-groups.service';
+import { IDropdownSettings } from 'ng-multiselect-dropdown';
 
 @Component({
   selector: 'gpf-groups-bulk-add',
@@ -15,10 +15,10 @@ import { UsersGroupsService } from '../users-groups/users-groups.service';
   styleUrls: ['./groups-bulk-add.component.css']
 })
 export class GroupsBulkAddComponent implements OnInit {
-  configurationOptions: Select2Options;
   users$ = new BehaviorSubject<User[]>(null);
   groups$: Observable<UserGroup[]>;
   group: string;
+  dropdownSettings: IDropdownSettings = {};
 
   constructor(
     private route: ActivatedRoute,
@@ -36,11 +36,11 @@ export class GroupsBulkAddComponent implements OnInit {
     // this.users$ =
     this.groups$ = this.usersGroupsService.getAllGroups();
 
-
-    this.configurationOptions = {
-      tags: true,
-      placeholder: 'Select or type a new group name',
-      width: 'style'
+    this.dropdownSettings = {
+      singleSelection: true,
+      idField: 'id',
+      textField: 'text',
+      allowSearchFilter: true
     };
   }
 
@@ -77,7 +77,7 @@ export class GroupsBulkAddComponent implements OnInit {
       return {
         id: group.name,
         text: group.name
-      } as Select2OptionData;
+      };
     });
   }
 
@@ -102,8 +102,11 @@ export class GroupsBulkAddComponent implements OnInit {
       .subscribe(() => this.router.navigate(['/management']));
   }
 
-  changeSelectedGroup(group) {
+  changeSelectedGroup(group: string) {
     this.group = group;
   }
 
+  clearSelectedGroup(group: string) {
+    this.group = undefined;
+  }
 }

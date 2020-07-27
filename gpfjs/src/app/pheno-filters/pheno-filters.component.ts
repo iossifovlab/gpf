@@ -34,13 +34,12 @@ export class PhenoFiltersComponent extends QueryStateWithErrorsProvider implemen
       this.dataset.genotypeBrowserConfig.phenoFilters
       .concat(this.dataset.genotypeBrowserConfig.familyFilters || [])
       .map(phenoFilter => {
-        console.log(phenoFilter);
         if (phenoFilter.measureType === 'continuous') {
           const continuousFilterState = new ContinuousFilterState(
             phenoFilter.name,
             phenoFilter.measureType,
-            phenoFilter.measureFilter.role,
-            phenoFilter.measureFilter.measure,
+            phenoFilter.role,
+            phenoFilter.measure,
           );
           return [
             phenoFilter, continuousFilterState
@@ -49,8 +48,8 @@ export class PhenoFiltersComponent extends QueryStateWithErrorsProvider implemen
           const categoricalFilterState = new CategoricalFilterState(
             phenoFilter.name,
             phenoFilter.measureType,
-            phenoFilter.measureFilter.role,
-            phenoFilter.measureFilter.measure,
+            phenoFilter.role,
+            phenoFilter.measure,
           );
 
           return [

@@ -1,16 +1,16 @@
 <div *ngIf="selectedDataset$ | async as dataset">
   <div *ngIf="dataset.accessRights">
 
-    <div class="container">
+    <div class="container" style="margin-bottom: 20px;">
       <gpf-genes-block [showAllTab]="false"></gpf-genes-block>
       <gpf-enrichment-models-block [selectedDatasetId]="selectedDatasetId"></gpf-enrichment-models-block>
       
       <div class="form-block">
         <input class="btn btn-md btn-primary" type="button" value="Enrichment Test" (click)="submitQuery()">
-        <gpf-save-query-button queryType="enrichment"></gpf-save-query-button>
+        <gpf-share-query-button queryType="enrichment"></gpf-share-query-button>
+        <gpf-save-query queryType="enrichment"></gpf-save-query>
       </div>
       <gpf-enrichment-table [enrichmentResults]="enrichmentResults"></gpf-enrichment-table>
     </div>
-
   </div>
 </div>

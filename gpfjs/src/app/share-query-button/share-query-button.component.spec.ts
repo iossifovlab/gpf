@@ -1,20 +1,20 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { SaveQueryButtonComponent } from './save-query-button.component';
+import { ShareQueryButtonComponent } from './share-query-button.component';
 
-describe('SaveQueryButtonComponent', () => {
-  let component: SaveQueryButtonComponent;
-  let fixture: ComponentFixture<SaveQueryButtonComponent>;
+describe('ShareQueryButtonComponent', () => {
+  let component: ShareQueryButtonComponent;
+  let fixture: ComponentFixture<ShareQueryButtonComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ SaveQueryButtonComponent ]
+      declarations: [ ShareQueryButtonComponent ]
     })
     .compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(SaveQueryButtonComponent);
+    fixture = TestBed.createComponent(ShareQueryButtonComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

@@ -8,7 +8,7 @@
         </div>
 
         <div class="col-12 mb-1">
-          <h5>Total number of families: {{ variantReport.familyReport.familiesTotal }} <span>(<a [href]="getDownloadLink(variantReport)" download>Download</a>)</span></h5>
+          <h5>Total number of families: {{ variantReport.familyReport.familiesTotal }} <span>(<a [href]="getDownloadLink()" download>Download</a>)</span></h5>
         </div>
       </div>
       
@@ -17,7 +17,7 @@
       </div>
 
       <div class="col-sm-3" class="variants-report-selector">
-        <select class="form-control" [(ngModel)]="this.currentPeopleCounter">
+        <select id="families-by-number-dropdown-button" class="form-control" [(ngModel)]="this.currentPeopleCounter">
           <option value="" selected="selected"></option>
           <option *ngFor="let peopleCounter of variantReport.familyReport.peopleCounters" [ngValue]="peopleCounter">
             {{ peopleCounter.groupName }}
@@ -113,11 +113,11 @@
       <div *ngIf="variantReport.denovoReport">
         <div class="col-12 mb-1">
           <h5>De Novo Variants of:</h5>
-          <h5><small class="text-muted">Legend: "number of observed events", "observed rate per child" ("number of children with events", "percent of children with events")</small></h5>
+          <h5><small class="text-muted">Legend: "number of observed events", "observed rate per individual" ("number of individuals with events", "percent of individuals with events")</small></h5>
         </div>
 
         <div class="col-sm-3" class="variants-report-selector">
-          <select class="form-control" [(ngModel)]="this.currentDenovoReport">
+          <select id="denovo-variants-dropdown-button" class="form-control" [(ngModel)]="this.currentDenovoReport">
             <option value="" selected="selected"></option>
             <option *ngFor="let denovoReport of variantReport.denovoReport.tables" [ngValue]="denovoReport">
               {{ denovoReport.groupName }}
@@ -130,7 +130,7 @@
             <div class="col-12">
               <table class="table table-bordered table-hover table-sm table-centered">
                 <thead>
-                  <th>Phenotype</th>
+                  <th>Effect type</th>
                   <th class="rotate" *ngFor="let column of this.currentDenovoReport.columns">
                     <div>{{ column }}</div>
                   </th>

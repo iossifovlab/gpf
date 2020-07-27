@@ -42,9 +42,7 @@ export class PhenoToolComponent extends QueryStateCollector
     const state = super.getCurrentState();
 
     return state.map(state => {
-        const stateObject = Object.assign(
-          { datasetId: this.selectedDatasetId },
-          ...state);
+        const stateObject = Object.assign({ datasetId: this.selectedDatasetId }, state);
         return stateObject;
       });
   }
@@ -98,7 +96,6 @@ export class PhenoToolComponent extends QueryStateCollector
     this.getCurrentState()
       .subscribe(state => {
         event.target.queryData.value = JSON.stringify(state);
-        console.log(event.target);
         event.target.submit();
       },
       error => null

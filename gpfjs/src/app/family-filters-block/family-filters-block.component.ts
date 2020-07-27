@@ -19,7 +19,7 @@ import { NgbTabChangeEvent } from '@ng-bootstrap/ng-bootstrap';
 export class FamilyFiltersBlockComponent extends QueryStateCollector implements AfterViewInit {
   @Input() dataset: Dataset;
   @Input() genotypeBrowserState: Object;
-  @ViewChild('tabset') ngbTabset;
+  @ViewChild('nav') ngbNav;
 
   constructor(
     private stateRestoreService: StateRestoreService
@@ -27,16 +27,15 @@ export class FamilyFiltersBlockComponent extends QueryStateCollector implements 
     super();
   }
 
-
   ngAfterViewInit() {
     this.stateRestoreService.getState(this.constructor.name)
       .take(1)
       .subscribe(state => {
 
           if ('familyIds' in state) {
-            this.ngbTabset.select('family-ids');
+            this.ngbNav.select('familyIds');
           } else if ('phenoFilters' in state) {
-            this.ngbTabset.select('pheno-filters');
+            this.ngbNav.select('phenoFilters');
           }
 
         }
