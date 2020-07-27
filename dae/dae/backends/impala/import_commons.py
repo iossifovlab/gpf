@@ -701,14 +701,14 @@ class BatchImporter:
     def generate_instructions(self, argv):
         dirname = self._create_output_directory(argv)
         context = self.build_context(argv)
-        if argv.tool_format == "make":
+        if argv.tool == "make":
             generator = MakefileGenerator()
             filename = os.path.join(dirname, "Makefile")
-        elif argv.tool_format == "snakemake":
+        elif argv.tool == "snakemake":
             generator = SnakefileGenerator()
             filename = os.path.join(dirname, "Snakefile")
         else:
-            assert False, f"unexpected tool format: {argv.tool_format}"
+            assert False, f"unexpected tool format: {argv.tool}"
 
         content = generator.generate(context)
 
@@ -769,9 +769,6 @@ class BatchImporter:
             context["variants"][prefix] = variants_context
 
         context["mirror_of"] = None
-        from pprint import pprint
-        pprint(self.gpf_instance.dae_config)
-        pprint(context)
 
         return context
 
@@ -930,11 +927,11 @@ class BatchImporter:
             help="Config used to overwrite values in generated configuration",
         )
         parser.add_argument(
-            "--tool-format",
+            "--tool",
             type=str,
             default="make",
-            dest="tool_format",
-            help="Tool format of generated build instructions. "
+            dest="tool",
+            help="Tool format for generated build instructions. "
             "Supported options are 'snakemake' and 'make'. "
             "[default: 'snakemake']",
         )
