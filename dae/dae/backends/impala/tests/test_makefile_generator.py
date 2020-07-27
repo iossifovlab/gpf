@@ -120,7 +120,7 @@ def test_makefile_generator_denovo_and_dae(
     assert importer.denovo_loader is not None
     assert importer.dae_loader is not None
 
-    importer.generate_makefile(argv)
+    importer.generate_instructions(argv)
 
     assert os.path.exists(os.path.join(temp_dirname, "Makefile"))
     with open(os.path.join(temp_dirname, "Makefile"), "rt") as infile:

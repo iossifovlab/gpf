@@ -252,17 +252,16 @@ pedigree.flag:
 {%- for prefix, context in variants.items() %}
 
 {{prefix}}_%.flag:
-\t\t(time {{prefix}}2parquet.py --study_id {{study_id}} \\
-\t\t\t{{pedigree.options}} {{pedigree.pedigree}} \\
-\t\t\t{{ context.options }} \\
-\t\t\t{{ context.variants }} \\
+\t(time {{prefix}}2parquet.py --study-id {{study_id}} \\
+\t\t{{pedigree.options}} {{pedigree.pedigree}} \\
+\t\t{{context.options}} {{context.variants}} \\
 {%- if partition_description %}
-\t\t\t--pd {{partition_description}} \\
+\t\t--pd {{partition_description}} \\
 {%- endif %}
-\t\t\t-o {{ variants_output }} \\
-\t\t\t--rb $* > logs/{{prefix}}_$*_stdout.log \\
-\t\t\t2> logs/{{prefix}}_$*_stderr.log && touch $@) \\
-\t\t\t2> logs/{{prefix}}_$*_benchmark.txt
+\t\t-o {{ variants_output }} \\
+\t\t--rb $* > logs/{{prefix}}_$*_stdout.log \\
+\t\t2> logs/{{prefix}}_$*_stderr.log && touch $@) \\
+\t\t2> logs/{{prefix}}_$*_benchmark.txt
 
 {%- endfor %}
 
@@ -358,11 +357,12 @@ rule pedigree:
         stderr="logs/pedigree_stderr.log"
     shell:
         '''
-        ped2parquet.py {{pedigree.options}} --study-id {{study_id}} \\
+        ped2parquet.py --study-id {{study_id}} \\
 {%- if partition_description %}
             --pd {input.partition_description} \\
 {%- endif %}
-            {input.pedigree} -o {output.parquet} > {log.stdout} 2> {log.stderr}
+            {{pedigree.params}} {input.pedigree} \\
+            -o {output.parquet} > {log.stdout} 2> {log.stderr}
         '''
 
 {%- for prefix, context in variants.items() %}
@@ -386,9 +386,8 @@ rule {{prefix}}_variants_region_bin:
     shell:
         '''
         {{prefix}}2parquet.py --study-id {{study_id}} \\
-            {{pedigree.options}} {input.pedigree} \\
-            {{context.options}} \\
-            {input.variants} \\
+            {{pedigree.params}} {input.pedigree} \\
+            {{context.params}} {input.variants} \\
 {%- if partition_description %}
             --pd {input.partition_description} \\
 {%- endif %}
@@ -681,28 +680,22 @@ class BatchImporter:
         os.makedirs(os.path.join(dirname, "logs"), exist_ok=True)
         return dirname
 
-    def generate_makefile(self, argv):
-        assert argv.tool_format == "make"
+    def generate_instructions(self, argv):
         dirname = self._create_output_directory(argv)
         context = self.build_context(argv)
-        generator = MakefileGenerator()
+        if argv.tool_format == "make":
+            generator = MakefileGenerator()
+            filename = os.path.join(dirname, "Makefile")
+        elif argv.tool_format == "snakemake":
+            generator = SnakefileGenerator()
+            filename = os.path.join(dirname, "Snakefile")
+        else:
+            assert False, f"unexpected tool format: {argv.tool_format}"
+
         content = generator.generate(context)
 
-        with open(os.path.join(dirname, "Makefile"), "w") as outfile:
+        with open(filename, "w") as outfile:
             outfile.write(content)
-
-            # self.generate_preamble(argv, outfile)
-            # self.generate_variants_bins(argv, outfile)
-            # self.generate_default_targets(argv, outfile)
-            # self.generate_all_targets(argv, outfile)
-            # self.generate_variants_targets(argv, outfile)
-            # self.generate_pedigree_rule(argv, outfile)
-            # self.generate_variants_rules(argv, outfile)
-            # self.generate_hdfs_load_targets(argv, outfile)
-            # self.generate_impala_load_targets(argv, outfile)
-            # self.generate_setup_instance_targets(argv, outfile)
-            # self.generate_report_targets(argv, outfile)
-            # self.generate_setup_remote_targets(argv, outfile)
 
     def build_context(self, argv):
         outdir = self._create_output_directory(argv)
@@ -720,7 +713,8 @@ class BatchImporter:
 
         pedigree_params = FamiliesLoader.build_cli_arguments(
             self.families_loader.params)
-        pedigree_pedigree = self.families_loader.filename
+        pedigree_pedigree = os.path.abspath(
+            self.families_loader.filename)
         pedigree_output = os.path.join(
             outdir, f"{study_id}_pedigree", "pedigree.parquet")
         context["pedigree"] = {
@@ -748,7 +742,10 @@ class BatchImporter:
 
             variants_context["bins"] = list(variants_targets.keys())
             variants_context["variants"] = " ".join(
-                variants_loader.variants_filenames)
+                [
+                    os.path.abspath(fn)
+                    for fn in variants_loader.variants_filenames
+                ])
             variants_context["params"] = variants_loader.build_cli_arguments(
                 variants_loader.params)
             context["variants"][prefix] = variants_context
@@ -793,382 +790,6 @@ class BatchImporter:
         with open(os.path.join(
                 dirname, f"{self.study_id}.conf"), "w") as outfile:
             outfile.write(config)
-
-    def _collect_variants_targets(self):
-        variants_targets = []
-        if self.denovo_loader is not None:
-            variants_targets.append("$(denovo_bins_flags)")
-        if self.cnv_loader is not None:
-            variants_targets.append("$(cnv_bins_flags)")
-        if self.vcf_loader is not None:
-            variants_targets.append("$(vcf_bins_flags)")
-        if self.dae_loader is not None:
-            variants_targets.append("$(dae_bins_flags)")
-        return variants_targets
-
-    def generate_default_targets(self, argv, outfile=sys.stdout):
-        print("\n", file=outfile)
-        print("default:", "reports", file=outfile)
-
-    def generate_all_targets(self, argv, outfile=sys.stdout):
-        targets = [
-            f"${{OUTDIR}}/ped.flag",
-            f"${{OUTDIR}}/hdfs.flag",
-            f"${{OUTDIR}}/impala.flag",
-            f"${{OUTDIR}}/setup_instance.flag",
-            f"${{OUTDIR}}/reports.flag",
-        ]
-        if self.gpf_instance.dae_config.mirror_of is not None:
-            targets.append(
-                f"${{OUTDIR}}/setup_remote.flag")
-
-        targets.extend(self._collect_variants_targets())
-
-        print("\n", file=outfile)
-        print("all:", " ".join(targets), file=outfile)
-
-    def generate_variants_targets(self, argv, outfile=sys.stdout):
-        variants_targets = self._collect_variants_targets()
-        if len(variants_targets) > 0:
-            print("\n", file=outfile)
-            print("variants:", " ".join(variants_targets), file=outfile)
-
-    def _construct_pedigree_command(self, argv):
-        families_params = FamiliesLoader.build_cli_arguments(
-            self.families_loader.params
-        )
-        families_filename = self.families_loader.filename
-        families_filename = os.path.abspath(families_filename)
-
-        command = [
-            f"ped2parquet.py {families_params} {families_filename}",
-            f"--study-id {self.study_id}",
-            f"-o ${{OUTDIR}}/{self.study_id}_pedigree/pedigree.parquet",
-        ]
-        if argv.partition_description is not None:
-            pd = os.path.abspath(argv.partition_description)
-            command.append(f"--pd {pd}")
-
-        return " ".join(command)
-
-    def generate_pedigree_rule(self, argv, outfile=sys.stdout):
-        print("\n", file=outfile)
-        print(f"pedigree: ${{OUTDIR}}/ped.flag\n", file=outfile)
-
-        command = self._construct_pedigree_command(argv)
-        print(
-            f"${{OUTDIR}}/ped.flag:\n"
-            f"\t{command} && touch $@", file=outfile)
-
-    def _construct_variants_command(self, argv, variants_loader, tool_command):
-        families_params = FamiliesLoader.build_cli_arguments(
-            self.families_loader.params)
-
-        families_filename = self.families_loader.filename
-        families_filename = os.path.abspath(families_filename)
-
-        variants_params = variants_loader.build_cli_arguments(
-            variants_loader.params)
-
-        variants_filenames = [
-            os.path.abspath(fn) for fn in variants_loader.variants_filenames
-        ]
-        variants_filenames = " ".join(variants_filenames)
-
-        command = [
-            f"{tool_command}",
-            f"{families_params} {families_filename}",
-            f"{variants_params} {variants_filenames}",
-            f"--study-id {self.study_id}",
-            f"-o ${{OUTDIR}}/{self.study_id}_variants",
-        ]
-        if argv.partition_description is not None:
-            pd = os.path.abspath(argv.partition_description)
-            command.append(f"--pd {pd}")
-        if argv.add_chrom_prefix is not None:
-            command.append(f"--add-chrom-prefix {argv.add_chrom_prefix}")
-        if argv.del_chrom_prefix is not None:
-            command.append(f"--del-chrom-prefix {argv.del_chrom_prefix}")
-
-        return " ".join(command)
-
-    def _generate_variants_bins(
-        self, argv, target_prefix, variants_loader, outfile=sys.stdout
-    ):
-        if "target_chromosomes" in argv and \
-                argv.target_chromosomes is not None:
-
-            target_chromosomes = argv.target_chromosomes
-        else:
-            target_chromosomes = variants_loader.chromosomes
-
-        variants_targets = self.partition_helper.generate_variants_targets(
-            target_chromosomes
-        )
-
-        bins = " ".join(list(variants_targets.keys()))
-
-        print("\n", file=outfile)
-        print(f"{target_prefix}_bins={bins}", file=outfile)
-        print(
-            f"{target_prefix}_bins_flags="
-            f"$(foreach bin, $({target_prefix}_bins), "
-            f"${{OUTDIR}}/{target_prefix}_$(bin).flag)\n",
-            file=outfile,
-        )
-
-    def generate_vcf_bins(self, argv, outfile=sys.stdout):
-        if self.vcf_loader is None:
-            return
-
-        self._generate_variants_bins(
-            argv, "vcf", self.vcf_loader, outfile=outfile
-        )
-
-    def generate_denovo_bins(self, argv, outfile=sys.stdout):
-        if self.denovo_loader is None:
-            return
-
-        self._generate_variants_bins(
-            argv, "denovo", self.denovo_loader, outfile=outfile
-        )
-
-    def generate_cnv_bins(self, argv, outfile=sys.stdout):
-        if self.cnv_loader is None:
-            return
-
-        self._generate_variants_bins(
-            argv, "cnv", self.cnv_loader, outfile=outfile
-        )
-
-    def generate_dae_bins(self, argv, outfile=sys.stdout):
-        if self.dae_loader is None:
-            return
-
-        self._generate_variants_bins(
-            argv, "dae", self.dae_loader, outfile=outfile
-        )
-
-    def generate_preamble(self, argv, outfile=sys.stdout):
-        print("SHELL=/bin/bash -o pipefail", file=outfile)
-        print(".DELETE_ON_ERROR:", file=outfile)
-        outdir = self._get_output_dir(argv)
-        print(f"OUTDIR={outdir}", file=outfile)
-        print(file=outfile)
-
-    def generate_variants_bins(self, argv, outfile=sys.stdout):
-        self.generate_vcf_bins(argv, outfile)
-        self.generate_dae_bins(argv, outfile)
-        self.generate_denovo_bins(argv, outfile)
-        self.generate_cnv_bins(argv, outfile)
-
-    def _generate_variants_rule(
-        self,
-        argv,
-        target_prefix,
-        variants_loader,
-        variants_tool,
-        outfile=sys.stdout,
-    ):
-
-        print(
-            f"{target_prefix}_variants: $({target_prefix}_bins_flags)\n",
-            file=outfile)
-
-        command = self._construct_variants_command(
-            argv, variants_loader, variants_tool
-        )
-        print(
-            f"${{OUTDIR}}/{target_prefix}_%.flag:\n"
-            f"\t(time {command} --rb $* "
-            f"> ${{OUTDIR}}/logs/{target_prefix}_$*_out.txt "
-            f"2> ${{OUTDIR}}/logs/{target_prefix}_$*_err.txt) "
-            f"2> ${{OUTDIR}}/logs/{target_prefix}_$*_time.txt && touch $@\n",
-            file=outfile)
-
-    def generate_vcf_rule(self, argv, outfile=sys.stdout):
-        if self.vcf_loader is None:
-            return
-
-        self._generate_variants_rule(
-            argv, "vcf", self.vcf_loader, "vcf2parquet.py", outfile=outfile)
-
-    def generate_denovo_rule(self, argv, outfile=sys.stdout):
-        if self.denovo_loader is None:
-            return
-
-        self._generate_variants_rule(
-            argv,
-            "denovo",
-            self.denovo_loader,
-            "denovo2parquet.py",
-            outfile=outfile)
-
-    def generate_cnv_rule(self, argv, outfile=sys.stdout):
-        if self.cnv_loader is None:
-            return
-
-        self._generate_variants_rule(
-            argv,
-            "cnv",
-            self.cnv_loader,
-            "cnv2parquet.py",
-            outfile=outfile)
-
-    def generate_dae_rule(self, argv, outfile=sys.stdout):
-        if self.dae_loader is None:
-            return
-
-        self._generate_variants_rule(
-            argv, "dae", self.dae_loader, "dae2parquet.py", outfile=outfile)
-
-    def generate_variants_rules(self, argv, outfile=sys.stdout):
-        self.generate_vcf_rule(argv, outfile)
-        self.generate_dae_rule(argv, outfile)
-        self.generate_denovo_rule(argv, outfile)
-        self.generate_cnv_rule(argv, outfile)
-
-    def _construct_hdfs_load_command(self, argv):
-        assert self.genotype_storage_id is not None
-
-        command = [
-            f"hdfs_parquet_loader.py {self.study_id}",
-            f"${{OUTDIR}}/{self.study_id}_pedigree/pedigree.parquet",
-            f"${{OUTDIR}}/{self.study_id}_variants",
-            f"--gs {self.genotype_storage_id}",
-        ]
-
-        # if argv.study_config:
-        #     command.append(f"--study-config ./{self.study_id}.conf")
-
-        return " ".join(command)
-
-    def _construct_impala_load_command(self, argv):
-        assert self.genotype_storage_id is not None
-
-        command = [
-            f"impala_tables_loader.py {self.study_id}",
-            f"--gs {self.genotype_storage_id}",
-            f"--variants-schema", 
-            os.path.join(
-                f"${{OUTDIR}}",
-                f"{self.study_id}_variants",
-                "_VARIANTS_SCHEMA"),
-        ]
-
-        if argv.partition_description is not None:
-            pd = os.path.join(
-                f"${{OUTDIR}}",
-                f"{self.study_id}_variants",
-                "_PARTITION_DESCRIPTION")
-
-            command.append(f"--pd {pd}")
-
-        return " ".join(command)
-
-    def _get_output_dir(self, argv):
-        output = argv.output
-        if output is None:
-            output = "."
-        output = os.path.abspath(output)
-        return output
-
-    def generate_hdfs_load_targets(self, argv, outfile=sys.stdout):
-        print("\n", file=outfile)
-        print(f"hdfs: ${{OUTDIR}}/hdfs.flag\n", file=outfile)
-
-        command = self._construct_hdfs_load_command(argv)
-        variants_targets = self._collect_variants_targets()
-        if len(variants_targets) > 0:
-            variants_targets = " ".join(variants_targets)
-            print(
-                f"${{OUTDIR}}/hdfs.flag: "
-                f"${{OUTDIR}}/ped.flag {variants_targets}\n"
-                f"\t{command} && touch $@",
-                file=outfile,
-            )
-        else:
-            print(
-                f"hdfs.flag: ${{OUTDIR}}/ped.flag\n"
-                f"\t{command} && touch $@",
-                file=outfile)
-
-    def generate_impala_load_targets(self, argv, outfile=sys.stdout):
-        print("\n", file=outfile)
-        print(f"impala: ${{OUTDIR}}/impala.flag\n", file=outfile)
-
-        command = self._construct_impala_load_command(argv)
-        print(
-            f"${{OUTDIR}}/impala.flag: "
-            f"${{OUTDIR}}/hdfs.flag\n"
-            f"\t{command} && touch $@",
-            file=outfile,
-        )
-
-    def generate_setup_instance_targets(self, argv, outfile=sys.stdout):
-        dae_config = self.gpf_instance.dae_config
-        rsync_helper = RsyncHelpers(dae_config.dae_data_dir)
-
-        command = rsync_helper._copy_to_remote_cmd(
-            f"${{OUTDIR}}/{self.study_id}.conf",
-            f"studies/{self.study_id}/",
-            ignore_existing=True,
-            clear_remote=False)
-
-        print("\n", file=outfile)
-        print(
-            f"setup_instance: ${{OUTDIR}}/setup_instance.flag\n",
-            file=outfile)
-        print(
-            f"${{OUTDIR}}/setup_instance.flag: ${{OUTDIR}}/impala.flag",
-            file=outfile)
-        print(f"\t{command} && touch $@", file=outfile)
-        print(f"\n", file=outfile)
-
-    def generate_setup_remote_targets(self, argv, outfile=sys.stdout):
-        dae_config = self.gpf_instance.dae_config
-        if dae_config.mirror_of is None:
-            return
-
-        study_dir = os.path.join(
-            dae_config.dae_data_dir,
-            "studies",
-            self.study_id)
-
-        rsync_helper = RsyncHelpers(dae_config.mirror_of)
-        command = rsync_helper._copy_to_remote_cmd(
-            study_dir,
-            f"studies/{self.study_id}/",
-            ignore_existing=True,
-            clear_remote=False)
-
-        print("\n", file=outfile)
-        print(f"setup_remote: ${{OUTDIR}}/setup_remote.flag\n", file=outfile)
-        print(
-            f"${{OUTDIR}}/setup_remote.flag: ${{OUTDIR}}/reports.flag",
-            file=outfile)
-        print(f"\t{command} && touch $@", file=outfile)
-        print(f"\n", file=outfile)
-
-    def _construct_reports_commands(self, argv):
-
-        command = [
-            f"generate_common_report.py --studies {self.study_id}",
-            f"generate_denovo_gene_sets.py --studies {self.study_id}",
-        ]
-
-        return command
-
-    def generate_report_targets(self, argv, outfile=sys.stdout):
-        print("\n", file=outfile)
-        print(f"reports: ${{OUTDIR}}/reports.flag\n", file=outfile)
-        commands = self._construct_reports_commands(argv)
-        print(
-            f"${{OUTDIR}}/reports.flag: ${{OUTDIR}}/setup_instance.flag",
-            file=outfile)
-        for command in commands:
-            print(f"\t{command} && touch $@", file=outfile)
-        print(f"\n", file=outfile)
 
     @classmethod
     def cli_arguments_parser(cls, gpf_instance):
@@ -1309,7 +930,7 @@ class BatchImporter:
 
         importer = BatchImporter(gpf_instance)
         importer.build(argv)
-        importer.generate_makefile(argv)
+        importer.generate_instructions(argv)
         importer.generate_study_config(argv)
 
 
