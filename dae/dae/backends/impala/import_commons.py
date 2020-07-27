@@ -333,12 +333,24 @@ class SnakefileGenerator(BatchGenerator):
     TEMPLATE = Template(
         """\
 
+rule default:
+    input:
+        "reports.flag"
+
 rule all:
     input:
         "pedigree.flag",
 {%- for prefix in variants %}
         "{{prefix}}_variants.flag",
 {%- endfor %}
+        "hdfs.flag",
+        "impala.flag",
+        "setup_instance.flag",
+        "reports.flag",
+{%- if mirror_of %}
+        "setup_remote.flag",
+{%- endif %}
+
 
 
 rule pedigree:
@@ -372,10 +384,11 @@ rule pedigree:
 rule {{prefix}}_variants_region_bin:
     input:
         pedigree="{{pedigree.pedigree}}",
-        variants="{{context.variants}}",
 {%- if partition_description %}
         partition_description="{{partition_description}}",
 {%- endif %}
+    params:
+        variants="{{context.variants}}",
     output:
         {{prefix}}_flag=touch("{{prefix}}_{rb}.flag")
     benchmark:
@@ -387,7 +400,7 @@ rule {{prefix}}_variants_region_bin:
         '''
         {{prefix}}2parquet.py --study-id {{study_id}} \\
             {{pedigree.params}} {input.pedigree} \\
-            {{context.params}} {input.variants} \\
+            {{context.params}} {params.variants} \\
 {%- if partition_description %}
             --pd {input.partition_description} \\
 {%- endif %}
@@ -466,7 +479,7 @@ rule setup_instance:
             --rsync-path \\
             "mkdir -p {{dae_db_dir}}/studies/{{study_id}}/ && rsync" \\
             --ignore-existing \\
-            {{outdir}}/ {{dae_db_dir}}/studies/{{study_id}}/
+            {{outdir}}/{{study_id}}.conf {{dae_db_dir}}/studies/{{study_id}}/
         '''
 
 rule reports:
@@ -476,6 +489,9 @@ rule reports:
         touch("reports.flag")
     benchmark:
         "logs/reports_benchmark.tsv"
+    log:
+        stdout="logs/reports_stdout.log",
+        stderr="logs/reports_stderr.log"
     shell:
         '''
         generate_common_report.py --studies {{study_id}} \\
@@ -676,6 +692,8 @@ class BatchImporter:
         dirname = argv.output
         if dirname is None:
             dirname = "."
+        dirname = os.path.abspath(dirname)
+
         os.makedirs(dirname, exist_ok=True)
         os.makedirs(os.path.join(dirname, "logs"), exist_ok=True)
         return dirname
@@ -704,7 +722,7 @@ class BatchImporter:
         context = {
             "study_id": study_id,
             "outdir": outdir,
-            "dae_db_dir": self.gpf_instance.dae_config.dae_db_dir,
+            "dae_db_dir": self.gpf_instance.dae_db_dir,
         }
         if argv.genotype_storage:
             context["genotype_storage"] = argv.genotype_storage
@@ -715,8 +733,8 @@ class BatchImporter:
             self.families_loader.params)
         pedigree_pedigree = os.path.abspath(
             self.families_loader.filename)
-        pedigree_output = os.path.join(
-            outdir, f"{study_id}_pedigree", "pedigree.parquet")
+        pedigree_output = os.path.abspath(os.path.join(
+            outdir, f"{study_id}_pedigree", "pedigree.parquet"))
         context["pedigree"] = {
             "pedigree": pedigree_pedigree,
             "params": pedigree_params,
@@ -724,8 +742,8 @@ class BatchImporter:
         }
 
         if self.variants_loaders:
-            context["variants_output"] = os.path.join(
-                outdir, f"{study_id}_variants")
+            context["variants_output"] = os.path.abspath(os.path.join(
+                outdir, f"{study_id}_variants"))
             context["variants"] = {}
 
         for prefix, variants_loader in self.variants_loaders.items():
@@ -751,6 +769,9 @@ class BatchImporter:
             context["variants"][prefix] = variants_context
 
         context["mirror_of"] = None
+        from pprint import pprint
+        pprint(self.gpf_instance.dae_config)
+        pprint(context)
 
         return context
 
