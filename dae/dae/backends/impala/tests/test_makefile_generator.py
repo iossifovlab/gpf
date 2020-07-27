@@ -1,27 +1,29 @@
 import os
 import pytest
 
-from dae.backends.impala.import_commons import MakefileGenerator
+from dae.backends.impala.import_commons import BatchImporter, \
+    SnakefileGenerator, \
+    MakefileGenerator
 
 
 @pytest.fixture
 def cli_parse(gpf_instance_2013):
     def parser(argv):
-        parser = MakefileGenerator.cli_arguments_parser(gpf_instance_2013)
+        parser = BatchImporter.cli_arguments_parser(gpf_instance_2013)
         return parser.parse_args(argv)
 
     return parser
 
 
 @pytest.fixture
-def generator(gpf_instance_2013):
-    result = MakefileGenerator(gpf_instance_2013)
+def importer(gpf_instance_2013):
+    result = BatchImporter(gpf_instance_2013)
     assert result is not None
     return result
 
 
 def test_makefile_generator_simple(
-    fixture_dirname, cli_parse, generator, temp_dirname
+    fixture_dirname, cli_parse, importer, temp_dirname
 ):
     prefix = fixture_dirname("vcf_import/effects_trio")
     argv = cli_parse(
@@ -36,16 +38,16 @@ def test_makefile_generator_simple(
         ]
     )
 
-    generator.build(argv)
+    importer.build(argv)
 
-    assert generator.study_id == "effects_trio"
-    assert generator.vcf_loader is not None
-    assert generator.denovo_loader is None
-    assert generator.dae_loader is None
+    assert importer.study_id == "effects_trio"
+    assert importer.vcf_loader is not None
+    assert importer.denovo_loader is None
+    assert importer.dae_loader is None
 
 
 def test_makefile_generator_multivcf_simple(
-    fixture_dirname, cli_parse, generator, temp_dirname
+    fixture_dirname, cli_parse, importer, temp_dirname
 ):
 
     vcf_file1 = fixture_dirname("multi_vcf/multivcf_missing1.vcf.gz")
@@ -71,17 +73,17 @@ def test_makefile_generator_multivcf_simple(
         ]
     )
 
-    generator.build(argv)
+    importer.build(argv)
 
-    assert generator.study_id == "multivcf"
-    assert generator.partition_helper is not None
-    assert generator.vcf_loader is not None
-    assert generator.denovo_loader is None
-    assert generator.dae_loader is None
+    assert importer.study_id == "multivcf"
+    assert importer.partition_helper is not None
+    assert importer.vcf_loader is not None
+    assert importer.denovo_loader is None
+    assert importer.dae_loader is None
 
 
 def test_makefile_generator_denovo_and_dae(
-    fixture_dirname, cli_parse, generator, temp_dirname
+    fixture_dirname, cli_parse, importer, temp_dirname
 ):
 
     denovo_file = fixture_dirname("dae_denovo/denovo.txt")
@@ -110,18 +112,65 @@ def test_makefile_generator_denovo_and_dae(
         ]
     )
 
-    generator.build(argv)
+    importer.build(argv)
 
-    assert generator.study_id == "dae_denovo_and_transmitted"
-    assert generator.partition_helper is not None
-    assert generator.vcf_loader is None
-    assert generator.denovo_loader is not None
-    assert generator.dae_loader is not None
+    assert importer.study_id == "dae_denovo_and_transmitted"
+    assert importer.partition_helper is not None
+    assert importer.vcf_loader is None
+    assert importer.denovo_loader is not None
+    assert importer.dae_loader is not None
 
-    generator.generate_makefile(argv)
+    importer.generate_makefile(argv)
 
     assert os.path.exists(os.path.join(temp_dirname, "Makefile"))
     with open(os.path.join(temp_dirname, "Makefile"), "rt") as infile:
         makefile = infile.read()
 
     print(makefile)
+
+
+CONTEXT = {
+    "dae_db_dir": "/data/lubo/seq-pipeline/import_202005/production_mirror/data-hg19-test",
+    "study_id": "test",
+    "partition_description": "/data/lubo/seq-pipeline/import_202005/gpf_validation_data/data_hg19/studies/SPARKv3_pilot/partition_description.conf",
+    "genotype_storage": "genotype_impala",
+    "pedigree": {
+        "pedigree": "/data/lubo/seq-pipeline/import_202005/gpf_validation_data/data_hg19/studies/SPARKv3_pilot/data/SPARKv3-families.ped",
+        "output": "temp/pedigree.parquet",
+        "params": "--ped-sex gender",
+    },
+    "variants_output": "temp/variants.parquet",
+    "variants": {
+        "denovo": {
+            "bins": ["1_0", "2_0"],
+            "variants": "/data/lubo/seq-pipeline/import_202005/gpf_validation_data/data_hg19/studies/SPARKv3_pilot/data/1394probands_denovoSNVindels_annotated5_pf_ia.csv",
+            "params": "--denovo-chrom CHROM --denovo-pos POS --denovo-ref REF --denovo-alt ALT --denovo-person-id SPID ",
+        }
+    },
+    "mirror_of": {
+        "location": "cshlgroup@sparkgpf3-node03-prod.sfari.org:/data/import202005/data-hg19-test",
+        "netloc": "/data/import202005/data-hg19-test",
+    },
+    "outdir": "./temp",
+}
+
+
+def test_snakefile_generator():
+
+    generator = SnakefileGenerator()
+    result = generator.generate(CONTEXT)
+
+    print(result)
+    with open("Snakefile", "wt") as outfile:
+        outfile.write(result)
+
+
+def test_makefile_generator():
+
+    generator = MakefileGenerator()
+    result = generator.generate(CONTEXT)
+
+    print(result)
+
+    with open("Makefile", "wt") as outfile:
+        outfile.write(result)
