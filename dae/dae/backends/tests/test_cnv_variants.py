@@ -11,7 +11,7 @@ from dae.backends.raw.raw_variants import RawMemoryVariants
 
 from dae.backends.impala.parquet_io import ParquetManager, \
     NoPartitionDescriptor
-from dae.configuration.gpf_config_parser import GPFConfigParser
+from dae.configuration.gpf_config_parser import FrozenBox
 
 
 @pytest.fixture(scope="session")
@@ -82,7 +82,7 @@ def cnv_impala(
     )
 
     fvars = impala_genotype_storage.build_backend(
-        GPFConfigParser._dict_to_namedtuple({"id": study_id}), genomes_db_2013
+        FrozenBox({"id": study_id}), genomes_db_2013
     )
 
     return fvars

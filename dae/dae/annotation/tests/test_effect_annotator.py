@@ -4,7 +4,6 @@ import pandas as pd
 import numpy as np
 
 
-from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.annotation.tools.annotator_config import AnnotationConfigParser
 from dae.annotation.tools.effect_annotator import VariantEffectAnnotator
 
@@ -50,17 +49,15 @@ from dae.annotation.tests.conftest import relative_to_this_test_folder
 
 @pytest.fixture(scope="session")
 def variant_effect_annotator(genomes_db_2013):
-    options = GPFConfigParser._dict_to_namedtuple(
-        {
-            "direct": False,
-            "vcf": True,
-            "r": "reference",
-            "a": "alternative",
-            "c": "chrom",
-            "p": "position",
-            "prom_len": 0,
-        }
-    )
+    options = {
+        "direct": False,
+        "vcf": True,
+        "r": "reference",
+        "a": "alternative",
+        "c": "chrom",
+        "p": "position",
+        "prom_len": 0,
+    }
 
     columns = {
         "effect_type": "effect_type",
@@ -74,14 +71,12 @@ def variant_effect_annotator(genomes_db_2013):
     }
 
     config = AnnotationConfigParser.parse_section(
-        GPFConfigParser._dict_to_namedtuple(
-            {
-                "options": options,
-                "columns": columns,
-                "annotator": "effect_annotator.VariantEffectAnnotator",
-                "virtual_columns": [],
-            }
-        )
+        {
+            "options": options,
+            "columns": columns,
+            "annotator": "effect_annotator.VariantEffectAnnotator",
+            "virtual_columns": [],
+        }
     )
 
     annotator = VariantEffectAnnotator(config, genomes_db_2013)

@@ -4,7 +4,7 @@ import os
 import pandas as pd
 from io import StringIO
 
-from dae.configuration.gpf_config_parser import GPFConfigParser
+from dae.configuration.gpf_config_parser import FrozenBox
 from dae.annotation.tools.file_io import IOManager, IOType
 from dae.annotation.tools.score_file_io import ScoreFile, TabixAccess
 
@@ -20,17 +20,13 @@ def work_dir():
 
 @pytest.fixture
 def variants_io(request):
-    def build(fixture_name, options=None):
-        if options:
-            io_options = dict(options.field_values_iterator())
-        else:
-            io_options = dict()
+    def build(fixture_name, io_options=dict()):
         io_config = {
             "infile": relative_to_this_test_folder(fixture_name),
             "outfile": "-",
         }
         io_options.update(io_config)
-        io_options = GPFConfigParser._dict_to_namedtuple(io_options)
+        io_options = FrozenBox(io_options)
         io_manager = IOManager(io_options, IOType.TSV, IOType.TSV)
         return io_manager
 

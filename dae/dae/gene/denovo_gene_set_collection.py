@@ -171,7 +171,7 @@ class DenovoGeneSetCollection(object):
             return {}
 
         recurrency_criteria = \
-            denovo_gene_set_collections[0].recurrency_criteria
+            denovo_gene_set_collections[0].recurrency_criteria.segments
 
         for collection in denovo_gene_set_collections:
             common_elements = frozenset(

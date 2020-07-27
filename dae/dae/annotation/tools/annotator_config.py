@@ -1,8 +1,7 @@
-from dae.configuration.gpf_config_parser import GPFConfigParser
+from dae.configuration.gpf_config_parser import GPFConfigParser, DefaultBox, \
+    FrozenBox
 from dae.configuration.schemas.annotation_conf import annotation_conf_schema
 from dae.utils.dict_utils import recursive_dict_update
-
-from box import Box
 
 
 def annotation_config_cli_options(gpf_instance):
@@ -79,14 +78,7 @@ class AnnotationConfigParser:
         config["virtual_columns"] = []
         config["output_columns"] = []
 
-        config = Box(
-            config,
-            default_box=True,
-            default_box_attr=None
-        )
-        print(config.options)
-
-        config = cls._setup_defaults(config)
+        config = cls._setup_defaults(DefaultBox(config))
 
         parsed_sections = list()
         for config_section in config.sections:
@@ -99,21 +91,12 @@ class AnnotationConfigParser:
 
         config["sections"] = parsed_sections
 
-        return Box(
-            config,
-            frozen_box=True,
-            default_box=True,
-            default_box_attr=None
-        )
+        return FrozenBox(config)
 
     @classmethod
     def parse_section(cls, config_section):
 
-        config_section = Box(
-            config_section,
-            default_box=True,
-            default_box_attr=None
-        )
+        config_section = DefaultBox(config_section)
 
         config_section = cls._setup_defaults(config_section)
 
@@ -121,14 +104,15 @@ class AnnotationConfigParser:
         config_section["native_columns"] = list(config_section.columns.keys())
 
         assert all([
-            c in config_section["columns"]
-            for c in config_section["virtual_columns"]
+            c in config_section.columns.values()
+            for c in config_section.virtual_columns
         ])
 
-        config_section["output_columns"] = list(
-            set(config_section["columns"])
-            - set(config_section["virtual_columns"])
-        )
+        config_section["output_columns"] = [
+            config_section.columns[col] for col in config_section.columns
+            if config_section.columns[col]
+            not in config_section.virtual_columns
+        ]
 
         return config_section
 

@@ -120,7 +120,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
             "conf_dir": ".",
             "has_denovo": False,
             "genotype_storage": {
-                "id": self.storage_config.section_id(),
+                "id": self.id,
                 "tables": {"pedigree": pedigree_table},
             },
             "genotype_browser": {"enabled": False},

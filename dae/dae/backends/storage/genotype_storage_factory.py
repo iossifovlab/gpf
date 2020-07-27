@@ -23,7 +23,7 @@ class GenotypeStorageFactory:
         return self._genotype_storage_cache[genotype_storage_id]
 
     def get_genotype_storage_ids(self):
-        return list(getattr(self.dae_config, "storage")._fields)
+        return list(self.dae_config["storage"].keys())
 
     def _load_genotype_storage(self, genotype_storage_ids=None):
         if genotype_storage_ids is None:

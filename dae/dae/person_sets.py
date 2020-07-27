@@ -4,6 +4,7 @@ sets based on what value they have in a given mapping.
 """
 
 from typing import Dict, NamedTuple
+from dae.configuration.gpf_config_parser import FrozenBox
 from dae.pedigrees.family import Person, FamiliesData
 
 
@@ -79,7 +80,7 @@ class PersonSetCollection(NamedTuple):
 
     @staticmethod
     def from_families(
-            collection_config: NamedTuple,
+            collection_config: FrozenBox,
             families_data: FamiliesData) -> "PersonSetCollection":
         """Produce a PersonSetCollection from its given configuration
         with a pedigree as its source.

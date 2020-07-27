@@ -4,7 +4,6 @@ import pandas as pd
 
 from .conftest import relative_to_this_test_folder
 
-from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.annotation.tools.annotator_config import AnnotationConfigParser
 from dae.annotation.tools.score_annotator import PositionScoreAnnotator
 
@@ -58,29 +57,24 @@ def test_regions_parameterized(
         f"fixtures/TEST3{score_name}/TEST3{score_name}.bedGraph.gz"
     )
 
-    options = GPFConfigParser._dict_to_namedtuple(
-        {
-            "mode": "replace",
-            "vcf": True,
-            "direct": direct,
-            "region": region,
-            "scores_file": relative_to_this_test_folder(score_filename),
-        }
-    )
+    options = {
+        "mode": "replace",
+        "vcf": True,
+        "direct": direct,
+        "region": region,
+        "scores_file": relative_to_this_test_folder(score_filename),
+    }
 
     columns = {
         "TEST{}".format(score_name): "RESULT_{}".format(score_name),
     }
 
-    config = AnnotationConfigParser.parse_section(
-        GPFConfigParser._dict_to_namedtuple(
-            {
-                "options": options,
-                "columns": columns,
-                "annotator": "score_annotator.PositionScoreAnnotator",
-                "virtual_columns": [],
-            }
-        )
+    config = AnnotationConfigParser.parse_section({
+            "options": options,
+            "columns": columns,
+            "annotator": "score_annotator.PositionScoreAnnotator",
+            "virtual_columns": [],
+        }
     )
 
     with variants_io("fixtures/input3.tsv.gz", config.options) as io_manager:
@@ -137,29 +131,24 @@ def test_regions_parameterized_missing_scores(
 
     score_filename = f"fixtures/TEST{score_name}/TEST{score_name}.bedGraph.gz"
 
-    options = GPFConfigParser._dict_to_namedtuple(
-        {
-            "mode": "replace",
-            "vcf": True,
-            "direct": direct,
-            "region": region,
-            "scores_file": relative_to_this_test_folder(score_filename),
-        }
-    )
+    options = {
+        "mode": "replace",
+        "vcf": True,
+        "direct": direct,
+        "region": region,
+        "scores_file": relative_to_this_test_folder(score_filename),
+    }
 
     columns = {
         "TEST{}".format(score_name): "RESULT_{}".format(score_name),
     }
 
-    config = AnnotationConfigParser.parse_section(
-        GPFConfigParser._dict_to_namedtuple(
-            {
-                "options": options,
-                "columns": columns,
-                "annotator": "score_annotator.VariantScoreAnnotator",
-                "virtual_columns": [],
-            }
-        )
+    config = AnnotationConfigParser.parse_section({
+            "options": options,
+            "columns": columns,
+            "annotator": "score_annotator.VariantScoreAnnotator",
+            "virtual_columns": [],
+        }
     )
 
     with variants_io("fixtures/input3.tsv.gz", config.options) as io_manager:
@@ -192,29 +181,24 @@ def test_regions_simple(expected_df, variants_io, capsys, genomes_db_2013):
         f"fixtures/TEST3{score_name}/TEST3{score_name}.bedGraph.gz"
     )
 
-    options = GPFConfigParser._dict_to_namedtuple(
-        {
-            "mode": "replace",
-            "vcf": True,
-            "direct": direct,
-            "region": region,
-            "scores_file": relative_to_this_test_folder(score_filename),
-        }
-    )
+    options = {
+        "mode": "replace",
+        "vcf": True,
+        "direct": direct,
+        "region": region,
+        "scores_file": relative_to_this_test_folder(score_filename),
+    }
 
     columns = {
         f"TEST{score_name}": f"RESULT_{score_name}",
     }
 
-    config = AnnotationConfigParser.parse_section(
-        GPFConfigParser._dict_to_namedtuple(
-            {
-                "options": options,
-                "columns": columns,
-                "annotator": "score_annotator.VariantScoreAnnotator",
-                "virtual_columns": [],
-            }
-        )
+    config = AnnotationConfigParser.parse_section({
+            "options": options,
+            "columns": columns,
+            "annotator": "score_annotator.VariantScoreAnnotator",
+            "virtual_columns": [],
+        }
     )
 
     with variants_io("fixtures/input3.tsv.gz", config.options) as io_manager:

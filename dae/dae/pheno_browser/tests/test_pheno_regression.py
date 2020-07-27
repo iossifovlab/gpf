@@ -12,34 +12,32 @@ def test_pheno_regressions_from_conf_path(regressions_conf):
     regs = GPFConfigParser.load_config(
         regressions_conf, regression_conf_schema
     )
-    expected_regs = GPFConfigParser._dict_to_namedtuple(
-        {
-            "reg1": {
-                "instrument_name": "i1",
-                "measure_name": "regressor1",
-                "jitter": 0.1,
-            },
-            "reg2": {
-                "instrument_name": "i1",
-                "measure_name": "regressor2",
-                "jitter": 0.2,
-            },
-            "reg3": {
-                "instrument_name": "",
-                "measure_name": "common_regressor",
-                "jitter": 0.3,
-            },
-            "reg4": {
-                "instrument_name": "i2",
-                "measure_name": "regressor1",
-                "jitter": 0.4,
-            },
-        }
-    )
+    expected_regs = {
+        "reg1": {
+            "instrument_name": "i1",
+            "measure_name": "regressor1",
+            "jitter": 0.1,
+        },
+        "reg2": {
+            "instrument_name": "i1",
+            "measure_name": "regressor2",
+            "jitter": 0.2,
+        },
+        "reg3": {
+            "instrument_name": "",
+            "measure_name": "common_regressor",
+            "jitter": 0.3,
+        },
+        "reg4": {
+            "instrument_name": "i2",
+            "measure_name": "regressor1",
+            "jitter": 0.4,
+        },
+    }
 
     assert len(regs.regression) == len(expected_regs)
-    for reg_name, expected_reg in expected_regs.field_values_iterator():
-        assert getattr(regs.regression, reg_name) == expected_reg
+    for reg_name, expected_reg in expected_regs.items():
+        assert regs.regression[reg_name] == expected_reg
 
 
 def test_has_regression_measure(
