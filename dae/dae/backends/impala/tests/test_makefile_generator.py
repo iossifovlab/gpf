@@ -23,8 +23,7 @@ def importer(gpf_instance_2013):
 
 
 def test_makefile_generator_simple(
-    fixture_dirname, cli_parse, importer, temp_dirname
-):
+        fixture_dirname, cli_parse, importer, temp_dirname):
     prefix = fixture_dirname("vcf_import/effects_trio")
     argv = cli_parse(
         [
@@ -47,8 +46,7 @@ def test_makefile_generator_simple(
 
 
 def test_makefile_generator_multivcf_simple(
-    fixture_dirname, cli_parse, importer, temp_dirname
-):
+        fixture_dirname, cli_parse, importer, temp_dirname):
 
     vcf_file1 = fixture_dirname("multi_vcf/multivcf_missing1.vcf.gz")
     vcf_file2 = fixture_dirname("multi_vcf/multivcf_missing2.vcf.gz")
@@ -83,8 +81,7 @@ def test_makefile_generator_multivcf_simple(
 
 
 def test_makefile_generator_denovo_and_dae(
-    fixture_dirname, cli_parse, importer, temp_dirname
-):
+        fixture_dirname, cli_parse, importer, temp_dirname):
 
     denovo_file = fixture_dirname("dae_denovo/denovo.txt")
     dae_file = fixture_dirname("dae_transmitted/transmission.txt.gz")
@@ -175,3 +172,102 @@ def test_makefile_generator():
 
     with open("Makefile", "wt") as outfile:
         outfile.write(result)
+
+
+def test_generator_context_denovo_and_dae(
+        fixture_dirname, cli_parse, importer, temp_dirname):
+
+    denovo_file = fixture_dirname("dae_denovo/denovo.txt")
+    dae_file = fixture_dirname("dae_transmitted/transmission.txt.gz")
+    ped_file = fixture_dirname("dae_denovo/denovo_families.ped")
+
+    partition_description = fixture_dirname(
+        "backends/example_partition_configuration.conf"
+    )
+
+    argv = cli_parse(
+        [
+            "--tool", "make",
+            "-o",
+            temp_dirname,
+            ped_file,
+            "--id",
+            "dae_denovo_and_transmitted",
+            "--denovo-file",
+            denovo_file,
+            "--dae-summary-file",
+            dae_file,
+            "--pd",
+            partition_description,
+            "--gs",
+            "genotype_impala",
+        ]
+    )
+
+    importer.build(argv)
+    context = importer.build_context(argv)
+
+    assert context is not None
+
+    assert "dae_denovo_and_transmitted" == context["study_id"]
+
+    assert "partition_description" in context
+    assert partition_description == context["partition_description"]
+
+    assert "dae" in context["variants"]
+    assert "denovo" in context["variants"]
+
+    assert dae_file == context["variants"]["dae"]["variants"]
+    assert denovo_file == context["variants"]["denovo"]["variants"]
+
+    assert "pedigree" in context
+    assert ped_file == context["pedigree"]["pedigree"]
+
+
+def test_generator_context_multivcf(
+        fixture_dirname, cli_parse, importer, temp_dirname):
+
+    vcf_file1 = fixture_dirname("multi_vcf/multivcf_missing1.vcf.gz")
+    vcf_file2 = fixture_dirname("multi_vcf/multivcf_missing2.vcf.gz")
+    ped_file = fixture_dirname("multi_vcf/multivcf.ped")
+
+    partition_description = fixture_dirname(
+        "backends/example_partition_configuration.conf"
+    )
+
+    argv = cli_parse(
+        [
+            "-o",
+            temp_dirname,
+            ped_file,
+            "--vcf-files",
+            vcf_file1,
+            vcf_file2,
+            "--pd",
+            partition_description,
+            "--gs",
+            "genotype_impala",
+        ]
+    )
+
+    importer.build(argv)
+    context = importer.build_context(argv)
+
+    assert context is not None
+
+    assert "multivcf" == context["study_id"]
+
+    assert "partition_description" in context
+    assert partition_description == context["partition_description"]
+
+    assert temp_dirname == context["outdir"]
+
+    assert "vcf" in context["variants"]
+
+    assert vcf_file1 in context["variants"]["vcf"]["variants"]
+    assert vcf_file2 in context["variants"]["vcf"]["variants"]
+
+    assert "" == context["variants"]["vcf"]["params"]
+
+    assert ped_file == context["pedigree"]["pedigree"]
+    assert "" == context["pedigree"]["params"]
