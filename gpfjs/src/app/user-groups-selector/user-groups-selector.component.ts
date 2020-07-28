@@ -35,6 +35,13 @@ export class UserGroupsSelectorComponent implements OnInit {
     if (!groups) {
       return null;
     }
+
+    groups.forEach(element => {
+      if (element.name === 'any_user') {
+        groups.splice(groups.indexOf(element), 1);
+      }
+    });
+
     return groups.map(group => {
       return {
         id: group.name,
