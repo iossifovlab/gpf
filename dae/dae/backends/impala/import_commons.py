@@ -934,7 +934,7 @@ class BatchImporter:
         parser.add_argument(
             "--tool",
             type=str,
-            default="make",
+            default="snakemake",
             dest="tool",
             help="Tool format for generated build instructions. "
             "Supported options are 'snakemake' and 'make'. "

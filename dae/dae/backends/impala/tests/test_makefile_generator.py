@@ -96,6 +96,7 @@ def test_makefile_generator_denovo_and_dae(
 
     argv = cli_parse(
         [
+            "--tool", "make",
             "-o",
             temp_dirname,
             ped_file,
