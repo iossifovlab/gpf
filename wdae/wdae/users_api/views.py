@@ -1,4 +1,3 @@
-import re
 from functools import wraps
 
 from django.db import IntegrityError, transaction
@@ -27,15 +26,9 @@ from .serializers import BulkGroupOperationSerializer
 
 from utils.logger import log_filter, LOGGER, request_logging
 from utils.logger import request_logging_function_view
+from utils.email_regex import is_email_valid
 
 from django.utils.decorators import available_attrs
-
-
-def is_email_valid(email: str) -> bool:
-    email_regex = \
-        (r"[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:"
-         r"[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?")
-    return bool(re.search(email_regex, email))
 
 
 def csrf_clear(view_func):

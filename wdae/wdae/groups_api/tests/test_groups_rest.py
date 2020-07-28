@@ -1,5 +1,6 @@
 import json
 
+from django.db.models import Q
 from guardian.models import Group
 from guardian import shortcuts
 from rest_framework import status
@@ -7,6 +8,8 @@ from rest_framework import status
 from guardian.shortcuts import assign_perm
 from guardian.shortcuts import get_perms
 from datasets_api.models import Dataset
+
+from utils.email_regex import email_regex
 
 
 def test_admin_can_get_groups(admin_client):
@@ -48,8 +51,21 @@ def test_groups_have_users_and_datasets(admin_client):
         assert "datasets" in group
 
 
+def test_groups_does_not_send_email_groups(admin_client):
+    url = "/api/v3/groups"
+    response = admin_client.get(url)
+
+    assert response.status_code is status.HTTP_200_OK
+    assert len(response.data) > 0
+    for group in response.data:
+        assert group["name"] not in [
+            "anonymous@seqpipe.org",
+            "admin@example.com"
+        ]
+
+
 def test_single_group_has_users_and_datasets(admin_client):
-    groups = Group.objects.all()
+    groups = Group.objects.filter(~Q(name__iregex=email_regex))
     for group in groups:
         url = "/api/v3/groups/{}".format(group.id)
         response = admin_client.get(url)
@@ -60,7 +76,7 @@ def test_single_group_has_users_and_datasets(admin_client):
 
 
 def test_admin_cant_delete_groups(admin_client, groups_model):
-    all_groups = groups_model.objects.all()
+    all_groups = groups_model.objects.filter(~Q(name__iregex=email_regex))
     assert len(all_groups) > 0
 
     for group in all_groups:
@@ -144,7 +160,7 @@ def test_group_has_all_users(admin_client, group):
 
 
 def test_no_empty_groups_are_accessible(admin_client):
-    groups_count = Group.objects.count()
+    groups_count = Group.objects.filter(~Q(name__iregex=email_regex)).count()
     new_group = Group.objects.create(name="New Group")
 
     url = "/api/v3/groups"
@@ -158,7 +174,7 @@ def test_no_empty_groups_are_accessible(admin_client):
 
 
 def test_empty_group_with_permissions_is_shown(admin_client, dataset):
-    groups_count = Group.objects.count()
+    groups_count = Group.objects.filter(~Q(name__iregex=email_regex)).count()
     group = Group.objects.create(name="New Group")
 
     shortcuts.assign_perm("view", group, dataset)
