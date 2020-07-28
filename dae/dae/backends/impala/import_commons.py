@@ -315,7 +315,7 @@ setup_remote: setup_remote.flag
 
 setup_remote.flag: reports.flag
 \trsync -avPHt \\
-\t\t--rsync-path "mkdir -p {{mirror_of.netloc}}/studies/{{study_id}}/ && rsync" \\
+\t\t--rsync-path "mkdir -p {{mirror_of.path}}/studies/{{study_id}}/ && rsync" \\
 \t\t--ignore-existing {{dae_db_dir}}/studies/{study_id}}/ \\
 \t\t{{mirror_of.location}}/studies/{{study_id}}/ && touch $@
 
@@ -512,7 +512,7 @@ rule setup_remote:
         '''
         rsync -avPHt \\
             --rsync-path \\
-            "mkdir -p {{mirror_of.netloc}}/studies/{{study_id}}/ && rsync" \\
+            "mkdir -p {{mirror_of.path}}/studies/{{study_id}}/ && rsync" \\
             --ignore-existing \\
             {{dae_db_dir}}/studies/{{study_id}}/ \\
             {{mirror_of.location}}/studies/{{study_id}}
@@ -768,7 +768,12 @@ class BatchImporter:
                 variants_loader.params)
             context["variants"][prefix] = variants_context
 
-        context["mirror_of"] = None
+        context["mirror_of"] = {}
+        if self.gpf_instance.dae_config.mirror_of:
+            rsync_helper = RsyncHelpers(
+                self.gpf_instance.dae_config.mirror_of)
+            context["mirror_of"]["location"] = rsync_helper.rsync_remote
+            context["mirror_of"]["path"] = rsync_helper.parsed_remote.netloc
 
         return context
 
