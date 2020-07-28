@@ -21,7 +21,9 @@ from dae.utils.dict_utils import recursive_dict_update
 
 class FilesystemGenotypeStorage(GenotypeStorage):
     def __init__(self, storage_config, section_id):
-        super(FilesystemGenotypeStorage, self).__init__(storage_config, section_id)
+        super(FilesystemGenotypeStorage, self).__init__(
+            storage_config, section_id
+        )
         self.data_dir = self.storage_config.dir
 
     def get_data_dir(self, *path):
@@ -53,7 +55,8 @@ class FilesystemGenotypeStorage(GenotypeStorage):
 
         else:
             start = time.time()
-            ped_params = study_config.genotype_storage.files.pedigree.params.to_dict()
+            ped_params = \
+                study_config.genotype_storage.files.pedigree.params.to_dict()
             families_loader = FamiliesLoader(
                 study_config.genotype_storage.files.pedigree.path,
                 params=ped_params,
@@ -128,7 +131,7 @@ class FilesystemGenotypeStorage(GenotypeStorage):
             "has_denovo": False,
             "has_cnv": False,
             "genotype_storage": {
-                "id": self.storage_config.section_id(),
+                "id": self.id,
                 "files": {
                     "variants": variants_config,
                     "pedigree": families_config,
@@ -205,9 +208,10 @@ class FilesystemGenotypeStorage(GenotypeStorage):
             result_config.append(config)
 
             os.makedirs(destination_dirname, exist_ok=True)
-            annotation_filename = StoredAnnotationDecorator.build_annotation_filename(
-                destination_filenames[0]
-            )
+            annotation_filename = \
+                StoredAnnotationDecorator.build_annotation_filename(
+                    destination_filenames[0]
+                )
             StoredAnnotationDecorator.save_annotation_file(
                 variants_loader, annotation_filename
             )

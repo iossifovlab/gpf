@@ -21,7 +21,10 @@ def test_import_iossifov2014_filesystem(
 
     storage_config = getattr(default_dae_config.storage, genotype_storage_id)
     assert storage_config.storage_type == "filesystem"
-    genotype_storage = FilesystemGenotypeStorage(storage_config)
+    genotype_storage = FilesystemGenotypeStorage(
+        storage_config,
+        genotype_storage_id
+    )
     assert genotype_storage
 
     argv = [
@@ -117,7 +120,10 @@ def test_flexible_denovo_default(
         gpf_instance_2019.dae_config.storage, genotype_storage_id
     )
     assert storage_config.storage_type == "filesystem"
-    genotype_storage = FilesystemGenotypeStorage(storage_config)
+    genotype_storage = FilesystemGenotypeStorage(
+        storage_config,
+        genotype_storage_id
+    )
     assert genotype_storage
 
     argv = [
@@ -164,7 +170,10 @@ def test_flexible_denovo_vcf(
         gpf_instance_2019.dae_config.storage, genotype_storage_id
     )
     assert storage_config.storage_type == "filesystem"
-    genotype_storage = FilesystemGenotypeStorage(storage_config)
+    genotype_storage = FilesystemGenotypeStorage(
+        storage_config,
+        genotype_storage_id
+    )
     assert genotype_storage
 
     argv = [
@@ -223,7 +232,10 @@ def test_flexible_denovo_vcf_location(
         gpf_instance_2019.dae_config.storage, genotype_storage_id
     )
     assert storage_config.storage_type == "filesystem"
-    genotype_storage = FilesystemGenotypeStorage(storage_config)
+    genotype_storage = FilesystemGenotypeStorage(
+        storage_config,
+        genotype_storage_id
+    )
     assert genotype_storage
 
     argv = [
@@ -280,7 +292,10 @@ def test_flexible_denovo_vcf_best_state(
         gpf_instance_2019.dae_config.storage, genotype_storage_id
     )
     assert storage_config.storage_type == "filesystem"
-    genotype_storage = FilesystemGenotypeStorage(storage_config)
+    genotype_storage = FilesystemGenotypeStorage(
+        storage_config,
+        genotype_storage_id
+    )
     assert genotype_storage
 
     argv = [
@@ -339,7 +354,10 @@ def test_flexible_denovo_dae_chrom_pos(
         gpf_instance_2019.dae_config.storage, genotype_storage_id
     )
     assert storage_config.storage_type == "filesystem"
-    genotype_storage = FilesystemGenotypeStorage(storage_config)
+    genotype_storage = FilesystemGenotypeStorage(
+        storage_config,
+        genotype_storage_id
+    )
     assert genotype_storage
 
     argv = [
@@ -398,7 +416,10 @@ def test_flexible_denovo_dae_person(
         gpf_instance_2019.dae_config.storage, genotype_storage_id
     )
     assert storage_config.storage_type == "filesystem"
-    genotype_storage = FilesystemGenotypeStorage(storage_config)
+    genotype_storage = FilesystemGenotypeStorage(
+        storage_config,
+        genotype_storage_id
+    )
     assert genotype_storage
 
     argv = [
