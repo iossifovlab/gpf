@@ -82,14 +82,14 @@ class VcfFamiliesGenotypes(FamiliesGenotypes):
 
 class SingleVcfLoader(VariantsGenotypesLoader):
     def __init__(
-        self,
-        families,
-        vcf_files,
-        genome: GenomicSequence,
-        regions=None,
-        params={},
-        **kwargs,
-    ):
+            self,
+            families,
+            vcf_files,
+            genome: GenomicSequence,
+            regions=None,
+            params={},
+            **kwargs):
+
         super(SingleVcfLoader, self).__init__(
             families=families,
             filenames=vcf_files,
@@ -98,8 +98,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
             regions=regions,
             expect_genotype=True,
             expect_best_state=False,
-            params=params,
-        )
+            params=params)
 
         assert len(vcf_files)
         self.set_attribute("source_type", "vcf")
@@ -522,7 +521,7 @@ class VcfLoader(VariantsGenotypesLoader):
             SingleVcfLoader(
                 families, vcf_files, genome, regions=regions, params=params
             )
-            for vcf_files in filenames
+            for vcf_files in filenames if vcf_files
         ]
 
     def _collect_filenames(self, params, vcf_files):
@@ -530,10 +529,12 @@ class VcfLoader(VariantsGenotypesLoader):
             vcf_chromosomes = [
                 wc.strip() for wc in params.get("vcf_chromosomes").split(";")
             ]
+
             glob_filenames = [
-                [vcf_file.format(vc=vc) for vcf_file in vcf_files]
+                [vcf_file.replace("[vc]", vc) for vcf_file in vcf_files]
                 for vc in vcf_chromosomes
             ]
+
         else:
             glob_filenames = [vcf_files]
 
@@ -541,7 +542,10 @@ class VcfLoader(VariantsGenotypesLoader):
         for batches_globnames in glob_filenames:
             batches_result = []
             for globname in batches_globnames:
+
                 filenames = glob.glob(globname)
+                if len(filenames) == 0:
+                    continue
                 assert len(filenames) == 1, (globname, filenames)
                 batches_result.append(filenames[0])
             result.append(batches_result)

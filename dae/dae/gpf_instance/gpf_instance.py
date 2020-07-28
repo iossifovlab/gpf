@@ -59,6 +59,7 @@ class GPFInstance(object):
             )
 
         self.dae_config = dae_config
+        self.dae_db_dir = work_dir
 
         if load_eagerly:
             self.genomes_db
