@@ -345,22 +345,21 @@ class VariantsGenotypesLoader(VariantsLoader):
     """
 
     def __init__(
-        self,
-        families: FamiliesData,
-        filenames: List[str],
-        transmission_type: TransmissionType,
-        genome: GenomicSequence,
-        regions: List[str] = None,
-        expect_genotype: bool = True,
-        expect_best_state: bool = False,
-        params: Dict[str, Any] = {},
-    ):
+            self,
+            families: FamiliesData,
+            filenames: List[str],
+            transmission_type: TransmissionType,
+            genome: GenomicSequence,
+            regions: List[str] = None,
+            expect_genotype: bool = True,
+            expect_best_state: bool = False,
+            params: Dict[str, Any] = {}):
+
         super(VariantsGenotypesLoader, self).__init__(
             families=families,
             filenames=filenames,
             transmission_type=transmission_type,
-            params=params,
-        )
+            params=params)
 
         self.genome = genome
 
