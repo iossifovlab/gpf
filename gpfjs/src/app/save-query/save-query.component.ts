@@ -13,6 +13,8 @@ import { UsersService } from '../users/users.service';
 export class SaveQueryComponent implements OnInit {
 
   @Input() queryType: string;
+  @Input() disabled: boolean;
+
   @ViewChild('nameInput') nameInputRef: ElementRef;
   @ViewChild('descInput') descInputRef: ElementRef;
   @ViewChild(NgbDropdownMenu) ngbDropdownMenu: NgbDropdownMenu;
