@@ -82,14 +82,14 @@ class VcfFamiliesGenotypes(FamiliesGenotypes):
 
 class SingleVcfLoader(VariantsGenotypesLoader):
     def __init__(
-        self,
-        families,
-        vcf_files,
-        genome: GenomicSequence,
-        regions=None,
-        params={},
-        **kwargs,
-    ):
+            self,
+            families,
+            vcf_files,
+            genome: GenomicSequence,
+            regions=None,
+            params={},
+            **kwargs):
+
         super(SingleVcfLoader, self).__init__(
             families=families,
             filenames=vcf_files,
@@ -98,8 +98,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
             regions=regions,
             expect_genotype=True,
             expect_best_state=False,
-            params=params,
-        )
+            params=params)
 
         assert len(vcf_files)
         self.set_attribute("source_type", "vcf")
@@ -532,7 +531,7 @@ class VcfLoader(VariantsGenotypesLoader):
             ]
 
             glob_filenames = [
-                [vcf_file.replace("%vc%", vc) for vcf_file in vcf_files]
+                [vcf_file.replace("[vc]", vc) for vcf_file in vcf_files]
                 for vc in vcf_chromosomes
             ]
 

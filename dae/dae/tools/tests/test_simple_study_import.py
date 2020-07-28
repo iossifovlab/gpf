@@ -526,8 +526,8 @@ def test_import_wild_multivcf_into_genotype_storage(
     temp_dirname,
 ):
 
-    vcf_file1 = fixture_dirname("multi_vcf/multivcf_missing1_chr{vc}.vcf.gz")
-    vcf_file2 = fixture_dirname("multi_vcf/multivcf_missing2_chr{vc}.vcf.gz")
+    vcf_file1 = fixture_dirname("multi_vcf/multivcf_missing1_[vc].vcf.gz")
+    vcf_file2 = fixture_dirname("multi_vcf/multivcf_missing2_[vc].vcf.gz")
     ped_file = fixture_dirname("multi_vcf/multivcf.ped")
 
     study_id = f"test_wile_multivcf_{genotype_storage_id}"
@@ -541,7 +541,7 @@ def test_import_wild_multivcf_into_genotype_storage(
         vcf_file1,
         vcf_file2,
         "--vcf-chromosomes",
-        "1;2",
+        "chr1;chr2",
         "--genotype-storage",
         genotype_storage_id,
         "-o",
