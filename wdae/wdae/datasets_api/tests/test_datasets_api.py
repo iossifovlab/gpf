@@ -1,5 +1,5 @@
 import pytest
-from box import Box
+from dae.configuration.gpf_config_parser import FrozenBox
 
 pytestmark = pytest.mark.usefixtures("wdae_gpf_instance", "calc_gene_sets")
 
@@ -70,26 +70,12 @@ def test_user_client_get_nonexistant_dataset_details(
 def test_datasets_api_get_all_with_selected_restriction(
     admin_client, mocker, wdae_gpf_instance
 ):
+    edited_conf = wdae_gpf_instance.dae_config.to_dict()
+    edited_conf["gpfjs"]["selected_genotype_data"] = [
+        "quads_f1", "quads_f2", "f1_group"
+    ]
     mocker.patch.object(
-        wdae_gpf_instance._variants_db,
-        "dae_config",
-        Box(wdae_gpf_instance._variants_db.dae_config)
-    )
-
-    mocker.patch.object(
-        wdae_gpf_instance._variants_db.dae_config,
-        "gpfjs",
-        Box(
-            wdae_gpf_instance._variants_db.dae_config.gpfjs,
-            default_box=True,
-            default_box_attr=None
-        )
-    )
-
-    mocker.patch.object(
-        wdae_gpf_instance._variants_db.dae_config.gpfjs,
-        "selected_genotype_data",
-        ["quads_f1", "quads_f2", "f1_group"]
+        wdae_gpf_instance, "dae_config", FrozenBox(edited_conf)
     )
 
     response = admin_client.get("/api/v3/datasets")

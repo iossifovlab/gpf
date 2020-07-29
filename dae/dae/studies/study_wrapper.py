@@ -2,7 +2,6 @@ import math
 import itertools
 import traceback
 from functools import reduce
-from copy import deepcopy
 
 from box import Box
 
@@ -1012,7 +1011,7 @@ class StudyWrapper(StudyWrapperBase):
             "has_present_in_parent",
         ]
         result = {
-            key: deepcopy(getattr(self.config, key, None)) for key in keys
+            key: self.config.get(key, None) for key in keys
         }
 
         result["description"] = self.description
@@ -1043,8 +1042,7 @@ class StudyWrapper(StudyWrapperBase):
             self.genotype_data_study.person_set_collection_configs
         result["name"] = result["name"] or result["id"]
 
-        result["enrichment"] = GPFConfigParser._namedtuple_to_dict(
-            deepcopy(self.config.enrichment))
+        result["enrichment"] = self.config.enrichment.to_dict()
 
         return result
 
