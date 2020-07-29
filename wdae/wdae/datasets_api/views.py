@@ -30,7 +30,6 @@ class DatasetView(QueryBaseView):
             selected_genotype_data = \
                 self.gpf_instance.get_selected_genotype_data()
             if selected_genotype_data is not None:
-                print("IDI")
                 datasets = [
                     self.gpf_instance.get_wdae_wrapper(genotype_data_id)
                     for genotype_data_id
@@ -43,7 +42,6 @@ class DatasetView(QueryBaseView):
                     for dataset in datasets
                 )
             else:
-                print("IDI KO MNYE")
                 datasets = [
                     self.gpf_instance.get_wdae_wrapper(genotype_data_id)
                     for genotype_data_id
