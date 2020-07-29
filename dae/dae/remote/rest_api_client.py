@@ -1,5 +1,7 @@
 import requests
 
+from dae.configuration.gpf_config_parser import FrozenBox
+
 
 class RESTClientRequestError(Exception):
     def __init__(self, message):
@@ -88,7 +90,7 @@ class RESTClient:
     def get_dataset_config(self, study_id):
         response = self._get(f"datasets/{study_id}")
         if response.status_code == 200:
-            return response.json()["data"]
+            return FrozenBox(response.json()["data"])
 
     def get_variants_preview(self, data):
         response = self._post(
