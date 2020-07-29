@@ -5,7 +5,7 @@ import pandas as pd
 
 from copy import deepcopy
 
-from dae.configuration.gpf_config_parser import GPFConfigParser
+from dae.configuration.gpf_config_parser import GPFConfigParser, FrozenBox
 from dae.annotation.tools.utils import LineMapper
 
 from dae.utils.dae_utils import dae2vcf_variant
@@ -61,9 +61,15 @@ class AnnotatorBase(object):
                 for col in self.schema.columns
                 if col not in self.config.virtual_columns
             ]
-            self.config = GPFConfigParser.modify_tuple(
-                self.config, {"output_columns": output_columns}
-            )
+
+            # FIXME
+            # Using this hack to change the output_columns
+            # since the FrozenBox instances in "sections"
+            # don't allow changing attributes via the standard
+            # way with the usage of recusrive_dict_update
+            self.config = self.config.to_dict()
+            self.config["output_columns"] = output_columns
+            self.config = FrozenBox(self.config)
 
         file_io_manager.header_write(self.config.output_columns)
 
