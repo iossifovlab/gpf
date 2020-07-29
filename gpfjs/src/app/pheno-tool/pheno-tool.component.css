@@ -5,3 +5,8 @@
     display: inline-block;
     margin-right: 5px;
   }
+
+.pheno-tool-results {
+	padding: 30px;
+	width: 100%;
+}
