@@ -222,5 +222,5 @@ gpf-global-error-display {
 .nav-title-custom {
   font-family: Roboto;
   font-weight: 500;
-  margin-right: 30px;
+  width: 100px;
 }
