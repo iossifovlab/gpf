@@ -1,4 +1,4 @@
-import { Component, OnInit, HostListener, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, HostListener, ViewChild, ElementRef, ChangeDetectorRef } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { UsersService } from './users.service';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
@@ -21,12 +21,14 @@ export class UsersComponent implements OnInit {
 
   @ViewChild('dropdownButton') dropdownButton: ElementRef;
   @ViewChild('dialog') dialog: ElementRef;
+  @ViewChild('emailInput') emailInput: ElementRef;
 
   constructor(
     private modalService: NgbModal,
     private usersService: UsersService,
     private router: Router,
-    private currentRoute: ActivatedRoute
+    private currentRoute: ActivatedRoute,
+    private changeDetectorRef: ChangeDetectorRef
   ) { }
 
   ngOnInit() {
@@ -83,4 +85,8 @@ export class UsersComponent implements OnInit {
     }
   }
 
+  focusEmailInput() {
+    this.changeDetectorRef.detectChanges();
+    this.emailInput.nativeElement.focus();
+  }
 }

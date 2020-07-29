@@ -1,5 +1,5 @@
 import { Observable } from 'rxjs';
-import { Component, OnInit, Input, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, Input, ViewChild, ElementRef, ChangeDetectorRef } from '@angular/core';
 import { QueryStateCollector } from '../query/query-state-provider';
 import { QueryService } from '../query/query.service';
 import { NgbDropdownMenu } from '@ng-bootstrap/ng-bootstrap';
@@ -24,6 +24,7 @@ export class SaveQueryComponent implements OnInit {
     private queryService: QueryService,
     private parentComponent: QueryStateCollector,
     private usersService: UsersService,
+    private changeDetectorRef: ChangeDetectorRef
   ) { }
 
   ngOnInit() {
@@ -50,5 +51,10 @@ export class SaveQueryComponent implements OnInit {
        error => {});
 
     this.ngbDropdownMenu.dropdown.close();
+  }
+
+  focusNameInput() {
+    this.changeDetectorRef.detectChanges();
+    this.nameInputRef.nativeElement.focus();
   }
 }
