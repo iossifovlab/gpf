@@ -138,8 +138,8 @@ pipeline {
     post {
         always {
             sh '''
-                docker stop $GPF_REMOTE_DOCKER_CONTAINER
-                docker rm $GPF_REMOTE_DOCKER_CONTAINER
+                # docker stop $GPF_REMOTE_DOCKER_CONTAINER
+                # docker rm $GPF_REMOTE_DOCKER_CONTAINER
 
                 docker stop $GPF_IMPALA_DOCKER_CONTAINER
                 docker rm $GPF_IMPALA_DOCKER_CONTAINER
