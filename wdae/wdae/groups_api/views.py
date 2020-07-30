@@ -19,6 +19,8 @@ from django.contrib.auth import get_user_model
 from guardian.shortcuts import assign_perm
 from guardian.shortcuts import remove_perm
 
+from utils.email_regex import email_regex
+
 
 class GroupsViewSet(
     mixins.CreateModelMixin,
@@ -41,10 +43,13 @@ class GroupsViewSet(
         return serializer_class
 
     def get_queryset(self):
-        # Either the group has users or has 'view' permission to some dataset
+        # Either the group has users or has 'view' permission to some dataset;
+        # Filter user email groups since we do not perform
+        # any operations with them
         return Group.objects.annotate(users_count=Count("user")).filter(
             Q(users_count__gt=0)
-            | Q(groupobjectpermission__permission__codename="view")
+            | Q(groupobjectpermission__permission__codename="view"),
+            ~Q(name__iregex=email_regex)
         )
 
 

@@ -105,7 +105,7 @@ class UserWithoutEmailSerializer(UserSerializer):
 class BulkGroupOperationSerializer(serializers.Serializer):
 
     userIds = serializers.ListSerializer(child=serializers.IntegerField())
-    group = serializers.CharField()
+    groups = serializers.ListSerializer(child=serializers.CharField())
 
     def create(self, validated_data):
         raise NotImplementedError()
