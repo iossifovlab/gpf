@@ -128,12 +128,17 @@ def test_makefile_generator_denovo_and_dae(
 
 
 CONTEXT = {
-    "dae_db_dir": "/data/lubo/seq-pipeline/import_202005/production_mirror/data-hg19-test",
+    "dae_db_dir":
+    "/data/lubo/seq-pipeline/import_202005/production_mirror/data-hg19-test",
     "study_id": "test",
-    "partition_description": "/data/lubo/seq-pipeline/import_202005/gpf_validation_data/data_hg19/studies/SPARKv3_pilot/partition_description.conf",
+    "partition_description":
+    "/data/lubo/seq-pipeline/import_202005/gpf_validation_data/"
+    "data_hg19/studies/SPARKv3_pilot/partition_description.conf",
     "genotype_storage": "genotype_impala",
     "pedigree": {
-        "pedigree": "/data/lubo/seq-pipeline/import_202005/gpf_validation_data/data_hg19/studies/SPARKv3_pilot/data/SPARKv3-families.ped",
+        "pedigree":
+        "/data/lubo/seq-pipeline/import_202005/gpf_validation_data/"
+        "data_hg19/studies/SPARKv3_pilot/data/SPARKv3-families.ped",
         "output": "temp/pedigree.parquet",
         "params": "--ped-sex gender",
     },
@@ -141,12 +146,18 @@ CONTEXT = {
     "variants": {
         "denovo": {
             "bins": ["1_0", "2_0"],
-            "variants": "/data/lubo/seq-pipeline/import_202005/gpf_validation_data/data_hg19/studies/SPARKv3_pilot/data/1394probands_denovoSNVindels_annotated5_pf_ia.csv",
-            "params": "--denovo-chrom CHROM --denovo-pos POS --denovo-ref REF --denovo-alt ALT --denovo-person-id SPID ",
+            "variants":
+            "/data/lubo/seq-pipeline/import_202005/gpf_validation_data/"
+            "data_hg19/studies/SPARKv3_pilot/"
+            "data/1394probands_denovoSNVindels_annotated5_pf_ia.csv",
+            "params": "--denovo-chrom CHROM --denovo-pos POS --denovo-ref REF "
+            "--denovo-alt ALT --denovo-person-id SPID ",
         }
     },
     "mirror_of": {
-        "location": "cshlgroup@sparkgpf3-node03-prod.sfari.org:/data/import202005/data-hg19-test",
+        "location":
+        "cshlgroup@sparkgpf3-node03-prod.sfari.org:"
+        "/data/import202005/data-hg19-test",
         "netloc": "/data/import202005/data-hg19-test",
     },
     "outdir": "./temp",

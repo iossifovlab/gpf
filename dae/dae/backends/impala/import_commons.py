@@ -315,7 +315,8 @@ setup_remote: setup_remote.flag
 
 setup_remote.flag: reports.flag
 \trsync -avPHt \\
-\t\t--rsync-path "mkdir -p {{mirror_of.path}}/studies/{{study_id}}/ && rsync" \\
+\t\t--rsync-path \\
+\t\t"mkdir -p {{mirror_of.path}}/studies/{{study_id}}/ && rsync" \\
 \t\t--ignore-existing {{dae_db_dir}}/studies/{study_id}}/ \\
 \t\t{{mirror_of.location}}/studies/{{study_id}}/ && touch $@
 
