@@ -111,7 +111,7 @@ if [[ $CLEANUP ]]; then
     echo "Cleaning up remote container..."
     echo "----------------------------------------------"
     docker stop ${GPF_REMOTE_DOCKER_CONTAINER}
-    docker rm ${GPF_REMOTE_DOCKER_CONTAINER}
+    # docker rm ${GPF_REMOTE_DOCKER_CONTAINER}
     echo "----------------------------------------------"
     echo "[DONE] Cleaning up remote container"
     echo "----------------------------------------------"
