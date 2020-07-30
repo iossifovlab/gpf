@@ -21,8 +21,8 @@ export class UsersService {
   private readonly changePasswordUrl = 'users/change_password';
   private readonly checkVerificationUrl = 'users/check_verif_path';
   private readonly usersUrl = 'users';
-  private readonly bulkAddGroupUrl = `${this.usersUrl}/bulk_add_group`;
-  private readonly bulkRemoveGroupUrl = `${this.usersUrl}/bulk_remove_group`;
+  private readonly bulkAddGroupsUrl = `${this.usersUrl}/bulk_add_groups`;
+  private readonly bulkRemoveGroupsUrl = `${this.usersUrl}/bulk_remove_groups`;
 
   private userInfo$ = new ReplaySubject<{}>(1);
   private lastUserInfo = null;
@@ -243,26 +243,26 @@ export class UsersService {
       .map(response => User.fromJsonArray(response));
   }
 
-  bulkAddGroup(users: User[], group: string) {
+  bulkAddGroups(users: User[], groups: string[]) {
     const options = { withCredentials: true };
 
     const data = {
       userIds: users.map(u => u.id),
-      group: group
+      groups: groups
     };
 
-    return this.http.post(this.config.baseUrl + this.bulkAddGroupUrl, data, options);
+    return this.http.post(this.config.baseUrl + this.bulkAddGroupsUrl, data, options);
   }
 
-  bulkRemoveGroup(users: User[], group: string) {
+  bulkRemoveGroups(users: User[], groups: string[]) {
     const options = { withCredentials: true };
 
     const data = {
       userIds: users.map(u => u.id),
-      group: group
+      groups: groups
     };
 
-    return this.http.post(this.config.baseUrl + this.bulkRemoveGroupUrl, data, options);
+    return this.http.post(this.config.baseUrl + this.bulkRemoveGroupsUrl, data, options);
   }
 
 }

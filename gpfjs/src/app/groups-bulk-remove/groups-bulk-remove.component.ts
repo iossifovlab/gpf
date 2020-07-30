@@ -1,14 +1,13 @@
 
 import {throwError as observableThrowError,  Observable, BehaviorSubject } from 'rxjs';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 
 import { User } from '../users/users';
 import { UsersService } from '../users/users.service';
 import { UserGroup } from '../users-groups/users-groups';
 import { UsersGroupsService } from '../users-groups/users-groups.service';
-import { IDropdownSettings } from 'ng-multiselect-dropdown';
-
+import { UserGroupsSelectorComponent } from 'app/user-groups-selector/user-groups-selector.component';
 
 @Component({
   selector: 'gpf-groups-bulk-remove',
@@ -18,8 +17,9 @@ import { IDropdownSettings } from 'ng-multiselect-dropdown';
 export class GroupsBulkRemoveComponent implements OnInit {
   users$ = new BehaviorSubject<User[]>(null);
   groups$: Observable<UserGroup[]>;
-  group: string;
-  dropdownSettings: IDropdownSettings = {};
+
+  @ViewChild(UserGroupsSelectorComponent)
+  private userGroupsSelectorComponent: UserGroupsSelectorComponent;
 
   constructor(
     private route: ActivatedRoute,
@@ -29,19 +29,14 @@ export class GroupsBulkRemoveComponent implements OnInit {
   ) { }
 
   ngOnInit() {
-    let parameterUsers = this.getUsersOrBack();
+    const parameterUsers = this.getUsersOrBack();
+
     parameterUsers.take(1)
       .subscribe(users => {
         this.users$.next(users);
       });
-    this.groups$ = this.usersGroupsService.getAllGroups();
 
-    this.dropdownSettings = {
-      singleSelection: true,
-      idField: 'id',
-      textField: 'text',
-      allowSearchFilter: true
-    };
+    this.groups$ = this.usersGroupsService.getAllGroups();
   }
 
   getUsersOrBack() {
@@ -69,18 +64,6 @@ export class GroupsBulkRemoveComponent implements OnInit {
       });
   }
 
-  groupsToOptions(groups: UserGroup[]) {
-    if (!groups) {
-      return null;
-    }
-    return groups.map(group => {
-      return {
-        id: group.name,
-        text: group.name
-      };
-    });
-  }
-
   groupsToValue(groups: UserGroup[]) {
     if (!groups) {
       return [];
@@ -88,25 +71,18 @@ export class GroupsBulkRemoveComponent implements OnInit {
     return groups.map(group => group.id.toString());
   }
 
-
   submit() {
-    if (!this.group) {
-      return;
-    }
-    let users = this.users$.value;
+    const users = this.users$.value;
+    const selectedGroups = this.userGroupsSelectorComponent.selectedGroups;
+
     if (!users) {
       return;
     }
-    this.usersService.bulkRemoveGroup(users, this.group)
-      .take(1)
-      .subscribe(() => this.router.navigate(['/management']));
-  }
 
-  changeSelectedGroup(group) {
-    this.group = group;
-  }
-
-  clearSelectedGroup(group: string) {
-    this.group = undefined;
+    if (selectedGroups !== undefined && !selectedGroups.includes(undefined) && selectedGroups.length !== 0) {
+      this.usersService.bulkRemoveGroups(users, selectedGroups)
+        .take(1)
+        .subscribe(() => this.router.navigate(['/management']));
+    }
   }
 }
