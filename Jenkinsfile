@@ -137,6 +137,16 @@ pipeline {
     }
     post {
         always {
+            step(
+                sh '''
+                    docker stop $GPF_REMOTE_DOCKER_CONTAINER
+                    docker rm $GPF_REMOTE_DOCKER_CONTAINER
+
+                    docker stop $GPF_IMPALA_DOCKER_CONTAINER
+                    docker rm $GPF_IMPALA_DOCKER_CONTAINER
+                '''
+            )
+
             junit 'test_results/wdae-junit.xml, test_results/dae-junit.xml'
             step([
                 $class: 'CoberturaPublisher',
