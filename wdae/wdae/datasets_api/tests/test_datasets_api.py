@@ -68,18 +68,22 @@ def test_user_client_get_nonexistant_dataset_details(
 
 
 def test_datasets_api_get_all_with_selected_restriction(
-    admin_client, mocker, wdae_gpf_instance
+    admin_client, wdae_gpf_instance
 ):
-    edited_conf = wdae_gpf_instance.dae_config.to_dict()
+    # FIXME This is a temporary hack to mock the
+    # dae_config of wdae_gpf_instance since using the mocker
+    # fixture does not work.
+    old_conf = wdae_gpf_instance.dae_config
+    edited_conf = old_conf.to_dict()
     edited_conf["gpfjs"]["selected_genotype_data"] = [
         "quads_f1", "quads_f2", "f1_group"
     ]
-    mocker.patch.object(
-        wdae_gpf_instance, "dae_config", FrozenBox(edited_conf)
-    )
+    wdae_gpf_instance.dae_config = FrozenBox(edited_conf)
 
-    response = admin_client.get("/api/v3/datasets")
-
-    assert response
-    assert response.status_code == 200
-    assert len(response.data["data"]) == 3
+    try:
+        response = admin_client.get("/api/v3/datasets")
+        assert response
+        assert response.status_code == 200
+        assert len(response.data["data"]) == 3
+    finally:
+        wdae_gpf_instance.dae_config = old_conf
