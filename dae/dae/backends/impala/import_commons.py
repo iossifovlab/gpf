@@ -222,7 +222,7 @@ class MakefileGenerator(BatchGenerator):
 
 {%- endfor %}
 
-defaults: reports.flag
+defaults: parquet.flag
 
 all: pedigree.flag \\
 {%- for prefix in variants %}
@@ -240,9 +240,10 @@ all: pedigree.flag \\
 pedigree: pedigree.flag
 
 pedigree.flag:
-\t(time ped2parquet.py {{pedigree.pedigree}} --study-id {{study_id}} \\
+\t(time ped2parquet.py --study-id {{study_id}} \\
+\t\t{{pedigree.params}} {{pedigree.pedigree}} \\
 {%- if partition_description %}
-\t\t--pd {partition_description} \\
+\t\t--pd {{partition_description}} \\
 {%- endif %}
 \t\t-o {{pedigree.output}} \\
 \t\t> logs/pedigree_stdout.log 2> logs/pedigree_stderr.log && touch $@) \\
@@ -253,8 +254,8 @@ pedigree.flag:
 
 {{prefix}}_%.flag:
 \t(time {{prefix}}2parquet.py --study-id {{study_id}} \\
-\t\t{{pedigree.options}} {{pedigree.pedigree}} \\
-\t\t{{context.options}} {{context.variants}} \\
+\t\t{{pedigree.params}} {{pedigree.pedigree}} \\
+\t\t{{context.params}} {{context.variants}} \\
 {%- if partition_description %}
 \t\t--pd {{partition_description}} \\
 {%- endif %}
@@ -264,6 +265,16 @@ pedigree.flag:
 \t\t2> logs/{{prefix}}_$*_benchmark.txt
 
 {%- endfor %}
+
+
+parquet: parquet.flag
+
+parquet.flag: \\
+{%- for prefix in variants %}
+\t\t$({{prefix}}_bins_flags) \\
+{%- endfor %}
+\t\tpedigree.flag
+\ttouch parquet.flag
 
 hdfs: hdfs.flag
 
@@ -336,7 +347,7 @@ class SnakefileGenerator(BatchGenerator):
 
 rule default:
     input:
-        "reports.flag"
+        "parquet.flag"
 
 rule all:
     input:
@@ -351,7 +362,6 @@ rule all:
 {%- if mirror_of %}
         "setup_remote.flag",
 {%- endif %}
-
 
 
 rule pedigree:
@@ -417,6 +427,18 @@ rule {{prefix}}_variants:
 
 {%- endfor %}
 
+
+rule parquet:
+    input:
+        pedigree="pedigree.flag",
+{%- for prefix in variants %}
+        {{prefix}}_flags=expand("{{prefix}}_{rb}.flag", rb={{prefix}}_bins),
+{%- endfor %}
+
+    output:
+        touch("parquet.flag")
+    benchmark:
+        "logs/parquet_benchmark.tsv"
 
 
 rule hdfs:
