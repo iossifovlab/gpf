@@ -136,6 +136,14 @@ pipeline {
                 '''
             }
         }
+
+        stage('Test') {
+            steps {
+                sh '''
+                    ${WD}/run_tests.sh
+                '''
+            }
+        }
     }
     post {
         always {
