@@ -104,6 +104,12 @@ export class UsersService {
       ));
     }
 
+    if (name === undefined) {
+      return observableThrowError(new Error(
+        'Name field cannot be empty.'
+      ));
+    }
+
     return this.http.post(this.config.baseUrl + this.registerUrl, {
       email: email,
       name: name,
