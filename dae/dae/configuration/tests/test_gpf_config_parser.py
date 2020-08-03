@@ -122,25 +122,3 @@ def test_config_parser_env_interpolation_missing(
         os.path.join(fixtures_dir, "env_interpolation_conf.toml"),
         conf_schema_basic,
     )
-
-
-@pytest.mark.skip
-def test_tupleization_default_value():
-    sample_dict = {"a": 1, "b": 2}
-    tupleized = GPFConfigParser._dict_to_namedtuple(sample_dict)
-    assert tupleized.a == 1
-    assert tupleized.b == 2
-    assert tupleized.c is None
-
-
-@pytest.mark.skip
-def test_config_parser_dict_namedtuple_conversion(
-    conf_schema_nested, fixtures_dir
-):
-    config = GPFConfigParser.load_config(
-        os.path.join(fixtures_dir, "nested_conf.toml"), conf_schema_nested
-    )
-
-    dict_config = GPFConfigParser._namedtuple_to_dict(config)
-    tup_from_dict_config = GPFConfigParser._dict_to_namedtuple(dict_config)
-    assert tup_from_dict_config == config
