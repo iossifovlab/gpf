@@ -105,27 +105,33 @@ echo "----------------------------------------------"
 echo "[DONE] Running tests..."
 echo "----------------------------------------------"
 
-echo "----------------------------------------------"
-echo "Cleaning up remote container..."
-echo "----------------------------------------------"
-
-docker stop ${GPF_REMOTE_DOCKER_CONTAINER}
-
-echo "----------------------------------------------"
-echo "[DONE] Cleaning up remote container"
-echo "----------------------------------------------"
-
 if [[ $CLEANUP ]]; then
 
     echo "----------------------------------------------"
-    echo "Cleaning up docker containers"
+    echo "Cleaning up remote container..."
+    echo "----------------------------------------------"
+    docker stop ${GPF_REMOTE_DOCKER_CONTAINER}
+    # docker rm ${GPF_REMOTE_DOCKER_CONTAINER}
+    echo "----------------------------------------------"
+    echo "[DONE] Cleaning up remote container"
+    echo "----------------------------------------------"
+
+    echo "----------------------------------------------"
+    echo "Cleaning up impala docker containers"
     echo "----------------------------------------------"
     docker stop ${GPF_IMPALA_DOCKER_CONTAINER}
     docker rm ${GPF_IMPALA_DOCKER_CONTAINER}
+    echo "----------------------------------------------"
+    echo "[DONE] Cleaning up impala docker containers"
+    echo "----------------------------------------------"
+
+    echo "----------------------------------------------"
+    echo "Cleaning up docker"
+    echo "----------------------------------------------"
     docker network prune --force
     docker image rm ${GPF_DOCKER_IMAGE}
     echo "----------------------------------------------"
-    echo "[DONE] Cleaning up docker containers"
+    echo "[DONE] Cleaning up docker"
     echo "----------------------------------------------"
 
 fi

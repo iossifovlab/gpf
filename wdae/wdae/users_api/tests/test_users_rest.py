@@ -446,10 +446,10 @@ def test_bulk_adding_users_to_existing_group(
     for user in three_new_users:
         assert not user.groups.filter(name=empty_group.name).exists()
 
-    url = "/api/v3/users/bulk_add_group"
+    url = "/api/v3/users/bulk_add_groups"
     data = {
         "userIds": [u.id for u in three_new_users],
-        "group": empty_group.name,
+        "groups": [empty_group.name],
     }
 
     response = admin_client.post(
@@ -464,8 +464,8 @@ def test_bulk_adding_users_to_existing_group(
 
 def test_bulk_adding_users_to_new_group(admin_client, three_new_users):
     group_name = "some random name"
-    url = "/api/v3/users/bulk_add_group"
-    data = {"userIds": [u.id for u in three_new_users], "group": group_name}
+    url = "/api/v3/users/bulk_add_groups"
+    data = {"userIds": [u.id for u in three_new_users], "groups": [group_name]}
 
     response = admin_client.post(
         url, json.dumps(data), content_type="application/json", format="json"
@@ -474,18 +474,37 @@ def test_bulk_adding_users_to_new_group(admin_client, three_new_users):
 
     for user in three_new_users:
         user.refresh_from_db()
-        assert user.groups.filter(name=data["group"]).exists()
+        assert user.groups.filter(name=data["groups"][0]).exists()
 
     assert Group.objects.filter(name=group_name).exists()
+
+
+def test_bulk_adding_users_to_new_groups(admin_client, three_new_users):
+    group_names = ["some random name", "some random name 2"]
+    url = "/api/v3/users/bulk_add_groups"
+    data = {"userIds": [u.id for u in three_new_users], "groups": group_names}
+
+    response = admin_client.post(
+        url, json.dumps(data), content_type="application/json", format="json"
+    )
+    assert response.status_code is status.HTTP_200_OK
+
+    for user in three_new_users:
+        user.refresh_from_db()
+        for group_name in group_names:
+            assert user.groups.filter(name=group_name).exists()
+
+    for group_name in group_names:
+        assert Group.objects.filter(name=group_name).exists()
 
 
 def test_bulk_adding_with_duplicate_user_ids_fails(
     admin_client, three_new_users
 ):
-    url = "/api/v3/users/bulk_add_group"
+    url = "/api/v3/users/bulk_add_groups"
     data = {
         "userIds": [u.id for u in three_new_users],
-        "group": "some random name",
+        "groups": ["some random name"],
     }
     data["userIds"].append(three_new_users[0].id)
 
@@ -496,15 +515,15 @@ def test_bulk_adding_with_duplicate_user_ids_fails(
 
     for user in three_new_users:
         user.refresh_from_db()
-        assert not user.groups.filter(name=data["group"]).exists()
+        assert not user.groups.filter(name=data["groups"][0]).exists()
 
 
 def test_bulk_adding_with_duplicate_user_ids_doesnt_create_new_group(
     admin_client, three_new_users
 ):
     group_name = "some random name"
-    url = "/api/v3/users/bulk_add_group"
-    data = {"userIds": [u.id for u in three_new_users], "group": group_name}
+    url = "/api/v3/users/bulk_add_groups"
+    data = {"userIds": [u.id for u in three_new_users], "groups": [group_name]}
     data["userIds"].append(three_new_users[0].id)
 
     response = admin_client.post(
@@ -517,8 +536,8 @@ def test_bulk_adding_with_duplicate_user_ids_doesnt_create_new_group(
 
 def test_bulk_adding_unknown_user_ids_fails(admin_client, three_new_users):
     group_name = "some random name"
-    url = "/api/v3/users/bulk_add_group"
-    data = {"userIds": [u.id for u in three_new_users], "group": group_name}
+    url = "/api/v3/users/bulk_add_groups"
+    data = {"userIds": [u.id for u in three_new_users], "groups": [group_name]}
     data["userIds"].append(424242)
 
     response = admin_client.post(
@@ -531,8 +550,8 @@ def test_bulk_adding_unknown_user_ids_fails(admin_client, three_new_users):
 
 def test_bulk_remove_group_works(admin_client, three_users_in_a_group):
     users, group = three_users_in_a_group
-    url = "/api/v3/users/bulk_remove_group"
-    data = {"userIds": [u.id for u in users], "group": group.name}
+    url = "/api/v3/users/bulk_remove_groups"
+    data = {"userIds": [u.id for u in users], "groups": [group.name]}
 
     response = admin_client.post(
         url, json.dumps(data), content_type="application/json", format="json"
@@ -543,14 +562,34 @@ def test_bulk_remove_group_works(admin_client, three_users_in_a_group):
         assert not user.groups.filter(name=group.name).exists()
 
 
+def test_bulk_remove_multiple_groups_works(
+    admin_client, three_users_in_groups
+):
+    users, group, group_2 = three_users_in_groups
+    url = "/api/v3/users/bulk_remove_groups"
+    data = {
+        "userIds": [u.id for u in users],
+        "groups": [group.name, group_2.name]
+    }
+
+    response = admin_client.post(
+        url, json.dumps(data), content_type="application/json", format="json"
+    )
+    assert response.status_code is status.HTTP_200_OK
+
+    for user in users:
+        assert not (user.groups.filter(name=group.name).exists()
+                    or user.groups.filter(name=group_2.name).exists())
+
+
 def test_bulk_remove_with_user_without_the_group_works(
     admin_client, three_users_in_a_group, active_user
 ):
     users, group = three_users_in_a_group
     assert not active_user.groups.filter(name=group.name).exists()
 
-    url = "/api/v3/users/bulk_remove_group"
-    data = {"userIds": [u.id for u in users], "group": group.name}
+    url = "/api/v3/users/bulk_remove_groups"
+    data = {"userIds": [u.id for u in users], "groups": [group.name]}
     data["userIds"].append(active_user.id)
 
     response = admin_client.post(
@@ -565,8 +604,8 @@ def test_bulk_remove_with_user_without_the_group_works(
 
 def test_bulk_remove_unknown_group_fails(admin_client, three_users_in_a_group):
     users, _ = three_users_in_a_group
-    url = "/api/v3/users/bulk_remove_group"
-    data = {"userIds": [u.id for u in users], "group": "alabala"}
+    url = "/api/v3/users/bulk_remove_groups"
+    data = {"userIds": [u.id for u in users], "groups": ["alabala"]}
 
     response = admin_client.post(
         url, json.dumps(data), content_type="application/json", format="json"
