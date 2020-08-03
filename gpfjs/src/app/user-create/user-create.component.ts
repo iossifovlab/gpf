@@ -1,7 +1,7 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
 
-import { BehaviorSubject } from 'rxjs';
+import {throwError as observableThrowError, Observable , ReplaySubject, BehaviorSubject } from 'rxjs';
 
 import { User } from '../users/users';
 import { UsersService } from '../users/users.service';
@@ -25,9 +25,10 @@ export class UserCreateComponent implements OnInit {
     tags: true,
     disabled: true,
   };
+
   user$ = new BehaviorSubject<User>(new User(0, '', '', [], false));
   groups$ = new BehaviorSubject<UserGroup[]>(null);
-
+  createUserError = '';
   edit = false;
 
   constructor(
@@ -55,8 +56,15 @@ export class UserCreateComponent implements OnInit {
     }
 
     this.usersService.createUser(user)
-      .take(1)
-      .subscribe(() => this.router.navigate(['/management']));
+      .subscribe(() => this.router.navigate(['/management']),
+        (error: any) => {
+          if (error) {
+            this.createUserError = error;
+          } else {
+            this.createUserError = 'Creating user failed';
+          }
+        }
+      );
   }
 
   goBack() {

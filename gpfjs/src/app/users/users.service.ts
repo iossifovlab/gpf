@@ -93,6 +93,10 @@ export class UsersService {
     return re.test(String(email).toLowerCase());
   }
 
+  isNameValid(name: string): boolean {
+    return !(name === undefined || name === '');
+  }
+
   register(email: string, name: string): Observable<boolean> {
     const csrfToken = this.cookieService.get('csrftoken');
     const headers = { 'X-CSRFToken': csrfToken };
@@ -104,7 +108,7 @@ export class UsersService {
       ));
     }
 
-    if (name === undefined) {
+    if (!this.isNameValid(name)) {
       return observableThrowError(new Error(
         'Name field cannot be empty.'
       ));
@@ -204,6 +208,18 @@ export class UsersService {
   createUser(user: User) {
     if (user.id) {
       return observableThrowError('Create should not have user id');
+    }
+
+    if (!this.isEmailValid(user.email)) {
+      return observableThrowError(new Error(
+        'Invalid email address entered. Please use a valid email address.'
+      ));
+    }
+
+    if (!this.isNameValid(user.name)) {
+      return observableThrowError(new Error(
+        'Name field cannot be empty.'
+      ));
     }
 
     const csrfToken = this.cookieService.get('csrftoken');
