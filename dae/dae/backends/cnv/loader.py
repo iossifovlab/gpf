@@ -1,10 +1,10 @@
-from argparse import ArgumentParser
-from typing import List, Optional, Dict, Any, Tuple
+from argparse import ArgumentParser, Namespace
+from typing import List, Optional, Dict, Any, Tuple, Generator
 from copy import copy
 import numpy as np
 import pandas as pd
 
-from dae.genome.genome_access import GenomicSequence
+from dae.genome.genomes_db import Genome
 from dae.backends.raw.loader import VariantsGenotypesLoader, TransmissionType
 from dae.pedigrees.family import FamiliesData
 from dae.variants.attributes import VariantType, Inheritance
@@ -20,7 +20,7 @@ class CNVLoader(VariantsGenotypesLoader):
             self,
             families: FamiliesData,
             cnv_filename: str,
-            genome: GenomicSequence,
+            genome: Genome,
             regions: List[str] = None,
             params: Dict[str, Any] = {}):
 
@@ -75,7 +75,9 @@ class CNVLoader(VariantsGenotypesLoader):
 
     def _is_in_regions(self, summary_variant: SummaryVariant) -> bool:
         isin = [
-            r.isin(summary_variant.chrom, summary_variant.position)
+            r.isin(  # type: ignore
+                summary_variant.chrom, summary_variant.position
+            )
             if r is not None
             else True
             for r in self.regions
@@ -83,7 +85,8 @@ class CNVLoader(VariantsGenotypesLoader):
         return any(isin)
 
     def _full_variants_iterator_impl(
-            self) -> Tuple[SummaryVariant, List[FamilyVariant]]:
+        self
+    ) -> Generator[Tuple[SummaryVariant, List[FamilyVariant]], None, None]:
 
         for index, rec in enumerate(self.cnv_df.to_dict(orient="records")):
             family_id = rec.pop("family_id")
@@ -157,7 +160,7 @@ class CNVLoader(VariantsGenotypesLoader):
             cls,
             filepath: str,
             families: FamiliesData,
-            genome: GenomicSequence,
+            genome: Genome,
             cnv_location: Optional[str] = None,
             cnv_family_id: Optional[str] = None,
             cnv_variant_type: Optional[str] = None,
@@ -211,8 +214,8 @@ class CNVLoader(VariantsGenotypesLoader):
         effect_gene_genes = []
         effect_gene_types = []
         for egs in effect_genes_col:
-            effect_genes = []
-            effect_types = []
+            effect_genes: List[Optional[str]] = []
+            effect_types: List[Optional[str]] = []
             for eg in egs:
                 split = eg.split(":")
                 if len(split) == 1:
@@ -333,8 +336,8 @@ class CNVLoader(VariantsGenotypesLoader):
 
     @classmethod
     def parse_cli_arguments(
-            cls, argv: Dict[str, Any]) -> Tuple[str, Dict[str, Any]]:
-
+        cls, argv: Namespace
+    ) -> Tuple[str, Dict[str, Any]]:
         return argv.cnv_file, \
             {
                 "cnv_location": argv.cnv_location,

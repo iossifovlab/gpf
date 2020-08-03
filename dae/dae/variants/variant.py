@@ -119,7 +119,7 @@ class Allele:
         raise NotImplementedError()
 
     @property
-    def end_position(self) -> int:
+    def end_position(self) -> Optional[int]:
         raise NotImplementedError()
 
     @property
@@ -168,11 +168,17 @@ class Allele:
 
     @property
     def effect_types(self) -> List[str]:
-        return self.effect.types
+        if self.effect is not None:
+            return self.effect.types
+        else:
+            raise ValueError()
 
     @property
     def effect_genes(self) -> List[EffectGene]:
-        return self.effect.genes
+        if self.effect is not None:
+            return self.effect.genes
+        else:
+            raise ValueError()
 
     @property
     def effect_gene_symbols(self) -> List[str]:
@@ -442,7 +448,7 @@ class SummaryAllele(Allele):
         position: int,
         reference: str,
         alternative: Optional[str] = None,
-        end_position: int = None,
+        end_position: Optional[int] = None,
         summary_index: int = -1,
         allele_index: int = 0,
         transmission_type: TransmissionType = TransmissionType.transmitted,
@@ -452,7 +458,7 @@ class SummaryAllele(Allele):
 
         self._chromosome: str = chromosome
         self._position: int = position
-        self._end_position = end_position
+        self._end_position: Optional[int] = end_position
         self._reference: str = reference
         self._alternative: Optional[str] = alternative
 
@@ -489,7 +495,7 @@ class SummaryAllele(Allele):
         return self._position
 
     @property
-    def end_position(self) -> int:
+    def end_position(self) -> Optional[int]:
         return self._end_position
 
     @property

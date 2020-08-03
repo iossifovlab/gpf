@@ -29,7 +29,7 @@ class PersonSetCollection(NamedTuple):
     families: FamiliesData
 
     @staticmethod
-    def _produce_sets(config: NamedTuple) -> Dict[str, PersonSet]:
+    def _produce_sets(config: FrozenBox) -> Dict[str, PersonSet]:
         """Initializes a dictionary of person set IDs
         mapped to empty PersonSet instances from a given configuration.
         """

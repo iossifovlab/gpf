@@ -5,7 +5,7 @@ Created on Mar 5, 2018
 """
 import numpy as np
 
-from dae.genome.genome_access import GenomicSequence
+from dae.genome.genomes_db import Genome
 from dae.variants.attributes import Sex
 
 
@@ -82,8 +82,8 @@ def trim_str_front(pos, ref, alt):
             break
 
     if ref[n] == alt[n]:
-        ref = ref[n + 1 :]
-        alt = alt[n + 1 :]
+        ref = ref[n + 1:]
+        alt = alt[n + 1:]
         pos += n + 1
     else:
         ref = ref[n:]
@@ -134,7 +134,7 @@ def trim_str_back(pos, ref, alt):
             break
 
     if r[n] == a[n]:
-        return pos + n + 1, r[n + 1 :], a[n + 1 :]
+        return pos + n + 1, r[n + 1:], a[n + 1:]
 
     return pos + n, r[n:], a[n:]
 
@@ -169,7 +169,7 @@ def vcf2cshl(pos, ref, alt, trimmer=trim_str_front):
 
 
 def get_locus_ploidy(
-    chrom: str, pos: int, sex: Sex, genome: GenomicSequence
+    chrom: str, pos: int, sex: Sex, genome: Genome
 ) -> int:
     if chrom in ("chrX", "X") and sex == Sex.M:
         if not genome.is_pseudoautosomal(chrom, pos):
@@ -178,7 +178,7 @@ def get_locus_ploidy(
 
 
 def get_interval_locus_ploidy(
-    chrom: str, pos_start: int, pos_end: int, sex: Sex, genome: GenomicSequence
+    chrom: str, pos_start: int, pos_end: int, sex: Sex, genome: Genome
 ) -> int:
     start_ploidy = get_locus_ploidy(chrom, pos_start, sex, genome)
     end_ploidy = get_locus_ploidy(chrom, pos_end, sex, genome)
