@@ -107,6 +107,9 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
         )
 
     def email_user(self, subject, message, from_email=None):
+        if from_email is None:
+            from_email = settings.DEFAULT_FROM_EMAIL
+
         override = None
         try:
             override = settings.EMAIL_OVERRIDE
@@ -114,13 +117,15 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
             LOGGER.debug("no email override; sending email")
             override = None
         if override:
-            mail = send_mail(subject, message, from_email, override)
+            to_email = override
         else:
-            mail = send_mail(subject, message, from_email, [self.email])
-            LOGGER.info("email sent: to:      <" + str(self.email) + ">")
-            LOGGER.info("email sent: from:    <" + str(from_email) + ">")
-            LOGGER.info("email sent: subject: " + str(subject))
-            LOGGER.info("email sent: message: " + str(message))
+            to_email = self.email
+
+        mail = send_mail(subject, message, from_email, [to_email])
+        LOGGER.info("email sent: to:      <" + str(self.email) + ">")
+        LOGGER.info("email sent: from:    <" + str(from_email) + ">")
+        LOGGER.info("email sent: subject: " + str(subject))
+        LOGGER.info("email sent: message: " + str(message))
 
         return mail
 
@@ -145,14 +150,9 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
             self.is_active = False
 
     def reset_password(self, by_admin=False):
-        if not self.is_active:
-            send_reset_inactive_acc_email(self)
-        else:
-            self.set_unusable_password()
-            self.save()
 
-            verif_path = _create_verif_path(self)
-            send_reset_email(self, verif_path, by_admin)
+        verif_path = _create_verif_path(self)
+        send_reset_email(self, verif_path, by_admin)
 
     def deauthenticate(self):
         all_sessions = Session.objects.all()
