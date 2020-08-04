@@ -168,17 +168,17 @@ class Allele:
 
     @property
     def effect_types(self) -> List[str]:
-        if self.effect is not None:
+        if self.effect:
             return self.effect.types
         else:
-            raise ValueError()
+            return []
 
     @property
     def effect_genes(self) -> List[EffectGene]:
-        if self.effect is not None:
+        if self.effect:
             return self.effect.genes
         else:
-            raise ValueError()
+            return []
 
     @property
     def effect_gene_symbols(self) -> List[str]:
