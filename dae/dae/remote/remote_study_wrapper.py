@@ -1,4 +1,5 @@
 from dae.studies.study_wrapper import StudyWrapperBase
+from dae.remote.remote_phenotype_data import RemotePhenotypeData
 import json
 
 
@@ -14,6 +15,11 @@ class RemoteStudyWrapper(StudyWrapperBase):
         del self.config["groups"]
         self.config["id"] = self.study_id
         self.config["name"] = self.study_id
+
+        self.phenotype_data = RemotePhenotypeData(
+            self._remote_study_id,
+            self.rest_client
+        )
 
         self.is_remote = True
 

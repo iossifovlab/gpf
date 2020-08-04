@@ -88,6 +88,13 @@ class WGPFInstance(GPFInstance):
         genotype_data = wrapper.config
         return genotype_data
 
+    def get_genotype_data_config(self, dataset_id):
+        genotype_data = super(WGPFInstance, self).get_genotype_data(dataset_id)
+        if genotype_data is not None:
+            return genotype_data
+        genotype_data = self.get_genotype_data(dataset_id)
+        return genotype_data
+
     def get_common_report(self, common_report_id):
         common_report = \
             super(WGPFInstance, self).get_common_report(common_report_id)
