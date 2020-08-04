@@ -1,5 +1,4 @@
 import pytest
-from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.annotation.tools.annotator_config import AnnotationConfigParser
 from dae.annotation.tools.lift_over_annotator import LiftOverAnnotator
 from dae.annotation.annotation_pipeline import PipelineAnnotator
@@ -36,15 +35,12 @@ def test_lift_over(mocker, chrom, pos, lift_over, expected, genomes_db_2013):
         "new_x": "hg19_location",
     }
 
-    config = AnnotationConfigParser.parse_section(
-        GPFConfigParser._dict_to_namedtuple(
-            {
-                "options": options,
-                "columns": columns,
-                "annotator": "lift_over_annotator.LiftOverAnnotator",
-                "virtual_columns": [],
-            }
-        )
+    config = AnnotationConfigParser.parse_section({
+            "options": options,
+            "columns": columns,
+            "annotator": "lift_over_annotator.LiftOverAnnotator",
+            "virtual_columns": [],
+        }
     )
     mocker.patch(
         "dae.annotation.tools.lift_over_annotator."

@@ -56,7 +56,7 @@ class FrequencyAnnotator(VariantScoreAnnotatorBase):
                 )
 
             variant_index = scores[self.variant_col_name].index(variant)
-            for native, output in self.config.columns.field_values_iterator():
+            for native, output in self.config.columns.items():
                 # FIXME: this conversion should come from schema
                 val = scores[native][variant_index]
                 try:

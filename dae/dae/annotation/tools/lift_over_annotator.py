@@ -31,7 +31,7 @@ class LiftOverAnnotator(VariantAnnotatorBase):
 
     def collect_annotator_schema(self, schema):
         super(LiftOverAnnotator, self).collect_annotator_schema(schema)
-        for key, value in self.columns.field_values_iterator():
+        for key, value in self.columns.items():
             if key == "new_x" or key == "new_c":
                 schema.columns[value] = Schema.produce_type("str")
             elif key == "new_p":

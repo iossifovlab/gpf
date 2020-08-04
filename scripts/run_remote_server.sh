@@ -4,7 +4,7 @@
 pip install -e /code/dae
 pip install -e /code/wdae
 
-if [ -d "/data/studies/iossifov_2014" ]; then
+if [ -d "/data/studies/iossifov_2014/iossifov_2014.conf" ]; then
     echo "Studies found"
 else
     echo "Studies missing, importing..."

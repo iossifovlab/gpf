@@ -11,6 +11,7 @@ pytestmark = pytest.mark.usefixtures("gene_info_cache_dir", "calc_gene_sets")
 
 
 def name_in_gene_sets(gene_sets, name, count=None):
+    print(gene_sets)
     for gene_set in gene_sets:
         if gene_set["name"] == name:
             print(gene_set)

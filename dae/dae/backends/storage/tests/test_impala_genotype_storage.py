@@ -151,9 +151,8 @@ def test_impala_genotype_storate_has_rsync_helpers(mocker):
         },
     }
     config = Box(config)
-    mocker.patch.object(config, "section_id", return_value="genotype_impala")
 
-    storage = ImpalaGenotypeStorage(config)
+    storage = ImpalaGenotypeStorage(config, "genotype_impala")
     assert storage is not None
     assert storage.rsync_helpers is not None
 
@@ -173,8 +172,7 @@ def test_impala_genotype_storate_no_rsync_helpers(mocker):
         "rsync": None,
     }
     config = Box(config)
-    mocker.patch.object(config, "section_id", return_value="genotype_impala")
 
-    storage = ImpalaGenotypeStorage(config)
+    storage = ImpalaGenotypeStorage(config, "genotype_impala")
     assert storage is not None
     assert storage.rsync_helpers is None

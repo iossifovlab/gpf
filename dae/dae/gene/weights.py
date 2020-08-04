@@ -15,8 +15,8 @@ class GeneWeight(GenomicValues):
     in `geneInfo.conf`.
     """
 
-    def __init__(self, config):
-        super(GeneWeight, self).__init__(config.section_id())
+    def __init__(self, section_id, config):
+        super(GeneWeight, self).__init__(section_id)
         self.config = config
 
         self.genomic_values_col = "gene"
@@ -168,13 +168,13 @@ class GeneWeightsDb(object):
 
     def _load(self):
         if self.config and self.config.gene_weights:
-            for weight_config in self.config.gene_weights:
+            for section_id, weight_config in self.config.gene_weights.items():
                 if (
-                    weight_config.section_id()
+                    section_id
                     in self.config.gene_info.selected_gene_weights
                 ):
-                    w = GeneWeight(weight_config)
-                    self.weights[weight_config.section_id()] = w
+                    w = GeneWeight(section_id, weight_config)
+                    self.weights[section_id] = w
 
     def __getitem__(self, weight_id):
         if weight_id not in self.weights:

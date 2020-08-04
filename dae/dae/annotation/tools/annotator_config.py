@@ -1,4 +1,5 @@
-from dae.configuration.gpf_config_parser import GPFConfigParser
+from dae.configuration.gpf_config_parser import GPFConfigParser, DefaultBox, \
+    FrozenBox
 from dae.configuration.schemas.annotation_conf import annotation_conf_schema
 from dae.utils.dict_utils import recursive_dict_update
 
@@ -69,90 +70,69 @@ class AnnotationConfigParser:
 
         config = GPFConfigParser.load_config(
             config_file, annotation_conf_schema
-        )
+        ).to_dict()
 
-        config = GPFConfigParser.modify_tuple(
-            config,
-            {
-                "options": options,
-                "columns": {},
-                "native_columns": [],
-                "virtual_columns": [],
-                "output_columns": [],
-            },
-        )
-        config = cls._setup_defaults(config)
+        config["options"] = options
+        config["columns"] = {}
+        config["native_columns"] = []
+        config["virtual_columns"] = []
+        config["output_columns"] = []
+
+        config = cls._setup_defaults(DefaultBox(config))
 
         parsed_sections = list()
         for config_section in config.sections:
             if config_section.annotator is None:
                 continue
-            config_dict = GPFConfigParser._namedtuple_to_dict(config_section)
-            config_dict = recursive_dict_update(
-                {"options": options}, config_dict
+            config_section_dict = recursive_dict_update(
+                {"options": options}, config_section.to_dict()
             )
-            config_section = GPFConfigParser._dict_to_namedtuple(config_dict)
-            config_section = cls.parse_section(config_section)
-            parsed_sections.append(config_section)
-        config = GPFConfigParser.modify_tuple(
-            config, {"sections": parsed_sections}
-        )
-        return config
+            parsed_sections.append(cls.parse_section(config_section_dict))
+
+        config["sections"] = parsed_sections
+
+        return FrozenBox(config)
 
     @classmethod
     def parse_section(cls, config_section):
+
+        config_section = DefaultBox(config_section)
+
         config_section = cls._setup_defaults(config_section)
 
-        config_section = GPFConfigParser.modify_tuple(
-            config_section, {"sections": []}
-        )
+        config_section["sections"] = list()
+        config_section["native_columns"] = list(config_section.columns.keys())
 
-        native_columns = list(config_section.columns._fields)
-        config_section = GPFConfigParser.modify_tuple(
-            config_section, {"native_columns": native_columns}
-        )
-        assert all(
-            [
-                c in config_section.columns
-                for c in config_section.virtual_columns
-            ]
-        )
+        assert all([
+            c in config_section.columns.values()
+            for c in config_section.virtual_columns
+        ])
 
-        output_columns = [
-            c
-            for c in config_section.columns
-            if c not in config_section.virtual_columns
+        config_section["output_columns"] = [
+            config_section.columns[col] for col in config_section.columns
+            if config_section.columns[col]
+            not in config_section.virtual_columns
         ]
-        config_section = GPFConfigParser.modify_tuple(
-            config_section, {"output_columns": output_columns}
-        )
 
         return config_section
 
     @staticmethod
     def _setup_defaults(config):
-        def modify_config_options(config, new_vals):
-            config_opts = config.options
-            config_opts = GPFConfigParser.modify_tuple(config_opts, new_vals)
-            return GPFConfigParser.modify_tuple(
-                config, {"options": config_opts}
-            )
-
         if config.options.vcf:
             assert not config.options.v, [config.annotator, config.options.v]
 
             if config.options.c is None:
-                config = modify_config_options(config, {"c": "CHROM"})
+                config.options.c = "CHROM"
             if config.options.p is None:
-                config = modify_config_options(config, {"p": "POS"})
+                config.options.p = "POS"
             if config.options.r is None:
-                config = modify_config_options(config, {"r": "REF"})
+                config.options.r = "REF"
             if config.options.a is None:
-                config = modify_config_options(config, {"a": "ALT"})
+                config.options.a = "ALT"
         else:
             if config.options.x is None and config.options.c is None:
-                config = modify_config_options(config, {"x": "location"})
+                config.options.x = "location"
             if config.options.v is None:
-                config = modify_config_options(config, {"v": "variant"})
+                config.options.v = "variant"
 
         return config

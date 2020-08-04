@@ -65,7 +65,7 @@ def test_load_config():
 
     dummy_score = ScoreFile(score_filename, config_filename)
 
-    expected_header = [
+    expected_header = (
         "chrom",
         "chromStart",
         "chromEnd",
@@ -74,7 +74,7 @@ def test_load_config():
         "scoreThree",
         "scoreFour",
         "scoreFive",
-    ]
+    )
 
     assert dummy_score.header == expected_header
     assert dummy_score.score_names == expected_header[3:]

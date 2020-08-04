@@ -47,14 +47,14 @@ class Genome:
     )
 
     @staticmethod
-    def load_config(genome_config):
-        genome = Genome(genome_config.section_id())
+    def load_config(genome_config, section_id):
+        genome = Genome(section_id)
 
         genome.genomic_sequence_filename = genome_config.chr_all_file
 
-        for gene_models_config in genome_config.gene_models:
+        for section_id, gene_models_config in genome_config.gene_models.items():
             gene_models = Genome.GeneModelsConfig(
-                gene_models_config.section_id(),
+                section_id,
                 gene_models_config.file,
                 gene_models_config.fileformat,
                 None,
@@ -132,8 +132,8 @@ class GenomesDB(object):
 
         self._genomes = {}
 
-        for genome_config in self.config.genome:
-            genome = Genome.load_config(genome_config)
+        for section_id, genome_config in self.config.genome.items():
+            genome = Genome.load_config(genome_config, section_id)
             assert genome is not None
             self._genomes[genome.genome_id] = genome
 

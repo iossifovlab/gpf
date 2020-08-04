@@ -1,6 +1,5 @@
 import pandas as pd
 
-from dae.configuration.gpf_config_parser import GPFConfigParser
 from .conftest import relative_to_this_test_folder
 from dae.annotation.tools.dbnsfp_annotator import dbNSFPAnnotator
 from dae.annotation.tools.annotator_config import AnnotationConfigParser
@@ -30,14 +29,12 @@ def test_dbNSFP_annotator(variants_io, expected_df, capsys, genomes_db_2013):
     columns = {"score": "RESULT_dbNSFP", "score2": "RESULT_dbNSFP_2"}
 
     config = AnnotationConfigParser.parse_section(
-        GPFConfigParser._dict_to_namedtuple(
-            {
-                "options": options,
-                "columns": columns,
-                "annotator": "dbNSFP_annotator.dbNSFPAnnotator",
-                "virtual_columns": [],
-            }
-        ),
+        {
+            "options": options,
+            "columns": columns,
+            "annotator": "dbNSFP_annotator.dbNSFPAnnotator",
+            "virtual_columns": [],
+        }
     )
 
     with variants_io("fixtures/multi_chrom_input.tsv") as io_manager:

@@ -3,7 +3,7 @@ import pandas as pd
 
 from .conftest import relative_to_this_test_folder
 
-from dae.configuration.gpf_config_parser import GPFConfigParser
+from dae.configuration.gpf_config_parser import FrozenBox
 from dae.annotation.tools.annotator_base import AnnotatorBase, CopyAnnotator
 from dae.annotation.tools.annotator_config import AnnotationConfigParser
 
@@ -12,19 +12,17 @@ from dae.annotation.tools.file_io import IOManager, IOType
 
 @pytest.fixture
 def variants_io1(request):
-    io_config = GPFConfigParser._dict_to_namedtuple(
-        {
+    io_config = FrozenBox({
             "infile": relative_to_this_test_folder("fixtures/input.tsv"),
             "outfile": "-",
-        }
-    )
+    })
     io_manager = IOManager(io_config, IOType.TSV, IOType.TSV)
     return io_manager
 
 
 @pytest.fixture
 def variants_io_m(request):
-    io_config = GPFConfigParser._dict_to_namedtuple(
+    io_config = FrozenBox(
         {
             "infile": relative_to_this_test_folder("fixtures/input_multi.tsv"),
             "outfile": "-",
@@ -35,7 +33,7 @@ def variants_io_m(request):
 
 
 def test_create_file_io():
-    io_config = GPFConfigParser._dict_to_namedtuple(
+    io_config = FrozenBox(
         {
             "infile": relative_to_this_test_folder("fixtures/input.tsv"),
             "outfile": "-",
@@ -51,15 +49,12 @@ def test_create_file_io():
 
 
 def test_annotator_base_simple(genomes_db_2013):
-    section_config = AnnotationConfigParser.parse_section(
-        GPFConfigParser._dict_to_namedtuple(
-            {
-                "options": {},
-                "columns": {"CSHL_chr": "chr", "CSHL_position": "pos"},
-                "virtual_columns": [],
-                "annotator": "annotator_base.AnnotatorBase",
-            }
-        )
+    section_config = AnnotationConfigParser.parse_section({
+            "options": {},
+            "columns": {"CSHL_chr": "chr", "CSHL_position": "pos"},
+            "virtual_columns": [],
+            "annotator": "annotator_base.AnnotatorBase",
+        }
     )
 
     annotator = AnnotatorBase(section_config, genomes_db_2013)
@@ -67,15 +62,12 @@ def test_annotator_base_simple(genomes_db_2013):
 
 
 def test_copy_annotator_simple(capsys, variants_io1, genomes_db_2013):
-    section_config = AnnotationConfigParser.parse_section(
-        GPFConfigParser._dict_to_namedtuple(
-            {
-                "options": {},
-                "columns": {"location": "loc1", "variant": "var1"},
-                "virtual_columns": [],
-                "annotator": "annotator_base.CopyAnnotator",
-            }
-        )
+    section_config = AnnotationConfigParser.parse_section({
+            "options": {},
+            "columns": {"location": "loc1", "variant": "var1"},
+            "virtual_columns": [],
+            "annotator": "annotator_base.CopyAnnotator",
+        }
     )
 
     with variants_io1 as io_manager:
@@ -95,15 +87,12 @@ def test_copy_annotator_simple(capsys, variants_io1, genomes_db_2013):
 def test_copy_annotator_multi(
     capsys, variants_io_m, expected_df, genomes_db_2013
 ):
-    section_config = AnnotationConfigParser.parse_section(
-        GPFConfigParser._dict_to_namedtuple(
-            {
-                "options": {},
-                "columns": {"location": "loc1", "variant": "var1"},
-                "virtual_columns": [],
-                "annotator": "annotator_base.CopyAnnotator",
-            }
-        )
+    section_config = AnnotationConfigParser.parse_section({
+            "options": {},
+            "columns": {"location": "loc1", "variant": "var1"},
+            "virtual_columns": [],
+            "annotator": "annotator_base.CopyAnnotator",
+        }
     )
 
     df = pd.read_csv(

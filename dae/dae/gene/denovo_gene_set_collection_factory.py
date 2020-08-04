@@ -81,21 +81,21 @@ class DenovoGeneSetCollectionFactory:
         """
 
         effect_type_criterias = []
-        for criteria in standard_criterias[0].segments.field_values_iterator():
+        for name, criteria in standard_criterias.effect_types.segments.items():
             effect_type_criterias.append(
                 {
                     "property": "effect_types",
-                    "name": criteria[0],
-                    "value": expand_effect_types(criteria[1]),
+                    "name": name,
+                    "value": expand_effect_types(criteria),
                 }
             )
         sex_criterias = []
-        for criteria in standard_criterias[1].segments.field_values_iterator():
+        for name, criteria in standard_criterias.sexes.segments.items():
             sex_criterias.append(
                 {
                     "property": "sexes",
-                    "name": criteria[0],
-                    "value": [Sex.from_name(criteria[1])],
+                    "name": name,
+                    "value": [Sex.from_name(criteria)],
                 }
             )
         return (effect_type_criterias, sex_criterias)

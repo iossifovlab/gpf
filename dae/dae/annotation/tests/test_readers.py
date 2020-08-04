@@ -1,9 +1,7 @@
 import os
 import pytest
 
-from box import Box
-
-from dae.configuration.gpf_config_parser import GPFConfigParser
+from dae.configuration.gpf_config_parser import FrozenBox
 from dae.annotation.tools.file_io import (
     TSVReader,
     TSVGzipReader,
@@ -41,11 +39,7 @@ def test_tsv_gzip_reader(filename, header, no_header, linecount):
     infilename = relative_to_this_test_folder(filename)
     os.path.exists(infilename)
 
-    options = Box(
-        {"region": None, "no_header": no_header,},
-        default_box=True,
-        default_box_attr=None,
-    )
+    options = FrozenBox({"region": None, "no_header": no_header})
 
     with TSVGzipReader(options, filename=infilename) as reader:
         assert reader is not None
@@ -68,11 +62,7 @@ def test_tsv_reader(filename, header, linecount):
     infilename = relative_to_this_test_folder(filename)
     os.path.exists(infilename)
 
-    options = Box(
-        {"region": None, "no_header": None,},
-        default_box=True,
-        default_box_attr=None,
-    )
+    options = FrozenBox({"region": None, "no_header": None})
 
     with TSVReader(options, filename=infilename) as reader:
         assert reader is not None
@@ -233,8 +223,8 @@ def test_tabix_reader(filename, header, no_header, region, linecount):
     infilename = relative_to_this_test_folder(filename)
     os.path.exists(infilename)
 
-    options = GPFConfigParser._dict_to_namedtuple(
-        {"region": region, "no_header": no_header,}
+    options = FrozenBox(
+        {"region": region, "no_header": no_header}
     )
 
     with TabixReaderVariants(options, filename=infilename) as reader:
@@ -258,7 +248,7 @@ def test_tabix_reader_simple():
     infilename = relative_to_this_test_folder(filename)
     os.path.exists(infilename)
 
-    options = GPFConfigParser._dict_to_namedtuple({"region": region,})
+    options = FrozenBox({"region": region})
 
     with TabixReaderVariants(options, filename=infilename) as reader:
         assert reader is not None

@@ -7,7 +7,7 @@ from dae.gene.scores import Scores
 
 def test_scores_default(score_config):
     config = score_config.genomic_scores.score_raw
-    s = Scores(config)
+    s = Scores(config, "score_raw")
     df = s.df
 
     assert df is not None
@@ -18,7 +18,7 @@ def test_scores_default(score_config):
 
 def test_scores(score_config):
     config = score_config.genomic_scores.score_raw_rankscore
-    s = Scores(config)
+    s = Scores(config, "score_raw_rankscore")
 
     assert s.id == "score_raw_rankscore"
     assert s.desc == "SCORE raw rankscore"

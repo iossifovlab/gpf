@@ -263,10 +263,7 @@ class PreparePhenoBrowserBase(object):
         return res
 
     def _has_regression_measure(self, measure_name, instrument_name):
-        for (
-            _,
-            reg,
-        ) in self.pheno_regressions.regression.field_values_iterator():
+        for reg in self.pheno_regressions.regression.values():
             if measure_name == reg.measure_name:
                 if (
                     instrument_name
@@ -283,10 +280,7 @@ class PreparePhenoBrowserBase(object):
             MeasureType.ordinal,
         ]:
             return
-        for (
-            reg_id,
-            reg,
-        ) in self.pheno_regressions.regression.field_values_iterator():
+        for reg_id, reg in self.pheno_regressions.regression.items():
             res = {"measure_id": measure.measure_id}
             reg_measure = self._get_measure_by_name(
                 reg.measure_name,
@@ -312,10 +306,7 @@ class PreparePhenoBrowserBase(object):
         db.build()
 
         if self.pheno_regressions:
-            for (
-                reg_id,
-                reg_data,
-            ) in self.pheno_regressions.regression.field_values_iterator():
+            for reg_id, reg_data in self.pheno_regressions.regression.items():
                 db.save_regression(
                     {
                         "regression_id": reg_id,

@@ -12,7 +12,7 @@ import pandas as pd
 
 from dae.utils.regions import Region
 
-from dae.genome.genome_access import GenomicSequence
+from dae.genome.genomes_db import Genome
 from dae.utils.variant_utils import str2mat, GENOTYPE_TYPE
 from dae.utils.helpers import str2bool
 
@@ -57,7 +57,7 @@ class DenovoLoader(VariantsGenotypesLoader):
             self,
             families: FamiliesData,
             denovo_filename: str,
-            genome: GenomicSequence,
+            genome: Genome,
             regions: List[str] = None,
             params: Dict[str, Any] = {}):
         super(DenovoLoader, self).__init__(
@@ -188,7 +188,7 @@ class DenovoLoader(VariantsGenotypesLoader):
     def produce_genotype(
         chrom: str,
         pos: int,
-        genome: GenomicSequence,
+        genome: Genome,
         family: Family,
         members_with_variant: List[str],
     ) -> np.array:
@@ -417,7 +417,7 @@ class DenovoLoader(VariantsGenotypesLoader):
     def flexible_denovo_load(
             cls,
             filepath: str,
-            genome: GenomicSequence,
+            genome: Genome,
             families: FamiliesData,
             denovo_location: Optional[str] = None,
             denovo_variant: Optional[str] = None,
@@ -474,7 +474,7 @@ class DenovoLoader(VariantsGenotypesLoader):
         :param str families: An instance of the FamiliesData class for the
         pedigree of the relevant study.
 
-        :type genome: An instance of GenomicSequence.
+        :type genome: An instance of Genome.
 
         :return: Dataframe containing the variants, with the following
         header - 'chrom', 'position', 'reference', 'alternative', 'family_id',
@@ -502,7 +502,7 @@ class DenovoLoader(VariantsGenotypesLoader):
         if denovo_sep is None:
             denovo_sep = "\t"
 
-        with warnings.catch_warnings(record=True) as ws:
+        with warnings.catch_warnings(record=True) as _:
             warnings.filterwarnings(
                 "ignore",
                 category=pd.errors.ParserWarning,
@@ -533,8 +533,10 @@ class DenovoLoader(VariantsGenotypesLoader):
         if denovo_variant:
             variant_col = raw_df.loc[:, denovo_variant]
             ref_alt_tuples = [
-                dae2vcf_variant(*variant_tuple, genome.get_genomic_sequence())
-                for variant_tuple in zip(chrom_col, pos_col, variant_col)
+                dae2vcf_variant(
+                    variant_tuple[0], variant_tuple[1], variant_tuple[2],
+                    genome.get_genomic_sequence()
+                ) for variant_tuple in zip(chrom_col, pos_col, variant_col)
             ]
             pos_col, ref_col, alt_col = zip(*ref_alt_tuples)
 
@@ -894,7 +896,6 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
                     ex, file=sys.stderr)
 
             self.lines_iterator = None
-
 
     @classmethod
     def cli_defaults(cls):

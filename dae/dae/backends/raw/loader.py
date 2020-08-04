@@ -8,7 +8,7 @@ import pandas as pd
 
 from typing import Iterator, Tuple, List, Dict, Any, Optional, Sequence
 
-from dae.genome.genome_access import GenomicSequence
+from dae.genome.genomes_db import Genome
 
 from dae.pedigrees.family import FamiliesData
 
@@ -345,22 +345,21 @@ class VariantsGenotypesLoader(VariantsLoader):
     """
 
     def __init__(
-        self,
-        families: FamiliesData,
-        filenames: List[str],
-        transmission_type: TransmissionType,
-        genome: GenomicSequence,
-        regions: List[str] = None,
-        expect_genotype: bool = True,
-        expect_best_state: bool = False,
-        params: Dict[str, Any] = {},
-    ):
+            self,
+            families: FamiliesData,
+            filenames: List[str],
+            transmission_type: TransmissionType,
+            genome: Genome,
+            regions: List[str] = None,
+            expect_genotype: bool = True,
+            expect_best_state: bool = False,
+            params: Dict[str, Any] = {}):
+
         super(VariantsGenotypesLoader, self).__init__(
             families=families,
             filenames=filenames,
             transmission_type=transmission_type,
-            params=params,
-        )
+            params=params)
 
         self.genome = genome
 
@@ -411,7 +410,7 @@ class VariantsGenotypesLoader(VariantsLoader):
 
     @classmethod
     def _calc_genetic_model(
-        cls, family_variant: FamilyVariant, genome: GenomicSequence
+        cls, family_variant: FamilyVariant, genome: Genome
     ) -> GeneticModel:
         if family_variant.chromosome in ("X", "chrX"):
             male_ploidy = get_locus_ploidy(
@@ -437,7 +436,7 @@ class VariantsGenotypesLoader(VariantsLoader):
     def _calc_best_state(
         cls,
         family_variant: FamilyVariant,
-        genome: GenomicSequence,
+        genome: Genome,
         force: bool = True,
     ) -> np.array:
 
@@ -478,7 +477,7 @@ class VariantsGenotypesLoader(VariantsLoader):
 
     @classmethod
     def _calc_genotype(
-        cls, family_variant: FamilyVariant, genome: GenomicSequence
+        cls, family_variant: FamilyVariant, genome: Genome
     ) -> np.array:
         best_state = family_variant._best_state
         genotype = best2gt(best_state)

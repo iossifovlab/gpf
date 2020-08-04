@@ -5,7 +5,6 @@ from dae.pedigrees.loader import FamiliesLoader
 
 from .conftest import relative_to_this_test_folder
 
-from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.annotation.tools.annotator_config import AnnotationConfigParser
 from dae.annotation.tools.score_annotator import PositionScoreAnnotator, \
     NPScoreAnnotator
@@ -15,31 +14,26 @@ def test_cnv_variant_score_annotation_position(
     fixture_dirname,
     genomes_db_2013
 ):
-    options = GPFConfigParser._dict_to_namedtuple(
-        {
-            "vcf": False,
-            "x": "location",
-            "v": "variant",
-            "mode": "overwrite",
-            "scores_file": relative_to_this_test_folder(
-                "fixtures/TESTphastCons100way/TESTphastCons100way.bedGraph.gz"
-            ),
-        }
-    )
+    options = {
+        "vcf": False,
+        "x": "location",
+        "v": "variant",
+        "mode": "overwrite",
+        "scores_file": relative_to_this_test_folder(
+            "fixtures/TESTphastCons100way/TESTphastCons100way.bedGraph.gz"
+        ),
+    }
 
     columns = {
         "TESTphastCons100way": "RESULT_phastCons100way",
     }
 
-    config = AnnotationConfigParser.parse_section(
-        GPFConfigParser._dict_to_namedtuple(
-            {
-                "options": options,
-                "columns": columns,
-                "annotator": "score_annotator.VariantScoreAnnotator",
-                "virtual_columns": [],
-            }
-        )
+    config = AnnotationConfigParser.parse_section({
+            "options": options,
+            "columns": columns,
+            "annotator": "score_annotator.VariantScoreAnnotator",
+            "virtual_columns": [],
+        }
     )
 
     score_annotator = PositionScoreAnnotator(config, genomes_db_2013)
@@ -48,7 +42,9 @@ def test_cnv_variant_score_annotation_position(
     families_file = fixture_dirname("backends/cnv_ped.txt")
     families = FamiliesLoader.load_simple_families_file(families_file)
     assert families is not None
-    variants_file = fixture_dirname("annotation_pipeline/cnv_annotation_variants.txt")
+    variants_file = fixture_dirname(
+        "annotation_pipeline/cnv_annotation_variants.txt"
+    )
 
     loader = CNVLoader(families, variants_file, genomes_db_2013.get_genome())
     assert loader is not None
@@ -65,31 +61,26 @@ def test_cnv_variant_score_annotation_np_score(
     fixture_dirname,
     genomes_db_2013
 ):
-    options = GPFConfigParser._dict_to_namedtuple(
-        {
-            "vcf": False,
-            "x": "location",
-            "v": "variant",
-            "mode": "overwrite",
-            "scores_file": relative_to_this_test_folder(
-                "fixtures/TESTphastCons100way/TESTphastCons100way.bedGraph.gz"
-            ),
-        }
-    )
+    options = {
+        "vcf": False,
+        "x": "location",
+        "v": "variant",
+        "mode": "overwrite",
+        "scores_file": relative_to_this_test_folder(
+            "fixtures/TESTphastCons100way/TESTphastCons100way.bedGraph.gz"
+        ),
+    }
 
     columns = {
         "TESTphastCons100way": "RESULT_phastCons100way",
     }
 
-    config = AnnotationConfigParser.parse_section(
-        GPFConfigParser._dict_to_namedtuple(
-            {
-                "options": options,
-                "columns": columns,
-                "annotator": "score_annotator.VariantScoreAnnotator",
-                "virtual_columns": [],
-            }
-        )
+    config = AnnotationConfigParser.parse_section({
+            "options": options,
+            "columns": columns,
+            "annotator": "score_annotator.VariantScoreAnnotator",
+            "virtual_columns": [],
+        }
     )
 
     score_annotator = NPScoreAnnotator(config, genomes_db_2013)
@@ -98,7 +89,9 @@ def test_cnv_variant_score_annotation_np_score(
     families_file = fixture_dirname("backends/cnv_ped.txt")
     families = FamiliesLoader.load_simple_families_file(families_file)
     assert families is not None
-    variants_file = fixture_dirname("annotation_pipeline/cnv_annotation_variants.txt")
+    variants_file = fixture_dirname(
+        "annotation_pipeline/cnv_annotation_variants.txt"
+    )
 
     loader = CNVLoader(families, variants_file, genomes_db_2013.get_genome())
     assert loader is not None

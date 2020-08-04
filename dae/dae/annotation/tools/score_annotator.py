@@ -44,7 +44,7 @@ class VariantScoreAnnotatorBase(VariantAnnotatorBase):
 
     def collect_annotator_schema(self, schema):
         super(VariantScoreAnnotatorBase, self).collect_annotator_schema(schema)
-        for native, output in self.config.columns.field_values_iterator():
+        for native, output in self.config.columns.items():
             type_name = self.score_file.schema.columns[native].type_name
             schema.create_column(output, type_name)
 
@@ -223,7 +223,7 @@ class PositionMultiScoreAnnotator(CompositeVariantAnnotator):
         super(PositionMultiScoreAnnotator, self).__init__(config, genomes_db)
         assert self.config.options.scores_directory is not None
 
-        for score_name in self.config.columns._fields:
+        for score_name in self.config.columns:
             annotator = self._build_annotator_for(score_name)
             self.add_annotator(annotator)
 
@@ -248,15 +248,12 @@ class PositionMultiScoreAnnotator(CompositeVariantAnnotator):
         )
         columns = {score_name: getattr(self.config.columns, score_name)}
 
-        variant_config = AnnotationConfigParser.parse_section(
-            GPFConfigParser._dict_to_namedtuple(
-                {
-                    "options": options,
-                    "columns": columns,
-                    "annotator": "score_annotator.VariantScoreAnnotator",
-                    "virtual_columns": [],
-                }
-            )
+        variant_config = AnnotationConfigParser.parse_section({
+                "options": options,
+                "columns": columns,
+                "annotator": "score_annotator.VariantScoreAnnotator",
+                "virtual_columns": [],
+            }
         )
 
         annotator = PositionScoreAnnotator(variant_config, self.genomes_db)

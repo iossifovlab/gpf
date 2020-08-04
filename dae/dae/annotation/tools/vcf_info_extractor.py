@@ -7,18 +7,12 @@ class VCFInfoExtractor(AnnotatorBase):
         super(VCFInfoExtractor, self).__init__(config, genomes_db)
 
     def collect_annotator_schema(self, schema):
-        for (
-            info_key,
-            output_col,
-        ) in self.config.columns.field_values_iterator():
+        for info_key, output_col in self.config.columns.items():
             schema.create_column(output_col, "str")
 
     def line_annotation(self, annotation_line):
         info = annotation_line["INFO"]
-        for (
-            info_key,
-            output_col,
-        ) in self.config.columns.field_values_iterator():
+        for info_key, output_col in self.config.columns.items():
             annotation_line[output_col] = None
             match = re.search(r"\b({})\b".format(info_key), info)
             if match is None:
@@ -28,5 +22,5 @@ class VCFInfoExtractor(AnnotatorBase):
             if val_end_index == -1:
                 val_end_index = len(info)
             annotation_line[output_col] = info[
-                val_beg_index + 1 : val_end_index
+                val_beg_index + 1: val_end_index
             ]

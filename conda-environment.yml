@@ -45,7 +45,7 @@ sphinx-copybutton
 pybigwig>=0.3.17
 pytest-doctestplus=0.4.0
 deprecation=2.0.6
-lxml>=4.4.2
+lxml>=4.5.2
 beautifulsoup4>=4.8.1
 django-extensions=2.2.5
 biopython=1.76
@@ -53,3 +53,5 @@ toml>=0.10.0
 cerberus>=1.3.2
 pre-commit>=2.1.0
 raven>=6.10.0
+snakemake-minimal=5.20
+mypy

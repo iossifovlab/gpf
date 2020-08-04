@@ -2,7 +2,7 @@ import pytest
 
 from .conftest import relative_to_this_test_folder
 
-from dae.configuration.gpf_config_parser import GPFConfigParser
+from dae.configuration.gpf_config_parser import FrozenBox
 from dae.annotation.tools.annotator_config import AnnotationConfigParser
 from dae.annotation.tools.vcf_info_extractor import VCFInfoExtractor
 from dae.annotation.tools.file_io import IOManager, IOType
@@ -14,7 +14,7 @@ def vcf_io(request):
         "infile": relative_to_this_test_folder("fixtures/vcf_input.tsv"),
         "outfile": "-",
     }
-    io_config = GPFConfigParser._dict_to_namedtuple(io_config)
+    io_config = FrozenBox(io_config)
     io_manager = IOManager(io_config, IOType.TSV, IOType.TSV)
     return io_manager
 
@@ -29,22 +29,19 @@ def test_vcf_info_extractor(capsys, vcf_io, genomes_db_2013):
         "\t13.324234\t10.453e+10\t\n"
     )
 
-    opts = GPFConfigParser._dict_to_namedtuple({"mode": "overwrite",})
+    opts = {"mode": "overwrite"}
 
-    section_config = AnnotationConfigParser.parse_section(
-        GPFConfigParser._dict_to_namedtuple(
-            {
-                "options": opts,
-                "columns": {
-                    "AC": "extracted-AC",
-                    "AB": "extracted-AB",
-                    "AT": "extracted-AT",
-                    "AZ": "extracted-AZ",
-                },
-                "annotator": "vcf_info_extractor.VCFInfoExtractor",
-                "virtual_columns": [],
-            }
-        )
+    section_config = AnnotationConfigParser.parse_section({
+            "options": opts,
+            "columns": {
+                "AC": "extracted-AC",
+                "AB": "extracted-AB",
+                "AT": "extracted-AT",
+                "AZ": "extracted-AZ",
+            },
+            "annotator": "vcf_info_extractor.VCFInfoExtractor",
+            "virtual_columns": [],
+        }
     )
 
     with vcf_io as io_manager:

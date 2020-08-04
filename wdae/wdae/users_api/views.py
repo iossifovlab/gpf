@@ -1,4 +1,3 @@
-import re
 from functools import wraps
 
 from django.db import IntegrityError, transaction
@@ -27,15 +26,9 @@ from .serializers import BulkGroupOperationSerializer
 
 from utils.logger import log_filter, LOGGER, request_logging
 from utils.logger import request_logging_function_view
+from utils.email_regex import is_email_valid
 
 from django.utils.decorators import available_attrs
-
-
-def is_email_valid(email: str) -> bool:
-    email_regex = \
-        (r"[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:"
-         r"[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?")
-    return bool(re.search(email_regex, email))
 
 
 def csrf_clear(view_func):
@@ -80,7 +73,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
     @request_logging(LOGGER)
     @action(detail=False, methods=["post"])
-    def bulk_add_group(self, request):
+    def bulk_add_groups(self, request):
         self.check_permissions(request)
 
         serializer = BulkGroupOperationSerializer(data=request.data)
@@ -93,15 +86,15 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         with transaction.atomic():
-            group, _ = Group.objects.get_or_create(name=data["group"])
-
-            group.user_set.add(*users)
+            for group_name in data["groups"]:
+                group, _ = Group.objects.get_or_create(name=group_name)
+                group.user_set.add(*users)
 
         return Response(status=status.HTTP_200_OK)
 
     @request_logging(LOGGER)
     @action(detail=False, methods=["post"])
-    def bulk_remove_group(self, request):
+    def bulk_remove_groups(self, request):
         serializer = BulkGroupOperationSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -111,9 +104,10 @@ class UserViewSet(viewsets.ModelViewSet):
         if len(users) != len(data["userIds"]):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        group = get_object_or_404(Group, name=data["group"])
         with transaction.atomic():
-            group.user_set.remove(*users)
+            for group_name in data["groups"]:
+                group = get_object_or_404(Group, name=group_name)
+                group.user_set.remove(*users)
 
         return Response(status=status.HTTP_200_OK)
 

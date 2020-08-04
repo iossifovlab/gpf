@@ -2,6 +2,8 @@ from dae.studies.study_wrapper import StudyWrapperBase
 from dae.remote.remote_phenotype_data import RemotePhenotypeData
 import json
 
+from dae.configuration.gpf_config_parser import FrozenBox
+
 
 class RemoteStudyWrapper(StudyWrapperBase):
 
@@ -9,12 +11,12 @@ class RemoteStudyWrapper(StudyWrapperBase):
         self._remote_study_id = study_id
         self.rest_client = rest_client
         self.study_id = self.rest_client.get_remote_dataset_id(study_id)
-        self.config = self.rest_client.get_dataset_config(
-            self._remote_study_id)
-        del self.config["access_rights"]
-        del self.config["groups"]
-        self.config["id"] = self.study_id
-        self.config["name"] = self.study_id
+        config = self.rest_client.get_dataset_config(self._remote_study_id)
+        config["id"] = self.study_id
+        config["name"] = self.study_id
+        del config["access_rights"]
+        del config["groups"]
+        self.config = FrozenBox(config)
 
         self.phenotype_data = RemotePhenotypeData(
             self._remote_study_id,
@@ -40,7 +42,7 @@ class RemoteStudyWrapper(StudyWrapperBase):
         raise NotImplementedError
 
     def get_genotype_data_group_description(self):
-        return self.config
+        return self.config.to_dict()
 
 
 # rsw = RemoteStudyWrapper("AGRE_WG_859", "localhost", "api/v3", 8000)
