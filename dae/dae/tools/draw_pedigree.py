@@ -14,7 +14,7 @@ from dae.pedigrees.loader import FamiliesLoader
 from dae.pedigrees.drawing import OffsetLayoutDrawer, PDFLayoutDrawer
 from dae.pedigrees.layout import Layout
 from dae.common_reports.family_report import FamiliesReport
-from dae.configuration.gpf_config_parser import GPFConfigParser
+from dae.configuration.gpf_config_parser import FrozenBox
 from dae.person_sets import PersonSetCollection
 
 
@@ -29,7 +29,7 @@ def build_families_report(families):
         "default": {"id": "unspecified", "name": "unspecified", "color": "#aaaaaa"},
         "source": {"pedigree": {"column": "status"}}
     }
-    status_collection_config = GPFConfigParser._dict_to_namedtuple(
+    status_collection_config = FrozenBox(
         status_collection_config
     )
     status_collection = PersonSetCollection.from_families(

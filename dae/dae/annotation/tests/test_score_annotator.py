@@ -5,7 +5,6 @@ from collections import OrderedDict
 
 from .conftest import relative_to_this_test_folder
 
-from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.annotation.tools.annotator_config import AnnotationConfigParser
 from dae.annotation.tools.score_annotator import (
     PositionScoreAnnotator,
@@ -42,30 +41,25 @@ def test_variant_score_annotator_simple(
     expected_df, variants_io, direct, capsys, genomes_db_2013
 ):
 
-    options = GPFConfigParser._dict_to_namedtuple(
-        {
-            "vcf": True,
-            "direct": direct,
-            "mode": "overwrite",
-            "scores_file": relative_to_this_test_folder(
-                "fixtures/TESTphastCons100way/TESTphastCons100way.bedGraph.gz"
-            ),
-        }
-    )
+    options = {
+        "vcf": True,
+        "direct": direct,
+        "mode": "overwrite",
+        "scores_file": relative_to_this_test_folder(
+            "fixtures/TESTphastCons100way/TESTphastCons100way.bedGraph.gz"
+        ),
+    }
 
     columns = {
         "TESTphastCons100way": "RESULT_phastCons100way",
     }
 
-    config = AnnotationConfigParser.parse_section(
-        GPFConfigParser._dict_to_namedtuple(
-            {
-                "options": options,
-                "columns": columns,
-                "annotator": "score_annotator.VariantScoreAnnotator",
-                "virtual_columns": [],
-            }
-        )
+    config = AnnotationConfigParser.parse_section({
+            "options": options,
+            "columns": columns,
+            "annotator": "score_annotator.VariantScoreAnnotator",
+            "virtual_columns": [],
+        }
     )
 
     with variants_io("fixtures/input2.tsv") as io_manager:
@@ -91,28 +85,23 @@ def test_variant_multi_score_annotator_simple(
     expected_df, variants_io, direct, capsys, genomes_db_2013
 ):
 
-    options = GPFConfigParser._dict_to_namedtuple(
-        {
-            "vcf": True,
-            "direct": direct,
-            "mode": "overwrite",
-            "scores_directory": relative_to_this_test_folder("fixtures/"),
-        }
-    )
+    options = {
+        "vcf": True,
+        "direct": direct,
+        "mode": "overwrite",
+        "scores_directory": relative_to_this_test_folder("fixtures/"),
+    }
 
     columns = {
         "TESTphastCons100way": "RESULT_phastCons100way",
     }
 
-    config = AnnotationConfigParser.parse_section(
-        GPFConfigParser._dict_to_namedtuple(
-            {
-                "options": options,
-                "columns": columns,
-                "annotator": "score_annotator.VariantScoreAnnotator",
-                "virtual_columns": [],
-            }
-        )
+    config = AnnotationConfigParser.parse_section({
+            "options": options,
+            "columns": columns,
+            "annotator": "score_annotator.VariantScoreAnnotator",
+            "virtual_columns": [],
+        }
     )
     print(config.options)
     print(type(config.options))
@@ -141,14 +130,12 @@ def test_variant_multi_score_annotator_multi(
     expected_df, variants_io, direct, capsys, genomes_db_2013
 ):
 
-    options = GPFConfigParser._dict_to_namedtuple(
-        {
-            "vcf": True,
-            "direct": direct,
-            "mode": "overwrite",
-            "scores_directory": relative_to_this_test_folder("fixtures/"),
-        }
-    )
+    options = {
+        "vcf": True,
+        "direct": direct,
+        "mode": "overwrite",
+        "scores_directory": relative_to_this_test_folder("fixtures/"),
+    }
 
     columns = OrderedDict(
         [
@@ -157,15 +144,12 @@ def test_variant_multi_score_annotator_multi(
         ]
     )
 
-    config = AnnotationConfigParser.parse_section(
-        GPFConfigParser._dict_to_namedtuple(
-            {
-                "options": options,
-                "columns": columns,
-                "annotator": "score_annotator.VariantScoreAnnotator",
-                "virtual_columns": [],
-            }
-        )
+    config = AnnotationConfigParser.parse_section({
+            "options": options,
+            "columns": columns,
+            "annotator": "score_annotator.VariantScoreAnnotator",
+            "virtual_columns": [],
+        }
     )
     print(config.options)
     print(type(config.options))
@@ -202,30 +186,25 @@ def test_variant_score_annotator_cadd(
     expected_df, variants_io, direct, capsys, genomes_db_2013
 ):
 
-    options = GPFConfigParser._dict_to_namedtuple(
-        {
-            "vcf": True,
-            "direct": direct,
-            "mode": "overwrite",
-            "scores_file": relative_to_this_test_folder(
-                "fixtures/TESTCADD/TESTwhole_genome_SNVs.tsv.gz"
-            ),
-        }
-    )
+    options = {
+        "vcf": True,
+        "direct": direct,
+        "mode": "overwrite",
+        "scores_file": relative_to_this_test_folder(
+            "fixtures/TESTCADD/TESTwhole_genome_SNVs.tsv.gz"
+        )
+    }
 
     columns = OrderedDict(
-        [("RawScore", "RESULT_RawScore"), ("PHRED", "RESULT_PHRED"),]
+        [("RawScore", "RESULT_RawScore"), ("PHRED", "RESULT_PHRED")]
     )
 
-    config = AnnotationConfigParser.parse_section(
-        GPFConfigParser._dict_to_namedtuple(
-            {
-                "options": options,
-                "columns": columns,
-                "annotator": "score_annotator.VariantScoreAnnotator",
-                "virtual_columns": [],
-            }
-        )
+    config = AnnotationConfigParser.parse_section({
+            "options": options,
+            "columns": columns,
+            "annotator": "score_annotator.VariantScoreAnnotator",
+            "virtual_columns": [],
+        }
     )
     print(config.options)
     print(type(config.options))

@@ -126,9 +126,19 @@ pipeline {
             }
         }
 
+        stage('Type Check') {
+            steps {
+                sh '''
+                    docker run --rm \
+                        -v ${DAE_DB_DIR}:/data \
+                        -v ${WD}:/code \
+                        ${GPF_DOCKER_IMAGE} /code/jenkins_mypy.sh
+                '''
+            }
+        }
+
         stage('Test') {
             steps {
-
                 sh '''
                     ${WD}/run_tests.sh
                 '''
@@ -158,6 +168,8 @@ pipeline {
 
         }
         success {
+	    archiveArtifacts artifacts: 'mypy_report.tar.gz'
+
             slackSend (
                 color: '#00FF00',
                 message: "SUCCESSFUL: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' ${env.BUILD_URL}"

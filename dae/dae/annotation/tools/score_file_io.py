@@ -85,7 +85,7 @@ class ScoreFile(object):
         self.score_names = self.config.columns.score
 
         self.schema = Schema.from_dict(
-            self.config.score_schema._asdict()
+            self.config.score_schema
         ).order_as(self.header)
 
         assert all([sn in self.schema for sn in self.score_names]), [

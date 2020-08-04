@@ -9,7 +9,7 @@ from cyvcf2 import VCF
 import pysam
 
 from dae.utils.helpers import str2bool
-from dae.genome.genome_access import GenomicSequence
+from dae.genome.genomes_db import Genome
 
 from dae.utils.variant_utils import (
     is_all_reference_genotype,
@@ -85,7 +85,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
             self,
             families,
             vcf_files,
-            genome: GenomicSequence,
+            genome: Genome,
             regions=None,
             params={},
             **kwargs):
@@ -110,7 +110,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
             self._fill_missing_value = -1
         else:
             print(
-                f"unexpected `vcf_multi_loader_fill_in_mode` value",
+                "unexpected `vcf_multi_loader_fill_in_mode` value",
                 f"{fill_in_mode}; "
                 f"expected values are `reference` or `unknown`",
                 file=sys.stderr,
@@ -497,7 +497,7 @@ class VcfLoader(VariantsGenotypesLoader):
         self,
         families,
         vcf_files,
-        genome: GenomicSequence,
+        genome: Genome,
         regions=None,
         params={},
         **kwargs,
@@ -722,7 +722,7 @@ class VcfLoader(VariantsGenotypesLoader):
             "vcf_include_unknown_person_genotypes": str2bool(
                 argv.vcf_include_unknown_person_genotypes
             ),
-            "vcf_multi_loader_fill_in_mode": 
+            "vcf_multi_loader_fill_in_mode":
             argv.vcf_multi_loader_fill_in_mode,
             "vcf_denovo_mode": argv.vcf_denovo_mode,
             "vcf_omission_mode": argv.vcf_omission_mode,

@@ -1,10 +1,10 @@
 from dae.utils.gene_utils import GeneSymsMixin
 from dae.gene.weights import GeneWeight
-from dae.configuration.gpf_config_parser import GPFConfigParser
+from dae.configuration.gpf_config_parser import FrozenBox
 
 
 def test_get_gene_weights_query():
-    dummy_enrichment_config = GPFConfigParser._dict_to_namedtuple(
+    dummy_enrichment_config = FrozenBox(
         {"testWeight": "mock value"}
     )
     kwargs = {
@@ -22,7 +22,7 @@ def test_get_gene_weights_query():
 
 def test_get_gene_weights(mocker):
 
-    dummy_enrichment_config = GPFConfigParser._dict_to_namedtuple(
+    dummy_enrichment_config = FrozenBox(
         {"testWeight": "mock value"}
     )
 

@@ -4,8 +4,8 @@ from dae.gene.genomic_values import GenomicValues
 
 
 class Scores(GenomicValues):
-    def __init__(self, config):
-        super(Scores, self).__init__(config.id)
+    def __init__(self, config, config_id):
+        super(Scores, self).__init__(config_id)
 
         self.config = config
         self.genomic_values_col = "scores"
@@ -53,8 +53,8 @@ class ScoresFactory(object):
         return result
 
     def _load(self):
-        for score_config in self.config.genomic_scores:
-            s = Scores(score_config)
+        for score_id, score_config in self.config.genomic_scores.items():
+            s = Scores(score_config, score_id)
             if s.id in self.config.scores:
                 self.scores[score_config.id] = s
 

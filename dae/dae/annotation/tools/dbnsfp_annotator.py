@@ -37,6 +37,9 @@ class dbNSFPAnnotator(NPScoreAnnotator):
         )
         config = GPFConfigParser.modify_tuple(config, {"options": options})
 
+        print("ohuyennniiiiiii")
+        print("bla - ", config)
+
         super(dbNSFPAnnotator, self).__init__(config, genomes_db)
 
     def _init_score_file(self):

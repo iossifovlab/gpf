@@ -2,7 +2,8 @@ import math
 import itertools
 import traceback
 from functools import reduce
-from copy import deepcopy
+
+from box import Box
 
 from dae.utils.variant_utils import mat2str
 from dae.utils.dae_utils import (
@@ -79,8 +80,7 @@ class StudyWrapper(StudyWrapperBase):
         # PHENO
         pheno_column_slots = []
         if genotype_browser_config.pheno:
-            for col_id, pheno_col \
-                 in genotype_browser_config.pheno.field_values_iterator():
+            for col_id, pheno_col in genotype_browser_config.pheno.items():
                 for slot in pheno_col.slots:
                     slot = GPFConfigParser.modify_tuple(
                         slot, {"id": f"{col_id}.{slot.name}"}
@@ -122,13 +122,13 @@ class StudyWrapper(StudyWrapperBase):
         preview_column_names = genotype_browser_config.preview_columns
         download_column_names = \
             genotype_browser_config.download_columns \
-            + (genotype_browser_config.selected_pheno_column_values or [])
+            + (genotype_browser_config.selected_pheno_column_values or tuple())
 
         def unpack_columns(selected_columns, use_id=True):
             columns, sources = [], []
 
             def inner(cols, get_source, use_id):
-                cols_dict = cols._asdict()
+                cols_dict = cols
 
                 for col_id in selected_columns:
                     col = cols_dict.get(col_id, None)
@@ -184,9 +184,7 @@ class StudyWrapper(StudyWrapperBase):
             # to get the measure assigned to this filter and its respective
             # domain
             if self.pheno_filters:
-                pheno_filters_dict = GPFConfigParser._namedtuple_to_dict(
-                    self.pheno_filters
-                )
+                pheno_filters_dict = self.pheno_filters.to_dict()
                 for k, pheno_filter in pheno_filters_dict.items():
                     if "measure" in pheno_filter:
                         pheno_filters_dict[k][
@@ -195,13 +193,16 @@ class StudyWrapper(StudyWrapperBase):
                             pheno_filter["measure"]
                         ).domain
 
-                self.pheno_filters = GPFConfigParser._dict_to_namedtuple(
-                    pheno_filters_dict
+                self.pheno_filters = Box(
+                    pheno_filters_dict,
+                    frozen_box=True,
+                    default_box=True,
+                    default_box_attr=None
                 )
 
                 self.pheno_filters_in_config = {
                     f"{pf.role}.{pf.measure}"
-                    for pf in self.pheno_filters
+                    for pf in self.pheno_filters.values()
                     if pf.measure and pf.filter_type == "single"
                 }
                 self.pheno_filter_builder = PhenoFilterBuilder(
@@ -557,7 +558,7 @@ class StudyWrapper(StudyWrapperBase):
             return None
 
         result = {}
-        for roles_value in self.in_role_columns:
+        for roles_value in self.in_role_columns.values():
             result[roles_value.destination] = "".join(
                 self._get_roles_value(allele, roles_value.roles)
             )
@@ -994,15 +995,7 @@ class StudyWrapper(StudyWrapperBase):
         if not present_in_role_id:
             return {}
 
-        present_in_role = list(
-            filter(
-                lambda present_in_role: present_in_role.section_id()
-                == present_in_role_id,
-                self.present_in_role,
-            )
-        )
-
-        return present_in_role[0] if present_in_role else {}
+        return self.present_in_role.get(present_in_role_id, {})
 
     def get_genotype_data_group_description(self):
         keys = [
@@ -1018,14 +1011,12 @@ class StudyWrapper(StudyWrapperBase):
             "has_present_in_parent",
         ]
         result = {
-            key: deepcopy(getattr(self.config, key, None)) for key in keys
+            key: self.config.get(key, None) for key in keys
         }
 
         result["description"] = self.description
 
-        bs_config = GPFConfigParser._namedtuple_to_dict(
-            deepcopy(self.config.genotype_browser)
-        )
+        bs_config = Box(self.config.genotype_browser)
 
         bs_config["columns"] = dict()
         for column in bs_config["preview_columns"]:
@@ -1042,25 +1033,16 @@ class StudyWrapper(StudyWrapperBase):
                 assert column in bs_config["genotype"], column
                 bs_config["columns"][column] = bs_config["genotype"][column]
 
-        if self.pheno_filters:
-            bs_config["pheno_filters"] = GPFConfigParser._namedtuple_to_dict(
-                self.pheno_filters
-            )
-
         result["genotype_browser_config"] = bs_config
         result["genotype_browser"] = self.config.genotype_browser.enabled
 
         result["study_types"] = result["study_type"]
         result["enrichment_tool"] = self.config.enrichment.enabled
-        result["common_report"] = GPFConfigParser._namedtuple_to_dict(
-            result["common_report"]
-        )
         result["person_set_collections"] = \
             self.genotype_data_study.person_set_collection_configs
         result["name"] = result["name"] or result["id"]
 
-        result["enrichment"] = GPFConfigParser._namedtuple_to_dict(
-            deepcopy(self.config.enrichment))
+        result["enrichment"] = self.config.enrichment.to_dict()
 
         return result
 

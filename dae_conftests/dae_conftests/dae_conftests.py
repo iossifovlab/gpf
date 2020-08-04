@@ -12,7 +12,7 @@ from dae.genome.genomes_db import GenomesDB
 
 from dae.gpf_instance.gpf_instance import GPFInstance, cached
 
-from dae.configuration.gpf_config_parser import GPFConfigParser
+from dae.configuration.gpf_config_parser import GPFConfigParser, FrozenBox
 from dae.configuration.schemas.dae_conf import dae_conf_schema
 
 from dae.annotation.annotation_pipeline import PipelineAnnotator
@@ -30,7 +30,6 @@ from dae.backends.impala.import_commons import (
     construct_import_annotation_pipeline,
 )
 
-from dae.pedigrees.family import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
 from dae.utils.helpers import study_id_from_path
 
@@ -303,7 +302,7 @@ def from_prefix_denovo(prefix):
             "family_filename": family_filename,
         }
     }
-    return GPFConfigParser._dict_to_namedtuple(conf)
+    return FrozenBox(conf)
 
 
 def from_prefix_vcf(prefix):
@@ -317,7 +316,7 @@ def from_prefix_vcf(prefix):
         "annotation": "{}-vcf-eff.txt".format(prefix),
         "prefix": prefix,
     }
-    return GPFConfigParser._dict_to_namedtuple(conf)
+    return FrozenBox(conf)
 
 
 @pytest.fixture
@@ -358,7 +357,7 @@ def from_prefix_dae(prefix):
             "family_filename": family_filename,
         }
     }
-    return GPFConfigParser._dict_to_namedtuple(conf)
+    return FrozenBox(conf)
 
 
 @pytest.fixture
@@ -475,7 +474,7 @@ def iossifov2014_impala(
         pedigree_file=parquet_filenames.pedigree,)
 
     fvars = impala_genotype_storage.build_backend(
-        GPFConfigParser._dict_to_namedtuple({"id": study_id}), genomes_db_2013
+        FrozenBox({"id": study_id}), genomes_db_2013
     )
     return fvars
 
@@ -637,7 +636,7 @@ def impala_test_dbname():
 
 @pytest.fixture(scope="session")
 def impala_genotype_storage(hdfs_host, impala_host):
-    storage_config = GPFConfigParser._dict_to_namedtuple(
+    storage_config = FrozenBox(
         {
             "id": "impala_test_storage",
             "type": "impala",
@@ -652,7 +651,7 @@ def impala_genotype_storage(hdfs_host, impala_host):
         }
     )
 
-    return ImpalaGenotypeStorage(storage_config)
+    return ImpalaGenotypeStorage(storage_config, "impala_test_storage")
 
 
 @pytest.fixture(scope="session")
@@ -727,7 +726,7 @@ def data_import(
 
             (variant_table, pedigree_table) = \
                 impala_genotype_storage.study_tables(
-                    GPFConfigParser._dict_to_namedtuple({"id": study_id}))
+                    FrozenBox({"id": study_id}))
 
             if (
                 not reimport
@@ -782,7 +781,7 @@ def variants_impala(
     def builder(path):
         study_id = os.path.basename(path)
         fvars = impala_genotype_storage.build_backend(
-            GPFConfigParser._dict_to_namedtuple({"id": study_id}),
+            FrozenBox({"id": study_id}),
             genomes_db_2013,
         )
         return fvars

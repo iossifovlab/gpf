@@ -1,12 +1,11 @@
 import os
-import sys
 import glob
 
 import yaml
 import toml
 
-from collections import namedtuple
-from copy import deepcopy
+from box import Box
+
 from typing import List, Any, Dict, NamedTuple
 from cerberus import Validator
 
@@ -25,6 +24,19 @@ def validate_path(field: str, value: str, error):
         error(field, f"path <{value}> is not an absolute path!")
 
 
+class DefaultBox(Box):
+    def __init__(self, *args, **kwargs):
+        kwargs["default_box"] = True
+        kwargs["default_box_attr"] = None
+        super(DefaultBox, self).__init__(*args, **kwargs)
+
+
+class FrozenBox(DefaultBox):
+    def __init__(self, *args, **kwargs):
+        kwargs["frozen_box"] = True
+        super(FrozenBox, self).__init__(*args, **kwargs)
+
+
 class GPFConfigValidator(Validator):
     def _normalize_coerce_abspath(self, value: str) -> str:
         directory = self._config["conf_dir"]
@@ -41,63 +53,6 @@ class GPFConfigParser:
         ".toml": toml.loads,
         ".conf": toml.loads,  # TODO FIXME Rename all .conf to .toml
     }
-
-    @classmethod
-    def _dict_to_namedtuple(
-        cls, input_dict: dict, dict_name: str = "root"
-    ) -> NamedTuple:
-        CONFIG_TUPLE = namedtuple(dict_name, input_dict.keys())  # type: ignore
-
-        class ConfigTuple(CONFIG_TUPLE):  # noqa
-            def __getattr__(self, name):
-                # print(
-                #     f"WARNING: Attempting to get non-existent attribute "
-                #     f"{name} on tuple!",
-                #     file=sys.stderr,
-                # )
-
-                # FIXME Temporary hack to enable default values
-                # only for public attributes
-                if name[0:2] == "__":
-                    raise AttributeError()
-                return None
-
-            def __repr__(self):
-                retval = super(ConfigTuple, self).__repr__()
-                return retval.replace("ConfigTuple", self.section_id())
-
-            def section_id(self):
-                return dict_name
-
-            def field_values_iterator(self):
-                return zip(self._fields, self)
-
-        for key, value in input_dict.items():
-            if isinstance(value, dict):
-                input_dict[key] = cls._dict_to_namedtuple(value, key)
-            elif isinstance(value, list):
-                input_dict[key] = [
-                    (
-                        cls._dict_to_namedtuple(item)
-                        if isinstance(item, dict)
-                        else item
-                    )
-                    for item in value
-                ]
-
-        return ConfigTuple(*input_dict.values())  # type: ignore
-
-    @classmethod
-    def _namedtuple_to_dict(cls, tup: NamedTuple) -> Dict[str, Any]:
-        output = deepcopy(tup)._asdict()
-        for k, v in output.items():
-            if isinstance(v, tuple):
-                output[k] = cls._namedtuple_to_dict(v)  # type: ignore
-            if isinstance(v, list):
-                for idx, li in enumerate(output[k]):
-                    if isinstance(li, tuple):
-                        output[k][idx] = cls._namedtuple_to_dict(li)  # type: ignore
-        return output
 
     @classmethod
     def _collect_directory_configs(cls, dirname: str) -> List[str]:
@@ -150,7 +105,7 @@ class GPFConfigParser:
             config = recursive_dict_update(default_config, config)
 
         assert validator.validate(config), validator.errors
-        return cls._dict_to_namedtuple(validator.document)
+        return FrozenBox(validator.document)
 
     @classmethod
     def load_config_raw(cls, filename: str) -> Dict[str, Any]:
@@ -162,7 +117,7 @@ class GPFConfigParser:
     @classmethod
     def load_directory_configs(
         cls, dirname: str, schema: dict, default_config_filename: str = None
-    ) -> List[NamedTuple]:
+    ) -> List[Box]:
         return [
             cls.load_config(config_path, schema, default_config_filename)
             for config_path in cls._collect_directory_configs(dirname)
@@ -170,8 +125,6 @@ class GPFConfigParser:
 
     @classmethod
     def modify_tuple(
-        cls, t: NamedTuple, new_values: Dict[str, Any]
-    ) -> NamedTuple:
-        t_dict = cls._namedtuple_to_dict(t)
-        updated_dict = recursive_dict_update(t_dict, new_values)
-        return cls._dict_to_namedtuple(updated_dict)
+            cls, t: Box, new_values: Dict[str, Any]
+    ) -> Box:
+        return FrozenBox(recursive_dict_update(t.to_dict(), new_values))

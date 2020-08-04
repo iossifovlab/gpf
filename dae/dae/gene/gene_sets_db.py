@@ -63,7 +63,7 @@ class GeneSetsDb(object):
     def collections_descriptions(self):
         gene_sets_collections_desc = []
         if self.config.gene_terms:
-            for gsc_id in self.config.gene_terms._fields:
+            for gsc_id in self.config.gene_terms:
                 label = getGeneTermAtt(self.config, gsc_id, "web_label")
                 format_str = getGeneTermAtt(
                     self.config, gsc_id, "web_format_str"
@@ -104,7 +104,7 @@ class GeneSetsDb(object):
         Return all gene set collection ids (including the ids
         of collections which have not been loaded).
         """
-        return set(self.config.gene_terms._fields)
+        return set(self.config.gene_terms)
 
     def get_gene_set_ids(self, collection_id):
         gsc = self._load_gene_set_collection(collection_id)

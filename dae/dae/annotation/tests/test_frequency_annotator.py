@@ -1,6 +1,5 @@
 import pandas as pd
 
-from dae.configuration.gpf_config_parser import GPFConfigParser
 from .conftest import relative_to_this_test_folder
 from dae.annotation.tools.frequency_annotator import FrequencyAnnotator
 from dae.annotation.tools.annotator_config import AnnotationConfigParser
@@ -23,28 +22,23 @@ expected_result_freq = """RESULT_FREQ\tRESULT_FREQ_2
 def test_frequency_annotator(
     variants_io, expected_df, capsys, genomes_db_2013
 ):
-    options = GPFConfigParser._dict_to_namedtuple(
-        {
-            "vcf": True,
-            "direct": False,
-            "mode": "overwrite",
-            "scores_file": relative_to_this_test_folder(
-                "fixtures/TESTFreq/test_freq.tsv.gz"
-            ),
-        }
-    )
+    options = {
+        "vcf": True,
+        "direct": False,
+        "mode": "overwrite",
+        "scores_file": relative_to_this_test_folder(
+            "fixtures/TESTFreq/test_freq.tsv.gz"
+        ),
+    }
 
     columns = {"all_altFreq": "RESULT_FREQ", "all_altFreq2": "RESULT_FREQ_2"}
 
-    config = AnnotationConfigParser.parse_section(
-        GPFConfigParser._dict_to_namedtuple(
-            {
-                "options": options,
-                "columns": columns,
-                "annotator": "frequency_annotator.FrequencyAnnotator",
-                "virtual_columns": [],
-            }
-        )
+    config = AnnotationConfigParser.parse_section({
+            "options": options,
+            "columns": columns,
+            "annotator": "frequency_annotator.FrequencyAnnotator",
+            "virtual_columns": [],
+        }
     )
 
     with variants_io("fixtures/freq_test_1.tsv") as io_manager:

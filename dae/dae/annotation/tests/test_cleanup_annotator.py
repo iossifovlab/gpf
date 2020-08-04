@@ -1,4 +1,3 @@
-from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.annotation.tools.cleanup_annotator import CleanupAnnotator
 from dae.annotation.tools.annotator_config import AnnotationConfigParser
 
@@ -12,14 +11,12 @@ Y:4372
 
 def test_cleanup_annotator(capsys, variants_io, genomes_db_2013):
     section_config = AnnotationConfigParser.parse_section(
-        GPFConfigParser._dict_to_namedtuple(
-            {
-                "options": {},
-                "columns": {"cleanup": "id, variant",},
-                "annotator": "cleanup_annotator.CleanupAnnotator",
-                "virtual_columns": [],
-            }
-        )
+        {
+            "options": {},
+            "columns": {"cleanup": "id, variant"},
+            "annotator": "cleanup_annotator.CleanupAnnotator",
+            "virtual_columns": [],
+        }
     )
 
     with variants_io("fixtures/input.tsv") as io_manager:

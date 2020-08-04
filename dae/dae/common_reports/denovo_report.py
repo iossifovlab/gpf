@@ -145,8 +145,8 @@ class DenovoReportTable(object):
             if len(person_set.persons) > 0:
                 self.person_sets.append(person_set)
 
-        self.effect_groups = effect_groups
-        self.effect_types = effect_types
+        self.effect_groups = list(effect_groups)
+        self.effect_types = list(effect_types)
         self.effects = effect_groups + effect_types
 
         self.columns = [person_set.id for person_set in self.person_sets]
