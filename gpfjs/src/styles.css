@@ -100,11 +100,6 @@ label {
   border-top: 1px solid rgba(0,0,0,.125);
 }
 
-.row {
-  margin-right: 0px;
-  margin-left: 0px;
-}
-
 .nav-pills .nav-link.active {
 	background-color: #2a6395;
 }
