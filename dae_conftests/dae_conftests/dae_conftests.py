@@ -330,7 +330,7 @@ def dae_denovo_config():
 def dae_denovo(dae_denovo_config, genome_2013, annotation_pipeline_internal):
 
     families_loader = FamiliesLoader(
-        dae_denovo_config.family_filename, params={"ped_file_format": "simple"}
+        dae_denovo_config.family_filename, **{"ped_file_format": "simple"}
     )
     families = families_loader.load()
 

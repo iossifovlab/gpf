@@ -110,7 +110,7 @@ def main(argv=sys.argv[1:]):
     argv = parser.parse_args(argv)
 
     filename, params = FamiliesLoader.parse_cli_arguments(argv)
-    families_loader = FamiliesLoader(filename, params=params)
+    families_loader = FamiliesLoader(filename, **params)
     families = families_loader.load()
 
     mode = argv.mode

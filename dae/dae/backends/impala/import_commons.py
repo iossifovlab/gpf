@@ -576,7 +576,7 @@ class BatchImporter:
             FamiliesLoader.parse_cli_arguments(argv)
 
         families_loader = FamiliesLoader(
-            families_filename, params=families_params
+            families_filename, **families_params
         )
         self.families_loader = families_loader
         return self
@@ -1098,7 +1098,7 @@ class Variants2ParquetTool:
             FamiliesLoader.parse_cli_arguments(argv)
 
         families_loader = FamiliesLoader(
-            families_filename, params=families_params
+            families_filename, **families_params
         )
         families = families_loader.load()
 

@@ -162,14 +162,14 @@ def test_handling_of_large_family_with_only_prb_role(fixture_dirname):
 
 def test_proband_column(fixture_dirname):
     ped_file = fixture_dirname("pedigrees/pedigree_no_role_F.ped")
-    loader = FamiliesLoader(ped_file, params={"ped_no_role": True})
+    loader = FamiliesLoader(ped_file, **{"ped_no_role": True})
     families = loader.load()
 
     for person in families.persons.values():
         assert not person.has_attr("proband")
 
     ped_file = fixture_dirname("pedigrees/pedigree_no_role_H.ped")
-    loader = FamiliesLoader(ped_file, params={"ped_no_role": True})
+    loader = FamiliesLoader(ped_file, **{"ped_no_role": True})
     families = loader.load()
 
     for person in families.persons.values():

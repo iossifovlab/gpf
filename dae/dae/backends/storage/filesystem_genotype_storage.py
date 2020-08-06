@@ -59,7 +59,7 @@ class FilesystemGenotypeStorage(GenotypeStorage):
                 study_config.genotype_storage.files.pedigree.params.to_dict()
             families_loader = FamiliesLoader(
                 study_config.genotype_storage.files.pedigree.path,
-                params=ped_params,
+                **ped_params,
             )
             families = families_loader.load()
             elapsed = time.time() - start

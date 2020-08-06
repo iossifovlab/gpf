@@ -43,7 +43,7 @@ def main(argv):
     else:
         study_id, _ = os.path.splitext(os.path.basename(filename))
 
-    loader = FamiliesLoader(filename, params=params)
+    loader = FamiliesLoader(filename, **params)
     families = loader.load()
 
     if argv.partition_description:

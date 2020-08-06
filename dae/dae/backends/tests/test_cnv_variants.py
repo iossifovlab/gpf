@@ -22,7 +22,7 @@ def cnv_loader(
     variants_filename = fixture_dirname("backends/cnv_variants.txt")
 
     families_loader = FamiliesLoader(
-        families_filename, params={"ped_file_format": "simple"})
+        families_filename, **{"ped_file_format": "simple"})
     families = families_loader.load()
 
     variants_loader = CNVLoader(
