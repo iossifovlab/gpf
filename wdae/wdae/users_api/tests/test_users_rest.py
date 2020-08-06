@@ -350,19 +350,20 @@ def test_admin_can_delete_user(admin_client, user_model):
 
 
 def test_admin_can_reset_user_password(admin_client, active_user):
+    assert active_user.is_active
+
     url = "/api/v3/users/{}/password_reset".format(active_user.pk)
     response = admin_client.post(url)
-
     assert response.status_code is status.HTTP_204_NO_CONTENT
 
     active_user.refresh_from_db()
-    assert not active_user.has_usable_password()
-    assert not active_user.is_active
+    assert active_user.has_usable_password()
+    assert active_user.is_active
 
 
-def test_resetting_user_password_deauthenticates_them(
-    admin_client, logged_in_user
-):
+def test_resetting_user_password_does_not_deauthenticates_them(
+        admin_client, logged_in_user):
+
     user, user_client = logged_in_user
     url = "/api/v3/users/get_user_info"
     response = user_client.get(url)
@@ -376,7 +377,7 @@ def test_resetting_user_password_deauthenticates_them(
 
     response = user_client.get(url)
     assert response.status_code == status.HTTP_200_OK
-    assert not response.data["loggedIn"]
+    assert response.data["loggedIn"]
 
 
 def test_user_cant_reset_other_user_password(user_client, active_user):

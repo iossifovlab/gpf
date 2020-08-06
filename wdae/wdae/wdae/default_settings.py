@@ -36,6 +36,8 @@ EMAIL_VERIFICATION_PATH = "/gpfjs/(popup:validate/{})"
 # EMAIL_HOST_USER
 # EMAIL_HOST_PASSWORD
 
+DEFAULT_FROM_EMAIL = "no-reply@iossifovlab.com"
+
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
 DATABASES = {
