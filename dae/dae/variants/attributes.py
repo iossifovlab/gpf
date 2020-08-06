@@ -186,9 +186,9 @@ class Status(enum.Enum):
             return Status.from_value(name)
         assert isinstance(name, str)
         name = name.lower()
-        if name in set(["unaffected", "1"]):
+        if name in set(["unaffected", "1", "false"]):
             return Status.unaffected
-        elif name in set(["affected", "2"]):
+        elif name in set(["affected", "2", "true"]):
             return Status.affected
         elif name in set(["unspecified", "-", "0"]):
             return Status.unspecified

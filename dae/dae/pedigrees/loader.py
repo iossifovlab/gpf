@@ -1,6 +1,5 @@
 import warnings
 import pandas as pd
-import numpy as np
 
 from functools import partial
 from collections import defaultdict
@@ -143,7 +142,8 @@ class FamiliesLoader:
             default="familyId",
             help="specify the name of the column in the pedigree file that "
             "holds "
-            "the ID of the family the person belongs to [default: %(default)s]",
+            "the ID of the family the person belongs to "
+            "[default: %(default)s]",
         )
 
         parser.add_argument(

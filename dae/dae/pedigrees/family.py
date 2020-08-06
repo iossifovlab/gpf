@@ -47,15 +47,19 @@ class Person(object):
         self._attributes["status"] = self._status
 
         self.mom_id = attributes.get("mom_id", None)
-        if self.mom_id == "0":
+        if self.mom_id == "0" or type(self.mom_id) != str:
             self.mom_id = None
             self._attributes["mom_id"] = None
         self.dad_id = attributes.get("dad_id", None)
-        if self.dad_id == "0":
+        if self.dad_id == "0" or type(self.dad_id) != str:
             self.dad_id = None
             self._attributes["dad_id"] = None
         self.mom = None
         self.dad = None
+        assert self.mom_id is None or type(self.mom_id) == str, \
+            (self, attributes)
+        assert self.dad_id is None or type(self.dad_id) == str, \
+            (self, attributes)
 
     def __repr__(self):
         if self.generated:
@@ -212,8 +216,8 @@ class Family(object):
     @staticmethod
     def merge(l_fam: "Family", r_fam: "Family") -> "Family":
         assert l_fam.family_id == r_fam.family_id, \
-            (f"Merging families is only allowed with matching family IDs!"
-             " ({l_fam.family_id} != {r_fam.family_id})")
+            ("Merging families is only allowed with matching family IDs!"
+             f" ({l_fam.family_id} != {r_fam.family_id})")
 
         people_intersection = \
             set(l_fam.persons.keys()) & set(r_fam.persons.keys())
@@ -236,8 +240,8 @@ class Family(object):
             elif r_person.sex == Sex.unspecified:
                 merged_persons[person_id] = l_person
 
-            assert (l_person.sex == r_person.sex or \
-                    l_person.sex == Sex.unspecified or \
+            assert (l_person.sex == r_person.sex or
+                    l_person.sex == Sex.unspecified or
                     r_person.sex == Sex.unspecified) \
                 and (l_person.role == r_person.role) \
                 and (l_person.family_id == r_person.family_id), \
