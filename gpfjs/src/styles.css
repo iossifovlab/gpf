@@ -92,9 +92,12 @@ label {
 }
 
 .form-block .tab-content {
-	padding: 20px;
-	border-top: 1px solid rgba(0,0,0,.125);
-	font-size: 0.9em;
+  font-size: 0.9em;
+}
+
+.panel {
+  padding: 20px;
+  border-top: 1px solid rgba(0,0,0,.125);
 }
 
 .nav-pills .nav-link.active {
@@ -214,5 +217,5 @@ gpf-global-error-display {
 .nav-title-custom {
   font-family: Roboto;
   font-weight: 500;
-  margin-right: 30px;
+  width: 100px;
 }

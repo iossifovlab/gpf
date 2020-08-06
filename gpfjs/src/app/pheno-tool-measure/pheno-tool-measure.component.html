@@ -15,7 +15,7 @@
                 #checkboxes
                 id = "{{ reg }}"
                 type="checkbox"
-                [checked]="phenoToolMeasure.normalizeBy.indexOf(reg) !== -1"
+                [checked]="isNormalizedBy(reg)"
                 (change)="onNormalizeByChange(regressions[reg], $event);"
                 [disabled]="phenoToolMeasure.measure == null || (regressions[reg].instrument_name + '.' + regressions[reg].measure_name) == phenoToolMeasure.measure.name">
               {{ regressions[reg].display_name }}

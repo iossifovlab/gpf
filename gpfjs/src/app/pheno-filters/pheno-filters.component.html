@@ -1,6 +1,6 @@
-<div id="pheno-filters-panel">
+<div class="panel" id="pheno-filters-panel">
   <div class="row">
-    <div class="col-sm-3">
+    <div *ngIf="categoricalPhenoFilters.length !== 0" class="col-sm-3">
       <div *ngFor="let categoricalPhenoFilter of categoricalPhenoFilters" class="categorical-filter">
         <gpf-categorical-filter
           [categoricalFilter]="categoricalPhenoFilter[0]"
@@ -8,7 +8,7 @@
         </gpf-categorical-filter>
       </div>
     </div>
-    <div class="col-sm-9">
+    <div style="margin: auto;" class="col-sm-9">
       <div>
         <div *ngFor="let continuousPhenoFilter of continuousPhenoFilters" >
           <gpf-multi-continuous-filter

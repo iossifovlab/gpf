@@ -17,8 +17,8 @@
           <button type="button" class="btn btn-md btn-primary" (click)="submitQuery()" [disabled]="disableQueryButtons">
             Report
           </button>
-          <gpf-share-query-button queryType="phenotool"></gpf-share-query-button>
-          <gpf-save-query queryType="phenotool"></gpf-save-query>
+          <gpf-share-query-button [disabled]="disableQueryButtons" queryType="phenotool"></gpf-share-query-button>
+          <gpf-save-query [disabled]="disableQueryButtons" queryType="phenotool"></gpf-save-query>
         </div>
         <div class="btn-group">
           <form
@@ -31,8 +31,9 @@
       </div>
     </div>
 
-    <gpf-pheno-tool-results-chart *ngIf="phenoToolResults" [phenoToolResults]="phenoToolResults">
-    </gpf-pheno-tool-results-chart>
+    <div class="pheno-tool-results">
+      <gpf-pheno-tool-results-chart *ngIf="phenoToolResults" [phenoToolResults]="phenoToolResults">
+      </gpf-pheno-tool-results-chart>
+    </div>
   </div>
-
 </div>

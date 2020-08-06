@@ -1,7 +1,15 @@
 .dataset-selector {
-	width: 310px;
+    width: 310px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
+.dataset-selector .dropdown-item {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
 .dataset-selector .dropdown-item.active {
     color: white;
 }
