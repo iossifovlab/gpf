@@ -1,0 +1,8 @@
+personId,familyId,momId,dadId,sex,status,prb
+prb1,fam1,mom1,,Male,True,1
+sib1,fam1,mom1,,Female,True,0
+cous1,fam1,aunt1,,Male,True,0
+aunt1,fam1,,,Female,False,0
+cous2,fam1,aunt1,,Male,True,0
+mom1,fam1,,,Female,True,0
+cous3,fam1,aunt1,,Male,True,0

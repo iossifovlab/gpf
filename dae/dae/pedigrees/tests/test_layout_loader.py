@@ -19,10 +19,12 @@ def assert_positions(expected, resulted):
 def test_generate_layout(family1, family2):
     layout1 = Layout.from_family(family1)
     layout2 = Layout.from_family(family2)
+    assert len(layout1) == 1
+    assert len(layout2) == 1
 
-    assert layout1.positions is not None
-    assert layout2.positions is not None
-    assert_positions(layout1.positions, layout2.positions)
+    assert layout1[0].positions is not None
+    assert layout2[0].positions is not None
+    assert_positions(layout1[0].positions, layout2[0].positions)
 
 
 def test_load_from_family_layout(family1, family2, layout2):

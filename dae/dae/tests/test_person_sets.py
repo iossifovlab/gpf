@@ -86,7 +86,8 @@ def test_from_pedigree_nonexistent_domain(fixture_dirname):
             config.invalid, quads_f1_families,
         )
 
-    assert "Missing domain value for 'invalid' in person" in str(excinfo.value)
+    assert "Domain for 'invalid' does not have the value 'None'!" in \
+        str(excinfo.value)
 
 
 def test_get_person_color(fixture_dirname):

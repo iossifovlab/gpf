@@ -2,6 +2,7 @@ import copy
 
 from collections import defaultdict
 from collections.abc import Mapping
+from dae.utils.helpers import isnan
 
 import pandas as pd
 
@@ -26,40 +27,42 @@ PEDIGREE_COLUMN_NAMES = {
 class Person(object):
     def __init__(self, **attributes):
         self._attributes = attributes
+        self.rebuild()
 
-        assert "person_id" in attributes
-        self.family_id = attributes["family_id"]
+    def rebuild(self):
+        assert "person_id" in self._attributes
+        self.family_id = self._attributes["family_id"]
         self.family = None
-        self.person_id = attributes["person_id"]
-        self.sample_id = attributes.get("sample_id", None)
-        self.index = attributes.get("index", None)
+        self.person_id = self._attributes["person_id"]
+        self.sample_id = self._attributes.get("sample_id", None)
+        self.index = self._attributes.get("index", None)
 
-        self._sex = Sex.from_name(attributes["sex"])
-        if "role" not in attributes:
+        self._sex = Sex.from_name(self._attributes["sex"])
+        if "role" not in self._attributes:
             self._role = None
         else:
-            self._role = Role.from_name(attributes.get("role"))
+            self._role = Role.from_name(self._attributes.get("role"))
 
-        self._status = Status.from_name(attributes["status"])
+        self._status = Status.from_name(self._attributes["status"])
 
         self._attributes["sex"] = self._sex
         self._attributes["role"] = self._role
         self._attributes["status"] = self._status
 
-        self.mom_id = attributes.get("mom_id", None)
-        if self.mom_id == "0" or type(self.mom_id) != str:
+        self.mom_id = self.get_attr("mom_id")
+        if self.mom_id == "0":
             self.mom_id = None
             self._attributes["mom_id"] = None
-        self.dad_id = attributes.get("dad_id", None)
-        if self.dad_id == "0" or type(self.dad_id) != str:
+        self.dad_id = self.get_attr("dad_id")
+        if self.dad_id == "0":
             self.dad_id = None
             self._attributes["dad_id"] = None
         self.mom = None
         self.dad = None
         assert self.mom_id is None or type(self.mom_id) == str, \
-            (self, attributes)
+            (self, self._attributes)
         assert self.dad_id is None or type(self.dad_id) == str, \
-            (self, attributes)
+            (self, self._attributes)
 
     def __repr__(self):
         if self.generated:
@@ -119,7 +122,10 @@ class Person(object):
         return key in self._attributes
 
     def get_attr(self, key, default=None):
-        return self._attributes.get(key, default)
+        res = self._attributes.get(key, default)
+        if type(res) == float and isnan(res):
+            return None
+        return res
 
     def set_attr(self, key, value):
         self._attributes[key] = value

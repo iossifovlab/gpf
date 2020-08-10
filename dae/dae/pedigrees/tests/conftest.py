@@ -207,7 +207,7 @@ def individuals_intervals_from_family2(intervals_from_family2):
 
 @pytest.fixture(scope="function")
 def layout_from_family2(individuals_intervals_from_family2):
-    return Layout(individuals_intervals_from_family2)
+    return [Layout(individuals_intervals_from_family2)]
 
 
 @pytest.fixture(scope="function")

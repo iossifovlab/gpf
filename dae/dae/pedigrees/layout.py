@@ -1,9 +1,10 @@
 import sys
 import re
 
-from collections import defaultdict
+from collections import defaultdict, namedtuple
 from functools import reduce
 
+from dae.pedigrees.family import Family
 from dae.pedigrees.pedigrees import FamilyConnections, Individual
 from dae.pedigrees.interval_sandwich import SandwichSolver
 
@@ -26,7 +27,9 @@ def layout_parser(layout):
 
 
 class IndividualWithCoordinates(object):
-    def __init__(self, individual, x=0.0, y=0.0, size=21.0, scale=1.0):
+    SIZE = 21.0
+
+    def __init__(self, individual, x=0.0, y=0.0, size=SIZE, scale=1.0):
         self.individual = individual
         self.x = x
         self.y = y
@@ -102,6 +105,10 @@ class Line(object):
         return "[({},{}) - ({},{})]".format(self.x1, self.y1, self.x2, self.y2)
 
 
+class CompositeLayout:
+    pass
+
+
 class Layout(object):
     def __init__(self, intervals=None):
         self._intervals = intervals
@@ -115,6 +122,20 @@ class Layout(object):
                 self._individuals_by_rank
             )
             self._generate_from_intervals()
+
+    BBox = namedtuple("BBox", ["min_x", "min_y", "max_x", "max_y"])
+
+    def get_bbox(self):
+        min_x = 0
+        max_x = 0
+        min_y = 0
+        max_y = 0
+        for i in self._id_to_position.values():
+            min_x = min(min_x, i.x)
+            min_y = min(min_y, i.y)
+            max_x = max(max_x, i.x)
+            max_y = max(max_y, i.y)
+        return Layout.BBox(min_x, min_y, max_x, max_y)
 
     @staticmethod
     def _handle_broken_family_connections(family, x_offset=15):
@@ -130,26 +151,24 @@ class Layout(object):
         return layout
 
     @staticmethod
-    def from_family(family, add_missing_members=True):
-
-        family_connections = FamilyConnections.from_family(
-            family, add_missing_members=add_missing_members
-        )
+    def _build_family_layout(
+            family: Family, family_connections: FamilyConnections):
 
         if family_connections is None:
-            print(
-                f"Missing family connections for family: {family.family_id}",
-                file=sys.stderr,
-            )
+            # print(
+            #     f"Missing family connections for family: {family.family_id}",
+            #     file=sys.stderr,
+            # )
             return Layout._handle_broken_family_connections(family)
 
+        assert family_connections.is_connected()
         sandwich_instance = family_connections.create_sandwich_instance()
         intervals = SandwichSolver.solve(sandwich_instance)
 
         if intervals is None:
-            print(
-                f"No intervals for family: {family.family_id}", file=sys.stderr
-            )
+            # print(
+            #     f"No intervals for family: {family.family_id}", file=sys.stderr
+            # )
             return Layout._handle_broken_family_connections(family)
 
         individuals_intervals = [
@@ -159,6 +178,31 @@ class Layout(object):
         ]
 
         return Layout(individuals_intervals)
+
+    @staticmethod
+    def from_family(family: Family, add_missing_members=True):
+
+        family_connections = FamilyConnections.from_family(
+            family, add_missing_members=add_missing_members
+        )
+
+        if not family_connections:
+            return [Layout._handle_broken_family_connections(family)]
+
+        if family_connections.is_connected():
+            return [Layout._build_family_layout(family, family_connections)]
+
+        layouts = []
+        for component in family_connections.connected_components():
+            members = [
+                m for m in family.full_members
+                if m.person_id in component
+            ]
+            fam = Family.from_persons(members)
+            fc = FamilyConnections.from_family(fam)
+            # assert fc.is_connected(), fam.family_id
+            layouts.append(Layout._build_family_layout(fam, fc))
+        return layouts
 
     @staticmethod
     def from_family_layout(family):
@@ -701,12 +745,11 @@ class Layout(object):
 
     @staticmethod
     def _generate_simple_layout(
-        individuals_by_rank,
-        level_heigh=30.0,
-        x_offset=20.0,
-        y_offset=20.0,
-        gap=8.0,
-    ):
+            individuals_by_rank,
+            level_heigh=30.0,
+            x_offset=20.0,
+            y_offset=20.0,
+            gap=8.0):
 
         result = {}
         original_x_offset = x_offset

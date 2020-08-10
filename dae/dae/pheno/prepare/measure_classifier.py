@@ -342,7 +342,7 @@ class MeasureClassifier(object):
             if (
                 rep.count_unique_values >= conf.categorical.min_rank
                 and rep.count_unique_values <= conf.categorical.max_rank
-                and rep.value_max_len <= conf.value_max_len
+                # and rep.value_max_len <= conf.value_max_len
             ):
                 return MeasureType.categorical
 
