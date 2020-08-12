@@ -89,7 +89,8 @@ class WGPFInstance(GPFInstance):
         return genotype_data
 
     def get_genotype_data_config(self, dataset_id):
-        genotype_data = super(WGPFInstance, self).get_genotype_data(dataset_id)
+        genotype_data = \
+            super(WGPFInstance, self).get_genotype_data_config(dataset_id)
         if genotype_data is not None:
             return genotype_data
         genotype_data = self.get_genotype_data(dataset_id)

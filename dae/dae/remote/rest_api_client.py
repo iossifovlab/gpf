@@ -270,3 +270,14 @@ class RESTClient:
             data=data
         )
         return response.json()
+
+    def post_pheno_tool(self, data):
+        response = self._post(
+            "pheno_tool",
+            data=data
+        )
+
+        if response.status_code != 200:
+            return None
+
+        return response.json()

@@ -47,7 +47,7 @@ class RemotePhenotypeData(PhenotypeData):
     def has_measure(self, measure_id):
         measure = self.rest_client.get_measure(self.dataset_id, measure_id)
 
-        return measure is None
+        return measure is not None
 
     def get_measure(self, measure_id):
         measure = self.rest_client.get_measure(self.dataset_id, measure_id)
@@ -60,7 +60,7 @@ class RemotePhenotypeData(PhenotypeData):
             instrument,
             measure_type
         )
-        return [Measure.from_json(m) for m in measures]
+        return {m["measureName"]: Measure.from_json(m) for m in measures}
 
     def get_measure_values_df(
         self,

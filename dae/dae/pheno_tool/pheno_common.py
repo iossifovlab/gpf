@@ -90,6 +90,6 @@ class PhenoResult(object):
         self.negative_deviation = n_std
 
     def __repr__(self):
-        return "PhenoResult: pvalue={:.3g}; pos={} (neg={})".format(
+        return "PhenoResult: pvalue={}; pos={} (neg={})".format(
             self.pvalue, self.positive_count, self.negative_count
         )

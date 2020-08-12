@@ -1,6 +1,5 @@
 import json
 import logging
-from collections import Counter
 
 from rest_framework.response import Response
 from rest_framework import status
@@ -13,6 +12,8 @@ from dae.pheno_tool.tool import PhenoTool, PhenoToolHelper
 from dae.variants.attributes import Sex
 
 from query_base.query_base import QueryBaseView
+
+from .pheno_tool_adapter import PhenoToolAdapter, RemotePhenoToolAdapter
 
 
 logger = logging.getLogger(__name__)
@@ -44,14 +45,19 @@ class PhenoToolView(QueryBaseView):
             "femaleResults": cls.get_result_by_sex(result, Sex.F.name),
         }
 
-    def prepare_pheno_tool(self, data):
+    def prepare_pheno_tool_adapter(self, data):
         study_wrapper = self.gpf_instance.get_wdae_wrapper(data["datasetId"])
-
         if not (
             study_wrapper
             and study_wrapper.phenotype_data.has_measure(data["measureId"])
         ):
-            return None, None
+            return None
+
+        if study_wrapper.is_remote:
+            return RemotePhenoToolAdapter(
+                study_wrapper.rest_client,
+                study_wrapper._remote_study_id
+            )
 
         helper = PhenoToolHelper(study_wrapper)
 
@@ -69,7 +75,7 @@ class PhenoToolView(QueryBaseView):
             family_ids=pheno_filter_family_ids,
             normalize_by=data["normalizeBy"],
         )
-        return helper, tool
+        return PhenoToolAdapter(tool, helper)
 
     @staticmethod
     def _align_NA_results(results):
@@ -97,28 +103,14 @@ class PhenoToolView(QueryBaseView):
     @expand_gene_set
     def post(self, request):
         data = request.data
-        helper, tool = self.prepare_pheno_tool(data)
+        adapter = self.prepare_pheno_tool_adapter(data)
 
-        if not (helper and tool):
+        if not adapter:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        people_variants = helper.genotype_data_variants(data)
+        result = adapter.calc_variants(data)
 
-        results = [
-            self.calc_by_effect(
-                effect, tool, people_variants.get(effect.lower(), Counter())
-            )
-            for effect in data["effectTypes"]
-        ]
-        self._align_NA_results(results)
-
-        response = {
-            "description": self._build_report_description(
-                tool.measure_id, tool.normalize_by
-            ),
-            "results": results,
-        }
-        return Response(response)
+        return Response(result)
 
 
 class PhenoToolDownload(PhenoToolView):
@@ -239,7 +231,7 @@ class PhenoToolMeasure(QueryBaseView):
             measure_id,
         )
 
-        return Response(result.to_dict())
+        return Response(result.to_json())
 
 
 class PhenoToolMeasures(QueryBaseView):
@@ -254,7 +246,7 @@ class PhenoToolMeasures(QueryBaseView):
 
         instrument = params.get("instrument", None)
 
-        if instrument not in dataset.phenotype_data.instruments:
+        if instrument and instrument not in dataset.phenotype_data.instruments:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         measure_type = params.get("measureType", None)
@@ -266,7 +258,7 @@ class PhenoToolMeasures(QueryBaseView):
             measure_type,
         )
 
-        return Response(result.to_dict())
+        return Response([m.to_json() for m in result.values()])
 
 
 class PhenoToolMeasureValues(QueryBaseView):

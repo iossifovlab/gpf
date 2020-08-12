@@ -128,7 +128,7 @@ class Measure(object):
         m.measure_id = json["measureId"]
         m.instrument_name = json["instrumentName"]
         m.measure_name = json["measureName"]
-        m.measure_type = json["measureType"]
+        m.measure_type = MeasureType.from_str(json["measureType"])
 
         m.description = json["description"]
         m.default_filter = json["defaultFilter"]
@@ -137,6 +137,21 @@ class Measure(object):
         m.max_value = json.get("maxValue")
 
         return m
+
+    def to_json(self):
+        result = dict()
+
+        result["measureName"] = self.measure_name
+        result["measureId"] = self.measure_id
+        result["instrumentName"] = self.instrument_name
+        result["measureType"] = self.measure_type.name
+        result["description"] = self.description
+        result["defaultFilter"] = self.default_filter
+        result["valuesDomain"] = self.values_domain
+        result["minValue"] = self.min_value
+        result["minValue"] = self.max_value
+
+        return result
 
 
 class PhenotypeData:
