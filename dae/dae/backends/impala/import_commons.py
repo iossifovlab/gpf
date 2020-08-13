@@ -285,7 +285,7 @@ hdfs.flag: \\
 \t\tpedigree.flag
 \thdfs_parquet_loader.py {{study_id}} \\
 \t\t{{pedigree.output}} \\
-\t\t{{variants_output}} \\
+\t\t--variants {{variants_output}} \\
 \t\t--gs {{genotype_storage}} \\
 \t\t&& touch $@
 
@@ -461,7 +461,7 @@ rule hdfs:
 {%- if genotype_storage %}
             --gs {{genotype_storage}} \\
 {%- endif %}
-            {{pedigree.output}} {{variants_output}} \\
+            {{pedigree.output}} --variants {{variants_output}} \\
             > {log.stdout} 2> {log.stderr}
         '''
 
