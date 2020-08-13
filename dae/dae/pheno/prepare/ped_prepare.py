@@ -1,9 +1,5 @@
-"""
-Created on Jul 25, 2017
-
-@author: lubo
-"""
 import os
+import re
 import traceback
 from collections import defaultdict, OrderedDict
 
@@ -308,11 +304,11 @@ class PrepareVariables(PreparePersons):
         assert filenames
         assert all([os.path.exists(f) for f in filenames])
 
-        instrument_names = [
-            os.path.splitext(os.path.basename(f))[0] for f in filenames
-        ]
-        assert len(set(instrument_names)) == 1
-        assert instrument_name == instrument_names[0]
+        # instrument_names = [
+        #     os.path.splitext(os.path.basename(f))[0] for f in filenames
+        # ]
+        # assert len(set(instrument_names)) == 1
+        # assert instrument_name == instrument_names[0]
 
         dataframes = []
         sep = ","
@@ -411,14 +407,17 @@ class PrepareVariables(PreparePersons):
             connection.execute(ins, list(values.values()))
 
     def _collect_instruments(self, dirname):
+        regexp = re.compile("(?P<instrument>.*)(?P<ext>\.csv.*)")
         instruments = defaultdict(list)
         for root, _dirnames, filenames in os.walk(dirname):
             for filename in filenames:
                 basename = os.path.basename(filename)
-                name, ext = os.path.splitext(basename)
-                if ext.lower() != ".csv":
+                basename = basename.lower()
+                res = regexp.match(basename)
+                if not res:
                     continue
-                instruments[name].append(
+                print(res.group("instrument"), res.group("ext"))
+                instruments[res.group("instrument")].append(
                     os.path.abspath(os.path.join(root, filename))
                 )
         return instruments

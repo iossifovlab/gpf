@@ -280,6 +280,9 @@ class Layout(object):
 
     def apply_to_family(self, family):
         for person_id, person in family.persons.items():
+            if person_id not in self.id_to_position:
+                continue
+
             assert person_id in self.id_to_position, (
                 person_id,
                 family,

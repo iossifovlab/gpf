@@ -55,8 +55,9 @@ class FamiliesLoader:
         ped_layout_mode = pedigree_format.get("ped_layout_mode", "load")
         if ped_layout_mode == "generate":
             for family in families.values():
-                layout = Layout.from_family(family)
-                layout.apply_to_family(family)
+                layouts = Layout.from_family(family)
+                for layout in layouts:
+                    layout.apply_to_family(family)
         elif ped_layout_mode == "load":
             pass
         else:
@@ -69,7 +70,7 @@ class FamiliesLoader:
     def _build_families_roles(families, pedigree_format):
         has_unknown_roles = any(
             [
-                p.role is None or p.role == Role.unknown
+                p.role is None  # or p.role == Role.unknown
                 for p in families.persons.values()
             ]
         )
