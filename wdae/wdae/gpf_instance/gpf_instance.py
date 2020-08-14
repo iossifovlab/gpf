@@ -5,9 +5,9 @@ from django.conf import settings
 from threading import Lock
 
 from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.remote.remote_study_wrapper import RemoteStudyWrapper
+from studies.study_wrapper import RemoteStudyWrapper
 
-from dae.remote.rest_api_client import RESTClient, RESTClientRequestError
+from remote.rest_api_client import RESTClient, RESTClientRequestError
 
 from dae.enrichment_tool.tool import EnrichmentTool
 from dae.enrichment_tool.event_counters import CounterBase
