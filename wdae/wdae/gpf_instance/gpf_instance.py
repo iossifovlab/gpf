@@ -5,7 +5,7 @@ from django.conf import settings
 from threading import Lock
 
 from dae.gpf_instance.gpf_instance import GPFInstance
-from studies.study_wrapper import RemoteStudyWrapper
+from studies.study_wrapper import StudyWrapper, RemoteStudyWrapper
 
 from remote.rest_api_client import RESTClient, RESTClientRequestError
 
@@ -30,8 +30,8 @@ class WGPFInstance(GPFInstance):
     def __init__(self, *args, **kwargs):
         super(WGPFInstance, self).__init__(*args, **kwargs)
         self._remote_study_clients = dict()
-        self._remote_study_wrappers = dict()
         self._remote_study_ids = dict()
+        self._study_wrappers = dict()
 
         if getattr(settings, "REMOTES", None):
             for remote in settings.REMOTES:
@@ -61,12 +61,23 @@ class WGPFInstance(GPFInstance):
             study_id = study_wrapper.study_id
             self._remote_study_ids[study_id] = study["id"]
             self._remote_study_clients[study_id] = rest_client
-            self._remote_study_wrappers[study_id] = study_wrapper
+            self._study_wrappers[study_id] = study_wrapper
+
+    def make_wdae_wrapper(self, dataset_id):
+        genotype_data = self.get_dataset(dataset_id)
+        study_wrapper = StudyWrapper(
+            genotype_data,
+            self._pheno_db,
+            self.gene_weights_db
+        )
+        return study_wrapper
 
     def get_wdae_wrapper(self, dataset_id):
-        wrapper = super(WGPFInstance, self).get_wdae_wrapper(dataset_id)
-        if not wrapper:
-            wrapper = self._remote_study_wrappers.get(dataset_id, None)
+        if dataset_id not in self._study_wrappers.keys():
+            wrapper = self.make_wdae_wrapper(dataset_id)
+            self._study_wrappers[dataset_id] = wrapper
+        else:
+            wrapper = self._study_wrappers.get(dataset_id, None)
         return wrapper
 
     def get_genotype_data_ids(self):

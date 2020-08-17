@@ -121,8 +121,6 @@ class GPFInstance(object):
     def _variants_db(self):
         return VariantsDb(
             self.dae_config,
-            self._pheno_db,
-            self.gene_weights_db,
             self.genomes_db,
             self.genotype_storage_db,
         )
@@ -335,9 +333,6 @@ class GPFInstance(object):
             gene_set_id, types, datasets)
 
     # Variants DB
-    def get_wdae_wrapper(self, dataset_id):
-        return self._variants_db.get_wdae_wrapper(dataset_id)
-
     def get_dataset(self, dataset_id):
         return self._variants_db.get(dataset_id)
 
