@@ -4,9 +4,11 @@
 <div #wrapper class="clickable" style="display: flex; width: 100%; height: 100%;"
 	[ngClass]="{'fullscreen': maximized}"
 	(click)="toggleMaximize()">
-	<svg style="margin: auto; height: 100%;"
+	<svg
 		[attr.width]="width"
-		[attr.viewBox]="getViewBox()" >
+		[attr.viewBox]="getViewBox()"
+		[ngClass]="{'fullscreen-pedigree': maximized}"
+	>
 		<svg:line *ngFor="let straightLine of straightLines"
 			[attr.x1]=straightLine.startX
 			[attr.y1]=straightLine.startY
