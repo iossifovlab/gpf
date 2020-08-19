@@ -152,6 +152,7 @@ import { GlobalErrorHandler } from './global-error-handler/global-error-handler'
 import { GlobalErrorDisplayComponent } from './global-error-display/global-error-display.component';
 import { NgMultiSelectDropDownModule } from 'ng-multiselect-dropdown';
 import { DatasetPermissionGuard } from './dataset-permission.guard';
+import { VariantFrequencyViewComponent } from './variant-frequency-view/variant-frequency-view.component';
 
 const appRoutes: Routes = [
   {
@@ -343,6 +344,7 @@ const appRoutes: Routes = [
     GeneViewComponent,
     GeneBrowserComponent,
     GlobalErrorDisplayComponent,
+    VariantFrequencyViewComponent,
   ],
   imports: [
     BrowserModule,
