@@ -2,7 +2,7 @@ import { Component, OnInit, forwardRef, ElementRef, QueryList, ViewChildren } fr
 import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query-state-provider';
 // tslint:disable-next-line:import-blacklist
 import { Observable, ReplaySubject } from 'rxjs';
-import { PhenoToolMeasure } from './pheno-tool-measure';
+import { PhenoToolMeasure, Regression } from './pheno-tool-measure';
 import { StateRestoreService } from '../store/state-restore.service';
 import { ContinuousMeasure } from '../measures/measures';
 import { MeasuresService } from '../measures/measures.service';
@@ -72,17 +72,19 @@ export class PhenoToolMeasureComponent extends QueryStateWithErrorsProvider impl
     this.measuresLoaded$.next(measures);
   }
 
-  onNormalizeByChange(value: any, event): void {
+  onNormalizeByChange(value: Regression, event): void {
     if (event.target.checked) {
-      if (this.phenoToolMeasure.normalizeBy.indexOf(value) === -1) {
+      if (!this.phenoToolMeasure.normalizeBy.some((reg) => reg.measure_name === value.measure_name)) {
         this.phenoToolMeasure.normalizeBy.push(value);
       }
     } else {
-      if (this.phenoToolMeasure.normalizeBy.indexOf(value) !== -1) {
-        this.phenoToolMeasure.normalizeBy =
-          this.phenoToolMeasure.normalizeBy.filter(v => v !== value);
-      }
+       this.clearNormalizedByFilter(value.measure_name);
     }
+  }
+
+  clearNormalizedByFilter(value: string): void {
+    this.phenoToolMeasure.normalizeBy =
+    this.phenoToolMeasure.normalizeBy.filter(reg => reg.measure_name !== value);
   }
 
   getRegressionNames() {
@@ -90,14 +92,12 @@ export class PhenoToolMeasureComponent extends QueryStateWithErrorsProvider impl
   }
 
   uncheckCheckboxes(event) {
-    if (event === null) {
-      return;
-    }
+    // this.inputs.forEach((directive, index) => {
+    //   this.clearNormalizedByFilter(directive.nativeElement.id);
+    // });
+  }
 
-    if (event.name.includes('age')) {
-      this.inputs.find(input => input.nativeElement.id === 'age').nativeElement.checked = false;
-    } else if (event.name.includes('iq')) {
-      this.inputs.find(input => input.nativeElement.id === 'nonverbal_iq').nativeElement.checked = false;
-    }
+  isNormalizedBy(reg: string): boolean {
+    return this.phenoToolMeasure.normalizeBy.some(norm => norm.measure_name === reg);
   }
 }

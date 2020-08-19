@@ -5,14 +5,15 @@
       <div *ngFor="let user of users">{{ user.name }} ({{ user.email }})</div>
     </div>
   </div>
-  <div *ngIf="groupsToOptions(groups$ | async) as groupOptions" class="row justify-content-center mt-3">
+  <div *ngIf="(groups$ | async) as groupOptions" class="row justify-content-center mt-3">
     <div class="col-4">
       <div class="form-group">
         <label for="groups">Group</label>
         <div class="groupsInput" >
-          <select2 class="selector" [data]="groupOptions" [value]="''"(valueChanged)="changeSelectedGroup($event.value)" [options]="configurationOptions">
-
-          </select2>
+          <gpf-user-groups-selector
+            [allInputtedGroups]="groupOptions"
+          >
+          </gpf-user-groups-selector>
         </div>
       </div>
     </div>

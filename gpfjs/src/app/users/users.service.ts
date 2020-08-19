@@ -5,8 +5,11 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 
 import { ConfigService } from '../config/config.service';
-import { CookieService } from 'ngx-cookie';
+import { CookieService } from 'ngx-cookie-service';
 import { User } from './users';
+
+import { Router } from '@angular/router';
+import { Location } from '@angular/common';
 
 @Injectable()
 export class UsersService {
@@ -18,8 +21,8 @@ export class UsersService {
   private readonly changePasswordUrl = 'users/change_password';
   private readonly checkVerificationUrl = 'users/check_verif_path';
   private readonly usersUrl = 'users';
-  private readonly bulkAddGroupUrl = `${this.usersUrl}/bulk_add_group`;
-  private readonly bulkRemoveGroupUrl = `${this.usersUrl}/bulk_remove_group`;
+  private readonly bulkAddGroupsUrl = `${this.usersUrl}/bulk_add_groups`;
+  private readonly bulkRemoveGroupsUrl = `${this.usersUrl}/bulk_remove_groups`;
 
   private userInfo$ = new ReplaySubject<{}>(1);
   private lastUserInfo = null;
@@ -27,7 +30,9 @@ export class UsersService {
   constructor(
     private http: HttpClient,
     private config: ConfigService,
-    private cookieService: CookieService
+    private cookieService: CookieService,
+    private router: Router,
+    private location: Location,
   ) {}
 
   logout(): Observable<boolean> {
@@ -37,6 +42,7 @@ export class UsersService {
 
     return this.http.post(this.config.baseUrl + this.logoutUrl, {}, options)
       .map(res => {
+        this.router.navigate([this.location.path()]);
         return true;
       });
   }
@@ -48,6 +54,7 @@ export class UsersService {
 
     return this.http.post(this.config.baseUrl + this.loginUrl, { username: username, password: password }, options)
       .map(res => {
+        this.router.navigate([this.location.path()]);
         return true;
       })
       .catch(error => {
@@ -77,21 +84,45 @@ export class UsersService {
       });
   }
 
-  register(email: string, name: string, researcherId: string): Observable<boolean> {
+  isEmailValid(email: string): boolean {
+    const re = new RegExp(
+      "[a-z0-9!#$%&\'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&\'*+/=?^_`{" +
+      "|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?" +
+      ":[a-z0-9-]*[a-z0-9])?"
+    );
+    return re.test(String(email).toLowerCase());
+  }
+
+  isNameValid(name: string): boolean {
+    return !(name === undefined || name === '');
+  }
+
+  register(email: string, name: string): Observable<boolean> {
     const csrfToken = this.cookieService.get('csrftoken');
     const headers = { 'X-CSRFToken': csrfToken };
     const options = { headers: headers, withCredentials: true };
 
-    return this.http.post(this.registerUrl, {
+    if (!this.isEmailValid(email)) {
+      return observableThrowError(new Error(
+        'Invalid email address entered. Please use a valid email address.'
+      ));
+    }
+
+    if (!this.isNameValid(name)) {
+      return observableThrowError(new Error(
+        'Name field cannot be empty.'
+      ));
+    }
+
+    return this.http.post(this.config.baseUrl + this.registerUrl, {
       email: email,
       name: name,
-      researcherId: researcherId
     }, options)
       .map(res => {
         return true;
       })
       .catch(error => {
-        return observableThrowError(new Error(error.json().error_msg));
+        return observableThrowError(new Error(error.error.error_msg));
       });
   }
 
@@ -105,7 +136,7 @@ export class UsersService {
         return true;
       })
       .catch(error => {
-        return observableThrowError(new Error(error.json().error_msg));
+        return observableThrowError(new Error(error.error.error_msg));
       });
   }
 
@@ -179,6 +210,18 @@ export class UsersService {
       return observableThrowError('Create should not have user id');
     }
 
+    if (!this.isEmailValid(user.email)) {
+      return observableThrowError(new Error(
+        'Invalid email address entered. Please use a valid email address.'
+      ));
+    }
+
+    if (!this.isNameValid(user.name)) {
+      return observableThrowError(new Error(
+        'Name field cannot be empty.'
+      ));
+    }
+
     const csrfToken = this.cookieService.get('csrftoken');
     const headers = { 'X-CSRFToken': csrfToken };
     const options = { headers: headers, withCredentials: true };
@@ -195,16 +238,6 @@ export class UsersService {
     const options = { withCredentials: true };
 
     return this.http.delete(url, options);
-  }
-
-  removeUserPassword(user: User) {
-    if (!user.id) {
-      return observableThrowError('No user id');
-    }
-    const url = `${this.config.baseUrl}${this.usersUrl}/${user.id}/password_remove`;
-    const options = { withCredentials: true };
-
-    return this.http.post(url, null, options);
   }
 
   resetUserPassword(user: User) {
@@ -232,26 +265,26 @@ export class UsersService {
       .map(response => User.fromJsonArray(response));
   }
 
-  bulkAddGroup(users: User[], group: string) {
+  bulkAddGroups(users: User[], groups: string[]) {
     const options = { withCredentials: true };
 
     const data = {
       userIds: users.map(u => u.id),
-      group: group
+      groups: groups
     };
 
-    return this.http.post(this.config.baseUrl + this.bulkAddGroupUrl, data, options);
+    return this.http.post(this.config.baseUrl + this.bulkAddGroupsUrl, data, options);
   }
 
-  bulkRemoveGroup(users: User[], group: string) {
+  bulkRemoveGroups(users: User[], groups: string[]) {
     const options = { withCredentials: true };
 
     const data = {
       userIds: users.map(u => u.id),
-      group: group
+      groups: groups
     };
 
-    return this.http.post(this.config.baseUrl + this.bulkRemoveGroupUrl, data, options);
+    return this.http.post(this.config.baseUrl + this.bulkRemoveGroupsUrl, data, options);
   }
 
 }

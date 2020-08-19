@@ -12,7 +12,7 @@ import { StateRestoreService } from '../store/state-restore.service';
   }]
 })
 export class RegionsBlockComponent extends QueryStateCollector implements AfterViewInit {
-  @ViewChild('tabset') ngbTabset;
+  @ViewChild('nav') ngbNav;
 
   constructor(
     private stateRestoreService: StateRestoreService
@@ -25,7 +25,7 @@ export class RegionsBlockComponent extends QueryStateCollector implements AfterV
       .take(1)
       .subscribe(state => {
         if ('regions' in state) {
-          this.ngbTabset.select('regions-filter');
+          this.ngbNav.select('regionsFilter');
         }
       });
   }

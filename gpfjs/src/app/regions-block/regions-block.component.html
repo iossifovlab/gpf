@@ -1,16 +1,17 @@
 <div class="regions-block form-block">
   <div class="card">
-    <gpf-tabset #tabset>
-      <div class="gpf-tabset-left">
-        Regions
-      </div>
-      <ngb-tab id="all-regions" title="All">
-      </ngb-tab>
-      <ngb-tab id="regions-filter" title="Regions Filter">
-          <ng-template ngbTabContent>
+    <ul ngbNav #nav="ngbNav" class="navbar bg-light nav-pills" style="justify-content: flex-start">
+      <div class="nav-title-custom">Regions</div>
+      <li [ngbNavItem]="'allRegions'">
+          <a ngbNavLink>All</a>
+      </li>
+      <li [ngbNavItem]="'regionsFilter'" id="regions-filter">
+          <a ngbNavLink>Regions Filter</a>
+          <ng-template ngbNavContent>
               <gpf-regions-filter></gpf-regions-filter>
           </ng-template>
-      </ngb-tab>
-    </gpf-tabset>
+      </li>
+    </ul>
+    <div [ngbNavOutlet]="nav" class="card-block"></div>
   </div>
 </div>

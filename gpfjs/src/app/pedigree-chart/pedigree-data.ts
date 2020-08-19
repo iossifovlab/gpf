@@ -7,7 +7,7 @@ export abstract class IndividualSet {
 
     generationRanks(): Set<number> {
       const individuals = this.individualSet();
-      const ranks = new Set();
+      const ranks = new Set<number>();
 
       individuals.forEach(individual => ranks.add(individual.rank));
 
@@ -170,7 +170,7 @@ export class SibshipUnit extends IndividualSet {
   }
 
   childrenSet() {
-    return new Set();
+    return new Set<Individual>();
   }
 }
 

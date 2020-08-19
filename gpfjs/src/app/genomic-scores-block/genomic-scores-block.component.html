@@ -1,17 +1,15 @@
 <div class="form-block">
   <div class="card">
-    <gpf-tabset #tabset>
-      <div class="gpf-tabset-left">
-          Genomic scores
-      </div>
-      <ngb-tab>
-        <ng-template ngbTabTitle>
+    <ul ngbNav #nav="ngbNav" class="navbar bg-light nav-pills" style="justify-content: flex-start">
+      <div class="nav-title-custom">Genomic scores</div>
+      <li ngbNavItem>
+        <a ngbNavLink>
           <gpf-add-button
             (addFilter)="addFilter($event)">
           </gpf-add-button>
-        </ng-template>
-      </ngb-tab>
-    </gpf-tabset>
+        </a>
+      </li>
+    </ul>
     <div class="card-block">
       <div style="padding: 5px" *ngFor="let score of genomicScoresState.genomicScoresState; trackBy: trackById; let i = index">
         <span style="padding: 5px; display: block; overflow: hidden">

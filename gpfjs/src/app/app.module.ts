@@ -46,10 +46,9 @@ import { MinValidatorDirective, MaxValidatorDirective } from './utils/min-max.va
 
 import { StudyTypesComponent } from './study-types/study-types.component';
 
-import { CookieModule } from 'ngx-cookie';
+import { CookieService} from 'ngx-cookie-service';
 
 import { GenotypeBrowserComponent } from './genotype-browser/genotype-browser.component';
-import { GpfTabsetComponent } from './tabset/tabset.component';
 
 import { EnrichmentToolComponent } from './enrichment-tool/enrichment-tool.component';
 import { EnrichmentModelsBlockComponent } from './enrichment-models-block/enrichment-models-block.component';
@@ -108,7 +107,7 @@ import { GenomicScoresComponent } from './genomic-scores/genomic-scores.componen
 import { GenomicScoresBlockComponent } from './genomic-scores-block/genomic-scores-block.component';
 import { GenomicScoresBlockService } from './genomic-scores-block/genomic-scores-block.service';
 
-import { NgxMdModule } from 'ngx-md';
+import { MarkdownModule } from 'ngx-markdown';
 import { UserManagementComponent } from './user-management/user-management.component';
 import { UserInfoPipe } from './users/user-info.pipe';
 import { UsersTableComponent } from './users-table/users-table.component';
@@ -117,7 +116,6 @@ import { UserEditComponent } from './user-edit/user-edit.component';
 import { ManagementComponent } from './management/management.component';
 import { UsersGroupsService } from './users-groups/users-groups.service';
 
-import { Select2Module } from 'ng2-select2';
 import { ConfirmationPopoverModule } from 'angular-confirmation-popover';
 import { UserCreateComponent } from './user-create/user-create.component';
 import { GroupsBulkAddComponent } from './groups-bulk-add/groups-bulk-add.component';
@@ -152,6 +150,8 @@ import { GeneViewComponent } from './gene-view/gene-view.component';
 import { GeneBrowserComponent } from './gene-browser/gene-browser.component';
 import { GlobalErrorHandler } from './global-error-handler/global-error-handler';
 import { GlobalErrorDisplayComponent } from './global-error-display/global-error-display.component';
+import { NgMultiSelectDropDownModule } from 'ng-multiselect-dropdown';
+import { DatasetPermissionGuard } from './dataset-permission.guard';
 
 const appRoutes: Routes = [
   {
@@ -168,6 +168,7 @@ const appRoutes: Routes = [
     data: {
       reuse: false
     },
+    canLoad: [DatasetPermissionGuard],
     children: [
       {
         path: 'browser',
@@ -273,7 +274,6 @@ const appRoutes: Routes = [
     UsersComponent,
     StudyTypesComponent,
     GenotypeBrowserComponent,
-    GpfTabsetComponent,
     EnrichmentToolComponent,
     EnrichmentModelsComponent,
     EnrichmentTableComponent,
@@ -347,21 +347,21 @@ const appRoutes: Routes = [
   imports: [
     BrowserModule,
     FormsModule,
-    NgbModule.forRoot(),
+    NgbModule,
     GpfTableModule,
     PedigreeChartModule,
     HistogramModule,
-    RouterModule.forRoot(appRoutes),
-    CookieModule.forRoot(),
+    RouterModule.forRoot(appRoutes, {onSameUrlNavigation: 'reload'}),
     BrowserAnimationsModule,
-    NgxMdModule.forRoot(),
-    Select2Module,
+    MarkdownModule.forRoot(),
     HttpClientModule,
     ConfirmationPopoverModule.forRoot({
       confirmButtonType: 'danger'
-    })
+    }),
+    NgMultiSelectDropDownModule.forRoot(),
   ],
   providers: [
+    CookieService,
     ConfigService,
     DatasetsService,
     QueryService,
@@ -391,14 +391,6 @@ const appRoutes: Routes = [
       provide: RouteReuseStrategy,
       useClass: TaggingRouteReuseStrategy
     }
-  ],
-
-  entryComponents: [
-    RegistrationComponent,
-    ForgotPasswordComponent,
-    PhenoBrowserModalContentComponent,
-    PopupComponent,
-    GlobalErrorDisplayComponent
   ],
 
   bootstrap: [AppComponent]

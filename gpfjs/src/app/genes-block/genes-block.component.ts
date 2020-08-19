@@ -10,7 +10,7 @@ import { StateRestoreService } from '../store/state-restore.service';
 })
 export class GenesBlockComponent extends QueryStateCollector implements AfterViewInit {
   @Input() showAllTab = true;
-  @ViewChild('tabset') ngbTabset;
+  @ViewChild('nav') ngbNav;
 
   constructor(
     private stateRestoreService: StateRestoreService
@@ -23,11 +23,11 @@ export class GenesBlockComponent extends QueryStateCollector implements AfterVie
       .take(1)
       .subscribe(state => {
         if ('geneSymbols' in state) {
-          this.ngbTabset.select('gene-symbols');
+          this.ngbNav.select('geneSymbols');
         } else if ('geneSet' in state) {
-          this.ngbTabset.select('gene-sets');
+          this.ngbNav.select('geneSets');
         } else if ('geneWeights' in state) {
-          this.ngbTabset.select('gene-weights');
+          this.ngbNav.select('geneWeights');
         }
       }
     );

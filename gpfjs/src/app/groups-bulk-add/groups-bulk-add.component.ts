@@ -1,13 +1,13 @@
 
 import {throwError as observableThrowError,  Observable, BehaviorSubject } from 'rxjs';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Select2OptionData } from 'ng2-select2';
 
 import { User } from '../users/users';
 import { UsersService } from '../users/users.service';
 import { UserGroup } from '../users-groups/users-groups';
 import { UsersGroupsService } from '../users-groups/users-groups.service';
+import { UserGroupsSelectorComponent } from 'app/user-groups-selector/user-groups-selector.component';
 
 @Component({
   selector: 'gpf-groups-bulk-add',
@@ -15,10 +15,11 @@ import { UsersGroupsService } from '../users-groups/users-groups.service';
   styleUrls: ['./groups-bulk-add.component.css']
 })
 export class GroupsBulkAddComponent implements OnInit {
-  configurationOptions: Select2Options;
   users$ = new BehaviorSubject<User[]>(null);
   groups$: Observable<UserGroup[]>;
-  group: string;
+
+  @ViewChild(UserGroupsSelectorComponent)
+  private userGroupsSelectorComponent: UserGroupsSelectorComponent;
 
   constructor(
     private route: ActivatedRoute,
@@ -28,20 +29,14 @@ export class GroupsBulkAddComponent implements OnInit {
   ) { }
 
   ngOnInit() {
-    let parameterUsers = this.getUsersOrBack();
+    const parameterUsers = this.getUsersOrBack();
+
     parameterUsers.take(1)
       .subscribe(users => {
         this.users$.next(users);
       });
-    // this.users$ =
+
     this.groups$ = this.usersGroupsService.getAllGroups();
-
-
-    this.configurationOptions = {
-      tags: true,
-      placeholder: 'Select or type a new group name',
-      width: 'style'
-    };
   }
 
   getUsersOrBack() {
@@ -69,18 +64,6 @@ export class GroupsBulkAddComponent implements OnInit {
       });
   }
 
-  groupsToOptions(groups: UserGroup[]) {
-    if (!groups) {
-      return null;
-    }
-    return groups.map(group => {
-      return {
-        id: group.name,
-        text: group.name
-      } as Select2OptionData;
-    });
-  }
-
   groupsToValue(groups: UserGroup[]) {
     if (!groups) {
       return [];
@@ -88,22 +71,18 @@ export class GroupsBulkAddComponent implements OnInit {
     return groups.map(group => group.id.toString());
   }
 
-
   submit() {
-    if (!this.group) {
-      return;
-    }
-    let users = this.users$.value;
+    const users = this.users$.value;
+    const selectedGroups = this.userGroupsSelectorComponent.selectedGroups;
+
     if (!users) {
       return;
     }
-    this.usersService.bulkAddGroup(users, this.group)
-      .take(1)
-      .subscribe(() => this.router.navigate(['/management']));
-  }
 
-  changeSelectedGroup(group) {
-    this.group = group;
+    if (selectedGroups !== undefined && selectedGroups.length !== 0 && !selectedGroups.includes(undefined)) {
+      this.usersService.bulkAddGroups(users, selectedGroups)
+        .take(1)
+        .subscribe(() => this.router.navigate(['/management']));
+    }
   }
-
 }

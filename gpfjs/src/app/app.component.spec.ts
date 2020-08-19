@@ -34,7 +34,7 @@ describe('AppComponent', () => {
         PedigreeSelectorComponent,
       ],
       imports: [
-        NgbModule.forRoot(),
+        NgbModule,
 
       ],
       providers: [

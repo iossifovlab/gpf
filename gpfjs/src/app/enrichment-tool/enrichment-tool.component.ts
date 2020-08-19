@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, AfterViewInit } from '@angular/core';
 import { ActivatedRoute, Params } from '@angular/router';
 
 import { Observable } from 'rxjs';
@@ -19,10 +19,11 @@ import { DatasetsService } from 'app/datasets/datasets.service';
     useExisting: EnrichmentToolComponent
   }]
 })
-export class EnrichmentToolComponent extends QueryStateCollector implements OnInit {
+export class EnrichmentToolComponent extends QueryStateCollector implements OnInit, AfterViewInit {
   enrichmentResults: EnrichmentResults;
   public selectedDatasetId: string;
   selectedDataset$: Observable<Dataset>;
+  private disableQueryButtons = false;
 
   constructor(
     private enrichmentQueryService: EnrichmentQueryService,
@@ -42,14 +43,27 @@ export class EnrichmentToolComponent extends QueryStateCollector implements OnIn
     this.selectedDataset$ = this.datasetsService.getSelectedDataset();
   }
 
+  ngAfterViewInit() {
+    this.detectNextStateChange(() => {
+        this.getCurrentState()
+        .take(1)
+        .subscribe(
+          state => {
+            this.disableQueryButtons = false;
+          },
+          error => {
+            this.disableQueryButtons = true;
+            console.warn(error);
+          });
+      });
+  }
+
   getCurrentState() {
     const state = super.getCurrentState();
 
     return state
       .map(state => {
-        const stateObject = Object.assign(
-          { datasetId: this.selectedDatasetId },
-          ...state);
+        const stateObject = Object.assign({ datasetId: this.selectedDatasetId }, state);
         return stateObject;
       });
   }
@@ -65,6 +79,7 @@ export class EnrichmentToolComponent extends QueryStateCollector implements OnIn
             this.loadingService.setLoadingStop();
           },
           error => {
+            console.error(error);
             this.loadingService.setLoadingStop();
           },
           () => {
@@ -72,6 +87,7 @@ export class EnrichmentToolComponent extends QueryStateCollector implements OnIn
           });
       },
       error => {
+        console.error(error);
         this.loadingService.setLoadingStop();
       }
     );

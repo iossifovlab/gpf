@@ -2,7 +2,7 @@ import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { PhenoBrowserComponent } from './pheno-browser.component';
 import { DatasetsService } from '../datasets/datasets.service';
 import { PhenoBrowserService } from './pheno-browser.service';
-import { PhenoInstruments, PhenoInstrument, PhenoMeasures } from './pheno-browser';
+import { PhenoInstruments, PhenoInstrument, PhenoMeasures, PhenoMeasure } from './pheno-browser';
 import { fakeJsonMeasureOneRegression } from './pheno-browser.spec';
 import { environment } from '../../environments/environment';
 import { FormsModule } from '@angular/forms';
@@ -21,7 +21,7 @@ import { GpfTableSubcontentComponent } from '../table/component/subcontent.compo
 import { GpfTableSubheaderComponent } from '../table/component/subheader.component';
 import { NumberWithExpPipe } from '../utils/number-with-exp.pipe';
 import { PValueIntensityPipe } from '../utils/p-value-intensity.pipe';
-import { ActivatedRoute, Router, Event } from '@angular/router';
+import { ActivatedRoute, Router, Event, UrlTree } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
 import { Location } from '@angular/common';
 import { Observable, of } from 'rxjs';
@@ -50,10 +50,14 @@ class MockPhenoBrowserService {
     return of(new PhenoInstruments('i1', ['i1', 'i2', 'i3']));
   }
 
-  getMeasures(datasetId: string, instrument: PhenoInstrument, search: string): Observable<PhenoMeasures> {
-    let measures = PhenoMeasures.fromJson({'base_image_url': 'base', 'measures': [fakeJsonMeasurei1], 'has_descriptions': true, 'regression_names': {'age': 'age'}});
-    measures = PhenoMeasures.addBasePath(measures);
+  getMeasures(datasetId: string, instrument: PhenoInstrument, search: string): Observable<PhenoMeasure> {
+    let measures = PhenoMeasure.fromJson(fakeJsonMeasurei1);
     return of(measures);
+  }
+
+  getMeasuresInfo(datasetId: string): Observable<PhenoMeasures> {
+    let measuresInfo = PhenoMeasures.fromJson({'base_image_url': 'base', 'has_descriptions': true, 'regression_names': {'age': 'age'}});
+    return of(measuresInfo);
   }
 
   getDownloadLink(instrument: PhenoInstrument, datasetId: string) {
@@ -98,8 +102,8 @@ function setQuery(fixture: ComponentFixture<PhenoBrowserComponent>, instrument: 
 describe('PhenoBrowserComponent', () => {
   let component: PhenoBrowserComponent;
   let fixture: ComponentFixture<PhenoBrowserComponent>;
-  let router: MockRouter;
-  let location: jasmine.SpyObj<Location>;
+  let router;
+  let location: Location;
   let activatedRoute = new MockActivatedRoute();
   const phenoBrowserServiceMock = new MockPhenoBrowserService();
   const datasetServiceMock = new MockDatasetsService();
@@ -133,8 +137,8 @@ describe('PhenoBrowserComponent', () => {
     })
     .compileComponents();
 
-    router = TestBed.get(Router);
-    location = TestBed.get(Location);
+    router = TestBed.inject(Router);
+    location = TestBed.inject(Location);
   
     fixture = TestBed.createComponent(PhenoBrowserComponent);
     component = fixture.componentInstance;

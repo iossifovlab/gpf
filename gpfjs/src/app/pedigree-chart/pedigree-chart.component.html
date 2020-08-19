@@ -5,7 +5,7 @@
 	[ngClass]="{'fullscreen': maximized}"
 	(click)="toggleMaximize()">
 	<svg style="margin: auto; height: 100%;"
-		[attr.width.px]="width"
+		[attr.width]="width"
 		[attr.viewBox]="getViewBox()" >
 		<svg:line *ngFor="let straightLine of straightLines"
 			[attr.x1]=straightLine.startX

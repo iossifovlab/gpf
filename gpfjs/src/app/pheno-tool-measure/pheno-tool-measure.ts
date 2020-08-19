@@ -7,5 +7,13 @@ export class PhenoToolMeasure {
     @IsNotEmpty()
     measure: ContinuousMeasure = null;
 
-    normalizeBy: string[] = new Array<string>();
+    normalizeBy: Regression[] = new Array<Regression>();
+}
+
+export class Regression {
+    constructor(
+      public display_name: string,
+      public instrument_name: string,
+      public measure_name: string,
+    ) { }
 }

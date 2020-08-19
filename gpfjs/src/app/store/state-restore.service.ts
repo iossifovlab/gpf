@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
 // tslint:disable-next-line:import-blacklist
-import { Observable, ReplaySubject } from 'rxjs';
-import { Scheduler } from 'rxjs-compat';
+import { Observable, ReplaySubject, asyncScheduler } from 'rxjs';
 
 import { take } from 'rxjs/operators';
 // import { Router } from '@angular/router';
@@ -30,7 +29,7 @@ export class StateRestoreService {
   }
 
   getState(key: string): Observable<any> {
-    return this.state.asObservable().subscribeOn(Scheduler.async);
+    return this.state.asObservable().subscribeOn(asyncScheduler);
   }
 
   onParamsUpdate(jsonEncodedState: string) {

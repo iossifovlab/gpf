@@ -1,4 +1,4 @@
-<div class="row">
+<div class="row panel" id="gene-weights-panel">
     <div class="col-sm-3">
           <select class="form-control" [(ngModel)]="selectedGeneWeights" required>
 		    <option *ngFor="let geneWeights of geneWeightsArray" [ngValue]="geneWeights">{{ geneWeights.desc }}</option>

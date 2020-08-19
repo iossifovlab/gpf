@@ -92,9 +92,12 @@ label {
 }
 
 .form-block .tab-content {
-	padding: 20px;
-	border-top: 1px solid rgba(0,0,0,.125);
-	font-size: 0.9em;
+  font-size: 0.9em;
+}
+
+.panel {
+  padding: 20px;
+  border-top: 1px solid rgba(0,0,0,.125);
 }
 
 .nav-pills .nav-link.active {
@@ -200,11 +203,19 @@ label {
   max-width: 500px;
 }
 
-.global-error-modal {
-  top: 73%;
-  left: 75%;
+gpf-global-error-display {
+  position: fixed;
+  bottom: 25px;
+  right: 25px;
+  width: 20%;
 }
 
 .modal-backdrop.fade {
   transition: none;
+}
+
+.nav-title-custom {
+  font-family: Roboto;
+  font-weight: 500;
+  width: 100px;
 }

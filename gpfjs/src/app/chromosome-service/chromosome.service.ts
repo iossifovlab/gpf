@@ -4,16 +4,20 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import { Chromosome } from './chromosome';
+import { ConfigService } from 'app/config/config.service';
 
 @Injectable()
 export class ChromosomeService {
-  private readonly chromosomeUrl = 'chromosomes/';
+  private readonly chromosomeUrl = 'chromosomes';
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private config: ConfigService
+  ) {}
 
   getChromosomes(): Observable<Chromosome[]> {
     return this.http
-      .get(this.chromosomeUrl)
+      .get(this.config.baseUrl + this.chromosomeUrl)
       .map((response: any) => Chromosome.fromJsonArray(response));
   }
 }

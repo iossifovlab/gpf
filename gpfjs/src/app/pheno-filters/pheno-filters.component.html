@@ -1,23 +1,25 @@
-<div class="row">
-  <div class="col-sm-3">
-    <div *ngFor="let categoricalPhenoFilter of categoricalPhenoFilters" class="categorical-filter">
-      <gpf-categorical-filter
-        [categoricalFilter]="categoricalPhenoFilter[0]"
-        [categoricalFilterState]="categoricalPhenoFilter[1]">
-      </gpf-categorical-filter>
+<div class="panel" id="pheno-filters-panel">
+  <div class="row">
+    <div *ngIf="categoricalPhenoFilters.length !== 0" class="col-sm-3">
+      <div *ngFor="let categoricalPhenoFilter of categoricalPhenoFilters" class="categorical-filter">
+        <gpf-categorical-filter
+          [categoricalFilter]="categoricalPhenoFilter[0]"
+          [categoricalFilterState]="categoricalPhenoFilter[1]">
+        </gpf-categorical-filter>
+      </div>
     </div>
-  </div>
-  <div class="col-sm-9">
-    <div>
-      <div *ngFor="let continuousPhenoFilter of continuousPhenoFilters" >
-        <gpf-multi-continuous-filter
-          [continuousFilter]="continuousPhenoFilter[0]"
-          [continuousFilterState]="continuousPhenoFilter[1]"
-          [datasetId]="dataset.id">
-        </gpf-multi-continuous-filter>
+    <div style="margin: auto;" class="col-sm-9">
+      <div>
+        <div *ngFor="let continuousPhenoFilter of continuousPhenoFilters" >
+          <gpf-multi-continuous-filter
+            [continuousFilter]="continuousPhenoFilter[0]"
+            [continuousFilterState]="continuousPhenoFilter[1]"
+            [datasetId]="dataset.id">
+          </gpf-multi-continuous-filter>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
-<gpf-errors-alert [errors]="errors"></gpf-errors-alert>
+  <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
+</div>

@@ -1,5 +1,7 @@
-<select2 #selector 
+<ng-multiselect-dropdown
+    [settings]="dropdownSettings"
+    [placeholder]="'Select groups'"
     [data]="data"
-    (valueChanged)="changeSelectedGroups($event.value)"
-    [options]="configurationOptions">
-</select2>
+    [(ngModel)]="_selectedGroups"
+>
+</ng-multiselect-dropdown>

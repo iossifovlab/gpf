@@ -1,26 +1,29 @@
 <div class="genes-block form-block">
   <div class="card">
-    <gpf-tabset #tabset>
-      <div class="gpf-tabset-left">
-        Genes
-      </div>
-      <ngb-tab *ngIf="showAllTab" id="all-genes" title="All">
-      </ngb-tab>
-      <ngb-tab id="gene-symbols" title="Gene Symbols">
-          <ng-template ngbTabContent>
-              <gpf-gene-symbols></gpf-gene-symbols>
+    <ul ngbNav #nav="ngbNav" class="navbar bg-light nav-pills" style="justify-content: flex-start">
+      <div class="nav-title-custom">Genes</div>
+      <li [ngbNavItem]="'allGenes'" *ngIf="showAllTab">
+          <a ngbNavLink>All</a>
+      </li>
+      <li [ngbNavItem]="'geneSymbols'" id="gene-symbols">
+          <a ngbNavLink>Gene Symbols</a>
+          <ng-template ngbNavContent>
+            <gpf-gene-symbols></gpf-gene-symbols>
           </ng-template>
-      </ngb-tab>
-      <ngb-tab id="gene-sets" title="Gene Sets">
-          <ng-template ngbTabContent>
+      </li>
+      <li [ngbNavItem]="'geneSets'" id="gene-sets">
+          <a ngbNavLink>Gene Sets</a>
+          <ng-template ngbNavContent>
               <gpf-gene-sets></gpf-gene-sets>
           </ng-template>
-      </ngb-tab>
-      <ngb-tab id="gene-weights" title="Gene Weights">
-          <ng-template ngbTabContent>
+      </li>
+      <li [ngbNavItem]="'geneWeights'" id="gene-weights">
+          <a ngbNavLink>Gene Weights</a>
+          <ng-template ngbNavContent>
               <gpf-gene-weights width="650" height="200"></gpf-gene-weights>
           </ng-template>
-      </ngb-tab>
-    </gpf-tabset>
+      </li>
+    </ul>
+    <div [ngbNavOutlet]="nav" class="card-block"></div>
   </div>
 </div>
