@@ -1,7 +1,7 @@
 <div style="padding: 30px;" >
     <gpf-gene-symbols></gpf-gene-symbols>
 
-    <div style="margin-top: 20px;">
+    <div style="padding: 20px">
         <input type="button" class="btn btn-md btn-primary" value="Gene Preview" (click)="submitGeneRequest()">
     </div>
 
@@ -11,5 +11,16 @@
         <div style="padding: 10px;"></div>
 
         <gpf-gene-view [gene]="selectedGene"></gpf-gene-view>
+    </div>
+
+    <div *ngIf="selectedDataset$ | async as dataset">
+        <span *ngIf="genotypePreviewVariantsArray && genotypePreviewInfo" id="variants-count-span">
+          {{ genotypePreviewVariantsArray.getVariantsCount(genotypePreviewInfo.maxVariantsCount) }}
+        </span>
+        <gpf-genotype-preview-table
+            [columns]="dataset?.genotypeBrowserConfig?.columns"
+            [genotypePreviewInfo]="genotypePreviewInfo"
+            [genotypePreviewVariantsArray]="genotypePreviewVariantsArray">
+        </gpf-genotype-preview-table>
     </div>
 </div>

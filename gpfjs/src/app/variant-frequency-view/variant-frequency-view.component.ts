@@ -35,6 +35,7 @@ export class VariantFrequencyViewComponent implements OnInit, OnChanges {
 
   ngOnChanges() {
     if (this.gene !== undefined) {
+      this.svgElement.selectAll('*').remove();
       this.setDefaultScale();
       this.x_axis = d3.axisBottom(this.x);
       this.svgElement.append('g').call(this.x_axis);
