@@ -9,7 +9,6 @@ import { DatasetsService } from 'app/datasets/datasets.service';
 import { ActivatedRoute, Params } from '@angular/router';
 import { QueryStateCollector } from 'app/query/query-state-provider';
 import { FullscreenLoadingService } from 'app/fullscreen-loading/fullscreen-loading.service';
-import { GenotypeBrowserComponent } from 'app/genotype-browser/genotype-browser.component';
 
 @Component({
   selector: 'gpf-gene-browser-component',
@@ -17,11 +16,11 @@ import { GenotypeBrowserComponent } from 'app/genotype-browser/genotype-browser.
   styleUrls: ['./gene-browser.component.css'],
   providers: [{
     provide: QueryStateCollector,
-    useExisting: GenotypeBrowserComponent
+    useExisting: GeneBrowserComponent
   }]
 })
 export class GeneBrowserComponent extends QueryStateCollector
-implements OnInit, OnChanges, AfterViewInit {
+implements OnInit {
   selectedGene: Gene;
   geneSymbol: string = 'CHD8';
   genotypePreviewVariantsArray: GenotypePreviewVariantsArray;
@@ -41,10 +40,6 @@ implements OnInit, OnChanges, AfterViewInit {
   ) {
     super();
   }
-  ngOnChanges(changes: SimpleChanges): void {
-  }
-  ngAfterViewInit(): void {
-  }
 
   ngOnInit() {
     this.selectedDataset$ = this.datasetsService.getSelectedDataset();
@@ -58,26 +53,22 @@ implements OnInit, OnChanges, AfterViewInit {
 
   getCurrentState() {
     const state = super.getCurrentState();
-
-
-    console.log(this.selectedDatasetId);
-    let a = state.map(current_state => {
-        const stateObject = Object.assign({ datasetId: this.selectedDatasetId }, current_state);
-        return stateObject;
-      });
-
-      console.log(a);
-      return a;
+    return state.map(current_state => {
+      const stateObject = Object.assign({ datasetId: this.selectedDatasetId }, current_state);
+      return stateObject;
+    });
   }
 
   submitGeneRequest() {
-    this.geneService.getGene(this.geneSymbol.toUpperCase().trim()).subscribe((gene) => {
-      this.selectedGene = gene;
-    });
-    console.log('a');
 
     this.getCurrentState()
       .subscribe(state => {
+        this.geneSymbol = state["geneSymbols"][0];
+
+        this.geneService.getGene(this.geneSymbol.toUpperCase().trim()).subscribe((gene) => {
+          this.selectedGene = gene;
+        });
+
         this.genotypePreviewInfo = null;
         this.loadingFinished = false;
         this.loadingService.setLoadingStart();
@@ -89,7 +80,6 @@ implements OnInit, OnChanges, AfterViewInit {
             this.genotypePreviewVariantsArray = null;
 
             this.genotypeBrowserState = state;
-            console.log(state)
 
             this.queryService.streamingFinishedSubject.subscribe(
               _ => { this.loadingFinished = true; }
@@ -99,7 +89,6 @@ implements OnInit, OnChanges, AfterViewInit {
               this.queryService.getGenotypePreviewVariantsByFilter(
                 state, this.genotypePreviewInfo, this.loadingService
               );
-              console.log(this.genotypePreviewVariantsArray);
 
           }, error => {
             console.warn(error);

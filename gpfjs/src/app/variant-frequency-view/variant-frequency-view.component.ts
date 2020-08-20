@@ -20,9 +20,7 @@ export class VariantFrequencyViewComponent implements OnInit, OnChanges {
   x;
   x_axis;
 
-  constructor(
-    private queryService: QueryService,
-  ) { }
+  constructor() { }
 
   ngOnInit() {
     this.svgElement = d3.select('#svg-container-asdf')
