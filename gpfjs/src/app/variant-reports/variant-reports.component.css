@@ -55,3 +55,7 @@ th.rotate {
   padding-bottom: 10px;
   vertical-align: bottom;
 }
+
+table {
+  table-layout: fixed;
+}
