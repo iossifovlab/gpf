@@ -77,13 +77,10 @@ class OffsetLayoutDrawer(object):
             )
             ax_pedigree.autoscale_view()
         for layout in self._layout:
-            bbox = layout.get_bbox()
-
             self._draw_lines(ax_pedigree, layout)
             self._draw_rounded_lines(ax_pedigree, layout)
 
             self._draw_members(ax_pedigree, layout)
-            self._x_offset += bbox.max_x + 21.0 + self._gap
 
         if ax:
             return ax_pedigree

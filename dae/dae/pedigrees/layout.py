@@ -137,6 +137,17 @@ class Layout(object):
             max_y = max(max_y, i.y)
         return Layout.BBox(min_x, min_y, max_x, max_y)
 
+    def translate(self, x_offset=0.0, y_offset=0.0):
+        for generation in self.positions:
+            for individual in generation:
+                individual.x += x_offset
+                individual.y += y_offset
+        for line in self.lines:
+            line.x1 += x_offset
+            line.x2 += x_offset
+            line.y1 += y_offset
+            line.y2 += y_offset
+
     @staticmethod
     def _handle_broken_family_connections(family, x_offset=15):
         individuals = []
@@ -202,6 +213,12 @@ class Layout(object):
             fc = FamilyConnections.from_family(fam)
             # assert fc.is_connected(), fam.family_id
             layouts.append(Layout._build_family_layout(fam, fc))
+
+        x_offset = 0.0
+        for layout in layouts:
+            layout.translate(x_offset, 0.0)
+            bbox = layout.get_bbox()
+            x_offset = bbox.max_x + IndividualWithCoordinates.SIZE + 4.0
         return layouts
 
     @staticmethod
