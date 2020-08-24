@@ -31,8 +31,8 @@ implements OnInit {
   private genotypeBrowserState: Object;
 
   constructor(
+    public queryService: QueryService,
     private geneService: GeneService,
-    private queryService: QueryService,
     private datasetsService: DatasetsService,
     private route: ActivatedRoute,
     private loadingService: FullscreenLoadingService
