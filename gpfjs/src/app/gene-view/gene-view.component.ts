@@ -9,10 +9,9 @@ import { Gene } from './gene';
 })
 export class GeneViewComponent implements OnInit, OnChanges {
   @Input() gene: Gene;
-
   svgElement;
   svgWidth = 1000;
-  svgHeight = 150;
+  svgHeight;
   x;
   brush;
   doubleClickTimer;
@@ -21,11 +20,6 @@ export class GeneViewComponent implements OnInit, OnChanges {
   ) {}
 
   ngOnInit() {
-    this.svgElement = d3.select('#svg-container')
-    .append('svg')
-    .attr('width', this.svgWidth)
-    .attr('height', this.svgHeight);
-
     this.x = d3.scaleLinear()
     .domain([0, 0])
     .range([0, this.svgWidth]);
@@ -39,10 +33,20 @@ export class GeneViewComponent implements OnInit, OnChanges {
   }
 
   drawGene() {
-    this.svgElement.selectAll('*').remove();
+    this.svgHeight = this.gene.transcripts.length * 50;
 
-    this.drawTranscript(0);
-    this.drawTranscript(1);
+    d3.select('#svg-container').selectAll('svg').remove();
+
+    this.svgElement = d3.select('#svg-container')
+    .append('svg')
+    .attr('width', this.svgWidth)
+    .attr('height', this.svgHeight);
+
+    let transcriptYPosition = 20;
+    for (let i = 0; i < this.gene.transcripts.length; i++) {
+      this.drawTranscript(i, transcriptYPosition);
+      transcriptYPosition += 50;
+    }
 
     this.brush = d3.brushX().extent([[0, 0], [this.svgWidth, this.svgHeight]])
     .on('end', this.brushEndEvent);
@@ -72,21 +76,14 @@ export class GeneViewComponent implements OnInit, OnChanges {
     this.doubleClickTimer = null;
   }
 
-  drawTranscript(transcriptId: number) {
-    let y = 0;
+  drawTranscript(transcriptId: number, yPos: number) {
     let lastEnd = null;
-
-    if (transcriptId === 0) {
-      y = 20;
-    } else {
-      y = 120;
-    }
 
     for (const exon of this.gene.transcripts[transcriptId].exons) {
       if (lastEnd) {
-        this.drawIntron(lastEnd, exon.start, y);
+        this.drawIntron(lastEnd, exon.start, yPos);
       }
-      this.drawExon(exon.start, exon.stop, y);
+      this.drawExon(exon.start, exon.stop, yPos);
 
       lastEnd = exon.stop;
     }
@@ -112,11 +109,23 @@ export class GeneViewComponent implements OnInit, OnChanges {
   }
 
   setDefaultScale() {
-    const a = this.gene.transcripts[0].exons;
-    const b = this.gene.transcripts[1].exons;
+    let domainBeginning = this.gene.transcripts[0].exons[0].start;
+    let domainEnding = this.gene.transcripts[0].exons[this.gene.transcripts[0].exons.length - 1].stop;
 
-    const domainBeginning = Math.min(a[0].start, b[0].start);
-    const domainEnding = Math.max(a[a.length - 1].stop, b[b.length - 1].stop);
+    let transcriptStart;
+    let transcriptEnd;
+
+    for (let i = 1; i < this.gene.transcripts.length; i++) {
+      transcriptStart = this.gene.transcripts[i].exons[0].start;
+      if (transcriptStart < domainBeginning) {
+        domainBeginning = transcriptStart;
+      }
+
+      transcriptEnd = this.gene.transcripts[i].exons[this.gene.transcripts[i].exons.length - 1].stop;
+      if (transcriptEnd > domainEnding) {
+        domainEnding = transcriptEnd;
+      }
+    }
 
     this.x.domain([domainBeginning, domainEnding]);
   }
