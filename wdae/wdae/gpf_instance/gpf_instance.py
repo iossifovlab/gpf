@@ -272,8 +272,10 @@ def load_gpf_instance():
 
 def reload_datasets(gpf_instance):
     from datasets_api.models import Dataset
-    for study_id in gpf_instance.get_genotype_data_ids():
-        Dataset.recreate_dataset_perm(study_id, [])
+    for genotype_data in gpf_instance.get_all_genotype_data():
+        Dataset.recreate_dataset_perm(
+            genotype_data.id, genotype_data.get_studies_ids()
+        )
 
 
 def _recreated_dataset_perm():
