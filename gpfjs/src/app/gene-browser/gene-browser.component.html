@@ -5,7 +5,14 @@
         <input type="button" class="btn btn-md btn-primary" value="Gene Preview" (click)="submitGeneRequest()">
     </div>
 
-    <div style="padding: 30px">
+    <gpf-gene-visualization-unified
+        [gene]="selectedGene"
+        [variantsArray]="genotypePreviewVariantsArray"
+        [streamingFinished$]="queryService.streamingFinishedSubject">
+    >
+    </gpf-gene-visualization-unified>
+
+    <!-- <div style="padding: 30px">
         <gpf-variant-frequency-view
             [gene]="selectedGene"
             [variantsArray]="genotypePreviewVariantsArray"
@@ -15,7 +22,7 @@
         <div style="padding: 10px;"></div>
 
         <gpf-gene-view [gene]="selectedGene"></gpf-gene-view>
-    </div>
+    </div> -->
 
     <div *ngIf="selectedDataset$ | async as dataset">
         <span *ngIf="genotypePreviewVariantsArray && genotypePreviewInfo" id="variants-count-span">
