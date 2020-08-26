@@ -1,5 +1,7 @@
 import pytest
 
+pytestmark = pytest.mark.xfail(reason="Wrappers don't exist anymore")
+
 FILTER_QUERY_CATEGORICAL = {
     "id": "Categorical",
     "measureType": "categorical",

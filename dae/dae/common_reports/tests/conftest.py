@@ -36,22 +36,22 @@ def common_report_facade(local_gpf_instance):
 
 @pytest.fixture(scope="session")
 def study1(vdb_fixture):
-    return vdb_fixture.get_study_wdae_wrapper("Study1")
+    return vdb_fixture.get("Study1")
 
 
 @pytest.fixture(scope="session")
 def study2(vdb_fixture):
-    return vdb_fixture.get_study_wdae_wrapper("Study2")
+    return vdb_fixture.get("Study2")
 
 
 @pytest.fixture(scope="session")
 def study4(vdb_fixture):
-    return vdb_fixture.get_study_wdae_wrapper("Study4")
+    return vdb_fixture.get("Study4")
 
 
 @pytest.fixture(scope="session")
 def genotype_data_group1(vdb_fixture):
-    return vdb_fixture.get_genotype_data_group_wdae_wrapper("Dataset1")
+    return vdb_fixture.get("Dataset1")
 
 
 @pytest.fixture(scope="session")
