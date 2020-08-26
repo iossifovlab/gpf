@@ -55,11 +55,16 @@ class QueryPreviewVariantsView(QueryBaseView):
         if dataset_id is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
+        max_variants = data.pop("maxVariants", None)
+
+        if max_variants is None:
+            max_variants = self.MAX_SHOWN_VARIANTS
+
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
 
         # LOGGER.info('dataset ' + str(dataset))
         response = dataset.get_variants_wdae_preview(
-            data, max_variants_count=self.MAX_SHOWN_VARIANTS
+            data, max_variants_count=max_variants
         )
 
         # pprint.pprint(response)
