@@ -1088,10 +1088,11 @@ class RemoteStudyWrapper(StudyWrapperBase):
 
     def get_wdae_preview_info(self, query, max_variants_count=10000):
         query["datasetId"] = self._remote_study_id
-        return self.rest_client.get_browser_preview_info(query).json()
+        return self.rest_client.get_browser_preview_info(query)
 
     def get_variants_wdae_preview(self, query, max_variants_count=10000):
         query["datasetId"] = self._remote_study_id
+        query["maxVariants"] = max_variants_count
         response = self.rest_client.get_variants_preview(query)
         for line in response.iter_lines():
             if line:

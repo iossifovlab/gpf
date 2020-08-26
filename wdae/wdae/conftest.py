@@ -6,6 +6,8 @@ from django.contrib.auth.models import Group
 
 from users_api.models import WdaeUser
 
+from remote.rest_api_client import RESTClient
+
 from dae.gpf_instance.gpf_instance import cached
 from gpf_instance.gpf_instance import WGPFInstance,\
     reload_datasets, load_gpf_instance
@@ -133,14 +135,33 @@ def wdae_gpf_instance(
 @pytest.fixture(scope="function")
 def remote_settings(settings):
     host = os.environ.get("TEST_REMOTE_HOST", "localhost")
-    settings.REMOTES = [{
+    remote = {
         "id": "TEST_REMOTE",
         "host": host,
         "base_url": "api/v3",
         "port": "21010",
         "user": "admin@iossifovlab.com",
         "password": "secret",
-        }]
+    }
+    settings.REMOTES = [remote]
 
     # FIXME: Find a better workaround
     reload_datasets(load_gpf_instance())
+
+    return remote
+
+@pytest.fixture(scope="function")
+def rest_client(admin_client, remote_settings):
+    client = RESTClient(
+        remote_settings["id"],
+        remote_settings["host"],
+        remote_settings["user"],
+        remote_settings["password"],
+        base_url=remote_settings["base_url"],
+        port=remote_settings["port"]
+    )
+
+    assert client.session is not None, \
+        "Failed to create session for REST client"
+
+    return client

@@ -231,7 +231,7 @@ class WGPFInstance(GPFInstance):
     def _create_local_enrichment_builder(
             self, dataset_id, background_name, counting_name,
             gene_syms):
-        dataset = GPFInstance.get_wdae_wrapper(self, dataset_id)
+        dataset = self.get_genotype_data(dataset_id)
         enrichment_config = GPFInstance.get_study_enrichment_config(
             self,
             dataset_id

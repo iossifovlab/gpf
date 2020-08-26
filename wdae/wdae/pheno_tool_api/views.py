@@ -1,4 +1,5 @@
 import json
+import math
 import logging
 
 from rest_framework.response import Response
@@ -184,15 +185,16 @@ class PhenoToolPersons(QueryBaseView):
             result[key] = {
                 "person_id": person.person_id,
                 "family_id": person.family_id,
-                "role": person.role,
-                "sex": person.sex,
-                "status": person.status,
+                "role": str(person.role),
+                "sex": str(person.sex),
+                "status": str(person.status),
             }
 
         return Response(result)
 
 
 class PhenoToolPersonsValues(QueryBaseView):
+
     def post(self, request):
         data = request.data
         dataset_id = data["datasetId"]
@@ -207,7 +209,14 @@ class PhenoToolPersonsValues(QueryBaseView):
             data["roles"],
         )
 
-        return Response(result.to_dict("records"))
+        result = result.to_dict("records")
+
+        for v in result:
+            v["status"] = str(v["status"])
+            v["role"] = str(v["role"])
+            v["sex"] = str(v["sex"])
+
+        return Response(result)
 
 
 class PhenoToolMeasure(QueryBaseView):
@@ -264,6 +273,7 @@ class PhenoToolMeasures(QueryBaseView):
 class PhenoToolMeasureValues(QueryBaseView):
     def post(self, request):
         data = request.data
+        print(data)
         dataset_id = data["datasetId"]
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
         if not dataset:
@@ -306,12 +316,14 @@ class PhenoToolInstruments(QueryBaseView):
             "measureId": measure.measure_id,
             "instrumentName": measure.instrument_name,
             "measureName": measure.measure_name,
-            "measureType": measure.measure_type,
+            "measureType": str(measure.measure_type),
             "description": measure.description,
             "defaultFilter": measure.default_filter,
             "valuesDomain": measure.values_domain,
-            "minValue": measure.min_value,
-            "maxValue": measure.max_value
+            "minValue":
+                None if math.isnan(measure.min_value) else measure.min_value,
+            "maxValue":
+                None if math.isnan(measure.max_value) else measure.max_value
         }
 
     def get(self, request):
@@ -327,10 +339,12 @@ class PhenoToolInstruments(QueryBaseView):
 
         result = dict()
 
-        for i in instruments:
+        for i in instruments.values():
             result[i.instrument_name] = {
                 "name": i.instrument_name,
-                "measures": [self.measure_to_json(m) for m in i.measures]
+                "measures": [
+                    self.measure_to_json(m) for m in i.measures.values()
+                ]
             }
 
         return Response(result)

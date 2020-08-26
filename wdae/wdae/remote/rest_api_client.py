@@ -100,7 +100,7 @@ class RESTClient:
 
     def get_browser_preview_info(self, data):
         response = self._post("genotype_browser/preview", data=data)
-        return response
+        return response.json()
 
     def get_common_report(self, common_report_id):
         response = self._get(f"common_reports/studies/{common_report_id}")
@@ -154,9 +154,11 @@ class RESTClient:
         )
         return response.json()
 
-    def post_pheno_persons(self, dataset_id, roles, person_ids, family_ids):
+    def post_pheno_persons(
+            self, dataset_id, measure_ids, roles, person_ids, family_ids):
         data = {
             "datasetId": dataset_id,
+            "measureIds": measure_ids,
             "roles": roles,
             "personIds": person_ids,
             "familyIds": family_ids,
@@ -168,9 +170,10 @@ class RESTClient:
         return response.json()
 
     def post_pheno_persons_values(
-            self, dataset_id, roles, person_ids, family_ids):
+            self, dataset_id, measure_ids, roles, person_ids, family_ids):
         data = {
             "datasetId": dataset_id,
+            "measureIds": measure_ids,
             "roles": roles,
             "personIds": person_ids,
             "familyIds": family_ids,

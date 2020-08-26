@@ -1,0 +1,177 @@
+from requests import Response
+
+
+def test_get_datasets(rest_client):
+    datasets = rest_client.get_datasets()
+    assert datasets is not None
+    assert isinstance(datasets, dict)
+
+
+def test_get_dataset_config(rest_client):
+    dataset_config = rest_client.get_dataset_config("iossifov_2014")
+    assert dataset_config is not None
+    assert isinstance(dataset_config, dict)
+
+
+def test_get_variants_preview(rest_client):
+    data = {"datasetId": "iossifov_2014"}
+    variants_response = rest_client.get_variants_preview(data)
+    assert variants_response is not None
+    assert isinstance(variants_response, Response)
+
+
+def test_get_browser_preview_info(rest_client):
+    data = {"datasetId": "iossifov_2014"}
+    preview = rest_client.get_browser_preview_info(data)
+    assert preview is not None
+    assert isinstance(preview, dict)
+
+
+def test_get_common_report(rest_client):
+    common_report = rest_client.get_common_report("iossifov_2014")
+    assert common_report is not None
+    assert isinstance(common_report, dict)
+
+
+def test_get_common_report_families_data(rest_client):
+    families_response = \
+        rest_client.get_common_report_families_data("iossifov_2014")
+
+    assert families_response is not None
+    assert isinstance(families_response, Response)
+
+
+def test_get_pheno_browser_config(rest_client):
+    config = rest_client.get_pheno_browser_config("comp_pheno")
+
+    assert config is not None
+    assert isinstance(config, dict)
+
+
+def test_get_browser_measures_info(rest_client):
+    measures_info = rest_client.get_browser_measures_info("iossifov_2014")
+
+    assert measures_info is not None
+    assert isinstance(measures_info, dict)
+
+
+def test_get_browser_measures(rest_client):
+    measures_response = rest_client.get_browser_measures(
+        "iossifov_2014", "i1", None)
+
+    assert measures_response is not None
+    assert isinstance(measures_response, Response)
+
+
+def test_get_instruments(rest_client):
+    instruments = rest_client.get_instruments("iossifov_2014")
+
+    assert instruments is not None
+    assert isinstance(instruments, list)
+
+
+def test_post_enrichment_test(rest_client):
+    data = {
+        "datasetId": "iossifov_2014",
+        "geneSymbols": ["POGZ"]
+    }
+    response = rest_client.post_enrichment_test(data)
+
+    assert response is not None
+    assert isinstance(response, dict)
+
+
+def test_post_pheno_persons(rest_client):
+    pheno_persons = rest_client.post_pheno_persons(
+        "iossifov_2014",
+        ["i1.m1"],
+        None,
+        None,
+        None
+    )
+
+    assert pheno_persons is not None
+    assert isinstance(pheno_persons, dict)
+
+
+def test_post_pheno_persons_values(rest_client):
+    pheno_persons_values = rest_client.post_pheno_persons_values(
+        "iossifov_2014",
+        ["i1.m1"],
+        None,
+        None,
+        None
+    )
+
+    assert pheno_persons_values is not None
+    assert isinstance(pheno_persons_values, list)
+
+
+def test_get_instruments_details(rest_client):
+    instrument_details = rest_client.get_instruments_details("iossifov_2014")
+
+    assert instrument_details is not None
+    assert isinstance(instrument_details, dict)
+
+
+def test_get_measure(rest_client):
+    measure = rest_client.get_measure("iossifov_2014", "i1.m1")
+
+    assert measure is not None
+    assert isinstance(measure, dict)
+
+
+def test_get_measures(rest_client):
+    measures = rest_client.get_measures("iossifov_2014", "i1", "continuous")
+
+    assert measures is not None
+    assert isinstance(measures, list)
+
+
+def test_post_measure_values(rest_client):
+    measure_values = rest_client.post_measure_values(
+        "iossifov_2014", "i1.m1", None, None, None, None)
+
+    assert measure_values is not None
+    assert isinstance(measure_values, dict)
+
+
+def test_post_pheno_values(rest_client):
+    pheno_values = rest_client.post_pheno_values(
+        "iossifov_2014", ["i1.m1"], None, None, None, None)
+
+    assert pheno_values is not None
+    assert isinstance(pheno_values, list)
+
+
+def test_post_instrument_values(rest_client):
+    instrument_values = rest_client.post_instrument_values(
+        "iossifov_2014", "i1", None, None, None)
+
+    assert instrument_values is not None
+    assert isinstance(instrument_values, dict)
+
+
+def test_post_pheno_tool(rest_client):
+    data = {
+        "datasetId": "iossifov_2014",
+        "measureId": "i1.m1",
+        "normalizeBy": [{
+            "display_name": "Non Verbal IQ",
+            "instrument_name": "i1",
+            "measure_name": "iq",
+        }],
+        "presentInParent": {
+            "presentInParent": ["neither"],
+            "rarity": {
+                "ultraRare": True,
+                "minFreq": None,
+                "maxFreq": None,
+            }
+        },
+        "effectTypes": ["LGDs", "Missense", "Synonymous"]
+    }
+    test_results = rest_client.post_pheno_tool(data)
+
+    assert test_results is not None
+    assert isinstance(test_results, dict)
