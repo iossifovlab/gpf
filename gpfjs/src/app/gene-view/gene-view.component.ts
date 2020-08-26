@@ -78,10 +78,11 @@ export class GeneViewComponent implements OnInit, OnChanges {
 
   drawTranscript(transcriptId: number, yPos: number) {
     let lastEnd = null;
+    const strand = this.gene.transcripts[transcriptId].strand;
 
     for (const exon of this.gene.transcripts[transcriptId].exons) {
       if (lastEnd) {
-        this.drawIntron(lastEnd, exon.start, yPos);
+        this.drawIntron(lastEnd, exon.start, yPos, strand);
       }
       this.drawExon(exon.start, exon.stop, yPos);
 
@@ -93,8 +94,8 @@ export class GeneViewComponent implements OnInit, OnChanges {
     this.drawRect(xStart, xEnd, y, 10, 'Exon ?/?');
   }
 
-  drawIntron(xStart: number, xEnd: number, y: number) {
-    this.drawRect(xStart, xEnd, y + 4, 2, 'Intron ?/?');
+  drawIntron(xStart: number, xEnd: number, y: number, strand: string) {
+    this.drawLine(xStart, xEnd, y + 4, 2, 'Intron ?/?', strand);
   }
 
   drawRect(xStart: number, xEnd: number, y: number, height: number, svgTitle: string) {
@@ -106,6 +107,43 @@ export class GeneViewComponent implements OnInit, OnChanges {
     .attr('x', this.x(xStart))
     .attr('y', y)
     .append('svg:title').text(svgTitle);
+  }
+
+  drawLine(xStart: number, xEnd: number, y: number, height: number, svgTitle: string, strand: string) {
+    let arrowX1Index;
+    if (strand === '-') {
+      arrowX1Index = 12.5;
+    } else {
+      arrowX1Index = 17.5;
+    }
+
+    let xStartAligned = this.x(xStart);
+    let xEndAligned = this.x(xEnd);
+
+    this.svgElement.append('line')
+    .attr('x1', xStartAligned)
+    .attr('y1', y + 1)
+    .attr('x2', xEndAligned)
+    .attr('y2', y + 1)
+    .attr('stroke', 'black');
+
+    for (xStartAligned; xStartAligned < xEndAligned; xStartAligned += 50) {
+      this.svgElement.append('line')
+      .attr('x1', xStartAligned + arrowX1Index)
+      .attr('y1', y + 3)
+      .attr('x2', xStartAligned + 15)
+      .attr('y2', y + 1)
+      .attr('stroke', 'black')
+      .attr('opacity', 0.7);
+
+      this.svgElement.append('line')
+      .attr('x1', xStartAligned + arrowX1Index)
+      .attr('y1', y - 1)
+      .attr('x2', xStartAligned + 15)
+      .attr('y2', y + 1)
+      .attr('opacity', 0.7)
+      .attr('stroke', 'black');
+    }
   }
 
   setDefaultScale() {

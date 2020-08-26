@@ -25,7 +25,7 @@ export class Exon {
 export class Transcript {
   constructor(
     private transcript_id: string,
-    private strand: string,
+    private _strand: string,
     private chrom: string,
     private utr3: Exon,
     private utr5: Exon,
@@ -45,6 +45,10 @@ export class Transcript {
 
   get exons() {
     return this._exons;
+  }
+
+  get strand() {
+    return this._strand;
   }
 }
 
