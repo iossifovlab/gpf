@@ -65,6 +65,8 @@ class WGPFInstance(GPFInstance):
 
     def make_wdae_wrapper(self, dataset_id):
         genotype_data = self.get_dataset(dataset_id)
+        if genotype_data is None:
+            return None
         study_wrapper = StudyWrapper(
             genotype_data,
             self._pheno_db,
@@ -75,7 +77,8 @@ class WGPFInstance(GPFInstance):
     def get_wdae_wrapper(self, dataset_id):
         if dataset_id not in self._study_wrappers.keys():
             wrapper = self.make_wdae_wrapper(dataset_id)
-            self._study_wrappers[dataset_id] = wrapper
+            if wrapper is not None:
+                self._study_wrappers[dataset_id] = wrapper
         else:
             wrapper = self._study_wrappers.get(dataset_id, None)
         return wrapper
