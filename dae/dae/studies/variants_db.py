@@ -46,10 +46,8 @@ class VariantsDb(object):
         self._filter_disabled()
 
         self._genotype_data_study_cache = {}
-        self._genotype_data_study_wrapper_cache = {}
 
         self._genotype_data_group_cache = {}
-        self._genotype_data_group_wrapper_cache = {}
 
         self._configuration_check()
 
@@ -90,23 +88,10 @@ class VariantsDb(object):
 
         return self._genotype_data_study_cache[study_id]
 
-    def get_study_wdae_wrapper(self, study_id):
-        self._load_study_cache({study_id})
-
-        if study_id not in self._genotype_data_study_wrapper_cache:
-            return None
-
-        return self._genotype_data_study_wrapper_cache[study_id]
-
     def get_all_studies(self):
         self._load_study_cache()
 
         return list(self._genotype_data_study_cache.values())
-
-    def get_all_studies_wrapper(self):
-        self._load_study_cache()
-
-        return list(self._genotype_data_study_wrapper_cache.values())
 
     def get_all_study_configs(self):
         self._load_study_cache()
@@ -130,26 +115,10 @@ class VariantsDb(object):
 
         return self._genotype_data_group_cache[genotype_data_group_id]
 
-    def get_genotype_data_group_wdae_wrapper(self, genotype_data_group_id):
-        self._load_genotype_data_group_cache({genotype_data_group_id})
-
-        if (
-            genotype_data_group_id
-            not in self._genotype_data_group_wrapper_cache
-        ):
-            return None
-
-        return self._genotype_data_group_wrapper_cache[genotype_data_group_id]
-
     def get_all_genotype_data_groups(self):
         self._load_genotype_data_group_cache()
 
         return list(self._genotype_data_group_cache.values())
-
-    def get_all_genotype_data_groups_wrapper(self):
-        self._load_genotype_data_group_cache()
-
-        return list(self._genotype_data_group_wrapper_cache.values())
 
     def get_all_genotype_data_group_configs(self):
         self._load_genotype_data_group_cache()

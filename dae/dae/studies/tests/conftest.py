@@ -1,7 +1,6 @@
 import pytest
 import os
 
-from dae.studies.study_wrapper import StudyWrapper
 from dae_conftests.dae_conftests import get_global_dae_fixtures_dir
 
 
@@ -125,43 +124,6 @@ def quads_in_parent(variants_db_fixture, genotype_data_study_configs):
 
 
 @pytest.fixture(scope="session")
-def inheritance_trio_wrapper(inheritance_trio, pheno_db, gene_weights_db):
-    return StudyWrapper(inheritance_trio, pheno_db, gene_weights_db)
-
-
-@pytest.fixture(scope="session")
-def quads_f1_wrapper(quads_f1, pheno_db, gene_weights_db):
-    return StudyWrapper(quads_f1, pheno_db, gene_weights_db)
-
-
-@pytest.fixture(scope="session")
-def quads_f2_wrapper(quads_f2, pheno_db, gene_weights_db):
-    return StudyWrapper(quads_f2, pheno_db, gene_weights_db)
-
-
-@pytest.fixture(scope="session")
-def quads_variant_types_wrapper(
-    quads_variant_types, pheno_db, gene_weights_db
-):
-    return StudyWrapper(quads_variant_types, pheno_db, gene_weights_db)
-
-
-@pytest.fixture(scope="session")
-def quads_two_families_wrapper(quads_two_families, pheno_db, gene_weights_db):
-    return StudyWrapper(quads_two_families, pheno_db, gene_weights_db)
-
-
-@pytest.fixture(scope="session")
-def quads_in_child_wrapper(quads_in_child, pheno_db, gene_weights_db):
-    return StudyWrapper(quads_in_child, pheno_db, gene_weights_db)
-
-
-@pytest.fixture(scope="session")
-def quads_in_parent_wrapper(quads_in_parent, pheno_db, gene_weights_db):
-    return StudyWrapper(quads_in_parent, pheno_db, gene_weights_db)
-
-
-@pytest.fixture(scope="session")
 def genotype_data_group_configs(variants_db_fixture):
     return variants_db_fixture.genotype_data_group_configs
 
@@ -201,35 +163,6 @@ def inheritance_trio_genotype_data_group(
 
 
 @pytest.fixture(scope="session")
-def inheritance_trio_genotype_data_group_wrapper(
-    inheritance_trio_genotype_data_group, pheno_db, gene_weights_db
-):
-    return StudyWrapper(
-        inheritance_trio_genotype_data_group, pheno_db, gene_weights_db
-    )
-
-
-@pytest.fixture(scope="session")
-def quads_two_families_genotype_data_group(
-    variants_db_fixture, genotype_data_group_configs
-):
-    return load_genotype_data_group(
-        variants_db_fixture,
-        genotype_data_group_configs,
-        "quads_two_families_ds",
-    )
-
-
-@pytest.fixture(scope="session")
-def quads_two_families_genotype_data_group_wrapper(
-    quads_two_families_genotype_data_group, pheno_db, gene_weights_db
-):
-    return StudyWrapper(
-        quads_two_families_genotype_data_group, pheno_db, gene_weights_db
-    )
-
-
-@pytest.fixture(scope="session")
 def quads_f1_genotype_data_group(
     variants_db_fixture, genotype_data_group_configs
 ):
@@ -239,29 +172,11 @@ def quads_f1_genotype_data_group(
 
 
 @pytest.fixture(scope="session")
-def quads_f1_genotype_data_group_wrapper(
-    quads_f1_genotype_data_group, pheno_db, gene_weights_db
-):
-    return StudyWrapper(
-        quads_f1_genotype_data_group, pheno_db, gene_weights_db
-    )
-
-
-@pytest.fixture(scope="session")
 def quads_f2_genotype_data_group(
     variants_db_fixture, genotype_data_group_configs
 ):
     return load_genotype_data_group(
         variants_db_fixture, genotype_data_group_configs, "quads_f2_ds"
-    )
-
-
-@pytest.fixture(scope="session")
-def quads_f2_genotype_data_group_wrapper(
-    quads_f2_genotype_data_group, pheno_db, gene_weights_db
-):
-    return StudyWrapper(
-        quads_f2_genotype_data_group, pheno_db, gene_weights_db
     )
 
 
@@ -277,29 +192,11 @@ def quads_variant_types_genotype_data_group(
 
 
 @pytest.fixture(scope="session")
-def quads_variant_types_genotype_data_group_wrapper(
-    quads_variant_types_genotype_data_group, pheno_db, gene_weights_db
-):
-    return StudyWrapper(
-        quads_variant_types_genotype_data_group, pheno_db, gene_weights_db
-    )
-
-
-@pytest.fixture(scope="session")
 def quads_in_child_genotype_data_group(
     variants_db_fixture, genotype_data_group_configs
 ):
     return load_genotype_data_group(
         variants_db_fixture, genotype_data_group_configs, "quads_in_child_ds"
-    )
-
-
-@pytest.fixture(scope="session")
-def quads_in_child_genotype_data_group_wrapper(
-    quads_in_child_genotype_data_group, pheno_db, gene_weights_db
-):
-    return StudyWrapper(
-        quads_in_child_genotype_data_group, pheno_db, gene_weights_db
     )
 
 
@@ -313,36 +210,9 @@ def quads_in_parent_genotype_data_group(
 
 
 @pytest.fixture(scope="session")
-def quads_in_parent_genotype_data_group_wrapper(
-    quads_in_parent_genotype_data_group, pheno_db, gene_weights_db
-):
-    return StudyWrapper(
-        quads_in_parent_genotype_data_group, pheno_db, gene_weights_db
-    )
-
-
-@pytest.fixture(scope="session")
 def composite_dataset(variants_db_fixture, genotype_data_group_configs):
     return load_genotype_data_group(
         variants_db_fixture,
         genotype_data_group_configs,
         "composite_dataset_ds",
     )
-
-
-@pytest.fixture(scope="session")
-def composite_dataset_wrapper(composite_dataset, pheno_db, gene_weights_db):
-    return StudyWrapper(composite_dataset, pheno_db, gene_weights_db)
-
-
-@pytest.fixture
-def fake_study_wrapper(
-    variants_db_fixture,
-    genotype_data_study_configs,
-    pheno_db,
-    gene_weights_db
-):
-    fake_study = load_study(
-        variants_db_fixture, genotype_data_study_configs, "fake_study"
-    )
-    return StudyWrapper(fake_study, pheno_db, gene_weights_db)
