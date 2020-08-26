@@ -52,8 +52,7 @@ def test_query_limit_variants(iossifov_2014_wrappers, wrapper_type):
     variants = list(study_wrapper.get_variants_wdae_preview(
         {}, max_variants_count=1)
     )
-    # TODO: investigate why
-    assert len(variants) == 2
+    assert len(variants) == 1
 
 
 @pytest.mark.parametrize(
