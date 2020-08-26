@@ -346,7 +346,7 @@ class StudyWrapper(StudyWrapperBase):
         variants_data = self.get_variant_web_rows(
             query,
             self.preview_sources,
-            max_variants_count=(max_variants_count + 1),
+            max_variants_count=max_variants_count,
         )
 
         return variants_data
