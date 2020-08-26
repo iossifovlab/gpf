@@ -51,11 +51,11 @@ export class VariantFrequencyViewComponent implements OnInit, OnChanges {
     .range([0, this.svgWidth])
 
     this.y = d3.scaleLog()
-    .domain([0.1, 1])
+    .domain([0.01, 100])
     .range([this.a, 0]);
 
     this.y_subdomain = d3.scaleLinear()
-    .domain([0, 0.1])
+    .domain([0, 0.01])
     .range([this.b, this.a]);
 
     this.y_denovo = d3.scalePoint()
@@ -94,13 +94,15 @@ export class VariantFrequencyViewComponent implements OnInit, OnChanges {
 	hydrateVariantsData(variantsArray) {
 		this.variantsDataRepr = [];
 		for(let v of variantsArray.genotypePreviews) {
-      this.variantsDataRepr.push(
-        {
-          position: this.extractPosition(v.get("variant.location")),
-          frequency: v.get("freq.genome gnomad"),
-          color: this.getVariantColor(v.get("effect.worst effect"))
-        }
-      )
+      if(v.get("freq.genome gnomad") !== "-" || v.get("variant.is denovo")) {
+        this.variantsDataRepr.push(
+          {
+            position: this.extractPosition(v.get("variant.location")),
+            frequency: v.get("freq.genome gnomad") === "-" ? "denovo" : v.get("freq.genome gnomad"),
+            color: this.getVariantColor(v.get("effect.worst effect")),
+          }
+        )
+      }
 		}
 	}
 
@@ -112,7 +114,7 @@ export class VariantFrequencyViewComponent implements OnInit, OnChanges {
       this.setDefaultScale();
       this.x_axis = d3.axisBottom(this.x);
       this.y_axis = d3.axisLeft(this.y);
-      this.y_axis_subdomain = d3.axisLeft(this.y_subdomain).tickValues([0, 0.05]);
+      this.y_axis_subdomain = d3.axisLeft(this.y_subdomain).tickValues([0, 0.005]);
       this.y_axis_denovo = d3.axisLeft(this.y_denovo);
       this.svgElement.append('g').attr('transform', `translate(0, ${this.svgHeight})`).call(this.x_axis);
 			this.svgElement.append('g').call(this.y_axis);
@@ -136,9 +138,10 @@ export class VariantFrequencyViewComponent implements OnInit, OnChanges {
 			.enter()
 			.append("circle")
 			.attr("cx", d => { return this.x(d.position)} )
-			.attr("cy", d => { return d.frequency !== "-" ? d.frequency < 0.1 ? this.y_subdomain(d.frequency) : this.y(d.frequency) : this.y_denovo("Denovo")} )
+			.attr("cy", d => { return d.frequency !== "denovo" ? d.frequency < 0.1 ? this.y_subdomain(d.frequency) : this.y(d.frequency) : this.y_denovo("Denovo")} )
 			.attr("r", 5)
 			.style("fill", d => { return d.color })
+      .style("opacity", 0.5);
     }
 	}
 
