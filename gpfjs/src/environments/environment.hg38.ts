@@ -4,5 +4,5 @@ export const environment = {
   production: true,
   basePath: basePath,
   apiPath: basePath + '/api38/v3/',
-  imgPathPrefix: '/gpf38/assets/'
+  imgPathPrefix: '/hg38/assets/'
 };
