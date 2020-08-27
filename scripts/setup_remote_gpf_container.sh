@@ -13,7 +13,10 @@ if [[ ! -d $WD/gpf_remote ]]; then
 fi
 
 wget -P $WD -c https://iossifovlab.com/distribution/public/studies/genotype-iossifov_2014-latest.tar.gz
-tar -zxvf genotype-iossifov_2014-latest.tar.gz
+tar -zxvf $WD/genotype-iossifov_2014-latest.tar.gz -C $WD
+
+wget -P $WD -c https://iossifovlab.com/distribution/public/pheno/phenotype-comp-data-latest.tar.gz
+tar -zxvf $WD/phenotype-comp-data-latest.tar.gz -C $WD
 
 #(. ./gpf_remote/setenv.sh; cd ./iossifov_2014; \
     #$WD/dae/dae/tools/simple_study_import.py IossifovWE2014.ped --denovo-file IossifovWE2014.tsv --id iossifov_2014)
