@@ -2,6 +2,7 @@ import pytest
 import toml
 from pathlib import Path
 from studies.study_wrapper import RemoteStudyWrapper, StudyWrapper
+from dae.studies.study import GenotypeDataStudy
 from dae.configuration.gpf_config_parser import FrozenBox
 from dae.utils.dict_utils import recursive_dict_update
 
@@ -17,7 +18,7 @@ def remote_studies_dir(remote_dir):
 
 
 @pytest.fixture(scope="session")
-def local_gpf_instancer(gpf_instance, remote_dir):
+def local_gpf_instance(gpf_instance, remote_dir):
     return gpf_instance(work_dir=remote_dir)
 
 
@@ -53,17 +54,24 @@ def iossifov_2014_local_config(remote_studies_dir, remote_dir):
 
 @pytest.fixture(scope="session")
 def iossifov_2014_local(
-        local_gpf_instancer, remote_studies_dir, iossifov_2014_local_config):
+        local_gpf_instance, remote_studies_dir, iossifov_2014_local_config):
     assert remote_studies_dir.exists()
 
-    data_study = local_gpf_instancer._variants_db.make_genotype_data_study(
-        iossifov_2014_local_config
+    storage_db = local_gpf_instance.genotype_storage_db
+    genotype_storage = storage_db.get_genotype_storage(
+        iossifov_2014_local_config.genotype_storage.id
     )
+
+    variants = genotype_storage.build_backend(
+        iossifov_2014_local_config, local_gpf_instance.genomes_db)
+
+    data_study = GenotypeDataStudy(
+        iossifov_2014_local_config, variants)
 
     return StudyWrapper(
         data_study,
-        local_gpf_instancer._pheno_db,
-        local_gpf_instancer.gene_weights_db
+        local_gpf_instance._pheno_db,
+        local_gpf_instance.gene_weights_db
     )
 
 
