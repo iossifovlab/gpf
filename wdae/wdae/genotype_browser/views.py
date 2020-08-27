@@ -13,8 +13,33 @@ from query_base.query_base import QueryBaseView
 
 from gene_sets.expand_gene_set_decorator import expand_gene_set
 
+from datasets_api.models import Dataset
+
 
 logger = logging.getLogger(__name__)
+
+
+def handle_partial_permissions(user, dataset_id: str, request_data: dict):
+    """A user may have only partial access to a dataset based
+    on which of its constituent studies he has rights to access.
+    This method attaches these rights to the request as study filters
+    in order to filter variants from studies the user cannot access.
+    """
+
+    user_allowed_datasets = {
+        dataset_object.dataset_id
+        for dataset_object in Dataset.objects.all()
+        if user.groups.filter(name=dataset_object.dataset_id).exists()
+    }
+
+    if dataset_id not in user_allowed_datasets:
+        if request_data.get("study_filters"):
+            combined_filters = \
+                set(request_data["study_filters"]) \
+                & user_allowed_datasets
+        else:
+            combined_filters = user_allowed_datasets
+        request_data["study_filters"] = list(combined_filters)
 
 
 class QueryPreviewView(QueryBaseView):
@@ -56,6 +81,9 @@ class QueryPreviewVariantsView(QueryBaseView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
+        user = request.user
+
+        handle_partial_permissions(user, dataset_id, data)
 
         # LOGGER.info('dataset ' + str(dataset))
         response = dataset.get_variants_wdae_preview(
@@ -92,6 +120,8 @@ class QueryDownloadView(QueryBaseView):
         user = request.user
 
         dataset_id = data.pop("datasetId")
+
+        handle_partial_permissions(user, dataset_id, data)
 
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
 
