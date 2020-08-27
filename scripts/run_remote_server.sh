@@ -13,7 +13,7 @@ else
     echo "Done"
 fi
 
-if [ -f "/data/studies/comp_pheno/comp_pheno.conf" ]; then
+if [ -f "/data/pheno/comp_pheno/comp_pheno.conf" ]; then
     echo "Phenotype data found"
 else
     echo "Phenotype data missing, importing..."
