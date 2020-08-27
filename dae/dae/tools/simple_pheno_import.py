@@ -103,7 +103,7 @@ def generate_phenotype_data_config(args, regressions):
         },
     }
     if regressions:
-        regressions_dict = GPFConfigParser._namedtuple_to_dict(regressions)
+        regressions_dict = regressions.to_dict()
         config["regression"] = regressions_dict["regression"]
     return config
 
