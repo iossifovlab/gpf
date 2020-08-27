@@ -30,7 +30,7 @@
       <li *ngIf="selectedDataset.description" class="nav-item">
         <a class="nav-link" routerLink="description" routerLinkActive="active">Dataset Description</a>
       </li>
-      <li *ngIf="selectedDataset.commonReport" class="nav-item">
+      <li *ngIf="selectedDataset.commonReport['enabled']" class="nav-item">
         <a class="nav-link" routerLink="commonReport" routerLinkActive="active">Dataset Statistics</a>
       </li>
       <li *ngIf="selectedDataset.genotypeBrowser && selectedDataset.genotypeBrowserConfig" class="nav-item">

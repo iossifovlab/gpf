@@ -72,7 +72,7 @@ export class DatasetsComponent implements OnInit {
   findFirstTool(selectedDataset: Dataset) {
     if (selectedDataset.description) {
       return 'description';
-    } else if (selectedDataset.commonReport) {
+    } else if (selectedDataset.commonReport['enabled']) {
       return 'commonReport';
     } else if (selectedDataset.genotypeBrowser && selectedDataset.genotypeBrowserConfig) {
       return 'browser';
