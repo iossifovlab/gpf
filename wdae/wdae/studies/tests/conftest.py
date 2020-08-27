@@ -5,6 +5,7 @@ from studies.study_wrapper import RemoteStudyWrapper, StudyWrapper
 from dae.studies.study import GenotypeDataStudy
 from dae.configuration.gpf_config_parser import FrozenBox
 from dae.utils.dict_utils import recursive_dict_update
+from dae.gpf_instance.gpf_instance import GPFInstance
 
 
 @pytest.fixture(scope="session")
@@ -18,8 +19,8 @@ def remote_studies_dir(remote_dir):
 
 
 @pytest.fixture(scope="session")
-def local_gpf_instance(gpf_instance, remote_dir):
-    return gpf_instance(work_dir=remote_dir)
+def local_gpf_instance(remote_dir):
+    return GPFInstance(work_dir=remote_dir)
 
 
 @pytest.fixture(scope="session")
