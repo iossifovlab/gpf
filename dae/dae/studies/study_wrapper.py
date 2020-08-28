@@ -242,6 +242,9 @@ class StudyWrapper(StudyWrapperBase):
         "family_structure": lambda aa: members_in_order_get_family_structure(
             aa.members_in_order
         ),
+        "is_denovo": lambda aa: bool(
+             Inheritance.denovo in aa.inheritance_in_members
+        ),
     }
 
     SPECIAL_ATTRS = {**SPECIAL_ATTRS_FORMAT, **STANDARD_ATTRS_LAMBDAS}
