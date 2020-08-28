@@ -1039,6 +1039,8 @@ class StudyWrapper(StudyWrapperBase):
         result["genotype_browser_config"] = bs_config
         result["genotype_browser"] = self.config.genotype_browser.enabled
 
+        result["gene_browser"] = self.config.gene_browser
+
         result["study_types"] = result["study_type"]
         result["enrichment_tool"] = self.config.enrichment.enabled
         result["person_set_collections"] = \

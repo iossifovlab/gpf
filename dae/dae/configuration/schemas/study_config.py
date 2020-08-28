@@ -408,5 +408,26 @@ study_config_schema = {
             "effect_types": {"type": "list", "schema": {"type": "string"}},
         },
     },
+    "gene_browser": {
+        "type": "dict",
+        "schema": {
+            "enabled": {"type": "boolean", "required": True},
+            "frequency_column": {"type": "string", "required": True},
+            "domain_min": {
+                "type": "float",
+                "required": True,
+                "forbidden": [0.0],
+                "min": 0.0,
+                "max": 100.0,
+            },
+            "domain_max": {
+                "type": "float",
+                "required": True,
+                "forbidden": [0.0],
+                "min": 0.0,
+                "max": 100.0,
+            },
+        },
+    },
     "person_set_collections": person_set_collections_schema,
 }
