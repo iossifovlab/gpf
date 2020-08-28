@@ -54,14 +54,12 @@ class DatasetView(QueryBaseView):
             assert all([d is not None for d in datasets]), \
                 selected_genotype_data
 
-            if self.gpf_instance.get_selected_genotype_data():
-                res = datasets
-            else:
+            res = [
+                dataset.get_genotype_data_group_description()
+                for dataset in datasets]
+            if not self.gpf_instance.get_selected_genotype_data():
                 res = sorted(
-                    [
-                        dataset.get_genotype_data_group_description()
-                        for dataset in datasets
-                    ],
+                    res,
                     key=lambda desc: desc["name"]
                 )
 
