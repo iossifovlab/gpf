@@ -1,11 +1,9 @@
 import { Component, OnInit, Input, OnChanges } from '@angular/core';
 import * as d3 from 'd3';
 import { Gene } from 'app/gene-view/gene';
-import { QueryService } from 'app/query/query.service';
 import { GenotypePreviewVariantsArray } from 'app/genotype-preview-model/genotype-preview';
-import { Subject } from 'rxjs';
-import { text } from 'd3';
-// import { Gene } from './gene';
+import { Subject, Observable } from 'rxjs';
+import { DatasetsService } from 'app/datasets/datasets.service';
 
 @Component({
   selector: 'gpf-gene-visualization-unified',
@@ -17,9 +15,12 @@ export class GeneVisualizationUnifiedComponent implements OnInit {
   @Input() variantsArray: GenotypePreviewVariantsArray;
   @Input() streamingFinished$: Subject<boolean>;
 
+  frequencyColumn;
+  frequencyDomainMin: number;
+  frequencyDomainMax: number;
+
 	margin = {top: 10, right: 70, left: 70, bottom: 0}
   y_axes_proportions = {domain: 0.70, subdomain: 0.20, denovo: 0.10}
-
   svgElement;
   svgWidth = 1200 - this.margin.left - this.margin.right;
   svgHeight;
@@ -45,34 +46,41 @@ export class GeneVisualizationUnifiedComponent implements OnInit {
   // GENE VIEW VARS
   brush;
   doubleClickTimer;
-
-  constructor() { }
+  
+  constructor(
+    private datasetsService: DatasetsService,
+  ) { }
 
   ngOnInit() {
-    this.svgElement = d3.select('#svg-container')
-    .append('svg')
-    .attr('width', this.svgWidth + this.margin.left + this.margin.right)
-    .attr('height', this.svgHeightFreqRaw)
-		.append('g')
-		.attr('transform', `translate(${this.margin.left}, ${this.margin.top})`);
+    this.datasetsService.getSelectedDataset().subscribe(dataset => {
+      this.frequencyColumn = dataset.geneBrowser.frequencyColumn;
+      this.frequencyDomainMin = dataset.geneBrowser.domainMin;
+      this.frequencyDomainMax = dataset.geneBrowser.domainMax;
 
-    this.x = d3.scaleLinear()
-    .domain([0, 0])
-    .range([0, this.svgWidth])
+      this.svgElement = d3.select('#svg-container')
+      .append('svg')
+      .attr('width', this.svgWidth + this.margin.left + this.margin.right)
+      .attr('height', this.svgHeightFreqRaw)
+      .append('g')
+      .attr('transform', `translate(${this.margin.left}, ${this.margin.top})`);
 
-    this.y = d3.scaleLog()
-    .domain([0.01, 100])
-    .range([this.subdomainAxisY, 0]);
+      this.x = d3.scaleLinear()
+      .domain([0, 0])
+      .range([0, this.svgWidth])
 
-    this.y_subdomain = d3.scaleLinear()
-    .domain([0, 0.01])
-    .range([this.denovoAxisY, this.subdomainAxisY]);
+      this.y = d3.scaleLog()
+      .domain([this.frequencyDomainMin, this.frequencyDomainMax])
+      .range([this.subdomainAxisY, 0]);
 
-    this.y_denovo = d3.scalePoint()
-    .domain(["Denovo"])
-    .range([this.svgHeightFreq, this.denovoAxisY]);
+      this.y_subdomain = d3.scaleLinear()
+      .domain([0, this.frequencyDomainMin])
+      .range([this.denovoAxisY, this.subdomainAxisY]);
 
-		this.streamingFinished$.subscribe(() => {this.drawPlot()});
+      this.y_denovo = d3.scalePoint()
+      .domain(["Denovo"])
+      .range([this.svgHeightFreq, this.denovoAxisY]);
+    });
+    this.streamingFinished$.subscribe(() => {this.drawPlot()});
   }
 
   ngOnChanges() {
@@ -134,11 +142,11 @@ export class GeneVisualizationUnifiedComponent implements OnInit {
 		this.variantsDataRepr = [];
 		for(let v of variantsArray.genotypePreviews) {
 			if(this.isVariantEffectSelected(v.get("effect.worst effect"))) {
-				if(v.get("freq.genome gnomad") !== "-" || v.get("variant.is denovo")) {
+				if(v.get(this.frequencyColumn) !== "-" || v.get("variant.is denovo")) {
 					this.variantsDataRepr.push(
 						{
 							position: this.extractPosition(v.get("variant.location")),
-							frequency: v.get("freq.genome gnomad") === "-" ? "denovo" : v.get("freq.genome gnomad"),
+							frequency: v.get(this.frequencyColumn) === "-" ? "denovo" : v.get(this.frequencyColumn),
 							color: this.getVariantColor(v.get("effect.worst effect")),
 						}
 					)
@@ -153,7 +161,7 @@ export class GeneVisualizationUnifiedComponent implements OnInit {
     if (this.gene !== undefined) {
       this.x_axis = d3.axisBottom(this.x).ticks(12);
       this.y_axis = d3.axisLeft(this.y);
-      this.y_axis_subdomain = d3.axisLeft(this.y_subdomain).tickValues([0, 0.005]);
+      this.y_axis_subdomain = d3.axisLeft(this.y_subdomain).tickValues([0, this.frequencyDomainMin / 2.0]);
       this.y_axis_denovo = d3.axisLeft(this.y_denovo);
       this.svgElement.append('g').attr('transform', `translate(0, ${this.svgHeightFreq})`).call(this.x_axis);
 			this.svgElement.append('g').call(this.y_axis);
@@ -176,7 +184,7 @@ export class GeneVisualizationUnifiedComponent implements OnInit {
 			.enter()
 			.append("circle")
 			.attr("cx", d => { return this.x(d.position)} )
-			.attr("cy", d => { return d.frequency !== "denovo" ? d.frequency < 0.1 ? this.y_subdomain(d.frequency) : this.y(d.frequency) : this.y_denovo("Denovo")} )
+			.attr("cy", d => { return d.frequency !== "denovo" ? d.frequency < this.frequencyDomainMin ? this.y_subdomain(d.frequency) : this.y(d.frequency) : this.y_denovo("Denovo")} )
 			.attr("r", 5)
 			.style("fill", d => { return d.color })
       .style("opacity", 0.5);

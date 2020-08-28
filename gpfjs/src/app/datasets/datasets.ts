@@ -210,6 +210,24 @@ export class GenotypeBrowser {
   }
 }
 
+export class GeneBrowser {
+  static fromJson(json: any): GeneBrowser {
+    return new GeneBrowser(
+      json['enabled'],
+      json['frequency_column'],
+      json['domain_min'],
+      json['domain_max'],
+    );
+  }
+
+  constructor(
+    readonly enabled: boolean,
+    readonly frequencyColumn: string,
+    readonly domainMin: number,
+    readonly domainMax: number,
+  ) { }
+}
+
 export class PeopleGroup {
 
   static fromJson(json: any): PeopleGroup {
@@ -244,6 +262,7 @@ export class Dataset extends IdName {
       json['genotype_browser_config'] ? GenotypeBrowser.fromJson(json['genotype_browser_config']) : null,
       json['person_set_collections'] ? PeopleGroup.fromJson(json['person_set_collections']) : null,
       UserGroup.fromJsonArray(json['groups']),
+      json['gene_browser'] ? GeneBrowser.fromJson(json['gene_browser']) : null,
     );
   }
 
@@ -273,7 +292,8 @@ export class Dataset extends IdName {
     readonly commonReport: boolean,
     readonly genotypeBrowserConfig: GenotypeBrowser,
     readonly peopleGroupConfig: PeopleGroup,
-    readonly groups: UserGroup[]
+    readonly groups: UserGroup[],
+    readonly geneBrowser: GeneBrowser
   ) {
     super(id, name);
   }
