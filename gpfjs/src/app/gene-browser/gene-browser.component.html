@@ -1,8 +1,12 @@
 <div style="padding: 30px;" >
-    <gpf-gene-symbols></gpf-gene-symbols>
-
-    <div style="padding: 20px">
-        <input type="button" class="btn btn-md btn-primary" value="Gene Preview" (click)="submitGeneRequest()">
+    <div class="effect-card card">
+      <div class="card-header card-title">Gene Symbols</div>
+      <div class="card-block">
+        <gpf-gene-symbols></gpf-gene-symbols>
+        <div style="padding: 10px">
+            <input type="button" class="btn btn-md btn-primary" value="Gene Preview" (click)="submitGeneRequest()">
+        </div>
+      </div>
     </div>
 
     <gpf-gene-visualization-unified
@@ -11,18 +15,6 @@
         [streamingFinished$]="queryService.streamingFinishedSubject">
     >
     </gpf-gene-visualization-unified>
-
-    <!-- <div style="padding: 30px">
-        <gpf-variant-frequency-view
-            [gene]="selectedGene"
-            [variantsArray]="genotypePreviewVariantsArray"
-            [streamingFinished$]="queryService.streamingFinishedSubject">
-        </gpf-variant-frequency-view>
-
-        <div style="padding: 10px;"></div>
-
-        <gpf-gene-view [gene]="selectedGene"></gpf-gene-view>
-    </div> -->
 
     <div *ngIf="selectedDataset$ | async as dataset">
         <span *ngIf="genotypePreviewVariantsArray && genotypePreviewInfo" id="variants-count-span">

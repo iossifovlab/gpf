@@ -28,6 +28,8 @@ export class GeneVisualizationUnifiedComponent implements OnInit {
 
   subdomainAxisY = Math.round(this.svgHeightFreq * 0.75);
   denovoAxisY = this.subdomainAxisY + Math.round(this.svgHeightFreq * 0.20);
+	
+	lgds = ["nonsense", "splice-site", "frame-shift", "no-frame-shift-new-stop"];
 
   x;
   y;
@@ -38,6 +40,7 @@ export class GeneVisualizationUnifiedComponent implements OnInit {
   y_axis_subdomain;
   y_axis_denovo;
 	variantsDataRepr = [];
+	selectedEffectTypes = ["lgds", "missense", "synonymous", "other"];
 
   // GENE VIEW VARS
   brush;
@@ -79,6 +82,14 @@ export class GeneVisualizationUnifiedComponent implements OnInit {
     }
   }
 
+	checkEffectType(effectType, checked) {
+		effectType = effectType.toLowerCase();
+		if(checked) this.selectedEffectTypes.push(effectType);
+		else this.selectedEffectTypes.splice(this.selectedEffectTypes.indexOf(effectType), 1);
+		this.drawGene();
+		this.drawPlot();
+	}
+
 	extractPosition(location) {
 		let idx = location.indexOf(":")
 		return location.slice(idx + 1);
@@ -87,9 +98,7 @@ export class GeneVisualizationUnifiedComponent implements OnInit {
 	getVariantColor(worst_effect) {
 		worst_effect = worst_effect.toLowerCase();
 
-		let lgds = ["nonsense", "splice-site", "frame-shift", "no-frame-shift-new-stop"]
-
-		if(lgds.indexOf(worst_effect) !== -1) {
+		if(this.lgds.indexOf(worst_effect) !== -1) {
 			return "#ff0000";
 		}
 		else if(worst_effect == "missense") {
@@ -103,18 +112,38 @@ export class GeneVisualizationUnifiedComponent implements OnInit {
 		}
 	}
 
+	isVariantEffectSelected(worst_effect) {
+		worst_effect = worst_effect.toLowerCase();
+
+		if(this.selectedEffectTypes.indexOf(worst_effect) !== -1) {
+			return true
+		}
+
+		if(this.lgds.indexOf(worst_effect) !== -1) {
+			if(this.selectedEffectTypes.indexOf("lgds") !== -1) {
+				return true;
+			}
+		}
+		else if(worst_effect !== "missense" && worst_effect !== "synonymous" && this.selectedEffectTypes.indexOf("other") !== -1) {
+			return true;
+		}
+		return false;
+	}
+
 	hydrateVariantsData(variantsArray) {
 		this.variantsDataRepr = [];
 		for(let v of variantsArray.genotypePreviews) {
-      if(v.get("freq.genome gnomad") !== "-" || v.get("variant.is denovo")) {
-        this.variantsDataRepr.push(
-          {
-            position: this.extractPosition(v.get("variant.location")),
-            frequency: v.get("freq.genome gnomad") === "-" ? "denovo" : v.get("freq.genome gnomad"),
-            color: this.getVariantColor(v.get("effect.worst effect")),
-          }
-        )
-      }
+			if(this.isVariantEffectSelected(v.get("effect.worst effect"))) {
+				if(v.get("freq.genome gnomad") !== "-" || v.get("variant.is denovo")) {
+					this.variantsDataRepr.push(
+						{
+							position: this.extractPosition(v.get("variant.location")),
+							frequency: v.get("freq.genome gnomad") === "-" ? "denovo" : v.get("freq.genome gnomad"),
+							color: this.getVariantColor(v.get("effect.worst effect")),
+						}
+					)
+				}
+			}
 		}
 	}
 
@@ -122,8 +151,6 @@ export class GeneVisualizationUnifiedComponent implements OnInit {
 		this.hydrateVariantsData(this.variantsArray);
 
     if (this.gene !== undefined) {
-      // this.svgElement.selectAll('*').remove();
-      // this.setDefaultScale();
       this.x_axis = d3.axisBottom(this.x).ticks(12);
       this.y_axis = d3.axisLeft(this.y);
       this.y_axis_subdomain = d3.axisLeft(this.y_subdomain).tickValues([0, 0.005]);
@@ -139,8 +166,7 @@ export class GeneVisualizationUnifiedComponent implements OnInit {
       .attr("y", this.denovoAxisY)
       .attr("width", this.svgWidth)
       .attr("height", this.svgHeightFreq - this.denovoAxisY)
-      .style("fill", "orange")
-      .style("stroke", "black")
+      .style("fill", "#1E90FF")
       .style("opacity", 0.3);
 
 
