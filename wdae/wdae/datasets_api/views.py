@@ -46,19 +46,25 @@ class DatasetView(QueryBaseView):
             selected_genotype_data = \
                 self.gpf_instance.get_selected_genotype_data() \
                 or self.gpf_instance.get_genotype_data_ids()
+
             datasets = [
                 self.gpf_instance.get_wdae_wrapper(genotype_data_id)
                 for genotype_data_id in selected_genotype_data
             ]
             assert all([d is not None for d in datasets]), \
                 selected_genotype_data
-            res = sorted(
-                [
-                    dataset.get_genotype_data_group_description()
-                    for dataset in datasets
-                ],
-                key=lambda desc: desc["name"]
-            )
+
+            if self.gpf_instance.get_selected_genotype_data():
+                res = datasets
+            else:
+                res = sorted(
+                    [
+                        dataset.get_genotype_data_group_description()
+                        for dataset in datasets
+                    ],
+                    key=lambda desc: desc["name"]
+                )
+
             res = [self.augment_accessibility(ds, user) for ds in res]
             res = [self.augment_with_groups(ds) for ds in res]
             return Response({"data": res})
