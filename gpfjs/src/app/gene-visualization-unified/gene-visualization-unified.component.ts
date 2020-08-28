@@ -16,8 +16,8 @@ export class GeneVisualizationUnifiedComponent implements OnInit {
   @Input() variantsArray: GenotypePreviewVariantsArray;
   @Input() streamingFinished$: Subject<boolean>;
 
-	margin = {top: 10, right: 30, left: 70, bottom: 60}
-  y_axes_proportions = {domain: 0.75, subdomain: 0.20, denovo: 0.05}
+	margin = {top: 10, right: 30, left: 70, bottom: 0}
+  y_axes_proportions = {domain: 0.70, subdomain: 0.20, denovo: 0.10}
 
   svgElement;
   svgWidth = 1200 - this.margin.left - this.margin.right;
@@ -68,7 +68,7 @@ export class GeneVisualizationUnifiedComponent implements OnInit {
     .domain(["Denovo"])
     .range([this.svgHeightFreq, this.denovoAxisY]);
 
-		this.streamingFinished$.subscribe(() => {this.drawGene(); this.drawPlot()});
+		this.streamingFinished$.subscribe(() => {this.drawPlot()});
   }
 
   ngOnChanges() {
@@ -123,7 +123,7 @@ export class GeneVisualizationUnifiedComponent implements OnInit {
     if (this.gene !== undefined) {
       // this.svgElement.selectAll('*').remove();
       // this.setDefaultScale();
-      this.x_axis = d3.axisBottom(this.x);
+      this.x_axis = d3.axisBottom(this.x).ticks(12);
       this.y_axis = d3.axisLeft(this.y);
       this.y_axis_subdomain = d3.axisLeft(this.y_subdomain).tickValues([0, 0.005]);
       this.y_axis_denovo = d3.axisLeft(this.y_denovo);
@@ -216,7 +216,14 @@ export class GeneVisualizationUnifiedComponent implements OnInit {
       }
       this.setDefaultScale();
     } else {
-      this.x.domain([this.x.invert(extent[0]), this.x.invert(extent[1])]);
+      if(this.x.domain()[1] - this.x.domain()[0] > 12) {
+        let newXmin = Math.round(this.x.invert(extent[0]));
+        let newXmax = Math.round(this.x.invert(extent[1]));
+        if(newXmax - newXmin < 12) {
+          newXmax = newXmin + 12;
+        }
+        this.x.domain([newXmin, newXmax]);
+      }
       this.svgElement.select('.brush').call(this.brush.move, null);
     }
     this.drawGene();
