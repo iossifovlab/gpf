@@ -275,7 +275,7 @@ class GenotypeDataStudy(GenotypeData):
             print("received excess keyword arguments when querying variants!")
             print("kwargs received: {}".format(list(kwargs.keys())))
 
-        if study_filters and self.name not in study_filters:
+        if study_filters and self.id not in study_filters:
             return
 
         person_ids = self._transform_person_set_collection_query(

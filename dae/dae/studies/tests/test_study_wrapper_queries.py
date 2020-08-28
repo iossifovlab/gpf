@@ -50,7 +50,7 @@ def test_query_family_variants(families, count, quads_two_families_wrapper):
     assert len(variants) == count
 
 
-@pytest.mark.parametrize("sexes,count", [(["M"], 3), (["F"], 2),])
+@pytest.mark.parametrize("sexes,count", [(["M"], 3), (["F"], 2)])
 def test_query_sexes_variants(sexes, count, quads_f1_wrapper):
     variants = list(quads_f1_wrapper.query_variants(sexes=sexes))
 
@@ -81,7 +81,7 @@ def test_query_effect_types_variants(effect_types, count, quads_f1_wrapper):
 
 @pytest.mark.parametrize(
     "regions,count",
-    [(["1:0-100000000"], 1), (["2:0-100000000"], 1), (["1:11539-11539"], 1),],
+    [(["1:0-100000000"], 1), (["2:0-100000000"], 1), (["1:11539-11539"], 1)],
 )
 def test_query_regions_variants(regions, count, quads_f1_wrapper):
     variants = list(quads_f1_wrapper.query_variants(regions=regions))
@@ -256,7 +256,7 @@ def test_query_present_in_role_compared_to_raw(
 
 
 @pytest.mark.parametrize(
-    "option,count", [(None, 4), (25, 4), (50, 0), (100, 0),]
+    "option,count", [(None, 4), (25, 4), (50, 0), (100, 0)]
 )
 def test_query_min_alt_frequency(option, count, quads_in_child_wrapper):
     variants = list(
@@ -267,7 +267,7 @@ def test_query_min_alt_frequency(option, count, quads_in_child_wrapper):
 
 
 @pytest.mark.parametrize(
-    "option,count", [(None, 4), (0, 0), (12.5, 0), (25, 4), (100, 4),]
+    "option,count", [(None, 4), (0, 0), (12.5, 0), (25, 4), (100, 4)]
 )
 def test_query_max_alt_frequency(option, count, quads_in_child_wrapper):
     variants = list(
@@ -304,7 +304,7 @@ def test_query_min_max_alt_frequency(
 def test_query_with_matching_study_filter(inheritance_trio_wrapper):
     variants = list(
         inheritance_trio_wrapper.query_variants(
-            studyFilters=[{"studyName": "TRIO"}]
+            studyFilters=[{"studyName": "inheritance_trio"}]
         )
     )
 
@@ -314,7 +314,7 @@ def test_query_with_matching_study_filter(inheritance_trio_wrapper):
 def test_query_with_mismatching_study_filter(inheritance_trio_wrapper):
     variants = list(
         inheritance_trio_wrapper.query_variants(
-            studyFilters=[{"studyName": "QUADS_F1"}]
+            studyFilters=[{"studyName": "quads_f1"}]
         )
     )
 
@@ -324,7 +324,10 @@ def test_query_with_mismatching_study_filter(inheritance_trio_wrapper):
 def test_query_with_multiple_study_filters(inheritance_trio_wrapper):
     variants = list(
         inheritance_trio_wrapper.query_variants(
-            studyFilters=[{"studyName": "QUADS_F1"}, {"studyName": "TRIO"}]
+            studyFilters=[
+                {"studyName": "quads_f1"},
+                {"studyName": "inheritance_trio"}
+            ]
         )
     )
     assert len(variants) == 14
@@ -332,7 +335,7 @@ def test_query_with_multiple_study_filters(inheritance_trio_wrapper):
     variants = list(
         inheritance_trio_wrapper.query_variants(
             studyFilters=[
-                {"studyName": "QUADS_F1"},
+                {"studyName": "quads_f1"},
                 {"studyName": "TEST_NAME"},
             ]
         )

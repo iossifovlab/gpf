@@ -2,6 +2,8 @@ import copy
 import json
 import pytest
 
+from django.contrib.auth.models import Group
+
 from rest_framework import status
 
 pytestmark = pytest.mark.usefixtures("wdae_gpf_instance", "calc_gene_sets")
@@ -108,3 +110,37 @@ def test_simple_query_download(db, admin_client):
         "ordinal.Ordinal",
         "raw.Raw",
     }
+
+
+def test_mixed_dataset_rights_query(db, user, user_client):
+    data = {
+        "datasetId": "composite_dataset_ds",
+    }
+
+    group = Group.objects.get(name="inheritance_trio")
+    user.groups.add(group)
+
+    response = user_client.post(
+        PREVIEW_VARIANTS_URL, json.dumps(data), content_type="application/json"
+    )
+    assert status.HTTP_200_OK == response.status_code
+    res = response.streaming_content
+    res = json.loads("".join(map(lambda x: x.decode("utf-8"), res)))
+
+    assert len(res) == 14
+
+
+def test_mixed_dataset_rights_download(db, user, user_client):
+    data = {
+        "queryData": json.dumps({"datasetId": "composite_dataset_ds"})
+    }
+
+    group = Group.objects.get(name="inheritance_trio")
+    user.groups.add(group)
+
+    response = user_client.post(
+        DOWNLOAD_URL, json.dumps(data), content_type="application/json"
+    )
+    assert response.status_code == status.HTTP_200_OK
+    res = list(response.streaming_content)
+    assert len(res) == 15

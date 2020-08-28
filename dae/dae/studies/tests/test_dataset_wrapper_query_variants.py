@@ -64,7 +64,7 @@ def test_query_family_variants(
     assert len(variants) == count
 
 
-@pytest.mark.parametrize("sexes,count", [(["M"], 3), (["F"], 2),])
+@pytest.mark.parametrize("sexes,count", [(["M"], 3), (["F"], 2)])
 def test_query_sexes_variants(
     sexes, count, quads_f1_genotype_data_group_wrapper
 ):
@@ -107,7 +107,7 @@ def test_query_effect_types_variants(
 
 @pytest.mark.parametrize(
     "regions,count",
-    [(["1:0-100000000"], 1), (["2:0-100000000"], 1), (["1:11539-11539"], 1),],
+    [(["1:0-100000000"], 1), (["2:0-100000000"], 1), (["1:11539-11539"], 1)],
 )
 def test_query_regions_variants(
     regions, count, quads_f1_genotype_data_group_wrapper
@@ -292,7 +292,7 @@ def test_query_present_in_role_compared_to_raw(
 
 
 @pytest.mark.parametrize(
-    "option,count", [(None, 4), (25, 4), (50, 0), (100, 0),]
+    "option,count", [(None, 4), (25, 4), (50, 0), (100, 0)]
 )
 def test_query_min_alt_frequency(
     option, count, quads_in_child_genotype_data_group_wrapper
@@ -307,7 +307,7 @@ def test_query_min_alt_frequency(
 
 
 @pytest.mark.parametrize(
-    "option,count", [(None, 4), (0, 0), (12.5, 0), (25, 4), (100, 4),]
+    "option,count", [(None, 4), (0, 0), (12.5, 0), (25, 4), (100, 4)]
 )
 def test_query_max_alt_frequency(
     option, count, quads_in_child_genotype_data_group_wrapper
@@ -354,14 +354,14 @@ def test_query_study_filter(composite_dataset_wrapper):
 
     inh_trio_variants = list(
         composite_dataset_wrapper.query_variants(
-            studyFilters=[{"studyName": "TRIO"}]
+            studyFilters=[{"studyName": "inheritance_trio"}]
         )
     )
     assert len(inh_trio_variants) == 14
 
     quads_f1_variants = list(
         composite_dataset_wrapper.query_variants(
-            studyFilters=[{"studyName": "QUADS_F1"}]
+            studyFilters=[{"studyName": "quads_f1"}]
         )
     )
     assert len(quads_f1_variants) == 3
