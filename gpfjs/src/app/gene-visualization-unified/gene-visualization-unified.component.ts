@@ -4,6 +4,7 @@ import { Gene } from 'app/gene-view/gene';
 import { QueryService } from 'app/query/query.service';
 import { GenotypePreviewVariantsArray } from 'app/genotype-preview-model/genotype-preview';
 import { Subject } from 'rxjs';
+import { text } from 'd3';
 // import { Gene } from './gene';
 
 @Component({
@@ -16,7 +17,7 @@ export class GeneVisualizationUnifiedComponent implements OnInit {
   @Input() variantsArray: GenotypePreviewVariantsArray;
   @Input() streamingFinished$: Subject<boolean>;
 
-	margin = {top: 10, right: 30, left: 70, bottom: 0}
+	margin = {top: 10, right: 70, left: 70, bottom: 0}
   y_axes_proportions = {domain: 0.70, subdomain: 0.20, denovo: 0.10}
 
   svgElement;
@@ -235,6 +236,7 @@ export class GeneVisualizationUnifiedComponent implements OnInit {
   }
 
   drawTranscript(transcriptId: number, yPos: number) {
+    const firstStart = this.gene.transcripts[transcriptId].exons[0].start;
     let lastEnd = null;
     const strand = this.gene.transcripts[transcriptId].strand;
 
@@ -246,6 +248,8 @@ export class GeneVisualizationUnifiedComponent implements OnInit {
 
       lastEnd = exon.stop;
     }
+
+    this.drawTranscriptUTRText(firstStart, lastEnd, yPos, strand);
   }
 
   drawExon(xStart: number, xEnd: number, y: number) {
@@ -253,7 +257,28 @@ export class GeneVisualizationUnifiedComponent implements OnInit {
   }
 
   drawIntron(xStart: number, xEnd: number, y: number, strand: string) {
-    this.drawLine(xStart, xEnd, y + 4, 2, 'Intron ?/?', strand);
+    this.drawLine(xStart, xEnd, y, 2, 'Intron ?/?', strand);
+  }
+
+  drawTranscriptUTRText(xStart: number, xEnd: number, y: number, strand: string) {
+    let UTR = {left: '5\'', right: '3\''}
+
+    if (strand === '-') {
+      UTR.left = '3\'';
+      UTR.right = '5\'';
+    }
+
+    this.svgElement.append("text")
+    .attr("y", y + 10)
+    .attr("x", this.x(xStart) - 20)
+    .attr('font-size', '13px')
+    .text(UTR.left)
+
+    this.svgElement.append("text")
+    .attr("y", y + 10)
+    .attr("x", this.x(xEnd) + 10)
+    .attr('font-size', '13px')
+    .text(UTR.right);
   }
 
   drawRect(xStart: number, xEnd: number, y: number, height: number, svgTitle: string) {
@@ -268,39 +293,14 @@ export class GeneVisualizationUnifiedComponent implements OnInit {
   }
 
   drawLine(xStart: number, xEnd: number, y: number, height: number, svgTitle: string, strand: string) {
-    let arrowX1Index;
-    if (strand === '-') {
-      arrowX1Index = 12.5;
-    } else {
-      arrowX1Index = 17.5;
-    }
-
     let xStartAligned = this.x(xStart);
     let xEndAligned = this.x(xEnd);
 
     this.svgElement.append('line')
     .attr('x1', xStartAligned)
-    .attr('y1', y + 1)
+    .attr('y1', y + 5)
     .attr('x2', xEndAligned)
-    .attr('y2', y + 1)
-    .attr('stroke', 'black');
-
-    // for (xStartAligned; xStartAligned < xEndAligned; xStartAligned += 50) {
-    //   this.svgElement.append('line')
-    //   .attr('x1', xStartAligned + arrowX1Index)
-    //   .attr('y1', y + 3)
-    //   .attr('x2', xStartAligned + 15)
-    //   .attr('y2', y + 1)
-    //   .attr('stroke', 'black')
-    //   .attr('opacity', 0.7);
-
-    //   this.svgElement.append('line')
-    //   .attr('x1', xStartAligned + arrowX1Index)
-    //   .attr('y1', y - 1)
-    //   .attr('x2', xStartAligned + 15)
-    //   .attr('y2', y + 1)
-    //   .attr('opacity', 0.7)
-    //   .attr('stroke', 'black');
-    // }
+    .attr('y2', y + 5)
+    .attr('stroke', 'black'); 
   }
 }
