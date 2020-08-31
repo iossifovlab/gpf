@@ -313,12 +313,16 @@ export class GeneVisualizationUnifiedComponent implements OnInit {
     .attr("x", this.x(xStart) - 20)
     .attr('font-size', '13px')
     .text(UTR.left)
+    .attr('cursor', 'default')
+    .append('svg:title').text(`UTR ${UTR.left}`)
 
     this.svgElement.append("text")
     .attr("y", y + 10)
     .attr("x", this.x(xEnd) + 10)
     .attr('font-size', '13px')
-    .text(UTR.right);
+    .text(UTR.right)
+    .attr('cursor', 'default')
+    .append('svg:title').text(`UTR ${UTR.right}`)
   }
 
   drawRect(xStart: number, xEnd: number, y: number, height: number, svgTitle: string) {
