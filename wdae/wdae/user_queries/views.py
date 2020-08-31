@@ -1,3 +1,4 @@
+from utils.logger import LOGGER, request_logging
 from rest_framework import views
 from rest_framework.response import Response
 from rest_framework import status
@@ -7,6 +8,8 @@ from query_state_save.models import QueryState
 
 
 class UserQuerySaveView(views.APIView):
+
+    @request_logging(LOGGER)
     def post(self, request):
         if not request.user.is_authenticated:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
@@ -39,6 +42,8 @@ class UserQuerySaveView(views.APIView):
 
 
 class UserQueryCollectView(views.APIView):
+
+    @request_logging(LOGGER)
     def get(self, request):
         if not request.user.is_authenticated:
             return Response(status=status.HTTP_401_UNAUTHORIZED)

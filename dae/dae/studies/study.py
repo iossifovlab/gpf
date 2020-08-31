@@ -145,6 +145,7 @@ class GenotypeDataGroup(GenotypeData):
             **kwargs):
 
         variants_futures = list()
+        LOGGER.info(f"study_filters: {study_filters}")
 
         def get_variants(genotype_data_study):
             return genotype_data_study.query_variants(
@@ -185,7 +186,7 @@ class GenotypeDataGroup(GenotypeData):
                     return
             elapsed = time.time() - started
             LOGGER.info(
-                f"processing study {future.study_id}"
+                f"processing study {future.study_id} "
                 f"elapsed: {elapsed:.3f}")
 
     def get_studies_ids(self):
