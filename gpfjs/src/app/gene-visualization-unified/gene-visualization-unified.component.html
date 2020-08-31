@@ -1,15 +1,3 @@
-<div class="effect-card card">
-  <div class="card-header card-title">Effect Types</div>
-  <div class="card-block col-lg-3">
-	  <div *ngFor="let effect of ['LGDs', 'Missense', 'Synonymous', 'Other']; let i=index" class="checkbox">
-		<label>
-		  <input #checkbox checked type="checkbox" (change)="checkEffectType(effect, checkbox.checked)">
-		  {{ effect }}
-		</label>
-	  </div>
-  </div>
-</div>
-
 <div style="padding: 30px;">
   <div id="svg-container"></div>
 </div>

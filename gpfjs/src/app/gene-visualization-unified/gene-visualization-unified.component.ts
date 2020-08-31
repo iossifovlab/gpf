@@ -93,9 +93,12 @@ export class GeneVisualizationUnifiedComponent implements OnInit {
 	checkEffectType(effectType, checked) {
 		effectType = effectType.toLowerCase();
 		if(checked) this.selectedEffectTypes.push(effectType);
-		else this.selectedEffectTypes.splice(this.selectedEffectTypes.indexOf(effectType), 1);
-		this.drawGene();
-		this.drawPlot();
+    else this.selectedEffectTypes.splice(this.selectedEffectTypes.indexOf(effectType), 1);
+
+    if (this.gene !== undefined) {
+      this.drawGene();
+      this.drawPlot();
+    }
 	}
 
 	extractPosition(location) {

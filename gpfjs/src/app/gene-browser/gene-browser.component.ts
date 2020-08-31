@@ -1,4 +1,4 @@
-import { Component, OnInit, OnChanges, AfterViewInit, SimpleChanges } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { GeneService } from 'app/gene-view/gene.service';
 import { Gene } from 'app/gene-view/gene';
 import { GenotypePreviewVariantsArray, GenotypePreviewInfo } from 'app/genotype-preview-model/genotype-preview';
@@ -9,6 +9,7 @@ import { DatasetsService } from 'app/datasets/datasets.service';
 import { ActivatedRoute, Params } from '@angular/router';
 import { QueryStateCollector } from 'app/query/query-state-provider';
 import { FullscreenLoadingService } from 'app/fullscreen-loading/fullscreen-loading.service';
+import { GeneVisualizationUnifiedComponent } from 'app/gene-visualization-unified/gene-visualization-unified.component';
 
 @Component({
   selector: 'gpf-gene-browser-component',
@@ -19,8 +20,8 @@ import { FullscreenLoadingService } from 'app/fullscreen-loading/fullscreen-load
     useExisting: GeneBrowserComponent
   }]
 })
-export class GeneBrowserComponent extends QueryStateCollector
-implements OnInit {
+export class GeneBrowserComponent extends QueryStateCollector implements OnInit {
+  @ViewChild (GeneVisualizationUnifiedComponent) child: GeneVisualizationUnifiedComponent;
   selectedGene: Gene;
   geneSymbol: string = 'CHD8';
   genotypePreviewVariantsArray: GenotypePreviewVariantsArray;
@@ -57,6 +58,10 @@ implements OnInit {
       const stateObject = Object.assign({ datasetId: this.selectedDatasetId }, current_state);
       return stateObject;
     });
+  }
+
+  checkEffectType(effectType, checked) {
+    this.child.checkEffectType(effectType, checked)
   }
 
   submitGeneRequest() {
