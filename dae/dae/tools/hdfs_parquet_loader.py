@@ -29,7 +29,7 @@ def parse_cli_arguments(argv, gpf_instance):
     )
 
     parser.add_argument(
-        "variants",
+        "--variants",
         type=str,
         metavar="<Variants Parquet Directory>",
         help="path to directory which contains variants parquet data files",
@@ -70,15 +70,18 @@ def main(argv=sys.argv[1:], gpf_instance=None):
         print("missing or non-impala genotype storage")
         return
 
-    assert os.path.exists(argv.variants)
-    partition_config_file = os.path.join(
-        argv.variants, "_PARTITION_DESCRIPTION")
+    partition_descriptor = None
+    if argv.variants and os.path.exists(argv.variants):
+        partition_config_file = os.path.join(
+            argv.variants, "_PARTITION_DESCRIPTION")
 
-    if os.path.isdir(argv.variants) and os.path.exists(partition_config_file):
-        partition_descriptor = ParquetPartitionDescriptor.from_config(
-            partition_config_file, root_dirname=argv.variants
-        )
-    else:
+        if os.path.isdir(argv.variants) and \
+                os.path.exists(partition_config_file):
+            partition_descriptor = ParquetPartitionDescriptor.from_config(
+                partition_config_file, root_dirname=argv.variants
+            )
+
+    if partition_descriptor is None:
         partition_descriptor = NoPartitionDescriptor(
             root_dirname=argv.variants)
 

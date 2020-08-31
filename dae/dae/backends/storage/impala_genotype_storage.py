@@ -111,8 +111,8 @@ class ImpalaGenotypeStorage(GenotypeStorage):
         return family_variants
 
     def _generate_study_config(
-        self, study_id, pedigree_table, variants_table=None
-    ):
+            self, study_id, pedigree_table, variants_table=None):
+
         assert study_id is not None
 
         study_config = {
@@ -259,7 +259,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
         self.hdfs_helpers.put(pedigree_file, pedigree_hdfs_path)
 
         if variants_dir is None:
-            return (None, pedigree_hdfs_path)
+            return (None, None, pedigree_hdfs_path)
 
         local_variants_files, hdfs_variants_dir, hdfs_variants_files = \
             self._build_hdfs_variants(
@@ -286,7 +286,9 @@ class ImpalaGenotypeStorage(GenotypeStorage):
             pedigree_file, remote_subdir=pedigree_rsync_path)
 
         if variants_dir is None:
-            return (None, self._build_hdfs_pedigree(study_id, pedigree_file))
+            return (
+                None, None,
+                self._build_hdfs_pedigree(study_id, pedigree_file))
 
         variants_rsync_path = os.path.join(
             study_path, "variants/")
@@ -325,8 +327,6 @@ class ImpalaGenotypeStorage(GenotypeStorage):
             variants_sample=None,
             variants_schema=None):
 
-        assert variants_sample is not None or variants_schema is not None
-
         pedigree_table = self._construct_pedigree_table(study_id)
         variants_table = self._construct_variants_table(study_id)
 
@@ -338,43 +338,44 @@ class ImpalaGenotypeStorage(GenotypeStorage):
         self.impala_helpers.import_pedigree_into_db(
             db, pedigree_table, pedigree_hdfs_file)
 
+        if variants_hdfs_dir is None:
+            return self._generate_study_config(
+                study_id, pedigree_table)
+
+        assert variants_sample is not None or variants_schema is not None
         self.impala_helpers.import_variants_into_db(
             db, variants_table, variants_hdfs_dir,
             partition_description,
             variants_sample=variants_sample,
             variants_schema=variants_schema)
 
-        # self.impala_helpers.import_dataset_into_db(
-        #     db,
-        #     pedigree_table,
-        #     variants_table,
-        #     pedigree_hdfs_file,
-        #     variants_hdfs_file,
-        #     partition_description)
-
         return self._generate_study_config(
             study_id, pedigree_table, variants_table)
 
     def impala_load_dataset(self, study_id, variants_dir, pedigree_file):
-        partition_config_file = os.path.join(
-            variants_dir, "_PARTITION_DESCRIPTION"
-        )
-        if os.path.exists(partition_config_file):
-            partition_description = ParquetPartitionDescriptor.from_config(
-                partition_config_file, root_dirname=variants_dir)
+        if variants_dir is None:
+            partition_description = None
+            variants_schema = None
         else:
-            partition_description = NoPartitionDescriptor(
-                root_dirname=variants_dir)
+            partition_config_file = os.path.join(
+                variants_dir, "_PARTITION_DESCRIPTION"
+            )
+            if os.path.exists(partition_config_file):
+                partition_description = ParquetPartitionDescriptor.from_config(
+                    partition_config_file, root_dirname=variants_dir)
+            else:
+                partition_description = NoPartitionDescriptor(
+                    root_dirname=variants_dir)
 
-        variants_schema_file = os.path.join(
-            variants_dir, "_VARIANTS_SCHEMA"
-        )
-        variants_schema = None
-        if os.path.exists(variants_schema_file):
-            with open(variants_schema_file, "rt") as infile:
-                content = infile.read()
-                schema = toml.loads(content)
-                variants_schema = schema["variants_schema"]
+            variants_schema_file = os.path.join(
+                variants_dir, "_VARIANTS_SCHEMA"
+            )
+            variants_schema = None
+            if os.path.exists(variants_schema_file):
+                with open(variants_schema_file, "rt") as infile:
+                    content = infile.read()
+                    schema = toml.loads(content)
+                    variants_schema = schema["variants_schema"]
 
         variants_hdfs_dir, variants_hdfs_path, pedigree_hdfs_path = \
             self.hdfs_upload_dataset(

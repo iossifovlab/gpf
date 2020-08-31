@@ -44,8 +44,7 @@ def test_lift_over(mocker, chrom, pos, lift_over, expected, genomes_db_2013):
     )
     mocker.patch(
         "dae.annotation.tools.lift_over_annotator."
-        "LiftOverAnnotator.build_lift_over"
-    )
+        "LiftOverAnnotator.build_lift_over")
 
     annotator = LiftOverAnnotator(config, genomes_db_2013)
     assert annotator is not None
@@ -77,8 +76,7 @@ def test_lift_over(mocker, chrom, pos, lift_over, expected, genomes_db_2013):
     ],
 )
 def test_pipeline_with_liftover(
-    mocker, location, lift_over, expected_location, genomes_db_2013
-):
+        mocker, location, lift_over, expected_location, genomes_db_2013):
 
     options = {
         "default_arguments": None,
@@ -91,8 +89,8 @@ def test_pipeline_with_liftover(
 
     mocker.patch(
         "dae.annotation.tools.lift_over_annotator."
-        "LiftOverAnnotator.build_lift_over"
-    )
+        "LiftOverAnnotator.build_lift_over")
+
     pipeline = PipelineAnnotator.build(options, filename, genomes_db_2013,)
     assert pipeline is not None
     assert len(pipeline.annotators) == 3

@@ -2,13 +2,6 @@
 import sys
 import argparse
 
-import matplotlib as mpl
-
-mpl.use("PS")  # noqa
-import matplotlib.pyplot as plt
-
-plt.ioff()  # noqa
-
 from dae.pedigrees.loader import FamiliesLoader
 
 from dae.pedigrees.drawing import OffsetLayoutDrawer, PDFLayoutDrawer
@@ -16,6 +9,12 @@ from dae.pedigrees.layout import Layout
 from dae.common_reports.family_report import FamiliesReport
 from dae.configuration.gpf_config_parser import FrozenBox
 from dae.person_sets import PersonSetCollection
+
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+
+mpl.use("PS")  # noqa
+plt.ioff()  # noqa
 
 
 def build_families_report(families):
@@ -57,8 +56,9 @@ def draw_families_report(families):
     families_report = build_families_report(families)
     assert len(families_report.families_counters) == 1
     family_counters = families_report.families_counters[0]
+    print("total number:", len(family_counters.counters))
 
-    for family_counter in family_counters.counters.values():
+    for index, family_counter in enumerate(family_counters.counters.values()):
         family = family_counter.family
         layout = build_family_layout(family)
         if len(family_counter.families) > 5:
@@ -69,6 +69,14 @@ def draw_families_report(families):
 
         figure = draw_pedigree(layout, title=title)
         yield figure
+        remainder = (index + 1) % 10
+        if remainder == 0:
+            print(".", end="", file=sys.stderr)
+        remainder = (index + 1) % 100
+        if remainder == 0:
+            print("", file=sys.stderr)
+
+    print("", file=sys.stderr)
 
 
 def draw_families(families):
@@ -101,7 +109,7 @@ def main(argv=sys.argv[1:]):
     parser.add_argument(
         "--mode",
         type=str,
-        default="families",
+        default="report",
         dest="mode",
         help="mode of drawing; supported modes are `families` and `report`; "
         "defaults: `report`",
@@ -110,11 +118,12 @@ def main(argv=sys.argv[1:]):
     argv = parser.parse_args(argv)
 
     filename, params = FamiliesLoader.parse_cli_arguments(argv)
-    families_loader = FamiliesLoader(filename, params=params)
+    families_loader = FamiliesLoader(filename, **params)
     families = families_loader.load()
 
     mode = argv.mode
     assert mode in ("families", "report")
+    print("mode:", mode)
     if mode == "report":
         generator = draw_families_report(families)
     else:

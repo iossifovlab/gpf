@@ -15,7 +15,7 @@ def main(argv):
         "--output",
         dest="output_filename",
         help="output families parquet filename "
-        "(default is [basename(families_filename).parquet])",
+        "(default is [basename(families_filename).ped])",
     )
     parser.add_argument(
         "--partition-description",
@@ -35,12 +35,14 @@ def main(argv):
     argv = parser.parse_args(argv)
 
     filename, params = FamiliesLoader.parse_cli_arguments(argv)
+    print("PED PARAMS:", params)
+
     if argv.study_id is not None:
         study_id = argv.study_id
     else:
         study_id, _ = os.path.splitext(os.path.basename(filename))
 
-    loader = FamiliesLoader(filename, params=params)
+    loader = FamiliesLoader(filename, **params)
     families = loader.load()
 
     if argv.partition_description:
@@ -51,7 +53,7 @@ def main(argv):
 
     if not argv.output_filename:
         output_filename, _ = os.path.splitext(os.path.basename(filename))
-        output_filename = f"{output_filename}.parquet"
+        output_filename = f"{output_filename}.ped"
     else:
         output_filename = argv.output_filename
 

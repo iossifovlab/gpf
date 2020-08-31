@@ -1,11 +1,15 @@
 import time
 import functools
+import logging
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from typing import Dict
 from dae.pedigrees.family import Family, FamiliesData
 from dae.person_sets import PersonSetCollection
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 class GenotypeData:
@@ -180,8 +184,8 @@ class GenotypeDataGroup(GenotypeData):
                 if limit and len(seen) >= limit:
                     return
             elapsed = time.time() - started
-            print(
-                "processing study", future.study_id,
+            LOGGER.info(
+                f"processing study {future.study_id}"
                 f"elapsed: {elapsed:.3f}")
 
     def get_studies_ids(self):
@@ -272,10 +276,14 @@ class GenotypeDataStudy(GenotypeData):
         if len(kwargs):
             # FIXME This will remain so it can be used for discovering
             # when excess kwargs are passed in order to fix such cases.
-            print("received excess keyword arguments when querying variants!")
-            print("kwargs received: {}".format(list(kwargs.keys())))
+            LOGGER.warn(
+                "received excess keyword arguments when querying variants!")
+            LOGGER.warn(
+                "kwargs received: {}".format(list(kwargs.keys())))
 
-        if study_filters and self.name not in study_filters:
+        LOGGER.info(f"study_filters: {study_filters}")
+
+        if study_filters and self.id not in study_filters:
             return
 
         person_ids = self._transform_person_set_collection_query(

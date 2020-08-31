@@ -193,7 +193,7 @@ def main(argv, gpf_instance=None):
     families_filename, families_params = FamiliesLoader.parse_cli_arguments(
         argv
     )
-    families_loader = FamiliesLoader(families_filename, params=families_params)
+    families_loader = FamiliesLoader(families_filename, **families_params)
     families = families_loader.load()
     elapsed = time.time() - start
     print(f"Families loaded in in {elapsed:.2f} sec", file=sys.stderr)

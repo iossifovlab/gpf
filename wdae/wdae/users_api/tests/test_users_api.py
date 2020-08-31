@@ -3,7 +3,7 @@ from pprint import pprint
 
 from rest_framework import status
 
-from users_api.views import is_email_valid
+from utils.email_regex import email_regex, is_email_valid
 
 
 def test_invalid_verif_path(client, researcher):
@@ -42,14 +42,25 @@ def test_register_existing_user(client, researcher):
     assert response.status_code == status.HTTP_201_CREATED
 
 
+def test_email_regex_is_posix_compliant():
+    assert r"+?" not in email_regex
+    assert r"*?" not in email_regex
+    assert r"(?:" not in email_regex
+    assert r"\w" not in email_regex
+    assert r"\d" not in email_regex
+
+
 def test_email_validaiton():
     assert is_email_valid("test@test.com")
     assert is_email_valid("t3st@t3st.org")
     assert is_email_valid("test@test.uk")
     assert is_email_valid("te-st@test.com")
     assert is_email_valid("a@b.com")
+    assert is_email_valid("UpperCase@email.com")
 
     assert not is_email_valid("abab")
     assert not is_email_valid("test@-test.com")
     assert not is_email_valid("test@com")
     assert not is_email_valid("@bla.com")
+    assert not is_email_valid("invalid@UpperCaseDomain.com")
+    assert not is_email_valid("invalid@uppercasedomain.Com")

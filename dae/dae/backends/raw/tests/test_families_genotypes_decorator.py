@@ -75,18 +75,18 @@ def test_vcf_loader_genetic_model(
         [
             "backends/quads_f1",
             [
-                np.array([[1, 2, 1, 2], [1, 0, 1, 0],]),
-                np.array([[2, 1, 1, 2], [0, 1, 1, 0],]),
+                np.array([[1, 2, 1, 2], [1, 0, 1, 0]]),
+                np.array([[2, 1, 1, 2], [0, 1, 1, 0]]),
             ],
         ],
         [
             "backends/quads_f1_X",
             [
-                np.array([[1, 1, 0, 2, 2], [1, 0, 1, 0, 0],]),
-                np.array([[2, 1, 1, 2, 2], [0, 1, 1, 0, 0],]),
-                np.array([[2, 1, 0, 2, 2], [0, 0, 1, 0, 0],]),
-                np.array([[2, 1, 2, 1, 1], [0, 1, 0, 1, 1],]),
-                np.array([[2, 0, 1, 1, 1], [0, 1, 0, 1, 1],]),
+                np.array([[1, 1, 0, 2, 2], [1, 0, 1, 0, 0]]),
+                np.array([[2, 1, 1, 2, 2], [0, 1, 1, 0, 0]]),
+                np.array([[2, 1, 0, 2, 2], [0, 0, 1, 0, 0]]),
+                np.array([[2, 1, 2, 1, 1], [0, 1, 0, 1, 1]]),
+                np.array([[2, 0, 1, 1, 1], [0, 1, 0, 1, 1]]),
             ],
         ],
     ],
@@ -113,7 +113,7 @@ def test_families_genotypes_decorator_broken_x(fixture_dirname, genome_2013):
 
     families_loader = FamiliesLoader(
         fixture_dirname("backends/denovo_families.txt"),
-        params={"ped_file_format": "simple"},
+        **{"ped_file_format": "simple"},
     )
     families = families_loader.load()
 

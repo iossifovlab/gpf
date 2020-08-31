@@ -82,7 +82,7 @@ def test_families_loader_no_role(pedigree, fixture_dirname):
     params = {
         "ped_no_role": True,
     }
-    loader = FamiliesLoader(filename, params=params)
+    loader = FamiliesLoader(filename, **params)
     families = loader.load()
 
     assert families is not None
@@ -111,7 +111,7 @@ def test_families_loader_roles_testing(fixture_dirname):
     params = {
         "ped_no_role": True,
     }
-    loader = FamiliesLoader(filename, params=params)
+    loader = FamiliesLoader(filename, **params)
     families = loader.load()
 
     assert families.persons["f1.mg_dad"].role == Role.maternal_grandfather
@@ -133,7 +133,7 @@ def test_families_ped_df(pedigree, temp_filename, fixture_dirname):
     filename = fixture_dirname(f"pedigrees/{pedigree}")
     assert os.path.exists(filename)
 
-    loader = FamiliesLoader(filename, params={})
+    loader = FamiliesLoader(filename)
     families = loader.load()
 
     assert families._ped_df is None

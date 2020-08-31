@@ -1,6 +1,5 @@
 import warnings
 import pandas as pd
-import numpy as np
 
 from functools import partial
 from collections import defaultdict
@@ -24,12 +23,12 @@ PED_COLUMNS_REQUIRED = (
 
 
 class FamiliesLoader:
-    def __init__(self, families_filename, params=dict(), ped_sep="\t"):
+    def __init__(self, families_filename, **params):
 
         self.filename = families_filename
         # TODO FIXME Params should be able to accept namedtuple instances
         self.params = params
-        self.params["ped_sep"] = ped_sep
+        # self.params["ped_sep"] = ped_sep
         self.file_format = self.params.get("ped_file_format", "pedigree")
 
     @staticmethod
@@ -56,8 +55,9 @@ class FamiliesLoader:
         ped_layout_mode = pedigree_format.get("ped_layout_mode", "load")
         if ped_layout_mode == "generate":
             for family in families.values():
-                layout = Layout.from_family(family)
-                layout.apply_to_family(family)
+                layouts = Layout.from_family(family)
+                for layout in layouts:
+                    layout.apply_to_family(family)
         elif ped_layout_mode == "load":
             pass
         else:
@@ -70,7 +70,7 @@ class FamiliesLoader:
     def _build_families_roles(families, pedigree_format):
         has_unknown_roles = any(
             [
-                p.role is None or p.role == Role.unknown
+                p.role is None  # or p.role == Role.unknown
                 for p in families.persons.values()
             ]
         )
@@ -143,7 +143,8 @@ class FamiliesLoader:
             default="familyId",
             help="specify the name of the column in the pedigree file that "
             "holds "
-            "the ID of the family the person belongs to [default: %(default)s]",
+            "the ID of the family the person belongs to "
+            "[default: %(default)s]",
         )
 
         parser.add_argument(

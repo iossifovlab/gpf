@@ -285,7 +285,7 @@ hdfs.flag: \\
 \t\tpedigree.flag
 \thdfs_parquet_loader.py {{study_id}} \\
 \t\t{{pedigree.output}} \\
-\t\t{{variants_output}} \\
+\t\t--variants {{variants_output}} \\
 \t\t--gs {{genotype_storage}} \\
 \t\t&& touch $@
 
@@ -461,7 +461,7 @@ rule hdfs:
 {%- if genotype_storage %}
             --gs {{genotype_storage}} \\
 {%- endif %}
-            {{pedigree.output}} {{variants_output}} \\
+            {{pedigree.output}} --variants {{variants_output}} \\
             > {log.stdout} 2> {log.stderr}
         '''
 
@@ -576,7 +576,7 @@ class BatchImporter:
             FamiliesLoader.parse_cli_arguments(argv)
 
         families_loader = FamiliesLoader(
-            families_filename, params=families_params
+            families_filename, **families_params
         )
         self.families_loader = families_loader
         return self
@@ -1098,7 +1098,7 @@ class Variants2ParquetTool:
             FamiliesLoader.parse_cli_arguments(argv)
 
         families_loader = FamiliesLoader(
-            families_filename, params=families_params
+            families_filename, **families_params
         )
         families = families_loader.load()
 

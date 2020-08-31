@@ -19,7 +19,13 @@ class Mating:
 
     @staticmethod
     def parents_id(person):
+        assert person.mom_id is None or type(person.mom_id) == str, person
+        assert person.dad_id is None or type(person.dad_id) == str, person
+
         return Mating.build_id(person.mom_id, person.dad_id)
+
+    def __repr__(self):
+        return f"({self.id}> Mom: {self.mom_id}, Dad: {self.dad_id})"
 
 
 class FamilyRoleBuilder:
@@ -70,6 +76,8 @@ class FamilyRoleBuilder:
                 return person
 
         affected = self.family.get_members_with_statuses([Status.affected])
+        affected = [p for p in affected if p.has_parent()]
+
         if len(affected) > 0:
             return affected[0]
         return None
@@ -114,10 +122,8 @@ class FamilyRoleBuilder:
             ):
                 person = self.family.persons[mating.dad_id]
                 self._set_person_role(person, Role.spouse)
-            elif (
-                mating.mom_id is not None
-                and mating.mom_id != proband.person_id
-            ):
+            elif mating.mom_id is not None and \
+                    mating.mom_id != proband.person_id:
                 person = self.family.persons[mating.mom_id]
                 self._set_person_role(person, Role.spouse)
 

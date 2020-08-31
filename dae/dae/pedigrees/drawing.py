@@ -3,17 +3,18 @@ import math
 from itertools import zip_longest
 
 import matplotlib as mpl
-
-mpl.use("PS")  # noqa
 import matplotlib.pyplot as plt
 
-plt.ioff()  # noqa
 import matplotlib.patches as mpatches
 import matplotlib.lines as mlines
 from matplotlib.path import Path
 from matplotlib.backends.backend_pdf import PdfPages
 
 from dae.variants.attributes import Sex, Role, Status
+
+
+mpl.use("PS")  # noqa
+plt.ioff()  # noqa
 
 
 class PDFLayoutDrawer(object):
@@ -37,15 +38,16 @@ class PDFLayoutDrawer(object):
 
 class OffsetLayoutDrawer(object):
     def __init__(
-        self,
-        layout,
-        x_offset,
-        y_offset,
-        gap=4.0,
-        show_id=False,
-        show_family=False,
-        figsize=(7, 10),
-    ):
+            self,
+            layout,
+            x_offset,
+            y_offset,
+            gap=4.0,
+            show_id=False,
+            show_family=False,
+            figsize=(7, 10)):
+
+        assert layout is not None
 
         self._x_offset = x_offset
         self._y_offset = y_offset
@@ -64,9 +66,9 @@ class OffsetLayoutDrawer(object):
         if ax is not None:
             ax_pedigree = ax
         else:
-            pedigree_axes_rect = (0.35, 0.33, 0.33, 0.33)
+            pedigree_axes_rect = (0.1, 0.3, 0.8, 0.6)
             if self.show_family:
-                pedigree_axes_rect = (0.35, 0.45, 0.3, 0.45)
+                pedigree_axes_rect = (0.1, 0.35, 0.8, 0.55)
 
             ax_pedigree = figure.add_axes(pedigree_axes_rect)
             ax_pedigree.axis("off")
@@ -74,11 +76,11 @@ class OffsetLayoutDrawer(object):
                 aspect="equal", adjustable="datalim", anchor="C"
             )
             ax_pedigree.autoscale_view()
+        for layout in self._layout:
+            self._draw_lines(ax_pedigree, layout)
+            self._draw_rounded_lines(ax_pedigree, layout)
 
-        self._draw_lines(ax_pedigree)
-        self._draw_rounded_lines(ax_pedigree)
-
-        self._draw_members(ax_pedigree)
+            self._draw_members(ax_pedigree, layout)
 
         if ax:
             return ax_pedigree
@@ -95,7 +97,8 @@ class OffsetLayoutDrawer(object):
 
             family = [
                 member.individual.member
-                for layer in self._layout.positions
+                for layout in self._layout
+                for layer in layout.positions
                 for member in layer
             ]
 
@@ -240,8 +243,8 @@ class OffsetLayoutDrawer(object):
 
         return fcf
 
-    def _draw_lines(self, axes):
-        for line in self._layout.lines:
+    def _draw_lines(self, axes, layout):
+        for line in layout.lines:
             if not line.curved:
                 axes.add_line(
                     mlines.Line2D(
@@ -251,11 +254,10 @@ class OffsetLayoutDrawer(object):
                     )
                 )
 
-    def _draw_rounded_lines(self, axes):
+    def _draw_rounded_lines(self, axes, layout):
         def elementwise_sum(x, y):
             return tuple([x[0] + y[0], x[1] + y[1]])
-
-        for line in self._layout.lines:
+        for line in layout.lines:
             if line.curved:
                 offset = (self._x_offset, self._y_offset)
                 verts = [
@@ -271,10 +273,10 @@ class OffsetLayoutDrawer(object):
 
                 axes.add_patch(mpatches.PathPatch(path, facecolor="none"))
 
-                # line = ()
+            # line = ()
 
-    def _draw_members(self, axes):
-        for level in self._layout.positions:
+    def _draw_members(self, axes, layout):
+        for level in layout.positions:
             for individual in level:
                 if individual.individual.member.generated:
                     individual_color = "grey"
@@ -416,14 +418,16 @@ class OffsetLayoutDrawer(object):
         figure.text(x, y, title, horizontalalignment="center", **kwargs)
 
     def _horizontal_mirror_layout(self):
-        highest_y = (
-            max([i.y for level in self._layout.positions for i in level]) + 10
+        highest_y = max(
+            max([i.y for level in layout.positions for i in level]) + 10
+            for layout in self._layout
         )
 
-        for level in self._layout.positions:
-            for individual in level:
-                individual.y = highest_y - individual.y
+        for layout in self._layout:
+            for level in layout.positions:
+                for individual in level:
+                    individual.y = highest_y - individual.y
 
-        for line in self._layout.lines:
-            line.y1 = highest_y - line.y1 + self._layout.positions[0][0].size
-            line.y2 = highest_y - line.y2 + self._layout.positions[0][0].size
+            for line in layout.lines:
+                line.y1 = highest_y - line.y1 + layout.positions[0][0].size
+                line.y2 = highest_y - line.y2 + layout.positions[0][0].size
