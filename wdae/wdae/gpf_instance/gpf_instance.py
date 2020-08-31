@@ -90,6 +90,8 @@ class WGPFInstance(GPFInstance):
         )
 
     def get_genotype_data(self, dataset_id):
+        # TODO: Avoid returning different types of data when remote
+        # Returns an instance GenotypeData when local, a Box config when remote
         genotype_data = super(WGPFInstance, self).get_genotype_data(dataset_id)
         if genotype_data is not None:
             return genotype_data
