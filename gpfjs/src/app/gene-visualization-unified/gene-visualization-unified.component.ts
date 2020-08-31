@@ -94,7 +94,7 @@ export class GeneVisualizationUnifiedComponent implements OnInit {
 		effectType = effectType.toLowerCase();
 		if(checked) this.selectedEffectTypes.push(effectType);
     else this.selectedEffectTypes.splice(this.selectedEffectTypes.indexOf(effectType), 1);
-
+    
     if (this.gene !== undefined) {
       this.drawGene();
       this.drawPlot();
@@ -220,7 +220,6 @@ export class GeneVisualizationUnifiedComponent implements OnInit {
   
   drawGene() {
     this.svgHeight = this.svgHeightFreqRaw + this.gene.transcripts.length * 50;
-
     d3.select('#svg-container').selectAll('svg').remove();
 
     this.svgElement = d3.select('#svg-container')
@@ -230,18 +229,18 @@ export class GeneVisualizationUnifiedComponent implements OnInit {
 		.append('g')
 		.attr('transform', `translate(${this.margin.left}, ${this.margin.top})`);
 
-    let transcriptYPosition = this.svgHeightFreqRaw + 20;
-    for (let i = 0; i < this.gene.transcripts.length; i++) {
-      this.drawTranscript(i, transcriptYPosition);
-      transcriptYPosition += 50;
-    }
-
     this.brush = d3.brushX().extent([[0, 0], [this.svgWidth, this.svgHeight]])
     .on('end', this.brushEndEvent);
 
     this.svgElement.append('g')
     .attr('class', 'brush')
     .call(this.brush);
+
+    let transcriptYPosition = this.svgHeightFreqRaw + 20;
+    for (let i = 0; i < this.gene.transcripts.length; i++) {
+      this.drawTranscript(i, transcriptYPosition);
+      transcriptYPosition += 50;
+    }
   }
 
   brushEndEvent = () => {
@@ -273,28 +272,32 @@ export class GeneVisualizationUnifiedComponent implements OnInit {
   }
 
   drawTranscript(transcriptId: number, yPos: number) {
-    const firstStart = this.gene.transcripts[transcriptId].exons[0].start;
-    let lastEnd = null;
-    const strand = this.gene.transcripts[transcriptId].strand;
+    const transcript = this.gene.transcripts[transcriptId];
+    const firstStart = transcript.exons[0].start;
+    const strand = transcript.strand;
+    const totalExonCount = transcript.exons.length;
 
-    for (const exon of this.gene.transcripts[transcriptId].exons) {
+    let lastEnd = null;
+    let i = 1;
+    for (const exon of transcript.exons) {
       if (lastEnd) {
-        this.drawIntron(lastEnd, exon.start, yPos, strand);
+        this.drawIntron(lastEnd, exon.start, yPos, `intron ${i - 1}/${totalExonCount - 1}`);
       }
-      this.drawExon(exon.start, exon.stop, yPos);
+      this.drawExon(exon.start, exon.stop, yPos, `exon ${i}/${totalExonCount}`);
 
       lastEnd = exon.stop;
+      i += 1;
     }
 
     this.drawTranscriptUTRText(firstStart, lastEnd, yPos, strand);
   }
 
-  drawExon(xStart: number, xEnd: number, y: number) {
-    this.drawRect(xStart, xEnd, y, 10, 'Exon ?/?');
+  drawExon(xStart: number, xEnd: number, y: number, title: string) {
+    this.drawRect(xStart, xEnd, y, 10, title);
   }
 
-  drawIntron(xStart: number, xEnd: number, y: number, strand: string) {
-    this.drawLine(xStart, xEnd, y, 2, 'Intron ?/?', strand);
+  drawIntron(xStart: number, xEnd: number, y: number, title: string) {
+    this.drawLine(xStart, xEnd, y, title);
   }
 
   drawTranscriptUTRText(xStart: number, xEnd: number, y: number, strand: string) {
@@ -329,7 +332,7 @@ export class GeneVisualizationUnifiedComponent implements OnInit {
     .append('svg:title').text(svgTitle);
   }
 
-  drawLine(xStart: number, xEnd: number, y: number, height: number, svgTitle: string, strand: string) {
+  drawLine(xStart: number, xEnd: number, y: number, svgTitle: string) {
     let xStartAligned = this.x(xStart);
     let xEndAligned = this.x(xEnd);
 
@@ -338,6 +341,7 @@ export class GeneVisualizationUnifiedComponent implements OnInit {
     .attr('y1', y + 5)
     .attr('x2', xEndAligned)
     .attr('y2', y + 5)
-    .attr('stroke', 'black'); 
+    .attr('stroke', 'black')
+    .append('svg:title').text(svgTitle);
   }
 }
