@@ -107,9 +107,9 @@ export class GeneVisualizationUnifiedComponent implements OnInit {
 	}
 
 	getVariantColor(worst_effect) {
-		worst_effect = worst_effect.toLowerCase();
+    worst_effect = worst_effect.toLowerCase();
 
-		if(this.lgds.indexOf(worst_effect) !== -1) {
+		if(this.lgds.indexOf(worst_effect) !== -1 || worst_effect == "lgds") {
 			return "#ff0000";
 		}
 		else if(worst_effect == "missense") {

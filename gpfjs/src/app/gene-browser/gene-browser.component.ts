@@ -21,7 +21,7 @@ import { GeneVisualizationUnifiedComponent } from 'app/gene-visualization-unifie
   }]
 })
 export class GeneBrowserComponent extends QueryStateCollector implements OnInit {
-  @ViewChild (GeneVisualizationUnifiedComponent) child: GeneVisualizationUnifiedComponent;
+  @ViewChild (GeneVisualizationUnifiedComponent, {static: true}) geneVisualizationUnifiedComponent: GeneVisualizationUnifiedComponent;
   selectedGene: Gene;
   geneSymbol: string = 'CHD8';
   genotypePreviewVariantsArray: GenotypePreviewVariantsArray;
@@ -61,7 +61,11 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
   }
 
   checkEffectType(effectType, checked) {
-    this.child.checkEffectType(effectType, checked)
+    this.geneVisualizationUnifiedComponent.checkEffectType(effectType, checked)
+  }
+
+  getVariantColor(effect) {
+    return this.geneVisualizationUnifiedComponent.getVariantColor(effect);
   }
 
   submitGeneRequest() {

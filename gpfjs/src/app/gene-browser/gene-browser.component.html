@@ -12,6 +12,11 @@
         <div style="display: inline; margin-right: 20px;" *ngFor="let effect of ['LGDs', 'Missense', 'Synonymous', 'Other']; let i=index" class="checkbox">
         <label>
           <input #checkbox checked type="checkbox" (change)="checkEffectType(effect, checkbox.checked)">
+          <span
+            class="pedigree-icon"
+            [style.background-color]="getVariantColor(effect)"
+            style="opacity: 0.75;"
+          ></span>
           {{ effect }}
         </label>
         </div>

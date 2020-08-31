@@ -28,16 +28,6 @@
   padding: 20px;
 }
 
-.pedigree-icon {
-  margin-bottom: -1px;
-  margin-right: 3px;
-  margin-left: 3px;
-  display: inline-block;
-  width: 15px;
-  height: 15px;
-  border: 0.1px solid #aaaaaa;
-}
-
 th.rotate > div {
   display: inline-block;
   position: relative;
