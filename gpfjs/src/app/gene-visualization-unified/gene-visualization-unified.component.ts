@@ -144,13 +144,13 @@ export class GeneVisualizationUnifiedComponent implements OnInit {
 	hydrateVariantsData(variantsArray) {
 		this.variantsDataRepr = [];
 		for(let v of variantsArray.genotypePreviews) {
-			if(this.isVariantEffectSelected(v.get("effect.worst effect"))) {
+			if(this.isVariantEffectSelected(v.get("effect.worst effect type"))) {
 				if(v.get(this.frequencyColumn) !== "-" || v.get("variant.is denovo")) {
 					this.variantsDataRepr.push(
 						{
 							position: this.extractPosition(v.get("variant.location")),
 							frequency: v.get(this.frequencyColumn) === "-" ? "denovo" : v.get(this.frequencyColumn),
-							color: this.getVariantColor(v.get("effect.worst effect")),
+							color: this.getVariantColor(v.get("effect.worst effect type")),
 						}
 					)
 				}
