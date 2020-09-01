@@ -1,4 +1,6 @@
 from django.http.response import StreamingHttpResponse, FileResponse
+from django.db.models import Q
+
 from rest_framework import status
 from rest_framework.response import Response
 
@@ -26,11 +28,16 @@ def handle_partial_permissions(user, dataset_id: str, request_data: dict):
     in order to filter variants from studies the user cannot access.
     """
 
+    any_dataset = user.groups.filter(Q(name="admin") | Q(name="any_dataset"))
+    logger.debug(f"any_dataset: {any_dataset} ({bool(any_dataset)})")
+    any_dataset = bool(any_dataset)
+
     user_allowed_datasets = {
         dataset_object.dataset_id
         for dataset_object in Dataset.objects.all()
-        if user.groups.filter(name=dataset_object.dataset_id).exists()
+        if any_dataset or user.groups.filter(name=dataset_object.dataset_id).exists()
     }
+    logger.debug(f"user allowed datasets: {user_allowed_datasets}")
 
     if dataset_id not in user_allowed_datasets:
         if request_data.get("study_filters"):

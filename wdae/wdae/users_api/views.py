@@ -52,6 +52,30 @@ class UserViewSet(viewsets.ModelViewSet):
     filter_backends = (filters.SearchFilter,)
     search_fields = ("groups__name", "email", "name")
 
+    @request_logging(LOGGER)
+    def list(self, request):
+        return super(UserViewSet, self).list(request)
+
+    @request_logging(LOGGER)
+    def create(self, request):
+        return super(UserViewSet, self).create(request)
+
+    @request_logging(LOGGER)
+    def retrieve(self, request, pk=None):
+        return super(UserViewSet, self).retrieve(request, pk=pk)
+
+    @request_logging(LOGGER)
+    def update(self, request, pk=None, *args, **kwargs):
+        return super(UserViewSet, self).update(request, pk=pk, *args, **kwargs)
+
+    @request_logging(LOGGER)
+    def partial_update(self, request, pk=None):
+        return super(UserViewSet, self).partial_update(request, pk=pk)
+
+    @request_logging(LOGGER)
+    def destroy(self, request, pk=None):
+        return super(UserViewSet, self).destroy(request, pk=pk)
+
     def get_serializer_class(self):
         serializer_class = self.serializer_class
 

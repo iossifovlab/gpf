@@ -1,3 +1,4 @@
+import logging
 from contextlib import closing
 
 from deprecation import deprecated
@@ -21,6 +22,9 @@ from ..attributes_query_inheritance import InheritanceTransformer, \
     inheritance_parser
 
 from dae.variants.attributes import Role, Status, Sex
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 class ImpalaFamilyVariants:
@@ -76,7 +80,6 @@ class ImpalaFamilyVariants:
         with closing(self.connection()) as conn:
             with conn.cursor() as cursor:
                 query = self.build_count_query(**kwargs)
-                # print('COUNT QUERY:', query)
                 cursor.execute(query)
                 row = next(cursor)
                 return row[0]
@@ -124,8 +127,7 @@ class ImpalaFamilyVariants:
                     return_unknown=return_unknown,
                     limit=None,
                 )
-                # print("LIMIT:", limit)
-                print("FINAL QUERY: ", query)
+                LOGGER.debug(f"FINAL QUERY: {query}")
 
                 seen = set()
 
@@ -153,9 +155,10 @@ class ImpalaFamilyVariants:
                     seen.add(fvuid)
 
                     if type(variant_data) == str:
-                        print(
-                            "variant_data is string!!!!", family_id,
-                            chrom, position, end_position, reference)
+                        LOGGER.debug(
+                            f"variant_data is string!!!! "
+                            f"{family_id}, {chrom}, "
+                            f"{position}, {end_position}, {reference}")
                         variant_data = bytes(variant_data, "utf8")
 
                     family = self.families[family_id]
@@ -332,7 +335,7 @@ class ImpalaFamilyVariants:
                         properties_end = row_index + 1
 
                 if properties_start == -1:
-                    print("No partitioning found")
+                    LOGGER.debug("No partitioning found")
                     return
 
                 for index in range(properties_start, properties_end):

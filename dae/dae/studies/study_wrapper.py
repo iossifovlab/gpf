@@ -1,6 +1,8 @@
 import math
 import itertools
 import traceback
+import logging
+
 from functools import reduce
 
 from box import Box
@@ -37,6 +39,9 @@ from dae.studies.study import GenotypeDataGroup
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.person_sets import PersonSetCollection
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 class StudyWrapperBase:
@@ -263,10 +268,10 @@ class StudyWrapper(StudyWrapperBase):
                     )
                 )
             except IndexError:
-                print(best_st, index, member)
                 import traceback
                 traceback.print_exc()
                 missing_members.add(member.person_id)
+                LOGGER.error(f"{best_st}, {index}, {member}")
 
         for member in allele.family.full_members:
             if member.generated or member.person_id in missing_members:
@@ -369,7 +374,7 @@ class StudyWrapper(StudyWrapperBase):
     # ultraRareOnly
     # TMM_ALL
     def query_variants(self, **kwargs):
-        # print("kwargs in study group:", kwargs)
+        LOGGER.debug(f"kwargs in study group: {kwargs}")
         kwargs = self._add_people_with_people_group(kwargs)
 
         limit = None
@@ -454,6 +459,7 @@ class StudyWrapper(StudyWrapperBase):
             )
             kwargs.pop("inheritanceTypeFilter")
 
+        LOGGER.info(f"query filters after translation: {kwargs}")
         variants_from_studies = itertools.islice(
             self.genotype_data_study.query_variants(**kwargs), limit
         )
