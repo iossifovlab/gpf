@@ -171,6 +171,29 @@ def test_mixed_layered_dataset_rights_query(db, user, user_client):
     assert len(res) == 17
 
 
+def test_mixed_layered_diff_group_dataset_rights_query(db, user, user_client):
+    data = {
+        "datasetId": "composite_dataset_ds",
+    }
+
+    group = Group.objects.create(name="new_custom_group")
+    dataset = Dataset.objects.get(dataset_id="composite_dataset_ds")
+    assign_perm("view", group, dataset)
+    dataset = Dataset.objects.get(dataset_id="inheritance_trio")
+    assign_perm("view", group, dataset)
+
+    user.groups.add(group)
+
+    response = user_client.post(
+        PREVIEW_VARIANTS_URL, json.dumps(data), content_type="application/json"
+    )
+    assert status.HTTP_200_OK == response.status_code
+    res = response.streaming_content
+    res = json.loads("".join(map(lambda x: x.decode("utf-8"), res)))
+
+    assert len(res) == 17
+
+
 def test_mixed_dataset_rights_download(db, user, user_client):
     data = {
         "queryData": json.dumps({"datasetId": "composite_dataset_ds"})

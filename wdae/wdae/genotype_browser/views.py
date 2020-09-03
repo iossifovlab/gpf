@@ -37,8 +37,25 @@ def handle_partial_permissions(user, dataset_id: str, request_data: dict):
     if any_dataset or user.groups.filter(name=dataset_id).exists():
         return
 
+    dataset_obj = Dataset.objects.get(dataset_id=dataset_id)
+
+    dataset_groups = set()
+    non_dataset_groups = set()
+    for group in get_groups_with_perms(dataset_obj):
+        if group.name == dataset_id:
+            continue
+        if Dataset.objects.filter(dataset_id=group.name).exists():
+            dataset_groups.add(group)
+        else:
+            non_dataset_groups.add(group.name)
+
+    if user.groups.filter(name__in=non_dataset_groups).exists():
+        return
+
     user_allowed_datasets: Set[str] = set()
-    for dataset_object in Dataset.objects.filter(~Q(dataset_id=dataset_id)):
+
+    for group in dataset_groups:
+        dataset_object = Dataset.objects.get(dataset_id=group.name)
         dataset_groups = [
             group.name for group in get_groups_with_perms(dataset_object)
         ]
