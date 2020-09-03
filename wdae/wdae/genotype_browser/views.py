@@ -1,11 +1,13 @@
 from django.http.response import StreamingHttpResponse, FileResponse
 from django.db.models import Q
+from guardian.shortcuts import get_groups_with_perms
 
 from rest_framework import status
 from rest_framework.response import Response
 
 import json
 import logging
+from typing import Set
 
 from utils.logger import LOGGER
 from utils.streaming_response_util import iterator_to_json
@@ -32,11 +34,17 @@ def handle_partial_permissions(user, dataset_id: str, request_data: dict):
     logger.debug(f"any_dataset: {any_dataset} ({bool(any_dataset)})")
     any_dataset = bool(any_dataset)
 
-    user_allowed_datasets = {
-        dataset_object.dataset_id
-        for dataset_object in Dataset.objects.all()
-        if any_dataset or user.groups.filter(name=dataset_object.dataset_id).exists()
-    }
+    if any_dataset or user.groups.filter(name=dataset_id).exists():
+        return
+
+    user_allowed_datasets: Set[str] = set()
+    for dataset_object in Dataset.objects.filter(~Q(dataset_id=dataset_id)):
+        dataset_groups = [
+            group.name for group in get_groups_with_perms(dataset_object)
+        ]
+        if user.groups.filter(name__in=dataset_groups).exists():
+            user_allowed_datasets.add(dataset_object.dataset_id)
+
     logger.debug(f"user allowed datasets: {user_allowed_datasets}")
 
     if dataset_id not in user_allowed_datasets:

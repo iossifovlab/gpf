@@ -4,6 +4,7 @@ from gpf_instance.gpf_instance import get_gpf_instance
 from .models import Dataset
 from utils.datasets import find_dataset_id_in_request
 from guardian.utils import get_anonymous_user
+from guardian.shortcuts import get_groups_with_perms
 
 
 class IsDatasetAllowed(permissions.BasePermission):
@@ -16,7 +17,16 @@ class IsDatasetAllowed(permissions.BasePermission):
         return self.has_object_permission(request, view, dataset_id)
 
     def has_object_permission(self, request, view, dataset_id):
-        return self.user_has_permission(request.user, dataset_id)
+        if not self.user_has_permission(request.user, dataset_id):
+            if not Dataset.objects.filter(dataset_id=dataset_id).exists():
+                return False
+            dataset_object = Dataset.objects.get(dataset_id=dataset_id)
+            for group in get_groups_with_perms(dataset_object):
+                if Dataset.objects.filter(dataset_id=group.name).exists():
+                    if self.user_has_permission(request.user, group.name):
+                        return True
+            return False
+        return True
 
     @staticmethod
     def user_has_permission(user, dataset_id):
