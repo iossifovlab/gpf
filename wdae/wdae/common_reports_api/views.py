@@ -2,7 +2,7 @@ from django.http.response import StreamingHttpResponse
 from rest_framework import status
 from rest_framework.response import Response
 
-from datasets_api.permissions import IsDatasetAllowed
+from datasets_api.permissions import user_has_permission
 
 from query_base.query_base import QueryBaseView
 
@@ -35,7 +35,7 @@ class FamiliesDataDownloadView(QueryBaseView):
         if not report:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        if not IsDatasetAllowed.user_has_permission(
+        if not user_has_permission(
             request.user, common_report_id
         ):
             return Response(status=status.HTTP_403_FORBIDDEN)

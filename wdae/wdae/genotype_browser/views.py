@@ -1,11 +1,13 @@
 from django.http.response import StreamingHttpResponse, FileResponse
 from django.db.models import Q
+from guardian.shortcuts import get_groups_with_perms
 
 from rest_framework import status
 from rest_framework.response import Response
 
 import json
 import logging
+from typing import Set
 
 from utils.logger import LOGGER
 from utils.streaming_response_util import iterator_to_json
@@ -16,6 +18,8 @@ from query_base.query_base import QueryBaseView
 from gene_sets.expand_gene_set_decorator import expand_gene_set
 
 from datasets_api.models import Dataset
+from datasets_api.permissions import user_allowed_datasets, \
+    user_allowed_studies
 
 
 logger = logging.getLogger(__name__)
@@ -28,25 +32,10 @@ def handle_partial_permissions(user, dataset_id: str, request_data: dict):
     in order to filter variants from studies the user cannot access.
     """
 
-    any_dataset = user.groups.filter(Q(name="admin") | Q(name="any_dataset"))
-    logger.debug(f"any_dataset: {any_dataset} ({bool(any_dataset)})")
-    any_dataset = bool(any_dataset)
+    if dataset_id in user_allowed_datasets(user, dataset_id):
+        return
 
-    user_allowed_datasets = {
-        dataset_object.dataset_id
-        for dataset_object in Dataset.objects.all()
-        if any_dataset or user.groups.filter(name=dataset_object.dataset_id).exists()
-    }
-    logger.debug(f"user allowed datasets: {user_allowed_datasets}")
-
-    if dataset_id not in user_allowed_datasets:
-        if request_data.get("study_filters"):
-            combined_filters = \
-                set(request_data["study_filters"]) \
-                & user_allowed_datasets
-        else:
-            combined_filters = user_allowed_datasets
-        request_data["study_filters"] = list(combined_filters)
+    request_data["study_filters"] = user_allowed_studies(user, dataset_id)
 
 
 class QueryPreviewView(QueryBaseView):
