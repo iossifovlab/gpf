@@ -115,6 +115,7 @@ def test_simple_query_download(db, admin_client):
     }
 
 
+# START: Adaptive datasets rights
 def test_normal_dataset_rights_query(db, user, user_client):
     data = {
         "datasetId": "composite_dataset_ds",
@@ -230,3 +231,6 @@ def test_mixed_dataset_rights_third_party_group(db, user, user_client):
     res = json.loads("".join(map(lambda x: x.decode("utf-8"), res)))
 
     assert len(res) == 14
+
+
+# END: Adaptive datasets rights

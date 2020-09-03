@@ -18,6 +18,8 @@ from query_base.query_base import QueryBaseView
 from gene_sets.expand_gene_set_decorator import expand_gene_set
 
 from datasets_api.models import Dataset
+from datasets_api.permissions import user_allowed_datasets, \
+    user_allowed_studies
 
 
 logger = logging.getLogger(__name__)
@@ -30,48 +32,10 @@ def handle_partial_permissions(user, dataset_id: str, request_data: dict):
     in order to filter variants from studies the user cannot access.
     """
 
-    any_dataset = user.groups.filter(Q(name="admin") | Q(name="any_dataset"))
-    logger.debug(f"any_dataset: {any_dataset} ({bool(any_dataset)})")
-    any_dataset = bool(any_dataset)
-
-    if any_dataset or user.groups.filter(name=dataset_id).exists():
+    if dataset_id in user_allowed_datasets(user, dataset_id):
         return
 
-    dataset_obj = Dataset.objects.get(dataset_id=dataset_id)
-
-    dataset_groups = set()
-    non_dataset_groups = set()
-    for group in get_groups_with_perms(dataset_obj):
-        if group.name == dataset_id:
-            continue
-        if Dataset.objects.filter(dataset_id=group.name).exists():
-            dataset_groups.add(group)
-        else:
-            non_dataset_groups.add(group.name)
-
-    if user.groups.filter(name__in=non_dataset_groups).exists():
-        return
-
-    user_allowed_datasets: Set[str] = set()
-
-    for group in dataset_groups:
-        dataset_object = Dataset.objects.get(dataset_id=group.name)
-        dataset_groups = [
-            group.name for group in get_groups_with_perms(dataset_object)
-        ]
-        if user.groups.filter(name__in=dataset_groups).exists():
-            user_allowed_datasets.add(dataset_object.dataset_id)
-
-    logger.debug(f"user allowed datasets: {user_allowed_datasets}")
-
-    if dataset_id not in user_allowed_datasets:
-        if request_data.get("study_filters"):
-            combined_filters = \
-                set(request_data["study_filters"]) \
-                & user_allowed_datasets
-        else:
-            combined_filters = user_allowed_datasets
-        request_data["study_filters"] = list(combined_filters)
+    request_data["study_filters"] = user_allowed_studies(user, dataset_id)
 
 
 class QueryPreviewView(QueryBaseView):

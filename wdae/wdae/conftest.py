@@ -107,8 +107,8 @@ def fixtures_wgpf_instance(wgpf_instance, global_dae_fixtures_dir):
 
 @pytest.fixture(scope="function")
 def wdae_gpf_instance(
-    db, mocker, admin_client, fixtures_wgpf_instance
-):
+        db, mocker, admin_client, fixtures_wgpf_instance):
+
     reload_datasets(fixtures_wgpf_instance)
     mocker.patch(
         "query_base.query_base.get_gpf_instance",
@@ -140,7 +140,7 @@ def remote_settings(settings):
         "port": "21010",
         "user": "admin@iossifovlab.com",
         "password": "secret",
-        }]
+    }]
 
     # FIXME: Find a better workaround
     reload_datasets(load_gpf_instance())
