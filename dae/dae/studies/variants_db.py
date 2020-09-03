@@ -191,9 +191,9 @@ class VariantsDb(object):
 
     def get_wdae_wrapper(self, wdae_wrapper_id):
         study_wdae_wrapper = self.get_study_wdae_wrapper(wdae_wrapper_id)
-        genotype_data_group_wdae_wrapper = self.get_genotype_data_group_wdae_wrapper(
-            wdae_wrapper_id
-        )
+        genotype_data_group_wdae_wrapper = \
+            self.get_genotype_data_group_wdae_wrapper(wdae_wrapper_id)
+
         return (
             study_wdae_wrapper
             if study_wdae_wrapper

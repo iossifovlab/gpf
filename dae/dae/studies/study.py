@@ -39,6 +39,13 @@ class GenotypeData:
         self.person_set_collections: Dict[str, PersonSetCollection] = dict()
         self.person_set_collection_configs = dict()
 
+    @property
+    def is_group(self):
+        raise NotImplementedError()
+
+    def get_studies_ids(self, leafs=True):
+        raise NotImplementedError()
+
     def query_variants(
         self,
         regions=None,
@@ -59,9 +66,6 @@ class GenotypeData:
         study_filters=None,
         **kwargs,
     ):
-        raise NotImplementedError()
-
-    def get_studies_ids(self):
         raise NotImplementedError()
 
     @property
@@ -113,6 +117,10 @@ class GenotypeDataGroup(GenotypeData):
         self._families = self._build_families()
         self._build_person_set_collections()
         self._executor = None
+
+    @property
+    def is_group(self):
+        return True
 
     @property
     def executor(self):
@@ -189,9 +197,14 @@ class GenotypeDataGroup(GenotypeData):
                 f"processing study {future.study_id} "
                 f"elapsed: {elapsed:.3f}")
 
-    def get_studies_ids(self):
-        # TODO Use the 'cached' property on this
-        return [genotype_data_study.id for genotype_data_study in self.studies]
+    def get_studies_ids(self, leafs=True):
+        if not leafs:
+            return [st.id for st in self.studies]
+        else:
+            result = []
+            for st in self.studies:
+                result.extend(st.get_studies_ids())
+            return result
 
     def _build_families(self):
         return FamiliesData.from_families(
@@ -252,6 +265,13 @@ class GenotypeDataStudy(GenotypeData):
 
         self._backend = backend
         self._build_person_set_collections()
+
+    @property
+    def is_group(self):
+        return False
+
+    def get_studies_ids(self, leafs=True):
+        return [self.id]
 
     def query_variants(
             self,
@@ -341,9 +361,6 @@ class GenotypeDataStudy(GenotypeData):
                 else:
                     person_ids = selected_person_ids
         return person_ids
-
-    def get_studies_ids(self):
-        return [self.id]
 
     @property
     def families(self):

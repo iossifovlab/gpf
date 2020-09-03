@@ -77,6 +77,9 @@ class StudyWrapper(StudyWrapperBase):
 
         self.gene_weights_db = gene_weights_db
 
+    def get_studies_ids(self, leafs=True):
+        return self.genotype_data_study.get_studies_ids(leafs=leafs)
+
     def _init_wdae_config(self):
         genotype_browser_config = self.config.genotype_browser
         if not genotype_browser_config:
