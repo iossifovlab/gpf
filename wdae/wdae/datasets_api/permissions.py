@@ -99,7 +99,7 @@ def user_allowed_datasets(user, dataset_id):
     return set(result)
 
 
-def user_allowed_studies(user, dataset_id):
+def user_allowed_datasets_deep(user, dataset_id):
     datasets = user_allowed_datasets(user, dataset_id)
     gpf_instance = get_gpf_instance()
 

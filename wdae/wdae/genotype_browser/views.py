@@ -19,7 +19,7 @@ from gene_sets.expand_gene_set_decorator import expand_gene_set
 
 from datasets_api.models import Dataset
 from datasets_api.permissions import user_allowed_datasets, \
-    user_allowed_studies
+    user_allowed_datasets_deep
 
 
 logger = logging.getLogger(__name__)
@@ -35,7 +35,8 @@ def handle_partial_permissions(user, dataset_id: str, request_data: dict):
     if dataset_id in user_allowed_datasets(user, dataset_id):
         return
 
-    request_data["study_filters"] = user_allowed_studies(user, dataset_id)
+    request_data["study_filters"] = user_allowed_datasets_deep(
+        user, dataset_id)
 
 
 class QueryPreviewView(QueryBaseView):

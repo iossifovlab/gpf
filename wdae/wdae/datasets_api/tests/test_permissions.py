@@ -8,7 +8,7 @@ from datasets_api.permissions import user_has_permission, \
     add_group_perm_to_user, \
     add_group_perm_to_dataset, \
     user_allowed_datasets, \
-    user_allowed_studies
+    user_allowed_datasets_deep
 
 
 @pytest.fixture()
@@ -84,7 +84,7 @@ def test_dataset1_rights_allowed_datasets(db, user, dataset_wrapper):
     result = user_allowed_datasets(user, dataset_wrapper.id)
     assert result == set(["Dataset1"])
 
-    result = user_allowed_studies(user, dataset_wrapper.id)
+    result = user_allowed_datasets_deep(user, dataset_wrapper.id)
     assert result == set(["Study1", "Study3"])
 
 
@@ -93,7 +93,7 @@ def test_dataset2_rights_allowed_datasets(db, user, dataset_wrapper):
     result = user_allowed_datasets(user, dataset_wrapper.id)
     assert result == set(["Dataset2"])
 
-    result = user_allowed_studies(user, dataset_wrapper.id)
+    result = user_allowed_datasets_deep(user, dataset_wrapper.id)
     assert result == set(["Study2"])
 
 
@@ -103,7 +103,7 @@ def test_study1_and_dataset2_rights_allowed_datasets(db, user, dataset_wrapper):
     result = user_allowed_datasets(user, dataset_wrapper.id)
     assert result == set(["Study1", "Dataset2"])
 
-    result = user_allowed_studies(user, dataset_wrapper.id)
+    result = user_allowed_datasets_deep(user, dataset_wrapper.id)
     assert result == set(["Study1", "Study2"])
 
 
@@ -131,7 +131,7 @@ def test_study1_and_dataset2_group_rights_allowed_datasets(
     result = user_allowed_datasets(user, dataset_wrapper.id)
     assert result == set(["Study1", "Dataset2"])
 
-    result = user_allowed_studies(user, dataset_wrapper.id)
+    result = user_allowed_datasets_deep(user, dataset_wrapper.id)
     assert result == set(["Study1", "Study2"])
 
 
@@ -143,7 +143,7 @@ def test_dataset_any_dataset_group_rights(db, user, dataset_wrapper):
     result = user_allowed_datasets(user, dataset_wrapper.id)
     assert result == set(["Dataset"])
 
-    result = user_allowed_studies(user, dataset_wrapper.id)
+    result = user_allowed_datasets_deep(user, dataset_wrapper.id)
     assert result == set(["Study1", "Study2", "Study3"])
 
 
@@ -155,5 +155,5 @@ def test_dataset_admin_group_rights(db, user, dataset_wrapper):
     result = user_allowed_datasets(user, dataset_wrapper.id)
     assert result == set(["Dataset"])
 
-    result = user_allowed_studies(user, dataset_wrapper.id)
+    result = user_allowed_datasets_deep(user, dataset_wrapper.id)
     assert result == set(["Study1", "Study2", "Study3"])
