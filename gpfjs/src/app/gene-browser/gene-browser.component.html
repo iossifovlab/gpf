@@ -30,18 +30,19 @@
     <gpf-gene-visualization-unified
         [gene]="selectedGene"
         [variantsArray]="genotypePreviewVariantsArray"
+        (updateShownTablePreviewVariantsArrayEvent)="updateShownTablePreviewVariantsArray($event)"
         [streamingFinished$]="queryService.streamingFinishedSubject">
     >
     </gpf-gene-visualization-unified>
 
     <div *ngIf="selectedDataset$ | async as dataset">
-        <span *ngIf="genotypePreviewVariantsArray && genotypePreviewInfo" id="variants-count-span">
-          {{ genotypePreviewVariantsArray.getVariantsCount(genotypePreviewInfo.maxVariantsCount) }}
+        <span *ngIf="shownTablePreviewVariantsArray && genotypePreviewInfo" id="variants-count-span">
+          {{ shownTablePreviewVariantsArray.getVariantsCount(genotypePreviewInfo.maxVariantsCount) }}
         </span>
         <gpf-genotype-preview-table
             [columns]="dataset?.genotypeBrowserConfig?.columns"
             [genotypePreviewInfo]="genotypePreviewInfo"
-            [genotypePreviewVariantsArray]="genotypePreviewVariantsArray">
+            [genotypePreviewVariantsArray]="shownTablePreviewVariantsArray">
         </gpf-genotype-preview-table>
     </div>
 </div>

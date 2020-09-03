@@ -25,6 +25,7 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
   selectedGene: Gene;
   geneSymbol: string = 'CHD8';
   genotypePreviewVariantsArray: GenotypePreviewVariantsArray;
+  shownTablePreviewVariantsArray: GenotypePreviewVariantsArray;
   selectedDataset$: Observable<Dataset>;
   selectedDatasetId: string;
   genotypePreviewInfo: GenotypePreviewInfo;
@@ -68,6 +69,10 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
     return this.geneVisualizationUnifiedComponent.getVariantColor(effect);
   }
 
+  updateShownTablePreviewVariantsArray($event: GenotypePreviewVariantsArray) {
+    this.shownTablePreviewVariantsArray = $event;
+  }
+
   submitGeneRequest() {
 
     this.getCurrentState()
@@ -98,6 +103,7 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
               this.queryService.getGenotypePreviewVariantsByFilter(
                 state, this.genotypePreviewInfo, this.loadingService
               );
+            this.shownTablePreviewVariantsArray = this.genotypePreviewVariantsArray;
 
           }, error => {
             console.warn(error);

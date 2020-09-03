@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, OnChanges } from '@angular/core';
+import { Component, OnInit, Input, OnChanges, Output, EventEmitter } from '@angular/core';
 import * as d3 from 'd3';
 import { Gene } from 'app/gene-view/gene';
 import { GenotypePreviewVariantsArray } from 'app/genotype-preview-model/genotype-preview';
@@ -14,7 +14,8 @@ export class GeneVisualizationUnifiedComponent implements OnInit {
   @Input() gene: Gene;
   @Input() variantsArray: GenotypePreviewVariantsArray;
   @Input() streamingFinished$: Subject<boolean>;
-
+  @Output() updateShownTablePreviewVariantsArrayEvent = new EventEmitter<GenotypePreviewVariantsArray>();
+  
   frequencyColumn;
   frequencyDomainMin: number;
   frequencyDomainMax: number;
@@ -144,13 +145,13 @@ export class GeneVisualizationUnifiedComponent implements OnInit {
 	hydrateVariantsData(variantsArray) {
 		this.variantsDataRepr = [];
 		for(let v of variantsArray.genotypePreviews) {
-			if(this.isVariantEffectSelected(v.get("effect.worst effect type"))) {
+			if(this.isVariantEffectSelected(v.get("effect.worst effect"))) {
 				if(v.get(this.frequencyColumn) !== "-" || v.get("variant.is denovo")) {
 					this.variantsDataRepr.push(
 						{
 							position: this.extractPosition(v.get("variant.location")),
 							frequency: v.get(this.frequencyColumn) === "-" ? "denovo" : v.get(this.frequencyColumn),
-							color: this.getVariantColor(v.get("effect.worst effect type")),
+							color: this.getVariantColor(v.get("effect.worst effect")),
 						}
 					)
 				}
@@ -159,8 +160,8 @@ export class GeneVisualizationUnifiedComponent implements OnInit {
 	}
 
 	drawPlot() {
-		this.hydrateVariantsData(this.variantsArray);
-
+    this.hydrateVariantsData(this.variantsArray);
+    
     if (this.gene !== undefined) {
       this.x_axis = d3.axisBottom(this.x).ticks(12);
       this.y_axis = d3.axisLeft(this.y);
@@ -251,6 +252,7 @@ export class GeneVisualizationUnifiedComponent implements OnInit {
         this.doubleClickTimer = setTimeout(this.resetTimer, 250);
         return;
       }
+      this.updateShownTablePreviewVariantsArrayEvent.emit(this.variantsArray);
       this.setDefaultScale();
     } else {
       if(this.x.domain()[1] - this.x.domain()[0] > 12) {
@@ -262,7 +264,29 @@ export class GeneVisualizationUnifiedComponent implements OnInit {
         this.x.domain([newXmin, newXmax]);
       }
       this.svgElement.select('.brush').call(this.brush.move, null);
+
+      const circles = this.svgElement.selectAll('circle')._groups[0];
+      let circlesPositions = [];
+      for (const circle of circles) {
+        if (circle.attributes.cx.value >= d3.event.selection[0] && circle.attributes.cx.value <= d3.event.selection[1]) {
+          circlesPositions.push(circle.__data__.position);
+        }
+      }
+      circlesPositions = [... new Set(circlesPositions)];
+
+      const result = [];
+      const result1 = new GenotypePreviewVariantsArray();
+
+      for (const genotypePreview of this.variantsArray.genotypePreviews) {
+        if (circlesPositions.includes(genotypePreview.data.get('variant.location').substring(2))) {
+          result.push(genotypePreview);
+        }
+      }
+
+      result1.setGenotypePreviews(result);
+      this.updateShownTablePreviewVariantsArrayEvent.emit(result1);
     }
+
     this.drawGene();
     this.drawPlot();
   }
