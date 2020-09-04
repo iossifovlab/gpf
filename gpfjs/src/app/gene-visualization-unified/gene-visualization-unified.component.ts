@@ -255,36 +255,29 @@ export class GeneVisualizationUnifiedComponent implements OnInit {
       this.updateShownTablePreviewVariantsArrayEvent.emit(this.variantsArray);
       this.setDefaultScale();
     } else {
-      if(this.x.domain()[1] - this.x.domain()[0] > 12) {
+      if (this.x.domain()[1] - this.x.domain()[0] > 12) {
         let newXmin = Math.round(this.x.invert(extent[0]));
         let newXmax = Math.round(this.x.invert(extent[1]));
-        if(newXmax - newXmin < 12) {
+        if (newXmax - newXmin < 12) {
           newXmax = newXmin + 12;
         }
         this.x.domain([newXmin, newXmax]);
-      }
-      this.svgElement.select('.brush').call(this.brush.move, null);
+        this.svgElement.select('.brush').call(this.brush.move, null);
 
-      const circles = this.svgElement.selectAll('circle')._groups[0];
-      let circlesPositions = [];
-      for (const circle of circles) {
-        if (circle.attributes.cx.value >= d3.event.selection[0] && circle.attributes.cx.value <= d3.event.selection[1]) {
-          circlesPositions.push(circle.__data__.position);
+        const filteredVariants = [];
+        const result = new GenotypePreviewVariantsArray();
+
+        let variantLocation: number;
+        for (const genotypePreview of this.variantsArray.genotypePreviews) {
+          variantLocation = Number(genotypePreview.data.get('variant.location').substring(2));
+          if (variantLocation > newXmin && variantLocation < newXmax) {
+            filteredVariants.push(genotypePreview);
+          }
         }
+
+        result.setGenotypePreviews(filteredVariants);
+        this.updateShownTablePreviewVariantsArrayEvent.emit(result);
       }
-      circlesPositions = [... new Set(circlesPositions)];
-
-      const result = [];
-      const result1 = new GenotypePreviewVariantsArray();
-
-      for (const genotypePreview of this.variantsArray.genotypePreviews) {
-        if (circlesPositions.includes(genotypePreview.data.get('variant.location').substring(2))) {
-          result.push(genotypePreview);
-        }
-      }
-
-      result1.setGenotypePreviews(result);
-      this.updateShownTablePreviewVariantsArrayEvent.emit(result1);
     }
 
     this.drawGene();
