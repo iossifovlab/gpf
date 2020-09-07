@@ -4,6 +4,7 @@ import { Gene } from 'app/gene-view/gene';
 import { GenotypePreviewVariantsArray } from 'app/genotype-preview-model/genotype-preview';
 import { Subject, Observable } from 'rxjs';
 import { DatasetsService } from 'app/datasets/datasets.service';
+import { Transcript, Exon } from 'app/gene-view/gene';
 
 @Component({
   selector: 'gpf-gene-visualization-unified',
@@ -292,19 +293,55 @@ export class GeneVisualizationUnifiedComponent implements OnInit {
     this.doubleClickTimer = null;
   }
 
+  getCDSTransitionPos(transcript: Transcript, exon: Exon) {
+    function inCDS(pos: number) {
+      return pos >= transcript.cds[0] && pos <= transcript.cds[1];
+    }
+    if(inCDS(exon.start) !== inCDS(exon.stop)) {
+      if(inCDS(exon.start)) return transcript.cds[1];
+      else return transcript.cds[0];
+    }
+    else return null;
+  }
+
+  isInCDS(transcript: Transcript, start: number, stop: number) {
+    return (start >= transcript.cds[0]) && (stop <= transcript.cds[1]);
+  }
+
   drawTranscript(transcriptId: number, yPos: number) {
     const transcript = this.gene.transcripts[transcriptId];
     const firstStart = transcript.exons[0].start;
     const strand = transcript.strand;
     const totalExonCount = transcript.exons.length;
-
     let lastEnd = null;
     let i = 1;
     for (const exon of transcript.exons) {
+
+      let transitionPos = this.getCDSTransitionPos(transcript, exon);
+
       if (lastEnd) {
         this.drawIntron(lastEnd, exon.start, yPos, `intron ${i - 1}/${totalExonCount - 1}`);
       }
-      this.drawExon(exon.start, exon.stop, yPos, `exon ${i}/${totalExonCount}`);
+
+      if(transitionPos !== null) {
+        this.drawExon(
+          exon.start, transitionPos, yPos,
+          `exon ${i}/${totalExonCount}`,
+          this.isInCDS(transcript, exon.start, transitionPos)
+        );
+        this.drawExon(
+          transitionPos, exon.stop, yPos,
+          `exon ${i}/${totalExonCount}`,
+          this.isInCDS(transcript, transitionPos, exon.stop)
+        );
+      }
+      else {
+        this.drawExon(
+          exon.start, exon.stop, yPos,
+          `exon ${i}/${totalExonCount}`,
+          this.isInCDS(transcript, exon.start, exon.stop)
+        );
+      }
 
       lastEnd = exon.stop;
       i += 1;
@@ -313,8 +350,14 @@ export class GeneVisualizationUnifiedComponent implements OnInit {
     this.drawTranscriptUTRText(firstStart, lastEnd, yPos, strand);
   }
 
-  drawExon(xStart: number, xEnd: number, y: number, title: string) {
-    this.drawRect(xStart, xEnd, y, 10, title);
+  drawExon(xStart: number, xEnd: number, y: number, title: string, cds: boolean) {
+    let rectThickness = 10;
+    if(cds) {
+      rectThickness = 15;
+      y -= 2.5;
+      title = title + " [CDS]";
+    }
+    this.drawRect(xStart, xEnd, y, rectThickness, title);
   }
 
   drawIntron(xStart: number, xEnd: number, y: number, title: string) {
@@ -354,6 +397,7 @@ export class GeneVisualizationUnifiedComponent implements OnInit {
     .attr('width', width)
     .attr('x', this.x(xStart))
     .attr('y', y)
+    .attr('stroke', "rgb(0,0,0)")
     .append('svg:title').text(svgTitle);
   }
 

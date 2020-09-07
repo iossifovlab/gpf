@@ -29,6 +29,7 @@ export class Transcript {
     private chrom: string,
     private utr3: Exon,
     private utr5: Exon,
+    private _cds: number[],
     private _exons: Exon[]
   ) {}
 
@@ -36,6 +37,7 @@ export class Transcript {
     return new Transcript(
       json['transcript_id'], json['strand'], json['chrom'],
       Exon.fromJson(json['utr3']), Exon.fromJson(json['utr5']),
+      json["cds"],
       Exon.fromJsonArray(json['exons']));
   }
 
@@ -49,6 +51,10 @@ export class Transcript {
 
   get strand() {
     return this._strand;
+  }
+
+  get cds() {
+    return this._cds;
   }
 }
 
