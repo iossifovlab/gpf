@@ -16,7 +16,9 @@ export class GeneVisualizationUnifiedComponent implements OnInit {
   @Input() streamingFinished$: Subject<boolean>;
   @Output() updateShownTablePreviewVariantsArrayEvent = new EventEmitter<GenotypePreviewVariantsArray>();
   
-  frequencyColumn;
+  frequencyColumn: string;
+  locationColumn: string;
+  effectColumn: string;
   frequencyDomainMin: number;
   frequencyDomainMax: number;
 
@@ -55,6 +57,8 @@ export class GeneVisualizationUnifiedComponent implements OnInit {
   ngOnInit() {
     this.datasetsService.getSelectedDataset().subscribe(dataset => {
       this.frequencyColumn = dataset.geneBrowser.frequencyColumn;
+      this.locationColumn = dataset.geneBrowser.locationColumn;
+      this.effectColumn = dataset.geneBrowser.effectColumn;
       this.frequencyDomainMin = dataset.geneBrowser.domainMin;
       this.frequencyDomainMax = dataset.geneBrowser.domainMax;
 
@@ -145,13 +149,13 @@ export class GeneVisualizationUnifiedComponent implements OnInit {
 	hydrateVariantsData(variantsArray) {
 		this.variantsDataRepr = [];
 		for(let v of variantsArray.genotypePreviews) {
-			if(this.isVariantEffectSelected(v.get("effect.worst effect"))) {
+			if(this.isVariantEffectSelected(v.get(this.effectColumn))) {
 				if(v.get(this.frequencyColumn) !== "-" || v.get("variant.is denovo")) {
 					this.variantsDataRepr.push(
 						{
-							position: this.extractPosition(v.get("variant.location")),
+							position: this.extractPosition(v.get(this.locationColumn)),
 							frequency: v.get(this.frequencyColumn) === "-" ? "denovo" : v.get(this.frequencyColumn),
-							color: this.getVariantColor(v.get("effect.worst effect")),
+							color: this.getVariantColor(v.get(this.effectColumn)),
 						}
 					)
 				}
@@ -269,7 +273,7 @@ export class GeneVisualizationUnifiedComponent implements OnInit {
 
         let variantLocation: number;
         for (const genotypePreview of this.variantsArray.genotypePreviews) {
-          variantLocation = Number(genotypePreview.data.get('variant.location').substring(2));
+          variantLocation = Number(genotypePreview.data.get(this.locationColumn).substring(2));
           if (variantLocation > newXmin && variantLocation < newXmax) {
             filteredVariants.push(genotypePreview);
           }

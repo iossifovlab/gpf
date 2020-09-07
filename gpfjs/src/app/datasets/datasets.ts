@@ -215,6 +215,8 @@ export class GeneBrowser {
     return new GeneBrowser(
       json['enabled'],
       json['frequency_column'],
+      json['effect_column'],
+      json['location_column'],
       json['domain_min'],
       json['domain_max'],
     );
@@ -223,6 +225,8 @@ export class GeneBrowser {
   constructor(
     readonly enabled: boolean,
     readonly frequencyColumn: string,
+    readonly effectColumn: string,
+    readonly locationColumn: string,
     readonly domainMin: number,
     readonly domainMax: number,
   ) { }
