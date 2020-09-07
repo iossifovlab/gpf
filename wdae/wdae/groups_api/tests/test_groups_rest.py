@@ -242,6 +242,24 @@ def test_grant_permission_creates_new_group(admin_client, user, dataset):
     assert Group.objects.filter(name=groupName).count() == 1
 
 
+def test_grant_permission_creates_new_group_case_sensitive(
+        admin_client, user, dataset):
+
+    group_name = "group_name_P"
+    data = {"datasetId": dataset.dataset_id, "groupName": group_name}
+
+    assert not user.has_perm("view", dataset)
+
+    url = "/api/v3/groups/grant-permission"
+    response = admin_client.post(
+        url, json.dumps(data), content_type="application/json", format="json"
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+    assert Group.objects.filter(name=group_name).count() == 1
+    assert Group.objects.filter(name=group_name.lower()).count() == 0
+
+
 def test_not_admin_cant_grant_permissions(
     user_client, group_with_user, dataset
 ):
