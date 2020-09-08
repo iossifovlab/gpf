@@ -151,6 +151,17 @@ class VariantsDb(object):
             genotype_data_study if genotype_data_study else genotype_data_group
         )
 
+    # def get_wdae_wrapper(self, wdae_wrapper_id):
+    #     study_wdae_wrapper = self.get_study_wdae_wrapper(wdae_wrapper_id)
+    #     genotype_data_group_wdae_wrapper = \
+    #         self.get_genotype_data_group_wdae_wrapper(wdae_wrapper_id)
+
+    #     return (
+    #         study_wdae_wrapper
+    #         if study_wdae_wrapper
+    #         else genotype_data_group_wdae_wrapper
+    #     )
+
     @deprecated(details="start using GPFInstance methods")
     def get_all_genotype_data(self):
         genotype_studies = self.get_all_studies()

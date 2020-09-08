@@ -3,6 +3,9 @@ import json
 import pytest
 
 from django.contrib.auth.models import Group
+from guardian.shortcuts import assign_perm
+
+from datasets_api.models import Dataset
 
 from rest_framework import status
 
@@ -112,6 +115,25 @@ def test_simple_query_download(db, admin_client):
     }
 
 
+# START: Adaptive datasets rights
+def test_normal_dataset_rights_query(db, user, user_client):
+    data = {
+        "datasetId": "composite_dataset_ds",
+    }
+
+    group = Group.objects.get(name="composite_dataset_ds")
+    user.groups.add(group)
+
+    response = user_client.post(
+        PREVIEW_VARIANTS_URL, json.dumps(data), content_type="application/json"
+    )
+    assert status.HTTP_200_OK == response.status_code
+    res = response.streaming_content
+    res = json.loads("".join(map(lambda x: x.decode("utf-8"), res)))
+
+    assert len(res) == 17
+
+
 def test_mixed_dataset_rights_query(db, user, user_client):
     data = {
         "datasetId": "composite_dataset_ds",
@@ -130,6 +152,49 @@ def test_mixed_dataset_rights_query(db, user, user_client):
     assert len(res) == 14
 
 
+def test_mixed_layered_dataset_rights_query(db, user, user_client):
+    data = {
+        "datasetId": "composite_dataset_ds",
+    }
+
+    group = Group.objects.get(name="inheritance_trio")
+    user.groups.add(group)
+    group = Group.objects.get(name="composite_dataset_ds")
+    user.groups.add(group)
+
+    response = user_client.post(
+        PREVIEW_VARIANTS_URL, json.dumps(data), content_type="application/json"
+    )
+    assert status.HTTP_200_OK == response.status_code
+    res = response.streaming_content
+    res = json.loads("".join(map(lambda x: x.decode("utf-8"), res)))
+
+    assert len(res) == 17
+
+
+def test_mixed_layered_diff_group_dataset_rights_query(db, user, user_client):
+    data = {
+        "datasetId": "composite_dataset_ds",
+    }
+
+    group = Group.objects.create(name="new_custom_group")
+    dataset = Dataset.objects.get(dataset_id="composite_dataset_ds")
+    assign_perm("view", group, dataset)
+    dataset = Dataset.objects.get(dataset_id="inheritance_trio")
+    assign_perm("view", group, dataset)
+
+    user.groups.add(group)
+
+    response = user_client.post(
+        PREVIEW_VARIANTS_URL, json.dumps(data), content_type="application/json"
+    )
+    assert status.HTTP_200_OK == response.status_code
+    res = response.streaming_content
+    res = json.loads("".join(map(lambda x: x.decode("utf-8"), res)))
+
+    assert len(res) == 17
+
+
 def test_mixed_dataset_rights_download(db, user, user_client):
     data = {
         "queryData": json.dumps({"datasetId": "composite_dataset_ds"})
@@ -144,3 +209,28 @@ def test_mixed_dataset_rights_download(db, user, user_client):
     assert response.status_code == status.HTTP_200_OK
     res = list(response.streaming_content)
     assert len(res) == 15
+
+
+def test_mixed_dataset_rights_third_party_group(db, user, user_client):
+    data = {
+        "datasetId": "composite_dataset_ds",
+    }
+
+    dataset = Dataset.objects.get(dataset_id="inheritance_trio")
+
+    group = Group.objects.create(name="new_custom_group")
+    assign_perm("view", group, dataset)
+
+    user.groups.add(group)
+
+    response = user_client.post(
+        PREVIEW_VARIANTS_URL, json.dumps(data), content_type="application/json"
+    )
+    assert status.HTTP_200_OK == response.status_code
+    res = response.streaming_content
+    res = json.loads("".join(map(lambda x: x.decode("utf-8"), res)))
+
+    assert len(res) == 14
+
+
+# END: Adaptive datasets rights

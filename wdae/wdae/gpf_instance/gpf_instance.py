@@ -130,7 +130,7 @@ class WGPFInstance(GPFInstance):
     def get_common_report_families_data(self, common_report_id):
         families_data = \
             super(WGPFInstance, self).get_common_report_families_data(
-                    common_report_id)
+                common_report_id)
         if families_data:
             for family_data in families_data:
                 yield family_data
@@ -297,9 +297,9 @@ def load_gpf_instance():
 def reload_datasets(gpf_instance):
     from datasets_api.models import Dataset
     for genotype_data_id in gpf_instance.get_genotype_data_ids():
-        study_wrapper = gpf_instance.get_wdae_wrapper(genotype_data_id)
+        # study_wrapper = gpf_instance.get_wdae_wrapper(genotype_data_id)
         Dataset.recreate_dataset_perm(
-            genotype_data_id, study_wrapper.config.studies
+            genotype_data_id,  # study_wrapper.config.studies
         )
 
 

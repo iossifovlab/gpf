@@ -21,12 +21,12 @@ class Dataset(models.Model):
 
     @classmethod
     def recreate_dataset_perm(cls, dataset_id, authorized_groups=None):
-        datasetObject, _ = cls.objects.get_or_create(dataset_id=dataset_id)
+        dataset_object, _ = cls.objects.get_or_create(dataset_id=dataset_id)
 
-        groups = datasetObject.default_groups
+        groups = dataset_object.default_groups
         if authorized_groups is not None:
             groups += authorized_groups
         LOGGER.info("recreating groups: {}".format(groups))
         for group_name in set(groups):
             group, _created = Group.objects.get_or_create(name=group_name)
-            assign_perm("view", group, datasetObject)
+            assign_perm("view", group, dataset_object)

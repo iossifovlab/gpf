@@ -1,0 +1,159 @@
+import pytest
+
+from box import Box
+from dae.studies.study import GenotypeDataGroup
+from dae.studies.study_wrapper import StudyWrapper
+from datasets_api.models import Dataset
+from datasets_api.permissions import user_has_permission, \
+    add_group_perm_to_user, \
+    add_group_perm_to_dataset, \
+    user_allowed_datasets, \
+    user_allowed_datasets_deep
+
+
+@pytest.fixture()
+def dataset_wrapper(db, wdae_gpf_instance):
+    dataset1_wrapper = wdae_gpf_instance.get_wdae_wrapper("Dataset1")
+    assert dataset1_wrapper is not None
+    assert dataset1_wrapper.is_group
+
+    dataset2_wrapper = wdae_gpf_instance.get_wdae_wrapper("Dataset2")
+    assert dataset2_wrapper is not None
+    assert dataset2_wrapper.is_group
+
+    ds_config = Box(dataset1_wrapper.config.to_dict())
+    ds_config.studies = (
+        "Dataset1",
+        "Dataset2",
+    )
+    ds_config.id = "Dataset"
+
+    dataset = GenotypeDataGroup(
+        ds_config,
+        [
+            dataset1_wrapper.genotype_data_study,
+            dataset2_wrapper.genotype_data_study,
+        ])
+    assert dataset is not None
+    assert dataset.id == "Dataset"
+
+    dataset_wrapper = StudyWrapper(dataset, None, None)
+    assert dataset_wrapper is not None
+    assert dataset_wrapper.is_group
+
+    Dataset.recreate_dataset_perm("Dataset")
+
+    wdae_gpf_instance\
+        ._variants_db\
+        ._genotype_data_group_cache["Dataset"] = dataset
+    wdae_gpf_instance\
+        ._variants_db\
+        ._genotype_data_group_wrapper_cache["Dataset"] = dataset_wrapper
+    wdae_gpf_instance\
+        ._variants_db\
+        .genotype_data_group_configs["Dataset"] = ds_config
+
+    assert "Dataset" in wdae_gpf_instance.get_genotype_data_ids()
+    assert wdae_gpf_instance.get_genotype_data("Dataset") is not None
+
+    return dataset_wrapper
+
+
+def test_datasets_studies_ids(
+        admin_client, wdae_gpf_instance, dataset_wrapper):
+
+    study_ids = dataset_wrapper.get_studies_ids()
+    assert set(study_ids) == set(["Study1", "Study2", "Study3"])
+
+    study_ids = dataset_wrapper.get_studies_ids(leafs=False)
+    assert set(study_ids) == set(["Dataset1", "Dataset2"])
+
+
+def test_dataset_rights(db, user, dataset_wrapper):
+    add_group_perm_to_user(dataset_wrapper.id, user)
+    assert user_has_permission(user, dataset_wrapper.id)
+
+
+def test_dataset1_rights(db, user, dataset_wrapper):
+    add_group_perm_to_user("Dataset1", user)
+    assert user_has_permission(user, dataset_wrapper.id)
+
+
+def test_dataset1_rights_allowed_datasets(db, user, dataset_wrapper):
+    add_group_perm_to_user("Dataset1", user)
+    result = user_allowed_datasets(user, dataset_wrapper.id)
+    assert result == set(["Dataset1"])
+
+    result = user_allowed_datasets_deep(user, dataset_wrapper.id)
+    assert result == set(["Study1", "Study3"])
+
+
+def test_dataset2_rights_allowed_datasets(db, user, dataset_wrapper):
+    add_group_perm_to_user("Dataset2", user)
+    result = user_allowed_datasets(user, dataset_wrapper.id)
+    assert result == set(["Dataset2"])
+
+    result = user_allowed_datasets_deep(user, dataset_wrapper.id)
+    assert result == set(["Study2"])
+
+
+def test_study1_and_dataset2_rights_allowed_datasets(db, user, dataset_wrapper):
+    add_group_perm_to_user("Dataset2", user)
+    add_group_perm_to_user("Study1", user)
+    result = user_allowed_datasets(user, dataset_wrapper.id)
+    assert result == set(["Study1", "Dataset2"])
+
+    result = user_allowed_datasets_deep(user, dataset_wrapper.id)
+    assert result == set(["Study1", "Study2"])
+
+
+def test_dataset_group_rights(db, user, dataset_wrapper):
+    add_group_perm_to_user("A", user)
+    add_group_perm_to_dataset("A", dataset_wrapper.id)
+
+    assert user_has_permission(user, dataset_wrapper.id)
+
+
+def test_dataset1_group_rights(db, user, dataset_wrapper):
+    add_group_perm_to_user("A", user)
+    add_group_perm_to_dataset("A", "Dataset1")
+
+    assert user_has_permission(user, dataset_wrapper.id)
+
+
+def test_study1_and_dataset2_group_rights_allowed_datasets(
+        db, user, dataset_wrapper):
+
+    add_group_perm_to_user("A", user)
+    add_group_perm_to_dataset("A", "Dataset2")
+    add_group_perm_to_dataset("A", "Study1")
+
+    result = user_allowed_datasets(user, dataset_wrapper.id)
+    assert result == set(["Study1", "Dataset2"])
+
+    result = user_allowed_datasets_deep(user, dataset_wrapper.id)
+    assert result == set(["Study1", "Study2"])
+
+
+def test_dataset_any_dataset_group_rights(db, user, dataset_wrapper):
+    add_group_perm_to_user("any_dataset", user)
+
+    assert user_has_permission(user, dataset_wrapper.id)
+
+    result = user_allowed_datasets(user, dataset_wrapper.id)
+    assert result == set(["Dataset"])
+
+    result = user_allowed_datasets_deep(user, dataset_wrapper.id)
+    assert result == set(["Study1", "Study2", "Study3"])
+
+
+def test_dataset_admin_group_rights(db, user, dataset_wrapper):
+    add_group_perm_to_user("any_dataset", user)
+
+    assert user_has_permission(user, dataset_wrapper.id)
+
+    result = user_allowed_datasets(user, dataset_wrapper.id)
+    assert result == set(["Dataset"])
+
+    result = user_allowed_datasets_deep(user, dataset_wrapper.id)
+    assert result == set(["Study1", "Study2", "Study3"])

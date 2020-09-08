@@ -1,3 +1,4 @@
+from utils.logger import request_logging, LOGGER
 from django.db.models import Count, Q
 from rest_framework import viewsets
 from rest_framework import permissions
@@ -56,6 +57,7 @@ class GroupsViewSet(
 class GrantPermissionToGroupView(views.APIView):
     permission_classes = (permissions.IsAdminUser,)
 
+    @request_logging(LOGGER)
     def post(self, request):
         serializer = PermissionChangeSerializer(data=request.data)
         if not serializer.is_valid():
@@ -75,6 +77,7 @@ class GrantPermissionToGroupView(views.APIView):
 class RevokePermissionToGroupView(views.APIView):
     permission_classes = (permissions.IsAdminUser,)
 
+    @request_logging(LOGGER)
     def post(self, request):
         serializer = PermissionRevokeSerializer(data=request.data)
         if not serializer.is_valid():
@@ -95,6 +98,7 @@ class GroupUsersManagementView(views.APIView):
     permission_classes = (permissions.IsAdminUser,)
     serializer_class = GroupUserPermissionSerializer
 
+    @request_logging(LOGGER)
     def post(self, request, group_id, user_id):
         data = {"groupId": group_id, "Id": user_id}
         serializer = self.serializer_class(data=data)
@@ -109,6 +113,7 @@ class GroupUsersManagementView(views.APIView):
 
         return Response(status=status.HTTP_200_OK)
 
+    @request_logging(LOGGER)
     def delete(self, request, group_id, user_id):
         data = {"groupId": group_id, "Id": user_id}
         serializer = self.serializer_class(data=data)
@@ -128,6 +133,7 @@ class GroupDatasetsManagementView(views.APIView):
     permission_classes = (permissions.IsAdminUser,)
     serializer_class = GroupDatasetPermissionSerializer
 
+    @request_logging(LOGGER)
     def post(self, request, group_id, dataset_id):
         data = {"groupId": group_id, "datasetId": dataset_id}
         serializer = self.serializer_class(data=data)
@@ -142,6 +148,7 @@ class GroupDatasetsManagementView(views.APIView):
 
         return Response(status=status.HTTP_200_OK)
 
+    @request_logging(LOGGER)
     def delete(self, request, group_id, dataset_id):
         data = {"groupId": group_id, "datasetId": dataset_id}
         serializer = self.serializer_class(data=data)

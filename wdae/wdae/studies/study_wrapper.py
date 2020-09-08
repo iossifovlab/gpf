@@ -2,6 +2,8 @@ import math
 import itertools
 import traceback
 import json
+import logging
+
 from functools import reduce
 
 from box import Box
@@ -41,6 +43,9 @@ from dae.person_sets import PersonSetCollection
 from remote.remote_phenotype_data import RemotePhenotypeData
 
 
+LOGGER = logging.getLogger(__name__)
+
+
 class StudyWrapperBase:
     def get_wdae_preview_info(self, query, max_variants_count=10000):
         raise NotImplementedError
@@ -73,6 +78,9 @@ class StudyWrapper(StudyWrapperBase):
         self._init_pheno(self.pheno_db)
 
         self.gene_weights_db = gene_weights_db
+
+    def get_studies_ids(self, leafs=True):
+        return self.genotype_data_study.get_studies_ids(leafs=leafs)
 
     def _init_wdae_config(self):
         genotype_browser_config = self.config.genotype_browser
@@ -244,6 +252,9 @@ class StudyWrapper(StudyWrapperBase):
         "family_structure": lambda aa: members_in_order_get_family_structure(
             aa.members_in_order
         ),
+        "is_denovo": lambda aa: bool(
+             Inheritance.denovo in aa.inheritance_in_members
+        ),
     }
 
     SPECIAL_ATTRS = {**SPECIAL_ATTRS_FORMAT, **STANDARD_ATTRS_LAMBDAS}
@@ -262,10 +273,10 @@ class StudyWrapper(StudyWrapperBase):
                     )
                 )
             except IndexError:
-                print(best_st, index, member)
                 import traceback
                 traceback.print_exc()
                 missing_members.add(member.person_id)
+                LOGGER.error(f"{best_st}, {index}, {member}")
 
         for member in allele.family.full_members:
             if member.generated or member.person_id in missing_members:
@@ -368,7 +379,7 @@ class StudyWrapper(StudyWrapperBase):
     # ultraRareOnly
     # TMM_ALL
     def query_variants(self, **kwargs):
-        # print("kwargs in study group:", kwargs)
+        LOGGER.debug(f"kwargs in study group: {kwargs}")
         kwargs = self._add_people_with_people_group(kwargs)
 
         limit = None
@@ -453,6 +464,7 @@ class StudyWrapper(StudyWrapperBase):
             )
             kwargs.pop("inheritanceTypeFilter")
 
+        LOGGER.info(f"query filters after translation: {kwargs}")
         variants_from_studies = itertools.islice(
             self.genotype_data_study.query_variants(**kwargs), limit
         )
@@ -1037,6 +1049,8 @@ class StudyWrapper(StudyWrapperBase):
 
         result["genotype_browser_config"] = bs_config
         result["genotype_browser"] = self.config.genotype_browser.enabled
+
+        result["gene_browser"] = self.config.gene_browser
 
         result["study_types"] = result["study_type"]
         result["enrichment_tool"] = self.config.enrichment.enabled
