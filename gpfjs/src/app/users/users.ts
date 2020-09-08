@@ -11,6 +11,7 @@ export class User {
       json['email'],
       json['groups'],
       json['hasPassword'],
+      json['allowedDatasets'],
     );
   }
 
@@ -19,7 +20,8 @@ export class User {
     public name: string,
     public email: string,
     public groups: Array<string>,
-    public hasPassword: boolean
+    public hasPassword: boolean,
+    public allowedDatasets: Array<string>
   ) {}
 
   getDefaultGroups() {
@@ -32,7 +34,8 @@ export class User {
       this.name,
       this.email,
       this.groups.slice(),
-      this.hasPassword
+      this.hasPassword,
+      this.allowedDatasets
     );
   }
 }

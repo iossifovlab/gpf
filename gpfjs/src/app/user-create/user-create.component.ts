@@ -26,7 +26,7 @@ export class UserCreateComponent implements OnInit {
     disabled: true,
   };
 
-  user$ = new BehaviorSubject<User>(new User(0, '', '', [], false));
+  user$ = new BehaviorSubject<User>(new User(0, '', '', [], false, []));
   groups$ = new BehaviorSubject<UserGroup[]>(null);
   createUserError = '';
   edit = false;
