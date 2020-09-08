@@ -115,4 +115,8 @@ export class GenotypePreviewVariantsArray {
 
     return variantsCount;
   }
+
+  setGenotypePreviews(genotypePreviews: GenotypePreview[]) {
+    this.genotypePreviews = genotypePreviews;
+  }
 }
