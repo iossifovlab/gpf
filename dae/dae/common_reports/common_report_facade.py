@@ -164,18 +164,22 @@ class CommonReportFacade(object):
         self._common_report_cache[common_report_id] = common_report
 
     def query_person_counters(
-        self,
-        common_report_id,
-        person_set_collection_id,
-        person_set_id,
-        sex=None
-    ):
+            self,
+            common_report_id,
+            person_set_collection_id,
+            person_set_id,
+            sex=None):
+
         genotype_data_study = \
             self.gpf_instance._variants_db.get_wdae_wrapper(common_report_id)
         collections = genotype_data_study.person_set_collections
-        person_set = collections[person_set_collection_id].person_sets[
-            person_set_id
-        ]
+        person_sets = collections[person_set_collection_id].person_sets
+        print("person_sets:", person_sets)
+
+        if person_set_id not in person_sets:
+            return 0
+
+        person_set = person_sets[person_set_id]
 
         if sex:
             return list(filter(

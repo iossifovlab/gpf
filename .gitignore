@@ -53,3 +53,5 @@ iossifov_2014/
 genotype-iossifov_2014-latest.tar.gz
 dae/Makefile
 dae/Snakefile
+phenotype-comp-data-latest.tar.gz
+comp-data/
