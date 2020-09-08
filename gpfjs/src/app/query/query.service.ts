@@ -45,7 +45,6 @@ export class QueryService {
   private parseGenotypePreviewVariantsResponse(
     response: any, genotypePreviewInfo: GenotypePreviewInfo,
     genotypePreviewVariantsArray: GenotypePreviewVariantsArray) {
-
     genotypePreviewVariantsArray.addPreviewVariant(response, genotypePreviewInfo);
   }
 

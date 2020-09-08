@@ -146,10 +146,12 @@ import { SaveQueryComponent } from './save-query/save-query.component';
 import { SavedQueriesTableComponent } from './saved-queries-table/saved-queries-table.component';
 import { SavedQueriesComponent } from './saved-queries/saved-queries.component';
 import { InheritancetypesComponent } from './inheritancetypes/inheritancetypes.component';
+import { GeneBrowserComponent } from './gene-browser/gene-browser.component';
 import { GlobalErrorHandler } from './global-error-handler/global-error-handler';
 import { GlobalErrorDisplayComponent } from './global-error-display/global-error-display.component';
 import { NgMultiSelectDropDownModule } from 'ng-multiselect-dropdown';
 import { DatasetPermissionGuard } from './dataset-permission.guard';
+import { GeneVisualizationUnifiedComponent } from './gene-visualization-unified/gene-visualization-unified.component';
 
 const appRoutes: Routes = [
   {
@@ -190,7 +192,11 @@ const appRoutes: Routes = [
       },
       {
         path: 'commonReport',
-        component: VariantReportsComponent,
+        component: VariantReportsComponent
+      },
+      {
+        path: 'geneBrowser',
+        component: GeneBrowserComponent
       }
     ]
   },
@@ -334,7 +340,9 @@ const appRoutes: Routes = [
     SavedQueriesTableComponent,
     SavedQueriesComponent,
     InheritancetypesComponent,
+    GeneBrowserComponent,
     GlobalErrorDisplayComponent,
+    GeneVisualizationUnifiedComponent,
   ],
   imports: [
     BrowserModule,

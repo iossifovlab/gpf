@@ -219,3 +219,13 @@ gpf-global-error-display {
   font-weight: 500;
   width: 100px;
 }
+
+.pedigree-icon {
+  margin-bottom: -1px;
+  margin-right: 3px;
+  margin-left: 3px;
+  display: inline-block;
+  width: 15px;
+  height: 15px;
+  border: 0.1px solid #aaaaaa;
+}
