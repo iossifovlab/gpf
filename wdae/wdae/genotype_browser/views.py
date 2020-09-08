@@ -65,7 +65,7 @@ class QueryPreviewView(QueryBaseView):
 
 class QueryPreviewVariantsView(QueryBaseView):
 
-    MAX_SHOWN_VARIANTS = 1000
+    MAX_SHOWN_VARIANTS = 10000
 
     @expand_gene_set
     @request_logging(LOGGER)

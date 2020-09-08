@@ -250,6 +250,9 @@ class StudyWrapper(StudyWrapperBase):
         "family_structure": lambda aa: members_in_order_get_family_structure(
             aa.members_in_order
         ),
+        "is_denovo": lambda aa: bool(
+             Inheritance.denovo in aa.inheritance_in_members
+        ),
     }
 
     SPECIAL_ATTRS = {**SPECIAL_ATTRS_FORMAT, **STANDARD_ATTRS_LAMBDAS}
@@ -1044,6 +1047,8 @@ class StudyWrapper(StudyWrapperBase):
 
         result["genotype_browser_config"] = bs_config
         result["genotype_browser"] = self.config.genotype_browser.enabled
+
+        result["gene_browser"] = self.config.gene_browser
 
         result["study_types"] = result["study_type"]
         result["enrichment_tool"] = self.config.enrichment.enabled
