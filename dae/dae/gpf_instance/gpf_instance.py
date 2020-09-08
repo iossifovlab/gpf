@@ -1,4 +1,5 @@
 import os
+import logging
 import pandas as pd
 from dae.genome.genomes_db import GenomesDB
 
@@ -26,6 +27,9 @@ from dae.configuration.schemas.gene_info import gene_info_conf
 from dae.configuration.schemas.genomic_scores import genomic_scores_schema
 
 from dae.utils.helpers import isnan
+
+
+logger = logging.getLogger(__name__)
 
 
 def cached(prop):
@@ -180,8 +184,18 @@ class GPFInstance(object):
             genotype_data_id
         )
 
-    # Phenotype data
+    def register_genotype_data(self, genotype_data):
+        if genotype_data.id in self.get_genotype_data_ids():
+            logger.warning(
+                f"replacing genotype data instance {genotype_data.id}")
 
+        self._variants_db\
+            ._genotype_data_group_cache[genotype_data.id] = genotype_data
+        self._variants_db\
+            .genotype_data_group_configs[genotype_data.id] = \
+            genotype_data.config
+
+    # Phenotype data
     def get_phenotype_db_config(self):
         return self._pheno_db.config
 

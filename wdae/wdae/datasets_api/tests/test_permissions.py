@@ -2,7 +2,7 @@ import pytest
 
 from box import Box
 from dae.studies.study import GenotypeDataGroup
-from dae.studies.study_wrapper import StudyWrapper
+from studies.study_wrapper import StudyWrapper
 from datasets_api.models import Dataset
 from datasets_api.permissions import user_has_permission, \
     add_group_perm_to_user, \
@@ -43,15 +43,14 @@ def dataset_wrapper(db, wdae_gpf_instance):
 
     Dataset.recreate_dataset_perm("Dataset")
 
-    wdae_gpf_instance\
-        ._variants_db\
-        ._genotype_data_group_cache["Dataset"] = dataset
-    wdae_gpf_instance\
-        ._variants_db\
-        ._genotype_data_group_wrapper_cache["Dataset"] = dataset_wrapper
-    wdae_gpf_instance\
-        ._variants_db\
-        .genotype_data_group_configs["Dataset"] = ds_config
+    wdae_gpf_instance.register_genotype_data(dataset)
+
+    # wdae_gpf_instance\
+    #     ._variants_db\
+    #     ._genotype_data_group_wrapper_cache["Dataset"] = dataset_wrapper
+    # wdae_gpf_instance\
+    #     ._variants_db\
+    #     .genotype_data_group_configs["Dataset"] = ds_config
 
     assert "Dataset" in wdae_gpf_instance.get_genotype_data_ids()
     assert wdae_gpf_instance.get_genotype_data("Dataset") is not None

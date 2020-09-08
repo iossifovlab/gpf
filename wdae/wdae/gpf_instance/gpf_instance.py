@@ -35,8 +35,7 @@ class WGPFInstance(GPFInstance):
 
         if getattr(settings, "REMOTES", None):
             for remote in settings.REMOTES:
-                print("Creating remote")
-                print(remote)
+                logger.info(f"Creating remote{remote}")
                 try:
                     client = RESTClient(
                         remote["id"],
@@ -57,16 +56,30 @@ class WGPFInstance(GPFInstance):
     def _fetch_remote_studies(self, rest_client):
         studies = rest_client.get_datasets()
         for study in studies["data"]:
+            logger.info(f"creating remote genotype data: {study['id']}")
             study_wrapper = RemoteStudyWrapper(study["id"], rest_client)
             study_id = study_wrapper.study_id
             self._remote_study_ids[study_id] = study["id"]
             self._remote_study_clients[study_id] = rest_client
             self._study_wrappers[study_id] = study_wrapper
 
+    def register_genotype_data(self, genotype_data):
+        super(WGPFInstance, self).register_genotype_data(genotype_data)
+
+        logger.debug(f"genotype data config; {genotype_data.config}")
+
+        study_wrapper = StudyWrapper(
+            genotype_data,
+            self._pheno_db,
+            self.gene_weights_db
+        )
+        return study_wrapper
+
     def make_wdae_wrapper(self, dataset_id):
         genotype_data = self.get_dataset(dataset_id)
         if genotype_data is None:
             return None
+
         study_wrapper = StudyWrapper(
             genotype_data,
             self._pheno_db,
@@ -146,7 +159,7 @@ class WGPFInstance(GPFInstance):
                     yield line.decode("UTF-8")
 
     def get_pheno_config(self, study_wrapper):
-        print("WARNING: Using is_remote")
+        logger.warning("WARNING: Using is_remote")
         if not study_wrapper.is_remote:
             return super(WGPFInstance, self).get_pheno_config(study_wrapper)
 
@@ -154,14 +167,14 @@ class WGPFInstance(GPFInstance):
         return client.get_pheno_browser_config(study_wrapper._remote_study_id)
 
     def has_pheno_data(self, study_wrapper):
-        print("WARNING: Using is_remote")
+        logger.warning("WARNING: Using is_remote")
         if not study_wrapper.is_remote:
             return super(WGPFInstance, self).has_pheno_data(study_wrapper)
 
         return "phenotype_data" in study_wrapper.config
 
     def get_instruments(self, study_wrapper):
-        print("WARNING: Using is_remote")
+        logger.warning("WARNING: Using is_remote")
         if not study_wrapper.is_remote:
             return super(WGPFInstance, self).get_instruments(study_wrapper)
 
@@ -169,7 +182,7 @@ class WGPFInstance(GPFInstance):
             study_wrapper._remote_study_id)
 
     def get_measures_info(self, study_wrapper):
-        print("WARNING: Using is_remote")
+        logger.warning("WARNING: Using is_remote")
         if not study_wrapper.is_remote:
             return super(WGPFInstance, self).get_measures_info(study_wrapper)
 
@@ -177,7 +190,7 @@ class WGPFInstance(GPFInstance):
         return client.get_browser_measures_info(study_wrapper._remote_study_id)
 
     def search_measures(self, study_wrapper, instrument, search_term):
-        print("WARNING: Using is_remote")
+        logger.warning("WARNING: Using is_remote")
         if not study_wrapper.is_remote:
             measures = super(WGPFInstance, self).search_measures(
                 study_wrapper, instrument, search_term)

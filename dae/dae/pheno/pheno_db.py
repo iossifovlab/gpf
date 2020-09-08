@@ -772,12 +772,7 @@ class PhenoDb(object):
 
     def get_phenotype_data(self, pheno_data_id):
         if not self.has_phenotype_data(pheno_data_id):
-            raise ValueError(
-                "cannot find phenotype data {};"
-                " available phenotype data: {}".format(
-                    pheno_data_id, self.get_phenotype_data_ids()
-                )
-            )
+            return None
         if pheno_data_id in self.pheno_cache:
             phenotype_data = self.pheno_cache[pheno_data_id]
         else:
