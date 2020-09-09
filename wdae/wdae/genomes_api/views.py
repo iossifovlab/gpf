@@ -38,6 +38,7 @@ class GeneModels(QueryBaseView):
         output["transcript_id"] = transcript.tr_id
         output["strand"] = transcript.strand
         output["chrom"] = transcript.chrom
+        output["cds"] = transcript.cds
         output["utr3"] = list()
         for region in transcript.UTR3_regions():
             output["utr3"].append(self.region_to_dict(region))
