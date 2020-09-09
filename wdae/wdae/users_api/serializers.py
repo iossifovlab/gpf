@@ -34,6 +34,7 @@ class UserSerializer(serializers.ModelSerializer):
     hasPassword = serializers.BooleanField(source="is_active", read_only=True)
 
     allowedDatasets = serializers.ListSerializer(
+        required=False,
         source="allowed_datasets",
         child=serializers.CharField()
     )
