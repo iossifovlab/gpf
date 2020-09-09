@@ -103,7 +103,7 @@ def generate_phenotype_data_config(args, regressions):
         },
     }
     if regressions:
-        regressions_dict = GPFConfigParser._namedtuple_to_dict(regressions)
+        regressions_dict = regressions.to_dict()
         config["regression"] = regressions_dict["regression"]
     return config
 
@@ -168,13 +168,12 @@ def main(argv):
             os.makedirs(args.browser_dir)
 
         config = parse_phenotype_data_config(args)
-        regressions = (
-            GPFConfigParser.load_config(
+        if args.regression:
+            regressions = GPFConfigParser.load_config(
                 args.regression, regression_conf_schema
             )
-            if args.regression
-            else None
-        )
+        else:
+            regressions = None
 
         prep = PrepareVariables(config)
         prep.build_pedigree(args.pedigree)
