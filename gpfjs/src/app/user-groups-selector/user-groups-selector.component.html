@@ -1,7 +1,28 @@
-<ng-multiselect-dropdown
-    [settings]="dropdownSettings"
-    [placeholder]="'Select groups'"
-    [data]="data"
-    [(ngModel)]="_selectedGroups"
->
-</ng-multiselect-dropdown>
+<div class="row">
+    <div class="col-12">
+        <ng-multiselect-dropdown
+            [settings]="dropdownSettings"
+            [placeholder]="'Select groups'"
+            [data]="data"
+            [(ngModel)]="_selectedGroups"
+        >
+        </ng-multiselect-dropdown>
+    </div>
+<div>
+
+<div style="margin-top: 20px;">
+    <div class="col-12">
+        <div ngbDropdown class="d-inline-block" autoClose="outside" placement="right">
+            <button style="border-color: #d3d3d3" class="btn btn-light" (click)="focusGroupNameInput()" ngbDropdownToggle>Create group</button>
+            <div ngbDropdownMenu>
+                <form style="margin: 10px">
+                    <div class="form-group">
+                        <label for="groupName">Group name</label>
+                        <input #groupInput type="text" class="form-control" id="groupName" required autocomplete="off" maxlength=256 style="width: 300px">
+                    </div>
+                    <button type="submit" class="btn btn-success" (click)="createGroup(groupInput.value)">Add</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

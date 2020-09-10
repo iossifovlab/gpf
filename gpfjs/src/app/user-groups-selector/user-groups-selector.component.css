@@ -1,0 +1,6 @@
+.dropdown-toggle::after {
+    position: relative;
+    top: 2px;
+    transform: rotate(-90deg);
+    opacity: 0.8;
+}
