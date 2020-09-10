@@ -16,7 +16,7 @@ export class UserGroupsSelectorComponent implements OnInit {
   @ViewChild(NgbDropdownMenu) ngbDropdownMenu: NgbDropdownMenu;
   @ViewChild('groupInput') groupInputRef: ElementRef;
 
-  data: object;
+  data: object[];
   dropdownSettings: IDropdownSettings = {};
 
   constructor(
@@ -65,7 +65,9 @@ export class UserGroupsSelectorComponent implements OnInit {
       return;
     }
 
-    this.createGroupEvent.emit(group);
+    this.data.push({id: group, text: group});
+    this.data = [...this.data];
+
     this.ngbDropdownMenu.dropdown.close();
     this.groupInputRef.nativeElement.value = '';
   }

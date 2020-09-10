@@ -81,11 +81,6 @@ export class UserEditComponent implements OnInit {
       .subscribe(() => this.router.navigate(['/management']));
   }
 
-  createGroup(group: string) {
-    this.user$.value.groups.push(group);
-    this.userGroupsSelectorComponent.data = this.user$.value.groups;
-  }
-
   goBack() {
     this.router.navigate(['/management']);
   }

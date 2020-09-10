@@ -85,13 +85,12 @@
       <div *ngIf="(groups$ | async) as groups" class="row justify-content-center">
         <div class="col-4">
           <div class="form-group">
-            <label for="groups">Other Groups</label>
+            <label for="groups">Add groups</label>
             <div class="groupsInput">
               <gpf-user-groups-selector
                 [allInputtedGroups]="groups"
                 [_selectedGroups]="user.groups"
                 [defaultGroups]="getDefaultGroups()"
-                (createGroupEvent)="createGroup($event)"
               >
               </gpf-user-groups-selector>
             </div>
