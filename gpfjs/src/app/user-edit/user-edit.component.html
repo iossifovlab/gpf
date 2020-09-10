@@ -91,6 +91,7 @@
                 [allInputtedGroups]="groups"
                 [_selectedGroups]="user.groups"
                 [defaultGroups]="getDefaultGroups()"
+                (createGroupEvent)="createGroup($event)"
               >
               </gpf-user-groups-selector>
             </div>
