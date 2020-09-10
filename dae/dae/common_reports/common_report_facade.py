@@ -177,7 +177,7 @@ class CommonReportFacade(object):
         print("person_sets:", person_sets)
 
         if person_set_id not in person_sets:
-            return 0
+            return []
 
         person_set = person_sets[person_set_id]
 
