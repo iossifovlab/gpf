@@ -80,6 +80,19 @@
         </gpf-table-content>
       </gpf-table-column>
 
+      <gpf-table-column>
+        <gpf-table-header caption="Allowed datasets"></gpf-table-header>
+        <gpf-table-content>
+          <gpf-table-subcontent>
+            <span *gpfTableCellContent="let data">
+              <div *ngFor="let datasetId of data.user.allowedDatasets">
+                  {{ datasetId }}
+              </div>
+            </span>
+          </gpf-table-subcontent>
+        </gpf-table-content>
+      </gpf-table-column>
+
       <gpf-table-column columnWidth="150px">
         <gpf-table-header caption="Actions"></gpf-table-header>
         <gpf-table-content>
