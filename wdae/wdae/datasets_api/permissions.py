@@ -99,6 +99,15 @@ def user_allowed_datasets(user, dataset_id):
     return set(result)
 
 
+def get_allowed_datasets_for_user(user):
+    gpf_instance = get_gpf_instance()
+    dataset_ids = gpf_instance.get_genotype_data_ids()
+    return set(
+        dataset_id for dataset_id in dataset_ids
+        if user_has_permission_strict(user, dataset_id)
+    )
+
+
 def user_allowed_datasets_deep(user, dataset_id):
     datasets = user_allowed_datasets(user, dataset_id)
     gpf_instance = get_gpf_instance()

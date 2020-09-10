@@ -22,6 +22,7 @@ from django.contrib.auth.models import Group
 from django.db.models.signals import m2m_changed, post_delete, pre_delete
 
 from utils.logger import LOGGER
+from datasets_api.permissions import get_allowed_datasets_for_user
 
 
 class WdaeUserManager(BaseUserManager):
@@ -105,6 +106,10 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
         return (
             self.groups.filter(name=self.UMLIMITTED_DOWNLOAD_GROUP).count() > 0
         )
+
+    @property
+    def allowed_datasets(self):
+        return get_allowed_datasets_for_user(self)
 
     def email_user(self, subject, message, from_email=None):
         if from_email is None:
