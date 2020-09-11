@@ -16,7 +16,8 @@ import { SelectableUser } from './user-management';
 export class UserManagementComponent implements OnInit {
 
   input$ = new ReplaySubject<string>(1);
-  users$: Observable<SelectableUser[]>;
+  users: SelectableUser[] = [];
+  usersToShow$: Observable<SelectableUser[]>;
 
 
   constructor(
@@ -27,11 +28,12 @@ export class UserManagementComponent implements OnInit {
 
   ngOnInit() {
 
-    this.users$ = this.input$
+    this.usersToShow$ = this.input$
       .map(searchTerm => searchTerm.trim())
       .debounceTime(300)
       .distinctUntilChanged()
       .do(searchTerm => {
+        this.users = [];
         let queryParamsObject: any = {};
         if (searchTerm) {
           queryParamsObject.search =  searchTerm;
@@ -44,8 +46,11 @@ export class UserManagementComponent implements OnInit {
       })
       .switchMap(searchTerm =>
         this.usersService.searchUsersByGroup(searchTerm))
-      .map(users => users.map(user => this.sortGroups(user)))
-      .map(users => users.map(user => new SelectableUser(user)))
+      .map(user => this.sortGroups(user))
+      .map(user => {
+        this.users.push(new SelectableUser(user))
+        return this.users;
+      })
       .share();
 
     this.route.queryParamMap

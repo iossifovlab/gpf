@@ -1,6 +1,6 @@
 
 // tslint:disable-next-line:import-blacklist
-import {throwError as observableThrowError,  Observable ,  ReplaySubject } from 'rxjs';
+import {throwError as observableThrowError, Observable, Subject, ReplaySubject } from 'rxjs';
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 
@@ -10,6 +10,8 @@ import { User } from './users';
 
 import { Router } from '@angular/router';
 import { Location } from '@angular/common';
+
+const oboe = require('oboe');
 
 @Injectable()
 export class UsersService {
@@ -21,11 +23,16 @@ export class UsersService {
   private readonly changePasswordUrl = 'users/change_password';
   private readonly checkVerificationUrl = 'users/check_verif_path';
   private readonly usersUrl = 'users';
+  private readonly usersStreamingUrl = `${this.usersUrl}/streaming_search`;
   private readonly bulkAddGroupsUrl = `${this.usersUrl}/bulk_add_groups`;
   private readonly bulkRemoveGroupsUrl = `${this.usersUrl}/bulk_remove_groups`;
 
   private userInfo$ = new ReplaySubject<{}>(1);
   private lastUserInfo = null;
+
+  private oboeInstance = null;
+  private connectionEstablished = false;
+  public usersStreamingFinishedSubject = new Subject();
 
   constructor(
     private http: HttpClient,
@@ -258,11 +265,29 @@ export class UsersService {
 
   searchUsersByGroup(searchTerm: string) {
     const searchParams = new HttpParams().set('search', searchTerm);
+    const csrfToken = this.cookieService.get('csrftoken');
+    const headers = { 'X-CSRFToken': csrfToken };
+    const usersSubject: Subject<User> = new Subject()
 
-    const options = { withCredentials: true, params: searchParams };
+    this.oboeInstance = oboe({
+      url: `${this.config.baseUrl}${this.usersStreamingUrl}?${searchParams.toString()}`,
+      method: "GET",
+      headers: headers,
+      withCredentials: true,
+    }).start(data => {
+      this.connectionEstablished = true;
+      this.usersStreamingFinishedSubject.next(false);
+    }).node('!.*', data => {
+      usersSubject.next(data);
+    }).done(data => {
+      this.usersStreamingFinishedSubject.next(true);
+    }).fail(error => {
+      this.connectionEstablished = false;
+      this.usersStreamingFinishedSubject.next(true);
+      console.warn('oboejs encountered a fail event while streaming');
+    });
 
-    return this.http.get(this.config.baseUrl + this.usersUrl, options)
-      .map(response => User.fromJsonArray(response));
+    return usersSubject.map(data => { return User.fromJson(data); });
   }
 
   bulkAddGroups(users: User[], groups: string[]) {

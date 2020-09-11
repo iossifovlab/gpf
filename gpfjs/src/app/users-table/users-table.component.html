@@ -84,11 +84,11 @@
         <gpf-table-header caption="Allowed datasets"></gpf-table-header>
         <gpf-table-content>
           <gpf-table-subcontent>
-            <span *gpfTableCellContent="let data">
+            <div *gpfTableCellContent="let data" style="height:150px;overflow:auto">
               <div *ngFor="let datasetId of data.user.allowedDatasets">
                   {{ datasetId }}
               </div>
-            </span>
+            </div>
           </gpf-table-subcontent>
         </gpf-table-content>
       </gpf-table-column>
