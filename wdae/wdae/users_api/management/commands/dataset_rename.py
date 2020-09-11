@@ -5,10 +5,11 @@ import toml
 
 from box import Box
 
+from django.db.models import Count, Q
 from django.core.management.base import BaseCommand
-from datasets_api.models import Dataset
 from django.contrib.auth.models import Group
 from guardian.shortcuts import get_perms
+from datasets_api.models import Dataset
 
 from gpf_instance.gpf_instance import get_gpf_instance
 
@@ -172,3 +173,21 @@ class Command(BaseCommand):
             short_config.genotype_storage.tables.variants = variants_table
 
         self.rename_study_config(dataset_id, new_id, short_config)
+
+        dataset.dataset_id = new_id
+        dataset.save()
+
+        new_groups = Group.objects.filter(Q(name=new_id))
+        print(new_groups)
+        if len(new_groups) > 0:
+            assert len(new_groups) == 1
+            new_groups.delete()
+
+        groups = list(Group.objects.filter(
+            Q(groupobjectpermission__permission__codename="view"),
+            Q(name__iregex=dataset_id)))
+        assert len(groups) == 1
+        group = groups[0]
+
+        group.name = new_id
+        group.save()
