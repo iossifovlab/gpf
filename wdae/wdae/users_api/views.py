@@ -1,3 +1,4 @@
+import json
 from functools import wraps
 
 from django.db import IntegrityError, transaction
@@ -6,6 +7,8 @@ from django.contrib.auth.models import BaseUserManager, Group
 from django.shortcuts import get_object_or_404, get_list_or_404
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.conf import settings
+from django.http.response import StreamingHttpResponse
+from django.db.models import Q
 import django.contrib.auth
 
 from rest_framework.decorators import action
@@ -30,6 +33,8 @@ from utils.email_regex import is_email_valid
 
 from django.utils.decorators import available_attrs
 
+from utils.streaming_response_util import convert
+
 
 def csrf_clear(view_func):
     """
@@ -42,6 +47,27 @@ def csrf_clear(view_func):
         return view_func(*args, **kwargs)
 
     return wraps(view_func, assigned=available_attrs(view_func))(wrapped_view)
+
+
+def iterator_to_json(users):
+    yield "["
+    curr = next(users, None)
+    post = next(users, None)
+    while curr is not None:
+        if curr.email:
+            serializer = UserSerializer
+        else:
+            serializer = UserWithoutEmailSerializer
+        yieldval = json.dumps(serializer(curr).data, default=convert)
+        if post is None:
+            yield yieldval
+            break
+        else:
+            yield yieldval + ","
+        curr = post
+        post = next(users, None)
+    yield "]"
+    return 0
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -83,6 +109,23 @@ class UserViewSet(viewsets.ModelViewSet):
             serializer_class = UserWithoutEmailSerializer
 
         return serializer_class
+
+    @request_logging(LOGGER)
+    @action(detail=False, methods=["get"])
+    def streaming_search(self, request):
+        self.check_permissions(request)
+        queryset = get_user_model().objects.all()
+        search_param = request.GET.get("search", None)
+        if search_param:
+            queryset = queryset.filter(
+                Q(name__contains=search_param)
+                | Q(email__contains=search_param)
+            )
+        return StreamingHttpResponse(
+            iterator_to_json(queryset.iterator()),
+            status=status.HTTP_200_OK,
+            content_type="text/event-stream",
+        )
 
     @request_logging(LOGGER)
     @action(detail=True, methods=["post"])
