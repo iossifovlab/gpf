@@ -71,6 +71,9 @@ class HdfsHelpers(object):
     def filesystem(self):
         return self.hdfs
 
+    def rename(self, path, new_path):
+        self.hdfs.rename(path, new_path)
+
     def put(self, local_filename, hdfs_filename):
         assert os.path.exists(local_filename)
 

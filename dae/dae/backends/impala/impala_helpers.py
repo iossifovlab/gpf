@@ -245,6 +245,39 @@ class ImpalaHelpers(object):
                     self._add_partition_properties(
                         cursor, db, variants_table, partition_description)
 
+    def change_table_location(
+            self, db, table, new_hdfs_dir, partition_description=None):
+        statement = [
+            f"ALTER TABLE {db}.{table}"
+        ]
+        if partition_description is not None and \
+                partition_description.has_partitions():
+            partitions = partition_description.build_impala_partitions()
+            statement.extend([
+                "PARTITION", f"({partitions})"
+            ])
+
+        statement.append(f"SET LOCATION '{new_hdfs_dir}'")
+
+        statement = " ".join(statement)
+        print(statement)
+
+        with closing(self.connection()) as conn:
+            with conn.cursor() as cursor:
+                cursor.execute(statement)
+
+    def rename_table(
+            self, db, table, new_table):
+        statement = [
+            f"ALTER TABLE {db}.{table} RENAME TO {db}.{new_table}"
+        ]
+        statement = " ".join(statement)
+        print(statement)
+
+        with closing(self.connection()) as conn:
+            with conn.cursor() as cursor:
+                cursor.execute(statement)
+
     def check_database(self, dbname):
         with closing(self.connection()) as conn:
             with conn.cursor() as cursor:
