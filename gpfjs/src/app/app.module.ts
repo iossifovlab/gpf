@@ -152,6 +152,9 @@ import { GlobalErrorDisplayComponent } from './global-error-display/global-error
 import { NgMultiSelectDropDownModule } from 'ng-multiselect-dropdown';
 import { DatasetPermissionGuard } from './dataset-permission.guard';
 import { GeneVisualizationUnifiedComponent } from './gene-visualization-unified/gene-visualization-unified.component';
+import { CommonReportsRowComponent } from './variant-reports/common-reports-row/common-reports-row.component';
+import { CommonReportsPedigreeCellComponent } from './variant-reports/common-reports-pedigree-cell/common-reports-pedigree-cell.component';
+import { CommonReportsPedigreeCellDirective } from './variant-reports/common-reports-pedigree-cell.directive';
 
 const appRoutes: Routes = [
   {
@@ -343,6 +346,9 @@ const appRoutes: Routes = [
     GeneBrowserComponent,
     GlobalErrorDisplayComponent,
     GeneVisualizationUnifiedComponent,
+    CommonReportsRowComponent,
+    CommonReportsPedigreeCellComponent,
+    CommonReportsPedigreeCellDirective,
   ],
   imports: [
     BrowserModule,

@@ -79,20 +79,7 @@
 
               <tbody>
                 <ng-template ngFor let-pedigreeGroup [ngForOf]="this.currentPedigreeTable.pedigrees">
-                  <tr style="height: 86px">
-                    <ng-template ngFor let-pedigree [ngForOf]="pedigreeGroup">
-                      <td class="centered">
-                        <div *ngIf="pedigree">
-                          <div>
-                            <gpf-pedigree-chart [family]="pedigree.data"></gpf-pedigree-chart>
-                          </div>
-                          <div>
-                            {{ pedigree.count }}
-                          </div>
-                        </div>
-                      </td>
-                    </ng-template>
-                  </tr>
+                    <gpf-common-reports-row [pedigreeGroup]="pedigreeGroup"></gpf-common-reports-row>
                 </ng-template>
               </tbody>
 
