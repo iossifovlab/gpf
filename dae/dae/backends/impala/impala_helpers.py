@@ -1,8 +1,10 @@
 import os
+import re
 import sys
 import itertools
 
 from contextlib import closing
+from venv import create
 
 from impala import dbapi
 from sqlalchemy.pool import QueuePool
@@ -245,26 +247,63 @@ class ImpalaHelpers(object):
                     self._add_partition_properties(
                         cursor, db, variants_table, partition_description)
 
-    def change_table_location(
-            self, db, table, new_hdfs_dir, partition_description=None):
-        statement = [
-            f"ALTER TABLE {db}.{table}"
-        ]
-        if partition_description is not None and \
-                partition_description.has_partitions():
-            partitions = partition_description.build_impala_partitions()
-            statement.extend([
-                "PARTITION", f"({partitions})"
-            ])
-
-        statement.append(f"SET LOCATION '{new_hdfs_dir}'")
-
-        statement = " ".join(statement)
-        print(statement)
+    def recreate_table(
+            self, db, table, new_table, new_hdfs_dir):
 
         with closing(self.connection()) as conn:
             with conn.cursor() as cursor:
+                statement = f"SHOW CREATE TABLE {db}.{table}"
                 cursor.execute(statement)
+
+                create_statement = None
+                for row in cursor:
+                    create_statement = row[0]
+                    break
+
+            table_name = re.compile(
+                r"CREATE EXTERNAL TABLE (?P<table_name>[a-zA-Z0-9._]+)\s")
+            create_statement = table_name.sub(
+                f"CREATE EXTERNAL TABLE {db}.{new_table} ",
+                create_statement
+            )
+
+            location = re.compile(
+                r"LOCATION '(?P<location>.+)'\s")
+            create_statement = location.sub(
+                f"LOCATION '{new_hdfs_dir}' ",
+                create_statement
+            )
+
+            position = re.compile(
+                r"\s(position)\s")
+
+            create_statement = position.sub(
+                f" `position` ",
+                create_statement
+            )
+
+            role = re.compile(
+                r"\s(role)\s")
+
+            create_statement = role.sub(
+                f" `role` ",
+                create_statement
+            )
+
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    f"DROP TABLE IF EXISTS {db}.{new_table}"
+                )
+
+                print(create_statement)
+                cursor.execute(create_statement)
+
+                if "PARTITIONED" in create_statement:
+                    cursor.execute(
+                        f"ALTER TABLE {db}.{new_table} "
+                        f"RECOVER PARTITIONS")
+                cursor.execute(
+                    f"REFRESH {db}.{new_table}")
 
     def rename_table(
             self, db, table, new_table):
@@ -294,7 +333,8 @@ class ImpalaHelpers(object):
                 q = f"SHOW TABLES IN {dbname}"
                 cursor.execute(q)
                 for row in cursor:
-                    if row[0] == tablename:
+                    print(row[0])
+                    if row[0] == tablename.lower():
                         return True
         return False
 
