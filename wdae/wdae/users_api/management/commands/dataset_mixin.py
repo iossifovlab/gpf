@@ -202,7 +202,7 @@ class DatasetBaseMixin:
 
         groups = list(Group.objects.filter(
             Q(groupobjectpermission__permission__codename="view"),
-            Q(name__iregex=dataset_id)))
+            Q(name=dataset_id)))
         assert len(groups) == 1
         group = groups[0]
 

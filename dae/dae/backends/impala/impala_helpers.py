@@ -297,6 +297,9 @@ class ImpalaHelpers(object):
                 create_statement
             )
 
+            create_statement = create_statement.replace("3'UTR", "3\\'UTR")
+            create_statement = create_statement.replace("5'UTR", "5\\'UTR")
+
             with conn.cursor() as cursor:
                 cursor.execute(
                     f"DROP TABLE IF EXISTS {db}.{new_table}"
