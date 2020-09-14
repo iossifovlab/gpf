@@ -68,8 +68,10 @@ class DatasetBaseMixin:
         genotype_storage = self.get_genotype_storage(config)
         hdfs_helpers = genotype_storage.hdfs_helpers
 
-        source_dir = genotype_storage.default_hdfs_study_path(config.id)
-        dest_dir = genotype_storage.default_hdfs_study_path(new_id)
+        source_dir = genotype_storage.full_hdfs_path(
+            genotype_storage.default_hdfs_study_path(config.id))
+        dest_dir = genotype_storage.full_hdfs_path(
+            genotype_storage.default_hdfs_study_path(new_id))
 
         assert hdfs_helpers.exists(source_dir), \
             f"source hdfs dir {source_dir} should exists"
