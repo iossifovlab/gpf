@@ -264,13 +264,21 @@ export class UsersService {
   }
 
   searchUsersByGroup(searchTerm: string) {
-    const searchParams = new HttpParams().set('search', searchTerm);
     const csrfToken = this.cookieService.get('csrftoken');
     const headers = { 'X-CSRFToken': csrfToken };
     const usersSubject: Subject<User> = new Subject()
 
+    let url;
+    if(searchTerm !== null) {
+      const searchParams = new HttpParams().set('search', searchTerm);
+      url = `${this.config.baseUrl}${this.usersStreamingUrl}?${searchParams.toString()}`;
+    }
+    else {
+      url = `${this.config.baseUrl}${this.usersStreamingUrl}`;
+    }
+
     this.oboeInstance = oboe({
-      url: `${this.config.baseUrl}${this.usersStreamingUrl}?${searchParams.toString()}`,
+      url: url,
       method: "GET",
       headers: headers,
       withCredentials: true,

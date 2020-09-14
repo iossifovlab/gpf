@@ -19,6 +19,7 @@ export class DatasetsTableComponent implements OnInit {
   tableData$: Observable<DatasetTableRow[]>;
   groups: UserGroup[];
   private datasets$: Observable<Dataset[]>;
+  private usersToShow: User[];
   private users$: Observable<User[]>;
   private datasetsRefresh$ = new ReplaySubject<boolean>(1);
 
@@ -32,7 +33,14 @@ export class DatasetsTableComponent implements OnInit {
     this.datasets$ = this.datasetsRefresh$
       .switchMap(() => this.datasetsService.getDatasets())
       .share();
-    this.users$ = this.usersService.getAllUsers().share();
+
+    this.usersToShow = [];
+    this.users$ = this.usersService.searchUsersByGroup(null)
+      .map(user => {
+        this.usersToShow.push(user);
+        return this.usersToShow;
+      })
+      .share();
 
     this.tableData$ = Observable.combineLatest(this.datasets$, this.users$)
       .map(([datasets, users]) => this.toDatasetTableRow(datasets, users));
