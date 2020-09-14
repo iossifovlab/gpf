@@ -1,7 +1,7 @@
 import { Directive, ViewContainerRef } from '@angular/core';
 
 @Directive({
-  selector: '[pedigreeHost]'
+  selector: '[gpfPedigreeHost]'
 })
 export class CommonReportsPedigreeCellDirective {
 

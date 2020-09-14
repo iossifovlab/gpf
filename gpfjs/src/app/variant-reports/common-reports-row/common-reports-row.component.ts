@@ -10,9 +10,9 @@ import { PedigreeData } from 'app/genotype-preview-model/genotype-preview';
   styleUrls: ['./common-reports-row.component.css']
 })
 export class CommonReportsRowComponent implements OnInit {
-  @Input() pedigreeGroup: [PedigreeData]
+  @Input() pedigreeGroup: [PedigreeData];
 
-  @ViewChild(CommonReportsPedigreeCellDirective, {static: true}) pedigreeHost: CommonReportsPedigreeCellDirective;
+  @ViewChild(CommonReportsPedigreeCellDirective, {static: true}) gpfPedigreeHost: CommonReportsPedigreeCellDirective;
 
   private componentFactory: ComponentFactory<CommonReportsPedigreeCellComponent>;
   private rowViewContainer: ViewContainerRef;
@@ -22,18 +22,16 @@ export class CommonReportsRowComponent implements OnInit {
   ngOnInit(): void {
     this.componentFactory = this.componentFactoryResolver.resolveComponentFactory(CommonReportsPedigreeCellComponent);
 
-    this.rowViewContainer = this.pedigreeHost.viewContainerRef;
-    for(let pedigree of this.pedigreeGroup) {
+    this.rowViewContainer = this.gpfPedigreeHost.viewContainerRef;
+    for (const pedigree of this.pedigreeGroup) {
       setTimeout(() => {
-        console.log(pedigree);
         this.createPedigree(pedigree);
-      }, 1)
+      }, 1);
     }
   }
 
   async createPedigree(pedigree: PedigreeData): Promise<any> {
-    const component = this.rowViewContainer.createComponent<CommonReportsPedigreeCellComponent>(this.componentFactory)
+    const component = this.rowViewContainer.createComponent<CommonReportsPedigreeCellComponent>(this.componentFactory);
     component.instance.pedigree = pedigree;
   }
-
 }
