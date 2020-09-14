@@ -247,9 +247,7 @@ class ImpalaHelpers(object):
                     self._add_partition_properties(
                         cursor, db, variants_table, partition_description)
 
-    def recreate_table(
-            self, db, table, new_table, new_hdfs_dir):
-
+    def get_table_create_statement(self, db, table):
         with closing(self.connection()) as conn:
             with conn.cursor() as cursor:
                 statement = f"SHOW CREATE TABLE {db}.{table}"
@@ -259,6 +257,15 @@ class ImpalaHelpers(object):
                 for row in cursor:
                     create_statement = row[0]
                     break
+                return create_statement
+
+    def recreate_table(
+            self, db, table, new_table, new_hdfs_dir):
+
+        create_statement = self.get_table_create_statement(db, table)
+        assert create_statement is not None
+
+        with closing(self.connection()) as conn:
 
             table_name = re.compile(
                 r"CREATE EXTERNAL TABLE (?P<table_name>[a-zA-Z0-9._]+)\s")

@@ -155,6 +155,18 @@ class DatasetBaseMixin:
         assert impala_helpers.check_table(impala_db, pedigree_table), \
             f"impala pedigree table {impala_db}.{pedigree_table} should exists"
 
+        create_statement = impala_helpers.get_table_create_statement(
+            impala_db, variants_table)
+        assert "CREATE EXTERNAL TABLE" in create_statement, \
+            f"variants table {impala_db}.{variants_table} should " \
+            f"be external table"
+
+        create_statement = impala_helpers.get_table_create_statement(
+            impala_db, pedigree_table)
+        assert "CREATE EXTERNAL TABLE" in create_statement, \
+            f"pedigree table {impala_db}.{pedigree_table} should " \
+            f"be external table"
+
     def rename_study_config(self, dataset_id, new_id, short_config):
 
         config_file = self.find_dataset_config_file(dataset_id)
