@@ -96,12 +96,6 @@ class DatasetBaseMixin:
         assert hdfs_helpers.isdir(study_dir), \
             f"study hdfs dir {study_dir} should be a directory"
 
-        variants_dir = os.path.join(study_dir, "variants")
-        assert hdfs_helpers.exists(variants_dir), \
-            f"variants hdfs dir {variants_dir} should exists"
-        assert hdfs_helpers.isdir(variants_dir), \
-            f"variants hdfs dir {variants_dir} should be a directory"
-
         pedigree_dir = os.path.join(study_dir, "pedigree")
         assert hdfs_helpers.exists(pedigree_dir), \
             f"pedigree hdfs dir {pedigree_dir} should exists"
@@ -114,20 +108,19 @@ class DatasetBaseMixin:
         assert hdfs_helpers.isfile(pedigree_file), \
             f"pedigree hdfs file {pedigree_file} should be a file"
 
+        variants_table = config.genotype_storage.tables.variants
+        if variants_table is not None:
+            variants_dir = os.path.join(study_dir, "variants")
+            assert hdfs_helpers.exists(variants_dir), \
+                f"variants hdfs dir {variants_dir} should exists"
+            assert hdfs_helpers.isdir(variants_dir), \
+                f"variants hdfs dir {variants_dir} should be a directory"
+
     def dataset_recreate_impala_tables(self, config, new_id):
         genotype_storage = self.get_genotype_storage(config)
 
         impala_db = genotype_storage.storage_config.impala.db
         impala_helpers = genotype_storage.impala_helpers
-
-        new_hdfs_variants = genotype_storage \
-            .default_variants_hdfs_dirname(new_id)
-
-        new_variants_table = genotype_storage._construct_variants_table(new_id)
-
-        impala_helpers.recreate_table(
-            impala_db, config.genotype_storage.tables.variants,
-            new_variants_table, new_hdfs_variants)
 
         new_hdfs_pedigree = genotype_storage \
             .default_pedigree_hdfs_filename(new_id)
@@ -139,6 +132,20 @@ class DatasetBaseMixin:
             impala_db, config.genotype_storage.tables.pedigree,
             new_pedigree_table, new_hdfs_pedigree)
 
+        variants_table = config.genotype_storage.tables.variants
+        new_variants_table = None
+
+        if variants_table is not None:
+            new_hdfs_variants = genotype_storage \
+                .default_variants_hdfs_dirname(new_id)
+
+            new_variants_table = genotype_storage \
+                ._construct_variants_table(new_id)
+
+            impala_helpers.recreate_table(
+                impala_db, variants_table,
+                new_variants_table, new_hdfs_variants)
+
         return new_pedigree_table, new_variants_table
 
     def check_dataset_impala_tables(self, config):
@@ -147,25 +154,24 @@ class DatasetBaseMixin:
         impala_db = genotype_storage.storage_config.impala.db
         impala_helpers = genotype_storage.impala_helpers
 
-        variants_table = config.genotype_storage.tables.variants
-        assert impala_helpers.check_table(impala_db, variants_table), \
-            f"impala variants table {impala_db}.{variants_table} should exists"
-
         pedigree_table = config.genotype_storage.tables.pedigree
         assert impala_helpers.check_table(impala_db, pedigree_table), \
             f"impala pedigree table {impala_db}.{pedigree_table} should exists"
-
-        create_statement = impala_helpers.get_table_create_statement(
-            impala_db, variants_table)
-        assert "CREATE EXTERNAL TABLE" in create_statement, \
-            f"variants table {impala_db}.{variants_table} should " \
-            f"be external table"
-
         create_statement = impala_helpers.get_table_create_statement(
             impala_db, pedigree_table)
         assert "CREATE EXTERNAL TABLE" in create_statement, \
             f"pedigree table {impala_db}.{pedigree_table} should " \
             f"be external table"
+
+        variants_table = config.genotype_storage.tables.variants
+        if variants_table is not None:
+            assert impala_helpers.check_table(impala_db, variants_table), \
+                f"impala variants table {impala_db}.{variants_table} should exists"
+            create_statement = impala_helpers.get_table_create_statement(
+                impala_db, variants_table)
+            assert "CREATE EXTERNAL TABLE" in create_statement, \
+                f"variants table {impala_db}.{variants_table} should " \
+                f"be external table"
 
     def rename_study_config(self, dataset_id, new_id, short_config):
 
