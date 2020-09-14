@@ -333,7 +333,6 @@ class ImpalaHelpers(object):
                 q = f"SHOW TABLES IN {dbname}"
                 cursor.execute(q)
                 for row in cursor:
-                    print(row[0])
                     if row[0] == tablename.lower():
                         return True
         return False

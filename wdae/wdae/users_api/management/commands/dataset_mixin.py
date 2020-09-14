@@ -86,7 +86,8 @@ class DatasetBaseMixin:
         genotype_storage = self.get_genotype_storage(config)
         hdfs_helpers = genotype_storage.hdfs_helpers
 
-        study_dir = genotype_storage.default_hdfs_study_path(config.id)
+        study_dir = genotype_storage.full_hdfs_path(
+            genotype_storage.default_hdfs_study_path(config.id))
 
         assert hdfs_helpers.exists(study_dir), \
             f"study hdfs dir {study_dir} should exists"
@@ -104,13 +105,12 @@ class DatasetBaseMixin:
             f"pedigree hdfs dir {pedigree_dir} should exists"
         assert hdfs_helpers.isdir(pedigree_dir), \
             f"pedigree hdfs dir {pedigree_dir} should be a directory"
-        
+
         pedigree_file = os.path.join(pedigree_dir, "pedigree.parquet")
         assert hdfs_helpers.exists(pedigree_file), \
             f"pedigree hdfs file {pedigree_file} should exists"
         assert hdfs_helpers.isfile(pedigree_file), \
             f"pedigree hdfs file {pedigree_file} should be a file"
-
 
     def dataset_recreate_impala_tables(self, config, new_id):
         genotype_storage = self.get_genotype_storage(config)
@@ -120,7 +120,7 @@ class DatasetBaseMixin:
 
         new_hdfs_variants = genotype_storage \
             .default_variants_hdfs_dirname(new_id)
-        
+
         new_variants_table = genotype_storage._construct_variants_table(new_id)
 
         impala_helpers.recreate_table(
@@ -130,7 +130,7 @@ class DatasetBaseMixin:
         new_hdfs_pedigree = genotype_storage \
             .default_pedigree_hdfs_filename(new_id)
         new_hdfs_pedigree = os.path.dirname(new_hdfs_pedigree)
-    
+
         new_pedigree_table = genotype_storage._construct_pedigree_table(new_id)
 
         impala_helpers.recreate_table(
@@ -167,7 +167,6 @@ class DatasetBaseMixin:
         with open(new_config_file, "wt") as outfile:
             content = toml.dumps(short_config)
             outfile.write(content)
-
 
     def rename_wdae_dataset_and_groups(self, dataset_id, new_id):
         dataset = self.get_dataset(dataset_id)
