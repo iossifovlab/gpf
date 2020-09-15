@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterContentInit, Input, ComponentFactoryResolver, ViewChild, ContentChildren, ComponentFactory, ViewContainerRef, QueryList } from '@angular/core';
+import { Component, OnInit, AfterViewInit, Input, ComponentFactoryResolver, ViewChild, ViewChildren, ComponentFactory, ViewContainerRef, QueryList } from '@angular/core';
 import { PedigreeCounter } from '../variant-reports';
 import { CommonReportsPedigreeCellDirective } from '../common-reports-pedigree-cell.directive';
 import { CommonReportsPedigreeCellComponent } from '../common-reports-pedigree-cell/common-reports-pedigree-cell.component';
@@ -9,39 +9,26 @@ import { PedigreeData } from 'app/genotype-preview-model/genotype-preview';
   templateUrl: './common-reports-row.component.html',
   styleUrls: ['./common-reports-row.component.css']
 })
-export class CommonReportsRowComponent implements OnInit, AfterContentInit {
+export class CommonReportsRowComponent implements OnInit, AfterViewInit {
   @Input() pedigreeGroup: [PedigreeData];
 
-  @ContentChildren(CommonReportsPedigreeCellDirective, { descendants: true }) gpfPedigreeHost: QueryList<CommonReportsPedigreeCellDirective>;
+  @ViewChildren("gpfPedigreeHost", {read: ViewContainerRef}) gpfPedigreeHost: QueryList<ViewContainerRef>;
 
   private componentFactory: ComponentFactory<CommonReportsPedigreeCellComponent>;
-  // private rowViewContainer: ViewContainerRef;
 
   constructor(private componentFactoryResolver: ComponentFactoryResolver) { }
 
   ngOnInit(): void {
     this.componentFactory = this.componentFactoryResolver.resolveComponentFactory(CommonReportsPedigreeCellComponent);
-
-    // this.rowViewContainer = this.gpfPedigreeHost.viewContainerRef;
-
-    for(let i = 0; i < this.pedigreeGroup.length; i++) {
-      // console.log(i);
-      // setTimeout(() => {
-      //   this.createPedigree(this.rowViewContainer, pedigree);
-      // }, 1);
-    }
-
-    // for (const pedigree of this.pedigreeGroup) {
-    //   setTimeout(() => {
-    //     console.log(pedigree);
-    //     this.createPedigree(this.rowViewContainer, pedigree);
-    //   }, 1);
-    // }
   }
 
-  ngAfterContentInit() {
-    console.log(this.gpfPedigreeHost);
-    this.gpfPedigreeHost.changes.subscribe(c => console.log(this.gpfPedigreeHost.toArray()));
+  ngAfterViewInit() {
+    const hosts = this.gpfPedigreeHost.toArray();
+    for(let i = 0; i < this.pedigreeGroup.length; i++) {
+      setTimeout(() => {
+        this.createPedigree(hosts[i], this.pedigreeGroup[i]);
+      }, 1);
+    }
   }
 
   async createPedigree(viewContainer: ViewContainerRef, pedigree: PedigreeData): Promise<any> {

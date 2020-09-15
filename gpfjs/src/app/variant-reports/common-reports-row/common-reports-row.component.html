@@ -1,5 +1,5 @@
 <ng-template ngFor let-pedigree [ngForOf]="pedigreeGroup">
     <td class="centered">
-        <ng-content [id]="'host' + pedigreeGroup.indexOf(pedigree)"></ng-content>
+        <div #gpfPedigreeHost></div>
     </td>
 </ng-template>
