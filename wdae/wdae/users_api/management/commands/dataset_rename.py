@@ -47,20 +47,30 @@ class Command(BaseCommand, DatasetBaseMixin):
         config = get_gpf_instance().get_genotype_data_config(dataset_id)
         assert config is not None
 
-        assert self.is_impala_genotype_storage(config), \
-            f"genotype storage {config.genotype_storage.id} is not Impala"
+        genotype_data = get_gpf_instance().get_genotype_data(dataset_id)
+        print(type(genotype_data), genotype_data)
 
-        self.dataset_rename_hdfs_directory(config, new_id)
-        pedigree_table, variants_table = \
-            self.dataset_recreate_impala_tables(config, new_id)
+        if genotype_data.is_group:
+            short_config = self.find_dataset_config(dataset_id)
+            short_config.id = new_id
 
-        short_config = self.find_dataset_config(dataset_id)
+            self.rename_study_config(dataset_id, new_id, short_config)
+            self.rename_wdae_dataset_and_groups(dataset_id, new_id)
 
-        short_config.id = new_id
-        short_config.genotype_storage.tables.pedigree = pedigree_table
-        if variants_table:
-            short_config.genotype_storage.tables.variants = variants_table
+        else:
+            assert self.is_impala_genotype_storage(config), \
+                f"genotype storage {config.genotype_storage.id} is not Impala"
 
-        self.rename_study_config(dataset_id, new_id, short_config)
+            self.dataset_rename_hdfs_directory(config, new_id)
+            pedigree_table, variants_table = \
+                self.dataset_recreate_impala_tables(config, new_id)
 
-        self.rename_wdae_dataset_and_groups(dataset_id, new_id)
+            short_config = self.find_dataset_config(dataset_id)
+
+            short_config.id = new_id
+            short_config.genotype_storage.tables.pedigree = pedigree_table
+            if variants_table:
+                short_config.genotype_storage.tables.variants = variants_table
+
+            self.rename_study_config(dataset_id, new_id, short_config)
+            self.rename_wdae_dataset_and_groups(dataset_id, new_id)

@@ -42,8 +42,14 @@ class Command(BaseCommand, DatasetBaseMixin):
         config = get_gpf_instance().get_genotype_data_config(dataset_id)
         assert config is not None
 
-        assert self.is_impala_genotype_storage(config), \
-            f"genotype storage {config.genotype_storage.id} is not Impala"
+        genotype_data = get_gpf_instance().get_genotype_data(dataset_id)
+        print(type(genotype_data), genotype_data)
 
-        self.check_dataset_hdfs_directories(config)
-        self.check_dataset_impala_tables(config)
+        if genotype_data.is_group:
+            pass
+        else:
+            assert self.is_impala_genotype_storage(config), \
+                f"genotype storage {config.genotype_storage.id} is not Impala"
+
+            self.check_dataset_hdfs_directories(config)
+            self.check_dataset_impala_tables(config)
