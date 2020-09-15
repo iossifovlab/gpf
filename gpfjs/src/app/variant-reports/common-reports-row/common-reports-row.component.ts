@@ -1,6 +1,5 @@
 import { Component, OnInit, AfterViewInit, Input, ComponentFactoryResolver, ViewChild, ViewChildren, ComponentFactory, ViewContainerRef, QueryList } from '@angular/core';
 import { PedigreeCounter } from '../variant-reports';
-import { CommonReportsPedigreeCellDirective } from '../common-reports-pedigree-cell.directive';
 import { CommonReportsPedigreeCellComponent } from '../common-reports-pedigree-cell/common-reports-pedigree-cell.component';
 import { PedigreeData } from 'app/genotype-preview-model/genotype-preview';
 
