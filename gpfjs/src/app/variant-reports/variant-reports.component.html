@@ -79,7 +79,7 @@
 
               <tbody>
                 <ng-template ngFor let-pedigreeGroup [ngForOf]="this.currentPedigreeTable.pedigrees">
-                    <gpf-common-reports-row [pedigreeGroup]="pedigreeGroup"></gpf-common-reports-row>
+                    <tr [gpf-common-reports-row] [pedigreeGroup]="pedigreeGroup"></tr>
                 </ng-template>
               </tbody>
 

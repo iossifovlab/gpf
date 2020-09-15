@@ -1,3 +1,5 @@
-<tr style="height: 86px">
-  <ng-template gpfPedigreeHost></ng-template>
-</tr>
+<ng-template ngFor let-pedigree [ngForOf]="pedigreeGroup">
+    <td class="centered">
+        <ng-content [id]="'host' + pedigreeGroup.indexOf(pedigree)"></ng-content>
+    </td>
+</ng-template>
