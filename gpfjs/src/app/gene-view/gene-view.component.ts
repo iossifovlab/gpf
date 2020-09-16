@@ -275,10 +275,12 @@ export class GeneViewComponent implements OnInit {
         const filteredVariants = [];
         const result = new GenotypePreviewVariantsArray();
 
-        let variantLocation: number;
+        let location: string;
+        let position: number;
         for (const genotypePreview of this.variantsArray.genotypePreviews) {
-          variantLocation = Number(genotypePreview.data.get(this.locationColumn).substring(2));
-          if (variantLocation > newXmin && variantLocation < newXmax) {
+          location = genotypePreview.data.get(this.locationColumn);
+          position = Number(location.slice(location.indexOf(':') + 1));
+          if (position >= newXmin && position <= newXmax) {
             filteredVariants.push(genotypePreview);
           }
         }
