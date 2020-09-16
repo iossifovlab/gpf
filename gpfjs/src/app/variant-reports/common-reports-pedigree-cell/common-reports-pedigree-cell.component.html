@@ -1,0 +1,8 @@
+  <div *ngIf="pedigree">
+    <div>
+      <gpf-pedigree-chart [family]="pedigree.data"></gpf-pedigree-chart>
+    </div>
+    <div>
+      {{ pedigree.count }}
+    </div>
+  </div>
