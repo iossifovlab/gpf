@@ -16,15 +16,15 @@ export class GeneViewComponent implements OnInit {
   @Input() variantsArray: GenotypePreviewVariantsArray;
   @Input() streamingFinished$: Subject<boolean>;
   @Output() updateShownTablePreviewVariantsArrayEvent = new EventEmitter<GenotypePreviewVariantsArray>();
-  
+
   frequencyColumn: string;
   locationColumn: string;
   effectColumn: string;
   frequencyDomainMin: number;
   frequencyDomainMax: number;
 
-	margin = {top: 10, right: 70, left: 70, bottom: 0}
-  y_axes_proportions = {domain: 0.70, subdomain: 0.20, denovo: 0.10}
+  margin = {top: 10, right: 70, left: 70, bottom: 0};
+  y_axes_proportions = {domain: 0.70, subdomain: 0.20, denovo: 0.10};
   svgElement;
   svgWidth = 1200 - this.margin.left - this.margin.right;
   svgHeight;
@@ -33,8 +33,8 @@ export class GeneViewComponent implements OnInit {
 
   subdomainAxisY = Math.round(this.svgHeightFreq * 0.75);
   denovoAxisY = this.subdomainAxisY + Math.round(this.svgHeightFreq * 0.20);
-	
-	lgds = ["nonsense", "splice-site", "frame-shift", "no-frame-shift-new-stop"];
+
+  lgds = ['nonsense', 'splice-site', 'frame-shift', 'no-frame-shift-new-stop'];
 
   x;
   y;
@@ -44,13 +44,13 @@ export class GeneViewComponent implements OnInit {
   y_axis;
   y_axis_subdomain;
   y_axis_denovo;
-	variantsDataRepr = [];
-	selectedEffectTypes = ["lgds", "missense", "synonymous", "other"];
+  variantsDataRepr = [];
+  selectedEffectTypes = ['lgds', 'missense', 'synonymous', 'other'];
 
   // GENE VIEW VARS
   brush;
   doubleClickTimer;
-  
+
   constructor(
     private datasetsService: DatasetsService,
   ) { }
@@ -72,7 +72,7 @@ export class GeneViewComponent implements OnInit {
 
       this.x = d3.scaleLinear()
       .domain([0, 0])
-      .range([0, this.svgWidth])
+      .range([0, this.svgWidth]);
 
       this.y = d3.scaleLog()
       .domain([this.frequencyDomainMin, this.frequencyDomainMax])
@@ -83,10 +83,10 @@ export class GeneViewComponent implements OnInit {
       .range([this.denovoAxisY, this.subdomainAxisY]);
 
       this.y_denovo = d3.scalePoint()
-      .domain(["Denovo"])
+      .domain(['Denovo'])
       .range([this.svgHeightFreq, this.denovoAxisY]);
     });
-    this.streamingFinished$.subscribe(() => {this.drawPlot()});
+    this.streamingFinished$.subscribe(() => { this.drawPlot(); });
   }
 
   ngOnChanges() {
@@ -96,109 +96,113 @@ export class GeneViewComponent implements OnInit {
     }
   }
 
-	checkEffectType(effectType, checked) {
-		effectType = effectType.toLowerCase();
-		if(checked) this.selectedEffectTypes.push(effectType);
-    else this.selectedEffectTypes.splice(this.selectedEffectTypes.indexOf(effectType), 1);
-    
+  checkEffectType(effectType, checked) {
+    effectType = effectType.toLowerCase();
+    if (checked) {
+      this.selectedEffectTypes.push(effectType);
+    } else {
+      this.selectedEffectTypes.splice(this.selectedEffectTypes.indexOf(effectType), 1);
+    }
+
     if (this.gene !== undefined) {
       this.drawGene();
       this.drawPlot();
     }
-	}
+  }
 
-	extractPosition(location) {
-		let idx = location.indexOf(":")
-		return location.slice(idx + 1);
-	}
+  extractPosition(location) {
+    const idx = location.indexOf(':');
+    return location.slice(idx + 1);
+  }
 
-	getVariantColor(worst_effect) {
+  getVariantColor(worst_effect) {
     worst_effect = worst_effect.toLowerCase();
 
-		if(this.lgds.indexOf(worst_effect) !== -1 || worst_effect == "lgds") {
-			return "#ff0000";
-		}
-		else if(worst_effect == "missense") {
-			return "#ffff00";
-		}
-		else if(worst_effect == "synonymous") {
-			return "#69b3a2";
-		}
-		else {
-			return "#555555";
-		}
-	}
+    if (this.lgds.indexOf(worst_effect) !== -1 || worst_effect === 'lgds') {
+      return '#ff0000';
+    } else if ( worst_effect === 'missense') {
+      return '#ffff00';
+    } else if (worst_effect === 'synonymous') {
+      return '#69b3a2';
+    } else {
+      return '#555555';
+    }
+  }
 
-	isVariantEffectSelected(worst_effect) {
-		worst_effect = worst_effect.toLowerCase();
+  isVariantEffectSelected(worst_effect) {
+    worst_effect = worst_effect.toLowerCase();
 
-		if(this.selectedEffectTypes.indexOf(worst_effect) !== -1) {
-			return true
-		}
+    if (this.selectedEffectTypes.indexOf(worst_effect) !== -1) {
+      return true;
+    }
 
-		if(this.lgds.indexOf(worst_effect) !== -1) {
-			if(this.selectedEffectTypes.indexOf("lgds") !== -1) {
-				return true;
-			}
-		}
-		else if(worst_effect !== "missense" && worst_effect !== "synonymous" && this.selectedEffectTypes.indexOf("other") !== -1) {
-			return true;
-		}
-		return false;
-	}
+    if (this.lgds.indexOf(worst_effect) !== -1) {
+      if (this.selectedEffectTypes.indexOf('lgds') !== -1) {
+        return true;
+      }
+    } else if (worst_effect !== 'missense' && worst_effect !== 'synonymous' && this.selectedEffectTypes.indexOf('other') !== -1) {
+      return true;
+    }
+    return false;
+  }
 
-	hydrateVariantsData(variantsArray) {
-		this.variantsDataRepr = [];
-		for(let v of variantsArray.genotypePreviews) {
-			if(this.isVariantEffectSelected(v.get(this.effectColumn))) {
-				if(v.get(this.frequencyColumn) !== "-" || v.get("variant.is denovo")) {
-					this.variantsDataRepr.push(
-						{
-							position: this.extractPosition(v.get(this.locationColumn)),
-							frequency: v.get(this.frequencyColumn) === "-" ? "denovo" : v.get(this.frequencyColumn),
-							color: this.getVariantColor(v.get(this.effectColumn)),
-						}
-					)
-				}
-			}
-		}
-	}
+  hydrateVariantsData(variantsArray) {
+    this.variantsDataRepr = [];
+    for (const v of variantsArray.genotypePreviews) {
+      if (this.isVariantEffectSelected(v.get(this.effectColumn))) {
+        if (v.get(this.frequencyColumn) !== '-' || v.get('variant.is denovo')) {
+          this.variantsDataRepr.push(
+            {
+              position: this.extractPosition(v.get(this.locationColumn)),
+              frequency: v.get(this.frequencyColumn) === '-' ? 'denovo' : v.get(this.frequencyColumn),
+              color: this.getVariantColor(v.get(this.effectColumn)),
+            }
+          );
+        }
+      }
+    }
+  }
 
-	drawPlot() {
+  drawPlot() {
     this.hydrateVariantsData(this.variantsArray);
-    
     if (this.gene !== undefined) {
       this.x_axis = d3.axisBottom(this.x).ticks(12);
       this.y_axis = d3.axisLeft(this.y);
       this.y_axis_subdomain = d3.axisLeft(this.y_subdomain).tickValues([0, this.frequencyDomainMin / 2.0]);
       this.y_axis_denovo = d3.axisLeft(this.y_denovo);
       this.svgElement.append('g').attr('transform', `translate(0, ${this.svgHeightFreq})`).call(this.x_axis);
-			this.svgElement.append('g').call(this.y_axis);
-			this.svgElement.append('g').call(this.y_axis_subdomain);
-			this.svgElement.append('g').call(this.y_axis_denovo);
+      this.svgElement.append('g').call(this.y_axis);
+      this.svgElement.append('g').call(this.y_axis_subdomain);
+      this.svgElement.append('g').call(this.y_axis_denovo);
 
 
       this.svgElement.append('rect')
-      .attr("x", 0)
-      .attr("y", this.denovoAxisY)
-      .attr("width", this.svgWidth)
-      .attr("height", this.svgHeightFreq - this.denovoAxisY)
-      .style("fill", "#1E90FF")
-      .style("opacity", 0.3);
+      .attr('x', 0)
+      .attr('y', this.denovoAxisY)
+      .attr('width', this.svgWidth)
+      .attr('height', this.svgHeightFreq - this.denovoAxisY)
+      .style('fill', '#1E90FF')
+      .style('opacity', 0.3);
 
 
-			this.svgElement.append('g')
-			.selectAll("dot")
-			.data(this.variantsDataRepr)
-			.enter()
-			.append("circle")
-			.attr("cx", d => { return this.x(d.position)} )
-			.attr("cy", d => { return d.frequency !== "denovo" ? d.frequency < this.frequencyDomainMin ? this.y_subdomain(d.frequency) : this.y(d.frequency) : this.y_denovo("Denovo")} )
-			.attr("r", 5)
-			.style("fill", d => { return d.color })
-      .style("opacity", 0.5);
+      this.svgElement.append('g')
+      .selectAll('dot')
+      .data(this.variantsDataRepr)
+      .enter()
+      .append('circle')
+      .attr('cx', d => this.x(d.position) )
+      .attr('cy', d => {
+        if (d.frequency !== 'denovo') {
+          return d.frequency < this.frequencyDomainMin ? this.y_subdomain(d.frequency) : this.y(d.frequency);
+        } else {
+          return this.y_denovo('Denovo');
+        }
+      } )
+      .attr('r', 5)
+      .style('fill', d => d.color)
+      .style('opacity', 0.5);
     }
-	}
+  }
 
   setDefaultScale() {
     let domainBeginning = this.gene.transcripts[0].exons[0].start;
@@ -223,7 +227,6 @@ export class GeneViewComponent implements OnInit {
   }
 
   // GENE VIEW FUNCTIONS
-  
   drawGene() {
     this.svgHeight = this.svgHeightFreqRaw + this.gene.transcripts.length * 50;
     d3.select('#svg-container').selectAll('svg').remove();
@@ -232,8 +235,8 @@ export class GeneViewComponent implements OnInit {
     .append('svg')
     .attr('width', this.svgWidth + this.margin.left + this.margin.right)
     .attr('height', this.svgHeight)
-		.append('g')
-		.attr('transform', `translate(${this.margin.left}, ${this.margin.top})`);
+    .append('g')
+    .attr('transform', `translate(${this.margin.left}, ${this.margin.top})`);
 
     this.brush = d3.brushX().extent([[0, 0], [this.svgWidth, this.svgHeight]])
     .on('end', this.brushEndEvent);
@@ -261,7 +264,7 @@ export class GeneViewComponent implements OnInit {
       this.setDefaultScale();
     } else {
       if (this.x.domain()[1] - this.x.domain()[0] > 12) {
-        let newXmin = Math.round(this.x.invert(extent[0]));
+        const newXmin = Math.round(this.x.invert(extent[0]));
         let newXmax = Math.round(this.x.invert(extent[1]));
         if (newXmax - newXmin < 12) {
           newXmax = newXmin + 12;
@@ -297,11 +300,13 @@ export class GeneViewComponent implements OnInit {
     function inCDS(pos: number) {
       return pos >= transcript.cds[0] && pos <= transcript.cds[1];
     }
-    if(inCDS(exon.start) !== inCDS(exon.stop)) {
-      if(inCDS(exon.start)) return transcript.cds[1];
-      else return transcript.cds[0];
-    }
-    else return null;
+    if (inCDS(exon.start) !== inCDS(exon.stop)) {
+      if (inCDS(exon.start)) {
+        return transcript.cds[1];
+      } else {
+        return transcript.cds[0];
+      }
+    } else { return null; }
   }
 
   isInCDS(transcript: Transcript, start: number, stop: number) {
@@ -317,13 +322,13 @@ export class GeneViewComponent implements OnInit {
     let i = 1;
     for (const exon of transcript.exons) {
 
-      let transitionPos = this.getCDSTransitionPos(transcript, exon);
+      const transitionPos = this.getCDSTransitionPos(transcript, exon);
 
       if (lastEnd) {
         this.drawIntron(lastEnd, exon.start, yPos, `intron ${i - 1}/${totalExonCount - 1}`);
       }
 
-      if(transitionPos !== null) {
+      if (transitionPos !== null) {
         this.drawExon(
           exon.start, transitionPos, yPos,
           `exon ${i}/${totalExonCount}`,
@@ -334,8 +339,7 @@ export class GeneViewComponent implements OnInit {
           `exon ${i}/${totalExonCount}`,
           this.isInCDS(transcript, transitionPos, exon.stop)
         );
-      }
-      else {
+      } else {
         this.drawExon(
           exon.start, exon.stop, yPos,
           `exon ${i}/${totalExonCount}`,
@@ -352,10 +356,10 @@ export class GeneViewComponent implements OnInit {
 
   drawExon(xStart: number, xEnd: number, y: number, title: string, cds: boolean) {
     let rectThickness = 10;
-    if(cds) {
+    if (cds) {
       rectThickness = 15;
       y -= 2.5;
-      title = title + " [CDS]";
+      title = title + ' [CDS]';
     }
     this.drawRect(xStart, xEnd, y, rectThickness, title);
   }
@@ -365,28 +369,28 @@ export class GeneViewComponent implements OnInit {
   }
 
   drawTranscriptUTRText(xStart: number, xEnd: number, y: number, strand: string) {
-    let UTR = {left: '5\'', right: '3\''}
+    const UTR = {left: '5\'', right: '3\''};
 
     if (strand === '-') {
       UTR.left = '3\'';
       UTR.right = '5\'';
     }
 
-    this.svgElement.append("text")
-    .attr("y", y + 10)
-    .attr("x", this.x(xStart) - 20)
+    this.svgElement.append('text')
+    .attr('y', y + 10)
+    .attr('x', this.x(xStart) - 20)
     .attr('font-size', '13px')
     .text(UTR.left)
     .attr('cursor', 'default')
-    .append('svg:title').text(`UTR ${UTR.left}`)
+    .append('svg:title').text(`UTR ${UTR.left}`);
 
-    this.svgElement.append("text")
-    .attr("y", y + 10)
-    .attr("x", this.x(xEnd) + 10)
+    this.svgElement.append('text')
+    .attr('y', y + 10)
+    .attr('x', this.x(xEnd) + 10)
     .attr('font-size', '13px')
     .text(UTR.right)
     .attr('cursor', 'default')
-    .append('svg:title').text(`UTR ${UTR.right}`)
+    .append('svg:title').text(`UTR ${UTR.right}`);
   }
 
   drawRect(xStart: number, xEnd: number, y: number, height: number, svgTitle: string) {
@@ -397,13 +401,13 @@ export class GeneViewComponent implements OnInit {
     .attr('width', width)
     .attr('x', this.x(xStart))
     .attr('y', y)
-    .attr('stroke', "rgb(0,0,0)")
+    .attr('stroke', 'rgb(0,0,0)')
     .append('svg:title').text(svgTitle);
   }
 
   drawLine(xStart: number, xEnd: number, y: number, svgTitle: string) {
-    let xStartAligned = this.x(xStart);
-    let xEndAligned = this.x(xEnd);
+    const xStartAligned = this.x(xStart);
+    const xEndAligned = this.x(xEnd);
 
     this.svgElement.append('line')
     .attr('x1', xStartAligned)
