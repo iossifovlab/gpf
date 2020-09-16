@@ -174,10 +174,12 @@ export class GeneViewComponent implements OnInit {
       location = genotypePreview.data.get(this.locationColumn);
       position = Number(location.slice(location.indexOf(':') + 1));
       frequency = genotypePreview.data.get(this.frequencyColumn);
-      if (position >= startPos && position <= endPos) {
-        // FIXME duplicated logic from hydrateVariantsData
-        if (frequency !== '-' || genotypePreview.data.get('variant.is denovo')) {
-          filteredVariants.push(genotypePreview);
+      if (this.isVariantEffectSelected(genotypePreview.data.get(this.effectColumn))) {
+        if (position >= startPos && position <= endPos) {
+          // FIXME duplicated logic from hydrateVariantsData
+          if (frequency !== '-' || genotypePreview.data.get('variant.is denovo')) {
+            filteredVariants.push(genotypePreview);
+          }
         }
       }
     }
