@@ -163,8 +163,33 @@ export class GeneViewComponent implements OnInit {
     }
   }
 
+  filterTablePreviewVariantsArray(variantsArray: GenotypePreviewVariantsArray, startPos: number, endPos: number) {
+    const filteredVariants = [];
+    const result = new GenotypePreviewVariantsArray();
+
+    let location: string;
+    let position: number;
+    let frequency: string;
+    for (const genotypePreview of this.variantsArray.genotypePreviews) {
+      location = genotypePreview.data.get(this.locationColumn);
+      position = Number(location.slice(location.indexOf(':') + 1));
+      frequency = genotypePreview.data.get(this.frequencyColumn);
+      if (position >= startPos && position <= endPos) {
+        // FIXME duplicated logic from hydrateVariantsData
+        if (frequency !== '-' || genotypePreview.data.get('variant.is denovo')) {
+          filteredVariants.push(genotypePreview);
+        }
+      }
+    }
+    result.setGenotypePreviews(filteredVariants);
+    return result;
+  }
+
   drawPlot() {
     this.hydrateVariantsData(this.variantsArray);
+    this.updateShownTablePreviewVariantsArrayEvent.emit(
+      this.filterTablePreviewVariantsArray(this.variantsArray, this.x.domain()[0], this.x.domain()[1])
+    );
     if (this.gene !== undefined) {
       this.x_axis = d3.axisBottom(this.x).ticks(12);
       this.y_axis = d3.axisLeft(this.y);
@@ -260,7 +285,6 @@ export class GeneViewComponent implements OnInit {
         this.doubleClickTimer = setTimeout(this.resetTimer, 250);
         return;
       }
-      this.updateShownTablePreviewVariantsArrayEvent.emit(this.variantsArray);
       this.setDefaultScale();
     } else {
       if (this.x.domain()[1] - this.x.domain()[0] > 12) {
@@ -271,25 +295,8 @@ export class GeneViewComponent implements OnInit {
         }
         this.x.domain([newXmin, newXmax]);
         this.svgElement.select('.brush').call(this.brush.move, null);
-
-        const filteredVariants = [];
-        const result = new GenotypePreviewVariantsArray();
-
-        let location: string;
-        let position: number;
-        for (const genotypePreview of this.variantsArray.genotypePreviews) {
-          location = genotypePreview.data.get(this.locationColumn);
-          position = Number(location.slice(location.indexOf(':') + 1));
-          if (position >= newXmin && position <= newXmax) {
-            filteredVariants.push(genotypePreview);
-          }
-        }
-
-        result.setGenotypePreviews(filteredVariants);
-        this.updateShownTablePreviewVariantsArrayEvent.emit(result);
       }
     }
-
     this.drawGene();
     this.drawPlot();
   }
