@@ -7,11 +7,11 @@ import { DatasetsService } from 'app/datasets/datasets.service';
 import { Transcript, Exon } from 'app/gene-view/gene';
 
 @Component({
-  selector: 'gpf-gene-visualization-unified',
-  templateUrl: './gene-visualization-unified.component.html',
-  styleUrls: ['./gene-visualization-unified.component.css']
+  selector: 'gpf-gene-view',
+  templateUrl: './gene-view.component.html',
+  styleUrls: ['./gene-view.component.css']
 })
-export class GeneVisualizationUnifiedComponent implements OnInit {
+export class GeneViewComponent implements OnInit {
   @Input() gene: Gene;
   @Input() variantsArray: GenotypePreviewVariantsArray;
   @Input() streamingFinished$: Subject<boolean>;

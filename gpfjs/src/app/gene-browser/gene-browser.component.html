@@ -27,13 +27,13 @@
       <input type="button" class="btn btn-md btn-primary" value="Gene Preview" (click)="submitGeneRequest()">
     </div>
 
-    <gpf-gene-visualization-unified
+    <gpf-gene-view
         [gene]="selectedGene"
         [variantsArray]="genotypePreviewVariantsArray"
         (updateShownTablePreviewVariantsArrayEvent)="updateShownTablePreviewVariantsArray($event)"
         [streamingFinished$]="queryService.streamingFinishedSubject">
     >
-    </gpf-gene-visualization-unified>
+    </gpf-gene-view>
 
     <div *ngIf="selectedDataset$ | async as dataset">
         <span *ngIf="shownTablePreviewVariantsArray && genotypePreviewInfo" id="variants-count-span">

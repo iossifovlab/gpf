@@ -9,7 +9,7 @@ import { DatasetsService } from 'app/datasets/datasets.service';
 import { ActivatedRoute, Params } from '@angular/router';
 import { QueryStateCollector } from 'app/query/query-state-provider';
 import { FullscreenLoadingService } from 'app/fullscreen-loading/fullscreen-loading.service';
-import { GeneVisualizationUnifiedComponent } from 'app/gene-visualization-unified/gene-visualization-unified.component';
+import { GeneViewComponent } from 'app/gene-view/gene-view.component';
 
 @Component({
   selector: 'gpf-gene-browser-component',
@@ -21,7 +21,7 @@ import { GeneVisualizationUnifiedComponent } from 'app/gene-visualization-unifie
   }]
 })
 export class GeneBrowserComponent extends QueryStateCollector implements OnInit {
-  @ViewChild (GeneVisualizationUnifiedComponent, {static: true}) geneVisualizationUnifiedComponent: GeneVisualizationUnifiedComponent;
+  @ViewChild (GeneViewComponent, {static: true}) geneViewComponent: GeneViewComponent;
   selectedGene: Gene;
   geneSymbol: string = 'CHD8';
   genotypePreviewVariantsArray: GenotypePreviewVariantsArray;
@@ -62,11 +62,11 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
   }
 
   checkEffectType(effectType, checked) {
-    this.geneVisualizationUnifiedComponent.checkEffectType(effectType, checked)
+    this.geneViewComponent.checkEffectType(effectType, checked)
   }
 
   getVariantColor(effect) {
-    return this.geneVisualizationUnifiedComponent.getVariantColor(effect);
+    return this.geneViewComponent.getVariantColor(effect);
   }
 
   updateShownTablePreviewVariantsArray($event: GenotypePreviewVariantsArray) {
