@@ -35,8 +35,7 @@ class WGPFInstance(GPFInstance):
 
         if getattr(settings, "REMOTES", None):
             for remote in settings.REMOTES:
-                print("Creating remote")
-                print(remote)
+                logger.info(f"Creating remote {remote}")
                 try:
                     client = RESTClient(
                         remote["id"],
@@ -44,9 +43,7 @@ class WGPFInstance(GPFInstance):
                         remote["user"],
                         remote["password"],
                         base_url=remote["base_url"],
-                        port=remote["port"],
-
-                    )
+                        port=remote["port"])
                     self._fetch_remote_studies(client)
                 except ConnectionError as err:
                     logger.error(err)
