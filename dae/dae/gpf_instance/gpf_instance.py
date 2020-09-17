@@ -1,4 +1,5 @@
 import os
+import logging
 import pandas as pd
 from dae.genome.genomes_db import GenomesDB
 
@@ -16,9 +17,8 @@ from dae.studies.variants_db import VariantsDb
 from dae.pheno.pheno_db import PhenoDb
 from dae.pheno_browser.db import DbManager
 
-from dae.backends.storage.genotype_storage_factory import (
-    GenotypeStorageFactory,
-)
+from dae.backends.storage.genotype_storage_factory import \
+    GenotypeStorageFactory
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.dae_conf import dae_conf_schema
@@ -26,6 +26,9 @@ from dae.configuration.schemas.gene_info import gene_info_conf
 from dae.configuration.schemas.genomic_scores import genomic_scores_schema
 
 from dae.utils.helpers import isnan
+
+
+logger = logging.getLogger(__name__)
 
 
 def cached(prop):
@@ -60,6 +63,7 @@ class GPFInstance(object):
 
         self.dae_config = dae_config
         self.dae_db_dir = work_dir
+        self.load_eagerly = load_eagerly
 
         if load_eagerly:
             self.genomes_db
@@ -145,7 +149,9 @@ class GPFInstance(object):
     @property  # type: ignore
     @cached
     def gene_sets_db(self):
-        return GeneSetsDb(self._gene_info_config)
+        logger.debug("creating new instance of GeneSetsDb")
+        return GeneSetsDb(
+            self._gene_info_config, load_eagerly=self.load_eagerly)
 
     @property  # type: ignore
     @cached

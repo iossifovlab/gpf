@@ -262,7 +262,8 @@ def load_gpf_instance():
         _gpf_instance_lock.acquire()
         try:
             if _gpf_instance is None:
-                gpf_instance = WGPFInstance(load_eagerly=True)
+                gpf_instance = WGPFInstance(
+                    load_eagerly=settings.STUDIES_EAGER_LOADING)  # FIXME
                 _gpf_instance = gpf_instance
         finally:
             _gpf_instance_lock.release()

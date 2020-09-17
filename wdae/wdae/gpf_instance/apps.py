@@ -17,7 +17,7 @@ class EagerLoadingConfig(AppConfig):
         if settings.STUDIES_EAGER_LOADING:
             try:
                 logger.warn(
-                    "STUDIES EAGER LOADING: going to call load_gpf_instance()...")
+                    "STUDIES EAGER LOADING: going to call load_gpf_instance()")
                 gpf_instance = load_gpf_instance()
                 result = gpf_instance.get_all_genotype_data()
                 logger.info(result)
