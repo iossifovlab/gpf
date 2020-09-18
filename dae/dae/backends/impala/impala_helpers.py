@@ -2,12 +2,15 @@ import os
 import re
 import sys
 import itertools
+import logging
 
 from contextlib import closing
-from venv import create
 
 from impala import dbapi
 from sqlalchemy.pool import QueuePool
+
+
+logger = logging.getLogger(__name__)
 
 
 class ImpalaHelpers(object):
@@ -50,6 +53,7 @@ class ImpalaHelpers(object):
             CREATE EXTERNAL TABLE {db}.{table} LIKE PARQUET '{import_file}'
             STORED AS PARQUET LOCATION '{dirname}'
         """
+        logger.trace(f"{statement}")
         cursor.execute(statement)
         cursor.execute(f"REFRESH {db}.{table}")
 
@@ -206,7 +210,7 @@ class ImpalaHelpers(object):
             ])
 
         statement.extend([
-            "STORED AS PARQUET LOCATION", 
+            "STORED AS PARQUET LOCATION",
             f"'{variants_hdfs_dir}'"
         ])
         return " ".join(statement)
@@ -285,7 +289,7 @@ class ImpalaHelpers(object):
                 r"\s(position)\s")
 
             create_statement = position.sub(
-                f" `position` ",
+                " `position` ",
                 create_statement
             )
 
@@ -293,7 +297,7 @@ class ImpalaHelpers(object):
                 r"\s(role)\s")
 
             create_statement = role.sub(
-                f" `role` ",
+                " `role` ",
                 create_statement
             )
 

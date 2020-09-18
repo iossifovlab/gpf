@@ -6,12 +6,8 @@ import argparse
 import toml
 
 from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.backends.impala.import_commons import save_study_config
-from dae.configuration.gpf_config_parser import GPFConfigParser
-from dae.configuration.study_config_builder import StudyConfigBuilder
 from dae.backends.impala.parquet_io import NoPartitionDescriptor, \
     ParquetPartitionDescriptor
-from dae.utils.dict_utils import recursive_dict_update
 
 
 def parse_cli_arguments(argv, gpf_instance):
@@ -110,6 +106,9 @@ def main(argv=sys.argv[1:], gpf_instance=None):
     else:
         hdfs_variants_dir = \
             genotype_storage.default_variants_hdfs_dirname(study_id)
+        if not os.path.exists(hdfs_variants_dir):
+            hdfs_variants_dir = None
+
     if argv.pedigree is not None:
         hdfs_pedigree_file = argv.pedigree
     else:

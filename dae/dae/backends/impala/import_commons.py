@@ -285,7 +285,9 @@ hdfs.flag: \\
 \t\tpedigree.flag
 \thdfs_parquet_loader.py {{study_id}} \\
 \t\t{{pedigree.output}} \\
+{%- if variants %}
 \t\t--variants {{variants_output}} \\
+{%- endif -%}
 \t\t--gs {{genotype_storage}} \\
 \t\t&& touch $@
 
@@ -459,10 +461,12 @@ rule hdfs:
         '''
         hdfs_parquet_loader.py {{study_id}} \\
 {%- if genotype_storage %}
-            --gs {{genotype_storage}} \\
+            --gs {{genotype_storage}} \\\n
 {%- endif %}
-            {{pedigree.output}} --variants {{variants_output}} \\
-            > {log.stdout} 2> {log.stderr}
+{%- if variants %}
+            --variants {{variants_output}} \\\n
+{%- endif -%}
+            {{pedigree.output}} > {log.stdout} 2> {log.stderr}
         '''
 
 rule impala:
@@ -480,12 +484,14 @@ rule impala:
         '''
         impala_tables_loader.py {{study_id}} \\
 {%- if genotype_storage %}
-            --gs {{genotype_storage}} \\
+            --gs {{genotype_storage}} \\\n
 {%- endif %}
 {%- if partition_description %}
             --pd {{variants_output}}/_PARTITION_DESCRIPTION \\
 {%- endif %}
+{%- if variants %}
             --variants-schema {{variants_output}}/_VARIANTS_SCHEMA \\
+{%- endif %}
             > {log.stdout} 2> {log.stderr}
         '''
 
@@ -764,10 +770,10 @@ class BatchImporter:
             "output": pedigree_output,
         }
 
+        context["variants"] = {}
         if self.variants_loaders:
             context["variants_output"] = os.path.abspath(os.path.join(
                 outdir, f"{study_id}_variants"))
-            context["variants"] = {}
 
         for prefix, variants_loader in self.variants_loaders.items():
             variants_context = {}
