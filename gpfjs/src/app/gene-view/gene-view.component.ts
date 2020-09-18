@@ -47,6 +47,8 @@ export class GeneViewComponent implements OnInit {
   variantsDataRepr = [];
   selectedEffectTypes = ['lgds', 'missense', 'synonymous', 'other'];
 
+  selectedFrequencies;
+
   // GENE VIEW VARS
   brush;
   doubleClickTimer;
@@ -62,6 +64,7 @@ export class GeneViewComponent implements OnInit {
       this.effectColumn = dataset.geneBrowser.effectColumn;
       this.frequencyDomainMin = dataset.geneBrowser.domainMin;
       this.frequencyDomainMax = dataset.geneBrowser.domainMax;
+      this.selectedFrequencies = [-1, this.frequencyDomainMax]; // -1 signifies denovo variants
 
       this.svgElement = d3.select('#svg-container')
       .append('svg')
@@ -86,7 +89,10 @@ export class GeneViewComponent implements OnInit {
       .domain(['Denovo'])
       .range([this.svgHeightFreq, this.denovoAxisY]);
     });
-    this.streamingFinished$.subscribe(() => { this.drawPlot(); });
+    this.streamingFinished$.subscribe(() => {
+      this.variantsArray = this.filterUnusableTransmittedVariants(this.variantsArray);
+      this.drawPlot();
+    });
   }
 
   ngOnChanges() {
@@ -146,52 +152,61 @@ export class GeneViewComponent implements OnInit {
     return false;
   }
 
-  hydrateVariantsData(variantsArray) {
-    this.variantsDataRepr = [];
-    for (const v of variantsArray.genotypePreviews) {
-      if (this.isVariantEffectSelected(v.get(this.effectColumn))) {
-        if (v.get(this.frequencyColumn) !== '-' || v.get('variant.is denovo')) {
-          this.variantsDataRepr.push(
-            {
-              position: this.extractPosition(v.get(this.locationColumn)),
-              frequency: v.get(this.frequencyColumn) === '-' ? 'denovo' : v.get(this.frequencyColumn),
-              color: this.getVariantColor(v.get(this.effectColumn)),
-            }
-          );
-        }
-      }
-    }
+  frequencyIsSelected(frequency: number) {
+    return frequency >= this.selectedFrequencies[0] && frequency <= this.selectedFrequencies[1];
   }
 
-  filterTablePreviewVariantsArray(variantsArray: GenotypePreviewVariantsArray, startPos: number, endPos: number) {
+  filterUnusableTransmittedVariants(variantsArray: GenotypePreviewVariantsArray) {
+    // Filter out transmitted variants without any frequency value, i.e. "-"
     const filteredVariants = [];
     const result = new GenotypePreviewVariantsArray();
 
-    let location: string;
-    let position: number;
     let frequency: string;
     for (const genotypePreview of this.variantsArray.genotypePreviews) {
-      location = genotypePreview.data.get(this.locationColumn);
-      position = Number(location.slice(location.indexOf(':') + 1));
       frequency = genotypePreview.data.get(this.frequencyColumn);
-      if (this.isVariantEffectSelected(genotypePreview.data.get(this.effectColumn))) {
-        if (position >= startPos && position <= endPos) {
-          // FIXME duplicated logic from hydrateVariantsData
-          if (frequency !== '-' || genotypePreview.data.get('variant.is denovo')) {
-            filteredVariants.push(genotypePreview);
-          }
-        }
+      if (genotypePreview.data.get('variant.is denovo') || frequency !== '-') {
+        filteredVariants.push(genotypePreview);
       }
     }
     result.setGenotypePreviews(filteredVariants);
     return result;
   }
 
+  filterTablePreviewVariantsArray(
+    variantsArray: GenotypePreviewVariantsArray, startPos: number, endPos: number
+  ): [GenotypePreviewVariantsArray, number[]] {
+    const filteredVariants = [];
+    const filteredVariantsPlot = [];
+    const result = new GenotypePreviewVariantsArray();
+
+    let location: string;
+    let position: number;
+    let frequency: string;
+    for (const genotypePreview of variantsArray.genotypePreviews) {
+      location = genotypePreview.data.get(this.locationColumn);
+      position = Number(location.slice(location.indexOf(':') + 1));
+      frequency = genotypePreview.data.get(this.frequencyColumn);
+      if (!this.isVariantEffectSelected(genotypePreview.data.get(this.effectColumn))) {
+        continue;
+      } else if (position >= startPos && position <= endPos) {
+        if (genotypePreview.data.get('variant.is denovo') && this.selectedFrequencies[0] === -1) {
+          filteredVariants.push(genotypePreview);
+          filteredVariantsPlot.push([position, -1, this.getVariantColor(genotypePreview.data.get(this.effectColumn))]);
+        } else if (this.frequencyIsSelected(Number(frequency))) {
+          filteredVariants.push(genotypePreview);
+          filteredVariantsPlot.push([position, frequency, this.getVariantColor(genotypePreview.data.get(this.effectColumn))]);
+        }
+      }
+    }
+    result.setGenotypePreviews(filteredVariants);
+    return [result, filteredVariantsPlot];
+  }
+
   drawPlot() {
-    this.hydrateVariantsData(this.variantsArray);
-    this.updateShownTablePreviewVariantsArrayEvent.emit(
-      this.filterTablePreviewVariantsArray(this.variantsArray, this.x.domain()[0], this.x.domain()[1])
+    const [filteredVariants, plotVariants] = this.filterTablePreviewVariantsArray(
+      this.variantsArray, this.x.domain()[0], this.x.domain()[1]
     );
+    this.updateShownTablePreviewVariantsArrayEvent.emit(filteredVariants);
     if (this.gene !== undefined) {
       this.x_axis = d3.axisBottom(this.x).ticks(12);
       this.y_axis = d3.axisLeft(this.y);
@@ -214,19 +229,19 @@ export class GeneViewComponent implements OnInit {
 
       this.svgElement.append('g')
       .selectAll('dot')
-      .data(this.variantsDataRepr)
+      .data(plotVariants)
       .enter()
       .append('circle')
-      .attr('cx', d => this.x(d.position) )
+      .attr('cx', d => this.x(d[0]) )
       .attr('cy', d => {
-        if (d.frequency !== 'denovo') {
-          return d.frequency < this.frequencyDomainMin ? this.y_subdomain(d.frequency) : this.y(d.frequency);
+        if (d[1] !== -1) {
+          return d[1] < this.frequencyDomainMin ? this.y_subdomain(d[1]) : this.y(d[1]);
         } else {
           return this.y_denovo('Denovo');
         }
       } )
       .attr('r', 5)
-      .style('fill', d => d.color)
+      .style('fill', d => d[2])
       .style('opacity', 0.5);
     }
   }
@@ -251,6 +266,7 @@ export class GeneViewComponent implements OnInit {
     }
 
     this.x.domain([domainBeginning, domainEnding]);
+    this.selectedFrequencies = [-1, this.frequencyDomainMax];
   }
 
   // GENE VIEW FUNCTIONS
@@ -265,7 +281,7 @@ export class GeneViewComponent implements OnInit {
     .append('g')
     .attr('transform', `translate(${this.margin.left}, ${this.margin.top})`);
 
-    this.brush = d3.brushX().extent([[0, 0], [this.svgWidth, this.svgHeight]])
+    this.brush = d3.brush().extent([[0, 0], [this.svgWidth, this.svgHeightFreq]])
     .on('end', this.brushEndEvent);
 
     this.svgElement.append('g')
@@ -290,17 +306,38 @@ export class GeneViewComponent implements OnInit {
       this.setDefaultScale();
     } else {
       if (this.x.domain()[1] - this.x.domain()[0] > 12) {
-        const newXmin = Math.round(this.x.invert(extent[0]));
-        let newXmax = Math.round(this.x.invert(extent[1]));
+        const newXmin = Math.round(this.x.invert(extent[0][0]));
+        let newXmax = Math.round(this.x.invert(extent[1][0]));
         if (newXmax - newXmin < 12) {
           newXmax = newXmin + 12;
         }
         this.x.domain([newXmin, newXmax]);
         this.svgElement.select('.brush').call(this.brush.move, null);
       }
+
+      // set new frequency limits
+      const newFreqLimits = [
+        this.convertBrushPointToFrequency(extent[0][1]),
+        this.convertBrushPointToFrequency(extent[1][1])
+      ];
+      this.selectedFrequencies = [
+        Math.min(...newFreqLimits),
+        Math.max(...newFreqLimits),
+      ];
     }
+
     this.drawGene();
     this.drawPlot();
+  }
+
+  convertBrushPointToFrequency(brushY: number) {
+    if (brushY < this.y_subdomain.range()[1]) {
+      return this.y.invert(brushY);
+    } else if (brushY < this.y_denovo.range()[1]) {
+      return this.y_subdomain.invert(brushY);
+    } else {
+      return -1; // denovo
+    }
   }
 
   resetTimer = () => {
