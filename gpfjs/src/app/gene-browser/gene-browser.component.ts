@@ -100,9 +100,7 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
             );
 
             this.genotypePreviewVariantsArray =
-              this.queryService.getGenotypePreviewVariantsByFilter(
-                state, this.genotypePreviewInfo, this.loadingService
-              );
+              this.queryService.getGenotypePreviewVariantsByFilter(state, this.genotypePreviewInfo);
 
           }, error => {
             console.warn(error);

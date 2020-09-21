@@ -5,6 +5,7 @@ import { GenotypePreviewVariantsArray } from 'app/genotype-preview-model/genotyp
 import { Subject, Observable } from 'rxjs';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { Transcript, Exon } from 'app/gene-view/gene';
+import { FullscreenLoadingService } from 'app/fullscreen-loading/fullscreen-loading.service';
 
 @Component({
   selector: 'gpf-gene-view',
@@ -55,6 +56,7 @@ export class GeneViewComponent implements OnInit {
 
   constructor(
     private datasetsService: DatasetsService,
+    private loadingService: FullscreenLoadingService,
   ) { }
 
   ngOnInit() {
@@ -92,6 +94,7 @@ export class GeneViewComponent implements OnInit {
     this.streamingFinished$.subscribe(() => {
       this.variantsArray = this.filterUnusableTransmittedVariants(this.variantsArray);
       this.drawPlot();
+      this.loadingService.setLoadingStop();
     });
   }
 
@@ -162,7 +165,7 @@ export class GeneViewComponent implements OnInit {
     const result = new GenotypePreviewVariantsArray();
 
     let frequency: string;
-    for (const genotypePreview of this.variantsArray.genotypePreviews) {
+    for (const genotypePreview of variantsArray.genotypePreviews) {
       frequency = genotypePreview.data.get(this.frequencyColumn);
       if (genotypePreview.data.get('variant.is denovo') || frequency !== '-') {
         filteredVariants.push(genotypePreview);

@@ -84,13 +84,16 @@ export class QueryService {
     return streamingSubject;
   }
 
-  getGenotypePreviewVariantsByFilter(filter: QueryData, genotypePreviewInfo: GenotypePreviewInfo,
-    loadingService: any): GenotypePreviewVariantsArray {
+  getGenotypePreviewVariantsByFilter(
+    filter: QueryData, genotypePreviewInfo: GenotypePreviewInfo, loadingService?: any
+  ): GenotypePreviewVariantsArray {
     const genotypePreviewVariantsArray = new GenotypePreviewVariantsArray();
 
     this.streamPost(this.genotypePreviewVariantsUrl, filter).subscribe(variant => {
       this.parseGenotypePreviewVariantsResponse(variant, genotypePreviewInfo, genotypePreviewVariantsArray);
-      loadingService.setLoadingStop(); // Stop the loading overlay when at least one variant has been loaded
+      if (loadingService) {
+        loadingService.setLoadingStop(); // Stop the loading overlay when at least one variant has been loaded
+      }
     });
 
     return genotypePreviewVariantsArray;
