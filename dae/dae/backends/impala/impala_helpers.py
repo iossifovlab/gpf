@@ -53,7 +53,7 @@ class ImpalaHelpers(object):
             CREATE EXTERNAL TABLE {db}.{table} LIKE PARQUET '{import_file}'
             STORED AS PARQUET LOCATION '{dirname}'
         """
-        logger.trace(f"{statement}")
+        logger.debug(f"{statement}")
         cursor.execute(statement)
         cursor.execute(f"REFRESH {db}.{table}")
 
