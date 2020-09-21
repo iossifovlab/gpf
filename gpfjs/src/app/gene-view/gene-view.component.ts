@@ -159,6 +159,17 @@ export class GeneViewComponent implements OnInit {
     return frequency >= this.selectedFrequencies[0] && frequency <= this.selectedFrequencies[1];
   }
 
+  countSummaryVariants(variantsArray: GenotypePreviewVariantsArray) {
+    const summaryVariants: Set<string> = new Set();
+    for (const genotypePreview of variantsArray.genotypePreviews) {
+      summaryVariants.add(
+        genotypePreview.data.get(this.locationColumn)
+        + genotypePreview.data.get('variant.variant')
+      );
+    }
+    return summaryVariants.size;
+  }
+
   filterUnusableTransmittedVariants(variantsArray: GenotypePreviewVariantsArray) {
     // Filter out transmitted variants without any frequency value, i.e. "-"
     const filteredVariants = [];
@@ -209,6 +220,10 @@ export class GeneViewComponent implements OnInit {
     const [filteredVariants, plotVariants] = this.filterTablePreviewVariantsArray(
       this.variantsArray, this.x.domain()[0], this.x.domain()[1]
     );
+
+    console.log(this.countSummaryVariants(this.variantsArray));
+    console.log(this.countSummaryVariants(filteredVariants));
+
     this.updateShownTablePreviewVariantsArrayEvent.emit(filteredVariants);
     if (this.gene !== undefined) {
       this.x_axis = d3.axisBottom(this.x).ticks(12);
