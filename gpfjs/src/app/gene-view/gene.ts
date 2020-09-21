@@ -26,7 +26,7 @@ export class Transcript {
   constructor(
     private transcript_id: string,
     private _strand: string,
-    private chrom: string,
+    private _chrom: string,
     private utr3: Exon,
     private utr5: Exon,
     private _cds: number[],
@@ -55,6 +55,10 @@ export class Transcript {
 
   get cds() {
     return this._cds;
+  }
+
+  get chrom() {
+    return this._chrom;
   }
 }
 

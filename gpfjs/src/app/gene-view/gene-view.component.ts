@@ -53,6 +53,14 @@ export class GeneViewComponent implements OnInit {
   // GENE VIEW VARS
   brush;
   doubleClickTimer;
+  geneTableValues = {
+    geneSymbol: '',
+    chromosome: '',
+    totalFamilyVariants: 0,
+    selectedFamilyVariants: 0,
+    totalSummaryVariants: 0,
+    selectedSummaryVariants: 0,
+  };
 
   constructor(
     private datasetsService: DatasetsService,
@@ -94,6 +102,12 @@ export class GeneViewComponent implements OnInit {
     this.streamingFinished$.subscribe(() => {
       this.variantsArray = this.filterUnusableTransmittedVariants(this.variantsArray);
       this.drawPlot();
+
+      this.geneTableValues.geneSymbol = this.gene.gene;
+      this.geneTableValues.chromosome = this.gene.transcripts[0].chrom;
+      this.geneTableValues.totalFamilyVariants = this.variantsArray.genotypePreviews.length;
+      this.geneTableValues.totalSummaryVariants = this.countSummaryVariants(this.variantsArray);
+
       this.loadingService.setLoadingStop();
     });
   }
@@ -221,8 +235,8 @@ export class GeneViewComponent implements OnInit {
       this.variantsArray, this.x.domain()[0], this.x.domain()[1]
     );
 
-    console.log(this.countSummaryVariants(this.variantsArray));
-    console.log(this.countSummaryVariants(filteredVariants));
+    this.geneTableValues.selectedFamilyVariants = filteredVariants.genotypePreviews.length;
+    this.geneTableValues.selectedSummaryVariants = this.countSummaryVariants(filteredVariants);
 
     this.updateShownTablePreviewVariantsArrayEvent.emit(filteredVariants);
     if (this.gene !== undefined) {

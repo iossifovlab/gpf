@@ -1,3 +1,27 @@
-<div style="padding: 30px;">
+<div style="padding: 30px; float: left">
   <div id="svg-container"></div>
+</div>
+
+<div *ngIf="this.gene" style="float: left;">
+  <h2>{{ this.geneTableValues.geneSymbol }}</h2>
+  <h3>Chromosome {{ this.geneTableValues.chromosome }}</h3>
+  <table>
+    <tr>
+      <td></td>
+      <td>family variants</td>
+      <td>summary variants</td> 
+    </tr>
+
+    <tr>
+      <td>total</td>
+      <td>{{ this.geneTableValues.totalFamilyVariants }}</td>
+      <td>{{ this.geneTableValues.totalSummaryVariants }}</td>
+    </tr>
+
+    <tr>
+      <td>selected</td>
+      <td>{{ this.geneTableValues.selectedFamilyVariants }}</td>
+      <td>{{ this.geneTableValues.selectedSummaryVariants }}</td>
+    </tr>
+  </table>
 </div>

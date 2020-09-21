@@ -36,9 +36,6 @@
     </gpf-gene-view>
 
     <div *ngIf="selectedDataset$ | async as dataset">
-        <span *ngIf="shownTablePreviewVariantsArray && genotypePreviewInfo" id="variants-count-span">
-          {{ shownTablePreviewVariantsArray.getVariantsCount(genotypePreviewInfo.maxVariantsCount) }}
-        </span>
         <gpf-genotype-preview-table
             [columns]="dataset?.genotypeBrowserConfig?.columns"
             [genotypePreviewInfo]="genotypePreviewInfo"
