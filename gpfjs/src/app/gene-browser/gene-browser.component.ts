@@ -74,6 +74,7 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
   }
 
   submitGeneRequest() {
+    this.updateShownTablePreviewVariantsArray(new GenotypePreviewVariantsArray());
 
     this.getCurrentState()
       .subscribe(state => {
