@@ -35,7 +35,7 @@ class WGPFInstance(GPFInstance):
 
         if getattr(settings, "REMOTES", None):
             for remote in settings.REMOTES:
-                logger.info(f"Creating remote{remote}")
+                logger.info(f"Creating remote {remote}")
                 try:
                     client = RESTClient(
                         remote["id"],
@@ -43,9 +43,7 @@ class WGPFInstance(GPFInstance):
                         remote["user"],
                         remote["password"],
                         base_url=remote["base_url"],
-                        port=remote["port"],
-
-                    )
+                        port=remote["port"])
                     self._fetch_remote_studies(client)
                 except ConnectionError as err:
                     logger.error(err)
@@ -299,7 +297,8 @@ def load_gpf_instance():
         _gpf_instance_lock.acquire()
         try:
             if _gpf_instance is None:
-                gpf_instance = WGPFInstance(load_eagerly=True)
+                gpf_instance = WGPFInstance(
+                    load_eagerly=settings.STUDIES_EAGER_LOADING)  # FIXME
                 _gpf_instance = gpf_instance
         finally:
             _gpf_instance_lock.release()

@@ -33,9 +33,16 @@ class UserSerializer(serializers.ModelSerializer):
 
     hasPassword = serializers.BooleanField(source="is_active", read_only=True)
 
+    allowedDatasets = serializers.ListSerializer(
+        required=False,
+        read_only=True,
+        source="allowed_datasets",
+        child=serializers.CharField()
+    )
+
     class Meta(object):
         model = get_user_model()
-        fields = ("id", "email", "name", "hasPassword", "groups")
+        fields = ("id", "email", "name", "hasPassword", "groups", "allowedDatasets",)
 
     def validate(self, data):
         unknown_keys = set(self.initial_data.keys()) - set(self.fields.keys())

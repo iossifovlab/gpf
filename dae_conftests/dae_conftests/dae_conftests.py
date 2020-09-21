@@ -89,6 +89,9 @@ def gpf_instance(default_dae_config):
             return "RefSeq2013"
 
     class GPFInstanceInternal(GPFInstance):
+        def __init__(self, *args, **kwargs):
+            super(GPFInstanceInternal, self).__init__(*args, **kwargs)
+
         @property
         @cached
         def genomes_db(self):
@@ -112,6 +115,9 @@ def gpf_instance_2013(default_dae_config, global_dae_fixtures_dir):
             return "RefSeq2013"
 
     class GPFInstance2013(GPFInstance):
+        def __init__(self, *args, **kwargs):
+            super(GPFInstance2013, self).__init__(*args, **kwargs)
+
         @property
         @cached
         def genomes_db(self):

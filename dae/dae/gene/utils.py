@@ -2,6 +2,7 @@ import sys
 from copy import deepcopy
 from box import Box
 
+from dae.configuration.gpf_config_parser import FrozenBox
 from dae.gene.gene_term import loadGeneTerm
 
 
@@ -17,15 +18,18 @@ def rename_gene_terms(config, gene_terms, inNS):
         return result
     elif result.geneNS == "id" and inNS == "sym":
 
+        if not (config.gene_info and config.gene_info.genes):
+            config = getGenes(config)
+
         def rF(x):
-            genes = getGenes(config.gene_info)
+            genes = config.gene_info.genes
             if x in genes:
                 return genes[x].sym
 
         result.renameGenes("sym", rF)
     elif result.geneNS == "sym" and inNS == "id":
         result.renameGenes(
-            "id", lambda x: getCleanGeneId(config.gene_info, "sym", x)
+            "id", lambda x: getCleanGeneId(config, "sym", x)
         )
     return result
 
@@ -135,17 +139,23 @@ def getCleanGeneId(config, ns, t):
     return allTokens[t][0].id
 
 
+def loadNCBIGeneInfo(config):
+    genes, ns_tokens = _parseNCBIGeneInfo(config.gene_info)
+    config = config.to_dict()
+    config.setdefault("gene_info", dict())
+    config["gene_info"]["genes"] = genes
+    config["gene_info"]["ns_tokens"] = ns_tokens
+    config = FrozenBox(config)
+    return config
+
+
 def getGenes(config):
-    if config.genes is None:
-        genes, ns_tokens = _parseNCBIGeneInfo(config)
-        config.genes = genes
-        config.nsTokes = ns_tokens
-    return config.genes
+    if config.gene_info.genes is None:
+        config = loadNCBIGeneInfo(config)
+    return config
 
 
 def getNsTokens(config):
-    if config.ns_tokens is None:
-        genes, ns_tokens = _parseNCBIGeneInfo(config)
-        config.genes = genes
-        config.nsTokes = ns_tokens
-    return config.ns_tokens
+    if config.gene_info.ns_tokens is None:
+        config = loadNCBIGeneInfo(config)
+    return config

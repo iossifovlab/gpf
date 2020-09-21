@@ -1,4 +1,3 @@
-from dae.backends.impala.rsync_helpers import RsyncHelpers
 import os
 import glob
 import toml
@@ -16,6 +15,7 @@ from dae.backends.impala.parquet_io import NoPartitionDescriptor, \
 from dae.configuration.study_config_builder import StudyConfigBuilder
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.utils.dict_utils import recursive_dict_update
+from dae.backends.impala.rsync_helpers import RsyncHelpers
 
 
 class ImpalaGenotypeStorage(GenotypeStorage):
@@ -217,6 +217,12 @@ class ImpalaGenotypeStorage(GenotypeStorage):
     def default_variants_hdfs_dirname(self, study_id):
         study_path = self.default_hdfs_study_path(study_id)
         return os.path.join(study_path, "variants")
+
+    def full_hdfs_path(self, hdfs_path):
+        result = \
+            f"hdfs://{self.storage_config.hdfs.host}:" \
+            f"{self.storage_config.hdfs.port}{hdfs_path}"
+        return result
 
     def _build_hdfs_pedigree(
             self, study_id, pedigree_file):

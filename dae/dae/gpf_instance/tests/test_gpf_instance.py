@@ -32,8 +32,8 @@ def test_init(local_gpf_instance):
 
 def test_eager_init(gpf_instance):
     local_gpf_instance = gpf_instance(
-        work_dir=fixtures_dir(), load_eagerly=True
-    )
+        work_dir=None, load_eagerly=True)
+
     assert local_gpf_instance
 
     assert local_gpf_instance.dae_config

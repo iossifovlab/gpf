@@ -53,10 +53,22 @@ class GeneSetCollection(object):
 
 
 class GeneSetsDb(object):
-    def __init__(self, config):
+    def __init__(self, config, load_eagerly=False):
         assert config is not None
         self.config = config
         self.gene_set_collections = dict()
+        self.load_eagerly = load_eagerly
+        if load_eagerly:
+            LOGGER.info(
+                f"GeneSetsDb created with load_eagerly={load_eagerly}")
+
+            for collection_id in self.get_gene_set_collection_ids():
+                LOGGER.debug(
+                    f"loading gene set collection <{collection_id}>")
+                self._load_gene_set_collection(collection_id)
+            LOGGER.info(
+                f"gene set collections <{self.get_gene_set_collection_ids()}> "
+                f"loaded")
 
     @property  # type: ignore
     @cached
@@ -89,9 +101,16 @@ class GeneSetsDb(object):
 
     def _load_gene_set_collection(self, gene_sets_collection_id):
         if gene_sets_collection_id not in self.gene_set_collections:
+            LOGGER.info(
+                f"gene set collection <{gene_sets_collection_id}> "
+                f"not found in GeneSetDb cache")
+
             self.gene_set_collections[
                 gene_sets_collection_id
             ] = GeneSetCollection(gene_sets_collection_id, config=self.config)
+            LOGGER.info(
+                f"gene set collection <{gene_sets_collection_id}> "
+                f"loaded into GeneSetsDb cache")
         return self.gene_set_collections[gene_sets_collection_id]
 
     def has_gene_set_collection(self, gsc_id):
