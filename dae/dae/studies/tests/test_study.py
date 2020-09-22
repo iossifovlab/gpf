@@ -7,7 +7,3 @@ def test_can_get_all_variants(quads_f1):
     variants = list(variants)
 
     assert len(variants) == 3
-
-
-def test_inheritance_trio_can_init(inheritance_trio_wrapper):
-    assert inheritance_trio_wrapper is not None

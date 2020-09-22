@@ -5,9 +5,9 @@ from django.conf import settings
 from threading import Lock
 
 from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.remote.remote_study_wrapper import RemoteStudyWrapper
+from studies.study_wrapper import StudyWrapper, RemoteStudyWrapper
 
-from dae.remote.rest_api_client import RESTClient, RESTClientRequestError
+from remote.rest_api_client import RESTClient, RESTClientRequestError
 
 from dae.enrichment_tool.tool import EnrichmentTool
 from dae.enrichment_tool.event_counters import CounterBase
@@ -30,8 +30,8 @@ class WGPFInstance(GPFInstance):
     def __init__(self, *args, **kwargs):
         super(WGPFInstance, self).__init__(*args, **kwargs)
         self._remote_study_clients = dict()
-        self._remote_study_wrappers = dict()
         self._remote_study_ids = dict()
+        self._study_wrappers = dict()
 
         if getattr(settings, "REMOTES", None):
             for remote in settings.REMOTES:
@@ -54,16 +54,44 @@ class WGPFInstance(GPFInstance):
     def _fetch_remote_studies(self, rest_client):
         studies = rest_client.get_datasets()
         for study in studies["data"]:
+            logger.info(f"creating remote genotype data: {study['id']}")
             study_wrapper = RemoteStudyWrapper(study["id"], rest_client)
             study_id = study_wrapper.study_id
             self._remote_study_ids[study_id] = study["id"]
             self._remote_study_clients[study_id] = rest_client
-            self._remote_study_wrappers[study_id] = study_wrapper
+            self._study_wrappers[study_id] = study_wrapper
+
+    def register_genotype_data(self, genotype_data):
+        super(WGPFInstance, self).register_genotype_data(genotype_data)
+
+        logger.debug(f"genotype data config; {genotype_data.config}")
+
+        study_wrapper = StudyWrapper(
+            genotype_data,
+            self._pheno_db,
+            self.gene_weights_db
+        )
+        return study_wrapper
+
+    def make_wdae_wrapper(self, dataset_id):
+        genotype_data = self.get_dataset(dataset_id)
+        if genotype_data is None:
+            return None
+
+        study_wrapper = StudyWrapper(
+            genotype_data,
+            self._pheno_db,
+            self.gene_weights_db
+        )
+        return study_wrapper
 
     def get_wdae_wrapper(self, dataset_id):
-        wrapper = super(WGPFInstance, self).get_wdae_wrapper(dataset_id)
-        if not wrapper:
-            wrapper = self._remote_study_wrappers.get(dataset_id, None)
+        if dataset_id not in self._study_wrappers.keys():
+            wrapper = self.make_wdae_wrapper(dataset_id)
+            if wrapper is not None:
+                self._study_wrappers[dataset_id] = wrapper
+        else:
+            wrapper = self._study_wrappers.get(dataset_id, None)
         return wrapper
 
     def get_genotype_data_ids(self):
@@ -73,6 +101,8 @@ class WGPFInstance(GPFInstance):
         )
 
     def get_genotype_data(self, dataset_id):
+        # TODO: Avoid returning different types of data when remote
+        # Returns an instance GenotypeData when local, a Box config when remote
         genotype_data = super(WGPFInstance, self).get_genotype_data(dataset_id)
         if genotype_data is not None:
             return genotype_data
@@ -83,6 +113,14 @@ class WGPFInstance(GPFInstance):
             return None
 
         genotype_data = wrapper.config
+        return genotype_data
+
+    def get_genotype_data_config(self, dataset_id):
+        genotype_data = \
+            super(WGPFInstance, self).get_genotype_data_config(dataset_id)
+        if genotype_data is not None:
+            return genotype_data
+        genotype_data = self.get_genotype_data(dataset_id)
         return genotype_data
 
     def get_common_report(self, common_report_id):
@@ -119,7 +157,7 @@ class WGPFInstance(GPFInstance):
                     yield line.decode("UTF-8")
 
     def get_pheno_config(self, study_wrapper):
-        print("WARNING: Using is_remote")
+        logger.warning("WARNING: Using is_remote")
         if not study_wrapper.is_remote:
             return super(WGPFInstance, self).get_pheno_config(study_wrapper)
 
@@ -127,14 +165,14 @@ class WGPFInstance(GPFInstance):
         return client.get_pheno_browser_config(study_wrapper._remote_study_id)
 
     def has_pheno_data(self, study_wrapper):
-        print("WARNING: Using is_remote")
+        logger.warning("WARNING: Using is_remote")
         if not study_wrapper.is_remote:
             return super(WGPFInstance, self).has_pheno_data(study_wrapper)
 
         return "phenotype_data" in study_wrapper.config
 
     def get_instruments(self, study_wrapper):
-        print("WARNING: Using is_remote")
+        logger.warning("WARNING: Using is_remote")
         if not study_wrapper.is_remote:
             return super(WGPFInstance, self).get_instruments(study_wrapper)
 
@@ -142,7 +180,7 @@ class WGPFInstance(GPFInstance):
             study_wrapper._remote_study_id)
 
     def get_measures_info(self, study_wrapper):
-        print("WARNING: Using is_remote")
+        logger.warning("WARNING: Using is_remote")
         if not study_wrapper.is_remote:
             return super(WGPFInstance, self).get_measures_info(study_wrapper)
 
@@ -150,7 +188,7 @@ class WGPFInstance(GPFInstance):
         return client.get_browser_measures_info(study_wrapper._remote_study_id)
 
     def search_measures(self, study_wrapper, instrument, search_term):
-        print("WARNING: Using is_remote")
+        logger.warning("WARNING: Using is_remote")
         if not study_wrapper.is_remote:
             measures = super(WGPFInstance, self).search_measures(
                 study_wrapper, instrument, search_term)
@@ -209,7 +247,7 @@ class WGPFInstance(GPFInstance):
     def _create_local_enrichment_builder(
             self, dataset_id, background_name, counting_name,
             gene_syms):
-        dataset = GPFInstance.get_wdae_wrapper(self, dataset_id)
+        dataset = self.get_genotype_data(dataset_id)
         enrichment_config = GPFInstance.get_study_enrichment_config(
             self,
             dataset_id

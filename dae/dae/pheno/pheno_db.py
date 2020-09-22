@@ -117,6 +117,42 @@ class Measure(object):
 
         return m
 
+    @classmethod
+    def from_json(cls, json):
+        """
+        Creates `Measure` object from a JSON representation.
+        """
+        assert json["measureType"] is not None
+
+        m = Measure(json["measureName"])
+        m.measure_id = json["measureId"]
+        m.instrument_name = json["instrumentName"]
+        m.measure_name = json["measureName"]
+        m.measure_type = MeasureType.from_str(json["measureType"])
+
+        m.description = json["description"]
+        m.default_filter = json["defaultFilter"]
+        m.values_domain = json.get("valuesDomain")
+        m.min_value = json.get("minValue")
+        m.max_value = json.get("maxValue")
+
+        return m
+
+    def to_json(self):
+        result = dict()
+
+        result["measureName"] = self.measure_name
+        result["measureId"] = self.measure_id
+        result["instrumentName"] = self.instrument_name
+        result["measureType"] = self.measure_type.name
+        result["description"] = self.description
+        result["defaultFilter"] = self.default_filter
+        result["valuesDomain"] = self.values_domain
+        result["minValue"] = self.min_value
+        result["minValue"] = self.max_value
+
+        return result
+
 
 class PhenotypeData:
     def get_persons_df(self, roles, person_ids, family_ids):
@@ -142,10 +178,12 @@ class PhenotypeData:
     def get_measure_values_df(self, measure_id, person_ids, family_ids, roles):
         raise NotImplementedError()
 
-    def get_measure_values(self, measure_id, person_ids, family_ids, roles):
+    def get_measure_values(
+            self, measure_id, person_ids, family_ids, roles, default_filter):
         raise NotImplementedError()
 
-    def get_values_df(self, measure_ids, person_ids, family_ids, roles):
+    def get_values_df(
+            self, measure_ids, person_ids, family_ids, roles, default_filter):
         raise NotImplementedError()
 
     def get_values(self, measure_ids, person_ids, family_ids, roles):
@@ -734,12 +772,7 @@ class PhenoDb(object):
 
     def get_phenotype_data(self, pheno_data_id):
         if not self.has_phenotype_data(pheno_data_id):
-            raise ValueError(
-                "cannot find phenotype data {};"
-                " available phenotype data: {}".format(
-                    pheno_data_id, self.get_phenotype_data_ids()
-                )
-            )
+            return None
         if pheno_data_id in self.pheno_cache:
             phenotype_data = self.pheno_cache[pheno_data_id]
         else:

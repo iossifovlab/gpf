@@ -1,7 +1,6 @@
 from deprecation import deprecated
 
 from dae.studies.study import GenotypeDataStudy, GenotypeDataGroup
-from dae.studies.study_wrapper import StudyWrapper
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.study_config import study_config_schema
 
@@ -10,20 +9,14 @@ class VariantsDb(object):
     def __init__(
         self,
         dae_config,
-        pheno_db,
-        gene_weights_db,
         genomes_db,
         genotype_storage_factory,
     ):
         self.dae_config = dae_config
 
-        assert pheno_db is not None
-        assert gene_weights_db is not None
         assert genomes_db is not None
         assert genotype_storage_factory is not None
 
-        self.pheno_db = pheno_db
-        self.gene_weights_db = gene_weights_db
         self.genomes_db = genomes_db
         self.genotype_storage_factory = genotype_storage_factory
 
@@ -53,10 +46,8 @@ class VariantsDb(object):
         self._filter_disabled()
 
         self._genotype_data_study_cache = {}
-        self._genotype_data_study_wrapper_cache = {}
 
         self._genotype_data_group_cache = {}
-        self._genotype_data_group_wrapper_cache = {}
 
         self._configuration_check()
 
@@ -97,23 +88,10 @@ class VariantsDb(object):
 
         return self._genotype_data_study_cache[study_id]
 
-    def get_study_wdae_wrapper(self, study_id):
-        self._load_study_cache({study_id})
-
-        if study_id not in self._genotype_data_study_wrapper_cache:
-            return None
-
-        return self._genotype_data_study_wrapper_cache[study_id]
-
     def get_all_studies(self):
         self._load_study_cache()
 
         return list(self._genotype_data_study_cache.values())
-
-    def get_all_studies_wrapper(self):
-        self._load_study_cache()
-
-        return list(self._genotype_data_study_wrapper_cache.values())
 
     def get_all_study_configs(self):
         self._load_study_cache()
@@ -137,26 +115,10 @@ class VariantsDb(object):
 
         return self._genotype_data_group_cache[genotype_data_group_id]
 
-    def get_genotype_data_group_wdae_wrapper(self, genotype_data_group_id):
-        self._load_genotype_data_group_cache({genotype_data_group_id})
-
-        if (
-            genotype_data_group_id
-            not in self._genotype_data_group_wrapper_cache
-        ):
-            return None
-
-        return self._genotype_data_group_wrapper_cache[genotype_data_group_id]
-
     def get_all_genotype_data_groups(self):
         self._load_genotype_data_group_cache()
 
         return list(self._genotype_data_group_cache.values())
-
-    def get_all_genotype_data_groups_wrapper(self):
-        self._load_genotype_data_group_cache()
-
-        return list(self._genotype_data_group_wrapper_cache.values())
 
     def get_all_genotype_data_group_configs(self):
         self._load_genotype_data_group_cache()
@@ -189,16 +151,16 @@ class VariantsDb(object):
             genotype_data_study if genotype_data_study else genotype_data_group
         )
 
-    def get_wdae_wrapper(self, wdae_wrapper_id):
-        study_wdae_wrapper = self.get_study_wdae_wrapper(wdae_wrapper_id)
-        genotype_data_group_wdae_wrapper = \
-            self.get_genotype_data_group_wdae_wrapper(wdae_wrapper_id)
+    # def get_wdae_wrapper(self, wdae_wrapper_id):
+    #     study_wdae_wrapper = self.get_study_wdae_wrapper(wdae_wrapper_id)
+    #     genotype_data_group_wdae_wrapper = \
+    #         self.get_genotype_data_group_wdae_wrapper(wdae_wrapper_id)
 
-        return (
-            study_wdae_wrapper
-            if study_wdae_wrapper
-            else genotype_data_group_wdae_wrapper
-        )
+    #     return (
+    #         study_wdae_wrapper
+    #         if study_wdae_wrapper
+    #         else genotype_data_group_wdae_wrapper
+    #     )
 
     @deprecated(details="start using GPFInstance methods")
     def get_all_genotype_data(self):
@@ -234,9 +196,6 @@ class VariantsDb(object):
         if genotype_data_study is None:
             return
         self._genotype_data_study_cache[study_id] = genotype_data_study
-        self._genotype_data_study_wrapper_cache[study_id] = StudyWrapper(
-            genotype_data_study, self.pheno_db, self.gene_weights_db
-        )
 
     def _load_genotype_data_group_cache(self, genotype_data_group_ids=None):
         if genotype_data_group_ids is None:
@@ -261,11 +220,6 @@ class VariantsDb(object):
         self._genotype_data_group_cache[
             genotype_data_group_id
         ] = genotype_data_group
-        self._genotype_data_group_wrapper_cache[
-            genotype_data_group_id
-        ] = StudyWrapper(
-            genotype_data_group, self.pheno_db, self.gene_weights_db
-        )
 
     def make_genotype_data_study(self, study_config):
         if study_config is None:

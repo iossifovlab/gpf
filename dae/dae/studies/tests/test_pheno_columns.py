@@ -2,6 +2,9 @@ import pytest
 from dae.variants.attributes import Role
 
 
+pytestmark = pytest.mark.xfail(reason="Wrappers don't exist anymore")
+
+
 def test_genotype_data_group_with_phenodb_can_be_loaded(
     quads_f1_genotype_data_group_wrapper,
 ):

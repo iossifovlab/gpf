@@ -125,8 +125,6 @@ class GPFInstance(object):
     def _variants_db(self):
         return VariantsDb(
             self.dae_config,
-            self._pheno_db,
-            self.gene_weights_db,
             self.genomes_db,
             self.genotype_storage_db,
         )
@@ -188,8 +186,18 @@ class GPFInstance(object):
             genotype_data_id
         )
 
-    # Phenotype data
+    def register_genotype_data(self, genotype_data):
+        if genotype_data.id in self.get_genotype_data_ids():
+            logger.warning(
+                f"replacing genotype data instance {genotype_data.id}")
 
+        self._variants_db\
+            ._genotype_data_group_cache[genotype_data.id] = genotype_data
+        self._variants_db\
+            .genotype_data_group_configs[genotype_data.id] = \
+            genotype_data.config
+
+    # Phenotype data
     def get_phenotype_db_config(self):
         return self._pheno_db.config
 
@@ -341,9 +349,6 @@ class GPFInstance(object):
             gene_set_id, types, datasets)
 
     # Variants DB
-    def get_wdae_wrapper(self, dataset_id):
-        return self._variants_db.get_wdae_wrapper(dataset_id)
-
     def get_dataset(self, dataset_id):
         return self._variants_db.get(dataset_id)
 

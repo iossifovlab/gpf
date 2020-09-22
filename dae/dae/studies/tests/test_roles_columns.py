@@ -1,3 +1,7 @@
+import pytest
+
+
+pytestmark = pytest.mark.xfail(reason="Wrappers don't exist anymore")
 
 
 def test_all_in_role_columns_are_present_in_config(

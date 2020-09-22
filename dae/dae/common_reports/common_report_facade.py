@@ -51,7 +51,7 @@ class CommonReportFacade(object):
             return None
 
         variants_db = self.gpf_instance._variants_db
-        genotype_data_study = variants_db.get_wdae_wrapper(common_report_id)
+        genotype_data_study = variants_db.get(common_report_id)
         common_report_config = self._common_report_config_cache[
             common_report_id
         ]
@@ -171,7 +171,7 @@ class CommonReportFacade(object):
             sex=None):
 
         genotype_data_study = \
-            self.gpf_instance._variants_db.get_wdae_wrapper(common_report_id)
+            self.gpf_instance._variants_db.get(common_report_id)
         collections = genotype_data_study.person_set_collections
         person_sets = collections[person_set_collection_id].person_sets
         print("person_sets:", person_sets)
@@ -197,7 +197,7 @@ class CommonReportFacade(object):
     ):
         self.load_cache({common_report_id})
         genotype_data_study = \
-            self.gpf_instance._variants_db.get_wdae_wrapper(common_report_id)
+            self.gpf_instance._variants_db.get(common_report_id)
         common_report_config = self._common_report_config_cache[
             common_report_id
         ]

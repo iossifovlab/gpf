@@ -9,7 +9,7 @@ from pheno_browser_api import views
 
 urlpatterns = [
     url(
-        r"^/pheno_config/?$",
+        r"^/config/?$",
         views.PhenoConfigView.as_view(),
         name="pheno_browser_config",
     ),

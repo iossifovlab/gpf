@@ -2,8 +2,8 @@ import pytest
 
 from dae.variants.attributes import Inheritance, Role
 from dae.backends.attributes_query import inheritance_query, role_query, \
-    OrNode, AndNode
-from dae.studies.study_wrapper import StudyWrapper
+    OrNode
+from studies.study_wrapper import StudyWrapper
 
 
 @pytest.mark.parametrize(
