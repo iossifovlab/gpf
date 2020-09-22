@@ -60,11 +60,11 @@ def test_get_genotype_data_config_nonexistant(wgpf_instance_fixture):
     assert data_config is None
 
 
-# def test_get_common_report(wgpf_instance_fixture):
-#     print(wgpf_instance_fixture.get_genotype_data_ids())
-#     wgpf_instance_fixture._common_report_facade.generate_common_reports()
-#     common_report = wgpf_instance_fixture.get_common_report("Study1")
-#     assert isinstance(common_report, dict)
+def test_get_common_report(wgpf_instance_fixture):
+    wgpf_instance_fixture._common_report_facade.generate_common_report(
+        "Study1")
+    common_report = wgpf_instance_fixture.get_common_report("Study1")
+    assert isinstance(common_report, dict)
 
 
 def test_get_common_report_remote(wgpf_instance_fixture):

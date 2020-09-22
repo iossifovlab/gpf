@@ -164,24 +164,24 @@ CONTEXT = {
 }
 
 
-def test_snakefile_generator():
+def test_snakefile_generator(temp_dirname):
 
     generator = SnakefileGenerator()
     result = generator.generate(CONTEXT)
 
     print(result)
-    with open("Snakefile", "wt") as outfile:
+    with open(os.path.join(temp_dirname, "Snakefile"), "wt") as outfile:
         outfile.write(result)
 
 
-def test_makefile_generator():
+def test_makefile_generator(temp_dirname):
 
     generator = MakefileGenerator()
     result = generator.generate(CONTEXT)
 
     print(result)
 
-    with open("Makefile", "wt") as outfile:
+    with open(os.path.join(temp_dirname, "Makefile"), "wt") as outfile:
         outfile.write(result)
 
 
