@@ -301,6 +301,17 @@ export class GeneViewComponent implements OnInit {
     this.selectedFrequencies = [-1, this.frequencyDomainMax];
   }
 
+  resetGeneTableValues(): void {
+    this.geneTableValues = {
+      geneSymbol: '',
+      chromosome: '',
+      totalFamilyVariants: 0,
+      selectedFamilyVariants: 0,
+      totalSummaryVariants: 0,
+      selectedSummaryVariants: 0,
+    };
+  }
+
   // GENE VIEW FUNCTIONS
   drawGene() {
     this.svgHeight = this.svgHeightFreqRaw + this.gene.transcripts.length * 50;
