@@ -253,7 +253,7 @@ class StudyWrapper(StudyWrapperBase):
             aa.members_in_order
         ),
         "is_denovo": lambda aa: bool(
-             Inheritance.denovo in aa.inheritance_in_members
+            Inheritance.denovo in aa.inheritance_in_members
         ),
     }
 
@@ -330,14 +330,14 @@ class StudyWrapper(StudyWrapperBase):
         )
 
         if max_variants_count is not None:
-            query["limit"] = max_variants_count
+            query["limit"] = max_variants_count + 1
 
         rows = self.query_list_variants(
             sources, person_set_collection, **query
         )
 
         if max_variants_count is not None:
-            limited_rows = itertools.islice(rows, max_variants_count)
+            limited_rows = itertools.islice(rows, max_variants_count + 1)
         else:
             limited_rows = rows
 
@@ -783,32 +783,32 @@ class StudyWrapper(StudyWrapperBase):
 
         if "mother only" in present_in_parent:
             roles_query.append(AndNode(
-                        [
-                            NotNode(ContainsNode(Role.dad)),
-                            ContainsNode(Role.mom),
-                        ]
-                    ))
+                [
+                    NotNode(ContainsNode(Role.dad)),
+                    ContainsNode(Role.mom),
+                ]
+            ))
 
         if "father only" in present_in_parent:
             roles_query.append(AndNode(
-                        [
-                            ContainsNode(Role.dad),
-                            NotNode(ContainsNode(Role.mom)),
-                        ]
-                    ))
+                [
+                    ContainsNode(Role.dad),
+                    NotNode(ContainsNode(Role.mom)),
+                ]
+            ))
 
         if "mother and father" in present_in_parent:
             roles_query.append(AndNode(
-                        [ContainsNode(Role.dad), ContainsNode(Role.mom)]
-                    ))
+                [ContainsNode(Role.dad), ContainsNode(Role.mom)]
+            ))
 
         if "neither" in present_in_parent:
             roles_query.append(AndNode(
-                        [
-                            NotNode(ContainsNode(Role.dad)),
-                            NotNode(ContainsNode(Role.mom)),
-                        ]
-                    ))
+                [
+                    NotNode(ContainsNode(Role.dad)),
+                    NotNode(ContainsNode(Role.mom)),
+                ]
+            ))
         if len(roles_query) == 4 or len(roles_query) == 0:
             return None
         if len(roles_query) == 1:
