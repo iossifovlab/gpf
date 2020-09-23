@@ -58,6 +58,25 @@ def dataset_wrapper(db, wdae_gpf_instance):
     return dataset_wrapper
 
 
+def test_parents(admin_client, wdae_gpf_instance, dataset_wrapper):
+    assert dataset_wrapper.parents == set()
+
+    dataset1 = wdae_gpf_instance.get_genotype_data("Dataset1")
+    assert dataset1.parents == set(["Dataset"])
+
+    dataset2 = wdae_gpf_instance.get_genotype_data("Dataset2")
+    assert dataset2.parents == set(["Dataset"])
+
+    study1 = wdae_gpf_instance.get_genotype_data("Study1")
+    assert study1.parents == set(["Dataset1"])
+
+    study2 = wdae_gpf_instance.get_genotype_data("Study2")
+    assert study2.parents == set(["Dataset2"])
+
+    study3 = wdae_gpf_instance.get_genotype_data("Study3")
+    assert study3.parents == set(["Dataset1"])
+
+
 def test_datasets_studies_ids(
         admin_client, wdae_gpf_instance, dataset_wrapper):
 
@@ -113,11 +132,42 @@ def test_dataset_group_rights(db, user, dataset_wrapper):
     assert user_has_permission(user, dataset_wrapper.id)
 
 
+def test_dataset_group_rights_gives_access_to_all_studies(
+        db, user, dataset_wrapper):
+    add_group_perm_to_user("A", user)
+    add_group_perm_to_dataset("A", dataset_wrapper.id)
+
+    assert user_has_permission(user, "Study1")
+    assert user_has_permission(user, "Study2")
+    assert user_has_permission(user, "Study3")
+
+
+def test_dataset_group_rights_gives_access_to_all_datasets(
+        db, user, dataset_wrapper):
+    add_group_perm_to_user("A", user)
+    add_group_perm_to_dataset("A", dataset_wrapper.id)
+
+    assert user_has_permission(user, "Dataset1")
+    assert user_has_permission(user, "Dataset2")
+    assert user_has_permission(user, "Dataset")
+
+
 def test_dataset1_group_rights(db, user, dataset_wrapper):
     add_group_perm_to_user("A", user)
     add_group_perm_to_dataset("A", "Dataset1")
 
     assert user_has_permission(user, dataset_wrapper.id)
+
+
+def test_dataset1_group_rights_gives_access_to_study1_and_study3(
+        db, user, dataset_wrapper):
+    add_group_perm_to_user("A", user)
+    add_group_perm_to_dataset("A", "Dataset1")
+
+    assert user_has_permission(user, "Study1")
+    assert user_has_permission(user, "Study3")
+
+    assert not user_has_permission(user, "Study2")
 
 
 def test_study1_and_dataset2_group_rights_allowed_datasets(

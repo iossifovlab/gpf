@@ -38,6 +38,14 @@ class GenotypeData:
         self.study_type = self.config.study_type
         self.person_set_collections: Dict[str, PersonSetCollection] = dict()
         self.person_set_collection_configs = dict()
+        self._parents = set()
+
+    @property
+    def parents(self):
+        return self._parents
+
+    def _add_parent(self, genotype_data_id):
+        self._parents.add(genotype_data_id)
 
     @property
     def is_group(self):
@@ -117,6 +125,8 @@ class GenotypeDataGroup(GenotypeData):
         self._families = self._build_families()
         self._build_person_set_collections()
         self._executor = None
+        for study in self.studies:
+            study._add_parent(self.id)
 
     @property
     def is_group(self):

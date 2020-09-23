@@ -64,6 +64,17 @@ def user_has_permission_strict(user, dataset_id):
     return False
 
 
+def _check_parents_permissions(user, genotype_data):
+    gpf_instance = get_gpf_instance()
+
+    for parent_id in genotype_data.parents:
+        if user_has_permission_strict(user, parent_id):
+            return True
+        parent = gpf_instance.get_genotype_data(parent_id)
+        if _check_parents_permissions(user, parent):
+            return True
+
+
 def user_has_permission(user, dataset_id):
     logger.debug(f"cheking access rights for dataset {dataset_id}")
     if user_has_permission_strict(user, dataset_id):
@@ -73,6 +84,10 @@ def user_has_permission(user, dataset_id):
     genotype_data = gpf_instance.get_genotype_data(dataset_id)
     if genotype_data is None:
         return False
+
+    if _check_parents_permissions(user, genotype_data):
+        return True
+
     if not genotype_data.is_group:
         return False
 
