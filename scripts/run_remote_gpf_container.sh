@@ -41,7 +41,8 @@ else
         seqpipe/seqpipe-gpf-conda /code/scripts/run_remote_server.sh
 fi
 
-docker exec ${GPF_REMOTE_DOCKER_CONTAINER} /code/scripts/wait-for-it.sh -h localhost -p 21010 -t 300
+# docker exec ${GPF_REMOTE_DOCKER_CONTAINER} /code/scripts/wait-for-it.sh -h localhost -p 21010 -t 300
+$WD/scripts/wait-for-it.sh -h localhost -p 21010 -t 300
 
 echo ""
 echo "==========================================="
