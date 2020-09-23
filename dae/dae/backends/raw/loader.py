@@ -310,7 +310,7 @@ class StoredAnnotationDecorator(AnnotationDecorator):
         )
 
         start = time.time()
-        records = annot_df.to_dict(orient="record")
+        records = annot_df.to_dict(orient="records")
         index = 0
 
         while index < len(records):

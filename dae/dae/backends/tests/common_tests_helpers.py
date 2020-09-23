@@ -16,7 +16,7 @@ def relative_to_this_test_folder(path):
 def assert_annotation_equals(vars_df, vars1_df):
 
     for v1, v2 in zip(
-        vars_df.to_dict(orient="record"), vars1_df.to_dict(orient="record")
+        vars_df.to_dict(orient="records"), vars1_df.to_dict(orient="records")
     ):
         for k in list(v1.keys()):
             res = v1[k] == v2[k]
