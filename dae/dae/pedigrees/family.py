@@ -324,7 +324,7 @@ class FamiliesData(Mapping):
     @staticmethod
     def from_pedigree_df(ped_df):
         persons = defaultdict(list)
-        for rec in ped_df.to_dict(orient="record"):
+        for rec in ped_df.to_dict(orient="records"):
             person = Person(**rec)
             persons[person.family_id].append(person)
 
