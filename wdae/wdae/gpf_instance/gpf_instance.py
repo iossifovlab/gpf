@@ -162,7 +162,8 @@ class WGPFInstance(GPFInstance):
             return super(WGPFInstance, self).get_pheno_config(study_wrapper)
 
         client = study_wrapper.rest_client
-        return client.get_pheno_browser_config(study_wrapper._remote_study_id)
+        return client.get_pheno_browser_config(
+            study_wrapper.config.phenotype_data)
 
     def has_pheno_data(self, study_wrapper):
         logger.warning("WARNING: Using is_remote")
