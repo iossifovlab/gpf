@@ -65,16 +65,16 @@ def test_parents(admin_client, wdae_gpf_instance, dataset_wrapper):
     assert dataset1.parents == set(["Dataset"])
 
     dataset2 = wdae_gpf_instance.get_genotype_data("Dataset2")
-    assert dataset2.parents == set(["Dataset"])
+    assert "Dataset" in dataset2.parents
 
     study1 = wdae_gpf_instance.get_genotype_data("Study1")
-    assert study1.parents == set(["Dataset1"])
+    assert "Dataset1" in study1.parents
 
     study2 = wdae_gpf_instance.get_genotype_data("Study2")
-    assert study2.parents == set(["Dataset2"])
+    assert "Dataset2" in study2.parents
 
     study3 = wdae_gpf_instance.get_genotype_data("Study3")
-    assert study3.parents == set(["Dataset1"])
+    assert "Dataset1" in study3.parents
 
 
 def test_datasets_studies_ids(
