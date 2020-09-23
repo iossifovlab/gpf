@@ -58,10 +58,15 @@ def user_has_permission_strict(user, dataset_id):
 
     if get_anonymous_user().has_perm("datasets_api.view", dataset):
         return True
-    if user.has_perm("datasets_api.view", dataset):
-        return True
 
-    return False
+    # Temporarily make user active if they are not, as inactive users
+    # have no permissions even if they have the appropriate groups given
+    # to them
+    user_prev_active = user.is_active
+    user.is_active = True
+    has_perm = user.has_perm("datasets_api.view", dataset)
+    user.is_active = user_prev_active
+    return has_perm
 
 
 def user_has_permission(user, dataset_id):
