@@ -64,7 +64,7 @@ class WGPFInstance(GPFInstance):
     def register_genotype_data(self, genotype_data):
         super(WGPFInstance, self).register_genotype_data(genotype_data)
 
-        logger.debug(f"genotype data config; {genotype_data.config}")
+        logger.debug(f"genotype data config; {genotype_data.id}")
 
         study_wrapper = StudyWrapper(
             genotype_data,

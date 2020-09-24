@@ -1,6 +1,17 @@
 import pytest
 
 from box import Box
+
+from django.db.models import Count, Q
+from django.contrib.auth import get_user_model
+
+from django.contrib.auth.models import Group
+
+from guardian.shortcuts import get_perms, get_groups_with_perms, \
+    get_user_perms, get_group_perms, get_objects_for_user, \
+    get_objects_for_group
+
+from guardian.utils import get_user_obj_perms_model, get_group_obj_perms_model
 from dae.studies.study import GenotypeDataGroup
 from studies.study_wrapper import StudyWrapper
 from datasets_api.models import Dataset
@@ -8,7 +19,10 @@ from datasets_api.permissions import user_has_permission, \
     add_group_perm_to_user, \
     add_group_perm_to_dataset, \
     user_allowed_datasets, \
-    user_allowed_datasets_deep
+    user_allowed_datasets_deep, \
+    get_user_groups, get_dataset_groups, \
+    get_allowed_datasets_for_user, \
+    user_has_permission_strict
 
 
 @pytest.fixture()
@@ -206,3 +220,70 @@ def test_dataset_admin_group_rights(db, user, dataset_wrapper):
 
     result = user_allowed_datasets_deep(user, dataset_wrapper.id)
     assert result == set(["Study1", "Study2", "Study3"])
+
+
+def test_explore_datasets_users_and_groups(db, user, dataset_wrapper):
+    add_group_perm_to_user("A", user)
+    add_group_perm_to_dataset("A", "Dataset")
+
+    group = Group.objects.get(name="A")
+
+    dataset = Dataset.objects.get(dataset_id="Dataset")
+
+    print("===========================================================")
+    print(group, dir(group))
+    print("===========================================================")
+
+    print("user.groups:", user.groups.all())
+    print("get_groups_with_perms:", get_groups_with_perms(dataset))
+
+    print(get_user_groups(user))
+    print(get_dataset_groups(dataset))
+    print(get_dataset_groups("Dataset"))
+
+    assert get_user_groups(user) & get_dataset_groups(dataset)
+
+
+@pytest.fixture()
+def na_user(db):
+    User = get_user_model()
+    u = User.objects.create(
+        email="nauser@example.com",
+        name="Non-Active User",
+        is_staff=False,
+        is_active=False,
+        is_superuser=False,
+    )
+    u.save()
+
+    return u
+
+
+def test_explore_datasets_nauser_and_groups(db, na_user, dataset_wrapper):
+    add_group_perm_to_user("A", na_user)
+    add_group_perm_to_dataset("A", "Dataset")
+
+    print(get_user_groups(na_user))
+    print(get_dataset_groups("Dataset"))
+
+    assert get_user_groups(na_user) & get_dataset_groups("Dataset")
+
+
+def test_get_allowed_datasets_for_na_user(db, na_user, dataset_wrapper):
+    add_group_perm_to_user("A", na_user)
+    add_group_perm_to_dataset("A", "Dataset")
+
+    allowed_dtasets = get_allowed_datasets_for_user(na_user)
+    print(allowed_dtasets)
+    assert "Dataset" in allowed_dtasets
+    assert not user_has_permission_strict(na_user, "Dataset")
+
+
+def test_get_allowed_datasets_for_user(db, user, dataset_wrapper):
+    add_group_perm_to_user("A", user)
+    add_group_perm_to_dataset("A", "Dataset")
+
+    allowed_dtasets = get_allowed_datasets_for_user(user)
+    print(allowed_dtasets)
+    assert "Dataset" in allowed_dtasets
+    assert user_has_permission_strict(user, "Dataset")
