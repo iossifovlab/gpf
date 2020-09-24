@@ -18,8 +18,8 @@ from query_base.query_base import QueryBaseView
 from gene_sets.expand_gene_set_decorator import expand_gene_set
 
 from datasets_api.models import Dataset
-from datasets_api.permissions import user_allowed_datasets, \
-    user_allowed_datasets_deep
+from datasets_api.permissions import get_allowed_children_datasets_for_user, \
+    get_allowed_children_datasets_for_user_deep
 
 
 logger = logging.getLogger(__name__)
@@ -32,11 +32,11 @@ def handle_partial_permissions(user, dataset_id: str, request_data: dict):
     in order to filter variants from studies the user cannot access.
     """
 
-    if dataset_id in user_allowed_datasets(user, dataset_id):
+    if dataset_id in get_allowed_children_datasets_for_user(user, dataset_id):
         return
 
-    request_data["study_filters"] = user_allowed_datasets_deep(
-        user, dataset_id)
+    request_data["study_filters"] = \
+        get_allowed_children_datasets_for_user_deep(user, dataset_id)
 
 
 class QueryPreviewView(QueryBaseView):

@@ -88,13 +88,17 @@ def get_wdae_parents(dataset):
     return [get_wdae_dataset(pid) for pid in genotype_data.parents]
 
 
-def get_wdae_children(dataset):
+def get_wdae_children(dataset, leafs=False):
     genotype_data = get_genotype_data(dataset)
     if genotype_data is None:
         return []
+
+    if not genotype_data.is_group:
+        return []
+
     return [
         get_wdae_dataset(sid)
-        for sid in genotype_data.get_studies_ids(leafs=False)
+        for sid in genotype_data.get_studies_ids(leafs=leafs)
     ]
 
 
@@ -103,7 +107,13 @@ def user_has_permission_strict(user, dataset):
     if dataset is None:
         return False
 
+    if user.is_superuser or user.is_staff:
+        return True
+
     user_groups = get_user_groups(user)
+    if "admin" in user_groups:
+        return True
+
     dataset_groups = get_dataset_groups(dataset)
     if not (user_groups & dataset_groups):
         return False
@@ -114,55 +124,95 @@ def user_has_permission_strict(user, dataset):
     return user.has_perm("datasets_api.view", dataset)
 
 
-def _check_parents_permissions(user, genotype_data):
-    gpf_instance = get_gpf_instance()
+def user_has_permission_up(user, dataset):
+    dataset = get_wdae_dataset(dataset)
+    if dataset is None:
+        return False
 
-    for parent_id in genotype_data.parents:
-        if user_has_permission_strict(user, parent_id):
+    for parent in get_wdae_parents(dataset):
+        if user_has_permission_strict(user, parent):
             return True
-        parent = gpf_instance.get_genotype_data(parent_id)
-        if _check_parents_permissions(user, parent):
+        if user_has_permission_up(user, parent):
             return True
+    return False
+
+
+def user_has_permission_down(user, dataset):
+    dataset = get_wdae_dataset(dataset)
+    if dataset is None:
+        return False
+
+    for child in get_wdae_children(dataset):
+        if user_has_permission_strict(user, child):
+            return True
+        if user_has_permission_down(user, child):
+            return True
+    return False
 
 
 def user_has_permission(user, dataset):
+    logger.debug(f"checking user <{user}> permissions on {dataset}")
     dataset = get_wdae_dataset(dataset)
+    if dataset is None:
+        return False
 
     logger.debug(f"cheking access rights for dataset {dataset.dataset_id}")
     if user_has_permission_strict(user, dataset):
         return True
 
-    gpf_instance = get_gpf_instance()
-    genotype_data = gpf_instance.get_genotype_data(dataset.dataset_id)
-    if genotype_data is None:
-        return False
-
-    if _check_parents_permissions(user, genotype_data):
+    if user_has_permission_up(user, dataset):
         return True
-
-    if not genotype_data.is_group:
-        return False
-
-    for study_id in genotype_data.get_studies_ids(leafs=False):
-        if user_has_permission(user, study_id):
-            return True
+    if user_has_permission_down(user, dataset):
+        return True
 
     return False
 
 
-def user_allowed_datasets(user, dataset_id):
-    if user_has_permission_strict(user, dataset_id):
-        return set([dataset_id])
-    gpf_instance = get_gpf_instance()
-    genotype_data = gpf_instance.get_genotype_data(dataset_id)
-    if genotype_data is None:
-        return set([])
-    if not genotype_data.is_group:
-        return set([])
+def get_allowed_children_datasets_for_user(
+        user, dataset, collect=None):
+
+    if collect is None:
+        collect = set()
+
+    dataset = get_wdae_dataset(dataset)
+    if dataset is None:
+        return collect
+
+    if user_has_permission_strict(user, dataset):
+        collect.add(dataset.dataset_id)
+        return collect
+
+    for child in get_wdae_children(dataset):
+        if user_has_permission_strict(user, child):
+            collect.add(child.dataset_id)
+        else:
+            result = get_allowed_children_datasets_for_user(user, child)
+            collect = collect | result
+    return collect
+
+    # gpf_instance = get_gpf_instance()
+    # genotype_data = gpf_instance.get_genotype_data(dataset_id)
+    # if genotype_data is None:
+    #     return set([])
+    # if not genotype_data.is_group:
+    #     return set([])
+
+    # result = []
+    # for study_id in genotype_data.get_studies_ids(leafs=False):
+    #     result.extend(user_allowed_datasets(user, study_id))
+    # return set(result)
+
+
+def get_allowed_children_datasets_for_user_deep(user, dataset):
+    allowed_datasets = get_allowed_children_datasets_for_user(
+        user, dataset)
 
     result = []
-    for study_id in genotype_data.get_studies_ids(leafs=False):
-        result.extend(user_allowed_datasets(user, study_id))
+    for dataset in allowed_datasets:
+        children = get_wdae_children(dataset, leafs=True)
+        if not children:
+            result.append(dataset)
+        result.extend([child.dataset_id for child in children])
     return set(result)
 
 
@@ -175,17 +225,6 @@ def get_allowed_datasets_for_user(user):
         dataset_id for dataset_id in dataset_ids
         if user_groups & get_dataset_groups(dataset_id)
     )
-
-
-def user_allowed_datasets_deep(user, dataset_id):
-    datasets = user_allowed_datasets(user, dataset_id)
-    gpf_instance = get_gpf_instance()
-
-    result = []
-    for dataset_id in datasets:
-        genotype_data = gpf_instance.get_genotype_data(dataset_id)
-        result.extend(genotype_data.get_studies_ids(leafs=True))
-    return set(result)
 
 
 def add_group_perm_to_user(group_name, user):
