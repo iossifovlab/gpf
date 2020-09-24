@@ -190,18 +190,6 @@ def get_allowed_children_datasets_for_user(
             collect = collect | result
     return collect
 
-    # gpf_instance = get_gpf_instance()
-    # genotype_data = gpf_instance.get_genotype_data(dataset_id)
-    # if genotype_data is None:
-    #     return set([])
-    # if not genotype_data.is_group:
-    #     return set([])
-
-    # result = []
-    # for study_id in genotype_data.get_studies_ids(leafs=False):
-    #     result.extend(user_allowed_datasets(user, study_id))
-    # return set(result)
-
 
 def get_allowed_children_datasets_for_user_deep(user, dataset):
     allowed_datasets = get_allowed_children_datasets_for_user(
