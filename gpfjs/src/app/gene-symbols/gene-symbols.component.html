@@ -1,6 +1,20 @@
 <div class="panel" id="gene-symbols-panel">
-    <textarea type="text" [(ngModel)]="geneSymbols.geneSymbols" class="form-control">
-    </textarea>
-
+    <div class="input-group" style="width: 100%; max-width: 100%;">
+        <gpf-searchable-select
+            style="width: 50%"
+            (search)="searchBoxChange($event)"
+            (selectItem)="geneSymbols.geneSymbols = $event"
+            [data]="matchingGeneSymbols"
+            caption="{{ geneSymbols?.geneSymbols }}">
+            <div *gpf-searchable-select-template="let geneSymbol">
+            <span
+                data-toggle="tooltip"
+                data-placement="bottom"
+                title="{{ geneSymbol | boldMatching: searchString}}"
+                innerHtml="{{ geneSymbol | boldMatching: searchString}}">
+            </span>
+            </div>
+        </gpf-searchable-select>
+    </div>
     <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
 </div>

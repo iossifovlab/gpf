@@ -1,7 +1,9 @@
 import { GeneSymbols } from './gene-symbols';
 import { Component, OnInit, forwardRef } from '@angular/core';
+import { Subject } from 'rxjs';
 
 import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query-state-provider';
+import { GeneService } from '../gene-view/gene.service';
 import { StateRestoreService } from '../store/state-restore.service';
 
 @Component({
@@ -11,9 +13,13 @@ import { StateRestoreService } from '../store/state-restore.service';
 })
 export class GeneSymbolsComponent extends QueryStateWithErrorsProvider implements OnInit {
   geneSymbols = new GeneSymbols();
+  matchingGeneSymbols: string[] = [];
+  searchString = '';
+  searchKeystrokes$: Subject<string> = new Subject();
 
   constructor(
-    private stateRestoreService: StateRestoreService
+    private stateRestoreService: StateRestoreService,
+    private geneService: GeneService
   ) {
     super();
   }
@@ -26,8 +32,21 @@ export class GeneSymbolsComponent extends QueryStateWithErrorsProvider implement
           this.geneSymbols.geneSymbols = state['geneSymbols'].join('\n');
         }
       });
-  }
 
+    this.searchKeystrokes$
+    .debounceTime(200)
+    .distinctUntilChanged()
+    .subscribe(searchTerm => {
+      this.searchString = searchTerm;
+      if (this.searchString !== '') {
+        this.geneService.searchGenes(this.searchString).subscribe(
+          response => this.matchingGeneSymbols = response['gene_symbols']
+        );
+      } else {
+        this.matchingGeneSymbols = [];
+      }
+    });
+  }
 
   getState() {
     return this.validateAndGetState(this.geneSymbols)
@@ -42,5 +61,9 @@ export class GeneSymbolsComponent extends QueryStateWithErrorsProvider implement
 
         return { geneSymbols: result };
       });
+  }
+
+  searchBoxChange(searchTerm: string) {
+    this.searchKeystrokes$.next(searchTerm.toUpperCase());
   }
 }

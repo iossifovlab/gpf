@@ -8,6 +8,7 @@ import { Gene } from './gene';
 })
 export class GeneService {
   private readonly geneVisualizationUrl = 'genome/gene_models/default/';
+  private readonly geneSymbolSearchUrl = 'genome/gene_models/search/';
 
   constructor(
     private http: HttpClient,
@@ -20,5 +21,9 @@ export class GeneService {
     return this.http
     .get(this.config.baseUrl + this.geneVisualizationUrl + geneSymbol)
     .map((response: any) => Gene.fromJson(response));
+  }
+
+  searchGenes(searchTerm: string) {
+    return this.http.get(this.config.baseUrl + this.geneSymbolSearchUrl + searchTerm);
   }
 }
