@@ -101,8 +101,11 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
               _ => { this.loadingFinished = true; }
             );
 
+            const requestParams = {...state};
+            requestParams['maxVariantsCount'] = 10000;
+
             this.genotypePreviewVariantsArray =
-              this.queryService.getGenotypePreviewVariantsByFilter(state, this.genotypePreviewInfo);
+              this.queryService.getGenotypePreviewVariantsByFilter(requestParams, this.genotypePreviewInfo);
 
           }, error => {
             console.warn(error);
