@@ -12,7 +12,7 @@ export class UserGroupsSelectorComponent implements OnInit {
   @Input() allInputtedGroups: UserGroup[];
   @Input() defaultGroups: string[] = [];
   @Input() userGroups;
-  private _displayedGroups;
+  _displayedGroups;
   @Output() createGroupEvent = new EventEmitter<string>();
   @ViewChild(NgbDropdownMenu) ngbDropdownMenu: NgbDropdownMenu;
   @ViewChild('groupInput') groupInputRef: ElementRef;
