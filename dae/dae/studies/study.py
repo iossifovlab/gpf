@@ -314,7 +314,7 @@ class GenotypeDataStudy(GenotypeData):
 
         LOGGER.info(f"study_filters: {study_filters}")
 
-        if study_filters and self.id not in study_filters:
+        if study_filters is not None and self.id not in study_filters:
             return
 
         person_ids = self._transform_person_set_collection_query(
