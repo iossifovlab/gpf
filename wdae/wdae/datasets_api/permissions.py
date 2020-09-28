@@ -115,6 +115,9 @@ def _user_has_permission_strict(user, dataset):
     if user.is_superuser or user.is_staff:
         return True
 
+    # if get_anonymous_user().has_perm("datasets_api.view", dataset):
+    #     return True
+
     user_groups = get_user_groups(user)
     if "admin" in user_groups:
         return True
@@ -123,11 +126,8 @@ def _user_has_permission_strict(user, dataset):
     if 'any_user' in dataset_groups:
         return True
 
-    if not (user_groups & dataset_groups):
+    if not bool(user_groups & dataset_groups):
         return False
-
-    if get_anonymous_user().has_perm("datasets_api.view", dataset):
-        return True
 
     return user.has_perm("datasets_api.view", dataset)
 
