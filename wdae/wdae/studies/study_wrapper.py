@@ -321,7 +321,7 @@ class StudyWrapper(StudyWrapperBase):
 
                 yield row_variant
 
-    def get_variant_web_rows(self, query, sources, max_variants_count=None):
+    def get_variant_web_rows(self, query, sources, max_variants_count=10000):
         person_set_collection_id = query.get("peopleGroup", {}).get(
             "id", list(self.legend.keys())[0] if self.legend else None
         )
@@ -330,14 +330,14 @@ class StudyWrapper(StudyWrapperBase):
         )
 
         if max_variants_count is not None:
-            query["limit"] = max_variants_count + 1
+            query["limit"] = max_variants_count
 
         rows = self.query_list_variants(
             sources, person_set_collection, **query
         )
 
         if max_variants_count is not None:
-            limited_rows = itertools.islice(rows, max_variants_count + 1)
+            limited_rows = itertools.islice(rows, max_variants_count)
         else:
             limited_rows = rows
 
