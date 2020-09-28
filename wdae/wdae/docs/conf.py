@@ -21,6 +21,14 @@
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
 
+# Enabling Django
+import os
+import sys
+import django
+sys.path.insert(0, os.path.abspath('..'))
+os.environ['DJANGO_SETTINGS_MODULE'] = 'wdae.settings'
+django.setup()
+
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
@@ -37,6 +45,7 @@ extensions = [
     "sphinx.ext.coverage",
     "sphinx.ext.imgmath",
     "sphinx.ext.viewcode",
+    "sphinxcontrib.httpdomain",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
