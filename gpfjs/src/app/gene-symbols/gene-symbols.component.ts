@@ -1,5 +1,5 @@
 import { GeneSymbols } from './gene-symbols';
-import { Component, OnInit, forwardRef } from '@angular/core';
+import { Component, OnInit, forwardRef, Input } from '@angular/core';
 import { Subject } from 'rxjs';
 
 import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query-state-provider';
@@ -13,6 +13,7 @@ import { StateRestoreService } from '../store/state-restore.service';
 })
 export class GeneSymbolsComponent extends QueryStateWithErrorsProvider implements OnInit {
   geneSymbols = new GeneSymbols();
+  @Input() enableSearch = false;
   matchingGeneSymbols: string[] = [];
   searchString = '';
   searchKeystrokes$: Subject<string> = new Subject();
@@ -32,20 +33,21 @@ export class GeneSymbolsComponent extends QueryStateWithErrorsProvider implement
           this.geneSymbols.geneSymbols = state['geneSymbols'].join('\n');
         }
       });
-
-    this.searchKeystrokes$
-    .debounceTime(200)
-    .distinctUntilChanged()
-    .subscribe(searchTerm => {
-      this.searchString = searchTerm;
-      if (this.searchString !== '') {
-        this.geneService.searchGenes(this.searchString).subscribe(
-          response => this.matchingGeneSymbols = response['gene_symbols']
-        );
-      } else {
-        this.matchingGeneSymbols = [];
+      if (this.enableSearch) {
+        this.searchKeystrokes$
+        .debounceTime(200)
+        .distinctUntilChanged()
+        .subscribe(searchTerm => {
+          this.searchString = searchTerm;
+          if (this.searchString !== '') {
+            this.geneService.searchGenes(this.searchString).subscribe(
+              response => this.matchingGeneSymbols = response['gene_symbols']
+            );
+          } else {
+            this.matchingGeneSymbols = [];
+          }
+        });
       }
-    });
   }
 
   getState() {

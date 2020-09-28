@@ -1,5 +1,10 @@
 <div class="panel" id="gene-symbols-panel">
-    <div class="input-group" style="width: 100%; max-width: 100%;">
+    <div *ngIf="!enableSearch">
+        <textarea type="text" [(ngModel)]="geneSymbols.geneSymbols" class="form-control">
+        </textarea>
+    </div>
+
+    <div *ngIf="enableSearch" class="input-group" style="width: 100%; max-width: 100%;">
         <gpf-searchable-select
             style="width: 50%"
             (search)="searchBoxChange($event)"
