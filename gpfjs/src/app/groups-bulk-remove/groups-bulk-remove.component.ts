@@ -73,14 +73,14 @@ export class GroupsBulkRemoveComponent implements OnInit {
 
   submit() {
     const users = this.users$.value;
-    const selectedGroups = this.userGroupsSelectorComponent.selectedGroups;
+    const groupsToRemove = this.userGroupsSelectorComponent.displayedGroups;
 
     if (!users) {
       return;
     }
 
-    if (selectedGroups !== undefined && !selectedGroups.includes(undefined) && selectedGroups.length !== 0) {
-      this.usersService.bulkRemoveGroups(users, selectedGroups)
+    if (groupsToRemove !== undefined && !groupsToRemove.includes(undefined) && groupsToRemove.length !== 0) {
+      this.usersService.bulkRemoveGroups(users, groupsToRemove)
         .take(1)
         .subscribe(() => this.router.navigate(['/management']));
     }

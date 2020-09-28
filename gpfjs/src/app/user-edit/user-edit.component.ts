@@ -52,7 +52,7 @@ export class UserEditComponent implements OnInit {
         this.user$.next(user);
       });
 
-      const allGroups = this.usersGroupsService
+      this.usersGroupsService
       .getAllGroups()
       .subscribe(groups => this.groups$.next(groups));
 
@@ -69,10 +69,10 @@ export class UserEditComponent implements OnInit {
   }
 
   submit(user) {
-    const selectedGroups = this.userGroupsSelectorComponent.selectedGroups;
+    const groupsToAdd = this.userGroupsSelectorComponent.displayedGroups;
 
-    if (!selectedGroups.includes(undefined)) {
-      this.user$.value.groups = this.getDefaultGroups().concat(selectedGroups);
+    if (!groupsToAdd.includes(undefined)) {
+      this.user$.value.groups = this.getDefaultGroups().concat(groupsToAdd);
     }
 
     delete user.email;

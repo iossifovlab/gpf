@@ -11,7 +11,8 @@ import { NgbDropdownMenu } from '@ng-bootstrap/ng-bootstrap';
 export class UserGroupsSelectorComponent implements OnInit {
   @Input() allInputtedGroups: UserGroup[];
   @Input() defaultGroups: string[] = [];
-  @Input() _selectedGroups;
+  @Input() userGroups;
+  private _displayedGroups;
   @Output() createGroupEvent = new EventEmitter<string>();
   @ViewChild(NgbDropdownMenu) ngbDropdownMenu: NgbDropdownMenu;
   @ViewChild('groupInput') groupInputRef: ElementRef;
@@ -32,7 +33,7 @@ export class UserGroupsSelectorComponent implements OnInit {
 
     this.data = this.groupsToOptions(this.allInputtedGroups);
     if (this.defaultGroups.length !== 0) {
-      this._selectedGroups = this.filterOutDefaultGroups(this._selectedGroups);
+      this._displayedGroups = this.filterOutDefaultGroups(this.userGroups);
     }
   }
 
@@ -77,14 +78,14 @@ export class UserGroupsSelectorComponent implements OnInit {
     this.groupInputRef.nativeElement.focus();
   }
 
-  get selectedGroups() {
+  get displayedGroups() {
     const groupsArray = [];
 
-    if (!this._selectedGroups) {
+    if (!this._displayedGroups) {
       return;
     }
 
-    for (const group of this._selectedGroups) {
+    for (const group of this._displayedGroups) {
       groupsArray.push(group.text);
     }
 

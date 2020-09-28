@@ -49,10 +49,10 @@ export class UserCreateComponent implements OnInit {
   }
 
   submit(user: User) {
-    const selectedGroups = this.userGroupsSelectorComponent.selectedGroups;
+    const groupsToAdd = this.userGroupsSelectorComponent.displayedGroups;
 
-    if (!(selectedGroups.includes(undefined) || selectedGroups.length === 0 || this.getDefaultGroups().includes(''))) {
-      this.user$.value.groups = this.getDefaultGroups().concat(selectedGroups);
+    if (!(groupsToAdd.includes(undefined) || groupsToAdd.length === 0 || this.getDefaultGroups().includes(''))) {
+      this.user$.value.groups = this.getDefaultGroups().concat(groupsToAdd);
     }
 
     this.usersService.createUser(user)

@@ -73,14 +73,14 @@ export class GroupsBulkAddComponent implements OnInit {
 
   submit() {
     const users = this.users$.value;
-    const selectedGroups = this.userGroupsSelectorComponent.selectedGroups;
+    const groupsToAdd = this.userGroupsSelectorComponent.displayedGroups;
 
     if (!users) {
       return;
     }
 
-    if (selectedGroups !== undefined && selectedGroups.length !== 0 && !selectedGroups.includes(undefined)) {
-      this.usersService.bulkAddGroups(users, selectedGroups)
+    if (groupsToAdd !== undefined && groupsToAdd.length !== 0 && !groupsToAdd.includes(undefined)) {
+      this.usersService.bulkAddGroups(users, groupsToAdd)
         .take(1)
         .subscribe(() => this.router.navigate(['/management']));
     }
