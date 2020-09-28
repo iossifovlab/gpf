@@ -234,7 +234,10 @@ export class UsersService {
     const options = { headers: headers, withCredentials: true };
 
     return this.http.post(this.config.baseUrl + this.usersUrl, user, options)
-      .map(response => User.fromJson(response));
+      .map(response => User.fromJson(response))
+      .catch(error => {
+        return observableThrowError(new Error(error.error.email));
+      });
   }
 
   deleteUser(user: User) {
