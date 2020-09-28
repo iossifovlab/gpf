@@ -1110,6 +1110,14 @@ class RemoteStudyWrapper(StudyWrapperBase):
         return self.rest_client.get_browser_preview_info(query)
 
     def get_variants_wdae_preview(self, query, max_variants_count=10000):
+
+        study_filters = query.get("study_filters")
+        if study_filters is not None:
+            if self.study_id not in study_filters:
+                return
+            else:
+                del query["study_filters"]
+
         query["datasetId"] = self._remote_study_id
         query["maxVariantsCount"] = max_variants_count
         response = self.rest_client.get_variants_preview(query)

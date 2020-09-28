@@ -18,7 +18,7 @@ from query_base.query_base import QueryBaseView
 from gene_sets.expand_gene_set_decorator import expand_gene_set
 
 from datasets_api.models import Dataset
-from datasets_api.permissions import get_allowed_datasets_for_user, \
+from datasets_api.permissions import \
     get_allowed_datasets_leafs_for_user
 
 
@@ -31,9 +31,6 @@ def handle_partial_permissions(user, dataset_id: str, request_data: dict):
     This method attaches these rights to the request as study filters
     in order to filter variants from studies the user cannot access.
     """
-
-    if dataset_id in get_allowed_datasets_for_user(user, dataset_id):
-        return
 
     request_data["study_filters"] = \
         get_allowed_datasets_leafs_for_user(user, dataset_id)
