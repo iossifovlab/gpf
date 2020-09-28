@@ -444,9 +444,14 @@ class StudyWrapper(StudyWrapperBase):
 
         if "studyFilters" in kwargs:
             if kwargs["studyFilters"]:
-                kwargs["study_filters"] = [
+                request = set([
                     sf["studyName"] for sf in kwargs["studyFilters"]
-                ]
+                ])
+                study_filters = kwargs.get("study_filters")
+                if study_filters is None:
+                    kwargs["study_filters"] = request
+                else:
+                    kwargs["study_filters"] = request & set(study_filters)
             else:
                 del kwargs["studyFilters"]
 
