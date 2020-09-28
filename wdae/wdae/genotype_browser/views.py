@@ -72,7 +72,8 @@ class QueryPreviewVariantsView(QueryBaseView):
         if dataset_id is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        max_variants = data.pop("maxVariantsCount", self.MAX_SHOWN_VARIANTS)
+        max_variants = data.pop(
+            "maxVariantsCount", self.MAX_SHOWN_VARIANTS + 1)
         if max_variants == -1:
             # unlimitted variants preview
             max_variants = None

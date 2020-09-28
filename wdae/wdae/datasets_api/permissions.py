@@ -120,6 +120,9 @@ def _user_has_permission_strict(user, dataset):
         return True
 
     dataset_groups = get_dataset_groups(dataset)
+    if 'any_user' in dataset_groups:
+        return True
+
     if not (user_groups & dataset_groups):
         return False
 
