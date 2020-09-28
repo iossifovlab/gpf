@@ -31,13 +31,6 @@ class IsDatasetAllowed(permissions.BasePermission):
         if user_has_permission(request.user, dataset_id):
             return True
 
-        if not Dataset.objects.filter(dataset_id=dataset_id).exists():
-            return False
-        dataset_object = Dataset.objects.get(dataset_id=dataset_id)
-        for group in get_groups_with_perms(dataset_object):
-            if Dataset.objects.filter(dataset_id=group.name).exists():
-                if user_has_permission(request.user, group.name):
-                    return True
         return False
 
     @staticmethod
