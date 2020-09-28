@@ -129,6 +129,9 @@ def user_has_permission_up(user, dataset):
     if dataset is None:
         return False
 
+    if user_has_permission_strict(user, dataset):
+        return True
+
     for parent in get_wdae_parents(dataset):
         if user_has_permission_strict(user, parent):
             return True
@@ -156,20 +159,22 @@ def user_has_permission(user, dataset):
     if dataset is None:
         return False
 
-    logger.debug(f"cheking access rights for dataset {dataset.dataset_id}")
-    if user_has_permission_strict(user, dataset):
-        return True
+    allowed_dataset_leafs = get_allowed_datasets_leafs_for_user(user, dataset)
+    return bool(allowed_dataset_leafs)
 
-    if user_has_permission_up(user, dataset):
-        return True
-    if user_has_permission_down(user, dataset):
-        return True
+    # logger.debug(f"cheking access rights for dataset {dataset.dataset_id}")
+    # if user_has_permission_strict(user, dataset):
+    #     return True
 
-    return False
+    # if user_has_permission_up(user, dataset):
+    #     return True
+    # if user_has_permission_down(user, dataset):
+    #     return True
+
+    # return False
 
 
-def get_allowed_children_datasets_for_user(
-        user, dataset, collect=None):
+def get_allowed_datasets_for_user(user, dataset, collect=None):
 
     if collect is None:
         collect = set()
@@ -178,7 +183,7 @@ def get_allowed_children_datasets_for_user(
     if dataset is None:
         return collect
 
-    if user_has_permission_strict(user, dataset):
+    if user_has_permission_up(user, dataset):
         collect.add(dataset.dataset_id)
         return collect
 
@@ -186,14 +191,13 @@ def get_allowed_children_datasets_for_user(
         if user_has_permission_strict(user, child):
             collect.add(child.dataset_id)
         else:
-            result = get_allowed_children_datasets_for_user(user, child)
+            result = get_allowed_datasets_for_user(user, child)
             collect = collect | result
     return collect
 
 
-def get_allowed_children_datasets_for_user_deep(user, dataset):
-    allowed_datasets = get_allowed_children_datasets_for_user(
-        user, dataset)
+def get_allowed_datasets_leafs_for_user(user, dataset):
+    allowed_datasets = get_allowed_datasets_for_user(user, dataset)
 
     result = []
     for dataset in allowed_datasets:
@@ -204,7 +208,7 @@ def get_allowed_children_datasets_for_user_deep(user, dataset):
     return set(result)
 
 
-def get_allowed_datasets_for_user(user):
+def get_all_allowed_datasets_for_user(user):
     gpf_instance = get_gpf_instance()
     dataset_ids = gpf_instance.get_genotype_data_ids()
     user_groups = get_user_groups(user)
