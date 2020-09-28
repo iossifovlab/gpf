@@ -12,4 +12,9 @@ urlpatterns = [
         views.GeneModels.as_view(),
         name="gene_models_query",
     ),
+    url(
+        r"^/gene_models/search/(?P<search_term>.+)$",
+        views.GeneSymbolsSearch.as_view(),
+        name="gene_symbols_search",
+    ),
 ]

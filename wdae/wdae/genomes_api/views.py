@@ -1,3 +1,5 @@
+from itertools import islice
+
 from rest_framework.response import Response
 from rest_framework import status
 
@@ -61,3 +63,25 @@ class GeneModels(QueryBaseView):
             "start": exon.start,
             "stop": exon.stop
         }
+
+
+class GeneSymbolsSearch(QueryBaseView):
+
+    RESPONSE_LIMIT = 20
+
+    def get(self, request, search_term):
+        genome = self.gpf_instance.get_genome()
+        gene_models = genome.get_gene_models().gene_models
+        matching_gene_symbols = filter(
+            lambda gs: gs.startswith(search_term),
+            gene_models.keys()
+        )
+
+        matching_gene_symbols = islice(
+            matching_gene_symbols, None, self.RESPONSE_LIMIT
+        )
+
+        return Response(
+            {"gene_symbols": list(matching_gene_symbols)},
+            status=status.HTTP_200_OK,
+        )

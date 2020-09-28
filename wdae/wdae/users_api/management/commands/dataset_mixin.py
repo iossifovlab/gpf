@@ -1,4 +1,5 @@
 import os
+import shutil
 import re
 import logging
 import glob
@@ -84,6 +85,21 @@ class DatasetBaseMixin:
 
         hdfs_helpers.rename(source_dir, dest_dir)
 
+    def dataset_remove_hdfs_directory(self, config):
+        genotype_storage = self.get_genotype_storage(config)
+        hdfs_helpers = genotype_storage.hdfs_helpers
+
+        study_dir = genotype_storage.full_hdfs_path(
+            genotype_storage.default_hdfs_study_path(config.id))
+
+        assert hdfs_helpers.exists(study_dir), \
+            f"source hdfs dir {study_dir} should exists"
+
+        assert hdfs_helpers.isdir(study_dir), \
+            f"source hdfs dir {study_dir} should be a directory"
+
+        hdfs_helpers.delete(study_dir, recursive=True)
+
     def check_dataset_hdfs_directories(self, config):
         genotype_storage = self.get_genotype_storage(config)
         hdfs_helpers = genotype_storage.hdfs_helpers
@@ -148,6 +164,21 @@ class DatasetBaseMixin:
 
         return new_pedigree_table, new_variants_table
 
+    def dataset_drop_impala_tables(self, config):
+        genotype_storage = self.get_genotype_storage(config)
+
+        impala_db = genotype_storage.storage_config.impala.db
+        impala_helpers = genotype_storage.impala_helpers
+
+        impala_helpers.drop_table(
+            impala_db, config.genotype_storage.tables.pedigree)
+
+        variants_table = config.genotype_storage.tables.variants
+
+        if variants_table is not None:
+            impala_helpers.drop_table(
+                impala_db, variants_table)
+
     def check_dataset_impala_tables(self, config):
         genotype_storage = self.get_genotype_storage(config)
 
@@ -188,6 +219,12 @@ class DatasetBaseMixin:
             content = toml.dumps(short_config)
             outfile.write(content)
 
+    def remove_study_config(self, dataset_id):
+        config_file = self.find_dataset_config_file(dataset_id)
+        config_dir = os.path.dirname(config_file)
+
+        shutil.rmtree(config_dir)
+
     def rename_wdae_dataset_and_groups(self, dataset_id, new_id):
         dataset = self.get_dataset(dataset_id)
         assert dataset is not None, f"can't find WDAE dataset {dataset_id}"
@@ -208,3 +245,14 @@ class DatasetBaseMixin:
 
         group.name = new_id
         group.save()
+
+    def remove_wdae_dataset_and_groups(self, dataset_id):
+        dataset = self.get_dataset(dataset_id)
+        assert dataset is not None, f"can't find WDAE dataset {dataset_id}"
+        dataset.delete()
+
+        groups = Group.objects.filter(
+            Q(groupobjectpermission__permission__codename="view"),
+            Q(name=dataset_id))
+        assert len(groups) == 1
+        groups.delete()
