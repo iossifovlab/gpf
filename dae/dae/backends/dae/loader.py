@@ -596,7 +596,7 @@ class DenovoLoader(VariantsGenotypesLoader):
                         }
                     )
 
-            return pd.DataFrame(result)
+            output = pd.DataFrame(result)
 
         else:
             family_col = raw_df.loc[:, denovo_family_id]
@@ -609,7 +609,7 @@ class DenovoLoader(VariantsGenotypesLoader):
             )
             # genotype_col = list(map(best2gt, best_state_col))
 
-            return pd.DataFrame(
+            output = pd.DataFrame(
                 {
                     "chrom": chrom_col,
                     "position": pos_col,
@@ -620,6 +620,15 @@ class DenovoLoader(VariantsGenotypesLoader):
                     "best_state": best_state_col,
                 }
             )
+
+        extra_attributes_cols = raw_df.columns.difference([
+            denovo_location, denovo_variant, denovo_chrom, denovo_pos,
+            denovo_ref, denovo_alt, denovo_person_id, denovo_family_id,
+            denovo_best_state,
+        ])
+        extra_attributes_df = raw_df[extra_attributes_cols]
+        output = output.join(extra_attributes_df)
+        return output
 
 
 class DaeTransmittedFamiliesGenotypes(FamiliesGenotypes):
