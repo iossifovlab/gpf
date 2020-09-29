@@ -92,10 +92,10 @@ def main(argv=sys.argv[1:], gpf_instance=None):
     genotype_storage.hdfs_upload_dataset(
         argv.study_id, argv.variants, argv.pedigree, partition_descriptor)
 
-    logger.info("Done")
-
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG)
-    logger.info('Started')
+    logging.basicConfig(level=logging.INFO)
+
+    logger.info("Started")
     main(sys.argv[1:])
+    logger.info("Done")

@@ -90,8 +90,8 @@ class RsyncHelpers:
 
             if self.hosturl():
                 cmds.append(
-                    f'ssh {self.rsync_remote} "{clear_remote_option}'
-                    f'mkdir -p {rsync_path} && rsync"')
+                    f'ssh {self.parsed_remote.netloc} "{clear_remote_option}'
+                    f'mkdir -p {rsync_path}"')
             else:
                 cmds.append(
                     f'{clear_remote_option} mkdir -p {rsync_path}')
