@@ -14,7 +14,6 @@ from dae.backends.impala.parquet_io import NoPartitionDescriptor, \
 logger = logging.getLogger(__name__)
 
 
-
 def parse_cli_arguments(argv, gpf_instance):
     parser = argparse.ArgumentParser(
         description="loading study parquet files in impala db",
@@ -104,14 +103,16 @@ def main(argv=sys.argv[1:], gpf_instance=None):
         return
 
     study_id = argv.study_id
+
     if argv.variants is not None:
         hdfs_variants_dir = argv.variants
-    else:
+    elif argv.variants_sample or argv.variants_schema:
         hdfs_variants_dir = \
             genotype_storage.default_variants_hdfs_dirname(study_id)
-
-        if not genotype_storage.hdfs_helpers.exists(hdfs_variants_dir):
-            hdfs_variants_dir = None
+        # if not genotype_storage.hdfs_helpers.exists(hdfs_variants_dir):
+        #     hdfs_variants_dir = None
+    else:
+        hdfs_variants_dir = None
 
     if argv.pedigree is not None:
         hdfs_pedigree_file = argv.pedigree

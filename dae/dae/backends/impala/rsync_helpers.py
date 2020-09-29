@@ -31,6 +31,8 @@ class RsyncHelpers:
         self.rsync_remote_shell = None
         if parsed_remote.port and parsed_remote.port != 22:
             self.rsync_remote_shell = f"ssh -p {parsed_remote.port}"
+        
+        logger.debug(f"parsed_remote: {parsed_remote}")
 
     def hosturl(self):
         logger.debug(self.parsed_remote)
@@ -117,6 +119,8 @@ class RsyncHelpers:
         os.makedirs(local_path, exist_ok=True)
         exclude_options = self._exclude_options(exclude)
 
+        cmds = []
+
         if not local_path.endswith("/"):
             local_path += "/"
 
@@ -127,11 +131,14 @@ class RsyncHelpers:
             rsync_remote = os.path.join(self.rsync_remote, remote_subdir)
 
         if self.rsync_remote_shell is None:
-            return f"rsync -avPHt {exclude_options} " \
-                f"{rsync_remote} {local_path}"
+            cmds.append(
+                f"rsync -avPHt {exclude_options} "
+                f"{rsync_remote} {local_path}")
         else:
-            return f'rsync -e "{self.rsync_remote_shell}" '\
-                f'-avPHt {exclude_options} {local_path}'
+            cmds.append(
+                f'rsync -e "{self.rsync_remote_shell}" '
+                f'-avPHt {exclude_options} {local_path}')
+        return cmds
 
     def _cmd_execute(self, commands):
         for cmd in commands:
