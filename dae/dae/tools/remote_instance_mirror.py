@@ -6,6 +6,10 @@ import sys
 import argparse
 import toml
 import subprocess
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 def parse_cli_arguments(argv):
@@ -99,6 +103,7 @@ def update_mirror_config(rsync_helpers, work_dir, argv):
         outfile.write(content)
 
     filename = os.path.join(work_dir, "remote_impala_port_mapping.txt")
+    logger.debug(f"remote netloc: {rsync_helpers.parsed_remote}")
     port_mapping_command = \
         f"ssh -L 21050:{remote_impala_host}:21050 " \
         f"{rsync_helpers.parsed_remote.netloc}"
@@ -136,6 +141,8 @@ def build_setenv(work_dir):
     scores_hg38_dir = os.environ.get(
         "DAE_GENOMIC_SCORES_HG38", "<define this environment variable>")
 
+    gpf_prefix = os.environ.get("GPF_PREFIX", "gpfjs")
+
     content = f"""
 #!/bin/bash
 
@@ -143,6 +150,8 @@ export DAE_GENOMIC_SCORES_HG19={scores_hg19_dir}
 export DAE_GENOMIC_SCORES_HG38={scores_hg38_dir}
 
 export DAE_DB_DIR={work_dir}
+
+export GPF_PREFIX={gpf_prefix}
 
 conda activate {conda_environment}
 
@@ -176,8 +185,8 @@ def run_wdae_bootstrap(work_dir):
             command,
             text=True, capture_output=True)
         if result.returncode != 0:
-            print(" ".join(result.args))
-            print(result.stderr)
+            logger.error(" ".join(result.args))
+            logger.error(result.stderr)
 
 
 def main(argv=sys.argv[1:]):
@@ -205,4 +214,8 @@ def main(argv=sys.argv[1:]):
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.DEBUG)
+
+    logger.info("Started")
     main(sys.argv[1:])
+    logger.info("Done")

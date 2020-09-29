@@ -31,13 +31,6 @@ class IsDatasetAllowed(permissions.BasePermission):
         if user_has_permission(request.user, dataset_id):
             return True
 
-        if not Dataset.objects.filter(dataset_id=dataset_id).exists():
-            return False
-        dataset_object = Dataset.objects.get(dataset_id=dataset_id)
-        for group in get_groups_with_perms(dataset_object):
-            if Dataset.objects.filter(dataset_id=group.name).exists():
-                if user_has_permission(request.user, group.name):
-                    return True
         return False
 
     @staticmethod
@@ -46,7 +39,7 @@ class IsDatasetAllowed(permissions.BasePermission):
 
         return list(
             filter(
-                lambda dataset_id: user_has_permission_strict(
+                lambda dataset_id: _user_has_permission_strict(
                     user, dataset_id
                 ),
                 dataset_ids,
@@ -55,6 +48,8 @@ class IsDatasetAllowed(permissions.BasePermission):
 
 
 def get_wdae_dataset(dataset):
+    """Given a dataset ID or DAE genotype data object, returns WDAE dataset
+    object"""
     if isinstance(dataset, Dataset):
         return dataset
     elif isinstance(dataset, GenotypeData):
@@ -69,6 +64,8 @@ def get_wdae_dataset(dataset):
 
 
 def get_genotype_data(dataset):
+    """Given a dataset ID or WDAE dataset object, returns DAE genotype data
+    object"""
     if isinstance(dataset, GenotypeData):
         return dataset
 
@@ -82,6 +79,8 @@ def get_genotype_data(dataset):
 
 
 def get_wdae_parents(dataset):
+    """Given a dataset ID or DAE genotype data object or WDAE dataset object,
+    returns list of parents as WDAE dataset object"""
     genotype_data = get_genotype_data(dataset)
     if genotype_data is None:
         return []
@@ -89,6 +88,10 @@ def get_wdae_parents(dataset):
 
 
 def get_wdae_children(dataset, leafs=False):
+    """Given a dataset ID or DAE genotype data object or WDAE dataset object,
+    returns list of direct childrens as WDAE dataset object (if 'leafs' 
+    parameter is 'False'). If 'leafs' parameter is 'True', returns list 
+    of leafs of the datasets tree."""
     genotype_data = get_genotype_data(dataset)
     if genotype_data is None:
         return []
@@ -102,7 +105,9 @@ def get_wdae_children(dataset, leafs=False):
     ]
 
 
-def user_has_permission_strict(user, dataset):
+def _user_has_permission_strict(user, dataset):
+    "Checks if a user has access strictly to the given datasets"
+
     dataset = get_wdae_dataset(dataset)
     if dataset is None:
         return False
@@ -110,66 +115,79 @@ def user_has_permission_strict(user, dataset):
     if user.is_superuser or user.is_staff:
         return True
 
+    # if get_anonymous_user().has_perm("datasets_api.view", dataset):
+    #     return True
+
     user_groups = get_user_groups(user)
     if "admin" in user_groups:
         return True
 
     dataset_groups = get_dataset_groups(dataset)
-    if not (user_groups & dataset_groups):
-        return False
-
-    if get_anonymous_user().has_perm("datasets_api.view", dataset):
+    if 'any_user' in dataset_groups:
         return True
+
+    if not bool(user_groups & dataset_groups):
+        return False
 
     return user.has_perm("datasets_api.view", dataset)
 
 
-def user_has_permission_up(user, dataset):
+def _user_has_permission_up(user, dataset):
+    """Checks if a user has access strictly to the given datasets or to any
+    of the dataset parents
+    """
+
     dataset = get_wdae_dataset(dataset)
     if dataset is None:
         return False
 
+    if _user_has_permission_strict(user, dataset):
+        return True
+
     for parent in get_wdae_parents(dataset):
-        if user_has_permission_strict(user, parent):
+        if _user_has_permission_strict(user, parent):
             return True
-        if user_has_permission_up(user, parent):
+        if _user_has_permission_up(user, parent):
             return True
     return False
 
 
-def user_has_permission_down(user, dataset):
+def _user_has_permission_down(user, dataset):
+    """Checks if a user has access strictly to the given datasets or to any
+    of the dataset children.
+    """
+
     dataset = get_wdae_dataset(dataset)
     if dataset is None:
         return False
 
+    if _user_has_permission_strict(user, dataset):
+        return True
+
     for child in get_wdae_children(dataset):
-        if user_has_permission_strict(user, child):
+        if _user_has_permission_strict(user, child):
             return True
-        if user_has_permission_down(user, child):
+        if _user_has_permission_down(user, child):
             return True
     return False
 
 
 def user_has_permission(user, dataset):
+    """Checks if a user has permission to browse the given dataset"""
+
     logger.debug(f"checking user <{user}> permissions on {dataset}")
     dataset = get_wdae_dataset(dataset)
     if dataset is None:
         return False
 
-    logger.debug(f"cheking access rights for dataset {dataset.dataset_id}")
-    if user_has_permission_strict(user, dataset):
-        return True
-
-    if user_has_permission_up(user, dataset):
-        return True
-    if user_has_permission_down(user, dataset):
-        return True
-
-    return False
+    allowed_dataset_leafs = get_allowed_datasets_leafs_for_user(user, dataset)
+    return bool(allowed_dataset_leafs)
 
 
-def get_allowed_children_datasets_for_user(
-        user, dataset, collect=None):
+def _get_allowed_datasets_for_user(user, dataset, collect=None):
+    """Walks through the dataset's hierarcy sub-tree starting with the given
+    `dataset` and collects earliest in the hierarchy datasets IDs the user
+    has access to."""
 
     if collect is None:
         collect = set()
@@ -178,22 +196,25 @@ def get_allowed_children_datasets_for_user(
     if dataset is None:
         return collect
 
-    if user_has_permission_strict(user, dataset):
+    if _user_has_permission_up(user, dataset):
         collect.add(dataset.dataset_id)
         return collect
 
     for child in get_wdae_children(dataset):
-        if user_has_permission_strict(user, child):
+        if _user_has_permission_strict(user, child):
             collect.add(child.dataset_id)
         else:
-            result = get_allowed_children_datasets_for_user(user, child)
+            result = _get_allowed_datasets_for_user(user, child)
             collect = collect | result
     return collect
 
 
-def get_allowed_children_datasets_for_user_deep(user, dataset):
-    allowed_datasets = get_allowed_children_datasets_for_user(
-        user, dataset)
+def get_allowed_datasets_leafs_for_user(user, dataset):
+    """Finds the leafs of the dataset sub-tree with root `dataset`,
+    such that user has access to and returns a set of dataset IDs
+    of those datasets."""
+
+    allowed_datasets = _get_allowed_datasets_for_user(user, dataset)
 
     result = []
     for dataset in allowed_datasets:
@@ -204,7 +225,7 @@ def get_allowed_children_datasets_for_user_deep(user, dataset):
     return set(result)
 
 
-def get_allowed_datasets_for_user(user):
+def get_all_allowed_datasets_for_user(user):
     gpf_instance = get_gpf_instance()
     dataset_ids = gpf_instance.get_genotype_data_ids()
     user_groups = get_user_groups(user)

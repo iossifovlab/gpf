@@ -321,7 +321,7 @@ class StudyWrapper(StudyWrapperBase):
 
                 yield row_variant
 
-    def get_variant_web_rows(self, query, sources, max_variants_count=None):
+    def get_variant_web_rows(self, query, sources, max_variants_count=10000):
         person_set_collection_id = query.get("peopleGroup", {}).get(
             "id", list(self.legend.keys())[0] if self.legend else None
         )
@@ -330,14 +330,14 @@ class StudyWrapper(StudyWrapperBase):
         )
 
         if max_variants_count is not None:
-            query["limit"] = max_variants_count + 1
+            query["limit"] = max_variants_count
 
         rows = self.query_list_variants(
             sources, person_set_collection, **query
         )
 
         if max_variants_count is not None:
-            limited_rows = itertools.islice(rows, max_variants_count + 1)
+            limited_rows = itertools.islice(rows, max_variants_count)
         else:
             limited_rows = rows
 
@@ -444,9 +444,14 @@ class StudyWrapper(StudyWrapperBase):
 
         if "studyFilters" in kwargs:
             if kwargs["studyFilters"]:
-                kwargs["study_filters"] = [
+                request = set([
                     sf["studyName"] for sf in kwargs["studyFilters"]
-                ]
+                ])
+                study_filters = kwargs.get("study_filters")
+                if study_filters is None:
+                    kwargs["study_filters"] = request
+                else:
+                    kwargs["study_filters"] = request & set(study_filters)
             else:
                 del kwargs["studyFilters"]
 
@@ -1105,6 +1110,14 @@ class RemoteStudyWrapper(StudyWrapperBase):
         return self.rest_client.get_browser_preview_info(query)
 
     def get_variants_wdae_preview(self, query, max_variants_count=10000):
+
+        study_filters = query.get("study_filters")
+        if study_filters is not None:
+            if self.study_id not in study_filters:
+                return
+            else:
+                del query["study_filters"]
+
         query["datasetId"] = self._remote_study_id
         query["maxVariantsCount"] = max_variants_count
         response = self.rest_client.get_variants_preview(query)

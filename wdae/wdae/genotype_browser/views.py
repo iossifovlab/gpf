@@ -18,8 +18,8 @@ from query_base.query_base import QueryBaseView
 from gene_sets.expand_gene_set_decorator import expand_gene_set
 
 from datasets_api.models import Dataset
-from datasets_api.permissions import get_allowed_children_datasets_for_user, \
-    get_allowed_children_datasets_for_user_deep
+from datasets_api.permissions import \
+    get_allowed_datasets_leafs_for_user
 
 
 logger = logging.getLogger(__name__)
@@ -32,11 +32,8 @@ def handle_partial_permissions(user, dataset_id: str, request_data: dict):
     in order to filter variants from studies the user cannot access.
     """
 
-    if dataset_id in get_allowed_children_datasets_for_user(user, dataset_id):
-        return
-
     request_data["study_filters"] = \
-        get_allowed_children_datasets_for_user_deep(user, dataset_id)
+        get_allowed_datasets_leafs_for_user(user, dataset_id)
 
 
 class QueryPreviewView(QueryBaseView):
@@ -58,8 +55,6 @@ class QueryPreviewView(QueryBaseView):
             max_variants_count=QueryPreviewVariantsView.MAX_SHOWN_VARIANTS,
         )
 
-        # pprint.pprint(response)
-
         return Response(response, status=status.HTTP_200_OK)
 
 
@@ -77,12 +72,10 @@ class QueryPreviewVariantsView(QueryBaseView):
         if dataset_id is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        max_variants = data.pop("maxVariantsCount", None)
-
-        if max_variants is None:
-            max_variants = self.MAX_SHOWN_VARIANTS
-
+        max_variants = data.pop(
+            "maxVariantsCount", self.MAX_SHOWN_VARIANTS + 1)
         if max_variants == -1:
+            # unlimitted variants preview
             max_variants = None
 
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
@@ -90,12 +83,9 @@ class QueryPreviewVariantsView(QueryBaseView):
 
         handle_partial_permissions(user, dataset_id, data)
 
-        # LOGGER.info('dataset ' + str(dataset))
         response = dataset.get_variants_wdae_preview(
             data, max_variants_count=max_variants
         )
-
-        # pprint.pprint(response)
 
         response = StreamingHttpResponse(
             iterator_to_json(response),
