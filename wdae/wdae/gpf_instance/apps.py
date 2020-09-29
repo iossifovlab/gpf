@@ -12,9 +12,9 @@ class EagerLoadingConfig(AppConfig):
     name = "gpf_instance"
 
     def ready(self):
-        logger.warn("EagerLoadingConfig.read() started...")
         AppConfig.ready(self)
         if settings.STUDIES_EAGER_LOADING:
+            logger.warn("Eager loading started")
             try:
                 logger.warn(
                     "STUDIES EAGER LOADING: going to call load_gpf_instance()")
@@ -24,3 +24,4 @@ class EagerLoadingConfig(AppConfig):
             except Exception as ex:
                 logger.error(f"problem while eager loading of studies; {ex}")
                 logger.exception(ex)
+            logger.warn("Eager loading DONE")

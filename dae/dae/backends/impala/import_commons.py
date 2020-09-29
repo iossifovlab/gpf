@@ -354,7 +354,7 @@ rule default:
 rule all:
     input:
         "pedigree.flag",
-{%- for prefix in variants %}
+{%- for prefix in variants -%}
         "{{prefix}}_variants.flag",
 {%- endfor %}
         "hdfs.flag",
@@ -363,7 +363,7 @@ rule all:
         "reports.flag",
 {%- if mirror_of %}
         "setup_remote.flag",
-{%- endif %}
+{% endif %}
 
 
 rule pedigree:
@@ -390,7 +390,7 @@ rule pedigree:
             -o {output.parquet} > {log.stdout} 2> {log.stderr}
         '''
 
-{%- for prefix, context in variants.items() %}
+{% for prefix, context in variants.items() %}
 
 {{prefix}}_bins={{context.bins|tojson}}
 
@@ -427,7 +427,7 @@ rule {{prefix}}_variants:
     output:
         touch("{{prefix}}_variants.flag")
 
-{%- endfor %}
+{% endfor %}
 
 
 rule parquet:
@@ -461,12 +461,13 @@ rule hdfs:
         '''
         hdfs_parquet_loader.py {{study_id}} \\
 {%- if genotype_storage %}
-            --gs {{genotype_storage}} \\\n
+            --gs {{genotype_storage}} \\
 {%- endif %}
 {%- if variants %}
-            --variants {{variants_output}} \\\n
-{%- endif -%}
-            {{pedigree.output}} > {log.stdout} 2> {log.stderr}
+            --variants {{variants_output}} \\
+{%- endif %}
+            {{pedigree.output}} \\
+            > {log.stdout} 2> {log.stderr}
         '''
 
 rule impala:
@@ -525,8 +526,10 @@ rule reports:
         '''
         generate_common_report.py --studies {{study_id}} \\
             > {log.stdout} 2> {log.stderr}
+{%- if variants %}
         generate_denovo_gene_sets.py --studies {{study_id}} \\
             >> {log.stdout} 2>> {log.stderr}
+{%- endif %}
         '''
 
 {%- if mirror_of %}
@@ -539,9 +542,8 @@ rule setup_remote:
         "logs/setup_remote_benchmark.tsv"
     shell:
         '''
+        ssh {{mirror_of.netloc}} "mkdir -p {{mirror_of.path}}/studies/{{study_id}}"
         rsync -avPHt \\
-            --rsync-path \\
-            "mkdir -p {{mirror_of.path}}/studies/{{study_id}}/ && rsync" \\
             --ignore-existing \\
             {{dae_db_dir}}/studies/{{study_id}}/ \\
             {{mirror_of.location}}/studies/{{study_id}}
@@ -802,7 +804,8 @@ class BatchImporter:
             rsync_helper = RsyncHelpers(
                 self.gpf_instance.dae_config.mirror_of)
             context["mirror_of"]["location"] = rsync_helper.rsync_remote
-            context["mirror_of"]["path"] = rsync_helper.parsed_remote.netloc
+            context["mirror_of"]["path"] = rsync_helper.parsed_remote.path
+            context["mirror_of"]["netloc"] = rsync_helper.parsed_remote.netloc
 
         return context
 

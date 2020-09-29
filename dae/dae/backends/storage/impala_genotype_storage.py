@@ -2,6 +2,8 @@ import os
 import glob
 import toml
 
+import logging
+
 from dae.backends.raw.loader import VariantsLoader, TransmissionType
 from dae.backends.storage.genotype_storage import GenotypeStorage
 
@@ -16,6 +18,9 @@ from dae.configuration.study_config_builder import StudyConfigBuilder
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.utils.dict_utils import recursive_dict_update
 from dae.backends.impala.rsync_helpers import RsyncHelpers
+
+
+logger = logging.getLogger(__name__)
 
 
 class ImpalaGenotypeStorage(GenotypeStorage):
@@ -239,7 +244,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
         files_glob = partition_description.generate_file_access_glob()
         files_glob = os.path.join(variants_dir, files_glob)
         local_variants_files = glob.glob(files_glob)
-        print(variants_dir, files_glob, local_variants_files)
+        logger.debug(f"{variants_dir}, {files_glob}, {local_variants_files}")
 
         local_basedir = partition_description.variants_filename_basedir(
             local_variants_files[0])
@@ -250,7 +255,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
             assert lvf.startswith(local_basedir)
             hdfs_variants_files.append(
                 os.path.join(hdfs_variants_dir, lvf[len(local_basedir):]))
-        print(local_variants_files, hdfs_variants_files)
+        logger.debug(f"{local_variants_files}, {hdfs_variants_files}")
 
         return local_variants_files, hdfs_variants_dir, hdfs_variants_files
 
@@ -306,7 +311,8 @@ class ImpalaGenotypeStorage(GenotypeStorage):
 
         _, hdfs_variants_dir, hdfs_variants_files = self._build_hdfs_variants(
             study_id, variants_dir, partition_description)
-        print("HDFS_VARIANTS_FILES:", hdfs_variants_dir, hdfs_variants_files)
+        logger.debug(
+            f"HDFS_VARIANTS_FILES: {hdfs_variants_dir}, {hdfs_variants_files}")
 
         return (
             hdfs_variants_dir, hdfs_variants_files[0],
