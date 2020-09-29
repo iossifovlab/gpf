@@ -2,9 +2,13 @@
 import os
 import sys
 import argparse
+import logging
 
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.backends.impala.parquet_io import NoPartitionDescriptor, ParquetPartitionDescriptor
+
+
+logger = logging.getLogger(__name__)
 
 
 def parse_cli_arguments(argv, gpf_instance):
@@ -67,7 +71,7 @@ def main(argv=sys.argv[1:], gpf_instance=None):
     if not genotype_storage or (
         genotype_storage and not genotype_storage.is_impala()
     ):
-        print("missing or non-impala genotype storage")
+        logger.error("missing or non-impala genotype storage")
         return
 
     partition_descriptor = None
@@ -88,8 +92,10 @@ def main(argv=sys.argv[1:], gpf_instance=None):
     genotype_storage.hdfs_upload_dataset(
         argv.study_id, argv.variants, argv.pedigree, partition_descriptor)
 
-    print("Done")
+    logger.info("Done")
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.DEBUG)
+    logger.info('Started')
     main(sys.argv[1:])

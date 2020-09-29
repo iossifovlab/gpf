@@ -1,7 +1,11 @@
 import os
 import subprocess
+import logging
 
 from urllib.parse import urlparse, urlunparse
+
+
+logger = logging.getLogger(__name__)
 
 
 class RsyncHelpers:
@@ -29,7 +33,7 @@ class RsyncHelpers:
             self.rsync_remote_shell = f"ssh -p {parsed_remote.port}"
 
     def hosturl(self):
-        print(self.parsed_remote)
+        logger.debug(self.parsed_remote)
 
         return urlunparse(
             (
@@ -55,6 +59,11 @@ class RsyncHelpers:
             ignore_existing=False,
             clear_remote=True):
 
+        logger.debug(f"rsync remote: {self.rsync_remote}")
+        logger.debug(f"rsync hosturl: {self.hosturl()}")
+
+        cmds = []
+
         if os.path.isdir(local_path):
             local_dir = local_path
             if not local_path.endswith("/"):
@@ -65,6 +74,7 @@ class RsyncHelpers:
             local_dir += "/"
 
         exclude_options = self._exclude_options(exclude)
+        logger.debug(f"rsync remote: {self.rsync_remote}")
 
         rsync_remote = self.rsync_remote
         rsync_path = ""
@@ -78,22 +88,30 @@ class RsyncHelpers:
             if clear_remote:
                 clear_remote_option = f"rm -rf {rsync_path} && "
 
-            rsync_path = f'--rsync-path "{clear_remote_option}' \
-                f'mkdir -p {rsync_path} && rsync"'
+            if self.hosturl():
+                cmds.append(
+                    f'ssh {self.rsync_remote} "{clear_remote_option}'
+                    f'mkdir -p {rsync_path} && rsync"')
+            else:
+                cmds.append(
+                    f'{clear_remote_option} mkdir -p {rsync_path}')
 
         ignore_existing_option = ""
         if ignore_existing:
             ignore_existing_option = "--ignore-existing"
 
         if self.rsync_remote_shell is None:
-            return f"rsync -avPHt {exclude_options} {rsync_path} "\
-                f"{ignore_existing_option} " \
-                f"{local_path} {rsync_remote}"
+            cmds.append(
+                f"rsync -avPHt {exclude_options} "
+                f"{ignore_existing_option} "
+                f"{local_path} {rsync_remote}")
         else:
-            return f'rsync -e "{self.rsync_remote_shell}" '\
-                f'-avPHt {exclude_options} {rsync_path} '\
-                f"{ignore_existing_option} " \
-                f'{local_path} {rsync_remote}'
+            cmds.append(
+                f'rsync -e "{self.rsync_remote_shell}" '
+                f'-avPHt {exclude_options} '
+                f"{ignore_existing_option} "
+                f'{local_path} {rsync_remote}')
+        return cmds
 
     def _copy_to_local_cmd(self, local_path, remote_subdir=None, exclude=[]):
         os.makedirs(local_path, exist_ok=True)
@@ -113,15 +131,15 @@ class RsyncHelpers:
                 f"{rsync_remote} {local_path}"
         else:
             return f'rsync -e "{self.rsync_remote_shell}" '\
-                f'-avPHt {exclude_options} ' \
-                f'{rsync_remote} {local_path}'
+                f'-avPHt {exclude_options} {local_path}'
 
-    def _cmd_execute(self, cmd):
-        print(cmd)
-        result = subprocess.run(
-            cmd, shell=True, text=True, capture_output=True)
+    def _cmd_execute(self, commands):
+        for cmd in commands:
+            logger.info(f"executing command: {cmd}")
+            result = subprocess.run(
+                cmd, shell=True, text=True, capture_output=True)
 
-        assert result.returncode == 0, result
+            assert result.returncode == 0, result
 
     def copy_to_remote(self, local_path, remote_subdir=None, exclude=[]):
         cmd = self._copy_to_remote_cmd(
