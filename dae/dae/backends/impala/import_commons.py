@@ -354,7 +354,7 @@ rule default:
 rule all:
     input:
         "pedigree.flag",
-{%- for prefix in variants %}
+{%- for prefix in variants -%}
         "{{prefix}}_variants.flag",
 {%- endfor %}
         "hdfs.flag",
@@ -363,7 +363,7 @@ rule all:
         "reports.flag",
 {%- if mirror_of %}
         "setup_remote.flag",
-{%- endif %}
+{% endif %}
 
 
 rule pedigree:
@@ -390,7 +390,7 @@ rule pedigree:
             -o {output.parquet} > {log.stdout} 2> {log.stderr}
         '''
 
-{%- for prefix, context in variants.items() %}
+{% for prefix, context in variants.items() %}
 
 {{prefix}}_bins={{context.bins|tojson}}
 
@@ -427,7 +427,7 @@ rule {{prefix}}_variants:
     output:
         touch("{{prefix}}_variants.flag")
 
-{%- endfor %}
+{% endfor %}
 
 
 rule parquet:
@@ -461,12 +461,13 @@ rule hdfs:
         '''
         hdfs_parquet_loader.py {{study_id}} \\
 {%- if genotype_storage %}
-            --gs {{genotype_storage}} \\\n
+            --gs {{genotype_storage}} \\
 {%- endif %}
 {%- if variants %}
-            --variants {{variants_output}} \\\n
-{%- endif -%}
-            {{pedigree.output}} > {log.stdout} 2> {log.stderr}
+            --variants {{variants_output}} \\
+{%- endif %}
+            {{pedigree.output}} \\
+            > {log.stdout} 2> {log.stderr}
         '''
 
 rule impala:

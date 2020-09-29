@@ -2,12 +2,17 @@
 import os
 import sys
 import argparse
+import logging
 
 import toml
 
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.backends.impala.parquet_io import NoPartitionDescriptor, \
     ParquetPartitionDescriptor
+
+
+logger = logging.getLogger(__name__)
+
 
 
 def parse_cli_arguments(argv, gpf_instance):
@@ -92,12 +97,10 @@ def main(argv=sys.argv[1:], gpf_instance=None):
 
     genotype_storage_db = gpf_instance.genotype_storage_db
     genotype_storage = genotype_storage_db.get_genotype_storage(
-        argv.genotype_storage
-    )
-    if not genotype_storage or (
-        genotype_storage and not genotype_storage.is_impala()
-    ):
-        print("missing or non-impala genotype storage")
+        argv.genotype_storage)
+
+    if not genotype_storage or not genotype_storage.is_impala():
+        logger.error("missing or non-impala genotype storage")
         return
 
     study_id = argv.study_id
@@ -106,7 +109,8 @@ def main(argv=sys.argv[1:], gpf_instance=None):
     else:
         hdfs_variants_dir = \
             genotype_storage.default_variants_hdfs_dirname(study_id)
-        if not os.path.exists(hdfs_variants_dir):
+
+        if not genotype_storage.hdfs_helpers.exists(hdfs_variants_dir):
             hdfs_variants_dir = None
 
     if argv.pedigree is not None:
@@ -115,14 +119,14 @@ def main(argv=sys.argv[1:], gpf_instance=None):
         hdfs_pedigree_file = \
             genotype_storage.default_pedigree_hdfs_filename(study_id)
 
-    print("HDFS variants dir: ", hdfs_variants_dir)
-    print("HDFS pedigree file:", hdfs_pedigree_file)
+    logger.info(f"HDFS variants dir: {hdfs_variants_dir}")
+    logger.info(f"HDFS pedigree file: {hdfs_pedigree_file}")
 
     partition_config_file = None
     if argv.partition_description is not None:
         partition_config_file = argv.partition_description
         assert os.path.isfile(partition_config_file), partition_config_file
-    print("partition_config_file:", partition_config_file)
+    logger.info(f"partition_config_file: {partition_config_file}")
 
     if partition_config_file is not None and \
             os.path.isfile(partition_config_file):
