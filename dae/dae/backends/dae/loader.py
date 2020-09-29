@@ -166,7 +166,7 @@ class DenovoLoader(VariantsGenotypesLoader):
 
     def full_variants_iterator(self):
         full_iterator = super(DenovoLoader, self).full_variants_iterator()
-        for summary_vairants, family_variants in full_iterator:
+        for summary_variants, family_variants in full_iterator:
             for fv in family_variants:
                 for fa in fv.alt_alleles:
                     inheritance = [
