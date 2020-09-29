@@ -369,7 +369,9 @@ class ContinuousParquetFileWriter:
 
         self.filepath = filepath
         annotation_schema = variant_loader.get_attribute("annotation_schema")
-        self.serializer = AlleleParquetSerializer(annotation_schema)
+        extra_attributes = variant_loader.get_attribute("extra_attributes")
+        self.serializer = AlleleParquetSerializer(
+            annotation_schema, extra_attributes)
         self.schema = self.serializer.schema
 
         dirname = os.path.dirname(filepath)
@@ -397,13 +399,14 @@ class ContinuousParquetFileWriter:
         self._writer.write_table(self.build_table())
         self.data_reset()
 
-    def append_allele(self, variant_data, allele):
+    def append_allele(self, variant_data, extra_attributes_data, allele):
         """
         Appends the data for an entire variant to the buffer
 
         :param list attributes: List of key-value tuples containing the data
         """
-        data = self.serializer.build_allele_batch_dict(variant_data, allele)
+        data = self.serializer.build_allele_batch_dict(
+            variant_data, extra_attributes_data, allele)
         for k, v in self._data.items():
             v.extend(data[k])
 
@@ -540,9 +543,12 @@ class VariantsParquetWriter:
                     alleles = fv.alleles
 
                 variant_data = self.serializer.serialize_variant(fv)
+                extra_attributes_data = \
+                    self.serializer.serialize_extra_attributes(fv)
                 for family_allele in alleles:
                     bin_writer = self._get_bin_writer(family_allele)
-                    bin_writer.append_allele(variant_data, family_allele)
+                    bin_writer.append_allele(
+                        variant_data, extra_attributes_data, family_allele)
 
                 if family_variant_index % 1000 == 0:
                     report = True

@@ -358,7 +358,7 @@ class AlleleParquetSerializer:
         "variant_data"
     ]
 
-    def __init__(self, variants_schema):
+    def __init__(self, variants_schema, extra_attributes=None):
         self.summary_prop_serializers = {
             "bucket_index": IntSerializer,
             "chromosome": StringSerializer,
@@ -433,6 +433,11 @@ class AlleleParquetSerializer:
             **scores_searchable,
         }
 
+        self.extra_properties = []
+        if extra_attributes:
+            for attribute_name in extra_attributes:
+                self.extra_properties.append(attribute_name)
+
     @property
     def schema(self):
         if self._schema is None:
@@ -441,6 +446,7 @@ class AlleleParquetSerializer:
                 field = pa.field(spr, self.searchable_properties_types[spr])
                 fields.append(field)
             fields.append(pa.field("variant_data", pa.binary()))
+            fields.append(pa.field("extra_attributes", pa.binary()))
             self._schema = pa.schema(fields)
         return self._schema
 
@@ -483,6 +489,18 @@ class AlleleParquetSerializer:
         stream.close()
         return output
 
+    def serialize_extra_attributes(self, variant):
+        stream = io.BytesIO()
+        write_int8(stream, len(self.extra_properties))
+        for prop in self.extra_properties:
+            write_string(stream, prop)
+            write_string(stream, variant.get_attribute(prop)[1])
+
+        stream.seek(0)
+        output = stream.read()
+        stream.close()
+        return output
+
     def write_property(self, stream, value, serializer):
         if value is None:
             write_int8(stream, 0)
@@ -501,11 +519,11 @@ class AlleleParquetSerializer:
                     allele_data[prop] = None
         return allele_data
 
-    def deserialize_family_variant(self, data, family):
+    def deserialize_family_variant(self, main_blob, family, extra_blob=None):
         summary_alleles = []
         family_alleles = []
 
-        stream = io.BytesIO(data)
+        stream = io.BytesIO(main_blob)
         allele_count = read_int8(stream)
         for _i in range(0, allele_count):
             allele_data = self.deserialize_allele(stream)
@@ -541,9 +559,21 @@ class AlleleParquetSerializer:
         )
         fv._family_alleles = family_alleles
 
+        if extra_blob:
+            extra_attributes = {}
+            stream = io.BytesIO(extra_blob)
+            extra_attributes_count = read_int8(stream)
+            for i in range(0, extra_attributes_count):
+                name = read_string(stream)
+                value = read_string(stream)
+                extra_attributes[name] = [value]
+
+        fv.update_attributes(extra_attributes)
+
         return fv
 
-    def build_allele_batch_dict(self, variant_data, allele):
+    def build_allele_batch_dict(
+            self, variant_data, extra_attributes_data, allele):
         allele_data = {name: [] for name in self.schema.names}
         for spr in self.searchable_properties:
             prop_value = getattr(allele, spr, None)
@@ -567,6 +597,7 @@ class AlleleParquetSerializer:
 
             allele_data[spr].append(prop_value)
         allele_data["variant_data"].append(variant_data)
+        allele_data["extra_attributes"].append(extra_attributes_data)
 
         product_values = list()
 

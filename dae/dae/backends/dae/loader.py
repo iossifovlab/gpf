@@ -73,13 +73,14 @@ class DenovoLoader(VariantsGenotypesLoader):
         self.genome = genome
         self.set_attribute("source_type", "denovo")
 
-        self.denovo_df = self.flexible_denovo_load(
+        self.denovo_df, extra_attributes = self._flexible_denovo_load_internal(
             denovo_filename,
             genome,
             families=families,
             adjust_chrom_prefix=self._adjust_chrom_prefix,
             **self.params,
         )
+        self.set_attribute("extra_attributes", extra_attributes)
         self._init_chromosomes()
 
         if np.all(pd.isnull(self.denovo_df["genotype"])):
@@ -177,7 +178,7 @@ class DenovoLoader(VariantsGenotypesLoader):
                     ]
                     fa._inheritance_in_members = inheritance
 
-            yield summary_vairants, family_variants
+            yield summary_variants, family_variants
 
     @staticmethod
     def split_location(location):
@@ -414,7 +415,7 @@ class DenovoLoader(VariantsGenotypesLoader):
         return argv.denovo_file, params
 
     @classmethod
-    def flexible_denovo_load(
+    def _flexible_denovo_load_internal(
             cls,
             filepath: str,
             genome: Genome,
@@ -596,7 +597,7 @@ class DenovoLoader(VariantsGenotypesLoader):
                         }
                     )
 
-            output = pd.DataFrame(result)
+            denovo_df = pd.DataFrame(result)
 
         else:
             family_col = raw_df.loc[:, denovo_family_id]
@@ -609,7 +610,7 @@ class DenovoLoader(VariantsGenotypesLoader):
             )
             # genotype_col = list(map(best2gt, best_state_col))
 
-            output = pd.DataFrame(
+            denovo_df = pd.DataFrame(
                 {
                     "chrom": chrom_col,
                     "position": pos_col,
@@ -627,8 +628,45 @@ class DenovoLoader(VariantsGenotypesLoader):
             denovo_best_state,
         ])
         extra_attributes_df = raw_df[extra_attributes_cols]
-        output = output.join(extra_attributes_df)
-        return output
+        denovo_df = denovo_df.join(extra_attributes_df)
+        return (denovo_df, extra_attributes_cols.tolist())
+
+    @classmethod
+    def flexible_denovo_load(
+            cls,
+            filepath: str,
+            genome: Genome,
+            families: FamiliesData,
+            denovo_location: Optional[str] = None,
+            denovo_variant: Optional[str] = None,
+            denovo_chrom: Optional[str] = None,
+            denovo_pos: Optional[str] = None,
+            denovo_ref: Optional[str] = None,
+            denovo_alt: Optional[str] = None,
+            denovo_person_id: Optional[str] = None,
+            denovo_family_id: Optional[str] = None,
+            denovo_best_state: Optional[str] = None,
+            denovo_sep: str = "\t",
+            adjust_chrom_prefix=None,
+            **kwargs) -> pd.DataFrame:
+        denovo_df, _ = cls._flexible_denovo_load_internal(
+            filepath,
+            genome,
+            families,
+            denovo_location,
+            denovo_variant,
+            denovo_chrom,
+            denovo_pos,
+            denovo_ref,
+            denovo_alt,
+            denovo_person_id,
+            denovo_family_id,
+            denovo_best_state,
+            denovo_sep,
+            adjust_chrom_prefix,
+            **kwargs
+        )
+        return denovo_df
 
 
 class DaeTransmittedFamiliesGenotypes(FamiliesGenotypes):
