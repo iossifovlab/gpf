@@ -24,7 +24,7 @@ def test_copy_to_remote_ssh_file(temp_filename, mocker):
     cmd = helpers._copy_to_remote_cmd(temp_filename)
 
     print(cmd)
-    assert cmd.endswith("/mnt/hdfs2nfs/")
+    assert cmd[0].endswith("/mnt/hdfs2nfs/")
 
 
 def test_copy_to_remote_ssh_dir(temp_dirname, mocker):
@@ -34,8 +34,8 @@ def test_copy_to_remote_ssh_dir(temp_dirname, mocker):
     cmd = helpers._copy_to_remote_cmd(temp_dirname)
 
     print(temp_dirname, cmd)
-    assert cmd.endswith("/mnt/hdfs2nfs/")
-    assert f"{temp_dirname}/" in cmd
+    assert cmd[0].endswith("/mnt/hdfs2nfs/")
+    assert f"{temp_dirname}/" in cmd[0]
 
 
 def test_rsync_helpers_ssh_port2022(temp_dirname, mocker):
@@ -51,7 +51,7 @@ def test_rsync_helpers_ssh_port2022(temp_dirname, mocker):
 
     print(temp_dirname, cmd)
 
-    assert '-e "ssh -p 2022"' in cmd
+    assert '-e "ssh -p 2022"' in cmd[0]
 
 
 def test_exclude_options(temp_dirname):
@@ -60,10 +60,11 @@ def test_exclude_options(temp_dirname):
     assert helpers._exclude_options(None) == ""
     assert helpers._exclude_options("") == ""
 
-    cmd = helpers._copy_to_remote_cmd(temp_dirname, exclude=[".git", ".dvc"])
-    print(cmd)
-    assert "--exclude .git" in cmd
-    assert "--exclude .dvc" in cmd
+    cmds = helpers._copy_to_remote_cmd(temp_dirname, exclude=[".git", ".dvc"])
+    print(cmds)
+    rsync_cmd = cmds[0]
+    assert "--exclude .git" in rsync_cmd
+    assert "--exclude .dvc" in rsync_cmd
 
 
 def test_rsync_remote_subdir(temp_dirname):
