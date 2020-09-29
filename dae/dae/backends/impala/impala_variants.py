@@ -61,6 +61,7 @@ class ImpalaFamilyVariants:
         self.families = FamiliesData.from_pedigree_df(self.ped_df)
 
         self.schema = self._fetch_variant_schema()
+        self.has_extra_attributes = "extra_attributes" in self.schema.columns
         if self.variants_table:
             self.serializer = AlleleParquetSerializer(self.schema)
 
@@ -147,6 +148,11 @@ class ImpalaFamilyVariants:
                         variant_data,
                     ) = row
 
+                    extra_attributes = None
+
+                    if self.has_extra_attributes:
+                        extra_attributes = row[9]
+
                     # FIXME:
                     # fvuid = f"{bucket_index}:{summary_index}:{family_index}"
                     fvuid = f"{bucket_index}:{summary_index}:{family_id}"
@@ -163,7 +169,7 @@ class ImpalaFamilyVariants:
 
                     family = self.families[family_id]
                     v = self.serializer.deserialize_family_variant(
-                        variant_data, family
+                        variant_data, family, extra_attributes
                     )
 
                     if v is None:
@@ -800,26 +806,49 @@ class ImpalaFamilyVariants:
         limit_clause = ""
         if limit:
             limit_clause = "LIMIT {}".format(limit)
-        return """
-            SELECT
-                bucket_index,
-                summary_index,
-                chromosome,
-                `position`,
-                end_position,
-                variant_type,
-                reference,
-                family_id,
-                variant_data
-            FROM {db}.{variant}
-            {where_clause}
-            {limit_clause}
-            """.format(
-            db=self.db,
-            variant=self.variants_table,
-            where_clause=where_clause,
-            limit_clause=limit_clause,
-        )
+        if self.has_extra_attributes:
+            return """
+                SELECT
+                    bucket_index,
+                    summary_index,
+                    chromosome,
+                    `position`,
+                    end_position,
+                    variant_type,
+                    reference,
+                    family_id,
+                    variant_data,
+                    extra_attributes
+                FROM {db}.{variant}
+                {where_clause}
+                {limit_clause}
+                """.format(
+                db=self.db,
+                variant=self.variants_table,
+                where_clause=where_clause,
+                limit_clause=limit_clause,
+            )
+        else:
+            return """
+                SELECT
+                    bucket_index,
+                    summary_index,
+                    chromosome,
+                    `position`,
+                    end_position,
+                    variant_type,
+                    reference,
+                    family_id,
+                    variant_data
+                FROM {db}.{variant}
+                {where_clause}
+                {limit_clause}
+                """.format(
+                db=self.db,
+                variant=self.variants_table,
+                where_clause=where_clause,
+                limit_clause=limit_clause,
+            )
 
     def build_count_query(
         self,
