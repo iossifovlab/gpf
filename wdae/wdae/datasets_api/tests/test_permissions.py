@@ -18,11 +18,11 @@ from datasets_api.models import Dataset
 from datasets_api.permissions import user_has_permission, \
     add_group_perm_to_user, \
     add_group_perm_to_dataset, \
-    get_allowed_children_datasets_for_user, \
-    get_allowed_children_datasets_for_user_deep, \
+    _get_allowed_datasets_for_user, \
+    get_allowed_datasets_leafs_for_user, \
     get_user_groups, get_dataset_groups, \
-    get_allowed_datasets_for_user, \
-    user_has_permission_strict
+    get_all_allowed_datasets_for_user, \
+    _user_has_permission_strict
 
 
 @pytest.fixture()
@@ -113,22 +113,22 @@ def test_dataset1_rights(db, user, dataset_wrapper):
 
 def test_dataset1_rights_allowed_datasets(db, user, dataset_wrapper):
     add_group_perm_to_user("Dataset1", user)
-    result = get_allowed_children_datasets_for_user(
+    result = _get_allowed_datasets_for_user(
         user, dataset_wrapper.id)
     assert result == set(["Dataset1"])
 
-    result = get_allowed_children_datasets_for_user_deep(
+    result = get_allowed_datasets_leafs_for_user(
         user, dataset_wrapper.id)
     assert result == set(["Study1", "Study3"])
 
 
 def test_dataset2_rights_allowed_datasets(db, user, dataset_wrapper):
     add_group_perm_to_user("Dataset2", user)
-    result = get_allowed_children_datasets_for_user(
+    result = _get_allowed_datasets_for_user(
         user, dataset_wrapper.id)
     assert result == set(["Dataset2"])
 
-    result = get_allowed_children_datasets_for_user_deep(
+    result = get_allowed_datasets_leafs_for_user(
         user, dataset_wrapper.id)
     assert result == set(["Study2"])
 
@@ -139,11 +139,11 @@ def test_study1_and_dataset2_rights_allowed_datasets(
     add_group_perm_to_user("Dataset2", user)
     add_group_perm_to_user("Study1", user)
 
-    result = get_allowed_children_datasets_for_user(
+    result = _get_allowed_datasets_for_user(
         user, dataset_wrapper.id)
     assert result == set(["Study1", "Dataset2"])
 
-    result = get_allowed_children_datasets_for_user_deep(
+    result = get_allowed_datasets_leafs_for_user(
         user, dataset_wrapper.id)
     assert result == set(["Study1", "Study2"])
 
@@ -200,11 +200,11 @@ def test_study1_and_dataset2_group_rights_allowed_datasets(
     add_group_perm_to_dataset("A", "Dataset2")
     add_group_perm_to_dataset("A", "Study1")
 
-    result = get_allowed_children_datasets_for_user(
+    result = _get_allowed_datasets_for_user(
         user, dataset_wrapper.id)
     assert result == set(["Study1", "Dataset2"])
 
-    result = get_allowed_children_datasets_for_user_deep(
+    result = get_allowed_datasets_leafs_for_user(
         user, dataset_wrapper.id)
     assert result == set(["Study1", "Study2"])
 
@@ -214,11 +214,11 @@ def test_dataset_any_dataset_group_rights(db, user, dataset_wrapper):
 
     assert user_has_permission(user, dataset_wrapper.id)
 
-    result = get_allowed_children_datasets_for_user(
+    result = _get_allowed_datasets_for_user(
         user, dataset_wrapper.id)
     assert result == set(["Dataset"])
 
-    result = get_allowed_children_datasets_for_user_deep(
+    result = get_allowed_datasets_leafs_for_user(
         user, dataset_wrapper.id)
     assert result == set(["Study1", "Study2", "Study3"])
 
@@ -228,11 +228,11 @@ def test_dataset_admin_group_rights(db, user, dataset_wrapper):
 
     assert user_has_permission(user, dataset_wrapper.id)
 
-    result = get_allowed_children_datasets_for_user(
+    result = _get_allowed_datasets_for_user(
         user, dataset_wrapper.id)
     assert result == set(["Dataset"])
 
-    result = get_allowed_children_datasets_for_user_deep(
+    result = get_allowed_datasets_leafs_for_user(
         user, dataset_wrapper.id)
     assert result == set(["Study1", "Study2", "Study3"])
 
@@ -284,21 +284,35 @@ def test_explore_datasets_nauser_and_groups(db, na_user, dataset_wrapper):
     assert get_user_groups(na_user) & get_dataset_groups("Dataset")
 
 
-def test_get_allowed_datasets_for_na_user(db, na_user, dataset_wrapper):
+def test_get_allowed_datasets_for_na_user_strict(db, na_user, dataset_wrapper):
     add_group_perm_to_user("A", na_user)
     add_group_perm_to_dataset("A", "Dataset")
 
-    allowed_dtasets = get_allowed_datasets_for_user(na_user)
+    allowed_dtasets = get_all_allowed_datasets_for_user(na_user)
     print(allowed_dtasets)
     assert "Dataset" in allowed_dtasets
-    assert not user_has_permission_strict(na_user, "Dataset")
+    assert not _user_has_permission_strict(na_user, "Dataset")
 
 
-def test_get_allowed_datasets_for_user(db, user, dataset_wrapper):
+def test_get_all_allowed_datasets_for_user(db, user, dataset_wrapper):
     add_group_perm_to_user("A", user)
     add_group_perm_to_dataset("A", "Dataset")
 
-    allowed_dtasets = get_allowed_datasets_for_user(user)
+    allowed_dtasets = get_all_allowed_datasets_for_user(user)
     print(allowed_dtasets)
     assert "Dataset" in allowed_dtasets
-    assert user_has_permission_strict(user, "Dataset")
+    assert _user_has_permission_strict(user, "Dataset")
+
+
+def test_get_allowed_dataset_from_parent(db, user, dataset_wrapper):
+    add_group_perm_to_user("A", user)
+    add_group_perm_to_dataset("A", "Dataset")
+
+    allowed_datasets = _get_allowed_datasets_for_user(user, "Dataset1")
+    assert "Dataset1" in allowed_datasets
+
+
+def test_compare_has_permissions_with_get_allowed_children_datasets(
+        db, user, dataset_wrapper, wdae_gpf_instance):
+
+    pass
