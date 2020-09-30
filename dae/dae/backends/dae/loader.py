@@ -518,7 +518,8 @@ class DenovoLoader(VariantsGenotypesLoader):
                 },
                 dtype=str,
                 comment="#",
-                encoding="utf-8")
+                encoding="utf-8",
+                na_filter=False)
 
         if denovo_location:
             chrom_col, pos_col = zip(
