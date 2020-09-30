@@ -1,5 +1,7 @@
 import pytest
 from dae.backends.impala.serializers import AlleleParquetSerializer
+from dae.backends.dae.loader import DenovoLoader
+from dae.pedigrees.loader import FamiliesLoader
 
 
 @pytest.mark.xfail()
@@ -27,3 +29,35 @@ def test_all_properties_in_blob(vcf_variants_loader, impala_genotype_storage):
             deserialized_prop = deserialized_variant.get_attribute(prop)
 
         assert fv_prop == deserialized_prop
+
+
+def test_extra_attributes_serialization_deserialization(
+        fixtures_gpf_instance, fixture_dirname):
+    families_data = FamiliesLoader.load_simple_families_file(
+        fixture_dirname("backends/iossifov_extra_attrs.ped"))
+
+    loader = DenovoLoader(
+        families_data, fixture_dirname("backends/iossifov_extra_attrs.tsv"),
+        fixtures_gpf_instance.get_genome()
+    )
+
+    main_schema = loader.get_attribute("annotation_schema")
+    extra_attributes = loader.get_attribute("extra_attributes")
+
+    serializer = AlleleParquetSerializer(main_schema, extra_attributes)
+    it = loader.full_variants_iterator()
+    variant = next(it)[1][0]
+    variant_blob = serializer.serialize_variant(variant)
+    extra_blob = serializer.serialize_extra_attributes(variant)
+    family = variant.family
+
+    fv = serializer.deserialize_family_variant(
+        variant_blob, family, extra_blob)
+
+    assert fv.get_attribute("someAttr")[1] == "asdf"
+
+
+def test_extra_attributes_impala(extra_attrs_impala):
+    variants = extra_attrs_impala.query_variants()
+    first_variant = list(variants)[0]
+    assert first_variant.get_attribute("someAttr")[1] == "asdf"

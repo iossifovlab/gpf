@@ -1,8 +1,14 @@
 import pytest
+import os
 import numpy as np
 from dae.pedigrees.loader import FamiliesLoader
 from io import StringIO
 from dae.utils.variant_utils import GENOTYPE_TYPE, BEST_STATE_TYPE
+from dae.backends.dae.loader import DenovoLoader
+from dae.backends.raw.loader import AnnotationPipelineDecorator
+from dae.backends.impala.parquet_io import ParquetManager, \
+    NoPartitionDescriptor
+from dae.configuration.gpf_config_parser import FrozenBox
 
 PED1 = """
 # SIMPLE TRIO
@@ -56,3 +62,68 @@ def best_state():
 @pytest.fixture(scope="module")
 def best_state_serialized():
     return "\x02\x00\x00\x01\x01\x00\x00\x02\x00\x00\x01\x01"
+
+
+@pytest.fixture(scope="session")
+def denovo_extra_attr_loader(
+        fixture_dirname, genome_2013, annotation_pipeline_internal):
+
+    families_filename = fixture_dirname("backends/iossifov_extra_attrs.ped")
+    variants_filename = fixture_dirname("backends/iossifov_extra_attrs.tsv")
+
+    families = FamiliesLoader.load_simple_families_file(families_filename)
+
+    variants_loader = DenovoLoader(
+        families, variants_filename, genome_2013)
+
+    variants_loader = AnnotationPipelineDecorator(
+        variants_loader, annotation_pipeline_internal
+    )
+
+    return variants_loader
+
+
+@pytest.fixture(scope="session")
+def extra_attrs_impala(
+        request,
+        denovo_extra_attr_loader,
+        genomes_db_2013,
+        hdfs_host,
+        impala_genotype_storage):
+
+    from dae.backends.impala.hdfs_helpers import HdfsHelpers
+
+    hdfs = HdfsHelpers(hdfs_host, 8020)
+
+    temp_dirname = hdfs.tempdir(prefix="variants_", suffix="_data")
+    hdfs.mkdir(temp_dirname)
+
+    study_id = "denovo_extra_attrs"
+    parquet_filenames = ParquetManager.build_parquet_filenames(
+        temp_dirname, bucket_index=2, study_id=study_id
+    )
+
+    assert parquet_filenames is not None
+
+    ParquetManager.families_to_parquet(
+        denovo_extra_attr_loader.families, parquet_filenames.pedigree
+    )
+
+    variants_dir = os.path.join(temp_dirname, "variants")
+    partition_description = NoPartitionDescriptor(variants_dir)
+
+    ParquetManager.variants_to_parquet(
+        denovo_extra_attr_loader, partition_description
+    )
+
+    impala_genotype_storage.impala_load_dataset(
+        study_id,
+        variants_dir=os.path.dirname(parquet_filenames.variants),
+        pedigree_file=parquet_filenames.pedigree,
+    )
+
+    fvars = impala_genotype_storage.build_backend(
+        FrozenBox({"id": study_id}), genomes_db_2013
+    )
+
+    return fvars

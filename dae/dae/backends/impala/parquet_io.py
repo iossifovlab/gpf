@@ -451,7 +451,10 @@ class VariantsParquetWriter:
 
         annotation_schema = self.variants_loader.get_attribute(
             "annotation_schema")
-        self.serializer = AlleleParquetSerializer(annotation_schema)
+        extra_attributes = self.variants_loader.get_attribute(
+            "extra_attributes")
+        self.serializer = AlleleParquetSerializer(
+            annotation_schema, extra_attributes)
 
     def _setup_reference_allele(self, summary_variant, family):
         genotype = -1 * np.ones(shape=(2, len(family)), dtype=GENOTYPE_TYPE)
