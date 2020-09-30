@@ -4,6 +4,7 @@ import os
 import glob
 import shutil
 import tempfile
+import logging
 
 import pandas as pd
 from io import StringIO
@@ -39,6 +40,9 @@ from dae.backends.storage.impala_genotype_storage import ImpalaGenotypeStorage
 from dae.gene.denovo_gene_set_collection_factory import (
     DenovoGeneSetCollectionFactory,
 )
+
+
+logging.basicConfig(level=logging.DEBUG)
 
 
 def relative_to_this_test_folder(path):

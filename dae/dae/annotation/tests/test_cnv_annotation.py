@@ -1,3 +1,4 @@
+import logging
 import numpy as np
 
 from dae.backends.cnv.loader import CNVLoader
@@ -10,10 +11,13 @@ from dae.annotation.tools.score_annotator import PositionScoreAnnotator, \
     NPScoreAnnotator
 
 
+logger = logging.getLogger(__name__)
+
+
 def test_cnv_variant_score_annotation_position(
-    fixture_dirname,
-    genomes_db_2013
-):
+        fixture_dirname,
+        genomes_db_2013):
+
     options = {
         "vcf": False,
         "x": "location",
@@ -51,6 +55,9 @@ def test_cnv_variant_score_annotation_position(
 
     result = []
     for sv, _ in loader.full_variants_iterator():
+        logger.debug(f"summary_variant: {sv}")
+        print(f"summary_variant: {sv}")
+
         score_annotator.annotate_summary_variant(sv)
         result.append(sv.alt_alleles[0].attributes["RESULT_phastCons100way"])
 

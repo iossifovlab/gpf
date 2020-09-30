@@ -2,6 +2,7 @@ import os
 import sys
 import itertools
 import glob
+import logging
 
 import numpy as np
 
@@ -19,11 +20,12 @@ from dae.utils.variant_utils import (
 from dae.variants.attributes import Inheritance
 from dae.variants.variant import SummaryVariantFactory
 from dae.variants.family_variant import FamilyVariant
-from dae.backends.raw.loader import (
-    VariantsGenotypesLoader,
-    TransmissionType,
-    FamiliesGenotypes,
-)
+from dae.backends.raw.loader import VariantsGenotypesLoader, \
+    TransmissionType, \
+    FamiliesGenotypes
+
+
+logger = logging.getLogger(__name__)
 
 
 class VcfFamiliesGenotypes(FamiliesGenotypes):
@@ -494,14 +496,13 @@ class SingleVcfLoader(VariantsGenotypesLoader):
 
 class VcfLoader(VariantsGenotypesLoader):
     def __init__(
-        self,
-        families,
-        vcf_files,
-        genome: Genome,
-        regions=None,
-        params={},
-        **kwargs,
-    ):
+            self,
+            families,
+            vcf_files,
+            genome: Genome,
+            regions=None,
+            params={},
+            **kwargs):
 
         all_filenames, filenames = self._collect_filenames(params, vcf_files)
 
@@ -512,15 +513,16 @@ class VcfLoader(VariantsGenotypesLoader):
             genome=genome,
             expect_genotype=True,
             expect_best_state=False,
-            params=params,
-        )
+            params=params)
 
         self.set_attribute("source_type", "vcf")
+        logger.debug(f"loader passed VCF files {vcf_files}")
+        logger.debug(f"collected VCF files: {all_filenames}, {filenames}")
+
         self.vcf_files = vcf_files
         self.vcf_loaders = [
             SingleVcfLoader(
-                families, vcf_files, genome, regions=regions, params=params
-            )
+                families, vcf_files, genome, regions=regions, params=params)
             for vcf_files in filenames if vcf_files
         ]
 
@@ -537,6 +539,8 @@ class VcfLoader(VariantsGenotypesLoader):
 
         else:
             glob_filenames = [vcf_files]
+
+        logger.debug(f"collecting VCF filenames glob: {glob_filenames}")
 
         result = []
         for batches_globnames in glob_filenames:
