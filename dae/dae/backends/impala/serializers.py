@@ -415,6 +415,7 @@ class AlleleParquetSerializer:
                     not in self.BASE_SEARCHABLE_PROPERTIES_TYPES.keys()
                     and col_name not in additional_searchable_props.keys()
                     and col_name not in self.GENOMIC_SCORES_SCHEMA_CLEAN_UP
+                    and col_name != "extra_attributes"
                 ):
                     scores_binary[col_name] = FloatSerializer
                     scores_searchable[col_name] = pa.float32()
