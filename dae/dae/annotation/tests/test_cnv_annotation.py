@@ -56,7 +56,6 @@ def test_cnv_variant_score_annotation_position(
     result = []
     for sv, _ in loader.full_variants_iterator():
         logger.debug(f"summary_variant: {sv}")
-        print(f"summary_variant: {sv}")
 
         score_annotator.annotate_summary_variant(sv)
         result.append(sv.alt_alleles[0].attributes["RESULT_phastCons100way"])

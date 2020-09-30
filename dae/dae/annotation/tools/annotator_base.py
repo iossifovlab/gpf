@@ -11,6 +11,7 @@ from dae.annotation.tools.utils import LineMapper
 
 from dae.utils.dae_utils import dae2vcf_variant
 from dae.variants.variant import SummaryAllele
+from dae.variants.attributes import VariantType
 
 
 logger = logging.getLogger(__name__)
@@ -277,7 +278,10 @@ class VariantAnnotatorBase(AnnotatorBase):
             attributes = deepcopy(alt_allele.attributes)
             self.variant_builder.fill_variant_coordinates(
                 attributes, alt_allele)
-            variant = self.variant_builder.build_variant(attributes)
+            if VariantType.is_cnv(alt_allele.variant_type):
+                variant = alt_allele
+            else:
+                variant = self.variant_builder.build_variant(attributes)
             # logger.debug(
             #     f"annotate_summary_variant calls do_annotate({variant})")
             self.do_annotate(attributes, variant)
