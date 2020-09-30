@@ -2,6 +2,7 @@
 
 import sys
 import os
+import logging
 
 import pysam
 import numpy as np
@@ -11,11 +12,13 @@ from collections import defaultdict
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.score_file_conf import score_file_conf_schema
 
-from dae.annotation.tools.file_io_tsv import (
-    TSVFormat,
-    TabixReader,
-    handle_chrom_prefix,
-)
+from dae.annotation.tools.file_io_tsv import \
+    TSVFormat, \
+    TabixReader, \
+    handle_chrom_prefix
+
+from dae.annotation.tools.score_file_io_vcf import VcfInfoAccess
+
 from dae.annotation.tools.schema import Schema
 
 try:
@@ -23,6 +26,9 @@ try:
     from dae.annotation.tools.score_file_io_bigwig import BigWigAccess
 except ImportError:
     bigwig_enabled = False
+
+
+logger = logging.getLogger(__name__)
 
 
 class LineAdapter(object):
@@ -82,11 +88,13 @@ class ScoreFile(object):
         assert self.config.general.header is not None
         assert self.config.columns.score is not None
         self.header = self.config.general.header
+        logger.debug(f"score file {self.score_filename} header {self.header}")
         self.score_names = self.config.columns.score
 
         self.schema = Schema.from_dict(
             self.config.score_schema
         ).order_as(self.header)
+        logger.debug(f"score file {self.score_filename} schema {self.schema}")
 
         assert all([sn in self.schema for sn in self.score_names]), [
             self.score_filename,
@@ -110,7 +118,7 @@ class ScoreFile(object):
         score_format = (
             self.config.misc.format.lower() if self.config.misc else "tsv"
         )
-        assert score_format in ["bedgraph", "tsv", "bigwig", "bw"], (
+        assert score_format in ["bedgraph", "tsv", "bigwig", "bw", "vcf"], (
             score_format,
             self.config.options.scores_config_file,
         )
@@ -118,6 +126,8 @@ class ScoreFile(object):
         if score_format == "bigwig" or score_format == "bw":
             assert bigwig_enabled, "pyBigWig module is not installed"
             self.accessor = BigWigAccess(self)
+        elif score_format == "vcf":
+            self.accessor = VcfInfoAccess(self)
         else:
             self.accessor = TabixAccess(self)
 
@@ -156,16 +166,24 @@ class ScoreFile(object):
         stripped_chrom = handle_chrom_prefix(self.chr_prefix, chrom)
 
         score_lines = self.accessor._fetch(stripped_chrom, pos_begin, pos_end)
+        logger.debug(f"score lines found: {score_lines}")
         result = defaultdict(list)
 
         for line in score_lines:
+            logger.debug(
+                f"pos_end: {pos_end}; line.pos_end: {line.pos_end}; "
+                f"pos_begin: {pos_begin}; line.pos_begin: {line.pos_begin}")
             count = (
                 min(pos_end, line.pos_end) - max(line.pos_begin, pos_begin) + 1
             )
-            assert count >= 1
+            if count < 0:
+                continue
+
+            assert count >= 1, count
             result["COUNT"].append(count)
             for index, column in enumerate(self.schema.col_names):
                 result[column].append(line[index])
+        logger.debug(f"fetch scores: {result}")
         return result
 
     def fetch_highest_scores(self, chrom, pos_begin, pos_end):
@@ -183,7 +201,8 @@ class ScoreFile(object):
                     score_value = float(line[score_index]) \
                         if str.lower(line[score_index]) \
                         != self.config.general.no_score_value else np.nan
-                    result[column] = max(score_value, result.get(column, np.nan))
+                    result[column] = max(
+                        score_value, result.get(column, np.nan))
             return result
 
         except ValueError as ex:
