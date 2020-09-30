@@ -134,24 +134,35 @@ class ImpalaFamilyVariants:
 
                 cursor.execute(query)
                 for row in cursor:
-
-                    (
-                        bucket_index,
-                        summary_index,
-                        # family_index,
-                        chrom,
-                        position,
-                        end_position,
-                        variant_type,
-                        reference,
-                        family_id,
-                        variant_data,
-                    ) = row
-
-                    extra_attributes = None
-
                     if self.has_extra_attributes:
-                        extra_attributes = row[9]
+                        (
+                            bucket_index,
+                            summary_index,
+                            # family_index,
+                            chrom,
+                            position,
+                            end_position,
+                            variant_type,
+                            reference,
+                            family_id,
+                            variant_data,
+                            extra_attributes,
+                        ) = row
+                    else:
+                        (
+                            bucket_index,
+                            summary_index,
+                            # family_index,
+                            chrom,
+                            position,
+                            end_position,
+                            variant_type,
+                            reference,
+                            family_id,
+                            variant_data,
+                        ) = row
+
+                        extra_attributes = None
 
                     # FIXME:
                     # fvuid = f"{bucket_index}:{summary_index}:{family_index}"

@@ -559,8 +559,8 @@ class AlleleParquetSerializer:
         )
         fv._family_alleles = family_alleles
 
+        extra_attributes = {}
         if extra_blob:
-            extra_attributes = {}
             stream = io.BytesIO(extra_blob)
             extra_attributes_count = read_int8(stream)
             for i in range(0, extra_attributes_count):
