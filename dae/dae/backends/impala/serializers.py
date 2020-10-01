@@ -434,10 +434,10 @@ class AlleleParquetSerializer:
             **scores_searchable,
         }
 
-        self.extra_properties = []
+        self.extra_attributes = []
         if extra_attributes:
             for attribute_name in extra_attributes:
-                self.extra_properties.append(attribute_name)
+                self.extra_attributes.append(attribute_name)
 
     @property
     def schema(self):
@@ -492,8 +492,8 @@ class AlleleParquetSerializer:
 
     def serialize_extra_attributes(self, variant):
         stream = io.BytesIO()
-        write_int8(stream, len(self.extra_properties))
-        for prop in self.extra_properties:
+        write_int8(stream, len(self.extra_attributes))
+        for prop in self.extra_attributes:
             write_string(stream, prop)
             write_string(stream, variant.get_attribute(prop)[1])
 
