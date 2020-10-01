@@ -520,6 +520,9 @@ class AlleleParquetSerializer:
                     allele_data[prop] = None
         return allele_data
 
+    def deserialize_summary_variant(self, main_blob, extra_blob=None):
+        raise NotImplementedError()
+
     def deserialize_family_variant(self, main_blob, family, extra_blob=None):
         summary_alleles = []
         family_alleles = []

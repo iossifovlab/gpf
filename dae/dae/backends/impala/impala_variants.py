@@ -88,6 +88,110 @@ class ImpalaFamilyVariants:
     def connection(self):
         return self._impala_helpers.connection()
 
+    def _summary_variants_iterator(
+            self,
+            regions=None,
+            genes=None,
+            effect_types=None,
+            family_ids=None,
+            person_ids=None,
+            inheritance=None,
+            roles=None,
+            sexes=None,
+            variant_type=None,
+            real_attr_filter=None,
+            ultra_rare=None,
+            frequency_filter=None,
+            return_reference=None,
+            return_unknown=None,
+            limit=None):
+        if not self.variants_table:
+            return None
+        with closing(self.connection()) as conn:
+
+            with conn.cursor() as cursor:
+                query = self.build_query(
+                    regions=regions,
+                    genes=genes,
+                    effect_types=effect_types,
+                    family_ids=family_ids,
+                    person_ids=person_ids,
+                    inheritance=inheritance,
+                    roles=roles,
+                    sexes=sexes,
+                    variant_type=variant_type,
+                    real_attr_filter=real_attr_filter,
+                    ultra_rare=ultra_rare,
+                    frequency_filter=frequency_filter,
+                    return_reference=return_reference,
+                    return_unknown=return_unknown,
+                    limit=None,
+                )
+                LOGGER.debug(f"FINAL QUERY: {query}")
+
+                seen = set()
+
+                cursor.execute(query)
+                for row in cursor:
+                    if self.has_extra_attributes:
+                        (
+                            bucket_index,
+                            summary_index,
+                            # family_index,
+                            chrom,
+                            position,
+                            end_position,
+                            variant_type,
+                            reference,
+                            family_id,
+                            variant_data,
+                            extra_attributes,
+                        ) = row
+                    else:
+                        (
+                            bucket_index,
+                            summary_index,
+                            # family_index,
+                            chrom,
+                            position,
+                            end_position,
+                            variant_type,
+                            reference,
+                            family_id,
+                            variant_data,
+                        ) = row
+
+                        extra_attributes = None
+
+                    # FIXME:
+                    # fvuid = f"{bucket_index}:{summary_index}:{family_index}"
+                    fvuid = f"{bucket_index}:{summary_index}:{family_id}"
+                    if fvuid in seen:
+                        continue
+                    seen.add(fvuid)
+
+                    if type(variant_data) == str:
+                        LOGGER.debug(
+                            f"variant_data is string!!!! "
+                            f"{family_id}, {chrom}, "
+                            f"{position}, {end_position}, {reference}")
+                        variant_data = bytes(variant_data, "utf8")
+                    if type(extra_attributes) == str:
+                        LOGGER.debug(
+                            f"extra_attributes is string!!!! "
+                            f"{family_id}, {chrom}, "
+                            f"{position}, {end_position}, {reference}")
+                        extra_attributes = bytes(extra_attributes, "utf8")
+
+                    v = self.serializer.deserialize_summary_variant(
+                        variant_data, extra_attributes
+                    )
+
+                    if v is None:
+                        continue
+
+                    yield v
+
     def _family_variants_iterator(
             self,
             regions=None,
@@ -193,6 +297,77 @@ class ImpalaFamilyVariants:
                         continue
 
                     yield v
+
+    def query_summary_variants(
+            self,
+            regions=None,
+            genes=None,
+            effect_types=None,
+            family_ids=None,
+            person_ids=None,
+            inheritance=None,
+            roles=None,
+            sexes=None,
+            variant_type=None,
+            real_attr_filter=None,
+            ultra_rare=None,
+            frequency_filter=None,
+            return_reference=None,
+            return_unknown=None,
+            limit=None):
+        if not self.variants_table:
+            return None
+
+        if limit is None:
+            count = -1
+        else:
+            count = limit
+            limit = 10 * limit
+
+        summary_variants_iterator = self._summary_variants_iterator(
+                    regions=regions,
+                    genes=genes,
+                    effect_types=effect_types,
+                    family_ids=family_ids,
+                    person_ids=person_ids,
+                    inheritance=inheritance,
+                    roles=roles,
+                    sexes=sexes,
+                    variant_type=variant_type,
+                    real_attr_filter=real_attr_filter,
+                    ultra_rare=ultra_rare,
+                    frequency_filter=frequency_filter,
+                    return_reference=return_reference,
+                    return_unknown=return_unknown,
+                    limit=limit)
+
+        raw_variants_iterator = RawVariantsIterator(
+            summary_variants_iterator, self.families)
+
+        result = raw_variants_iterator.query_variants(
+            regions=regions,
+            genes=genes,
+            effect_types=effect_types,
+            family_ids=family_ids,
+            person_ids=person_ids,
+            inheritance=inheritance,
+            roles=roles,
+            sexes=sexes,
+            variant_type=variant_type,
+            real_attr_filter=real_attr_filter,
+            ultra_rare=ultra_rare,
+            frequency_filter=frequency_filter,
+            return_reference=return_reference,
+            return_unknown=return_unknown,
+            limit=count)
+
+        for v in result:
+            if v is None:
+                continue
+            yield v
+            count -= 1
+            if count == 0:
+                break
 
     def query_variants(
             self,
