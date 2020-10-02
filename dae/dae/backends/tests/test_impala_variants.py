@@ -2,6 +2,7 @@ import pytest
 from dae.backends.impala.impala_variants import ImpalaFamilyVariants
 from dae.backends.impala.hdfs_helpers import HdfsHelpers
 from dae.backends.impala.impala_helpers import ImpalaHelpers
+from dae.variants.variant import SummaryVariant
 from dae.utils.regions import Region
 
 
@@ -44,7 +45,7 @@ def test_impala_query_build(impala_host, genomes_db_2013):
     print(q)
 
 
-@pytest.mark.parametrize("fixture_name", ["backends/a",])
+@pytest.mark.parametrize("fixture_name", ["backends/a"])
 def test_impala_variants_simple(variants_impala, fixture_name):
     fvars = variants_impala(fixture_name)
 
@@ -58,6 +59,24 @@ def test_impala_variants_simple(variants_impala, fixture_name):
         for a in v.matched_alleles:
             print(">", a)
 
+    assert len(vs) == 5
+
+
+@pytest.mark.parametrize("fixture_name", ["backends/a"])
+def test_impala_summary_variants_simple(variants_impala, fixture_name):
+    fvars = variants_impala(fixture_name)
+
+    vs = list(fvars.query_summary_variants())
+    print(len(vs))
+
+    for v in vs:
+        print(v)
+        for a in v.alt_alleles:
+            print(">", a)
+        for a in v.matched_alleles:
+            print(">", a)
+
+    assert all([isinstance(sv, SummaryVariant) for sv in vs])
     assert len(vs) == 5
 
 
