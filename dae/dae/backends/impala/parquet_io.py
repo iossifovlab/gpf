@@ -606,6 +606,11 @@ class VariantsParquetWriter:
             path = os.path.dirname(self.partition_descriptor.output)
         filename = os.path.join(path, "_VARIANTS_SCHEMA")
 
+        config["extra_attributes"] = {}
+        extra_attributes = self.serializer.extra_attributes
+        for attr in extra_attributes:
+            config["extra_attributes"][attr] = "string"
+
         with open(filename, "w") as configfile:
             content = toml.dumps(config)
             configfile.write(content)
