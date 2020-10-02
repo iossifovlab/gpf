@@ -50,7 +50,9 @@ def main(argv):
         partition_description = ParquetPartitionDescriptor.from_config(
             argv.partition_description
         )
-        families = partition_description.add_family_bins_to_families(families)
+        if partition_description.family_bin_size > 0:
+            families = partition_description \
+                .add_family_bins_to_families(families)
 
     if not argv.output_filename:
         output_filename, _ = os.path.splitext(os.path.basename(filename))
