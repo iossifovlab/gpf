@@ -12,6 +12,9 @@ export class Exon {
     return this._stop;
   }
 
+  get length() {
+    return this._stop - this._start;
+  }
 
   static fromJson(json: any): Exon {
     return new Exon(json['start'], json['stop']);

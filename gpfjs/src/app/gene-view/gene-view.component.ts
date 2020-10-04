@@ -119,6 +119,35 @@ export class GeneViewComponent implements OnInit {
     }
   }
 
+  calculateTranscriptRanges(transcript: Transcript, svgWidth: number, intronSize: number, start?: number, stop?: number) {
+    const intronCount = transcript.exons.length - 1;
+    const exonSpace = transcript.exons.map(e => e.length).reduce((a, b) => a + b, 0);
+    const newExonSpace = (transcript.exons[transcript.exons.length - 1].stop - transcript.exons[0].start) - intronCount * intronSize;
+    const newExonRatio = newExonSpace / exonSpace;
+
+    const linearScale = d3.scaleLinear()
+    .domain(this.getGeneExtent(this.gene.transcripts))
+    .range([0, this.svgWidth]);
+
+    const transcriptRanges: number[] = this.getTranscriptDomain(transcript, start, stop).map(pos => linearScale(pos));
+    const newTranscriptRanges: number[] = [];
+    const svgTranscriptLengths: number[] = [];
+
+    for (let i = 0; i < transcriptRanges.length - 1; i += 2) {
+      svgTranscriptLengths.push((transcriptRanges[i + 1] - transcriptRanges[i]) * newExonRatio);
+    }
+
+    let rollingPosTracker = 0;
+    for (let i = 0; i < svgTranscriptLengths.length; i++) {
+      newTranscriptRanges.push(
+        rollingPosTracker, rollingPosTracker + svgTranscriptLengths[i]
+      );
+      rollingPosTracker += svgTranscriptLengths[i] + linearScale(linearScale.domain()[0] + intronSize);
+    }
+
+    return newTranscriptRanges;
+  }
+
   checkEffectType(effectType, checked) {
     effectType = effectType.toLowerCase();
     if (checked) {
@@ -294,26 +323,34 @@ export class GeneViewComponent implements OnInit {
     }
   }
 
-  setDefaultScale() {
-    let domainBeginning = this.gene.transcripts[0].exons[0].start;
-    let domainEnding = this.gene.transcripts[0].exons[this.gene.transcripts[0].exons.length - 1].stop;
+  getGeneExtent(transcripts: Transcript[]) {
+    const domainBeginning = Math.min(...transcripts.map(t => t.exons[0].start));
+    const domainEnding = Math.max(...transcripts.map(t => t.exons[t.exons.length - 1].stop));
+    return [domainBeginning, domainEnding];
+  }
 
-    let transcriptStart;
-    let transcriptEnd;
+  getTranscriptDomain(transcript: Transcript, start?: number, stop?: number) {
+    const transcriptRanges: number[] = [];
 
-    for (let i = 1; i < this.gene.transcripts.length; i++) {
-      transcriptStart = this.gene.transcripts[i].exons[0].start;
-      if (transcriptStart < domainBeginning) {
-        domainBeginning = transcriptStart;
+    start = start === undefined ? transcript.exons[0].start : start;
+    stop = stop === undefined ? transcript.exons[transcript.exons.length - 1].stop : stop;
+
+    for (let i = 0; i < transcript.exons.length; i++) {
+      if (transcript.exons[i].stop < start || transcript.exons[i].start > stop) {
+        continue;
       }
-
-      transcriptEnd = this.gene.transcripts[i].exons[this.gene.transcripts[i].exons.length - 1].stop;
-      if (transcriptEnd > domainEnding) {
-        domainEnding = transcriptEnd;
-      }
+      transcriptRanges.push(
+        Math.max(start, transcript.exons[i].start),
+        Math.min(stop, transcript.exons[i].stop)
+      );
     }
+    return transcriptRanges;
+  }
 
-    this.x.domain([domainBeginning, domainEnding]);
+  setDefaultScale() {
+    this.x.domain(this.getTranscriptDomain(this.gene.transcripts[0]));
+    const newRanges = this.calculateTranscriptRanges(this.gene.transcripts[0], this.svgWidth, 200);
+    this.x.range(newRanges);
     this.selectedFrequencies = [0, this.frequencyDomainMax];
   }
 
@@ -370,7 +407,8 @@ export class GeneViewComponent implements OnInit {
         if (newXmax - newXmin < 12) {
           newXmax = newXmin + 12;
         }
-        this.x.domain([newXmin, newXmax]);
+        this.x.domain(this.getTranscriptDomain(this.gene.transcripts[0], newXmin, newXmax));
+        this.x.range(this.calculateTranscriptRanges(this.gene.transcripts[0], this.svgWidth, 200, newXmin, newXmax));
         this.svgElement.select('.brush').call(this.brush.move, null);
       }
 
