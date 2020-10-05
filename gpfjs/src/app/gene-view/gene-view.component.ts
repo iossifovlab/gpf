@@ -276,7 +276,7 @@ export class GeneViewComponent implements OnInit {
 
   drawPlot() {
     const [filteredVariants, transmittedPlotVariants, denovoPlotVariants] = this.filterTablePreviewVariantsArray(
-      this.variantsArray, this.x.domain()[0], this.x.domain()[1]
+      this.variantsArray, this.x.domain()[0], this.x.domain()[this.x.domain().length - 1]
     );
 
     this.geneTableValues.selectedFamilyVariants = filteredVariants.genotypePreviews.length;
@@ -349,7 +349,7 @@ export class GeneViewComponent implements OnInit {
 
   setDefaultScale() {
     this.x.domain(this.getTranscriptDomain(this.gene.transcripts[0]));
-    const newRanges = this.calculateTranscriptRanges(this.gene.transcripts[0], this.svgWidth, 200);
+    const newRanges = this.calculateTranscriptRanges(this.gene.transcripts[0], this.svgWidth, 2000);
     this.x.range(newRanges);
     this.selectedFrequencies = [0, this.frequencyDomainMax];
   }
@@ -385,10 +385,11 @@ export class GeneViewComponent implements OnInit {
     .call(this.brush);
 
     let transcriptYPosition = this.svgHeightFreqRaw + 20;
-    for (let i = 0; i < this.gene.transcripts.length; i++) {
+    this.drawTranscript(0, transcriptYPosition);
+    /** for (let i = 0; i < this.gene.transcripts.length; i++) {
       this.drawTranscript(i, transcriptYPosition);
       transcriptYPosition += 50;
-    }
+    } **/
   }
 
   brushEndEvent = () => {
@@ -408,7 +409,7 @@ export class GeneViewComponent implements OnInit {
           newXmax = newXmin + 12;
         }
         this.x.domain(this.getTranscriptDomain(this.gene.transcripts[0], newXmin, newXmax));
-        this.x.range(this.calculateTranscriptRanges(this.gene.transcripts[0], this.svgWidth, 200, newXmin, newXmax));
+        this.x.range(this.calculateTranscriptRanges(this.gene.transcripts[0], this.svgWidth, 2000, newXmin, newXmax));
         this.svgElement.select('.brush').call(this.brush.move, null);
       }
 
