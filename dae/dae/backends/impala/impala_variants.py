@@ -980,7 +980,6 @@ class ImpalaVariants:
         limit_clause = ""
         if limit:
             limit_clause = "LIMIT {}".format(limit)
-        group_by_clause = ""
         distinct = ""
         if summary_variants_only:
             distinct = "DISTINCT"
