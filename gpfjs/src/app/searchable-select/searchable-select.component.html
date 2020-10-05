@@ -1,5 +1,6 @@
 <div class="input-group mr-3" style="width: 100%; max-width: 100%;">
   <input [hidden]="caption" #searchBox id="search-box" autocomplete="off"
+    (focusout)="enabledFocusOutSelect === true && onSelect(searchBox.value)"
     (keyup)="searchBoxChange(searchBox.value)"
     style="width: 90%"
     placeholder="Select or start typing to search"

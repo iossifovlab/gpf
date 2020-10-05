@@ -10,6 +10,7 @@ import { NgZone } from '@angular/core';
 export class SearchableSelectComponent {
   @Input() data: Array<any>;
   @Input() caption: string;
+  @Input() enabledFocusOutSelect = false;
   @Output() search  = new EventEmitter();
   @Output() selectItem  = new EventEmitter();
   @ViewChild(NgbDropdown) dropdown: NgbDropdown;

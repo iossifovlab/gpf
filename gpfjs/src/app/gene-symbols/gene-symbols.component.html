@@ -10,7 +10,9 @@
             (search)="searchBoxChange($event)"
             (selectItem)="geneSymbols.geneSymbols = $event"
             [data]="matchingGeneSymbols"
-            caption="{{ geneSymbols?.geneSymbols }}">
+            caption="{{ geneSymbols?.geneSymbols }}"
+            [enabledFocusOutSelect]="enableSearch"
+        >
             <div *gpf-searchable-select-template="let geneSymbol">
             <span
                 data-toggle="tooltip"
