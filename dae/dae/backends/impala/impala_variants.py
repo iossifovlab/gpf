@@ -129,8 +129,7 @@ class ImpalaVariants:
                     summary_variants_only=True,
                 )
                 LOGGER.debug(f"FINAL QUERY: {query}")
-
-                seen = set()
+                print(query)
 
                 cursor.execute(query)
                 for row in cursor:
@@ -138,13 +137,6 @@ class ImpalaVariants:
                         (
                             bucket_index,
                             summary_index,
-                            # family_index,
-                            chrom,
-                            position,
-                            end_position,
-                            variant_type,
-                            reference,
-                            family_id,
                             variant_data,
                             extra_attributes,
                         ) = row
@@ -152,36 +144,22 @@ class ImpalaVariants:
                         (
                             bucket_index,
                             summary_index,
-                            # family_index,
-                            chrom,
-                            position,
-                            end_position,
-                            variant_type,
-                            reference,
-                            family_id,
                             variant_data,
                         ) = row
 
                         extra_attributes = None
 
-                    # FIXME:
-                    # fvuid = f"{bucket_index}:{summary_index}:{family_index}"
-                    fvuid = f"{bucket_index}:{summary_index}:{family_id}"
-                    if fvuid in seen:
-                        continue
-                    seen.add(fvuid)
-
                     if type(variant_data) == str:
                         LOGGER.debug(
                             f"variant_data is string!!!! "
-                            f"{family_id}, {chrom}, "
-                            f"{position}, {end_position}, {reference}")
+                            f"{bucket_index}, {summary_index}"
+                        )
                         variant_data = bytes(variant_data, "utf8")
                     if type(extra_attributes) == str:
                         LOGGER.debug(
                             f"extra_attributes is string!!!! "
-                            f"{family_id}, {chrom}, "
-                            f"{position}, {end_position}, {reference}")
+                            f"{bucket_index}, {summary_index}"
+                        )
                         extra_attributes = bytes(extra_attributes, "utf8")
 
                     v = self.serializer.deserialize_summary_variant(
@@ -980,53 +958,48 @@ class ImpalaVariants:
         limit_clause = ""
         if limit:
             limit_clause = "LIMIT {}".format(limit)
-        distinct = ""
-        if summary_variants_only:
-            distinct = "DISTINCT"
-        if self.has_extra_attributes:
-            return """
-                SELECT {distinct}
-                    bucket_index,
-                    summary_index,
-                    chromosome,
-                    `position`,
-                    end_position,
-                    variant_type,
-                    reference,
-                    family_id,
-                    variant_data,
-                    extra_attributes
-                FROM {db}.{variant}
-                {where_clause}
-                {limit_clause}
-                """.format(
-                db=self.db,
-                variant=self.variants_table,
-                distinct=distinct,
-                where_clause=where_clause,
-                limit_clause=limit_clause,
-            )
+        group_by_clause = ""
+
+        columns = [
+            "bucket_index",
+            "summary_index"
+        ]
+
+        if not summary_variants_only:
+            columns += [
+                "chromosome",
+                "position",
+                "end_position",
+                "variant_type",
+                "reference",
+                "family_id",
+                "variant_data",
+            ]
         else:
-            return """
-                SELECT {distinct}
-                    bucket_index,
-                    summary_index,
-                    chromosome,
-                    `position`,
-                    end_position,
-                    variant_type,
-                    reference,
-                    family_id,
-                    variant_data
-                FROM {db}.{variant}
-                {where_clause}
-                {limit_clause}
-                """.format(
+            columns += [
+                "MIN(variant_data)"
+            ]
+            group_by_clause = "GROUP BY bucket_index, summary_index"
+
+        if self.has_extra_attributes:
+            if not summary_variants_only:
+                columns += ["extra_attributes"]
+            else:
+                columns += ["MIN(extra_attributes)"]
+
+        return """
+            SELECT {columns}
+            FROM {db}.{variant}
+            {where_clause}
+            {limit_clause}
+            {group_by_clause}
+            """.format(
+                columns=", ".join(columns),
                 db=self.db,
                 variant=self.variants_table,
-                distinct=distinct,
                 where_clause=where_clause,
                 limit_clause=limit_clause,
+                group_by_clause=group_by_clause,
             )
 
     def build_count_query(
