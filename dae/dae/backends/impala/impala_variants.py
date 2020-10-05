@@ -126,6 +126,7 @@ class ImpalaFamilyVariants:
                     return_reference=return_reference,
                     return_unknown=return_unknown,
                     limit=None,
+                    summary_variants_only=True,
                 )
                 LOGGER.debug(f"FINAL QUERY: {query}")
 
@@ -341,27 +342,7 @@ class ImpalaFamilyVariants:
                     return_unknown=return_unknown,
                     limit=limit)
 
-        raw_variants_iterator = RawVariantsIterator(
-            summary_variants_iterator, self.families)
-
-        result = raw_variants_iterator.query_variants(
-            regions=regions,
-            genes=genes,
-            effect_types=effect_types,
-            family_ids=family_ids,
-            person_ids=person_ids,
-            inheritance=inheritance,
-            roles=roles,
-            sexes=sexes,
-            variant_type=variant_type,
-            real_attr_filter=real_attr_filter,
-            ultra_rare=ultra_rare,
-            frequency_filter=frequency_filter,
-            return_reference=return_reference,
-            return_unknown=return_unknown,
-            limit=count)
-
-        for v in result:
+        for v in summary_variants_iterator:
             if v is None:
                 continue
             yield v
@@ -976,7 +957,8 @@ class ImpalaFamilyVariants:
             frequency_filter=None,
             return_reference=None,
             return_unknown=None,
-            limit=None):
+            limit=None,
+            summary_variants_only=False):
 
         where_clause = self._build_where(
             regions=regions,
@@ -998,9 +980,13 @@ class ImpalaFamilyVariants:
         limit_clause = ""
         if limit:
             limit_clause = "LIMIT {}".format(limit)
+        group_by_clause = ""
+        distinct = ""
+        if summary_variants_only:
+            distinct = "DISTINCT"
         if self.has_extra_attributes:
             return """
-                SELECT
+                SELECT {distinct}
                     bucket_index,
                     summary_index,
                     chromosome,
@@ -1017,12 +1003,13 @@ class ImpalaFamilyVariants:
                 """.format(
                 db=self.db,
                 variant=self.variants_table,
+                distinct=distinct,
                 where_clause=where_clause,
                 limit_clause=limit_clause,
             )
         else:
             return """
-                SELECT
+                SELECT {distinct}
                     bucket_index,
                     summary_index,
                     chromosome,
@@ -1038,6 +1025,7 @@ class ImpalaFamilyVariants:
                 """.format(
                 db=self.db,
                 variant=self.variants_table,
+                distinct=distinct,
                 where_clause=where_clause,
                 limit_clause=limit_clause,
             )

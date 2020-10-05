@@ -73,8 +73,6 @@ def test_impala_summary_variants_simple(variants_impala, fixture_name):
         print(v)
         for a in v.alt_alleles:
             print(">", a)
-        for a in v.matched_alleles:
-            print(">", a)
 
     assert all([isinstance(sv, SummaryVariant) for sv in vs])
     assert len(vs) == 5
