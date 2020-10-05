@@ -62,7 +62,7 @@ def test_impala_variants_simple(variants_impala, fixture_name):
     assert len(vs) == 5
 
 
-@pytest.mark.parametrize("fixture_name", ["backends/a"])
+@pytest.mark.parametrize("fixture_name", ["backends/quads_f2"])
 def test_impala_summary_variants_simple(variants_impala, fixture_name):
     fvars = variants_impala(fixture_name)
 
@@ -75,7 +75,7 @@ def test_impala_summary_variants_simple(variants_impala, fixture_name):
             print(">", a)
 
     assert all([isinstance(sv, SummaryVariant) for sv in vs])
-    assert len(vs) == 5
+    assert len(vs) == 2
 
 
 @pytest.mark.parametrize("inheritance,ultra_rare,real_attr_filter, result", [
