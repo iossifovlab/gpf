@@ -218,6 +218,10 @@ class AnnotationPipelineDecorator(AnnotationDecorator):
         self.annotation_pipeline = annotation_pipeline
         self.annotation_schema = annotation_pipeline.build_annotation_schema()
         self.set_attribute("annotation_schema", self.annotation_schema)
+        self.set_attribute(
+            "extra_attributes",
+            variants_loader.get_attribute("extra_attributes")
+        )
 
     def full_variants_iterator(self):
         for (summary_variant, family_variants) in \

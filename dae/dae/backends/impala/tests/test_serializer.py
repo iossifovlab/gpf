@@ -1,5 +1,7 @@
 import pytest
 from dae.backends.impala.serializers import AlleleParquetSerializer
+from dae.backends.dae.loader import DenovoLoader
+from dae.pedigrees.loader import FamiliesLoader
 
 
 @pytest.mark.xfail()
@@ -27,3 +29,67 @@ def test_all_properties_in_blob(vcf_variants_loader, impala_genotype_storage):
             deserialized_prop = deserialized_variant.get_attribute(prop)
 
         assert fv_prop == deserialized_prop
+
+
+def test_extra_attributes_serialization_deserialization(
+        fixtures_gpf_instance, fixture_dirname):
+    families_data = FamiliesLoader.load_simple_families_file(
+        fixture_dirname("backends/iossifov_extra_attrs.ped"))
+
+    loader = DenovoLoader(
+        families_data, fixture_dirname("backends/iossifov_extra_attrs.tsv"),
+        fixtures_gpf_instance.get_genome()
+    )
+
+    main_schema = loader.get_attribute("annotation_schema")
+    extra_attributes = loader.get_attribute("extra_attributes")
+
+    serializer = AlleleParquetSerializer(main_schema, extra_attributes)
+    it = loader.full_variants_iterator()
+    variant = next(it)[1][0]
+    variant_blob = serializer.serialize_variant(variant)
+    extra_blob = serializer.serialize_extra_attributes(variant)
+    family = variant.family
+
+    fv = serializer.deserialize_family_variant(
+        variant_blob, family, extra_blob)
+
+    assert fv.get_attribute("someAttr")[1] == "asdf"
+
+
+def test_extra_attributes_loading_with_person_id(
+        fixtures_gpf_instance, fixture_dirname):
+    families_loader = FamiliesLoader(
+        fixture_dirname("backends/denovo-db-person-id.ped"))
+    families_data = families_loader.load()
+
+    params = {
+        "denovo_chrom": "Chr",
+        "denovo_pos": "Position",
+        "denovo_ref": "Ref",
+        "denovo_alt": "Alt",
+        "denovo_person_id": "SampleID"
+    }
+
+    loader = DenovoLoader(
+        families_data, fixture_dirname("backends/denovo-db-person-id.tsv"),
+        fixtures_gpf_instance.get_genome(),
+        params=params
+    )
+
+    it = loader.full_variants_iterator()
+    variants = list(it)
+    assert len(variants) == 17
+    family_variants = [v[1][0] for v in variants]
+    assert family_variants[0].get_attribute("StudyName")[1] == "Turner_2017"
+    assert family_variants[1].get_attribute("StudyName")[1] == "Turner_2017"
+    assert family_variants[2].get_attribute("StudyName")[1] == "Turner_2017"
+    assert family_variants[3].get_attribute("StudyName")[1] == "Lelieveld2016"
+    for variant in family_variants:
+        print(variant)
+
+
+def test_extra_attributes_impala(extra_attrs_impala):
+    variants = extra_attrs_impala.query_variants()
+    first_variant = list(variants)[0]
+    assert first_variant.get_attribute("someAttr")[1] == "asdf"

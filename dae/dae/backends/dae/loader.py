@@ -73,13 +73,14 @@ class DenovoLoader(VariantsGenotypesLoader):
         self.genome = genome
         self.set_attribute("source_type", "denovo")
 
-        self.denovo_df = self.flexible_denovo_load(
+        self.denovo_df, extra_attributes = self._flexible_denovo_load_internal(
             denovo_filename,
             genome,
             families=families,
             adjust_chrom_prefix=self._adjust_chrom_prefix,
             **self.params,
         )
+        self.set_attribute("extra_attributes", extra_attributes)
         self._init_chromosomes()
 
         if np.all(pd.isnull(self.denovo_df["genotype"])):
@@ -166,7 +167,7 @@ class DenovoLoader(VariantsGenotypesLoader):
 
     def full_variants_iterator(self):
         full_iterator = super(DenovoLoader, self).full_variants_iterator()
-        for summary_vairants, family_variants in full_iterator:
+        for summary_variants, family_variants in full_iterator:
             for fv in family_variants:
                 for fa in fv.alt_alleles:
                     inheritance = [
@@ -177,7 +178,7 @@ class DenovoLoader(VariantsGenotypesLoader):
                     ]
                     fa._inheritance_in_members = inheritance
 
-            yield summary_vairants, family_variants
+            yield summary_variants, family_variants
 
     @staticmethod
     def split_location(location):
@@ -414,7 +415,7 @@ class DenovoLoader(VariantsGenotypesLoader):
         return argv.denovo_file, params
 
     @classmethod
-    def flexible_denovo_load(
+    def _flexible_denovo_load_internal(
             cls,
             filepath: str,
             genome: Genome,
@@ -517,7 +518,8 @@ class DenovoLoader(VariantsGenotypesLoader):
                 },
                 dtype=str,
                 comment="#",
-                encoding="utf-8")
+                encoding="utf-8",
+                na_filter=False)
 
         if denovo_location:
             chrom_col, pos_col = zip(
@@ -544,6 +546,12 @@ class DenovoLoader(VariantsGenotypesLoader):
             ref_col = raw_df.loc[:, denovo_ref]
             alt_col = raw_df.loc[:, denovo_alt]
 
+        extra_attributes_cols = raw_df.columns.difference([
+            denovo_location, denovo_variant, denovo_chrom, denovo_pos,
+            denovo_ref, denovo_alt, denovo_person_id, denovo_family_id,
+            denovo_best_state,
+        ])
+
         if denovo_person_id:
             temp_df = pd.DataFrame(
                 {
@@ -555,12 +563,12 @@ class DenovoLoader(VariantsGenotypesLoader):
                 }
             )
 
-            variant_to_people = dict()
-            variant_to_families = dict()
+            grouped = temp_df.groupby(["chrom", "pos", "ref", "alt"])
 
-            for variant, variants_indices in temp_df.groupby(
-                ["chrom", "pos", "ref", "alt"]
-            ).groups.items():
+            result = []
+
+            # TODO Implement support for multiallelic variants
+            for variant, variants_indices in grouped.groups.items():
                 # Here we join and then split again by ',' to handle cases
                 # where the person IDs are actually a list of IDs, separated
                 # by a ','
@@ -568,35 +576,33 @@ class DenovoLoader(VariantsGenotypesLoader):
                     temp_df.iloc[variants_indices].loc[:, "person_id"]
                 ).split(",")
 
-                variant_to_people[variant] = person_ids
-                variant_to_families[
-                    variant
-                ] = families.families_query_by_person_ids(person_ids)
+                variant_families = families.families_query_by_person_ids(
+                    person_ids)
 
-            # TODO Implement support for multiallelic variants
-            result = []
-            for variant, families in variant_to_families.items():
+                # TODO Implement support for multiallelic variants
 
-                for family_id, family in families.items():
-                    result.append(
-                        {
-                            "chrom": variant[0],
-                            "position": variant[1],
-                            "reference": variant[2],
-                            "alternative": variant[3],
-                            "family_id": family_id,
-                            "genotype": cls.produce_genotype(
-                                variant[0],
-                                variant[1],
-                                genome,
-                                family,
-                                variant_to_people[variant],
-                            ),
-                            "best_state": None,
-                        }
-                    )
+                for family_id, family in variant_families.items():
+                    family_dict = {
+                        "chrom": variant[0],
+                        "position": variant[1],
+                        "reference": variant[2],
+                        "alternative": variant[3],
+                        "family_id": family_id,
+                        "genotype": cls.produce_genotype(
+                            variant[0],
+                            variant[1],
+                            genome,
+                            family,
+                            person_ids,
+                        ),
+                        "best_state": None,
+                    }
+                    record = raw_df.loc[variants_indices[0]]
+                    extra_attributes = record[extra_attributes_cols].to_dict()
 
-            output = pd.DataFrame(result)
+                    result.append({**family_dict, **extra_attributes})
+
+            denovo_df = pd.DataFrame(result)
 
         else:
             family_col = raw_df.loc[:, denovo_family_id]
@@ -609,7 +615,7 @@ class DenovoLoader(VariantsGenotypesLoader):
             )
             # genotype_col = list(map(best2gt, best_state_col))
 
-            output = pd.DataFrame(
+            denovo_df = pd.DataFrame(
                 {
                     "chrom": chrom_col,
                     "position": pos_col,
@@ -621,14 +627,47 @@ class DenovoLoader(VariantsGenotypesLoader):
                 }
             )
 
-        extra_attributes_cols = raw_df.columns.difference([
-            denovo_location, denovo_variant, denovo_chrom, denovo_pos,
-            denovo_ref, denovo_alt, denovo_person_id, denovo_family_id,
+            extra_attributes_df = raw_df[extra_attributes_cols]
+            denovo_df = denovo_df.join(extra_attributes_df)
+
+        return (denovo_df, extra_attributes_cols.tolist())
+
+    @classmethod
+    def flexible_denovo_load(
+            cls,
+            filepath: str,
+            genome: Genome,
+            families: FamiliesData,
+            denovo_location: Optional[str] = None,
+            denovo_variant: Optional[str] = None,
+            denovo_chrom: Optional[str] = None,
+            denovo_pos: Optional[str] = None,
+            denovo_ref: Optional[str] = None,
+            denovo_alt: Optional[str] = None,
+            denovo_person_id: Optional[str] = None,
+            denovo_family_id: Optional[str] = None,
+            denovo_best_state: Optional[str] = None,
+            denovo_sep: str = "\t",
+            adjust_chrom_prefix=None,
+            **kwargs) -> pd.DataFrame:
+        denovo_df, _ = cls._flexible_denovo_load_internal(
+            filepath,
+            genome,
+            families,
+            denovo_location,
+            denovo_variant,
+            denovo_chrom,
+            denovo_pos,
+            denovo_ref,
+            denovo_alt,
+            denovo_person_id,
+            denovo_family_id,
             denovo_best_state,
-        ])
-        extra_attributes_df = raw_df[extra_attributes_cols]
-        output = output.join(extra_attributes_df)
-        return output
+            denovo_sep,
+            adjust_chrom_prefix,
+            **kwargs
+        )
+        return denovo_df
 
 
 class DaeTransmittedFamiliesGenotypes(FamiliesGenotypes):

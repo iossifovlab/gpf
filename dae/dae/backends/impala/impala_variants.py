@@ -61,6 +61,7 @@ class ImpalaFamilyVariants:
         self.families = FamiliesData.from_pedigree_df(self.ped_df)
 
         self.schema = self._fetch_variant_schema()
+        self.has_extra_attributes = "extra_attributes" in self.schema.columns
         if self.variants_table:
             self.serializer = AlleleParquetSerializer(self.schema)
 
@@ -133,19 +134,35 @@ class ImpalaFamilyVariants:
 
                 cursor.execute(query)
                 for row in cursor:
+                    if self.has_extra_attributes:
+                        (
+                            bucket_index,
+                            summary_index,
+                            # family_index,
+                            chrom,
+                            position,
+                            end_position,
+                            variant_type,
+                            reference,
+                            family_id,
+                            variant_data,
+                            extra_attributes,
+                        ) = row
+                    else:
+                        (
+                            bucket_index,
+                            summary_index,
+                            # family_index,
+                            chrom,
+                            position,
+                            end_position,
+                            variant_type,
+                            reference,
+                            family_id,
+                            variant_data,
+                        ) = row
 
-                    (
-                        bucket_index,
-                        summary_index,
-                        # family_index,
-                        chrom,
-                        position,
-                        end_position,
-                        variant_type,
-                        reference,
-                        family_id,
-                        variant_data,
-                    ) = row
+                        extra_attributes = None
 
                     # FIXME:
                     # fvuid = f"{bucket_index}:{summary_index}:{family_index}"
@@ -160,10 +177,16 @@ class ImpalaFamilyVariants:
                             f"{family_id}, {chrom}, "
                             f"{position}, {end_position}, {reference}")
                         variant_data = bytes(variant_data, "utf8")
+                    if type(extra_attributes) == str:
+                        LOGGER.debug(
+                            f"extra_attributes is string!!!! "
+                            f"{family_id}, {chrom}, "
+                            f"{position}, {end_position}, {reference}")
+                        extra_attributes = bytes(extra_attributes, "utf8")
 
                     family = self.families[family_id]
                     v = self.serializer.deserialize_family_variant(
-                        variant_data, family
+                        variant_data, family, extra_attributes
                     )
 
                     if v is None:
@@ -800,26 +823,49 @@ class ImpalaFamilyVariants:
         limit_clause = ""
         if limit:
             limit_clause = "LIMIT {}".format(limit)
-        return """
-            SELECT
-                bucket_index,
-                summary_index,
-                chromosome,
-                `position`,
-                end_position,
-                variant_type,
-                reference,
-                family_id,
-                variant_data
-            FROM {db}.{variant}
-            {where_clause}
-            {limit_clause}
-            """.format(
-            db=self.db,
-            variant=self.variants_table,
-            where_clause=where_clause,
-            limit_clause=limit_clause,
-        )
+        if self.has_extra_attributes:
+            return """
+                SELECT
+                    bucket_index,
+                    summary_index,
+                    chromosome,
+                    `position`,
+                    end_position,
+                    variant_type,
+                    reference,
+                    family_id,
+                    variant_data,
+                    extra_attributes
+                FROM {db}.{variant}
+                {where_clause}
+                {limit_clause}
+                """.format(
+                db=self.db,
+                variant=self.variants_table,
+                where_clause=where_clause,
+                limit_clause=limit_clause,
+            )
+        else:
+            return """
+                SELECT
+                    bucket_index,
+                    summary_index,
+                    chromosome,
+                    `position`,
+                    end_position,
+                    variant_type,
+                    reference,
+                    family_id,
+                    variant_data
+                FROM {db}.{variant}
+                {where_clause}
+                {limit_clause}
+                """.format(
+                db=self.db,
+                variant=self.variants_table,
+                where_clause=where_clause,
+                limit_clause=limit_clause,
+            )
 
     def build_count_query(
         self,
