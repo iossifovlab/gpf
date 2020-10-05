@@ -968,7 +968,7 @@ class ImpalaVariants:
         if not summary_variants_only:
             columns += [
                 "chromosome",
-                "position",
+                "`position`",
                 "end_position",
                 "variant_type",
                 "reference",
