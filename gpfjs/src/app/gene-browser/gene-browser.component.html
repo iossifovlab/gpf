@@ -6,7 +6,11 @@
         </div>
     </div>
 
-    <div class="effect-card card" style="margin-top: 20px;">
+    <div style="margin-top: 15px">
+      <input type="button" style="width: 75px" class="btn btn-md btn-primary" value="Go" (click)="submitGeneRequest()">
+    </div>
+
+    <div class="effect-card card" style="margin-top: 40px;">
       <div class="card-header card-title">Effect Types</div>
       <div class="card-block" style="padding: 20px;">
         <div style="display: inline; margin-right: 20px;" *ngFor="let effect of ['LGDs', 'Missense', 'Synonymous', 'Other']; let i=index" class="checkbox">
@@ -21,10 +25,6 @@
         </label>
         </div>
       </div>
-    </div>
-
-    <div style="margin-top: 20px">
-      <input type="button" style="width: 75px" class="btn btn-md btn-primary" value="Go" (click)="submitGeneRequest()">
     </div>
 
     <gpf-gene-view
