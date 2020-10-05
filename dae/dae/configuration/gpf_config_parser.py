@@ -1,5 +1,6 @@
 import os
 import glob
+import logging
 
 import yaml
 import toml
@@ -10,6 +11,9 @@ from typing import List, Any, Dict, NamedTuple
 from cerberus import Validator
 
 from dae.utils.dict_utils import recursive_dict_update
+
+
+logger = logging.getLogger(__name__)
 
 
 def validate_existing_path(field: str, value: str, error):
@@ -70,24 +74,31 @@ class GPFConfigParser:
 
     @classmethod
     def parse_config(cls, filename: str) -> dict:
-        ext = os.path.splitext(filename)[1]
-        assert ext in cls.filetype_parsers, f"Unsupported filetype {filename}!"
-        file_contents = cls._get_file_contents(filename)
+        try:
+            ext = os.path.splitext(filename)[1]
+            assert ext in cls.filetype_parsers, \
+                f"Unsupported filetype {filename}!"
+            file_contents = cls._get_file_contents(filename)
 
-        env_vars = {f"${key}": val for key, val in os.environ.items()}
+            env_vars = {f"${key}": val for key, val in os.environ.items()}
 
-        interpol_vars = cls.filetype_parsers[ext](file_contents).get(
-            "vars", {}
-        )
-        interpol_vars = {
-            key: value % env_vars for key, value in interpol_vars.items()
-        }
-        interpol_vars.update(env_vars)
+            interpol_vars = cls.filetype_parsers[ext](file_contents).get(
+                "vars", {}
+            )
+            interpol_vars = {
+                key: value % env_vars for key, value in interpol_vars.items()
+            }
+            interpol_vars.update(env_vars)
 
-        interpolated_text = file_contents % interpol_vars
-        config = cls.filetype_parsers[ext](interpolated_text)
-        config.pop("vars", None)
-        return config  # type: ignore
+            interpolated_text = file_contents % interpol_vars
+            config = cls.filetype_parsers[ext](interpolated_text)
+            config.pop("vars", None)
+            return config  # type: ignore
+
+        except Exception as ex:
+            logger.error(f"problems parsing config file <{filename}>")
+            logger.error(ex)
+        return {}
 
     @classmethod
     def load_config(

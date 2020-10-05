@@ -1,6 +1,7 @@
 import sys
 import os
 import glob
+import logging
 # import time
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
@@ -13,6 +14,9 @@ from dae.annotation.tools.annotator_base import (
 )
 from dae.annotation.tools.annotator_config import AnnotationConfigParser
 from dae.annotation.tools.score_file_io import ScoreFile
+
+
+logger = logging.getLogger(__name__)
 
 
 class VariantScoreAnnotatorBase(VariantAnnotatorBase):
@@ -114,7 +118,12 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
 
         scores = self._fetch_scores(variant)
 
+        logger.debug(
+            f"{self.score_file.score_filename} looking for score of {variant}")
         if not scores:
+            logger.debug(
+                f"{self.score_file.score_filename} score not found"
+            )
             self._scores_not_found(aline)
             return
 
@@ -142,6 +151,8 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
                     aline[column_name] = \
                         (total_sum / total_count) if total_sum \
                         else self.score_file.no_score_value
+                    logger.debug(
+                        f"aline[{column_name}]={aline[column_name]}")
 
 
 class NPScoreAnnotator(VariantScoreAnnotatorBase):
