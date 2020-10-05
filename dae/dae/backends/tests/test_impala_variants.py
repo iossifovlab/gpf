@@ -1,5 +1,5 @@
 import pytest
-from dae.backends.impala.impala_variants import ImpalaFamilyVariants
+from dae.backends.impala.impala_variants import ImpalaVariants
 from dae.backends.impala.hdfs_helpers import HdfsHelpers
 from dae.backends.impala.impala_helpers import ImpalaHelpers
 from dae.variants.variant import SummaryVariant
@@ -16,7 +16,7 @@ def test_hdfs_helpers(hdfs_host):
 
 def test_impala_query_build(impala_host, genomes_db_2013):
     impala_helpers = ImpalaHelpers([impala_host], 21050)
-    ifv = ImpalaFamilyVariants(
+    ifv = ImpalaVariants(
         impala_helpers,
         "impala_storage_test_db",
         "test_study_variants",
@@ -137,7 +137,7 @@ def test_impala_frequency_bin_heuristics(
         mocker, impala_helpers, genomes_db_2013,
         inheritance, ultra_rare, real_attr_filter, result):
 
-    ifv = ImpalaFamilyVariants(
+    ifv = ImpalaVariants(
         impala_helpers,
         "impala_storage_test_db",
         "test_study_variants",

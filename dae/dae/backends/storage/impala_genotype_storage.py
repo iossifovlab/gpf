@@ -9,7 +9,7 @@ from dae.backends.storage.genotype_storage import GenotypeStorage
 
 from dae.backends.impala.hdfs_helpers import HdfsHelpers
 from dae.backends.impala.impala_helpers import ImpalaHelpers
-from dae.backends.impala.impala_variants import ImpalaFamilyVariants
+from dae.backends.impala.impala_variants import ImpalaVariants
 from dae.backends.impala.parquet_io import NoPartitionDescriptor, \
     ParquetManager, \
     ParquetPartitionDescriptor
@@ -105,7 +105,7 @@ class ImpalaGenotypeStorage(GenotypeStorage):
         assert study_config is not None
 
         variants_table, pedigree_table = self.study_tables(study_config)
-        family_variants = ImpalaFamilyVariants(
+        family_variants = ImpalaVariants(
             self.impala_helpers,
             self.storage_config.impala.db,
             variants_table,

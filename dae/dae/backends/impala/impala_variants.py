@@ -27,7 +27,7 @@ from dae.variants.attributes import Role, Status, Sex
 LOGGER = logging.getLogger(__name__)
 
 
-class ImpalaFamilyVariants:
+class ImpalaVariants:
     QUOTE = "'"
     WHERE = """
         WHERE
@@ -47,7 +47,7 @@ class ImpalaFamilyVariants:
             pedigree_table,
             gene_models=None):
 
-        super(ImpalaFamilyVariants, self).__init__()
+        super(ImpalaVariants, self).__init__()
         assert db, db
         assert pedigree_table, pedigree_table
 
