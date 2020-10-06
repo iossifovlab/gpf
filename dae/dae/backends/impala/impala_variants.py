@@ -24,7 +24,7 @@ from ..attributes_query_inheritance import InheritanceTransformer, \
 from dae.variants.attributes import Role, Status, Sex
 
 
-LOGGER = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class ImpalaVariants:
@@ -128,7 +128,7 @@ class ImpalaVariants:
                     limit=None,
                     summary_variants_only=True,
                 )
-                LOGGER.debug(f"FINAL QUERY: {query}")
+                logger.debug(f"FINAL QUERY: {query}")
                 print(query)
 
                 cursor.execute(query)
@@ -150,13 +150,13 @@ class ImpalaVariants:
                         extra_attributes = None
 
                     if type(variant_data) == str:
-                        LOGGER.debug(
+                        logger.debug(
                             f"variant_data is string!!!! "
                             f"{bucket_index}, {summary_index}"
                         )
                         variant_data = bytes(variant_data, "utf8")
                     if type(extra_attributes) == str:
-                        LOGGER.debug(
+                        logger.debug(
                             f"extra_attributes is string!!!! "
                             f"{bucket_index}, {summary_index}"
                         )
@@ -211,7 +211,7 @@ class ImpalaVariants:
                     return_unknown=return_unknown,
                     limit=None,
                 )
-                LOGGER.debug(f"FINAL QUERY: {query}")
+                logger.debug(f"FINAL QUERY: {query}")
 
                 seen = set()
 
@@ -255,13 +255,13 @@ class ImpalaVariants:
                     seen.add(fvuid)
 
                     if type(variant_data) == str:
-                        LOGGER.debug(
+                        logger.debug(
                             f"variant_data is string!!!! "
                             f"{family_id}, {chrom}, "
                             f"{position}, {end_position}, {reference}")
                         variant_data = bytes(variant_data, "utf8")
                     if type(extra_attributes) == str:
-                        LOGGER.debug(
+                        logger.debug(
                             f"extra_attributes is string!!!! "
                             f"{family_id}, {chrom}, "
                             f"{position}, {end_position}, {reference}")
@@ -492,7 +492,7 @@ class ImpalaVariants:
                         properties_end = row_index + 1
 
                 if properties_start == -1:
-                    LOGGER.debug("No partitioning found")
+                    logger.debug("No partitioning found")
                     return
 
                 for index in range(properties_start, properties_end):
