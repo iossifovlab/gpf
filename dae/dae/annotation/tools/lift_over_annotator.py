@@ -4,9 +4,14 @@ import gzip
 
 import sys
 import os
+import logging
+
 from pyliftover import LiftOver
 from dae.annotation.tools.annotator_base import VariantAnnotatorBase
 from dae.annotation.tools.schema import Schema
+
+
+logger = logging.getLogger(__name__)
 
 
 class LiftOverAnnotator(VariantAnnotatorBase):
@@ -61,52 +66,36 @@ class LiftOverAnnotator(VariantAnnotatorBase):
         )
 
         if converted_coordinates is None:
-            print(
-                "position: chrom=",
-                chrom,
-                "; pos=",
-                pos,
-                "(0-pos=",
-                liftover_pos,
-                ")",
-                "can not be converted into target reference genome",
-                file=sys.stderr,
-            )
+            logger.info(
+                f"position: chrom={chrom}; pos={pos}, (0-pos={liftover_pos})"
+                f"can not be converted into target reference genome")
             new_c = None
             new_p = None
             new_x = None
 
         elif len(converted_coordinates) == 0:
-            print(
-                "position: chrom=",
-                chrom,
-                "; pos=",
-                pos,
-                "(0-pos=",
-                liftover_pos,
-                ")",
-                "can not be converted into target reference genome",
-                file=sys.stderr,
-            )
+            logger.info(
+                f"position: chrom={chrom}; pos={pos}, (0-pos={liftover_pos})"
+                f"can not be converted into target reference genome")
             new_c = None
             new_p = None
             new_x = None
         else:
             if len(converted_coordinates) > 1:
-                print(
-                    "position: chrom=",
-                    chrom,
-                    "; pos=",
-                    pos,
-                    "has more than one corresponding position "
-                    "into target reference genome",
-                    converted_coordinates,
-                    file=sys.stderr,
-                )
+                logger.info(
+                    f"position: chrom={chrom}; pos={pos}; "
+                    f"can not be converted into target reference genome"
+                    f"has more than one corresponding position "
+                    f"into target reference genome {converted_coordinates}")
 
             new_c = converted_coordinates[0][0]
             new_p = converted_coordinates[0][1] + 1
             new_x = "{}:{}".format(new_c, new_p)
+
+            logger.debug(
+                f"liftover source position: {chrom}:{pos} -> "
+                f"after litfover: "
+                f"{new_c}:{new_p}; (location {new_x})")
 
         if self.columns.new_x:
             aline[self.columns.new_x] = new_x

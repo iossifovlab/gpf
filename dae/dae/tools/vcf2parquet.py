@@ -1,8 +1,12 @@
 #!/usr/bin/env python
 import sys
+import logging
 
 from dae.backends.vcf.loader import VcfLoader
 from dae.backends.impala.import_commons import Variants2ParquetTool
+
+
+logger = logging.getLogger(__name__)
 
 
 class Vcf2ParquetTool(Variants2ParquetTool):
@@ -13,11 +17,15 @@ class Vcf2ParquetTool(Variants2ParquetTool):
 
 
 def main(argv=sys.argv[1:], gpf_instance=None):
+    logging.basicConfig(level=logging.DEBUG)
+    logger.info("Started")
 
     Vcf2ParquetTool.main(
         argv,
         gpf_instance=gpf_instance
     )
+
+    logger.info("Done")
 
 
 if __name__ == "__main__":

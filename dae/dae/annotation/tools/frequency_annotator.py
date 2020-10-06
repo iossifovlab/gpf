@@ -1,9 +1,13 @@
 #!/usr/bin/env python
 import sys
+import logging
 from os.path import basename
 
 from dae.variants.attributes import VariantType
 from dae.annotation.tools.score_annotator import VariantScoreAnnotatorBase
+
+
+logger = logging.getLogger(__name__)
 
 
 class FrequencyAnnotator(VariantScoreAnnotatorBase):
@@ -16,11 +20,10 @@ class FrequencyAnnotator(VariantScoreAnnotatorBase):
         self.score_filename_base = basename(self.score_file.score_filename)
         self.variant_col_name = self.score_file.config.columns.variant
         assert self.variant_col_name
-        assert (
-            self.variant_col_name in self.score_file.schema.col_names
-        ), "'{}' not in score file schema! Schema columns: {}".format(
-            self.variant_col_name, self.score_file.schema.col_names
-        )
+        assert self.variant_col_name in self.score_file.schema.col_names, \
+            "'{}' not in score file schema! Schema columns: {}".format(
+                self.variant_col_name, self.score_file.schema.col_names)
+        logger.debug(f"variants builder {self.variant_builder}")
 
     def collect_annotator_schema(self, schema):
         super(FrequencyAnnotator, self).collect_annotator_schema(schema)
@@ -35,6 +38,9 @@ class FrequencyAnnotator(VariantScoreAnnotatorBase):
 
         chrom = variant.chromosome
         pos = variant.details.cshl_position
+        logger.debug(
+            f"{self.score_filename_base}: looking for frequency of "
+            f"{variant}; {chrom}:{pos};")
 
         scores = self.score_file.fetch_scores(chrom, pos, pos)
         if not scores:
@@ -64,6 +70,9 @@ class FrequencyAnnotator(VariantScoreAnnotatorBase):
                         aline[output] = self.score_file.no_score_value
                     else:
                         aline[output] = float(val)
+                    logger.debug(
+                        f"frequency: aline[{output}]={aline[output]}")
+
                 except ValueError as ex:
                     print(
                         "problem with: ",

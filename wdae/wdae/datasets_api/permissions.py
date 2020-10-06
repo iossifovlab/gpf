@@ -180,7 +180,7 @@ def user_has_permission(user, dataset):
     if dataset is None:
         return False
 
-    allowed_dataset_leafs = get_allowed_datasets_leafs_for_user(user, dataset)
+    allowed_dataset_leafs = get_allowed_genotype_studies(user, dataset)
     return bool(allowed_dataset_leafs)
 
 
@@ -209,7 +209,7 @@ def _get_allowed_datasets_for_user(user, dataset, collect=None):
     return collect
 
 
-def get_allowed_datasets_leafs_for_user(user, dataset):
+def get_allowed_genotype_studies(user, dataset):
     """Finds the leafs of the dataset sub-tree with root `dataset`,
     such that user has access to and returns a set of dataset IDs
     of those datasets."""
@@ -225,7 +225,7 @@ def get_allowed_datasets_leafs_for_user(user, dataset):
     return set(result)
 
 
-def get_all_allowed_datasets_for_user(user):
+def get_directly_allowed_genotype_data(user):
     gpf_instance = get_gpf_instance()
     dataset_ids = gpf_instance.get_genotype_data_ids()
     user_groups = get_user_groups(user)

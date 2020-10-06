@@ -363,7 +363,8 @@ class GenotypeDataStudy(GenotypeData):
                 limit=limit):
 
             for allele in variant.alleles:
-                allele.update_attributes({"studyName": self.name})
+                if allele.get_attribute("studyName") is None:
+                    allele.update_attributes({"studyName": self.name})
             yield variant
 
     def query_summary_variants(

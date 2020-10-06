@@ -57,6 +57,38 @@ def test_extra_attributes_serialization_deserialization(
     assert fv.get_attribute("someAttr")[1] == "asdf"
 
 
+def test_extra_attributes_loading_with_person_id(
+        fixtures_gpf_instance, fixture_dirname):
+    families_loader = FamiliesLoader(
+        fixture_dirname("backends/denovo-db-person-id.ped"))
+    families_data = families_loader.load()
+
+    params = {
+        "denovo_chrom": "Chr",
+        "denovo_pos": "Position",
+        "denovo_ref": "Ref",
+        "denovo_alt": "Alt",
+        "denovo_person_id": "SampleID"
+    }
+
+    loader = DenovoLoader(
+        families_data, fixture_dirname("backends/denovo-db-person-id.tsv"),
+        fixtures_gpf_instance.get_genome(),
+        params=params
+    )
+
+    it = loader.full_variants_iterator()
+    variants = list(it)
+    assert len(variants) == 17
+    family_variants = [v[1][0] for v in variants]
+    assert family_variants[0].get_attribute("StudyName")[1] == "Turner_2017"
+    assert family_variants[1].get_attribute("StudyName")[1] == "Turner_2017"
+    assert family_variants[2].get_attribute("StudyName")[1] == "Turner_2017"
+    assert family_variants[3].get_attribute("StudyName")[1] == "Lelieveld2016"
+    for variant in family_variants:
+        print(variant)
+
+
 def test_extra_attributes_impala(extra_attrs_impala):
     variants = extra_attrs_impala.query_variants()
     first_variant = list(variants)[0]
