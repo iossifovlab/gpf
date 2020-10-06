@@ -53,9 +53,16 @@ def annotation_config_cli_options(gpf_instance):
         (
             "--Traw",
             {
-                "help": "gene model id [default: %(default)s]",
+                "help": "gene model filename [default: %(default)s]",
                 "default":
-                gpf_instance.genomes_db.get_default_gene_models_id(),
+                gpf_instance.genomes_db.get_default_gene_models_filename(),
+            },
+        ),
+        (
+            "--TrawFormat",
+            {
+                "help": "gene model file format [default: %(default)s]",
+                "default": "default",
             },
         ),
         # fmt: on

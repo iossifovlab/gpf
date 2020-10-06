@@ -2,6 +2,7 @@
 
 import os
 import sys
+import logging
 import time
 import datetime
 import argparse
@@ -24,6 +25,9 @@ from dae.annotation.tools.annotator_config import annotation_config_cli_options
 from dae.annotation.tools.utils import AnnotatorFactory
 
 from dae.gpf_instance.gpf_instance import GPFInstance
+
+
+logger = logging.getLogger(__name__)
 
 
 def run_tabix(filename):
@@ -173,7 +177,7 @@ def main_cli_options(gpf_instance):
                 },
             ),
             (
-                "--notabix",
+                "--tabix",
                 {
                     "help": "skip running bgzip and tabix on the annotated "
                     "files "
@@ -207,11 +211,21 @@ def pipeline_main(argv):
         conflict_handler="resolve",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
+    parser.add_argument('--verbose', '-V', action='count', default=0)
 
     for name, args in main_cli_options(gpf_instance):
         parser.add_argument(name, **args)
 
     options = parser.parse_args()
+
+    logging.basicConfig(level=logging.ERROR)
+    if options.verbose == 1:
+        logging.basicConfig(level=logging.WARNING)
+    elif options.verbose == 2:
+        logging.basicConfig(level=logging.INFO)
+    elif options.verbose >= 3:
+        logging.basicConfig(level=logging.DEBUG)
+
     if options.annotation_config is not None:
         config_filename = options.annotation_config
     else:
@@ -251,9 +265,10 @@ def pipeline_main(argv):
         file=sys.stderr,
     )
 
-    if not options.notabix:
+    if options.tabix:
         run_tabix(options.outfile)
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.ERROR)
     pipeline_main(sys.argv)
