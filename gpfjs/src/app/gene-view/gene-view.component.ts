@@ -123,18 +123,26 @@ export class GeneViewComponent implements OnInit {
   }
 
   calculateTranscriptRanges(transcript: Transcript, svgWidth: number, intronSize: number, start?: number, stop?: number) {
-    const intronCount = transcript.exons.length - 1;
     const exonSpace = transcript.exons.map(e => e.length).reduce((a, b) => a + b, 0);
-    const newExonSpace = (transcript.exons[transcript.exons.length - 1].stop - transcript.exons[0].start) - intronCount * intronSize;
-    const newExonRatio = newExonSpace / exonSpace;
 
     const linearScale = d3.scaleLinear()
     .domain(this.getGeneExtent(this.gene.transcripts))
     .range([0, this.svgWidth]);
 
-    const transcriptRanges: number[] = this.getTranscriptDomain(transcript, start, stop).map(pos => linearScale(pos));
+    const transcriptDomain: number[] = this.getTranscriptDomain(transcript, start, stop);
+    const transcriptRanges: number[] = transcriptDomain.map(pos => linearScale(pos));
+    const intronLengths: number[] = [];
     const newTranscriptRanges: number[] = [];
     const svgTranscriptLengths: number[] = [];
+
+    for (let i = 1; i < transcriptDomain.length - 1; i += 2) {
+      const intronLength = Math.min((transcriptDomain[i + 1] - transcriptDomain[i]), intronSize);
+      intronLengths.push(intronLength);
+    }
+
+    const intronSpace = intronLengths.reduce((a, b) => a + b, 0);
+    const newExonSpace = (transcript.exons[transcript.exons.length - 1].stop - transcript.exons[0].start) - intronSpace;
+    const newExonRatio = newExonSpace / exonSpace;
 
     for (let i = 0; i < transcriptRanges.length - 1; i += 2) {
       svgTranscriptLengths.push((transcriptRanges[i + 1] - transcriptRanges[i]) * newExonRatio);
@@ -145,7 +153,7 @@ export class GeneViewComponent implements OnInit {
       newTranscriptRanges.push(
         rollingPosTracker, rollingPosTracker + svgTranscriptLengths[i]
       );
-      rollingPosTracker += svgTranscriptLengths[i] + linearScale(linearScale.domain()[0] + intronSize);
+      rollingPosTracker += svgTranscriptLengths[i] + linearScale(linearScale.domain()[0] + intronLengths[i]);
     }
 
     return newTranscriptRanges;
