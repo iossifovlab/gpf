@@ -37,7 +37,8 @@ export class GeneViewComponent implements OnInit {
 
   lgds = ['nonsense', 'splice-site', 'frame-shift', 'no-frame-shift-new-stop'];
 
-  collapsedIntronSize = 200;
+  collapseIntrons = false;
+  collapsedIntronSize = 2000;
 
   x;
   y;
@@ -204,6 +205,13 @@ export class GeneViewComponent implements OnInit {
     return frequency >= this.selectedFrequencies[0] && frequency <= this.selectedFrequencies[1];
   }
 
+  toggleIntronCollapsing() {
+    this.collapseIntrons = !this.collapseIntrons;
+    this.setDefaultScale();
+    this.drawGene();
+    this.drawPlot();
+  }
+
   countSummaryVariants(variantsArray: GenotypePreviewVariantsArray) {
     const summaryVariants: Set<string> = new Set();
     for (const genotypePreview of variantsArray.genotypePreviews) {
@@ -350,8 +358,15 @@ export class GeneViewComponent implements OnInit {
   }
 
   setDefaultScale() {
-    this.x.domain(this.getTranscriptDomain(this.gene.transcripts[0]));
-    const newRanges = this.calculateTranscriptRanges(this.gene.transcripts[0], this.svgWidth, this.collapsedIntronSize);
+    let newDomain, newRanges;
+    if (this.collapseIntrons) {
+      newDomain = this.getTranscriptDomain(this.gene.transcripts[0]);
+      newRanges = this.calculateTranscriptRanges(this.gene.transcripts[0], this.svgWidth, this.collapsedIntronSize);
+    } else {
+      newDomain = this.getGeneExtent(this.gene.transcripts);
+      newRanges = [0, this.svgWidth];
+    }
+    this.x.domain(newDomain);
     this.x.range(newRanges);
     this.selectedFrequencies = [0, this.frequencyDomainMax];
   }
