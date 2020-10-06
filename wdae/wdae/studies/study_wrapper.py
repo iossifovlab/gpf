@@ -56,6 +56,17 @@ class StudyWrapperBase:
     def get_variants_wdae_download(self, query, max_variants_count=10000):
         raise NotImplementedError
 
+    def get_wdae_summary_preview_info(self, query, max_variants_count=10000):
+        raise NotImplementedError
+
+    def get_summary_variants_wdae_preview(
+            self, query, max_variants_count=10000):
+        raise NotImplementedError
+
+    def get_summary_variants_wdae_download(
+            self, query, max_variants_count=10000):
+        raise NotImplementedError
+
     def get_genotype_data_group_description(self):
         raise NotImplementedError
 
@@ -133,6 +144,10 @@ class StudyWrapper(StudyWrapperBase):
         download_column_names = \
             genotype_browser_config.download_columns \
             + (genotype_browser_config.selected_pheno_column_values or tuple())
+        summary_preview_column_names = \
+            genotype_browser_config.summary_preview_columns
+        summary_download_column_names = \
+            genotype_browser_config.summary_download_columns
 
         def unpack_columns(selected_columns, use_id=True):
             columns, sources = [], []
@@ -176,9 +191,20 @@ class StudyWrapper(StudyWrapperBase):
             self.download_columns, self.download_sources = unpack_columns(
                 download_column_names, use_id=False
             )
+            self.summary_preview_columns, self.summary_preview_sources = \
+                unpack_columns(
+                    summary_preview_column_names
+                )
+            self.summary_download_columns, self.summary_download_sources = \
+                unpack_columns(
+                    summary_download_column_names
+                )
         else:
             self.preview_columns, self.preview_sources = [], []
             self.download_columns, self.download_sources = [], []
+            self.summary_preview_columns, self.summary_preview_sources = [], []
+            self.summary_download_columns, self.summary_download_sources = \
+                [], []
 
     def _init_pheno(self, pheno_db):
         self.phenotype_data = None
@@ -373,18 +399,41 @@ class StudyWrapper(StudyWrapperBase):
 
         return wdae_download
 
+    def get_summary_wdae_preview_info(self, query, max_variants_count=10000):
+        preview_info = {}
+
+        preview_info["cols"] = self.summary_preview_columns
+        preview_info["legend"] = self.get_legend(**query)
+
+        preview_info["maxVariantsCount"] = max_variants_count
+
+        return preview_info
+
+    def get_summary_variants_wdae_preview(
+            self, query, max_variants_count=10000):
+        query["limit"] = max_variants_count
+        rows = self.query_summary_variants(**query)
+        return rows
+
+    def get_summary_variants_wdae_download(
+            self, query, max_variants_count=10000):
+        query["limit"] = max_variants_count
+        rows = self.query_summary_variants(**query)
+
+        wdae_download = map(
+            join_line, itertools.chain([self.download_columns], rows)
+        )
+
+        return wdae_download
+
     # Not implemented:
     # callSet
     # minParentsCalled
     # ultraRareOnly
     # TMM_ALL
-    def query_variants(self, **kwargs):
+    def _transform_kwargs(self, **kwargs):
         LOGGER.debug(f"kwargs in study group: {kwargs}")
         kwargs = self._add_people_with_people_group(kwargs)
-
-        limit = None
-        if "limit" in kwargs:
-            limit = kwargs["limit"]
 
         if "regions" in kwargs:
             kwargs["regions"] = list(map(Region.from_str, kwargs["regions"]))
@@ -468,13 +517,59 @@ class StudyWrapper(StudyWrapperBase):
                 ",".join(kwargs["inheritanceTypeFilter"])
             )
             kwargs.pop("inheritanceTypeFilter")
+        return kwargs
 
+    def query_variants(self, **kwargs):
+        kwargs = self._transform_kwargs(kwargs)
+        limit = None
+        if "limit" in kwargs:
+            limit = kwargs["limit"]
         LOGGER.info(f"query filters after translation: {kwargs}")
         variants_from_studies = itertools.islice(
             self.genotype_data_study.query_variants(**kwargs), limit
         )
         for variant in self._add_additional_columns(variants_from_studies):
             yield variant
+
+    def query_summary_variants(self, **kwargs):
+        kwargs = self._transform_kwargs(kwargs)
+        limit = None
+        if "limit" in kwargs:
+            limit = kwargs["limit"]
+
+        LOGGER.info(f"query filters after translation: {kwargs}")
+        variants_from_studies = itertools.islice(
+            self.genotype_data_study.query_summary_variants(**kwargs), limit
+        )
+        for v in variants_from_studies:
+            for aa in v.matched_alleles:
+                assert not aa.is_reference_allele
+
+                row_variant = []
+                for source in self.summary_preview_sources:
+                    try:
+                        if source in self.SPECIAL_ATTRS:
+                            row_variant.append(self.SPECIAL_ATTRS[source](aa))
+                        elif source == "pedigree":
+                            pass
+                        else:
+                            attribute = aa.get_attribute(source, "-")
+
+                            if not isinstance(attribute, str) and \
+                                    not isinstance(attribute, list):
+                                if attribute is None or math.isnan(attribute):
+                                    attribute = "-"
+                                elif math.isinf(attribute):
+                                    attribute = "inf"
+                            if not attribute:
+                                attribute = "-"
+                            row_variant.append(attribute)
+
+                    except (AttributeError, KeyError):
+                        traceback.print_exc()
+                        row_variant.append("")
+
+                yield row_variant
 
     STREAMING_CHUNK_SIZE = 20
 
