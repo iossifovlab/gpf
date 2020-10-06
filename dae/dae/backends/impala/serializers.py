@@ -520,6 +520,48 @@ class AlleleParquetSerializer:
                     allele_data[prop] = None
         return allele_data
 
+    def deserialize_summary_variant(self, main_blob, extra_blob=None):
+        summary_alleles = []
+
+        stream = io.BytesIO(main_blob)
+        allele_count = read_int8(stream)
+        for _i in range(0, allele_count):
+            allele_data = self.deserialize_allele(stream)
+            sa = SummaryAllele(
+                allele_data["chromosome"],
+                allele_data["position"],
+                allele_data["reference"],
+                alternative=allele_data["alternative"],
+                end_position=allele_data["end_position"],
+                summary_index=allele_data["summary_index"],
+                allele_index=allele_data["allele_index"],
+                transmission_type=allele_data["transmission_type"],
+                variant_type=allele_data["variant_type"],
+            )
+            summary_alleles.append(sa)
+
+            allele_attributes_data = {
+                k: v
+                for (k, v) in allele_data.items()
+                if k not in self.ALLELE_CREATION_PROPERTIES
+            }
+            sa.update_attributes(allele_attributes_data)
+
+        sv = SummaryVariant(summary_alleles)
+
+        extra_attributes = {}
+        if extra_blob:
+            stream = io.BytesIO(extra_blob)
+            extra_attributes_count = read_int8(stream)
+            for i in range(0, extra_attributes_count):
+                name = read_string(stream)
+                value = read_string(stream)
+                extra_attributes[name] = [value]
+
+        sv.update_attributes(extra_attributes)
+
+        return sv
+
     def deserialize_family_variant(self, main_blob, family, extra_blob=None):
         summary_alleles = []
         family_alleles = []

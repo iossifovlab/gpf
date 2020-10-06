@@ -1,7 +1,8 @@
 import pytest
-from dae.backends.impala.impala_variants import ImpalaFamilyVariants
+from dae.backends.impala.impala_variants import ImpalaVariants
 from dae.backends.impala.hdfs_helpers import HdfsHelpers
 from dae.backends.impala.impala_helpers import ImpalaHelpers
+from dae.variants.variant import SummaryVariant
 from dae.utils.regions import Region
 
 
@@ -15,7 +16,7 @@ def test_hdfs_helpers(hdfs_host):
 
 def test_impala_query_build(impala_host, genomes_db_2013):
     impala_helpers = ImpalaHelpers([impala_host], 21050)
-    ifv = ImpalaFamilyVariants(
+    ifv = ImpalaVariants(
         impala_helpers,
         "impala_storage_test_db",
         "test_study_variants",
@@ -44,7 +45,7 @@ def test_impala_query_build(impala_host, genomes_db_2013):
     print(q)
 
 
-@pytest.mark.parametrize("fixture_name", ["backends/a",])
+@pytest.mark.parametrize("fixture_name", ["backends/a"])
 def test_impala_variants_simple(variants_impala, fixture_name):
     fvars = variants_impala(fixture_name)
 
@@ -59,6 +60,22 @@ def test_impala_variants_simple(variants_impala, fixture_name):
             print(">", a)
 
     assert len(vs) == 5
+
+
+@pytest.mark.parametrize("fixture_name", ["backends/quads_f2"])
+def test_impala_summary_variants_simple(variants_impala, fixture_name):
+    fvars = variants_impala(fixture_name)
+
+    vs = list(fvars.query_summary_variants())
+    print(len(vs))
+
+    for v in vs:
+        print(v)
+        for a in v.alt_alleles:
+            print(">", a)
+
+    assert all([isinstance(sv, SummaryVariant) for sv in vs])
+    assert len(vs) == 2
 
 
 @pytest.mark.parametrize("inheritance,ultra_rare,real_attr_filter, result", [
@@ -120,7 +137,7 @@ def test_impala_frequency_bin_heuristics(
         mocker, impala_helpers, genomes_db_2013,
         inheritance, ultra_rare, real_attr_filter, result):
 
-    ifv = ImpalaFamilyVariants(
+    ifv = ImpalaVariants(
         impala_helpers,
         "impala_storage_test_db",
         "test_study_variants",

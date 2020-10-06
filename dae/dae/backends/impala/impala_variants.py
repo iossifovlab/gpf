@@ -27,7 +27,7 @@ from dae.variants.attributes import Role, Status, Sex
 LOGGER = logging.getLogger(__name__)
 
 
-class ImpalaFamilyVariants:
+class ImpalaVariants:
     QUOTE = "'"
     WHERE = """
         WHERE
@@ -47,7 +47,7 @@ class ImpalaFamilyVariants:
             pedigree_table,
             gene_models=None):
 
-        super(ImpalaFamilyVariants, self).__init__()
+        super(ImpalaVariants, self).__init__()
         assert db, db
         assert pedigree_table, pedigree_table
 
@@ -87,6 +87,89 @@ class ImpalaFamilyVariants:
 
     def connection(self):
         return self._impala_helpers.connection()
+
+    def _summary_variants_iterator(
+            self,
+            regions=None,
+            genes=None,
+            effect_types=None,
+            family_ids=None,
+            person_ids=None,
+            inheritance=None,
+            roles=None,
+            sexes=None,
+            variant_type=None,
+            real_attr_filter=None,
+            ultra_rare=None,
+            frequency_filter=None,
+            return_reference=None,
+            return_unknown=None,
+            limit=None):
+        if not self.variants_table:
+            return None
+        with closing(self.connection()) as conn:
+
+            with conn.cursor() as cursor:
+                query = self.build_query(
+                    regions=regions,
+                    genes=genes,
+                    effect_types=effect_types,
+                    family_ids=family_ids,
+                    person_ids=person_ids,
+                    inheritance=inheritance,
+                    roles=roles,
+                    sexes=sexes,
+                    variant_type=variant_type,
+                    real_attr_filter=real_attr_filter,
+                    ultra_rare=ultra_rare,
+                    frequency_filter=frequency_filter,
+                    return_reference=return_reference,
+                    return_unknown=return_unknown,
+                    limit=None,
+                    summary_variants_only=True,
+                )
+                LOGGER.debug(f"FINAL QUERY: {query}")
+                print(query)
+
+                cursor.execute(query)
+                for row in cursor:
+                    if self.has_extra_attributes:
+                        (
+                            bucket_index,
+                            summary_index,
+                            variant_data,
+                            extra_attributes,
+                        ) = row
+                    else:
+                        (
+                            bucket_index,
+                            summary_index,
+                            variant_data,
+                        ) = row
+
+                        extra_attributes = None
+
+                    if type(variant_data) == str:
+                        LOGGER.debug(
+                            f"variant_data is string!!!! "
+                            f"{bucket_index}, {summary_index}"
+                        )
+                        variant_data = bytes(variant_data, "utf8")
+                    if type(extra_attributes) == str:
+                        LOGGER.debug(
+                            f"extra_attributes is string!!!! "
+                            f"{bucket_index}, {summary_index}"
+                        )
+                        extra_attributes = bytes(extra_attributes, "utf8")
+
+                    v = self.serializer.deserialize_summary_variant(
+                        variant_data, extra_attributes
+                    )
+
+                    if v is None:
+                        continue
+
+                    yield v
 
     def _family_variants_iterator(
             self,
@@ -193,6 +276,57 @@ class ImpalaFamilyVariants:
                         continue
 
                     yield v
+
+    def query_summary_variants(
+            self,
+            regions=None,
+            genes=None,
+            effect_types=None,
+            family_ids=None,
+            person_ids=None,
+            inheritance=None,
+            roles=None,
+            sexes=None,
+            variant_type=None,
+            real_attr_filter=None,
+            ultra_rare=None,
+            frequency_filter=None,
+            return_reference=None,
+            return_unknown=None,
+            limit=None):
+        if not self.variants_table:
+            return None
+
+        if limit is None:
+            count = -1
+        else:
+            count = limit
+            limit = 10 * limit
+
+        summary_variants_iterator = self._summary_variants_iterator(
+                    regions=regions,
+                    genes=genes,
+                    effect_types=effect_types,
+                    family_ids=family_ids,
+                    person_ids=person_ids,
+                    inheritance=inheritance,
+                    roles=roles,
+                    sexes=sexes,
+                    variant_type=variant_type,
+                    real_attr_filter=real_attr_filter,
+                    ultra_rare=ultra_rare,
+                    frequency_filter=frequency_filter,
+                    return_reference=return_reference,
+                    return_unknown=return_unknown,
+                    limit=limit)
+
+        for v in summary_variants_iterator:
+            if v is None:
+                continue
+            yield v
+            count -= 1
+            if count == 0:
+                break
 
     def query_variants(
             self,
@@ -801,7 +935,8 @@ class ImpalaFamilyVariants:
             frequency_filter=None,
             return_reference=None,
             return_unknown=None,
-            limit=None):
+            limit=None,
+            summary_variants_only=False):
 
         where_clause = self._build_where(
             regions=regions,
@@ -823,48 +958,48 @@ class ImpalaFamilyVariants:
         limit_clause = ""
         if limit:
             limit_clause = "LIMIT {}".format(limit)
-        if self.has_extra_attributes:
-            return """
-                SELECT
-                    bucket_index,
-                    summary_index,
-                    chromosome,
-                    `position`,
-                    end_position,
-                    variant_type,
-                    reference,
-                    family_id,
-                    variant_data,
-                    extra_attributes
-                FROM {db}.{variant}
-                {where_clause}
-                {limit_clause}
-                """.format(
-                db=self.db,
-                variant=self.variants_table,
-                where_clause=where_clause,
-                limit_clause=limit_clause,
-            )
+        group_by_clause = ""
+
+        columns = [
+            "bucket_index",
+            "summary_index"
+        ]
+
+        if not summary_variants_only:
+            columns += [
+                "chromosome",
+                "`position`",
+                "end_position",
+                "variant_type",
+                "reference",
+                "family_id",
+                "variant_data",
+            ]
         else:
-            return """
-                SELECT
-                    bucket_index,
-                    summary_index,
-                    chromosome,
-                    `position`,
-                    end_position,
-                    variant_type,
-                    reference,
-                    family_id,
-                    variant_data
-                FROM {db}.{variant}
-                {where_clause}
-                {limit_clause}
-                """.format(
+            columns += [
+                "MIN(variant_data)"
+            ]
+            group_by_clause = "GROUP BY bucket_index, summary_index"
+
+        if self.has_extra_attributes:
+            if not summary_variants_only:
+                columns += ["extra_attributes"]
+            else:
+                columns += ["MIN(extra_attributes)"]
+
+        return """
+            SELECT {columns}
+            FROM {db}.{variant}
+            {where_clause}
+            {limit_clause}
+            {group_by_clause}
+            """.format(
+                columns=", ".join(columns),
                 db=self.db,
                 variant=self.variants_table,
                 where_clause=where_clause,
                 limit_clause=limit_clause,
+                group_by_clause=group_by_clause,
             )
 
     def build_count_query(
