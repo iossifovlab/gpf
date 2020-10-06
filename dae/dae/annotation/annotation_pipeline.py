@@ -218,13 +218,14 @@ def pipeline_main(argv):
 
     options = parser.parse_args()
 
-    logging.basicConfig(level=logging.ERROR)
     if options.verbose == 1:
         logging.basicConfig(level=logging.WARNING)
     elif options.verbose == 2:
         logging.basicConfig(level=logging.INFO)
     elif options.verbose >= 3:
         logging.basicConfig(level=logging.DEBUG)
+    else:
+        logging.basicConfig(level=logging.ERROR)
 
     if options.annotation_config is not None:
         config_filename = options.annotation_config
@@ -270,5 +271,4 @@ def pipeline_main(argv):
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.ERROR)
     pipeline_main(sys.argv)
