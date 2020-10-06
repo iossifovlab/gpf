@@ -546,6 +546,12 @@ class DenovoLoader(VariantsGenotypesLoader):
             ref_col = raw_df.loc[:, denovo_ref]
             alt_col = raw_df.loc[:, denovo_alt]
 
+        extra_attributes_cols = raw_df.columns.difference([
+            denovo_location, denovo_variant, denovo_chrom, denovo_pos,
+            denovo_ref, denovo_alt, denovo_person_id, denovo_family_id,
+            denovo_best_state,
+        ])
+
         if denovo_person_id:
             temp_df = pd.DataFrame(
                 {
@@ -557,12 +563,12 @@ class DenovoLoader(VariantsGenotypesLoader):
                 }
             )
 
-            variant_to_people = dict()
-            variant_to_families = dict()
+            grouped = temp_df.groupby(["chrom", "pos", "ref", "alt"])
 
-            for variant, variants_indices in temp_df.groupby(
-                ["chrom", "pos", "ref", "alt"]
-            ).groups.items():
+            result = []
+
+            # TODO Implement support for multiallelic variants
+            for variant, variants_indices in grouped.groups.items():
                 # Here we join and then split again by ',' to handle cases
                 # where the person IDs are actually a list of IDs, separated
                 # by a ','
@@ -570,33 +576,31 @@ class DenovoLoader(VariantsGenotypesLoader):
                     temp_df.iloc[variants_indices].loc[:, "person_id"]
                 ).split(",")
 
-                variant_to_people[variant] = person_ids
-                variant_to_families[
-                    variant
-                ] = families.families_query_by_person_ids(person_ids)
+                variant_families = families.families_query_by_person_ids(
+                    person_ids)
 
-            # TODO Implement support for multiallelic variants
-            result = []
-            for variant, families in variant_to_families.items():
+                # TODO Implement support for multiallelic variants
 
-                for family_id, family in families.items():
-                    result.append(
-                        {
-                            "chrom": variant[0],
-                            "position": variant[1],
-                            "reference": variant[2],
-                            "alternative": variant[3],
-                            "family_id": family_id,
-                            "genotype": cls.produce_genotype(
-                                variant[0],
-                                variant[1],
-                                genome,
-                                family,
-                                variant_to_people[variant],
-                            ),
-                            "best_state": None,
-                        }
-                    )
+                for family_id, family in variant_families.items():
+                    family_dict = {
+                        "chrom": variant[0],
+                        "position": variant[1],
+                        "reference": variant[2],
+                        "alternative": variant[3],
+                        "family_id": family_id,
+                        "genotype": cls.produce_genotype(
+                            variant[0],
+                            variant[1],
+                            genome,
+                            family,
+                            person_ids,
+                        ),
+                        "best_state": None,
+                    }
+                    record = raw_df.loc[variants_indices[0]]
+                    extra_attributes = record[extra_attributes_cols].to_dict()
+
+                    result.append({**family_dict, **extra_attributes})
 
             denovo_df = pd.DataFrame(result)
 
@@ -623,13 +627,9 @@ class DenovoLoader(VariantsGenotypesLoader):
                 }
             )
 
-        extra_attributes_cols = raw_df.columns.difference([
-            denovo_location, denovo_variant, denovo_chrom, denovo_pos,
-            denovo_ref, denovo_alt, denovo_person_id, denovo_family_id,
-            denovo_best_state,
-        ])
-        extra_attributes_df = raw_df[extra_attributes_cols]
-        denovo_df = denovo_df.join(extra_attributes_df)
+            extra_attributes_df = raw_df[extra_attributes_cols]
+            denovo_df = denovo_df.join(extra_attributes_df)
+
         return (denovo_df, extra_attributes_cols.tolist())
 
     @classmethod

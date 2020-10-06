@@ -19,9 +19,9 @@ from datasets_api.permissions import user_has_permission, \
     add_group_perm_to_user, \
     add_group_perm_to_dataset, \
     _get_allowed_datasets_for_user, \
-    get_allowed_datasets_leafs_for_user, \
+    get_allowed_genotype_studies, \
     get_user_groups, get_dataset_groups, \
-    get_all_allowed_datasets_for_user, \
+    get_directly_allowed_genotype_data, \
     _user_has_permission_strict
 
 
@@ -117,7 +117,7 @@ def test_dataset1_rights_allowed_datasets(db, user, dataset_wrapper):
         user, dataset_wrapper.id)
     assert result == set(["Dataset1"])
 
-    result = get_allowed_datasets_leafs_for_user(
+    result = get_allowed_genotype_studies(
         user, dataset_wrapper.id)
     assert result == set(["Study1", "Study3"])
 
@@ -128,7 +128,7 @@ def test_dataset2_rights_allowed_datasets(db, user, dataset_wrapper):
         user, dataset_wrapper.id)
     assert result == set(["Dataset2"])
 
-    result = get_allowed_datasets_leafs_for_user(
+    result = get_allowed_genotype_studies(
         user, dataset_wrapper.id)
     assert result == set(["Study2"])
 
@@ -143,7 +143,7 @@ def test_study1_and_dataset2_rights_allowed_datasets(
         user, dataset_wrapper.id)
     assert result == set(["Study1", "Dataset2"])
 
-    result = get_allowed_datasets_leafs_for_user(
+    result = get_allowed_genotype_studies(
         user, dataset_wrapper.id)
     assert result == set(["Study1", "Study2"])
 
@@ -204,7 +204,7 @@ def test_study1_and_dataset2_group_rights_allowed_datasets(
         user, dataset_wrapper.id)
     assert result == set(["Study1", "Dataset2"])
 
-    result = get_allowed_datasets_leafs_for_user(
+    result = get_allowed_genotype_studies(
         user, dataset_wrapper.id)
     assert result == set(["Study1", "Study2"])
 
@@ -218,7 +218,7 @@ def test_dataset_any_dataset_group_rights(db, user, dataset_wrapper):
         user, dataset_wrapper.id)
     assert result == set(["Dataset"])
 
-    result = get_allowed_datasets_leafs_for_user(
+    result = get_allowed_genotype_studies(
         user, dataset_wrapper.id)
     assert result == set(["Study1", "Study2", "Study3"])
 
@@ -232,7 +232,7 @@ def test_dataset_admin_group_rights(db, user, dataset_wrapper):
         user, dataset_wrapper.id)
     assert result == set(["Dataset"])
 
-    result = get_allowed_datasets_leafs_for_user(
+    result = get_allowed_genotype_studies(
         user, dataset_wrapper.id)
     assert result == set(["Study1", "Study2", "Study3"])
 
@@ -288,17 +288,17 @@ def test_get_allowed_datasets_for_na_user_strict(db, na_user, dataset_wrapper):
     add_group_perm_to_user("A", na_user)
     add_group_perm_to_dataset("A", "Dataset")
 
-    allowed_dtasets = get_all_allowed_datasets_for_user(na_user)
+    allowed_dtasets = get_directly_allowed_genotype_data(na_user)
     print(allowed_dtasets)
     assert "Dataset" in allowed_dtasets
     assert not _user_has_permission_strict(na_user, "Dataset")
 
 
-def test_get_all_allowed_datasets_for_user(db, user, dataset_wrapper):
+def test_get_directly_allowed_genotype_data(db, user, dataset_wrapper):
     add_group_perm_to_user("A", user)
     add_group_perm_to_dataset("A", "Dataset")
 
-    allowed_dtasets = get_all_allowed_datasets_for_user(user)
+    allowed_dtasets = get_directly_allowed_genotype_data(user)
     print(allowed_dtasets)
     assert "Dataset" in allowed_dtasets
     assert _user_has_permission_strict(user, "Dataset")

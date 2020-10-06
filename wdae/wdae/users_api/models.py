@@ -22,7 +22,7 @@ from django.contrib.auth.models import Group
 from django.db.models.signals import m2m_changed, post_delete, pre_delete
 
 from utils.logger import LOGGER
-from datasets_api.permissions import get_all_allowed_datasets_for_user
+from datasets_api.permissions import get_directly_allowed_genotype_data
 
 
 class WdaeUserManager(BaseUserManager):
@@ -109,7 +109,7 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
 
     @property
     def allowed_datasets(self):
-        return get_all_allowed_datasets_for_user(self)
+        return get_directly_allowed_genotype_data(self)
 
     def email_user(self, subject, message, from_email=None):
         if from_email is None:

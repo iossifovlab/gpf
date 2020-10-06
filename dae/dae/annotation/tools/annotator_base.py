@@ -1,5 +1,6 @@
 import sys
 import traceback
+import logging
 
 import pandas as pd
 
@@ -10,6 +11,10 @@ from dae.annotation.tools.utils import LineMapper
 
 from dae.utils.dae_utils import dae2vcf_variant
 from dae.variants.variant import SummaryAllele
+from dae.variants.attributes import VariantType
+
+
+logger = logging.getLogger(__name__)
 
 
 class AnnotatorBase(object):
@@ -172,8 +177,12 @@ class DAEBuilder(VariantBuilder):
         self.chrom = self.config.options.c or "chr"
         self.position = self.config.options.p or "position"
         self.location = self.config.options.x or "location"
+        logger.debug(
+            f"DAEBuilder: {self.variant}; "
+            f"{self.chrom}, {self.position} ({self.location})")
 
     def build_variant(self, aline):
+        # logger.debug(f"DAEBuilder: build_variant({aline}")
         variant = aline[self.variant]
         if self.location in aline:
             location = aline[self.location]
@@ -198,6 +207,10 @@ class VCFBuilder(VariantBuilder):
         self.position = self.config.options.p
         self.ref = self.config.options.r
         self.alt = self.config.options.a
+
+        logger.debug(
+            f"VCFBuilder: {self.ref} -> {self.alt}; "
+            f"{self.chrom}, {self.position}")
 
     def build_variant(self, aline):
         assert self.chrom, self.chrom
@@ -254,6 +267,7 @@ class VariantAnnotatorBase(AnnotatorBase):
 
     def line_annotation(self, aline):
         variant = self.variant_builder.build(aline)
+        logger.debug(f"line_annotation calls do_annotate({variant}")
         self.do_annotate(aline, variant)
 
     def do_annotate(self, aline, variant):
@@ -262,10 +276,16 @@ class VariantAnnotatorBase(AnnotatorBase):
     def annotate_summary_variant(self, summary_variant):
         for alt_allele in summary_variant.alt_alleles:
             attributes = deepcopy(alt_allele.attributes)
+            logger.debug(f"variant attributes: {attributes}")
             self.variant_builder.fill_variant_coordinates(
                 attributes, alt_allele)
-            # self.line_annotation(attributes)
-            self.do_annotate(attributes, alt_allele)
+            if VariantType.is_cnv(alt_allele.variant_type):
+                variant = alt_allele
+            else:
+                variant = self.variant_builder.build_variant(attributes)
+            # logger.debug(
+            #     f"annotate_summary_variant calls do_annotate({variant})")
+            self.do_annotate(attributes, variant)
 
             alt_allele.update_attributes(attributes)
 
@@ -304,6 +324,10 @@ class CompositeVariantAnnotator(VariantAnnotatorBase):
     def line_annotation(self, aline):
         variant = self.variant_builder.build(aline)
         self.do_annotate(aline, variant)
+
+    def annotate_summary_variant(self, summary_variant):
+        for annotator in self.annotators:
+            annotator.annotate_summary_variant(summary_variant)
 
     def collect_annotator_schema(self, schema):
         super(CompositeVariantAnnotator, self).collect_annotator_schema(schema)
