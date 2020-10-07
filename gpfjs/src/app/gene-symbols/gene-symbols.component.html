@@ -1,8 +1,6 @@
 <div class="panel" id="gene-symbols-panel">
-    <div *ngIf="!enableSearch">
-        <textarea type="text" [(ngModel)]="geneSymbols.geneSymbols" class="form-control">
-        </textarea>
-    </div>
+    <textarea type="text" [(ngModel)]="geneSymbols.geneSymbols" class="form-control">
+    </textarea>
 
     <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
 </div>
