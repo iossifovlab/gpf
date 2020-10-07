@@ -27,7 +27,7 @@ export class SearchableSelectComponent {
 
   onFocus(event) {
     this.searchBoxChange('');
-    event.stopPropagation();
+    // event.stopPropagation();
 
     this.ngZone.run(() => {
       if (!this.dropdown.isOpen()) {
@@ -42,8 +42,5 @@ export class SearchableSelectComponent {
 
   onSelect(value) {
     this.selectItem.emit(value);
-  }
-
-  log(value) {
   }
 }
