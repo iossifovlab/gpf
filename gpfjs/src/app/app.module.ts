@@ -154,6 +154,7 @@ import { DatasetPermissionGuard } from './dataset-permission.guard';
 import { CommonReportsRowComponent } from './variant-reports/common-reports-row/common-reports-row.component';
 import { CommonReportsPedigreeCellComponent } from './variant-reports/common-reports-pedigree-cell/common-reports-pedigree-cell.component';
 import { GeneViewComponent } from './gene-view/gene-view.component';
+import { GeneSymbolsWithSearchComponent } from './gene-symbols-with-search/gene-symbols-with-search.component';
 
 const appRoutes: Routes = [
   {
@@ -347,6 +348,7 @@ const appRoutes: Routes = [
     GeneViewComponent,
     CommonReportsRowComponent,
     CommonReportsPedigreeCellComponent,
+    GeneSymbolsWithSearchComponent,
   ],
   imports: [
     BrowserModule,

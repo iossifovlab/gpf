@@ -1,0 +1,19 @@
+<div class="input-group panel">
+    <gpf-searchable-select
+        style="width: 50%;"
+        (search)="searchBoxChange($event)"
+        (selectItem)="geneSymbols.geneSymbols = $event"
+        [data]="matchingGeneSymbols"
+        caption="{{ geneSymbols?.geneSymbols }}"
+        [enabledFocusOutSelect]="true"
+    >
+        <div *gpf-searchable-select-template="let geneSymbol">
+        <span
+            data-toggle="tooltip"
+            data-placement="bottom"
+            title="{{ geneSymbol | boldMatching: searchString}}"
+            innerHtml="{{ geneSymbol | boldMatching: searchString}}">
+        </span>
+        </div>
+    </gpf-searchable-select>
+</div>

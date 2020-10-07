@@ -1,15 +1,16 @@
-import { GeneSymbols } from './gene-symbols';
-import { Component, OnInit, forwardRef, Input } from '@angular/core';
+import { Component, OnInit, forwardRef } from '@angular/core';
+import { GeneSymbols } from 'app/gene-symbols/gene-symbols';
 import { Subject } from 'rxjs';
 import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query-state-provider';
+import { GeneService } from '../gene-view/gene.service';
 import { StateRestoreService } from '../store/state-restore.service';
 
 @Component({
-  selector: 'gpf-gene-symbols',
-  templateUrl: './gene-symbols.component.html',
-  providers: [{provide: QueryStateProvider, useExisting: forwardRef(() => GeneSymbolsComponent) }]
+  selector: 'gpf-gene-symbol-with-search',
+  templateUrl: './gene-symbols-with-search.component.html',
+  providers: [{provide: QueryStateProvider, useExisting: forwardRef(() => GeneSymbolsWithSearchComponent) }]
 })
-export class GeneSymbolsComponent extends QueryStateWithErrorsProvider implements OnInit {
+export class GeneSymbolsWithSearchComponent extends QueryStateWithErrorsProvider implements OnInit {
   geneSymbols = new GeneSymbols();
   matchingGeneSymbols: string[] = [];
   searchString = '';
@@ -17,6 +18,7 @@ export class GeneSymbolsComponent extends QueryStateWithErrorsProvider implement
 
   constructor(
     private stateRestoreService: StateRestoreService,
+    private geneService: GeneService
   ) {
     super();
   }
@@ -27,6 +29,19 @@ export class GeneSymbolsComponent extends QueryStateWithErrorsProvider implement
       .subscribe(state => {
         if (state['geneSymbols']) {
           this.geneSymbols.geneSymbols = state['geneSymbols'].join('\n');
+        }
+      });
+      this.searchKeystrokes$
+      .debounceTime(200)
+      .distinctUntilChanged()
+      .subscribe(searchTerm => {
+        this.searchString = searchTerm;
+        if (this.searchString !== '') {
+          this.geneService.searchGenes(this.searchString).subscribe(
+            response => this.matchingGeneSymbols = response['gene_symbols']
+          );
+        } else {
+          this.matchingGeneSymbols = [];
         }
       });
   }
