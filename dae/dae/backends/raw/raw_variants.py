@@ -239,7 +239,7 @@ class RawFamilyVariants:
                         continue
                     alleles_matched.append(allele.allele_index)
             if alleles_matched:
-                sv.set_matched_alleles(alleles_matched)
+                # sv.set_matched_alleles(alleles_matched)
                 yield sv
 
     def query_variants(self, **kwargs):
