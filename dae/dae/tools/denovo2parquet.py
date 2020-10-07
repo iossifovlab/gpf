@@ -1,8 +1,12 @@
 #!/usr/bin/env python
 import sys
+import logging
 
 from dae.backends.dae.loader import DenovoLoader
 from dae.backends.impala.import_commons import Variants2ParquetTool
+
+
+logger = logging.getLogger(__name__)
 
 
 class Denovo2ParquetTool(Variants2ParquetTool):
@@ -14,6 +18,7 @@ class Denovo2ParquetTool(Variants2ParquetTool):
 
 
 def main(argv=sys.argv[1:], gpf_instance=None):
+    logging.basicConfig(level=logging.DEBUG)
 
     Denovo2ParquetTool.main(
         argv,
@@ -22,4 +27,5 @@ def main(argv=sys.argv[1:], gpf_instance=None):
 
 
 if __name__ == "__main__":
+
     main()
