@@ -704,7 +704,7 @@ class ImpalaVariants:
                             frequency_bin.update([
                                 "frequency_bin = 1",
                                 "frequency_bin = 2"])
-                        elif begin >= self.rare_boundary:
+                        elif begin and begin >= self.rare_boundary:
                             frequency_bin.add("frequency_bin = 3")
                         elif end is not None and end >= self.rare_boundary:
                             frequency_bin.update([
