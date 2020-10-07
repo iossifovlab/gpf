@@ -234,17 +234,6 @@ export class GeneViewComponent implements OnInit {
     return [result, filteredVariantsPlot, filteredVariantsPlotDenovo];
   }
 
-  getTrianglePoints(plotX: number, plotY: number, size: number) {
-    const height = Math.sqrt(Math.pow(size, 2) - Math.pow((size / 2.0), 2));
-    const x1 = plotX - (size / 2.0);
-    const y1 = plotY + (height / 2.0);
-    const x2 = plotX + (size / 2.0);
-    const y2 = plotY + (height / 2.0);
-    const x3 = plotX;
-    const y3 = plotY - (height / 2.0);
-    return `${x1},${y1} ${x2},${y2} ${x3},${y3}`;
-  }
-
   drawPlot() {
     const [filteredVariants, transmittedPlotVariants, denovoPlotVariants] = this.filterTablePreviewVariantsArray(
       this.variantsArray, this.x.domain()[0], this.x.domain()[1]
@@ -264,34 +253,60 @@ export class GeneViewComponent implements OnInit {
       this.svgElement.append('g').call(this.y_axis_subdomain);
       this.svgElement.append('g').call(this.y_axis_zero);
 
-      this.svgElement.append('g')
-      .selectAll('dot')
-      .data(transmittedPlotVariants)
-      .enter()
-      .append('circle')
-      .attr('cx', d => this.x(d[0]) )
-      .attr('cy', d => {
-          return d[1] === 0 ? this.y_zero('0') : d[1] < this.frequencyDomainMin ? this.y_subdomain(d[1]) : this.y(d[1]);
-      })
-      .attr('r', 5)
-      .style('fill', d => d[2])
-      .style('opacity', 0.5);
+      for (const variant of transmittedPlotVariants) {
+        this.drawTransmittedPlotVariant(variant);
+      }
 
-      this.svgElement.append('g')
-      .selectAll('dot')
-      .data(denovoPlotVariants)
-      .enter()
-      .append('polygon')
-      .attr('points', d => this.getTrianglePoints(
-        this.x(d[0]),
-        d[1] === 0 ? this.y_zero('0') : d[1] < this.frequencyDomainMin ? this.y_subdomain(d[1]) : this.y(d[1]),
-        15
-      ))
-      .style('stroke-width', 2)
-      .style('stroke', '#000000')
-      .style('fill', d => d[2])
-      .style('opacity', 0.5);
+      for (const variant of denovoPlotVariants) {
+        this.drawDenovoPlotVariant(variant);
+      }
     }
+  }
+
+  drawTransmittedPlotVariant(variantInfo) {
+    this.svgElement.append('g')
+    .append('circle')
+    .attr('cx', this.x(variantInfo[0]))
+    .attr(
+      'cy', variantInfo[1] === 0 ?
+      this.y_zero('0') :
+      variantInfo[1] < this.frequencyDomainMin ?
+      this.y_subdomain(variantInfo[1]) :
+      this.y(variantInfo[1])
+    )
+    .attr('r', 5)
+    .style('fill', variantInfo[2])
+    .style('opacity', 0.5);
+  }
+
+  drawDenovoPlotVariant(variantInfo) {
+    this.svgElement.append('g')
+    .select('dot')
+    .append('polygon')
+    .attr('points', variantInfo => this.getTrianglePoints(
+      this.x(variantInfo[0]),
+      variantInfo[1] === 0 ?
+      this.y_zero('0') :
+      variantInfo[1] < this.frequencyDomainMin ?
+      this.y_subdomain(variantInfo[1]) :
+      this.y(variantInfo[1]),
+      15
+    ))
+    .style('stroke-width', 2)
+    .style('stroke', '#000000')
+    .style('fill', variantInfo[2])
+    .style('opacity', 0.5);
+  }
+
+  getTrianglePoints(plotX: number, plotY: number, size: number) {
+    const height = Math.sqrt(Math.pow(size, 2) - Math.pow((size / 2.0), 2));
+    const x1 = plotX - (size / 2.0);
+    const y1 = plotY + (height / 2.0);
+    const x2 = plotX + (size / 2.0);
+    const y2 = plotY + (height / 2.0);
+    const x3 = plotX;
+    const y3 = plotY - (height / 2.0);
+    return `${x1},${y1} ${x2},${y2} ${x3},${y3}`;
   }
 
   setDefaultScale() {
