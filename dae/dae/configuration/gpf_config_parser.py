@@ -98,7 +98,7 @@ class GPFConfigParser:
         except Exception as ex:
             logger.error(f"problems parsing config file <{filename}>")
             logger.error(ex)
-        return {}
+            raise ex
 
     @classmethod
     def load_config(
