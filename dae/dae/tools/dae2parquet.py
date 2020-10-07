@@ -1,8 +1,12 @@
 #!/usr/bin/env python
+import logging
 
 import sys
 from dae.backends.dae.loader import DaeTransmittedLoader
 from dae.backends.impala.import_commons import Variants2ParquetTool
+
+
+logger = logging.getLogger(__name__)
 
 
 class Dae2ParquetTool(Variants2ParquetTool):

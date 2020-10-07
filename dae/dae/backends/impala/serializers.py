@@ -4,6 +4,7 @@ import struct
 import functools
 import operator
 import itertools
+import logging
 
 from collections import namedtuple, defaultdict
 
@@ -14,6 +15,9 @@ from dae.variants.variant import SummaryAllele, SummaryVariant
 from dae.variants.family_variant import FamilyVariant, FamilyAllele
 from dae.variants.attributes import GeneticModel, Inheritance, VariantType, \
     TransmissionType, Sex, Role
+
+
+logger = logging.getLogger(__name__)
 
 
 # TODO: Optimize list methods to avoid redundancy
@@ -359,6 +363,8 @@ class AlleleParquetSerializer:
     ]
 
     def __init__(self, variants_schema, extra_attributes=None):
+        logger.debug(f"serializer varints schema {variants_schema}")
+
         self.summary_prop_serializers = {
             "bucket_index": IntSerializer,
             "chromosome": StringSerializer,

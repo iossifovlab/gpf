@@ -17,15 +17,11 @@ class Vcf2ParquetTool(Variants2ParquetTool):
 
 
 def main(argv=sys.argv[1:], gpf_instance=None):
-    logging.basicConfig(level=logging.DEBUG)
-    logger.info("Started")
 
     Vcf2ParquetTool.main(
         argv,
         gpf_instance=gpf_instance
     )
-
-    logger.info("Done")
 
 
 if __name__ == "__main__":

@@ -18,7 +18,6 @@ class Denovo2ParquetTool(Variants2ParquetTool):
 
 
 def main(argv=sys.argv[1:], gpf_instance=None):
-    logging.basicConfig(level=logging.DEBUG)
 
     Denovo2ParquetTool.main(
         argv,
