@@ -61,9 +61,11 @@ class ImpalaVariants:
         self.families = FamiliesData.from_pedigree_df(self.ped_df)
 
         self.schema = self._fetch_variant_schema()
-        self.has_extra_attributes = "extra_attributes" in self.schema.columns
+        self.has_extra_attributes = None
         if self.variants_table:
             self.serializer = AlleleParquetSerializer(self.schema)
+            self.has_extra_attributes = \
+                "extra_attributes" in self.schema.columns
 
         assert gene_models is not None
         self.gene_models = gene_models
