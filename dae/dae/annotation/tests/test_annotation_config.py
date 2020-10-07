@@ -15,20 +15,21 @@ def test_annotation_config_cli_options(
         gpf_instance(fixture_dirname("."))
     )
 
-    assert len(cli_options) == 10
+    assert len(cli_options) == 11
 
     assert cli_options[0][0] == "--annotation"
     assert cli_options[0][1]["default"] == fixture_dirname(
         "annotation_pipeline/import_annotation.conf"
     )
 
-    assert cli_options[-2][0] == "--Graw"
-    assert cli_options[-2][1]["default"].endswith(
+    assert cli_options[-3][0] == "--Graw"
+    assert cli_options[-3][1]["default"].endswith(
         "genomes/GATK_ResourceBundle_5777_b37_phiX174/chrAll.fa"
     )
 
-    assert cli_options[-1][0] == "--Traw"
-    assert cli_options[-1][1]["default"] == "RefSeq2013"
+    assert cli_options[-2][0] == "--Traw"
+    assert cli_options[-2][1]["default"].endswith(
+        "genomes/GATK_ResourceBundle_5777_b37_phiX174/refGene-20190211.gz")
 
 
 def test_annotation_config_options_parsing(gpf_instance_2013):
