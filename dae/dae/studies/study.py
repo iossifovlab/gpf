@@ -164,6 +164,72 @@ class GenotypeDataGroup(GenotypeData):
     def families(self):
         return self._families
 
+    def query_summary_variants(
+        self,
+        regions=None,
+        genes=None,
+        effect_types=None,
+        family_ids=None,
+        person_ids=None,
+        person_set_collection=None,
+        inheritance=None,
+        roles=None,
+        sexes=None,
+        variant_type=None,
+        real_attr_filter=None,
+        ultra_rare=None,
+        return_reference=None,
+        return_unknown=None,
+        limit=None,
+        study_filters=None,
+        **kwargs,
+    ):
+        variants_futures = list()
+        LOGGER.info(f"summary query - study_filters: {study_filters}")
+
+        def get_summary_variants(genotype_data_study):
+            return genotype_data_study.query_summary_variants(
+                regions=regions,
+                genes=genes,
+                effect_types=effect_types,
+                family_ids=family_ids,
+                person_ids=person_ids,
+                person_set_collection=person_set_collection,
+                inheritance=inheritance,
+                roles=roles,
+                sexes=sexes,
+                variant_type=variant_type,
+                real_attr_filter=real_attr_filter,
+                ultra_rare=ultra_rare,
+                return_reference=return_reference,
+                return_unknown=return_unknown,
+                limit=limit,
+                study_filters=study_filters,
+                **kwargs,
+            )
+
+        for genotype_data_study in self.studies:
+            future = self.executor.submit(
+                get_summary_variants, genotype_data_study)
+            future.study_id = genotype_data_study.id
+            variants_futures.append(future)
+
+        seen = set()
+        for future in as_completed(variants_futures):
+            started = time.time()
+            for v in future.result():
+                if v.svuid in seen:
+                    continue
+                seen.add(v.svuid)
+                yield v
+                if limit and len(seen) >= limit:
+                    return
+            elapsed = time.time() - started
+            LOGGER.info(
+                f"Processing study {future.study_id} "
+                f"elapsed: {elapsed:.3f}"
+            )
+
     def query_variants(
             self,
             regions=None,
