@@ -22,6 +22,9 @@ EXAMPLE_REQUEST_F1 = {
 PREVIEW_URL = "/api/v3/genotype_browser/preview"
 PREVIEW_VARIANTS_URL = "/api/v3/genotype_browser/preview/variants"
 DOWNLOAD_URL = "/api/v3/genotype_browser/download"
+SUMMARY_PREVIEW_URL = "/api/v3/genotype_browser/summary/preview"
+SUMMARY_PREVIEW_VARIANTS_URL = "/api/v3/genotype_browser/summary/variants"
+SUMMARY_DOWNLOAD_URL = "/api/v3/genotype_browser/summary/download"
 
 
 def test_simple_query_variants_preview(db, admin_client):
@@ -35,6 +38,87 @@ def test_simple_query_variants_preview(db, admin_client):
     res = json.loads("".join(map(lambda x: x.decode("utf-8"), res)))
 
     assert len(res) == 3
+
+
+def test_simple_query_summary_variants_preview_info(db, admin_client):
+    data = copy.deepcopy(EXAMPLE_REQUEST_F1)
+
+    response = admin_client.post(
+        SUMMARY_PREVIEW_URL,
+        json.dumps(data),
+        content_type="application/json"
+    )
+    assert status.HTTP_200_OK == response.status_code
+    res = response.json()
+
+    assert len(res) == 3
+    assert set(res["cols"]) == set([
+        'variant.location',
+        'variant.variant',
+        'effect.worst effect type',
+        'effect.genes',
+        'weights.LGD rank',
+        'weights.RVIS rank',
+        'weights.pLI rank',
+        'freq.SSC',
+        'freq.EVS',
+        'freq.E65',
+        'effect.worst effect type',
+        'effect.genes',
+        'continuous.Continuous',
+        'categorical.Categorical',
+        'ordinal.Ordinal',
+        'raw.Raw'
+    ])
+
+
+def test_simple_query_summary_variants(db, admin_client):
+    data = copy.deepcopy(EXAMPLE_REQUEST_F1)
+
+    response = admin_client.post(
+        SUMMARY_PREVIEW_VARIANTS_URL,
+        json.dumps(data),
+        content_type="application/json"
+    )
+    assert status.HTTP_200_OK == response.status_code
+    res = response.streaming_content
+    res = json.loads("".join(map(lambda x: x.decode("utf-8"), res)))
+
+    assert len(res) == 3
+
+
+def test_simple_query_summary_variants_download(db, admin_client):
+    data = {"queryData": json.dumps(EXAMPLE_REQUEST_F1)}
+
+    response = admin_client.post(
+        SUMMARY_DOWNLOAD_URL, json.dumps(data), content_type="application/json"
+    )
+    assert response.status_code == status.HTTP_200_OK
+    res = list(response.streaming_content)
+    assert res
+    assert res[0]
+    header = res[0].decode("utf-8")[:-1].split("\t")
+
+    assert len(res) == 4
+
+    assert set(header) == {
+        "location",
+        "variant",
+        "worst effect type",
+        "genes",
+        "all effects",
+        "effect details",
+        "LGD rank",
+        "RVIS rank",
+        "pLI rank",
+        "SSC",
+        "EVS",
+        "E65",
+        "categorical.Categorical",
+        "continuous.Continuous",
+        "ordinal.Ordinal",
+        "raw.Raw",
+    }
 
 
 @pytest.mark.parametrize("url", [PREVIEW_URL, PREVIEW_VARIANTS_URL])
