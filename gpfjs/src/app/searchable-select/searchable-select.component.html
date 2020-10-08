@@ -2,7 +2,7 @@
   <div ngbDropdown role="group" style="width: 100%" placement="bottom-right" class="input-group-append">
     <input style="width: 100%"
       [hidden]="caption" #searchBox id="search-box" autocomplete="off"
-      (focusout)="enabledFocusOutSelect === true && onSelect(searchBox.value)"
+      (focusout)="isInGeneBrowser === true && onSelect(searchBox.value)"
       (keyup)="searchBoxChange(searchBox.value)"
       placeholder="Select or start typing to search"
       (click)="searchBox.value=''; onFocus($event)" />

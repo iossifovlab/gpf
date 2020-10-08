@@ -10,7 +10,7 @@ import { NgZone } from '@angular/core';
 export class SearchableSelectComponent implements AfterViewInit {
   @Input() data: Array<any>;
   @Input() caption: string;
-  @Input() enabledFocusOutSelect = false;
+  @Input() isInGeneBrowser = false;
   @Output() search  = new EventEmitter();
   @Output() selectItem  = new EventEmitter();
   @ViewChild(NgbDropdown) dropdown: NgbDropdown;
@@ -21,7 +21,9 @@ export class SearchableSelectComponent implements AfterViewInit {
   ) {}
 
   ngAfterViewInit(): void {
-    this.dropdown.autoClose = 'inside';
+    if (this.isInGeneBrowser) {
+      this.dropdown.autoClose = 'inside';
+    }
   }
 
   searchBoxChange(searchFieldValue) {

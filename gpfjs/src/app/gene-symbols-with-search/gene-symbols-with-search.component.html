@@ -5,7 +5,7 @@
         (selectItem)="geneSymbols.geneSymbols = $event"
         [data]="matchingGeneSymbols"
         caption="{{ geneSymbols?.geneSymbols }}"
-        [enabledFocusOutSelect]="true"
+        [isInGeneBrowser]="true"
     >
         <div *gpf-searchable-select-template="let geneSymbol">
         <span
