@@ -205,6 +205,7 @@ export class GeneViewComponent implements OnInit {
 
   ngOnChanges() {
     if (this.gene !== undefined) {
+      this.resetGeneTableValues();
       this.setDefaultScale();
       this.drawGene();
     }

@@ -1,50 +1,33 @@
-<div style="padding: 30px;" >
-    <div class="effect-card card">
-      <div style="font-family: Roboto; font-weight: 500; border-bottom: none;" class="card-header card-title">Gene Symbols</div>
-        <div class="card-block">
-          <gpf-gene-symbol-with-search></gpf-gene-symbol-with-search>
+<div style="padding: 30px;" *ngIf="selectedDataset$ | async as dataset">
+  <div *ngIf="dataset.accessRights">
+      <div class="effect-card card">
+        <div style="font-family: Roboto; font-weight: 500; border-bottom: none;" class="card-header card-title">Gene Symbols</div>
+          <div class="card-block">
+            <gpf-gene-symbol-with-search></gpf-gene-symbol-with-search>
 
-          <div style="padding: 0px 10px 10px 20px">
-            <input style="margin-right: 10px;" type="checkbox" id="coding-only-checkbox" [(ngModel)]="enableCodingOnly">
-            <label for="coding-only-checkbox">Coding only</label>
+            <div style="padding: 0px 10px 10px 20px">
+              <input style="margin-right: 10px;" type="checkbox" id="coding-only-checkbox" [(ngModel)]="enableCodingOnly">
+              <label for="coding-only-checkbox">Coding only</label>
+            </div>
           </div>
-        </div>
-    </div>
-
-    <div style="margin-top: 15px">
-      <input type="button" style="width: 75px" class="btn btn-md btn-primary" value="Go" (click)="submitGeneRequest()">
-    </div>
-
-    <div class="effect-card card" style="margin-top: 40px;">
-      <div class="card-header card-title">Effect Types</div>
-      <div class="card-block" style="padding: 20px;">
-        <div style="display: inline; margin-right: 20px;" *ngFor="let effect of ['LGDs', 'Missense', 'Synonymous', 'Other']; let i=index" class="checkbox">
-        <label>
-          <input #checkbox checked type="checkbox" (change)="checkEffectType(effect, checkbox.checked)">
-          <span
-            class="pedigree-icon"
-            [style.background-color]="getVariantColor(effect)"
-            style="opacity: 0.75;"
-          ></span>
-          {{ effect }}
-        </label>
-        </div>
       </div>
-    </div>
 
-    <gpf-gene-view
-        [gene]="selectedGene"
-        [variantsArray]="genotypePreviewVariantsArray"
-        (updateShownTablePreviewVariantsArrayEvent)="updateShownTablePreviewVariantsArray($event)"
-        [streamingFinished$]="queryService.streamingFinishedSubject">
-    >
-    </gpf-gene-view>
+      <div style="margin-top: 15px">
+        <input type="button" style="width: 75px" class="btn btn-md btn-primary" value="Go" (click)="submitGeneRequest()">
+      </div>
 
-    <div *ngIf="selectedDataset$ | async as dataset">
-        <gpf-genotype-preview-table
-            [columns]="dataset?.genotypeBrowserConfig?.columns"
-            [genotypePreviewInfo]="genotypePreviewInfo"
-            [genotypePreviewVariantsArray]="shownTablePreviewVariantsArray">
-        </gpf-genotype-preview-table>
-    </div>
+      <gpf-gene-view
+          [gene]="selectedGene"
+          [variantsArray]="genotypePreviewVariantsArray"
+          (updateShownTablePreviewVariantsArrayEvent)="updateShownTablePreviewVariantsArray($event)"
+          [streamingFinished$]="queryService.streamingFinishedSubject">
+      >
+      </gpf-gene-view>
+
+      <gpf-genotype-preview-table
+          [columns]="dataset?.genotypeBrowserConfig?.columns"
+          [genotypePreviewInfo]="genotypePreviewInfo"
+          [genotypePreviewVariantsArray]="shownTablePreviewVariantsArray">
+      </gpf-genotype-preview-table>
+  </div>
 </div>

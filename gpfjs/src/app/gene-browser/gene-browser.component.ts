@@ -21,7 +21,6 @@ import { GeneViewComponent } from 'app/gene-view/gene-view.component';
   }]
 })
 export class GeneBrowserComponent extends QueryStateCollector implements OnInit {
-  @ViewChild (GeneViewComponent, {static: true}) geneViewComponent: GeneViewComponent;
   selectedGene: Gene;
   geneSymbol = 'CHD8';
   genotypePreviewVariantsArray: GenotypePreviewVariantsArray;
@@ -35,6 +34,7 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
     'No-frame-shift-newStop', 'Missense',
     'No-frame-shift', 'noStart', 'noEnd', 'Synonymous'
   ];
+
   enableCodingOnly: boolean;
   private genotypeBrowserState: Object;
 
@@ -67,20 +67,11 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
     });
   }
 
-  checkEffectType(effectType, checked) {
-    this.geneViewComponent.checkEffectType(effectType, checked)
-  }
-
-  getVariantColor(effect) {
-    return this.geneViewComponent.getVariantColor(effect);
-  }
-
   updateShownTablePreviewVariantsArray($event: GenotypePreviewVariantsArray) {
     this.shownTablePreviewVariantsArray = $event;
   }
 
   submitGeneRequest() {
-    this.geneViewComponent.resetGeneTableValues();
     this.updateShownTablePreviewVariantsArray(new GenotypePreviewVariantsArray());
 
     this.getCurrentState()
