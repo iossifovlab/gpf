@@ -179,7 +179,7 @@ class QueryPreviewSummaryVariantsView(QueryBaseView):
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
 
         # LOGGER.info('dataset ' + str(dataset))
-        response = dataset.get_summary_variants_wdae_preview(
+        response = dataset.get_summary_wdae_preview_info(
             data,
             max_variants_count=QuerySummaryVariantsView.MAX_SHOWN_VARIANTS,
         )
