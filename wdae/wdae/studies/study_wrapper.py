@@ -520,7 +520,7 @@ class StudyWrapper(StudyWrapperBase):
         return kwargs
 
     def query_variants(self, **kwargs):
-        kwargs = self._transform_kwargs(kwargs)
+        kwargs = self._transform_kwargs(**kwargs)
         limit = None
         if "limit" in kwargs:
             limit = kwargs["limit"]
@@ -532,7 +532,7 @@ class StudyWrapper(StudyWrapperBase):
             yield variant
 
     def query_summary_variants(self, **kwargs):
-        kwargs = self._transform_kwargs(kwargs)
+        kwargs = self._transform_kwargs(**kwargs)
         limit = None
         if "limit" in kwargs:
             limit = kwargs["limit"]
@@ -542,7 +542,7 @@ class StudyWrapper(StudyWrapperBase):
             self.genotype_data_study.query_summary_variants(**kwargs), limit
         )
         for v in variants_from_studies:
-            for aa in v.matched_alleles:
+            for aa in v.alt_alleles:
                 assert not aa.is_reference_allele
 
                 row_variant = []
