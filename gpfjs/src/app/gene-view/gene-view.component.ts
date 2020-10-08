@@ -14,7 +14,7 @@ class GeneViewSummaryVariant {
   chrom: string;
   variant: string;
   effect: string;
-  frequency: number;  
+  frequency: number;
   numberOfFamilyVariants: number;
   seenAsDenovo: boolean;
 
@@ -22,22 +22,22 @@ class GeneViewSummaryVariant {
   seenInUnaffected: boolean;
   svuid: string;
 
-  static fromPreivewVariant(genotypePreview: GenotypePreview): GeneViewSummaryVariant {
-    const result = new GeneViewSummaryVariant(); 
+  static fromPreviewVariant(config, genotypePreview: GenotypePreview): GeneViewSummaryVariant {
+    const result = new GeneViewSummaryVariant();
 
-    const location = genotypePreview.get("variant.location");
+    const location = genotypePreview.get(config.locationColumn);
     result.location = location;
     result.position = Number(location.slice(location.indexOf(':') + 1));
-    result.chrom = location.slice(0, location.indexOf(':'))
+    result.chrom = location.slice(0, location.indexOf(':'));
 
-    let frequency: string = genotypePreview.data.get("freq.genome gnomad");
+    let frequency: string = genotypePreview.data.get(config.frequencyColumn);
     if (frequency === '-') {
       frequency = '0.0';
     }
     result.frequency = Number(frequency);
 
-    result.effect = genotypePreview.get("effect.worst effect type").toLowerCase();
-    result.variant = genotypePreview.get("variant.variant");
+    result.effect = genotypePreview.get(config.effectColumn).toLowerCase();
+    result.variant = genotypePreview.get('variant.variant');
 
     result.numberOfFamilyVariants = 1;
 
@@ -52,31 +52,28 @@ class GeneViewSummaryVariant {
 
     return result;
   }
-
-
 }
-
 
 class GeneViewSummaryVariantsArray {
   summaryVariants: GeneViewSummaryVariant[] = [];
 
   constructor(summaryVariants: IterableIterator<GeneViewSummaryVariant>) {
-    for(const summaryVariant of summaryVariants) {
+    for (const summaryVariant of summaryVariants) {
       this.summaryVariants.push(summaryVariant);
     }
   }
 
-  static fromPreviewVariantsArray(previewVariants: GenotypePreviewVariantsArray): GeneViewSummaryVariantsArray {
-    let summaryVariants: Map<string, GeneViewSummaryVariant> = new Map();
+  static fromPreviewVariantsArray(config, previewVariants: GenotypePreviewVariantsArray): GeneViewSummaryVariantsArray {
+    const summaryVariants: Map<string, GeneViewSummaryVariant> = new Map();
 
     for (const genotypePreview of previewVariants.genotypePreviews) {
-      let summaryVariant = GeneViewSummaryVariant.fromPreivewVariant(genotypePreview);
+      const summaryVariant = GeneViewSummaryVariant.fromPreviewVariant(config, genotypePreview);
       const svuid = summaryVariant.svuid;
 
-      if(!summaryVariants.has(svuid)) {
+      if (!summaryVariants.has(svuid)) {
         summaryVariants.set(svuid, summaryVariant);
       } else {
-        let mergeSummaryVariant = summaryVariants.get(svuid);
+        const mergeSummaryVariant = summaryVariants.get(svuid);
         mergeSummaryVariant.numberOfFamilyVariants += 1;
         if (summaryVariant.seenAsDenovo) {
           mergeSummaryVariant.seenAsDenovo = true;
@@ -91,9 +88,7 @@ class GeneViewSummaryVariantsArray {
     }
     return new GeneViewSummaryVariantsArray(summaryVariants.values());
   }
-
 }
-
 
 @Component({
   selector: 'gpf-gene-view',
@@ -106,9 +101,7 @@ export class GeneViewComponent implements OnInit {
   @Input() streamingFinished$: Subject<boolean>;
   @Output() updateShownTablePreviewVariantsArrayEvent = new EventEmitter<GenotypePreviewVariantsArray>();
 
-  frequencyColumn: string;
-  locationColumn: string;
-  effectColumn: string;
+  geneBrowserConfig;
   frequencyDomainMin: number;
   frequencyDomainMax: number;
   summaryVariantsArray: GeneViewSummaryVariantsArray;
@@ -158,11 +151,9 @@ export class GeneViewComponent implements OnInit {
 
   ngOnInit() {
     this.datasetsService.getSelectedDataset().subscribe(dataset => {
-      this.frequencyColumn = dataset.geneBrowser.frequencyColumn;
-      this.locationColumn = dataset.geneBrowser.locationColumn;
-      this.effectColumn = dataset.geneBrowser.effectColumn;
-      this.frequencyDomainMin = dataset.geneBrowser.domainMin;
-      this.frequencyDomainMax = dataset.geneBrowser.domainMax;
+      this.geneBrowserConfig = dataset.geneBrowser;
+      this.frequencyDomainMin = this.geneBrowserConfig.domainMin;
+      this.frequencyDomainMax = this.geneBrowserConfig.domainMax;
       this.selectedFrequencies = [0, this.frequencyDomainMax];
 
       this.svgElement = d3.select('#svg-container')
@@ -189,15 +180,17 @@ export class GeneViewComponent implements OnInit {
       .range([this.svgHeightFreq, this.zeroAxisY]);
     });
     this.streamingFinished$.subscribe(() => {
-      this.variantsArray = this.filterUnusableTransmittedVariants(this.variantsArray);
-      this.summaryVariantsArray = GeneViewSummaryVariantsArray.fromPreviewVariantsArray(this.variantsArray);
+      this.summaryVariantsArray = GeneViewSummaryVariantsArray.fromPreviewVariantsArray(
+        this.geneBrowserConfig,
+        this.variantsArray
+      );
 
       this.drawPlot();
 
       this.geneTableValues.geneSymbol = this.gene.gene;
       this.geneTableValues.chromosome = this.gene.transcripts[0].chrom;
       this.geneTableValues.totalFamilyVariants = this.variantsArray.genotypePreviews.length;
-      this.geneTableValues.totalSummaryVariants = this.countSummaryVariants(this.variantsArray);
+      this.geneTableValues.totalSummaryVariants = this.summaryVariantsArray.summaryVariants.length;
 
       this.loadingService.setLoadingStop();
     });
@@ -265,74 +258,45 @@ export class GeneViewComponent implements OnInit {
     return frequency >= this.selectedFrequencies[0] && frequency <= this.selectedFrequencies[1];
   }
 
-  countSummaryVariants(variantsArray: GenotypePreviewVariantsArray) {
-    const summaryVariants: Set<string> = new Set();
-    for (const genotypePreview of variantsArray.genotypePreviews) {
-      summaryVariants.add(
-        genotypePreview.data.get(this.locationColumn)
-        + genotypePreview.data.get('variant.variant')
-      );
-    }
-    return summaryVariants.size;
-  }
-
-  filterUnusableTransmittedVariants(variantsArray: GenotypePreviewVariantsArray) {
-    // Filter out transmitted variants without any frequency value, i.e. "-"
+  filterTablePreviewVariantsArray(
+    variantsArray: GenotypePreviewVariantsArray, startPos: number, endPos: number
+  ): GenotypePreviewVariantsArray {
     const filteredVariants = [];
     const result = new GenotypePreviewVariantsArray();
-
+    let location: string;
+    let position: number;
     let frequency: string;
     for (const genotypePreview of variantsArray.genotypePreviews) {
-      frequency = genotypePreview.data.get(this.frequencyColumn);
-      filteredVariants.push(genotypePreview);
+      const data = genotypePreview.data;
+      location = data.get(this.geneBrowserConfig.locationColumn);
+      position = Number(location.slice(location.indexOf(':') + 1));
+      frequency = data.get(this.geneBrowserConfig.frequencyColumn);
+      if (!this.isVariantEffectSelected(data.get(this.geneBrowserConfig.effectColumn))) {
+        continue;
+      } else if (position >= startPos && position <= endPos) {
+        if (frequency === '-') {
+          frequency = '0.0';
+        }
+        if (this.frequencyIsSelected(Number(frequency))) {
+          filteredVariants.push(genotypePreview);
+        }
+      }
     }
     result.setGenotypePreviews(filteredVariants);
     return result;
   }
 
-  filterTablePreviewVariantsArray(
-    variantsArray: GenotypePreviewVariantsArray, startPos: number, endPos: number
-  ): [GenotypePreviewVariantsArray, number[], number[]] {
-    const filteredVariants = [];
-    const filteredVariantsPlot = [];
-    const filteredVariantsPlotDenovo = [];
-    const result = new GenotypePreviewVariantsArray();
-
-    let location: string;
-    let position: number;
-    let frequency: string;
-    for (const genotypePreview of variantsArray.genotypePreviews) {
-      location = genotypePreview.data.get(this.locationColumn);
-      position = Number(location.slice(location.indexOf(':') + 1));
-      frequency = genotypePreview.data.get(this.frequencyColumn);
-      if (frequency === '-') {
-        frequency = '0.0';
-      }
-      if (!this.isVariantEffectSelected(genotypePreview.data.get(this.effectColumn))) {
-        continue;
-      } else if (position >= startPos && position <= endPos) {
-        if (this.frequencyIsSelected(Number(frequency))) {
-          filteredVariants.push(genotypePreview);
-          const plotVariant = [position, Number(frequency), this.getVariantColor(genotypePreview.data.get(this.effectColumn))];
-          if (genotypePreview.data.get('variant.is denovo')) {
-            filteredVariantsPlotDenovo.push(plotVariant);
-          } else {
-            filteredVariantsPlot.push(plotVariant);
-          }
-        }
-      }
-    }
-    result.setGenotypePreviews(filteredVariants);
-    return [result, filteredVariantsPlot, filteredVariantsPlotDenovo];
-  }
-
   drawPlot() {
-    const [filteredVariants, transmittedPlotVariants, denovoPlotVariants] = this.filterTablePreviewVariantsArray(
+    const filteredVariants = this.filterTablePreviewVariantsArray(
       this.variantsArray, this.x.domain()[0], this.x.domain()[1]
     );
 
+    const filteredVariantsSummary = GeneViewSummaryVariantsArray.fromPreviewVariantsArray(
+      this.geneBrowserConfig, filteredVariants
+    );
+
     this.geneTableValues.selectedFamilyVariants = filteredVariants.genotypePreviews.length;
-    this.geneTableValues.selectedSummaryVariants = this.countSummaryVariants(filteredVariants);
+    this.geneTableValues.selectedSummaryVariants = filteredVariantsSummary.summaryVariants.length;
 
     this.updateShownTablePreviewVariantsArrayEvent.emit(filteredVariants);
     if (this.gene !== undefined) {
@@ -345,48 +309,48 @@ export class GeneViewComponent implements OnInit {
       this.svgElement.append('g').call(this.y_axis_subdomain);
       this.svgElement.append('g').call(this.y_axis_zero);
 
-      for (const variant of transmittedPlotVariants) {
-        this.drawTransmittedPlotVariant(variant);
-      }
-
-      for (const variant of denovoPlotVariants) {
-        this.drawDenovoPlotVariant(variant);
+      for (const variant of filteredVariantsSummary.summaryVariants) {
+        if (variant.seenAsDenovo) {
+          this.drawDenovoPlotVariant(variant);
+        } else {
+          this.drawTransmittedPlotVariant(variant);
+        }
       }
     }
   }
 
-  drawTransmittedPlotVariant(variantInfo) {
+  drawTransmittedPlotVariant(variantInfo: GeneViewSummaryVariant) {
     this.svgElement.append('g')
     .append('circle')
-    .attr('cx', this.x(variantInfo[0]))
+    .attr('cx', this.x(variantInfo.position))
     .attr(
-      'cy', variantInfo[1] === 0 ?
+      'cy', variantInfo.frequency === 0 ?
       this.y_zero('0') :
-      variantInfo[1] < this.frequencyDomainMin ?
-      this.y_subdomain(variantInfo[1]) :
-      this.y(variantInfo[1])
+      variantInfo.frequency < this.frequencyDomainMin ?
+      this.y_subdomain(variantInfo.frequency) :
+      this.y(variantInfo.frequency)
     )
     .attr('r', 5)
-    .style('fill', variantInfo[2])
+    .style('fill', this.getVariantColor(variantInfo.effect))
     .style('opacity', 0.5);
   }
 
-  drawDenovoPlotVariant(variantInfo) {
+  drawDenovoPlotVariant(variantInfo: GeneViewSummaryVariant) {
     this.svgElement.append('g')
     .select('dot')
     .append('polygon')
-    .attr('points', variantInfo => this.getTrianglePoints(
-      this.x(variantInfo[0]),
-      variantInfo[1] === 0 ?
+    .attr('points', this.getTrianglePoints(
+      this.x(variantInfo.position),
+      variantInfo.frequency === 0 ?
       this.y_zero('0') :
-      variantInfo[1] < this.frequencyDomainMin ?
-      this.y_subdomain(variantInfo[1]) :
-      this.y(variantInfo[1]),
+      variantInfo.frequency < this.frequencyDomainMin ?
+      this.y_subdomain(variantInfo.frequency) :
+      this.y(variantInfo.frequency),
       15
     ))
     .style('stroke-width', 2)
     .style('stroke', '#000000')
-    .style('fill', variantInfo[2])
+    .style('fill', this.getVariantColor(variantInfo.effect))
     .style('opacity', 0.5);
   }
 
