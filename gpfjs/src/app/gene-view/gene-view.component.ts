@@ -1,11 +1,99 @@
 import { Component, OnInit, Input, OnChanges, Output, EventEmitter } from '@angular/core';
 import * as d3 from 'd3';
 import { Gene } from 'app/gene-view/gene';
-import { GenotypePreviewVariantsArray } from 'app/genotype-preview-model/genotype-preview';
+import { GenotypePreviewVariantsArray, GenotypePreview } from 'app/genotype-preview-model/genotype-preview';
 import { Subject, Observable } from 'rxjs';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { Transcript, Exon } from 'app/gene-view/gene';
 import { FullscreenLoadingService } from 'app/fullscreen-loading/fullscreen-loading.service';
+
+
+class GeneViewSummaryVariant {
+  location: string;
+  position: number;
+  chrom: string;
+  variant: string;
+  effect: string;
+  frequency: number;  
+  numberOfFamilyVariants: number;
+  seenAsDenovo: boolean;
+
+  seenInAffected: boolean;
+  seenInUnaffected: boolean;
+  svuid: string;
+
+  static fromPreivewVariant(genotypePreview: GenotypePreview): GeneViewSummaryVariant {
+    const result = new GeneViewSummaryVariant(); 
+
+    const location = genotypePreview.get("variant.location");
+    result.location = location;
+    result.position = Number(location.slice(location.indexOf(':') + 1));
+    result.chrom = location.slice(0, location.indexOf(':'))
+
+    let frequency: string = genotypePreview.data.get("freq.genome gnomad");
+    if (frequency === '-') {
+      frequency = '0.0';
+    }
+    result.frequency = Number(frequency);
+
+    result.effect = genotypePreview.get("effect.worst effect type").toLowerCase();
+    result.variant = genotypePreview.get("variant.variant");
+
+    result.numberOfFamilyVariants = 1;
+
+    result.seenAsDenovo = false;
+    if (genotypePreview.get('variant.is denovo')) {
+      result.seenAsDenovo = true;
+    }
+    result.seenInAffected = false;
+    result.seenInUnaffected = false;
+
+    result.svuid = result.location + ':' + result.variant;
+
+    return result;
+  }
+
+
+}
+
+
+class GeneViewSummaryVariantsArray {
+  summaryVariants: GeneViewSummaryVariant[] = [];
+
+  constructor(summaryVariants: IterableIterator<GeneViewSummaryVariant>) {
+    for(const summaryVariant of summaryVariants) {
+      this.summaryVariants.push(summaryVariant);
+    }
+  }
+
+  static fromPreviewVariantsArray(previewVariants: GenotypePreviewVariantsArray): GeneViewSummaryVariantsArray {
+    let summaryVariants: Map<string, GeneViewSummaryVariant> = new Map();
+
+    for (const genotypePreview of previewVariants.genotypePreviews) {
+      let summaryVariant = GeneViewSummaryVariant.fromPreivewVariant(genotypePreview);
+      const svuid = summaryVariant.svuid;
+
+      if(!summaryVariants.has(svuid)) {
+        summaryVariants.set(svuid, summaryVariant);
+      } else {
+        let mergeSummaryVariant = summaryVariants.get(svuid);
+        mergeSummaryVariant.numberOfFamilyVariants += 1;
+        if (summaryVariant.seenAsDenovo) {
+          mergeSummaryVariant.seenAsDenovo = true;
+        }
+        if (summaryVariant.seenInAffected) {
+          mergeSummaryVariant.seenInAffected = true;
+        }
+        if (summaryVariant.seenInUnaffected) {
+          mergeSummaryVariant.seenInUnaffected = true;
+        }
+      }
+    }
+    return new GeneViewSummaryVariantsArray(summaryVariants.values());
+  }
+
+}
+
 
 @Component({
   selector: 'gpf-gene-view',
@@ -23,6 +111,7 @@ export class GeneViewComponent implements OnInit {
   effectColumn: string;
   frequencyDomainMin: number;
   frequencyDomainMax: number;
+  summaryVariantsArray: GeneViewSummaryVariantsArray;
 
   margin = {top: 10, right: 70, left: 70, bottom: 0};
   y_axes_proportions = {domain: 0.70, subdomain: 0.20};
@@ -101,6 +190,8 @@ export class GeneViewComponent implements OnInit {
     });
     this.streamingFinished$.subscribe(() => {
       this.variantsArray = this.filterUnusableTransmittedVariants(this.variantsArray);
+      this.summaryVariantsArray = GeneViewSummaryVariantsArray.fromPreviewVariantsArray(this.variantsArray);
+
       this.drawPlot();
 
       this.geneTableValues.geneSymbol = this.gene.gene;
