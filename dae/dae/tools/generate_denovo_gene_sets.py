@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import argparse
+import logging
 
 from dae.gpf_instance.gpf_instance import GPFInstance
 
@@ -7,6 +8,7 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 def main(gpf_instance=None, argv=None):
     description = "Generate genovo gene sets tool"
     parser = argparse.ArgumentParser(description=description)
+    parser.add_argument('--verbose', '-V', action='count', default=3)
 
     parser.add_argument(
         "--show-studies",
@@ -24,6 +26,15 @@ def main(gpf_instance=None, argv=None):
     )
 
     args = parser.parse_args(argv)
+
+    if args.verbose == 1:
+        logging.basicConfig(level=logging.WARNING)
+    elif args.verbose == 2:
+        logging.basicConfig(level=logging.INFO)
+    elif args.verbose >= 3:
+        logging.basicConfig(level=logging.DEBUG)
+    else:
+        logging.basicConfig(level=logging.ERROR)
 
     if gpf_instance is None:
         gpf_instance = GPFInstance()

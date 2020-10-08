@@ -843,7 +843,7 @@ class BatchImporter:
             study_config_dict = GPFConfigParser.load_config_raw(
                 argv.study_config
             )
-            config_dict = recursive_dict_update(config_dict, study_config_dict)
+            config_dict = recursive_dict_update(study_config_dict, config_dict)
 
         config_builder = StudyConfigBuilder(config_dict)
         config = config_builder.build_config()
