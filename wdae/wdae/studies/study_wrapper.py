@@ -199,7 +199,7 @@ class StudyWrapper(StudyWrapperBase):
                     )
                 self.summary_download_columns, self.summary_download_sources =\
                     unpack_columns(
-                        summary_download_column_names
+                        summary_download_column_names, use_id=False
                     )
         else:
             self.preview_columns, self.preview_sources = [], []
@@ -423,7 +423,7 @@ class StudyWrapper(StudyWrapperBase):
         rows = self.query_summary_variants(**query)
 
         wdae_download = map(
-            join_line, itertools.chain([self.download_columns], rows)
+            join_line, itertools.chain([self.summary_download_columns], rows)
         )
 
         return wdae_download
