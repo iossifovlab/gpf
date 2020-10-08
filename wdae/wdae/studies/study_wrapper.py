@@ -191,14 +191,16 @@ class StudyWrapper(StudyWrapperBase):
             self.download_columns, self.download_sources = unpack_columns(
                 download_column_names, use_id=False
             )
-            self.summary_preview_columns, self.summary_preview_sources = \
-                unpack_columns(
-                    summary_preview_column_names
-                )
-            self.summary_download_columns, self.summary_download_sources = \
-                unpack_columns(
-                    summary_download_column_names
-                )
+            if summary_preview_column_names and \
+                    len(summary_preview_column_names):
+                self.summary_preview_columns, self.summary_preview_sources = \
+                    unpack_columns(
+                        summary_preview_column_names
+                    )
+                self.summary_download_columns, self.summary_download_sources =\
+                    unpack_columns(
+                        summary_download_column_names
+                    )
         else:
             self.preview_columns, self.preview_sources = [], []
             self.download_columns, self.download_sources = [], []
