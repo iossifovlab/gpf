@@ -1,8 +1,6 @@
 import logging
 import cyvcf2
 
-import pysam
-
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +37,8 @@ class VcfInfoLineAdapter:
         elif name in self.accessor.info:
             return self.variant.INFO.get(name)
         elif name in self.accessor.extra:
-            return self.accessor.extra[name](self.variant)
+            # logger.debug(f"accessor: {self.accessor.extra[name]}")
+            return self.accessor.extra[name](name, self.variant)
         logger.error(f"can not find {name} in {self.variant}")
         raise ValueError(f"can not find {name} in {self.variant}")
 
@@ -84,10 +83,11 @@ class VcfInfoAccess:
                 continue
             if col_name.endswith("_percent"):
                 base_col_name = col_name[:-len("_percent")]
-                print(base_col_name)
+                suffix_len = -len("_percent")
                 if base_col_name in self.info:
-                    def percent(v):
-                        base_val = v.INFO.get(base_col_name)
+                    def percent(name, v):
+                        # logger.debug(f"getting percents for {name}")
+                        base_val = v.INFO.get(name[:suffix_len])
                         if base_val is None:
                             return None
                         else:
@@ -102,7 +102,8 @@ class VcfInfoAccess:
             raise ValueError(f"missing columns {failed} in VCF info")
 
     def _cleanup(self):
-        self.vcf.close()
+        logger.warning(f"clean up VCF info access {self.score_filename}")
+        # self.vcf.close()
         self.vcf = None
 
     def _fetch(self, chrom, pos_begin, pos_end):
@@ -110,7 +111,7 @@ class VcfInfoAccess:
         assert pos_end >= pos_begin
 
         region = f"{chrom}:{pos_begin}-{pos_end}"
-        logger.debug(f"fetching region {region}")
+        logger.debug(f"fetching region VCF  {region} from {self.score_filename}")
         vcf_iterator = self.vcf(region)
 
         result = []
