@@ -363,7 +363,7 @@ class AlleleParquetSerializer:
     ]
 
     def __init__(self, variants_schema, extra_attributes=None):
-        logger.debug(f"serializer varints schema {variants_schema}")
+        logger.debug(f"serializer varints schema {variants_schema.col_names}")
 
         self.summary_prop_serializers = {
             "bucket_index": IntSerializer,
