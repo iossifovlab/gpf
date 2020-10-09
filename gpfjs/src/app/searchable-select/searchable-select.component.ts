@@ -21,9 +21,7 @@ export class SearchableSelectComponent implements AfterViewInit {
   ) {}
 
   ngAfterViewInit(): void {
-    if (this.isInGeneBrowser) {
-      this.dropdown.autoClose = 'inside';
-    }
+    this.dropdown.autoClose = 'inside';
   }
 
   searchBoxChange(searchFieldValue) {
