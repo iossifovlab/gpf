@@ -39,7 +39,7 @@ class FrequencyAnnotator(VariantScoreAnnotatorBase):
         chrom = variant.chromosome
         pos = variant.details.cshl_position
         logger.debug(
-            f"{self.score_filename_base}: looking for frequency of "
+            f"{self.score_filename_base}: looking for DAE frequency of "
             f"{variant}; {chrom}:{pos};")
 
         scores = self.score_file.fetch_scores(chrom, pos, pos)
@@ -71,7 +71,7 @@ class FrequencyAnnotator(VariantScoreAnnotatorBase):
                     else:
                         aline[output] = float(val)
                     logger.debug(
-                        f"frequency: aline[{output}]={aline[output]}")
+                        f"DAE frequency: aline[{output}]={aline[output]}")
 
                 except ValueError as ex:
                     print(

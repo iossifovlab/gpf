@@ -176,7 +176,7 @@ class ScoreFile(object):
             count = (
                 min(pos_end, line.pos_end) - max(line.pos_begin, pos_begin) + 1
             )
-            if count < 0:
+            if count <= 0:
                 continue
 
             assert count >= 1, count

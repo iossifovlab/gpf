@@ -3,10 +3,9 @@
 import sys
 import logging
 
-logger = logging.getLogger(__name__)
-
-
 from dae.backends.impala.import_commons import BatchImporter
+
+logger = logging.getLogger(__name__)
 
 
 def main(argv=sys.argv[1:]):

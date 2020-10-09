@@ -61,9 +61,11 @@ class ImpalaVariants:
         self.families = FamiliesData.from_pedigree_df(self.ped_df)
 
         self.schema = self._fetch_variant_schema()
-        self.has_extra_attributes = "extra_attributes" in self.schema.columns
+        self.has_extra_attributes = None
         if self.variants_table:
             self.serializer = AlleleParquetSerializer(self.schema)
+            self.has_extra_attributes = \
+                "extra_attributes" in self.schema.columns
 
         assert gene_models is not None
         self.gene_models = gene_models
@@ -702,7 +704,7 @@ class ImpalaVariants:
                             frequency_bin.update([
                                 "frequency_bin = 1",
                                 "frequency_bin = 2"])
-                        elif begin >= self.rare_boundary:
+                        elif begin and begin >= self.rare_boundary:
                             frequency_bin.add("frequency_bin = 3")
                         elif end is not None and end >= self.rare_boundary:
                             frequency_bin.update([
