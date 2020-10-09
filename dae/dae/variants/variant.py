@@ -607,6 +607,8 @@ class SummaryVariant(Variant):
         else:
             self._end_position = None
 
+        self._svuid: Optional[str] = None
+
     @property
     def chromosome(self) -> str:
         return self._chromosome
@@ -639,6 +641,14 @@ class SummaryVariant(Variant):
     @property
     def alleles(self):
         return self._alleles
+
+    @property
+    def svuid(self):
+        if self._svuid is None:
+            self._svuid = \
+                f"{self.location}.{self.reference}.{self.alternative}"
+
+        return self._svuid
 
 
 class SummaryVariantFactory(object):

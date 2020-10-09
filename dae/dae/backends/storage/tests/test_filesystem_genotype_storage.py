@@ -15,6 +15,18 @@ def test_build_backend(
     assert len(list(backend.query_variants())) == 3
 
 
+def test_query_summary_variants(
+    filesystem_genotype_storage, quads_f1_vcf_config, genomes_db_2013
+):
+    assert filesystem_genotype_storage
+
+    backend = filesystem_genotype_storage.build_backend(
+        quads_f1_vcf_config, genomes_db_2013
+    )
+
+    assert len(list(backend.query_summary_variants())) == 3
+
+
 def test_is_impala(filesystem_genotype_storage):
     assert filesystem_genotype_storage.is_impala() is False
 

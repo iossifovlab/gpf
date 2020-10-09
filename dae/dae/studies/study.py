@@ -76,6 +76,28 @@ class GenotypeData:
     ):
         raise NotImplementedError()
 
+    def query_summary_variants(
+        self,
+        regions=None,
+        genes=None,
+        effect_types=None,
+        family_ids=None,
+        person_ids=None,
+        person_set_collection=None,
+        inheritance=None,
+        roles=None,
+        sexes=None,
+        variant_type=None,
+        real_attr_filter=None,
+        ultra_rare=None,
+        return_reference=None,
+        return_unknown=None,
+        limit=None,
+        study_filters=None,
+        **kwargs,
+    ):
+        raise NotImplementedError()
+
     @property
     def families(self):
         raise NotImplementedError()
@@ -141,6 +163,72 @@ class GenotypeDataGroup(GenotypeData):
     @property
     def families(self):
         return self._families
+
+    def query_summary_variants(
+        self,
+        regions=None,
+        genes=None,
+        effect_types=None,
+        family_ids=None,
+        person_ids=None,
+        person_set_collection=None,
+        inheritance=None,
+        roles=None,
+        sexes=None,
+        variant_type=None,
+        real_attr_filter=None,
+        ultra_rare=None,
+        return_reference=None,
+        return_unknown=None,
+        limit=None,
+        study_filters=None,
+        **kwargs,
+    ):
+        variants_futures = list()
+        LOGGER.info(f"summary query - study_filters: {study_filters}")
+
+        def get_summary_variants(genotype_data_study):
+            return genotype_data_study.query_summary_variants(
+                regions=regions,
+                genes=genes,
+                effect_types=effect_types,
+                family_ids=family_ids,
+                person_ids=person_ids,
+                person_set_collection=person_set_collection,
+                inheritance=inheritance,
+                roles=roles,
+                sexes=sexes,
+                variant_type=variant_type,
+                real_attr_filter=real_attr_filter,
+                ultra_rare=ultra_rare,
+                return_reference=return_reference,
+                return_unknown=return_unknown,
+                limit=limit,
+                study_filters=study_filters,
+                **kwargs,
+            )
+
+        for genotype_data_study in self.studies:
+            future = self.executor.submit(
+                get_summary_variants, genotype_data_study)
+            future.study_id = genotype_data_study.id
+            variants_futures.append(future)
+
+        seen = set()
+        for future in as_completed(variants_futures):
+            started = time.time()
+            for v in future.result():
+                if v.svuid in seen:
+                    continue
+                seen.add(v.svuid)
+                yield v
+                if limit and len(seen) >= limit:
+                    return
+            elapsed = time.time() - started
+            LOGGER.info(
+                f"Processing study {future.study_id} "
+                f"elapsed: {elapsed:.3f}"
+            )
 
     def query_variants(
             self,
@@ -343,6 +431,67 @@ class GenotypeDataStudy(GenotypeData):
             for allele in variant.alleles:
                 if allele.get_attribute("studyName") is None:
                     allele.update_attributes({"studyName": self.name})
+            yield variant
+
+    def query_summary_variants(
+            self,
+            regions=None,
+            genes=None,
+            effect_types=None,
+            family_ids=None,
+            person_ids=None,
+            person_set_collection=None,
+            inheritance=None,
+            roles=None,
+            sexes=None,
+            variant_type=None,
+            real_attr_filter=None,
+            frequency_filter=None,
+            ultra_rare=None,
+            return_reference=None,
+            return_unknown=None,
+            limit=None,
+            study_filters=None,
+            **kwargs):
+
+        if len(kwargs):
+            # FIXME This will remain so it can be used for discovering
+            # when excess kwargs are passed in order to fix such cases.
+            LOGGER.warn(
+                "received excess keyword arguments when querying variants!")
+            LOGGER.warn(
+                "kwargs received: {}".format(list(kwargs.keys())))
+
+        LOGGER.info(f"study_filters: {study_filters}")
+
+        if study_filters is not None and self.id not in study_filters:
+            return
+
+        person_ids = self._transform_person_set_collection_query(
+            person_set_collection, person_ids)
+
+        if person_ids is not None and len(person_ids) == 0:
+            return
+
+        for variant in self._backend.query_summary_variants(
+                regions=regions,
+                genes=genes,
+                effect_types=effect_types,
+                family_ids=family_ids,
+                person_ids=person_ids,
+                inheritance=inheritance,
+                roles=roles,
+                sexes=sexes,
+                variant_type=variant_type,
+                real_attr_filter=real_attr_filter,
+                ultra_rare=ultra_rare,
+                frequency_filter=frequency_filter,
+                return_reference=return_reference,
+                return_unknown=return_unknown,
+                limit=limit):
+
+            for allele in variant.alleles:
+                allele.update_attributes({"studyName": self.name})
             yield variant
 
     def _transform_person_set_collection_query(
