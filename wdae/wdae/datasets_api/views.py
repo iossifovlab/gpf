@@ -55,7 +55,8 @@ class DatasetView(QueryBaseView):
                 selected_genotype_data
 
             res = [
-                dataset.get_genotype_data_group_description()
+                dataset.build_genotype_data_group_description(
+                    self.gpf_instance)
                 for dataset in datasets]
             if not self.gpf_instance.get_selected_genotype_data():
                 res = sorted(
@@ -69,7 +70,8 @@ class DatasetView(QueryBaseView):
         else:
             dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
             if dataset:
-                res = dataset.get_genotype_data_group_description()
+                res = dataset.build_genotype_data_group_description(
+                    self.gpf_instance)
                 res = self.augment_accessibility(res, user)
                 res = self.augment_with_groups(res)
                 return Response({"data": res})
