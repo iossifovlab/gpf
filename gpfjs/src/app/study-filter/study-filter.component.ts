@@ -1,6 +1,6 @@
 import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 
-import { StudyFilterState } from './study-filter-store';
+import { StudyFilterState, StudyDescriptor } from './study-filter-store';
 
 @Component({
   selector: 'gpf-study-filter',
@@ -10,15 +10,20 @@ import { StudyFilterState } from './study-filter-store';
 export class StudyFilterComponent {
   @Input() studyFilterState: StudyFilterState;
   @Input() errors: string[];
-  @Input() studies: string[];
+  @Input() studies: StudyDescriptor[];
 
   constructor() { }
 
-  set selectedStudyNames(selectedStudyName: string) {
-    this.studyFilterState.studyName = selectedStudyName;
+  set selectedStudyNames(selectedStudyId: string) {
+    for(let study of this.studies) {
+      if (study.studyId === selectedStudyId) {
+        this.studyFilterState.study = study;
+        break;
+      }
+    }
   }
 
   get selectedStudyNames() {
-    return this.studyFilterState.studyName;
+    return this.studyFilterState.study.studyId;
   }
 }

@@ -4,7 +4,7 @@ import { Dataset } from '../datasets/datasets';
 import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query-state-provider';
 import { StateRestoreService } from '../store/state-restore.service';
 
-import { StudyFiltersState, StudyFilterState } from '../study-filter/study-filter-store';
+import { StudyFiltersState, StudyFilterState, StudyDescriptor } from '../study-filter/study-filter-store';
 
 @Component({
   selector: 'gpf-study-filters-block',
@@ -18,12 +18,12 @@ import { StudyFiltersState, StudyFilterState } from '../study-filter/study-filte
 export class StudyFiltersBlockComponent extends QueryStateWithErrorsProvider implements OnInit, OnChanges {
   @Input() dataset: Dataset;
   studyFiltersState = new StudyFiltersState();
-  studies: string[];
+  studies: StudyDescriptor[];
 
   addFilter(studyFilterState: StudyFilterState = null) {
     if (!studyFilterState) {
         studyFilterState = new StudyFilterState();
-        studyFilterState.studyName = this.studies[0];
+        studyFilterState.study = this.studies[0];
     }
     this.studyFiltersState.studyFiltersState.push(studyFilterState);
   }
@@ -48,9 +48,13 @@ export class StudyFiltersBlockComponent extends QueryStateWithErrorsProvider imp
         .take(1)
         .subscribe(state => {
           if (state['studyFilters'] && state['studyFilters'].length > 0) {
-            for (let studyName of state['studyFilters']) {
+            for (let study of state['studyFilters']) {
               let studyFilter = new StudyFilterState();
-              studyFilter.studyName = studyName.studyName;
+              for(let studyDesc of this.studies) {
+                  if(studyDesc.studyId === study.studyId) {
+                      studyFilter.study = studyDesc;
+                  }
+              }
               this.addFilter(studyFilter);
             }
           }
@@ -62,7 +66,16 @@ export class StudyFiltersBlockComponent extends QueryStateWithErrorsProvider imp
   }
 
   ngOnChanges(changes: SimpleChanges) {
-    this.studies = changes.dataset.currentValue.studies;
+    let ids: string[] = changes.dataset.currentValue.studies;
+    let names: string[] = changes.dataset.currentValue.studyNames;
+    this.studies = [];
+    for(let i = 0; i < ids.length; i++) {
+        let study: StudyDescriptor = {
+            "studyId": ids[i],
+            "studyName": names[i]
+        }
+        this.studies.push(study)
+    }
   }
 
   getState() {
@@ -72,7 +85,7 @@ export class StudyFiltersBlockComponent extends QueryStateWithErrorsProvider imp
                      studyFilters: studyFiltersState.studyFiltersState
                        .map(el => {
                          return {
-                           studyName: el.studyName
+                           studyId: el.study.studyId
                          };
                        })
                    };
