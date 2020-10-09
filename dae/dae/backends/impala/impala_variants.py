@@ -140,6 +140,7 @@ class ImpalaVariants:
                             bucket_index,
                             summary_index,
                             variant_data,
+                            family_variants_count,
                             extra_attributes,
                         ) = row
                     else:
@@ -147,6 +148,7 @@ class ImpalaVariants:
                             bucket_index,
                             summary_index,
                             variant_data,
+                            family_variants_count,
                         ) = row
 
                         extra_attributes = None
@@ -167,6 +169,8 @@ class ImpalaVariants:
                     v = self.serializer.deserialize_summary_variant(
                         variant_data, extra_attributes
                     )
+                    v.update_attributes(
+                        {"family_variants_count": [family_variants_count]})
 
                     if v is None:
                         continue
@@ -979,7 +983,8 @@ class ImpalaVariants:
             ]
         else:
             columns += [
-                "MIN(variant_data)"
+                "MIN(variant_data)",
+                "COUNT(DISTINCT family_id)"
             ]
             group_by_clause = "GROUP BY bucket_index, summary_index"
 
