@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, ViewChild, QueryList, ContentChild, ViewChildren } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ViewChild, ContentChild, AfterViewInit } from '@angular/core';
 import { SearchableSelectTemplateDirective } from './searchable-select-template.directive';
 import { NgbDropdown } from '@ng-bootstrap/ng-bootstrap';
 import { NgZone } from '@angular/core';
@@ -7,18 +7,22 @@ import { NgZone } from '@angular/core';
   selector: 'gpf-searchable-select',
   templateUrl: './searchable-select.component.html',
 })
-export class SearchableSelectComponent {
+export class SearchableSelectComponent implements AfterViewInit {
   @Input() data: Array<any>;
   @Input() caption: string;
+  @Input() isInGeneBrowser = false;
   @Output() search  = new EventEmitter();
   @Output() selectItem  = new EventEmitter();
   @ViewChild(NgbDropdown) dropdown: NgbDropdown;
   @ViewChild('searchBox') searchBox: any;
   @ContentChild(SearchableSelectTemplateDirective) template: SearchableSelectTemplateDirective;
-
   constructor(
     private ngZone: NgZone
   ) {}
+
+  ngAfterViewInit(): void {
+    this.dropdown.autoClose = 'inside';
+  }
 
   searchBoxChange(searchFieldValue) {
     this.search.emit(searchFieldValue);
@@ -41,8 +45,5 @@ export class SearchableSelectComponent {
 
   onSelect(value) {
     this.selectItem.emit(value);
-  }
-
-  log(value) {
   }
 }

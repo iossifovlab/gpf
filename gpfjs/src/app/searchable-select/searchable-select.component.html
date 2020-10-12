@@ -1,16 +1,17 @@
-<div class="input-group mr-3" style="width: 100%; max-width: 100%;">
-  <input [hidden]="caption" #searchBox id="search-box" autocomplete="off"
-    (keyup)="searchBoxChange(searchBox.value)"
-    style="width: 90%"
-    placeholder="Select or start typing to search"
-    (click)="searchBox.value=''; onFocus($event)" />
-
-  <span [hidden]="!caption" id="selected-value"
-    style="width: 90%"
-    class="clickable"
-    (click)="searchBox.value = ''; onFocus($event)">{{ caption }}</span>
-
-  <div ngbDropdown role="group" placement="bottom-right" class="input-group-append" style="position: static;">
+<div class="input-group mr-3">
+  <div ngbDropdown role="group" style="width: 100%" placement="bottom-right" class="input-group-append">
+    <input style="width: 100%"
+      [hidden]="caption" #searchBox id="search-box" autocomplete="off"
+      (focusout)="isInGeneBrowser === true && onSelect(searchBox.value)"
+      (keyup)="searchBoxChange(searchBox.value)"
+      placeholder="Select or start typing to search"
+      (click)="searchBox.value=''; onFocus($event)" />
+    <span style="width: 100%"
+      [hidden]="!caption" id="selected-value"
+      class="clickable"
+      (click)="searchBox.value = ''; onFocus($event)">
+      {{ caption }}
+    </span>
     <button type="button" class="btn btn-secondary dropdown-toggle-split" ngbDropdownToggle>
       <span class="caret"></span>
     </button>
@@ -22,7 +23,7 @@
         (click)="onSelect(element)">
         <ng-template *ngIf="template?.templateRef" [ngTemplateOutlet]="template.templateRef" [ngTemplateOutletContext]="{$implicit: element}">
         </ng-template>
-       </button>
+      </button>
     </div>
   </div>
 </div>

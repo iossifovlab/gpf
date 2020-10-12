@@ -21,15 +21,21 @@ import { GeneViewComponent } from 'app/gene-view/gene-view.component';
   }]
 })
 export class GeneBrowserComponent extends QueryStateCollector implements OnInit {
-  @ViewChild (GeneViewComponent, {static: true}) geneViewComponent: GeneViewComponent;
   selectedGene: Gene;
-  geneSymbol: string = 'CHD8';
+  geneSymbol = 'CHD8';
   genotypePreviewVariantsArray: GenotypePreviewVariantsArray;
   shownTablePreviewVariantsArray: GenotypePreviewVariantsArray;
   selectedDataset$: Observable<Dataset>;
   selectedDatasetId: string;
   genotypePreviewInfo: GenotypePreviewInfo;
   loadingFinished: boolean;
+  codingEffectTypes = [
+    'Nonsense', 'Frame-shift', 'Splice-site',
+    'No-frame-shift-newStop', 'Missense',
+    'No-frame-shift', 'noStart', 'noEnd', 'Synonymous'
+  ];
+
+  enableCodingOnly: boolean;
   private genotypeBrowserState: Object;
 
   constructor(
@@ -61,20 +67,11 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
     });
   }
 
-  checkEffectType(effectType, checked) {
-    this.geneViewComponent.checkEffectType(effectType, checked)
-  }
-
-  getVariantColor(effect) {
-    return this.geneViewComponent.getVariantColor(effect);
-  }
-
   updateShownTablePreviewVariantsArray($event: GenotypePreviewVariantsArray) {
     this.shownTablePreviewVariantsArray = $event;
   }
 
   submitGeneRequest() {
-    this.geneViewComponent.resetGeneTableValues();
     this.updateShownTablePreviewVariantsArray(new GenotypePreviewVariantsArray());
 
     this.getCurrentState()
@@ -103,6 +100,10 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
 
             const requestParams = {...state};
             requestParams['maxVariantsCount'] = 10000;
+
+            if (this.enableCodingOnly) {
+              requestParams['effectTypes'] = this.codingEffectTypes;
+            }
 
             this.genotypePreviewVariantsArray =
               this.queryService.getGenotypePreviewVariantsByFilter(requestParams, this.genotypePreviewInfo);
