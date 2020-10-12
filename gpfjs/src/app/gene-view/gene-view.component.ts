@@ -331,7 +331,6 @@ export class GeneViewComponent implements OnInit {
 
   drawDenovoPlotVariant(variantInfo: GeneViewSummaryVariant) {
     this.svgElement.append('g')
-    .select('dot')
     .append('polygon')
     .attr('points', this.getTrianglePoints(
       this.x(variantInfo.position),
