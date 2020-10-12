@@ -114,8 +114,8 @@ export class GeneViewComponent implements OnInit {
   svgHeightFreqRaw = 400;
   svgHeightFreq = this.svgHeightFreqRaw - this.margin.top - this.margin.bottom;
 
-  subdomainAxisY = Math.round(this.svgHeightFreq * 0.75);
-  zeroAxisY = this.subdomainAxisY + Math.round(this.svgHeightFreq * 0.2);
+  subdomainAxisY = Math.round(this.svgHeightFreq * 0.90);
+  zeroAxisY = this.subdomainAxisY + Math.round(this.svgHeightFreq * 0.05);
 
   lgds = ['nonsense', 'splice-site', 'frame-shift', 'no-frame-shift-new-stop'];
 
