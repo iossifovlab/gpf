@@ -323,13 +323,7 @@ export class GeneViewComponent implements OnInit {
     this.svgElement.append('g')
     .append('circle')
     .attr('cx', this.x(variantInfo.position))
-    .attr(
-      'cy', variantInfo.frequency === 0 ?
-      this.y_zero('0') :
-      variantInfo.frequency < this.frequencyDomainMin ?
-      this.y_subdomain(variantInfo.frequency) :
-      this.y(variantInfo.frequency)
-    )
+    .attr('cy', this.getVariantY(variantInfo.frequency))
     .attr('r', 5)
     .style('fill', this.getVariantColor(variantInfo.effect))
     .style('opacity', 0.5);
@@ -341,17 +335,27 @@ export class GeneViewComponent implements OnInit {
     .append('polygon')
     .attr('points', this.getTrianglePoints(
       this.x(variantInfo.position),
-      variantInfo.frequency === 0 ?
-      this.y_zero('0') :
-      variantInfo.frequency < this.frequencyDomainMin ?
-      this.y_subdomain(variantInfo.frequency) :
-      this.y(variantInfo.frequency),
+      this.getVariantY(variantInfo.frequency),
       15
     ))
     .style('stroke-width', 2)
     .style('stroke', '#000000')
     .style('fill', this.getVariantColor(variantInfo.effect))
     .style('opacity', 0.5);
+  }
+
+  getVariantY(variantFrequency): number {
+    let y: number;
+
+    if (variantFrequency === 0) {
+      y = this.y_zero('0');
+    } else if (variantFrequency < this.frequencyDomainMin) {
+      y = this.y_subdomain(variantFrequency);
+    } else {
+      y = this.y(variantFrequency);
+    }
+
+    return y;
   }
 
   getTrianglePoints(plotX: number, plotY: number, size: number) {
