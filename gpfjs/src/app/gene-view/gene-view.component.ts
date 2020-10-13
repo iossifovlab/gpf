@@ -135,7 +135,7 @@ export class GeneViewComponent implements OnInit {
   // GENE VIEW VARS
   brush;
   doubleClickTimer;
-  geneTableValues = {
+  geneTableStats = {
     geneSymbol: '',
     chromosome: '',
     totalFamilyVariants: 0,
@@ -188,10 +188,12 @@ export class GeneViewComponent implements OnInit {
       this.updateFamilyVariantsTable();
       this.drawPlot();
 
-      this.geneTableValues.geneSymbol = this.gene.gene;
-      this.geneTableValues.chromosome = this.gene.transcripts[0].chrom;
-      this.geneTableValues.totalFamilyVariants = this.variantsArray.genotypePreviews.length;
-      this.geneTableValues.totalSummaryVariants = this.summaryVariantsArray.summaryVariants.length;
+      this.geneTableStats.geneSymbol = this.gene.gene;
+      this.geneTableStats.chromosome = this.gene.transcripts[0].chrom;
+      this.geneTableStats.totalSummaryVariants = this.summaryVariantsArray.summaryVariants.length;
+      this.geneTableStats.totalFamilyVariants = this.summaryVariantsArray.summaryVariants.reduce(
+        (a, b) => a + b.numberOfFamilyVariants, 0
+      );
 
       this.loadingService.setLoadingStop();
     });
@@ -307,16 +309,18 @@ export class GeneViewComponent implements OnInit {
     const filteredVariants = this.filterTablePreviewVariantsArray(
       this.variantsArray, this.x.domain()[0], this.x.domain()[1]
     );
-    this.geneTableValues.selectedFamilyVariants = filteredVariants.genotypePreviews.length;
     this.updateShownTablePreviewVariantsArrayEvent.emit(filteredVariants);
   }
 
   drawPlot() {
 
-    const filteredVariantsSummary = this.filterSummaryVariantsArray(
+    const filteredSummaryVariants = this.filterSummaryVariantsArray(
       this.summaryVariantsArray, this.x.domain()[0], this.x.domain()[1]
     );
-    this.geneTableValues.selectedSummaryVariants = filteredVariantsSummary.summaryVariants.length;
+    this.geneTableStats.selectedSummaryVariants = filteredSummaryVariants.summaryVariants.length;
+    this.geneTableStats.selectedFamilyVariants = filteredSummaryVariants.summaryVariants.reduce(
+      (a, b) => a + b.numberOfFamilyVariants, 0
+    );
 
     if (this.gene !== undefined) {
       this.x_axis = d3.axisBottom(this.x).ticks(12);
@@ -328,7 +332,7 @@ export class GeneViewComponent implements OnInit {
       this.svgElement.append('g').call(this.y_axis_subdomain);
       this.svgElement.append('g').call(this.y_axis_zero);
 
-      for (const variant of filteredVariantsSummary.summaryVariants) {
+      for (const variant of filteredSummaryVariants.summaryVariants) {
         if (variant.seenAsDenovo) {
           this.drawDenovoPlotVariant(variant);
         } else {
@@ -411,7 +415,7 @@ export class GeneViewComponent implements OnInit {
   }
 
   resetGeneTableValues(): void {
-    this.geneTableValues = {
+    this.geneTableStats = {
       geneSymbol: '',
       chromosome: '',
       totalFamilyVariants: 0,

@@ -20,8 +20,8 @@
 </div>
 
 <div *ngIf="this.gene" style="float: left;">
-  <h2>{{ this.geneTableValues.geneSymbol }}</h2>
-  <h3>Chromosome {{ this.geneTableValues.chromosome }}</h3>
+  <h2>{{ this.geneTableStats.geneSymbol }}</h2>
+  <h3>Chromosome {{ this.geneTableStats.chromosome }}</h3>
   <table>
     <tr>
       <td></td>
@@ -31,14 +31,14 @@
 
     <tr>
       <td>family variants</td>
-      <td>{{ this.geneTableValues.totalFamilyVariants }}</td>
-      <td>{{ this.geneTableValues.selectedFamilyVariants }}</td>
+      <td>{{ this.geneTableStats.totalFamilyVariants }}</td>
+      <td>{{ this.geneTableStats.selectedFamilyVariants }}</td>
     </tr>
 
     <tr>
       <td>summary variants</td> 
-      <td>{{ this.geneTableValues.totalSummaryVariants }}</td>
-      <td>{{ this.geneTableValues.selectedSummaryVariants }}</td>
+      <td>{{ this.geneTableStats.totalSummaryVariants }}</td>
+      <td>{{ this.geneTableStats.selectedSummaryVariants }}</td>
     </tr>
   </table>
 </div>
