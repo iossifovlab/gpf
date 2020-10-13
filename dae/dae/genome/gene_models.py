@@ -1,11 +1,16 @@
 import gzip
 import os
 import sys
+import logging
+
 from collections import defaultdict
 
 import pandas as pd
 
 from dae.utils.regions import Region
+
+
+logger = logging.getLogger(__name__)
 
 
 #
@@ -858,8 +863,8 @@ def load_ccds_gene_models_format(filename, gene_mapping_file=None, nrows=None):
 
 
 def load_known_gene_models_format(
-    filename, gene_mapping_file=None, nrows=None
-):
+        filename, gene_mapping_file=None, nrows=None):
+
     expected_columns = [
         "name",
         "chrom",
@@ -909,6 +914,119 @@ def load_known_gene_models_format(
         tr_id = f"{tr_name}_{transcript_ids_counter[tr_name]}"
 
         attributes = {k: rec[k] for k in ["proteinID", "alignID"]}
+        tm = TranscriptModel(
+            gene=gene,
+            tr_id=tr_id,
+            tr_name=tr_name,
+            chrom=chrom,
+            strand=strand,
+            tx=tx,
+            cds=cds,
+            exons=exons,
+            attributes=attributes,
+        )
+        tm.update_frames()
+        gm._add_transcript_model(tm)
+
+    return gm
+
+
+def load_ucscgenepred_models_format(
+        filename, gene_mapping_file=None, nrows=None):
+    """
+    table genePred
+    "A gene prediction."
+        (
+        string  name;               "Name of gene"
+        string  chrom;              "Chromosome name"
+        char[1] strand;             "+ or - for strand"
+        uint    txStart;            "Transcription start position"
+        uint    txEnd;              "Transcription end position"
+        uint    cdsStart;           "Coding region start"
+        uint    cdsEnd;             "Coding region end"
+        uint    exonCount;          "Number of exons"
+        uint[exonCount] exonStarts; "Exon start positions"
+        uint[exonCount] exonEnds;   "Exon end positions"
+        )
+
+    table genePredExt
+    "A gene prediction with some additional info."
+        (
+        string name;        	"Name of gene (usually transcript_id from GTF)"
+        string chrom;       	"Chromosome name"
+        char[1] strand;     	"+ or - for strand"
+        uint txStart;       	"Transcription start position"
+        uint txEnd;         	"Transcription end position"
+        uint cdsStart;      	"Coding region start"
+        uint cdsEnd;        	"Coding region end"
+        uint exonCount;     	"Number of exons"
+        uint[exonCount] exonStarts; "Exon start positions"
+        uint[exonCount] exonEnds;   "Exon end positions"
+        int score;            	"Score"
+        string name2;       	"Alternate name (e.g. gene_id from GTF)"
+        string cdsStartStat; 	"Status of CDS start annotation (none, unknown, incomplete, or complete)"
+        string cdsEndStat;   	"Status of CDS end annotation (none, unknown, incomplete, or complete)"
+        lstring exonFrames; 	"Exon frame offsets {0,1,2}"
+        )
+    """
+
+    expected_columns = [
+        "name",
+        "chrom",
+        "strand",
+        "txStart",
+        "txEnd",
+        "cdsStart",
+        "cdsEnd",
+        "exonCount",
+        "exonStarts",
+        "exonEnds",
+        "score",
+        "name2",
+        "cdsStartStat",
+        "cdsEndStat",
+        "exonFrames",
+    ]
+
+    df = parse_raw(filename, expected_columns[:10], nrows=nrows)
+    if df is None:
+        df = parse_raw(filename, expected_columns, nrows=nrows)
+        if df is None:
+            return None
+
+    gm = GeneModels(location=filename)
+    records = df.to_dict(orient="records")
+
+    transcript_ids_counter = defaultdict(int)
+    gm._alternative_names = {}
+    if gene_mapping_file is not None:
+        gm._alternative_names = gene_mapping(gene_mapping_file)
+
+    for rec in records:
+        gene = rec["name"]
+        gene = gm._alternative_names.get(gene, gene)
+
+        tr_name = rec["name"]
+        chrom = rec["chrom"]
+        strand = rec["strand"]
+        tx = (int(rec["txStart"]) + 1, int(rec["txEnd"]))
+        cds = (int(rec["cdsStart"]) + 1, int(rec["cdsEnd"]))
+
+        exon_starts = list(map(int, rec["exonStarts"].strip(",").split(",")))
+        exon_ends = list(map(int, rec["exonEnds"].strip(",").split(",")))
+        assert len(exon_starts) == len(exon_ends)
+
+        exons = [
+            Exon(start + 1, end) for start, end in zip(exon_starts, exon_ends)
+        ]
+
+        transcript_ids_counter[tr_name] += 1
+        tr_id = f"{tr_name}_{transcript_ids_counter[tr_name]}"
+
+        attributes = {}
+        for attr in expected_columns[10:]:
+            if attr in rec:
+                attributes[attr] = rec.get(attr)
         tm = TranscriptModel(
             gene=gene,
             tr_id=tr_id,
@@ -1062,7 +1180,7 @@ SUPPORTED_GENE_MODELS_FILE_FORMATS = {
     "ccds": load_ccds_gene_models_format,
     "knowngene": load_known_gene_models_format,
     "gtf": load_gtf_gene_models_format,
-    "ucscgenepred": None,
+    "ucscgenepred": load_ucscgenepred_models_format,
 }
 
 
@@ -1077,19 +1195,20 @@ def infer_gene_model_parser(filename, fileformat=None):
         if parser is None:
             continue
         try:
+            logger.debug(f"trying file format: {fileformat}...")
             gm = parser(filename, nrows=50)
             if gm is not None:
                 inferred_formats.append(fileformat)
         except Exception:
             pass
 
+    logger.debug(f"inferred file formats: {inferred_formats}")
     if len(inferred_formats) == 1:
         return inferred_formats[0]
 
-    print(
+    logger.error(
         f"can't find gene model parser for {filename}; "
-        f"inferred file formats are{inferred_formats}",
-        file=sys.stderr,
+        f"inferred file formats are {inferred_formats}"
     )
     return None
 
@@ -1097,8 +1216,10 @@ def infer_gene_model_parser(filename, fileformat=None):
 def load_gene_models(filename, gene_mapping_file=None, fileformat=None):
     assert os.path.exists(filename), filename
 
+    logger.debug(f"loading gene models from {filename}")
     if fileformat is None:
         fileformat = infer_gene_model_parser(filename)
+        logger.debug(f"infering gene models file format: {fileformat}")
         if filename is None:
             return None
 

@@ -16,6 +16,7 @@ from dae.genome.gene_models import (
     load_ccds_gene_models_format,
     load_known_gene_models_format,
     load_gtf_gene_models_format,
+    load_ucscgenepred_models_format,
     # probe_header,
     # probe_columns,
     infer_gene_model_parser,
@@ -271,28 +272,64 @@ def test_load_gene_models(fixture_dirname, filename, fileformat):
 
 
 @pytest.mark.parametrize(
-    "filename,fileformat",
+    "filename,fileformat,expected",
     [
-        ("gene_models/test_ref_flat.txt", "refflat"),
-        ("gene_models/test_ref_flat_no_header.txt", "refflat"),
-        ("gene_models/test_ccds.txt", "ccds"),
-        ("gene_models/test_ref_gene.txt", "refseq"),
-        ("gene_models/test_ref_seq_hg38.txt", "refseq"),
-        ("gene_models/test_known_gene.txt", "knowngene"),
-        ("gene_models/test_default_ref_gene_201309.txt", "default"),
-        ("gene_models/test_gencode_selenon.gtf", "gtf"),
-        ("gene_models/test_ref_gene.gtf", "gtf"),
-        ("gene_models/test_gencode.gtf", "gtf"),
+        ("gene_models/test_ref_flat.txt", None, "refflat"),
+        ("gene_models/test_ref_flat_no_header.txt", None, "refflat"),
+        ("gene_models/test_ccds.txt", "ccds", "ccds"),
+        ("gene_models/test_ref_gene.txt", "refseq", "refseq"),
+        ("gene_models/test_ref_seq_hg38.txt", "refseq", "refseq"),
+        ("gene_models/test_known_gene.txt", None, "knowngene"),
+        ("gene_models/test_default_ref_gene_201309.txt", None, "default"),
+        ("gene_models/test_gencode_selenon.gtf", None, "gtf"),
+        ("gene_models/test_ref_gene.gtf", None, "gtf"),
+        ("gene_models/test_gencode.gtf", None, "gtf"),
     ],
 )
-def test_infer_gene_models(fixture_dirname, filename, fileformat):
+def test_infer_gene_models(fixture_dirname, filename, fileformat, expected):
 
     filename = fixture_dirname(filename)
     inferred_fileformat = infer_gene_model_parser(
-        filename, fileformat=fileformat
-    )
+        filename, fileformat=fileformat)
+
+    assert inferred_fileformat is not None
+    assert inferred_fileformat == expected
+
+
+@pytest.mark.parametrize(
+    "filename,fileformat",
+    [
+        ("gene_models/genePred_100.txt.gz", "ucscgenepred"),
+        ("gene_models/genePred_453.gtf.gz", "gtf"),
+    ],
+)
+def test_infer_gene_models_no_header(fixture_dirname, filename, fileformat):
+
+    filename = fixture_dirname(filename)
+    inferred_fileformat = infer_gene_model_parser(filename)
     assert inferred_fileformat is not None
     assert inferred_fileformat == fileformat
+
+
+def test_load_ucscgenepred(fixture_dirname):
+
+    filename = fixture_dirname("gene_models/genePred_100.txt.gz")
+    gm = load_ucscgenepred_models_format(filename)
+
+    assert gm is not None
+
+
+@pytest.mark.parametrize(
+    "filename,fileformat",
+    [
+        ("gene_models/genePred_100.txt.gz", "default"),
+    ],
+)
+def test_load_gene_models_no_header(fixture_dirname, filename, fileformat):
+
+    filename = fixture_dirname(filename)
+    gm = load_gene_models(filename)
+    assert gm is not None
 
 
 @pytest.mark.parametrize(
@@ -350,6 +387,7 @@ def test_save_load_gene_models(
             # assert exon.number == exon1.number
             # assert exon.cds_start == exon1.cds_start
             # assert exon.cds_stop == exon1.cds_stop
+
 
 
 @pytest.mark.skip
