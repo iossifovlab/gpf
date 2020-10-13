@@ -693,3 +693,32 @@ class SummaryVariantFactory(object):
             allele.update_attributes(allele_count)
 
         return SummaryVariant(alleles)
+
+    @staticmethod
+    def summary_variant_from_vcf(vcf_variant, summary_variant_index):
+        records = []
+        allele_count = len(vcf_variant.ALT) + 1
+        records.append(
+            {
+                "chrom": vcf_variant.CHROM,
+                "position": vcf_variant.start + 1,
+                "reference": vcf_variant.REF,
+                "alternative": None,
+                "summary_variant_index": summary_variant_index,
+                "allele_index": 0,
+                "allele_count": allele_count,
+            }
+        )
+        for allele_index, alt in enumerate(vcf_variant.ALT):
+            records.append(
+                {
+                    "chrom": vcf_variant.CHROM,
+                    "position": vcf_variant.start + 1,
+                    "reference": vcf_variant.REF,
+                    "alternative": alt,
+                    "summary_variant_index": summary_variant_index,
+                    "allele_index": allele_index + 1,
+                    "allele_count": allele_count,
+                }
+            )
+        return SummaryVariantFactory.summary_variant_from_records(records)
