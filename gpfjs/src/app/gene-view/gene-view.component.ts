@@ -337,9 +337,41 @@ export class GeneViewComponent implements OnInit {
           this.drawDenovoPlotVariant(variant);
         } else {
           this.drawTransmittedPlotVariant(variant);
+          // this.drawSquareVariant(variant);
+          // this.drawStarVariant(variant);
         }
       }
     }
+  }
+
+  drawSquareVariant(variantInfo: GeneViewSummaryVariant) {
+    this.svgElement.append('g')
+    .append('rect')
+    .attr('x', (this.x(variantInfo.position)) - 5)
+    .attr('y', this.getVariantY(variantInfo.frequency) - 5)
+    .attr('width', 10)
+    .attr('height', 10)
+    .style('fill', this.getVariantColor(variantInfo.effect))
+    .style('opacity', 0.5)
+    .style('stroke-width', 1)
+    .style('stroke', '#000000');
+  }
+
+  drawStarVariant(variantInfo: GeneViewSummaryVariant) {
+    const x = Number(this.x(variantInfo.position));
+    const y = Number(this.getVariantY(variantInfo.frequency));
+
+    this.svgElement.append('g')
+    .append('polygon')
+    .attr('points', `${x},${y - 7} ${x - 5},${y + 5} ${x + 5},${y + 5}`)
+    .style('fill', this.getVariantColor(variantInfo.effect))
+    .style('opacity', 0.7);
+
+    this.svgElement.append('g')
+    .append('polygon')
+    .attr('points', `${x},${y + 9} ${x - 5},${y - 4} ${x + 5},${y - 4}`)
+    .style('fill', this.getVariantColor(variantInfo.effect))
+    .style('opacity', 0.7);
   }
 
   drawTransmittedPlotVariant(variantInfo: GeneViewSummaryVariant) {
