@@ -185,6 +185,7 @@ export class GeneViewComponent implements OnInit {
         this.variantsArray
       );
 
+      this.updateFamilyVariantsTable();
       this.drawPlot();
 
       this.geneTableValues.geneSymbol = this.gene.gene;
@@ -258,6 +259,22 @@ export class GeneViewComponent implements OnInit {
     return frequency >= this.selectedFrequencies[0] && frequency <= this.selectedFrequencies[1];
   }
 
+  filterSummaryVariantsArray(
+    summaryVariantsArray: GeneViewSummaryVariantsArray, startPos: number, endPos: number
+  ): GeneViewSummaryVariantsArray {
+    const filteredVariants: GeneViewSummaryVariant[] = [];
+    for (const summaryVariant of summaryVariantsArray.summaryVariants) {
+      if (!this.isVariantEffectSelected(summaryVariant.effect)) {
+        continue;
+      } else if (summaryVariant.position >= startPos && summaryVariant.position <= endPos) {
+        if (this.frequencyIsSelected(summaryVariant.frequency)) {
+          filteredVariants.push(summaryVariant);
+        }
+      }
+    }
+    return new GeneViewSummaryVariantsArray(filteredVariants.values());
+  }
+
   filterTablePreviewVariantsArray(
     variantsArray: GenotypePreviewVariantsArray, startPos: number, endPos: number
   ): GenotypePreviewVariantsArray {
@@ -286,19 +303,21 @@ export class GeneViewComponent implements OnInit {
     return result;
   }
 
-  drawPlot() {
+  updateFamilyVariantsTable() {
     const filteredVariants = this.filterTablePreviewVariantsArray(
       this.variantsArray, this.x.domain()[0], this.x.domain()[1]
     );
-
-    const filteredVariantsSummary = GeneViewSummaryVariantsArray.fromPreviewVariantsArray(
-      this.geneBrowserConfig, filteredVariants
-    );
-
     this.geneTableValues.selectedFamilyVariants = filteredVariants.genotypePreviews.length;
+    this.updateShownTablePreviewVariantsArrayEvent.emit(filteredVariants);
+  }
+
+  drawPlot() {
+
+    const filteredVariantsSummary = this.filterSummaryVariantsArray(
+      this.summaryVariantsArray, this.x.domain()[0], this.x.domain()[1]
+    );
     this.geneTableValues.selectedSummaryVariants = filteredVariantsSummary.summaryVariants.length;
 
-    this.updateShownTablePreviewVariantsArrayEvent.emit(filteredVariants);
     if (this.gene !== undefined) {
       this.x_axis = d3.axisBottom(this.x).ticks(12);
       this.y_axis = d3.axisLeft(this.y);
@@ -460,6 +479,7 @@ export class GeneViewComponent implements OnInit {
     }
 
     this.drawGene();
+    this.updateFamilyVariantsTable();
     this.drawPlot();
   }
 
