@@ -33,7 +33,9 @@ class BaseQueryBuilder:
         return self._product
 
     def build_select(self):
-        raise NotImplementedError()
+        columns = ", ".join(self.query_columns)
+        select_clause = f"SELECT {columns}"
+        self._add_to_product(select_clause)
 
     def build_from(self):
         from_clause = f"FROM {self.db}.{self.table}"
@@ -142,6 +144,12 @@ class BaseQueryBuilder:
         self._add_to_product(where_clause)
 
     def build_group_by(self):
+        raise NotImplementedError()
+
+    def build_limit(self, limit):
+        self._add_to_product(f"LIMIT {limit}")
+
+    def create_row_deserializer(self, serializer):
         raise NotImplementedError()
 
     def _add_to_product(self, string):
