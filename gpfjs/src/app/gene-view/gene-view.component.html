@@ -1,36 +1,40 @@
-<div class="effect-card card" style="margin-top: 40px; margin-bottom: 40px">
-  <div class="card-block" style="padding: 20px;">
-    <div style="display: inline; margin-right: 20px">
-      <label>
-        <input style="margin-right: 5px;" #denovoCheckbox checked type="checkbox" (click)="checkShowDenovo(denovoCheckbox.checked)">
-        <svg id="denovo"></svg>
-        Denovo
-      </label>
-    </div>
+<div class="row" style="margin-left: 0px;">
+  <div class="effect-card card" style="margin-top: 40px; margin-bottom: 40px">
+    <div class="card-header card-title" style="font-family: Roboto; font-weight: 500;">Inheritance type</div>
+    <div class="card-block" style="padding: 20px;">
+      <div style="display: inline; margin-right: 20px">
+        <label>
+          <input style="margin-right: 5px;" #denovoCheckbox checked type="checkbox" (click)="checkShowDenovo(denovoCheckbox.checked)">
+          <svg id="denovo"></svg>
+          Denovo
+        </label>
+      </div>
 
-    <div style="display: inline; margin-right: 20px">
-      <label>
-        <input #transmittedCheckbox checked type="checkbox" (click)="checkShowTransmitted(transmittedCheckbox.checked)">
-        <svg id="transmitted"></svg>
-        Transmitted
-      </label>
+      <div style="display: inline; margin-right: 20px">
+        <label>
+          <input #transmittedCheckbox checked type="checkbox" (click)="checkShowTransmitted(transmittedCheckbox.checked)">
+          <svg id="transmitted"></svg>
+          Transmitted
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <div class="effect-card card" style="margin-top: 40px; margin-bottom: 40px; margin-left: 40px">
+    <div class="card-header card-title" style="font-family: Roboto; font-weight: 500;">Effect Types</div>
+    <div class="card-block" style="padding: 20px;">
+      <div style="display: inline; margin-right: 20px;"
+        *ngFor="let effect of ['LGDs', 'Missense', 'Synonymous', 'Other']; let i=index" class="checkbox">
+        <label>
+          <input #checkbox checked type="checkbox" (change)="checkEffectType(effect, checkbox.checked)">
+          <svg id={{effect}}></svg>
+          {{ effect }}
+        </label>
+      </div>
     </div>
   </div>
 </div>
 
-<div class="effect-card card" style="margin-top: 40px; margin-bottom: 40px">
-  <div class="card-header card-title">Effect Types</div>
-  <div class="card-block" style="padding: 20px;">
-    <div style="display: inline; margin-right: 20px;"
-      *ngFor="let effect of ['LGDs', 'Missense', 'Synonymous', 'Other']; let i=index" class="checkbox">
-      <label>
-        <input #checkbox checked type="checkbox" (change)="checkEffectType(effect, checkbox.checked)">
-        <svg id={{effect}}></svg>
-        {{ effect }}
-      </label>
-    </div>
-  </div>
-</div>
 
 <div style="padding: 30px; float: left">
   <div id="svg-container"></div>
