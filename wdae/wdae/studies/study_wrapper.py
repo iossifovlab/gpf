@@ -496,7 +496,7 @@ class StudyWrapper(StudyWrapperBase):
         if "studyFilters" in kwargs:
             if kwargs["studyFilters"]:
                 request = set([
-                    sf["studyName"] for sf in kwargs["studyFilters"]
+                    sf["studyId"] for sf in kwargs["studyFilters"]
                 ])
                 study_filters = kwargs.get("study_filters")
                 if study_filters is None:
@@ -1113,7 +1113,7 @@ class StudyWrapper(StudyWrapperBase):
 
         return self.present_in_role.get(present_in_role_id, {})
 
-    def get_genotype_data_group_description(self):
+    def build_genotype_data_group_description(self, gpf_instance):
         keys = [
             "id",
             "name",
@@ -1162,6 +1162,20 @@ class StudyWrapper(StudyWrapperBase):
 
         result["enrichment"] = self.config.enrichment.to_dict()
 
+        result["study_names"] = None
+        if result["studies"] is not None:
+            print(f"found studies in {self.config.id}")
+            studyNames = []
+            for studyId in result["studies"]:
+                wrapper = gpf_instance.get_wdae_wrapper(studyId)
+                name = (
+                    wrapper.config.name
+                    if wrapper.config.name is not None
+                    else wrapper.config.id
+                )
+                studyNames.append(name)
+                result["study_names"] = studyNames
+
         return result
 
     def _get_wdae_member(self, member, person_set_collection, best_st):
@@ -1190,7 +1204,7 @@ class RemoteStudyWrapper(StudyWrapperBase):
         self.study_id = self.rest_client.get_remote_dataset_id(study_id)
         config = self.rest_client.get_dataset_config(self._remote_study_id)
         config["id"] = self.study_id
-        config["name"] = self.study_id
+        config["name"] = f"({rest_client.remote_id}) {config['name']}"
         del config["access_rights"]
         del config["groups"]
         self.config = FrozenBox(config)
