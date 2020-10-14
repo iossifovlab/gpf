@@ -161,10 +161,10 @@ export class GeneViewComponent implements OnInit {
   y_axis_zero;
   variantsDataRepr = [];
   selectedEffectTypes = ['lgds', 'missense', 'synonymous', 'other'];
-
   selectedFrequencies;
+  showDenovo = true;
+  showTransmitted = true;
 
-  // GENE VIEW VARS
   brush;
   doubleClickTimer;
   geneTableStats = {
@@ -189,6 +189,8 @@ export class GeneViewComponent implements OnInit {
       this.selectedFrequencies = [0, this.frequencyDomainMax];
 
       this.drawEffectTypesIcons();
+      this.drawTransmittedIcons();
+      this.drawDenovoIcons();
 
       this.svgElement = d3.select('#svg-container')
         .append('svg')
@@ -241,6 +243,30 @@ export class GeneViewComponent implements OnInit {
     }
   }
 
+  drawTransmittedIcons() {
+    this.svgElement = d3.select('#transmitted')
+    .attr('width', 80)
+    .attr('height', 20);
+    this.drawStar(10, 7.5, '#000000');
+    this.drawTriangle(30, 8, '#000000');
+    this.drawCircle(50, 8, '#000000');
+    this.drawDot(70, 8, '#000000');
+  }
+
+  drawDenovoIcons() {
+    this.svgElement = d3.select('#denovo')
+    .attr('width', 80)
+    .attr('height', 20);
+    this.drawStar(10, 7.5, '#000000');
+    this.drawSuroundingSquare(10, 7.5, '#000000');
+    this.drawTriangle(30, 8, '#000000');
+    this.drawSuroundingSquare(30, 8, '#000000');
+    this.drawCircle(50, 8, '#000000');
+    this.drawSuroundingSquare(50, 8, '#000000');
+    this.drawDot(70, 8, '#000000');
+    this.drawSuroundingSquare(70, 8, '#000000');
+  }
+
   drawEffectTypesIcons() {
     this.svgElement = d3.select('#LGDs')
     .attr('width', 20)
@@ -263,7 +289,25 @@ export class GeneViewComponent implements OnInit {
     this.drawDot(10, 8, '#000000');
   }
 
-  checkEffectType(effectType, checked) {
+  checkShowDenovo(checked: boolean) {
+    this.showDenovo = checked;
+
+    if (this.gene !== undefined) {
+      this.drawGene();
+      this.drawPlot();
+    }
+  }
+
+  checkShowTransmitted(checked: boolean) {
+    this.showTransmitted = checked;
+
+    if (this.gene !== undefined) {
+      this.drawGene();
+      this.drawPlot();
+    }
+  }
+
+  checkEffectType(effectType: string, checked: boolean) {
     effectType = effectType.toLowerCase();
     if (checked) {
       this.selectedEffectTypes.push(effectType);
@@ -317,7 +361,11 @@ export class GeneViewComponent implements OnInit {
   ): GeneViewSummaryVariantsArray {
     const filteredVariants: GeneViewSummaryVariant[] = [];
     for (const summaryVariant of summaryVariantsArray.summaryVariants) {
-      if (!this.isVariantEffectSelected(summaryVariant.effect)) {
+      if (
+        (!this.isVariantEffectSelected(summaryVariant.effect)) ||
+        (!this.showDenovo && summaryVariant.seenAsDenovo) ||
+        (!this.showTransmitted && !summaryVariant.seenAsDenovo)
+      ) {
         continue;
       } else if (summaryVariant.position >= startPos && summaryVariant.position <= endPos) {
         if (this.frequencyIsSelected(summaryVariant.frequency)) {
@@ -395,7 +443,7 @@ export class GeneViewComponent implements OnInit {
           this.drawDot(this.x(variant.position), this.getVariantY(variant.frequency), color);
         }
         if (variant.seenAsDenovo) {
-          this.drawSuroundingSquare(variant, color);
+          this.drawSuroundingSquare(this.x(variant.position), this.getVariantY(variant.frequency), color);
         }
       }
     }
@@ -412,26 +460,13 @@ export class GeneViewComponent implements OnInit {
     return '#00AA00';
   }
 
-  drawSquareVariant(variantInfo: GeneViewSummaryVariant, color: string) {
-    this.svgElement.append('g')
-      .append('rect')
-      .attr('x', (this.x(variantInfo.position)) - 5)
-      .attr('y', this.getVariantY(variantInfo.frequency) - 5)
-      .attr('width', 10)
-      .attr('height', 10)
-      .style('fill', color)
-      .style('opacity', 0.5)
-      .style('stroke-width', 1)
-      .style('stroke', '#000000');
-  }
-
-  drawSuroundingSquare(variantInfo: GeneViewSummaryVariant, color: string) {
+  drawSuroundingSquare(x: number, y: number, color: string) {
     const w = 16;
     const h = 16;
     this.svgElement.append('g')
       .append('rect')
-      .attr('x', (this.x(variantInfo.position)) - w / 2)
-      .attr('y', this.getVariantY(variantInfo.frequency) - h / 2)
+      .attr('x', x - w / 2)
+      .attr('y', y - h / 2)
       .attr('width', w)
       .attr('height', h)
       .style('fill', color)
