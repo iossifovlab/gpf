@@ -256,6 +256,7 @@ export class Dataset extends IdName {
       json['name'],
       json['access_rights'],
       json['studies'],
+      json['study_names'],
       json['study_types'],
       json['phenotype_data'],
       json['genotype_browser'],
@@ -287,6 +288,7 @@ export class Dataset extends IdName {
     readonly name: string,
     readonly accessRights: boolean,
     readonly studies: string[],
+    readonly studyNames: string[],
     readonly studyTypes: string[],
     readonly phenotypeData: string,
     readonly genotypeBrowser: boolean,
@@ -297,7 +299,7 @@ export class Dataset extends IdName {
     readonly genotypeBrowserConfig: GenotypeBrowser,
     readonly peopleGroupConfig: PeopleGroup,
     readonly groups: UserGroup[],
-    readonly geneBrowser: GeneBrowser
+    readonly geneBrowser: GeneBrowser,
   ) {
     super(id, name);
   }
