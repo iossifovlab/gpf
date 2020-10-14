@@ -1,8 +1,13 @@
+import logging
+
 from deprecation import deprecated
 
 from dae.studies.study import GenotypeDataStudy, GenotypeDataGroup
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.study_config import study_config_schema
+
+
+logger = logging.getLogger(__name__)
 
 
 class VariantsDb(object):
@@ -32,8 +37,12 @@ class VariantsDb(object):
             study_config_schema,
             default_config_filename=default_config_filename,
         )
+        self.genotype_data_study_configs = {}
+        for study_config in study_configs:
+            assert study_config.id is not None, study_config
 
-        self.genotype_data_study_configs = {ds.id: ds for ds in study_configs}
+            self.genotype_data_study_configs[study_config.id] = \
+                study_config
 
         data_groups = GPFConfigParser.load_directory_configs(
             dae_config.datasets_db.dir,
@@ -52,18 +61,25 @@ class VariantsDb(object):
         self._configuration_check()
 
     def _filter_disabled(self):
+
         to_remove = []
         for k, v in self.genotype_data_study_configs.items():
             if v.enabled is False:
                 to_remove.append(k)
         for disabled_study_id in to_remove:
+            logger.debug(f"removing disable study {disabled_study_id}")
             del self.genotype_data_study_configs[disabled_study_id]
         to_remove.clear()
         for k, v in self.genotype_data_group_configs.items():
             if v.enabled is False:
                 to_remove.append(k)
         for disabled_group_id in to_remove:
+            logger.debug(f"removing disable group {disabled_group_id}")
             del self.genotype_data_group_configs[disabled_group_id]
+        logger.debug(
+            f"active studies: {list(self.genotype_data_study_configs.keys())}")
+        logger.debug(
+            f"active groups: {list(self.genotype_data_group_configs.keys())}")
 
     def _configuration_check(self):
         studies_ids = set(self.get_genotype_studies_ids())

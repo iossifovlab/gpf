@@ -81,6 +81,14 @@ def test_get_existing_study(variants_db_fixture):
     assert len(vs) == 14
 
 
+def test_query_summary_variants(variants_db_fixture):
+    study = variants_db_fixture.get_study("quads_f1")
+    assert study is not None
+    vs = study.query_summary_variants()
+    vs = list(vs)
+    assert len(vs) == 3
+
+
 def test_get_non_existing_study(variants_db_fixture):
     study = variants_db_fixture.get_study("ala bala")
     assert study is None

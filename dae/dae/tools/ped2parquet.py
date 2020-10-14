@@ -3,6 +3,8 @@
 import os
 import sys
 import argparse
+import logging
+
 from dae.backends.impala.parquet_io import (
     ParquetPartitionDescriptor,
     ParquetManager,
@@ -12,6 +14,9 @@ from dae.pedigrees.loader import FamiliesLoader
 
 def main(argv):
     parser = argparse.ArgumentParser()
+
+    parser.add_argument('--verbose', '-V', action='count', default=0)
+
     FamiliesLoader.cli_arguments(parser)
     parser.add_argument(
         "-o",
@@ -36,6 +41,14 @@ def main(argv):
         "construct study id [default: basename(families filename)]",
     )
     argv = parser.parse_args(argv)
+    if argv.verbose == 1:
+        logging.basicConfig(level=logging.WARNING)
+    elif argv.verbose == 2:
+        logging.basicConfig(level=logging.INFO)
+    elif argv.verbose >= 3:
+        logging.basicConfig(level=logging.DEBUG)
+    else:
+        logging.basicConfig(level=logging.ERROR)
 
     filename, params = FamiliesLoader.parse_cli_arguments(argv)
     if argv.study_id is not None:

@@ -24,7 +24,7 @@ from ..attributes_query_inheritance import InheritanceTransformer, \
 from dae.variants.attributes import Role, Status, Sex
 
 
-LOGGER = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class ImpalaVariants:
@@ -61,9 +61,11 @@ class ImpalaVariants:
         self.families = FamiliesData.from_pedigree_df(self.ped_df)
 
         self.schema = self._fetch_variant_schema()
-        self.has_extra_attributes = "extra_attributes" in self.schema.columns
+        self.has_extra_attributes = None
         if self.variants_table:
             self.serializer = AlleleParquetSerializer(self.schema)
+            self.has_extra_attributes = \
+                "extra_attributes" in self.schema.columns
 
         assert gene_models is not None
         self.gene_models = gene_models
@@ -128,7 +130,7 @@ class ImpalaVariants:
                     limit=None,
                     summary_variants_only=True,
                 )
-                LOGGER.debug(f"FINAL QUERY: {query}")
+                logger.debug(f"FINAL QUERY: {query}")
                 print(query)
 
                 cursor.execute(query)
@@ -138,6 +140,7 @@ class ImpalaVariants:
                             bucket_index,
                             summary_index,
                             variant_data,
+                            family_variants_count,
                             extra_attributes,
                         ) = row
                     else:
@@ -145,18 +148,19 @@ class ImpalaVariants:
                             bucket_index,
                             summary_index,
                             variant_data,
+                            family_variants_count,
                         ) = row
 
                         extra_attributes = None
 
                     if type(variant_data) == str:
-                        LOGGER.debug(
+                        logger.debug(
                             f"variant_data is string!!!! "
                             f"{bucket_index}, {summary_index}"
                         )
                         variant_data = bytes(variant_data, "utf8")
                     if type(extra_attributes) == str:
-                        LOGGER.debug(
+                        logger.debug(
                             f"extra_attributes is string!!!! "
                             f"{bucket_index}, {summary_index}"
                         )
@@ -165,6 +169,8 @@ class ImpalaVariants:
                     v = self.serializer.deserialize_summary_variant(
                         variant_data, extra_attributes
                     )
+                    v.update_attributes(
+                        {"family_variants_count": [family_variants_count]})
 
                     if v is None:
                         continue
@@ -211,7 +217,7 @@ class ImpalaVariants:
                     return_unknown=return_unknown,
                     limit=None,
                 )
-                LOGGER.debug(f"FINAL QUERY: {query}")
+                logger.debug(f"FINAL QUERY: {query}")
 
                 seen = set()
 
@@ -255,13 +261,13 @@ class ImpalaVariants:
                     seen.add(fvuid)
 
                     if type(variant_data) == str:
-                        LOGGER.debug(
+                        logger.debug(
                             f"variant_data is string!!!! "
                             f"{family_id}, {chrom}, "
                             f"{position}, {end_position}, {reference}")
                         variant_data = bytes(variant_data, "utf8")
                     if type(extra_attributes) == str:
-                        LOGGER.debug(
+                        logger.debug(
                             f"extra_attributes is string!!!! "
                             f"{family_id}, {chrom}, "
                             f"{position}, {end_position}, {reference}")
@@ -492,7 +498,7 @@ class ImpalaVariants:
                         properties_end = row_index + 1
 
                 if properties_start == -1:
-                    LOGGER.debug("No partitioning found")
+                    logger.debug("No partitioning found")
                     return
 
                 for index in range(properties_start, properties_end):
@@ -702,7 +708,7 @@ class ImpalaVariants:
                             frequency_bin.update([
                                 "frequency_bin = 1",
                                 "frequency_bin = 2"])
-                        elif begin >= self.rare_boundary:
+                        elif begin and begin >= self.rare_boundary:
                             frequency_bin.add("frequency_bin = 3")
                         elif end is not None and end >= self.rare_boundary:
                             frequency_bin.update([
@@ -977,7 +983,8 @@ class ImpalaVariants:
             ]
         else:
             columns += [
-                "MIN(variant_data)"
+                "MIN(variant_data)",
+                "COUNT(DISTINCT family_id)"
             ]
             group_by_clause = "GROUP BY bucket_index, summary_index"
 

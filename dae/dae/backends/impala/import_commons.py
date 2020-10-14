@@ -2,6 +2,7 @@ import os
 import sys
 import argparse
 import time
+import logging
 
 from typing import Optional, Any
 
@@ -31,19 +32,23 @@ from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.utils.dict_utils import recursive_dict_update
 
 
+logger = logging.getLogger(__name__)
+
+
 def save_study_config(dae_config, study_id, study_config, force=False):
     dirname = os.path.join(dae_config.studies_db.dir, study_id)
     filename = os.path.join(dirname, "{}.conf".format(study_id))
 
     if os.path.exists(filename):
-        print("configuration file already exists:", filename)
+        logger.info(
+            f"configuration file already exists: {filename}")
         if not force:
-            print("skipping overwring the old config file...")
+            logger.info("skipping overwring the old config file...")
             return
 
         new_name = os.path.basename(filename) + "." + str(time.time_ns())
         new_path = os.path.join(os.path.dirname(filename), new_name)
-        print(f"Backing up configuration for {study_id} in {new_path}")
+        logger.info(f"Backing up configuration for {study_id} in {new_path}")
         os.rename(filename, new_path)
 
     os.makedirs(dirname, exist_ok=True)
@@ -76,12 +81,11 @@ def construct_import_annotation_pipeline(
 
 class MakefilePartitionHelper:
     def __init__(
-        self,
-        partition_descriptor,
-        genome,
-        add_chrom_prefix=None,
-        del_chrom_prefix=None,
-    ):
+            self,
+            partition_descriptor,
+            genome,
+            add_chrom_prefix=None,
+            del_chrom_prefix=None):
 
         self.genome = genome
         self.partition_descriptor = partition_descriptor
@@ -838,7 +842,7 @@ class BatchImporter:
             study_config_dict = GPFConfigParser.load_config_raw(
                 argv.study_config
             )
-            config_dict = recursive_dict_update(config_dict, study_config_dict)
+            config_dict = recursive_dict_update(study_config_dict, config_dict)
 
         config_builder = StudyConfigBuilder(config_dict)
         config = config_builder.build_config()
@@ -1004,6 +1008,7 @@ class Variants2ParquetTool:
             conflict_handler="resolve",
             formatter_class=argparse.RawDescriptionHelpFormatter,
         )
+        parser.add_argument('--verbose', '-V', action='count', default=0)
 
         FamiliesLoader.cli_arguments(parser)
         cls.VARIANTS_LOADER_CLASS.cli_arguments(parser)
@@ -1102,6 +1107,14 @@ class Variants2ParquetTool:
         parser = cls.cli_arguments_parser(gpf_instance)
 
         argv = parser.parse_args(argv)
+        if argv.verbose == 1:
+            logging.basicConfig(level=logging.WARNING)
+        elif argv.verbose == 2:
+            logging.basicConfig(level=logging.INFO)
+        elif argv.verbose >= 3:
+            logging.basicConfig(level=logging.DEBUG)
+        else:
+            logging.basicConfig(level=logging.ERROR)
 
         families_filename, families_params = \
             FamiliesLoader.parse_cli_arguments(argv)
@@ -1146,7 +1159,8 @@ class Variants2ParquetTool:
                     cls.BUCKET_INDEX_DEFAULT
                     + generator.bucket_index(argv.region_bin)
                 )
-                print(f"resetting regions (rb: {argv.region_bin}):", regions)
+                logger.info(
+                    f"resetting regions (rb: {argv.region_bin}): {regions}")
                 variants_loader.reset_regions(regions)
 
         elif argv.regions is not None:
@@ -1158,7 +1172,7 @@ class Variants2ParquetTool:
             gpf_instance, argv, variants_loader
         )
 
-        print("argv.rows:", argv.rows)
+        logger.debug(f"argv.rows: {argv.rows}")
 
         ParquetManager.variants_to_parquet(
             variants_loader,

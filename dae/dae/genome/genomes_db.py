@@ -1,3 +1,5 @@
+import logging
+
 from collections import namedtuple
 from typing import List
 
@@ -8,6 +10,8 @@ from dae.genome.gene_models import load_gene_models
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.genomes_db import genomes_db_conf
+
+logger = logging.getLogger(__name__)
 
 """
 GA = genomesDB.get_GA()
@@ -52,7 +56,9 @@ class Genome:
 
         genome.genomic_sequence_filename = genome_config.chr_all_file
 
-        for section_id, gene_models_config in genome_config.gene_models.items():
+        for section_id, gene_models_config in \
+                genome_config.gene_models.items():
+
             gene_models = Genome.GeneModelsConfig(
                 section_id,
                 gene_models_config.file,
@@ -63,6 +69,8 @@ class Genome:
 
         assert genome_config.default_gene_models in genome._gene_models
         genome.default_gene_models_id = genome_config.default_gene_models
+        genome.default_gene_models_filename = \
+            genome._gene_models[genome.default_gene_models_id].file
 
         if genome_config.pars:
             assert genome_config.pars.X is not None
@@ -157,7 +165,13 @@ class GenomesDB(object):
 
     def get_default_gene_models_id(self, genome_id=None):
         genome = self.get_genome(genome_id)
-        return genome.default_gene_model_id
+        logger.debug(f"genome {genome_id}: {genome}")
+        return genome.default_gene_models_id
+
+    def get_default_gene_models_filename(self, genome_id=None):
+        genome = self.get_genome(genome_id)
+        logger.debug(f"genome {genome_id}: {genome}")
+        return genome.default_gene_models_filename
 
     def get_gene_models(self, gene_model_id=None, genome_id=None):
         genome = self.get_genome(genome_id)
@@ -171,8 +185,10 @@ class GenomesDB(object):
         return open_ref(genomic_sequence_filename)
 
     def load_gene_models(
-        self, gene_models_file=None, gene_models_fileformat=None
-    ):
+            self, gene_models_file=None, gene_models_fileformat=None):
+        logger.debug(
+            f"gene models file: {gene_models_file}, "
+            f"format: {gene_models_fileformat}")
         if gene_models_file is None:
             return self.default_genome.get_gene_models()
 

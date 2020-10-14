@@ -280,6 +280,12 @@ study_config_schema = {
             },
             "preview_columns": {"type": "list", "schema": {"type": "string"}},
             "download_columns": {"type": "list", "schema": {"type": "string"}},
+            "summary_preview_columns": {
+                "type": "list", "schema": {"type": "string"}
+            },
+            "summary_download_columns": {
+                "type": "list", "schema": {"type": "string"}
+            },
             "present_in_role": {
                 "type": "dict",
                 "valuesrules": {

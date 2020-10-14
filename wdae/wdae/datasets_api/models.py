@@ -1,7 +1,12 @@
+import logging
+
 from django.db import models
 from django.contrib.auth.models import Group
 from guardian.shortcuts import assign_perm
 from utils.logger import LOGGER
+
+
+logger = logging.getLogger(__name__)
 
 
 class Dataset(models.Model):
@@ -21,6 +26,7 @@ class Dataset(models.Model):
 
     @classmethod
     def recreate_dataset_perm(cls, dataset_id, authorized_groups=None):
+        logger.debug(f"looking for dataset <{dataset_id}>")
         dataset_object, _ = cls.objects.get_or_create(dataset_id=dataset_id)
 
         groups = dataset_object.default_groups

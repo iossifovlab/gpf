@@ -30,8 +30,8 @@ class AnnotatorBase(object):
             config.options.Graw
         )
         self.gene_models = self.genomes_db.load_gene_models(
-            config.options.Traw
-        )
+            config.options.Traw, config.options.TrawFormat)
+
         assert self.genomes_db is not None
         assert self.genomic_sequence is not None
         assert self.gene_models is not None
@@ -57,6 +57,7 @@ class AnnotatorBase(object):
         """
         self.schema = deepcopy(file_io_manager.reader.schema)
         self.collect_annotator_schema(self.schema)
+
         file_io_manager.writer.schema = self.schema
 
         line_mapper = LineMapper(file_io_manager.header)

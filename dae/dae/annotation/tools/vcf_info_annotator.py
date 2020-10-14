@@ -32,14 +32,14 @@ class VcfInfoAnnotator(VariantScoreAnnotatorBase):
         chrom = variant.chromosome
         pos = variant.position
         logger.debug(
-            f"{self.score_file.score_filename}: looking for frequency of "
+            f"{self.score_file.score_filename}: looking for VCF frequency of "
             f"{variant}; {chrom}:{pos};")
 
         scores = self.score_file.fetch_scores(chrom, pos, pos)
         if not scores:
             self._scores_not_found(aline)
             return
-        
+
         logger.debug(
             f"scores found: {scores}")
 
@@ -48,6 +48,8 @@ class VcfInfoAnnotator(VariantScoreAnnotatorBase):
         alts = scores["ALT"]
         for index, (ref, alt) in enumerate(zip(refs, alts)):
             if variant.reference == ref and variant.alternative == alt:
-                for name, result_name in self.config.columns.items():
-                    aline[result_name] = scores[name][index]
+                for name, output in self.config.columns.items():
+                    aline[output] = scores[name][index]
+                    logger.debug(
+                        f"VCF frequency: aline[{output}]={aline[output]}")
                 return

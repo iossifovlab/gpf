@@ -323,33 +323,33 @@ class SingleVcfLoader(VariantsGenotypesLoader):
             len(self.independent),
         )
 
-    def _build_summary_variant(self, summary_index, vcf_variant):
-        records = []
-        allele_count = len(vcf_variant.ALT) + 1
-        records.append(
-            {
-                "chrom": vcf_variant.CHROM,
-                "position": vcf_variant.start + 1,
-                "reference": vcf_variant.REF,
-                "alternative": None,
-                "summary_variant_index": summary_index,
-                "allele_index": 0,
-                "allele_count": allele_count,
-            }
-        )
-        for allele_index, alt in enumerate(vcf_variant.ALT):
-            records.append(
-                {
-                    "chrom": vcf_variant.CHROM,
-                    "position": vcf_variant.start + 1,
-                    "reference": vcf_variant.REF,
-                    "alternative": alt,
-                    "summary_variant_index": summary_index,
-                    "allele_index": allele_index + 1,
-                    "allele_count": allele_count,
-                }
-            )
-        return SummaryVariantFactory.summary_variant_from_records(records)
+    # def _build_summary_variant(self, summary_index, vcf_variant):
+    #     records = []
+    #     allele_count = len(vcf_variant.ALT) + 1
+    #     records.append(
+    #         {
+    #             "chrom": vcf_variant.CHROM,
+    #             "position": vcf_variant.start + 1,
+    #             "reference": vcf_variant.REF,
+    #             "alternative": None,
+    #             "summary_variant_index": summary_index,
+    #             "allele_index": 0,
+    #             "allele_count": allele_count,
+    #         }
+    #     )
+    #     for allele_index, alt in enumerate(vcf_variant.ALT):
+    #         records.append(
+    #             {
+    #                 "chrom": vcf_variant.CHROM,
+    #                 "position": vcf_variant.start + 1,
+    #                 "reference": vcf_variant.REF,
+    #                 "alternative": alt,
+    #                 "summary_variant_index": summary_index,
+    #                 "allele_index": allele_index + 1,
+    #                 "allele_count": allele_count,
+    #             }
+    #         )
+    #     return SummaryVariantFactory.summary_variant_from_records(records)
 
     def _compare_vcf_variants_gt(self, lhs, rhs):
         """
@@ -459,9 +459,9 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                 current_vcf_variant = self._find_current_vcf_variant(
                     vcf_variants
                 )
-                current_summary_variant = self._build_summary_variant(
-                    summary_variant_index, current_vcf_variant
-                )
+                current_summary_variant = \
+                    SummaryVariantFactory.summary_variant_from_vcf(
+                        current_vcf_variant, summary_variant_index)
 
                 vcf_iterator_idexes_to_advance = list()
                 vcf_gt_variants = list()

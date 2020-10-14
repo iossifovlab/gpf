@@ -22,4 +22,19 @@ urlpatterns = [
         views.QueryDownloadView.as_view(),
         name="genotype_browser_download",
     ),
+    url(
+        r"^/summary/preview/?$",
+        views.QueryPreviewSummaryVariantsView.as_view(),
+        name="genotype_browser_summary_variants",
+    ),
+    url(
+        r"^/summary/variants/?$",
+        views.QuerySummaryVariantsView.as_view(),
+        name="genotype_browser_summary_variants",
+    ),
+    url(
+        r"^/summary/download/?$",
+        views.QuerySummaryVariantsDownloadView.as_view(),
+        name="genotype_browser_summary_variants",
+    ),
 ]

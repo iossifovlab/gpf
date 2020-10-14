@@ -45,6 +45,7 @@ setuptools.setup(
     vcf2parquet.py=dae.tools.vcf2parquet:main
     denovo2parquet.py=dae.tools.denovo2parquet:main
     cnv2parquet.py=dae.tools.cnv2parquet:main
+    generate_vcf_score_histogram.py=dae.tools.generate_vcf_score_histogram:main
     """,
     classifiers=[
         "Development Status :: 4 - Beta",

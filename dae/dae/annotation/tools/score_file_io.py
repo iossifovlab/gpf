@@ -88,13 +88,17 @@ class ScoreFile(object):
         assert self.config.general.header is not None
         assert self.config.columns.score is not None
         self.header = self.config.general.header
-        logger.debug(f"score file {self.score_filename} header {self.header}")
+        logger.debug(
+            f"score file {os.path.basename(self.score_filename)} "
+            f"header {self.header}")
         self.score_names = self.config.columns.score
 
         self.schema = Schema.from_dict(
             self.config.score_schema
         ).order_as(self.header)
-        logger.debug(f"score file {self.score_filename} schema {self.schema}")
+        logger.debug(
+            f"score file {os.path.basename(self.score_filename)} "
+            f"schema {self.schema.col_names}")
 
         assert all([sn in self.schema for sn in self.score_names]), [
             self.score_filename,
@@ -176,7 +180,7 @@ class ScoreFile(object):
             count = (
                 min(pos_end, line.pos_end) - max(line.pos_begin, pos_begin) + 1
             )
-            if count < 0:
+            if count <= 0:
                 continue
 
             assert count >= 1, count

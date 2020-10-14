@@ -1,6 +1,7 @@
 import sys
 import time
 
+from dae.variants.variant import SummaryAllele
 from dae.variants.family_variant import FamilyAllele
 
 from dae.backends.attributes_query import (
@@ -148,6 +149,44 @@ class RawFamilyVariants:
         return True
 
     @classmethod
+    def filter_summary_allele(
+            cls,
+            allele,
+            real_attr_filter=None,
+            frequency_filter=None,
+            ultra_rare=None,
+            genes=None,
+            effect_types=None,
+            variant_type=None,
+            person_ids=None,
+            **kwargs):
+
+        assert isinstance(allele, SummaryAllele)
+        if real_attr_filter is not None:
+            if not cls.filter_real_attr(allele, real_attr_filter):
+                return False
+        if frequency_filter is not None:
+            if not cls.filter_real_attr(
+                    allele, frequency_filter, is_frequency=True):
+                return False
+        if ultra_rare:
+            if not cls.filter_real_attr(allele, [("af_allele_count", (0, 1))]):
+                return False
+
+        if genes is not None or effect_types is not None:
+            if not cls.filter_gene_effects(allele, effect_types, genes):
+                return False
+        if variant_type is not None:
+            if not variant_type.match([allele.variant_type]):
+                return False
+        if person_ids is not None:
+            if allele.is_reference_allele:
+                return False
+            if not set(allele.variant_in_members) & set(person_ids):
+                return False
+        return True
+
+    @classmethod
     def filter_variant(cls, v, **kwargs):
         if kwargs.get("regions") is not None:
             if not cls.filter_regions(v, kwargs["regions"]):
@@ -161,6 +200,47 @@ class RawFamilyVariants:
             if not func(v):
                 return False
         return True
+
+    @classmethod
+    def filter_summary_variant(cls, v, **kwargs):
+        if kwargs.get("regions") is not None:
+            if not cls.filter_regions(v, kwargs["regions"]):
+                return False
+        if "filter" in kwargs:
+            func = kwargs["filter"]
+            if not func(v):
+                return False
+        return True
+
+    def query_summary_variants(self, **kwargs):
+        if kwargs.get("variant_type") is not None:
+            parsed = kwargs["variant_type"]
+            if isinstance(kwargs["variant_type"], str):
+                parsed = variant_type_query.transform_query_string_to_tree(
+                    parsed
+                )
+
+            kwargs[
+                "variant_type"
+            ] = variant_type_query.transform_tree_to_matcher(parsed)
+
+        return_reference = kwargs.get("return_reference", False)
+
+        # for _, vs in self.full_variants_iterator():
+        for sv, _ in self.full_variants_iterator():
+            if not self.filter_summary_variant(sv, **kwargs):
+                continue
+
+            alleles = sv.alleles
+            alleles_matched = []
+            for allele in alleles:
+                if self.filter_summary_allele(allele, **kwargs):
+                    if allele.allele_index == 0 and not return_reference:
+                        continue
+                    alleles_matched.append(allele.allele_index)
+            if alleles_matched:
+                # sv.set_matched_alleles(alleles_matched)
+                yield sv
 
     def query_variants(self, **kwargs):
         if kwargs.get("roles") is not None:

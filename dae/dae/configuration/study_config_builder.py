@@ -407,7 +407,7 @@ genotype.{{ k }}.source = "{{ v.source }}"
 {%- endif %}
 
 {%- if v.slots %}
-genotype.{{ k }}.slots = "{{ v.slots }}"
+genotype.{{ k }}.slots = {{ v.slots }}
 {%- endif %}
 {%- endfor %}
 {%- endif %}
@@ -421,7 +421,7 @@ pheno.{{ k }}.source = "{{ v.source }}"
 {%- endif %}
 
 {%- if v.slots %}
-pheno.{{ k }}.slots = "{{ v.slots }}"
+pheno.{{ k }}.slots = {{ v.slots }}
 {%- endif %}
 {%- endfor %}
 {%- endif %}
@@ -432,11 +432,11 @@ selected_genotype_column_values = \
 {%- endif %}
 
 {%- if genotype_browser.preview_columns %}
-preview_columns = "{{ genotype_browser.preview_columns }}"
+preview_columns = {{ genotype_browser.preview_columns }}
 {%- endif %}
 
 {%- if genotype_browser.download_columns %}
-download_columns = "{{ genotype_browser.download_columns }}"
+download_columns = {{ genotype_browser.download_columns }}
 {%- endif %}
 
 
@@ -445,12 +445,12 @@ present_in_role = "{{ genotype_browser.present_in_role }}"
 {%- endif %}
 
 {%- if genotype_browser.pheno_filters %}
-pheno_filters = "{{ genotype_browser.pheno_filters }}"
+pheno_filters = {{ genotype_browser.pheno_filters }}
 {%- endif %}
 
 {%- if genotype_browser.selected_pheno_filters_values %}
 selected_pheno_filters_values = \
-"{{ genotype_browser.selected_pheno_filters_values }}"
+{{ genotype_browser.selected_pheno_filters_values }}
 {%- endif %}
 
 
