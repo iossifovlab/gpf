@@ -22,6 +22,29 @@ class GeneViewSummaryVariant {
   seenInUnaffected: boolean;
   svuid: string;
 
+  lgds = ['nonsense', 'splice-site', 'frame-shift', 'no-frame-shift-new-stop'];
+
+  isLGDs(): boolean {
+    if (this.lgds.indexOf(this.effect) !== -1 || this.effect === 'lgds') {
+      return true;
+    }
+    return false;
+  }
+
+  isMissense(): boolean {
+    if (this.effect === 'missense') {
+      return true;
+    }
+    return false;
+  }
+
+  isSynonymous(): boolean {
+    if (this.effect === 'synonymous') {
+      return true;
+    }
+    return false;
+  }
+
   static fromPreviewVariant(config, genotypePreview: GenotypePreview): GeneViewSummaryVariant {
     const result = new GeneViewSummaryVariant();
 
@@ -47,6 +70,15 @@ class GeneViewSummaryVariant {
     }
     result.seenInAffected = false;
     result.seenInUnaffected = false;
+    for (const pedigreeData of genotypePreview.get("genotype")) {
+      if (pedigreeData.label > 0) {
+        if (pedigreeData.color == "#ffffff") {
+          result.seenInUnaffected = true
+        } else {
+          result.seenInAffected = true
+        }
+      }
+    }
 
     result.svuid = result.location + ':' + result.variant;
 
@@ -106,8 +138,8 @@ export class GeneViewComponent implements OnInit {
   frequencyDomainMax: number;
   summaryVariantsArray: GeneViewSummaryVariantsArray;
 
-  margin = {top: 10, right: 70, left: 70, bottom: 0};
-  y_axes_proportions = {domain: 0.70, subdomain: 0.20};
+  margin = { top: 10, right: 70, left: 70, bottom: 0 };
+  y_axes_proportions = { domain: 0.70, subdomain: 0.20 };
   svgElement;
   svgWidth = 1200 - this.margin.left - this.margin.right;
   svgHeight;
@@ -157,27 +189,27 @@ export class GeneViewComponent implements OnInit {
       this.selectedFrequencies = [0, this.frequencyDomainMax];
 
       this.svgElement = d3.select('#svg-container')
-      .append('svg')
-      .attr('width', this.svgWidth + this.margin.left + this.margin.right)
-      .attr('height', this.svgHeightFreqRaw)
-      .append('g')
-      .attr('transform', `translate(${this.margin.left}, ${this.margin.top})`);
+        .append('svg')
+        .attr('width', this.svgWidth + this.margin.left + this.margin.right)
+        .attr('height', this.svgHeightFreqRaw)
+        .append('g')
+        .attr('transform', `translate(${this.margin.left}, ${this.margin.top})`);
 
       this.x = d3.scaleLinear()
-      .domain([0, 0])
-      .range([0, this.svgWidth]);
+        .domain([0, 0])
+        .range([0, this.svgWidth]);
 
       this.y = d3.scaleLog()
-      .domain([this.frequencyDomainMin, this.frequencyDomainMax])
-      .range([this.subdomainAxisY, 0]);
+        .domain([this.frequencyDomainMin, this.frequencyDomainMax])
+        .range([this.subdomainAxisY, 0]);
 
       this.y_subdomain = d3.scaleLinear()
-      .domain([0, this.frequencyDomainMin])
-      .range([this.zeroAxisY, this.subdomainAxisY]);
+        .domain([0, this.frequencyDomainMin])
+        .range([this.zeroAxisY, this.subdomainAxisY]);
 
       this.y_zero = d3.scalePoint()
-      .domain(['0'])
-      .range([this.svgHeightFreq, this.zeroAxisY]);
+        .domain(['0'])
+        .range([this.svgHeightFreq, this.zeroAxisY]);
     });
     this.streamingFinished$.subscribe(() => {
       this.summaryVariantsArray = GeneViewSummaryVariantsArray.fromPreviewVariantsArray(
@@ -226,12 +258,12 @@ export class GeneViewComponent implements OnInit {
     return location.slice(idx + 1);
   }
 
-  getVariantColor(worst_effect) {
+  getEffectVariantColor(worst_effect): string {
     worst_effect = worst_effect.toLowerCase();
 
     if (this.lgds.indexOf(worst_effect) !== -1 || worst_effect === 'lgds') {
       return '#ff0000';
-    } else if ( worst_effect === 'missense') {
+    } else if (worst_effect === 'missense') {
       return '#ffff00';
     } else if (worst_effect === 'synonymous') {
       return '#69b3a2';
@@ -332,70 +364,141 @@ export class GeneViewComponent implements OnInit {
       this.svgElement.append('g').call(this.y_axis_subdomain);
       this.svgElement.append('g').call(this.y_axis_zero);
 
+      // for (const variant of filteredSummaryVariants.summaryVariants) {
+      //   if (variant.seenAsDenovo) {
+      //     this.drawDenovoPlotVariant(variant);
+      //   } else {
+      //     this.drawTransmittedPlotVariant(variant);
+      //     // this.drawSquareVariant(variant);
+      //     // this.drawStarVariant(variant);
+      //   }
+      // }
+
       for (const variant of filteredSummaryVariants.summaryVariants) {
-        if (variant.seenAsDenovo) {
-          this.drawDenovoPlotVariant(variant);
+        const color = this.getPhenoColor(variant);
+        if (variant.isLGDs()) {
+          this.drawStarVariant(variant, color);
+        } else if (variant.isMissense()) {
+          this.drawTriangleVariant(variant, color);
+        } else if (variant.isSynonymous()) {
+          this.drawCircleVariant(variant, color);
         } else {
-          this.drawTransmittedPlotVariant(variant);
-          // this.drawSquareVariant(variant);
-          // this.drawStarVariant(variant);
+          this.drawDotVariant(variant, color);
+        }
+        if (variant.seenAsDenovo) {
+          this.drawSuroundingSquare(variant, color);
         }
       }
+
     }
   }
 
-  drawSquareVariant(variantInfo: GeneViewSummaryVariant) {
-    this.svgElement.append('g')
-    .append('rect')
-    .attr('x', (this.x(variantInfo.position)) - 5)
-    .attr('y', this.getVariantY(variantInfo.frequency) - 5)
-    .attr('width', 10)
-    .attr('height', 10)
-    .style('fill', this.getVariantColor(variantInfo.effect))
-    .style('opacity', 0.5)
-    .style('stroke-width', 1)
-    .style('stroke', '#000000');
+  getPhenoColor(summaryVariant: GeneViewSummaryVariant): string {
+    if (summaryVariant.seenInAffected) {
+      if (summaryVariant.seenInUnaffected) {
+        return "#AAAAAA";
+      } else {
+        return "#AA0000";
+      }
+    }
+    return "#00AA00"
   }
 
-  drawStarVariant(variantInfo: GeneViewSummaryVariant) {
+  drawSquareVariant(variantInfo: GeneViewSummaryVariant, color: string) {
+    this.svgElement.append('g')
+      .append('rect')
+      .attr('x', (this.x(variantInfo.position)) - 5)
+      .attr('y', this.getVariantY(variantInfo.frequency) - 5)
+      .attr('width', 10)
+      .attr('height', 10)
+      .style('fill', color)
+      .style('opacity', 0.5)
+      .style('stroke-width', 1)
+      .style('stroke', '#000000');
+  }
+
+  drawSuroundingSquare(variantInfo: GeneViewSummaryVariant, color: string) {
+    const w = 16;
+    const h = 16;
+    this.svgElement.append('g')
+      .append('rect')
+      .attr('x', (this.x(variantInfo.position)) - w / 2)
+      .attr('y', this.getVariantY(variantInfo.frequency) - h / 2)
+      .attr('width', w)
+      .attr('height', h)
+      .style('fill', color)
+      .style('fill-opacity', 0.2)
+      .style('stroke-width', 2)
+      .style('stroke', color);
+  }
+
+
+  drawStarVariant(variantInfo: GeneViewSummaryVariant, color: string) {
     const x = Number(this.x(variantInfo.position));
     const y = Number(this.getVariantY(variantInfo.frequency));
 
     this.svgElement.append('g')
-    .append('polygon')
-    .attr('points', `${x},${y - 7} ${x - 5},${y + 5} ${x + 5},${y + 5}`)
-    .style('fill', this.getVariantColor(variantInfo.effect))
-    .style('opacity', 0.7);
+      .append('polygon')
+      .attr('points', `${x},${y - 7} ${x - 5},${y + 5} ${x + 5},${y + 5}`)
+      .style('fill', color);
 
     this.svgElement.append('g')
-    .append('polygon')
-    .attr('points', `${x},${y + 9} ${x - 5},${y - 4} ${x + 5},${y - 4}`)
-    .style('fill', this.getVariantColor(variantInfo.effect))
-    .style('opacity', 0.7);
+      .append('polygon')
+      .attr('points', `${x},${y + 9} ${x - 5},${y - 4} ${x + 5},${y - 4}`)
+      .style('fill', color);
+  }
+
+  drawCircleVariant(variantInfo: GeneViewSummaryVariant, color: string) {
+    this.svgElement.append('g')
+      .append('circle')
+      .attr('cx', this.x(variantInfo.position))
+      .attr('cy', this.getVariantY(variantInfo.frequency))
+      .attr('r', 7)
+      .style('fill', color);
+  }
+
+  drawDotVariant(variantInfo: GeneViewSummaryVariant, color: string) {
+    this.svgElement.append('g')
+      .append('circle')
+      .attr('cx', this.x(variantInfo.position))
+      .attr('cy', this.getVariantY(variantInfo.frequency))
+      .attr('r', 3)
+      .style('fill', color);
+  }
+
+  drawTriangleVariant(variantInfo: GeneViewSummaryVariant, color: string) {
+    this.svgElement.append('g')
+      .append('polygon')
+      .attr('points', this.getTrianglePoints(
+        this.x(variantInfo.position),
+        this.getVariantY(variantInfo.frequency),
+        14
+      ))
+      .style('stroke-width', 1)
+      .style('stroke', color)
+      .style('fill', color);
   }
 
   drawTransmittedPlotVariant(variantInfo: GeneViewSummaryVariant) {
     this.svgElement.append('g')
-    .append('circle')
-    .attr('cx', this.x(variantInfo.position))
-    .attr('cy', this.getVariantY(variantInfo.frequency))
-    .attr('r', 5)
-    .style('fill', this.getVariantColor(variantInfo.effect))
-    .style('opacity', 0.5);
+      .append('circle')
+      .attr('cx', this.x(variantInfo.position))
+      .attr('cy', this.getVariantY(variantInfo.frequency))
+      .attr('r', 5)
+      .style('fill', this.getEffectVariantColor(variantInfo.effect));
   }
 
   drawDenovoPlotVariant(variantInfo: GeneViewSummaryVariant) {
     this.svgElement.append('g')
-    .append('polygon')
-    .attr('points', this.getTrianglePoints(
-      this.x(variantInfo.position),
-      this.getVariantY(variantInfo.frequency),
-      15
-    ))
-    .style('stroke-width', 2)
-    .style('stroke', '#000000')
-    .style('fill', this.getVariantColor(variantInfo.effect))
-    .style('opacity', 0.5);
+      .append('polygon')
+      .attr('points', this.getTrianglePoints(
+        this.x(variantInfo.position),
+        this.getVariantY(variantInfo.frequency),
+        15
+      ))
+      .style('stroke-width', 2)
+      .style('stroke', '#000000')
+      .style('fill', this.getEffectVariantColor(variantInfo.effect));
   }
 
   getVariantY(variantFrequency): number {
@@ -463,18 +566,18 @@ export class GeneViewComponent implements OnInit {
     d3.select('#svg-container').selectAll('svg').remove();
 
     this.svgElement = d3.select('#svg-container')
-    .append('svg')
-    .attr('width', this.svgWidth + this.margin.left + this.margin.right)
-    .attr('height', this.svgHeight)
-    .append('g')
-    .attr('transform', `translate(${this.margin.left}, ${this.margin.top})`);
+      .append('svg')
+      .attr('width', this.svgWidth + this.margin.left + this.margin.right)
+      .attr('height', this.svgHeight)
+      .append('g')
+      .attr('transform', `translate(${this.margin.left}, ${this.margin.top})`);
 
     this.brush = d3.brush().extent([[0, 0], [this.svgWidth, this.svgHeightFreq]])
-    .on('end', this.brushEndEvent);
+      .on('end', this.brushEndEvent);
 
     this.svgElement.append('g')
-    .attr('class', 'brush')
-    .call(this.brush);
+      .attr('class', 'brush')
+      .call(this.brush);
 
     let transcriptYPosition = this.svgHeightFreqRaw + 20;
     for (let i = 0; i < this.gene.transcripts.length; i++) {
@@ -606,7 +709,7 @@ export class GeneViewComponent implements OnInit {
   }
 
   drawTranscriptUTRText(xStart: number, xEnd: number, y: number, strand: string) {
-    const UTR = {left: '5\'', right: '3\''};
+    const UTR = { left: '5\'', right: '3\'' };
 
     if (strand === '-') {
       UTR.left = '3\'';
@@ -614,32 +717,32 @@ export class GeneViewComponent implements OnInit {
     }
 
     this.svgElement.append('text')
-    .attr('y', y + 10)
-    .attr('x', this.x(xStart) - 20)
-    .attr('font-size', '13px')
-    .text(UTR.left)
-    .attr('cursor', 'default')
-    .append('svg:title').text(`UTR ${UTR.left}`);
+      .attr('y', y + 10)
+      .attr('x', this.x(xStart) - 20)
+      .attr('font-size', '13px')
+      .text(UTR.left)
+      .attr('cursor', 'default')
+      .append('svg:title').text(`UTR ${UTR.left}`);
 
     this.svgElement.append('text')
-    .attr('y', y + 10)
-    .attr('x', this.x(xEnd) + 10)
-    .attr('font-size', '13px')
-    .text(UTR.right)
-    .attr('cursor', 'default')
-    .append('svg:title').text(`UTR ${UTR.right}`);
+      .attr('y', y + 10)
+      .attr('x', this.x(xEnd) + 10)
+      .attr('font-size', '13px')
+      .text(UTR.right)
+      .attr('cursor', 'default')
+      .append('svg:title').text(`UTR ${UTR.right}`);
   }
 
   drawRect(xStart: number, xEnd: number, y: number, height: number, svgTitle: string) {
     const width = this.x(xEnd) - this.x(xStart);
 
     this.svgElement.append('rect')
-    .attr('height', height)
-    .attr('width', width)
-    .attr('x', this.x(xStart))
-    .attr('y', y)
-    .attr('stroke', 'rgb(0,0,0)')
-    .append('svg:title').text(svgTitle);
+      .attr('height', height)
+      .attr('width', width)
+      .attr('x', this.x(xStart))
+      .attr('y', y)
+      .attr('stroke', 'rgb(0,0,0)')
+      .append('svg:title').text(svgTitle);
   }
 
   drawLine(xStart: number, xEnd: number, y: number, svgTitle: string) {
@@ -647,11 +750,11 @@ export class GeneViewComponent implements OnInit {
     const xEndAligned = this.x(xEnd);
 
     this.svgElement.append('line')
-    .attr('x1', xStartAligned)
-    .attr('y1', y + 5)
-    .attr('x2', xEndAligned)
-    .attr('y2', y + 5)
-    .attr('stroke', 'black')
-    .append('svg:title').text(svgTitle);
+      .attr('x1', xStartAligned)
+      .attr('y1', y + 5)
+      .attr('x2', xEndAligned)
+      .attr('y2', y + 5)
+      .attr('stroke', 'black')
+      .append('svg:title').text(svgTitle);
   }
 }
