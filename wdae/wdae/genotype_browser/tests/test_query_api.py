@@ -293,7 +293,7 @@ def test_mixed_dataset_rights_third_party_group(db, user, user_client):
 def test_mixed_dataset_rights_with_study_filters(db, user, user_client):
     data = {
         "datasetId": "composite_dataset_ds",
-        "studyFilters": [{"studyName": "quads_f1"}]
+        "studyFilters": [{"studyId": "quads_f1"}]
     }
 
     add_group_perm_to_dataset("new_custom_group", "inheritance_trio")

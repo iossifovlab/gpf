@@ -67,7 +67,7 @@ class StudyWrapperBase:
             self, query, max_variants_count=10000):
         raise NotImplementedError
 
-    def get_genotype_data_group_description(self):
+    def build_genotype_data_group_description(self, gpf_instance):
         raise NotImplementedError
 
 
@@ -1241,7 +1241,7 @@ class RemoteStudyWrapper(StudyWrapperBase):
     def get_variants_wdae_download(self, query, max_variants_count=10000):
         raise NotImplementedError
 
-    def get_genotype_data_group_description(self):
+    def build_genotype_data_group_description(self, gpf_instance):
         return self.config.to_dict()
 
 
