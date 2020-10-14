@@ -476,15 +476,14 @@ export class GeneViewComponent implements OnInit {
   }
 
   drawStar(x: number, y: number, color: string) {
-    this.svgElement.append('g')
-    .append('polygon')
-    .attr('points', `${x},${y - 7} ${x - 5},${y + 5} ${x + 5},${y + 5}`)
-    .style('fill', color);
-
-    this.svgElement.append('g')
-    .append('polygon')
-    .attr('points', `${x},${y + 9} ${x - 5},${y - 4} ${x + 5},${y - 4}`)
-    .style('fill', color);
+    this.svgElement.append('svg')
+    .attr('x', x - 8.5)
+    .attr('y', y - 8.5)
+    .append('g')
+    .append('path')
+    .attr('d', 'M12 .587l3.668 7.568 8.332 1.151-6.064 5.828 1.48 8.279-7.416-3.967-7.417 3.967 1.481-8.279-6.064-5.828 8.332-1.151z')
+    .attr('transform', 'scale(0.7)')
+    .attr('fill', color);
   }
 
   drawTriangle(x: number, y: number, color: string) {
