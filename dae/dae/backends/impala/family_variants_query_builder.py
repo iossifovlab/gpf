@@ -32,8 +32,8 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
     def create_row_deserializer(self, serializer):
         seen = set()
 
-        def deserialize_row(self, row):
-            cols = []
+        def deserialize_row(row):
+            cols = dict()
             for idx, col_name in enumerate(self.query_columns):
                 cols[col_name] = row[idx]
 
@@ -68,7 +68,7 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
                 extra_attributes = bytes(extra_attributes, "utf8")
 
             family = self.families[family_id]
-            v = self.serializer.deserialize_family_variant(
+            v = serializer.deserialize_family_variant(
                 variant_data, family, extra_attributes
             )
             return v

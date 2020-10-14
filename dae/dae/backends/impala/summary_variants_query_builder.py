@@ -24,8 +24,8 @@ class SummaryVariantsQueryBuilder(BaseQueryBuilder):
         self._add_to_product("GROUP BY bucket_index, summary_index")
 
     def create_row_deserializer(self, serializer):
-        def deserialize_row(self, row):
-            cols = []
+        def deserialize_row(row):
+            cols = dict()
             for idx, col_name in enumerate(self.query_columns):
                 cols[col_name] = row[idx]
 
@@ -48,14 +48,13 @@ class SummaryVariantsQueryBuilder(BaseQueryBuilder):
                 )
                 extra_attributes = bytes(extra_attributes, "utf8")
 
-            v = self.serializer.deserialize_summary_variant(
+            v = serializer.deserialize_summary_variant(
                 variant_data, extra_attributes
             )
-            v.update_attributes(
-                {"family_variants_count": [family_variants_count]})
+            if v is not None:
+                v.update_attributes(
+                    {"family_variants_count": [family_variants_count]})
 
-            if v is None:
-                continue
+            return v
 
-            yield v
         return deserialize_row

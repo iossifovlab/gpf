@@ -1,8 +1,7 @@
 class ImpalaQueryDirector:
 
-    def __init__(self, query_builder, limit):
+    def __init__(self, query_builder):
         self.query_builder = query_builder
-        self.limit = limit
 
     def build_query(
             self,
@@ -41,7 +40,6 @@ class ImpalaQueryDirector:
             frequency_filter=frequency_filter,
             return_reference=return_reference,
             return_unknown=return_unknown,
-            limit=limit
         )
 
         self.query_builder.build_group_by()
