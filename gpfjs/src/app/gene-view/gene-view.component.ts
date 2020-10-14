@@ -188,6 +188,8 @@ export class GeneViewComponent implements OnInit {
       this.frequencyDomainMax = this.geneBrowserConfig.domainMax;
       this.selectedFrequencies = [0, this.frequencyDomainMax];
 
+      this.drawEffectTypesIcons();
+
       this.svgElement = d3.select('#svg-container')
         .append('svg')
         .attr('width', this.svgWidth + this.margin.left + this.margin.right)
@@ -239,6 +241,28 @@ export class GeneViewComponent implements OnInit {
     }
   }
 
+  drawEffectTypesIcons() {
+    this.svgElement = d3.select('#LGDs')
+    .attr('width', 20)
+    .attr('height', 20);
+    this.drawStar(10, 7.5, '#000000');
+
+    this.svgElement = d3.select('#Missense')
+    .attr('width', 20)
+    .attr('height', 20);
+    this.drawTriangle(10, 8, '#000000');
+
+    this.svgElement = d3.select('#Synonymous')
+    .attr('width', 20)
+    .attr('height', 20);
+    this.drawCircle(10, 8, '#000000');
+
+    this.svgElement = d3.select('#Other')
+    .attr('width', 20)
+    .attr('height', 20);
+    this.drawDot(10, 8, '#000000');
+  }
+
   checkEffectType(effectType, checked) {
     effectType = effectType.toLowerCase();
     if (checked) {
@@ -251,11 +275,6 @@ export class GeneViewComponent implements OnInit {
       this.drawGene();
       this.drawPlot();
     }
-  }
-
-  extractPosition(location) {
-    const idx = location.indexOf(':');
-    return location.slice(idx + 1);
   }
 
   getEffectVariantColor(worst_effect): string {
@@ -345,7 +364,6 @@ export class GeneViewComponent implements OnInit {
   }
 
   drawPlot() {
-
     const filteredSummaryVariants = this.filterSummaryVariantsArray(
       this.summaryVariantsArray, this.x.domain()[0], this.x.domain()[1]
     );
@@ -364,44 +382,34 @@ export class GeneViewComponent implements OnInit {
       this.svgElement.append('g').call(this.y_axis_subdomain);
       this.svgElement.append('g').call(this.y_axis_zero);
 
-      // for (const variant of filteredSummaryVariants.summaryVariants) {
-      //   if (variant.seenAsDenovo) {
-      //     this.drawDenovoPlotVariant(variant);
-      //   } else {
-      //     this.drawTransmittedPlotVariant(variant);
-      //     // this.drawSquareVariant(variant);
-      //     // this.drawStarVariant(variant);
-      //   }
-      // }
-
       for (const variant of filteredSummaryVariants.summaryVariants) {
         const color = this.getPhenoColor(variant);
+
         if (variant.isLGDs()) {
-          this.drawStarVariant(variant, color);
+          this.drawStar(this.x(variant.position), this.getVariantY(variant.frequency), color);
         } else if (variant.isMissense()) {
-          this.drawTriangleVariant(variant, color);
+          this.drawTriangle(this.x(variant.position), this.getVariantY(variant.frequency), color);
         } else if (variant.isSynonymous()) {
-          this.drawCircleVariant(variant, color);
+          this.drawCircle(this.x(variant.position), this.getVariantY(variant.frequency), color);
         } else {
-          this.drawDotVariant(variant, color);
+          this.drawDot(this.x(variant.position), this.getVariantY(variant.frequency), color);
         }
         if (variant.seenAsDenovo) {
           this.drawSuroundingSquare(variant, color);
         }
       }
-
     }
   }
 
   getPhenoColor(summaryVariant: GeneViewSummaryVariant): string {
     if (summaryVariant.seenInAffected) {
       if (summaryVariant.seenInUnaffected) {
-        return "#AAAAAA";
+        return '#AAAAAA';
       } else {
-        return "#AA0000";
+        return '#AA0000';
       }
     }
-    return "#00AA00"
+    return '#00AA00';
   }
 
   drawSquareVariant(variantInfo: GeneViewSummaryVariant, color: string) {
@@ -432,51 +440,43 @@ export class GeneViewComponent implements OnInit {
       .style('stroke', color);
   }
 
-
-  drawStarVariant(variantInfo: GeneViewSummaryVariant, color: string) {
-    const x = Number(this.x(variantInfo.position));
-    const y = Number(this.getVariantY(variantInfo.frequency));
+  drawStar(x: number, y: number, color: string) {
+    this.svgElement.append('g')
+    .append('polygon')
+    .attr('points', `${x},${y - 7} ${x - 5},${y + 5} ${x + 5},${y + 5}`)
+    .style('fill', color);
 
     this.svgElement.append('g')
-      .append('polygon')
-      .attr('points', `${x},${y - 7} ${x - 5},${y + 5} ${x + 5},${y + 5}`)
-      .style('fill', color);
-
-    this.svgElement.append('g')
-      .append('polygon')
-      .attr('points', `${x},${y + 9} ${x - 5},${y - 4} ${x + 5},${y - 4}`)
-      .style('fill', color);
+    .append('polygon')
+    .attr('points', `${x},${y + 9} ${x - 5},${y - 4} ${x + 5},${y - 4}`)
+    .style('fill', color);
   }
 
-  drawCircleVariant(variantInfo: GeneViewSummaryVariant, color: string) {
+  drawTriangle(x: number, y: number, color: string) {
     this.svgElement.append('g')
-      .append('circle')
-      .attr('cx', this.x(variantInfo.position))
-      .attr('cy', this.getVariantY(variantInfo.frequency))
-      .attr('r', 7)
-      .style('fill', color);
+     .append('polygon')
+     .attr('points', this.getTrianglePoints(x, y, 14))
+     .style('stroke-width', 1)
+     .style('stroke', color)
+     .style('fill', color);
+   }
+
+  drawCircle(x: number, y: number, color: string) {
+    this.svgElement.append('g')
+    .append('circle')
+    .attr('cx', x)
+    .attr('cy', y)
+    .attr('r', 7)
+    .style('fill', color);
   }
 
-  drawDotVariant(variantInfo: GeneViewSummaryVariant, color: string) {
+  drawDot(x: number, y: number, color: string) {
     this.svgElement.append('g')
-      .append('circle')
-      .attr('cx', this.x(variantInfo.position))
-      .attr('cy', this.getVariantY(variantInfo.frequency))
-      .attr('r', 3)
-      .style('fill', color);
-  }
-
-  drawTriangleVariant(variantInfo: GeneViewSummaryVariant, color: string) {
-    this.svgElement.append('g')
-      .append('polygon')
-      .attr('points', this.getTrianglePoints(
-        this.x(variantInfo.position),
-        this.getVariantY(variantInfo.frequency),
-        14
-      ))
-      .style('stroke-width', 1)
-      .style('stroke', color)
-      .style('fill', color);
+    .append('circle')
+    .attr('cx', x)
+    .attr('cy', y)
+    .attr('r', 3)
+    .style('fill', color);
   }
 
   drawTransmittedPlotVariant(variantInfo: GeneViewSummaryVariant) {

@@ -5,8 +5,7 @@
       *ngFor="let effect of ['LGDs', 'Missense', 'Synonymous', 'Other']; let i=index" class="checkbox">
       <label>
         <input #checkbox checked type="checkbox" (change)="checkEffectType(effect, checkbox.checked)">
-        <span class="pedigree-icon" [style.background-color]="getEffectVariantColor(effect)"
-          style="opacity: 0.75;"></span>
+        <svg id={{effect}}></svg>
         {{ effect }}
       </label>
     </div>
