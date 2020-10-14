@@ -75,6 +75,13 @@ class ImpalaVariants:
         self.family_bin_size = 0
         self.coding_effect_types = []
         self.rare_boundary = 0
+        self.table_properties = dict({
+            "region_length": 0,
+            "chromosomes": [],
+            "family_bin_size": 0,
+            "coding_effect_types": [],
+            "rare_boundary": 0
+        })
         self._fetch_tblproperties()
 
     def count_variants(self, **kwargs):
@@ -506,23 +513,29 @@ class ImpalaVariants:
                     prop_value = rows[index][2]
                     if prop_name == \
                             "gpf_partitioning_region_bin_region_length":
-                        self.region_length = int(prop_value)
+                        self.table_properties["region_length"] = \
+                            int(prop_value)
                     elif prop_name == \
                             "gpf_partitioning_region_bin_chromosomes":
-                        self.chromosomes = prop_value.split(",")
-                        self.chromosomes = \
+                        chromosomes = prop_value.split(",")
+                        chromosomes = \
                             list(map(str.strip, self.chromosomes))
+                        self.table_properties["chromosomes"] = chromosomes
                     elif prop_name == \
                             "gpf_partitioning_family_bin_family_bin_size":
-                        self.family_bin_size = int(prop_value)
+                        self.table_properties["family_bin_size"] = \
+                            int(prop_value)
                     elif prop_name == \
                             "gpf_partitioning_coding_bin_coding_effect_types":
-                        self.coding_effect_types = prop_value.split(",")
-                        self.coding_effect_types = list(
+                        coding_effect_types = prop_value.split(",")
+                        coding_effect_types = list(
                             map(str.strip, self.coding_effect_types))
+                        self.table_properties["coding_effect_types"] = \
+                            coding_effect_types
                     elif prop_name == \
                             "gpf_partitioning_frequency_bin_rare_boundary":
-                        self.rare_boundary = int(prop_value)
+                        self.table_properties["rare_boundary"] = \
+                            int(prop_value)
 
     def _build_real_attr_where(self, real_attr_filter, is_frequency=False):
         query = []
