@@ -93,7 +93,7 @@ export class GeneSetsComponent extends QueryStateWithErrorsProvider implements O
               (geneSet) => geneSet.name.toLowerCase().trim() !== 'denovo'
             );
           } else {
-            denovoGeneSetTypes.sort((a, b) => a.datasetId.localeCompare(b.datasetId));
+            denovoGeneSetTypes.sort((a, b) => (a.datasetName > b.datasetName) ? 1 : ((b.datasetName > a.datasetName) ? -1 : 0));
 
             const selectedStudyTypes = denovoGeneSetTypes.find(
               type => type.datasetId === this.selectedDatasetId
