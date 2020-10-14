@@ -1167,15 +1167,12 @@ class StudyWrapper(StudyWrapperBase):
             print(f"found studies in {self.config.id}")
             studyNames = []
             for studyId in result["studies"]:
-                print("====")
-                print(studyId)
                 wrapper = gpf_instance.get_wdae_wrapper(studyId)
                 name = (
                     wrapper.config.name
                     if wrapper.config.name is not None
                     else wrapper.config.id
                 )
-                print(name)
                 studyNames.append(name)
                 result["study_names"] = studyNames
 
