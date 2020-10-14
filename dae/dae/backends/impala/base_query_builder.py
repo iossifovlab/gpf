@@ -15,6 +15,15 @@ logger = logging.getLogger(__name__)
 
 
 class BaseQueryBuilder:
+    QUOTE = "'"
+    WHERE = """
+        WHERE
+            {where}
+    """
+    GENE_REGIONS_HEURISTIC_CUTOFF = 20
+    GENE_REGIONS_HEURISTIC_EXTEND = 20000
+
+    MAX_CHILD_NUMBER = 9999
 
     def __init__(self, db, table_name, schema, table_properties):
         assert schema is not None
@@ -22,9 +31,9 @@ class BaseQueryBuilder:
         self.db = db
         self.table = table_name
         self.table_properties = table_properties
-        self.schema_columns = schema
+        self.schema_columns = schema.columns
         self.has_extra_attributes = \
-            "extra_attributes" in self.schema.columns
+            "extra_attributes" in self.schema_columns
         self._product = ""
         self.query_columns = self._query_columns()
 
@@ -147,7 +156,8 @@ class BaseQueryBuilder:
         raise NotImplementedError()
 
     def build_limit(self, limit):
-        self._add_to_product(f"LIMIT {limit}")
+        if limit is not None:
+            self._add_to_product(f"LIMIT {limit}")
 
     def create_row_deserializer(self, serializer):
         raise NotImplementedError()
@@ -164,14 +174,14 @@ class BaseQueryBuilder:
     def _build_real_attr_where(self, real_attr_filter, is_frequency=False):
         query = []
         for attr_name, attr_range in real_attr_filter:
-            if attr_name not in self.schema:
+            if attr_name not in self.schema_columns:
                 query.append("false")
                 continue
-            assert attr_name in self.schema
+            assert attr_name in self.schema_columns
             assert (
-                self.schema[attr_name].type_py == float
-                or self.schema[attr_name].type_py == int
-            ), self.schema[attr_name]
+                self.schema_columns[attr_name].type_py == float
+                or self.schema_columns[attr_name].type_py == int
+            ), self.schema_columns[attr_name]
             left, right = attr_range
             if left is None and right is None:
                 if not is_frequency:
@@ -298,7 +308,7 @@ class BaseQueryBuilder:
     def _build_frequency_bin_heuristic(
             self, inheritance, ultra_rare, real_attr_filter):
 
-        if "frequency_bin" not in self.schema:
+        if "frequency_bin" not in self.schema_columns:
             return ""
 
         rare_boundary = self.table_properties["rare_boundary"]
@@ -351,7 +361,7 @@ class BaseQueryBuilder:
     def _build_coding_heuristic(self, effect_types):
         if effect_types is None:
             return ""
-        if "coding_bin" not in self.schema:
+        if "coding_bin" not in self.schema_columns:
             return ""
         effect_types = set(effect_types)
 
@@ -389,7 +399,7 @@ class BaseQueryBuilder:
         )
 
     def _build_family_bin_heuristic(self, family_ids, person_ids):
-        if "family_bin" not in self.schema:
+        if "family_bin" not in self.schema_columns:
             return ""
         if "family_bin" not in self.pedigree_schema:
             return ""

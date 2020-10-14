@@ -22,16 +22,6 @@ logger = logging.getLogger(__name__)
 
 
 class ImpalaVariants:
-    QUOTE = "'"
-    WHERE = """
-        WHERE
-            {where}
-    """
-
-    GENE_REGIONS_HEURISTIC_CUTOFF = 20
-    GENE_REGIONS_HEURISTIC_EXTEND = 20000
-
-    MAX_CHILD_NUMBER = 9999
 
     def __init__(
             self,
