@@ -2,6 +2,9 @@ import pytest
 from dae.backends.impala.impala_variants import ImpalaVariants
 from dae.backends.impala.hdfs_helpers import HdfsHelpers
 from dae.backends.impala.impala_helpers import ImpalaHelpers
+from dae.backends.impala.family_variants_query_builder import \
+    FamilyVariantsQueryBuilder
+from dae.backends.impala.impala_query_director import ImpalaQueryDirector
 from dae.variants.variant import SummaryVariant
 from dae.utils.regions import Region
 
@@ -23,25 +26,44 @@ def test_impala_query_build(impala_host, genomes_db_2013):
         "test_study_pedigree",
         genomes_db_2013.get_gene_models(),
     )
+
+    builder = FamilyVariantsQueryBuilder(
+        ifv.db,
+        ifv.variants_table,
+        ifv.schema,
+        ifv.table_properties,
+        ifv.pedigree_schema,
+        ifv.ped_df,
+        ifv.families,
+        ifv.gene_models
+    )
+
+    director = ImpalaQueryDirector(builder)
+
     regions = [Region("1", 1, 199999), Region("2", 1, 199999)]
     families = ["f1", "f2"]
     coding_effects = ["missense", "frame-shift"]
     real_attr_filter = [("af_allele_freq", (1, 50))]
 
-    q = ifv.build_query(regions=regions)
+    director.build_query(regions=regions)
+    q = builder.product
     print(q)
-    q = ifv.build_query(family_ids=families)
+    director.build_query(family_ids=families)
+    q = builder.product
     print(q)
-    q = ifv.build_query(effect_types=coding_effects)
+    director.build_query(effect_types=coding_effects)
+    q = builder.product
     print(q)
-    q = ifv.build_query(real_attr_filter=real_attr_filter)
+    director.build_query(real_attr_filter=real_attr_filter)
+    q = builder.product
     print(q)
-    q = ifv.build_query(
+    director.build_query(
         regions=regions,
         family_ids=families,
         effect_types=coding_effects,
         real_attr_filter=real_attr_filter,
     )
+    q = builder.product
     print(q)
 
 
@@ -147,9 +169,20 @@ def test_impala_frequency_bin_heuristics(
         "test_study_pedigree",
         genomes_db_2013.get_gene_models(),
     )
-    ifv.rare_boundary = 5
+    ifv.table_properties["rare_boundary"] = 5
 
-    q = ifv._build_frequency_bin_heuristic(
+    builder = FamilyVariantsQueryBuilder(
+        ifv.db,
+        ifv.variants_table,
+        ifv.schema,
+        ifv.table_properties,
+        ifv.pedigree_schema,
+        ifv.ped_df,
+        ifv.families,
+        ifv.gene_models
+    )
+
+    q = builder._build_frequency_bin_heuristic(
         inheritance, ultra_rare, real_attr_filter)
 
     assert result == q
