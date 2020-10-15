@@ -161,6 +161,7 @@ export class GeneViewComponent implements OnInit {
   y_axis_zero;
   variantsDataRepr = [];
   selectedEffectTypes = ['lgds', 'missense', 'synonymous', 'other'];
+  selectedAffectedStatus = ['Affected only', 'Unaffected only', 'Affected and unaffected'];
   selectedFrequencies;
   showDenovo = true;
   showTransmitted = true;
@@ -324,6 +325,20 @@ export class GeneViewComponent implements OnInit {
     }
   }
 
+  checkAffectedStatus(affectedStatus: string, checked: boolean) {
+    if (checked) {
+      this.selectedAffectedStatus.push(affectedStatus);
+    } else {
+      this.selectedAffectedStatus.splice(this.selectedAffectedStatus.indexOf(affectedStatus), 1);
+    }
+
+    if (this.gene !== undefined) {
+      this.drawGene();
+      this.drawPlot();
+      this.updateFamilyVariantsTable();
+    }
+  }
+
   getEffectVariantColor(worst_effect): string {
     worst_effect = worst_effect.toLowerCase();
 
@@ -359,6 +374,40 @@ export class GeneViewComponent implements OnInit {
     return frequency >= this.selectedFrequencies[0] && frequency <= this.selectedFrequencies[1];
   }
 
+  getAffectedStatusColor(affectedStatus: string): string {
+    let color: string;
+
+    if (affectedStatus === 'Affected only') {
+      color = '#AA0000';
+    } else if (affectedStatus === 'Unaffected only') {
+      color = '#00AA00';
+    } else {
+      color = '#AAAAAA';
+    }
+
+    return color;
+  }
+
+  getVariantAffectedStatus(summaryVariant: GeneViewSummaryVariant): string {
+    let variantAffectedStatus: string;
+
+    if (summaryVariant.seenInAffected) {
+      if (summaryVariant.seenInUnaffected) {
+        variantAffectedStatus = 'Affected and unaffected';
+      } else {
+        variantAffectedStatus = 'Affected only';
+      }
+    } else {
+      variantAffectedStatus = 'Unaffected only';
+    }
+
+    return variantAffectedStatus;
+  }
+
+  isAffectedStatusSelected(affectedStatus: string): boolean {
+    return this.selectedAffectedStatus.includes(affectedStatus) ? true : false;
+  }
+
   filterSummaryVariantsArray(
     summaryVariantsArray: GeneViewSummaryVariantsArray, startPos: number, endPos: number
   ): GeneViewSummaryVariantsArray {
@@ -367,7 +416,8 @@ export class GeneViewComponent implements OnInit {
       if (
         (!this.isVariantEffectSelected(summaryVariant.effect)) ||
         (!this.showDenovo && summaryVariant.seenAsDenovo) ||
-        (!this.showTransmitted && !summaryVariant.seenAsDenovo)
+        (!this.showTransmitted && !summaryVariant.seenAsDenovo) ||
+        (!this.isAffectedStatusSelected(this.getVariantAffectedStatus(summaryVariant)))
       ) {
         continue;
       } else if (summaryVariant.position >= startPos && summaryVariant.position <= endPos) {
@@ -438,7 +488,7 @@ export class GeneViewComponent implements OnInit {
       this.svgElement.append('g').call(this.y_axis_zero);
 
       for (const variant of filteredSummaryVariants.summaryVariants) {
-        const color = this.getPhenoColor(variant);
+        const color = this.getAffectedStatusColor(this.getVariantAffectedStatus(variant));
 
         if (variant.isLGDs()) {
           this.drawStar(this.x(variant.position), this.getVariantY(variant.frequency), color);
@@ -454,17 +504,6 @@ export class GeneViewComponent implements OnInit {
         }
       }
     }
-  }
-
-  getPhenoColor(summaryVariant: GeneViewSummaryVariant): string {
-    if (summaryVariant.seenInAffected) {
-      if (summaryVariant.seenInUnaffected) {
-        return '#AAAAAA';
-      } else {
-        return '#AA0000';
-      }
-    }
-    return '#00AA00';
   }
 
   drawSuroundingSquare(x: number, y: number, color: string) {
