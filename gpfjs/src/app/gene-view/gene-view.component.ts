@@ -22,6 +22,29 @@ class GeneViewSummaryVariant {
   seenInUnaffected: boolean;
   svuid: string;
 
+  lgds = ['nonsense', 'splice-site', 'frame-shift', 'no-frame-shift-new-stop'];
+
+  isLGDs(): boolean {
+    if (this.lgds.indexOf(this.effect) !== -1 || this.effect === 'lgds') {
+      return true;
+    }
+    return false;
+  }
+
+  isMissense(): boolean {
+    if (this.effect === 'missense') {
+      return true;
+    }
+    return false;
+  }
+
+  isSynonymous(): boolean {
+    if (this.effect === 'synonymous') {
+      return true;
+    }
+    return false;
+  }
+
   static fromPreviewVariant(config, genotypePreview: GenotypePreview): GeneViewSummaryVariant {
     const result = new GeneViewSummaryVariant();
 
@@ -47,6 +70,15 @@ class GeneViewSummaryVariant {
     }
     result.seenInAffected = false;
     result.seenInUnaffected = false;
+    for (const pedigreeData of genotypePreview.get("genotype")) {
+      if (pedigreeData.label > 0) {
+        if (pedigreeData.color == "#ffffff") {
+          result.seenInUnaffected = true
+        } else {
+          result.seenInAffected = true
+        }
+      }
+    }
 
     result.svuid = result.location + ':' + result.variant;
 
@@ -296,16 +328,16 @@ export class GeneViewComponent implements OnInit {
   frequencyDomainMax: number;
   summaryVariantsArray: GeneViewSummaryVariantsArray;
 
-  margin = {top: 10, right: 70, left: 70, bottom: 0};
-  y_axes_proportions = {domain: 0.70, subdomain: 0.20};
+  margin = { top: 10, right: 70, left: 70, bottom: 0 };
+  y_axes_proportions = { domain: 0.70, subdomain: 0.20 };
   svgElement;
   svgWidth = 1200 - this.margin.left - this.margin.right;
   svgHeight;
   svgHeightFreqRaw = 400;
   svgHeightFreq = this.svgHeightFreqRaw - this.margin.top - this.margin.bottom;
 
-  subdomainAxisY = Math.round(this.svgHeightFreq * 0.75);
-  zeroAxisY = this.subdomainAxisY + Math.round(this.svgHeightFreq * 0.2);
+  subdomainAxisY = Math.round(this.svgHeightFreq * 0.90);
+  zeroAxisY = this.subdomainAxisY + Math.round(this.svgHeightFreq * 0.05);
 
   lgds = ['nonsense', 'splice-site', 'frame-shift', 'no-frame-shift-new-stop'];
 
@@ -319,14 +351,15 @@ export class GeneViewComponent implements OnInit {
   y_axis_zero;
   variantsDataRepr = [];
   selectedEffectTypes = ['lgds', 'missense', 'synonymous', 'other'];
-
   selectedFrequencies;
+  showDenovo = true;
+  showTransmitted = true;
 
   geneViewTranscript: GeneViewTranscript;
 
   brush;
   doubleClickTimer;
-  geneTableValues = {
+  geneTableStats = {
     geneSymbol: '',
     chromosome: '',
     totalFamilyVariants: 0,
@@ -347,28 +380,32 @@ export class GeneViewComponent implements OnInit {
       this.frequencyDomainMax = this.geneBrowserConfig.domainMax;
       this.selectedFrequencies = [0, this.frequencyDomainMax];
 
+      this.drawEffectTypesIcons();
+      this.drawTransmittedIcons();
+      this.drawDenovoIcons();
+
       this.svgElement = d3.select('#svg-container')
-      .append('svg')
-      .attr('width', this.svgWidth + this.margin.left + this.margin.right)
-      .attr('height', this.svgHeightFreqRaw)
-      .append('g')
-      .attr('transform', `translate(${this.margin.left}, ${this.margin.top})`);
+        .append('svg')
+        .attr('width', this.svgWidth + this.margin.left + this.margin.right)
+        .attr('height', this.svgHeightFreqRaw)
+        .append('g')
+        .attr('transform', `translate(${this.margin.left}, ${this.margin.top})`);
 
       this.x = d3.scaleLinear()
-      .domain([0, 0])
-      .range([0, this.svgWidth]);
+        .domain([0, 0])
+        .range([0, this.svgWidth]);
 
       this.y = d3.scaleLog()
-      .domain([this.frequencyDomainMin, this.frequencyDomainMax])
-      .range([this.subdomainAxisY, 0]);
+        .domain([this.frequencyDomainMin, this.frequencyDomainMax])
+        .range([this.subdomainAxisY, 0]);
 
       this.y_subdomain = d3.scaleLinear()
-      .domain([0, this.frequencyDomainMin])
-      .range([this.zeroAxisY, this.subdomainAxisY]);
+        .domain([0, this.frequencyDomainMin])
+        .range([this.zeroAxisY, this.subdomainAxisY]);
 
       this.y_zero = d3.scalePoint()
-      .domain(['0'])
-      .range([this.svgHeightFreq, this.zeroAxisY]);
+        .domain(['0'])
+        .range([this.svgHeightFreq, this.zeroAxisY]);
     });
     this.streamingFinished$.subscribe(() => {
       this.summaryVariantsArray = GeneViewSummaryVariantsArray.fromPreviewVariantsArray(
@@ -376,12 +413,15 @@ export class GeneViewComponent implements OnInit {
         this.variantsArray
       );
 
+      this.updateFamilyVariantsTable();
       this.drawPlot();
 
-      this.geneTableValues.geneSymbol = this.gene.gene;
-      this.geneTableValues.chromosome = this.gene.transcripts[0].chrom;
-      this.geneTableValues.totalFamilyVariants = this.variantsArray.genotypePreviews.length;
-      this.geneTableValues.totalSummaryVariants = this.summaryVariantsArray.summaryVariants.length;
+      this.geneTableStats.geneSymbol = this.gene.gene;
+      this.geneTableStats.chromosome = this.gene.transcripts[0].chrom;
+      this.geneTableStats.totalSummaryVariants = this.summaryVariantsArray.summaryVariants.length;
+      this.geneTableStats.totalFamilyVariants = this.summaryVariantsArray.summaryVariants.reduce(
+        (a, b) => a + b.numberOfFamilyVariants, 0
+      );
 
       this.loadingService.setLoadingStop();
     });
@@ -396,7 +436,71 @@ export class GeneViewComponent implements OnInit {
     }
   }
 
-  checkEffectType(effectType, checked) {
+  drawTransmittedIcons() {
+    this.svgElement = d3.select('#transmitted')
+    .attr('width', 80)
+    .attr('height', 20);
+    this.drawStar(10, 7.5, '#000000');
+    this.drawTriangle(30, 8, '#000000');
+    this.drawCircle(50, 8, '#000000');
+    this.drawDot(70, 8, '#000000');
+  }
+
+  drawDenovoIcons() {
+    this.svgElement = d3.select('#denovo')
+    .attr('width', 80)
+    .attr('height', 20);
+    this.drawStar(10, 7.5, '#000000');
+    this.drawSuroundingSquare(10, 7.5, '#000000');
+    this.drawTriangle(30, 8, '#000000');
+    this.drawSuroundingSquare(30, 8, '#000000');
+    this.drawCircle(50, 8, '#000000');
+    this.drawSuroundingSquare(50, 8, '#000000');
+    this.drawDot(70, 8, '#000000');
+    this.drawSuroundingSquare(70, 8, '#000000');
+  }
+
+  drawEffectTypesIcons() {
+    this.svgElement = d3.select('#LGDs')
+    .attr('width', 20)
+    .attr('height', 20);
+    this.drawStar(10, 7.5, '#000000');
+
+    this.svgElement = d3.select('#Missense')
+    .attr('width', 20)
+    .attr('height', 20);
+    this.drawTriangle(10, 8, '#000000');
+
+    this.svgElement = d3.select('#Synonymous')
+    .attr('width', 20)
+    .attr('height', 20);
+    this.drawCircle(10, 8, '#000000');
+
+    this.svgElement = d3.select('#Other')
+    .attr('width', 20)
+    .attr('height', 20);
+    this.drawDot(10, 8, '#000000');
+  }
+
+  checkShowDenovo(checked: boolean) {
+    this.showDenovo = checked;
+
+    if (this.gene !== undefined) {
+      this.drawGene();
+      this.drawPlot();
+    }
+  }
+
+  checkShowTransmitted(checked: boolean) {
+    this.showTransmitted = checked;
+
+    if (this.gene !== undefined) {
+      this.drawGene();
+      this.drawPlot();
+    }
+  }
+
+  checkEffectType(effectType: string, checked: boolean) {
     effectType = effectType.toLowerCase();
     if (checked) {
       this.selectedEffectTypes.push(effectType);
@@ -410,17 +514,12 @@ export class GeneViewComponent implements OnInit {
     }
   }
 
-  extractPosition(location) {
-    const idx = location.indexOf(':');
-    return location.slice(idx + 1);
-  }
-
-  getVariantColor(worst_effect) {
+  getEffectVariantColor(worst_effect): string {
     worst_effect = worst_effect.toLowerCase();
 
     if (this.lgds.indexOf(worst_effect) !== -1 || worst_effect === 'lgds') {
       return '#ff0000';
-    } else if ( worst_effect === 'missense') {
+    } else if (worst_effect === 'missense') {
       return '#ffff00';
     } else if (worst_effect === 'synonymous') {
       return '#69b3a2';
@@ -457,6 +556,26 @@ export class GeneViewComponent implements OnInit {
     this.drawPlot();
   }
 
+  filterSummaryVariantsArray(
+    summaryVariantsArray: GeneViewSummaryVariantsArray, startPos: number, endPos: number
+  ): GeneViewSummaryVariantsArray {
+    const filteredVariants: GeneViewSummaryVariant[] = [];
+    for (const summaryVariant of summaryVariantsArray.summaryVariants) {
+      if (
+        (!this.isVariantEffectSelected(summaryVariant.effect)) ||
+        (!this.showDenovo && summaryVariant.seenAsDenovo) ||
+        (!this.showTransmitted && !summaryVariant.seenAsDenovo)
+      ) {
+        continue;
+      } else if (summaryVariant.position >= startPos && summaryVariant.position <= endPos) {
+        if (this.frequencyIsSelected(summaryVariant.frequency)) {
+          filteredVariants.push(summaryVariant);
+        }
+      }
+    }
+    return new GeneViewSummaryVariantsArray(filteredVariants.values());
+  }
+
   filterTablePreviewVariantsArray(
     variantsArray: GenotypePreviewVariantsArray, startPos: number, endPos: number
   ): GenotypePreviewVariantsArray {
@@ -485,19 +604,22 @@ export class GeneViewComponent implements OnInit {
     return result;
   }
 
-  drawPlot() {
+  updateFamilyVariantsTable() {
     const filteredVariants = this.filterTablePreviewVariantsArray(
       this.variantsArray, this.x.domain()[0], this.x.domain()[this.x.domain().length - 1]
     );
+    this.updateShownTablePreviewVariantsArrayEvent.emit(filteredVariants);
+  }
 
-    const filteredVariantsSummary = GeneViewSummaryVariantsArray.fromPreviewVariantsArray(
-      this.geneBrowserConfig, filteredVariants
+  drawPlot() {
+    const filteredSummaryVariants = this.filterSummaryVariantsArray(
+      this.summaryVariantsArray, this.x.domain()[0], this.x.domain()[this.x.domain().length - 1]
+    );
+    this.geneTableStats.selectedSummaryVariants = filteredSummaryVariants.summaryVariants.length;
+    this.geneTableStats.selectedFamilyVariants = filteredSummaryVariants.summaryVariants.reduce(
+      (a, b) => a + b.numberOfFamilyVariants, 0
     );
 
-    this.geneTableValues.selectedFamilyVariants = filteredVariants.genotypePreviews.length;
-    this.geneTableValues.selectedSummaryVariants = filteredVariantsSummary.summaryVariants.length;
-
-    this.updateShownTablePreviewVariantsArrayEvent.emit(filteredVariants);
     if (this.gene !== undefined) {
       this.x_axis = d3.axisBottom(this.x);
       this.y_axis = d3.axisLeft(this.y);
@@ -508,49 +630,123 @@ export class GeneViewComponent implements OnInit {
       this.svgElement.append('g').call(this.y_axis_subdomain);
       this.svgElement.append('g').call(this.y_axis_zero);
 
-      for (const variant of filteredVariantsSummary.summaryVariants) {
-        if (variant.seenAsDenovo) {
-          this.drawDenovoPlotVariant(variant);
+      for (const variant of filteredSummaryVariants.summaryVariants) {
+        const color = this.getPhenoColor(variant);
+
+        if (variant.isLGDs()) {
+          this.drawStar(this.x(variant.position), this.getVariantY(variant.frequency), color);
+        } else if (variant.isMissense()) {
+          this.drawTriangle(this.x(variant.position), this.getVariantY(variant.frequency), color);
+        } else if (variant.isSynonymous()) {
+          this.drawCircle(this.x(variant.position), this.getVariantY(variant.frequency), color);
         } else {
-          this.drawTransmittedPlotVariant(variant);
+          this.drawDot(this.x(variant.position), this.getVariantY(variant.frequency), color);
+        }
+        if (variant.seenAsDenovo) {
+          this.drawSuroundingSquare(this.x(variant.position), this.getVariantY(variant.frequency), color);
         }
       }
     }
   }
 
-  drawTransmittedPlotVariant(variantInfo: GeneViewSummaryVariant) {
+  getPhenoColor(summaryVariant: GeneViewSummaryVariant): string {
+    if (summaryVariant.seenInAffected) {
+      if (summaryVariant.seenInUnaffected) {
+        return '#AAAAAA';
+      } else {
+        return '#AA0000';
+      }
+    }
+    return '#00AA00';
+  }
+
+  drawSuroundingSquare(x: number, y: number, color: string) {
+    const w = 16;
+    const h = 16;
+    this.svgElement.append('g')
+      .append('rect')
+      .attr('x', x - w / 2)
+      .attr('y', y - h / 2)
+      .attr('width', w)
+      .attr('height', h)
+      .style('fill', color)
+      .style('fill-opacity', 0.2)
+      .style('stroke-width', 2)
+      .style('stroke', color);
+  }
+
+  drawStar(x: number, y: number, color: string) {
+    this.svgElement.append('svg')
+    .attr('x', x - 8.5)
+    .attr('y', y - 8.5)
+    .append('g')
+    .append('path')
+    .attr('d', 'M12 .587l3.668 7.568 8.332 1.151-6.064 5.828 1.48 8.279-7.416-3.967-7.417 3.967 1.481-8.279-6.064-5.828 8.332-1.151z')
+    .attr('transform', 'scale(0.7)')
+    .attr('fill', color);
+  }
+
+  drawTriangle(x: number, y: number, color: string) {
+    this.svgElement.append('g')
+     .append('polygon')
+     .attr('points', this.getTrianglePoints(x, y, 14))
+     .style('stroke-width', 1)
+     .style('stroke', color)
+     .style('fill', color);
+   }
+
+  drawCircle(x: number, y: number, color: string) {
     this.svgElement.append('g')
     .append('circle')
-    .attr('cx', this.x(variantInfo.position))
-    .attr(
-      'cy', variantInfo.frequency === 0 ?
-      this.y_zero('0') :
-      variantInfo.frequency < this.frequencyDomainMin ?
-      this.y_subdomain(variantInfo.frequency) :
-      this.y(variantInfo.frequency)
-    )
-    .attr('r', 5)
-    .style('fill', this.getVariantColor(variantInfo.effect))
-    .style('opacity', 0.5);
+    .attr('cx', x)
+    .attr('cy', y)
+    .attr('r', 7)
+    .style('fill', color);
+  }
+
+  drawDot(x: number, y: number, color: string) {
+    this.svgElement.append('g')
+    .append('circle')
+    .attr('cx', x)
+    .attr('cy', y)
+    .attr('r', 3)
+    .style('fill', color);
+  }
+
+  drawTransmittedPlotVariant(variantInfo: GeneViewSummaryVariant) {
+    this.svgElement.append('g')
+      .append('circle')
+      .attr('cx', this.x(variantInfo.position))
+      .attr('cy', this.getVariantY(variantInfo.frequency))
+      .attr('r', 5)
+      .style('fill', this.getEffectVariantColor(variantInfo.effect));
   }
 
   drawDenovoPlotVariant(variantInfo: GeneViewSummaryVariant) {
     this.svgElement.append('g')
-    .select('dot')
-    .append('polygon')
-    .attr('points', this.getTrianglePoints(
-      this.x(variantInfo.position),
-      variantInfo.frequency === 0 ?
-      this.y_zero('0') :
-      variantInfo.frequency < this.frequencyDomainMin ?
-      this.y_subdomain(variantInfo.frequency) :
-      this.y(variantInfo.frequency),
-      15
-    ))
-    .style('stroke-width', 2)
-    .style('stroke', '#000000')
-    .style('fill', this.getVariantColor(variantInfo.effect))
-    .style('opacity', 0.5);
+      .append('polygon')
+      .attr('points', this.getTrianglePoints(
+        this.x(variantInfo.position),
+        this.getVariantY(variantInfo.frequency),
+        15
+      ))
+      .style('stroke-width', 2)
+      .style('stroke', '#000000')
+      .style('fill', this.getEffectVariantColor(variantInfo.effect));
+  }
+
+  getVariantY(variantFrequency): number {
+    let y: number;
+
+    if (variantFrequency === 0) {
+      y = this.y_zero('0');
+    } else if (variantFrequency < this.frequencyDomainMin) {
+      y = this.y_subdomain(variantFrequency);
+    } else {
+      y = this.y(variantFrequency);
+    }
+
+    return y;
   }
 
   getTrianglePoints(plotX: number, plotY: number, size: number) {
@@ -572,7 +768,7 @@ export class GeneViewComponent implements OnInit {
   }
 
   resetGeneTableValues(): void {
-    this.geneTableValues = {
+    this.geneTableStats = {
       geneSymbol: '',
       chromosome: '',
       totalFamilyVariants: 0,
@@ -588,18 +784,18 @@ export class GeneViewComponent implements OnInit {
     d3.select('#svg-container').selectAll('svg').remove();
 
     this.svgElement = d3.select('#svg-container')
-    .append('svg')
-    .attr('width', this.svgWidth + this.margin.left + this.margin.right)
-    .attr('height', this.svgHeight)
-    .append('g')
-    .attr('transform', `translate(${this.margin.left}, ${this.margin.top})`);
+      .append('svg')
+      .attr('width', this.svgWidth + this.margin.left + this.margin.right)
+      .attr('height', this.svgHeight)
+      .append('g')
+      .attr('transform', `translate(${this.margin.left}, ${this.margin.top})`);
 
     this.brush = d3.brush().extent([[0, 0], [this.svgWidth, this.svgHeightFreq]])
-    .on('end', this.brushEndEvent);
+      .on('end', this.brushEndEvent);
 
     this.svgElement.append('g')
-    .attr('class', 'brush')
-    .call(this.brush);
+      .attr('class', 'brush')
+      .call(this.brush);
 
     this.drawTranscript(this.svgHeightFreqRaw + 20);
     /**
@@ -646,6 +842,7 @@ export class GeneViewComponent implements OnInit {
     }
 
     this.drawGene();
+    this.updateFamilyVariantsTable();
     this.drawPlot();
   }
 
@@ -696,7 +893,7 @@ export class GeneViewComponent implements OnInit {
   }
 
   drawTranscriptUTRText(xStart: number, xEnd: number, y: number, strand: string) {
-    const UTR = {left: '5\'', right: '3\''};
+    const UTR = { left: '5\'', right: '3\'' };
 
     if (strand === '-') {
       UTR.left = '3\'';
@@ -704,32 +901,32 @@ export class GeneViewComponent implements OnInit {
     }
 
     this.svgElement.append('text')
-    .attr('y', y + 10)
-    .attr('x', this.x(xStart) - 20)
-    .attr('font-size', '13px')
-    .text(UTR.left)
-    .attr('cursor', 'default')
-    .append('svg:title').text(`UTR ${UTR.left}`);
+      .attr('y', y + 10)
+      .attr('x', this.x(xStart) - 20)
+      .attr('font-size', '13px')
+      .text(UTR.left)
+      .attr('cursor', 'default')
+      .append('svg:title').text(`UTR ${UTR.left}`);
 
     this.svgElement.append('text')
-    .attr('y', y + 10)
-    .attr('x', this.x(xEnd) + 10)
-    .attr('font-size', '13px')
-    .text(UTR.right)
-    .attr('cursor', 'default')
-    .append('svg:title').text(`UTR ${UTR.right}`);
+      .attr('y', y + 10)
+      .attr('x', this.x(xEnd) + 10)
+      .attr('font-size', '13px')
+      .text(UTR.right)
+      .attr('cursor', 'default')
+      .append('svg:title').text(`UTR ${UTR.right}`);
   }
 
   drawRect(xStart: number, xEnd: number, y: number, height: number, svgTitle: string) {
     const width = this.x(xEnd) - this.x(xStart);
 
     this.svgElement.append('rect')
-    .attr('height', height)
-    .attr('width', width)
-    .attr('x', this.x(xStart))
-    .attr('y', y)
-    .attr('stroke', 'rgb(0,0,0)')
-    .append('svg:title').text(svgTitle);
+      .attr('height', height)
+      .attr('width', width)
+      .attr('x', this.x(xStart))
+      .attr('y', y)
+      .attr('stroke', 'rgb(0,0,0)')
+      .append('svg:title').text(svgTitle);
   }
 
   drawLine(xStart: number, xEnd: number, y: number, svgTitle: string) {
@@ -737,11 +934,11 @@ export class GeneViewComponent implements OnInit {
     const xEndAligned = this.x(xEnd);
 
     this.svgElement.append('line')
-    .attr('x1', xStartAligned)
-    .attr('y1', y + 5)
-    .attr('x2', xEndAligned)
-    .attr('y2', y + 5)
-    .attr('stroke', 'black')
-    .append('svg:title').text(svgTitle);
+      .attr('x1', xStartAligned)
+      .attr('y1', y + 5)
+      .attr('x2', xEndAligned)
+      .attr('y2', y + 5)
+      .attr('stroke', 'black')
+      .append('svg:title').text(svgTitle);
   }
 }
