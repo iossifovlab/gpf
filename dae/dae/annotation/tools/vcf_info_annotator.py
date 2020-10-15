@@ -1,6 +1,4 @@
-import sys
 import logging
-from os.path import basename
 
 from dae.variants.attributes import VariantType
 from dae.annotation.tools.score_annotator import VariantScoreAnnotatorBase
