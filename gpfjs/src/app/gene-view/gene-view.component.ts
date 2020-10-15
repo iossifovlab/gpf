@@ -295,6 +295,7 @@ export class GeneViewComponent implements OnInit {
     if (this.gene !== undefined) {
       this.drawGene();
       this.drawPlot();
+      this.updateFamilyVariantsTable();
     }
   }
 
@@ -304,6 +305,7 @@ export class GeneViewComponent implements OnInit {
     if (this.gene !== undefined) {
       this.drawGene();
       this.drawPlot();
+      this.updateFamilyVariantsTable();
     }
   }
 
@@ -318,6 +320,7 @@ export class GeneViewComponent implements OnInit {
     if (this.gene !== undefined) {
       this.drawGene();
       this.drawPlot();
+      this.updateFamilyVariantsTable();
     }
   }
 
@@ -389,7 +392,11 @@ export class GeneViewComponent implements OnInit {
       location = data.get(this.geneBrowserConfig.locationColumn);
       position = Number(location.slice(location.indexOf(':') + 1));
       frequency = data.get(this.geneBrowserConfig.frequencyColumn);
-      if (!this.isVariantEffectSelected(data.get(this.geneBrowserConfig.effectColumn))) {
+      if (
+        (!this.isVariantEffectSelected(data.get(this.geneBrowserConfig.effectColumn))) ||
+        (!this.showDenovo && data.get('variant.is denovo')) ||
+        (!this.showTransmitted && !data.get('variant.is denovo'))
+      ) {
         continue;
       } else if (position >= startPos && position <= endPos) {
         if (frequency === '-') {
