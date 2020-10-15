@@ -25,17 +25,26 @@ class BaseQueryBuilder:
 
     MAX_CHILD_NUMBER = 9999
 
-    def __init__(self, db, table_name, schema, table_properties):
+    def __init__(
+            self, db, table_name, schema,
+            table_properties, pedigree_schema,
+            pedigree_df, gene_models=None):
         assert schema is not None
 
         self.db = db
         self.table = table_name
         self.table_properties = table_properties
         self.schema_columns = schema.columns
+        self.pedigree_columns = pedigree_schema
+        self.ped_df = pedigree_df
         self.has_extra_attributes = \
             "extra_attributes" in self.schema_columns
         self._product = ""
         self.query_columns = self._query_columns()
+        self.gene_models = gene_models
+
+    def reset_product(self):
+        self._product = ""
 
     @property
     def product(self):
@@ -401,7 +410,7 @@ class BaseQueryBuilder:
     def _build_family_bin_heuristic(self, family_ids, person_ids):
         if "family_bin" not in self.schema_columns:
             return ""
-        if "family_bin" not in self.pedigree_schema:
+        if "family_bin" not in self.pedigree_columns:
             return ""
         family_bins = set()
         if family_ids:

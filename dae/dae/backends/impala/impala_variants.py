@@ -51,11 +51,6 @@ class ImpalaVariants:
         assert gene_models is not None
         self.gene_models = gene_models
 
-        self.region_length = 0
-        self.chromosomes = []
-        self.family_bin_size = 0
-        self.coding_effect_types = []
-        self.rare_boundary = 0
         self.table_properties = dict({
             "region_length": 0,
             "chromosomes": [],
@@ -102,7 +97,9 @@ class ImpalaVariants:
             with conn.cursor() as cursor:
                 query_builder = SummaryVariantsQueryBuilder(
                     self.db, self.variants_table,
-                    self.schema, self.table_properties
+                    self.schema, self.table_properties,
+                    self.pedigree_schema, self.ped_df,
+                    self.gene_models
                 )
                 director = ImpalaQueryDirector(query_builder)
                 director.build_query(
@@ -168,7 +165,8 @@ class ImpalaVariants:
                 query_builder = FamilyVariantsQueryBuilder(
                     self.db, self.variants_table,
                     self.schema, self.table_properties,
-                    self.families
+                    self.pedigree_schema, self.ped_df,
+                    self.families, self.gene_models
                 )
                 director = ImpalaQueryDirector(query_builder)
                 director.build_query(
@@ -435,7 +433,7 @@ class ImpalaVariants:
                             "gpf_partitioning_region_bin_chromosomes":
                         chromosomes = prop_value.split(",")
                         chromosomes = \
-                            list(map(str.strip, self.chromosomes))
+                            list(map(str.strip, chromosomes))
                         self.table_properties["chromosomes"] = chromosomes
                     elif prop_name == \
                             "gpf_partitioning_family_bin_family_bin_size":
@@ -445,7 +443,7 @@ class ImpalaVariants:
                             "gpf_partitioning_coding_bin_coding_effect_types":
                         coding_effect_types = prop_value.split(",")
                         coding_effect_types = list(
-                            map(str.strip, self.coding_effect_types))
+                            map(str.strip, coding_effect_types))
                         self.table_properties["coding_effect_types"] = \
                             coding_effect_types
                     elif prop_name == \

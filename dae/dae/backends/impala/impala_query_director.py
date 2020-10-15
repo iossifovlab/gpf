@@ -21,6 +21,8 @@ class ImpalaQueryDirector:
             return_unknown=None,
             limit=None):
 
+        self.query_builder.reset_product()
+
         self.query_builder.build_select()
 
         self.query_builder.build_from()
