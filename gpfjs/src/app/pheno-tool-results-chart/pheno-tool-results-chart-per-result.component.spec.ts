@@ -8,7 +8,7 @@ describe('PhenoToolResultsChartPerResultComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ PhenoToolResultsChartPerResultComponent ]
+      declarations: [PhenoToolResultsChartPerResultComponent]
     })
     .compileComponents();
   }));
@@ -16,6 +16,8 @@ describe('PhenoToolResultsChartPerResultComponent', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(PhenoToolResultsChartPerResultComponent);
     component = fixture.componentInstance;
+    component.results = jasmine.createSpyObj('PhenoToolResult', ['rangeStart', 'rangeEnd']);
+    component.yScale = jasmine.createSpy() as any;
     fixture.detectChanges();
   });
 

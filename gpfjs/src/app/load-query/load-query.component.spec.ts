@@ -1,4 +1,11 @@
+import { HttpClient, HttpHandler } from '@angular/common/http';
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { RouterTestingModule } from '@angular/router/testing';
+import { ConfigService } from 'app/config/config.service';
+import { DatasetsService } from 'app/datasets/datasets.service';
+import { QueryService } from 'app/query/query.service';
+import { StateRestoreService } from 'app/store/state-restore.service';
+import { UsersService } from 'app/users/users.service';
 
 import { LoadQueryComponent } from './load-query.component';
 
@@ -8,7 +15,17 @@ describe('LoadQueryComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ LoadQueryComponent ]
+      declarations: [ LoadQueryComponent ],
+      providers: [
+        QueryService,
+        HttpClient,
+        HttpHandler,
+        ConfigService,
+        StateRestoreService,
+        DatasetsService,
+        UsersService
+      ],
+      imports: [RouterTestingModule],
     })
     .compileComponents();
   }));
