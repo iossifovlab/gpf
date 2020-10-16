@@ -125,19 +125,19 @@ class GeneViewSummaryVariantsArray {
 
 class GeneViewTranscriptSegment {
 
-  dnaStart: number;
-  dnaEnd: number;
+  start: number;
+  stop: number;
   isExon: boolean;
   isCDS: boolean;
 
   constructor(
-    dnaStart: number,
-    dnaEnd: number,
+    start: number,
+    stop: number,
     isExon: boolean,
     isCDS: boolean
   ) {
-    this.dnaStart = dnaStart;
-    this.dnaEnd = dnaEnd;
+    this.start = start;
+    this.stop = stop;
     this.isExon = isExon;
     this.isCDS = isCDS;
   }
@@ -157,57 +157,49 @@ class GeneViewTranscript {
     this.resetStartStop();
 
     for (let i = 0; i < this.transcript.exons.length; i++) {
-      const cdsTransition = GeneViewTranscript.getCDSTransitionPos(this.transcript, this.transcript.exons[i]);
+      const cdsTransition = this.getCDSTransitionPos(this.transcript.exons[i]);
       const segmentStart = this.transcript.exons[i].start;
       const segmentStop = this.transcript.exons[i].stop;
       if (cdsTransition) {
         // Separate exons both inside and outside the coding region into two segments
         this.transcriptSegments.push(
-          new GeneViewTranscriptSegment(
-            segmentStart, cdsTransition, true, GeneViewTranscript.isInCDS(this.transcript, segmentStart, cdsTransition)
-          ),
-          new GeneViewTranscriptSegment(
-            cdsTransition, segmentStop, true, GeneViewTranscript.isInCDS(this.transcript, cdsTransition, segmentStop)
-          )
+          new GeneViewTranscriptSegment(segmentStart, cdsTransition, true, this.isInCDS(segmentStart, cdsTransition)),
+          new GeneViewTranscriptSegment(cdsTransition, segmentStop, true, this.isInCDS(cdsTransition, segmentStop))
         );
       } else {
         this.transcriptSegments.push(
-          new GeneViewTranscriptSegment(
-            segmentStart, segmentStop, true, GeneViewTranscript.isInCDS(this.transcript, segmentStart, segmentStop)
-          )
+          new GeneViewTranscriptSegment(segmentStart, segmentStop, true, this.isInCDS(segmentStart, segmentStop))
         );
       }
       // Add intron segment if applicable
       if (i + 1 < this.transcript.exons.length) {
-        const nextSegmentStart = this.transcript.exons[i + 1].start;
-        this.transcriptSegments.push(new GeneViewTranscriptSegment(segmentStop, nextSegmentStart, false, false));
+        this.transcriptSegments.push(
+          new GeneViewTranscriptSegment(segmentStop, this.transcript.exons[i + 1].start, false, false)
+        );
       }
     }
-  }
-
-  static isInCDS(transcript: Transcript, start: number, stop: number) {
-    return (start >= transcript.cds[0]) && (stop <= transcript.cds[1]);
-  }
-
-  static getCDSTransitionPos(transcript: Transcript, exon: Exon) {
-    function inCDS(pos: number) {
-      return pos >= transcript.cds[0] && pos <= transcript.cds[1];
-    }
-    if (inCDS(exon.start) !== inCDS(exon.stop)) {
-      if (inCDS(exon.start)) {
-        return transcript.cds[1];
-      } else {
-        return transcript.cds[0];
-      }
-    } else { return null; }
   }
 
   static domainFromSegments(segments: GeneViewTranscriptSegment[]): number[] {
     const domain: number[] = [];
     for (let i = 0; i < segments.length; i++) {
-      domain.push(segments[i].dnaStart, segments[i].dnaEnd);
+      domain.push(segments[i].start, segments[i].stop);
     }
     return domain;
+  }
+
+  isInCDS(start: number, stop: number) {
+    return (start >= this.transcript.cds[0]) && (stop <= this.transcript.cds[1]);
+  }
+
+  getCDSTransitionPos(exon: Exon) {
+    const startIsInCDS = this.isInCDS(exon.start, exon.start);
+    const stopIsInCDS = this.isInCDS(exon.stop, exon.stop);
+    if (startIsInCDS !== stopIsInCDS) {
+      return startIsInCDS ? this.transcript.cds[1] : this.transcript.cds[0];
+    } else {
+      return null;
+    }
   }
 
   resetStartStop() {
@@ -237,11 +229,11 @@ class GeneViewTranscript {
     const newSegments = [];
     for (let i = 0; i < this.transcriptSegments.length; i++) {
       const segment: GeneViewTranscriptSegment = this.transcriptSegments[i];
-      if (segment.dnaEnd <= this.start || segment.dnaStart >= this.stop) {
+      if (segment.stop <= this.start || segment.start >= this.stop) {
         continue;
       }
-      const start = Math.max(this.start, this.transcriptSegments[i].dnaStart);
-      const stop = Math.min(this.stop, this.transcriptSegments[i].dnaEnd);
+      const start = Math.max(this.start, this.transcriptSegments[i].start);
+      const stop = Math.min(this.stop, this.transcriptSegments[i].stop);
 
       newSegments.push(new GeneViewTranscriptSegment(
         start, stop, segment.isExon, segment.isCDS
@@ -256,31 +248,30 @@ class GeneViewTranscript {
     const selectedIntronSegments = selectedSegments.filter(segment => !segment.isExon);
 
     const linearScale = d3.scaleLinear()
-    .domain([selectedSegments[0].dnaStart, selectedSegments[selectedSegments.length - 1].dnaEnd])
+    .domain([selectedSegments[0].start, selectedSegments[selectedSegments.length - 1].stop])
     .range([0, plotWidth]);
 
     let newIntronSpace = 0;
     for (let i = 0; i < selectedIntronSegments.length; i++) {
-      let intronLength = selectedIntronSegments[i].dnaEnd - selectedIntronSegments[i].dnaStart;
+      let intronLength = selectedIntronSegments[i].stop - selectedIntronSegments[i].start;
       if (this.collapseIntrons) {
-        // intronLength = Math.min(intronLength, this.collapsedIntronLength);
         intronLength = this.collapsedIntronLength;
       }
       newIntronSpace += intronLength;
     }
 
-    const exonSpace = selectedExonSegments.reduce((a, b) => a + b.dnaEnd - b.dnaStart, 0);
-    const newExonSpace = selectedSegments[selectedSegments.length - 1].dnaEnd - selectedSegments[0].dnaStart - newIntronSpace;
+    const exonSpace = selectedExonSegments.reduce((a, b) => a + b.stop - b.start, 0);
+    const newExonSpace = selectedSegments[selectedSegments.length - 1].stop - selectedSegments[0].start - newIntronSpace;
     const newExonRatio = newExonSpace / exonSpace;
 
     const plotSegments: number[] = [];
     let rollingPosTracker = 0;
     for (let i = 0; i < selectedSegments.length; i++) {
-      let segmentLength = selectedSegments[i].dnaEnd - selectedSegments[i].dnaStart;
+      let segmentLength = selectedSegments[i].stop - selectedSegments[i].start;
       if (selectedSegments[i].isExon) {
         segmentLength *= newExonRatio;
       } else if (this.collapseIntrons) {
-        segmentLength = Math.min(segmentLength, this.collapsedIntronLength);
+        segmentLength = this.collapsedIntronLength;
       }
       segmentLength = linearScale(linearScale.domain()[0] + segmentLength);
       plotSegments.push(
@@ -845,9 +836,9 @@ export class GeneViewComponent implements OnInit {
     let i = 1;
     for (const segment of this.geneViewTranscript.calculateSelectedSegments()) {
       if (segment.isExon) {
-        this.drawExon(segment.dnaStart, segment.dnaEnd, yPos, `exon ${i}/${totalExonCount}`, segment.isCDS);
+        this.drawExon(segment.start, segment.stop, yPos, `exon ${i}/${totalExonCount}`, segment.isCDS);
       } else {
-        this.drawIntron(segment.dnaStart, segment.dnaEnd, yPos, `intron ${i - 1}/${totalExonCount - 1}`);
+        this.drawIntron(segment.start, segment.stop, yPos, `intron ${i - 1}/${totalExonCount - 1}`);
       }
       i += 1;
     }
