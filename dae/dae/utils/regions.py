@@ -6,16 +6,15 @@
 
 from collections import defaultdict
 import copy
-import re
 
 
 def bedFile2Rgns(bedFN):
     F = open(bedFN)
     r = []
-    for l in F:
-        if l[0] == "#":
+    for ln in F:
+        if ln[0] == "#":
             continue
-        chrom, beg, end = l.strip().split("\t")
+        chrom, beg, end = ln.strip().split("\t")
         beg = int(beg)
         end = int(end)
         r.append(Region(chrom, beg + 1, end))
