@@ -1,9 +1,8 @@
 /* tslint:disable:no-unused-variable */
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
-import { By } from '@angular/platform-browser';
-import { DebugElement } from '@angular/core';
-
 import { StudyTypesComponent } from './study-types.component';
+import { StateRestoreService } from 'app/store/state-restore.service';
+import { ErrorsAlertComponent } from 'app/errors-alert/errors-alert.component';
 
 describe('StudyTypesComponent', () => {
   let component: StudyTypesComponent;
@@ -11,7 +10,8 @@ describe('StudyTypesComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ StudyTypesComponent ]
+      declarations: [StudyTypesComponent, ErrorsAlertComponent],
+      providers: [StateRestoreService]
     })
     .compileComponents();
   }));

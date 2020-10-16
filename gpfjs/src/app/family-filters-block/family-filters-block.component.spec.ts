@@ -1,4 +1,6 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { NgbNavModule } from '@ng-bootstrap/ng-bootstrap';
+import { StateRestoreService } from 'app/store/state-restore.service';
 
 import { FamilyFiltersBlockComponent } from './family-filters-block.component';
 
@@ -8,7 +10,9 @@ describe('FamilyFiltersBlockComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ FamilyFiltersBlockComponent ]
+      declarations: [FamilyFiltersBlockComponent],
+      providers: [StateRestoreService],
+      imports: [NgbNavModule]
     })
     .compileComponents();
   }));

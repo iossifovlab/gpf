@@ -1,4 +1,8 @@
+import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ConfigService } from 'app/config/config.service';
+import { MeasuresService } from 'app/measures/measures.service';
+import { StateRestoreService } from 'app/store/state-restore.service';
 
 import { ContinuousFilterComponent } from './continuous-filter.component';
 
@@ -8,7 +12,9 @@ describe('ContinuousFilterComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ ContinuousFilterComponent ]
+      declarations: [ContinuousFilterComponent],
+      providers: [MeasuresService, ConfigService, StateRestoreService],
+      imports: [HttpClientTestingModule]
     })
     .compileComponents();
   }));

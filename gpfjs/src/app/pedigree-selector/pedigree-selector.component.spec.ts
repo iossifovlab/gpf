@@ -1,9 +1,7 @@
 /* tslint:disable:no-unused-variable */
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
-import { By } from '@angular/platform-browser';
-import { DebugElement } from '@angular/core';
-
 import { PedigreeSelectorComponent } from './pedigree-selector.component';
+import { StateRestoreService } from 'app/store/state-restore.service';
 
 
 describe('PedigreeselectorComponent', () => {
@@ -13,11 +11,8 @@ describe('PedigreeselectorComponent', () => {
   beforeEach(async(() => {
     TestBed.configureTestingModule({
       declarations: [PedigreeSelectorComponent],
-      imports: [
-
-      ],
-      providers: [
-      ]
+      imports: [],
+      providers: [StateRestoreService]
 
     })
       .compileComponents();

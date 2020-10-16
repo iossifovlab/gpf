@@ -1,11 +1,10 @@
 /* tslint:disable:no-unused-variable */
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
-import { By } from '@angular/platform-browser';
-import { DebugElement } from '@angular/core';
-
+import { RouterTestingModule } from '@angular/router/testing';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
-
 import { RegionsBlockComponent } from './regions-block.component';
+import { StateRestoreService } from 'app/store/state-restore.service';
+import { ErrorsAlertComponent } from 'app/errors-alert/errors-alert.component';
 
 describe('RegionsBlockComponent', () => {
   let component: RegionsBlockComponent;
@@ -14,10 +13,8 @@ describe('RegionsBlockComponent', () => {
   beforeEach(async(() => {
     TestBed.configureTestingModule({
       declarations: [RegionsBlockComponent],
-      imports: [
-        NgbModule,
-
-      ],
+      providers: [StateRestoreService],
+      imports: [NgbModule, RouterTestingModule],
     })
       .compileComponents();
   }));

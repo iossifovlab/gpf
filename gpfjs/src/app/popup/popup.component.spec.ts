@@ -1,6 +1,15 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
+import { MarkdownComponent, MarkdownService, SECURITY_CONTEXT} from 'ngx-markdown';
 
 import { PopupComponent } from './popup.component';
+
+class MarkdownServiceMock {
+  compile() {}
+  getSource() {}
+  highlight() {}
+  renderKatex() {}
+}
 
 describe('PopupComponent', () => {
   let component: PopupComponent;
@@ -8,7 +17,8 @@ describe('PopupComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ PopupComponent ]
+      declarations: [ PopupComponent, MarkdownComponent],
+      providers: [NgbActiveModal, {provide: MarkdownService, useClass: MarkdownServiceMock}],
     })
     .compileComponents();
   }));
