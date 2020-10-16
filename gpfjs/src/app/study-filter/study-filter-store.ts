@@ -1,9 +1,14 @@
 import { ValidateNested } from 'class-validator';
 import { IsNotEmpty } from 'class-validator';
 
+export class StudyDescriptor {
+    studyId: string;
+    studyName: string;
+}
+
 export class StudyFilterState {
   @IsNotEmpty()
-  studyName: string;
+  study: StudyDescriptor;
 }
 
 export class StudyFiltersState {
