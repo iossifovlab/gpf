@@ -1,5 +1,3 @@
-import logging
-
 from dae.variants.attributes import Inheritance
 from dae.backends.attributes_query import inheritance_query
 
@@ -10,8 +8,6 @@ from ..attributes_query import QueryTreeToSQLBitwiseTransformer, \
     role_query, sex_query, variant_type_query
 from ..attributes_query_inheritance import InheritanceTransformer, \
     inheritance_parser
-
-logger = logging.getLogger(__name__)
 
 
 class BaseQueryBuilder:
@@ -26,22 +22,24 @@ class BaseQueryBuilder:
     MAX_CHILD_NUMBER = 9999
 
     def __init__(
-            self, db, table_name, schema,
-            table_properties, pedigree_schema,
+            self, db, variants_table, pedigree_table,
+            variants_schema, table_properties, pedigree_schema,
             pedigree_df, gene_models=None):
-        assert schema is not None
+        assert variants_schema is not None
 
         self.db = db
-        self.table = table_name
+        self.variants_table = variants_table
+        self.pedigree_table = pedigree_table
         self.table_properties = table_properties
-        self.schema_columns = schema.columns
+        self.variants_columns = variants_schema.columns
         self.pedigree_columns = pedigree_schema
         self.ped_df = pedigree_df
         self.has_extra_attributes = \
-            "extra_attributes" in self.schema_columns
+            "extra_attributes" in self.variants_columns
         self._product = ""
         self.query_columns = self._query_columns()
         self.gene_models = gene_models
+        self.where_accessors = self._where_accessors()
 
     def reset_product(self):
         self._product = ""
@@ -50,14 +48,21 @@ class BaseQueryBuilder:
     def product(self):
         return self._product
 
+    def _where_accessors(self):
+        cols = list(self.variants_columns)
+        return {k: v for k, v in zip(cols, cols)}
+
     def build_select(self):
         columns = ", ".join(self.query_columns)
         select_clause = f"SELECT {columns}"
         self._add_to_product(select_clause)
 
     def build_from(self):
-        from_clause = f"FROM {self.db}.{self.table}"
+        from_clause = f"FROM {self.db}.{self.variants_table}"
         self._add_to_product(from_clause)
+
+    def build_join(self):
+        raise NotImplementedError()
 
     def build_where(
         self,
@@ -81,50 +86,53 @@ class BaseQueryBuilder:
             regions = self._build_gene_regions_heuristic(genes, regions)
             where.append(
                 self._build_iterable_string_attr_where(
-                    "effect_gene_symbols", genes
+                    self.where_accessors["effect_gene_symbols"], genes
                 )
             )
         if regions is not None:
             where.append(self._build_regions_where(regions))
         if family_ids is not None:
             where.append(
-                self._build_iterable_string_attr_where("family_id", family_ids)
+                self._build_iterable_string_attr_where(
+                    self.where_accessors["family_id"], family_ids)
             )
         if person_ids is not None:
             person_ids = set(person_ids) & set(self.families.persons.keys())
             where.append(
                 self._build_iterable_string_attr_where(
-                    "variant_in_members", person_ids
+                    self.where_accessors["variant_in_members"], person_ids
                 )
             )
         if effect_types is not None:
             where.append(
                 self._build_iterable_string_attr_where(
-                    "effect_types", effect_types
+                    self.where_accessors["effect_types"], effect_types
                 )
             )
         if inheritance is not None:
             where.append(
                 self._build_inheritance_where(
-                    "inheritance_in_members", inheritance
+                    self.where_accessors["inheritance_in_members"], inheritance
                 )
             )
         if roles is not None:
             where.append(
                 self._build_bitwise_attr_where(
-                    "variant_in_roles", roles, role_query
+                    self.where_accessors["variant_in_roles"], roles, role_query
                 )
             )
         if sexes is not None:
             where.append(
                 self._build_bitwise_attr_where(
-                    "variant_in_sexes", sexes, sex_query
+                    self.where_accessors["variant_in_sexes"], sexes, sex_query
                 )
             )
         if variant_type is not None:
             where.append(
                 self._build_bitwise_attr_where(
-                    "variant_type", variant_type, variant_type_query
+                    self.where_accessors["variant_type"],
+                    variant_type,
+                    variant_type_query
                 )
             )
         if real_attr_filter is not None:
@@ -183,15 +191,16 @@ class BaseQueryBuilder:
     def _build_real_attr_where(self, real_attr_filter, is_frequency=False):
         query = []
         for attr_name, attr_range in real_attr_filter:
-            if attr_name not in self.schema_columns:
+            if attr_name not in self.variants_columns:
                 query.append("false")
                 continue
-            assert attr_name in self.schema_columns
+            assert attr_name in self.variants_columns
             assert (
-                self.schema_columns[attr_name].type_py == float
-                or self.schema_columns[attr_name].type_py == int
-            ), self.schema_columns[attr_name]
+                self.variants_columns[attr_name].type_py == float
+                or self.variants_columns[attr_name].type_py == int
+            ), self.variants_columns[attr_name]
             left, right = attr_range
+            attr_name = self.where_accessors[attr_name]
             if left is None and right is None:
                 if not is_frequency:
                     query.append(
@@ -317,18 +326,19 @@ class BaseQueryBuilder:
     def _build_frequency_bin_heuristic(
             self, inheritance, ultra_rare, real_attr_filter):
 
-        if "frequency_bin" not in self.schema_columns:
+        if "frequency_bin" not in self.variants_columns:
             return ""
 
         rare_boundary = self.table_properties["rare_boundary"]
 
         frequency_bin = set()
+        frequency_bin_col = self.where_accessors["frequency_bin"]
         if inheritance is not None:
             matcher = inheritance_query.transform_tree_to_matcher(
                 inheritance_query.transform_query_string_to_tree(inheritance))
 
             if matcher.match([Inheritance.denovo]):
-                frequency_bin.add("frequency_bin = 0")
+                frequency_bin.add(f"{frequency_bin_col} = 0")
 
         if inheritance is None or matcher.match(
             [Inheritance.mendelian,
@@ -338,7 +348,7 @@ class BaseQueryBuilder:
             if ultra_rare:
                 frequency_bin.update([
                     # "frequency_bin = 0",
-                    "frequency_bin = 1"
+                    f"{frequency_bin_col} = 1"
                 ])
             elif real_attr_filter:
                 for name, (begin, end) in real_attr_filter:
@@ -346,22 +356,22 @@ class BaseQueryBuilder:
 
                         if end and end < rare_boundary:
                             frequency_bin.update([
-                                "frequency_bin = 1",
-                                "frequency_bin = 2"])
+                                f"{frequency_bin_col} = 1",
+                                f"{frequency_bin_col} = 2"])
                         elif begin and begin >= rare_boundary:
-                            frequency_bin.add("frequency_bin = 3")
+                            frequency_bin.add(f"{frequency_bin_col} = 3")
                         elif end is not None and end >= rare_boundary:
                             frequency_bin.update([
-                                "frequency_bin = 1",
-                                "frequency_bin = 2",
-                                "frequency_bin = 3",
+                                f"{frequency_bin_col} = 1",
+                                f"{frequency_bin_col} = 2",
+                                f"{frequency_bin_col} = 3",
                             ])
 
             elif inheritance is not None:
                 frequency_bin.update([
-                    "frequency_bin = 1",
-                    "frequency_bin = 2",
-                    "frequency_bin = 3"])
+                    f"{frequency_bin_col} = 1",
+                    f"{frequency_bin_col} = 2",
+                    f"{frequency_bin_col} = 3"])
 
         if len(frequency_bin) == 4:
             return ""
@@ -370,7 +380,7 @@ class BaseQueryBuilder:
     def _build_coding_heuristic(self, effect_types):
         if effect_types is None:
             return ""
-        if "coding_bin" not in self.schema_columns:
+        if "coding_bin" not in self.variants_columns:
             return ""
         effect_types = set(effect_types)
 
@@ -378,10 +388,12 @@ class BaseQueryBuilder:
             effect_types & \
             set(self.table_properties["coding_effect_types"])
 
+        coding_bin_col = self.where_accessors["coding_bin"]
+
         if intersection == effect_types:
-            return "coding_bin = 1"
+            return f"{coding_bin_col} = 1"
         if not intersection:
-            return "coding_bin = 0"
+            return f"{coding_bin_col} = 0"
         return ""
 
     def _build_region_bin_heuristic(self, regions):
@@ -403,12 +415,14 @@ class BaseQueryBuilder:
                 region_bins.append("{}_{}".format(chrom_bin, position_bin))
         if not region_bins:
             return ""
-        return "region_bin IN ({})".format(
-            ",".join(["'{}'".format(rb) for rb in region_bins])
+        region_bin_col = self.where_accessors("region_bin")
+        return "{region_bin} IN ({bins})".format(
+            region_bin=region_bin_col,
+            bins=",".join(["'{}'".format(rb) for rb in region_bins])
         )
 
     def _build_family_bin_heuristic(self, family_ids, person_ids):
-        if "family_bin" not in self.schema_columns:
+        if "family_bin" not in self.variants_columns:
             return ""
         if "family_bin" not in self.pedigree_columns:
             return ""
@@ -433,17 +447,21 @@ class BaseQueryBuilder:
                 )
             )
 
+        family_bin_col = self.where_accessors["family_bin"]
+
         if 0 < len(family_bins) < self.table_properties["family_bin_size"]:
             w = ", ".join([str(fb) for fb in family_bins])
-            return "family_bin IN ({w})".format(w=w)
+            return "{family_bin} IN ({w})".format(
+                family_bin=family_bin_col, w=w)
 
         return ""
 
     def _build_return_reference_and_return_unknown(
         self, return_reference=None, return_unknown=None
     ):
+        allele_index_col = self.where_accessors["allele_index"]
         if not return_reference:
-            return "allele_index > 0"
+            return f"{allele_index_col} > 0"
         elif not return_unknown:
-            return "allele_index >= 0"
+            return f"{allele_index_col} >= 0"
         return ""

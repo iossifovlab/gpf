@@ -96,7 +96,7 @@ class ImpalaVariants:
 
             with conn.cursor() as cursor:
                 query_builder = SummaryVariantsQueryBuilder(
-                    self.db, self.variants_table,
+                    self.db, self.variants_table, self.pedigree_table,
                     self.schema, self.table_properties,
                     self.pedigree_schema, self.ped_df,
                     self.gene_models
@@ -163,7 +163,7 @@ class ImpalaVariants:
 
             with conn.cursor() as cursor:
                 query_builder = FamilyVariantsQueryBuilder(
-                    self.db, self.variants_table,
+                    self.db, self.variants_table, self.pedigree_table,
                     self.schema, self.table_properties,
                     self.pedigree_schema, self.ped_df,
                     self.families, self.gene_models
