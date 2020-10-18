@@ -150,8 +150,6 @@ class GeneViewTranscript {
 
   transcript: Transcript;
   transcriptSegments: GeneViewTranscriptSegment[] = [];
-  collapseIntrons = false;
-  collapsedIntronLength = 2000; // in base pairs, not px
 
   constructor(transcript: Transcript) {
     this.transcript = transcript;
@@ -161,14 +159,14 @@ class GeneViewTranscript {
       const segmentStart = this.transcript.exons[i].start;
       const segmentStop = this.transcript.exons[i].stop;
       if (cdsTransition) {
-        // Separate exons both inside and outside the coding region into two segments
+        // Split exons which are both inside and outside the coding region into two segments
         this.transcriptSegments.push(
-          new GeneViewTranscriptSegment(segmentStart, cdsTransition, true, this.isInCDS(segmentStart, cdsTransition)),
-          new GeneViewTranscriptSegment(cdsTransition, segmentStop, true, this.isInCDS(cdsTransition, segmentStop))
+          new GeneViewTranscriptSegment(segmentStart, cdsTransition, true, this.isAreaInCDS(segmentStart, cdsTransition)),
+          new GeneViewTranscriptSegment(cdsTransition, segmentStop, true, this.isAreaInCDS(cdsTransition, segmentStop))
         );
       } else {
         this.transcriptSegments.push(
-          new GeneViewTranscriptSegment(segmentStart, segmentStop, true, this.isInCDS(segmentStart, segmentStop))
+          new GeneViewTranscriptSegment(segmentStart, segmentStop, true, this.isAreaInCDS(segmentStart, segmentStop))
         );
       }
       // Add intron segment if applicable
@@ -180,13 +178,13 @@ class GeneViewTranscript {
     }
   }
 
-  isInCDS(start: number, stop: number) {
+  isAreaInCDS(start: number, stop: number) {
     return (start >= this.transcript.cds[0]) && (stop <= this.transcript.cds[1]);
   }
 
   getCDSTransitionPos(exon: Exon) {
-    const startIsInCDS = this.isInCDS(exon.start, exon.start);
-    const stopIsInCDS = this.isInCDS(exon.stop, exon.stop);
+    const startIsInCDS = this.isAreaInCDS(exon.start, exon.start);
+    const stopIsInCDS = this.isAreaInCDS(exon.stop, exon.stop);
     if (startIsInCDS !== stopIsInCDS) {
       return startIsInCDS ? this.transcript.cds[1] : this.transcript.cds[0];
     } else {
@@ -217,13 +215,7 @@ class CollapsedSegments {
     }
   }
 
-  getSegmentIndex(coordinateSystem: boolean, coordinate: number): number {
-    /**
-      coordinateSystem:
-      -> 0 indicates the real coordinate system (i.e. DNA positions)
-      -> 1 indicates the pseudo coordinate system (with collapsed introns)
-    **/
-    const segments: GeneViewTranscriptSegment[] = coordinateSystem ? this.transcriptSegmentsCollapsed : this.transcriptSegments;
+  private getSegmentIndex(coordinate: number, segments: GeneViewTranscriptSegment[]): number {
     for (let i = 0; i < segments.length; i++) {
       if (segments[i].start <= coordinate && coordinate <= segments[i].stop) {
         return i;
@@ -232,23 +224,39 @@ class CollapsedSegments {
     return -1;
   }
 
-  convertCoordinate(coordinateSystem: boolean, coordinate: number): number {
-    const segments: GeneViewTranscriptSegment[] = coordinateSystem ? this.transcriptSegmentsCollapsed : this.transcriptSegments;
-    const targetSegments: GeneViewTranscriptSegment[] = coordinateSystem ? this.transcriptSegments : this.transcriptSegmentsCollapsed;
-    const segmentIndex = this.getSegmentIndex(coordinateSystem, coordinate);
+  private convertCoordinate(
+    coordinate: number, segments: GeneViewTranscriptSegment[], targetSegments: GeneViewTranscriptSegment[]
+  ): number {
+    const segmentIndex = this.getSegmentIndex(coordinate, segments);
     if (segmentIndex !== -1) {
-      return targetSegments[segmentIndex].start + Math.round(((coordinate - segments[segmentIndex].start) / segments[segmentIndex].length) * (targetSegments[segmentIndex].length));
+      return targetSegments[segmentIndex].start + Math.round(
+        ((coordinate - segments[segmentIndex].start) / segments[segmentIndex].length) * (targetSegments[segmentIndex].length)
+      );
     } else {
       return coordinate;
     }
   }
 
-  getDomain(coordinateSystem: boolean): number[] {
-    const segments: GeneViewTranscriptSegment[] = coordinateSystem ? this.transcriptSegmentsCollapsed : this.transcriptSegments;
+  private getDomain(segments: GeneViewTranscriptSegment[]): number[] {
     return [segments[0].start, segments[segments.length - 1].stop];
   }
-}
 
+  convertCoordinateToReal(coordinate: number) {
+    return this.convertCoordinate(coordinate, this.transcriptSegmentsCollapsed, this.transcriptSegments);
+  }
+
+  convertCoordinateToCollapsed(coordinate: number) {
+    return this.convertCoordinate(coordinate, this.transcriptSegments, this.transcriptSegmentsCollapsed);
+  }
+
+  getDomainReal() {
+    return this.getDomain(this.transcriptSegments);
+  }
+
+  getDomainCollapsed() {
+    return this.getDomain(this.transcriptSegmentsCollapsed);
+  }
+}
 
 @Component({
   selector: 'gpf-gene-view',
@@ -267,7 +275,6 @@ export class GeneViewComponent implements OnInit {
   summaryVariantsArray: GeneViewSummaryVariantsArray;
 
   margin = { top: 10, right: 70, left: 70, bottom: 0 };
-  y_axes_proportions = { domain: 0.70, subdomain: 0.20 };
   svgElement;
   svgWidth = 1200 - this.margin.left - this.margin.right;
   svgHeight;
@@ -287,7 +294,6 @@ export class GeneViewComponent implements OnInit {
   y_axis;
   y_axis_subdomain;
   y_axis_zero;
-  variantsDataRepr = [];
   selectedEffectTypes = ['lgds', 'missense', 'synonymous', 'other'];
   selectedAffectedStatus = ['Affected only', 'Unaffected only', 'Affected and unaffected'];
   selectedFrequencies;
@@ -508,7 +514,6 @@ export class GeneViewComponent implements OnInit {
   }
 
   toggleIntronCollapsing() {
-    this.geneViewTranscript.collapseIntrons = !this.geneViewTranscript.collapseIntrons;
     this.collapsedSegments.collapseIntrons = !this.collapsedSegments.collapseIntrons;
     this.setDefaultScale();
     this.drawGene();
@@ -614,12 +619,8 @@ export class GeneViewComponent implements OnInit {
     let minDomain = this.x.domain()[0];
     let maxDomain = this.x.domain()[this.x.domain().length - 1];
     if (this.collapsedSegments.collapseIntrons) {
-      minDomain = this.collapsedSegments.convertCoordinate(
-        this.collapsedSegments.collapseIntrons, minDomain
-      );
-      maxDomain = this.collapsedSegments.convertCoordinate(
-        this.collapsedSegments.collapseIntrons, maxDomain
-      );
+      minDomain = this.collapsedSegments.convertCoordinateToReal(minDomain);
+      maxDomain = this.collapsedSegments.convertCoordinateToReal(maxDomain);
     }
 
     const filteredSummaryVariants = this.filterSummaryVariantsArray(
@@ -632,7 +633,7 @@ export class GeneViewComponent implements OnInit {
 
     if (this.gene !== undefined) {
       this.x_axis = d3.axisBottom(this.x).tickFormat(
-        x => String(this.collapsedSegments.collapseIntrons ? this.collapsedSegments.convertCoordinate(true, +x) : +x)
+        x => String(this.collapsedSegments.collapseIntrons ? this.collapsedSegments.convertCoordinateToReal(+x) : +x)
       );
       this.y_axis = d3.axisLeft(this.y);
       this.y_axis_subdomain = d3.axisLeft(this.y_subdomain).tickValues([this.frequencyDomainMin / 2.0]);
@@ -645,13 +646,9 @@ export class GeneViewComponent implements OnInit {
       for (const variant of filteredSummaryVariants.summaryVariants) {
         const color = this.getAffectedStatusColor(this.getVariantAffectedStatus(variant));
 
-        let variantPosition;
+        let variantPosition = variant.position;
         if (this.collapsedSegments.collapseIntrons) {
-          variantPosition = this.collapsedSegments.convertCoordinate(
-            false, variant.position
-          );
-        } else {
-          variantPosition = variant.position;
+          variantPosition = this.collapsedSegments.convertCoordinateToCollapsed(variantPosition);
         }
         variantPosition = this.x(variantPosition);
 
@@ -724,28 +721,6 @@ export class GeneViewComponent implements OnInit {
     .style('fill', color);
   }
 
-  drawTransmittedPlotVariant(variantInfo: GeneViewSummaryVariant) {
-    this.svgElement.append('g')
-      .append('circle')
-      .attr('cx', this.x(this.collapsedSegments.convertCoordinate(this.collapsedSegments.collapseIntrons, variantInfo.position)))
-      .attr('cy', this.getVariantY(variantInfo.frequency))
-      .attr('r', 5)
-      .style('fill', this.getEffectVariantColor(variantInfo.effect));
-  }
-
-  drawDenovoPlotVariant(variantInfo: GeneViewSummaryVariant) {
-    this.svgElement.append('g')
-      .append('polygon')
-      .attr('points', this.getTrianglePoints(
-        this.x(this.collapsedSegments.convertCoordinate(this.collapsedSegments.collapseIntrons, variantInfo.position)),
-        this.getVariantY(variantInfo.frequency),
-        15
-      ))
-      .style('stroke-width', 2)
-      .style('stroke', '#000000')
-      .style('fill', this.getEffectVariantColor(variantInfo.effect));
-  }
-
   getVariantY(variantFrequency): number {
     let y: number;
 
@@ -772,7 +747,10 @@ export class GeneViewComponent implements OnInit {
   }
 
   setDefaultScale() {
-    this.x.domain(this.collapsedSegments.getDomain(this.collapsedSegments.collapseIntrons));
+    const domain = this.collapsedSegments.collapseIntrons
+      ? this.collapsedSegments.getDomainCollapsed()
+      : this.collapsedSegments.getDomainReal();
+    this.x.domain(domain);
     this.x.range([0, this.svgWidth]);
     this.selectedFrequencies = [0, this.frequencyDomainMax];
   }

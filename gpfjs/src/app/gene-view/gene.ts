@@ -40,7 +40,7 @@ export class Transcript {
     return new Transcript(
       json['transcript_id'], json['strand'], json['chrom'],
       Exon.fromJson(json['utr3']), Exon.fromJson(json['utr5']),
-      json["cds"],
+      json['cds'],
       Exon.fromJsonArray(json['exons']));
   }
 
