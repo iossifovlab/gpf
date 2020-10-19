@@ -487,6 +487,8 @@ export class GeneViewComponent implements OnInit {
       this.svgElement.append('g').call(this.y_axis_subdomain);
       this.svgElement.append('g').call(this.y_axis_zero);
 
+      filteredSummaryVariants.summaryVariants.sort((a, b) => this.variantsComparator(a, b));
+
       for (const variant of filteredSummaryVariants.summaryVariants) {
         const color = this.getAffectedStatusColor(this.getVariantAffectedStatus(variant));
 
@@ -501,6 +503,40 @@ export class GeneViewComponent implements OnInit {
         }
         if (variant.seenAsDenovo) {
           this.drawSuroundingSquare(this.x(variant.position), this.getVariantY(variant.frequency), color);
+        }
+      }
+    }
+  }
+
+  variantsComparator(a: GeneViewSummaryVariant, b: GeneViewSummaryVariant) {
+    if (a.seenAsDenovo && !b.seenAsDenovo) {
+      return 1;
+    } else if (!a.seenAsDenovo && b.seenAsDenovo) {
+      return -1;
+    } else {
+      if (a.isLGDs() && !b.isLGDs()) {
+        return 1;
+      } else if (!a.isLGDs() && b.isLGDs()) {
+        return -1;
+      } else if (a.isMissense() && !b.isMissense()) {
+        return 1;
+      } else if (!a.isMissense() && b.isMissense()) {
+        return -1;
+      } else if (a.isSynonymous() && !b.isSynonymous()) {
+        return 1;
+      } else if (!a.isSynonymous() && b.isSynonymous()) {
+        return -1;
+      } else {
+        if (this.getVariantAffectedStatus(a) === 'Affected only' && this.getVariantAffectedStatus(b) !== 'Affected only') {
+          return 1;
+        } else if (this.getVariantAffectedStatus(a) !== 'Affected only' && this.getVariantAffectedStatus(b) === 'Affected only') {
+          return -1;
+        } else if (this.getVariantAffectedStatus(a) === 'Unaffected only' && this.getVariantAffectedStatus(b) !== 'Unaffected only') {
+          return 1;
+        } else if (this.getVariantAffectedStatus(a) !== 'Unaffected only' && this.getVariantAffectedStatus(b) === 'Unaffected only') {
+          return -1;
+        } else {
+          return 0;
         }
       }
     }
