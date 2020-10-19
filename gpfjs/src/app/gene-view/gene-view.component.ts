@@ -274,15 +274,21 @@ export class GeneViewComponent implements OnInit {
   frequencyDomainMax: number;
   summaryVariantsArray: GeneViewSummaryVariantsArray;
 
-  margin = { top: 10, right: 70, left: 70, bottom: 0 };
+  options = {
+    margin: { top: 10, right: 70, left: 70, bottom: 0 },
+    axisScale: { domain: 0.90, subdomain: 0.05 },
+    exonThickness: 14,
+    cdsThickness: 20,
+  };
+
   svgElement;
-  svgWidth = 1200 - this.margin.left - this.margin.right;
+  svgWidth = 1200 - this.options.margin.left - this.options.margin.right;
   svgHeight;
   svgHeightFreqRaw = 400;
-  svgHeightFreq = this.svgHeightFreqRaw - this.margin.top - this.margin.bottom;
+  svgHeightFreq = this.svgHeightFreqRaw - this.options.margin.top - this.options.margin.bottom;
 
-  subdomainAxisY = Math.round(this.svgHeightFreq * 0.90);
-  zeroAxisY = this.subdomainAxisY + Math.round(this.svgHeightFreq * 0.05);
+  subdomainAxisY = Math.round(this.svgHeightFreq * this.options.axisScale.domain);
+  zeroAxisY = this.subdomainAxisY + Math.round(this.svgHeightFreq * this.options.axisScale.subdomain);
 
   lgds = ['nonsense', 'splice-site', 'frame-shift', 'no-frame-shift-new-stop'];
 
@@ -332,10 +338,10 @@ export class GeneViewComponent implements OnInit {
 
       this.svgElement = d3.select('#svg-container')
         .append('svg')
-        .attr('width', this.svgWidth + this.margin.left + this.margin.right)
+        .attr('width', this.svgWidth + this.options.margin.left + this.options.margin.right)
         .attr('height', this.svgHeightFreqRaw)
         .append('g')
-        .attr('transform', `translate(${this.margin.left}, ${this.margin.top})`);
+        .attr('transform', `translate(${this.options.margin.left}, ${this.options.margin.top})`);
 
       this.x = d3.scaleLinear()
         .domain([0, 0])
@@ -773,10 +779,10 @@ export class GeneViewComponent implements OnInit {
 
     this.svgElement = d3.select('#svg-container')
       .append('svg')
-      .attr('width', this.svgWidth + this.margin.left + this.margin.right)
+      .attr('width', this.svgWidth + this.options.margin.left + this.options.margin.right)
       .attr('height', this.svgHeight)
       .append('g')
-      .attr('transform', `translate(${this.margin.left}, ${this.margin.top})`);
+      .attr('transform', `translate(${this.options.margin.left}, ${this.options.margin.top})`);
 
     this.brush = d3.brush().extent([[0, 0], [this.svgWidth, this.svgHeightFreq]])
       .on('end', this.brushEndEvent);
@@ -864,17 +870,17 @@ export class GeneViewComponent implements OnInit {
   }
 
   drawExon(xStart: number, xEnd: number, y: number, title: string, cds: boolean) {
-    let rectThickness = 10;
+    let rectThickness = this.options.exonThickness;
     if (cds) {
-      rectThickness = 15;
-      y -= 2.5;
+      rectThickness = this.options.cdsThickness;
+      y -= (rectThickness - this.options.exonThickness) / 2;
       title = title + ' [CDS]';
     }
     this.drawRect(xStart, xEnd, y, rectThickness, title);
   }
 
   drawIntron(xStart: number, xEnd: number, y: number, title: string) {
-    this.drawLine(xStart, xEnd, y, title);
+    this.drawLine(xStart, xEnd, y + this.options.exonThickness / 2, title);
   }
 
   drawTranscriptUTRText(xStart: number, xEnd: number, y: number, strand: string) {
@@ -920,9 +926,9 @@ export class GeneViewComponent implements OnInit {
 
     this.svgElement.append('line')
       .attr('x1', xStartAligned)
-      .attr('y1', y + 5)
+      .attr('y1', y)
       .attr('x2', xEndAligned)
-      .attr('y2', y + 5)
+      .attr('y2', y)
       .attr('stroke', 'black')
       .append('svg:title').text(svgTitle);
   }
