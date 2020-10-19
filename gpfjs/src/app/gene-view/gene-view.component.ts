@@ -24,30 +24,8 @@ class GeneViewSummaryVariant {
 
   lgds = ['nonsense', 'splice-site', 'frame-shift', 'no-frame-shift-new-stop'];
 
-  isLGDs(): boolean {
-    if (this.lgds.indexOf(this.effect) !== -1 || this.effect === 'lgds') {
-      return true;
-    }
-    return false;
-  }
-
-  isMissense(): boolean {
-    if (this.effect === 'missense') {
-      return true;
-    }
-    return false;
-  }
-
-  isSynonymous(): boolean {
-    if (this.effect === 'synonymous') {
-      return true;
-    }
-    return false;
-  }
-
   static fromPreviewVariant(config, genotypePreview: GenotypePreview): GeneViewSummaryVariant {
     const result = new GeneViewSummaryVariant();
-
     const location = genotypePreview.get(config.locationColumn);
     result.location = location;
     result.position = Number(location.slice(location.indexOf(':') + 1));
@@ -70,12 +48,12 @@ class GeneViewSummaryVariant {
     }
     result.seenInAffected = false;
     result.seenInUnaffected = false;
-    for (const pedigreeData of genotypePreview.get("genotype")) {
+    for (const pedigreeData of genotypePreview.get('genotype')) {
       if (pedigreeData.label > 0) {
-        if (pedigreeData.color == "#ffffff") {
-          result.seenInUnaffected = true
+        if (pedigreeData.color === '#ffffff') {
+          result.seenInUnaffected = true;
         } else {
-          result.seenInAffected = true
+          result.seenInAffected = true;
         }
       }
     }
@@ -83,6 +61,27 @@ class GeneViewSummaryVariant {
     result.svuid = result.location + ':' + result.variant;
 
     return result;
+  }
+
+  isLGDs(): boolean {
+    if (this.lgds.indexOf(this.effect) !== -1 || this.effect === 'lgds') {
+      return true;
+    }
+    return false;
+  }
+
+  isMissense(): boolean {
+    if (this.effect === 'missense') {
+      return true;
+    }
+    return false;
+  }
+
+  isSynonymous(): boolean {
+    if (this.effect === 'synonymous') {
+      return true;
+    }
+    return false;
   }
 }
 
@@ -438,6 +437,7 @@ export class GeneViewComponent implements OnInit {
     let position: number;
     let frequency: string;
     for (const genotypePreview of variantsArray.genotypePreviews) {
+      console.log(genotypePreview);
       const data = genotypePreview.data;
       location = data.get(this.geneBrowserConfig.locationColumn);
       position = Number(location.slice(location.indexOf(':') + 1));
