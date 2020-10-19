@@ -12,7 +12,7 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
         super().__init__(
             db, variants_table, pedigree_table,
             variants_schema, table_properties, pedigree_schema,
-            pedigree_df, families, gene_models=gene_models)
+            pedigree_df, gene_models=gene_models)
         self.families = families
 
     def _query_columns(self):
@@ -33,6 +33,9 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
         return columns
 
     def build_group_by(self):
+        pass
+
+    def build_join(self):
         pass
 
     def create_row_deserializer(self, serializer):

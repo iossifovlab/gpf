@@ -50,7 +50,11 @@ class BaseQueryBuilder:
 
     def _where_accessors(self):
         cols = list(self.variants_columns)
-        return {k: v for k, v in zip(cols, cols)}
+        accessors = {k: v for k, v in zip(cols, cols)}
+        if "effect_types" not in accessors:
+            accessors["effect_types"] = "effect_types"
+
+        return accessors
 
     def build_select(self):
         columns = ", ".join(self.query_columns)
@@ -415,7 +419,7 @@ class BaseQueryBuilder:
                 region_bins.append("{}_{}".format(chrom_bin, position_bin))
         if not region_bins:
             return ""
-        region_bin_col = self.where_accessors("region_bin")
+        region_bin_col = self.where_accessors["region_bin"]
         return "{region_bin} IN ({bins})".format(
             region_bin=region_bin_col,
             bins=",".join(["'{}'".format(rb) for rb in region_bins])
