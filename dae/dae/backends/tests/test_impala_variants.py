@@ -98,6 +98,8 @@ def test_impala_summary_variants_simple(variants_impala, fixture_name):
     for v in vs:
         for a in v.alt_alleles:
             assert a.get_attribute("family_variants_count") == 2
+            assert a.get_attribute("seen_in_status") is True
+            assert a.get_attribute("seen_in_denovo") == 0
 
     assert all([isinstance(sv, SummaryVariant) for sv in vs])
     assert len(vs) == 2

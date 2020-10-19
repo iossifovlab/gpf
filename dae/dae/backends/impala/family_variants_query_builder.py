@@ -6,13 +6,13 @@ logger = logging.getLogger(__name__)
 
 class FamilyVariantsQueryBuilder(BaseQueryBuilder):
     def __init__(
-            self, db, table_name, schema,
-            table_properties, pedigree_schema,
+            self, db, variants_table, pedigree_table,
+            variants_schema, table_properties, pedigree_schema,
             pedigree_df, families, gene_models=None):
         super().__init__(
-            db, table_name, schema,
-            table_properties, pedigree_schema,
-            pedigree_df, gene_models=gene_models)
+            db, variants_table, pedigree_table,
+            variants_schema, table_properties, pedigree_schema,
+            pedigree_df, families, gene_models=gene_models)
         self.families = families
 
     def _query_columns(self):
