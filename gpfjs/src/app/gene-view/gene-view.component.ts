@@ -128,17 +128,20 @@ class GeneViewTranscriptSegment {
   stop: number;
   isExon: boolean;
   isCDS: boolean;
+  label: string;
 
   constructor(
     start: number,
     stop: number,
     isExon: boolean,
-    isCDS: boolean
+    isCDS: boolean,
+    label: string
   ) {
     this.start = start;
     this.stop = stop;
     this.isExon = isExon;
     this.isCDS = isCDS;
+    this.label = label;
   }
 
   get length() {
@@ -154,6 +157,9 @@ class GeneViewTranscript {
   constructor(transcript: Transcript) {
     this.transcript = transcript;
 
+    const exonCount = this.transcript.exons.length;
+    const intronCount = exonCount - 1;
+
     for (let i = 0; i < this.transcript.exons.length; i++) {
       const cdsTransition = this.getCDSTransitionPos(this.transcript.exons[i]);
       const segmentStart = this.transcript.exons[i].start;
@@ -161,18 +167,18 @@ class GeneViewTranscript {
       if (cdsTransition) {
         // Split exons which are both inside and outside the coding region into two segments
         this.transcriptSegments.push(
-          new GeneViewTranscriptSegment(segmentStart, cdsTransition, true, this.isAreaInCDS(segmentStart, cdsTransition)),
-          new GeneViewTranscriptSegment(cdsTransition, segmentStop, true, this.isAreaInCDS(cdsTransition, segmentStop))
+          new GeneViewTranscriptSegment(segmentStart, cdsTransition, true, this.isAreaInCDS(segmentStart, cdsTransition), `exon ${i + 1}/${exonCount}`),
+          new GeneViewTranscriptSegment(cdsTransition, segmentStop, true, this.isAreaInCDS(cdsTransition, segmentStop), `exon ${i + 1}/${exonCount}`)
         );
       } else {
         this.transcriptSegments.push(
-          new GeneViewTranscriptSegment(segmentStart, segmentStop, true, this.isAreaInCDS(segmentStart, segmentStop))
+          new GeneViewTranscriptSegment(segmentStart, segmentStop, true, this.isAreaInCDS(segmentStart, segmentStop), `exon ${i + 1}/${exonCount}`)
         );
       }
       // Add intron segment if applicable
       if (i + 1 < this.transcript.exons.length) {
         this.transcriptSegments.push(
-          new GeneViewTranscriptSegment(segmentStop, this.transcript.exons[i + 1].start, false, false)
+          new GeneViewTranscriptSegment(segmentStop, this.transcript.exons[i + 1].start, false, false, `intron ${i + 1}/${intronCount}`)
         );
       }
     }
@@ -209,7 +215,7 @@ class CollapsedSegments {
     for (const segment of transcriptSegments) {
       const segmentLength = segment.isExon ? segment.length : collapsedIntronLength;
       this.transcriptSegmentsCollapsed.push(
-        new GeneViewTranscriptSegment(rollingPosTracker, rollingPosTracker + segmentLength, segment.isExon, segment.isCDS)
+        new GeneViewTranscriptSegment(rollingPosTracker, rollingPosTracker + segmentLength, segment.isExon, segment.isCDS, segment.label)
       );
       rollingPosTracker += segmentLength;
     }
@@ -364,6 +370,8 @@ export class GeneViewComponent implements OnInit {
         this.geneBrowserConfig,
         this.variantsArray
       );
+
+      this.collapsedSegments.collapseIntrons = false;
 
       this.updateFamilyVariantsTable();
       this.drawPlot();
@@ -524,6 +532,7 @@ export class GeneViewComponent implements OnInit {
     this.setDefaultScale();
     this.drawGene();
     this.drawPlot();
+    this.updateFamilyVariantsTable();
   }
 
   getAffectedStatusColor(affectedStatus: string): string {
@@ -614,21 +623,25 @@ export class GeneViewComponent implements OnInit {
   }
 
   updateFamilyVariantsTable() {
-    const filteredVariants = this.filterTablePreviewVariantsArray(
-      this.variantsArray, this.x.domain()[0], this.x.domain()[this.x.domain().length - 1]
-    );
-    this.updateShownTablePreviewVariantsArrayEvent.emit(filteredVariants);
-  }
-
-  drawPlot() {
-
     let minDomain = this.x.domain()[0];
     let maxDomain = this.x.domain()[this.x.domain().length - 1];
     if (this.collapsedSegments.collapseIntrons) {
       minDomain = this.collapsedSegments.convertCoordinateToReal(minDomain);
       maxDomain = this.collapsedSegments.convertCoordinateToReal(maxDomain);
     }
+    const filteredVariants = this.filterTablePreviewVariantsArray(
+      this.variantsArray, minDomain, maxDomain
+    );
+    this.updateShownTablePreviewVariantsArrayEvent.emit(filteredVariants);
+  }
 
+  drawPlot() {
+    let minDomain = this.x.domain()[0];
+    let maxDomain = this.x.domain()[this.x.domain().length - 1];
+    if (this.collapsedSegments.collapseIntrons) {
+      minDomain = this.collapsedSegments.convertCoordinateToReal(minDomain);
+      maxDomain = this.collapsedSegments.convertCoordinateToReal(maxDomain);
+    }
     const filteredSummaryVariants = this.filterSummaryVariantsArray(
       this.summaryVariantsArray, minDomain, maxDomain
     );
@@ -852,17 +865,14 @@ export class GeneViewComponent implements OnInit {
   }
 
   drawTranscript(yPos: number) {
-    const totalExonCount = this.geneViewTranscript.transcript.exons.length;
-    let i = 1;
     const segments = this.collapsedSegments.collapseIntrons ?
       this.collapsedSegments.transcriptSegmentsCollapsed : this.collapsedSegments.transcriptSegments;
     for (const segment of segments) {
       if (segment.isExon) {
-        this.drawExon(segment.start, segment.stop, yPos, `exon ${i}/${totalExonCount}`, segment.isCDS);
+        this.drawExon(segment.start, segment.stop, yPos, segment.label, segment.isCDS);
       } else {
-        this.drawIntron(segment.start, segment.stop, yPos, `intron ${i - 1}/${totalExonCount - 1}`);
+        this.drawIntron(segment.start, segment.stop, yPos, segment.label);
       }
-      i += 1;
     }
     this.drawTranscriptUTRText(
       segments[0].start, segments[segments.length - 1].stop, yPos, this.geneViewTranscript.transcript.strand
@@ -874,7 +884,7 @@ export class GeneViewComponent implements OnInit {
     if (cds) {
       rectThickness = this.options.cdsThickness;
       y -= (rectThickness - this.options.exonThickness) / 2;
-      title = title + ' [CDS]';
+      title += ' [CDS]';
     }
     this.drawRect(xStart, xEnd, y, rectThickness, title);
   }
