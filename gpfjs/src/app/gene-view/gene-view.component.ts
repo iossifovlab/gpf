@@ -26,7 +26,6 @@ class GeneViewSummaryVariant {
 
   static fromPreviewVariant(config, genotypePreview: GenotypePreview): GeneViewSummaryVariant {
     const result = new GeneViewSummaryVariant();
-
     const location = genotypePreview.get(config.locationColumn);
     result.location = location;
     result.position = Number(location.slice(location.indexOf(':') + 1));
@@ -606,7 +605,8 @@ export class GeneViewComponent implements OnInit {
       if (
         (!this.isVariantEffectSelected(data.get(this.geneBrowserConfig.effectColumn))) ||
         (!this.showDenovo && data.get('variant.is denovo')) ||
-        (!this.showTransmitted && !data.get('variant.is denovo'))
+        (!this.showTransmitted && !data.get('variant.is denovo')) ||
+        (!this.isAffectedStatusSelected(this.getPedigreeAffectedStatus(data.get('genotype'))))
       ) {
         continue;
       } else if (position >= startPos && position <= endPos) {
@@ -619,6 +619,32 @@ export class GeneViewComponent implements OnInit {
       }
     }
     result.setGenotypePreviews(filteredVariants);
+    return result;
+  }
+
+  getPedigreeAffectedStatus(pedigreeData): string {
+    let result: string;
+    let isInAffected = false;
+    let isInUnaffected = false;
+
+    for (const d of pedigreeData) {
+      if (d.label > 0) {
+        if (d.color === '#ffffff') {
+          isInUnaffected = true;
+        } else {
+          isInAffected = true;
+        }
+      }
+    }
+
+    if (isInAffected && isInUnaffected) {
+      result = 'Affected and unaffected';
+    } else if (!isInAffected && isInUnaffected) {
+      result = 'Unaffected only';
+    } else {
+      result = 'Affected only';
+    }
+
     return result;
   }
 
@@ -662,6 +688,8 @@ export class GeneViewComponent implements OnInit {
       this.svgElement.append('g').call(this.y_axis_subdomain);
       this.svgElement.append('g').call(this.y_axis_zero);
 
+      filteredSummaryVariants.summaryVariants.sort((a, b) => this.variantsComparator(a, b));
+
       for (const variant of filteredSummaryVariants.summaryVariants) {
         const color = this.getAffectedStatusColor(this.getVariantAffectedStatus(variant));
 
@@ -682,6 +710,40 @@ export class GeneViewComponent implements OnInit {
         }
         if (variant.seenAsDenovo) {
           this.drawSuroundingSquare(variantPosition, this.getVariantY(variant.frequency), color);
+        }
+      }
+    }
+  }
+
+  variantsComparator(a: GeneViewSummaryVariant, b: GeneViewSummaryVariant) {
+    if (a.seenAsDenovo && !b.seenAsDenovo) {
+      return 1;
+    } else if (!a.seenAsDenovo && b.seenAsDenovo) {
+      return -1;
+    } else {
+      if (a.isLGDs() && !b.isLGDs()) {
+        return 1;
+      } else if (!a.isLGDs() && b.isLGDs()) {
+        return -1;
+      } else if (a.isMissense() && !b.isMissense()) {
+        return 1;
+      } else if (!a.isMissense() && b.isMissense()) {
+        return -1;
+      } else if (a.isSynonymous() && !b.isSynonymous()) {
+        return 1;
+      } else if (!a.isSynonymous() && b.isSynonymous()) {
+        return -1;
+      } else {
+        if (this.getVariantAffectedStatus(a) === 'Affected only' && this.getVariantAffectedStatus(b) !== 'Affected only') {
+          return 1;
+        } else if (this.getVariantAffectedStatus(a) !== 'Affected only' && this.getVariantAffectedStatus(b) === 'Affected only') {
+          return -1;
+        } else if (this.getVariantAffectedStatus(a) === 'Unaffected only' && this.getVariantAffectedStatus(b) !== 'Unaffected only') {
+          return 1;
+        } else if (this.getVariantAffectedStatus(a) !== 'Unaffected only' && this.getVariantAffectedStatus(b) === 'Unaffected only') {
+          return -1;
+        } else {
+          return 0;
         }
       }
     }
