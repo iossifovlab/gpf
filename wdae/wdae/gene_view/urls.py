@@ -5,11 +5,11 @@ urlpatterns = [
     url(
         r"^/config/?$",
         views.ConfigView.as_view(),
-        name="genotype_browser_preview",
+        name="gene_view_config",
     ),
     url(
         r"^/query_summary_variants/?$",
         views.QueryVariantsView.as_view(),
-        name="genotype_browser_preview_variants",
+        name="gene_view_summary_variants_query",
     ),
 ]
