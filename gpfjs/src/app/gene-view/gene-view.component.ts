@@ -807,6 +807,7 @@ export class GeneViewComponent implements OnInit {
       i += 1;
     }
 
+    this.drawTranscriptChromosomeText(firstStart, yPos, transcript.chrom);
     this.drawTranscriptUTRText(firstStart, lastEnd, yPos, strand);
   }
 
@@ -847,6 +848,16 @@ export class GeneViewComponent implements OnInit {
       .text(UTR.right)
       .attr('cursor', 'default')
       .append('svg:title').text(`UTR ${UTR.right}`);
+  }
+
+  drawTranscriptChromosomeText(xStart: number, y: number, chromosome: string) {
+    this.svgElement.append('text')
+      .attr('y', y + 10)
+      .attr('x', this.x(xStart) - 70)
+      .attr('font-size', '13px')
+      .text(`chr:${chromosome}`)
+      .attr('cursor', 'default')
+      .append('svg:title').text(`Chromosome: ${chromosome}`);
   }
 
   drawRect(xStart: number, xEnd: number, y: number, height: number, svgTitle: string) {
