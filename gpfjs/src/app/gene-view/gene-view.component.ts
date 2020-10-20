@@ -210,6 +210,7 @@ class GeneViewModel {
 
   collapsedRange: number[];
   collapsedDomain: number[];
+  normalDomain: number[];
 
   collapsedScale;
   normalScale;
@@ -221,18 +222,23 @@ class GeneViewModel {
     for (let transcript of gene.transcripts) {
       this.geneViewTranscripts.push(new GeneViewTranscript(transcript));
     }
-    this.collapsedGeneViewTranscript = new GeneViewTranscript(gene.collapsedTranscript());
-    this.collapsedDomain = this.buildCollapsedIntronsDomain()
-    this.collapsedRange = this.buildCollapsedIntronsRange();
 
+    this.collapsedGeneViewTranscript = new GeneViewTranscript(gene.collapsedTranscript());
+
+    this.normalDomain = [
+      this.collapsedGeneViewTranscript.transcript.start,
+      this.collapsedGeneViewTranscript.transcript.stop
+    ]
+
+    this.normalScale = d3.scaleLinear()
+      .domain(this.normalDomain)
+      .range([0, this.rangeWidth]);
+
+    this.collapsedDomain = this.buildCollapsedIntronsDomain();
+    this.collapsedRange = this.buildCollapsedIntronsRange();
     this.collapsedScale = d3.scaleLinear()
       .domain(this.collapsedDomain)
       .range(this.collapsedRange);
-    this.normalScale = d3.scaleLinear()
-      .domain([
-        this.collapsedGeneViewTranscript.transcript.start,
-        this.collapsedGeneViewTranscript.transcript.stop])
-      .range([0, this.rangeWidth]);
   }
 
   buildCollapsedIntronsDomain() {
@@ -282,7 +288,7 @@ class GeneViewModel {
       return this.normalScale;
     }
   }
-};
+}
 
 class CollapsedSegments {
 
@@ -387,7 +393,6 @@ export class GeneViewComponent implements OnInit {
 
   lgds = ['nonsense', 'splice-site', 'frame-shift', 'no-frame-shift-new-stop'];
 
-  x;
   y;
   y_subdomain;
   y_zero;
@@ -438,10 +443,6 @@ export class GeneViewComponent implements OnInit {
         .attr('height', this.svgHeightFreqRaw)
         .append('g')
         .attr('transform', `translate(${this.options.margin.left}, ${this.options.margin.top})`);
-
-      this.x = d3.scaleLinear()
-        .domain([0, 0])
-        .range([0, this.svgWidth]);
 
       this.y = d3.scaleLog()
         .domain([this.frequencyDomainMin, this.frequencyDomainMax])
@@ -756,14 +757,13 @@ export class GeneViewComponent implements OnInit {
     this.updateShownTablePreviewVariantsArrayEvent.emit(filteredVariants);
   }
 
-  scale() {
+  get x() {
     return this.geneViewModel.scale(this.collapseIntrons);
   }
 
   drawPlot() {
-    let x_scale = this.scale();
-    let minDomain = x_scale.invert(this.x.domain()[0]);
-    let maxDomain = x_scale.invert(this.x.domain()[this.x.domain().length - 1]);
+    let minDomain = this.x.domain()[0];
+    let maxDomain = this.x.domain()[this.x.domain().length - 1];
 
     // if (this.collapseIntrons) {
     //   minDomain = this.collapsedSegments.convertCoordinateToReal(minDomain);
@@ -778,9 +778,7 @@ export class GeneViewComponent implements OnInit {
     );
 
     if (this.gene !== undefined) {
-      this.x_axis = d3.axisBottom(this.x).tickFormat(
-        x => String(this.collapseIntrons ? this.collapsedSegments.convertCoordinateToReal(+x) : +x)
-      );
+      this.x_axis = d3.axisBottom(this.x);
       this.y_axis = d3.axisLeft(this.y);
       this.y_axis_subdomain = d3.axisLeft(this.y_subdomain).tickValues([this.frequencyDomainMin / 2.0]);
       this.y_axis_zero = d3.axisLeft(this.y_zero);
@@ -798,7 +796,7 @@ export class GeneViewComponent implements OnInit {
         // if (this.collapseIntrons) {
         //   variantPosition = this.collapsedSegments.convertCoordinateToCollapsed(variantPosition);
         // }
-        variantPosition = this.x(x_scale(variantPosition));
+        variantPosition = this.x(variantPosition);
 
         if (variant.isLGDs()) {
           this.drawStar(variantPosition, this.getVariantY(variant.frequency), color);
@@ -929,9 +927,10 @@ export class GeneViewComponent implements OnInit {
   }
 
   setDefaultScale() {
-    const domain = this.scale().range();
+    const domain = this.collapseIntrons ? this.geneViewModel.collapsedDomain : this.geneViewModel.normalDomain;
+    const range = this.collapseIntrons ? this.geneViewModel.collapsedRange : [0, this.svgWidth];
     this.x.domain(domain);
-    this.x.range([0, this.svgWidth]);
+    this.x.range(range);
     this.selectedFrequencies = [0, this.frequencyDomainMax];
   }
 
@@ -1025,20 +1024,18 @@ export class GeneViewComponent implements OnInit {
 
   drawTranscript(yPos: number, geneViewTranscript: GeneViewTranscript) {
     const segments = geneViewTranscript.transcriptSegments;
-    let x_scale = this.scale();
-
     for (const segment of segments) {
       if (segment.isExon) {
         this.drawExon(
-          x_scale(segment.start), x_scale(segment.stop), yPos, segment.label, segment.isCDS);
+          this.x(segment.start), this.x(segment.stop), yPos, segment.label, segment.isCDS);
       } else {
         this.drawIntron(
-          x_scale(segment.start), x_scale(segment.stop), yPos, segment.label);
+          this.x(segment.start), this.x(segment.stop), yPos, segment.label);
       }
     }
     this.drawTranscriptUTRText(
-      x_scale(segments[0].start),
-      x_scale(segments[segments.length - 1].stop),
+      this.x(segments[0].start),
+      this.x(segments[segments.length - 1].stop),
       yPos, this.geneViewTranscript.transcript.strand
     );
   }
@@ -1083,25 +1080,20 @@ export class GeneViewComponent implements OnInit {
   }
 
   drawRect(xStart: number, xEnd: number, y: number, height: number, svgTitle: string) {
-    const width = this.x(xEnd) - this.x(xStart);
-
     this.svgElement.append('rect')
       .attr('height', height)
-      .attr('width', width)
-      .attr('x', this.x(xStart))
+      .attr('width', xEnd - xStart)
+      .attr('x', xStart)
       .attr('y', y)
       .attr('stroke', 'rgb(0,0,0)')
       .append('svg:title').text(svgTitle);
   }
 
   drawLine(xStart: number, xEnd: number, y: number, svgTitle: string) {
-    const xStartAligned = this.x(xStart);
-    const xEndAligned = this.x(xEnd);
-
     this.svgElement.append('line')
-      .attr('x1', xStartAligned)
+      .attr('x1', xStart)
       .attr('y1', y)
-      .attr('x2', xEndAligned)
+      .attr('x2', xEnd)
       .attr('y2', y)
       .attr('stroke', 'black')
       .append('svg:title').text(svgTitle);
