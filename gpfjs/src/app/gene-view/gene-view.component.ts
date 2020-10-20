@@ -565,8 +565,8 @@ export class GeneViewComponent implements OnInit {
       .attr('height', h)
       .style('fill', color)
       .style('fill-opacity', 0.2)
-      .style('stroke-width', 2)
-      .style('stroke', color);
+      .style('stroke', color)
+      .style('stroke-width', 2);
   }
 
   drawStar(x: number, y: number, color: string) {
@@ -577,16 +577,20 @@ export class GeneViewComponent implements OnInit {
     .append('path')
     .attr('d', 'M12 .587l3.668 7.568 8.332 1.151-6.064 5.828 1.48 8.279-7.416-3.967-7.417 3.967 1.481-8.279-6.064-5.828 8.332-1.151z')
     .attr('transform', 'scale(0.7)')
-    .attr('fill', color);
+    .attr('fill', color)
+    .attr('fill-opacity', '0.6')
+    .style('stroke-width', 1)
+    .style('stroke', color);
   }
 
   drawTriangle(x: number, y: number, color: string) {
     this.svgElement.append('g')
      .append('polygon')
      .attr('points', this.getTrianglePoints(x, y, 14))
+     .style('fill', color)
+     .attr('fill-opacity', '0.6')
      .style('stroke-width', 1)
-     .style('stroke', color)
-     .style('fill', color);
+     .style('stroke', color);
    }
 
   drawCircle(x: number, y: number, color: string) {
@@ -595,7 +599,10 @@ export class GeneViewComponent implements OnInit {
     .attr('cx', x)
     .attr('cy', y)
     .attr('r', 7)
-    .style('fill', color);
+    .style('fill', color)
+    .attr('fill-opacity', '0.6')
+    .style('stroke-width', 1)
+    .style('stroke', color);
   }
 
   drawDot(x: number, y: number, color: string) {
@@ -604,7 +611,10 @@ export class GeneViewComponent implements OnInit {
     .attr('cx', x)
     .attr('cy', y)
     .attr('r', 3)
-    .style('fill', color);
+    .style('fill', color)
+    .attr('fill-opacity', '0.6')
+    .style('stroke-width', 1)
+    .style('stroke', color);
   }
 
   getVariantY(variantFrequency): number {
