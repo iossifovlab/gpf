@@ -6,12 +6,12 @@ logger = logging.getLogger(__name__)
 
 class FamilyVariantsQueryBuilder(BaseQueryBuilder):
     def __init__(
-            self, db, table_name, schema,
-            table_properties, pedigree_schema,
+            self, db, variants_table, pedigree_table,
+            variants_schema, table_properties, pedigree_schema,
             pedigree_df, families, gene_models=None):
         super().__init__(
-            db, table_name, schema,
-            table_properties, pedigree_schema,
+            db, variants_table, pedigree_table,
+            variants_schema, table_properties, pedigree_schema,
             pedigree_df, gene_models=gene_models)
         self.families = families
 
@@ -33,6 +33,9 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
         return columns
 
     def build_group_by(self):
+        pass
+
+    def build_join(self):
         pass
 
     def create_row_deserializer(self, serializer):

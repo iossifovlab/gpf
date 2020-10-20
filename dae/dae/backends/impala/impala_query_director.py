@@ -27,6 +27,8 @@ class ImpalaQueryDirector:
 
         self.query_builder.build_from()
 
+        self.query_builder.build_join()
+
         self.query_builder.build_where(
             regions=regions,
             genes=genes,
