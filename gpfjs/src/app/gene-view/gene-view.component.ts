@@ -488,25 +488,7 @@ export class GeneViewComponent implements OnInit {
     this.geneTableStats.selectedFamilyVariants = filteredSummaryVariants.summaryVariants.reduce(
       (a, b) => a + b.numberOfFamilyVariants, 0
     );
-      filteredSummaryVariants.summaryVariants[0].seenAsDenovo = true;
-      filteredSummaryVariants.summaryVariants[5].seenAsDenovo = true;
-      filteredSummaryVariants.summaryVariants[15].seenAsDenovo = true;
-      filteredSummaryVariants.summaryVariants[20].seenAsDenovo = true;
-      filteredSummaryVariants.summaryVariants[2].seenInUnaffected = true;
-      filteredSummaryVariants.summaryVariants[9].seenInUnaffected = true;
-      filteredSummaryVariants.summaryVariants[22].seenInUnaffected = true;
-      filteredSummaryVariants.summaryVariants[43].seenInUnaffected = true;
-      filteredSummaryVariants.summaryVariants[50].seenInUnaffected = true;
-      filteredSummaryVariants.summaryVariants[50].seenInAffected = false;
-      filteredSummaryVariants.summaryVariants[56].seenInAffected = false;
-      filteredSummaryVariants.summaryVariants[56].seenInUnaffected = true;
-      filteredSummaryVariants.summaryVariants[60].seenInAffected = false;
-      filteredSummaryVariants.summaryVariants[60].seenInUnaffected = true;
-      filteredSummaryVariants.summaryVariants[7].seenInAffected = false;
-      filteredSummaryVariants.summaryVariants[7].seenInUnaffected = true;
-      filteredSummaryVariants.summaryVariants[8].seenAsDenovo = true;
-      filteredSummaryVariants.summaryVariants[8].seenInUnaffected = true;
-      filteredSummaryVariants.summaryVariants[8].seenInAffected = false;
+
     if (this.gene !== undefined) {
       this.x_axis = d3.axisBottom(this.x).ticks(12);
       this.y_axis = d3.axisLeft(this.y);
