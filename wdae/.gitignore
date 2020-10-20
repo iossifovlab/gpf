@@ -1,4 +1,4 @@
 build
 dist
 gpf_wdae.egg-info
-wdae/gpfjs
+wdae/gpfjs/static/gpfjs*

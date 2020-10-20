@@ -23,6 +23,10 @@ class VcfInfoLineAdapter:
     def chrom(self):
         return self.variant.CHROM
 
+    def __repr__(self):
+        return f"{self.variant.CHROM}:{self.variant.POS} " \
+            f"{self.variant.REF} -> {self.variant.ALT}"
+
     def get(self, name):
         if name == "ID":
             return self.variant.ID
@@ -111,11 +115,14 @@ class VcfInfoAccess:
         assert pos_end >= pos_begin
 
         region = f"{chrom}:{pos_begin}-{pos_end}"
-        logger.debug(f"fetching region VCF  {region} from {self.score_filename}")
-        vcf_iterator = self.vcf(region)
+        logger.debug(
+            f"fetching region VCF  {region} from {self.score_filename}")
+        vcf_variants = list(self.vcf(region))
+        logger.debug(
+            f"fetched variants from region VCF {region}: {vcf_variants}")
 
         result = []
-        for v in vcf_iterator:
+        for v in vcf_variants:
             logger.debug(f"vcf variant: {v.CHROM}, {v.POS}")
             result.append(VcfInfoLineAdapter(self, v))
 

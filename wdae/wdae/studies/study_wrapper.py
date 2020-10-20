@@ -43,7 +43,7 @@ from dae.person_sets import PersonSetCollection
 from remote.remote_phenotype_data import RemotePhenotypeData
 
 
-LOGGER = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class StudyWrapperBase:
@@ -304,7 +304,7 @@ class StudyWrapper(StudyWrapperBase):
                 import traceback
                 traceback.print_exc()
                 missing_members.add(member.person_id)
-                LOGGER.error(f"{best_st}, {index}, {member}")
+                logger.error(f"{best_st}, {index}, {member}")
 
         for member in allele.family.full_members:
             if member.generated or member.person_id in missing_members:
@@ -434,7 +434,7 @@ class StudyWrapper(StudyWrapperBase):
     # ultraRareOnly
     # TMM_ALL
     def _transform_kwargs(self, **kwargs):
-        LOGGER.debug(f"kwargs in study group: {kwargs}")
+        logger.debug(f"kwargs in study group: {kwargs}")
         kwargs = self._add_people_with_people_group(kwargs)
 
         if "regions" in kwargs:
@@ -526,7 +526,7 @@ class StudyWrapper(StudyWrapperBase):
         limit = None
         if "limit" in kwargs:
             limit = kwargs["limit"]
-        LOGGER.info(f"query filters after translation: {kwargs}")
+        logger.info(f"query filters after translation: {kwargs}")
         variants_from_studies = itertools.islice(
             self.genotype_data_study.query_variants(**kwargs), limit
         )
@@ -539,7 +539,7 @@ class StudyWrapper(StudyWrapperBase):
         if "limit" in kwargs:
             limit = kwargs["limit"]
 
-        LOGGER.info(f"query filters after translation: {kwargs}")
+        logger.info(f"query filters after translation: {kwargs}")
         variants_from_studies = itertools.islice(
             self.genotype_data_study.query_summary_variants(**kwargs), limit
         )
@@ -1164,7 +1164,7 @@ class StudyWrapper(StudyWrapperBase):
 
         result["study_names"] = None
         if result["studies"] is not None:
-            print(f"found studies in {self.config.id}")
+            logger.debug(f"found studies in {self.config.id}")
             studyNames = []
             for studyId in result["studies"]:
                 wrapper = gpf_instance.get_wdae_wrapper(studyId)
