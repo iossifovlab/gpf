@@ -379,9 +379,9 @@ export class GeneViewComponent implements OnInit {
     if (affectedStatus === 'Affected only') {
       color = '#AA0000';
     } else if (affectedStatus === 'Unaffected only') {
-      color = '#00AA00';
+      color = '#2c574d';
     } else {
-      color = '#AAAAAA';
+      color = '#848484';
     }
 
     return color;
