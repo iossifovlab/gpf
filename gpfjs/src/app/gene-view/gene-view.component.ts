@@ -290,7 +290,7 @@ class GeneViewModel {
   }
 }
 
-class CollapsedSegments {
+/* class CollapsedSegments {
 
   transcriptSegments: GeneViewTranscriptSegment[];
   transcriptSegmentsCollapsed: GeneViewTranscriptSegment[] = [];
@@ -355,7 +355,7 @@ class CollapsedSegments {
   getDomainCollapsed() {
     return this.getDomain(this.transcriptSegmentsCollapsed);
   }
-}
+} */
 
 @Component({
   selector: 'gpf-gene-view',
@@ -408,7 +408,6 @@ export class GeneViewComponent implements OnInit {
 
   geneViewModel: GeneViewModel;
   geneViewTranscript: GeneViewTranscript;
-  collapsedSegments: CollapsedSegments;
 
   brush;
   doubleClickTimer;
@@ -481,11 +480,7 @@ export class GeneViewComponent implements OnInit {
   ngOnChanges() {
     if (this.gene !== undefined) {
       this.geneViewModel = new GeneViewModel(this.gene, this.svgWidth);
-
       this.geneViewTranscript = new GeneViewTranscript(this.gene.transcripts[0]);
-      this.collapsedSegments = new CollapsedSegments(
-        this.geneViewTranscript.transcriptSegments, 200);
-
       this.resetGeneTableValues();
       this.setDefaultScale();
       this.drawGene();
@@ -745,12 +740,8 @@ export class GeneViewComponent implements OnInit {
   }
 
   updateFamilyVariantsTable() {
-    let minDomain = this.x.domain()[0];
-    let maxDomain = this.x.domain()[this.x.domain().length - 1];
-    if (this.collapseIntrons) {
-      minDomain = this.collapsedSegments.convertCoordinateToReal(minDomain);
-      maxDomain = this.collapsedSegments.convertCoordinateToReal(maxDomain);
-    }
+    const minDomain = this.x.domain()[0];
+    const maxDomain = this.x.domain()[this.x.domain().length - 1];
     const filteredVariants = this.filterTablePreviewVariantsArray(
       this.variantsArray, minDomain, maxDomain
     );
@@ -762,13 +753,9 @@ export class GeneViewComponent implements OnInit {
   }
 
   drawPlot() {
-    let minDomain = this.x.domain()[0];
-    let maxDomain = this.x.domain()[this.x.domain().length - 1];
+    const minDomain = this.x.domain()[0];
+    const maxDomain = this.x.domain()[this.x.domain().length - 1];
 
-    // if (this.collapseIntrons) {
-    //   minDomain = this.collapsedSegments.convertCoordinateToReal(minDomain);
-    //   maxDomain = this.collapsedSegments.convertCoordinateToReal(maxDomain);
-    // }
     const filteredSummaryVariants = this.filterSummaryVariantsArray(
       this.summaryVariantsArray, minDomain, maxDomain
     );
@@ -791,12 +778,7 @@ export class GeneViewComponent implements OnInit {
 
       for (const variant of filteredSummaryVariants.summaryVariants) {
         const color = this.getAffectedStatusColor(this.getVariantAffectedStatus(variant));
-
-        let variantPosition = variant.position;
-        // if (this.collapseIntrons) {
-        //   variantPosition = this.collapsedSegments.convertCoordinateToCollapsed(variantPosition);
-        // }
-        variantPosition = this.x(variantPosition);
+        const variantPosition = this.x(variant.position);
 
         if (variant.isLGDs()) {
           this.drawStar(variantPosition, this.getVariantY(variant.frequency), color);
