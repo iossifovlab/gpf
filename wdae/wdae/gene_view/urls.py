@@ -1,5 +1,5 @@
 from django.conf.urls import url
-from gene_view_api import views
+from gene_view import views
 
 urlpatterns = [
     url(

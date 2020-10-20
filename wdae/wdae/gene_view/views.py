@@ -1,6 +1,7 @@
 import logging
 from rest_framework import status
 from rest_framework.response import Response
+from django.http.response import StreamingHttpResponse
 
 from query_base.query_base import QueryBaseView
 
@@ -27,7 +28,7 @@ class ConfigView(QueryBaseView):
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         # LOGGER.info('dataset ' + str(dataset))
-        config = dataset.config.gene_view
+        config = dataset.config.gene_browser
 
         return Response(config, status=status.HTTP_200_OK)
 
@@ -46,12 +47,12 @@ class QueryVariantsView(QueryBaseView):
         if dataset is None:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        config = dataset.config.gene_view
+        config = dataset.config.gene_browser
         freq_col = config.frequency_column
 
-        variants = dataset.get_gene_view_summary_variants(freq_col, data)
+        variants = dataset.get_gene_view_summary_variants(freq_col, **data)
 
-        response = Response(
+        response = StreamingHttpResponse(
             iterator_to_json(variants),
             status=status.HTTP_200_OK,
             content_type="text/event-stream"

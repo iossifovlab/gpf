@@ -436,12 +436,12 @@ class StudyWrapper(StudyWrapperBase):
                     "position": a.position,
                     "chrom": a.chrom,
                     "frequency": a.get_attribute(frequency_column),
-                    "effect": ge2str(a.get_attribute("effect")),
+                    "effect": ge2str(a.effect),
                     "variant": a.cshl_variant,
                     "is_denovo": a.get_attribute("seen_in_denovo") == 4,
-                    "seen_in_affected": a.get_attributes("seen_in_status"),
+                    "seen_in_affected": a.get_attribute("seen_in_status"),
                     "seen_in_unaffected":
-                        not a.get_attributes("seen_in_status")
+                        not a.get_attribute("seen_in_status")
                 }
 
     # Not implemented:
