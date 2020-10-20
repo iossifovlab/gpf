@@ -338,20 +338,6 @@ export class GeneViewComponent implements OnInit {
     }
   }
 
-  getEffectVariantColor(worst_effect): string {
-    worst_effect = worst_effect.toLowerCase();
-
-    if (this.lgds.indexOf(worst_effect) !== -1 || worst_effect === 'lgds') {
-      return '#ff0000';
-    } else if (worst_effect === 'missense') {
-      return '#ffff00';
-    } else if (worst_effect === 'synonymous') {
-      return '#69b3a2';
-    } else {
-      return '#555555';
-    }
-  }
-
   isVariantEffectSelected(worst_effect) {
     worst_effect = worst_effect.toLowerCase();
 
@@ -619,28 +605,6 @@ export class GeneViewComponent implements OnInit {
     .attr('cy', y)
     .attr('r', 3)
     .style('fill', color);
-  }
-
-  drawTransmittedPlotVariant(variantInfo: GeneViewSummaryVariant) {
-    this.svgElement.append('g')
-      .append('circle')
-      .attr('cx', this.x(variantInfo.position))
-      .attr('cy', this.getVariantY(variantInfo.frequency))
-      .attr('r', 5)
-      .style('fill', this.getEffectVariantColor(variantInfo.effect));
-  }
-
-  drawDenovoPlotVariant(variantInfo: GeneViewSummaryVariant) {
-    this.svgElement.append('g')
-      .append('polygon')
-      .attr('points', this.getTrianglePoints(
-        this.x(variantInfo.position),
-        this.getVariantY(variantInfo.frequency),
-        15
-      ))
-      .style('stroke-width', 2)
-      .style('stroke', '#000000')
-      .style('fill', this.getEffectVariantColor(variantInfo.effect));
   }
 
   getVariantY(variantFrequency): number {
