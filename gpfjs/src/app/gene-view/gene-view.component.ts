@@ -124,7 +124,8 @@ class GeneViewSummaryVariantsArray {
 @Component({
   selector: 'gpf-gene-view',
   templateUrl: './gene-view.component.html',
-  styleUrls: ['./gene-view.component.css']
+  styleUrls: ['./gene-view.component.css'],
+  host: {'(document:keydown)': 'handleKeyboardEvent($event)'}
 })
 export class GeneViewComponent implements OnInit {
   @Input() gene: Gene;
@@ -756,6 +757,15 @@ export class GeneViewComponent implements OnInit {
     this.drawGene();
     this.updateFamilyVariantsTable();
     this.drawPlot();
+  }
+
+  handleKeyboardEvent($event) {
+    if ($event.ctrlKey && $event.key === 'z') {
+      this.undoZoom();
+    }
+    if ($event.ctrlKey && $event.key === 'y') {
+      this.redoZoom();
+    }
   }
 
   undoZoom() {
