@@ -1058,8 +1058,8 @@ export class GeneViewComponent implements OnInit {
       }
     }
     this.drawTranscriptUTRText(
-      this.x(segments[0].start),
-      this.x(segments[segments.length - 1].stop),
+      -50, //this.x(segments[0].start),
+      this.svgWidth + 10,//this.x(segments[segments.length - 1].stop),
       yPos, this.geneViewTranscript.transcript.strand
     );
   }
