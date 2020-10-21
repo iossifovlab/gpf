@@ -729,6 +729,13 @@ export class GeneViewComponent implements OnInit {
     } else {
       let newXmin: number;
       let newXmax: number;
+
+      // set new frequency limits
+      const newFreqLimits = [
+        this.convertBrushPointToFrequency(extent[0][1]),
+        this.convertBrushPointToFrequency(extent[1][1])
+      ];
+
       if (this.x.domain()[1] - this.x.domain()[0] > 12) {
         newXmin = Math.round(this.x.invert(extent[0][0]));
         newXmax = Math.round(this.x.invert(extent[1][0]));
@@ -737,21 +744,16 @@ export class GeneViewComponent implements OnInit {
         }
         this.x.domain([newXmin, newXmax]);
         this.svgElement.select('.brush').call(this.brush.move, null);
+
+        this.zoomHistory = this.zoomHistory.slice(0, this.zoomHistoryIndex + 1);
+        this.zoomHistory.push([newXmin, newXmax, Math.min(...newFreqLimits), Math.max(...newFreqLimits)]);
+        this.zoomHistoryIndex++;
       }
 
-      // set new frequency limits
-      const newFreqLimits = [
-        this.convertBrushPointToFrequency(extent[0][1]),
-        this.convertBrushPointToFrequency(extent[1][1])
-      ];
       this.selectedFrequencies = [
         Math.min(...newFreqLimits),
         Math.max(...newFreqLimits),
       ];
-
-      this.zoomHistory = this.zoomHistory.slice(0, this.zoomHistoryIndex + 1);
-      this.zoomHistory.push([newXmin, newXmax, Math.min(...newFreqLimits), Math.max(...newFreqLimits)]);
-      this.zoomHistoryIndex++;
     }
 
     this.drawGene();
@@ -761,29 +763,24 @@ export class GeneViewComponent implements OnInit {
 
   handleKeyboardEvent($event) {
     if ($event.ctrlKey && $event.key === 'z') {
-      this.undoZoom();
+      this.moveInZoomHistory('undo');
     }
     if ($event.ctrlKey && $event.key === 'y') {
-      this.redoZoom();
+      this.moveInZoomHistory('redo');
     }
   }
 
-  undoZoom() {
-    this.zoomHistoryIndex--;
+  moveInZoomHistory(operation: string) {
+    if ((operation === 'undo' && this.zoomHistoryIndex === 0) ||
+        (operation === 'redo' && this.zoomHistoryIndex === this.zoomHistory.length - 1)) {
+      return;
+    }
 
-    this.x.domain([this.zoomHistory[this.zoomHistoryIndex][0], this.zoomHistory[this.zoomHistoryIndex][1]]);
-    this.selectedFrequencies = [
-      this.zoomHistory[this.zoomHistoryIndex][2],
-      this.zoomHistory[this.zoomHistoryIndex][3]
-    ];
-
-    this.drawGene();
-    this.updateFamilyVariantsTable();
-    this.drawPlot();
-  }
-
-  redoZoom() {
-    this.zoomHistoryIndex++;
+    if (operation === 'undo') {
+      this.zoomHistoryIndex--;
+    } else if (operation === 'redo') {
+      this.zoomHistoryIndex++;
+    }
 
     this.x.domain([this.zoomHistory[this.zoomHistoryIndex][0], this.zoomHistory[this.zoomHistoryIndex][1]]);
     this.selectedFrequencies = [
