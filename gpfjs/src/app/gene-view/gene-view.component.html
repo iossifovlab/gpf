@@ -79,3 +79,9 @@
     </tr>
   </table>
 </div>
+
+<div *ngIf="this.gene">
+  <input type="button" style="width: 75px" class="btn btn-md btn-primary" value="<<" (click)="undoZoom()">
+  <input type="button" style="width: 75px" class="btn btn-md btn-primary" value=">>" (click)="redoZoom()">
+</div>
+

@@ -166,6 +166,8 @@ export class GeneViewComponent implements OnInit {
   showTransmitted = true;
 
   brush;
+  zoomHistory: number[][];
+  zoomHistoryIndex: number;
   doubleClickTimer;
   geneTableStats = {
     geneSymbol: '',
@@ -233,6 +235,9 @@ export class GeneViewComponent implements OnInit {
 
       this.loadingService.setLoadingStop();
     });
+
+    this.zoomHistory = [];
+    this.zoomHistoryIndex = 0;
   }
 
   ngOnChanges() {
@@ -240,6 +245,7 @@ export class GeneViewComponent implements OnInit {
       this.resetGeneTableValues();
       this.setDefaultScale();
       this.drawGene();
+      this.zoomHistory = [this.calculateDefaultScale()];
     }
   }
 
@@ -643,6 +649,12 @@ export class GeneViewComponent implements OnInit {
   }
 
   setDefaultScale() {
+    const scales = this.calculateDefaultScale();
+    this.x.domain([scales[0], scales[1]]);
+    this.selectedFrequencies = [scales[2], scales[3]];
+  }
+
+  calculateDefaultScale(): number[] {
     let domainBeginning = this.gene.transcripts[0].exons[0].start;
     let domainEnding = this.gene.transcripts[0].exons[this.gene.transcripts[0].exons.length - 1].stop;
 
@@ -661,8 +673,7 @@ export class GeneViewComponent implements OnInit {
       }
     }
 
-    this.x.domain([domainBeginning, domainEnding]);
-    this.selectedFrequencies = [0, this.frequencyDomainMax];
+    return [domainBeginning, domainEnding, 0, this.frequencyDomainMax];
   }
 
   resetGeneTableValues(): void {
@@ -710,11 +721,16 @@ export class GeneViewComponent implements OnInit {
         this.doubleClickTimer = setTimeout(this.resetTimer, 250);
         return;
       }
+
+      this.zoomHistory = [this.calculateDefaultScale()];
+      this.zoomHistoryIndex = 0;
       this.setDefaultScale();
     } else {
+      let newXmin: number;
+      let newXmax: number;
       if (this.x.domain()[1] - this.x.domain()[0] > 12) {
-        const newXmin = Math.round(this.x.invert(extent[0][0]));
-        let newXmax = Math.round(this.x.invert(extent[1][0]));
+        newXmin = Math.round(this.x.invert(extent[0][0]));
+        newXmax = Math.round(this.x.invert(extent[1][0]));
         if (newXmax - newXmin < 12) {
           newXmax = newXmin + 12;
         }
@@ -731,7 +747,39 @@ export class GeneViewComponent implements OnInit {
         Math.min(...newFreqLimits),
         Math.max(...newFreqLimits),
       ];
+
+      this.zoomHistory = this.zoomHistory.slice(0, this.zoomHistoryIndex + 1);
+      this.zoomHistory.push([newXmin, newXmax, Math.min(...newFreqLimits), Math.max(...newFreqLimits)]);
+      this.zoomHistoryIndex++;
     }
+
+    this.drawGene();
+    this.updateFamilyVariantsTable();
+    this.drawPlot();
+  }
+
+  undoZoom() {
+    this.zoomHistoryIndex--;
+
+    this.x.domain([this.zoomHistory[this.zoomHistoryIndex][0], this.zoomHistory[this.zoomHistoryIndex][1]]);
+    this.selectedFrequencies = [
+      this.zoomHistory[this.zoomHistoryIndex][2],
+      this.zoomHistory[this.zoomHistoryIndex][3]
+    ];
+
+    this.drawGene();
+    this.updateFamilyVariantsTable();
+    this.drawPlot();
+  }
+
+  redoZoom() {
+    this.zoomHistoryIndex++;
+
+    this.x.domain([this.zoomHistory[this.zoomHistoryIndex][0], this.zoomHistory[this.zoomHistoryIndex][1]]);
+    this.selectedFrequencies = [
+      this.zoomHistory[this.zoomHistoryIndex][2],
+      this.zoomHistory[this.zoomHistoryIndex][3]
+    ];
 
     this.drawGene();
     this.updateFamilyVariantsTable();
