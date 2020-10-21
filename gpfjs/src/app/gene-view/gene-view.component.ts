@@ -123,11 +123,11 @@ class GeneViewSummaryVariantsArray {
 
 class GeneViewTranscriptSegment {
 
-  start: number;
-  stop: number;
-  isExon: boolean;
-  isCDS: boolean;
-  label: string;
+  private _start: number;
+  private _stop: number;
+  private _isExon: boolean;
+  private _isCDS: boolean;
+  private _label: string;
 
   constructor(
     start: number,
@@ -136,22 +136,69 @@ class GeneViewTranscriptSegment {
     isCDS: boolean,
     label: string
   ) {
-    this.start = start;
-    this.stop = stop;
-    this.isExon = isExon;
-    this.isCDS = isCDS;
-    this.label = label;
+    this._start = start;
+    this._stop = stop;
+    this._isExon = isExon;
+    this._isCDS = isCDS;
+    this._label = label;
+  }
+
+  get start() {
+    return this._start;
+  }
+
+  get stop() {
+    return this._stop;
   }
 
   get length() {
     return this.stop - this.start;
+  }
+
+  get isExon() {
+    return this._isExon;
+  }
+
+  get isIntron() {
+    return !this._isCDS;
+  }
+
+  get isCDS() {
+    return this._isCDS;
+  }
+
+  get label() {
+    return this._label;
+  }
+
+  intersectionLength(min: number, max: number): number {
+    const start = Math.max(this.start, min);
+    const stop = Math.min(this.stop, max);
+
+    if (start >= stop) {
+      return 0;
+    } else {
+      return stop - start;
+    }
+  }
+
+  isSubSegment(min: number, max: number): boolean {
+    return this.start >= min && this.stop <= max;
   }
 }
 
 class GeneViewTranscript {
 
   transcript: Transcript;
-  transcriptSegments: GeneViewTranscriptSegment[] = [];
+  segments: GeneViewTranscriptSegment[] = [];
+
+  get start() {
+    return this.transcript.start;
+  }
+
+  get stop() {
+    return this.transcript.stop;
+  }
 
   constructor(transcript: Transcript) {
     this.transcript = transcript;
@@ -165,18 +212,27 @@ class GeneViewTranscript {
       const segmentStop = this.transcript.exons[i].stop;
       if (cdsTransition) {
         // Split exons which are both inside and outside the coding region into two segments
-        this.transcriptSegments.push(
-          new GeneViewTranscriptSegment(segmentStart, cdsTransition, true, this.isAreaInCDS(segmentStart, cdsTransition), `exon ${i + 1}/${exonCount}`),
-          new GeneViewTranscriptSegment(cdsTransition, segmentStop, true, this.isAreaInCDS(cdsTransition, segmentStop), `exon ${i + 1}/${exonCount}`)
+        this.segments.push(
+          new GeneViewTranscriptSegment(
+            segmentStart, cdsTransition, true,
+            this.isAreaInCDS(segmentStart, cdsTransition),
+            `exon ${i + 1}/${exonCount}`),
+          new GeneViewTranscriptSegment(
+            cdsTransition, segmentStop, true,
+            this.isAreaInCDS(cdsTransition, segmentStop),
+            `exon ${i + 1}/${exonCount}`)
         );
       } else {
-        this.transcriptSegments.push(
-          new GeneViewTranscriptSegment(segmentStart, segmentStop, true, this.isAreaInCDS(segmentStart, segmentStop), `exon ${i + 1}/${exonCount}`)
+        this.segments.push(
+          new GeneViewTranscriptSegment(
+            segmentStart, segmentStop, true,
+            this.isAreaInCDS(segmentStart, segmentStop),
+            `exon ${i + 1}/${exonCount}`)
         );
       }
       // Add intron segment if applicable
       if (i + 1 < this.transcript.exons.length) {
-        this.transcriptSegments.push(
+        this.segments.push(
           new GeneViewTranscriptSegment(
             segmentStop, this.transcript.exons[i + 1].start,
             false, false, `intron ${i + 1}/${intronCount}`)
@@ -208,12 +264,9 @@ class GeneViewModel {
   geneViewTranscripts: GeneViewTranscript[] = [];
   collapsedGeneViewTranscript: GeneViewTranscript;
 
-  collapsedRange: number[];
-  collapsedDomain: number[];
+  condensedRange: number[];
+  condensedDomain: number[];
   normalDomain: number[];
-
-  collapsedScale;
-  normalScale;
 
   constructor(gene: Gene, rangeWidth: number) {
     this.gene = gene;
@@ -226,136 +279,85 @@ class GeneViewModel {
     this.collapsedGeneViewTranscript = new GeneViewTranscript(gene.collapsedTranscript());
 
     this.normalDomain = [
-      this.collapsedGeneViewTranscript.transcript.start,
-      this.collapsedGeneViewTranscript.transcript.stop
+      this.collapsedGeneViewTranscript.start,
+      this.collapsedGeneViewTranscript.stop
     ]
 
-    this.normalScale = d3.scaleLinear()
-      .domain(this.normalDomain)
-      .range([0, this.rangeWidth]);
+    this.condensedDomain = this.buildCondensedIntronsDomain(0, 3000000000);
+    this.condensedRange = this.buildCondesedIntronsRange(0, 3000000000, this.rangeWidth);
 
-    this.collapsedDomain = this.buildCollapsedIntronsDomain();
-    this.collapsedRange = this.buildCollapsedIntronsRange();
-    this.collapsedScale = d3.scaleLinear()
-      .domain(this.collapsedDomain)
-      .range(this.collapsedRange);
   }
 
-  buildCollapsedIntronsDomain() {
+  buildCondensedIntronsDomain(domainMin: number, domainMax: number) {
     let domain: number[] = []
-    const transcript = this.collapsedGeneViewTranscript.transcript;
-    for (const exon of transcript.exons) {
-      domain.push(exon.start);
-      domain.push(exon.stop);
+    const filteredSegments = this.collapsedGeneViewTranscript.segments.filter(
+      seg => seg.intersectionLength(domainMin, domainMax) > 0);
+
+    const firstSegment = filteredSegments[0];
+    if (firstSegment.isSubSegment(domainMin, domainMax)) {
+      domain.push(firstSegment.start);
+    } else {
+      domain.push(domainMin);
     }
+    for (let i = 1; i < filteredSegments.length; i++) {
+      const segment = filteredSegments[i];
+      domain.push(segment.start);
+    }
+    const lastSegment = filteredSegments[filteredSegments.length - 1];
+    if (lastSegment.stop <= domainMax) {
+      domain.push(lastSegment.stop);
+    } else {
+      domain.push(domainMax);
+    }
+
     return domain;
   }
 
-  buildCollapsedIntronsRange() {
+  buildCondesedIntronsRange(domainMin: number, domainMax: number, rangeWidth: number) {
+    let range: number[] = []
     const transcript = this.collapsedGeneViewTranscript.transcript;
-    const medianExonLength: number = transcript.medianExonLength;
+    const filteredSegments = this.collapsedGeneViewTranscript.segments.filter(
+      seg => seg.intersectionLength(domainMin, domainMax) > 0);
 
-    let collapsedLength = 0;
-    collapsedLength += transcript.exons[0].length;
-    for (let i = 1; i < transcript.exons.length; i++) {
-      collapsedLength += medianExonLength;
-      collapsedLength += transcript.exons[i].length;
+    const medianExonLength: number = transcript.medianExonLength;
+    let condensedLength = 0;
+
+    for (let i = 0; i < filteredSegments.length; i++) {
+      const segment = filteredSegments[i];
+      if (segment.isIntron) {
+        const intronLength = segment.length;
+        const intersectionLength = segment.intersectionLength(domainMin, domainMax);
+        const factor = intersectionLength / intronLength;
+
+        condensedLength += medianExonLength * factor;
+      } else {
+        const length = segment.intersectionLength(domainMin, domainMax);
+        condensedLength += length;
+      }
     }
 
-    let scaleFactor: number = this.rangeWidth / collapsedLength;
+    let scaleFactor: number = this.rangeWidth / condensedLength;
 
-    let range: number[] = []
-    let rollingTracker: number = transcript.exons[0].length * scaleFactor;
-
+    let rollingTracker: number = 0;
     range.push(0);
-    range.push(rollingTracker);
 
-    for (let i = 1; i < transcript.exons.length; i++) {
-      const exon = transcript.exons[i];
+    for (let i = 0; i < filteredSegments.length; i++) {
+      const segment = filteredSegments[i];
+      if (segment.isIntron) {
+        const intronLength = segment.length;
+        const intersectionLength = segment.intersectionLength(domainMin, domainMax);
+        const factor = intersectionLength / intronLength;
 
-      rollingTracker += medianExonLength * scaleFactor;
-      range.push(rollingTracker);
-      rollingTracker += exon.length * scaleFactor;
+        rollingTracker += medianExonLength * scaleFactor * factor;
+      } else {
+        rollingTracker += segment.intersectionLength(domainMin, domainMax) * scaleFactor;
+      }
       range.push(rollingTracker);
     }
     return range;
   }
 
-  scale(collapsed: boolean) {
-    if (collapsed) {
-      return this.collapsedScale;
-    } else {
-      return this.normalScale;
-    }
-  }
 }
-
-/* class CollapsedSegments {
-
-  transcriptSegments: GeneViewTranscriptSegment[];
-  transcriptSegmentsCollapsed: GeneViewTranscriptSegment[] = [];
-  collapsedIntronLength: number; // in base pairs, not px
-
-  constructor(transcriptSegments: GeneViewTranscriptSegment[],
-    collapsedIntronLength: number) {
-
-    this.collapsedIntronLength = collapsedIntronLength;
-    this.transcriptSegments = transcriptSegments;
-
-    let rollingPosTracker = 0;
-    for (const segment of transcriptSegments) {
-      const segmentLength = segment.isExon ? segment.length : collapsedIntronLength;
-      this.transcriptSegmentsCollapsed.push(
-        new GeneViewTranscriptSegment(
-          rollingPosTracker, rollingPosTracker + segmentLength,
-          segment.isExon, segment.isCDS, segment.label)
-      );
-      rollingPosTracker += segmentLength;
-    }
-  }
-
-  private getSegmentIndex(coordinate: number, segments: GeneViewTranscriptSegment[]): number {
-    for (let i = 0; i < segments.length; i++) {
-      if (segments[i].start <= coordinate && coordinate <= segments[i].stop) {
-        return i;
-      }
-    }
-    return -1;
-  }
-
-  private convertCoordinate(
-    coordinate: number, segments: GeneViewTranscriptSegment[], targetSegments: GeneViewTranscriptSegment[]
-  ): number {
-    const segmentIndex = this.getSegmentIndex(coordinate, segments);
-    if (segmentIndex !== -1) {
-      return targetSegments[segmentIndex].start + Math.round(
-        ((coordinate - segments[segmentIndex].start) / segments[segmentIndex].length) * (targetSegments[segmentIndex].length)
-      );
-    } else {
-      return coordinate;
-    }
-  }
-
-  private getDomain(segments: GeneViewTranscriptSegment[]): number[] {
-    return [segments[0].start, segments[segments.length - 1].stop];
-  }
-
-  convertCoordinateToReal(coordinate: number) {
-    return this.convertCoordinate(coordinate, this.transcriptSegmentsCollapsed, this.transcriptSegments);
-  }
-
-  convertCoordinateToCollapsed(coordinate: number) {
-    return this.convertCoordinate(coordinate, this.transcriptSegments, this.transcriptSegmentsCollapsed);
-  }
-
-  getDomainReal() {
-    return this.getDomain(this.transcriptSegments);
-  }
-
-  getDomainCollapsed() {
-    return this.getDomain(this.transcriptSegmentsCollapsed);
-  }
-} */
 
 @Component({
   selector: 'gpf-gene-view',
@@ -371,12 +373,12 @@ export class GeneViewComponent implements OnInit {
   geneBrowserConfig;
   frequencyDomainMin: number;
   frequencyDomainMax: number;
-  collapseIntrons: boolean;
+  condenseIntrons: boolean;
 
   summaryVariantsArray: GeneViewSummaryVariantsArray;
 
   options = {
-    margin: { top: 10, right: 70, left: 70, bottom: 0 },
+    margin: { top: 10, right: 100, left: 100, bottom: 0 },
     axisScale: { domain: 0.90, subdomain: 0.05 },
     exonThickness: 14,
     cdsThickness: 20,
@@ -393,6 +395,7 @@ export class GeneViewComponent implements OnInit {
 
   lgds = ['nonsense', 'splice-site', 'frame-shift', 'no-frame-shift-new-stop'];
 
+  x;
   y;
   y_subdomain;
   y_zero;
@@ -455,13 +458,15 @@ export class GeneViewComponent implements OnInit {
         .domain(['0'])
         .range([this.svgHeightFreq, this.zeroAxisY]);
     });
+
     this.streamingFinished$.subscribe(() => {
       this.summaryVariantsArray = GeneViewSummaryVariantsArray.fromPreviewVariantsArray(
         this.geneBrowserConfig,
         this.variantsArray
       );
 
-      this.collapseIntrons = false;
+      this.condenseIntrons = false;
+      this.setDefaultScale();
 
       this.updateFamilyVariantsTable();
       this.drawPlot();
@@ -617,8 +622,8 @@ export class GeneViewComponent implements OnInit {
     return frequency >= this.selectedFrequencies[0] && frequency <= this.selectedFrequencies[1];
   }
 
-  toggleIntronCollapsing() {
-    this.collapseIntrons = !this.collapseIntrons;
+  toggleCondenseIntron() {
+    this.condenseIntrons = !this.condenseIntrons;
     this.setDefaultScale();
     this.drawGene();
     this.drawPlot();
@@ -748,13 +753,16 @@ export class GeneViewComponent implements OnInit {
     this.updateShownTablePreviewVariantsArrayEvent.emit(filteredVariants);
   }
 
-  get x() {
-    return this.geneViewModel.scale(this.collapseIntrons);
-  }
+  // get x() {
+  //   return this.geneViewModel.scale(this.condenseIntrons);
+  // }
 
   drawPlot() {
+
     const minDomain = this.x.domain()[0];
     const maxDomain = this.x.domain()[this.x.domain().length - 1];
+    const domain = this.x.domain();
+    const range = this.x.range();
 
     const filteredSummaryVariants = this.filterSummaryVariantsArray(
       this.summaryVariantsArray, minDomain, maxDomain
@@ -909,11 +917,13 @@ export class GeneViewComponent implements OnInit {
   }
 
   setDefaultScale() {
-    const domain = this.collapseIntrons ? this.geneViewModel.collapsedDomain : this.geneViewModel.normalDomain;
-    const range = this.collapseIntrons ? this.geneViewModel.collapsedRange : [0, this.svgWidth];
-    this.x.domain(domain);
-    this.x.range(range);
+    const domain = this.condenseIntrons ? this.geneViewModel.condensedDomain : this.geneViewModel.normalDomain;
+    const range = this.condenseIntrons ? this.geneViewModel.condensedRange : [0, this.svgWidth];
+    this.x = d3.scaleLinear().domain(domain).range(range).clamp(true);
     this.selectedFrequencies = [0, this.frequencyDomainMax];
+
+    console.log("default:", this.x(domain[0]), this.x.invert(0));
+
   }
 
   resetGeneTableValues(): void {
@@ -964,15 +974,35 @@ export class GeneViewComponent implements OnInit {
       }
       this.setDefaultScale();
     } else {
-      if (this.x.domain()[this.x.domain().length - 1] - this.x.domain()[0] > 12) {
-        const newXmin = Math.round(this.x.invert(extent[0][0]));
-        let newXmax = Math.round(this.x.invert(extent[1][0]));
-        if (newXmax - newXmin < 12) {
-          newXmax = newXmin + 12;
-        }
-        this.x.domain([newXmin, newXmax]);
-        this.svgElement.select('.brush').call(this.brush.move, null);
+      const x1 = extent[0][0];
+      const x2 = extent[1][0];
+
+      const domainMin = Math.round(this.x.invert(Math.min(x1, x2)));
+      let domainMax = Math.round(this.x.invert(Math.max(x1, x2)));
+      if (domainMax - domainMin < 12) {
+        domainMax = domainMin + 12;
       }
+      if (this.condenseIntrons) {
+        const domain = this.geneViewModel.buildCondensedIntronsDomain(
+          domainMin, domainMax);
+        const range = this.geneViewModel.buildCondesedIntronsRange(
+          domainMin, domainMax, this.svgWidth);
+
+        this.x = d3.scaleLinear()
+          .domain(domain)
+          .range(range)
+          .clamp(true);
+
+      } else {
+        this.x = d3.scaleLinear()
+          .domain([domainMin, domainMax])
+          .range([0, this.svgWidth])
+          .clamp(true);
+      }
+      this.svgElement.select('.brush').call(this.brush.move, null);
+      const domain = this.x.domain();
+      console.log("zoom:", this.x(domainMin), this.x.invert(0), domainMin);
+      console.log("zoom:", this.x(domain[0]), this.x.invert(0), domain[0]);
 
       // set new frequency limits
       const newFreqLimits = [
@@ -1005,14 +1035,26 @@ export class GeneViewComponent implements OnInit {
   }
 
   drawTranscript(yPos: number, geneViewTranscript: GeneViewTranscript) {
-    const segments = geneViewTranscript.transcriptSegments;
+    const domain = this.x.domain();
+    const domainMin = domain[0];
+    const domainMax = domain[domain.length - 1];
+    const range = this.x.range();
+    const test = this.x.invert(0);
+
+    const segments = geneViewTranscript.segments.filter(
+      seg => seg.intersectionLength(domainMin, domainMax) > 0);
     for (const segment of segments) {
+      const start = Math.max(domainMin, segment.start);
+      const stop = Math.min(domainMax, segment.stop);
+      const xStart = this.x(start);
+      const xStop = this.x(stop);
+
       if (segment.isExon) {
         this.drawExon(
-          this.x(segment.start), this.x(segment.stop), yPos, segment.label, segment.isCDS);
+          xStart, xStop, yPos, segment.label, segment.isCDS);
       } else {
         this.drawIntron(
-          this.x(segment.start), this.x(segment.stop), yPos, segment.label);
+          xStart, xStop, yPos, segment.label);
       }
     }
     this.drawTranscriptUTRText(
