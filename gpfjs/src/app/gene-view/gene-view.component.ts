@@ -200,6 +200,10 @@ class GeneViewTranscript {
     return this.transcript.stop;
   }
 
+  get strand() {
+    return this.transcript.strand;
+  }
+
   constructor(transcript: Transcript) {
     this.transcript = transcript;
 
@@ -322,8 +326,7 @@ class GeneViewModel {
     const medianExonLength: number = transcript.medianExonLength;
     let condensedLength = 0;
 
-    for (let i = 0; i < filteredSegments.length; i++) {
-      const segment = filteredSegments[i];
+    for (const segment of filteredSegments) {
       if (segment.isIntron) {
         const intronLength = segment.length;
         const intersectionLength = segment.intersectionLength(domainMin, domainMax);
@@ -341,8 +344,7 @@ class GeneViewModel {
     let rollingTracker: number = 0;
     range.push(0);
 
-    for (let i = 0; i < filteredSegments.length; i++) {
-      const segment = filteredSegments[i];
+    for (const segment of filteredSegments) {
       if (segment.isIntron) {
         const intronLength = segment.length;
         const intersectionLength = segment.intersectionLength(domainMin, domainMax);
@@ -1038,11 +1040,14 @@ export class GeneViewComponent implements OnInit {
     const domain = this.x.domain();
     const domainMin = domain[0];
     const domainMax = domain[domain.length - 1];
-    const range = this.x.range();
-    const test = this.x.invert(0);
 
     const segments = geneViewTranscript.segments.filter(
       seg => seg.intersectionLength(domainMin, domainMax) > 0);
+
+    if (segments.length == 0) {
+      return;
+    }
+
     for (const segment of segments) {
       const start = Math.max(domainMin, segment.start);
       const stop = Math.min(domainMax, segment.stop);
@@ -1057,10 +1062,14 @@ export class GeneViewComponent implements OnInit {
           xStart, xStop, yPos, segment.label);
       }
     }
+
+    const firstSegmentStart = Math.max(segments[0].start, domainMin);
+    const lastSegmentStop = Math.min(segments[segments.length - 1].stop, domainMax);
+
     this.drawTranscriptUTRText(
-      -50, //this.x(segments[0].start),
-      this.svgWidth + 10,//this.x(segments[segments.length - 1].stop),
-      yPos, this.geneViewTranscript.transcript.strand
+      firstSegmentStart,
+      lastSegmentStop,
+      yPos, geneViewTranscript.strand
     );
   }
 
