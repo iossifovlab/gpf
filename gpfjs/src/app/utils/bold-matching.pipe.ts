@@ -7,7 +7,11 @@ export class BoldMatchingPipe implements PipeTransform {
       return input;
     }
 
-    const re = new RegExp('(' + match + ')', 'ig');
+    const re = new RegExp('(' + this.escapeRegExp(match) + ')', 'ig');
     return input.replace(re, '<b>$1</b>');
+  }
+
+  escapeRegExp(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   }
 }

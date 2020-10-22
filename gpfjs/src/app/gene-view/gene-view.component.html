@@ -4,13 +4,13 @@
     <div class="card-header card-title" style="font-family: Roboto; font-weight: 500;">Affected Status</div>
     <div class="card-block" style="padding: 20px;">
       <div style="display: inline; margin-right: 20px;"
-        *ngFor="let affectedStatus of ['Affected only', 'Unaffected only', 'Affected and unaffected']; let i=index"
-        class="checkbox">
-        <label>
-          <input #affectedStatusCheckbox checked type="checkbox"
-            (change)="checkAffectedStatus(affectedStatus, affectedStatusCheckbox.checked)">
-          <span class="pedigree-icon" [style.background-color]="getAffectedStatusColor(affectedStatus)"
-            style="opacity: 0.75;"></span>
+        *ngFor="let affectedStatus of ['Affected only', 'Unaffected only', 'Affected and unaffected']; let i=index" class="checkbox">
+        <input #affectedStatusCheckbox checked type="checkbox" (change)="checkAffectedStatus(affectedStatus, affectedStatusCheckbox.checked)" id="{{affectedStatus}}-checkbox">
+        <span class="pedigree-icon" [style.background-color]="getAffectedStatusColor(affectedStatus)" style="opacity: 0.75;"></span>
+        <label for="{{affectedStatus}}-checkbox" style="display: inline-block;vertical-align: middle;line-height: 95%;"
+          [ngStyle]="{width: affectedStatus === 'Affected only' ? '70px' : 
+                             affectedStatus === 'Unaffected only' ? '80px' :
+                             affectedStatus === 'Affected and unaffected' ? '100px': {}}">
           {{ affectedStatus }}
         </label>
       </div>
@@ -19,7 +19,7 @@
 
   <div class="effect-card card" style="margin-top: 40px; margin-bottom: 40px; margin-left: 30px">
     <div class="card-header card-title" style="font-family: Roboto; font-weight: 500;">Effect Types</div>
-    <div class="card-block" style="padding: 20px;">
+    <div class="card-block" style="padding: 20px;padding-top: 22.75px; padding-bottom: 22.75px;">
       <div style="display: inline; margin-right: 20px;"
         *ngFor="let effect of ['LGDs', 'Missense', 'Synonymous', 'Other']; let i=index" class="checkbox">
         <label>
@@ -34,7 +34,7 @@
 
   <div class="effect-card card" style="margin-top: 40px; margin-bottom: 40px; margin-left: 30px">
     <div class="card-header card-title" style="font-family: Roboto; font-weight: 500;">Inheritance Type</div>
-    <div class="card-block" style="padding: 20px;">
+    <div class="card-block" style="padding: 20px;padding-top: 22.75px; padding-bottom: 22.75px;">
       <div style="display: inline; margin-right: 20px">
         <label>
           <input style="margin-right: 5px;" #denovoCheckbox checked type="checkbox"
@@ -62,7 +62,6 @@
 
 <div *ngIf="this.gene" style="float: left;">
   <h2>{{ this.geneTableStats.geneSymbol }}</h2>
-  <h3>Chromosome {{ this.geneTableStats.chromosome }}</h3>
   <table>
     <tr>
       <td></td>

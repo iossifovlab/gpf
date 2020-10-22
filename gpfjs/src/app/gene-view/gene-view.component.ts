@@ -276,7 +276,7 @@ class GeneViewModel {
     this.gene = gene;
     this.rangeWidth = rangeWidth;
 
-    for (let transcript of gene.transcripts) {
+    for (const transcript of gene.transcripts) {
       this.geneViewTranscripts.push(new GeneViewTranscript(transcript));
     }
 
@@ -285,7 +285,7 @@ class GeneViewModel {
     this.normalDomain = [
       this.collapsedGeneViewTranscript.start,
       this.collapsedGeneViewTranscript.stop
-    ]
+    ];
 
     this.condensedDomain = this.buildCondensedIntronsDomain(0, 3000000000);
     this.condensedRange = this.buildCondesedIntronsRange(0, 3000000000, this.rangeWidth);
@@ -293,7 +293,7 @@ class GeneViewModel {
   }
 
   buildCondensedIntronsDomain(domainMin: number, domainMax: number) {
-    let domain: number[] = []
+    const domain: number[] = [];
     const filteredSegments = this.collapsedGeneViewTranscript.segments.filter(
       seg => seg.intersectionLength(domainMin, domainMax) > 0);
 
@@ -318,7 +318,7 @@ class GeneViewModel {
   }
 
   buildCondesedIntronsRange(domainMin: number, domainMax: number, rangeWidth: number) {
-    let range: number[] = []
+    const range: number[] = [];
     const transcript = this.collapsedGeneViewTranscript.transcript;
     const filteredSegments = this.collapsedGeneViewTranscript.segments.filter(
       seg => seg.intersectionLength(domainMin, domainMax) > 0);
@@ -339,9 +339,9 @@ class GeneViewModel {
       }
     }
 
-    let scaleFactor: number = this.rangeWidth / condensedLength;
+    const scaleFactor: number = this.rangeWidth / condensedLength;
 
-    let rollingTracker: number = 0;
+    let rollingTracker = 0;
     range.push(0);
 
     for (const segment of filteredSegments) {
@@ -358,13 +358,71 @@ class GeneViewModel {
     }
     return range;
   }
+}
 
+class GeneViewScaleState {
+  constructor(
+    public xValues: number[],
+    public yMin: number,
+    public yMax: number,
+  ) { }
+
+  get xMin(): number {
+    return this.xValues[0];
+  }
+
+  get xMax(): number {
+    return this.xValues[this.xValues.length - 1];
+  }
+}
+
+class GeneViewZoomHistory {
+  private zoomHistory: GeneViewScaleState[];
+  private zoomHistoryIndex: number;
+
+  constructor() {
+    this.zoomHistory = [];
+    this.zoomHistoryIndex = -1;
+  }
+
+  resetToDefaultState(defaultScale: GeneViewScaleState) {
+    this.zoomHistory = [];
+    this.zoomHistoryIndex = -1;
+    this.append(defaultScale);
+  }
+
+  append(scale: GeneViewScaleState) {
+    // If you append and the index is not in the end
+    // clean the history after it and start apending new states
+    this.zoomHistory = this.zoomHistory.slice(0, this.zoomHistoryIndex + 1);
+    this.zoomHistory.push(scale);
+    this.zoomHistoryIndex++;
+  }
+
+  moveToPrevious() {
+    if (this.zoomHistoryIndex === 0) {
+      return;
+    }
+    this.zoomHistoryIndex--;
+  }
+
+  moveToNext() {
+    if (this.zoomHistoryIndex === this.zoomHistory.length - 1) {
+      return;
+    }
+    this.zoomHistoryIndex++;
+  }
+
+  getState() {
+    return this.zoomHistory[this.zoomHistoryIndex];
+  }
 }
 
 @Component({
   selector: 'gpf-gene-view',
   templateUrl: './gene-view.component.html',
-  styleUrls: ['./gene-view.component.css']
+  styleUrls: ['./gene-view.component.css'],
+  host: {'(document:keydown)': 'handleKeyboardEvent($event)'}
 })
 export class GeneViewComponent implements OnInit {
   @Input() gene: Gene;
@@ -415,6 +473,7 @@ export class GeneViewComponent implements OnInit {
   geneViewTranscript: GeneViewTranscript;
 
   brush;
+  zoomHistory: GeneViewZoomHistory;
   doubleClickTimer;
   geneTableStats = {
     geneSymbol: '',
@@ -482,6 +541,8 @@ export class GeneViewComponent implements OnInit {
 
       this.loadingService.setLoadingStop();
     });
+
+    this.zoomHistory = new GeneViewZoomHistory();
   }
 
   ngOnChanges() {
@@ -491,6 +552,7 @@ export class GeneViewComponent implements OnInit {
       this.resetGeneTableValues();
       this.setDefaultScale();
       this.drawGene();
+      this.zoomHistory.resetToDefaultState(this.calculateDefaultScale());
     }
   }
 
@@ -589,20 +651,6 @@ export class GeneViewComponent implements OnInit {
     }
   }
 
-  getEffectVariantColor(worst_effect): string {
-    worst_effect = worst_effect.toLowerCase();
-
-    if (this.lgds.indexOf(worst_effect) !== -1 || worst_effect === 'lgds') {
-      return '#ff0000';
-    } else if (worst_effect === 'missense') {
-      return '#ffff00';
-    } else if (worst_effect === 'synonymous') {
-      return '#69b3a2';
-    } else {
-      return '#555555';
-    }
-  }
-
   isVariantEffectSelected(worst_effect) {
     worst_effect = worst_effect.toLowerCase();
 
@@ -638,9 +686,9 @@ export class GeneViewComponent implements OnInit {
     if (affectedStatus === 'Affected only') {
       color = '#AA0000';
     } else if (affectedStatus === 'Unaffected only') {
-      color = '#00AA00';
+      color = '#04613a';
     } else {
-      color = '#AAAAAA';
+      color = '#8a8a8a';
     }
 
     return color;
@@ -851,46 +899,56 @@ export class GeneViewComponent implements OnInit {
       .attr('height', h)
       .style('fill', color)
       .style('fill-opacity', 0.2)
-      .style('stroke-width', 2)
-      .style('stroke', color);
+      .style('stroke', color)
+      .style('stroke-width', 2);
   }
 
   drawStar(x: number, y: number, color: string) {
     this.svgElement.append('svg')
-      .attr('x', x - 8.5)
-      .attr('y', y - 8.5)
-      .append('g')
-      .append('path')
-      .attr('d', 'M12 .587l3.668 7.568 8.332 1.151-6.064 5.828 1.48 8.279-7.416-3.967-7.417 3.967 1.481-8.279-6.064-5.828 8.332-1.151z')
-      .attr('transform', 'scale(0.7)')
-      .attr('fill', color);
+    .attr('x', x - 8.5)
+    .attr('y', y - 8.5)
+    .append('g')
+    .append('path')
+    .attr('d', 'M12 .587l3.668 7.568 8.332 1.151-6.064 5.828 1.48 8.279-7.416-3.967-7.417 3.967 1.481-8.279-6.064-5.828 8.332-1.151z')
+    .attr('transform', 'scale(0.7)')
+    .attr('fill', color)
+    .attr('fill-opacity', '0.6')
+    .style('stroke-width', 1)
+    .style('stroke', color);
   }
 
   drawTriangle(x: number, y: number, color: string) {
     this.svgElement.append('g')
-      .append('polygon')
-      .attr('points', this.getTrianglePoints(x, y, 14))
-      .style('stroke-width', 1)
-      .style('stroke', color)
-      .style('fill', color);
-  }
+     .append('polygon')
+     .attr('points', this.getTrianglePoints(x, y, 14))
+     .style('fill', color)
+     .attr('fill-opacity', '0.6')
+     .style('stroke-width', 1)
+     .style('stroke', color);
+   }
 
   drawCircle(x: number, y: number, color: string) {
     this.svgElement.append('g')
-      .append('circle')
-      .attr('cx', x)
-      .attr('cy', y)
-      .attr('r', 7)
-      .style('fill', color);
+    .append('circle')
+    .attr('cx', x)
+    .attr('cy', y)
+    .attr('r', 7)
+    .style('fill', color)
+    .attr('fill-opacity', '0.6')
+    .style('stroke-width', 1)
+    .style('stroke', color);
   }
 
   drawDot(x: number, y: number, color: string) {
     this.svgElement.append('g')
-      .append('circle')
-      .attr('cx', x)
-      .attr('cy', y)
-      .attr('r', 3)
-      .style('fill', color);
+    .append('circle')
+    .attr('cx', x)
+    .attr('cy', y)
+    .attr('r', 3)
+    .style('fill', color)
+    .attr('fill-opacity', '0.6')
+    .style('stroke-width', 1)
+    .style('stroke', color);
   }
 
   getVariantY(variantFrequency): number {
@@ -919,13 +977,15 @@ export class GeneViewComponent implements OnInit {
   }
 
   setDefaultScale() {
-    const domain = this.condenseIntrons ? this.geneViewModel.condensedDomain : this.geneViewModel.normalDomain;
+    const defaultScale = this.calculateDefaultScale();
     const range = this.condenseIntrons ? this.geneViewModel.condensedRange : [0, this.svgWidth];
-    this.x = d3.scaleLinear().domain(domain).range(range).clamp(true);
-    this.selectedFrequencies = [0, this.frequencyDomainMax];
+    this.x = d3.scaleLinear().domain(defaultScale.xValues).range(range).clamp(true);
+    this.selectedFrequencies = [defaultScale.yMin, defaultScale.yMax];
+  }
 
-    console.log("default:", this.x(domain[0]), this.x.invert(0));
-
+  calculateDefaultScale(): GeneViewScaleState {
+    const domain = this.condenseIntrons ? this.geneViewModel.condensedDomain : this.geneViewModel.normalDomain;
+    return new GeneViewScaleState(domain, 0, this.frequencyDomainMax);
   }
 
   resetGeneTableValues(): void {
@@ -960,7 +1020,7 @@ export class GeneViewComponent implements OnInit {
 
     let transcriptY = this.svgHeightFreqRaw + 20;
     this.drawTranscript(transcriptY, this.geneViewModel.collapsedGeneViewTranscript);
-    for (let geneViewTranscript of this.geneViewModel.geneViewTranscripts) {
+    for (const geneViewTranscript of this.geneViewModel.geneViewTranscripts) {
       transcriptY += 50;
       this.drawTranscript(transcriptY, geneViewTranscript);
     }
@@ -974,48 +1034,76 @@ export class GeneViewComponent implements OnInit {
         this.doubleClickTimer = setTimeout(this.resetTimer, 250);
         return;
       }
+
+      this.zoomHistory.resetToDefaultState(this.calculateDefaultScale());
       this.setDefaultScale();
     } else {
       const x1 = extent[0][0];
       const x2 = extent[1][0];
-
-      const domainMin = Math.round(this.x.invert(Math.min(x1, x2)));
-      let domainMax = Math.round(this.x.invert(Math.max(x1, x2)));
-      if (domainMax - domainMin < 12) {
-        domainMax = domainMin + 12;
-      }
-      if (this.condenseIntrons) {
-        const domain = this.geneViewModel.buildCondensedIntronsDomain(
-          domainMin, domainMax);
-        const range = this.geneViewModel.buildCondesedIntronsRange(
-          domainMin, domainMax, this.svgWidth);
-
-        this.x = d3.scaleLinear()
-          .domain(domain)
-          .range(range)
-          .clamp(true);
-
-      } else {
-        this.x = d3.scaleLinear()
-          .domain([domainMin, domainMax])
-          .range([0, this.svgWidth])
-          .clamp(true);
-      }
-      this.svgElement.select('.brush').call(this.brush.move, null);
-      const domain = this.x.domain();
-      console.log("zoom:", this.x(domainMin), this.x.invert(0), domainMin);
-      console.log("zoom:", this.x(domain[0]), this.x.invert(0), domain[0]);
 
       // set new frequency limits
       const newFreqLimits = [
         this.convertBrushPointToFrequency(extent[0][1]),
         this.convertBrushPointToFrequency(extent[1][1])
       ];
+
+      let domain: number[];
+      const domainMin = Math.round(this.x.invert(Math.min(x1, x2)));
+      let domainMax = Math.round(this.x.invert(Math.max(x1, x2)));
+
+      if (domainMax - domainMin < 12) {
+        domainMax = domainMin + 12;
+      }
+      if (this.condenseIntrons) {
+        domain = this.geneViewModel.buildCondensedIntronsDomain(
+          domainMin, domainMax);
+        const range = this.geneViewModel.buildCondesedIntronsRange(
+          domainMin, domainMax, this.svgWidth);
+        this.x = d3.scaleLinear()
+          .domain(domain)
+          .range(range)
+          .clamp(true);
+      } else {
+        domain = [domainMin, domainMax];
+        this.x = d3.scaleLinear()
+          .domain(domain)
+          .range([0, this.svgWidth])
+          .clamp(true);
+      }
+
+      if (domainMax - domainMin >= 12) {
+        this.zoomHistory.append(new GeneViewScaleState(domain, Math.min(...newFreqLimits), Math.max(...newFreqLimits)));
+      }
+
+      this.svgElement.select('.brush').call(this.brush.move, null);
       this.selectedFrequencies = [
         Math.min(...newFreqLimits),
         Math.max(...newFreqLimits),
       ];
     }
+
+    this.drawGene();
+    this.updateFamilyVariantsTable();
+    this.drawPlot();
+  }
+
+  handleKeyboardEvent($event) {
+    if ($event.ctrlKey && $event.key === 'z') {
+      this.zoomHistory.moveToPrevious();
+      this.drawFromHistory(this.zoomHistory.getState());
+    }
+    if ($event.ctrlKey && $event.key === 'y') {
+      this.zoomHistory.moveToNext();
+      this.drawFromHistory(this.zoomHistory.getState());
+    }
+  }
+
+  drawFromHistory(scale: GeneViewScaleState) {
+    this.x.domain([scale.xMin, scale.xMax]);
+    this.selectedFrequencies = [
+      scale.yMin,
+      scale.yMax
+    ];
 
     this.drawGene();
     this.updateFamilyVariantsTable();
@@ -1044,7 +1132,7 @@ export class GeneViewComponent implements OnInit {
     const segments = geneViewTranscript.segments.filter(
       seg => seg.intersectionLength(domainMin, domainMax) > 0);
 
-    if (segments.length == 0) {
+    if (segments.length === 0) {
       return;
     }
 
@@ -1070,6 +1158,11 @@ export class GeneViewComponent implements OnInit {
       firstSegmentStart,
       lastSegmentStop,
       yPos, geneViewTranscript.strand
+    );
+    this.drawTranscriptChromosomeText(
+      firstSegmentStart,
+      yPos,
+      geneViewTranscript.transcript.chrom
     );
   }
 
@@ -1110,6 +1203,16 @@ export class GeneViewComponent implements OnInit {
       .text(UTR.right)
       .attr('cursor', 'default')
       .append('svg:title').text(`UTR ${UTR.right}`);
+  }
+
+  drawTranscriptChromosomeText(xStart: number, y: number, chromosome: string) {
+    this.svgElement.append('text')
+      .attr('y', y + 10)
+      .attr('x', this.x(xStart) - 70)
+      .attr('font-size', '13px')
+      .text(`chr:${chromosome}`)
+      .attr('cursor', 'default')
+      .append('svg:title').text(`Chromosome: ${chromosome}`);
   }
 
   drawRect(xStart: number, xEnd: number, y: number, height: number, svgTitle: string) {
