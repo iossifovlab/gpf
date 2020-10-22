@@ -121,6 +121,48 @@ class GeneViewSummaryVariantsArray {
   }
 }
 
+class GeneViewZoomHistory {
+  private zoomHistory: number[][];
+  private zoomHistoryIndex: number;
+
+  constructor() {
+    this.zoomHistory = [];
+    this.zoomHistoryIndex = 0;
+  }
+
+  resetToDefaultState(defaultState: number[]) {
+    this.zoomHistory = [];
+    this.zoomHistoryIndex = 0;
+    this.append(defaultState);
+  }
+
+  append(state: number[]) {
+    // If you append and the index is not in the end
+    // clean the history after it and start apending new states
+    this.zoomHistory = this.zoomHistory.slice(0, this.zoomHistoryIndex + 1);
+    this.zoomHistory.push(state);
+    this.zoomHistoryIndex++;
+  }
+
+  moveToPrevious() {
+    if (this.zoomHistoryIndex === 0) {
+      return;
+    }
+    this.zoomHistoryIndex--;
+  }
+
+  moveToNext() {
+    if (this.zoomHistoryIndex === this.zoomHistory.length - 1) {
+      return;
+    }
+    this.zoomHistoryIndex++;
+  }
+
+  getState() {
+    return this.zoomHistory[this.zoomHistoryIndex];
+  }
+}
+
 @Component({
   selector: 'gpf-gene-view',
   templateUrl: './gene-view.component.html',
@@ -167,8 +209,7 @@ export class GeneViewComponent implements OnInit {
   showTransmitted = true;
 
   brush;
-  zoomHistory: number[][];
-  zoomHistoryIndex: number;
+  zoomHistory: GeneViewZoomHistory;
   doubleClickTimer;
   geneTableStats = {
     geneSymbol: '',
@@ -237,8 +278,7 @@ export class GeneViewComponent implements OnInit {
       this.loadingService.setLoadingStop();
     });
 
-    this.zoomHistory = [];
-    this.zoomHistoryIndex = 0;
+    this.zoomHistory = new GeneViewZoomHistory();
   }
 
   ngOnChanges() {
@@ -246,7 +286,7 @@ export class GeneViewComponent implements OnInit {
       this.resetGeneTableValues();
       this.setDefaultScale();
       this.drawGene();
-      this.zoomHistory = [this.calculateDefaultScale()];
+      this.zoomHistory.resetToDefaultState(this.calculateDefaultScale());
     }
   }
 
@@ -723,8 +763,7 @@ export class GeneViewComponent implements OnInit {
         return;
       }
 
-      this.zoomHistory = [this.calculateDefaultScale()];
-      this.zoomHistoryIndex = 0;
+      this.zoomHistory.resetToDefaultState(this.calculateDefaultScale());
       this.setDefaultScale();
     } else {
       let newXmin: number;
@@ -745,9 +784,7 @@ export class GeneViewComponent implements OnInit {
         this.x.domain([newXmin, newXmax]);
         this.svgElement.select('.brush').call(this.brush.move, null);
 
-        this.zoomHistory = this.zoomHistory.slice(0, this.zoomHistoryIndex + 1);
-        this.zoomHistory.push([newXmin, newXmax, Math.min(...newFreqLimits), Math.max(...newFreqLimits)]);
-        this.zoomHistoryIndex++;
+        this.zoomHistory.append([newXmin, newXmax, Math.min(...newFreqLimits), Math.max(...newFreqLimits)]);
       }
 
       this.selectedFrequencies = [
@@ -763,29 +800,20 @@ export class GeneViewComponent implements OnInit {
 
   handleKeyboardEvent($event) {
     if ($event.ctrlKey && $event.key === 'z') {
-      this.moveInZoomHistory('undo');
+      this.zoomHistory.moveToPrevious();
+      this.drawFromHistory(this.zoomHistory.getState());
     }
     if ($event.ctrlKey && $event.key === 'y') {
-      this.moveInZoomHistory('redo');
+      this.zoomHistory.moveToNext();
+      this.drawFromHistory(this.zoomHistory.getState());
     }
   }
 
-  moveInZoomHistory(operation: string) {
-    if ((operation === 'undo' && this.zoomHistoryIndex === 0) ||
-        (operation === 'redo' && this.zoomHistoryIndex === this.zoomHistory.length - 1)) {
-      return;
-    }
-
-    if (operation === 'undo') {
-      this.zoomHistoryIndex--;
-    } else if (operation === 'redo') {
-      this.zoomHistoryIndex++;
-    }
-
-    this.x.domain([this.zoomHistory[this.zoomHistoryIndex][0], this.zoomHistory[this.zoomHistoryIndex][1]]);
+  drawFromHistory(state: number[]) {
+    this.x.domain([state[0], state[1]]);
     this.selectedFrequencies = [
-      this.zoomHistory[this.zoomHistoryIndex][2],
-      this.zoomHistory[this.zoomHistoryIndex][3]
+      state[2],
+      state[3]
     ];
 
     this.drawGene();
