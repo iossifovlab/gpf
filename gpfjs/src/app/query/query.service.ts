@@ -11,11 +11,13 @@ import { environment } from 'environments/environment';
 import { QueryData } from './query';
 import { ConfigService } from '../config/config.service';
 import { GenotypePreviewInfo, GenotypePreviewVariantsArray } from '../genotype-preview-model/genotype-preview';
+import { GeneViewSummaryVariantsArray } from '../gene-view/gene'
 
 @Injectable()
 export class QueryService {
   private readonly genotypePreviewUrl = 'genotype_browser/preview';
   private readonly genotypePreviewVariantsUrl = 'genotype_browser/preview/variants';
+  private readonly geneViewVariants = 'gene_view/query_summary_variants';
   private readonly saveQueryEndpoint = 'query_state/save';
   private readonly loadQueryEndpoint = 'query_state/load';
   private readonly deleteQueryEndpoint = 'query_state/delete';
@@ -25,8 +27,10 @@ export class QueryService {
   private readonly headers = new HttpHeaders({ 'Content-Type': 'application/json' });
 
   private connectionEstablished = false;
+  private summaryConnectionEstablished = false;
   private oboeInstance = null;
   public streamingFinishedSubject = new Subject(); // This is for notifying that the streaming has completely finished
+  public summaryStreamingFinishedSubject = new Subject(); // This is for notifying that the streaming has completely finished
 
   constructor(
     private location: Location,
@@ -46,6 +50,10 @@ export class QueryService {
     response: any, genotypePreviewInfo: GenotypePreviewInfo,
     genotypePreviewVariantsArray: GenotypePreviewVariantsArray) {
     genotypePreviewVariantsArray.addPreviewVariant(response, genotypePreviewInfo);
+  }
+
+  private parseGeneViewSummaryVariant(response: any, genotypeVariantsArray) {
+
   }
 
   getGenotypePreviewInfo(filter: QueryData): Observable<GenotypePreviewInfo> {
@@ -84,6 +92,36 @@ export class QueryService {
     return streamingSubject;
   }
 
+  summaryStreamPost(url: string, filter: QueryData) {
+    if (this.connectionEstablished) {
+      this.oboeInstance.abort();
+    }
+
+    const streamingSubject = new Subject();
+    this.oboeInstance = oboe({
+      url: `${environment.apiPath}${url}`,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: filter,
+      withCredentials: true
+    }).start(data => {
+      this.summaryConnectionEstablished = true;
+    }).node('!.*', data => {
+      streamingSubject.next(data);
+    }).done(data => {
+      this.summaryStreamingFinishedSubject.next(true);
+      streamingSubject.next(null); // Emit null so the loading service can stop the loading overlay even if no variants were received
+    }).fail(error => {
+      this.summaryConnectionEstablished = false;
+      this.summaryStreamingFinishedSubject.next(true);
+      console.warn('oboejs encountered a fail event while streaming');
+      console.log(error);
+      streamingSubject.next(null);
+    });
+
+    return streamingSubject;
+  }
+
   getGenotypePreviewVariantsByFilter(
     filter: QueryData, genotypePreviewInfo: GenotypePreviewInfo, loadingService?: any
   ): GenotypePreviewVariantsArray {
@@ -97,6 +135,14 @@ export class QueryService {
     });
 
     return genotypePreviewVariantsArray;
+  }
+
+  getGeneViewVariants(filter: QueryData, loadingService?: any) {
+    const summaryVariantsArray = new GeneViewSummaryVariantsArray();
+    this.summaryStreamPost(this.geneViewVariants, filter).subscribe((variant: string[]) => {
+      summaryVariantsArray.addSummaryVariant(variant)
+    });
+    return summaryVariantsArray;
   }
 
   saveQuery(queryData: {}, page: string) {

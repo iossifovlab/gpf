@@ -1,6 +1,6 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { GeneService } from 'app/gene-view/gene.service';
-import { Gene } from 'app/gene-view/gene';
+import { Gene, GeneViewSummaryVariantsArray } from 'app/gene-view/gene';
 import { GenotypePreviewVariantsArray, GenotypePreviewInfo } from 'app/genotype-preview-model/genotype-preview';
 import { QueryService } from 'app/query/query.service';
 import { Observable } from 'rxjs';
@@ -24,7 +24,8 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
   selectedGene: Gene;
   geneSymbol = 'CHD8';
   genotypePreviewVariantsArray: GenotypePreviewVariantsArray;
-  shownTablePreviewVariantsArray: GenotypePreviewVariantsArray;
+  summaryVariantsArray: GeneViewSummaryVariantsArray;
+  shownTablePreviewVariantsArray: GeneViewSummaryVariantsArray;
   selectedDataset$: Observable<Dataset>;
   selectedDatasetId: string;
   genotypePreviewInfo: GenotypePreviewInfo;
@@ -67,12 +68,12 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
     });
   }
 
-  updateShownTablePreviewVariantsArray($event: GenotypePreviewVariantsArray) {
+  updateShownTablePreviewVariantsArray($event: GeneViewSummaryVariantsArray) {
     this.shownTablePreviewVariantsArray = $event;
   }
 
   submitGeneRequest() {
-    this.updateShownTablePreviewVariantsArray(new GenotypePreviewVariantsArray());
+    this.updateShownTablePreviewVariantsArray(new GeneViewSummaryVariantsArray());
 
     this.getCurrentState()
       .subscribe(state => {
@@ -85,6 +86,7 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
         this.genotypePreviewInfo = null;
         this.loadingFinished = false;
         this.loadingService.setLoadingStart();
+        this.queryService.summaryStreamPost
         this.queryService.getGenotypePreviewInfo(
           { datasetId: this.selectedDatasetId, peopleGroup: state["peopleGroup"] }
         ).subscribe(
@@ -93,17 +95,33 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
             this.genotypePreviewVariantsArray = null;
 
             this.genotypeBrowserState = state;
+            let summaryLoadingFinished = false;
+            let familyLoadingFinished = false;
 
             this.queryService.streamingFinishedSubject.subscribe(
-              _ => { this.loadingFinished = true; }
-            );
+              _ => {
+                  familyLoadingFinished = true;
+                  if(summaryLoadingFinished) {
+                      this.loadingFinished = true; 
+                  }
+            });
+            this.queryService.summaryStreamingFinishedSubject.subscribe(
+              _ => {
+                  summaryLoadingFinished = true;
+                  if(summaryLoadingFinished) {
+                      this.loadingFinished = true; 
+                  }
+            });
 
             const requestParams = {...state};
             requestParams['maxVariantsCount'] = 10000;
 
+
             if (this.enableCodingOnly) {
               requestParams['effectTypes'] = this.codingEffectTypes;
             }
+
+            this.summaryVariantsArray = this.queryService.getGeneViewVariants(requestParams);
 
             this.genotypePreviewVariantsArray =
               this.queryService.getGenotypePreviewVariantsByFilter(requestParams, this.genotypePreviewInfo);

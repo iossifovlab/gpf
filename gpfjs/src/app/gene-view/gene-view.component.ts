@@ -1,6 +1,6 @@
 import { Component, OnInit, Input, OnChanges, Output, EventEmitter } from '@angular/core';
 import * as d3 from 'd3';
-import { Gene } from 'app/gene-view/gene';
+import { Gene, GeneViewSummaryVariantsArray, GeneViewSummaryVariant } from 'app/gene-view/gene';
 import { GenotypePreviewVariantsArray, GenotypePreview } from 'app/genotype-preview-model/genotype-preview';
 import { Subject, Observable } from 'rxjs';
 import { DatasetsService } from 'app/datasets/datasets.service';
@@ -8,118 +8,6 @@ import { Transcript, Exon } from 'app/gene-view/gene';
 import { FullscreenLoadingService } from 'app/fullscreen-loading/fullscreen-loading.service';
 
 
-class GeneViewSummaryVariant {
-  location: string;
-  position: number;
-  chrom: string;
-  variant: string;
-  effect: string;
-  frequency: number;
-  numberOfFamilyVariants: number;
-  seenAsDenovo: boolean;
-
-  seenInAffected: boolean;
-  seenInUnaffected: boolean;
-  svuid: string;
-
-  lgds = ['nonsense', 'splice-site', 'frame-shift', 'no-frame-shift-new-stop'];
-
-  static fromPreviewVariant(config, genotypePreview: GenotypePreview): GeneViewSummaryVariant {
-    const result = new GeneViewSummaryVariant();
-    const location = genotypePreview.get(config.locationColumn);
-    result.location = location;
-    result.position = Number(location.slice(location.indexOf(':') + 1));
-    result.chrom = location.slice(0, location.indexOf(':'));
-
-    let frequency: string = genotypePreview.data.get(config.frequencyColumn);
-    if (frequency === '-') {
-      frequency = '0.0';
-    }
-    result.frequency = Number(frequency);
-
-    result.effect = genotypePreview.get(config.effectColumn).toLowerCase();
-    result.variant = genotypePreview.get('variant.variant');
-
-    result.numberOfFamilyVariants = 1;
-
-    result.seenAsDenovo = false;
-    if (genotypePreview.get('variant.is denovo')) {
-      result.seenAsDenovo = true;
-    }
-    result.seenInAffected = false;
-    result.seenInUnaffected = false;
-    for (const pedigreeData of genotypePreview.get('genotype')) {
-      if (pedigreeData.label > 0) {
-        if (pedigreeData.color === '#ffffff') {
-          result.seenInUnaffected = true;
-        } else {
-          result.seenInAffected = true;
-        }
-      }
-    }
-
-    result.svuid = result.location + ':' + result.variant;
-
-    return result;
-  }
-
-  isLGDs(): boolean {
-    if (this.lgds.indexOf(this.effect) !== -1 || this.effect === 'lgds') {
-      return true;
-    }
-    return false;
-  }
-
-  isMissense(): boolean {
-    if (this.effect === 'missense') {
-      return true;
-    }
-    return false;
-  }
-
-  isSynonymous(): boolean {
-    if (this.effect === 'synonymous') {
-      return true;
-    }
-    return false;
-  }
-}
-
-class GeneViewSummaryVariantsArray {
-  summaryVariants: GeneViewSummaryVariant[] = [];
-
-  constructor(summaryVariants: IterableIterator<GeneViewSummaryVariant>) {
-    for (const summaryVariant of summaryVariants) {
-      this.summaryVariants.push(summaryVariant);
-    }
-  }
-
-  static fromPreviewVariantsArray(config, previewVariants: GenotypePreviewVariantsArray): GeneViewSummaryVariantsArray {
-    const summaryVariants: Map<string, GeneViewSummaryVariant> = new Map();
-
-    for (const genotypePreview of previewVariants.genotypePreviews) {
-      const summaryVariant = GeneViewSummaryVariant.fromPreviewVariant(config, genotypePreview);
-      const svuid = summaryVariant.svuid;
-
-      if (!summaryVariants.has(svuid)) {
-        summaryVariants.set(svuid, summaryVariant);
-      } else {
-        const mergeSummaryVariant = summaryVariants.get(svuid);
-        mergeSummaryVariant.numberOfFamilyVariants += 1;
-        if (summaryVariant.seenAsDenovo) {
-          mergeSummaryVariant.seenAsDenovo = true;
-        }
-        if (summaryVariant.seenInAffected) {
-          mergeSummaryVariant.seenInAffected = true;
-        }
-        if (summaryVariant.seenInUnaffected) {
-          mergeSummaryVariant.seenInUnaffected = true;
-        }
-      }
-    }
-    return new GeneViewSummaryVariantsArray(summaryVariants.values());
-  }
-}
 
 class GeneViewScaleState {
   constructor(
@@ -180,9 +68,9 @@ class GeneViewZoomHistory {
 })
 export class GeneViewComponent implements OnInit {
   @Input() gene: Gene;
-  @Input() variantsArray: GenotypePreviewVariantsArray;
+  @Input() variantsArray: GeneViewSummaryVariantsArray;
   @Input() streamingFinished$: Subject<boolean>;
-  @Output() updateShownTablePreviewVariantsArrayEvent = new EventEmitter<GenotypePreviewVariantsArray>();
+  @Output() updateShownTablePreviewVariantsArrayEvent = new EventEmitter<GeneViewSummaryVariantsArray>();
 
   geneBrowserConfig;
   frequencyDomainMin: number;
@@ -269,10 +157,7 @@ export class GeneViewComponent implements OnInit {
         .range([this.svgHeightFreq, this.zeroAxisY]);
     });
     this.streamingFinished$.subscribe(() => {
-      this.summaryVariantsArray = GeneViewSummaryVariantsArray.fromPreviewVariantsArray(
-        this.geneBrowserConfig,
-        this.variantsArray
-      );
+      this.summaryVariantsArray = this.variantsArray;
 
       this.updateFamilyVariantsTable();
       this.drawPlot();
@@ -452,7 +337,7 @@ export class GeneViewComponent implements OnInit {
   filterSummaryVariantsArray(
     summaryVariantsArray: GeneViewSummaryVariantsArray, startPos: number, endPos: number
   ): GeneViewSummaryVariantsArray {
-    const filteredVariants: GeneViewSummaryVariant[] = [];
+    const result = new GeneViewSummaryVariantsArray();
     for (const summaryVariant of summaryVariantsArray.summaryVariants) {
       if (
         (!this.isVariantEffectSelected(summaryVariant.effect)) ||
@@ -463,43 +348,44 @@ export class GeneViewComponent implements OnInit {
         continue;
       } else if (summaryVariant.position >= startPos && summaryVariant.position <= endPos) {
         if (this.frequencyIsSelected(summaryVariant.frequency)) {
-          filteredVariants.push(summaryVariant);
+          result.addSummaryVariant(summaryVariant);
         }
       }
     }
-    return new GeneViewSummaryVariantsArray(filteredVariants.values());
+    return result;
   }
 
   filterTablePreviewVariantsArray(
-    variantsArray: GenotypePreviewVariantsArray, startPos: number, endPos: number
-  ): GenotypePreviewVariantsArray {
-    const filteredVariants = [];
-    const result = new GenotypePreviewVariantsArray();
+    variantsArray: GeneViewSummaryVariantsArray, startPos: number, endPos: number
+  ): GeneViewSummaryVariantsArray {
+    const result = new GeneViewSummaryVariantsArray();
     let location: string;
     let position: number;
-    let frequency: string;
-    for (const genotypePreview of variantsArray.genotypePreviews) {
-      const data = genotypePreview.data;
-      location = data.get(this.geneBrowserConfig.locationColumn);
-      position = Number(location.slice(location.indexOf(':') + 1));
-      frequency = data.get(this.geneBrowserConfig.frequencyColumn);
+    let frequency: number;
+    for (const summaryVariant of variantsArray.summaryVariants) {
+      location = summaryVariant.location;
+      position = summaryVariant.position;
+      frequency = summaryVariant.frequency;
+      console.log(position);
+      console.log(frequency);
+      console.log(location);
       if (
-        (!this.isVariantEffectSelected(data.get(this.geneBrowserConfig.effectColumn))) ||
-        (!this.showDenovo && data.get('variant.is denovo')) ||
-        (!this.showTransmitted && !data.get('variant.is denovo')) ||
-        (!this.isAffectedStatusSelected(this.getPedigreeAffectedStatus(data.get('genotype'))))
+        (!this.isVariantEffectSelected(summaryVariant.effect)) ||
+        (!this.showDenovo && summaryVariant.seenAsDenovo) ||
+        (!this.showTransmitted && !summaryVariant.seenAsDenovo) ||
+        (!summaryVariant.seenInAffected)
       ) {
+        console.log("Skip");
         continue;
       } else if (position >= startPos && position <= endPos) {
-        if (frequency === '-') {
-          frequency = '0.0';
-        }
-        if (this.frequencyIsSelected(Number(frequency))) {
-          filteredVariants.push(genotypePreview);
+        console.log("Pass");
+        if (this.frequencyIsSelected(frequency)) {
+          console.log("Add");
+          result.addSummaryVariant(summaryVariant);
         }
       }
     }
-    result.setGenotypePreviews(filteredVariants);
+    console.log(result);
     return result;
   }
 

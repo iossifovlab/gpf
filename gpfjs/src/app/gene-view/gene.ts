@@ -1,3 +1,5 @@
+import { GenotypePreviewVariantsArray, GenotypePreview } from "app/genotype-preview-model/genotype-preview";
+
 export class Exon {
   constructor(
     private _start: number,
@@ -83,4 +85,113 @@ export class Gene {
   get gene() {
     return this._gene;
   }
+}
+
+export class GeneViewSummaryVariant {
+  location: string;
+  position: number;
+  chrom: string;
+  variant: string;
+  effect: string;
+  frequency: number;
+  numberOfFamilyVariants: number;
+  seenAsDenovo: boolean;
+
+  seenInAffected: boolean;
+  seenInUnaffected: boolean;
+  svuid: string;
+
+  lgds = ['nonsense', 'splice-site', 'frame-shift', 'no-frame-shift-new-stop'];
+
+  static fromRow(row: any): GeneViewSummaryVariant {
+    const result = new GeneViewSummaryVariant();
+    result.location = row.location;
+    result.position = row.position;
+    result.chrom = row.chrom;
+    result.variant = row.variant;
+    result.effect = row.effect;
+    result.frequency = row.frequency;
+    result.numberOfFamilyVariants = row.family_variants_count;
+    result.seenAsDenovo = row.is_denovo;
+    result.seenInAffected = row.seen_in_affected;
+    result.seenInUnaffected = row.seen_in_unaffected;
+    result.svuid = result.location + ':' + result.variant;
+
+    return result;
+  }
+
+  static fromPreviewVariant(config, genotypePreview: GenotypePreview): GeneViewSummaryVariant {
+    const result = new GeneViewSummaryVariant();
+    const location = genotypePreview.get(config.locationColumn);
+    result.location = location;
+    result.position = Number(location.slice(location.indexOf(':') + 1));
+    result.chrom = location.slice(0, location.indexOf(':'));
+
+    let frequency: string = genotypePreview.data.get(config.frequencyColumn);
+    if (frequency === '-') {
+      frequency = '0.0';
+    }
+    result.frequency = Number(frequency);
+
+    result.effect = genotypePreview.get(config.effectColumn).toLowerCase();
+    result.variant = genotypePreview.get('variant.variant');
+
+    result.numberOfFamilyVariants = 1;
+
+    result.seenAsDenovo = false;
+    if (genotypePreview.get('variant.is denovo')) {
+      result.seenAsDenovo = true;
+    }
+    result.seenInAffected = false;
+    result.seenInUnaffected = false;
+    for (const pedigreeData of genotypePreview.get('genotype')) {
+      if (pedigreeData.label > 0) {
+        if (pedigreeData.color === '#ffffff') {
+          result.seenInUnaffected = true;
+        } else {
+          result.seenInAffected = true;
+        }
+      }
+    }
+
+    result.svuid = result.location + ':' + result.variant;
+
+    return result;
+  }
+
+  isLGDs(): boolean {
+    if (this.lgds.indexOf(this.effect) !== -1 || this.effect === 'lgds') {
+      return true;
+    }
+    return false;
+  }
+
+  isMissense(): boolean {
+    if (this.effect === 'missense') {
+      return true;
+    }
+    return false;
+  }
+
+  isSynonymous(): boolean {
+    if (this.effect === 'synonymous') {
+      return true;
+    }
+    return false;
+  }
+}
+
+export class GeneViewSummaryVariantsArray {
+  summaryVariants: GeneViewSummaryVariant[] = [];
+
+  constructor() {}
+
+  addSummaryVariant(variant: any) {
+      if(!variant) {
+        return
+      }
+      const summaryVariant = GeneViewSummaryVariant.fromRow(variant);
+      this.summaryVariants.push(summaryVariant);
+  }
+
 }
