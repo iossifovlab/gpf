@@ -25,23 +25,23 @@ class SummaryVariantsQueryBuilder(BaseQueryBuilder):
         self.select_accessors = {
             "bucket_index": "variants.bucket_index",
             "summary_index": "variants.summary_index",
-            "variant_data": "gpf_first(variants.variant_data)",
+            "variant_data": "MIN(variants.variant_data)",
             "family_variants_count": "COUNT(DISTINCT variants.family_id)",
             "seen_in_status": "gpf_or(pedigree.status)",
             "seen_in_denovo":
                 "gpf_bit_or(BITAND(inheritance_in_members, 4))",
-            "extra_attributes": "gpf_first(variants.extra_attributes)"
+            "extra_attributes": "MIN(variants.extra_attributes)"
         }
         columns = [
             "variants.bucket_index",
             "variants.summary_index",
-            "gpf_first(variants.variant_data)",
+            "MIN(variants.variant_data)",
             "COUNT(DISTINCT variants.family_id)",
             "gpf_or(pedigree.status)",
             "gpf_bit_or(BITAND(inheritance_in_members, 4))"
         ]
         if self.has_extra_attributes:
-            columns.append("gpf_first(variants.extra_attributes)")
+            columns.append("MIN(variants.extra_attributes)")
 
         return columns
 
@@ -101,6 +101,7 @@ class SummaryVariantsQueryBuilder(BaseQueryBuilder):
             bucket_index = cols[self.select_accessors["bucket_index"]]
             summary_index = cols[self.select_accessors["summary_index"]]
             variant_data = cols[self.select_accessors["variant_data"]]
+            print(row)
             family_variants_count = cols[
                 self.select_accessors["family_variants_count"]]
             seen_in_status = cols[self.select_accessors["seen_in_status"]]
