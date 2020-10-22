@@ -136,12 +136,12 @@ class GeneViewZoomHistory {
 
   constructor() {
     this.zoomHistory = [];
-    this.zoomHistoryIndex = 0;
+    this.zoomHistoryIndex = -1;
   }
 
   resetToDefaultState(defaultScale: GeneViewScaleState) {
     this.zoomHistory = [];
-    this.zoomHistoryIndex = 0;
+    this.zoomHistoryIndex = -1;
     this.append(defaultScale);
   }
 
