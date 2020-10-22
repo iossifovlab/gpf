@@ -23,7 +23,8 @@
       <div style="display: inline; margin-right: 20px;"
         *ngFor="let effect of ['LGDs', 'Missense', 'Synonymous', 'Other']; let i=index" class="checkbox">
         <label>
-          <input #effectTypeCheckbox checked type="checkbox" (change)="checkEffectType(effect, effectTypeCheckbox.checked)">
+          <input #effectTypeCheckbox checked type="checkbox"
+            (change)="checkEffectType(effect, effectTypeCheckbox.checked)">
           <svg id={{effect}}></svg>
           {{ effect }}
         </label>
@@ -36,14 +37,16 @@
     <div class="card-block" style="padding: 20px;padding-top: 22.75px; padding-bottom: 22.75px;">
       <div style="display: inline; margin-right: 20px">
         <label>
-          <input style="margin-right: 5px;" #denovoCheckbox checked type="checkbox" (click)="checkShowDenovo(denovoCheckbox.checked)">
+          <input style="margin-right: 5px;" #denovoCheckbox checked type="checkbox"
+            (click)="checkShowDenovo(denovoCheckbox.checked)">
           <svg id="denovo"></svg>
           Denovo
         </label>
       </div>
       <div style="display: inline; margin-right: 20px">
         <label>
-          <input #transmittedCheckbox checked type="checkbox" (click)="checkShowTransmitted(transmittedCheckbox.checked)">
+          <input #transmittedCheckbox checked type="checkbox"
+            (click)="checkShowTransmitted(transmittedCheckbox.checked)">
           <svg id="transmitted"></svg>
           Transmitted
         </label>
@@ -78,4 +81,10 @@
       <td>{{ this.geneTableStats.selectedSummaryVariants }}</td>
     </tr>
   </table>
+  <div style="margin-right: 20px; margin-top: 20px" class="checkbox">
+    <label>
+      <input #checkbox type="checkbox" [checked]="condenseIntrons" (change)="toggleCondenseIntron()">
+      Condense introns
+    </label>
+  </div>
 </div>
