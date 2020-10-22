@@ -362,17 +362,18 @@ class GeneViewModel {
 
 class GeneViewScaleState {
   constructor(
-    public xValues: number[],
+    public xDomain: number[],
+    public xRange: number[],
     public yMin: number,
     public yMax: number,
   ) { }
 
   get xMin(): number {
-    return this.xValues[0];
+    return this.xDomain[0];
   }
 
   get xMax(): number {
-    return this.xValues[this.xValues.length - 1];
+    return this.xDomain[this.xDomain.length - 1];
   }
 }
 
@@ -978,14 +979,14 @@ export class GeneViewComponent implements OnInit {
 
   setDefaultScale() {
     const defaultScale = this.calculateDefaultScale();
-    const range = this.condenseIntrons ? this.geneViewModel.condensedRange : [0, this.svgWidth];
-    this.x = d3.scaleLinear().domain(defaultScale.xValues).range(range).clamp(true);
+    this.x = d3.scaleLinear().domain(defaultScale.xDomain).range(defaultScale.xRange).clamp(true);
     this.selectedFrequencies = [defaultScale.yMin, defaultScale.yMax];
   }
 
   calculateDefaultScale(): GeneViewScaleState {
     const domain = this.condenseIntrons ? this.geneViewModel.condensedDomain : this.geneViewModel.normalDomain;
-    return new GeneViewScaleState(domain, 0, this.frequencyDomainMax);
+    const range = this.condenseIntrons ? this.geneViewModel.condensedRange : [0, this.svgWidth];
+    return new GeneViewScaleState(domain, range, 0, this.frequencyDomainMax);
   }
 
   resetGeneTableValues(): void {
@@ -1048,6 +1049,7 @@ export class GeneViewComponent implements OnInit {
       ];
 
       let domain: number[];
+      let range: number[];
       const domainMin = Math.round(this.x.invert(Math.min(x1, x2)));
       let domainMax = Math.round(this.x.invert(Math.max(x1, x2)));
 
@@ -1057,22 +1059,17 @@ export class GeneViewComponent implements OnInit {
       if (this.condenseIntrons) {
         domain = this.geneViewModel.buildCondensedIntronsDomain(
           domainMin, domainMax);
-        const range = this.geneViewModel.buildCondesedIntronsRange(
+        range = this.geneViewModel.buildCondesedIntronsRange(
           domainMin, domainMax, this.svgWidth);
-        this.x = d3.scaleLinear()
-          .domain(domain)
-          .range(range)
-          .clamp(true);
       } else {
         domain = [domainMin, domainMax];
-        this.x = d3.scaleLinear()
-          .domain(domain)
-          .range([0, this.svgWidth])
-          .clamp(true);
+        range = [0, this.svgWidth];
       }
 
+      this.x = d3.scaleLinear().domain(domain).range(range).clamp(true);
+
       if (domainMax - domainMin >= 12) {
-        this.zoomHistory.append(new GeneViewScaleState(domain, Math.min(...newFreqLimits), Math.max(...newFreqLimits)));
+        this.zoomHistory.append(new GeneViewScaleState(domain, range, Math.min(...newFreqLimits), Math.max(...newFreqLimits)));
       }
 
       this.svgElement.select('.brush').call(this.brush.move, null);
@@ -1099,7 +1096,8 @@ export class GeneViewComponent implements OnInit {
   }
 
   drawFromHistory(scale: GeneViewScaleState) {
-    this.x.domain([scale.xMin, scale.xMax]);
+    this.x.domain(scale.xDomain);
+    this.x.range(scale.xRange);
     this.selectedFrequencies = [
       scale.yMin,
       scale.yMax
