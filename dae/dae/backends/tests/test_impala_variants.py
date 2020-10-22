@@ -30,6 +30,7 @@ def test_impala_query_build(impala_host, genomes_db_2013):
     builder = FamilyVariantsQueryBuilder(
         ifv.db,
         ifv.variants_table,
+        ifv.pedigree_table,
         ifv.schema,
         ifv.table_properties,
         ifv.pedigree_schema,
@@ -176,6 +177,7 @@ def test_impala_frequency_bin_heuristics(
     builder = FamilyVariantsQueryBuilder(
         ifv.db,
         ifv.variants_table,
+        ifv.pedigree_table,
         ifv.schema,
         ifv.table_properties,
         ifv.pedigree_schema,

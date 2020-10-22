@@ -8,25 +8,24 @@ from collections import defaultdict
 import copy
 
 
-def bedFile2Rgns(bedFN):
-    F = open(bedFN)
-    r = []
-    for ln in F:
-        if ln[0] == "#":
-            continue
-        chrom, beg, end = ln.strip().split("\t")
-        beg = int(beg)
-        end = int(end)
-        r.append(Region(chrom, beg + 1, end))
-    F.close()
-    return r
+def bedfile2regions(bed_filename):
+    with open(bed_filename) as infile:
+        regions = []
+        for line in infile:
+            if line[0] == "#":
+                continue
+            chrom, beg, end = line.strip().split("\t")
+            beg = int(beg)
+            end = int(end)
+            regions.append(Region(chrom, beg + 1, end))
+        return regions
 
 
-def rgns2BedFile(rgns, bedFN):
-    F = open(bedFN, "w")
-    for rr in rgns:
-        F.write("%s\t%d\t%d\n" % (rr.chrom, rr.start - 1, rr.stop))
-    F.close()
+def regions2bedfile(regions, bed_filename):
+    with open(bed_filename, "w") as outfile:
+        for reg in regions:
+            outfile.write(
+                f"{reg.chrom}\t{reg.start-1}\t{reg.stop}\n")
 
 
 class Region(object):
@@ -61,8 +60,6 @@ class Region(object):
         return str(self).__hash__()
 
     def __eq__(self, other):
-        print(type(self.start), type(other.start))
-        print(type(self.stop), type(other.stop))
         return (
             self.chrom == other.chrom
             and self.start == other.start
@@ -191,64 +188,64 @@ def connected_component(R):
     return CC
 
 
-def collapse(r, is_sorted=False):
-    """Ivan knows"""
+def collapse(source, is_sorted=False):
+    if not source:
+        return source
 
-    if not r:
-        return r
-
-    r_copy = copy.deepcopy(r)
+    regions = copy.deepcopy(source)
 
     if not is_sorted:
-        r_copy.sort(key=lambda x: x.start)
+        regions.sort(key=lambda x: x.start)
 
-    C = defaultdict(list)
+    collapsed = defaultdict(list)
 
-    C[r_copy[0].chrom].append(r_copy[0])
+    collapsed[regions[0].chrom].append(regions[0])
 
-    for i in r_copy[1:]:
-        try:
-            j = C[i.chrom][-1]
-        except Exception:
-            C[i.chrom].append(i)
+    for reg in regions[1:]:
+        chrom_collapsed = collapsed.get(reg.chrom)
+        if not chrom_collapsed:
+            collapsed[reg.chrom].append(reg)
+            continue
+        else:
+            prev_reg = chrom_collapsed[-1]
+
+        if reg.start <= prev_reg.stop:
+            if reg.stop > prev_reg.stop:
+                collapsed[reg.chrom][-1].stop = reg.stop
             continue
 
-        if i.start <= j.stop:
-            if i.stop > j.stop:
-                C[i.chrom][-1].stop = i.stop
-            continue
+        collapsed[reg.chrom].append(reg)
 
-        C[i.chrom].append(i)
-
-    L = []
-    for v in list(C.values()):
-        L.extend(v)
-    return L
+    result = []
+    for v in list(collapsed.values()):
+        result.extend(v)
+    return result
 
 
-def collapse_noChr(r, is_sorted=False):
+def collapse_no_chrom(source, is_sorted=False):
     """collapse by ignoring the chromosome. Useful when the caller knows
     that all the regions are from the same chromosome."""
 
-    if r == []:
-
-        return r
-    r_copy = copy.copy(r)
+    if not source:
+        return source
+    regions = copy.copy(source)
+    if len(regions) == 1:
+        return regions
 
     if not is_sorted:
-        r_copy.sort(key=lambda x: x.start)
+        regions.sort(key=lambda x: x.start)
 
-    C = [r_copy[0]]
-    for i in r_copy[1:]:
-        j = C[-1]
-        if i.start <= j.stop:
-            if i.stop > j.stop:
-                C[-1].stop = i.stop
+    collapsed = [regions[0]]
+    for reg in regions[1:]:
+        prev_reg = collapsed[-1]
+        if reg.start <= prev_reg.stop:
+            if reg.stop > prev_reg.stop:
+                prev_reg.stop = reg.stop
             continue
 
-        C.append(i)
+        collapsed.append(reg)
 
-    return C
+    return collapsed
 
 
 def totalLen(s):
