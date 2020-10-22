@@ -6,11 +6,11 @@ set -e
 export HAS_GPF_IMPALA=`docker ps -a | grep gpf_impala | sed -e "s/\s\{2,\}/\t/g" | cut -f 1`
 export GPF_IMPALA_IMAGE='seqpipe/seqpipe-docker-impala:latest'
 
+docker pull ${GPF_IMPALA_IMAGE}
 
 if [[ -z $HAS_GPF_IMPALA ]]; then
     # create gpf_impala docker container
 
-    docker pull ${GPF_IMPALA_IMAGE}
     docker create \
         --name gpf_impala \
         --hostname impala \

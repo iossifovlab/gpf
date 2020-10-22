@@ -103,6 +103,8 @@ pipeline {
                 }
                 sh '''
                     tar zxf builds/data-hg19-startup-*.tar.gz -C $WD
+                    
+                    mkdir -p $WD/data-hg19-startup/wdae
 
                     sed -i "s/localhost/impala/" $WD/data-hg19-startup/DAE.conf
                             docker run -d --rm \

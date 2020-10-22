@@ -43,7 +43,7 @@ from dae.person_sets import PersonSetCollection
 from remote.remote_phenotype_data import RemotePhenotypeData
 
 
-LOGGER = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class StudyWrapperBase:
@@ -67,7 +67,7 @@ class StudyWrapperBase:
             self, query, max_variants_count=10000):
         raise NotImplementedError
 
-    def get_genotype_data_group_description(self):
+    def build_genotype_data_group_description(self, gpf_instance):
         raise NotImplementedError
 
 
@@ -304,7 +304,7 @@ class StudyWrapper(StudyWrapperBase):
                 import traceback
                 traceback.print_exc()
                 missing_members.add(member.person_id)
-                LOGGER.error(f"{best_st}, {index}, {member}")
+                logger.error(f"{best_st}, {index}, {member}")
 
         for member in allele.family.full_members:
             if member.generated or member.person_id in missing_members:
@@ -434,7 +434,7 @@ class StudyWrapper(StudyWrapperBase):
     # ultraRareOnly
     # TMM_ALL
     def _transform_kwargs(self, **kwargs):
-        LOGGER.debug(f"kwargs in study group: {kwargs}")
+        logger.debug(f"kwargs in study group: {kwargs}")
         kwargs = self._add_people_with_people_group(kwargs)
 
         if "regions" in kwargs:
@@ -496,7 +496,7 @@ class StudyWrapper(StudyWrapperBase):
         if "studyFilters" in kwargs:
             if kwargs["studyFilters"]:
                 request = set([
-                    sf["studyName"] for sf in kwargs["studyFilters"]
+                    sf["studyId"] for sf in kwargs["studyFilters"]
                 ])
                 study_filters = kwargs.get("study_filters")
                 if study_filters is None:
@@ -526,7 +526,7 @@ class StudyWrapper(StudyWrapperBase):
         limit = None
         if "limit" in kwargs:
             limit = kwargs["limit"]
-        LOGGER.info(f"query filters after translation: {kwargs}")
+        logger.info(f"query filters after translation: {kwargs}")
         variants_from_studies = itertools.islice(
             self.genotype_data_study.query_variants(**kwargs), limit
         )
@@ -539,7 +539,7 @@ class StudyWrapper(StudyWrapperBase):
         if "limit" in kwargs:
             limit = kwargs["limit"]
 
-        LOGGER.info(f"query filters after translation: {kwargs}")
+        logger.info(f"query filters after translation: {kwargs}")
         variants_from_studies = itertools.islice(
             self.genotype_data_study.query_summary_variants(**kwargs), limit
         )
@@ -1113,7 +1113,7 @@ class StudyWrapper(StudyWrapperBase):
 
         return self.present_in_role.get(present_in_role_id, {})
 
-    def get_genotype_data_group_description(self):
+    def build_genotype_data_group_description(self, gpf_instance):
         keys = [
             "id",
             "name",
@@ -1162,6 +1162,20 @@ class StudyWrapper(StudyWrapperBase):
 
         result["enrichment"] = self.config.enrichment.to_dict()
 
+        result["study_names"] = None
+        if result["studies"] is not None:
+            logger.debug(f"found studies in {self.config.id}")
+            studyNames = []
+            for studyId in result["studies"]:
+                wrapper = gpf_instance.get_wdae_wrapper(studyId)
+                name = (
+                    wrapper.config.name
+                    if wrapper.config.name is not None
+                    else wrapper.config.id
+                )
+                studyNames.append(name)
+                result["study_names"] = studyNames
+
         return result
 
     def _get_wdae_member(self, member, person_set_collection, best_st):
@@ -1190,7 +1204,7 @@ class RemoteStudyWrapper(StudyWrapperBase):
         self.study_id = self.rest_client.get_remote_dataset_id(study_id)
         config = self.rest_client.get_dataset_config(self._remote_study_id)
         config["id"] = self.study_id
-        config["name"] = self.study_id
+        config["name"] = f"({rest_client.remote_id}) {config['name']}"
         del config["access_rights"]
         del config["groups"]
         self.config = FrozenBox(config)
@@ -1227,7 +1241,7 @@ class RemoteStudyWrapper(StudyWrapperBase):
     def get_variants_wdae_download(self, query, max_variants_count=10000):
         raise NotImplementedError
 
-    def get_genotype_data_group_description(self):
+    def build_genotype_data_group_description(self, gpf_instance):
         return self.config.to_dict()
 
 
