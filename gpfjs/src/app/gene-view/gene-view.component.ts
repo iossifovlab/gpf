@@ -121,8 +121,17 @@ class GeneViewSummaryVariantsArray {
   }
 }
 
+class GeneViewScaleState {
+  constructor(
+    public xMin: number,
+    public xMax: number,
+    public yMin: number,
+    public yMax: number,
+  ) { }
+}
+
 class GeneViewZoomHistory {
-  private zoomHistory: number[][];
+  private zoomHistory: GeneViewScaleState[];
   private zoomHistoryIndex: number;
 
   constructor() {
@@ -130,17 +139,17 @@ class GeneViewZoomHistory {
     this.zoomHistoryIndex = 0;
   }
 
-  resetToDefaultState(defaultState: number[]) {
+  resetToDefaultState(defaultScale: GeneViewScaleState) {
     this.zoomHistory = [];
     this.zoomHistoryIndex = 0;
-    this.append(defaultState);
+    this.append(defaultScale);
   }
 
-  append(state: number[]) {
+  append(scale: GeneViewScaleState) {
     // If you append and the index is not in the end
     // clean the history after it and start apending new states
     this.zoomHistory = this.zoomHistory.slice(0, this.zoomHistoryIndex + 1);
-    this.zoomHistory.push(state);
+    this.zoomHistory.push(scale);
     this.zoomHistoryIndex++;
   }
 
@@ -690,12 +699,12 @@ export class GeneViewComponent implements OnInit {
   }
 
   setDefaultScale() {
-    const scales = this.calculateDefaultScale();
-    this.x.domain([scales[0], scales[1]]);
-    this.selectedFrequencies = [scales[2], scales[3]];
+    const defaultScale = this.calculateDefaultScale();
+    this.x.domain([defaultScale.xMin, defaultScale.xMax]);
+    this.selectedFrequencies = [defaultScale.yMin, defaultScale.yMax];
   }
 
-  calculateDefaultScale(): number[] {
+  calculateDefaultScale(): GeneViewScaleState {
     let domainBeginning = this.gene.transcripts[0].exons[0].start;
     let domainEnding = this.gene.transcripts[0].exons[this.gene.transcripts[0].exons.length - 1].stop;
 
@@ -714,7 +723,7 @@ export class GeneViewComponent implements OnInit {
       }
     }
 
-    return [domainBeginning, domainEnding, 0, this.frequencyDomainMax];
+    return new GeneViewScaleState(domainBeginning, domainEnding, 0, this.frequencyDomainMax);
   }
 
   resetGeneTableValues(): void {
@@ -784,7 +793,7 @@ export class GeneViewComponent implements OnInit {
         this.x.domain([newXmin, newXmax]);
         this.svgElement.select('.brush').call(this.brush.move, null);
 
-        this.zoomHistory.append([newXmin, newXmax, Math.min(...newFreqLimits), Math.max(...newFreqLimits)]);
+        this.zoomHistory.append(new GeneViewScaleState(newXmin, newXmax, Math.min(...newFreqLimits), Math.max(...newFreqLimits)));
       }
 
       this.selectedFrequencies = [
@@ -809,11 +818,11 @@ export class GeneViewComponent implements OnInit {
     }
   }
 
-  drawFromHistory(state: number[]) {
-    this.x.domain([state[0], state[1]]);
+  drawFromHistory(scale: GeneViewScaleState) {
+    this.x.domain([scale.xMin, scale.xMax]);
     this.selectedFrequencies = [
-      state[2],
-      state[3]
+      scale.yMin,
+      scale.yMax
     ];
 
     this.drawGene();
