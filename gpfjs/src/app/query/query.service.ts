@@ -37,7 +37,7 @@ export class QueryService {
     private router: Router,
     private http: HttpClient,
     private config: ConfigService
-  ) {}
+  ) { }
 
   private parseGenotypePreviewInfoResponse(response: Response): GenotypePreviewInfo {
     const data = response;
@@ -57,7 +57,7 @@ export class QueryService {
   }
 
   getGenotypePreviewInfo(filter: QueryData): Observable<GenotypePreviewInfo> {
-    const options = {headers: this.headers, withCredentials: true};
+    const options = { headers: this.headers, withCredentials: true };
 
     return this.http.post(this.config.baseUrl + this.genotypePreviewUrl, filter, options)
       .map(this.parseGenotypePreviewInfoResponse);
@@ -143,13 +143,13 @@ export class QueryService {
   getGeneViewVariants(filter: QueryData, loadingService?: any) {
     const summaryVariantsArray = new GeneViewSummaryVariantsArray();
     this.summaryStreamPost(this.geneViewVariants, filter).subscribe((variant: string[]) => {
-      summaryVariantsArray.addSummaryVariant(variant)
+      summaryVariantsArray.addSummaryRow(variant)
     });
     return summaryVariantsArray;
   }
 
   saveQuery(queryData: {}, page: string) {
-    const options = {headers: this.headers};
+    const options = { headers: this.headers };
     const data = {
       data: queryData,
       page: page
@@ -161,15 +161,15 @@ export class QueryService {
   }
 
   loadQuery(uuid: string) {
-    const options = {headers: this.headers, withCredentials: true};
+    const options = { headers: this.headers, withCredentials: true };
 
     return this.http
       .post(this.config.baseUrl + this.loadQueryEndpoint, { uuid: uuid }, options)
       .map(response => response);
   }
 
-  deleteQuery(uuid:string) {
-    const options = {headers: this.headers, withCredentials: true};
+  deleteQuery(uuid: string) {
+    const options = { headers: this.headers, withCredentials: true };
 
     return this.http
       .post(this.config.baseUrl + this.deleteQueryEndpoint, { uuid: uuid }, options)
@@ -189,7 +189,7 @@ export class QueryService {
   }
 
   saveUserQuery(uuid: string, query_name: string, query_description: string) {
-    const options = {headers: this.headers, withCredentials: true};
+    const options = { headers: this.headers, withCredentials: true };
 
     const data = {
       query_uuid: uuid,
@@ -203,7 +203,7 @@ export class QueryService {
   }
 
   collectUserSavedQueries() {
-    const options = {withCredentials: true};
+    const options = { withCredentials: true };
     return this.http
       .get(this.config.baseUrl + this.userCollectQueriesEndpoint, options)
       .map(response => response);
