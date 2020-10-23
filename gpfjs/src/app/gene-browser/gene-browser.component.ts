@@ -82,7 +82,6 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
       }];
       this.genotypePreviewVariantsArray =
         this.queryService.getGenotypePreviewVariantsByFilter(requestParams, this.genotypePreviewInfo);
-      console.log(this.genotypePreviewVariantsArray);
     })
   }
 
@@ -113,6 +112,7 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
               _ => {
                   summaryLoadingFinished = true;
                   this.loadingFinished = true; 
+                  this.loadingService.setLoadingStop();
             });
 
             const requestParams = {...state};
@@ -124,11 +124,6 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
             }
 
             this.summaryVariantsArray = this.queryService.getGeneViewVariants(requestParams);
-
-            requestParams['maxVariantsCount'] = 1000;
-
-            this.genotypePreviewVariantsArray =
-              this.queryService.getGenotypePreviewVariantsByFilter(requestParams, this.genotypePreviewInfo);
 
           }, error => {
             console.warn(error);

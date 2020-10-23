@@ -80,6 +80,7 @@ export class QueryService {
     }).node('!.*', data => {
       streamingSubject.next(data);
     }).done(data => {
+      this.connectionEstablished = false;
       this.streamingFinishedSubject.next(true);
       streamingSubject.next(null); // Emit null so the loading service can stop the loading overlay even if no variants were received
     }).fail(error => {
@@ -93,7 +94,8 @@ export class QueryService {
   }
 
   summaryStreamPost(url: string, filter: QueryData) {
-    if (this.connectionEstablished) {
+    if (this.summaryConnectionEstablished) {
+      console.log("Aborted");
       this.oboeInstance.abort();
     }
 
@@ -109,6 +111,7 @@ export class QueryService {
     }).node('!.*', data => {
       streamingSubject.next(data);
     }).done(data => {
+      this.summaryConnectionEstablished = false;
       this.summaryStreamingFinishedSubject.next(true);
       streamingSubject.next(null); // Emit null so the loading service can stop the loading overlay even if no variants were received
     }).fail(error => {
