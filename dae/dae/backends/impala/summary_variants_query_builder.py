@@ -27,9 +27,9 @@ class SummaryVariantsQueryBuilder(BaseQueryBuilder):
             "summary_index": "variants.summary_index",
             "variant_data": "MIN(variants.variant_data)",
             "family_variants_count": "COUNT(DISTINCT variants.family_id)",
-            "seen_in_status": "gpf_or(pedigree.status)",
+            "seen_in_status": "gpf_bit_or(pedigree.status)",
             "seen_in_denovo":
-                "gpf_bit_or(BITAND(inheritance_in_members, 4))",
+                "gpf_or(BITAND(inheritance_in_members, 4))",
             "extra_attributes": "MIN(variants.extra_attributes)"
         }
         columns = [
@@ -37,8 +37,8 @@ class SummaryVariantsQueryBuilder(BaseQueryBuilder):
             "variants.summary_index",
             "MIN(variants.variant_data)",
             "COUNT(DISTINCT variants.family_id)",
-            "gpf_or(pedigree.status)",
-            "gpf_bit_or(BITAND(inheritance_in_members, 4))"
+            "gpf_bit_or(pedigree.status)",
+            "gpf_or(BITAND(inheritance_in_members, 4))"
         ]
         if self.has_extra_attributes:
             columns.append("MIN(variants.extra_attributes)")

@@ -447,11 +447,11 @@ class StudyWrapper(StudyWrapperBase):
                     "variant": a.cshl_variant,
                     "family_variants_count":
                         a.get_attribute("family_variants_count"),
-                    "is_denovo": a.get_attribute("seen_in_denovo") == 4,
+                    "is_denovo": a.get_attribute("seen_in_denovo"),
                     "seen_in_affected":
                         a.get_attribute("seen_in_status") in {2, 3},
                     "seen_in_unaffected":
-                        a.get_attribute("seen_in_status") in {1, 3}
+                        a.get_attribute("seen_in_status") in {1, 3},
                 }
 
     # Not implemented:
