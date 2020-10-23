@@ -1,6 +1,6 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { GeneService } from 'app/gene-view/gene.service';
-import { Gene, GeneViewSummaryVariantsArray } from 'app/gene-view/gene';
+import { Gene, GeneViewSummaryVariantsArray, DomainRange } from 'app/gene-view/gene';
 import { GenotypePreviewVariantsArray, GenotypePreviewInfo } from 'app/genotype-preview-model/genotype-preview';
 import { QueryService } from 'app/query/query.service';
 import { Observable } from 'rxjs';
@@ -25,7 +25,6 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
   geneSymbol = 'CHD8';
   genotypePreviewVariantsArray: GenotypePreviewVariantsArray;
   summaryVariantsArray: GeneViewSummaryVariantsArray;
-  shownTablePreviewVariantsArray: GeneViewSummaryVariantsArray;
   selectedDataset$: Observable<Dataset>;
   selectedDatasetId: string;
   genotypePreviewInfo: GenotypePreviewInfo;
@@ -35,6 +34,7 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
     'No-frame-shift-newStop', 'Missense',
     'No-frame-shift', 'noStart', 'noEnd', 'Synonymous'
   ];
+  private geneBrowserConfig;
 
   enableCodingOnly: boolean;
   private genotypeBrowserState: Object;
@@ -52,6 +52,9 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
 
   ngOnInit() {
     this.selectedDataset$ = this.datasetsService.getSelectedDataset();
+    this.datasetsService.getSelectedDataset().subscribe(dataset => {
+      this.geneBrowserConfig = dataset.geneBrowser;
+    });
 
     this.route.parent.params.subscribe(
       (params: Params) => {
@@ -68,13 +71,22 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
     });
   }
 
-  updateShownTablePreviewVariantsArray($event: GeneViewSummaryVariantsArray) {
-    this.shownTablePreviewVariantsArray = $event;
+  updateShownTablePreviewVariantsArray($event: DomainRange) {
+    this.getCurrentState().subscribe(state => {
+      const requestParams = {...state};
+      requestParams["maxVariantsCount"] = 10000;
+      requestParams["genomicScores"] = {
+        "metric": this.geneBrowserConfig.frequencyColumn,
+        "rangeStart": $event.start,
+        "rangeEnd": $event.end
+      }
+      this.genotypePreviewVariantsArray =
+        this.queryService.getGenotypePreviewVariantsByFilter(requestParams, this.genotypePreviewInfo);
+      console.log(this.genotypePreviewVariantsArray);
+    })
   }
 
   submitGeneRequest() {
-    this.updateShownTablePreviewVariantsArray(new GeneViewSummaryVariantsArray());
-
     this.getCurrentState()
       .subscribe(state => {
         this.geneSymbol = state["geneSymbols"][0];
@@ -86,7 +98,6 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
         this.genotypePreviewInfo = null;
         this.loadingFinished = false;
         this.loadingService.setLoadingStart();
-        this.queryService.summaryStreamPost
         this.queryService.getGenotypePreviewInfo(
           { datasetId: this.selectedDatasetId, peopleGroup: state["peopleGroup"] }
         ).subscribe(

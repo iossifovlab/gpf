@@ -5,7 +5,6 @@ export class Exon {
     private _start: number,
     private _stop: number
   ) { }
-
   get start() {
     return this._start;
   }
@@ -262,4 +261,14 @@ export class GeneViewSummaryVariantsArray {
       this.summaryVariants.push(summaryVariant);
   }
 
+}
+
+export class DomainRange {
+    start: Number;
+    end: Number;
+
+    constructor(start: Number, end: Number) {
+        this.start = start;
+        this.end = end;
+    }
 }

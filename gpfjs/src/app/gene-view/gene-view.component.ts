@@ -1,6 +1,6 @@
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import * as d3 from 'd3';
-import { Gene, GeneViewSummaryVariantsArray, GeneViewSummaryVariant } from 'app/gene-view/gene';
+import { Gene, GeneViewSummaryVariantsArray, GeneViewSummaryVariant, DomainRange } from 'app/gene-view/gene';
 import { GenotypePreviewVariantsArray, GenotypePreview } from 'app/genotype-preview-model/genotype-preview';
 import { Subject } from 'rxjs';
 import { DatasetsService } from 'app/datasets/datasets.service';
@@ -317,7 +317,7 @@ export class GeneViewComponent implements OnInit {
   @Input() gene: Gene;
   @Input() variantsArray: GeneViewSummaryVariantsArray;
   @Input() streamingFinished$: Subject<boolean>;
-  @Output() updateShownTablePreviewVariantsArrayEvent = new EventEmitter<GeneViewSummaryVariantsArray>();
+  @Output() updateShownTablePreviewVariantsArrayEvent = new EventEmitter<DomainRange>();
 
   geneBrowserConfig;
   frequencyDomainMin: number;
@@ -621,40 +621,6 @@ export class GeneViewComponent implements OnInit {
     return result;
   }
 
-  filterTablePreviewVariantsArray(
-    variantsArray: GeneViewSummaryVariantsArray, startPos: number, endPos: number
-  ): GeneViewSummaryVariantsArray {
-    const result = new GeneViewSummaryVariantsArray();
-    let location: string;
-    let position: number;
-    let frequency: number;
-    for (const summaryVariant of variantsArray.summaryVariants) {
-      location = summaryVariant.location;
-      position = summaryVariant.position;
-      frequency = summaryVariant.frequency;
-      console.log(position);
-      console.log(frequency);
-      console.log(location);
-      if (
-        (!this.isVariantEffectSelected(summaryVariant.effect)) ||
-        (!this.showDenovo && summaryVariant.seenAsDenovo) ||
-        (!this.showTransmitted && !summaryVariant.seenAsDenovo) ||
-        (!summaryVariant.seenInAffected)
-      ) {
-        console.log("Skip");
-        continue;
-      } else if (position >= startPos && position <= endPos) {
-        console.log("Pass");
-        if (this.frequencyIsSelected(frequency)) {
-          console.log("Add");
-          result.addSummaryVariant(summaryVariant);
-        }
-      }
-    }
-    console.log(result);
-    return result;
-  }
-
   getPedigreeAffectedStatus(pedigreeData): string {
     let result: string;
     let isInAffected = false;
@@ -684,10 +650,8 @@ export class GeneViewComponent implements OnInit {
   updateFamilyVariantsTable() {
     const minDomain = this.x.domain()[0];
     const maxDomain = this.x.domain()[this.x.domain().length - 1];
-    const filteredVariants = this.filterTablePreviewVariantsArray(
-      this.variantsArray, minDomain, maxDomain
-    );
-    this.updateShownTablePreviewVariantsArrayEvent.emit(filteredVariants);
+    const domains = new DomainRange(minDomain, maxDomain);
+    this.updateShownTablePreviewVariantsArrayEvent.emit(domains);
   }
 
   // get x() {
