@@ -251,24 +251,27 @@ export class GeneViewSummaryVariant {
 export class GeneViewSummaryVariantsArray {
   summaryVariants: GeneViewSummaryVariant[] = [];
 
-  constructor() {}
+  constructor() { }
 
-  addSummaryVariant(variant: any) {
-      if(!variant) {
-        return
-      }
-      const summaryVariant = GeneViewSummaryVariant.fromRow(variant);
-      this.summaryVariants.push(summaryVariant);
+  addSummaryRow(variant: any) {
+    if (!variant) {
+      return
+    }
+    const summaryVariant = GeneViewSummaryVariant.fromRow(variant);
+    this.summaryVariants.push(summaryVariant);
   }
 
+  push(variant: GeneViewSummaryVariant) {
+    this.summaryVariants.push(variant);
+  }
 }
 
 export class DomainRange {
-    start: Number;
-    end: Number;
+  start: Number;
+  end: Number;
 
-    constructor(start: Number, end: Number) {
-        this.start = start;
-        this.end = end;
-    }
+  constructor(start: Number, end: Number) {
+    this.start = start;
+    this.end = end;
+  }
 }

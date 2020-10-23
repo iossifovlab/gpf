@@ -311,7 +311,7 @@ class GeneViewZoomHistory {
   selector: 'gpf-gene-view',
   templateUrl: './gene-view.component.html',
   styleUrls: ['./gene-view.component.css'],
-  host: {'(document:keydown)': 'handleKeyboardEvent($event)'}
+  host: { '(document:keydown)': 'handleKeyboardEvent($event)' }
 })
 export class GeneViewComponent implements OnInit {
   @Input() gene: Gene;
@@ -614,7 +614,7 @@ export class GeneViewComponent implements OnInit {
         continue;
       } else if (summaryVariant.position >= startPos && summaryVariant.position <= endPos) {
         if (this.frequencyIsSelected(summaryVariant.frequency)) {
-          result.addSummaryVariant(summaryVariant);
+          result.push(summaryVariant);
         }
       }
     }
@@ -757,50 +757,50 @@ export class GeneViewComponent implements OnInit {
 
   drawStar(x: number, y: number, color: string) {
     this.svgElement.append('svg')
-    .attr('x', x - 8.5)
-    .attr('y', y - 8.5)
-    .append('g')
-    .append('path')
-    .attr('d', 'M12 .587l3.668 7.568 8.332 1.151-6.064 5.828 1.48 8.279-7.416-3.967-7.417 3.967 1.481-8.279-6.064-5.828 8.332-1.151z')
-    .attr('transform', 'scale(0.7)')
-    .attr('fill', color)
-    .attr('fill-opacity', '0.6')
-    .style('stroke-width', 1)
-    .style('stroke', color);
+      .attr('x', x - 8.5)
+      .attr('y', y - 8.5)
+      .append('g')
+      .append('path')
+      .attr('d', 'M12 .587l3.668 7.568 8.332 1.151-6.064 5.828 1.48 8.279-7.416-3.967-7.417 3.967 1.481-8.279-6.064-5.828 8.332-1.151z')
+      .attr('transform', 'scale(0.7)')
+      .attr('fill', color)
+      .attr('fill-opacity', '0.6')
+      .style('stroke-width', 1)
+      .style('stroke', color);
   }
 
   drawTriangle(x: number, y: number, color: string) {
     this.svgElement.append('g')
-     .append('polygon')
-     .attr('points', this.getTrianglePoints(x, y, 14))
-     .style('fill', color)
-     .attr('fill-opacity', '0.6')
-     .style('stroke-width', 1)
-     .style('stroke', color);
-   }
+      .append('polygon')
+      .attr('points', this.getTrianglePoints(x, y, 14))
+      .style('fill', color)
+      .attr('fill-opacity', '0.6')
+      .style('stroke-width', 1)
+      .style('stroke', color);
+  }
 
   drawCircle(x: number, y: number, color: string) {
     this.svgElement.append('g')
-    .append('circle')
-    .attr('cx', x)
-    .attr('cy', y)
-    .attr('r', 7)
-    .style('fill', color)
-    .attr('fill-opacity', '0.6')
-    .style('stroke-width', 1)
-    .style('stroke', color);
+      .append('circle')
+      .attr('cx', x)
+      .attr('cy', y)
+      .attr('r', 7)
+      .style('fill', color)
+      .attr('fill-opacity', '0.6')
+      .style('stroke-width', 1)
+      .style('stroke', color);
   }
 
   drawDot(x: number, y: number, color: string) {
     this.svgElement.append('g')
-    .append('circle')
-    .attr('cx', x)
-    .attr('cy', y)
-    .attr('r', 3)
-    .style('fill', color)
-    .attr('fill-opacity', '0.6')
-    .style('stroke-width', 1)
-    .style('stroke', color);
+      .append('circle')
+      .attr('cx', x)
+      .attr('cy', y)
+      .attr('r', 3)
+      .style('fill', color)
+      .attr('fill-opacity', '0.6')
+      .style('stroke-width', 1)
+      .style('stroke', color);
   }
 
   getVariantY(variantFrequency): number {
