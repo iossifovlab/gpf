@@ -101,7 +101,6 @@ class SummaryVariantsQueryBuilder(BaseQueryBuilder):
             bucket_index = cols[self.select_accessors["bucket_index"]]
             summary_index = cols[self.select_accessors["summary_index"]]
             variant_data = cols[self.select_accessors["variant_data"]]
-            print(row)
             family_variants_count = cols[
                 self.select_accessors["family_variants_count"]]
             seen_in_status = cols[self.select_accessors["seen_in_status"]]
