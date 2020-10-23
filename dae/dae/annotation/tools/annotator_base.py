@@ -277,7 +277,6 @@ class VariantAnnotatorBase(AnnotatorBase):
     def annotate_summary_variant(self, summary_variant):
         for alt_allele in summary_variant.alt_alleles:
             attributes = deepcopy(alt_allele.attributes)
-            logger.debug(f"variant attributes: {attributes}")
             self.variant_builder.fill_variant_coordinates(
                 attributes, alt_allele)
             if VariantType.is_cnv(alt_allele.variant_type):
@@ -287,6 +286,7 @@ class VariantAnnotatorBase(AnnotatorBase):
             # logger.debug(
             #     f"annotate_summary_variant calls do_annotate({variant})")
             self.do_annotate(attributes, variant)
+            logger.debug(f"variant attributes: {attributes}")
 
             alt_allele.update_attributes(attributes)
 

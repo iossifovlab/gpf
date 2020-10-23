@@ -34,6 +34,7 @@ annotation_section_schema = {
             "a": {"type": "string", "required": False},
             "v": {"type": "string", "required": False},
             "x": {"type": "string", "required": False},
+            "s": {"type": "string", "required": False},
         },
     },
     "columns": {

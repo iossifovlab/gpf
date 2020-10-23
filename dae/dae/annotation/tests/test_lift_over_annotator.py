@@ -9,14 +9,14 @@ from .conftest import relative_to_this_test_folder
 @pytest.mark.parametrize(
     "chrom,pos,lift_over,expected",
     [
-        ("chr1", 10000, lambda c, p: [(c, p + 1000)], "chr1:11000"),
+        ("chr1", 10000, lambda c, p, s: [(c, p + 1000, s)], "chr1:11000"),
         (
             "chr1",
             10000,
-            lambda c, p: [(c, p + 1000), (c, p + 2000)],
+            lambda c, p, s: [(c, p + 1000, s), (c, p + 2000, s)],
             "chr1:11000",
         ),
-        ("chr1", 10000, lambda c, p: [], None),
+        ("chr1", 10000, lambda c, p, s: [], None),
     ],
 )
 def test_lift_over(mocker, chrom, pos, lift_over, expected, genomes_db_2013):
@@ -66,13 +66,13 @@ def test_lift_over(mocker, chrom, pos, lift_over, expected, genomes_db_2013):
 @pytest.mark.parametrize(
     "location,lift_over,expected_location",
     [
-        ("chr1:20000", lambda c, p: [(c, p + 2000)], "chr1:22000"),
+        ("chr1:20000", lambda c, p, s: [(c, p + 2000, s)], "chr1:22000"),
         (
             "chr1:20000",
-            lambda c, p: [(c, p + 2000), (c, p + 3000)],
+            lambda c, p, s: [(c, p + 2000, s), (c, p + 3000, s)],
             "chr1:22000",
         ),
-        ("chr1:20000", lambda c, p: [], None),
+        ("chr1:20000", lambda c, p, s: [], None),
     ],
 )
 def test_pipeline_with_liftover(

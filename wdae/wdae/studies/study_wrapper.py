@@ -428,6 +428,32 @@ class StudyWrapper(StudyWrapperBase):
 
         return wdae_download
 
+    def get_gene_view_summary_variants(self, frequency_column, **kwargs):
+        kwargs = self._transform_kwargs(**kwargs)
+        limit = None
+        if "limit" in kwargs:
+            limit = kwargs["limit"]
+        variants_from_studies = itertools.islice(
+            self.genotype_data_study.query_summary_variants(**kwargs), limit
+        )
+        for v in variants_from_studies:
+            for a in v.alt_alleles:
+                yield {
+                    "location": a.cshl_location,
+                    "position": a.position,
+                    "chrom": a.chrom,
+                    "frequency": a.get_attribute(frequency_column),
+                    "effect": gene_effect_get_worst_effect(a.effect),
+                    "variant": a.cshl_variant,
+                    "family_variants_count":
+                        a.get_attribute("family_variants_count"),
+                    "is_denovo": a.get_attribute("seen_in_denovo"),
+                    "seen_in_affected":
+                        a.get_attribute("seen_in_status") in {2, 3},
+                    "seen_in_unaffected":
+                        a.get_attribute("seen_in_status") in {1, 3},
+                }
+
     # Not implemented:
     # callSet
     # minParentsCalled
