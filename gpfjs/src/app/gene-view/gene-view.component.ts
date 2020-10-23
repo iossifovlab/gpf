@@ -648,9 +648,10 @@ export class GeneViewComponent implements OnInit {
   }
 
   updateFamilyVariantsTable() {
-    const minDomain = this.x.domain()[0];
-    const maxDomain = this.x.domain()[this.x.domain().length - 1];
-    const domains = new DomainRange(minDomain, maxDomain);
+    const currentState = this.zoomHistory.getState();
+    const start = currentState.yMin;
+    const end = currentState.yMax;
+    const domains = new DomainRange(start, end);
     this.updateShownTablePreviewVariantsArrayEvent.emit(domains);
   }
 
