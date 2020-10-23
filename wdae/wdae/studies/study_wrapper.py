@@ -437,7 +437,6 @@ class StudyWrapper(StudyWrapperBase):
             self.genotype_data_study.query_summary_variants(**kwargs), limit
         )
         for v in variants_from_studies:
-            print(v)
             for a in v.alt_alleles:
                 yield {
                     "location": a.cshl_location,
@@ -449,9 +448,10 @@ class StudyWrapper(StudyWrapperBase):
                     "family_variants_count":
                         a.get_attribute("family_variants_count"),
                     "is_denovo": a.get_attribute("seen_in_denovo") == 4,
-                    "seen_in_affected": a.get_attribute("seen_in_status"),
+                    "seen_in_affected":
+                        a.get_attribute("seen_in_status") in {2, 3},
                     "seen_in_unaffected":
-                        not a.get_attribute("seen_in_status")
+                        a.get_attribute("seen_in_status") in {1, 3}
                 }
 
     # Not implemented:
