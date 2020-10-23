@@ -17,11 +17,11 @@
       </gpf-family-filters-block>
 
       <div class="form-block">
-    	  <form
-    	      (ngSubmit)="onSubmit($event)"
+        <form
+            (ngSubmit)="onSubmit($event)"
             action="{{ configService.baseUrl }}genotype_browser/download" method="post">
-    	    <input name="queryData" type="hidden">
-    	    <button class="btn btn-md btn-primary btn-right" id="download-button" [disabled]="disableQueryButtons" type="submit">Download</button>
+          <input name="queryData" type="hidden">
+          <button class="btn btn-md btn-primary btn-right" id="download-button" [disabled]="disableQueryButtons" type="submit">Download</button>
         </form>
         <div class="button">
           <input type="button" [disabled]="disableQueryButtons" class="btn btn-md btn-primary" id="table-preview-button" value="Table Preview" (click)="tablePreview = true; submitQuery()">
@@ -35,19 +35,16 @@
       </div>
     </div>
     <div class="genotype-browser-results" *ngIf="genotypePreviewVariantsArray">
-      
-      <p class="overview">
-        <span *ngIf="!loadingFinished">
-          <span class="loader"></span>
-          Loading variants...
-        </span>
-        <span *ngIf="loadingFinished" id="variants-count-span">
-          {{ genotypePreviewVariantsArray.getVariantsCount(genotypePreviewInfo.maxVariantsCount) }}
-        </span>
-      </p>
+
+      <hr>
+      <gpf-loading-spinner
+        [loadingFinished]="loadingFinished"
+        [count]="genotypePreviewVariantsArray.getVariantsCount(genotypePreviewInfo.maxVariantsCount)"
+        [displayText]="'Loading variants...'">
+      </gpf-loading-spinner>
 
       <gpf-genotype-preview-table
-      	*ngIf="tablePreview"
+        *ngIf="tablePreview"
         [columns]="dataset?.genotypeBrowserConfig?.columns"
         [genotypePreviewInfo]="genotypePreviewInfo"
         [genotypePreviewVariantsArray]="genotypePreviewVariantsArray">

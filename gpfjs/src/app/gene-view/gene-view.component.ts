@@ -1,6 +1,6 @@
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import * as d3 from 'd3';
-import { Gene } from 'app/gene-view/gene';
+import { Gene, GeneViewSummaryVariantsArray, GeneViewSummaryVariant, DomainRange } from 'app/gene-view/gene';
 import { GenotypePreviewVariantsArray, GenotypePreview } from 'app/genotype-preview-model/genotype-preview';
 import { Subject } from 'rxjs';
 import { DatasetsService } from 'app/datasets/datasets.service';
@@ -8,118 +8,6 @@ import { Transcript, Exon } from 'app/gene-view/gene';
 import { FullscreenLoadingService } from 'app/fullscreen-loading/fullscreen-loading.service';
 
 
-class GeneViewSummaryVariant {
-  location: string;
-  position: number;
-  chrom: string;
-  variant: string;
-  effect: string;
-  frequency: number;
-  numberOfFamilyVariants: number;
-  seenAsDenovo: boolean;
-
-  seenInAffected: boolean;
-  seenInUnaffected: boolean;
-  svuid: string;
-
-  lgds = ['nonsense', 'splice-site', 'frame-shift', 'no-frame-shift-new-stop'];
-
-  static fromPreviewVariant(config, genotypePreview: GenotypePreview): GeneViewSummaryVariant {
-    const result = new GeneViewSummaryVariant();
-    const location = genotypePreview.get(config.locationColumn);
-    result.location = location;
-    result.position = Number(location.slice(location.indexOf(':') + 1));
-    result.chrom = location.slice(0, location.indexOf(':'));
-
-    let frequency: string = genotypePreview.data.get(config.frequencyColumn);
-    if (frequency === '-') {
-      frequency = '0.0';
-    }
-    result.frequency = Number(frequency);
-
-    result.effect = genotypePreview.get(config.effectColumn).toLowerCase();
-    result.variant = genotypePreview.get('variant.variant');
-
-    result.numberOfFamilyVariants = 1;
-
-    result.seenAsDenovo = false;
-    if (genotypePreview.get('variant.is denovo')) {
-      result.seenAsDenovo = true;
-    }
-    result.seenInAffected = false;
-    result.seenInUnaffected = false;
-    for (const pedigreeData of genotypePreview.get('genotype')) {
-      if (pedigreeData.label > 0) {
-        if (pedigreeData.color === '#ffffff') {
-          result.seenInUnaffected = true;
-        } else {
-          result.seenInAffected = true;
-        }
-      }
-    }
-
-    result.svuid = result.location + ':' + result.variant;
-
-    return result;
-  }
-
-  isLGDs(): boolean {
-    if (this.lgds.indexOf(this.effect) !== -1 || this.effect === 'lgds') {
-      return true;
-    }
-    return false;
-  }
-
-  isMissense(): boolean {
-    if (this.effect === 'missense') {
-      return true;
-    }
-    return false;
-  }
-
-  isSynonymous(): boolean {
-    if (this.effect === 'synonymous') {
-      return true;
-    }
-    return false;
-  }
-}
-
-class GeneViewSummaryVariantsArray {
-  summaryVariants: GeneViewSummaryVariant[] = [];
-
-  constructor(summaryVariants: IterableIterator<GeneViewSummaryVariant>) {
-    for (const summaryVariant of summaryVariants) {
-      this.summaryVariants.push(summaryVariant);
-    }
-  }
-
-  static fromPreviewVariantsArray(config, previewVariants: GenotypePreviewVariantsArray): GeneViewSummaryVariantsArray {
-    const summaryVariants: Map<string, GeneViewSummaryVariant> = new Map();
-
-    for (const genotypePreview of previewVariants.genotypePreviews) {
-      const summaryVariant = GeneViewSummaryVariant.fromPreviewVariant(config, genotypePreview);
-      const svuid = summaryVariant.svuid;
-
-      if (!summaryVariants.has(svuid)) {
-        summaryVariants.set(svuid, summaryVariant);
-      } else {
-        const mergeSummaryVariant = summaryVariants.get(svuid);
-        mergeSummaryVariant.numberOfFamilyVariants += 1;
-        if (summaryVariant.seenAsDenovo) {
-          mergeSummaryVariant.seenAsDenovo = true;
-        }
-        if (summaryVariant.seenInAffected) {
-          mergeSummaryVariant.seenInAffected = true;
-        }
-        if (summaryVariant.seenInUnaffected) {
-          mergeSummaryVariant.seenInUnaffected = true;
-        }
-      }
-    }
-    return new GeneViewSummaryVariantsArray(summaryVariants.values());
-  }
-}
 
 class GeneViewTranscriptSegment {
 
@@ -423,13 +311,13 @@ class GeneViewZoomHistory {
   selector: 'gpf-gene-view',
   templateUrl: './gene-view.component.html',
   styleUrls: ['./gene-view.component.css'],
-  host: {'(document:keydown)': 'handleKeyboardEvent($event)'}
+  host: { '(document:keydown)': 'handleKeyboardEvent($event)' }
 })
 export class GeneViewComponent implements OnInit {
   @Input() gene: Gene;
-  @Input() variantsArray: GenotypePreviewVariantsArray;
+  @Input() variantsArray: GeneViewSummaryVariantsArray;
   @Input() streamingFinished$: Subject<boolean>;
-  @Output() updateShownTablePreviewVariantsArrayEvent = new EventEmitter<GenotypePreviewVariantsArray>();
+  @Output() updateShownTablePreviewVariantsArrayEvent = new EventEmitter<DomainRange>();
 
   geneBrowserConfig;
   frequencyDomainMin: number;
@@ -522,10 +410,7 @@ export class GeneViewComponent implements OnInit {
     });
 
     this.streamingFinished$.subscribe(() => {
-      this.summaryVariantsArray = GeneViewSummaryVariantsArray.fromPreviewVariantsArray(
-        this.geneBrowserConfig,
-        this.variantsArray
-      );
+      this.summaryVariantsArray = this.variantsArray;
 
       this.condenseIntrons = false;
       this.setDefaultScale();
@@ -718,7 +603,7 @@ export class GeneViewComponent implements OnInit {
   filterSummaryVariantsArray(
     summaryVariantsArray: GeneViewSummaryVariantsArray, startPos: number, endPos: number
   ): GeneViewSummaryVariantsArray {
-    const filteredVariants: GeneViewSummaryVariant[] = [];
+    const result = new GeneViewSummaryVariantsArray();
     for (const summaryVariant of summaryVariantsArray.summaryVariants) {
       if (
         (!this.isVariantEffectSelected(summaryVariant.effect)) ||
@@ -729,43 +614,10 @@ export class GeneViewComponent implements OnInit {
         continue;
       } else if (summaryVariant.position >= startPos && summaryVariant.position <= endPos) {
         if (this.frequencyIsSelected(summaryVariant.frequency)) {
-          filteredVariants.push(summaryVariant);
+          result.push(summaryVariant);
         }
       }
     }
-    return new GeneViewSummaryVariantsArray(filteredVariants.values());
-  }
-
-  filterTablePreviewVariantsArray(
-    variantsArray: GenotypePreviewVariantsArray, startPos: number, endPos: number
-  ): GenotypePreviewVariantsArray {
-    const filteredVariants = [];
-    const result = new GenotypePreviewVariantsArray();
-    let location: string;
-    let position: number;
-    let frequency: string;
-    for (const genotypePreview of variantsArray.genotypePreviews) {
-      const data = genotypePreview.data;
-      location = data.get(this.geneBrowserConfig.locationColumn);
-      position = Number(location.slice(location.indexOf(':') + 1));
-      frequency = data.get(this.geneBrowserConfig.frequencyColumn);
-      if (
-        (!this.isVariantEffectSelected(data.get(this.geneBrowserConfig.effectColumn))) ||
-        (!this.showDenovo && data.get('variant.is denovo')) ||
-        (!this.showTransmitted && !data.get('variant.is denovo')) ||
-        (!this.isAffectedStatusSelected(this.getPedigreeAffectedStatus(data.get('genotype'))))
-      ) {
-        continue;
-      } else if (position >= startPos && position <= endPos) {
-        if (frequency === '-') {
-          frequency = '0.0';
-        }
-        if (this.frequencyIsSelected(Number(frequency))) {
-          filteredVariants.push(genotypePreview);
-        }
-      }
-    }
-    result.setGenotypePreviews(filteredVariants);
     return result;
   }
 
@@ -796,12 +648,11 @@ export class GeneViewComponent implements OnInit {
   }
 
   updateFamilyVariantsTable() {
-    const minDomain = this.x.domain()[0];
-    const maxDomain = this.x.domain()[this.x.domain().length - 1];
-    const filteredVariants = this.filterTablePreviewVariantsArray(
-      this.variantsArray, minDomain, maxDomain
-    );
-    this.updateShownTablePreviewVariantsArrayEvent.emit(filteredVariants);
+    const currentState = this.zoomHistory.getState();
+    const start = currentState.yMin;
+    const end = currentState.yMax;
+    const domains = new DomainRange(start, end);
+    this.updateShownTablePreviewVariantsArrayEvent.emit(domains);
   }
 
   // get x() {
@@ -906,50 +757,50 @@ export class GeneViewComponent implements OnInit {
 
   drawStar(x: number, y: number, color: string) {
     this.svgElement.append('svg')
-    .attr('x', x - 8.5)
-    .attr('y', y - 8.5)
-    .append('g')
-    .append('path')
-    .attr('d', 'M12 .587l3.668 7.568 8.332 1.151-6.064 5.828 1.48 8.279-7.416-3.967-7.417 3.967 1.481-8.279-6.064-5.828 8.332-1.151z')
-    .attr('transform', 'scale(0.7)')
-    .attr('fill', color)
-    .attr('fill-opacity', '0.6')
-    .style('stroke-width', 1)
-    .style('stroke', color);
+      .attr('x', x - 8.5)
+      .attr('y', y - 8.5)
+      .append('g')
+      .append('path')
+      .attr('d', 'M12 .587l3.668 7.568 8.332 1.151-6.064 5.828 1.48 8.279-7.416-3.967-7.417 3.967 1.481-8.279-6.064-5.828 8.332-1.151z')
+      .attr('transform', 'scale(0.7)')
+      .attr('fill', color)
+      .attr('fill-opacity', '0.6')
+      .style('stroke-width', 1)
+      .style('stroke', color);
   }
 
   drawTriangle(x: number, y: number, color: string) {
     this.svgElement.append('g')
-     .append('polygon')
-     .attr('points', this.getTrianglePoints(x, y, 14))
-     .style('fill', color)
-     .attr('fill-opacity', '0.6')
-     .style('stroke-width', 1)
-     .style('stroke', color);
-   }
+      .append('polygon')
+      .attr('points', this.getTrianglePoints(x, y, 14))
+      .style('fill', color)
+      .attr('fill-opacity', '0.6')
+      .style('stroke-width', 1)
+      .style('stroke', color);
+  }
 
   drawCircle(x: number, y: number, color: string) {
     this.svgElement.append('g')
-    .append('circle')
-    .attr('cx', x)
-    .attr('cy', y)
-    .attr('r', 7)
-    .style('fill', color)
-    .attr('fill-opacity', '0.6')
-    .style('stroke-width', 1)
-    .style('stroke', color);
+      .append('circle')
+      .attr('cx', x)
+      .attr('cy', y)
+      .attr('r', 7)
+      .style('fill', color)
+      .attr('fill-opacity', '0.6')
+      .style('stroke-width', 1)
+      .style('stroke', color);
   }
 
   drawDot(x: number, y: number, color: string) {
     this.svgElement.append('g')
-    .append('circle')
-    .attr('cx', x)
-    .attr('cy', y)
-    .attr('r', 3)
-    .style('fill', color)
-    .attr('fill-opacity', '0.6')
-    .style('stroke-width', 1)
-    .style('stroke', color);
+      .append('circle')
+      .attr('cx', x)
+      .attr('cy', y)
+      .attr('r', 3)
+      .style('fill', color)
+      .attr('fill-opacity', '0.6')
+      .style('stroke-width', 1)
+      .style('stroke', color);
   }
 
   getVariantY(variantFrequency): number {

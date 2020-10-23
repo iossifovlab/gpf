@@ -18,16 +18,21 @@
 
       <gpf-gene-view
           [gene]="selectedGene"
-          [variantsArray]="genotypePreviewVariantsArray"
+          [variantsArray]="summaryVariantsArray"
           (updateShownTablePreviewVariantsArrayEvent)="updateShownTablePreviewVariantsArray($event)"
-          [streamingFinished$]="queryService.streamingFinishedSubject">
-      >
+          [streamingFinished$]="queryService.summaryStreamingFinishedSubject">
       </gpf-gene-view>
+
+      <gpf-loading-spinner
+        [loadingFinished]="familyLoadingFinished"
+        [count]="getFamilyVariantCounts()"
+        [displayText]="'Loading variants...'">
+      </gpf-loading-spinner>
 
       <gpf-genotype-preview-table
           [columns]="dataset?.genotypeBrowserConfig?.columns"
           [genotypePreviewInfo]="genotypePreviewInfo"
-          [genotypePreviewVariantsArray]="shownTablePreviewVariantsArray">
+          [genotypePreviewVariantsArray]="genotypePreviewVariantsArray">
       </gpf-genotype-preview-table>
   </div>
 </div>

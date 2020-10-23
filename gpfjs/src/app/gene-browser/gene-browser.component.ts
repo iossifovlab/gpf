@@ -1,6 +1,6 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { GeneService } from 'app/gene-view/gene.service';
-import { Gene } from 'app/gene-view/gene';
+import { Gene, GeneViewSummaryVariantsArray, DomainRange } from 'app/gene-view/gene';
 import { GenotypePreviewVariantsArray, GenotypePreviewInfo } from 'app/genotype-preview-model/genotype-preview';
 import { QueryService } from 'app/query/query.service';
 import { Observable } from 'rxjs';
@@ -24,16 +24,18 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
   selectedGene: Gene;
   geneSymbol = 'CHD8';
   genotypePreviewVariantsArray: GenotypePreviewVariantsArray;
-  shownTablePreviewVariantsArray: GenotypePreviewVariantsArray;
+  summaryVariantsArray: GeneViewSummaryVariantsArray;
   selectedDataset$: Observable<Dataset>;
   selectedDatasetId: string;
   genotypePreviewInfo: GenotypePreviewInfo;
   loadingFinished: boolean;
+  familyLoadingFinished: boolean;
   codingEffectTypes = [
     'Nonsense', 'Frame-shift', 'Splice-site',
     'No-frame-shift-newStop', 'Missense',
     'No-frame-shift', 'noStart', 'noEnd', 'Synonymous'
   ];
+  private geneBrowserConfig;
 
   enableCodingOnly: boolean;
   private genotypeBrowserState: Object;
@@ -51,6 +53,9 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
 
   ngOnInit() {
     this.selectedDataset$ = this.datasetsService.getSelectedDataset();
+    this.datasetsService.getSelectedDataset().subscribe(dataset => {
+      this.geneBrowserConfig = dataset.geneBrowser;
+    });
 
     this.route.parent.params.subscribe(
       (params: Params) => {
@@ -67,13 +72,22 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
     });
   }
 
-  updateShownTablePreviewVariantsArray($event: GenotypePreviewVariantsArray) {
-    this.shownTablePreviewVariantsArray = $event;
+  updateShownTablePreviewVariantsArray($event: DomainRange) {
+    this.familyLoadingFinished = false;
+    this.getCurrentState().subscribe(state => {
+      const requestParams = {...state};
+      requestParams["maxVariantsCount"] = 1000;
+      requestParams["genomicScores"] = [{
+        "metric": this.geneBrowserConfig.frequencyColumn,
+        "rangeStart": $event.start,
+        "rangeEnd": $event.end
+      }];
+      this.genotypePreviewVariantsArray =
+        this.queryService.getGenotypePreviewVariantsByFilter(requestParams, this.genotypePreviewInfo);
+    })
   }
 
   submitGeneRequest() {
-    this.updateShownTablePreviewVariantsArray(new GenotypePreviewVariantsArray());
-
     this.getCurrentState()
       .subscribe(state => {
         this.geneSymbol = state["geneSymbols"][0];
@@ -93,20 +107,26 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
             this.genotypePreviewVariantsArray = null;
 
             this.genotypeBrowserState = state;
+            let summaryLoadingFinished = false;
 
-            this.queryService.streamingFinishedSubject.subscribe(
-              _ => { this.loadingFinished = true; }
-            );
+            this.queryService.summaryStreamingFinishedSubject.subscribe(
+              _ => {
+                  summaryLoadingFinished = true;
+                  this.loadingFinished = true; 
+                  this.loadingService.setLoadingStop();
+            });
+
+            this.queryService.streamingFinishedSubject.subscribe (() => {this.familyLoadingFinished = true})
 
             const requestParams = {...state};
             requestParams['maxVariantsCount'] = 10000;
+
 
             if (this.enableCodingOnly) {
               requestParams['effectTypes'] = this.codingEffectTypes;
             }
 
-            this.genotypePreviewVariantsArray =
-              this.queryService.getGenotypePreviewVariantsByFilter(requestParams, this.genotypePreviewInfo);
+            this.summaryVariantsArray = this.queryService.getGeneViewVariants(requestParams);
 
           }, error => {
             console.warn(error);
@@ -115,5 +135,12 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
       }, error => {
         console.error(error);
       });
+  }
+
+  getFamilyVariantCounts() {
+    if (this.genotypePreviewVariantsArray) {
+      return this.genotypePreviewVariantsArray.getVariantsCount(this.genotypePreviewInfo.maxVariantsCount)
+    }
+    return "";
   }
 }

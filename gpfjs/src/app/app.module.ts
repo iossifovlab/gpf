@@ -155,6 +155,7 @@ import { CommonReportsRowComponent } from './variant-reports/common-reports-row/
 import { CommonReportsPedigreeCellComponent } from './variant-reports/common-reports-pedigree-cell/common-reports-pedigree-cell.component';
 import { GeneViewComponent } from './gene-view/gene-view.component';
 import { GeneSymbolsWithSearchComponent } from './gene-symbols-with-search/gene-symbols-with-search.component';
+import { LoadingSpinnerComponent } from './loading-spinner/loading-spinner.component';
 
 const appRoutes: Routes = [
   {
@@ -349,6 +350,7 @@ const appRoutes: Routes = [
     CommonReportsRowComponent,
     CommonReportsPedigreeCellComponent,
     GeneSymbolsWithSearchComponent,
+    LoadingSpinnerComponent,
   ],
   imports: [
     BrowserModule,

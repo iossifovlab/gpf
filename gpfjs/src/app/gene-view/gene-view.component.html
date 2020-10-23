@@ -4,9 +4,13 @@
     <div class="card-header card-title" style="font-family: Roboto; font-weight: 500;">Affected Status</div>
     <div class="card-block" style="padding: 20px;">
       <div style="display: inline; margin-right: 20px;"
-        *ngFor="let affectedStatus of ['Affected only', 'Unaffected only', 'Affected and unaffected']; let i=index" class="checkbox">
-        <input #affectedStatusCheckbox checked type="checkbox" (change)="checkAffectedStatus(affectedStatus, affectedStatusCheckbox.checked)" id="{{affectedStatus}}-checkbox">
-        <span class="pedigree-icon" [style.background-color]="getAffectedStatusColor(affectedStatus)" style="opacity: 0.75;"></span>
+        *ngFor="let affectedStatus of ['Affected only', 'Unaffected only', 'Affected and unaffected']; let i=index"
+        class="checkbox">
+        <input #affectedStatusCheckbox checked type="checkbox"
+          (change)="checkAffectedStatus(affectedStatus, affectedStatusCheckbox.checked)"
+          id="{{affectedStatus}}-checkbox">
+        <span class="pedigree-icon" [style.background-color]="getAffectedStatusColor(affectedStatus)"
+          style="opacity: 0.75;"></span>
         <label for="{{affectedStatus}}-checkbox" style="display: inline-block;vertical-align: middle;line-height: 95%;"
           [ngStyle]="{width: affectedStatus === 'Affected only' ? '70px' : 
                              affectedStatus === 'Unaffected only' ? '80px' :
@@ -60,7 +64,7 @@
   <div id="svg-container"></div>
 </div>
 
-<div *ngIf="this.gene" style="float: left;">
+<div *ngIf="this.gene">
   <h2>{{ this.geneTableStats.geneSymbol }}</h2>
   <table>
     <tr>
@@ -70,16 +74,17 @@
     </tr>
 
     <tr>
+      <td>summary variants</td>
+      <td>{{ this.geneTableStats.totalSummaryVariants }}</td>
+      <td>{{ this.geneTableStats.selectedSummaryVariants }}</td>
+    </tr>
+
+    <tr>
       <td>family variants</td>
       <td>{{ this.geneTableStats.totalFamilyVariants }}</td>
       <td>{{ this.geneTableStats.selectedFamilyVariants }}</td>
     </tr>
 
-    <tr>
-      <td>summary variants</td>
-      <td>{{ this.geneTableStats.totalSummaryVariants }}</td>
-      <td>{{ this.geneTableStats.selectedSummaryVariants }}</td>
-    </tr>
   </table>
   <div style="margin-right: 20px; margin-top: 20px" class="checkbox">
     <label>
