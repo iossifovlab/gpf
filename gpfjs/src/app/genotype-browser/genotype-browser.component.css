@@ -13,8 +13,6 @@
 .genotype-browser-results .overview {
   border-top: 1px solid rgba(0,0,0,0.125);
   padding-top: 20px;
-  font-size: 0.75em;
-  font-weight: 500;
   vertical-align: middle;
 }
 
@@ -24,26 +22,4 @@
 .button > input, gpf-share-query-button {
   display: inline-block;
   margin-right: 5px;
-}
-
-.loader {
-  border: 6px solid #cccccc;
-  border-radius: 50%;
-  border-top: 6px solid #ff2222;
-  width: 10px;
-  height: 10px;
-  display: inline-block;
-  -webkit-animation: spin 1s linear infinite; /* Safari */
-  animation: spin 1s linear infinite;
-}
-
-/* Safari */
-@-webkit-keyframes spin {
-  0% { -webkit-transform: rotate(0deg); }
-  100% { -webkit-transform: rotate(360deg); }
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
 }
