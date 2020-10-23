@@ -75,11 +75,11 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
     this.getCurrentState().subscribe(state => {
       const requestParams = {...state};
       requestParams["maxVariantsCount"] = 10000;
-      requestParams["genomicScores"] = {
+      requestParams["genomicScores"] = [{
         "metric": this.geneBrowserConfig.frequencyColumn,
         "rangeStart": $event.start,
         "rangeEnd": $event.end
-      }
+      }];
       this.genotypePreviewVariantsArray =
         this.queryService.getGenotypePreviewVariantsByFilter(requestParams, this.genotypePreviewInfo);
       console.log(this.genotypePreviewVariantsArray);
