@@ -74,7 +74,7 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
   updateShownTablePreviewVariantsArray($event: DomainRange) {
     this.getCurrentState().subscribe(state => {
       const requestParams = {...state};
-      requestParams["maxVariantsCount"] = 10000;
+      requestParams["maxVariantsCount"] = 1000;
       requestParams["genomicScores"] = [{
         "metric": this.geneBrowserConfig.frequencyColumn,
         "rangeStart": $event.start,
@@ -109,19 +109,10 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
             let summaryLoadingFinished = false;
             let familyLoadingFinished = false;
 
-            this.queryService.streamingFinishedSubject.subscribe(
-              _ => {
-                  familyLoadingFinished = true;
-                  if(summaryLoadingFinished) {
-                      this.loadingFinished = true; 
-                  }
-            });
             this.queryService.summaryStreamingFinishedSubject.subscribe(
               _ => {
                   summaryLoadingFinished = true;
-                  if(summaryLoadingFinished) {
-                      this.loadingFinished = true; 
-                  }
+                  this.loadingFinished = true; 
             });
 
             const requestParams = {...state};
@@ -133,6 +124,8 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
             }
 
             this.summaryVariantsArray = this.queryService.getGeneViewVariants(requestParams);
+
+            requestParams['maxVariantsCount'] = 1000;
 
             this.genotypePreviewVariantsArray =
               this.queryService.getGenotypePreviewVariantsByFilter(requestParams, this.genotypePreviewInfo);
