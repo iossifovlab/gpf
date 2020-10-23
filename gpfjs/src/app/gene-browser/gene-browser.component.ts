@@ -29,6 +29,7 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
   selectedDatasetId: string;
   genotypePreviewInfo: GenotypePreviewInfo;
   loadingFinished: boolean;
+  familyLoadingFinished: boolean;
   codingEffectTypes = [
     'Nonsense', 'Frame-shift', 'Splice-site',
     'No-frame-shift-newStop', 'Missense',
@@ -72,6 +73,7 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
   }
 
   updateShownTablePreviewVariantsArray($event: DomainRange) {
+    this.familyLoadingFinished = false;
     this.getCurrentState().subscribe(state => {
       const requestParams = {...state};
       requestParams["maxVariantsCount"] = 1000;
@@ -106,7 +108,6 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
 
             this.genotypeBrowserState = state;
             let summaryLoadingFinished = false;
-            let familyLoadingFinished = false;
 
             this.queryService.summaryStreamingFinishedSubject.subscribe(
               _ => {
@@ -114,6 +115,8 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
                   this.loadingFinished = true; 
                   this.loadingService.setLoadingStop();
             });
+
+            this.queryService.streamingFinishedSubject.subscribe (() => {this.familyLoadingFinished = true})
 
             const requestParams = {...state};
             requestParams['maxVariantsCount'] = 10000;
@@ -132,5 +135,12 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
       }, error => {
         console.error(error);
       });
+  }
+
+  getFamilyVariantCounts() {
+    if (this.genotypePreviewVariantsArray) {
+      return this.genotypePreviewVariantsArray.getVariantsCount(this.genotypePreviewInfo.maxVariantsCount)
+    }
+    return "";
   }
 }

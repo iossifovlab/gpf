@@ -86,7 +86,7 @@ export class GenotypePreviewInfo {
   constructor(
     readonly columns: Array<string>,
     readonly legend: Array<any>,
-    readonly maxVariantsCount: Number
+    readonly maxVariantsCount: number
   ) { }
 }
 

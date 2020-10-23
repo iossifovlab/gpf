@@ -21,8 +21,13 @@
           [variantsArray]="summaryVariantsArray"
           (updateShownTablePreviewVariantsArrayEvent)="updateShownTablePreviewVariantsArray($event)"
           [streamingFinished$]="queryService.summaryStreamingFinishedSubject">
-      >
       </gpf-gene-view>
+
+      <gpf-loading-spinner
+        [loadingFinished]="familyLoadingFinished"
+        [count]="getFamilyVariantCounts()"
+        [displayText]="'Loading variants...'">
+      </gpf-loading-spinner>
 
       <gpf-genotype-preview-table
           [columns]="dataset?.genotypeBrowserConfig?.columns"
