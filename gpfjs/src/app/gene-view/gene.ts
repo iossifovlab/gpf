@@ -1,4 +1,4 @@
-import { GenotypePreviewVariantsArray, GenotypePreview } from "app/genotype-preview-model/genotype-preview";
+import { GenotypePreviewVariantsArray, GenotypePreview } from 'app/genotype-preview-model/genotype-preview';
 
 export class Exon {
   constructor(
@@ -90,7 +90,7 @@ export class Transcript {
   }
 
   get medianExonLength() {
-    let middle: number = Math.floor(this.exons.length / 2);
+    const middle: number = Math.floor(this.exons.length / 2);
     return this.exons[middle].length;
   }
 }
@@ -118,41 +118,41 @@ export class Gene {
   }
 
   collapsedTranscript(): Transcript {
-    let allExons: Exon[] = [];
-    for (let transcipt of this.transcripts) {
-      for (let exon of transcipt.exons) {
-        allExons.push(exon)
+    const allExons: Exon[] = [];
+    for (const transcipt of this.transcripts) {
+      for (const exon of transcipt.exons) {
+        allExons.push(exon);
       }
     }
-    let sortedExons: Exon[] = allExons.sort(
+    const sortedExons: Exon[] = allExons.sort(
       (e1, e2) => e1.start > e2.start ? 1 : -1
-    )
-    let result: Exon[] = [];
+    );
+    const result: Exon[] = [];
     const first: Exon = sortedExons[0];
 
     result.push(new Exon(first.start, first.stop));
 
     for (let i = 1; i < sortedExons.length; i++) {
-      let curr = sortedExons[i];
-      let prev = result[result.length - 1];
+      const curr = sortedExons[i];
+      const prev = result[result.length - 1];
       if (curr.start <= prev.stop) {
         if (curr.stop > prev.stop) {
           prev.stop = curr.stop;
         }
         continue;
       }
-      result.push(new Exon(curr.start, curr.stop))
+      result.push(new Exon(curr.start, curr.stop));
     }
     const firstTranscript = this.transcripts[0];
 
     const firstExon = result[0];
     const lastExon = result[result.length - 1];
-    let cds: number[] = [];
+    const cds: number[] = [];
     cds.push(firstExon.start);
     cds.push(lastExon.stop);
 
     return new Transcript(
-      "collapsed", firstTranscript.strand, firstTranscript.chrom,
+      'collapsed', firstTranscript.strand, firstTranscript.chrom,
       null, null,
       cds, result);
   }
@@ -259,7 +259,7 @@ export class GeneViewSummaryVariantsArray {
 
   addSummaryRow(variant: any) {
     if (!variant) {
-      return
+      return;
     }
     const summaryVariant = GeneViewSummaryVariant.fromRow(variant);
     this.summaryVariants.push(summaryVariant);

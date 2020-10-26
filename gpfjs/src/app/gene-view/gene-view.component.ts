@@ -1,12 +1,11 @@
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import * as d3 from 'd3';
 import { Gene, GeneViewSummaryVariantsArray, GeneViewSummaryVariant, DomainRange } from 'app/gene-view/gene';
-import { GenotypePreviewVariantsArray, GenotypePreview } from 'app/genotype-preview-model/genotype-preview';
 import { Subject } from 'rxjs';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { Transcript, Exon } from 'app/gene-view/gene';
 import { FullscreenLoadingService } from 'app/fullscreen-loading/fullscreen-loading.service';
-
+import { drawRect, drawLine, drawHoverText, drawStar, drawCircle, drawTriangle, drawSurroundingSquare, drawDot } from 'app/utils/svg-drawing';
 
 
 class GeneViewTranscriptSegment {
@@ -456,46 +455,46 @@ export class GeneViewComponent implements OnInit {
     this.svgElement = d3.select('#transmitted')
       .attr('width', 80)
       .attr('height', 20);
-    this.drawStar(10, 7.5, '#000000');
-    this.drawTriangle(30, 8, '#000000');
-    this.drawCircle(50, 8, '#000000');
-    this.drawDot(70, 8, '#000000');
+    drawStar(this.svgElement, 10, 7.5, '#000000');
+    drawTriangle(this.svgElement, 30, 8, '#000000');
+    drawCircle(this.svgElement, 50, 8, '#000000');
+    drawDot(this.svgElement, 70, 8, '#000000');
   }
 
   drawDenovoIcons() {
     this.svgElement = d3.select('#denovo')
       .attr('width', 80)
       .attr('height', 20);
-    this.drawStar(10, 7.5, '#000000');
-    this.drawSuroundingSquare(10, 7.5, '#000000');
-    this.drawTriangle(30, 8, '#000000');
-    this.drawSuroundingSquare(30, 8, '#000000');
-    this.drawCircle(50, 8, '#000000');
-    this.drawSuroundingSquare(50, 8, '#000000');
-    this.drawDot(70, 8, '#000000');
-    this.drawSuroundingSquare(70, 8, '#000000');
+    drawStar(this.svgElement, 10, 7.5, '#000000');
+    drawSurroundingSquare(this.svgElement, 10, 7.5, '#000000');
+    drawTriangle(this.svgElement, 30, 8, '#000000');
+    drawSurroundingSquare(this.svgElement, 30, 8, '#000000');
+    drawCircle(this.svgElement, 50, 8, '#000000');
+    drawSurroundingSquare(this.svgElement, 50, 8, '#000000');
+    drawDot(this.svgElement, 70, 8, '#000000');
+    drawSurroundingSquare(this.svgElement, 70, 8, '#000000');
   }
 
   drawEffectTypesIcons() {
     this.svgElement = d3.select('#LGDs')
       .attr('width', 20)
       .attr('height', 20);
-    this.drawStar(10, 7.5, '#000000');
+    drawStar(this.svgElement, 10, 7.5, '#000000');
 
     this.svgElement = d3.select('#Missense')
       .attr('width', 20)
       .attr('height', 20);
-    this.drawTriangle(10, 8, '#000000');
+    drawTriangle(this.svgElement, 10, 8, '#000000');
 
     this.svgElement = d3.select('#Synonymous')
       .attr('width', 20)
       .attr('height', 20);
-    this.drawCircle(10, 8, '#000000');
+    drawCircle(this.svgElement, 10, 8, '#000000');
 
     this.svgElement = d3.select('#Other')
       .attr('width', 20)
       .attr('height', 20);
-    this.drawDot(10, 8, '#000000');
+    drawDot(this.svgElement, 10, 8, '#000000');
   }
 
   checkShowDenovo(checked: boolean) {
@@ -700,16 +699,16 @@ export class GeneViewComponent implements OnInit {
         const variantPosition = this.x(variant.position);
 
         if (variant.isLGDs()) {
-          this.drawStar(variantPosition, this.getVariantY(variant.frequency), color);
+          drawStar(this.svgElement, variantPosition, this.getVariantY(variant.frequency), color);
         } else if (variant.isMissense()) {
-          this.drawTriangle(variantPosition, this.getVariantY(variant.frequency), color);
+          drawTriangle(this.svgElement, variantPosition, this.getVariantY(variant.frequency), color);
         } else if (variant.isSynonymous()) {
-          this.drawCircle(variantPosition, this.getVariantY(variant.frequency), color);
+          drawCircle(this.svgElement, variantPosition, this.getVariantY(variant.frequency), color);
         } else {
-          this.drawDot(variantPosition, this.getVariantY(variant.frequency), color);
+          drawDot(this.svgElement, variantPosition, this.getVariantY(variant.frequency), color);
         }
         if (variant.seenAsDenovo) {
-          this.drawSuroundingSquare(variantPosition, this.getVariantY(variant.frequency), color);
+          drawSurroundingSquare(this.svgElement, variantPosition, this.getVariantY(variant.frequency), color);
         }
       }
     }
@@ -749,69 +748,6 @@ export class GeneViewComponent implements OnInit {
     }
   }
 
-  drawSuroundingSquare(x: number, y: number, color: string) {
-    const w = 16;
-    const h = 16;
-    this.svgElement.append('g')
-      .append('rect')
-      .attr('x', x - w / 2)
-      .attr('y', y - h / 2)
-      .attr('width', w)
-      .attr('height', h)
-      .style('fill', color)
-      .style('fill-opacity', 0.2)
-      .style('stroke', color)
-      .style('stroke-width', 2);
-  }
-
-  drawStar(x: number, y: number, color: string) {
-    this.svgElement.append('svg')
-      .attr('x', x - 8.5)
-      .attr('y', y - 8.5)
-      .append('g')
-      .append('path')
-      .attr('d', 'M12 .587l3.668 7.568 8.332 1.151-6.064 5.828 1.48 8.279-7.416-3.967-7.417 3.967 1.481-8.279-6.064-5.828 8.332-1.151z')
-      .attr('transform', 'scale(0.7)')
-      .attr('fill', color)
-      .attr('fill-opacity', '0.6')
-      .style('stroke-width', 1)
-      .style('stroke', color);
-  }
-
-  drawTriangle(x: number, y: number, color: string) {
-    this.svgElement.append('g')
-      .append('polygon')
-      .attr('points', this.getTrianglePoints(x, y, 14))
-      .style('fill', color)
-      .attr('fill-opacity', '0.6')
-      .style('stroke-width', 1)
-      .style('stroke', color);
-  }
-
-  drawCircle(x: number, y: number, color: string) {
-    this.svgElement.append('g')
-      .append('circle')
-      .attr('cx', x)
-      .attr('cy', y)
-      .attr('r', 7)
-      .style('fill', color)
-      .attr('fill-opacity', '0.6')
-      .style('stroke-width', 1)
-      .style('stroke', color);
-  }
-
-  drawDot(x: number, y: number, color: string) {
-    this.svgElement.append('g')
-      .append('circle')
-      .attr('cx', x)
-      .attr('cy', y)
-      .attr('r', 3)
-      .style('fill', color)
-      .attr('fill-opacity', '0.6')
-      .style('stroke-width', 1)
-      .style('stroke', color);
-  }
-
   getVariantY(variantFrequency): number {
     let y: number;
 
@@ -824,17 +760,6 @@ export class GeneViewComponent implements OnInit {
     }
 
     return y;
-  }
-
-  getTrianglePoints(plotX: number, plotY: number, size: number) {
-    const height = Math.sqrt(Math.pow(size, 2) - Math.pow((size / 2.0), 2));
-    const x1 = plotX - (size / 2.0);
-    const y1 = plotY + (height / 2.0);
-    const x2 = plotX + (size / 2.0);
-    const y2 = plotY + (height / 2.0);
-    const x3 = plotX;
-    const y3 = plotY - (height / 2.0);
-    return `${x1},${y1} ${x2},${y2} ${x3},${y3}`;
   }
 
   setDefaultScale() {
@@ -1062,75 +987,28 @@ export class GeneViewComponent implements OnInit {
       y -= (rectThickness - this.options.exonThickness) / 2;
       title += ' [CDS]';
     }
-    this.drawRect(element, xStart, xEnd, y, rectThickness, title);
+    drawRect(element, xStart, xEnd, y, rectThickness, title);
   }
 
   drawIntron(element, xStart: number, xEnd: number, y: number, title: string) {
-    this.drawLine(element, xStart, xEnd, y + this.options.exonThickness / 2, title);
+    drawLine(element, xStart, xEnd, y + this.options.exonThickness / 2, title);
   }
 
   drawTranscriptUTRText(element, xStart: number, xEnd: number, y: number, strand: string) {
     const UTR = { left: '5\'', right: '3\'' };
-
     if (strand === '-') {
       UTR.left = '3\'';
       UTR.right = '5\'';
     }
-
-    element.append('text')
-      .attr('y', y + 10)
-      .attr('x', this.x(xStart) - 20)
-      .attr('font-size', '13px')
-      .text(UTR.left)
-      .attr('cursor', 'default')
-      .append('svg:title').text(`UTR ${UTR.left}`);
-
-    element.append('text')
-      .attr('y', y + 10)
-      .attr('x', this.x(xEnd) + 10)
-      .attr('font-size', '13px')
-      .text(UTR.right)
-      .attr('cursor', 'default')
-      .append('svg:title').text(`UTR ${UTR.right}`);
+    drawHoverText(element, this.x(xStart) - 20, y + 10, UTR.left, 'UTR ');
+    drawHoverText(element, this.x(xEnd) + 10, y + 10, UTR.right, 'UTR ');
   }
 
   drawTranscriptChromosomeText(element, xStart: number, y: number, chromosome: string) {
-    element.append('text')
-      .attr('y', y + 10)
-      .attr('x', this.x(xStart) - 50)
-      .attr('font-size', '13px')
-      .text(`${chromosome}`)
-      .attr('cursor', 'default')
-      .append('svg:title').text(`Chromosome: ${chromosome}`);
+    drawHoverText(element, this.x(xStart) - 50, y + 10, chromosome, 'Chromosome: ');
   }
 
   drawTranscriptIdText(element, xStart: number, y: number, id: string) {
-    element.append('text')
-      .attr('y', y + 10)
-      .attr('x', this.x(xStart) - 150)
-      .attr('font-size', '13px')
-      .text(`${id}`)
-      .attr('cursor', 'default')
-      .append('svg:title').text(`Transcript id: ${id}`);
-  }
-
-  drawRect(element, xStart: number, xEnd: number, y: number, height: number, svgTitle: string) {
-    element.append('rect')
-      .attr('height', height)
-      .attr('width', xEnd - xStart)
-      .attr('x', xStart)
-      .attr('y', y)
-      .attr('stroke', 'rgb(0,0,0)')
-      .append('svg:title').text(svgTitle);
-  }
-
-  drawLine(element, xStart: number, xEnd: number, y: number, svgTitle: string) {
-    element.append('line')
-      .attr('x1', xStart)
-      .attr('y1', y)
-      .attr('x2', xEnd)
-      .attr('y2', y)
-      .attr('stroke', 'black')
-      .append('svg:title').text(svgTitle);
+    drawHoverText(element, this.x(xStart) - 150, y + 10, id, 'Transcript id: ');
   }
 }
