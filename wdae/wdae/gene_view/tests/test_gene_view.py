@@ -20,7 +20,7 @@ def test_gene_view_summary_variants_query(db, admin_client):
     res = json.loads("".join(map(lambda x: x.decode("utf-8"), res)))
 
     print(res)
-    assert len(res) == 7
+    assert len(res) == 14
 
 
 def test_gene_view_config(db, admin_client):
