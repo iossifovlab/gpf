@@ -32,14 +32,7 @@ class SummaryVariantsQueryBuilder(BaseQueryBuilder):
                 "gpf_or(BITAND(inheritance_in_members, 4))",
             "extra_attributes": "MIN(variants.extra_attributes)"
         }
-        columns = [
-            "variants.bucket_index",
-            "variants.summary_index",
-            "MIN(variants.variant_data)",
-            "COUNT(DISTINCT variants.family_id)",
-            "gpf_bit_or(pedigree.status)",
-            "gpf_or(BITAND(inheritance_in_members, 4))"
-        ]
+        columns = list(self.select_accessors.values())
         if self.has_extra_attributes:
             columns.append("MIN(variants.extra_attributes)")
 
