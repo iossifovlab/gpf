@@ -23,6 +23,7 @@ import { GeneViewComponent } from 'app/gene-view/gene-view.component';
 export class GeneBrowserComponent extends QueryStateCollector implements OnInit {
   selectedGene: Gene;
   geneSymbol = 'CHD8';
+  maxFamilyVariants = 1000;
   genotypePreviewVariantsArray: GenotypePreviewVariantsArray;
   summaryVariantsArray: GeneViewSummaryVariantsArray;
   selectedDataset$: Observable<Dataset>;
@@ -76,7 +77,7 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
     this.familyLoadingFinished = false;
     this.getCurrentState().subscribe(state => {
       const requestParams = {...state};
-      requestParams["maxVariantsCount"] = 1000;
+      requestParams["maxVariantsCount"] = this.maxFamilyVariants;
       requestParams["genomicScores"] = [{
         "metric": this.geneBrowserConfig.frequencyColumn,
         "rangeStart": $event.start,
@@ -139,7 +140,7 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
 
   getFamilyVariantCounts() {
     if (this.genotypePreviewVariantsArray) {
-      return this.genotypePreviewVariantsArray.getVariantsCount(this.genotypePreviewInfo.maxVariantsCount)
+      return this.genotypePreviewVariantsArray.getVariantsCount(this.maxFamilyVariants)
     }
     return "";
   }
