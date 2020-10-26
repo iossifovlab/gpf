@@ -329,8 +329,10 @@ export class GeneViewComponent implements OnInit {
   options = {
     margin: { top: 10, right: 100, left: 150, bottom: 0 },
     axisScale: { domain: 0.90, subdomain: 0.05 },
-    exonThickness: 14,
-    cdsThickness: 20,
+    exonThickness: 6.25,
+    cdsThickness: 12.5,
+    summedTranscriptExonThickness: 12.5,
+    summedTranscriptCdsThickness: 25,
   };
 
   svgElement;
@@ -859,7 +861,7 @@ export class GeneViewComponent implements OnInit {
   }
 
   drawGene() {
-    this.svgHeight = this.svgHeightFreqRaw + (this.gene.transcripts.length + 1) * 50;
+    this.svgHeight = this.svgHeightFreqRaw + (this.gene.transcripts.length + 1) * 25 + 70;
     d3.select('#svg-container').selectAll('svg').remove();
 
     this.svgElement = d3.select('#svg-container')
@@ -882,12 +884,11 @@ export class GeneViewComponent implements OnInit {
       .attr('class', 'brush')
       .call(this.brush);
 
-    let transcriptY = this.svgHeightFreqRaw + 20;
-
+    let transcriptY = this.svgHeightFreqRaw + 30;
     this.drawTranscript(this.summedTranscriptElement, transcriptY, this.geneViewModel.collapsedGeneViewTranscript);
-
+    transcriptY += 25;
     for (const geneViewTranscript of this.geneViewModel.geneViewTranscripts) {
-      transcriptY += 50;
+      transcriptY += 25;
       this.drawTranscript(this.transcriptsElement, transcriptY, geneViewTranscript);
     }
   }
@@ -992,30 +993,20 @@ export class GeneViewComponent implements OnInit {
     const domainMin = domain[0];
     const domainMax = domain[domain.length - 1];
     const transcriptId = geneViewTranscript.transcript.transcript_id;
+    let isExonInCollapsedTranscript: boolean;
     const segments = geneViewTranscript.segments.filter(
-      seg => seg.intersectionLength(domainMin, domainMax) > 0);
+      seg => seg.intersectionLength(domainMin, domainMax) > 0
+    );
 
     if (segments.length === 0) {
       return;
-    }
-
-    for (const segment of segments) {
-      const start = Math.max(domainMin, segment.start);
-      const stop = Math.min(domainMax, segment.stop);
-      const xStart = this.x(start);
-      const xStop = this.x(stop);
-
-      if (segment.isExon) {
-        this.drawExon(element, xStart, xStop, yPos, segment.label, segment.isCDS);
-      } else {
-        this.drawIntron(element, xStart, xStop, yPos, segment.label);
-      }
     }
 
     const firstSegmentStart = Math.max(segments[0].start, domainMin);
     const lastSegmentStop = Math.min(segments[segments.length - 1].stop, domainMax);
 
     if (transcriptId === 'collapsed') {
+      isExonInCollapsedTranscript = true;
       this.drawTranscriptChromosomeText(
         element,
         firstSegmentStart,
@@ -1023,6 +1014,7 @@ export class GeneViewComponent implements OnInit {
         geneViewTranscript.transcript.chrom
       );
     } else {
+      isExonInCollapsedTranscript = false;
       this.drawTranscriptIdText(
         element,
         firstSegmentStart,
@@ -1037,12 +1029,36 @@ export class GeneViewComponent implements OnInit {
       lastSegmentStop,
       yPos, geneViewTranscript.strand
     );
+
+    for (const segment of segments) {
+      const start = Math.max(domainMin, segment.start);
+      const stop = Math.min(domainMax, segment.stop);
+      const xStart = this.x(start);
+      const xStop = this.x(stop);
+
+      if (segment.isExon) {
+        this.drawExon(element, xStart, xStop, yPos, segment.label, segment.isCDS, isExonInCollapsedTranscript);
+      } else {
+        this.drawIntron(element, xStart, xStop, yPos, segment.label);
+      }
+    }
   }
 
-  drawExon(element, xStart: number, xEnd: number, y: number, title: string, cds: boolean) {
-    let rectThickness = this.options.exonThickness;
+  drawExon(element, xStart: number, xEnd: number, y: number, title: string, cds: boolean, isExonInCollapsedTranscript: boolean) {
+    let exonThickness: number;
+    let cdsThickness: number;
+
+    if (isExonInCollapsedTranscript) {
+      exonThickness = this.options.summedTranscriptExonThickness;
+      cdsThickness = this.options.summedTranscriptCdsThickness;
+    } else {
+      exonThickness = this.options.exonThickness;
+      cdsThickness = this.options.cdsThickness;
+    }
+
+    let rectThickness = exonThickness;
     if (cds) {
-      rectThickness = this.options.cdsThickness;
+      rectThickness = cdsThickness;
       y -= (rectThickness - this.options.exonThickness) / 2;
       title += ' [CDS]';
     }
