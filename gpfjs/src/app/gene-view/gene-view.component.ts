@@ -1057,9 +1057,9 @@ export class GeneViewComponent implements OnInit {
   drawTranscriptChromosomeText(xStart: number, y: number, chromosome: string) {
     this.svgElement.append('text')
       .attr('y', y + 10)
-      .attr('x', this.x(xStart) - 70)
+      .attr('x', this.x(xStart) - 50)
       .attr('font-size', '13px')
-      .text(`chr:${chromosome}`)
+      .text(`${chromosome}`)
       .attr('cursor', 'default')
       .append('svg:title').text(`Chromosome: ${chromosome}`);
   }
