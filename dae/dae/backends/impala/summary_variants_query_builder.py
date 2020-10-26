@@ -99,7 +99,7 @@ class SummaryVariantsQueryBuilder(BaseQueryBuilder):
             seen_in_status = cols[self.select_accessors["seen_in_status"]]
             seen_in_denovo = cols[self.select_accessors["seen_in_denovo"]]
             extra_attributes = cols.get(
-                self.select_accessors["extra_attributes"], None)
+                self.select_accessors.get("extra_attributes", None), None)
 
             if type(variant_data) == str:
                 logger.debug(
