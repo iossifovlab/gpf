@@ -327,7 +327,7 @@ export class GeneViewComponent implements OnInit {
   summaryVariantsArray: GeneViewSummaryVariantsArray;
 
   options = {
-    margin: { top: 10, right: 100, left: 100, bottom: 0 },
+    margin: { top: 10, right: 100, left: 150, bottom: 0 },
     axisScale: { domain: 0.90, subdomain: 0.05 },
     exonThickness: 14,
     cdsThickness: 20,
@@ -991,7 +991,7 @@ export class GeneViewComponent implements OnInit {
     const domain = this.x.domain();
     const domainMin = domain[0];
     const domainMax = domain[domain.length - 1];
-
+    const transcriptId = geneViewTranscript.transcript.transcript_id;
     const segments = geneViewTranscript.segments.filter(
       seg => seg.intersectionLength(domainMin, domainMax) > 0);
 
@@ -1014,6 +1014,22 @@ export class GeneViewComponent implements OnInit {
 
     const firstSegmentStart = Math.max(segments[0].start, domainMin);
     const lastSegmentStop = Math.min(segments[segments.length - 1].stop, domainMax);
+
+    if (transcriptId === 'collapsed') {
+      this.drawTranscriptChromosomeText(
+        element,
+        firstSegmentStart,
+        yPos,
+        geneViewTranscript.transcript.chrom
+      );
+    } else {
+      this.drawTranscriptIdText(
+        element,
+        firstSegmentStart,
+        yPos,
+        transcriptId
+      );
+    }
 
     this.drawTranscriptUTRText(
       element,
@@ -1072,6 +1088,15 @@ export class GeneViewComponent implements OnInit {
       .append('svg:title').text(`Chromosome: ${chromosome}`);
   }
 
+  drawTranscriptIdText(element, xStart: number, y: number, id: string) {
+    element.append('text')
+      .attr('y', y + 10)
+      .attr('x', this.x(xStart) - 150)
+      .attr('font-size', '13px')
+      .text(`${id}`)
+      .attr('cursor', 'default')
+      .append('svg:title').text(`Transcript id: ${id}`);
+  }
 
   drawRect(element, xStart: number, xEnd: number, y: number, height: number, svgTitle: string) {
     element.append('rect')

@@ -36,7 +36,7 @@ export class Exon {
 
 export class Transcript {
   constructor(
-    private transcript_id: string,
+    private _transcript_id: string,
     private _strand: string,
     private _chrom: string,
     private utr3: Exon,
@@ -55,6 +55,10 @@ export class Transcript {
 
   static fromJsonArray(jsonArray: Array<Object>): Array<Transcript> {
     return jsonArray.map(json => Transcript.fromJson(json));
+  }
+
+  get transcript_id() {
+    return this._transcript_id;
   }
 
   get exons() {
