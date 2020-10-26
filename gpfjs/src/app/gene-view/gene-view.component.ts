@@ -334,6 +334,8 @@ export class GeneViewComponent implements OnInit {
   };
 
   svgElement;
+  summedTranscriptElement;
+  transcriptsElement;
   svgWidth = 1200 - this.options.margin.left - this.options.margin.right;
   svgHeight;
   svgHeightFreqRaw = 400;
@@ -395,6 +397,12 @@ export class GeneViewComponent implements OnInit {
         .attr('height', this.svgHeightFreqRaw)
         .append('g')
         .attr('transform', `translate(${this.options.margin.left}, ${this.options.margin.top})`);
+
+      this.summedTranscriptElement = this.svgElement
+      .append('g');
+
+      this.transcriptsElement = this.svgElement
+      .append('g');
 
       this.y = d3.scaleLog()
         .domain([this.frequencyDomainMin, this.frequencyDomainMax])
@@ -537,6 +545,10 @@ export class GeneViewComponent implements OnInit {
     }
   }
 
+  checkHideTranscripts(checked: boolean) {
+    this.transcriptsElement.attr('display', checked ? 'none' : 'block');
+  }
+
   isVariantEffectSelected(worst_effect) {
     worst_effect = worst_effect.toLowerCase();
 
@@ -655,12 +667,7 @@ export class GeneViewComponent implements OnInit {
     this.updateShownTablePreviewVariantsArrayEvent.emit(domains);
   }
 
-  // get x() {
-  //   return this.geneViewModel.scale(this.condenseIntrons);
-  // }
-
   drawPlot() {
-
     const minDomain = this.x.domain()[0];
     const maxDomain = this.x.domain()[this.x.domain().length - 1];
     const domain = this.x.domain();
@@ -851,7 +858,6 @@ export class GeneViewComponent implements OnInit {
     };
   }
 
-  // GENE VIEW FUNCTIONS
   drawGene() {
     this.svgHeight = this.svgHeightFreqRaw + (this.gene.transcripts.length + 1) * 50;
     d3.select('#svg-container').selectAll('svg').remove();
@@ -863,6 +869,12 @@ export class GeneViewComponent implements OnInit {
       .append('g')
       .attr('transform', `translate(${this.options.margin.left}, ${this.options.margin.top})`);
 
+    this.summedTranscriptElement = this.svgElement
+    .append('g');
+
+    this.transcriptsElement = this.svgElement
+    .append('g');
+
     this.brush = d3.brush().extent([[0, 0], [this.svgWidth, this.svgHeightFreq]])
       .on('end', this.brushEndEvent);
 
@@ -871,10 +883,12 @@ export class GeneViewComponent implements OnInit {
       .call(this.brush);
 
     let transcriptY = this.svgHeightFreqRaw + 20;
-    this.drawTranscript(transcriptY, this.geneViewModel.collapsedGeneViewTranscript);
+
+    this.drawTranscript(this.summedTranscriptElement, transcriptY, this.geneViewModel.collapsedGeneViewTranscript);
+
     for (const geneViewTranscript of this.geneViewModel.geneViewTranscripts) {
       transcriptY += 50;
-      this.drawTranscript(transcriptY, geneViewTranscript);
+      this.drawTranscript(this.transcriptsElement, transcriptY, geneViewTranscript);
     }
   }
 
@@ -973,7 +987,7 @@ export class GeneViewComponent implements OnInit {
     this.doubleClickTimer = null;
   }
 
-  drawTranscript(yPos: number, geneViewTranscript: GeneViewTranscript) {
+  drawTranscript(element, yPos: number, geneViewTranscript: GeneViewTranscript) {
     const domain = this.x.domain();
     const domainMin = domain[0];
     const domainMax = domain[domain.length - 1];
@@ -992,11 +1006,9 @@ export class GeneViewComponent implements OnInit {
       const xStop = this.x(stop);
 
       if (segment.isExon) {
-        this.drawExon(
-          xStart, xStop, yPos, segment.label, segment.isCDS);
+        this.drawExon(element, xStart, xStop, yPos, segment.label, segment.isCDS);
       } else {
-        this.drawIntron(
-          xStart, xStop, yPos, segment.label);
+        this.drawIntron(element, xStart, xStop, yPos, segment.label);
       }
     }
 
@@ -1004,32 +1016,28 @@ export class GeneViewComponent implements OnInit {
     const lastSegmentStop = Math.min(segments[segments.length - 1].stop, domainMax);
 
     this.drawTranscriptUTRText(
+      element,
       firstSegmentStart,
       lastSegmentStop,
       yPos, geneViewTranscript.strand
     );
-    this.drawTranscriptChromosomeText(
-      firstSegmentStart,
-      yPos,
-      geneViewTranscript.transcript.chrom
-    );
   }
 
-  drawExon(xStart: number, xEnd: number, y: number, title: string, cds: boolean) {
+  drawExon(element, xStart: number, xEnd: number, y: number, title: string, cds: boolean) {
     let rectThickness = this.options.exonThickness;
     if (cds) {
       rectThickness = this.options.cdsThickness;
       y -= (rectThickness - this.options.exonThickness) / 2;
       title += ' [CDS]';
     }
-    this.drawRect(xStart, xEnd, y, rectThickness, title);
+    this.drawRect(element, xStart, xEnd, y, rectThickness, title);
   }
 
-  drawIntron(xStart: number, xEnd: number, y: number, title: string) {
-    this.drawLine(xStart, xEnd, y + this.options.exonThickness / 2, title);
+  drawIntron(element, xStart: number, xEnd: number, y: number, title: string) {
+    this.drawLine(element, xStart, xEnd, y + this.options.exonThickness / 2, title);
   }
 
-  drawTranscriptUTRText(xStart: number, xEnd: number, y: number, strand: string) {
+  drawTranscriptUTRText(element, xStart: number, xEnd: number, y: number, strand: string) {
     const UTR = { left: '5\'', right: '3\'' };
 
     if (strand === '-') {
@@ -1037,7 +1045,7 @@ export class GeneViewComponent implements OnInit {
       UTR.right = '5\'';
     }
 
-    this.svgElement.append('text')
+    element.append('text')
       .attr('y', y + 10)
       .attr('x', this.x(xStart) - 20)
       .attr('font-size', '13px')
@@ -1045,7 +1053,7 @@ export class GeneViewComponent implements OnInit {
       .attr('cursor', 'default')
       .append('svg:title').text(`UTR ${UTR.left}`);
 
-    this.svgElement.append('text')
+    element.append('text')
       .attr('y', y + 10)
       .attr('x', this.x(xEnd) + 10)
       .attr('font-size', '13px')
@@ -1054,8 +1062,8 @@ export class GeneViewComponent implements OnInit {
       .append('svg:title').text(`UTR ${UTR.right}`);
   }
 
-  drawTranscriptChromosomeText(xStart: number, y: number, chromosome: string) {
-    this.svgElement.append('text')
+  drawTranscriptChromosomeText(element, xStart: number, y: number, chromosome: string) {
+    element.append('text')
       .attr('y', y + 10)
       .attr('x', this.x(xStart) - 50)
       .attr('font-size', '13px')
@@ -1064,8 +1072,9 @@ export class GeneViewComponent implements OnInit {
       .append('svg:title').text(`Chromosome: ${chromosome}`);
   }
 
-  drawRect(xStart: number, xEnd: number, y: number, height: number, svgTitle: string) {
-    this.svgElement.append('rect')
+
+  drawRect(element, xStart: number, xEnd: number, y: number, height: number, svgTitle: string) {
+    element.append('rect')
       .attr('height', height)
       .attr('width', xEnd - xStart)
       .attr('x', xStart)
@@ -1074,8 +1083,8 @@ export class GeneViewComponent implements OnInit {
       .append('svg:title').text(svgTitle);
   }
 
-  drawLine(xStart: number, xEnd: number, y: number, svgTitle: string) {
-    this.svgElement.append('line')
+  drawLine(element, xStart: number, xEnd: number, y: number, svgTitle: string) {
+    element.append('line')
       .attr('x1', xStart)
       .attr('y1', y)
       .attr('x2', xEnd)
