@@ -30,11 +30,11 @@ class SummaryVariantsQueryBuilder(BaseQueryBuilder):
             "seen_in_status": "gpf_bit_or(pedigree.status)",
             "seen_in_denovo":
                 "gpf_or(BITAND(inheritance_in_members, 4))",
-            "extra_attributes": "MIN(variants.extra_attributes)"
         }
-        columns = list(self.select_accessors.values())
         if self.has_extra_attributes:
-            columns.append("MIN(variants.extra_attributes)")
+            self.select_accessors["extra_attributes"] = \
+                "MIN(variants.extra_attributes)"
+        columns = list(self.select_accessors.values())
 
         return columns
 
