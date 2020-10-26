@@ -21,6 +21,7 @@ import { GeneViewComponent } from 'app/gene-view/gene-view.component';
   }]
 })
 export class GeneBrowserComponent extends QueryStateCollector implements OnInit {
+  @ViewChild(GeneViewComponent) geneViewComponent: GeneViewComponent;
   selectedGene: Gene;
   geneSymbol = 'CHD8';
   maxFamilyVariants = 1000;
@@ -125,6 +126,9 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
 
             if (this.enableCodingOnly) {
               requestParams['effectTypes'] = this.codingEffectTypes;
+              this.geneViewComponent.enableIntronCondensing();
+            } else {
+              this.geneViewComponent.disableIntronCondensing();
             }
 
             this.summaryVariantsArray = this.queryService.getGeneViewVariants(requestParams);

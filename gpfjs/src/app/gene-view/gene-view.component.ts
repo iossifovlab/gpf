@@ -411,8 +411,6 @@ export class GeneViewComponent implements OnInit {
 
     this.streamingFinished$.subscribe(() => {
       this.summaryVariantsArray = this.variantsArray;
-
-      this.condenseIntrons = false;
       this.setDefaultScale();
 
       this.updateFamilyVariantsTable();
@@ -440,6 +438,14 @@ export class GeneViewComponent implements OnInit {
       this.drawGene();
       this.zoomHistory.resetToDefaultState(this.calculateDefaultScale());
     }
+  }
+
+  enableIntronCondensing() {
+    this.condenseIntrons = true;
+  }
+
+  disableIntronCondensing() {
+    this.condenseIntrons = false;
   }
 
   drawTransmittedIcons() {
