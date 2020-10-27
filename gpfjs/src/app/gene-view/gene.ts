@@ -1,4 +1,4 @@
-import { GenotypePreviewVariantsArray, GenotypePreview } from "app/genotype-preview-model/genotype-preview";
+import { GenotypePreviewVariantsArray, GenotypePreview } from 'app/genotype-preview-model/genotype-preview';
 
 export class Exon {
   constructor(
@@ -36,7 +36,7 @@ export class Exon {
 
 export class Transcript {
   constructor(
-    private transcript_id: string,
+    private _transcript_id: string,
     private _strand: string,
     private _chrom: string,
     private utr3: Exon,
@@ -55,6 +55,10 @@ export class Transcript {
 
   static fromJsonArray(jsonArray: Array<Object>): Array<Transcript> {
     return jsonArray.map(json => Transcript.fromJson(json));
+  }
+
+  get transcript_id() {
+    return this._transcript_id;
   }
 
   get exons() {
@@ -86,7 +90,7 @@ export class Transcript {
   }
 
   get medianExonLength() {
-    let middle: number = Math.floor(this.exons.length / 2);
+    const middle: number = Math.floor(this.exons.length / 2);
     return this.exons[middle].length;
   }
 }
@@ -114,41 +118,41 @@ export class Gene {
   }
 
   collapsedTranscript(): Transcript {
-    let allExons: Exon[] = [];
-    for (let transcipt of this.transcripts) {
-      for (let exon of transcipt.exons) {
-        allExons.push(exon)
+    const allExons: Exon[] = [];
+    for (const transcipt of this.transcripts) {
+      for (const exon of transcipt.exons) {
+        allExons.push(exon);
       }
     }
-    let sortedExons: Exon[] = allExons.sort(
+    const sortedExons: Exon[] = allExons.sort(
       (e1, e2) => e1.start > e2.start ? 1 : -1
-    )
-    let result: Exon[] = [];
+    );
+    const result: Exon[] = [];
     const first: Exon = sortedExons[0];
 
     result.push(new Exon(first.start, first.stop));
 
     for (let i = 1; i < sortedExons.length; i++) {
-      let curr = sortedExons[i];
-      let prev = result[result.length - 1];
+      const curr = sortedExons[i];
+      const prev = result[result.length - 1];
       if (curr.start <= prev.stop) {
         if (curr.stop > prev.stop) {
           prev.stop = curr.stop;
         }
         continue;
       }
-      result.push(new Exon(curr.start, curr.stop))
+      result.push(new Exon(curr.start, curr.stop));
     }
     const firstTranscript = this.transcripts[0];
 
     const firstExon = result[0];
     const lastExon = result[result.length - 1];
-    let cds: number[] = [];
+    const cds: number[] = [];
     cds.push(firstExon.start);
     cds.push(lastExon.stop);
 
     return new Transcript(
-      "collapsed", firstTranscript.strand, firstTranscript.chrom,
+      'collapsed', firstTranscript.strand, firstTranscript.chrom,
       null, null,
       cds, result);
   }
@@ -169,6 +173,16 @@ export class GeneViewSummaryVariant {
   svuid: string;
 
   lgds = ['nonsense', 'splice-site', 'frame-shift', 'no-frame-shift-new-stop'];
+
+  static comparator(a: GeneViewSummaryVariant, b: GeneViewSummaryVariant) {
+    if (a.comparisonValue > b.comparisonValue) {
+      return 1;
+    } else if (a.comparisonValue < b.comparisonValue) {
+      return -1;
+    } else {
+      return 0;
+    }
+  }
 
   static fromRow(row: any): GeneViewSummaryVariant {
     const result = new GeneViewSummaryVariant();
@@ -246,6 +260,15 @@ export class GeneViewSummaryVariant {
     }
     return false;
   }
+
+  get comparisonValue(): number {
+    let sum = 0;
+
+    sum += this.seenAsDenovo ? 200 : 100;
+    sum += this.isLGDs() ? 30 : this.isMissense() ? 20 : 10;
+    sum += this.seenInAffected ? 3 : this.seenInUnaffected ? 2 : 1;
+    return sum;
+  }
 }
 
 export class GeneViewSummaryVariantsArray {
@@ -255,7 +278,7 @@ export class GeneViewSummaryVariantsArray {
 
   addSummaryRow(variant: any) {
     if (!variant) {
-      return
+      return;
     }
     const summaryVariant = GeneViewSummaryVariant.fromRow(variant);
     this.summaryVariants.push(summaryVariant);
