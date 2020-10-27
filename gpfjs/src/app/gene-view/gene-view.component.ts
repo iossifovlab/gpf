@@ -34,6 +34,18 @@ class GeneViewZoomHistory {
     this.zoomHistoryIndex = -1;
   }
 
+  get currentState() {
+    return this.zoomHistory[this.zoomHistoryIndex];
+  }
+
+  get canGoForward() {
+    return this.zoomHistoryIndex < this.zoomHistory.length - 1;
+  }
+
+  get canGoBackward() {
+    return this.zoomHistoryIndex > 0;
+  }
+
   resetToDefaultState(defaultScale: GeneViewScaleState) {
     this.zoomHistory = [];
     this.zoomHistoryIndex = -1;
@@ -49,21 +61,15 @@ class GeneViewZoomHistory {
   }
 
   moveToPrevious() {
-    if (this.zoomHistoryIndex === 0) {
-      return;
+    if (this.canGoBackward) {
+      this.zoomHistoryIndex--;
     }
-    this.zoomHistoryIndex--;
   }
 
   moveToNext() {
-    if (this.zoomHistoryIndex === this.zoomHistory.length - 1) {
-      return;
+    if (this.canGoForward) {
+      this.zoomHistoryIndex++;
     }
-    this.zoomHistoryIndex++;
-  }
-
-  get currentState() {
-    return this.zoomHistory[this.zoomHistoryIndex];
   }
 }
 
@@ -581,14 +587,22 @@ export class GeneViewComponent implements OnInit {
     this.redraw();
   }
 
+  historyUndo() {
+    this.zoomHistory.moveToPrevious();
+    this.drawFromHistory(this.zoomHistory.currentState);
+  }
+
+  historyRedo() {
+    this.zoomHistory.moveToNext();
+    this.drawFromHistory(this.zoomHistory.currentState);
+  }
+
   handleKeyboardEvent($event) {
     if ($event.ctrlKey && $event.key === 'z') {
-      this.zoomHistory.moveToPrevious();
-      this.drawFromHistory(this.zoomHistory.currentState);
+      this.historyUndo();
     }
     if ($event.ctrlKey && $event.key === 'y') {
-      this.zoomHistory.moveToNext();
-      this.drawFromHistory(this.zoomHistory.currentState);
+      this.historyRedo();
     }
   }
 

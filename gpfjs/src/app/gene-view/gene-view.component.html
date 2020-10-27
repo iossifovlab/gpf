@@ -62,14 +62,6 @@
 
 <div style="padding: 30px; float: left">
   <div id="svg-container"></div>
-
-  <div *ngIf="this.gene" tyle="padding: 0px 10px 10px 20px">
-    <input
-      style="margin-right: 10px;" type="checkbox"
-      id="hide-transcripts-checkbox" #hideTranscriptsCheckbox
-      (click)="checkHideTranscripts(hideTranscriptsCheckbox.checked)">
-    <label for="hide-transcripts-checkbox">Hide transcripts</label>
-  </div>
 </div>
 
 <div *ngIf="this.gene">
@@ -94,10 +86,24 @@
     </tr>
 
   </table>
-  <div style="margin-right: 20px; margin-top: 20px" class="checkbox">
-    <label>
-      <input #checkbox type="checkbox" [checked]="condenseIntrons" (change)="toggleCondenseIntron()">
-      Condense introns
-    </label>
+  <div *ngIf="this.gene">
+    <div style="float: left; margin-top: 5px; margin-right: 10px;">
+      <button style="margin-right: 5px" type="button" class="btn btn-primary" [disabled]="!zoomHistory.canGoBackward" (click)="historyUndo()">Undo history</button>
+      <button type="button" class="btn btn-primary" [disabled]="!zoomHistory.canGoForward" (click)="historyRedo()">Redo history</button>
+    </div>
+    <div>
+      <div class="checkbox">
+        <label>
+          <input #hideTranscriptsCheckbox type="checkbox" (change)="checkHideTranscripts(hideTranscriptsCheckbox.checked)">
+          Hide transcripts
+        </label>
+      </div>
+      <div class="checkbox">
+        <label>
+          <input #checkbox type="checkbox" [checked]="condenseIntrons" (change)="toggleCondenseIntron()">
+          Condense introns
+        </label>
+      </div>
+    </div>
   </div>
 </div>
