@@ -76,21 +76,21 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
     this.familyLoadingFinished = false;
     this.getCurrentState().subscribe(state => {
       const requestParams = {...state};
-      requestParams["maxVariantsCount"] = 1000;
-      requestParams["genomicScores"] = [{
-        "metric": this.geneBrowserConfig.frequencyColumn,
-        "rangeStart": $event.start,
-        "rangeEnd": $event.end
+      requestParams['maxVariantsCount'] = 1000;
+      requestParams['genomicScores'] = [{
+        'metric': this.geneBrowserConfig.frequencyColumn,
+        'rangeStart': $event.start,
+        'rangeEnd': $event.end
       }];
       this.genotypePreviewVariantsArray =
         this.queryService.getGenotypePreviewVariantsByFilter(requestParams, this.genotypePreviewInfo);
-    })
+    });
   }
 
   submitGeneRequest() {
     this.getCurrentState()
       .subscribe(state => {
-        this.geneSymbol = state["geneSymbols"][0];
+        this.geneSymbol = state['geneSymbols'][0];
 
         this.geneService.getGene(this.geneSymbol.toUpperCase().trim()).subscribe((gene) => {
           this.selectedGene = gene;
@@ -100,7 +100,7 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
         this.loadingFinished = false;
         this.loadingService.setLoadingStart();
         this.queryService.getGenotypePreviewInfo(
-          { datasetId: this.selectedDatasetId, peopleGroup: state["peopleGroup"] }
+          { datasetId: this.selectedDatasetId, peopleGroup: state['peopleGroup'] }
         ).subscribe(
           (genotypePreviewInfo) => {
             this.genotypePreviewInfo = genotypePreviewInfo;
@@ -112,11 +112,11 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
             this.queryService.summaryStreamingFinishedSubject.subscribe(
               _ => {
                   summaryLoadingFinished = true;
-                  this.loadingFinished = true; 
+                  this.loadingFinished = true;
                   this.loadingService.setLoadingStop();
             });
 
-            this.queryService.streamingFinishedSubject.subscribe (() => {this.familyLoadingFinished = true})
+            this.queryService.streamingFinishedSubject.subscribe (() => { this.familyLoadingFinished = true; });
 
             const requestParams = {...state};
             requestParams['maxVariantsCount'] = 10000;
@@ -139,8 +139,8 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
 
   getFamilyVariantCounts() {
     if (this.genotypePreviewVariantsArray) {
-      return this.genotypePreviewVariantsArray.getVariantsCount(this.genotypePreviewInfo.maxVariantsCount)
+      return this.genotypePreviewVariantsArray.getVariantsCount(this.genotypePreviewInfo.maxVariantsCount);
     }
-    return "";
+    return '';
   }
 }

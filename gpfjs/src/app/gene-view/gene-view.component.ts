@@ -3,249 +3,10 @@ import * as d3 from 'd3';
 import { Gene, GeneViewSummaryVariantsArray, GeneViewSummaryVariant, DomainRange } from 'app/gene-view/gene';
 import { Subject } from 'rxjs';
 import { DatasetsService } from 'app/datasets/datasets.service';
-import { Transcript, Exon } from 'app/gene-view/gene';
 import { FullscreenLoadingService } from 'app/fullscreen-loading/fullscreen-loading.service';
 import { drawRect, drawLine, drawHoverText, drawStar, drawCircle, drawTriangle, drawSurroundingSquare, drawDot } from 'app/utils/svg-drawing';
+import { GeneViewTranscript, GeneViewModel } from 'app/gene-view/gene-view';
 
-
-class GeneViewTranscriptSegment {
-
-  private _start: number;
-  private _stop: number;
-  private _isExon: boolean;
-  private _isCDS: boolean;
-  private _label: string;
-
-  constructor(
-    start: number,
-    stop: number,
-    isExon: boolean,
-    isCDS: boolean,
-    label: string
-  ) {
-    this._start = start;
-    this._stop = stop;
-    this._isExon = isExon;
-    this._isCDS = isCDS;
-    this._label = label;
-  }
-
-  get start() {
-    return this._start;
-  }
-
-  get stop() {
-    return this._stop;
-  }
-
-  get length() {
-    return this.stop - this.start;
-  }
-
-  get isExon() {
-    return this._isExon;
-  }
-
-  get isIntron() {
-    return !this._isCDS;
-  }
-
-  get isCDS() {
-    return this._isCDS;
-  }
-
-  get label() {
-    return this._label;
-  }
-
-  intersectionLength(min: number, max: number): number {
-    const start = Math.max(this.start, min);
-    const stop = Math.min(this.stop, max);
-
-    if (start >= stop) {
-      return 0;
-    } else {
-      return stop - start;
-    }
-  }
-
-  isSubSegment(min: number, max: number): boolean {
-    return this.start >= min && this.stop <= max;
-  }
-}
-
-class GeneViewTranscript {
-
-  transcript: Transcript;
-  segments: GeneViewTranscriptSegment[] = [];
-
-  get start() {
-    return this.transcript.start;
-  }
-
-  get stop() {
-    return this.transcript.stop;
-  }
-
-  get strand() {
-    return this.transcript.strand;
-  }
-
-  constructor(transcript: Transcript) {
-    this.transcript = transcript;
-
-    const exonCount = this.transcript.exons.length;
-    const intronCount = exonCount - 1;
-
-    for (let i = 0; i < this.transcript.exons.length; i++) {
-      const cdsTransition = this.getCDSTransitionPos(this.transcript.exons[i]);
-      const segmentStart = this.transcript.exons[i].start;
-      const segmentStop = this.transcript.exons[i].stop;
-      if (cdsTransition) {
-        // Split exons which are both inside and outside the coding region into two segments
-        this.segments.push(
-          new GeneViewTranscriptSegment(
-            segmentStart, cdsTransition, true,
-            this.isAreaInCDS(segmentStart, cdsTransition),
-            `exon ${i + 1}/${exonCount}`),
-          new GeneViewTranscriptSegment(
-            cdsTransition, segmentStop, true,
-            this.isAreaInCDS(cdsTransition, segmentStop),
-            `exon ${i + 1}/${exonCount}`)
-        );
-      } else {
-        this.segments.push(
-          new GeneViewTranscriptSegment(
-            segmentStart, segmentStop, true,
-            this.isAreaInCDS(segmentStart, segmentStop),
-            `exon ${i + 1}/${exonCount}`)
-        );
-      }
-      // Add intron segment if applicable
-      if (i + 1 < this.transcript.exons.length) {
-        this.segments.push(
-          new GeneViewTranscriptSegment(
-            segmentStop, this.transcript.exons[i + 1].start,
-            false, false, `intron ${i + 1}/${intronCount}`)
-        );
-      }
-    }
-  }
-
-  isAreaInCDS(start: number, stop: number) {
-    return (start >= this.transcript.cds[0]) && (stop <= this.transcript.cds[1]);
-  }
-
-  getCDSTransitionPos(exon: Exon) {
-    const startIsInCDS = this.isAreaInCDS(exon.start, exon.start);
-    const stopIsInCDS = this.isAreaInCDS(exon.stop, exon.stop);
-    if (startIsInCDS !== stopIsInCDS) {
-      return startIsInCDS ? this.transcript.cds[1] : this.transcript.cds[0];
-    } else {
-      return null;
-    }
-  }
-}
-
-
-class GeneViewModel {
-
-  gene: Gene;
-  rangeWidth: number;
-  geneViewTranscripts: GeneViewTranscript[] = [];
-  collapsedGeneViewTranscript: GeneViewTranscript;
-
-  condensedRange: number[];
-  condensedDomain: number[];
-  normalDomain: number[];
-
-  constructor(gene: Gene, rangeWidth: number) {
-    this.gene = gene;
-    this.rangeWidth = rangeWidth;
-
-    for (const transcript of gene.transcripts) {
-      this.geneViewTranscripts.push(new GeneViewTranscript(transcript));
-    }
-
-    this.collapsedGeneViewTranscript = new GeneViewTranscript(gene.collapsedTranscript());
-
-    this.normalDomain = [
-      this.collapsedGeneViewTranscript.start,
-      this.collapsedGeneViewTranscript.stop
-    ];
-
-    this.condensedDomain = this.buildCondensedIntronsDomain(0, 3000000000);
-    this.condensedRange = this.buildCondesedIntronsRange(0, 3000000000, this.rangeWidth);
-
-  }
-
-  buildCondensedIntronsDomain(domainMin: number, domainMax: number) {
-    const domain: number[] = [];
-    const filteredSegments = this.collapsedGeneViewTranscript.segments.filter(
-      seg => seg.intersectionLength(domainMin, domainMax) > 0);
-
-    const firstSegment = filteredSegments[0];
-    if (firstSegment.isSubSegment(domainMin, domainMax)) {
-      domain.push(firstSegment.start);
-    } else {
-      domain.push(domainMin);
-    }
-    for (let i = 1; i < filteredSegments.length; i++) {
-      const segment = filteredSegments[i];
-      domain.push(segment.start);
-    }
-    const lastSegment = filteredSegments[filteredSegments.length - 1];
-    if (lastSegment.stop <= domainMax) {
-      domain.push(lastSegment.stop);
-    } else {
-      domain.push(domainMax);
-    }
-
-    return domain;
-  }
-
-  buildCondesedIntronsRange(domainMin: number, domainMax: number, rangeWidth: number) {
-    const range: number[] = [];
-    const transcript = this.collapsedGeneViewTranscript.transcript;
-    const filteredSegments = this.collapsedGeneViewTranscript.segments.filter(
-      seg => seg.intersectionLength(domainMin, domainMax) > 0);
-
-    const medianExonLength: number = transcript.medianExonLength;
-    let condensedLength = 0;
-
-    for (const segment of filteredSegments) {
-      if (segment.isIntron) {
-        const intronLength = segment.length;
-        const intersectionLength = segment.intersectionLength(domainMin, domainMax);
-        const factor = intersectionLength / intronLength;
-
-        condensedLength += medianExonLength * factor;
-      } else {
-        const length = segment.intersectionLength(domainMin, domainMax);
-        condensedLength += length;
-      }
-    }
-
-    const scaleFactor: number = this.rangeWidth / condensedLength;
-
-    let rollingTracker = 0;
-    range.push(0);
-
-    for (const segment of filteredSegments) {
-      if (segment.isIntron) {
-        const intronLength = segment.length;
-        const intersectionLength = segment.intersectionLength(domainMin, domainMax);
-        const factor = intersectionLength / intronLength;
-
-        rollingTracker += medianExonLength * scaleFactor * factor;
-      } else {
-        rollingTracker += segment.intersectionLength(domainMin, domainMax) * scaleFactor;
-      }
-      range.push(rollingTracker);
-    }
-    return range;
-  }
-}
 
 class GeneViewScaleState {
   constructor(
@@ -423,7 +184,6 @@ export class GeneViewComponent implements OnInit {
 
       this.condenseIntrons = false;
       this.setDefaultScale();
-
       this.updateFamilyVariantsTable();
       this.drawPlot();
 
@@ -444,10 +204,9 @@ export class GeneViewComponent implements OnInit {
     if (this.gene !== undefined) {
       this.geneViewModel = new GeneViewModel(this.gene, this.svgWidth);
       this.geneViewTranscript = new GeneViewTranscript(this.gene.transcripts[0]);
-      this.resetGeneTableValues();
       this.setDefaultScale();
+      this.resetGeneTableValues();
       this.drawGene();
-      this.zoomHistory.resetToDefaultState(this.calculateDefaultScale());
     }
   }
 
@@ -476,45 +235,36 @@ export class GeneViewComponent implements OnInit {
   }
 
   drawEffectTypesIcons() {
-    this.svgElement = d3.select('#LGDs')
-      .attr('width', 20)
-      .attr('height', 20);
-    drawStar(this.svgElement, 10, 7.5, '#000000');
+    const effectIcons = {
+      '#LGDs': drawStar,
+      '#Missense': drawTriangle,
+      '#Synonymous': drawCircle,
+      '#Other': drawDot
+    };
+    for (const [effect, draw] of Object.entries(effectIcons)) {
+      this.svgElement = d3.select(effect)
+        .attr('width', 20)
+        .attr('height', 20);
+      draw(this.svgElement, 10, 8, '#000000');
+    }
+  }
 
-    this.svgElement = d3.select('#Missense')
-      .attr('width', 20)
-      .attr('height', 20);
-    drawTriangle(this.svgElement, 10, 8, '#000000');
-
-    this.svgElement = d3.select('#Synonymous')
-      .attr('width', 20)
-      .attr('height', 20);
-    drawCircle(this.svgElement, 10, 8, '#000000');
-
-    this.svgElement = d3.select('#Other')
-      .attr('width', 20)
-      .attr('height', 20);
-    drawDot(this.svgElement, 10, 8, '#000000');
+  redraw() {
+    if (this.gene !== undefined) {
+      this.drawGene();
+      this.drawPlot();
+      this.updateFamilyVariantsTable(); // TODO see if this can't be removed from here, causes a request
+    }
   }
 
   checkShowDenovo(checked: boolean) {
     this.showDenovo = checked;
-
-    if (this.gene !== undefined) {
-      this.drawGene();
-      this.drawPlot();
-      this.updateFamilyVariantsTable();
-    }
+    this.redraw();
   }
 
   checkShowTransmitted(checked: boolean) {
     this.showTransmitted = checked;
-
-    if (this.gene !== undefined) {
-      this.drawGene();
-      this.drawPlot();
-      this.updateFamilyVariantsTable();
-    }
+    this.redraw();
   }
 
   checkEffectType(effectType: string, checked: boolean) {
@@ -524,12 +274,7 @@ export class GeneViewComponent implements OnInit {
     } else {
       this.selectedEffectTypes.splice(this.selectedEffectTypes.indexOf(effectType), 1);
     }
-
-    if (this.gene !== undefined) {
-      this.drawGene();
-      this.drawPlot();
-      this.updateFamilyVariantsTable();
-    }
+    this.redraw();
   }
 
   checkAffectedStatus(affectedStatus: string, checked: boolean) {
@@ -538,12 +283,7 @@ export class GeneViewComponent implements OnInit {
     } else {
       this.selectedAffectedStatus.splice(this.selectedAffectedStatus.indexOf(affectedStatus), 1);
     }
-
-    if (this.gene !== undefined) {
-      this.drawGene();
-      this.drawPlot();
-      this.updateFamilyVariantsTable();
-    }
+    this.redraw();
   }
 
   checkHideTranscripts(checked: boolean) {
@@ -574,9 +314,7 @@ export class GeneViewComponent implements OnInit {
   toggleCondenseIntron() {
     this.condenseIntrons = !this.condenseIntrons;
     this.setDefaultScale();
-    this.drawGene();
-    this.drawPlot();
-    this.updateFamilyVariantsTable();
+    this.redraw();
   }
 
   getAffectedStatusColor(affectedStatus: string): string {
@@ -671,8 +409,6 @@ export class GeneViewComponent implements OnInit {
   drawPlot() {
     const minDomain = this.x.domain()[0];
     const maxDomain = this.x.domain()[this.x.domain().length - 1];
-    const domain = this.x.domain();
-    const range = this.x.range();
 
     const filteredSummaryVariants = this.filterSummaryVariantsArray(
       this.summaryVariantsArray, minDomain, maxDomain
@@ -692,7 +428,7 @@ export class GeneViewComponent implements OnInit {
       this.svgElement.append('g').call(this.y_axis_subdomain);
       this.svgElement.append('g').call(this.y_axis_zero);
 
-      filteredSummaryVariants.summaryVariants.sort((a, b) => this.variantsComparator(a, b));
+      filteredSummaryVariants.summaryVariants.sort((a, b) => GeneViewSummaryVariant.comparator(a, b));
 
       for (const variant of filteredSummaryVariants.summaryVariants) {
         const color = this.getAffectedStatusColor(this.getVariantAffectedStatus(variant));
@@ -714,64 +450,33 @@ export class GeneViewComponent implements OnInit {
     }
   }
 
-  variantsComparator(a: GeneViewSummaryVariant, b: GeneViewSummaryVariant) {
-    if (a.seenAsDenovo && !b.seenAsDenovo) {
-      return 1;
-    } else if (!a.seenAsDenovo && b.seenAsDenovo) {
-      return -1;
+  getVariantY(variantFrequency: number): number {
+    if (variantFrequency === 0) {
+      return this.y_zero('0');
+    } else if (variantFrequency < this.frequencyDomainMin) {
+      return this.y_subdomain(variantFrequency);
     } else {
-      if (a.isLGDs() && !b.isLGDs()) {
-        return 1;
-      } else if (!a.isLGDs() && b.isLGDs()) {
-        return -1;
-      } else if (a.isMissense() && !b.isMissense()) {
-        return 1;
-      } else if (!a.isMissense() && b.isMissense()) {
-        return -1;
-      } else if (a.isSynonymous() && !b.isSynonymous()) {
-        return 1;
-      } else if (!a.isSynonymous() && b.isSynonymous()) {
-        return -1;
-      } else {
-        if (this.getVariantAffectedStatus(a) === 'Affected only' && this.getVariantAffectedStatus(b) !== 'Affected only') {
-          return 1;
-        } else if (this.getVariantAffectedStatus(a) !== 'Affected only' && this.getVariantAffectedStatus(b) === 'Affected only') {
-          return -1;
-        } else if (this.getVariantAffectedStatus(a) === 'Unaffected only' && this.getVariantAffectedStatus(b) !== 'Unaffected only') {
-          return 1;
-        } else if (this.getVariantAffectedStatus(a) !== 'Unaffected only' && this.getVariantAffectedStatus(b) === 'Unaffected only') {
-          return -1;
-        } else {
-          return 0;
-        }
-      }
+      return this.y(variantFrequency);
     }
   }
 
-  getVariantY(variantFrequency): number {
-    let y: number;
-
-    if (variantFrequency === 0) {
-      y = this.y_zero('0');
-    } else if (variantFrequency < this.frequencyDomainMin) {
-      y = this.y_subdomain(variantFrequency);
+  convertBrushPointToFrequency(brushY: number): number {
+    if (brushY < this.y_subdomain.range()[1]) {
+      return this.y.invert(brushY);
+    } else if (brushY < this.y_zero.range()[1]) {
+      return this.y_subdomain.invert(brushY);
     } else {
-      y = this.y(variantFrequency);
+      return 0;
     }
-
-    return y;
   }
 
   setDefaultScale() {
-    const defaultScale = this.calculateDefaultScale();
-    this.x = d3.scaleLinear().domain(defaultScale.xDomain).range(defaultScale.xRange).clamp(true);
-    this.selectedFrequencies = [defaultScale.yMin, defaultScale.yMax];
-  }
-
-  calculateDefaultScale(): GeneViewScaleState {
     const domain = this.condenseIntrons ? this.geneViewModel.condensedDomain : this.geneViewModel.normalDomain;
     const range = this.condenseIntrons ? this.geneViewModel.condensedRange : [0, this.svgWidth];
-    return new GeneViewScaleState(domain, range, 0, this.frequencyDomainMax);
+    const defaultScale = new GeneViewScaleState(domain, range, 0, this.frequencyDomainMax);
+    this.x = d3.scaleLinear().domain(domain).range(range).clamp(true);
+    this.selectedFrequencies = [0, this.frequencyDomainMax];
+    this.zoomHistory.resetToDefaultState(defaultScale);
   }
 
   resetGeneTableValues(): void {
@@ -827,7 +532,6 @@ export class GeneViewComponent implements OnInit {
         return;
       }
 
-      this.zoomHistory.resetToDefaultState(this.calculateDefaultScale());
       this.setDefaultScale();
     } else {
       const x1 = extent[0][0];
@@ -869,10 +573,7 @@ export class GeneViewComponent implements OnInit {
         Math.max(...newFreqLimits),
       ];
     }
-
-    this.drawGene();
-    this.updateFamilyVariantsTable();
-    this.drawPlot();
+    this.redraw();
   }
 
   handleKeyboardEvent($event) {
@@ -889,24 +590,8 @@ export class GeneViewComponent implements OnInit {
   drawFromHistory(scale: GeneViewScaleState) {
     this.x.domain(scale.xDomain);
     this.x.range(scale.xRange);
-    this.selectedFrequencies = [
-      scale.yMin,
-      scale.yMax
-    ];
-
-    this.drawGene();
-    this.updateFamilyVariantsTable();
-    this.drawPlot();
-  }
-
-  convertBrushPointToFrequency(brushY: number) {
-    if (brushY < this.y_subdomain.range()[1]) {
-      return this.y.invert(brushY);
-    } else if (brushY < this.y_zero.range()[1]) {
-      return this.y_subdomain.invert(brushY);
-    } else {
-      return 0;
-    }
+    this.selectedFrequencies = [scale.yMin, scale.yMax];
+    this.redraw();
   }
 
   resetTimer = () => {
@@ -932,28 +617,13 @@ export class GeneViewComponent implements OnInit {
 
     if (transcriptId === 'collapsed') {
       isExonInCollapsedTranscript = true;
-      this.drawTranscriptChromosomeText(
-        element,
-        firstSegmentStart,
-        yPos,
-        geneViewTranscript.transcript.chrom
-      );
+      drawHoverText(element, this.x(firstSegmentStart) - 50, yPos + 10, geneViewTranscript.transcript.chrom, 'Chromosome: ');
     } else {
       isExonInCollapsedTranscript = false;
-      this.drawTranscriptIdText(
-        element,
-        firstSegmentStart,
-        yPos,
-        transcriptId
-      );
+      drawHoverText(element, this.x(firstSegmentStart) - 150, yPos + 10, transcriptId, 'Transcript id: ');
     }
 
-    this.drawTranscriptUTRText(
-      element,
-      firstSegmentStart,
-      lastSegmentStop,
-      yPos, geneViewTranscript.strand
-    );
+    this.drawTranscriptUTRText(element, firstSegmentStart, lastSegmentStop, yPos, geneViewTranscript.strand);
 
     for (const segment of segments) {
       const start = Math.max(domainMin, segment.start);
@@ -1002,13 +672,5 @@ export class GeneViewComponent implements OnInit {
     }
     drawHoverText(element, this.x(xStart) - 20, y + 10, UTR.left, 'UTR ');
     drawHoverText(element, this.x(xEnd) + 10, y + 10, UTR.right, 'UTR ');
-  }
-
-  drawTranscriptChromosomeText(element, xStart: number, y: number, chromosome: string) {
-    drawHoverText(element, this.x(xStart) - 50, y + 10, chromosome, 'Chromosome: ');
-  }
-
-  drawTranscriptIdText(element, xStart: number, y: number, id: string) {
-    drawHoverText(element, this.x(xStart) - 150, y + 10, id, 'Transcript id: ');
   }
 }
