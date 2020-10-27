@@ -37,10 +37,10 @@ class GeneViewZoomHistory {
   resetToDefaultState(defaultScale: GeneViewScaleState) {
     this.zoomHistory = [];
     this.zoomHistoryIndex = -1;
-    this.append(defaultScale);
+    this.addStateToHistory(defaultScale);
   }
 
-  append(scale: GeneViewScaleState) {
+  addStateToHistory(scale: GeneViewScaleState) {
     // If you append and the index is not in the end
     // clean the history after it and start apending new states
     this.zoomHistory = this.zoomHistory.slice(0, this.zoomHistoryIndex + 1);
@@ -62,7 +62,7 @@ class GeneViewZoomHistory {
     this.zoomHistoryIndex++;
   }
 
-  getState() {
+  get currentState() {
     return this.zoomHistory[this.zoomHistoryIndex];
   }
 }
@@ -89,10 +89,8 @@ export class GeneViewComponent implements OnInit {
   options = {
     margin: { top: 10, right: 100, left: 150, bottom: 0 },
     axisScale: { domain: 0.90, subdomain: 0.05 },
-    exonThickness: 6.25,
-    cdsThickness: 12.5,
-    summedTranscriptExonThickness: 12.5,
-    summedTranscriptCdsThickness: 25,
+    exonThickness: { normal: 6.25, collapsed: 12.5 },
+    cdsThickness: { normal: 12.5, collapsed: 25 },
   };
 
   svgElement;
@@ -405,9 +403,8 @@ export class GeneViewComponent implements OnInit {
   }
 
   updateFamilyVariantsTable() {
-    const currentState = this.zoomHistory.getState();
-    const start = currentState.yMin;
-    const end = currentState.yMax;
+    const start = this.zoomHistory.currentState.yMin;
+    const end = this.zoomHistory.currentState.yMax;
     const domains = new DomainRange(start, end);
     this.updateShownTablePreviewVariantsArrayEvent.emit(domains);
   }
@@ -570,7 +567,9 @@ export class GeneViewComponent implements OnInit {
       this.x = d3.scaleLinear().domain(domain).range(range).clamp(true);
 
       if (domainMax - domainMin >= 12) {
-        this.zoomHistory.append(new GeneViewScaleState(domain, range, Math.min(...newFreqLimits), Math.max(...newFreqLimits)));
+        this.zoomHistory.addStateToHistory(
+          new GeneViewScaleState(domain, range, Math.min(...newFreqLimits), Math.max(...newFreqLimits))
+        );
       }
 
       this.svgElement.select('.brush').call(this.brush.move, null);
@@ -585,11 +584,11 @@ export class GeneViewComponent implements OnInit {
   handleKeyboardEvent($event) {
     if ($event.ctrlKey && $event.key === 'z') {
       this.zoomHistory.moveToPrevious();
-      this.drawFromHistory(this.zoomHistory.getState());
+      this.drawFromHistory(this.zoomHistory.currentState);
     }
     if ($event.ctrlKey && $event.key === 'y') {
       this.zoomHistory.moveToNext();
-      this.drawFromHistory(this.zoomHistory.getState());
+      this.drawFromHistory(this.zoomHistory.currentState);
     }
   }
 
@@ -650,24 +649,24 @@ export class GeneViewComponent implements OnInit {
     let cdsThickness: number;
 
     if (isExonInCollapsedTranscript) {
-      exonThickness = this.options.summedTranscriptExonThickness;
-      cdsThickness = this.options.summedTranscriptCdsThickness;
+      exonThickness = this.options.exonThickness.collapsed;
+      cdsThickness = this.options.cdsThickness.collapsed;
     } else {
-      exonThickness = this.options.exonThickness;
-      cdsThickness = this.options.cdsThickness;
+      exonThickness = this.options.exonThickness.normal;
+      cdsThickness = this.options.cdsThickness.normal;
     }
 
     let rectThickness = exonThickness;
     if (cds) {
       rectThickness = cdsThickness;
-      y -= (rectThickness - this.options.exonThickness) / 2;
+      y -= (rectThickness - exonThickness) / 2;
       title += ' [CDS]';
     }
     drawRect(element, xStart, xEnd, y, rectThickness, title);
   }
 
   drawIntron(element, xStart: number, xEnd: number, y: number, title: string) {
-    drawLine(element, xStart, xEnd, y + this.options.exonThickness / 2, title);
+    drawLine(element, xStart, xEnd, y + this.options.exonThickness.normal / 2, title);
   }
 
   drawTranscriptUTRText(element, xStart: number, xEnd: number, y: number, strand: string) {
