@@ -608,7 +608,6 @@ export class GeneViewComponent implements OnInit {
     const domainMin = domain[0];
     const domainMax = domain[domain.length - 1];
     const transcriptId = geneViewTranscript.transcript.transcript_id;
-    let isExonInCollapsedTranscript: boolean;
     const segments = geneViewTranscript.segments.filter(
       seg => seg.intersectionLength(domainMin, domainMax) > 0
     );
@@ -620,11 +619,15 @@ export class GeneViewComponent implements OnInit {
     const firstSegmentStart = Math.max(segments[0].start, domainMin);
     const lastSegmentStop = Math.min(segments[segments.length - 1].stop, domainMax);
 
+    let brushSize = {
+      nonCoding: this.options.exonThickness.normal,
+      coding: this.options.cdsThickness.normal
+    };
+
     if (transcriptId === 'collapsed') {
-      isExonInCollapsedTranscript = true;
+      brushSize = { nonCoding: this.options.exonThickness.collapsed, coding: this.options.cdsThickness.collapsed };
       drawHoverText(element, this.x(firstSegmentStart) - 50, yPos + 10, geneViewTranscript.transcript.chrom, 'Chromosome: ');
     } else {
-      isExonInCollapsedTranscript = false;
       drawHoverText(element, this.x(firstSegmentStart) - 150, yPos + 10, transcriptId, 'Transcript id: ');
     }
 
@@ -637,36 +640,25 @@ export class GeneViewComponent implements OnInit {
       const xStop = this.x(stop);
 
       if (segment.isExon) {
-        this.drawExon(element, xStart, xStop, yPos, segment.label, segment.isCDS, isExonInCollapsedTranscript);
+        this.drawExon(element, xStart, xStop, yPos, segment.label, segment.isCDS, brushSize);
       } else {
-        this.drawIntron(element, xStart, xStop, yPos, segment.label);
+        this.drawIntron(element, xStart, xStop, yPos, segment.label, brushSize);
       }
     }
   }
 
-  drawExon(element, xStart: number, xEnd: number, y: number, title: string, cds: boolean, isExonInCollapsedTranscript: boolean) {
-    let exonThickness: number;
-    let cdsThickness: number;
-
-    if (isExonInCollapsedTranscript) {
-      exonThickness = this.options.exonThickness.collapsed;
-      cdsThickness = this.options.cdsThickness.collapsed;
-    } else {
-      exonThickness = this.options.exonThickness.normal;
-      cdsThickness = this.options.cdsThickness.normal;
-    }
-
-    let rectThickness = exonThickness;
+  drawExon(element, xStart: number, xEnd: number, y: number, title: string, cds: boolean, brushSize) {
+    let rectThickness = brushSize.nonCoding;
     if (cds) {
-      rectThickness = cdsThickness;
-      y -= (rectThickness - exonThickness) / 2;
+      rectThickness = brushSize.coding;
+      y -= (brushSize.coding - brushSize.nonCoding) / 2;
       title += ' [CDS]';
     }
     drawRect(element, xStart, xEnd, y, rectThickness, title);
   }
 
-  drawIntron(element, xStart: number, xEnd: number, y: number, title: string) {
-    drawLine(element, xStart, xEnd, y + this.options.exonThickness.normal / 2, title);
+  drawIntron(element, xStart: number, xEnd: number, y: number, title: string, brushSize) {
+    drawLine(element, xStart, xEnd, y + brushSize.nonCoding / 2, title);
   }
 
   drawTranscriptUTRText(element, xStart: number, xEnd: number, y: number, strand: string) {
