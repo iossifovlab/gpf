@@ -297,7 +297,16 @@ export class GeneViewComponent implements OnInit {
   }
 
   checkHideTranscripts(checked: boolean) {
-    this.transcriptsElement.attr('display', checked ? 'none' : 'block');
+    const height = this.svgHeightFreqRaw + 70;
+    const heightWithTranscripts = height + (this.gene.transcripts.length + 1) * 25;
+
+    if (checked) {
+      this.transcriptsElement.attr('display', 'none');
+      d3.select('#svg-container svg').attr('height', height);
+    } else {
+      this.transcriptsElement.attr('display', 'block');
+      d3.select('#svg-container svg').attr('height', heightWithTranscripts);
+    }
   }
 
   isVariantEffectSelected(worst_effect) {
