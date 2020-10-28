@@ -212,12 +212,8 @@ class BaseQueryBuilder:
                     )
             elif left is None:
                 assert right is not None
-                if is_frequency:
-                    query.append(
-                        f"({attr_name} <= {right} or {attr_name} is null)")
-                else:
-                    query.append(
-                        f"({attr_name} <= {right})")
+                query.append(
+                    f"({attr_name} <= {right} or {attr_name} is null)")
 
             elif right is None:
                 assert left is not None
