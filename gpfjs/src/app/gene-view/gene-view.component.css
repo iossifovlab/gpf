@@ -11,12 +11,10 @@ td {
 }
 
 .astext {
-  margin-right: 5px;
-  font-size : 35px;
+  font-size : 25px;
   background:none;
   border:none;
   margin:0;
-  padding:0;
   padding-right:5px;
   outline:none;
 }

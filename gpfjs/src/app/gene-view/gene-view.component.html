@@ -60,34 +60,26 @@
 </div>
 
 
-<div style="padding: 0px 30px 30px 30px; float: left;text-align:center;">
-  <button type="button" class="astext" [disabled]="!zoomHistory.canGoBackward" (click)="historyUndo()">&#x021B6;</button>
-  <button type="button" class="astext" [disabled]="!zoomHistory.canGoForward" (click)="historyRedo()">&#x021B7;</button>
+<div style="padding: 0px 30px 30px 30px; float: left;">
+  <div *ngIf="this.gene" class="effect-card card" style="left:12%; width: 956px">
+    <div class="card-header card-title" style="font-family: Roboto; font-weight: 500; padding: 0px">
+      <button type="button" class="astext" style="padding-left:10px;" [disabled]="!zoomHistory.canGoBackward" (click)="historyUndo()">&#x021B6;</button>
+      <button type="button" class="astext" style="padding-left:5px;" [disabled]="!zoomHistory.canGoForward" (click)="historyRedo()">&#x021B7;</button>
+      <b style="margin-left: 50px; font-size: 20px;">{{ this.geneTableStats.geneSymbol }}</b>
+      <span style="margin-left: 20px; font-size: 17px;">Summary variants:
+        total {{ this.geneTableStats.totalSummaryVariants }}
+        selected {{ this.geneTableStats.selectedSummaryVariants }}
+      </span>
+      <span style="margin-left: 20px; font-size: 17px;">Family variants:
+        total {{ this.geneTableStats.totalFamilyVariants }}
+        selected {{ this.geneTableStats.selectedFamilyVariants }}
+      </span>
+    </div>
+  </div>
   <div id="svg-container"></div>
 </div>
 
 <div *ngIf="this.gene">
-  <h2>{{ this.geneTableStats.geneSymbol }}</h2>
-  <table>
-    <tr>
-      <td></td>
-      <td>total</td>
-      <td>selected</td>
-    </tr>
-
-    <tr>
-      <td>summary variants</td>
-      <td>{{ this.geneTableStats.totalSummaryVariants }}</td>
-      <td>{{ this.geneTableStats.selectedSummaryVariants }}</td>
-    </tr>
-
-    <tr>
-      <td>family variants</td>
-      <td>{{ this.geneTableStats.totalFamilyVariants }}</td>
-      <td>{{ this.geneTableStats.selectedFamilyVariants }}</td>
-    </tr>
-
-  </table>
   <div *ngIf="this.gene">
     <div>
       <div class="checkbox">
