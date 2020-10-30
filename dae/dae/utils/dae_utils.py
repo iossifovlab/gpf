@@ -53,16 +53,3 @@ def join_line(ln, sep="\t"):
 
 def members_in_order_get_family_structure(mio):
     return "".join([f"{p.role.name}{p.sex.short()}" for p in mio])
-
-
-DNA_COMPLEMENT_NUCLEOTIDES = {
-    "A": "T",
-    "T": "A",
-    "G": "C",
-    "C": "G",
-}
-
-
-def dna_complement(nucleotides: str) -> str:
-    return "".join(
-        [DNA_COMPLEMENT_NUCLEOTIDES[n] for n in nucleotides[::-1].upper()])

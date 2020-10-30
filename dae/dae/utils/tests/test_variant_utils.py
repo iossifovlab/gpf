@@ -2,7 +2,7 @@ import pytest
 
 from typing import List, Union
 
-from dae.utils.variant_utils import get_locus_ploidy
+from dae.utils.variant_utils import get_locus_ploidy, reverse_complement
 from dae.variants.attributes import Sex
 
 chroms: List[Union[int, str]] = list(range(1, 23))
@@ -39,3 +39,13 @@ test_data.append(("X", 155260600, Sex.M, 1))
 @pytest.mark.parametrize("chrom,pos,sex,expected", [*test_data])
 def test_get_locus_ploidy(chrom, pos, sex, expected, genome_2013):
     assert get_locus_ploidy(chrom, pos, sex, genome_2013) == expected
+
+
+@pytest.mark.parametrize("dna,expected", [
+    ("a", "T"),
+    ("ac", "GT"),
+    ("actg", "CAGT"),
+])
+def test_reverse_complement(dna, expected):
+    result = reverse_complement(dna)
+    assert result == expected

@@ -3,10 +3,16 @@ Created on Mar 5, 2018
 
 @author: lubo
 """
+import logging
 import numpy as np
+
+from typing import Iterator
 
 from dae.genome.genomes_db import Genome
 from dae.variants.attributes import Sex
+
+
+logger = logging.getLogger(__name__)
 
 
 GENOTYPE_TYPE = np.int8
@@ -144,22 +150,22 @@ def cshl_format(pos, ref, alt, trimmer=trim_str_front):
     if len(r) == len(a) and len(r) == 0:
         # print('ref {:s} is the same as alt {:s}'.format(
         #     ref, alt), file=sys.stderr)
-        return p, "complex(" + r + "->" + a + ")", 0
+        return p, f"complex({r}->{a})", 0
 
     if len(r) == len(a) and len(r) == 1:
-        wx = "sub(" + r + "->" + a + ")"
+        wx = f"sub({r}->{a})"
         return p, wx, 1
 
     if len(r) > len(a) and len(a) == 0:
-        wx = "del(" + str(len(r)) + ")"
+        wx = f"del({len(r)})"
         return p, wx, len(r)
 
     # len(ref) < len(alt):
     if len(r) < len(a) and len(r) == 0:
-        wx = "ins(" + a + ")"
+        wx = f"ins({a})"
         return p, wx, len(a)
 
-    return p, "complex(" + r + "->" + a + ")", max(len(r), len(a))
+    return p, f"complex({r}->{a})", max(len(r), len(a))
 
 
 def vcf2cshl(pos, ref, alt, trimmer=trim_str_front):
@@ -183,3 +189,57 @@ def get_interval_locus_ploidy(
     start_ploidy = get_locus_ploidy(chrom, pos_start, sex, genome)
     end_ploidy = get_locus_ploidy(chrom, pos_end, sex, genome)
     return max(start_ploidy, end_ploidy)
+
+
+DNA_COMPLEMENT_NUCLEOTIDES = {
+    "A": "T",
+    "T": "A",
+    "G": "C",
+    "C": "G",
+}
+
+
+def complement(nucleotides: str) -> str:
+    return "".join(
+        [
+            DNA_COMPLEMENT_NUCLEOTIDES[n.upper()]
+            for n in nucleotides
+        ])
+
+
+def reverse_complement(nucleotides: str) -> str:
+    return complement(nucleotides[::-1])
+
+
+def liftover_variant(chrom, pos, ref, alt, lo, target_genome):
+    lo_coordinates = lo.convert_coordinate(chrom, pos - 1)
+
+    # print(f"{chrom}:{pos} -> {lo_coordinates}")
+
+    if not lo_coordinates:
+        return None
+    if len(lo_coordinates) > 1:
+        print("Warning....")
+    lo_chrom, lo_pos, lo_strand, _ = lo_coordinates[0]
+
+    if lo_strand == "+" or len(ref) == len(alt):
+        lo_pos += 1
+    elif lo_strand == "-":
+        lo_pos -= len(ref)
+        lo_pos -= 1
+
+    _, tr_ref, tr_alt = trim_str_front(pos, ref, alt)
+
+    lo_ref = target_genome.get_sequence(
+        lo_chrom, lo_pos, lo_pos + len(ref) - 1)
+
+    lo_alt = alt
+    if lo_strand == "-":
+        if not tr_alt:
+            lo_alt = f"{lo_ref[0]}"
+        else:
+            lo_alt = reverse_complement(tr_alt)
+            if not tr_ref:
+                lo_alt = f"{lo_ref[0]}{lo_alt}"
+
+    return (lo_chrom, lo_pos, lo_ref, lo_alt)
