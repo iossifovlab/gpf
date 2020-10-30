@@ -1,11 +1,12 @@
-import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter, forwardRef } from '@angular/core';
 import * as d3 from 'd3';
 import { Gene, GeneViewSummaryVariantsArray, GeneViewSummaryVariant, DomainRange } from 'app/gene-view/gene';
-import { Subject } from 'rxjs';
+import { Subject, Observable } from 'rxjs';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { FullscreenLoadingService } from 'app/fullscreen-loading/fullscreen-loading.service';
 import { drawRect, drawLine, drawHoverText, drawStar, drawCircle, drawTriangle, drawSurroundingSquare, drawDot } from 'app/utils/svg-drawing';
 import { GeneViewTranscript, GeneViewModel } from 'app/gene-view/gene-view';
+import { QueryStateWithErrorsProvider } from 'app/query/query-state-provider';
 
 
 class GeneViewScaleState {
@@ -71,9 +72,10 @@ class GeneViewZoomHistory {
   selector: 'gpf-gene-view',
   templateUrl: './gene-view.component.html',
   styleUrls: ['./gene-view.component.css'],
-  host: { '(document:keydown)': 'handleKeyboardEvent($event)' }
+  host: { '(document:keydown)': 'handleKeyboardEvent($event)' },
+  providers: [{provide: QueryStateProvider, useExisting: forwardRef(() => GeneViewComponent) }]
 })
-export class GeneViewComponent implements OnInit {
+export class GeneViewComponent extends QueryStateWithErrorsProvider implements OnInit {
   @Input() gene: Gene;
   @Input() variantsArray: GeneViewSummaryVariantsArray;
   @Input() streamingFinished$: Subject<boolean>;
@@ -85,6 +87,17 @@ export class GeneViewComponent implements OnInit {
   condenseIntrons: boolean;
 
   summaryVariantsArray: GeneViewSummaryVariantsArray;
+
+  getState(): Observable<object> {
+    const state = {
+      "affectedStatus": this.selectedAffectedStatus,
+      "selectedEffectTypes": this.selectedEffectTypes,
+      "zoomState": this.zoomHistory.currentState,
+      "showDenovo": this.showDenovo,
+      "showTransmitted": this.showTransmitted
+    }
+    return this.validateAndGetState(state);
+  }
 
   options = {
     margin: { top: 10, right: 100, left: 150, bottom: 0 },
@@ -138,7 +151,9 @@ export class GeneViewComponent implements OnInit {
   constructor(
     private datasetsService: DatasetsService,
     private loadingService: FullscreenLoadingService,
-  ) { }
+  ) { 
+    super()
+  }
 
   ngOnInit() {
     this.datasetsService.getSelectedDataset().subscribe(dataset => {

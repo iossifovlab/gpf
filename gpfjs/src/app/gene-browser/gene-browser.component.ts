@@ -10,6 +10,7 @@ import { ActivatedRoute, Params } from '@angular/router';
 import { QueryStateCollector } from 'app/query/query-state-provider';
 import { FullscreenLoadingService } from 'app/fullscreen-loading/fullscreen-loading.service';
 import { GeneViewComponent } from 'app/gene-view/gene-view.component';
+import { StateRestoreService } from 'app/store/state-restore.service';
 
 @Component({
   selector: 'gpf-gene-browser-component',
@@ -47,7 +48,8 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
     private geneService: GeneService,
     private datasetsService: DatasetsService,
     private route: ActivatedRoute,
-    private loadingService: FullscreenLoadingService
+    private loadingService: FullscreenLoadingService,
+    private stateRestoreService: StateRestoreService
 
   ) {
     super();
@@ -77,7 +79,7 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
   updateShownTablePreviewVariantsArray($event: DomainRange) {
     this.familyLoadingFinished = false;
     this.getCurrentState().subscribe(state => {
-      const requestParams = {...state};
+      const requestParams = this.transformFamilyVariantsQueryParameters(state, this.selectedGene);
       requestParams['maxVariantsCount'] = this.maxFamilyVariants;
       requestParams['genomicScores'] = [{
         'metric': this.geneBrowserConfig.frequencyColumn,
@@ -88,6 +90,26 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
         this.queryService.getGenotypePreviewVariantsByFilter(requestParams, this.genotypePreviewInfo);
     });
   }
+
+  transformFamilyVariantsQueryParameters(state, gene: Gene) {
+    const inheritanceFilters = []
+    if(state.showDenovo) {
+      inheritanceFilters.push("denovo")
+    }
+    if(state.showTransmitted) {
+      inheritanceFilters.push("mendelian")
+    }
+    const params: any = {
+      "effectTypes": state.selectedEffectTypes,
+      "genomicScores": state.genomicScores,
+      "inheritanceTypeFilter": inheritanceFilters,
+      "datasetId": state.datasetId
+    }
+    if(state.zoomState) {
+      params.regions = `${gene.transcripts[0].chrom}:${state.zoomState.xDomain[0]}-${state.zoomState.xDomain[1]}`;
+    }
+    return params;
+  } 
 
   submitGeneRequest() {
     this.getCurrentState()
