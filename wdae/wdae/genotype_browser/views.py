@@ -68,6 +68,12 @@ class QueryPreviewVariantsView(QueryBaseView):
         if dataset_id is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
+        if "genomicScores" in data:
+            scores = data["genomicScores"]
+            for score in scores:
+                if score["rangeStart"] is None and score["rangeEnd"] is None:
+                    return Response(status=status.HTTP_400_BAD_REQUEST)
+
         max_variants = data.pop(
             "maxVariantsCount", self.MAX_SHOWN_VARIANTS + 1)
         if max_variants == -1:
