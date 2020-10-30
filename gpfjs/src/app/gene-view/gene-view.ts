@@ -2,53 +2,22 @@ import { Gene, Transcript, Exon } from 'app/gene-view/gene';
 
 
 export class GeneViewTranscriptSegment {
-
-  private _start: number;
-  private _stop: number;
-  private _isExon: boolean;
-  private _isCDS: boolean;
-  private _label: string;
-
   constructor(
-    start: number,
-    stop: number,
-    isExon: boolean,
-    isCDS: boolean,
-    label: string
-  ) {
-    this._start = start;
-    this._stop = stop;
-    this._isExon = isExon;
-    this._isCDS = isCDS;
-    this._label = label;
-  }
-
-  get start() {
-    return this._start;
-  }
-
-  get stop() {
-    return this._stop;
-  }
+    public chrom: string,
+    public start: number,
+    public stop: number,
+    public isExon: boolean,
+    public isCDS: boolean,
+    public isSpacer: boolean,
+    public label: string
+  ) { }
 
   get length() {
-    return this.stop - this.start;
-  }
-
-  get isExon() {
-    return this._isExon;
+    return (this.stop - this.start) * (this.isSpacer ? 2 : 1);
   }
 
   get isIntron() {
-    return !this._isCDS;
-  }
-
-  get isCDS() {
-    return this._isCDS;
-  }
-
-  get label() {
-    return this._label;
+    return !this.isCDS;
   }
 
   intersectionLength(min: number, max: number): number {
@@ -98,28 +67,33 @@ export class GeneViewTranscript {
         // Split exons which are both inside and outside the coding region into two segments
         this.segments.push(
           new GeneViewTranscriptSegment(
+            this.transcript.exons[i].chrom,
             segmentStart, cdsTransition, true,
-            this.isAreaInCDS(segmentStart, cdsTransition),
+            this.isAreaInCDS(segmentStart, cdsTransition), false,
             `exon ${i + 1}/${exonCount}`),
           new GeneViewTranscriptSegment(
+            this.transcript.exons[i].chrom,
             cdsTransition, segmentStop, true,
-            this.isAreaInCDS(cdsTransition, segmentStop),
+            this.isAreaInCDS(cdsTransition, segmentStop), false,
             `exon ${i + 1}/${exonCount}`)
         );
       } else {
         this.segments.push(
           new GeneViewTranscriptSegment(
+            this.transcript.exons[i].chrom,
             segmentStart, segmentStop, true,
-            this.isAreaInCDS(segmentStart, segmentStop),
+            this.isAreaInCDS(segmentStart, segmentStop), false,
             `exon ${i + 1}/${exonCount}`)
         );
       }
       // Add intron segment if applicable
       if (i + 1 < this.transcript.exons.length) {
+        const spacer = this.transcript.exons[i].chrom !== this.transcript.exons[i + 1].chrom;
         this.segments.push(
           new GeneViewTranscriptSegment(
+            this.transcript.exons[i].chrom,
             segmentStop, this.transcript.exons[i + 1].start,
-            false, false, `intron ${i + 1}/${intronCount}`)
+            false, false, spacer, `intron ${i + 1}/${intronCount}`)
         );
       }
     }
@@ -168,7 +142,7 @@ export class GeneViewModel {
     ];
 
     this.condensedDomain = this.buildCondensedIntronsDomain(0, 3000000000);
-    this.condensedRange = this.buildCondesedIntronsRange(0, 3000000000, this.rangeWidth);
+    this.condensedRange = this.buildCondensedIntronsRange(0, 3000000000, this.rangeWidth);
 
   }
 
@@ -197,7 +171,7 @@ export class GeneViewModel {
     return domain;
   }
 
-  buildCondesedIntronsRange(domainMin: number, domainMax: number, rangeWidth: number) {
+  buildCondensedIntronsRange(domainMin: number, domainMax: number, rangeWidth: number) {
     const range: number[] = [];
     const transcript = this.collapsedGeneViewTranscript.transcript;
     const filteredSegments = this.collapsedGeneViewTranscript.segments.filter(
