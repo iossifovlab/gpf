@@ -1,5 +1,3 @@
-import pytest
-
 from dae.utils.dae_utils import join_line
 
 

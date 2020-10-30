@@ -6,8 +6,6 @@ Created on Mar 5, 2018
 import logging
 import numpy as np
 
-from typing import Iterator
-
 from dae.genome.genomes_db import Genome
 from dae.variants.attributes import Sex
 
@@ -83,6 +81,10 @@ def is_all_unknown_genotype(gt):
 
 
 def trim_str_front(pos, ref, alt):
+    assert alt, (pos, ref, alt)
+    assert ref, (pos, ref, alt)
+
+    n = 0
     for n, s in enumerate(zip(ref, alt)):
         if s[0] != s[1]:
             break
@@ -117,9 +119,10 @@ def trim_str_front(pos, ref, alt):
 
 
 def trim_str_back(pos, ref, alt):
-    assert alt
-    assert ref
+    assert alt, (pos, ref, alt)
+    assert ref, (pos, ref, alt)
 
+    n = 0
     for n, s in enumerate(zip(ref[::-1], alt[::-1])):
         if s[0] != s[1]:
             break
@@ -213,8 +216,6 @@ def reverse_complement(nucleotides: str) -> str:
 
 def liftover_variant(chrom, pos, ref, alt, lo, target_genome):
     lo_coordinates = lo.convert_coordinate(chrom, pos - 1)
-
-    # print(f"{chrom}:{pos} -> {lo_coordinates}")
 
     if not lo_coordinates:
         return None
