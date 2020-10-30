@@ -97,6 +97,7 @@ export class GeneViewComponent implements OnInit {
     axisScale: { domain: 0.90, subdomain: 0.05 },
     exonThickness: { normal: 6.25, collapsed: 12.5 },
     cdsThickness: { normal: 12.5, collapsed: 25 },
+    xAxisTicks: 12,
   };
 
   svgElement;
@@ -437,7 +438,7 @@ export class GeneViewComponent implements OnInit {
     );
 
     if (this.gene !== undefined) {
-      this.x_axis = d3.axisBottom(this.x);
+      this.x_axis = d3.axisBottom(this.x).tickValues(this.calculateTranscriptAxisTicks(this.geneViewModel.collapsedGeneViewTranscript));
       this.y_axis = d3.axisLeft(this.y);
       this.y_axis_subdomain = d3.axisLeft(this.y_subdomain).tickValues([this.frequencyDomainMin / 2.0]);
       this.y_axis_zero = d3.axisLeft(this.y_zero);
@@ -626,7 +627,7 @@ export class GeneViewComponent implements OnInit {
     this.doubleClickTimer = null;
   }
 
-  drawChromosomeLabels(element, yPos: number, geneViewTranscript: GeneViewTranscript) {
+  getTranscriptChromosomes(geneViewTranscript: GeneViewTranscript) {
     const domain = this.x.domain();
     const domainMin = domain[0];
     const domainMax = domain[domain.length - 1];
@@ -646,11 +647,44 @@ export class GeneViewComponent implements OnInit {
         segment.stop, chromosomes[segment.chrom][1]
       );
     }
+    return chromosomes;
+  }
+
+  drawChromosomeLabels(element, yPos: number, geneViewTranscript: GeneViewTranscript) {
+    const domain = this.x.domain();
+    const domainMin = domain[0];
+    const domainMax = domain[domain.length - 1];
+    const chromosomes = this.getTranscriptChromosomes(geneViewTranscript);
+    let from: number;
+    let to: number;
+    for (const [chromosome, range] of Object.entries(chromosomes)) {
+      from = Math.max(range[0], domainMin);
+      to = Math.min(range[1], domainMax);
+      drawHoverText(element, this.x((from + to) / 2) - 43, yPos + 35, `Chromosome: ${chromosome}`, '');
+    }
+  }
+
+  calculateTranscriptAxisTicks(geneViewTranscript: GeneViewTranscript) {
+    const domain = this.x.domain();
+    const domainMin = domain[0];
+    const domainMax = domain[domain.length - 1];
+    const chromosomes = this.getTranscriptChromosomes(geneViewTranscript);
+    const ticks = [];
+    let from: number;
+    let to: number;
 
     for (const [chromosome, range] of Object.entries(chromosomes)) {
-      drawHoverText(element, this.x((range[0] + range[1]) / 2) - 15, yPos + 35, `Chromosome: ${chromosome}`, '');
+      from = this.x(Math.max(range[0], domainMin));
+      to = this.x(Math.min(range[1], domainMax));
+      const increment = (to - from) / (this.options.xAxisTicks / Object.keys(chromosomes).length);
+      for (let i = from; i < to; i += increment) {
+        ticks.push(this.x.invert(i));
+      }
+      if (ticks[ticks.length - 1] !== this.x.invert(to)) {
+        ticks.push(this.x.invert(to));
+      }
     }
-
+    return ticks;
   }
 
   drawTranscript(element, yPos: number, geneViewTranscript: GeneViewTranscript) {
