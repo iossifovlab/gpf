@@ -572,7 +572,7 @@ export class GeneViewComponent implements OnInit {
       if (this.condenseIntrons) {
         domain = this.geneViewModel.buildCondensedIntronsDomain(
           domainMin, domainMax);
-        range = this.geneViewModel.buildCondesedIntronsRange(
+        range = this.geneViewModel.buildCondensedIntronsRange(
           domainMin, domainMax, this.svgWidth);
       } else {
         domain = [domainMin, domainMax];
@@ -626,6 +626,33 @@ export class GeneViewComponent implements OnInit {
     this.doubleClickTimer = null;
   }
 
+  drawChromosomeLabels(element, yPos: number, geneViewTranscript: GeneViewTranscript) {
+    const domain = this.x.domain();
+    const domainMin = domain[0];
+    const domainMax = domain[domain.length - 1];
+    const segments = geneViewTranscript.segments.filter(
+      seg => seg.intersectionLength(domainMin, domainMax) > 0 && !seg.isSpacer
+    );
+
+    const chromosomes = {};
+    for (const segment of segments) {
+      if (!chromosomes.hasOwnProperty(segment.chrom)) {
+        chromosomes[segment.chrom] = [segment.start, segment.stop];
+      }
+      chromosomes[segment.chrom][0] = Math.min(
+        segment.start, chromosomes[segment.chrom][0]
+      );
+      chromosomes[segment.chrom][1] = Math.max(
+        segment.stop, chromosomes[segment.chrom][1]
+      );
+    }
+
+    for (const [chromosome, range] of Object.entries(chromosomes)) {
+      drawHoverText(element, this.x((range[0] + range[1]) / 2) - 15, yPos + 35, `Chromosome: ${chromosome}`, '');
+    }
+
+  }
+
   drawTranscript(element, yPos: number, geneViewTranscript: GeneViewTranscript) {
     const domain = this.x.domain();
     const domainMin = domain[0];
@@ -649,7 +676,7 @@ export class GeneViewComponent implements OnInit {
 
     if (transcriptId === 'collapsed') {
       brushSize = { nonCoding: this.options.exonThickness.collapsed, coding: this.options.cdsThickness.collapsed };
-      drawHoverText(element, this.x(firstSegmentStart) - 50, yPos + 10, geneViewTranscript.transcript.chrom, 'Chromosome: ');
+      this.drawChromosomeLabels(element, yPos, geneViewTranscript);
     } else {
       drawHoverText(element, this.x(firstSegmentStart) - 150, yPos + 10, transcriptId, 'Transcript id: ');
     }
@@ -664,7 +691,7 @@ export class GeneViewComponent implements OnInit {
 
       if (segment.isExon) {
         this.drawExon(element, xStart, xStop, yPos, segment.label, segment.isCDS, brushSize);
-      } else {
+      } else if (!segment.isSpacer) {
         this.drawIntron(element, xStart, xStop, yPos, segment.label, brushSize);
       }
     }

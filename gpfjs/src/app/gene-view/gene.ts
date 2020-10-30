@@ -2,9 +2,11 @@ import { GenotypePreviewVariantsArray, GenotypePreview } from 'app/genotype-prev
 
 export class Exon {
   constructor(
+    public chrom: string,
     private _start: number,
     private _stop: number
   ) { }
+
   get start() {
     return this._start;
   }
@@ -25,12 +27,12 @@ export class Exon {
     return this._stop - this._start;
   }
 
-  static fromJson(json: any): Exon {
-    return new Exon(json['start'], json['stop']);
+  static fromJson(chrom: string, json: any): Exon {
+    return new Exon(chrom, json['start'], json['stop']);
   }
 
-  static fromJsonArray(jsonArray: Array<Object>): Array<Exon> {
-    return jsonArray.map(json => Exon.fromJson(json));
+  static fromJsonArray(chrom: string, jsonArray: Array<Object>): Array<Exon> {
+    return jsonArray.map(json => Exon.fromJson(chrom, json));
   }
 }
 
@@ -48,9 +50,9 @@ export class Transcript {
   static fromJson(json: any): Transcript {
     return new Transcript(
       json['transcript_id'], json['strand'], json['chrom'],
-      Exon.fromJson(json['utr3']), Exon.fromJson(json['utr5']),
+      Exon.fromJson(json['chrom'], json['utr3']), Exon.fromJson(json['chrom'], json['utr5']),
       json['cds'],
-      Exon.fromJsonArray(json['exons']));
+      Exon.fromJsonArray(json['chrom'], json['exons']));
   }
 
   static fromJsonArray(jsonArray: Array<Object>): Array<Transcript> {
@@ -130,7 +132,7 @@ export class Gene {
     const result: Exon[] = [];
     const first: Exon = sortedExons[0];
 
-    result.push(new Exon(first.start, first.stop));
+    result.push(new Exon(first.chrom, first.start, first.stop));
 
     for (let i = 1; i < sortedExons.length; i++) {
       const curr = sortedExons[i];
@@ -141,7 +143,7 @@ export class Gene {
         }
         continue;
       }
-      result.push(new Exon(curr.start, curr.stop));
+      result.push(new Exon(curr.chrom, curr.start, curr.stop));
     }
     const firstTranscript = this.transcripts[0];
 
