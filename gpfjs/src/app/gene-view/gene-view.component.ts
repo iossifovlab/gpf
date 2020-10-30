@@ -93,7 +93,7 @@ export class GeneViewComponent implements OnInit {
   summaryVariantsArray: GeneViewSummaryVariantsArray;
 
   options = {
-    margin: { top: 10, right: 100, left: 150, bottom: 0 },
+    margin: { top: 10, right: 100, left: 260, bottom: 0 },
     axisScale: { domain: 0.90, subdomain: 0.05 },
     exonThickness: { normal: 6.25, collapsed: 12.5 },
     cdsThickness: { normal: 12.5, collapsed: 25 },
@@ -297,7 +297,7 @@ export class GeneViewComponent implements OnInit {
   }
 
   checkHideTranscripts(checked: boolean) {
-    const height = this.svgHeightFreqRaw + 70;
+    const height = this.svgHeightFreqRaw + 85;
     const heightWithTranscripts = height + (this.gene.transcripts.length + 1) * 25;
 
     if (checked) {

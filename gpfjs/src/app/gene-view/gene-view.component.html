@@ -60,28 +60,34 @@
 </div>
 
 
-<div style="padding: 0px 30px 30px 30px; float: left;">
-  <div *ngIf="this.gene" class="effect-card card" style="left:12%; width: 956px">
-    <div class="card-header card-title" style="font-family: Roboto; font-weight: 500; padding: 0px">
-      <button type="button" class="astext" style="padding-left:10px;" [disabled]="!zoomHistory.canGoBackward" (click)="historyUndo()">&#x021B6;</button>
-      <button type="button" class="astext" style="padding-left:5px;" [disabled]="!zoomHistory.canGoForward" (click)="historyRedo()">&#x021B7;</button>
-      <b style="margin-left: 50px; font-size: 20px;">{{ this.geneTableStats.geneSymbol }}</b>
-      <span style="margin-left: 20px; font-size: 17px;">Summary variants:
-        total {{ this.geneTableStats.totalSummaryVariants }}
-        selected {{ this.geneTableStats.selectedSummaryVariants }}
-      </span>
-      <span style="margin-left: 20px; font-size: 17px;">Family variants:
-        total {{ this.geneTableStats.totalFamilyVariants }}
-        selected {{ this.geneTableStats.selectedFamilyVariants }}
+<div *ngIf="this.gene" style="padding: 0px 30px 30px 0px; float: left;">
+  <div class="effect-card card">
+    <div class="card-header card-title" style="font-family: Roboto; font-weight: 500; padding: 0px; border-bottom: none;">
+      <button type="button" class="astext" style="padding-left:20px; font-weight: bold;" [disabled]="!zoomHistory.canGoBackward" (click)="historyUndo()">&#x021FD;</button>
+      <button type="button" class="astext" style="padding-left:7px; font-weight: bold;" [disabled]="!zoomHistory.canGoForward" (click)="historyRedo()">&#x021FE;</button>
+      <button type="button" class="astext" style="padding-left:12px;" (click)="setDefaultScale(); this.redraw();">&#x021BB;</button>
+
+      <span style="margin-left: 50px; font-size: 20px; font-weight: bold; margin-left: 915px">{{ this.geneTableStats.geneSymbol }}</span>
+      <span style="float: right; padding-top:7px; padding-right: 15px;">
+        <span style="margin-left: 20px; font-size: 17px; font-weight: 1;">Summary variants:
+          selected
+          <span style="background-color: #EEEEEE; padding: 2px; border: 1px solid rgba(0,0,0,.125);"> {{ this.geneTableStats.selectedSummaryVariants }} /
+          {{ this.geneTableStats.totalSummaryVariants }}</span>
+        </span>
+        <span style="margin-left: 40px; font-size: 17px; font-weight: 1;">Family variants:
+          selected 
+          <span style="background-color: #EEEEEE; padding: 2px; border: 1px solid rgba(0,0,0,.125);">{{ this.geneTableStats.selectedFamilyVariants }} /
+          {{ this.geneTableStats.totalFamilyVariants }}</span>
+        </span>
       </span>
     </div>
   </div>
-  <div id="svg-container"></div>
+  <div id="svg-container" style="border: 1px solid rgba(0,0,0,.125); border-top: none;"></div>
 </div>
 
 <div *ngIf="this.gene">
   <div *ngIf="this.gene">
-    <div>
+    <div style="position: absolute; top: 943px; left: 44px; border: 1px solid rgba(0,0,0,.125); padding: 5px; border-radius: calc(.25rem - 1px)">
       <div class="checkbox">
         <label>
           <input #hideTranscriptsCheckbox type="checkbox" (change)="checkHideTranscripts(hideTranscriptsCheckbox.checked)">
