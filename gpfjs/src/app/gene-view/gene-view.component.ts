@@ -6,7 +6,7 @@ import { DatasetsService } from 'app/datasets/datasets.service';
 import { FullscreenLoadingService } from 'app/fullscreen-loading/fullscreen-loading.service';
 import { drawRect, drawLine, drawHoverText, drawStar, drawCircle, drawTriangle, drawSurroundingSquare, drawDot } from 'app/utils/svg-drawing';
 import { GeneViewTranscript, GeneViewModel } from 'app/gene-view/gene-view';
-import { QueryStateWithErrorsProvider } from 'app/query/query-state-provider';
+import { QueryStateProvider, QueryStateWithErrorsProvider } from 'app/query/query-state-provider';
 
 
 class GeneViewScaleState {
