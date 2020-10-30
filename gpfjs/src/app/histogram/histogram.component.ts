@@ -62,25 +62,16 @@ export class HistogramComponent implements OnInit, OnChanges {
       this.rangeStartSubject
       .debounceTime(100)
       .subscribe((start) => {
-          const step = Math.abs(this.bins[1] - this.bins[0]) / 1e10;
-          if (Math.abs(start - this.bins[0]) < step) {
-            this.rangeStartChange.emit(null);
-          } else {
-            this.rangeStartChange.emit(start);
-          }
+        this.rangeStartChange.emit(start);
       });
 
       this.rangeEndSubject
       .debounceTime(100)
       .subscribe((end) => {
-          const step = Math.abs(this.bins[this.bins.length - 1]
-            - this.bins[this.bins.length - 2]) / 1e10;
-          if (Math.abs(end - this.bins[this.bins.length - 1]) < step) {
-            this.rangeEndChange.emit(null);
-          } else {
-            this.rangeEndChange.emit(end);
-          }
+        this.rangeEndChange.emit(end);
       });
+      this.rangeStartSubject.next(this.min_value);
+      this.rangeEndSubject.next(this.max_value);
   }
 
   ngOnChanges(changes: SimpleChanges) {
