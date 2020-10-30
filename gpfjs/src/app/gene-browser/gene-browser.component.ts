@@ -38,6 +38,11 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
     'No-frame-shift-newStop', 'Missense',
     'No-frame-shift', 'noStart', 'noEnd', 'Synonymous'
   ];
+  otherEffectTypes = [
+    "cnv", "noncoding", "Nonsense", "Frame-shift",
+    "Splice-site", "No-frame-shift-newStop",
+    "No-frame-shift", "noStart", "noEnd"
+  ]
   private geneBrowserConfig;
 
   enableCodingOnly: boolean;
@@ -99,14 +104,19 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
     if(state.showTransmitted) {
       inheritanceFilters.push("mendelian")
     }
+    let effects: string[] = state.selectedEffectTypes;
+    if(effects.indexOf("other")) {
+        effects.splice(effects.indexOf("other", 1));
+        effects = effects.concat(this.otherEffectTypes)
+    }
     const params: any = {
-      "effectTypes": state.selectedEffectTypes,
+      "effectTypes": effects,
       "genomicScores": state.genomicScores,
       "inheritanceTypeFilter": inheritanceFilters,
       "datasetId": state.datasetId
     }
     if(state.zoomState) {
-      params.regions = `${gene.transcripts[0].chrom}:${state.zoomState.xDomain[0]}-${state.zoomState.xDomain[1]}`;
+      params.regions = [`${gene.transcripts[0].chrom}:${state.zoomState.xDomain[0]}-${state.zoomState.xDomain[1]}`];
     }
     return params;
   } 
