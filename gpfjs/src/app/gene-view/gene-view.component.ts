@@ -102,7 +102,7 @@ export class GeneViewComponent implements OnInit {
   svgElement;
   summedTranscriptElement;
   transcriptsElement;
-  svgWidth = 1200 - this.options.margin.left - this.options.margin.right;
+  svgWidth = 2000 - this.options.margin.left - this.options.margin.right;
   svgHeight;
   svgHeightFreqRaw = 400;
   svgHeightFreq = this.svgHeightFreqRaw - this.options.margin.top - this.options.margin.bottom;
