@@ -63,9 +63,9 @@
 <div *ngIf="this.gene" style="padding: 0px 30px 30px 0px; float: left;">
   <div class="effect-card card">
     <div class="card-header card-title" style="font-family: Roboto; font-weight: 500; padding: 0px; border-bottom: none;">
-      <button type="button" class="astext" style="padding-left:20px; font-weight: bold;" [disabled]="!zoomHistory.canGoBackward" (click)="historyUndo()">&#x021FD;</button>
-      <button type="button" class="astext" style="padding-left:7px; font-weight: bold;" [disabled]="!zoomHistory.canGoForward" (click)="historyRedo()">&#x021FE;</button>
-      <button type="button" class="astext" style="padding-left:12px;" (click)="setDefaultScale(); this.redraw();">&#x021BB;</button>
+      <button type="button" class="astext" title="Undo (Ctrl+Z)" style="padding-left:20px; font-weight: bold;" [disabled]="!zoomHistory.canGoBackward" (click)="historyUndo()">&#x021FD;</button>
+      <button type="button" class="astext" title="Redo (Ctrl+Y)" style="padding-left:7px; font-weight: bold;" [disabled]="!zoomHistory.canGoForward" (click)="historyRedo()">&#x021FE;</button>
+      <button type="button" class="astext" title="Reset" style="padding-left:12px;" (click)="setDefaultScale(); this.redraw();">&#x021BB;</button>
 
       <span style="margin-left: 50px; font-size: 20px; font-weight: bold; margin-left: 915px">{{ this.geneTableStats.geneSymbol }}</span>
       <span style="float: right; padding-top:7px; padding-right: 15px;">
