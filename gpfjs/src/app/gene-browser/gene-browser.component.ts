@@ -125,7 +125,7 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
     }
     if (state.zoomState) {
       const left = state.zoomState.xDomain[0];
-      const right = state.zoomState.xDomain[1];
+      const right = state.zoomState.xDomain[state.zoomState.xDomain.length - 1];
       params.regions = [`${gene.transcripts[0].chrom}:${left}-${right}`];
     }
     return params;
