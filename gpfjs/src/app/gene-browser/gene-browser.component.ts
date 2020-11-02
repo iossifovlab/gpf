@@ -88,7 +88,7 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
       requestParams['maxVariantsCount'] = this.maxFamilyVariants;
       requestParams['genomicScores'] = [{
         'metric': this.geneBrowserConfig.frequencyColumn,
-        'rangeStart': $event.start,
+        'rangeStart': $event.start > 0 ? $event.start : null,
         'rangeEnd': $event.end
       }];
       this.genotypePreviewVariantsArray =
@@ -106,8 +106,8 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
     }
     let effects: string[] = state.selectedEffectTypes;
     if(effects.indexOf("other")) {
-        effects.splice(effects.indexOf("other", 1));
         effects = effects.concat(this.otherEffectTypes)
+        effects.splice(effects.indexOf("other", 1));
     }
     const params: any = {
       "effectTypes": effects,
@@ -116,7 +116,9 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
       "datasetId": state.datasetId
     }
     if(state.zoomState) {
-      params.regions = [`${gene.transcripts[0].chrom}:${state.zoomState.xDomain[0]}-${state.zoomState.xDomain[1]}`];
+      const left = state.zoomState.xDomain[0];
+      const right = state.zoomState.xDomain[0];
+      params.regions = [`${gene.transcripts[0].chrom}:${left}-${right}`];
     }
     return params;
   } 
