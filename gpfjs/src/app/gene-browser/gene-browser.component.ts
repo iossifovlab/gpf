@@ -39,9 +39,7 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
     'No-frame-shift', 'noStart', 'noEnd', 'Synonymous'
   ];
   otherEffectTypes = [
-    "cnv", "noncoding", "Nonsense", "Frame-shift",
-    "Splice-site", "No-frame-shift-newStop",
-    "No-frame-shift", "noStart", "noEnd"
+    "noncoding",
   ]
   private geneBrowserConfig;
 
@@ -113,7 +111,7 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
       inheritanceFilters.push("missing");
     }
     let effects: string[] = state.selectedEffectTypes;
-    if (effects.indexOf("other")) {
+    if (effects.indexOf("other") >= 0) {
       effects.splice(effects.indexOf("other", 1));
       if (!this.enableCodingOnly) {
         effects = effects.concat(this.otherEffectTypes);
