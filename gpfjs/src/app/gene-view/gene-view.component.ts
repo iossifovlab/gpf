@@ -93,7 +93,7 @@ export class GeneViewComponent implements OnInit {
   summaryVariantsArray: GeneViewSummaryVariantsArray;
 
   options = {
-    margin: { top: 10, right: 100, left: 260, bottom: 0 },
+    margin: { top: 10, right: 50, left: 180, bottom: 0 },
     axisScale: { domain: 0.90, subdomain: 0.05 },
     exonThickness: { normal: 6.25, collapsed: 12.5 },
     cdsThickness: { normal: 12.5, collapsed: 25 },
