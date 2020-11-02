@@ -16,8 +16,9 @@
         <input type="button" style="width: 75px" class="btn btn-md btn-primary" value="Go" (click)="submitGeneRequest()">
       </div>
 
-    <div class="row" style="padding-left: 10px">
+    <div class="row" style="margin-left: 0px; margin-right: 0px">
       <gpf-gene-view
+        style="width: 100%; min-width: 1310px;"
         [gene]="selectedGene"
         [variantsArray]="summaryVariantsArray"
         (updateShownTablePreviewVariantsArrayEvent)="updateShownTablePreviewVariantsArray($event)"
