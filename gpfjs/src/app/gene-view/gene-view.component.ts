@@ -117,7 +117,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
   svgElement;
   summedTranscriptElement;
   transcriptsElement;
-  svgWidth = 2000 - this.options.margin.left - this.options.margin.right;
+  svgWidth = 1800 - this.options.margin.left - this.options.margin.right;
   svgHeight;
   svgHeightFreqRaw = 400;
   svgHeightFreq = this.svgHeightFreqRaw - this.options.margin.top - this.options.margin.bottom;
@@ -176,8 +176,8 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
 
       this.svgElement = d3.select('#svg-container')
         .append('svg')
-        .attr('width', this.svgWidth + this.options.margin.left + this.options.margin.right)
-        .attr('height', this.svgHeightFreqRaw)
+        .attr('viewBox', '0 0 ' + (this.svgWidth + this.options.margin.left + this.options.margin.right).toString() +
+          ' ' + this.svgHeightFreqRaw.toString())
         .append('g')
         .attr('transform', `translate(${this.options.margin.left}, ${this.options.margin.top})`);
 
@@ -550,8 +550,8 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
 
     this.svgElement = d3.select('#svg-container')
       .append('svg')
-      .attr('width', this.svgWidth + this.options.margin.left + this.options.margin.right)
-      .attr('height', this.svgHeight)
+      .attr('viewBox', '0 0 ' + (this.svgWidth + this.options.margin.left + this.options.margin.right).toString() +
+          ' ' + (this.svgHeightFreqRaw + 70 + (this.gene.transcripts.length + 1) * 25).toString())
       .append('g')
       .attr('transform', `translate(${this.options.margin.left}, ${this.options.margin.top})`);
 
