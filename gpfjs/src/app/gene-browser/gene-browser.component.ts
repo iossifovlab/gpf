@@ -115,7 +115,9 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
     let effects: string[] = state.selectedEffectTypes;
     if (effects.indexOf("other")) {
       effects.splice(effects.indexOf("other", 1));
-      effects = effects.concat(this.otherEffectTypes)
+      if (!this.enableCodingOnly) {
+        effects = effects.concat(this.otherEffectTypes);
+      }
     }
     const params: any = {
       "effectTypes": effects,
