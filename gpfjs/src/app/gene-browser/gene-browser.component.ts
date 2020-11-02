@@ -35,11 +35,10 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
   familyLoadingFinished: boolean;
   codingEffectTypes = [
     'Nonsense', 'Frame-shift', 'Splice-site',
-    'No-frame-shift-newStop', 'Missense',
-    'No-frame-shift', 'noStart', 'noEnd', 'Synonymous'
+    'No-frame-shift-newStop', 'Missense', 'Synonymous'
   ];
   otherEffectTypes = [
-    "noncoding",
+    "noncoding", 'noStart', 'noEnd', 'no-frame-shift',
   ]
   private geneBrowserConfig;
 
