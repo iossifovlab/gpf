@@ -9,3 +9,12 @@ td {
   text-align: left;
   padding: 11px;
 }
+
+.astext {
+  font-size : 25px;
+  background:none;
+  border:none;
+  margin:0;
+  padding-right:5px;
+  outline:none;
+}

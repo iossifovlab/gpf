@@ -16,23 +16,26 @@
         <input type="button" style="width: 75px" class="btn btn-md btn-primary" value="Go" (click)="submitGeneRequest()">
       </div>
 
+    <div class="row" style="padding-left: 10px">
       <gpf-gene-view
-          [gene]="selectedGene"
-          [variantsArray]="summaryVariantsArray"
-          (updateShownTablePreviewVariantsArrayEvent)="updateShownTablePreviewVariantsArray($event)"
-          [streamingFinished$]="queryService.summaryStreamingFinishedSubject">
+        [gene]="selectedGene"
+        [variantsArray]="summaryVariantsArray"
+        (updateShownTablePreviewVariantsArrayEvent)="updateShownTablePreviewVariantsArray($event)"
+        [streamingFinished$]="queryService.summaryStreamingFinishedSubject">
       </gpf-gene-view>
+    </div>
 
-      <gpf-loading-spinner
-        [loadingFinished]="familyLoadingFinished"
-        [count]="getFamilyVariantCounts()"
-        [displayText]="'Loading variants...'">
-      </gpf-loading-spinner>
+    <gpf-loading-spinner
+      *ngIf="selectedGene"
+      [loadingFinished]="familyLoadingFinished"
+      [count]="getFamilyVariantCounts()"
+      [displayText]="'Loading variants...'">
+   </gpf-loading-spinner>
 
-      <gpf-genotype-preview-table
-          [columns]="dataset?.genotypeBrowserConfig?.columns"
-          [genotypePreviewInfo]="genotypePreviewInfo"
-          [genotypePreviewVariantsArray]="genotypePreviewVariantsArray">
-      </gpf-genotype-preview-table>
+    <gpf-genotype-preview-table
+        [columns]="dataset?.genotypeBrowserConfig?.columns"
+        [genotypePreviewInfo]="genotypePreviewInfo"
+        [genotypePreviewVariantsArray]="genotypePreviewVariantsArray">
+    </gpf-genotype-preview-table>
   </div>
 </div>
