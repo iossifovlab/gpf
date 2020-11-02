@@ -70,7 +70,7 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
       (params: Params) => {
         this.selectedDatasetId = params['dataset'];
       }
-     );
+    );
   }
 
   getCurrentState() {
@@ -98,16 +98,24 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
 
   transformFamilyVariantsQueryParameters(state, gene: Gene) {
     const inheritanceFilters = []
-    if(state.showDenovo) {
+    if (state.showDenovo && state.showTransmitted) {
+      inheritanceFilters.push("denovo");
+      inheritanceFilters.push("mendelian");
+      inheritanceFilters.push("omission");
+      inheritanceFilters.push("missing");
+    }
+    else if (state.showDenovo) {
       inheritanceFilters.push("denovo")
     }
-    if(state.showTransmitted) {
-      inheritanceFilters.push("mendelian")
+    else if (state.showTransmitted) {
+      inheritanceFilters.push("mendelian");
+      inheritanceFilters.push("omission");
+      inheritanceFilters.push("missing");
     }
     let effects: string[] = state.selectedEffectTypes;
-    if(effects.indexOf("other")) {
-        effects.splice(effects.indexOf("other", 1));
-        effects = effects.concat(this.otherEffectTypes)
+    if (effects.indexOf("other")) {
+      effects.splice(effects.indexOf("other", 1));
+      effects = effects.concat(this.otherEffectTypes)
     }
     const params: any = {
       "effectTypes": effects,
@@ -115,11 +123,11 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
       "inheritanceTypeFilter": inheritanceFilters,
       "datasetId": state.datasetId
     }
-    if(state.zoomState) {
+    if (state.zoomState) {
       params.regions = [`${gene.transcripts[0].chrom}:${state.zoomState.xDomain[0]}-${state.zoomState.xDomain[1]}`];
     }
     return params;
-  } 
+  }
 
   submitGeneRequest() {
     this.getCurrentState()
@@ -145,14 +153,14 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
 
             this.queryService.summaryStreamingFinishedSubject.subscribe(
               _ => {
-                  summaryLoadingFinished = true;
-                  this.loadingFinished = true;
-                  this.loadingService.setLoadingStop();
-            });
+                summaryLoadingFinished = true;
+                this.loadingFinished = true;
+                this.loadingService.setLoadingStop();
+              });
 
-            this.queryService.streamingFinishedSubject.subscribe (() => { this.familyLoadingFinished = true; });
+            this.queryService.streamingFinishedSubject.subscribe(() => { this.familyLoadingFinished = true; });
 
-            const requestParams = {...state};
+            const requestParams = { ...state };
             requestParams['maxVariantsCount'] = 10000;
 
 

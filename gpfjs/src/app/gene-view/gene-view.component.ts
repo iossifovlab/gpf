@@ -80,7 +80,7 @@ class GeneViewZoomHistory {
   templateUrl: './gene-view.component.html',
   styleUrls: ['./gene-view.component.css'],
   host: { '(document:keydown)': 'handleKeyboardEvent($event)' },
-  providers: [{provide: QueryStateProvider, useExisting: forwardRef(() => GeneViewComponent) }]
+  providers: [{ provide: QueryStateProvider, useExisting: forwardRef(() => GeneViewComponent) }]
 })
 export class GeneViewComponent extends QueryStateWithErrorsProvider implements OnInit {
   @Input() gene: Gene;
@@ -159,7 +159,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
   constructor(
     private datasetsService: DatasetsService,
     private loadingService: FullscreenLoadingService,
-  ) { 
+  ) {
     super()
   }
 
@@ -182,10 +182,10 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
         .attr('transform', `translate(${this.options.margin.left}, ${this.options.margin.top})`);
 
       this.summedTranscriptElement = this.svgElement
-      .append('g');
+        .append('g');
 
       this.transcriptsElement = this.svgElement
-      .append('g');
+        .append('g');
 
       this.y = d3.scaleLog()
         .domain([this.frequencyDomainMin, this.frequencyDomainMax])
@@ -362,6 +362,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
       domain = [domainMin, domainMax];
       range = [0, this.svgWidth];
     }
+
     this.zoomHistory.addStateToHistory(
       new GeneViewScaleState(domain, range, this.selectedFrequencies[0], this.selectedFrequencies[1], this.condenseIntrons)
     );
@@ -407,6 +408,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
   filterSummaryVariantsArray(
     summaryVariantsArray: GeneViewSummaryVariantsArray, startPos: number, endPos: number
   ): GeneViewSummaryVariantsArray {
+
     const result = new GeneViewSummaryVariantsArray();
     for (const summaryVariant of summaryVariantsArray.summaryVariants) {
       if (
@@ -554,10 +556,10 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
       .attr('transform', `translate(${this.options.margin.left}, ${this.options.margin.top})`);
 
     this.summedTranscriptElement = this.svgElement
-    .append('g');
+      .append('g');
 
     this.transcriptsElement = this.svgElement
-    .append('g');
+      .append('g');
 
     this.brush = d3.brush().extent([[0, 0], [this.svgWidth, this.svgHeightFreq]])
       .on('end', this.brushEndEvent);
