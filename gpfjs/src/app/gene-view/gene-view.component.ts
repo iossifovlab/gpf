@@ -14,6 +14,7 @@ class GeneViewScaleState {
     public xRange: number[],
     public yMin: number,
     public yMax: number,
+    public condenseToggled: boolean,
   ) { }
 
   get xMin(): number {
@@ -332,8 +333,25 @@ export class GeneViewComponent implements OnInit {
   }
 
   toggleCondenseIntron() {
+    let domain;
+    let range;
+    const domainMin = this.x.domain()[0];
+    const domainMax = this.x.domain()[this.x.domain().length - 1];
     this.condenseIntrons = !this.condenseIntrons;
-    this.setDefaultScale();
+    if (this.condenseIntrons) {
+      domain = this.geneViewModel.buildCondensedIntronsDomain(
+        domainMin, domainMax);
+      range = this.geneViewModel.buildCondensedIntronsRange(
+        domainMin, domainMax, this.svgWidth);
+    } else {
+      domain = [domainMin, domainMax];
+      range = [0, this.svgWidth];
+    }
+    this.zoomHistory.addStateToHistory(
+      new GeneViewScaleState(domain, range, this.selectedFrequencies[0], this.selectedFrequencies[1], this.condenseIntrons)
+    );
+    this.x.domain(domain);
+    this.x.range(range);
     this.redraw();
   }
 
@@ -492,7 +510,7 @@ export class GeneViewComponent implements OnInit {
   setDefaultScale() {
     const domain = this.condenseIntrons ? this.geneViewModel.condensedDomain : this.geneViewModel.normalDomain;
     const range = this.condenseIntrons ? this.geneViewModel.condensedRange : [0, this.svgWidth];
-    const defaultScale = new GeneViewScaleState(domain, range, 0, this.frequencyDomainMax);
+    const defaultScale = new GeneViewScaleState(domain, range, 0, this.frequencyDomainMax, this.condenseIntrons);
     this.x = d3.scaleLinear().domain(domain).range(range).clamp(true);
     this.selectedFrequencies = [0, this.frequencyDomainMax];
     this.zoomHistory.resetToDefaultState(defaultScale);
@@ -584,7 +602,7 @@ export class GeneViewComponent implements OnInit {
 
       if (domainMax - domainMin >= 12) {
         this.zoomHistory.addStateToHistory(
-          new GeneViewScaleState(domain, range, Math.min(...newFreqLimits), Math.max(...newFreqLimits))
+          new GeneViewScaleState(domain, range, Math.min(...newFreqLimits), Math.max(...newFreqLimits), this.condenseIntrons)
         );
       }
 
@@ -620,6 +638,7 @@ export class GeneViewComponent implements OnInit {
     this.x.domain(scale.xDomain);
     this.x.range(scale.xRange);
     this.selectedFrequencies = [scale.yMin, scale.yMax];
+    this.condenseIntrons = scale.condenseToggled;
     this.redraw();
   }
 
