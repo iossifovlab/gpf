@@ -10,6 +10,7 @@ import { ActivatedRoute, Params } from '@angular/router';
 import { QueryStateCollector } from 'app/query/query-state-provider';
 import { FullscreenLoadingService } from 'app/fullscreen-loading/fullscreen-loading.service';
 import { GeneViewComponent } from 'app/gene-view/gene-view.component';
+import { StateRestoreService } from 'app/store/state-restore.service';
 
 @Component({
   selector: 'gpf-gene-browser-component',
@@ -37,6 +38,11 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
     'No-frame-shift-newStop', 'Missense',
     'No-frame-shift', 'noStart', 'noEnd', 'Synonymous'
   ];
+  otherEffectTypes = [
+    "cnv", "noncoding", "Nonsense", "Frame-shift",
+    "Splice-site", "No-frame-shift-newStop",
+    "No-frame-shift", "noStart", "noEnd"
+  ]
   private geneBrowserConfig;
 
   enableCodingOnly: boolean;
@@ -47,7 +53,8 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
     private geneService: GeneService,
     private datasetsService: DatasetsService,
     private route: ActivatedRoute,
-    private loadingService: FullscreenLoadingService
+    private loadingService: FullscreenLoadingService,
+    private stateRestoreService: StateRestoreService
 
   ) {
     super();
@@ -63,7 +70,7 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
       (params: Params) => {
         this.selectedDatasetId = params['dataset'];
       }
-     );
+    );
   }
 
   getCurrentState() {
@@ -77,16 +84,51 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
   updateShownTablePreviewVariantsArray($event: DomainRange) {
     this.familyLoadingFinished = false;
     this.getCurrentState().subscribe(state => {
-      const requestParams = {...state};
+      const requestParams = this.transformFamilyVariantsQueryParameters(state, this.selectedGene);
       requestParams['maxVariantsCount'] = this.maxFamilyVariants;
       requestParams['genomicScores'] = [{
         'metric': this.geneBrowserConfig.frequencyColumn,
-        'rangeStart': $event.start,
+        'rangeStart': $event.start > 0 ? $event.start : null,
         'rangeEnd': $event.end
       }];
       this.genotypePreviewVariantsArray =
         this.queryService.getGenotypePreviewVariantsByFilter(requestParams, this.genotypePreviewInfo);
     });
+  }
+
+  transformFamilyVariantsQueryParameters(state, gene: Gene) {
+    const inheritanceFilters = []
+    if (state.showDenovo && state.showTransmitted) {
+      inheritanceFilters.push("denovo");
+      inheritanceFilters.push("mendelian");
+      inheritanceFilters.push("omission");
+      inheritanceFilters.push("missing");
+    }
+    else if (state.showDenovo) {
+      inheritanceFilters.push("denovo")
+    }
+    else if (state.showTransmitted) {
+      inheritanceFilters.push("mendelian");
+      inheritanceFilters.push("omission");
+      inheritanceFilters.push("missing");
+    }
+    let effects: string[] = state.selectedEffectTypes;
+    if (effects.indexOf("other")) {
+      effects.splice(effects.indexOf("other", 1));
+      effects = effects.concat(this.otherEffectTypes)
+    }
+    const params: any = {
+      "effectTypes": effects,
+      "genomicScores": state.genomicScores,
+      "inheritanceTypeFilter": inheritanceFilters,
+      "datasetId": state.datasetId
+    }
+    if (state.zoomState) {
+      const left = state.zoomState.xDomain[0];
+      const right = state.zoomState.xDomain[1];
+      params.regions = [`${gene.transcripts[0].chrom}:${left}-${right}`];
+    }
+    return params;
   }
 
   submitGeneRequest() {
@@ -113,14 +155,14 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
 
             this.queryService.summaryStreamingFinishedSubject.subscribe(
               _ => {
-                  summaryLoadingFinished = true;
-                  this.loadingFinished = true;
-                  this.loadingService.setLoadingStop();
-            });
+                summaryLoadingFinished = true;
+                this.loadingFinished = true;
+                this.loadingService.setLoadingStop();
+              });
 
-            this.queryService.streamingFinishedSubject.subscribe (() => { this.familyLoadingFinished = true; });
+            this.queryService.streamingFinishedSubject.subscribe(() => { this.familyLoadingFinished = true; });
 
-            const requestParams = {...state};
+            const requestParams = { ...state };
             requestParams['maxVariantsCount'] = 10000;
 
 

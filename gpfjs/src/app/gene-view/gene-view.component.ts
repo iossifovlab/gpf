@@ -1,11 +1,12 @@
-import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter, forwardRef } from '@angular/core';
 import * as d3 from 'd3';
 import { Gene, GeneViewSummaryVariantsArray, GeneViewSummaryVariant, DomainRange } from 'app/gene-view/gene';
-import { Subject } from 'rxjs';
+import { Subject, Observable } from 'rxjs';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { FullscreenLoadingService } from 'app/fullscreen-loading/fullscreen-loading.service';
 import { drawRect, drawLine, drawHoverText, drawStar, drawCircle, drawTriangle, drawSurroundingSquare, drawDot } from 'app/utils/svg-drawing';
 import { GeneViewTranscript, GeneViewModel } from 'app/gene-view/gene-view';
+import { QueryStateProvider, QueryStateWithErrorsProvider } from 'app/query/query-state-provider';
 
 
 class GeneViewScaleState {
@@ -78,9 +79,10 @@ class GeneViewZoomHistory {
   selector: 'gpf-gene-view',
   templateUrl: './gene-view.component.html',
   styleUrls: ['./gene-view.component.css'],
-  host: { '(document:keydown)': 'handleKeyboardEvent($event)' }
+  host: { '(document:keydown)': 'handleKeyboardEvent($event)' },
+  providers: [{ provide: QueryStateProvider, useExisting: forwardRef(() => GeneViewComponent) }]
 })
-export class GeneViewComponent implements OnInit {
+export class GeneViewComponent extends QueryStateWithErrorsProvider implements OnInit {
   @Input() gene: Gene;
   @Input() variantsArray: GeneViewSummaryVariantsArray;
   @Input() streamingFinished$: Subject<boolean>;
@@ -92,6 +94,17 @@ export class GeneViewComponent implements OnInit {
   condenseIntrons: boolean;
 
   summaryVariantsArray: GeneViewSummaryVariantsArray;
+
+  getState(): Observable<object> {
+    const state = {
+      "affectedStatus": Array.from(this.selectedAffectedStatus),
+      "selectedEffectTypes": Array.from(this.selectedEffectTypes),
+      "zoomState": this.zoomHistory.currentState,
+      "showDenovo": this.showDenovo,
+      "showTransmitted": this.showTransmitted
+    }
+    return this.validateAndGetState(state);
+  }
 
   options = {
     margin: { top: 10, right: 50, left: 180, bottom: 0 },
@@ -146,7 +159,9 @@ export class GeneViewComponent implements OnInit {
   constructor(
     private datasetsService: DatasetsService,
     private loadingService: FullscreenLoadingService,
-  ) { }
+  ) {
+    super()
+  }
 
   ngOnInit() {
     this.datasetsService.getSelectedDataset().subscribe(dataset => {
@@ -167,10 +182,10 @@ export class GeneViewComponent implements OnInit {
         .attr('transform', `translate(${this.options.margin.left}, ${this.options.margin.top})`);
 
       this.summedTranscriptElement = this.svgElement
-      .append('g');
+        .append('g');
 
       this.transcriptsElement = this.svgElement
-      .append('g');
+        .append('g');
 
       this.y = d3.scaleLog()
         .domain([this.frequencyDomainMin, this.frequencyDomainMax])
@@ -347,6 +362,7 @@ export class GeneViewComponent implements OnInit {
       domain = [domainMin, domainMax];
       range = [0, this.svgWidth];
     }
+
     this.zoomHistory.addStateToHistory(
       new GeneViewScaleState(domain, range, this.selectedFrequencies[0], this.selectedFrequencies[1], this.condenseIntrons)
     );
@@ -392,6 +408,7 @@ export class GeneViewComponent implements OnInit {
   filterSummaryVariantsArray(
     summaryVariantsArray: GeneViewSummaryVariantsArray, startPos: number, endPos: number
   ): GeneViewSummaryVariantsArray {
+
     const result = new GeneViewSummaryVariantsArray();
     for (const summaryVariant of summaryVariantsArray.summaryVariants) {
       if (
@@ -539,10 +556,10 @@ export class GeneViewComponent implements OnInit {
       .attr('transform', `translate(${this.options.margin.left}, ${this.options.margin.top})`);
 
     this.summedTranscriptElement = this.svgElement
-    .append('g');
+      .append('g');
 
     this.transcriptsElement = this.svgElement
-    .append('g');
+      .append('g');
 
     this.brush = d3.brush().extent([[0, 0], [this.svgWidth, this.svgHeightFreq]])
       .on('end', this.brushEndEvent);
