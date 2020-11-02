@@ -90,8 +90,8 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
 
   getState(): Observable<object> {
     const state = {
-      "affectedStatus": this.selectedAffectedStatus,
-      "selectedEffectTypes": this.selectedEffectTypes,
+      "affectedStatus": Array.from(this.selectedAffectedStatus),
+      "selectedEffectTypes": Array.from(this.selectedEffectTypes),
       "zoomState": this.zoomHistory.currentState,
       "showDenovo": this.showDenovo,
       "showTransmitted": this.showTransmitted
