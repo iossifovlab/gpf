@@ -38,8 +38,8 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
     'No-frame-shift-newStop', 'Missense', 'Synonymous'
   ];
   otherEffectTypes = [
-    "noncoding", 'noStart', 'noEnd', 'no-frame-shift',
-  ]
+    'noncoding', 'noStart', 'noEnd', 'no-frame-shift',
+  ];
   private geneBrowserConfig;
 
   enableCodingOnly: boolean;
@@ -94,34 +94,32 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
   }
 
   transformFamilyVariantsQueryParameters(state, gene: Gene) {
-    const inheritanceFilters = []
+    const inheritanceFilters = [];
     if (state.showDenovo && state.showTransmitted) {
-      inheritanceFilters.push("denovo");
-      inheritanceFilters.push("mendelian");
-      inheritanceFilters.push("omission");
-      inheritanceFilters.push("missing");
-    }
-    else if (state.showDenovo) {
-      inheritanceFilters.push("denovo")
-    }
-    else if (state.showTransmitted) {
-      inheritanceFilters.push("mendelian");
-      inheritanceFilters.push("omission");
-      inheritanceFilters.push("missing");
+      inheritanceFilters.push('denovo');
+      inheritanceFilters.push('mendelian');
+      inheritanceFilters.push('omission');
+      inheritanceFilters.push('missing');
+    } else if (state.showDenovo) {
+      inheritanceFilters.push('denovo');
+    } else if (state.showTransmitted) {
+      inheritanceFilters.push('mendelian');
+      inheritanceFilters.push('omission');
+      inheritanceFilters.push('missing');
     }
     let effects: string[] = state.selectedEffectTypes;
-    if (effects.indexOf("other") >= 0) {
-      effects.splice(effects.indexOf("other", 1));
+    if (effects.indexOf('other') >= 0) {
+      effects = effects.filter(ef => ef !== 'other');
       if (!this.enableCodingOnly) {
         effects = effects.concat(this.otherEffectTypes);
       }
     }
     const params: any = {
-      "effectTypes": effects,
-      "genomicScores": state.genomicScores,
-      "inheritanceTypeFilter": inheritanceFilters,
-      "datasetId": state.datasetId
-    }
+      'effectTypes': effects,
+      'genomicScores': state.genomicScores,
+      'inheritanceTypeFilter': inheritanceFilters,
+      'datasetId': state.datasetId
+    };
     if (state.zoomState) {
       const left = state.zoomState.xDomain[0];
       const right = state.zoomState.xDomain[state.zoomState.xDomain.length - 1];

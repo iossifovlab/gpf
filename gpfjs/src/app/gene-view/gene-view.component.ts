@@ -95,17 +95,6 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
 
   summaryVariantsArray: GeneViewSummaryVariantsArray;
 
-  getState(): Observable<object> {
-    const state = {
-      "affectedStatus": Array.from(this.selectedAffectedStatus),
-      "selectedEffectTypes": Array.from(this.selectedEffectTypes),
-      "zoomState": this.zoomHistory.currentState,
-      "showDenovo": this.showDenovo,
-      "showTransmitted": this.showTransmitted
-    }
-    return this.validateAndGetState(state);
-  }
-
   options = {
     margin: { top: 10, right: 50, left: 180, bottom: 0 },
     axisScale: { domain: 0.90, subdomain: 0.05 },
@@ -160,7 +149,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     private datasetsService: DatasetsService,
     private loadingService: FullscreenLoadingService,
   ) {
-    super()
+    super();
   }
 
   ngOnInit() {
@@ -227,6 +216,17 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
       this.resetGeneTableValues();
       this.drawGene();
     }
+  }
+
+  getState(): Observable<object> {
+    const state = {
+      'affectedStatus': Array.from(this.selectedAffectedStatus),
+      'selectedEffectTypes': Array.from(this.selectedEffectTypes),
+      'zoomState': this.zoomHistory.currentState,
+      'showDenovo': this.showDenovo,
+      'showTransmitted': this.showTransmitted
+    };
+    return this.validateAndGetState(state);
   }
 
   enableIntronCondensing() {
