@@ -42,7 +42,7 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
   ];
   private geneBrowserConfig;
 
-  enableCodingOnly: boolean;
+  enableCodingOnly = true;
   private genotypeBrowserState: Object;
 
   constructor(
