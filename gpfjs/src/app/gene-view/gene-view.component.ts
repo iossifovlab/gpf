@@ -665,34 +665,26 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     this.doubleClickTimer = null;
   }
 
-  getTranscriptChromosomes(geneViewTranscript: GeneViewTranscript) {
+  getSelectedChromosomes(geneViewTranscript: GeneViewTranscript) {
     const domain = this.x.domain();
     const domainMin = domain[0];
     const domainMax = domain[domain.length - 1];
-    const segments = geneViewTranscript.segments.filter(
-      seg => seg.intersectionLength(domainMin, domainMax) > 0 && !seg.isSpacer
-    );
-
-    const chromosomes = {};
-    for (const segment of segments) {
-      if (!chromosomes.hasOwnProperty(segment.chrom)) {
-        chromosomes[segment.chrom] = [segment.start, segment.stop];
+    const selectedChromosomes = {};
+    for (const [chromosome, range] of Object.entries(geneViewTranscript.chromosomes)) {
+      if (range[1] < domainMin || range[0] > domainMax) {
+        continue;
+      } else {
+        selectedChromosomes[chromosome] = range;
       }
-      chromosomes[segment.chrom][0] = Math.min(
-        segment.start, chromosomes[segment.chrom][0]
-      );
-      chromosomes[segment.chrom][1] = Math.max(
-        segment.stop, chromosomes[segment.chrom][1]
-      );
     }
-    return chromosomes;
+    return selectedChromosomes;
   }
 
   drawChromosomeLabels(element, yPos: number, geneViewTranscript: GeneViewTranscript) {
     const domain = this.x.domain();
     const domainMin = domain[0];
     const domainMax = domain[domain.length - 1];
-    const chromosomes = this.getTranscriptChromosomes(geneViewTranscript);
+    const chromosomes = this.getSelectedChromosomes(geneViewTranscript);
     let from: number;
     let to: number;
     for (const [chromosome, range] of Object.entries(chromosomes)) {
@@ -706,7 +698,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     const domain = this.x.domain();
     const domainMin = domain[0];
     const domainMax = domain[domain.length - 1];
-    const chromosomes = this.getTranscriptChromosomes(geneViewTranscript);
+    const chromosomes = this.getSelectedChromosomes(geneViewTranscript);
     const ticks = [];
     let from: number;
     let to: number;

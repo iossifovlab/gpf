@@ -40,6 +40,7 @@ export class GeneViewTranscript {
 
   transcript: Transcript;
   segments: GeneViewTranscriptSegment[] = [];
+  chromosomes = {};
 
   get start() {
     return this.transcript.start;
@@ -96,6 +97,18 @@ export class GeneViewTranscript {
             false, false, spacer, `intron ${i + 1}/${intronCount}`)
         );
       }
+    }
+    // Calculate chromosomes (ignoring spacer introns)
+    for (const segment of this.segments.filter(seg => !seg.isSpacer)) {
+      if (!this.chromosomes.hasOwnProperty(segment.chrom)) {
+        this.chromosomes[segment.chrom] = [segment.start, segment.stop];
+      }
+      this.chromosomes[segment.chrom][0] = Math.min(
+        segment.start, this.chromosomes[segment.chrom][0]
+      );
+      this.chromosomes[segment.chrom][1] = Math.max(
+        segment.stop, this.chromosomes[segment.chrom][1]
+      );
     }
   }
 
