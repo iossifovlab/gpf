@@ -9,3 +9,6 @@ gpf
 
 coverage/
 *.log
+_html
+gpf-wdae-html.tar.gz
+temp

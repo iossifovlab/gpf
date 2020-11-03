@@ -10,7 +10,7 @@ pipeline {
     upstream(upstreamProjects: 'iossifovlab/gpf/master', threshold: hudson.model.Result.SUCCESS)
   }
   environment {
-    DOCKER_IMAGE="seqpipe/gpf-documentation:${env.BRANCH_NAME}"
+    DOCUMENTATION_DOCKER_IMAGE="seqpipe/gpf-documentation:${env.BRANCH_NAME}"
     GPF_DOCKER_IMAGE="iossifovlab/gpf-base:documentation_${env.BRANCH_NAME}"
 
     DOCUMENTATION_DIR="${env.WORKSPACE}"
@@ -19,18 +19,13 @@ pipeline {
     DAE_GENOMIC_SCORES_HG19="/data01/lubo/data/seq-pipeline/genomic-scores-hg19"
     DAE_GENOMIC_SCORES_HG38="/data01/lubo/data/seq-pipeline/genomic-scores-hg19"
 
-    DOCKER_DOCUMENTATION_DIR="/documentation"
-    DOCKER_SOURCE_DIR="/code"
-    DOCKER_DAE_DB_DIR="/data"
-    DOCKER_DAE_GENOMIC_SCORES_HG19="/genomic-scores-hg19"
-    DOCKER_DAE_GENOMIC_SCORES_HG38="/genomic-scores-hg38"
 
     DOCKER_PARAMETERS="""
-      -v ${DOCUMENTATION_DIR}:${DOCKER_DOCUMENTATION_DIR} \
-      -v ${DAE_DB_DIR}:${DOCKER_DAE_DB_DIR} \
-      -v ${SOURCE_DIR}:${DOCKER_DOCUMENTATION_DIR}/userdocs/gpf \
-      -v ${DAE_GENOMIC_SCORES_HG19}:${DOCKER_DAE_GENOMIC_SCORES_HG19} \
-      -v ${DAE_GENOMIC_SCORES_HG38}:${DOCKER_DAE_GENOMIC_SCORES_HG38}
+      -v ${DOCUMENTATION_DIR}:/documentation \
+      -v ${DAE_DB_DIR}:/data \
+      -v ${SOURCE_DIR}:/documentation/userdocs/gpf \
+      -v ${DAE_GENOMIC_SCORES_HG19}:/genomic-scores-hg19 \
+      -v ${DAE_GENOMIC_SCORES_HG38}:/genomic-scores-hg38
     """
   }
   stages {
@@ -67,7 +62,7 @@ pipeline {
             ". -f ${SOURCE_DIR}/Dockerfile --build-arg SOURCE_DIR=./\$(basename ${SOURCE_DIR})"
           )
           docker.build(
-            "${DOCKER_IMAGE}",
+            "${DOCUMENTATION_DOCKER_IMAGE}",
             ". -f ${DOCUMENTATION_DIR}/Dockerfile --build-arg GPF_DOCKER_IMAGE=${GPF_DOCKER_IMAGE}"
           )
         }
@@ -77,18 +72,18 @@ pipeline {
     stage('Build') {
       steps {
         sh '''
-          docker run --rm ${DOCKER_PARAMETERS} ${DOCKER_IMAGE} /documentation/scripts/jenkins_build.sh
+          docker run --rm ${DOCKER_PARAMETERS} ${DOCUMENTATION_DOCKER_IMAGE} /documentation/scripts/jenkins_build.sh
         '''
       }
     }
 
-    stage('Test') {
-      steps {
-        sh '''
-          docker run --rm ${DOCKER_PARAMETERS} ${DOCKER_IMAGE} /documentation/scripts/jenkins_test.sh
-        '''
-      }
-    }
+    // stage('Test') {
+    //   steps {
+    //     sh '''
+    //       docker run --rm ${DOCKER_PARAMETERS} ${DOCUMENTATION_DOCKER_IMAGE} /documentation/scripts/jenkins_test.sh
+    //     '''
+    //   }
+    // }
   }
   post {
     always {
