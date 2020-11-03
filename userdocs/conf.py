@@ -48,6 +48,7 @@ extensions = [
     'sphinx.ext.imgmath',
     'sphinx.ext.viewcode',
     'sphinx_copybutton',
+    "sphinxcontrib.httpdomain",
     # 'sphinx_autorun',
 ]
 
