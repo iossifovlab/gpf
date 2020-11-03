@@ -106,7 +106,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
   svgElement;
   summedTranscriptElement;
   transcriptsElement;
-  svgWidth = 1800 - this.options.margin.left - this.options.margin.right;
+  svgWidth;
   svgHeight;
   svgHeightFreqRaw = 400;
   svgHeightFreq = this.svgHeightFreqRaw - this.options.margin.top - this.options.margin.bottom;
@@ -155,6 +155,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
 
   ngOnInit() {
     this.fontSize = this.calculateTextFontSize(window.innerWidth);
+    this.svgWidth = window.innerWidth - this.options.margin.left - this.options.margin.right;
 
     this.datasetsService.getSelectedDataset().subscribe(dataset => {
       this.geneBrowserConfig = dataset.geneBrowser;
@@ -728,11 +729,11 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     let fontSize: number;
 
     if (screenWidth < 1300) {
-      fontSize = 17;
-    } else if (screenWidth > 2000) {
       fontSize = 12;
+    } else if (screenWidth > 2000) {
+      fontSize = 15;
     } else {
-      fontSize = 17 - ((screenWidth - 1300) / 140);
+      fontSize = 12 + ((screenWidth - 1300) / 233);
     }
 
     return fontSize;
