@@ -135,9 +135,9 @@ export class GeneViewModel {
   geneViewTranscripts: GeneViewTranscript[] = [];
   collapsedGeneViewTranscript: GeneViewTranscript;
 
+  domain: number[];
+  normalRange: number[];
   condensedRange: number[];
-  condensedDomain: number[];
-  normalDomain: number[];
 
   constructor(gene: Gene, rangeWidth: number) {
     this.gene = gene;
@@ -149,17 +149,20 @@ export class GeneViewModel {
 
     this.collapsedGeneViewTranscript = new GeneViewTranscript(gene.collapsedTranscript());
 
-    this.normalDomain = [
-      this.collapsedGeneViewTranscript.start,
-      this.collapsedGeneViewTranscript.stop
-    ];
-
-    this.condensedDomain = this.buildCondensedIntronsDomain(0, 3000000000);
-    this.condensedRange = this.buildCondensedIntronsRange(0, 3000000000, this.rangeWidth);
-
+    this.domain = this.buildDomain(0, 3000000000);
+    this.normalRange = this.buildRange(0, 3000000000, (seg) => seg.isSpacer);
+    this.condensedRange = this.buildRange(0, 3000000000, (seg) => seg.isIntron || seg.isSpacer);
   }
 
-  buildCondensedIntronsDomain(domainMin: number, domainMax: number) {
+  buildNormalIntronsRange(domainMin: number, domainMax: number) {
+    return this.buildRange(domainMin, domainMax, (seg) => seg.isSpacer);
+  }
+
+  buildCondensedIntronsRange(domainMin: number, domainMax: number) {
+    return this.buildRange(domainMin, domainMax, (seg) => seg.isIntron || seg.isSpacer);
+  }
+
+  buildDomain(domainMin: number, domainMax: number) {
     const domain: number[] = [];
     const filteredSegments = this.collapsedGeneViewTranscript.segments.filter(
       seg => seg.intersectionLength(domainMin, domainMax) > 0);
@@ -184,7 +187,7 @@ export class GeneViewModel {
     return domain;
   }
 
-  buildCondensedIntronsRange(domainMin: number, domainMax: number, rangeWidth: number) {
+  buildRange(domainMin: number, domainMax: number, condenseCriteria: (seg: GeneViewTranscriptSegment) => boolean) {
     const range: number[] = [];
     const transcript = this.collapsedGeneViewTranscript.transcript;
     const filteredSegments = this.collapsedGeneViewTranscript.segments.filter(
@@ -194,7 +197,7 @@ export class GeneViewModel {
     let condensedLength = 0;
 
     for (const segment of filteredSegments) {
-      if (segment.isIntron) {
+      if (condenseCriteria(segment)) {
         const intronLength = segment.length;
         const intersectionLength = segment.intersectionLength(domainMin, domainMax);
         const factor = intersectionLength / intronLength;
@@ -212,7 +215,7 @@ export class GeneViewModel {
     range.push(0);
 
     for (const segment of filteredSegments) {
-      if (segment.isIntron) {
+      if (condenseCriteria(segment)) {
         const intronLength = segment.length;
         const intersectionLength = segment.intersectionLength(domainMin, domainMax);
         const factor = intersectionLength / intronLength;

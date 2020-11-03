@@ -355,14 +355,11 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     const domainMin = this.x.domain()[0];
     const domainMax = this.x.domain()[this.x.domain().length - 1];
     this.condenseIntrons = !this.condenseIntrons;
+    domain = this.geneViewModel.buildDomain(domainMin, domainMax);
     if (this.condenseIntrons) {
-      domain = this.geneViewModel.buildCondensedIntronsDomain(
-        domainMin, domainMax);
-      range = this.geneViewModel.buildCondensedIntronsRange(
-        domainMin, domainMax, this.svgWidth);
+      range = this.geneViewModel.buildCondensedIntronsRange(domainMin, domainMax);
     } else {
-      domain = [domainMin, domainMax];
-      range = [0, this.svgWidth];
+      range = this.geneViewModel.buildNormalIntronsRange(domainMin, domainMax);
     }
 
     this.zoomHistory.addStateToHistory(
@@ -527,8 +524,8 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
   }
 
   setDefaultScale() {
-    const domain = this.condenseIntrons ? this.geneViewModel.condensedDomain : this.geneViewModel.normalDomain;
-    const range = this.condenseIntrons ? this.geneViewModel.condensedRange : [0, this.svgWidth];
+    const domain = this.geneViewModel.domain;
+    const range = this.condenseIntrons ? this.geneViewModel.condensedRange : this.geneViewModel.normalRange;
     const defaultScale = new GeneViewScaleState(domain, range, 0, this.frequencyDomainMax, this.condenseIntrons);
     this.x = d3.scaleLinear().domain(domain).range(range).clamp(true);
     this.selectedFrequencies = [0, this.frequencyDomainMax];
@@ -607,14 +604,12 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
       if (domainMax - domainMin < 12) {
         domainMax = domainMin + 12;
       }
+
+      domain = this.geneViewModel.buildDomain(domainMin, domainMax);
       if (this.condenseIntrons) {
-        domain = this.geneViewModel.buildCondensedIntronsDomain(
-          domainMin, domainMax);
-        range = this.geneViewModel.buildCondensedIntronsRange(
-          domainMin, domainMax, this.svgWidth);
+        range = this.geneViewModel.buildCondensedIntronsRange(domainMin, domainMax);
       } else {
-        domain = [domainMin, domainMax];
-        range = [0, this.svgWidth];
+        range = this.geneViewModel.buildNormalIntronsRange(domainMin, domainMax);
       }
 
       this.x = d3.scaleLinear().domain(domain).range(range).clamp(true);
