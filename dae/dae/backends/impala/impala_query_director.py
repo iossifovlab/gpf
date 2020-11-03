@@ -19,7 +19,8 @@ class ImpalaQueryDirector:
             frequency_filter=None,
             return_reference=None,
             return_unknown=None,
-            limit=None):
+            limit=None,
+            affected_status=None):
 
         self.query_builder.reset_product()
 
@@ -44,6 +45,7 @@ class ImpalaQueryDirector:
             frequency_filter=frequency_filter,
             return_reference=return_reference,
             return_unknown=return_unknown,
+            affected_status=affected_status,
         )
 
         self.query_builder.build_group_by()

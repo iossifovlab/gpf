@@ -65,6 +65,7 @@ class SummaryVariantsQueryBuilder(BaseQueryBuilder):
         frequency_filter=None,
         return_reference=None,
         return_unknown=None,
+        **kwargs
     ):
         super().build_where(
             regions=regions,

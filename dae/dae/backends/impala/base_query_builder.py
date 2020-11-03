@@ -84,6 +84,7 @@ class BaseQueryBuilder:
         frequency_filter=None,
         return_reference=None,
         return_unknown=None,
+        **kwargs
     ):
         where = []
         if genes is not None:
