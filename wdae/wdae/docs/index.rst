@@ -1,5 +1,12 @@
+wdae Interface
+=============
+
 .. toctree::
-    :maxdepth: 2
-    :caption: Contents:
+    :maxdepth: 4
 
     modules/genotype-browser.rst
+    genotype_browser
+    users_api
+    groups_api
+    datasets_api
+    
