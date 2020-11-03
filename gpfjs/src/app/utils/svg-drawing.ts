@@ -9,11 +9,11 @@ function getTrianglePoints(plotX: number, plotY: number, size: number) {
   return `${x1},${y1} ${x2},${y2} ${x3},${y3}`;
 }
 
-export function drawHoverText(element, x: number, y: number, text: string, textPrefix: string) {
+export function drawHoverText(element, x: number, y: number, text: string, textPrefix: string, fontSize: number) {
   element.append('text')
     .attr('x', x)
     .attr('y', y)
-    .attr('font-size', '13px')
+    .attr('font-size', `${fontSize}px`)
     .text(text)
     .attr('cursor', 'default')
     .append('svg:title').text(`${textPrefix} ${text}`);
