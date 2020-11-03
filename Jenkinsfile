@@ -84,6 +84,21 @@ pipeline {
     //     '''
     //   }
     // }
+
+    stage('Publish') {
+      steps {
+        timeout(time: 5, unit: 'MINUTES') {
+          sh '''
+            echo $HOME
+            echo $WORKSPACE
+            pwd
+            hostname
+            ansible-playbook -i doc_inventory doc_publish.yml
+          '''
+        }
+      }
+    }
+
   }
   post {
     // always {
@@ -102,15 +117,6 @@ pipeline {
       archive 'gpf-user-html.tar.gz'
       fingerprint 'gpf-user-html.tar.gz'
 
-      timeout(time: 5, unit: 'MINUTES') {
-        sh '''
-          echo $HOME
-          echo $WORKSPACE
-          pwd
-          hostname
-          ansible-playbook -i doc_inventory doc_publish.yml
-        '''
-      }
     }
     failure {
       slackSend (
