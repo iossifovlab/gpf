@@ -86,9 +86,9 @@ pipeline {
     // }
   }
   post {
-    always {
-      junit 'coverage/doc-junit.xml'
-    }
+    // always {
+    //   junit 'coverage/doc-junit.xml'
+    // }
     success {
       slackSend (
         color: '#00FF00',
