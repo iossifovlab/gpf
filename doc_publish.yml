@@ -41,3 +41,24 @@
 
   - name: clean gpf-html.tar.gz
     file: path={{ base_path }}/gpf-html.tar.gz state=absent
+
+- name: deploy gpf wdae docs
+  hosts: all
+  tasks:
+
+  - name: copy gpf-wdae-html.tar.gz
+    copy: src=gpf-wdae-html.tar.gz dest="{{ base_path }}/gpf-wdae-html.tar.gz"
+
+  - name: clean API docs directory
+    file: path={{ base_path }}/gpf_wdae_docs state=absent
+
+  - name: ensure API docs directory exists
+    file: path={{ base_path }}/gpf_wdae_docs state=directory
+
+  - name: unarchive gpf-wdae-html.tar.gz
+    unarchive: |
+      src={{ base_path }}/gpf-wdae-html.tar.gz dest={{ base_path }}/gpf_wdae_docs
+      remote_src=yes
+
+  - name: clean gpf-wdae-html.tar.gz
+    file: path={{ base_path }}/gpf-wdae-html.tar.gz state=absent

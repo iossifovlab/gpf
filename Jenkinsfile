@@ -97,6 +97,8 @@ pipeline {
 
       archive 'gpf-html.tar.gz'
       fingerprint 'gpf-html.tar.gz'
+      archive 'gpf-wdae-html.tar.gz'
+      fingerprint 'gpf-wdae-html.tar.gz'
       archive 'gpf-user-html.tar.gz'
       fingerprint 'gpf-user-html.tar.gz'
 
