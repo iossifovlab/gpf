@@ -94,7 +94,7 @@ This property defines whether to draw all families in the
 a :ref:`boolean <allowed_values_booleans>` value.
 
 DEFAULT
-  .. exec::
+  .. code-block::
     from dae.common_reports.config import CommonReportsConfigParser
 
     print(f'``{CommonReportsConfigParser.DRAW_ALL_FAMILIES_DEFAULT}``')

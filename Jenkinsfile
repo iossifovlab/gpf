@@ -14,7 +14,7 @@ pipeline {
     GPF_DOCKER_IMAGE="iossifovlab/gpf-base:documentation_${env.BRANCH_NAME}"
 
     DOCUMENTATION_DIR="${env.WORKSPACE}"
-    SOURCE_DIR="${env.WORKSPACE}/gpf"
+    SOURCE_DIR="${env.WORKSPACE}/userdocs/gpf"
     DAE_DB_DIR="${env.WORKSPACE}/data-hg19-startup"
     DAE_GENOMIC_SCORES_HG19="/data01/lubo/data/seq-pipeline/genomic-scores-hg19"
     DAE_GENOMIC_SCORES_HG38="/data01/lubo/data/seq-pipeline/genomic-scores-hg19"
@@ -44,7 +44,7 @@ pipeline {
           $class: 'GitSCM', 
           branches: [[name: '*/master']],
           doGenerateSubmoduleConfigurations: false,
-          extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'gpf']],
+          extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'userdocs/gpf']],
           submoduleCfg: [], 
           userRemoteConfigs: [[
             credentialsId: 'dea7a214-d183-4735-a7d5-ed8076dd0e0d', 
@@ -57,14 +57,18 @@ pipeline {
     stage('Docker Setup') {
       steps {
         script {
-          docker.build(
-            "${GPF_DOCKER_IMAGE}",
-            ". -f ${SOURCE_DIR}/Dockerfile --build-arg SOURCE_DIR=./\$(basename ${SOURCE_DIR})"
-          )
-          docker.build(
-            "${DOCUMENTATION_DOCKER_IMAGE}",
-            ". -f ${DOCUMENTATION_DIR}/Dockerfile --build-arg GPF_DOCKER_IMAGE=${GPF_DOCKER_IMAGE}"
-          )
+          sh '''
+            make gpf_image
+            make documentation_image
+          '''
+          // docker.build(
+          //   "${GPF_DOCKER_IMAGE}",
+          //   ". -f ${SOURCE_DIR}/Dockerfile --build-arg SOURCE_DIR=./\$(basename ${SOURCE_DIR})"
+          // )
+          // docker.build(
+          //   "${DOCUMENTATION_DOCKER_IMAGE}",
+          //   ". -f ${DOCUMENTATION_DIR}/Dockerfile --build-arg GPF_DOCKER_IMAGE=${GPF_DOCKER_IMAGE}"
+          // )
         }
       }
     }

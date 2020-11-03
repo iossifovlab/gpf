@@ -120,7 +120,7 @@ impala.port
   impala.port = <Impala port number>
 
 DEFAULT
-  .. exec::
+  .. code-block::
     from dae.configuration.dae_config_parser import DAEConfigParser
 
     print(f"``{DAEConfigParser.DEFAULT_VALUES['impala.port']}``")
@@ -138,7 +138,7 @@ impala.db
   impala.db = <Impala database name>
 
 DEFAULT
-  .. exec::
+  .. code-block::
     from dae.configuration.dae_config_parser import DAEConfigParser
 
     print(f"``{DAEConfigParser.DEFAULT_VALUES['impala.db']}``")
@@ -169,7 +169,7 @@ hdfs.port
   hdfs.port = <HDFS port number>
 
 DEFAULT
-  .. exec::
+  .. code-block::
     from dae.configuration.dae_config_parser import DAEConfigParser
 
     print(f"``{DAEConfigParser.DEFAULT_VALUES['hdfs.port']}``")
@@ -190,7 +190,7 @@ hdfs.base_dir
   hdfs.base_dir = <>
 
 DEFAULT
-  .. exec::
+  .. code-block::
     from dae.configuration.dae_config_parser import DAEConfigParser
 
     print(f"``{DAEConfigParser.DEFAULT_VALUES['hdfs.base_dir']}``")
@@ -382,7 +382,7 @@ ______________________
   permissionDeniedPrompt = <markdown>
 
 DEFAULT
-  .. exec::
+  .. code-block::
     from dae.configuration.dae_config_parser import DAEConfigParser
 
     print(f"``{DAEConfigParser.DEFAULT_SECTION_VALUES['gpfjs']['permissionDeniedPrompt']}``")

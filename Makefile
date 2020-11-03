@@ -18,7 +18,7 @@ endif
 
 gpf_image:
 	echo $(GPF_DOCKER_IMAGE)
-	docker build . -t $(GPF_DOCKER_IMAGE) -f "gpf/Dockerfile" --build-arg SOURCE_DIR=./gpf
+	cd userdocs/gpf && docker build . -t $(GPF_DOCKER_IMAGE) -f "Dockerfile" && cd -
 
 
 documentation_image:

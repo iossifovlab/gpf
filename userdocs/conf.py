@@ -1,14 +1,12 @@
+
+# Enabling Django
+import os
 import sys
-from os.path import basename
+import django
+sys.path.insert(0, os.path.abspath('..'))
+os.environ['DJANGO_SETTINGS_MODULE'] = 'wdae.settings'
+django.setup()
 
-try:
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO
-
-# from sphinx.util.compat import Directive
-from sphinx.util.docutils import SphinxDirective
-from docutils import nodes, statemachine
 
 
 # -*- coding: utf-8 -*-
@@ -50,7 +48,7 @@ extensions = [
     'sphinx.ext.imgmath',
     'sphinx.ext.viewcode',
     'sphinx_copybutton',
-    'sphinx_autorun',
+    # 'sphinx_autorun',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -256,7 +254,7 @@ html_static_path = ['_static']
 # html_search_scorer = 'scorer.js'
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'wdaedoc'
+htmlhelp_basename = 'gpfdoc'
 
 # -- Options for LaTeX output ---------------------------------------------
 
@@ -282,7 +280,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'wdae.tex', u'wdae Documentation',
+    (master_doc, 'gpf.tex', u'GPF Documentation',
      u'iossifovlab.com', 'manual'),
 ]
 
@@ -324,7 +322,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'wdae', u'wdae Documentation',
+    (master_doc, 'gpf', u'GPF Documentation',
      [author], 1)
 ]
 
@@ -339,7 +337,7 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'wdae', u'wdae Documentation',
+    (master_doc, 'gpf', u'GPF Documentation',
      author, 'wdae', 'One line description of project.',
      'Miscellaneous'),
 ]
@@ -361,32 +359,32 @@ texinfo_documents = [
 # texinfo_no_detailmenu = False
 
 
-class ExecDirective(SphinxDirective):
-    """
-        Execute the specified python code and insert the output into the document.
-        This class is copied from:
-        https://stackoverflow.com/questions/7250659/how-to-use-python-to-programmatically-generate-part-of-sphinx-documentation/18143318#18143318
-    """
-    has_content = True
+# class ExecDirective(SphinxDirective):
+#     """
+#         Execute the specified python code and insert the output into the document.
+#         This class is copied from:
+#         https://stackoverflow.com/questions/7250659/how-to-use-python-to-programmatically-generate-part-of-sphinx-documentation/18143318#18143318
+#     """
+#     has_content = True
 
-    def run(self):
-        oldStdout, sys.stdout = sys.stdout, StringIO()
+#     def run(self):
+#         oldStdout, sys.stdout = sys.stdout, StringIO()
 
-        tab_width = self.options.get('tab-width', self.state.document.settings.tab_width)
-        source = self.state_machine.input_lines.source(self.lineno - self.state_machine.input_offset - 1)
+#         tab_width = self.options.get('tab-width', self.state.document.settings.tab_width)
+#         source = self.state_machine.input_lines.source(self.lineno - self.state_machine.input_offset - 1)
 
-        try:
-            exec('\n'.join(self.content))
-            text = sys.stdout.getvalue()
-            lines = statemachine.string2lines(text, tab_width, convert_whitespace=True)
-            self.state_machine.insert_input(lines, source)
-            return []
-        except Exception:
-            return [nodes.error(None, nodes.paragraph(text = "Unable to execute python code at %s:%d:" % (basename(source), self.lineno)), nodes.paragraph(text = str(sys.exc_info()[1])))]
-        finally:
-            sys.stdout = oldStdout
+#         try:
+#             exec('\n'.join(self.content))
+#             text = sys.stdout.getvalue()
+#             lines = statemachine.string2lines(text, tab_width, convert_whitespace=True)
+#             self.state_machine.insert_input(lines, source)
+#             return []
+#         except Exception:
+#             return [nodes.error(None, nodes.paragraph(text = "Unable to execute python code at %s:%d:" % (basename(source), self.lineno)), nodes.paragraph(text = str(sys.exc_info()[1])))]
+#         finally:
+#             sys.stdout = oldStdout
 
 
-def setup(app):
-    app.add_stylesheet('custom.css')
-    app.add_directive('exec', ExecDirective)
+# def setup(app):
+#     app.add_stylesheet('custom.css')
+#     app.add_directive('exec', ExecDirective)
