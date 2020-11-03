@@ -21,7 +21,9 @@ export class SearchableSelectComponent implements AfterViewInit {
   ) {}
 
   ngAfterViewInit(): void {
-    this.dropdown.autoClose = 'inside';
+    // this.dropdown.autoClose = 'inside';
+    // this.selectItem.emit('CHD8');
+    this.selectItem.emit('TTLL10');
   }
 
   searchBoxChange(searchFieldValue) {

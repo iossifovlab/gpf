@@ -124,6 +124,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
   y_axis;
   y_axis_subdomain;
   y_axis_zero;
+  fontSize: number;
   selectedEffectTypes = ['lgds', 'missense', 'synonymous', 'other'];
   selectedAffectedStatus = ['Affected only', 'Unaffected only', 'Affected and unaffected'];
   selectedFrequencies;
@@ -153,6 +154,8 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
   }
 
   ngOnInit() {
+    this.fontSize = this.calculateTextFontSize(window.innerWidth);
+
     this.datasetsService.getSelectedDataset().subscribe(dataset => {
       this.geneBrowserConfig = dataset.geneBrowser;
       this.frequencyDomainMin = this.geneBrowserConfig.domainMin;
@@ -165,8 +168,6 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
 
       this.svgElement = d3.select('#svg-container')
         .append('svg')
-        .attr('viewBox', '0 0 ' + (this.svgWidth + this.options.margin.left + this.options.margin.right).toString() +
-          ' ' + this.svgHeightFreqRaw.toString())
         .append('g')
         .attr('transform', `translate(${this.options.margin.left}, ${this.options.margin.top})`);
 
@@ -477,10 +478,10 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
       this.y_axis = d3.axisLeft(this.y);
       this.y_axis_subdomain = d3.axisLeft(this.y_subdomain).tickValues([this.frequencyDomainMin / 2.0]);
       this.y_axis_zero = d3.axisLeft(this.y_zero);
-      this.svgElement.append('g').attr('transform', `translate(0, ${this.svgHeightFreq})`).call(this.x_axis);
-      this.svgElement.append('g').call(this.y_axis);
-      this.svgElement.append('g').call(this.y_axis_subdomain);
-      this.svgElement.append('g').call(this.y_axis_zero);
+      this.svgElement.append('g').attr('transform', `translate(0, ${this.svgHeightFreq})`).call(this.x_axis).style('font', `${this.fontSize}px sans-serif`);
+      this.svgElement.append('g').call(this.y_axis).style('font', `${this.fontSize}px sans-serif`);
+      this.svgElement.append('g').call(this.y_axis_subdomain).style('font', `${this.fontSize}px sans-serif`);
+      this.svgElement.append('g').call(this.y_axis_zero).style('font', `${this.fontSize}px sans-serif`);
 
       filteredSummaryVariants.summaryVariants.sort((a, b) => GeneViewSummaryVariant.comparator(a, b));
 
@@ -696,7 +697,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     for (const [chromosome, range] of Object.entries(chromosomes)) {
       from = Math.max(range[0], domainMin);
       to = Math.min(range[1], domainMax);
-      drawHoverText(element, this.x((from + to) / 2) - 43, yPos + 35, `Chromosome: ${chromosome}`, '');
+      drawHoverText(element, this.x((from + to) / 2) - 43, yPos + 35, `Chromosome: ${chromosome}`, '', this.fontSize);
     }
   }
 
@@ -721,6 +722,20 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
       }
     }
     return ticks;
+  }
+
+  calculateTextFontSize(screenWidth: number) {
+    let fontSize: number;
+
+    if (screenWidth < 1300) {
+      fontSize = 17;
+    } else if (screenWidth > 2000) {
+      fontSize = 12;
+    } else {
+      fontSize = 17 - ((screenWidth - 1300) / 140);
+    }
+
+    return fontSize;
   }
 
   drawTranscript(element, yPos: number, geneViewTranscript: GeneViewTranscript) {
@@ -748,7 +763,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
       brushSize = { nonCoding: this.options.exonThickness.collapsed, coding: this.options.cdsThickness.collapsed };
       this.drawChromosomeLabels(element, yPos, geneViewTranscript);
     } else {
-      drawHoverText(element, this.x(firstSegmentStart) - 150, yPos + 10, transcriptId, 'Transcript id: ');
+      drawHoverText(element, this.x(firstSegmentStart) - 150, yPos + 10, transcriptId, 'Transcript id: ', this.fontSize);
     }
 
     this.drawTranscriptUTRText(element, firstSegmentStart, lastSegmentStop, yPos, geneViewTranscript.strand);
@@ -787,7 +802,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
       UTR.left = '3\'';
       UTR.right = '5\'';
     }
-    drawHoverText(element, this.x(xStart) - 20, y + 10, UTR.left, 'UTR ');
-    drawHoverText(element, this.x(xEnd) + 10, y + 10, UTR.right, 'UTR ');
+    drawHoverText(element, this.x(xStart) - 20, y + 10, UTR.left, 'UTR ', this.fontSize);
+    drawHoverText(element, this.x(xEnd) + 10, y + 10, UTR.right, 'UTR ', this.fontSize);
   }
 }
