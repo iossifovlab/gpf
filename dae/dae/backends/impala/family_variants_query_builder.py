@@ -35,6 +35,13 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
 
         return columns
 
+    def _where_accessors(self):
+        accessors = super()._where_accessors()
+
+        for key, value in accessors.items():
+            accessors[key] = f"variants.{value}"
+        return accessors
+
     def build_from(self):
         from_clause = f"FROM {self.db}.{self.variants_table} as variants"
         self._add_to_product(from_clause)
@@ -64,7 +71,7 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
         return_unknown=None,
         affected_status=None,
     ):
-        super().build_where(
+        where_clause = self._base_build_where(
             regions=regions,
             genes=genes,
             effect_types=effect_types,
@@ -80,7 +87,12 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
             return_reference=return_reference,
             return_unknown=return_unknown,
         )
-        in_members = "AND variants.variant_in_members = pedigree.person_id"
+        if where_clause:
+            self._add_to_product(where_clause)
+            in_members = "AND variants.variant_in_members = pedigree.person_id"
+        else:
+            in_members = \
+                "WHERE variants.variant_in_members = pedigree.person_id"
         self._add_to_product(in_members)
         if affected_status is not None and len(affected_status):
             statuses = set()
