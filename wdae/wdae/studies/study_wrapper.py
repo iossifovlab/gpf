@@ -540,11 +540,18 @@ class StudyWrapper(StudyWrapperBase):
         if "person_ids" in kwargs:
             kwargs["person_ids"] = list(kwargs["person_ids"])
 
+        if kwargs.get("inheritance"):
+            kwargs["inheritance"] = " and ".join([
+                kwargs["inheritance"],
+                "not possible_denovo and not possible_omission"
+            ])
         if "inheritanceTypeFilter" in kwargs:
-            kwargs["inheritance"] = "any({})".format(
-                ",".join(kwargs["inheritanceTypeFilter"])
-            )
-            kwargs.pop("inheritanceTypeFilter")
+            kwargs["inheritance"] = " and ".join([
+                "any({})".format(
+                    ",".join(kwargs["inheritanceTypeFilter"])),
+                kwargs["inheritance"]
+            ])
+
         return kwargs
 
     def query_variants(self, **kwargs):
@@ -591,6 +598,7 @@ class StudyWrapper(StudyWrapperBase):
                                     attribute = "inf"
                             if not attribute:
                                 attribute = "-"
+
                             row_variant.append(attribute)
 
                     except (AttributeError, KeyError):
