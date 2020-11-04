@@ -4,11 +4,11 @@
       <div style="font-family: Roboto; font-weight: 500; border-bottom: none;" class="card-header card-title">Gene
         Symbols</div>
       <div class="card-block">
-        <gpf-gene-symbol-with-search></gpf-gene-symbol-with-search>
+        <gpf-gene-symbol-with-search (inputClickEvent)="hideResults = true"></gpf-gene-symbol-with-search>
 
         <div style="padding: 0px 10px 10px 20px">
           <input style="margin-right: 10px;" type="checkbox" id="exome-only-checkbox" [(ngModel)]="enableExomeOnly">
-          <label for="exome-only-checkbox">Exome only</label>
+          <label (click)="hideResults = true" for="exome-only-checkbox">Exome only</label>
         </div>
       </div>
     </div>
@@ -17,20 +17,22 @@
       <input type="button" style="width: 75px" class="btn btn-md btn-primary" value="Go" (click)="submitGeneRequest()">
     </div>
 
-    <div class="row" style="margin-left: 0px; margin-right: 0px">
-      <gpf-gene-view style="width: 100%; min-width: 1300px;" [gene]="selectedGene"
-        [variantsArray]="summaryVariantsArray"
-        (updateShownTablePreviewVariantsArrayEvent)="updateShownTablePreviewVariantsArray($event)"
-        [streamingFinished$]="queryService.summaryStreamingFinishedSubject">
-      </gpf-gene-view>
+    <div [hidden]="hideResults">
+      <div class="row" style="margin-left: 0px; margin-right: 0px">
+        <gpf-gene-view style="width: 100%; min-width: 1300px;" [gene]="selectedGene"
+          [variantsArray]="summaryVariantsArray"
+          (updateShownTablePreviewVariantsArrayEvent)="updateShownTablePreviewVariantsArray($event)"
+          [streamingFinished$]="queryService.summaryStreamingFinishedSubject">
+        </gpf-gene-view>
+      </div>
+
+      <gpf-loading-spinner *ngIf="selectedGene" [loadingFinished]="familyLoadingFinished"
+        [count]="getFamilyVariantCounts()" [displayText]="'Loading variants...'">
+      </gpf-loading-spinner>
+
+      <gpf-genotype-preview-table [columns]="dataset?.genotypeBrowserConfig?.columns"
+        [genotypePreviewInfo]="genotypePreviewInfo" [genotypePreviewVariantsArray]="genotypePreviewVariantsArray">
+      </gpf-genotype-preview-table>
     </div>
-
-    <gpf-loading-spinner *ngIf="selectedGene" [loadingFinished]="familyLoadingFinished"
-      [count]="getFamilyVariantCounts()" [displayText]="'Loading variants...'">
-    </gpf-loading-spinner>
-
-    <gpf-genotype-preview-table [columns]="dataset?.genotypeBrowserConfig?.columns"
-      [genotypePreviewInfo]="genotypePreviewInfo" [genotypePreviewVariantsArray]="genotypePreviewVariantsArray">
-    </gpf-genotype-preview-table>
   </div>
 </div>

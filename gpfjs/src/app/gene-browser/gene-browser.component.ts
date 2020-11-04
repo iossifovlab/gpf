@@ -24,7 +24,7 @@ import { StateRestoreService } from 'app/store/state-restore.service';
 export class GeneBrowserComponent extends QueryStateCollector implements OnInit {
   @ViewChild(GeneViewComponent) geneViewComponent: GeneViewComponent;
   selectedGene: Gene;
-  geneSymbol = 'CHD8';
+  geneSymbol = '';
   maxFamilyVariants = 1000;
   genotypePreviewVariantsArray: GenotypePreviewVariantsArray;
   summaryVariantsArray: GeneViewSummaryVariantsArray;
@@ -33,6 +33,7 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
   genotypePreviewInfo: GenotypePreviewInfo;
   loadingFinished: boolean;
   familyLoadingFinished: boolean;
+  hideResults: boolean;
   exomeEffectTypes = [
     'lgds',
     'Nonsense',
@@ -140,7 +141,7 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
       'effectTypes': effects,
       'genomicScores': state.genomicScores,
       'inheritanceTypeFilter': inheritanceFilters,
-      "affectedStatus": state.affectedStatus,
+      'affectedStatus': state.affectedStatus,
       'datasetId': state.datasetId
     };
     if (state.zoomState) {
@@ -152,6 +153,7 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
   }
 
   submitGeneRequest() {
+    this.hideResults = false;
     this.getCurrentState()
       .subscribe(state => {
         this.geneSymbol = state['geneSymbols'][0];

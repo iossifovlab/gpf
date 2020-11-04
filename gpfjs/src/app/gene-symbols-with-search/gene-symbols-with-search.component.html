@@ -2,7 +2,7 @@
     <gpf-searchable-select
         style="width: 50%;"
         (search)="searchBoxChange($event)"
-        (selectItem)="geneSymbols.geneSymbols = $event"
+        (selectItem)="geneSymbols.geneSymbols = $event; emitInputClickEvent()"
         [data]="matchingGeneSymbols"
         caption="{{ geneSymbols?.geneSymbols }}"
         [isInGeneBrowser]="true"
