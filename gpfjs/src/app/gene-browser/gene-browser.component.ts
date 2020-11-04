@@ -33,16 +33,30 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
   genotypePreviewInfo: GenotypePreviewInfo;
   loadingFinished: boolean;
   familyLoadingFinished: boolean;
-  codingEffectTypes = [
+  exomeEffectTypes = [
     'Nonsense', 'Frame-shift', 'Splice-site',
-    'No-frame-shift-newStop', 'Missense', 'Synonymous'
+    'No-frame-shift-newStop', 'Missense', 'Synonymous',
+    'noStart', 'noEnd', 'no-frame-shift',
+    "3'UTR",
+    "3'UTR-intron",
+    "5'UTR",
+    "5'UTR-intron",
+    "CDS",
   ];
   otherEffectTypes = [
-    'noncoding', 'noStart', 'noEnd', 'no-frame-shift',
+    'noStart', 'noEnd', 'no-frame-shift',
+    "Non coding",
+    "Intron",
+    "Intergenic",
+    "3'UTR",
+    "3'UTR-intron",
+    "5'UTR",
+    "5'UTR-intron",
+    "CDS",
   ];
   private geneBrowserConfig;
 
-  enableCodingOnly = true;
+  enableExomeOnly = true;
   private genotypeBrowserState: Object;
 
   constructor(
@@ -110,8 +124,9 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
     let effects: string[] = state.selectedEffectTypes;
     if (effects.indexOf('other') >= 0) {
       effects = effects.filter(ef => ef !== 'other');
-      if (!this.enableCodingOnly) {
-        effects = effects.concat(this.otherEffectTypes);
+      effects = effects.concat(this.otherEffectTypes);
+      if (this.enableExomeOnly) {
+        effects = effects.filter(et => this.exomeEffectTypes.indexOf(et) >= 0);
       }
     }
     const params: any = {
@@ -164,8 +179,8 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
             requestParams['maxVariantsCount'] = 10000;
 
 
-            if (this.enableCodingOnly) {
-              requestParams['effectTypes'] = this.codingEffectTypes;
+            if (this.enableExomeOnly) {
+              requestParams['effectTypes'] = this.exomeEffectTypes;
               this.geneViewComponent.enableIntronCondensing();
             } else {
               this.geneViewComponent.disableIntronCondensing();
