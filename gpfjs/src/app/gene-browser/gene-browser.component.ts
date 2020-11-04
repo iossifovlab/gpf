@@ -170,6 +170,14 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
             } else {
               this.geneViewComponent.disableIntronCondensing();
             }
+            const inheritanceFilters = [
+                'denovo',
+                'mendelian',
+                'omission',
+                'missing'
+            ];
+
+            requestParams['inheritanceTypeFilter'] = inheritanceFilters;
 
             this.summaryVariantsArray = this.queryService.getGeneViewVariants(requestParams);
 
