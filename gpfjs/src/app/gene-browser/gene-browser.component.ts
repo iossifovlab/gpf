@@ -33,28 +33,26 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
   genotypePreviewInfo: GenotypePreviewInfo;
   loadingFinished: boolean;
   familyLoadingFinished: boolean;
-  exomeEffectTypes = [
+  codingEffectTypes = [
     'lgds',
-    'Nonsense',
-    'Frame-shift',
-    'Splice-site',
-    'No-frame-shift-newStop',
-    'Missense',
-    'Synonymous',
+    'nonsense',
+    'frame-shift',
+    'splice-site',
+    'no-frame-shift-newStop',
+    'missense',
+    'synonymous',
     'noStart',
     'noEnd',
     'no-frame-shift',
-    "3'UTR",
-    "3'UTR-intron",
-    "5'UTR",
-    "5'UTR-intron",
     "CDS",
   ];
   otherEffectTypes = [
-    'noStart', 'noEnd', 'no-frame-shift',
-    "Non coding",
-    "Intron",
-    "Intergenic",
+    'noStart',
+    'noEnd',
+    'no-frame-shift',
+    "non-coding",
+    "intron",
+    "intergenic",
     "3'UTR",
     "3'UTR-intron",
     "5'UTR",
@@ -63,7 +61,7 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
   ];
   private geneBrowserConfig;
 
-  enableExomeOnly = true;
+  enableCodingOnly = true;
   private genotypeBrowserState: Object;
 
   constructor(
@@ -132,8 +130,8 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
     if (effects.indexOf('other') >= 0) {
       effects = effects.filter(ef => ef !== 'other');
       effects = effects.concat(this.otherEffectTypes);
-      if (this.enableExomeOnly) {
-        effects = effects.filter(et => this.exomeEffectTypes.indexOf(et) >= 0);
+      if (this.enableCodingOnly) {
+        effects = effects.filter(et => this.codingEffectTypes.indexOf(et) >= 0);
       }
     }
     const params: any = {
@@ -186,8 +184,8 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
             requestParams['maxVariantsCount'] = 10000;
 
 
-            if (this.enableExomeOnly) {
-              requestParams['effectTypes'] = this.exomeEffectTypes;
+            if (this.enableCodingOnly) {
+              requestParams['effectTypes'] = this.codingEffectTypes;
               this.geneViewComponent.enableIntronCondensing();
             } else {
               this.geneViewComponent.disableIntronCondensing();
