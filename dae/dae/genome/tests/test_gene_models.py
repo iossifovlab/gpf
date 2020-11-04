@@ -315,8 +315,8 @@ def test_load_ucscgenepred(fixture_dirname):
 
     filename = fixture_dirname("gene_models/genePred_100.txt.gz")
     gm = load_ucscgenepred_models_format(filename)
-
     assert gm is not None
+    assert "DDX11L1" in gm.gene_models
 
 
 @pytest.mark.parametrize(
@@ -387,7 +387,6 @@ def test_save_load_gene_models(
             # assert exon.number == exon1.number
             # assert exon.cds_start == exon1.cds_start
             # assert exon.cds_stop == exon1.cds_stop
-
 
 
 @pytest.mark.skip
