@@ -125,6 +125,20 @@ export class GeneViewTranscript {
       return null;
     }
   }
+
+  resolveRegionChromosomes(region: number[]): string[] {
+    const regionMin = Math.min(...region);
+    const regionMax = Math.max(...region);
+    const result: string[] = [];
+    for (const [chromosome, range] of Object.entries(this.chromosomes)) {
+      if (range[0] >= regionMax || range[1] <= regionMin) {
+        continue;
+      } else {
+        result.push(`${chromosome}:${Math.max(regionMin, range[0])}-${Math.min(regionMax, range[1])}`);
+      }
+    }
+    return result;
+  }
 }
 
 

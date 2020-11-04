@@ -226,8 +226,13 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
       'selectedEffectTypes': Array.from(this.selectedEffectTypes),
       'zoomState': this.zoomHistory.currentState,
       'showDenovo': this.showDenovo,
-      'showTransmitted': this.showTransmitted
+      'showTransmitted': this.showTransmitted,
     };
+    if (state['zoomState']) {
+      state['regions'] = this.geneViewModel.collapsedGeneViewTranscript.resolveRegionChromosomes(
+        [this.x.domain()[0], this.x.domain()[this.x.domain().length - 1]]
+      );
+    }
     return this.validateAndGetState(state);
   }
 

@@ -46,20 +46,20 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
     'noStart',
     'noEnd',
     'no-frame-shift',
-    "CDS",
+    'CDS',
   ];
   otherEffectTypes = [
     'noStart',
     'noEnd',
     'no-frame-shift',
-    "non-coding",
-    "intron",
-    "intergenic",
-    "3'UTR",
-    "3'UTR-intron",
-    "5'UTR",
-    "5'UTR-intron",
-    "CDS",
+    'non-coding',
+    'intron',
+    'intergenic',
+    '3\'UTR',
+    '3\'UTR-intron',
+    '5\'UTR',
+    '5\'UTR-intron',
+    'CDS',
   ];
   private geneBrowserConfig;
 
@@ -145,9 +145,7 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
       'datasetId': state.datasetId
     };
     if (state.zoomState) {
-      const left = state.zoomState.xDomain[0];
-      const right = state.zoomState.xDomain[state.zoomState.xDomain.length - 1];
-      params.regions = [`${gene.transcripts[0].chrom}:${left}-${right}`];
+      params.regions = state.regions;
     }
     return params;
   }
