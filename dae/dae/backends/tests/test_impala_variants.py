@@ -109,7 +109,7 @@ def test_impala_summary_variants_simple(variants_impala, fixture_name):
 @pytest.mark.parametrize("inheritance,ultra_rare,real_attr_filter, result", [
     (
         "denovo", None, None,
-        "frequency_bin = 0"
+        "variants.frequency_bin = 0"
     ),
     (
         None, None, None,
@@ -121,29 +121,31 @@ def test_impala_summary_variants_simple(variants_impala, fixture_name):
     ),
     (
         "any(denovo)", True, None,
-        "frequency_bin = 0"
+        "variants.frequency_bin = 0"
     ),
     (
         "any(denovo, mendelian)", True, None,
-        " OR ".join(set(["frequency_bin = 0", "frequency_bin = 1"]))
+        " OR ".join(
+            set(["variants.frequency_bin = 0", "variants.frequency_bin = 1"]))
     ),
     (
         None, True, None,
-        " OR ".join(set(["frequency_bin = 1"]))
+        " OR ".join(set(["variants.frequency_bin = 1"]))
     ),
     (
         "any(mendelian)", True, None,
-        " OR ".join(set(["frequency_bin = 1"]))
+        " OR ".join(set(["variants.frequency_bin = 1"]))
     ),
     (
         "any(mendelian)", None, [("af_allele_freq", (0, 3))],
-        " OR ".join(set(["frequency_bin = 1", "frequency_bin = 2"]))
+        " OR ".join(
+            set(["variants.frequency_bin = 1", "variants.frequency_bin = 2"]))
     ),
     (
         "any(denovo, mendelian)", None, [("af_allele_freq", (0, 3))],
         " OR ".join(set([
-            "frequency_bin = 0", "frequency_bin = 1",
-            "frequency_bin = 2"]))
+            "variants.frequency_bin = 0", "variants.frequency_bin = 1",
+            "variants.frequency_bin = 2"]))
     ),
     (
         "any(denovo, mendelian)", None, [("af_allele_freq", (0, 5))],
@@ -152,13 +154,13 @@ def test_impala_summary_variants_simple(variants_impala, fixture_name):
     (
         "any(denovo, mendelian)", None, [("af_allele_freq", (5, 6))],
         " OR ".join(set([
-            "frequency_bin = 0", "frequency_bin = 3"]))
+            "variants.frequency_bin = 0", "variants.frequency_bin = 3"]))
     ),
     (
         None, None, [("af_allele_freq", (0, 3))],
         " OR ".join(set([
-            "frequency_bin = 1",
-            "frequency_bin = 2"]))
+            "variants.frequency_bin = 1",
+            "variants.frequency_bin = 2"]))
     ),
 ])
 def test_impala_frequency_bin_heuristics(
