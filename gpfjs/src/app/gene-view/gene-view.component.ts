@@ -321,10 +321,14 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
 
     if (checked) {
       this.transcriptsElement.attr('display', 'none');
-      d3.select('#svg-container svg').attr('height', height);
+      d3.select('#svg-container svg')
+      .attr('viewBox', '0 0 ' + (this.svgWidth + this.options.margin.left + this.options.margin.right).toString() +
+      ' ' + height.toString());
     } else {
       this.transcriptsElement.attr('display', 'block');
-      d3.select('#svg-container svg').attr('height', heightWithTranscripts);
+      d3.select('#svg-container svg')
+      .attr('viewBox', '0 0 ' + (this.svgWidth + this.options.margin.left + this.options.margin.right).toString() +
+      ' ' + heightWithTranscripts.toString());
     }
   }
 
@@ -550,7 +554,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     this.svgElement = d3.select('#svg-container')
       .append('svg')
       .attr('viewBox', '0 0 ' + (this.svgWidth + this.options.margin.left + this.options.margin.right).toString() +
-          ' ' + (this.svgHeightFreqRaw + 70 + (this.gene.transcripts.length + 1) * 25).toString())
+          ' ' + (this.svgHeightFreqRaw + 85 + (this.gene.transcripts.length + 1) * 25).toString())
       .append('g')
       .attr('transform', `translate(${this.options.margin.left}, ${this.options.margin.top})`);
 
