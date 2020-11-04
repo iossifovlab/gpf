@@ -1,4 +1,4 @@
-import { Component, OnInit, forwardRef } from '@angular/core';
+import { Component, OnInit, forwardRef, EventEmitter, Output } from '@angular/core';
 import { GeneSymbols } from 'app/gene-symbols/gene-symbols';
 import { Subject } from 'rxjs';
 import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query-state-provider';
@@ -11,6 +11,7 @@ import { StateRestoreService } from '../store/state-restore.service';
   providers: [{provide: QueryStateProvider, useExisting: forwardRef(() => GeneSymbolsWithSearchComponent) }]
 })
 export class GeneSymbolsWithSearchComponent extends QueryStateWithErrorsProvider implements OnInit {
+  @Output() inputClickEvent  = new EventEmitter();
   geneSymbols = new GeneSymbols();
   matchingGeneSymbols: string[] = [];
   searchString = '';
@@ -63,5 +64,9 @@ export class GeneSymbolsWithSearchComponent extends QueryStateWithErrorsProvider
 
   searchBoxChange(searchTerm: string) {
     this.searchKeystrokes$.next(searchTerm.toUpperCase());
+  }
+
+  emitInputClickEvent() {
+    this.inputClickEvent.emit();
   }
 }

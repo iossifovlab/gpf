@@ -11,6 +11,7 @@ import { QueryStateCollector } from 'app/query/query-state-provider';
 import { FullscreenLoadingService } from 'app/fullscreen-loading/fullscreen-loading.service';
 import { GeneViewComponent } from 'app/gene-view/gene-view.component';
 import { StateRestoreService } from 'app/store/state-restore.service';
+import { ConfigService } from 'app/config/config.service';
 
 @Component({
   selector: 'gpf-gene-browser-component',
@@ -24,7 +25,7 @@ import { StateRestoreService } from 'app/store/state-restore.service';
 export class GeneBrowserComponent extends QueryStateCollector implements OnInit {
   @ViewChild(GeneViewComponent) geneViewComponent: GeneViewComponent;
   selectedGene: Gene;
-  geneSymbol = 'CHD8';
+  geneSymbol = '';
   maxFamilyVariants = 1000;
   genotypePreviewVariantsArray: GenotypePreviewVariantsArray;
   summaryVariantsArray: GeneViewSummaryVariantsArray;
@@ -33,6 +34,7 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
   genotypePreviewInfo: GenotypePreviewInfo;
   loadingFinished: boolean;
   familyLoadingFinished: boolean;
+  hideResults: boolean;
   codingEffectTypes = [
     'lgds',
     'nonsense',
@@ -69,6 +71,7 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
     private geneService: GeneService,
     private datasetsService: DatasetsService,
     private route: ActivatedRoute,
+    readonly configService: ConfigService,
     private loadingService: FullscreenLoadingService,
     private stateRestoreService: StateRestoreService
 
@@ -138,7 +141,7 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
       'effectTypes': effects,
       'genomicScores': state.genomicScores,
       'inheritanceTypeFilter': inheritanceFilters,
-      "affectedStatus": state.affectedStatus,
+      'affectedStatus': state.affectedStatus,
       'datasetId': state.datasetId
     };
     if (state.zoomState) {
@@ -150,6 +153,7 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
   }
 
   submitGeneRequest() {
+    this.hideResults = false;
     this.getCurrentState()
       .subscribe(state => {
         this.geneSymbol = state['geneSymbols'][0];
@@ -190,6 +194,14 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
             } else {
               this.geneViewComponent.disableIntronCondensing();
             }
+            const inheritanceFilters = [
+              'denovo',
+              'mendelian',
+              'omission',
+              'missing'
+            ];
+
+            requestParams['inheritanceTypeFilter'] = inheritanceFilters;
 
             this.summaryVariantsArray = this.queryService.getGeneViewVariants(requestParams);
 
@@ -207,5 +219,23 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
       return this.genotypePreviewVariantsArray.getVariantsCount(this.maxFamilyVariants);
     }
     return '';
+  }
+
+  onSubmit(event) {
+    this.getCurrentState()
+      .subscribe(
+        state => {
+          console.log(state);
+          const requestParams = this.transformFamilyVariantsQueryParameters(state, this.selectedGene);
+          requestParams['genomicScores'] = [{
+            'metric': this.geneBrowserConfig.frequencyColumn,
+            'rangeStart': state['zoomState'].yMin > 0 ? state['zoomState'].yMin : null,
+            'rangeEnd': state['zoomState'].yMax
+          }];
+          event.target.queryData.value = JSON.stringify(requestParams);
+          event.target.submit();
+        },
+        error => null
+      );
   }
 }
