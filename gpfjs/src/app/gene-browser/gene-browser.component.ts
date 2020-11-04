@@ -34,9 +34,16 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
   loadingFinished: boolean;
   familyLoadingFinished: boolean;
   exomeEffectTypes = [
-    'Nonsense', 'Frame-shift', 'Splice-site',
-    'No-frame-shift-newStop', 'Missense', 'Synonymous',
-    'noStart', 'noEnd', 'no-frame-shift',
+    'lgds',
+    'Nonsense',
+    'Frame-shift',
+    'Splice-site',
+    'No-frame-shift-newStop',
+    'Missense',
+    'Synonymous',
+    'noStart',
+    'noEnd',
+    'no-frame-shift',
     "3'UTR",
     "3'UTR-intron",
     "5'UTR",
