@@ -11,6 +11,7 @@ import { QueryStateCollector } from 'app/query/query-state-provider';
 import { FullscreenLoadingService } from 'app/fullscreen-loading/fullscreen-loading.service';
 import { GeneViewComponent } from 'app/gene-view/gene-view.component';
 import { StateRestoreService } from 'app/store/state-restore.service';
+import { ConfigService } from 'app/config/config.service';
 
 @Component({
   selector: 'gpf-gene-browser-component',
@@ -50,6 +51,7 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
     private geneService: GeneService,
     private datasetsService: DatasetsService,
     private route: ActivatedRoute,
+    readonly configService: ConfigService,
     private loadingService: FullscreenLoadingService,
     private stateRestoreService: StateRestoreService
 
@@ -195,5 +197,23 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
       return this.genotypePreviewVariantsArray.getVariantsCount(this.maxFamilyVariants);
     }
     return '';
+  }
+
+  onSubmit(event) {
+    this.getCurrentState()
+    .subscribe(
+      state => {
+        console.log(state);
+        const requestParams = this.transformFamilyVariantsQueryParameters(state, this.selectedGene);
+        requestParams['genomicScores'] = [{
+          'metric': this.geneBrowserConfig.frequencyColumn,
+          'rangeStart': state['zoomState'].yMin > 0 ? state['zoomState'].yMin : null,
+          'rangeEnd': state['zoomState'].yMax
+        }];
+        event.target.queryData.value = JSON.stringify(requestParams);
+        event.target.submit();
+      },
+      error => null
+    );
   }
 }

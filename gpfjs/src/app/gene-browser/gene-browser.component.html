@@ -26,12 +26,28 @@
       </gpf-gene-view>
     </div>
 
-    <gpf-loading-spinner
-      *ngIf="selectedGene"
-      [loadingFinished]="familyLoadingFinished"
-      [count]="getFamilyVariantCounts()"
-      [displayText]="'Loading variants...'">
-   </gpf-loading-spinner>
+    <div class="row">
+      <div class="col-6">
+        <gpf-loading-spinner
+          *ngIf="selectedGene"
+          [loadingFinished]="familyLoadingFinished"
+          [count]="getFamilyVariantCounts()"
+          [displayText]="'Loading variants...'">
+       </gpf-loading-spinner>
+      </div>
+      <div class="col-6" *ngIf="selectedGene">
+        <form
+            (ngSubmit)="onSubmit($event)"
+            action="{{ configService.baseUrl }}genotype_browser/download" method="post">
+          <input name="queryData" type="hidden">
+          <button
+            class="btn btn-md btn-primary btn-right"
+            id="download-button"
+            [disabled]="disableQueryButtons"
+            type="submit">Download</button>
+        </form>
+      </div>
+   </div>
 
     <gpf-genotype-preview-table
         [columns]="dataset?.genotypeBrowserConfig?.columns"
