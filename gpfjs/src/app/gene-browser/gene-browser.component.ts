@@ -25,7 +25,7 @@ import { ConfigService } from 'app/config/config.service';
 export class GeneBrowserComponent extends QueryStateCollector implements OnInit {
   @ViewChild(GeneViewComponent) geneViewComponent: GeneViewComponent;
   selectedGene: Gene;
-  geneSymbol = 'CHD8';
+  geneSymbol = '';
   maxFamilyVariants = 1000;
   genotypePreviewVariantsArray: GenotypePreviewVariantsArray;
   summaryVariantsArray: GeneViewSummaryVariantsArray;
@@ -34,16 +34,38 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
   genotypePreviewInfo: GenotypePreviewInfo;
   loadingFinished: boolean;
   familyLoadingFinished: boolean;
-  codingEffectTypes = [
-    'Nonsense', 'Frame-shift', 'Splice-site',
-    'No-frame-shift-newStop', 'Missense', 'Synonymous'
+  hideResults: boolean;
+  exomeEffectTypes = [
+    'lgds',
+    'Nonsense',
+    'Frame-shift',
+    'Splice-site',
+    'No-frame-shift-newStop',
+    'Missense',
+    'Synonymous',
+    'noStart',
+    'noEnd',
+    'no-frame-shift',
+    "3'UTR",
+    "3'UTR-intron",
+    "5'UTR",
+    "5'UTR-intron",
+    "CDS",
   ];
   otherEffectTypes = [
-    'noncoding', 'noStart', 'noEnd', 'no-frame-shift',
+    'noStart', 'noEnd', 'no-frame-shift',
+    "Non coding",
+    "Intron",
+    "Intergenic",
+    "3'UTR",
+    "3'UTR-intron",
+    "5'UTR",
+    "5'UTR-intron",
+    "CDS",
   ];
   private geneBrowserConfig;
 
-  enableCodingOnly = true;
+  enableExomeOnly = true;
   private genotypeBrowserState: Object;
 
   constructor(
@@ -112,15 +134,16 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
     let effects: string[] = state.selectedEffectTypes;
     if (effects.indexOf('other') >= 0) {
       effects = effects.filter(ef => ef !== 'other');
-      if (!this.enableCodingOnly) {
-        effects = effects.concat(this.otherEffectTypes);
+      effects = effects.concat(this.otherEffectTypes);
+      if (this.enableExomeOnly) {
+        effects = effects.filter(et => this.exomeEffectTypes.indexOf(et) >= 0);
       }
     }
     const params: any = {
       'effectTypes': effects,
       'genomicScores': state.genomicScores,
       'inheritanceTypeFilter': inheritanceFilters,
-      "affectedStatus": state.affectedStatus,
+      'affectedStatus': state.affectedStatus,
       'datasetId': state.datasetId
     };
     if (state.zoomState) {
@@ -132,6 +155,7 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
   }
 
   submitGeneRequest() {
+    this.hideResults = false;
     this.getCurrentState()
       .subscribe(state => {
         this.geneSymbol = state['geneSymbols'][0];
@@ -166,8 +190,8 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
             requestParams['maxVariantsCount'] = 10000;
 
 
-            if (this.enableCodingOnly) {
-              requestParams['effectTypes'] = this.codingEffectTypes;
+            if (this.enableExomeOnly) {
+              requestParams['effectTypes'] = this.exomeEffectTypes;
               this.geneViewComponent.enableIntronCondensing();
             } else {
               this.geneViewComponent.disableIntronCondensing();
