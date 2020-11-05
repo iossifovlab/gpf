@@ -11,7 +11,7 @@ import { environment } from 'environments/environment';
 import { QueryData } from './query';
 import { ConfigService } from '../config/config.service';
 import { GenotypePreviewInfo, GenotypePreviewVariantsArray } from '../genotype-preview-model/genotype-preview';
-import { GeneViewSummaryVariantsArray } from '../gene-view/gene'
+import { GeneViewSummaryVariantsArray } from '../gene-view/gene';
 
 @Injectable()
 export class QueryService {
@@ -50,10 +50,6 @@ export class QueryService {
     response: any, genotypePreviewInfo: GenotypePreviewInfo,
     genotypePreviewVariantsArray: GenotypePreviewVariantsArray) {
     genotypePreviewVariantsArray.addPreviewVariant(response, genotypePreviewInfo);
-  }
-
-  private parseGeneViewSummaryVariant(response: any, genotypeVariantsArray) {
-
   }
 
   getGenotypePreviewInfo(filter: QueryData): Observable<GenotypePreviewInfo> {
@@ -95,7 +91,7 @@ export class QueryService {
 
   summaryStreamPost(url: string, filter: QueryData) {
     if (this.summaryConnectionEstablished) {
-      console.log("Aborted");
+      console.log('Aborted');
       this.oboeInstance.abort();
     }
 
@@ -126,11 +122,13 @@ export class QueryService {
   }
 
   getGenotypePreviewVariantsByFilter(
-    filter: QueryData, genotypePreviewInfo: GenotypePreviewInfo, loadingService?: any
+    filter: QueryData, genotypePreviewInfo: GenotypePreviewInfo, loadingService?: any, maxVariantsCount: number = 1001
   ): GenotypePreviewVariantsArray {
     const genotypePreviewVariantsArray = new GenotypePreviewVariantsArray();
+    const queryFilter = {...filter};
+    queryFilter['maxVariantsCount'] = maxVariantsCount;
 
-    this.streamPost(this.genotypePreviewVariantsUrl, filter).subscribe(variant => {
+    this.streamPost(this.genotypePreviewVariantsUrl, queryFilter).subscribe(variant => {
       this.parseGenotypePreviewVariantsResponse(variant, genotypePreviewInfo, genotypePreviewVariantsArray);
       if (loadingService) {
         loadingService.setLoadingStop(); // Stop the loading overlay when at least one variant has been loaded
@@ -143,7 +141,7 @@ export class QueryService {
   getGeneViewVariants(filter: QueryData, loadingService?: any) {
     const summaryVariantsArray = new GeneViewSummaryVariantsArray();
     this.summaryStreamPost(this.geneViewVariants, filter).subscribe((variant: string[]) => {
-      summaryVariantsArray.addSummaryRow(variant)
+      summaryVariantsArray.addSummaryRow(variant);
     });
     return summaryVariantsArray;
   }
