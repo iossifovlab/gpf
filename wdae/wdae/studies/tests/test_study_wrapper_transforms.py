@@ -12,7 +12,7 @@ from studies.study_wrapper import StudyWrapper
         ({
             "presentInChild": ["proband only"],
             "presentInParent": {"presentInParent": ["neither"]},
-            }, [Inheritance.denovo], [Role.prb], True),
+        }, [Inheritance.denovo], [Role.prb], True),
         ({
             "presentInChild": ["proband only"],
             "presentInParent": {"presentInParent": ["neither"]},
@@ -24,37 +24,37 @@ from studies.study_wrapper import StudyWrapper
         ({
             "presentInChild": ["proband only", "sibling only"],
             "presentInParent": {"presentInParent": ["neither"]},
-            }, [Inheritance.denovo], [Role.prb], True),
+        }, [Inheritance.denovo], [Role.prb], True),
         ({
             "presentInChild": ["proband only", "sibling only"],
             "presentInParent": {"presentInParent": ["neither"]},
-            }, [Inheritance.denovo], [Role.sib], True),
+        }, [Inheritance.denovo], [Role.sib], True),
         ({
             "presentInChild": ["proband only", "sibling only"],
             "presentInParent": {"presentInParent": ["neither"]},
-            }, [Inheritance.denovo], [Role.prb, Role.sib], False),
+        }, [Inheritance.denovo], [Role.prb, Role.sib], False),
         ({
             "presentInChild": [
                 "proband only", "sibling only", "proband and sibling"],
             "presentInParent": {"presentInParent": ["neither"]},
-            }, [Inheritance.denovo], [Role.prb, Role.sib], True),
+        }, [Inheritance.denovo], [Role.prb, Role.sib], True),
         ({
             "presentInChild": ["proband only"],
             "presentInParent": {"presentInParent": ["mother only"]},
-            }, [Inheritance.mendelian], [Role.prb, Role.mom], True),
+        }, [Inheritance.mendelian], [Role.prb, Role.mom], True),
         ({
             "presentInChild": ["proband only"],
             "presentInParent": {"presentInParent": ["mother only"]},
-         },
-         [Inheritance.denovo, Inheritance.mendelian],
-         [Role.prb, Role.mom], True),
+        },
+            [Inheritance.denovo, Inheritance.mendelian],
+            [Role.prb, Role.mom], True),
         ({
             "presentInChild": ["neither"],
             "presentInParent": {"presentInParent": ["mother only"]},
-         },
-         [Inheritance.missing],
-         [Role.mom], True),
-     ]
+        },
+            [Inheritance.missing],
+            [Role.mom], True),
+    ]
 )
 def test_transform_present_in_child_and_present_in_parent(
         kwargs, inheritance, roles, accepted):
@@ -67,7 +67,9 @@ def test_transform_present_in_child_and_present_in_parent(
 
     iq = kwargs.get("inheritance")
     assert iq is not None
-    it = inheritance_query.transform_query_string_to_tree(iq)
+    assert len(iq) == 1
+
+    it = inheritance_query.transform_query_string_to_tree(iq[0])
     im = inheritance_query.transform_tree_to_matcher(it)
 
     # rres = rm.match(roles)

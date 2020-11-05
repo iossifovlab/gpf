@@ -112,8 +112,9 @@ class RawFamilyVariants:
         if inheritance is not None:
             # if v.is_reference_allele:
             #     return False
-            if not inheritance.match(allele.inheritance_in_members):
-                return False
+            for inh in inheritance:
+                if not inh.match(allele.inheritance_in_members):
+                    return False
 
         if real_attr_filter is not None:
             if not cls.filter_real_attr(allele, real_attr_filter):
@@ -263,13 +264,19 @@ class RawFamilyVariants:
         if kwargs.get("inheritance") is not None:
             parsed = kwargs["inheritance"]
             if isinstance(parsed, str):
-                parsed = inheritance_query.transform_query_string_to_tree(
-                    parsed
-                )
+                parsed = [
+                    inheritance_query.transform_query_string_to_tree(parsed)
+                ]
+            elif isinstance(parsed, list):
+                parsed = [
+                    inheritance_query.transform_query_string_to_tree(p)
+                    for p in parsed
+                ]
 
-            kwargs[
-                "inheritance"
-            ] = inheritance_query.transform_tree_to_matcher(parsed)
+            kwargs["inheritance"] = [
+                inheritance_query.transform_tree_to_matcher(p)
+                for p in parsed
+            ]
 
         if kwargs.get("variant_type") is not None:
             parsed = kwargs["variant_type"]

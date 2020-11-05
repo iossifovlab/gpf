@@ -151,7 +151,7 @@ class BaseQueryBuilder:
                 )
             )
         if inheritance is not None:
-            where.append(
+            where.extend(
                 self._build_inheritance_where(
                     self.where_accessors["inheritance_in_members"], inheritance
                 )
@@ -333,17 +333,27 @@ class BaseQueryBuilder:
         return transformer.transform(parsed)
 
     def _build_inheritance_where(self, column_name, query_value):
+        trees = []
         if isinstance(query_value, str):
             tree = inheritance_parser.parse(query_value)
+            trees.append(tree)
+
+        elif isinstance(query_value, list):
+            for qv in query_value:
+                tree = inheritance_parser.parse(qv)
+                trees.append(tree)
+
+            # raise ValueError()
         else:
             tree = query_value
+            trees.append(tree)
 
-        # if query_value == "denovo":
-        #     pass
-
-        transformer = InheritanceTransformer(column_name)
-        res = transformer.transform(tree)
-        return res
+        result = []
+        for tree in trees:
+            transformer = InheritanceTransformer(column_name)
+            res = transformer.transform(tree)
+            result.append(res)
+        return result
 
     def _build_gene_regions_heuristic(self, genes, regions):
         assert genes is not None
@@ -373,17 +383,22 @@ class BaseQueryBuilder:
 
         frequency_bin = set()
         frequency_bin_col = self.where_accessors["frequency_bin"]
+        matchers = []
         if inheritance is not None:
-            matcher = inheritance_query.transform_tree_to_matcher(
-                inheritance_query.transform_query_string_to_tree(inheritance))
 
-            if matcher.match([Inheritance.denovo]):
+            matchers = [
+                inheritance_query.transform_tree_to_matcher(
+                    inheritance_query.transform_query_string_to_tree(
+                        inh))
+                for inh in inheritance]
+
+            if any([m.match([Inheritance.denovo]) for m in matchers]):
                 frequency_bin.add(f"{frequency_bin_col} = 0")
 
-        if inheritance is None or matcher.match(
+        if inheritance is None or any([m.match(
             [Inheritance.mendelian,
                 Inheritance.possible_denovo,
-                Inheritance.possible_omission]):
+                Inheritance.possible_omission]) for m in matchers]):
 
             if ultra_rare:
                 frequency_bin.update([

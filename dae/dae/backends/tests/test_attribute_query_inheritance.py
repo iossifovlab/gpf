@@ -6,22 +6,21 @@ from dae.backends.attributes_query import inheritance_query
 
 
 @pytest.mark.parametrize(
-    "query",
+    "query,exp1,exp2,exp3",
     [
-        "denovo",
-        "not denovo",
-        "all ( denovo, possible_denovo ) ",
-        "any(denovo,possible_denovo)",
-        "denovo or possible_denovo",
-        "denovo and possible_denovo",
-        "not denovo and not possible_denovo",
+        ("denovo", True, False, True),
+        ("not denovo", False, True, True),
+        ("all (denovo, possible_denovo )", False, False, True),
+        ("any(denovo,possible_denovo)", True, True, True),
+        ("denovo or possible_denovo", True, True, True),
+        ("denovo and possible_denovo", False, False, True),
+        ("not denovo and not possible_denovo", False, False, False),
+        # # "any(denovo,mendelian) and not possible_denovo"
     ],
 )
-def test_simple_inheritance_parser(query):
+def test_simple_inheritance_parser(query, exp1, exp2, exp3):
     tree = inheritance_parser.parse(query)
     print(tree)
-
-    print(dir(tree))
 
     transformer = InheritanceTransformer("col")
     res = transformer.transform(tree)
@@ -33,3 +32,9 @@ def test_simple_inheritance_parser(query):
     print(
         m.match([Inheritance.denovo]),
         m.match([Inheritance.possible_denovo]))
+
+    assert m.match([Inheritance.denovo]) == exp1
+    assert m.match([Inheritance.possible_denovo]) == exp2
+    # assert m.match([
+    #     Inheritance(Inheritance.denovo.value | Inheritance.possible_denovo.value)
+    # ]) == exp3

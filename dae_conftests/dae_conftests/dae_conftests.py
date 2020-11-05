@@ -44,6 +44,16 @@ from dae.gene.denovo_gene_set_collection_factory import (
 
 logging.basicConfig(level=logging.DEBUG)
 
+# suppress impala logger
+logger = logging.getLogger("impala")
+logger.setLevel(logging.WARNING)
+
+logger = logging.getLogger("dae.variant_annotation")
+logger.setLevel(logging.INFO)
+
+logger = logging.getLogger("dae.annotation")
+logger.setLevel(logging.INFO)
+
 
 def relative_to_this_test_folder(path):
     return os.path.join(

@@ -11,7 +11,13 @@ from dae.utils.variant_utils import mat2str
 @pytest.mark.parametrize("variants", ["variants_impala", "variants_vcf"])
 @pytest.mark.parametrize(
     "inheritance,count",
-    [("mendelian", 3), ("omission", 4), ("denovo", 2), ("unknown", 14),],
+    [
+        ("mendelian", 3),
+        (["mendelian"], 3),
+        ("omission", 4),
+        ("denovo", 2),
+        ("unknown", 14),
+    ],
 )
 def test_inheritance_trio_full(variants_impl, variants, inheritance, count):
     fvars = variants_impl(variants)("backends/inheritance_trio")
@@ -25,7 +31,12 @@ def test_inheritance_trio_full(variants_impl, variants, inheritance, count):
 
 @pytest.mark.parametrize("variants", ["variants_impala", "variants_vcf"])
 @pytest.mark.parametrize(
-    "count,inheritance", [(7, "mendelian"), (1, "omission"), (1, "denovo"),]
+    "count,inheritance", [
+        (7, "mendelian"),
+        (7, ["mendelian", "not possible_denovo"]),
+        (1, "omission"),
+        (1, "denovo"),
+    ]
 )
 def test_inheritance_quad_full(variants_impl, variants, count, inheritance):
     fvars = variants_impl(variants)("backends/inheritance_quad")
@@ -40,7 +51,7 @@ def test_inheritance_quad_full(variants_impl, variants, count, inheritance):
 @pytest.mark.parametrize("variants", ["variants_impala", "variants_vcf"])
 @pytest.mark.parametrize(
     "count,inheritance",
-    [(5, None), (4, "mendelian"), (0, "omission"), (1, "denovo"),],
+    [(5, None), (4, "mendelian"), (0, "omission"), (1, "denovo"), ],
 )
 def test_inheritance_multi_full(variants_impl, variants, count, inheritance):
     fvars = variants_impl(variants)("backends/inheritance_multi")
