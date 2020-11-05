@@ -103,13 +103,6 @@ class PersonSetCollection(NamedTuple):
         for person_id, person in families_data.persons.items():
             value = person.get_attr(collection_config.source.pedigree.column)
 
-
-            # assert value is not None, (
-            #     f"Missing domain value for"
-            #     f" '{collection_config.source.pedigree.column}'"
-            #     f" in person '{person_id}'!"
-            # )
-
             # Convert to string since some of the person's
             # attributes can be of an enum type
             if value is not None:

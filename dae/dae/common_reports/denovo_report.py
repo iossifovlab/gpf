@@ -54,7 +54,7 @@ class EffectCell:
 
     @property
     def column_name(self):
-        return self.person_set.id
+        return self.person_set.name
 
     def to_dict(self):
         return {
@@ -167,7 +167,7 @@ class DenovoReportTable(object):
         self.effect_types = list(effect_types)
         self.effects = effect_groups + effect_types
 
-        self.columns = [person_set.id for person_set in self.person_sets]
+        self.columns = [person_set.name for person_set in self.person_sets]
 
         self.rows = self._build_rows()
 
