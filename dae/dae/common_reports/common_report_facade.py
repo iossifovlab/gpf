@@ -50,8 +50,8 @@ class CommonReportFacade(object):
         if common_report_id not in self._common_report_config_cache:
             return None
 
-        variants_db = self.gpf_instance._variants_db
-        genotype_data_study = variants_db.get(common_report_id)
+        genotype_data_study = \
+            self.gpf_instance.get_genotype_data(common_report_id)
         common_report_config = self._common_report_config_cache[
             common_report_id
         ]

@@ -291,6 +291,7 @@ class FamiliesData(Mapping):
         self._families = {}
         self.persons = {}
         self._broken = {}
+        self._person_ids_with_parents = None
 
     def redefine(self):
         self.persons = {}
@@ -422,6 +423,15 @@ class FamiliesData(Mapping):
                 if p.has_both_parents() and (not p.has_generated_parent()):
                     person.append(p)
         return person
+
+    def person_ids_with_parents(self):
+        if self._person_ids_with_parents is None:
+            self._person_ids_with_parents = set()
+            for fam in list(self._families.values()):
+                for p in fam.members_in_order:
+                    if p.has_both_parents() and (not p.has_generated_parent()):
+                        self._person_ids_with_parents.add(p.person_id)
+        return self._person_ids_with_parents
 
     def persons_with_roles(self, roles, family_ids=None):
         if not isinstance(roles[0], Role):
