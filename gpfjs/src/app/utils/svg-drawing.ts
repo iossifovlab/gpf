@@ -34,7 +34,7 @@ export function drawSurroundingSquare(element, x: number, y: number, color: stri
     .style('stroke-width', 2);
 }
 
-export function drawStar(element, x: number, y: number, color: string) {
+export function drawStar(element, x: number, y: number, color: string, title: string) {
   element.append('svg')
     .attr('x', x - 8.5)
     .attr('y', y - 8.5)
@@ -45,20 +45,22 @@ export function drawStar(element, x: number, y: number, color: string) {
     .attr('fill', color)
     .attr('fill-opacity', '0.6')
     .style('stroke-width', 1)
-    .style('stroke', color);
+    .style('stroke', color)
+    .append('svg:title').text(title);
 }
 
-export function drawTriangle(element, x: number, y: number, color: string) {
+export function drawTriangle(element, x: number, y: number, color: string, title: string) {
   element.append('g')
     .append('polygon')
     .attr('points', getTrianglePoints(x, y, 14))
     .style('fill', color)
     .attr('fill-opacity', '0.6')
     .style('stroke-width', 1)
-    .style('stroke', color);
+    .style('stroke', color)
+    .append('svg:title').text(title);
 }
 
-function _drawCircle(element, x: number, y: number, radius: number, color: string) {
+function _drawCircle(element, x: number, y: number, radius: number, color: string, title: string) {
   element.append('g')
     .append('circle')
     .attr('cx', x)
@@ -67,15 +69,16 @@ function _drawCircle(element, x: number, y: number, radius: number, color: strin
     .style('fill', color)
     .attr('fill-opacity', '0.6')
     .style('stroke-width', 1)
-    .style('stroke', color);
+    .style('stroke', color)
+    .append('svg:title').text(title);
 }
 
-export function drawCircle(element, x: number, y: number, color: string) {
-    _drawCircle(element, x, y, 7, color);
+export function drawCircle(element, x: number, y: number, color: string, title: string) {
+    _drawCircle(element, x, y, 7, color, title);
 }
 
-export function drawDot(element, x: number, y: number, color: string) {
-    _drawCircle(element, x, y, 3, color);
+export function drawDot(element, x: number, y: number, color: string, title: string) {
+    _drawCircle(element, x, y, 3, color, title);
 }
 
 export function drawRect(element, xStart: number, xEnd: number, y: number, height: number, svgTitle: string) {

@@ -35,37 +35,35 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
   loadingFinished: boolean;
   familyLoadingFinished: boolean;
   hideResults: boolean;
-  exomeEffectTypes = [
+  codingEffectTypes = [
     'lgds',
-    'Nonsense',
-    'Frame-shift',
-    'Splice-site',
-    'No-frame-shift-newStop',
-    'Missense',
-    'Synonymous',
+    'nonsense',
+    'frame-shift',
+    'splice-site',
+    'no-frame-shift-newStop',
+    'missense',
+    'synonymous',
     'noStart',
     'noEnd',
     'no-frame-shift',
-    "3'UTR",
-    "3'UTR-intron",
-    "5'UTR",
-    "5'UTR-intron",
-    "CDS",
+    'CDS',
   ];
   otherEffectTypes = [
-    'noStart', 'noEnd', 'no-frame-shift',
-    "Non coding",
-    "Intron",
-    "Intergenic",
-    "3'UTR",
-    "3'UTR-intron",
-    "5'UTR",
-    "5'UTR-intron",
-    "CDS",
+    'noStart',
+    'noEnd',
+    'no-frame-shift',
+    'non-coding',
+    'intron',
+    'intergenic',
+    '3\'UTR',
+    '3\'UTR-intron',
+    '5\'UTR',
+    '5\'UTR-intron',
+    'CDS',
   ];
   private geneBrowserConfig;
 
-  enableExomeOnly = true;
+  enableCodingOnly = true;
   private genotypeBrowserState: Object;
 
   constructor(
@@ -135,8 +133,8 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
     if (effects.indexOf('other') >= 0) {
       effects = effects.filter(ef => ef !== 'other');
       effects = effects.concat(this.otherEffectTypes);
-      if (this.enableExomeOnly) {
-        effects = effects.filter(et => this.exomeEffectTypes.indexOf(et) >= 0);
+      if (this.enableCodingOnly) {
+        effects = effects.filter(et => this.codingEffectTypes.indexOf(et) >= 0);
       }
     }
     const params: any = {
@@ -148,9 +146,7 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
       'datasetId': state.datasetId
     };
     if (state.zoomState) {
-      const left = state.zoomState.xDomain[0];
-      const right = state.zoomState.xDomain[state.zoomState.xDomain.length - 1];
-      params.regions = [`${gene.transcripts[0].chrom}:${left}-${right}`];
+      params.regions = state.regions;
     }
     return params;
   }
@@ -192,17 +188,17 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
             delete requestParams['zoomState'];
 
 
-            if (this.enableExomeOnly) {
-              requestParams['effectTypes'] = this.exomeEffectTypes;
+            if (this.enableCodingOnly) {
+              requestParams['effectTypes'] = this.codingEffectTypes;
               this.geneViewComponent.enableIntronCondensing();
             } else {
               this.geneViewComponent.disableIntronCondensing();
             }
             const inheritanceFilters = [
-                'denovo',
-                'mendelian',
-                'omission',
-                'missing'
+              'denovo',
+              'mendelian',
+              'omission',
+              'missing'
             ];
 
             requestParams['inheritanceTypeFilter'] = inheritanceFilters;
@@ -227,19 +223,19 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
 
   onSubmit(event) {
     this.getCurrentState()
-    .subscribe(
-      state => {
-        console.log(state);
-        const requestParams = this.transformFamilyVariantsQueryParameters(state, this.selectedGene);
-        requestParams['genomicScores'] = [{
-          'metric': this.geneBrowserConfig.frequencyColumn,
-          'rangeStart': state['zoomState'].yMin > 0 ? state['zoomState'].yMin : null,
-          'rangeEnd': state['zoomState'].yMax
-        }];
-        event.target.queryData.value = JSON.stringify(requestParams);
-        event.target.submit();
-      },
-      error => null
-    );
+      .subscribe(
+        state => {
+          console.log(state);
+          const requestParams = this.transformFamilyVariantsQueryParameters(state, this.selectedGene);
+          requestParams['genomicScores'] = [{
+            'metric': this.geneBrowserConfig.frequencyColumn,
+            'rangeStart': state['zoomState'].yMin > 0 ? state['zoomState'].yMin : null,
+            'rangeEnd': state['zoomState'].yMax
+          }];
+          event.target.queryData.value = JSON.stringify(requestParams);
+          event.target.submit();
+        },
+        error => null
+      );
   }
 }

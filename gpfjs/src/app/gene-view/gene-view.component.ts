@@ -8,11 +8,9 @@ import { drawRect, drawLine, drawHoverText, drawStar, drawCircle, drawTriangle, 
 import { GeneViewTranscript, GeneViewModel } from 'app/gene-view/gene-view';
 import { QueryStateProvider, QueryStateWithErrorsProvider } from 'app/query/query-state-provider';
 
-
 class GeneViewScaleState {
   constructor(
     public xDomain: number[],
-    public xRange: number[],
     public yMin: number,
     public yMax: number,
     public condenseToggled: boolean,
@@ -79,7 +77,10 @@ class GeneViewZoomHistory {
   selector: 'gpf-gene-view',
   templateUrl: './gene-view.component.html',
   styleUrls: ['./gene-view.component.css'],
-  host: { '(document:keydown)': 'handleKeyboardEvent($event)' },
+  host: {
+    '(document:keydown)': 'handleKeyboardEvent($event)',
+    '(window:resize)': 'handleWindowResizeEvent($event)'
+  },
   providers: [{ provide: QueryStateProvider, useExisting: forwardRef(() => GeneViewComponent) }]
 })
 export class GeneViewComponent extends QueryStateWithErrorsProvider implements OnInit {
@@ -137,6 +138,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
   brush;
   zoomHistory: GeneViewZoomHistory;
   doubleClickTimer;
+  windowResizeTimer;
   geneTableStats = {
     geneSymbol: '',
     chromosome: '',
@@ -154,8 +156,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
   }
 
   ngOnInit() {
-    this.fontSize = this.calculateTextFontSize(window.innerWidth);
-    this.svgWidth = window.innerWidth - this.options.margin.left - this.options.margin.right;
+    this.setSvgScale(window.innerWidth);
 
     this.datasetsService.getSelectedDataset().subscribe(dataset => {
       this.geneBrowserConfig = dataset.geneBrowser;
@@ -226,8 +227,13 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
       'selectedEffectTypes': Array.from(this.selectedEffectTypes),
       'zoomState': this.zoomHistory.currentState,
       'showDenovo': this.showDenovo,
-      'showTransmitted': this.showTransmitted
+      'showTransmitted': this.showTransmitted,
     };
+    if (state['zoomState']) {
+      state['regions'] = this.geneViewModel.collapsedGeneViewTranscript.resolveRegionChromosomes(
+        [this.x.domain()[0], this.x.domain()[this.x.domain().length - 1]]
+      );
+    }
     return this.validateAndGetState(state);
   }
 
@@ -243,24 +249,24 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     this.svgElement = d3.select('#transmitted')
       .attr('width', 80)
       .attr('height', 20);
-    drawStar(this.svgElement, 10, 7.5, '#000000');
-    drawTriangle(this.svgElement, 30, 8, '#000000');
-    drawCircle(this.svgElement, 50, 8, '#000000');
-    drawDot(this.svgElement, 70, 8, '#000000');
+    drawStar(this.svgElement, 10, 7.5, '#000000', 'LGDs');
+    drawTriangle(this.svgElement, 30, 8, '#000000', 'Missense');
+    drawCircle(this.svgElement, 50, 8, '#000000', 'Synonymous');
+    drawDot(this.svgElement, 70, 8, '#000000', 'Other');
   }
 
   drawDenovoIcons() {
     this.svgElement = d3.select('#denovo')
       .attr('width', 80)
       .attr('height', 20);
-    drawStar(this.svgElement, 10, 7.5, '#000000');
     drawSurroundingSquare(this.svgElement, 10, 7.5, '#000000');
-    drawTriangle(this.svgElement, 30, 8, '#000000');
+    drawStar(this.svgElement, 10, 7.5, '#000000', 'Denovo LGDs');
     drawSurroundingSquare(this.svgElement, 30, 8, '#000000');
-    drawCircle(this.svgElement, 50, 8, '#000000');
+    drawTriangle(this.svgElement, 30, 8, '#000000', 'Denovo Missense');
     drawSurroundingSquare(this.svgElement, 50, 8, '#000000');
-    drawDot(this.svgElement, 70, 8, '#000000');
+    drawCircle(this.svgElement, 50, 8, '#000000', 'Denovo Synonymous');
     drawSurroundingSquare(this.svgElement, 70, 8, '#000000');
+    drawDot(this.svgElement, 70, 8, '#000000', 'Denovo Other');
   }
 
   drawEffectTypesIcons() {
@@ -274,26 +280,45 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
       this.svgElement = d3.select(effect)
         .attr('width', 20)
         .attr('height', 20);
-      draw(this.svgElement, 10, 8, '#000000');
+      draw(this.svgElement, 10, 8, '#000000', effect);
     }
+  }
+
+  setSvgScale(windowWidth: number) {
+    this.fontSize = this.calculateTextFontSize(windowWidth);
+    this.svgWidth = windowWidth - this.options.margin.left - this.options.margin.right;
   }
 
   redraw() {
     if (this.gene !== undefined) {
       this.drawGene();
       this.drawPlot();
-      this.updateFamilyVariantsTable(); // TODO see if this can't be removed from here, causes a request
     }
+  }
+
+  redrawAndUpdateTable() {
+    this.redraw();
+    this.updateFamilyVariantsTable();
+  }
+
+  recalculateXRange(domainMin: number, domainMax: number): number[] {
+    let newRange: number[];
+    if (this.condenseIntrons) {
+      newRange = this.geneViewModel.buildCondensedIntronsRange(domainMin, domainMax, this.svgWidth);
+    } else {
+      newRange = this.geneViewModel.buildNormalIntronsRange(domainMin, domainMax, this.svgWidth);
+    }
+    return newRange;
   }
 
   checkShowDenovo(checked: boolean) {
     this.showDenovo = checked;
-    this.redraw();
+    this.redrawAndUpdateTable();
   }
 
   checkShowTransmitted(checked: boolean) {
     this.showTransmitted = checked;
-    this.redraw();
+    this.redrawAndUpdateTable();
   }
 
   checkEffectType(effectType: string, checked: boolean) {
@@ -303,7 +328,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     } else {
       this.selectedEffectTypes.splice(this.selectedEffectTypes.indexOf(effectType), 1);
     }
-    this.redraw();
+    this.redrawAndUpdateTable();
   }
 
   checkAffectedStatus(affectedStatus: string, checked: boolean) {
@@ -312,7 +337,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     } else {
       this.selectedAffectedStatus.splice(this.selectedAffectedStatus.indexOf(affectedStatus), 1);
     }
-    this.redraw();
+    this.redrawAndUpdateTable();
   }
 
   checkHideTranscripts(checked: boolean) {
@@ -354,23 +379,14 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
   }
 
   toggleCondenseIntron() {
-    let domain;
-    let range;
     const domainMin = this.x.domain()[0];
     const domainMax = this.x.domain()[this.x.domain().length - 1];
     this.condenseIntrons = !this.condenseIntrons;
-    domain = this.geneViewModel.buildDomain(domainMin, domainMax);
-    if (this.condenseIntrons) {
-      range = this.geneViewModel.buildCondensedIntronsRange(domainMin, domainMax);
-    } else {
-      range = this.geneViewModel.buildNormalIntronsRange(domainMin, domainMax);
-    }
-
+    const domain = this.geneViewModel.buildDomain(domainMin, domainMax);
+    this.x.domain(domain).range(this.recalculateXRange(domainMin, domainMax));
     this.zoomHistory.addStateToHistory(
-      new GeneViewScaleState(domain, range, this.selectedFrequencies[0], this.selectedFrequencies[1], this.condenseIntrons)
+      new GeneViewScaleState(domain, this.selectedFrequencies[0], this.selectedFrequencies[1], this.condenseIntrons)
     );
-    this.x.domain(domain);
-    this.x.range(range);
     this.redraw();
   }
 
@@ -490,18 +506,17 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
       for (const variant of filteredSummaryVariants.summaryVariants) {
         const color = this.getAffectedStatusColor(this.getVariantAffectedStatus(variant));
         const variantPosition = this.x(variant.position);
-
-        if (variant.isLGDs()) {
-          drawStar(this.svgElement, variantPosition, this.getVariantY(variant.frequency), color);
-        } else if (variant.isMissense()) {
-          drawTriangle(this.svgElement, variantPosition, this.getVariantY(variant.frequency), color);
-        } else if (variant.isSynonymous()) {
-          drawCircle(this.svgElement, variantPosition, this.getVariantY(variant.frequency), color);
-        } else {
-          drawDot(this.svgElement, variantPosition, this.getVariantY(variant.frequency), color);
-        }
         if (variant.seenAsDenovo) {
           drawSurroundingSquare(this.svgElement, variantPosition, this.getVariantY(variant.frequency), color);
+        }
+        if (variant.isLGDs()) {
+          drawStar(this.svgElement, variantPosition, this.getVariantY(variant.frequency), color, `Effect type: LGDs\nVariant position: ${variantPosition}`);
+        } else if (variant.isMissense()) {
+          drawTriangle(this.svgElement, variantPosition, this.getVariantY(variant.frequency), color, `Effect type: Missense\nVariant position: ${variantPosition}`);
+        } else if (variant.isSynonymous()) {
+          drawCircle(this.svgElement, variantPosition, this.getVariantY(variant.frequency), color, `Effect type: Synonymous\nVariant position: ${variantPosition}`);
+        } else {
+          drawDot(this.svgElement, variantPosition, this.getVariantY(variant.frequency), color, `Effect type: Other\nVariant position: ${variantPosition}`);
         }
       }
     }
@@ -530,7 +545,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
   setDefaultScale() {
     const domain = this.geneViewModel.domain;
     const range = this.condenseIntrons ? this.geneViewModel.condensedRange : this.geneViewModel.normalRange;
-    const defaultScale = new GeneViewScaleState(domain, range, 0, this.frequencyDomainMax, this.condenseIntrons);
+    const defaultScale = new GeneViewScaleState(domain, 0, this.frequencyDomainMax, this.condenseIntrons);
     this.x = d3.scaleLinear().domain(domain).range(range).clamp(true);
     this.selectedFrequencies = [0, this.frequencyDomainMax];
     this.zoomHistory.resetToDefaultState(defaultScale);
@@ -585,7 +600,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
 
     if (!extent) {
       if (!this.doubleClickTimer) {
-        this.doubleClickTimer = setTimeout(this.resetTimer, 250);
+        this.doubleClickTimer = setTimeout(this.resetDoubleClickTimer, 250);
         return;
       }
 
@@ -611,16 +626,16 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
 
       domain = this.geneViewModel.buildDomain(domainMin, domainMax);
       if (this.condenseIntrons) {
-        range = this.geneViewModel.buildCondensedIntronsRange(domainMin, domainMax);
+        range = this.geneViewModel.buildCondensedIntronsRange(domainMin, domainMax, this.svgWidth);
       } else {
-        range = this.geneViewModel.buildNormalIntronsRange(domainMin, domainMax);
+        range = this.geneViewModel.buildNormalIntronsRange(domainMin, domainMax, this.svgWidth);
       }
 
       this.x = d3.scaleLinear().domain(domain).range(range).clamp(true);
 
       if (domainMax - domainMin >= 12) {
         this.zoomHistory.addStateToHistory(
-          new GeneViewScaleState(domain, range, Math.min(...newFreqLimits), Math.max(...newFreqLimits), this.condenseIntrons)
+          new GeneViewScaleState(domain, Math.min(...newFreqLimits), Math.max(...newFreqLimits), this.condenseIntrons)
         );
       }
 
@@ -630,7 +645,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
         Math.max(...newFreqLimits),
       ];
     }
-    this.redraw();
+    this.redrawAndUpdateTable();
   }
 
   historyUndo() {
@@ -652,15 +667,38 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     }
   }
 
-  drawFromHistory(scale: GeneViewScaleState) {
-    this.x.domain(scale.xDomain);
-    this.x.range(scale.xRange);
-    this.selectedFrequencies = [scale.yMin, scale.yMax];
-    this.condenseIntrons = scale.condenseToggled;
-    this.redraw();
+  handleWindowResizeEvent($event) {
+    if (!this.windowResizeTimer) {
+      this.windowResizeTimer = setTimeout(this.resetWindowResizeTimer, 250);
+      return;
+    }
+
+    if (this.gene !== undefined) {
+      const windowWidth = $event.currentTarget.innerWidth;
+      const domainMin = this.x.domain()[0];
+      const domainMax = this.x.domain()[this.x.domain().length - 1];
+      this.setSvgScale(windowWidth);
+      this.geneViewModel.calculateRanges(this.svgWidth);
+      this.x.range(this.recalculateXRange(domainMin, domainMax));
+      this.redraw();
+    }
   }
 
-  resetTimer = () => {
+  drawFromHistory(scale: GeneViewScaleState) {
+    this.x.domain(scale.xDomain);
+    const domainMin = this.x.domain()[0];
+    const domainMax = this.x.domain()[this.x.domain().length - 1];
+    this.x.range(this.recalculateXRange(domainMin, domainMax));
+    this.selectedFrequencies = [scale.yMin, scale.yMax];
+    this.condenseIntrons = scale.condenseToggled;
+    this.redrawAndUpdateTable();
+  }
+
+  resetDoubleClickTimer = () => {
+    this.doubleClickTimer = null;
+  }
+
+  resetWindowResizeTimer = () => {
     this.doubleClickTimer = null;
   }
 
