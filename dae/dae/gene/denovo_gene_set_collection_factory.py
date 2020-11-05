@@ -59,9 +59,9 @@ class DenovoGeneSetCollectionFactory:
         config = genotype_data_study.config
         assert config is not None, genotype_data_study.id
 
-        for (
-            person_set_collection_id
-        ) in config.denovo_gene_sets.selected_person_set_collections:
+        denovo_person_set_collections = \
+            config.denovo_gene_sets.selected_person_set_collections
+        for person_set_collection_id in denovo_person_set_collections:
             gene_set_cache = cls._generate_gene_set_for(
                 genotype_data_study,
                 config.denovo_gene_sets,
@@ -102,8 +102,7 @@ class DenovoGeneSetCollectionFactory:
 
     @classmethod
     def _generate_gene_set_for(
-        cls, genotype_data, config, person_set_collection_id
-    ):
+            cls, genotype_data, config, person_set_collection_id):
         """
         Produces a nested dictionary which represents a denovo gene set.
         It maps denovo gene set criteria to an innermost dictionary mapping
@@ -118,10 +117,7 @@ class DenovoGeneSetCollectionFactory:
         }
 
         variants = list(
-            genotype_data.query_variants(
-                inheritance=str(Inheritance.denovo.name)
-            )
-        )
+            genotype_data.query_variants(inheritance=["denovo"]))
 
         criterias = product(*cls._format_criterias(config.standard_criterias))
 

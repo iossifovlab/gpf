@@ -8,7 +8,7 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 def main(gpf_instance=None, argv=None):
     description = "Generate genovo gene sets tool"
     parser = argparse.ArgumentParser(description=description)
-    parser.add_argument('--verbose', '-V', action='count', default=3)
+    parser.add_argument('--verbose', '-V', action='count', default=0)
 
     parser.add_argument(
         "--show-studies",
