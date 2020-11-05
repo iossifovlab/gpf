@@ -461,6 +461,11 @@ class StudyWrapper(StudyWrapperBase):
     # TMM_ALL
     def _transform_kwargs(self, **kwargs):
         logger.debug(f"kwargs in study group: {kwargs}")
+        StudyWrapper._add_inheritance_to_query(
+            "not possible_denovo and not possible_omission",
+            kwargs
+        )
+
         kwargs = self._add_people_with_people_group(kwargs)
 
         if "regions" in kwargs:
@@ -540,17 +545,10 @@ class StudyWrapper(StudyWrapperBase):
         if "person_ids" in kwargs:
             kwargs["person_ids"] = list(kwargs["person_ids"])
 
-        if kwargs.get("inheritance"):
-            kwargs["inheritance"] = " and ".join([
-                kwargs["inheritance"],
-                "not possible_denovo and not possible_omission"
-            ])
         if "inheritanceTypeFilter" in kwargs:
-            kwargs["inheritance"] = " and ".join([
+            kwargs["inheritance"].append(
                 "any({})".format(
-                    ",".join(kwargs["inheritanceTypeFilter"])),
-                kwargs["inheritance"]
-            ])
+                    ",".join(kwargs["inheritanceTypeFilter"])))
 
         return kwargs
 
@@ -1115,15 +1113,15 @@ class StudyWrapper(StudyWrapperBase):
     def _add_inheritance_to_query(query, kwargs):
         if not query:
             return
-
-        original_inheritance = kwargs.get("inheritance", None)
-
-        if original_inheritance is not None:
-            assert isinstance(original_inheritance, str)
-            kwargs["inheritance"] = " and ".join(
-                [original_inheritance, query])
+        inheritance = kwargs.get("inheritance", [])
+        if isinstance(inheritance, list):
+            inheritance.append(query)
+        elif isinstance(inheritance, str):
+            inheritance = [inheritance]
+            inheritance.append(query)
         else:
-            kwargs["inheritance"] = query
+            raise ValueError(f"unexpected inheritance query {inheritance}")
+        kwargs["inheritance"] = inheritance
 
     def _get_legend_default_values(self):
         return [

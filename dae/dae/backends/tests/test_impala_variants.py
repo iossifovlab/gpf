@@ -108,7 +108,7 @@ def test_impala_summary_variants_simple(variants_impala, fixture_name):
 
 @pytest.mark.parametrize("inheritance,ultra_rare,real_attr_filter, result", [
     (
-        "denovo", None, None,
+        ["denovo"], None, None,
         "frequency_bin = 0"
     ),
     (
@@ -116,15 +116,15 @@ def test_impala_summary_variants_simple(variants_impala, fixture_name):
         ""
     ),
     (
-        "any(denovo, mendelian)", None, None,
+        ["any(denovo, mendelian)"], None, None,
         ""
     ),
     (
-        "any(denovo)", True, None,
+        ["any(denovo)"], True, None,
         "frequency_bin = 0"
     ),
     (
-        "any(denovo, mendelian)", True, None,
+        ["any(denovo, mendelian)"], True, None,
         " OR ".join(set(["frequency_bin = 0", "frequency_bin = 1"]))
     ),
     (
@@ -132,25 +132,25 @@ def test_impala_summary_variants_simple(variants_impala, fixture_name):
         " OR ".join(set(["frequency_bin = 1"]))
     ),
     (
-        "any(mendelian)", True, None,
+        ["any(mendelian)"], True, None,
         " OR ".join(set(["frequency_bin = 1"]))
     ),
     (
-        "any(mendelian)", None, [("af_allele_freq", (0, 3))],
+        ["any(mendelian)"], None, [("af_allele_freq", (0, 3))],
         " OR ".join(set(["frequency_bin = 1", "frequency_bin = 2"]))
     ),
     (
-        "any(denovo, mendelian)", None, [("af_allele_freq", (0, 3))],
+        ["any(denovo, mendelian)"], None, [("af_allele_freq", (0, 3))],
         " OR ".join(set([
             "frequency_bin = 0", "frequency_bin = 1",
             "frequency_bin = 2"]))
     ),
     (
-        "any(denovo, mendelian)", None, [("af_allele_freq", (0, 5))],
+        ["any(denovo, mendelian)"], None, [("af_allele_freq", (0, 5))],
         " OR ".join(set([]))
     ),
     (
-        "any(denovo, mendelian)", None, [("af_allele_freq", (5, 6))],
+        ["any(denovo, mendelian)"], None, [("af_allele_freq", (5, 6))],
         " OR ".join(set([
             "frequency_bin = 0", "frequency_bin = 3"]))
     ),

@@ -54,7 +54,12 @@ INHERITANCE_QUERY_GRAMMAR = r"""
 inheritance_parser = Lark(INHERITANCE_QUERY_GRAMMAR, start="expression")
 
 
-class Atom:
+class Primitive:
+    def __init__(self, value):
+        self.value = value
+
+
+class NegPrimitive:
     def __init__(self, value):
         self.value = value
 
@@ -71,80 +76,100 @@ class InheritanceTransformer(Transformer):
     def __init__(self, attr_name, *args, **kwargs):
         super(InheritanceTransformer, self).__init__(*args, **kwargs)
         self.attr_name = attr_name
+        self.inheritance_mask = 16383
 
     def denovo(self, items):
-        return Inheritance.denovo.value
+        return Primitive(Inheritance.denovo.value)
 
     def possible_denovo(self, items):
-        return Inheritance.possible_denovo.value
+        return Primitive(Inheritance.possible_denovo.value)
 
     def possible_omission(self, items):
-        return Inheritance.possible_omission.value
+        return Primitive(Inheritance.possible_omission.value)
 
     def reference(self, items):
-        return Inheritance.reference.value
+        return Primitive(Inheritance.reference.value)
 
     def mendelian(self, items):
-        return Inheritance.mendelian.value
+        return Primitive(Inheritance.mendelian.value)
 
     def omission(self, items):
-        return Inheritance.omission.value
+        return Primitive(Inheritance.omission.value)
 
     def other(self, items):
-        return Inheritance.other.value
+        return Primitive(Inheritance.other.value)
 
     def missing(self, items):
-        return Inheritance.missing.value
+        return Primitive(Inheritance.missing.value)
 
     def unknown(self, items):
-        return Inheritance.unknown.value
+        return Primitive(Inheritance.unknown.value)
 
     def primitive(self, items):
         assert len(items) == 1
-        return Inheritance.from_name(items[0]).value
+        return Primitive(Inheritance.from_name(items[0]).value)
 
     def negative_primitive(self, items):
         assert len(items) == 1
-        return operator.invert(items[0])
+        assert isinstance(items[0], Primitive)
+
+        return NegPrimitive(items[0].value)
 
     def atom(self, items):
         assert len(items) == 1
-        return Atom(items[0])
+        assert isinstance(items[0], Primitive) or \
+            isinstance(items[0], NegPrimitive)
+        return items[0]
 
     def atomlist(self, items):
         atom_values = [atom.value for atom in items]
         mask = functools.reduce(operator.or_, atom_values, 0)
-        return Atom(mask)
+        return Primitive(mask)
 
     def all(self, items):
         assert len(items) == 1
-        assert isinstance(items[0], Atom)
+        assert isinstance(items[0], Primitive)
         mask = items[0].value
         return Expression(
-            "BITAND({mask}, {attr}) = {mask}".format(
-                mask=mask, attr=self.attr_name
-            )
-        )
+            f"BITAND({mask}, {self.attr_name}) = {mask}")
 
     def any(self, items):
         assert len(items) == 1
-        assert isinstance(items[0], Atom)
+        assert isinstance(items[0], Primitive)
         mask = items[0].value
         return Expression(
-            "BITAND({mask}, {attr}) != 0".format(
-                mask=mask, attr=self.attr_name
-            )
-        )
+            f"BITAND({mask}, {self.attr_name}) != 0")
+
+    def _process_list(self, items):
+        expressions = []
+        for atom in items:
+            if isinstance(atom, Primitive):
+                expressions.append(
+                    f"BITAND({atom.value}, {self.attr_name}) != 0")
+            elif isinstance(atom, NegPrimitive):
+                expressions.append(
+                    f"BITAND({atom.value}, {self.attr_name}) = 0")
+            elif isinstance(atom, Expression):
+                expressions.append(atom)
+            else:
+                raise ValueError(f"unexpected expression {atom}")
+        return expressions
 
     def logical_or(self, items):
-        return self.any([self.atomlist(items)])
+        expressions = self._process_list(items)
+        return Expression(" OR ".join(expressions))
 
     def logical_and(self, items):
-        return self.all([self.atomlist(items)])
+        expressions = self._process_list(items)
+        return Expression(" AND ".join(expressions))
 
     def expression(self, items):
-        if len(items) == 1 and isinstance(items[0], Atom):
-            return self.any(items)
+        if len(items) == 1 and isinstance(items[0], Primitive):
+            mask = items[0].value
+            return Expression(f"BITAND({mask}, {self.attr_name}) != 0")
+        if len(items) == 1 and isinstance(items[0], NegPrimitive):
+            mask = items[0].value
+            return Expression(f"BITAND({mask}, {self.attr_name}) = 0")
         if len(items) == 1 and isinstance(items[0], Expression):
             return items[0].expression
 
