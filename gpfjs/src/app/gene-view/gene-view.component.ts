@@ -79,7 +79,10 @@ class GeneViewZoomHistory {
   selector: 'gpf-gene-view',
   templateUrl: './gene-view.component.html',
   styleUrls: ['./gene-view.component.css'],
-  host: { '(document:keydown)': 'handleKeyboardEvent($event)' },
+  host: {
+    '(document:keydown)': 'handleKeyboardEvent($event)',
+    '(window:resize)': 'handleWindowResizeEvent($event)'
+  },
   providers: [{ provide: QueryStateProvider, useExisting: forwardRef(() => GeneViewComponent) }]
 })
 export class GeneViewComponent extends QueryStateWithErrorsProvider implements OnInit {
@@ -137,6 +140,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
   brush;
   zoomHistory: GeneViewZoomHistory;
   doubleClickTimer;
+  windowResizeTimer;
   geneTableStats = {
     geneSymbol: '',
     chromosome: '',
@@ -154,8 +158,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
   }
 
   ngOnInit() {
-    this.fontSize = this.calculateTextFontSize(window.innerWidth);
-    this.svgWidth = window.innerWidth - this.options.margin.left - this.options.margin.right;
+    this.setSvgScale(window.innerWidth);
 
     this.datasetsService.getSelectedDataset().subscribe(dataset => {
       this.geneBrowserConfig = dataset.geneBrowser;
@@ -281,6 +284,11 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
         .attr('height', 20);
       draw(this.svgElement, 10, 8, '#000000', effect);
     }
+  }
+
+  setSvgScale(windowWidth: number) {
+    this.fontSize = this.calculateTextFontSize(windowWidth);
+    this.svgWidth = windowWidth - this.options.margin.left - this.options.margin.right;
   }
 
   redraw() {
@@ -589,7 +597,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
 
     if (!extent) {
       if (!this.doubleClickTimer) {
-        this.doubleClickTimer = setTimeout(this.resetTimer, 250);
+        this.doubleClickTimer = setTimeout(this.resetDoubleClickTimer, 250);
         return;
       }
 
@@ -656,6 +664,22 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     }
   }
 
+  handleWindowResizeEvent($event) {
+    if (!this.windowResizeTimer) {
+      this.windowResizeTimer = setTimeout(this.resetWindowResizeTimer, 250);
+      return;
+    }
+
+    const windowWidth = $event.currentTarget.innerWidth;
+    const domainMin = this.x.domain()[0];
+    const domainMax = this.x.domain()[this.x.domain().length - 1];
+
+    this.setSvgScale(windowWidth);
+    this.geneViewModel.rangeWidth = this.svgWidth;
+    this.x.range(this.geneViewModel.buildCondensedIntronsRange(domainMin, domainMax));
+    this.redraw();
+  }
+
   drawFromHistory(scale: GeneViewScaleState) {
     this.x.domain(scale.xDomain);
     this.x.range(scale.xRange);
@@ -664,7 +688,11 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     this.redraw();
   }
 
-  resetTimer = () => {
+  resetDoubleClickTimer = () => {
+    this.doubleClickTimer = null;
+  }
+
+  resetWindowResizeTimer = () => {
     this.doubleClickTimer = null;
   }
 
