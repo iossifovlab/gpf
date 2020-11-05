@@ -964,8 +964,10 @@ def load_ucscgenepred_models_format(
         uint[exonCount] exonEnds;   "Exon end positions"
         int score;            	"Score"
         string name2;       	"Alternate name (e.g. gene_id from GTF)"
-        string cdsStartStat; 	"Status of CDS start annotation (none, unknown, incomplete, or complete)"
-        string cdsEndStat;   	"Status of CDS end annotation (none, unknown, incomplete, or complete)"
+        string cdsStartStat; 	"Status of CDS start annotation (none,
+                                    unknown, incomplete, or complete)"
+        string cdsEndStat;   	"Status of CDS end annotation (none, unknown,
+                                    incomplete, or complete)"
         lstring exonFrames; 	"Exon frame offsets {0,1,2}"
         )
     """
@@ -1003,7 +1005,9 @@ def load_ucscgenepred_models_format(
         gm._alternative_names = gene_mapping(gene_mapping_file)
 
     for rec in records:
-        gene = rec["name"]
+        gene = rec.get("name2")
+        if not gene:
+            gene = rec["name"]
         gene = gm._alternative_names.get(gene, gene)
 
         tr_name = rec["name"]

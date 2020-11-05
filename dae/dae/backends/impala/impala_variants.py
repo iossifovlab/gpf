@@ -122,7 +122,7 @@ class ImpalaVariants:
 
                 query = query_builder.product
 
-                logger.debug(f"FINAL QUERY: {query}")
+                logger.debug(f"SUMMARY VARIANTS QUERY: {query}")
 
                 cursor.execute(query)
 
@@ -193,7 +193,7 @@ class ImpalaVariants:
 
                 query = query_builder.product
 
-                logger.debug(f"FINAL QUERY: {query}")
+                logger.debug(f"FAMILY VARIANTS QUERY: {query}")
 
                 deserialize_row = query_builder.create_row_deserializer(
                     self.serializer
