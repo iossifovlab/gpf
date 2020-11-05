@@ -189,6 +189,7 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
 
             const requestParams = { ...state };
             requestParams['maxVariantsCount'] = 10000;
+            delete requestParams['zoomState'];
 
 
             if (this.enableExomeOnly) {
