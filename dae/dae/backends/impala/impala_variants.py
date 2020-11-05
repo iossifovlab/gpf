@@ -163,11 +163,13 @@ class ImpalaVariants:
         with closing(self.connection()) as conn:
 
             with conn.cursor() as cursor:
+                do_join = affected_status is not None
                 query_builder = FamilyVariantsQueryBuilder(
                     self.db, self.variants_table, self.pedigree_table,
                     self.schema, self.table_properties,
                     self.pedigree_schema, self.ped_df,
-                    self.families, self.gene_models
+                    self.families, gene_models=self.gene_models,
+                    do_join=do_join
                 )
                 director = ImpalaQueryDirector(query_builder)
                 director.build_query(

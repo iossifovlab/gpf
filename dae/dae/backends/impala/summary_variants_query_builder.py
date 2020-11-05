@@ -49,6 +49,9 @@ class SummaryVariantsQueryBuilder(BaseQueryBuilder):
     def build_group_by(self):
         self._add_to_product("GROUP BY bucket_index, summary_index")
 
+    def build_having(self, **kwargs):
+        pass
+
     def build_where(
         self,
         regions=None,

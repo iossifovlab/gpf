@@ -217,6 +217,9 @@ class BaseQueryBuilder:
         if limit is not None:
             self._add_to_product(f"LIMIT {limit}")
 
+    def build_having(self, **kwargs):
+        raise NotImplementedError()
+
     def create_row_deserializer(self, serializer):
         raise NotImplementedError()
 

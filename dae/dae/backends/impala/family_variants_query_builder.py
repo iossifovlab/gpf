@@ -8,7 +8,8 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
     def __init__(
             self, db, variants_table, pedigree_table,
             variants_schema, table_properties, pedigree_schema,
-            pedigree_df, families, gene_models=None):
+            pedigree_df, families, gene_models=None, do_join=False):
+        self.do_join = do_join
         super().__init__(
             db, variants_table, pedigree_table,
             variants_schema, table_properties, pedigree_schema,
@@ -19,18 +20,20 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
         self.select_accessors = {
             "bucket_index": "variants.bucket_index",
             "summary_index": "variants.summary_index",
-            "chromosome": "variants.chromosome",
-            "`position`": "variants.`position`",
-            "end_position": "variants.end_position",
-            "variant_type": "variants.variant_type",
-            "reference": "variants.reference",
+            "chromosome": "MIN(variants.chromosome)",
+            "`position`": "MIN(variants.`position`)",
+            "end_position": "MIN(variants.end_position)",
+            "variant_type": "MIN(variants.variant_type)",
+            "reference": "MIN(variants.reference)",
             "family_id": "variants.family_id",
-            "seen_in_status": "pedigree.status",
-            "variant_data": "variants.variant_data",
+            "variant_data": "MIN(variants.variant_data)",
         }
         if self.has_extra_attributes:
             self.select_accessors["extra_attributes"] = \
-                "variants.extra_attributes"
+                "MIN(variants.extra_attributes)"
+        if not self.do_join:
+            for k, v in self.select_accessors.items():
+                self.select_accessors[k] = k
         columns = list(self.select_accessors.values())
 
         return columns
@@ -38,18 +41,21 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
     def _where_accessors(self):
         accessors = super()._where_accessors()
 
-        for key, value in accessors.items():
-            accessors[key] = f"variants.{value}"
+        if self.do_join:
+            for key, value in accessors.items():
+                accessors[key] = f"variants.{value}"
         return accessors
 
     def build_from(self):
-        from_clause = f"FROM {self.db}.{self.variants_table} as variants"
+        if self.do_join:
+            from_clause = f"FROM {self.db}.{self.variants_table} as variants"
+        else:
+            from_clause = f"FROM {self.db}.{self.variants_table}"
         self._add_to_product(from_clause)
 
-    def build_group_by(self):
-        pass
-
     def build_join(self):
+        if not self.do_join:
+            return
         join_clause = f"JOIN {self.db}.{self.pedigree_table} as pedigree"
         self._add_to_product(join_clause)
 
@@ -87,13 +93,29 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
             return_reference=return_reference,
             return_unknown=return_unknown,
         )
+        self._add_to_product(where_clause)
+        if not self.do_join:
+            return
         if where_clause:
-            self._add_to_product(where_clause)
             in_members = "AND variants.variant_in_members = pedigree.person_id"
         else:
             in_members = \
                 "WHERE variants.variant_in_members = pedigree.person_id"
         self._add_to_product(in_members)
+
+    def build_group_by(self):
+        if not self.do_join:
+            return
+        group_by_clause = (
+            "GROUP BY variants.bucket_index, "
+            "variants.summary_index, variants.family_id"
+        )
+        self._add_to_product(group_by_clause)
+
+    def build_having(self, **kwargs):
+        if not self.do_join:
+            return
+        affected_status = kwargs["affected_status"]
         if affected_status is not None and len(affected_status):
             statuses = set()
             for status in affected_status:
@@ -104,9 +126,9 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
                 elif status == "affected and unaffected":
                     statuses.add("1")
                     statuses.add("2")
-
-            status = f"AND pedigree.status IN ({','.join(statuses)})"
-            self._add_to_product(status)
+        in_clause = f"IN ({', '.join(statuses)})"
+        having_clause = f"HAVING gpf_bit_or(pedigree.status) {in_clause}"
+        self._add_to_product(having_clause)
 
     def create_row_deserializer(self, serializer):
         seen = set()
@@ -123,7 +145,6 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
             position = cols[self.select_accessors["`position`"]]
             end_position = cols[self.select_accessors["end_position"]]
             reference = cols[self.select_accessors["reference"]]
-            seen_in_status = cols[self.select_accessors["seen_in_status"]]
             variant_data = cols[self.select_accessors["variant_data"]]
             extra_attributes = cols.get(
                 self.select_accessors.get("extra_attributes", None), None)
@@ -152,9 +173,5 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
             v = serializer.deserialize_family_variant(
                 variant_data, family, extra_attributes
             )
-            if v is not None:
-                v.update_attributes({
-                    "seen_in_status": [seen_in_status]
-                })
             return v
         return deserialize_row
