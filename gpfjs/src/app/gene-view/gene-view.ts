@@ -145,7 +145,6 @@ export class GeneViewTranscript {
 export class GeneViewModel {
 
   gene: Gene;
-  rangeWidth: number;
   geneViewTranscripts: GeneViewTranscript[] = [];
   collapsedGeneViewTranscript: GeneViewTranscript;
 
@@ -155,25 +154,25 @@ export class GeneViewModel {
 
   constructor(gene: Gene, rangeWidth: number) {
     this.gene = gene;
-    this.rangeWidth = rangeWidth;
-
     for (const transcript of gene.transcripts) {
       this.geneViewTranscripts.push(new GeneViewTranscript(transcript));
     }
-
     this.collapsedGeneViewTranscript = new GeneViewTranscript(gene.collapsedTranscript());
+    this.calculateRanges(rangeWidth);
+  }
 
+  calculateRanges(rangeWidth: number) {
     this.domain = this.buildDomain(0, 3000000000);
-    this.normalRange = this.buildRange(0, 3000000000, (seg) => seg.isSpacer);
-    this.condensedRange = this.buildRange(0, 3000000000, (seg) => seg.isIntron || seg.isSpacer);
+    this.normalRange = this.buildRange(0, 3000000000, rangeWidth, (seg) => seg.isSpacer);
+    this.condensedRange = this.buildRange(0, 3000000000, rangeWidth, (seg) => seg.isIntron || seg.isSpacer);
   }
 
-  buildNormalIntronsRange(domainMin: number, domainMax: number) {
-    return this.buildRange(domainMin, domainMax, (seg) => seg.isSpacer);
+  buildNormalIntronsRange(domainMin: number, domainMax: number, rangeWidth: number) {
+    return this.buildRange(domainMin, domainMax, rangeWidth, (seg) => seg.isSpacer);
   }
 
-  buildCondensedIntronsRange(domainMin: number, domainMax: number) {
-    return this.buildRange(domainMin, domainMax, (seg) => seg.isIntron || seg.isSpacer);
+  buildCondensedIntronsRange(domainMin: number, domainMax: number, rangeWidth: number) {
+    return this.buildRange(domainMin, domainMax, rangeWidth, (seg) => seg.isIntron || seg.isSpacer);
   }
 
   buildDomain(domainMin: number, domainMax: number) {
@@ -201,7 +200,7 @@ export class GeneViewModel {
     return domain;
   }
 
-  buildRange(domainMin: number, domainMax: number, condenseCriteria: (seg: GeneViewTranscriptSegment) => boolean) {
+  buildRange(domainMin: number, domainMax: number, rangeWidth: number, condenseCriteria: (seg: GeneViewTranscriptSegment) => boolean) {
     const range: number[] = [];
     const transcript = this.collapsedGeneViewTranscript.transcript;
     const filteredSegments = this.collapsedGeneViewTranscript.segments.filter(
@@ -223,7 +222,7 @@ export class GeneViewModel {
       }
     }
 
-    const scaleFactor: number = this.rangeWidth / condensedLength;
+    const scaleFactor: number = rangeWidth / condensedLength;
 
     let rollingTracker = 0;
     range.push(0);

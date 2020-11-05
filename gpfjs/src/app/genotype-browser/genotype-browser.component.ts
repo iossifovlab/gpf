@@ -86,7 +86,7 @@ export class GenotypeBrowserComponent extends QueryStateCollector
         this.loadingService.setLoadingStart();
 
         this.queryService.getGenotypePreviewInfo(
-          { datasetId: this.selectedDatasetId, peopleGroup: state["peopleGroup"] }
+          { datasetId: this.selectedDatasetId, peopleGroup: state['peopleGroup'] }
         ).subscribe(
           (genotypePreviewInfo) => {
             this.genotypePreviewInfo = genotypePreviewInfo;
