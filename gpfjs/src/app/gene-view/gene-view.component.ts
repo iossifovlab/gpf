@@ -8,7 +8,6 @@ import { drawRect, drawLine, drawHoverText, drawStar, drawCircle, drawTriangle, 
 import { GeneViewTranscript, GeneViewModel } from 'app/gene-view/gene-view';
 import { QueryStateProvider, QueryStateWithErrorsProvider } from 'app/query/query-state-provider';
 
-
 class GeneViewScaleState {
   constructor(
     public xDomain: number[],
@@ -295,18 +294,22 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     if (this.gene !== undefined) {
       this.drawGene();
       this.drawPlot();
-      this.updateFamilyVariantsTable(); // TODO see if this can't be removed from here, causes a request
     }
+  }
+
+  redrawAndUpdateTable() {
+    this.redraw();
+    this.updateFamilyVariantsTable();
   }
 
   checkShowDenovo(checked: boolean) {
     this.showDenovo = checked;
-    this.redraw();
+    this.redrawAndUpdateTable();
   }
 
   checkShowTransmitted(checked: boolean) {
     this.showTransmitted = checked;
-    this.redraw();
+    this.redrawAndUpdateTable();
   }
 
   checkEffectType(effectType: string, checked: boolean) {
@@ -316,7 +319,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     } else {
       this.selectedEffectTypes.splice(this.selectedEffectTypes.indexOf(effectType), 1);
     }
-    this.redraw();
+    this.redrawAndUpdateTable();
   }
 
   checkAffectedStatus(affectedStatus: string, checked: boolean) {
@@ -325,7 +328,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     } else {
       this.selectedAffectedStatus.splice(this.selectedAffectedStatus.indexOf(affectedStatus), 1);
     }
-    this.redraw();
+    this.redrawAndUpdateTable();
   }
 
   checkHideTranscripts(checked: boolean) {
@@ -642,7 +645,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
         Math.max(...newFreqLimits),
       ];
     }
-    this.redraw();
+    this.redrawAndUpdateTable();
   }
 
   historyUndo() {
@@ -685,7 +688,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     this.x.range(scale.xRange);
     this.selectedFrequencies = [scale.yMin, scale.yMax];
     this.condenseIntrons = scale.condenseToggled;
-    this.redraw();
+    this.redrawAndUpdateTable();
   }
 
   resetDoubleClickTimer = () => {
