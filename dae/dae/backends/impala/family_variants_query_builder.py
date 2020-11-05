@@ -124,8 +124,7 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
                 elif status == "unaffected only":
                     statuses.add("1"),
                 elif status == "affected and unaffected":
-                    statuses.add("1")
-                    statuses.add("2")
+                    statuses.add("3")
         in_clause = f"IN ({', '.join(statuses)})"
         having_clause = f"HAVING gpf_bit_or(pedigree.status) {in_clause}"
         self._add_to_product(having_clause)
