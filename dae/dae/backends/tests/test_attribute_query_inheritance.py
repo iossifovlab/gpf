@@ -35,6 +35,3 @@ def test_simple_inheritance_parser(query, exp1, exp2, exp3):
 
     assert m.match([Inheritance.denovo]) == exp1
     assert m.match([Inheritance.possible_denovo]) == exp2
-    # assert m.match([
-    #     Inheritance(Inheritance.denovo.value | Inheritance.possible_denovo.value)
-    # ]) == exp3
