@@ -7,8 +7,8 @@
         <gpf-gene-symbol-with-search (inputClickEvent)="hideResults = true"></gpf-gene-symbol-with-search>
 
         <div style="padding: 0px 10px 10px 20px">
-          <input style="margin-right: 10px;" type="checkbox" id="coding-only-checkbox" [(ngModel)]="enableCodingOnly">
-          <label (click)="hideResults = true" for="coding-only-checkbox">Coding only</label>
+          <input (click)="hideResults = true" style="margin-right: 10px;" type="checkbox" id="coding-only-checkbox" [(ngModel)]="enableCodingOnly">
+          <label for="coding-only-checkbox">Coding only</label>
         </div>
       </div>
     </div>
