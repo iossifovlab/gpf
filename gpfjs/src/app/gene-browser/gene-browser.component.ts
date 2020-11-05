@@ -144,6 +144,7 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
       'genomicScores': state.genomicScores,
       'inheritanceTypeFilter': inheritanceFilters,
       'affectedStatus': state.affectedStatus,
+      'geneSymbols': state.geneSymbols,
       'datasetId': state.datasetId
     };
     if (state.zoomState) {
