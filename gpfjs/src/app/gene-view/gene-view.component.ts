@@ -506,17 +506,19 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
       for (const variant of filteredSummaryVariants.summaryVariants) {
         const color = this.getAffectedStatusColor(this.getVariantAffectedStatus(variant));
         const variantPosition = this.x(variant.position);
+        const variantTitle = `Effect type: ${variant.effect}\nVariant position: ${variant.location}`;
+
         if (variant.seenAsDenovo) {
           drawSurroundingSquare(this.svgElement, variantPosition, this.getVariantY(variant.frequency), color);
         }
         if (variant.isLGDs()) {
-          drawStar(this.svgElement, variantPosition, this.getVariantY(variant.frequency), color, `Effect type: LGDs\nVariant position: ${variantPosition}`);
+          drawStar(this.svgElement, variantPosition, this.getVariantY(variant.frequency), color, variantTitle);
         } else if (variant.isMissense()) {
-          drawTriangle(this.svgElement, variantPosition, this.getVariantY(variant.frequency), color, `Effect type: Missense\nVariant position: ${variantPosition}`);
+          drawTriangle(this.svgElement, variantPosition, this.getVariantY(variant.frequency), color, variantTitle);
         } else if (variant.isSynonymous()) {
-          drawCircle(this.svgElement, variantPosition, this.getVariantY(variant.frequency), color, `Effect type: Synonymous\nVariant position: ${variantPosition}`);
+          drawCircle(this.svgElement, variantPosition, this.getVariantY(variant.frequency), color, variantTitle);
         } else {
-          drawDot(this.svgElement, variantPosition, this.getVariantY(variant.frequency), color, `Effect type: Other\nVariant position: ${variantPosition}`);
+          drawDot(this.svgElement, variantPosition, this.getVariantY(variant.frequency), color, variantTitle);
         }
       }
     }
