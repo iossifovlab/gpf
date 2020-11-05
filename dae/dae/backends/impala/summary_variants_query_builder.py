@@ -49,6 +49,9 @@ class SummaryVariantsQueryBuilder(BaseQueryBuilder):
     def build_group_by(self):
         self._add_to_product("GROUP BY bucket_index, summary_index")
 
+    def build_having(self, **kwargs):
+        pass
+
     def build_where(
         self,
         regions=None,
@@ -65,8 +68,9 @@ class SummaryVariantsQueryBuilder(BaseQueryBuilder):
         frequency_filter=None,
         return_reference=None,
         return_unknown=None,
+        **kwargs
     ):
-        super().build_where(
+        where_clause = self._base_build_where(
             regions=regions,
             genes=genes,
             effect_types=effect_types,
@@ -82,7 +86,12 @@ class SummaryVariantsQueryBuilder(BaseQueryBuilder):
             return_reference=return_reference,
             return_unknown=return_unknown,
         )
-        in_members = "AND variants.variant_in_members = pedigree.person_id"
+        if where_clause:
+            self._add_to_product(where_clause)
+            in_members = "AND variants.variant_in_members = pedigree.person_id"
+        else:
+            in_members = \
+                "WHERE variants.variant_in_members = pedigree.person_id"
         self._add_to_product(in_members)
 
     def create_row_deserializer(self, serializer):

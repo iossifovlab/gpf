@@ -84,6 +84,43 @@ class BaseQueryBuilder:
         frequency_filter=None,
         return_reference=None,
         return_unknown=None,
+        **kwargs
+    ):
+        where_clause = self._base_build_where(
+            regions=regions,
+            genes=genes,
+            effect_types=effect_types,
+            family_ids=family_ids,
+            person_ids=person_ids,
+            inheritance=inheritance,
+            roles=roles,
+            sexes=sexes,
+            variant_type=variant_type,
+            real_attr_filter=real_attr_filter,
+            ultra_rare=ultra_rare,
+            frequency_filter=frequency_filter,
+            return_reference=return_reference,
+            return_unknown=return_unknown,
+        )
+        self._add_to_product(where_clause)
+
+    def _base_build_where(
+        self,
+        regions=None,
+        genes=None,
+        effect_types=None,
+        family_ids=None,
+        person_ids=None,
+        inheritance=None,
+        roles=None,
+        sexes=None,
+        variant_type=None,
+        real_attr_filter=None,
+        ultra_rare=None,
+        frequency_filter=None,
+        return_reference=None,
+        return_unknown=None,
+        **kwargs
     ):
         where = []
         if genes is not None:
@@ -171,7 +208,7 @@ class BaseQueryBuilder:
                 where=" AND ".join(["( {} )".format(w) for w in where])
             )
 
-        self._add_to_product(where_clause)
+        return where_clause
 
     def build_group_by(self):
         raise NotImplementedError()
@@ -179,6 +216,9 @@ class BaseQueryBuilder:
     def build_limit(self, limit):
         if limit is not None:
             self._add_to_product(f"LIMIT {limit}")
+
+    def build_having(self, **kwargs):
+        raise NotImplementedError()
 
     def create_row_deserializer(self, serializer):
         raise NotImplementedError()

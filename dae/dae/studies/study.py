@@ -72,6 +72,7 @@ class GenotypeData:
         return_unknown=None,
         limit=None,
         study_filters=None,
+        affected_status=None,
         **kwargs,
     ):
         raise NotImplementedError()
@@ -248,6 +249,7 @@ class GenotypeDataGroup(GenotypeData):
             return_unknown=None,
             limit=None,
             study_filters=None,
+            affected_status=None,
             **kwargs):
 
         variants_futures = list()
@@ -390,6 +392,7 @@ class GenotypeDataStudy(GenotypeData):
             return_unknown=None,
             limit=None,
             study_filters=None,
+            affected_status=None,
             **kwargs):
 
         if len(kwargs):
@@ -426,7 +429,8 @@ class GenotypeDataStudy(GenotypeData):
                 frequency_filter=frequency_filter,
                 return_reference=return_reference,
                 return_unknown=return_unknown,
-                limit=limit):
+                limit=limit,
+                affected_status=affected_status):
 
             for allele in variant.alleles:
                 if allele.get_attribute("studyName") is None:
