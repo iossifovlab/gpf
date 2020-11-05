@@ -248,24 +248,24 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     this.svgElement = d3.select('#transmitted')
       .attr('width', 80)
       .attr('height', 20);
-    drawStar(this.svgElement, 10, 7.5, '#000000');
-    drawTriangle(this.svgElement, 30, 8, '#000000');
-    drawCircle(this.svgElement, 50, 8, '#000000');
-    drawDot(this.svgElement, 70, 8, '#000000');
+    drawStar(this.svgElement, 10, 7.5, '#000000', 'LGDs');
+    drawTriangle(this.svgElement, 30, 8, '#000000', 'Missense');
+    drawCircle(this.svgElement, 50, 8, '#000000', 'Synonymous');
+    drawDot(this.svgElement, 70, 8, '#000000', 'Other');
   }
 
   drawDenovoIcons() {
     this.svgElement = d3.select('#denovo')
       .attr('width', 80)
       .attr('height', 20);
-    drawStar(this.svgElement, 10, 7.5, '#000000');
     drawSurroundingSquare(this.svgElement, 10, 7.5, '#000000');
-    drawTriangle(this.svgElement, 30, 8, '#000000');
+    drawStar(this.svgElement, 10, 7.5, '#000000', 'Denovo LGDs');
     drawSurroundingSquare(this.svgElement, 30, 8, '#000000');
-    drawCircle(this.svgElement, 50, 8, '#000000');
+    drawTriangle(this.svgElement, 30, 8, '#000000', 'Denovo Missense');
     drawSurroundingSquare(this.svgElement, 50, 8, '#000000');
-    drawDot(this.svgElement, 70, 8, '#000000');
+    drawCircle(this.svgElement, 50, 8, '#000000', 'Denovo Synonymous');
     drawSurroundingSquare(this.svgElement, 70, 8, '#000000');
+    drawDot(this.svgElement, 70, 8, '#000000', 'Denovo Other');
   }
 
   drawEffectTypesIcons() {
@@ -279,7 +279,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
       this.svgElement = d3.select(effect)
         .attr('width', 20)
         .attr('height', 20);
-      draw(this.svgElement, 10, 8, '#000000');
+      draw(this.svgElement, 10, 8, '#000000', effect);
     }
   }
 
@@ -495,18 +495,17 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
       for (const variant of filteredSummaryVariants.summaryVariants) {
         const color = this.getAffectedStatusColor(this.getVariantAffectedStatus(variant));
         const variantPosition = this.x(variant.position);
-
-        if (variant.isLGDs()) {
-          drawStar(this.svgElement, variantPosition, this.getVariantY(variant.frequency), color);
-        } else if (variant.isMissense()) {
-          drawTriangle(this.svgElement, variantPosition, this.getVariantY(variant.frequency), color);
-        } else if (variant.isSynonymous()) {
-          drawCircle(this.svgElement, variantPosition, this.getVariantY(variant.frequency), color);
-        } else {
-          drawDot(this.svgElement, variantPosition, this.getVariantY(variant.frequency), color);
-        }
         if (variant.seenAsDenovo) {
           drawSurroundingSquare(this.svgElement, variantPosition, this.getVariantY(variant.frequency), color);
+        }
+        if (variant.isLGDs()) {
+          drawStar(this.svgElement, variantPosition, this.getVariantY(variant.frequency), color, `Effect type: LGDs\nVariant position: ${variantPosition}`);
+        } else if (variant.isMissense()) {
+          drawTriangle(this.svgElement, variantPosition, this.getVariantY(variant.frequency), color, `Effect type: Missense\nVariant position: ${variantPosition}`);
+        } else if (variant.isSynonymous()) {
+          drawCircle(this.svgElement, variantPosition, this.getVariantY(variant.frequency), color, `Effect type: Synonymous\nVariant position: ${variantPosition}`);
+        } else {
+          drawDot(this.svgElement, variantPosition, this.getVariantY(variant.frequency), color, `Effect type: Other\nVariant position: ${variantPosition}`);
         }
       }
     }
