@@ -1,9 +1,13 @@
 import time
+import logging
 import numpy as np
 from copy import deepcopy
 from collections import OrderedDict
 
 from dae.utils.effect_utils import EffectTypesMixin
+
+
+logger = logging.getLogger(__name__)
 
 
 class EffectCell:
@@ -21,7 +25,10 @@ class EffectCell:
         self.observed_variants_ids = set()
         self.observed_people_with_event = set([])
 
+        self.persons_with_parents = self.families.person_ids_with_parents()
         self.person_set_persons = set(self.person_set.persons.keys())
+        self.person_set_childrens = self.person_set_persons & \
+            self.persons_with_parents
 
     @property
     def number_of_observed_events(self):
@@ -33,17 +40,21 @@ class EffectCell:
 
     @property
     def observed_rate_per_child(self):
-        return self.number_of_observed_events / len(self.person_set_persons)
+        if self.number_of_observed_events == 0:
+            return 0
+        return self.number_of_observed_events / len(self.person_set_childrens)
 
     @property
     def percent_of_children_with_events(self):
+        if self.number_of_children_with_event == 0:
+            return 0
         return self.number_of_children_with_event / len(
-            self.person_set_persons
+            self.person_set_childrens
         )
 
     @property
     def column_name(self):
-        return self.person_set.id
+        return self.person_set.name
 
     def to_dict(self):
         return {
@@ -60,9 +71,16 @@ class EffectCell:
         }
 
     def count_variant(self, family_variant, family_allele):
-        if not (
-            set(family_allele.variant_in_members) & self.person_set_persons
-        ):
+        if not set(family_allele.variant_in_members) & \
+                self.person_set_childrens:
+            variant_in_members = set(family_allele.variant_in_members) & \
+                self.person_set_persons
+            if variant_in_members:
+                logger.warning(
+                    f"denovo variant not in child: {family_allele}; "
+                    f"{family_allele.variant_in_members}; "
+                    f"person set: {self.person_set.id}; "
+                    f"mismatched persons: {variant_in_members}")
             return
         if not family_allele.effect:
             return
@@ -71,7 +89,7 @@ class EffectCell:
             return
         self.observed_variants_ids.add(family_variant.fvuid)
         self.observed_people_with_event.update(
-            set(family_allele.variant_in_members) & self.person_set_persons
+            set(family_allele.variant_in_members) & self.person_set_childrens
         )
 
     def is_empty(self):
@@ -149,7 +167,7 @@ class DenovoReportTable(object):
         self.effect_types = list(effect_types)
         self.effects = effect_groups + effect_types
 
-        self.columns = [person_set.id for person_set in self.person_sets]
+        self.columns = [person_set.name for person_set in self.person_sets]
 
         self.rows = self._build_rows()
 
@@ -231,12 +249,12 @@ class DenovoReportTable(object):
 
 class DenovoReport(object):
     def __init__(
-        self,
-        genotype_data,
-        effect_groups,
-        effect_types,
-        person_set_collections,
-    ):
+            self,
+            genotype_data,
+            effect_groups,
+            effect_types,
+            person_set_collections):
+
         self.genotype_data = genotype_data
         self.effect_groups = effect_groups
         self.effect_types = effect_types
@@ -244,7 +262,7 @@ class DenovoReport(object):
 
         start = time.time()
         denovo_variants = genotype_data.query_variants(
-            limit=None, inheritance="denovo",
+            limit=None, inheritance=["denovo"],
         )
         self.denovo_variants = list(denovo_variants)
         elapsed = time.time() - start

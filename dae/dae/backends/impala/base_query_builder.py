@@ -1,3 +1,5 @@
+import logging
+
 from dae.variants.attributes import Inheritance
 from dae.backends.attributes_query import inheritance_query
 
@@ -8,6 +10,9 @@ from ..attributes_query import QueryTreeToSQLBitwiseTransformer, \
     role_query, sex_query, variant_type_query
 from ..attributes_query_inheritance import InheritanceTransformer, \
     inheritance_parser
+
+
+logger = logging.getLogger(__name__)
 
 
 class BaseQueryBuilder:
@@ -69,22 +74,59 @@ class BaseQueryBuilder:
         raise NotImplementedError()
 
     def build_where(
-        self,
-        regions=None,
-        genes=None,
-        effect_types=None,
-        family_ids=None,
-        person_ids=None,
-        inheritance=None,
-        roles=None,
-        sexes=None,
-        variant_type=None,
-        real_attr_filter=None,
-        ultra_rare=None,
-        frequency_filter=None,
-        return_reference=None,
-        return_unknown=None,
-    ):
+            self,
+            regions=None,
+            genes=None,
+            effect_types=None,
+            family_ids=None,
+            person_ids=None,
+            inheritance=None,
+            roles=None,
+            sexes=None,
+            variant_type=None,
+            real_attr_filter=None,
+            ultra_rare=None,
+            frequency_filter=None,
+            return_reference=None,
+            return_unknown=None,
+            **kwargs):
+
+        where_clause = self._base_build_where(
+            regions=regions,
+            genes=genes,
+            effect_types=effect_types,
+            family_ids=family_ids,
+            person_ids=person_ids,
+            inheritance=inheritance,
+            roles=roles,
+            sexes=sexes,
+            variant_type=variant_type,
+            real_attr_filter=real_attr_filter,
+            ultra_rare=ultra_rare,
+            frequency_filter=frequency_filter,
+            return_reference=return_reference,
+            return_unknown=return_unknown,
+        )
+        self._add_to_product(where_clause)
+
+    def _base_build_where(
+            self,
+            regions=None,
+            genes=None,
+            effect_types=None,
+            family_ids=None,
+            person_ids=None,
+            inheritance=None,
+            roles=None,
+            sexes=None,
+            variant_type=None,
+            real_attr_filter=None,
+            ultra_rare=None,
+            frequency_filter=None,
+            return_reference=None,
+            return_unknown=None,
+            **kwargs):
+
         where = []
         if genes is not None:
             regions = self._build_gene_regions_heuristic(genes, regions)
@@ -171,7 +213,7 @@ class BaseQueryBuilder:
                 where=" AND ".join(["( {} )".format(w) for w in where])
             )
 
-        self._add_to_product(where_clause)
+        return where_clause
 
     def build_group_by(self):
         raise NotImplementedError()
@@ -179,6 +221,9 @@ class BaseQueryBuilder:
     def build_limit(self, limit):
         if limit is not None:
             self._add_to_product(f"LIMIT {limit}")
+
+    def build_having(self, **kwargs):
+        raise NotImplementedError()
 
     def create_row_deserializer(self, serializer):
         raise NotImplementedError()
@@ -318,20 +363,37 @@ class BaseQueryBuilder:
     def _build_gene_regions_heuristic(self, genes, regions):
         assert genes is not None
         if len(genes) > 0 and len(genes) <= self.GENE_REGIONS_HEURISTIC_CUTOFF:
-            if regions is None:
-                regions = []
+            gene_regions = []
             for gs in genes:
-                for gm in self.gene_models.gene_models_by_gene_name(gs):
-                    regions.append(
+                gene_model = self.gene_models.gene_models_by_gene_name(gs)
+                if gene_model is None:
+                    logger.warning(f"gene model for {gs} not found")
+                    continue
+                for gm in gene_model:
+                    gene_regions.append(
                         Region(
                             gm.chrom,
                             gm.tx[0] - self.GENE_REGIONS_HEURISTIC_EXTEND,
                             gm.tx[1] + self.GENE_REGIONS_HEURISTIC_EXTEND,
                         )
                     )
-            if regions:
-                regions = dae.utils.regions.collapse(regions)
-            return regions
+            gene_regions = dae.utils.regions.collapse(gene_regions)
+            logger.info(f"gene regions for {genes}: {gene_regions}")
+            logger.info(f"input regions: {regions}")
+            if not regions:
+                regions = gene_regions
+            else:
+                result = []
+                for gr in gene_regions:
+                    for r in regions:
+                        intersection = gr.intersection(r)
+                        if intersection:
+                            result.append(intersection)
+                result = dae.utils.regions.collapse(result)
+                logger.info(f"original regions: {regions}; result: {result}")
+                regions = result
+
+        return regions
 
     def _build_frequency_bin_heuristic(
             self, inheritance, ultra_rare, real_attr_filter):

@@ -125,7 +125,8 @@ def test_impala_summary_variants_simple(variants_impala, fixture_name):
     ),
     (
         ["any(denovo, mendelian)"], True, None,
-        " OR ".join(set(["frequency_bin = 0", "frequency_bin = 1"]))
+        " OR ".join(
+            set(["frequency_bin = 0", "frequency_bin = 1"]))
     ),
     (
         None, True, None,
@@ -137,7 +138,8 @@ def test_impala_summary_variants_simple(variants_impala, fixture_name):
     ),
     (
         ["any(mendelian)"], None, [("af_allele_freq", (0, 3))],
-        " OR ".join(set(["frequency_bin = 1", "frequency_bin = 2"]))
+        " OR ".join(
+            set(["frequency_bin = 1", "frequency_bin = 2"]))
     ),
     (
         ["any(denovo, mendelian)"], None, [("af_allele_freq", (0, 3))],

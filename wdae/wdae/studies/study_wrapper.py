@@ -549,7 +549,12 @@ class StudyWrapper(StudyWrapperBase):
             kwargs["inheritance"].append(
                 "any({})".format(
                     ",".join(kwargs["inheritanceTypeFilter"])))
-
+            kwargs.pop("inheritanceTypeFilter")
+        if "affectedStatus" in kwargs:
+            statuses = kwargs.pop("affectedStatus")
+            kwargs["affected_status"] = [
+                status.lower() for status in statuses
+            ]
         return kwargs
 
     def query_variants(self, **kwargs):

@@ -155,18 +155,21 @@ class ImpalaVariants:
             frequency_filter=None,
             return_reference=None,
             return_unknown=None,
-            limit=None):
+            limit=None,
+            affected_status=None):
 
         if not self.variants_table:
             return None
         with closing(self.connection()) as conn:
 
             with conn.cursor() as cursor:
+                do_join = affected_status is not None
                 query_builder = FamilyVariantsQueryBuilder(
                     self.db, self.variants_table, self.pedigree_table,
                     self.schema, self.table_properties,
                     self.pedigree_schema, self.ped_df,
-                    self.families, self.gene_models
+                    self.families, gene_models=self.gene_models,
+                    do_join=do_join
                 )
                 director = ImpalaQueryDirector(query_builder)
                 director.build_query(
@@ -185,6 +188,7 @@ class ImpalaVariants:
                     return_reference=return_reference,
                     return_unknown=return_unknown,
                     limit=None,
+                    affected_status=affected_status
                 )
 
                 query = query_builder.product
@@ -271,7 +275,8 @@ class ImpalaVariants:
             frequency_filter=None,
             return_reference=None,
             return_unknown=None,
-            limit=None):
+            limit=None,
+            affected_status=None):
 
         if not self.variants_table:
             return None
@@ -297,7 +302,8 @@ class ImpalaVariants:
                     frequency_filter=frequency_filter,
                     return_reference=return_reference,
                     return_unknown=return_unknown,
-                    limit=limit)
+                    limit=limit,
+                    affected_status=affected_status)
 
         raw_variants_iterator = RawVariantsIterator(
             family_variants_iterator, self.families)

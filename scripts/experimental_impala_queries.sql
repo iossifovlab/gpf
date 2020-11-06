@@ -398,3 +398,59 @@ WHERE
   ( region_bin IN ('chr14_0') );
 
 
+
+
+SELECT variants.bucket_index, variants.summary_index, COUNT(DISTINCT variants.family_id), gpf_bit_or(pedigree.status), gpf_or(BITAND(inheritance_in_members, 4)) 
+FROM data_hg38_production_202005.SSC_WG38_CSHL_2380_variants as variants JOIN data_hg38_production_202005.SSC_WG38_CSHL_2380_pedigree as pedigree 
+WHERE
+  ( (  variants.effect_gene_symbols in (  'SNORD141A'  )  ) ) AND 
+  ( (`chromosome` = 'chr5' AND `position` >= 14632278 AND `position` <= 14672382) OR 
+    (`chromosome` = 'chr6' AND `position` >= 73498245 AND `position` <= 73538438) OR 
+    (`chromosome` = 'chr9' AND `position` >= 133000430 AND `position` <= 133040534) ) AND 
+  ( BITAND(8, variants.inheritance_in_members) = 0 AND BITAND(32, variants.inheritance_in_members) = 0 ) AND ( BITAND(150, variants.inheritance_in_members) != 0 ) AND 
+  ( variants.allele_index > 0 ) AND 
+  ( variants.region_bin IN ('chr5_0','chr6_1','chr9_2') );
+
+
+SELECT variants.bucket_index, variants.summary_index, gpf_bit_or(pedigree.status), gpf_or(BITAND(inheritance_in_members, 4)) 
+FROM data_hg38_production_202005.SSC_WG38_CSHL_2380_variants as variants JOIN data_hg38_production_202005.SSC_WG38_CSHL_2380_pedigree as pedigree 
+WHERE
+  ( (  variants.effect_gene_symbols in (  'SNORD141A'  )  ) ) AND 
+  ( (`chromosome` = 'chr5' AND `position` >= 14632278 AND `position` <= 14672382) OR 
+    (`chromosome` = 'chr6' AND `position` >= 73498245 AND `position` <= 73538438) OR 
+    (`chromosome` = 'chr9' AND `position` >= 133000430 AND `position` <= 133040534) ) AND 
+  ( (  variants.effect_types in (  'frame-shift' , 'nonsense' , 'splice-site' , 'no-frame-shift-newStop' , 'nonsense' , 'frame-shift' , 'splice-site' , 'no-frame-shift-newStop' , 'missense' , 'synonymous' , 'noStart' , 'noEnd' , 'no-frame-shift' , 'CDS', 'non-coding'  )  ) ) AND 
+  ( BITAND(8, variants.inheritance_in_members) = 0 AND BITAND(32, variants.inheritance_in_members) = 0 ) AND ( BITAND(150, variants.inheritance_in_members) != 0 ) AND 
+  ( variants.allele_index > 0 ) AND ( variants.coding_bin = 1 ) AND 
+  ( variants.region_bin IN ('chr5_0','chr6_1','chr9_2') ) AND 
+  variants.variant_in_members = pedigree.person_id 
+GROUP BY bucket_index, summary_index;
+
+SELECT variants.bucket_index, variants.summary_index, gpf_bit_or(pedigree.status), gpf_or(BITAND(inheritance_in_members, 4)), GROUP_CONCAT(variants.effect_types) 
+FROM data_hg38_production_202005.SSC_WG38_CSHL_2380_variants as variants JOIN data_hg38_production_202005.SSC_WG38_CSHL_2380_pedigree as pedigree 
+WHERE
+  ( (  variants.effect_gene_symbols in (  'SNORD141A'  )  ) ) AND 
+  ( (`chromosome` = 'chr5' AND `position` >= 14632278 AND `position` <= 14672382) OR 
+    (`chromosome` = 'chr6' AND `position` >= 73498245 AND `position` <= 73538438) OR 
+    (`chromosome` = 'chr9' AND `position` >= 133000430 AND `position` <= 133040534) ) AND 
+  ( BITAND(8, variants.inheritance_in_members) = 0 AND BITAND(32, variants.inheritance_in_members) = 0 ) AND ( BITAND(150, variants.inheritance_in_members) != 0 ) AND 
+  ( variants.allele_index > 0 ) AND ( variants.coding_bin = 1 ) AND 
+  ( variants.region_bin IN ('chr5_0','chr6_1','chr9_2') ) AND 
+  variants.variant_in_members = pedigree.person_id 
+GROUP BY bucket_index, summary_index;
+
+
+SELECT variants.bucket_index, variants.summary_index 
+FROM data_hg38_production_202005.SSC_WG38_CSHL_2380_variants as variants JOIN data_hg38_production_202005.SSC_WG38_CSHL_2380_pedigree as pedigree 
+WHERE
+  ( (`chromosome` = 'chr5' AND `position` >= 14652278 AND `position` <= 14652382) OR (`chromosome` = 'chr6' AND `position` >= 73518245 AND `position` <= 73518438) OR (`chromosome` = 'chr9' AND `position` >= 133020430 AND `position` <= 133020534) ) AND 
+  ( (  variants.effect_gene_symbols in (  'SNORD141A'  )  ) ) AND 
+  ( (  variants.effect_types in (  'frame-shift' , 'nonsense' , 'splice-site' , 'no-frame-shift-newStop' , 'missense' , 'synonymous' , 'noStart' , 'noEnd' , 'no-frame-shift' , 'CDS'  )  ) ) AND 
+  ( BITAND(8, variants.inheritance_in_members) = 0 AND BITAND(32, variants.inheritance_in_members) = 0 ) AND ( BITAND(150, variants.inheritance_in_members) != 0 ) AND 
+  ( (variants.ssc_freq <= 100 or variants.ssc_freq is null) ) AND 
+  ( variants.allele_index > 0 ) AND 
+  ( variants.coding_bin = 1 ) AND 
+  ( variants.region_bin IN ('chr5_0','chr6_1','chr9_2') ) AND 
+  variants.variant_in_members = pedigree.person_id 
+GROUP BY variants.bucket_index, variants.summary_index, variants.family_id 
+HAVING gpf_bit_or(pedigree.status) IN (1, 2, 3);
