@@ -627,11 +627,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
       }
 
       domain = this.geneViewModel.buildDomain(domainMin, domainMax);
-      if (this.condenseIntrons) {
-        range = this.geneViewModel.buildCondensedIntronsRange(domainMin, domainMax, this.svgWidth);
-      } else {
-        range = this.geneViewModel.buildNormalIntronsRange(domainMin, domainMax, this.svgWidth);
-      }
+      range = this.recalculateXRange(domainMin, domainMax);
 
       this.x = d3.scaleLinear().domain(domain).range(range).clamp(true);
 

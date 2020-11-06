@@ -41,8 +41,6 @@ export class Transcript {
     private _transcript_id: string,
     private _strand: string,
     private _chrom: string,
-    private utr3: Exon,
-    private utr5: Exon,
     private _cds: number[],
     private _exons: Exon[]
   ) { }
@@ -50,9 +48,7 @@ export class Transcript {
   static fromJson(json: any): Transcript {
     return new Transcript(
       json['transcript_id'], json['strand'], json['chrom'],
-      Exon.fromJson(json['chrom'], json['utr3']), Exon.fromJson(json['chrom'], json['utr5']),
-      json['cds'],
-      Exon.fromJsonArray(json['chrom'], json['exons']));
+      json['cds'], Exon.fromJsonArray(json['chrom'], json['exons']));
   }
 
   static fromJsonArray(jsonArray: Array<Object>): Array<Transcript> {
@@ -154,9 +150,8 @@ export class Gene {
     cds.push(lastExon.stop);
 
     return new Transcript(
-      'collapsed', firstTranscript.strand, firstTranscript.chrom,
-      null, null,
-      cds, result);
+      'collapsed', firstTranscript.strand, firstTranscript.chrom, cds, result
+    );
   }
 }
 
