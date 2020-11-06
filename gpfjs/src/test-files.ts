@@ -88,3 +88,6 @@ import './app/errors-alert/errors-alert.component.spec.ts';
 import './app/chromosome-service/chromosome.service.spec.ts';
 import './app/config/config.service.spec.ts';
 import './app/registration/registration.component.spec.ts';
+import './app/gene-view/gene.spec.ts';
+import './app/gene-view/gene-view.spec.ts';
+import './app/gene-view/gene-view.component.spec.ts';
