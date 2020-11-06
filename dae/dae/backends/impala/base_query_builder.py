@@ -378,6 +378,8 @@ class BaseQueryBuilder:
                         )
                     )
             gene_regions = dae.utils.regions.collapse(gene_regions)
+            logger.info(f"gene regions for {genes}: {gene_regions}")
+            logger.info(f"input regions: {regions}")
             if not regions:
                 regions = gene_regions
             else:
@@ -387,8 +389,11 @@ class BaseQueryBuilder:
                         intersection = gr.intersection(r)
                         if intersection:
                             result.append(intersection)
-                regions = dae.utils.regions.collapse(result)
-            return regions
+                result = dae.utils.regions.collapse(result)
+                logger.info(f"original regions: {regions}; result: {result}")
+                regions = result
+
+        return regions
 
     def _build_frequency_bin_heuristic(
             self, inheritance, ultra_rare, real_attr_filter):
