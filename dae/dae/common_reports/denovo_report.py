@@ -249,12 +249,12 @@ class DenovoReportTable(object):
 
 class DenovoReport(object):
     def __init__(
-        self,
-        genotype_data,
-        effect_groups,
-        effect_types,
-        person_set_collections,
-    ):
+            self,
+            genotype_data,
+            effect_groups,
+            effect_types,
+            person_set_collections):
+
         self.genotype_data = genotype_data
         self.effect_groups = effect_groups
         self.effect_types = effect_types

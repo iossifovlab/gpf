@@ -24,9 +24,9 @@ def local_gpf_instance(gpf_instance):
     return gpf_instance
 
 
-@pytest.fixture(scope="session")
-def vdb_fixture(local_gpf_instance):
-    return local_gpf_instance._variants_db
+# @pytest.fixture(scope="session")
+# def vdb_fixture(local_gpf_instance):
+#     return local_gpf_instance._variants_db
 
 
 @pytest.fixture(scope="session")
@@ -35,43 +35,43 @@ def common_report_facade(local_gpf_instance):
 
 
 @pytest.fixture(scope="session")
-def study1(vdb_fixture):
-    return vdb_fixture.get("Study1")
+def study1(local_gpf_instance):
+    return local_gpf_instance.get_genotype_data("Study1")
 
 
 @pytest.fixture(scope="session")
-def study2(vdb_fixture):
-    return vdb_fixture.get("Study2")
+def study2(local_gpf_instance):
+    return local_gpf_instance.get_genotype_data("Study2")
 
 
 @pytest.fixture(scope="session")
-def study4(vdb_fixture):
-    return vdb_fixture.get("Study4")
+def study4(local_gpf_instance):
+    return local_gpf_instance.get_genotype_data("Study4")
 
 
 @pytest.fixture(scope="session")
-def genotype_data_group1(vdb_fixture):
-    return vdb_fixture.get("Dataset1")
+def genotype_data_group1(local_gpf_instance):
+    return local_gpf_instance.get_genotype_data("Dataset1")
 
 
-@pytest.fixture(scope="session")
-def study1_config(vdb_fixture):
-    return vdb_fixture.get_study_config("Study1")
+# @pytest.fixture(scope="session")
+# def study1_config(local_gpf_instance):
+#     return local_gpf_instance.get_genotype_data_config("Study1")
 
 
-@pytest.fixture(scope="session")
-def genotype_data_group2_config(vdb_fixture):
-    return vdb_fixture.get_genotype_data_group_config("Dataset2")
+# @pytest.fixture(scope="session")
+# def genotype_data_group2_config(local_gpf_instance):
+#     return local_gpf_instance.get_genotype_data_config("Dataset2")
 
 
-@pytest.fixture(scope="session")
-def genotype_data_group3_config(vdb_fixture):
-    return vdb_fixture.get_genotype_data_group_config("Dataset3")
+# @pytest.fixture(scope="session")
+# def genotype_data_group3_config(local_gpf_instance):
+#     return local_gpf_instance.get_genotype_data_config("Dataset3")
 
 
-@pytest.fixture(scope="session")
-def genotype_data_group4_config(vdb_fixture):
-    return vdb_fixture.get_genotype_data_group_config("Dataset4")
+# @pytest.fixture(scope="session")
+# def genotype_data_group4_config(local_gpf_instance):
+#     return local_gpf_instance.get_genotype_data_config("Dataset4")
 
 
 @pytest.fixture(scope="session")
