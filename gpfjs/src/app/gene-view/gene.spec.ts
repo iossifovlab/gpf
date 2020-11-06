@@ -1,5 +1,4 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
-import { FormsModule, NgModel } from '@angular/forms';
+import { GenotypePreview } from 'app/genotype-preview-model/genotype-preview';
 
 import { Exon, Transcript, Gene, GeneViewSummaryVariant, GeneViewSummaryVariantsArray, DomainRange } from './gene';
 
@@ -222,7 +221,6 @@ describe('Gene', () => {
     expect(testGenes[1].transcripts[1].exons).toEqual([new Exon('testChrom4', 67, 77), new Exon('testChrom4', 78, 88)]);
   });
 
-
   it('Should create collapsed transcript', () => {
     const testGene = Gene.fromJson({
       'gene': 'testGene',
@@ -256,4 +254,97 @@ describe('Gene', () => {
     );
     expect(testGene.collapsedTranscript()).toEqual(expectedTranscript);
   });
+});
+
+describe('GeneViewSummaryVariant', () => {
+  it('Should create from preview variant', () => {
+    const mockRow = {
+      location: '1:999',
+      position: 999,
+      chrom: '1',
+      variant: 'testVariant',
+      effect: 'test effect',
+      frequency: 2,
+      family_variants_count: 1,
+      is_denovo: true,
+      seen_in_affected: true,
+      seen_in_unaffected: false
+    };
+    const expectedResult = GeneViewSummaryVariant.fromRow(mockRow);
+
+    const mockConfig = {
+      locationColumn: 'location',
+      frequencyColumn: 'frequency',
+      effectColumn: 'effect'
+    };
+    const testGenotypePreview = new GenotypePreview();
+    testGenotypePreview.data = new Map<string, any>([
+      ['location', '1:999'],
+      ['frequency', 2],
+      ['effect', 'TEST EFFECT'],
+      ['variant.variant', 'testVariant'],
+      ['variant.is denovo', true],
+      ['genotype', [{label: 1, color: '#color'}]]
+    ]);
+
+    expect(GeneViewSummaryVariant.fromPreviewVariant(mockConfig, testGenotypePreview)).toEqual(expectedResult);
+  });
+
+  it('Should check if its LGDs', () => {
+    const testSummaryVariant = new GeneViewSummaryVariant();
+    testSummaryVariant.effect = 'lgds';
+    expect(testSummaryVariant.isLGDs()).toBeTruthy();
+  });
+
+  it('Should check if its Missense', () => {
+    const testSummaryVariant = new GeneViewSummaryVariant();
+    testSummaryVariant.effect = 'missense';
+    expect(testSummaryVariant.isMissense()).toBeTruthy();
+  });
+
+  it('Should check if its Synonymous', () => {
+    const testSummaryVariant = new GeneViewSummaryVariant();
+    testSummaryVariant.effect = 'synonymous';
+    expect(testSummaryVariant.isSynonymous()).toBeTruthy();
+  });
+
+  // Needs to be finished
+  // it('Should create correct comparison value', () => {
+  //   const correctOrder = [
+  //     [false, 'synonymous', true, true],
+  //     [false, 'synonymous', false, true],
+  //     [false, 'synonymous', true, false],
+  //     [false, 'missense', true, true],
+  //     [false, 'missense', false, true],
+  //     [false, 'missense', true, false],
+  //     [false, 'lgds', true, true],
+  //     [false, 'lgds', false, true],
+  //     [false, 'lgds', true, false],
+  //     [true, 'synonymous', true, true],
+  //     [true, 'synonymous', false, true],
+  //     [true, 'synonymous', true, false],
+  //     [true, 'missense', true, true],
+  //     [true, 'missense', false, true],
+  //     [true, 'missense', true, false],
+  //     [true, 'lgds', true, true],
+  //     [true, 'lgds', false, true],
+  //     [true, 'lgds', true, false],
+  //   ];
+
+  //   console.log(correctOrder[0][1]);
+  //   const length = 18;
+  //   const testSummaryVariants = Array<GeneViewSummaryVariant>();
+  //   for (let i = 0; i < length; i++) {
+  //     testSummaryVariants[i].seenAsDenovo = correctOrder[i][0];
+  //     testSummaryVariants[i].effect = correctOrder[i][1];
+  //     testSummaryVariants[i].seenInAffected = correctOrder[i][2];
+  //     testSummaryVariants[i].seenInUnaffected = correctOrder[i][3];
+  //   }
+
+  //   for (let i = 0; i < length - 1; i++) {
+  //     expect(
+  //       testSummaryVariants[i].comparisonValue() < testSummaryVariants[i + 1].comparisonValue()
+  //     ).toBeTruthy();
+  //   }
+  // });
 });
