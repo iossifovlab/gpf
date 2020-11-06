@@ -263,7 +263,7 @@ export class GeneViewSummaryVariant {
 
     sum += this.seenAsDenovo ? 200 : 100;
     sum += this.isLGDs() ? 30 : this.isMissense() ? 20 : 10;
-    sum += this.seenInAffected ? 3 : this.seenInUnaffected ? 2 : 1;
+    sum += (this.seenInAffected && this.seenInUnaffected) ? 1 : this.seenInUnaffected ? 2 : 3;
     return sum;
   }
 }
