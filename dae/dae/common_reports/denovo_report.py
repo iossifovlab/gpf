@@ -53,7 +53,7 @@ class EffectCell:
 
     @property
     def column_name(self):
-        return self.person_set.name
+        return f"{self.person_set.name} ({len(self.person_set_childrens)})"
 
     def to_dict(self):
         return {
