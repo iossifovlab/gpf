@@ -1,15 +1,15 @@
 import { GenotypePreview } from 'app/genotype-preview-model/genotype-preview';
 
-import { Exon, Transcript, Gene, GeneViewSummaryVariant, GeneViewSummaryVariantsArray, DomainRange } from './gene';
+import { Exon, Transcript, Gene, GeneViewSummaryVariant, GeneViewSummaryVariantsArray } from './gene';
 
 describe('Exon', () => {
-  it('Should have working getters', () => {
+  it('should have working getters', () => {
     const exon = new Exon('testChrom', 1, 11);
     expect(exon.start).toBe(1);
     expect(exon.stop).toBe(11);
   });
 
-  it('Should have working setters', () => {
+  it('should have working setters', () => {
     const exon = new Exon('testChrom', 0, 0);
     exon.start = 1;
     exon.stop = 11;
@@ -17,19 +17,19 @@ describe('Exon', () => {
     expect(exon.stop).toBe(11);
   });
 
-  it('Should calculate length', () => {
+  it('should calculate length', () => {
     const exon = new Exon('testChrom', 1, 11);
     expect(exon.length).toBe(10);
   });
 
-  it('Should create from json', () => {
+  it('should create from json', () => {
     const exon = Exon.fromJson('testChrom', {'start': 1, 'stop': 11});
     expect(exon.chrom).toBe('testChrom');
     expect(exon.start).toBe(1);
     expect(exon.stop).toBe(11);
   });
 
-  it('Should create from json array', () => {
+  it('should create from json array', () => {
     const exons = Exon.fromJsonArray('testChrom', [{'start': 1, 'stop': 11}, {'start': 12, 'stop': 22}]);
     expect(exons[0].chrom).toBe('testChrom');
     expect(exons[0].start).toBe(1);
@@ -44,7 +44,7 @@ describe('Transcript', () => {
   const testExon1 = new Exon('testChrom1', 1, 11);
   const testExon2 = new Exon('testChrom2', 12, 23);
 
-  it('Should have working getters', () => {
+  it('should have working getters', () => {
     const testTranscript = new Transcript('testTranscriptId', 'testStrand', 'testChrom', [1, 100], [testExon1, testExon2]);
     expect(testTranscript.transcript_id).toBe('testTranscriptId');
     expect(testTranscript.strand).toBe('testStrand');
@@ -55,17 +55,17 @@ describe('Transcript', () => {
     expect(testTranscript.stop).toBe(23);
   });
 
-  it('Should calculate length', () => {
+  it('should calculate length', () => {
     const testTranscript = new Transcript('testTranscriptId', 'testStrand', 'testChrom', [1, 100], [testExon1, testExon2]);
     expect(testTranscript.length).toBe(22);
   });
 
-  it('Should calculate median exon length', () => {
+  it('should calculate median exon length', () => {
     const testTranscript = new Transcript('testTranscriptId', 'testStrand', 'testChrom', [1, 100], [testExon1, testExon2]);
     expect(testTranscript.medianExonLength).toBe(11);
   });
 
-  it('Should create from json', () => {
+  it('should create from json', () => {
     const testTranscript = Transcript.fromJson({
       'transcript_id': 'testTranscriptId',
       'strand': 'testStrand',
@@ -82,7 +82,7 @@ describe('Transcript', () => {
     expect(testTranscript.stop).toBe(23);
   });
 
-  it('Should create from json array', () => {
+  it('should create from json array', () => {
     const testTranscripts = Transcript.fromJsonArray([{
         'transcript_id': 'testTranscriptId1',
         'strand': 'testStrand1',
@@ -111,7 +111,7 @@ describe('Transcript', () => {
 });
 
 describe('Gene', () => {
-  it('Should have working getters', () => {
+  it('should have working getters', () => {
     const testTranscript1 = new Transcript(
       'testTranscriptId1',
       'testStrand1',
@@ -132,7 +132,7 @@ describe('Gene', () => {
     expect(testGene.transcripts).toEqual([testTranscript1, testTranscript2]);
   });
 
-  it('Should create from json', () => {
+  it('should create from json', () => {
     const testGene = Gene.fromJson({
       'gene': 'testGene',
       'transcripts':
@@ -163,7 +163,7 @@ describe('Gene', () => {
     expect(testGene.transcripts[1].exons).toEqual([new Exon('testChrom2', 23, 33), new Exon('testChrom2', 34, 44)]);
   });
 
-  it('Should create from json array', () => {
+  it('should create from json array', () => {
     const testGenes = Gene.fromJsonArray([{
         'gene': 'testGene1',
         'transcripts': [{
@@ -221,7 +221,7 @@ describe('Gene', () => {
     expect(testGenes[1].transcripts[1].exons).toEqual([new Exon('testChrom4', 67, 77), new Exon('testChrom4', 78, 88)]);
   });
 
-  it('Should create collapsed transcript', () => {
+  it('should create collapsed transcript', () => {
     const testGene = Gene.fromJson({
       'gene': 'testGene',
       'transcripts':
@@ -257,7 +257,7 @@ describe('Gene', () => {
 });
 
 describe('GeneViewSummaryVariant', () => {
-  it('Should create from preview variant', () => {
+  it('should create from preview variant', () => {
     const mockRow = {
       location: '1:999',
       position: 999,
@@ -290,25 +290,25 @@ describe('GeneViewSummaryVariant', () => {
     expect(GeneViewSummaryVariant.fromPreviewVariant(mockConfig, testGenotypePreview)).toEqual(expectedResult);
   });
 
-  it('Should check if its LGDs', () => {
+  it('should check if its LGDs', () => {
     const testSummaryVariant = new GeneViewSummaryVariant();
     testSummaryVariant.effect = 'lgds';
     expect(testSummaryVariant.isLGDs()).toBeTruthy();
   });
 
-  it('Should check if its Missense', () => {
+  it('should check if its Missense', () => {
     const testSummaryVariant = new GeneViewSummaryVariant();
     testSummaryVariant.effect = 'missense';
     expect(testSummaryVariant.isMissense()).toBeTruthy();
   });
 
-  it('Should check if its Synonymous', () => {
+  it('should check if its Synonymous', () => {
     const testSummaryVariant = new GeneViewSummaryVariant();
     testSummaryVariant.effect = 'synonymous';
     expect(testSummaryVariant.isSynonymous()).toBeTruthy();
   });
 
-  it('Should create correct comparison value', () => {
+  it('should create correct comparison value', () => {
     const correctOrder = [
       [false, 'synonymous', true, true],
       [false, 'synonymous', false, true],
@@ -349,20 +349,20 @@ describe('GeneViewSummaryVariant', () => {
 });
 
 describe('GeneViewSummaryVariantsArray', () => {
-  it('Should add summary row', () => {
-    const mockRow = {
-      location: '1:999',
-      position: 999,
-      chrom: '1',
-      variant: 'testVariant',
-      effect: 'test effect',
-      frequency: 2,
-      family_variants_count: 1,
-      is_denovo: true,
-      seen_in_affected: true,
-      seen_in_unaffected: false
-    };
+  const mockRow = {
+    location: '1:999',
+    position: 999,
+    chrom: '1',
+    variant: 'testVariant',
+    effect: 'test effect',
+    frequency: 2,
+    family_variants_count: 1,
+    is_denovo: true,
+    seen_in_affected: true,
+    seen_in_unaffected: false
+  };
 
+  it('should add summary row', () => {
     const summaryVariantsArray = new GeneViewSummaryVariantsArray();
     summaryVariantsArray.addSummaryRow(mockRow);
 
@@ -371,20 +371,7 @@ describe('GeneViewSummaryVariantsArray', () => {
     expect(summaryVariantsArray.summaryVariants[0]).toEqual(expectedSummaryVariant);
   });
 
-  it('Should push summary variant', () => {
-    const mockRow = {
-      location: '1:999',
-      position: 999,
-      chrom: '1',
-      variant: 'testVariant',
-      effect: 'test effect',
-      frequency: 2,
-      family_variants_count: 1,
-      is_denovo: true,
-      seen_in_affected: true,
-      seen_in_unaffected: false
-    };
-
+  it('should push summary variant', () => {
     const expectedSummaryVariant = GeneViewSummaryVariant.fromRow(mockRow);
     const summaryVariantsArray = new GeneViewSummaryVariantsArray();
     summaryVariantsArray.push(expectedSummaryVariant);
