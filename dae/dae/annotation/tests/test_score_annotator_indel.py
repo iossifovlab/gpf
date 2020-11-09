@@ -80,7 +80,7 @@ def test_np_score_annotator_indels(
     pd.testing.assert_frame_equal(
         expected_df(captured.out),
         expected_df(expected),
-        check_less_precise=3,
+        rtol=10e-3,
         check_names=False,
     )
 
@@ -152,7 +152,7 @@ def test_position_score_annotator_indels(
     pd.testing.assert_frame_equal(
         expected_df(captured.out),
         expected_df(expected),
-        check_less_precise=3,
+        rtol=10e-3,
         check_names=False,
     )
 

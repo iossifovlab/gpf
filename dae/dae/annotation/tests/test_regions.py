@@ -43,15 +43,14 @@ chr2	20004	G	A	-0.118
     ],
 )
 def test_regions_parameterized(
-    expected_df,
-    variants_io,
-    capsys,
-    genomes_db_2013,
-    direct,
-    score_name,
-    region,
-    expected,
-):
+        expected_df,
+        variants_io,
+        capsys,
+        genomes_db_2013,
+        direct,
+        score_name,
+        region,
+        expected):
 
     score_filename = (
         f"fixtures/TEST3{score_name}/TEST3{score_name}.bedGraph.gz"
@@ -89,7 +88,7 @@ def test_regions_parameterized(
     print(captured.err)
     print(captured.out)
     pd.testing.assert_frame_equal(
-        expected_df(captured.out), expected_df(expected), check_less_precise=3
+        expected_df(captured.out), expected_df(expected), rtol=10e-3
     )
 
 
@@ -165,7 +164,7 @@ def test_regions_parameterized_missing_scores(
     pd.testing.assert_frame_equal(
         expected_df(captured.out),
         expected_df(expected),
-        check_less_precise=3,
+        rtol=10e-3,
         check_dtype=False,
     )
 
@@ -213,5 +212,5 @@ def test_regions_simple(expected_df, variants_io, capsys, genomes_db_2013):
     print(captured.err)
     print(captured.out)
     pd.testing.assert_frame_equal(
-        expected_df(captured.out), expected_df(expected), check_less_precise=3
+        expected_df(captured.out), expected_df(expected), rtol=10e-3
     )

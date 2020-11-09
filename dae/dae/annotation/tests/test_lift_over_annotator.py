@@ -29,6 +29,7 @@ def test_lift_over(mocker, chrom, pos, lift_over, expected, genomes_db_2013):
         "chain_file": "fake_chain_file",
         "c": "chrom",
         "p": "pos",
+        "liftover": "lo1",
     }
 
     columns = {
@@ -44,7 +45,7 @@ def test_lift_over(mocker, chrom, pos, lift_over, expected, genomes_db_2013):
     )
     mocker.patch(
         "dae.annotation.tools.lift_over_annotator."
-        "LiftOverAnnotator.build_lift_over")
+        "LiftOverAnnotator.build_liftover")
 
     annotator = LiftOverAnnotator(config, genomes_db_2013)
     assert annotator is not None
@@ -57,7 +58,8 @@ def test_lift_over(mocker, chrom, pos, lift_over, expected, genomes_db_2013):
         "pos": pos,
     }
 
-    annotator.do_annotate(aline, None)
+    liftover_variants = {}
+    annotator.do_annotate(aline, None, liftover_variants)
 
     assert "hg19_location" in aline
     assert aline["hg19_location"] == expected
@@ -81,6 +83,7 @@ def test_pipeline_with_liftover(
     options = {
         "default_arguments": None,
         "vcf": True,
+        "liftover": "lo1",
     }
 
     filename = relative_to_this_test_folder(
@@ -89,7 +92,7 @@ def test_pipeline_with_liftover(
 
     mocker.patch(
         "dae.annotation.tools.lift_over_annotator."
-        "LiftOverAnnotator.build_lift_over")
+        "LiftOverAnnotator.build_liftover")
 
     pipeline = PipelineAnnotator.build(options, filename, genomes_db_2013,)
     assert pipeline is not None

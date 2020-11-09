@@ -44,12 +44,17 @@ class AnnotatorBase(object):
         elif self.config.options.mode == "overwrite":
             self.mode = "overwrite"
 
+        self.liftover = None
+        if self.config.options.liftover:
+            self.liftover = self.config.options.liftover
+
     def build_output_line(self, annotation_line):
         output_columns = self.config.output_columns
         return [annotation_line.get(key, "") for key in output_columns]
 
     def collect_annotator_schema(self, schema):
-        raise NotImplementedError()
+        # raise NotImplementedError()
+        pass
 
     def annotate_file(self, file_io_manager):
         """
@@ -89,9 +94,10 @@ class AnnotatorBase(object):
 
             try:
                 self.line_annotation(annotation_line)
-            except Exception:
-                print("Problems annotating line:", line, file=sys.stderr)
-                print(annotation_line, file=sys.stderr)
+            except Exception as ex:
+                logger.error(f"problems annotating line: {line}")
+                logger.error(f"{annotation_line}")
+                logger.error(f"{ex}")
                 traceback.print_exc(file=sys.stderr)
 
             file_io_manager.line_write(self.build_output_line(annotation_line))
@@ -269,12 +275,13 @@ class VariantAnnotatorBase(AnnotatorBase):
     def line_annotation(self, aline):
         variant = self.variant_builder.build(aline)
         logger.debug(f"line_annotation calls do_annotate({variant}")
-        self.do_annotate(aline, variant)
+        liftover_variants = {}
+        self.do_annotate(aline, variant, liftover_variants)
 
-    def do_annotate(self, aline, variant):
+    def do_annotate(self, aline, variant, liftover_variants):
         raise NotImplementedError()
 
-    def annotate_summary_variant(self, summary_variant):
+    def annotate_summary_variant(self, summary_variant, liftover_variants):
         for alt_allele in summary_variant.alt_alleles:
             attributes = deepcopy(alt_allele.attributes)
             self.variant_builder.fill_variant_coordinates(
@@ -285,7 +292,7 @@ class VariantAnnotatorBase(AnnotatorBase):
                 variant = self.variant_builder.build_variant(attributes)
             # logger.debug(
             #     f"annotate_summary_variant calls do_annotate({variant})")
-            self.do_annotate(attributes, variant)
+            self.do_annotate(attributes, variant, liftover_variants)
             logger.debug(f"variant attributes: {attributes}")
 
             alt_allele.update_attributes(attributes)
@@ -318,17 +325,19 @@ class CompositeVariantAnnotator(VariantAnnotatorBase):
         assert isinstance(annotator, VariantAnnotatorBase)
         self.annotators.append(annotator)
 
-    def do_annotate(self, aline, variant):
+    def do_annotate(self, aline, variant, liftover_variants):
         for annotator in self.annotators:
-            annotator.do_annotate(aline, variant)
+            annotator.do_annotate(aline, variant, liftover_variants)
 
     def line_annotation(self, aline):
         variant = self.variant_builder.build(aline)
-        self.do_annotate(aline, variant)
+        liftover_variants = {}
+        self.do_annotate(aline, variant, liftover_variants)
 
-    def annotate_summary_variant(self, summary_variant):
+    def annotate_summary_variant(self, summary_variant, liftover_variants):
         for annotator in self.annotators:
-            annotator.annotate_summary_variant(summary_variant)
+            annotator.annotate_summary_variant(
+                summary_variant, liftover_variants)
 
     def collect_annotator_schema(self, schema):
         super(CompositeVariantAnnotator, self).collect_annotator_schema(schema)

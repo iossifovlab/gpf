@@ -2,7 +2,6 @@
 
 import gzip
 
-import sys
 import os
 import logging
 
@@ -39,7 +38,10 @@ class LiftOverAnnotator(VariantAnnotatorBase):
         logger.info(
             f"new columns are: {self.columns}")
 
-        self.lift_over = self.build_lift_over(self.config.options.chain_file)
+        assert self.config.options.liftover
+        self.liftover_id = self.config.options.liftover
+
+        self.liftover = self.build_liftover(self.config.options.chain_file)
 
         logger.debug(
             f"creating liftover annotation: {self.config.options.chain_file}")
@@ -53,14 +55,14 @@ class LiftOverAnnotator(VariantAnnotatorBase):
                 schema.columns[value] = Schema.produce_type("str")
 
     @staticmethod
-    def build_lift_over(chain_filename):
+    def build_liftover(chain_filename):
         assert chain_filename is not None
         assert os.path.exists(chain_filename)
 
-        chain_file = gzip.open(chain_filename, "r")
-        return LiftOver(chain_file)
+        with gzip.open(chain_filename, "r") as chain_file:
+            return LiftOver(chain_file)
 
-    def do_annotate(self, aline, variant):
+    def do_annotate(self, aline, variant, liftover_variants):
         liftover_pos = None
         if self.location and self.location in aline:
             location = aline[self.location]
@@ -119,11 +121,6 @@ class LiftOverAnnotator(VariantAnnotatorBase):
             new_p = converted_coordinates[0][1] + 1
             new_s = converted_coordinates[0][2]
             new_x = "{}:{}".format(new_c, new_p)
-
-            # logger.debug(
-            #     f"liftover source position: {chrom}:{pos} -> "
-            #     f"after litfover: "
-            #     f"{new_c}:{new_p}; (location {new_x})")
 
         if self.columns.new_x:
             aline[self.columns.new_x] = new_x

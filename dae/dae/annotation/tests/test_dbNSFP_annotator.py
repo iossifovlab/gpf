@@ -52,5 +52,5 @@ def test_dbNSFP_annotator(variants_io, expected_df, capsys, genomes_db_2013):
     pd.testing.assert_frame_equal(
         expected_df(captured.out),
         expected_df(expected_result_dbNSFP),
-        check_less_precise=3,
+        rtol=10e-3,
     )

@@ -14,7 +14,7 @@ from dae.annotation.tools.score_annotator import (
 
 try:
     bigwig_enabled = True
-    from annotation.tools.score_file_io_bigwig import BigWigAccess  # noqa
+    from dae.annotation.tools.score_file_io_bigwig import BigWigAccess  # noqa
 except ImportError:
     bigwig_enabled = False
 
@@ -38,8 +38,7 @@ input2_phast_pylo_expected = """RESULT_phastCons100way\tRESULT_phyloP100way
 
 @pytest.mark.parametrize("direct", [True, False])
 def test_variant_score_annotator_simple(
-    expected_df, variants_io, direct, capsys, genomes_db_2013
-):
+        expected_df, variants_io, direct, capsys, genomes_db_2013):
 
     options = {
         "vcf": True,
@@ -76,14 +75,12 @@ def test_variant_score_annotator_simple(
     pd.testing.assert_frame_equal(
         expected_df(captured.out),
         expected_df(input2_phast_exptected),
-        check_less_precise=3,
-    )
+        rtol=10e-3)
 
 
 @pytest.mark.parametrize("direct", [True, False])
 def test_variant_multi_score_annotator_simple(
-    expected_df, variants_io, direct, capsys, genomes_db_2013
-):
+        expected_df, variants_io, direct, capsys, genomes_db_2013):
 
     options = {
         "vcf": True,
@@ -121,8 +118,7 @@ def test_variant_multi_score_annotator_simple(
     pd.testing.assert_frame_equal(
         expected_df(captured.out),
         expected_df(input2_phast_exptected),
-        check_less_precise=3,
-    )
+        rtol=10e-3)
 
 
 @pytest.mark.parametrize("direct", [True, False])
@@ -168,7 +164,7 @@ def test_variant_multi_score_annotator_multi(
     pd.testing.assert_frame_equal(
         expected_df(captured.out),
         expected_df(input2_phast_pylo_expected),
-        check_less_precise=3,
+        rtol=10e-3,
     )
 
 
@@ -224,5 +220,5 @@ def test_variant_score_annotator_cadd(
     pd.testing.assert_frame_equal(
         expected_df(captured.out),
         expected_df(input2_cadd_expected),
-        check_less_precise=3,
+        rtol=10e-3,
     )

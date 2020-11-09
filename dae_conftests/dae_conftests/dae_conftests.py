@@ -1,6 +1,7 @@
 import pytest
 
 import os
+import sys
 import glob
 import shutil
 import tempfile
@@ -37,12 +38,13 @@ from dae.utils.helpers import study_id_from_path
 from dae.backends.impala.parquet_io import ParquetManager, \
     NoPartitionDescriptor
 from dae.backends.storage.impala_genotype_storage import ImpalaGenotypeStorage
-from dae.gene.denovo_gene_set_collection_factory import (
-    DenovoGeneSetCollectionFactory,
-)
+from dae.gene.denovo_gene_set_collection_factory import \
+    DenovoGeneSetCollectionFactory
 
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(
+    stream=sys.stderr, level=logging.DEBUG,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 
 # suppress impala logger
 logger = logging.getLogger("impala")

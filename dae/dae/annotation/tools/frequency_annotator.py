@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-import sys
 import logging
 from os.path import basename
 
@@ -28,13 +27,15 @@ class FrequencyAnnotator(VariantScoreAnnotatorBase):
     def collect_annotator_schema(self, schema):
         super(FrequencyAnnotator, self).collect_annotator_schema(schema)
 
-    def do_annotate(self, aline, variant):
+    def do_annotate(self, aline, variant, liftover_variants):
         if variant is None:
             self._scores_not_found(aline)
             return
         if VariantType.is_cnv(variant.variant_type):
             self._scores_not_found(aline)
             return
+        if self.liftover and liftover_variants.get(self.liftover):
+            variant = liftover_variants.get(self.liftover)
 
         chrom = variant.chromosome
         pos = variant.details.cshl_position
@@ -46,22 +47,17 @@ class FrequencyAnnotator(VariantScoreAnnotatorBase):
         if not scores:
             self._scores_not_found(aline)
             return
-        variant = variant.details.cshl_variant
+        variant_detail = variant.details.cshl_variant
 
-        variant_occurrences = scores[self.variant_col_name].count(variant)
+        variant_occurrences = scores[self.variant_col_name] \
+            .count(variant_detail)
         if variant_occurrences > 0:
             if variant_occurrences > 1:
-                print(
-                    "WARNING {}: multiple variant occurrences of {}:{} {}".format(
-                        self.score_filename_base,
-                        str(chrom),
-                        str(pos),
-                        str(variant),
-                    ),
-                    file=sys.stderr,
-                )
+                logger.warning(
+                    f"WARNING {self.score_filename_base}: "
+                    f"multiple variant occurrences of {chrom}:{pos} {variant}")
 
-            variant_index = scores[self.variant_col_name].index(variant)
+            variant_index = scores[self.variant_col_name].index(variant_detail)
             for native, output in self.config.columns.items():
                 # FIXME: this conversion should come from schema
                 val = scores[native][variant_index]
@@ -74,17 +70,7 @@ class FrequencyAnnotator(VariantScoreAnnotatorBase):
                         f"DAE frequency: aline[{output}]={aline[output]}")
 
                 except ValueError as ex:
-                    print(
-                        "problem with: ",
-                        output,
-                        chrom,
-                        pos,
-                        [val],
-                        file=sys.stderr,
-                    )
+                    logger.error(
+                        f"problem with: {output}: {chrom}:{pos} - {val}")
+                    logger.error(ex)
                     raise ex
-        # else:
-        #     print('{}: frequency score not found for variant {}:{} {}'.
-        #           format(self.score_filename_base,
-        #                  str(chrom), str(pos), str(variant)),
-        #           file=sys.stderr)

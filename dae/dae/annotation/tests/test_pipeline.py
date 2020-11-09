@@ -64,11 +64,13 @@ def test_build_pipeline(
     cap_df = expected_df(captured.out)
 
     pd.testing.assert_frame_equal(
-        cap_df, expected_df(expected), check_less_precise=3, check_names=False
+        cap_df, expected_df(expected),
+        rtol=10e-3,
+        check_names=False
     )
 
 
-def dummy_variant_annotate(annotator, aline, variant):
+def dummy_variant_annotate(annotator, aline, variant, liftover_variants):
     aline["changed_chrom"] = "test"
     aline["changed_position"] = 42
 
@@ -119,6 +121,6 @@ def test_pipeline_change_variants_position(
     pd.testing.assert_frame_equal(
         expected_df(captured.out),
         expected_df(expected_change_variants_position),
-        check_less_precise=3,
+        rtol=10e-3,
         check_names=False,
     )
