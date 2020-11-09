@@ -87,7 +87,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
   @Input() gene: Gene;
   @Input() variantsArray: GeneViewSummaryVariantsArray;
   @Input() streamingFinished$: Subject<boolean>;
-  @Output() updateShownTablePreviewVariantsArrayEvent = new EventEmitter<DomainRange>();
+  @Output() updateShownTablePreviewVariantsArrayEvent = new EventEmitter<[DomainRange, string[]]>();
 
   geneBrowserConfig;
   frequencyDomainMin: number;
@@ -95,6 +95,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
   condenseIntrons: boolean;
 
   summaryVariantsArray: GeneViewSummaryVariantsArray;
+  filteredSummaryVariantsArray: GeneViewSummaryVariantsArray;
 
   options = {
     margin: { top: 10, right: 50, left: 180, bottom: 0 },
@@ -194,6 +195,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
 
     this.streamingFinished$.subscribe(() => {
       this.summaryVariantsArray = this.variantsArray;
+      this.filteredSummaryVariantsArray = this.variantsArray;
       this.setDefaultScale();
       this.updateFamilyVariantsTable();
       this.drawPlot();
@@ -476,7 +478,8 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     const start = this.zoomHistory.currentState.yMin;
     const end = this.zoomHistory.currentState.yMax;
     const domains = new DomainRange(start, end);
-    this.updateShownTablePreviewVariantsArrayEvent.emit(domains);
+    const summaryVariantIds = this.filteredSummaryVariantsArray.summaryVariants.map(sv => sv.svuid);
+    this.updateShownTablePreviewVariantsArrayEvent.emit([domains, summaryVariantIds]);
   }
 
   drawPlot() {
@@ -486,6 +489,8 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     const filteredSummaryVariants = this.filterSummaryVariantsArray(
       this.summaryVariantsArray, minDomain, maxDomain
     );
+    this.filteredSummaryVariantsArray = filteredSummaryVariants;
+
     this.geneTableStats.selectedSummaryVariants = filteredSummaryVariants.summaryVariants.length;
     this.geneTableStats.selectedFamilyVariants = filteredSummaryVariants.summaryVariants.reduce(
       (a, b) => a + b.numberOfFamilyVariants, 0

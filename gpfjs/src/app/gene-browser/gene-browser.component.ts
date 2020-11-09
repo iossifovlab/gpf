@@ -100,18 +100,23 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
     });
   }
 
-  updateShownTablePreviewVariantsArray($event: DomainRange) {
+  updateShownTablePreviewVariantsArray($event: [DomainRange, string[]]) {
     this.familyLoadingFinished = false;
+
+    const domainRange = $event[0];
+    const summaryVariantIds = $event[1];
+
     this.getCurrentState().subscribe(state => {
       const requestParams = this.transformFamilyVariantsQueryParameters(state, this.selectedGene);
       requestParams['maxVariantsCount'] = this.maxFamilyVariants;
       requestParams['genomicScores'] = [{
         'metric': this.geneBrowserConfig.frequencyColumn,
-        'rangeStart': $event.start > 0 ? $event.start : null,
-        'rangeEnd': $event.end
+        'rangeStart': domainRange.start > 0 ? domainRange.start : null,
+        'rangeEnd': domainRange.end
       }];
+      requestParams['summaryVariantIds'] = summaryVariantIds;
       this.genotypePreviewVariantsArray =
-        this.queryService.getGenotypePreviewVariantsByFilter(requestParams, this.genotypePreviewInfo);
+        this.queryService.getGenotypePreviewVariantsWithSummaryIdFilter(requestParams, this.genotypePreviewInfo);
     });
   }
 
