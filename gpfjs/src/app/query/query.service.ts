@@ -10,7 +10,7 @@ const oboe = require('oboe');
 import { environment } from 'environments/environment';
 import { QueryData } from './query';
 import { ConfigService } from '../config/config.service';
-import { GenotypePreviewInfo, GenotypePreviewVariantsArray } from '../genotype-preview-model/genotype-preview';
+import { GenotypePreview, GenotypePreviewInfo, GenotypePreviewVariantsArray } from '../genotype-preview-model/genotype-preview';
 import { GeneViewSummaryVariantsArray } from '../gene-view/gene';
 
 @Injectable()
@@ -125,13 +125,40 @@ export class QueryService {
     filter: QueryData, genotypePreviewInfo: GenotypePreviewInfo, loadingService?: any, maxVariantsCount: number = 1001
   ): GenotypePreviewVariantsArray {
     const genotypePreviewVariantsArray = new GenotypePreviewVariantsArray();
-    const queryFilter = {...filter};
+    const queryFilter = { ...filter };
     queryFilter['maxVariantsCount'] = maxVariantsCount;
 
     this.streamPost(this.genotypePreviewVariantsUrl, queryFilter).subscribe(variant => {
       this.parseGenotypePreviewVariantsResponse(variant, genotypePreviewInfo, genotypePreviewVariantsArray);
       if (loadingService) {
         loadingService.setLoadingStop(); // Stop the loading overlay when at least one variant has been loaded
+      }
+    });
+
+    return genotypePreviewVariantsArray;
+  }
+
+  getGenotypePreviewVariantsWithSummaryIdFilter(
+    filter: QueryData, genotypePreviewInfo: GenotypePreviewInfo, loadingService?: any, maxVariantsCount: number = 1001
+  ): GenotypePreviewVariantsArray {
+    const genotypePreviewVariantsArray = new GenotypePreviewVariantsArray();
+    const queryFilter = { ...filter };
+    const summaryVariantIds = new Set(filter['summaryVariantIds']);
+
+    function filterVariantBySummaryId(variant: any) {
+      const genotypePreview = GenotypePreview.fromJson(variant, genotypePreviewInfo.columns);
+      const svid = `${genotypePreview.get('variant.location')}:${genotypePreview.get('variant.variant')}`
+      return summaryVariantIds.has(svid);
+    }
+
+    queryFilter['maxVariantsCount'] = maxVariantsCount;
+
+    this.streamPost(this.genotypePreviewVariantsUrl, queryFilter).subscribe(variant => {
+      if (variant && filterVariantBySummaryId(variant)) {
+        this.parseGenotypePreviewVariantsResponse(variant, genotypePreviewInfo, genotypePreviewVariantsArray);
+        if (loadingService) {
+          loadingService.setLoadingStop(); // Stop the loading overlay when at least one variant has been loaded
+        }
       }
     });
 
