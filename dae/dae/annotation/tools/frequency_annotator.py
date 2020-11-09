@@ -28,6 +28,9 @@ class FrequencyAnnotator(VariantScoreAnnotatorBase):
         super(FrequencyAnnotator, self).collect_annotator_schema(schema)
 
     def do_annotate(self, aline, variant, liftover_variants):
+        if self.liftover:
+            variant = liftover_variants.get(self.liftover)
+
         if variant is None:
             self._scores_not_found(aline)
             return

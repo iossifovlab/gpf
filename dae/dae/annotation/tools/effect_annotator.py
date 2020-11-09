@@ -12,7 +12,7 @@ from dae.annotation.tools.annotator_base import VariantAnnotatorBase
 
 
 class EffectAnnotatorBase(VariantAnnotatorBase):
-    COLUMNS_SCHEMA: List[Tuple[str,str]] = []
+    COLUMNS_SCHEMA: List[Tuple[str, str]] = []
 
     def __init__(self, config, genomes_db, **kwargs):
         super(EffectAnnotatorBase, self).__init__(config, genomes_db)

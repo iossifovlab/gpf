@@ -109,8 +109,8 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
             return float(score)
 
     def do_annotate(self, aline, variant, liftover_variants):
-        if self.liftover and liftover_variants.get(self.liftover):
-            variant = liftover_variants[self.liftover]
+        if self.liftover:
+            variant = liftover_variants.get(self.liftover)
 
         if variant is None:
             self._scores_not_found(aline)
@@ -203,8 +203,8 @@ class NPScoreAnnotator(VariantScoreAnnotatorBase):
         return res
 
     def do_annotate(self, aline, variant, liftover_variants):
-        if self.liftover and liftover_variants.get(self.liftover):
-            variant = liftover_variants[self.liftover]
+        if self.liftover:
+            variant = liftover_variants.get(self.liftover)
 
         if variant is None:
             self._scores_not_found(aline)

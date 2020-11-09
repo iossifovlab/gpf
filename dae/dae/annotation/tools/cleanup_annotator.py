@@ -17,7 +17,7 @@ class CleanupAnnotator(VariantAnnotatorBase):
             if column in annotation_line:
                 del annotation_line[column]
 
-    def do_annotate(self, aline, variant):
+    def do_annotate(self, aline, variant, liftover_variants):
         for column in self.cleanup_columns:
             if column in aline:
                 del aline[column]
