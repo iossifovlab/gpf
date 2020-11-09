@@ -10,8 +10,8 @@ from dae.gene.denovo_gene_set_collection_factory import (
 
 
 class DenovoGeneSetsDb:
-    def __init__(self, variants_db):
-        self.variants_db = variants_db
+    def __init__(self, gpf_instance):
+        self.gpf_instance = gpf_instance
         self._denovo_gene_set_collections_cache = dict()
         self._denovo_gene_set_configs_cache = dict()
 
@@ -32,12 +32,13 @@ class DenovoGeneSetsDb:
 
     def _load_cache(self):
         for genotype_data_id in self.get_genotype_data_ids():
-            genotype_data_study = self.variants_db.get(genotype_data_id)
+            genotype_data_study = \
+                self.gpf_instance.get_genotype_data(genotype_data_id)
             assert genotype_data_study is not None, genotype_data_id
 
-            denovo_gene_set_collection = DenovoGeneSetCollectionFactory.load_collection(
-                genotype_data_study
-            )
+            denovo_gene_set_collection = \
+                DenovoGeneSetCollectionFactory.load_collection(
+                    genotype_data_study)
 
             self._denovo_gene_set_configs_cache[
                 genotype_data_id
@@ -48,7 +49,8 @@ class DenovoGeneSetsDb:
 
     def _build_cache(self, genotype_data_ids):
         for genotype_data_id in genotype_data_ids:
-            genotype_data_study = self.variants_db.get(genotype_data_id)
+            genotype_data_study = \
+                self.gpf_instance.get_genotype_data(genotype_data_id)
             assert genotype_data_study is not None, genotype_data_id
             DenovoGeneSetCollectionFactory.build_collection(
                 genotype_data_study
@@ -77,10 +79,11 @@ class DenovoGeneSetsDb:
 
     @cached
     def get_genotype_data_ids(self):
-        genotype_data_ids = set(self.variants_db.get_all_ids())
+        genotype_data_ids = set(self.gpf_instance.get_genotype_data_ids())
         result = set()
         for genotype_data_id in genotype_data_ids:
-            gtd_config = self.variants_db.get_config(genotype_data_id)
+            gtd_config = \
+                self.gpf_instance.get_genotype_data_config(genotype_data_id)
             if (
                 gtd_config.denovo_gene_sets
                 and gtd_config.denovo_gene_sets.enabled

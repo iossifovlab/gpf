@@ -19,5 +19,5 @@ def impala_genotype_storage(genotype_storage_factory):
 
 
 @pytest.fixture(scope="session")
-def quads_f1_vcf_config(variants_db_fixture):
-    return variants_db_fixture.get_study_config("quads_f1")
+def quads_f1_vcf_config(fixtures_gpf_instance):
+    return fixtures_gpf_instance.get_genotype_data_config("quads_f1")

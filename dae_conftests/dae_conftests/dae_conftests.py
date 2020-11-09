@@ -818,23 +818,23 @@ def test_fixture():
     print("end")
 
 
-@pytest.fixture(scope="session")
-def variants_db_fixture(fixtures_gpf_instance):
-    return fixtures_gpf_instance._variants_db
+# @pytest.fixture(scope="session")
+# def variants_db_fixture(fixtures_gpf_instance):
+#     return fixtures_gpf_instance._variants_db
 
 
 @pytest.fixture(scope="session")
-def calc_gene_sets(request, variants_db_fixture):
+def calc_gene_sets(request, fixtures_gpf_instance):
     genotype_data_names = ["f1_group", "f2_group", "f3_group"]
     for dgs in genotype_data_names:
-        genotype_data = variants_db_fixture.get(dgs)
+        genotype_data = fixtures_gpf_instance.get_genotype_data(dgs)
         assert genotype_data is not None
 
         DenovoGeneSetCollectionFactory.build_collection(genotype_data)
 
     def remove_gene_sets():
         for dgs in genotype_data_names:
-            genotype_data = variants_db_fixture.get(dgs)
+            genotype_data = fixtures_gpf_instance.get_genotype_data(dgs)
             # fmt:off
             cache_file = \
                 DenovoGeneSetCollectionFactory.denovo_gene_set_cache_file(

@@ -398,9 +398,9 @@ class GenotypeDataStudy(GenotypeData):
         if len(kwargs):
             # FIXME This will remain so it can be used for discovering
             # when excess kwargs are passed in order to fix such cases.
-            LOGGER.warn(
+            LOGGER.warning(
                 "received excess keyword arguments when querying variants!")
-            LOGGER.warn(
+            LOGGER.warning(
                 "kwargs received: {}".format(list(kwargs.keys())))
 
         LOGGER.info(f"study_filters: {study_filters}")

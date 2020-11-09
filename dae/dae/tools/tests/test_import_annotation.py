@@ -16,17 +16,18 @@ def test_annotation_pipeline(
     print(df)
 
     pd.testing.assert_series_equal(
-        df["score0"], df["POS"] / 1.0, check_less_precise=1, check_names=False,
+        df["score0"], df["POS"] / 1.0, 
+        rtol=10e-1, check_names=False,
     )
     pd.testing.assert_series_equal(
         df["score2"],
         df["POS"] / 100.0,
-        check_less_precise=1,
+        rtol=10e-1,
         check_names=False,
     )
     pd.testing.assert_series_equal(
         df["score4"],
         df["POS"] / 10000.0,
-        check_less_precise=1,
+        rtol=10e-1,
         check_names=False,
     )
