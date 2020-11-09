@@ -2,7 +2,6 @@ import time
 import logging
 import numpy as np
 from copy import deepcopy
-from collections import OrderedDict
 
 from dae.utils.effect_utils import EffectTypesMixin
 
@@ -111,12 +110,10 @@ class EffectRow(object):
         self.row = self._build_row()
 
     def to_dict(self):
-        return OrderedDict(
-            [
-                ("effect_type", self.effect_type),
-                ("row", [r.to_dict() for r in self.row]),
-            ]
-        )
+        return {
+            "effect_type": self.effect_type,
+            "row": [r.to_dict() for r in self.row],
+        }
 
     def count_variant(self, family_variant, family_allele):
         for effect_cell in self.row:
@@ -146,13 +143,13 @@ class EffectRow(object):
 
 class DenovoReportTable(object):
     def __init__(
-        self,
-        genotype_data,
-        denovo_variants,
-        effect_groups,
-        effect_types,
-        person_set_collection,
-    ):
+            self,
+            genotype_data,
+            denovo_variants,
+            effect_groups,
+            effect_types,
+            person_set_collection):
+
         self.genotype_data = genotype_data
         self.denovo_variants = denovo_variants
         self.families = self.genotype_data.families
@@ -167,24 +164,38 @@ class DenovoReportTable(object):
         self.effect_types = list(effect_types)
         self.effects = effect_groups + effect_types
 
-        self.columns = [person_set.name for person_set in self.person_sets]
-
         self.rows = self._build_rows()
+        self._build_column_titles()
+
+    def _build_column_titles(self):
+        column_children = {}
+        for row in self.rows:
+            assert len(row.row) == len(self.person_sets)
+            for cell in row.row:
+                person_set_children = cell.person_set_childrens
+                person_set_id = cell.person_set.id
+                if person_set_id not in column_children:
+                    column_children[person_set_id] = len(person_set_children)
+                else:
+                    count = column_children[person_set_id]
+                    assert count == len(person_set_children)
+        self.columns = []
+        for person_set in self.person_sets:
+            self.columns.append(
+                f"{person_set.name} ({column_children[person_set.id]})")
 
     def to_dict(self):
-        return OrderedDict(
-            [
-                ("rows", [r.to_dict() for r in self.rows]),
-                ("group_name", self.person_set_collection.name),
-                ("columns", self.columns),
-                ("effect_groups", self.effect_groups),
-                ("effect_types", self.effect_types),
-            ]
-        )
+        return {
+            "rows": [r.to_dict() for r in self.rows],
+            "group_name": self.person_set_collection.name,
+            "columns": self.columns,
+            "effect_groups": self.effect_groups,
+            "effect_types": self.effect_types,
+        }
 
     def _remove_empty_columns(self, indexes):
         for index in sorted(indexes, reverse=True):
-            self.columns.pop(index)
+            self.person_sets.pop(index)
 
     def _remove_empty_rows(self, effect_rows):
         for effect_row in effect_rows:
@@ -274,7 +285,7 @@ class DenovoReport(object):
         print(f"DENOVO REPORTS build " f"in {elapsed:.2f} sec")
 
     def to_dict(self):
-        return OrderedDict([("tables", [t.to_dict() for t in self.tables])])
+        return {"tables": [t.to_dict() for t in self.tables]}
 
     def _build_tables(self):
         if len(self.denovo_variants) == 0:
