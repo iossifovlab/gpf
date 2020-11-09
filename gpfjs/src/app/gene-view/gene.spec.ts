@@ -308,43 +308,42 @@ describe('GeneViewSummaryVariant', () => {
     expect(testSummaryVariant.isSynonymous()).toBeTruthy();
   });
 
-  // Needs to be finished
-  // it('Should create correct comparison value', () => {
-  //   const correctOrder = [
-  //     [false, 'synonymous', true, true],
-  //     [false, 'synonymous', false, true],
-  //     [false, 'synonymous', true, false],
-  //     [false, 'missense', true, true],
-  //     [false, 'missense', false, true],
-  //     [false, 'missense', true, false],
-  //     [false, 'lgds', true, true],
-  //     [false, 'lgds', false, true],
-  //     [false, 'lgds', true, false],
-  //     [true, 'synonymous', true, true],
-  //     [true, 'synonymous', false, true],
-  //     [true, 'synonymous', true, false],
-  //     [true, 'missense', true, true],
-  //     [true, 'missense', false, true],
-  //     [true, 'missense', true, false],
-  //     [true, 'lgds', true, true],
-  //     [true, 'lgds', false, true],
-  //     [true, 'lgds', true, false],
-  //   ];
+  it('Should create correct comparison value', () => {
+    const correctOrder = [
+      [false, 'synonymous', true, true],
+      [false, 'synonymous', false, true],
+      [false, 'synonymous', true, false],
+      [false, 'missense', true, true],
+      [false, 'missense', false, true],
+      [false, 'missense', true, false],
+      [false, 'lgds', true, true],
+      [false, 'lgds', false, true],
+      [false, 'lgds', true, false],
+      [true, 'synonymous', true, true],
+      [true, 'synonymous', false, true],
+      [true, 'synonymous', true, false],
+      [true, 'missense', true, true],
+      [true, 'missense', false, true],
+      [true, 'missense', true, false],
+      [true, 'lgds', true, true],
+      [true, 'lgds', false, true],
+      [true, 'lgds', true, false],
+    ];
 
-  //   console.log(correctOrder[0][1]);
-  //   const length = 18;
-  //   const testSummaryVariants = Array<GeneViewSummaryVariant>();
-  //   for (let i = 0; i < length; i++) {
-  //     testSummaryVariants[i].seenAsDenovo = correctOrder[i][0];
-  //     testSummaryVariants[i].effect = correctOrder[i][1];
-  //     testSummaryVariants[i].seenInAffected = correctOrder[i][2];
-  //     testSummaryVariants[i].seenInUnaffected = correctOrder[i][3];
-  //   }
+    const length = 18;
+    const testSummaryVariants = Array<GeneViewSummaryVariant>();
+    for (let i = 0; i < length; i++) {
+      testSummaryVariants[i] = new GeneViewSummaryVariant();
+      testSummaryVariants[i].seenAsDenovo = correctOrder[i][0] as boolean;
+      testSummaryVariants[i].effect = correctOrder[i][1] as string;
+      testSummaryVariants[i].seenInAffected = correctOrder[i][2] as boolean;
+      testSummaryVariants[i].seenInUnaffected = correctOrder[i][3] as boolean;
+    }
 
-  //   for (let i = 0; i < length - 1; i++) {
-  //     expect(
-  //       testSummaryVariants[i].comparisonValue() < testSummaryVariants[i + 1].comparisonValue()
-  //     ).toBeTruthy();
-  //   }
-  // });
+    for (let i = 0; i < length - 1; i++) {
+      expect(
+        testSummaryVariants[i].comparisonValue < testSummaryVariants[i + 1].comparisonValue
+      ).toBeTruthy();
+    }
+  });
 });
