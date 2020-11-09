@@ -125,7 +125,7 @@ export class QueryService {
     filter: QueryData, genotypePreviewInfo: GenotypePreviewInfo, loadingService?: any, maxVariantsCount: number = 1001
   ): GenotypePreviewVariantsArray {
     const genotypePreviewVariantsArray = new GenotypePreviewVariantsArray();
-    const queryFilter = {...filter};
+    const queryFilter = { ...filter };
     queryFilter['maxVariantsCount'] = maxVariantsCount;
 
     this.streamPost(this.genotypePreviewVariantsUrl, queryFilter).subscribe(variant => {
@@ -142,12 +142,13 @@ export class QueryService {
     filter: QueryData, genotypePreviewInfo: GenotypePreviewInfo, loadingService?: any, maxVariantsCount: number = 1001
   ): GenotypePreviewVariantsArray {
     const genotypePreviewVariantsArray = new GenotypePreviewVariantsArray();
-    const queryFilter = {...filter};
-    const summaryVariantIds = filter['summaryVariantIds'];
+    const queryFilter = { ...filter };
+    const summaryVariantIds = new Set(filter['summaryVariantIds']);
 
     function filterVariantBySummaryId(variant: any) {
       const genotypePreview = GenotypePreview.fromJson(variant, genotypePreviewInfo.columns);
-      return summaryVariantIds.indexOf(`${genotypePreview.get('variant.location')}:${genotypePreview.get('variant.variant')}`) !== -1;
+      const svid = `${genotypePreview.get('variant.location')}:${genotypePreview.get('variant.variant')}`
+      return summaryVariantIds.has(svid);
     }
 
     queryFilter['maxVariantsCount'] = maxVariantsCount;

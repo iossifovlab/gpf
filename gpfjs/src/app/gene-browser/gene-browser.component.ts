@@ -142,11 +142,17 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
         effects = effects.filter(et => this.codingEffectTypes.indexOf(et) >= 0);
       }
     }
+    let affectedStatus = new Set(state.affectedStatus);
+    if (affectedStatus.has("Affected and unaffected")) {
+      affectedStatus.add("Affected only");
+      affectedStatus.add("Unaffected only");
+    }
+
     const params: any = {
       'effectTypes': effects,
       'genomicScores': state.genomicScores,
       'inheritanceTypeFilter': inheritanceFilters,
-      'affectedStatus': state.affectedStatus,
+      'affectedStatus': Array.from(affectedStatus.values()),
       'geneSymbols': state.geneSymbols,
       'datasetId': state.datasetId
     };
