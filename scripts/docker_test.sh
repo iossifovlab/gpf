@@ -30,28 +30,28 @@ export MPLBACKEND=PDF
 
 cd /code/
 
-# if [[ $CLEANUP ]]; then
-#     echo "Cleaning up with reimport..."
-#     py.test -v \
-#         --cov-config /code/coveragerc \
-#         --reimport \
-#         --junitxml=./test_results/dae-junit.xml \
-#         --cov-report=html:/code/test_results/coverage.html \
-#         --cov-report=xml:/code/test_results/coverage.xml \
-#         --cov dae/ \
-#         dae/dae/
+if [[ $CLEANUP ]]; then
+    echo "Cleaning up with reimport..."
+    py.test -v \
+        --cov-config /code/coveragerc \
+        --reimport \
+        --junitxml=./test_results/dae-junit.xml \
+        --cov-report=html:/code/test_results/coverage.html \
+        --cov-report=xml:/code/test_results/coverage.xml \
+        --cov dae/ \
+        dae/dae/
 
-# else
+else
 
-#     py.test -v \
-#         --cov-config /code/coveragerc \
-#         --junitxml=./test_results/dae-junit.xml \
-#         --cov-report=html:/code/test_results/coverage.html \
-#         --cov-report=xml:/code/test_results/coverage.xml \
-#         --cov dae/ \
-#         dae/dae/
+    py.test -v \
+        --cov-config /code/coveragerc \
+        --junitxml=./test_results/dae-junit.xml \
+        --cov-report=html:/code/test_results/coverage.html \
+        --cov-report=xml:/code/test_results/coverage.xml \
+        --cov dae/ \
+        dae/dae/
 
-# fi
+fi
 
 cd /code/
 
