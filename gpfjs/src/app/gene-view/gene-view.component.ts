@@ -8,7 +8,7 @@ import { drawRect, drawLine, drawHoverText, drawStar, drawCircle, drawTriangle, 
 import { GeneViewTranscript, GeneViewModel } from 'app/gene-view/gene-view';
 import { QueryStateProvider, QueryStateWithErrorsProvider } from 'app/query/query-state-provider';
 
-class GeneViewScaleState {
+export class GeneViewScaleState {
   constructor(
     public xDomain: number[],
     public yMin: number,
@@ -25,7 +25,7 @@ class GeneViewScaleState {
   }
 }
 
-class GeneViewZoomHistory {
+export class GeneViewZoomHistory {
   private zoomHistory: GeneViewScaleState[];
   private zoomHistoryIndex: number;
 
