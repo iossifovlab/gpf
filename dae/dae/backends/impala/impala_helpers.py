@@ -85,6 +85,7 @@ class ImpalaHelpers(object):
         coding_effect_types = ",".join(
             partition_description.coding_effect_types
         )
+        coding_effect_types = coding_effect_types.replace("'", "\\'")
         cursor.execute(
             f"ALTER TABLE {db}.{table} "
             "SET TBLPROPERTIES("
