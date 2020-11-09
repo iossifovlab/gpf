@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from dae.variants.variant import SummaryAllele
+from dae.utils.variant_utils import liftover_variant
 import gzip
 
 import os
@@ -18,26 +20,6 @@ class LiftOverAnnotator(VariantAnnotatorBase):
     def __init__(self, config, genomes_db):
         super(LiftOverAnnotator, self).__init__(config, genomes_db)
 
-        self.chrom = self.config.options.c
-        self.pos = self.config.options.p
-        if not self.config.options.vcf:
-            self.location = self.config.options.x
-        else:
-            self.location = None
-            assert self.chrom is not None
-            assert self.pos is not None
-
-        self.strand = self.config.options.get("s")
-
-        self.columns = self.config.columns
-        assert self.columns.new_x or (
-            self.columns.new_c and self.columns.new_p
-        )
-        logger.debug(
-            f"columns: chrom={self.chrom}; pos={self.pos}; "
-            f"strand={self.strand}")
-        logger.info(
-            f"new columns are: {self.columns}")
 
         assert self.config.options.liftover
         self.liftover_id = self.config.options.liftover
@@ -73,71 +55,28 @@ class LiftOverAnnotator(VariantAnnotatorBase):
 
         return open_ref(genome_filename)
 
-    def do_annotate(self, aline, variant, liftover_variants):
-        liftover_pos = None
-        if self.location and self.location in aline:
-            location = aline[self.location]
-            chrom, pos = location.split(":")
-            pos = int(pos)
-            liftover_pos = pos - 1
-        else:
-            chrom = aline[self.chrom]
-            pos = aline[self.pos]
-            if pos is not None:
-                pos = int(pos)
-                liftover_pos = pos - 1
-        strand = aline.get(self.strand, "+")
+    def liftover_variant(self, variant):
+        assert isinstance(variant, SummaryAllele)
 
-        if liftover_pos is None:
-            logger.info(
-                f"source liftover position is {liftover_pos}; "
-                f"can't liftover...")
+        lo_variant = liftover_variant(
+            variant.chrom, variant.position,
+            variant.reference, variant.alternative,
+            self.liftover, self.target_genome)
+
+        if lo_variant is None:
             return
 
-        # positions = [int(p) - 1 for p in position.split('-')]
-        converted_coordinates = self.lift_over.convert_coordinate(
-            chrom, liftover_pos, strand)
+        lo_chrom, lo_pos, lo_ref, lo_alt = lo_variant
+        result = SummaryAllele(lo_chrom, lo_pos, lo_ref, lo_alt)
+        return result
 
-        logger.debug(
-            f"source coordinates: {chrom}:{liftover_pos}, {strand}; "
-            f"liftover corrdinates ({len(converted_coordinates)}): "
-            f"{converted_coordinates}")
+    def do_annotate(self, _, variant, liftover_variants):
+        assert self.liftover_id not in liftover_variants
+        assert variant is not None
 
-        if converted_coordinates is None:
+        lo_variant = self.liftover_variant(variant)
+        if lo_variant is None:
             logger.info(
-                f"position: chrom={chrom}; pos={pos}, (0-pos={liftover_pos}) "
-                f"can not be converted into target reference genome")
-            new_c = None
-            new_p = None
-            new_x = None
-            new_s = None
-
-        elif len(converted_coordinates) == 0:
-            logger.info(
-                f"position: chrom={chrom}; pos={pos}, (0-pos={liftover_pos})"
-                f"can not be converted into target reference genome")
-            new_c = None
-            new_p = None
-            new_x = None
-            new_s = None
-        else:
-            if len(converted_coordinates) > 1:
-                logger.info(
-                    f"position: chrom={chrom}; pos={pos}; "
-                    f"can not be converted into target reference genome; "
-                    f"has more than one corresponding position "
-                    f"into target reference genome {converted_coordinates}")
-
-            new_c = converted_coordinates[0][0]
-            new_p = converted_coordinates[0][1] + 1
-            new_s = converted_coordinates[0][2]
-            new_x = "{}:{}".format(new_c, new_p)
-
-        if self.columns.new_x:
-            aline[self.columns.new_x] = new_x
-        if self.columns.new_c:
-            aline[self.columns.new_c] = new_c
-        if self.columns.new_p:
-            aline[self.columns.new_p] = new_p
-        if self.columns.new_s:
-            aline[self.columns.new_s] = new_s
+                f"can not liftover variant: {variant}")
+            return
+        liftover_variants[self.liftover_id] = lo_variant

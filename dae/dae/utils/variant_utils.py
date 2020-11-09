@@ -221,7 +221,10 @@ def liftover_variant(chrom, pos, ref, alt, lo, target_genome):
     if not lo_coordinates:
         return None
     if len(lo_coordinates) > 1:
-        print("Warning....")
+        logger.warning(
+            f"liftover variants returns more than one target position: "
+            f"{lo_coordinates}")
+
     lo_chrom, lo_pos, lo_strand, _ = lo_coordinates[0]
 
     if lo_strand == "+" or len(ref) == len(alt):

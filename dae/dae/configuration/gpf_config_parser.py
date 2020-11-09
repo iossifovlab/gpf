@@ -102,8 +102,9 @@ class GPFConfigParser:
 
     @classmethod
     def load_config(
-        cls, filename: str, schema: dict, default_config_filename: str = None
-    ) -> NamedTuple:
+            cls, filename: str, schema: dict,
+            default_config_filename: str = None) -> NamedTuple:
+
         assert os.path.exists(filename), f"{filename} does not exist!"
 
         validator = GPFConfigValidator(
@@ -127,8 +128,8 @@ class GPFConfigParser:
 
     @classmethod
     def load_directory_configs(
-        cls, dirname: str, schema: dict, default_config_filename: str = None
-    ) -> List[Box]:
+            cls, dirname: str, schema: dict,
+            default_config_filename: str = None) -> List[Box]:
         return [
             cls.load_config(config_path, schema, default_config_filename)
             for config_path in cls._collect_directory_configs(dirname)
@@ -136,6 +137,6 @@ class GPFConfigParser:
 
     @classmethod
     def modify_tuple(
-            cls, t: Box, new_values: Dict[str, Any]
-    ) -> Box:
+            cls, t: Box, new_values: Dict[str, Any]) -> Box:
+
         return FrozenBox(recursive_dict_update(t.to_dict(), new_values))
