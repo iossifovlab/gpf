@@ -70,57 +70,57 @@ def test_build_pipeline(
     )
 
 
-def dummy_variant_annotate(annotator, aline, variant, liftover_variants):
-    aline["changed_chrom"] = "test"
-    aline["changed_position"] = 42
+# def dummy_variant_annotate(annotator, aline, variant, liftover_variants):
+#     aline["changed_chrom"] = "test"
+#     aline["changed_position"] = 42
 
 
-@pytest.fixture(autouse=True)
-def mock(mocker):
-    mocker.patch.object(
-        VariantAnnotatorBase, "do_annotate", new=dummy_variant_annotate
-    )
+# @pytest.fixture(autouse=True)
+# def mock(mocker):
+#     mocker.patch.object(
+#         VariantAnnotatorBase, "do_annotate", new=dummy_variant_annotate
+#     )
 
 
-expected_change_variants_position = (
-    """test_copy_chr	test_copy_pos	test_vcf_chr	"""
-    """test_vcf_pos	test_cshl_chr	test_cshl_pos
-test	42	test	42	test	42
-test	42	test	42	test	42
-test	42	test	42	test	42
-test	42	test	42	test	42
-test	42	test	42	test	42
-"""
-)
+# expected_change_variants_position = (
+#     """test_copy_chr	test_copy_pos	test_vcf_chr	"""
+#     """test_vcf_pos	test_cshl_chr	test_cshl_pos
+# test	42	test	42	test	42
+# test	42	test	42	test	42
+# test	42	test	42	test	42
+# test	42	test	42	test	42
+# test	42	test	42	test	42
+# """
+# )
 
 
-def test_pipeline_change_variants_position(
-    variants_io, capsys, expected_df, genomes_db_2013
-):
+# def test_pipeline_change_variants_position(
+#     variants_io, capsys, expected_df, genomes_db_2013
+# ):
 
-    options = {
-        "default_arguments": None,
-        "vcf": True,
-        "mode": "overwrite",
-    }
+#     options = {
+#         "default_arguments": None,
+#         "vcf": True,
+#         "mode": "overwrite",
+#     }
 
-    filename = relative_to_this_test_folder(
-        "fixtures/variant_coordinates_change.conf"
-    )
+#     filename = relative_to_this_test_folder(
+#         "fixtures/variant_coordinates_change.conf"
+#     )
 
-    with variants_io("fixtures/input2.tsv") as io_manager:
-        pipeline = PipelineAnnotator.build(options, filename, genomes_db_2013,)
-        assert pipeline is not None
+#     with variants_io("fixtures/input2.tsv") as io_manager:
+#         pipeline = PipelineAnnotator.build(options, filename, genomes_db_2013,)
+#         assert pipeline is not None
 
-        pipeline.annotate_file(io_manager)
-    captured = capsys.readouterr()
+#         pipeline.annotate_file(io_manager)
+#     captured = capsys.readouterr()
 
-    print(captured.err)
-    print(captured.out)
+#     print(captured.err)
+#     print(captured.out)
 
-    pd.testing.assert_frame_equal(
-        expected_df(captured.out),
-        expected_df(expected_change_variants_position),
-        rtol=10e-3,
-        check_names=False,
-    )
+#     pd.testing.assert_frame_equal(
+#         expected_df(captured.out),
+#         expected_df(expected_change_variants_position),
+#         rtol=10e-3,
+#         check_names=False,
+#     )
