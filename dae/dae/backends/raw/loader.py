@@ -192,8 +192,8 @@ class AnnotationDecorator(VariantsLoaderDecorator):
 
             for summary_variant, _ in variants_loader.full_variants_iterator():
                 for allele_index, summary_allele in enumerate(
-                    summary_variant.alleles
-                ):
+                        summary_variant.alleles):
+
                     line = []
                     rec = summary_allele.attributes
                     rec["allele_index"] = allele_index
@@ -226,8 +226,9 @@ class AnnotationPipelineDecorator(AnnotationDecorator):
     def full_variants_iterator(self):
         for (summary_variant, family_variants) in \
                 self.variants_loader.full_variants_iterator():
-
-            self.annotation_pipeline.annotate_summary_variant(summary_variant)
+            liftover_variants = {}
+            self.annotation_pipeline.annotate_summary_variant(
+                summary_variant, liftover_variants)
             yield summary_variant, family_variants
 
 

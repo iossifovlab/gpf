@@ -45,7 +45,11 @@ def test_lift_over(mocker, chrom, pos, lift_over, expected, genomes_db_2013):
     )
     mocker.patch(
         "dae.annotation.tools.lift_over_annotator."
-        "LiftOverAnnotator.build_liftover")
+        "LiftOverAnnotator.load_liftover_chain")
+
+    mocker.patch(
+        "dae.annotation.tools.lift_over_annotator."
+        "LiftOverAnnotator.load_target_genome")
 
     annotator = LiftOverAnnotator(config, genomes_db_2013)
     assert annotator is not None
@@ -63,6 +67,7 @@ def test_lift_over(mocker, chrom, pos, lift_over, expected, genomes_db_2013):
 
     assert "hg19_location" in aline
     assert aline["hg19_location"] == expected
+    # assert "lo1" in liftover_variants
 
 
 @pytest.mark.parametrize(
@@ -92,7 +97,10 @@ def test_pipeline_with_liftover(
 
     mocker.patch(
         "dae.annotation.tools.lift_over_annotator."
-        "LiftOverAnnotator.build_liftover")
+        "LiftOverAnnotator.load_liftover_chain")
+    mocker.patch(
+        "dae.annotation.tools.lift_over_annotator."
+        "LiftOverAnnotator.load_target_genome")
 
     pipeline = PipelineAnnotator.build(options, filename, genomes_db_2013,)
     assert pipeline is not None

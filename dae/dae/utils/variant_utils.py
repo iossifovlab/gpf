@@ -187,8 +187,9 @@ def get_locus_ploidy(
 
 
 def get_interval_locus_ploidy(
-    chrom: str, pos_start: int, pos_end: int, sex: Sex, genome: Genome
-) -> int:
+        chrom: str, pos_start: int, pos_end: int,
+        sex: Sex, genome: Genome) -> int:
+
     start_ploidy = get_locus_ploidy(chrom, pos_start, sex, genome)
     end_ploidy = get_locus_ploidy(chrom, pos_end, sex, genome)
     return max(start_ploidy, end_ploidy)
