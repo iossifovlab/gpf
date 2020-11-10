@@ -3,6 +3,10 @@
 
 import sys
 import os
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 class GenomicSequence:
@@ -76,7 +80,7 @@ class GenomicSequence:
         try:
             return self._indexing[chrom]["length"]
         except KeyError:
-            print("Unknown chromosome!", chrom, file=sys.stderr)
+            logger.warning(f"unknown chromosome: {chrom}")
             return None
 
     def get_all_chrom_lengths(self):
@@ -87,8 +91,8 @@ class GenomicSequence:
 
     def get_sequence(self, chrom, start, stop):
         if chrom not in self.chromosomes:
-            print("Unknown chromosome!", chrom, file=sys.stderr)
-            return -1
+            logger.warning(f"unknown chromosome: {chrom}")
+            return None
 
         self.__f.seek(
             self._indexing[chrom]["startBit"]

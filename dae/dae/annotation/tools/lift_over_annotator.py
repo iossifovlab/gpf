@@ -58,6 +58,7 @@ class LiftOverAnnotator(VariantAnnotatorBase):
 
         lo_chrom, lo_pos, lo_ref, lo_alt = lo_variant
         result = SummaryAllele(lo_chrom, lo_pos, lo_ref, lo_alt)
+
         return result
 
     def do_annotate(self, _, variant, liftover_variants):

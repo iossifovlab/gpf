@@ -173,7 +173,6 @@ def cshl_format(pos, ref, alt, trimmer=trim_str_front):
 
 def vcf2cshl(pos, ref, alt, trimmer=trim_str_front):
     vp, vt, vl = cshl_format(pos, ref, alt, trimmer=trimmer)
-
     return vp, vt, vl
 
 
@@ -221,9 +220,9 @@ def liftover_variant(chrom, pos, ref, alt, lo, target_genome):
     if not lo_coordinates:
         return None
     if len(lo_coordinates) > 1:
-        logger.warning(
-            f"liftover variants returns more than one target position: "
-            f"{lo_coordinates}")
+        logger.info(
+            f"liftover_variant: liftover returns more than one target "
+            f"position: {lo_coordinates}")
 
     lo_chrom, lo_pos, lo_strand, _ = lo_coordinates[0]
 
@@ -237,6 +236,10 @@ def liftover_variant(chrom, pos, ref, alt, lo, target_genome):
 
     lo_ref = target_genome.get_sequence(
         lo_chrom, lo_pos, lo_pos + len(ref) - 1)
+    if lo_ref is None:
+        logger.warning(
+            f"can't find genomic sequence for {lo_chrom}:{lo_pos}")
+        return None
 
     lo_alt = alt
     if lo_strand == "-":
