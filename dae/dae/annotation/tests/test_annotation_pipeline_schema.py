@@ -10,7 +10,7 @@ def test_pipeline_schema(genomes_db_2013):
     filename = relative_to_this_test_folder("fixtures/import_annotation.conf")
 
     options = Box(
-        {"default_arguments": None, "mode": "overwrite",},
+        {"default_arguments": None, "mode": "overwrite", },
         default_box=True,
         default_box_attr=None,
     )
