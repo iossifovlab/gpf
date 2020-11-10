@@ -9,7 +9,6 @@ import logging
 
 from pyliftover import LiftOver
 from dae.annotation.tools.annotator_base import VariantAnnotatorBase
-from dae.annotation.tools.schema import Schema
 from dae.genome.genome_access import open_ref
 
 
@@ -19,7 +18,6 @@ logger = logging.getLogger(__name__)
 class LiftOverAnnotator(VariantAnnotatorBase):
     def __init__(self, config, genomes_db):
         super(LiftOverAnnotator, self).__init__(config, genomes_db)
-
 
         assert self.config.options.liftover
         self.liftover_id = self.config.options.liftover
@@ -31,14 +29,6 @@ class LiftOverAnnotator(VariantAnnotatorBase):
 
         logger.debug(
             f"creating liftover annotation: {self.config.options.chain_file}")
-
-    def collect_annotator_schema(self, schema):
-        super(LiftOverAnnotator, self).collect_annotator_schema(schema)
-        for key, value in self.columns.items():
-            if key == "new_x" or key == "new_c":
-                schema.columns[value] = Schema.produce_type("str")
-            elif key == "new_p":
-                schema.columns[value] = Schema.produce_type("str")
 
     @staticmethod
     def load_liftover_chain(chain_filename):
