@@ -87,7 +87,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
   @Input() gene: Gene;
   @Input() variantsArray: GeneViewSummaryVariantsArray;
   @Input() streamingFinished$: Subject<boolean>;
-  @Output() updateShownTablePreviewVariantsArrayEvent = new EventEmitter<[DomainRange, string[]]>();
+  @Output() updateShownTablePreviewVariantsArrayEvent = new EventEmitter<DomainRange>();
 
   geneBrowserConfig;
   frequencyDomainMin: number;
@@ -95,7 +95,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
   condenseIntrons: boolean;
 
   summaryVariantsArray: GeneViewSummaryVariantsArray;
-  filteredSummaryVariantsArray: GeneViewSummaryVariantsArray;
+  filteredSummaryVariantsArray: GeneViewSummaryVariantsArray = new GeneViewSummaryVariantsArray();
 
   options = {
     margin: { top: 10, right: 50, left: 180, bottom: 0 },
@@ -230,6 +230,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
       'zoomState': this.zoomHistory.currentState,
       'showDenovo': this.showDenovo,
       'showTransmitted': this.showTransmitted,
+      'summaryVariantIds': this.filteredSummaryVariantsArray.summaryVariants.map(sv => sv.svuid),
     };
     if (state['zoomState']) {
       state['regions'] = this.geneViewModel.collapsedGeneViewTranscript.resolveRegionChromosomes(
@@ -478,8 +479,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     const start = this.zoomHistory.currentState.yMin;
     const end = this.zoomHistory.currentState.yMax;
     const domains = new DomainRange(start, end);
-    const summaryVariantIds = this.filteredSummaryVariantsArray.summaryVariants.map(sv => sv.svuid);
-    this.updateShownTablePreviewVariantsArrayEvent.emit([domains, summaryVariantIds]);
+    this.updateShownTablePreviewVariantsArrayEvent.emit(domains);
   }
 
   drawPlot() {

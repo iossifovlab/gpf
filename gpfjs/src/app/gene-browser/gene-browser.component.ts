@@ -100,23 +100,20 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
     });
   }
 
-  updateShownTablePreviewVariantsArray($event: [DomainRange, string[]]) {
+  updateShownTablePreviewVariantsArray($event: DomainRange) {
     this.familyLoadingFinished = false;
-
-    const domainRange = $event[0];
-    const summaryVariantIds = $event[1];
 
     this.getCurrentState().subscribe(state => {
       const requestParams = this.transformFamilyVariantsQueryParameters(state, this.selectedGene);
       requestParams['maxVariantsCount'] = this.maxFamilyVariants;
+      requestParams['summaryVariantIds'] = state['summaryVariantIds'];
       requestParams['genomicScores'] = [{
         'metric': this.geneBrowserConfig.frequencyColumn,
-        'rangeStart': domainRange.start > 0 ? domainRange.start : null,
-        'rangeEnd': domainRange.end
+        'rangeStart': $event.start > 0 ? $event.start : null,
+        'rangeEnd': $event.end,
       }];
-      requestParams['summaryVariantIds'] = summaryVariantIds;
       this.genotypePreviewVariantsArray =
-        this.queryService.getGenotypePreviewVariantsWithSummaryIdFilter(requestParams, this.genotypePreviewInfo);
+        this.queryService.getGenotypePreviewVariantsByFilter(requestParams, this.genotypePreviewInfo);
     });
   }
 
@@ -142,10 +139,10 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
         effects = effects.filter(et => this.codingEffectTypes.indexOf(et) >= 0);
       }
     }
-    let affectedStatus = new Set(state.affectedStatus);
-    if (affectedStatus.has("Affected and unaffected")) {
-      affectedStatus.add("Affected only");
-      affectedStatus.add("Unaffected only");
+    const affectedStatus = new Set(state.affectedStatus);
+    if (affectedStatus.has('Affected and unaffected')) {
+      affectedStatus.add('Affected only');
+      affectedStatus.add('Unaffected only');
     }
 
     const params: any = {
@@ -237,12 +234,12 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
     this.getCurrentState()
       .subscribe(
         state => {
-          console.log(state);
           const requestParams = this.transformFamilyVariantsQueryParameters(state, this.selectedGene);
+          requestParams['summaryVariantIds'] = state['summaryVariantIds'];
           requestParams['genomicScores'] = [{
             'metric': this.geneBrowserConfig.frequencyColumn,
             'rangeStart': state['zoomState'].yMin > 0 ? state['zoomState'].yMin : null,
-            'rangeEnd': state['zoomState'].yMax
+            'rangeEnd': state['zoomState'].yMax,
           }];
           event.target.queryData.value = JSON.stringify(requestParams);
           event.target.submit();
