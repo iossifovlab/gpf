@@ -1,7 +1,6 @@
 # June 6th 2013
 # by Ewa
 
-import sys
 import os
 import logging
 
