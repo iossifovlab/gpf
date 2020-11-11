@@ -102,7 +102,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     axisScale: { domain: 0.90, subdomain: 0.05 },
     exonThickness: { normal: 6.25, collapsed: 12.5 },
     cdsThickness: { normal: 12.5, collapsed: 25 },
-    xAxisTicks: 12,
+    xAxisTicks: 13,
   };
 
   svgElement;
@@ -497,7 +497,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     );
 
     if (this.gene !== undefined) {
-      this.x_axis = d3.axisBottom(this.x).tickValues(this.calculateTranscriptAxisTicks(this.geneViewModel.collapsedGeneViewTranscript));
+      this.x_axis = d3.axisBottom(this.x).tickValues(this.calculateXAxisTicks());
       this.y_axis = d3.axisLeft(this.y);
       this.y_axis_subdomain = d3.axisLeft(this.y_subdomain).tickValues([this.frequencyDomainMin / 2.0]);
       this.y_axis_zero = d3.axisLeft(this.y_zero);
@@ -605,50 +605,51 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
   brushEndEvent = () => {
     const extent = d3.event.selection;
 
+    const currentDomainMin = this.x.domain()[0];
+    const currentDomainMax = this.x.domain()[this.x.domain().length - 1];
+
     if (!extent) {
       if (!this.doubleClickTimer) {
         this.doubleClickTimer = setTimeout(this.resetDoubleClickTimer, 250);
         return;
       }
-
       this.setDefaultScale();
     } else {
-      const x1 = extent[0][0];
-      const x2 = extent[1][0];
+      if (currentDomainMax - currentDomainMin > 12) {
+        const x1 = extent[0][0];
+        const x2 = extent[1][0];
+        const domainMin = Math.round(this.x.invert(Math.min(x1, x2)));
+        const domainMax = Math.round(this.x.invert(Math.max(x1, x2)));
+        this.updateXDomain(domainMin, domainMax);
+      }
 
-      // set new frequency limits
       const newFreqLimits = [
         this.convertBrushPointToFrequency(extent[0][1]),
         this.convertBrushPointToFrequency(extent[1][1])
       ];
-
-      let domain: number[];
-      let range: number[];
-      const domainMin = Math.round(this.x.invert(Math.min(x1, x2)));
-      let domainMax = Math.round(this.x.invert(Math.max(x1, x2)));
-
-      if (domainMax - domainMin < 12) {
-        domainMax = domainMin + 12;
-      }
-
-      domain = this.geneViewModel.buildDomain(domainMin, domainMax);
-      range = this.recalculateXRange(domainMin, domainMax);
-
-      this.x = d3.scaleLinear().domain(domain).range(range).clamp(true);
-
-      if (domainMax - domainMin >= 12) {
-        this.zoomHistory.addStateToHistory(
-          new GeneViewScaleState(domain, Math.min(...newFreqLimits), Math.max(...newFreqLimits), this.condenseIntrons)
-        );
-      }
-
-      this.svgElement.select('.brush').call(this.brush.move, null);
       this.selectedFrequencies = [
         Math.min(...newFreqLimits),
         Math.max(...newFreqLimits),
       ];
+
+      this.zoomHistory.addStateToHistory(
+        new GeneViewScaleState(this.x.domain(), this.selectedFrequencies[0], this.selectedFrequencies[1], this.condenseIntrons)
+      );
+      this.svgElement.select('.brush').call(this.brush.move, null);
     }
     this.redrawAndUpdateTable();
+  }
+
+  updateXDomain(domainMin: number, domainMax: number) {
+    if (domainMax - domainMin < 12) {
+      domainMax = domainMin + 12;
+    }
+
+    this.x = d3.scaleLinear()
+      .domain(this.geneViewModel.buildDomain(domainMin, domainMax))
+      .range(this.recalculateXRange(domainMin, domainMax))
+      .clamp(true)
+      .nice();
   }
 
   historyUndo() {
@@ -734,25 +735,11 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     }
   }
 
-  calculateTranscriptAxisTicks(geneViewTranscript: GeneViewTranscript) {
-    const domain = this.x.domain();
-    const domainMin = domain[0];
-    const domainMax = domain[domain.length - 1];
-    const chromosomes = this.getSelectedChromosomes(geneViewTranscript);
+  calculateXAxisTicks() {
     const ticks = [];
-    let from: number;
-    let to: number;
-
-    for (const [chromosome, range] of Object.entries(chromosomes)) {
-      from = this.x(Math.max(range[0], domainMin));
-      to = this.x(Math.min(range[1], domainMax));
-      const increment = (to - from) / (this.options.xAxisTicks / Object.keys(chromosomes).length);
-      for (let i = from; i < to; i += increment) {
-        ticks.push(this.x.invert(i));
-      }
-      if (ticks[ticks.length - 1] !== this.x.invert(to)) {
-        ticks.push(this.x.invert(to));
-      }
+    const increment = Math.round(this.svgWidth / (this.options.xAxisTicks - 1));
+    for (let i = 0; i < this.svgWidth; i += increment) {
+      ticks.push(Math.round(this.x.invert(i)));
     }
     return ticks;
   }
