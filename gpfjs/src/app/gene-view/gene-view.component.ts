@@ -648,8 +648,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     this.x = d3.scaleLinear()
       .domain(this.geneViewModel.buildDomain(domainMin, domainMax))
       .range(this.recalculateXRange(domainMin, domainMax))
-      .clamp(true)
-      .nice();
+      .clamp(true);
   }
 
   historyUndo() {
