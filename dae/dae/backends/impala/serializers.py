@@ -579,6 +579,7 @@ class AlleleParquetSerializer:
 
         stream = io.BytesIO(main_blob)
         allele_count = read_int8(stream)
+        allele_data = {}
         for _i in range(0, allele_count):
             allele_data = self.deserialize_allele(stream)
             sa = SummaryAllele(

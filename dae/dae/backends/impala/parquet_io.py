@@ -4,6 +4,7 @@ import time
 import re
 import hashlib
 import itertools
+import logging
 
 import toml
 from box import Box
@@ -22,6 +23,9 @@ from dae.variants.family_variant import (
 )
 from dae.variants.variant import SummaryVariant, SummaryAllele
 from dae.backends.impala.serializers import AlleleParquetSerializer
+
+
+logger = logging.getLogger(__name__)
 
 
 class PartitionDescriptor:
@@ -287,7 +291,7 @@ class ParquetPartitionDescriptor(PartitionDescriptor):
             f"{p[0]}_(?P={p[0]})" for p in product
         ]
         dirname = "/".join(dirname_parts)
-        dirname = os.path.join(f"^(?P<basedir>.+)", dirname)
+        dirname = os.path.join("^(?P<basedir>.+)", dirname)
         filename = "_".join(filename_parts)
         filename = f"variants_{filename}\\.parquet$"
 
@@ -377,6 +381,7 @@ class ContinuousParquetFileWriter:
         dirname = os.path.dirname(filepath)
         if dirname and not os.path.exists(dirname):
             os.makedirs(dirname)
+        self.dirname = dirname
 
         self._writer = pq.ParquetWriter(
             filepath, self.schema, compression="snappy", filesystem=filesystem
@@ -411,13 +416,15 @@ class ContinuousParquetFileWriter:
             v.extend(data[k])
 
         if self.size() >= self.rows:
-            # print(
-            #     "serializer data flushing at len:",
-            #     self.serializer.size(), file=sys.stderr)
+            logger.info(
+                f"parquet writer {self.filepath} data flushing "
+                f"at len {self.size()}")
             self._write_table()
 
     def close(self):
-        print(f"closing parquet writer {self.filepath}", file=sys.stderr)
+        logger.info(
+            f"closing parquet writer {self.dirname} "
+            f"at len {self.size()}")
 
         if self.size() > 0:
             self._write_table()
@@ -553,8 +560,8 @@ class VariantsParquetWriter:
                     bin_writer.append_allele(
                         variant_data, extra_attributes_data, family_allele)
 
-                if family_variant_index % 1000 == 0:
-                    report = True
+            if summary_variant_index % 1000 == 0:
+                report = True
 
             if report:
                 elapsed = time.time() - self.start
@@ -562,7 +569,8 @@ class VariantsParquetWriter:
                     f"Bucket {self.bucket_index}; "
                     f"{summary_variant.chromosome}:"
                     f"{summary_variant.position}: "
-                    f"{family_variant_index} family variants imported "
+                    f"{summary_variant_index}/"
+                    f"{family_variant_index} variants imported "
                     f"for {elapsed:.2f} sec ({len(self.data_writers)} files)",
                     file=sys.stderr,
                 )
@@ -675,7 +683,7 @@ class ParquetManager:
             bucket_index=1, rows=100_000, include_reference=False):
 
         assert variants_loader.get_attribute("annotation_schema") is not None
-        print(f"variants to parquet ({rows}) sec", file=sys.stderr)
+        print(f"variants to parquet ({rows} rows)", file=sys.stderr)
 
         start = time.time()
 
