@@ -314,10 +314,24 @@ class StudyWrapper(StudyWrapperBase):
 
         return result
 
-    def query_list_variants(self, sources, person_set_collection, **kwargs):
+    def _query_variants_rows_iterator(
+            self, sources, person_set_collection, **kwargs):
+
+        if not kwargs.get("summaryVariantIds"):
+            def filter_allele(allele):
+                return True
+        else:
+            summary_variant_ids = set(kwargs.get("summaryVariantIds"))
+
+            def filter_allele(allele):
+                svid = f"{allele.cshl_location}:{allele.cshl_variant}"
+                return svid in summary_variant_ids
+
         for v in self.query_variants(**kwargs):
             for aa in v.matched_alleles:
                 assert not aa.is_reference_allele
+                if not filter_allele(aa):
+                    continue
 
                 row_variant = []
                 for source in sources:
@@ -357,17 +371,17 @@ class StudyWrapper(StudyWrapperBase):
             person_set_collection_id
         )
 
-        if max_variants_count is not None:
-            query["limit"] = max_variants_count
+        # if max_variants_count is not None:
+        #     query["limit"] = max_variants_count
 
-        rows = self.query_list_variants(
+        rows_iterator = self._query_variants_rows_iterator(
             sources, person_set_collection, **query
         )
 
         if max_variants_count is not None:
-            limited_rows = itertools.islice(rows, max_variants_count)
+            limited_rows = itertools.islice(rows_iterator, max_variants_count)
         else:
-            limited_rows = rows
+            limited_rows = rows_iterator
 
         return limited_rows
 
