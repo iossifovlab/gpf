@@ -138,33 +138,6 @@ export class QueryService {
     return genotypePreviewVariantsArray;
   }
 
-  getGenotypePreviewVariantsWithSummaryIdFilter(
-    filter: QueryData, genotypePreviewInfo: GenotypePreviewInfo, loadingService?: any, maxVariantsCount: number = 1001
-  ): GenotypePreviewVariantsArray {
-    const genotypePreviewVariantsArray = new GenotypePreviewVariantsArray();
-    const queryFilter = { ...filter };
-    const summaryVariantIds = new Set(filter['summaryVariantIds']);
-
-    function filterVariantBySummaryId(variant: any) {
-      const genotypePreview = GenotypePreview.fromJson(variant, genotypePreviewInfo.columns);
-      const svid = `${genotypePreview.get('variant.location')}:${genotypePreview.get('variant.variant')}`
-      return summaryVariantIds.has(svid);
-    }
-
-    queryFilter['maxVariantsCount'] = maxVariantsCount;
-
-    this.streamPost(this.genotypePreviewVariantsUrl, queryFilter).subscribe(variant => {
-      if (variant && filterVariantBySummaryId(variant)) {
-        this.parseGenotypePreviewVariantsResponse(variant, genotypePreviewInfo, genotypePreviewVariantsArray);
-        if (loadingService) {
-          loadingService.setLoadingStop(); // Stop the loading overlay when at least one variant has been loaded
-        }
-      }
-    });
-
-    return genotypePreviewVariantsArray;
-  }
-
   getGeneViewVariants(filter: QueryData, loadingService?: any) {
     const summaryVariantsArray = new GeneViewSummaryVariantsArray();
     this.summaryStreamPost(this.geneViewVariants, filter).subscribe((variant: string[]) => {
