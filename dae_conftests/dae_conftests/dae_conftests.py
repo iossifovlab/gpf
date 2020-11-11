@@ -1,6 +1,7 @@
 import pytest
 
 import os
+import sys
 import glob
 import shutil
 import tempfile
@@ -37,12 +38,13 @@ from dae.utils.helpers import study_id_from_path
 from dae.backends.impala.parquet_io import ParquetManager, \
     NoPartitionDescriptor
 from dae.backends.storage.impala_genotype_storage import ImpalaGenotypeStorage
-from dae.gene.denovo_gene_set_collection_factory import (
-    DenovoGeneSetCollectionFactory,
-)
+from dae.gene.denovo_gene_set_collection_factory import \
+    DenovoGeneSetCollectionFactory
 
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(
+    stream=sys.stderr, level=logging.DEBUG,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 
 # suppress impala logger
 logger = logging.getLogger("impala")
@@ -816,23 +818,23 @@ def test_fixture():
     print("end")
 
 
-@pytest.fixture(scope="session")
-def variants_db_fixture(fixtures_gpf_instance):
-    return fixtures_gpf_instance._variants_db
+# @pytest.fixture(scope="session")
+# def variants_db_fixture(fixtures_gpf_instance):
+#     return fixtures_gpf_instance._variants_db
 
 
 @pytest.fixture(scope="session")
-def calc_gene_sets(request, variants_db_fixture):
+def calc_gene_sets(request, fixtures_gpf_instance):
     genotype_data_names = ["f1_group", "f2_group", "f3_group"]
     for dgs in genotype_data_names:
-        genotype_data = variants_db_fixture.get(dgs)
+        genotype_data = fixtures_gpf_instance.get_genotype_data(dgs)
         assert genotype_data is not None
 
         DenovoGeneSetCollectionFactory.build_collection(genotype_data)
 
     def remove_gene_sets():
         for dgs in genotype_data_names:
-            genotype_data = variants_db_fixture.get(dgs)
+            genotype_data = fixtures_gpf_instance.get_genotype_data(dgs)
             # fmt:off
             cache_file = \
                 DenovoGeneSetCollectionFactory.denovo_gene_set_cache_file(

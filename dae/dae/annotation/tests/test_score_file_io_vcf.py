@@ -23,7 +23,7 @@ def test_simple(fixture_dirname):
 
     options = Box({
         "score_names": (
-            "AC", "AN", "AF", "controls_AC", "controls_AN", "controls_AF", 
+            "AC", "AN", "AF", "controls_AC", "controls_AN", "controls_AF",
             "non_neuro_AC", "non_neuro_AN", "non_neuro_AF", "AF_percent",
             "controls_AF_percent", "non_neuro_AF_percent")
     }, frozen_box=True)
@@ -102,7 +102,8 @@ def test_vcf_info_annotator(fixture_dirname, genomes_db_2013):
     assert loader is not None
 
     for summary_variant, _ in loader.full_variants_iterator():
-        annotator.annotate_summary_variant(summary_variant)
+        liftover_variants = {}
+        annotator.annotate_summary_variant(summary_variant, liftover_variants)
 
         for aa in summary_variant.alt_alleles:
             af = aa.get_attribute("genome_gnomad_af_percent")

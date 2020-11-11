@@ -154,7 +154,7 @@ class GPFInstance(object):
     @property  # type: ignore
     @cached
     def denovo_gene_sets_db(self):
-        return DenovoGeneSetsDb(self._variants_db)
+        return DenovoGeneSetsDb(self)
 
     @property  # type: ignore
     @cached

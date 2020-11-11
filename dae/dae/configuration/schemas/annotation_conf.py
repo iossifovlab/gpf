@@ -19,6 +19,12 @@ annotation_section_schema = {
                 "check_with": validate_path,
                 "coerce": "abspath",
             },
+            "target_genome": {
+                "type": "string",
+                "check_with": validate_path,
+                "coerce": "abspath",
+                "required": False
+            },
             "scores_directory": {
                 "type": "string",
                 "check_with": validate_path,
@@ -28,13 +34,15 @@ annotation_section_schema = {
             "prom_len": {"type": "integer", "default": 0},
             "direct": {"type": "boolean"},
             "region": {"type": "string", "required": False},
-            "c": {"type": "string", "required": False},
-            "p": {"type": "string", "required": False},
-            "r": {"type": "string", "required": False},
-            "a": {"type": "string", "required": False},
-            "v": {"type": "string", "required": False},
-            "x": {"type": "string", "required": False},
-            "s": {"type": "string", "required": False},
+            "liftover": {"type": "string", "required": False},
+
+            # "c": {"type": "string", "required": False},
+            # "p": {"type": "string", "required": False},
+            # "r": {"type": "string", "required": False},
+            # "a": {"type": "string", "required": False},
+            # "v": {"type": "string", "required": False},
+            # "x": {"type": "string", "required": False},
+            # "s": {"type": "string", "required": False},
         },
     },
     "columns": {

@@ -109,8 +109,8 @@ def test_get_person_color(fixture_dirname):
     )
 
 
-def test_genotype_group_person_sets(variants_db_fixture):
-    genotype_data_group = variants_db_fixture.get_genotype_data_group(
+def test_genotype_group_person_sets(fixtures_gpf_instance):
+    genotype_data_group = fixtures_gpf_instance.get_genotype_data(
         "person_sets_dataset_1"
     )
 
@@ -127,8 +127,8 @@ def test_genotype_group_person_sets(variants_db_fixture):
     )
 
 
-def test_genotype_group_person_sets_overlapping(variants_db_fixture):
-    genotype_data_group = variants_db_fixture.get_genotype_data_group(
+def test_genotype_group_person_sets_overlapping(fixtures_gpf_instance):
+    genotype_data_group = fixtures_gpf_instance.get_genotype_data(
         "person_sets_dataset_2"
     )
 
@@ -145,11 +145,12 @@ def test_genotype_group_person_sets_overlapping(variants_db_fixture):
     assert "person3" in unaffected_persons and "person3" in phenotype1_persons
 
 
-def test_genotype_group_person_sets_subset(variants_db_fixture):
-    genotype_data_group_config = variants_db_fixture.\
-        get_genotype_data_group_config("person_sets_dataset_1")
-    genotype_data_group = variants_db_fixture.make_genotype_data_group(
-        genotype_data_group_config)
+def test_genotype_group_person_sets_subset(fixtures_gpf_instance):
+    genotype_data_group_config = fixtures_gpf_instance.\
+        get_genotype_data_config("person_sets_dataset_1")
+    genotype_data_group = \
+        fixtures_gpf_instance._variants_db.make_genotype_data_group(
+            genotype_data_group_config)
 
     # Remove a person to simulate a subset of people being used
     del genotype_data_group.families.persons["person4"]

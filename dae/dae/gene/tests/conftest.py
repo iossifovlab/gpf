@@ -31,11 +31,6 @@ def dae_config_fixture(local_gpf_instance):
 
 
 @pytest.fixture(scope="session")
-def variants_db_fixture(local_gpf_instance):
-    return local_gpf_instance._variants_db
-
-
-@pytest.fixture(scope="session")
 def gene_info_config(local_gpf_instance):
     return local_gpf_instance._gene_info_config
 
@@ -92,16 +87,16 @@ def genotype_data_names():
 
 
 @pytest.fixture(scope="session")
-def calc_gene_sets(request, variants_db_fixture, genotype_data_names):
+def calc_gene_sets(request, local_gpf_instance, genotype_data_names):
     for dgs in genotype_data_names:
-        genotype_data = variants_db_fixture.get(dgs)
+        genotype_data = local_gpf_instance.get_genotype_data(dgs)
         DenovoGeneSetCollectionFactory.build_collection(genotype_data)
 
     print("PRECALCULATION COMPLETE")
 
     def remove_gene_sets():
         for dgs in genotype_data_names:
-            genotype_data = variants_db_fixture.get(dgs)
+            genotype_data = local_gpf_instance.get_genotype_data(dgs)
             os.remove(
                 DenovoGeneSetCollectionFactory.denovo_gene_set_cache_file(
                     genotype_data.config, "phenotype"
@@ -112,27 +107,27 @@ def calc_gene_sets(request, variants_db_fixture, genotype_data_names):
 
 
 @pytest.fixture(scope="session")
-def denovo_gene_sets(variants_db_fixture):
+def denovo_gene_sets(local_gpf_instance):
     return [
         DenovoGeneSetCollectionFactory.load_collection(
-            variants_db_fixture.get("f1_group")
+            local_gpf_instance.get_genotype_data("f1_group")
         ),
         DenovoGeneSetCollectionFactory.load_collection(
-            variants_db_fixture.get("f2_group")
+            local_gpf_instance.get_genotype_data("f2_group")
         ),
         DenovoGeneSetCollectionFactory.load_collection(
-            variants_db_fixture.get("f3_group")
+            local_gpf_instance.get_genotype_data("f3_group")
         ),
     ]
 
 
 @pytest.fixture(scope="session")
-def denovo_gene_set_f4(variants_db_fixture):
+def denovo_gene_set_f4(local_gpf_instance):
     return DenovoGeneSetCollectionFactory.load_collection(
-        variants_db_fixture.get("f4_trio")
+        local_gpf_instance.get_genotype_data("f4_trio")
     )
 
 
 @pytest.fixture(scope="session")
-def f4_trio_denovo_gene_set_config(variants_db_fixture):
-    return variants_db_fixture.get_config("f4_trio")
+def f4_trio_denovo_gene_set_config(local_gpf_instance):
+    return local_gpf_instance.get_genotype_data_config("f4_trio")

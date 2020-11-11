@@ -1,5 +1,6 @@
 import glob
 import os.path
+
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.annotation.tools.score_annotator import NPScoreAnnotator
 
@@ -58,8 +59,9 @@ class dbNSFPAnnotator(NPScoreAnnotator):
             assert self.config.options.scores_file in self.dbNSFP_files
         super(dbNSFPAnnotator, self)._init_score_file()
 
-    def do_annotate(self, aline, variant):
+    def do_annotate(self, aline, variant, liftover_variants):
         if variant.chromosome != self.current_chr:
             self.current_chr = variant.chromosome
             self._init_score_file()
-        super(dbNSFPAnnotator, self).do_annotate(aline, variant)
+        super(dbNSFPAnnotator, self).do_annotate(
+            aline, variant, liftover_variants)
