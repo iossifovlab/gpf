@@ -20,17 +20,17 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
         self.select_accessors = {
             "bucket_index": "variants.bucket_index",
             "summary_index": "variants.summary_index",
-            "chromosome": "MIN(variants.chromosome)",
+            "chromosome": "gpf_first(variants.chromosome)",
             "`position`": "MIN(variants.`position`)",
             "end_position": "MIN(variants.end_position)",
             "variant_type": "MIN(variants.variant_type)",
-            "reference": "MIN(variants.reference)",
+            "reference": "gpf_first(variants.reference)",
             "family_id": "variants.family_id",
-            "variant_data": "MIN(variants.variant_data)",
+            "variant_data": "gpf_first(variants.variant_data)",
         }
         if self.has_extra_attributes:
             self.select_accessors["extra_attributes"] = \
-                "MIN(variants.extra_attributes)"
+                "gpf_first(variants.extra_attributes)"
         if not self.do_join:
             for k, v in self.select_accessors.items():
                 self.select_accessors[k] = k
@@ -148,8 +148,6 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
             extra_attributes = cols.get(
                 self.select_accessors.get("extra_attributes", None), None)
 
-            # FIXME:
-            # fvuid = f"{bucket_index}:{summary_index}:{family_index}"
             fvuid = f"{bucket_index}:{summary_index}:{family_id}"
             if fvuid in seen:
                 return None
