@@ -15,9 +15,9 @@ def test_denovo_report_table(
     )
 
     assert denovo_report_table.person_set_collection.name == "Diagnosis"
-    assert sorted(denovo_report_table.columns) == sorted(
-        ["phenotype 2", "phenotype 1"]
-    )
+    assert sorted(denovo_report_table.columns) == \
+        ["phenotype 1 (6)", "phenotype 2 (2)", ]
+
     assert denovo_report_table.effect_groups == ["Missense"]
     assert denovo_report_table.effect_types == ["Frame-shift"]
     assert len(denovo_report_table.rows) == 2

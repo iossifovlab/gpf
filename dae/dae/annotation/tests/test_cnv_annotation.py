@@ -15,8 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 def test_cnv_variant_score_annotation_position(
-        fixture_dirname,
-        genomes_db_2013):
+        fixture_dirname, genomes_db_2013):
 
     options = {
         "vcf": False,
@@ -56,17 +55,16 @@ def test_cnv_variant_score_annotation_position(
     result = []
     for sv, _ in loader.full_variants_iterator():
         logger.debug(f"summary_variant: {sv}")
-
-        score_annotator.annotate_summary_variant(sv)
+        liftover_variants = {}
+        score_annotator.annotate_summary_variant(sv, liftover_variants)
         result.append(sv.alt_alleles[0].attributes["RESULT_phastCons100way"])
 
     assert np.allclose(result, [0.253, 0.24, 0.253, 0.014])
 
 
 def test_cnv_variant_score_annotation_np_score(
-    fixture_dirname,
-    genomes_db_2013
-):
+        fixture_dirname, genomes_db_2013):
+
     options = {
         "vcf": False,
         "x": "location",
@@ -104,7 +102,8 @@ def test_cnv_variant_score_annotation_np_score(
 
     result = []
     for sv, _ in loader.full_variants_iterator():
-        score_annotator.annotate_summary_variant(sv)
+        liftover_variants = {}
+        score_annotator.annotate_summary_variant(sv, liftover_variants)
         result.append(sv.alt_alleles[0].attributes["RESULT_phastCons100way"])
 
     assert np.allclose(result, [0.253, 0.24, 0.253, 0.014])

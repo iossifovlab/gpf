@@ -3,15 +3,10 @@
 import sys
 import os.path
 import time
-import datetime
-
-from typing import List, Optional
 
 import argparse
 
 import pysam
-
-from dae.gpf_instance.gpf_instance import GPFInstance
 
 from dae.genome import genome_access
 from dae.genome.gene_models import load_gene_models
@@ -229,6 +224,7 @@ def cli(argv=sys.argv[1:]):
         header.extend(["effectType", "effectGene", "effectDetails"])
         print("\t".join(header), file=outfile)
 
+    counter = 0
     for counter, line in enumerate(infile):
         if line[0] == "#":
             continue
@@ -303,11 +299,14 @@ def cli_vcf(argv=sys.argv[1:]):
     header.info.add("ED", ".", "String", "effect details")
 
     print(str(header), file=outfile, end="")
-
+    counter = 0
     for counter, variant in enumerate(infile):
         effect_types = []
         effect_genes = []
         effect_details = []
+        eg = ""
+        ed = ""
+
         for alt in variant.alts:
             effects = annotator.do_annotate_variant(
                 chrom=variant.chrom,

@@ -21,8 +21,9 @@ tar -zxvf $WD/phenotype-comp-data-latest.tar.gz -C $WD
 sed -i 's/dae_data_dir =.*/dae_data_dir = "."/' $WD/gpf_remote/DAE.conf
 sed -i 's/wd =.*/wd = "."/' $WD/gpf_remote/DAE.conf
 
-#(. ./gpf_remote/setenv.sh; cd ./iossifov_2014; \
-    #$WD/dae/dae/tools/simple_study_import.py IossifovWE2014.ped --denovo-file IossifovWE2014.tsv --id iossifov_2014)
+
+# (. $WD/gpf_remote/setenv.sh; cd $WD/iossifov_2014; \
+#     simple_study_import.py IossifovWE2014.ped --denovo-file IossifovWE2014.tsv --id iossifov_2014)
 
 #LOCAL_DATA_DIR="$WD/scripts/gpf_remote"
 

@@ -19,7 +19,10 @@ class VcfInfoAnnotator(VariantScoreAnnotatorBase):
         logger.debug(self.score_file.schema.col_names)
         logger.debug(f"variants builder {self.variant_builder}")
 
-    def do_annotate(self, aline, variant):
+    def do_annotate(self, aline, variant, liftover_variants):
+        if self.liftover:
+            variant = liftover_variants.get(self.liftover)
+
         if variant is None:
             self._scores_not_found(aline)
             return

@@ -173,7 +173,6 @@ def cshl_format(pos, ref, alt, trimmer=trim_str_front):
 
 def vcf2cshl(pos, ref, alt, trimmer=trim_str_front):
     vp, vt, vl = cshl_format(pos, ref, alt, trimmer=trimmer)
-
     return vp, vt, vl
 
 
@@ -187,8 +186,9 @@ def get_locus_ploidy(
 
 
 def get_interval_locus_ploidy(
-    chrom: str, pos_start: int, pos_end: int, sex: Sex, genome: Genome
-) -> int:
+        chrom: str, pos_start: int, pos_end: int,
+        sex: Sex, genome: Genome) -> int:
+
     start_ploidy = get_locus_ploidy(chrom, pos_start, sex, genome)
     end_ploidy = get_locus_ploidy(chrom, pos_end, sex, genome)
     return max(start_ploidy, end_ploidy)
@@ -220,7 +220,10 @@ def liftover_variant(chrom, pos, ref, alt, lo, target_genome):
     if not lo_coordinates:
         return None
     if len(lo_coordinates) > 1:
-        print("Warning....")
+        logger.info(
+            f"liftover_variant: liftover returns more than one target "
+            f"position: {lo_coordinates}")
+
     lo_chrom, lo_pos, lo_strand, _ = lo_coordinates[0]
 
     if lo_strand == "+" or len(ref) == len(alt):
@@ -233,6 +236,10 @@ def liftover_variant(chrom, pos, ref, alt, lo, target_genome):
 
     lo_ref = target_genome.get_sequence(
         lo_chrom, lo_pos, lo_pos + len(ref) - 1)
+    if lo_ref is None:
+        logger.warning(
+            f"can't find genomic sequence for {lo_chrom}:{lo_pos}")
+        return None
 
     lo_alt = alt
     if lo_strand == "-":

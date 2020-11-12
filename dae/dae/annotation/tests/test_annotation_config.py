@@ -40,4 +40,4 @@ def test_annotation_config_options_parsing(gpf_instance_2013):
             {}, relative_to_this_test_folder("fixtures/dummy_annotator.conf"),
         )
     # fmt: on
-    assert annotator_config.sections[0].options.vcf is False
+    assert annotator_config.sections[0].options.liftover == "lo1"

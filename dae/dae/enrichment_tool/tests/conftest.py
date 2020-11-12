@@ -7,13 +7,13 @@ from dae.enrichment_tool.background import (
 
 
 @pytest.fixture(scope="session")
-def f1_trio_enrichment_config(variants_db_fixture):
-    return variants_db_fixture.get_config("f1_trio").enrichment
+def f1_trio_enrichment_config(fixtures_gpf_instance):
+    return fixtures_gpf_instance.get_genotype_data_config("f1_trio").enrichment
 
 
 @pytest.fixture(scope="session")
-def f1_trio(variants_db_fixture):
-    result = variants_db_fixture.get("f1_trio")
+def f1_trio(fixtures_gpf_instance):
+    result = fixtures_gpf_instance.get_genotype_data("f1_trio")
     return result
 
 

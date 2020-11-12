@@ -1,3 +1,4 @@
+from builtins import NotImplementedError
 import sys
 import traceback
 import logging
@@ -11,7 +12,6 @@ from dae.annotation.tools.utils import LineMapper
 
 from dae.utils.dae_utils import dae2vcf_variant
 from dae.variants.variant import SummaryAllele
-from dae.variants.attributes import VariantType
 
 
 logger = logging.getLogger(__name__)
@@ -44,12 +44,17 @@ class AnnotatorBase(object):
         elif self.config.options.mode == "overwrite":
             self.mode = "overwrite"
 
+        self.liftover = None
+        if self.config.options.liftover:
+            self.liftover = self.config.options.liftover
+
     def build_output_line(self, annotation_line):
         output_columns = self.config.output_columns
         return [annotation_line.get(key, "") for key in output_columns]
 
     def collect_annotator_schema(self, schema):
-        raise NotImplementedError()
+        # raise NotImplementedError()
+        pass
 
     def annotate_file(self, file_io_manager):
         """
@@ -89,9 +94,10 @@ class AnnotatorBase(object):
 
             try:
                 self.line_annotation(annotation_line)
-            except Exception:
-                print("Problems annotating line:", line, file=sys.stderr)
-                print(annotation_line, file=sys.stderr)
+            except Exception as ex:
+                logger.error(f"problems annotating line: {line}")
+                logger.error(f"{annotation_line}")
+                logger.error(f"{ex}")
                 traceback.print_exc(file=sys.stderr)
 
             file_io_manager.line_write(self.build_output_line(annotation_line))
@@ -269,44 +275,17 @@ class VariantAnnotatorBase(AnnotatorBase):
     def line_annotation(self, aline):
         variant = self.variant_builder.build(aline)
         logger.debug(f"line_annotation calls do_annotate({variant}")
-        self.do_annotate(aline, variant)
+        liftover_variants = {}
+        self.do_annotate(aline, variant, liftover_variants)
 
-    def do_annotate(self, aline, variant):
+    def do_annotate(self, aline, variant, liftover_variants):
         raise NotImplementedError()
 
-    def annotate_summary_variant(self, summary_variant):
+    def annotate_summary_variant(self, summary_variant, liftover_variants):
         for alt_allele in summary_variant.alt_alleles:
             attributes = deepcopy(alt_allele.attributes)
-            self.variant_builder.fill_variant_coordinates(
-                attributes, alt_allele)
-            if VariantType.is_cnv(alt_allele.variant_type):
-                variant = alt_allele
-            else:
-                variant = self.variant_builder.build_variant(attributes)
-            # logger.debug(
-            #     f"annotate_summary_variant calls do_annotate({variant})")
-            self.do_annotate(attributes, variant)
-            logger.debug(f"variant attributes: {attributes}")
-
+            self.do_annotate(attributes, alt_allele, liftover_variants)
             alt_allele.update_attributes(attributes)
-
-
-class CompositeAnnotator(AnnotatorBase):
-    def __init__(self, config, genomes_db):
-        super(CompositeAnnotator, self).__init__(config, genomes_db)
-        self.annotators = []
-
-    def add_annotator(self, annotator):
-        assert isinstance(annotator, AnnotatorBase)
-        self.annotators.append(annotator)
-
-    def line_annotation(self, aline):
-        for annotator in self.annotators:
-            annotator.line_annotation(aline)
-
-    def collect_annotator_schema(self, schema):
-        for annotator in self.annotators:
-            annotator.collect_annotator_schema(schema)
 
 
 class CompositeVariantAnnotator(VariantAnnotatorBase):
@@ -318,17 +297,9 @@ class CompositeVariantAnnotator(VariantAnnotatorBase):
         assert isinstance(annotator, VariantAnnotatorBase)
         self.annotators.append(annotator)
 
-    def do_annotate(self, aline, variant):
+    def do_annotate(self, aline, variant, liftover_variants):
         for annotator in self.annotators:
-            annotator.do_annotate(aline, variant)
-
-    def line_annotation(self, aline):
-        variant = self.variant_builder.build(aline)
-        self.do_annotate(aline, variant)
-
-    def annotate_summary_variant(self, summary_variant):
-        for annotator in self.annotators:
-            annotator.annotate_summary_variant(summary_variant)
+            annotator.do_annotate(aline, variant, liftover_variants)
 
     def collect_annotator_schema(self, schema):
         super(CompositeVariantAnnotator, self).collect_annotator_schema(schema)
