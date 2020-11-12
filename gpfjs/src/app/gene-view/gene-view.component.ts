@@ -642,7 +642,9 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
 
   updateXDomain(domainMin: number, domainMax: number) {
     if (domainMax - domainMin < 12) {
-      domainMax = domainMin + 12;
+      const center = domainMin + Math.round((domainMax - domainMin) / 2);
+      domainMin = center - 6;
+      domainMax = center + 6;
     }
 
     this.x = d3.scaleLinear()
