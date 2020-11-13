@@ -1043,22 +1043,26 @@ class Variants2ParquetTool:
             type=str,
             default=None,
             dest="partition_description",
-            help="Path to a config file containing the partition description",
+            help="Path to a config file containing the partition description "
+            "[default: %(default)s]",
+
         )
 
         parser.add_argument(
             "--rows",
             type=int,
-            default=100_000,
+            default=20_000,
             dest="rows",
-            help="Amount of allele rows to write at once",
+            help="Amount of allele rows to write at once "
+            "[default: %(default)s]",
         )
 
         parser.add_argument(
             "--annotation-config",
             type=str,
             default=None,
-            help="Path to an annotation config file to use when annotating",
+            help="Path to an annotation config file to use when annotating "
+            "[default: %(default)s]",
         )
 
         parser.add_argument(
