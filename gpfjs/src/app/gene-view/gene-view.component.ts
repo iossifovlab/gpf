@@ -738,8 +738,9 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
 
   calculateXAxisTicks() {
     const ticks = [];
-    const increment = Math.round(this.svgWidth / (this.options.xAxisTicks - 1));
-    for (let i = 0; i < this.svgWidth; i += increment) {
+    const axisLength = this.x.range()[this.x.range().length - 1] - this.x.range()[0];
+    const increment = Math.round(axisLength / (this.options.xAxisTicks - 1));
+    for (let i = 0; i < axisLength; i += increment) {
       ticks.push(Math.round(this.x.invert(i)));
     }
     return ticks;

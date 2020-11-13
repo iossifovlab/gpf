@@ -152,6 +152,8 @@ export class GeneViewModel {
   normalRange: number[];
   condensedRange: number[];
 
+  spacerLength = 150; // in px
+
   constructor(gene: Gene, rangeWidth: number) {
     this.gene = gene;
     for (const transcript of gene.transcripts) {
@@ -163,16 +165,16 @@ export class GeneViewModel {
 
   calculateRanges(rangeWidth: number) {
     this.domain = this.buildDomain(0, 3000000000);
-    this.normalRange = this.buildRange(0, 3000000000, rangeWidth, (seg) => seg.isSpacer);
-    this.condensedRange = this.buildRange(0, 3000000000, rangeWidth, (seg) => seg.isIntron || seg.isSpacer);
+    this.normalRange = this.buildRange(0, 3000000000, rangeWidth, false);
+    this.condensedRange = this.buildRange(0, 3000000000, rangeWidth, true);
   }
 
   buildNormalIntronsRange(domainMin: number, domainMax: number, rangeWidth: number) {
-    return this.buildRange(domainMin, domainMax, rangeWidth, (seg) => seg.isSpacer);
+    return this.buildRange(domainMin, domainMax, rangeWidth, false);
   }
 
   buildCondensedIntronsRange(domainMin: number, domainMax: number, rangeWidth: number) {
-    return this.buildRange(domainMin, domainMax, rangeWidth, (seg) => seg.isIntron || seg.isSpacer);
+    return this.buildRange(domainMin, domainMax, rangeWidth, true);
   }
 
   buildDomain(domainMin: number, domainMax: number) {
@@ -200,7 +202,7 @@ export class GeneViewModel {
     return domain;
   }
 
-  buildRange(domainMin: number, domainMax: number, rangeWidth: number, condenseCriteria: (seg: GeneViewTranscriptSegment) => boolean) {
+  buildRange(domainMin: number, domainMax: number, rangeWidth: number, condenseIntrons: boolean) {
     const range: number[] = [];
     const transcript = this.collapsedGeneViewTranscript.transcript;
     const filteredSegments = this.collapsedGeneViewTranscript.segments.filter(
@@ -209,8 +211,12 @@ export class GeneViewModel {
     const medianExonLength: number = transcript.medianExonLength;
     let condensedLength = 0;
 
+    let spacerCount = 0;
+
     for (const segment of filteredSegments) {
-      if (condenseCriteria(segment)) {
+      if (segment.isSpacer) {
+        spacerCount += 1;
+      } else if (segment.isIntron && condenseIntrons) {
         const intronLength = segment.length;
         const intersectionLength = segment.intersectionLength(domainMin, domainMax);
         const factor = intersectionLength / intronLength;
@@ -222,19 +228,21 @@ export class GeneViewModel {
       }
     }
 
-    const scaleFactor: number = rangeWidth / condensedLength;
+    const scaleFactor: number = (rangeWidth - spacerCount * this.spacerLength) / condensedLength;
 
     let rollingTracker = 0;
     range.push(0);
 
     for (const segment of filteredSegments) {
-      if (condenseCriteria(segment)) {
+      if (segment.isSpacer) {
+        rollingTracker += this.spacerLength;
+      } else if (segment.isIntron && condenseIntrons) {
         const intronLength = segment.length;
         const intersectionLength = segment.intersectionLength(domainMin, domainMax);
         const factor = intersectionLength / intronLength;
 
         rollingTracker += medianExonLength * scaleFactor * factor;
-      } else {
+      }  else {
         rollingTracker += segment.intersectionLength(domainMin, domainMax) * scaleFactor;
       }
       range.push(rollingTracker);
