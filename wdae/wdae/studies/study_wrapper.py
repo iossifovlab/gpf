@@ -322,6 +322,7 @@ class StudyWrapper(StudyWrapperBase):
                 return True
         else:
             summary_variant_ids = set(kwargs.get("summaryVariantIds"))
+            logger.debug(f"sumamry variants ids: {summary_variant_ids}")
 
             def filter_allele(allele):
                 svid = f"{allele.cshl_location}:{allele.cshl_variant}"
@@ -337,7 +338,8 @@ class StudyWrapper(StudyWrapperBase):
                 for source in sources:
                     try:
                         if source in self.SPECIAL_ATTRS:
-                            row_variant.append(self.SPECIAL_ATTRS[source](aa))
+                            row_variant.append(
+                                self.SPECIAL_ATTRS[source](aa))
                         elif source == "pedigree":
                             row_variant.append(
                                 self.generate_pedigree(
@@ -474,7 +476,7 @@ class StudyWrapper(StudyWrapperBase):
     # ultraRareOnly
     # TMM_ALL
     def _transform_kwargs(self, **kwargs):
-        logger.debug(f"kwargs in study group: {kwargs}")
+        logger.debug(f"kwargs in study wrapper: {kwargs}")
         StudyWrapper._add_inheritance_to_query(
             "not possible_denovo and not possible_omission",
             kwargs
