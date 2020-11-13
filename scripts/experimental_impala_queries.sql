@@ -454,3 +454,108 @@ WHERE
   variants.variant_in_members = pedigree.person_id 
 GROUP BY variants.bucket_index, variants.summary_index, variants.family_id 
 HAVING gpf_bit_or(pedigree.status) IN (1, 2, 3);
+
+
+
+
+
+
+
+SELECT variants.bucket_index, variants.summary_index
+FROM data_hg38_production_202005.SSC_WG38_CSHL_2380_variants as variants JOIN data_hg38_production_202005.SSC_WG38_CSHL_2380_pedigree as pedigree 
+WHERE
+  ( (  variants.effect_gene_symbols in (  'SNORD141A'  )  ) ) AND 
+  ( (`chromosome` = 'chr5' AND `position` >= 14632278 AND `position` <= 14672382) OR 
+    (`chromosome` = 'chr6' AND `position` >= 73498245 AND `position` <= 73538438) OR 
+    (`chromosome` = 'chr9' AND `position` >= 133000430 AND `position` <= 133040534) ) AND 
+  ( BITAND(8, variants.inheritance_in_members) = 0 AND BITAND(32, variants.inheritance_in_members) = 0 ) AND ( BITAND(150, variants.inheritance_in_members) != 0 ) AND 
+  ( variants.allele_index > 0 ) AND 
+  ( variants.region_bin IN ('chr5_0','chr6_1','chr9_2') ) AND 
+  variants.variant_in_members = pedigree.person_id 
+  GROUP BY bucket_index, summary_index
+
+
+
+
+SELECT gpf_first(variants.chromosome), gpf_first(variants.variant_data)
+FROM data_hg38_production_202005.SSC_WG38_CSHL_2380_variants as variants JOIN data_hg38_production_202005.SSC_WG38_CSHL_2380_pedigree as pedigree 
+WHERE
+  ( (  variants.effect_gene_symbols in (  'CHD8'  )  ) ) AND 
+  ( (`chromosome` = 'chr14' AND `position` >= 21385194 AND `position` <= 21437298) ) AND 
+  ( (  variants.effect_types in (  'frame-shift' , 'nonsense' , 'splice-site' , 'no-frame-shift-newStop' , 'missense' , 'synonymous' , 'noStart' , 'noEnd' , 'no-frame-shift' , 'CDS'  )  ) ) AND 
+  ( BITAND(8, variants.inheritance_in_members) = 0 AND BITAND(32, variants.inheritance_in_members) = 0 ) AND 
+  ( BITAND(150, variants.inheritance_in_members) != 0 ) AND 
+  ( (variants.ssc_freq <= 100 or variants.ssc_freq is null) ) AND 
+  ( variants.allele_index > 0 ) AND 
+  ( variants.coding_bin = 1 ) AND 
+  ( variants.region_bin IN ('chr14_0') ) AND 
+  variants.variant_in_members = pedigree.person_id 
+GROUP BY variants.bucket_index, variants.summary_index, variants.family_id
+HAVING gpf_bit_or(pedigree.status) IN (3, 2, 1);
+
+
+
+SELECT variants.bucket_index, variants.summary_index, gpf_first(variants.chromosome), MIN(variants.`position`), MIN(variants.end_position), MIN(variants.variant_type), gpf_first(variants.reference), variants.family_id, gpf_first(variants.variant_data) 
+FROM data_hg38_production_202005.AGRE_WG38_859_variants as variants JOIN data_hg38_production_202005.AGRE_WG38_859_pedigree as pedigree 
+WHERE
+  ( (  variants.effect_gene_symbols in (  'CHD8'  )  ) ) AND 
+  ( (`chromosome` = 'chr14' AND `position` >= 21385194 AND `position` <= 21437298) ) AND 
+  ( (  variants.effect_types in (  'frame-shift' , 'nonsense' , 'splice-site' , 'no-frame-shift-newStop' , 'missense' , 'synonymous' , 'noStart' , 'noEnd' , 'no-frame-shift' , 'CDS'  )  ) ) AND 
+  ( BITAND(8, variants.inheritance_in_members) = 0 AND BITAND(32, variants.inheritance_in_members) = 0 ) AND 
+  ( BITAND(150, variants.inheritance_in_members) != 0 ) AND 
+  ( false ) AND 
+  ( variants.allele_index > 0 ) AND 
+  ( variants.coding_bin = 1 ) AND 
+  ( variants.region_bin IN ('chr14_0') ) AND 
+  variants.variant_in_members = pedigree.person_id 
+GROUP BY variants.bucket_index, variants.summary_index, variants.family_id 
+HAVING gpf_bit_or(pedigree.status) IN (3, 2, 1)
+
+
+SELECT variants.bucket_index, variants.summary_index, gpf_first(variants.chromosome), MIN(variants.`position`), MIN(variants.end_position), MIN(variants.variant_type), gpf_first(variants.reference), variants.family_id, gpf_first(variants.variant_data) 
+FROM data_hg38_production_202005.sfari_spark_wes_1_consortium_variants as variants JOIN data_hg38_production_202005.sfari_spark_wes_1_consortium_pedigree as pedigree 
+WHERE
+  ( (  variants.effect_gene_symbols in (  'CHD8'  )  ) ) AND 
+  ( (`chromosome` = 'chr14' AND `position` >= 21385194 AND `position` <= 21437298) ) AND 
+  ( (  variants.effect_types in (  'frame-shift' , 'nonsense' , 'splice-site' , 'no-frame-shift-newStop' , 'missense' , 'synonymous' , 'noStart' , 'noEnd' , 'no-frame-shift' , 'CDS'  )  ) ) AND 
+  ( BITAND(8, variants.inheritance_in_members) = 0 AND BITAND(32, variants.inheritance_in_members) = 0 ) AND ( BITAND(150, variants.inheritance_in_members) != 0 ) AND 
+  ( (variants.ssc_freq <= 100 or variants.ssc_freq is null) ) AND 
+  ( variants.allele_index > 0 ) AND 
+  ( variants.region_bin IN ('chr14_0') ) AND 
+  variants.variant_in_members = pedigree.person_id 
+GROUP BY variants.bucket_index, variants.summary_index, variants.family_id 
+HAVING gpf_bit_or(pedigree.status) IN (3, 2, 1)
+
+
+SELECT variants.bucket_index, variants.summary_index
+FROM data_hg38_production_202005.sfari_spark_wes_1_consortium_variants as variants JOIN data_hg38_production_202005.sfari_spark_wes_1_consortium_pedigree as pedigree 
+WHERE
+  ( (  variants.effect_gene_symbols in (  'CHD8'  )  ) ) AND 
+  ( (`chromosome` = 'chr14' AND `position` >= 21385194 AND `position` <= 21437298) ) AND 
+  ( (  variants.effect_types in (  'frame-shift' , 'nonsense' , 'splice-site' , 'no-frame-shift-newStop' , 'missense' , 'synonymous' , 'noStart' , 'noEnd' , 'no-frame-shift' , 'CDS'  )  ) ) AND 
+  ( BITAND(8, variants.inheritance_in_members) = 0 AND BITAND(32, variants.inheritance_in_members) = 0 ) AND ( BITAND(150, variants.inheritance_in_members) != 0 ) AND 
+  ( (variants.ssc_freq <= 100 or variants.ssc_freq is null) ) AND 
+  ( variants.allele_index > 0 ) AND 
+  ( variants.region_bin IN ('chr14_0') ) AND 
+  variants.variant_in_members = pedigree.person_id 
+GROUP BY variants.bucket_index, variants.summary_index, variants.family_id 
+HAVING gpf_bit_or(pedigree.status) IN (3, 2, 1)
+
+
+SELECT variants.bucket_index, variants.summary_index
+FROM data_hg38_production_202005.sfari_spark_wes_1_consortium_variants as variants JOIN data_hg38_production_202005.sfari_spark_wes_1_consortium_pedigree as pedigree 
+WHERE
+  ( (  variants.effect_gene_symbols in (  'CHD8'  )  ) ) AND 
+  ( (  variants.chromosome = 'chr14' AND variants.`position` >= 21385194 AND variants.`position` <= 21437298) ) AND 
+  ( (  variants.effect_types in (  'frame-shift' , 'nonsense' , 'splice-site' , 'no-frame-shift-newStop' , 'missense' , 'synonymous' , 'noStart' , 'noEnd' , 'no-frame-shift' , 'CDS'  )  ) ) AND 
+  ( (variants.ssc_freq <= 100 or variants.ssc_freq is null) ) AND 
+  ( variants.allele_index > 0 ) AND 
+  ( variants.region_bin IN ('chr14_0') ) AND 
+  variants.variant_in_members = pedigree.person_id 
+GROUP BY variants.bucket_index, variants.summary_index, variants.family_id 
+HAVING gpf_bit_or(pedigree.status) IN (3, 2, 1)
+
+
+SELECT variants.bucket_index, variants.summary_index, variants.variant_in_members, variants.allele_index, variants.ssc_freq, variants.region_bin, `chromosome`, `position`
+FROM data_hg38_production_202005.sfari_spark_wes_1_consortium_variants as variants 
+LIMIT 10;
