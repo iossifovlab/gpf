@@ -426,60 +426,64 @@ describe('GeneViewComponent', () => {
     expect(component.getPedigreeAffectedStatus(mockPedigreeData)).toBe('Affected and unaffected');
   });
 
-  // it('should draw correct shapes for variants when drawing the plot', () => {
-  //   component.selectedFrequencies = [10, 20];
-  //   component.selectedAffectedStatus = ['Affected only'];
-  //   component.showDenovo = false;
-  //   component.x = {'_domain': [1, 10], domain() {return this._domain; }, invert() {return this._domain; }};
-  //   component.y = {range() {return [0, 0]; }};
-  //   component.y_zero = {range() {return [0, 0]; }};
-  //   component.y_axis_subdomain = {range() {return [0, 0]; }};
-  //   component.y_axis_zero = {range() {return [0, 0] }};
-  //   component.svgElement = d3.select('#svg-container');
-  //   const drawTypes: any = ['drawStar', 'drawTriangle', 'drawCircle', 'drawDot'];
-  //   const effectTypes = ['LGDs', 'Missense', 'Synonymous', 'Other'];
+  it('should draw correct shapes for variants when drawing the plot', () => {
+    component.selectedFrequencies = [0, 100];
+    component.selectedAffectedStatus = ['Affected only'];
+    component.showDenovo = false;
+    component.x = d3.scaleLinear().domain([1, 100]).range([1, 100]).clamp(true);
+    component.y = d3.scaleLog()
+      .domain([component.frequencyDomainMin, component.frequencyDomainMax])
+      .range([component.subdomainAxisY, 0]);
+    component.y_subdomain = d3.scaleLinear()
+      .domain([0, 0])
+      .range([component.zeroAxisY, component.subdomainAxisY]);
+    component.y_zero = d3.scalePoint()
+      .domain(['0'])
+      .range([component.svgHeightFreq, component.zeroAxisY]);
+    component.svgElement = d3.select('#svg-container');
+    component.showDenovo = true;
+    const drawTypes: any = ['drawStar', 'drawTriangle', 'drawCircle', 'drawDot'];
+    const effectTypes = ['lgds', 'missense', 'synonymous', 'other'];
 
-  //   const drawSpies = [];
-  //   drawTypes.forEach((drawType, index) => {
-  //     drawSpies[index] = spyOn(svgDrawing, drawType).and.callFake((element, x, y, color, title) => {
-  //       expect(title.indexOf(x)).not.toBe(-1);
-  //       expect(title.indexOf(effectTypes[index])).not.toBe(-1);
-  //     });
-  //   });
-  //   const drawSurroundingSquareSpy = spyOn(svgDrawing, 'drawSurroundingSquare');
+    const drawSpies = [];
+    drawTypes.forEach((drawType, index) => {
+      drawSpies[index] = spyOn(svgDrawing, drawType).and.callFake((element, x, y, color, title) => {
+        expect(title.indexOf(effectTypes[index])).not.toBe(-1);
+      });
+    });
+    const drawSurroundingSquareSpy = spyOn(svgDrawing, 'drawSurroundingSquare');
 
-  //   const testVariant1 = GeneViewSummaryVariant.fromRow({
-  //     effect: 'lgds', is_denovo: false, seen_in_affected: true, seen_in_unaffected: false, frequency: 15, position: 15,
-  //   });
+    const testVariant1 = GeneViewSummaryVariant.fromRow({
+      effect: 'lgds', is_denovo: true, seen_in_affected: true, seen_in_unaffected: false, frequency: 15, position: 15,
+    });
 
-  //   const testVariant2 = GeneViewSummaryVariant.fromRow({
-  //     effect: 'missense', is_denovo: false, seen_in_affected: true, seen_in_unaffected: false, frequency: 15, position: 15,
-  //   });
+    const testVariant2 = GeneViewSummaryVariant.fromRow({
+      effect: 'missense', is_denovo: false, seen_in_affected: true, seen_in_unaffected: false, frequency: 15, position: 15,
+    });
 
-  //   const testVariant3 = GeneViewSummaryVariant.fromRow({
-  //     effect: 'synonymous', is_denovo: false, seen_in_affected: true, seen_in_unaffected: false, frequency: 15, position: 15,
-  //   });
+    const testVariant3 = GeneViewSummaryVariant.fromRow({
+      effect: 'synonymous', is_denovo: false, seen_in_affected: true, seen_in_unaffected: false, frequency: 15, position: 15,
+    });
 
-  //   const testVariant4 = GeneViewSummaryVariant.fromRow({
-  //     effect: 'other', is_denovo: false, seen_in_affected: false, seen_in_unaffected: true, frequency: 15, position: 15,
-  //   });
+    const testVariant4 = GeneViewSummaryVariant.fromRow({
+      effect: 'other', is_denovo: false, seen_in_affected: true, seen_in_unaffected: false, frequency: 15, position: 15,
+    });
 
+    component.summaryVariantsArray = new GeneViewSummaryVariantsArray();
+    component.summaryVariantsArray.push(testVariant1);
+    component.summaryVariantsArray.push(testVariant2);
+    component.summaryVariantsArray.push(testVariant3);
+    component.summaryVariantsArray.push(testVariant4);
 
-  //   component.summaryVariantsArray = new GeneViewSummaryVariantsArray();
-  //   component.summaryVariantsArray.push(testVariant1);
-  //   component.summaryVariantsArray.push(testVariant2);
-  //   component.summaryVariantsArray.push(testVariant3);
-  //   component.summaryVariantsArray.push(testVariant4);
+    component.drawPlot();
 
-  //   component.drawPlot();
-
-  //   expect(drawSurroundingSquareSpy).toHaveBeenCalled();
-  //   expect(drawSurroundingSquareSpy).toHaveBeenCalledTimes(1);
-  //   for (const drawSpy of drawSpies) {
-  //     expect(drawSpy).toHaveBeenCalled();
-  //     expect(drawSpy).toHaveBeenCalledTimes(1);
-  //   }
-  // });
+    expect(drawSurroundingSquareSpy).toHaveBeenCalled();
+    expect(drawSurroundingSquareSpy).toHaveBeenCalledTimes(1);
+    for (const drawSpy of drawSpies) {
+      expect(drawSpy).toHaveBeenCalled();
+      expect(drawSpy).toHaveBeenCalledTimes(1);
+    }
+  });
 
   it('should get variant Y', () => {
     component.frequencyDomainMin = 11;
@@ -559,6 +563,32 @@ describe('GeneViewComponent', () => {
     });
   });
 
+  it('should draw gene transcripts', () => {
+    component.x = d3.scaleLinear().domain([1, 10]).range([1, 10]).clamp(true);
+    component.svgElement = d3.select('#svg-container');
+    component.summedTranscriptElement = component.svgElement
+      .append('g');
+    component.transcriptsElement = component.svgElement
+      .append('g');
+
+    const drawTranscriptSpy = spyOn(component, 'drawTranscript')
+      .withArgs(component.summedTranscriptElement, component.svgHeightFreqRaw + 30, component.geneViewModel.collapsedGeneViewTranscript)
+      .and.stub()
+      .withArgs(component.transcriptsElement, component.svgHeightFreqRaw + 80, component.geneViewModel.geneViewTranscripts[0])
+      .and.stub()
+      .withArgs(component.transcriptsElement, component.svgHeightFreqRaw + 105, component.geneViewModel.geneViewTranscripts[1])
+      .and.stub();
+
+    component.drawGene();
+    expect(drawTranscriptSpy).toHaveBeenCalled();
+  });
+
+  // it('should redraw and update table correctly on brush end event', () => {
+  //   component.x = d3.scaleLinear().domain([1, 10]).range([1, 10]).clamp(true);
+  //   const setDefaultScaleSpy = spyOn(component, 'setDefaultScale');
+
+  // });
+
   it('should undo state history', () => {
     const moveToPreviousSpy = spyOn(component.zoomHistory, 'moveToPrevious');
     const drawFromHistorySpy = spyOn(component, 'drawFromHistory');
@@ -589,6 +619,30 @@ describe('GeneViewComponent', () => {
 
     component.handleKeyboardEvent({ctrlKey: true, key: 'y'});
     expect(historyRedoSpy).toHaveBeenCalled();
+  });
+
+  it('should handle window resize events', () => {
+    component.x = d3.scaleLinear().domain([1, 10]).range([1, 10]).clamp(true);
+    const setTimeoutSpy = spyOn(window, 'setTimeout');
+    const setSvgScaleSpy = spyOn(component, 'setSvgScale');
+    const redrawSpy = spyOn(component, 'redraw');
+
+    component.windowResizeTimer = 0;
+    component.handleWindowResizeEvent({currentTarget: {innerWidth: 10}});
+    expect(setTimeoutSpy).toHaveBeenCalled();
+    expect(setSvgScaleSpy).not.toHaveBeenCalled();
+    expect(redrawSpy).not.toHaveBeenCalled();
+
+    component.windowResizeTimer = 10;
+    component.gene = undefined;
+    component.handleWindowResizeEvent({currentTarget: {innerWidth: 10}});
+    expect(setSvgScaleSpy).not.toHaveBeenCalled();
+    expect(redrawSpy).not.toHaveBeenCalled();
+
+    component.gene = testGene;
+    component.handleWindowResizeEvent({currentTarget: {innerWidth: 10}});
+    expect(setSvgScaleSpy).toHaveBeenCalled();
+    expect(redrawSpy).toHaveBeenCalled();
   });
 
   it('should get selected chromosomes', () => {
@@ -646,29 +700,40 @@ describe('GeneViewComponent', () => {
     expect(drawRectSpy).toHaveBeenCalled();
   });
 
-  // fit('should draw transcript exons and introns correctly', () => {
-  //   component.x = d3.scaleLinear().domain([0, 1]).range([0, 10]).clamp(true);
-  //   const testTranscript = new GeneViewTranscript(Transcript.fromJson({
-  //     'transcript_id': 'testTranscriptId',
-  //     'strand': 'testStrand',
-  //     'chrom': 'testChrom',
-  //     'cds': [0, 11],
-  //     'exons': [{'start': 1, 'stop': 10}, {'start': 15, 'stop': 25}]
-  //   }));
+  it('should draw transcript exons and introns correctly', () => {
+    component.svgElement = d3.select('#svg-container')
+        .append('svg')
+        .append('g')
+        .attr('transform', `translate(${component.options.margin.left}, ${component.options.margin.top})`);
+    component.x = d3.scaleLinear().domain([0, 30]).range([0, 30]).clamp(true);
+    const testTranscript = new GeneViewTranscript(Transcript.fromJson({
+      'transcript_id': 'testTranscriptId',
+      'strand': 'testStrand',
+      'chrom': 'testChrom',
+      'cds': [0, 100],
+      'exons': [{'start': 0, 'stop': 10}, {'start': 15, 'stop': 25}]
+    }));
 
-  //   const drawExonSpy = spyOn(component, 'drawExon').and.callFake((element, xStart, xEnd, y, title, cds, brushSize) => {
-  //     expect(xStart).toBe(-1);
-  //     expect(xEnd).toBe(-1);
-  //   });
-  //   const drawIntronSpy = spyOn(component, 'drawIntron').and.callFake((element, xStart, xEnd, y, title, brushSize) => {
-  //     expect(xStart).toBe(-1);
-  //     expect(xEnd).toBe(-1);
-  //   });
+    let firstExonDrawn = false;
+    const drawExonSpy = spyOn(component, 'drawExon').and.callFake((element, xStart, xEnd, y, title, cds, brushSize) => {
+      if (!firstExonDrawn) {
+        expect(xStart).toBe(0);
+        expect(xEnd).toBe(10);
+        firstExonDrawn = true;
+      } else {
+        expect(xStart).toBe(15);
+        expect(xEnd).toBe(25);
+      }
+    });
+    const drawIntronSpy = spyOn(component, 'drawIntron').and.callFake((element, xStart, xEnd, y, title, brushSize) => {
+      expect(xStart).toBe(10);
+      expect(xEnd).toBe(15);
+    });
 
-  //   component.drawTranscript(component.svgElement, 0, testTranscript);
-  //   expect(drawExonSpy).toHaveBeenCalled();
-  //   expect(drawIntronSpy).toHaveBeenCalled();
-  // });
+    component.drawTranscript(component.svgElement, 0, testTranscript);
+    expect(drawExonSpy).toHaveBeenCalled();
+    expect(drawIntronSpy).toHaveBeenCalled();
+  });
 
   it('should draw exon with cds', () => {
     const drawRectWithCDSSpy = spyOn(svgDrawing, 'drawRect')
