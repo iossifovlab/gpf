@@ -7,9 +7,10 @@ import { FullscreenLoadingService } from 'app/fullscreen-loading/fullscreen-load
 import { UsersService } from 'app/users/users.service';
 import * as svgDrawing from 'app/utils/svg-drawing';
 import * as d3 from 'd3';
+import * as select from 'd3-selection';
 // tslint:disable-next-line:import-blacklist
 import { Subject, Observable } from 'rxjs';
-import { DomainRange, Gene, GeneViewSummaryVariant, GeneViewSummaryVariantsArray, Transcript } from './gene';
+import { Gene, GeneViewSummaryVariant, GeneViewSummaryVariantsArray, Transcript } from './gene';
 import { GeneViewModel, GeneViewTranscript } from './gene-view';
 
 import { GeneViewComponent, GeneViewZoomHistory, GeneViewScaleState } from './gene-view.component';
@@ -319,10 +320,6 @@ describe('GeneViewComponent', () => {
     expect(redrawAndUpdateTableSpy).toHaveBeenCalled();
   });
 
-  // it('should check Hide Transcripts', () => {
-
-  // });
-
   it('should see if Variant Effect is selected', () => {
     component.selectedEffectTypes = ['missense', 'synonymous'];
     expect(component.isVariantEffectSelected('lgds')).toBeFalse();
@@ -582,12 +579,6 @@ describe('GeneViewComponent', () => {
     component.drawGene();
     expect(drawTranscriptSpy).toHaveBeenCalled();
   });
-
-  // it('should redraw and update table correctly on brush end event', () => {
-  //   component.x = d3.scaleLinear().domain([1, 10]).range([1, 10]).clamp(true);
-  //   const setDefaultScaleSpy = spyOn(component, 'setDefaultScale');
-
-  // });
 
   it('should undo state history', () => {
     const moveToPreviousSpy = spyOn(component.zoomHistory, 'moveToPrevious');
