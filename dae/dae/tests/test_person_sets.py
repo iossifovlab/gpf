@@ -26,13 +26,13 @@ def test_produce_sets(fixture_dirname):
     people_sets = PersonSetCollection._produce_sets(config.status)
     assert people_sets == {
         "affected": PersonSet(
-            "affected", "Affected", "affected_val", "#aabbcc", dict()
+            "affected", "Affected", {"affected_val"}, "#aabbcc", dict()
         ),
         "unaffected": PersonSet(
-            "unaffected", "Unaffected", "unaffected_val", "#ffffff", dict()
+            "unaffected", "Unaffected", {"unaffected_val"}, "#ffffff", dict()
         ),
         "unknown": PersonSet(
-            "unknown", "Unknown", "unknown", "#aaaaaa", dict()
+            "unknown", "Unknown", {"unknown"}, "#aaaaaa", dict()
         ),
     }
 
@@ -68,7 +68,7 @@ def test_from_pedigree_missing_value_in_domain(fixture_dirname):
         PersonSetCollection.from_families(
             config.status, quads_f1_families,
         )
-    assert "Domain for 'status' does not have the value 'affected'!" in str(
+    assert "Domain for 'status' does not have the value '('affected',)'!" in str(
         excinfo.value
     )
 
@@ -86,7 +86,7 @@ def test_from_pedigree_nonexistent_domain(fixture_dirname):
             config.invalid, quads_f1_families,
         )
 
-    assert "Domain for 'invalid' does not have the value 'None'!" in \
+    assert "Domain for 'invalid' does not have the value '(None,)'!" in \
         str(excinfo.value)
 
 
@@ -211,3 +211,28 @@ def test_collection_merging_ordering(fixture_dirname):
         "unknown",
         "z_new_role_last",
     ]
+
+
+def test_multiple_column_person_set(fixture_dirname):
+    config = get_person_set_collections_config(
+        fixture_dirname("quads_f1_person_sets_multiple_columns.toml")
+    )
+    quads_f1_families = FamiliesLoader(
+        fixture_dirname("studies/quads_f1/data/quads_f1.ped")
+    ).load()
+    status_sex_collection = PersonSetCollection.from_families(
+        config.status_sex, quads_f1_families
+    )
+
+    affected_male = set(
+        status_sex_collection.person_sets["affected_male"].persons.keys()
+    )
+
+    affected_female = set(
+        status_sex_collection.person_sets["affected_female"].persons.keys()
+    )
+
+    assert affected_male == {'prb1', 'prb2'}
+    assert affected_female == {'sib1', 'sib2', 'sib2_3'}
+
+# TODO Add unit test for default sets

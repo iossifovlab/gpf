@@ -3,7 +3,7 @@ individuals from a study or study group into various
 sets based on what value they have in a given mapping.
 """
 
-from typing import Dict, NamedTuple
+from typing import Dict, NamedTuple, Set
 from dae.configuration.gpf_config_parser import FrozenBox
 from dae.pedigrees.family import Person, FamiliesData
 
@@ -15,7 +15,7 @@ class PersonSet(NamedTuple):
 
     id: str
     name: str
-    value: str
+    values: Set[str]
     color: str
     persons: Dict[str, Person]
 
@@ -41,7 +41,7 @@ class PersonSetCollection(NamedTuple):
             person_set.id: PersonSet(
                 person_set.id,
                 person_set.name,
-                person_set.value,
+                set(person_set["values"]),
                 person_set.color,
                 dict(),
             )
@@ -92,25 +92,32 @@ class PersonSetCollection(NamedTuple):
             families_data,
         )
         value_to_id = {
-            person_set.value: person_set.id
+            tuple(person_set["values"]): person_set.id
             for person_set in collection_config.domain
         }
         if collection_config.default is not None:
             value_to_id[
-                collection_config.default.value
+                tuple(collection_config.default["values"])
             ] = collection_config.default.id
 
-        for person_id, person in families_data.persons.items():
-            value = person.get_attr(collection_config.source.pedigree.column)
+        print(value_to_id)
 
-            # Convert to string since some of the person's
-            # attributes can be of an enum type
-            if value is not None:
-                value = str(value)
+        for person_id, person in families_data.persons.items():
+            values = list()
+            for source in collection_config.sources:
+                value = person.get_attr(source.source)
+                # Convert to string since some of the person's
+                # attributes can be of an enum type
+                if value is not None:
+                    value = str(value)
+                values.append(value)
+
+            # make unified tuple value
+            value = tuple(values)
 
             if value not in value_to_id:
                 if collection_config.default is not None:
-                    value = collection_config.default.value
+                    value = tuple(collection_config.default["values"])
                 else:
                     assert value in value_to_id, (
                         f"Domain for '{collection_config.id}'"
@@ -145,7 +152,7 @@ class PersonSetCollection(NamedTuple):
                 new_collection.person_sets[person_set_id] = PersonSet(
                     person_set.id,
                     person_set.name,
-                    person_set.value,
+                    person_set.values,
                     person_set.color,
                     dict(),
                 )

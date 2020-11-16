@@ -3,7 +3,9 @@ selected_person_set_collections = ["status"]
 
 status.id = "status"
 status.name = "Affected Status"
-status.source.pedigree.column = "status"
+status.sources = [
+    { from = "pedigree", source = "status" },
+]
 status.domain = [
-   {id = "unaffected", name = "Unaffected", value = "unaffected", color = "#ffffff"}
+   {id = "unaffected", name = "Unaffected", values = ["unaffected"], color = "#ffffff"}
 ]

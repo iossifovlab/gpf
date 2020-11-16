@@ -123,7 +123,7 @@ class GenotypeData:
                         domain.append({
                             "id": person_set.id,
                             "name": person_set.name,
-                            "value": person_set.value,
+                            "values": person_set.values,
                             "color": person_set.color,
                         })
                 collection_conf = {

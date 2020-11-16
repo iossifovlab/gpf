@@ -1,29 +1,37 @@
 person_set = {
     "id": {"type": "string"},
     "name": {"type": "string"},
-    "value": {"type": "string"},
+    "values": {"type": "list", "schema": {"type": "string"}},
     "color": {"type": "string"},
+}
+
+person_set_source = {
+    "phenotype": {
+        "type": "dict",
+        "schema": {
+            "instrument": {"type": "string"},
+            "measure": {"type": "string"},
+        },
+        "excludes": "pedigree",
+    },
+    "pedigree": {
+        "type": "dict",
+        "schema": {"column": {"type": "string"}},
+        "excludes": "phenotype",
+    },
 }
 
 person_set_collection = {
     "id": {"type": "string"},
     "name": {"type": "string"},
-    "source": {
-        "type": "dict",
+    "sources": {
+        "type": "list",
         "schema": {
-            "phenotype": {
-                "type": "dict",
-                "schema": {
-                    "instrument": {"type": "string"},
-                    "measure": {"type": "string"},
-                },
-                "excludes": "pedigree",
-            },
-            "pedigree": {
-                "type": "dict",
-                "schema": {"column": {"type": "string"}},
-                "excludes": "phenotype",
-            },
+            "type": "dict",
+            "schema": {
+                "from": {"type": "string"},
+                "source": {"type": "string"}
+            }
         },
     },
     "domain": {
