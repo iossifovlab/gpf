@@ -1,5 +1,5 @@
-import { GeneViewTranscriptSegment, GeneViewTranscript } from './gene-view';
-import { Transcript, Exon } from 'app/gene-view/gene';
+import { GeneViewTranscriptSegment, GeneViewTranscript, GeneViewModel } from './gene-view';
+import { Transcript, Exon, Gene } from 'app/gene-view/gene';
 
 describe('GeneViewTranscriptSegment', () => {
   it('should have working getters', () => {
@@ -109,5 +109,69 @@ describe('GeneViewTranscript', () => {
     expect(geneViewTranscript.resolveRegionChromosomes([1, 35])).toEqual(['1:1-10', '2:15-25']);
     expect(geneViewTranscript.resolveRegionChromosomes([10, 60])).toEqual(['2:15-25', '3:40-55']);
     expect(geneViewTranscript.resolveRegionChromosomes([1, 120])).toEqual(['1:1-10', '2:15-25', '3:40-55', '4:80-100']);
+  });
+});
+
+describe('GeneViewModel', () => {
+  it('should have working getters', () => {
+    const exon = new Exon('1', 1, 10);
+    const exon1 = new Exon('1', 15, 25);
+    const exon2 = new Exon('1', 30, 40);
+    const exon3 = new Exon('1', 45, 55);
+    const transcript = new Transcript('NM_001130045_1', '+', '1', [100, 200], [exon, exon1]);
+    const transcript1 = new Transcript('NM_001130045_2', '+', '1', [100, 200], [exon2, exon3]);
+    const gene = new Gene('TEST', [transcript, transcript1]);
+    const geneViewModel = new GeneViewModel(gene, 1500);
+
+
+    expect(geneViewModel.gene).toBe(gene);
+  });
+
+  it('should calculate buildDomain', () => {
+    const exon = new Exon('1', 1, 10);
+    const exon1 = new Exon('1', 15, 25);
+    const exon2 = new Exon('1', 30, 40);
+    const exon3 = new Exon('1', 45, 55);
+    const transcript = new Transcript('NM_001130045_1', '+', '1', [100, 200], [exon, exon1]);
+    const transcript1 = new Transcript('NM_001130045_2', '+', '1', [100, 200], [exon2, exon3]);
+    const gene = new Gene('TEST', [transcript, transcript1]);
+    const geneViewModel = new GeneViewModel(gene, 1500);
+
+    expect(geneViewModel.buildDomain(0, 3000000000)).toEqual([1, 10, 15, 25, 30, 40, 45, 55]);
+    expect(geneViewModel.buildDomain(0, 10)).toEqual([1, 10]);
+    expect(geneViewModel.buildDomain(0, 5)).toEqual([0, 5]);
+  });
+
+  it('should calculate buildRange without spacer segments', () => {
+    const exon = new Exon('1', 1, 10);
+    const exon1 = new Exon('1', 15, 25);
+    const exon2 = new Exon('1', 30, 40);
+    const exon3 = new Exon('1', 45, 55);
+    const transcript = new Transcript('NM_001130045_1', '+', '1', [100, 200], [exon, exon1]);
+    const transcript1 = new Transcript('NM_001130045_2', '+', '1', [100, 200], [exon2, exon3]);
+    const gene = new Gene('TEST', [transcript, transcript1]);
+    const geneViewModel = new GeneViewModel(gene, 1500);
+
+    expect(geneViewModel.buildRange(0, 3000000000, 1500, false)).toEqual(
+      [0, 250, 388.8888888888889, 666.6666666666667, 805.5555555555557, 1083.3333333333335, 1222.2222222222224, 1500.0000000000002]
+    );
+    expect(geneViewModel.buildRange(0, 3000000000, 1500, true)).toEqual(
+      [0, 195.6521739130435, 413.0434782608696, 630.4347826086957, 847.8260869565219, 1065.217391304348, 1282.608695652174, 1500]
+    );
+  });
+
+  it('should calculate buildRange with spacer segments', () => {
+    const exon = new Exon('1', 1, 10);
+    const exon1 = new Exon('1', 15, 25);
+    const exon2 = new Exon('2', 30, 40);
+    const exon3 = new Exon('2', 45, 55);
+    const transcript = new Transcript('NM_001130045_1', '+', '1', [100, 200], [exon, exon1]);
+    const transcript1 = new Transcript('NM_001130045_2', '+', '1', [100, 200], [exon2, exon3]);
+    const gene = new Gene('TEST1', [transcript, transcript1]);
+    const geneViewModel = new GeneViewModel(gene, 1500);
+
+    expect(geneViewModel.buildRange(0, 3000000000, 1500, true)).toEqual(
+      [0, 205.93220338983053, 434.7457627118645, 663.5593220338984, 813.5593220338984, 1042.3728813559323, 1271.1864406779662, 1500]
+    );
   });
 });
