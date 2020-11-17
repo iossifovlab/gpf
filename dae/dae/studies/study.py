@@ -220,16 +220,18 @@ class GenotypeDataGroup(GenotypeData):
             started = time.time()
             for v in future.result():
                 if v.svuid in variants:
-                    fv_count = variants[v.svuid].get_attribute(
+                    existing = variants[v.svuid]
+                    fv_count = existing.get_attribute(
                         "family_variants_count")[1]
                     if fv_count is None:
                         continue
                     fv_count += v.get_attribute("family_variants_count")[1]
-                    seen_in_status = variants[v.svuid].get_attribute(
+                    seen_in_status = existing.get_attribute(
                         "seen_in_status")[1]
                     seen_in_status = \
                         seen_in_status | v.get_attribute("seen_in_status")[1]
-                    seen_in_denovo = variants[v.svuid].get_attribute(
+
+                    seen_in_denovo = existing.get_attribute(
                         "seen_in_denovo")[1]
                     seen_in_denovo = \
                         seen_in_denovo or v.get_attribute("seen_in_denovo")[1]
@@ -239,7 +241,7 @@ class GenotypeDataGroup(GenotypeData):
                         "seen_in_denovo": [seen_in_denovo]
                     }
                     v.update_attributes(new_attributes)
-                    continue
+
                 variants[v.svuid] = v
                 if limit and len(variants) >= limit:
                     return
