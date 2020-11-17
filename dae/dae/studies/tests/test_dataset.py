@@ -101,5 +101,8 @@ def test_summary_variant_merging(fixtures_gpf_instance, data_import, variants_im
     )
     assert genotype_data_group is not None
     vs = genotype_data_group.query_summary_variants()
-    vs = list(vs)
+    vs = list(sorted(vs, key=lambda v: v.position))
+    assert vs[0].get_attribute("family_variants_count")[1] == 9  # TODO expected?
+    assert vs[1].get_attribute("seen_in_denovo")[1] is True
+    assert vs[1].get_attribute("seen_in_status")[1] == 3
     assert len(vs) == 4

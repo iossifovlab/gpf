@@ -21,7 +21,7 @@ f7	dad7	0	0	1	1	dad	pheno	dad7
 f7	ch7	dad7	mom7	2	2	prb	phenotype2	ch7
 f8	mom8	0	0	2	1	mom	phenotype1	mom8
 f8	dad8	0	0	1	1	dad	pheno	dad8
-f8	ch8	dad8	mom8	2	2	prb	phenotype1	ch8
+f8	ch8	dad8	mom8	2	1	prb	unaffected	ch8
 f8	ch8.1	dad8	mom8	2	2	sib	phenotype2	ch8.1	1.0
 f9	ch9	0	0	1	1	sib	phenotype1	ch9
 f9	ch9.1	0	0	1	1	prb	phenotype1	ch9.1
