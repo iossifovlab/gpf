@@ -91,3 +91,4 @@ import './app/registration/registration.component.spec.ts';
 import './app/gene-view/gene.spec.ts';
 import './app/gene-view/gene-view.spec.ts';
 import './app/gene-view/gene-view.component.spec.ts';
+import './app/gene-browser/gene-browser.component.spec.ts';
