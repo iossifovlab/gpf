@@ -93,3 +93,13 @@ def test_combine_families_sex_unspecified_mismatch():
         "f1.s1",
         "f1.s2",
     }
+
+
+def test_summary_variant_merging(fixtures_gpf_instance, data_import, variants_impala):
+    genotype_data_group = fixtures_gpf_instance.get_genotype_data(
+        "svmergingdataset"
+    )
+    assert genotype_data_group is not None
+    vs = genotype_data_group.query_summary_variants()
+    vs = list(vs)
+    assert len(vs) == 4
