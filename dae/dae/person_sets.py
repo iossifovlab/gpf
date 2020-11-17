@@ -100,8 +100,6 @@ class PersonSetCollection(NamedTuple):
                 tuple(collection_config.default["values"])
             ] = collection_config.default.id
 
-        print(value_to_id)
-
         for person_id, person in families_data.persons.items():
             values = list()
             for source in collection_config.sources:
