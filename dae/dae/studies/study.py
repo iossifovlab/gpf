@@ -246,8 +246,8 @@ class GenotypeDataGroup(GenotypeData):
                 f"Processing study {future.study_id} "
                 f"elapsed: {elapsed:.3f}"
             )
-            for v in variants.values():
-                yield v
+        for v in variants.values():
+            yield v
 
     def query_variants(
             self,
