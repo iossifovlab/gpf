@@ -222,6 +222,8 @@ class GenotypeDataGroup(GenotypeData):
                 if v.svuid in variants:
                     fv_count = variants[v.svuid].get_attribute(
                         "family_variants_count")[1]
+                    if fv_count is None:
+                        continue
                     fv_count += v.get_attribute("family_variants_count")[1]
                     seen_in_status = variants[v.svuid].get_attribute(
                         "seen_in_status")[1]
