@@ -104,7 +104,7 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
     this.familyLoadingFinished = false;
 
     this.getCurrentState().subscribe(state => {
-      const requestParams = this.transformFamilyVariantsQueryParameters(state, this.selectedGene);
+      const requestParams = this.transformFamilyVariantsQueryParameters(state);
       requestParams['maxVariantsCount'] = this.maxFamilyVariants;
       requestParams['summaryVariantIds'] = state['summaryVariantIds'];
       requestParams['genomicScores'] = [{
@@ -117,7 +117,7 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
     });
   }
 
-  transformFamilyVariantsQueryParameters(state, gene: Gene) {
+  transformFamilyVariantsQueryParameters(state) {
     const inheritanceFilters = [];
     if (state.showDenovo && state.showTransmitted) {
       inheritanceFilters.push('denovo');
@@ -234,7 +234,7 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
     this.getCurrentState()
       .subscribe(
         state => {
-          const requestParams = this.transformFamilyVariantsQueryParameters(state, this.selectedGene);
+          const requestParams = this.transformFamilyVariantsQueryParameters(state);
           requestParams['summaryVariantIds'] = state['summaryVariantIds'];
           requestParams['genomicScores'] = [{
             'metric': this.geneBrowserConfig.frequencyColumn,
