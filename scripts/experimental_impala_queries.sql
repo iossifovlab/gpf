@@ -559,3 +559,80 @@ HAVING gpf_bit_or(pedigree.status) IN (3, 2, 1)
 SELECT variants.bucket_index, variants.summary_index, variants.variant_in_members, variants.allele_index, variants.ssc_freq, variants.region_bin, `chromosome`, `position`
 FROM data_hg38_production_202005.sfari_spark_wes_1_consortium_variants as variants 
 LIMIT 10;
+
+
+
+
+
+SELECT variants.bucket_index, variants.summary_index, COUNT(DISTINCT variants.family_id), gpf_bit_or(pedigree.status) 
+FROM data_hg38_production_202005.SFARI_SPARK_WGS_1_variants as variants JOIN data_hg38_production_202005.SFARI_SPARK_WGS_1_pedigree as pedigree 
+WHERE
+  ( (  variants.effect_gene_symbols in (  'CHD8'  )  ) ) AND ( (`chromosome` = 'chr14' AND `position` >= 21365194 AND `position` <= 21457298) ) AND 
+  ( (  variants.effect_types in (  'frame-shift' , 'nonsense' , 'splice-site' , 'no-frame-shift-newStop' , 'missense' , 'synonymous' , 'noStart' , 'noEnd' , 'no-frame-shift' , 'CDS'  )  ) ) AND 
+  ( BITAND(8, variants.inheritance_in_members) = 0 AND BITAND(32, variants.inheritance_in_members) = 0 ) AND ( BITAND(150, variants.inheritance_in_members) != 0 ) AND 
+  ( variants.allele_index > 0 ) AND 
+  ( variants.region_bin IN ('chr14_0') ) AND 
+  variants.variant_in_members = pedigree.person_id 
+GROUP BY bucket_index, summary_index;
+
+
+SELECT bucket_index, summary_index, chromosome, `position`, variant_type, family_id 
+FROM data_hg38_production_202005.SFARI_SPARK_WES_1_variants 
+WHERE
+  ( (  effect_gene_symbols in (  'CHD8'  )  ) ) AND ( (`chromosome` = 'chr14' AND `position` >= 21385194 AND `position` <= 21437298) ) AND 
+  ( (  effect_types in          (  'frame-shift' , 'nonsense' , 'splice-site' , 'no-frame-shift-newStop' , 'missense' , 'synonymous' , 'noStart' , 'noEnd' , 'no-frame-shift' , 'CDS'  )  ) ) AND 
+  ( BITAND(8, inheritance_in_members) = 0 AND BITAND(32, inheritance_in_members) = 0 ) AND ( BITAND(150, inheritance_in_members) != 0 ) AND 
+  ( (ssc_freq <= 100 or ssc_freq is null) ) AND 
+  ( allele_index > 0 ) AND 
+  ( region_bin IN ('chr14_0') )
+
+
+SELECT bucket_index, summary_index, chromosome, `position`, end_position, variant_type, reference, family_id 
+FROM data_hg38_production_202005.SFARI_SPARK_WGS_1_variants 
+WHERE
+  ( (  effect_gene_symbols in (  'CHD8'  )  ) ) AND 
+  ( (`chromosome` = 'chr14' AND `position` >= 21393932 AND `position` <= 21394045) ) AND 
+  ( (  effect_types in (  'synonymous'  )  ) ) AND 
+  ( BITAND(8, inheritance_in_members) = 0 AND BITAND(32, inheritance_in_members) = 0 ) AND ( BITAND(150, inheritance_in_members) != 0 ) AND 
+  ( (ssc_freq <= 0.03408583939688799 or ssc_freq is null) ) AND 
+  ( allele_index > 0 ) AND 
+  ( region_bin IN ('chr14_0') )
+
+
+
+SELECT variants.bucket_index, variants.summary_index, gpf_first(chromosome), MIN(`position`), COUNT(DISTINCT variants.family_id), gpf_bit_or(pedigree.status) 
+FROM data_hg38_production_202005.SFARI_SPARK_WGS_1_variants as variants JOIN data_hg38_production_202005.SFARI_SPARK_WGS_1_pedigree as pedigree 
+WHERE
+  ( (  variants.effect_gene_symbols in (  'CHD8'  )  ) ) AND 
+  ( (`chromosome` = 'chr14' AND `position` >= 21393932 AND `position` <= 21394045) ) AND 
+  ( (  variants.effect_types in (  'synonymous'  )  ) ) AND 
+  ( BITAND(8, variants.inheritance_in_members) = 0 AND BITAND(32, variants.inheritance_in_members) = 0 ) AND ( BITAND(150, variants.inheritance_in_members) != 0 ) AND 
+  ( variants.allele_index > 0 ) AND 
+  ( variants.region_bin IN ('chr14_0') ) AND 
+  variants.variant_in_members = pedigree.person_id 
+GROUP BY bucket_index, summary_index;
+
+
+
+SELECT bucket_index, summary_index, chromosome, `position`, end_position, variant_type, reference, family_id 
+FROM data_hg38_production_202005.SFARI_SPARK_WGS_1_variants 
+WHERE
+  ( (  effect_gene_symbols in (  'CHD8'  )  ) ) AND 
+  ( (`chromosome` = 'chr14' AND `position` >= 21393992 AND `position` <= 21393992) ) AND 
+  ( (  effect_types in (  'synonymous'  )  ) ) AND 
+  ( BITAND(8, inheritance_in_members) = 0 AND BITAND(32, inheritance_in_members) = 0 ) AND ( BITAND(150, inheritance_in_members) != 0 ) AND 
+  ( (ssc_freq <= 0.03408583939688799 or ssc_freq is null) ) AND 
+  ( allele_index > 0 ) AND 
+  ( region_bin IN ('chr14_0') );
+
+
+SELECT bucket_index, summary_index, chromosome, `position`, end_position, variant_type, reference, family_id 
+FROM data_hg38_production_202005.SFARI_SPARK_WES_1_variants 
+WHERE
+  ( (  effect_gene_symbols in (  'CHD8'  )  ) ) AND 
+  ( (`chromosome` = 'chr14' AND `position` >= 21393992 AND `position` <= 21393992) ) AND 
+  ( (  effect_types in (  'synonymous'  )  ) ) AND 
+  ( BITAND(8, inheritance_in_members) = 0 AND BITAND(32, inheritance_in_members) = 0 ) AND ( BITAND(150, inheritance_in_members) != 0 ) AND 
+  ( (ssc_freq <= 0.03408583939688799 or ssc_freq is null) ) AND 
+  ( allele_index > 0 ) AND 
+  ( region_bin IN ('chr14_0') );
