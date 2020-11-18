@@ -82,6 +82,18 @@ class VariantsLoader:
     def set_attribute(self, key: str, value: Any) -> None:
         self._attributes[key] = value
 
+    @classmethod
+    def build_cli_params(cls, params):
+        raise NotImplementedError
+
+    @classmethod
+    def cli_defaults(cls):
+        raise NotImplementedError
+
+    @classmethod
+    def cli_options(cls, parser):
+        raise NotImplementedError
+
 
 class VariantsLoaderDecorator(VariantsLoader):
     def __init__(self, variants_loader: VariantsLoader):
@@ -104,6 +116,18 @@ class VariantsLoaderDecorator(VariantsLoader):
 
     def __getattr__(self, attr):
         return getattr(self.variants_loader, attr, None)
+
+    @classmethod
+    def build_cli_params(cls, params):
+        return self.variants_loader.build_cli_params(params)
+
+    @classmethod
+    def cli_defaults(cls):
+        return self.variants_loader.cli_defaults()
+
+    @classmethod
+    def cli_options(cls, parser):
+        return self.variants_loader.cli_options
 
 
 class AnnotationDecorator(VariantsLoaderDecorator):
