@@ -1,4 +1,5 @@
 import { GenotypePreviewVariantsArray, GenotypePreview } from 'app/genotype-preview-model/genotype-preview';
+import { GeneViewTranscript } from './gene-view';
 
 export class Exon {
   constructor(
@@ -117,11 +118,25 @@ export class Gene {
 
   collapsedTranscript(): Transcript {
     const allExons: Exon[] = [];
-    for (const transcipt of this.transcripts) {
-      for (const exon of transcipt.exons) {
+    const cds: number[] = [];
+    const codingStartsAndStops: number[] = [];
+    let geneViewTranscript: GeneViewTranscript;
+
+    for (const transcript of this.transcripts) {
+      for (const exon of transcript.exons) {
         allExons.push(exon);
       }
+
+      geneViewTranscript = new GeneViewTranscript(transcript);
+      for (const segment of geneViewTranscript.segments) {
+        if (segment.isCDS) {
+          codingStartsAndStops.push(segment.start, segment.stop);
+        }
+      }
     }
+
+    cds.push(Math.min(...codingStartsAndStops), Math.max(...codingStartsAndStops));
+
     const sortedExons: Exon[] = allExons.sort(
       (e1, e2) => e1.start > e2.start ? 1 : -1
     );
@@ -142,12 +157,6 @@ export class Gene {
       result.push(new Exon(curr.chrom, curr.start, curr.stop));
     }
     const firstTranscript = this.transcripts[0];
-
-    const firstExon = result[0];
-    const lastExon = result[result.length - 1];
-    const cds: number[] = [];
-    cds.push(firstExon.start);
-    cds.push(lastExon.stop);
 
     return new Transcript(
       'collapsed', firstTranscript.strand, firstTranscript.chrom, cds, result
