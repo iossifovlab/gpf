@@ -10,10 +10,7 @@ import { QueryStateCollector } from 'app/query/query-state-provider';
 import { QueryService } from 'app/query/query.service';
 import { StateRestoreService } from 'app/store/state-restore.service';
 import { UsersService } from 'app/users/users.service';
-import { treemapResquarify } from 'd3';
-import { Observable } from 'rxjs/internal/Observable';
 import { of } from 'rxjs/internal/observable/of';
-import { MapOperator } from 'rxjs/internal/operators/map';
 import { GeneBrowserComponent } from './gene-browser.component';
 
 class MockActivatedRoute {
@@ -64,7 +61,8 @@ describe('GeneBrowserComponent', () => {
       peopleGroup: 'testPeopleGroup',
       datasetId: 'testDatasetId',
       zoomState: {yMin: 0, yMax: 10},
-      regions: [1, 10]
+      regions: [1, 10],
+      summaryVariantIds: [5, 10, 15]
     };
   });
 
@@ -81,19 +79,36 @@ describe('GeneBrowserComponent', () => {
     expect(state).toEqual([{datasetId: 'testId'}] as any);
   });
 
-  // it('should update shown table preview variants array', () => {
-  //   const getGenotypePreviewVariantsByFilterSpy = spyOn(component.queryService, 'getGenotypePreviewVariantsByFilter')
-  //     .and.callFake((requestParams, previewInfo) => {
-  //       expect(previewInfo).toEqual(component.genotypePreviewInfo);
-  //       console.log(requestParams);
-  //       return 'testPreviewVariantsArray' as any;
-  //     });
-  //   const getCurrentStateSpy = spyOn(component, 'getCurrentState').and.returnValue(testState);
-  //   component.maxFamilyVariants = 1;
-  //   component.updateShownTablePreviewVariantsArray(new DomainRange(1, 11));
-  //   console.log(component.genotypePreviewVariantsArray);
-  //   // expect(component.genotypePreviewVariantsArray).toEqual([] as any);
-  // });
+  it('should update shown table preview variants array', () => {
+    component.familyLoadingFinished = true;
+    const getGenotypePreviewVariantsByFilterSpy = spyOn(component.queryService, 'getGenotypePreviewVariantsByFilter')
+      .and.callFake((requestParams, previewInfo) => {
+        expect(previewInfo).toEqual(component.genotypePreviewInfo);
+        expect(requestParams).toEqual({
+          effectTypes: [ 'lgds', 'missense', 'synonymous', 'noStart', 'noEnd', 'no-frame-shift', 'CDS' ],
+          genomicScores: [{ metric: 'testMetric', rangeStart: 1, rangeEnd: 11 }],
+          inheritanceTypeFilter: [ 'denovo', 'mendelian', 'omission', 'missing' ],
+          affectedStatus: [ 'Affected and unaffected', 'Affected only', 'Unaffected only' ],
+          geneSymbols: [ 'testSymbol' ],
+          datasetId: 'testDatasetId',
+          regions: [ 1, 10 ],
+          maxVariantsCount: 1,
+          summaryVariantIds: [5, 10, 15]
+        });
+        return 'testPreviewVariantsArray' as any;
+      });
+    const getCurrentStateSpy = spyOn(component, 'getCurrentState').and.returnValue(of(testState));
+    // accesing private property - bad, needs to be refactored
+    (component as any).geneBrowserConfig = {frequencyColumn: 'testMetric'};
+    component.maxFamilyVariants = 1;
+
+    component.updateShownTablePreviewVariantsArray(new DomainRange(1, 11));
+    expect(getGenotypePreviewVariantsByFilterSpy).toHaveBeenCalled();
+    expect(getCurrentStateSpy).toHaveBeenCalled();
+    expect(component.genotypePreviewVariantsArray).toEqual('testPreviewVariantsArray' as any);
+    expect(component.familyLoadingFinished).toBeFalse();
+  });
+
   it('should transform family variants query parameters', () => {
     testState.affectedStatus = ['Affected only'];
     expect(component.transformFamilyVariantsQueryParameters(testState)).toEqual({
@@ -128,5 +143,104 @@ describe('GeneBrowserComponent', () => {
     testState.selectedEffectTypes = ['missense', 'synonymous'];
     expect(component.transformFamilyVariantsQueryParameters(testState).effectTypes)
       .toEqual(['missense', 'synonymous']);
+  });
+
+  it('should submit gene request', () => {
+    component.hideResults = true;
+    component.enableCodingOnly = true;
+    const getCurrentStateSpy = spyOn(component, 'getCurrentState').and.returnValue(of(testState));
+    // accesing private property - bad, needs to be refactored
+    (component as any).geneService = {
+      getGene(gene) { return of('testGene'); },
+    };
+    spyOn(component.queryService, 'getGenotypePreviewInfo').and.returnValue(of('testGenotypePreviewInfo' as any));
+    spyOn(component.queryService, 'getGeneViewVariants').and.callFake((requestParams) => {
+      if (component.enableCodingOnly) {
+        expect(requestParams).toEqual({
+          showDenovo: true,
+          showTransmitted: true,
+          selectedEffectTypes: [ 'lgds', 'missense', 'synonymous', 'other' ],
+          affectedStatus: [ 'Affected and unaffected' ],
+          genomicScores: 'testGenomicScores',
+          geneSymbols: [ 'testSymbol' ],
+          peopleGroup: 'testPeopleGroup',
+          datasetId: 'testDatasetId',
+          summaryVariantIds: [ 5, 10, 15 ],
+          maxVariantsCount: 10000,
+          effectTypes: [ 'lgds', 'nonsense', 'frame-shift', 'splice-site', 'no-frame-shift-newStop',
+            'missense', 'synonymous', 'noStart', 'noEnd', 'no-frame-shift', 'CDS' ],
+          inheritanceTypeFilter: [ 'denovo', 'mendelian', 'omission', 'missing' ]
+        });
+      } else {
+        expect(requestParams).toEqual({
+          showDenovo: true,
+          showTransmitted: true,
+          selectedEffectTypes: [ 'lgds', 'missense', 'synonymous', 'other' ],
+          affectedStatus: [ 'Affected and unaffected' ],
+          genomicScores: 'testGenomicScores',
+          geneSymbols: [ 'testSymbol' ],
+          peopleGroup: 'testPeopleGroup',
+          datasetId: 'testDatasetId',
+          summaryVariantIds: [ 5, 10, 15 ],
+          maxVariantsCount: 10000,
+          inheritanceTypeFilter: [ 'denovo', 'mendelian', 'omission', 'missing' ]
+        });
+      }
+
+      return 'testSummaryVariantsArray' as any;
+    });
+    component.geneViewComponent = {enableIntronCondensing() {}, disableIntronCondensing() {}} as any;
+    const enableIntronCondensingSpy = spyOn(component.geneViewComponent, 'enableIntronCondensing');
+    const disableIntronCondensingSpy = spyOn(component.geneViewComponent, 'disableIntronCondensing');
+
+    component.submitGeneRequest();
+    expect(component.hideResults).toBeFalse();
+    expect(component.geneSymbol).toBe('testSymbol');
+    expect(component.selectedGene).toBe('testGene' as any);
+    expect(component.genotypePreviewInfo).toBe('testGenotypePreviewInfo' as any);
+    expect(component.genotypePreviewVariantsArray).toBe(null);
+    expect(enableIntronCondensingSpy).toHaveBeenCalled();
+    expect(disableIntronCondensingSpy).not.toHaveBeenCalled();
+    expect(component.summaryVariantsArray).toBe('testSummaryVariantsArray' as any);
+
+    component.enableCodingOnly = false;
+    component.submitGeneRequest();
+    expect(disableIntronCondensingSpy).toHaveBeenCalled();
+  });
+
+  it('should get family variant counts', () => {
+    component.genotypePreviewVariantsArray = undefined;
+    expect(component.getFamilyVariantCounts()).toBe('');
+
+    component.maxFamilyVariants = 12;
+    component.genotypePreviewVariantsArray = { getVariantsCount(maxFamilyVariants) {}} as any;
+    const getVariantsCountSpy = spyOn(component.genotypePreviewVariantsArray, 'getVariantsCount').and.callFake((variants) => {
+      expect(variants).toBe(12);
+      return 'variants';
+    });
+    expect(component.getFamilyVariantCounts()).toBe('variants');
+    expect(getVariantsCountSpy).toHaveBeenCalled();
+  });
+
+  it('should set on submit event query data to the requested parameters', () => {
+    // accesing private property - bad, needs to be refactored
+    (component as any).geneBrowserConfig = {frequencyColumn: 'testMetric'};
+    const event = {
+      target: {queryData: {value: ''}, submit() {}}
+    };
+    const getCurrentStateSpy = spyOn(component, 'getCurrentState').and.returnValue(of(testState));
+    const submitSpy = spyOn(event.target, 'submit').and.callFake(() => {
+      expect(event.target.queryData.value).toEqual('{' +
+        '"effectTypes":["lgds","missense","synonymous","noStart","noEnd","no-frame-shift","CDS"],' +
+        '"genomicScores":[{"metric":"testMetric","rangeStart":null,"rangeEnd":10}],' +
+        '"inheritanceTypeFilter":["denovo","mendelian","omission","missing"],' +
+        '"affectedStatus":["Affected and unaffected","Affected only","Unaffected only"],' +
+        '"geneSymbols":["testSymbol"],"datasetId":"testDatasetId",' +
+        '"regions":[1,10],"summaryVariantIds":[5,10,15]}');
+    });
+
+    component.onSubmit(event);
+    expect(getCurrentStateSpy).toHaveBeenCalled();
+    expect(submitSpy).toHaveBeenCalled();
   });
 });
