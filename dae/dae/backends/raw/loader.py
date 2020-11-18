@@ -5,6 +5,7 @@ import time
 import copy
 import numpy as np
 import pandas as pd
+from enum import Enum
 
 from typing import Iterator, Tuple, List, Dict, Any, Optional, Sequence
 
@@ -22,6 +23,63 @@ from dae.variants.attributes import Sex, GeneticModel
 from dae.variants.attributes import TransmissionType
 
 from dae.utils.variant_utils import get_locus_ploidy, best2gt
+
+
+class ArgumentType(Enum):
+    ARGUMENT = 1
+    OPTION = 2
+
+
+class CLIArgument:
+    def __init__(
+            self, argument_name, has_value = True,
+            default_value=None, destination=None,
+            help_text=None, action=None, value_type=None,
+            metavar=None, nargs=None):
+        self.argument_name = argument_name
+        self.has_value = has_value
+        self.default_value = default_value
+        self.destination = destination
+        self.value_type = value_type
+        self.metavar = metavar
+        self.help_text = help_text
+        self.nargs = nargs
+        if destination is None:
+            destination = self._default_destination()
+
+    def _default_destination(self):
+        if self.argument_name.startswith("--"):
+            self.arg_type = ArgumentType.ARGUMENT
+        else:
+            self.arg_type = ArgumentType.OPTION
+        return self.argument_name.replace("-", "_")
+
+    def add_to_parser(self, parser):
+        parser.add_argument(
+            self.argument_name,
+            type=self.arg_type,
+            dest=self.destination,
+            metavar=self.metavar,
+            help=self.help_text,
+            default=self.default_value,
+            nargs=self.nargs
+        )
+
+    def build_option(self, params):
+        if self.arg_type == ArgumentType.ARGUMENT:
+            return ""
+        for key, value in params.items():
+            if key == self.destination:
+                if value is not None:
+                    if self.has_value:
+                        return f"--{self.argument_name} {value}"
+                    else:
+                        return f"--{self.argument_name}"
+                elif self.default_value is not None and self.has_value:
+                    return f"--{self.argument_name} {self.default_value}"
+                else:
+                    return f"--{self.argument_name}"
+        return ""
 
 
 class FamiliesGenotypes:
@@ -631,3 +689,4 @@ class VariantsGenotypesLoader(VariantsLoader):
             "add_chrom_prefix": None,
             "del_chrom_prefix": None,
         }
+
