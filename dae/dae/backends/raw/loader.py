@@ -49,15 +49,16 @@ class CLIArgument:
 
     def _default_destination(self):
         if self.argument_name.startswith("--"):
-            self.arg_type = ArgumentType.ARGUMENT
-        else:
             self.arg_type = ArgumentType.OPTION
+        else:
+            self.arg_type = ArgumentType.ARGUMENT
+            return None
         return self.argument_name.replace("-", "_")
 
     def add_to_parser(self, parser):
         parser.add_argument(
             self.argument_name,
-            type=self.arg_type,
+            type=self.value_type,
             dest=self.destination,
             metavar=self.metavar,
             help=self.help_text,
@@ -109,36 +110,38 @@ class FamiliesGenotypes:
 
 class CLILoader:
     def __init__(self):
-        self.arguments = []
-        self._init_arguments()
+        self.arguments = self._arguments()
 
     def _add_argument(self, argument):
         self.arguments.append(argument)
 
-    def _init_arguments(self):
+    @classmethod
+    def _arguments(cls):
         raise NotImplementedError()
 
     @classmethod
     def cli_defaults(cls):
-        argument_destinations = [arg.destination for arg in cls.arguments]
-        defaults = [arg.default_value for arg in cls.arguments]
+        argument_destinations = [arg.destination for arg in cls._arguments]
+        defaults = [arg.default_value for arg in cls._arguments]
         return {k: v for (k, v) in zip(argument_destinations, defaults)}
 
     @classmethod
-    def cli_arguments(cls, parser):
-        for argument in cls.arguments:
+    def cli_arguments(cls, parser, options_only=False):
+        for argument in cls._arguments():
+            if options_only and argument.arg_type == ArgumentType.ARGUMENT:
+                continue
             argument.add_to_parser(parser)
 
     @classmethod
     def build_cli_arguments(cls, params):
         result = []
-        for argument in cls.arguments:
+        for argument in cls._arguments():
             result.append(argument.build_option)
         return " ".join(result)
 
     @classmethod
     def parse_cli_arguments(cls, argv):
-        for arg in cls.arguments:
+        for arg in cls._arguments():
             arg.parse_cli_argument(argv)
 
 
@@ -151,6 +154,7 @@ class VariantsLoader(CLILoader):
         params: Dict[str, Any] = {},
         attributes: Optional[Dict[str, Any]] = None,
     ):
+        print("test 2")
 
         super().__init__()
         assert isinstance(families, FamiliesData)
@@ -171,8 +175,9 @@ class VariantsLoader(CLILoader):
     # def variants_filenames(self):
     #     return self.filenames
 
-    def _init_arguments(self):
-        pass
+    @classmethod
+    def _arguments(cls):
+        return []
 
     def full_variants_iterator(self):
         raise NotImplementedError()
@@ -471,6 +476,7 @@ class VariantsGenotypesLoader(VariantsLoader):
             expect_genotype: bool = True,
             expect_best_state: bool = False,
             params: Dict[str, Any] = {}):
+        print("test 1")
 
         super(VariantsGenotypesLoader, self).__init__(
             families=families,
@@ -497,19 +503,22 @@ class VariantsGenotypesLoader(VariantsLoader):
         self.expect_genotype = expect_genotype
         self.expect_best_state = expect_best_state
 
-    def _init_arguments(self):
-        self._add_argument(CLIArgument(
+    @classmethod
+    def _arguments(cls):
+        arguments = super()._arguments()
+        arguments.append(CLIArgument(
             "--add-chrom-prefix",
-            var_type=str,
+            value_type=str,
             help_text="Add specified prefix to each chromosome name in "
             "variants file",
         ))
-        self._add_argument(CLIArgument(
+        arguments.append(CLIArgument(
             "--del-chrom-prefix",
-            var_type=str,
+            value_type=str,
             help_text="Remove specified prefix to each chromosome name in "
             "variants file",
         ))
+        return arguments
 
     @property
     def variants_filenames(self):
