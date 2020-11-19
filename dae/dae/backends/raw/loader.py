@@ -32,7 +32,7 @@ class ArgumentType(Enum):
 
 class CLIArgument:
     def __init__(
-            self, argument_name, has_value = True,
+            self, argument_name, has_value=True,
             default_value=None, destination=None,
             help_text=None, action=None, value_type=None,
             metavar=None, nargs=None):
@@ -81,6 +81,14 @@ class CLIArgument:
                     return f"--{self.argument_name}"
         return ""
 
+    def parse_cli_argument(self, argv):
+        if self.destination not in argv:
+            return
+        argument = getattr(argv, self.destination)
+        if argument is None:
+            if self.default_value is not None:
+                setattr(argv, self.destination, self.default_value)
+
 
 class FamiliesGenotypes:
     def __init__(self):
@@ -99,7 +107,42 @@ class FamiliesGenotypes:
         raise NotImplementedError()
 
 
-class VariantsLoader:
+class CLILoader:
+    def __init__(self):
+        self.arguments = []
+        self._init_arguments()
+
+    def _add_argument(self, argument):
+        self.arguments.append(argument)
+
+    def _init_arguments(self):
+        raise NotImplementedError()
+
+    @classmethod
+    def cli_defaults(cls):
+        argument_destinations = [arg.destination for arg in cls.arguments]
+        defaults = [arg.default_value for arg in cls.arguments]
+        return {k: v for (k, v) in zip(argument_destinations, defaults)}
+
+    @classmethod
+    def cli_arguments(cls, parser):
+        for argument in cls.arguments:
+            argument.add_to_parser(parser)
+
+    @classmethod
+    def build_cli_arguments(cls, params):
+        result = []
+        for argument in cls.arguments:
+            result.append(argument.build_option)
+        return " ".join(result)
+
+    @classmethod
+    def parse_cli_arguments(cls, argv):
+        for arg in cls.arguments:
+            arg.parse_cli_argument(argv)
+
+
+class VariantsLoader(CLILoader):
     def __init__(
         self,
         families: FamiliesData,
@@ -109,6 +152,7 @@ class VariantsLoader:
         attributes: Optional[Dict[str, Any]] = None,
     ):
 
+        super().__init__()
         assert isinstance(families, FamiliesData)
         self.families = families
         assert all([os.path.exists(fn) for fn in filenames]), filenames
@@ -121,10 +165,14 @@ class VariantsLoader:
             self._attributes = {}
         else:
             self._attributes = copy.deepcopy(attributes)
+        self.arguments = []
 
     # @property
     # def variants_filenames(self):
     #     return self.filenames
+
+    def _init_arguments(self):
+        pass
 
     def full_variants_iterator(self):
         raise NotImplementedError()
@@ -133,24 +181,6 @@ class VariantsLoader:
         for _, fvs in self.full_variants_iterator():
             for fv in fvs:
                 yield fv
-
-    def get_attribute(self, key: str) -> Any:
-        return self._attributes.get(key, None)
-
-    def set_attribute(self, key: str, value: Any) -> None:
-        self._attributes[key] = value
-
-    @classmethod
-    def build_cli_params(cls, params):
-        raise NotImplementedError
-
-    @classmethod
-    def cli_defaults(cls):
-        raise NotImplementedError
-
-    @classmethod
-    def cli_options(cls, parser):
-        raise NotImplementedError
 
 
 class VariantsLoaderDecorator(VariantsLoader):
@@ -177,15 +207,15 @@ class VariantsLoaderDecorator(VariantsLoader):
 
     @classmethod
     def build_cli_params(cls, params):
-        return self.variants_loader.build_cli_params(params)
+        return cls.variants_loader.build_cli_params(params)
 
     @classmethod
     def cli_defaults(cls):
-        return self.variants_loader.cli_defaults()
+        return cls.variants_loader.cli_defaults()
 
     @classmethod
     def cli_options(cls, parser):
-        return self.variants_loader.cli_options
+        return cls.variants_loader.cli_options
 
 
 class AnnotationDecorator(VariantsLoaderDecorator):
@@ -467,6 +497,20 @@ class VariantsGenotypesLoader(VariantsLoader):
         self.expect_genotype = expect_genotype
         self.expect_best_state = expect_best_state
 
+    def _init_arguments(self):
+        self._add_argument(CLIArgument(
+            "--add-chrom-prefix",
+            var_type=str,
+            help_text="Add specified prefix to each chromosome name in "
+            "variants file",
+        ))
+        self._add_argument(CLIArgument(
+            "--del-chrom-prefix",
+            var_type=str,
+            help_text="Remove specified prefix to each chromosome name in "
+            "variants file",
+        ))
+
     @property
     def variants_filenames(self):
         return self.filenames
@@ -651,42 +695,3 @@ class VariantsGenotypesLoader(VariantsLoader):
                         fa._genetic_model = family_variant.genetic_model
 
             yield summary_variant, family_variants
-
-    @classmethod
-    def build_cli_params(cls, params):
-        param_defaults = cls.cli_defaults()
-        result = {}
-        for key, value in params.items():
-            assert key in param_defaults, (key, list(param_defaults.keys()))
-            if value != param_defaults[key]:
-                if value is None:
-                    result[key] = ""
-                else:
-                    result[key] = f"{value}"
-
-        return result
-
-    @classmethod
-    def cli_options(cls, parser):
-        parser.add_argument(
-            "--add-chrom-prefix",
-            type=str,
-            default=None,
-            help="Add specified prefix to each chromosome name in "
-            "variants file",
-        )
-        parser.add_argument(
-            "--del-chrom-prefix",
-            type=str,
-            default=None,
-            help="Removes specified prefix from each chromosome name in "
-            "variants file",
-        )
-
-    @classmethod
-    def cli_defaults(cls):
-        return {
-            "add_chrom_prefix": None,
-            "del_chrom_prefix": None,
-        }
-
