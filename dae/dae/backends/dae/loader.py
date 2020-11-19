@@ -28,6 +28,7 @@ from dae.backends.raw.loader import (
     VariantsGenotypesLoader,
     TransmissionType,
     FamiliesGenotypes,
+    CLIArgument
 )
 
 from dae.variants.attributes import VariantType
@@ -214,127 +215,76 @@ class DenovoLoader(VariantsGenotypesLoader):
         return genotype
 
     @classmethod
-    def cli_arguments(cls, parser):
-        parser.add_argument(
+    def _arguments(cls):
+        arguments = super()._arguments()
+        arguments.append(CLIArgument(
             "denovo_file",
-            type=str,
+            value_type=str,
             metavar="<variants filename>",
-            help="DAE denovo variants file",
-        )
-        DenovoLoader.cli_options(parser)
-
-    @classmethod
-    def cli_options(cls, parser):
-        variant_group = parser.add_argument_group("variant specification")
-
-        variant_group.add_argument(
+            help_text="DAE denovo variants file",
+        ))
+        arguments.append(CLIArgument(
             "--denovo-variant",
-            default=None,
-            help="The label or index of the column containing the CSHL-style"
+            help_text="The label or index of the"
+            " column containing the CSHL-style"
             " representation of the variant."
             "[Default: variant]",
-        )
-        variant_group.add_argument(
+        ))
+        arguments.append(CLIArgument(
             "--denovo-ref",
-            default=None,
-            help="The label or index of the column containing the reference"
+            help_text="The label or index of the"
+            " column containing the reference"
             " allele for the variant. [Default: none]",
-        )
-        variant_group.add_argument(
+        ))
+        arguments.append(CLIArgument(
             "--denovo-alt",
-            default=None,
-            help="The label or index of the column containing the alternative"
+            help__text="The label or index of the "
+            " column containing the alternative"
             " allele for the variant. [Default: none]",
-        )
-
-        location_group = parser.add_argument_group("variant location")
-        location_group.add_argument(
+        ))
+        arguments.append(CLIArgument(
             "--denovo-location",
-            default=None,
-            help="The label or index of the column containing the CSHL-style"
+            default_value="location",
+            help_text="The label or index of the"
+            " column containing the CSHL-style"
             " location of the variant. [Default: location]",
-        )
-        location_group.add_argument(
+        ))
+        arguments.append(CLIArgument(
             "--denovo-chrom",
-            default=None,
-            help="The label or index of the column containing the chromosome"
+            help_text="The label or index of the"
+            " column containing the chromosome"
             " upon which the variant is located. [Default: none]",
-        )
-        location_group.add_argument(
+        ))
+        arguments.append(CLIArgument(
             "--denovo-pos",
-            default=None,
-            help="The label or index of the column containing the position"
+            help_text="The label or index of the"
+            " column containing the position"
             " upon which the variant is located. [Default: none]",
-        )
-
-        genotype_group = parser.add_argument_group("variant genotype")
-        genotype_group.add_argument(
+        ))
+        arguments.append(CLIArgument(
             "--denovo-family-id",
-            help="The label or index of the column containing the "
-            "family's ID. [Default: familyId]",
-        )
-        genotype_group.add_argument(
+            default_value="familyId",
+            help_text="The label or index of the column containing the"
+            " family's ID. [Default: familyId]",
+        ))
+        arguments.append(CLIArgument(
             "--denovo-best-state",
-            help="The label or index of the column containing the best state"
+            default_value="bestState",
+            help_text="The label or index of the"
+            " column containing the best state"
             " for the family. [Default: bestState]",
-        )
-        genotype_group.add_argument(
+        ))
+        arguments.append(CLIArgument(
             "--denovo-person-id",
-            help="The label or index of the column containing the "
-            "person's ID. [Default: none]",
-        )
-
-        parser.add_argument(
+            help_text="The label or index of the column containing the"
+            " person's ID. [Default: none]",
+        ))
+        arguments.append(CLIArgument(
             "--denovo-sep",
-            type=str,
-            default=None,
-            help="Denovo file field separator [default: `\\t`]",
-        )
-
-        parser.add_argument(
-            "--add-chrom-prefix",
-            type=str,
-            default=None,
-            help="Add specified prefix to each chromosome name in "
-            "variants file",
-        )
-        parser.add_argument(
-            "--del-chrom-prefix",
-            type=str,
-            default=None,
-            help="Removes specified prefix from each chromosome name in "
-            "variants file",
-        )
-
-    @classmethod
-    def cli_defaults(cls):
-        return {
-            "denovo_variant": None,
-            "denovo_ref": None,
-            "denovo_alt": None,
-            "denovo_location": None,
-            "denovo_chrom": None,
-            "denovo_pos": None,
-            "denovo_family_id": None,
-            "denovo_best_state": None,
-            "denovo_person_id": None,
-            "add_chrom_prefix": None,
-            "del_chrom_prefix": None,
-            "denovo_sep": "\t",
-        }
-
-    @classmethod
-    def build_cli_arguments(cls, params):
-        param_defaults = DenovoLoader.cli_defaults()
-        result = []
-        for k, v in params.items():
-            assert k in param_defaults, (k, list(param_defaults.keys()))
-            if v != param_defaults[k]:
-                param = k.replace("_", "-")
-                result.append(f"--{param}")
-                result.append(f"{v}")
-
-        return " ".join(result)
+            value_type=str,
+            default_value="\t",
+            help_text="Denovo file field separator [default: `\\t`]",
+        ))
 
     @classmethod
     def parse_cli_arguments(cls, argv):
@@ -946,63 +896,21 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
             self.lines_iterator = None
 
     @classmethod
-    def cli_defaults(cls):
-        return {
-            "dae_include_reference_genotypes": False,
-            "add_chrom_prefix": None,
-            "del_chrom_prefix": None,
-        }
-
-    @classmethod
-    def build_cli_arguments(cls, params):
-        param_defaults = DaeTransmittedLoader.cli_defaults()
-        result = []
-        for key, value in params.items():
-            assert key in param_defaults, (key, list(param_defaults.keys()))
-            if value != param_defaults[key]:
-                param = key.replace("_", "-")
-                if key in ("dae_include_reference_genotypes"):
-                    if value:
-                        result.append(f"--{param}")
-                else:
-                    result.append(f"--{param}")
-                    result.append(f"{value}")
-        return " ".join(result)
-
-    @classmethod
-    def cli_arguments(cls, parser):
-        parser.add_argument(
+    def _arguments(cls):
+        arguments = super()._arguments()
+        arguments.append(CLIArgument(
             "dae_summary_file",
             type=str,
             metavar="<summary filename>",
-            help="summary variants file to import",
-        )
-        cls.cli_options(parser)
-
-    @classmethod
-    def cli_options(cls, parser):
-        parser.add_argument(
+            help_text="summary variants file to import",
+        ))
+        arguments.append(CLIArgument(
             "--dae-include-reference-genotypes",
             default=False,
             dest="dae_include_reference_genotypes",
             help="fill in reference only variants [default: %(default)s]",
             action="store_true",
-        )
-
-        parser.add_argument(
-            "--add-chrom-prefix",
-            type=str,
-            default=None,
-            help="Add specified prefix to each chromosome name in "
-            "variants file",
-        )
-        parser.add_argument(
-            "--del-chrom-prefix",
-            type=str,
-            default=None,
-            help="Removes specified prefix from each chromosome name in "
-            "variants file",
-        )
+        ))
 
     @classmethod
     def parse_cli_arguments(cls, argv):
