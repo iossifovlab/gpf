@@ -44,6 +44,7 @@ class CLIArgument:
         self.metavar = metavar
         self.help_text = help_text
         self.nargs = nargs
+        self.action = action
         if destination is None:
             destination = self._default_destination()
 
@@ -63,7 +64,8 @@ class CLIArgument:
             metavar=self.metavar,
             help=self.help_text,
             default=self.default_value,
-            nargs=self.nargs
+            nargs=self.nargs,
+            action=self.action
         )
 
     def build_option(self, params):
