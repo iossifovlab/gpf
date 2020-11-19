@@ -585,7 +585,6 @@ class VcfLoader(VariantsGenotypesLoader):
         arguments.append(CLIArgument(
             "--vcf-chromosomes",
             value_type=str,
-            default_value=None,
             help_text="specifies a list of filename template "
             "substitutions; then specified variant filename(s) are treated "
             "as templates and each occurent of `{vc}` is replaced "

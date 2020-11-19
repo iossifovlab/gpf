@@ -57,16 +57,24 @@ class CLIArgument:
         return self.argument_name.replace("-", "_")
 
     def add_to_parser(self, parser):
-        parser.add_argument(
-            self.argument_name,
-            type=self.value_type,
-            dest=self.destination,
-            metavar=self.metavar,
-            help=self.help_text,
-            default=self.default_value,
-            nargs=self.nargs,
-            action=self.action
-        )
+        if self.action:
+            parser.add_argument(
+                self.argument_name,
+                action=self.action,
+                dest=self.destination,
+                help=self.help_text,
+                default=self.default_value,
+            )
+        else:
+            parser.add_argument(
+                self.argument_name,
+                type=self.value_type,
+                dest=self.destination,
+                metavar=self.metavar,
+                help=self.help_text,
+                default=self.default_value,
+                nargs=self.nargs,
+            )
 
     def build_option(self, params):
         if self.arg_type == ArgumentType.ARGUMENT:

@@ -128,9 +128,9 @@ def cli_arguments(dae_config, argv=sys.argv[1:]):
         default=False
     )
 
-    DenovoLoader.cli_options(parser)
+    DenovoLoader.cli_arguments(parser, options_only=True)
     VcfLoader.cli_arguments(parser, options_only=True)
-    DaeTransmittedLoader.cli_options(parser)
+    DaeTransmittedLoader.cli_arguments(parser, options_only=True)
     CNVLoader.cli_options(parser)
 
     parser_args = parser.parse_args(argv)

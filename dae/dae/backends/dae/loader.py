@@ -238,7 +238,7 @@ class DenovoLoader(VariantsGenotypesLoader):
         ))
         arguments.append(CLIArgument(
             "--denovo-alt",
-            help__text="The label or index of the "
+            help_text="The label or index of the "
             " column containing the alternative"
             " allele for the variant. [Default: none]",
         ))
@@ -285,6 +285,7 @@ class DenovoLoader(VariantsGenotypesLoader):
             default_value="\t",
             help_text="Denovo file field separator [default: `\\t`]",
         ))
+        return arguments
 
     @classmethod
     def parse_cli_arguments(cls, argv):
@@ -900,17 +901,17 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
         arguments = super()._arguments()
         arguments.append(CLIArgument(
             "dae_summary_file",
-            type=str,
+            value_type=str,
             metavar="<summary filename>",
             help_text="summary variants file to import",
         ))
         arguments.append(CLIArgument(
             "--dae-include-reference-genotypes",
-            default=False,
-            dest="dae_include_reference_genotypes",
-            help="fill in reference only variants [default: %(default)s]",
+            default_value=False,
+            help_text="fill in reference only variants [default: %(default)s]",
             action="store_true",
         ))
+        return arguments
 
     @classmethod
     def parse_cli_arguments(cls, argv):
