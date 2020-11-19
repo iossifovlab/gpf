@@ -129,7 +129,7 @@ def cli_arguments(dae_config, argv=sys.argv[1:]):
     )
 
     DenovoLoader.cli_options(parser)
-    VcfLoader.cli_options(parser)
+    VcfLoader.cli_arguments(parser, options_only=True)
     DaeTransmittedLoader.cli_options(parser)
     CNVLoader.cli_options(parser)
 
