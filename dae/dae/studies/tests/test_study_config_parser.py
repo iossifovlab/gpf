@@ -19,6 +19,8 @@ def test_fixture_study_config_parser_is_loaded(genotype_data_study_configs):
         "person_sets_study_1",
         "person_sets_study_2",
         "person_sets_study_3",
+        "SVMergingStudy1",
+        "SVMergingStudy2",
     }
 
     assert genotype_data_study_configs is not None

@@ -215,21 +215,43 @@ class GenotypeDataGroup(GenotypeData):
             future.study_id = genotype_data_study.id
             variants_futures.append(future)
 
-        seen = set()
+        variants = dict()
         for future in as_completed(variants_futures):
             started = time.time()
             for v in future.result():
-                if v.svuid in seen:
-                    continue
-                seen.add(v.svuid)
-                yield v
-                if limit and len(seen) >= limit:
+                if v.svuid in variants:
+                    existing = variants[v.svuid]
+                    fv_count = existing.get_attribute(
+                        "family_variants_count")[1]
+                    if fv_count is None:
+                        continue
+                    fv_count += v.get_attribute("family_variants_count")[1]
+                    seen_in_status = existing.get_attribute(
+                        "seen_in_status")[1]
+                    seen_in_status = \
+                        seen_in_status | v.get_attribute("seen_in_status")[1]
+
+                    seen_in_denovo = existing.get_attribute(
+                        "seen_in_denovo")[1]
+                    seen_in_denovo = \
+                        seen_in_denovo or v.get_attribute("seen_in_denovo")[1]
+                    new_attributes = {
+                        "family_variants_count": [fv_count],
+                        "seen_in_status": [seen_in_status],
+                        "seen_in_denovo": [seen_in_denovo]
+                    }
+                    v.update_attributes(new_attributes)
+
+                variants[v.svuid] = v
+                if limit and len(variants) >= limit:
                     return
             elapsed = time.time() - started
             LOGGER.info(
                 f"Processing study {future.study_id} "
                 f"elapsed: {elapsed:.3f}"
             )
+        for v in variants.values():
+            yield v
 
     def query_variants(
             self,
