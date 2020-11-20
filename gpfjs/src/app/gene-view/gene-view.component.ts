@@ -613,7 +613,11 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
   }
 
   brushEndEvent = () => {
-    const extent = d3.event.selection;
+    this.updateBrush(d3.event.selection);
+  }
+
+  updateBrush(selection) {
+    const extent = selection;
 
     const currentDomainMin = this.x.domain()[0];
     const currentDomainMax = this.x.domain()[this.x.domain().length - 1];
@@ -641,7 +645,6 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
         Math.min(...newFreqLimits),
         Math.max(...newFreqLimits),
       ];
-
       this.zoomHistory.addStateToHistory(
         new GeneViewScaleState(this.x.domain(), this.selectedFrequencies[0], this.selectedFrequencies[1], this.condenseIntrons)
       );
