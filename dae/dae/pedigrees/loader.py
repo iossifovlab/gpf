@@ -6,7 +6,7 @@ from collections import defaultdict
 
 from dae.utils.helpers import str2bool
 from dae.variants.attributes import Role, Sex, Status
-from dae.backends.raw import CLILoader, CLIArgument
+from dae.backends.raw.loader import CLILoader, CLIArgument
 
 from dae.pedigrees.family import FamiliesData, Person, PEDIGREE_COLUMN_NAMES
 from dae.pedigrees.family_role_builder import FamilyRoleBuilder
@@ -98,7 +98,7 @@ class FamiliesLoader(CLILoader):
 
     @classmethod
     def _arguments(cls):
-        arguments = super()._arguments()
+        arguments = []
         arguments.append(CLIArgument(
             "families",
             value_type=str,
@@ -127,7 +127,7 @@ class FamiliesLoader(CLILoader):
         ))
         arguments.append(CLIArgument(
             "--ped-dad",
-            default="dadId",
+            default_value="dadId",
             help_text="specify the name of the column in the pedigree"
             " file that holds the ID of the person's father"
             " [default: %(default)s]",
@@ -164,7 +164,7 @@ class FamiliesLoader(CLILoader):
         ))
         arguments.append(CLIArgument(
             "--ped-proband",
-            default=None,
+            default_value=None,
             help_text="specify the name of the column in the pedigree"
             " file that specifies persons with role `proband`;"
             " this columns is used only when"
@@ -201,10 +201,12 @@ class FamiliesLoader(CLILoader):
             default_value="\t",
             help_text="Families file field separator [default: `\\t`]",
         ))
+        return arguments
 
     @classmethod
     def parse_cli_arguments(cls, argv):
         filename = argv.families
+        super().parse_cli_arguments(argv)
 
         ped_ped_args = [
             "ped_family",

@@ -190,6 +190,12 @@ class VariantsLoader(CLILoader):
             self._attributes = copy.deepcopy(attributes)
         self.arguments = []
 
+    def get_attribute(self, key: str) -> Any:
+        return self._attributes.get(key, None)
+
+    def set_attribute(self, key: str, value: Any) -> None:
+        self._attributes[key] = value
+
     # @property
     # def variants_filenames(self):
     #     return self.filenames
