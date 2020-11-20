@@ -1,4 +1,4 @@
-from argparse import ArgumentParser, Namespace
+from argparse import Namespace
 from typing import List, Optional, Dict, Any, Tuple, Generator
 from copy import copy
 import numpy as np
@@ -10,6 +10,7 @@ from dae.pedigrees.family import FamiliesData
 from dae.variants.attributes import VariantType, Inheritance
 from dae.variants.variant import SummaryVariantFactory, SummaryVariant
 from dae.variants.family_variant import FamilyVariant
+from dae.backends.raw.loader import CLIArgument
 
 from dae.utils.regions import Region
 from dae.utils.variant_utils import GENOTYPE_TYPE, get_interval_locus_ploidy
@@ -60,6 +61,54 @@ class CNVLoader(VariantsGenotypesLoader):
                 self.chromosomes,
                 key=lambda chrom: all_chromosomes.index(chrom),
             )
+
+    @classmethod
+    def _arguments(cls):
+        arguments = super()._arguments()
+        arguments.append(CLIArgument(
+            "cnv_file",
+            value_type=str,
+            metavar="<variants filename>",
+            help_text="cnv variants file",
+        ))
+        arguments.append(CLIArgument(
+            "--cnv-location",
+            value_type=str,
+            default_value="location",
+            help_text="The label or index of the"
+            " column containing the CSHL-style"
+            " location of the variant. [Default: location]",
+        ))
+        arguments.append(CLIArgument(
+            "--cnv-family-id",
+            value_type=str,
+            default_value="familyId",
+            help_text="The label or index of the"
+            " column containing family's ID."
+            " [Default: familyId]",
+        ))
+        arguments.append(CLIArgument(
+            "--cnv-variant_type",
+            value_type=str,
+            default_value="variant",
+            help_text="The label or index of the"
+            " column containing the variant's"
+            " type. [Default: variant]",
+        ))
+        arguments.append(CLIArgument(
+            "--cnv-best-state",
+            value_type=str,
+            default_value="bestState",
+            help_text="The label or index of the"
+            " column containing the variant's"
+            " best state. [Default: bestState]",
+        ))
+        arguments.append(CLIArgument(
+            "--cnv-sep",
+            value_type=str,
+            default_value="\t",
+            help_text="CNV file field separator. [Default: `\\t`]",
+        ))
 
     def reset_regions(self, regions):
         super(CNVLoader, self).reset_regions(regions)
@@ -122,7 +171,7 @@ class CNVLoader(VariantsGenotypesLoader):
 
     def full_variants_iterator(self):
         full_iterator = super(CNVLoader, self).full_variants_iterator()
-        for summary_vairants, family_variants in full_iterator:
+        for summary_variants, family_variants in full_iterator:
             for fv in family_variants:
                 for fa in fv.alt_alleles:
                     inheritance = [
@@ -133,7 +182,7 @@ class CNVLoader(VariantsGenotypesLoader):
                     ]
                     fa._inheritance_in_members = inheritance
 
-            yield summary_vairants, family_variants
+            yield summary_variants, family_variants
 
     @classmethod
     def _calc_cnv_best_state(
@@ -274,67 +323,6 @@ class CNVLoader(VariantsGenotypesLoader):
         )
 
     @classmethod
-    def cli_arguments(cls, parser: ArgumentParser) -> None:
-        parser.add_argument(
-            "cnv_file",
-            type=str,
-            metavar="<variants filename>",
-            help="cnv variants file",
-        )
-        cls.cli_options(parser)
-
-    @classmethod
-    def cli_options(cls, parser: ArgumentParser) -> None:
-        parser.add_argument(
-            "--cnv-location",
-            type=str,
-            default="location",
-            help="The label or index of the column containing the CSHL-style"
-            " location of the variant. [Default: location]",
-        )
-        parser.add_argument(
-            "--cnv-family-id",
-            type=str,
-            default="familyId",
-            help="The label or index of the column containing family's ID."
-            " [Default: familyId]",
-        )
-        parser.add_argument(
-            "--cnv-variant_type",
-            type=str,
-            default="variant",
-            help="The label or index of the column containing the variant's"
-            " type. [Default: variant]",
-        )
-        parser.add_argument(
-            "--cnv-best-state",
-            type=str,
-            default="bestState",
-            help="The label or index of the column containing the variant's"
-            " best state. [Default: bestState]",
-        )
-        parser.add_argument(
-            "--cnv-sep",
-            type=str,
-            default="\t",
-            help="CNV file field separator. [Default: `\\t`]",
-        )
-        parser.add_argument(
-            "--add-chrom-prefix",
-            type=str,
-            default=None,
-            help="Add specified prefix to each chromosome name in "
-            "variants file",
-        )
-        parser.add_argument(
-            "--del-chrom-prefix",
-            type=str,
-            default=None,
-            help="Removes specified prefix from each chromosome name in "
-            "variants file",
-        )
-
-    @classmethod
     def parse_cli_arguments(
         cls, argv: Namespace
     ) -> Tuple[str, Dict[str, Any]]:
@@ -348,28 +336,3 @@ class CNVLoader(VariantsGenotypesLoader):
                 "add_chrom_prefix": argv.add_chrom_prefix,
                 "del_chrom_prefix": argv.del_chrom_prefix,
             }
-
-    @classmethod
-    def build_cli_arguments(cls, params):
-        param_defaults = CNVLoader.cli_defaults()
-        result = []
-        for k, v in params.items():
-            assert k in param_defaults, (k, list(param_defaults.keys()))
-            if v != param_defaults[k]:
-                param = k.replace("_", "-")
-                result.append(f"--{param}")
-                result.append(f"{v}")
-
-        return " ".join(result)
-
-    @classmethod
-    def cli_defaults(cls):
-        return {
-            "cnv_location": "location",
-            "cnv_family_id": "familyId",
-            "cnv_variant_type": "variant",
-            "cnv_best_state": "bestState",
-            "cnv_sep": "\t",
-            "add_chrom_prefix": None,
-            "del_chrom_prefix": None,
-        }
