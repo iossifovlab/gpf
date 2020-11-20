@@ -500,8 +500,8 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
 
     if (this.gene !== undefined) {
       this.x_axis = d3.axisBottom(this.x).tickValues(this.calculateXAxisTicks());
-      this.y_axis = d3.axisLeft(this.y).tickValues(this.calculateYAxisTicks());
-      this.y_axis_subdomain = d3.axisLeft(this.y_subdomain).tickValues([this.frequencyDomainMin / 2.0]);
+      this.y_axis = d3.axisLeft(this.y).tickValues(this.calculateYAxisTicks()).tickFormat(d3.format('1'));
+      this.y_axis_subdomain = d3.axisLeft(this.y_subdomain).tickValues([]);
       this.y_axis_zero = d3.axisLeft(this.y_zero);
       this.svgElement.append('g').attr('transform', `translate(0, ${this.svgHeightFreq})`).call(this.x_axis).style('font', `${this.fontSize}px sans-serif`);
       this.svgElement.append('g').call(this.y_axis).style('font', `${this.fontSize}px sans-serif`);
