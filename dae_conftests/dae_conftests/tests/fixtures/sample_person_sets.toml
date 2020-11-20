@@ -14,7 +14,7 @@ status.default = {id = "unknown", values = ["unknown"], name = "Unknown", color 
 pheno.id = "pheno"
 pheno.name = "Phenotype Person Set"
 pheno.sources = [
-    { from = "phenotype", source = "basic_medical_screening:sample_measure" },
+    { from = "phenotype", source = "basic_medical_screening.sample_measure" },
 ]
 pheno.domain = [
    {id = "val1", name = "Value 1", values = ["1"], color = "#aabbcc"},

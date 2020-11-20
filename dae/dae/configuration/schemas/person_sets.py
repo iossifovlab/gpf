@@ -5,22 +5,6 @@ person_set = {
     "color": {"type": "string"},
 }
 
-person_set_source = {
-    "phenotype": {
-        "type": "dict",
-        "schema": {
-            "instrument": {"type": "string"},
-            "measure": {"type": "string"},
-        },
-        "excludes": "pedigree",
-    },
-    "pedigree": {
-        "type": "dict",
-        "schema": {"column": {"type": "string"}},
-        "excludes": "phenotype",
-    },
-}
-
 person_set_collection = {
     "id": {"type": "string"},
     "name": {"type": "string"},
