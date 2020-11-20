@@ -46,7 +46,7 @@ class CLIArgument:
         self.nargs = nargs
         self.action = action
         if destination is None:
-            destination = self._default_destination()
+            self.destination = self._default_destination()
 
     def _default_destination(self):
         if self.argument_name.startswith("--"):
@@ -54,27 +54,26 @@ class CLIArgument:
         else:
             self.arg_type = ArgumentType.ARGUMENT
             return None
-        return self.argument_name.replace("-", "_")
+        return self.argument_name[2:].replace("-", "_")
 
     def add_to_parser(self, parser):
+        kwargs = {
+            "type": self.value_type,
+            "help": self.help_text,
+        }
+        if self.arg_type == ArgumentType.OPTION:
+            kwargs["dest"] = self.destination
         if self.action:
-            parser.add_argument(
-                self.argument_name,
-                action=self.action,
-                dest=self.destination,
-                help=self.help_text,
-                default=self.default_value,
-            )
+            # TODO:
+            # For some reason kwargs["type"] = self.value_type gets tuple-ized
+            # should find a different workaround
+            del kwargs["type"]
+            kwargs["action"] = self.action
         else:
-            parser.add_argument(
-                self.argument_name,
-                type=self.value_type,
-                dest=self.destination,
-                metavar=self.metavar,
-                help=self.help_text,
-                default=self.default_value,
-                nargs=self.nargs,
-            )
+            kwargs["metavar"] = self.metavar
+            kwargs["nargs"] = self.nargs
+
+        parser.add_argument(self.argument_name, **kwargs)
 
     def build_option(self, params):
         if self.arg_type == ArgumentType.ARGUMENT:
@@ -83,13 +82,13 @@ class CLIArgument:
             if key == self.destination:
                 if value is not None:
                     if self.has_value:
-                        return f"--{self.argument_name} {value}"
+                        return f"{self.argument_name} {value}"
                     else:
-                        return f"--{self.argument_name}"
+                        return f"{self.argument_name}"
                 elif self.default_value is not None and self.has_value:
-                    return f"--{self.argument_name} {self.default_value}"
+                    return f"{self.argument_name} {self.default_value}"
                 else:
-                    return f"--{self.argument_name}"
+                    return f"{self.argument_name}"
         return ""
 
     def parse_cli_argument(self, argv):
@@ -144,10 +143,21 @@ class CLILoader:
 
     @classmethod
     def build_cli_arguments(cls, params):
-        result = []
+        built_arguments = []
         for argument in cls._arguments():
-            result.append(argument.build_option)
-        return " ".join(result)
+            built_arguments.append(argument.build_option(params))
+        result = " ".join(built_arguments)
+        return result
+
+    @classmethod
+    def build_arguments_dict(cls, params):
+        result = dict()
+        for argument in cls._arguments():
+            if argument.arg_type == ArgumentType.ARGUMENT:
+                continue
+            if argument.destination in params:
+                result[argument.destination] = params[argument.destination]
+        return result
 
     @classmethod
     def parse_cli_arguments(cls, argv):
@@ -164,7 +174,6 @@ class VariantsLoader(CLILoader):
         params: Dict[str, Any] = {},
         attributes: Optional[Dict[str, Any]] = None,
     ):
-        print("test 2")
 
         super().__init__()
         assert isinstance(families, FamiliesData)
@@ -486,7 +495,6 @@ class VariantsGenotypesLoader(VariantsLoader):
             expect_genotype: bool = True,
             expect_best_state: bool = False,
             params: Dict[str, Any] = {}):
-        print("test 1")
 
         super(VariantsGenotypesLoader, self).__init__(
             families=families,

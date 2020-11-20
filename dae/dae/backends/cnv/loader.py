@@ -109,6 +109,7 @@ class CNVLoader(VariantsGenotypesLoader):
             default_value="\t",
             help_text="CNV file field separator. [Default: `\\t`]",
         ))
+        return arguments
 
     def reset_regions(self, regions):
         super(CNVLoader, self).reset_regions(regions)
