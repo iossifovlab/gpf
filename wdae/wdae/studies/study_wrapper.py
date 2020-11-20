@@ -457,6 +457,7 @@ class StudyWrapper(StudyWrapperBase):
                 yield {
                     "location": a.cshl_location,
                     "position": a.position,
+                    "end_position": a.end_position,
                     "chrom": a.chrom,
                     "frequency": a.get_attribute(frequency_column),
                     "effect": gene_effect_get_worst_effect(a.effect),
