@@ -39,15 +39,15 @@ export class PedigreeSelector extends IdName {
 
     const pedigreeSelectors: PedigreeSelector[] = [];
 
-    for (let k in json) {
-      let v = json[k];
+    for (const k in json) {
+      const v = json[k];
       pedigreeSelectors.push(new PedigreeSelector(
         k,
         v['name'],
         k,
         SelectorValue.fromJson(v['default']),
         SelectorValue.fromJsonArray(v['domain']),
-      ))
+      ));
     }
 
     return pedigreeSelectors;
@@ -95,9 +95,9 @@ export class PresentInRole {
 
 export class AdditionalColumnSlot {
   static fromJson(json: any): Array<AdditionalColumnSlot> {
-    let res = [];
-    for(let column_id in json) {
-      let column = json[column_id]
+    const res = [];
+    for (const column_id in json) {
+      const column = json[column_id];
       res.push(new AdditionalColumnSlot(column_id, column['name'], column['source'], column['format']));
     }
     return res;
@@ -113,9 +113,9 @@ export class AdditionalColumnSlot {
 
 export class AdditionalColumn {
   static fromJson(json: any): Array<AdditionalColumn> {
-    let res = [];
-    for(let column_id in json) {
-      let column = json[column_id]
+    const res = [];
+    for (const column_id in json) {
+      const column = json[column_id];
       res.push(new AdditionalColumn(column_id, column['name'], column['source'], AdditionalColumnSlot.fromJson(column['slots'])));
     }
     return res;
@@ -131,9 +131,9 @@ export class AdditionalColumn {
 
 export class PhenoFilter {
   static fromJson(json: any): Array<PhenoFilter> {
-    let filters = [];
+    const filters = [];
 
-    for (let prop in json) {
+    for (const prop in json) {
       if (json.hasOwnProperty(prop)) {
         filters.push(
           new PhenoFilter(
@@ -215,6 +215,7 @@ export class GeneBrowser {
     return new GeneBrowser(
       json['enabled'],
       json['frequency_column'],
+      json['frequency_name'],
       json['effect_column'],
       json['location_column'],
       json['domain_min'],
@@ -225,6 +226,7 @@ export class GeneBrowser {
   constructor(
     readonly enabled: boolean,
     readonly frequencyColumn: string,
+    readonly frequencyName: string,
     readonly effectColumn: string,
     readonly locationColumn: string,
     readonly domainMin: number,
@@ -309,7 +311,7 @@ export class DatasetDetails {
   static fromJson(json: any): DatasetDetails {
     return new DatasetDetails(
       json.hasDenovo as boolean
-    )
+    );
   }
 
   constructor(
