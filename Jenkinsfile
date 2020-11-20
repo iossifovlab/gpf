@@ -123,12 +123,6 @@ pipeline {
                 $class: 'CoberturaPublisher',
                 coberturaReportFile: 'test_results/coverage.xml'])
 
-            warnings(
-                parserConfigurations: [[parserName: 'PyLint', pattern: 'test_results/pyflakes.report']],
-                excludePattern: '.*site-packages.*',
-                usePreviousBuildAsReference: true,
-            )
-
         }
         success {
             slackSend (
