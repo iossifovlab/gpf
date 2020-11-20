@@ -230,7 +230,7 @@ class VariantsLoaderDecorator(VariantsLoader):
 
     @classmethod
     def cli_options(cls, parser):
-        return cls.variants_loader.cli_options
+        return cls.variants_loader.cli_options(parser)
 
 
 class AnnotationDecorator(VariantsLoaderDecorator):
