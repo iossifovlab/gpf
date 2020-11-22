@@ -100,3 +100,16 @@ export function drawLine(element, xStart: number, xEnd: number, y: number, svgTi
     .attr('stroke', 'black')
     .append('svg:title').text(svgTitle);
 }
+
+export function drawCNVTest(element, xStart: number, xEnd: number, y: number, height: number, color: string, title: string) {
+  element.append('rect')
+    .attr('height', height)
+    .attr('width', xEnd - xStart)
+    .attr('x', xStart)
+    .attr('y', y)
+    .style('fill', color)
+    .attr('fill-opacity', '0.3')
+    .style('stroke-width', 1)
+    .style('stroke', color)
+    .append('svg:title').text(title);
+}

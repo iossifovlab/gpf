@@ -4,7 +4,7 @@ import { Gene, GeneViewSummaryVariantsArray, GeneViewSummaryVariant, DomainRange
 import { Subject, Observable } from 'rxjs';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { FullscreenLoadingService } from 'app/fullscreen-loading/fullscreen-loading.service';
-import { drawRect, drawLine, drawHoverText, drawStar, drawCircle, drawTriangle, drawSurroundingSquare, drawDot } from 'app/utils/svg-drawing';
+import { drawRect, drawLine, drawHoverText, drawStar, drawCircle, drawTriangle, drawSurroundingSquare, drawDot, drawCNVTest } from 'app/utils/svg-drawing';
 import { GeneViewTranscript, GeneViewModel } from 'app/gene-view/gene-view';
 import { QueryStateProvider, QueryStateWithErrorsProvider } from 'app/query/query-state-provider';
 
@@ -522,6 +522,10 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
           drawTriangle(this.svgElement, variantPosition, this.getVariantY(variant.frequency), color, variantTitle);
         } else if (variant.isSynonymous()) {
           drawCircle(this.svgElement, variantPosition, this.getVariantY(variant.frequency), color, variantTitle);
+        } else if (variant.isCNVPlus()) {
+          drawCNVTest(this.svgElement, this.x(variant.position), this.x(variant.endPosition), this.getVariantY(variant.frequency) - 10, 20, color, variantTitle);
+        } else if (variant.isCNVPMinus()) {
+          drawCNVTest(this.svgElement, this.x(variant.position), this.x(variant.endPosition), this.getVariantY(variant.frequency) - 10, 20, color, variantTitle);
         } else {
           drawDot(this.svgElement, variantPosition, this.getVariantY(variant.frequency), color, variantTitle);
         }

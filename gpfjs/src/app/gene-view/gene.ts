@@ -167,6 +167,7 @@ export class Gene {
 export class GeneViewSummaryVariant {
   location: string;
   position: number;
+  endPosition: number;
   chrom: string;
   variant: string;
   effect: string;
@@ -194,6 +195,7 @@ export class GeneViewSummaryVariant {
     const result = new GeneViewSummaryVariant();
     result.location = row.location;
     result.position = row.position;
+    result.endPosition = row.end_position;
     result.chrom = row.chrom;
     result.variant = row.variant;
     result.effect = row.effect;
@@ -262,6 +264,20 @@ export class GeneViewSummaryVariant {
 
   isSynonymous(): boolean {
     if (this.effect === 'synonymous') {
+      return true;
+    }
+    return false;
+  }
+
+  isCNVPlus(): boolean {
+    if (this.effect === 'CNV+') {
+      return true;
+    }
+    return false;
+  }
+
+  isCNVPMinus(): boolean {
+    if (this.effect === 'CNV-') {
       return true;
     }
     return false;
