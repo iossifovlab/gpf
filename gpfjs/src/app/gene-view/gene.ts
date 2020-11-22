@@ -249,38 +249,23 @@ export class GeneViewSummaryVariant {
   }
 
   isLGDs(): boolean {
-    if (this.lgds.indexOf(this.effect) !== -1 || this.effect === 'lgds') {
-      return true;
-    }
-    return false;
+    return (this.lgds.indexOf(this.effect) !== -1 || this.effect === 'lgds');
   }
 
   isMissense(): boolean {
-    if (this.effect === 'missense') {
-      return true;
-    }
-    return false;
+    return (this.effect === 'missense');
   }
 
   isSynonymous(): boolean {
-    if (this.effect === 'synonymous') {
-      return true;
-    }
-    return false;
+    return (this.effect === 'synonymous');
   }
 
   isCNVPlus(): boolean {
-    if (this.effect === 'CNV+') {
-      return true;
-    }
-    return false;
+    return (this.effect === 'CNV+');
   }
 
   isCNVPMinus(): boolean {
-    if (this.effect === 'CNV-') {
-      return true;
-    }
-    return false;
+    return (this.effect === 'CNV-');
   }
 
   get comparisonValue(): number {
