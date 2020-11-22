@@ -56,6 +56,20 @@
       </div>
     </div>
   </div>
+
+  <div class="effect-card card" style="margin-top: 40px; margin-bottom: 40px; margin-left: 30px">
+    <div class="card-header card-title" style="font-family: Roboto; font-weight: 500;">Variant Type</div>
+    <div class="card-block" style="padding: 20px;padding-top: 22.75px; padding-bottom: 22.75px;">
+      <div style="display: inline; margin-right: 20px;"
+        *ngFor="let variantType of ['sub', 'ins', 'del', 'CNV+', 'CNV-']; let i=index" class="checkbox">
+        <label>
+          <input #variantTypeCheckbox checked type="checkbox"
+            (change)="checkVariantType(variantType, variantTypeCheckbox.checked)">
+          {{ variantType }}
+        </label>
+      </div>
+    </div>
+  </div>
 </div>
 
 

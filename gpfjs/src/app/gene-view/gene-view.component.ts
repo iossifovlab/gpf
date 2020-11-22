@@ -128,6 +128,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
   y_axis_zero;
   fontSize: number;
   selectedEffectTypes = ['lgds', 'missense', 'synonymous', 'other'];
+  selectedVariantTypes = ['sub', 'ins', 'del', 'cnv+', 'cnv-'];
   selectedAffectedStatus = ['Affected only', 'Unaffected only', 'Affected and unaffected'];
   selectedFrequencies;
   showDenovo = true;
@@ -227,6 +228,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     const state = {
       'affectedStatus': Array.from(this.selectedAffectedStatus),
       'selectedEffectTypes': Array.from(this.selectedEffectTypes),
+      'selectedVariantTypes': Array.from(this.selectedVariantTypes),
       'zoomState': this.zoomHistory.currentState,
       'showDenovo': this.showDenovo,
       'showTransmitted': this.showTransmitted,
@@ -334,6 +336,16 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     this.redrawAndUpdateTable();
   }
 
+  checkVariantType(variantType: string, checked: boolean) {
+    variantType = variantType.toLowerCase();
+    if (checked) {
+      this.selectedVariantTypes.push(variantType);
+    } else {
+      this.selectedVariantTypes.splice(this.selectedVariantTypes.indexOf(variantType), 1);
+    }
+    this.redrawAndUpdateTable();
+  }
+
   checkAffectedStatus(affectedStatus: string, checked: boolean) {
     if (checked) {
       this.selectedAffectedStatus.push(affectedStatus);
@@ -427,6 +439,16 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     return this.selectedAffectedStatus.includes(affectedStatus) ? true : false;
   }
 
+  isVariantTypeSelected(variantType: string): boolean {
+    if (variantType.substr(0, 3) === 'cnv') {
+      variantType = variantType.substr(0, 4);
+    } else {
+      variantType = variantType.substr(0, 3);
+    }
+
+    return this.selectedVariantTypes.includes(variantType) ? true : false;
+  }
+
   filterSummaryVariantsArray(
     summaryVariantsArray: GeneViewSummaryVariantsArray, startPos: number, endPos: number
   ): GeneViewSummaryVariantsArray {
@@ -437,7 +459,8 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
         (!this.isVariantEffectSelected(summaryVariant.effect)) ||
         (!this.showDenovo && summaryVariant.seenAsDenovo) ||
         (!this.showTransmitted && !summaryVariant.seenAsDenovo) ||
-        (!this.isAffectedStatusSelected(this.getVariantAffectedStatus(summaryVariant)))
+        (!this.isAffectedStatusSelected(this.getVariantAffectedStatus(summaryVariant))) ||
+        (!this.isVariantTypeSelected(summaryVariant.variant))
       ) {
         continue;
       } else if (summaryVariant.position >= startPos && summaryVariant.position <= endPos) {
