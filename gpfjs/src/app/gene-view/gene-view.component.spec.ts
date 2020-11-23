@@ -131,6 +131,33 @@ describe('GeneViewComponent', () => {
     expect(component).toBeTruthy();
   });
 
+  it('should update gene information on change', () => {
+    const setDefaultScaleSpy = spyOn(component, 'setDefaultScale');
+    const resetGeneTableValuesSpy = spyOn(component, 'resetGeneTableValues');
+    const drawGeneSpy = spyOn(component, 'drawGene');
+
+    component.gene = undefined;
+    component.geneViewModel = undefined;
+    component.geneViewTranscript = undefined;
+    component.ngOnChanges();
+    expect(component.geneViewModel).toBe(undefined);
+    expect(component.geneViewTranscript).toBe(undefined);
+    expect(setDefaultScaleSpy).not.toHaveBeenCalled();
+    expect(resetGeneTableValuesSpy).not.toHaveBeenCalled();
+    expect(drawGeneSpy).not.toHaveBeenCalled();
+
+    component.gene = testGene;
+    component.svgWidth = 1000;
+    component.ngOnChanges();
+    const expectedModel = new GeneViewModel(component.gene, component.svgWidth );
+    expect(component.geneViewModel).toEqual(expectedModel);
+    const expectedTranscript = new GeneViewTranscript(component.gene.transcripts[0]);
+    expect(component.geneViewTranscript).toEqual(expectedTranscript);
+    expect(setDefaultScaleSpy).toHaveBeenCalled();
+    expect(resetGeneTableValuesSpy).toHaveBeenCalled();
+    expect(drawGeneSpy).toHaveBeenCalled();
+  });
+
   it('should get current state', (done) => {
     component.zoomHistory.resetToDefaultState(new GeneViewScaleState([1, 10], 1, 10, false));
     component.x = {'_domain': [1, 10], domain() {return this._domain; }};
@@ -322,6 +349,28 @@ describe('GeneViewComponent', () => {
     component.checkAffectedStatus('Affected only', true);
     expect(component.selectedAffectedStatus.indexOf('Affected only')).not.toBe(-1);
     expect(redrawAndUpdateTableSpy).toHaveBeenCalled();
+  });
+
+  it('should check hide transcripts', () => {
+    component.svgElement = d3.select('#svg-container');
+    component.transcriptsElement = component.svgElement.append('g');
+    let checked;
+    const addAttributeSpy = spyOn(component.transcriptsElement, 'attr').and.callFake((attr, value) => {
+      expect(attr).toBe('display');
+      if (checked) {
+        expect(value).toBe('none');
+      } else {
+        expect(value).toBe('block');
+      }
+    });
+
+    checked = true;
+    component.checkHideTranscripts(checked);
+    expect(addAttributeSpy).toHaveBeenCalled();
+
+    checked = false;
+    component.checkHideTranscripts(checked);
+    expect(addAttributeSpy).toHaveBeenCalledTimes(2);
   });
 
   it('should see if Variant Effect is selected', () => {
@@ -627,6 +676,19 @@ describe('GeneViewComponent', () => {
     expect(redrawAndUpdateTableSpy).toHaveBeenCalledTimes(3);
   });
 
+  it('should update X domain', () => {
+    component.x = undefined;
+    component.updateXDomain(1, 20);
+    expect(component.x.domain()).toEqual([ 1, 11, 12, 20 ]);
+    expect(component.x.range()).toEqual([ 0, 345.2631578947369, 379.7894736842106, 656 ]);
+    expect(component.x.clamp()).toEqual(true);
+
+    component.updateXDomain(1, 9);
+    expect(component.x.domain()).toEqual([ 1, 11 ]);
+    expect(component.x.range()).toEqual([ 0, 656 ]);
+    expect(component.x.clamp()).toEqual(true);
+  });
+
   it('should undo state history', () => {
     const moveToPreviousSpy = spyOn(component.zoomHistory, 'moveToPrevious');
     const drawFromHistorySpy = spyOn(component, 'drawFromHistory');
@@ -715,6 +777,20 @@ describe('GeneViewComponent', () => {
 
     component.drawChromosomeLabels(component.svgElement, 0, testTranscript);
     expect(drawHoverTextSpy).toHaveBeenCalled();
+  });
+
+  it('should calculate X axis ticks', () => {
+    component.x = d3.scaleLinear().domain([0, 50]).range([0, 10]).clamp(true);
+    expect(component.calculateXAxisTicks()).toEqual([ 0, 5, 10, 15, 20, 25, 30, 35, 40, 45 ]);
+
+    component.x = d3.scaleLinear().domain([0, 100]).range([0, 10]).clamp(true);
+    expect(component.calculateXAxisTicks()).toEqual([ 0, 10, 20, 30, 40, 50, 60, 70, 80, 90 ]);
+  });
+
+  it('should calculate Y axis ticks', () => {
+    component.frequencyDomainMin = 1;
+    component.frequencyDomainMax = 100;
+    expect(component.calculateYAxisTicks()).toEqual([ 1, 10, 100 ]);
   });
 
   it('should calculate text font size', () => {
