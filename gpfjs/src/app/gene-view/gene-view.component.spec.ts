@@ -679,13 +679,13 @@ describe('GeneViewComponent', () => {
   it('should update X domain', () => {
     component.x = undefined;
     component.updateXDomain(1, 20);
-    expect(component.x.domain()).toEqual([ 1, 11, 12, 20 ]);
-    expect(component.x.range()).toEqual([ 0, 345.2631578947369, 379.7894736842106, 656 ]);
+    expect(component.x.domain()).toEqual(component.geneViewModel.buildDomain(1, 20));
+    expect(component.x.range()).toEqual(component.recalculateXRange(1, 20));
     expect(component.x.clamp()).toEqual(true);
 
-    component.updateXDomain(1, 9);
-    expect(component.x.domain()).toEqual([ 1, 11 ]);
-    expect(component.x.range()).toEqual([ 0, 656 ]);
+    component.updateXDomain(2, 12);
+    expect(component.x.domain()).toEqual(component.geneViewModel.buildDomain(1, 13));
+    expect(component.x.range()).toEqual(component.recalculateXRange(1, 13));
     expect(component.x.clamp()).toEqual(true);
   });
 
