@@ -149,10 +149,9 @@ class CLILoader:
         result = " ".join(built_arguments)
         return result
 
-    @classmethod
-    def build_arguments_dict(cls, params):
+    def build_arguments_dict(self, params):
         result = dict()
-        for argument in cls._arguments():
+        for argument in self._arguments():
             if argument.arg_type == ArgumentType.ARGUMENT:
                 continue
             if argument.destination in params:
@@ -246,6 +245,9 @@ class VariantsLoaderDecorator(VariantsLoader):
     @classmethod
     def cli_options(cls, parser):
         return cls.variants_loader.cli_options(parser)
+
+    def build_arguments_dict(self, params):
+        return self.variants_loader.build_arguments_dict(params)
 
 
 class AnnotationDecorator(VariantsLoaderDecorator):
