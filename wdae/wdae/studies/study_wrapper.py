@@ -449,6 +449,7 @@ class StudyWrapper(StudyWrapperBase):
         limit = None
         if "limit" in kwargs:
             limit = kwargs["limit"]
+
         variants_from_studies = itertools.islice(
             self.genotype_data_study.query_summary_variants(**kwargs), limit
         )
@@ -484,6 +485,10 @@ class StudyWrapper(StudyWrapperBase):
         )
 
         kwargs = self._add_people_with_people_group(kwargs)
+
+        if "uniqueFamilyVariants" in kwargs:
+            kwargs["unique_family_variants"] = kwargs["uniqueFamilyVariants"]
+            del kwargs["uniqueFamilyVariants"]
 
         if "regions" in kwargs:
             kwargs["regions"] = list(map(Region.from_str, kwargs["regions"]))
