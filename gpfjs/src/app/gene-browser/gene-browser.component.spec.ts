@@ -93,7 +93,8 @@ describe('GeneBrowserComponent', () => {
           datasetId: 'testDatasetId',
           regions: [ 1, 10 ],
           maxVariantsCount: 1,
-          summaryVariantIds: [5, 10, 15]
+          summaryVariantIds: [5, 10, 15],
+          uniqueFamilyVariants: false
         });
         return 'testPreviewVariantsArray' as any;
       });
