@@ -20,13 +20,13 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
         self.select_accessors = {
             "bucket_index": "variants.bucket_index",
             "summary_index": "variants.summary_index",
-            "chromosome": "gpf_first(variants.chromosome)",
+            "chromosome": "MIN(variants.chromosome)",
             "`position`": "MIN(variants.`position`)",
             "end_position": "MIN(variants.end_position)",
             "variant_type": "MIN(variants.variant_type)",
-            "reference": "gpf_first(variants.reference)",
+            "reference": "MIN(variants.reference)",
             "family_id": "variants.family_id",
-            "variant_data": "gpf_first(variants.variant_data)",
+            "variant_data": "MIN(variants.variant_data)",
         }
         if self.has_extra_attributes:
             self.select_accessors["extra_attributes"] = \
