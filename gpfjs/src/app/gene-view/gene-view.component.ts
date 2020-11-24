@@ -452,7 +452,6 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
   filterSummaryVariantsArray(
     summaryVariantsArray: GeneViewSummaryVariantsArray, startPos: number, endPos: number
   ): GeneViewSummaryVariantsArray {
-
     const result = new GeneViewSummaryVariantsArray();
     for (const summaryVariant of summaryVariantsArray.summaryVariants) {
       if (
@@ -463,9 +462,18 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
         (!this.isVariantTypeSelected(summaryVariant.variant))
       ) {
         continue;
-      } else if (summaryVariant.position >= startPos && summaryVariant.position <= endPos) {
-        if (this.frequencyIsSelected(summaryVariant.frequency)) {
-          result.push(summaryVariant);
+      } else if (this.frequencyIsSelected(summaryVariant.frequency)) {
+        if (summaryVariant.isCNV()) {
+          if (
+            !(summaryVariant.position <= startPos && summaryVariant.endPosition <= startPos) &&
+            !(summaryVariant.position >= endPos && summaryVariant.endPosition >= endPos)
+          ) {
+            result.push(summaryVariant);
+          }
+        } else  {
+          if (summaryVariant.position >= startPos && summaryVariant.position <= endPos) {
+            result.push(summaryVariant);
+          }
         }
       }
     }

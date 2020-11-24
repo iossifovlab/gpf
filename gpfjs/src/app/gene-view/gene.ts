@@ -268,6 +268,10 @@ export class GeneViewSummaryVariant {
     return (this.effect === 'CNV-');
   }
 
+  isCNV(): boolean {
+    return this.isCNVPlus() || this.isCNVPMinus();
+  }
+
   get comparisonValue(): number {
     let sum = 0;
 
