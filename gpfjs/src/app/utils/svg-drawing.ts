@@ -108,7 +108,7 @@ export function drawCNVTest(element, xStart: number, xEnd: number, y: number, he
     .attr('x', xStart)
     .attr('y', y)
     .style('fill', color)
-    .attr('fill-opacity', '0.3')
+    .attr('fill-opacity', '0.05')
     .style('stroke-width', 1)
     .style('stroke', color)
     .append('svg:title').text(title);

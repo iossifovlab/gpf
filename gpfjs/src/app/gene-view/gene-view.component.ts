@@ -538,13 +538,12 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
       this.svgElement.append('g').call(this.y_axis_zero).style('font', `${this.fontSize}px sans-serif`);
 
       filteredSummaryVariants.summaryVariants.sort((a, b) => GeneViewSummaryVariant.comparator(a, b));
-
       for (const variant of filteredSummaryVariants.summaryVariants) {
         const color = this.getAffectedStatusColor(this.getVariantAffectedStatus(variant));
         const variantPosition = this.x(variant.position);
         const variantTitle = `Effect type: ${variant.effect}\nVariant position: ${variant.location}`;
 
-        if (variant.seenAsDenovo) {
+        if (variant.seenAsDenovo && !variant.isCNV()) {
           drawSurroundingSquare(this.svgElement, variantPosition, this.getVariantY(variant.frequency), color);
         }
         if (variant.isLGDs()) {
@@ -554,9 +553,9 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
         } else if (variant.isSynonymous()) {
           drawCircle(this.svgElement, variantPosition, this.getVariantY(variant.frequency), color, variantTitle);
         } else if (variant.isCNVPlus()) {
-          drawCNVTest(this.svgElement, this.x(variant.position), this.x(variant.endPosition), this.getVariantY(variant.frequency) - 10, 20, color, variantTitle);
+          drawCNVTest(this.svgElement, this.x(variant.position), this.x(variant.endPosition), this.getVariantY(variant.frequency) - 4, 8, color, variantTitle);
         } else if (variant.isCNVPMinus()) {
-          drawCNVTest(this.svgElement, this.x(variant.position), this.x(variant.endPosition), this.getVariantY(variant.frequency) - 10, 20, color, variantTitle);
+          drawCNVTest(this.svgElement, this.x(variant.position), this.x(variant.endPosition), this.getVariantY(variant.frequency) - 1, 2, color, variantTitle);
         } else {
           drawDot(this.svgElement, variantPosition, this.getVariantY(variant.frequency), color, variantTitle);
         }
