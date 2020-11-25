@@ -30,7 +30,7 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
         }
         if self.has_extra_attributes:
             self.select_accessors["extra_attributes"] = \
-                "gpf_first(variants.extra_attributes)"
+                "min(variants.extra_attributes)"
         if not self.do_join:
             for k, v in self.select_accessors.items():
                 self.select_accessors[k] = k
