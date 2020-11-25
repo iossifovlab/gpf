@@ -472,6 +472,51 @@ class StudyWrapper(StudyWrapperBase):
                         a.get_attribute("seen_in_status") in {1, 3},
                 }
 
+    def get_gene_view_summary_variants_download(
+            self, frequency_column, **kwargs):
+        kwargs = self._transform_kwargs(**kwargs)
+        limit = None
+        if "limit" in kwargs:
+            limit = kwargs["limit"]
+
+        variants_from_studies = itertools.islice(
+            self.genotype_data_study.query_summary_variants(**kwargs), limit
+        )
+
+        columns = [
+            "location",
+            "position",
+            "end_position",
+            "chrom",
+            "frequency",
+            "effect",
+            "variant",
+            "family_variants_count",
+            "is_denovo",
+            "seen_in_affected",
+            "seen_in_unaffected"
+        ]
+
+        def variants_iterator(variants):
+            for v in variants:
+                for a in v.alt_alleles:
+                    yield [
+                        a.cshl_location,
+                        a.position,
+                        a.end_position,
+                        a.chrom,
+                        a.get_attribute(frequency_column),
+                        gene_effect_get_worst_effect(a.effect),
+                        a.cshl_variant,
+                        a.get_attribute("family_variants_count"),
+                        a.get_attribute("seen_in_denovo"),
+                        a.get_attribute("seen_in_status") in {2, 3},
+                        a.get_attribute("seen_in_status") in {1, 3},
+                    ]
+
+        rows = variants_iterator(variants_from_studies)
+        return map(join_line, itertools.chain([columns], rows))
+
     # Not implemented:
     # callSet
     # minParentsCalled
