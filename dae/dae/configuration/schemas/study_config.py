@@ -431,6 +431,7 @@ study_config_schema = {
         "schema": {
             "enabled": {"type": "boolean", "required": True},
             "frequency_column": {"type": "string", "required": True},
+            "frequency_name": {"type": "string", "required": False},
             "effect_column": {"type": "string", "required": True},
             "location_column": {"type": "string", "required": True},
             "domain_min": {
