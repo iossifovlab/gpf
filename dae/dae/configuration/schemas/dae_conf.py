@@ -94,6 +94,9 @@ dae_conf_schema = {
     "datasets_db": {"type": "dict", "schema": config_reference_schema},
     "genomes_db": {"type": "dict", "schema": config_reference_schema},
     "genomic_scores_db": {"type": "dict", "schema": config_reference_schema},
+    "autism_gene_tool_config": {
+        "type": "dict", "schema": config_reference_schema
+    },
     "annotation": {"type": "dict", "schema": config_reference_schema},
     "phenotype_data": {
         "type": "dict",
