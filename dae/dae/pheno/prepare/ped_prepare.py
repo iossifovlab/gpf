@@ -425,7 +425,7 @@ class PrepareVariables(PreparePersons):
     def build_variables(self, instruments_dirname, description_path):
         self.log_header()
 
-        self.build_pheno_common()
+        # self.build_pheno_common()
 
         instruments = self._collect_instruments(instruments_dirname)
         descriptions = PrepareVariables.load_descriptions(description_path)
