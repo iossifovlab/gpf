@@ -123,7 +123,7 @@ class GenotypeData:
                         domain.append({
                             "id": person_set.id,
                             "name": person_set.name,
-                            "value": person_set.value,
+                            "values": person_set.values,
                             "color": person_set.color,
                         })
                 collection_conf = {
@@ -272,6 +272,7 @@ class GenotypeDataGroup(GenotypeData):
             limit=None,
             study_filters=None,
             affected_status=None,
+            unique_family_variants=True,
             **kwargs):
 
         variants_futures = list()
@@ -295,8 +296,9 @@ class GenotypeDataGroup(GenotypeData):
                 return_unknown=return_unknown,
                 limit=limit,
                 study_filters=study_filters,
-                **kwargs,
-            )
+                affected_status=affected_status,
+                unique_family_variants=unique_family_variants,
+                **kwargs,)
 
         for genotype_data_study in self.studies:
             future = self.executor.submit(get_variants, genotype_data_study)
@@ -310,7 +312,8 @@ class GenotypeDataGroup(GenotypeData):
             for v in future.result():
                 if v.fvuid in seen:
                     continue
-                seen.add(v.fvuid)
+                if unique_family_variants:
+                    seen.add(v.fvuid)
                 yield v
                 if limit and len(seen) >= limit:
                     return

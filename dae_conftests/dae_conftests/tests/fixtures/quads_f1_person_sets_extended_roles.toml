@@ -3,13 +3,15 @@ selected_person_set_collections = ["role"]
 
 role.id = "role"
 role.name = "Role"
-role.source.pedigree.column = "role"
-role.default = {id = "unknown", name = "Unknown", value = "unknown", color="#ffffff"}
+role.sources = [
+    { from = "pedigree", source = "role" },
+]
+role.default = {id = "unknown", name = "Unknown", values = ["unknown"], color="#ffffff"}
 role.domain = [
-   {id = "mom", name = "Mother", value = "mom", color = "#ffffff"},
-   {id = "dad", name = "Father", value = "dad", color = "#ffffff"},
-   {id = "prb", name = "Proband", value = "prb", color = "#ffffff"},
-   {id = "sib", name = "Sibling", value = "sib", color = "#ffffff"},
-   {id = "0_new_role_first", name = "New Role First", value = "maternal_grandmother", color = "#ffffff"},
-   {id = "z_new_role_last", name = "New Role Last", value = "maternal_grandfather", color = "#ffffff"},
+   {id = "mom", name = "Mother", values = ["mom"], color = "#ffffff"},
+   {id = "dad", name = "Father", values = ["dad"], color = "#ffffff"},
+   {id = "prb", name = "Proband", values = ["prb"], color = "#ffffff"},
+   {id = "sib", name = "Sibling", values = ["sib"], color = "#ffffff"},
+   {id = "0_new_role_first", name = "New Role First", values = ["maternal_grandmother"], color = "#ffffff"},
+   {id = "z_new_role_last", name = "New Role Last", values = ["maternal_grandfather"], color = "#ffffff"},
 ]

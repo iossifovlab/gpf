@@ -636,3 +636,29 @@ WHERE
   ( (ssc_freq <= 0.03408583939688799 or ssc_freq is null) ) AND 
   ( allele_index > 0 ) AND 
   ( region_bin IN ('chr14_0') );
+
+
+
+SELECT variants.bucket_index, variants.summary_index, gpf_first(variants.chromosome), MIN(variants.`position`), MIN(variants.end_position), MIN(variants.variant_type), gpf_first(variants.reference), variants.family_id
+FROM data_hg19_production_202005.SPARKv3_pilot_variants as variants JOIN data_hg19_production_202005.SPARKv3_pilot_pedigree as pedigree 
+WHERE
+  ( (  variants.effect_gene_symbols in (  'CHD8'  )  ) ) AND 
+  ( (`chromosome` = '14' AND `position` >= 21854022 AND `position` <= 21854022) ) AND 
+  ( (  variants.effect_types in (  'missense'  )  ) ) AND 
+  ( BITAND(8, variants.inheritance_in_members) = 0 AND BITAND(32, variants.inheritance_in_members) = 0 ) AND ( BITAND(150, variants.inheritance_in_members) != 0 ) AND 
+  ( (variants.genome_gnomad_af_percent >= 0.002411158224232163 AND variants.genome_gnomad_af_percent <= 0.20464154880884206) ) AND 
+  ( variants.allele_index > 0 ) AND ( variants.region_bin IN ('14_0') ) AND 
+  variants.variant_in_members = pedigree.person_id 
+GROUP BY variants.bucket_index, variants.summary_index, variants.family_id 
+HAVING gpf_bit_or(pedigree.status) IN (1);
+
+
+
+SELECT variants.bucket_index, variants.summary_index, gpf_first(variants.chromosome), MIN(variants.`position`), MIN(variants.end_position), MIN(variants.variant_type), gpf_first(variants.reference), variants.family_id
+FROM data_hg19_production_202005.SPARKv3_pilot_variants as variants JOIN data_hg19_production_202005.SPARKv3_pilot_pedigree as pedigree 
+WHERE
+  ( (  variants.effect_gene_symbols in (  'CHD8'  )  ) ) AND 
+  ( (`chromosome` = '14' AND `position` >= 21854022 AND `position` <= 21854022) ) AND 
+  ( variants.allele_index > 0 ) AND ( variants.region_bin IN ('14_0') ) AND 
+  variants.variant_in_members = pedigree.person_id 
+GROUP BY variants.bucket_index, variants.summary_index, variants.family_id;
