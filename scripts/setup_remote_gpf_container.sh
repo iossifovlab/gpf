@@ -9,7 +9,11 @@ fi
 docker pull seqpipe/seqpipe-gpf-conda
 
 if [[ ! -d $WD/gpf_remote ]]; then
-    $WD/wdae/wdae/wdae_bootstrap.sh hg19 $WD/gpf_remote
+    if [[ -d $WD/data-hg19-startup ]]; then
+        cp -rva $WD/data-hg19-startup $WD/gpf_remote
+    else
+        $WD/wdae/wdae/wdae_bootstrap.sh hg19 $WD/gpf_remote
+    fi
 fi
 
 wget -P $WD -c https://iossifovlab.com/distribution/public/studies/genotype-iossifov_2014-latest.tar.gz
