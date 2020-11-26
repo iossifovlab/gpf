@@ -11,7 +11,7 @@ pipeline {
     }
     parameters {
         string(
-            name: 'DATA_HG19_BUILD', defaultValue: '0',
+            name: 'DATA_HG19_BUILD', defaultValue: '158',
             description: 'data-hg19-startup build number to use for testing')
     }
 
