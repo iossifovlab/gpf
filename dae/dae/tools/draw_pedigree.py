@@ -22,11 +22,11 @@ def build_families_report(families):
         "id": "status",
         "name": "Affected status",
         "domain": [
-            {"id": "affected", "name": "affected", "value": "affected", "color": "#e35252"},
-            {"id": "unaffected", "name": "unaffected", "value": "unaffected", "color": "#ffffff"}
+            {"id": "affected", "name": "affected", "values": ["affected"], "color": "#e35252"},
+            {"id": "unaffected", "name": "unaffected", "values": ["unaffected"], "color": "#ffffff"}
         ],
         "default": {"id": "unspecified", "name": "unspecified", "color": "#aaaaaa"},
-        "source": {"pedigree": {"column": "status"}}
+        "sources": [{"from": "pedigree", "column": "status"}]
     }
     status_collection_config = FrozenBox(
         status_collection_config
