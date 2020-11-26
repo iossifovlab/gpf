@@ -16,9 +16,20 @@ class CommonReport(object):
         self.id = genotype_data_study.id
 
         start = time.time()
+
+        if config.selected_person_set_collections.family_report:
+            families_report_collections = [
+                genotype_data_study.person_set_collections[collection_id]
+                for collection_id in
+                config.selected_person_set_collections.family_report
+            ]
+        else:
+            families_report_collections = \
+                genotype_data_study.person_set_collections.values()
+
         self.families_report = FamiliesReport(
             genotype_data_study.families,
-            genotype_data_study.person_set_collections.values(),
+            families_report_collections,
             config.draw_all_families,
             config.families_count_show_id,
         )
@@ -26,11 +37,22 @@ class CommonReport(object):
         print(f"COMMON REPORTS family report " f"build in {elapsed:.2f} sec")
 
         start = time.time()
+
+        if config.selected_person_set_collections.denovo_report:
+            denovo_report_collections = [
+                genotype_data_study.person_set_collections[collection_id]
+                for collection_id in
+                config.selected_person_set_collections.denovo_report
+            ]
+        else:
+            denovo_report_collections = \
+                genotype_data_study.person_set_collections.values()
+
         self.denovo_report = DenovoReport(
             genotype_data_study,
             effect_groups,
             effect_types,
-            genotype_data_study.person_set_collections.values(),
+            denovo_report_collections
         )
         elapsed = time.time() - start
         print(f"COMMON REPORTS denovo report " f"build in {elapsed:.2f} sec")
@@ -91,7 +113,7 @@ class CommonReport(object):
         result = list()
         for person_set in collection.person_sets.values():
             if len(person_set.persons) > 0:
-                result.append(person_set.value)
+                result += person_set.values
         return result
 
     def _get_number_of_people_with_role(self, role):
