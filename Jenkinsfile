@@ -74,15 +74,6 @@ pipeline {
             }
         }
 
-        stage('Start federation remote instance') {
-            steps {
-                sh '''
-                    ${WD}/scripts/setup_remote_gpf_container.sh
-                    ${WD}/scripts/run_remote_gpf_container.sh
-                '''
-            }
-        }
-
         stage('Data') {
             steps {
                 sh '''
@@ -115,6 +106,14 @@ pipeline {
             }
         }
 
+        stage('Start federation remote instance') {
+            steps {
+                sh '''
+                    ${WD}/scripts/setup_remote_gpf_container.sh
+                    ${WD}/scripts/run_remote_gpf_container.sh
+                '''
+            }
+        }
 
         stage('Lint') {
             steps {
