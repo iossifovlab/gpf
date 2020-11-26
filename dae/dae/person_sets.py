@@ -3,9 +3,10 @@ individuals from a study or study group into various
 sets based on what value they have in a given mapping.
 """
 
-from typing import Dict, NamedTuple
+from typing import Dict, NamedTuple, Set
 from dae.configuration.gpf_config_parser import FrozenBox
 from dae.pedigrees.family import Person, FamiliesData
+from dae.pheno.pheno_db import PhenotypeData, MeasureType
 
 
 class PersonSet(NamedTuple):
@@ -15,7 +16,7 @@ class PersonSet(NamedTuple):
 
     id: str
     name: str
-    value: str
+    values: Set[str]
     color: str
     persons: Dict[str, Person]
 
@@ -41,7 +42,7 @@ class PersonSetCollection(NamedTuple):
             person_set.id: PersonSet(
                 person_set.id,
                 person_set.name,
-                person_set.value,
+                set(person_set["values"]),
                 person_set.color,
                 dict(),
             )
@@ -81,7 +82,9 @@ class PersonSetCollection(NamedTuple):
     @staticmethod
     def from_families(
             collection_config: FrozenBox,
-            families_data: FamiliesData) -> "PersonSetCollection":
+            families_data: FamiliesData,
+            pheno_db: PhenotypeData = None
+    ) -> "PersonSetCollection":
         """Produce a PersonSetCollection from its given configuration
         with a pedigree as its source.
         """
@@ -92,25 +95,42 @@ class PersonSetCollection(NamedTuple):
             families_data,
         )
         value_to_id = {
-            person_set.value: person_set.id
+            frozenset(person_set["values"]): person_set.id
             for person_set in collection_config.domain
         }
         if collection_config.default is not None:
             value_to_id[
-                collection_config.default.value
+                frozenset(collection_config.default["values"])
             ] = collection_config.default.id
 
         for person_id, person in families_data.persons.items():
-            value = person.get_attr(collection_config.source.pedigree.column)
+            values = list()
+            for source in collection_config.sources:
+                if source["from"] == "pedigree":
+                    value = person.get_attr(source.source)
+                    # Convert to string since some of the person's
+                    # attributes can be of an enum type
+                    if value is not None:
+                        value = str(value)
+                elif source["from"] == "phenotype":
+                    assert pheno_db.get_measure(source.source).measure_type \
+                        in {MeasureType.categorical, MeasureType.ordinal}, f"Continuous measures not allowed in person sets! ({source.source})"
+                    pheno_values = pheno_db.get_values(
+                        person_ids=[person_id],
+                        measure_ids=[source.source]
+                    )
+                    value = pheno_values[person_id][source.source] \
+                        if person_id in pheno_values else None
+                else:
+                    raise ValueError(f"Invalid source type {source['from']}!")
+                values.append(value)
 
-            # Convert to string since some of the person's
-            # attributes can be of an enum type
-            if value is not None:
-                value = str(value)
+            # make unified frozenset value
+            value = frozenset(values)
 
             if value not in value_to_id:
                 if collection_config.default is not None:
-                    value = collection_config.default.value
+                    value = frozenset(collection_config.default["values"])
                 else:
                     assert value in value_to_id, (
                         f"Domain for '{collection_config.id}'"
@@ -145,7 +165,7 @@ class PersonSetCollection(NamedTuple):
                 new_collection.person_sets[person_set_id] = PersonSet(
                     person_set.id,
                     person_set.name,
-                    person_set.value,
+                    person_set.values,
                     person_set.color,
                     dict(),
                 )
