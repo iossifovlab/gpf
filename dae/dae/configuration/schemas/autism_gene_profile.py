@@ -8,5 +8,9 @@ autism_gene_tool_config = {
     "autism_scores": {"type": "list", "schema": {"type": "string"}},
     "protection_scores": {"type": "list", "schema": {"type": "string"}},
     "datasets": {"type": "list", "schema": {"type": "string"}},
-    "denovo_criteria": {"type": "list", "schema": {"type": "string"}}
+    "denovo_criteria": {
+        "type": "dict", "valuesrules": {
+            "type": "list", "schema": {"type": "string"}
+        }
+    }
 }
