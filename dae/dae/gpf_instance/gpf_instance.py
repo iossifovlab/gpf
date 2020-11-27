@@ -24,6 +24,9 @@ from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.dae_conf import dae_conf_schema
 from dae.configuration.schemas.gene_info import gene_info_conf
 from dae.configuration.schemas.genomic_scores import genomic_scores_schema
+from dae.configuration.schemas.autism_gene_profile import (
+    autism_gene_tool_config
+)
 
 from dae.utils.helpers import isnan
 
@@ -143,6 +146,14 @@ class GPFInstance(object):
     @cached
     def _common_report_facade(self):
         return CommonReportFacade(self)
+
+    @property  # type: ignore
+    @cached
+    def _autism_gene_profile_config(self):
+        return GPFConfigParser.load_config(
+            self.dae_config.autism_gene_tool_config.conf_file,
+            autism_gene_tool_config
+        )
 
     @property  # type: ignore
     @cached
