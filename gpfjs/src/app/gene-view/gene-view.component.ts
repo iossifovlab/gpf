@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, Output, EventEmitter, forwardRef } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter, forwardRef, ViewChild, ViewChildren } from '@angular/core';
 import * as d3 from 'd3';
 import { Gene, GeneViewSummaryVariantsArray, GeneViewSummaryVariant, DomainRange } from 'app/gene-view/gene';
 import { Subject, Observable } from 'rxjs';
@@ -88,6 +88,11 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
   @Input() variantsArray: GeneViewSummaryVariantsArray;
   @Input() streamingFinished$: Subject<boolean>;
   @Output() updateShownTablePreviewVariantsArrayEvent = new EventEmitter<DomainRange>();
+  @ViewChildren('affectedStatusCheckbox') affectedStatusCheckboxes;
+  @ViewChildren('effectTypeCheckbox') effectTypeCheckboxes;
+  @ViewChild('denovoCheckbox') denovoCheckbox;
+  @ViewChild('transmittedCheckbox') transmittedCheckbox;
+  @ViewChildren('variantTypeCheckbox') variantTypeCheckboxes;
 
   geneBrowserConfig;
   frequencyDomainMin: number;
@@ -221,7 +226,28 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
       this.setDefaultScale();
       this.resetGeneTableValues();
       this.drawGene();
+      this.resetCheckboxes();
     }
+  }
+
+  resetCheckboxes() {
+    const panelCheckboxes = [];
+    panelCheckboxes.push(
+      this.denovoCheckbox,
+      this.transmittedCheckbox,
+      ...this.affectedStatusCheckboxes,
+      ...this.effectTypeCheckboxes,
+      ...this.variantTypeCheckboxes
+    );
+    panelCheckboxes.forEach(element => {
+      element.nativeElement.checked = true;
+    });
+
+    this.selectedEffectTypes = ['lgds', 'missense', 'synonymous', 'other'];
+    this.selectedVariantTypes = ['sub', 'ins', 'del', 'cnv+', 'cnv-'];
+    this.selectedAffectedStatus = ['Affected only', 'Unaffected only', 'Affected and unaffected'];
+    this.showDenovo = true;
+    this.showTransmitted = true;
   }
 
   getState(): Observable<object> {
