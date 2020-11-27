@@ -559,6 +559,5 @@ class GenotypeDataStudy(GenotypeData):
         collection_config = getattr(
             self.config.person_set_collections, person_set_collection_id
         )
-        self.person_set_collections[
-            person_set_collection_id
-        ] = PersonSetCollection.from_families(collection_config, self.families)
+        self.person_set_collections[person_set_collection_id] = \
+            PersonSetCollection.from_families(collection_config, self.families)

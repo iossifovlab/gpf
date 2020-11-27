@@ -116,7 +116,7 @@ class GPFConfigParser:
             default_config = cls.parse_config(default_config_filename)
             config = recursive_dict_update(default_config, config)
 
-        assert validator.validate(config), validator.errors
+        assert validator.validate(config), (filename, validator.errors)
         return FrozenBox(validator.document)
 
     @classmethod
