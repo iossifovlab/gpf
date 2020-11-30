@@ -142,7 +142,8 @@ describe('GeneViewComponent', () => {
       'showDenovo': component.showDenovo,
       'showTransmitted': component.showTransmitted,
       'regions': ['regions'],
-      'summaryVariantIds': []
+      'summaryVariantIds': [],
+      'selectedVariantTypes': [ 'sub', 'ins', 'del', 'cnv+', 'cnv-' ]
     };
 
     state.subscribe(result => {
@@ -372,27 +373,27 @@ describe('GeneViewComponent', () => {
     component.showDenovo = false;
 
     const testVariant1 = GeneViewSummaryVariant.fromRow({
-      effect: 'missense', is_denovo: false, seen_in_affected: true, seen_in_unaffected: false, frequency: 15, position: 15,
+      effect: 'missense', is_denovo: false, seen_in_affected: true, seen_in_unaffected: false, frequency: 15, position: 15, variant: 'sub'
     });
 
     const testVariant2 = GeneViewSummaryVariant.fromRow({
-      effect: 'lgds', is_denovo: false, seen_in_affected: true, seen_in_unaffected: false, frequency: 15, position: 15,
+      effect: 'lgds', is_denovo: false, seen_in_affected: true, seen_in_unaffected: false, frequency: 15, position: 15, variant: 'del'
     });
 
     const testVariant3 = GeneViewSummaryVariant.fromRow({
-      effect: 'missense', is_denovo: true, seen_in_affected: true, seen_in_unaffected: false, frequency: 15, position: 15,
+      effect: 'missense', is_denovo: true, seen_in_affected: true, seen_in_unaffected: false, frequency: 15, position: 15, variant: 'ins'
     });
 
     const testVariant4 = GeneViewSummaryVariant.fromRow({
-      effect: 'missense', is_denovo: false, seen_in_affected: false, seen_in_unaffected: true, frequency: 15, position: 15,
+      effect: 'missense', is_denovo: false, seen_in_affected: false, seen_in_unaffected: true, frequency: 15, position: 15, variant: 'cnv+'
     });
 
     const testVariant5 = GeneViewSummaryVariant.fromRow({
-      effect: 'missense', is_denovo: false, seen_in_affected: false, seen_in_unaffected: true, frequency: 9, position: 15,
+      effect: 'missense', is_denovo: false, seen_in_affected: false, seen_in_unaffected: true, frequency: 9, position: 15, variant: 'cnv-'
     });
 
     const testVariant6 = GeneViewSummaryVariant.fromRow({
-      effect: 'missense', is_denovo: false, seen_in_affected: false, seen_in_unaffected: true, frequency: 15, position: 9,
+      effect: 'missense', is_denovo: false, seen_in_affected: false, seen_in_unaffected: true, frequency: 15, position: 9, variant: 'cnv+'
     });
 
     const variantsArray = new GeneViewSummaryVariantsArray();
@@ -451,19 +452,19 @@ describe('GeneViewComponent', () => {
     const drawSurroundingSquareSpy = spyOn(svgDrawing, 'drawSurroundingSquare');
 
     const testVariant1 = GeneViewSummaryVariant.fromRow({
-      effect: 'lgds', is_denovo: true, seen_in_affected: true, seen_in_unaffected: false, frequency: 15, position: 15,
+      effect: 'lgds', is_denovo: true, seen_in_affected: true, seen_in_unaffected: false, frequency: 15, position: 15, variant: 'sub'
     });
 
     const testVariant2 = GeneViewSummaryVariant.fromRow({
-      effect: 'missense', is_denovo: false, seen_in_affected: true, seen_in_unaffected: false, frequency: 15, position: 15,
+      effect: 'missense', is_denovo: false, seen_in_affected: true, seen_in_unaffected: false, frequency: 15, position: 15, variant: 'ins'
     });
 
     const testVariant3 = GeneViewSummaryVariant.fromRow({
-      effect: 'synonymous', is_denovo: false, seen_in_affected: true, seen_in_unaffected: false, frequency: 15, position: 15,
+      effect: 'synonymous', is_denovo: false, seen_in_affected: true, seen_in_unaffected: false, frequency: 15, position: 15, variant: 'del'
     });
 
     const testVariant4 = GeneViewSummaryVariant.fromRow({
-      effect: 'other', is_denovo: false, seen_in_affected: true, seen_in_unaffected: false, frequency: 15, position: 15,
+      effect: 'other', is_denovo: false, seen_in_affected: true, seen_in_unaffected: false, frequency: 15, position: 15, variant: 'cnv+'
     });
 
     component.summaryVariantsArray = new GeneViewSummaryVariantsArray();
