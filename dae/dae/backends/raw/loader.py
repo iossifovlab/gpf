@@ -31,6 +31,12 @@ class ArgumentType(Enum):
 
 
 class CLIArgument:
+    """
+    This class handles the logic for CLI argument operations such as parsing
+    arguments, transforming to dict, transforming a parsed argument back to
+    a CLI argument and adding itself to an existing ArgumentParser.
+    Construction closely mirrors the ArgumentParser argument format.
+    """
     def __init__(
             self, argument_name, has_value=True,
             default_value=None, destination=None,
