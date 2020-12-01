@@ -115,9 +115,8 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
   transcriptsElement;
   svgWidth;
   svgHeight;
-  svgHeightFreqRaw = 400 + 200;
+  svgHeightFreqRaw = 400;
   svgHeightFreq = this.svgHeightFreqRaw - this.options.margin.top - this.options.margin.bottom;
-
   subdomainAxisY = Math.round(this.svgHeightFreq * this.options.axisScale.domain);
   zeroAxisY = this.subdomainAxisY + Math.round(this.svgHeightFreq * this.options.axisScale.subdomain);
 
@@ -154,7 +153,8 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     totalSummaryVariants: 0,
     selectedSummaryVariants: 0,
   };
-
+  spacedDenovos = [];
+  additionalZeroAxisHeight = 0;
   constructor(
     private datasetsService: DatasetsService,
     private loadingService: FullscreenLoadingService,
@@ -194,14 +194,22 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
         .domain([0, this.frequencyDomainMin])
         .range([this.zeroAxisY, this.subdomainAxisY]);
 
-      this.y_zero = d3.scalePoint()
-        .domain(['0'])
-        .range([this.svgHeightFreq, this.zeroAxisY]);
     });
 
     this.streamingFinished$.subscribe(() => {
       this.summaryVariantsArray = this.variantsArray;
       this.filteredSummaryVariantsArray = this.variantsArray;
+      this.spacedDenovos = this.calculateSpaceDenovos(this.summaryVariantsArray);
+      this.additionalZeroAxisHeight = Math.max.apply(Math, this.spacedDenovos.map(a => a.spacing));
+
+      this.svgHeightFreq += this.additionalZeroAxisHeight;
+      this.svgHeightFreqRaw += this.additionalZeroAxisHeight;
+
+      this.y_zero = d3.scalePoint()
+      .domain(['0'])
+      .range([this.svgHeightFreq, this.zeroAxisY]);
+
+      this.ngOnChanges();
       this.setDefaultScale();
       this.updateFamilyVariantsTable();
       this.drawPlot();
@@ -564,7 +572,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     const minDomain = this.x.domain()[0];
     const maxDomain = this.x.domain()[this.x.domain().length - 1];
 
-    let filteredSummaryVariants = this.filterSummaryVariantsArray(
+    const filteredSummaryVariants = this.filterSummaryVariantsArray(
       this.summaryVariantsArray, minDomain, maxDomain
     );
     this.filteredSummaryVariantsArray = filteredSummaryVariants;
@@ -573,7 +581,6 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     this.geneTableStats.selectedFamilyVariants = filteredSummaryVariants.summaryVariants.reduce(
       (a, b) => a + b.numberOfFamilyVariants, 0
     );
-    const denovoVariants = filteredSummaryVariants.summaryVariants.filter(variant => variant.seenAsDenovo);
     const transmittedVariants  = filteredSummaryVariants.summaryVariants.filter(variant => !variant.seenAsDenovo);
 
     if (this.gene !== undefined) {
@@ -581,7 +588,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
       this.y_axis = d3.axisLeft(this.y);
       this.y_axis_subdomain = d3.axisLeft(this.y_subdomain).tickValues([this.frequencyDomainMin / 2.0]);
       this.y_axis_zero = d3.axisLeft(this.y_zero);
-      this.svgElement.append('g').attr('transform', `translate(0, ${this.svgHeightFreq + 200})`).call(this.x_axis).style('font', `${this.fontSize}px sans-serif`);
+      this.svgElement.append('g').attr('transform', `translate(0, ${this.svgHeightFreq})`).call(this.x_axis).style('font', `${this.fontSize}px sans-serif`);
       this.svgElement.append('g').call(this.y_axis).style('font', `${this.fontSize}px sans-serif`);
       this.svgElement.append('g').call(this.y_axis_subdomain).style('font', `${this.fontSize}px sans-serif`);
       this.svgElement.append('g').call(this.y_axis_zero).style('font', `${this.fontSize}px sans-serif`);
@@ -607,21 +614,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
         }
       }
 
-      const sortedDenovos = denovoVariants.sort((sv, sv2) => sv.position > sv2.position ? 1 : sv.position < sv2.position ? -1 : 0);
-      const spacedDenovos = new Array<{data: GeneViewSummaryVariant, spacing: number}>();
-
-      let spacingTracker = 0;
-      spacedDenovos.push({data: sortedDenovos[0], spacing: spacingTracker});
-      for (let i = 0; i < sortedDenovos.length - 2; i++) {
-        if (this.doVariantsIntersect(sortedDenovos[i], sortedDenovos[i + 1])) {
-          spacingTracker += 20;
-        } else {
-          spacingTracker = 0;
-        }
-        spacedDenovos.push({data: sortedDenovos[i + 1], spacing: spacingTracker});
-      }
-
-      for (const variant of spacedDenovos) {
+      for (const variant of this.spacedDenovos) {
         const color = this.getAffectedStatusColor(this.getVariantAffectedStatus(variant.data));
         const variantPosition = this.x(variant.data.position);
         const variantTitle = `Effect type: ${variant.data.effect}\nVariant position: ${variant.data.location}`;
@@ -644,6 +637,25 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
         }
       }
     }
+  }
+
+  calculateSpaceDenovos(summaryVariantsArray: GeneViewSummaryVariantsArray) {
+    const denovoVariants = summaryVariantsArray.summaryVariants.filter(variant => variant.seenAsDenovo);
+    const sortedDenovos = denovoVariants.sort((sv, sv2) => sv.position > sv2.position ? 1 : sv.position < sv2.position ? -1 : 0);
+    const spacedDenovos = new Array<{data: GeneViewSummaryVariant, spacing: number}>();
+
+    let spacingTracker = 0;
+    spacedDenovos.push({data: sortedDenovos[0], spacing: spacingTracker});
+    for (let i = 0; i < sortedDenovos.length - 2; i++) {
+      if (this.doVariantsIntersect(sortedDenovos[i], sortedDenovos[i + 1])) {
+        spacingTracker += 20;
+      } else {
+        spacingTracker = 0;
+      }
+      spacedDenovos.push({data: sortedDenovos[i + 1], spacing: spacingTracker});
+    }
+
+    return spacedDenovos;
   }
 
   getVariantY(variantFrequency: number): number {
@@ -687,35 +699,37 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
   }
 
   drawGene() {
-    this.svgHeight = this.svgHeightFreqRaw + (this.gene.transcripts.length + 1) * 25 + 70;
-    d3.select('#svg-container').selectAll('svg').remove();
+    if (this.additionalZeroAxisHeight !== undefined) {
+      this.svgHeight = this.svgHeightFreqRaw + (this.gene.transcripts.length + 1) * 25 + 70;
+      d3.select('#svg-container').selectAll('svg').remove();
 
-    this.svgElement = d3.select('#svg-container')
-      .append('svg')
-      .attr('viewBox', '0 0 ' + (this.svgWidth + this.options.margin.left + this.options.margin.right).toString() +
-          ' ' + (this.svgHeightFreqRaw + 85 + 200 + (this.gene.transcripts.length + 1) * 25).toString())
-      .append('g')
-      .attr('transform', `translate(${this.options.margin.left}, ${this.options.margin.top})`);
+      this.svgElement = d3.select('#svg-container')
+        .append('svg')
+        .attr('viewBox', '0 0 ' + (this.svgWidth + this.options.margin.left + this.options.margin.right).toString() +
+            ' ' + (this.svgHeightFreqRaw + 85 + (this.gene.transcripts.length + 1) * 25).toString())
+        .append('g')
+        .attr('transform', `translate(${this.options.margin.left}, ${this.options.margin.top})`);
 
-    this.summedTranscriptElement = this.svgElement
-      .append('g');
+      this.summedTranscriptElement = this.svgElement
+        .append('g');
 
-    this.transcriptsElement = this.svgElement
-      .append('g');
+      this.transcriptsElement = this.svgElement
+        .append('g');
 
-    this.brush = d3.brush().extent([[0, 0], [this.svgWidth, this.svgHeightFreq]])
-      .on('end', this.brushEndEvent);
+      this.brush = d3.brush().extent([[0, 0], [this.svgWidth, this.svgHeightFreq]])
+        .on('end', this.brushEndEvent);
 
-    this.svgElement.append('g')
-      .attr('class', 'brush')
-      .call(this.brush);
+      this.svgElement.append('g')
+        .attr('class', 'brush')
+        .call(this.brush);
 
-    let transcriptY = this.svgHeightFreqRaw + 30 + 200;
-    this.drawTranscript(this.summedTranscriptElement, transcriptY, this.geneViewModel.collapsedGeneViewTranscript);
-    transcriptY += 25;
-    for (const geneViewTranscript of this.geneViewModel.geneViewTranscripts) {
+      let transcriptY = this.svgHeightFreqRaw + 30;
+      this.drawTranscript(this.summedTranscriptElement, transcriptY, this.geneViewModel.collapsedGeneViewTranscript);
       transcriptY += 25;
-      this.drawTranscript(this.transcriptsElement, transcriptY, geneViewTranscript);
+      for (const geneViewTranscript of this.geneViewModel.geneViewTranscripts) {
+        transcriptY += 25;
+        this.drawTranscript(this.transcriptsElement, transcriptY, geneViewTranscript);
+      }
     }
   }
 
