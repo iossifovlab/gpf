@@ -115,7 +115,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
   transcriptsElement;
   svgWidth;
   svgHeight;
-  svgHeightFreqRaw = 400;
+  svgHeightFreqRaw = 400 + 200;
   svgHeightFreq = this.svgHeightFreqRaw - this.options.margin.top - this.options.margin.bottom;
 
   subdomainAxisY = Math.round(this.svgHeightFreq * this.options.axisScale.domain);
@@ -539,11 +539,32 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     this.updateShownTablePreviewVariantsArrayEvent.emit(domains);
   }
 
+  doVariantsIntersect(variant1: GeneViewSummaryVariant, variant2: GeneViewSummaryVariant): boolean {
+    let result: boolean;
+
+    if (!variant1.isCNV) {
+      variant1.endPosition = variant1.position;
+    }
+
+    if (!variant2.isCNV) {
+      variant1.endPosition = variant1.position;
+    }
+
+    if (this.x(variant1.endPosition) + 8 < this.x(variant2.position) - 8 ||
+        this.x(variant1.position) - 8 <= this.x(variant2.endPosition) + 8) {
+      result = false;
+    } else {
+      result = true;
+    }
+
+    return result;
+  }
+
   drawPlot() {
     const minDomain = this.x.domain()[0];
     const maxDomain = this.x.domain()[this.x.domain().length - 1];
 
-    const filteredSummaryVariants = this.filterSummaryVariantsArray(
+    let filteredSummaryVariants = this.filterSummaryVariantsArray(
       this.summaryVariantsArray, minDomain, maxDomain
     );
     this.filteredSummaryVariantsArray = filteredSummaryVariants;
@@ -552,26 +573,25 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     this.geneTableStats.selectedFamilyVariants = filteredSummaryVariants.summaryVariants.reduce(
       (a, b) => a + b.numberOfFamilyVariants, 0
     );
+    const denovoVariants = filteredSummaryVariants.summaryVariants.filter(variant => variant.seenAsDenovo);
+    const transmittedVariants  = filteredSummaryVariants.summaryVariants.filter(variant => !variant.seenAsDenovo);
 
     if (this.gene !== undefined) {
       this.x_axis = d3.axisBottom(this.x).tickValues(this.calculateXAxisTicks());
       this.y_axis = d3.axisLeft(this.y);
       this.y_axis_subdomain = d3.axisLeft(this.y_subdomain).tickValues([this.frequencyDomainMin / 2.0]);
       this.y_axis_zero = d3.axisLeft(this.y_zero);
-      this.svgElement.append('g').attr('transform', `translate(0, ${this.svgHeightFreq})`).call(this.x_axis).style('font', `${this.fontSize}px sans-serif`);
+      this.svgElement.append('g').attr('transform', `translate(0, ${this.svgHeightFreq + 200})`).call(this.x_axis).style('font', `${this.fontSize}px sans-serif`);
       this.svgElement.append('g').call(this.y_axis).style('font', `${this.fontSize}px sans-serif`);
       this.svgElement.append('g').call(this.y_axis_subdomain).style('font', `${this.fontSize}px sans-serif`);
       this.svgElement.append('g').call(this.y_axis_zero).style('font', `${this.fontSize}px sans-serif`);
 
-      filteredSummaryVariants.summaryVariants.sort((a, b) => GeneViewSummaryVariant.comparator(a, b));
-      for (const variant of filteredSummaryVariants.summaryVariants) {
+      transmittedVariants.sort((a, b) => GeneViewSummaryVariant.comparator(a, b));
+      for (const variant of transmittedVariants) {
         const color = this.getAffectedStatusColor(this.getVariantAffectedStatus(variant));
         const variantPosition = this.x(variant.position);
         const variantTitle = `Effect type: ${variant.effect}\nVariant position: ${variant.location}`;
 
-        if (variant.seenAsDenovo && !variant.isCNV()) {
-          drawSurroundingSquare(this.svgElement, variantPosition, this.getVariantY(variant.frequency), color);
-        }
         if (variant.isLGDs()) {
           drawStar(this.svgElement, variantPosition, this.getVariantY(variant.frequency), color, variantTitle);
         } else if (variant.isMissense()) {
@@ -584,6 +604,52 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
           drawCNVTest(this.svgElement, this.x(variant.position), this.x(variant.endPosition), this.getVariantY(variant.frequency) - 1, 2, color, variantTitle);
         } else {
           drawDot(this.svgElement, variantPosition, this.getVariantY(variant.frequency), color, variantTitle);
+        }
+      }
+
+      const spacedDenovos = new Array<{data: GeneViewSummaryVariant, spacing: number}>();
+      let currentSpacing = 0;
+      while (denovoVariants.length > 0) {
+        for (const variant of denovoVariants) {
+          let isPositionFree = true;
+          for (const spacedDenovo of spacedDenovos) {
+            if (this.doVariantsIntersect(variant, spacedDenovo.data)) {
+              isPositionFree = false;
+              break;
+            }
+          }
+
+          if (isPositionFree) {
+            spacedDenovos.push({data: variant, spacing: currentSpacing});
+            const index = denovoVariants.indexOf(variant, 0);
+            if (index > -1) {
+              denovoVariants.splice(index, 1);
+            }
+          }
+        }
+        currentSpacing += 20;
+      }
+
+      for (const variant of spacedDenovos) {
+        const color = this.getAffectedStatusColor(this.getVariantAffectedStatus(variant.data));
+        const variantPosition = this.x(variant.data.position);
+        const variantTitle = `Effect type: ${variant.data.effect}\nVariant position: ${variant.data.location}`;
+
+        if (!variant.data.isCNV()) {
+          drawSurroundingSquare(this.svgElement, variantPosition, this.getVariantY(variant.data.frequency) + variant.spacing, color);
+        }
+        if (variant.data.isLGDs()) {
+          drawStar(this.svgElement, variantPosition, this.getVariantY(variant.data.frequency) + variant.spacing, color, variantTitle);
+        } else if (variant.data.isMissense()) {
+          drawTriangle(this.svgElement, variantPosition, this.getVariantY(variant.data.frequency) + variant.spacing, color, variantTitle);
+        } else if (variant.data.isSynonymous()) {
+          drawCircle(this.svgElement, variantPosition, this.getVariantY(variant.data.frequency) + variant.spacing, color, variantTitle);
+        } else if (variant.data.isCNVPlus()) {
+          drawCNVTest(this.svgElement, this.x(variant.data.position), this.x(variant.data.endPosition), this.getVariantY(variant.data.frequency) - 4 + variant.spacing, 8, color, variantTitle);
+        } else if (variant.data.isCNVPMinus()) {
+          drawCNVTest(this.svgElement, this.x(variant.data.position), this.x(variant.data.endPosition), this.getVariantY(variant.data.frequency) - 1 + variant.spacing, 2, color, variantTitle);
+        } else {
+          drawDot(this.svgElement, variantPosition, this.getVariantY(variant.data.frequency) + variant.spacing, color, variantTitle);
         }
       }
     }
@@ -636,7 +702,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     this.svgElement = d3.select('#svg-container')
       .append('svg')
       .attr('viewBox', '0 0 ' + (this.svgWidth + this.options.margin.left + this.options.margin.right).toString() +
-          ' ' + (this.svgHeightFreqRaw + 85 + (this.gene.transcripts.length + 1) * 25).toString())
+          ' ' + (this.svgHeightFreqRaw + 85 + 200 + (this.gene.transcripts.length + 1) * 25).toString())
       .append('g')
       .attr('transform', `translate(${this.options.margin.left}, ${this.options.margin.top})`);
 
@@ -653,7 +719,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
       .attr('class', 'brush')
       .call(this.brush);
 
-    let transcriptY = this.svgHeightFreqRaw + 30;
+    let transcriptY = this.svgHeightFreqRaw + 30 + 200;
     this.drawTranscript(this.summedTranscriptElement, transcriptY, this.geneViewModel.collapsedGeneViewTranscript);
     transcriptY += 25;
     for (const geneViewTranscript of this.geneViewModel.geneViewTranscripts) {
