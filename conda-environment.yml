@@ -55,3 +55,4 @@ raven>=6.10.0
 snakemake-minimal=5.20
 mypy
 sphinxcontrib-httpdomain
+bump2version
