@@ -542,16 +542,16 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
   doVariantsIntersect(variant1: GeneViewSummaryVariant, variant2: GeneViewSummaryVariant): boolean {
     let result: boolean;
 
-    if (!variant1.isCNV) {
+    if (!variant1.isCNV()) {
       variant1.endPosition = variant1.position;
     }
 
-    if (!variant2.isCNV) {
-      variant1.endPosition = variant1.position;
+    if (!variant2.isCNV()) {
+      variant2.endPosition = variant2.position;
     }
 
     if (this.x(variant1.endPosition) + 8 < this.x(variant2.position) - 8 ||
-        this.x(variant1.position) - 8 <= this.x(variant2.endPosition) + 8) {
+        this.x(variant1.position) - 8 > this.x(variant2.endPosition) + 8) {
       result = false;
     } else {
       result = true;
@@ -607,27 +607,18 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
         }
       }
 
+      const sortedDenovos = denovoVariants.sort((sv, sv2) => sv.position > sv2.position ? 1 : sv.position < sv2.position ? -1 : 0);
       const spacedDenovos = new Array<{data: GeneViewSummaryVariant, spacing: number}>();
-      let currentSpacing = 0;
-      while (denovoVariants.length > 0) {
-        for (const variant of denovoVariants) {
-          let isPositionFree = true;
-          for (const spacedDenovo of spacedDenovos) {
-            if (this.doVariantsIntersect(variant, spacedDenovo.data)) {
-              isPositionFree = false;
-              break;
-            }
-          }
 
-          if (isPositionFree) {
-            spacedDenovos.push({data: variant, spacing: currentSpacing});
-            const index = denovoVariants.indexOf(variant, 0);
-            if (index > -1) {
-              denovoVariants.splice(index, 1);
-            }
-          }
+      let spacingTracker = 0;
+      spacedDenovos.push({data: sortedDenovos[0], spacing: spacingTracker});
+      for (let i = 0; i < sortedDenovos.length - 2; i++) {
+        if (this.doVariantsIntersect(sortedDenovos[i], sortedDenovos[i + 1])) {
+          spacingTracker += 20;
+        } else {
+          spacingTracker = 0;
         }
-        currentSpacing += 20;
+        spacedDenovos.push({data: sortedDenovos[i + 1], spacing: spacingTracker});
       }
 
       for (const variant of spacedDenovos) {
