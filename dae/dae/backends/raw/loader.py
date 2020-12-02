@@ -124,8 +124,9 @@ class FamiliesGenotypes:
 
 
 class CLILoader:
-    def __init__(self):
+    def __init__(self, params={}):
         self.arguments = self._arguments()
+        self.params = params
 
     def _add_argument(self, argument):
         self.arguments.append(argument)
@@ -155,13 +156,14 @@ class CLILoader:
         result = " ".join(built_arguments)
         return result
 
-    def build_arguments_dict(self, params):
+    def build_arguments_dict(self):
         result = dict()
         for argument in self._arguments():
             if argument.arg_type == ArgumentType.ARGUMENT:
                 continue
-            if argument.destination in params:
-                result[argument.destination] = params[argument.destination]
+            if argument.destination in self.params:
+                result[argument.destination] = \
+                    self.params[argument.destination]
         return result
 
     @classmethod
@@ -180,7 +182,7 @@ class VariantsLoader(CLILoader):
         attributes: Optional[Dict[str, Any]] = None,
     ):
 
-        super().__init__()
+        super().__init__(params=params)
         assert isinstance(families, FamiliesData)
         self.families = families
         assert all([os.path.exists(fn) for fn in filenames]), filenames
@@ -188,7 +190,6 @@ class VariantsLoader(CLILoader):
 
         assert isinstance(transmission_type, TransmissionType)
         self.transmission_type = transmission_type
-        self.params = params
         if attributes is None:
             self._attributes = {}
         else:
