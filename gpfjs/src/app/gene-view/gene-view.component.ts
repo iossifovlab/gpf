@@ -592,6 +592,18 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
       this.y_axis = d3.axisLeft(this.y);
       this.y_axis_subdomain = d3.axisLeft(this.y_subdomain).tickValues([this.frequencyDomainMin / 2.0]);
       this.y_axis_zero = d3.axisLeft(this.y_zero);
+
+      this.svgElement
+      .append('svg')
+      .append('g')
+      .append('rect')
+      .attr('height', this.svgHeightFreq - this.zeroAxisY)
+      .attr('width', this.svgWidth)
+      .attr('x', 0)
+      .attr('y', this.zeroAxisY)
+      .attr('fill', '#2b63ff')
+      .attr('fill-opacity', '0.15');
+
       this.svgElement.append('g').attr('transform', `translate(0, ${this.svgHeightFreq})`).call(this.x_axis).style('font', `${this.fontSize}px sans-serif`);
       this.svgElement.append('g').call(this.y_axis).style('font', `${this.fontSize}px sans-serif`);
       this.svgElement.append('g').call(this.y_axis_subdomain).style('font', `${this.fontSize}px sans-serif`);
@@ -624,20 +636,20 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
         const variantTitle = `Effect type: ${variant.data.effect}\nVariant position: ${variant.data.location}`;
 
         if (!variant.data.isCNV()) {
-          drawSurroundingSquare(this.svgElement, variantPosition, this.getVariantY(variant.data.frequency) + variant.spacing, color);
+          drawSurroundingSquare(this.svgElement, variantPosition, this.getVariantY(variant.data.frequency) + 8 + variant.spacing, color);
         }
         if (variant.data.isLGDs()) {
-          drawStar(this.svgElement, variantPosition, this.getVariantY(variant.data.frequency) + variant.spacing, color, variantTitle);
+          drawStar(this.svgElement, variantPosition, this.getVariantY(variant.data.frequency) + 8 + variant.spacing, color, variantTitle);
         } else if (variant.data.isMissense()) {
-          drawTriangle(this.svgElement, variantPosition, this.getVariantY(variant.data.frequency) + variant.spacing, color, variantTitle);
+          drawTriangle(this.svgElement, variantPosition, this.getVariantY(variant.data.frequency) + 8 + variant.spacing, color, variantTitle);
         } else if (variant.data.isSynonymous()) {
-          drawCircle(this.svgElement, variantPosition, this.getVariantY(variant.data.frequency) + variant.spacing, color, variantTitle);
+          drawCircle(this.svgElement, variantPosition, this.getVariantY(variant.data.frequency) + 8 + variant.spacing, color, variantTitle);
         } else if (variant.data.isCNVPlus()) {
           drawCNVTest(this.svgElement, this.x(variant.data.position), this.x(variant.data.endPosition), this.getVariantY(variant.data.frequency) - 4 + variant.spacing, 8, color, variantTitle);
         } else if (variant.data.isCNVPMinus()) {
           drawCNVTest(this.svgElement, this.x(variant.data.position), this.x(variant.data.endPosition), this.getVariantY(variant.data.frequency) - 1 + variant.spacing, 2, color, variantTitle);
         } else {
-          drawDot(this.svgElement, variantPosition, this.getVariantY(variant.data.frequency) + variant.spacing, color, variantTitle);
+          drawDot(this.svgElement, variantPosition, this.getVariantY(variant.data.frequency) + 8 + variant.spacing, color, variantTitle);
         }
       }
     }
