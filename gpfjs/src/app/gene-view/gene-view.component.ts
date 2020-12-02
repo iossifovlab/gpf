@@ -214,7 +214,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
       .domain(['0'])
       .range([this.svgHeightFreq, this.zeroAxisY]);
 
-      this.ngOnChanges();
+      this.drawGene();
       this.setDefaultScale();
       this.updateFamilyVariantsTable();
       this.drawPlot();
@@ -238,7 +238,6 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
       this.geneViewTranscript = new GeneViewTranscript(this.gene.transcripts[0]);
       this.setDefaultScale();
       this.resetGeneTableValues();
-      this.drawGene();
       this.resetCheckboxes();
     }
   }
