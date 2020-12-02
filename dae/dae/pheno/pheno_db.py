@@ -183,10 +183,14 @@ class PhenotypeData:
         raise NotImplementedError()
 
     def get_values_df(
-            self, measure_ids, person_ids, family_ids, roles, default_filter):
+            self, measure_ids,
+            person_ids=None, family_ids=None, roles=None, 
+            default_filter="apply"):
         raise NotImplementedError()
 
-    def get_values(self, measure_ids, person_ids, family_ids, roles):
+    def get_values(
+            self, measure_ids, 
+            person_ids=None, family_ids=None, roles=None):
         raise NotImplementedError()
 
     def get_instrument_values_df(
