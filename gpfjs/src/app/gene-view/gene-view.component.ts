@@ -197,6 +197,11 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     });
 
     this.streamingFinished$.subscribe(() => {
+      this.svgHeightFreqRaw = 400;
+      this.svgHeightFreq = this.svgHeightFreqRaw - this.options.margin.top - this.options.margin.bottom;
+      this.subdomainAxisY = Math.round(this.svgHeightFreq * this.options.axisScale.domain);
+      this.zeroAxisY = this.subdomainAxisY + Math.round(this.svgHeightFreq * this.options.axisScale.subdomain);
+
       this.summaryVariantsArray = this.variantsArray;
       this.filteredSummaryVariantsArray = this.variantsArray;
       this.spacedDenovos = this.calculateSpaceDenovos(this.summaryVariantsArray);
