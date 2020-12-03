@@ -4,7 +4,7 @@ import { Gene, GeneViewSummaryVariantsArray, GeneViewSummaryVariant, DomainRange
 import { Subject, Observable } from 'rxjs';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { FullscreenLoadingService } from 'app/fullscreen-loading/fullscreen-loading.service';
-import { drawRect, drawLine, drawHoverText, drawStar, drawCircle, drawTriangle, drawSurroundingSquare, drawDot, drawCNVTest } from 'app/utils/svg-drawing';
+import { drawRect, drawLine, drawHoverText, drawStar, drawCircle, drawTriangle, drawSurroundingSquare, drawSurroundingRectangleForCNV, drawDot, drawCNVTest, drawCNVTest1 } from 'app/utils/svg-drawing';
 import { GeneViewTranscript, GeneViewModel } from 'app/gene-view/gene-view';
 import { QueryStateProvider, QueryStateWithErrorsProvider } from 'app/query/query-state-provider';
 
@@ -642,10 +642,13 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
         const color = this.getAffectedStatusColor(this.getVariantAffectedStatus(variant));
         const variantPosition = this.x(variant.position);
         const variantTitle = `Effect type: ${variant.effect}\nVariant position: ${variant.location}`;
-
-        if (!variant.isCNV()) {
+        if (variant.isCNV()) {
+          const cnvLength = this.x(variant.endPosition) - variantPosition;
+          drawSurroundingRectangleForCNV(this.svgElement, variantPosition + cnvLength / 2, this.getVariantY(variant.frequency) + spacing, color, cnvLength, variantTitle);
+        } else {
           drawSurroundingSquare(this.svgElement, variantPosition, this.getVariantY(variant.frequency) + 8 + spacing, color);
         }
+
         if (variant.isLGDs()) {
           drawStar(this.svgElement, variantPosition, this.getVariantY(variant.frequency) + 8 + spacing, color, variantTitle);
         } else if (variant.isMissense()) {
@@ -653,9 +656,9 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
         } else if (variant.isSynonymous()) {
           drawCircle(this.svgElement, variantPosition, this.getVariantY(variant.frequency) + 8 + spacing, color, variantTitle);
         } else if (variant.isCNVPlus()) {
-          drawCNVTest(this.svgElement, this.x(variant.position), this.x(variant.endPosition), this.getVariantY(variant.frequency) - 4 + spacing, 8, color, variantTitle);
+          drawCNVTest1(this.svgElement, variantPosition, this.x(variant.endPosition), this.getVariantY(variant.frequency) - 3 + spacing, 6, color, variantTitle);
         } else if (variant.isCNVPMinus()) {
-          drawCNVTest(this.svgElement, this.x(variant.position), this.x(variant.endPosition), this.getVariantY(variant.frequency) - 1 + spacing, 2, color, variantTitle);
+          drawCNVTest(this.svgElement, variantPosition, this.x(variant.endPosition), this.getVariantY(variant.frequency) - 0.5 + spacing, 1, color, variantTitle);
         } else {
           drawDot(this.svgElement, variantPosition, this.getVariantY(variant.frequency) + 8 + spacing, color, variantTitle);
         }
@@ -672,7 +675,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     for (let i = 0; i <= sortedDenovos.length - 2; i++) {
 
       if (this.doVariantsIntersect(sortedDenovos[i], sortedDenovos[i + 1])) {
-        spacingTracker += 20;
+        spacingTracker += 35;
       } else {
         spacingTracker = 0;
       }

@@ -34,6 +34,22 @@ export function drawSurroundingSquare(element, x: number, y: number, color: stri
     .style('stroke-width', 2);
 }
 
+export function drawSurroundingRectangleForCNV(element, x: number, y: number, color: string, w: number, title: string) {
+  const h = 16;
+  element.append('g')
+    .append('rect')
+    .attr('x', x - w / 2)
+    .attr('y', y - h / 2)
+    .attr('width', w)
+    .attr('height', h)
+    .style('fill', color)
+    .style('fill-opacity', 0.2)
+    .style('stroke', color)
+    .style('stroke-width', 2)
+    .style('stroke-opacity', 0.4)
+    .append('svg:title').text(title);;
+}
+
 export function drawStar(element, x: number, y: number, color: string, title: string) {
   element.append('svg')
     .attr('x', x - 8.5)
@@ -108,8 +124,23 @@ export function drawCNVTest(element, xStart: number, xEnd: number, y: number, he
     .attr('x', xStart)
     .attr('y', y)
     .style('fill', color)
-    .attr('fill-opacity', '0.05')
+    .attr('fill-opacity', '0.4')
     .style('stroke-width', 1)
     .style('stroke', color)
-    .append('svg:title').text(title);
+    .append('svg:title').text(title)
+    .style('stroke-opacity', 0.4);
+}
+
+export function drawCNVTest1(element, xStart: number, xEnd: number, y: number, height: number, color: string, title: string) {
+  element.append('rect')
+    .attr('height', height)
+    .attr('width', xEnd - xStart)
+    .attr('x', xStart)
+    .attr('y', y)
+    .style('fill', color)
+    .attr('fill-opacity', '0.4')
+    .style('stroke-width', 1)
+    .style('stroke', color)
+    .append('svg:title').text(title)
+    .style('stroke-opacity', 0.4);
 }
