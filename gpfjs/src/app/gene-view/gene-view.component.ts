@@ -153,7 +153,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     totalSummaryVariants: 0,
     selectedSummaryVariants: 0,
   };
-  spacedDenovos = [];
+  denovoVariantsSpacings = {};
   additionalZeroAxisHeight = 0;
   constructor(
     private datasetsService: DatasetsService,
@@ -204,9 +204,9 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
 
       this.summaryVariantsArray = this.variantsArray;
       this.filteredSummaryVariantsArray = this.variantsArray;
-      this.spacedDenovos = this.calculateSpaceDenovos(this.summaryVariantsArray);
-      this.additionalZeroAxisHeight = Math.max.apply(Math, this.spacedDenovos.map(a => a.spacing));
+      this.denovoVariantsSpacings = this.calculateDenovoVariantsSpacings(this.summaryVariantsArray);
 
+      this.additionalZeroAxisHeight = Math.max.apply(Math, Object.values(this.denovoVariantsSpacings));
       this.svgHeightFreq += this.additionalZeroAxisHeight;
       this.svgHeightFreqRaw += this.additionalZeroAxisHeight;
 
@@ -630,48 +630,49 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
         }
       }
 
-      for (const variant of this.spacedDenovos) {
-        const color = this.getAffectedStatusColor(this.getVariantAffectedStatus(variant.data));
-        const variantPosition = this.x(variant.data.position);
-        const variantTitle = `Effect type: ${variant.data.effect}\nVariant position: ${variant.data.location}`;
+      const denovoVariants  = filteredSummaryVariants.summaryVariants.filter(variant => variant.seenAsDenovo);
+      for (const variant of denovoVariants) {
+        const spacing = this.denovoVariantsSpacings[variant.svuid];
+        const color = this.getAffectedStatusColor(this.getVariantAffectedStatus(variant));
+        const variantPosition = this.x(variant.position);
+        const variantTitle = `Effect type: ${variant.effect}\nVariant position: ${variant.location}`;
 
-        if (!variant.data.isCNV()) {
-          drawSurroundingSquare(this.svgElement, variantPosition, this.getVariantY(variant.data.frequency) + 8 + variant.spacing, color);
+        if (!variant.isCNV()) {
+          drawSurroundingSquare(this.svgElement, variantPosition, this.getVariantY(variant.frequency) + 8 + spacing, color);
         }
-        if (variant.data.isLGDs()) {
-          drawStar(this.svgElement, variantPosition, this.getVariantY(variant.data.frequency) + 8 + variant.spacing, color, variantTitle);
-        } else if (variant.data.isMissense()) {
-          drawTriangle(this.svgElement, variantPosition, this.getVariantY(variant.data.frequency) + 8 + variant.spacing, color, variantTitle);
-        } else if (variant.data.isSynonymous()) {
-          drawCircle(this.svgElement, variantPosition, this.getVariantY(variant.data.frequency) + 8 + variant.spacing, color, variantTitle);
-        } else if (variant.data.isCNVPlus()) {
-          drawCNVTest(this.svgElement, this.x(variant.data.position), this.x(variant.data.endPosition), this.getVariantY(variant.data.frequency) - 4 + variant.spacing, 8, color, variantTitle);
-        } else if (variant.data.isCNVPMinus()) {
-          drawCNVTest(this.svgElement, this.x(variant.data.position), this.x(variant.data.endPosition), this.getVariantY(variant.data.frequency) - 1 + variant.spacing, 2, color, variantTitle);
+        if (variant.isLGDs()) {
+          drawStar(this.svgElement, variantPosition, this.getVariantY(variant.frequency) + 8 + spacing, color, variantTitle);
+        } else if (variant.isMissense()) {
+          drawTriangle(this.svgElement, variantPosition, this.getVariantY(variant.frequency) + 8 + spacing, color, variantTitle);
+        } else if (variant.isSynonymous()) {
+          drawCircle(this.svgElement, variantPosition, this.getVariantY(variant.frequency) + 8 + spacing, color, variantTitle);
+        } else if (variant.isCNVPlus()) {
+          drawCNVTest(this.svgElement, this.x(variant.position), this.x(variant.endPosition), this.getVariantY(variant.frequency) - 4 + spacing, 8, color, variantTitle);
+        } else if (variant.isCNVPMinus()) {
+          drawCNVTest(this.svgElement, this.x(variant.position), this.x(variant.endPosition), this.getVariantY(variant.frequency) - 1 + spacing, 2, color, variantTitle);
         } else {
-          drawDot(this.svgElement, variantPosition, this.getVariantY(variant.data.frequency) + 8 + variant.spacing, color, variantTitle);
+          drawDot(this.svgElement, variantPosition, this.getVariantY(variant.frequency) + 8 + spacing, color, variantTitle);
         }
       }
     }
   }
 
-  calculateSpaceDenovos(summaryVariantsArray: GeneViewSummaryVariantsArray) {
+  calculateDenovoVariantsSpacings(summaryVariantsArray: GeneViewSummaryVariantsArray) {
     const denovoVariants = summaryVariantsArray.summaryVariants.filter(variant => variant.seenAsDenovo);
     const sortedDenovos = denovoVariants.sort((sv, sv2) => sv.position > sv2.position ? 1 : sv.position < sv2.position ? -1 : 0);
-    const spacedDenovos = new Array<{data: GeneViewSummaryVariant, spacing: number}>();
-
+    const denovoVariantsSpacings = {};
     let spacingTracker = 0;
-    spacedDenovos.push({data: sortedDenovos[0], spacing: spacingTracker});
-    for (let i = 0; i < sortedDenovos.length - 2; i++) {
+    denovoVariantsSpacings[sortedDenovos[0].svuid] = spacingTracker;
+    for (let i = 0; i <= sortedDenovos.length - 2; i++) {
+
       if (this.doVariantsIntersect(sortedDenovos[i], sortedDenovos[i + 1])) {
         spacingTracker += 20;
       } else {
         spacingTracker = 0;
       }
-      spacedDenovos.push({data: sortedDenovos[i + 1], spacing: spacingTracker});
+      denovoVariantsSpacings[sortedDenovos[i + 1].svuid] = spacingTracker;
     }
-
-    return spacedDenovos;
+    return denovoVariantsSpacings;
   }
 
   getVariantY(variantFrequency: number): number {
