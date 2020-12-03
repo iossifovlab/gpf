@@ -1,4 +1,4 @@
-import { GenotypePreviewVariantsArray, GenotypePreview } from 'app/genotype-preview-model/genotype-preview';
+import { GenotypePreview } from 'app/genotype-preview-model/genotype-preview';
 import { GeneViewTranscript } from './gene-view';
 
 export class Exon {
@@ -284,6 +284,7 @@ export class GeneViewSummaryVariant {
 
 export class GeneViewSummaryVariantsArray {
   summaryVariants: GeneViewSummaryVariant[] = [];
+  summaryVariantsIds: string[] = [];
 
   constructor() { }
 
@@ -292,11 +293,20 @@ export class GeneViewSummaryVariantsArray {
       return;
     }
     const summaryVariant = GeneViewSummaryVariant.fromRow(variant);
+
+    // This is a temporary fix to merge duplicate variants
+    // TODO: Remove when backend is fixed
+    if (this.summaryVariantsIds.indexOf(summaryVariant.svuid) !== -1) {
+      return;
+    }
+
     this.summaryVariants.push(summaryVariant);
+    this.summaryVariantsIds.push(summaryVariant.svuid);
   }
 
   push(variant: GeneViewSummaryVariant) {
     this.summaryVariants.push(variant);
+    this.summaryVariantsIds.push(variant.svuid);
   }
 }
 
