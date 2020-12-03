@@ -591,8 +591,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
       this.x_axis = d3.axisBottom(this.x).tickValues(this.calculateXAxisTicks());
       this.y_axis = d3.axisLeft(this.y);
       this.y_axis_subdomain = d3.axisLeft(this.y_subdomain).tickValues([this.frequencyDomainMin / 2.0]);
-      this.y_axis_zero = d3.axisLeft(this.y_zero);
-
+      this.y_axis_zero = d3.axisLeft(this.y_zero).tickSizeInner(0).tickPadding(9);
       this.svgElement.append('g').attr('transform', `translate(0, ${this.svgHeightFreq})`).call(this.x_axis).style('font', `${this.fontSize}px sans-serif`);
       this.svgElement.append('g').call(this.y_axis).style('font', `${this.fontSize}px sans-serif`);
       this.svgElement.append('g').call(this.y_axis_subdomain).style('font', `${this.fontSize}px sans-serif`);
