@@ -593,21 +593,28 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
       this.y_axis_subdomain = d3.axisLeft(this.y_subdomain).tickValues([this.frequencyDomainMin / 2.0]);
       this.y_axis_zero = d3.axisLeft(this.y_zero);
 
-      this.svgElement
-      .append('svg')
-      .append('g')
-      .append('rect')
-      .attr('height', this.svgHeightFreq - this.zeroAxisY)
-      .attr('width', this.svgWidth)
-      .attr('x', 0)
-      .attr('y', this.zeroAxisY)
-      .attr('fill', '#2b63ff')
-      .attr('fill-opacity', '0.15');
-
       this.svgElement.append('g').attr('transform', `translate(0, ${this.svgHeightFreq})`).call(this.x_axis).style('font', `${this.fontSize}px sans-serif`);
       this.svgElement.append('g').call(this.y_axis).style('font', `${this.fontSize}px sans-serif`);
       this.svgElement.append('g').call(this.y_axis_subdomain).style('font', `${this.fontSize}px sans-serif`);
       this.svgElement.append('g').call(this.y_axis_zero).style('font', `${this.fontSize}px sans-serif`);
+
+      this.svgElement
+        .append('svg')
+        .append('g')
+        .append('rect')
+        .attr('height', this.svgHeightFreq - this.zeroAxisY)
+        .attr('width', this.svgWidth)
+        .attr('x', 0)
+        .attr('y', this.zeroAxisY)
+        .attr('fill', '#2b63ff')
+        .attr('fill-opacity', '0.15');
+
+      this.brush = d3.brush().extent([[0, 0], [this.svgWidth, this.svgHeightFreq]])
+        .on('end', this.brushEndEvent);
+
+      this.svgElement.append('g')
+        .attr('class', 'brush')
+        .call(this.brush);
 
       transmittedVariants.sort((a, b) => GeneViewSummaryVariant.comparator(a, b));
       for (const variant of transmittedVariants) {
@@ -732,13 +739,6 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
 
       this.transcriptsElement = this.svgElement
         .append('g');
-
-      this.brush = d3.brush().extent([[0, 0], [this.svgWidth, this.svgHeightFreq]])
-        .on('end', this.brushEndEvent);
-
-      this.svgElement.append('g')
-        .attr('class', 'brush')
-        .call(this.brush);
 
       let transcriptY = this.svgHeightFreqRaw + 30;
       this.drawTranscript(this.summedTranscriptElement, transcriptY, this.geneViewModel.collapsedGeneViewTranscript);
