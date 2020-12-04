@@ -642,9 +642,15 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
         } else if (variant.isSynonymous()) {
           draw.circle(this.svgElement, variantPosition, this.getVariantY(variant.frequency), color, variantTitle);
         } else if (variant.isCNVPlus()) {
-          draw.CNVTest(this.svgElement, this.x(variant.position), this.x(variant.endPosition), this.getVariantY(variant.frequency) - 4, 8, color, variantTitle);
+          draw.CNVTest(
+            this.svgElement, this.x(variant.position), this.x(variant.endPosition),
+            this.getVariantY(variant.frequency) - 4, 8, color, variantTitle
+          );
         } else if (variant.isCNVPMinus()) {
-          draw.CNVTest(this.svgElement, this.x(variant.position), this.x(variant.endPosition), this.getVariantY(variant.frequency) - 1, 2, color, variantTitle);
+          draw.CNVTest(
+            this.svgElement, this.x(variant.position), this.x(variant.endPosition),
+            this.getVariantY(variant.frequency) - 1, 2, color, variantTitle
+          );
         } else {
           draw.dot(this.svgElement, variantPosition, this.getVariantY(variant.frequency), color, variantTitle);
         }
@@ -658,7 +664,10 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
         const variantTitle = `Effect type: ${variant.effect}\nVariant position: ${variant.location}`;
         if (variant.isCNV()) {
           const cnvLength = this.x(variant.endPosition) - variantPosition;
-          draw.surroundingRectangleForCNV(this.svgElement, variantPosition + cnvLength / 2, this.getVariantY(variant.frequency) + spacing, color, cnvLength, variantTitle);
+          draw.surroundingRectangleForCNV(
+            this.svgElement, variantPosition + cnvLength / 2,
+            this.getVariantY(variant.frequency) + spacing, color, cnvLength, variantTitle
+          );
         } else {
           draw.surroundingSquare(this.svgElement, variantPosition, this.getVariantY(variant.frequency) + 8 + spacing, color);
         }
@@ -670,9 +679,15 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
         } else if (variant.isSynonymous()) {
           draw.circle(this.svgElement, variantPosition, this.getVariantY(variant.frequency) + 8 + spacing, color, variantTitle);
         } else if (variant.isCNVPlus()) {
-          draw.CNVTest1(this.svgElement, variantPosition, this.x(variant.endPosition), this.getVariantY(variant.frequency) - 3 + spacing, 6, color, variantTitle);
+          draw.CNVTest1(
+            this.svgElement, variantPosition, this.x(variant.endPosition),
+            this.getVariantY(variant.frequency) - 3 + spacing, 6, color, variantTitle
+          );
         } else if (variant.isCNVPMinus()) {
-          draw.CNVTest(this.svgElement, variantPosition, this.x(variant.endPosition), this.getVariantY(variant.frequency) - 0.5 + spacing, 1, color, variantTitle);
+          draw.CNVTest(
+            this.svgElement, variantPosition, this.x(variant.endPosition),
+            this.getVariantY(variant.frequency) - 0.5 + spacing, 1, color, variantTitle
+          );
         } else {
           draw.dot(this.svgElement, variantPosition, this.getVariantY(variant.frequency) + 8 + spacing, color, variantTitle);
         }
