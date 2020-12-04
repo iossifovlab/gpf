@@ -631,7 +631,14 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
       for (const variant of filteredSummaryVariants.summaryVariants) {
         const variantPosition = this.x(variant.position);
         const color = this.getAffectedStatusColor(this.getVariantAffectedStatus(variant));
-        const variantTitle = `Effect type: ${variant.effect}\nVariant position: ${variant.location}`;
+        const variantTitle = `Effect type: ${variant.effect}\nVariant position: ${variant.location}\nFrequency: ${variant.frequency}`;
+
+        let variantHeight = this.getVariantY(variant.frequency);
+
+        // Temporary fix for variants with 0 frequency shown in the middle of the denovo plot
+        if (variantHeight === 0) {
+          variantHeight = null;
+        }
 
         let spacing = 0;
         if (variant.seenAsDenovo) {
@@ -641,31 +648,31 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
             const cnvLength = this.x(variant.endPosition) - variantPosition;
             draw.surroundingRectangleForCNV(
               this.svgElement, variantPosition + cnvLength / 2,
-              this.getVariantY(variant.frequency) + spacing, color, cnvLength, variantTitle
+              variantHeight + spacing, color, cnvLength, variantTitle
             );
           } else {
-            draw.surroundingSquare(this.svgElement, variantPosition, this.getVariantY(variant.frequency) + spacing, color);
+            draw.surroundingSquare(this.svgElement, variantPosition, variantHeight + spacing, color);
           }
         }
 
         if (variant.isLGDs()) {
-          draw.star(this.svgElement, variantPosition, this.getVariantY(variant.frequency) + spacing, color, variantTitle);
+          draw.star(this.svgElement, variantPosition, variantHeight + spacing, color, variantTitle);
         } else if (variant.isMissense()) {
-          draw.triangle(this.svgElement, variantPosition, this.getVariantY(variant.frequency) + spacing, color, variantTitle);
+          draw.triangle(this.svgElement, variantPosition, variantHeight + spacing, color, variantTitle);
         } else if (variant.isSynonymous()) {
-          draw.circle(this.svgElement, variantPosition, this.getVariantY(variant.frequency) + spacing, color, variantTitle);
+          draw.circle(this.svgElement, variantPosition, variantHeight + spacing, color, variantTitle);
         } else if (variant.isCNVPlus()) {
           draw.rectWithOpacity(
             this.svgElement, this.x(variant.position), this.x(variant.endPosition),
-            this.getVariantY(variant.frequency) - 3 + spacing, 6, color, variantTitle
+            variantHeight - 3 + spacing, 6, color, variantTitle
           );
         } else if (variant.isCNVPMinus()) {
           draw.rectWithOpacity(
             this.svgElement, this.x(variant.position), this.x(variant.endPosition),
-            this.getVariantY(variant.frequency) - 0.5 + spacing, 1, color, variantTitle
+            variantHeight - 0.5 + spacing, 1, color, variantTitle
           );
         } else {
-          draw.dot(this.svgElement, variantPosition, this.getVariantY(variant.frequency) + spacing, color, variantTitle);
+          draw.dot(this.svgElement, variantPosition, variantHeight + spacing, color, variantTitle);
         }
       }
     }
