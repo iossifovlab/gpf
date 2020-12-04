@@ -7,6 +7,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Dict
 from dae.pedigrees.family import Family, FamiliesData
 from dae.person_sets import PersonSetCollection
+from dae.utils.effect_utils import expand_effect_types
 
 
 LOGGER = logging.getLogger(__name__)
@@ -438,6 +439,9 @@ class GenotypeDataStudy(GenotypeData):
 
         if person_ids is not None and len(person_ids) == 0:
             return
+
+        if effect_types:
+            effect_types = expand_effect_types(effect_types)
 
         for variant in self._backend.query_variants(
                 regions=regions,
