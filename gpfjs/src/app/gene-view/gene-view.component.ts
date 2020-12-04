@@ -4,7 +4,7 @@ import { Gene, GeneViewSummaryVariantsArray, GeneViewSummaryVariant, DomainRange
 import { Subject, Observable } from 'rxjs';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { FullscreenLoadingService } from 'app/fullscreen-loading/fullscreen-loading.service';
-import { drawRect, drawLine, drawHoverText, drawStar, drawCircle, drawTriangle, drawSurroundingSquare, drawSurroundingRectangleForCNV, drawDot, drawCNVTest, drawCNVTest1 } from 'app/utils/svg-drawing';
+import * as draw from 'app/utils/svg-drawing';
 import { GeneViewTranscript, GeneViewModel } from 'app/gene-view/gene-view';
 import { QueryStateProvider, QueryStateWithErrorsProvider } from 'app/query/query-state-provider';
 
@@ -297,38 +297,38 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     this.svgElement = d3.select('#transmitted')
       .attr('width', 80)
       .attr('height', 20);
-    drawStar(this.svgElement, 10, 7.5, '#000000', 'LGDs');
-    drawTriangle(this.svgElement, 30, 8, '#000000', 'Missense');
-    drawCircle(this.svgElement, 50, 8, '#000000', 'Synonymous');
-    drawDot(this.svgElement, 70, 8, '#000000', 'Other');
+    draw.star(this.svgElement, 10, 7.5, '#000000', 'LGDs');
+    draw.triangle(this.svgElement, 30, 8, '#000000', 'Missense');
+    draw.circle(this.svgElement, 50, 8, '#000000', 'Synonymous');
+    draw.dot(this.svgElement, 70, 8, '#000000', 'Other');
   }
 
   drawDenovoIcons() {
     this.svgElement = d3.select('#denovo')
       .attr('width', 80)
       .attr('height', 20);
-    drawSurroundingSquare(this.svgElement, 10, 7.5, '#000000');
-    drawStar(this.svgElement, 10, 7.5, '#000000', 'Denovo LGDs');
-    drawSurroundingSquare(this.svgElement, 30, 8, '#000000');
-    drawTriangle(this.svgElement, 30, 8, '#000000', 'Denovo Missense');
-    drawSurroundingSquare(this.svgElement, 50, 8, '#000000');
-    drawCircle(this.svgElement, 50, 8, '#000000', 'Denovo Synonymous');
-    drawSurroundingSquare(this.svgElement, 70, 8, '#000000');
-    drawDot(this.svgElement, 70, 8, '#000000', 'Denovo Other');
+    draw.surroundingSquare(this.svgElement, 10, 7.5, '#000000');
+    draw.star(this.svgElement, 10, 7.5, '#000000', 'Denovo LGDs');
+    draw.surroundingSquare(this.svgElement, 30, 8, '#000000');
+    draw.triangle(this.svgElement, 30, 8, '#000000', 'Denovo Missense');
+    draw.surroundingSquare(this.svgElement, 50, 8, '#000000');
+    draw.circle(this.svgElement, 50, 8, '#000000', 'Denovo Synonymous');
+    draw.surroundingSquare(this.svgElement, 70, 8, '#000000');
+    draw.dot(this.svgElement, 70, 8, '#000000', 'Denovo Other');
   }
 
   drawEffectTypesIcons() {
     const effectIcons = {
-      '#LGDs': drawStar,
-      '#Missense': drawTriangle,
-      '#Synonymous': drawCircle,
-      '#Other': drawDot
+      '#LGDs': draw.star,
+      '#Missense': draw.triangle,
+      '#Synonymous': draw.circle,
+      '#Other': draw.dot
     };
-    for (const [effect, draw] of Object.entries(effectIcons)) {
+    for (const [effect, drawIcon] of Object.entries(effectIcons)) {
       this.svgElement = d3.select(effect)
         .attr('width', 20)
         .attr('height', 20);
-      draw(this.svgElement, 10, 8, '#000000', effect);
+        drawIcon(this.svgElement, 10, 8, '#000000', effect);
     }
   }
 
@@ -636,17 +636,17 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
         const variantTitle = `Effect type: ${variant.effect}\nVariant position: ${variant.location}`;
 
         if (variant.isLGDs()) {
-          drawStar(this.svgElement, variantPosition, this.getVariantY(variant.frequency), color, variantTitle);
+          draw.star(this.svgElement, variantPosition, this.getVariantY(variant.frequency), color, variantTitle);
         } else if (variant.isMissense()) {
-          drawTriangle(this.svgElement, variantPosition, this.getVariantY(variant.frequency), color, variantTitle);
+          draw.triangle(this.svgElement, variantPosition, this.getVariantY(variant.frequency), color, variantTitle);
         } else if (variant.isSynonymous()) {
-          drawCircle(this.svgElement, variantPosition, this.getVariantY(variant.frequency), color, variantTitle);
+          draw.circle(this.svgElement, variantPosition, this.getVariantY(variant.frequency), color, variantTitle);
         } else if (variant.isCNVPlus()) {
-          drawCNVTest(this.svgElement, this.x(variant.position), this.x(variant.endPosition), this.getVariantY(variant.frequency) - 4, 8, color, variantTitle);
+          draw.CNVTest(this.svgElement, this.x(variant.position), this.x(variant.endPosition), this.getVariantY(variant.frequency) - 4, 8, color, variantTitle);
         } else if (variant.isCNVPMinus()) {
-          drawCNVTest(this.svgElement, this.x(variant.position), this.x(variant.endPosition), this.getVariantY(variant.frequency) - 1, 2, color, variantTitle);
+          draw.CNVTest(this.svgElement, this.x(variant.position), this.x(variant.endPosition), this.getVariantY(variant.frequency) - 1, 2, color, variantTitle);
         } else {
-          drawDot(this.svgElement, variantPosition, this.getVariantY(variant.frequency), color, variantTitle);
+          draw.dot(this.svgElement, variantPosition, this.getVariantY(variant.frequency), color, variantTitle);
         }
       }
 
@@ -658,23 +658,23 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
         const variantTitle = `Effect type: ${variant.effect}\nVariant position: ${variant.location}`;
         if (variant.isCNV()) {
           const cnvLength = this.x(variant.endPosition) - variantPosition;
-          drawSurroundingRectangleForCNV(this.svgElement, variantPosition + cnvLength / 2, this.getVariantY(variant.frequency) + spacing, color, cnvLength, variantTitle);
+          draw.surroundingRectangleForCNV(this.svgElement, variantPosition + cnvLength / 2, this.getVariantY(variant.frequency) + spacing, color, cnvLength, variantTitle);
         } else {
-          drawSurroundingSquare(this.svgElement, variantPosition, this.getVariantY(variant.frequency) + 8 + spacing, color);
+          draw.surroundingSquare(this.svgElement, variantPosition, this.getVariantY(variant.frequency) + 8 + spacing, color);
         }
 
         if (variant.isLGDs()) {
-          drawStar(this.svgElement, variantPosition, this.getVariantY(variant.frequency) + 8 + spacing, color, variantTitle);
+          draw.star(this.svgElement, variantPosition, this.getVariantY(variant.frequency) + 8 + spacing, color, variantTitle);
         } else if (variant.isMissense()) {
-          drawTriangle(this.svgElement, variantPosition, this.getVariantY(variant.frequency) + 8 + spacing, color, variantTitle);
+          draw.triangle(this.svgElement, variantPosition, this.getVariantY(variant.frequency) + 8 + spacing, color, variantTitle);
         } else if (variant.isSynonymous()) {
-          drawCircle(this.svgElement, variantPosition, this.getVariantY(variant.frequency) + 8 + spacing, color, variantTitle);
+          draw.circle(this.svgElement, variantPosition, this.getVariantY(variant.frequency) + 8 + spacing, color, variantTitle);
         } else if (variant.isCNVPlus()) {
-          drawCNVTest1(this.svgElement, variantPosition, this.x(variant.endPosition), this.getVariantY(variant.frequency) - 3 + spacing, 6, color, variantTitle);
+          draw.CNVTest1(this.svgElement, variantPosition, this.x(variant.endPosition), this.getVariantY(variant.frequency) - 3 + spacing, 6, color, variantTitle);
         } else if (variant.isCNVPMinus()) {
-          drawCNVTest(this.svgElement, variantPosition, this.x(variant.endPosition), this.getVariantY(variant.frequency) - 0.5 + spacing, 1, color, variantTitle);
+          draw.CNVTest(this.svgElement, variantPosition, this.x(variant.endPosition), this.getVariantY(variant.frequency) - 0.5 + spacing, 1, color, variantTitle);
         } else {
-          drawDot(this.svgElement, variantPosition, this.getVariantY(variant.frequency) + 8 + spacing, color, variantTitle);
+          draw.dot(this.svgElement, variantPosition, this.getVariantY(variant.frequency) + 8 + spacing, color, variantTitle);
         }
       }
     }
@@ -903,7 +903,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     for (const [chromosome, range] of Object.entries(chromosomes)) {
       from = Math.max(range[0], domainMin);
       to = Math.min(range[1], domainMax);
-      drawHoverText(element, this.x((from + to) / 2) - 43, yPos + 35, `Chromosome: ${chromosome}`, '', this.fontSize);
+      draw.hoverText(element, this.x((from + to) / 2) - 43, yPos + 35, `Chromosome: ${chromosome}`, '', this.fontSize);
     }
   }
 
@@ -964,7 +964,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
       brushSize = { nonCoding: this.options.exonThickness.collapsed, coding: this.options.cdsThickness.collapsed };
       this.drawChromosomeLabels(element, yPos, geneViewTranscript);
     } else {
-      drawHoverText(element, this.x(firstSegmentStart) - 150, yPos + 10, transcriptId, 'Transcript id: ', this.fontSize);
+      draw.hoverText(element, this.x(firstSegmentStart) - 150, yPos + 10, transcriptId, 'Transcript id: ', this.fontSize);
     }
 
     this.drawTranscriptUTRText(element, firstSegmentStart, lastSegmentStop, yPos, geneViewTranscript.strand);
@@ -990,11 +990,11 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
       y -= (brushSize.coding - brushSize.nonCoding) / 2;
       title += ' [CDS]';
     }
-    drawRect(element, xStart, xEnd, y, rectThickness, title);
+    draw.rect(element, xStart, xEnd, y, rectThickness, title);
   }
 
   drawIntron(element, xStart: number, xEnd: number, y: number, title: string, brushSize) {
-    drawLine(element, xStart, xEnd, y + brushSize.nonCoding / 2, title);
+    draw.line(element, xStart, xEnd, y + brushSize.nonCoding / 2, title);
   }
 
   drawTranscriptUTRText(element, xStart: number, xEnd: number, y: number, strand: string) {
@@ -1003,7 +1003,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
       UTR.left = '3\'';
       UTR.right = '5\'';
     }
-    drawHoverText(element, this.x(xStart) - 20, y + 10, UTR.left, 'UTR ', this.fontSize);
-    drawHoverText(element, this.x(xEnd) + 10, y + 10, UTR.right, 'UTR ', this.fontSize);
+    draw.hoverText(element, this.x(xStart) - 20, y + 10, UTR.left, 'UTR ', this.fontSize);
+    draw.hoverText(element, this.x(xEnd) + 10, y + 10, UTR.right, 'UTR ', this.fontSize);
   }
 }
