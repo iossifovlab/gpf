@@ -641,7 +641,9 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
 
         let spacing = 0;
         if (variant.seenAsDenovo) {
-          spacing = this.denovoVariantsSpacings[variant.svuid] + 8;
+          if (variant.frequency == null) {
+            spacing = this.denovoVariantsSpacings[variant.svuid] + 8;
+          }
 
           if (variant.isCNV()) {
             const cnvLength = this.x(variant.endPosition) - variantPosition;
