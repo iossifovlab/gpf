@@ -6,6 +6,7 @@ from collections import defaultdict
 
 from dae.utils.helpers import str2bool
 from dae.variants.attributes import Role, Sex, Status
+from dae.backends.raw.loader import CLILoader, CLIArgument
 
 from dae.pedigrees.family import FamiliesData, Person, PEDIGREE_COLUMN_NAMES
 from dae.pedigrees.family_role_builder import FamilyRoleBuilder
@@ -22,7 +23,7 @@ PED_COLUMNS_REQUIRED = (
 )
 
 
-class FamiliesLoader:
+class FamiliesLoader(CLILoader):
     def __init__(self, families_filename, **params):
 
         self.filename = families_filename
@@ -95,163 +96,117 @@ class FamiliesLoader:
                 self.filename, pedigree_format=self.params
             )
 
-    @staticmethod
-    def cli_defaults():
-        return {
-            "ped_family": "familyId",
-            "ped_person": "personId",
-            "ped_mom": "momId",
-            "ped_dad": "dadId",
-            "ped_sex": "sex",
-            "ped_status": "status",
-            "ped_role": "role",
-            "ped_file_format": "pedigree",
-            "ped_sep": "\t",
-            "ped_no_header": False,
-            "ped_proband": None,
-            "ped_no_role": False,
-            "ped_layout_mode": "load",
-        }
-
-    @staticmethod
-    def build_cli_arguments(params):
-        param_defaults = FamiliesLoader.cli_defaults()
-        result = []
-        for key, value in params.items():
-            assert key in param_defaults, (key, list(param_defaults.keys()))
-            if value != param_defaults[key]:
-                param = key.replace("_", "-")
-                if key in ("ped_no_header", "ped_no_role"):
-                    if value:
-                        result.append(f"--{param}")
-                else:
-                    result.append(f"--{param}")
-                    result.append(f"{value}")
-        return " ".join(result)
-
-    @staticmethod
-    def cli_arguments(parser):
-        parser.add_argument(
+    @classmethod
+    def _arguments(cls):
+        arguments = []
+        arguments.append(CLIArgument(
             "families",
-            type=str,
+            value_type=str,
             metavar="<families filename>",
-            help="families filename in pedigree or simple family format",
-        )
-
-        parser.add_argument(
+            help_text="families filename in pedigree or simple family format",
+        ))
+        arguments.append(CLIArgument(
             "--ped-family",
-            default="familyId",
-            help="specify the name of the column in the pedigree file that "
-            "holds "
-            "the ID of the family the person belongs to "
-            "[default: %(default)s]",
-        )
-
-        parser.add_argument(
+            default_value="familyId",
+            help_text="specify the name of the column in the pedigree"
+            " file that holds the ID of the family the person belongs to"
+            " [default: %(default)s]",
+        ))
+        arguments.append(CLIArgument(
             "--ped-person",
-            default="personId",
-            help="specify the name of the column in the pedigree file that "
-            "holds "
-            "the person's ID [default: %(default)s]",
-        )
-
-        parser.add_argument(
+            default_value="personId",
+            help_text="specify the name of the column in the pedigree"
+            " file that holds the person's ID [default: %(default)s]",
+        ))
+        arguments.append(CLIArgument(
             "--ped-mom",
-            default="momId",
-            help="specify the name of the column in the pedigree file that "
-            "holds "
-            "the ID of the person's mother [default: %(default)s]",
-        )
-
-        parser.add_argument(
+            default_value="momId",
+            help_text="specify the name of the column in the pedigree"
+            " file that holds the ID of the person's mother"
+            " [default: %(default)s]",
+        ))
+        arguments.append(CLIArgument(
             "--ped-dad",
-            default="dadId",
-            help="specify the name of the column in the pedigree file that "
-            "holds "
-            "the ID of the person's father [default: %(default)s]",
-        )
-
-        parser.add_argument(
+            default_value="dadId",
+            help_text="specify the name of the column in the pedigree"
+            " file that holds the ID of the person's father"
+            " [default: %(default)s]",
+        ))
+        arguments.append(CLIArgument(
             "--ped-sex",
-            default="sex",
-            help="specify the name of the column in the pedigree file that "
-            "holds "
-            "the sex of the person [default: %(default)s]",
-        )
-
-        parser.add_argument(
+            default_value="sex",
+            help_text="specify the name of the column in the pedigree"
+            " file that holds the sex of the person [default: %(default)s]",
+        ))
+        arguments.append(CLIArgument(
             "--ped-status",
-            default="status",
-            help="specify the name of the column in the pedigree file that "
-            "holds "
-            "the status of the person [default: %(default)s]",
-        )
+            default_value="status",
+            help_text="specify the name of the column in the pedigree"
+            " file that holds the status of the person"
+            " [default: %(default)s]",
 
-        parser.add_argument(
+        ))
+        arguments.append(CLIArgument(
             "--ped-role",
-            default="role",
-            help="specify the name of the column in the pedigree file that "
-            "holds "
-            "the role of the person [default: %(default)s]",
-        )
-
-        parser.add_argument(
+            default_value="role",
+            help_text="specify the name of the column in the pedigree"
+            " file that holds the role of the person"
+            " [default: %(default)s]",
+        ))
+        arguments.append(CLIArgument(
             "--ped-no-role",
             action="store_true",
-            help="indicates that the provided pedigree file has no role "
+            help_text="indicates that the provided pedigree file has no role "
             "column. "
             "If this argument is provided, the import tool will guess the "
             "roles "
             'of individuals and write them in a "role" column.',
-        )
-
-        parser.add_argument(
+        ))
+        arguments.append(CLIArgument(
             "--ped-proband",
-            default=None,
-            help="specify the name of the column in the pedigree file that "
-            "specifies persons with role `proband`; this columns is used "
-            "only when option `--ped-no-role` is specified. "
-            "[default: %(default)s]",
-        )
-
-        parser.add_argument(
+            default_value=None,
+            help_text="specify the name of the column in the pedigree"
+            " file that specifies persons with role `proband`;"
+            " this columns is used only when"
+            " option `--ped-no-role` is specified. [default: %(default)s]",
+        ))
+        arguments.append(CLIArgument(
             "--ped-no-header",
             action="store_true",
-            help="indicates that the provided pedigree file has no header. "
-            "The "
-            "pedigree column arguments will accept indices if this argument "
-            "is "
-            "given. [default: %(default)s]",
-        )
-
-        parser.add_argument(
+            help_text="indicates that the provided pedigree"
+            " file has no header. The pedigree column arguments"
+            " will accept indices if this argument is given."
+            " [default: %(default)s]",
+        ))
+        arguments.append(CLIArgument(
             "--ped-file-format",
-            default="pedigree",
-            help="Families file format. It should `pedigree` or `simple`"
+            default_value="pedigree",
+            help_text="Families file format. It should `pedigree` or `simple`"
             "for simple family format [default: %(default)s]",
-        )
-
-        parser.add_argument(
+        ))
+        arguments.append(CLIArgument(
             "--ped-layout-mode",
-            default="load",
-            help="Layout mode specifies how pedigrees drawing of each family "
-            "is handled. Available options are `generate` and `load`. When "
+            default_value="load",
+            help_text="Layout mode specifies how pedigrees "
+            "drawing of each family is handled."
+            " Available options are `generate` and `load`. When "
             "layout mode option is set to generate the loader"
             "tryes to generate a layout for the family pedigree. "
             "When `load` is specified, the loader tries to load the layout "
             "from the layout column of the pedigree. "
             "[default: %(default)s]",
-        )
-
-        parser.add_argument(
+        ))
+        arguments.append(CLIArgument(
             "--ped-sep",
-            default="\t",
-            help="Families file field separator [default: `\\t`]",
-        )
+            default_value="\t",
+            help_text="Families file field separator [default: `\\t`]",
+        ))
+        return arguments
 
     @classmethod
     def parse_cli_arguments(cls, argv):
         filename = argv.families
+        super().parse_cli_arguments(argv)
 
         ped_ped_args = [
             "ped_family",
@@ -294,17 +249,6 @@ class FamiliesLoader:
                 res[col] = int(ped_value)
 
         return filename, res
-
-    @classmethod
-    def build_cli_params(cls, params):
-        param_defaults = cls.cli_defaults()
-        result = {}
-        for key, value in params.items():
-            assert key in param_defaults, (key, list(param_defaults.keys()))
-            if value != param_defaults[key]:
-                result[key] = value
-
-        return result
 
     @staticmethod
     def produce_header_from_indices(

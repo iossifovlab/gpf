@@ -22,7 +22,8 @@ from dae.variants.variant import SummaryVariantFactory
 from dae.variants.family_variant import FamilyVariant
 from dae.backends.raw.loader import VariantsGenotypesLoader, \
     TransmissionType, \
-    FamiliesGenotypes
+    FamiliesGenotypes, \
+    CLIArgument
 
 
 logger = logging.getLogger(__name__)
@@ -526,6 +527,74 @@ class VcfLoader(VariantsGenotypesLoader):
             for vcf_files in filenames if vcf_files
         ]
 
+    @classmethod
+    def _arguments(cls):
+        arguments = super()._arguments()
+        arguments.append(CLIArgument(
+            "vcf_files",
+            value_type=str,
+            nargs="+",
+            metavar="<VCF filenames>",
+            help_text="VCF files to import",
+        ))
+        arguments.append(CLIArgument(
+            "--vcf-include-reference-genotypes",
+            default_value=False,
+            help_text="include reference only variants "
+            "[default_value: %(default)s]",
+            action="store_true",
+        ))
+        arguments.append(CLIArgument(
+            "--vcf-include-unknown-family-genotypes",
+            default_value=False,
+            help_text="include family variants with fully unknown genotype "
+            "[default: %(default)s]",
+            action="store_true",
+        ))
+        arguments.append(CLIArgument(
+            "--vcf-include-unknown-person-genotypes",
+            default_value=False,
+            help_text="include family variants with "
+            "partially unknown genotype [default: %(default)s]",
+            action="store_true",
+        ))
+        arguments.append(CLIArgument(
+            "--vcf-multi-loader-fill-in-mode",
+            default_value="reference",
+            help_text="used for multi VCF files loader "
+            "to fill missing genotypes; "
+            "supported values are `reference` or `unknown`"
+            "[default: %(default)s]",
+        ))
+        arguments.append(CLIArgument(
+            "--vcf-denovo-mode",
+            default_value="possible_denovo",
+            help_text="used for handling family variants "
+            "with denovo inheritance; "
+            "supported values are: `denovo`, `possible_denovo`, `ignore`; "
+            "[default: %(default)s]",
+        ))
+        arguments.append(CLIArgument(
+            "--vcf-omission-mode",
+            default_value="possible_omission",
+            help_text="used for handling family variants with omission "
+            "inheritance; "
+            "supported values are: `omission`, `possible_omission`, `ignore`; "
+            "[default: %(default)s]",
+        ))
+        arguments.append(CLIArgument(
+            "--vcf-chromosomes",
+            value_type=str,
+            help_text="specifies a list of filename template "
+            "substitutions; then specified variant filename(s) are treated "
+            "as templates and each occurent of `{vc}` is replaced "
+            "consecutively by elements of VCF wildcards list; "
+            "by default the list is empty and no substitution "
+            "takes place. "
+            "[default: None]",
+        ))
+        return arguments
+
     def _collect_filenames(self, params, vcf_files):
         if params.get("vcf_chromosomes", None):
             vcf_chromosomes = [
@@ -587,124 +656,8 @@ class VcfLoader(VariantsGenotypesLoader):
                 pass
 
     @classmethod
-    def cli_defaults(cls):
-        defaults = super(cls, VcfLoader).cli_defaults()
-        defaults.update(
-            {
-                "vcf_include_reference_genotypes": False,
-                "vcf_include_unknown_family_genotypes": False,
-                "vcf_include_unknown_person_genotypes": False,
-                "vcf_multi_loader_fill_in_mode": "reference",
-                "vcf_denovo_mode": "possible_denovo",
-                "vcf_omission_mode": "possible_omission",
-                "vcf_chromosomes": None,
-            }
-        )
-        return defaults
-
-    @classmethod
-    def build_cli_arguments(cls, params):
-        param_defaults = cls.cli_defaults()
-        result = []
-        for key, value in params.items():
-            assert key in param_defaults, (key, list(param_defaults.keys()))
-            if value != param_defaults[key]:
-                param = key.replace("_", "-")
-                if key in {
-                    "vcf_multi_loader_fill_in_mode",
-                    "vcf_denovo_mode",
-                    "vcf_omission_mode",
-                    "vcf_chromosomes",
-                    "add_chrom_prefix",
-                    "del_chrom_prefix",
-                }:
-                    result.append(f"--{param}")
-                    result.append(f'"{value}"')
-                else:
-                    if value:
-                        result.append(f"--{param}")
-        return " ".join(result)
-
-    @classmethod
-    def cli_arguments(cls, parser):
-        parser.add_argument(
-            "vcf_files",
-            type=str,
-            nargs="+",
-            metavar="<VCF filenames>",
-            help="VCF files to import",
-        )
-        cls.cli_options(parser)
-
-    @classmethod
-    def cli_options(cls, parser):
-        super(cls, VcfLoader).cli_options(parser)
-
-        parser.add_argument(
-            "--vcf-include-reference-genotypes",
-            default=False,
-            dest="vcf_include_reference_genotypes",
-            help="include reference only variants [default: %(default)s]",
-            action="store_true",
-        )
-        parser.add_argument(
-            "--vcf-include-unknown-family-genotypes",
-            default=False,
-            dest="vcf_include_unknown_family_genotypes",
-            help="include family variants with fully unknown genotype "
-            "[default: %(default)s]",
-            action="store_true",
-        )
-        parser.add_argument(
-            "--vcf-include-unknown-person-genotypes",
-            default=False,
-            dest="vcf_include_unknown_person_genotypes",
-            help="include family variants with partially unknown genotype "
-            "[default: %(default)s]",
-            action="store_true",
-        )
-        parser.add_argument(
-            "--vcf-multi-loader-fill-in-mode",
-            default="reference",
-            dest="vcf_multi_loader_fill_in_mode",
-            help="used for multi VCF files loader to fill missing genotypes; "
-            "supported values are `reference` or `unknown`"
-            "[default: %(default)s]",
-        )
-        parser.add_argument(
-            "--vcf-denovo-mode",
-            default="possible_denovo",
-            dest="vcf_denovo_mode",
-            help="used for handling family variants with denovo inheritance; "
-            "supported values are: `denovo`, `possible_denovo`, `ignore`; "
-            "[default: %(default)s]",
-        )
-        parser.add_argument(
-            "--vcf-omission-mode",
-            default="possible_omission",
-            dest="vcf_omission_mode",
-            help="used for handling family variants with omission "
-            "inheritance; "
-            "supported values are: `omission`, `possible_omission`, `ignore`; "
-            "[default: %(default)s]",
-        )
-        parser.add_argument(
-            "--vcf-chromosomes",
-            "--vc",
-            type=str,
-            dest="vcf_chromosomes",
-            default=None,
-            help="specifies a list of filename template "
-            "substitutions; then specified variant filename(s) are treated "
-            "as templates and each occurent of `{vc}` is replaced "
-            "consecutively by elements of VCF wildcards list; "
-            "by default the list is empty and no substitution "
-            "takes place. "
-            "[default: None]",
-        )
-
-    @classmethod
     def parse_cli_arguments(cls, argv):
+        super().parse_cli_arguments(argv)
         filenames = argv.vcf_files
 
         assert argv.vcf_multi_loader_fill_in_mode in set(

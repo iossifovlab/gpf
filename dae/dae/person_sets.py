@@ -38,16 +38,17 @@ class PersonSetCollection(NamedTuple):
         if config.default is not None:
             person_set_configs.append(config.default)
 
-        return {
-            person_set.id: PersonSet(
-                person_set.id,
-                person_set.name,
-                set(person_set["values"]),
-                person_set.color,
-                dict(),
-            )
-            for person_set in person_set_configs
-        }
+        result = {}
+        for person_set in person_set_configs:
+
+            result[person_set.id] = PersonSet(
+                    person_set.id,
+                    person_set.name,
+                    set(person_set["values"]),
+                    person_set.color,
+                    dict(),
+                )
+        return result
 
     @staticmethod
     def get_person_color(
@@ -83,8 +84,8 @@ class PersonSetCollection(NamedTuple):
     def from_families(
             collection_config: FrozenBox,
             families_data: FamiliesData,
-            pheno_db: PhenotypeData = None
-    ) -> "PersonSetCollection":
+            pheno_db: PhenotypeData = None) -> "PersonSetCollection":
+
         """Produce a PersonSetCollection from its given configuration
         with a pedigree as its source.
         """
@@ -112,12 +113,15 @@ class PersonSetCollection(NamedTuple):
                     # attributes can be of an enum type
                     if value is not None:
                         value = str(value)
-                elif source["from"] == "phenotype":
+                elif source["from"] == "phenotype" and pheno_db is not None:
                     assert pheno_db.get_measure(source.source).measure_type \
-                        in {MeasureType.categorical, MeasureType.ordinal}, f"Continuous measures not allowed in person sets! ({source.source})"
+                        in {MeasureType.categorical, MeasureType.ordinal}, \
+                        f"Continuous measures not allowed in person sets! " \
+                        f"({source.source})"
+
                     pheno_values = pheno_db.get_values(
+                        measure_ids=[source.source],
                         person_ids=[person_id],
-                        measure_ids=[source.source]
                     )
                     value = pheno_values[person_id][source.source] \
                         if person_id in pheno_values else None

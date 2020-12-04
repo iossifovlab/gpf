@@ -253,7 +253,7 @@ params.del_chrom_prefix = "{{ variant.params.del_chrom_prefix }}"
 {%- endif %}
 {%- if variant.params.dae_include_reference_genotypes %}
 params.dae_include_reference_genotypes = \
-"{{ variant.params.dae_include_reference_genotypes }}"
+{{ variant.params.dae_include_reference_genotypes }}
 {%- endif %}
 {%- if variant.params.denovo_location %}
 params.denovo_location = "{{ variant.params.denovo_location }}"
@@ -287,15 +287,15 @@ params.denovo_sep = "{{ variant.params.denovo_sep }}"
 {%- endif %}
 {%- if variant.params.vcf_include_reference_genotypes %}
 params.vcf_include_reference_genotypes = \
-"{{ variant.params.vcf_include_reference_genotypes }}"
+{{ variant.params.vcf_include_reference_genotypes }}
 {%- endif %}
 {%- if variant.params.vcf_include_unknown_family_genotypes %}
 params.vcf_include_unknown_family_genotypes = \
-"{{ variant.params.vcf_include_unknown_family_genotypes }}"
+{{ variant.params.vcf_include_unknown_family_genotypes }}
 {%- endif %}
 {%- if variant.params.vcf_include_unknown_person_genotypes %}
 params.vcf_include_unknown_person_genotypes = \
-"{{ variant.params.vcf_include_unknown_person_genotypes }}"
+{{ variant.params.vcf_include_unknown_person_genotypes }}
 {%- endif %}
 {%- if variant.params.vcf_multi_loader_fill_in_mode %}
 params.vcf_multi_loader_fill_in_mode = \

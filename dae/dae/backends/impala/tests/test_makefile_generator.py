@@ -278,7 +278,31 @@ def test_generator_context_multivcf(
     assert vcf_file1 in context["variants"]["vcf"]["variants"]
     assert vcf_file2 in context["variants"]["vcf"]["variants"]
 
-    assert "" == context["variants"]["vcf"]["params"]
+    assert context["variants"]["vcf"]["params"] == {
+            "add_chrom_prefix": None,
+            "del_chrom_prefix": None,
+            "vcf_chromosomes": None,
+            "vcf_denovo_mode": "possible_denovo",
+            "vcf_include_reference_genotypes": False,
+            "vcf_include_unknown_family_genotypes": False,
+            "vcf_include_unknown_person_genotypes": False,
+            "vcf_multi_loader_fill_in_mode": "reference",
+            "vcf_omission_mode": "possible_omission"
+    }
 
     assert ped_file == context["pedigree"]["pedigree"]
-    assert "" == context["pedigree"]["params"]
+    assert context["pedigree"]["params"] == {
+        "ped_dad": "dadId",
+        "ped_family": "familyId",
+        "ped_mom": "momId",
+        "ped_file_format": "pedigree",
+        "ped_layout_mode": "load",
+        "ped_no_header": False,
+        "ped_no_role": False,
+        "ped_proband": None,
+        "ped_role": "role",
+        "ped_sep": "\t",
+        "ped_person": "personId",
+        "ped_sex": "sex",
+        "ped_status": "status"
+    }

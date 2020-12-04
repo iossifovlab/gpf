@@ -28,7 +28,12 @@ class DenovoGeneSetCollectionFactory:
         assert config is not None, genotype_data_study.id
         collection = DenovoGeneSetCollection(
             genotype_data_study.id, genotype_data_study.name, config,
-            genotype_data_study.person_set_collection_configs
+            {
+                collection_id: collection_config
+                for collection_id, collection_config
+                in genotype_data_study.person_set_collection_configs.items()
+                if collection_id in config.denovo_gene_sets.selected_person_set_collections
+            }
         )
 
         for (
