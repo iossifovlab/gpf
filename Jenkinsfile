@@ -31,10 +31,9 @@ pipeline {
     stages {
         stage ('Start') {
             steps {
-                slackSend (
-                    color: '#FFFF00',
-                    message: "STARTED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' ${env.BUILD_URL}"
-                )
+                zulipSend(
+                    message: "Started build #${env.BUILD_NUMBER} of project ${env.JOB_NAME} (${env.BUILD_URL})",
+                    topic: "${env.JOB_NAME}")
             }
         }
 
@@ -160,27 +159,14 @@ pipeline {
             step([
                 $class: 'CoberturaPublisher',
                 coberturaReportFile: 'test_results/coverage.xml'])
-
-            // warnings(
-            //     parserConfigurations: [[parserName: 'PyLint', pattern: 'test_results/pyflakes.report']],
-            //     excludePattern: '.*site-packages.*',
-            //     usePreviousBuildAsReference: true,
-            // )
+            zulipNotification(
+                topic: "${env.JOB_NAME}"
+            )      
 
         }
         success {
-	    archiveArtifacts artifacts: 'mypy_report.tar.gz'
+    	    archiveArtifacts artifacts: 'mypy_report.tar.gz'
 
-            slackSend (
-                color: '#00FF00',
-                message: "SUCCESSFUL: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' ${env.BUILD_URL}"
-            )
-        }
-        failure {
-            slackSend (
-                color: '#FF0000',
-                message: "FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' ${env.BUILD_URL}"
-            )
         }
     }
 }
