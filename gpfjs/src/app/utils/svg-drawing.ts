@@ -9,7 +9,7 @@ function getTrianglePoints(plotX: number, plotY: number, size: number) {
   return `${x1},${y1} ${x2},${y2} ${x3},${y3}`;
 }
 
-export function drawHoverText(element, x: number, y: number, text: string, textPrefix: string, fontSize: number) {
+export function hoverText(element, x: number, y: number, text: string, textPrefix: string, fontSize: number) {
   element.append('text')
     .attr('x', x)
     .attr('y', y)
@@ -19,7 +19,7 @@ export function drawHoverText(element, x: number, y: number, text: string, textP
     .append('svg:title').text(`${textPrefix} ${text}`);
 }
 
-export function drawSurroundingSquare(element, x: number, y: number, color: string) {
+export function surroundingSquare(element, x: number, y: number, color: string) {
   const w = 16;
   const h = 16;
   element.append('g')
@@ -34,7 +34,7 @@ export function drawSurroundingSquare(element, x: number, y: number, color: stri
     .style('stroke-width', 2);
 }
 
-export function drawSurroundingRectangleForCNV(element, x: number, y: number, color: string, w: number, title: string) {
+export function surroundingRectangleForCNV(element, x: number, y: number, color: string, w: number, title: string) {
   const h = 16;
   element.append('g')
     .append('rect')
@@ -50,7 +50,7 @@ export function drawSurroundingRectangleForCNV(element, x: number, y: number, co
     .append('svg:title').text(title);;
 }
 
-export function drawStar(element, x: number, y: number, color: string, title: string) {
+export function star(element, x: number, y: number, color: string, title: string) {
   element.append('svg')
     .attr('x', x - 8.5)
     .attr('y', y - 8.5)
@@ -65,7 +65,7 @@ export function drawStar(element, x: number, y: number, color: string, title: st
     .append('svg:title').text(title);
 }
 
-export function drawTriangle(element, x: number, y: number, color: string, title: string) {
+export function triangle(element, x: number, y: number, color: string, title: string) {
   element.append('g')
     .append('polygon')
     .attr('points', getTrianglePoints(x, y, 14))
@@ -76,7 +76,7 @@ export function drawTriangle(element, x: number, y: number, color: string, title
     .append('svg:title').text(title);
 }
 
-function _drawCircle(element, x: number, y: number, radius: number, color: string, title: string) {
+function _circle(element, x: number, y: number, radius: number, color: string, title: string) {
   element.append('g')
     .append('circle')
     .attr('cx', x)
@@ -89,15 +89,15 @@ function _drawCircle(element, x: number, y: number, radius: number, color: strin
     .append('svg:title').text(title);
 }
 
-export function drawCircle(element, x: number, y: number, color: string, title: string) {
-    _drawCircle(element, x, y, 7, color, title);
+export function circle(element, x: number, y: number, color: string, title: string) {
+    _circle(element, x, y, 7, color, title);
 }
 
-export function drawDot(element, x: number, y: number, color: string, title: string) {
-    _drawCircle(element, x, y, 3, color, title);
+export function dot(element, x: number, y: number, color: string, title: string) {
+    _circle(element, x, y, 3, color, title);
 }
 
-export function drawRect(element, xStart: number, xEnd: number, y: number, height: number, svgTitle: string) {
+export function rect(element, xStart: number, xEnd: number, y: number, height: number, svgTitle: string) {
   element.append('rect')
     .attr('height', height)
     .attr('width', xEnd - xStart)
@@ -107,7 +107,7 @@ export function drawRect(element, xStart: number, xEnd: number, y: number, heigh
     .append('svg:title').text(svgTitle);
 }
 
-export function drawLine(element, xStart: number, xEnd: number, y: number, svgTitle: string) {
+export function line(element, xStart: number, xEnd: number, y: number, svgTitle: string) {
   element.append('line')
     .attr('x1', xStart)
     .attr('y1', y)
@@ -117,7 +117,7 @@ export function drawLine(element, xStart: number, xEnd: number, y: number, svgTi
     .append('svg:title').text(svgTitle);
 }
 
-export function drawCNVTest(element, xStart: number, xEnd: number, y: number, height: number, color: string, title: string) {
+export function CNVTest(element, xStart: number, xEnd: number, y: number, height: number, color: string, title: string) {
   element.append('rect')
     .attr('height', height)
     .attr('width', xEnd - xStart)
@@ -131,7 +131,7 @@ export function drawCNVTest(element, xStart: number, xEnd: number, y: number, he
     .style('stroke-opacity', 0.4);
 }
 
-export function drawCNVTest1(element, xStart: number, xEnd: number, y: number, height: number, color: string, title: string) {
+export function CNVTest1(element, xStart: number, xEnd: number, y: number, height: number, color: string, title: string) {
   element.append('rect')
     .attr('height', height)
     .attr('width', xEnd - xStart)
