@@ -204,9 +204,12 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
 
       this.summaryVariantsArray = this.variantsArray;
       this.filteredSummaryVariantsArray = this.variantsArray;
-      this.denovoVariantsSpacings = this.calculateDenovoVariantsSpacings(this.summaryVariantsArray);
 
+      this.denovoVariantsSpacings = this.calculateDenovoVariantsSpacings(this.summaryVariantsArray);
+      if (this.denovoVariantsSpacings) {
       this.additionalZeroAxisHeight = Math.max.apply(Math, Object.values(this.denovoVariantsSpacings));
+      }
+
       this.svgHeightFreq += this.additionalZeroAxisHeight;
       this.svgHeightFreqRaw += this.additionalZeroAxisHeight;
 
@@ -668,6 +671,10 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
 
   calculateDenovoVariantsSpacings(summaryVariantsArray: GeneViewSummaryVariantsArray) {
     const denovoVariants = summaryVariantsArray.summaryVariants.filter(variant => variant.seenAsDenovo);
+    if (!denovoVariants.length) {
+      return;
+    }
+
     const sortedDenovos = denovoVariants.sort((sv, sv2) => sv.position > sv2.position ? 1 : sv.position < sv2.position ? -1 : 0);
     const denovoVariantsSpacings = {};
     let spacingTracker = 0;
