@@ -253,8 +253,8 @@ class VariantsLoaderDecorator(VariantsLoader):
     def cli_options(cls, parser):
         return cls.variants_loader.cli_options(parser)
 
-    def build_arguments_dict(self, params):
-        return self.variants_loader.build_arguments_dict(params)
+    def build_arguments_dict(self):
+        return self.variants_loader.build_arguments_dict()
 
 
 class AnnotationDecorator(VariantsLoaderDecorator):

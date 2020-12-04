@@ -764,8 +764,7 @@ class BatchImporter:
         if argv.partition_description:
             context["partition_description"] = argv.partition_description
 
-        pedigree_params = self.families_loader.build_arguments_dict(
-            self.families_loader.params)
+        pedigree_params = self.families_loader.build_arguments_dict()
         pedigree_pedigree = os.path.abspath(
             self.families_loader.filename)
         pedigree_output = os.path.abspath(os.path.join(
@@ -799,8 +798,7 @@ class BatchImporter:
                     os.path.abspath(fn)
                     for fn in variants_loader.variants_filenames
                 ])
-            variants_context["params"] = variants_loader.build_arguments_dict(
-                variants_loader.params)
+            variants_context["params"] = variants_loader.build_arguments_dict()
             context["variants"][prefix] = variants_context
 
         context["mirror_of"] = {}
