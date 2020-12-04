@@ -849,9 +849,11 @@ describe('GeneViewComponent', () => {
 
   it('should draw exon with cds', () => {
     const drawRectWithCDSSpy = spyOn(draw, 'rect')
-      .and.callFake((element, xStart, xEnd, y, rectThickness, title) => {
+      .and.callFake((element, xStart, xEnd, y, rectThickness, color, opacity, title) => {
         expect(title.indexOf('CDS')).not.toBe(-1);
         expect(rectThickness).toBe(1);
+        expect(color).toBe('black');
+        expect(opacity).toBe(1);
         expect(xStart).toBe(11);
         expect(xEnd).toBe(12);
         expect(y).toBe(10.5);
