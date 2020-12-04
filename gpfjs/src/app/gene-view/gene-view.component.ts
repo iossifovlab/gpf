@@ -209,7 +209,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
 
       this.denovoVariantsSpacings = this.calculateDenovoVariantsSpacings(this.summaryVariantsArray);
       if (this.denovoVariantsSpacings) {
-      this.additionalZeroAxisHeight = Math.max.apply(Math, Object.values(this.denovoVariantsSpacings));
+        this.additionalZeroAxisHeight = Math.max.apply(Math, Object.values(this.denovoVariantsSpacings));
       }
 
       this.svgHeightFreq += this.additionalZeroAxisHeight;
@@ -642,12 +642,12 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
         } else if (variant.isSynonymous()) {
           draw.circle(this.svgElement, variantPosition, this.getVariantY(variant.frequency), color, variantTitle);
         } else if (variant.isCNVPlus()) {
-          draw.CNVTest(
+          draw.rectWithOpacity(
             this.svgElement, this.x(variant.position), this.x(variant.endPosition),
             this.getVariantY(variant.frequency) - 4, 8, color, variantTitle
           );
         } else if (variant.isCNVPMinus()) {
-          draw.CNVTest(
+          draw.rectWithOpacity(
             this.svgElement, this.x(variant.position), this.x(variant.endPosition),
             this.getVariantY(variant.frequency) - 1, 2, color, variantTitle
           );
@@ -679,12 +679,12 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
         } else if (variant.isSynonymous()) {
           draw.circle(this.svgElement, variantPosition, this.getVariantY(variant.frequency) + 8 + spacing, color, variantTitle);
         } else if (variant.isCNVPlus()) {
-          draw.CNVTest1(
+          draw.rectWithOpacity(
             this.svgElement, variantPosition, this.x(variant.endPosition),
             this.getVariantY(variant.frequency) - 3 + spacing, 6, color, variantTitle
           );
         } else if (variant.isCNVPMinus()) {
-          draw.CNVTest(
+          draw.rectWithOpacity(
             this.svgElement, variantPosition, this.x(variant.endPosition),
             this.getVariantY(variant.frequency) - 0.5 + spacing, 1, color, variantTitle
           );
@@ -708,7 +708,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     for (let i = 0; i <= sortedDenovos.length - 2; i++) {
 
       if (this.doVariantsIntersect(sortedDenovos[i], sortedDenovos[i + 1])) {
-        spacingTracker += 35;
+        spacingTracker += 30;
       } else {
         spacingTracker = 0;
       }

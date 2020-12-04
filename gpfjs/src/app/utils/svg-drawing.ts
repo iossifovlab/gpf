@@ -47,7 +47,7 @@ export function surroundingRectangleForCNV(element, x: number, y: number, color:
     .style('stroke', color)
     .style('stroke-width', 2)
     .style('stroke-opacity', 0.4)
-    .append('svg:title').text(title);;
+    .append('svg:title').text(title);
 }
 
 export function star(element, x: number, y: number, color: string, title: string) {
@@ -117,21 +117,7 @@ export function line(element, xStart: number, xEnd: number, y: number, svgTitle:
     .append('svg:title').text(svgTitle);
 }
 
-export function CNVTest(element, xStart: number, xEnd: number, y: number, height: number, color: string, title: string) {
-  element.append('rect')
-    .attr('height', height)
-    .attr('width', xEnd - xStart)
-    .attr('x', xStart)
-    .attr('y', y)
-    .style('fill', color)
-    .attr('fill-opacity', '0.4')
-    .style('stroke-width', 1)
-    .style('stroke', color)
-    .append('svg:title').text(title)
-    .style('stroke-opacity', 0.4);
-}
-
-export function CNVTest1(element, xStart: number, xEnd: number, y: number, height: number, color: string, title: string) {
+export function rectWithOpacity(element, xStart: number, xEnd: number, y: number, height: number, color: string, title: string) {
   element.append('rect')
     .attr('height', height)
     .attr('width', xEnd - xStart)
