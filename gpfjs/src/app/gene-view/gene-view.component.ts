@@ -663,14 +663,14 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
         } else if (variant.isSynonymous()) {
           draw.circle(this.svgElement, variantPosition, variantHeight + spacing, color, variantTitle);
         } else if (variant.isCNVPlus()) {
-          draw.rectWithOpacity(
+          draw.rect(
             this.svgElement, this.x(variant.position), this.x(variant.endPosition),
-            variantHeight - 3 + spacing, 6, color, variantTitle
+            variantHeight - 3 + spacing, 6, color, 0.4, variantTitle
           );
         } else if (variant.isCNVPMinus()) {
-          draw.rectWithOpacity(
+          draw.rect(
             this.svgElement, this.x(variant.position), this.x(variant.endPosition),
-            variantHeight - 0.5 + spacing, 1, color, variantTitle
+            variantHeight - 0.5 + spacing, 1, color, 0.4, variantTitle
           );
         } else {
           draw.dot(this.svgElement, variantPosition, variantHeight + spacing, color, variantTitle);
@@ -989,7 +989,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
       y -= (brushSize.coding - brushSize.nonCoding) / 2;
       title += ' [CDS]';
     }
-    draw.rect(element, xStart, xEnd, y, rectThickness, title);
+    draw.rect(element, xStart, xEnd, y, rectThickness, 'black', 1, title);
   }
 
   drawIntron(element, xStart: number, xEnd: number, y: number, title: string, brushSize) {

@@ -97,14 +97,17 @@ export function dot(element, x: number, y: number, color: string, title: string)
     _circle(element, x, y, 3, color, title);
 }
 
-export function rect(element, xStart: number, xEnd: number, y: number, height: number, svgTitle: string) {
+export function rect(element, xStart: number, xEnd: number, y: number, height: number, color: string, opacity: number, title: string) {
   element.append('rect')
     .attr('height', height)
     .attr('width', xEnd - xStart)
     .attr('x', xStart)
     .attr('y', y)
-    .attr('stroke', 'rgb(0,0,0)')
-    .append('svg:title').text(svgTitle);
+    .style('fill', color)
+    .attr('fill-opacity', opacity)
+    .attr('stroke', color)
+    .style('stroke-opacity', opacity)
+    .append('svg:title').text(title);
 }
 
 export function line(element, xStart: number, xEnd: number, y: number, svgTitle: string) {
@@ -115,18 +118,4 @@ export function line(element, xStart: number, xEnd: number, y: number, svgTitle:
     .attr('y2', y)
     .attr('stroke', 'black')
     .append('svg:title').text(svgTitle);
-}
-
-export function rectWithOpacity(element, xStart: number, xEnd: number, y: number, height: number, color: string, title: string) {
-  element.append('rect')
-    .attr('height', height)
-    .attr('width', xEnd - xStart)
-    .attr('x', xStart)
-    .attr('y', y)
-    .style('fill', color)
-    .attr('fill-opacity', '0.4')
-    .style('stroke-width', 1)
-    .style('stroke', color)
-    .append('svg:title').text(title)
-    .style('stroke-opacity', 0.4);
 }
