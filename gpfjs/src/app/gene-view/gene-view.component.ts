@@ -631,14 +631,13 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
       for (const variant of filteredSummaryVariants.summaryVariants) {
         const variantPosition = this.x(variant.position);
         const color = this.getAffectedStatusColor(this.getVariantAffectedStatus(variant));
-        const variantTitle = `Effect type: ${variant.effect}\nVariant position: ${variant.location}\nFrequency: ${variant.frequency}`;
-
-        let variantHeight = this.getVariantY(variant.frequency);
+        const variantTitle = `Effect type: ${variant.effect}\nVariant position: ${variant.location}`;
 
         // Temporary fix for variants with 0 frequency shown in the middle of the denovo plot
-        if (variantHeight === 0) {
-          variantHeight = null;
+        if (variant.frequency === 0) {
+          variant.frequency = null;
         }
+        const variantHeight = this.getVariantY(variant.frequency);
 
         let spacing = 0;
         if (variant.seenAsDenovo) {
