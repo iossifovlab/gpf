@@ -1,4 +1,5 @@
-import { GenotypePreviewVariantsArray, GenotypePreview } from 'app/genotype-preview-model/genotype-preview';
+import { GenotypePreview } from 'app/genotype-preview-model/genotype-preview';
+import { GeneViewTranscript } from './gene-view';
 
 export class Exon {
   constructor(
@@ -117,11 +118,25 @@ export class Gene {
 
   collapsedTranscript(): Transcript {
     const allExons: Exon[] = [];
-    for (const transcipt of this.transcripts) {
-      for (const exon of transcipt.exons) {
+    const cds: number[] = [];
+    const codingStartsAndStops: number[] = [];
+    let geneViewTranscript: GeneViewTranscript;
+
+    for (const transcript of this.transcripts) {
+      for (const exon of transcript.exons) {
         allExons.push(exon);
       }
+
+      geneViewTranscript = new GeneViewTranscript(transcript);
+      for (const segment of geneViewTranscript.segments) {
+        if (segment.isCDS) {
+          codingStartsAndStops.push(segment.start, segment.stop);
+        }
+      }
     }
+
+    cds.push(Math.min(...codingStartsAndStops), Math.max(...codingStartsAndStops));
+
     const sortedExons: Exon[] = allExons.sort(
       (e1, e2) => e1.start > e2.start ? 1 : -1
     );
@@ -143,12 +158,6 @@ export class Gene {
     }
     const firstTranscript = this.transcripts[0];
 
-    const firstExon = result[0];
-    const lastExon = result[result.length - 1];
-    const cds: number[] = [];
-    cds.push(firstExon.start);
-    cds.push(lastExon.stop);
-
     return new Transcript(
       'collapsed', firstTranscript.strand, firstTranscript.chrom, cds, result
     );
@@ -158,6 +167,7 @@ export class Gene {
 export class GeneViewSummaryVariant {
   location: string;
   position: number;
+  endPosition: number;
   chrom: string;
   variant: string;
   effect: string;
@@ -185,6 +195,7 @@ export class GeneViewSummaryVariant {
     const result = new GeneViewSummaryVariant();
     result.location = row.location;
     result.position = row.position;
+    result.endPosition = row.end_position;
     result.chrom = row.chrom;
     result.variant = row.variant;
     result.effect = row.effect;
@@ -238,24 +249,27 @@ export class GeneViewSummaryVariant {
   }
 
   isLGDs(): boolean {
-    if (this.lgds.indexOf(this.effect) !== -1 || this.effect === 'lgds') {
-      return true;
-    }
-    return false;
+    return (this.lgds.indexOf(this.effect) !== -1 || this.effect === 'lgds');
   }
 
   isMissense(): boolean {
-    if (this.effect === 'missense') {
-      return true;
-    }
-    return false;
+    return (this.effect === 'missense');
   }
 
   isSynonymous(): boolean {
-    if (this.effect === 'synonymous') {
-      return true;
-    }
-    return false;
+    return (this.effect === 'synonymous');
+  }
+
+  isCNVPlus(): boolean {
+    return (this.effect === 'CNV+');
+  }
+
+  isCNVPMinus(): boolean {
+    return (this.effect === 'CNV-');
+  }
+
+  isCNV(): boolean {
+    return this.isCNVPlus() || this.isCNVPMinus();
   }
 
   get comparisonValue(): number {
@@ -270,6 +284,7 @@ export class GeneViewSummaryVariant {
 
 export class GeneViewSummaryVariantsArray {
   summaryVariants: GeneViewSummaryVariant[] = [];
+  summaryVariantsIds: string[] = [];
 
   constructor() { }
 
@@ -278,11 +293,20 @@ export class GeneViewSummaryVariantsArray {
       return;
     }
     const summaryVariant = GeneViewSummaryVariant.fromRow(variant);
+
+    // This is a temporary fix to merge duplicate variants
+    // TODO: Remove when backend is fixed
+    if (this.summaryVariantsIds.indexOf(summaryVariant.svuid) !== -1) {
+      return;
+    }
+
     this.summaryVariants.push(summaryVariant);
+    this.summaryVariantsIds.push(summaryVariant.svuid);
   }
 
   push(variant: GeneViewSummaryVariant) {
     this.summaryVariants.push(variant);
+    this.summaryVariantsIds.push(variant.svuid);
   }
 }
 

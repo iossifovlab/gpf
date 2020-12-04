@@ -62,7 +62,8 @@ describe('GeneBrowserComponent', () => {
       datasetId: 'testDatasetId',
       zoomState: {yMin: 0, yMax: 10},
       regions: [1, 10],
-      summaryVariantIds: [5, 10, 15]
+      summaryVariantIds: [5, 10, 15],
+      selectedVariantTypes: ['sub', 'ins', 'del', 'cnv+', 'cnv-'],
     };
   });
 
@@ -94,6 +95,7 @@ describe('GeneBrowserComponent', () => {
           regions: [ 1, 10 ],
           maxVariantsCount: 1,
           summaryVariantIds: [5, 10, 15],
+          variant_type: ['sub', 'ins', 'del', 'cnv+', 'cnv-'],
           uniqueFamilyVariants: false
         });
         return 'testPreviewVariantsArray' as any;
@@ -119,7 +121,8 @@ describe('GeneBrowserComponent', () => {
       affectedStatus: ['Affected only'],
       geneSymbols: ['testSymbol'],
       datasetId: 'testDatasetId',
-      regions: [1, 10]
+      regions: [1, 10],
+      variant_type: ['sub', 'ins', 'del', 'cnv+', 'cnv-']
     });
 
     testState.affectedStatus = ['Affected and unaffected'];
@@ -156,36 +159,23 @@ describe('GeneBrowserComponent', () => {
     };
     spyOn(component.queryService, 'getGenotypePreviewInfo').and.returnValue(of('testGenotypePreviewInfo' as any));
     spyOn(component.queryService, 'getGeneViewVariants').and.callFake((requestParams) => {
+      expect(requestParams['showDenovo']).toBeTrue();
+      expect(requestParams['showTransmitted']).toBeTrue();
+      expect(requestParams['selectedEffectTypes']).toEqual([ 'lgds', 'missense', 'synonymous', 'other' ]);
+      expect(requestParams['affectedStatus']).toEqual([ 'Affected and unaffected' ]);
+      expect(requestParams['genomicScores']).toEqual('testGenomicScores');
+      expect(requestParams['geneSymbols']).toEqual([ 'testSymbol' ]);
+      expect(requestParams['peopleGroup']).toEqual('testPeopleGroup');
+      expect(requestParams['datasetId']).toEqual('testDatasetId');
+      expect(requestParams['summaryVariantIds']).toEqual([ 5, 10, 15 ]);
+      expect(requestParams['maxVariantsCount']).toEqual(10000);
+      expect(requestParams['inheritanceTypeFilter']).toEqual([ 'denovo', 'mendelian', 'omission', 'missing' ]);
+      expect(requestParams['selectedVariantTypes']).toEqual([ 'sub', 'ins', 'del', 'cnv+', 'cnv-' ]);
       if (component.enableCodingOnly) {
-        expect(requestParams).toEqual({
-          showDenovo: true,
-          showTransmitted: true,
-          selectedEffectTypes: [ 'lgds', 'missense', 'synonymous', 'other' ],
-          affectedStatus: [ 'Affected and unaffected' ],
-          genomicScores: 'testGenomicScores',
-          geneSymbols: [ 'testSymbol' ],
-          peopleGroup: 'testPeopleGroup',
-          datasetId: 'testDatasetId',
-          summaryVariantIds: [ 5, 10, 15 ],
-          maxVariantsCount: 10000,
-          effectTypes: [ 'lgds', 'nonsense', 'frame-shift', 'splice-site', 'no-frame-shift-newStop',
-            'missense', 'synonymous', 'noStart', 'noEnd', 'no-frame-shift', 'CDS' ],
-          inheritanceTypeFilter: [ 'denovo', 'mendelian', 'omission', 'missing' ]
-        });
+        expect(requestParams['effectTypes']).toEqual([ 'lgds', 'nonsense', 'frame-shift', 'splice-site', 'no-frame-shift-newStop',
+            'missense', 'synonymous', 'noStart', 'noEnd', 'no-frame-shift', 'CDS' ]);
       } else {
-        expect(requestParams).toEqual({
-          showDenovo: true,
-          showTransmitted: true,
-          selectedEffectTypes: [ 'lgds', 'missense', 'synonymous', 'other' ],
-          affectedStatus: [ 'Affected and unaffected' ],
-          genomicScores: 'testGenomicScores',
-          geneSymbols: [ 'testSymbol' ],
-          peopleGroup: 'testPeopleGroup',
-          datasetId: 'testDatasetId',
-          summaryVariantIds: [ 5, 10, 15 ],
-          maxVariantsCount: 10000,
-          inheritanceTypeFilter: [ 'denovo', 'mendelian', 'omission', 'missing' ]
-        });
+        expect(requestParams['effectTypes']).toEqual(undefined);
       }
 
       return 'testSummaryVariantsArray' as any;
@@ -236,6 +226,7 @@ describe('GeneBrowserComponent', () => {
         '"genomicScores":[{"metric":"testMetric","rangeStart":null,"rangeEnd":10}],' +
         '"inheritanceTypeFilter":["denovo","mendelian","omission","missing"],' +
         '"affectedStatus":["Affected and unaffected","Affected only","Unaffected only"],' +
+        '"variant_type":["sub","ins","del","cnv+","cnv-"],' +
         '"geneSymbols":["testSymbol"],"datasetId":"testDatasetId",' +
         '"regions":[1,10],"summaryVariantIds":[5,10,15]}');
     });

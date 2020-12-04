@@ -1,10 +1,10 @@
-import { Component, OnInit, Input, Output, EventEmitter, forwardRef } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter, forwardRef, ViewChild, ViewChildren } from '@angular/core';
 import * as d3 from 'd3';
 import { Gene, GeneViewSummaryVariantsArray, GeneViewSummaryVariant, DomainRange } from 'app/gene-view/gene';
 import { Subject, Observable } from 'rxjs';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { FullscreenLoadingService } from 'app/fullscreen-loading/fullscreen-loading.service';
-import { drawRect, drawLine, drawHoverText, drawStar, drawCircle, drawTriangle, drawSurroundingSquare, drawDot } from 'app/utils/svg-drawing';
+import * as draw from 'app/utils/svg-drawing';
 import { GeneViewTranscript, GeneViewModel } from 'app/gene-view/gene-view';
 import { QueryStateProvider, QueryStateWithErrorsProvider } from 'app/query/query-state-provider';
 
@@ -88,6 +88,11 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
   @Input() variantsArray: GeneViewSummaryVariantsArray;
   @Input() streamingFinished$: Subject<boolean>;
   @Output() updateShownTablePreviewVariantsArrayEvent = new EventEmitter<DomainRange>();
+  @ViewChildren('affectedStatusCheckbox') affectedStatusCheckboxes;
+  @ViewChildren('effectTypeCheckbox') effectTypeCheckboxes;
+  @ViewChild('denovoCheckbox') denovoCheckbox;
+  @ViewChild('transmittedCheckbox') transmittedCheckbox;
+  @ViewChildren('variantTypeCheckbox') variantTypeCheckboxes;
 
   geneBrowserConfig;
   frequencyDomainMin: number;
@@ -112,7 +117,6 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
   svgHeight;
   svgHeightFreqRaw = 400;
   svgHeightFreq = this.svgHeightFreqRaw - this.options.margin.top - this.options.margin.bottom;
-
   subdomainAxisY = Math.round(this.svgHeightFreq * this.options.axisScale.domain);
   zeroAxisY = this.subdomainAxisY + Math.round(this.svgHeightFreq * this.options.axisScale.subdomain);
 
@@ -129,6 +133,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
   yAxisLabel;
   fontSize: number;
   selectedEffectTypes = ['lgds', 'missense', 'synonymous', 'other'];
+  selectedVariantTypes = ['sub', 'ins', 'del', 'cnv+', 'cnv-'];
   selectedAffectedStatus = ['Affected only', 'Unaffected only', 'Affected and unaffected'];
   selectedFrequencies;
   showDenovo = true;
@@ -149,7 +154,8 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     totalSummaryVariants: 0,
     selectedSummaryVariants: 0,
   };
-
+  denovoVariantsSpacings = {};
+  additionalZeroAxisHeight = 0;
   constructor(
     private datasetsService: DatasetsService,
     private loadingService: FullscreenLoadingService,
@@ -190,14 +196,30 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
         .domain([0, this.frequencyDomainMin])
         .range([this.zeroAxisY, this.subdomainAxisY]);
 
-      this.y_zero = d3.scalePoint()
-        .domain(['0'])
-        .range([this.svgHeightFreq, this.zeroAxisY]);
     });
 
     this.streamingFinished$.subscribe(() => {
+      this.svgHeightFreqRaw = 400;
+      this.svgHeightFreq = this.svgHeightFreqRaw - this.options.margin.top - this.options.margin.bottom;
+      this.subdomainAxisY = Math.round(this.svgHeightFreq * this.options.axisScale.domain);
+      this.zeroAxisY = this.subdomainAxisY + Math.round(this.svgHeightFreq * this.options.axisScale.subdomain);
+
       this.summaryVariantsArray = this.variantsArray;
       this.filteredSummaryVariantsArray = this.variantsArray;
+
+      this.denovoVariantsSpacings = this.calculateDenovoVariantsSpacings(this.summaryVariantsArray);
+      if (this.denovoVariantsSpacings) {
+        this.additionalZeroAxisHeight = Math.max.apply(Math, Object.values(this.denovoVariantsSpacings));
+      }
+
+      this.svgHeightFreq += this.additionalZeroAxisHeight;
+      this.svgHeightFreqRaw += this.additionalZeroAxisHeight;
+
+      this.y_zero = d3.scalePoint()
+      .domain(['0'])
+      .range([this.svgHeightFreq, this.zeroAxisY]);
+
+      this.drawGene();
       this.setDefaultScale();
       this.updateFamilyVariantsTable();
       this.drawPlot();
@@ -221,14 +243,35 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
       this.geneViewTranscript = new GeneViewTranscript(this.gene.transcripts[0]);
       this.setDefaultScale();
       this.resetGeneTableValues();
-      this.drawGene();
+      this.resetCheckboxes();
     }
+  }
+
+  resetCheckboxes() {
+    const panelCheckboxes = [];
+    panelCheckboxes.push(
+      this.denovoCheckbox,
+      this.transmittedCheckbox,
+      ...this.affectedStatusCheckboxes,
+      ...this.effectTypeCheckboxes,
+      ...this.variantTypeCheckboxes
+    );
+    panelCheckboxes.forEach(element => {
+      element.nativeElement.checked = true;
+    });
+
+    this.selectedEffectTypes = ['lgds', 'missense', 'synonymous', 'other'];
+    this.selectedVariantTypes = ['sub', 'ins', 'del', 'cnv+', 'cnv-'];
+    this.selectedAffectedStatus = ['Affected only', 'Unaffected only', 'Affected and unaffected'];
+    this.showDenovo = true;
+    this.showTransmitted = true;
   }
 
   getState(): Observable<object> {
     const state = {
       'affectedStatus': Array.from(this.selectedAffectedStatus),
       'selectedEffectTypes': Array.from(this.selectedEffectTypes),
+      'selectedVariantTypes': Array.from(this.selectedVariantTypes),
       'zoomState': this.zoomHistory.currentState,
       'showDenovo': this.showDenovo,
       'showTransmitted': this.showTransmitted,
@@ -254,38 +297,38 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     this.svgElement = d3.select('#transmitted')
       .attr('width', 80)
       .attr('height', 20);
-    drawStar(this.svgElement, 10, 7.5, '#000000', 'LGDs');
-    drawTriangle(this.svgElement, 30, 8, '#000000', 'Missense');
-    drawCircle(this.svgElement, 50, 8, '#000000', 'Synonymous');
-    drawDot(this.svgElement, 70, 8, '#000000', 'Other');
+    draw.star(this.svgElement, 10, 7.5, '#000000', 'LGDs');
+    draw.triangle(this.svgElement, 30, 8, '#000000', 'Missense');
+    draw.circle(this.svgElement, 50, 8, '#000000', 'Synonymous');
+    draw.dot(this.svgElement, 70, 8, '#000000', 'Other');
   }
 
   drawDenovoIcons() {
     this.svgElement = d3.select('#denovo')
       .attr('width', 80)
       .attr('height', 20);
-    drawSurroundingSquare(this.svgElement, 10, 7.5, '#000000');
-    drawStar(this.svgElement, 10, 7.5, '#000000', 'Denovo LGDs');
-    drawSurroundingSquare(this.svgElement, 30, 8, '#000000');
-    drawTriangle(this.svgElement, 30, 8, '#000000', 'Denovo Missense');
-    drawSurroundingSquare(this.svgElement, 50, 8, '#000000');
-    drawCircle(this.svgElement, 50, 8, '#000000', 'Denovo Synonymous');
-    drawSurroundingSquare(this.svgElement, 70, 8, '#000000');
-    drawDot(this.svgElement, 70, 8, '#000000', 'Denovo Other');
+    draw.surroundingSquare(this.svgElement, 10, 7.5, '#000000');
+    draw.star(this.svgElement, 10, 7.5, '#000000', 'Denovo LGDs');
+    draw.surroundingSquare(this.svgElement, 30, 8, '#000000');
+    draw.triangle(this.svgElement, 30, 8, '#000000', 'Denovo Missense');
+    draw.surroundingSquare(this.svgElement, 50, 8, '#000000');
+    draw.circle(this.svgElement, 50, 8, '#000000', 'Denovo Synonymous');
+    draw.surroundingSquare(this.svgElement, 70, 8, '#000000');
+    draw.dot(this.svgElement, 70, 8, '#000000', 'Denovo Other');
   }
 
   drawEffectTypesIcons() {
     const effectIcons = {
-      '#LGDs': drawStar,
-      '#Missense': drawTriangle,
-      '#Synonymous': drawCircle,
-      '#Other': drawDot
+      '#LGDs': draw.star,
+      '#Missense': draw.triangle,
+      '#Synonymous': draw.circle,
+      '#Other': draw.dot
     };
-    for (const [effect, draw] of Object.entries(effectIcons)) {
+    for (const [effect, drawIcon] of Object.entries(effectIcons)) {
       this.svgElement = d3.select(effect)
         .attr('width', 20)
         .attr('height', 20);
-      draw(this.svgElement, 10, 8, '#000000', effect);
+        drawIcon(this.svgElement, 10, 8, '#000000', effect);
     }
   }
 
@@ -332,6 +375,16 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
       this.selectedEffectTypes.push(effectType);
     } else {
       this.selectedEffectTypes.splice(this.selectedEffectTypes.indexOf(effectType), 1);
+    }
+    this.redrawAndUpdateTable();
+  }
+
+  checkVariantType(variantType: string, checked: boolean) {
+    variantType = variantType.toLowerCase();
+    if (checked) {
+      this.selectedVariantTypes.push(variantType);
+    } else {
+      this.selectedVariantTypes.splice(this.selectedVariantTypes.indexOf(variantType), 1);
     }
     this.redrawAndUpdateTable();
   }
@@ -429,22 +482,41 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     return this.selectedAffectedStatus.includes(affectedStatus) ? true : false;
   }
 
+  isVariantTypeSelected(variantType: string): boolean {
+    if (variantType.substr(0, 3) === 'cnv') {
+      variantType = variantType.substr(0, 4);
+    } else {
+      variantType = variantType.substr(0, 3);
+    }
+
+    return this.selectedVariantTypes.includes(variantType) ? true : false;
+  }
+
   filterSummaryVariantsArray(
     summaryVariantsArray: GeneViewSummaryVariantsArray, startPos: number, endPos: number
   ): GeneViewSummaryVariantsArray {
-
     const result = new GeneViewSummaryVariantsArray();
     for (const summaryVariant of summaryVariantsArray.summaryVariants) {
       if (
         (!this.isVariantEffectSelected(summaryVariant.effect)) ||
         (!this.showDenovo && summaryVariant.seenAsDenovo) ||
         (!this.showTransmitted && !summaryVariant.seenAsDenovo) ||
-        (!this.isAffectedStatusSelected(this.getVariantAffectedStatus(summaryVariant)))
+        (!this.isAffectedStatusSelected(this.getVariantAffectedStatus(summaryVariant))) ||
+        (!this.isVariantTypeSelected(summaryVariant.variant))
       ) {
         continue;
-      } else if (summaryVariant.position >= startPos && summaryVariant.position <= endPos) {
-        if (this.frequencyIsSelected(summaryVariant.frequency)) {
-          result.push(summaryVariant);
+      } else if (this.frequencyIsSelected(summaryVariant.frequency)) {
+        if (summaryVariant.isCNV()) {
+          if (
+            !(summaryVariant.position <= startPos && summaryVariant.endPosition <= startPos) &&
+            !(summaryVariant.position >= endPos && summaryVariant.endPosition >= endPos)
+          ) {
+            result.push(summaryVariant);
+          }
+        } else  {
+          if (summaryVariant.position >= startPos && summaryVariant.position <= endPos) {
+            result.push(summaryVariant);
+          }
         }
       }
     }
@@ -484,6 +556,27 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     this.updateShownTablePreviewVariantsArrayEvent.emit(domains);
   }
 
+  doVariantsIntersect(variant1: GeneViewSummaryVariant, variant2: GeneViewSummaryVariant): boolean {
+    let result: boolean;
+
+    if (!variant1.isCNV()) {
+      variant1.endPosition = variant1.position;
+    }
+
+    if (!variant2.isCNV()) {
+      variant2.endPosition = variant2.position;
+    }
+
+    if (this.x(variant1.endPosition) + 8 < this.x(variant2.position) - 8 ||
+        this.x(variant1.position) - 8 > this.x(variant2.endPosition) + 8) {
+      result = false;
+    } else {
+      result = true;
+    }
+
+    return result;
+  }
+
   drawPlot() {
     const minDomain = this.x.domain()[0];
     const maxDomain = this.x.domain()[this.x.domain().length - 1];
@@ -502,11 +595,12 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
       this.x_axis = d3.axisBottom(this.x).tickValues(this.calculateXAxisTicks());
       this.y_axis = d3.axisLeft(this.y).tickValues(this.calculateYAxisTicks()).tickFormat(d3.format('1'));
       this.y_axis_subdomain = d3.axisLeft(this.y_subdomain).tickValues([]);
-      this.y_axis_zero = d3.axisLeft(this.y_zero);
+      this.y_axis_zero = d3.axisLeft(this.y_zero).tickSizeInner(0).tickPadding(9);
       this.svgElement.append('g').attr('transform', `translate(0, ${this.svgHeightFreq})`).call(this.x_axis).style('font', `${this.fontSize}px sans-serif`);
       this.svgElement.append('g').call(this.y_axis).style('font', `${this.fontSize}px sans-serif`);
       this.svgElement.append('g').call(this.y_axis_subdomain).style('font', `${this.fontSize}px sans-serif`);
       this.svgElement.append('g').call(this.y_axis_zero).style('font', `${this.fontSize}px sans-serif`);
+
 
       this.svgElement.append('text')
       .attr('transform', 'rotate(-90)')
@@ -516,27 +610,95 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
       .style('text-anchor', 'middle')
       .text(this.yAxisLabel);
 
-      filteredSummaryVariants.summaryVariants.sort((a, b) => GeneViewSummaryVariant.comparator(a, b));
+      this.svgElement
+        .append('svg')
+        .append('g')
+        .append('rect')
+        .attr('height', this.svgHeightFreq - this.zeroAxisY)
+        .attr('width', this.svgWidth)
+        .attr('x', 0)
+        .attr('y', this.zeroAxisY)
+        .attr('fill', '#2b63ff')
+        .attr('fill-opacity', '0.15');
+
+      this.brush = d3.brush().extent([[0, 0], [this.svgWidth, this.svgHeightFreq]])
+        .on('end', this.brushEndEvent);
+
+      this.svgElement.append('g')
+        .attr('class', 'brush')
+        .call(this.brush);
 
       for (const variant of filteredSummaryVariants.summaryVariants) {
-        const color = this.getAffectedStatusColor(this.getVariantAffectedStatus(variant));
         const variantPosition = this.x(variant.position);
+        const color = this.getAffectedStatusColor(this.getVariantAffectedStatus(variant));
         const variantTitle = `Effect type: ${variant.effect}\nVariant position: ${variant.location}`;
 
-        if (variant.seenAsDenovo) {
-          drawSurroundingSquare(this.svgElement, variantPosition, this.getVariantY(variant.frequency), color);
+        // Temporary fix for variants with 0 frequency shown in the middle of the denovo plot
+        if (variant.frequency === 0) {
+          variant.frequency = null;
         }
+        const variantHeight = this.getVariantY(variant.frequency);
+
+        let spacing = 0;
+        if (variant.seenAsDenovo) {
+          if (variant.frequency == null) {
+            spacing = this.denovoVariantsSpacings[variant.svuid] + 8;
+          }
+
+          if (variant.isCNV()) {
+            const cnvLength = this.x(variant.endPosition) - variantPosition;
+            draw.surroundingRectangleForCNV(
+              this.svgElement, variantPosition + cnvLength / 2,
+              variantHeight + spacing, color, cnvLength, variantTitle
+            );
+          } else {
+            draw.surroundingSquare(this.svgElement, variantPosition, variantHeight + spacing, color);
+          }
+        }
+
         if (variant.isLGDs()) {
-          drawStar(this.svgElement, variantPosition, this.getVariantY(variant.frequency), color, variantTitle);
+          draw.star(this.svgElement, variantPosition, variantHeight + spacing, color, variantTitle);
         } else if (variant.isMissense()) {
-          drawTriangle(this.svgElement, variantPosition, this.getVariantY(variant.frequency), color, variantTitle);
+          draw.triangle(this.svgElement, variantPosition, variantHeight + spacing, color, variantTitle);
         } else if (variant.isSynonymous()) {
-          drawCircle(this.svgElement, variantPosition, this.getVariantY(variant.frequency), color, variantTitle);
+          draw.circle(this.svgElement, variantPosition, variantHeight + spacing, color, variantTitle);
+        } else if (variant.isCNVPlus()) {
+          draw.rect(
+            this.svgElement, this.x(variant.position), this.x(variant.endPosition),
+            variantHeight - 3 + spacing, 6, color, 0.4, variantTitle
+          );
+        } else if (variant.isCNVPMinus()) {
+          draw.rect(
+            this.svgElement, this.x(variant.position), this.x(variant.endPosition),
+            variantHeight - 0.5 + spacing, 1, color, 0.4, variantTitle
+          );
         } else {
-          drawDot(this.svgElement, variantPosition, this.getVariantY(variant.frequency), color, variantTitle);
+          draw.dot(this.svgElement, variantPosition, variantHeight + spacing, color, variantTitle);
         }
       }
     }
+  }
+
+  calculateDenovoVariantsSpacings(summaryVariantsArray: GeneViewSummaryVariantsArray) {
+    const denovoVariants = summaryVariantsArray.summaryVariants.filter(variant => variant.seenAsDenovo);
+    if (!denovoVariants.length) {
+      return;
+    }
+
+    const sortedDenovos = denovoVariants.sort((sv, sv2) => sv.position > sv2.position ? 1 : sv.position < sv2.position ? -1 : 0);
+    const denovoVariantsSpacings = {};
+    let spacingTracker = 0;
+    denovoVariantsSpacings[sortedDenovos[0].svuid] = spacingTracker;
+    for (let i = 0; i <= sortedDenovos.length - 2; i++) {
+
+      if (this.doVariantsIntersect(sortedDenovos[i], sortedDenovos[i + 1])) {
+        spacingTracker += 30;
+      } else {
+        spacingTracker = 0;
+      }
+      denovoVariantsSpacings[sortedDenovos[i + 1].svuid] = spacingTracker;
+    }
+    return denovoVariantsSpacings;
   }
 
   getVariantY(variantFrequency: number): number {
@@ -580,35 +742,30 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
   }
 
   drawGene() {
-    this.svgHeight = this.svgHeightFreqRaw + (this.gene.transcripts.length + 1) * 25 + 70;
-    d3.select('#svg-container').selectAll('svg').remove();
+    if (this.additionalZeroAxisHeight !== undefined) {
+      this.svgHeight = this.svgHeightFreqRaw + (this.gene.transcripts.length + 1) * 25 + 70;
+      d3.select('#svg-container').selectAll('svg').remove();
 
-    this.svgElement = d3.select('#svg-container')
-      .append('svg')
-      .attr('viewBox', '0 0 ' + (this.svgWidth + this.options.margin.left + this.options.margin.right).toString() +
-          ' ' + (this.svgHeightFreqRaw + 85 + (this.gene.transcripts.length + 1) * 25).toString())
-      .append('g')
-      .attr('transform', `translate(${this.options.margin.left}, ${this.options.margin.top})`);
+      this.svgElement = d3.select('#svg-container')
+        .append('svg')
+        .attr('viewBox', '0 0 ' + (this.svgWidth + this.options.margin.left + this.options.margin.right).toString() +
+            ' ' + (this.svgHeightFreqRaw + 85 + (this.gene.transcripts.length + 1) * 25).toString())
+        .append('g')
+        .attr('transform', `translate(${this.options.margin.left}, ${this.options.margin.top})`);
 
-    this.summedTranscriptElement = this.svgElement
-      .append('g');
+      this.summedTranscriptElement = this.svgElement
+        .append('g');
 
-    this.transcriptsElement = this.svgElement
-      .append('g');
+      this.transcriptsElement = this.svgElement
+        .append('g');
 
-    this.brush = d3.brush().extent([[0, 0], [this.svgWidth, this.svgHeightFreq]])
-      .on('end', this.brushEndEvent);
-
-    this.svgElement.append('g')
-      .attr('class', 'brush')
-      .call(this.brush);
-
-    let transcriptY = this.svgHeightFreqRaw + 30;
-    this.drawTranscript(this.summedTranscriptElement, transcriptY, this.geneViewModel.collapsedGeneViewTranscript);
-    transcriptY += 25;
-    for (const geneViewTranscript of this.geneViewModel.geneViewTranscripts) {
+      let transcriptY = this.svgHeightFreqRaw + 30;
+      this.drawTranscript(this.summedTranscriptElement, transcriptY, this.geneViewModel.collapsedGeneViewTranscript);
       transcriptY += 25;
-      this.drawTranscript(this.transcriptsElement, transcriptY, geneViewTranscript);
+      for (const geneViewTranscript of this.geneViewModel.geneViewTranscripts) {
+        transcriptY += 25;
+        this.drawTranscript(this.transcriptsElement, transcriptY, geneViewTranscript);
+      }
     }
   }
 
@@ -745,7 +902,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     for (const [chromosome, range] of Object.entries(chromosomes)) {
       from = Math.max(range[0], domainMin);
       to = Math.min(range[1], domainMax);
-      drawHoverText(element, this.x((from + to) / 2) - 43, yPos + 35, `Chromosome: ${chromosome}`, '', this.fontSize);
+      draw.hoverText(element, this.x((from + to) / 2) - 43, yPos + 35, `Chromosome: ${chromosome}`, '', this.fontSize);
     }
   }
 
@@ -806,7 +963,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
       brushSize = { nonCoding: this.options.exonThickness.collapsed, coding: this.options.cdsThickness.collapsed };
       this.drawChromosomeLabels(element, yPos, geneViewTranscript);
     } else {
-      drawHoverText(element, this.x(firstSegmentStart) - 150, yPos + 10, transcriptId, 'Transcript id: ', this.fontSize);
+      draw.hoverText(element, this.x(firstSegmentStart) - 150, yPos + 10, transcriptId, 'Transcript id: ', this.fontSize);
     }
 
     this.drawTranscriptUTRText(element, firstSegmentStart, lastSegmentStop, yPos, geneViewTranscript.strand);
@@ -832,11 +989,11 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
       y -= (brushSize.coding - brushSize.nonCoding) / 2;
       title += ' [CDS]';
     }
-    drawRect(element, xStart, xEnd, y, rectThickness, title);
+    draw.rect(element, xStart, xEnd, y, rectThickness, 'black', 1, title);
   }
 
   drawIntron(element, xStart: number, xEnd: number, y: number, title: string, brushSize) {
-    drawLine(element, xStart, xEnd, y + brushSize.nonCoding / 2, title);
+    draw.line(element, xStart, xEnd, y + brushSize.nonCoding / 2, title);
   }
 
   drawTranscriptUTRText(element, xStart: number, xEnd: number, y: number, strand: string) {
@@ -845,7 +1002,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
       UTR.left = '3\'';
       UTR.right = '5\'';
     }
-    drawHoverText(element, this.x(xStart) - 20, y + 10, UTR.left, 'UTR ', this.fontSize);
-    drawHoverText(element, this.x(xEnd) + 10, y + 10, UTR.right, 'UTR ', this.fontSize);
+    draw.hoverText(element, this.x(xStart) - 20, y + 10, UTR.left, 'UTR ', this.fontSize);
+    draw.hoverText(element, this.x(xEnd) + 10, y + 10, UTR.right, 'UTR ', this.fontSize);
   }
 }
