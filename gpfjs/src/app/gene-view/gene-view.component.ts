@@ -130,6 +130,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
   y_axis;
   y_axis_subdomain;
   y_axis_zero;
+  yAxisLabel;
   fontSize: number;
   selectedEffectTypes = ['lgds', 'missense', 'synonymous', 'other'];
   selectedVariantTypes = ['sub', 'ins', 'del', 'cnv+', 'cnv-'];
@@ -170,6 +171,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
       this.frequencyDomainMin = this.geneBrowserConfig.domainMin;
       this.frequencyDomainMax = this.geneBrowserConfig.domainMax;
       this.selectedFrequencies = [0, this.frequencyDomainMax];
+      this.yAxisLabel = this.geneBrowserConfig.frequencyName || this.geneBrowserConfig.frequencyColumn;
 
       this.drawEffectTypesIcons();
       this.drawTransmittedIcons();
@@ -592,13 +594,22 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
 
     if (this.gene !== undefined) {
       this.x_axis = d3.axisBottom(this.x).tickValues(this.calculateXAxisTicks());
-      this.y_axis = d3.axisLeft(this.y);
-      this.y_axis_subdomain = d3.axisLeft(this.y_subdomain).tickValues([this.frequencyDomainMin / 2.0]);
+      this.y_axis = d3.axisLeft(this.y).tickValues(this.calculateYAxisTicks()).tickFormat(d3.format('1'));
+      this.y_axis_subdomain = d3.axisLeft(this.y_subdomain).tickValues([]);
       this.y_axis_zero = d3.axisLeft(this.y_zero).tickSizeInner(0).tickPadding(9);
       this.svgElement.append('g').attr('transform', `translate(0, ${this.svgHeightFreq})`).call(this.x_axis).style('font', `${this.fontSize}px sans-serif`);
       this.svgElement.append('g').call(this.y_axis).style('font', `${this.fontSize}px sans-serif`);
       this.svgElement.append('g').call(this.y_axis_subdomain).style('font', `${this.fontSize}px sans-serif`);
       this.svgElement.append('g').call(this.y_axis_zero).style('font', `${this.fontSize}px sans-serif`);
+
+
+      this.svgElement.append('text')
+      .attr('transform', 'rotate(-90)')
+      .attr('y', 0 - (this.options.margin.left / 2))
+      .attr('x', 0 - (this.svgHeightFreq / 2))
+      .attr('dy', '1em')
+      .style('text-anchor', 'middle')
+      .text(this.yAxisLabel);
 
       this.svgElement
         .append('svg')
@@ -760,7 +771,11 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
   }
 
   brushEndEvent = () => {
-    const extent = d3.event.selection;
+    this.updateBrush(d3.event.selection);
+  }
+
+  updateBrush(selection) {
+    const extent = selection;
 
     const currentDomainMin = this.x.domain()[0];
     const currentDomainMax = this.x.domain()[this.x.domain().length - 1];
@@ -788,7 +803,6 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
         Math.min(...newFreqLimits),
         Math.max(...newFreqLimits),
       ];
-
       this.zoomHistory.addStateToHistory(
         new GeneViewScaleState(this.x.domain(), this.selectedFrequencies[0], this.selectedFrequencies[1], this.condenseIntrons)
       );
@@ -899,6 +913,14 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     const increment = Math.round(axisLength / (this.options.xAxisTicks - 1));
     for (let i = 0; i < axisLength; i += increment) {
       ticks.push(Math.round(this.x.invert(i)));
+    }
+    return ticks;
+  }
+
+  calculateYAxisTicks() {
+    const ticks = [];
+    for (let i = this.frequencyDomainMin; i <= this.frequencyDomainMax; i *= 10) {
+      ticks.push(i);
     }
     return ticks;
   }

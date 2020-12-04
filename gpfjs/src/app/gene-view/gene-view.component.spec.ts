@@ -7,7 +7,8 @@ import { FullscreenLoadingService } from 'app/fullscreen-loading/fullscreen-load
 import { UsersService } from 'app/users/users.service';
 import * as svgDrawing from 'app/utils/svg-drawing';
 import * as d3 from 'd3';
-import * as select from 'd3-selection';
+// import * as d3Selection from 'd3-selection';
+const d3Selection = require('d3-selection');
 // tslint:disable-next-line:import-blacklist
 import { Subject, Observable } from 'rxjs';
 import { Gene, GeneViewSummaryVariant, GeneViewSummaryVariantsArray, Transcript } from './gene';
@@ -75,6 +76,9 @@ describe('GeneViewZoomHistory', () => {
   });
 });
 
+interface MutableEvent { selection: any; }
+interface MutableD3 { event: MutableEvent; }
+
 describe('GeneViewComponent', () => {
   let component: GeneViewComponent;
   let fixture: ComponentFixture<GeneViewComponent>;
@@ -125,6 +129,33 @@ describe('GeneViewComponent', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('should update gene information on change', () => {
+    const setDefaultScaleSpy = spyOn(component, 'setDefaultScale');
+    const resetGeneTableValuesSpy = spyOn(component, 'resetGeneTableValues');
+    const drawGeneSpy = spyOn(component, 'drawGene');
+
+    component.gene = undefined;
+    component.geneViewModel = undefined;
+    component.geneViewTranscript = undefined;
+    component.ngOnChanges();
+    expect(component.geneViewModel).toBe(undefined);
+    expect(component.geneViewTranscript).toBe(undefined);
+    expect(setDefaultScaleSpy).not.toHaveBeenCalled();
+    expect(resetGeneTableValuesSpy).not.toHaveBeenCalled();
+    expect(drawGeneSpy).not.toHaveBeenCalled();
+
+    component.gene = testGene;
+    component.svgWidth = 1000;
+    component.ngOnChanges();
+    const expectedModel = new GeneViewModel(component.gene, component.svgWidth );
+    expect(component.geneViewModel).toEqual(expectedModel);
+    const expectedTranscript = new GeneViewTranscript(component.gene.transcripts[0]);
+    expect(component.geneViewTranscript).toEqual(expectedTranscript);
+    expect(setDefaultScaleSpy).toHaveBeenCalled();
+    expect(resetGeneTableValuesSpy).toHaveBeenCalled();
+    expect(drawGeneSpy).toHaveBeenCalled();
   });
 
   it('should get current state', (done) => {
@@ -319,6 +350,28 @@ describe('GeneViewComponent', () => {
     component.checkAffectedStatus('Affected only', true);
     expect(component.selectedAffectedStatus.indexOf('Affected only')).not.toBe(-1);
     expect(redrawAndUpdateTableSpy).toHaveBeenCalled();
+  });
+
+  it('should check hide transcripts', () => {
+    component.svgElement = d3.select('#svg-container');
+    component.transcriptsElement = component.svgElement.append('g');
+    let checked;
+    const addAttributeSpy = spyOn(component.transcriptsElement, 'attr').and.callFake((attr, value) => {
+      expect(attr).toBe('display');
+      if (checked) {
+        expect(value).toBe('none');
+      } else {
+        expect(value).toBe('block');
+      }
+    });
+
+    checked = true;
+    component.checkHideTranscripts(checked);
+    expect(addAttributeSpy).toHaveBeenCalled();
+
+    checked = false;
+    component.checkHideTranscripts(checked);
+    expect(addAttributeSpy).toHaveBeenCalledTimes(2);
   });
 
   it('should see if Variant Effect is selected', () => {
@@ -581,6 +634,62 @@ describe('GeneViewComponent', () => {
     expect(drawTranscriptSpy).toHaveBeenCalled();
   });
 
+  it('should update brush with new d3 selection', () => {
+    const selectionMock = [[1, 11], [2, 12]];
+    component.x = d3.scaleLinear().domain([0, 0]).range([0, 0]).clamp(true);
+    const setDefaultScaleSpy = spyOn(component, 'setDefaultScale');
+    const redrawAndUpdateTableSpy = spyOn(component, 'redrawAndUpdateTable');
+
+    component.doubleClickTimer = 0;
+    component.updateBrush(null);
+    expect(component.doubleClickTimer).not.toEqual(0);
+    expect(setDefaultScaleSpy).not.toHaveBeenCalled();
+    expect(redrawAndUpdateTableSpy).not.toHaveBeenCalled();
+
+    component.doubleClickTimer = 1;
+    component.updateBrush(null);
+    expect(component.doubleClickTimer).toBe(1);
+    expect(setDefaultScaleSpy).toHaveBeenCalled();
+    expect(redrawAndUpdateTableSpy).toHaveBeenCalled();
+
+    component.x = d3.scaleLinear().domain([1, 2]).range([1, 10]).clamp(true);
+
+    const addStateToHistorySpy = spyOn(component.zoomHistory, 'addStateToHistory').and.callFake((scaleState) => {
+      expect(scaleState.xDomain).toEqual(component.x.domain());
+      expect(scaleState.yMin).toEqual(11);
+      expect(scaleState.yMax).toEqual(12);
+    });
+    spyOn(component, 'convertBrushPointToFrequency').and.callFake((point) => point);
+    component.svgElement = d3.select('#svg-container');
+    component.brush = {move: 'brushMove'};
+    const svgElementSelectSpy = spyOn(component.svgElement, 'select').withArgs('.brush').and.returnValue({call(brush, somth) {}});
+
+    component.updateBrush(selectionMock);
+    expect(component.selectedFrequencies).toEqual([11, 12]);
+    expect(addStateToHistorySpy).toHaveBeenCalled();
+    expect(svgElementSelectSpy).toHaveBeenCalled();
+    expect(redrawAndUpdateTableSpy).toHaveBeenCalledTimes(2);
+
+    component.x = d3.scaleLinear().domain([1, 20]).range([1, 10]).clamp(true);
+    component.updateBrush(selectionMock);
+    expect(component.x.domain()).not.toEqual([1, 20]);
+    expect(component.x.range()).not.toEqual([1, 10]);
+    expect(redrawAndUpdateTableSpy).toHaveBeenCalledTimes(3);
+  });
+
+  it('should update X domain', () => {
+    component.x = undefined;
+    component.updateXDomain(1, 20);
+    expect(component.x.domain()).toEqual(component.geneViewModel.buildDomain(1, 20));
+    expect(component.x.range()).toEqual(component.recalculateXRange(1, 20));
+    expect(component.x.clamp()).toEqual(true);
+
+    component.updateXDomain(2, 12);
+    expect(component.x.domain()).toEqual(component.geneViewModel.buildDomain(1, 13));
+    expect(component.x.range()).toEqual(component.recalculateXRange(1, 13));
+    expect(component.x.clamp()).toEqual(true);
+  });
+
   it('should undo state history', () => {
     const moveToPreviousSpy = spyOn(component.zoomHistory, 'moveToPrevious');
     const drawFromHistorySpy = spyOn(component, 'drawFromHistory');
@@ -669,6 +778,20 @@ describe('GeneViewComponent', () => {
 
     component.drawChromosomeLabels(component.svgElement, 0, testTranscript);
     expect(drawHoverTextSpy).toHaveBeenCalled();
+  });
+
+  it('should calculate X axis ticks', () => {
+    component.x = d3.scaleLinear().domain([0, 50]).range([0, 10]).clamp(true);
+    expect(component.calculateXAxisTicks()).toEqual([ 0, 5, 10, 15, 20, 25, 30, 35, 40, 45 ]);
+
+    component.x = d3.scaleLinear().domain([0, 100]).range([0, 10]).clamp(true);
+    expect(component.calculateXAxisTicks()).toEqual([ 0, 10, 20, 30, 40, 50, 60, 70, 80, 90 ]);
+  });
+
+  it('should calculate Y axis ticks', () => {
+    component.frequencyDomainMin = 1;
+    component.frequencyDomainMax = 100;
+    expect(component.calculateYAxisTicks()).toEqual([ 1, 10, 100 ]);
   });
 
   it('should calculate text font size', () => {

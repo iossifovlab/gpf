@@ -107,6 +107,7 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
       const requestParams = this.transformFamilyVariantsQueryParameters(state);
       requestParams['maxVariantsCount'] = this.maxFamilyVariants;
       requestParams['summaryVariantIds'] = state['summaryVariantIds'];
+      requestParams['uniqueFamilyVariants'] = false;
       requestParams['genomicScores'] = [{
         'metric': this.geneBrowserConfig.frequencyColumn,
         'rangeStart': $event.start > 0 ? $event.start : null,

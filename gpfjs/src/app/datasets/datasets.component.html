@@ -16,7 +16,8 @@
             <div
               ngbDropdownMenu
               class="dataset-selector"
-              aria-labelledby="datasets-dropdown-menu-button">
+              aria-labelledby="datasets-dropdown-menu-button"
+              style="z-index: 199;">
               <a
                 *ngFor="let dataset of (datasets$ | async)"
                 class="dropdown-item"

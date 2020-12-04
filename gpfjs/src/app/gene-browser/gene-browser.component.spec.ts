@@ -96,6 +96,7 @@ describe('GeneBrowserComponent', () => {
           maxVariantsCount: 1,
           summaryVariantIds: [5, 10, 15],
           variant_type: ['sub', 'ins', 'del', 'cnv+', 'cnv-'],
+          uniqueFamilyVariants: false
         });
         return 'testPreviewVariantsArray' as any;
       });
