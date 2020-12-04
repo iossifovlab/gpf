@@ -5,7 +5,7 @@ import { ConfigService } from 'app/config/config.service';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { FullscreenLoadingService } from 'app/fullscreen-loading/fullscreen-loading.service';
 import { UsersService } from 'app/users/users.service';
-import * as svgDrawing from 'app/utils/svg-drawing';
+import * as draw from 'app/utils/svg-drawing';
 import * as d3 from 'd3';
 // import * as d3Selection from 'd3-selection';
 const d3Selection = require('d3-selection');
@@ -134,7 +134,6 @@ describe('GeneViewComponent', () => {
   it('should update gene information on change', () => {
     const setDefaultScaleSpy = spyOn(component, 'setDefaultScale');
     const resetGeneTableValuesSpy = spyOn(component, 'resetGeneTableValues');
-    const drawGeneSpy = spyOn(component, 'drawGene');
 
     component.gene = undefined;
     component.geneViewModel = undefined;
@@ -144,7 +143,6 @@ describe('GeneViewComponent', () => {
     expect(component.geneViewTranscript).toBe(undefined);
     expect(setDefaultScaleSpy).not.toHaveBeenCalled();
     expect(resetGeneTableValuesSpy).not.toHaveBeenCalled();
-    expect(drawGeneSpy).not.toHaveBeenCalled();
 
     component.gene = testGene;
     component.svgWidth = 1000;
@@ -155,7 +153,6 @@ describe('GeneViewComponent', () => {
     expect(component.geneViewTranscript).toEqual(expectedTranscript);
     expect(setDefaultScaleSpy).toHaveBeenCalled();
     expect(resetGeneTableValuesSpy).toHaveBeenCalled();
-    expect(drawGeneSpy).toHaveBeenCalled();
   });
 
   it('should get current state', (done) => {
@@ -191,12 +188,12 @@ describe('GeneViewComponent', () => {
   });
 
   it('should draw transmitted icons with correct shapes and titles', () => {
-    const drawTypes: any = ['drawStar', 'drawTriangle', 'drawCircle', 'drawDot'];
+    const drawTypes: any = ['star', 'triangle', 'circle', 'dot'];
     const iconTitles = ['LGDs', 'Missense', 'Synonymous', 'Other'];
 
     const drawSpies = [];
     drawTypes.forEach((drawType, index) => {
-      drawSpies[index] = spyOn(svgDrawing, drawType).and.callFake((element, x, y, color, title) => {
+      drawSpies[index] = spyOn(draw, drawType).and.callFake((element, x, y, color, title) => {
         expect(element).toEqual(component.svgElement);
         expect(title).toEqual(iconTitles[index]);
       });
@@ -210,13 +207,13 @@ describe('GeneViewComponent', () => {
   });
 
   it('should draw denovo icons with correct shapes and titles', () => {
-    const drawTypes: any = ['drawStar', 'drawTriangle', 'drawCircle', 'drawDot'];
+    const drawTypes: any = ['star', 'triangle', 'circle', 'dot'];
     const iconTitles = ['Denovo LGDs', 'Denovo Missense', 'Denovo Synonymous', 'Denovo Other'];
 
-    const drawSurroundingSquareSpy = spyOn(svgDrawing, 'drawSurroundingSquare');
+    const drawSurroundingSquareSpy = spyOn(draw, 'surroundingSquare');
     const drawSpies = [];
     drawTypes.forEach((drawType, index) => {
-      drawSpies[index] = spyOn(svgDrawing, drawType).and.callFake((element, x, y, color, title) => {
+      drawSpies[index] = spyOn(draw, drawType).and.callFake((element, x, y, color, title) => {
         expect(element).toEqual(component.svgElement);
         expect(title).toEqual(iconTitles[index]);
       });
@@ -231,12 +228,12 @@ describe('GeneViewComponent', () => {
   });
 
   it('should draw effect types icons with correct shapes and titles', () => {
-    const drawTypes: any = ['drawStar', 'drawTriangle', 'drawCircle', 'drawDot'];
+    const drawTypes: any = ['star', 'triangle', 'circle', 'dot'];
     const iconTitles = ['#LGDs', '#Missense', '#Synonymous', '#Other'];
 
     const drawSpies = [];
     drawTypes.forEach((drawType, index) => {
-      drawSpies[index] = spyOn(svgDrawing, drawType).and.callFake((element, x, y, color, title) => {
+      drawSpies[index] = spyOn(draw, drawType).and.callFake((element, x, y, color, title) => {
         expect(element).toEqual(component.svgElement);
         expect(title).toEqual(iconTitles[index]);
       });
@@ -493,16 +490,16 @@ describe('GeneViewComponent', () => {
       .range([component.svgHeightFreq, component.zeroAxisY]);
     component.svgElement = d3.select('#svg-container');
     component.showDenovo = true;
-    const drawTypes: any = ['drawStar', 'drawTriangle', 'drawCircle', 'drawDot'];
+    const drawTypes: any = ['star', 'triangle', 'circle', 'dot'];
     const effectTypes = ['lgds', 'missense', 'synonymous', 'other'];
 
     const drawSpies = [];
     drawTypes.forEach((drawType, index) => {
-      drawSpies[index] = spyOn(svgDrawing, drawType).and.callFake((element, x, y, color, title) => {
+      drawSpies[index] = spyOn(draw, drawType).and.callFake((element, x, y, color, title) => {
         expect(title.indexOf(effectTypes[index])).not.toBe(-1);
       });
     });
-    const drawSurroundingSquareSpy = spyOn(svgDrawing, 'drawSurroundingSquare');
+    const drawSurroundingSquareSpy = spyOn(draw, 'surroundingSquare');
 
     const testVariant1 = GeneViewSummaryVariant.fromRow({
       effect: 'lgds', is_denovo: true, seen_in_affected: true, seen_in_unaffected: false, frequency: 15, position: 15, variant: 'sub'
@@ -772,7 +769,7 @@ describe('GeneViewComponent', () => {
       'cds': [1, 100],
       'exons': [{'start': 1, 'stop': 11}, {'start': 12, 'stop': 23}]
     }));
-    const drawHoverTextSpy = spyOn(svgDrawing, 'drawHoverText').and.callFake((element, x, y, title) => {
+    const drawHoverTextSpy = spyOn(draw, 'hoverText').and.callFake((element, x, y, title) => {
       expect(title.indexOf('testChrom')).not.toBe(-1);
     });
 
@@ -802,7 +799,7 @@ describe('GeneViewComponent', () => {
   });
 
   it('should draw exon without cds', () => {
-    const drawRectSpy = spyOn(svgDrawing, 'drawRect')
+    const drawRectSpy = spyOn(draw, 'rect')
       .and.callFake((element, xStart, xEnd, y, rectThickness, title) => {
         expect(title.indexOf('CDS')).toBe(-1);
         expect(rectThickness).toBe(2);
@@ -851,7 +848,7 @@ describe('GeneViewComponent', () => {
   });
 
   it('should draw exon with cds', () => {
-    const drawRectWithCDSSpy = spyOn(svgDrawing, 'drawRect')
+    const drawRectWithCDSSpy = spyOn(draw, 'rect')
       .and.callFake((element, xStart, xEnd, y, rectThickness, title) => {
         expect(title.indexOf('CDS')).not.toBe(-1);
         expect(rectThickness).toBe(1);
@@ -865,7 +862,7 @@ describe('GeneViewComponent', () => {
   });
 
   it('should draw intron', () => {
-    const drawLineSpy = spyOn(svgDrawing, 'drawLine')
+    const drawLineSpy = spyOn(draw, 'line')
     .and.callFake((element, xStart, xEnd, y, title) => {
       expect(xStart).toBe(11);
       expect(xEnd).toBe(12);
