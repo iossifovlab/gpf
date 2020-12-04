@@ -12,6 +12,7 @@ from dae.backends.raw.raw_variants import RawMemoryVariants
 from dae.backends.impala.parquet_io import ParquetManager, \
     NoPartitionDescriptor
 from dae.configuration.gpf_config_parser import FrozenBox
+from dae.utils.regions import Region
 
 
 @pytest.fixture(scope="session")
@@ -104,6 +105,36 @@ def test_cnv_impala(cnv_impala):
             print(aa)
             assert VariantType.is_cnv(aa.variant_type)
     assert len(vs) == 12
+
+
+def test_cnv_impala_region_query(cnv_impala):
+    vs = cnv_impala.query_variants(
+        regions=[
+            Region("1", 1600000, 1620000)
+        ],
+        effect_types=["CNV+", "CNV-"],
+        variant_type="cnv+ or cnv-",
+        inheritance="denovo"
+    )
+    assert len(list(vs)) == 1
+    vs = cnv_impala.query_variants(
+        regions=[
+            Region("1", 1600000, 1630000)
+        ],
+        effect_types=["CNV+", "CNV-"],
+        variant_type="cnv+ or cnv-",
+        inheritance="denovo"
+    )
+    assert len(list(vs)) == 2
+    vs = cnv_impala.query_variants(
+        regions=[
+            Region("1", 1000000, 2000000)
+        ],
+        effect_types=["CNV+", "CNV-"],
+        variant_type="cnv+ or cnv-",
+        inheritance="denovo"
+    )
+    assert len(list(vs)) == 2
 
 
 def test_cnv_best_state_X(cnv_raw):
