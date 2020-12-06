@@ -35,19 +35,23 @@ class PersonSetCollection(NamedTuple):
         mapped to empty PersonSet instances from a given configuration.
         """
         person_set_configs = [*config.domain]
-        if config.default is not None:
-            person_set_configs.append(config.default)
-
-        result = {}
+        result = dict()
         for person_set in person_set_configs:
-
             result[person_set.id] = PersonSet(
-                    person_set.id,
-                    person_set.name,
-                    set(person_set["values"]),
-                    person_set.color,
-                    dict(),
-                )
+                person_set.id,
+                person_set.name,
+                set(person_set["values"]),
+                person_set.color,
+                dict(),
+            )
+        if config.default is not None:
+            result[config.default.id] = PersonSet(
+                config.default.id,
+                config.default.name,
+                {"DEFAULT"},
+                config.default.color,
+                dict(),
+            )
         return result
 
     @staticmethod
@@ -101,7 +105,7 @@ class PersonSetCollection(NamedTuple):
         }
         if collection_config.default is not None:
             value_to_id[
-                frozenset(collection_config.default["values"])
+                frozenset(["DEFAULT"])
             ] = collection_config.default.id
 
         for person_id, person in families_data.persons.items():
@@ -134,7 +138,7 @@ class PersonSetCollection(NamedTuple):
 
             if value not in value_to_id:
                 if collection_config.default is not None:
-                    value = frozenset(collection_config.default["values"])
+                    value = frozenset(["DEFAULT"])
                 else:
                     assert value in value_to_id, (
                         f"Domain for '{collection_config.id}'"
