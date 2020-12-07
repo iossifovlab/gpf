@@ -187,12 +187,12 @@ class ClassifyMeasureTask(Task):
         else:
             min_value = None
             max_value = None
-        if measure_type == MeasureType.continuous:
+        if measure_type in set([MeasureType.continuous, MeasureType.ordinal]):
             values_domain = "[{}, {}]".format(min_value, max_value)
         else:
             distribution = self.classifier_report.calc_distribution_report()
             unique_values = [v for (v, _) in distribution if v.strip() != ""]
-            values_domain = ",".join(unique_values)
+            values_domain = ", ".join(sorted(unique_values))
 
         self.measure.min_value = min_value
         self.measure.max_value = max_value
@@ -297,7 +297,7 @@ class PrepareVariables(PreparePersons):
             person_id = self.config.person.column
         else:
             person_id = df.columns[0]
-        print("Person ID: {}".format(person_id))
+        print(f"Person ID: {person_id}")
         return person_id
 
     def load_instrument(self, instrument_name, filenames):
@@ -323,12 +323,11 @@ class PrepareVariables(PreparePersons):
             )
             person_id = self._get_person_column_name(df)
             print(
-                "renaming column '{}' in instrument: {}".format(
-                    person_id, instrument_name
-                )
+                f"renaming column '{person_id}' to '{self.PERSON_ID}' "
+                f"in instrument: {instrument_name}"
             )
 
-            df.rename(columns={person_id: self.PERSON_ID}, inplace=True)
+            df = df.rename(columns={person_id: self.PERSON_ID})
             dataframes.append(df)
         assert len(dataframes) >= 1
 
