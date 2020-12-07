@@ -283,13 +283,21 @@ class BaseQueryBuilder:
         where = []
         for region in regions:
             assert isinstance(region, Region)
+            end_position = "COALESCE(end_position, -1)"
             where.append(
-                "(`chromosome` = {q}{chrom}{q} AND `position` >= {start} AND "
-                "`position` <= {stop})".format(
+                    "(`chromosome` = {q}{chrom}{q} AND "
+                    "("
+                    "(`position` >= {start} AND `position` <= {stop}) "
+                    "OR "
+                    "({end_position} >= {start} AND {end_position} <= {stop}) "
+                    "OR "
+                    "({start} >= `position` AND {stop} <= {end_position})"
+                    "))".format(
                     q=self.QUOTE,
                     chrom=region.chrom,
                     start=region.start,
                     stop=region.stop,
+                    end_position=end_position
                 )
             )
         return " OR ".join(where)

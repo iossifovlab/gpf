@@ -31,10 +31,9 @@ pipeline {
     stages {
         stage ('Start') {
             steps {
-                slackSend (
-                    color: '#FFFF00',
-                    message: "STARTED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' ${env.BUILD_URL}"
-                )
+                zulipSend(
+                    message: "Started build #${env.BUILD_NUMBER} of project ${env.JOB_NAME} (${env.BUILD_URL})",
+                    topic: "${env.JOB_NAME}")
             }
         }
 
@@ -74,15 +73,6 @@ pipeline {
             }
         }
 
-        stage('Start federation remote instance') {
-            steps {
-                sh '''
-                    ${WD}/scripts/setup_remote_gpf_container.sh
-                    ${WD}/scripts/run_remote_gpf_container.sh
-                '''
-            }
-        }
-
         stage('Data') {
             steps {
                 sh '''
@@ -115,6 +105,14 @@ pipeline {
             }
         }
 
+        stage('Start federation remote instance') {
+            steps {
+                sh '''
+                    ${WD}/scripts/setup_remote_gpf_container.sh
+                    ${WD}/scripts/run_remote_gpf_container.sh
+                '''
+            }
+        }
 
         stage('Lint') {
             steps {
@@ -156,32 +154,19 @@ pipeline {
             //     docker stop $GPF_IMPALA_DOCKER_CONTAINER
             //     docker rm $GPF_IMPALA_DOCKER_CONTAINER
             // '''
+            zulipNotification(
+                topic: "${env.JOB_NAME}"
+            )      
 
             junit 'test_results/wdae-junit.xml, test_results/dae-junit.xml'
             step([
                 $class: 'CoberturaPublisher',
                 coberturaReportFile: 'test_results/coverage.xml'])
 
-            // warnings(
-            //     parserConfigurations: [[parserName: 'PyLint', pattern: 'test_results/pyflakes.report']],
-            //     excludePattern: '.*site-packages.*',
-            //     usePreviousBuildAsReference: true,
-            // )
-
         }
         success {
-	    archiveArtifacts artifacts: 'mypy_report.tar.gz'
+    	    archiveArtifacts artifacts: 'mypy_report.tar.gz'
 
-            slackSend (
-                color: '#00FF00',
-                message: "SUCCESSFUL: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' ${env.BUILD_URL}"
-            )
-        }
-        failure {
-            slackSend (
-                color: '#FF0000',
-                message: "FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' ${env.BUILD_URL}"
-            )
         }
     }
 }

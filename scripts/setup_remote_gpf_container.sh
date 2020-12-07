@@ -9,13 +9,34 @@ fi
 docker pull seqpipe/seqpipe-gpf-conda
 
 if [[ ! -d $WD/gpf_remote ]]; then
-    $WD/wdae/wdae/wdae_bootstrap.sh hg19 $WD/gpf_remote
+    if [[ -d $WD/data-hg19-startup ]]; then
+        cp -rva $WD/data-hg19-startup $WD/gpf_remote
+    else
+        $WD/wdae/wdae/wdae_bootstrap.sh hg19 $WD/gpf_remote
+    fi
 fi
 
-wget -P $WD -c https://iossifovlab.com/distribution/public/studies/genotype-iossifov_2014-latest.tar.gz
-tar -zxvf $WD/genotype-iossifov_2014-latest.tar.gz -C $WD
+if ls builds/genotype-iossifov_2014-*.tar.gz 1> /dev/null 2>&1; then
+    cp builds/genotype-iossifov_2014-*.tar.gz $WD/genotype-iossifov_2014-latest.tar.gz
+else
+    wget -P $WD -c https://iossifovlab.com/distribution/public/studies/genotype-iossifov_2014-latest.tar.gz
+fi
 
-wget -P $WD -c https://iossifovlab.com/distribution/public/pheno/phenotype-comp-data-latest.tar.gz
+if ls builds/genotype-comp*.tar.gz  1> /dev/null 2>&1; then
+    cp builds/genotype-comp*.tar.gz $WD/genotype-comp-latest.tar.gz
+else
+    wget -P $WD -c https://iossifovlab.com/distribution/public/pheno/genotype-comp-latest.tar.gz
+fi
+
+if ls builds/phenotype-comp-data*.tar.gz  1> /dev/null 2>&1; then
+    cp builds/phenotype-comp-data*.tar.gz $WD/phenotype-comp-data-latest.tar.gz
+else
+    wget -P $WD -c https://iossifovlab.com/distribution/public/pheno/phenotype-comp-data-latest.tar.gz
+fi
+
+
+tar -zxvf $WD/genotype-iossifov_2014-latest.tar.gz -C $WD
+tar -zxvf $WD/genotype-comp-latest.tar.gz -C $WD
 tar -zxvf $WD/phenotype-comp-data-latest.tar.gz -C $WD
 
 sed -i 's/dae_data_dir =.*/dae_data_dir = "."/' $WD/gpf_remote/DAE.conf

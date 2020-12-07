@@ -764,8 +764,7 @@ class BatchImporter:
         if argv.partition_description:
             context["partition_description"] = argv.partition_description
 
-        pedigree_params = FamiliesLoader.build_cli_arguments(
-            self.families_loader.params)
+        pedigree_params = self.families_loader.build_arguments_dict()
         pedigree_pedigree = os.path.abspath(
             self.families_loader.filename)
         pedigree_output = os.path.abspath(os.path.join(
@@ -799,8 +798,7 @@ class BatchImporter:
                     os.path.abspath(fn)
                     for fn in variants_loader.variants_filenames
                 ])
-            variants_context["params"] = variants_loader.build_cli_arguments(
-                variants_loader.params)
+            variants_context["params"] = variants_loader.build_arguments_dict()
             context["variants"][prefix] = variants_context
 
         context["mirror_of"] = {}
@@ -859,10 +857,10 @@ class BatchImporter:
         )
 
         FamiliesLoader.cli_arguments(parser)
-        DenovoLoader.cli_options(parser)
-        CNVLoader.cli_options(parser)
-        VcfLoader.cli_options(parser)
-        DaeTransmittedLoader.cli_options(parser)
+        DenovoLoader.cli_arguments(parser, options_only=True)
+        CNVLoader.cli_arguments(parser, options_only=True)
+        VcfLoader.cli_arguments(parser, options_only=True)
+        DaeTransmittedLoader.cli_arguments(parser, options_only=True)
 
         parser.add_argument(
             "--vcf-files",

@@ -5,6 +5,7 @@ import time
 import copy
 import numpy as np
 import pandas as pd
+from enum import Enum
 
 from typing import Iterator, Tuple, List, Dict, Any, Optional, Sequence
 
@@ -24,6 +25,87 @@ from dae.variants.attributes import TransmissionType
 from dae.utils.variant_utils import get_locus_ploidy, best2gt
 
 
+class ArgumentType(Enum):
+    ARGUMENT = 1
+    OPTION = 2
+
+
+class CLIArgument:
+    """
+    This class handles the logic for CLI argument operations such as parsing
+    arguments, transforming to dict, transforming a parsed argument back to
+    a CLI argument and adding itself to an existing ArgumentParser.
+    Construction closely mirrors the ArgumentParser argument format.
+    """
+    def __init__(
+            self, argument_name, has_value=True,
+            default_value=None, destination=None,
+            help_text=None, action=None, value_type=None,
+            metavar=None, nargs=None):
+        self.argument_name = argument_name
+        self.has_value = has_value
+        self.default_value = default_value
+        self.destination = destination
+        self.value_type = value_type
+        self.metavar = metavar
+        self.help_text = help_text
+        self.nargs = nargs
+        self.action = action
+        if destination is None:
+            self.destination = self._default_destination()
+
+    def _default_destination(self):
+        if self.argument_name.startswith("--"):
+            self.arg_type = ArgumentType.OPTION
+        else:
+            self.arg_type = ArgumentType.ARGUMENT
+            return None
+        return self.argument_name[2:].replace("-", "_")
+
+    def add_to_parser(self, parser):
+        kwargs = {
+            "type": self.value_type,
+            "help": self.help_text,
+        }
+        if self.arg_type == ArgumentType.OPTION:
+            kwargs["dest"] = self.destination
+        if self.action:
+            # TODO:
+            # For some reason kwargs["type"] = self.value_type gets tuple-ized
+            # should find a different workaround
+            del kwargs["type"]
+            kwargs["action"] = self.action
+        else:
+            kwargs["metavar"] = self.metavar
+            kwargs["nargs"] = self.nargs
+
+        parser.add_argument(self.argument_name, **kwargs)
+
+    def build_option(self, params):
+        if self.arg_type == ArgumentType.ARGUMENT:
+            return ""
+        for key, value in params.items():
+            if key == self.destination:
+                if value is not None:
+                    if self.has_value:
+                        return f"{self.argument_name} {value}"
+                    else:
+                        return f"{self.argument_name}"
+                elif self.default_value is not None and self.has_value:
+                    return f"{self.argument_name} {self.default_value}"
+                else:
+                    return f"{self.argument_name}"
+        return ""
+
+    def parse_cli_argument(self, argv):
+        if self.destination not in argv:
+            return
+        argument = getattr(argv, self.destination)
+        if argument is None:
+            if self.default_value is not None:
+                setattr(argv, self.destination, self.default_value)
+
+
 class FamiliesGenotypes:
     def __init__(self):
         pass
@@ -41,7 +123,56 @@ class FamiliesGenotypes:
         raise NotImplementedError()
 
 
-class VariantsLoader:
+class CLILoader:
+    def __init__(self, params={}):
+        self.arguments = self._arguments()
+        self.params = params
+
+    def _add_argument(self, argument):
+        self.arguments.append(argument)
+
+    @classmethod
+    def _arguments(cls):
+        raise NotImplementedError()
+
+    @classmethod
+    def cli_defaults(cls):
+        argument_destinations = [arg.destination for arg in cls._arguments]
+        defaults = [arg.default_value for arg in cls._arguments]
+        return {k: v for (k, v) in zip(argument_destinations, defaults)}
+
+    @classmethod
+    def cli_arguments(cls, parser, options_only=False):
+        for argument in cls._arguments():
+            if options_only and argument.arg_type == ArgumentType.ARGUMENT:
+                continue
+            argument.add_to_parser(parser)
+
+    @classmethod
+    def build_cli_arguments(cls, params):
+        built_arguments = []
+        for argument in cls._arguments():
+            built_arguments.append(argument.build_option(params))
+        result = " ".join(built_arguments)
+        return result
+
+    def build_arguments_dict(self):
+        result = dict()
+        for argument in self._arguments():
+            if argument.arg_type == ArgumentType.ARGUMENT:
+                continue
+            if argument.destination in self.params:
+                result[argument.destination] = \
+                    self.params[argument.destination]
+        return result
+
+    @classmethod
+    def parse_cli_arguments(cls, argv):
+        for arg in cls._arguments():
+            arg.parse_cli_argument(argv)
+
+
+class VariantsLoader(CLILoader):
     def __init__(
         self,
         families: FamiliesData,
@@ -51,6 +182,7 @@ class VariantsLoader:
         attributes: Optional[Dict[str, Any]] = None,
     ):
 
+        super().__init__(params=params)
         assert isinstance(families, FamiliesData)
         self.families = families
         assert all([os.path.exists(fn) for fn in filenames]), filenames
@@ -58,15 +190,25 @@ class VariantsLoader:
 
         assert isinstance(transmission_type, TransmissionType)
         self.transmission_type = transmission_type
-        self.params = params
         if attributes is None:
             self._attributes = {}
         else:
             self._attributes = copy.deepcopy(attributes)
+        self.arguments = []
+
+    def get_attribute(self, key: str) -> Any:
+        return self._attributes.get(key, None)
+
+    def set_attribute(self, key: str, value: Any) -> None:
+        self._attributes[key] = value
 
     # @property
     # def variants_filenames(self):
     #     return self.filenames
+
+    @classmethod
+    def _arguments(cls):
+        return []
 
     def full_variants_iterator(self):
         raise NotImplementedError()
@@ -75,12 +217,6 @@ class VariantsLoader:
         for _, fvs in self.full_variants_iterator():
             for fv in fvs:
                 yield fv
-
-    def get_attribute(self, key: str) -> Any:
-        return self._attributes.get(key, None)
-
-    def set_attribute(self, key: str, value: Any) -> None:
-        self._attributes[key] = value
 
 
 class VariantsLoaderDecorator(VariantsLoader):
@@ -104,6 +240,21 @@ class VariantsLoaderDecorator(VariantsLoader):
 
     def __getattr__(self, attr):
         return getattr(self.variants_loader, attr, None)
+
+    @classmethod
+    def build_cli_params(cls, params):
+        return cls.variants_loader.build_cli_params(params)
+
+    @classmethod
+    def cli_defaults(cls):
+        return cls.variants_loader.cli_defaults()
+
+    @classmethod
+    def cli_options(cls, parser):
+        return cls.variants_loader.cli_options(parser)
+
+    def build_arguments_dict(self):
+        return self.variants_loader.build_arguments_dict()
 
 
 class AnnotationDecorator(VariantsLoaderDecorator):
@@ -385,6 +536,23 @@ class VariantsGenotypesLoader(VariantsLoader):
         self.expect_genotype = expect_genotype
         self.expect_best_state = expect_best_state
 
+    @classmethod
+    def _arguments(cls):
+        arguments = super()._arguments()
+        arguments.append(CLIArgument(
+            "--add-chrom-prefix",
+            value_type=str,
+            help_text="Add specified prefix to each chromosome name in "
+            "variants file",
+        ))
+        arguments.append(CLIArgument(
+            "--del-chrom-prefix",
+            value_type=str,
+            help_text="Remove specified prefix to each chromosome name in "
+            "variants file",
+        ))
+        return arguments
+
     @property
     def variants_filenames(self):
         return self.filenames
@@ -569,41 +737,3 @@ class VariantsGenotypesLoader(VariantsLoader):
                         fa._genetic_model = family_variant.genetic_model
 
             yield summary_variant, family_variants
-
-    @classmethod
-    def build_cli_params(cls, params):
-        param_defaults = cls.cli_defaults()
-        result = {}
-        for key, value in params.items():
-            assert key in param_defaults, (key, list(param_defaults.keys()))
-            if value != param_defaults[key]:
-                if value is None:
-                    result[key] = ""
-                else:
-                    result[key] = f"{value}"
-
-        return result
-
-    @classmethod
-    def cli_options(cls, parser):
-        parser.add_argument(
-            "--add-chrom-prefix",
-            type=str,
-            default=None,
-            help="Add specified prefix to each chromosome name in "
-            "variants file",
-        )
-        parser.add_argument(
-            "--del-chrom-prefix",
-            type=str,
-            default=None,
-            help="Removes specified prefix from each chromosome name in "
-            "variants file",
-        )
-
-    @classmethod
-    def cli_defaults(cls):
-        return {
-            "add_chrom_prefix": None,
-            "del_chrom_prefix": None,
-        }
