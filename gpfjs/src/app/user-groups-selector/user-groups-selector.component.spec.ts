@@ -1,4 +1,6 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { FormsModule } from '@angular/forms';
+import { NgMultiSelectDropDownModule } from 'ng-multiselect-dropdown';
 
 import { UserGroupsSelectorComponent } from './user-groups-selector.component';
 
@@ -8,7 +10,8 @@ describe('UserGroupsSelectorComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ UserGroupsSelectorComponent ]
+      declarations: [ UserGroupsSelectorComponent ],
+      imports: [FormsModule, NgMultiSelectDropDownModule]
     })
     .compileComponents();
   }));
