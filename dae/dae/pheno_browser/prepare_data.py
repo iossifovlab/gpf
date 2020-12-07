@@ -6,14 +6,11 @@ Created on Apr 10, 2017
 import os
 import matplotlib as mpl
 
-mpl.use("PS")  # noqa
 import numpy as np
 
 from dae.pheno.pheno_db import Measure
 
 import matplotlib.pyplot as plt
-
-plt.ioff()  # noqa
 
 from dae.pheno_browser.db import DbManager
 from dae.pheno.common import Role, MeasureType
@@ -23,6 +20,10 @@ from dae.pheno_browser.graphs import draw_measure_violinplot
 from dae.pheno_browser.graphs import draw_categorical_violin_distribution
 from dae.pheno_browser.graphs import draw_ordinal_violin_distribution
 from dae.utils.progress import progress, progress_nl
+
+
+mpl.use("PS")  # noqa
+plt.ioff()  # noqa
 
 
 class PreparePhenoBrowserBase(object):
