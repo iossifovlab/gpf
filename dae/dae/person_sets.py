@@ -20,6 +20,9 @@ class PersonSet(NamedTuple):
     color: str
     persons: Dict[str, Person]
 
+    def __repr__(self):
+        return f"PersonSet({self.id}: {self.name}, {len(self.persons)})"
+
 
 class PersonSetCollection(NamedTuple):
     """The collection of all possible person sets in a given source."""
@@ -28,6 +31,9 @@ class PersonSetCollection(NamedTuple):
     name: str
     person_sets: Dict[str, PersonSet]
     families: FamiliesData
+
+    def __repr__(self):
+        return f"PersonSetCollection({self.id}: {self.person_sets})"
 
     @staticmethod
     def _produce_sets(config: FrozenBox) -> Dict[str, PersonSet]:
