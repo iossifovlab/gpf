@@ -307,13 +307,13 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     this.svgElement = d3.select('#denovo')
       .attr('width', 80)
       .attr('height', 20);
-    draw.surroundingSquare(this.svgElement, 10, 7.5, '#000000');
+    draw.surroundingRectangle(this.svgElement, 10, 7.5, '#000000', 'Denovo LGDs');
     draw.star(this.svgElement, 10, 7.5, '#000000', 'Denovo LGDs');
-    draw.surroundingSquare(this.svgElement, 30, 8, '#000000');
+    draw.surroundingRectangle(this.svgElement, 30, 8, '#000000', 'Denovo Missense');
     draw.triangle(this.svgElement, 30, 8, '#000000', 'Denovo Missense');
-    draw.surroundingSquare(this.svgElement, 50, 8, '#000000');
+    draw.surroundingRectangle(this.svgElement, 50, 8, '#000000', 'Denovo Synonymous');
     draw.circle(this.svgElement, 50, 8, '#000000', 'Denovo Synonymous');
-    draw.surroundingSquare(this.svgElement, 70, 8, '#000000');
+    draw.surroundingRectangle(this.svgElement, 70, 8, '#000000', 'Denovo Other');
     draw.dot(this.svgElement, 70, 8, '#000000', 'Denovo Other');
   }
 
@@ -647,12 +647,12 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
 
           if (variant.isCNV()) {
             const cnvLength = this.x(variant.endPosition) - variantPosition;
-            draw.surroundingRectangleForCNV(
+            draw.surroundingRectangle(
               this.svgElement, variantPosition + cnvLength / 2,
-              variantHeight + spacing, color, cnvLength, variantTitle
+              variantHeight + spacing, color, variantTitle, 0.4, cnvLength
             );
           } else {
-            draw.surroundingSquare(this.svgElement, variantPosition, variantHeight + spacing, color);
+            draw.surroundingRectangle(this.svgElement, variantPosition, variantHeight + spacing, color, variantTitle);
           }
         }
 

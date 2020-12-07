@@ -19,22 +19,10 @@ export function hoverText(element, x: number, y: number, text: string, textPrefi
     .append('svg:title').text(`${textPrefix} ${text}`);
 }
 
-export function surroundingSquare(element, x: number, y: number, color: string) {
-  const w = 16;
-  const h = 16;
-  element.append('g')
-    .append('rect')
-    .attr('x', x - w / 2)
-    .attr('y', y - h / 2)
-    .attr('width', w)
-    .attr('height', h)
-    .style('fill', color)
-    .style('fill-opacity', 0.2)
-    .style('stroke', color)
-    .style('stroke-width', 2);
-}
-
-export function surroundingRectangleForCNV(element, x: number, y: number, color: string, w: number, title: string) {
+export function surroundingRectangle(
+    element, x: number, y: number, color: string, title: string,
+    strokeOpacity: number = 1, w: number = 16
+  ) {
   const h = 16;
   element.append('g')
     .append('rect')
@@ -46,7 +34,7 @@ export function surroundingRectangleForCNV(element, x: number, y: number, color:
     .style('fill-opacity', 0.2)
     .style('stroke', color)
     .style('stroke-width', 2)
-    .style('stroke-opacity', 0.4)
+    .style('stroke-opacity', strokeOpacity)
     .append('svg:title').text(title);
 }
 

@@ -210,7 +210,7 @@ describe('GeneViewComponent', () => {
     const drawTypes: any = ['star', 'triangle', 'circle', 'dot'];
     const iconTitles = ['Denovo LGDs', 'Denovo Missense', 'Denovo Synonymous', 'Denovo Other'];
 
-    const drawSurroundingSquareSpy = spyOn(draw, 'surroundingSquare');
+    const drawSurroundingSquareSpy = spyOn(draw, 'surroundingRectangle');
     const drawSpies = [];
     drawTypes.forEach((drawType, index) => {
       drawSpies[index] = spyOn(draw, drawType).and.callFake((element, x, y, color, title) => {
@@ -499,7 +499,7 @@ describe('GeneViewComponent', () => {
         expect(title.indexOf(effectTypes[index])).not.toBe(-1);
       });
     });
-    const drawSurroundingSquareSpy = spyOn(draw, 'surroundingSquare');
+    const drawSurroundingSquareSpy = spyOn(draw, 'surroundingRectangle');
 
     const testVariant1 = GeneViewSummaryVariant.fromRow({
       effect: 'lgds', is_denovo: true, seen_in_affected: true, seen_in_unaffected: false, frequency: 15, position: 15, variant: 'sub'
