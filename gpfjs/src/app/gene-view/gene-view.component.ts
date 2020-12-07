@@ -567,8 +567,8 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
       variant2.endPosition = variant2.position;
     }
 
-    if (this.x(variant1.endPosition) + 8 < this.x(variant2.position) - 8 ||
-        this.x(variant1.position) - 8 > this.x(variant2.endPosition) + 8) {
+    if (this.x(variant1.endPosition) + 6 < this.x(variant2.position) - 6 ||
+        this.x(variant1.position) - 6 > this.x(variant2.endPosition) + 6) {
       result = false;
     } else {
       result = true;
