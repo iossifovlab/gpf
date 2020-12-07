@@ -26,9 +26,9 @@ PED_COLUMNS_REQUIRED = (
 class FamiliesLoader(CLILoader):
     def __init__(self, families_filename, **params):
 
+        super().__init__(params=params)
         self.filename = families_filename
         # TODO FIXME Params should be able to accept namedtuple instances
-        self.params = params
         # self.params["ped_sep"] = ped_sep
         self.file_format = self.params.get("ped_file_format", "pedigree")
 
