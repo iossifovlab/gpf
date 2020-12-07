@@ -26,7 +26,7 @@ pipeline {
 
         DAE_DB_DIR="${env.WORKSPACE}/data-hg19-startup"
 
-        CLEANUP=1
+        CLEANUP=0
     }
     stages {
         stage ('Start') {
@@ -147,21 +147,44 @@ pipeline {
     }
     post {
         always {
-            // sh '''
-            //     # docker stop $GPF_REMOTE_DOCKER_CONTAINER
-            //     # docker rm $GPF_REMOTE_DOCKER_CONTAINER
+            sh '''
+                echo "----------------------------------------------"
+                echo "Cleaning up remote container..."
+                echo "----------------------------------------------"
+                docker stop ${GPF_REMOTE_DOCKER_CONTAINER}
+                # docker rm ${GPF_REMOTE_DOCKER_CONTAINER}
+                echo "----------------------------------------------"
+                echo "[DONE] Cleaning up remote container"
+                echo "----------------------------------------------"
 
-            //     docker stop $GPF_IMPALA_DOCKER_CONTAINER
-            //     docker rm $GPF_IMPALA_DOCKER_CONTAINER
-            // '''
-            zulipNotification(
-                topic: "${env.JOB_NAME}"
-            )      
+                echo "----------------------------------------------"
+                echo "Cleaning up impala docker containers"
+                echo "----------------------------------------------"
+                docker stop ${GPF_IMPALA_DOCKER_CONTAINER}
+                docker rm ${GPF_IMPALA_DOCKER_CONTAINER}
+                echo "----------------------------------------------"
+                echo "[DONE] Cleaning up impala docker containers"
+                echo "----------------------------------------------"
+
+                echo "----------------------------------------------"
+                echo "Cleaning up docker"
+                echo "----------------------------------------------"
+                docker network prune --force
+                docker image rm ${GPF_DOCKER_IMAGE}
+                echo "----------------------------------------------"
+                echo "[DONE] Cleaning up docker"
+                echo "----------------------------------------------"
+            '''
 
             junit 'test_results/wdae-junit.xml, test_results/dae-junit.xml'
+
             step([
                 $class: 'CoberturaPublisher',
                 coberturaReportFile: 'test_results/coverage.xml'])
+
+            zulipNotification(
+                topic: "${env.JOB_NAME}"
+            )      
 
         }
         success {
