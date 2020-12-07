@@ -196,7 +196,7 @@ def generate_agp(gpf_instance, gene_symbol):
         for ps in filters.person_sets:
             person_set_query = (
                 ps.collection_name,
-                ps.set_name
+                [ps.set_name]
             )
             for effect in filters.effects:
                 counts = variant_counts.get(ps.set_name)
@@ -204,6 +204,7 @@ def generate_agp(gpf_instance, gene_symbol):
                     variant_counts[ps.set_name] = dict()
                     counts = variant_counts[ps.set_name]
                 fvars = genotype_data.query_variants(
+                    genes=[gene_symbol],
                     person_set_collection=person_set_query,
                     effect_types=[effect],
                 )
