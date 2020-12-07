@@ -16,10 +16,27 @@ if [[ ! -d $WD/gpf_remote ]]; then
     fi
 fi
 
-wget -P $WD -c https://iossifovlab.com/distribution/public/studies/genotype-iossifov_2014-latest.tar.gz
-tar -zxvf $WD/genotype-iossifov_2014-latest.tar.gz -C $WD
+if [[ -f builds/genotype-iossifov_2014-*.tar.gz ]]; then
+    cp builds/genotype-iossifov_2014-*.tar.gz $WD/genotype-iossifov_2014-latest.tar.gz
+else
+    wget -P $WD -c https://iossifovlab.com/distribution/public/studies/genotype-iossifov_2014-latest.tar.gz
+fi
 
-wget -P $WD -c https://iossifovlab.com/distribution/public/pheno/phenotype-comp-data-latest.tar.gz
+if [[ -f builds/genotype-comp-data*.tar.gz ]]; then
+    cp builds/genotype-comp-data*.tar.gz $WD/genotype-comp-data-latest.tar.gz
+else
+    wget -P $WD -c https://iossifovlab.com/distribution/public/pheno/genotype-comp-data-latest.tar.gz
+fi
+
+if [[ -f builds/phenotype-comp-data*.tar.gz ]]; then
+    cp builds/phenotype-comp-data*.tar.gz $WD/phenotype-comp-data-latest.tar.gz
+else
+    wget -P $WD -c https://iossifovlab.com/distribution/public/pheno/phenotype-comp-data-latest.tar.gz
+fi
+
+
+tar -zxvf $WD/genotype-iossifov_2014-latest.tar.gz -C $WD
+tar -zxvf $WD/genotype-comp-data-latest.tar.gz -C $WD
 tar -zxvf $WD/phenotype-comp-data-latest.tar.gz -C $WD
 
 sed -i 's/dae_data_dir =.*/dae_data_dir = "."/' $WD/gpf_remote/DAE.conf
