@@ -22,10 +22,10 @@ else
     wget -P $WD -c https://iossifovlab.com/distribution/public/studies/genotype-iossifov_2014-latest.tar.gz
 fi
 
-if ls builds/genotype-comp-data*.tar.gz  1> /dev/null 2>&1; then
-    cp builds/genotype-comp-data*.tar.gz $WD/genotype-comp-data-latest.tar.gz
+if ls builds/genotype-comp*.tar.gz  1> /dev/null 2>&1; then
+    cp builds/genotype-comp*.tar.gz $WD/genotype-comp-latest.tar.gz
 else
-    wget -P $WD -c https://iossifovlab.com/distribution/public/pheno/genotype-comp-data-latest.tar.gz
+    wget -P $WD -c https://iossifovlab.com/distribution/public/pheno/genotype-comp-latest.tar.gz
 fi
 
 if ls builds/phenotype-comp-data*.tar.gz  1> /dev/null 2>&1; then
@@ -36,7 +36,7 @@ fi
 
 
 tar -zxvf $WD/genotype-iossifov_2014-latest.tar.gz -C $WD
-tar -zxvf $WD/genotype-comp-data-latest.tar.gz -C $WD
+tar -zxvf $WD/genotype-comp-latest.tar.gz -C $WD
 tar -zxvf $WD/phenotype-comp-data-latest.tar.gz -C $WD
 
 sed -i 's/dae_data_dir =.*/dae_data_dir = "."/' $WD/gpf_remote/DAE.conf
