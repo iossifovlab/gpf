@@ -35,6 +35,9 @@ pipeline {
                     color: '#FFFF00',
                     message: "STARTED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' ${env.BUILD_URL}"
                 )
+                zulipSend(
+                message: "Started build #${env.BUILD_NUMBER} of project ${env.JOB_NAME} (${env.BUILD_URL})",
+                topic: "${env.JOB_NAME}")
             }
         }
 
@@ -74,15 +77,6 @@ pipeline {
             }
         }
 
-        stage('Start federation remote instance') {
-            steps {
-                sh '''
-                    ${WD}/scripts/setup_remote_gpf_container.sh
-                    ${WD}/scripts/run_remote_gpf_container.sh
-                '''
-            }
-        }
-
         stage('Data') {
             steps {
                 sh '''
@@ -115,6 +109,14 @@ pipeline {
             }
         }
 
+        stage('Start federation remote instance') {
+            steps {
+                sh '''
+                    ${WD}/scripts/setup_remote_gpf_container.sh
+                    ${WD}/scripts/run_remote_gpf_container.sh
+                '''
+            }
+        }
 
         stage('Lint') {
             steps {
@@ -156,6 +158,9 @@ pipeline {
             //     docker stop $GPF_IMPALA_DOCKER_CONTAINER
             //     docker rm $GPF_IMPALA_DOCKER_CONTAINER
             // '''
+            zulipNotification(
+                topic: "${env.JOB_NAME}"
+            )      
 
             junit 'test_results/wdae-junit.xml, test_results/dae-junit.xml'
             step([

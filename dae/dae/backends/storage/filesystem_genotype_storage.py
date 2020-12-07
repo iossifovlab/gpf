@@ -172,7 +172,7 @@ class FilesystemGenotypeStorage(GenotypeStorage):
             self.data_dir, study_id, "data", os.path.basename(source_filename)
         )
 
-        params = families_loader.build_cli_params(families_loader.params)
+        params = families_loader.build_arguments_dict(families_loader.params)
 
         config = {"path": destination_filename, "params": params}
 
@@ -196,8 +196,11 @@ class FilesystemGenotypeStorage(GenotypeStorage):
             destination_filenames = list(
                 map(construct_destination_filename, source_filenames)
             )
-            params = variants_loader.build_cli_params(variants_loader.params)
+            params = variants_loader.build_arguments_dict(variants_loader.params)
             source_type = variants_loader.get_attribute("source_type")
+            for key, value in params.items():
+                if isinstance(value, bool):
+                    params[key] = "true" if value else "false"
 
             config = {
                 "path": " ".join(destination_filenames),
