@@ -16,19 +16,19 @@ if [[ ! -d $WD/gpf_remote ]]; then
     fi
 fi
 
-if [[ -f builds/genotype-iossifov_2014-*.tar.gz ]]; then
+if ls builds/genotype-iossifov_2014-*.tar.gz 1> /dev/null 2>&1; then
     cp builds/genotype-iossifov_2014-*.tar.gz $WD/genotype-iossifov_2014-latest.tar.gz
 else
     wget -P $WD -c https://iossifovlab.com/distribution/public/studies/genotype-iossifov_2014-latest.tar.gz
 fi
 
-if [[ -f builds/genotype-comp-data*.tar.gz ]]; then
+if ls builds/genotype-comp-data*.tar.gz  1> /dev/null 2>&1; then
     cp builds/genotype-comp-data*.tar.gz $WD/genotype-comp-data-latest.tar.gz
 else
     wget -P $WD -c https://iossifovlab.com/distribution/public/pheno/genotype-comp-data-latest.tar.gz
 fi
 
-if [[ -f builds/phenotype-comp-data*.tar.gz ]]; then
+if ls builds/phenotype-comp-data*.tar.gz  1> /dev/null 2>&1; then
     cp builds/phenotype-comp-data*.tar.gz $WD/phenotype-comp-data-latest.tar.gz
 else
     wget -P $WD -c https://iossifovlab.com/distribution/public/pheno/phenotype-comp-data-latest.tar.gz
