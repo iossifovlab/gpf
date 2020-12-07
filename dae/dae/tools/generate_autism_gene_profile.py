@@ -7,6 +7,7 @@ from sqlalchemy import Table, Column, Integer, String, Float, ForeignKey
 from sqlalchemy.sql import select, insert
 
 from dae.gpf_instance.gpf_instance import GPFInstance
+from dae.variants.attributes import Inheritance
 
 logger = logging.getLogger(__name__)
 
@@ -159,6 +160,7 @@ class AutismGeneProfile:
             self, gene_symbol, gene_sets, protection_scores,
             autism_scores, variant_counts):
         self.gene_symbol = gene_symbol
+        self.gene_sets = gene_sets
         self.protection_scores = protection_scores
         self.autism_scores = autism_scores
         self.variant_counts = variant_counts
@@ -170,6 +172,12 @@ def generate_agp(gpf_instance, gene_symbol):
     autism_scores = dict()
     protection_scores = dict()
 
+    gene_sets = gpf_instance.gene_sets_db.get_all_gene_sets("main")
+    sets_in = []
+    for gs in gene_sets:
+        if gene_symbol in gs["syms"]:
+            sets_in.append(gs["name"])
+
     for score in config.autism_scores:
         gw = gene_weights_db.get_gene_weight(score)
         value = gw.get_gene_value(gene_symbol)
@@ -179,6 +187,32 @@ def generate_agp(gpf_instance, gene_symbol):
         gw = gene_weights_db.get_gene_weight(score)
         value = gw.get_gene_value(gene_symbol)
         protection_scores[score] = value
+
+    variant_counts = dict()
+
+    print(config.datasets.items())
+    for dataset_id, filters in config.datasets.items():
+        genotype_data = gpf_instance.get_genotype_data(dataset_id)
+        for ps in filters.person_sets:
+            person_set_query = (
+                ps.collection_name,
+                ps.set_name
+            )
+            for effect in filters.effects:
+                counts = variant_counts.get(ps.set_name)
+                if not counts:
+                    variant_counts[ps.set_name] = dict()
+                    counts = variant_counts[ps.set_name]
+                fvars = genotype_data.query_variants(
+                    person_set_collection=person_set_query,
+                    effect_types=[effect],
+                )
+                counts[effect] = len(list(fvars))
+
+    return AutismGeneProfile(
+        gene_symbol, sets_in, protection_scores,
+        autism_scores, variant_counts
+    )
 
 
 def main(gpf_instance=None, argv=None):
