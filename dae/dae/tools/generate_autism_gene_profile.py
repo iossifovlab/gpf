@@ -365,7 +365,6 @@ def generate_agp(gpf_instance, gene_symbol):
 
     variant_counts = dict()
 
-    print(config.datasets.items())
     for dataset_id, filters in config.datasets.items():
         genotype_data = gpf_instance.get_genotype_data(dataset_id)
         current_counts = dict()
