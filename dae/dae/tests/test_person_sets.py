@@ -32,7 +32,7 @@ def test_produce_sets(fixture_dirname):
             "unaffected", "Unaffected", {"unaffected_val"}, "#ffffff", dict()
         ),
         "unknown": PersonSet(
-            "unknown", "Unknown", {"unknown"}, "#aaaaaa", dict()
+            "unknown", "Unknown", {"DEFAULT"}, "#aaaaaa", dict()
         ),
     }
 
