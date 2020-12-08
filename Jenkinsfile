@@ -52,6 +52,10 @@ pipeline {
                         -v ${WD}:/code \
                         busybox:latest \
                         /bin/sh -c "rm -rf /code/test_results/*"
+                    docker run -d --rm \
+                        -v ${WD}:/code \
+                        busybox:latest \
+                        /bin/sh -c "rm -rf /code/gpf_remote"
                 '''
             }
         }
