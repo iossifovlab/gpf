@@ -47,6 +47,8 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
     'noEnd',
     'no-frame-shift',
     'CDS',
+    'CNV+',
+    'CNV-'
   ];
   otherEffectTypes = [
     'noStart',
@@ -60,6 +62,8 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
     '5\'UTR',
     '5\'UTR-intron',
     'CDS',
+    'CNV+',
+    'CNV-'
   ];
   private geneBrowserConfig;
 
