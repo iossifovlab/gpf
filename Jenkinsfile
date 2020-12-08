@@ -26,7 +26,7 @@ pipeline {
 
         DAE_DB_DIR="${env.WORKSPACE}/data-hg19-startup"
 
-        CLEANUP=0
+        // CLEANUP=1
     }
     stages {
         stage ('Start') {
