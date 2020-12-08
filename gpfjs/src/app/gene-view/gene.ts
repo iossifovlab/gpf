@@ -92,6 +92,15 @@ export class Transcript {
     const middle: number = Math.floor(this.exons.length / 2);
     return this.exons[middle].length;
   }
+
+  isAreaInCDS(start: number, stop: number) {
+    for (let i = 0; i < this.cds.length; i += 2) {
+      if ((start >= this.cds[i]) && (stop <= this.cds[i + 1])) {
+        return true;
+      }
+    }
+    return false;
+  }
 }
 
 export class Gene {
@@ -116,28 +125,8 @@ export class Gene {
     return this._gene;
   }
 
-  collapsedTranscript(): Transcript {
-    const allExons: Exon[] = [];
-    const cds: number[] = [];
-    const codingStartsAndStops: number[] = [];
-    let geneViewTranscript: GeneViewTranscript;
-
-    for (const transcript of this.transcripts) {
-      for (const exon of transcript.exons) {
-        allExons.push(exon);
-      }
-
-      geneViewTranscript = new GeneViewTranscript(transcript);
-      for (const segment of geneViewTranscript.segments) {
-        if (segment.isCDS) {
-          codingStartsAndStops.push(segment.start, segment.stop);
-        }
-      }
-    }
-
-    cds.push(Math.min(...codingStartsAndStops), Math.max(...codingStartsAndStops));
-
-    const sortedExons: Exon[] = allExons.sort(
+  mergeExons(exons: Exon[]): Exon[] {
+    const sortedExons: Exon[] = exons.sort(
       (e1, e2) => e1.start > e2.start ? 1 : -1
     );
     const result: Exon[] = [];
@@ -156,8 +145,34 @@ export class Gene {
       }
       result.push(new Exon(curr.chrom, curr.start, curr.stop));
     }
-    const firstTranscript = this.transcripts[0];
+    return result;
+  }
 
+  collapsedTranscript(): Transcript {
+    const allExons: Exon[] = [];
+    const cds: number[] = [];
+    const codingSegments: Exon[] = [];
+    let geneViewTranscript: GeneViewTranscript;
+
+    for (const transcript of this.transcripts) {
+      for (const exon of transcript.exons) {
+        allExons.push(exon);
+      }
+
+      geneViewTranscript = new GeneViewTranscript(transcript);
+      for (const segment of geneViewTranscript.segments) {
+        if (segment.isCDS) {
+          codingSegments.push(new Exon(segment.chrom, segment.start, segment.stop));
+        }
+      }
+    }
+
+    // This is a hack to reuse the merging logic from exon merging, should eventually be reworked
+    const cdsResult = this.mergeExons(codingSegments);
+    const result = this.mergeExons(allExons);
+    cdsResult.forEach(element => cds.push(element.start, element.stop));
+
+    const firstTranscript = this.transcripts[0];
     return new Transcript(
       'collapsed', firstTranscript.strand, firstTranscript.chrom, cds, result
     );
