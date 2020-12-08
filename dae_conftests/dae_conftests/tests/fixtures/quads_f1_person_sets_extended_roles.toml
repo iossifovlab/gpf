@@ -6,7 +6,7 @@ role.name = "Role"
 role.sources = [
     { from = "pedigree", source = "role" },
 ]
-role.default = {id = "unknown", name = "Unknown", values = ["unknown"], color="#ffffff"}
+role.default = {id = "unknown", name = "Unknown", color="#ffffff"}
 role.domain = [
    {id = "mom", name = "Mother", values = ["mom"], color = "#ffffff"},
    {id = "dad", name = "Father", values = ["dad"], color = "#ffffff"},
