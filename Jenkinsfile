@@ -80,6 +80,7 @@ pipeline {
                 '''
                 script {
                     println "DATA_HG19_BRANCH=" + DATA_HG19_BRANCH
+
                     copyArtifacts(
                         projectName: 'seqpipe/data-hg19-startup/' + DATA_HG19_BRANCH,
                         selector: lastSuccessful()
@@ -142,32 +143,7 @@ pipeline {
     post {
         always {
             sh '''
-                echo "----------------------------------------------"
-                echo "Cleaning up remote container..."
-                echo "----------------------------------------------"
-                docker stop ${GPF_REMOTE_DOCKER_CONTAINER}
-                # docker rm ${GPF_REMOTE_DOCKER_CONTAINER}
-                echo "----------------------------------------------"
-                echo "[DONE] Cleaning up remote container"
-                echo "----------------------------------------------"
-
-                echo "----------------------------------------------"
-                echo "Cleaning up impala docker containers"
-                echo "----------------------------------------------"
-                docker stop ${GPF_IMPALA_DOCKER_CONTAINER}
-                docker rm ${GPF_IMPALA_DOCKER_CONTAINER}
-                echo "----------------------------------------------"
-                echo "[DONE] Cleaning up impala docker containers"
-                echo "----------------------------------------------"
-
-                echo "----------------------------------------------"
-                echo "Cleaning up docker"
-                echo "----------------------------------------------"
-                docker network prune --force
-                docker image rm ${GPF_DOCKER_IMAGE}
-                echo "----------------------------------------------"
-                echo "[DONE] Cleaning up docker"
-                echo "----------------------------------------------"
+                ${WORKSPACE}/scripts/clean_up_docker.sh
             '''
 
             junit 'test_results/wdae-junit.xml, test_results/dae-junit.xml'
