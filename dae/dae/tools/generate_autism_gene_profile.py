@@ -16,7 +16,7 @@ class AutismGeneProfileDB:
     def __init__(self, dbfile):
         self.dbfile = dbfile
         self.metadata = MetaData()
-        self.engine = create_engine("sqlite:///{}".format(dbfile), echo=True)
+        self.engine = create_engine("sqlite:///{}".format(dbfile))
 
     def _get_autism_scores(self, gene_symbol_id):
         s = select([
