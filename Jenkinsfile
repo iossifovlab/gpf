@@ -11,7 +11,7 @@ pipeline {
     }
     parameters {
         string(
-            name: 'DATA_HG19_BUILD', defaultValue: '0',
+            name: 'DATA_HG19_BRANCH', defaultValue: 'master',
             description: 'data-hg19-startup build number to use for testing')
     }
 
@@ -79,17 +79,11 @@ pipeline {
                     rm -f builds/*
                 '''
                 script {
-                    println "DATA_HG19_BUILD=" + DATA_HG19_BUILD
-                    if (DATA_HG19_BUILD == '0') {
-                        copyArtifacts(
-                            projectName: 'seqpipe/build-data-hg19-startup/master',
-                            selector: lastSuccessful()
-                        );
-                    } else {
-                        copyArtifacts(
-                            projectName: 'seqpipe/build-data-hg19-startup/master',
-                            selector: specific(DATA_HG19_BUILD));
-                    }
+                    println "DATA_HG19_BRANCH=" + DATA_HG19_BRANCH
+                    copyArtifacts(
+                        projectName: 'seqpipe/data-hg19-startup/' + DATA_HG19_BRANCH,
+                        selector: lastSuccessful()
+                    );
                 }
                 sh '''
                     tar zxf builds/data-hg19-startup-*.tar.gz -C $WD
