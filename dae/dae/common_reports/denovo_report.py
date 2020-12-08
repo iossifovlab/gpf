@@ -26,8 +26,15 @@ class EffectCell:
 
         self.persons_with_parents = self.families.person_ids_with_parents()
         self.person_set_persons = set(self.person_set.persons.keys())
-        self.person_set_childrens = self.person_set_persons & \
-            self.persons_with_parents
+
+        if self.persons_with_parents:
+            self.person_set_children = self.person_set_persons & \
+                self.persons_with_parents
+        else:
+            self.person_set_children = self.person_set_persons
+        print(
+            f"DENOVO REPORTS: persons set {self.person_set} children "
+            f"{len(self.person_set_children)}")
 
     @property
     def number_of_observed_events(self):
@@ -41,19 +48,19 @@ class EffectCell:
     def observed_rate_per_child(self):
         if self.number_of_observed_events == 0:
             return 0
-        return self.number_of_observed_events / len(self.person_set_childrens)
+        return self.number_of_observed_events / len(self.person_set_children)
 
     @property
     def percent_of_children_with_events(self):
         if self.number_of_children_with_event == 0:
             return 0
         return self.number_of_children_with_event / len(
-            self.person_set_childrens
+            self.person_set_children
         )
 
     @property
     def column_name(self):
-        return f"{self.person_set.name} ({len(self.person_set_childrens)})"
+        return f"{self.person_set.name} ({len(self.person_set_children)})"
 
     def to_dict(self):
         return {
@@ -71,7 +78,7 @@ class EffectCell:
 
     def count_variant(self, family_variant, family_allele):
         if not set(family_allele.variant_in_members) & \
-                self.person_set_childrens:
+                self.person_set_children:
             variant_in_members = set(family_allele.variant_in_members) & \
                 self.person_set_persons
             if variant_in_members:
@@ -88,8 +95,7 @@ class EffectCell:
             return
         self.observed_variants_ids.add(family_variant.fvuid)
         self.observed_people_with_event.update(
-            set(family_allele.variant_in_members) & self.person_set_childrens
-        )
+            set(family_allele.variant_in_members) & self.person_set_children)
 
     def is_empty(self):
         return (
@@ -172,7 +178,7 @@ class DenovoReportTable(object):
         for row in self.rows:
             assert len(row.row) == len(self.person_sets)
             for cell in row.row:
-                person_set_children = cell.person_set_childrens
+                person_set_children = cell.person_set_children
                 person_set_id = cell.person_set.id
                 if person_set_id not in column_children:
                     column_children[person_set_id] = len(person_set_children)
@@ -270,14 +276,19 @@ class DenovoReport(object):
         self.effect_groups = effect_groups
         self.effect_types = effect_types
         self.person_set_collections = person_set_collections
-
+        print(
+            f"DENOVO REPORTS: person set collections {person_set_collections}")
         start = time.time()
         denovo_variants = genotype_data.query_variants(
             limit=None, inheritance=["denovo"],
         )
         self.denovo_variants = list(denovo_variants)
         elapsed = time.time() - start
-        print(f"DENOVO REPORTS denovo variants query " f"in {elapsed:.2f} sec")
+        print(
+            f"DENOVO REPORTS: denovo variants query in {elapsed:.2f} sec")
+        print(
+            f"DENOVO REPORTS: denovo variants count is "
+            f"{len(self.denovo_variants)}")
 
         start = time.time()
         self.tables = self._build_tables()
