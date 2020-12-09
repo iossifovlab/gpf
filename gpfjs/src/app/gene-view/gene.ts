@@ -257,12 +257,19 @@ export class GeneViewSummaryVariantsArray {
 
     // This is a temporary fix to merge duplicate variants
     // TODO: Remove when backend is fixed
-    if (this.summaryVariantsIds.indexOf(summaryVariant.svuid) !== -1) {
-      return;
+    const variantIndex = this.summaryVariantsIds.indexOf(summaryVariant.svuid);
+    if (variantIndex !== -1) {
+      this.summaryVariants[variantIndex].numberOfFamilyVariants += summaryVariant.numberOfFamilyVariants;
+      this.summaryVariants[variantIndex].seenAsDenovo =
+        this.summaryVariants[variantIndex].seenAsDenovo || summaryVariant.seenAsDenovo;
+      this.summaryVariants[variantIndex].seenInAffected =
+        this.summaryVariants[variantIndex].seenInAffected || summaryVariant.seenInAffected;
+      this.summaryVariants[variantIndex].seenInUnaffected =
+        this.summaryVariants[variantIndex].seenInUnaffected || summaryVariant.seenInUnaffected;
+    } else {
+      this.summaryVariants.push(summaryVariant);
+      this.summaryVariantsIds.push(summaryVariant.svuid);
     }
-
-    this.summaryVariants.push(summaryVariant);
-    this.summaryVariantsIds.push(summaryVariant.svuid);
   }
 
   push(variant: GeneViewSummaryVariant) {

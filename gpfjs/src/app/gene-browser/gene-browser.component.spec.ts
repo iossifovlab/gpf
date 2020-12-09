@@ -95,7 +95,7 @@ describe('GeneBrowserComponent', () => {
           regions: [ 1, 10 ],
           maxVariantsCount: 1,
           summaryVariantIds: [5, 10, 15],
-          variant_type: ['sub', 'ins', 'del', 'cnv+', 'cnv-'],
+          variantType: ['sub', 'ins', 'del', 'cnv+', 'cnv-'],
           uniqueFamilyVariants: false
         });
         return 'testPreviewVariantsArray' as any;
@@ -122,7 +122,7 @@ describe('GeneBrowserComponent', () => {
       geneSymbols: ['testSymbol'],
       datasetId: 'testDatasetId',
       regions: [1, 10],
-      variant_type: ['sub', 'ins', 'del', 'cnv+', 'cnv-']
+      variantType: ['sub', 'ins', 'del', 'cnv+', 'cnv-']
     });
 
     testState.affectedStatus = ['Affected and unaffected'];
@@ -226,7 +226,7 @@ describe('GeneBrowserComponent', () => {
         '"genomicScores":[{"metric":"testMetric","rangeStart":null,"rangeEnd":10}],' +
         '"inheritanceTypeFilter":["denovo","mendelian","omission","missing"],' +
         '"affectedStatus":["Affected and unaffected","Affected only","Unaffected only"],' +
-        '"variant_type":["sub","ins","del","cnv+","cnv-"],' +
+        '"variantType":["sub","ins","del","cnv+","cnv-"],' +
         '"geneSymbols":["testSymbol"],"datasetId":"testDatasetId",' +
         '"regions":[1,10],"summaryVariantIds":[5,10,15]}');
     });
