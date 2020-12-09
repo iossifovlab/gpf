@@ -166,16 +166,22 @@ export class Gene {
         }
       }
     }
-
-    // This is a hack to reuse the merging logic from exon merging, should eventually be reworked
-    const cdsResult = this.mergeExons(codingSegments);
     const result = this.mergeExons(allExons);
-    cdsResult.forEach(element => cds.push(element.start, element.stop));
-
     const firstTranscript = this.transcripts[0];
-    return new Transcript(
-      'collapsed', firstTranscript.strand, firstTranscript.chrom, cds, result
-    );
+
+    if (codingSegments.length === 0) {
+      return new Transcript(
+        'collapsed', firstTranscript.strand, firstTranscript.chrom, [], result
+      );
+    } else {
+      // This is a hack to reuse the merging logic from exon merging, should eventually be reworked
+      const cdsResult = this.mergeExons(codingSegments);
+      cdsResult.forEach(element => cds.push(element.start, element.stop));
+
+      return new Transcript(
+        'collapsed', firstTranscript.strand, firstTranscript.chrom, cds, result
+      );
+    }
   }
 }
 
