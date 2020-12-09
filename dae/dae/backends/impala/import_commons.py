@@ -858,6 +858,8 @@ class BatchImporter:
             formatter_class=argparse.RawDescriptionHelpFormatter,
         )
 
+        parser.add_argument('--verbose', '-V', action='count', default=0)
+
         FamiliesLoader.cli_arguments(parser)
         DenovoLoader.cli_options(parser)
         CNVLoader.cli_options(parser)
@@ -986,6 +988,15 @@ class BatchImporter:
 
         parser = BatchImporter.cli_arguments_parser(gpf_instance)
         argv = parser.parse_args(argv)
+
+        if argv.verbose == 1:
+            logging.basicConfig(level=logging.WARNING)
+        elif argv.verbose == 2:
+            logging.basicConfig(level=logging.INFO)
+        elif argv.verbose >= 3:
+            logging.basicConfig(level=logging.DEBUG)
+        else:
+            logging.basicConfig(level=logging.WARNING)
 
         importer = BatchImporter(gpf_instance)
         importer.build(argv)

@@ -13,9 +13,5 @@ def main(argv=sys.argv[1:]):
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG)
-    logger.info('Started')
 
     main()
-
-    logger.info('Done')
