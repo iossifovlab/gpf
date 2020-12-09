@@ -64,6 +64,10 @@ class GeneWeight(GenomicValues):
 
         return (bins, bars)
 
+    def get_gene_value(self, gene_symbol):
+        symbol_values = self._to_dict()
+        return symbol_values[gene_symbol]
+
     @cached
     def _to_dict(self):
         """
