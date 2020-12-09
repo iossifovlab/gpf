@@ -26,7 +26,7 @@ pipeline {
 
         DAE_DB_DIR="${env.WORKSPACE}/data-hg19-startup"
 
-        CLEANUP=1
+        // CLEANUP=1
     }
     stages {
         stage ('Start') {
@@ -52,6 +52,10 @@ pipeline {
                         -v ${WD}:/code \
                         busybox:latest \
                         /bin/sh -c "rm -rf /code/test_results/*"
+                    docker run -d --rm \
+                        -v ${WD}:/code \
+                        busybox:latest \
+                        /bin/sh -c "rm -rf /code/gpf_remote"
                 '''
             }
         }
@@ -79,17 +83,12 @@ pipeline {
                     rm -f builds/*
                 '''
                 script {
-                    println "DATA_HG19_BUILD=" + DATA_HG19_BUILD
-                    if (DATA_HG19_BUILD == '0') {
-                        copyArtifacts(
-                            projectName: 'seqpipe/build-data-hg19-startup/master',
-                            selector: lastSuccessful()
-                        );
-                    } else {
-                        copyArtifacts(
-                            projectName: 'seqpipe/build-data-hg19-startup/master',
-                            selector: specific(DATA_HG19_BUILD));
-                    }
+                    println "DATA_HG19_BRANCH=" + DATA_HG19_BRANCH
+
+                    copyArtifacts(
+                        projectName: 'seqpipe/data-hg19-startup/' + DATA_HG19_BRANCH,
+                        selector: lastSuccessful()
+                    );
                 }
                 sh '''
                     tar zxf builds/data-hg19-startup-*.tar.gz -C $WD
@@ -147,18 +146,16 @@ pipeline {
     }
     post {
         always {
-            // sh '''
-            //     # docker stop $GPF_REMOTE_DOCKER_CONTAINER
-            //     # docker rm $GPF_REMOTE_DOCKER_CONTAINER
-
-            //     docker stop $GPF_IMPALA_DOCKER_CONTAINER
-            //     docker rm $GPF_IMPALA_DOCKER_CONTAINER
-            // '''
+            sh '''
+                ${WORKSPACE}/scripts/clean_up_docker.sh
+            '''
 
             junit 'test_results/wdae-junit.xml, test_results/dae-junit.xml'
+
             step([
                 $class: 'CoberturaPublisher',
                 coberturaReportFile: 'test_results/coverage.xml'])
+
             zulipNotification(
                 topic: "${env.JOB_NAME}"
             )      
