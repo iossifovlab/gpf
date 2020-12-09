@@ -224,45 +224,6 @@ export class GeneViewSummaryVariant {
     return result;
   }
 
-  static fromPreviewVariant(config, genotypePreview: GenotypePreview): GeneViewSummaryVariant {
-    const result = new GeneViewSummaryVariant();
-    const location = genotypePreview.get(config.locationColumn);
-    result.location = location;
-    result.position = Number(location.slice(location.indexOf(':') + 1));
-    result.chrom = location.slice(0, location.indexOf(':'));
-
-    let frequency: string = genotypePreview.data.get(config.frequencyColumn);
-    if (frequency === '-') {
-      frequency = '0.0';
-    }
-    result.frequency = Number(frequency);
-
-    result.effect = genotypePreview.get(config.effectColumn).toLowerCase();
-    result.variant = genotypePreview.get('variant.variant');
-
-    result.numberOfFamilyVariants = 1;
-
-    result.seenAsDenovo = false;
-    if (genotypePreview.get('variant.is denovo')) {
-      result.seenAsDenovo = true;
-    }
-    result.seenInAffected = false;
-    result.seenInUnaffected = false;
-    for (const pedigreeData of genotypePreview.get('genotype')) {
-      if (pedigreeData.label > 0) {
-        if (pedigreeData.color === '#ffffff') {
-          result.seenInUnaffected = true;
-        } else {
-          result.seenInAffected = true;
-        }
-      }
-    }
-
-    result.svuid = result.location + ':' + result.variant;
-
-    return result;
-  }
-
   isLGDs(): boolean {
     return (this.lgds.indexOf(this.effect) !== -1 || this.effect === 'lgds');
   }
@@ -291,7 +252,7 @@ export class GeneViewSummaryVariant {
     let sum = 0;
 
     sum += this.seenAsDenovo ? 200 : 100;
-    sum += this.isLGDs() ? 30 : this.isMissense() ? 20 : 10;
+    sum += this.isLGDs() ? 50 : this.isMissense() ? 40 : this.isSynonymous ? 30 : !this.isCNV ? 20 : 10;
     sum += (this.seenInAffected && this.seenInUnaffected) ? 1 : this.seenInUnaffected ? 2 : 3;
     return sum;
   }

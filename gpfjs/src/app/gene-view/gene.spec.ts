@@ -266,40 +266,6 @@ describe('Gene', () => {
 });
 
 describe('GeneViewSummaryVariant', () => {
-  // it('should create from preview variant', () => {
-  //   const mockRow = {
-  //     location: '1:999',
-  //     position: 999,
-  //     chrom: '1',
-  //     variant: 'testVariant',
-  //     effect: 'test effect',
-  //     frequency: 2,
-  //     family_variants_count: 1,
-  //     is_denovo: true,
-  //     seen_in_affected: true,
-  //     seen_in_unaffected: false,
-  //     end_position: 1000
-  //   };
-  //   const expectedResult = GeneViewSummaryVariant.fromRow(mockRow);
-
-  //   const mockConfig = {
-  //     locationColumn: 'location',
-  //     frequencyColumn: 'frequency',
-  //     effectColumn: 'effect'
-  //   };
-  //   const testGenotypePreview = new GenotypePreview();
-  //   testGenotypePreview.data = new Map<string, any>([
-  //     ['location', '1:999'],
-  //     ['frequency', 2],
-  //     ['effect', 'TEST EFFECT'],
-  //     ['variant.variant', 'testVariant'],
-  //     ['variant.is denovo', true],
-  //     ['genotype', [{label: 1, color: '#color'}]]
-  //   ]);
-
-  //   expect(GeneViewSummaryVariant.fromPreviewVariant(mockConfig, testGenotypePreview)).toEqual(expectedResult);
-  // });
-
   it('should check if its LGDs', () => {
     const testSummaryVariant = new GeneViewSummaryVariant();
     testSummaryVariant.effect = 'lgds';

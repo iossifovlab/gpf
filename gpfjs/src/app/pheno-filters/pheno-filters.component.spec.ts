@@ -1,4 +1,5 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ErrorsAlertComponent } from 'app/errors-alert/errors-alert.component';
 
 import { PhenoFiltersComponent } from './pheno-filters.component';
 
@@ -8,7 +9,7 @@ describe('PhenoFiltersComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ PhenoFiltersComponent ]
+      declarations: [ PhenoFiltersComponent, ErrorsAlertComponent ]
     })
     .compileComponents();
   }));

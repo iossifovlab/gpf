@@ -86,7 +86,7 @@ describe('GeneBrowserComponent', () => {
       .and.callFake((requestParams, previewInfo) => {
         expect(previewInfo).toEqual(component.genotypePreviewInfo);
         expect(requestParams).toEqual({
-          effectTypes: [ 'lgds', 'missense', 'synonymous', 'noStart', 'noEnd', 'no-frame-shift', 'CDS' ],
+          effectTypes: [ 'lgds', 'missense', 'synonymous', 'noStart', 'noEnd', 'no-frame-shift', 'CDS', 'CNV+', 'CNV-'],
           genomicScores: [{ metric: 'testMetric', rangeStart: 1, rangeEnd: 11 }],
           inheritanceTypeFilter: [ 'denovo', 'mendelian', 'omission', 'missing' ],
           affectedStatus: [ 'Affected and unaffected', 'Affected only', 'Unaffected only' ],
@@ -115,7 +115,7 @@ describe('GeneBrowserComponent', () => {
   it('should transform family variants query parameters', () => {
     testState.affectedStatus = ['Affected only'];
     expect(component.transformFamilyVariantsQueryParameters(testState)).toEqual({
-      effectTypes: ['lgds', 'missense', 'synonymous', 'noStart', 'noEnd', 'no-frame-shift', 'CDS'],
+      effectTypes: ['lgds', 'missense', 'synonymous', 'noStart', 'noEnd', 'no-frame-shift', 'CDS', 'CNV+', 'CNV-'],
       genomicScores: 'testGenomicScores',
       inheritanceTypeFilter: ['denovo', 'mendelian', 'omission', 'missing'],
       affectedStatus: ['Affected only'],
@@ -140,8 +140,8 @@ describe('GeneBrowserComponent', () => {
 
     component.enableCodingOnly = false;
     expect(component.transformFamilyVariantsQueryParameters(testState).effectTypes).toEqual([
-      'lgds', 'missense', 'synonymous', 'noStart', 'noEnd', 'no-frame-shift',
-      'non-coding', 'intron', 'intergenic', '3\'UTR', '3\'UTR-intron', '5\'UTR', '5\'UTR-intron', 'CDS'
+      'lgds', 'missense', 'synonymous', 'noStart', 'noEnd', 'no-frame-shift', 'non-coding', 'intron',
+      'intergenic', '3\'UTR', '3\'UTR-intron', '5\'UTR', '5\'UTR-intron', 'CDS', 'CNV+', 'CNV-'
     ]);
 
     testState.selectedEffectTypes = ['missense', 'synonymous'];
@@ -173,7 +173,7 @@ describe('GeneBrowserComponent', () => {
       expect(requestParams['selectedVariantTypes']).toEqual([ 'sub', 'ins', 'del', 'cnv+', 'cnv-' ]);
       if (component.enableCodingOnly) {
         expect(requestParams['effectTypes']).toEqual([ 'lgds', 'nonsense', 'frame-shift', 'splice-site', 'no-frame-shift-newStop',
-            'missense', 'synonymous', 'noStart', 'noEnd', 'no-frame-shift', 'CDS' ]);
+            'missense', 'synonymous', 'noStart', 'noEnd', 'no-frame-shift', 'CDS', 'CNV+', 'CNV-']);
       } else {
         expect(requestParams['effectTypes']).toEqual(undefined);
       }
@@ -222,7 +222,7 @@ describe('GeneBrowserComponent', () => {
     const getCurrentStateSpy = spyOn(component, 'getCurrentState').and.returnValue(of(testState));
     const submitSpy = spyOn(event.target, 'submit').and.callFake(() => {
       expect(event.target.queryData.value).toEqual('{' +
-        '"effectTypes":["lgds","missense","synonymous","noStart","noEnd","no-frame-shift","CDS"],' +
+        '"effectTypes":["lgds","missense","synonymous","noStart","noEnd","no-frame-shift","CDS","CNV+","CNV-"],' +
         '"genomicScores":[{"metric":"testMetric","rangeStart":null,"rangeEnd":10}],' +
         '"inheritanceTypeFilter":["denovo","mendelian","omission","missing"],' +
         '"affectedStatus":["Affected and unaffected","Affected only","Unaffected only"],' +

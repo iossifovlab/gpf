@@ -646,8 +646,8 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
         .attr('width', this.svgWidth)
         .attr('x', 0)
         .attr('y', this.zeroAxisY)
-        .attr('fill', '#2b63ff')
-        .attr('fill-opacity', '0.15');
+        .attr('fill', '#FFAD18')
+        .attr('fill-opacity', '0.05');
 
       this.brush = d3.brush().extent([[0, 0], [this.svgWidth, this.svgHeightFreq]])
         .on('end', this.brushEndEvent);
@@ -677,7 +677,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
             const cnvLength = this.x(variant.endPosition) - variantPosition;
             draw.surroundingRectangle(
               this.svgElement, variantPosition + cnvLength / 2,
-              variantHeight + spacing, color, variantTitle, 0.4, cnvLength
+              variantHeight + spacing, color, variantTitle, 1, cnvLength
             );
           } else {
             draw.surroundingRectangle(this.svgElement, variantPosition, variantHeight + spacing, color, variantTitle);
@@ -693,12 +693,12 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
         } else if (variant.isCNVPlus()) {
           draw.rect(
             this.svgElement, this.x(variant.position), this.x(variant.endPosition),
-            variantHeight - 3 + spacing, 6, color, 0.4, variantTitle
+            variantHeight - 3 + spacing, 6, color, 1, variantTitle
           );
         } else if (variant.isCNVPMinus()) {
           draw.rect(
             this.svgElement, this.x(variant.position), this.x(variant.endPosition),
-            variantHeight - 0.5 + spacing, 1, color, 0.4, variantTitle
+            variantHeight - 0.5 + spacing, 1, color, 1, variantTitle
           );
         } else {
           draw.dot(this.svgElement, variantPosition, variantHeight + spacing, color, variantTitle);
@@ -720,7 +720,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     for (let i = 0; i <= sortedDenovos.length - 2; i++) {
 
       if (this.doVariantsIntersect(sortedDenovos[i], sortedDenovos[i + 1])) {
-        spacingTracker += 30;
+        spacingTracker += 22;
       } else {
         spacingTracker = 0;
       }
