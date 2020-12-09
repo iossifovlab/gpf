@@ -741,6 +741,10 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     };
   }
 
+  clearSvgElement() {
+    this.svgElement.selectAll('*').remove();
+  }
+
   drawGene() {
     if (this.additionalZeroAxisHeight !== undefined) {
       this.svgHeight = this.svgHeightFreqRaw + (this.gene.transcripts.length + 1) * 25 + 70;
