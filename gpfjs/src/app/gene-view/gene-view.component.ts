@@ -649,7 +649,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
             const cnvLength = this.x(variant.endPosition) - variantPosition;
             draw.surroundingRectangle(
               this.svgElement, variantPosition + cnvLength / 2,
-              variantHeight + spacing, color, variantTitle, 0.4, cnvLength
+              variantHeight + spacing, color, variantTitle, 1, cnvLength
             );
           } else {
             draw.surroundingRectangle(this.svgElement, variantPosition, variantHeight + spacing, color, variantTitle);
@@ -665,12 +665,12 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
         } else if (variant.isCNVPlus()) {
           draw.rect(
             this.svgElement, this.x(variant.position), this.x(variant.endPosition),
-            variantHeight - 3 + spacing, 6, color, 0.4, variantTitle
+            variantHeight - 3 + spacing, 6, color, 1, variantTitle
           );
         } else if (variant.isCNVPMinus()) {
           draw.rect(
             this.svgElement, this.x(variant.position), this.x(variant.endPosition),
-            variantHeight - 0.5 + spacing, 1, color, 0.4, variantTitle
+            variantHeight - 0.5 + spacing, 1, color, 1, variantTitle
           );
         } else {
           draw.dot(this.svgElement, variantPosition, variantHeight + spacing, color, variantTitle);
