@@ -692,7 +692,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     for (let i = 0; i <= sortedDenovos.length - 2; i++) {
 
       if (this.doVariantsIntersect(sortedDenovos[i], sortedDenovos[i + 1])) {
-        spacingTracker += 30;
+        spacingTracker += 22;
       } else {
         spacingTracker = 0;
       }
