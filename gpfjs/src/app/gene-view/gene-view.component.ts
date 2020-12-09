@@ -295,17 +295,19 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
 
   drawTransmittedIcons() {
     this.svgElement = d3.select('#transmitted')
-      .attr('width', 80)
+      .attr('width', 125)
       .attr('height', 20);
     draw.star(this.svgElement, 10, 7.5, '#000000', 'LGDs');
     draw.triangle(this.svgElement, 30, 8, '#000000', 'Missense');
     draw.circle(this.svgElement, 50, 8, '#000000', 'Synonymous');
     draw.dot(this.svgElement, 70, 8, '#000000', 'Other');
+    draw.rect(this.svgElement, 82, 98, 5, 6, '#000000', 0.4, 'CNV+');
+    draw.rect(this.svgElement, 107, 125, 7.5, 1, '#000000', 0.4, 'CNV-');
   }
 
   drawDenovoIcons() {
     this.svgElement = d3.select('#denovo')
-      .attr('width', 80)
+      .attr('width', 120)
       .attr('height', 20);
     draw.surroundingRectangle(this.svgElement, 10, 7.5, '#000000', 'Denovo LGDs');
     draw.star(this.svgElement, 10, 7.5, '#000000', 'Denovo LGDs');
@@ -315,6 +317,10 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     draw.circle(this.svgElement, 50, 8, '#000000', 'Denovo Synonymous');
     draw.surroundingRectangle(this.svgElement, 70, 8, '#000000', 'Denovo Other');
     draw.dot(this.svgElement, 70, 8, '#000000', 'Denovo Other');
+    draw.surroundingRectangle(this.svgElement, 90, 8, '#000000', 'Denovo CNV+');
+    draw.rect(this.svgElement, 82, 98, 5, 6, '#000000', 0.4, 'CNV+');
+    draw.surroundingRectangle(this.svgElement, 110, 8, '#000000', 'Denovo CNV-');
+    draw.rect(this.svgElement, 102, 118, 7.5, 1, '#000000', 0.4, 'CNV-');
   }
 
   drawEffectTypesIcons() {
@@ -330,6 +336,22 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
         .attr('height', 20);
         drawIcon(this.svgElement, 10, 8, '#000000', effect);
     }
+
+    this.svgElement = d3.select('#CNV\\+')
+    .attr('width', 20)
+    .attr('height', 20);
+    draw.rect(
+      this.svgElement, 5, 20,
+      5, 6, '#000000', 0.4, 'CNV+'
+    );
+
+    this.svgElement = d3.select('#CNV-')
+    .attr('width', 20)
+    .attr('height', 20);
+    draw.rect(
+      this.svgElement, 5, 20,
+      7.5, 1, '#000000', 0.4, 'CNV-'
+    );
   }
 
   setSvgScale(windowWidth: number) {
