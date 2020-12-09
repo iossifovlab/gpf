@@ -618,8 +618,8 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
         .attr('width', this.svgWidth)
         .attr('x', 0)
         .attr('y', this.zeroAxisY)
-        .attr('fill', '#2b63ff')
-        .attr('fill-opacity', '0.15');
+        .attr('fill', '#FFAD18')
+        .attr('fill-opacity', '0.05');
 
       this.brush = d3.brush().extent([[0, 0], [this.svgWidth, this.svgHeightFreq]])
         .on('end', this.brushEndEvent);
