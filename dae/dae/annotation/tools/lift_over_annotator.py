@@ -62,7 +62,8 @@ class LiftOverAnnotator(VariantAnnotatorBase):
         return result
 
     def do_annotate(self, _, variant, liftover_variants):
-        assert self.liftover_id not in liftover_variants
+        assert self.liftover_id not in liftover_variants, \
+            (self.liftover_id, liftover_variants)
         assert variant is not None
 
         lo_variant = self.liftover_variant(variant)

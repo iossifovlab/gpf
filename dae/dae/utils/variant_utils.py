@@ -205,7 +205,7 @@ DNA_COMPLEMENT_NUCLEOTIDES = {
 def complement(nucleotides: str) -> str:
     return "".join(
         [
-            DNA_COMPLEMENT_NUCLEOTIDES[n.upper()]
+            DNA_COMPLEMENT_NUCLEOTIDES.get(n.upper(), n)
             for n in nucleotides
         ])
 
