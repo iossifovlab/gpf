@@ -11,7 +11,7 @@ pipeline {
     }
     parameters {
         string(
-            name: 'DATA_HG19_BUILD', defaultValue: '158',
+            name: 'DATA_HG19_BRANCH', defaultValue: 'release-3.2.0',
             description: 'data-hg19-startup build number to use for testing')
     }
 
