@@ -293,18 +293,6 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     this.condenseIntrons = false;
   }
 
-  drawTransmittedIcons() {
-    this.svgElement = d3.select('#transmitted')
-      .attr('width', 125)
-      .attr('height', 20);
-    draw.star(this.svgElement, 10, 7.5, '#000000', 'LGDs');
-    draw.triangle(this.svgElement, 30, 8, '#000000', 'Missense');
-    draw.circle(this.svgElement, 50, 8, '#000000', 'Synonymous');
-    draw.dot(this.svgElement, 70, 8, '#000000', 'Other');
-    draw.rect(this.svgElement, 82, 98, 5, 6, '#000000', 0.4, 'CNV+');
-    draw.rect(this.svgElement, 107, 125, 7.5, 1, '#000000', 0.4, 'CNV-');
-  }
-
   drawDenovoIcons() {
     this.svgElement = d3.select('#denovo')
       .attr('width', 120)
@@ -321,6 +309,18 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     draw.rect(this.svgElement, 82, 98, 5, 6, '#000000', 0.4, 'CNV+');
     draw.surroundingRectangle(this.svgElement, 110, 8, '#000000', 'Denovo CNV-');
     draw.rect(this.svgElement, 102, 118, 7.5, 1, '#000000', 0.4, 'CNV-');
+  }
+
+  drawTransmittedIcons() {
+    this.svgElement = d3.select('#transmitted')
+      .attr('width', 125)
+      .attr('height', 20);
+    draw.star(this.svgElement, 10, 7.5, '#000000', 'LGDs');
+    draw.triangle(this.svgElement, 30, 8, '#000000', 'Missense');
+    draw.circle(this.svgElement, 50, 8, '#000000', 'Synonymous');
+    draw.dot(this.svgElement, 70, 8, '#000000', 'Other');
+    draw.rect(this.svgElement, 82, 98, 5, 6, '#000000', 0.4, 'CNV+');
+    draw.rect(this.svgElement, 107, 125, 7.5, 1, '#000000', 0.4, 'CNV-');
   }
 
   drawEffectTypesIcons() {
