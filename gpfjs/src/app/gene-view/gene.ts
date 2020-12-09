@@ -135,7 +135,9 @@ export class Gene {
       }
     }
 
-    cds.push(Math.min(...codingStartsAndStops), Math.max(...codingStartsAndStops));
+    if (codingStartsAndStops.length !== 0) {
+      cds.push(Math.min(...codingStartsAndStops), Math.max(...codingStartsAndStops));
+    }
 
     const sortedExons: Exon[] = allExons.sort(
       (e1, e2) => e1.start > e2.start ? 1 : -1
