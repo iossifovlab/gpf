@@ -65,6 +65,15 @@ describe('Transcript', () => {
     expect(testTranscript.medianExonLength).toBe(11);
   });
 
+  it('should calculate isAreaInCDS', () => {
+    const exon = new Exon('1', 1, 10);
+    const exon1 = new Exon('1', 15, 25);
+    const transcript = new Transcript('NM_001130045_1', '+', '1', [100, 200], [exon, exon1]);
+
+    expect(transcript.isAreaInCDS(1, 10)).toBe(false);
+    expect(transcript.isAreaInCDS(120, 180)).toBe(true);
+  });
+
   it('should create from json', () => {
     const testTranscript = Transcript.fromJson({
       'transcript_id': 'testTranscriptId',

@@ -73,16 +73,6 @@ describe('GeneViewTranscript', () => {
     expect(geneViewTranscript.strand).toBe(transcript.strand);
   });
 
-  it('should calculate isAreaInCDS', () => {
-    const exon = new Exon('1', 1, 10);
-    const exon1 = new Exon('1', 15, 25);
-    const transcript = new Transcript('NM_001130045_1', '+', '1', [100, 200], [exon, exon1]);
-    const geneViewTranscript = new GeneViewTranscript(transcript);
-
-    expect(geneViewTranscript.isAreaInCDS(1, 10)).toBe(false);
-    expect(geneViewTranscript.isAreaInCDS(120, 180)).toBe(true);
-  });
-
   it('should calculate getCDSTransitionPos', () => {
     const exon = new Exon('1', 1, 10);
     const exon1 = new Exon('1', 80, 110);
