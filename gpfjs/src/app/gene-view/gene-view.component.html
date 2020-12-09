@@ -24,7 +24,7 @@
     <div class="card-header card-title" style="font-family: Roboto; font-weight: 500;">Effect Types</div>
     <div class="card-block" style="padding: 20px;padding-top: 22.75px; padding-bottom: 22.75px;">
       <div style="display: inline; margin-right: 20px;"
-        *ngFor="let effect of ['LGDs', 'Missense', 'Synonymous', 'Other']; let i=index" class="checkbox">
+        *ngFor="let effect of ['LGDs', 'Missense', 'Synonymous', 'CNV+', 'CNV-', 'Other']; let i=index" class="checkbox">
         <label>
           <input #effectTypeCheckbox checked type="checkbox"
             (change)="checkEffectType(effect, effectTypeCheckbox.checked)">

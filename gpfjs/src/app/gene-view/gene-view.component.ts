@@ -132,7 +132,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
   y_axis_zero;
   yAxisLabel;
   fontSize: number;
-  selectedEffectTypes = ['lgds', 'missense', 'synonymous', 'other'];
+  selectedEffectTypes = ['lgds', 'missense', 'synonymous', 'cnv+', 'cnv-', 'other'];
   selectedVariantTypes = ['sub', 'ins', 'del', 'cnv+', 'cnv-'];
   selectedAffectedStatus = ['Affected only', 'Unaffected only', 'Affected and unaffected'];
   selectedFrequencies;
@@ -260,7 +260,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
       element.nativeElement.checked = true;
     });
 
-    this.selectedEffectTypes = ['lgds', 'missense', 'synonymous', 'other'];
+    this.selectedEffectTypes = ['lgds', 'missense', 'synonymous', 'cnv+', 'cnv-', 'other'];
     this.selectedVariantTypes = ['sub', 'ins', 'del', 'cnv+', 'cnv-'];
     this.selectedAffectedStatus = ['Affected only', 'Unaffected only', 'Affected and unaffected'];
     this.showDenovo = true;
@@ -415,21 +415,27 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     }
   }
 
-  isVariantEffectSelected(worst_effect) {
+  isVariantEffectSelected(worst_effect: string): boolean {
+    let result = false;
     worst_effect = worst_effect.toLowerCase();
 
     if (this.selectedEffectTypes.indexOf(worst_effect) !== -1) {
-      return true;
+      result = true;
     }
 
     if (this.lgds.indexOf(worst_effect) !== -1) {
       if (this.selectedEffectTypes.indexOf('lgds') !== -1) {
-        return true;
+        result = true;
       }
-    } else if (worst_effect !== 'missense' && worst_effect !== 'synonymous' && this.selectedEffectTypes.indexOf('other') !== -1) {
-      return true;
+    } else if (
+      worst_effect !== 'missense' && worst_effect !== 'synonymous' &&
+      worst_effect !== 'cnv+' && worst_effect !== 'cnv-' &&
+      this.selectedEffectTypes.indexOf('other') !== -1
+    ) {
+      result = true;
     }
-    return false;
+
+    return result;
   }
 
   frequencyIsSelected(frequency: number) {
