@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="gpf_dae",
-    version="3.0.0dev",
+    version="3.2.2",
     author="Lubomir Chorbadjiev",
     author_email="lubomir.chorbadjiev@gmail.com",
     description="GPF: Genotypes and Phenotypes in Families",
@@ -13,7 +13,7 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/IossifovLab/gpf",
     packages=setuptools.find_packages(
-        where=".", exclude=["dae.docs", "dae.tests", "*.tests.*", "*.tests",],
+        where=".", exclude=["dae.docs", "dae.tests", "*.tests.*", "*.tests", ],
     ),
     include_package_data=True,
     scripts=[
