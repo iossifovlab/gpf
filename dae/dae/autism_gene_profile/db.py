@@ -1,7 +1,7 @@
 from dae.autism_gene_profile.statistic import AGPStatistic
 from sqlalchemy import MetaData, create_engine
 from sqlalchemy import Table, Column, Integer, String, Float, ForeignKey
-from sqlalchemy.sql import select, insert, join
+from sqlalchemy.sql import select, insert, join, delete
 
 
 class AutismGeneProfileDB:
@@ -251,6 +251,16 @@ class AutismGeneProfileDB:
         self._build_protection_scores_table()
         self._build_variant_counts_table()
         self.metadata.create_all(self.engine)
+
+    def clear_all_tables(self):
+        with self.engine.connect() as connection:
+            connection.execute(delete(self.variant_counts))
+            connection.execute(delete(self.gene_symbol_sets))
+            connection.execute(delete(self.protection_scores))
+            connection.execute(delete(self.autism_scores))
+            connection.execute(delete(self.studies))
+            connection.execute(delete(self.gene_symbols))
+            connection.execute(delete(self.gene_sets))
 
     def populate_data_tables(self, gpf_instance):
         gene_sets = gpf_instance.gene_sets_db.get_gene_set_ids("main")

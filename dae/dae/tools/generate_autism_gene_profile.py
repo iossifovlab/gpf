@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import os
 import time
 import argparse
 import logging
@@ -6,6 +7,7 @@ import logging
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.variants.attributes import Inheritance
 from dae.autism_gene_profile.statistic import AGPStatistic
+from dae.autism_gene_profile.db import AutismGeneProfileDB
 
 logger = logging.getLogger(__name__)
 
@@ -65,7 +67,8 @@ def main(gpf_instance=None, argv=None):
     description = "Generate autism gene profile statistics tool"
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument('--verbose', '-V', action='count', default=0)
-    parser.add_argument("--dbfile", default="agpdb")
+    default_dbfile = os.path.join(os.getenv("DAE_DB_DIR", "./"), "agpdb")
+    parser.add_argument("--dbfile", default=default_dbfile)
 
     args = parser.parse_args(argv)
     if args.verbose == 1:
@@ -82,17 +85,20 @@ def main(gpf_instance=None, argv=None):
         gpf_instance = GPFInstance()
 
     config = gpf_instance._autism_gene_profile_config
-    gene_symbols = set()
-    for gene_set_name in config.gene_sets:
-        gene_set = gpf_instance.gene_sets_db.get_gene_set(
-            "main", gene_set_name)
-        gene_symbols.union(set(gene_set["syms"]))
+    gene_symbols = config.gene_symbols
     output = []
     for sym in gene_symbols:
         output.append(generate_agp(gpf_instance, sym))
-    print(output)
     duration = time.time() - start
     print(duration)
+
+    agpdb = AutismGeneProfileDB(args.dbfile)
+
+    agpdb.build_gene_profile_db()
+    agpdb.clear_all_tables()
+    agpdb.populate_data_tables(gpf_instance)
+    for agp in output:
+        agpdb.insert_agp(agp)
 
 
 if __name__ == "__main__":

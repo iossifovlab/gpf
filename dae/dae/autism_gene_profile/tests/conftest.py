@@ -22,7 +22,7 @@ def temp_dbfile(request):
 @pytest.fixture
 def agp_gpf_instance(fixtures_gpf_instance, mocker):
     agp_config = Box({
-        'gene_sets': ['PLEKHN1', 'SAMD11'],
+        'gene_symbols': ['PLEKHN1', 'SAMD11'],
         'protection_scores': ['SFARI_gene_score', 'RVIS_rank', 'RVIS'],
         'autism_scores': ['SFARI_gene_score', 'RVIS_rank', 'RVIS'],
         'datasets': Box({
