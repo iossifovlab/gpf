@@ -132,7 +132,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
   y_axis_zero;
   yAxisLabel;
   fontSize: number;
-  selectedEffectTypes = ['lgds', 'missense', 'synonymous', 'other'];
+  selectedEffectTypes = ['lgds', 'missense', 'synonymous', 'cnv+', 'cnv-', 'other'];
   selectedVariantTypes = ['sub', 'ins', 'del', 'cnv+', 'cnv-'];
   selectedAffectedStatus = ['Affected only', 'Unaffected only', 'Affected and unaffected'];
   selectedFrequencies;
@@ -260,7 +260,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
       element.nativeElement.checked = true;
     });
 
-    this.selectedEffectTypes = ['lgds', 'missense', 'synonymous', 'other'];
+    this.selectedEffectTypes = ['lgds', 'missense', 'synonymous', 'cnv+', 'cnv-', 'other'];
     this.selectedVariantTypes = ['sub', 'ins', 'del', 'cnv+', 'cnv-'];
     this.selectedAffectedStatus = ['Affected only', 'Unaffected only', 'Affected and unaffected'];
     this.showDenovo = true;
@@ -293,19 +293,9 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     this.condenseIntrons = false;
   }
 
-  drawTransmittedIcons() {
-    this.svgElement = d3.select('#transmitted')
-      .attr('width', 80)
-      .attr('height', 20);
-    draw.star(this.svgElement, 10, 7.5, '#000000', 'LGDs');
-    draw.triangle(this.svgElement, 30, 8, '#000000', 'Missense');
-    draw.circle(this.svgElement, 50, 8, '#000000', 'Synonymous');
-    draw.dot(this.svgElement, 70, 8, '#000000', 'Other');
-  }
-
   drawDenovoIcons() {
     this.svgElement = d3.select('#denovo')
-      .attr('width', 80)
+      .attr('width', 120)
       .attr('height', 20);
     draw.surroundingRectangle(this.svgElement, 10, 7.5, '#000000', 'Denovo LGDs');
     draw.star(this.svgElement, 10, 7.5, '#000000', 'Denovo LGDs');
@@ -315,6 +305,22 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     draw.circle(this.svgElement, 50, 8, '#000000', 'Denovo Synonymous');
     draw.surroundingRectangle(this.svgElement, 70, 8, '#000000', 'Denovo Other');
     draw.dot(this.svgElement, 70, 8, '#000000', 'Denovo Other');
+    draw.surroundingRectangle(this.svgElement, 90, 8, '#000000', 'Denovo CNV+');
+    draw.rect(this.svgElement, 82, 98, 5, 6, '#000000', 0.4, 'Denovo CNV+');
+    draw.surroundingRectangle(this.svgElement, 110, 8, '#000000', 'Denovo CNV-');
+    draw.rect(this.svgElement, 102, 118, 7.5, 1, '#000000', 0.4, 'Denovo CNV-');
+  }
+
+  drawTransmittedIcons() {
+    this.svgElement = d3.select('#transmitted')
+      .attr('width', 125)
+      .attr('height', 20);
+    draw.star(this.svgElement, 10, 7.5, '#000000', 'LGDs');
+    draw.triangle(this.svgElement, 30, 8, '#000000', 'Missense');
+    draw.circle(this.svgElement, 50, 8, '#000000', 'Synonymous');
+    draw.dot(this.svgElement, 70, 8, '#000000', 'Other');
+    draw.rect(this.svgElement, 82, 98, 5, 6, '#000000', 0.4, 'CNV+');
+    draw.rect(this.svgElement, 107, 125, 7.5, 1, '#000000', 0.4, 'CNV-');
   }
 
   drawEffectTypesIcons() {
@@ -330,6 +336,22 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
         .attr('height', 20);
         drawIcon(this.svgElement, 10, 8, '#000000', effect);
     }
+
+    this.svgElement = d3.select('#CNV\\+')
+    .attr('width', 20)
+    .attr('height', 20);
+    draw.rect(
+      this.svgElement, 5, 20,
+      5, 6, '#000000', 0.4, 'CNV+'
+    );
+
+    this.svgElement = d3.select('#CNV-')
+    .attr('width', 20)
+    .attr('height', 20);
+    draw.rect(
+      this.svgElement, 5, 20,
+      7.5, 1, '#000000', 0.4, 'CNV-'
+    );
   }
 
   setSvgScale(windowWidth: number) {
@@ -415,21 +437,27 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     }
   }
 
-  isVariantEffectSelected(worst_effect) {
+  isVariantEffectSelected(worst_effect: string): boolean {
+    let result = false;
     worst_effect = worst_effect.toLowerCase();
 
     if (this.selectedEffectTypes.indexOf(worst_effect) !== -1) {
-      return true;
+      result = true;
     }
 
     if (this.lgds.indexOf(worst_effect) !== -1) {
       if (this.selectedEffectTypes.indexOf('lgds') !== -1) {
-        return true;
+        result = true;
       }
-    } else if (worst_effect !== 'missense' && worst_effect !== 'synonymous' && this.selectedEffectTypes.indexOf('other') !== -1) {
-      return true;
+    } else if (
+      worst_effect !== 'missense' && worst_effect !== 'synonymous' &&
+      worst_effect !== 'cnv+' && worst_effect !== 'cnv-' &&
+      this.selectedEffectTypes.indexOf('other') !== -1
+    ) {
+      result = true;
     }
-    return false;
+
+    return result;
   }
 
   frequencyIsSelected(frequency: number) {
@@ -739,6 +767,10 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
       totalSummaryVariants: 0,
       selectedSummaryVariants: 0,
     };
+  }
+
+  clearSvgElement() {
+    this.svgElement.selectAll('*').remove();
   }
 
   drawGene() {

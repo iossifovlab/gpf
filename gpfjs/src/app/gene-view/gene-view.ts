@@ -61,39 +61,14 @@ export class GeneViewTranscript {
     const intronCount = exonCount - 1;
 
     for (let i = 0; i < this.transcript.exons.length; i++) {
-      const cdsTransition = this.getCDSTransitionPos(this.transcript.exons[i]);
-      const segmentStart = this.transcript.exons[i].start;
-      const segmentStop = this.transcript.exons[i].stop;
-      if (cdsTransition) {
-        // Split exons which are both inside and outside the coding region into two segments
-        this.segments.push(
-          new GeneViewTranscriptSegment(
-            this.transcript.exons[i].chrom,
-            segmentStart, cdsTransition, true,
-            this.isAreaInCDS(segmentStart, cdsTransition), false,
-            `exon ${i + 1}/${exonCount}`),
-          new GeneViewTranscriptSegment(
-            this.transcript.exons[i].chrom,
-            cdsTransition, segmentStop, true,
-            this.isAreaInCDS(cdsTransition, segmentStop), false,
-            `exon ${i + 1}/${exonCount}`)
-        );
-      } else {
-        this.segments.push(
-          new GeneViewTranscriptSegment(
-            this.transcript.exons[i].chrom,
-            segmentStart, segmentStop, true,
-            this.isAreaInCDS(segmentStart, segmentStop), false,
-            `exon ${i + 1}/${exonCount}`)
-        );
-      }
-      // Add intron segment if applicable
+      this.segments.push(...this.exonToTranscriptSegments(this.transcript.exons[i], i, exonCount));
       if (i + 1 < this.transcript.exons.length) {
+        // Add intron segment if applicable
         const spacer = this.transcript.exons[i].chrom !== this.transcript.exons[i + 1].chrom;
         this.segments.push(
           new GeneViewTranscriptSegment(
             this.transcript.exons[i].chrom,
-            segmentStop, this.transcript.exons[i + 1].start,
+            this.transcript.exons[i].stop, this.transcript.exons[i + 1].start,
             false, false, spacer, `intron ${i + 1}/${intronCount}`)
         );
       }
@@ -112,18 +87,31 @@ export class GeneViewTranscript {
     }
   }
 
-  isAreaInCDS(start: number, stop: number) {
-    return (start >= this.transcript.cds[0]) && (stop <= this.transcript.cds[1]);
-  }
-
-  getCDSTransitionPos(exon: Exon) {
-    const startIsInCDS = this.isAreaInCDS(exon.start, exon.start);
-    const stopIsInCDS = this.isAreaInCDS(exon.stop, exon.stop);
-    if (startIsInCDS !== stopIsInCDS) {
-      return startIsInCDS ? this.transcript.cds[1] : this.transcript.cds[0];
-    } else {
-      return null;
+  exonToTranscriptSegments(exon: Exon, exonIndex: number, exonCount: number): GeneViewTranscriptSegment[] {
+    /*
+      This method splits a single exon segment into multiple
+      sub-segments at CDS transition points.
+    */
+    const result: GeneViewTranscriptSegment[] = [];
+    const segmentTransitions = this.transcript.cds.filter(
+      cdsTransitionPos => cdsTransitionPos >= exon.start && cdsTransitionPos <= exon.stop
+    );
+    if (segmentTransitions[segmentTransitions.length - 1] || segmentTransitions.length === 0) {
+      segmentTransitions.push(exon.stop);
     }
+
+    let posTracker = exon.start;
+    segmentTransitions.forEach(transitionPos => {
+      const isCDS = this.transcript.isAreaInCDS(posTracker, transitionPos);
+      result.push(
+        new GeneViewTranscriptSegment(
+          exon.chrom, posTracker, transitionPos, true,
+          isCDS, false, `exon ${exonIndex + 1}/${exonCount}`
+        )
+      );
+      posTracker = transitionPos;
+    });
+    return result;
   }
 
   resolveRegionChromosomes(region: number[]): string[] {

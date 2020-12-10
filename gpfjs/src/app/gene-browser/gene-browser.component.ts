@@ -167,6 +167,7 @@ export class GeneBrowserComponent extends QueryStateCollector implements OnInit 
 
   submitGeneRequest() {
     this.hideResults = false;
+    this.geneViewComponent.clearSvgElement();
     this.getCurrentState()
       .subscribe(state => {
         this.geneSymbol = state['geneSymbols'][0];
