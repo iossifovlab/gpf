@@ -306,9 +306,9 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     draw.surroundingRectangle(this.svgElement, 70, 8, '#000000', 'Denovo Other');
     draw.dot(this.svgElement, 70, 8, '#000000', 'Denovo Other');
     draw.surroundingRectangle(this.svgElement, 90, 8, '#000000', 'Denovo CNV+');
-    draw.rect(this.svgElement, 82, 98, 5, 6, '#000000', 0.4, 'CNV+');
+    draw.rect(this.svgElement, 82, 98, 5, 6, '#000000', 0.4, 'Denovo CNV+');
     draw.surroundingRectangle(this.svgElement, 110, 8, '#000000', 'Denovo CNV-');
-    draw.rect(this.svgElement, 102, 118, 7.5, 1, '#000000', 0.4, 'CNV-');
+    draw.rect(this.svgElement, 102, 118, 7.5, 1, '#000000', 0.4, 'Denovo CNV-');
   }
 
   drawTransmittedIcons() {
