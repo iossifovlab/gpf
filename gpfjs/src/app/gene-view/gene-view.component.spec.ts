@@ -836,13 +836,13 @@ describe('GeneViewComponent', () => {
       'strand': 'testStrand',
       'chrom': 'testChrom',
       'cds': [0, 100],
-      'exons': [{'start': 0, 'stop': 10}, {'start': 15, 'stop': 25}]
+      'exons': [{'start': 1, 'stop': 10}, {'start': 15, 'stop': 25}]
     }));
 
     let firstExonDrawn = false;
     const drawExonSpy = spyOn(component, 'drawExon').and.callFake((element, xStart, xEnd, y, title, cds, brushSize) => {
       if (!firstExonDrawn) {
-        expect(xStart).toBe(0);
+        expect(xStart).toBe(1);
         expect(xEnd).toBe(10);
         firstExonDrawn = true;
       } else {
