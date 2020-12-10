@@ -218,13 +218,26 @@ describe('GeneViewComponent', () => {
         expect(title).toEqual(iconTitles[index]);
       });
     });
+    let cnvPlusDrawn = false;
+    let cnvMinusDrawn = false;
+    const drawCnvSpy = spyOn(draw, 'rect').and.callFake((element, xStart, xEnd, y, height, color, opacity, title) => {
+      expect(element).toEqual(component.svgElement);
+      if (title === 'Denovo CNV+') {
+        cnvPlusDrawn = true;
+      } else if (title === 'Denovo CNV-') {
+        cnvMinusDrawn = true;
+      }
+    });
 
     component.drawDenovoIcons();
 
     for (const drawSpy of drawSpies) {
       expect(drawSpy).toHaveBeenCalled();
     }
-    expect(drawSurroundingSquareSpy).toHaveBeenCalledTimes(4);
+    expect(cnvPlusDrawn).toBeTrue();
+    expect(cnvMinusDrawn).toBeTrue();
+    expect(drawCnvSpy).toHaveBeenCalledTimes(2);
+    expect(drawSurroundingSquareSpy).toHaveBeenCalledTimes(6);
   });
 
   it('should draw effect types icons with correct shapes and titles', () => {
