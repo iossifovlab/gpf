@@ -17,6 +17,7 @@ import { Location } from '@angular/common';
 export class DatasetsComponent implements OnInit {
   registerAlertVisible = false;
   datasets$: Observable<Dataset[]>;
+  datasetTrees: Dataset[];
   selectedDataset$: Observable<Dataset>;
   permissionDeniedPrompt: string;
   @Output() selectedDatasetChange = new EventEmitter<Dataset>();
@@ -37,7 +38,8 @@ export class DatasetsComponent implements OnInit {
 
     this.datasets$ = this.filterHiddenGroups(
       this.datasetsService.getDatasetsObservable());
-
+    
+    this.createDatasetTrees();
     this.selectedDataset$ = this.datasetsService.getSelectedDataset();
 
     this.datasets$
@@ -84,6 +86,50 @@ export class DatasetsComponent implements OnInit {
       return 'phenoTool';
     }  else {
       return '';
+    }
+  }
+
+  createDatasetTrees() {
+    this.datasets$.subscribe((datasets) => {
+      const mainDatasets = new Array<Dataset>();
+      for (let dataset of datasets) {
+        let hasParent = false;
+
+        for(let d of datasets){
+          if (d.studies != null) {
+            for (let study of d.studies) {
+              if (dataset.id === study) {
+                hasParent = true;
+                break;
+              }
+            }
+          }
+        }
+
+        if (!hasParent) {
+          dataset['indent'] ='0px';
+          mainDatasets.push(dataset);
+        }
+      }
+      this.datasetTrees = new Array<Dataset>();
+      for(let currentDataset of mainDatasets) {
+        this.createDatasetTree(currentDataset, datasets, 0);
+      }
+    });
+  }
+
+  createDatasetTree(current: Dataset, datasets: Dataset[], indent: number) {
+    current['indent'] = `${indent}px`;
+    this.datasetTrees.push(current);
+
+    indent +=25;
+
+    if (current.studies === null) {
+      return;
+    } else {
+      for (let study of current.studies) {
+        this.createDatasetTree(datasets.find(d => d.id === study), datasets, indent);
+      }
     }
   }
 
