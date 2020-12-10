@@ -180,7 +180,7 @@ describe('GeneBrowserComponent', () => {
 
       return 'testSummaryVariantsArray' as any;
     });
-    component.geneViewComponent = {enableIntronCondensing() {}, disableIntronCondensing() {}} as any;
+    component.geneViewComponent = {enableIntronCondensing() {}, disableIntronCondensing() {}, clearSvgElement() {}} as any;
     const enableIntronCondensingSpy = spyOn(component.geneViewComponent, 'enableIntronCondensing');
     const disableIntronCondensingSpy = spyOn(component.geneViewComponent, 'disableIntronCondensing');
 
