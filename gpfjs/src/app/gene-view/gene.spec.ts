@@ -253,7 +253,7 @@ describe('Gene', () => {
       'collapsed',
       'testStrand1',
       'testChrom1',
-      [1, 44],
+      [1, 11, 12, 22, 23, 33, 34, 44],
       [
         new Exon('testChrom1', 1, 11),
         new Exon('testChrom1', 12, 22),
