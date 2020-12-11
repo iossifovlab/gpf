@@ -201,6 +201,12 @@ class StudyWrapper(StudyWrapperBase):
                     unpack_columns(
                         summary_download_column_names, use_id=False
                     )
+            else:
+                self.summary_preview_columns = None
+                self.summary_preview_sources = None
+                self.summary_download_columns = None
+                self.summary_download_sources = None
+
         else:
             self.preview_columns, self.preview_sources = [], []
             self.download_columns, self.download_sources = [], []
@@ -414,6 +420,7 @@ class StudyWrapper(StudyWrapperBase):
         wdae_download = map(
             join_line, itertools.chain([self.download_columns], rows)
         )
+        raise NotImplementedError()
 
         return wdae_download
 
@@ -429,12 +436,16 @@ class StudyWrapper(StudyWrapperBase):
 
     def get_summary_variants_wdae_preview(
             self, query, max_variants_count=10000):
+        if not self.summary_preview_columns:
+            raise Exception("No summary preview columns specified")
         query["limit"] = max_variants_count
         rows = self.query_summary_variants(**query)
         return rows
 
     def get_summary_variants_wdae_download(
             self, query, max_variants_count=10000):
+        if not self.summary_download_columns:
+            raise Exception("No summary download columns specified")
         query["limit"] = max_variants_count
         rows = self.query_summary_variants(**query)
 
