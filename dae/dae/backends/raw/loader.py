@@ -67,6 +67,7 @@ class CLIArgument:
         kwargs = {
             "type": self.value_type,
             "help": self.help_text,
+            "default": self.default_value
         }
         if self.arg_type == ArgumentType.OPTION:
             kwargs["dest"] = self.destination
@@ -89,6 +90,8 @@ class CLIArgument:
             if key == self.destination:
                 if self.has_value:
                     if value is not None:
+                        if value == self.default_value:
+                            continue
                         if self.raw:
                             value = value.encode('unicode-escape')\
                                 .decode().replace('\\\\', '\\')
