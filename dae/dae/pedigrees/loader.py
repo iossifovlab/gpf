@@ -199,6 +199,7 @@ class FamiliesLoader(CLILoader):
         arguments.append(CLIArgument(
             "--ped-sep",
             default_value="\t",
+            raw=True,
             help_text="Families file field separator [default: `\\t`]",
         ))
         return arguments
@@ -206,7 +207,7 @@ class FamiliesLoader(CLILoader):
     @classmethod
     def parse_cli_arguments(cls, argv):
         filename = argv.families
-        super().parse_cli_arguments(argv)
+        super().parse_cli_arguments(argv, use_defaults=True)
 
         ped_ped_args = [
             "ped_family",
