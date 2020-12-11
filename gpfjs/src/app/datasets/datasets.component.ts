@@ -38,7 +38,7 @@ export class DatasetsComponent implements OnInit {
 
     this.datasets$ = this.filterHiddenGroups(
       this.datasetsService.getDatasetsObservable());
-    
+
     this.createDatasetTrees();
     this.selectedDataset$ = this.datasetsService.getSelectedDataset();
 
@@ -84,7 +84,7 @@ export class DatasetsComponent implements OnInit {
       return 'enrichment';
     } else if (selectedDataset.phenotypeTool) {
       return 'phenoTool';
-    }  else {
+    } else {
       return '';
     }
   }
@@ -95,7 +95,7 @@ export class DatasetsComponent implements OnInit {
       for (let dataset of datasets) {
         let hasParent = false;
 
-        for(let d of datasets){
+        for (let d of datasets) {
           if (d.studies != null) {
             for (let study of d.studies) {
               if (dataset.id === study) {
@@ -107,12 +107,12 @@ export class DatasetsComponent implements OnInit {
         }
 
         if (!hasParent) {
-          dataset['indent'] ='0px';
+          dataset['indent'] = '0px';
           mainDatasets.push(dataset);
         }
       }
       this.datasetTrees = new Array<Dataset>();
-      for(let currentDataset of mainDatasets) {
+      for (let currentDataset of mainDatasets) {
         this.createDatasetTree(currentDataset, datasets, 0);
       }
     });
@@ -122,12 +122,12 @@ export class DatasetsComponent implements OnInit {
     current['indent'] = `${indent}px`;
     this.datasetTrees.push(current);
 
-    indent +=25;
+    indent += 25;
 
     if (current.studies === null) {
       return;
     } else {
-      datasets.filter(d => current.studies.indexOf(d.name) !== -1).forEach(d => this.createDatasetTree(d, datasets, indent));
+      datasets.filter(d => current.studies.indexOf(d.id) !== -1).forEach(d => this.createDatasetTree(d, datasets, indent));
     }
   }
 
