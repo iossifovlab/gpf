@@ -156,6 +156,7 @@ class FamiliesLoader(CLILoader):
         arguments.append(CLIArgument(
             "--ped-no-role",
             action="store_true",
+            default_value=False,
             help_text="indicates that the provided pedigree file has no role "
             "column. "
             "If this argument is provided, the import tool will guess the "
@@ -173,6 +174,7 @@ class FamiliesLoader(CLILoader):
         arguments.append(CLIArgument(
             "--ped-no-header",
             action="store_true",
+            default_value=False,
             help_text="indicates that the provided pedigree"
             " file has no header. The pedigree column arguments"
             " will accept indices if this argument is given."
@@ -207,7 +209,7 @@ class FamiliesLoader(CLILoader):
     @classmethod
     def parse_cli_arguments(cls, argv):
         filename = argv.families
-        super().parse_cli_arguments(argv, use_defaults=True)
+        super().parse_cli_arguments(argv, use_defaults=False)
 
         ped_ped_args = [
             "ped_family",
