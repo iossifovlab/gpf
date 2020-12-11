@@ -8,6 +8,7 @@ import { Observable } from 'rxjs';
 
 import { ActivatedRoute, Params, Router } from '@angular/router';
 import { Location } from '@angular/common';
+import * as _ from 'lodash';
 
 @Component({
   selector: 'gpf-datasets',
@@ -105,7 +106,7 @@ export class DatasetsComponent implements OnInit {
 
   createDatasetTree(current: Dataset, datasets: Dataset[], indent: number) {
     current['indent'] = `${indent}px`;
-    this.datasetTrees.push(current);
+    this.datasetTrees.push(_.cloneDeep(current));
 
     indent += 25;
 
