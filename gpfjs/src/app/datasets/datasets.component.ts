@@ -127,9 +127,7 @@ export class DatasetsComponent implements OnInit {
     if (current.studies === null) {
       return;
     } else {
-      for (let study of current.studies) {
-        this.createDatasetTree(datasets.find(d => d.id === study), datasets, indent);
-      }
+      datasets.filter(d => current.studies.indexOf(d.name) !== -1).forEach(d => this.createDatasetTree(d, datasets, indent));
     }
   }
 
