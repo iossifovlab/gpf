@@ -420,7 +420,6 @@ class StudyWrapper(StudyWrapperBase):
         wdae_download = map(
             join_line, itertools.chain([self.download_columns], rows)
         )
-        raise NotImplementedError()
 
         return wdae_download
 
