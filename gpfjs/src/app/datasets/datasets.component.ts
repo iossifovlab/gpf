@@ -57,17 +57,6 @@ export class DatasetsComponent implements OnInit {
         this.datasetsService.reloadSelectedDataset();
       });
 
-    this.selectedDataset$
-      .subscribe(selectedDataset => {
-        if (!selectedDataset) {
-          return;
-        }
-        this.registerAlertVisible = !selectedDataset.accessRights;
-        if (selectedDataset.accessRights) {
-          this.selectedDatasetChange.emit(selectedDataset);
-        }
-      });
-
     this.datasetsService.getPermissionDeniedPrompt().subscribe(
       aprompt => this.permissionDeniedPrompt = aprompt
     );
