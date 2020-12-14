@@ -244,7 +244,7 @@ class DenovoLoader(VariantsGenotypesLoader):
         ))
         arguments.append(CLIArgument(
             "--denovo-location",
-            default_value="location",
+            # default_value="location",
             help_text="The label or index of the"
             " column containing the CSHL-style"
             " location of the variant. [Default: location]",
@@ -263,13 +263,13 @@ class DenovoLoader(VariantsGenotypesLoader):
         ))
         arguments.append(CLIArgument(
             "--denovo-family-id",
-            default_value="familyId",
+            # default_value="familyId",
             help_text="The label or index of the column containing the"
             " family's ID. [Default: familyId]",
         ))
         arguments.append(CLIArgument(
             "--denovo-best-state",
-            default_value="bestState",
+            # default_value="bestState",
             help_text="The label or index of the"
             " column containing the best state"
             " for the family. [Default: bestState]",
@@ -289,6 +289,8 @@ class DenovoLoader(VariantsGenotypesLoader):
 
     @classmethod
     def parse_cli_arguments(cls, argv):
+        print(argv)
+
         if argv.denovo_location and (argv.denovo_chrom or argv.denovo_pos):
             print(
                 "--denovo-location and (--denovo-chrom, --denovo-pos) "
@@ -304,26 +306,22 @@ class DenovoLoader(VariantsGenotypesLoader):
             raise ValueError()
 
         if argv.denovo_person_id and (
-            argv.denovo_family_id or argv.denovo_best_state
-        ):
+                argv.denovo_family_id or argv.denovo_best_state):
             print(
                 "--denovo-person-id and (denovo-family-id, denovo-best-state) "
                 "are mutually exclusive"
             )
             raise ValueError()
 
-        if not (
-            argv.denovo_location or (argv.denovo_chrom and argv.denovo_pos)
-        ):
+        if not (argv.denovo_location or 
+                (argv.denovo_chrom and argv.denovo_pos)):
             argv.denovo_location = "location"
 
         if not (argv.denovo_variant or (argv.denovo_ref and argv.denovo_alt)):
             argv.denovo_variant = "variant"
 
-        if not (
-            argv.denovo_person_id
-            or (argv.denovo_family_id and argv.denovo_best_state)
-        ):
+        if not (argv.denovo_person_id or
+                (argv.denovo_family_id and argv.denovo_best_state)):
             argv.denovo_family_id = "familyId"
             argv.denovo_best_state = "bestState"
 
