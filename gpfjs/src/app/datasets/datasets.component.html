@@ -18,12 +18,7 @@
               class="dataset-selector"
               aria-labelledby="datasets-dropdown-menu-button"
               style="z-index: 199;">
-              <a *ngFor="let dataset of datasetTrees"
-                class="dropdown-item"
-                (click)="selectDataset(dataset)"
-                [class.active]="dataset.id === selectedDataset.id"
-                [style.opacity]="dataset.accessRights ? 1.0 : 0.3"
-                [style.margin-left]="dataset.indent">{{ dataset.name }}</a>
+              <gpf-dataset-node *ngFor="let tree of datasetTrees" [datasetNode]="tree"></gpf-dataset-node>
             </div>
           </div>
         </div>

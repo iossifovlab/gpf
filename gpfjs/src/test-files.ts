@@ -93,3 +93,4 @@ import './app/gene-view/gene-view.spec.ts';
 import './app/gene-view/gene-view.component.spec.ts';
 import './app/gene-browser/gene-browser.component.spec.ts';
 import './app/loading-spinner/loading-spinner.component.spec.ts';
+import './app/dataset-node/dataset-node.component.spec.ts';

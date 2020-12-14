@@ -1,0 +1,9 @@
+<a class="dropdown-item"
+  (click)="select()"
+  [style.opacity]="datasetNode.dataset.accessRights ? 1.0 : 0.3">
+  {{ datasetNode.dataset.name }}
+</a>
+
+<div class="children-container">
+  <gpf-dataset-node *ngFor="let child of datasetNode.children" [datasetNode] = "child"></gpf-dataset-node>
+</div>

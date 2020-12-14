@@ -156,6 +156,7 @@ import { CommonReportsPedigreeCellComponent } from './variant-reports/common-rep
 import { GeneViewComponent } from './gene-view/gene-view.component';
 import { GeneSymbolsWithSearchComponent } from './gene-symbols-with-search/gene-symbols-with-search.component';
 import { LoadingSpinnerComponent } from './loading-spinner/loading-spinner.component';
+import { DatasetNodeComponent } from './dataset-node/dataset-node.component';
 
 const appRoutes: Routes = [
   {
@@ -351,6 +352,7 @@ const appRoutes: Routes = [
     CommonReportsPedigreeCellComponent,
     GeneSymbolsWithSearchComponent,
     LoadingSpinnerComponent,
+    DatasetNodeComponent,
   ],
   imports: [
     BrowserModule,

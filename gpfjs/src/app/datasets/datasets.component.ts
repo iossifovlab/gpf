@@ -9,6 +9,7 @@ import { Observable } from 'rxjs';
 import { ActivatedRoute, Params, Router } from '@angular/router';
 import { Location } from '@angular/common';
 import * as _ from 'lodash';
+import { DatasetNode } from 'app/dataset-node/dataset-node';
 
 @Component({
   selector: 'gpf-datasets',
@@ -18,7 +19,7 @@ import * as _ from 'lodash';
 export class DatasetsComponent implements OnInit {
   registerAlertVisible = false;
   datasets$: Observable<Dataset[]>;
-  datasetTrees: Dataset[];
+  datasetTrees: DatasetNode[];
   selectedDataset$: Observable<Dataset>;
   permissionDeniedPrompt: string;
   @Output() selectedDatasetChange = new EventEmitter<Dataset>();
@@ -92,29 +93,13 @@ export class DatasetsComponent implements OnInit {
 
   createDatasetHierarchy() {
     this.datasets$.subscribe((datasets) => {
-      this.datasetTrees = new Array<Dataset>();
-      const mainDatasets = new Array<Dataset>();
+      this.datasetTrees = new Array<DatasetNode>();
       datasets.forEach(d => {
-        d['indent'] = '0px';
         if (!d.parents.length) {
-          mainDatasets.push(d);
+          this.datasetTrees.push(new DatasetNode(d, datasets));
         }
       });
-      mainDatasets.forEach(d => this.createDatasetTree(d, datasets, 0))
     });
-  }
-
-  createDatasetTree(current: Dataset, datasets: Dataset[], indent: number) {
-    current['indent'] = `${indent}px`;
-    this.datasetTrees.push(_.cloneDeep(current));
-
-    indent += 25;
-
-    if (current.studies === null) {
-      return;
-    } else {
-      datasets.filter(d => current.studies.indexOf(d.id) !== -1).forEach(d => this.createDatasetTree(d, datasets, indent));
-    }
   }
 
   filterHiddenGroups(datasets: Observable<Dataset[]>): Observable<Dataset[]> {
