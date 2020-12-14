@@ -4,13 +4,22 @@ from dae.configuration.gpf_config_parser import (
 )
 
 autism_gene_tool_config = {
-    "gene_sets": {"type": "list", "schema": {"type": "string"}},
+    "gene_symbols": {"type": "list", "schema": {"type": "string"}},
     "autism_scores": {"type": "list", "schema": {"type": "string"}},
     "protection_scores": {"type": "list", "schema": {"type": "string"}},
-    "datasets": {"type": "list", "schema": {"type": "string"}},
-    "denovo_criteria": {
+    "datasets": {
         "type": "dict", "valuesrules": {
-            "type": "list", "schema": {"type": "string"}
+            "type": "dict", "schema": {
+                "person_sets": {"type": "list", "schema": {
+                        "type": "dict",
+                        "schema": {
+                            "set_name": {"type": "string"},
+                            "collection_name": {"type": "string"},
+                        }
+                    }
+                },
+                "effects": {"type": "list", "schema": {"type": "string"}}
+            }
         }
-    }
+    },
 }
