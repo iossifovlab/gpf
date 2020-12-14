@@ -393,8 +393,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
             if vcf_variants[index] is None:
                 continue
             if self._compare_vcf_variants_gt(
-                vcf_variants[min_index], vcf_variants[index]
-            ):
+                vcf_variants[min_index], vcf_variants[index]):
                 min_index = index
         return vcf_variants[min_index]
 
@@ -412,11 +411,11 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                 continue
 
             sample_index = self.independent_indexes[
-                self.independent_indexes[:, 0] == vcf_index, :
-            ][:, 1].T
+                self.independent_indexes[:, 0] == vcf_index, :][:, 1].T
             allele_index = np.stack(
-                [2 * sample_index, 2 * sample_index + 1]
-            ).reshape([1, 2 * len(sample_index)], order="F")[0]
+                [2 * sample_index, 2 * sample_index + 1]).reshape(
+                    [1, 2 * len(sample_index)], order="F")[0]
+
             vcf_gt = vcf.gt_idxs[allele_index]
             vcf_gt = vcf_gt.reshape([2, len(sample_index)], order="F")
 
@@ -432,6 +431,8 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                 )
         n_independent_parents = len(self.independent_indexes)
         n_parents_called = sum([r["n_parents_called"] for r in result])
+        percent_parents_called = None
+
         for allele in summary_variant.alleles:
             if n_independent_parents > 0:
                 percent_parents_called = (
