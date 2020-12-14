@@ -185,10 +185,16 @@ class QueryPreviewSummaryVariantsView(QueryBaseView):
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
 
         # LOGGER.info('dataset ' + str(dataset))
-        response = dataset.get_summary_wdae_preview_info(
-            data,
-            max_variants_count=QuerySummaryVariantsView.MAX_SHOWN_VARIANTS,
-        )
+        try:
+            response = dataset.get_summary_wdae_preview_info(
+                data,
+                max_variants_count=QuerySummaryVariantsView.MAX_SHOWN_VARIANTS,
+            )
+        except(Exception):
+            return Response(
+                {"error": "Summary preview columns are not configured"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
         return Response(response, status=status.HTTP_200_OK)
 
@@ -220,9 +226,15 @@ class QuerySummaryVariantsDownloadView(QueryBaseView):
         if not (user.is_authenticated and user.has_unlimitted_download):
             download_limit = self.DOWNLOAD_LIMIT
 
-        variants_data = dataset.get_summary_variants_wdae_download(
-            data, max_variants_count=download_limit
-        )
+        try:
+            variants_data = dataset.get_summary_variants_wdae_download(
+                data, max_variants_count=download_limit
+            )
+        except(Exception):
+            return Response(
+                {"error": "Summary download columns are not configured"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
         response = FileResponse(variants_data, content_type="text/tsv")
 
