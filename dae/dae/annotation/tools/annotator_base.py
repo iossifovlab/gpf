@@ -284,6 +284,7 @@ class VariantAnnotatorBase(AnnotatorBase):
     def annotate_summary_variant(self, summary_variant, liftover_variants):
         for alt_allele in summary_variant.alt_alleles:
             attributes = deepcopy(alt_allele.attributes)
+            liftover_variants = {}
             self.do_annotate(attributes, alt_allele, liftover_variants)
             alt_allele.update_attributes(attributes)
 
