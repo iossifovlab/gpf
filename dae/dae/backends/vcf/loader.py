@@ -663,7 +663,7 @@ class VcfLoader(VariantsGenotypesLoader):
 
     @classmethod
     def parse_cli_arguments(cls, argv):
-        super().parse_cli_arguments(argv)
+        super().parse_cli_arguments(argv, use_defaults=False)
         filenames = argv.vcf_files
 
         assert argv.vcf_multi_loader_fill_in_mode in set(

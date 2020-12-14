@@ -41,7 +41,7 @@ class CLIArgument:
             self, argument_name, has_value=True,
             default_value=None, destination=None,
             help_text=None, action=None, value_type=None,
-            metavar=None, nargs=None):
+            metavar=None, nargs=None, raw=False):
         self.argument_name = argument_name
         self.has_value = has_value
         self.default_value = default_value
@@ -51,6 +51,7 @@ class CLIArgument:
         self.help_text = help_text
         self.nargs = nargs
         self.action = action
+        self.raw = raw
         if destination is None:
             self.destination = self._default_destination()
 
@@ -66,6 +67,7 @@ class CLIArgument:
         kwargs = {
             "type": self.value_type,
             "help": self.help_text,
+            "default": self.default_value
         }
         if self.arg_type == ArgumentType.OPTION:
             kwargs["dest"] = self.destination
@@ -81,28 +83,35 @@ class CLIArgument:
 
         parser.add_argument(self.argument_name, **kwargs)
 
-    def build_option(self, params):
+    def build_option(self, params, use_defaults=False):
         if self.arg_type == ArgumentType.ARGUMENT:
-            return ""
+            return None
         for key, value in params.items():
             if key == self.destination:
-                if value is not None:
-                    if self.has_value:
-                        return f"{self.argument_name} {value}"
-                    else:
-                        return f"{self.argument_name}"
-                elif self.default_value is not None and self.has_value:
-                    return f"{self.argument_name} {self.default_value}"
+                if self.has_value:
+                    if value is not None:
+                        if value == self.default_value:
+                            continue
+                        if self.raw:
+                            value = value.encode('unicode-escape')\
+                                .decode().replace('\\\\', '\\')
+                        return f"{self.argument_name} \"{value}\""
+                    elif use_defaults and self.default_value is not None:
+                        value = self.default_value
+                        if self.raw:
+                            value = value.encode('unicode-escape')\
+                                .decode().replace('\\\\', '\\')
+                        return f"{self.argument_name} \"{value}\""
                 else:
                     return f"{self.argument_name}"
-        return ""
+        return None
 
-    def parse_cli_argument(self, argv):
+    def parse_cli_argument(self, argv, use_defaults=False):
         if self.destination not in argv:
             return
         argument = getattr(argv, self.destination)
         if argument is None:
-            if self.default_value is not None:
+            if self.default_value is not None and use_defaults:
                 setattr(argv, self.destination, self.default_value)
 
 
@@ -153,6 +162,7 @@ class CLILoader:
         built_arguments = []
         for argument in cls._arguments():
             built_arguments.append(argument.build_option(params))
+        built_arguments = filter(lambda x: x is not None, built_arguments)
         result = " ".join(built_arguments)
         return result
 
@@ -167,9 +177,9 @@ class CLILoader:
         return result
 
     @classmethod
-    def parse_cli_arguments(cls, argv):
+    def parse_cli_arguments(cls, argv, use_defaults=False):
         for arg in cls._arguments():
-            arg.parse_cli_argument(argv)
+            arg.parse_cli_argument(argv, use_defaults=use_defaults)
 
 
 class VariantsLoader(CLILoader):

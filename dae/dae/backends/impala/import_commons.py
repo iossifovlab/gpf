@@ -417,11 +417,12 @@ rule {{prefix}}_variants_region_bin:
         '''
         {{prefix}}2parquet.py --study-id {{study_id}} \\
             {{pedigree.params}} {input.pedigree} \\
-            {{context.params}} {params.variants} \\
+            {{context.params}} \\
 {%- if partition_description %}
             --pd {input.partition_description} \\
 {%- endif %}
             -o {{variants_output}} \\
+            {params.variants} \\
             --rb {wildcards.rb} > {log.stdout} 2> {log.stderr}
         '''
 
@@ -764,7 +765,9 @@ class BatchImporter:
         if argv.partition_description:
             context["partition_description"] = argv.partition_description
 
-        pedigree_params = self.families_loader.build_arguments_dict()
+        pedigree_params_dict = self.families_loader.build_arguments_dict()
+        pedigree_params = self.families_loader.build_cli_arguments(
+            pedigree_params_dict)
         pedigree_pedigree = os.path.abspath(
             self.families_loader.filename)
         pedigree_output = os.path.abspath(os.path.join(
@@ -798,7 +801,9 @@ class BatchImporter:
                     os.path.abspath(fn)
                     for fn in variants_loader.variants_filenames
                 ])
-            variants_context["params"] = variants_loader.build_arguments_dict()
+            variants_params_dict = variants_loader.build_arguments_dict()
+            variants_context["params"] = variants_loader.build_cli_arguments(
+                variants_params_dict)
             context["variants"][prefix] = variants_context
 
         context["mirror_of"] = {}
