@@ -36,7 +36,7 @@ echo "----------------------------------------------"
 echo "Cleaning up docker"
 echo "----------------------------------------------"
 docker image rm ${GPF_DOCKER_IMAGE}
-docker network prune --force
+# docker network prune --force
 echo "----------------------------------------------"
 echo "[DONE] Cleaning up docker"
 echo "----------------------------------------------"
