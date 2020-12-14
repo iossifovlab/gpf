@@ -1,3 +1,11 @@
 .children-container {
-  margin-left: 25px;
+  padding-left: 25px;
+}
+
+.dataset-dropdown-item{
+  padding-left: 0px;
+  padding-right: 0px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }

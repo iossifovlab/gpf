@@ -13,11 +13,11 @@
               aria-haspopup="true"
               aria-expanded="false">{{ selectedDataset.name }}
             </button>
-            <div
+            <div 
               ngbDropdownMenu
               class="dataset-selector"
               aria-labelledby="datasets-dropdown-menu-button"
-              style="z-index: 199;">
+              style="z-index: 199; padding-left: 1.5rem">
               <gpf-dataset-node *ngFor="let tree of datasetTrees" [datasetNode]="tree"></gpf-dataset-node>
             </div>
           </div>
