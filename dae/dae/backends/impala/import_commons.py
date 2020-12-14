@@ -417,11 +417,12 @@ rule {{prefix}}_variants_region_bin:
         '''
         {{prefix}}2parquet.py --study-id {{study_id}} \\
             {{pedigree.params}} {input.pedigree} \\
-            {{context.params}} {params.variants} \\
+            {{context.params}} \\
 {%- if partition_description %}
             --pd {input.partition_description} \\
 {%- endif %}
             -o {{variants_output}} \\
+            {params.variants} \\
             --rb {wildcards.rb} > {log.stdout} 2> {log.stderr}
         '''
 

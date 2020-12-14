@@ -95,13 +95,13 @@ class CLIArgument:
                         if self.raw:
                             value = value.encode('unicode-escape')\
                                 .decode().replace('\\\\', '\\')
-                        return f"{self.argument_name} {value}"
+                        return f"{self.argument_name} \"{value}\""
                     elif use_defaults and self.default_value is not None:
                         value = self.default_value
                         if self.raw:
                             value = value.encode('unicode-escape')\
                                 .decode().replace('\\\\', '\\')
-                        return f"{self.argument_name} {value}"
+                        return f"{self.argument_name} \"{value}\""
                 else:
                     return f"{self.argument_name}"
         return None
