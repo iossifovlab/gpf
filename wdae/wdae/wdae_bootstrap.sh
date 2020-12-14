@@ -6,6 +6,8 @@ REFERENCE_GENOME=$1
 INSTALL_DIRNAME=$2
 DATA_ARCHIVE=$3
 
+SERIES=$(python -c "from dae.__version__ import SERIES; print(SERIES)")
+
 if [[ -z $REFERENCE_GENOME ]]; then
     REFERENCE_GENOME=hg19
 fi
@@ -32,13 +34,13 @@ fi
 
 
 if [[ -z $DATA_ARCHIVE ]]; then
-    DATA_ARCHIVE=data-${REFERENCE_GENOME}-startup-latest.tar.gz
+    DATA_ARCHIVE=data-${REFERENCE_GENOME}-startup-${SERIES}-latest.tar.gz
     wget -c https://iossifovlab.com/distribution/public/$DATA_ARCHIVE
 
     mkdir $INSTALL_DIRNAME && \
         tar xzf $DATA_ARCHIVE -C $INSTALL_DIRNAME --strip-components 1
 
-    rm $DATA_ARCHIVE 
+    # rm $DATA_ARCHIVE 
 else
     if [[ ! -f $DATA_ARCHIVE ]]; then
         echo "Data archive '$DATA_ARCHIVE' not found"

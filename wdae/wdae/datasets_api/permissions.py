@@ -10,7 +10,6 @@ from dae.studies.study import GenotypeData
 from django.contrib.auth.models import Group
 from django.utils.encoding import force_str
 
-from guardian.utils import get_anonymous_user
 from guardian.shortcuts import get_groups_with_perms
 from guardian.shortcuts import assign_perm
 
@@ -89,8 +88,8 @@ def get_wdae_parents(dataset):
 
 def get_wdae_children(dataset, leafs=False):
     """Given a dataset ID or DAE genotype data object or WDAE dataset object,
-    returns list of direct childrens as WDAE dataset object (if 'leafs' 
-    parameter is 'False'). If 'leafs' parameter is 'True', returns list 
+    returns list of direct childrens as WDAE dataset object (if 'leafs'
+    parameter is 'False'). If 'leafs' parameter is 'True', returns list
     of leafs of the datasets tree."""
     genotype_data = get_genotype_data(dataset)
     if genotype_data is None:

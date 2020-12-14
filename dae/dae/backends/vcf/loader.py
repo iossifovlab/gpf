@@ -232,7 +232,12 @@ class SingleVcfLoader(VariantsGenotypesLoader):
 
     def _init_chromosome_order(self):
         seqnames = self.vcfs[0].seqnames
-        assert all([vcf.seqnames == seqnames for vcf in self.vcfs])
+        if not all([vcf.seqnames == seqnames for vcf in self.vcfs]):
+            logger.warning(
+                f"VCF files {self.filenames} do not have the same list "
+                f"of contigs")
+            # assert all([vcf.seqnames == seqnames for vcf in self.vcfs]), \
+            #     (self.filenames, seqnames)
 
         chrom_order = dict()
         for idx, seq in enumerate(seqnames):
