@@ -87,3 +87,22 @@ def test_datasets_api_get_all_with_selected_restriction(
         assert len(response.data["data"]) == 3
     finally:
         wdae_gpf_instance.dae_config = old_conf
+
+
+def test_datasets_api_parents(admin_client, wdae_gpf_instance):
+
+    dataset1_wrapper = wdae_gpf_instance.get_wdae_wrapper("Dataset1")
+    assert dataset1_wrapper is not None
+    assert dataset1_wrapper.is_group
+
+    # study1 = wdae_gpf_instance.get_genotype_data("Study1")
+    # assert "Dataset1" in study1.parents
+
+    response = admin_client.get("/api/v3/datasets/Study1")
+    assert response
+    assert response.status_code == 200
+    print(response.data)
+    data = response.data["data"]
+
+    assert "parents" in data
+    assert data["parents"] == ["Dataset1"]

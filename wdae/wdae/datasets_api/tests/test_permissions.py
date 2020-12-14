@@ -310,9 +310,3 @@ def test_get_allowed_dataset_from_parent(db, user, dataset_wrapper):
 
     allowed_datasets = _get_allowed_datasets_for_user(user, "Dataset1")
     assert "Dataset1" in allowed_datasets
-
-
-def test_compare_has_permissions_with_get_allowed_children_datasets(
-        db, user, dataset_wrapper, wdae_gpf_instance):
-
-    pass

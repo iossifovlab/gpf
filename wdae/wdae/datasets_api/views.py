@@ -6,6 +6,7 @@ from query_base.query_base import QueryBaseView
 
 from .models import Dataset
 from groups_api.serializers import GroupSerializer
+from datasets_api.permissions import get_wdae_parents
 
 
 class DatasetView(QueryBaseView):
@@ -40,6 +41,13 @@ class DatasetView(QueryBaseView):
 
         return dataset
 
+    def augment_with_parents(self, dataset):
+        parents = get_wdae_parents(dataset["id"])
+        parents = [ds.dataset_id for ds in parents]
+        dataset["parents"] = parents
+
+        return dataset
+
     def get(self, request, dataset_id=None):
         user = request.user
         if dataset_id is None:
@@ -66,6 +74,7 @@ class DatasetView(QueryBaseView):
 
             res = [self.augment_accessibility(ds, user) for ds in res]
             res = [self.augment_with_groups(ds) for ds in res]
+            res = [self.augment_with_parents(ds) for ds in res]
             return Response({"data": res})
         else:
             dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
@@ -74,6 +83,8 @@ class DatasetView(QueryBaseView):
                     self.gpf_instance)
                 res = self.augment_accessibility(res, user)
                 res = self.augment_with_groups(res)
+                res = self.augment_with_parents(res)
+
                 return Response({"data": res})
             return Response(
                 {"error": "Dataset {} not found".format(dataset_id)},

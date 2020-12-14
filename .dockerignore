@@ -3,3 +3,10 @@ containers/
 coverage/
 data-hg19-startup/
 data-hg19-startup-latest.tar.gz
+gpf_remote/
+*.tar.gz
+comp/
+comp-data/
+.pytest_cache/
+.mypy_cache/
+test_results/
