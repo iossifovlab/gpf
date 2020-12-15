@@ -256,9 +256,9 @@ export class GeneViewSummaryVariant {
 
   get comparisonValue(): number {
     let sum = 0;
-
-    sum += this.seenAsDenovo ? 200 : 100;
-    sum += this.isLGDs() ? 50 : this.isMissense() ? 40 : this.isSynonymous ? 30 : !this.isCNV ? 20 : 10;
+    
+    sum += this.seenAsDenovo && !this.isCNV() ? 200 : 100;
+    sum += this.isLGDs() ? 50 : this.isMissense() ? 40 : this.isSynonymous() ? 30 : !this.isCNV() ? 20 : this.seenAsDenovo ? 10 : 5;
     sum += (this.seenInAffected && this.seenInUnaffected) ? 1 : this.seenInUnaffected ? 2 : 3;
     return sum;
   }

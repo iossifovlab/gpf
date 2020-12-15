@@ -286,6 +286,9 @@ describe('GeneViewSummaryVariant', () => {
 
   it('should create correct comparison value', () => {
     const correctOrder = [
+      [false, 'CNV+', true, true],
+      [true, 'CNV+', true, true],
+      [false, 'other', true, true],
       [false, 'synonymous', true, true],
       [false, 'synonymous', false, true],
       [false, 'synonymous', true, false],
