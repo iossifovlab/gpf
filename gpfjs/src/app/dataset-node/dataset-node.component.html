@@ -1,4 +1,6 @@
 <a class="dataset-dropdown-item dropdown-item"
+  *ngIf="(selectedDataset$ | async) as selectedDataset"
+  [class.active]="selectedDataset.id === datasetNode.dataset.id"
   (click)="select()"
   [style.opacity]="datasetNode.dataset.accessRights ? 1.0 : 0.3">
   {{ datasetNode.dataset.name }}
