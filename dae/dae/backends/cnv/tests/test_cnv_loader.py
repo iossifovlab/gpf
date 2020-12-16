@@ -45,7 +45,10 @@ def test_cnv_loader_alt_2(fixture_dirname, genomes_db_2013):
 
     variants_file = fixture_dirname("backends/cnv_variants_alt_2.txt")
 
-    loader = CNVLoader(families, variants_file, genomes_db_2013.get_genome())
+    loader = CNVLoader(
+        families, variants_file, genomes_db_2013.get_genome(),
+        params={"cnv_person_id": "personId"}
+    )
     assert loader is not None
 
     svs = []
