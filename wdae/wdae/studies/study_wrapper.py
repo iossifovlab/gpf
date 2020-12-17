@@ -656,7 +656,9 @@ class StudyWrapper(StudyWrapperBase):
         variants_from_studies = itertools.islice(
             self.genotype_data_study.query_summary_variants(**kwargs), limit
         )
-        for v in variants_from_studies:
+        variants_with_additional_cols = self._add_additional_columns_summary(
+            variants_from_studies)
+        for v in variants_with_additional_cols:
             for aa in v.alt_alleles:
                 assert not aa.is_reference_allele
 
@@ -711,6 +713,18 @@ class StudyWrapper(StudyWrapperBase):
 
                     if roles_values:
                         allele.update_attributes(roles_values)
+
+                    allele.update_attributes(gene_weights_values)
+
+                yield variant
+
+    def _add_additional_columns_summary(self, variants_iterable):
+        for variants_chunk in split_iterable(
+                variants_iterable, self.STREAMING_CHUNK_SIZE):
+
+            for variant in variants_chunk:
+                for allele in variant.alt_alleles:
+                    gene_weights_values = self._get_gene_weights_values(allele)
 
                     allele.update_attributes(gene_weights_values)
 
