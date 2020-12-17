@@ -28,7 +28,7 @@ export LD_LIBRARY_PATH=/opt/conda/envs/gpf/lib/native:/opt/conda/envs/gpf/lib/se
 export MPLBACKEND=PDF
 # export MPLBACKEND=qt5agg
 
-sed -i \"s/localhost/impala/\" /code/dae_conftests/dae_conftests/tests/fixtures/DAE.conf
+sed -i "s/localhost/impala/" /code/dae_conftests/dae_conftests/tests/fixtures/DAE.conf
 
 cd /code/
 
@@ -58,13 +58,13 @@ fi
 
 cd /code/
 
-py.test -v --cov-config /code/coveragerc \
-    --junitxml=/code/test_results/wdae-junit.xml \
-    --cov-append \
-    --cov-report=html:/code/test_results/coverage.html \
-    --cov-report=xml:/code/test_results/coverage.xml \
-    --cov wdae/ \
-    wdae/wdae
+# py.test -v --cov-config /code/coveragerc \
+#     --junitxml=/code/test_results/wdae-junit.xml \
+#     --cov-append \
+#     --cov-report=html:/code/test_results/coverage.html \
+#     --cov-report=xml:/code/test_results/coverage.xml \
+#     --cov wdae/ \
+#     wdae/wdae
 
 
 cd /code
