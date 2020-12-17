@@ -33,8 +33,8 @@ cd /code/
 if [[ $CLEANUP ]]; then
     echo "Cleaning up with reimport..."
     py.test -v \
-        --cov-config /code/coveragerc \
         --reimport \
+        --cov-config /code/coveragerc \
         --junitxml=./test_results/dae-junit.xml \
         --cov-report=html:/code/test_results/coverage.html \
         --cov-report=xml:/code/test_results/coverage.xml \
@@ -44,6 +44,7 @@ if [[ $CLEANUP ]]; then
 else
 
     py.test -v \
+        --reimport \
         --cov-config /code/coveragerc \
         --junitxml=./test_results/dae-junit.xml \
         --cov-report=html:/code/test_results/coverage.html \
