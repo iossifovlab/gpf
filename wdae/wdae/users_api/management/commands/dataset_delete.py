@@ -1,8 +1,4 @@
-import os
-import re
 import logging
-import glob
-import toml
 
 
 from django.core.management.base import BaseCommand
@@ -41,7 +37,7 @@ class Command(BaseCommand, DatasetBaseMixin):
             self.remove_wdae_dataset_and_groups(dataset_id)
 
         else:
-            assert self.is_impala_genotype_storage(config), \
+            assert self.is_impala_genotype_storage(dataset_id), \
                 f"genotype storage {config.genotype_storage.id} is not Impala"
 
             self.remove_study_config(dataset_id)

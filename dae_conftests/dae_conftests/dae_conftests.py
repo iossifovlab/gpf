@@ -669,7 +669,10 @@ def impala_genotype_storage(hdfs_host, impala_host):
                 "db": impala_test_dbname(),
                 "pool_size": 5,
             },
-            "hdfs": {"host": hdfs_host, "port": 8020, "base_dir": "/tmp"},
+            "hdfs": {
+                "host": hdfs_host,
+                "port": 8020,
+                "base_dir": "/tmp/test_data"},
         }
     )
 
@@ -798,8 +801,8 @@ def data_import(
 
 @pytest.fixture(scope="session")
 def variants_impala(
-    request, data_import, impala_genotype_storage, genomes_db_2013
-):
+        request, data_import, impala_genotype_storage, genomes_db_2013):
+
     def builder(path):
         study_id = os.path.basename(path)
         fvars = impala_genotype_storage.build_backend(

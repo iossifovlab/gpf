@@ -1,8 +1,13 @@
 import os
 import sys
+import glob
 import argparse
 import time
 import logging
+import shutil
+
+import toml
+from box import Box
 
 from typing import Optional, Any
 
@@ -222,7 +227,7 @@ class MakefileGenerator(BatchGenerator):
 {%- for prefix, context in variants.items() %}
 
 {{prefix}}_bins={{context.bins|join(" ")}}
-{{prefix}}_bins_flags=$(foreach bin, $({{prefix}}_bins), {{prefix}}_$(bin).flag)
+{{prefix}}_bins_flags=$(foreach bin,$({{prefix}}_bins),{{prefix}}_$(bin).flag)
 
 {%- endfor %}
 
@@ -547,7 +552,8 @@ rule setup_remote:
         "logs/setup_remote_benchmark.tsv"
     shell:
         '''
-        ssh {{mirror_of.netloc}} "mkdir -p {{mirror_of.path}}/studies/{{study_id}}"
+        ssh {{mirror_of.netloc}} \\
+            "mkdir -p {{mirror_of.path}}/studies/{{study_id}}"
         rsync -avPHt \\
             --ignore-existing \\
             {{dae_db_dir}}/studies/{{study_id}}/ \\
@@ -1259,3 +1265,302 @@ class Variants2ParquetTool:
         else:
             target_chromosomes = variants_loader.chromosomes
         return target_chromosomes
+
+
+class DatasetHelpers:
+
+    def __init__(self, gpf_instance=None):
+        if gpf_instance is None:
+            self.gpf_instance = GPFInstance()
+        else:
+            self.gpf_instance = gpf_instance
+
+    def find_genotype_data_config_file(self, dataset_id):
+        config = self.gpf_instance.get_genotype_data_config(dataset_id)
+        assert config is not None
+
+        conf_dir = config.conf_dir
+
+        result = glob.glob(os.path.join(conf_dir, "*.conf"))
+        assert len(result) == 1, \
+            f"unexpected number of config files in {conf_dir}"
+        config_file = result[0]
+        assert os.path.exists(config_file)
+        return config_file
+
+    def find_genotype_data_config(self, dataset_id):
+        config_file = self.find_genotype_data_config_file(dataset_id)
+
+        with open(config_file, "r") as infile:
+            short_config = toml.load(infile)
+            short_config = Box(short_config)
+        return short_config
+
+    def get_genotype_storage(self, dataset_id):
+        config = self.find_genotype_data_config(dataset_id)
+        gpf_instance = self.gpf_instance
+        genotype_storage = gpf_instance \
+            .genotype_storage_db \
+            .get_genotype_storage(
+                config.genotype_storage.id)
+        return genotype_storage
+
+    def is_impala_genotype_storage(self, dataset_id):
+        genotype_storage = self.get_genotype_storage(dataset_id)
+        return genotype_storage.is_impala()
+
+    def check_dataset_hdfs_directories(self, genotype_storage, dataset_id):
+        # genotype_storage = self.get_genotype_storage(dataset_id)
+        logger.info(
+            f"genotype storage of study {dataset_id} should be impala: "
+            f"{genotype_storage.is_impala()}")
+        if not genotype_storage.is_impala():
+            return None
+
+        hdfs_helpers = genotype_storage.hdfs_helpers
+
+        study_dir = genotype_storage.full_hdfs_path(
+            genotype_storage.default_hdfs_study_path(dataset_id))
+
+        logger.info(
+            f"study hdfs dir {study_dir} should exists: "
+            f"{hdfs_helpers.exists(study_dir)}")
+        logger.info(
+            f"study hdfs dir {study_dir} should be a directory: "
+            f"{hdfs_helpers.isdir(study_dir)}")
+
+        if not hdfs_helpers.exists(study_dir) or \
+                not hdfs_helpers.isdir(study_dir):
+            return None
+
+        pedigree_dir = os.path.join(study_dir, "pedigree")
+        logger.info(
+            f"pedigree hdfs dir {pedigree_dir} should exists: "
+            f"{hdfs_helpers.exists(pedigree_dir)}")
+        logger.info(
+            f"pedigree hdfs dir {pedigree_dir} should be a directory: "
+            f"{hdfs_helpers.isdir(pedigree_dir)}")
+
+        if not hdfs_helpers.exists(pedigree_dir) or \
+                not hdfs_helpers.isdir(pedigree_dir):
+            return None
+
+        pedigree_file = os.path.join(pedigree_dir, "pedigree.parquet")
+        logger.info(
+            f"pedigree hdfs file {pedigree_file} should exists: "
+            f"{hdfs_helpers.exists(pedigree_file)}")
+        logger.info(
+            f"pedigree hdfs file {pedigree_file} should be a file: "
+            f"{hdfs_helpers.isfile(pedigree_file)}")
+
+        if not hdfs_helpers.exists(pedigree_file) or \
+                not hdfs_helpers.isfile(pedigree_file):
+            return None
+        config = self.find_genotype_data_config(dataset_id)
+        variants_table = config.genotype_storage.tables.variants
+        if variants_table is None:
+            logger.info(
+                f"dataset {dataset_id} does not have variants; "
+                f"skipping checks for variants directory...")
+        else:
+            variants_dir = os.path.join(study_dir, "variants")
+            logger.info(
+                f"variants hdfs dir {variants_dir} should exists: "
+                f"{hdfs_helpers.exists(variants_dir)}")
+            logger.info(
+                f"variants hdfs dir {variants_dir} should be a directory: "
+                f"{hdfs_helpers.isdir(variants_dir)}")
+            if not hdfs_helpers.exists(variants_dir) or \
+                    not hdfs_helpers.isdir(variants_dir):
+                return None
+
+        return True
+
+    def check_dataset_rename_hdfs_directory(self, old_id, new_id):
+        genotype_storage = self.get_genotype_storage(old_id)
+        if not self.check_dataset_hdfs_directories(genotype_storage, old_id):
+            return (None, None)
+
+        hdfs_helpers = genotype_storage.hdfs_helpers
+
+        source_dir = genotype_storage.full_hdfs_path(
+            genotype_storage.default_hdfs_study_path(old_id))
+        dest_dir = genotype_storage.full_hdfs_path(
+            genotype_storage.default_hdfs_study_path(new_id))
+
+        logger.info(
+            f"source hdfs dir {source_dir} should exists: "
+            f"{hdfs_helpers.exists(source_dir)}")
+
+        logger.info(
+            f"source hdfs dir {source_dir} should be a directory: "
+            f"{hdfs_helpers.isdir(source_dir)}")
+
+        logger.info(
+            f"destination hdfs dir {dest_dir} should not exists: "
+            f"{not hdfs_helpers.exists(dest_dir)}")
+
+        if hdfs_helpers.exists(source_dir) and \
+                hdfs_helpers.isdir(source_dir) and  \
+                not hdfs_helpers.exists(dest_dir):
+            return (source_dir, dest_dir)
+
+        else:
+            return (None, None)
+
+    def dataset_rename_hdfs_directory(self, old_id, new_id):
+        source_dir, dest_dir = \
+            self.check_dataset_rename_hdfs_directory(old_id, new_id)
+        assert source_dir is not None
+        assert dest_dir is not None
+
+        genotype_storage = self.get_genotype_storage(old_id)
+        hdfs_helpers = genotype_storage.hdfs_helpers
+        hdfs_helpers.rename(source_dir, dest_dir)
+
+    def dataset_remove_hdfs_directory(self, dataset_id):
+        genotype_storage = self.get_genotype_storage(dataset_id)
+        assert self.check_dataset_hdfs_directories(
+            genotype_storage, dataset_id)
+
+        hdfs_helpers = genotype_storage.hdfs_helpers
+
+        study_dir = genotype_storage.full_hdfs_path(
+            genotype_storage.default_hdfs_study_path(dataset_id))
+
+        hdfs_helpers.delete(study_dir, recursive=True)
+
+    def dataset_recreate_impala_tables(self, old_id, new_id):
+        genotype_storage = self.get_genotype_storage(old_id)
+        assert genotype_storage.is_impala()
+        assert self.check_dataset_hdfs_directories(genotype_storage, new_id)
+
+        impala_db = genotype_storage.storage_config.impala.db
+        impala_helpers = genotype_storage.impala_helpers
+
+        new_hdfs_pedigree = genotype_storage \
+            .default_pedigree_hdfs_filename(new_id)
+        new_hdfs_pedigree = os.path.dirname(new_hdfs_pedigree)
+
+        new_pedigree_table = genotype_storage._construct_pedigree_table(new_id)
+
+        config = self.find_genotype_data_config(old_id)
+
+        pedigree_table = config.genotype_storage.tables.pedigree
+
+        impala_helpers.recreate_table(
+            impala_db, pedigree_table,
+            new_pedigree_table, new_hdfs_pedigree)
+
+        variants_table = config.genotype_storage.tables.variants
+        new_variants_table = None
+
+        if variants_table is not None:
+            new_hdfs_variants = genotype_storage \
+                .default_variants_hdfs_dirname(new_id)
+
+            new_variants_table = genotype_storage \
+                ._construct_variants_table(new_id)
+
+            impala_helpers.recreate_table(
+                impala_db, variants_table,
+                new_variants_table, new_hdfs_variants)
+
+        return new_pedigree_table, new_variants_table
+
+    def dataset_drop_impala_tables(self, dataset_id):
+        assert self.check_dataset_impala_tables(dataset_id)
+
+        genotype_storage = self.get_genotype_storage(dataset_id)
+
+        impala_db = genotype_storage.storage_config.impala.db
+        impala_helpers = genotype_storage.impala_helpers
+
+        config = self.find_genotype_data_config(dataset_id)
+
+        pedigree_table = config.genotype_storage.tables.pedigree
+        impala_helpers.drop_table(
+            impala_db, pedigree_table)
+
+        variants_table = config.genotype_storage.tables.variants
+        if variants_table is not None:
+            impala_helpers.drop_table(
+                impala_db, variants_table)
+
+    def check_dataset_impala_tables(self, dataset_id):
+        genotype_storage = self.get_genotype_storage(dataset_id)
+
+        impala_db = genotype_storage.storage_config.impala.db
+        impala_helpers = genotype_storage.impala_helpers
+
+        config = self.find_genotype_data_config(dataset_id)
+
+        pedigree_table = config.genotype_storage.tables.pedigree
+
+        logger.info(
+            f"impala pedigree table {impala_db}.{pedigree_table} "
+            f"should exists: "
+            f"{impala_helpers.check_table(impala_db, pedigree_table)}")
+
+        if not impala_helpers.check_table(impala_db, pedigree_table):
+            return None
+
+        create_statement = impala_helpers.get_table_create_statement(
+            impala_db, pedigree_table)
+
+        logger.info(
+            f"pedigree table {impala_db}.{pedigree_table} should "
+            f"be external table: "
+            f"{'CREATE EXTERNAL TABLE' in create_statement}"
+        )
+        if "CREATE EXTERNAL TABLE" not in create_statement:
+            return None
+
+        variants_table = config.genotype_storage.tables.variants
+        if variants_table is None:
+            logger.info(
+                f"dataset {dataset_id} has no variants; "
+                f"skipping checks for variants table")
+        else:
+            logger.info(
+                f"impala variants table {impala_db}.{variants_table} "
+                f"should exists: "
+                f"{impala_helpers.check_table(impala_db, variants_table)}"
+            )
+            if not impala_helpers.check_table(impala_db, variants_table):
+                return None
+
+            create_statement = impala_helpers.get_table_create_statement(
+                impala_db, variants_table)
+
+            logger.info(
+                f"variants table {impala_db}.{variants_table} should "
+                f"be external table: "
+                f"{'CREATE EXTERNAL TABLE' in create_statement}"
+            )
+            if 'CREATE EXTERNAL TABLE' not in create_statement:
+                return None
+
+        return True
+
+    def rename_study_config(self, dataset_id, new_id, config_content):
+        config_file = self.find_genotype_data_config_file(dataset_id)
+
+        os.rename(config_file, f"{config_file}_bak")
+
+        config_dirname = os.path.dirname(config_file)
+        new_dirname = os.path.join(os.path.dirname(config_dirname), new_id)
+        print(new_dirname)
+        os.rename(config_dirname, new_dirname)
+
+        new_config_file = os.path.join(new_dirname, f"{new_id}.conf")
+
+        with open(new_config_file, "wt") as outfile:
+            content = toml.dumps(config_content)
+            outfile.write(content)
+
+    def remove_study_config(self, dataset_id):
+        config_file = self.find_genotype_data_config_file(dataset_id)
+        config_dir = os.path.dirname(config_file)
+
+        shutil.rmtree(config_dir)
