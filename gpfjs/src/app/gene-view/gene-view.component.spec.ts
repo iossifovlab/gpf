@@ -131,30 +131,6 @@ describe('GeneViewComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should update gene information on change', () => {
-    const setDefaultScaleSpy = spyOn(component, 'setDefaultScale');
-    const resetGeneTableValuesSpy = spyOn(component, 'resetGeneTableValues');
-
-    component.gene = undefined;
-    component.geneViewModel = undefined;
-    component.geneViewTranscript = undefined;
-    component.ngOnChanges();
-    expect(component.geneViewModel).toBe(undefined);
-    expect(component.geneViewTranscript).toBe(undefined);
-    expect(setDefaultScaleSpy).not.toHaveBeenCalled();
-    expect(resetGeneTableValuesSpy).not.toHaveBeenCalled();
-
-    component.gene = testGene;
-    component.svgWidth = 1000;
-    component.ngOnChanges();
-    const expectedModel = new GeneViewModel(component.gene, component.svgWidth );
-    expect(component.geneViewModel).toEqual(expectedModel);
-    const expectedTranscript = new GeneViewTranscript(component.gene.transcripts[0]);
-    expect(component.geneViewTranscript).toEqual(expectedTranscript);
-    expect(setDefaultScaleSpy).toHaveBeenCalled();
-    expect(resetGeneTableValuesSpy).toHaveBeenCalled();
-  });
-
   it('should get current state', (done) => {
     component.zoomHistory.resetToDefaultState(new GeneViewScaleState([1, 10], 1, 10, false));
     component.x = {'_domain': [1, 10], domain() {return this._domain; }};

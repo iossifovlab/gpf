@@ -199,6 +199,12 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     });
 
     this.streamingFinished$.subscribe(() => {
+      this.geneViewModel = new GeneViewModel(this.gene, this.svgWidth);
+      this.geneViewTranscript = new GeneViewTranscript(this.gene.transcripts[0]);
+      this.setDefaultScale();
+      this.resetGeneTableValues();
+      this.resetCheckboxes();
+
       this.summaryVariantsArray = this.variantsArray;
       this.filteredSummaryVariantsArray = this.variantsArray;
 
@@ -219,16 +225,6 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     });
 
     this.zoomHistory = new GeneViewZoomHistory();
-  }
-
-  ngOnChanges() {
-    if (this.gene !== undefined) {
-      this.geneViewModel = new GeneViewModel(this.gene, this.svgWidth);
-      this.geneViewTranscript = new GeneViewTranscript(this.gene.transcripts[0]);
-      this.setDefaultScale();
-      this.resetGeneTableValues();
-      this.resetCheckboxes();
-    }
   }
 
   resetCheckboxes() {
