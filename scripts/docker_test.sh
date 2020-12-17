@@ -28,6 +28,8 @@ export LD_LIBRARY_PATH=/opt/conda/envs/gpf/lib/native:/opt/conda/envs/gpf/lib/se
 export MPLBACKEND=PDF
 # export MPLBACKEND=qt5agg
 
+sed -i \"s/localhost/impala/\" /code/dae_conftests/dae_conftests/tests/fixtures/DAE.conf
+
 cd /code/
 
 if [[ $CLEANUP ]]; then
@@ -68,3 +70,4 @@ py.test -v --cov-config /code/coveragerc \
 cd /code
 chmod a+rwx -R /code/test_results
 
+git checkout dae_conftests/dae_conftests/tests/fixtures/DAE.conf

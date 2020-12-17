@@ -96,10 +96,10 @@ pipeline {
                     mkdir -p $WD/data-hg19-startup/wdae
 
                     sed -i "s/localhost/impala/" $WD/data-hg19-startup/DAE.conf
-                            docker run -d --rm \
-                                -v ${WD}:/code \
-                                busybox:latest \
-                                /bin/sh -c "sed -i \"s/localhost/impala/\" /code/dae_conftests/dae_conftests/tests/fixtures/DAE.conf"
+                    docker run -d --rm \
+                        -v ${WD}:/code \
+                        busybox:latest \
+                        /bin/sh -c "sed -i \"s/localhost/impala/\" /code/dae_conftests/dae_conftests/tests/fixtures/DAE.conf"
                 '''
             }
         }
