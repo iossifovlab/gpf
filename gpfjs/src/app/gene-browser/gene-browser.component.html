@@ -19,7 +19,8 @@
 
     <div [hidden]="hideResults">
       <div class="row" style="margin-left: 0px; margin-right: 0px">
-        <gpf-gene-view style="width: 100%; min-width: 1300px;" [gene]="selectedGene"
+        <gpf-gene-view style="width: 100%; min-width: 1300px;"
+          [gene]="selectedGene"
           [variantsArray]="summaryVariantsArray"
           (updateShownTablePreviewVariantsArrayEvent)="updateShownTablePreviewVariantsArray($event)"
           [streamingFinished$]="queryService.summaryStreamingFinishedSubject">
