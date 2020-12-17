@@ -286,10 +286,12 @@ describe('GeneViewComponent', () => {
   });
 
   it('should redraw and update table', () => {
+    const setDenovoPlotHeightSpy = spyOn(component, 'setDenovoPlotHeight');
     const redrawSpy = spyOn(component, 'redraw');
     const updateFamilyVariantsTableSpy = spyOn(component, 'updateFamilyVariantsTable');
 
     component.redrawAndUpdateTable();
+    expect(setDenovoPlotHeightSpy).toHaveBeenCalled();
     expect(redrawSpy).toHaveBeenCalled();
     expect(updateFamilyVariantsTableSpy).toHaveBeenCalled();
   });
