@@ -5,16 +5,18 @@
       <div style="display: inline; margin-right: 20px;"
         *ngFor="let affectedStatus of ['Affected only', 'Unaffected only', 'Affected and unaffected']; let i=index"
         class="checkbox">
-        <input #affectedStatusCheckbox checked type="checkbox"
-          (change)="checkAffectedStatus(affectedStatus, affectedStatusCheckbox.checked)"
-          id="{{affectedStatus}}-checkbox">
-        <span class="pedigree-icon" [style.background-color]="getAffectedStatusColor(affectedStatus)"
-          style="opacity: 0.75;"></span>
-        <label for="{{affectedStatus}}-checkbox" style="display: inline-block;vertical-align: middle;line-height: 95%;"
-          [ngStyle]="{width: affectedStatus === 'Affected only' ? '70px' : 
-                             affectedStatus === 'Unaffected only' ? '80px' :
-                             affectedStatus === 'Affected and unaffected' ? '100px': {}}">
-          {{ affectedStatus }}
+        <label>
+          <input #affectedStatusCheckbox checked type="checkbox"
+            (change)="checkAffectedStatus(affectedStatus, affectedStatusCheckbox.checked)"
+            id="{{affectedStatus}}-checkbox">
+          <span class="pedigree-icon" [style.background-color]="getAffectedStatusColor(affectedStatus)"
+            style="opacity: 0.75;"></span>
+          <label for="{{affectedStatus}}-checkbox" style="display: inline-block;vertical-align: middle;line-height: 95%;"
+            [ngStyle]="{width: affectedStatus === 'Affected only' ? '70px' : 
+                              affectedStatus === 'Unaffected only' ? '80px' :
+                              affectedStatus === 'Affected and unaffected' ? '100px': {}}">
+            {{ affectedStatus }}
+          </label>
         </label>
       </div>
     </div>
