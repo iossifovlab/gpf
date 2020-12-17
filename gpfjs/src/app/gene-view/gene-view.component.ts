@@ -199,26 +199,10 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     });
 
     this.streamingFinished$.subscribe(() => {
-      this.svgHeightFreqRaw = 400;
-      this.svgHeightFreq = this.svgHeightFreqRaw - this.options.margin.top - this.options.margin.bottom;
-      this.subdomainAxisY = Math.round(this.svgHeightFreq * this.options.axisScale.domain);
-      this.zeroAxisY = this.subdomainAxisY + Math.round(this.svgHeightFreq * this.options.axisScale.subdomain);
-
       this.summaryVariantsArray = this.variantsArray;
       this.filteredSummaryVariantsArray = this.variantsArray;
 
-      this.denovoVariantsSpacings = this.calculateDenovoVariantsSpacings(this.summaryVariantsArray);
-      if (this.denovoVariantsSpacings) {
-        this.additionalZeroAxisHeight = Math.max.apply(Math, Object.values(this.denovoVariantsSpacings));
-      }
-
-      this.svgHeightFreq += this.additionalZeroAxisHeight;
-      this.svgHeightFreqRaw += this.additionalZeroAxisHeight;
-
-      this.y_zero = d3.scalePoint()
-      .domain(['0'])
-      .range([this.svgHeightFreq, this.zeroAxisY]);
-
+      this.setDenovoPlotHeight();
       this.drawGene();
       this.setDefaultScale();
       this.updateFamilyVariantsTable();
@@ -367,6 +351,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
   }
 
   redrawAndUpdateTable() {
+    this.setDenovoPlotHeight();
     this.redraw();
     this.updateFamilyVariantsTable();
   }
@@ -727,6 +712,30 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
       denovoVariantsSpacings[sortedDenovos[i + 1].svuid] = spacingTracker;
     }
     return denovoVariantsSpacings;
+  }
+
+  setDenovoPlotHeight() {
+    const minDomain = this.x.domain()[0];
+    const maxDomain = this.x.domain()[this.x.domain().length - 1];
+    const filteredSummaryVariants = this.filterSummaryVariantsArray(
+      this.summaryVariantsArray, minDomain, maxDomain
+    );
+    this.svgHeightFreqRaw = 400;
+    this.svgHeightFreq = this.svgHeightFreqRaw - this.options.margin.top - this.options.margin.bottom;
+    this.subdomainAxisY = Math.round(this.svgHeightFreq * this.options.axisScale.domain);
+    this.zeroAxisY = this.subdomainAxisY + Math.round(this.svgHeightFreq * this.options.axisScale.subdomain);
+
+    this.denovoVariantsSpacings = this.calculateDenovoVariantsSpacings(filteredSummaryVariants);
+    this.additionalZeroAxisHeight = 0;
+    if (this.denovoVariantsSpacings) {
+      this.additionalZeroAxisHeight = Math.max.apply(Math, Object.values(this.denovoVariantsSpacings));
+    }
+
+    this.svgHeightFreq += this.additionalZeroAxisHeight;
+    this.svgHeightFreqRaw += this.additionalZeroAxisHeight;
+    this.y_zero = d3.scalePoint()
+    .domain(['0'])
+    .range([this.svgHeightFreq, this.zeroAxisY]);
   }
 
   getVariantY(variantFrequency: number): number {
