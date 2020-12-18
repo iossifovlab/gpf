@@ -46,7 +46,6 @@ if [[ $CLEANUP ]]; then
 else
 
     py.test -v \
-        --reimport \
         --cov-config /code/coveragerc \
         --junitxml=./test_results/dae-junit.xml \
         --cov-report=html:/code/test_results/coverage.html \
@@ -58,13 +57,13 @@ fi
 
 cd /code/
 
-# py.test -v --cov-config /code/coveragerc \
-#     --junitxml=/code/test_results/wdae-junit.xml \
-#     --cov-append \
-#     --cov-report=html:/code/test_results/coverage.html \
-#     --cov-report=xml:/code/test_results/coverage.xml \
-#     --cov wdae/ \
-#     wdae/wdae
+py.test -v --cov-config /code/coveragerc \
+    --junitxml=/code/test_results/wdae-junit.xml \
+    --cov-append \
+    --cov-report=html:/code/test_results/coverage.html \
+    --cov-report=xml:/code/test_results/coverage.xml \
+    --cov wdae/ \
+    wdae/wdae
 
 
 cd /code

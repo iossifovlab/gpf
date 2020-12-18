@@ -25,7 +25,8 @@ def test_is_impala_genotype_data_config(fixtures_gpf_instance):
     assert not helpers.is_impala_genotype_storage("Study1")
 
 
-def test_check_dataset_rename_hdfs_directory(fixtures_gpf_instance):
+def test_check_dataset_rename_hdfs_directory(
+        fixtures_gpf_instance, data_import):
     helpers = DatasetHelpers(fixtures_gpf_instance)
 
     sdir, ddir = helpers.check_dataset_rename_hdfs_directory("Study1", "new")
@@ -36,7 +37,8 @@ def test_check_dataset_rename_hdfs_directory(fixtures_gpf_instance):
     assert sdir is not None and ddir is not None
 
 
-def test_check_dataset_hdfs_directory(fixtures_gpf_instance):
+def test_check_dataset_hdfs_directory(
+        fixtures_gpf_instance, data_import):
     helpers = DatasetHelpers(fixtures_gpf_instance)
 
     assert not helpers.check_dataset_hdfs_directories(
@@ -45,7 +47,8 @@ def test_check_dataset_hdfs_directory(fixtures_gpf_instance):
         helpers.get_genotype_storage("SVMergingStudy1"), "SVMergingStudy1")
 
 
-def test_dataset_rename_hdfs_directory(fixtures_gpf_instance, mocker):
+def test_dataset_rename_hdfs_directory(
+        fixtures_gpf_instance, mocker, data_import):
     def mock_rename(self, n1, n2):
         assert n1.endswith("SVMergingStudy1")
         assert n2.endswith("new")
@@ -58,7 +61,8 @@ def test_dataset_rename_hdfs_directory(fixtures_gpf_instance, mocker):
     helpers.dataset_rename_hdfs_directory("SVMergingStudy1", "new")
 
 
-def test_dataset_delete_hdfs_directory(fixtures_gpf_instance, mocker):
+def test_dataset_delete_hdfs_directory(
+        fixtures_gpf_instance, mocker, data_import):
     def mock_delete(self, name, recursive):
         assert name.endswith("SVMergingStudy1")
         assert recursive
@@ -71,7 +75,8 @@ def test_dataset_delete_hdfs_directory(fixtures_gpf_instance, mocker):
     helpers.dataset_remove_hdfs_directory("SVMergingStudy1")
 
 
-def test_dataset_recreate_impala_tables(fixtures_gpf_instance, mocker):
+def test_dataset_recreate_impala_tables(
+        fixtures_gpf_instance, mocker, data_import):
     def mock_recreate(self, db, old_table, new_table, hdfs_dir):
         print(old_table)
         print(new_table)
@@ -91,7 +96,8 @@ def test_dataset_recreate_impala_tables(fixtures_gpf_instance, mocker):
     helpers.dataset_recreate_impala_tables("SVMergingStudy1", "new")
 
 
-def test_dataset_drop_impala_tables(fixtures_gpf_instance, mocker):
+def test_dataset_drop_impala_tables(
+        fixtures_gpf_instance, mocker, data_import):
     def mock_drop(self, db, table,):
         print(table)
         assert table.startswith("svmergingstudy1")
@@ -107,7 +113,8 @@ def test_dataset_drop_impala_tables(fixtures_gpf_instance, mocker):
     helpers.dataset_drop_impala_tables("SVMergingStudy1")
 
 
-def test_check_dataset_impala_tables(fixtures_gpf_instance, mocker):
+def test_check_dataset_impala_tables(
+        fixtures_gpf_instance, mocker, data_import):
 
     helpers = DatasetHelpers(fixtures_gpf_instance)
 
