@@ -41,9 +41,22 @@ class VcfFamiliesGenotypes(FamiliesGenotypes):
         for vcf_index, vcf_variant in enumerate(self.vcf_variants):
             if vcf_variant is not None:
                 # genotypes.append(vcf_variant.genotypes)
-                gt = vcf_variant.gt_idxs
+                current_vcf = self.loader.vcfs[vcf_index]
+                samples_count = len(current_vcf.samples)
+                logger.debug(
+                    f"samples len: {samples_count}; "
+                    f"gt_idxs: {len(vcf_variant.gt_idxs)}; "
+                    f"{set(vcf_variant.gt_idxs)}")
+
+                if len(vcf_variant.gt_idxs) == samples_count and \
+                        set(vcf_variant.gt_idxs) == set([-1]):
+                    gt_idxs = -1 * np.ones(2 * samples_count, dtype=np.int)
+                else:
+                    gt_idxs = vcf_variant.gt_idxs
+
+                gt = gt_idxs
                 gt[gt < -1] = -2
-                genotypes.append(vcf_variant.gt_idxs)
+                genotypes.append(gt_idxs)
             else:
                 fill_value = self.loader._fill_missing_value
                 samples_count = len(self.loader.vcfs[vcf_index].samples)
@@ -394,7 +407,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
             if vcf_variants[index] is None:
                 continue
             if self._compare_vcf_variants_gt(
-                vcf_variants[min_index], vcf_variants[index]):
+                    vcf_variants[min_index], vcf_variants[index]):
                 min_index = index
         return vcf_variants[min_index]
 
@@ -417,7 +430,19 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                 [2 * sample_index, 2 * sample_index + 1]).reshape(
                     [1, 2 * len(sample_index)], order="F")[0]
 
-            vcf_gt = vcf.gt_idxs[allele_index]
+            current_vcf = self.vcfs[vcf_index]
+            samples_count = len(current_vcf.samples)
+            logger.debug(
+                f"samples len: {samples_count}; "
+                f"gt_idxs: {len(vcf.gt_idxs)}; "
+                f"{set(vcf.gt_idxs)}")
+            if len(vcf.gt_idxs) == samples_count and \
+                    set(vcf.gt_idxs) == set([-1]):
+                gt_idxs = -1 * np.ones(2 * samples_count, dtype = np.int)
+            else:
+                gt_idxs = vcf.gt_idxs
+
+            vcf_gt = gt_idxs[allele_index]
             vcf_gt = vcf_gt.reshape([2, len(sample_index)], order="F")
 
             unknown = np.any(vcf_gt == -1, axis=0)
