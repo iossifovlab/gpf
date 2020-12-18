@@ -939,7 +939,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     for (const [chromosome, range] of Object.entries(chromosomes)) {
       from = Math.max(range[0], domainMin);
       to = Math.min(range[1], domainMax);
-      draw.hoverText(element, this.x((from + to) / 2) - 43, yPos + 35, `Chromosome: ${chromosome}`, '', this.fontSize);
+      draw.hoverText(element, (this.x(from) + this.x(to))/2 - 43, yPos + 35, `Chromosome: ${chromosome}`, '', this.fontSize);
     }
   }
 
