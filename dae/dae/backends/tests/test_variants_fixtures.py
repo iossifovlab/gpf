@@ -30,7 +30,7 @@ def test_variants_all_count(variants_impl, variants, fixture_name, count):
     assert len(vs) == count
 
 
-@pytest.mark.parametrize("fixture_name", ["backends/trios2",])
+@pytest.mark.parametrize("fixture_name", ["backends/trios2"])
 @pytest.mark.parametrize("variants", ["variants_impala", "variants_vcf"])
 def test_df_query_multiallelic3_families(
     variants_impl, variants, fixture_name
@@ -63,7 +63,7 @@ def test_df_query_multiallelic3_families(
 
 
 @pytest.mark.parametrize("variants", ["variants_impala", "variants_vcf"])
-@pytest.mark.parametrize("fixture_name", ["backends/trios2_11541",])
+@pytest.mark.parametrize("fixture_name", ["backends/trios2_11541"])
 def test_reference_variant(variants_impl, variants, fixture_name):
 
     fvars = variants_impl(variants)(fixture_name)
@@ -81,7 +81,7 @@ def test_reference_variant(variants_impl, variants, fixture_name):
 
 
 @pytest.mark.parametrize("variants", ["variants_impala", "variants_vcf"])
-@pytest.mark.parametrize("fixture_name", ["backends/trios2_11600",])
+@pytest.mark.parametrize("fixture_name", ["backends/trios2_11600"])
 def test_reference_multiallelic_variant(variants_impl, variants, fixture_name):
 
     fvars = variants_impl(variants)(fixture_name)
@@ -96,3 +96,34 @@ def test_reference_multiallelic_variant(variants_impl, variants, fixture_name):
         print(mat2str(v.best_state))
 
     # assert vs[0].summary_variant == vs[1].summary_variant
+
+
+@pytest.mark.parametrize("fixture_name", ["backends/strange_01"])
+@pytest.mark.parametrize("variants", ["variants_impala", "variants_vcf"])
+def test_query_strange_multiallelic_families(
+    variants_impl, variants, fixture_name
+):
+
+    fvars = variants_impl(variants)(fixture_name)
+    assert fvars is not None
+
+    vs = fvars.query_variants()
+    vs = list(vs)
+    assert len(vs) == 2
+    for v in vs:
+        # v = vs[0]
+
+        print(v, mat2str(v.best_state))
+        print(v.alt_alleles)
+
+        fa1 = v.alt_alleles[0]
+        fa2 = v.alt_alleles[1]
+        assert len(v.alt_alleles) == 2
+
+        print(fa1.variant_in_members)
+        print(fa2.variant_in_members)
+
+        # assert "mom1" in fa1.variant_in_members
+        # assert "dad1" in fa2.variant_in_members
+        # assert "ch1" not in fa1.variant_in_members
+        # assert "ch1" not in fa2.variant_in_members

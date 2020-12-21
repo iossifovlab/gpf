@@ -1,0 +1,9 @@
+familyId	personId	dadId	momId	sex	status	role
+f1	dad1	0	0	M	unaffected	father
+f1	mom1	0	0	F	unaffected	mother
+f1	prb1	dad1	mom1	M	affected	proband
+f1	sib1	dad1	mom1	F	unaffected	sibling
+f2	dad2	0	0	M	unaffected	father
+f2	mom2	0	0	F	unaffected	mother
+f2	prb2	dad2	mom2	M	affected	proband
+f2	sib2	dad2	mom2	F	unaffected	sibling

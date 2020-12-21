@@ -289,6 +289,11 @@ class StudyWrapper(StudyWrapperBase):
         "is_denovo": lambda aa: bool(
             Inheritance.denovo in aa.inheritance_in_members
         ),
+        "seen_in_affected": 
+        lambda aa: bool(aa.get_attribute("seen_in_status") in {2,3}),
+        "seen_in_unaffected": 
+        lambda aa: bool(aa.get_attribute("seen_in_status") in {1,3}),
+
     }
 
     SPECIAL_ATTRS = {**SPECIAL_ATTRS_FORMAT, **STANDARD_ATTRS_LAMBDAS}
@@ -361,7 +366,7 @@ class StudyWrapper(StudyWrapperBase):
                                     attribute = "-"
                                 elif math.isinf(attribute):
                                     attribute = "inf"
-                            if not attribute:
+                            if attribute == "":
                                 attribute = "-"
                             row_variant.append(attribute)
 
@@ -475,7 +480,7 @@ class StudyWrapper(StudyWrapperBase):
                     "variant": a.cshl_variant,
                     "family_variants_count":
                         a.get_attribute("family_variants_count"),
-                    "is_denovo": a.get_attribute("seen_in_denovo"),
+                    "is_denovo": a.get_attribute("seen_as_denovo"),
                     "seen_in_affected":
                         a.get_attribute("seen_in_status") in {2, 3},
                     "seen_in_unaffected":
@@ -519,7 +524,7 @@ class StudyWrapper(StudyWrapperBase):
                         gene_effect_get_worst_effect(a.effect),
                         a.cshl_variant,
                         a.get_attribute("family_variants_count"),
-                        a.get_attribute("seen_in_denovo"),
+                        a.get_attribute("seen_as_denovo"),
                         a.get_attribute("seen_in_status") in {2, 3},
                         a.get_attribute("seen_in_status") in {1, 3},
                     ]
@@ -678,7 +683,7 @@ class StudyWrapper(StudyWrapperBase):
                                     attribute = "-"
                                 elif math.isinf(attribute):
                                     attribute = "inf"
-                            if not attribute:
+                            if attribute == "":
                                 attribute = "-"
 
                             row_variant.append(attribute)
