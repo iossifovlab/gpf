@@ -1,4 +1,6 @@
 import itertools
+import logging
+
 from typing import Any, List, Optional
 
 import numpy as np
@@ -20,6 +22,9 @@ from dae.variants.variant import Allele, \
     SummaryAllele, \
     SummaryVariant, \
     Variant
+
+
+logger = logging.getLogger(__name__)
 
 
 def calculate_simple_best_state(

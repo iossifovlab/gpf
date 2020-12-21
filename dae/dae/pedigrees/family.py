@@ -197,6 +197,9 @@ class Family(object):
             )
         return self._members_in_order
 
+    def has_members(self):
+        return len(self.members_in_order) > 0
+
     @property
     def members_ids(self):
         return [m.person_id for m in self.members_in_order]

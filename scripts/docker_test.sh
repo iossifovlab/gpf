@@ -28,13 +28,15 @@ export LD_LIBRARY_PATH=/opt/conda/envs/gpf/lib/native:/opt/conda/envs/gpf/lib/se
 export MPLBACKEND=PDF
 # export MPLBACKEND=qt5agg
 
+sed -i "s/localhost/impala/" /code/dae_conftests/dae_conftests/tests/fixtures/DAE.conf
+
 cd /code/
 
 if [[ $CLEANUP ]]; then
     echo "Cleaning up with reimport..."
     py.test -v \
-        --cov-config /code/coveragerc \
         --reimport \
+        --cov-config /code/coveragerc \
         --junitxml=./test_results/dae-junit.xml \
         --cov-report=html:/code/test_results/coverage.html \
         --cov-report=xml:/code/test_results/coverage.xml \
@@ -67,3 +69,4 @@ py.test -v --cov-config /code/coveragerc \
 cd /code
 chmod a+rwx -R /code/test_results
 
+git checkout dae_conftests/dae_conftests/tests/fixtures/DAE.conf

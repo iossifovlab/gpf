@@ -47,13 +47,12 @@ def cached(prop):
 
 class GPFInstance(object):
     def __init__(
-        self,
-        dae_config=None,
-        config_file="DAE.conf",
-        work_dir=None,
-        defaults=None,
-        load_eagerly=False,
-    ):
+            self,
+            dae_config=None,
+            config_file="DAE.conf",
+            work_dir=None,
+            defaults=None,
+            load_eagerly=False):
         if dae_config is None:
             # FIXME Merge defaults with newly-loaded config
             assert not defaults, defaults

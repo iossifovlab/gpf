@@ -99,6 +99,8 @@ docker run --rm \
     -v ${DAE_DB_DIR}:/data \
     -v ${WD}:/code \
     -e TEST_REMOTE_HOST=${GPF_TEST_REMOTE_HOSTNAME} \
+    -e DAE_HDFS_HOST="impala" \
+    -e DAE_IMPALA_HOST="impala" \
     ${GPF_DOCKER_IMAGE} /code/scripts/docker_test.sh
 
 echo "----------------------------------------------"

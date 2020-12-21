@@ -333,3 +333,31 @@ def test_vcf_loader_params(
     variants_loader = vcf_variants_loader("backends/f1_test", params=params)
     vs = list(variants_loader.family_variants_iterator())
     assert len(vs) == count
+
+
+# @pytest.mark.parametrize(
+#     "fill_mode, fill_value", [["reference", 0], ["unknown", -1]]
+# )
+# def test_multivcf_loader_handle_all_unknown(
+#     fixture_dirname, fill_mode, fill_value, genomes_db_2013
+# ):
+#     ped_file = fixture_dirname("backends/multivcf.ped")
+
+#     multivcf_files = [
+#         fixture_dirname("backends/multivcf_unknown1.vcf"),
+#         fixture_dirname("backends/multivcf_unknown2.vcf"),
+#     ]
+#     families = FamiliesLoader(ped_file).load()
+#     params = {
+#         "vcf_include_reference_genotypes": True,
+#         "vcf_include_unknown_family_genotypes": True,
+#         "vcf_include_unknown_person_genotypes": True,
+#         "vcf_multi_loader_fill_in_mode": fill_mode,
+#     }
+#     multi_vcf_loader = VcfLoader(
+#         families, multivcf_files, genomes_db_2013.get_genome(), params=params
+#     )
+
+#     assert multi_vcf_loader is not None
+#     vs = list(multi_vcf_loader.family_variants_iterator())
+#     assert len(vs) == 30
