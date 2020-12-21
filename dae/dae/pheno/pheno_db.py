@@ -2,9 +2,12 @@ import logging
 
 import pandas as pd
 from sqlalchemy.sql import select, text
-from sqlalchemy import not_, and_, desc
+from sqlalchemy import not_, desc
 
 from collections import defaultdict, OrderedDict
+
+import csv
+from io import StringIO
 
 from dae.pedigrees.family import Person, Family
 from dae.pheno.db import DbManager
@@ -184,12 +187,12 @@ class PhenotypeData:
 
     def get_values_df(
             self, measure_ids,
-            person_ids=None, family_ids=None, roles=None, 
+            person_ids=None, family_ids=None, roles=None,
             default_filter="apply"):
         raise NotImplementedError()
 
     def get_values(
-            self, measure_ids, 
+            self, measure_ids,
             person_ids=None, family_ids=None, roles=None):
         raise NotImplementedError()
 
@@ -507,7 +510,7 @@ class PhenotypeDataStudy(PhenotypeData):
         df.rename(columns={"value": measure.measure_id}, inplace=True)
         return df
 
-    def get_measures_values_df(
+    def get_measures_values_streaming_csv(
         self,
         measure_ids,
         person_ids=None,
@@ -515,8 +518,6 @@ class PhenotypeDataStudy(PhenotypeData):
         roles=None,
         default_filter="apply",
     ):
-        value_tables = set()
-        values_cols = set()
         columns = [
             self.db.measure.c.measure_id,
             self.db.person.c.person_id,
@@ -531,56 +532,73 @@ class PhenotypeDataStudy(PhenotypeData):
                         measure.measure_id
                     )
                 )
-            value_table = self.db.get_value_table(measure_type)
-            value_tables.add(value_table)
-            if measure_type.name not in values_cols:
-                values_cols.add(measure_type.name)
-                columns.append(value_table.c.value.label(measure_type.name))
-        s = select(columns)
-        value_tables = list(value_tables)
-        j = (
-            value_tables[0].join(
-                self.db.measure,
-                and_(
-                    value_tables[0].c.measure_id==self.db.measure.c.id,
-                    value_tables[0].c.person_id==self.db.person.c.id
+        value_tables = [
+            self.db.get_value_table(MeasureType.categorical),
+            self.db.get_value_table(MeasureType.continuous),
+            self.db.get_value_table(MeasureType.ordinal),
+            self.db.get_value_table(MeasureType.raw)
+        ]
+
+        df_records = []
+
+        for vt in value_tables:
+            s = select(columns + [vt.c.value])
+
+            j = (
+                self.db.family.join(self.db.person)
+                .join(vt, isouter=True)
+                .join(self.db.measure)
+            )
+
+            s = s.select_from(j).where(
+                self.db.measure.c.measure_id.in_(measure_ids))
+
+            if roles is not None:
+                s = s.where(self.db.person.c.role.in_(roles))
+            if person_ids is not None:
+                s = s.where(self.db.person.c.person_id.in_(person_ids))
+            if family_ids is not None:
+                s = s.where(self.db.family.c.family_id.in_(family_ids))
+
+            if measure.default_filter is not None:
+                filter_clause = self._build_default_filter_clause(
+                    measure, default_filter
                 )
-            )
-            .join(self.db.person)
-            .join(self.db.family)
-        )
+                if filter_clause is not None:
+                    s = s.where(text(filter_clause))
 
-        for vt in value_tables[1:]:
-            j = j.join(
-                vt,
-                and_(
-                    vt.c.measure_id==self.db.measure.c.id,
-                    vt.c.person_id==self.db.person.c.id
-                ),
-                isouter=True
-            )
+            s = s.order_by(desc(self.db.person.c.person_id))
 
-        s = s.select_from(j).where(
-            self.db.measure.c.measure_id.in_(measure_ids))
+            df = pd.read_sql(s, self.db.engine)
+            df_records.append(df.to_dict("records"))
+        output = dict()
+        encountered_measures = set()
 
-        if roles is not None:
-            s = s.where(self.db.person.c.role.in_(roles))
-        if person_ids is not None:
-            s = s.where(self.db.person.c.person_id.in_(person_ids))
-        if family_ids is not None:
-            s = s.where(self.db.family.c.family_id.in_(family_ids))
-
-        if measure.default_filter is not None:
-            filter_clause = self._build_default_filter_clause(
-                measure, default_filter
-            )
-            if filter_clause is not None:
-                s = s.where(text(filter_clause))
-
-        s = s.order_by(desc(self.db.person.c.person_id))
-
-        df = pd.read_sql(s, self.db.engine)
-        return df
+        for records in df_records:
+            for record in records:
+                person_id = record["person_id"]
+                if person_id not in output:
+                    output[person_id] = {"person_id": person_id}
+                measure_id = record["measure_id"]
+                measure_value = record["value"]
+                encountered_measures.add(measure_id)
+                output[person_id][measure_id] = measure_value
+        for k, v in output.items():
+            for measure in encountered_measures:
+                if measure not in v:
+                    output[k][measure] = "-"
+        fieldnames = output[list(output.keys())[0]].keys()
+        buffer = StringIO()
+        writer = csv.DictWriter(buffer, fieldnames=fieldnames)
+        writer.writeheader()
+        yield buffer.getvalue()
+        buffer.seek(0)
+        buffer.truncate(0)
+        for v in output.values():
+            writer.writerow(v)
+            yield buffer.getvalue()
+            buffer.seek(0)
+            buffer.truncate(0)
 
     def get_measure_values_df(
         self,
@@ -623,7 +641,6 @@ class PhenotypeDataStudy(PhenotypeData):
             roles=roles,
             default_filter=default_filter,
         )
-        print(df[["person_id", measure_id]])
         return df[["person_id", measure_id]]
 
     def get_measure_values(
@@ -696,28 +713,58 @@ class PhenotypeDataStudy(PhenotypeData):
         assert len(measure_ids) >= 1
         assert all([self.has_measure(m) for m in measure_ids])
 
-        # dfs = [
-            # self.get_measure_values_df(
-                # m, person_ids, family_ids, roles, default_filter
-            # )
-            # for m in measure_ids
-        # ]
-        print(measure_ids[0:5])
-        df = self.get_measures_values_df(
-            measure_ids, person_ids, family_ids, roles, default_filter
-        )
-        print(df)
+        dfs = [
+            self.get_measure_values_df(
+                m, person_ids, family_ids, roles, default_filter
+            )
+            for m in measure_ids
+        ]
 
-        # res_df = dfs[0]
-        # for i, df in enumerate(dfs[1:]):
-            # res_df = res_df.join(
-                # df.set_index("person_id"),
-                # on="person_id",
-                # how="outer",
-                # rsuffix="_val_{}".format(i),
-            # )
+        res_df = dfs[0]
+        for i, df in enumerate(dfs[1:]):
+            res_df = res_df.join(
+                df.set_index("person_id"),
+                on="person_id",
+                how="outer",
+                rsuffix="_val_{}".format(i),
+            )
 
         return df
+
+    def get_values_streaming_csv(
+        self,
+        measure_ids,
+        person_ids=None,
+        family_ids=None,
+        roles=None,
+        default_filter="apply",
+    ):
+        """
+        Returns a data frame with values for given list of measures.
+
+        Values are loaded using consecutive calls to
+        `get_measure_values_df()` method for each measure in `measure_ids`.
+        All data frames are joined in the end and returned.
+
+        `measure_ids` -- list of measure ids which values should be returned.
+
+        `person_ids` -- list of person IDs to filter result. Only data for
+        individuals with person_id in the list `person_ids` are returned.
+
+        `family_ids` -- list of family IDs to filter result. Only data for
+        individuals that are members of any of the specified `family_ids`
+        are returned.
+
+        `roles` -- list of roles of individuals to select measure value for.
+        If not specified value for individuals in all roles are returned.
+        """
+        assert isinstance(measure_ids, list)
+        assert len(measure_ids) >= 1
+        assert all([self.has_measure(m) for m in measure_ids])
+
+        return self.get_measures_values_streaming_csv(
+            measure_ids, person_ids, family_ids, roles, default_filter
+        )
 
     def _values_df_to_dict(self, df):
         res = {}
