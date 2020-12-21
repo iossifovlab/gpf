@@ -128,15 +128,17 @@ class PhenoMeasuresDownload(QueryBaseView):
         instrument = request.query_params.get("instrument", None)
         if not instrument:
             measure_ids = list(dataset.phenotype_data.measures.keys())
-            df = dataset.phenotype_data.get_values_df(measure_ids)
+            values_iterator = dataset.phenotype_data.get_values_streaming_csv(
+                measure_ids)
+            response = StreamingHttpResponse(
+                values_iterator, content_type="text/csv")
         else:
             if instrument not in dataset.phenotype_data.instruments:
                 return Response(status=status.HTTP_404_NOT_FOUND)
             df = dataset.phenotype_data.get_instrument_values_df(instrument)
+            df_csv = df.to_csv(index=False, encoding="utf-8")
 
-        df_csv = df.to_csv(index=False, encoding="utf-8")
-
-        response = HttpResponse(df_csv, content_type="text/csv")
+            response = HttpResponse(df_csv, content_type="text/csv")
 
         response["Content-Disposition"] = "attachment; filename=instrument.csv"
         response["Expires"] = "0"
