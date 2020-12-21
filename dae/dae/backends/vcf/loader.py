@@ -70,9 +70,9 @@ class VcfFamiliesGenotypes(FamiliesGenotypes):
         genotypes = self._build_genotypes()
 
         # fmt: off
-        for family, allele_indexes in \
-                self.loader.families_allele_indexes:
-            # fmt: on
+        for family, allele_indexes in self.loader.families_allele_indexes:
+            if not family.has_members():
+                continue
 
             gt = genotypes[allele_indexes]
             gt = gt.reshape([2, len(allele_indexes)//2], order="F")
@@ -282,13 +282,16 @@ class SingleVcfLoader(VariantsGenotypesLoader):
 
         vcf_samples_order = [list(vcf.samples) for vcf in self.vcfs]
         vcf_samples = set(vcf_samples)
+        logger.info(f"vcf samples: {len(vcf_samples)}")
         pedigree_samples = set(self.families.ped_df["sample_id"].values)
+        logger.info(f"pedigree samples: {len(pedigree_samples)}")
         missing_samples = vcf_samples.difference(pedigree_samples)
-
+        logger.info(f"samples missing in pedigree: {len(missing_samples)}")
         vcf_samples = vcf_samples.difference(missing_samples)
         assert vcf_samples.issubset(pedigree_samples)
 
         seen = set()
+        generated = 0
         for person in self.families.persons.values():
             if person.sample_id in vcf_samples:
                 if person.sample_id in seen:
@@ -305,8 +308,11 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                         seen.add(person.sample_id)
                         break
             else:
+                generated += 1
                 person.set_attr("generated", True)
         self.families.redefine()
+        logger.info(
+            f"persons changed to generated {generated}")
 
     def _build_family_alleles_indexes(self):
         vcf_offsets = [0] * len(self.vcfs)

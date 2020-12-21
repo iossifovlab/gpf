@@ -16,11 +16,8 @@ import configparser
 
 from dae.utils.variant_utils import GENOTYPE_TYPE
 from dae.variants.attributes import TransmissionType
-from dae.variants.family_variant import (
-    FamilyAllele,
-    FamilyVariant,
-    calculate_simple_best_state,
-)
+from dae.variants.family_variant import FamilyAllele, FamilyVariant, \
+    calculate_simple_best_state
 from dae.variants.variant import SummaryVariant, SummaryAllele
 from dae.backends.impala.serializers import AlleleParquetSerializer
 
@@ -545,7 +542,10 @@ class VariantsParquetWriter:
                 fv.family_index = family_variant_index
 
                 for family_allele in fv.alleles:
-                    extra_atts = {"bucket_index": self.bucket_index}
+                    extra_atts = {
+                        "bucket_index": self.bucket_index,
+                        "family_index": family_variant_index
+                    }
                     family_allele.update_attributes(extra_atts)
 
                 alleles = fv.alt_alleles
