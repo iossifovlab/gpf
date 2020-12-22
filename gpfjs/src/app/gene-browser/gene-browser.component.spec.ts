@@ -180,9 +180,13 @@ describe('GeneBrowserComponent', () => {
 
       return 'testSummaryVariantsArray' as any;
     });
-    component.geneViewComponent = {enableIntronCondensing() {}, disableIntronCondensing() {}, clearSvgElement() {}} as any;
+    component.geneViewComponent = {
+      enableIntronCondensing() {}, disableIntronCondensing() {}, clearSvgElement() {}, resetGeneTableValues() {}
+    } as any;
     const enableIntronCondensingSpy = spyOn(component.geneViewComponent, 'enableIntronCondensing');
     const disableIntronCondensingSpy = spyOn(component.geneViewComponent, 'disableIntronCondensing');
+    const clearSvgElementSpy = spyOn(component.geneViewComponent, 'clearSvgElement');
+    const resetGeneTableValuesSpy = spyOn(component.geneViewComponent, 'resetGeneTableValues');
 
     component.submitGeneRequest();
     expect(component.hideResults).toBeFalse();
@@ -192,6 +196,8 @@ describe('GeneBrowserComponent', () => {
     expect(component.genotypePreviewVariantsArray).toBe(null);
     expect(enableIntronCondensingSpy).toHaveBeenCalled();
     expect(disableIntronCondensingSpy).not.toHaveBeenCalled();
+    expect(clearSvgElementSpy).toHaveBeenCalled();
+    expect(resetGeneTableValuesSpy).toHaveBeenCalled();
     expect(component.summaryVariantsArray).toBe('testSummaryVariantsArray' as any);
 
     component.enableCodingOnly = false;
