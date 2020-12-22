@@ -29,6 +29,11 @@ urlpatterns = [
         name="pheno_browser_measures",
     ),
     url(
+        r"^/measure_description/?$",
+        views.PhenoMeasureDescriptionView.as_view(),
+        name="pheno_browser_measure_description",
+    ),
+    url(
         r"^/download/?$",
         views.PhenoMeasuresDownload.as_view(),
         name="pheno_browser_download",
