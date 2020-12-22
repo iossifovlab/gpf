@@ -119,7 +119,8 @@ def test_download_all_instruments(admin_client):
 
     assert response.status_code == 200
 
-    header = response.content.decode("utf-8").split()[0].split(",")
+    content = list(response.streaming_content)[0].decode("utf-8")
+    header = content.split()[0].split(",")
 
     print("header:\n", header)
     assert len(header) == 5
