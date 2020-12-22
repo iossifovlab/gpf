@@ -290,13 +290,14 @@ class GPFInstance(object):
         out = {
             "instrument_name": measure.instrument_name,
             "measure_name": measure.measure_name,
-            "measure_type": measure.measure_type.value,
+            "measure_type": measure.measure_type.name,
             "values_domain": measure.values_domain,
         }
         if not math.isnan(measure.min_value):
             out["min_value"] = measure.min_value
         if not math.isnan(measure.max_value):
             out["max_value"] = measure.max_value
+        return out
 
     # Genomic scores
 
