@@ -729,7 +729,7 @@ class PhenotypeDataStudy(PhenotypeData):
                 rsuffix="_val_{}".format(i),
             )
 
-        return df
+        return res_df
 
     def get_values_streaming_csv(
         self,
