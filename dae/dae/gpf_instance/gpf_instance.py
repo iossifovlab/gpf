@@ -291,7 +291,7 @@ class GPFInstance(object):
             "instrument_name": measure.instrument_name,
             "measure_name": measure.measure_name,
             "measure_type": measure.measure_type.name,
-            "values_domain": measure.values_domain,
+            "values_domain": measure.values_domain.split(","),
         }
         if not math.isnan(measure.min_value):
             out["min_value"] = measure.min_value

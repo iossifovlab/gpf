@@ -146,4 +146,4 @@ def test_measure_details(admin_client):
     assert response.data["instrument_name"] == "instrument1"
     assert response.data["measure_name"] == "categorical"
     assert response.data["measure_type"] == "categorical"
-    assert response.data["values_domain"] == "option1,option2"
+    assert response.data["values_domain"] == ["option1", "option2"]
