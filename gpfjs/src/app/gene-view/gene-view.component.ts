@@ -202,7 +202,6 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
       this.geneViewModel = new GeneViewModel(this.gene, this.svgWidth);
       this.geneViewTranscript = new GeneViewTranscript(this.gene.transcripts[0]);
       this.setDefaultScale();
-      this.resetGeneTableValues();
       this.resetCheckboxes();
 
       this.summaryVariantsArray = this.variantsArray;
