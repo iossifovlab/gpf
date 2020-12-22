@@ -539,7 +539,16 @@ class PhenotypeDataStudy(PhenotypeData):
             self.db.get_value_table(MeasureType.raw)
         ]
 
-        df_records = []
+        fieldnames = ["person_id"] + measure_ids
+
+        buffer = StringIO()
+        writer = csv.DictWriter(buffer, fieldnames=fieldnames)
+        writer.writeheader()
+        yield buffer.getvalue()
+        buffer.seek(0)
+        buffer.truncate(0)
+
+        output = dict()
 
         for vt in value_tables:
             s = select(columns + [vt.c.value])
@@ -560,40 +569,22 @@ class PhenotypeDataStudy(PhenotypeData):
             if family_ids is not None:
                 s = s.where(self.db.family.c.family_id.in_(family_ids))
 
-            if measure.default_filter is not None:
-                filter_clause = self._build_default_filter_clause(
-                    measure, default_filter
-                )
-                if filter_clause is not None:
-                    s = s.where(text(filter_clause))
-
             s = s.order_by(desc(self.db.person.c.person_id))
 
-            df = pd.read_sql(s, self.db.engine)
-            df_records.append(df.to_dict("records"))
-        output = dict()
-        encountered_measures = set()
+            with self.db.engine.connect() as connection:
+                results = connection.execute(s)
+                for row in results:
+                    person_id = row["person_id"]
+                    measure_id = row["measure_id"]
+                    measure_value = row["value"]
 
-        for records in df_records:
-            for record in records:
-                person_id = record["person_id"]
-                if person_id not in output:
-                    output[person_id] = {"person_id": person_id}
-                measure_id = record["measure_id"]
-                measure_value = record["value"]
-                encountered_measures.add(measure_id)
-                output[person_id][measure_id] = measure_value
-        for k, v in output.items():
-            for measure in encountered_measures:
-                if measure not in v:
-                    output[k][measure] = "-"
-        fieldnames = output[list(output.keys())[0]].keys()
-        buffer = StringIO()
-        writer = csv.DictWriter(buffer, fieldnames=fieldnames)
-        writer.writeheader()
-        yield buffer.getvalue()
-        buffer.seek(0)
-        buffer.truncate(0)
+                    if person_id not in output:
+                        output[person_id] = {"person_id": person_id}
+                        for measure in measure_ids:
+                            output[person_id][measure] = "-"
+
+                    output[person_id][measure_id] = measure_value
+
         for v in output.values():
             writer.writerow(v)
             yield buffer.getvalue()
