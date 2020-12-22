@@ -471,3 +471,35 @@ def test_denovo_loader(
         Inheritance.denovo,
         Inheritance.denovo,
     ]
+
+
+def test_denovo_loader_avoids_duplicates(
+    genome_2013, fixture_dirname, fake_families,
+):
+    denovo_filename = fixture_dirname(
+        "denovo_import/variants_VCF_style_dup.tsv"
+    )
+    params = {
+        "denovo_chrom": "chrom",
+        "denovo_pos": "pos",
+        "denovo_ref": "ref",
+        "denovo_alt": "alt",
+        "denovo_family_id": "familyId",
+        "denovo_best_state": "bestState"
+    }
+    variants_loader = DenovoLoader(
+        fake_families, denovo_filename, genome=genome_2013, params=params
+    )
+
+    vs = variants_loader.full_variants_iterator()
+
+    svs = []
+    fvs = []
+    for sv, fvs_ in vs:
+        print(sv, fvs)
+        svs.append(sv)
+        for fv in fvs_:
+            fvs.append(fv)
+
+    assert len(svs) == 3
+    assert len(fvs) == 4
