@@ -9,14 +9,14 @@ function getTrianglePoints(plotX: number, plotY: number, size: number) {
   return `${x1},${y1} ${x2},${y2} ${x3},${y3}`;
 }
 
-export function hoverText(element, x: number, y: number, text: string, textPrefix: string, fontSize: number) {
+export function hoverText(element, x: number, y: number, text: string, svgTitle: string, fontSize: number) {
   element.append('text')
     .attr('x', x)
     .attr('y', y)
     .attr('font-size', `${fontSize}px`)
     .text(text)
     .attr('cursor', 'default')
-    .append('svg:title').text(`${textPrefix} ${text}`);
+    .append('svg:title').text(`${svgTitle}`);
 }
 
 export function surroundingRectangle(

@@ -938,7 +938,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     for (const [chromosome, range] of Object.entries(chromosomes)) {
       from = Math.max(range[0], domainMin);
       to = Math.min(range[1], domainMax);
-      draw.hoverText(element, (this.x(from) + this.x(to))/2 - 43, yPos + 35, `Chromosome: ${chromosome}`, '', this.fontSize);
+      draw.hoverText(element, (this.x(from) + this.x(to))/2 - 43, yPos + 35, `Chromosome: ${chromosome}`, `Chromosome: ${chromosome}`, this.fontSize);
     }
   }
 
@@ -998,12 +998,10 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     if (transcriptId === 'collapsed') {
       brushSize = { nonCoding: this.options.exonThickness.collapsed, coding: this.options.cdsThickness.collapsed };
       this.drawChromosomeLabels(element, yPos, geneViewTranscript);
-    } else {
-      draw.hoverText(element, this.x(firstSegmentStart) - 150, yPos + 10, transcriptId, 'Transcript id: ', this.fontSize);
     }
-
     this.drawTranscriptUTRText(element, firstSegmentStart, lastSegmentStop, yPos, geneViewTranscript.strand);
 
+    let exonsLength = 0;
     for (const segment of segments) {
       const start = Math.max(domainMin, segment.start);
       const stop = Math.min(domainMax, segment.stop);
@@ -1012,9 +1010,17 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
 
       if (segment.isExon) {
         this.drawExon(element, xStart, xStop, yPos, segment.label, segment.isCDS, brushSize);
+        exonsLength += segment.stop - segment.start;
       } else if (!segment.isSpacer) {
         this.drawIntron(element, xStart, xStop, yPos, segment.label, brushSize);
       }
+    }
+
+    if (transcriptId !== 'collapsed') {
+      draw.hoverText(
+        element, this.x(firstSegmentStart) - 150, yPos + 10,
+        transcriptId, `Transcript id: ${transcriptId}\nExons length: ${exonsLength}`, this.fontSize
+      );
     }
   }
 
@@ -1038,7 +1044,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
       UTR.left = '3\'';
       UTR.right = '5\'';
     }
-    draw.hoverText(element, this.x(xStart) - 20, y + 10, UTR.left, 'UTR ', this.fontSize);
-    draw.hoverText(element, this.x(xEnd) + 10, y + 10, UTR.right, 'UTR ', this.fontSize);
+    draw.hoverText(element, this.x(xStart) - 20, y + 10, UTR.left, `UTR ${UTR.left}`, this.fontSize);
+    draw.hoverText(element, this.x(xEnd) + 10, y + 10, UTR.right, `UTR ${UTR.left}`, this.fontSize);
   }
 }
