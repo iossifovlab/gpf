@@ -15,6 +15,7 @@ export class PhenoBrowserService {
   private readonly measuresUrl = 'pheno_browser/measures';
   private readonly measuresInfoUrl = 'pheno_browser/measures_info';
   private readonly downloadUrl = 'pheno_browser/download';
+  private readonly measureDescription = 'pheno_browser/measure_description';
 
   private oboeInstance = null;
   private connectionEstablished = false;
@@ -25,6 +26,20 @@ export class PhenoBrowserService {
     private cookieService: CookieService,
     private config: ConfigService
   ) {}
+
+  getMeasureDesciption(datasetId: string, measureId: string) {
+    const headers = this.getHeaders();
+    const searchParams = new HttpParams().set('dataset_id', datasetId).set('measure_id', measureId);
+    const options = { headers: headers, withCredentials: true,  params: searchParams };
+
+    return this.http.get(this.config.baseUrl + this.measureDescription, options)
+      .map(res => {
+        console.log('res');
+
+        console.log(res);
+        return res;
+      });
+  }
 
   private getHeaders() {
     const csrfToken = this.cookieService.get('csrftoken');

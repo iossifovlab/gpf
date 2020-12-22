@@ -1,20 +1,32 @@
-import { Component, OnChanges, SimpleChanges, Input } from '@angular/core';
+import { Component, OnChanges, SimpleChanges, Input, OnInit } from '@angular/core';
 import { CategoricalFilterState, CategoricalSelection } from '../pheno-filters/pheno-filters';
 import { PhenoFilter } from '../datasets/datasets';
 import { StateRestoreService } from '../store/state-restore.service';
+import { PhenoBrowserService } from 'app/pheno-browser/pheno-browser.service';
+import { DatasetsService } from 'app/datasets/datasets.service';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'gpf-categorical-filter',
   templateUrl: './categorical-filter.component.html',
   styleUrls: ['./categorical-filter.component.css']
 })
-export class CategoricalFilterComponent implements OnChanges {
+export class CategoricalFilterComponent implements OnInit, OnChanges {
   @Input() categoricalFilter: PhenoFilter;
   @Input() categoricalFilterState: CategoricalFilterState;
+  measureDescription$: Observable<Object>;
 
   constructor(
-    private stateRestoreService: StateRestoreService
+    private datasetsService: DatasetsService,
+    private phenoBrowserService: PhenoBrowserService,
+    private stateRestoreService: StateRestoreService,
   ) {
+  }
+
+  ngOnInit(): void {
+    this.measureDescription$ = this.phenoBrowserService.getMeasureDesciption(
+      this.datasetsService.getSelectedDatasetId(), this.categoricalFilter.measure
+    );
   }
 
   ngOnChanges(change: SimpleChanges) {

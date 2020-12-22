@@ -142,7 +142,6 @@ export class PhenoFilter {
             json[prop]['role'],
             json[prop]['filter_type'],
             json[prop]['measure'],
-            json[prop]['domain']
           )
         );
       }
@@ -156,7 +155,6 @@ export class PhenoFilter {
     readonly role: string,
     readonly filterType: string,
     readonly measure: string,
-    readonly domain: Array<string>
   ) {}
 }
 
