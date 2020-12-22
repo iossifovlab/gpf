@@ -79,6 +79,32 @@ class PhenoMeasuresInfoView(PhenoBrowserBaseView):
         return Response(res)
 
 
+class PhenoMeasureDescriptionView(PhenoBrowserBaseView):
+    def get(self, request):
+        if "dataset_id" not in request.query_params:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        dataset_id = request.query_params["dataset_id"]
+
+        dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
+        if dataset is None or not self.gpf_instance.has_pheno_data(dataset):
+            return Response(
+                {"error": "Dataset not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        measure_id = request.query_params["measure_id"]
+
+        if not self.gpf_instance.has_measure(dataset, measure_id):
+            return Response(
+                {"error": "Measure not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        res = self.gpf_instance.get_measure_description(dataset, measure_id)
+
+        return Response(res)
+
+
 class PhenoMeasuresView(PhenoBrowserBaseView):
     def __init__(self):
         super(PhenoMeasuresView, self).__init__()
