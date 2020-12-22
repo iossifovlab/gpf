@@ -142,4 +142,8 @@ def test_measure_details(admin_client):
 
     assert response.status_code == 200
 
-    print(response.content)
+    print(response.data)
+    assert response.data["instrument_name"] == "instrument1"
+    assert response.data["measure_name"] == "categorical"
+    assert response.data["measure_type"] == "categorical"
+    assert response.data["values_domain"] == "option1,option2"
