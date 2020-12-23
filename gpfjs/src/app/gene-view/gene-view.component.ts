@@ -938,7 +938,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     for (const [chromosome, range] of Object.entries(chromosomes)) {
       from = Math.max(range[0], domainMin);
       to = Math.min(range[1], domainMax);
-      draw.hoverText(element, (this.x(from) + this.x(to))/2 - 43, yPos + 35, `Chromosome: ${chromosome}`, `Chromosome: ${chromosome}`, this.fontSize);
+      draw.hoverText(element, (this.x(from) + this.x(to))/2 + 50, yPos + 35, `Chromosome: ${chromosome}`, `Chromosome: ${chromosome}`, this.fontSize);
     }
   }
 
@@ -1017,10 +1017,11 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     }
 
     if (transcriptId !== 'collapsed') {
+      const formattedExonsLength = this.formatExonsLength(exonsLength);
       draw.hoverText(
         element,
-        this.x(firstSegmentStart) - 110, yPos + 10,
-        this.formatExonsLength(exonsLength),
+        this.x(firstSegmentStart) - 50, yPos + 10,
+        formattedExonsLength,
         `Transcript id: ${transcriptId}\nExons length: ${this.commaSeparateNumber(exonsLength)}`,
         this.fontSize
       );
@@ -1047,8 +1048,8 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
       UTR.left = '3\'';
       UTR.right = '5\'';
     }
-    draw.hoverText(element, this.x(xStart) - 20, y + 10, UTR.left, `UTR ${UTR.left}`, this.fontSize);
-    draw.hoverText(element, this.x(xEnd) + 10, y + 10, UTR.right, `UTR ${UTR.left}`, this.fontSize);
+    draw.hoverText(element, this.x(xStart) - 10, y + 10, UTR.left, `UTR ${UTR.left}`, this.fontSize);
+    draw.hoverText(element, this.x(xEnd) + 20, y + 10, UTR.right, `UTR ${UTR.left}`, this.fontSize);
   }
 
   commaSeparateNumber(number: number): string {

@@ -16,6 +16,7 @@ export function hoverText(element, x: number, y: number, text: string, svgTitle:
     .attr('font-size', `${fontSize}px`)
     .text(text)
     .attr('cursor', 'default')
+    .attr('text-anchor', 'end')
     .append('svg:title').text(`${svgTitle}`);
 }
 
