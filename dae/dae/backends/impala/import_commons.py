@@ -1432,6 +1432,7 @@ class DatasetHelpers:
 
     def dataset_recreate_impala_tables(self, old_id, new_id):
         genotype_storage = self.get_genotype_storage(old_id)
+
         assert genotype_storage.is_impala()
         assert self.check_dataset_hdfs_directories(genotype_storage, new_id)
 

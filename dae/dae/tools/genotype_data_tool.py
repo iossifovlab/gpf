@@ -72,6 +72,15 @@ def main(argv, gpf_instance=None):
     assert helpers.check_dataset_impala_tables(argv.source_id)
     assert helpers.check_dataset_impala_tables(argv.dest_id)
 
+    helpers.dataset_drop_impala_tables(argv.dest_id)
+    helpers.dataset_remove_hdfs_directory(argv.dest_id)
+
+    helpers.dataset_rename_hdfs_directory(argv.source_id, argv.dest_id)
+    helpers.dataset_recreate_impala_tables(argv.source_id, argv.dest_id)
+    helpers.dataset_drop_impala_tables(argv.source)
+
+    helpers.remove_study_config(argv.source_id)
+
 
 if __name__ == "__main__":
     main(sys.argv[1:])
