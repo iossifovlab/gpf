@@ -171,7 +171,7 @@ class CNVLoader(VariantsGenotypesLoader):
                 continue
 
             fvs = []
-            extra_attributes = filter(
+            extra_attributes_keys = filter(
                 lambda x: x not in ["best_state", "family_id"],
                 values.keys()
             )
@@ -182,7 +182,7 @@ class CNVLoader(VariantsGenotypesLoader):
                     continue
                 fv = FamilyVariant(sv, family, None, best_state)
                 extra_attributes = {}
-                for attr in extra_attributes:
+                for attr in extra_attributes_keys:
                     attr_val = values.get(attr)[f_idx]
                     extra_attributes[attr] = [attr_val]
                 fv.update_attributes(extra_attributes)
