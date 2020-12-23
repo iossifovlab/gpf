@@ -103,7 +103,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
   filteredSummaryVariantsArray: GeneViewSummaryVariantsArray = new GeneViewSummaryVariantsArray();
 
   options = {
-    margin: { top: 10, right: 50, left: 180, bottom: 0 },
+    margin: { top: 10, right: 50, left: 140, bottom: 0 },
     axisScale: { domain: 0.90, subdomain: 0.05 },
     exonThickness: { normal: 6.25, collapsed: 12.5 },
     cdsThickness: { normal: 12.5, collapsed: 25 },
@@ -612,7 +612,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
 
       this.svgElement.append('text')
       .attr('transform', 'rotate(-90)')
-      .attr('y', 0 - (this.options.margin.left / 2))
+      .attr('y', 0 - (this.options.margin.left - 45))
       .attr('x', 0 - (this.svgHeightFreq / 2))
       .attr('dy', '1em')
       .style('text-anchor', 'middle')
@@ -1019,7 +1019,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     if (transcriptId !== 'collapsed') {
       draw.hoverText(
         element,
-        this.x(firstSegmentStart) - 90, yPos + 10,
+        this.x(firstSegmentStart) - 110, yPos + 10,
         this.formatExonsLength(exonsLength),
         `Transcript id: ${transcriptId}\nExons length: ${this.commaSeparateNumber(exonsLength)}`,
         this.fontSize
