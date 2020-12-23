@@ -1018,8 +1018,11 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
 
     if (transcriptId !== 'collapsed') {
       draw.hoverText(
-        element, this.x(firstSegmentStart) - 150, yPos + 10,
-        transcriptId, `Transcript id: ${transcriptId}\nExons length: ${exonsLength}`, this.fontSize
+        element,
+        this.x(firstSegmentStart) - 90, yPos + 10,
+        this.formatExonsLength(exonsLength),
+        `Transcript id: ${transcriptId}\nExons length: ${this.commaSeparateNumber(exonsLength)}`,
+        this.fontSize
       );
     }
   }
@@ -1046,5 +1049,24 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     }
     draw.hoverText(element, this.x(xStart) - 20, y + 10, UTR.left, `UTR ${UTR.left}`, this.fontSize);
     draw.hoverText(element, this.x(xEnd) + 10, y + 10, UTR.right, `UTR ${UTR.left}`, this.fontSize);
+  }
+
+  commaSeparateNumber(number: number): string {
+    return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  }
+
+  formatExonsLength(exonsLength: number): string {
+    let result: string;
+    const numLen = exonsLength.toString().length;
+
+    if (numLen < 4) {
+     result = `${exonsLength} bp`; 
+    } else if (numLen < 7) {
+      result = `${Math.round(exonsLength/100 + Number.EPSILON) / 10} kbp`;
+    } else if (numLen < 10) {
+      result = `${Math.round(exonsLength/10000 + Number.EPSILON) / 10} mbp`;
+    }
+
+    return result;
   }
 }
