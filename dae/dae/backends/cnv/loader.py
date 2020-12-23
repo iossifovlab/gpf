@@ -139,7 +139,8 @@ class CNVLoader(VariantsGenotypesLoader):
     ) -> Generator[Tuple[SummaryVariant, List[FamilyVariant]], None, None]:
 
         group = self.cnv_df.groupby(
-            ["chrom", "position", "end_position", "variant_type"]).agg(
+            ["chrom", "position", "end_position", "variant_type"],
+            sort=False).agg(
                 lambda x: list(x)
             )
         for num_idx, (idx, values) in enumerate(group.iterrows()):

@@ -133,7 +133,8 @@ class DenovoLoader(VariantsGenotypesLoader):
 
         print(self.denovo_df)
         group = self.denovo_df.groupby(
-            ["chrom", "position", "reference", "alternative"]).agg(
+            ["chrom", "position", "reference", "alternative"],
+            sort=False).agg(
                 lambda x: list(x)
             )
         for num_idx, (idx, values) in enumerate(group.iterrows()):
