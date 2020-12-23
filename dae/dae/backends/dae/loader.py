@@ -157,10 +157,10 @@ class DenovoLoader(VariantsGenotypesLoader):
                 continue
 
             fvs = []
-            extra_attributes = filter(
+            extra_attributes_keys = list(filter(
                 lambda x: x not in ["best_state", "family_id", "genotype"],
                 values.keys()
-            )
+            ))
             for f_idx, family_id in enumerate(values.get("family_id")):
                 best_state = values.get("best_state")[f_idx]
                 gt = values.get("genotype")[f_idx]
@@ -172,7 +172,7 @@ class DenovoLoader(VariantsGenotypesLoader):
                 for fam, gt, bs in family_genotypes.family_genotype_iterator():
                     fv = FamilyVariant(sv, fam, gt, bs)
                     extra_attributes = {}
-                    for attr in extra_attributes:
+                    for attr in extra_attributes_keys:
                         attr_val = values.get(attr)[f_idx]
                         extra_attributes[attr] = [attr_val]
                     fv.update_attributes(extra_attributes)
