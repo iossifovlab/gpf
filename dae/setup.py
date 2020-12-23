@@ -36,6 +36,7 @@ setuptools.setup(
         "dae/tools/impala_batch_import.py",
         "dae/tools/remote_instance_mirror.py",
         "dae/pheno/prepare/individuals2ped.py",
+        "dae/tools/genotype_data_tool.py",
     ],
     entry_points="""
     [console_scripts]
