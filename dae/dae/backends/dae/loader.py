@@ -175,6 +175,12 @@ class DenovoLoader(VariantsGenotypesLoader):
                     for attr in extra_attributes_keys:
                         attr_val = values.get(attr)[f_idx]
                         extra_attributes[attr] = [attr_val]
+                    if gt is None:
+                        fv.gt, fv._genetic_model = self._calc_genotype(
+                            fv, self.genome)
+                        for fa in fv.alleles:
+                            fa.gt = fv.gt
+                            fa._genetic_model = fv.genetic_model
                     fv.update_attributes(extra_attributes)
                     fvs.append(fv)
             yield sv, fvs
