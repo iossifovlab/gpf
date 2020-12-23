@@ -59,7 +59,17 @@ def main(argv, gpf_instance=None):
 
     assert argv.columns is not None
     info_columns = [c.strip() for c in argv.columns.split(",")]
-    header = ["CHROM", "POS", "variant", "location", "REF", "ALT", "ID"]
+    header = [
+        "CHROM",
+        "POS",
+        "chrom",
+        "position",
+        "location",
+        "variant",
+        "REF",
+        "ALT",
+        "ID"
+    ]
     header.extend(info_columns)
 
     with open(argv.output, "wt") as output:
@@ -75,6 +85,8 @@ def main(argv, gpf_instance=None):
             line = [
                 vcf_variant.CHROM,
                 vcf_variant.POS,
+                sa.chromosome,
+                sa.cshl_position,
                 sa.cshl_location,
                 sa.cshl_variant,
                 vcf_variant.REF,
