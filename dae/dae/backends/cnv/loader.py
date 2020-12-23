@@ -170,12 +170,21 @@ class CNVLoader(VariantsGenotypesLoader):
                 continue
 
             fvs = []
+            extra_attributes = filter(
+                lambda x: x not in ["best_state", "family_id"],
+                values.keys()
+            )
             for f_idx, family_id in enumerate(values.get("family_id")):
                 best_state = values.get("best_state")[f_idx]
                 family = self.families.get(family_id)
                 if family is None:
                     continue
                 fv = FamilyVariant(sv, family, None, best_state)
+                extra_attributes = {}
+                for attr in extra_attributes:
+                    attr_val = values.get(attr)[f_idx]
+                    extra_attributes[attr] = [attr_val]
+                fv.update_attributes(extra_attributes)
                 fvs.append(fv)
             yield sv, fvs
 
