@@ -79,7 +79,7 @@ def main(argv, gpf_instance=None):
     helpers.dataset_recreate_impala_tables(argv.source_id, argv.dest_id)
 
     helpers.dataset_drop_impala_tables(argv.source_id)
-    helpers.remove_study_config(argv.source_id)
+    helpers.disable_study_config(argv.source_id)
 
 
 if __name__ == "__main__":

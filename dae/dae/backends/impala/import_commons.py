@@ -1565,3 +1565,10 @@ class DatasetHelpers:
         config_dir = os.path.dirname(config_file)
 
         shutil.rmtree(config_dir)
+
+    def disable_study_config(self, dataset_id):
+        config_file = self.find_genotype_data_config_file(dataset_id)
+        config_dir = os.path.dirname(config_file)
+
+        os.rename(config_file, f"{config_file}_bak")
+        os.rename(config_dir, f"{config_dir}_bak")
