@@ -77,8 +77,8 @@ def main(argv, gpf_instance=None):
 
     helpers.dataset_rename_hdfs_directory(argv.source_id, argv.dest_id)
     helpers.dataset_recreate_impala_tables(argv.source_id, argv.dest_id)
-    helpers.dataset_drop_impala_tables(argv.source)
 
+    helpers.dataset_drop_impala_tables(argv.source_id)
     helpers.remove_study_config(argv.source_id)
 
 
