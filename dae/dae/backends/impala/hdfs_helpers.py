@@ -6,7 +6,7 @@ import pyarrow as pa
 
 
 class HdfsHelpers(object):
-    def __init__(self, hdfs_host, hdfs_port, replication=None):
+    def __init__(self, hdfs_host, hdfs_port, replication=1):
         assert hdfs_host
         assert hdfs_port
 
