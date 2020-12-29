@@ -59,7 +59,8 @@ class ImpalaGenotypeStorage(GenotypeStorage):
         if self._hdfs_helpers is None:
             self._hdfs_helpers = HdfsHelpers(
                 self.storage_config.hdfs.host,
-                self.storage_config.hdfs.port
+                self.storage_config.hdfs.port,
+                replication=self.storage_config.hdfs.replication
             )
 
         assert self._hdfs_helpers is not None
