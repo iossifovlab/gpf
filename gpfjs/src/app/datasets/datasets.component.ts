@@ -22,7 +22,6 @@ export class DatasetsComponent implements OnInit {
   datasetTrees: DatasetNode[];
   selectedDataset$: Observable<Dataset>;
   permissionDeniedPrompt: string;
-  @Output() selectedDatasetChange = new EventEmitter<Dataset>();
 
   constructor(
     private usersService: UsersService,
@@ -43,6 +42,14 @@ export class DatasetsComponent implements OnInit {
 
     this.createDatasetHierarchy();
     this.selectedDataset$ = this.datasetsService.getSelectedDataset();
+
+    this.selectedDataset$
+    .subscribe(selectedDataset => {
+      if (!selectedDataset) {
+        return;
+      }
+      this.registerAlertVisible = !selectedDataset.accessRights;
+    });
 
     this.datasets$
       .take(1)
