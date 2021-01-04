@@ -688,24 +688,47 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
   }
 
   calculateDenovoVariantsSpacings(summaryVariantsArray: GeneViewSummaryVariantsArray) {
-    const denovoVariants = summaryVariantsArray.summaryVariants.filter(variant => variant.seenAsDenovo);
+    let denovoVariants = summaryVariantsArray.summaryVariants
+      .filter(variant => variant.seenAsDenovo)
+      .sort((sv, sv2) => sv.position > sv2.position ? 1 : sv.position < sv2.position ? -1 : 0);
+
     if (!denovoVariants.length) {
       return;
     }
 
-    const sortedDenovos = denovoVariants.sort((sv, sv2) => sv.position > sv2.position ? 1 : sv.position < sv2.position ? -1 : 0);
-    const denovoVariantsSpacings = {};
-    let spacingTracker = 0;
-    denovoVariantsSpacings[sortedDenovos[0].svuid] = spacingTracker;
-    for (let i = 0; i <= sortedDenovos.length - 2; i++) {
+    const leveledDenovos: GeneViewSummaryVariant[][] = [];
+    const denovoCount = denovoVariants.length;
+    for (let level = 0; level < denovoCount; level++) {
+      leveledDenovos[level] = [];
 
-      if (this.doVariantsIntersect(sortedDenovos[i], sortedDenovos[i + 1])) {
-        spacingTracker += 22;
-      } else {
-        spacingTracker = 0;
+      for (let i = 0; i < denovoVariants.length; i++) {
+        let canFitInLevel = true;
+
+        for (let k = 0; k < leveledDenovos[level].length; k++) {
+          if (this.doVariantsIntersect(leveledDenovos[level][k], denovoVariants[i])) {
+            canFitInLevel = false;
+            break;
+          }
+        }
+
+        if (canFitInLevel) {
+          leveledDenovos[level].push(denovoVariants[i]);
+          denovoVariants.splice(i, 1);
+        }
       }
-      denovoVariantsSpacings[sortedDenovos[i + 1].svuid] = spacingTracker;
+
+      if (denovoVariants.length === 0) {
+        break;
+      }
     }
+
+    const denovoVariantsSpacings = {};
+    for (let row = 0; row < leveledDenovos.length; row++) {
+      for (let col = 0; col < leveledDenovos[row].length; col++) {
+        denovoVariantsSpacings[leveledDenovos[row][col].svuid] = 22 * row;
+      }
+    }
+
     return denovoVariantsSpacings;
   }
 
