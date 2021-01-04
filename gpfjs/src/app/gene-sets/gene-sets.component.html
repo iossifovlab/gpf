@@ -8,7 +8,9 @@
         #acc="ngbAccordion" class="gene-sets-types row-sm-3">
       <ngb-panel *ngFor="let type of selectedGeneSetsCollection.types" id="{{type.datasetId}}-{{type.peopleGroupId}}-denovo-geneset">
         <ng-template ngbPanelTitle *ngIf="selectedGeneSetsCollection?.types?.length > 0">
-          <span class="dropdown-toggle btn-sm text-wrap">{{ getGeneSetName(type) }}</span>
+          <div style="text-align: left">
+            <span style="display: block;" class="dropdown-toggle btn-sm text-wrap">{{ getGeneSetName(type) }}</span>
+          </div>
         </ng-template>
         <ng-template ngbPanelContent>
           <div *ngFor="let peopleGroup of type.peopleGroupLegend">
