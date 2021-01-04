@@ -733,7 +733,7 @@ class VariantsGenotypesLoader(VariantsLoader):
                     for fa in family_variant.alleles:
                         fa._best_state = family_variant.best_state
                         fa._genetic_model = family_variant.genetic_model
-                elif self.expect_best_state:
+                elif self.expect_best_state and family_variant.gt is None:
                     assert family_variant._best_state is not None
                     assert family_variant._genetic_model is None
                     assert family_variant.gt is None

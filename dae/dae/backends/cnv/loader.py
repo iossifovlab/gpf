@@ -138,37 +138,56 @@ class CNVLoader(VariantsGenotypesLoader):
         self
     ) -> Generator[Tuple[SummaryVariant, List[FamilyVariant]], None, None]:
 
-        for index, rec in enumerate(self.cnv_df.to_dict(orient="records")):
-            family_id = rec.pop("family_id")
-            best_state = rec.pop("best_state")
-            rec["reference"] = None
-            rec["alternative"] = None
-
-            rec["position"] = int(rec["position"])
-            rec["end_position"] = int(rec["end_position"])
-
-            rec["summary_variant_index"] = index
-            rec["allele_index"] = 0
-
-            alt_rec = copy(rec)
-            del rec["end_position"]
-            del rec["variant_type"]
+        group = self.cnv_df.groupby(
+            ["chrom", "position", "end_position", "variant_type"],
+            sort=False).agg(
+                lambda x: list(x)
+            )
+        for num_idx, (idx, values) in enumerate(group.iterrows()):
+            chrom, position, end_position, variant_type = idx
+            position = int(position)
+            end_position = int(end_position)
+            summary_rec = {
+                "chrom": chrom,
+                "reference": None,
+                "alternative": None,
+                "position": position,
+                "end_position": end_position,
+                "summary_variant_index": num_idx,
+                "variant_type": variant_type,
+                "allele_index": 0
+            }
+            alt_rec = copy(summary_rec)
+            del summary_rec["end_position"]
+            del summary_rec["variant_type"]
 
             alt_rec["allele_index"] = 1
 
             sv = SummaryVariantFactory.summary_variant_from_records(
-                [rec, alt_rec], self.transmission_type
+                [summary_rec, alt_rec], self.transmission_type
             )
+
             if not self._is_in_regions(sv):
                 continue
 
-            family = self.families.get(family_id)
-            if family is None:
-                continue
-
-            fv = FamilyVariant(sv, family, None, best_state)
-
-            yield sv, [fv]
+            fvs = []
+            extra_attributes_keys = filter(
+                lambda x: x not in ["best_state", "family_id"],
+                values.keys()
+            )
+            for f_idx, family_id in enumerate(values.get("family_id")):
+                best_state = values.get("best_state")[f_idx]
+                family = self.families.get(family_id)
+                if family is None:
+                    continue
+                fv = FamilyVariant(sv, family, None, best_state)
+                extra_attributes = {}
+                for attr in extra_attributes_keys:
+                    attr_val = values.get(attr)[f_idx]
+                    extra_attributes[attr] = [attr_val]
+                fv.update_attributes(extra_attributes)
+                fvs.append(fv)
+            yield sv, fvs
 
     def full_variants_iterator(self):
         full_iterator = super(CNVLoader, self).full_variants_iterator()

@@ -131,40 +131,59 @@ class DenovoLoader(VariantsGenotypesLoader):
                 continue
             region.chrom = self._adjust_chrom_prefix(region.chrom)
 
-        for index, rec in enumerate(self.denovo_df.to_dict(orient="records")):
-            family_id = rec.pop("family_id")
-            gt = rec.pop("genotype")
-            best_state = rec.pop("best_state")
+        print(self.denovo_df)
+        group = self.denovo_df.groupby(
+            ["chrom", "position", "reference", "alternative"],
+            sort=False).agg(
+                lambda x: list(x)
+            )
+        for num_idx, (idx, values) in enumerate(group.iterrows()):
+            chrom, position, reference, alternative = idx
+            position = int(position)
+            summary_rec = {
+                "chrom": chrom,
+                "reference": reference,
+                "alternative": alternative,
+                "position": position,
+                "summary_variant_index": num_idx,
+                "allele_index": 1
+            }
 
-            rec["summary_variant_index"] = index
-            rec["allele_index"] = 1
+            sv = SummaryVariantFactory.summary_variant_from_records(
+                [summary_rec], self.transmission_type
+            )
 
-            # rec["af_parents_called_count"] = 0
-            # rec["af_parents_called_percent"] = 0
-            # rec["af_allele_count"] = 0
-            # rec["af_allele_freq"] = 0
-
-            # fmt: off
-            summary_variant = SummaryVariantFactory.\
-                summary_variant_from_records(
-                    [rec], self.transmission_type
-                )
-            # fmt: on
-            if not self._is_in_regions(summary_variant):
+            if not self._is_in_regions(sv):
                 continue
 
-            family = self.families.get(family_id)
-            if family is None:
-                continue
-
-            family_genotypes = DenovoFamiliesGenotypes(family, gt, best_state)
-
-            family_variants = []
-            for fam, gt, bs in family_genotypes.family_genotype_iterator():
-                fv = FamilyVariant(summary_variant, fam, gt, bs)
-                family_variants.append(fv)
-
-            yield summary_variant, family_variants
+            fvs = []
+            extra_attributes_keys = list(filter(
+                lambda x: x not in ["best_state", "family_id", "genotype"],
+                values.keys()
+            ))
+            for f_idx, family_id in enumerate(values.get("family_id")):
+                best_state = values.get("best_state")[f_idx]
+                gt = values.get("genotype")[f_idx]
+                family = self.families.get(family_id)
+                if family is None:
+                    continue
+                family_genotypes = DenovoFamiliesGenotypes(
+                    family, gt, best_state)
+                for fam, gt, bs in family_genotypes.family_genotype_iterator():
+                    fv = FamilyVariant(sv, fam, gt, bs)
+                    extra_attributes = {}
+                    for attr in extra_attributes_keys:
+                        attr_val = values.get(attr)[f_idx]
+                        extra_attributes[attr] = [attr_val]
+                    if gt is None:
+                        fv.gt, fv._genetic_model = self._calc_genotype(
+                            fv, self.genome)
+                        for fa in fv.alleles:
+                            fa.gt = fv.gt
+                            fa._genetic_model = fv.genetic_model
+                    fv.update_attributes(extra_attributes)
+                    fvs.append(fv)
+            yield sv, fvs
 
     def full_variants_iterator(self):
         full_iterator = super(DenovoLoader, self).full_variants_iterator()
@@ -313,7 +332,7 @@ class DenovoLoader(VariantsGenotypesLoader):
             )
             raise ValueError()
 
-        if not (argv.denovo_location or 
+        if not (argv.denovo_location or
                 (argv.denovo_chrom and argv.denovo_pos)):
             argv.denovo_location = "location"
 
