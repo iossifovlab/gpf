@@ -31,17 +31,18 @@
             <table class="table table-bordered table-hover table-sm table-centered table-header-rotate">
               <thead>
                 <th>Group</th>
-                <th class="rotate" *ngFor="let column of this.currentPeopleCounter.columns">
-                  <div>{{ column }}</div>
+
+                <th *ngFor="let row of this.currentPeopleCounter.rows">
+                    {{ getPeopleSexValue(row) }}
                 </th>
               </thead>
               <tbody>
-                <tr *ngFor="let row of this.currentPeopleCounter.rows">
+                <tr *ngFor="let row of this.currentPeopleCounter.columns">
                   <th>
-                    {{ getPeopleSexValue(row) }}
+                    {{ row }}
                   </th>
-                  <td *ngFor="let column of this.currentPeopleCounter.columns">
-                    {{ this.currentPeopleCounter.getChildrenCounter(column, row).children }}
+                  <td *ngFor="let column of this.currentPeopleCounter.rows">
+                    {{ this.currentPeopleCounter.getChildrenCounter(row, column).children }}
                   </td>
                 </tr>
 
