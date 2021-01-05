@@ -30,14 +30,14 @@
           <div class="col-12">
             <table class="table table-bordered table-hover table-sm table-centered table-header-rotate">
               <thead>
-                <th>
+                <th class="first-header-cell">
                   <div style="padding: 0;">
                     <div class="groups-title">{{ this.currentPeopleCounter.groupName }}</div>
                     <div class="sex-title">Sex</div>
                   </div>
                 </th>
 
-                <th style="vertical-align: top;" *ngFor="let row of this.currentPeopleCounter.rows">
+                <th style="vertical-align: top; border-bottom: 1px" *ngFor="let row of this.currentPeopleCounter.rows">
                     {{ getPeopleSexValue(row) }}
                 </th>
               </thead>

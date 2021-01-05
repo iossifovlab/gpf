@@ -63,3 +63,13 @@ table {
   padding-right: 11px;
   top: -25px;
 }
+
+.first-header-cell {
+  background-image: linear-gradient(
+    to top right,
+    white 49%,
+    #dee2e6,
+    white 51%
+  );
+  border-bottom: 1px;
+}
