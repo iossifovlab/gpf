@@ -30,15 +30,20 @@
           <div class="col-12">
             <table class="table table-bordered table-hover table-sm table-centered table-header-rotate">
               <thead>
-                <th>Group</th>
+                <th>
+                  <div style="padding: 0;">
+                    <div class="groups-title">{{ this.currentPeopleCounter.groupName }}</div>
+                    <div class="sex-title">Sex</div>
+                  </div>
+                </th>
 
-                <th *ngFor="let row of this.currentPeopleCounter.rows">
+                <th style="vertical-align: top;" *ngFor="let row of this.currentPeopleCounter.rows">
                     {{ getPeopleSexValue(row) }}
                 </th>
               </thead>
               <tbody>
                 <tr *ngFor="let row of this.currentPeopleCounter.columns">
-                  <th>
+                  <th style="text-align: left; padding-left: 15px;">  
                     {{ row }}
                   </th>
                   <td *ngFor="let column of this.currentPeopleCounter.rows">
