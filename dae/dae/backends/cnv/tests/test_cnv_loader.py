@@ -1,5 +1,3 @@
-import numpy as np
-from dae.utils.variant_utils import GENOTYPE_TYPE
 from dae.backends.cnv.loader import CNVLoader
 from dae.pedigrees.loader import FamiliesLoader
 
@@ -127,8 +125,12 @@ def test_cnv_loader_alt_2(fixture_dirname, genomes_db_2013):
     assert loader is not None
 
     svs = []
-    for sv, fvs in loader.full_variants_iterator():
+    fvs = []
+    for sv, _fvs in loader.full_variants_iterator():
         print(sv, fvs)
         svs.append(sv)
+        for fv in _fvs:
+            fvs.append(fv)
 
-    assert len(svs) == 30
+    assert len(svs) == 29
+    assert len(fvs) == 30
