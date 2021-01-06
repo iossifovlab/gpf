@@ -278,27 +278,9 @@ class VariantType(enum.Enum):
             return VariantType.deletion
         elif name == "comp" or name == "complex":
             return VariantType.comp
-
-        raise ValueError("unexpected variant type: {}".format(name))
-
-    @staticmethod
-    def from_name_cnv(name):
-        cnv_dup_names = {
-            "cnv_p",
-            "cnv+",
-            "duplication"
-        }
-
-        cnv_del_names = {
-            "cnv_m",
-            "cnv-",
-            "deletion"
-        }
-
-        name = name.lower().strip()
-        if name in cnv_dup_names:
+        elif name == "cnv_p" or name == "cnv+":
             return VariantType.cnv_p
-        elif name in cnv_del_names:
+        elif name == "cnv_m" or name == "cnv-":
             return VariantType.cnv_m
 
         raise ValueError("unexpected variant type: {}".format(name))

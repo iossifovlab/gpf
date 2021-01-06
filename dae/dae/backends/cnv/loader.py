@@ -328,7 +328,7 @@ class CNVLoader(VariantsGenotypesLoader):
             translate_variant_type
         )
         variant_type_col = tuple(
-            map(VariantType.from_name_cnv, variant_types_transformed)
+            map(VariantType.from_name, variant_types_transformed)
         )
 
         if cnv_person_id:
