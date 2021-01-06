@@ -482,19 +482,38 @@ class AlleleParquetSerializer:
     def searchable_properties(self):
         return self.searchable_properties_types.keys()
 
-    def _serialize_allele(self, allele, stream):
-        for property_serializers in self.property_serializers_list:
+    def _serialize_family_allele(self, allele, stream):
+        for property_serializers in self.property_serializers_list[1:]:
             for prop, serializer in property_serializers.items():
                 value = getattr(allele, prop, None)
                 if value is None:
                     value = allele.get_attribute(prop)
                 self.write_property(stream, value, serializer)
 
-    def serialize_variant(self, variant):
+    def serialize_family_variant(self, variant, blob):
+        stream = io.BytesIO(blob)
+        write_int8(stream, len(variant.alleles))
+        for allele in variant.alleles:
+            self._serialize_family_allele(allele, stream)
+
+        stream.seek(0)
+        output = stream.read()
+        stream.close()
+        return output
+
+    def _serialize_summary_allele(self, allele, stream):
+        property_serializers = self.property_serializers_list[0]
+        for prop, serializer in property_serializers.items():
+            value = getattr(allele, prop, None)
+            if value is None:
+                value = allele.get_attribute(prop)
+            self.write_property(stream, value, serializer)
+
+    def serialize_summary_variant(self, variant):
         stream = io.BytesIO()
         write_int8(stream, len(variant.alleles))
         for allele in variant.alleles:
-            self._serialize_allele(allele, stream)
+            self._serialize_summary_allele(allele, stream)
 
         stream.seek(0)
         output = stream.read()
