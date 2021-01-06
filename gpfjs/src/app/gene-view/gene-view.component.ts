@@ -701,6 +701,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
     for (let level = 0; level < denovoCount; level++) {
       leveledDenovos[level] = [];
 
+      const toRemove = [];
       for (let i = 0; i < denovoVariants.length; i++) {
         let canFitInLevel = true;
 
@@ -713,9 +714,12 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
 
         if (canFitInLevel) {
           leveledDenovos[level].push(denovoVariants[i]);
-          denovoVariants.splice(i, 1);
+          toRemove.push(i);
         }
       }
+      toRemove.reverse().forEach(index => {
+        denovoVariants.splice(index, 1);
+      });
 
       if (denovoVariants.length === 0) {
         break;
