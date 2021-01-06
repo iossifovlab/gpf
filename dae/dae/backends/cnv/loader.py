@@ -331,34 +331,27 @@ class CNVLoader(VariantsGenotypesLoader):
             map(VariantType.from_name_cnv, variant_types_transformed)
         )
 
-        def get_expected_ploidy(chrom, pos_start, pos_end, family_id):
-            return np.asarray([
-                get_interval_locus_ploidy(
-                    chrom,
-                    int(pos_start),
-                    int(pos_end),
-                    person.sex,
-                    genome
-                )
-                for person in families[family_id].members_in_order
-            ])
-
         if cnv_person_id:
             best_state_col = []
             family_id_col = []
+            variant_best_states = dict()
 
             person_id_col = raw_df[cnv_person_id]
-            for chrom, pos_start, pos_end, person_id in zip(
-                    chrom_col, start_col, end_col, person_id_col):
-                family_best_states = dict()
+            for chrom, pos_start, pos_end, variant_type, person_id in zip(
+                    chrom_col, start_col, end_col,
+                    variant_type_col, person_id_col):
+
                 person = families.persons.get(person_id)
                 family_id = person.family_id
                 family = families[family_id]
                 members = family.members_in_order
-                if family_id in family_best_states:
+                variant_index = (
+                    chrom, pos_start, pos_end, variant_type, family_id
+                )
+                if variant_index in variant_best_states:
                     idx = person.index
-                    ref = family_best_states[family_id][0]
-                    alt = family_best_states[family_id][1]
+                    ref = variant_best_states[variant_index][0]
+                    alt = variant_best_states[variant_index][1]
                     ref[idx] = ref[idx] - 1
                     alt[idx] = alt[idx] + 1
                 else:
@@ -378,14 +371,27 @@ class CNVLoader(VariantsGenotypesLoader):
                         if member.person_id == person_id:
                             ref[idx] = ref[idx] - 1
                             alt[idx] = alt[idx] + 1
-                    family_best_states[family_id] = np.asarray(
+                    variant_best_states[variant_index] = np.asarray(
                         [ref, alt], dtype=GENOTYPE_TYPE)
 
-                best_state = family_best_states[family_id]
+                best_state = variant_best_states[variant_index]
                 best_state_col.append(best_state)
                 family_id_col.append(family_id)
 
         else:
+
+            def get_expected_ploidy(chrom, pos_start, pos_end, family_id):
+                return np.asarray([
+                    get_interval_locus_ploidy(
+                        chrom,
+                        int(pos_start),
+                        int(pos_end),
+                        person.sex,
+                        genome
+                    )
+                    for person in families[family_id].members_in_order
+                ])
+
             family_id_col = raw_df[cnv_family_id]
             expected_ploidy_col = tuple(
                 map(
