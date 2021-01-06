@@ -111,6 +111,20 @@ class CNVLoader(VariantsGenotypesLoader):
             " the variant is. [Default: None]",
         ))
         arguments.append(CLIArgument(
+            "--cnv-plus-type-value",
+            value_type=str,
+            default_value="CNV+",
+            help_text="The cnv+ value used in the columns containing"
+            " the variant's type. [Default: CNV+]",
+        ))
+        arguments.append(CLIArgument(
+            "--cnv-minus-type-value",
+            value_type=str,
+            default_value="CNV-",
+            help_text="The cnv- value used in the columns containing"
+            " the variant's type. [Default: CNV-]",
+        ))
+        arguments.append(CLIArgument(
             "--cnv-sep",
             value_type=str,
             default_value="\t",
@@ -218,11 +232,16 @@ class CNVLoader(VariantsGenotypesLoader):
             filepath: str,
             families: FamiliesData,
             genome: Genome,
+            cnv_chrom: Optional[str] = None,
+            cnv_start: Optional[str] = None,
+            cnv_end: Optional[str] = None,
             cnv_location: Optional[str] = None,
             cnv_person_id: Optional[str] = None,
             cnv_family_id: Optional[str] = None,
             cnv_best_state: Optional[str] = None,
             cnv_variant_type: Optional[str] = None,
+            cnv_plus_values: List[str] = ["CNV+"],
+            cnv_minus_values: List[str] = ["CNV-"],
             cnv_sep: str = "\t",
             adjust_chrom_prefix=None,
             **kwargs) -> pd.DataFrame:
@@ -231,7 +250,11 @@ class CNVLoader(VariantsGenotypesLoader):
         assert families is not None
         assert isinstance(families, FamiliesData)
 
-        if not cnv_location:
+        if isinstance(cnv_plus_values, str):
+            cnv_plus_values = [cnv_plus_values]
+        if isinstance(cnv_minus_values, str):
+            cnv_minus_values = [cnv_minus_values]
+        if not cnv_location and not cnv_chrom:
             cnv_location = "location"
         if not cnv_variant_type:
             cnv_variant_type = "variant"
@@ -242,9 +265,14 @@ class CNVLoader(VariantsGenotypesLoader):
                 cnv_family_id = "familyId"
 
         dtype_dict = {
-            cnv_location: str,
             cnv_variant_type: str,
         }
+        if cnv_location:
+            dtype_dict[cnv_location] = str
+        else:
+            dtype_dict[cnv_chrom] = str
+            dtype_dict[cnv_start] = int
+            dtype_dict[cnv_end] = int
 
         if cnv_person_id:
             dtype_dict[cnv_person_id] = str
@@ -258,15 +286,30 @@ class CNVLoader(VariantsGenotypesLoader):
             dtype=dtype_dict
         )
 
-        location = raw_df[cnv_location]
-        chrom_col, full_pos = zip(*map(lambda x: x.split(":"), location))
-        start_col, end_col = zip(*map(lambda x: x.split("-"), full_pos))
+        if cnv_location:
+            location = raw_df[cnv_location]
+            chrom_col, full_pos = zip(*map(lambda x: x.split(":"), location))
+            start_col, end_col = zip(*map(lambda x: x.split("-"), full_pos))
+        else:
+            chrom_col = raw_df[cnv_chrom]
+            start_col = raw_df[cnv_start]
+            end_col = raw_df[cnv_end]
 
         if adjust_chrom_prefix is not None:
             chrom_col = tuple(map(adjust_chrom_prefix, chrom_col))
 
+        def translate_variant_type(variant_type):
+            if variant_type in cnv_plus_values:
+                return "CNV+"
+            if variant_type in cnv_minus_values:
+                return "CNV-"
+            return None
+
+        variant_types_transformed = raw_df[cnv_variant_type].apply(
+            translate_variant_type
+        )
         variant_type_col = tuple(
-            map(VariantType.from_name_cnv, raw_df[cnv_variant_type])
+            map(VariantType.from_name_cnv, variant_types_transformed)
         )
 
         def get_expected_ploidy(chrom, pos_start, pos_end, family_id):
@@ -282,7 +325,47 @@ class CNVLoader(VariantsGenotypesLoader):
             ])
 
         if cnv_person_id:
+            best_state_col = []
+            family_id_col = []
+
             person_id_col = raw_df[cnv_person_id]
+            for chrom, pos_start, pos_end, person_id in zip(
+                    chrom_col, start_col, end_col, person_id_col):
+                family_best_states = dict()
+                person = families.persons.get(person_id)
+                family_id = person.family_id
+                family = families[family_id]
+                members = family.members_in_order
+                if family_id in family_best_states:
+                    idx = person.index
+                    ref = family_best_states[family_id][0]
+                    alt = family_best_states[family_id][1]
+                    ref[idx] = ref[idx] - 1
+                    alt[idx] = alt[idx] + 1
+                else:
+                    ref = []
+                    alt = []
+                    for idx, member in enumerate(members):
+                        ref.append(
+                            get_interval_locus_ploidy(
+                                chrom,
+                                int(pos_start),
+                                int(pos_end),
+                                member.sex,
+                                genome
+                            )
+                        )
+                        alt.append(0)
+                        if member.person_id == person_id:
+                            ref[idx] = ref[idx] - 1
+                            alt[idx] = alt[idx] + 1
+                    family_best_states[family_id] = np.asarray(
+                        [ref, alt], dtype=GENOTYPE_TYPE)
+
+                best_state = family_best_states[family_id]
+                best_state_col.append(best_state)
+                family_id_col.append(family_id)
+
         else:
             family_id_col = raw_df[cnv_family_id]
             expected_ploidy_col = tuple(
@@ -307,13 +390,9 @@ class CNVLoader(VariantsGenotypesLoader):
             "position": start_col,
             "end_position": end_col,
             "variant_type": variant_type_col,
+            "best_state": best_state_col,
+            "family_id": family_id_col
         }
-
-        if cnv_person_id:
-            result["person_id"] = person_id_col
-        else:
-            result["family_id"] = family_id_col
-            result["best_state"] = best_state_col
 
         return pd.DataFrame(result)
 
