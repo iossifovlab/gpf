@@ -232,14 +232,14 @@ class GenotypeDataGroup(GenotypeData):
                     seen_in_status = \
                         seen_in_status | v.get_attribute("seen_in_status")[1]
 
-                    seen_in_denovo = existing.get_attribute(
-                        "seen_in_denovo")[1]
-                    seen_in_denovo = \
-                        seen_in_denovo or v.get_attribute("seen_in_denovo")[1]
+                    seen_as_denovo = existing.get_attribute(
+                        "seen_as_denovo")[1]
+                    seen_as_denovo = \
+                        seen_as_denovo or v.get_attribute("seen_as_denovo")[1]
                     new_attributes = {
                         "family_variants_count": [fv_count],
                         "seen_in_status": [seen_in_status],
-                        "seen_in_denovo": [seen_in_denovo]
+                        "seen_as_denovo": [seen_as_denovo]
                     }
                     v.update_attributes(new_attributes)
 

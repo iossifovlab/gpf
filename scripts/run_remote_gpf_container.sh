@@ -27,6 +27,12 @@ if [[ -z $GPF_DOCKER_NETWORK ]]; then
         -d \
         seqpipe/seqpipe-gpf-conda /code/scripts/run_remote_server.sh
 else
+    export HAS_NETWORK=`docker network ls | grep ${GPF_DOCKER_NETWORK} | sed -e "s/\s\{2,\}/\t/g" | cut -f 1`
+    echo ${GPF_DOCKER_NETWORK}
+    if [[ -z $HAS_NETWORK ]]; then
+        docker network create -d bridge ${GPF_DOCKER_NETWORK} || true
+    fi
+
     docker run --rm -it \
         --name ${GPF_REMOTE_DOCKER_CONTAINER} \
         --hostname $GPF_TEST_REMOTE_HOSTNAME \

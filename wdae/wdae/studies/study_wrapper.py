@@ -201,6 +201,12 @@ class StudyWrapper(StudyWrapperBase):
                     unpack_columns(
                         summary_download_column_names, use_id=False
                     )
+            else:
+                self.summary_preview_columns = None
+                self.summary_preview_sources = None
+                self.summary_download_columns = None
+                self.summary_download_sources = None
+
         else:
             self.preview_columns, self.preview_sources = [], []
             self.download_columns, self.download_sources = [], []
@@ -283,6 +289,11 @@ class StudyWrapper(StudyWrapperBase):
         "is_denovo": lambda aa: bool(
             Inheritance.denovo in aa.inheritance_in_members
         ),
+        "seen_in_affected": 
+        lambda aa: bool(aa.get_attribute("seen_in_status") in {2,3}),
+        "seen_in_unaffected": 
+        lambda aa: bool(aa.get_attribute("seen_in_status") in {1,3}),
+
     }
 
     SPECIAL_ATTRS = {**SPECIAL_ATTRS_FORMAT, **STANDARD_ATTRS_LAMBDAS}
@@ -355,7 +366,7 @@ class StudyWrapper(StudyWrapperBase):
                                     attribute = "-"
                                 elif math.isinf(attribute):
                                     attribute = "inf"
-                            if not attribute:
+                            if attribute == "":
                                 attribute = "-"
                             row_variant.append(attribute)
 
@@ -429,12 +440,16 @@ class StudyWrapper(StudyWrapperBase):
 
     def get_summary_variants_wdae_preview(
             self, query, max_variants_count=10000):
+        if not self.summary_preview_columns:
+            raise Exception("No summary preview columns specified")
         query["limit"] = max_variants_count
         rows = self.query_summary_variants(**query)
         return rows
 
     def get_summary_variants_wdae_download(
             self, query, max_variants_count=10000):
+        if not self.summary_download_columns:
+            raise Exception("No summary download columns specified")
         query["limit"] = max_variants_count
         rows = self.query_summary_variants(**query)
 
@@ -465,7 +480,7 @@ class StudyWrapper(StudyWrapperBase):
                     "variant": a.cshl_variant,
                     "family_variants_count":
                         a.get_attribute("family_variants_count"),
-                    "is_denovo": a.get_attribute("seen_in_denovo"),
+                    "is_denovo": a.get_attribute("seen_as_denovo"),
                     "seen_in_affected":
                         a.get_attribute("seen_in_status") in {2, 3},
                     "seen_in_unaffected":
@@ -509,7 +524,7 @@ class StudyWrapper(StudyWrapperBase):
                         gene_effect_get_worst_effect(a.effect),
                         a.cshl_variant,
                         a.get_attribute("family_variants_count"),
-                        a.get_attribute("seen_in_denovo"),
+                        a.get_attribute("seen_as_denovo"),
                         a.get_attribute("seen_in_status") in {2, 3},
                         a.get_attribute("seen_in_status") in {1, 3},
                     ]
@@ -646,7 +661,9 @@ class StudyWrapper(StudyWrapperBase):
         variants_from_studies = itertools.islice(
             self.genotype_data_study.query_summary_variants(**kwargs), limit
         )
-        for v in variants_from_studies:
+        variants_with_additional_cols = self._add_additional_columns_summary(
+            variants_from_studies)
+        for v in variants_with_additional_cols:
             for aa in v.alt_alleles:
                 assert not aa.is_reference_allele
 
@@ -666,7 +683,7 @@ class StudyWrapper(StudyWrapperBase):
                                     attribute = "-"
                                 elif math.isinf(attribute):
                                     attribute = "inf"
-                            if not attribute:
+                            if attribute == "":
                                 attribute = "-"
 
                             row_variant.append(attribute)
@@ -701,6 +718,18 @@ class StudyWrapper(StudyWrapperBase):
 
                     if roles_values:
                         allele.update_attributes(roles_values)
+
+                    allele.update_attributes(gene_weights_values)
+
+                yield variant
+
+    def _add_additional_columns_summary(self, variants_iterable):
+        for variants_chunk in split_iterable(
+                variants_iterable, self.STREAMING_CHUNK_SIZE):
+
+            for variant in variants_chunk:
+                for allele in variant.alt_alleles:
+                    gene_weights_values = self._get_gene_weights_values(allele)
 
                     allele.update_attributes(gene_weights_values)
 

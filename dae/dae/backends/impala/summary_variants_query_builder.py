@@ -28,7 +28,7 @@ class SummaryVariantsQueryBuilder(BaseQueryBuilder):
             "variant_data": "MIN(variants.variant_data)",
             "family_variants_count": "COUNT(DISTINCT variants.family_id)",
             "seen_in_status": "gpf_bit_or(pedigree.status)",
-            "seen_in_denovo":
+            "seen_as_denovo":
                 "gpf_or(BITAND(inheritance_in_members, 4))",
         }
         if self.has_extra_attributes:
@@ -107,7 +107,7 @@ class SummaryVariantsQueryBuilder(BaseQueryBuilder):
             family_variants_count = cols[
                 self.select_accessors["family_variants_count"]]
             seen_in_status = cols[self.select_accessors["seen_in_status"]]
-            seen_in_denovo = cols[self.select_accessors["seen_in_denovo"]]
+            seen_as_denovo = cols[self.select_accessors["seen_as_denovo"]]
             extra_attributes = cols.get(
                 self.select_accessors.get("extra_attributes", None), None)
 
@@ -118,10 +118,10 @@ class SummaryVariantsQueryBuilder(BaseQueryBuilder):
                 )
                 variant_data = bytes(variant_data, "utf8")
             if type(extra_attributes) == str:
-                logger.debug(
-                    f"extra_attributes is string!!!! "
-                    f"{bucket_index}, {summary_index}"
-                )
+                # logger.debug(
+                #     f"extra_attributes is string!!!! "
+                #     f"{bucket_index}, {summary_index}"
+                # )
                 extra_attributes = bytes(extra_attributes, "utf8")
 
             v = serializer.deserialize_summary_variant(
@@ -131,7 +131,7 @@ class SummaryVariantsQueryBuilder(BaseQueryBuilder):
                 v.update_attributes({
                     "family_variants_count": [family_variants_count],
                     "seen_in_status": [seen_in_status],
-                    "seen_in_denovo": [seen_in_denovo]
+                    "seen_as_denovo": [seen_as_denovo]
                 })
 
             return v

@@ -8,6 +8,7 @@ pytestmark = pytest.mark.usefixtures("wdae_gpf_instance", "calc_gene_sets")
 URL = "/api/v3/pheno_browser/instruments"
 MEASURES_URL = "/api/v3/pheno_browser/measures"
 MEASURES_INFO_URL = "/api/v3/pheno_browser/measures_info"
+MEASURE_DESCRIPTION_URL = "/api/v3/pheno_browser/measure_description"
 DOWNLOAD_URL = "/api/v3/pheno_browser/download"
 
 
@@ -119,7 +120,8 @@ def test_download_all_instruments(admin_client):
 
     assert response.status_code == 200
 
-    header = response.content.decode("utf-8").split()[0].split(",")
+    content = list(response.streaming_content)[0].decode("utf-8")
+    header = content.split()[0].split(",")
 
     print("header:\n", header)
     assert len(header) == 5
@@ -130,3 +132,19 @@ def test_download_all_instruments(admin_client):
         "instrument1.ordinal",
         "instrument1.raw",
     }
+
+
+def test_measure_details(admin_client):
+    url = (
+        "{}?dataset_id=quads_f1_ds&measure_id=instrument1.categorical"
+        .format(MEASURE_DESCRIPTION_URL)
+    )
+    response = admin_client.get(url)
+
+    assert response.status_code == 200
+
+    print(response.data)
+    assert response.data["instrument_name"] == "instrument1"
+    assert response.data["measure_name"] == "categorical"
+    assert response.data["measure_type"] == "categorical"
+    assert response.data["values_domain"] == ["option1", "option2"]

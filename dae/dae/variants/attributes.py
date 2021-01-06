@@ -341,6 +341,9 @@ class VariantType(enum.Enum):
     def __str__(self) -> str:
         return _VARIANT_TYPE_DISPLAY_NAME[self.name]
 
+    def __lt__(self, other):
+        return self.value < other.value
+
 
 class GeneticModel(enum.Enum):
     autosomal = 1

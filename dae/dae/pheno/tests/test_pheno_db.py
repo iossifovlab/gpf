@@ -25,6 +25,16 @@ def dict_check(dict_, expected_count, expected_cols):
     assert expected_count == len(dict_)
 
 
+def str_check(str_, expected_count, expected_cols):
+    assert isinstance(str_, str)
+    lines = str_.splitlines()
+    header = lines[0]
+    values_lines = lines[1:]
+    columns = [col.strip() for col in header.split(",")]
+    assert all([col in columns for col in expected_cols])
+    assert len(values_lines) == expected_count
+
+
 def dict_check_measure(dict_, expected_count, *args):
     assert isinstance(dict_, dict)
     for m_id, measure in dict_.items():
@@ -57,6 +67,28 @@ def test_get_values(fake_phenotype_data, query_cols, get, check):
 
     vals = get(fake_phenotype_data, query_cols, roles=["prb"])
     check(vals, 39, query_cols)
+
+
+@pytest.mark.parametrize("query_cols", [(["i1.m1"]), (["i1.m1", "i1.m2"])])
+def test_get_values_streaming_csv(fake_phenotype_data, query_cols):
+    result_it = fake_phenotype_data.get_values_streaming_csv(query_cols)
+    result = "".join(list(result_it))
+    str_check(result, 195, query_cols)
+
+    result_it = fake_phenotype_data.get_values_streaming_csv(
+        query_cols, ["f20.p1"])
+    result = "".join(list(result_it))
+    str_check(result, 1, query_cols)
+
+    result_it = fake_phenotype_data.get_values_streaming_csv(
+        query_cols, ["f20.p1", "f21.p1"])
+    result = "".join(list(result_it))
+    str_check(result, 2, query_cols)
+
+    result_it = fake_phenotype_data.get_values_streaming_csv(
+        query_cols, roles=["prb"])
+    result = "".join(list(result_it))
+    str_check(result, 39, query_cols)
 
 
 @pytest.mark.parametrize(

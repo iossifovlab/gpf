@@ -1,8 +1,11 @@
 import os
 import re
 import tempfile
-
+import logging
 import pyarrow as pa
+
+
+logger = logging.getLogger(__name__)
 
 
 class HdfsHelpers(object):
@@ -23,12 +26,14 @@ class HdfsHelpers(object):
     def hdfs(self):
         if self._hdfs is None:
             extra_conf = None
-            if self.replication:
+            if self.replication and self.replication > 0:
                 assert self.replication > 0, self.replication
                 extra_conf = {
-                    "dfs.replication": self.replication
+                    "dfs.replication": str(self.replication)
                 }
-            print("hdfs connecting to:", self.host, self.port, extra_conf)
+            logger.info(
+                f"hdfs connecting to: {self.host}:{self.port}; "
+                f"extra: {extra_conf}")
             self._hdfs = pa.hdfs.connect(
                 host=self.host, port=self.port, extra_conf=extra_conf)
         return self._hdfs
@@ -37,7 +42,6 @@ class HdfsHelpers(object):
         return self.hdfs.exists(path)
 
     def mkdir(self, path):
-        print(path)
         self.hdfs.mkdir(path)
         self.chmod(path, 0o777)
 

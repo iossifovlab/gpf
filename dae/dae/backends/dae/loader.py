@@ -131,40 +131,59 @@ class DenovoLoader(VariantsGenotypesLoader):
                 continue
             region.chrom = self._adjust_chrom_prefix(region.chrom)
 
-        for index, rec in enumerate(self.denovo_df.to_dict(orient="records")):
-            family_id = rec.pop("family_id")
-            gt = rec.pop("genotype")
-            best_state = rec.pop("best_state")
+        print(self.denovo_df)
+        group = self.denovo_df.groupby(
+            ["chrom", "position", "reference", "alternative"],
+            sort=False).agg(
+                lambda x: list(x)
+            )
+        for num_idx, (idx, values) in enumerate(group.iterrows()):
+            chrom, position, reference, alternative = idx
+            position = int(position)
+            summary_rec = {
+                "chrom": chrom,
+                "reference": reference,
+                "alternative": alternative,
+                "position": position,
+                "summary_variant_index": num_idx,
+                "allele_index": 1
+            }
 
-            rec["summary_variant_index"] = index
-            rec["allele_index"] = 1
+            sv = SummaryVariantFactory.summary_variant_from_records(
+                [summary_rec], self.transmission_type
+            )
 
-            # rec["af_parents_called_count"] = 0
-            # rec["af_parents_called_percent"] = 0
-            # rec["af_allele_count"] = 0
-            # rec["af_allele_freq"] = 0
-
-            # fmt: off
-            summary_variant = SummaryVariantFactory.\
-                summary_variant_from_records(
-                    [rec], self.transmission_type
-                )
-            # fmt: on
-            if not self._is_in_regions(summary_variant):
+            if not self._is_in_regions(sv):
                 continue
 
-            family = self.families.get(family_id)
-            if family is None:
-                continue
-
-            family_genotypes = DenovoFamiliesGenotypes(family, gt, best_state)
-
-            family_variants = []
-            for fam, gt, bs in family_genotypes.family_genotype_iterator():
-                fv = FamilyVariant(summary_variant, fam, gt, bs)
-                family_variants.append(fv)
-
-            yield summary_variant, family_variants
+            fvs = []
+            extra_attributes_keys = list(filter(
+                lambda x: x not in ["best_state", "family_id", "genotype"],
+                values.keys()
+            ))
+            for f_idx, family_id in enumerate(values.get("family_id")):
+                best_state = values.get("best_state")[f_idx]
+                gt = values.get("genotype")[f_idx]
+                family = self.families.get(family_id)
+                if family is None:
+                    continue
+                family_genotypes = DenovoFamiliesGenotypes(
+                    family, gt, best_state)
+                for fam, gt, bs in family_genotypes.family_genotype_iterator():
+                    fv = FamilyVariant(sv, fam, gt, bs)
+                    extra_attributes = {}
+                    for attr in extra_attributes_keys:
+                        attr_val = values.get(attr)[f_idx]
+                        extra_attributes[attr] = [attr_val]
+                    if gt is None:
+                        fv.gt, fv._genetic_model = self._calc_genotype(
+                            fv, self.genome)
+                        for fa in fv.alleles:
+                            fa.gt = fv.gt
+                            fa._genetic_model = fv.genetic_model
+                    fv.update_attributes(extra_attributes)
+                    fvs.append(fv)
+            yield sv, fvs
 
     def full_variants_iterator(self):
         full_iterator = super(DenovoLoader, self).full_variants_iterator()
@@ -244,7 +263,7 @@ class DenovoLoader(VariantsGenotypesLoader):
         ))
         arguments.append(CLIArgument(
             "--denovo-location",
-            default_value="location",
+            # default_value="location",
             help_text="The label or index of the"
             " column containing the CSHL-style"
             " location of the variant. [Default: location]",
@@ -263,13 +282,13 @@ class DenovoLoader(VariantsGenotypesLoader):
         ))
         arguments.append(CLIArgument(
             "--denovo-family-id",
-            default_value="familyId",
+            # default_value="familyId",
             help_text="The label or index of the column containing the"
             " family's ID. [Default: familyId]",
         ))
         arguments.append(CLIArgument(
             "--denovo-best-state",
-            default_value="bestState",
+            # default_value="bestState",
             help_text="The label or index of the"
             " column containing the best state"
             " for the family. [Default: bestState]",
@@ -289,6 +308,8 @@ class DenovoLoader(VariantsGenotypesLoader):
 
     @classmethod
     def parse_cli_arguments(cls, argv):
+        print(argv)
+
         if argv.denovo_location and (argv.denovo_chrom or argv.denovo_pos):
             print(
                 "--denovo-location and (--denovo-chrom, --denovo-pos) "
@@ -304,26 +325,22 @@ class DenovoLoader(VariantsGenotypesLoader):
             raise ValueError()
 
         if argv.denovo_person_id and (
-            argv.denovo_family_id or argv.denovo_best_state
-        ):
+                argv.denovo_family_id or argv.denovo_best_state):
             print(
                 "--denovo-person-id and (denovo-family-id, denovo-best-state) "
                 "are mutually exclusive"
             )
             raise ValueError()
 
-        if not (
-            argv.denovo_location or (argv.denovo_chrom and argv.denovo_pos)
-        ):
+        if not (argv.denovo_location or
+                (argv.denovo_chrom and argv.denovo_pos)):
             argv.denovo_location = "location"
 
         if not (argv.denovo_variant or (argv.denovo_ref and argv.denovo_alt)):
             argv.denovo_variant = "variant"
 
-        if not (
-            argv.denovo_person_id
-            or (argv.denovo_family_id and argv.denovo_best_state)
-        ):
+        if not (argv.denovo_person_id or
+                (argv.denovo_family_id and argv.denovo_best_state)):
             argv.denovo_family_id = "familyId"
             argv.denovo_best_state = "bestState"
 
