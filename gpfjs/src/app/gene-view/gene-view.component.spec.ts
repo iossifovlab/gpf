@@ -524,6 +524,75 @@ describe('GeneViewComponent', () => {
     }
   });
 
+  it('should calculate correct spacings for denovo variants', () => {
+    component.x = d3.scaleLinear().domain([1, 100]).range([1, 100]).clamp(true);
+    let result;
+    const spacingValue = 22;
+
+    // denovo + non denovo
+    let variantsArray = new GeneViewSummaryVariantsArray();
+    variantsArray.addSummaryRow({
+      is_denovo: false, frequency: 15, position: 15, end_position: 15, variant: 'nonDenovoVariant1'
+    });
+    variantsArray.addSummaryRow({
+      is_denovo: true, position: 15, end_position: 15, variant: 'denovoVariant1'
+    });
+
+    result = component.calculateDenovoVariantsSpacings(variantsArray);
+    expect(Object.keys(result).indexOf('nonDenovoVariant1')).toBe(-1);
+    expect(result).toEqual({'undefined:denovoVariant1': 0});
+
+    // 3 denovos and 1 CNV denovo intersecting
+    variantsArray = new GeneViewSummaryVariantsArray();
+    variantsArray.addSummaryRow({
+      is_denovo: true, position: 15, variant: 'denovoVariant1'
+    });
+    variantsArray.addSummaryRow({
+      is_denovo: true, position: 15, variant: 'denovoVariant2'
+    });
+    variantsArray.addSummaryRow({
+      is_denovo: true, position: 21, variant: 'denovoVariant3'
+    });
+    variantsArray.addSummaryRow({
+      is_denovo: true, position: 1, end_position: 30, effect: 'CNV+', variant: 'denovoCnvVariant1'
+    });
+
+    result = component.calculateDenovoVariantsSpacings(variantsArray);
+    expect(Object.keys(result).length).toBe(4);
+    expect(Object.values(result).sort()).toEqual([0, spacingValue, 2 * spacingValue, 3 * spacingValue]);
+
+    // 2 denovos not intersecting
+    variantsArray = new GeneViewSummaryVariantsArray();
+
+    variantsArray.addSummaryRow({
+      is_denovo: true, position: 10, variant: 'denovoVariant1'
+    });
+    variantsArray.addSummaryRow({
+      is_denovo: true, position: 30, variant: 'denovoVariant2'
+    });
+
+    result = component.calculateDenovoVariantsSpacings(variantsArray);
+    expect(Object.keys(result).length).toBe(2);
+    expect(Object.values(result).sort()).toEqual([0, 0]);
+
+    // 2 CNV denovos intersecting and 1 not intersecting
+    variantsArray = new GeneViewSummaryVariantsArray();
+
+    variantsArray.addSummaryRow({
+      is_denovo: true, position: 10, end_position: 20, effect: 'CNV+', variant: 'denovoCnvVariant1'
+    });
+    variantsArray.addSummaryRow({
+      is_denovo: true, position: 15, end_position: 25, effect: 'CNV+', variant: 'denovoCnvVariant2'
+    });
+    variantsArray.addSummaryRow({
+      is_denovo: true, position: 35, end_position: 45, effect: 'CNV+', variant: 'denovoCnvVariant3'
+    });
+
+    result = component.calculateDenovoVariantsSpacings(variantsArray);
+    expect(Object.keys(result).length).toBe(3);
+    expect(Object.values(result).sort()).toEqual([0, 0, 22]);
+  });
+
   it('should get variant Y', () => {
     component.frequencyDomainMin = 11;
 
