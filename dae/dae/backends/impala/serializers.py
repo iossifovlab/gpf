@@ -492,7 +492,7 @@ class AlleleParquetSerializer:
 
     def serialize_family_variant(self, variant, blob):
         stream = io.BytesIO(blob)
-        write_int8(stream, len(variant.alleles))
+        stream.seek(len(stream.getvalue()))
         for allele in variant.alleles:
             self._serialize_family_allele(allele, stream)
 
@@ -539,9 +539,20 @@ class AlleleParquetSerializer:
             write_int8(stream, 1)
             serializer.serialize(stream, value)
 
-    def deserialize_allele(self, stream):
+    def deserialize_summary_allele(self, stream):
         allele_data = {}
-        for property_serializers in self.property_serializers_list:
+        property_serializers = self.property_serializers_list[0]
+        for prop, serializer in property_serializers.items():
+            is_not_none = read_int8(stream)
+            if is_not_none:
+                allele_data[prop] = serializer.deserialize(stream)
+            else:
+                allele_data[prop] = None
+        return allele_data
+
+    def deserialize_family_allele(self, stream):
+        allele_data = {}
+        for property_serializers in self.property_serializers_list[1:]:
             for prop, serializer in property_serializers.items():
                 is_not_none = read_int8(stream)
                 if is_not_none:
@@ -600,7 +611,7 @@ class AlleleParquetSerializer:
         allele_count = read_int8(stream)
         allele_data = {}
         for _i in range(0, allele_count):
-            allele_data = self.deserialize_allele(stream)
+            allele_data = self.deserialize_summary_allele(stream)
             sa = SummaryAllele(
                 allele_data["chromosome"],
                 allele_data["position"],
@@ -614,6 +625,15 @@ class AlleleParquetSerializer:
             )
             summary_alleles.append(sa)
 
+            allele_attributes_data = {
+                k: v
+                for (k, v) in allele_data.items()
+                if k not in self.ALLELE_CREATION_PROPERTIES
+            }
+            sa.update_attributes(allele_attributes_data)
+
+        for sa in summary_alleles:
+            allele_data = self.deserialize_family_allele(stream)
             allele_attributes_data = {
                 k: v
                 for (k, v) in allele_data.items()
