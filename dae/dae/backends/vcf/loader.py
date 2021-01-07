@@ -236,6 +236,8 @@ class SingleVcfLoader(VariantsGenotypesLoader):
 
     def _init_vcf_readers(self):
         self.vcfs = list()
+        logger.debug(f"SingleVcfLoader input files: {self.filenames}")
+
         for file in self.filenames:
             self.vcfs.append(VCF(file, gts012=True, strict_gt=True, lazy=True))
 
@@ -283,16 +285,18 @@ class SingleVcfLoader(VariantsGenotypesLoader):
         vcf_samples_order = [list(vcf.samples) for vcf in self.vcfs]
         vcf_samples = set(vcf_samples)
         logger.info(f"vcf samples: {len(vcf_samples)}")
-        pedigree_samples = set(self.families.ped_df["sample_id"].values)
+        pedigree_samples = set(self.families.pedigree_samples())
         logger.info(f"pedigree samples: {len(pedigree_samples)}")
+
         missing_samples = vcf_samples.difference(pedigree_samples)
         logger.info(f"samples missing in pedigree: {len(missing_samples)}")
         vcf_samples = vcf_samples.difference(missing_samples)
         assert vcf_samples.issubset(pedigree_samples)
 
         seen = set()
-        generated = 0
+        generated = set()
         for person in self.families.persons.values():
+
             if person.sample_id in vcf_samples:
                 if person.sample_id in seen:
                     continue
@@ -308,11 +312,13 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                         seen.add(person.sample_id)
                         break
             else:
-                generated += 1
-                person.set_attr("generated", True)
+                if not person.generated:
+                    generated.add(person.person_id)
+                    person.set_attr("generated", True)
+
         self.families.redefine()
         logger.info(
-            f"persons changed to generated {generated}")
+            f"persons changed to generated {len(generated)}: {generated}")
 
     def _build_family_alleles_indexes(self):
         vcf_offsets = [0] * len(self.vcfs)
@@ -444,7 +450,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                 f"{set(vcf.gt_idxs)}")
             if len(vcf.gt_idxs) == samples_count and \
                     set(vcf.gt_idxs) == set([-1]):
-                gt_idxs = -1 * np.ones(2 * samples_count, dtype = np.int)
+                gt_idxs = -1 * np.ones(2 * samples_count, dtype=np.int)
             else:
                 gt_idxs = vcf.gt_idxs
 
@@ -563,6 +569,30 @@ class VcfLoader(VariantsGenotypesLoader):
                 families, vcf_files, genome, regions=regions, params=params)
             for vcf_files in filenames if vcf_files
         ]
+        self.families = self._families_intersection()
+        logger.info(
+            f"real persons/sample: {len(self.families.real_persons)}")
+        for vcf_loader in self.vcf_loaders:
+            vcf_families = vcf_loader.families
+            logger.info(
+                f"real persons/sample: {len(vcf_families.real_persons)} "
+                f"in {vcf_loader.filenames}")
+
+    def _families_intersection(self):
+        families = self.vcf_loaders[0].families
+        for vcf_loader in self.vcf_loaders:
+            other_families = vcf_loader.families
+            assert len(families.persons) == len(other_families.persons)
+            for other_person in other_families.persons.values():
+                if other_person.generated:
+                    person = families.persons[other_person.person_id]
+                    person.set_attr("generated", True)
+        families.redefine()
+
+        for vcf_loader in self.vcf_loaders:
+            vcf_loader.families = families
+
+        return families
 
     @classmethod
     def _arguments(cls):

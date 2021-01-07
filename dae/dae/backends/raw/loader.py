@@ -3,8 +3,10 @@ import pathlib
 import sys
 import time
 import copy
+import logging
 import numpy as np
 import pandas as pd
+from abc import abstractclassmethod, abstractmethod
 from enum import Enum
 
 from typing import Iterator, Tuple, List, Dict, Any, Optional, Sequence
@@ -23,6 +25,9 @@ from dae.variants.attributes import Sex, GeneticModel
 from dae.variants.attributes import TransmissionType
 
 from dae.utils.variant_utils import get_locus_ploidy, best2gt
+
+
+logger = logging.getLogger(__name__)
 
 
 class ArgumentType(Enum):
@@ -119,17 +124,21 @@ class FamiliesGenotypes:
     def __init__(self):
         pass
 
+    @abstractmethod
     def full_families_genotypes(self):
-        raise NotImplementedError()
+        pass
 
+    @abstractmethod
     def get_family_genotype(self, family):
-        raise NotImplementedError()
+        pass
 
+    @abstractmethod
     def get_family_best_state(self, family):
-        raise NotImplementedError()
+        pass
 
+    @abstractmethod
     def family_genotype_iterator(self):
-        raise NotImplementedError()
+        pass
 
 
 class CLILoader:
@@ -140,9 +149,9 @@ class CLILoader:
     def _add_argument(self, argument):
         self.arguments.append(argument)
 
-    @classmethod
+    @abstractclassmethod
     def _arguments(cls):
-        raise NotImplementedError()
+        pass
 
     @classmethod
     def cli_defaults(cls):
@@ -220,8 +229,9 @@ class VariantsLoader(CLILoader):
     def _arguments(cls):
         return []
 
+    @abstractmethod
     def full_variants_iterator(self):
-        raise NotImplementedError()
+        pass
 
     def family_variants_iterator(self):
         for _, fvs in self.full_variants_iterator():
@@ -470,10 +480,8 @@ class StoredAnnotationDecorator(AnnotationDecorator):
         start = time.time()
         annot_df = self._load_annotation_file(self.annotation_filename)
         elapsed = time.time() - start
-        print(
-            f"Storred annotation file loaded in in {elapsed:.2f} sec",
-            file=sys.stderr,
-        )
+        logger.info(
+            f"Storred annotation file loaded in in {elapsed:.2f} sec")
 
         start = time.time()
         records = annot_df.to_dict(orient="records")
@@ -498,10 +506,8 @@ class StoredAnnotationDecorator(AnnotationDecorator):
             yield sv, family_variants
 
         elapsed = time.time() - start
-        print(
-            f"Storred annotation file parsed in {elapsed:.2f} sec",
-            file=sys.stderr,
-        )
+        logger.info(
+            f"Storred annotation file parsed in {elapsed:.2f} sec")
 
 
 class VariantsGenotypesLoader(VariantsLoader):
@@ -567,8 +573,9 @@ class VariantsGenotypesLoader(VariantsLoader):
     def variants_filenames(self):
         return self.filenames
 
+    @abstractmethod
     def _full_variants_iterator_impl(self):
-        raise NotImplementedError()
+        pass
 
     def reset_regions(self, regions):
         # print("resetting regions to:", regions)
