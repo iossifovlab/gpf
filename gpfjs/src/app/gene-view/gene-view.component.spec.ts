@@ -535,7 +535,7 @@ describe('GeneViewComponent', () => {
       is_denovo: false, frequency: 15, position: 15, end_position: 15, variant: 'nonDenovoVariant1'
     });
     variantsArray.addSummaryRow({
-      is_denovo: true, position: 15, end_position: 15, variant: 'denovoVariant1'
+      is_denovo: true, frequency: null, position: 15, end_position: 15, variant: 'denovoVariant1'
     });
 
     result = component.calculateDenovoVariantsSpacings(variantsArray);
@@ -545,16 +545,16 @@ describe('GeneViewComponent', () => {
     // 3 denovos and 1 CNV denovo intersecting
     variantsArray = new GeneViewSummaryVariantsArray();
     variantsArray.addSummaryRow({
-      is_denovo: true, position: 15, variant: 'denovoVariant1'
+      is_denovo: true, frequency: null, position: 15, variant: 'denovoVariant1'
     });
     variantsArray.addSummaryRow({
-      is_denovo: true, position: 15, variant: 'denovoVariant2'
+      is_denovo: true, frequency: null, position: 15, variant: 'denovoVariant2'
     });
     variantsArray.addSummaryRow({
-      is_denovo: true, position: 21, variant: 'denovoVariant3'
+      is_denovo: true, frequency: null, position: 21, variant: 'denovoVariant3'
     });
     variantsArray.addSummaryRow({
-      is_denovo: true, position: 1, end_position: 30, effect: 'CNV+', variant: 'denovoCnvVariant1'
+      is_denovo: true, frequency: null, position: 1, end_position: 30, effect: 'CNV+', variant: 'denovoCnvVariant1'
     });
 
     result = component.calculateDenovoVariantsSpacings(variantsArray);
@@ -565,10 +565,10 @@ describe('GeneViewComponent', () => {
     variantsArray = new GeneViewSummaryVariantsArray();
 
     variantsArray.addSummaryRow({
-      is_denovo: true, position: 10, variant: 'denovoVariant1'
+      is_denovo: true, frequency: null, position: 10, variant: 'denovoVariant1'
     });
     variantsArray.addSummaryRow({
-      is_denovo: true, position: 30, variant: 'denovoVariant2'
+      is_denovo: true, frequency: null, position: 30, variant: 'denovoVariant2'
     });
 
     result = component.calculateDenovoVariantsSpacings(variantsArray);
@@ -579,13 +579,13 @@ describe('GeneViewComponent', () => {
     variantsArray = new GeneViewSummaryVariantsArray();
 
     variantsArray.addSummaryRow({
-      is_denovo: true, position: 10, end_position: 20, effect: 'CNV+', variant: 'denovoCnvVariant1'
+      is_denovo: true, frequency: null, position: 10, end_position: 20, effect: 'CNV+', variant: 'denovoCnvVariant1'
     });
     variantsArray.addSummaryRow({
-      is_denovo: true, position: 15, end_position: 25, effect: 'CNV+', variant: 'denovoCnvVariant2'
+      is_denovo: true, frequency: null, position: 15, end_position: 25, effect: 'CNV+', variant: 'denovoCnvVariant2'
     });
     variantsArray.addSummaryRow({
-      is_denovo: true, position: 35, end_position: 45, effect: 'CNV+', variant: 'denovoCnvVariant3'
+      is_denovo: true, frequency: null, position: 35, end_position: 45, effect: 'CNV+', variant: 'denovoCnvVariant3'
     });
 
     result = component.calculateDenovoVariantsSpacings(variantsArray);
