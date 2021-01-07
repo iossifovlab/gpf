@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, HostListener, OnInit, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
 
 import {throwError as observableThrowError, Observable , ReplaySubject, BehaviorSubject } from 'rxjs';
@@ -15,8 +15,14 @@ import { UserGroupsSelectorComponent } from 'app/user-groups-selector/user-group
   styleUrls: ['../user-edit/user-edit.component.css']
 })
 export class UserCreateComponent implements OnInit {
+  @HostListener('window:popstate', [ '$event' ])
+  unloadHandler() {
+    this.closeConfirmnationModal();
+  }
+
   @ViewChild(UserGroupsSelectorComponent)
   private userGroupsSelectorComponent: UserGroupsSelectorComponent;
+  @ViewChild('ele') ele: ElementRef;
 
   lockedOptions = {
     width: 'style',
@@ -42,6 +48,10 @@ export class UserCreateComponent implements OnInit {
       .getAllGroups()
       .take(1)
       .subscribe(groups => this.groups$.next(groups));
+  }
+
+  closeConfirmnationModal() {
+    this.ele.nativeElement.click();
   }
 
   getDefaultGroups() {

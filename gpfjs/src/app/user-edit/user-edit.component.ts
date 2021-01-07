@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, HostListener, OnInit, ViewChild } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 
 // tslint:disable-next-line:import-blacklist
@@ -17,8 +17,14 @@ import { UserGroupsSelectorComponent } from 'app/user-groups-selector/user-group
   styleUrls: ['./user-edit.component.css']
 })
 export class UserEditComponent implements OnInit {
+  @HostListener('window:popstate', [ '$event' ])
+  unloadHandler() {
+    this.closeConfirmnationModal();
+  }
+
   @ViewChild(UserGroupsSelectorComponent)
   private userGroupsSelectorComponent: UserGroupsSelectorComponent;
+  @ViewChild('ele') ele: ElementRef;
 
   dropdownSettings: IDropdownSettings = {};
 
@@ -62,6 +68,10 @@ export class UserEditComponent implements OnInit {
         textField: 'text',
         allowSearchFilter: true,
       };
+  }
+
+  closeConfirmnationModal() {
+    this.ele.nativeElement.click();
   }
 
   getDefaultGroups() {

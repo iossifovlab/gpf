@@ -1,5 +1,4 @@
-import { Component, OnInit, NgZone, Input } from '@angular/core';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Component, OnInit, NgZone, Input, ViewChild, ElementRef, OnDestroy } from '@angular/core';
 
 import { User } from '../users/users';
 import { UsersService } from '../users/users.service';
@@ -9,18 +8,25 @@ import { UsersService } from '../users/users.service';
   templateUrl: './users-actions.component.html',
   styleUrls: ['./users-actions.component.css']
 })
-export class UsersActionsComponent implements OnInit {
+export class UsersActionsComponent implements OnInit, OnDestroy {
   @Input()
   user: User;
+  @ViewChild('ele') ele: ElementRef;
 
   constructor(
     private zone: NgZone,
-    private router: Router,
-    private route: ActivatedRoute,
-    private usersService: UsersService
+    private usersService: UsersService,
   ) { }
 
   ngOnInit() {
+  }
+
+  ngOnDestroy(): void {
+    this.closeConfirmnationModal();
+  }
+
+  closeConfirmnationModal() {
+    this.ele.nativeElement.click();
   }
 
   deleteUser(user: User) {
