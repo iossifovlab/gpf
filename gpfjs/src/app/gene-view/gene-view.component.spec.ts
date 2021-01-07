@@ -524,6 +524,58 @@ describe('GeneViewComponent', () => {
     }
   });
 
+  it('should draw denovo variants with spacings when drawing the plot', () => {
+    component.selectedFrequencies = [0, 100];
+    component.selectedAffectedStatus = ['Affected only'];
+    component.showDenovo = true;
+    component.x = d3.scaleLinear().domain([1, 100]).range([1, 100]).clamp(true);
+    component.y = d3.scaleLog()
+      .domain([component.frequencyDomainMin, component.frequencyDomainMax])
+      .range([component.subdomainAxisY, 100]);
+    component.y_subdomain = d3.scaleLinear()
+      .domain([0, 100])
+      .range([component.zeroAxisY, component.subdomainAxisY]);
+    component.y_zero = d3.scalePoint()
+      .domain(['0'])
+      .range([component.svgHeightFreq, component.zeroAxisY]);
+    component.svgElement = d3.select('#svg-container');
+    component.showDenovo = true;
+    const getVariantYSpy = spyOn(component, 'getVariantY').and.callFake(y => {return y;});
+
+    const spacings: Number[] = [];
+    const drawSpy = spyOn(draw, 'star').and.callFake((element, x, y, color, title) => {
+      spacings.push(y);
+    });
+
+    component.summaryVariantsArray = new GeneViewSummaryVariantsArray();
+    component.summaryVariantsArray.addSummaryRow({
+      effect: 'lgds', is_denovo: true, seen_in_affected: true, seen_in_unaffected: false, frequency: 0, position: 1, variant: 'sub', location: '1'
+    })
+    component.summaryVariantsArray.addSummaryRow({
+      effect: 'lgds', is_denovo: true, seen_in_affected: true, seen_in_unaffected: false, frequency: 0, position: 1, variant: 'sub', location: '2'
+    })
+    component.summaryVariantsArray.addSummaryRow({
+      effect: 'lgds', is_denovo: true, seen_in_affected: true, seen_in_unaffected: false, frequency: 0, position: 1, variant: 'sub', location: '3'
+    })
+    component.summaryVariantsArray.addSummaryRow({
+      effect: 'lgds', is_denovo: true, seen_in_affected: true, seen_in_unaffected: false, frequency: 0, position: 1, variant: 'sub', location: '4'
+    })
+    component.summaryVariantsArray.addSummaryRow({
+      effect: 'lgds', is_denovo: true, seen_in_affected: true, seen_in_unaffected: false, frequency: 0, position: 1, variant: 'sub', location: '5'
+    })
+
+    component.denovoVariantsSpacings = {
+      '1:sub': 10,
+      '2:sub': 20,
+      '3:sub': 30,
+      '4:sub': 40,
+      '5:sub': 50,
+    }
+
+    component.drawPlot();
+    expect(spacings).toEqual([18, 28, 38, 48, 58]);
+  });
+
   it('should calculate correct spacings for denovo variants', () => {
     component.x = d3.scaleLinear().domain([1, 100]).range([1, 100]).clamp(true);
     let result;
