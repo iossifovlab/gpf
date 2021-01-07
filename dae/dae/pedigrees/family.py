@@ -1,4 +1,5 @@
 import copy
+import logging
 
 from collections import defaultdict
 from collections.abc import Mapping
@@ -7,6 +8,9 @@ from dae.utils.helpers import isnan
 import pandas as pd
 
 from dae.variants.attributes import Role, Sex, Status
+
+
+logger = logging.getLogger(__name__)
 
 
 PEDIGREE_COLUMN_NAMES = {
@@ -130,6 +134,18 @@ class Person(object):
     def set_attr(self, key, value):
         self._attributes[key] = value
 
+    def __eq__(self, other):
+        if not isinstance(other, Person):
+            return False
+        return self.person_id == other.person_id and \
+            self.family_id == other.family_id and \
+            self.sex == other.sex and \
+            self.role == other.role and \
+            self.status == other.status and \
+            self.mom == other.mom and \
+            self.dad == other.dad and \
+            self.generated == other.generated
+
 
 class Family(object):
     def __init__(self, family_id):
@@ -196,6 +212,14 @@ class Family(object):
                 filter(lambda m: not m.generated, self.persons.values())
             )
         return self._members_in_order
+
+    def __eq__(self, other):
+        if len(self.full_members) != len(other.full_members):
+            return False
+        for m1, m2 in zip(self.full_members, other.full_members):
+            if m1 != m2:
+                return False
+        return True
 
     def has_members(self):
         return len(self.members_in_order) > 0
@@ -295,10 +319,14 @@ class FamiliesData(Mapping):
         self.persons = {}
         self._broken = {}
         self._person_ids_with_parents = None
+        self._real_persons = None
 
     def redefine(self):
+        error_msg = None
+
         self.persons = {}
         self._ped_df = None
+        self._real_persons = None
 
         all_families = self._families.values()
         self._families = {}
@@ -311,7 +339,25 @@ class FamiliesData(Mapping):
                 self._families[family.family_id] = family
 
             for person in family.full_members:
+                if person.person_id in self.persons:
+                    logger.error(
+                        f"person {person.person_id} included in more "
+                        f"than one family: {family.family_id}, "
+                        f"{self.persons[person.person_id].family_id}")
+                    error_msg = f"person {person.person_id} " \
+                        f"in multiple families"
                 self.persons[person.person_id] = person
+        if error_msg:
+            raise AttributeError(error_msg)
+
+    @property
+    def real_persons(self):
+        if self._real_persons is None:
+            self._real_persons = {}
+            for p in self.persons.values():
+                if not p.generated:
+                    self._real_persons[p.person_id] = p
+        return self._real_persons
 
     @staticmethod
     def from_family_persons(family_persons):
@@ -345,6 +391,13 @@ class FamiliesData(Mapping):
         return FamiliesData.from_family_persons(
             [(fam.family_id, fam.full_members) for fam in families.values()]
         )
+
+    def pedigree_samples(self):
+        result = []
+        for family in self.values():
+            for member in family.members_in_order:
+                result.append(member.sample_id)
+        return result
 
     @property
     def ped_df(self):
