@@ -649,7 +649,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
 
         let spacing = 0;
         if (variant.seenAsDenovo) {
-          if (variant.frequency == null) {
+          if (variant.frequency === null) {
             spacing = this.denovoVariantsSpacings[variant.svuid] + 8;
           }
 
@@ -689,7 +689,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
 
   calculateDenovoVariantsSpacings(summaryVariantsArray: GeneViewSummaryVariantsArray) {
     let denovoVariants = summaryVariantsArray.summaryVariants
-      .filter(variant => variant.seenAsDenovo)
+      .filter(variant => variant.seenAsDenovo && variant.frequency === null)
       .sort((sv, sv2) => sv.position > sv2.position ? 1 : sv.position < sv2.position ? -1 : 0);
 
     if (!denovoVariants.length) {
