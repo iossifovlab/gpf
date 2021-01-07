@@ -394,6 +394,7 @@ class AlleleParquetSerializer:
             "effect_details_details": StringListSerializer,
         }
         self.family_prop_serializers = {
+            "allele_index": SignedInt8Serializer,
             "family_id": StringSerializer,
             "gt": GenotypeSerializer,
             "best_state": BestStateserializer,
@@ -493,6 +494,7 @@ class AlleleParquetSerializer:
     def serialize_family_variant(self, variant, blob):
         stream = io.BytesIO(blob)
         stream.seek(len(stream.getvalue()))
+        write_int8(stream, len(variant.alleles))
         for allele in variant.alleles:
             self._serialize_family_allele(allele, stream)
 
@@ -608,9 +610,9 @@ class AlleleParquetSerializer:
         family_alleles = []
 
         stream = io.BytesIO(main_blob)
-        allele_count = read_int8(stream)
+        summary_allele_count = read_int8(stream)
         allele_data = {}
-        for _i in range(0, allele_count):
+        for _i in range(0, summary_allele_count):
             allele_data = self.deserialize_summary_allele(stream)
             sa = SummaryAllele(
                 allele_data["chromosome"],
@@ -632,13 +634,18 @@ class AlleleParquetSerializer:
             }
             sa.update_attributes(allele_attributes_data)
 
-        for sa in summary_alleles:
+        family_allele_count = read_int8(stream)
+        for _i in range(0, family_allele_count):
             allele_data = self.deserialize_family_allele(stream)
             allele_attributes_data = {
                 k: v
                 for (k, v) in allele_data.items()
                 if k not in self.ALLELE_CREATION_PROPERTIES
             }
+            allele_index = allele_data["allele_index"]
+            sa = next(filter(
+                lambda x: x.allele_index == allele_index, summary_alleles
+            ))
             sa.update_attributes(allele_attributes_data)
             fa = FamilyAllele(
                 sa, family, allele_data["gt"], allele_data["best_state"],
