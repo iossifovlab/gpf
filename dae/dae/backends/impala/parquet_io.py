@@ -8,7 +8,6 @@ import logging
 
 import toml
 from box import Box
-from copy import copy
 
 import numpy as np
 import pyarrow as pa
@@ -528,9 +527,12 @@ class VariantsParquetWriter:
         for summary_variant_index, (summary_variant, family_variants) in \
                 enumerate(self.full_variants_iterator):
 
-            summary_variant_data = self.serializer.serialize_summary_variant(
+            summary_blobs = self.serializer.serialize_summary_data(
                 summary_variant
             )
+
+            scores_blob = self.serializer.serialize_scores_data(
+                summary_variant)
 
             for family_variant in family_variants:
                 family_variant_index += 1
@@ -558,7 +560,7 @@ class VariantsParquetWriter:
                     alleles = fv.alleles
 
                 variant_data = self.serializer.serialize_family_variant(
-                    fv, copy(summary_variant_data))
+                    fv, summary_blobs, scores_blob)
                 extra_attributes_data = \
                     self.serializer.serialize_extra_attributes(fv)
                 for family_allele in alleles:
