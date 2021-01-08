@@ -54,6 +54,27 @@ pipeline {
       }
     }
 
+    stage('Data') {
+        steps {
+            sh '''
+                rm -f builds/*
+            '''
+            script {
+                copyArtifacts(
+                    projectName: 'seqpipe/data-hg19-startup/master',
+                    selector: lastSuccessful()
+                );
+            }
+            sh '''
+                tar zxf builds/data-hg19-startup-*.tar.gz -C $WD
+                
+                mkdir -p $WD/data-hg19-startup/wdae
+
+                sed -i "s/localhost/impala/" $WD/data-hg19-startup/DAE.conf
+            '''
+        }
+    }
+
     stage('Docker Setup') {
       steps {
         script {
