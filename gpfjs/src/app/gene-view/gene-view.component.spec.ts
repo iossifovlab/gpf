@@ -490,6 +490,10 @@ describe('GeneViewComponent', () => {
         expect(title.indexOf(effectTypes[index])).not.toBe(-1);
       });
     });
+    const drawRectSpy = spyOn(draw, 'rect').and.callFake((element, x, xEnd, y, height, color, opacity, title) => {
+      expect(title.indexOf('CNV+')).not.toBe(-1);
+    });
+
     const drawSurroundingSquareSpy = spyOn(draw, 'surroundingRectangle');
 
     const testVariant1 = GeneViewSummaryVariant.fromRow({
@@ -505,7 +509,11 @@ describe('GeneViewComponent', () => {
     });
 
     const testVariant4 = GeneViewSummaryVariant.fromRow({
-      effect: 'other', is_denovo: false, seen_in_affected: true, seen_in_unaffected: false, frequency: 15, position: 15, variant: 'cnv+'
+      effect: 'other', is_denovo: false, seen_in_affected: true, seen_in_unaffected: false, frequency: 15, position: 15, variant: 'del'
+    });
+
+    const testVariant5 = GeneViewSummaryVariant.fromRow({
+      effect: 'CNV+', is_denovo: false, seen_in_affected: true, seen_in_unaffected: false, frequency: 15, position: 15, endPosition: 25, variant: 'cnv+'
     });
 
     component.summaryVariantsArray = new GeneViewSummaryVariantsArray();
@@ -513,6 +521,7 @@ describe('GeneViewComponent', () => {
     component.summaryVariantsArray.push(testVariant2);
     component.summaryVariantsArray.push(testVariant3);
     component.summaryVariantsArray.push(testVariant4);
+    component.summaryVariantsArray.push(testVariant5);
 
     component.drawPlot();
 
@@ -522,6 +531,8 @@ describe('GeneViewComponent', () => {
       expect(drawSpy).toHaveBeenCalled();
       expect(drawSpy).toHaveBeenCalledTimes(1);
     }
+    expect(drawRectSpy).toHaveBeenCalled();
+    expect(drawRectSpy).toHaveBeenCalledTimes(1);
   });
 
   it('should draw denovo variants with spacings when drawing the plot', () => {
