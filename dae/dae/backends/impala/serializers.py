@@ -431,12 +431,17 @@ class AlleleParquetSerializer:
                     scores_binary[col_name] = FloatSerializer
                     scores_searchable[col_name] = pa.float32()
 
-        self.property_serializers_list = [
-            self.summary_prop_serializers,
+        self.scores_serializers = scores_binary
+
+        self.family_serializers_list = [
             self.annotation_prop_serializers,
             self.family_prop_serializers,
             self.member_prop_serializers,
-            scores_binary,
+        ]
+        self.property_serializers_list = [
+            self.summary_prop_serializers,
+            *self.family_serializers_list,
+            self.scores_serializers
         ]
 
         self.searchable_properties_types = {
@@ -483,19 +488,21 @@ class AlleleParquetSerializer:
         return self.searchable_properties_types.keys()
 
     def _serialize_family_allele(self, allele, stream):
-        for property_serializers in self.property_serializers_list[1:]:
+        for property_serializers in self.family_serializers_list:
             for prop, serializer in property_serializers.items():
                 value = getattr(allele, prop, None)
                 if value is None:
                     value = allele.get_attribute(prop)
                 self.write_property(stream, value, serializer)
 
-    def serialize_family_variant(self, variant, blob):
-        stream = io.BytesIO(blob)
-        stream.seek(len(stream.getvalue()))
+    def serialize_family_variant(
+            self, variant, summary_blobs, scores_blobs):
+        stream = io.BytesIO()
         write_int8(stream, len(variant.alleles))
         for allele in variant.alleles:
+            stream.write(summary_blobs[allele.allele_index])
             self._serialize_family_allele(allele, stream)
+            stream.write(scores_blobs[allele.allele_index])
 
         stream.seek(0)
         output = stream.read()
@@ -503,23 +510,44 @@ class AlleleParquetSerializer:
         return output
 
     def _serialize_summary_allele(self, allele, stream):
-        property_serializers = self.property_serializers_list[0]
+        property_serializers = self.summary_prop_serializers
         for prop, serializer in property_serializers.items():
             value = getattr(allele, prop, None)
             if value is None:
                 value = allele.get_attribute(prop)
             self.write_property(stream, value, serializer)
 
-    def serialize_summary_variant(self, variant):
-        stream = io.BytesIO()
-        write_int8(stream, len(variant.alleles))
+    def serialize_summary_data(self, variant):
+        output = []
         for allele in variant.alleles:
+            stream = io.BytesIO()
             self._serialize_summary_allele(allele, stream)
+            stream.seek(0)
+            blob = stream.read()
+            output.append(blob)
+            stream.close()
 
-        stream.seek(0)
-        output = stream.read()
-        stream.close()
         return output
+
+    def _serialize_allele_scores(self, allele, stream):
+        property_serializers = self.scores_serializers
+        for prop, serializer in property_serializers.items():
+            print(prop)
+            value = getattr(allele, prop, None)
+            if value is None:
+                value = allele.get_attribute(prop)
+            self.write_property(stream, value, serializer)
+
+    def serialize_scores_data(self, variant):
+        scores_blobs = []
+        for allele in variant.alleles:
+            stream = io.BytesIO()
+            self._serialize_allele_scores(allele, stream)
+            stream.seek(0)
+            blob = stream.read()
+            scores_blobs.append(blob)
+            stream.close()
+        return scores_blobs
 
     def serialize_extra_attributes(self, variant):
         stream = io.BytesIO()
