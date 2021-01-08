@@ -394,7 +394,6 @@ class AlleleParquetSerializer:
             "effect_details_details": StringListSerializer,
         }
         self.family_prop_serializers = {
-            "allele_index": SignedInt8Serializer,
             "family_id": StringSerializer,
             "gt": GenotypeSerializer,
             "best_state": BestStateserializer,
@@ -541,20 +540,9 @@ class AlleleParquetSerializer:
             write_int8(stream, 1)
             serializer.serialize(stream, value)
 
-    def deserialize_summary_allele(self, stream):
+    def deserialize_allele(self, stream):
         allele_data = {}
-        property_serializers = self.property_serializers_list[0]
-        for prop, serializer in property_serializers.items():
-            is_not_none = read_int8(stream)
-            if is_not_none:
-                allele_data[prop] = serializer.deserialize(stream)
-            else:
-                allele_data[prop] = None
-        return allele_data
-
-    def deserialize_family_allele(self, stream):
-        allele_data = {}
-        for property_serializers in self.property_serializers_list[1:]:
+        for property_serializers in self.property_serializers_list:
             for prop, serializer in property_serializers.items():
                 is_not_none = read_int8(stream)
                 if is_not_none:
@@ -610,10 +598,10 @@ class AlleleParquetSerializer:
         family_alleles = []
 
         stream = io.BytesIO(main_blob)
-        summary_allele_count = read_int8(stream)
+        allele_count = read_int8(stream)
         allele_data = {}
-        for _i in range(0, summary_allele_count):
-            allele_data = self.deserialize_summary_allele(stream)
+        for _i in range(0, allele_count):
+            allele_data = self.deserialize_allele(stream)
             sa = SummaryAllele(
                 allele_data["chromosome"],
                 allele_data["position"],
@@ -632,20 +620,6 @@ class AlleleParquetSerializer:
                 for (k, v) in allele_data.items()
                 if k not in self.ALLELE_CREATION_PROPERTIES
             }
-            sa.update_attributes(allele_attributes_data)
-
-        family_allele_count = read_int8(stream)
-        for _i in range(0, family_allele_count):
-            allele_data = self.deserialize_family_allele(stream)
-            allele_attributes_data = {
-                k: v
-                for (k, v) in allele_data.items()
-                if k not in self.ALLELE_CREATION_PROPERTIES
-            }
-            allele_index = allele_data["allele_index"]
-            sa = next(filter(
-                lambda x: x.allele_index == allele_index, summary_alleles
-            ))
             sa.update_attributes(allele_attributes_data)
             fa = FamilyAllele(
                 sa, family, allele_data["gt"], allele_data["best_state"],
