@@ -13,7 +13,7 @@ pipeline {
     DOCUMENTATION_DOCKER_IMAGE="seqpipe/gpf-documentation:${env.BRANCH_NAME}"
     GPF_DOCKER_IMAGE="iossifovlab/gpf-base:documentation_${env.BRANCH_NAME}"
 
-    DOCUMENTATION_DIR="${env.WORKSPACE}"
+    WD="${env.WORKSPACE}"
     SOURCE_DIR="${env.WORKSPACE}/userdocs/gpf"
     DAE_DB_DIR="${env.WORKSPACE}/data-hg19-startup"
     DAE_GENOMIC_SCORES_HG19="/data01/lubo/data/seq-pipeline/genomic-scores-hg19"
@@ -21,7 +21,7 @@ pipeline {
 
 
     DOCKER_PARAMETERS="""
-      -v ${DOCUMENTATION_DIR}:/documentation \
+      -v ${WD}:/documentation \
       -v ${DAE_DB_DIR}:/data \
       -v ${SOURCE_DIR}:/documentation/userdocs/gpf \
       -v ${DAE_GENOMIC_SCORES_HG19}:/genomic-scores-hg19 \
@@ -88,7 +88,7 @@ pipeline {
           // )
           // docker.build(
           //   "${DOCUMENTATION_DOCKER_IMAGE}",
-          //   ". -f ${DOCUMENTATION_DIR}/Dockerfile --build-arg GPF_DOCKER_IMAGE=${GPF_DOCKER_IMAGE}"
+          //   ". -f ${WD}/Dockerfile --build-arg GPF_DOCKER_IMAGE=${GPF_DOCKER_IMAGE}"
           // )
         }
       }
