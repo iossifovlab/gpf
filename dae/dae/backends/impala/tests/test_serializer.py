@@ -1,4 +1,3 @@
-from copy import copy
 from dae.backends.impala.serializers import AlleleParquetSerializer
 from dae.backends.dae.loader import DenovoLoader
 from dae.pedigrees.loader import FamiliesLoader
@@ -14,8 +13,9 @@ def test_all_properties_in_blob(vcf_variants_loader, impala_genotype_storage):
     fv.update_attributes({"some_score": [1.24]})
 
     serializer = AlleleParquetSerializer(schema)
-    blob = serializer.serialize_summary_variant(fv)
-    blob = serializer.serialize_family_variant(fv, copy(blob))
+    summary_blobs = serializer.serialize_summary_data(fv)
+    scores_blob = serializer.serialize_scores_data(fv)
+    blob = serializer.serialize_family_variant(fv, summary_blobs, scores_blob)
     deserialized_variant = serializer.deserialize_family_variant(blob, family)
     for prop in schema.columns.keys():
         print(prop)
@@ -49,9 +49,10 @@ def test_extra_attributes_serialization_deserialization(
     it = loader.full_variants_iterator()
     variant = next(it)[1][0]
     print(variant.gt)
-    variant_blob = serializer.serialize_summary_variant(variant)
+    summary_blobs = serializer.serialize_summary_data(variant)
+    scores_blob = serializer.serialize_scores_data(variant)
     variant_blob = serializer.serialize_family_variant(
-        variant, copy(variant_blob)
+        variant, summary_blobs, scores_blob
     )
     extra_blob = serializer.serialize_extra_attributes(variant)
     family = variant.family
