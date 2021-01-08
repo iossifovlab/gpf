@@ -359,7 +359,8 @@ class AlleleParquetSerializer:
         "genetic_model_data",
         "frequency_data",
         "alternative",
-        "variant_data"
+        "variant_data",
+        "family_variant_index"
     ]
 
     def __init__(self, variants_schema, extra_attributes=None):
