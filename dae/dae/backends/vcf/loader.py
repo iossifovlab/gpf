@@ -132,7 +132,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                 f"expected values are `reference` or `unknown`")
             self._fill_missing_value = 0
 
-        self.strict_pedigree = params.get("vcf_pedigree_mode", False) == \
+        self.strict_pedigree = params.get("vcf_pedigree_mode", "strict") == \
             "strict"
 
         self._init_vcf_readers()
@@ -561,7 +561,7 @@ class VcfLoader(VariantsGenotypesLoader):
             for vcf_files in filenames if vcf_files
         ]
 
-        pedigree_mode = params.get("vcf_pedigree_mode", "intersection")
+        pedigree_mode = params.get("vcf_pedigree_mode", "strict")
         if pedigree_mode == "intersection":
             self.families = self._families_intersection()
         elif pedigree_mode == "union":
@@ -667,7 +667,7 @@ class VcfLoader(VariantsGenotypesLoader):
         ))
         arguments.append(CLIArgument(
             "--vcf-pedigree-mode",
-            default_value="intersection",
+            default_value="strict",
             help_text="used for handling missmathes between samples in VCF"
             "and sample in pedigree file;"
             "supported values are: 'intersection', 'union', 'strict';"
