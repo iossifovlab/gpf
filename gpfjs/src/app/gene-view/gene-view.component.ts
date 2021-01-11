@@ -641,10 +641,6 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
         const color = this.getAffectedStatusColor(this.getVariantAffectedStatus(variant));
         const variantTitle = `Effect type: ${variant.effect}\nVariant position: ${variant.location}`;
 
-        // Temporary fix for variants with 0 frequency shown in the middle of the denovo plot
-        if (variant.frequency === 0) {
-          variant.frequency = null;
-        }
         const variantHeight = this.getVariantY(variant.frequency);
 
         let spacing = 0;
@@ -688,6 +684,7 @@ export class GeneViewComponent extends QueryStateWithErrorsProvider implements O
   }
 
   calculateDenovoVariantsSpacings(summaryVariantsArray: GeneViewSummaryVariantsArray) {
+    summaryVariantsArray.summaryVariants.filter(variant => variant.frequency === 0).forEach(variant => variant.frequency = null)
     let denovoVariants = summaryVariantsArray.summaryVariants
       .filter(variant => variant.seenAsDenovo && variant.frequency === null)
       .sort((sv, sv2) => sv.position > sv2.position ? 1 : sv.position < sv2.position ? -1 : 0);
