@@ -597,7 +597,7 @@ class VcfLoader(VariantsGenotypesLoader):
             if not person.generated:
                 continue
             for vcf_loader in self.vcf_loaders:
-                other_person = vcf_loader.persons[person_id]
+                other_person = vcf_loader.families.persons[person_id]
 
                 if not other_person.generated:
                     person.set_attr("generated", False)
