@@ -1,6 +1,5 @@
 import os
 import pathlib
-import sys
 import time
 import copy
 import logging

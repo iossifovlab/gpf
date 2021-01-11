@@ -98,6 +98,10 @@ class Person(object):
         return self._attributes.get("generated", None)
 
     @property
+    def missing(self):
+        return self._attributes.get("missing", None)
+
+    @property
     def family_bin(self):
         return self._attributes.get("family_bin", None)
 

@@ -10,7 +10,7 @@ def test_build_backend(
         quads_f1_vcf_config, genomes_db_2013
     )
 
-    assert len(backend.families) == 1
+    assert len(backend.families) == 2
     assert len(backend.families["f1"].members_ids) == 5
     assert len(list(backend.query_variants())) == 3
 
