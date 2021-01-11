@@ -434,15 +434,18 @@ class AlleleParquetSerializer:
 
         self.scores_serializers = scores_binary
 
-        self.family_serializers_list = [
+        self.summary_serializers_list = [
+            self.summary_prop_serializers,
             self.annotation_prop_serializers,
+        ]
+        self.family_serializers_list = [
             self.family_prop_serializers,
             self.member_prop_serializers,
         ]
         self.property_serializers_list = [
-            self.summary_prop_serializers,
+            *self.summary_serializers_List,
             *self.family_serializers_list,
-            self.scores_serializers
+            self.scores_serializers,
         ]
 
         self.searchable_properties_types = {
@@ -511,12 +514,12 @@ class AlleleParquetSerializer:
         return output
 
     def _serialize_summary_allele(self, allele, stream):
-        property_serializers = self.summary_prop_serializers
-        for prop, serializer in property_serializers.items():
-            value = getattr(allele, prop, None)
-            if value is None:
-                value = allele.get_attribute(prop)
-            self.write_property(stream, value, serializer)
+        for property_serializers in self.summary_serializers_list:
+            for prop, serializer in property_serializers.items():
+                value = getattr(allele, prop, None)
+                if value is None:
+                    value = allele.get_attribute(prop)
+                self.write_property(stream, value, serializer)
 
     def serialize_summary_data(self, variant):
         output = []
