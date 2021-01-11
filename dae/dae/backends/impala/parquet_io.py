@@ -527,6 +527,15 @@ class VariantsParquetWriter:
         for summary_variant_index, (summary_variant, family_variants) in \
                 enumerate(self.full_variants_iterator):
 
+            summary_alleles = summary_variant.alleles
+
+            summary_blobs = self.serializer.serialize_summary_data(
+                summary_alleles
+            )
+
+            scores_blob = self.serializer.serialize_scores_data(
+                summary_alleles)
+
             for family_variant in family_variants:
                 family_variant_index += 1
 
@@ -552,7 +561,8 @@ class VariantsParquetWriter:
                 if self.include_reference or fv.is_reference():
                     alleles = fv.alleles
 
-                variant_data = self.serializer.serialize_variant(fv)
+                variant_data = self.serializer.serialize_family_variant(
+                    alleles, summary_blobs, scores_blob)
                 extra_attributes_data = \
                     self.serializer.serialize_extra_attributes(fv)
                 for family_allele in alleles:
