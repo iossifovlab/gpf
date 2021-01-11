@@ -43,7 +43,12 @@ def test_wild_vcf_loader_pedigree(
         families,
         [vcf_file1, vcf_file2],
         gpf_instance_2013.genomes_db.get_genome(),
-        params={"vcf_chromosomes": "1;2", },
+        params={
+            "vcf_chromosomes": "1;2",
+            "vcf_strict_pedigree": True,
+            "vcf_include_unknown_person_genotypes": True,
+            "vcf_include_unknown_family_genotypes": True,
+        },
     )
 
     assert variants_loader is not None

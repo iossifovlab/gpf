@@ -12,11 +12,10 @@ import pysam
 from dae.utils.helpers import str2bool
 from dae.genome.genomes_db import Genome
 
-from dae.utils.variant_utils import (
-    is_all_reference_genotype,
-    is_all_unknown_genotype,
-    is_unknown_genotype,
-)
+from dae.utils.variant_utils import is_all_reference_genotype, \
+    is_all_unknown_genotype, \
+    is_unknown_genotype
+
 from dae.variants.attributes import Inheritance
 from dae.variants.variant import SummaryVariantFactory
 from dae.variants.family_variant import FamilyVariant
@@ -69,28 +68,29 @@ class VcfFamiliesGenotypes(FamiliesGenotypes):
     def family_genotype_iterator(self):
         genotypes = self._build_genotypes()
 
-        # fmt: off
         for family, allele_indexes in self.loader.families_allele_indexes:
             if not family.has_members():
                 continue
 
             gt = genotypes[allele_indexes]
             gt = gt.reshape([2, len(allele_indexes)//2], order="F")
+            if gt.shape[1] < len(family):
+                res = -1 * np.ones((gt.shape[0], len(family)), dtype=np.int8)
+                gt_column = 0
+                for family_index, member in enumerate(family.members_in_order):
+                    if not member.missing:
+                        res[:, family_index] = gt[:, gt_column]
+                        gt_column += 1
+                gt = res
 
-            if (
-                is_all_reference_genotype(gt)
-                and not self.loader.include_reference_genotypes
-            ):
+            if is_all_reference_genotype(gt) and \
+                    not self.loader.include_reference_genotypes:
                 continue
-            if (
-                is_unknown_genotype(gt)
-                and not self.loader.include_unknown_person_genotypes
-            ):
+            if is_unknown_genotype(gt) and \
+                    not self.loader.include_unknown_person_genotypes:
                 continue
-            if (
-                is_all_unknown_genotype(gt)
-                and not self.loader.include_unknown_family_genotypes
-            ):
+            if is_all_unknown_genotype(gt) and \
+                    not self.loader.include_unknown_family_genotypes:
                 continue
 
             yield family, gt, None
@@ -125,16 +125,18 @@ class SingleVcfLoader(VariantsGenotypesLoader):
         elif fill_in_mode == "unknown":
             self._fill_missing_value = -1
         else:
-            print(
+            logger.warning(
                 "unexpected `vcf_multi_loader_fill_in_mode` value",
                 f"{fill_in_mode}; "
-                f"expected values are `reference` or `unknown`",
-                file=sys.stderr,
-            )
+                f"expected values are `reference` or `unknown`")
             self._fill_missing_value = 0
+
+        self.strict_pedigree = str2bool(
+            params.get("vcf_strict_pedigree", False))
 
         self._init_vcf_readers()
         self._match_pedigree_to_samples()
+
         self._build_family_alleles_indexes()
         self._build_independent_persons_indexes()
         self._init_chromosome_order()
@@ -142,17 +144,13 @@ class SingleVcfLoader(VariantsGenotypesLoader):
         self._init_omission_mode()
 
         self.include_reference_genotypes = str2bool(
-            params.get("vcf_include_reference_genotypes", False)
-        )
+            params.get("vcf_include_reference_genotypes", False))
         self.include_unknown_family_genotypes = str2bool(
-            params.get("vcf_include_unknown_family_genotypes", False)
-        )
+            params.get("vcf_include_unknown_family_genotypes", False))
         self.include_unknown_person_genotypes = str2bool(
-            params.get("vcf_include_unknown_person_genotypes", False)
-        )
+            params.get("vcf_include_unknown_person_genotypes", False))
         self.multi_loader_fill_in_mode = params.get(
-            "vcf_multi_loader_fill_in_mode", "reference"
-        )
+            "vcf_multi_loader_fill_in_mode", "reference")
 
     def _init_denovo_mode(self):
         denovo_mode = self.params.get("vcf_denovo_mode", "possible_denovo")
@@ -163,10 +161,9 @@ class SingleVcfLoader(VariantsGenotypesLoader):
         elif denovo_mode == "ignore":
             self._denovo_handler = self._ignore_denovo_mode_handler
         else:
-            print(
+            logger.warning(
                 f"unexpected denovo mode: {denovo_mode}; "
-                f"using possible_denovo"
-            )
+                f"using possible_denovo")
             self._denovo_handler = self._possible_denovo_mode_handler
 
     @staticmethod
@@ -204,10 +201,9 @@ class SingleVcfLoader(VariantsGenotypesLoader):
         elif omission_mode == "ignore":
             self._omission_handler = self._ignore_omission_mode_handler
         else:
-            print(
+            logger.warning(
                 f"unexpected omission mode: {omission_mode}; "
-                f"using possible_omission"
-            )
+                f"using possible_omission")
             self._omission_handler = self._possible_omission_mode_handler
 
     @staticmethod
@@ -242,7 +238,6 @@ class SingleVcfLoader(VariantsGenotypesLoader):
             self.vcfs.append(VCF(file, gts012=True, strict_gt=True, lazy=True))
 
     def _build_vcf_iterators(self, region):
-        # print(f"build vcf iterator for {self.filenames} for region:", region)
         return [vcf(region) for vcf in self.vcfs]
 
     def _init_chromosome_order(self):
@@ -251,8 +246,6 @@ class SingleVcfLoader(VariantsGenotypesLoader):
             logger.warning(
                 f"VCF files {self.filenames} do not have the same list "
                 f"of contigs")
-            # assert all([vcf.seqnames == seqnames for vcf in self.vcfs]), \
-            #     (self.filenames, seqnames)
 
         chrom_order = dict()
         for idx, seq in enumerate(seqnames):
@@ -311,10 +304,19 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                         )
                         seen.add(person.sample_id)
                         break
-            else:
+            elif not self.strict_pedigree:
                 if not person.generated:
                     generated.add(person.person_id)
                     person.set_attr("generated", True)
+            else:
+                person.set_attr(
+                    "sample_index",
+                    (
+                        None,
+                        None
+                    )
+                )
+                person.set_attr("missing", True)
 
         self.families.redefine()
         logger.info(
@@ -332,6 +334,9 @@ class SingleVcfLoader(VariantsGenotypesLoader):
         for family in self.families.values():
             samples_indexes = []
             for vcf_index, sample_index in family.samples_index:
+                if vcf_index is None or sample_index is None:
+                    assert vcf_index is None and sample_index is None
+                    continue
                 offset = vcf_offsets[vcf_index]
                 samples_indexes.append(sample_index + offset)
             samples_indexes = np.array(tuple(samples_indexes))
@@ -346,41 +351,20 @@ class SingleVcfLoader(VariantsGenotypesLoader):
     def _build_independent_persons_indexes(self):
         self.independent = self.families.persons_without_parents()
         self.independent_indexes = []
+
+        missing = 0
         for person in self.independent:
+            if person.missing:
+                missing += 1
+                continue
             self.independent_indexes.append(person.sample_index)
         self.independent_indexes = np.array(tuple(self.independent_indexes))
-        assert len(self.independent_indexes) == len(self.independent), (
-            len(self.independent_indexes),
-            len(self.independent),
-        )
-
-    # def _build_summary_variant(self, summary_index, vcf_variant):
-    #     records = []
-    #     allele_count = len(vcf_variant.ALT) + 1
-    #     records.append(
-    #         {
-    #             "chrom": vcf_variant.CHROM,
-    #             "position": vcf_variant.start + 1,
-    #             "reference": vcf_variant.REF,
-    #             "alternative": None,
-    #             "summary_variant_index": summary_index,
-    #             "allele_index": 0,
-    #             "allele_count": allele_count,
-    #         }
-    #     )
-    #     for allele_index, alt in enumerate(vcf_variant.ALT):
-    #         records.append(
-    #             {
-    #                 "chrom": vcf_variant.CHROM,
-    #                 "position": vcf_variant.start + 1,
-    #                 "reference": vcf_variant.REF,
-    #                 "alternative": alt,
-    #                 "summary_variant_index": summary_index,
-    #                 "allele_index": allele_index + 1,
-    #                 "allele_count": allele_count,
-    #             }
-    #         )
-    #     return SummaryVariantFactory.summary_variant_from_records(records)
+        assert len(self.independent_indexes) + missing == \
+            len(self.independent), (
+                len(self.independent_indexes),
+                missing,
+                len(self.independent),
+            )
 
     def _compare_vcf_variants_gt(self, lhs, rhs):
         """
@@ -659,6 +643,15 @@ class VcfLoader(VariantsGenotypesLoader):
             "by default the list is empty and no substitution "
             "takes place. "
             "[default: None]",
+        ))
+        arguments.append(CLIArgument(
+            "--vcf-strict-pedigree",
+            default_value=False,
+            action="store_true",
+            help_text="pedigree should be accept 'as is' without any "
+            "modifications; samples found in pedigree but not in the VCF "
+            "should be patched with unknown genotype;"
+            "[default: False]",
         ))
         return arguments
 
