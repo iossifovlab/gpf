@@ -560,19 +560,19 @@ describe('GeneViewComponent', () => {
 
     component.summaryVariantsArray = new GeneViewSummaryVariantsArray();
     component.summaryVariantsArray.addSummaryRow({
-      effect: 'lgds', is_denovo: true, seen_in_affected: true, seen_in_unaffected: false, frequency: 0, position: 1, variant: 'sub', location: '1'
+      effect: 'lgds', is_denovo: true, seen_in_affected: true, seen_in_unaffected: false, frequency: null, position: 1, variant: 'sub', location: '1'
     })
     component.summaryVariantsArray.addSummaryRow({
-      effect: 'lgds', is_denovo: true, seen_in_affected: true, seen_in_unaffected: false, frequency: 0, position: 1, variant: 'sub', location: '2'
+      effect: 'lgds', is_denovo: true, seen_in_affected: true, seen_in_unaffected: false, frequency: null, position: 1, variant: 'sub', location: '2'
     })
     component.summaryVariantsArray.addSummaryRow({
-      effect: 'lgds', is_denovo: true, seen_in_affected: true, seen_in_unaffected: false, frequency: 0, position: 1, variant: 'sub', location: '3'
+      effect: 'lgds', is_denovo: true, seen_in_affected: true, seen_in_unaffected: false, frequency: null, position: 1, variant: 'sub', location: '3'
     })
     component.summaryVariantsArray.addSummaryRow({
-      effect: 'lgds', is_denovo: true, seen_in_affected: true, seen_in_unaffected: false, frequency: 0, position: 1, variant: 'sub', location: '4'
+      effect: 'lgds', is_denovo: true, seen_in_affected: true, seen_in_unaffected: false, frequency: null, position: 1, variant: 'sub', location: '4'
     })
     component.summaryVariantsArray.addSummaryRow({
-      effect: 'lgds', is_denovo: true, seen_in_affected: true, seen_in_unaffected: false, frequency: 0, position: 1, variant: 'sub', location: '5'
+      effect: 'lgds', is_denovo: true, seen_in_affected: true, seen_in_unaffected: false, frequency: null, position: 1, variant: 'sub', location: '5'
     })
 
     component.denovoVariantsSpacings = {
