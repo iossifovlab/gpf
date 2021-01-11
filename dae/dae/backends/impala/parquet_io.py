@@ -527,9 +527,7 @@ class VariantsParquetWriter:
         for summary_variant_index, (summary_variant, family_variants) in \
                 enumerate(self.full_variants_iterator):
 
-            summary_alleles = summary_variant.alt_alleles
-            if self.include_reference:
-                summary_alleles = summary_variant.alleles
+            summary_alleles = summary_variant.alleles
 
             summary_blobs = self.serializer.serialize_summary_data(
                 summary_alleles
