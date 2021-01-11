@@ -11,8 +11,8 @@ from collections import namedtuple, defaultdict
 import numpy as np
 import pyarrow as pa
 
-from dae.variants.variant import SummaryAllele, SummaryVariant
-from dae.variants.family_variant import FamilyVariant, FamilyAllele
+from dae.variants.variant import SummaryVariantFactory
+from dae.variants.family_variant import FamilyVariant
 from dae.variants.attributes import GeneticModel, Inheritance, VariantType, \
     TransmissionType, Sex, Role
 
@@ -382,6 +382,7 @@ class AlleleParquetSerializer:
             "allele_index": SignedInt8Serializer,
             "summary_index": IntSerializer,
             "transmission_type": TransmissionTypeSerializer,
+            "summary_variant_index": IntSerializer,
         }
         self.annotation_prop_serializers = {
             "af_allele_freq": FloatSerializer,
@@ -443,7 +444,7 @@ class AlleleParquetSerializer:
             self.member_prop_serializers,
         ]
         self.property_serializers_list = [
-            *self.summary_serializers_List,
+            *self.summary_serializers_list,
             *self.family_serializers_list,
             self.scores_serializers,
         ]
@@ -500,10 +501,10 @@ class AlleleParquetSerializer:
                 self.write_property(stream, value, serializer)
 
     def serialize_family_variant(
-            self, variant, summary_blobs, scores_blobs):
+            self, variant_alleles, summary_blobs, scores_blobs):
         stream = io.BytesIO()
-        write_int8(stream, len(variant.alleles))
-        for allele in variant.alleles:
+        write_int8(stream, len(variant_alleles))
+        for allele in variant_alleles:
             stream.write(summary_blobs[allele.allele_index])
             self._serialize_family_allele(allele, stream)
             stream.write(scores_blobs[allele.allele_index])
@@ -521,9 +522,9 @@ class AlleleParquetSerializer:
                     value = allele.get_attribute(prop)
                 self.write_property(stream, value, serializer)
 
-    def serialize_summary_data(self, variant):
+    def serialize_summary_data(self, alleles):
         output = []
-        for allele in variant.alleles:
+        for allele in alleles:
             stream = io.BytesIO()
             self._serialize_summary_allele(allele, stream)
             stream.seek(0)
@@ -542,9 +543,9 @@ class AlleleParquetSerializer:
                 value = allele.get_attribute(prop)
             self.write_property(stream, value, serializer)
 
-    def serialize_scores_data(self, variant):
+    def serialize_scores_data(self, alleles):
         scores_blobs = []
-        for allele in variant.alleles:
+        for allele in alleles:
             stream = io.BytesIO()
             self._serialize_allele_scores(allele, stream)
             stream.seek(0)
@@ -581,36 +582,19 @@ class AlleleParquetSerializer:
                     allele_data[prop] = serializer.deserialize(stream)
                 else:
                     allele_data[prop] = None
+        allele_data["chrom"] = allele_data["chromosome"]
+        del allele_data["chromosome"]
         return allele_data
 
     def deserialize_summary_variant(self, main_blob, extra_blob=None):
-        summary_alleles = []
-
         stream = io.BytesIO(main_blob)
         allele_count = read_int8(stream)
+        records = []
         for _i in range(0, allele_count):
             allele_data = self.deserialize_allele(stream)
-            sa = SummaryAllele(
-                allele_data["chromosome"],
-                allele_data["position"],
-                allele_data["reference"],
-                alternative=allele_data["alternative"],
-                end_position=allele_data["end_position"],
-                summary_index=allele_data["summary_index"],
-                allele_index=allele_data["allele_index"],
-                transmission_type=allele_data["transmission_type"],
-                variant_type=allele_data["variant_type"],
-            )
-            summary_alleles.append(sa)
+            records.append(allele_data)
 
-            allele_attributes_data = {
-                k: v
-                for (k, v) in allele_data.items()
-                if k not in self.ALLELE_CREATION_PROPERTIES
-            }
-            sa.update_attributes(allele_attributes_data)
-
-        sv = SummaryVariant(summary_alleles)
+        sv = SummaryVariantFactory.summary_variant_from_records(records)
 
         extra_attributes = {}
         if extra_blob:
@@ -626,45 +610,18 @@ class AlleleParquetSerializer:
         return sv
 
     def deserialize_family_variant(self, main_blob, family, extra_blob=None):
-        summary_alleles = []
-        family_alleles = []
 
         stream = io.BytesIO(main_blob)
         allele_count = read_int8(stream)
-        allele_data = {}
+        records = []
         for _i in range(0, allele_count):
             allele_data = self.deserialize_allele(stream)
-            sa = SummaryAllele(
-                allele_data["chromosome"],
-                allele_data["position"],
-                allele_data["reference"],
-                alternative=allele_data["alternative"],
-                end_position=allele_data["end_position"],
-                summary_index=allele_data["summary_index"],
-                allele_index=allele_data["allele_index"],
-                transmission_type=allele_data["transmission_type"],
-                variant_type=allele_data["variant_type"],
-            )
-            summary_alleles.append(sa)
+            records.append(allele_data)
 
-            allele_attributes_data = {
-                k: v
-                for (k, v) in allele_data.items()
-                if k not in self.ALLELE_CREATION_PROPERTIES
-            }
-            sa.update_attributes(allele_attributes_data)
-            fa = FamilyAllele(
-                sa, family, allele_data["gt"], allele_data["best_state"],
-                inheritance_in_members=allele_data["inheritance_in_members"],
-                genetic_model=allele_data["genetic_model"]
-            )
-            family_alleles.append(fa)
-
-        sv = SummaryVariant(summary_alleles)
+        sv = SummaryVariantFactory.summary_variant_from_records(records)
         fv = FamilyVariant(
             sv, family, allele_data["gt"], allele_data["best_state"],
         )
-        fv._family_alleles = family_alleles
 
         extra_attributes = {}
         if extra_blob:
