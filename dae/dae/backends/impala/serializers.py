@@ -594,7 +594,8 @@ class AlleleParquetSerializer:
             allele_data = self.deserialize_allele(stream)
             records.append(allele_data)
 
-        sv = SummaryVariantFactory.summary_variant_from_records(records)
+        sv = SummaryVariantFactory.summary_variant_from_records(
+            records, attr_filter=self.ALLELE_CREATION_PROPERTIES)
 
         extra_attributes = {}
         if extra_blob:
@@ -618,7 +619,8 @@ class AlleleParquetSerializer:
             allele_data = self.deserialize_allele(stream)
             records.append(allele_data)
 
-        sv = SummaryVariantFactory.summary_variant_from_records(records)
+        sv = SummaryVariantFactory.summary_variant_from_records(
+            records, attr_filter=self.ALLELE_CREATION_PROPERTIES)
         fv = FamilyVariant(
             sv, family, allele_data["gt"], allele_data["best_state"],
         )
