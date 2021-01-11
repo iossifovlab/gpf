@@ -1,5 +1,4 @@
 import os
-import sys
 import itertools
 import glob
 import logging
@@ -131,8 +130,8 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                 f"expected values are `reference` or `unknown`")
             self._fill_missing_value = 0
 
-        self.strict_pedigree = str2bool(
-            params.get("vcf_strict_pedigree", False))
+        self.strict_pedigree = params.get("vcf_pedigree_mode", False) == \
+            "strict"
 
         self._init_vcf_readers()
         self._match_pedigree_to_samples()
@@ -553,7 +552,13 @@ class VcfLoader(VariantsGenotypesLoader):
                 families, vcf_files, genome, regions=regions, params=params)
             for vcf_files in filenames if vcf_files
         ]
-        self.families = self._families_intersection()
+
+        pedigree_mode = params.get("vcf_pedigree_mode", "intersection")
+        if pedigree_mode == "intersection":
+            self.families = self._families_intersection()
+        elif pedigree_mode == "union":
+            self.families = self._families_union()
+
         logger.info(
             f"real persons/sample: {len(self.families.real_persons)}")
         for vcf_loader in self.vcf_loaders:
@@ -571,6 +576,25 @@ class VcfLoader(VariantsGenotypesLoader):
                 if other_person.generated:
                     person = families.persons[other_person.person_id]
                     person.set_attr("generated", True)
+        families.redefine()
+
+        for vcf_loader in self.vcf_loaders:
+            vcf_loader.families = families
+
+        return families
+
+    def _families_union(self):
+        families = self.vcf_loaders[0].families
+        for person_id, person in families.persons.items():
+            if not person.generated:
+                continue
+            for vcf_loader in self.vcf_loaders:
+                other_person = vcf_loader.persons[person_id]
+
+                if not other_person.generated:
+                    person.set_attr("generated", False)
+                    break
+
         families.redefine()
 
         for vcf_loader in self.vcf_loaders:
@@ -634,6 +658,17 @@ class VcfLoader(VariantsGenotypesLoader):
             "[default: %(default)s]",
         ))
         arguments.append(CLIArgument(
+            "--vcf-pedigree-mode",
+            default_value="intersection",
+            help_text="used for handling missmathes between samples in VCF"
+            "and sample in pedigree file;"
+            "supported values are: 'intersection', 'union', 'strict';"
+            "'strict' mode means that pedigree should be accept 'as is' "
+            "without any modifications; samples found in pedigree but not "
+            "in the VCF should be patched with unknown genotype;"
+            "[default: 'intersection']",
+        ))
+        arguments.append(CLIArgument(
             "--vcf-chromosomes",
             value_type=str,
             help_text="specifies a list of filename template "
@@ -643,15 +678,6 @@ class VcfLoader(VariantsGenotypesLoader):
             "by default the list is empty and no substitution "
             "takes place. "
             "[default: None]",
-        ))
-        arguments.append(CLIArgument(
-            "--vcf-strict-pedigree",
-            default_value=False,
-            action="store_true",
-            help_text="pedigree should be accept 'as is' without any "
-            "modifications; samples found in pedigree but not in the VCF "
-            "should be patched with unknown genotype;"
-            "[default: False]",
         ))
         return arguments
 
@@ -729,6 +755,10 @@ class VcfLoader(VariantsGenotypesLoader):
         assert argv.vcf_omission_mode in set(
             ["omission", "possible_omission", "ignore"]
         ), argv.vcf_omission_mode
+        assert argv.vcf_pedigree_mode in set(
+            ["intersection", "union", "strict"]
+        ), argv.vcf_pedigree_mode
+
         params = {
             "vcf_include_reference_genotypes": str2bool(
                 argv.vcf_include_reference_genotypes
@@ -743,6 +773,7 @@ class VcfLoader(VariantsGenotypesLoader):
             argv.vcf_multi_loader_fill_in_mode,
             "vcf_denovo_mode": argv.vcf_denovo_mode,
             "vcf_omission_mode": argv.vcf_omission_mode,
+            "vcf_pedigree_mode": argv.vcf_pedigree_mode,
             "vcf_chromosomes": argv.vcf_chromosomes,
             "add_chrom_prefix": argv.add_chrom_prefix,
             "del_chrom_prefix": argv.del_chrom_prefix,
