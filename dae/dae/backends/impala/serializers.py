@@ -537,7 +537,6 @@ class AlleleParquetSerializer:
     def _serialize_allele_scores(self, allele, stream):
         property_serializers = self.scores_serializers
         for prop, serializer in property_serializers.items():
-            print(prop)
             value = getattr(allele, prop, None)
             if value is None:
                 value = allele.get_attribute(prop)
