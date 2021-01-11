@@ -41,3 +41,96 @@ def test_cnv_loader_avoids_duplication(fixture_dirname, genomes_db_2013):
     print(len(fvs))
     assert len(svs) == 4
     assert len(fvs) == 5
+
+
+def test_cnv_loader_alt(fixture_dirname, genomes_db_2013):
+    families_file = fixture_dirname("backends/cnv_ped.txt")
+    families = FamiliesLoader.load_simple_families_file(families_file)
+    assert families is not None
+    variants_file = fixture_dirname("backends/cnv_variants_alt_1.txt")
+
+    loader = CNVLoader(
+        families, variants_file, genomes_db_2013.get_genome(),
+        params={
+            "cnv_chrom": "Chr",
+            "cnv_start": "Start",
+            "cnv_end": "Stop",
+            "cnv_variant_type": "Del/Dup",
+            "cnv_plus_values": ["Dup", "Dup_Germline"],
+            "cnv_minus_values": ["Del", "Del_Germline"],
+            "cnv_person_id": "personId"
+        }
+    )
+    assert loader is not None
+
+    svs = []
+    for sv, fvs in loader.full_variants_iterator():
+        print(sv, fvs)
+        svs.append(sv)
+
+    assert len(svs) == 35
+
+
+def test_cnv_loader_alt_best_state(fixture_dirname, genomes_db_2013):
+    families_file = fixture_dirname("backends/cnv_ped.txt")
+    families = FamiliesLoader.load_simple_families_file(families_file)
+    assert families is not None
+    variants_file = fixture_dirname(
+        "backends/cnv_variants_alt_1_best_state.txt")
+
+    loader = CNVLoader(
+        families, variants_file, genomes_db_2013.get_genome(),
+        params={
+            "cnv_chrom": "Chr",
+            "cnv_start": "Start",
+            "cnv_end": "Stop",
+            "cnv_variant_type": "Del/Dup",
+            "cnv_plus_values": ["Dup", "Dup_Germline"],
+            "cnv_minus_values": ["Del", "Del_Germline"],
+            "cnv_person_id": "personId"
+        }
+    )
+    assert loader is not None
+
+    svs = []
+    fvs = []
+    for sv, _fvs in loader.full_variants_iterator():
+        print(sv, fvs)
+        svs.append(sv)
+        for fv in _fvs:
+            fvs.append(fv)
+
+    assert len(svs) == 1
+    assert len(fvs) == 4
+    print(fvs[0].best_state)
+
+
+def test_cnv_loader_alt_2(fixture_dirname, genomes_db_2013):
+    families_file = fixture_dirname("backends/cnv_ped.txt")
+    families = FamiliesLoader.load_simple_families_file(families_file)
+    assert families is not None
+
+    variants_file = fixture_dirname("backends/cnv_variants_alt_2.txt")
+
+    loader = CNVLoader(
+        families, variants_file, genomes_db_2013.get_genome(),
+        params={
+            "cnv_location": "location",
+            "cnv_variant_type": "variant",
+            "cnv_plus_values": ["duplication"],
+            "cnv_minus_values": ["deletion"],
+            "cnv_person_id": "personId"
+        }
+    )
+    assert loader is not None
+
+    svs = []
+    fvs = []
+    for sv, _fvs in loader.full_variants_iterator():
+        print(sv, fvs)
+        svs.append(sv)
+        for fv in _fvs:
+            fvs.append(fv)
+
+    assert len(svs) == 29
+    assert len(fvs) == 30
