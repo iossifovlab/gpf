@@ -70,6 +70,8 @@ class VcfFamiliesGenotypes(FamiliesGenotypes):
         for family, allele_indexes in self.loader.families_allele_indexes:
             if not family.has_members():
                 continue
+            if len(allele_indexes) == 0:
+                continue
 
             gt = genotypes[allele_indexes]
             gt = gt.reshape([2, len(allele_indexes)//2], order="F")
@@ -358,6 +360,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                 continue
             self.independent_indexes.append(person.sample_index)
         self.independent_indexes = np.array(tuple(self.independent_indexes))
+
         assert len(self.independent_indexes) + missing == \
             len(self.independent), (
                 len(self.independent_indexes),
@@ -418,9 +421,14 @@ class SingleVcfLoader(VariantsGenotypesLoader):
         for vcf_index, vcf in enumerate(vcf_variants):
             if vcf is None:
                 continue
+            if len(self.independent_indexes) == 0:
+                continue
 
-            sample_index = self.independent_indexes[
-                self.independent_indexes[:, 0] == vcf_index, :][:, 1].T
+            sample_index = \
+                self.independent_indexes[
+                    self.independent_indexes[:, 0] == vcf_index,
+                    :][:, 1].T
+
             allele_index = np.stack(
                 [2 * sample_index, 2 * sample_index + 1]).reshape(
                     [1, 2 * len(sample_index)], order="F")[0]
@@ -452,7 +460,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                 )
         n_independent_parents = len(self.independent_indexes)
         n_parents_called = sum([r["n_parents_called"] for r in result])
-        percent_parents_called = None
+        percent_parents_called = 0.0
 
         for allele in summary_variant.alleles:
             if n_independent_parents > 0:
