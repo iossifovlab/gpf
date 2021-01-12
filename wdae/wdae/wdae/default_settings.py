@@ -26,7 +26,7 @@ AUTHENTICATION_BACKENDS = (
 MANAGERS = ADMINS
 
 EMAIL_VERIFICATION_HOST = "http://localhost:8000"
-EMAIL_VERIFICATION_PATH = "/gpfjs/(popup:validate/{})"
+EMAIL_VERIFICATION_PATH = "/gpfjs/validate/{}"
 
 
 """ Set these for production"""
