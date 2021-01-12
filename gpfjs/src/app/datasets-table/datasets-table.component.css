@@ -2,3 +2,9 @@
     max-height: 252px;
     overflow: auto;
 }
+
+.error-popup {
+    position: absolute;
+    bottom: 130%;
+    padding: 8px;
+ }

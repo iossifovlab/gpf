@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChildren } from '@angular/core';
 
 import { Observable, ReplaySubject } from 'rxjs';
 
@@ -22,18 +22,28 @@ export class DatasetsTableComponent implements OnInit {
   private usersToShow: User[];
   private users$: Observable<User[]>;
   private datasetsRefresh$ = new ReplaySubject<boolean>(1);
+  @ViewChildren('errorPopup') errorPopup: ElementRef[];
+  errorDisplayStyles: Object = {};
+  errorMessage: String;
+  delay = ms => new Promise(res => setTimeout(res, ms));
 
   constructor(
     private datasetsService: DatasetsService,
     private usersService: UsersService,
     private userGroupsService: UsersGroupsService
-  ) { }
-
-  ngOnInit() {
+  ) {
     this.datasets$ = this.datasetsRefresh$
       .switchMap(() => this.datasetsService.getDatasets())
       .share();
 
+    this.datasets$.take(1).subscribe(datasets => {
+      datasets.forEach(dataset => {
+        this.errorDisplayStyles[dataset.id] = 'none';
+      })
+    });
+  }
+
+  ngOnInit() {
     this.usersToShow = [];
     this.users$ = this.usersService.searchUsersByGroup(null)
       .map(user => {
@@ -90,7 +100,19 @@ export class DatasetsTableComponent implements OnInit {
     return (this.groups || []).filter(g => groups.indexOf(g.name) === -1);
   }
 
-  updatePermissions(dataset, groupName) {
+  async updatePermissions(dataset, groupName) {
+    const groupNames = dataset.groups.map(group => group.name);
+
+    if (groupNames.indexOf(groupName) !== -1 || groupName === '') {
+      this.errorMessage = groupName === '' ? 'Please enter a group!' : 'This group already exists!';
+      this.errorPopup.find(ele => ele.nativeElement.id === dataset.id + '-warning').nativeElement.setAttribute('style', 'display: block');
+
+      this.errorDisplayStyles[dataset.id] = 'block';
+      await this.delay(3000).then(() => this.errorDisplayStyles[dataset.id] = 'none');
+
+      return;
+    }
+
     this.userGroupsService.grantPermission(groupName, dataset)
       .take(1)
       .subscribe(() => {
@@ -134,5 +156,4 @@ export class DatasetsTableComponent implements OnInit {
         this.datasetsRefresh$.next(true);
       });
   }
-
 }

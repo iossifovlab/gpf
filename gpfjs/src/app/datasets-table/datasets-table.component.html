@@ -27,6 +27,7 @@
                 </gpf-small-remove-button>
               </div>
               <div class="input-group">
+                <span #errorPopup [style.display]="errorDisplayStyles[data.dataset.id]" id="{{data.dataset.id}}-warning" class="error-popup card">{{errorMessage}}</span>
                 <input #input
                   class="form-control"
                   [ngbTypeahead]="searchGroups(data.groups)"
