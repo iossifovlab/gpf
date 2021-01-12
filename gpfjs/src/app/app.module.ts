@@ -233,6 +233,10 @@ const appRoutes: Routes = [
     ]
   },
   {
+    path: 'validate/:validateString',
+    component: ResetPasswordComponent,
+  },
+  {
     path: 'load-query/:uuid',
     component: LoadQueryComponent
   },
@@ -243,11 +247,6 @@ const appRoutes: Routes = [
   {
     path: '**',
     redirectTo: 'datasets'
-  },
-  {
-    path: 'validate/:validateString',
-    component: ResetPasswordComponent,
-    outlet: 'popup'
   },
 ];
 
