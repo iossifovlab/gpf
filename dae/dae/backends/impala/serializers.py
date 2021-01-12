@@ -275,6 +275,34 @@ InheritanceSerializer = Serializer(
 
 class AlleleParquetSerializer:
 
+    SUMMARY_SEARCHABLE_PROPERTIES_TYPES = {
+        "bucket_index": pa.int32(),
+        "chromosome": pa.string(),
+        "position": pa.int32(),
+        "end_position": pa.int32(),
+        "effect_types": pa.string(),
+        "effect_gene_symbols": pa.string(),
+        "summary_index": pa.int32(),
+        "allele_index": pa.int32(),
+        "variant_type": pa.int8(),
+        "transmission_type": pa.int8(),
+        "reference": pa.string(),
+    }
+
+    FAMILY_SEARCHABLE_PROPERTIES_TYPES = {
+        "family_index": pa.int32(),
+        "family_id": pa.string(),
+        "is_denovo": pa.int8(),
+        "variant_in_sexes": pa.int8(),
+        "variant_in_roles": pa.int32(),
+        "inheritance_in_members": pa.int16(),
+        "variant_in_members": pa.string(),
+    }
+
+    PRODUCT_PROPERTIES_LIST = [
+        "effect_types", "effect_gene_symbols", "variant_in_members"
+    ]
+
     BASE_SEARCHABLE_PROPERTIES_TYPES = {
         "bucket_index": pa.int32(),
         "chromosome": pa.string(),
@@ -489,6 +517,10 @@ class AlleleParquetSerializer:
     #     return self.member_properties_serializers.keys()
 
     @property
+    def searchable_properties_summary(self):
+        return self.SUMMARY_SEARCHABLE_PROPERTIES_TYPES.keys()
+
+    @property
     def searchable_properties(self):
         return self.searchable_properties_types.keys()
 
@@ -637,6 +669,47 @@ class AlleleParquetSerializer:
         fv.update_attributes(extra_attributes)
 
         return fv
+
+    def build_searchable_vectors_summary(self, summary_variant):
+        vectors = []
+        for allele in summary_variant.alleles:
+            vector = []
+            product_properties = []
+            for spr in self.searchable_properties_summary:
+                if spr in self.PRODUCT_PROPERTIES_LIST:
+                    product_properties.append(spr)
+                    continue
+                prop_value = getattr(allele, spr, None)
+                if prop_value is None:
+                    prop_value = allele.get_attribute(spr)
+                if prop_value and spr in self.ENUM_PROPERTIES:
+                    if isinstance(prop_value, list):
+                        prop_value = functools.reduce(
+                            operator.or_,
+                            [
+                                enum.value
+                                for enum in prop_value
+                                if enum is not None
+                            ],
+                            0,
+                        )
+                    else:
+                        prop_value = prop_value.value
+                vector.append(prop_value)
+            vector = [vector]
+            for prop in product_properties:
+                prop_value = getattr(allele, prop, None)
+                if prop_value is None:
+                    prop_value = allele.get_attribute(prop)
+                if not len(prop_value):
+                    continue
+                vector = list(itertools.product(vector, prop_value))
+                vector = [list(itertools.chain.from_iterable(map(
+                    lambda x: x if isinstance(x, list) else [x],
+                    subvector
+                ))) for subvector in vector]
+            vectors.append(list(vector))
+        return list(itertools.chain.from_iterable(vectors))
 
     def build_allele_batch_dict(
             self, variant_data, extra_attributes_data, allele):
