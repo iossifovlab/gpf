@@ -539,6 +539,12 @@ class VariantsParquetWriter:
             scores_blob = self.serializer.serialize_scores_data(
                 summary_alleles)
 
+            for summary_allele in summary_alleles:
+                extra_atts = {
+                    "bucket_index": self.bucket_index,
+                }
+                summary_allele.update_attributes(extra_atts)
+
             summary_vectors = self.serializer.build_searchable_vectors_summary(
                 summary_variant)
 
