@@ -5,6 +5,7 @@ import re
 import hashlib
 import itertools
 import logging
+from copy import copy
 
 import toml
 from box import Box
@@ -551,6 +552,13 @@ class VariantsParquetWriter:
                         summary_variant, family_variant.family_id
                     )
                     fv = unknown_variant
+                    if -1 not in summary_vectors:
+                        summary_vectors[-1] = copy(summary_vectors[0])
+                        header = self.serializer.allele_batch_header
+                        allele_index_idx = header.index("allele_index")
+                        vectors = summary_vectors[-1]
+                        for vector in vectors:
+                            vector[allele_index_idx] = -1
 
                 fv.summary_index = summary_variant_index
                 fv.family_index = family_variant_index
