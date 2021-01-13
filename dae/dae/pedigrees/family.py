@@ -70,12 +70,10 @@ class Person(object):
 
     def __repr__(self):
         if self.generated:
-            return "Person([G] {} ({}); {}; {})".format(
-                self.person_id, self.family_id, self.role, self.sex
-            )
-        return "Person({} ({}); {}; {})".format(
-            self.person_id, self.family_id, self.role, self.sex
-        )
+            return f"Person([G] {self.person_id} ({self.family_id}); " \
+                f"{self.role}; {self.sex}, {self.status})"
+        return f"Person({self.person_id} ({self.family_id}); " \
+            f"{self.role}; {self.sex}, {self.status})"
 
     @property
     def role(self):
@@ -146,9 +144,27 @@ class Person(object):
             self.sex == other.sex and \
             self.role == other.role and \
             self.status == other.status and \
-            self.mom == other.mom and \
-            self.dad == other.dad and \
+            self.mom_id == other.mom_id and \
+            self.dad_id == other.dad_id and \
             self.generated == other.generated
+
+    def diff(self, other):
+        if self.person_id != other.person_id:
+            print(f"{self} person_id:", self.person_id, other.person_id)
+        if self.family_id != other.family_id:
+            print(f"{self} family_id:", self.family_id, other.family_id)
+        if self.sex != other.sex:
+            print(f"{self}       sex:", self.sex, other.sex)
+        if self.role != other.role:
+            print(f"{self}      role:", self.role, other.role)
+        if self.status != other.status:
+            print(f"{self}     status:", self.status, other.status)
+        if self.mom_id != other.mom_id:
+            print(f"{self}     mom_id:", self.mom_id, other.mom_id)
+        if self.dad_id != other.dad_id:
+            print(f"{self}     dad_id:", self.dad_id, other.dad_id)
+        if self.generated != other.generated:
+            print(f"{self}  generated:", self.generated, other.generated)
 
 
 class Family(object):
@@ -176,6 +192,7 @@ class Family(object):
         assert len(persons) > 0
         assert all([persons[0].family_id == p.family_id for p in persons])
         family_id = persons[0].family_id
+        persons = sorted(persons, key=lambda p: p.role.value)
 
         family = Family(family_id)
         for person in persons:
