@@ -477,6 +477,16 @@ class AlleleParquetSerializer:
             self.scores_serializers,
         ]
 
+        self.searchable_properties_summary_types = {
+            **self.SUMMARY_SEARCHABLE_PROPERTIES_TYPES,
+            **additional_searchable_props,
+            **scores_searchable
+        }
+
+        self.searchable_properties_family_types = {
+            **self.FAMILY_SEARCHABLE_PROPERTIES_TYPES
+        }
+
         self.searchable_properties_types = {
             **self.BASE_SEARCHABLE_PROPERTIES_TYPES,
             **additional_searchable_props,
@@ -487,6 +497,8 @@ class AlleleParquetSerializer:
         if extra_attributes:
             for attribute_name in extra_attributes:
                 self.extra_attributes.append(attribute_name)
+
+        self._allele_batch_header = None
 
     @property
     def schema(self):
@@ -518,7 +530,11 @@ class AlleleParquetSerializer:
 
     @property
     def searchable_properties_summary(self):
-        return self.SUMMARY_SEARCHABLE_PROPERTIES_TYPES.keys()
+        return self.searchable_properties_summary_types.keys()
+
+    @property
+    def searchable_properties_family(self):
+        return self.searchable_properties_family_types.keys()
 
     @property
     def searchable_properties(self):
@@ -671,30 +687,17 @@ class AlleleParquetSerializer:
         return fv
 
     def build_searchable_vectors_summary(self, summary_variant):
-        vectors = []
+        vectors = dict()
         for allele in summary_variant.alleles:
             vector = []
             product_properties = []
+            if allele.allele_index not in vectors:
+                vectors[allele.allele_index] = []
             for spr in self.searchable_properties_summary:
                 if spr in self.PRODUCT_PROPERTIES_LIST:
                     product_properties.append(spr)
                     continue
-                prop_value = getattr(allele, spr, None)
-                if prop_value is None:
-                    prop_value = allele.get_attribute(spr)
-                if prop_value and spr in self.ENUM_PROPERTIES:
-                    if isinstance(prop_value, list):
-                        prop_value = functools.reduce(
-                            operator.or_,
-                            [
-                                enum.value
-                                for enum in prop_value
-                                if enum is not None
-                            ],
-                            0,
-                        )
-                    else:
-                        prop_value = prop_value.value
+                prop_value = self._get_searchable_prop_value(allele, spr)
                 vector.append(prop_value)
             vector = [vector]
             for prop in product_properties:
@@ -702,16 +705,103 @@ class AlleleParquetSerializer:
                 if prop_value is None:
                     prop_value = allele.get_attribute(prop)
                 if not len(prop_value):
-                    continue
+                    prop_value = [None]
                 vector = list(itertools.product(vector, prop_value))
                 vector = [list(itertools.chain.from_iterable(map(
                     lambda x: x if isinstance(x, list) else [x],
                     subvector
                 ))) for subvector in vector]
-            vectors.append(list(vector))
-        return list(itertools.chain.from_iterable(vectors))
+            vectors[allele.allele_index].append(list(vector))
+        return {
+            k: list(itertools.chain.from_iterable(v))
+            for k, v in vectors.items()
+        }
+
+    def _get_searchable_prop_value(self, allele, spr):
+        prop_value = getattr(allele, spr, None)
+        if prop_value is None:
+            prop_value = allele.get_attribute(spr)
+        if prop_value and spr in self.ENUM_PROPERTIES:
+            if isinstance(prop_value, list):
+                prop_value = functools.reduce(
+                    operator.or_,
+                    [
+                        enum.value
+                        for enum in prop_value
+                        if enum is not None
+                    ],
+                    0,
+                )
+            else:
+                prop_value = prop_value.value
+        return prop_value
+
+    @property
+    def allele_batch_header(self):
+        if self._allele_batch_header is None:
+            header = []
+            product_props = []
+            for spr in self.searchable_properties_summary:
+                if spr in self.PRODUCT_PROPERTIES_LIST:
+                    product_props.append(spr)
+                else:
+                    header.append(spr)
+            header = header + product_props
+            product_props = []
+            for spr in self.searchable_properties_family:
+                if spr in self.PRODUCT_PROPERTIES_LIST:
+                    product_props.append(spr)
+                else:
+                    header.append(spr)
+            header = header + product_props
+
+            self._allele_batch_header = header
+        return self._allele_batch_header
 
     def build_allele_batch_dict(
+            self, allele, variant_data,
+            extra_attributes_data,
+            summary_vectors):
+        vectors = summary_vectors[allele.allele_index]
+        family_properties = []
+        product_properties = []
+        for spr in self.searchable_properties_family:
+            if spr in self.PRODUCT_PROPERTIES_LIST:
+                product_properties.append(spr)
+                continue
+            prop_value = self._get_searchable_prop_value(allele, spr)
+            family_properties.append(prop_value)
+        new_vectors = zip(vectors, itertools.repeat(family_properties))
+        new_vectors = list(map(list, map(
+            itertools.chain.from_iterable,
+            new_vectors
+        )))
+        for prop in product_properties:
+            prop_value = getattr(allele, prop, None)
+            if prop_value is None:
+                prop_value = allele.get_attribute(prop)
+            if not len(prop_value):
+                prop_value = [None]
+            else:
+                prop_value = list(filter(lambda x: x is not None, prop_value))
+            new_vectors = list(itertools.product(new_vectors, prop_value))
+            new_vectors = [list(itertools.chain.from_iterable(map(
+                lambda x: x if isinstance(x, list) else [x],
+                subvector
+            ))) for subvector in new_vectors]
+
+        header = self.allele_batch_header
+        allele_data = {name: [] for name in self.schema.names}
+        for idx, field_name in enumerate(header):
+            for vector in new_vectors:
+                allele_data[field_name].append(vector[idx])
+        allele_data["variant_data"] = list(itertools.repeat(
+            variant_data, len(new_vectors)))
+        allele_data["extra_attributes"] = list(itertools.repeat(
+            extra_attributes_data, len(new_vectors)))
+        return allele_data
+
+    def build_allele_batch_dict_old(
             self, variant_data, extra_attributes_data, allele):
         allele_data = {name: [] for name in self.schema.names}
         for spr in self.searchable_properties:

@@ -119,5 +119,8 @@ def test_build_allele_batch_dict(
     scores_blob = serializer.serialize_scores_data(fv.alleles)
     blob = serializer.serialize_family_variant(
         fv.alleles, summary_blobs, scores_blob)
+    extra_blob = serializer.serialize_extra_attributes(fv)
     chain = serializer.build_searchable_vectors_summary(fv)
-    print(chain)
+    batch = serializer.build_allele_batch_dict(
+        fv.alleles[1], blob, extra_blob, chain)
+    print(batch)
