@@ -401,14 +401,16 @@ class ContinuousParquetFileWriter:
         self._writer.write_table(self.build_table())
         self.data_reset()
 
-    def append_allele(self, variant_data, extra_attributes_data, allele):
+    def append_allele(
+            self, allele, variant_data,
+            extra_attributes_data, summary_vectors):
         """
         Appends the data for an entire variant to the buffer
 
         :param list attributes: List of key-value tuples containing the data
         """
         data = self.serializer.build_allele_batch_dict(
-            variant_data, extra_attributes_data, allele)
+            allele, variant_data, extra_attributes_data, summary_vectors)
         for k, v in self._data.items():
             v.extend(data[k])
 
@@ -536,6 +538,9 @@ class VariantsParquetWriter:
             scores_blob = self.serializer.serialize_scores_data(
                 summary_alleles)
 
+            summary_vectors = self.serializer.build_searchable_vectors_summary(
+                summary_variant)
+
             for family_variant in family_variants:
                 family_variant_index += 1
 
@@ -568,7 +573,8 @@ class VariantsParquetWriter:
                 for family_allele in alleles:
                     bin_writer = self._get_bin_writer(family_allele)
                     bin_writer.append_allele(
-                        variant_data, extra_attributes_data, family_allele)
+                        family_allele, variant_data,
+                        extra_attributes_data, summary_vectors)
 
             if summary_variant_index % 1000 == 0:
                 report = True
