@@ -779,10 +779,12 @@ class AlleleParquetSerializer:
             prop_value = getattr(allele, prop, None)
             if prop_value is None:
                 prop_value = allele.get_attribute(prop)
+            prop_value = list(filter(lambda x: x is not None, prop_value))
             if not len(prop_value):
+                # This is added to handle the case when the reference allele
+                # has a variant_in_members consisting only of None, but has
+                # to be written anyways
                 prop_value = [None]
-            else:
-                prop_value = list(filter(lambda x: x is not None, prop_value))
             new_vectors = list(itertools.product(new_vectors, prop_value))
             new_vectors = [list(itertools.chain.from_iterable(map(
                 lambda x: x if isinstance(x, list) else [x],
