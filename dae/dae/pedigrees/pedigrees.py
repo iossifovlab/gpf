@@ -10,7 +10,6 @@ from functools import reduce
 from dae.pedigrees.interval_sandwich import SandwichInstance
 from dae.variants.attributes import Role, Sex, Status
 from dae.pedigrees.family import Person, Family
-from dae.pedigrees.family_role_builder import FamilyRoleBuilder
 
 
 class FamilyConnections(object):
@@ -142,7 +141,6 @@ class FamilyConnections(object):
         family.add_members(unique_new_members)
         # role_builder = FamilyRoleBuilder(family)
         # role_builder.build_roles()
-
 
     @classmethod
     def from_family(cls, family, add_missing_members=True):

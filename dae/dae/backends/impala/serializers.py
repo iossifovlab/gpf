@@ -11,8 +11,8 @@ from collections import namedtuple, defaultdict
 import numpy as np
 import pyarrow as pa
 
-from dae.variants.variant import SummaryAllele, SummaryVariant
-from dae.variants.family_variant import FamilyVariant, FamilyAllele
+from dae.variants.variant import SummaryVariantFactory
+from dae.variants.family_variant import FamilyVariant
 from dae.variants.attributes import GeneticModel, Inheritance, VariantType, \
     TransmissionType, Sex, Role
 
@@ -275,6 +275,34 @@ InheritanceSerializer = Serializer(
 
 class AlleleParquetSerializer:
 
+    SUMMARY_SEARCHABLE_PROPERTIES_TYPES = {
+        "bucket_index": pa.int32(),
+        "chromosome": pa.string(),
+        "position": pa.int32(),
+        "end_position": pa.int32(),
+        "effect_types": pa.string(),
+        "effect_gene_symbols": pa.string(),
+        "summary_index": pa.int32(),
+        "allele_index": pa.int32(),
+        "variant_type": pa.int8(),
+        "transmission_type": pa.int8(),
+        "reference": pa.string(),
+    }
+
+    FAMILY_SEARCHABLE_PROPERTIES_TYPES = {
+        "family_index": pa.int32(),
+        "family_id": pa.string(),
+        "is_denovo": pa.int8(),
+        "variant_in_sexes": pa.int8(),
+        "variant_in_roles": pa.int32(),
+        "inheritance_in_members": pa.int16(),
+        "variant_in_members": pa.string(),
+    }
+
+    PRODUCT_PROPERTIES_LIST = [
+        "effect_types", "effect_gene_symbols", "variant_in_members"
+    ]
+
     BASE_SEARCHABLE_PROPERTIES_TYPES = {
         "bucket_index": pa.int32(),
         "chromosome": pa.string(),
@@ -359,7 +387,8 @@ class AlleleParquetSerializer:
         "genetic_model_data",
         "frequency_data",
         "alternative",
-        "variant_data"
+        "variant_data",
+        "family_variant_index"
     ]
 
     def __init__(self, variants_schema, extra_attributes=None):
@@ -431,13 +460,34 @@ class AlleleParquetSerializer:
                     scores_binary[col_name] = FloatSerializer
                     scores_searchable[col_name] = pa.float32()
 
-        self.property_serializers_list = [
+        self.scores_serializers = scores_binary
+
+        self.summary_serializers_list = [
             self.summary_prop_serializers,
             self.annotation_prop_serializers,
+        ]
+        # Family variant index was being imported into the scores schema
+        # previously by mistake
+        self.family_serializers_list = [
             self.family_prop_serializers,
             self.member_prop_serializers,
-            scores_binary,
+            {"family_variant_index": IntSerializer}
         ]
+        self.property_serializers_list = [
+            *self.summary_serializers_list,
+            *self.family_serializers_list,
+            self.scores_serializers,
+        ]
+
+        self.searchable_properties_summary_types = {
+            **self.SUMMARY_SEARCHABLE_PROPERTIES_TYPES,
+            **additional_searchable_props,
+            **scores_searchable
+        }
+
+        self.searchable_properties_family_types = {
+            **self.FAMILY_SEARCHABLE_PROPERTIES_TYPES
+        }
 
         self.searchable_properties_types = {
             **self.BASE_SEARCHABLE_PROPERTIES_TYPES,
@@ -449,6 +499,8 @@ class AlleleParquetSerializer:
         if extra_attributes:
             for attribute_name in extra_attributes:
                 self.extra_attributes.append(attribute_name)
+
+        self._allele_batch_header = None
 
     @property
     def schema(self):
@@ -479,27 +531,77 @@ class AlleleParquetSerializer:
     #     return self.member_properties_serializers.keys()
 
     @property
+    def searchable_properties_summary(self):
+        return self.searchable_properties_summary_types.keys()
+
+    @property
+    def searchable_properties_family(self):
+        return self.searchable_properties_family_types.keys()
+
+    @property
     def searchable_properties(self):
         return self.searchable_properties_types.keys()
 
-    def _serialize_allele(self, allele, stream):
-        for property_serializers in self.property_serializers_list:
+    def _serialize_family_allele(self, allele, stream):
+        for property_serializers in self.family_serializers_list:
             for prop, serializer in property_serializers.items():
                 value = getattr(allele, prop, None)
                 if value is None:
                     value = allele.get_attribute(prop)
                 self.write_property(stream, value, serializer)
 
-    def serialize_variant(self, variant):
+    def serialize_family_variant(
+            self, variant_alleles, summary_blobs, scores_blobs):
         stream = io.BytesIO()
-        write_int8(stream, len(variant.alleles))
-        for allele in variant.alleles:
-            self._serialize_allele(allele, stream)
+        write_int8(stream, len(variant_alleles))
+        for allele in variant_alleles:
+            stream.write(summary_blobs[allele.allele_index])
+            self._serialize_family_allele(allele, stream)
+            stream.write(scores_blobs[allele.allele_index])
 
         stream.seek(0)
         output = stream.read()
         stream.close()
         return output
+
+    def _serialize_summary_allele(self, allele, stream):
+        for property_serializers in self.summary_serializers_list:
+            for prop, serializer in property_serializers.items():
+                value = getattr(allele, prop, None)
+                if value is None:
+                    value = allele.get_attribute(prop)
+                self.write_property(stream, value, serializer)
+
+    def serialize_summary_data(self, alleles):
+        output = []
+        for allele in alleles:
+            stream = io.BytesIO()
+            self._serialize_summary_allele(allele, stream)
+            stream.seek(0)
+            blob = stream.read()
+            output.append(blob)
+            stream.close()
+
+        return output
+
+    def _serialize_allele_scores(self, allele, stream):
+        property_serializers = self.scores_serializers
+        for prop, serializer in property_serializers.items():
+            value = getattr(allele, prop, None)
+            if value is None:
+                value = allele.get_attribute(prop)
+            self.write_property(stream, value, serializer)
+
+    def serialize_scores_data(self, alleles):
+        scores_blobs = []
+        for allele in alleles:
+            stream = io.BytesIO()
+            self._serialize_allele_scores(allele, stream)
+            stream.seek(0)
+            blob = stream.read()
+            scores_blobs.append(blob)
+            stream.close()
+        return scores_blobs
 
     def serialize_extra_attributes(self, variant):
         stream = io.BytesIO()
@@ -529,36 +631,20 @@ class AlleleParquetSerializer:
                     allele_data[prop] = serializer.deserialize(stream)
                 else:
                     allele_data[prop] = None
+        allele_data["chrom"] = allele_data["chromosome"]
+        del allele_data["chromosome"]
         return allele_data
 
     def deserialize_summary_variant(self, main_blob, extra_blob=None):
-        summary_alleles = []
-
         stream = io.BytesIO(main_blob)
         allele_count = read_int8(stream)
+        records = []
         for _i in range(0, allele_count):
             allele_data = self.deserialize_allele(stream)
-            sa = SummaryAllele(
-                allele_data["chromosome"],
-                allele_data["position"],
-                allele_data["reference"],
-                alternative=allele_data["alternative"],
-                end_position=allele_data["end_position"],
-                summary_index=allele_data["summary_index"],
-                allele_index=allele_data["allele_index"],
-                transmission_type=allele_data["transmission_type"],
-                variant_type=allele_data["variant_type"],
-            )
-            summary_alleles.append(sa)
+            records.append(allele_data)
 
-            allele_attributes_data = {
-                k: v
-                for (k, v) in allele_data.items()
-                if k not in self.ALLELE_CREATION_PROPERTIES
-            }
-            sa.update_attributes(allele_attributes_data)
-
-        sv = SummaryVariant(summary_alleles)
+        sv = SummaryVariantFactory.summary_variant_from_records(
+            records, attr_filter=self.ALLELE_CREATION_PROPERTIES)
 
         extra_attributes = {}
         if extra_blob:
@@ -574,45 +660,19 @@ class AlleleParquetSerializer:
         return sv
 
     def deserialize_family_variant(self, main_blob, family, extra_blob=None):
-        summary_alleles = []
-        family_alleles = []
 
         stream = io.BytesIO(main_blob)
         allele_count = read_int8(stream)
-        allele_data = {}
+        records = []
         for _i in range(0, allele_count):
             allele_data = self.deserialize_allele(stream)
-            sa = SummaryAllele(
-                allele_data["chromosome"],
-                allele_data["position"],
-                allele_data["reference"],
-                alternative=allele_data["alternative"],
-                end_position=allele_data["end_position"],
-                summary_index=allele_data["summary_index"],
-                allele_index=allele_data["allele_index"],
-                transmission_type=allele_data["transmission_type"],
-                variant_type=allele_data["variant_type"],
-            )
-            summary_alleles.append(sa)
+            records.append(allele_data)
 
-            allele_attributes_data = {
-                k: v
-                for (k, v) in allele_data.items()
-                if k not in self.ALLELE_CREATION_PROPERTIES
-            }
-            sa.update_attributes(allele_attributes_data)
-            fa = FamilyAllele(
-                sa, family, allele_data["gt"], allele_data["best_state"],
-                inheritance_in_members=allele_data["inheritance_in_members"],
-                genetic_model=allele_data["genetic_model"]
-            )
-            family_alleles.append(fa)
-
-        sv = SummaryVariant(summary_alleles)
+        sv = SummaryVariantFactory.summary_variant_from_records(
+            records, attr_filter=self.ALLELE_CREATION_PROPERTIES)
         fv = FamilyVariant(
             sv, family, allele_data["gt"], allele_data["best_state"],
         )
-        fv._family_alleles = family_alleles
 
         extra_attributes = {}
         if extra_blob:
@@ -627,7 +687,124 @@ class AlleleParquetSerializer:
 
         return fv
 
+    def build_searchable_vectors_summary(self, summary_variant):
+        vectors = dict()
+        for allele in summary_variant.alleles:
+            vector = []
+            product_properties = []
+            if allele.allele_index not in vectors:
+                vectors[allele.allele_index] = []
+            for spr in self.searchable_properties_summary:
+                if spr in self.PRODUCT_PROPERTIES_LIST:
+                    product_properties.append(spr)
+                    continue
+                prop_value = self._get_searchable_prop_value(allele, spr)
+                vector.append(prop_value)
+            vector = [vector]
+            for prop in product_properties:
+                prop_value = getattr(allele, prop, None)
+                if prop_value is None:
+                    prop_value = allele.get_attribute(prop)
+                if not len(prop_value):
+                    prop_value = [None]
+                vector = list(itertools.product(vector, prop_value))
+                vector = [list(itertools.chain.from_iterable(map(
+                    lambda x: x if isinstance(x, list) else [x],
+                    subvector
+                ))) for subvector in vector]
+            vectors[allele.allele_index].append(list(vector))
+        return {
+            k: list(itertools.chain.from_iterable(v))
+            for k, v in vectors.items()
+        }
+
+    def _get_searchable_prop_value(self, allele, spr):
+        prop_value = getattr(allele, spr, None)
+        if prop_value is None:
+            prop_value = allele.get_attribute(spr)
+        if prop_value and spr in self.ENUM_PROPERTIES:
+            if isinstance(prop_value, list):
+                prop_value = functools.reduce(
+                    operator.or_,
+                    [
+                        enum.value
+                        for enum in prop_value
+                        if enum is not None
+                    ],
+                    0,
+                )
+            else:
+                prop_value = prop_value.value
+        return prop_value
+
+    @property
+    def allele_batch_header(self):
+        if self._allele_batch_header is None:
+            header = []
+            product_props = []
+            for spr in self.searchable_properties_summary:
+                if spr in self.PRODUCT_PROPERTIES_LIST:
+                    product_props.append(spr)
+                else:
+                    header.append(spr)
+            header = header + product_props
+            product_props = []
+            for spr in self.searchable_properties_family:
+                if spr in self.PRODUCT_PROPERTIES_LIST:
+                    product_props.append(spr)
+                else:
+                    header.append(spr)
+            header = header + product_props
+
+            self._allele_batch_header = header
+        return self._allele_batch_header
+
     def build_allele_batch_dict(
+            self, allele, variant_data,
+            extra_attributes_data,
+            summary_vectors):
+        vectors = summary_vectors[allele.allele_index]
+        family_properties = []
+        product_properties = []
+        for spr in self.searchable_properties_family:
+            if spr in self.PRODUCT_PROPERTIES_LIST:
+                product_properties.append(spr)
+                continue
+            prop_value = self._get_searchable_prop_value(allele, spr)
+            family_properties.append(prop_value)
+        new_vectors = zip(vectors, itertools.repeat(family_properties))
+        new_vectors = list(map(list, map(
+            itertools.chain.from_iterable,
+            new_vectors
+        )))
+        for prop in product_properties:
+            prop_value = getattr(allele, prop, None)
+            if prop_value is None:
+                prop_value = allele.get_attribute(prop)
+            prop_value = list(filter(lambda x: x is not None, prop_value))
+            if not len(prop_value):
+                # This is added to handle the case when the reference allele
+                # has a variant_in_members consisting only of None, but has
+                # to be written anyways
+                prop_value = [None]
+            new_vectors = list(itertools.product(new_vectors, prop_value))
+            new_vectors = [list(itertools.chain.from_iterable(map(
+                lambda x: x if isinstance(x, list) else [x],
+                subvector
+            ))) for subvector in new_vectors]
+
+        header = self.allele_batch_header
+        allele_data = {name: [] for name in self.schema.names}
+        for idx, field_name in enumerate(header):
+            for vector in new_vectors:
+                allele_data[field_name].append(vector[idx])
+        allele_data["variant_data"] = list(itertools.repeat(
+            variant_data, len(new_vectors)))
+        allele_data["extra_attributes"] = list(itertools.repeat(
+            extra_attributes_data, len(new_vectors)))
+        return allele_data
+
+    def build_allele_batch_dict_old(
             self, variant_data, extra_attributes_data, allele):
         allele_data = {name: [] for name in self.schema.names}
         for spr in self.searchable_properties:

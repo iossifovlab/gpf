@@ -654,34 +654,48 @@ class SummaryVariant(Variant):
 class SummaryVariantFactory(object):
     @staticmethod
     def summary_allele_from_record(
-        record, transmission_type=TransmissionType.transmitted
+        record, transmission_type=TransmissionType.transmitted,
+        attr_filter=None
     ):
         record["transmission_type"] = transmission_type
         alternative = record["alternative"]
+        attributes = record
+        if attr_filter:
+            attributes = {
+                k: v
+                for (k, v) in record.items()
+                if k not in attr_filter
+            }
+
+        if "summary_variant_index" not in record:
+            summary_index = record["summary_index"]
+        else:
+            summary_index = record["summary_variant_index"]
 
         return SummaryAllele(
             record["chrom"],
             record["position"],
             record["reference"],
             alternative=alternative,
-            summary_index=record["summary_variant_index"],
+            summary_index=summary_index,
             end_position=record.get("end_position", None),
             variant_type=record.get("variant_type", None),
             allele_index=record["allele_index"],
             transmission_type=transmission_type,
-            attributes=record,
+            attributes=attributes,
         )
 
     @staticmethod
     def summary_variant_from_records(
-            records, transmission_type=TransmissionType.transmitted):
+            records, transmission_type=TransmissionType.transmitted,
+            attr_filter=None):
 
         assert len(records) > 0
 
         alleles = []
         for record in records:
             sa = SummaryVariantFactory.summary_allele_from_record(
-                record, transmission_type
+                record, transmission_type, attr_filter
             )
             alleles.append(sa)
         if not alleles[0].is_reference_allele:

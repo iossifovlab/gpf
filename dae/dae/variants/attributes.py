@@ -152,7 +152,7 @@ class Sex(enum.Enum):
             return Sex.male
         elif name in set(["female", "f", "2"]):
             return Sex.female
-        elif name in set(["unspecified", "u", "0"]):
+        elif name in set(["unspecified", "u", "0", "unknown"]):
             return Sex.unspecified
         raise ValueError("unexpected sex type: " + str(name))
 

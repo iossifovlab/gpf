@@ -13,10 +13,12 @@ def test_all_properties_in_blob(vcf_variants_loader, impala_genotype_storage):
     fv.update_attributes({"some_score": [1.24]})
 
     serializer = AlleleParquetSerializer(schema)
-    blob = serializer.serialize_variant(fv)
+    summary_blobs = serializer.serialize_summary_data(fv.alleles)
+    scores_blob = serializer.serialize_scores_data(fv.alleles)
+    blob = serializer.serialize_family_variant(
+        fv.alleles, summary_blobs, scores_blob)
     deserialized_variant = serializer.deserialize_family_variant(blob, family)
     for prop in schema.columns.keys():
-        print(prop)
         if prop == "summary_variant_index":
             continue  # Summary variant index has special handling
         fv_prop = getattr(fv, prop, None)
@@ -27,6 +29,9 @@ def test_all_properties_in_blob(vcf_variants_loader, impala_genotype_storage):
             deserialized_prop = deserialized_variant.get_attribute(prop)
         if prop == "some_score":
             continue
+        print(prop)
+        print(fv_prop)
+        print(deserialized_prop)
         assert fv_prop == deserialized_prop, prop
 
 
@@ -46,7 +51,12 @@ def test_extra_attributes_serialization_deserialization(
     serializer = AlleleParquetSerializer(main_schema, extra_attributes)
     it = loader.full_variants_iterator()
     variant = next(it)[1][0]
-    variant_blob = serializer.serialize_variant(variant)
+    print(variant.gt)
+    summary_blobs = serializer.serialize_summary_data(variant.alleles)
+    scores_blob = serializer.serialize_scores_data(variant.alleles)
+    variant_blob = serializer.serialize_family_variant(
+        variant.alleles, summary_blobs, scores_blob
+    )
     extra_blob = serializer.serialize_extra_attributes(variant)
     family = variant.family
 
@@ -92,3 +102,25 @@ def test_extra_attributes_impala(extra_attrs_impala):
     variants = extra_attrs_impala.query_variants()
     first_variant = list(variants)[0]
     assert first_variant.get_attribute("someAttr")[1] == "asdf"
+
+
+def test_build_allele_batch_dict(
+        vcf_variants_loader, impala_genotype_storage, mocker):
+    loader = vcf_variants_loader("backends/effects_trio")
+
+    fv = list(loader.full_variants_iterator())[0][1][0]
+    schema = loader.get_attribute("annotation_schema")
+    family = loader.families.get(fv.family_id)
+    schema.create_column("some_score", "float")
+    fv.update_attributes({"some_score": [1.24]})
+
+    serializer = AlleleParquetSerializer(schema)
+    summary_blobs = serializer.serialize_summary_data(fv.alleles)
+    scores_blob = serializer.serialize_scores_data(fv.alleles)
+    blob = serializer.serialize_family_variant(
+        fv.alleles, summary_blobs, scores_blob)
+    extra_blob = serializer.serialize_extra_attributes(fv)
+    chain = serializer.build_searchable_vectors_summary(fv)
+    batch = serializer.build_allele_batch_dict(
+        fv.alleles[1], blob, extra_blob, chain)
+    print(batch)
