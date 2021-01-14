@@ -410,7 +410,6 @@ class AlleleParquetSerializer:
             "allele_index": SignedInt8Serializer,
             "summary_index": IntSerializer,
             "transmission_type": TransmissionTypeSerializer,
-            "summary_variant_index": IntSerializer,
         }
         self.annotation_prop_serializers = {
             "af_allele_freq": FloatSerializer,
