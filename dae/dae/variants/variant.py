@@ -667,12 +667,17 @@ class SummaryVariantFactory(object):
                 if k not in attr_filter
             }
 
+        if "summary_variant_index" not in record:
+            summary_index = record["summary_index"]
+        else:
+            summary_index = record["summary_variant_index"]
+
         return SummaryAllele(
             record["chrom"],
             record["position"],
             record["reference"],
             alternative=alternative,
-            summary_index=record["summary_variant_index"],
+            summary_index=summary_index,
             end_position=record.get("end_position", None),
             variant_type=record.get("variant_type", None),
             allele_index=record["allele_index"],
@@ -682,7 +687,7 @@ class SummaryVariantFactory(object):
 
     @staticmethod
     def summary_variant_from_records(
-            records, transmission_type=TransmissionType.transmitted, 
+            records, transmission_type=TransmissionType.transmitted,
             attr_filter=None):
 
         assert len(records) > 0
