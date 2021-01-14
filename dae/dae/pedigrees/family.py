@@ -192,7 +192,8 @@ class Family(object):
         assert len(persons) > 0
         assert all([persons[0].family_id == p.family_id for p in persons])
         family_id = persons[0].family_id
-        persons = sorted(persons, key=lambda p: p.role.value)
+        # persons = sorted(
+        #     persons, key=lambda p: p.role.value if p.role else -1)
 
         family = Family(family_id)
         for person in persons:

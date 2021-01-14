@@ -5,6 +5,7 @@ import re
 import hashlib
 import itertools
 import logging
+from copy import copy
 
 import toml
 from box import Box
@@ -401,14 +402,16 @@ class ContinuousParquetFileWriter:
         self._writer.write_table(self.build_table())
         self.data_reset()
 
-    def append_allele(self, variant_data, extra_attributes_data, allele):
+    def append_allele(
+            self, allele, variant_data,
+            extra_attributes_data, summary_vectors):
         """
         Appends the data for an entire variant to the buffer
 
         :param list attributes: List of key-value tuples containing the data
         """
         data = self.serializer.build_allele_batch_dict(
-            variant_data, extra_attributes_data, allele)
+            allele, variant_data, extra_attributes_data, summary_vectors)
         for k, v in self._data.items():
             v.extend(data[k])
 
@@ -536,6 +539,15 @@ class VariantsParquetWriter:
             scores_blob = self.serializer.serialize_scores_data(
                 summary_alleles)
 
+            for summary_allele in summary_alleles:
+                extra_atts = {
+                    "bucket_index": self.bucket_index,
+                }
+                summary_allele.update_attributes(extra_atts)
+
+            summary_vectors = self.serializer.build_searchable_vectors_summary(
+                summary_variant)
+
             for family_variant in family_variants:
                 family_variant_index += 1
 
@@ -546,6 +558,13 @@ class VariantsParquetWriter:
                         summary_variant, family_variant.family_id
                     )
                     fv = unknown_variant
+                    if -1 not in summary_vectors:
+                        summary_vectors[-1] = copy(summary_vectors[0])
+                        header = self.serializer.allele_batch_header
+                        allele_index_idx = header.index("allele_index")
+                        vectors = summary_vectors[-1]
+                        for vector in vectors:
+                            vector[allele_index_idx] = -1
 
                 fv.summary_index = summary_variant_index
                 fv.family_index = family_variant_index
@@ -568,7 +587,8 @@ class VariantsParquetWriter:
                 for family_allele in alleles:
                     bin_writer = self._get_bin_writer(family_allele)
                     bin_writer.append_allele(
-                        variant_data, extra_attributes_data, family_allele)
+                        family_allele, variant_data,
+                        extra_attributes_data, summary_vectors)
 
             if summary_variant_index % 1000 == 0:
                 report = True
