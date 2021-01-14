@@ -466,9 +466,12 @@ class AlleleParquetSerializer:
             self.summary_prop_serializers,
             self.annotation_prop_serializers,
         ]
+        # Family variant index was being imported into the scores schema
+        # previously by mistake
         self.family_serializers_list = [
             self.family_prop_serializers,
             self.member_prop_serializers,
+            {"family_variant_index": IntSerializer}
         ]
         self.property_serializers_list = [
             *self.summary_serializers_list,
