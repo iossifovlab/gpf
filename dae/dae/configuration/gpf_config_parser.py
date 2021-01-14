@@ -32,6 +32,7 @@ class DefaultBox(Box):
     def __init__(self, *args, **kwargs):
         kwargs["default_box"] = True
         kwargs["default_box_attr"] = None
+        kwargs["default_box_none_transform"] = False
         super(DefaultBox, self).__init__(*args, **kwargs)
 
 
