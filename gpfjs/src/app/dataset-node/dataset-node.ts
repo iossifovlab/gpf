@@ -8,10 +8,8 @@ export class DatasetNode {
     this.dataset = dataset;
     this.children = new Array<DatasetNode>();
 
-    if (dataset.studies !== null) {
-      allDatasets
-        .filter(d => dataset.studies.indexOf(d.id) !== -1)
+    allDatasets
+        .filter(d => d.parents.indexOf(dataset.id) !== -1)
         .forEach(d => this.children.push(new DatasetNode(d, allDatasets)));
-    }
   }
 }
