@@ -265,6 +265,7 @@ class FamiliesLoader(CLILoader):
         ped_proband=None,
         ped_layout=None,
         ped_generated=None,
+        ped_not_sequenced=None,
         ped_sample_id=None,
     ):
         header = (
@@ -278,6 +279,7 @@ class FamiliesLoader(CLILoader):
             (ped_proband, PEDIGREE_COLUMN_NAMES["proband"]),
             (ped_layout, PEDIGREE_COLUMN_NAMES["layout"]),
             (ped_generated, PEDIGREE_COLUMN_NAMES["generated"]),
+            (ped_not_sequenced, PEDIGREE_COLUMN_NAMES["not_sequenced"]),
             (ped_sample_id, PEDIGREE_COLUMN_NAMES["sample id"]),
         )
         header = tuple(filter(lambda col: type(col[0]) is int, header))
@@ -302,6 +304,7 @@ class FamiliesLoader(CLILoader):
         ped_proband="proband",
         ped_layout="layout",
         ped_generated="generated",
+        ped_not_sequenced="not_sequenced",
         ped_sample_id="sampleId",
         ped_no_role=False,
         **kwargs,
@@ -322,6 +325,7 @@ class FamiliesLoader(CLILoader):
                 ped_sex: Sex.from_name,
                 ped_status: Status.from_name,
                 ped_generated: lambda v: str2bool(v),
+                ped_not_sequenced: lambda v: str2bool(v),
                 ped_proband: lambda v: str2bool(v),
             },
             dtype=str,
@@ -347,6 +351,7 @@ class FamiliesLoader(CLILoader):
                     ped_proband=ped_proband,
                     ped_layout=ped_layout,
                     ped_generated=ped_generated,
+                    ped_not_sequenced=ped_not_sequenced,
                     ped_sample_id=ped_sample_id,
                 )
                 ped_family = PEDIGREE_COLUMN_NAMES["family"]
@@ -359,6 +364,7 @@ class FamiliesLoader(CLILoader):
                 ped_proband = PEDIGREE_COLUMN_NAMES["proband"]
                 ped_layout = PEDIGREE_COLUMN_NAMES["layout"]
                 ped_generated = PEDIGREE_COLUMN_NAMES["generated"]
+                ped_not_sequenced = PEDIGREE_COLUMN_NAMES["not_sequenced"]
                 ped_sample_id = PEDIGREE_COLUMN_NAMES["sample id"]
                 ped_df = read_csv_func(
                     pedigree_filepath, header=None, names=file_header
@@ -370,13 +376,13 @@ class FamiliesLoader(CLILoader):
             warnings.showwarning(w.message, w.category, w.filename, w.lineno)
 
         if ped_sample_id in ped_df:
-            if ped_generated in ped_df:
+            if ped_generated in ped_df or ped_not_sequenced in ped_df:
 
                 def fill_sample_id(r):
                     if not pd.isna(r.sampleId):
                         return r.sampleId
                     else:
-                        if r.generated:
+                        if r.generated or r.not_sequenced:
                             return None
                         else:
                             return r.personId
@@ -398,6 +404,10 @@ class FamiliesLoader(CLILoader):
             ped_df[ped_sample_id] = sample_ids
         if ped_generated in ped_df:
             ped_df[ped_generated] = ped_df[ped_generated].apply(
+                lambda v: v if v else None
+            )
+        if ped_not_sequenced in ped_df:
+            ped_df[ped_not_sequenced] = ped_df[ped_not_sequenced].apply(
                 lambda v: v if v else None
             )
 

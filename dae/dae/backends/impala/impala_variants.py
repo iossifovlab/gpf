@@ -41,6 +41,7 @@ class ImpalaVariants:
 
         self._impala_helpers = impala_helpers
         self.pedigree_schema = self._fetch_pedigree_schema()
+
         self.ped_df = self._fetch_pedigree()
         self.families = FamiliesData.from_pedigree_df(self.ped_df)
 
@@ -345,8 +346,7 @@ class ImpalaVariants:
                 cursor.execute(q)
                 ped_df = as_pandas(cursor)
 
-        ped_df = ped_df.rename(
-            columns={
+        columns = {
                 "personId": "person_id",
                 "familyId": "family_id",
                 "momId": "mom_id",
@@ -358,8 +358,14 @@ class ImpalaVariants:
                 "generated": "generated",
                 "layout": "layout",
                 "phenotype": "phenotype",
+        }
+        if "not_sequenced" in self.pedigree_schema:
+            columns = {
+                "not_sequenced": "not_sequenced"
             }
-        )
+
+        ped_df = ped_df.rename(columns=columns)
+
         ped_df.role = ped_df.role.apply(lambda v: Role(v))
         ped_df.sex = ped_df.sex.apply(lambda v: Sex(v))
         ped_df.status = ped_df.status.apply(lambda v: Status(v))

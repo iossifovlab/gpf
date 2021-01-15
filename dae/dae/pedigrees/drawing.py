@@ -278,7 +278,8 @@ class OffsetLayoutDrawer(object):
     def _draw_members(self, axes, layout):
         for level in layout.positions:
             for individual in level:
-                if individual.individual.member.generated:
+                if individual.individual.member.generated or \
+                        individual.individual.member.not_sequenced:
                     individual_color = "grey"
                 elif individual.individual.member.status == Status.unaffected:
                     individual_color = "white"
@@ -392,6 +393,7 @@ class OffsetLayoutDrawer(object):
             "role",
             "layout",
             "generated",
+            "not_sequenced",
         ]
         table_vals = []
 
@@ -407,6 +409,7 @@ class OffsetLayoutDrawer(object):
                     member.role,
                     member.layout,
                     "G" if member.generated else "",
+                    "N" if member.not_sequenced else "",
                 ]
             )
 

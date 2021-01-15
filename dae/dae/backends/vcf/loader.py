@@ -132,8 +132,8 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                 f"expected values are `reference` or `unknown`")
             self._fill_missing_value = 0
 
-        self.strict_pedigree = params.get("vcf_pedigree_mode", "strict") == \
-            "strict"
+        self.fixed_pedigree = params.get("vcf_pedigree_mode", "fixed") == \
+            "fixed"
 
         self._init_vcf_readers()
         self._match_pedigree_to_samples()
@@ -273,6 +273,12 @@ class SingleVcfLoader(VariantsGenotypesLoader):
     def _match_pedigree_to_samples(self):
         vcf_samples = list()
         for vcf in self.vcfs:
+            intersection = set(vcf_samples) & set(vcf.samples)
+            if intersection:
+                logger.warning(
+                    f"vcf samples present in multiple batches: "
+                    f"{intersection}")
+
             vcf_samples += vcf.samples
         vcf_samples = np.array(vcf_samples)
 
@@ -283,12 +289,16 @@ class SingleVcfLoader(VariantsGenotypesLoader):
         logger.info(f"pedigree samples: {len(pedigree_samples)}")
 
         missing_samples = vcf_samples.difference(pedigree_samples)
-        logger.info(f"samples missing in pedigree: {len(missing_samples)}")
+        if missing_samples:
+            logger.warning(
+                f"samples missing in pedigree: {len(missing_samples)}; "
+                f"{missing_samples}")
+
         vcf_samples = vcf_samples.difference(missing_samples)
         assert vcf_samples.issubset(pedigree_samples)
 
         seen = set()
-        generated = set()
+        not_sequenced = set()
         for person in self.families.persons.values():
 
             if person.sample_id in vcf_samples:
@@ -305,10 +315,10 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                         )
                         seen.add(person.sample_id)
                         break
-            elif not self.strict_pedigree:
-                if not person.generated:
-                    generated.add(person.person_id)
-                    person.set_attr("generated", True)
+            elif not self.fixed_pedigree:
+                if not person.generated and not person.not_sequenced:
+                    not_sequenced.add(person.person_id)
+                    person.set_attr("not_sequenced", True)
             else:
                 person.set_attr(
                     "sample_index",
@@ -321,7 +331,8 @@ class SingleVcfLoader(VariantsGenotypesLoader):
 
         self.families.redefine()
         logger.info(
-            f"persons changed to generated {len(generated)}: {generated}")
+            f"persons changed to not_sequenced {len(not_sequenced)}: "
+            f"{not_sequenced}")
 
     def _build_family_alleles_indexes(self):
         vcf_offsets = [0] * len(self.vcfs)
@@ -561,7 +572,7 @@ class VcfLoader(VariantsGenotypesLoader):
             for vcf_files in filenames if vcf_files
         ]
 
-        pedigree_mode = params.get("vcf_pedigree_mode", "strict")
+        pedigree_mode = params.get("vcf_pedigree_mode", "fixed")
         if pedigree_mode == "intersection":
             self.families = self._families_intersection()
         elif pedigree_mode == "union":
@@ -581,9 +592,12 @@ class VcfLoader(VariantsGenotypesLoader):
             other_families = vcf_loader.families
             assert len(families.persons) == len(other_families.persons)
             for other_person in other_families.persons.values():
-                if other_person.generated:
+                if other_person.not_sequenced:
                     person = families.persons[other_person.person_id]
-                    person.set_attr("generated", True)
+                    logger.warning(
+                        f"person {person.person_id} is marked as "
+                        f"'not_sequenced'")
+                    person.set_attr("not_sequenced", True)
         families.redefine()
 
         for vcf_loader in self.vcf_loaders:
@@ -594,13 +608,16 @@ class VcfLoader(VariantsGenotypesLoader):
     def _families_union(self):
         families = self.vcf_loaders[0].families
         for person_id, person in families.persons.items():
-            if not person.generated:
+            if not person.not_sequenced:
                 continue
             for vcf_loader in self.vcf_loaders:
                 other_person = vcf_loader.families.persons[person_id]
 
-                if not other_person.generated:
-                    person.set_attr("generated", False)
+                if not other_person.not_sequenced:
+                    logger.warning(
+                        f"person {person.person_id} is marked as "
+                        f"'not_sequenced'")
+                    person.set_attr("not_sequenced", False)
                     break
 
         families.redefine()
@@ -667,14 +684,14 @@ class VcfLoader(VariantsGenotypesLoader):
         ))
         arguments.append(CLIArgument(
             "--vcf-pedigree-mode",
-            default_value="strict",
+            default_value="fixed",
             help_text="used for handling missmathes between samples in VCF"
             "and sample in pedigree file;"
-            "supported values are: 'intersection', 'union', 'strict';"
-            "'strict' mode means that pedigree should be accept 'as is' "
+            "supported values are: 'intersection', 'union', 'fixed';"
+            "'fixed' mode means that pedigree should be accept 'as is' "
             "without any modifications; samples found in pedigree but not "
             "in the VCF should be patched with unknown genotype;"
-            "[default: 'intersection']",
+            "[default: 'fixed']",
         ))
         arguments.append(CLIArgument(
             "--vcf-chromosomes",
@@ -764,7 +781,7 @@ class VcfLoader(VariantsGenotypesLoader):
             ["omission", "possible_omission", "ignore"]
         ), argv.vcf_omission_mode
         assert argv.vcf_pedigree_mode in set(
-            ["intersection", "union", "strict"]
+            ["intersection", "union", "fixed"]
         ), argv.vcf_pedigree_mode
 
         params = {
