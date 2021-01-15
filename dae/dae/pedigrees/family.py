@@ -177,7 +177,7 @@ class Person(object):
             print(f"{self}   generated:", self.generated, other.generated)
         if self.not_sequenced != other.not_sequenced:
             print(
-                f"{self} not_sequenced:", 
+                f"{self} not_sequenced:",
                 self.not_sequenced, other.not_sequenced)
 
 
@@ -195,7 +195,7 @@ class Family(object):
             member.family = self
             member.mom = self.get_member(member.mom_id, None)
             member.dad = self.get_member(member.dad_id, None)
-            if member.generated:
+            if member.generated or member.not_sequenced:
                 member.index = -1
             else:
                 member.index = index
@@ -360,7 +360,7 @@ class FamiliesData(Mapping):
         self._real_persons = None
 
     def redefine(self):
-        error_msg = None
+        error_msgs = []
 
         self.persons = {}
         self._ped_df = None
@@ -373,9 +373,8 @@ class FamiliesData(Mapping):
 
             if len(family) == 0:
                 self._broken[family.family_id] = family
-                continue
-            else:
-                self._families[family.family_id] = family
+
+            self._families[family.family_id] = family
 
             for person in family.full_members:
                 if person.person_id in self.persons:
@@ -383,11 +382,16 @@ class FamiliesData(Mapping):
                         f"person {person.person_id} included in more "
                         f"than one family: {family.family_id}, "
                         f"{self.persons[person.person_id].family_id}")
-                    error_msg = f"person {person.person_id} " \
-                        f"in multiple families"
+                    error_msgs.append(
+                        f"person {person.person_id} "
+                        f"in multiple families")
                 self.persons[person.person_id] = person
-        if error_msg:
-            raise AttributeError(error_msg)
+        if error_msgs:
+            raise AttributeError("; ".join(error_msgs))
+
+    @property
+    def broken_families(self):
+        return self._broken
 
     @property
     def real_persons(self):
@@ -478,6 +482,9 @@ class FamiliesData(Mapping):
 
     def __contains__(self, family_id):
         return family_id in self._families
+
+    def __delitem__(self, family_id):
+        del self._families[family_id]
 
     def keys(self):
         return self._families.keys()

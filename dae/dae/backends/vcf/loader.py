@@ -283,7 +283,10 @@ class SingleVcfLoader(VariantsGenotypesLoader):
         logger.info(f"pedigree samples: {len(pedigree_samples)}")
 
         missing_samples = vcf_samples.difference(pedigree_samples)
-        logger.info(f"samples missing in pedigree: {len(missing_samples)}")
+        logger.warning(
+            f"samples missing in pedigree: {len(missing_samples)}; "
+            f"{missing_samples}")
+
         vcf_samples = vcf_samples.difference(missing_samples)
         assert vcf_samples.issubset(pedigree_samples)
 
@@ -584,6 +587,9 @@ class VcfLoader(VariantsGenotypesLoader):
             for other_person in other_families.persons.values():
                 if other_person.not_sequenced:
                     person = families.persons[other_person.person_id]
+                    logger.warning(
+                        f"person {person.person_id} is marked as "
+                        f"'not_sequenced'")
                     person.set_attr("not_sequenced", True)
         families.redefine()
 
@@ -601,6 +607,9 @@ class VcfLoader(VariantsGenotypesLoader):
                 other_person = vcf_loader.families.persons[person_id]
 
                 if not other_person.not_sequenced:
+                    logger.warning(
+                        f"person {person.person_id} is marked as "
+                        f"'not_sequenced'")
                     person.set_attr("not_sequenced", False)
                     break
 

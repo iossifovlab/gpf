@@ -72,7 +72,7 @@ def test_drawing_draw(drawing_from_family2):
     assert axes2.table._loc == 9
 
     table_cells = axes2.table._cells
-    assert len(table_cells) == 36
+    assert len(table_cells) == 40
 
     assert table_cells[(0, 0)]._text._text == "familyId"
     assert table_cells[(0, 1)]._text._text == "individualId"
@@ -193,7 +193,7 @@ def test_draw_families_report(drawing_from_family2, layout_from_family2):
                 ],
             }
         ),
-        dict({"fam1": None, "fam2": layout_from_family2,}),
+        dict({"fam1": None, "fam2": layout_from_family2, }),
     )
 
     assert len(families_report) == 2

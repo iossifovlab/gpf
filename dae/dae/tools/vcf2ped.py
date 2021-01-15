@@ -68,16 +68,23 @@ def main(argv, gpf_instance=None):
     variants_filenames, variants_params = \
         VcfLoader.parse_cli_arguments(argv)
 
-    assert variants_filenames is not None
+    if variants_filenames:
+        assert variants_filenames is not None
 
-    variants_loader = VcfLoader(
-        families,
-        variants_filenames,
-        params=variants_params,
-        genome=gpf_instance.genomes_db.get_genome(),
-    )
+        variants_loader = VcfLoader(
+            families,
+            variants_filenames,
+            params=variants_params,
+            genome=gpf_instance.genomes_db.get_genome(),
+        )
 
-    families = variants_loader.families
+        families = variants_loader.families
+
+    if families.broken_families:
+        for family_id, family in families.broken_families.items():
+            del families[family_id]
+            logger.warning(
+                f"family {family_id} removed from pedigree: {family}")
 
     if not argv.output_filename:
         output_filename, _ = os.path.splitext(os.path.basename(filename))

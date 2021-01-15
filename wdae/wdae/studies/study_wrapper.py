@@ -289,10 +289,10 @@ class StudyWrapper(StudyWrapperBase):
         "is_denovo": lambda aa: bool(
             Inheritance.denovo in aa.inheritance_in_members
         ),
-        "seen_in_affected": 
-        lambda aa: bool(aa.get_attribute("seen_in_status") in {2,3}),
-        "seen_in_unaffected": 
-        lambda aa: bool(aa.get_attribute("seen_in_status") in {1,3}),
+        "seen_in_affected":
+        lambda aa: bool(aa.get_attribute("seen_in_status") in {2, 3}),
+        "seen_in_unaffected":
+        lambda aa: bool(aa.get_attribute("seen_in_status") in {1, 3}),
 
     }
 
