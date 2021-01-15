@@ -273,6 +273,12 @@ class SingleVcfLoader(VariantsGenotypesLoader):
     def _match_pedigree_to_samples(self):
         vcf_samples = list()
         for vcf in self.vcfs:
+            intersection = set(vcf_samples) & set(vcf.samples)
+            if intersection:                
+                logger.warning(
+                    f"vcf samples present in multiple batches: "
+                    f"{intersection}")
+
             vcf_samples += vcf.samples
         vcf_samples = np.array(vcf_samples)
 
@@ -283,9 +289,10 @@ class SingleVcfLoader(VariantsGenotypesLoader):
         logger.info(f"pedigree samples: {len(pedigree_samples)}")
 
         missing_samples = vcf_samples.difference(pedigree_samples)
-        logger.warning(
-            f"samples missing in pedigree: {len(missing_samples)}; "
-            f"{missing_samples}")
+        if missing_samples:
+            logger.warning(
+                f"samples missing in pedigree: {len(missing_samples)}; "
+                f"{missing_samples}")
 
         vcf_samples = vcf_samples.difference(missing_samples)
         assert vcf_samples.issubset(pedigree_samples)
