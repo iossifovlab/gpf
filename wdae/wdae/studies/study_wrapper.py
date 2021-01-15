@@ -318,7 +318,8 @@ class StudyWrapper(StudyWrapperBase):
                 logger.error(f"{best_st}, {index}, {member}")
 
         for member in allele.family.full_members:
-            if member.generated or member.person_id in missing_members:
+            if (member.generated or member.not_sequenced) \
+                    or (member.person_id in missing_members):
                 result.append(
                     self._get_wdae_member(member, person_set_collection, 0)
                 )
@@ -1323,7 +1324,7 @@ class StudyWrapper(StudyWrapperBase):
                 member, person_set_collection
             ),
             member.layout,
-            member.generated,
+            (member.generated or member.not_sequenced),
             best_st,
             0,
         ]

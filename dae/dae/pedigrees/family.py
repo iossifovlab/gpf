@@ -25,6 +25,7 @@ PEDIGREE_COLUMN_NAMES = {
     "layout": "layout",
     "generated": "generated",
     "proband": "proband",
+    "not_sequenced": "not_sequenced",
 }
 
 
@@ -69,10 +70,12 @@ class Person(object):
             (self, self._attributes)
 
     def __repr__(self):
+        decorator = ""
         if self.generated:
-            return f"Person([G] {self.person_id} ({self.family_id}); " \
-                f"{self.role}; {self.sex}, {self.status})"
-        return f"Person({self.person_id} ({self.family_id}); " \
+            decorator = "[G] "
+        elif self.not_sequenced:
+            decorator = "[N] "
+        return f"Person({decorator}{self.person_id} ({self.family_id}); " \
             f"{self.role}; {self.sex}, {self.status})"
 
     @property
@@ -94,6 +97,10 @@ class Person(object):
     @property
     def generated(self):
         return self._attributes.get("generated", None)
+
+    @property
+    def not_sequenced(self):
+        return self._attributes.get("not_sequenced", None)
 
     @property
     def missing(self):
@@ -120,9 +127,11 @@ class Person(object):
         return self.has_dad() and self.has_mom()
 
     def has_generated_parent(self):
-        return (self.has_dad() and self.dad.generated) or (
-            self.has_mom() and self.mom.generated
-        )
+        return \
+            (self.has_dad() and
+             (self.dad.generated or self.dad.not_sequenced)) or \
+            (self.has_mom() and
+             (self.mom.generated or self.mom.not_sequenced))
 
     def has_attr(self, key):
         return key in self._attributes
@@ -146,25 +155,30 @@ class Person(object):
             self.status == other.status and \
             self.mom_id == other.mom_id and \
             self.dad_id == other.dad_id and \
-            self.generated == other.generated
+            self.generated == other.generated and \
+            self.not_sequenced == other.not_sequenced
 
     def diff(self, other):
         if self.person_id != other.person_id:
-            print(f"{self} person_id:", self.person_id, other.person_id)
+            print(f"{self}  person_id:", self.person_id, other.person_id)
         if self.family_id != other.family_id:
-            print(f"{self} family_id:", self.family_id, other.family_id)
+            print(f"{self}  family_id:", self.family_id, other.family_id)
         if self.sex != other.sex:
-            print(f"{self}       sex:", self.sex, other.sex)
+            print(f"{self}        sex:", self.sex, other.sex)
         if self.role != other.role:
-            print(f"{self}      role:", self.role, other.role)
+            print(f"{self}       role:", self.role, other.role)
         if self.status != other.status:
-            print(f"{self}     status:", self.status, other.status)
+            print(f"{self}      status:", self.status, other.status)
         if self.mom_id != other.mom_id:
-            print(f"{self}     mom_id:", self.mom_id, other.mom_id)
+            print(f"{self}      mom_id:", self.mom_id, other.mom_id)
         if self.dad_id != other.dad_id:
-            print(f"{self}     dad_id:", self.dad_id, other.dad_id)
+            print(f"{self}      dad_id:", self.dad_id, other.dad_id)
         if self.generated != other.generated:
-            print(f"{self}  generated:", self.generated, other.generated)
+            print(f"{self}   generated:", self.generated, other.generated)
+        if self.not_sequenced != other.not_sequenced:
+            print(
+                f"{self} not_sequenced:", 
+                self.not_sequenced, other.not_sequenced)
 
 
 class Family(object):
@@ -231,7 +245,9 @@ class Family(object):
     def members_in_order(self):
         if self._members_in_order is None:
             self._members_in_order = list(
-                filter(lambda m: not m.generated, self.persons.values())
+                filter(
+                    lambda m: not (m.generated or m.not_sequenced),
+                    self.persons.values())
             )
         return self._members_in_order
 
@@ -357,6 +373,7 @@ class FamiliesData(Mapping):
 
             if len(family) == 0:
                 self._broken[family.family_id] = family
+                continue
             else:
                 self._families[family.family_id] = family
 

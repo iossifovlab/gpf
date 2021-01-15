@@ -288,7 +288,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
         assert vcf_samples.issubset(pedigree_samples)
 
         seen = set()
-        generated = set()
+        not_sequenced = set()
         for person in self.families.persons.values():
 
             if person.sample_id in vcf_samples:
@@ -306,9 +306,9 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                         seen.add(person.sample_id)
                         break
             elif not self.strict_pedigree:
-                if not person.generated:
-                    generated.add(person.person_id)
-                    person.set_attr("generated", True)
+                if not person.generated and not person.not_sequenced:
+                    not_sequenced.add(person.person_id)
+                    person.set_attr("not_sequenced", True)
             else:
                 person.set_attr(
                     "sample_index",
@@ -321,7 +321,8 @@ class SingleVcfLoader(VariantsGenotypesLoader):
 
         self.families.redefine()
         logger.info(
-            f"persons changed to generated {len(generated)}: {generated}")
+            f"persons changed to not_sequenced {len(not_sequenced)}: "
+            f"{not_sequenced}")
 
     def _build_family_alleles_indexes(self):
         vcf_offsets = [0] * len(self.vcfs)
@@ -581,9 +582,9 @@ class VcfLoader(VariantsGenotypesLoader):
             other_families = vcf_loader.families
             assert len(families.persons) == len(other_families.persons)
             for other_person in other_families.persons.values():
-                if other_person.generated:
+                if other_person.not_sequenced:
                     person = families.persons[other_person.person_id]
-                    person.set_attr("generated", True)
+                    person.set_attr("not_sequenced", True)
         families.redefine()
 
         for vcf_loader in self.vcf_loaders:
@@ -594,13 +595,13 @@ class VcfLoader(VariantsGenotypesLoader):
     def _families_union(self):
         families = self.vcf_loaders[0].families
         for person_id, person in families.persons.items():
-            if not person.generated:
+            if not person.not_sequenced:
                 continue
             for vcf_loader in self.vcf_loaders:
                 other_person = vcf_loader.families.persons[person_id]
 
-                if not other_person.generated:
-                    person.set_attr("generated", False)
+                if not other_person.not_sequenced:
+                    person.set_attr("not_sequenced", False)
                     break
 
         families.redefine()
