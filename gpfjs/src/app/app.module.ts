@@ -157,6 +157,7 @@ import { GeneViewComponent } from './gene-view/gene-view.component';
 import { GeneSymbolsWithSearchComponent } from './gene-symbols-with-search/gene-symbols-with-search.component';
 import { LoadingSpinnerComponent } from './loading-spinner/loading-spinner.component';
 import { DatasetNodeComponent } from './dataset-node/dataset-node.component';
+import { AutismGeneProfilesComponent } from './autism-gene-profiles/autism-gene-profiles.component';
 
 const appRoutes: Routes = [
   {
@@ -204,6 +205,10 @@ const appRoutes: Routes = [
         component: GeneBrowserComponent
       }
     ]
+  },
+  {
+    path: 'autismGeneProfiles',
+    component: AutismGeneProfilesComponent
   },
   {
     path: 'management',
@@ -352,6 +357,7 @@ const appRoutes: Routes = [
     GeneSymbolsWithSearchComponent,
     LoadingSpinnerComponent,
     DatasetNodeComponent,
+    AutismGeneProfilesComponent,
   ],
   imports: [
     BrowserModule,

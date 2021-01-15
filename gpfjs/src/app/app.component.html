@@ -32,6 +32,13 @@
             [routerLinkActiveOptions]="{ exact: false }"
             (click)="hideSidenav()">Saved queries</a>
         </li>
+        <li class="nav-item">
+          <a class="nav-link"
+            routerLink="/autismGeneProfiles"
+            routerLinkActive="active"
+            [routerLinkActiveOptions]="{ exact: false }"
+            (click)="hideSidenav()">Autism gene profiles</a>
+        </li>
         <li class="nav-item" *ngIf="('' | userInfo)?.isAdministrator">
           <a class="nav-link"
             routerLink="/management"
