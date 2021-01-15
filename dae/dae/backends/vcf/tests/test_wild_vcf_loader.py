@@ -45,7 +45,7 @@ def test_wild_vcf_loader_pedigree(
         gpf_instance_2013.genomes_db.get_genome(),
         params={
             "vcf_chromosomes": "1;2",
-            "vcf_pedigree_mode": "strict",
+            "vcf_pedigree_mode": "fixed",
             "vcf_include_unknown_person_genotypes": True,
             "vcf_include_unknown_family_genotypes": True,
         },
