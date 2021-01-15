@@ -12,7 +12,8 @@ class RESTClient:
     def __init__(
             self, remote_id, host,
             username, password,
-            base_url=None, port=None):
+            base_url=None, port=None,
+            protocol=None):
         self.host = host
         self.remote_id = remote_id
         self.username = username
@@ -29,7 +30,12 @@ class RESTClient:
         if port:
             self.port = port
         else:
-            self.port = 8000
+            self.port = None
+
+        if protocol:
+            self.protocol = protocol
+        else:
+            self.protocol = "http"
 
         self.session = self._login()
 
@@ -58,7 +64,16 @@ class RESTClient:
                 query_url += "?" if first else "&"
                 query_url += f"{k}={v}"
                 first = False
-        result = f"http://{self.host}:{self.port}{self.base_url}{query_url}"
+        if self.port:
+            result = (
+                f"{self.protocol}://"
+                f"{self.host}:{self.port}{self.base_url}{query_url}"
+            )
+        else:
+            result = (
+                f"{self.protocol}://"
+                f"{self.host}{self.base_url}{query_url}"
+            )
         return result
 
     def _get(self, url, query_values=None, stream=False):

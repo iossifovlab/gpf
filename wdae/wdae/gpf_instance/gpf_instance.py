@@ -43,7 +43,8 @@ class WGPFInstance(GPFInstance):
                         remote["user"],
                         remote["password"],
                         base_url=remote["base_url"],
-                        port=remote["port"])
+                        port=remote.get("port", None),
+                        protocol=remote.get("protocol", None))
                     self._fetch_remote_studies(client)
                 except ConnectionError as err:
                     logger.error(err)
