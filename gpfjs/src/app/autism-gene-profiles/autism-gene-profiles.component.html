@@ -1,1 +1,45 @@
-<h1>test</h1>
+<div style="display: inline-block;">
+
+  <table style="float: left; width: 100px">
+    <thead>
+      <th>Gene</th>
+    </thead>
+  </table>
+
+  <table style="float: left; width: 200px" class="table table-bordered table-hover table-sm table-centered table-header-rotate">
+    <thead>
+      <tr>
+        <th colspan="100">Gene lists</th>
+      </tr>
+      <tr style="height: 150px">
+        <td *ngFor="let geneList of geneLists" style="vertical-align: middle; transform-origin: center center; transform: rotate(-90deg);">{{ geneList }}</td>
+      </tr>
+    </thead>
+
+  </table>
+
+  <table style="float: left; width: 200px" class="table table-bordered table-hover table-sm table-centered table-header-rotate">
+    <thead>
+      <tr>
+        <th colspan="100">Autism score</th>
+      </tr>
+      <tr style="height: 150px">
+        <td *ngFor="let autismScore of autismScores" style="vertical-align: middle; transform-origin: center center; transform: rotate(-90deg);">{{ autismScore }}</td>
+      </tr>
+    </thead>
+
+  </table>
+
+  <table style="float: left; width: 200px" class="table table-bordered table-hover table-sm table-centered table-header-rotate">
+    <thead>
+      <tr>
+        <th colspan="100">Protection score</th>
+      </tr>
+      <tr style="height: 150px">
+        <td *ngFor="let protectionScore of protectionScores" style="vertical-align: middle; transform-origin: center center; transform: rotate(-90deg);">{{ protectionScore }}</td>
+      </tr>
+    </thead>
+
+  </table>
+
+</div>
