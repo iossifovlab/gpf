@@ -1,34 +1,34 @@
-<div>
+<div style="padding: 25px;">
 
-  <table style="float: left; width: 100px">
+  <table style="float: left; width: 100px" class="table table-bordered table-hover table-sm table-centered table-header-rotate">
     <thead>
-      <th>Gene</th>
+      <th class="table-header" >Gene</th>
     </thead>
-    <tr *ngFor="let gene of genes">
-      {{ gene }}
+    <tr style="height: 150px; vertical-align: middle;">
+      search gene
     </tr>
   </table>
 
-  <div style="resize: horizontal; overflow: hidden; float: left; width: 200px; max-width: 200px; padding: none">
-    <table style="float: left; width: 200px;" class="table table-bordered table-hover table-sm table-centered table-header-rotate">
+  <div style="resize: horizontal; overflow: hidden; float: left; width: 265px; max-width: 265px; padding: none">
+    <table style="float: left;" class="table table-bordered table-hover table-sm table-centered table-header-rotate">
       <thead>
         <tr>
-          <th colspan="100">Gene lists</th>
+          <th class="table-header" colspan="100" >Gene lists</th>
         </tr>
         <tr style="height: 150px;">
-          <td *ngFor="let geneList of geneLists" style="vertical-align: middle; transform-origin: center center; transform: rotate(-90deg);">{{ geneList }}</td>
+          <td *ngFor="let geneList of geneLists" style="vertical-align: middle; transform-origin: center center; transform: rotate(-90deg); padding: 0px 15px 0px 15px">{{ geneList }}</td>
         </tr>
       </thead>
     </table>
   </div>
 
-  <table style="float: left; width: 200px" class="table table-bordered table-hover table-sm table-centered table-header-rotate">
+  <table style="float: left; width: 200px;" class="table table-bordered table-hover table-sm table-centered table-header-rotate">
     <thead>
       <tr>
-        <th colspan="100">Autism score</th>
+        <th class="table-header" colspan="100" >Autism score</th>
       </tr>
       <tr style="height: 150px">
-        <td *ngFor="let autismScore of autismScores" style="vertical-align: middle; transform-origin: center center; transform: rotate(-90deg);">{{ autismScore }}</td>
+        <td *ngFor="let autismScore of autismScores" style="vertical-align: middle; transform-origin: center center; transform: rotate(-90deg); padding: 0px 15px 0px 15px">{{ autismScore }}</td>
       </tr>
     </thead>
   </table>
@@ -36,10 +36,10 @@
   <table style="float: left; width: 200px" class="table table-bordered table-hover table-sm table-centered table-header-rotate">
     <thead>
       <tr>
-        <th colspan="100">Protection score</th>
+        <th class="table-header" colspan="100" >Protection score</th>
       </tr>
       <tr style="height: 150px">
-        <td *ngFor="let protectionScore of protectionScores" style="vertical-align: middle; transform-origin: center center; transform: rotate(-90deg);">{{ protectionScore }}</td>
+        <td *ngFor="let protectionScore of protectionScores" style="vertical-align: middle; transform-origin: center center; transform: rotate(-90deg); padding: 0px 15px 0px 15px">{{ protectionScore }}</td>
       </tr>
     </thead>
   </table>
