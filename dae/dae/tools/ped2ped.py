@@ -82,9 +82,11 @@ def main(argv, gpf_instance=None):
 
     if families.broken_families:
         for family_id, family in families.broken_families.items():
-            del families[family_id]
-            logger.warning(
-                f"family {family_id} removed from pedigree: {family}")
+            if not family.has_members():
+                del families[family_id]
+                logger.warning(
+                    f"family {family_id} does not contain sequenced members "
+                    f"and is removed from the pedigree: {family}")
 
     if not argv.output_filename:
         output_filename, _ = os.path.splitext(os.path.basename(filename))

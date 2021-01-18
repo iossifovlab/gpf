@@ -100,7 +100,8 @@ class Person(object):
 
     @property
     def not_sequenced(self):
-        return self._attributes.get("not_sequenced", None)
+        return self._attributes.get("not_sequenced", None) or \
+            self._attributes.get("generated", None)
 
     @property
     def missing(self):
