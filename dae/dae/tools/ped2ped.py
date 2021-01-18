@@ -54,7 +54,7 @@ def main(argv, gpf_instance=None):
         logging.basicConfig(level=logging.WARNING)
 
     filename, params = FamiliesLoader.parse_cli_arguments(argv)
-    logger.info("PED PARAMS:", params)
+    logger.info(F"PED PARAMS: {params}")
 
     loader = FamiliesLoader(filename, **params)
     families = loader.load()

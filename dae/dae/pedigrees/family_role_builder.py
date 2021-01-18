@@ -1,10 +1,13 @@
 import sys
+import logging
 
 from collections import defaultdict
 
 from dae.variants.attributes import Role, Status, Sex
 from dae.pedigrees.family import Person
 
+
+logger = logging.getLogger(__name__)
 
 class Mating:
     def __init__(self, mom_id, dad_id):
@@ -58,9 +61,8 @@ class FamilyRoleBuilder:
         assert isinstance(role, Role)
         if person.role is None or person.role == Role.unknown:
             if role != person.role:
-                print(
-                    f"changing role for {person} from {person.role} to {role}",
-                    file=sys.stderr,
+                logger.warning(
+                    f"changing role for {person} from {person.role} to {role}"
                 )
                 person._role = role
                 person._attributes["role"] = role
