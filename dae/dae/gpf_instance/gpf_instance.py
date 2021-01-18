@@ -28,6 +28,7 @@ from dae.configuration.schemas.genomic_scores import genomic_scores_schema
 from dae.configuration.schemas.autism_gene_profile import (
     autism_gene_tool_config
 )
+from dae.autism_gene_profile.db import AutismGeneProfileDB
 
 from dae.utils.helpers import isnan
 
@@ -131,6 +132,11 @@ class GPFInstance(object):
             self.genomes_db,
             self.genotype_storage_db,
         )
+
+    @property  # type: ignore
+    @cached
+    def _autism_gene_profile_db(self):
+        return AutismGeneProfileDB(os.path.join(self.work_dir, "agpdb"))
 
     def reload(self):
         reload_properties = [
@@ -391,6 +397,16 @@ class GPFInstance(object):
     def get_study_background(self, dataset_id, background_name):
         return self._background_facade.get_study_background(
             dataset_id, background_name)
+
+    # AGP
+    def get_agp_configuration(self):
+        return self._autism_gene_profile_db.get_full_configuration(self)
+
+    def get_agp_statistic(self, gene_symbol):
+        return self._autism_gene_profile_db.get_agp(gene_symbol)
+
+    def get_all_agp_statistics(self, gene_symbol):
+        return self._autism_gene_profile_db.get_all_agps()
 
     # DAE config
     def get_selected_genotype_data(self):

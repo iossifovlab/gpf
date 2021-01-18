@@ -321,3 +321,13 @@ class AutismGeneProfileDB:
                                 count=count
                             )
                         )
+
+    def get_full_configuration(self, gpf_instance):
+        if not self.configuration:
+            self.configuration = \
+                gpf_instance._autism_gene_profile_config.to_dict()
+            s = select([self.gene_sets.c.set_name])
+            with self.engine.connect() as connection:
+                sets = connection.execute(s).fetchall()
+            self.configuration["gene_lists"] = sets
+        return self.configuration
