@@ -1160,7 +1160,10 @@ class StudyWrapper(StudyWrapperBase):
             pheno_filter = self.pheno_filter_builder.make_filter(
                 pheno_filter_arg["measure"], pheno_constraints
             )
-            roles = [pheno_filter_arg["role"]]
+            if "role" in pheno_filter_arg:
+                roles = [pheno_filter_arg["role"]]
+            else:
+                roles = None
             person_ids = [
                 p.person_id
                 for p in self.families.persons_with_roles(roles=roles)
