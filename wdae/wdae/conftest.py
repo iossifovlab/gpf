@@ -1,6 +1,8 @@
 import pytest
 import os
 
+from box import Box
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 
@@ -133,6 +135,66 @@ def wdae_gpf_instance(
 
 
 @pytest.fixture(scope="function")
+def wdae_gpf_instance_agp(
+        db, mocker, admin_client, wdae_gpf_instance, sample_agp):
+
+    agp_config = Box({
+        'gene_symbols': ['PLEKHN1', 'SAMD11'],
+        'protection_scores': ['SFARI_gene_score', 'RVIS_rank', 'RVIS'],
+        'autism_scores': ['SFARI_gene_score', 'RVIS_rank', 'RVIS'],
+        'datasets': Box({
+            'f1_study': Box({
+                'effects': ['synonymous', 'missense'],
+                'person_sets': [
+                    Box({
+                        'set_name': 'phenotype1',
+                        'collection_name': 'phenotype'
+                    }),
+                    Box({
+                        'set_name': 'unaffected',
+                        'collection_name': 'phenotype'
+                    }),
+                ]
+            })
+        })
+    })
+    mocker.patch.object(
+        WGPFInstance,
+        "_autism_gene_profile_config",
+        return_value=agp_config,
+        new_callable=mocker.PropertyMock
+    )
+    main_gene_sets = {
+        'CHD8 target genes',
+        'FMRP Darnell',
+        'FMRP Tuschl',
+        'PSD',
+        'autism candidates from Iossifov PNAS 2015',
+        'autism candidates from Sanders Neuron 2015',
+        'brain critical genes',
+        'brain embryonically expressed',
+        'chromatin modifiers',
+        'essential genes',
+        'non-essential genes',
+        'postsynaptic inhibition',
+        'synaptic clefts excitatory',
+        'synaptic clefts inhibitory',
+        'topotecan downreg genes'
+    }
+    mocker.patch.object(
+        wdae_gpf_instance.gene_sets_db,
+        "get_gene_set_ids",
+        return_value=main_gene_sets
+    )
+    wdae_gpf_instance._autism_gene_profile_db.clear_all_tables()
+    wdae_gpf_instance._autism_gene_profile_db.populate_data_tables(
+        wdae_gpf_instance)
+    wdae_gpf_instance._autism_gene_profile_db.insert_agp(sample_agp)
+
+    return wdae_gpf_instance
+
+
+@pytest.fixture(scope="function")
 def remote_settings(settings):
     host = os.environ.get("TEST_REMOTE_HOST", "localhost")
     remote = {
@@ -149,6 +211,7 @@ def remote_settings(settings):
     reload_datasets(load_gpf_instance())
 
     return remote
+
 
 @pytest.fixture(scope="function")
 def rest_client(admin_client, remote_settings):
