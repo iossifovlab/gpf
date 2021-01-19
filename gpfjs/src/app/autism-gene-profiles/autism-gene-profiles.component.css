@@ -1,8 +1,17 @@
-
-  table, tr, td, th {
-    border: 1px solid black;
+td {
+  text-align: center;
 }
 
-.table-header {
+.table-main-header {
     text-align: center;
+}
+
+.table-subheader {
+  text-align: center;
+}
+
+.vertical-text {
+  writing-mode: vertical-rl;
+  transform-origin: center center;
+  transform: rotate(180deg);
 }

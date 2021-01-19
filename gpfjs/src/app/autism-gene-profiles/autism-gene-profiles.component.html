@@ -1,47 +1,36 @@
 <div style="padding: 25px;">
 
-  <table style="float: left; width: 100px" class="table table-bordered table-hover table-sm table-centered table-header-rotate">
-    <thead>
-      <th class="table-header" >Gene</th>
-    </thead>
-    <tr style="height: 150px; vertical-align: middle;">
-      search gene
+<table class="table table-bordered table-hover table-sm table-centered table-header-rotate">
+  <thead>
+    <tr>
+      <th class="table-main-header">Gene</th>
+      <th class="table-main-header" colspan="4">Gene lists</th>
+      <th class="table-main-header" colspan="4">Autism scores</th>
+      <th class="table-main-header" colspan="4">Protection scores</th>
+      <th class="table-main-header" colspan="6">SSC</th>
+      <th class="table-main-header" colspan="6">SPARK</th>
     </tr>
-  </table>
 
-  <div style="resize: horizontal; overflow: hidden; float: left; width: 265px; max-width: 265px; padding: none">
-    <table style="float: left;" class="table table-bordered table-hover table-sm table-centered table-header-rotate">
-      <thead>
-        <tr>
-          <th class="table-header" colspan="100" >Gene lists</th>
-        </tr>
-        <tr style="height: 150px;">
-          <td *ngFor="let geneList of geneLists" style="vertical-align: middle; transform-origin: center center; transform: rotate(-90deg); padding: 0px 15px 0px 15px">{{ geneList }}</td>
-        </tr>
-      </thead>
-    </table>
-  </div>
+    <tr style="height: 110px;">
+      <th class="table-subheader" rowspan="2">Gene search</th>
+      <th class="table-subheader" rowspan="2" *ngFor="let geneList of geneLists"><span class="vertical-text">{{geneList}}</span></th>
+      <th class="table-subheader" rowspan="2" *ngFor="let autismScore of autismScores"><span class="vertical-text">{{autismScore}}</span></th>
+      <th class="table-subheader" rowspan="2" *ngFor="let protectionScore of protectionScores"><span class="vertical-text">{{protectionScore}}</span></th>
+      <th class="table-subheader" colspan="3" *ngFor="let affectedStatus of affectedStatuses">{{affectedStatus}}</th>
+      <th class="table-subheader" colspan="3" *ngFor="let affectedStatus of affectedStatuses">{{affectedStatus}}</th>
+    </tr>
+  <tr>
+    <td *ngFor="let effectType of effectTypes">{{effectType}}</td>
+    <td *ngFor="let effectType of effectTypes">{{effectType}}</td>
+    <td *ngFor="let effectType of effectTypes">{{effectType}}</td>
+    <td *ngFor="let effectType of effectTypes">{{effectType}}</td>
+  </tr>
+  </thead>
 
-  <table style="float: left; width: 200px;" class="table table-bordered table-hover table-sm table-centered table-header-rotate">
-    <thead>
-      <tr>
-        <th class="table-header" colspan="100" >Autism score</th>
-      </tr>
-      <tr style="height: 150px">
-        <td *ngFor="let autismScore of autismScores" style="vertical-align: middle; transform-origin: center center; transform: rotate(-90deg); padding: 0px 15px 0px 15px">{{ autismScore }}</td>
-      </tr>
-    </thead>
-  </table>
+  <tbody>
 
-  <table style="float: left; width: 200px" class="table table-bordered table-hover table-sm table-centered table-header-rotate">
-    <thead>
-      <tr>
-        <th class="table-header" colspan="100" >Protection score</th>
-      </tr>
-      <tr style="height: 150px">
-        <td *ngFor="let protectionScore of protectionScores" style="vertical-align: middle; transform-origin: center center; transform: rotate(-90deg); padding: 0px 15px 0px 15px">{{ protectionScore }}</td>
-      </tr>
-    </thead>
-  </table>
+  </tbody>
+
+</table>
 
 </div>
