@@ -1,36 +1,42 @@
 <div style="padding: 25px;">
 
-<table class="table table-bordered table-hover table-sm table-centered table-header-rotate">
-  <thead>
+  <table class="table table-bordered table-hover table-sm table-centered table-header-rotate">
+    <thead>
+      <tr>
+        <th class="table-main-header">Gene</th>
+        <th class="table-main-header" colspan="4">Gene lists</th>
+        <th class="table-main-header" colspan="4">Autism scores</th>
+        <th class="table-main-header" colspan="4">Protection scores</th>
+        <th class="table-main-header" colspan="6">SSC</th>
+        <th class="table-main-header" colspan="6">SPARK</th>
+      </tr>
+
+      <tr style="height: 110px;">
+        <th class="table-subheader" rowspan="2">Gene search</th>
+        <th class="table-subheader" rowspan="2" *ngFor="let geneList of geneLists"><span class="vertical-text">{{geneList}}</span></th>
+        <th class="table-subheader" rowspan="2" *ngFor="let autismScore of autismScores"><span class="vertical-text">{{autismScore}}</span></th>
+        <th class="table-subheader" rowspan="2" *ngFor="let protectionScore of protectionScores"><span class="vertical-text">{{protectionScore}}</span></th>
+        <th class="table-subheader" colspan="3" *ngFor="let affectedStatus of affectedStatuses">{{affectedStatus}}</th>
+        <th class="table-subheader" colspan="3" *ngFor="let affectedStatus of affectedStatuses">{{affectedStatus}}</th>
+      </tr>
     <tr>
-      <th class="table-main-header">Gene</th>
-      <th class="table-main-header" colspan="4">Gene lists</th>
-      <th class="table-main-header" colspan="4">Autism scores</th>
-      <th class="table-main-header" colspan="4">Protection scores</th>
-      <th class="table-main-header" colspan="6">SSC</th>
-      <th class="table-main-header" colspan="6">SPARK</th>
+      <td *ngFor="let effectType of effectTypes">{{effectType}}</td>
+      <td *ngFor="let effectType of effectTypes">{{effectType}}</td>
+      <td *ngFor="let effectType of effectTypes">{{effectType}}</td>
+      <td *ngFor="let effectType of effectTypes">{{effectType}}</td>
     </tr>
+    </thead>
 
-    <tr style="height: 110px;">
-      <th class="table-subheader" rowspan="2">Gene search</th>
-      <th class="table-subheader" rowspan="2" *ngFor="let geneList of geneLists"><span class="vertical-text">{{geneList}}</span></th>
-      <th class="table-subheader" rowspan="2" *ngFor="let autismScore of autismScores"><span class="vertical-text">{{autismScore}}</span></th>
-      <th class="table-subheader" rowspan="2" *ngFor="let protectionScore of protectionScores"><span class="vertical-text">{{protectionScore}}</span></th>
-      <th class="table-subheader" colspan="3" *ngFor="let affectedStatus of affectedStatuses">{{affectedStatus}}</th>
-      <th class="table-subheader" colspan="3" *ngFor="let affectedStatus of affectedStatuses">{{affectedStatus}}</th>
-    </tr>
-  <tr>
-    <td *ngFor="let effectType of effectTypes">{{effectType}}</td>
-    <td *ngFor="let effectType of effectTypes">{{effectType}}</td>
-    <td *ngFor="let effectType of effectTypes">{{effectType}}</td>
-    <td *ngFor="let effectType of effectTypes">{{effectType}}</td>
-  </tr>
-  </thead>
+    <tbody>
+      <tr *ngFor="let geneRow of geneRows">
+        <td>{{geneRow.name}}</td>
+        <td *ngFor="let geneList of geneLists"> {{geneRow.geneLists.get(geneList)}}</td>
+        <td *ngFor="let autismScore of autismScores"> {{geneRow.autismScores.get(autismScore)}}</td>
+        <td *ngFor="let protectionScore of protectionScores"> {{geneRow.protectionScores.get(protectionScore)}}</td>
+        <td *ngFor="let data of geneRow.datasets">{{data}}</td>
+      </tr>
+    </tbody>
 
-  <tbody>
-
-  </tbody>
-
-</table>
+  </table>
 
 </div>
