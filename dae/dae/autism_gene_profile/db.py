@@ -9,6 +9,8 @@ class AutismGeneProfileDB:
         self.dbfile = dbfile
         self.metadata = MetaData()
         self.engine = create_engine("sqlite:///{}".format(dbfile))
+        self.configuration = None
+        self.build_gene_profile_db()
 
     def _get_autism_scores(self, gene_symbol_id):
         s = select([
@@ -329,5 +331,11 @@ class AutismGeneProfileDB:
             s = select([self.gene_sets.c.set_name])
             with self.engine.connect() as connection:
                 sets = connection.execute(s).fetchall()
-            self.configuration["gene_lists"] = sets
+            self.configuration["gene_lists"] = [row[0] for row in sets]
+            for dataset in self.configuration["datasets"]:
+                dataset_dict = self.configuration["datasets"][dataset]
+                person_sets = dataset_dict["person_sets"]
+                dataset_dict["person_sets"] = [
+                    ps["set_name"] for ps in person_sets
+                ]
         return self.configuration
