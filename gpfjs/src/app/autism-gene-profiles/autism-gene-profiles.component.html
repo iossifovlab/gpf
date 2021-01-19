@@ -4,7 +4,7 @@
     <thead>
       <tr>
         <th class="table-main-header">Gene</th>
-        <th class="table-main-header" colspan="4">Gene lists</th>
+        <th class="table-main-header" [attr.colspan]="geneLists.length">Gene lists</th>
         <th class="table-main-header" colspan="4">Autism scores</th>
         <th class="table-main-header" colspan="4">Protection scores</th>
         <th class="table-main-header" colspan="6">SSC</th>
@@ -39,4 +39,6 @@
 
   </table>
 
+  <button (click)="testButton1()">button</button>
+  <button (click)="testButton2()">button</button>
 </div>

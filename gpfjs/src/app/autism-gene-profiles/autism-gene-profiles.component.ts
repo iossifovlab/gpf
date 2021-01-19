@@ -12,16 +12,18 @@ export class AutismGeneProfilesComponent implements OnInit {
   protectionScores: string[];
   affectedStatuses: string[];
   effectTypes: string[];
-
   geneRows: {};
 
-  ngOnInit(): void {
+  constructor() {
     this.tableHeaders = ["Gene", "Gene lists", "Autism score", "Protection score", "SSC", "SPARK"];
     this.geneLists = ["gene list 1", "gene list 2", "gene list 3", "gene list 4"];
     this.autismScores = ["autism score 1", "autism score 2", "autism score 3", "autism score 4"];
     this.protectionScores = ["protection score 1", "protection score 2", "protection score 3", "protection score 4"];
     this.affectedStatuses = ["affected", "unaffected"];
     this.effectTypes = ["LGD", "MS", "SYN"];
+  }
+
+  ngOnInit(): void {
     this.geneRows = [
       {
         name: "GENE1",
@@ -53,5 +55,12 @@ export class AutismGeneProfilesComponent implements OnInit {
         // datasets: [{name: "SSC", affected: new Map([["LGD", 1],["MS", 2], ["SYN", 3]]), unaffected: new Map([["LGD", 4],["MS", 5], ["SYN", 6]])}],
       }
     ];
+  }
+
+  testButton1() {
+    this.geneLists = ["gene list 1", "gene list 2"];
+  }
+  testButton2() {
+    this.geneLists = ["gene list 1", "gene list 2", "gene list 3", "gene list 4"];
   }
 }
