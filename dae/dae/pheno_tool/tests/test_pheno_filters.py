@@ -1,10 +1,9 @@
 import pytest
-from dae.pheno_tool.pheno_common import (
-    PhenoFilter,
-    PhenoFilterSet,
-    PhenoFilterRange,
-    PhenoFilterBuilder,
-)
+from dae.pheno_tool.pheno_common import \
+    PhenoFilter, \
+    PhenoFilterSet, \
+    PhenoFilterRange, \
+    PhenoFilterBuilder
 
 
 def test_pheno_filter_nonexistent_measure(fake_phenotype_data):
