@@ -44,7 +44,9 @@ class WGPFInstance(GPFInstance):
                         remote["password"],
                         base_url=remote["base_url"],
                         port=remote.get("port", None),
-                        protocol=remote.get("protocol", None))
+                        protocol=remote.get("protocol", None),
+                        gpf_prefix=remote.get("gpf_prefix", None)
+                    )
                     self._fetch_remote_studies(client)
                 except ConnectionError as err:
                     logger.error(err)
@@ -204,10 +206,12 @@ class WGPFInstance(GPFInstance):
             instrument,
             search_term
         )
+        base = client.build_host_url()
         for line in response.iter_lines():
             if line:
                 measures = json.loads(line)
                 for m in measures:
+                    m["measure"]["base_url"] = base
                     yield m
 
     def get_study_enrichment_config(self, dataset_id):

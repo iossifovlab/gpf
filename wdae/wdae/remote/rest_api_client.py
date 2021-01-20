@@ -13,7 +13,7 @@ class RESTClient:
             self, remote_id, host,
             username, password,
             base_url=None, port=None,
-            protocol=None):
+            protocol=None, gpf_prefix=None):
         self.host = host
         self.remote_id = remote_id
         self.username = username
@@ -37,6 +37,11 @@ class RESTClient:
         else:
             self.protocol = "http"
 
+        if gpf_prefix:
+            self.gpf_prefix = gpf_prefix
+        else:
+            self.gpf_prefix = None
+
         self.session = self._login()
 
     def _login(self):
@@ -54,6 +59,16 @@ class RESTClient:
             )
         return session
 
+    def build_host_url(self):
+        if self.port:
+            return f"{self.protocol}://{self.host}:{self.port}"
+        else:
+            return f"{self.protocol}://{self.host}"
+
+    def build_api_base_url(self):
+        host_url = self.build_host_url()
+        return f"{host_url}/{self.gpf_prefix}{self.base_url}"
+
     def _build_url(self, url, query_values=None):
         query_url = url
         if query_values:
@@ -64,16 +79,8 @@ class RESTClient:
                 query_url += "?" if first else "&"
                 query_url += f"{k}={v}"
                 first = False
-        if self.port:
-            result = (
-                f"{self.protocol}://"
-                f"{self.host}:{self.port}{self.base_url}{query_url}"
-            )
-        else:
-            result = (
-                f"{self.protocol}://"
-                f"{self.host}{self.base_url}{query_url}"
-            )
+        base = self.build_api_base_url()
+        result = f"{base}{query_url}"
         return result
 
     def _get(self, url, query_values=None, stream=False):
