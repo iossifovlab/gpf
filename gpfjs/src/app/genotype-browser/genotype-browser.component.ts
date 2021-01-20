@@ -80,8 +80,6 @@ export class GenotypeBrowserComponent extends QueryStateCollector
   submitQuery() {
     this.getCurrentState()
       .subscribe(state => {
-
-        this.genotypePreviewInfo = null;
         this.loadingFinished = false;
         this.loadingService.setLoadingStart();
 
