@@ -41,7 +41,7 @@
     "lodash": "^4.17.15",
     "ng-multiselect-dropdown": "^0.3.0",
     "ngx-cookie-service": "^3.0.4",
-    "ngx-markdown": "^9.1.1",
+    "ngx-markdown": "^11.0.1",
     "oboe": "^2.1.5",
     "popper.js": "^1.16.1",
     "rxjs": "^6.5.5",
