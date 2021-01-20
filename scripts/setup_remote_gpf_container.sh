@@ -42,9 +42,9 @@ else
 fi
 
 
-tar -zxvf $WD/genotype-iossifov_2014-${GPF_SERIES}-latest.tar.gz -C $WD
-tar -zxvf $WD/genotype-comp-${GPF_SERIES}-latest.tar.gz -C $WD
-tar -zxvf $WD/phenotype-comp-data-${GPF_SERIES}-latest.tar.gz -C $WD
+tar -zxvf $WD/genotype-iossifov_2014-*latest.tar.gz -C $WD
+tar -zxvf $WD/genotype-comp-*latest.tar.gz -C $WD
+tar -zxvf $WD/phenotype-comp-data-*latest.tar.gz -C $WD
 
 sed -i 's/dae_data_dir =.*/dae_data_dir = "."/' $WD/gpf_remote/DAE.conf
 sed -i 's/wd =.*/wd = "."/' $WD/gpf_remote/DAE.conf
