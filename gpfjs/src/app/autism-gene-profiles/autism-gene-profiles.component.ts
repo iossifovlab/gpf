@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { AutismGeneProfilesService } from './autism-gene-profiles.service';
 
 @Component({
   selector: 'gpf-autism-gene-profiles',
@@ -14,7 +15,11 @@ export class AutismGeneProfilesComponent implements OnInit {
   effectTypes: string[];
   geneRows: {};
 
-  constructor() {
+  constructor(
+    private autismGeneProfilesService: AutismGeneProfilesService,
+  ) {
+    
+
     this.tableHeaders = ["Gene", "Gene lists", "Autism score", "Protection score", "SSC", "SPARK"];
     this.geneLists = ["gene list 1", "gene list 2", "gene list 3", "gene list 4"];
     this.autismScores = ["autism score 1", "autism score 2", "autism score 3", "autism score 4"];
@@ -59,6 +64,9 @@ export class AutismGeneProfilesComponent implements OnInit {
 
   testButton1() {
     this.geneLists = ["gene list 1", "gene list 2"];
+    this.autismGeneProfilesService.getGenes().subscribe(res => console.log(res))
+    this.autismGeneProfilesService.getConfig().subscribe(res => console.log(res))
+
   }
   testButton2() {
     this.geneLists = ["gene list 1", "gene list 2", "gene list 3", "gene list 4"];
