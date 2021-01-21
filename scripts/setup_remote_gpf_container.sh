@@ -8,7 +8,7 @@ if [[ -z $WD ]]; then
     export WD=$(dirname "${SCRIPT_DIR}")
 fi
 
-export GPF_SERIES=$(python -c "from dae.__version__ import SERIES; print(SERIES)")
+export GPF_SERIES=$(bump2version --dry-run --allow-dirty --list patch | grep current_version | sed -r s,"^.*=",, | sed -r s,"\.([devrc1-9]+)$",,g)
 
 echo "GPF_SERIES=${GPF_SERIES}"
 
