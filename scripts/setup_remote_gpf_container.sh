@@ -1,10 +1,17 @@
 #!/bin/bash
 
+# set -e
+
 if [[ -z $WD ]]; then
     SCRIPT_LOCATION=$(readlink -f "$0")
     SCRIPT_DIR=$(dirname "${SCRIPT_LOCATION}")
     export WD=$(dirname "${SCRIPT_DIR}")
 fi
+
+export GPF_SERIES=$(cat ${WD}/VERSION |  sed -r "s/\.([devrc1-9]+)$//g")
+
+echo "GPF_SERIES=${GPF_SERIES}"
+
 
 docker pull seqpipe/seqpipe-gpf-conda
 
@@ -19,25 +26,25 @@ fi
 if ls builds/genotype-iossifov_2014-*.tar.gz 1> /dev/null 2>&1; then
     cp builds/genotype-iossifov_2014-*.tar.gz $WD/genotype-iossifov_2014-latest.tar.gz
 else
-    wget -P $WD -c https://iossifovlab.com/distribution/public/studies/genotype-iossifov_2014-latest.tar.gz
+    wget -P $WD -c https://iossifovlab.com/distribution/public/studies/genotype-iossifov_2014-${GPF_SERIES}-latest.tar.gz
 fi
 
 if ls builds/genotype-comp*.tar.gz  1> /dev/null 2>&1; then
     cp builds/genotype-comp*.tar.gz $WD/genotype-comp-latest.tar.gz
 else
-    wget -P $WD -c https://iossifovlab.com/distribution/public/pheno/genotype-comp-latest.tar.gz
+    wget -P $WD -c https://iossifovlab.com/distribution/public/studies/genotype-comp-${GPF_SERIES}-latest.tar.gz
 fi
 
 if ls builds/phenotype-comp-data*.tar.gz  1> /dev/null 2>&1; then
     cp builds/phenotype-comp-data*.tar.gz $WD/phenotype-comp-data-latest.tar.gz
 else
-    wget -P $WD -c https://iossifovlab.com/distribution/public/pheno/phenotype-comp-data-latest.tar.gz
+    wget -P $WD -c https://iossifovlab.com/distribution/public/pheno/phenotype-comp-data-${GPF_SERIES}-latest.tar.gz
 fi
 
 
-tar -zxvf $WD/genotype-iossifov_2014-latest.tar.gz -C $WD
-tar -zxvf $WD/genotype-comp-latest.tar.gz -C $WD
-tar -zxvf $WD/phenotype-comp-data-latest.tar.gz -C $WD
+tar -zxvf $WD/genotype-iossifov_2014-*latest.tar.gz -C $WD
+tar -zxvf $WD/genotype-comp-*latest.tar.gz -C $WD
+tar -zxvf $WD/phenotype-comp-data-*latest.tar.gz -C $WD
 
 sed -i 's/dae_data_dir =.*/dae_data_dir = "."/' $WD/gpf_remote/DAE.conf
 sed -i 's/wd =.*/wd = "."/' $WD/gpf_remote/DAE.conf

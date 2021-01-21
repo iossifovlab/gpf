@@ -40,7 +40,7 @@ DAE/pyflakes.report
 test_data
 denovo-cache
 data-hg19-startup.tar.gz
-data-hg19-startup-latest.tar.gz
+data-hg19-startup-*latest.tar.gz
 data-hg19-startup
 __pycache__
 .mypy_cache
@@ -50,8 +50,10 @@ scripts/iossifov_2014/
 scripts/genotype-iossifov_2014-latest.tar.gz
 gpf_remote/
 iossifov_2014/
-genotype-iossifov_2014-latest.tar.gz
+genotype-iossifov_2014-*latest.tar.gz
 dae/Makefile
 dae/Snakefile
-phenotype-comp-data-latest.tar.gz
+genotype-comp-*latest.tar.gz
+phenotype-comp-data-*latest.tar.gz
 comp-data/
+comp
