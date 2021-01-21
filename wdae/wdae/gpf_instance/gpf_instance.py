@@ -201,18 +201,15 @@ class WGPFInstance(GPFInstance):
             return
 
         client = study_wrapper.rest_client
-        response = client.get_browser_measures(
+        measures = client.get_browser_measures(
             study_wrapper._remote_study_id,
             instrument,
             search_term
         )
         base = client.build_host_url()
-        for line in response.iter_lines():
-            if line:
-                measures = json.loads(line)
-                for m in measures:
-                    m["measure"]["base_url"] = base
-                    yield m
+        for m in measures:
+            m["measure"]["base_url"] = base
+            yield m
 
     def get_study_enrichment_config(self, dataset_id):
         result = \

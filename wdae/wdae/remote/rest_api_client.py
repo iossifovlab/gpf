@@ -1,4 +1,5 @@
 import requests
+import ijson
 
 
 class RESTClientRequestError(Exception):
@@ -102,6 +103,17 @@ class RESTClient:
     def _delete(self, url, data=None):
         pass
 
+    def _read_json_list_stream(self, response):
+        stream = response.iter_content(chunk_size=64)
+        objects = ijson.sendable_list()
+        coro = ijson.items_coro(objects, "item", use_float=True)
+        for chunk in stream:
+            coro.send(chunk)
+            if len(objects):
+                for o in objects:
+                    yield o
+                del objects[:]
+
     def get_remote_dataset_id(self, dataset_id):
         return f"{self.remote_id}_{dataset_id}"
 
@@ -163,7 +175,7 @@ class RESTClient:
             },
             stream=True
         )
-        return response
+        return self._read_json_list_stream(response)
 
     def get_instruments(self, dataset_id):
         response = self._get(
