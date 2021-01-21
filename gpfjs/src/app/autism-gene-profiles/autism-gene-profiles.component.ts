@@ -64,8 +64,9 @@ export class AutismGeneProfilesComponent implements OnInit {
 
   testButton1() {
     this.geneLists = ["gene list 1", "gene list 2"];
-    // this.autismGeneProfilesService.getGenes().subscribe(res => console.log(res))
-    this.autismGeneProfilesService.getConfig().subscribe(res => console.log(res))
+    //this.autismGeneProfilesService.getConfig().subscribe(res => console.log(res))
+    this.autismGeneProfilesService.getGenes1().subscribe(res => console.log(res))
+    this.autismGeneProfilesService.getGenes().subscribe(res => console.log(res))
   }
 
   testButton2() {

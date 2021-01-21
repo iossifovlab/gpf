@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { ConfigService } from 'app/config/config.service';
-import { AutismGeneToolConfig } from './autism-gene-profile';
+import { AutismGeneToolConfig, AutismGeneToolGene } from './autism-gene-profile';
 
 @Injectable({
   providedIn: 'root'
@@ -18,14 +18,23 @@ export class AutismGeneProfilesService {
   getConfig() {
     return this.http
     .get(this.config.baseUrl + this.configUrl)
-    .map(res => { return AutismGeneToolConfig.fromJson(res); })
+    .map(res => AutismGeneToolConfig.fromJson(res))
   }
 
   getGenes() {
     return this.http
     .get(this.config.baseUrl + this.genesUrl)
     .map(res => {
-      return res;
+      console.log(res)
+      const geneArray: AutismGeneToolGene[] = [];
+      (res as Array<Object>).map(gene => AutismGeneToolGene.fromJson(gene))
+      return geneArray;
     })
+  }
+
+  getGenes1() {
+    return this.http
+    .get(this.config.baseUrl + this.genesUrl)
+    .map(res => res)
   }
 }
