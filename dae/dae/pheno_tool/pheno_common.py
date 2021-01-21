@@ -66,11 +66,13 @@ class PhenoFilterBuilder(object):
     def __init__(self, phenotype_data):
         self.phenotype_data = phenotype_data
 
-    def make_filter(self, measure_id, constraints):
+    def make_filter(self, measure_id, constraints, pheno_filter_type=None):
         measure = self.phenotype_data.get_measure(measure_id)
+
         assert measure is not None
         if measure.measure_type == MeasureType.categorical:
-            return PhenoFilterSet(self.phenotype_data, measure_id, constraints)
+            return PhenoFilterSet(
+                self.phenotype_data, measure_id, constraints)
         else:
             return PhenoFilterRange(
                 self.phenotype_data, measure_id, constraints

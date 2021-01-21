@@ -1,9 +1,9 @@
 **/*.pyc
 containers/
 coverage/
-data-hg19-startup/
+data-hg19-startup
 data-hg19-startup-latest.tar.gz
-gpf_remote/
+gpf_remote
 *.tar.gz
 comp/
 comp-data/

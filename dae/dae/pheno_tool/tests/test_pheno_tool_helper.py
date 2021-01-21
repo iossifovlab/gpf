@@ -28,7 +28,7 @@ def mocked_query_variants(**kwargs):
 
 
 def mocked_pheno_filter_transform(pheno_filters):
-    return None
+    return None, None
 
 
 mocked_study = Box(
@@ -63,7 +63,8 @@ mocked_study = Box(
             },
         },
         "query_variants": mocked_query_variants,
-        "_transform_pheno_filters_to_family_ids": mocked_pheno_filter_transform,
+        "_transform_pheno_filters_to_family_ids":
+        mocked_pheno_filter_transform,
     }
 )
 
@@ -110,9 +111,8 @@ def test_pheno_filter_persons(mocker):
     mocker.spy(mocked_study, "_transform_pheno_filters_to_family_ids")
     helper = PhenoToolHelper(mocked_study)
     helper.pheno_filter_persons([1])
-    mocked_study._transform_pheno_filters_to_family_ids.assert_called_once_with(
-        [1]
-    )
+    mocked_study._transform_pheno_filters_to_family_ids \
+        .assert_called_once_with([1])
 
 
 def test_pheno_filter_persons_none_or_empty():
