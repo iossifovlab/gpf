@@ -67,7 +67,10 @@ class RESTClient:
 
     def build_api_base_url(self):
         host_url = self.build_host_url()
-        return f"{host_url}/{self.gpf_prefix}{self.base_url}"
+        if self.gpf_prefix:
+            return f"{host_url}/{self.gpf_prefix}{self.base_url}"
+        else:
+            return f"{host_url}{self.base_url}"
 
     def _build_url(self, url, query_values=None):
         query_url = url
