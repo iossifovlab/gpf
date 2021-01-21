@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+# set -e
 
 if [[ -z $WD ]]; then
     SCRIPT_LOCATION=$(readlink -f "$0")
