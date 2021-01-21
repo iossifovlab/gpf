@@ -283,7 +283,7 @@ class GPFInstance(object):
             }
 
     def has_measure(self, study_wrapper, measure_id):
-        return measure_id in study_wrapper.phenotype_data.measures
+        return study_wrapper.phenotype_data.has_measure(measure_id)
 
     def get_measure_description(self, study_wrapper, measure_id):
         measure = study_wrapper.phenotype_data.measures[measure_id]
