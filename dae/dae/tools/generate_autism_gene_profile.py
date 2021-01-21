@@ -94,7 +94,6 @@ def main(gpf_instance=None, argv=None):
 
     agpdb = AutismGeneProfileDB(args.dbfile)
 
-    agpdb.build_gene_profile_db()
     agpdb.clear_all_tables()
     agpdb.populate_data_tables(gpf_instance)
     for agp in output:
