@@ -221,6 +221,20 @@ class RESTClient:
 
         return response.json()
 
+    def get_measure_description(self, dataset_id, measure_id):
+        response = self._get(
+            "pheno_browser/measure_description",
+            query_values={
+                "dataset_id": dataset_id,
+                "measure_id": measure_id,
+            }
+        )
+
+        if response.status_code != 200:
+            return None
+
+        return response.json()
+
     def get_measures(self, dataset_id, instrument_name, measure_type):
         response = self._get(
             "pheno_tool/measures",
