@@ -18,23 +18,14 @@ export class AutismGeneProfilesService {
   getConfig() {
     return this.http
     .get(this.config.baseUrl + this.configUrl)
-    .map(res => AutismGeneToolConfig.fromJson(res))
+    .map(res => AutismGeneToolConfig.fromJson(res));
   }
 
   getGenes() {
     return this.http
     .get(this.config.baseUrl + this.genesUrl)
     .map(res => {
-      console.log(res)
-      const geneArray: AutismGeneToolGene[] = [];
-      (res as Array<Object>).map(gene => AutismGeneToolGene.fromJson(gene))
-      return geneArray;
-    })
-  }
-
-  getGenes1() {
-    return this.http
-    .get(this.config.baseUrl + this.genesUrl)
-    .map(res => res)
+      return (res as Array<Object>).map(gene => AutismGeneToolGene.fromJson(gene));
+    });
   }
 }

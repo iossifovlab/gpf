@@ -19,12 +19,7 @@ export class AutismGeneToolConfig {
 
   static datasetsFromJson(datasetsJson: any): Array<AutismGeneToolDataset> {
     const datasetKeys = Object.keys(datasetsJson);
-    return datasetKeys
-      .map(dataset => {
-        return AutismGeneToolDataset.fromJson(
-          dataset, datasetsJson[dataset]['effects'], datasetsJson[dataset]['person_sets']
-        )
-      });
+    return datasetKeys.map(dataset => new AutismGeneToolDataset(dataset, datasetsJson[dataset]['effects'], datasetsJson[dataset]['person_sets']));
   }
 }
 
@@ -34,23 +29,18 @@ export class AutismGeneToolDataset {
     private effects: string[],
     private personSets: string[],
   ) { }
-
-  static fromJson(name: string, effects: string[], personSets: string[]) {
-    return new AutismGeneToolDataset(name, effects, personSets);
-  }
 }
 
 export class AutismGeneToolGene {
   constructor (
     private geneSymbol: string,
     private geneSets: string[],
-    private autismScores: Map<String, Number>,
-    private protectionScores: Map<String, Number>,
-    private studies: GeneStudy[]
+    private autismScores: Map<String, String>,
+    private protectionScores: Map<String, String>,
+    private studies: AutismGeneToolGeneStudy[]
   ) { }
 
   static fromJson(json: any) {
-    console.log(new Map(Object.entries(json['autism_scores'])))
     return new AutismGeneToolGene(
       json['gene_symbol'],
       json['gene_sets'],
@@ -60,39 +50,28 @@ export class AutismGeneToolGene {
     );
   }
 
-  geneStudiesFromJson(geneStudiesJson: any): Array<GeneStudy> {
-    const datasetKeys = Object.keys(datasetsJson);
-    return datasetKeys
-      .map(dataset => {
-        return AutismGeneToolDataset.fromJson(
-          dataset, datasetsJson[dataset]['effects'], datasetsJson[dataset]['person_sets']
-        )
-      });
+  static geneStudiesFromJson(geneStudiesJson: any): Array<AutismGeneToolGeneStudy> {
+    const geneStudyKeys = Object.keys(geneStudiesJson);
+    return geneStudyKeys.map(geneStudy => new AutismGeneToolGeneStudy(geneStudy, this.personSetsFromJson(geneStudiesJson[geneStudy])));
   }
 
-
+  static personSetsFromJson(personSetsJson: any): Array<AutismGeneToolPersonSet> {
+    const personSetsKeys = Object.keys(personSetsJson);
+    return personSetsKeys.map(personSet => new AutismGeneToolPersonSet(personSet, new Map(Object.entries(personSetsJson[personSet]))));
+  }
 }
 
-export class GeneStudy {
+export class AutismGeneToolGeneStudy {
   constructor (
     private name: string,
-    private personSets: PersonSet[],
+    private personSets: AutismGeneToolPersonSet[],
 
   ) { }
-
-  fromJson(json: any) {
-    return new PersonSet(name, );
-  }
-
 }
 
-export class PersonSet {
+export class AutismGeneToolPersonSet {
   constructor (
     private name: string,
-    private effectTypes: Map<String, Number>,
+    private effectTypes: Map<String, String>,
   ) { }
-
-  fromJson(json: any) {
-    return new PersonSet(name, );
-  }
 }
