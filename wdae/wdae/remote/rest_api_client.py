@@ -250,6 +250,19 @@ class RESTClient:
 
         return response.json()
 
+    def get_regressions(self, dataset_id):
+        response = self._get(
+            "measures/regressions",
+            query_values={
+                "datasetId": dataset_id
+            }
+        )
+
+        if response.status_code != 200:
+            return None
+
+        return response.json()
+
     def post_measure_values(
             self, dataset_id, measure_id, person_ids,
             family_ids, roles, default_filter):

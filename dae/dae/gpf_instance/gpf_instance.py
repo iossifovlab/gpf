@@ -299,6 +299,23 @@ class GPFInstance(object):
             out["max_value"] = measure.max_value
         return out
 
+    def get_regressions(self, study_wrapper):
+        dataset_config = self.get_genotype_data_config(
+            study_wrapper.id)
+
+        pheno_config = self.get_phenotype_db_config()
+        browser_dbfile = \
+            pheno_config[dataset_config.phenotype_data].browser_dbfile
+
+        db = DbManager(
+            browser_dbfile)
+        db.build()
+
+        if db is None:
+            return None
+
+        return db.regression_display_names_with_ids
+
     # Genomic scores
 
     def get_genomic_scores(self):

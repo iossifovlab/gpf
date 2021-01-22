@@ -189,6 +189,14 @@ class WGPFInstance(GPFInstance):
         return study_wrapper.rest_client.get_instruments(
             study_wrapper._remote_study_id)
 
+    def get_regressions(self, study_wrapper):
+        logger.warning("WARNING: Using is_remote")
+        if not study_wrapper.is_remote:
+            return super(WGPFInstance, self).get_regressions(study_wrapper)
+
+        return study_wrapper.rest_client.get_regressions(
+            study_wrapper._remote_study_id)
+
     def get_measures_info(self, study_wrapper):
         logger.warning("WARNING: Using is_remote")
         if not study_wrapper.is_remote:
