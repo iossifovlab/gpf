@@ -4,7 +4,6 @@ from sqlalchemy import inspect
 
 def test_agpdb_tables_building(temp_dbfile, agp_gpf_instance):
     agpdb = AutismGeneProfileDB(temp_dbfile)
-    agpdb.build_gene_profile_db()
     inspector = inspect(agpdb.engine)
 
     table_columns = dict()
@@ -55,7 +54,6 @@ def test_agpdb_tables_building(temp_dbfile, agp_gpf_instance):
 
 def test_agpdb_get_studies(temp_dbfile, agp_gpf_instance):
     agpdb = AutismGeneProfileDB(temp_dbfile)
-    agpdb.build_gene_profile_db()
     agpdb.populate_data_tables(agp_gpf_instance)
     study_ids = agpdb._get_study_ids().keys()
     assert len(study_ids) == 40
@@ -63,7 +61,6 @@ def test_agpdb_get_studies(temp_dbfile, agp_gpf_instance):
 
 def test_agpdb_get_gene_sets(temp_dbfile, agp_gpf_instance):
     agpdb = AutismGeneProfileDB(temp_dbfile)
-    agpdb.build_gene_profile_db()
     agpdb.populate_data_tables(agp_gpf_instance)
     gene_sets = set([gs[1] for gs in agpdb._get_gene_sets()])
     expected = {
@@ -88,7 +85,6 @@ def test_agpdb_get_gene_sets(temp_dbfile, agp_gpf_instance):
 
 def test_agpdb_insert_and_get_agp(temp_dbfile, agp_gpf_instance, sample_agp):
     agpdb = AutismGeneProfileDB(temp_dbfile)
-    agpdb.build_gene_profile_db()
     agpdb.populate_data_tables(agp_gpf_instance)
     agpdb.insert_agp(sample_agp)
     agp = agpdb.get_agp("CHD8")

@@ -940,7 +940,7 @@ def temp_dbfile(request):
     return dbfile
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def agp_gpf_instance(fixtures_gpf_instance, mocker, sample_agp):
     agp_config = Box({
         'gene_symbols': ['PLEKHN1', 'SAMD11'],
