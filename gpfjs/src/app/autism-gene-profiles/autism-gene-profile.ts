@@ -1,10 +1,10 @@
 export class AutismGeneToolConfig {
   constructor(
-    private autism_scores: string[],
+    private autismScores: string[],
     private datasets: AutismGeneToolDataset[],
     private geneLists: string[],
     private geneSymbols: string[],
-    private protectionScore: string[],
+    private protectionScores: string[],
   ) { }
 
   static fromJson(json: any) {
