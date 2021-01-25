@@ -32,7 +32,9 @@
     <tbody *ngIf="genes$ | async as genes">
       <tr *ngFor="let gene of genes">
         <td>{{gene.geneSymbol}}</td>
-        <td *ngFor="let geneList of config.geneLists"> {{gene.geneSets.indexOf(geneList) !== -1}}</td>
+          <td *ngFor="let geneList of config.geneLists">
+            <span *ngIf="gene.geneSets.indexOf(geneList) !== -1">&#10003;</span>
+          </td>
         <td *ngFor="let autismScore of config.autismScores"> {{gene.autismScores.get(autismScore)}}</td>
         <td *ngFor="let protectionScore of config.protectionScores"> {{gene.protectionScores.get(protectionScore)}}</td>
 
