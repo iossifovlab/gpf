@@ -90,6 +90,21 @@ pheno_filters_schema = {
     "measure": {"type": "string"},
 }
 
+family_filters_schema = {
+    "name": {"type": "string"},
+    "measure_type": {"type": "string"},
+    "filter_type": {"type": "string"},
+    "role": {"type": "string"},
+    "measure": {"type": "string"},
+}
+
+person_filters_schema = {
+    "name": {"type": "string"},
+    "measure_type": {"type": "string"},
+    "filter_type": {"type": "string"},
+    "measure": {"type": "string"},
+}
+
 family_schema = {
     "path": {
         "type": "string",

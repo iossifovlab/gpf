@@ -66,9 +66,20 @@ class PhenoFilterBuilder(object):
     def __init__(self, phenotype_data):
         self.phenotype_data = phenotype_data
 
-    def make_filter(self, measure_id, constraints, pheno_filter_type=None):
-        measure = self.phenotype_data.get_measure(measure_id)
+    @staticmethod
+    def _get_pheno_filter_constraints(pheno_filter):
+        measure_type = MeasureType.from_str(pheno_filter["measureType"])
+        selection = pheno_filter["selection"]
+        if measure_type in (MeasureType.continuous, MeasureType.ordinal):
+            return tuple([selection["min"], selection["max"]])
+        return set(selection["selection"])
 
+    def make_filter(self, pheno_filter: dict):
+        measure_id = pheno_filter["measure"]
+        measure = self.phenotype_data.get_measure(measure_id)
+        constraints = PhenoFilterBuilder._get_pheno_filter_constraints(
+            pheno_filter
+        )
         assert measure is not None
         if measure.measure_type == MeasureType.categorical:
             return PhenoFilterSet(
