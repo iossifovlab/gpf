@@ -16,12 +16,16 @@
         <th class="table-subheader" rowspan="2" *ngFor="let autismScore of config.autismScores"><span class="vertical-text">{{autismScore}}</span></th>
         <th class="table-subheader" rowspan="2" *ngFor="let protectionScore of config.protectionScores"><span class="vertical-text">{{protectionScore}}</span></th>
 
-        <th class="table-subheader" colspan="3" *ngFor="let personSet of config.datasets[0].personSets">{{personSet}}</th>
-        <th class="table-subheader" colspan="3" *ngFor="let affectedStatus of affectedStatuses">{{affectedStatus}}</th>
+        <ng-container *ngFor="let dataset of config.datasets">
+          <th class="table-subheader" colspan="3" *ngFor="let personSet of dataset.personSets">{{personSet}}</th>
+        </ng-container>
       </tr>
       <tr>
-        <td *ngFor="let effectType of config.datasets[0].effects">{{effectType}}</td>
-        <td *ngFor="let effectType of config.datasets[0].effects">{{effectType}}</td>
+        <ng-container *ngFor="let dataset of config.datasets">
+          <ng-container *ngFor="let personSet of dataset.personSets">
+            <td *ngFor="let effectType of dataset.effects">{{effectType}}</td>
+          </ng-container>
+        </ng-container>
       </tr>
     </thead>
 

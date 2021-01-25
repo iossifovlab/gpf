@@ -20,7 +20,10 @@ export class AutismGeneProfilesService {
   getConfig(): Observable<AutismGeneToolConfig> {
     return this.http
     .get(this.config.baseUrl + this.configUrl)
-    .map(res => AutismGeneToolConfig.fromJson(res));
+    .map(res => {
+      res['datasets']['KEK'] = res['datasets']['SVIP'];
+      return AutismGeneToolConfig.fromJson(res);
+    });
   }
 
   getGenes(): Observable<AutismGeneToolGene[]> {
