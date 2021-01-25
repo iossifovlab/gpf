@@ -21,7 +21,7 @@ export class AutismGeneProfilesService {
     return this.http
     .get(this.config.baseUrl + this.configUrl)
     .map(res => {
-      res['datasets']['KEK'] = res['datasets']['SVIP'];
+      // res['datasets']['KEK'] = res['datasets']['SVIP'];
       return AutismGeneToolConfig.fromJson(res);
     });
   }

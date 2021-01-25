@@ -10,7 +10,7 @@ import { AutismGeneProfilesService } from './autism-gene-profiles.service';
 })
 export class AutismGeneProfilesComponent implements OnInit {
   private config$: Observable<AutismGeneToolConfig>;
-  private genes: AutismGeneToolGene[];
+  private genes$: Observable<AutismGeneToolGene[]>;
 
   constructor(
     private autismGeneProfilesService: AutismGeneProfilesService,
@@ -18,10 +18,10 @@ export class AutismGeneProfilesComponent implements OnInit {
 
   ngOnInit(): void {
     this.config$ = this.autismGeneProfilesService.getConfig();
-    this.autismGeneProfilesService.getGenes().subscribe(genes => this.genes = genes);
+    this.genes$ = this.autismGeneProfilesService.getGenes();
 
     this.config$.subscribe(res => {console.log(res); });
-    this.autismGeneProfilesService.getGenes().subscribe(genes => {console.log(genes); });
+    this.genes$.subscribe(res => {console.log(res); });
   }
 
   // getDatasetsNamesArray() {
@@ -37,7 +37,6 @@ export class AutismGeneProfilesComponent implements OnInit {
   // }
 
   calculateDatasetColspan(datasetConfig) {
-    console.log(datasetConfig.effects.length * datasetConfig.personSets.length)
     return datasetConfig.effects.length * datasetConfig.personSets.length;
   }
 

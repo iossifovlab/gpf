@@ -1,7 +1,7 @@
 <div style="padding: 25px;">
 
-  <table class="table table-bordered table-hover table-sm table-centered table-header-rotate">
-    <thead *ngIf="config$ | async as config">
+  <table *ngIf="config$ | async as config" class="table table-bordered table-hover table-sm table-centered table-header-rotate">
+    <thead>
       <tr>
         <th class="table-main-header">Gene</th>
         <th class="table-main-header" [attr.colspan]="config.geneLists?.length">Gene lists</th>
@@ -29,14 +29,19 @@
       </tr>
     </thead>
 
-    <tbody>
-      <!-- <tr *ngFor="let geneRow of geneRows">
-        <td>{{geneRow.name}}</td>
-        <td *ngFor="let geneList of geneLists"> {{geneRow.geneLists.get(geneList)}}</td>
-        <td *ngFor="let autismScore of autismScores"> {{geneRow.autismScores.get(autismScore)}}</td>
-        <td *ngFor="let protectionScore of protectionScores"> {{geneRow.protectionScores.get(protectionScore)}}</td>
-        <td *ngFor="let data of geneRow.datasets">{{data}}</td>
-      </tr> -->
+    <tbody *ngIf="genes$ | async as genes">
+      <tr *ngFor="let gene of genes">
+        <td>{{gene.geneSymbol}}</td>
+        <td *ngFor="let geneList of config.geneLists"> {{gene.geneSets.indexOf(geneList) !== -1}}</td>
+        <td *ngFor="let autismScore of config.autismScores"> {{gene.autismScores.get(autismScore)}}</td>
+        <td *ngFor="let protectionScore of config.protectionScores"> {{gene.protectionScores.get(protectionScore)}}</td>
+
+        <ng-container *ngFor="let study of gene.studies">
+          <ng-container *ngFor="let personSet of study.personSets">
+            <td *ngFor="let effectType of personSet.effectTypes | keyvalue">{{effectType.value}}</td>
+          </ng-container>
+        </ng-container>
+      </tr>
     </tbody>
 
   </table>
