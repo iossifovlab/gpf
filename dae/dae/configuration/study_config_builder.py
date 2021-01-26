@@ -371,10 +371,6 @@ has_graphical_preview = {{ genotype_browser.has_graphical_preview }}
 family_filters = {{ genotype_browser.family_filters }}
 {%- endif %}
 
-{%- if genotype_browser.selected_in_roles_values %}
-selected_in_roles_values = "{{ genotype_browser.selected_in_roles_values }}"
-{%- endif %}
-
 {%- if genotype_browser.inheritance_type_filter %}
 inheritance_type_filter = "{{ genotype_browser.inheritance_type_filter }}"
 {%- endif %}

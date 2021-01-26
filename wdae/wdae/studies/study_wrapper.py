@@ -123,9 +123,6 @@ class StudyWrapper(StudyWrapperBase):
         else:
             self.gene_weight_column_sources = []
 
-        # IN ROLE
-        self.in_role_columns = genotype_browser_config.in_roles or []
-
         # PRESENT IN ROLE
         self.present_in_role = genotype_browser_config.present_in_role or []
 
@@ -711,14 +708,10 @@ class StudyWrapper(StudyWrapperBase):
                 )
 
                 for allele in variant.alt_alleles:
-                    roles_values = self._get_all_roles_values(allele)
                     gene_weights_values = self._get_gene_weights_values(allele)
 
                     if pheno_values:
                         allele.update_attributes(pheno_values)
-
-                    if roles_values:
-                        allele.update_attributes(roles_values)
 
                     allele.update_attributes(gene_weights_values)
 
@@ -802,18 +795,6 @@ class StudyWrapper(StudyWrapperBase):
                 gene_weights_values[gwc] = ""
 
         return gene_weights_values
-
-    def _get_all_roles_values(self, allele):
-        if not self.in_role_columns:
-            return None
-
-        result = {}
-        for roles_value in self.in_role_columns.values():
-            result[roles_value.destination] = "".join(
-                self._get_roles_value(allele, roles_value.roles)
-            )
-
-        return result
 
     def _get_roles_value(self, allele, roles):
         result = []
