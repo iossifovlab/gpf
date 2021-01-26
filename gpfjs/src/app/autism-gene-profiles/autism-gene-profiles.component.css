@@ -6,12 +6,17 @@ td {
     text-align: center;
 }
 
-.table-subheader {
-  text-align: center;
-}
-
 .vertical-text {
   writing-mode: vertical-rl;
   transform-origin: center center;
   transform: rotate(180deg);
+}
+
+.table-subheader {
+  text-align: center;
+  height: 150px;
+}
+
+.table-subheader span {
+  text-align: start;
 }
