@@ -20,3 +20,15 @@ td {
 .table-subheader span {
   text-align: start;
 }
+
+thead {
+  background-color: #eeeeee;
+}
+
+td, th, .table-subheader, .table-main-header {
+  border-bottom: none;
+}
+
+td, th {
+  border: 1px solid #dddddd;
+}
