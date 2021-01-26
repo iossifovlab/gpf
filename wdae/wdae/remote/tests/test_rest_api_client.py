@@ -62,7 +62,7 @@ def test_get_browser_measures(rest_client):
 
     assert measures is not None
     assert isinstance(measures, list)
-    assert len(measures) == 6
+    assert len(measures) == 7
 
 
 def test_get_instruments(rest_client):
