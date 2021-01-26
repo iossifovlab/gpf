@@ -25,7 +25,7 @@ fi
 if ls builds/genotype-comp*.tar.gz  1> /dev/null 2>&1; then
     cp builds/genotype-comp*.tar.gz $WD/genotype-comp-latest.tar.gz
 else
-    wget -P $WD -c https://iossifovlab.com/distribution/public/pheno/genotype-comp-latest.tar.gz
+    wget -P $WD -c https://iossifovlab.com/distribution/public/studies/genotype-comp-latest.tar.gz
 fi
 
 if ls builds/phenotype-comp-data*.tar.gz  1> /dev/null 2>&1; then
