@@ -4,7 +4,7 @@ from dae.configuration.gpf_config_parser import (
 )
 
 autism_gene_tool_config = {
-    "gene_symbols": {"type": "list", "schema": {"type": "string"}},
+    "gene_sets": {"type": "list", "schema": {"type": "string"}},
     "autism_scores": {"type": "list", "schema": {"type": "string"}},
     "protection_scores": {"type": "list", "schema": {"type": "string"}},
     "datasets": {
