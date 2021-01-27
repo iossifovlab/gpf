@@ -143,17 +143,19 @@ class DenovoLoader(VariantsGenotypesLoader):
         for num_idx, (idx, values) in enumerate(group.iterrows()):
             chrom, position, reference, alternative = idx
             position = int(position)
-            summary_rec = {
-                "chrom": chrom,
-                "reference": reference,
-                "alternative": alternative,
-                "position": position,
-                "summary_variant_index": num_idx,
-                "allele_index": 1
-            }
+            summary_records = []
+            for alt_index, alt in enumerate(alternative.split(",")):                
+                summary_records.append({
+                    "chrom": chrom,
+                    "reference": reference,
+                    "alternative": alt,
+                    "position": position,
+                    "summary_variant_index": num_idx,
+                    "allele_index": alt_index + 1,
+                })
 
             sv = SummaryVariantFactory.summary_variant_from_records(
-                [summary_rec], self.transmission_type
+                summary_records, self.transmission_type
             )
 
             if not self._is_in_regions(sv):
@@ -297,6 +299,12 @@ class DenovoLoader(VariantsGenotypesLoader):
             " for the family. [Default: bestState]",
         ))
         arguments.append(CLIArgument(
+            "--denovo-genotype",
+            help_text="The label or index of the"
+            " column containing the family genotype."
+            " [Default: genotype]",
+        ))
+        arguments.append(CLIArgument(
             "--denovo-person-id",
             help_text="The label or index of the column containing the"
             " person's ID. [Default: none]",
@@ -362,8 +370,9 @@ class DenovoLoader(VariantsGenotypesLoader):
         if not argv.denovo_person_id:
             if not argv.denovo_family_id:
                 argv.denovo_family_id = "familyId"
-            if not argv.denovo_best_state:
+            if not argv.denovo_best_state and not argv.denovo_genotype:
                 argv.denovo_best_state = "bestState"
+        assert not (argv.denovo_best_state and argv.denovo_genotype)
 
         if argv.denovo_sep is None:
             argv.denovo_sep = "\t"
@@ -378,6 +387,7 @@ class DenovoLoader(VariantsGenotypesLoader):
             "denovo_person_id": argv.denovo_person_id,
             "denovo_family_id": argv.denovo_family_id,
             "denovo_best_state": argv.denovo_best_state,
+            "denovo_genotype": argv.denovo_genotype,
             "add_chrom_prefix": argv.add_chrom_prefix,
             "del_chrom_prefix": argv.del_chrom_prefix,
             "denovo_sep": argv.denovo_sep,
@@ -400,6 +410,7 @@ class DenovoLoader(VariantsGenotypesLoader):
             denovo_person_id: Optional[str] = None,
             denovo_family_id: Optional[str] = None,
             denovo_best_state: Optional[str] = None,
+            denovo_genotype: Optional[str] = None,
             denovo_sep: str = "\t",
             adjust_chrom_prefix=None,
             **kwargs) -> pd.DataFrame:
@@ -467,7 +478,9 @@ class DenovoLoader(VariantsGenotypesLoader):
         if not (denovo_variant or (denovo_ref and denovo_alt)):
             denovo_variant = "variant"
 
-        if not (denovo_person_id or (denovo_family_id and denovo_best_state)):
+        if not (denovo_person_id or
+                (denovo_family_id and
+                    (denovo_best_state or denovo_genotype))):
             denovo_family_id = "familyId"
             denovo_best_state = "bestState"
 
@@ -520,7 +533,7 @@ class DenovoLoader(VariantsGenotypesLoader):
         extra_attributes_cols = raw_df.columns.difference([
             denovo_location, denovo_variant, denovo_chrom, denovo_pos,
             denovo_ref, denovo_alt, denovo_person_id, denovo_family_id,
-            denovo_best_state,
+            denovo_best_state, denovo_genotype
         ])
 
         if denovo_person_id:
@@ -577,26 +590,47 @@ class DenovoLoader(VariantsGenotypesLoader):
 
         else:
             family_col = raw_df.loc[:, denovo_family_id]
-
-            best_state_col = list(
-                map(
-                    lambda bs: str2mat(bs, col_sep=" "),  # type: ignore
-                    raw_df[denovo_best_state],
+            if denovo_best_state:
+                best_state_col = list(
+                    map(
+                        lambda bs: str2mat(bs, col_sep=" "),  # type: ignore
+                        raw_df[denovo_best_state],
+                    )
                 )
-            )
-            # genotype_col = list(map(best2gt, best_state_col))
+                # genotype_col = list(map(best2gt, best_state_col))
 
-            denovo_df = pd.DataFrame(
-                {
-                    "chrom": chrom_col,
-                    "position": pos_col,
-                    "reference": ref_col,
-                    "alternative": alt_col,
-                    "family_id": family_col,
-                    "genotype": None,
-                    "best_state": best_state_col,
-                }
-            )
+                denovo_df = pd.DataFrame(
+                    {
+                        "chrom": chrom_col,
+                        "position": pos_col,
+                        "reference": ref_col,
+                        "alternative": alt_col,
+                        "family_id": family_col,
+                        "genotype": None,
+                        "best_state": best_state_col,
+                    }
+                )
+            else:
+                assert denovo_genotype
+                genotype_col = list(
+                    map(
+                        lambda bs: str2mat(bs, col_sep=" "),  # type: ignore
+                        raw_df[denovo_genotype],
+                    )
+                )
+                # genotype_col = list(map(best2gt, best_state_col))
+
+                denovo_df = pd.DataFrame(
+                    {
+                        "chrom": chrom_col,
+                        "position": pos_col,
+                        "reference": ref_col,
+                        "alternative": alt_col,
+                        "family_id": family_col,
+                        "genotype": genotype_col,
+                        "best_state": None,
+                    }
+                )
 
             extra_attributes_df = raw_df[extra_attributes_cols]
             denovo_df = denovo_df.join(extra_attributes_df)
@@ -618,6 +652,7 @@ class DenovoLoader(VariantsGenotypesLoader):
             denovo_person_id: Optional[str] = None,
             denovo_family_id: Optional[str] = None,
             denovo_best_state: Optional[str] = None,
+            denovo_genotype: Optional[str] = None,
             denovo_sep: str = "\t",
             adjust_chrom_prefix=None,
             **kwargs) -> pd.DataFrame:
@@ -625,17 +660,18 @@ class DenovoLoader(VariantsGenotypesLoader):
             filepath,
             genome,
             families,
-            denovo_location,
-            denovo_variant,
-            denovo_chrom,
-            denovo_pos,
-            denovo_ref,
-            denovo_alt,
-            denovo_person_id,
-            denovo_family_id,
-            denovo_best_state,
-            denovo_sep,
-            adjust_chrom_prefix,
+            denovo_location=denovo_location,
+            denovo_variant=denovo_variant,
+            denovo_chrom=denovo_chrom,
+            denovo_pos=denovo_pos,
+            denovo_ref=denovo_ref,
+            denovo_alt=denovo_alt,
+            denovo_person_id=denovo_person_id,
+            denovo_family_id=denovo_family_id,
+            denovo_best_state=denovo_best_state,
+            denovo_genotype=denovo_genotype,
+            denovo_sep=denovo_sep,
+            adjust_chrom_prefix=adjust_chrom_prefix,
             **kwargs
         )
         return denovo_df
