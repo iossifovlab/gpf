@@ -103,7 +103,7 @@ def test_read_variants_DAE_style(genome_2013, fixture_dirname, fake_families):
             "reference": ["A", "T", "G", "G", "G"],
             "alternative": ["G", "A", "A", "A", "A"],
             "family_id": ["f1", "f1", "f2", "f3", "f4"],
-            "genotype": [None, None, None, None, None,],
+            "genotype": [None, None, None, None, None],
             "best_state": [
                 np.array([[2, 2, 1, 2, 1], [0, 0, 1, 0, 1]]),
                 np.array([[2, 2, 1, 2, 2], [0, 0, 1, 0, 0]]),
@@ -140,7 +140,7 @@ def test_read_variants_a_la_VCF_style(
             "reference": ["A", "T", "G", "G", "G"],
             "alternative": ["G", "A", "A", "A", "A"],
             "family_id": ["f1", "f1", "f2", "f3", "f4"],
-            "genotype": [None, None, None, None, None,],
+            "genotype": [None, None, None, None, None],
             "best_state": [
                 np.array([[2, 2, 1, 2, 1], [0, 0, 1, 0, 1]]),
                 np.array([[2, 2, 1, 2, 2], [0, 0, 1, 0, 0]]),
@@ -174,7 +174,7 @@ def test_read_variants_mixed_A(genome_2013, fixture_dirname, fake_families):
             "reference": ["A", "T", "G", "G", "G"],
             "alternative": ["G", "A", "A", "A", "A"],
             "family_id": ["f1", "f1", "f2", "f3", "f4"],
-            "genotype": [None, None, None, None, None,],
+            "genotype": [None, None, None, None, None],
             "best_state": [
                 np.array([[2, 2, 1, 2, 1], [0, 0, 1, 0, 1]]),
                 np.array([[2, 2, 1, 2, 2], [0, 0, 1, 0, 0]]),
@@ -208,7 +208,7 @@ def test_read_variants_mixed_B(genome_2013, fixture_dirname, fake_families):
             "reference": ["A", "T", "G", "G", "G"],
             "alternative": ["G", "A", "A", "A", "A"],
             "family_id": ["f1", "f1", "f2", "f3", "f4"],
-            "genotype": [None, None, None, None, None,],
+            "genotype": [None, None, None, None, None],
             "best_state": [
                 np.array([[2, 2, 1, 2, 1], [0, 0, 1, 0, 1]]),
                 np.array([[2, 2, 1, 2, 2], [0, 0, 1, 0, 0]]),
@@ -258,7 +258,7 @@ def test_read_variants_person_ids(
                 np.array([[0], [1]]),
                 np.array([[0, 0], [1, 1]]),
             ],
-            "best_state": [None, None, None, None, None,],
+            "best_state": [None, None, None, None, None],
         }
     )
 
@@ -302,7 +302,7 @@ def test_read_variants_different_separator(
             "reference": ["A", "T", "G", "G", "G"],
             "alternative": ["G", "A", "A", "A", "A"],
             "family_id": ["f1", "f1", "f2", "f3", "f4"],
-            "genotype": [None, None, None, None, None,],
+            "genotype": [None, None, None, None, None],
             "best_state": [
                 np.array([[2, 2, 1, 2, 1], [0, 0, 1, 0, 1]]),
                 np.array([[2, 2, 1, 2, 2], [0, 0, 1, 0, 0]]),
@@ -346,7 +346,7 @@ def test_read_variants_with_genotype(
                 np.array([[0, 0, 0, 0, 0], [0, 0, 1, 0, 0]]),
                 np.array([[0, 0, 0, 0], [0, 0, 0, 1]]),
                 np.array([[0], [1]]),
-                np.array([[0, 0], [1, 1]]),            
+                np.array([[0, 0], [1, 1]]),
             ],
             "best_state": [
                 None,
@@ -359,6 +359,7 @@ def test_read_variants_with_genotype(
     )
 
     assert compare_variant_dfs(res_df, expected_df)
+
 
 def test_read_variants_genome_assertion(fixture_dirname, fake_families):
     filename = fixture_dirname("denovo_import/variants_DAE_style.tsv")

@@ -300,12 +300,12 @@ class BaseQueryBuilder(ABC):
                     "OR "
                     "({start} >= `position` AND {stop} <= {end_position})"
                     "))".format(
-                    q=self.QUOTE,
-                    chrom=region.chrom,
-                    start=region.start,
-                    stop=region.stop,
-                    end_position=end_position
-                )
+                        q=self.QUOTE,
+                        chrom=region.chrom,
+                        start=region.start,
+                        stop=region.stop,
+                        end_position=end_position
+                    )
             )
         return " OR ".join(where)
 
