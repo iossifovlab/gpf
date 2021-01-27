@@ -11,6 +11,8 @@ import { AutismGeneProfilesService } from './autism-gene-profiles.service';
 export class AutismGeneProfilesComponent implements OnInit {
   private config$: Observable<AutismGeneToolConfig>;
   private genes$: Observable<AutismGeneToolGene[]>;
+  private shownGeneListsCount: Number;
+  private geneListsCount: Number;
 
   constructor(
     private autismGeneProfilesService: AutismGeneProfilesService,
@@ -18,33 +20,30 @@ export class AutismGeneProfilesComponent implements OnInit {
 
   ngOnInit(): void {
     this.config$ = this.autismGeneProfilesService.getConfig();
+    this.config$.take(1).subscribe(res => {
+      this.geneListsCount = res['geneLists'].length;
+      this.shownGeneListsCount = this.geneListsCount;
+    });
+
     this.genes$ = this.autismGeneProfilesService.getGenes();
 
     this.config$.subscribe(res => {console.log(res); });
     this.genes$.subscribe(res => {console.log(res); });
   }
 
-  // getDatasetsNamesArray() {
-  //   this.config$.subscribe(conf => {
-  //     return conf.datasets.map(dataset => dataset.name);
-  //   });
-  // }
-
-  // getDatasetConfigByName(datasetName: string) {
-  //   this.config$.subscribe(conf => {
-  //     return conf.datasets.find(dataset => dataset.name === datasetName);
-  //   });
-  // }
-
   calculateDatasetColspan(datasetConfig) {
     return datasetConfig.effects.length * datasetConfig.personSets.length;
   }
 
-  testButton1() {
+  getShownGeneLists(geneLists) {
+    return geneLists.slice(0, this.shownGeneListsCount);
   }
 
-  testButton2() {
+  showOrHideGeneLists() {
+    if (this.shownGeneListsCount === this.geneListsCount) {
+      this.shownGeneListsCount = 5;
+    } else {
+      this.shownGeneListsCount = this.geneListsCount;
+    }
   }
-
-  log(val) { console.log(val); }
 }

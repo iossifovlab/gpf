@@ -4,7 +4,7 @@
     <thead>
       <tr>
         <th class="table-main-header">Gene</th>
-        <th class="table-main-header" [attr.colspan]="config.geneLists?.length">Gene lists</th>
+        <th class="table-main-header" [attr.colspan]="shownGeneListsCount">Gene lists</th>
         <th class="table-main-header" [attr.colspan]="config.autismScores?.length">Autism scores</th>
         <th class="table-main-header" [attr.colspan]="config.protectionScores?.length">Protection scores</th>
         <th class="table-main-header" *ngFor="let dataset of config.datasets" [attr.colspan]="calculateDatasetColspan(dataset)">{{dataset.name}}</th>
@@ -12,7 +12,7 @@
 
       <tr style="height: 110px;">
         <th class="table-subheader" rowspan="2">Gene search</th>
-        <th class="table-subheader" rowspan="2" *ngFor="let geneList of config.geneLists"><span class="vertical-text">{{geneList}}</span></th>
+        <th class="table-subheader" rowspan="2" *ngFor="let geneList of getShownGeneLists(config.geneLists)"><span class="vertical-text">{{geneList}}</span></th>
         <th class="table-subheader" rowspan="2" *ngFor="let autismScore of config.autismScores"><span class="vertical-text">{{autismScore}}</span></th>
         <th class="table-subheader" rowspan="2" *ngFor="let protectionScore of config.protectionScores"><span class="vertical-text">{{protectionScore}}</span></th>
 
@@ -32,7 +32,7 @@
     <tbody *ngIf="genes$ | async as genes">
       <tr *ngFor="let gene of genes">
         <td>{{gene.geneSymbol}}</td>
-          <td *ngFor="let geneList of config.geneLists">
+          <td *ngFor="let geneList of getShownGeneLists(config.geneLists)">
             <span *ngIf="gene.geneSets.indexOf(geneList) !== -1">&#10003;</span>
           </td>
         <td *ngFor="let autismScore of config.autismScores"> {{gene.autismScores.get(autismScore)}}</td>
@@ -48,6 +48,5 @@
 
   </table>
 
-  <button (click)="testButton1()">button</button>
-  <button (click)="testButton2()">button</button>
+  <button (click)="showOrHideGeneLists()">button</button>
 </div>
