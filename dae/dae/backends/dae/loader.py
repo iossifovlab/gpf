@@ -43,6 +43,9 @@ class DenovoFamiliesGenotypes(FamiliesGenotypes):
         self.gt = gt
         self.best_state = best_state
 
+    def full_families_genotypes(self):
+        raise NotImplementedError()
+
     def get_family_genotype(self):
         return self.gt
 
@@ -657,6 +660,9 @@ class DaeTransmittedFamiliesGenotypes(FamiliesGenotypes):
 
     def get_family_best_state(self, family):
         return self.families_best_states.get(family.family_id, None)
+
+    def get_family_genotype(self, family):
+        raise NotImplementedError()
 
     def family_genotype_iterator(self):
         for family_id, bs in self.families_best_states.items():

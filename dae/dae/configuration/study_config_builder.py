@@ -325,7 +325,7 @@ params = {}
 {{key}}.name = "{{ value.name }}"
 {{key}}.domain = {{ value.domain }}
 {{key}}.default = {{ value.default }}
-{{key}}.source.pedigree.column = "{{ value.source.pedigree.column }}"
+{{key}}.sources = "{{ value.sources }}"
 {% else %}
 {{ key }} = {{ value }}
 {% endif %}
@@ -388,13 +388,6 @@ variant_types = {{ genotype_browser.variant_types }}
 selected_variant_types = {{ genotype_browser.selected_variant_types }}
 {%- endif %}
 
-{%- if genotype_browser.in_roles %}
-{%- for k, v in genotype_browser.in_roles.items() %}
-in_roles.{{ k }}.destination = "{{ v.destination }}"
-in_roles.{{ k }}.roles = {{ v.roles }}
-{%- endfor %}
-{%- endif %}
-
 {%- if genotype_browser.genotype %}
 {%- for k, v in genotype_browser.genotype.items() %}
 genotype.{{ k }}.name = "{{ v.name }}"
@@ -433,11 +426,6 @@ preview_columns = {{ genotype_browser.preview_columns }}
 
 {%- if genotype_browser.download_columns %}
 download_columns = {{ genotype_browser.download_columns }}
-{%- endif %}
-
-
-{%- if genotype_browser.present_in_role %}
-present_in_role = "{{ genotype_browser.present_in_role }}"
 {%- endif %}
 
 {%- if genotype_browser.pheno_filters %}

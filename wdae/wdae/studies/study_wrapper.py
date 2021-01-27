@@ -5,6 +5,7 @@ import json
 import logging
 
 from functools import reduce
+from abc import ABC, abstractmethod
 
 from box import Box
 
@@ -46,29 +47,33 @@ from remote.remote_phenotype_data import RemotePhenotypeData
 logger = logging.getLogger(__name__)
 
 
-class StudyWrapperBase:
+class StudyWrapperBase(ABC):
+
+    @abstractmethod
     def get_wdae_preview_info(self, query, max_variants_count=10000):
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
     def get_variants_wdae_preview(self, query, max_variants_count=10000):
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
     def get_variants_wdae_download(self, query, max_variants_count=10000):
-        raise NotImplementedError
+        pass
 
-    def get_wdae_summary_preview_info(self, query, max_variants_count=10000):
-        raise NotImplementedError
-
+    @abstractmethod
     def get_summary_variants_wdae_preview(
             self, query, max_variants_count=10000):
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
     def get_summary_variants_wdae_download(
             self, query, max_variants_count=10000):
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
     def build_genotype_data_group_description(self, gpf_instance):
-        raise NotImplementedError
+        pass
 
 
 class StudyWrapper(StudyWrapperBase):
@@ -1302,7 +1307,7 @@ class StudyWrapper(StudyWrapperBase):
         result["study_names"] = None
         if result["studies"] is not None:
             logger.debug(f"found studies in {self.config.id}")
-            studyNames = []
+            study_names = []
             for studyId in result["studies"]:
                 wrapper = gpf_instance.get_wdae_wrapper(studyId)
                 name = (
@@ -1310,8 +1315,8 @@ class StudyWrapper(StudyWrapperBase):
                     if wrapper.config.name is not None
                     else wrapper.config.id
                 )
-                studyNames.append(name)
-                result["study_names"] = studyNames
+                study_names.append(name)
+                result["study_names"] = study_names
 
         return result
 
@@ -1376,6 +1381,14 @@ class RemoteStudyWrapper(StudyWrapperBase):
                     yield variant
 
     def get_variants_wdae_download(self, query, max_variants_count=10000):
+        raise NotImplementedError
+
+    def get_summary_variants_wdae_preview(
+            self, query, max_variants_count=10000):
+        raise NotImplementedError
+
+    def get_summary_variants_wdae_download(
+            self, query, max_variants_count=10000):
         raise NotImplementedError
 
     def build_genotype_data_group_description(self, gpf_instance):

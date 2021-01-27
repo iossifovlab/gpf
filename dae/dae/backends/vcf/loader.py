@@ -34,6 +34,15 @@ class VcfFamiliesGenotypes(FamiliesGenotypes):
         self.loader = loader
         self.vcf_variants = vcf_variants
 
+    def full_families_genotypes(self):
+        raise NotImplementedError()
+
+    def get_family_best_state(self, family):
+        raise NotImplementedError()
+
+    def get_family_genotype(self, family):
+        raise NotImplementedError()
+
     def _build_genotypes(self):
         genotypes = []
         for vcf_index, vcf_variant in enumerate(self.vcf_variants):

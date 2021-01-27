@@ -279,11 +279,6 @@ study_config_schema = {
                     "schema": present_in_role_schema,
                 },
             },
-            "selected_present_in_role_values": {
-                "type": "list",
-                "schema": {"type": "string"},
-                "default": [],
-            },
             "pheno_filters": {
                 "type": "dict",
                 "valuesrules": {

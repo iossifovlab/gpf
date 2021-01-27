@@ -462,8 +462,8 @@ class GenotypeDataStudy(GenotypeData):
                 affected_status=affected_status):
 
             for allele in variant.alleles:
-                if allele.get_attribute("studyName") is None:
-                    allele.update_attributes({"studyName": self.name})
+                if allele.get_attribute("study_name") is None:
+                    allele.update_attributes({"study_name": self.name})
             yield variant
 
     def query_summary_variants(

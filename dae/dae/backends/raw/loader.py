@@ -5,7 +5,7 @@ import copy
 import logging
 import numpy as np
 import pandas as pd
-from abc import abstractclassmethod, abstractmethod
+from abc import ABC, abstractclassmethod, abstractmethod
 from enum import Enum
 
 from typing import Iterator, Tuple, List, Dict, Any, Optional, Sequence
@@ -119,7 +119,7 @@ class CLIArgument:
                 setattr(argv, self.destination, self.default_value)
 
 
-class FamiliesGenotypes:
+class FamiliesGenotypes(ABC):
     def __init__(self):
         pass
 
@@ -140,7 +140,7 @@ class FamiliesGenotypes:
         pass
 
 
-class CLILoader:
+class CLILoader(ABC):
     def __init__(self, params={}):
         self.arguments = self._arguments()
         self.params = params
