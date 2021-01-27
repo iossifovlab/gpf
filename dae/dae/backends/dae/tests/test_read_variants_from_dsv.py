@@ -316,6 +316,50 @@ def test_read_variants_different_separator(
     assert compare_variant_dfs(res_df, expected_df)
 
 
+def test_read_variants_with_genotype(
+    genome_2013, fixture_dirname, fake_families
+):
+    filename = fixture_dirname(
+        "denovo_import/variants_VCF_genotype.tsv"
+    )
+    res_df = DenovoLoader.flexible_denovo_load(
+        filename,
+        genome_2013,
+        families=fake_families,
+        denovo_chrom="chrom",
+        denovo_pos="pos",
+        denovo_ref="ref",
+        denovo_alt="alt",
+        denovo_family_id="familyId",
+        denovo_genotype="genotype",
+    )
+
+    expected_df = pd.DataFrame(
+        {
+            "chrom": ["1", "2", "2", "3", "4"],
+            "position": [123, 234, 234, 345, 456],
+            "reference": ["A", "T", "G", "G", "G"],
+            "alternative": ["G", "A", "A", "A", "A"],
+            "family_id": ["f1", "f1", "f2", "f3", "f4"],
+            "genotype": [
+                np.array([[0, 0, 0, 0, 0], [0, 0, 1, 0, 1]]),
+                np.array([[0, 0, 0, 0, 0], [0, 0, 1, 0, 0]]),
+                np.array([[0, 0, 0, 0], [0, 0, 0, 1]]),
+                np.array([[0], [1]]),
+                np.array([[0, 0], [1, 1]]),            
+            ],
+            "best_state": [
+                None,
+                None,
+                None,
+                None,
+                None,
+            ],
+        }
+    )
+
+    assert compare_variant_dfs(res_df, expected_df)
+
 def test_read_variants_genome_assertion(fixture_dirname, fake_families):
     filename = fixture_dirname("denovo_import/variants_DAE_style.tsv")
 

@@ -2,8 +2,12 @@ import pytest
 
 from typing import List, Union
 
-from dae.utils.variant_utils import get_locus_ploidy, reverse_complement
+import numpy as np
+
+from dae.utils.variant_utils import get_locus_ploidy, reverse_complement, \
+    gt2str, str2gt
 from dae.variants.attributes import Sex
+
 
 chroms: List[Union[int, str]] = list(range(1, 23))
 chroms.append("Y")
@@ -49,3 +53,43 @@ def test_get_locus_ploidy(chrom, pos, sex, expected, genome_2013):
 def test_reverse_complement(dna, expected):
     result = reverse_complement(dna)
     assert result == expected
+
+
+@pytest.mark.parametrize("gt,expected", [
+    (
+        np.array([[0, 0, 0], [0, 1, 0]], dtype=np.int8), 
+        "0/0,0/1,0/0"
+    ),
+    (
+        np.array([[0, 0, 0], [0, -1, 0]], dtype=np.int8), 
+        "0/0,0/.,0/0"
+    ),
+    (
+        np.array([[0, 1, 0], [0, -1, 0]], dtype=np.int8), 
+        "0/0,1/.,0/0"
+    ),
+])
+def test_gt2str(gt, expected):
+    res = gt2str(gt)
+
+    assert res == expected
+
+
+@pytest.mark.parametrize("gts,expected", [
+    (
+        "0/0,0/1,0/0",
+        np.array([[0, 0, 0], [0, 1, 0]], dtype=np.int8),
+    ),
+    (
+        "0/0,0/.,0/0",
+        np.array([[0, 0, 0], [0, -1, 0]], dtype=np.int8),
+    ),
+    (
+        "0/0,1/.,0/0",
+        np.array([[0, 1, 0], [0, -1, 0]], dtype=np.int8),
+    ),
+])
+def test_str2gt(gts, expected):
+    res = str2gt(gts)
+
+    assert np.all(res == expected)
