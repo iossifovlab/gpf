@@ -351,7 +351,8 @@ class DenovoLoader(VariantsGenotypesLoader):
             argv.denovo_variant = "variant"
 
         if not (argv.denovo_person_id or
-                (argv.denovo_family_id and argv.denovo_best_state)):
+                (argv.denovo_family_id and (
+                    argv.denovo_best_state or argv.denovo_genotype))):
             argv.denovo_family_id = "familyId"
             argv.denovo_best_state = "bestState"
 
