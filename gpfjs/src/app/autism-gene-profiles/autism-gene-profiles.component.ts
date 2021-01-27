@@ -13,6 +13,7 @@ export class AutismGeneProfilesComponent implements OnInit {
   private genes$: Observable<AutismGeneToolGene[]>;
   private shownGeneListsCount: Number;
   private geneListsCount: Number;
+  private collapseSymbol: String = String.fromCharCode(0x022B2);
 
   constructor(
     private autismGeneProfilesService: AutismGeneProfilesService,
@@ -42,8 +43,10 @@ export class AutismGeneProfilesComponent implements OnInit {
   showOrHideGeneLists() {
     if (this.shownGeneListsCount === this.geneListsCount) {
       this.shownGeneListsCount = 5;
+      this.collapseSymbol = String.fromCharCode(0x022B3);
     } else {
       this.shownGeneListsCount = this.geneListsCount;
+      this.collapseSymbol = String.fromCharCode(0x022B2);
     }
   }
 }
