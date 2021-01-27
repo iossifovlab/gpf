@@ -144,7 +144,7 @@ class DenovoLoader(VariantsGenotypesLoader):
             chrom, position, reference, alternative = idx
             position = int(position)
             summary_records = []
-            for alt_index, alt in enumerate(alternative.split(",")):                
+            for alt_index, alt in enumerate(alternative.split(",")):
                 summary_records.append({
                     "chrom": chrom,
                     "reference": reference,
