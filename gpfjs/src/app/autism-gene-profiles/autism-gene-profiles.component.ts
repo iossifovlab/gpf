@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { Observable } from 'rxjs';
 import { AutismGeneToolConfig, AutismGeneToolGene } from './autism-gene-profile';
 import { AutismGeneProfilesService } from './autism-gene-profiles.service';
@@ -15,7 +15,7 @@ export class AutismGeneProfilesComponent implements OnInit {
   private config$: Observable<AutismGeneToolConfig>;
   private genes$: Observable<AutismGeneToolGene[]>;
 
-  private geneLists: string[];
+  private shownGeneLists: string[];
   // private shownGeneListsCount: Number;
   // private geneListsCount: Number;
   // private collapseSymbol: String = String.fromCharCode(0x022B2);
@@ -37,7 +37,7 @@ export class AutismGeneProfilesComponent implements OnInit {
 
     this.config$ = this.autismGeneProfilesService.getConfig();
     this.config$.take(1).subscribe(res => {
-      this.geneLists = res['geneLists'];
+      this.shownGeneLists = res['geneLists'];
       // this.geneListsCount = res['geneLists'].length;
       // this.shownGeneListsCount = this.geneListsCount;
     });
@@ -72,5 +72,9 @@ export class AutismGeneProfilesComponent implements OnInit {
       if (a > b) { return 1; }
       return 0;
    });
+  }
+
+  setShownGeneLists($event: string[]) {
+    this.shownGeneLists = $event;
   }
 }

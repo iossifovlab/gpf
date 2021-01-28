@@ -4,18 +4,13 @@
     <thead>
       <tr>
         <th class="table-main-header">Gene</th>
-        <th class="table-main-header" *ngIf="geneLists.length" [attr.colspan]="geneLists.length">
+        <th class="table-main-header" *ngIf="shownGeneLists" [attr.colspan]="shownGeneLists.length">
           Gene lists
           <!-- <button style="float: right; border: 1px solid #dddddd; outline: none; font-size: 18px; padding: 0;" (click)="showOrHideGeneLists()">{{collapseSymbol}}</button> -->
           <div ngbDropdown>
             <button ngbDropdownToggle style="float: left; border: 1px solid #dddddd; outline: none; font-size: 18px;"></button>
       
-            <ng-multiselect-dropdown ngbDropdownMenu
-            style="width: 520px; border: none; padding: 0;"
-            [settings]="dropdownSettings"
-            [placeholder]="' '"
-            [data]="config.geneLists"
-            [(ngModel)]="geneLists"></ng-multiselect-dropdown>
+            <gpf-multiple-select-menu *ngIf="config.geneLists" ngbDropdownMenu [allItems]="config.geneLists" [selectedItems]="shownGeneLists" (applyEvent)="setShownGeneLists($event)"></gpf-multiple-select-menu>
           </div>
         </th>
         <th class="table-main-header" [attr.colspan]="config.autismScores?.length">Autism scores</th>
@@ -25,7 +20,7 @@
 
       <tr style="height: 110px;">
         <th class="table-subheader" rowspan="2">Gene search</th>
-        <th class="table-subheader" rowspan="2" *ngFor="let geneList of sortAlphabetically(geneLists)"><span class="vertical-text">{{geneList}}</span></th>
+        <th class="table-subheader" rowspan="2" *ngFor="let geneList of sortAlphabetically(shownGeneLists)"><span class="vertical-text">{{geneList}}</span></th>
         <th class="table-subheader" rowspan="2" *ngFor="let autismScore of config.autismScores"><span class="vertical-text">{{autismScore}}</span></th>
         <th class="table-subheader" rowspan="2" *ngFor="let protectionScore of config.protectionScores"><span class="vertical-text">{{protectionScore}}</span></th>
 
@@ -45,7 +40,7 @@
     <tbody *ngIf="genes$ | async as genes">
       <tr *ngFor="let gene of genes">
         <td>{{gene.geneSymbol}}</td>
-          <td *ngFor="let geneList of geneLists">
+          <td *ngFor="let geneList of shownGeneLists">
             <span *ngIf="gene.geneSets.indexOf(geneList) !== -1">&#10003;</span>
           </td>
         <td *ngFor="let autismScore of config.autismScores"> {{gene.autismScores.get(autismScore)}}</td>

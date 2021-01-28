@@ -1,0 +1,14 @@
+
+<div style="padding: 10px">
+  <table>
+    <tr *ngFor="let item of checkboxDataArray" style="height: 30px;">
+      <td>
+        <input type="checkbox" id="{{item.id}}" [checked]="item.isChecked" [(ngModel)]="item.isChecked">
+        <label for="{{item.id}}" style="padding-left: 10px;">{{item.id}}</label>
+      </td>
+    </tr>
+    <td></td>
+  </table>
+
+  <button type="submit" class="btn btn-success" style="float: right;" (click)="apply()">Apply</button>
+</div>

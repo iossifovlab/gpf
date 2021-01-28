@@ -158,6 +158,7 @@ import { GeneSymbolsWithSearchComponent } from './gene-symbols-with-search/gene-
 import { LoadingSpinnerComponent } from './loading-spinner/loading-spinner.component';
 import { DatasetNodeComponent } from './dataset-node/dataset-node.component';
 import { AutismGeneProfilesComponent } from './autism-gene-profiles/autism-gene-profiles.component';
+import { MultipleSelectMenuComponent } from './multiple-select-menu/multiple-select-menu.component';
 
 const appRoutes: Routes = [
   {
@@ -358,6 +359,7 @@ const appRoutes: Routes = [
     LoadingSpinnerComponent,
     DatasetNodeComponent,
     AutismGeneProfilesComponent,
+    MultipleSelectMenuComponent,
   ],
   imports: [
     BrowserModule,
