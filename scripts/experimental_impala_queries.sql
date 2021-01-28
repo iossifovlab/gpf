@@ -662,3 +662,24 @@ WHERE
   ( variants.allele_index > 0 ) AND ( variants.region_bin IN ('14_0') ) AND 
   variants.variant_in_members = pedigree.person_id 
 GROUP BY variants.bucket_index, variants.summary_index, variants.family_id;
+
+
+
+
+select chromosome, `position`, variant_type, summary_index, allele_index, family_index, family_id, variant_in_sexes, variant_in_roles, variant_in_members, inheritance_in_members,
+    bitand(inheritance_in_members, 4) as denovo,
+    bitand(inheritance_in_members, 8) as possible_denovo,
+    bitand(inheritance_in_members, 16) as omission,
+    bitand(inheritance_in_members, 32) as possible_omission,
+    bitand(inheritance_in_members, 64) as other,
+    bitand(inheritance_in_members, 128) as missing,
+    bitand(inheritance_in_members, 256) as unknown_inheritance
+from sfari_ssc_wgs_2b_variants;
+
+
+SELECT bucket_index, summary_index, chromosome, `position`, end_position, variant_type, reference, family_id FROM data_hg38_production.SFARI_SSC_WGS_2b_variants 
+WHERE
+  ( (  effect_types in (  'nonsense' , 'frame-shift' , 'splice-site' , 'no-frame-shift-newStop' , 'missense' , 'no-frame-shift' , 'noStart' , 'noEnd' , 'synonymous' , 'non-coding' , 'intron' , 'non-coding-intron' , 'intergenic' , '3\'UTR' , '3\'UTR-intron' , '5\'UTR' , '5\'UTR-intron' , 'CNV+' , 'CNV-'  )  ) ) 
+  AND ( BITAND(8, inheritance_in_members) = 0 AND BITAND(32, inheritance_in_members) = 0 ) AND ( BITAND(134, inheritance_in_members) != 0 ) 
+  AND ( (((BITAND(variant_type, 4) != 0)) OR ((BITAND(variant_type, 2) != 0))) OR ((BITAND(variant_type, 1) != 0)) ) 
+  AND ( (af_allele_count <= 1 or af_allele_count is null) ) AND ( allele_index > 0 ) AND ( frequency_bin = 0 OR frequency_bin = 1 );
