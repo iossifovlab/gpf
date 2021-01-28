@@ -8,9 +8,10 @@
           Gene lists
           <!-- <button style="float: right; border: 1px solid #dddddd; outline: none; font-size: 18px; padding: 0;" (click)="showOrHideGeneLists()">{{collapseSymbol}}</button> -->
           <div ngbDropdown>
-            <button ngbDropdownToggle style="float: left; border: 1px solid #dddddd; outline: none; font-size: 18px;"></button>
-      
-            <gpf-multiple-select-menu *ngIf="config.geneLists" ngbDropdownMenu [allItems]="config.geneLists" [selectedItems]="shownGeneLists" (applyEvent)="setShownGeneLists($event)"></gpf-multiple-select-menu>
+            <button class="dropdown-toggle btn navbar-toggler" ngbDropdownToggle style="float: left; border: 1px solid #dddddd; outline: none; font-size: 18px; width: 40px;">
+              <span style="font-size: 14px;">&#9776;</span>
+            </button>
+            <gpf-multiple-select-menu *ngIf="shownGeneLists" ngbDropdownMenu [allItems]="config.geneLists" [selectedItems]="shownGeneLists" (applyEvent)="setShownGeneLists($event)"></gpf-multiple-select-menu>
           </div>
         </th>
         <th class="table-main-header" [attr.colspan]="config.autismScores?.length">Autism scores</th>

@@ -33,3 +33,7 @@ td, th, .table-subheader, .table-main-header {
 td, th {
   border: 1px solid #dddddd;
 }
+
+.dropdown-toggle::after {
+  content: none;
+}
