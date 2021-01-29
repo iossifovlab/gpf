@@ -33,7 +33,7 @@ def test_reference_variant_single_allele(
 
     assert len(v.frequencies) == 1
     assert v.frequencies[0] == pytest.approx(87.5)
-    assert v.effects is None
+    assert not v.effects
 
     # sv = v.summary_variant
 
