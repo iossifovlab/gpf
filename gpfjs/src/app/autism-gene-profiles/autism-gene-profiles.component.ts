@@ -4,6 +4,7 @@ import { AutismGeneToolConfig, AutismGeneToolGene } from './autism-gene-profile'
 import { AutismGeneProfilesService } from './autism-gene-profiles.service';
 import { IDropdownSettings } from 'ng-multiselect-dropdown';
 import { NgbDropdownMenu } from '@ng-bootstrap/ng-bootstrap';
+import { MultipleSelectMenuComponent } from 'app/multiple-select-menu/multiple-select-menu.component';
 
 @Component({
   selector: 'gpf-autism-gene-profiles',
@@ -12,6 +13,8 @@ import { NgbDropdownMenu } from '@ng-bootstrap/ng-bootstrap';
 })
 export class AutismGeneProfilesComponent implements OnInit {
   @ViewChild(NgbDropdownMenu) ngbDropdownMenu: NgbDropdownMenu;
+  @ViewChild(MultipleSelectMenuComponent) multipleSelectMenuComponent;
+
   private config$: Observable<AutismGeneToolConfig>;
   private genes$: Observable<AutismGeneToolGene[]>;
 
@@ -81,5 +84,11 @@ export class AutismGeneProfilesComponent implements OnInit {
 
   setShownGeneLists(geneLists: string[]) {
     this.shownGeneLists = geneLists;
+  }
+
+  emitApplyEventOnMultipleSelectMenuCloseEvent(isOpen: boolean) {
+    if (!isOpen) {
+      this.multipleSelectMenuComponent.apply();
+    }
   }
 }
