@@ -74,7 +74,12 @@ export class AutismGeneProfilesComponent implements OnInit {
    });
   }
 
-  setShownGeneLists($event: string[]) {
-    this.shownGeneLists = $event;
+  handleMultipleSelectMenuApplyEvent($event: string[]) {
+    this.setShownGeneLists($event);
+    this.ngbDropdownMenu.dropdown.close();
+  }
+
+  setShownGeneLists(geneLists: string[]) {
+    this.shownGeneLists = geneLists;
   }
 }
