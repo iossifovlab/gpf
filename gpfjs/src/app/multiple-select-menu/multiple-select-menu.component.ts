@@ -30,5 +30,4 @@ export class MultipleSelectMenuComponent implements OnInit {
       this.checkboxDataArray.filter(item => item.isChecked).map(item => item.id)
     );
   }
-
 }
