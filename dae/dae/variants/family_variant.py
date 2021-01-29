@@ -453,6 +453,10 @@ class FamilyVariant(Variant, FamilyDelegate):
             allele.family_index = val
 
     @property
+    def allele_indexes(self):
+        return [a.allele_index for a in self.alleles]
+
+    @property
     def alleles(self):
         if self._family_alleles is None:
             family_alleles = [

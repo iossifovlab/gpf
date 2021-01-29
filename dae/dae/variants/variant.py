@@ -393,10 +393,10 @@ class Variant(ABC):
 
     def get_attribute(
             self, item: Any, default: Optional[Any] = None) -> List[Any]:
-        return [sa.get_attribute(item, default) for sa in self.alleles]
+        return [sa.get_attribute(item, default) for sa in self.alt_alleles]
 
     def has_attribute(self, item: Any) -> bool:
-        return any([sa.has_attribute(item) for sa in self.alleles])
+        return any([sa.has_attribute(item) for sa in self.alt_alleles])
 
     def __getitem__(self, item: Any) -> List[Any]:
         return self.get_attribute(item)

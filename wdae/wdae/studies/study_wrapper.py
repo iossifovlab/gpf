@@ -274,43 +274,62 @@ class StudyWrapper(StudyWrapperBase):
     }
 
     STANDARD_ATTRS_LAMBDAS = {
-        key: lambda aa, val=val: getattr(aa, val)
+        key: lambda v, val=val: getattr(v, val)
         for key, val in STANDARD_ATTRS.items()
     }
 
     SPECIAL_ATTRS_FORMAT = {
-        "genotype": lambda aa: mat2str(aa.genotype),
-        "effects": lambda aa: ge2str(aa.effect),
-        "genes": lambda aa: gene_effect_get_genes(aa.effect),
-        "worst_effect": lambda aa: gene_effect_get_worst_effect(aa.effect),
-        "effect_details": lambda aa: gd2str(aa.effect),
-        "best_st": lambda aa: mat2str(aa.best_state),
-        "family_structure": lambda aa: members_in_order_get_family_structure(
-            aa.members_in_order
+        "genotype":
+        lambda v: mat2str(v.genotype),
+
+        "effects":
+        lambda v: ",".join([ge2str(e) for e in v.effects]),
+
+        "genes":
+        lambda v: ",".join([gene_effect_get_genes(e) for e in v.effects]),
+
+        "worst_effect":
+        lambda v: ",".join(
+            [gene_effect_get_worst_effect(e) for e in v.effects]),
+
+        "effect_details":
+        lambda v: ",".join([gd2str(e) for e in v.effects]),
+
+        "best_st":
+        lambda v: mat2str(v.best_state),
+
+        "family_structure":
+        lambda v: members_in_order_get_family_structure(
+            v.members_in_order
         ),
-        "is_denovo": lambda aa: bool(
-            Inheritance.denovo in aa.inheritance_in_members
+
+        "is_denovo":
+        lambda v: bool(
+            Inheritance.denovo in v.inheritance_in_members
         ),
+
         "seen_in_affected":
-        lambda aa: bool(aa.get_attribute("seen_in_status") in {2, 3}),
+        lambda v: bool(v.get_attribute("seen_in_status") in {2, 3}),
+
         "seen_in_unaffected":
-        lambda aa: bool(aa.get_attribute("seen_in_status") in {1, 3}),
+        lambda v: bool(v.get_attribute("seen_in_status") in {1, 3}),
 
     }
 
     SPECIAL_ATTRS = {**SPECIAL_ATTRS_FORMAT, **STANDARD_ATTRS_LAMBDAS}
 
-    def generate_pedigree(self, allele, person_set_collection):
+    def generate_pedigree(self, variant, person_set_collection):
         result = []
         # best_st = np.sum(allele.gt == allele.allele_index, axis=0)
-        best_st = allele.best_state[allele.allele_index, :]
+        best_st = variant.best_state[variant.allele_indexes, :]
 
         missing_members = set()
-        for index, member in enumerate(allele.members_in_order):
+        for index, member in enumerate(variant.members_in_order):
             try:
                 result.append(
                     self._get_wdae_member(
-                        member, person_set_collection, int(best_st[index])
+                        member, person_set_collection, 
+                        ",".join([str(v) for v in best_st[:, index]])
                     )
                 )
             except IndexError:
@@ -319,7 +338,7 @@ class StudyWrapper(StudyWrapperBase):
                 missing_members.add(member.person_id)
                 logger.error(f"{best_st}, {index}, {member}")
 
-        for member in allele.family.full_members:
+        for member in variant.family.full_members:
             if (member.generated or member.not_sequenced) \
                     or (member.person_id in missing_members):
                 result.append(
@@ -327,6 +346,48 @@ class StudyWrapper(StudyWrapperBase):
                 )
 
         return result
+
+    def _build_variant_row(self, v, sources, **kwargs):
+        row_variant = []
+        for source in sources:
+            try:
+                if source in self.SPECIAL_ATTRS:
+                    print("\t>", source)
+                    attribute = self.SPECIAL_ATTRS[source](v)
+                    print("\t\t>>", attribute)
+                    row_variant.append(attribute)
+                elif source == "pedigree":
+                    person_set_collection = \
+                        kwargs.get("person_set_collection")
+                    # assert person_set_collection is not None
+                    row_variant.append(
+                        self.generate_pedigree(
+                            v, person_set_collection
+                        )
+                    )
+                else:
+                    attribute = v.get_attribute(source, "-")
+                    print("\t>", source, ":", attribute)
+                    if not isinstance(attribute, str) and \
+                            not isinstance(attribute, list):
+                        if attribute is None or math.isnan(attribute):
+                            attribute = ["-"]
+                        elif math.isinf(attribute):
+                            attribute = ["inf"]
+                    if attribute == "":
+                        attribute = ["-"]
+                    print("\t\t>>attribute:", attribute)
+                    attribute = list(filter(
+                        lambda a: a if a is not None else "-", attribute))
+                    print("\t\t>>attribute:", attribute)
+                    row_variant.append(",".join([str(a) for a in attribute]))
+
+            except (AttributeError, KeyError, Exception):
+                logging.exception(f'error build variant: {v}')
+                traceback.print_stack()
+                row_variant.append([""])
+
+        return row_variant
 
     def _query_variants_rows_iterator(
             self, sources, person_set_collection, **kwargs):
@@ -343,41 +404,50 @@ class StudyWrapper(StudyWrapperBase):
                 return svid in summary_variant_ids
 
         for v in self.query_variants(**kwargs):
+            matched = True
             for aa in v.matched_alleles:
+                print("\t>>allele:", aa, aa.attributes)
                 assert not aa.is_reference_allele
                 if not filter_allele(aa):
-                    continue
+                    matched = False
+                    break
+            if not matched:
+                continue
 
-                row_variant = []
-                for source in sources:
-                    try:
-                        if source in self.SPECIAL_ATTRS:
-                            row_variant.append(
-                                self.SPECIAL_ATTRS[source](aa))
-                        elif source == "pedigree":
-                            row_variant.append(
-                                self.generate_pedigree(
-                                    aa, person_set_collection
-                                )
-                            )
-                        else:
-                            attribute = aa.get_attribute(source, "-")
+            row_variant = []
+            row_variant = self._build_variant_row(
+                v, sources, person_set_collection=person_set_collection)
 
-                            if not isinstance(attribute, str) and \
-                                    not isinstance(attribute, list):
-                                if attribute is None or math.isnan(attribute):
-                                    attribute = "-"
-                                elif math.isinf(attribute):
-                                    attribute = "inf"
-                            if attribute == "":
-                                attribute = "-"
-                            row_variant.append(attribute)
+            # for source in sources:
+            #     try:
+            #         if source in self.SPECIAL_ATTRS:
+            #             row_variant.append(
+            #                 self.SPECIAL_ATTRS[source](v))
+            #         elif source == "pedigree":
+            #             row_variant.append(
+            #                 self.generate_pedigree(
+            #                     v, person_set_collection
+            #                 )
+            #             )
+            #         else:
+            #             attribute = v.get_attribute(source, "-")
+            #             print("\t>", source, ":", attribute)
+            #             if not isinstance(attribute, str) and \
+            #                     not isinstance(attribute, list):
+            #                 if attribute is None or math.isnan(attribute):
+            #                     attribute = "-"
+            #                 elif math.isinf(attribute):
+            #                     attribute = "inf"
+            #             if attribute == "":
+            #                 attribute = "-"
+            #             row_variant.append(attribute)
 
-                    except (AttributeError, KeyError):
-                        traceback.print_exc()
-                        row_variant.append("")
+            #     except (AttributeError, KeyError, Exception):
+            #         traceback.print_exc()
+            #         row_variant.append("")
 
-                yield row_variant
+            print(v, row_variant)
+            yield row_variant
 
     def get_variant_web_rows(self, query, sources, max_variants_count=10000):
         person_set_collection_id = query.get("peopleGroup", {}).get(
@@ -667,35 +737,41 @@ class StudyWrapper(StudyWrapperBase):
         variants_with_additional_cols = self._add_additional_columns_summary(
             variants_from_studies)
         for v in variants_with_additional_cols:
-            for aa in v.alt_alleles:
-                assert not aa.is_reference_allele
+            # for aa in v.alt_alleles:
+            #     assert not aa.is_reference_allele
 
-                row_variant = []
-                for source in self.summary_preview_sources:
-                    try:
-                        if source in self.SPECIAL_ATTRS:
-                            row_variant.append(self.SPECIAL_ATTRS[source](aa))
-                        elif source == "pedigree":
-                            pass
-                        else:
-                            attribute = aa.get_attribute(source, "-")
+            #     row_variant = []
+            #     for source in self.summary_preview_sources:
+            #         try:
+            #             if source in self.SPECIAL_ATTRS:
+            #                 row_variant.append(self.SPECIAL_ATTRS[source](aa))
+            #             elif source == "pedigree":
+            #                 pass
+            #             else:
+            #                 attribute = aa.get_attribute(source, "-")
 
-                            if not isinstance(attribute, str) and \
-                                    not isinstance(attribute, list):
-                                if attribute is None or math.isnan(attribute):
-                                    attribute = "-"
-                                elif math.isinf(attribute):
-                                    attribute = "inf"
-                            if attribute == "":
-                                attribute = "-"
+            #                 if not isinstance(attribute, str) and \
+            #                         not isinstance(attribute, list):
+            #                     if attribute is None or math.isnan(attribute):
+            #                         attribute = "-"
+            #                     elif math.isinf(attribute):
+            #                         attribute = "inf"
+            #                 if attribute == "":
+            #                     attribute = "-"
 
-                            row_variant.append(attribute)
+            #                 row_variant.append(attribute)
 
-                    except (AttributeError, KeyError):
-                        traceback.print_exc()
-                        row_variant.append("")
+            #         except (AttributeError, KeyError):
+            #             traceback.print_exc()
+            #             row_variant.append([])
 
-                yield row_variant
+            #     assert all([isinstance(c, list) for c in row_variant])
+            #     row_variant = [",".join(c) for c in row_variant]
+            row_variant = self._build_variant_row(
+                v, self.summary_preview_sources)
+
+            print("row_variant:", row_variant)
+            yield row_variant
 
     STREAMING_CHUNK_SIZE = 20
 
@@ -714,11 +790,12 @@ class StudyWrapper(StudyWrapperBase):
 
                 for allele in variant.alt_alleles:
                     gene_weights_values = self._get_gene_weights_values(allele)
+                    print("gene_weights_values:", gene_weights_values)
+                    allele.update_attributes(gene_weights_values)
 
                     if pheno_values:
+                        print("pheno_values:", pheno_values)
                         allele.update_attributes(pheno_values)
-
-                    allele.update_attributes(gene_weights_values)
 
                 yield variant
 
@@ -748,7 +825,7 @@ class StudyWrapper(StudyWrapperBase):
             assert len(variant_pheno_value_df.columns) == 1
             column = variant_pheno_value_df.columns[0]
 
-            pheno_values[pheno_column_name] = list(
+            pheno_values[pheno_column_name] = ",".join(
                 variant_pheno_value_df[column].map(str).tolist()
             )
 

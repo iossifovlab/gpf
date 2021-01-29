@@ -223,19 +223,19 @@ class GenotypeDataGroup(GenotypeData):
                 if v.svuid in variants:
                     existing = variants[v.svuid]
                     fv_count = existing.get_attribute(
-                        "family_variants_count")[1]
+                        "family_variants_count")[0]
                     if fv_count is None:
                         continue
-                    fv_count += v.get_attribute("family_variants_count")[1]
+                    fv_count += v.get_attribute("family_variants_count")[0]
                     seen_in_status = existing.get_attribute(
-                        "seen_in_status")[1]
+                        "seen_in_status")[0]
                     seen_in_status = \
-                        seen_in_status | v.get_attribute("seen_in_status")[1]
+                        seen_in_status | v.get_attribute("seen_in_status")[0]
 
                     seen_as_denovo = existing.get_attribute(
-                        "seen_as_denovo")[1]
+                        "seen_as_denovo")[0]
                     seen_as_denovo = \
-                        seen_as_denovo or v.get_attribute("seen_as_denovo")[1]
+                        seen_as_denovo or v.get_attribute("seen_as_denovo")[0]
                     new_attributes = {
                         "family_variants_count": [fv_count],
                         "seen_in_status": [seen_in_status],

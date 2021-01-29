@@ -68,22 +68,22 @@ def test_simple_query(db, admin_client):
         (
             [FILTER_QUERY_CATEGORICAL], 3,
             [
-                [["option2"]],
-                [["option2"]],
-                [["option2"]]]),
+                ["option2"],
+                ["option2"],
+                ["option2"]]),
         (
             [FILTER_QUERY_CONTINUOUS], 3,
             [
-                [["3.14"]],
-                [["3.14"]],
-                [["3.14"]]]),
+                ["3.14"],
+                ["3.14"],
+                ["3.14"]]),
         (
             [FILTER_QUERY_CATEGORICAL, FILTER_QUERY_CONTINUOUS],
             3,
             [
-                [["option2"], ["3.14"]],
-                [["option2"], ["3.14"]],
-                [["option2"], ["3.14"]]],
+                ["option2", "3.14"],
+                ["option2", "3.14"],
+                ["option2", "3.14"]],
         ),
     ],
 )
@@ -112,10 +112,17 @@ def test_query_with_pheno_filters(
 
     assert variants_count == len(variants)
     rows_values = []
+    variants = list(variants)
+    print("variants:", variants)
+
     for row in variants:
+        print("row:", row)
+
         row_values = []
         for column_idx in columns_idxs:
             row_values.append(row[column_idx])
         rows_values.append(row_values)
+    print("rows_values:", rows_values)
+    print("expected:", pheno_values)
 
     assert rows_values == pheno_values
