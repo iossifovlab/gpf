@@ -283,17 +283,16 @@ class StudyWrapper(StudyWrapperBase):
         lambda v: mat2str(v.genotype),
 
         "effects":
-        lambda v: ",".join([ge2str(e) for e in v.effects]),
+        lambda v: [ge2str(e) for e in v.effects],
 
         "genes":
-        lambda v: ",".join([gene_effect_get_genes(e) for e in v.effects]),
+        lambda v: [gene_effect_get_genes(e) for e in v.effects],
 
         "worst_effect":
-        lambda v: ",".join(
-            [gene_effect_get_worst_effect(e) for e in v.effects]),
+        lambda v: [gene_effect_get_worst_effect(e) for e in v.effects],
 
         "effect_details":
-        lambda v: ",".join([gd2str(e) for e in v.effects]),
+        lambda v: [gd2str(e) for e in v.effects],
 
         "best_st":
         lambda v: mat2str(v.best_state),
@@ -359,6 +358,8 @@ class StudyWrapper(StudyWrapperBase):
                     print("\t>", source)
                     attribute = self.SPECIAL_ATTRS[source](v)
                     print("\t\t>>", attribute)
+                    if all([a == attribute[0] for a in attribute]):
+                        attribute = [attribute[0]]
                     row_variant.append(attribute)
                 elif source == "pedigree":
                     person_set_collection = \
@@ -372,6 +373,9 @@ class StudyWrapper(StudyWrapperBase):
                 else:
                     attribute = v.get_attribute(source, "-")
                     print("\t>", source, ":", attribute)
+                    if all([a == attribute[0] for a in attribute]):
+                        attribute = [attribute[0]]
+
                     if not isinstance(attribute, str) and \
                             not isinstance(attribute, list):
                         if attribute is None or math.isnan(attribute):
