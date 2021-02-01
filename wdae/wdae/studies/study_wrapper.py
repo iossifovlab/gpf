@@ -78,8 +78,8 @@ class StudyWrapperBase(ABC):
 
 class StudyWrapper(StudyWrapperBase):
     def __init__(
-        self, genotype_data_study, pheno_db, gene_weights_db
-    ):
+            self, genotype_data_study, pheno_db, gene_weights_db):
+
         assert genotype_data_study is not None
 
         self.genotype_data_study = genotype_data_study
@@ -141,7 +141,11 @@ class StudyWrapper(StudyWrapperBase):
                     collections_conf.selected_person_set_collections:
                 self.legend[collection_id] = \
                     self.person_set_collection_configs[collection_id]["domain"]
+
         # PREVIEW AND DOWNLOAD COLUMNS
+        self._init_genotype_columns(genotype_browser_config)
+
+    def _init_genotype_columns(self, genotype_browser_config):
         preview_column_names = genotype_browser_config.preview_columns
         download_column_names = \
             genotype_browser_config.download_columns \
@@ -152,68 +156,82 @@ class StudyWrapper(StudyWrapperBase):
             genotype_browser_config.summary_download_columns
 
         def unpack_columns(selected_columns, use_id=True):
-            columns, sources = [], []
+            columns = []
+            descs = []
 
             def inner(cols, get_source, use_id):
                 cols_dict = cols
 
                 for col_id in selected_columns:
                     col = cols_dict.get(col_id, None)
+                    print("\tcol_id:", col_id, "; col:", col)
+
                     if not col:
                         continue
-                    if col.source is not None:
-                        columns.append(col_id if use_id else col.name)
-                        sources.append(get_source(col))
-                    if col.slots is not None:
-                        for slot in col.slots:
-                            columns.append(
-                                f"{col_id}.{slot.name}"
-                                if use_id
-                                else f"{slot.name}"
-                            )
-                            sources.append(get_source(slot))
+                    col = col.to_dict()
+                    col["id"] = col_id
+
+                    if col.get("source") is not None:
+                        columns.append(col_id if use_id else col["name"])
+                        col["source"] = get_source(col)
+                        descs.append(col)
+
+                    elif col.get("slots") is not None:
+                        for slot in col.get("slots"):
+                            scol_id = f"{col_id}.{slot['name']}" if use_id \
+                                else f"{slot['name']}"
+
+                            scol = slot.to_dict()
+                            scol["id"] = scol_id
+                            scol["source"] = get_source(slot)
+                
+                            columns.append(scol_id)
+                            descs.append(scol)
+
 
             inner(
                 genotype_browser_config.genotype,
-                lambda x: f"{x.source}",
+                lambda x: f"{x['source']}",
                 use_id
             )
             if genotype_browser_config.pheno:
                 inner(
                     genotype_browser_config.pheno,
-                    lambda x: f"{x.source}.{x.role}",
+                    lambda x: f"{x['source']}.{x['role']}",
                     True
                 )
-            return columns, sources
+            return columns, descs
 
         if genotype_browser_config.genotype:
-            self.preview_columns, self.preview_sources = unpack_columns(
-                preview_column_names
-            )
-            self.download_columns, self.download_sources = unpack_columns(
-                download_column_names, use_id=False
-            )
+            print("preview_column_names:", preview_column_names)
+            self.preview_columns, self.preview_descs = \
+                unpack_columns(preview_column_names)
+
+            self.download_columns, \
+                self.download_descs = \
+                    unpack_columns(download_column_names, use_id=False)
             if summary_preview_column_names and \
                     len(summary_preview_column_names):
-                self.summary_preview_columns, self.summary_preview_sources = \
+                self.summary_preview_columns, self.summary_preview_descs = \
                     unpack_columns(
                         summary_preview_column_names
                     )
-                self.summary_download_columns, self.summary_download_sources =\
+                self.summary_download_columns, self.summary_download_descs = \
                     unpack_columns(
                         summary_download_column_names, use_id=False
                     )
             else:
-                self.summary_preview_columns = None
-                self.summary_preview_sources = None
-                self.summary_download_columns = None
-                self.summary_download_sources = None
+                self.summary_preview_columns = []
+                self.summary_preview_descs = []
+                self.summary_download_columns = []
+                self.summary_download_descs = []
 
         else:
-            self.preview_columns, self.preview_sources = [], []
-            self.download_columns, self.download_sources = [], []
-            self.summary_preview_columns, self.summary_preview_sources = [], []
-            self.summary_download_columns, self.summary_download_sources = \
+            self.preview_columns, self.preview_descs = [], []
+            self.download_columns, self.download_descs= [], []
+            self.summary_preview_columns, self.summary_preview_descs= \
+                [], []
+            self.summary_download_columns, self.summary_download_descs = \
                 [], []
 
     def _init_pheno(self, pheno_db):
@@ -268,9 +286,6 @@ class StudyWrapper(StudyWrapperBase):
     }
 
     STANDARD_ATTRS = {
-        "family": "family_id",
-        "location": "cshl_location",
-        "variant": "cshl_variant",
     }
 
     STANDARD_ATTRS_LAMBDAS = {
@@ -279,8 +294,19 @@ class StudyWrapper(StudyWrapperBase):
     }
 
     SPECIAL_ATTRS_FORMAT = {
+        "family": 
+        lambda v: [v.family_id],
+
+        "location": 
+        lambda v: v.cshl_location,
+
+        "variant": 
+        lambda v: v.cshl_variant,
+
         "genotype":
-        lambda v: mat2str(v.genotype),
+        lambda v: [
+            "/".join([str(g) for g in gt])
+            for gt in v.family_genotype],
 
         "effects":
         lambda v: [ge2str(e) for e in v.effects],
@@ -331,7 +357,7 @@ class StudyWrapper(StudyWrapperBase):
                         "/".join(
                             [str(v) 
                              for v in filter(
-                                lambda g: g!=0, genotype[index])
+                                lambda g: g != 0, genotype[index])
                             ])
                     )
                 )
@@ -350,52 +376,65 @@ class StudyWrapper(StudyWrapperBase):
 
         return result
 
-    def _build_variant_row(self, v, sources, **kwargs):
+    def _build_variant_row(self, v, column_descs, **kwargs):
+        print("column descs:", column_descs)
+
         row_variant = []
-        for source in sources:
+        for col_desc in column_descs:
             try:
-                if source in self.SPECIAL_ATTRS:
-                    print("\t>", source)
-                    attribute = self.SPECIAL_ATTRS[source](v)
-                    print("\t\t>>", attribute)
-                    if all([a == attribute[0] for a in attribute]):
-                        attribute = [attribute[0]]
-                    row_variant.append(attribute)
-                elif source == "pedigree":
+                col_id = col_desc["id"]
+                col_source = col_desc["source"]
+                col_format = col_desc.get("format")
+
+                print(f"\tcol_id     >", col_id)
+                print(f"\tcol_source >", col_source)
+                print(f"\tcol_format >", col_format)
+                if col_format is None:
+                    def col_formatter(val):
+                        if val is None:
+                            return "-"
+                        else:
+                            return str(val)
+                else:
+                    def col_formatter(val):
+                        if val is None:
+                            return "-"
+                        try:
+                            return col_format % val
+                        except:
+                            logging.exception(f'error build variant: {v}')
+                            traceback.print_stack()
+                            return "-"
+
+                if col_source == "pedigree":
                     person_set_collection = \
                         kwargs.get("person_set_collection")
-                    # assert person_set_collection is not None
                     row_variant.append(
                         self.generate_pedigree(
                             v, person_set_collection
                         )
                     )
                 else:
-                    attribute = v.get_attribute(source, "-")
-                    print("\t>", source, ":", attribute)
+                    if col_source in self.SPECIAL_ATTRS:
+                        attribute = self.SPECIAL_ATTRS[col_source](v)
+                    else:
+                        attribute = v.get_attribute(col_source)
+
+                    print("\t>", col_source, ":", attribute)
                     if all([a == attribute[0] for a in attribute]):
                         attribute = [attribute[0]]
 
-                    if not isinstance(attribute, str) and \
-                            not isinstance(attribute, list):
-                        if attribute is None or math.isnan(attribute):
-                            attribute = ["-"]
-                        elif math.isinf(attribute):
-                            attribute = ["inf"]
-                    if attribute == "":
-                        attribute = ["-"]
                     print("\t\t>>attribute:", attribute)
-                    attribute = list(map(
-                        lambda a: a if a is not None else "-", attribute))
-                    print("\t\t>>attribute:", attribute)
-                    print("\t\t\t>>types:", [type(a) for a in attribute])
+                    attribute = list(map(col_formatter, attribute))
+                    print("\t\t>>formatted:", attribute)
 
-                    row_variant.append(",".join([str(a) for a in attribute]))
+                    row_variant.append(", ".join([str(a) for a in attribute]))
 
             except (AttributeError, KeyError, Exception):
                 logging.exception(f'error build variant: {v}')
                 traceback.print_stack()
                 row_variant.append([""])
+                raise
 
         return row_variant
 
@@ -427,34 +466,6 @@ class StudyWrapper(StudyWrapperBase):
             row_variant = []
             row_variant = self._build_variant_row(
                 v, sources, person_set_collection=person_set_collection)
-
-            # for source in sources:
-            #     try:
-            #         if source in self.SPECIAL_ATTRS:
-            #             row_variant.append(
-            #                 self.SPECIAL_ATTRS[source](v))
-            #         elif source == "pedigree":
-            #             row_variant.append(
-            #                 self.generate_pedigree(
-            #                     v, person_set_collection
-            #                 )
-            #             )
-            #         else:
-            #             attribute = v.get_attribute(source, "-")
-            #             print("\t>", source, ":", attribute)
-            #             if not isinstance(attribute, str) and \
-            #                     not isinstance(attribute, list):
-            #                 if attribute is None or math.isnan(attribute):
-            #                     attribute = "-"
-            #                 elif math.isinf(attribute):
-            #                     attribute = "inf"
-            #             if attribute == "":
-            #                 attribute = "-"
-            #             row_variant.append(attribute)
-
-            #     except (AttributeError, KeyError, Exception):
-            #         traceback.print_exc()
-            #         row_variant.append("")
 
             print(v, row_variant)
             yield row_variant
@@ -494,7 +505,7 @@ class StudyWrapper(StudyWrapperBase):
     def get_variants_wdae_preview(self, query, max_variants_count=10000):
         variants_data = self.get_variant_web_rows(
             query,
-            self.preview_sources,
+            self.preview_descs,
             max_variants_count=max_variants_count,
         )
 
@@ -502,7 +513,7 @@ class StudyWrapper(StudyWrapperBase):
 
     def get_variants_wdae_download(self, query, max_variants_count=10000):
         rows = self.get_variant_web_rows(
-            query, self.download_sources, max_variants_count=max_variants_count
+            query, self.download_descs, max_variants_count=max_variants_count
         )
 
         wdae_download = map(
@@ -748,7 +759,7 @@ class StudyWrapper(StudyWrapperBase):
             variants_from_studies)
         for v in variants_with_additional_cols:
             row_variant = self._build_variant_row(
-                v, self.summary_preview_sources)
+                v, self.summary_preview_descs)
 
             print("row_variant:", row_variant)
             yield row_variant
@@ -837,7 +848,7 @@ class StudyWrapper(StudyWrapperBase):
         result = list(zip(pheno_column_dfs, pheno_column_names))
         return result
 
-    def _get_gene_weights_values(self, allele, default="-"):
+    def _get_gene_weights_values(self, allele, default=None):
         if not self.gene_weight_column_sources:
             return {}
         genes = gene_effect_get_genes(allele.effects).split(";")
