@@ -27,10 +27,10 @@ def test_multi_alt_allele_genotype(variants_vcf, region, worst_effect):
         assert np.all(v.gt[:, 0] == np.array([0, 1]))
         assert np.all(v.gt[:, 2] == np.array([0, 1]))
 
-        assert v.genotype.shape == (3, 2)
-        assert np.all(v.genotype[0, :] == np.array([0, 1]))
-        assert np.all(v.genotype[1, :] == np.array([0, 0]))
-        assert np.all(v.genotype[2, :] == np.array([0, 1]))
+        assert len(v.genotype) == 3
+        assert v.genotype[0] == [0, 1]
+        assert v.genotype[1] == [0, 0]
+        assert v.genotype[2] == [0, 1]
 
 
 @pytest.mark.parametrize(
@@ -47,10 +47,10 @@ def test_multi_alt_allele_genotype2(variants_vcf, region, worst_effect):
     assert len(vs) == 1
 
     for v in vs:
-        assert v.genotype.shape == (3, 2)
-        assert np.all(v.genotype[0, :] == np.array([0, 1]))
-        assert np.all(v.genotype[1, :] == np.array([0, 2]))
-        assert np.all(v.genotype[2, :] == np.array([1, 2]))
+        assert len(v.genotype) == 3
+        assert v.genotype[0] == [0, 1]
+        assert v.genotype[1] == [0, 2]
+        assert v.genotype[2] == [1, 2]
 
 
 @pytest.mark.parametrize(
@@ -74,7 +74,7 @@ def test_trios_multi_alt_allele_genotype2(variants_vcf, region, gt):
     assert len(vs) == 1
 
     for v in vs:
-        assert v.genotype.shape == (3, 2)
-        assert np.all(v.genotype[0, :] == gt[0, :])
-        assert np.all(v.genotype[1, :] == gt[1, :])
-        assert np.all(v.genotype[2, :] == gt[2, :])
+        assert len(v.genotype) == 3
+        assert v.genotype[0] == list(gt[0, :])
+        assert v.genotype[1] == list(gt[1, :])
+        assert v.genotype[2] == list(gt[2, :])
