@@ -1,8 +1,8 @@
-<div style="padding: 10px; width: 400px;display: grid;">
+<div style="padding: 10px; min-width: 400px; display: grid;">
 
-  <div style="width: 100%">
-    <button type="button" class="btn btn-primary" style="float: left; position: relative;" (click)="toggleCheckingAll()">{{checkUncheckAll}}</button>
-    <input class="form-control" type="text" name="search" [(ngModel)]="searchText" autocomplete="off" placeholder="&#61442;  Search...">
+  <div style="width: 100%; padding-bottom: 5px">
+    <button type="button" class="btn btn-default" style="float: left; position: relative; width: 30%; margin-right: 2%;" (click)="toggleCheckingAll()">{{checkUncheckAll}}</button>
+    <input class="form-control" type="text" style="width: 68%;" name="search" [(ngModel)]="searchText" autocomplete="off" placeholder="Search...">
   </div>
 
   <table>
@@ -14,9 +14,10 @@
         </label>
       </td>
     </tr>
-    <td></td>
+    <td>
+      <button type="submit" class="btn btn-secondary" style="width: 100%;" (click)="apply()">Apply</button>
+    </td>
   </table>
 
-  <button type="submit" class="btn btn-success" style="width: 100%;" (click)="apply()">Apply</button>
   
 </div>
