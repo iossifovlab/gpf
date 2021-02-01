@@ -328,7 +328,7 @@ class StudyWrapper(StudyWrapperBase):
             try:
                 result.append(
                     self._get_wdae_member(
-                        member, person_set_collection, 
+                        member, person_set_collection,
                         ",".join([str(v) for v in best_st[:, index]])
                     )
                 )
@@ -377,9 +377,11 @@ class StudyWrapper(StudyWrapperBase):
                     if attribute == "":
                         attribute = ["-"]
                     print("\t\t>>attribute:", attribute)
-                    attribute = list(filter(
+                    attribute = list(map(
                         lambda a: a if a is not None else "-", attribute))
                     print("\t\t>>attribute:", attribute)
+                    print("\t\t\t>>types:", [type(a) for a in attribute])
+
                     row_variant.append(",".join([str(a) for a in attribute]))
 
             except (AttributeError, KeyError, Exception):
@@ -737,36 +739,6 @@ class StudyWrapper(StudyWrapperBase):
         variants_with_additional_cols = self._add_additional_columns_summary(
             variants_from_studies)
         for v in variants_with_additional_cols:
-            # for aa in v.alt_alleles:
-            #     assert not aa.is_reference_allele
-
-            #     row_variant = []
-            #     for source in self.summary_preview_sources:
-            #         try:
-            #             if source in self.SPECIAL_ATTRS:
-            #                 row_variant.append(self.SPECIAL_ATTRS[source](aa))
-            #             elif source == "pedigree":
-            #                 pass
-            #             else:
-            #                 attribute = aa.get_attribute(source, "-")
-
-            #                 if not isinstance(attribute, str) and \
-            #                         not isinstance(attribute, list):
-            #                     if attribute is None or math.isnan(attribute):
-            #                         attribute = "-"
-            #                     elif math.isinf(attribute):
-            #                         attribute = "inf"
-            #                 if attribute == "":
-            #                     attribute = "-"
-
-            #                 row_variant.append(attribute)
-
-            #         except (AttributeError, KeyError):
-            #             traceback.print_exc()
-            #             row_variant.append([])
-
-            #     assert all([isinstance(c, list) for c in row_variant])
-            #     row_variant = [",".join(c) for c in row_variant]
             row_variant = self._build_variant_row(
                 v, self.summary_preview_sources)
 
@@ -857,7 +829,7 @@ class StudyWrapper(StudyWrapperBase):
         result = list(zip(pheno_column_dfs, pheno_column_names))
         return result
 
-    def _get_gene_weights_values(self, allele):
+    def _get_gene_weights_values(self, allele, default="-"):
         if not self.gene_weight_column_sources:
             return {}
         genes = gene_effect_get_genes(allele.effects).split(";")
@@ -871,10 +843,10 @@ class StudyWrapper(StudyWrapperBase):
             gene_weights = self.gene_weights_db[gwc]
             if gene != "":
                 gene_weights_values[gwc] = gene_weights._to_dict().get(
-                    gene, ""
+                    gene, default
                 )
             else:
-                gene_weights_values[gwc] = ""
+                gene_weights_values[gwc] = default
 
         return gene_weights_values
 

@@ -236,6 +236,8 @@ class Allele(ABC):
         on creation of the variant.
         """
         val = self.attributes.get(item, default)
+        if val is None:
+            val = default
         return val
 
     def has_attribute(self, item: str) -> bool:
@@ -360,7 +362,7 @@ class Variant(ABC):
     def cshl_variant(self) -> List[Optional[str]]:
         if not self.alt_alleles:
             return []
-        return [aa.cshl_variant for aa in self.alt_alleles] 
+        return [aa.cshl_variant for aa in self.alt_alleles]
 
     @property
     def cshl_location(self) -> Optional[str]:
