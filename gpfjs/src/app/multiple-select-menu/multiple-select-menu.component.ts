@@ -11,6 +11,7 @@ export class MultipleSelectMenuComponent implements OnInit {
   @Output() applyEvent = new EventEmitter<string[]>();
 
   private checkboxDataArray: {id: string; isChecked: boolean}[];
+  private checkUncheckAll = 'Uncheck all';
 
   constructor() { }
 
@@ -23,6 +24,16 @@ export class MultipleSelectMenuComponent implements OnInit {
     return allItems.map(
       item => ({id: item, isChecked: this.selectedItems.includes(item)})
     );
+  }
+
+  toggleCheckingAll() {
+    if (this.checkUncheckAll === 'Uncheck all') {
+      this.checkboxDataArray.forEach(item => item.isChecked = false);
+      this.checkUncheckAll = 'Check all';
+    } else if (this.checkUncheckAll === 'Check all') {
+      this.checkboxDataArray.forEach(item => item.isChecked = true);
+      this.checkUncheckAll = 'Uncheck all';
+    }
   }
 
   apply() {
