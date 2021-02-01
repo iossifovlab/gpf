@@ -90,7 +90,7 @@ def get_variant_count(
 def main(gpf_instance=None, argv=None):
     description = "Generate autism gene profile statistics tool"
     parser = argparse.ArgumentParser(description=description)
-    parser.add_argument('--verbose', '-V', action='count', default=0)
+    parser.add_argument('--verbose', '-V', '-v', action='count', default=0)
     default_dbfile = os.path.join(os.getenv("DAE_DB_DIR", "./"), "agpdb")
     parser.add_argument("--dbfile", default=default_dbfile)
 
@@ -136,8 +136,13 @@ def main(gpf_instance=None, argv=None):
                 )
 
     output = []
-    for sym in gene_symbols:
+    gene_symbols = list(gene_symbols)
+    gs_count = len(gene_symbols)
+    for idx, sym in enumerate(gene_symbols, 1):
         output.append(generate_agp(gpf_instance, sym, variants, person_ids))
+        if idx % 25 == 0:
+            logger.info(f"Generated {idx}/{gs_count} AGP statistics")
+    logger.info("Done generating AGP statistics!")
     duration = time.time() - start
     print(duration)
 
@@ -145,8 +150,9 @@ def main(gpf_instance=None, argv=None):
 
     agpdb.clear_all_tables()
     agpdb.populate_data_tables(gpf_instance)
-    for agp in output:
-        agpdb.insert_agp(agp)
+    logger.info("Inserting statistics into DB")
+    agpdb.insert_agps(output)
+    logger.info("Done")
 
 
 if __name__ == "__main__":
