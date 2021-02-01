@@ -1,7 +1,11 @@
+import logging
+
 from dae.autism_gene_profile.statistic import AGPStatistic
 from sqlalchemy import MetaData, create_engine
 from sqlalchemy import Table, Column, Integer, String, Float, ForeignKey
 from sqlalchemy.sql import select, insert, join, delete
+
+logger = logging.getLogger(__name__)
 
 
 class AutismGeneProfileDB:
@@ -43,10 +47,13 @@ class AutismGeneProfileDB:
             for row in studies
         ]
 
-    def _get_study_ids(self):
+    def _get_study_ids(self, connection=None):
         s = select(self.studies.c)
-        with self.engine.connect() as connection:
+        if connection is not None:
             studies = connection.execute(s).fetchall()
+        else:
+            with self.engine.connect() as connection:
+                studies = connection.execute(s).fetchall()
         return {row[1]: row[0] for row in studies}
 
     def _get_variant_counts(self, gene_symbol_id):
@@ -82,6 +89,12 @@ class AutismGeneProfileDB:
             sets = connection.execute(s).fetchall()
         return sets
 
+    def _get_gene_set_ids(self):
+        s = select(self.gene_sets.c)
+        with self.engine.connect() as connection:
+            sets = connection.execute(s).fetchall()
+        return {gs.set_name: gs.id for gs in sets}
+
     def _get_gene_symbol_sets(self, gene_symbol_id):
         j = join(
             self.gene_symbol_sets, self.gene_sets,
@@ -107,6 +120,12 @@ class AutismGeneProfileDB:
         with self.engine.connect() as connection:
             gene_symbols = connection.execute(s).fetchall()
         return [gs.symbol_name for gs in gene_symbols]
+
+    def _get_gene_symbol_ids(self):
+        s = select(self.gene_symbols.c)
+        with self.engine.connect() as connection:
+            gene_symbols = connection.execute(s).fetchall()
+        return {gs.symbol_name: gs.id for gs in gene_symbols}
 
     def get_agp(self, gene_symbol):
         symbol_id = self._get_gene_symbol_id(gene_symbol)
@@ -265,7 +284,7 @@ class AutismGeneProfileDB:
             connection.execute(delete(self.gene_sets))
 
     def populate_data_tables(self, gpf_instance):
-        gene_sets = gpf_instance.gene_sets_db.get_gene_set_ids("main")
+        gene_sets = self.get_full_configuration(gpf_instance)["gene_sets"]
         self._populate_gene_sets_table(gene_sets)
         studies = gpf_instance.get_genotype_data_ids()
         self._populate_studies_table(studies)
@@ -294,13 +313,6 @@ class AutismGeneProfileDB:
                 )
             for gene_set in agp.gene_sets:
                 gene_set_db = self._get_gene_set(gene_set)
-                if not gene_set_db:
-                    connection.execute(
-                        insert(self.gene_sets).values(
-                            set_name=gene_set
-                        )
-                    )
-                    gene_set_db = self._get_gene_set(gene_set)
                 set_id = gene_set_db[0]
                 connection.execute(
                     insert(self.gene_symbol_sets).values(
@@ -324,14 +336,68 @@ class AutismGeneProfileDB:
                             )
                         )
 
+
+    def insert_agps(self, agps):
+        study_ids = self._get_study_ids()
+        gene_set_ids = self._get_gene_set_ids()
+        with self.engine.connect() as connection:
+            with connection.begin():
+                agp_count = len(agps)
+                for idx, agp in enumerate(agps, 1):
+                    result = connection.execute(
+                        insert(self.gene_symbols).values(
+                            symbol_name=agp.gene_symbol
+                        )
+                    )
+                    symbol_id = result.inserted_primary_key[0]
+                    for name, value in agp.protection_scores.items():
+                        connection.execute(
+                            insert(self.protection_scores).values(
+                                symbol_id=symbol_id,
+                                score_name=name,
+                                score_value=value
+                            )
+                        )
+                    for name, value in agp.autism_scores.items():
+                        connection.execute(
+                            insert(self.autism_scores).values(
+                                symbol_id=symbol_id,
+                                score_name=name,
+                                score_value=value
+                            )
+                        )
+                    for gene_set in agp.gene_sets:
+                        set_id = gene_set_ids[gene_set]
+                        connection.execute(
+                            insert(self.gene_symbol_sets).values(
+                                symbol_id=symbol_id,
+                                set_id=set_id
+                            )
+                        )
+
+                    for study, counts in agp.variant_counts.items():
+                        study_id = study_ids[study]
+                        for people_group, effects in counts.items():
+                            for effect_type, count in effects.items():
+                                connection.execute(
+                                    insert(self.variant_counts).values(
+                                        symbol_id=symbol_id,
+                                        study_id=study_id,
+                                        people_group=people_group,
+                                        effect_type=effect_type,
+                                        count=count
+                                    )
+                                )
+
+                    if idx % 25 == 0:
+                        logger.info(f"Inserted {idx}/{agp_count} AGPs into DB")
+                logger.info("Done!")
+
     def get_full_configuration(self, gpf_instance):
         if not self.configuration:
             self.configuration = \
                 gpf_instance._autism_gene_profile_config.to_dict()
-            s = select([self.gene_sets.c.set_name])
-            with self.engine.connect() as connection:
-                sets = connection.execute(s).fetchall()
-            self.configuration["gene_lists"] = [row[0] for row in sets]
+            self.configuration["gene_lists"] = self.configuration["gene_sets"]
             for dataset in self.configuration["datasets"]:
                 dataset_dict = self.configuration["datasets"][dataset]
                 person_sets = dataset_dict["person_sets"]
