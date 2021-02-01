@@ -415,11 +415,15 @@ class BaseQueryBuilder:
         frequency_bin_col = self.where_accessors["frequency_bin"]
         matchers = []
         if inheritance is not None:
+            logger.debug(
+                f"frequence_bin_heuristic inheritance: {inheritance} "
+                f"({type(inheritance)})")
+            if isinstance(inheritance, str):
+                inheritance = [inheritance]
 
             matchers = [
                 inheritance_query.transform_tree_to_matcher(
-                    inheritance_query.transform_query_string_to_tree(
-                        inh))
+                    inheritance_query.transform_query_string_to_tree(inh))
                 for inh in inheritance]
 
             if any([m.match([Inheritance.denovo]) for m in matchers]):

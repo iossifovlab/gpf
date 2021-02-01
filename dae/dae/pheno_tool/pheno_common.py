@@ -28,15 +28,23 @@ class PhenoFilterRange(PhenoFilter):
     def __init__(self, phenotype_data, measure_id, values_range):
         super(PhenoFilterRange, self).__init__(phenotype_data, measure_id)
         measure_type = phenotype_data.get_measure(measure_id).measure_type
-        assert (
-            measure_type == MeasureType.continuous
-            or measure_type == MeasureType.ordinal
-        )
+        assert measure_type == MeasureType.continuous or \
+            measure_type == MeasureType.ordinal
+        assert isinstance(values_range, list) or \
+            isinstance(values_range, tuple) or \
+            isinstance(values_range, set), \
+            f"{values_range} ({type(values_range)})"
 
-        assert isinstance(values_range, list) or isinstance(
-            values_range, tuple
-        )
-        self.values_min, self.values_max = values_range
+        if len(values_range) == 2:
+            assert isinstance(values_range, list) or isinstance(
+                values_range, tuple
+            )
+            assert len(values_range) == 2
+            self.values_min, self.values_max = values_range
+        else:
+            assert len(values_range) == 1
+            for value in values_range:
+                self.values_max = self.values_min = value
 
     def apply(self, df):
         if self.values_min is not None and self.values_max is not None:
@@ -58,11 +66,13 @@ class PhenoFilterBuilder(object):
     def __init__(self, phenotype_data):
         self.phenotype_data = phenotype_data
 
-    def make_filter(self, measure_id, constraints):
+    def make_filter(self, measure_id, constraints, pheno_filter_type=None):
         measure = self.phenotype_data.get_measure(measure_id)
+
         assert measure is not None
         if measure.measure_type == MeasureType.categorical:
-            return PhenoFilterSet(self.phenotype_data, measure_id, constraints)
+            return PhenoFilterSet(
+                self.phenotype_data, measure_id, constraints)
         else:
             return PhenoFilterRange(
                 self.phenotype_data, measure_id, constraints

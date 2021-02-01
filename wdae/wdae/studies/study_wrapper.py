@@ -1148,34 +1148,48 @@ class StudyWrapper(StudyWrapperBase):
 
     def _transform_pheno_filters_to_family_ids(self, pheno_filter_args):
         family_ids = list()
+        person_ids = list()
 
-        for pheno_filter_arg in pheno_filter_args:
-            if not self.phenotype_data.has_measure(
-                pheno_filter_arg["measure"]
-            ):
+        for pheno_filter in pheno_filter_args:
+            if not self.phenotype_data.has_measure(pheno_filter["measure"]):
                 continue
+
+            pheno_filter_type = MeasureType.from_str(
+                pheno_filter["measureType"])
+
             pheno_constraints = self._get_pheno_filter_constraints(
-                pheno_filter_arg
-            )
-            pheno_filter = self.pheno_filter_builder.make_filter(
-                pheno_filter_arg["measure"], pheno_constraints
-            )
-            roles = [pheno_filter_arg["role"]]
-            person_ids = [
+                pheno_filter)
+
+            if "role" in pheno_filter:
+                roles = [pheno_filter["role"]]
+            else:
+                roles = None
+            persons = set([
                 p.person_id
                 for p in self.families.persons_with_roles(roles=roles)
-            ]
+            ])
             measure_df = self.phenotype_data.get_measure_values_df(
-                pheno_filter_arg["measure"], person_ids=person_ids
-            )
-            measure_df = pheno_filter.apply(measure_df)
-            family_ids.append(set(
-                self.families.persons[person_id].family.family_id
-                for person_id in measure_df["person_id"]
-                if person_id in self.families.persons
-            ))
+                pheno_filter["measure"], person_ids=persons)
 
-        return reduce(set.intersection, family_ids) if family_ids else set()
+            filter = self.pheno_filter_builder.make_filter(
+                pheno_filter["measure"], pheno_constraints, pheno_filter_type)
+            measure_df = filter.apply(measure_df)
+            if roles:
+                family_ids.append(set(
+                    self.families.persons[person_id].family.family_id
+                    for person_id in measure_df["person_id"]
+                    if person_id in self.families.persons
+                ))
+            else:
+                person_ids.append(set([
+                    person_id for person_id in measure_df["person_id"]
+                    if person_id in persons]))
+        family_ids = reduce(
+            set.intersection, family_ids) if family_ids else None
+        person_ids = reduce(
+            set.intersection, person_ids) if person_ids else None
+
+        return family_ids, person_ids
 
     def _transform_pheno_filters(self, kwargs):
         pheno_filter_args = kwargs.pop("phenoFilters")
@@ -1183,17 +1197,25 @@ class StudyWrapper(StudyWrapperBase):
         assert isinstance(pheno_filter_args, list)
         assert self.phenotype_data
 
-        matching_family_ids = self._transform_pheno_filters_to_family_ids(
-            pheno_filter_args
-        )
+        matching_family_ids, matching_person_ids = \
+            self._transform_pheno_filters_to_family_ids(pheno_filter_args)
 
-        if "family_ids" in kwargs:
-            kwarg_family_ids = kwargs.pop("family_ids")
-            matching_family_ids = set.intersection(
-                matching_family_ids, set(kwarg_family_ids)
-            )
+        if matching_family_ids is not None:
+            if "family_ids" in kwargs:
+                kwarg_family_ids = kwargs.pop("family_ids")
+                matching_family_ids = set.intersection(
+                    matching_family_ids, set(kwarg_family_ids)
+                )
+            kwargs["family_ids"] = matching_family_ids
 
-        kwargs["family_ids"] = matching_family_ids
+        if matching_person_ids is not None:
+            if "person_ids" in kwargs:
+                kwarg_person_ids = kwargs.pop("person_ids")
+                matching_person_ids = set.intersection(
+                    matching_person_ids, set(kwarg_person_ids)
+                )
+            kwargs["person_ids"] = matching_person_ids
+
         return kwargs
 
     @staticmethod

@@ -290,7 +290,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
 
         missing_samples = vcf_samples.difference(pedigree_samples)
         if missing_samples:
-            logger.warning(
+            logger.info(
                 f"samples missing in pedigree: {len(missing_samples)}; "
                 f"{missing_samples}")
 
@@ -319,6 +319,9 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                 if not person.generated and not person.not_sequenced:
                     not_sequenced.add(person.person_id)
                     person.set_attr("not_sequenced", True)
+                    logger.warning(
+                        f"person {person.person_id} marked as "
+                        f"'not_sequenced'")
             else:
                 person.set_attr(
                     "sample_index",
@@ -330,7 +333,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                 person.set_attr("missing", True)
 
         self.families.redefine()
-        logger.info(
+        logger.warning(
             f"persons changed to not_sequenced {len(not_sequenced)}: "
             f"{not_sequenced}")
 
@@ -587,6 +590,7 @@ class VcfLoader(VariantsGenotypesLoader):
                 f"in {vcf_loader.filenames}")
 
     def _families_intersection(self):
+        logger.warning("families intersection run...")
         families = self.vcf_loaders[0].families
         for vcf_loader in self.vcf_loaders:
             other_families = vcf_loader.families
@@ -595,8 +599,8 @@ class VcfLoader(VariantsGenotypesLoader):
                 if other_person.not_sequenced:
                     person = families.persons[other_person.person_id]
                     logger.warning(
-                        f"person {person.person_id} is marked as "
-                        f"'not_sequenced'")
+                        f"families intersection: person {person.person_id} "
+                        f"is marked as 'not_sequenced'")
                     person.set_attr("not_sequenced", True)
         families.redefine()
 
@@ -606,6 +610,7 @@ class VcfLoader(VariantsGenotypesLoader):
         return families
 
     def _families_union(self):
+        logger.warning("families union run...")
         families = self.vcf_loaders[0].families
         for person_id, person in families.persons.items():
             if not person.not_sequenced:
@@ -615,8 +620,8 @@ class VcfLoader(VariantsGenotypesLoader):
 
                 if not other_person.not_sequenced:
                     logger.warning(
-                        f"person {person.person_id} is marked as "
-                        f"'not_sequenced'")
+                        f"families union: person {person.person_id} "
+                        f"'not_sequenced' flag changed to 'sequenced'")
                     person.set_attr("not_sequenced", False)
                     break
 

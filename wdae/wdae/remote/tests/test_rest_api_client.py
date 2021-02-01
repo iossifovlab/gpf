@@ -56,11 +56,13 @@ def test_get_browser_measures_info(rest_client):
 
 
 def test_get_browser_measures(rest_client):
-    measures_response = rest_client.get_browser_measures(
-        "iossifov_2014", "i1", None)
+    measures = rest_client.get_browser_measures("iossifov_2014", "i1", None)
 
-    assert measures_response is not None
-    assert isinstance(measures_response, Response)
+    measures = list(measures)
+
+    assert measures is not None
+    assert isinstance(measures, list)
+    assert len(measures) == 7
 
 
 def test_get_instruments(rest_client):

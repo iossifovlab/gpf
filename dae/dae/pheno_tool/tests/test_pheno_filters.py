@@ -1,10 +1,9 @@
 import pytest
-from dae.pheno_tool.pheno_common import (
-    PhenoFilter,
-    PhenoFilterSet,
-    PhenoFilterRange,
-    PhenoFilterBuilder,
-)
+from dae.pheno_tool.pheno_common import \
+    PhenoFilter, \
+    PhenoFilterSet, \
+    PhenoFilterRange, \
+    PhenoFilterBuilder
 
 
 def test_pheno_filter_nonexistent_measure(fake_phenotype_data):
@@ -82,6 +81,11 @@ def test_pheno_filter_range_apply(fake_phenotype_data):
     pf = PhenoFilterRange(fake_phenotype_data, "i1.m1", (None, None))
     filtered_df = pf.apply(df)
     assert len(filtered_df) == 195
+
+    pf = PhenoFilterRange(fake_phenotype_data, "i1.m1", {50})
+    print(df.head())
+    filtered_df = pf.apply(df)
+    assert len(filtered_df) == 0
 
 
 def test_pheno_filter_range_measure_type(fake_phenotype_data):
