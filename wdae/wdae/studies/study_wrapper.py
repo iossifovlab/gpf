@@ -321,7 +321,7 @@ class StudyWrapper(StudyWrapperBase):
     def generate_pedigree(self, variant, person_set_collection):
         result = []
         # best_st = np.sum(allele.gt == allele.allele_index, axis=0)
-        best_st = variant.best_state[variant.allele_indexes, :]
+        genotype = variant.family_genotype
 
         missing_members = set()
         for index, member in enumerate(variant.members_in_order):
@@ -329,14 +329,18 @@ class StudyWrapper(StudyWrapperBase):
                 result.append(
                     self._get_wdae_member(
                         member, person_set_collection,
-                        ",".join([str(v) for v in best_st[:, index]])
+                        "/".join(
+                            [str(v) 
+                             for v in filter(
+                                lambda g: g!=0, genotype[index])
+                            ])
                     )
                 )
             except IndexError:
                 import traceback
                 traceback.print_exc()
                 missing_members.add(member.person_id)
-                logger.error(f"{best_st}, {index}, {member}")
+                logger.error(f"{genotype}, {index}, {member}")
 
         for member in variant.family.full_members:
             if (member.generated or member.not_sequenced) \
