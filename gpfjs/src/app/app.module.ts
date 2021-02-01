@@ -159,6 +159,7 @@ import { LoadingSpinnerComponent } from './loading-spinner/loading-spinner.compo
 import { DatasetNodeComponent } from './dataset-node/dataset-node.component';
 import { AutismGeneProfilesComponent } from './autism-gene-profiles/autism-gene-profiles.component';
 import { MultipleSelectMenuComponent } from './multiple-select-menu/multiple-select-menu.component';
+import { Ng2SearchPipeModule } from 'ng2-search-filter';
 
 const appRoutes: Routes = [
   {
@@ -376,6 +377,7 @@ const appRoutes: Routes = [
       confirmButtonType: 'danger'
     }),
     NgMultiSelectDropDownModule.forRoot(),
+    Ng2SearchPipeModule
   ],
   providers: [
     CookieService,

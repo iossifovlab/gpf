@@ -1,7 +1,12 @@
+<div style="padding: 10px; width: 400px;display: grid;">
 
-<div style="padding: 10px; width: 400px;">
+  <div style="width: 100%">
+    <button type="button" class="btn btn-primary" style="float: left; position: relative;" (click)="toggleCheckingAll()">{{checkUncheckAll}}</button>
+    <input class="form-control" type="text" name="search" [(ngModel)]="searchText" autocomplete="off" placeholder="&#61442;  Search...">
+  </div>
+
   <table>
-    <tr *ngFor="let item of checkboxDataArray" style="height: 30px;">
+    <tr *ngFor="let item of checkboxDataArray | filter:searchText" style="height: 30px;">
       <td>
         <label style="width: 100%">
           <input type="checkbox" [checked]="item.isChecked" [(ngModel)]="item.isChecked">
@@ -12,6 +17,6 @@
     <td></td>
   </table>
 
-  <button type="submit" class="btn btn-success" style="float: right;" (click)="apply()">Apply</button>
-  <button type="button" class="btn btn-primary" style="float: left;" (click)="toggleCheckingAll()">{{checkUncheckAll}}</button>
+  <button type="submit" class="btn btn-success" style="width: 100%;" (click)="apply()">Apply</button>
+  
 </div>

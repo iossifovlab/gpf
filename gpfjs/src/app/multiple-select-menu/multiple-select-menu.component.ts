@@ -10,8 +10,9 @@ export class MultipleSelectMenuComponent implements OnInit {
   @Input() allItems: string[];
   @Output() applyEvent = new EventEmitter<string[]>();
 
-  private checkboxDataArray: {id: string; isChecked: boolean}[];
   private checkUncheckAll = 'Uncheck all';
+  private searchText: String;
+  private checkboxDataArray: {id: string; isChecked: boolean}[];
 
   constructor() { }
 
