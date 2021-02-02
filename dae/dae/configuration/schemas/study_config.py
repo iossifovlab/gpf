@@ -82,28 +82,21 @@ present_in_role_schema = {
     "roles": {"type": "list", "schema": {"type": "string"}},
 }
 
-pheno_filters_schema = {
-    "name": {"type": "string"},
-    "measure_type": {"type": "string"},
-    "filter_type": {"type": "string"},
-    "role": {"type": "string"},
-    "measure": {"type": "string"},
-}
-
-family_filters_schema = {
-    "name": {"type": "string"},
-    "measure_type": {"type": "string"},
-    "filter_type": {"type": "string"},
-    "role": {"type": "string"},
-    "measure": {"type": "string"},
-}
-
 person_filters_schema = {
     "name": {"type": "string"},
-    "measure_type": {"type": "string"},
+    "from": {"type": "string", "allowed": ["pedigree", "phenotype"]},
+    "source": {"type": "string"},
+    "source_type": {
+        "type": "string",
+        "allowed": ["continuous", "categorical"]
+    },
     "filter_type": {"type": "string"},
-    "measure": {"type": "string"},
 }
+
+family_filters_schema = dict(
+    **person_filters_schema,
+    role={"type": "string"},
+)
 
 family_schema = {
     "path": {
@@ -246,6 +239,7 @@ study_config_schema = {
         "schema": {
             "enabled": {"type": "boolean", "required": True},
             "has_family_filters": {"type": "boolean"},
+            "has_person_filters": {"type": "boolean"},
             "has_study_filters": {"type": "boolean"},
             "has_present_in_child": {"type": "boolean"},
             "has_present_in_parent": {"type": "boolean"},
@@ -256,11 +250,6 @@ study_config_schema = {
                 "type": "list",
                 "schema": {"type": "string"},
                 "default": [],
-            },
-            "family_filters": {
-                "type": "list",
-                "schema": {"type": "string"},
-                "dependencies": {"has_family_filters": True},
             },
             "selected_in_roles_values": {
                 "type": "list",
@@ -317,7 +306,21 @@ study_config_schema = {
                 "type": "dict",
                 "valuesrules": {
                     "type": "dict",
-                    "schema": pheno_filters_schema,
+                    "schema": family_filters_schema,
+                },
+            },
+            "person_filters": {
+                "type": "dict",
+                "valuesrules": {
+                    "type": "dict",
+                    "schema": person_filters_schema,
+                },
+            },
+            "family_filters": {
+                "type": "dict",
+                "valuesrules": {
+                    "type": "dict",
+                    "schema": family_filters_schema,
                 },
             },
             "selected_pheno_filters_values": {

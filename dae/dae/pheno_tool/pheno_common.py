@@ -1,93 +1,81 @@
 import numpy as np
+import pandas as pd
+from collections.abc import Collection
 from dae.pheno.common import MeasureType
+from dae.pheno.pheno_db import Measure
 
 
-class PhenoFilter(object):
-    def __init__(self, phenotype_data, measure_id):
-        assert phenotype_data.has_measure(measure_id)
-
-        self.phenotype_data = phenotype_data
-        self.measure_id = measure_id
-
-
-class PhenoFilterSet(PhenoFilter):
-    def __init__(self, phenotype_data, measure_id, values_set):
-        super(PhenoFilterSet, self).__init__(phenotype_data, measure_id)
-
-        measure_type = phenotype_data.get_measure(measure_id).measure_type
-        assert measure_type == MeasureType.categorical
-
-        assert type(values_set) in (list, set, tuple)
-        self.value_set = values_set
-
-    def apply(self, df):
-        return df[df[self.measure_id].isin(self.value_set)]
+class PersonFilter():
+    def __init__(self, criteria: str, values: Collection):
+        self.criteria: str = criteria
+        self.values: str = values
+        assert type(values) in (list, set, tuple)
 
 
-class PhenoFilterRange(PhenoFilter):
-    def __init__(self, phenotype_data, measure_id, values_range):
-        super(PhenoFilterRange, self).__init__(phenotype_data, measure_id)
-        measure_type = phenotype_data.get_measure(measure_id).measure_type
-        assert measure_type == MeasureType.continuous or \
-            measure_type == MeasureType.ordinal
-        assert isinstance(values_range, list) or \
-            isinstance(values_range, tuple) or \
-            isinstance(values_range, set), \
-            f"{values_range} ({type(values_range)})"
+class PersonFilterSet(PersonFilter):
+    def __init__(self, criteria: str, values: Collection):
+        super(PersonFilterSet, self).__init__(criteria, values)
 
-        if len(values_range) == 2:
-            assert isinstance(values_range, list) or isinstance(
-                values_range, tuple
-            )
-            assert len(values_range) == 2
-            self.values_min, self.values_max = values_range
+    def apply(self, df: pd.DataFrame) -> pd.DataFrame:
+        return df[df[self.criteria].isin(self.values)]
+
+
+class PersonFilterRange(PersonFilter):
+    def __init__(self, criteria: str, values: Collection):
+        super(PersonFilterRange, self).__init__(criteria, values)
+        if len(values) == 2:
+            self.values_min, self.values_max = values
         else:
-            assert len(values_range) == 1
-            for value in values_range:
-                self.values_max = self.values_min = value
+            self.values_min = self.values_max = values[0]
 
-    def apply(self, df):
+    def apply(self, df: pd.DataFrame) -> pd.DataFrame:
         if self.values_min is not None and self.values_max is not None:
             return df[
                 np.logical_and(
-                    df[self.measure_id] >= self.values_min,
-                    df[self.measure_id] <= self.values_max,
+                    df[self.criteria] >= self.values_min,
+                    df[self.criteria] <= self.values_max,
                 )
             ]
         elif self.values_min is not None:
-            return df[df[self.measure_id] >= self.values_min]
+            return df[df[self.criteria] >= self.values_min]
         elif self.values_max is not None:
-            return df[df[self.measure_id] <= self.values_max]
+            return df[df[self.criteria] <= self.values_max]
         else:
-            return df[-np.isnan(df[self.measure_id])]
+            return df[-np.isnan(df[self.criteria])]
+
+
+class PhenoFilterSet(PersonFilterSet):
+    def __init__(self, measure: Measure, values: Collection):
+        super(PersonFilterSet, self).__init__(measure.name, values)
+        self.measure: Measure = measure
+        assert measure.measure_type == MeasureType.categorical
+
+
+class PhenoFilterRange(PersonFilterRange):
+    def __init__(self, measure: Measure, values: Collection):
+        super(PersonFilterRange, self).__init__(measure.name, values)
+        self.measure: Measure = measure
+        assert measure.measure_type in (
+            MeasureType.continuous, MeasureType.ordinal
+        )
 
 
 class PhenoFilterBuilder(object):
     def __init__(self, phenotype_data):
         self.phenotype_data = phenotype_data
 
-    @staticmethod
-    def _get_pheno_filter_constraints(pheno_filter):
-        measure_type = MeasureType.from_str(pheno_filter["measureType"])
+    def make_filter(self, pheno_filter: dict) -> PersonFilter:
+        measure = self.phenotype_data.get_measure(pheno_filter["measure"])
+        measure_type = measure.measure_type
         selection = pheno_filter["selection"]
         if measure_type in (MeasureType.continuous, MeasureType.ordinal):
-            return tuple([selection["min"], selection["max"]])
-        return set(selection["selection"])
-
-    def make_filter(self, pheno_filter: dict):
-        measure_id = pheno_filter["measure"]
-        measure = self.phenotype_data.get_measure(measure_id)
-        constraints = PhenoFilterBuilder._get_pheno_filter_constraints(
-            pheno_filter
-        )
-        assert measure is not None
-        if measure.measure_type == MeasureType.categorical:
-            return PhenoFilterSet(
-                self.phenotype_data, measure_id, constraints)
+            constraints = tuple([selection["min"], selection["max"]])
         else:
-            return PhenoFilterRange(
-                self.phenotype_data, measure_id, constraints
-            )
+            constraints = set(selection["selection"])
+        if measure_type == MeasureType.categorical:
+            return PersonFilterSet(measure, constraints)
+        else:
+            return PersonFilterRange(measure, constraints)
 
 
 class PhenoResult(object):

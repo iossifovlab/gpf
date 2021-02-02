@@ -25,7 +25,6 @@ from dae.utils.effect_utils import (
 )
 
 from dae.utils.regions import Region
-from dae.pheno.common import MeasureType
 from dae.pheno_tool.pheno_common import PhenoFilterBuilder
 from dae.variants.attributes import Role, Inheritance
 
@@ -112,7 +111,10 @@ class StudyWrapper(StudyWrapperBase):
         self.pheno_column_slots = pheno_column_slots or []
 
         # PHENO FILTERS
+        # TODO remove these pheno filters below
         self.pheno_filters = genotype_browser_config.pheno_filters or None
+        self.person_filters = genotype_browser_config.person_filters or None
+        self.family_filters = genotype_browser_config.family_filters or None
 
         # GENE WEIGHTS
         if genotype_browser_config.genotype:
@@ -219,11 +221,11 @@ class StudyWrapper(StudyWrapperBase):
     def _init_pheno(self, pheno_db):
         self.phenotype_data = None
         self.pheno_filter_builder = None
-
         self.pheno_filters_in_config = set()
-        phenotype_data = self.config.phenotype_data
-        if phenotype_data:
-            self.phenotype_data = pheno_db.get_phenotype_data(phenotype_data)
+        if self.config.phenotype_data:
+            self.phenotype_data = pheno_db.get_phenotype_data(
+                self.config.phenotype_data
+            )
 
             # TODO
             # This should probably be done in the front-end by making a query
@@ -1141,89 +1143,47 @@ class StudyWrapper(StudyWrapperBase):
 
         self._add_roles_to_query(OrNode(roles_query), kwargs)
 
-    def _transform_pheno_filters_to_family_ids(self, pheno_filter_args):
-        # TODO Delete me
-        family_ids = list()
-        person_ids = list()
+    def _transform_pedigree_filter_to_ids(self, pedigree_filter):
+        # TODO implement pedigree filters
+        pass
 
-        for pheno_filter in pheno_filter_args:
-            if not self.phenotype_data.has_measure(pheno_filter["measure"]):
-                continue
-
-            if "role" in pheno_filter:
-                roles = [pheno_filter["role"]]
-            else:
-                roles = None
-            persons = set([
-                p.person_id
-                for p in self.families.persons_with_roles(roles=roles)
-            ])
-            measure_df = self.phenotype_data.get_measure_values_df(
-                pheno_filter["measure"], person_ids=persons)
-
-            filter = self.pheno_filter_builder.make_filter(pheno_filter)
-            measure_df = filter.apply(measure_df)
-            if roles:
-                family_ids.append(set(
-                    self.families.persons[person_id].family.family_id
-                    for person_id in measure_df["person_id"]
-                    if person_id in self.families.persons
-                ))
-            else:
-                person_ids.append(set([
-                    person_id for person_id in measure_df["person_id"]
-                    if person_id in persons]))
-        family_ids = reduce(
-            set.intersection, family_ids) if family_ids else None
-        person_ids = reduce(
-            set.intersection, person_ids) if person_ids else None
-
-        return family_ids, person_ids
-
-    def _transform_generic_filter(self, generic_filter, roles=None):
-        persons = set([
-            p.person_id
-            for p in self.families.persons_with_roles(roles=roles)
-        ])
-        measure_df = self.phenotype_data.get_measure_values_df(
-            generic_filter["measure"], person_ids=persons)
-        generic_filter = self.pheno_filter_builder.make_filter(generic_filter)
-        measure_df = generic_filter.apply(measure_df)
-        return measure_df, persons
-
-    def _transform_family_filters_to_ids(self, family_filters) -> Set[str]:
-        family_ids = list()
-        for family_filter in family_filters:
-            if not self.phenotype_data.has_measure(family_filter["measure"]):
-                # Should an exception be thrown here?
-                continue
-            measure_df, _ = self._transform_generic_filter_to_dataframe(
-                family_filter, [family_filter["role"]]
+    def _transform_pheno_filter_to_ids(self, pheno_filter):
+        persons = set(
+            p.person_id for p in self.families.persons_with_roles(
+                roles=[pheno_filter["role"]]
             )
-            family_ids.append(set(
+        )
+        pheno_filter = self.pheno_filter_builder.make_filter(pheno_filter)
+        measure_df = pheno_filter.apply(
+            self.phenotype_data.get_measure_values_df(
+                pheno_filter["measure"],
+                person_ids=persons,
+            )
+        )
+        if pheno_filter["role"]:
+            # Handle family filter
+            ids = set(
                 self.families.persons[person_id].family.family_id
                 for person_id in measure_df["person_id"]
                 if person_id in self.families.persons
-            ))
-        family_ids = reduce(set.intersection, family_ids)
-        return family_ids
-
-    def _transform_person_filters_to_ids(self, person_filters) -> Set[str]:
-        person_ids = list()
-        for person_filter in person_filters:
-            if not self.phenotype_data.has_measure(person_filter["measure"]):
-                # Should an exception be thrown here?
-                continue
-            measure_df, persons = self._transform_generic_filter(
-                person_filter
             )
-            person_ids.append(set([
-                person_id
-                for person_id in measure_df["person_id"]
+        else:
+            # Handle person filter
+            ids = set(
+                person_id for person_id in measure_df["person_id"]
                 if person_id in persons
-            ]))
-        person_ids = reduce(set.intersection, person_ids)
-        return person_ids
+            )
+        return ids
+
+    def _transform_filters_to_ids(self, filters) -> Set[str]:
+        result = list()
+        for filter_conf in filters:
+            if filter_conf["source"] == "phenotype":
+                ids = self._transform_pheno_filter_to_ids(filter_conf)
+            else:
+                ids = self._transform_pedigree_filter_to_ids(filter_conf)
+            result.append(ids)
+        return reduce(set.intersection, result)
 
     def _transform_pheno_filters(self, kwargs):
         pheno_filter_args = kwargs.pop("phenoFilters")
@@ -1433,12 +1393,3 @@ class RemoteStudyWrapper(StudyWrapperBase):
 
     def build_genotype_data_group_description(self, gpf_instance):
         return self.config.to_dict()
-
-
-# rsw = RemoteStudyWrapper("AGRE_WG_859", "localhost", "api/v3", 8000)
-# print(rsw.config)
-# response = rsw.get_variants_wdae_preview(dict())
-# print(response.status_code)
-# print(response.headers)
-# # print(response.content)
-# print(response.json())
