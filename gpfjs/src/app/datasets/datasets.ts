@@ -39,7 +39,7 @@ export class PedigreeSelector extends IdName {
 
     const pedigreeSelectors: PedigreeSelector[] = [];
 
-    for (const k in json) {
+    for (const k of Object.keys(json)) {
       const v = json[k];
       pedigreeSelectors.push(new PedigreeSelector(
         k,
@@ -96,7 +96,7 @@ export class PresentInRole {
 export class AdditionalColumnSlot {
   static fromJson(json: any): Array<AdditionalColumnSlot> {
     const res = [];
-    for (const column_id in json) {
+    for (const column_id of Object.keys(json)) {
       const column = json[column_id];
       res.push(new AdditionalColumnSlot(column_id, column['name'], column['source'], column['format']));
     }
@@ -114,7 +114,7 @@ export class AdditionalColumnSlot {
 export class AdditionalColumn {
   static fromJson(json: any): Array<AdditionalColumn> {
     const res = [];
-    for (const column_id in json) {
+    for (const column_id of Object.keys(json)) {
       const column = json[column_id];
       res.push(new AdditionalColumn(column_id, column['name'], column['source'], AdditionalColumnSlot.fromJson(column['slots'])));
     }
@@ -129,19 +129,19 @@ export class AdditionalColumn {
   ) {}
 }
 
-export class PhenoFilter {
-  static fromJson(json: any): Array<PhenoFilter> {
+export class PersonFilter {
+  static fromJson(json: any): Array<PersonFilter> {
     const filters = [];
 
     for (const prop in json) {
       if (json.hasOwnProperty(prop)) {
         filters.push(
-          new PhenoFilter(
+          new PersonFilter(
             json[prop]['name'],
-            json[prop]['measure_type'],
+            json[prop]['source_type'],
             json[prop]['role'],
             json[prop]['filter_type'],
-            json[prop]['measure'],
+            json[prop]['source'],
           )
         );
       }
@@ -151,10 +151,10 @@ export class PhenoFilter {
 
   constructor(
     readonly name: string,
-    readonly measureType: string,
+    readonly sourceType: string,
     readonly role: string,
     readonly filterType: string,
-    readonly measure: string,
+    readonly source: string,
   ) {}
 }
 
@@ -174,8 +174,8 @@ export class GenotypeBrowser {
       json['has_graphical_preview'],
       json['preview_columns'],
       [...AdditionalColumn.fromJson(json['columns'])],
-      PhenoFilter.fromJson(json['pheno_filters']),
-      PhenoFilter.fromJson(json['family_filters']),
+      PersonFilter.fromJson(json['person_filters']),
+      PersonFilter.fromJson(json['family_filters']),
       PresentInRole.fromJsonArray(json['present_in_role']),
       json['inheritance_type_filter'],
       json['selected_inheritance_type_filter_values'],
@@ -195,8 +195,8 @@ export class GenotypeBrowser {
     readonly hasGraphicalPreview: boolean,
     readonly previewColumnsIds: string[],
     readonly allColumns: Array<AdditionalColumn>,
-    readonly phenoFilters: Array<PhenoFilter>,
-    readonly familyFilters: Array<PhenoFilter>,
+    readonly personFilters: Array<PersonFilter>,
+    readonly familyFilters: Array<PersonFilter>,
     readonly presentInRole: PresentInRole[],
     readonly inheritanceTypeFilter: string[],
     readonly selectedInheritanceTypeFilterValues: string[],

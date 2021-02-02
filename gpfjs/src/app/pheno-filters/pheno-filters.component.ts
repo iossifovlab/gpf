@@ -1,11 +1,7 @@
 import { Component, OnChanges, Input, forwardRef } from '@angular/core';
-import { Dataset, PhenoFilter } from '../datasets/datasets';
+import { Dataset, PersonFilter } from '../datasets/datasets';
 import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query-state-provider';
-import { toValidationObservable, validationErrorsToStringArray } from '../utils/to-observable-with-validation';
-import {
-  PhenoFilterState, PhenoFiltersState, CategoricalFilterState,
-  ContinuousFilterState
-} from './pheno-filters';
+import { PersonFilterState, CategoricalFilterState, ContinuousFilterState } from './pheno-filters';
 
 @Component({
   selector: 'gpf-pheno-filters',
@@ -18,8 +14,9 @@ import {
 })
 export class PhenoFiltersComponent extends QueryStateWithErrorsProvider implements OnChanges {
   @Input() dataset: Dataset;
+  @Input() filters;
 
-  private phenoFiltersState = new Array<[PhenoFilter, PhenoFilterState]>();
+  private personFiltersState = new Array<[PersonFilter, PersonFilterState]>();
 
   constructor() {
     super();
@@ -30,55 +27,54 @@ export class PhenoFiltersComponent extends QueryStateWithErrorsProvider implemen
       return;
     }
 
-    this.phenoFiltersState =
-      this.dataset.genotypeBrowserConfig.phenoFilters
-      .concat(this.dataset.genotypeBrowserConfig.familyFilters || [])
-      .map(phenoFilter => {
-        if (phenoFilter.measureType === 'continuous') {
+    this.personFiltersState =
+      this.filters
+      .map(personFilter => {
+        if (personFilter.sourceType === 'continuous') {
           const continuousFilterState = new ContinuousFilterState(
-            phenoFilter.name,
-            phenoFilter.measureType,
-            phenoFilter.role,
-            phenoFilter.measure,
+            personFilter.name,
+            personFilter.sourceType,
+            personFilter.role,
+            personFilter.source,
           );
           return [
-            phenoFilter, continuousFilterState
-          ] as [PhenoFilter, PhenoFilterState];
-        } else if (phenoFilter.measureType === 'categorical') {
+            personFilter, continuousFilterState
+          ] as [PersonFilter, PersonFilterState];
+        } else if (personFilter.sourceType === 'categorical') {
           const categoricalFilterState = new CategoricalFilterState(
-            phenoFilter.name,
-            phenoFilter.measureType,
-            phenoFilter.role,
-            phenoFilter.measure,
+            personFilter.name,
+            personFilter.sourceType,
+            personFilter.role,
+            personFilter.source,
           );
 
           return [
-            phenoFilter, categoricalFilterState
-          ] as [PhenoFilter, PhenoFilterState];
+            personFilter, categoricalFilterState
+          ] as [PersonFilter, PersonFilterState];
 
           }
 
-          return [phenoFilter, null] as [PhenoFilter, PhenoFilterState];
+          return [personFilter, null] as [PersonFilter, PersonFilterState];
 
       });
   }
 
   get categoricalPhenoFilters() {
-    return this.phenoFiltersState.filter(
-      ([_, phenoFilter]) => phenoFilter && phenoFilter.measureType === 'categorical'
+    return this.personFiltersState.filter(
+      ([_, personFilter]) => personFilter && personFilter.sourceType === 'categorical'
     );
   }
 
   get continuousPhenoFilters() {
-    return this.phenoFiltersState.filter(
-      ([_, phenoFilter]) => phenoFilter && phenoFilter.measureType === 'continuous'
+    return this.personFiltersState.filter(
+      ([_, personFilter]) => personFilter && personFilter.sourceType === 'continuous'
     );
   }
 
   getState() {
-    return this.validateAndGetState(this.phenoFiltersState)
-      .map(phenoFiltersState => ({
-        phenoFilters: phenoFiltersState.map(x => x[1]).filter(f => f && !f.isEmpty())
+    return this.validateAndGetState(this.personFiltersState)
+      .map(personFiltersState => ({
+        personFilters: personFiltersState.map(x => x[1]).filter(f => f && !f.isEmpty())
       }));
   }
 

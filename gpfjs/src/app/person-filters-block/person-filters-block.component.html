@@ -1,29 +1,31 @@
 <div class="family-filters-block form-block">
   <div class="card">
     <ul ngbNav #nav="ngbNav" class="navbar bg-light nav-pills" style="justify-content: flex-start">
-      <div class="nav-title-custom">Family filters</div>
+      <div class="nav-title-custom">Person filters</div>
       <li [ngbNavItem]="'allFamilies'" id="all-families">
           <a ngbNavLink>All</a>
       </li>
-      <li [ngbNavItem]="'familyIds'" id="family-ids">
-          <a ngbNavLink>Family Ids</a>
+      <li [ngbNavItem]="'personIds'" id="person-ids">
+          <a ngbNavLink>Person Ids</a>
           <ng-template ngbNavContent>
-              <gpf-family-ids></gpf-family-ids>
+              <p>Fixme</p>
+              <!-- <gpf-family-ids></gpf-family-ids> -->
           </ng-template>
       </li>
-      <li [ngbNavItem]="'advanced'" *ngIf="dataset?.genotypeBrowserConfig?.familyFilters && dataset.phenotypeData" id="advanced">
+      <li [ngbNavItem]="'advanced'" *ngIf="dataset?.genotypeBrowserConfig?.personFilters && dataset.phenotypeData" id="advanced">
           <a ngbNavLink>Advanced</a>
           <ng-template ngbNavContent>
-              <gpf-pheno-filters [dataset]="dataset" [filters]="dataset?.genotypeBrowserConfig?.familyFilters">
+              <gpf-pheno-filters [dataset]="dataset" [filters]="dataset?.genotypeBrowserConfig?.personFilters">
               </gpf-pheno-filters>
           </ng-template>
       </li>
     </ul>
     <div [ngbNavOutlet]="nav" class="card-block"></div>
-    <gpf-family-counters
+    <!-- <gpf-family-counters
         *ngIf="genotypeBrowserState"
         [genotypeBrowserState]="genotypeBrowserState"
         class="family-counters"
-    ></gpf-family-counters>
+    ></gpf-family-counters> -->
   </div>
 </div>
+

@@ -7,43 +7,11 @@ export interface Selection {
   isEmpty(): boolean;
 }
 
-export class PhenoFilterState {
-  constructor(
-    readonly id: string,
-    readonly measureType: string,
-    readonly role: string,
-    public measure: string,
-    public selection: Selection
-  ) {}
-
-  isEmpty() {
-    return this.measure == null
-        || this.measure.length === 0;
-  }
-}
-
 export class CategoricalSelection implements Selection {
   selection: string[] = [];
 
   isEmpty() {
     return this.selection.length === 0;
-  }
-}
-
-export class CategoricalFilterState extends PhenoFilterState {
-
-  constructor(
-    id: string,
-    // name: string,
-    type: string,
-    role: string,
-    measure: string
-  ) {
-    super(id, type, role, measure, new CategoricalSelection());
-  }
-
-  isEmpty() {
-    return this.selection.isEmpty() || super.isEmpty();
   }
 }
 
@@ -68,18 +36,44 @@ export class ContinuousSelection implements Selection {
   }
 }
 
-export class ContinuousFilterState extends PhenoFilterState {
+export class PersonFilterState {
+  constructor(
+    readonly id: string,
+    readonly sourceType: string,
+    readonly role: string,
+    public source: string,
+    public selection: Selection
+  ) {}
+
+  isEmpty() {
+    return this.source == null || this.source.length === 0;
+  }
+}
+
+export class CategoricalFilterState extends PersonFilterState {
 
   constructor(
     id: string,
     type: string,
     role: string,
-    measure: string
+    source: string
   ) {
-    super(id, type, role, measure, new ContinuousSelection());
+    super(id, type, role, source, new CategoricalSelection());
+  }
+
+  isEmpty() {
+    return this.selection.isEmpty() || super.isEmpty();
   }
 }
 
-export class PhenoFiltersState {
-  phenoFilters: Array<PhenoFilterState> = [];
+export class ContinuousFilterState extends PersonFilterState {
+
+  constructor(
+    id: string,
+    type: string,
+    role: string,
+    source: string
+  ) {
+    super(id, type, role, source, new ContinuousSelection());
+  }
 }

@@ -3,16 +3,17 @@ import { Dataset } from '../datasets/datasets';
 import { QueryStateCollector } from '../query/query-state-provider';
 import { StateRestoreService } from '../store/state-restore.service';
 
+
 @Component({
-  selector: 'gpf-family-filters-block',
-  templateUrl: './family-filters-block.component.html',
-  styleUrls: ['./family-filters-block.component.css'],
+  selector: 'gpf-person-filters-block',
+  templateUrl: './person-filters-block.component.html',
+  styleUrls: ['./person-filters-block.component.css'],
   providers: [{
     provide: QueryStateCollector,
-    useExisting: forwardRef(() => FamilyFiltersBlockComponent)
+    useExisting: forwardRef(() => PersonFiltersBlockComponent)
   }]
 })
-export class FamilyFiltersBlockComponent extends QueryStateCollector implements AfterViewInit {
+export class PersonFiltersBlockComponent extends QueryStateCollector implements AfterViewInit {
   @Input() dataset: Dataset;
   @Input() genotypeBrowserState: Object;
   @ViewChild('nav') ngbNav;
@@ -28,8 +29,8 @@ export class FamilyFiltersBlockComponent extends QueryStateCollector implements 
       .take(1)
       .subscribe(state => {
 
-          if ('familyIds' in state) {
-            this.ngbNav.select('familyIds');
+          if ('personIds' in state) {
+            this.ngbNav.select('personIds');
           } else if ('phenoFilters' in state) {
             this.ngbNav.select('advanced');
           }
@@ -38,7 +39,5 @@ export class FamilyFiltersBlockComponent extends QueryStateCollector implements 
       );
   }
 
-  ngOnDestroy() {
-  }
 
 }

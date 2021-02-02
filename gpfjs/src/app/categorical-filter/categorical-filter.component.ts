@@ -1,6 +1,6 @@
 import { Component, OnChanges, SimpleChanges, Input, OnInit } from '@angular/core';
 import { CategoricalFilterState, CategoricalSelection } from '../pheno-filters/pheno-filters';
-import { PhenoFilter } from '../datasets/datasets';
+import { PersonFilter } from '../datasets/datasets';
 import { StateRestoreService } from '../store/state-restore.service';
 import { PhenoBrowserService } from 'app/pheno-browser/pheno-browser.service';
 import { DatasetsService } from 'app/datasets/datasets.service';
@@ -12,9 +12,10 @@ import { Observable } from 'rxjs';
   styleUrls: ['./categorical-filter.component.css']
 })
 export class CategoricalFilterComponent implements OnInit, OnChanges {
-  @Input() categoricalFilter: PhenoFilter;
+  @Input() categoricalFilter: PersonFilter;
   @Input() categoricalFilterState: CategoricalFilterState;
   measureDescription$: Observable<Object>;
+  valuesDomain: any;
 
   constructor(
     private datasetsService: DatasetsService,
@@ -24,9 +25,12 @@ export class CategoricalFilterComponent implements OnInit, OnChanges {
   }
 
   ngOnInit(): void {
-    this.measureDescription$ = this.phenoBrowserService.getMeasureDesciption(
-      this.datasetsService.getSelectedDatasetId(), this.categoricalFilter.measure
+    this.measureDescription$ = this.phenoBrowserService.getMeasureDescription(
+      this.datasetsService.getSelectedDatasetId(), this.categoricalFilter.source
     );
+
+    // FIXME fix this?
+    this.valuesDomain = this.measureDescription$.subscribe(res => res['values_domain']);
   }
 
   ngOnChanges(change: SimpleChanges) {
