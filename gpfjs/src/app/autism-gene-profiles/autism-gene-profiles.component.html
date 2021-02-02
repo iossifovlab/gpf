@@ -1,19 +1,25 @@
 <div style="padding: 25px;">
-
   <table *ngIf="config$ | async as config" class="table table-hover table-sm table-centered table-header-rotate" style="position: relative;">
     <thead>
       <tr>
-        <th class="table-main-header">Gene</th>
+        <th class="table-main-header">
+          <span>Gene</span>
+          <span *ngIf="!shownGeneLists.length" ngbDropdown (openChange)="emitApplyEventOnMultipleSelectMenuCloseEvent($event)">
+            <button class="dropdown-toggle btn navbar-toggler" ngbDropdownToggle style="float: right; border: 1px solid #dddddd; outline: none; font-size: 18px; width: 40px;">
+              <span style="font-size: 14px;">&#9776;</span>
+            </button>
+            <gpf-multiple-select-menu ngbDropdownMenu [allItems]="config.geneLists" [selectedItems]="shownGeneLists" (applyEvent)="handleMultipleSelectMenuApplyEvent($event)"></gpf-multiple-select-menu>
+          </span>
+        </th>
         <th class="table-main-header" *ngIf="shownGeneLists.length" [attr.colspan]="shownGeneLists.length">
           <span>
             Gene lists
           </span>
-          <!-- <button style="float: right; border: 1px solid #dddddd; outline: none; font-size: 18px; padding: 0;" (click)="showOrHideGeneLists()">{{collapseSymbol}}</button> -->
           <span ngbDropdown (openChange)="emitApplyEventOnMultipleSelectMenuCloseEvent($event)">
             <button class="dropdown-toggle btn navbar-toggler" ngbDropdownToggle style="float: left; border: 1px solid #dddddd; outline: none; font-size: 18px; width: 40px;">
               <span style="font-size: 14px;">&#9776;</span>
             </button>
-            <gpf-multiple-select-menu *ngIf="shownGeneLists.length" ngbDropdownMenu [allItems]="config.geneLists" [selectedItems]="shownGeneLists" (applyEvent)="handleMultipleSelectMenuApplyEvent($event)"></gpf-multiple-select-menu>
+            <gpf-multiple-select-menu ngbDropdownMenu [allItems]="config.geneLists" [selectedItems]="shownGeneLists" (applyEvent)="handleMultipleSelectMenuApplyEvent($event)"></gpf-multiple-select-menu>
           </span>
         </th>
         <th class="table-main-header" [attr.colspan]="config.autismScores?.length">Autism scores</th>

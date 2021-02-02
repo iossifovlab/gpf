@@ -10,7 +10,7 @@ export class MultipleSelectMenuComponent implements OnInit {
   @Input() allItems: string[];
   @Output() applyEvent = new EventEmitter<string[]>();
 
-  private checkUncheckAll = 'Uncheck all';
+  private checkUncheckAllButtonName = 'Uncheck all';
   private searchText: String;
   private checkboxDataArray: {id: string; isChecked: boolean}[];
 
@@ -18,7 +18,9 @@ export class MultipleSelectMenuComponent implements OnInit {
 
   ngOnInit(): void {
     this.checkboxDataArray = this.toCheckboxDataArray(this.allItems);
-    console.log(this.checkboxDataArray);
+    if (this.areAllUnchecked(this.checkboxDataArray)) {
+      this.checkUncheckAllButtonName = 'Check all';
+    }
   }
 
   toCheckboxDataArray(allItems: string[]) {
@@ -27,13 +29,17 @@ export class MultipleSelectMenuComponent implements OnInit {
     );
   }
 
+  areAllUnchecked(checkboxDataArray): boolean {
+    return !checkboxDataArray.map(item => item.isChecked).includes(true);
+  }
+
   toggleCheckingAll() {
-    if (this.checkUncheckAll === 'Uncheck all') {
+    if (this.checkUncheckAllButtonName === 'Uncheck all') {
       this.checkboxDataArray.forEach(item => item.isChecked = false);
-      this.checkUncheckAll = 'Check all';
-    } else if (this.checkUncheckAll === 'Check all') {
+      this.checkUncheckAllButtonName = 'Check all';
+    } else if (this.checkUncheckAllButtonName === 'Check all') {
       this.checkboxDataArray.forEach(item => item.isChecked = true);
-      this.checkUncheckAll = 'Uncheck all';
+      this.checkUncheckAllButtonName = 'Uncheck all';
     }
   }
 
