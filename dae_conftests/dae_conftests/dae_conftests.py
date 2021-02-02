@@ -943,7 +943,7 @@ def temp_dbfile(request):
 @pytest.fixture
 def agp_gpf_instance(fixtures_gpf_instance, mocker, sample_agp):
     agp_config = Box({
-        'gene_symbols': ['PLEKHN1', 'SAMD11'],
+        'gene_sets': ['CHD8 target genes'],
         'protection_scores': ['SFARI_gene_score', 'RVIS_rank', 'RVIS'],
         'autism_scores': ['SFARI_gene_score', 'RVIS_rank', 'RVIS'],
         'datasets': Box({
@@ -999,10 +999,7 @@ def agp_gpf_instance(fixtures_gpf_instance, mocker, sample_agp):
 
 @pytest.fixture(scope="session")
 def sample_agp():
-    gene_sets = [
-        'FMRP Tuschl', 'autism candidates from Iossifov PNAS 2015',
-        'autism candidates from Sanders Neuron 2015', 'essential genes'
-    ]
+    gene_sets = ['CHD8 target genes']
     protection_scores = {
         'SFARI_gene_score': 1, 'RVIS_rank': 193.0, 'RVIS': -2.34
     }
