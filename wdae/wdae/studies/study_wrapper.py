@@ -428,7 +428,7 @@ class StudyWrapper(StudyWrapperBase):
                     attribute = list(map(col_formatter, attribute))
                     print("\t\t>>formatted:", attribute)
 
-                    row_variant.append(", ".join([str(a) for a in attribute]))
+                    row_variant.append(",".join([str(a) for a in attribute]))
 
             except (AttributeError, KeyError, Exception):
                 logging.exception(f'error build variant: {v}')
