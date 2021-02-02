@@ -127,3 +127,28 @@ class DatasetDetailsView(QueryBaseView):
 
         dataset_details = {"hasDenovo": has_denovo}
         return Response(dataset_details)
+
+
+class DatasetPedigreeView(QueryBaseView):
+    def get(self, request, dataset_id, column):
+        if dataset_id is None:
+            return Response(
+                {"error": "No dataset ID given"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        genotype_data = self.gpf_instance.get_genotype_data(dataset_id)
+
+        if genotype_data is None:
+            return Response(
+                {"error": f"No such dataset {dataset_id}"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        values_domain = list(
+            map(str, genotype_data.families.ped_df[column].unique())
+        )
+
+        return Response(
+            {"column_name": column, "values_domain": values_domain}
+        )
