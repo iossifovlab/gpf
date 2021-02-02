@@ -2,7 +2,6 @@ import { Component, OnInit, ViewChild } from '@angular/core';
 import { Observable } from 'rxjs';
 import { AutismGeneToolConfig, AutismGeneToolGene } from './autism-gene-profile';
 import { AutismGeneProfilesService } from './autism-gene-profiles.service';
-import { IDropdownSettings } from 'ng-multiselect-dropdown';
 import { NgbDropdownMenu } from '@ng-bootstrap/ng-bootstrap';
 import { MultipleSelectMenuComponent } from 'app/multiple-select-menu/multiple-select-menu.component';
 
@@ -19,30 +18,15 @@ export class AutismGeneProfilesComponent implements OnInit {
   private genes$: Observable<AutismGeneToolGene[]>;
 
   private shownGeneLists: string[];
-  // private shownGeneListsCount: Number;
-  // private geneListsCount: Number;
-  // private collapseSymbol: String = String.fromCharCode(0x022B2);
-
-  dropdownSettings: IDropdownSettings = {};
 
   constructor(
     private autismGeneProfilesService: AutismGeneProfilesService,
   ) { }
 
   ngOnInit(): void {
-    this.dropdownSettings = {
-      idField: 'id',
-      textField: 'text',
-      allowSearchFilter: true,
-      defaultOpen: true,
-      // itemsShowLimit: 3
-    };
-
     this.config$ = this.autismGeneProfilesService.getConfig();
     this.config$.take(1).subscribe(res => {
       this.shownGeneLists = res['geneLists'];
-      // this.geneListsCount = res['geneLists'].length;
-      // this.shownGeneListsCount = this.geneListsCount;
     });
 
     this.genes$ = this.autismGeneProfilesService.getGenes();
@@ -54,20 +38,6 @@ export class AutismGeneProfilesComponent implements OnInit {
   calculateDatasetColspan(datasetConfig) {
     return datasetConfig.effects.length * datasetConfig.personSets.length;
   }
-
-  // getShownGeneLists(geneLists) {
-  //   return geneLists.slice(0, this.shownGeneListsCount);
-  // }
-
-  // showOrHideGeneLists() {
-  //   if (this.shownGeneListsCount === this.geneListsCount) {
-  //     this.shownGeneListsCount = 5;
-  //     this.collapseSymbol = String.fromCharCode(0x022B3);
-  //   } else {
-  //     this.shownGeneListsCount = this.geneListsCount;
-  //     this.collapseSymbol = String.fromCharCode(0x022B2);
-  //   }
-  // }
 
   sortAlphabetically(array: string[]): string[] {
     return array.sort((a, b) => {
