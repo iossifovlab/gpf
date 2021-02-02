@@ -38,12 +38,13 @@ td, th {
   content: none;
 }
 
+/* Thicker column lines between major table sections*/
 thead > tr:first-of-type th:not(:first-of-type)::after {
   content: '';
   position: absolute;
   display: block;
   top: 0;
-  border: 1px solid black;
+  border: 1px solid #dddddd;
   margin-left: -0.3em;
   height: calc(100% - 3px);
 }
