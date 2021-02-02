@@ -1,7 +1,7 @@
 import { Component, OnInit, Input, forwardRef } from '@angular/core';
 import { ContinuousMeasure } from '../measures/measures';
 import { QueryStateCollector } from '../query/query-state-provider';
-import { ContinuousFilterState, ContinuousSelection } from '../pheno-filters/pheno-filters';
+import { ContinuousFilterState, ContinuousSelection } from '../person-filters/person-filters';
 import { PersonFilter } from '../datasets/datasets';
 import { StateRestoreService } from '../store/state-restore.service';
 

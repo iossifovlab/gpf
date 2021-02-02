@@ -1,12 +1,12 @@
 import { Component, OnChanges, Input, forwardRef } from '@angular/core';
 import { Dataset, PersonFilter } from '../datasets/datasets';
 import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query-state-provider';
-import { PersonFilterState, CategoricalFilterState, ContinuousFilterState } from './pheno-filters';
+import { PersonFilterState, CategoricalFilterState, ContinuousFilterState } from './person-filters';
 
 @Component({
   selector: 'gpf-person-filters',
-  templateUrl: './pheno-filters.component.html',
-  styleUrls: ['./pheno-filters.component.css'],
+  templateUrl: './person-filters.component.html',
+  styleUrls: ['./person-filters.component.css'],
   providers: [{
     provide: QueryStateProvider,
     useExisting: forwardRef(() => PersonFiltersComponent)

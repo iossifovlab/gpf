@@ -67,7 +67,7 @@ import { RouteReuseStrategy, RouterModule, Routes } from '@angular/router';
 import { TaggingRouteReuseStrategy } from 'app/route-reuse.strategy';
 
 import { StateRestoreService } from './store/state-restore.service';
-import { PersonFiltersComponent } from './pheno-filters/pheno-filters.component';
+import { PersonFiltersComponent } from './person-filters/person-filters.component';
 import { FamilyFiltersBlockComponent } from './family-filters-block/family-filters-block.component';
 import { ContinuousFilterComponent } from './continuous-filter/continuous-filter.component';
 import { MultiContinuousFilterComponent } from './multi-continuous-filter/multi-continuous-filter.component';

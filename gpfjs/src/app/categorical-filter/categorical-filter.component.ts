@@ -1,5 +1,5 @@
 import { Component, OnChanges, SimpleChanges, Input, OnInit } from '@angular/core';
-import { CategoricalFilterState, CategoricalSelection } from '../pheno-filters/pheno-filters';
+import { CategoricalFilterState, CategoricalSelection } from '../person-filters/person-filters';
 import { PersonFilter } from '../datasets/datasets';
 import { StateRestoreService } from '../store/state-restore.service';
 import { PhenoBrowserService } from 'app/pheno-browser/pheno-browser.service';
