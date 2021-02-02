@@ -15,7 +15,7 @@
       </td>
     </tr>
     <td>
-      <button type="submit" class="btn btn-secondary" style="width: 100%;" (click)="apply()">Apply</button>
+      <button type="submit" [disabled]="!isSelectionValid()" class="btn btn-secondary" style="width: 100%;" (click)="apply()">Apply</button>
     </td>
   </table>
 

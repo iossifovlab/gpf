@@ -8,6 +8,7 @@ import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 export class MultipleSelectMenuComponent implements OnInit {
   @Input() selectedItems: string[];
   @Input() allItems: string[];
+  @Input() readonly minSelectCount = 0;
   @Output() applyEvent = new EventEmitter<string[]>();
 
   private checkUncheckAllButtonName = 'Uncheck all';
@@ -41,6 +42,10 @@ export class MultipleSelectMenuComponent implements OnInit {
       this.checkboxDataArray.forEach(item => item.isChecked = true);
       this.checkUncheckAllButtonName = 'Uncheck all';
     }
+  }
+
+  isSelectionValid() {
+    return this.checkboxDataArray.filter(item => item.isChecked === true).length >= this.minSelectCount;
   }
 
   apply() {
