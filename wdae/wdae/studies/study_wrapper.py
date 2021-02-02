@@ -1363,6 +1363,14 @@ class RemoteStudyWrapper(StudyWrapperBase):
         config["name"] = f"({rest_client.remote_id}) {config['name']}"
         del config["access_rights"]
         del config["groups"]
+        if config["parents"]:
+            config["parents"] = list(
+                map(
+                    self.rest_client.get_remote_dataset_id,
+                    config["parents"]
+                )
+            )
+
         self.config = FrozenBox(config)
 
         self.phenotype_data = RemotePhenotypeData(
