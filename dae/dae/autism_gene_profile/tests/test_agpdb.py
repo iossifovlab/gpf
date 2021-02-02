@@ -89,8 +89,7 @@ def test_agpdb_insert_and_get_agp(temp_dbfile, agp_gpf_instance, sample_agp):
     agpdb.insert_agp(sample_agp)
     agp = agpdb.get_agp("CHD8")
     assert agp.gene_sets == [
-        'FMRP Tuschl', 'autism candidates from Iossifov PNAS 2015',
-        'autism candidates from Sanders Neuron 2015', 'essential genes'
+        'CHD8 target genes'
     ]
 
     assert agp.protection_scores == {
