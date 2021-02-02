@@ -1,3 +1,4 @@
+import math
 import logging
 
 import pandas as pd
@@ -151,8 +152,10 @@ class Measure(object):
         result["description"] = self.description
         result["defaultFilter"] = self.default_filter
         result["valuesDomain"] = self.values_domain
-        result["minValue"] = self.min_value
-        result["minValue"] = self.max_value
+        result["minValue"] = \
+            None if math.isnan(self.min_value) else self.min_value
+        result["maxValue"] = \
+            None if math.isnan(self.max_value) else self.max_value
 
         return result
 
