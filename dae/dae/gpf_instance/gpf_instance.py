@@ -283,7 +283,7 @@ class GPFInstance(object):
             }
 
     def has_measure(self, study_wrapper, measure_id):
-        return measure_id in study_wrapper.phenotype_data.measures
+        return study_wrapper.phenotype_data.has_measure(measure_id)
 
     def get_measure_description(self, study_wrapper, measure_id):
         measure = study_wrapper.phenotype_data.measures[measure_id]
@@ -299,6 +299,23 @@ class GPFInstance(object):
         if not math.isnan(measure.max_value):
             out["max_value"] = measure.max_value
         return out
+
+    def get_regressions(self, study_wrapper):
+        dataset_config = self.get_genotype_data_config(
+            study_wrapper.id)
+
+        pheno_config = self.get_phenotype_db_config()
+        browser_dbfile = \
+            pheno_config[dataset_config.phenotype_data].browser_dbfile
+
+        db = DbManager(
+            browser_dbfile)
+        db.build()
+
+        if db is None:
+            return None
+
+        return db.regression_display_names_with_ids
 
     # Genomic scores
 

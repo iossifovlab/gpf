@@ -44,7 +44,9 @@ class WGPFInstance(GPFInstance):
                         remote["password"],
                         base_url=remote["base_url"],
                         port=remote.get("port", None),
-                        protocol=remote.get("protocol", None))
+                        protocol=remote.get("protocol", None),
+                        gpf_prefix=remote.get("gpf_prefix", None)
+                    )
                     self._fetch_remote_studies(client)
                 except ConnectionError as err:
                     logger.error(err)
@@ -173,12 +175,28 @@ class WGPFInstance(GPFInstance):
 
         return "phenotype_data" in study_wrapper.config
 
+    def get_measure_description(self, study_wrapper, measure_id):
+        logger.warning("WARNING: Using is_remote")
+        if not study_wrapper.is_remote:
+            return super(WGPFInstance, self).get_measure_description(
+                study_wrapper, measure_id)
+
+        return study_wrapper.phenotype_data.get_measure_description(measure_id)
+
     def get_instruments(self, study_wrapper):
         logger.warning("WARNING: Using is_remote")
         if not study_wrapper.is_remote:
             return super(WGPFInstance, self).get_instruments(study_wrapper)
 
         return study_wrapper.rest_client.get_instruments(
+            study_wrapper._remote_study_id)
+
+    def get_regressions(self, study_wrapper):
+        logger.warning("WARNING: Using is_remote")
+        if not study_wrapper.is_remote:
+            return super(WGPFInstance, self).get_regressions(study_wrapper)
+
+        return study_wrapper.rest_client.get_regressions(
             study_wrapper._remote_study_id)
 
     def get_measures_info(self, study_wrapper):
@@ -199,16 +217,15 @@ class WGPFInstance(GPFInstance):
             return
 
         client = study_wrapper.rest_client
-        response = client.get_browser_measures(
+        measures = client.get_browser_measures(
             study_wrapper._remote_study_id,
             instrument,
             search_term
         )
-        for line in response.iter_lines():
-            if line:
-                measures = json.loads(line)
-                for m in measures:
-                    yield m
+        base = client.build_host_url()
+        for m in measures:
+            m["measure"]["base_url"] = base
+            yield m
 
     def get_study_enrichment_config(self, dataset_id):
         result = \
