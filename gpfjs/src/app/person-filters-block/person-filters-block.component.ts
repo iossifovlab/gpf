@@ -31,7 +31,7 @@ export class PersonFiltersBlockComponent extends QueryStateCollector implements 
 
           if ('personIds' in state) {
             this.ngbNav.select('personIds');
-          } else if ('phenoFilters' in state) {
+          } else if ('personFilters' in state) {
             this.ngbNav.select('advanced');
           }
 

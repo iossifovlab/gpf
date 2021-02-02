@@ -30,7 +30,7 @@ export class FamilyFiltersBlockComponent extends QueryStateCollector implements 
 
           if ('familyIds' in state) {
             this.ngbNav.select('familyIds');
-          } else if ('phenoFilters' in state) {
+          } else if ('personFilters' in state) {
             this.ngbNav.select('advanced');
           }
 

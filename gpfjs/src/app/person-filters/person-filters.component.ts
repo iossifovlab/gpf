@@ -42,13 +42,13 @@ export class PersonFiltersComponent extends QueryStateWithErrorsProvider impleme
       });
   }
 
-  get categoricalPhenoFilters() {
+  get categoricalFilters() {
     return this.personFiltersState.filter(
       ([_, personFilter]) => personFilter && personFilter.sourceType === 'categorical'
     );
   }
 
-  get continuousPhenoFilters() {
+  get continuousFilters() {
     return this.personFiltersState.filter(
       ([_, personFilter]) => personFilter && personFilter.sourceType === 'continuous'
     );
