@@ -4,7 +4,7 @@ import { HistogramData } from '../measures/measures';
 import { ContinuousFilterState, ContinuousSelection } from '../pheno-filters/pheno-filters';
 import { StateRestoreService } from '../store/state-restore.service';
 // tslint:disable-next-line:import-blacklist
-import { Observable ,  Subject } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 import { Partitions } from '../gene-weights/gene-weights';
 
 @Component({

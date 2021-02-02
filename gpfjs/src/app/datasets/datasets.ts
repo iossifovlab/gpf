@@ -138,10 +138,11 @@ export class PersonFilter {
         filters.push(
           new PersonFilter(
             json[prop]['name'],
-            json[prop]['source_type'],
-            json[prop]['role'],
-            json[prop]['filter_type'],
+            json[prop]['from'],
             json[prop]['source'],
+            json[prop]['source_type'],
+            json[prop]['filter_type'],
+            json[prop]['role'],
           )
         );
       }
@@ -151,10 +152,11 @@ export class PersonFilter {
 
   constructor(
     readonly name: string,
-    readonly sourceType: string,
-    readonly role: string,
-    readonly filterType: string,
+    readonly from: string,
     readonly source: string,
+    readonly sourceType: string,
+    readonly filterType: string,
+    readonly role: string,
   ) {}
 }
 

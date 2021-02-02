@@ -14,8 +14,8 @@ import { Observable } from 'rxjs';
 export class CategoricalFilterComponent implements OnInit, OnChanges {
   @Input() categoricalFilter: PersonFilter;
   @Input() categoricalFilterState: CategoricalFilterState;
-  measureDescription$: Observable<Object>;
-  valuesDomain: any;
+  sourceDescription$: Observable<Object>;
+  valuesDomain: any = [];
 
   constructor(
     private datasetsService: DatasetsService,
@@ -25,12 +25,19 @@ export class CategoricalFilterComponent implements OnInit, OnChanges {
   }
 
   ngOnInit(): void {
-    this.measureDescription$ = this.phenoBrowserService.getMeasureDescription(
-      this.datasetsService.getSelectedDatasetId(), this.categoricalFilter.source
-    );
 
-    // FIXME fix this?
-    this.valuesDomain = this.measureDescription$.subscribe(res => res['values_domain']);
+    if (this.categoricalFilter.from === 'phenotype') {
+      this.sourceDescription$ = this.phenoBrowserService.getMeasureDescription(
+        this.datasetsService.getSelectedDatasetId(), this.categoricalFilter.source
+      );
+    } else if (this.categoricalFilter.from === 'pedigree') {
+      this.sourceDescription$ = this.datasetsService.getDatasetPedigreeColumnDetails(
+        this.datasetsService.getSelectedDatasetId(), this.categoricalFilter.source
+      );
+    }
+    this.sourceDescription$.subscribe(res => {
+      this.valuesDomain = res['values_domain'];
+    });
   }
 
   ngOnChanges(change: SimpleChanges) {
@@ -39,19 +46,17 @@ export class CategoricalFilterComponent implements OnInit, OnChanges {
         .getState(this.constructor.name + this.categoricalFilterState.id)
         .take(1)
         .subscribe(state => {
-          if (state['phenoFilters']) {
-            this.restoreCategoricalFilter(state['phenoFilters']);
+          if (state['personFilters']) {
+            this.restoreCategoricalFilter(state['personFilters']);
           }
         });
     }
   }
 
   restoreCategoricalFilter(state) {
-    const phenoFilterState = state
-      .find(f => f.id === this.categoricalFilterState.id);
-    if (phenoFilterState) {
-      this.categoricalFilterState.selection =
-        phenoFilterState.selection.slice();
+    const personFilterState = state.find(f => f.id === this.categoricalFilterState.id);
+    if (personFilterState) {
+      this.categoricalFilterState.selection = personFilterState.selection.slice();
     }
   }
 

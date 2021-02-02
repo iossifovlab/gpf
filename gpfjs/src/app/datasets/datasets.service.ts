@@ -12,6 +12,7 @@ export class DatasetsService {
   private readonly datasetUrl = 'datasets';
   private readonly permissionDeniedPromptUrl = 'datasets/denied_prompt';
   private readonly datasetsDetailsUrl = 'datasets/details';
+  private readonly datasetPedigreeUrl = 'datasets/pedigree';
 
   private readonly headers = new HttpHeaders({ 'Content-Type': 'application/json' });
   private datasets$ = new ReplaySubject<Array<Dataset>>(1);
@@ -126,5 +127,10 @@ export class DatasetsService {
       .map(res => {
         return DatasetDetails.fromJson(res);
       });
+  }
+
+  getDatasetPedigreeColumnDetails(datasetId: string, column: string): Observable<Object> {
+    const options = { headers: this.headers, withCredentials: true };
+    return this.http.get(`${this.config.baseUrl}${this.datasetPedigreeUrl}/${datasetId}/${column}`, options);
   }
 }

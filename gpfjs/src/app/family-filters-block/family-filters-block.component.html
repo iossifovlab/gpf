@@ -14,8 +14,7 @@
       <li [ngbNavItem]="'advanced'" *ngIf="dataset?.genotypeBrowserConfig?.familyFilters && dataset.phenotypeData" id="advanced">
           <a ngbNavLink>Advanced</a>
           <ng-template ngbNavContent>
-              <gpf-pheno-filters [dataset]="dataset" [filters]="dataset?.genotypeBrowserConfig?.familyFilters">
-              </gpf-pheno-filters>
+              <gpf-person-filters [dataset]="dataset" [filters]="dataset?.genotypeBrowserConfig?.familyFilters"></gpf-person-filters>
           </ng-template>
       </li>
     </ul>

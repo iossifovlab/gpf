@@ -4,17 +4,17 @@ import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query
 import { PersonFilterState, CategoricalFilterState, ContinuousFilterState } from './pheno-filters';
 
 @Component({
-  selector: 'gpf-pheno-filters',
+  selector: 'gpf-person-filters',
   templateUrl: './pheno-filters.component.html',
   styleUrls: ['./pheno-filters.component.css'],
   providers: [{
     provide: QueryStateProvider,
-    useExisting: forwardRef(() => PhenoFiltersComponent)
+    useExisting: forwardRef(() => PersonFiltersComponent)
   }]
 })
-export class PhenoFiltersComponent extends QueryStateWithErrorsProvider implements OnChanges {
+export class PersonFiltersComponent extends QueryStateWithErrorsProvider implements OnChanges {
   @Input() dataset: Dataset;
-  @Input() filters;
+  @Input() filters: PersonFilter[];
 
   private personFiltersState = new Array<[PersonFilter, PersonFilterState]>();
 
@@ -23,39 +23,22 @@ export class PhenoFiltersComponent extends QueryStateWithErrorsProvider implemen
   }
 
   ngOnChanges(changes) {
-    if (!this.dataset) {
-      return;
-    }
-
     this.personFiltersState =
-      this.filters
-      .map(personFilter => {
+      this.filters.map(personFilter => {
+        let filterState = null;
         if (personFilter.sourceType === 'continuous') {
-          const continuousFilterState = new ContinuousFilterState(
-            personFilter.name,
-            personFilter.sourceType,
-            personFilter.role,
-            personFilter.source,
-          );
-          return [
-            personFilter, continuousFilterState
-          ] as [PersonFilter, PersonFilterState];
-        } else if (personFilter.sourceType === 'categorical') {
-          const categoricalFilterState = new CategoricalFilterState(
-            personFilter.name,
-            personFilter.sourceType,
-            personFilter.role,
-            personFilter.source,
-          );
-
-          return [
-            personFilter, categoricalFilterState
-          ] as [PersonFilter, PersonFilterState];
-
+          if (personFilter.from === 'pedigree') {
+            throw new Error('Continuous filters with pedigree sources are not supported!');
           }
-
-          return [personFilter, null] as [PersonFilter, PersonFilterState];
-
+          filterState = new ContinuousFilterState(
+            personFilter.name, personFilter.sourceType, personFilter.role, personFilter.source,
+          );
+        } else if (personFilter.sourceType === 'categorical') {
+          filterState = new CategoricalFilterState(
+            personFilter.name, personFilter.sourceType, personFilter.role, personFilter.source,
+          );
+        }
+        return [personFilter, filterState] as [PersonFilter, PersonFilterState];
       });
   }
 

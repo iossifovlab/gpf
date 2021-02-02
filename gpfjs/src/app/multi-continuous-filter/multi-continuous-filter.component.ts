@@ -68,8 +68,8 @@ export class MultiContinuousFilterComponent extends QueryStateCollector implemen
       .getState(this.constructor.name)
       .take(1)
       .subscribe(state => {
-        if (state['phenoFilters']) {
-          this.restoreContinuousFilter(state['phenoFilters']);
+        if (state['personFilters']) {
+          this.restoreContinuousFilter(state['personFilters']);
         }
       });
   }
