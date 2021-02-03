@@ -1,9 +1,8 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChildren } from '@angular/core';
 import { Observable } from 'rxjs';
 import { AutismGeneToolConfig, AutismGeneToolGene } from './autism-gene-profile';
 import { AutismGeneProfilesService } from './autism-gene-profiles.service';
 import { NgbDropdownMenu } from '@ng-bootstrap/ng-bootstrap';
-import { MultipleSelectMenuComponent } from 'app/multiple-select-menu/multiple-select-menu.component';
 
 @Component({
   selector: 'gpf-autism-gene-profiles',
@@ -11,8 +10,7 @@ import { MultipleSelectMenuComponent } from 'app/multiple-select-menu/multiple-s
   styleUrls: ['./autism-gene-profiles.component.css']
 })
 export class AutismGeneProfilesComponent implements OnInit {
-  @ViewChild(NgbDropdownMenu) ngbDropdownMenu: NgbDropdownMenu;
-  @ViewChild(MultipleSelectMenuComponent) multipleSelectMenuComponent;
+  @ViewChildren(NgbDropdownMenu) ngbDropdownMenu: NgbDropdownMenu[];
 
   private config$: Observable<AutismGeneToolConfig>;
   private genes$: Observable<AutismGeneToolGene[]>;
@@ -60,12 +58,6 @@ export class AutismGeneProfilesComponent implements OnInit {
       this.shownProtectionScores = $event.data;
     }
 
-    this.ngbDropdownMenu.dropdown.close();
-  }
-
-  emitApplyEventOnMultipleSelectMenuCloseEvent(isOpen: boolean) {
-    if (!isOpen) {
-      this.multipleSelectMenuComponent.apply();
-    }
+    this.ngbDropdownMenu.forEach(menu => menu.dropdown.close());
   }
 }
