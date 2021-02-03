@@ -6,10 +6,11 @@ import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
   styleUrls: ['./multiple-select-menu.component.css']
 })
 export class MultipleSelectMenuComponent implements OnInit {
+  @Input() id: string;
   @Input() selectedItems: string[];
   @Input() allItems: string[];
   @Input() readonly minSelectCount = 0;
-  @Output() applyEvent = new EventEmitter<string[]>();
+  @Output() applyEvent = new EventEmitter<{id: string, data: string[]}>();
 
   private checkUncheckAllButtonName = 'Uncheck all';
   private searchText: String;
@@ -49,8 +50,9 @@ export class MultipleSelectMenuComponent implements OnInit {
   }
 
   apply() {
-    this.applyEvent.emit(
-      this.checkboxDataArray.filter(item => item.isChecked).map(item => item.id)
-    );
+    this.applyEvent.emit({
+      id: this.id,
+      data: this.checkboxDataArray.filter(item => item.isChecked).map(item => item.id)
+    });
   }
 }

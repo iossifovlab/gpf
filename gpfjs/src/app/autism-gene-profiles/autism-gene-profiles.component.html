@@ -5,7 +5,8 @@
         <th class="table-main-header">
           <span>Gene</span>
         </th>
-        <th class="table-main-header" *ngIf="shownGeneLists.length" [attr.colspan]="shownGeneLists.length">
+
+        <th class="table-main-header" [attr.colspan]="shownGeneLists.length">
           <span>
             Gene lists
           </span>
@@ -13,19 +14,42 @@
             <button class="dropdown-toggle btn navbar-toggler" ngbDropdownToggle style="float: right; border: 1px solid #dddddd; outline: none; font-size: 18px; width: 40px;">
               <span style="font-size: 14px;">&#9776;</span>
             </button>
-            <gpf-multiple-select-menu ngbDropdownMenu [allItems]="config.geneLists" [selectedItems]="shownGeneLists" [minSelectCount]="1" (applyEvent)="handleMultipleSelectMenuApplyEvent($event)"></gpf-multiple-select-menu>
+            <gpf-multiple-select-menu ngbDropdownMenu [id]="'geneLists'" [allItems]="config.geneLists" [selectedItems]="shownGeneLists" [minSelectCount]="1" (applyEvent)="handleMultipleSelectMenuApplyEvent($event)"></gpf-multiple-select-menu>
           </span>
         </th>
-        <th class="table-main-header" [attr.colspan]="config.autismScores?.length">Autism scores</th>
-        <th class="table-main-header" [attr.colspan]="config.protectionScores?.length">Protection scores</th>
+
+        <th class="table-main-header" [attr.colspan]="shownAutismScores.length">
+          <span>
+            Autism scores
+          </span>
+          <span ngbDropdown (openChange)="emitApplyEventOnMultipleSelectMenuCloseEvent($event)">
+            <button class="dropdown-toggle btn navbar-toggler" ngbDropdownToggle style="float: right; border: 1px solid #dddddd; outline: none; font-size: 18px; width: 40px;">
+              <span style="font-size: 14px;">&#9776;</span>
+            </button>
+            <gpf-multiple-select-menu ngbDropdownMenu [id]="'autismScores'" [allItems]="config.autismScores" [selectedItems]="shownAutismScores" [minSelectCount]="1" (applyEvent)="handleMultipleSelectMenuApplyEvent($event)"></gpf-multiple-select-menu>
+          </span>
+        </th>
+
+        <th class="table-main-header" [attr.colspan]="shownProtectionScores.length">
+          <span>
+            Protection scores
+          </span>
+          <span ngbDropdown (openChange)="emitApplyEventOnMultipleSelectMenuCloseEvent($event)">
+            <button class="dropdown-toggle btn navbar-toggler" ngbDropdownToggle style="float: right; border: 1px solid #dddddd; outline: none; font-size: 18px; width: 40px;">
+              <span style="font-size: 14px;">&#9776;</span>
+            </button>
+            <gpf-multiple-select-menu ngbDropdownMenu [id]="'protectionScores'" [allItems]="config.protectionScores" [selectedItems]="shownProtectionScores" [minSelectCount]="1" (applyEvent)="handleMultipleSelectMenuApplyEvent($event)"></gpf-multiple-select-menu>
+          </span>
+        </th>
+
         <th class="table-main-header" *ngFor="let dataset of config.datasets" [attr.colspan]="calculateDatasetColspan(dataset)">{{dataset.name}}</th>
       </tr>
 
       <tr style="height: 110px;">
         <th class="table-subheader" rowspan="2">Gene search</th>
         <th class="table-subheader" rowspan="2" *ngFor="let geneList of sortAlphabetically(shownGeneLists)"><span class="vertical-text">{{geneList}}</span></th>
-        <th class="table-subheader" rowspan="2" *ngFor="let autismScore of config.autismScores"><span class="vertical-text">{{autismScore}}</span></th>
-        <th class="table-subheader" rowspan="2" *ngFor="let protectionScore of config.protectionScores"><span class="vertical-text">{{protectionScore}}</span></th>
+        <th class="table-subheader" rowspan="2" *ngFor="let autismScore of shownAutismScores"><span class="vertical-text">{{autismScore}}</span></th>
+        <th class="table-subheader" rowspan="2" *ngFor="let protectionScore of shownProtectionScores"><span class="vertical-text">{{protectionScore}}</span></th>
 
         <ng-container *ngFor="let dataset of config.datasets">
           <th class="table-subheader" colspan="3" *ngFor="let personSet of dataset.personSets">{{personSet}}</th>
@@ -46,8 +70,8 @@
         <td *ngFor="let geneList of shownGeneLists">
           <span *ngIf="gene.geneSets.indexOf(geneList) !== -1">&#10003;</span>
         </td>
-        <td *ngFor="let autismScore of config.autismScores"> {{gene.autismScores.get(autismScore)}}</td>
-        <td *ngFor="let protectionScore of config.protectionScores"> {{gene.protectionScores.get(protectionScore)}}</td>
+        <td *ngFor="let autismScore of shownAutismScores"> {{gene.autismScores.get(autismScore)}}</td>
+        <td *ngFor="let protectionScore of shownProtectionScores"> {{gene.protectionScores.get(protectionScore)}}</td>
 
         <ng-container *ngFor="let study of gene.studies">
           <ng-container *ngFor="let personSet of study.personSets">

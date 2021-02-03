@@ -18,6 +18,8 @@ export class AutismGeneProfilesComponent implements OnInit {
   private genes$: Observable<AutismGeneToolGene[]>;
 
   private shownGeneLists: string[];
+  private shownAutismScores: string[];
+  private shownProtectionScores: string[];
 
   constructor(
     private autismGeneProfilesService: AutismGeneProfilesService,
@@ -27,6 +29,8 @@ export class AutismGeneProfilesComponent implements OnInit {
     this.config$ = this.autismGeneProfilesService.getConfig();
     this.config$.take(1).subscribe(res => {
       this.shownGeneLists = res['geneLists'];
+      this.shownAutismScores = res['autismScores'];
+      this.shownProtectionScores = res['protectionScores'];
     });
 
     this.genes$ = this.autismGeneProfilesService.getGenes();
@@ -47,13 +51,16 @@ export class AutismGeneProfilesComponent implements OnInit {
    });
   }
 
-  handleMultipleSelectMenuApplyEvent($event: string[]) {
-    this.setShownGeneLists($event);
-    this.ngbDropdownMenu.dropdown.close();
-  }
+  handleMultipleSelectMenuApplyEvent($event) {
+    if ($event.id === 'geneLists') {
+      this.shownGeneLists = $event.data;
+    } else if ($event.id === 'autismScores') {
+      this.shownAutismScores = $event.data;
+    } else if ($event.id === 'protectionScores') {
+      this.shownProtectionScores = $event.data;
+    }
 
-  setShownGeneLists(geneLists: string[]) {
-    this.shownGeneLists = geneLists;
+    this.ngbDropdownMenu.dropdown.close();
   }
 
   emitApplyEventOnMultipleSelectMenuCloseEvent(isOpen: boolean) {
