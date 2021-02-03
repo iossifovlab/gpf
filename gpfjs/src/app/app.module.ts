@@ -160,6 +160,7 @@ import { DatasetNodeComponent } from './dataset-node/dataset-node.component';
 import { AutismGeneProfilesComponent } from './autism-gene-profiles/autism-gene-profiles.component';
 import { MultipleSelectMenuComponent } from './multiple-select-menu/multiple-select-menu.component';
 import { Ng2SearchPipeModule } from 'ng2-search-filter';
+import { AutismGeneProfilesBlockComponent } from './autism-gene-profiles-block/autism-gene-profiles-block.component';
 
 const appRoutes: Routes = [
   {
@@ -210,7 +211,7 @@ const appRoutes: Routes = [
   },
   {
     path: 'autismGeneProfiles',
-    component: AutismGeneProfilesComponent
+    component: AutismGeneProfilesBlockComponent
   },
   {
     path: 'management',
@@ -361,6 +362,7 @@ const appRoutes: Routes = [
     DatasetNodeComponent,
     AutismGeneProfilesComponent,
     MultipleSelectMenuComponent,
+    AutismGeneProfilesBlockComponent,
   ],
   imports: [
     BrowserModule,
