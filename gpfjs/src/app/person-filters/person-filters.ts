@@ -42,6 +42,7 @@ export class PersonFilterState {
     readonly sourceType: string,
     readonly role: string,
     public source: string,
+    public from: string,
     public selection: Selection
   ) {}
 
@@ -56,9 +57,10 @@ export class CategoricalFilterState extends PersonFilterState {
     id: string,
     type: string,
     role: string,
-    source: string
+    source: string,
+    from: string
   ) {
-    super(id, type, role, source, new CategoricalSelection());
+    super(id, type, role, source, from, new CategoricalSelection());
   }
 
   isEmpty() {
@@ -72,8 +74,9 @@ export class ContinuousFilterState extends PersonFilterState {
     id: string,
     type: string,
     role: string,
-    source: string
+    source: string,
+    from: string
   ) {
-    super(id, type, role, source, new ContinuousSelection());
+    super(id, type, role, source, from, new ContinuousSelection());
   }
 }

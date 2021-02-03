@@ -15,6 +15,7 @@ import { PersonFilterState, CategoricalFilterState, ContinuousFilterState } from
 export class PersonFiltersComponent extends QueryStateWithErrorsProvider implements OnChanges {
   @Input() dataset: Dataset;
   @Input() filters: PersonFilter[];
+  @Input() isFamilyFilters: boolean;
 
   private personFiltersState = new Array<[PersonFilter, PersonFilterState]>();
 
@@ -31,11 +32,11 @@ export class PersonFiltersComponent extends QueryStateWithErrorsProvider impleme
             throw new Error('Continuous filters with pedigree sources are not supported!');
           }
           filterState = new ContinuousFilterState(
-            personFilter.name, personFilter.sourceType, personFilter.role, personFilter.source,
+            personFilter.name, personFilter.sourceType, personFilter.role, personFilter.source, personFilter.from,
           );
         } else if (personFilter.sourceType === 'categorical') {
           filterState = new CategoricalFilterState(
-            personFilter.name, personFilter.sourceType, personFilter.role, personFilter.source,
+            personFilter.name, personFilter.sourceType, personFilter.role, personFilter.source, personFilter.from,
           );
         }
         return [personFilter, filterState] as [PersonFilter, PersonFilterState];
@@ -55,10 +56,11 @@ export class PersonFiltersComponent extends QueryStateWithErrorsProvider impleme
   }
 
   getState() {
-    return this.validateAndGetState(this.personFiltersState)
-      .map(personFiltersState => ({
-        personFilters: personFiltersState.map(x => x[1]).filter(f => f && !f.isEmpty())
-      }));
+    const keyName = this.isFamilyFilters ? 'familyFilters' : 'personFilters';
+    return this.validateAndGetState(this.personFiltersState).map(personFiltersState => {
+      const result = {};
+      result[keyName] = personFiltersState.map(x => x[1]).filter(f => f && !f.isEmpty());
+      return result;
+    });
   }
-
 }
