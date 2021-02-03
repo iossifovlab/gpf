@@ -6,19 +6,19 @@ import { Component, OnInit } from '@angular/core';
   styleUrls: ['./autism-gene-profiles-block.component.css']
 })
 export class AutismGeneProfilesBlockComponent implements OnInit {
-  private geneTabs: string[] = [];
+  private geneTabs = new Set<string>();
 
   constructor() { }
 
   ngOnInit(): void {
   }
 
-  newTab() {
-    this.geneTabs.push('CHD8');
+  openTabEventHandler($event) {
+    this.geneTabs.add($event);
   }
 
   close(event: MouseEvent, toRemove: string) {
-    this.geneTabs = this.geneTabs.filter(geneTab => geneTab !== toRemove);
+    this.geneTabs.delete(toRemove);
     event.preventDefault();
     event.stopImmediatePropagation();
   }
