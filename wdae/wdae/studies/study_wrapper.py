@@ -4,7 +4,7 @@ import traceback
 import json
 import logging
 
-from typing import Set
+from typing import List, Set
 
 from functools import reduce
 
@@ -110,9 +110,7 @@ class StudyWrapper(StudyWrapperBase):
                     pheno_column_slots.append(slot)
         self.pheno_column_slots = pheno_column_slots or []
 
-        # PHENO FILTERS
-        # TODO remove these pheno filters below
-        self.pheno_filters = genotype_browser_config.pheno_filters or None
+        # PERSON AND FAMILY FILTERS
         self.person_filters = genotype_browser_config.person_filters or None
         self.family_filters = genotype_browser_config.family_filters or None
 
@@ -221,41 +219,13 @@ class StudyWrapper(StudyWrapperBase):
     def _init_pheno(self, pheno_db):
         self.phenotype_data = None
         self.pheno_filter_builder = None
-        self.pheno_filters_in_config = set()
         if self.config.phenotype_data:
             self.phenotype_data = pheno_db.get_phenotype_data(
                 self.config.phenotype_data
             )
-
-            # TODO
-            # This should probably be done in the front-end by making a query
-            # to get the measure assigned to this filter and its respective
-            # domain
-            if self.pheno_filters:
-                pheno_filters_dict = self.pheno_filters.to_dict()
-                for k, pheno_filter in pheno_filters_dict.items():
-                    if "measure" in pheno_filter:
-                        pheno_filters_dict[k][
-                            "domain"
-                        ] = self.phenotype_data.get_measure(
-                            pheno_filter["measure"]
-                        ).domain
-
-                self.pheno_filters = Box(
-                    pheno_filters_dict,
-                    frozen_box=True,
-                    default_box=True,
-                    default_box_attr=None
-                )
-
-                self.pheno_filters_in_config = {
-                    f"{pf.role}.{pf.measure}"
-                    for pf in self.pheno_filters.values()
-                    if pf.measure and pf.filter_type == "single"
-                }
-                self.pheno_filter_builder = PhenoFilterBuilder(
-                    self.phenotype_data
-                )
+            self.pheno_filter_builder = PhenoFilterBuilder(
+                self.phenotype_data
+            )
 
     def __getattr__(self, name):
         return getattr(self.genotype_data_study, name)
@@ -624,10 +594,11 @@ class StudyWrapper(StudyWrapperBase):
             else:
                 del kwargs["studyFilters"]
 
-        if "phenoFilters" in kwargs:
-            kwargs = self._transform_pheno_filters(kwargs)
-            if kwargs is None:
-                return
+        if "personFilters" in kwargs:
+            kwargs = self._transform_person_filters(kwargs)
+
+        if "familyFilters" in kwargs:
+            kwargs = self._transform_family_filters(kwargs)
 
         if "person_ids" in kwargs:
             kwargs["person_ids"] = list(kwargs["person_ids"])
@@ -1144,72 +1115,90 @@ class StudyWrapper(StudyWrapperBase):
         self._add_roles_to_query(OrNode(roles_query), kwargs)
 
     def _transform_pedigree_filter_to_ids(self, pedigree_filter):
-        # TODO implement pedigree filters
-        pass
-
-    def _transform_pheno_filter_to_ids(self, pheno_filter):
-        persons = set(
-            p.person_id for p in self.families.persons_with_roles(
-                roles=[pheno_filter["role"]]
-            )
-        )
-        pheno_filter = self.pheno_filter_builder.make_filter(pheno_filter)
-        measure_df = pheno_filter.apply(
-            self.phenotype_data.get_measure_values_df(
-                pheno_filter["measure"],
-                person_ids=persons,
-            )
-        )
-        if pheno_filter["role"]:
+        column = pedigree_filter["source"]
+        value = pedigree_filter["selection"]
+        ped_df = self.families.ped_df.loc[
+            self.families.ped_df[column] == value
+        ]
+        if pedigree_filter.get("role"):
             # Handle family filter
+            ped_df = ped_df.loc[ped_df["role"] == pedigree_filter["role"]]
             ids = set(
                 self.families.persons[person_id].family.family_id
-                for person_id in measure_df["person_id"]
-                if person_id in self.families.persons
+                for person_id in ped_df["person_id"]
             )
         else:
             # Handle person filter
             ids = set(
-                person_id for person_id in measure_df["person_id"]
-                if person_id in persons
+                person_id for person_id in ped_df["person_id"]
+                if person_id in self.families.persons
             )
         return ids
 
-    def _transform_filters_to_ids(self, filters) -> Set[str]:
+    def _transform_pheno_filter_to_ids(self, pheno_filter):
+        pheno_filter = self.pheno_filter_builder.make_filter(pheno_filter)
+        if pheno_filter.get("role"):
+            # Handle family filter
+            persons = set(
+                p.person_id for p in self.families.persons_with_roles(
+                    roles=[pheno_filter["role"]]
+                )
+            )
+            measure_df = pheno_filter.apply(
+                self.phenotype_data.get_measure_values_df(
+                    pheno_filter["source"],
+                    person_ids=persons,
+                )
+            )
+            ids = set(
+                self.families.persons[person_id].family.family_id
+                for person_id in measure_df["person_id"]
+            )
+        else:
+            # Handle person filter
+            measure_df = pheno_filter.apply(
+                self.phenotype_data.get_measure_values_df(
+                    pheno_filter["source"]
+                )
+            )
+            ids = set(
+                person_id for person_id in measure_df["person_id"]
+                if person_id in self.families.persons
+            )
+        return ids
+
+    def _transform_filters_to_ids(self, filters: List[dict]) -> Set[str]:
         result = list()
         for filter_conf in filters:
-            if filter_conf["source"] == "phenotype":
+            if filter_conf["from"] == "phenotype":
                 ids = self._transform_pheno_filter_to_ids(filter_conf)
             else:
                 ids = self._transform_pedigree_filter_to_ids(filter_conf)
             result.append(ids)
         return reduce(set.intersection, result)
 
-    def _transform_pheno_filters(self, kwargs):
-        pheno_filter_args = kwargs.pop("phenoFilters")
-
-        assert isinstance(pheno_filter_args, list)
-        assert self.phenotype_data
-
-        matching_family_ids, matching_person_ids = \
-            self._transform_pheno_filters_to_family_ids(pheno_filter_args)
-
-        if matching_family_ids is not None:
-            if "family_ids" in kwargs:
-                kwarg_family_ids = kwargs.pop("family_ids")
-                matching_family_ids = set.intersection(
-                    matching_family_ids, set(kwarg_family_ids)
-                )
-            kwargs["family_ids"] = matching_family_ids
-
+    def _transform_person_filters(self, kwargs):
+        matching_person_ids = self._transform_filters_to_ids(
+            kwargs.pop("personFilters")
+        )
         if matching_person_ids is not None:
             if "person_ids" in kwargs:
-                kwarg_person_ids = kwargs.pop("person_ids")
                 matching_person_ids = set.intersection(
-                    matching_person_ids, set(kwarg_person_ids)
+                    matching_person_ids, set(kwargs.pop("person_ids"))
                 )
             kwargs["person_ids"] = matching_person_ids
+        return kwargs
 
+    def _transform_family_filters(self, kwargs):
+        matching_family_ids = self._transform_filters_to_ids(
+            kwargs.pop("familyFilters")
+        )
+        if matching_family_ids is not None:
+            if "family_ids" in kwargs:
+                matching_family_ids = set.intersection(
+                    matching_family_ids, set(kwargs.pop("family_ids"))
+                )
+            kwargs["family_ids"] = matching_family_ids
         return kwargs
 
     @staticmethod

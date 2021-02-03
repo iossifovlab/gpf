@@ -65,7 +65,7 @@ class PhenoFilterBuilder(object):
         self.phenotype_data = phenotype_data
 
     def make_filter(self, pheno_filter: dict) -> PersonFilter:
-        measure = self.phenotype_data.get_measure(pheno_filter["measure"])
+        measure = self.phenotype_data.get_measure(pheno_filter["source"])
         measure_type = measure.measure_type
         selection = pheno_filter["selection"]
         if measure_type in (MeasureType.continuous, MeasureType.ordinal):
