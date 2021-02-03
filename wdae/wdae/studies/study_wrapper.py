@@ -1116,13 +1116,15 @@ class StudyWrapper(StudyWrapperBase):
 
     def _transform_pedigree_filter_to_ids(self, pedigree_filter):
         column = pedigree_filter["source"]
-        value = pedigree_filter["selection"]
+        value = set(pedigree_filter["selection"]["selection"])
         ped_df = self.families.ped_df.loc[
-            self.families.ped_df[column] == value
+            self.families.ped_df[column].astype(str).isin(value)
         ]
         if pedigree_filter.get("role"):
             # Handle family filter
-            ped_df = ped_df.loc[ped_df["role"] == pedigree_filter["role"]]
+            ped_df = ped_df.loc[
+                ped_df["role"].astype(str) == pedigree_filter["role"]
+            ]
             ids = set(
                 self.families.persons[person_id].family.family_id
                 for person_id in ped_df["person_id"]
@@ -1135,18 +1137,18 @@ class StudyWrapper(StudyWrapperBase):
             )
         return ids
 
-    def _transform_pheno_filter_to_ids(self, pheno_filter):
-        pheno_filter = self.pheno_filter_builder.make_filter(pheno_filter)
-        if pheno_filter.get("role"):
+    def _transform_pheno_filter_to_ids(self, pheno_filter_conf):
+        pheno_filter = self.pheno_filter_builder.make_filter(pheno_filter_conf)
+        if pheno_filter_conf.get("role"):
             # Handle family filter
             persons = set(
                 p.person_id for p in self.families.persons_with_roles(
-                    roles=[pheno_filter["role"]]
+                    roles=[pheno_filter_conf["role"]]
                 )
             )
             measure_df = pheno_filter.apply(
                 self.phenotype_data.get_measure_values_df(
-                    pheno_filter["source"],
+                    pheno_filter_conf["source"],
                     person_ids=persons,
                 )
             )
@@ -1158,7 +1160,7 @@ class StudyWrapper(StudyWrapperBase):
             # Handle person filter
             measure_df = pheno_filter.apply(
                 self.phenotype_data.get_measure_values_df(
-                    pheno_filter["source"]
+                    pheno_filter_conf["source"]
                 )
             )
             ids = set(
