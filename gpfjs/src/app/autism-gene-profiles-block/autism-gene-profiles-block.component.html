@@ -2,12 +2,24 @@
   <ul ngbNav #nav="ngbNav" class="navbar bg-light nav-pills" style="justify-content: flex-start">
 
     <li [ngbNavItem]="'autismGenesTool'">
-        <a ngbNavLink>Autism genes tool</a>
-        <ng-template ngbNavContent>
-          <gpf-autism-gene-profiles></gpf-autism-gene-profiles>
-        </ng-template>
+      <a ngbNavLink>Autism genes tool</a>
+      <ng-template ngbNavContent>
+        <gpf-autism-gene-profiles></gpf-autism-gene-profiles>
+      </ng-template>
     </li>
+
+    <li *ngFor="let geneTab of geneTabs" [ngbNavItem]="geneTab">
+      <a ngbNavLink>
+        {{geneTab}}
+        <span class="close position-relative pl-2 font-weight-light" (click)="close($event, geneTab)">×</span>
+      </a>
+      <ng-template ngbNavContent>
+        <p>??</p>
+      </ng-template>
+  </li>
 
   </ul>
   <div [ngbNavOutlet]="nav" class="card-block"></div>
 </div>
+
+<button type="button" class="btn btn-primary" (click)="newTab()">new tab</button>
