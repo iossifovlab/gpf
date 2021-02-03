@@ -5,13 +5,6 @@
       <li [ngbNavItem]="'allPersons'" id="all-persons">
           <a ngbNavLink>All</a>
       </li>
-      <li [ngbNavItem]="'personIds'" id="person-ids">
-          <a ngbNavLink>Person Ids</a>
-          <ng-template ngbNavContent>
-              <p>Fixme</p>
-              <!-- <gpf-family-ids></gpf-family-ids> -->
-          </ng-template>
-      </li>
       <li [ngbNavItem]="'advanced'" *ngIf="dataset?.genotypeBrowserConfig?.personFilters && dataset.phenotypeData" id="advanced">
           <a ngbNavLink>Advanced</a>
           <ng-template ngbNavContent>
