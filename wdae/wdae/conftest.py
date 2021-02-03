@@ -139,7 +139,7 @@ def wdae_gpf_instance_agp(
         db, mocker, admin_client, wdae_gpf_instance, sample_agp):
 
     agp_config = Box({
-        'gene_symbols': ['PLEKHN1', 'SAMD11'],
+        'gene_sets': ['CHD8 target genes'],
         'protection_scores': ['SFARI_gene_score', 'RVIS_rank', 'RVIS'],
         'autism_scores': ['SFARI_gene_score', 'RVIS_rank', 'RVIS'],
         'datasets': Box({
