@@ -66,10 +66,14 @@
 
     <tbody *ngIf="genes$ | async as genes">
       <tr *ngFor="let gene of genes">
-        <td (click)="emitOpenTabEvent(gene.geneSymbol)">{{gene.geneSymbol}}</td>
+        <td (click)="emitOpenTabEvent(gene.geneSymbol)" style="cursor:pointer;color:#1a6393;">
+          {{gene.geneSymbol}}
+        </td>
+
         <td *ngFor="let geneList of shownGeneLists">
           <span *ngIf="gene.geneSets.indexOf(geneList) !== -1">&#10003;</span>
         </td>
+        
         <td *ngFor="let autismScore of shownAutismScores"> {{gene.autismScores.get(autismScore)}}</td>
         <td *ngFor="let protectionScore of shownProtectionScores"> {{gene.protectionScores.get(protectionScore)}}</td>
 
