@@ -41,4 +41,16 @@ export class GenotypePreviewFieldComponent implements OnChanges {
       }
       return '';
   }
+
+  getUCSCLink(): string {
+    let link: string;
+
+    if (this.value.substring(0, 3) === 'chr') {
+      link = `http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg38&position=${this.value}`;
+    } else {
+      link = `http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg19&position=chr${this.value}`;
+    }
+
+    return link;
+  }
 }
