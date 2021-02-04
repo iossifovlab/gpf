@@ -146,7 +146,7 @@ def main(gpf_instance=None, argv=None):
     duration = time.time() - start
     print(duration)
 
-    agpdb = AutismGeneProfileDB(args.dbfile)
+    agpdb = AutismGeneProfileDB(args.dbfile, clear=True)
 
     agpdb.clear_all_tables()
     agpdb.populate_data_tables(gpf_instance)
