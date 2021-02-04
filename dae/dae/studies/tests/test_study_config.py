@@ -65,7 +65,7 @@ def test_quads_f1_config_genotype_browser_pheno_filters(quads_f1_config):
     assert genotype_browser_config.family_filters == {
         "categorical": {
             "name": "Categorical",
-            "from": "phenotype",
+            "from": "phenodb",
             "source": "instrument1.categorical",
             "source_type": "categorical",
             "filter_type": "single",
@@ -73,7 +73,7 @@ def test_quads_f1_config_genotype_browser_pheno_filters(quads_f1_config):
         },
         "continuous": {
             "name": "Continuous",
-            "from": "phenotype",
+            "from": "phenodb",
             "source": "instrument1.continuous",
             "source_type": "continuous",
             "filter_type": "single",

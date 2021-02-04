@@ -115,6 +115,7 @@ def test_pheno_filter_builder_categorical(fake_phenotype_data):
     pf_builder = PhenoFilterBuilder(fake_phenotype_data)
     pf = pf_builder.make_filter({
         "source": "i1.m5",
+        "sourceType": "categorical",
         "selection": {"selection": {"catB", "catF"}}
     })
     assert isinstance(pf, PhenoFilterSet)
@@ -125,6 +126,7 @@ def test_pheno_filter_builder_raw(fake_phenotype_data):
         pf_builder = PhenoFilterBuilder(fake_phenotype_data)
         pf_builder.make_filter({
             "source": "i1.m9",
+            "sourceType": "categorical",
             "selection": {"selection": [0, 0]}
         })
 
@@ -133,6 +135,7 @@ def test_pheno_filter_builder_continuous(fake_phenotype_data):
     pf_builder = PhenoFilterBuilder(fake_phenotype_data)
     pf = pf_builder.make_filter({
         "source": "i1.m1",
+        "sourceType": "continuous",
         "selection": {"min": 50, "max": 70}
     })
     assert isinstance(pf, PhenoFilterRange)
@@ -142,6 +145,7 @@ def test_pheno_filter_builder_ordinal(fake_phenotype_data):
     pf_builder = PhenoFilterBuilder(fake_phenotype_data)
     pf = pf_builder.make_filter({
         "source": "i1.m4",
+        "sourceType": "continuous",
         "selection": {"min": 3, "max": 5}
     })
     assert isinstance(pf, PhenoFilterRange)
@@ -152,5 +156,6 @@ def test_pheno_filter_builder_nonexistent_measure(fake_phenotype_data):
     with pytest.raises(AssertionError):
         pfbuilder.make_filter({
             "source": "??.??",
+            "sourceType": "continuous",
             "selection": {"min": 0, "max": 0}
         })
