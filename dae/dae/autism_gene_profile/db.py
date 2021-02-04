@@ -3,18 +3,29 @@ import logging
 from dae.autism_gene_profile.statistic import AGPStatistic
 from sqlalchemy import MetaData, create_engine
 from sqlalchemy import Table, Column, Integer, String, Float, ForeignKey
-from sqlalchemy.sql import select, insert, join, delete
+from sqlalchemy.sql import select, insert, join, delete, and_
+from sqlalchemy.orm import aliased
+from dae.utils.sql_utils import CreateView
 
 logger = logging.getLogger(__name__)
 
 
 class AutismGeneProfileDB:
-    def __init__(self, dbfile):
+
+    PAGE_SIZE = 100
+
+    def __init__(self, dbfile, clear=False):
         self.dbfile = dbfile
-        self.metadata = MetaData()
         self.engine = create_engine("sqlite:///{}".format(dbfile))
+        self.metadata = MetaData(self.engine)
         self.configuration = None
-        self.build_gene_profile_db()
+        self.build_gene_profile_db(clear)
+
+    @property
+    def agp_view(self):
+        if self._agp_view is None:
+            self._agp_view = Table("agp_view", self.metadata, autoload=True)
+        return self._agp_view
 
     def _get_autism_scores(self, gene_symbol_id):
         s = select([
@@ -163,6 +174,11 @@ class AutismGeneProfileDB:
             agps.append(self.get_agp(symbol))
         return agps
 
+    def query_agps(self, page, symbol_like=None, sort_by=None):
+        s = self.agp_view.select()
+        with self.engine.connect() as connection:
+            return connection.execute(s).fetchall()
+
     def _build_gene_symbols_table(self):
         self.gene_symbols = Table(
             "gene_symbols",
@@ -197,7 +213,8 @@ class AutismGeneProfileDB:
             self.metadata,
             Column("id", Integer(), primary_key=True),
             Column("symbol_id", ForeignKey("gene_symbols.id")),
-            Column("set_id", ForeignKey("gene_sets.id"))
+            Column("set_id", ForeignKey("gene_sets.id")),
+            Column("present", Integer())
         )
 
     def _populate_gene_sets_table(self, sets):
@@ -262,8 +279,113 @@ class AutismGeneProfileDB:
             ),
         )
 
-    def build_gene_profile_db(self):
-        self.metadata.drop_all(self.engine)
+    def build_agp_view(self, gpf_instance):
+        config = self.get_full_configuration(gpf_instance)
+
+        study_ids = self._get_study_ids()
+        gene_set_ids = self._get_gene_set_ids()
+        current_join = None
+        select_cols = [self.gene_symbols.c.symbol_name]
+
+        for gs in config["gene_sets"]:
+            set_alias = gs
+            table_alias = aliased(
+                self.gene_symbol_sets,
+                set_alias
+            )
+            left = current_join
+            if left is None:
+                left = self.gene_symbols
+
+
+            current_join = join(
+                left, table_alias,
+                and_(
+                    self.gene_symbols.c.id == table_alias.c.symbol_id,
+                    table_alias.c.set_id == gene_set_ids[gs]
+                ),
+                isouter=True
+            )
+
+            select_cols.append(table_alias.c.present.label(set_alias))
+
+        for ps in config["protection_scores"]:
+            score_alias = f"protection_{ps}"
+            table_alias = aliased(
+                self.protection_scores,
+                score_alias
+            )
+            left = current_join
+            if left is None:
+                left = self.gene_symbols
+
+            current_join = join(
+                left, table_alias,
+                and_(
+                    self.gene_symbols.c.id == table_alias.c.symbol_id,
+                    table_alias.c.score_name == ps
+                )
+            )
+
+            select_cols.append(table_alias.c.score_value.label(score_alias))
+
+        for aus in config["autism_scores"]:
+            score_alias = f"autism_{ps}"
+            table_alias = aliased(
+                self.autism_scores,
+                score_alias
+            )
+            left = current_join
+            if left is None:
+                left = self.gene_symbols
+
+            current_join = join(
+                left, table_alias,
+                and_(
+                    self.gene_symbols.c.id == table_alias.c.symbol_id,
+                    table_alias.c.score_name == aus
+                )
+            )
+
+            select_cols.append(table_alias.c.score_value.label(score_alias))
+
+        for dataset_id, dataset in config["datasets"].items():
+            config_section = config["datasets"][dataset_id]
+            db_study_id = study_ids[dataset_id]
+            for person_set in config_section["person_sets"]:
+                for effect_type in config_section["effects"]:
+                    count_alias = f"{dataset_id}_{person_set}_{effect_type}"
+                    table_alias = aliased(
+                        self.variant_counts,
+                        count_alias
+                    )
+                    left = current_join
+                    if left is None:
+                        left = self.gene_symbols
+
+                    current_join = join(
+                        left, table_alias,
+                        and_(
+                            self.gene_symbols.c.id == table_alias.c.symbol_id,
+                            table_alias.c.study_id == db_study_id,
+                            table_alias.c.people_group == person_set,
+                            table_alias.c.effect_type == effect_type
+                        )
+                    )
+                    select_cols.append(
+                        table_alias.c.count.label(count_alias)
+                    )
+
+        view_query = select(select_cols).select_from(current_join)
+
+        with self.engine.connect() as connection:
+            connection.execute("DROP VIEW IF EXISTS agp_view")
+            view_create = CreateView("agp_view", view_query)
+            connection.execute(view_create)
+
+        self._agp_view = Table("agp_view", self.metadata, autoload=True)
+
+    def build_gene_profile_db(self, clear=False):
         self._build_gene_symbols_table()
         self._build_gene_sets_table()
         self._build_gene_symbol_sets_table()
@@ -271,7 +393,9 @@ class AutismGeneProfileDB:
         self._build_autism_scores_table()
         self._build_protection_scores_table()
         self._build_variant_counts_table()
-        self.metadata.create_all(self.engine)
+        if clear:
+            self.metadata.drop_all()
+        self.metadata.create_all()
 
     def clear_all_tables(self):
         with self.engine.connect() as connection:
@@ -336,7 +460,6 @@ class AutismGeneProfileDB:
                             )
                         )
 
-
     def insert_agps(self, agps):
         study_ids = self._get_study_ids()
         gene_set_ids = self._get_gene_set_ids()
@@ -366,12 +489,16 @@ class AutismGeneProfileDB:
                                 score_value=value
                             )
                         )
-                    for gene_set in agp.gene_sets:
+                    for gene_set, set_id in gene_set_ids.items():
                         set_id = gene_set_ids[gene_set]
+                        present = 0
+                        if gene_set in agp.gene_sets:
+                            present = 1
                         connection.execute(
                             insert(self.gene_symbol_sets).values(
                                 symbol_id=symbol_id,
-                                set_id=set_id
+                                set_id=set_id,
+                                present=present
                             )
                         )
 
