@@ -316,11 +316,6 @@ study_config_schema = {
                     "schema": family_filters_schema,
                 },
             },
-            "selected_pheno_filters_values": {
-                "type": "list",
-                "schema": {"type": "string"},
-                "default": [],
-            },
             "variant_types": {
                 "type": "list",
                 "schema": {"type": "string"},
