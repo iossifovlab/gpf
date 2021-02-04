@@ -302,13 +302,6 @@ study_config_schema = {
                 "schema": {"type": "string"},
                 "default": [],
             },
-            "pheno_filters": {
-                "type": "dict",
-                "valuesrules": {
-                    "type": "dict",
-                    "schema": family_filters_schema,
-                },
-            },
             "person_filters": {
                 "type": "dict",
                 "valuesrules": {
