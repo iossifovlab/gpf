@@ -310,12 +310,14 @@ export class Dataset extends IdName {
 export class DatasetDetails {
   static fromJson(json: any): DatasetDetails {
     return new DatasetDetails(
-      json.hasDenovo as boolean
+      json.hasDenovo as boolean,
+      json['genome']
     );
   }
 
   constructor(
-    readonly hasDenovo: boolean
+    readonly hasDenovo: boolean,
+    readonly genome: string,
   ) { }
 }
 

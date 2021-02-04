@@ -5,7 +5,7 @@
     </gpf-pedigree-chart>
 </div>
  <span *ngIf="field == 'variant.location'">
-   <a target="_blank" href="{{getUCSCLink()}}">{{ formattedValue }}</a>
+   <a target="_blank" href="{{UCSCLink}}">{{ formattedValue }}</a>
  </span>
  <span *ngIf="field != 'genotype' && field != 'variant.location'">
     {{ formattedValue }}
