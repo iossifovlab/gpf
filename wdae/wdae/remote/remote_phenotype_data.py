@@ -9,6 +9,14 @@ class RemotePhenotypeData(PhenotypeData):
         self.dataset_id = dataset_id
         self.rest_client = rest_client
         self._instruments = None
+        self._measures = None
+        # self.measures = self.get_measures()
+
+    @property
+    def measures(self):
+        if not self._measures:
+            self._measures = self.get_measures()
+        return self._measures
 
     def get_persons_df(self, roles=None, person_ids=None, family_ids=None):
         persons = self.rest_client.post_pheno_persons(
@@ -53,6 +61,12 @@ class RemotePhenotypeData(PhenotypeData):
         measure = self.rest_client.get_measure(self.dataset_id, measure_id)
 
         return Measure.from_json(measure)
+
+    def get_measure_description(self, measure_id):
+        measure_description = self.rest_client.get_measure_description(
+            self.dataset_id, measure_id)
+
+        return measure_description
 
     def get_measures(self, instrument=None, measure_type=None):
         measures = self.rest_client.get_measures(

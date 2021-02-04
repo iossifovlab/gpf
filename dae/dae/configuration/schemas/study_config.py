@@ -220,6 +220,12 @@ study_config_schema = {
     "study_type": {"type": "list", "schema": {"type": "string"}},
     "year": {"type": "list", "schema": {"type": "integer"}},
     "pub_med": {"type": "list", "schema": {"type": "string"}},
+    "genome": {
+        "type": "string",
+        "allowed": ["hg19", "hg38"],
+        "required": True,
+    },
+    "chr_prefix": {"type": "boolean", "required": True},
     "has_denovo": {"type": "boolean", "default": True},
     "has_transmitted": {"type": "boolean"},
     "has_complex": {"type": "boolean"},
