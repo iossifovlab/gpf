@@ -125,5 +125,9 @@ class DatasetDetailsView(QueryBaseView):
 
         has_denovo = getattr(genotype_data, "has_denovo", False)
 
-        dataset_details = {"hasDenovo": has_denovo}
+        dataset_details = {
+            "hasDenovo": has_denovo,
+            "genome": genotype_data.config.genome,
+            "chrPrefix": genotype_data.config.chr_prefix,
+        }
         return Response(dataset_details)
