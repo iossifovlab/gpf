@@ -54,7 +54,8 @@ class PhenoFilterSet(PersonFilterSet):
     def __init__(self, measure: Measure, values: Collection):
         super(PhenoFilterSet, self).__init__(measure.measure_id, values)
         self.measure: Measure = measure
-        assert measure.measure_type == MeasureType.categorical
+        assert measure.measure_type in (
+            MeasureType.categorical,  MeasureType.ordinal)
 
 
 class PhenoFilterRange(PersonFilterRange):
@@ -72,13 +73,18 @@ class PhenoFilterBuilder(object):
 
     def make_filter(self, pheno_filter: dict) -> PersonFilter:
         measure = self.phenotype_data.get_measure(pheno_filter["source"])
-        measure_type = measure.measure_type
+        print("pheno_filter:", pheno_filter)
+
+        pheno_filter_type = MeasureType.from_str(
+            pheno_filter["sourceType"])
+
+        # measure_type = measure.measure_type
         selection = pheno_filter["selection"]
-        if measure_type in (MeasureType.continuous, MeasureType.ordinal):
+        if pheno_filter_type in (MeasureType.continuous, MeasureType.ordinal):
             constraints = tuple([selection["min"], selection["max"]])
         else:
             constraints = set(selection["selection"])
-        if measure_type == MeasureType.categorical:
+        if pheno_filter_type == MeasureType.categorical:
             return PhenoFilterSet(measure, constraints)
         else:
             return PhenoFilterRange(measure, constraints)

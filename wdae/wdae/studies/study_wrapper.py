@@ -1172,7 +1172,7 @@ class StudyWrapper(StudyWrapperBase):
     def _transform_filters_to_ids(self, filters: List[dict]) -> Set[str]:
         result = list()
         for filter_conf in filters:
-            if filter_conf["from"] == "phenotype":
+            if filter_conf["from"] == "phenodb":
                 ids = self._transform_pheno_filter_to_ids(filter_conf)
             else:
                 ids = self._transform_pedigree_filter_to_ids(filter_conf)

@@ -11,7 +11,7 @@ PREVIEW_VARIANTS_URL = "/api/v3/genotype_browser/preview/variants"
 
 FILTER_QUERY_CATEGORICAL = {
     "id": "Categorical",
-    "from": "phenotype",
+    "from": "phenodb",
     "source": "instrument1.categorical",
     "sourceType": "categorical",
     "role": "prb",
@@ -20,7 +20,7 @@ FILTER_QUERY_CATEGORICAL = {
 
 FILTER_QUERY_CONTINUOUS = {
     "id": "Continuous",
-    "from": "phenotype",
+    "from": "phenodb",
     "source": "instrument1.continuous",
     "sourceType": "continuous",
     "role": "prb",
@@ -29,7 +29,7 @@ FILTER_QUERY_CONTINUOUS = {
 
 FILTER_QUERY_BOGUS = {
     "id": "some nonexistant measure",
-    "from": "phenotype",
+    "from": "phenodb",
     "source": "wrontinstrument.wrongmeasure",
     "sourceType": "continuous",
     "role": "prb",
@@ -38,7 +38,7 @@ FILTER_QUERY_BOGUS = {
 
 FILTER_QUERY_ORDINAL = {
     "id": "Ordinal",
-    "from": "phenotype",
+    "from": "phenodb",
     "source": "instrument1.ordinal",
     "sourceType": "ordinal",
     "role": "prb",

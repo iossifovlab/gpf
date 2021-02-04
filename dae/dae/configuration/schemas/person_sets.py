@@ -14,7 +14,7 @@ person_set_collection = {
             "type": "dict",
             "schema": {
                 "from": {
-                    "type": "string", "allowed": ["pedigree", "phenotype"]
+                    "type": "string", "allowed": ["pedigree", "phenodb"]
                 },
                 "source": {"type": "string"}
             }

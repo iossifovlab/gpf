@@ -84,7 +84,7 @@ present_in_role_schema = {
 
 person_filters_schema = {
     "name": {"type": "string"},
-    "from": {"type": "string", "allowed": ["pedigree", "phenotype"]},
+    "from": {"type": "string", "allowed": ["pedigree", "phenodb"]},
     "source": {"type": "string"},
     "source_type": {
         "type": "string",
