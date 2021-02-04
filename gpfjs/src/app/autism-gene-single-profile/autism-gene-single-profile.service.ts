@@ -16,8 +16,10 @@ export class AutismGeneSingleProfileService {
   ) {}
 
   getGene(geneSymbol: string): Observable<AutismGeneToolGene> {
-    return of(AutismGeneToolGene.fromJson(
-      this.http.get(this.config.baseUrl + this.genesUrl + geneSymbol)
-    ));
+    return this.http
+    .get(this.config.baseUrl + this.genesUrl + geneSymbol)
+    .map(res => {
+      return AutismGeneToolGene.fromJson(res);
+    });
   }
 }
