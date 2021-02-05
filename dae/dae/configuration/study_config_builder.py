@@ -428,15 +428,13 @@ preview_columns = {{ genotype_browser.preview_columns }}
 download_columns = {{ genotype_browser.download_columns }}
 {%- endif %}
 
-{%- if genotype_browser.pheno_filters %}
-pheno_filters = {{ genotype_browser.pheno_filters }}
+{%- if genotype_browser.person_filters %}
+person_filters = {{ genotype_browser.person_filters }}
 {%- endif %}
 
-{%- if genotype_browser.selected_pheno_filters_values %}
-selected_pheno_filters_values = \
-{{ genotype_browser.selected_pheno_filters_values }}
+{%- if genotype_browser.family_filters %}
+family_filters = {{ genotype_browser.family_filters }}
 {%- endif %}
-
 
 {%- endif %}
 

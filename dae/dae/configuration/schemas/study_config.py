@@ -77,13 +77,21 @@ present_in_role_schema = {
     "roles": {"type": "list", "schema": {"type": "string"}},
 }
 
-pheno_filters_schema = {
+person_filters_schema = {
     "name": {"type": "string"},
-    "measure_type": {"type": "string"},
+    "from": {"type": "string", "allowed": ["pedigree", "phenodb"]},
+    "source": {"type": "string"},
+    "source_type": {
+        "type": "string",
+        "allowed": ["continuous", "categorical"]
+    },
     "filter_type": {"type": "string"},
-    "role": {"type": "string"},
-    "measure": {"type": "string"},
 }
+
+family_filters_schema = dict(
+    **person_filters_schema,
+    role={"type": "string"},
+)
 
 family_schema = {
     "path": {
@@ -207,6 +215,12 @@ study_config_schema = {
     "study_type": {"type": "list", "schema": {"type": "string"}},
     "year": {"type": "list", "schema": {"type": "integer"}},
     "pub_med": {"type": "list", "schema": {"type": "string"}},
+    "genome": {
+        "type": "string",
+        "allowed": ["hg19", "hg38"],
+        "required": True,
+    },
+    "chr_prefix": {"type": "boolean", "required": True},
     "has_denovo": {"type": "boolean", "default": True},
     "has_transmitted": {"type": "boolean"},
     "has_complex": {"type": "boolean"},
@@ -226,6 +240,7 @@ study_config_schema = {
         "schema": {
             "enabled": {"type": "boolean", "required": True},
             "has_family_filters": {"type": "boolean"},
+            "has_person_filters": {"type": "boolean"},
             "has_study_filters": {"type": "boolean"},
             "has_present_in_child": {"type": "boolean"},
             "has_present_in_parent": {"type": "boolean"},
@@ -283,13 +298,15 @@ study_config_schema = {
                 "type": "dict",
                 "valuesrules": {
                     "type": "dict",
-                    "schema": pheno_filters_schema,
+                    "schema": person_filters_schema,
                 },
             },
-            "selected_pheno_filters_values": {
-                "type": "list",
-                "schema": {"type": "string"},
-                "default": [],
+            "family_filters": {
+                "type": "dict",
+                "valuesrules": {
+                    "type": "dict",
+                    "schema": family_filters_schema,
+                },
             },
             "variant_types": {
                 "type": "list",

@@ -72,10 +72,6 @@ def test_transform_present_in_child_and_present_in_parent(
     it = inheritance_query.transform_query_string_to_tree(iq[0])
     im = inheritance_query.transform_tree_to_matcher(it)
 
-    # rres = rm.match(roles)
-    # ires = im.match(inheritance)
-    # print(rres, ires)
-
     if accepted:
         assert rm.match(roles) and im.match(inheritance)
     else:
@@ -91,32 +87,10 @@ def test_attributes_query_roles():
     result = rm.match([Role.prb])
     assert not result
 
-# @pytest.mark.parametrize(
-#     "option,count",
-#     [
-#         ({"presentInParent": ["mother only"]}, 1),
-#         ({"presentInParent": ["father only"]}, 1),
-#         ({"presentInParent": ["mother and father"]}, 1),
-#         ({"presentInParent": ["neither"]}, 1),
-#         ({"presentInParent": ["mother and father", "mother only"]}, 2),
-#         ({"presentInParent": ["mother only", "neither"]}, 2),
-#         (
-#             {
-#                 "presentInParent": [
-#                     "mother only",
-#                     "father only",
-#                     "mother and father",
-#                     "neither",
-#                 ]
-#             },
-#             4,
-#         ),
-#     ],
-#     ids=repr,
-# )
-# def test_transform_present_in_parent(option, count, quads_in_parent_wrapper):
-#     variants = list(
-#         quads_in_parent_wrapper.query_variants(presentInParent=option)
-#     )
 
-#     assert len(variants) == count
+def test_transform_family_filters_to_ids():
+    pass
+
+
+def test_transform_person_filters_to_ids():
+    pass

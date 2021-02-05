@@ -65,9 +65,9 @@ class PhenoToolHelper(object):
         if not pheno_filters:
             return None
         assert isinstance(pheno_filters, list)
-        family_ids, _person_ids = \
-            self.genotype_data._transform_pheno_filters_to_family_ids(
-                pheno_filters)
+        family_ids = self.genotype_data._transform_filters_to_ids(
+            pheno_filters
+        )
         return family_ids
 
     def genotype_data_variants(self, data):

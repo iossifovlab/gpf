@@ -157,11 +157,12 @@ def test_pheno_tool_view_na_values(admin_client):
 def test_pheno_tool_view_pheno_filter(admin_client):
     query = copy.deepcopy(QUERY)
     query["effectTypes"] = ["frame-shift"]
-    query["phenoFilters"] = [
+    query["familyFilters"] = [
         {
             "id": "Proband Continuous",
-            "measure": "i1.m2",
-            "measureType": "continuous",
+            "from": "phenodb",
+            "source": "i1.m2",
+            "sourceType": "continuous",
             "role": "prb",
             "selection": {
                 "domainMax": 67.4553055880587,
