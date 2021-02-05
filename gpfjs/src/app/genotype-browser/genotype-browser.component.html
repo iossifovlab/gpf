@@ -11,10 +11,15 @@
       <gpf-genomic-scores-block>
       </gpf-genomic-scores-block>
       <gpf-family-filters-block
-        *ngIf="dataset?.genotypeBrowserConfig?.hasFamilyFilters"
+        *ngIf="dataset?.genotypeBrowserConfig?.familyFilters?.length"
         [dataset]="dataset"
         [genotypeBrowserState]="genotypeBrowserState">
       </gpf-family-filters-block>
+      <gpf-person-filters-block
+        *ngIf="dataset?.genotypeBrowserConfig?.personFilters?.length"
+        [dataset]="dataset"
+        [genotypeBrowserState]="genotypeBrowserState">
+      </gpf-person-filters-block>
 
       <div class="form-block">
         <form

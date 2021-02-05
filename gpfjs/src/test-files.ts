@@ -25,7 +25,7 @@ import './app/pheno-browser/pheno-browser.component.spec.ts';
 import './app/pheno-browser/pheno-browser.service.spec.ts';
 import './app/pheno-browser/pheno-browser.spec.ts';
 import './app/measures/measures.service.spec.ts';
-import './app/pheno-filters/pheno-filters.component.spec.ts';
+import './app/person-filters/person-filters.component.spec.ts';
 import './app/chromosome/chromosome.component.spec.ts';
 import './app/study-filters-block/study-filters-block.component.spec.ts';
 import './app/saved-queries/saved-queries.component.spec.ts';
