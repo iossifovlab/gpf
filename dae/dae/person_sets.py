@@ -123,7 +123,7 @@ class PersonSetCollection(NamedTuple):
                     # attributes can be of an enum type
                     if value is not None:
                         value = str(value)
-                elif source["from"] == "phenotype" and pheno_db is not None:
+                elif source["from"] == "phenodb" and pheno_db is not None:
                     assert pheno_db.get_measure(source.source).measure_type \
                         in {MeasureType.categorical, MeasureType.ordinal}, \
                         f"Continuous measures not allowed in person sets! " \

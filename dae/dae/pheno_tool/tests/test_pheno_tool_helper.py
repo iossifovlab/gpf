@@ -27,7 +27,7 @@ def mocked_query_variants(**kwargs):
         yield Box(v)
 
 
-def mocked_pheno_filter_transform(pheno_filters):
+def mocked_filter_transform(pheno_filters):
     return None, None
 
 
@@ -63,8 +63,8 @@ mocked_study = Box(
             },
         },
         "query_variants": mocked_query_variants,
-        "_transform_pheno_filters_to_family_ids":
-        mocked_pheno_filter_transform,
+        "_transform_filters_to_ids":
+        mocked_filter_transform,
     }
 )
 
@@ -108,10 +108,10 @@ def test_genotype_data_persons_invalid_family_ids():
 
 
 def test_pheno_filter_persons(mocker):
-    mocker.spy(mocked_study, "_transform_pheno_filters_to_family_ids")
+    mocker.spy(mocked_study, "_transform_filters_to_ids")
     helper = PhenoToolHelper(mocked_study)
     helper.pheno_filter_persons([1])
-    mocked_study._transform_pheno_filters_to_family_ids \
+    mocked_study._transform_filters_to_ids \
         .assert_called_once_with([1])
 
 

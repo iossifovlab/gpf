@@ -4,6 +4,8 @@ import traceback
 import json
 import logging
 
+from typing import List, Set
+
 from functools import reduce
 
 from box import Box
@@ -23,7 +25,6 @@ from dae.utils.effect_utils import (
 )
 
 from dae.utils.regions import Region
-from dae.pheno.common import MeasureType
 from dae.pheno_tool.pheno_common import PhenoFilterBuilder
 from dae.variants.attributes import Role, Inheritance
 
@@ -109,8 +110,9 @@ class StudyWrapper(StudyWrapperBase):
                     pheno_column_slots.append(slot)
         self.pheno_column_slots = pheno_column_slots or []
 
-        # PHENO FILTERS
-        self.pheno_filters = genotype_browser_config.pheno_filters or None
+        # PERSON AND FAMILY FILTERS
+        self.person_filters = genotype_browser_config.person_filters or None
+        self.family_filters = genotype_browser_config.family_filters or None
 
         # GENE WEIGHTS
         if genotype_browser_config.genotype:
@@ -217,41 +219,13 @@ class StudyWrapper(StudyWrapperBase):
     def _init_pheno(self, pheno_db):
         self.phenotype_data = None
         self.pheno_filter_builder = None
-
-        self.pheno_filters_in_config = set()
-        phenotype_data = self.config.phenotype_data
-        if phenotype_data:
-            self.phenotype_data = pheno_db.get_phenotype_data(phenotype_data)
-
-            # TODO
-            # This should probably be done in the front-end by making a query
-            # to get the measure assigned to this filter and its respective
-            # domain
-            if self.pheno_filters:
-                pheno_filters_dict = self.pheno_filters.to_dict()
-                for k, pheno_filter in pheno_filters_dict.items():
-                    if "measure" in pheno_filter:
-                        pheno_filters_dict[k][
-                            "domain"
-                        ] = self.phenotype_data.get_measure(
-                            pheno_filter["measure"]
-                        ).domain
-
-                self.pheno_filters = Box(
-                    pheno_filters_dict,
-                    frozen_box=True,
-                    default_box=True,
-                    default_box_attr=None
-                )
-
-                self.pheno_filters_in_config = {
-                    f"{pf.role}.{pf.measure}"
-                    for pf in self.pheno_filters.values()
-                    if pf.measure and pf.filter_type == "single"
-                }
-                self.pheno_filter_builder = PhenoFilterBuilder(
-                    self.phenotype_data
-                )
+        if self.config.phenotype_data:
+            self.phenotype_data = pheno_db.get_phenotype_data(
+                self.config.phenotype_data
+            )
+            self.pheno_filter_builder = PhenoFilterBuilder(
+                self.phenotype_data
+            )
 
     def __getattr__(self, name):
         return getattr(self.genotype_data_study, name)
@@ -620,10 +594,11 @@ class StudyWrapper(StudyWrapperBase):
             else:
                 del kwargs["studyFilters"]
 
-        if "phenoFilters" in kwargs:
-            kwargs = self._transform_pheno_filters(kwargs)
-            if kwargs is None:
-                return
+        if "personFilters" in kwargs:
+            kwargs = self._transform_person_filters(kwargs)
+
+        if "familyFilters" in kwargs:
+            kwargs = self._transform_family_filters(kwargs)
 
         if "person_ids" in kwargs:
             kwargs["person_ids"] = list(kwargs["person_ids"])
@@ -1139,83 +1114,93 @@ class StudyWrapper(StudyWrapperBase):
 
         self._add_roles_to_query(OrNode(roles_query), kwargs)
 
-    def _get_pheno_filter_constraints(self, pheno_filter):
-        measure_type = MeasureType.from_str(pheno_filter["measureType"])
-        selection = pheno_filter["selection"]
-        if measure_type in (MeasureType.continuous, MeasureType.ordinal):
-            return tuple([selection["min"], selection["max"]])
-        return set(selection["selection"])
+    def _transform_pedigree_filter_to_ids(self, pedigree_filter):
+        column = pedigree_filter["source"]
+        value = set(pedigree_filter["selection"]["selection"])
+        ped_df = self.families.ped_df.loc[
+            self.families.ped_df[column].astype(str).isin(value)
+        ]
+        if pedigree_filter.get("role"):
+            # Handle family filter
+            ped_df = ped_df.loc[
+                ped_df["role"].astype(str) == pedigree_filter["role"]
+            ]
+            ids = set(
+                self.families.persons[person_id].family.family_id
+                for person_id in ped_df["person_id"]
+            )
+        else:
+            # Handle person filter
+            ids = set(
+                person_id for person_id in ped_df["person_id"]
+                if person_id in self.families.persons
+            )
+        return ids
 
-    def _transform_pheno_filters_to_family_ids(self, pheno_filter_args):
-        family_ids = list()
-        person_ids = list()
-
-        for pheno_filter in pheno_filter_args:
-            if not self.phenotype_data.has_measure(pheno_filter["measure"]):
-                continue
-
-            pheno_filter_type = MeasureType.from_str(
-                pheno_filter["measureType"])
-
-            pheno_constraints = self._get_pheno_filter_constraints(
-                pheno_filter)
-
-            if "role" in pheno_filter:
-                roles = [pheno_filter["role"]]
-            else:
-                roles = None
-            persons = set([
-                p.person_id
-                for p in self.families.persons_with_roles(roles=roles)
-            ])
-            measure_df = self.phenotype_data.get_measure_values_df(
-                pheno_filter["measure"], person_ids=persons)
-
-            filter = self.pheno_filter_builder.make_filter(
-                pheno_filter["measure"], pheno_constraints, pheno_filter_type)
-            measure_df = filter.apply(measure_df)
-            if roles:
-                family_ids.append(set(
-                    self.families.persons[person_id].family.family_id
-                    for person_id in measure_df["person_id"]
-                    if person_id in self.families.persons
-                ))
-            else:
-                person_ids.append(set([
-                    person_id for person_id in measure_df["person_id"]
-                    if person_id in persons]))
-        family_ids = reduce(
-            set.intersection, family_ids) if family_ids else None
-        person_ids = reduce(
-            set.intersection, person_ids) if person_ids else None
-
-        return family_ids, person_ids
-
-    def _transform_pheno_filters(self, kwargs):
-        pheno_filter_args = kwargs.pop("phenoFilters")
-
-        assert isinstance(pheno_filter_args, list)
-        assert self.phenotype_data
-
-        matching_family_ids, matching_person_ids = \
-            self._transform_pheno_filters_to_family_ids(pheno_filter_args)
-
-        if matching_family_ids is not None:
-            if "family_ids" in kwargs:
-                kwarg_family_ids = kwargs.pop("family_ids")
-                matching_family_ids = set.intersection(
-                    matching_family_ids, set(kwarg_family_ids)
+    def _transform_pheno_filter_to_ids(self, pheno_filter_conf):
+        pheno_filter = self.pheno_filter_builder.make_filter(pheno_filter_conf)
+        if pheno_filter_conf.get("role"):
+            # Handle family filter
+            persons = set(
+                p.person_id for p in self.families.persons_with_roles(
+                    roles=[pheno_filter_conf["role"]]
                 )
-            kwargs["family_ids"] = matching_family_ids
+            )
+            measure_df = pheno_filter.apply(
+                self.phenotype_data.get_measure_values_df(
+                    pheno_filter_conf["source"],
+                    person_ids=persons,
+                )
+            )
+            ids = set(
+                self.families.persons[person_id].family.family_id
+                for person_id in measure_df["person_id"]
+            )
+        else:
+            # Handle person filter
+            measure_df = pheno_filter.apply(
+                self.phenotype_data.get_measure_values_df(
+                    pheno_filter_conf["source"]
+                )
+            )
+            ids = set(
+                person_id for person_id in measure_df["person_id"]
+                if person_id in self.families.persons
+            )
+        return ids
 
+    def _transform_filters_to_ids(self, filters: List[dict]) -> Set[str]:
+        result = list()
+        for filter_conf in filters:
+            if filter_conf["from"] == "phenodb":
+                ids = self._transform_pheno_filter_to_ids(filter_conf)
+            else:
+                ids = self._transform_pedigree_filter_to_ids(filter_conf)
+            result.append(ids)
+        return reduce(set.intersection, result)
+
+    def _transform_person_filters(self, kwargs):
+        matching_person_ids = self._transform_filters_to_ids(
+            kwargs.pop("personFilters")
+        )
         if matching_person_ids is not None:
             if "person_ids" in kwargs:
-                kwarg_person_ids = kwargs.pop("person_ids")
                 matching_person_ids = set.intersection(
-                    matching_person_ids, set(kwarg_person_ids)
+                    matching_person_ids, set(kwargs.pop("person_ids"))
                 )
             kwargs["person_ids"] = matching_person_ids
+        return kwargs
 
+    def _transform_family_filters(self, kwargs):
+        matching_family_ids = self._transform_filters_to_ids(
+            kwargs.pop("familyFilters")
+        )
+        if matching_family_ids is not None:
+            if "family_ids" in kwargs:
+                matching_family_ids = set.intersection(
+                    matching_family_ids, set(kwargs.pop("family_ids"))
+                )
+            kwargs["family_ids"] = matching_family_ids
         return kwargs
 
     @staticmethod
@@ -1407,12 +1392,3 @@ class RemoteStudyWrapper(StudyWrapperBase):
 
     def build_genotype_data_group_description(self, gpf_instance):
         return self.config.to_dict()
-
-
-# rsw = RemoteStudyWrapper("AGRE_WG_859", "localhost", "api/v3", 8000)
-# print(rsw.config)
-# response = rsw.get_variants_wdae_preview(dict())
-# print(response.status_code)
-# print(response.headers)
-# # print(response.content)
-# print(response.json())
