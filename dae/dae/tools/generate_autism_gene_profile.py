@@ -47,7 +47,7 @@ def generate_agp(gpf_instance, gene_symbol, variants, person_ids):
         current_counts = dict()
         variant_gene_symbols = {
             eg
-            for fv in variants["IossifovWE2014"]
+            for fv in variants[dataset_id]
             for eg in fv.effect_gene_symbols
         }
         for ps in filters.person_sets:
