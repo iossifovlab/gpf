@@ -5,7 +5,7 @@ import copy
 import logging
 import numpy as np
 import pandas as pd
-from abc import abstractclassmethod, abstractmethod
+from abc import ABC, abstractclassmethod, abstractmethod
 from enum import Enum
 
 from typing import Iterator, Tuple, List, Dict, Any, Optional, Sequence
@@ -119,7 +119,7 @@ class CLIArgument:
                 setattr(argv, self.destination, self.default_value)
 
 
-class FamiliesGenotypes:
+class FamiliesGenotypes(ABC):
     def __init__(self):
         pass
 
@@ -140,7 +140,7 @@ class FamiliesGenotypes:
         pass
 
 
-class CLILoader:
+class CLILoader(ABC):
     def __init__(self, params={}):
         self.arguments = self._arguments()
         self.params = params
@@ -480,7 +480,8 @@ class StoredAnnotationDecorator(AnnotationDecorator):
         annot_df = self._load_annotation_file(self.annotation_filename)
         elapsed = time.time() - start
         logger.info(
-            f"Storred annotation file loaded in in {elapsed:.2f} sec")
+            f"Storred annotation file ({self.annotation_filename}) "
+            f"loaded in in {elapsed:.2f} sec")
 
         start = time.time()
         records = annot_df.to_dict(orient="records")
@@ -506,7 +507,8 @@ class StoredAnnotationDecorator(AnnotationDecorator):
 
         elapsed = time.time() - start
         logger.info(
-            f"Storred annotation file parsed in {elapsed:.2f} sec")
+            f"Storred annotation file ({self.annotation_filename}) "
+            f"parsed in {elapsed:.2f} sec")
 
 
 class VariantsGenotypesLoader(VariantsLoader):

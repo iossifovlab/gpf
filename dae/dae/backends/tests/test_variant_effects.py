@@ -25,9 +25,9 @@ def test_single_alt_allele_effects(variants_vcf, region, worst_effect):
     assert len(vs) == 1
     for v in vs:
         assert len(v.effects) == 1
-        assert v.effects[1].worst == worst_effect
-        assert v.effects[1].transcripts is not None
-        print(v.effects[1].transcripts)
+        assert v.effects[0].worst == worst_effect
+        assert v.effects[0].transcripts is not None
+        print(v.effects[0].transcripts)
 
 
 @pytest.mark.parametrize(
@@ -45,7 +45,7 @@ def test_multi_alt_allele_effects(variants_vcf, region, worst_effect):
     for v in vs:
         print(v.effects)
         # assert len(v.effects) == 2
-        assert v.effects[1].worst == worst_effect[0]
+        assert v.effects[0].worst == worst_effect[0]
         # assert v.effects[2].worst == worst_effect[1]
 
 

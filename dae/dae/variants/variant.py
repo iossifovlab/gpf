@@ -3,6 +3,7 @@ Created on Feb 13, 2018
 
 @author: lubo
 """
+from abc import ABC, abstractproperty
 from dae.utils.variant_utils import vcf2cshl
 
 from dae.variants.attributes import VariantType, TransmissionType
@@ -11,67 +12,67 @@ from dae.variants.effects import Effect, EffectGene
 import itertools
 
 
-class AltAlleleItems:
-    """
-    1-based list for representing list of items relevant to the list
-    of alternative alleles.
-    """
+# class AltAlleleItems:
+#     """
+#     1-based list for representing list of items relevant to the list
+#     of alternative alleles.
+#     """
 
-    def __init__(self, items, alt_alleles=None):
-        if not hasattr(items, "__iter__"):
-            items = [items]
+#     def __init__(self, items, alt_alleles=None):
+#         if not hasattr(items, "__iter__"):
+#             items = [items]
 
-        if alt_alleles is None:
-            self.items = items
-            self.alt_alleles = list(range(1, len(self.items) + 1))
-        else:
-            assert len(alt_alleles) == len(items) or len(items) == 1
-            if len(items) == 1:
-                item = items[0]
-                self.items = [item for _ in alt_alleles]
-            else:
-                self.items = items
+#         if alt_alleles is None:
+#             self.items = items
+#             self.alt_alleles = list(range(1, len(self.items) + 1))
+#         else:
+#             assert len(alt_alleles) == len(items) or len(items) == 1
+#             if len(items) == 1:
+#                 item = items[0]
+#                 self.items = [item for _ in alt_alleles]
+#             else:
+#                 self.items = items
 
-        self.size = len(self.items)
+#         self.size = len(self.items)
 
-    def _to_zero_based(self, index):
-        if isinstance(index, slice):
-            return slice(
-                self._to_zero_based(index.start),
-                self._to_zero_based(index.stop),
-                index.step,
-            )
-        else:
-            if index is None or index < 0:
-                return index
-            elif not 1 <= index <= self.size:
-                raise IndexError("invalid allele index: {}".format(index))
-            return index - 1
+#     def _to_zero_based(self, index):
+#         if isinstance(index, slice):
+#             return slice(
+#                 self._to_zero_based(index.start),
+#                 self._to_zero_based(index.stop),
+#                 index.step,
+#             )
+#         else:
+#             if index is None or index < 0:
+#                 return index
+#             elif not 1 <= index <= self.size:
+#                 raise IndexError("invalid allele index: {}".format(index))
+#             return index - 1
 
-    def __getitem__(self, key):
-        index = self._to_zero_based(key)
-        if isinstance(index, int):
-            return self.items[index]
-        elif isinstance(index, slice):
-            return [self.items[i] for i in range(*index.indices(self.size))]
-        raise TypeError("bad allele index type: {}".format(index))
+#     def __getitem__(self, key):
+#         index = self._to_zero_based(key)
+#         if isinstance(index, int):
+#             return self.items[index]
+#         elif isinstance(index, slice):
+#             return [self.items[i] for i in range(*index.indices(self.size))]
+#         raise TypeError("bad allele index type: {}".format(index))
 
-    def __iter__(self):
-        return iter(self.items)
+#     def __iter__(self):
+#         return iter(self.items)
 
-    def __len__(self):
-        return self.size
+#     def __len__(self):
+#         return self.size
 
-    def __repr__(self):
-        return self.items.__repr__()
+#     def __repr__(self):
+#         return self.items.__repr__()
 
-    def __str__(self):
-        return str(self.items)
+#     def __str__(self):
+#         return str(self.items)
 
-    def __eq__(self, other):
-        return len(self.items) == len(other.items) and all(
-            [s == o for (s, o) in zip(self.items, other.items)]
-        )
+#     def __eq__(self, other):
+#         return len(self.items) == len(other.items) and all(
+#             [s == o for (s, o) in zip(self.items, other.items)]
+#         )
 
 
 class VariantDetail:
@@ -105,62 +106,63 @@ class VariantDetail:
         )
 
 
-class Allele:
-    @property
+class Allele(ABC):
+
+    @abstractproperty
     def chromosome(self) -> str:
-        raise NotImplementedError()
+        pass
 
     @property
     def chrom(self) -> str:
         return self.chromosome
 
-    @property
+    @abstractproperty
     def position(self) -> int:
-        raise NotImplementedError()
+        pass
 
-    @property
+    @abstractproperty
     def end_position(self) -> Optional[int]:
-        raise NotImplementedError()
+        pass
 
-    @property
+    @abstractproperty
     def reference(self) -> str:
-        raise NotImplementedError()
+        pass
 
-    @property
+    @abstractproperty
     def alternative(self) -> Optional[str]:
-        raise NotImplementedError()
+        pass
 
-    @property
+    @abstractproperty
     def summary_index(self) -> int:
         """
         index of the summary variant this allele belongs to
         """
-        raise NotImplementedError()
+        pass
 
-    @property
+    @abstractproperty
     def allele_index(self) -> int:
         """
         index of the allele in summary variant
         """
-        raise NotImplementedError()
+        pass
 
-    @property
+    @abstractproperty
     def transmission_type(self) -> TransmissionType:
-        raise NotImplementedError()
+        pass
 
-    @property
+    @abstractproperty
     def attributes(self) -> Dict[str, Any]:
         """
         additional attributes of the allele
         """
-        raise NotImplementedError()
+        pass
 
-    @property
+    @abstractproperty
     def effect(self) -> Optional[Effect]:
         """
         effects of the allele; None for the reference allele.
         """
-        raise NotImplementedError()
+        pass
 
     @property
     def effects(self) -> Optional[Effect]:
@@ -184,17 +186,17 @@ class Allele:
     def effect_gene_symbols(self) -> List[str]:
         return [eg.symbol for eg in self.effect_genes]
 
-    @property
+    @abstractproperty
     def variant_type(self) -> Optional[VariantType]:
-        raise NotImplementedError()
+        pass
 
     @property
     def frequency(self) -> Optional[float]:
         return self.attributes.get("af_allele_freq")
 
-    @property
+    @abstractproperty
     def details(self) -> Optional[VariantDetail]:
-        raise NotImplementedError()
+        pass
 
     @property
     def cshl_variant(self) -> Optional[str]:
@@ -234,6 +236,8 @@ class Allele:
         on creation of the variant.
         """
         val = self.attributes.get(item, default)
+        if val is None:
+            val = default
         return val
 
     def has_attribute(self, item: str) -> bool:
@@ -275,26 +279,26 @@ class Allele:
             )
 
 
-class Variant:
+class Variant(ABC):
     @property
     def chrom(self) -> str:
         return self.chromosome
 
-    @property
+    @abstractproperty
     def chromosome(self) -> str:
-        raise NotImplementedError()
+        pass
 
-    @property
+    @abstractproperty
     def position(self) -> int:
-        raise NotImplementedError()
+        pass
 
-    @property
+    @abstractproperty
     def end_position(self) -> Optional[int]:
-        raise NotImplementedError()
+        pass
 
-    @property
+    @abstractproperty
     def reference(self) -> str:
-        raise NotImplementedError()
+        pass
 
     @property
     def alternative(self) -> Optional[str]:
@@ -310,9 +314,9 @@ class Variant:
             ]
         )
 
-    @property
+    @abstractproperty
     def allele_count(self) -> int:
-        raise NotImplementedError()
+        pass
 
     @property
     def location(self) -> str:
@@ -321,16 +325,16 @@ class Variant:
         else:
             return f"{self.chromosome}:{self.position}"
 
-    @property
+    @abstractproperty
     def summary_index(self) -> int:
-        raise NotImplementedError()
+        pass
 
-    @property
+    @abstractproperty
     def alleles(self) -> List[Allele]:
         """
         list of all alleles of the variant
         """
-        raise NotImplementedError()
+        pass
 
     @property
     def ref_allele(self) -> Allele:
@@ -345,23 +349,35 @@ class Variant:
         return self.alleles[1:]
 
     @property
-    def details(self) -> Optional[AltAlleleItems]:
+    def details(self) -> List[Allele]:
         """
-        1-based list of `VariantDetails`, that describes each
+        list of `VariantDetails`, that describe each
         alternative allele.
         """
         if not self.alt_alleles:
-            return None
-        return AltAlleleItems([sa.details for sa in self.alt_alleles])
+            return []
+        return [sa.details for sa in self.alt_alleles]
 
     @property
-    def effects(self) -> Optional[AltAlleleItems]:
+    def cshl_variant(self) -> List[Optional[str]]:
+        if not self.alt_alleles:
+            return []
+        return [aa.cshl_variant for aa in self.alt_alleles]
+
+    @property
+    def cshl_location(self) -> Optional[str]:
+        if not self.alt_alleles:
+            return []
+        return [aa.cshl_location for aa in self.alt_alleles]
+
+    @property
+    def effects(self) -> List[str]:
         """
         1-based list of `Effect`, that describes variant effects.
         """
         if not self.alt_alleles:
-            return None
-        return AltAlleleItems([sa.effect for sa in self.alt_alleles])
+            return []
+        return [sa.effect for sa in self.alt_alleles]
 
     @property
     def frequencies(self) -> List[Optional[float]]:
@@ -378,12 +394,11 @@ class Variant:
         return set([aa.variant_type for aa in self.alt_alleles])
 
     def get_attribute(
-        self, item: Any, default: Optional[Any] = None
-    ) -> List[Any]:
-        return [sa.get_attribute(item, default) for sa in self.alleles]
+            self, item: Any, default: Optional[Any] = None) -> List[Any]:
+        return [sa.get_attribute(item, default) for sa in self.alt_alleles]
 
     def has_attribute(self, item: Any) -> bool:
-        return any([sa.has_attribute(item) for sa in self.alleles])
+        return any([sa.has_attribute(item) for sa in self.alt_alleles])
 
     def __getitem__(self, item: Any) -> List[Any]:
         return self.get_attribute(item)

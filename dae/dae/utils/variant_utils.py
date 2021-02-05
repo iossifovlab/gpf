@@ -60,6 +60,34 @@ def best2gt(best_state):
     return genotype
 
 
+def gt2str(gt):
+    assert gt.shape[0] == 2
+    result = []
+    for i in range(gt.shape[1]):
+        v0 = gt[0, i]
+        v1 = gt[1, i]
+        if v0 < 0:
+            v0 = "."
+        if v1 < 0:
+            v1 = "."
+        result.append(f"{v0}/{v1}")
+    return ",".join(result)
+
+
+def str2gt(gts):
+    gts = gts.split(",")
+    result = np.zeros(shape=(2,  len(gts)), dtype=GENOTYPE_TYPE)
+
+    for col, pgts in enumerate(gts):
+        vals = [
+            int(p) if p != "." else -1 
+            for p in pgts.split("/")
+        ]
+        result[0, col] = vals[0]
+        result[1, col] = vals[1]
+    return result
+
+
 def reference_genotype(size):
     return np.zeros(shape=(2, size), dtype=GENOTYPE_TYPE)
 
@@ -171,7 +199,7 @@ def cshl_format(pos, ref, alt, trimmer=trim_str_front):
     return p, f"complex({r}->{a})", max(len(r), len(a))
 
 
-def vcf2cshl(pos, ref, alt, trimmer=trim_str_front):
+def vcf2cshl(pos, ref, alt, trimmer=trim_str_back):
     vp, vt, vl = cshl_format(pos, ref, alt, trimmer=trimmer)
     return vp, vt, vl
 

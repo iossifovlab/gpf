@@ -34,6 +34,15 @@ class VcfFamiliesGenotypes(FamiliesGenotypes):
         self.loader = loader
         self.vcf_variants = vcf_variants
 
+    def full_families_genotypes(self):
+        raise NotImplementedError()
+
+    def get_family_best_state(self, family):
+        raise NotImplementedError()
+
+    def get_family_genotype(self, family):
+        raise NotImplementedError()
+
     def _build_genotypes(self):
         genotypes = []
         for vcf_index, vcf_variant in enumerate(self.vcf_variants):
@@ -476,6 +485,9 @@ class SingleVcfLoader(VariantsGenotypesLoader):
         n_parents_called = sum([r["n_parents_called"] for r in result])
         percent_parents_called = 0.0
 
+        ref_n_alleles = 0
+        ref_allele_freq = 0.0
+
         for allele in summary_variant.alleles:
             if n_independent_parents > 0:
                 percent_parents_called = (
@@ -484,13 +496,20 @@ class SingleVcfLoader(VariantsGenotypesLoader):
             allele_index = allele["allele_index"]
             n_alleles = sum([r["n_alleles"][allele_index] for r in result])
             allele_freq = 0
+
             if n_parents_called > 0:
                 allele_freq = (100.0 * n_alleles) / (2.0 * n_parents_called)
+            if allele_index == 0:
+                ref_n_alleles = n_alleles
+                ref_allele_freq = allele_freq
+
             freq = {
                 "af_parents_called_count": int(n_parents_called),
                 "af_parents_called_percent": float(percent_parents_called),
                 "af_allele_count": int(n_alleles),
                 "af_allele_freq": float(allele_freq),
+                "af_ref_allele_count": int(ref_n_alleles),
+                "af_ref_allele_freq": float(ref_allele_freq),
             }
             allele.update_attributes(freq)
 

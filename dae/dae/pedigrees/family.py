@@ -68,6 +68,10 @@ class Person(object):
             (self, self._attributes)
         assert self.dad_id is None or type(self.dad_id) == str, \
             (self, self._attributes)
+        if self._attributes.get("not_sequenced"):
+            value = self._attributes.get("not_sequenced")
+            if value == "None":
+                self._attributes["not_sequenced"] = None
 
     def __repr__(self):
         decorator = ""

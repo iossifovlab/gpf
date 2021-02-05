@@ -13,11 +13,6 @@ phenotype_schema = {
     },
 }
 
-in_roles_schema = {
-    "destination": {"type": "string"},
-    "roles": {"type": "list", "schema": {"type": "string"}},
-}
-
 genotype_slot_schema = {
     "type": "dict",
     "schema": {
@@ -257,11 +252,6 @@ study_config_schema = {
                 "schema": {"type": "string"},
                 "default": [],
             },
-            "selected_in_roles_values": {
-                "type": "list",
-                "schema": {"type": "string"},
-                "default": [],
-            },
             "inheritance_type_filter": {
                 "type": "list",
                 "schema": {"type": "string"},
@@ -270,10 +260,6 @@ study_config_schema = {
                 "type": "list",
                 "schema": {"type": "string"},
                 "dependencies": ["inheritance_type_filter"],
-            },
-            "in_roles": {
-                "type": "dict",
-                "valuesrules": {"type": "dict", "schema": in_roles_schema},
             },
             "genotype": {
                 "type": "dict",
@@ -303,12 +289,7 @@ study_config_schema = {
                     "schema": present_in_role_schema,
                 },
             },
-            "selected_present_in_role_values": {
-                "type": "list",
-                "schema": {"type": "string"},
-                "default": [],
-            },
-            "person_filters": {
+            "pheno_filters": {
                 "type": "dict",
                 "valuesrules": {
                     "type": "dict",

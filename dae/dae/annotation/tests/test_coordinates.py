@@ -8,8 +8,8 @@ from dae.variants.variant import SummaryAllele
     "variant,check_pos,check_cshl_pos,check_ref,check_alt",
     [
         ("sub(A->T)", 150013938, 150013938, "A", "T"),
-        ("ins(AA)", 150013937, 150013938, "A", "AAA"),
-        ("del(1)", 150013937, 150013938, "AA", "A"),
+        ("ins(AA)", 150013937, 150013937, "A", "AAA"),
+        ("del(1)", 150013937, 150013937, "AA", "A"),
     ],
 )
 def test_dae2vcf(

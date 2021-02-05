@@ -82,24 +82,24 @@ def test_quads_f1_config_genotype_browser_pheno_filters(quads_f1_config):
     }
 
 
-def test_quads_f1_config_genotype_browser_present_in_role(quads_f1_config):
-    genotype_browser_config = quads_f1_config.genotype_browser
+# def test_quads_f1_config_genotype_browser_present_in_role(quads_f1_config):
+#     genotype_browser_config = quads_f1_config.genotype_browser
 
-    assert set(genotype_browser_config.present_in_role.keys()) == {
-        "prb", "parent"
-    }
-    assert (
-        genotype_browser_config.present_in_role.prb.name
-        == "Present in Proband and Sibling"
-    )
-    assert set(genotype_browser_config.present_in_role.prb.roles) == {
-        "prb", "sib"
-    }
+#     assert set(genotype_browser_config.present_in_role.keys()) == {
+#         "prb", "parent"
+#     }
+#     assert (
+#         genotype_browser_config.present_in_role.prb.name
+#         == "Present in Proband and Sibling"
+#     )
+#     assert set(genotype_browser_config.present_in_role.prb.roles) == {
+#         "prb", "sib"
+#     }
 
-    assert genotype_browser_config.present_in_role.parent.name == "Parents"
-    assert set(genotype_browser_config.present_in_role.parent.roles) == {
-        "mom", "dad"
-    }
+#     assert genotype_browser_config.present_in_role.parent.name == "Parents"
+#     assert set(genotype_browser_config.present_in_role.parent.roles) == {
+#         "mom", "dad"
+#     }
 
 
 @pytest.mark.parametrize(
