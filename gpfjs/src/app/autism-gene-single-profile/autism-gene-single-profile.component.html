@@ -1,1 +1,24 @@
-<p>{{geneSymbol}}</p>
+<div *ngIf="gene$ | async as gene">
+
+  <span class="effect-card card" style="width: 23.3%; display:inline-block; padding: 5%">
+    <div class="card-header card-title">Autism scores</div>
+    <div *ngFor="let autismScore of gene.autismScores | keyvalue" class="card-block">
+      {{autismScore.key}}: {{autismScore.value}}
+    </div>
+  </span>
+
+  <span class="effect-card card" style="width: 23.3%; display:inline-block; padding: 5%">
+    <div class="card-header card-title">Protection scores</div>
+    <div *ngFor="let protectionScore of gene.protectionScores | keyvalue" class="card-block">
+      {{protectionScore.key}}: {{protectionScore.value}}
+    </div>
+  </span>
+
+  <span class="effect-card card" style="width: 23.3%; display:inline-block; padding: 5%">
+    <div class="card-header card-title">Autism scores</div>
+    <div *ngFor="let autismScore of gene.autismScores | keyvalue" class="card-block">
+      {{autismScore.key}}: {{autismScore.value}}
+    </div>
+  </span>
+
+</div>

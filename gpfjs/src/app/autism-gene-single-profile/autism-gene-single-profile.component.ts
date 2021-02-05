@@ -1,5 +1,6 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { AutismGeneToolGene } from 'app/autism-gene-profiles/autism-gene-profile';
+import { Observable } from 'rxjs';
 import { AutismGeneSingleProfileService } from './autism-gene-single-profile.service';
 
 @Component({
@@ -9,17 +10,13 @@ import { AutismGeneSingleProfileService } from './autism-gene-single-profile.ser
 })
 export class AutismGeneSingleProfileComponent implements OnInit {
   @Input() readonly geneSymbol: string;
-  private gene: AutismGeneToolGene;
+  private gene$: Observable<AutismGeneToolGene>;
 
   constructor(
     private autismGeneSingleProfileService: AutismGeneSingleProfileService,
   ) { }
 
   ngOnInit(): void {
-    this.autismGeneSingleProfileService.getGene(this.geneSymbol).take(1).subscribe(res => {
-      this.gene = res;
-      console.log(this.gene)
-    });
+    this.gene$ = this.autismGeneSingleProfileService.getGene(this.geneSymbol);
   }
-
 }
