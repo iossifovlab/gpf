@@ -26,7 +26,7 @@ export class CategoricalFilterComponent implements OnInit, OnChanges {
 
   ngOnInit(): void {
 
-    if (this.categoricalFilter.from === 'phenotype') {
+    if (this.categoricalFilter.from === 'phenodb') {
       this.sourceDescription$ = this.phenoBrowserService.getMeasureDescription(
         this.datasetsService.getSelectedDatasetId(), this.categoricalFilter.source
       );
