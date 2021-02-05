@@ -325,7 +325,7 @@ params = {}
 {{key}}.name = "{{ value.name }}"
 {{key}}.domain = {{ value.domain }}
 {{key}}.default = {{ value.default }}
-{{key}}.source.pedigree.column = "{{ value.source.pedigree.column }}"
+{{key}}.sources = "{{ value.sources }}"
 {% else %}
 {{ key }} = {{ value }}
 {% endif %}
@@ -371,10 +371,6 @@ has_graphical_preview = {{ genotype_browser.has_graphical_preview }}
 family_filters = {{ genotype_browser.family_filters }}
 {%- endif %}
 
-{%- if genotype_browser.selected_in_roles_values %}
-selected_in_roles_values = "{{ genotype_browser.selected_in_roles_values }}"
-{%- endif %}
-
 {%- if genotype_browser.inheritance_type_filter %}
 inheritance_type_filter = "{{ genotype_browser.inheritance_type_filter }}"
 {%- endif %}
@@ -390,13 +386,6 @@ variant_types = {{ genotype_browser.variant_types }}
 
 {%- if genotype_browser.selected_variant_types %}
 selected_variant_types = {{ genotype_browser.selected_variant_types }}
-{%- endif %}
-
-{%- if genotype_browser.in_roles %}
-{%- for k, v in genotype_browser.in_roles.items() %}
-in_roles.{{ k }}.destination = "{{ v.destination }}"
-in_roles.{{ k }}.roles = {{ v.roles }}
-{%- endfor %}
 {%- endif %}
 
 {%- if genotype_browser.genotype %}
@@ -439,20 +428,13 @@ preview_columns = {{ genotype_browser.preview_columns }}
 download_columns = {{ genotype_browser.download_columns }}
 {%- endif %}
 
-
-{%- if genotype_browser.present_in_role %}
-present_in_role = "{{ genotype_browser.present_in_role }}"
+{%- if genotype_browser.person_filters %}
+person_filters = {{ genotype_browser.person_filters }}
 {%- endif %}
 
-{%- if genotype_browser.pheno_filters %}
-pheno_filters = {{ genotype_browser.pheno_filters }}
+{%- if genotype_browser.family_filters %}
+family_filters = {{ genotype_browser.family_filters }}
 {%- endif %}
-
-{%- if genotype_browser.selected_pheno_filters_values %}
-selected_pheno_filters_values = \
-{{ genotype_browser.selected_pheno_filters_values }}
-{%- endif %}
-
 
 {%- endif %}
 

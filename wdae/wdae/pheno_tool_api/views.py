@@ -63,7 +63,7 @@ class PhenoToolView(QueryBaseView):
         helper = PhenoToolHelper(study_wrapper)
 
         pheno_filter_family_ids = helper.pheno_filter_persons(
-            data.get("phenoFilters")
+            data.get("familyFilters")
         )
         study_persons = helper.genotype_data_persons(data.get("familyIds", []))
 
@@ -259,8 +259,6 @@ class PhenoToolMeasures(QueryBaseView):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         measure_type = params.get("measureType", None)
-        if not measure_type:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
 
         result = dataset.phenotype_data.get_measures(
             instrument,

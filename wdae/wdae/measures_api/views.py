@@ -5,7 +5,6 @@ from rest_framework import status
 from rest_framework.response import Response
 
 from dae.pheno.common import MeasureType
-from dae.pheno_browser.db import DbManager
 
 from query_base.query_base import QueryBaseView
 
@@ -132,14 +131,16 @@ class PhenoMeasureRegressionsView(QueryBaseView):
         data = request.query_params
 
         dataset_id = data["datasetId"]
-        dataset_config = self.gpf_instance.get_genotype_data_config(dataset_id)
+        dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
 
-        db = DbManager(self.get_browser_dbfile(dataset_config.phenotype_data))
-        db.build()
+        if dataset is None:
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
-        if db is None:
+        regressions = self.gpf_instance.get_regressions(dataset)
+
+        if regressions is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         return Response(
-            db.regression_display_names_with_ids, status=status.HTTP_200_OK
+            regressions, status=status.HTTP_200_OK
         )

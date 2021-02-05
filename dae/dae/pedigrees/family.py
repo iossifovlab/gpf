@@ -68,6 +68,10 @@ class Person(object):
             (self, self._attributes)
         assert self.dad_id is None or type(self.dad_id) == str, \
             (self, self._attributes)
+        if self._attributes.get("not_sequenced"):
+            value = self._attributes.get("not_sequenced")
+            if value == "None":
+                self._attributes["not_sequenced"] = None
 
     def __repr__(self):
         decorator = ""
@@ -100,7 +104,8 @@ class Person(object):
 
     @property
     def not_sequenced(self):
-        return self._attributes.get("not_sequenced", None)
+        return self._attributes.get("not_sequenced", None) or \
+            self._attributes.get("generated", None)
 
     @property
     def missing(self):
@@ -535,9 +540,7 @@ class FamiliesData(Mapping):
                         self._person_ids_with_parents.add(p.person_id)
         return self._person_ids_with_parents
 
-    def persons_with_roles(self, roles, family_ids=None):
-        if not isinstance(roles[0], Role):
-            roles = [Role.from_name(role) for role in roles]
+    def persons_with_roles(self, roles=None, family_ids=None):
         if family_ids is None:
             persons = self.persons.values()
         else:
@@ -545,4 +548,11 @@ class FamiliesData(Mapping):
             persons = filter(
                 lambda p: p.family_id in family_ids,
                 self.persons.values())
+
+        if roles is None:
+            return persons
+
+        if not isinstance(roles[0], Role):
+            roles = [Role.from_name(role) for role in roles]
+
         return list(filter(lambda m: m.role in roles, persons))

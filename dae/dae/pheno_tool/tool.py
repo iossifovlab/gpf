@@ -65,9 +65,10 @@ class PhenoToolHelper(object):
         if not pheno_filters:
             return None
         assert isinstance(pheno_filters, list)
-        return self.genotype_data._transform_pheno_filters_to_family_ids(
+        family_ids = self.genotype_data._transform_filters_to_ids(
             pheno_filters
         )
+        return family_ids
 
     def genotype_data_variants(self, data):
         assert "effectTypes" in data
@@ -125,9 +126,8 @@ class PhenoTool(object):
         self.measure_id = measure_id
 
         assert self.phenotype_data.has_measure(measure_id)
-        assert self.phenotype_data.get_measure(
-            self.measure_id
-        ).measure_type in [MeasureType.continuous, MeasureType.ordinal]
+        assert self.phenotype_data.get_measure(self.measure_id).measure_type \
+            in [MeasureType.continuous, MeasureType.ordinal]
 
         self.normalize_by = self._init_normalize_measures(normalize_by)
 

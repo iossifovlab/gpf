@@ -1,5 +1,7 @@
 import logging
 
+from abc import ABC, abstractmethod
+
 from dae.variants.attributes import Inheritance
 from dae.backends.attributes_query import inheritance_query
 
@@ -15,7 +17,7 @@ from ..attributes_query_inheritance import InheritanceTransformer, \
 logger = logging.getLogger(__name__)
 
 
-class BaseQueryBuilder:
+class BaseQueryBuilder(ABC):
     QUOTE = "'"
     WHERE = """
         WHERE
@@ -70,8 +72,9 @@ class BaseQueryBuilder:
         from_clause = f"FROM {self.db}.{self.variants_table}"
         self._add_to_product(from_clause)
 
+    @abstractmethod
     def build_join(self):
-        raise NotImplementedError()
+        pass
 
     def build_where(
             self,
@@ -215,18 +218,21 @@ class BaseQueryBuilder:
 
         return where_clause
 
+    @abstractmethod
     def build_group_by(self):
-        raise NotImplementedError()
+        pass
 
     def build_limit(self, limit):
         if limit is not None:
             self._add_to_product(f"LIMIT {limit}")
 
+    @abstractmethod
     def build_having(self, **kwargs):
-        raise NotImplementedError()
+        pass
 
+    @abstractmethod
     def create_row_deserializer(self, serializer):
-        raise NotImplementedError()
+        pass
 
     def _add_to_product(self, string):
         if self._product == "":
@@ -234,8 +240,9 @@ class BaseQueryBuilder:
         else:
             self._product += f" {string}"
 
+    @abstractmethod
     def _query_columns(self):
-        raise NotImplementedError()
+        pass
 
     def _build_real_attr_where(self, real_attr_filter, is_frequency=False):
         query = []
@@ -293,12 +300,12 @@ class BaseQueryBuilder:
                     "OR "
                     "({start} >= `position` AND {stop} <= {end_position})"
                     "))".format(
-                    q=self.QUOTE,
-                    chrom=region.chrom,
-                    start=region.start,
-                    stop=region.stop,
-                    end_position=end_position
-                )
+                        q=self.QUOTE,
+                        chrom=region.chrom,
+                        start=region.start,
+                        stop=region.stop,
+                        end_position=end_position
+                    )
             )
         return " OR ".join(where)
 
@@ -415,11 +422,15 @@ class BaseQueryBuilder:
         frequency_bin_col = self.where_accessors["frequency_bin"]
         matchers = []
         if inheritance is not None:
+            logger.debug(
+                f"frequence_bin_heuristic inheritance: {inheritance} "
+                f"({type(inheritance)})")
+            if isinstance(inheritance, str):
+                inheritance = [inheritance]
 
             matchers = [
                 inheritance_query.transform_tree_to_matcher(
-                    inheritance_query.transform_query_string_to_tree(
-                        inh))
+                    inheritance_query.transform_query_string_to_tree(inh))
                 for inh in inheritance]
 
             if any([m.match([Inheritance.denovo]) for m in matchers]):

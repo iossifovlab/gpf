@@ -14,7 +14,14 @@ if [[ -z $GPF_TEST_REMOTE_HOSTNAME ]]; then
     export GPF_TEST_REMOTE_HOSTNAME="gpfremote"
 fi
 
+if [[ -z $GPF_DOCKER_IMAGE ]]; then
+    export GPF_DOCKER_IMAGE="gpf_docker_image"
+    docker build $WD -t $GPF_DOCKER_IMAGE
+fi
+
 if [[ -z $GPF_DOCKER_NETWORK ]]; then
+    echo "Running local ($WD) gpf remote container..."
+
     docker run --rm -it \
         --name ${GPF_REMOTE_DOCKER_CONTAINER} \
         -v $WD/gpf_remote:/data \
@@ -25,7 +32,7 @@ if [[ -z $GPF_DOCKER_NETWORK ]]; then
         -e DAE_DATA_DIR=/data \
         -e TEST_REMOTE_HOST=${GPF_TEST_REMOTE_HOSTNAME} \
         -d \
-        seqpipe/seqpipe-gpf-conda /code/scripts/run_remote_server.sh
+        ${GPF_DOCKER_IMAGE} /code/scripts/run_remote_server.sh
 else
     export HAS_NETWORK=`docker network ls | grep ${GPF_DOCKER_NETWORK} | sed -e "s/\s\{2,\}/\t/g" | cut -f 1`
     echo ${GPF_DOCKER_NETWORK}
@@ -44,7 +51,7 @@ else
         -e DAE_DATA_DIR=/data \
         -e TEST_REMOTE_HOST=${GPF_TEST_REMOTE_HOSTNAME} \
         -d \
-        seqpipe/seqpipe-gpf-conda /code/scripts/run_remote_server.sh
+        ${GPF_DOCKER_IMAGE} /code/scripts/run_remote_server.sh
 fi
 
 docker exec ${GPF_REMOTE_DOCKER_CONTAINER} /code/scripts/wait-for-it.sh -h localhost -p 21010 -t 300

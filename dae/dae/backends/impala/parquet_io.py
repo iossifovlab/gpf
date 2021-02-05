@@ -742,6 +742,7 @@ def pedigree_parquet_schema():
         pa.field("sample_id", pa.string()),
         pa.field("generated", pa.bool_()),
         pa.field("layout", pa.string()),
+        pa.field("not_sequenced", pa.bool_()),
     ]
 
     return pa.schema(fields)
@@ -779,6 +780,8 @@ def save_ped_df_to_parquet(ped_df, filename, filesystem=None):
         ped_df["generated"] = False
     if "layout" not in ped_df:
         ped_df["layout"] = None
+    if "not_sequenced" not in ped_df:
+        ped_df["not_sequenced"] = False
 
     pps = pedigree_parquet_schema()
     ped_df, pps = add_missing_parquet_fields(pps, ped_df)

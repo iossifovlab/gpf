@@ -453,6 +453,14 @@ class FamilyVariant(Variant, FamilyDelegate):
             allele.family_index = val
 
     @property
+    def allele_indexes(self):
+        return [a.allele_index for a in self.alleles]
+
+    @property
+    def family_allele_indexes(self):
+        return list(range(len(self.alleles)))
+
+    @property
     def alleles(self):
         if self._family_alleles is None:
             family_alleles = [
@@ -504,9 +512,21 @@ class FamilyVariant(Variant, FamilyDelegate):
     @property
     def genotype(self):
         """
-        Returns genotype of the family.
+        Returns genotype using summary variant allele indexes.
         """
-        return self.gt.T
+        return [list(self.gt[:, m]) for m in range(self.gt.shape[1])]
+
+    @property
+    def family_genotype(self):
+        """
+        Returns family genotype using family variant indexes.
+        """
+        gt2fgt = zip(self.allele_indexes, self.family_allele_indexes)
+        fgt = np.zeros(shape=self.gt.shape, dtype=np.int8)
+        for gi, fgi in gt2fgt:
+            fgt[self.gt == gi] = fgi
+
+        return [list(fgt[:, m]) for m in range(fgt.shape[1])]
 
     @property
     def genetic_model(self):

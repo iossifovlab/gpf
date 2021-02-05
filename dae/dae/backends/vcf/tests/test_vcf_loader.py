@@ -115,24 +115,24 @@ def test_vcf_loader_multi(fixture_dirname, multivcf_files, genomes_db_2013):
         assert len(s[1]) == 5
         assert len(m[1]) == 5
 
-        s_gt_f1 = s[1][0].genotype
-        m_gt_f1 = m[1][0].genotype
+        s_gt_f1 = s[1][0].gt
+        m_gt_f1 = m[1][0].gt
         assert all((s_gt_f1 == m_gt_f1).flatten())
 
-        s_gt_f2 = s[1][0].genotype
-        m_gt_f2 = m[1][0].genotype
+        s_gt_f2 = s[1][0].gt
+        m_gt_f2 = m[1][0].gt
         assert all((s_gt_f2 == m_gt_f2).flatten())
 
-        s_gt_f3 = s[1][0].genotype
-        m_gt_f3 = m[1][0].genotype
+        s_gt_f3 = s[1][0].gt
+        m_gt_f3 = m[1][0].gt
         assert all((s_gt_f3 == m_gt_f3).flatten())
 
-        s_gt_f4 = s[1][0].genotype
-        m_gt_f4 = m[1][0].genotype
+        s_gt_f4 = s[1][0].gt
+        m_gt_f4 = m[1][0].gt
         assert all((s_gt_f4 == m_gt_f4).flatten())
 
-        s_gt_f5 = s[1][0].genotype
-        m_gt_f5 = m[1][0].genotype
+        s_gt_f5 = s[1][0].gt
+        m_gt_f5 = m[1][0].gt
         assert all((s_gt_f5 == m_gt_f5).flatten())
 
 

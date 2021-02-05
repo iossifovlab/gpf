@@ -1,4 +1,5 @@
 import requests
+import ijson
 
 
 class RESTClientRequestError(Exception):
@@ -13,7 +14,7 @@ class RESTClient:
             self, remote_id, host,
             username, password,
             base_url=None, port=None,
-            protocol=None):
+            protocol=None, gpf_prefix=None):
         self.host = host
         self.remote_id = remote_id
         self.username = username
@@ -37,6 +38,11 @@ class RESTClient:
         else:
             self.protocol = "http"
 
+        if gpf_prefix:
+            self.gpf_prefix = gpf_prefix
+        else:
+            self.gpf_prefix = None
+
         self.session = self._login()
 
     def _login(self):
@@ -54,6 +60,19 @@ class RESTClient:
             )
         return session
 
+    def build_host_url(self):
+        if self.port:
+            return f"{self.protocol}://{self.host}:{self.port}"
+        else:
+            return f"{self.protocol}://{self.host}"
+
+    def build_api_base_url(self):
+        host_url = self.build_host_url()
+        if self.gpf_prefix:
+            return f"{host_url}/{self.gpf_prefix}{self.base_url}"
+        else:
+            return f"{host_url}{self.base_url}"
+
     def _build_url(self, url, query_values=None):
         query_url = url
         if query_values:
@@ -64,16 +83,8 @@ class RESTClient:
                 query_url += "?" if first else "&"
                 query_url += f"{k}={v}"
                 first = False
-        if self.port:
-            result = (
-                f"{self.protocol}://"
-                f"{self.host}:{self.port}{self.base_url}{query_url}"
-            )
-        else:
-            result = (
-                f"{self.protocol}://"
-                f"{self.host}{self.base_url}{query_url}"
-            )
+        base = self.build_api_base_url()
+        result = f"{base}{query_url}"
         return result
 
     def _get(self, url, query_values=None, stream=False):
@@ -91,6 +102,17 @@ class RESTClient:
 
     def _delete(self, url, data=None):
         pass
+
+    def _read_json_list_stream(self, response):
+        stream = response.iter_content(chunk_size=64)
+        objects = ijson.sendable_list()
+        coro = ijson.items_coro(objects, "item", use_float=True)
+        for chunk in stream:
+            coro.send(chunk)
+            if len(objects):
+                for o in objects:
+                    yield o
+                del objects[:]
 
     def get_remote_dataset_id(self, dataset_id):
         return f"{self.remote_id}_{dataset_id}"
@@ -153,7 +175,7 @@ class RESTClient:
             },
             stream=True
         )
-        return response
+        return self._read_json_list_stream(response)
 
     def get_instruments(self, dataset_id):
         response = self._get(
@@ -221,6 +243,20 @@ class RESTClient:
 
         return response.json()
 
+    def get_measure_description(self, dataset_id, measure_id):
+        response = self._get(
+            "pheno_browser/measure_description",
+            query_values={
+                "dataset_id": dataset_id,
+                "measure_id": measure_id,
+            }
+        )
+
+        if response.status_code != 200:
+            return None
+
+        return response.json()
+
     def get_measures(self, dataset_id, instrument_name, measure_type):
         response = self._get(
             "pheno_tool/measures",
@@ -228,6 +264,19 @@ class RESTClient:
                 "datasetId": dataset_id,
                 "instrument": instrument_name,
                 "measureType": measure_type,
+            }
+        )
+
+        if response.status_code != 200:
+            return None
+
+        return response.json()
+
+    def get_regressions(self, dataset_id):
+        response = self._get(
+            "measures/regressions",
+            query_values={
+                "datasetId": dataset_id
             }
         )
 
