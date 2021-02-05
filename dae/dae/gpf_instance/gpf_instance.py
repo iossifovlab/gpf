@@ -29,6 +29,7 @@ from dae.configuration.schemas.autism_gene_profile import (
     autism_gene_tool_config
 )
 from dae.autism_gene_profile.db import AutismGeneProfileDB
+from dae.autism_gene_profile.statistic import AGPStatistic
 
 from dae.utils.helpers import isnan
 
@@ -407,6 +408,50 @@ class GPFInstance(object):
 
     def get_all_agp_statistics(self):
         return self._autism_gene_profile_db.get_all_agps()
+
+    def _agp_from_table_row(self, row):
+        config = self._autism_gene_profile_config
+        gene_symbol = row["symbol_name"]
+        protection_scores = [
+            row[f"protection_{ps}"] for ps in config.protection_scores
+        ]
+        autism_scores = [
+            row[f"autism_{aus}"] for aus in config.autism_scores
+        ]
+        gene_lists = config.gene_sets
+        gene_lists = list(filter(
+            lambda x: row[x] == 1,
+            gene_lists
+        ))
+        variant_counts = {}
+        for dataset_id, filters in config.datasets.items():
+            current_counts = dict()
+            for ps in filters.person_sets:
+                person_set = ps.set_name
+                for effect in filters.effects:
+                    counts = current_counts.get(person_set)
+                    if not counts:
+                        current_counts[person_set] = dict()
+                        counts = current_counts[person_set]
+
+                    counts[effect] = row[
+                        f"{dataset_id}_{person_set}_{effect}"
+                    ]
+            variant_counts[dataset_id] = current_counts
+        return AGPStatistic(
+            gene_symbol, gene_lists, protection_scores,
+            autism_scores, variant_counts
+        )
+
+    def query_agp_statistics(self, page, symbol_like=None, sort_by=None):
+        rows = self._autism_gene_profile_db.query_agps(
+            page, symbol_like, sort_by
+        )
+        statistics = list(map(
+            self._agp_from_table_row,
+            rows
+        ))
+        return statistics
 
     # DAE config
     def get_selected_genotype_data(self):

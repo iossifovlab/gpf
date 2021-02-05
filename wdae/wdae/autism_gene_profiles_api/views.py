@@ -1,5 +1,4 @@
 import logging
-import json
 from rest_framework import status
 from rest_framework.response import Response
 
@@ -29,8 +28,17 @@ class ProfileView(QueryBaseView):
 
 class QueryProfilesView(QueryBaseView):
     def get(self, request):
-        agps = self.gpf_instance.get_all_agp_statistics()
-        if not agps:
+        data = request.query_params
+        page = int(data.get("page", 1))
+        if page < 1:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        symbol_like = data.get("symbol", None)
+        sort_by = data.get("sortBy", None)
+
+        agps = self.gpf_instance.query_agp_statistics(
+            page, symbol_like, sort_by)
+
+        if agps is None:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         return Response([agp.to_json() for agp in agps])
