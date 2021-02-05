@@ -12,7 +12,7 @@ export class GenotypePreviewFieldComponent implements OnChanges, OnInit {
   @Input() field: string;
   @Input() format: string;
 
-  private formattedValue: string;
+  formattedValue: string;
   private UCSCLink: string;
 
   constructor(
