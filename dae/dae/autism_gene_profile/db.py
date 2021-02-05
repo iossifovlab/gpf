@@ -177,6 +177,9 @@ class AutismGeneProfileDB:
 
     def query_agps(self, page, symbol_like=None, sort_by=None):
         s = self.agp_view.select()
+        if symbol_like:
+            s = s.where(self.agp_view.c.symbol_name.like(f"%{symbol_like}%"))
+        s = s.limit(self.PAGE_SIZE).offset(self.PAGE_SIZE*(page-1))
         with self.engine.connect() as connection:
             return connection.execute(s).fetchall()
 
