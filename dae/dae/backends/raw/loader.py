@@ -480,7 +480,8 @@ class StoredAnnotationDecorator(AnnotationDecorator):
         annot_df = self._load_annotation_file(self.annotation_filename)
         elapsed = time.time() - start
         logger.info(
-            f"Storred annotation file loaded in in {elapsed:.2f} sec")
+            f"Storred annotation file ({self.annotation_filename}) "
+            f"loaded in in {elapsed:.2f} sec")
 
         start = time.time()
         records = annot_df.to_dict(orient="records")
@@ -506,7 +507,8 @@ class StoredAnnotationDecorator(AnnotationDecorator):
 
         elapsed = time.time() - start
         logger.info(
-            f"Storred annotation file parsed in {elapsed:.2f} sec")
+            f"Storred annotation file ({self.annotation_filename}) "
+            f"parsed in {elapsed:.2f} sec")
 
 
 class VariantsGenotypesLoader(VariantsLoader):

@@ -252,11 +252,6 @@ study_config_schema = {
                 "schema": {"type": "string"},
                 "default": [],
             },
-            "family_filters": {
-                "type": "list",
-                "schema": {"type": "string"},
-                "dependencies": {"has_family_filters": True},
-            },
             "inheritance_type_filter": {
                 "type": "list",
                 "schema": {"type": "string"},
