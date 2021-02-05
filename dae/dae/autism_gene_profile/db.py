@@ -20,6 +20,7 @@ class AutismGeneProfileDB:
         self.metadata = MetaData(self.engine)
         self.configuration = None
         self.build_gene_profile_db(clear)
+        self._agp_view = None
 
     @property
     def agp_view(self):
@@ -330,7 +331,7 @@ class AutismGeneProfileDB:
             select_cols.append(table_alias.c.score_value.label(score_alias))
 
         for aus in config["autism_scores"]:
-            score_alias = f"autism_{ps}"
+            score_alias = f"autism_{aus}"
             table_alias = aliased(
                 self.autism_scores,
                 score_alias
