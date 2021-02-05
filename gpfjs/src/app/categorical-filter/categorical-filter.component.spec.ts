@@ -27,7 +27,7 @@ describe('CategoricalFilterComponent', () => {
     component = fixture.componentInstance;
     component.categoricalFilterState = jasmine.createSpyObj('CategoricalFilterState', ['selection']);
     component.categoricalFilterState.selection = jasmine.createSpyObj('CategoricalSelection', ['selection']);
-    component.categoricalFilter = jasmine.createSpyObj('CategoricalFilter', ['selection'], {'from': 'phenotype'});
+    component.categoricalFilter = jasmine.createSpyObj('CategoricalFilter', ['selection'], {'from': 'phenodb'});
     fixture.detectChanges();
   });
 
