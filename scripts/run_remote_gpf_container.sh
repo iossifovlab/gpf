@@ -15,10 +15,13 @@ if [[ -z $GPF_TEST_REMOTE_HOSTNAME ]]; then
 fi
 
 if [[ -z $GPF_DOCKER_IMAGE ]]; then
-    export GPF_DOCKER_IMAGE="seqpipe/seqpipe-gpf-conda"
+    export GPF_DOCKER_IMAGE="gpf_docker_image"
+    docker build $WD -t $GPF_DOCKER_IMAGE
 fi
 
 if [[ -z $GPF_DOCKER_NETWORK ]]; then
+    echo "Running local ($WD) gpf remote container..."
+
     docker run --rm -it \
         --name ${GPF_REMOTE_DOCKER_CONTAINER} \
         -v $WD/gpf_remote:/data \
