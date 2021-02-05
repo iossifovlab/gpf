@@ -89,7 +89,9 @@ export class PhenoMeasure {
       json['measure_type'],
       json['description'],
 
-      new PhenoRegressions(json['regressions'])
+      new PhenoRegressions(json['regressions']),
+
+      json['base_url']
     );
   }
 
@@ -109,6 +111,8 @@ export class PhenoMeasure {
       measure.description,
 
       measure.regressions,
+
+      measure.base_url
     );
     return newMeasure
   }
@@ -127,13 +131,21 @@ export class PhenoMeasure {
     readonly description: string,
 
     readonly regressions: PhenoRegressions,
+    
+    readonly base_url: string,
   ) { }
 }
 
 export class PhenoMeasures {
 
   public _addMeasure(measure: PhenoMeasure) {
-    let basePath = environment.basePath + this.baseImageUrl;
+    let basePath: string;;
+    if (measure.base_url) {
+        basePath = measure.base_url + this.baseImageUrl;
+    }
+    else {
+        basePath = environment.basePath + this.baseImageUrl;
+    }
 
     measure.regressions.addBasePath(basePath)
 
@@ -151,6 +163,8 @@ export class PhenoMeasures {
       measure.description,
 
       measure.regressions,
+
+      measure.base_url
     );
     this.measures.push(newMeasure);
   }
