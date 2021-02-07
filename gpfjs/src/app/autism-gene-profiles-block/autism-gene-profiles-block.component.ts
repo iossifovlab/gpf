@@ -1,5 +1,8 @@
 import { Component, HostListener, OnInit, ViewChild } from '@angular/core';
 import { NgbNav } from '@ng-bootstrap/ng-bootstrap';
+import { AutismGeneToolConfig } from 'app/autism-gene-profiles/autism-gene-profile';
+import { AutismGeneProfilesService } from 'app/autism-gene-profiles/autism-gene-profiles.service';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'gpf-autism-gene-profiles-block',
@@ -9,6 +12,7 @@ import { NgbNav } from '@ng-bootstrap/ng-bootstrap';
 export class AutismGeneProfilesBlockComponent implements OnInit {
   @ViewChild('nav') nav: NgbNav;
   private geneTabs = new Set<string>();
+  private autismGeneToolConfig: AutismGeneToolConfig;
 
   @HostListener('window:keydown', ['$event'])
   keyEvent($event: KeyboardEvent) {
@@ -21,9 +25,14 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
     }
   }
 
-  constructor() { }
+  constructor(
+    private autismGeneProfilesService: AutismGeneProfilesService,
+  ) { }
 
   ngOnInit(): void {
+    this.autismGeneProfilesService.getConfig().take(1).subscribe(config => {
+      this.autismGeneToolConfig = config;
+    });
   }
 
   openTabEventHandler($event) {

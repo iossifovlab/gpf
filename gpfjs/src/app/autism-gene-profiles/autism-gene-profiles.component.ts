@@ -1,4 +1,4 @@
-import { Component, EventEmitter, OnInit, Output, ViewChildren } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, OnInit, Output, ViewChildren } from '@angular/core';
 import { Observable } from 'rxjs';
 import { AutismGeneToolConfig, AutismGeneToolGene } from './autism-gene-profile';
 import { AutismGeneProfilesService } from './autism-gene-profiles.service';
@@ -9,11 +9,11 @@ import { NgbDropdownMenu } from '@ng-bootstrap/ng-bootstrap';
   templateUrl: './autism-gene-profiles.component.html',
   styleUrls: ['./autism-gene-profiles.component.css']
 })
-export class AutismGeneProfilesComponent implements OnInit {
+export class AutismGeneProfilesComponent implements OnInit, OnChanges {
+  @Input() config: AutismGeneToolConfig;
   @Output() openTabEvent = new EventEmitter<string>();
   @ViewChildren(NgbDropdownMenu) ngbDropdownMenu: NgbDropdownMenu[];
 
-  private config$: Observable<AutismGeneToolConfig>;
   private genes$: Observable<AutismGeneToolGene[]>;
 
   private shownGeneLists: string[];
@@ -24,18 +24,16 @@ export class AutismGeneProfilesComponent implements OnInit {
     private autismGeneProfilesService: AutismGeneProfilesService,
   ) { }
 
+  ngOnChanges(): void {
+    if (this.config) {
+      this.shownGeneLists = this.config['geneLists'];
+      this.shownAutismScores = this.config['autismScores'];
+      this.shownProtectionScores = this.config['protectionScores'];
+    }
+  }
+
   ngOnInit(): void {
-    this.config$ = this.autismGeneProfilesService.getConfig();
-    this.config$.take(1).subscribe(res => {
-      this.shownGeneLists = res['geneLists'];
-      this.shownAutismScores = res['autismScores'];
-      this.shownProtectionScores = res['protectionScores'];
-    });
-
     this.genes$ = this.autismGeneProfilesService.getGenes();
-
-    this.config$.subscribe(res => {console.log(res); });
-    this.genes$.subscribe(res => {console.log(res); });
   }
 
   calculateDatasetColspan(datasetConfig) {
@@ -63,7 +61,6 @@ export class AutismGeneProfilesComponent implements OnInit {
   }
 
   emitOpenTabEvent(geneSymbol: string) {
-    console.log('sample text')
     this.openTabEvent.emit(geneSymbol);
   }
 }
