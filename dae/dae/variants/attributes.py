@@ -266,6 +266,7 @@ class VariantType(enum.Enum):
     comp = 1 << 3
     cnv_p = 1 << 4
     cnv_m = 1 << 5
+    tandem_repeat = 1 << 6
 
     @staticmethod
     def from_name(name):
@@ -282,6 +283,8 @@ class VariantType(enum.Enum):
             return VariantType.cnv_p
         elif name == "cnv_m" or name == "cnv-":
             return VariantType.cnv_m
+        elif name == "tr" or name == "TR":
+            return VariantType.tandem_repeat
 
         raise ValueError("unexpected variant type: {}".format(name))
 
@@ -291,15 +294,17 @@ class VariantType(enum.Enum):
         if variant is None:
             return VariantType.invalid
 
-        vt = variant[0:3]
-        if vt == "sub":
+        vt = variant[0:2]
+        if vt == "su":
             return VariantType.substitution
-        elif vt == "ins":
+        elif vt == "in":
             return VariantType.insertion
-        elif vt == "del":
+        elif vt == "de":
             return VariantType.deletion
-        elif vt == "com":
+        elif vt == "co":
             return VariantType.comp
+        elif vt == "TR":
+            return VariantType.tandem_repeat
         elif variant == "CNV+":
             return VariantType.cnv_p
         elif variant == "CNV-":
@@ -325,6 +330,56 @@ class VariantType(enum.Enum):
 
     def __lt__(self, other):
         return self.value < other.value
+
+
+class VariantDesc:
+
+    def __init__(
+            self, variant_type,
+            ref=None, alt=None, length=None, unit=None):
+
+        # self.chrom = chrom
+        # self.position = position
+        self.variant_type = variant_type
+        self.ref = ref
+        self.alt = alt
+        self.length = length
+        self.unit = unit
+
+    def __repr__(self):
+        if self.variant_type == VariantType.substitution:
+            return f"sub({self.ref}->{self.alt})"
+        elif self.variant_type == VariantType.insertion:
+            return f"ins({self.alt})"
+        elif self.variant_type == VariantType.deletion:
+            return f"del({self.length})"
+        elif self.variant_type == VariantType.comp:
+            return f"comp({self.ref}->{self.alt})"
+        elif self.variant_type == VariantType.cnv_p:
+            return "CNV+"
+        elif self.variant_type == VariantType.cnv_m:
+            return "CNV-"
+        elif self.variant_type == VariantType.tandem_repeat:
+            return f"TR({self.ref}x{self.unit}->{self.alt})"
+
+    @staticmethod
+    def combine(variant_descs):
+        if all([
+                variant_descs[0].variant_type == vd.variant_type
+                for vd in variant_descs]):
+
+            if all([
+                    variant_descs[0].ref == vd.ref
+                    for vd in variant_descs]):
+                result = VariantDesc(
+                    variant_descs[0].variant_type,
+                    variant_descs[0].ref,
+                    ",".join([str(vd.alt) for vd in variant_descs]),
+                    variant_descs[-1].length,
+                    variant_descs[0].unit
+                )
+                return [str(result)]
+        return [str(vd) for vd in variant_descs]
 
 
 class GeneticModel(enum.Enum):

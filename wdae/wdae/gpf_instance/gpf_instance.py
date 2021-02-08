@@ -1,8 +1,10 @@
-import json
 import logging
+from threading import Lock
+
+from requests.exceptions import ConnectionError
+
 from django.conf import settings
 
-from threading import Lock
 
 from dae.gpf_instance.gpf_instance import GPFInstance
 from studies.study_wrapper import StudyWrapper, RemoteStudyWrapper
@@ -13,8 +15,6 @@ from dae.enrichment_tool.tool import EnrichmentTool
 from dae.enrichment_tool.event_counters import CounterBase
 from enrichment_api.enrichment_builder import \
     EnrichmentBuilder, RemoteEnrichmentBuilder
-
-from requests.exceptions import ConnectionError
 
 
 logger = logging.getLogger(__name__)
@@ -332,6 +332,18 @@ def reload_datasets(gpf_instance):
         Dataset.recreate_dataset_perm(
             genotype_data_id,  # study_wrapper.config.studies
         )
+
+        genotype_data = gpf_instance.get_genotype_data(genotype_data_id)
+        print("genotype_data.studies:", genotype_data.studies)
+        if not genotype_data.studies:
+            continue
+
+        for study_id in genotype_data.studies:
+            if study_id is None:
+                continue
+            Dataset.recreate_dataset_perm(
+                study_id,  # study_wrapper.config.studies
+            )
 
 
 def _recreated_dataset_perm():

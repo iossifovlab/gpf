@@ -1,4 +1,3 @@
-import math
 import itertools
 import traceback
 import json
@@ -27,7 +26,7 @@ from dae.utils.effect_utils import (
 
 from dae.utils.regions import Region
 from dae.pheno_tool.pheno_common import PhenoFilterBuilder
-from dae.variants.attributes import Role, Inheritance
+from dae.variants.attributes import Role, Inheritance, VariantDesc
 
 from dae.backends.attributes_query import (
     role_query,
@@ -186,10 +185,9 @@ class StudyWrapper(StudyWrapperBase):
                             scol = slot.to_dict()
                             scol["id"] = scol_id
                             scol["source"] = get_source(slot)
-                
+
                             columns.append(scol_id)
                             descs.append(scol)
-
 
             inner(
                 genotype_browser_config.genotype,
@@ -211,7 +209,7 @@ class StudyWrapper(StudyWrapperBase):
 
             self.download_columns, \
                 self.download_descs = \
-                    unpack_columns(download_column_names, use_id=False)
+                unpack_columns(download_column_names, use_id=False)
             if summary_preview_column_names and \
                     len(summary_preview_column_names):
                 self.summary_preview_columns, self.summary_preview_descs = \
@@ -230,8 +228,8 @@ class StudyWrapper(StudyWrapperBase):
 
         else:
             self.preview_columns, self.preview_descs = [], []
-            self.download_columns, self.download_descs= [], []
-            self.summary_preview_columns, self.summary_preview_descs= \
+            self.download_columns, self.download_descs = [], []
+            self.summary_preview_columns, self.summary_preview_descs = \
                 [], []
             self.summary_download_columns, self.summary_download_descs = \
                 [], []
@@ -268,13 +266,13 @@ class StudyWrapper(StudyWrapperBase):
     }
 
     SPECIAL_ATTRS_FORMAT = {
-        "family": 
+        "family":
         lambda v: [v.family_id],
 
-        "location": 
+        "location":
         lambda v: v.cshl_location,
 
-        "variant": 
+        "variant":
         lambda v: v.cshl_variant,
 
         "genotype":
@@ -329,10 +327,10 @@ class StudyWrapper(StudyWrapperBase):
                     self._get_wdae_member(
                         member, person_set_collection,
                         "/".join(
-                            [str(v) 
+                            [str(v)
                              for v in filter(
                                 lambda g: g != 0, genotype[index])
-                            ])
+                             ])
                     )
                 )
             except IndexError:
@@ -356,13 +354,9 @@ class StudyWrapper(StudyWrapperBase):
         row_variant = []
         for col_desc in column_descs:
             try:
-                col_id = col_desc["id"]
                 col_source = col_desc["source"]
                 col_format = col_desc.get("format")
 
-                print(f"\tcol_id     >", col_id)
-                print(f"\tcol_source >", col_source)
-                print(f"\tcol_format >", col_format)
                 if col_format is None:
                     def col_formatter(val):
                         if val is None:
@@ -375,7 +369,7 @@ class StudyWrapper(StudyWrapperBase):
                             return "-"
                         try:
                             return col_format % val
-                        except:
+                        except Exception:
                             logging.exception(f'error build variant: {v}')
                             traceback.print_stack()
                             return "-"
@@ -388,6 +382,14 @@ class StudyWrapper(StudyWrapperBase):
                             v, person_set_collection
                         )
                     )
+                elif col_source == "variant":
+                    attribute = [
+                        aa.details.variant_desc for aa in v.alt_alleles]
+                    attribute = VariantDesc.combine(attribute)
+                    print("\t\t>>attribute:", attribute)
+
+                    row_variant.append(",".join(attribute))
+
                 else:
                     if col_source in self.SPECIAL_ATTRS:
                         attribute = self.SPECIAL_ATTRS[col_source](v)
@@ -1407,6 +1409,14 @@ class RemoteStudyWrapper(StudyWrapperBase):
                 map(
                     self.rest_client.get_remote_dataset_id,
                     config["parents"]
+                )
+            )
+
+        if config.get("studies"):
+            config["studies"] = list(
+                map(
+                    self.rest_client.get_remote_dataset_id,
+                    config["studies"]
                 )
             )
 
