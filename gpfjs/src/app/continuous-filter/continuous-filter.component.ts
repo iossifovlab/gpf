@@ -1,10 +1,10 @@
 import { Component, OnInit, OnChanges, SimpleChanges, Input } from '@angular/core';
 import { MeasuresService } from '../measures/measures.service';
 import { HistogramData } from '../measures/measures';
-import { ContinuousFilterState, ContinuousSelection } from '../pheno-filters/pheno-filters';
+import { ContinuousFilterState, ContinuousSelection } from '../person-filters/person-filters';
 import { StateRestoreService } from '../store/state-restore.service';
 // tslint:disable-next-line:import-blacklist
-import { Observable ,  Subject } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 import { Partitions } from '../gene-weights/gene-weights';
 
 @Component({

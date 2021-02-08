@@ -1,6 +1,6 @@
 <div class="input-group" style="width: 100%; max-width: 100%;">
   <gpf-searchable-select
-    style="width: 100%"
+    style="width: 93%"
     (search)="searchBoxChange($event)"
     (selectItem)="selectedMeasure = $event"
     [data]="filteredMeasures"
@@ -14,4 +14,10 @@
       </span>
     </div>
   </gpf-searchable-select>
+
+  <div style="width: 7%" class="input-group-btn">
+    <button class="btn btn-secondary" (click)="clear()">
+      &times;
+    </button>
+  </div>
 </div>

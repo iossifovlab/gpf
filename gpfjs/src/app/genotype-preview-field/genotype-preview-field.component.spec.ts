@@ -3,6 +3,11 @@ import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { GenotypePreviewFieldComponent } from './genotype-preview-field.component';
 import { PedigreeChartComponent } from 'app/pedigree-chart/pedigree-chart.component';
 import { PedigreeChartMemberComponent } from 'app/pedigree-chart/pedigree-chart-member.component';
+import { DatasetsService } from 'app/datasets/datasets.service';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { ConfigService } from 'app/config/config.service';
+import { UsersService } from 'app/users/users.service';
+import { RouterTestingModule } from '@angular/router/testing';
 
 describe('GenotypePreviewFieldComponent', () => {
   let component: GenotypePreviewFieldComponent;
@@ -14,7 +19,9 @@ describe('GenotypePreviewFieldComponent', () => {
         GenotypePreviewFieldComponent,
         PedigreeChartComponent,
         PedigreeChartMemberComponent
-      ]
+      ],
+      providers: [DatasetsService, ConfigService, UsersService],
+      imports: [HttpClientTestingModule, RouterTestingModule]
     })
     .compileComponents();
   }));

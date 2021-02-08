@@ -1,4 +1,4 @@
-import { Input, Component } from '@angular/core';
+import { Input, Component, HostListener, OnInit } from '@angular/core';
 import { GenotypePreview, GenotypePreviewVariantsArray, GenotypePreviewInfo } from '../genotype-preview-model/genotype-preview';
 import { AdditionalColumn } from '../datasets/datasets';
 
@@ -7,12 +7,27 @@ import { AdditionalColumn } from '../datasets/datasets';
   templateUrl: './genotype-preview-table.component.html',
   styleUrls: ['./genotype-preview-table.component.css']
 })
-export class GenotypePreviewTableComponent {
+export class GenotypePreviewTableComponent implements OnInit {
   @Input() genotypePreviewInfo: GenotypePreviewInfo;
   @Input() genotypePreviewVariantsArray: GenotypePreviewVariantsArray;
   @Input() columns: Array<AdditionalColumn>;
+  private singleColumnWidth: number;
+
+  @HostListener('window:resize', ['$event'])
+  onResize() {
+    const screenWidth = window.innerWidth;
+    const columnsCount = this.columns.length;
+    const padding = 60;
+
+    this.singleColumnWidth = ((screenWidth - padding) / columnsCount);
+  }
+
   constructor(
   ) { }
+
+  ngOnInit(): void {
+    this.onResize();
+  }
 
   comparator(field: string) {
     if (field === 'variant.location') {
@@ -22,9 +37,12 @@ export class GenotypePreviewTableComponent {
         let leftVal = a.get(field);
         let rightVal = b.get(field);
 
-        if (leftVal == "-") leftVal = null;
-        if (rightVal == "-") rightVal = null;
-
+        if (leftVal === '-') {
+          leftVal = null;
+        }
+        if (rightVal === '-') {
+          rightVal = null;
+        }
         if (leftVal == null && rightVal == null) {
           return 0;
         }

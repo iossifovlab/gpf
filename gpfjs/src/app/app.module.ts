@@ -67,7 +67,7 @@ import { RouteReuseStrategy, RouterModule, Routes } from '@angular/router';
 import { TaggingRouteReuseStrategy } from 'app/route-reuse.strategy';
 
 import { StateRestoreService } from './store/state-restore.service';
-import { PhenoFiltersComponent } from './pheno-filters/pheno-filters.component';
+import { PersonFiltersComponent } from './person-filters/person-filters.component';
 import { FamilyFiltersBlockComponent } from './family-filters-block/family-filters-block.component';
 import { ContinuousFilterComponent } from './continuous-filter/continuous-filter.component';
 import { MultiContinuousFilterComponent } from './multi-continuous-filter/multi-continuous-filter.component';
@@ -157,6 +157,7 @@ import { GeneViewComponent } from './gene-view/gene-view.component';
 import { GeneSymbolsWithSearchComponent } from './gene-symbols-with-search/gene-symbols-with-search.component';
 import { LoadingSpinnerComponent } from './loading-spinner/loading-spinner.component';
 import { DatasetNodeComponent } from './dataset-node/dataset-node.component';
+import { PersonFiltersBlockComponent } from './person-filters-block/person-filters-block.component';
 
 const appRoutes: Routes = [
   {
@@ -285,7 +286,7 @@ const appRoutes: Routes = [
     FullscreenLoadingComponent,
     EncodeUriComponentPipe,
     EnrichmentModelsBlockComponent,
-    PhenoFiltersComponent,
+    PersonFiltersComponent,
     FamilyFiltersBlockComponent,
     ContinuousFilterComponent,
     MultiContinuousFilterComponent,
@@ -352,6 +353,7 @@ const appRoutes: Routes = [
     GeneSymbolsWithSearchComponent,
     LoadingSpinnerComponent,
     DatasetNodeComponent,
+    PersonFiltersBlockComponent,
   ],
   imports: [
     BrowserModule,

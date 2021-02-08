@@ -1,7 +1,7 @@
 <div class="family-filters-block form-block">
   <div class="card">
     <ul ngbNav #nav="ngbNav" class="navbar bg-light nav-pills" style="justify-content: flex-start">
-      <div class="nav-title-custom">Families</div>
+      <div class="nav-title-custom">Family filters</div>
       <li [ngbNavItem]="'allFamilies'" id="all-families">
           <a ngbNavLink>All</a>
       </li>
@@ -11,11 +11,14 @@
               <gpf-family-ids></gpf-family-ids>
           </ng-template>
       </li>
-      <li [ngbNavItem]="'phenoFilters'" *ngIf="dataset?.genotypeBrowserConfig?.phenoFilters && dataset.phenotypeData" id="pheno-filters">
+      <li [ngbNavItem]="'advanced'" *ngIf="dataset?.genotypeBrowserConfig?.familyFilters && dataset.phenotypeData" id="advanced">
           <a ngbNavLink>Advanced</a>
           <ng-template ngbNavContent>
-              <gpf-pheno-filters [dataset]="dataset">
-              </gpf-pheno-filters>
+              <gpf-person-filters
+                [dataset]="dataset"
+                [filters]="dataset?.genotypeBrowserConfig?.familyFilters"
+                [isFamilyFilters]="true"
+              ></gpf-person-filters>
           </ng-template>
       </li>
     </ul>

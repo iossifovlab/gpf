@@ -26,8 +26,9 @@ const ContinuousFilterStateMock = {
   id: '',
   type: '',
   role: '',
-  measure: '',
-  measureType: '',
+  from: '',
+  source: '',
+  sourceType: '',
   selection: SelectionMock,
   isEmpty() { return true; },
   min: 0,
@@ -36,12 +37,13 @@ const ContinuousFilterStateMock = {
   domainMax: 0
 };
 
-const PhenoFilterMock = {
+const PersonFilterMock = {
   name: '',
-  measureType: '',
+  from: '',
+  source: '',
+  sourceType: '',
   role: '',
   filterType: '',
-  measure: '',
   domain: ['']
 };
 
@@ -76,7 +78,7 @@ describe('MultiContinuousFilterComponent', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(MultiContinuousFilterComponent);
     component = fixture.componentInstance;
-    component.continuousFilter = PhenoFilterMock;
+    component.continuousFilter = PersonFilterMock;
     component.datasetId = '';
     component.continuousFilterState = ContinuousFilterStateMock;
     fixture.detectChanges();
