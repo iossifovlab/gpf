@@ -1,7 +1,7 @@
 {{ continuousFilterState.id }}:
 <gpf-pheno-measure-selector
     [(selectedMeasure)]="selectedMeasure"
-    [initialSelectedMeasure]="continuousFilterState.measure"
+    [initialSelectedMeasure]="continuousFilterState.source"
     (measuresChange)="updateMeasures($event)" >
 </gpf-pheno-measure-selector>
 
