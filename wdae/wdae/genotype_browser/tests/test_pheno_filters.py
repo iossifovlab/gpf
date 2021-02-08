@@ -11,33 +11,37 @@ PREVIEW_VARIANTS_URL = "/api/v3/genotype_browser/preview/variants"
 
 FILTER_QUERY_CATEGORICAL = {
     "id": "Categorical",
-    "measureType": "categorical",
+    "from": "phenodb",
+    "source": "instrument1.categorical",
+    "sourceType": "categorical",
     "role": "prb",
-    "measure": "instrument1.categorical",
     "selection": {"selection": ["option2"]},
 }
 
 FILTER_QUERY_CONTINUOUS = {
     "id": "Continuous",
-    "measureType": "continuous",
+    "from": "phenodb",
+    "source": "instrument1.continuous",
+    "sourceType": "continuous",
     "role": "prb",
-    "measure": "instrument1.continuous",
     "selection": {"min": 3, "max": 4},
 }
 
 FILTER_QUERY_BOGUS = {
     "id": "some nonexistant measure",
-    "measureType": "continuous",
+    "from": "phenodb",
+    "source": "wrontinstrument.wrongmeasure",
+    "sourceType": "continuous",
     "role": "prb",
-    "measure": "wrontinstrument.wrongmeasure",
     "selection": {"min": 3, "max": 4},
 }
 
 FILTER_QUERY_ORDINAL = {
     "id": "Ordinal",
-    "measureType": "ordinal",
+    "from": "phenodb",
+    "source": "instrument1.ordinal",
+    "sourceType": "ordinal",
     "role": "prb",
-    "measure": "instrument1.ordinal",
     "selection": {"min": 1, "max": 5},
 }
 
@@ -68,29 +72,29 @@ def test_simple_query(db, admin_client):
         (
             [FILTER_QUERY_CATEGORICAL], 3,
             [
-                [["option2"]],
-                [["option2"]],
-                [["option2"]]]),
+                ["option2"],
+                ["option2"],
+                ["option2"]]),
         (
             [FILTER_QUERY_CONTINUOUS], 3,
             [
-                [["3.14"]],
-                [["3.14"]],
-                [["3.14"]]]),
+                ["3.14"],
+                ["3.14"],
+                ["3.14"]]),
         (
             [FILTER_QUERY_CATEGORICAL, FILTER_QUERY_CONTINUOUS],
             3,
             [
-                [["option2"], ["3.14"]],
-                [["option2"], ["3.14"]],
-                [["option2"], ["3.14"]]],
+                ["option2", "3.14"],
+                ["option2", "3.14"],
+                ["option2", "3.14"]],
         ),
     ],
 )
 def test_query_with_pheno_filters(
         db, admin_client, pheno_filters, variants_count, pheno_values):
 
-    data = {"datasetId": "quads_f1", "phenoFilters": pheno_filters}
+    data = {"datasetId": "quads_f1", "familyFilters": pheno_filters}
 
     response = admin_client.post(
         PREVIEW_VARIANTS_URL, json.dumps(data), content_type="application/json"
@@ -106,16 +110,23 @@ def test_query_with_pheno_filters(
     cols = response.data["cols"]
 
     columns = [
-        "{}.{}".format(pf["measureType"], pf["id"]) for pf in pheno_filters
+        "{}.{}".format(pf["sourceType"], pf["id"]) for pf in pheno_filters
     ]
     columns_idxs = [cols.index(col) for col in columns]
 
     assert variants_count == len(variants)
     rows_values = []
+    variants = list(variants)
+    print("variants:", variants)
+
     for row in variants:
+        print("row:", row)
+
         row_values = []
         for column_idx in columns_idxs:
             row_values.append(row[column_idx])
         rows_values.append(row_values)
+    print("rows_values:", rows_values)
+    print("expected:", pheno_values)
 
     assert rows_values == pheno_values

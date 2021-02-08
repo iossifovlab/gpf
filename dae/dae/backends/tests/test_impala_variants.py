@@ -82,7 +82,7 @@ def test_impala_variants_simple(variants_impala, fixture_name):
         for a in v.matched_alleles:
             print(">", a)
 
-    assert len(vs) == 5
+    assert len(vs) == 6
 
 
 @pytest.mark.parametrize("fixture_name", ["backends/quads_f2"])

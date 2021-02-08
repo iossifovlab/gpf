@@ -63,7 +63,7 @@ class PhenoToolView(QueryBaseView):
         helper = PhenoToolHelper(study_wrapper)
 
         pheno_filter_family_ids = helper.pheno_filter_persons(
-            data.get("phenoFilters")
+            data.get("familyFilters")
         )
         study_persons = helper.genotype_data_persons(data.get("familyIds", []))
 

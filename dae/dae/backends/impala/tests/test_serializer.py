@@ -63,7 +63,7 @@ def test_extra_attributes_serialization_deserialization(
     fv = serializer.deserialize_family_variant(
         variant_blob, family, extra_blob)
 
-    assert fv.get_attribute("someAttr")[1] == "asdf"
+    assert fv.get_attribute("someAttr")[0] == "asdf"
 
 
 def test_extra_attributes_loading_with_person_id(
@@ -90,10 +90,10 @@ def test_extra_attributes_loading_with_person_id(
     variants = list(it)
     assert len(variants) == 17
     family_variants = [v[1][0] for v in variants]
-    assert family_variants[0].get_attribute("StudyName")[1] == "Turner_2017"
-    assert family_variants[1].get_attribute("StudyName")[1] == "Turner_2017"
-    assert family_variants[2].get_attribute("StudyName")[1] == "Turner_2017"
-    assert family_variants[3].get_attribute("StudyName")[1] == "Lelieveld2016"
+    assert family_variants[0].get_attribute("StudyName")[0] == "Turner_2017"
+    assert family_variants[1].get_attribute("StudyName")[0] == "Turner_2017"
+    assert family_variants[2].get_attribute("StudyName")[0] == "Turner_2017"
+    assert family_variants[3].get_attribute("StudyName")[0] == "Lelieveld2016"
     for variant in family_variants:
         print(variant)
 
@@ -101,7 +101,7 @@ def test_extra_attributes_loading_with_person_id(
 def test_extra_attributes_impala(extra_attrs_impala):
     variants = extra_attrs_impala.query_variants()
     first_variant = list(variants)[0]
-    assert first_variant.get_attribute("someAttr")[1] == "asdf"
+    assert first_variant.get_attribute("someAttr")[0] == "asdf"
 
 
 def test_build_allele_batch_dict(

@@ -13,11 +13,6 @@ phenotype_schema = {
     },
 }
 
-in_roles_schema = {
-    "destination": {"type": "string"},
-    "roles": {"type": "list", "schema": {"type": "string"}},
-}
-
 genotype_slot_schema = {
     "type": "dict",
     "schema": {
@@ -82,13 +77,21 @@ present_in_role_schema = {
     "roles": {"type": "list", "schema": {"type": "string"}},
 }
 
-pheno_filters_schema = {
+person_filters_schema = {
     "name": {"type": "string"},
-    "measure_type": {"type": "string"},
+    "from": {"type": "string", "allowed": ["pedigree", "phenodb"]},
+    "source": {"type": "string"},
+    "source_type": {
+        "type": "string",
+        "allowed": ["continuous", "categorical"]
+    },
     "filter_type": {"type": "string"},
-    "role": {"type": "string"},
-    "measure": {"type": "string"},
 }
+
+family_filters_schema = dict(
+    **person_filters_schema,
+    role={"type": "string"},
+)
 
 family_schema = {
     "path": {
@@ -212,6 +215,12 @@ study_config_schema = {
     "study_type": {"type": "list", "schema": {"type": "string"}},
     "year": {"type": "list", "schema": {"type": "integer"}},
     "pub_med": {"type": "list", "schema": {"type": "string"}},
+    "genome": {
+        "type": "string",
+        "allowed": ["hg19", "hg38"],
+        "required": True,
+    },
+    "chr_prefix": {"type": "boolean", "required": True},
     "has_denovo": {"type": "boolean", "default": True},
     "has_transmitted": {"type": "boolean"},
     "has_complex": {"type": "boolean"},
@@ -231,6 +240,7 @@ study_config_schema = {
         "schema": {
             "enabled": {"type": "boolean", "required": True},
             "has_family_filters": {"type": "boolean"},
+            "has_person_filters": {"type": "boolean"},
             "has_study_filters": {"type": "boolean"},
             "has_present_in_child": {"type": "boolean"},
             "has_present_in_parent": {"type": "boolean"},
@@ -238,16 +248,6 @@ study_config_schema = {
             "has_study_types": {"type": "boolean"},
             "has_graphical_preview": {"type": "boolean"},
             "selected_pheno_column_values": {
-                "type": "list",
-                "schema": {"type": "string"},
-                "default": [],
-            },
-            "family_filters": {
-                "type": "list",
-                "schema": {"type": "string"},
-                "dependencies": {"has_family_filters": True},
-            },
-            "selected_in_roles_values": {
                 "type": "list",
                 "schema": {"type": "string"},
                 "default": [],
@@ -260,10 +260,6 @@ study_config_schema = {
                 "type": "list",
                 "schema": {"type": "string"},
                 "dependencies": ["inheritance_type_filter"],
-            },
-            "in_roles": {
-                "type": "dict",
-                "valuesrules": {"type": "dict", "schema": in_roles_schema},
             },
             "genotype": {
                 "type": "dict",
@@ -293,22 +289,19 @@ study_config_schema = {
                     "schema": present_in_role_schema,
                 },
             },
-            "selected_present_in_role_values": {
-                "type": "list",
-                "schema": {"type": "string"},
-                "default": [],
-            },
             "pheno_filters": {
                 "type": "dict",
                 "valuesrules": {
                     "type": "dict",
-                    "schema": pheno_filters_schema,
+                    "schema": person_filters_schema,
                 },
             },
-            "selected_pheno_filters_values": {
-                "type": "list",
-                "schema": {"type": "string"},
-                "default": [],
+            "family_filters": {
+                "type": "dict",
+                "valuesrules": {
+                    "type": "dict",
+                    "schema": family_filters_schema,
+                },
             },
             "variant_types": {
                 "type": "list",

@@ -4,7 +4,10 @@ import traceback
 import json
 import logging
 
+from typing import List, Set
+
 from functools import reduce
+from abc import ABC, abstractmethod
 
 from box import Box
 
@@ -23,7 +26,6 @@ from dae.utils.effect_utils import (
 )
 
 from dae.utils.regions import Region
-from dae.pheno.common import MeasureType
 from dae.pheno_tool.pheno_common import PhenoFilterBuilder
 from dae.variants.attributes import Role, Inheritance
 
@@ -46,35 +48,39 @@ from remote.remote_phenotype_data import RemotePhenotypeData
 logger = logging.getLogger(__name__)
 
 
-class StudyWrapperBase:
+class StudyWrapperBase(ABC):
+
+    @abstractmethod
     def get_wdae_preview_info(self, query, max_variants_count=10000):
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
     def get_variants_wdae_preview(self, query, max_variants_count=10000):
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
     def get_variants_wdae_download(self, query, max_variants_count=10000):
-        raise NotImplementedError
+        pass
 
-    def get_wdae_summary_preview_info(self, query, max_variants_count=10000):
-        raise NotImplementedError
-
+    @abstractmethod
     def get_summary_variants_wdae_preview(
             self, query, max_variants_count=10000):
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
     def get_summary_variants_wdae_download(
             self, query, max_variants_count=10000):
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
     def build_genotype_data_group_description(self, gpf_instance):
-        raise NotImplementedError
+        pass
 
 
 class StudyWrapper(StudyWrapperBase):
     def __init__(
-        self, genotype_data_study, pheno_db, gene_weights_db
-    ):
+            self, genotype_data_study, pheno_db, gene_weights_db):
+
         assert genotype_data_study is not None
 
         self.genotype_data_study = genotype_data_study
@@ -109,8 +115,9 @@ class StudyWrapper(StudyWrapperBase):
                     pheno_column_slots.append(slot)
         self.pheno_column_slots = pheno_column_slots or []
 
-        # PHENO FILTERS
-        self.pheno_filters = genotype_browser_config.pheno_filters or None
+        # PERSON AND FAMILY FILTERS
+        self.person_filters = genotype_browser_config.person_filters or None
+        self.family_filters = genotype_browser_config.family_filters or None
 
         # GENE WEIGHTS
         if genotype_browser_config.genotype:
@@ -122,9 +129,6 @@ class StudyWrapper(StudyWrapperBase):
             ]
         else:
             self.gene_weight_column_sources = []
-
-        # IN ROLE
-        self.in_role_columns = genotype_browser_config.in_roles or []
 
         # PRESENT IN ROLE
         self.present_in_role = genotype_browser_config.present_in_role or []
@@ -139,7 +143,11 @@ class StudyWrapper(StudyWrapperBase):
                     collections_conf.selected_person_set_collections:
                 self.legend[collection_id] = \
                     self.person_set_collection_configs[collection_id]["domain"]
+
         # PREVIEW AND DOWNLOAD COLUMNS
+        self._init_genotype_columns(genotype_browser_config)
+
+    def _init_genotype_columns(self, genotype_browser_config):
         preview_column_names = genotype_browser_config.preview_columns
         download_column_names = \
             genotype_browser_config.download_columns \
@@ -150,108 +158,94 @@ class StudyWrapper(StudyWrapperBase):
             genotype_browser_config.summary_download_columns
 
         def unpack_columns(selected_columns, use_id=True):
-            columns, sources = [], []
+            columns = []
+            descs = []
 
             def inner(cols, get_source, use_id):
                 cols_dict = cols
 
                 for col_id in selected_columns:
                     col = cols_dict.get(col_id, None)
+                    print("\tcol_id:", col_id, "; col:", col)
+
                     if not col:
                         continue
-                    if col.source is not None:
-                        columns.append(col_id if use_id else col.name)
-                        sources.append(get_source(col))
-                    if col.slots is not None:
-                        for slot in col.slots:
-                            columns.append(
-                                f"{col_id}.{slot.name}"
-                                if use_id
-                                else f"{slot.name}"
-                            )
-                            sources.append(get_source(slot))
+                    col = col.to_dict()
+                    col["id"] = col_id
+
+                    if col.get("source") is not None:
+                        columns.append(col_id if use_id else col["name"])
+                        col["source"] = get_source(col)
+                        descs.append(col)
+
+                    elif col.get("slots") is not None:
+                        for slot in col.get("slots"):
+                            scol_id = f"{col_id}.{slot['name']}" if use_id \
+                                else f"{slot['name']}"
+
+                            scol = slot.to_dict()
+                            scol["id"] = scol_id
+                            scol["source"] = get_source(slot)
+                
+                            columns.append(scol_id)
+                            descs.append(scol)
+
 
             inner(
                 genotype_browser_config.genotype,
-                lambda x: f"{x.source}",
+                lambda x: f"{x['source']}",
                 use_id
             )
             if genotype_browser_config.pheno:
                 inner(
                     genotype_browser_config.pheno,
-                    lambda x: f"{x.source}.{x.role}",
+                    lambda x: f"{x['source']}.{x['role']}",
                     True
                 )
-            return columns, sources
+            return columns, descs
 
         if genotype_browser_config.genotype:
-            self.preview_columns, self.preview_sources = unpack_columns(
-                preview_column_names
-            )
-            self.download_columns, self.download_sources = unpack_columns(
-                download_column_names, use_id=False
-            )
+            print("preview_column_names:", preview_column_names)
+            self.preview_columns, self.preview_descs = \
+                unpack_columns(preview_column_names)
+
+            self.download_columns, \
+                self.download_descs = \
+                    unpack_columns(download_column_names, use_id=False)
             if summary_preview_column_names and \
                     len(summary_preview_column_names):
-                self.summary_preview_columns, self.summary_preview_sources = \
+                self.summary_preview_columns, self.summary_preview_descs = \
                     unpack_columns(
                         summary_preview_column_names
                     )
-                self.summary_download_columns, self.summary_download_sources =\
+                self.summary_download_columns, self.summary_download_descs = \
                     unpack_columns(
                         summary_download_column_names, use_id=False
                     )
             else:
-                self.summary_preview_columns = None
-                self.summary_preview_sources = None
-                self.summary_download_columns = None
-                self.summary_download_sources = None
+                self.summary_preview_columns = []
+                self.summary_preview_descs = []
+                self.summary_download_columns = []
+                self.summary_download_descs = []
 
         else:
-            self.preview_columns, self.preview_sources = [], []
-            self.download_columns, self.download_sources = [], []
-            self.summary_preview_columns, self.summary_preview_sources = [], []
-            self.summary_download_columns, self.summary_download_sources = \
+            self.preview_columns, self.preview_descs = [], []
+            self.download_columns, self.download_descs= [], []
+            self.summary_preview_columns, self.summary_preview_descs= \
+                [], []
+            self.summary_download_columns, self.summary_download_descs = \
                 [], []
 
     def _init_pheno(self, pheno_db):
         self.phenotype_data = None
         self.pheno_filter_builder = None
-
-        self.pheno_filters_in_config = set()
-        phenotype_data = self.config.phenotype_data
-        if phenotype_data:
-            self.phenotype_data = pheno_db.get_phenotype_data(phenotype_data)
-
-            # TODO
-            # This should probably be done in the front-end by making a query
-            # to get the measure assigned to this filter and its respective
-            # domain
-            if self.pheno_filters:
-                pheno_filters_dict = self.pheno_filters.to_dict()
-                for k, pheno_filter in pheno_filters_dict.items():
-                    if "measure" in pheno_filter:
-                        pheno_filters_dict[k][
-                            "domain"
-                        ] = self.phenotype_data.get_measure(
-                            pheno_filter["measure"]
-                        ).domain
-
-                self.pheno_filters = Box(
-                    pheno_filters_dict,
-                    frozen_box=True,
-                    default_box=True,
-                    default_box_attr=None
-                )
-
-                self.pheno_filters_in_config = {
-                    f"{pf.role}.{pf.measure}"
-                    for pf in self.pheno_filters.values()
-                    if pf.measure and pf.filter_type == "single"
-                }
-                self.pheno_filter_builder = PhenoFilterBuilder(
-                    self.phenotype_data
-                )
+        if self.config.phenotype_data:
+            self.phenotype_data = pheno_db.get_phenotype_data(
+                self.config.phenotype_data
+            )
+            self.pheno_filter_builder = PhenoFilterBuilder(
+                self.phenotype_data
+            )
 
     def __getattr__(self, name):
         return getattr(self.genotype_data_study, name)
@@ -266,58 +260,88 @@ class StudyWrapper(StudyWrapperBase):
     }
 
     STANDARD_ATTRS = {
-        "family": "family_id",
-        "location": "cshl_location",
-        "variant": "cshl_variant",
     }
 
     STANDARD_ATTRS_LAMBDAS = {
-        key: lambda aa, val=val: getattr(aa, val)
+        key: lambda v, val=val: getattr(v, val)
         for key, val in STANDARD_ATTRS.items()
     }
 
     SPECIAL_ATTRS_FORMAT = {
-        "genotype": lambda aa: mat2str(aa.genotype),
-        "effects": lambda aa: ge2str(aa.effect),
-        "genes": lambda aa: gene_effect_get_genes(aa.effect),
-        "worst_effect": lambda aa: gene_effect_get_worst_effect(aa.effect),
-        "effect_details": lambda aa: gd2str(aa.effect),
-        "best_st": lambda aa: mat2str(aa.best_state),
-        "family_structure": lambda aa: members_in_order_get_family_structure(
-            aa.members_in_order
+        "family": 
+        lambda v: [v.family_id],
+
+        "location": 
+        lambda v: v.cshl_location,
+
+        "variant": 
+        lambda v: v.cshl_variant,
+
+        "genotype":
+        lambda v: [
+            "/".join([str(g) for g in gt])
+            for gt in v.family_genotype],
+
+        "effects":
+        lambda v: [ge2str(e) for e in v.effects],
+
+        "genes":
+        lambda v: [gene_effect_get_genes(e) for e in v.effects],
+
+        "worst_effect":
+        lambda v: [gene_effect_get_worst_effect(e) for e in v.effects],
+
+        "effect_details":
+        lambda v: [gd2str(e) for e in v.effects],
+
+        "best_st":
+        lambda v: mat2str(v.best_state),
+
+        "family_structure":
+        lambda v: members_in_order_get_family_structure(
+            v.members_in_order
         ),
-        "is_denovo": lambda aa: bool(
-            Inheritance.denovo in aa.inheritance_in_members
+
+        "is_denovo":
+        lambda v: bool(
+            Inheritance.denovo in v.inheritance_in_members
         ),
+
         "seen_in_affected":
-        lambda aa: bool(aa.get_attribute("seen_in_status") in {2, 3}),
+        lambda v: bool(v.get_attribute("seen_in_status") in {2, 3}),
+
         "seen_in_unaffected":
-        lambda aa: bool(aa.get_attribute("seen_in_status") in {1, 3}),
+        lambda v: bool(v.get_attribute("seen_in_status") in {1, 3}),
 
     }
 
     SPECIAL_ATTRS = {**SPECIAL_ATTRS_FORMAT, **STANDARD_ATTRS_LAMBDAS}
 
-    def generate_pedigree(self, allele, person_set_collection):
+    def generate_pedigree(self, variant, person_set_collection):
         result = []
         # best_st = np.sum(allele.gt == allele.allele_index, axis=0)
-        best_st = allele.best_state[allele.allele_index, :]
+        genotype = variant.family_genotype
 
         missing_members = set()
-        for index, member in enumerate(allele.members_in_order):
+        for index, member in enumerate(variant.members_in_order):
             try:
                 result.append(
                     self._get_wdae_member(
-                        member, person_set_collection, int(best_st[index])
+                        member, person_set_collection,
+                        "/".join(
+                            [str(v) 
+                             for v in filter(
+                                lambda g: g != 0, genotype[index])
+                            ])
                     )
                 )
             except IndexError:
                 import traceback
                 traceback.print_exc()
                 missing_members.add(member.person_id)
-                logger.error(f"{best_st}, {index}, {member}")
+                logger.error(f"{genotype}, {index}, {member}")
 
-        for member in allele.family.full_members:
+        for member in variant.family.full_members:
             if (member.generated or member.not_sequenced) \
                     or (member.person_id in missing_members):
                 result.append(
@@ -325,6 +349,68 @@ class StudyWrapper(StudyWrapperBase):
                 )
 
         return result
+
+    def _build_variant_row(self, v, column_descs, **kwargs):
+        print("column descs:", column_descs)
+
+        row_variant = []
+        for col_desc in column_descs:
+            try:
+                col_id = col_desc["id"]
+                col_source = col_desc["source"]
+                col_format = col_desc.get("format")
+
+                print(f"\tcol_id     >", col_id)
+                print(f"\tcol_source >", col_source)
+                print(f"\tcol_format >", col_format)
+                if col_format is None:
+                    def col_formatter(val):
+                        if val is None:
+                            return "-"
+                        else:
+                            return str(val)
+                else:
+                    def col_formatter(val):
+                        if val is None:
+                            return "-"
+                        try:
+                            return col_format % val
+                        except:
+                            logging.exception(f'error build variant: {v}')
+                            traceback.print_stack()
+                            return "-"
+
+                if col_source == "pedigree":
+                    person_set_collection = \
+                        kwargs.get("person_set_collection")
+                    row_variant.append(
+                        self.generate_pedigree(
+                            v, person_set_collection
+                        )
+                    )
+                else:
+                    if col_source in self.SPECIAL_ATTRS:
+                        attribute = self.SPECIAL_ATTRS[col_source](v)
+                    else:
+                        attribute = v.get_attribute(col_source)
+
+                    print("\t>", col_source, ":", attribute)
+                    if all([a == attribute[0] for a in attribute]):
+                        attribute = [attribute[0]]
+
+                    print("\t\t>>attribute:", attribute)
+                    attribute = list(map(col_formatter, attribute))
+                    print("\t\t>>formatted:", attribute)
+
+                    row_variant.append(",".join([str(a) for a in attribute]))
+
+            except (AttributeError, KeyError, Exception):
+                logging.exception(f'error build variant: {v}')
+                traceback.print_stack()
+                row_variant.append([""])
+                raise
+
+        return row_variant
 
     def _query_variants_rows_iterator(
             self, sources, person_set_collection, **kwargs):
@@ -341,41 +427,22 @@ class StudyWrapper(StudyWrapperBase):
                 return svid in summary_variant_ids
 
         for v in self.query_variants(**kwargs):
+            matched = True
             for aa in v.matched_alleles:
+                print("\t>>allele:", aa, aa.attributes)
                 assert not aa.is_reference_allele
                 if not filter_allele(aa):
-                    continue
+                    matched = False
+                    break
+            if not matched:
+                continue
 
-                row_variant = []
-                for source in sources:
-                    try:
-                        if source in self.SPECIAL_ATTRS:
-                            row_variant.append(
-                                self.SPECIAL_ATTRS[source](aa))
-                        elif source == "pedigree":
-                            row_variant.append(
-                                self.generate_pedigree(
-                                    aa, person_set_collection
-                                )
-                            )
-                        else:
-                            attribute = aa.get_attribute(source, "-")
+            row_variant = []
+            row_variant = self._build_variant_row(
+                v, sources, person_set_collection=person_set_collection)
 
-                            if not isinstance(attribute, str) and \
-                                    not isinstance(attribute, list):
-                                if attribute is None or math.isnan(attribute):
-                                    attribute = "-"
-                                elif math.isinf(attribute):
-                                    attribute = "inf"
-                            if attribute == "":
-                                attribute = "-"
-                            row_variant.append(attribute)
-
-                    except (AttributeError, KeyError):
-                        traceback.print_exc()
-                        row_variant.append("")
-
-                yield row_variant
+            print(v, row_variant)
+            yield row_variant
 
     def get_variant_web_rows(self, query, sources, max_variants_count=10000):
         person_set_collection_id = query.get("peopleGroup", {}).get(
@@ -412,7 +479,7 @@ class StudyWrapper(StudyWrapperBase):
     def get_variants_wdae_preview(self, query, max_variants_count=10000):
         variants_data = self.get_variant_web_rows(
             query,
-            self.preview_sources,
+            self.preview_descs,
             max_variants_count=max_variants_count,
         )
 
@@ -420,7 +487,7 @@ class StudyWrapper(StudyWrapperBase):
 
     def get_variants_wdae_download(self, query, max_variants_count=10000):
         rows = self.get_variant_web_rows(
-            query, self.download_sources, max_variants_count=max_variants_count
+            query, self.download_descs, max_variants_count=max_variants_count
         )
 
         wdae_download = map(
@@ -620,10 +687,11 @@ class StudyWrapper(StudyWrapperBase):
             else:
                 del kwargs["studyFilters"]
 
-        if "phenoFilters" in kwargs:
-            kwargs = self._transform_pheno_filters(kwargs)
-            if kwargs is None:
-                return
+        if "personFilters" in kwargs:
+            kwargs = self._transform_person_filters(kwargs)
+
+        if "familyFilters" in kwargs:
+            kwargs = self._transform_family_filters(kwargs)
 
         if "person_ids" in kwargs:
             kwargs["person_ids"] = list(kwargs["person_ids"])
@@ -665,35 +733,11 @@ class StudyWrapper(StudyWrapperBase):
         variants_with_additional_cols = self._add_additional_columns_summary(
             variants_from_studies)
         for v in variants_with_additional_cols:
-            for aa in v.alt_alleles:
-                assert not aa.is_reference_allele
+            row_variant = self._build_variant_row(
+                v, self.summary_preview_descs)
 
-                row_variant = []
-                for source in self.summary_preview_sources:
-                    try:
-                        if source in self.SPECIAL_ATTRS:
-                            row_variant.append(self.SPECIAL_ATTRS[source](aa))
-                        elif source == "pedigree":
-                            pass
-                        else:
-                            attribute = aa.get_attribute(source, "-")
-
-                            if not isinstance(attribute, str) and \
-                                    not isinstance(attribute, list):
-                                if attribute is None or math.isnan(attribute):
-                                    attribute = "-"
-                                elif math.isinf(attribute):
-                                    attribute = "inf"
-                            if attribute == "":
-                                attribute = "-"
-
-                            row_variant.append(attribute)
-
-                    except (AttributeError, KeyError):
-                        traceback.print_exc()
-                        row_variant.append("")
-
-                yield row_variant
+            print("row_variant:", row_variant)
+            yield row_variant
 
     STREAMING_CHUNK_SIZE = 20
 
@@ -711,16 +755,13 @@ class StudyWrapper(StudyWrapperBase):
                 )
 
                 for allele in variant.alt_alleles:
-                    roles_values = self._get_all_roles_values(allele)
                     gene_weights_values = self._get_gene_weights_values(allele)
+                    print("gene_weights_values:", gene_weights_values)
+                    allele.update_attributes(gene_weights_values)
 
                     if pheno_values:
+                        print("pheno_values:", pheno_values)
                         allele.update_attributes(pheno_values)
-
-                    if roles_values:
-                        allele.update_attributes(roles_values)
-
-                    allele.update_attributes(gene_weights_values)
 
                 yield variant
 
@@ -750,7 +791,7 @@ class StudyWrapper(StudyWrapperBase):
             assert len(variant_pheno_value_df.columns) == 1
             column = variant_pheno_value_df.columns[0]
 
-            pheno_values[pheno_column_name] = list(
+            pheno_values[pheno_column_name] = ",".join(
                 variant_pheno_value_df[column].map(str).tolist()
             )
 
@@ -782,7 +823,7 @@ class StudyWrapper(StudyWrapperBase):
         result = list(zip(pheno_column_dfs, pheno_column_names))
         return result
 
-    def _get_gene_weights_values(self, allele):
+    def _get_gene_weights_values(self, allele, default=None):
         if not self.gene_weight_column_sources:
             return {}
         genes = gene_effect_get_genes(allele.effects).split(";")
@@ -796,24 +837,12 @@ class StudyWrapper(StudyWrapperBase):
             gene_weights = self.gene_weights_db[gwc]
             if gene != "":
                 gene_weights_values[gwc] = gene_weights._to_dict().get(
-                    gene, ""
+                    gene, default
                 )
             else:
-                gene_weights_values[gwc] = ""
+                gene_weights_values[gwc] = default
 
         return gene_weights_values
-
-    def _get_all_roles_values(self, allele):
-        if not self.in_role_columns:
-            return None
-
-        result = {}
-        for roles_value in self.in_role_columns.values():
-            result[roles_value.destination] = "".join(
-                self._get_roles_value(allele, roles_value.roles)
-            )
-
-        return result
 
     def _get_roles_value(self, allele, roles):
         result = []
@@ -1139,83 +1168,93 @@ class StudyWrapper(StudyWrapperBase):
 
         self._add_roles_to_query(OrNode(roles_query), kwargs)
 
-    def _get_pheno_filter_constraints(self, pheno_filter):
-        measure_type = MeasureType.from_str(pheno_filter["measureType"])
-        selection = pheno_filter["selection"]
-        if measure_type in (MeasureType.continuous, MeasureType.ordinal):
-            return tuple([selection["min"], selection["max"]])
-        return set(selection["selection"])
+    def _transform_pedigree_filter_to_ids(self, pedigree_filter):
+        column = pedigree_filter["source"]
+        value = set(pedigree_filter["selection"]["selection"])
+        ped_df = self.families.ped_df.loc[
+            self.families.ped_df[column].astype(str).isin(value)
+        ]
+        if pedigree_filter.get("role"):
+            # Handle family filter
+            ped_df = ped_df.loc[
+                ped_df["role"].astype(str) == pedigree_filter["role"]
+            ]
+            ids = set(
+                self.families.persons[person_id].family.family_id
+                for person_id in ped_df["person_id"]
+            )
+        else:
+            # Handle person filter
+            ids = set(
+                person_id for person_id in ped_df["person_id"]
+                if person_id in self.families.persons
+            )
+        return ids
 
-    def _transform_pheno_filters_to_family_ids(self, pheno_filter_args):
-        family_ids = list()
-        person_ids = list()
-
-        for pheno_filter in pheno_filter_args:
-            if not self.phenotype_data.has_measure(pheno_filter["measure"]):
-                continue
-
-            pheno_filter_type = MeasureType.from_str(
-                pheno_filter["measureType"])
-
-            pheno_constraints = self._get_pheno_filter_constraints(
-                pheno_filter)
-
-            if "role" in pheno_filter:
-                roles = [pheno_filter["role"]]
-            else:
-                roles = None
-            persons = set([
-                p.person_id
-                for p in self.families.persons_with_roles(roles=roles)
-            ])
-            measure_df = self.phenotype_data.get_measure_values_df(
-                pheno_filter["measure"], person_ids=persons)
-
-            filter = self.pheno_filter_builder.make_filter(
-                pheno_filter["measure"], pheno_constraints, pheno_filter_type)
-            measure_df = filter.apply(measure_df)
-            if roles:
-                family_ids.append(set(
-                    self.families.persons[person_id].family.family_id
-                    for person_id in measure_df["person_id"]
-                    if person_id in self.families.persons
-                ))
-            else:
-                person_ids.append(set([
-                    person_id for person_id in measure_df["person_id"]
-                    if person_id in persons]))
-        family_ids = reduce(
-            set.intersection, family_ids) if family_ids else None
-        person_ids = reduce(
-            set.intersection, person_ids) if person_ids else None
-
-        return family_ids, person_ids
-
-    def _transform_pheno_filters(self, kwargs):
-        pheno_filter_args = kwargs.pop("phenoFilters")
-
-        assert isinstance(pheno_filter_args, list)
-        assert self.phenotype_data
-
-        matching_family_ids, matching_person_ids = \
-            self._transform_pheno_filters_to_family_ids(pheno_filter_args)
-
-        if matching_family_ids is not None:
-            if "family_ids" in kwargs:
-                kwarg_family_ids = kwargs.pop("family_ids")
-                matching_family_ids = set.intersection(
-                    matching_family_ids, set(kwarg_family_ids)
+    def _transform_pheno_filter_to_ids(self, pheno_filter_conf):
+        pheno_filter = self.pheno_filter_builder.make_filter(pheno_filter_conf)
+        if pheno_filter_conf.get("role"):
+            # Handle family filter
+            persons = set(
+                p.person_id for p in self.families.persons_with_roles(
+                    roles=[pheno_filter_conf["role"]]
                 )
-            kwargs["family_ids"] = matching_family_ids
+            )
+            measure_df = pheno_filter.apply(
+                self.phenotype_data.get_measure_values_df(
+                    pheno_filter_conf["source"],
+                    person_ids=persons,
+                )
+            )
+            ids = set(
+                self.families.persons[person_id].family.family_id
+                for person_id in measure_df["person_id"]
+            )
+        else:
+            # Handle person filter
+            measure_df = pheno_filter.apply(
+                self.phenotype_data.get_measure_values_df(
+                    pheno_filter_conf["source"]
+                )
+            )
+            ids = set(
+                person_id for person_id in measure_df["person_id"]
+                if person_id in self.families.persons
+            )
+        return ids
 
+    def _transform_filters_to_ids(self, filters: List[dict]) -> Set[str]:
+        result = list()
+        for filter_conf in filters:
+            if filter_conf["from"] == "phenodb":
+                ids = self._transform_pheno_filter_to_ids(filter_conf)
+            else:
+                ids = self._transform_pedigree_filter_to_ids(filter_conf)
+            result.append(ids)
+        return reduce(set.intersection, result)
+
+    def _transform_person_filters(self, kwargs):
+        matching_person_ids = self._transform_filters_to_ids(
+            kwargs.pop("personFilters")
+        )
         if matching_person_ids is not None:
             if "person_ids" in kwargs:
-                kwarg_person_ids = kwargs.pop("person_ids")
                 matching_person_ids = set.intersection(
-                    matching_person_ids, set(kwarg_person_ids)
+                    matching_person_ids, set(kwargs.pop("person_ids"))
                 )
             kwargs["person_ids"] = matching_person_ids
+        return kwargs
 
+    def _transform_family_filters(self, kwargs):
+        matching_family_ids = self._transform_filters_to_ids(
+            kwargs.pop("familyFilters")
+        )
+        if matching_family_ids is not None:
+            if "family_ids" in kwargs:
+                matching_family_ids = set.intersection(
+                    matching_family_ids, set(kwargs.pop("family_ids"))
+                )
+            kwargs["family_ids"] = matching_family_ids
         return kwargs
 
     @staticmethod
@@ -1321,7 +1360,7 @@ class StudyWrapper(StudyWrapperBase):
         result["study_names"] = None
         if result["studies"] is not None:
             logger.debug(f"found studies in {self.config.id}")
-            studyNames = []
+            study_names = []
             for studyId in result["studies"]:
                 wrapper = gpf_instance.get_wdae_wrapper(studyId)
                 name = (
@@ -1329,8 +1368,8 @@ class StudyWrapper(StudyWrapperBase):
                     if wrapper.config.name is not None
                     else wrapper.config.id
                 )
-                studyNames.append(name)
-                result["study_names"] = studyNames
+                study_names.append(name)
+                result["study_names"] = study_names
 
         return result
 
@@ -1405,14 +1444,13 @@ class RemoteStudyWrapper(StudyWrapperBase):
     def get_variants_wdae_download(self, query, max_variants_count=10000):
         raise NotImplementedError
 
+    def get_summary_variants_wdae_preview(
+            self, query, max_variants_count=10000):
+        raise NotImplementedError
+
+    def get_summary_variants_wdae_download(
+            self, query, max_variants_count=10000):
+        raise NotImplementedError
+
     def build_genotype_data_group_description(self, gpf_instance):
         return self.config.to_dict()
-
-
-# rsw = RemoteStudyWrapper("AGRE_WG_859", "localhost", "api/v3", 8000)
-# print(rsw.config)
-# response = rsw.get_variants_wdae_preview(dict())
-# print(response.status_code)
-# print(response.headers)
-# # print(response.content)
-# print(response.json())

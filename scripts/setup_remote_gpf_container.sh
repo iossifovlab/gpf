@@ -2,6 +2,9 @@
 
 # set -e
 
+
+
+
 if [[ -z $WD ]]; then
     SCRIPT_LOCATION=$(readlink -f "$0")
     SCRIPT_DIR=$(dirname "${SCRIPT_LOCATION}")
@@ -13,7 +16,7 @@ export GPF_SERIES=$(cat ${WD}/VERSION |  sed -r "s/\.([devrc1-9]+)$//g")
 echo "GPF_SERIES=${GPF_SERIES}"
 
 
-docker pull seqpipe/seqpipe-gpf-conda
+# docker pull seqpipe/seqpipe-gpf-conda
 
 if [[ ! -d $WD/gpf_remote ]]; then
     if [[ -d $WD/data-hg19-startup ]]; then

@@ -608,7 +608,7 @@ class AlleleParquetSerializer:
         write_int8(stream, len(self.extra_attributes))
         for prop in self.extra_attributes:
             write_string(stream, prop)
-            write_string(stream, variant.get_attribute(prop)[1])
+            write_string(stream, variant.get_attribute(prop)[0])
 
         stream.seek(0)
         output = stream.read()
