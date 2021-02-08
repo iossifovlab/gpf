@@ -4,7 +4,7 @@ Created on Mar 30, 2018
 @author: lubo
 """
 import pytest
-from dae.variants.variant import VariantDetail
+from dae.variants.variant import VariantDetails
 
 
 @pytest.mark.parametrize(
@@ -31,7 +31,7 @@ from dae.variants.variant import VariantDetail
 def test_variant_details(variant, position):
     print(variant)
     [chrom, pos, ref, alt] = variant.split(":")
-    detail = VariantDetail.from_vcf(chrom, int(pos), ref, alt)
+    detail = VariantDetails.from_vcf(chrom, int(pos), ref, alt)
     print(detail)
 
     assert detail.cshl_position == position
