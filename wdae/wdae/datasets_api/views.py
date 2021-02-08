@@ -6,7 +6,7 @@ from query_base.query_base import QueryBaseView
 
 from .models import Dataset
 from groups_api.serializers import GroupSerializer
-from datasets_api.permissions import get_wdae_parents
+from datasets_api.permissions import get_wdae_parents, get_genotype_data
 
 
 class DatasetView(QueryBaseView):
@@ -19,10 +19,12 @@ class DatasetView(QueryBaseView):
             "datasets_api.view", dataset_object
         )
 
+        genotype_data = get_genotype_data(dataset["id"])
         # if the dataset is a data group, access to at least one
         # of its studies grants access to the group as well (although limited)
         if not dataset["access_rights"] and dataset.get("studies"):
-            for study_id in dataset["studies"]:
+
+            for study_id in genotype_data.studies:
                 study_perm = user.has_perm(
                     "datasets_api.view",
                     Dataset.objects.get(dataset_id=study_id)
@@ -127,8 +129,8 @@ class DatasetDetailsView(QueryBaseView):
 
         dataset_details = {
             "hasDenovo": has_denovo,
-            "genome": genotype_data.config.genome,
-            "chrPrefix": genotype_data.config.chr_prefix,
+            "genome": genotype_data.genome,
+            "chrPrefix": genotype_data.chr_prefix,
         }
         return Response(dataset_details)
 

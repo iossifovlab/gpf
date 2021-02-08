@@ -2,16 +2,12 @@ import pytest
 
 from box import Box
 
-from django.db.models import Count, Q
 from django.contrib.auth import get_user_model
 
 from django.contrib.auth.models import Group
 
-from guardian.shortcuts import get_perms, get_groups_with_perms, \
-    get_user_perms, get_group_perms, get_objects_for_user, \
-    get_objects_for_group
+from guardian.shortcuts import get_groups_with_perms
 
-from guardian.utils import get_user_obj_perms_model, get_group_obj_perms_model
 from dae.studies.study import GenotypeDataGroup
 from studies.study_wrapper import StudyWrapper
 from datasets_api.models import Dataset

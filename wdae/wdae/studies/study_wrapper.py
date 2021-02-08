@@ -1,4 +1,3 @@
-import math
 import itertools
 import traceback
 import json
@@ -186,10 +185,9 @@ class StudyWrapper(StudyWrapperBase):
                             scol = slot.to_dict()
                             scol["id"] = scol_id
                             scol["source"] = get_source(slot)
-                
+
                             columns.append(scol_id)
                             descs.append(scol)
-
 
             inner(
                 genotype_browser_config.genotype,
@@ -211,7 +209,7 @@ class StudyWrapper(StudyWrapperBase):
 
             self.download_columns, \
                 self.download_descs = \
-                    unpack_columns(download_column_names, use_id=False)
+                unpack_columns(download_column_names, use_id=False)
             if summary_preview_column_names and \
                     len(summary_preview_column_names):
                 self.summary_preview_columns, self.summary_preview_descs = \
@@ -230,8 +228,8 @@ class StudyWrapper(StudyWrapperBase):
 
         else:
             self.preview_columns, self.preview_descs = [], []
-            self.download_columns, self.download_descs= [], []
-            self.summary_preview_columns, self.summary_preview_descs= \
+            self.download_columns, self.download_descs = [], []
+            self.summary_preview_columns, self.summary_preview_descs = \
                 [], []
             self.summary_download_columns, self.summary_download_descs = \
                 [], []
@@ -268,7 +266,7 @@ class StudyWrapper(StudyWrapperBase):
     }
 
     SPECIAL_ATTRS_FORMAT = {
-        "family": 
+        "family":
         lambda v: [v.family_id],
 
         "location":
@@ -329,7 +327,7 @@ class StudyWrapper(StudyWrapperBase):
                     self._get_wdae_member(
                         member, person_set_collection,
                         "/".join(
-                            [str(v) 
+                            [str(v)
                              for v in filter(
                                 lambda g: g != 0, genotype[index])
                              ])
@@ -356,13 +354,9 @@ class StudyWrapper(StudyWrapperBase):
         row_variant = []
         for col_desc in column_descs:
             try:
-                col_id = col_desc["id"]
                 col_source = col_desc["source"]
                 col_format = col_desc.get("format")
 
-                print(f"\tcol_id     >", col_id)
-                print(f"\tcol_source >", col_source)
-                print(f"\tcol_format >", col_format)
                 if col_format is None:
                     def col_formatter(val):
                         if val is None:
@@ -375,7 +369,7 @@ class StudyWrapper(StudyWrapperBase):
                             return "-"
                         try:
                             return col_format % val
-                        except:
+                        except Exception:
                             logging.exception(f'error build variant: {v}')
                             traceback.print_stack()
                             return "-"
@@ -1415,6 +1409,14 @@ class RemoteStudyWrapper(StudyWrapperBase):
                 map(
                     self.rest_client.get_remote_dataset_id,
                     config["parents"]
+                )
+            )
+
+        if config.get("studies"):
+            config["studies"] = list(
+                map(
+                    self.rest_client.get_remote_dataset_id,
+                    config["studies"]
                 )
             )
 
