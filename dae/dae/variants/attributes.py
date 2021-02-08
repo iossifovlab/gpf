@@ -348,19 +348,19 @@ class VariantDesc:
 
     def __repr__(self):
         if self.variant_type == VariantType.substitution:
-            return f"sub({self.ref}>{self.alt})"
+            return f"sub({self.ref}->{self.alt})"
         elif self.variant_type == VariantType.insertion:
             return f"ins({self.alt})"
         elif self.variant_type == VariantType.deletion:
             return f"del({self.length})"
         elif self.variant_type == VariantType.comp:
-            return f"comp({self.ref}>{self.alt})"
+            return f"comp({self.ref}->{self.alt})"
         elif self.variant_type == VariantType.cnv_p:
             return "CNV+"
         elif self.variant_type == VariantType.cnv_m:
             return "CNV-"
         elif self.variant_type == VariantType.tandem_repeat:
-            return f"TR({self.ref}x{self.unit}>{self.alt})"
+            return f"TR({self.ref}x{self.unit}->{self.alt})"
 
     @staticmethod
     def combine(variant_descs):
