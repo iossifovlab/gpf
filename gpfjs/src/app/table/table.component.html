@@ -1,5 +1,6 @@
-<div *ngIf="showFloatingHeader" class="table-header-sticky-div" [style.min-width.px]="calculateMinWidth(columnsChildren)">
+<div *ngIf="showFloatingHeader" class="table-header-sticky-div">
     <gpf-table-view-header
+        style="display: table-header-group;"
         [columns]="columnsChildren"
         [(sortingInfo)]="sortingInfo">
     </gpf-table-view-header>
