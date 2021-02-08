@@ -27,7 +27,7 @@ from dae.utils.effect_utils import (
 
 from dae.utils.regions import Region
 from dae.pheno_tool.pheno_common import PhenoFilterBuilder
-from dae.variants.attributes import Role, Inheritance
+from dae.variants.attributes import Role, Inheritance, VariantDesc
 
 from dae.backends.attributes_query import (
     role_query,
@@ -271,10 +271,10 @@ class StudyWrapper(StudyWrapperBase):
         "family": 
         lambda v: [v.family_id],
 
-        "location": 
+        "location":
         lambda v: v.cshl_location,
 
-        "variant": 
+        "variant":
         lambda v: v.cshl_variant,
 
         "genotype":
@@ -332,7 +332,7 @@ class StudyWrapper(StudyWrapperBase):
                             [str(v) 
                              for v in filter(
                                 lambda g: g != 0, genotype[index])
-                            ])
+                             ])
                     )
                 )
             except IndexError:
@@ -388,6 +388,14 @@ class StudyWrapper(StudyWrapperBase):
                             v, person_set_collection
                         )
                     )
+                elif col_source == "variant":
+                    attribute = [
+                        aa.details.variant_desc for aa in v.alt_alleles]
+                    attribute = VariantDesc.combine(attribute)
+                    print("\t\t>>attribute:", attribute)
+
+                    row_variant.append(",".join(attribute))
+
                 else:
                     if col_source in self.SPECIAL_ATTRS:
                         attribute = self.SPECIAL_ATTRS[col_source](v)
