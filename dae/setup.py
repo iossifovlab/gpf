@@ -38,6 +38,7 @@ setuptools.setup(
         "dae/pheno/prepare/individuals2ped.py",
         "dae/tools/genotype_data_tool.py",
         "dae/tools/vcfinfo_extractor.py",
+        "dae/tools/generate_autism_gene_profile.py",
     ],
     entry_points="""
     [console_scripts]
