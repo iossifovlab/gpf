@@ -1,5 +1,4 @@
-import { Component, Input, OnChanges, OnInit } from '@angular/core';
-import { DatasetsService } from '../datasets/datasets.service';
+import { Component, Input, OnChanges } from '@angular/core';
 import { sprintf } from 'sprintf-js';
 
 @Component({
@@ -7,32 +6,18 @@ import { sprintf } from 'sprintf-js';
   templateUrl: './genotype-preview-field.component.html',
   styleUrls: ['./genotype-preview-field.component.css']
 })
-export class GenotypePreviewFieldComponent implements OnChanges, OnInit {
+export class GenotypePreviewFieldComponent implements OnChanges {
   @Input() value: any;
   @Input() field: string;
   @Input() format: string;
+  @Input() genome: string;
 
   formattedValue: string;
-  private UCSCLink: string;
 
-  constructor(
-    private datasetsService: DatasetsService,
-  ) { }
+  constructor() { }
 
   ngOnChanges() {
     this.formattedValue = this.formatValue();
-  }
-
-  ngOnInit() {
-    this.datasetsService.getDatasetDetails(this.datasetsService.getSelectedDatasetId())
-      .subscribe(res => {
-        if (res.genome === 'hg19') {
-          this.UCSCLink = `http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg19&position=chr${this.value}`;
-        } else if (res.genome === 'hg38') {
-          this.UCSCLink = `http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg38&position=${this.value}`;
-        }
-      }
-    );
   }
 
   formatValue() {
@@ -49,5 +34,15 @@ export class GenotypePreviewFieldComponent implements OnChanges, OnInit {
         return this.value;
       }
       return '';
+  }
+
+  getUCSCLink(): string {
+    let link: string;
+    if (this.genome === 'hg19') {
+      link = `http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg19&position=chr${this.value}`;
+    } else if (this.genome === 'hg38') {
+      link = `http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg38&position=${this.value}`;
+    }
+    return link;
   }
 }

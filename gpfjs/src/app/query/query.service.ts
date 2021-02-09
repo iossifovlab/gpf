@@ -12,6 +12,7 @@ import { QueryData } from './query';
 import { ConfigService } from '../config/config.service';
 import { GenotypePreview, GenotypePreviewInfo, GenotypePreviewVariantsArray } from '../genotype-preview-model/genotype-preview';
 import { GeneViewSummaryVariantsArray } from '../gene-view/gene';
+import { DatasetsService } from 'app/datasets/datasets.service';
 
 @Injectable()
 export class QueryService {
@@ -36,7 +37,8 @@ export class QueryService {
     private location: Location,
     private router: Router,
     private http: HttpClient,
-    private config: ConfigService
+    private config: ConfigService,
+    private datasetsService: DatasetsService,
   ) { }
 
   private parseGenotypePreviewInfoResponse(response: Response): GenotypePreviewInfo {
@@ -127,12 +129,20 @@ export class QueryService {
     const genotypePreviewVariantsArray = new GenotypePreviewVariantsArray();
     const queryFilter = { ...filter };
     queryFilter['maxVariantsCount'] = maxVariantsCount;
-
-    this.streamPost(this.genotypePreviewVariantsUrl, queryFilter).subscribe(variant => {
-      this.parseGenotypePreviewVariantsResponse(variant, genotypePreviewInfo, genotypePreviewVariantsArray);
-      if (loadingService) {
-        loadingService.setLoadingStop(); // Stop the loading overlay when at least one variant has been loaded
-      }
+    this.datasetsService.getDatasetDetails(filter['datasetId']).subscribe(datasetDetails => {
+      this.streamPost(this.genotypePreviewVariantsUrl, queryFilter).subscribe(variant => {
+        this.parseGenotypePreviewVariantsResponse(variant, genotypePreviewInfo, genotypePreviewVariantsArray);
+        if (variant) {
+          // Attach the genome version to each variant
+          // This is done so that the table can construct the correct UCSC link for the variant
+          genotypePreviewVariantsArray.genotypePreviews[
+            genotypePreviewVariantsArray.genotypePreviews.length - 1
+          ].data.set('genome', datasetDetails['genome']);
+        }
+        if (loadingService) {
+          loadingService.setLoadingStop(); // Stop the loading overlay when at least one variant has been loaded
+        }
+      });
     });
 
     return genotypePreviewVariantsArray;
