@@ -28,7 +28,7 @@ CORS_ALLOW_CREDENTIALS = True
 REMOTES = [
     {
         "id": "REMOTE1",
-        "host": "localhost",
+        "host": "gpfremote",
         "base_url": "api/v3",
         "port": "21010",
         "user": "admin@iossifovlab.com",
