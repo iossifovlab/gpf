@@ -25,7 +25,7 @@ def test_agpdb_tables_building(temp_dbfile, agp_gpf_instance):
     ) == set()
     assert set(table_columns["gene_symbol_sets"]).difference(
         set([
-            "id", "symbol_id", "set_id"
+            "id", "symbol_id", "set_id", "present"
         ])
     ) == set()
     assert set(table_columns["autism_scores"]).difference(
