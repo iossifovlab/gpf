@@ -2,7 +2,6 @@ import { Component, HostListener, OnInit, ViewChild } from '@angular/core';
 import { NgbNav } from '@ng-bootstrap/ng-bootstrap';
 import { AutismGeneToolConfig } from 'app/autism-gene-profiles/autism-gene-profile';
 import { AutismGeneProfilesService } from 'app/autism-gene-profiles/autism-gene-profiles.service';
-import { Observable } from 'rxjs';
 
 @Component({
   selector: 'gpf-autism-gene-profiles-block',
@@ -20,8 +19,8 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
       this.closeCurrentTab();
     }
 
-    if (Number($event.key) || Number($event.key) === 0) {
-      this.openTabByNumericIndex(Number($event.key));
+    if (Number($event.key) || $event.key === '0' || $event.key === '`') {
+      this.openTabByKey($event.key);
     }
   }
 
@@ -63,17 +62,17 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
     }
   }
 
-  openTabByNumericIndex(index: number) {
+  openTabByKey(key) {
     if (this.geneTabs.size === 0) {
       return;
     }
 
-    if (index === 0) {
+    if (key === '0') {
       this.nav.select([...this.geneTabs][this.geneTabs.size - 1]);
-    } else if (index === 1) {
+    } else if (key === '1' || key === '`') {
       this.nav.select('autismGenesTool');
-    } else if (index - 1 <= this.geneTabs.size) {
-      this.nav.select([...this.geneTabs][index - 2]);
+    } else if (Number(key) - 1 <= this.geneTabs.size) {
+      this.nav.select([...this.geneTabs][Number(key) - 2]);
     }
   }
 }
