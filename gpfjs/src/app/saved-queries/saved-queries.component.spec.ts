@@ -3,6 +3,7 @@ import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { NgbNavModule } from '@ng-bootstrap/ng-bootstrap';
 import { ConfigService } from 'app/config/config.service';
+import { DatasetsService } from 'app/datasets/datasets.service';
 import { QueryService } from 'app/query/query.service';
 import { SavedQueriesTableComponent } from 'app/saved-queries-table/saved-queries-table.component';
 import { GpfTableColumnComponent } from 'app/table/component/column.component';
@@ -35,7 +36,9 @@ describe('SavedQueriesComponent', () => {
         GpfTableHeaderCellComponent,
         GpfTableHeaderComponent
       ],
-      providers: [QueryService, ConfigService, UsersService, ResizeService],
+      providers: [
+        QueryService, ConfigService, UsersService, ResizeService, DatasetsService
+      ],
       imports: [RouterTestingModule, HttpClientTestingModule, NgbNavModule]
     })
     .compileComponents();
