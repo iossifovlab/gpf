@@ -1,10 +1,9 @@
-import math
 import itertools
 import traceback
 import json
 import logging
 
-from typing import List, Set
+from typing import List, Set, Dict
 
 from functools import reduce
 from abc import ABC, abstractmethod
@@ -28,6 +27,7 @@ from dae.utils.effect_utils import (
 from dae.utils.regions import Region
 from dae.pheno_tool.pheno_common import PhenoFilterBuilder
 from dae.variants.attributes import Role, Inheritance
+from dae.variants.family_variant import FamilyVariant
 
 from dae.backends.attributes_query import (
     role_query,
@@ -190,7 +190,6 @@ class StudyWrapper(StudyWrapperBase):
                             columns.append(scol_id)
                             descs.append(scol)
 
-
             inner(
                 genotype_browser_config.genotype,
                 lambda x: f"{x['source']}",
@@ -209,9 +208,9 @@ class StudyWrapper(StudyWrapperBase):
             self.preview_columns, self.preview_descs = \
                 unpack_columns(preview_column_names)
 
-            self.download_columns, \
-                self.download_descs = \
-                    unpack_columns(download_column_names, use_id=False)
+            self.download_columns, self.download_descs = unpack_columns(
+                download_column_names, use_id=False
+            )
             if summary_preview_column_names and \
                     len(summary_preview_column_names):
                 self.summary_preview_columns, self.summary_preview_descs = \
@@ -230,8 +229,8 @@ class StudyWrapper(StudyWrapperBase):
 
         else:
             self.preview_columns, self.preview_descs = [], []
-            self.download_columns, self.download_descs= [], []
-            self.summary_preview_columns, self.summary_preview_descs= \
+            self.download_columns, self.download_descs = [], []
+            self.summary_preview_columns, self.summary_preview_descs = \
                 [], []
             self.summary_download_columns, self.summary_download_descs = \
                 [], []
@@ -295,12 +294,30 @@ class StudyWrapper(StudyWrapperBase):
         lambda v: [gd2str(e) for e in v.effects],
 
         "best_st":
-        lambda v: mat2str(v.best_state),
+        lambda v: [mat2str(v.best_state)],
 
         "family_structure":
         lambda v: members_in_order_get_family_structure(
             v.members_in_order
         ),
+
+        "family_person_ids": lambda v: list(map(
+            lambda m: m.person_id, v.members_in_order
+        )),
+
+        "carrier_person_ids": lambda v: list(map(
+            lambda aa: list(filter(None, aa.variant_in_members)), v.alt_alleles
+        )),
+
+        "carrier_person_attributes": lambda v: list(map(
+            lambda aa: list(filter(None, members_in_order_get_family_structure(
+                aa.variant_in_members_objects
+            ))), v.alt_alleles
+        )),
+
+        "inheritance_type": lambda v: list(map(
+            lambda aa: aa.inheritance_in_members, v.alt_alleles
+        )),
 
         "is_denovo":
         lambda v: bool(
@@ -350,7 +367,7 @@ class StudyWrapper(StudyWrapperBase):
 
         return result
 
-    def _build_variant_row(self, v, column_descs, **kwargs):
+    def _build_variant_row(self, v: FamilyVariant, column_descs: List[Dict], **kwargs):
         print("column descs:", column_descs)
 
         row_variant = []
@@ -360,9 +377,9 @@ class StudyWrapper(StudyWrapperBase):
                 col_source = col_desc["source"]
                 col_format = col_desc.get("format")
 
-                print(f"\tcol_id     >", col_id)
-                print(f"\tcol_source >", col_source)
-                print(f"\tcol_format >", col_format)
+                print("\tcol_id     >", col_id)
+                print("\tcol_source >", col_source)
+                print("\tcol_format >", col_format)
                 if col_format is None:
                     def col_formatter(val):
                         if val is None:
@@ -388,6 +405,19 @@ class StudyWrapper(StudyWrapperBase):
                             v, person_set_collection
                         )
                     )
+                elif col_source == "family_phenotypes":
+                    phenotypes = ':'.join(self.get_persons_phenotypes(list(map(
+                        lambda m: m.person_id, v.members_in_order
+                    ))))
+                    row_variant.append(phenotypes)
+                elif col_source == "carrier_phenotypes":
+                    phenotypes = list(map(
+                        lambda aa: ':'.join(self.get_persons_phenotypes(
+                            list(filter(None, aa.variant_in_members)))
+                        ),
+                        v.alt_alleles
+                    ))
+                    row_variant.append(phenotypes)
                 else:
                     if col_source in self.SPECIAL_ATTRS:
                         attribute = self.SPECIAL_ATTRS[col_source](v)
@@ -1389,6 +1419,13 @@ class StudyWrapper(StudyWrapperBase):
             best_st,
             0,
         ]
+
+    def get_persons_phenotypes(self, person_ids: List[str]):
+        result = list()
+        collection = self.person_set_collections["phenotype"]
+        for pid in person_ids:
+            result.append(collection.get_person_set_of_person(pid).id)
+        return result
 
 
 class RemoteStudyWrapper(StudyWrapperBase):
