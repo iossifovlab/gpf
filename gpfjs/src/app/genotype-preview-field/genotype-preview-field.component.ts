@@ -11,6 +11,7 @@ export class GenotypePreviewFieldComponent implements OnChanges, OnInit {
   @Input() value: any;
   @Input() field: string;
   @Input() format: string;
+  @Input() genome: string;
 
   formattedValue: string;
   private UCSCLink: string;
@@ -21,18 +22,15 @@ export class GenotypePreviewFieldComponent implements OnChanges, OnInit {
 
   ngOnChanges() {
     this.formattedValue = this.formatValue();
+    console.log(this.genome)
+    if (this.genome) {
+      this.UCSCLink = this.getUCSCLink(this.genome);
+    }
   }
 
   ngOnInit() {
-    this.datasetsService.getDatasetDetails(this.datasetsService.getSelectedDatasetId())
-      .subscribe(res => {
-        if (res.genome === 'hg19') {
-          this.UCSCLink = `http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg19&position=chr${this.value}`;
-        } else if (res.genome === 'hg38') {
-          this.UCSCLink = `http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg38&position=${this.value}`;
-        }
-      }
-    );
+    // console.log(this.genome)
+    // this.UCSCLink = this.getUCSCLink(this.genome);
   }
 
   formatValue() {
@@ -49,5 +47,15 @@ export class GenotypePreviewFieldComponent implements OnChanges, OnInit {
         return this.value;
       }
       return '';
+  }
+
+  getUCSCLink(genome): string {
+    let link: string;
+    if (genome === 'hg19') {
+      link = `http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg19&position=chr${this.genome}`;
+    } else if (genome === 'hg38') {
+      link = `http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg38&position=${this.genome}`;
+    }
+    return link;
   }
 }
