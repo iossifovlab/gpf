@@ -2,6 +2,7 @@ import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { ConfigService } from 'app/config/config.service';
+import { DatasetsService } from 'app/datasets/datasets.service';
 import { QueryService } from 'app/query/query.service';
 import { GpfTableColumnComponent } from 'app/table/component/column.component';
 import { GpfTableContentComponent } from 'app/table/component/content.component';
@@ -12,6 +13,7 @@ import { GpfTableCellComponent } from 'app/table/view/cell.component';
 import { GpfTableEmptyCellComponent } from 'app/table/view/empty-cell.component';
 import { GpfTableHeaderCellComponent } from 'app/table/view/header/header-cell.component';
 import { GpfTableHeaderComponent } from 'app/table/view/header/header.component';
+import { UsersService } from 'app/users/users.service';
 
 import { SavedQueriesTableComponent } from './saved-queries-table.component';
 
@@ -32,7 +34,9 @@ describe('SavedQueriesTableComponent', () => {
         GpfTableEmptyCellComponent,
         GpfTableHeaderCellComponent,
       ],
-      providers: [QueryService, ConfigService, ResizeService],
+      providers: [
+        QueryService, ConfigService, ResizeService, DatasetsService, UsersService
+      ],
       imports: [RouterTestingModule, HttpClientTestingModule]
     })
     .compileComponents();
