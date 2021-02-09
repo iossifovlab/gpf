@@ -129,12 +129,15 @@ export class QueryService {
     const genotypePreviewVariantsArray = new GenotypePreviewVariantsArray();
     const queryFilter = { ...filter };
     queryFilter['maxVariantsCount'] = maxVariantsCount;
-
-    this.datasetsService.getDatasetDetails(this.datasetsService.getSelectedDatasetId()).subscribe(datasetDetails => {
+    this.datasetsService.getDatasetDetails(filter['datasetId']).subscribe(datasetDetails => {
       this.streamPost(this.genotypePreviewVariantsUrl, queryFilter).subscribe(variant => {
         this.parseGenotypePreviewVariantsResponse(variant, genotypePreviewInfo, genotypePreviewVariantsArray);
         if (variant) {
-          genotypePreviewVariantsArray.genotypePreviews[genotypePreviewVariantsArray.genotypePreviews.length - 1].data.set('genome', datasetDetails['genome']);
+          // Attach the genome version to each variant
+          // This is done so that the table can construct the correct UCSC link for the variant
+          genotypePreviewVariantsArray.genotypePreviews[
+            genotypePreviewVariantsArray.genotypePreviews.length - 1
+          ].data.set('genome', datasetDetails['genome']);
         }
         if (loadingService) {
           loadingService.setLoadingStop(); // Stop the loading overlay when at least one variant has been loaded

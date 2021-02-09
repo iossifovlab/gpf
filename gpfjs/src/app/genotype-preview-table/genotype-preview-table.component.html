@@ -25,7 +25,8 @@
                                 *gpfTableCellContent="let data"
                                 [field]="column.id + '.' + slot.name"
                                 [value]="data.get(column.id + '.' + slot.name)"
-                                [format]="slot.format">
+                                [format]="slot.format"
+                                [genome]="data.get('genome')">
                             </gpf-genotype-preview-field>
                         </gpf-table-subcontent>
                     </ng-template>
