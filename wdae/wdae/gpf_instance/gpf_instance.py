@@ -95,7 +95,6 @@ class WGPFInstance(GPFInstance):
                 self._study_wrappers[dataset_id] = wrapper
         else:
             wrapper = self._study_wrappers.get(dataset_id, None)
-        print("wdae wrapper:", dataset_id, type(wrapper))
 
         return wrapper
 

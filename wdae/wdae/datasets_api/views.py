@@ -127,8 +127,6 @@ class DatasetDetailsView(QueryBaseView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        print(genotype_data_config)
-
         has_denovo = genotype_data_config.get("has_denovo", False)
 
         dataset_details = {
