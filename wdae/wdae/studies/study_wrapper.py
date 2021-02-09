@@ -6,7 +6,7 @@ import logging
 from typing import List, Set
 
 from functools import reduce
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 
 from box import Box
 
@@ -37,7 +37,7 @@ from dae.backends.attributes_query import (
     OrNode,
     ContainsNode,
 )
-from dae.studies.study import GenotypeData, GenotypeDataGroup
+from dae.studies.study import GenotypeData
 
 from dae.configuration.gpf_config_parser import GPFConfigParser, FrozenBox
 from dae.person_sets import PersonSetCollection
@@ -134,7 +134,6 @@ class StudyWrapper(StudyWrapperBase):
         assert genotype_data_study is not None
 
         super(StudyWrapper, self).__init__(genotype_data_study.config)
-
 
         self.genotype_data_study = genotype_data_study
 
@@ -1495,7 +1494,7 @@ class RemoteStudyWrapper(StudyWrapperBase):
         studies = self.config["studies"]
         if not studies:
             return []
-        return [study["id"] for study in self.config["studies"]]
+        return studies
 
     def get_wdae_preview_info(self, query, max_variants_count=10000):
         query["datasetId"] = self._remote_study_id
@@ -1504,14 +1503,19 @@ class RemoteStudyWrapper(StudyWrapperBase):
     def get_variants_wdae_preview(self, query, max_variants_count=10000):
 
         study_filters = query.get("study_filters")
+        print("study_id:", self.study_id, "; study_filters:", study_filters)
         if study_filters is not None:
-            if self.study_id not in study_filters:
-                return
-            else:
-                del query["study_filters"]
+            del query["study_filters"]
+
+            # if self.study_id not in study_filters:
+            #     return
+            # else:
+            #     del query["study_filters"]
 
         query["datasetId"] = self._remote_study_id
         query["maxVariantsCount"] = max_variants_count
+        print("query:", query)
+
         response = self.rest_client.get_variants_preview(query)
         for line in response.iter_lines():
             if line:

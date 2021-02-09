@@ -32,7 +32,7 @@ class DenovoGeneSetCollectionFactory:
                 collection_id: collection_config
                 for collection_id, collection_config
                 in genotype_data_study.person_set_collection_configs.items()
-                if collection_id in 
+                if collection_id in
                 config.denovo_gene_sets.selected_person_set_collections
             }
         )
