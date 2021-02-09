@@ -117,20 +117,24 @@ class DatasetDetailsView(QueryBaseView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        genotype_data = self.gpf_instance.get_genotype_data(dataset_id)
+        # genotype_data = self.gpf_instance.get_wdae_wrapper(dataset_id)
 
-        if genotype_data is None:
+        genotype_data_config = \
+            self.gpf_instance.get_genotype_data_config(dataset_id)
+        if genotype_data_config is None:
             return Response(
                 {"error": f"No such dataset {dataset_id}"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        has_denovo = getattr(genotype_data, "has_denovo", False)
+        print(genotype_data_config)
+
+        has_denovo = genotype_data_config.get("has_denovo", False)
 
         dataset_details = {
             "hasDenovo": has_denovo,
-            "genome": genotype_data.genome,
-            "chrPrefix": genotype_data.chr_prefix,
+            "genome": genotype_data_config.genome,
+            "chrPrefix": genotype_data_config.chr_prefix,
         }
         return Response(dataset_details)
 

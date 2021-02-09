@@ -52,7 +52,7 @@ class EnrichmentBuilder(BaseEnrichmentBuilder):
         results["geneSymbols"] = list(self.gene_syms)
         results["peopleGroupId"] = self.person_set_collection.id
         results["peopleGroupValue"] = person_set.id
-        results["datasetId"] = self.dataset.id
+        results["datasetId"] = self.dataset.study_id
 
         return results
 

@@ -9,7 +9,7 @@ def test_datasets_api_get_all(admin_client):
 
     assert response
     assert response.status_code == 200
-    assert len(response.data["data"]) == 40
+    assert len(response.data["data"]) == 41
 
 
 def test_datasets_api_get_one(admin_client):
@@ -59,17 +59,28 @@ def test_user_client_get_dataset_details(user_client, wdae_gpf_instance):
 
 
 def test_user_client_get_nonexistant_dataset_details(
-    user_client, wdae_gpf_instance
-):
+        user_client, wdae_gpf_instance):
     response = user_client.get("/api/v3/datasets/details/asdfghjkl")
 
     assert response
     assert response.status_code == 400
 
 
+def test_user_client_get_dataset_details_remote(
+        user_client, wdae_gpf_instance):
+
+    response = user_client.get(
+        "/api/v3/datasets/details/REMOTE1_iossifov_2014")
+
+    assert response
+    assert response.status_code == 200
+    print(response.data)
+    assert response.data["hasDenovo"]
+
+
 def test_datasets_api_get_all_with_selected_restriction(
-    admin_client, wdae_gpf_instance
-):
+        admin_client, wdae_gpf_instance):
+
     # FIXME This is a temporary hack to mock the
     # dae_config of wdae_gpf_instance since using the mocker
     # fixture does not work.

@@ -30,7 +30,7 @@ REMOTES = [
         "host": "localhost",
         "base_url": "api/v3",
         "port": "8000",
-        "user": "admin@iossifovlab.org",
+        "user": "admin@iossifovlab.com",
         "password": "secret",
     }
 ]
