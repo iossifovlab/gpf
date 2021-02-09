@@ -13,7 +13,7 @@ class CommonReport(object):
         effect_types = config.effect_types
 
         self.genotype_data_study = genotype_data_study
-        self.id = genotype_data_study.id
+        self.id = genotype_data_study.study_id
 
         start = time.time()
 

@@ -146,7 +146,7 @@ def test_get_genotype_data_group(variants_db_fixture):
         "quads_in_parent_ds"
     )
     assert genotype_data_group is not None
-    assert genotype_data_group.id == "quads_in_parent_ds"
+    assert genotype_data_group.study_id == "quads_in_parent_ds"
 
 
 def test_get_existing_genotype_data_group(variants_db_fixture):
