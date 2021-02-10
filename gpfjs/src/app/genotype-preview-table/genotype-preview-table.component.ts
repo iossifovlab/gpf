@@ -11,15 +11,16 @@ export class GenotypePreviewTableComponent implements OnInit {
   @Input() genotypePreviewInfo: GenotypePreviewInfo;
   @Input() genotypePreviewVariantsArray: GenotypePreviewVariantsArray;
   @Input() columns: Array<AdditionalColumn>;
-  private singleColumnWidth: number;
+  private singleColumnWidth: string;
 
   @HostListener('window:resize', ['$event'])
   onResize() {
     const screenWidth = window.innerWidth;
     const columnsCount = this.columns.length;
     const padding = 60;
+    const scrollSize = 15;
 
-    this.singleColumnWidth = ((screenWidth - padding) / columnsCount);
+    this.singleColumnWidth = ((screenWidth - padding - scrollSize) / columnsCount) + 'px';
   }
 
   constructor(
