@@ -1,19 +1,24 @@
-<div *ngIf="gene$ | async as gene" style="padding: 25px;">
-  <span class="effect-card card" style="width: 23.3%; display:inline-block; padding: 5%">
-    <div class="card-header card-title">Autism scores</div>
-    <div *ngFor="let autismScore of gene.autismScores | keyvalue" class="card-block">
-      {{autismScore.key}}: {{autismScore.value}}
-    </div>
-  </span>
+<div *ngIf="gene$ | async as gene" style="padding: 25px; width: 30%">
+  <table class="table table-bordered table-centered table-header-rotate">
+    <th [attr.colspan]="2" style="text-align: center;">Autism scores</th>
+    <tr *ngFor="let autismScore of gene.autismScores | keyvalue" class="card-block">
+      <td>{{autismScore.key}}</td>
+      <td>{{autismScore.value}}</td>
+    </tr>
+  </table>
+
+
+  <table class="table table-bordered table-centered table-header-rotate" style="margin-top: 50px;">
+    <th [attr.colspan]="2" style="text-align: center;">Protection scores</th>
+    <tr *ngFor="let protectionScore of gene.protectionScores | keyvalue" class="card-block">
+      <td>{{protectionScore.key}}</td>
+      <td>{{protectionScore.value}}</td>
+    </tr>
+  </table>
+  
 
   <span class="effect-card card" style="width: 23.3%; display:inline-block; padding: 5%">
-    <div class="card-header card-title">Protection scores</div>
-    <div *ngFor="let protectionScore of gene.protectionScores | keyvalue" class="card-block">
-      {{protectionScore.key}}: {{protectionScore.value}}
-    </div>
-  </span>
 
-  <span class="effect-card card" style="width: 23.3%; display:inline-block; padding: 5%">
     <div class="card-header card-title">Autism scores</div>
     <div *ngFor="let autismScore of gene.autismScores | keyvalue" class="card-block">
       {{autismScore.key}}: {{autismScore.value}}
