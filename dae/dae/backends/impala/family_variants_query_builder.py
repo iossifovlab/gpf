@@ -160,10 +160,10 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
                     f"{position}, {end_position}, {reference}")
                 variant_data = bytes(variant_data, "utf8")
             if type(extra_attributes) == str:
-                logger.debug(
-                    f"extra_attributes is string!!!! "
-                    f"{family_id}, {chrom}, "
-                    f"{position}, {end_position}, {reference}")
+                # logger.debug(
+                #     f"extra_attributes is string!!!! "
+                #     f"{family_id}, {chrom}, "
+                #     f"{position}, {end_position}, {reference}")
                 extra_attributes = bytes(extra_attributes, "utf8")
 
             family = self.families[family_id]

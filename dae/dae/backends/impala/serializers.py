@@ -607,6 +607,10 @@ class AlleleParquetSerializer:
                 genetic_model=allele_data["genetic_model"]
             )
             family_alleles.append(fa)
+        if not summary_alleles[0].is_reference_allele:
+            ref_allele = SummaryAllele.create_reference_allele(
+                summary_alleles[0])
+            summary_alleles = [ref_allele, *summary_alleles]
 
         sv = SummaryVariant(summary_alleles)
         fv = FamilyVariant(

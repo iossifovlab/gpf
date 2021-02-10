@@ -118,10 +118,10 @@ class SummaryVariantsQueryBuilder(BaseQueryBuilder):
                 )
                 variant_data = bytes(variant_data, "utf8")
             if type(extra_attributes) == str:
-                logger.debug(
-                    f"extra_attributes is string!!!! "
-                    f"{bucket_index}, {summary_index}"
-                )
+                # logger.debug(
+                #     f"extra_attributes is string!!!! "
+                #     f"{bucket_index}, {summary_index}"
+                # )
                 extra_attributes = bytes(extra_attributes, "utf8")
 
             v = serializer.deserialize_summary_variant(
