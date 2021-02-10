@@ -34,8 +34,9 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
     });
   }
 
-  openTabEventHandler($event) {
-    this.geneTabs.add($event);
+  openTabEventHandler(tabId: string) {
+    this.geneTabs.add(tabId);
+    this.nav.select(tabId);
   }
 
   openTabAtIndex(index: number) {
@@ -48,9 +49,9 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
     }
   }
 
-  close(event: MouseEvent, tabToDelete: string) {
-    const index = [...this.geneTabs].indexOf(tabToDelete);
-    this.geneTabs.delete(tabToDelete);
+  closeTab(event: MouseEvent, tabId: string) {
+    const index = [...this.geneTabs].indexOf(tabId);
+    this.geneTabs.delete(tabId);
     this.openTabAtIndex(index);
 
     event.preventDefault();

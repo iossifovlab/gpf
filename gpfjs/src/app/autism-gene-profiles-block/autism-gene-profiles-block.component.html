@@ -9,7 +9,7 @@
   <li class="nav-tabs" *ngFor="let geneTab of geneTabs" [ngbNavItem]="geneTab">
     <a ngbNavLink>
       {{geneTab}}
-      <span class="close position-relative pl-2 font-weight-light" (click)="close($event, geneTab)">×</span>
+      <span class="close position-relative pl-2 font-weight-light" (click)="closeTab($event, geneTab)">×</span>
     </a>
     <ng-template ngbNavContent>
       <gpf-autism-gene-single-profile [config]="autismGeneToolConfig" [geneSymbol]="geneTab"></gpf-autism-gene-single-profile>
