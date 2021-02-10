@@ -267,13 +267,13 @@ class StudyWrapper(StudyWrapperBase):
     }
 
     SPECIAL_ATTRS_FORMAT = {
-        "family": 
+        "family":
         lambda v: [v.family_id],
 
-        "location": 
+        "location":
         lambda v: v.cshl_location,
 
-        "variant": 
+        "variant":
         lambda v: v.cshl_variant,
 
         "genotype":
@@ -346,7 +346,7 @@ class StudyWrapper(StudyWrapperBase):
                     self._get_wdae_member(
                         member, person_set_collection,
                         "/".join(
-                            [str(v) 
+                            [str(v)
                              for v in filter(
                                 lambda g: g != 0, genotype[index])
                             ])
@@ -368,18 +368,12 @@ class StudyWrapper(StudyWrapperBase):
         return result
 
     def _build_variant_row(self, v: FamilyVariant, column_descs: List[Dict], **kwargs):
-        print("column descs:", column_descs)
-
         row_variant = []
         for col_desc in column_descs:
             try:
-                col_id = col_desc["id"]
                 col_source = col_desc["source"]
                 col_format = col_desc.get("format")
 
-                print("\tcol_id     >", col_id)
-                print("\tcol_source >", col_source)
-                print("\tcol_format >", col_format)
                 if col_format is None:
                     def col_formatter(val):
                         if val is None:
@@ -424,13 +418,10 @@ class StudyWrapper(StudyWrapperBase):
                     else:
                         attribute = v.get_attribute(col_source)
 
-                    print("\t>", col_source, ":", attribute)
                     if all([a == attribute[0] for a in attribute]):
                         attribute = [attribute[0]]
 
-                    print("\t\t>>attribute:", attribute)
                     attribute = list(map(col_formatter, attribute))
-                    print("\t\t>>formatted:", attribute)
 
                     row_variant.append(",".join([str(a) for a in attribute]))
 
@@ -459,7 +450,6 @@ class StudyWrapper(StudyWrapperBase):
         for v in self.query_variants(**kwargs):
             matched = True
             for aa in v.matched_alleles:
-                print("\t>>allele:", aa, aa.attributes)
                 assert not aa.is_reference_allele
                 if not filter_allele(aa):
                     matched = False
@@ -471,7 +461,6 @@ class StudyWrapper(StudyWrapperBase):
             row_variant = self._build_variant_row(
                 v, sources, person_set_collection=person_set_collection)
 
-            print(v, row_variant)
             yield row_variant
 
     def get_variant_web_rows(self, query, sources, max_variants_count=10000):
@@ -766,7 +755,6 @@ class StudyWrapper(StudyWrapperBase):
             row_variant = self._build_variant_row(
                 v, self.summary_preview_descs)
 
-            print("row_variant:", row_variant)
             yield row_variant
 
     STREAMING_CHUNK_SIZE = 20
@@ -786,11 +774,9 @@ class StudyWrapper(StudyWrapperBase):
 
                 for allele in variant.alt_alleles:
                     gene_weights_values = self._get_gene_weights_values(allele)
-                    print("gene_weights_values:", gene_weights_values)
                     allele.update_attributes(gene_weights_values)
 
                     if pheno_values:
-                        print("pheno_values:", pheno_values)
                         allele.update_attributes(pheno_values)
 
                 yield variant
