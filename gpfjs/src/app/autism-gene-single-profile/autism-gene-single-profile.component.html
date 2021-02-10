@@ -7,7 +7,6 @@
     </tr>
   </table>
 
-
   <table class="table table-bordered table-centered table-header-rotate" style="margin-top: 50px;">
     <th [attr.colspan]="2" style="text-align: center;">Protection scores</th>
     <tr *ngFor="let protectionScore of gene.protectionScores | keyvalue" class="card-block">
@@ -15,13 +14,14 @@
       <td>{{protectionScore.value}}</td>
     </tr>
   </table>
-  
 
-  <span class="effect-card card" style="width: 23.3%; display:inline-block; padding: 5%">
-
-    <div class="card-header card-title">Autism scores</div>
-    <div *ngFor="let autismScore of gene.autismScores | keyvalue" class="card-block">
-      {{autismScore.key}}: {{autismScore.value}}
-    </div>
-  </span>
+  <table class="table table-bordered table-centered table-header-rotate" style="margin-top: 50px;">
+    <th [attr.colspan]="2" style="text-align: center;">Gene lists</th>
+    <tr *ngFor="let geneList of geneLists" class="card-block">
+      <td>{{geneList}}</td>
+      <td>
+        <span *ngIf="gene.geneSets.indexOf(geneList) !== -1">&#10003;</span>
+      </td>
+    </tr>
+  </table>
 </div>
