@@ -345,11 +345,11 @@ class StudyWrapper(StudyWrapperBase):
                 result.append(
                     self._get_wdae_member(
                         member, person_set_collection,
-                        "/".join(
-                            [str(v)
-                             for v in filter(
-                                lambda g: g != 0, genotype[index])
-                            ])
+                        "/".join([
+                            str(v) for v in filter(
+                                lambda g: g != 0, genotype[index]
+                            )]
+                        )
                     )
                 )
             except IndexError:
@@ -412,6 +412,8 @@ class StudyWrapper(StudyWrapperBase):
                         v.alt_alleles
                     ))
                     row_variant.append(phenotypes)
+                elif col_source == "study_phenotype":
+                    row_variant.append(self.config.study_phenotype)
                 else:
                     if col_source in self.SPECIAL_ATTRS:
                         attribute = self.SPECIAL_ATTRS[col_source](v)

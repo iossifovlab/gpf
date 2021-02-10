@@ -220,6 +220,7 @@ study_config_schema = {
         "allowed": ["hg19", "hg38"],
         "required": True,
     },
+    "study_phenotype": {"type": "string"},
     "chr_prefix": {"type": "boolean", "required": True},
     "has_denovo": {"type": "boolean", "default": True},
     "has_transmitted": {"type": "boolean"},

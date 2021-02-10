@@ -416,5 +416,6 @@ def test_special_attrs_formatting(fixtures_wgpf_instance):
         "['dad:M:unaffected', 'prb:F:affected'],['sib:M:unaffected']",
         '[unknown, unknown, mendelian, missing],[unknown, unknown, missing, denovo]',
         'phenotype1:unaffected:phenotype1:unaffected',
-        ['unaffected:phenotype1', 'unaffected']
+        ['unaffected:phenotype1', 'unaffected'],
+        "test_phenotype"
     ]
