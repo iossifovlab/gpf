@@ -162,6 +162,7 @@ import { MultipleSelectMenuComponent } from './multiple-select-menu/multiple-sel
 import { Ng2SearchPipeModule } from 'ng2-search-filter';
 import { AutismGeneProfilesBlockComponent } from './autism-gene-profiles-block/autism-gene-profiles-block.component';
 import { AutismGeneSingleProfileComponent } from './autism-gene-single-profile/autism-gene-single-profile.component';
+import { MiddleClickDirective } from './autism-gene-profiles/middle-click.directive';
 
 const appRoutes: Routes = [
   {
@@ -365,6 +366,7 @@ const appRoutes: Routes = [
     MultipleSelectMenuComponent,
     AutismGeneProfilesBlockComponent,
     AutismGeneSingleProfileComponent,
+    MiddleClickDirective,
   ],
   imports: [
     BrowserModule,

@@ -11,7 +11,7 @@ import { NgbDropdownMenu } from '@ng-bootstrap/ng-bootstrap';
 })
 export class AutismGeneProfilesComponent implements OnInit, OnChanges {
   @Input() config: AutismGeneToolConfig;
-  @Output() openTabEvent = new EventEmitter<string>();
+  @Output() createTabEvent = new EventEmitter();
   @ViewChildren(NgbDropdownMenu) ngbDropdownMenu: NgbDropdownMenu[];
 
   private genes$: Observable<AutismGeneToolGene[]>;
@@ -60,7 +60,7 @@ export class AutismGeneProfilesComponent implements OnInit, OnChanges {
     this.ngbDropdownMenu.forEach(menu => menu.dropdown.close());
   }
 
-  emitOpenTabEvent(geneSymbol: string) {
-    this.openTabEvent.emit(geneSymbol);
+  emitCreateTabEvent(geneSymbol: string, openTab: boolean): void {
+    this.createTabEvent.emit({geneSymbol: geneSymbol, openTab: openTab});
   }
 }

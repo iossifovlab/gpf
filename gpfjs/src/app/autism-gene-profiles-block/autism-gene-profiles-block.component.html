@@ -2,7 +2,7 @@
   <li class="nav-tabs" [ngbNavItem]="'autismGenesTool'" [destroyOnHide]="false">
     <a ngbNavLink>Autism genes tool</a>
     <ng-template ngbNavContent>
-      <gpf-autism-gene-profiles [config]="autismGeneToolConfig" (openTabEvent)="openTabEventHandler($event)"></gpf-autism-gene-profiles>
+      <gpf-autism-gene-profiles [config]="autismGeneToolConfig" (createTabEvent)="createTabEventHandler($event)"></gpf-autism-gene-profiles>
     </ng-template>
   </li>
 

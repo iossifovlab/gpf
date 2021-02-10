@@ -66,7 +66,7 @@
 
     <tbody *ngIf="genes$ | async as genes">
       <tr *ngFor="let gene of genes">
-        <td (click)="emitOpenTabEvent(gene.geneSymbol)" style="cursor:pointer;color:#1a6393;">
+        <td (click)="emitCreateTabEvent(gene.geneSymbol, true)" (middleclick)="emitCreateTabEvent(gene.geneSymbol, false)" style="cursor:pointer;color:#1a6393;">
           {{gene.geneSymbol}}
         </td>
 
