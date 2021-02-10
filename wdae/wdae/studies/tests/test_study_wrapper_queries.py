@@ -404,7 +404,7 @@ def test_special_attrs_formatting(fixtures_wgpf_instance):
         "f1",
         "f1_study",
         '1:878152',
-        'sub(C->T),sub(C->A)',
+        'sub(C->T,A)',
         '1',
         '878152',
         'C',

@@ -4,6 +4,8 @@ import logging
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
+from abc import ABC, abstractmethod, abstractproperty
+
 from typing import Dict
 from dae.pedigrees.family import Family, FamiliesData
 from dae.person_sets import PersonSetCollection
@@ -13,48 +15,94 @@ from dae.utils.effect_utils import expand_effect_types
 LOGGER = logging.getLogger(__name__)
 
 
-class GenotypeData:
+class GenotypeData(ABC):
     def __init__(self, config, studies):
         self.config = config
         self.studies = studies
 
-        self.id = self.config.id
-        self.name = self.config.name
-        if self.name is None:
-            self.name = self.id
+        self._description = None
 
-        if self.config.description_file:
-            with open(self.config.description_file, "r") as infile:
-                self.description = infile.read()
-        else:
-            self.description = self.config.description
-        self.year = self.config.year
-        self.pub_med = self.config.pub_med
-
-        self.has_denovo = self.config.has_denovo
-        self.has_transmitted = self.config.has_transmitted
-        self.has_cnv = self.config.has_cnv
-        self.has_complex = self.config.has_complex
-
-        self.study_type = self.config.study_type
-        self.person_set_collections: Dict[str, PersonSetCollection] = dict()
-        self.person_set_collection_configs = dict()
+        self._person_set_collections: Dict[str, PersonSetCollection] = dict()
+        self._person_set_collection_configs = dict()
         self._parents = set()
+
+    @property
+    def study_id(self):
+        return self.config["id"]
+
+    @property
+    def name(self):
+        name = self.config.get("name")
+        if name:
+            return name
+        return self.study_id
+
+    @property
+    def description(self):
+        if self._description is None:
+            if self.config.description_file:
+                with open(self.config.description_file, "r") as infile:
+                    self._description = infile.read()
+            else:
+                self._description = self.config.description
+        return self._description
+
+    @property
+    def year(self):
+        return self.config.get("year")
+
+    @property
+    def pub_med(self):
+        return self.config.get("pub_med")
+
+    @property
+    def phenotype(self):
+        return self.config.get("phenotype")
+
+    @property
+    def has_denovo(self):
+        return self.config.get("has_denovo")
+
+    @property
+    def has_transmitted(self):
+        return self.config.get("has_transmitted")
+
+    @property
+    def has_cnv(self):
+        return self.config.get("has_cnv")
+
+    @property
+    def has_complex(self):
+        return self.config.get("has_complex")
+
+    @property
+    def study_type(self):
+        return self.config.get("study_type")
 
     @property
     def parents(self):
         return self._parents
 
+    @property
+    def person_set_collections(self):
+        return self._person_set_collections
+
+    @property
+    def person_set_collection_configs(self):
+        return self._person_set_collection_configs
+
     def _add_parent(self, genotype_data_id):
         self._parents.add(genotype_data_id)
 
-    @property
+    @abstractproperty
     def is_group(self):
-        raise NotImplementedError()
+        pass
 
+    @abstractmethod
     def get_studies_ids(self, leafs=True):
-        raise NotImplementedError()
+        pass
 
+    @abstractmethod
     def query_variants(
         self,
         regions=None,
@@ -76,8 +124,9 @@ class GenotypeData:
         affected_status=None,
         **kwargs,
     ):
-        raise NotImplementedError()
+        pass
 
+    @abstractmethod
     def query_summary_variants(
         self,
         regions=None,
@@ -98,14 +147,15 @@ class GenotypeData:
         study_filters=None,
         **kwargs,
     ):
-        raise NotImplementedError()
+        pass
 
-    @property
+    @abstractproperty
     def families(self):
-        raise NotImplementedError()
+        pass
 
+    @abstractmethod
     def _build_person_set_collection(self, person_set_collection_id):
-        raise NotImplementedError()
+        pass
 
     def _build_person_set_collections(self):
         collections_config = self.config.person_set_collections
@@ -150,7 +200,7 @@ class GenotypeDataGroup(GenotypeData):
         self._build_person_set_collections()
         self._executor = None
         for study in self.studies:
-            study._add_parent(self.id)
+            study._add_parent(self.study_id)
 
     @property
     def is_group(self):
@@ -213,7 +263,7 @@ class GenotypeDataGroup(GenotypeData):
         for genotype_data_study in self.studies:
             future = self.executor.submit(
                 get_summary_variants, genotype_data_study)
-            future.study_id = genotype_data_study.id
+            future.study_id = genotype_data_study.study_id
             variants_futures.append(future)
 
         variants = dict()
@@ -303,7 +353,7 @@ class GenotypeDataGroup(GenotypeData):
 
         for genotype_data_study in self.studies:
             future = self.executor.submit(get_variants, genotype_data_study)
-            future.study_id = genotype_data_study.id
+            future.study_id = genotype_data_study.study_id
 
             variants_futures.append(future)
 
@@ -325,7 +375,7 @@ class GenotypeDataGroup(GenotypeData):
 
     def get_studies_ids(self, leafs=True):
         if not leafs:
-            return [st.id for st in self.studies]
+            return [st.study_id for st in self.studies]
         else:
             result = []
             for st in self.studies:
@@ -397,7 +447,7 @@ class GenotypeDataStudy(GenotypeData):
         return False
 
     def get_studies_ids(self, leafs=True):
-        return [self.id]
+        return [self.study_id]
 
     def query_variants(
             self,
@@ -431,7 +481,7 @@ class GenotypeDataStudy(GenotypeData):
 
         LOGGER.info(f"study_filters: {study_filters}")
 
-        if study_filters is not None and self.id not in study_filters:
+        if study_filters is not None and self.study_id not in study_filters:
             return
 
         person_ids = self._transform_person_set_collection_query(
@@ -497,7 +547,7 @@ class GenotypeDataStudy(GenotypeData):
 
         LOGGER.info(f"study_filters: {study_filters}")
 
-        if study_filters is not None and self.id not in study_filters:
+        if study_filters is not None and self.study_id not in study_filters:
             return
 
         person_ids = self._transform_person_set_collection_query(

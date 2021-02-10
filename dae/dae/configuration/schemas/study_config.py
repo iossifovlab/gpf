@@ -290,7 +290,7 @@ study_config_schema = {
                     "schema": present_in_role_schema,
                 },
             },
-            "pheno_filters": {
+            "person_filters": {
                 "type": "dict",
                 "valuesrules": {
                     "type": "dict",

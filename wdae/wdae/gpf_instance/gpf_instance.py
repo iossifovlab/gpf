@@ -1,8 +1,10 @@
-import json
 import logging
+from threading import Lock
+
+from requests.exceptions import ConnectionError
+
 from django.conf import settings
 
-from threading import Lock
 
 from dae.gpf_instance.gpf_instance import GPFInstance
 from studies.study_wrapper import StudyWrapper, RemoteStudyWrapper
@@ -13,8 +15,6 @@ from dae.enrichment_tool.tool import EnrichmentTool
 from dae.enrichment_tool.event_counters import CounterBase
 from enrichment_api.enrichment_builder import \
     EnrichmentBuilder, RemoteEnrichmentBuilder
-
-from requests.exceptions import ConnectionError
 
 
 logger = logging.getLogger(__name__)
@@ -67,7 +67,7 @@ class WGPFInstance(GPFInstance):
     def register_genotype_data(self, genotype_data):
         super(WGPFInstance, self).register_genotype_data(genotype_data)
 
-        logger.debug(f"genotype data config; {genotype_data.id}")
+        logger.debug(f"genotype data config; {genotype_data.study_id}")
 
         study_wrapper = StudyWrapper(
             genotype_data,
@@ -95,6 +95,7 @@ class WGPFInstance(GPFInstance):
                 self._study_wrappers[dataset_id] = wrapper
         else:
             wrapper = self._study_wrappers.get(dataset_id, None)
+
         return wrapper
 
     def get_genotype_data_ids(self):
@@ -115,16 +116,18 @@ class WGPFInstance(GPFInstance):
         if wrapper is None:
             return None
 
-        genotype_data = wrapper.config
-        return genotype_data
+        # genotype_data = wrapper.config
+        return wrapper
 
     def get_genotype_data_config(self, dataset_id):
-        genotype_data = \
+        genotype_data_config = \
             super(WGPFInstance, self).get_genotype_data_config(dataset_id)
-        if genotype_data is not None:
-            return genotype_data
+        if genotype_data_config is not None:
+            return genotype_data_config
         genotype_data = self.get_genotype_data(dataset_id)
-        return genotype_data
+        if genotype_data:
+            return genotype_data.config
+        return None
 
     def get_common_report(self, common_report_id):
         common_report = \
@@ -332,6 +335,18 @@ def reload_datasets(gpf_instance):
         Dataset.recreate_dataset_perm(
             genotype_data_id,  # study_wrapper.config.studies
         )
+
+        genotype_data = gpf_instance.get_genotype_data(genotype_data_id)
+        print("genotype_data.studies:", genotype_data.studies)
+        if not genotype_data.studies:
+            continue
+
+        for study_id in genotype_data.studies:
+            if study_id is None:
+                continue
+            Dataset.recreate_dataset_perm(
+                study_id,  # study_wrapper.config.studies
+            )
 
 
 def _recreated_dataset_perm():
