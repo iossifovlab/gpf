@@ -38,8 +38,21 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
     this.geneTabs.add($event);
   }
 
-  close(event: MouseEvent, toRemove: string) {
-    this.geneTabs.delete(toRemove);
+  openTabAtIndex(index: number) {
+    if (index !== 0) {
+      this.nav.select([...this.geneTabs][index - 1]);
+    } else if (this.geneTabs.size !== 0) {
+      this.nav.select([...this.geneTabs][index]);
+    } else {
+      this.nav.select('autismGenesTool');
+    }
+  }
+
+  close(event: MouseEvent, tabToDelete: string) {
+    const index = [...this.geneTabs].indexOf(tabToDelete);
+    this.geneTabs.delete(tabToDelete);
+    this.openTabAtIndex(index);
+
     event.preventDefault();
     event.stopImmediatePropagation();
   }
@@ -51,15 +64,7 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
 
     const index = [...this.geneTabs].indexOf(this.nav.activeId);
     this.geneTabs.delete(this.nav.activeId);
-
-    if (index !== 0) {
-      this.nav.select([...this.geneTabs][index - 1]);
-    } else if (this.geneTabs.size !== 0) {
-      this.nav.select([...this.geneTabs][index]);
-
-    } else {
-      this.nav.select('autismGenesTool');
-    }
+    this.openTabAtIndex(index);
   }
 
   openTabByKey(key) {
