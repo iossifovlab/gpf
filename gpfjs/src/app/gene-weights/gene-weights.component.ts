@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewEncapsulation, ChangeDetectorRef, forwardRef } from '@angular/core';
+import { Component, OnInit, ViewEncapsulation, ChangeDetectorRef, forwardRef, Input } from '@angular/core';
 import { GeneWeights, Partitions } from './gene-weights';
 import { GeneWeightsService } from './gene-weights.service';
 // tslint:disable-next-line:import-blacklist
@@ -20,6 +20,7 @@ import { GeneWeightsState } from './gene-weights-store';
   }]
 })
 export class GeneWeightsComponent extends QueryStateWithErrorsProvider implements OnInit {
+  @Input() singleWeight: string;
   private rangeChanges = new ReplaySubject<[string, number, number]>(1);
   private partitions: Observable<Partitions>;
 
@@ -104,13 +105,17 @@ export class GeneWeightsComponent extends QueryStateWithErrorsProvider implement
   }
 
   ngOnInit() {
-
     this.geneWeightsService.getGeneWeights()
       .subscribe(geneWeights => {
+        if (!this.singleWeight) {
           this.geneWeightsArray = geneWeights;
           this.selectedGeneWeights = geneWeights[0];
+        } else {
+          this.geneWeightsArray = geneWeights.filter(w => w.weight === this.singleWeight);
+          this.selectedGeneWeights = this.geneWeightsArray[0];
+        }
 
-          this.restoreStateSubscribe();
+        this.restoreStateSubscribe();
       });
   }
 

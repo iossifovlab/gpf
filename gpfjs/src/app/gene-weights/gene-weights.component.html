@@ -1,24 +1,27 @@
 <div class="row panel" id="gene-weights-panel" style="margin-left: 0px; margin-right: 0px">
-    <div class="col-sm-3">
-          <select class="form-control" [(ngModel)]="selectedGeneWeights" required>
+    <div *ngIf="!singleWeight" class="col-sm-3">
+      <select class="form-control" [(ngModel)]="selectedGeneWeights" required>
 		    <option *ngFor="let geneWeights of geneWeightsArray" [ngValue]="geneWeights">{{ geneWeights.desc }}</option>
 		  </select>
       <div *ngIf="selectedGeneWeights" style="margin-top: 5px;">
         <a href="{{ getDownloadLink() }}">Download</a>
       </div>
     </div>
+
     <div class="col-sm-9">
       <gpf-histogram
 		    *ngIf="selectedGeneWeights"
 		    width="650" height="145"
 		    [bins]="selectedGeneWeights.bins"
-            [bars]="selectedGeneWeights.bars"
-            [domainMin]="domainMin"
-            [domainMax]="domainMax"
-            [logScaleX]="selectedGeneWeights.logScaleX"
-			[logScaleY]="selectedGeneWeights.logScaleY"
+        [bars]="selectedGeneWeights.bars"
+        [domainMin]="domainMin"
+        [domainMax]="domainMax"
+        [logScaleX]="selectedGeneWeights.logScaleX"
+		  	[logScaleY]="selectedGeneWeights.logScaleY"
 		    [rangesCounts]="rangesCounts | async"
-		    [(rangeStart)]="rangeStart" [(rangeEnd)]="rangeEnd">
+		    [(rangeStart)]="rangeStart" [(rangeEnd)]="rangeEnd"
+        [showMinMaxInput]="singleWeight ? false : undefined"
+        [isInteractive]="!singleWeight">
 		  </gpf-histogram>
       <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
     </div>

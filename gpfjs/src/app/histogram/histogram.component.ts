@@ -43,6 +43,8 @@ export class HistogramComponent implements OnInit, OnChanges {
   @Input() centerLabels: boolean;
   @Input() showMinMaxInput: boolean;
 
+  @Input() isInteractive: boolean;
+
   beforeRangeText: string;
   insideRangeText: string;
   afterRangeText: string;

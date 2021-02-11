@@ -1,17 +1,21 @@
-<div *ngIf="gene$ | async as gene" style="padding: 25px; width: 30%">
+<div *ngIf="gene$ | async as gene" style="padding: 25px;">
   <table class="table table-bordered table-centered table-header-rotate">
     <th [attr.colspan]="2" style="text-align: center;">Autism scores</th>
     <tr *ngFor="let autismScore of gene.autismScores | keyvalue" class="card-block">
-      <td>{{autismScore.key}}</td>
-      <td>{{autismScore.value}}</td>
+      <td>{{formatScoreName(autismScore.key)}}</td>
+      <td>
+        <gpf-gene-weights [singleWeight]="autismScore.key"></gpf-gene-weights>
+      </td>
     </tr>
   </table>
 
   <table class="table table-bordered table-centered table-header-rotate" style="margin-top: 50px;">
     <th [attr.colspan]="2" style="text-align: center;">Protection scores</th>
     <tr *ngFor="let protectionScore of gene.protectionScores | keyvalue" class="card-block">
-      <td>{{protectionScore.key}}</td>
-      <td>{{protectionScore.value}}</td>
+      <td>{{formatScoreName(protectionScore.key)}}</td>
+      <td>
+        <gpf-gene-weights [singleWeight]="protectionScore.key"></gpf-gene-weights>
+      </td>
     </tr>
   </table>
 
