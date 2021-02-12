@@ -307,7 +307,7 @@ study_config_schema = {
             "variant_types": {
                 "type": "list",
                 "schema": {"type": "string"},
-                "default": ["sub", "ins", "del", "TR"],
+                "default": ["sub", "ins", "del"],
             },
             "selected_variant_types": {
                 "type": "list",
