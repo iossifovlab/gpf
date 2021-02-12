@@ -278,8 +278,8 @@ def liftover_variant(chrom, pos, ref, alt, lo, target_genome):
     return (lo_chrom, lo_pos, lo_ref, lo_alt)
 
 
-def tandem_repeat(ref, alt, max_period=25, min_reference=8):
-    for period in range(1, max_period + 1):
+def tandem_repeat(ref, alt, min_mono_reference=8):
+    for period in range(1, len(ref) // 2 + 1):
         if len(ref) % period != 0:
             continue
         unit = ref[:period]
@@ -294,7 +294,7 @@ def tandem_repeat(ref, alt, max_period=25, min_reference=8):
         if alt_repeats * unit != alt:
             continue
 
-        if len(unit) == 1 and len(ref) < min_reference:
+        if len(unit) == 1 and len(ref) < min_mono_reference:
             return None, None, None
 
         return unit, ref_repeats, alt_repeats
