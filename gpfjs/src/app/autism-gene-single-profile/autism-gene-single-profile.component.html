@@ -1,4 +1,7 @@
 <div *ngIf="gene$ | async as gene" style="padding: 25px;">
+
+  <h2>{{geneSymbol}}</h2>
+
   <table class="table table-bordered table-centered table-header-rotate">
     <th [attr.colspan]="2" style="text-align: center;">Autism scores</th>
     <tr *ngFor="let autismScore of gene.autismScores | keyvalue; let i = index" class="card-block">
