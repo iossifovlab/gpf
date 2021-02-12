@@ -11,7 +11,7 @@
               <gpf-person-ids></gpf-person-ids>
           </ng-template>
       </li>
-      <li [ngbNavItem]="'advanced'" *ngIf="dataset?.genotypeBrowserConfig?.personFilters && dataset.phenotypeData" id="advanced">
+      <li [ngbNavItem]="'advanced'" *ngIf="dataset?.genotypeBrowserConfig?.personFilters" id="advanced">
           <a ngbNavLink>Advanced</a>
           <ng-template ngbNavContent>
               <gpf-person-filters
