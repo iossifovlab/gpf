@@ -23,6 +23,16 @@ logger = logging.getLogger(__name__)
 
 
 class QueryTransformer:
+
+    FILTER_RENAMES_MAP = {
+        "familyIds": "family_ids",
+        "gender": "sexes",
+        "geneSymbols": "genes",
+        "variantTypes": "variant_type",
+        "effectTypes": "effect_types",
+        "regionS": "regions",
+    }
+
     def __init__(self, study_wrapper):
         self.study_wrapper = study_wrapper
 

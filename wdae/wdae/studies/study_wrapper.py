@@ -300,15 +300,6 @@ class StudyWrapper(StudyWrapperBase):
     def __getattr__(self, name):
         return getattr(self.genotype_data_study, name)
 
-    FILTER_RENAMES_MAP = {
-        "familyIds": "family_ids",
-        "gender": "sexes",
-        "geneSymbols": "genes",
-        "variantTypes": "variant_type",
-        "effectTypes": "effect_types",
-        "regionS": "regions",
-    }
-
     STANDARD_ATTRS = {
     }
 
