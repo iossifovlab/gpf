@@ -430,12 +430,12 @@ class GPFInstance(object):
     def _agp_from_table_row(self, row):
         config = self._autism_gene_profile_config
         gene_symbol = row["symbol_name"]
-        protection_scores = [
-            row[f"protection_{ps}"] for ps in config.protection_scores
-        ]
-        autism_scores = [
-            row[f"autism_{aus}"] for aus in config.autism_scores
-        ]
+        protection_scores = {
+            ps: row[f"protection_{ps}"] for ps in config.protection_scores
+        }
+        autism_scores = {
+            aus: row[f"autism_{aus}"] for aus in config.autism_scores
+        }
         gene_lists = config.gene_sets
         gene_lists = list(filter(
             lambda x: row[x] == 1,
