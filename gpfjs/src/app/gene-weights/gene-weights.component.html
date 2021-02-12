@@ -1,5 +1,5 @@
 <div class="row panel" id="gene-weights-panel" style="margin-left: 0px; margin-right: 0px">
-    <div *ngIf="!singleWeight" class="col-sm-3">
+    <div class="col-sm-3">
       <select class="form-control" [(ngModel)]="selectedGeneWeights" required>
 		    <option *ngFor="let geneWeights of geneWeightsArray" [ngValue]="geneWeights">{{ geneWeights.desc }}</option>
 		  </select>
@@ -19,9 +19,7 @@
         [logScaleX]="selectedGeneWeights.logScaleX"
 		  	[logScaleY]="selectedGeneWeights.logScaleY"
 		    [rangesCounts]="rangesCounts | async"
-		    [(rangeStart)]="rangeStart" [(rangeEnd)]="rangeEnd"
-        [showMinMaxInput]="singleWeight ? false : undefined"
-        [isInteractive]="!singleWeight">
+		    [(rangeStart)]="rangeStart" [(rangeEnd)]="rangeEnd">
 		  </gpf-histogram>
       <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
     </div>
