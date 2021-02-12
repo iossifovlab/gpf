@@ -112,7 +112,12 @@ class AutismGeneProfileDB:
             self.gene_symbol_sets, self.gene_sets,
             self.gene_symbol_sets.c.set_id == self.gene_sets.c.id
         )
-        s = select([self.gene_sets.c.set_name]).select_from(j).where(
+        s = select(
+            [
+                self.gene_sets.c.set_name,
+                self.gene_symbol_sets.c.present
+            ]
+        ).select_from(j).where(
             self.gene_symbol_sets.c.symbol_id == gene_symbol_id,
         )
         with self.engine.connect() as connection:
@@ -142,7 +147,10 @@ class AutismGeneProfileDB:
     def get_agp(self, gene_symbol):
         symbol_id = self._get_gene_symbol_id(gene_symbol)
         sets_in = self._get_gene_symbol_sets(symbol_id)
-        sets_in = [row[0] for row in sets_in]
+        sets_in = [
+            row[0] for row in
+            filter(lambda row: row["present"] == 1, sets_in)
+        ]
         protection_scores = self._get_protection_scores(symbol_id)
         protection_scores = {row[0]: row[1] for row in protection_scores}
         autism_scores = self._get_autism_scores(symbol_id)
