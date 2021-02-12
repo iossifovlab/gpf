@@ -15,8 +15,6 @@ export class AutismGeneSingleProfileComponent implements OnInit, OnChanges {
   @Input() config: AutismGeneToolConfig;
 
   private gene$: Observable<AutismGeneToolGene>;
-  private autismScores: String[];
-  private protectionScores: String[];
   private autismScoreGeneWeights: GeneWeights[];
   private protectionScoreGeneWeights: GeneWeights[];
   private geneLists: string[];
@@ -36,23 +34,15 @@ export class AutismGeneSingleProfileComponent implements OnInit, OnChanges {
     this.gene$ = this.autismGeneSingleProfileService.getGene(this.geneSymbol);
 
     this.gene$.subscribe(res => {
-      this.protectionScores = [...res['protectionScores'].keys()];
-      this.autismScores = [...res['autismScores'].keys()];
+      const autismScores: string = [...res['autismScores'].keys()].join(',');
+      const protectionScores: string = [...res['protectionScores'].keys()].join(',');
 
-      this.geneWeightsService.getGeneWeights().subscribe(
-        geneWeights => {
-          this.autismScoreGeneWeights = geneWeights.filter(
-            geneWeight => {
-              return this.autismScores.includes(geneWeight['weight']);
-            }
-          );
+      this.geneWeightsService.getGeneWeights(autismScores).subscribe(
+        geneWeights => this.autismScoreGeneWeights = geneWeights
+      );
 
-          this.protectionScoreGeneWeights = geneWeights.filter(
-            geneWeight => {
-              return this.protectionScores.includes(geneWeight['weight']);
-            }
-          );
-        }
+      this.geneWeightsService.getGeneWeights(protectionScores).subscribe(
+        geneWeights => this.protectionScoreGeneWeights = geneWeights
       );
     });
   }
