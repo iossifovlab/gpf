@@ -1,20 +1,40 @@
 <div *ngIf="gene$ | async as gene" style="padding: 25px;">
   <table class="table table-bordered table-centered table-header-rotate">
     <th [attr.colspan]="2" style="text-align: center;">Autism scores</th>
-    <tr *ngFor="let autismScore of gene.autismScores | keyvalue" class="card-block">
+    <tr *ngFor="let autismScore of gene.autismScores | keyvalue; let i = index" class="card-block">
       <td>{{formatScoreName(autismScore.key)}}</td>
       <td>
-        <gpf-gene-weights [singleWeight]="autismScore.key"></gpf-gene-weights>
+        <gpf-histogram *ngIf="autismScoreGeneWeights"
+          width="650" height="145"
+          [bins]="autismScoreGeneWeights[i].bins"
+          [bars]="autismScoreGeneWeights[i].bars"
+          [logScaleX]="autismScoreGeneWeights[i].logScaleX"
+          [logScaleY]="autismScoreGeneWeights[i].logScaleY"
+          [rangesCounts]="rangesCounts | async"
+          [(rangeStart)]="rangeStart" [(rangeEnd)]="rangeEnd"
+          [showMinMaxInput]="false"
+          [isInteractive]="false">
+        </gpf-histogram>
       </td>
     </tr>
   </table>
 
   <table class="table table-bordered table-centered table-header-rotate" style="margin-top: 50px;">
     <th [attr.colspan]="2" style="text-align: center;">Protection scores</th>
-    <tr *ngFor="let protectionScore of gene.protectionScores | keyvalue" class="card-block">
+    <tr *ngFor="let protectionScore of gene.protectionScores | keyvalue; let i = index" class="card-block">
       <td>{{formatScoreName(protectionScore.key)}}</td>
       <td>
-        <gpf-gene-weights [singleWeight]="protectionScore.key"></gpf-gene-weights>
+        <gpf-histogram *ngIf="protectionScoreGeneWeights"
+          width="650" height="145"
+          [bins]="protectionScoreGeneWeights[i].bins"
+          [bars]="protectionScoreGeneWeights[i].bars"
+          [logScaleX]="protectionScoreGeneWeights[i].logScaleX"
+          [logScaleY]="protectionScoreGeneWeights[i].logScaleY"
+          [rangesCounts]="rangesCounts | async"
+          [(rangeStart)]="rangeStart" [(rangeEnd)]="rangeEnd"
+          [showMinMaxInput]="false"
+          [isInteractive]="false">
+        </gpf-histogram>
       </td>
     </tr>
   </table>
