@@ -342,6 +342,33 @@ class QueryTransformer:
         else:
             kwargs["roles"] = query
 
+    def _add_people_with_people_group(self, kwargs):
+
+        # TODO Rename peopleGroup kwarg to person_set_collections
+        # and all other, relevant keys in the kwargs dict
+
+        if kwargs.get("peopleGroup") is None:
+            return kwargs
+
+        person_set_collections_query = kwargs.pop("peopleGroup")
+        person_set_collection_id = person_set_collections_query["id"]
+        selected_person_set_ids = set(
+            person_set_collections_query["checkedValues"]
+        )
+
+        person_set_collection = self.genotype_data_study \
+            .get_person_set_collection(person_set_collection_id)
+
+        if set(person_set_collection.person_sets.keys()) == \
+                selected_person_set_ids:
+            return kwargs
+
+        person_set_collection_query = (
+            person_set_collection_id, selected_person_set_ids
+        )
+        kwargs["person_set_collection"] = person_set_collection_query
+        return kwargs
+
     # Not implemented:
     # callSet
     # minParentsCalled
@@ -369,7 +396,7 @@ class QueryTransformer:
         if "presentInRole" in kwargs:
             present_in_role = kwargs.pop("presentInRole")
             roles_query = self._transform_present_in_role(present_in_role)
-            self._add_roles_to_query(roles_query)
+            self._add_roles_to_query(roles_query, kwargs)
 
         if (
             "minAltFrequencyPercent" in kwargs
