@@ -123,4 +123,36 @@ describe('GenotypePreviewTableComponent', () => {
       GenotypePreview.fromJson(['M:113'], ['variant.location'])
     )).toBe(-1);
   });
+
+  it('should calculate single column width in onResize()', () => {
+    const windowSpy = spyOnProperty(window, 'innerWidth');
+
+    windowSpy.and.returnValue(85);
+    component.columns = new Array<AdditionalColumn>(1);
+    component.onResize();
+    expect((component as any).singleColumnWidth).toEqual('10px');
+
+    windowSpy.and.returnValue(2075);
+    component.columns = new Array<AdditionalColumn>(10);
+    component.onResize();
+    expect((component as any).singleColumnWidth).toEqual('200px');
+
+    component.columns = new Array<AdditionalColumn>(25);
+    component.onResize();
+    expect((component as any).singleColumnWidth).toEqual('80px');
+
+    windowSpy.and.returnValue(1920);
+    component.columns = new Array<AdditionalColumn>(12);
+    component.onResize();
+    expect((component as any).singleColumnWidth).toEqual('153.75px');
+
+    component.columns = new Array<AdditionalColumn>(15);
+    component.onResize();
+    expect((component as any).singleColumnWidth).toEqual('123px');
+
+    windowSpy.and.returnValue(1366);
+    component.columns = new Array<AdditionalColumn>(8);
+    component.onResize();
+    expect((component as any).singleColumnWidth).toEqual('161.375px');
+   });
 });
