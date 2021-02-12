@@ -61,19 +61,24 @@ export class HistogramComponent implements OnInit, OnChanges {
   private resetRange = false;
 
   ngOnInit() {
-      this.rangeStartSubject
-      .debounceTime(100)
-      .subscribe((start) => {
-        this.rangeStartChange.emit(start);
-      });
+    this.rangeStartSubject
+    .debounceTime(100)
+    .subscribe((start) => {
+      this.rangeStartChange.emit(start);
+    });
 
-      this.rangeEndSubject
-      .debounceTime(100)
-      .subscribe((end) => {
-        this.rangeEndChange.emit(end);
-      });
-      this.rangeStartSubject.next(this.min_value);
-      this.rangeEndSubject.next(this.max_value);
+    this.rangeEndSubject
+    .debounceTime(100)
+    .subscribe((end) => {
+      this.rangeEndChange.emit(end);
+    });
+    this.rangeStartSubject.next(this.min_value);
+    this.rangeEndSubject.next(this.max_value);
+
+    if (!this.isInteractive) {
+      this.rangeStart = this.bins[0];
+      this.rangeEnd = this.bins[this.bins.length - 1];
+    }
   }
 
   ngOnChanges(changes: SimpleChanges) {

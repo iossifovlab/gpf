@@ -13,8 +13,6 @@
           [bars]="autismScoreGeneWeights[i].bars"
           [logScaleX]="autismScoreGeneWeights[i].logScaleX"
           [logScaleY]="autismScoreGeneWeights[i].logScaleY"
-          [rangesCounts]="rangesCounts | async"
-          [(rangeStart)]="rangeStart" [(rangeEnd)]="rangeEnd"
           [showMinMaxInput]="false"
           [isInteractive]="false">
         </gpf-histogram>
@@ -33,8 +31,6 @@
           [bars]="protectionScoreGeneWeights[i].bars"
           [logScaleX]="protectionScoreGeneWeights[i].logScaleX"
           [logScaleY]="protectionScoreGeneWeights[i].logScaleY"
-          [rangesCounts]="rangesCounts | async"
-          [(rangeStart)]="rangeStart" [(rangeEnd)]="rangeEnd"
           [showMinMaxInput]="false"
           [isInteractive]="false">
         </gpf-histogram>
