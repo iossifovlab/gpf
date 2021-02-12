@@ -524,9 +524,7 @@ class SummaryAllele(Allele):
     @property
     def variant_type(self):
         if self._variant_type is None and self.details:
-            self._variant_type = VariantType.from_cshl_variant(
-                self.details.cshl_variant
-            )
+            self._variant_type = self.details.variant_desc.variant_type
         return self._variant_type
 
     @property

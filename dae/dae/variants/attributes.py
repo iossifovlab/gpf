@@ -5,7 +5,7 @@ _VARIANT_TYPE_DISPLAY_NAME = {
     "substitution": "sub",
     "insertion": "ins",
     "deletion": "del",
-    "comp": "complex",
+    "comp": "comp",
     "cnv_p": "cnv+",
     "cnv_m": "cnv-",
 }
@@ -264,6 +264,7 @@ class VariantType(enum.Enum):
     insertion = 1 << 1
     deletion = 1 << 2
     comp = 1 << 3
+    indel = insertion | deletion | comp
     cnv_p = 1 << 4
     cnv_m = 1 << 5
     cnv = cnv_p | cnv_m
@@ -273,7 +274,7 @@ class VariantType(enum.Enum):
     tandem_repeat_del = tandem_repeat | deletion
 
     def __and__(self, other):
-        assert isinstance(other, VariantType)
+        assert isinstance(other, VariantType), type(other)
         return self.value & other.value
 
     def __or__(self, other):
@@ -349,10 +350,10 @@ class VariantType(enum.Enum):
         return vt & VariantType.tandem_repeat
 
     def __repr__(self) -> str:
-        return _VARIANT_TYPE_DISPLAY_NAME[self.name]
+        return _VARIANT_TYPE_DISPLAY_NAME.get(self.name) or self.name
 
     def __str__(self) -> str:
-        return _VARIANT_TYPE_DISPLAY_NAME[self.name]
+        return _VARIANT_TYPE_DISPLAY_NAME.get(self.name) or self.name
 
     def __lt__(self, other):
         return self.value < other.value

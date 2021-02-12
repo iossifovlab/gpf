@@ -347,7 +347,6 @@ class AlleleParquetSerializer:
         "allele_index",
         "summary_index",
         "transmission_type",
-        "variant_type",
         "family_id",
         "gt",
         "best_state",
