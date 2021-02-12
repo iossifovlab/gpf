@@ -25,7 +25,7 @@ from dae.utils.effect_utils import (
 )
 
 from dae.utils.regions import Region
-from dae.pheno_tool.pheno_common import PhenoFilterBuilder
+from dae.utils.person_filters import PhenoFilterBuilder
 from dae.variants.attributes import Role, Inheritance, VariantDesc
 
 from dae.backends.attributes_query import (
@@ -750,8 +750,8 @@ class StudyWrapper(StudyWrapperBase):
         if "familyFilters" in kwargs:
             kwargs = self._transform_family_filters(kwargs)
 
-        if "person_ids" in kwargs:
-            kwargs["person_ids"] = list(kwargs["person_ids"])
+        if "personIds" in kwargs:
+            kwargs["person_ids"] = kwargs["personIds"]
 
         if "inheritanceTypeFilter" in kwargs:
             kwargs["inheritance"].append(
