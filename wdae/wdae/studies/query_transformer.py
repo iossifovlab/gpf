@@ -68,22 +68,8 @@ class QueryTransformer:
 
         return (value, value_range)
 
-    def _transform_present_in_child_and_present_in_parent(self, kwargs):
-        if "presentInChild" in kwargs:
-            present_in_child = set(kwargs["presentInChild"])
-            kwargs.pop("presentInChild")
-        else:
-            present_in_child = set()
-
-        if "presentInParent" in kwargs:
-            present_in_parent = \
-                set(kwargs["presentInParent"]["presentInParent"])
-            rarity = kwargs["presentInParent"].get("rarity", None)
-            kwargs.pop("presentInParent")
-        else:
-            present_in_parent = set()
-            rarity = None
-
+    def _transform_present_in_child_and_parent_roles(
+            self, present_in_child, present_in_parent):
         roles_query = []
         roles_query.append(
             self._present_in_child_to_roles(present_in_child))
@@ -97,8 +83,10 @@ class QueryTransformer:
         else:
             roles_query = None
 
-        self._add_roles_to_query(roles_query, kwargs)
+        return roles_query
 
+    def _transform_present_in_child_and_parent_inheritance(
+            self, present_in_child, present_in_parent):
         inheritance = None
         if present_in_child == set(["neither"]) and \
                 present_in_parent != set(["neither"]):
@@ -112,26 +100,24 @@ class QueryTransformer:
                 Inheritance.mendelian,
                 Inheritance.missing]
         inheritance = [str(inh) for inh in inheritance]
-        self._add_inheritance_to_query(
-            "any({})".format(",".join(inheritance)), kwargs)
+        return inheritance
 
-        if present_in_parent == {"neither"}:
-            return
-
-        if rarity is not None:
-            ultra_rare = rarity.get("ultraRare", None)
-            ultra_rare = bool(ultra_rare)
-            if ultra_rare:
-                kwargs["ultra_rare"] = True
-            else:
-                max_alt_freq = rarity.get("maxFreq", None)
-                min_alt_freq = rarity.get("minFreq", None)
-                if min_alt_freq is not None or max_alt_freq is not None:
-                    frequency_filter = kwargs.get("frequency_filter", [])
-                    frequency_filter.append(
-                        ("af_allele_freq", (min_alt_freq, max_alt_freq))
-                    )
-                    kwargs["frequency_filter"] = frequency_filter
+    def _transform_present_in_child_and_parent_frequency(
+            self, present_in_child, present_in_parent,
+            rarity, frequency_filter):
+        ultra_rare = rarity.get("ultraRare", None)
+        ultra_rare = bool(ultra_rare)
+        if ultra_rare:
+            return ("ultra_rare", True)
+        else:
+            max_alt_freq = rarity.get("maxFreq", None)
+            min_alt_freq = rarity.get("minFreq", None)
+            if min_alt_freq is not None or max_alt_freq is not None:
+                frequency_filter.append(
+                    ("af_allele_freq", (min_alt_freq, max_alt_freq))
+                )
+                return ("frequency_filter", frequency_filter)
+        return (None, None)
 
     def _present_in_child_to_roles(present_in_child):
         roles_query = []
@@ -391,7 +377,42 @@ class QueryTransformer:
             kwargs["regions"] = list(map(Region.from_str, kwargs["regions"]))
 
         if "presentInChild" in kwargs or "presentInParent" in kwargs:
-            self._transform_present_in_child_and_present_in_parent(kwargs)
+            if "presentInChild" in kwargs:
+                present_in_child = set(kwargs["presentInChild"])
+                kwargs.pop("presentInChild")
+            else:
+                present_in_child = set()
+
+            if "presentInParent" in kwargs:
+                present_in_parent = \
+                    set(kwargs["presentInParent"]["presentInParent"])
+                rarity = kwargs["presentInParent"].get("rarity", None)
+                kwargs.pop("presentInParent")
+            else:
+                present_in_parent = set()
+                rarity = None
+
+            roles_query = self._transform_present_in_child_and_parent_roles(
+                present_in_child, present_in_parent
+            )
+            self._add_roles_to_query(roles_query, kwargs)
+
+            inheritance = \
+                self._transform_present_in_child_and_parent_inheritance(
+                    present_in_child, present_in_parent
+                )
+            self._add_inheritance_to_query(
+                "any({})".format(",".join(inheritance)), kwargs)
+
+            if present_in_parent != {"neither"} and rarity is not None:
+                frequency_filter = kwargs.get("frequency_filter", [])
+                arg, val = \
+                    self._transform_present_in_child_and_parent_frequency(
+                        present_in_child, present_in_parent,
+                        rarity, frequency_filter
+                    )
+                if arg is not None:
+                    kwargs[arg] = val
 
         if "presentInRole" in kwargs:
             present_in_role = kwargs.pop("presentInRole")
