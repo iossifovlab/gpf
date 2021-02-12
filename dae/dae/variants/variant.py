@@ -105,20 +105,20 @@ import itertools
 class VariantDetails:
 
     def __init__(
-            self, chrom: str, position: int, variant_desc: VariantDesc):
+            self, chrom: str, variant_desc: VariantDesc):
 
         self.chrom = chrom
-        self.cshl_position = position
-
         self.variant_desc = variant_desc
 
-        self.cshl_variant = str(variant_desc)
+        self.cshl_position = self.variant_desc.position
         self.cshl_location = f"{self.chrom}:{self.cshl_position}"
+        self.cshl_variant = str(variant_desc)
+        self.cshl_variant_full = variant_desc.to_cshl_full()
 
     @staticmethod
     def from_vcf(chrom, position, reference, alternative):
         return VariantDetails(
-            chrom, *vcf2cshl(position, reference, alternative)
+            chrom, vcf2cshl(position, reference, alternative)
         )
 
 
@@ -221,6 +221,14 @@ class Allele(ABC):
         if self.details is None:
             return None
         return self.details.cshl_variant  # type: ignore
+
+    @property
+    def cshl_variant_full(self) -> Optional[str]:
+        if self.alternative is None:
+            return None
+        if self.details is None:
+            return None
+        return self.details.cshl_variant_full  # type: ignore
 
     @property
     def cshl_location(self) -> Optional[str]:
@@ -377,6 +385,12 @@ class Variant(ABC):
         if not self.alt_alleles:
             return []
         return [aa.cshl_variant for aa in self.alt_alleles]
+
+    @property
+    def cshl_variant_full(self) -> List[Optional[str]]:
+        if not self.alt_alleles:
+            return []
+        return [aa.cshl_variant_full for aa in self.alt_alleles]
 
     @property
     def cshl_location(self) -> Optional[str]:
