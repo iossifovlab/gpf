@@ -49,7 +49,7 @@ def calculate_simple_best_state(
     return best_st_arr
 
 
-class FamilyDelegate(object):
+class FamilyDelegate:
     def __init__(self, family):
         self.family = family
 

@@ -6,7 +6,7 @@ Created on Feb 13, 2018
 from abc import ABC, abstractproperty
 from dae.utils.variant_utils import vcf2cshl
 
-from dae.variants.attributes import VariantType, TransmissionType
+from dae.variants.attributes import VariantType, TransmissionType, VariantDesc
 from typing import List, Dict, Set, Any, Optional
 from dae.variants.effects import Effect, EffectGene
 import itertools
@@ -75,33 +75,49 @@ import itertools
 #         )
 
 
-class VariantDetail:
-    def __init__(self, chrom: str, position, variant, length):
-        self.length = length
-        self.type = None
+# class VariantDetail:
+#     def __init__(self, chrom: str, position, variant_desc):
+#         self.variant_desc = variant_desc
+#         self.length = variant_desc.length
+
+#         self.chrom = chrom
+#         self.cshl_position = position
+#         self.cshl_variant = str(variant_desc)
+
+#     def __repr__(self):
+#         return "{} {}".format(self.cshl_location, self.cshl_variant)
+
+#     @property
+#     def cshl_location(self):
+#         return "{}:{}".format(self.chrom, self.cshl_position)
+
+#     @property
+#     def variant_type(self):
+#         return self.variant_desc.variant_type
+
+#     @staticmethod
+#     def from_vcf(chrom, position, reference, alternative):
+#         return VariantDetail(
+#             chrom, *vcf2cshl(position, reference, alternative)
+#         )
+
+
+class VariantDetails:
+
+    def __init__(
+            self, chrom: str, position: int, variant_desc: VariantDesc):
+
         self.chrom = chrom
         self.cshl_position = position
-        self.cshl_variant = variant
-        self._variant_type = None
 
-    def __repr__(self):
-        return "{} {}".format(self.cshl_location, self.cshl_variant)
+        self.variant_desc = variant_desc
 
-    @property
-    def cshl_location(self):
-        return "{}:{}".format(self.chrom, self.cshl_position)
-
-    @property
-    def variant_type(self):
-        if self._variant_type is None:
-            self._variant_type = VariantType.from_cshl_variant(
-                self.cshl_variant
-            )
-        return self._variant_type
+        self.cshl_variant = str(variant_desc)
+        self.cshl_location = f"{self.chrom}:{self.cshl_position}"
 
     @staticmethod
     def from_vcf(chrom, position, reference, alternative):
-        return VariantDetail(
+        return VariantDetails(
             chrom, *vcf2cshl(position, reference, alternative)
         )
 
@@ -195,13 +211,11 @@ class Allele(ABC):
         return self.attributes.get("af_allele_freq")
 
     @abstractproperty
-    def details(self) -> Optional[VariantDetail]:
+    def details(self) -> Optional[VariantDetails]:
         pass
 
     @property
     def cshl_variant(self) -> Optional[str]:
-        if self.end_position and self.end_position != -1:
-            return str(self.variant_type)
         if self.alternative is None:
             return None
         if self.details is None:
@@ -556,11 +570,11 @@ class SummaryAllele(Allele):
         return self._attributes
 
     @property
-    def details(self) -> Optional[VariantDetail]:
+    def details(self) -> Optional[VariantDetails]:
         if self.alternative is None:
             return None
         if self._details is None:
-            self._details = VariantDetail.from_vcf(
+            self._details = VariantDetails.from_vcf(
                 self.chromosome,
                 self.position,
                 self.reference,

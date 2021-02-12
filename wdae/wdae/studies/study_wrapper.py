@@ -1,4 +1,3 @@
-import math
 import itertools
 import traceback
 import json
@@ -7,7 +6,7 @@ import logging
 from typing import List, Set
 
 from functools import reduce
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 
 from box import Box
 
@@ -27,7 +26,7 @@ from dae.utils.effect_utils import (
 
 from dae.utils.regions import Region
 from dae.pheno_tool.pheno_common import PhenoFilterBuilder
-from dae.variants.attributes import Role, Inheritance
+from dae.variants.attributes import Role, Inheritance, VariantDesc
 
 from dae.backends.attributes_query import (
     role_query,
@@ -38,7 +37,7 @@ from dae.backends.attributes_query import (
     OrNode,
     ContainsNode,
 )
-from dae.studies.study import GenotypeDataGroup
+from dae.studies.study import GenotypeData
 
 from dae.configuration.gpf_config_parser import GPFConfigParser, FrozenBox
 from dae.person_sets import PersonSetCollection
@@ -48,7 +47,10 @@ from remote.remote_phenotype_data import RemotePhenotypeData
 logger = logging.getLogger(__name__)
 
 
-class StudyWrapperBase(ABC):
+class StudyWrapperBase(GenotypeData):
+
+    def __init__(self, config):
+        super(StudyWrapperBase, self).__init__(config, config.get("studies"))
 
     @abstractmethod
     def get_wdae_preview_info(self, query, max_variants_count=10000):
@@ -76,6 +78,54 @@ class StudyWrapperBase(ABC):
     def build_genotype_data_group_description(self, gpf_instance):
         pass
 
+    def _build_person_set_collection(self):
+        pass
+
+    def query_variants(
+        self,
+        regions=None,
+        genes=None,
+        effect_types=None,
+        family_ids=None,
+        person_ids=None,
+        person_set_collection=None,
+        inheritance=None,
+        roles=None,
+        sexes=None,
+        variant_type=None,
+        real_attr_filter=None,
+        ultra_rare=None,
+        return_reference=None,
+        return_unknown=None,
+        limit=None,
+        study_filters=None,
+        affected_status=None,
+        **kwargs,
+    ):
+        pass
+
+    def query_summary_variants(
+        self,
+        regions=None,
+        genes=None,
+        effect_types=None,
+        family_ids=None,
+        person_ids=None,
+        person_set_collection=None,
+        inheritance=None,
+        roles=None,
+        sexes=None,
+        variant_type=None,
+        real_attr_filter=None,
+        ultra_rare=None,
+        return_reference=None,
+        return_unknown=None,
+        limit=None,
+        study_filters=None,
+        **kwargs,
+    ):
+        pass
+
 
 class StudyWrapper(StudyWrapperBase):
     def __init__(
@@ -83,10 +133,9 @@ class StudyWrapper(StudyWrapperBase):
 
         assert genotype_data_study is not None
 
+        super(StudyWrapper, self).__init__(genotype_data_study.config)
+
         self.genotype_data_study = genotype_data_study
-        self.is_group = isinstance(genotype_data_study, GenotypeDataGroup)
-        self.config = genotype_data_study.config
-        assert self.config is not None
 
         self.is_remote = False
 
@@ -95,6 +144,21 @@ class StudyWrapper(StudyWrapperBase):
         self._init_pheno(self.pheno_db)
 
         self.gene_weights_db = gene_weights_db
+
+    def is_group(self):
+        return self.genotype_data_study.is_group()
+
+    @property
+    def families(self):
+        return self.genotype_data_study.families
+
+    @property
+    def person_set_collections(self):
+        return self.genotype_data_study.person_set_collections
+
+    @property
+    def person_set_collection_configs(self):
+        return self.genotype_data_study._person_set_collection_configs
 
     def get_studies_ids(self, leafs=True):
         return self.genotype_data_study.get_studies_ids(leafs=leafs)
@@ -166,7 +230,6 @@ class StudyWrapper(StudyWrapperBase):
 
                 for col_id in selected_columns:
                     col = cols_dict.get(col_id, None)
-                    print("\tcol_id:", col_id, "; col:", col)
 
                     if not col:
                         continue
@@ -186,10 +249,9 @@ class StudyWrapper(StudyWrapperBase):
                             scol = slot.to_dict()
                             scol["id"] = scol_id
                             scol["source"] = get_source(slot)
-                
+
                             columns.append(scol_id)
                             descs.append(scol)
-
 
             inner(
                 genotype_browser_config.genotype,
@@ -205,13 +267,12 @@ class StudyWrapper(StudyWrapperBase):
             return columns, descs
 
         if genotype_browser_config.genotype:
-            print("preview_column_names:", preview_column_names)
             self.preview_columns, self.preview_descs = \
                 unpack_columns(preview_column_names)
 
             self.download_columns, \
                 self.download_descs = \
-                    unpack_columns(download_column_names, use_id=False)
+                unpack_columns(download_column_names, use_id=False)
             if summary_preview_column_names and \
                     len(summary_preview_column_names):
                 self.summary_preview_columns, self.summary_preview_descs = \
@@ -230,8 +291,8 @@ class StudyWrapper(StudyWrapperBase):
 
         else:
             self.preview_columns, self.preview_descs = [], []
-            self.download_columns, self.download_descs= [], []
-            self.summary_preview_columns, self.summary_preview_descs= \
+            self.download_columns, self.download_descs = [], []
+            self.summary_preview_columns, self.summary_preview_descs = \
                 [], []
             self.summary_download_columns, self.summary_download_descs = \
                 [], []
@@ -268,13 +329,13 @@ class StudyWrapper(StudyWrapperBase):
     }
 
     SPECIAL_ATTRS_FORMAT = {
-        "family": 
+        "family":
         lambda v: [v.family_id],
 
-        "location": 
+        "location":
         lambda v: v.cshl_location,
 
-        "variant": 
+        "variant":
         lambda v: v.cshl_variant,
 
         "genotype":
@@ -329,10 +390,10 @@ class StudyWrapper(StudyWrapperBase):
                     self._get_wdae_member(
                         member, person_set_collection,
                         "/".join(
-                            [str(v) 
+                            [str(v)
                              for v in filter(
                                 lambda g: g != 0, genotype[index])
-                            ])
+                             ])
                     )
                 )
             except IndexError:
@@ -351,18 +412,13 @@ class StudyWrapper(StudyWrapperBase):
         return result
 
     def _build_variant_row(self, v, column_descs, **kwargs):
-        print("column descs:", column_descs)
 
         row_variant = []
         for col_desc in column_descs:
             try:
-                col_id = col_desc["id"]
                 col_source = col_desc["source"]
                 col_format = col_desc.get("format")
 
-                print(f"\tcol_id     >", col_id)
-                print(f"\tcol_source >", col_source)
-                print(f"\tcol_format >", col_format)
                 if col_format is None:
                     def col_formatter(val):
                         if val is None:
@@ -375,7 +431,7 @@ class StudyWrapper(StudyWrapperBase):
                             return "-"
                         try:
                             return col_format % val
-                        except:
+                        except Exception:
                             logging.exception(f'error build variant: {v}')
                             traceback.print_stack()
                             return "-"
@@ -388,19 +444,22 @@ class StudyWrapper(StudyWrapperBase):
                             v, person_set_collection
                         )
                     )
+                elif col_source == "variant":
+                    attribute = [
+                        aa.details.variant_desc for aa in v.alt_alleles]
+                    attribute = VariantDesc.combine(attribute)
+
+                    row_variant.append(",".join(attribute))
+
                 else:
                     if col_source in self.SPECIAL_ATTRS:
                         attribute = self.SPECIAL_ATTRS[col_source](v)
                     else:
                         attribute = v.get_attribute(col_source)
 
-                    print("\t>", col_source, ":", attribute)
                     if all([a == attribute[0] for a in attribute]):
                         attribute = [attribute[0]]
-
-                    print("\t\t>>attribute:", attribute)
                     attribute = list(map(col_formatter, attribute))
-                    print("\t\t>>formatted:", attribute)
 
                     row_variant.append(",".join([str(a) for a in attribute]))
 
@@ -429,7 +488,6 @@ class StudyWrapper(StudyWrapperBase):
         for v in self.query_variants(**kwargs):
             matched = True
             for aa in v.matched_alleles:
-                print("\t>>allele:", aa, aa.attributes)
                 assert not aa.is_reference_allele
                 if not filter_allele(aa):
                     matched = False
@@ -441,7 +499,6 @@ class StudyWrapper(StudyWrapperBase):
             row_variant = self._build_variant_row(
                 v, sources, person_set_collection=person_set_collection)
 
-            print(v, row_variant)
             yield row_variant
 
     def get_variant_web_rows(self, query, sources, max_variants_count=10000):
@@ -736,7 +793,6 @@ class StudyWrapper(StudyWrapperBase):
             row_variant = self._build_variant_row(
                 v, self.summary_preview_descs)
 
-            print("row_variant:", row_variant)
             yield row_variant
 
     STREAMING_CHUNK_SIZE = 20
@@ -756,11 +812,9 @@ class StudyWrapper(StudyWrapperBase):
 
                 for allele in variant.alt_alleles:
                     gene_weights_values = self._get_gene_weights_values(allele)
-                    print("gene_weights_values:", gene_weights_values)
                     allele.update_attributes(gene_weights_values)
 
                     if pheno_values:
-                        print("pheno_values:", pheno_values)
                         allele.update_attributes(pheno_values)
 
                 yield variant
@@ -1320,6 +1374,9 @@ class StudyWrapper(StudyWrapperBase):
             "studies",
             "has_present_in_child",
             "has_present_in_parent",
+            "has_denovo",
+            "genome",
+            "chr_prefix",
         ]
         result = {
             key: self.config.get(key, None) for key in keys
@@ -1396,9 +1453,9 @@ class RemoteStudyWrapper(StudyWrapperBase):
     def __init__(self, study_id, rest_client):
         self._remote_study_id = study_id
         self.rest_client = rest_client
-        self.study_id = self.rest_client.get_remote_dataset_id(study_id)
+
         config = self.rest_client.get_dataset_config(self._remote_study_id)
-        config["id"] = self.study_id
+        config["id"] = self.rest_client.get_remote_dataset_id(study_id)
         config["name"] = f"({rest_client.remote_id}) {config['name']}"
         del config["access_rights"]
         del config["groups"]
@@ -1410,7 +1467,15 @@ class RemoteStudyWrapper(StudyWrapperBase):
                 )
             )
 
-        self.config = FrozenBox(config)
+        if config.get("studies"):
+            config["studies"] = list(
+                map(
+                    self.rest_client.get_remote_dataset_id,
+                    config["studies"]
+                )
+            )
+
+        super(RemoteStudyWrapper, self).__init__(FrozenBox(config))
 
         self.phenotype_data = RemotePhenotypeData(
             self._remote_study_id,
@@ -1419,6 +1484,18 @@ class RemoteStudyWrapper(StudyWrapperBase):
 
         self.is_remote = True
 
+    def is_group(self):
+        pass
+
+    def families(self):
+        pass
+
+    def get_studies_ids(self, leafs=True):
+        studies = self.config["studies"]
+        if not studies:
+            return []
+        return studies
+
     def get_wdae_preview_info(self, query, max_variants_count=10000):
         query["datasetId"] = self._remote_study_id
         return self.rest_client.get_browser_preview_info(query)
@@ -1426,14 +1503,19 @@ class RemoteStudyWrapper(StudyWrapperBase):
     def get_variants_wdae_preview(self, query, max_variants_count=10000):
 
         study_filters = query.get("study_filters")
+        print("study_id:", self.study_id, "; study_filters:", study_filters)
         if study_filters is not None:
-            if self.study_id not in study_filters:
-                return
-            else:
-                del query["study_filters"]
+            del query["study_filters"]
+
+            # if self.study_id not in study_filters:
+            #     return
+            # else:
+            #     del query["study_filters"]
 
         query["datasetId"] = self._remote_study_id
         query["maxVariantsCount"] = max_variants_count
+        print("query:", query)
+
         response = self.rest_client.get_variants_preview(query)
         for line in response.iter_lines():
             if line:
