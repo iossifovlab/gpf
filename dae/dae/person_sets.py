@@ -70,9 +70,11 @@ class PersonSetCollection(NamedTuple):
         if person_set_collection is None:
             return "#FFFFFF"
 
-        for person_set in person_set_collection.person_sets.values():
-            if person.person_id in person_set.persons:
-                return person_set.color
+        matching_person_set = person_set_collection.get_person_set_of_person(
+            person.person_id
+        )
+        if matching_person_set is not None:
+            return matching_person_set.color
 
         print(
             f"Person '{person.person_id}' could not be found in any"
@@ -190,3 +192,9 @@ class PersonSetCollection(NamedTuple):
                     ] = person
 
         return new_collection
+
+    def get_person_set_of_person(self, person_id: str):
+        for person_set in self.person_sets.values():
+            if person_id in person_set.persons:
+                return person_set
+        return None

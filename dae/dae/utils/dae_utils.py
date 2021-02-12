@@ -52,4 +52,4 @@ def join_line(ln, sep="\t"):
 
 
 def members_in_order_get_family_structure(mio):
-    return "".join([f"{p.role.name}{p.sex.short()}" for p in mio])
+    return [f"{p.role.name}:{p.sex.short()}:{p.status.name}" for p in mio]
