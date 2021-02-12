@@ -1,7 +1,7 @@
 import pytest
 
 from dae.pheno.pheno_db import PhenotypeDataStudy
-from dae.pheno_tool.pheno_common import PhenoFilterBuilder
+from dae.utils.person_filters import PhenoFilterBuilder
 
 
 @pytest.fixture
