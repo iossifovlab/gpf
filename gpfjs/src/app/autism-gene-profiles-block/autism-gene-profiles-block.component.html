@@ -6,7 +6,7 @@
     </ng-template>
   </li>
 
-  <li class="nav-tabs" *ngFor="let geneTab of geneTabs" [ngbNavItem]="geneTab">
+  <li class="nav-tabs" *ngFor="let geneTab of geneTabs" [ngbNavItem]="geneTab" [destroyOnHide]="false">
     <a ngbNavLink>
       {{geneTab}}
       <span class="close position-relative pl-2 font-weight-light" (click)="closeTab($event, geneTab)">×</span>
