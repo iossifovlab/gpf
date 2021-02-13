@@ -2,10 +2,10 @@
 
   <h2>{{geneSymbol}}</h2>
 
-  <table class="table table-bordered table-centered table-header-rotate">
+  <table class="table table-bordered table-centered" style="width: 49%; float: left; margin-right: 15px;">
     <th [attr.colspan]="2" style="text-align: center;">Autism scores</th>
     <tr *ngFor="let autismScore of gene.autismScores | keyvalue; let i = index" class="card-block">
-      <td>{{formatScoreName(autismScore.key)}}</td>
+      <td style="vertical-align: middle;">{{formatScoreName(autismScore.key)}}</td>
       <td>
         <gpf-histogram *ngIf="autismScoreGeneWeights"
           width="650" height="145"
@@ -20,10 +20,10 @@
     </tr>
   </table>
 
-  <table class="table table-bordered table-centered table-header-rotate" style="margin-top: 50px;">
+  <table class="table table-bordered table-centered" style="width: 49%; float: left; margin-right: 15px;">
     <th [attr.colspan]="2" style="text-align: center;">Protection scores</th>
     <tr *ngFor="let protectionScore of gene.protectionScores | keyvalue; let i = index" class="card-block">
-      <td>{{formatScoreName(protectionScore.key)}}</td>
+      <td style="vertical-align: middle;">{{formatScoreName(protectionScore.key)}}</td>
       <td>
         <gpf-histogram *ngIf="protectionScoreGeneWeights"
           width="650" height="145"
@@ -38,7 +38,7 @@
     </tr>
   </table>
 
-  <table class="table table-bordered table-centered table-header-rotate" style="margin-top: 50px;">
+  <table class="table table-bordered table-centered" style="width: 30%; float: left; margin-right: 15px;">
     <th [attr.colspan]="2" style="text-align: center;">Gene lists</th>
     <tr *ngFor="let geneList of geneLists" class="card-block">
       <td>{{geneList}}</td>
