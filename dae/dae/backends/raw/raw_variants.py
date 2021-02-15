@@ -1,5 +1,6 @@
 import sys
 import time
+import logging
 
 from dae.variants.variant import SummaryAllele
 from dae.variants.family_variant import FamilyAllele
@@ -10,6 +11,9 @@ from dae.backends.attributes_query import (
     inheritance_query,
     variant_type_query,
 )
+
+
+logger = logging.getLogger(__name__)
 
 
 class RawFamilyVariants:
@@ -303,22 +307,26 @@ class RawFamilyVariants:
 
         # for _, vs in self.full_variants_iterator():
         for v in self.family_variants_iterator():
-            if v.is_unknown() and not return_unknown:
-                continue
+            try:
+                if v.is_unknown() and not return_unknown:
+                    continue
 
-            if not self.filter_variant(v, **kwargs):
-                continue
+                if not self.filter_variant(v, **kwargs):
+                    continue
 
-            alleles = v.alleles
-            alleles_matched = []
-            for allele in alleles:
-                if self.filter_allele(allele, **kwargs):
-                    if allele.allele_index == 0 and not return_reference:
-                        continue
-                    alleles_matched.append(allele.allele_index)
-            if alleles_matched:
-                v.set_matched_alleles(alleles_matched)
-                yield v
+                alleles = v.alleles
+                alleles_matched = []
+                for allele in alleles:
+                    if self.filter_allele(allele, **kwargs):
+                        if allele.allele_index == 0 and not return_reference:
+                            continue
+                        alleles_matched.append(allele.allele_index)
+                if alleles_matched:
+                    v.set_matched_alleles(alleles_matched)
+                    yield v
+            except Exception as ex:
+                logger.error(f"unexpected error {ex}")
+                logger.exception(ex)
 
 
 class RawMemoryVariants(RawFamilyVariants):
