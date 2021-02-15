@@ -453,9 +453,11 @@ class QueryTransformer:
 
         if "geneWeights" in kwargs:
             gene_weights = kwargs.pop("geneWeights", {})
-            if "genes" not in kwargs:
-                kwargs["genes"] = []
-            kwargs["genes"] += self._transform_gene_weights(gene_weights)
+            genes = self._transform_gene_weights(gene_weights)
+            if genes is not None:
+                if "genes" not in kwargs:
+                    kwargs["genes"] = []
+                kwargs["genes"] += genes
 
         for key in list(kwargs.keys()):
             if key in self.FILTER_RENAMES_MAP:
