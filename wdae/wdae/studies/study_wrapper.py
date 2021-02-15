@@ -337,7 +337,7 @@ class StudyWrapper(StudyWrapperBase):
         lambda v: v.cshl_location,
 
         "variant":
-        lambda v: v.cshl_variant,
+        lambda v: v.cshl_variant_full,
 
         "genotype":
         lambda v: [

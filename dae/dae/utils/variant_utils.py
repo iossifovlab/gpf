@@ -80,7 +80,7 @@ def str2gt(gts):
 
     for col, pgts in enumerate(gts):
         vals = [
-            int(p) if p != "." else -1 
+            int(p) if p != "." else -1
             for p in pgts.split("/")
         ]
         result[0, col] = vals[0]
@@ -179,26 +179,25 @@ def trim_str_back(pos, ref, alt):
 def cshl_format(pos, ref, alt, trimmer=trim_str_front):
     p, r, a = trimmer(pos, ref, alt)
     if len(r) == len(a) and len(r) == 0:
-        return p, VariantDesc(
-            VariantType.comp, ref=r, alt=a, length=0) 
+        return VariantDesc(
+            VariantType.comp, p, ref=r, alt=a, length=0)
 
     if len(r) == len(a) and len(r) == 1:
-        return p, VariantDesc(
-            VariantType.substitution, ref=r, alt=a, length=1)
+        return VariantDesc(
+            VariantType.substitution, p, ref=r, alt=a, length=1)
 
     if len(r) > len(a) and len(a) == 0:
-        wx = f"del({len(r)})"
-        return p, VariantDesc(
-            VariantType.deletion, length=len(r)
+        return VariantDesc(
+            VariantType.deletion, p, length=len(r)
         )
 
     # len(ref) < len(alt):
     if len(r) < len(a) and len(r) == 0:
-        return p, VariantDesc(
-            VariantType.insertion, alt=a, length=len(a))
+        return VariantDesc(
+            VariantType.insertion, p, alt=a, length=len(a))
 
-    return p, VariantDesc(
-        VariantType.comp, ref=r, alt=a, length=max(len(r), len(a))
+    return VariantDesc(
+        VariantType.comp, p, ref=r, alt=a, length=max(len(r), len(a))
     )
 
 
@@ -279,8 +278,8 @@ def liftover_variant(chrom, pos, ref, alt, lo, target_genome):
     return (lo_chrom, lo_pos, lo_ref, lo_alt)
 
 
-def tandem_repeat_unit(ref, alt, max_period=25, min_reference=8):
-    for period in range(1, max_period + 1):
+def tandem_repeat(ref, alt, min_mono_reference=8):
+    for period in range(1, len(ref) // 2 + 1):
         if len(ref) % period != 0:
             continue
         unit = ref[:period]
@@ -295,25 +294,33 @@ def tandem_repeat_unit(ref, alt, max_period=25, min_reference=8):
         if alt_repeats * unit != alt:
             continue
 
-        if len(unit) == 1 and len(ref) < min_reference:
+        if len(unit) == 1 and len(ref) < min_mono_reference:
             return None, None, None
 
         return unit, ref_repeats, alt_repeats
     return None, None, None
 
 
-def tandem_repeat(chrom, position, ref, alt):
-    pass
-
-
 def vcf2cshl(pos, ref, alt, trimmer=trim_str_back):
-    unit, tr_ref, tr_alt = tandem_repeat_unit(ref, alt)
-    if unit is not None:
+    tr_vd = None
+    tr_unit, tr_ref, tr_alt = tandem_repeat(ref, alt)
+
+    if tr_unit is not None:
+
         assert tr_ref is not None
         assert tr_alt is not None
 
-        return pos, VariantDesc(
-            VariantType.tandem_repeat, ref=tr_ref, alt=tr_alt, unit=unit)
+        tr_vd = VariantDesc(
+            VariantType.tandem_repeat, pos, 
+            tr_ref=tr_ref, tr_alt=tr_alt, tr_unit=tr_unit)
 
-    vp, vt = cshl_format(pos, ref, alt, trimmer=trimmer)
-    return vp, vt
+        vd = cshl_format(pos, ref, alt, trimmer=trimmer)
+
+        vd.variant_type |= tr_vd.variant_type
+        vd.tr_unit = tr_vd.tr_unit
+        vd.tr_ref = tr_vd.tr_ref
+        vd.tr_alt = tr_vd.tr_alt
+
+        return vd
+
+    return cshl_format(pos, ref, alt, trimmer=trimmer)

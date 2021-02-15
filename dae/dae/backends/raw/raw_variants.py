@@ -230,7 +230,7 @@ class RawFamilyVariants:
                 parsed = variant_type_query.transform_query_string_to_tree(
                     parsed
                 )
-
+            print(parsed)
             kwargs[
                 "variant_type"
             ] = variant_type_query.transform_tree_to_matcher(parsed)

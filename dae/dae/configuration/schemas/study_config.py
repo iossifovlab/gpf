@@ -226,6 +226,7 @@ study_config_schema = {
     "has_transmitted": {"type": "boolean"},
     "has_complex": {"type": "boolean"},
     "has_cnv": {"type": "boolean"},
+    "has_tandem_repeat": {"type": "boolean"},
     "genotype_storage": {
         "type": "dict",
         "schema": genotype_storage_schema,
