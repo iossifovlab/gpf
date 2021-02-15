@@ -146,7 +146,7 @@ class AutismGeneProfileDB:
 
     def get_agp(self, gene_symbol):
         symbol_id = self._get_gene_symbol_id(gene_symbol)
-        sets_in = self._get_gene_symbol_sets(symbol_id)
+        sets_in = list(self._get_gene_symbol_sets(symbol_id))
         sets_in = [
             row[0] for row in
             filter(lambda row: row["present"] == 1, sets_in)
@@ -309,7 +309,6 @@ class AutismGeneProfileDB:
             if left is None:
                 left = self.gene_symbols
 
-
             current_join = join(
                 left, table_alias,
                 and_(
@@ -447,13 +446,18 @@ class AutismGeneProfileDB:
                         score_value=value
                     )
                 )
-            for gene_set in agp.gene_sets:
-                gene_set_db = self._get_gene_set(gene_set)
-                set_id = gene_set_db[0]
+            gene_sets = self._get_gene_sets()
+            for gs_row in gene_sets:
+                if gs_row["set_name"] in agp.gene_sets:
+                    present = 1
+                else:
+                    present = 0
+                set_id = gs_row["id"]
                 connection.execute(
                     insert(self.gene_symbol_sets).values(
                         symbol_id=symbol_id,
-                        set_id=set_id
+                        set_id=set_id,
+                        present=present
                     )
                 )
 
