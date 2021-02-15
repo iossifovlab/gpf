@@ -44,20 +44,28 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
     }
   }
 
+  openHomeTab() {
+    this.nav.select('autismGenesTool');
+  }
+
+  openLastTab() {
+    this.nav.select([...this.geneTabs][this.geneTabs.size - 1]);
+  }
+
   openTabAtIndex(index: number) {
-    if (index !== 0) {
-      this.nav.select([...this.geneTabs][index - 1]);
-    } else if (this.geneTabs.size !== 0) {
-      this.nav.select([...this.geneTabs][index]);
-    } else {
-      this.nav.select('autismGenesTool');
-    }
+    this.nav.select([...this.geneTabs][index]);
   }
 
   closeTab(event: MouseEvent, tabId: string) {
-    const index = [...this.geneTabs].indexOf(tabId);
-    this.geneTabs.delete(tabId);
-    this.openTabAtIndex(index);
+    if (tabId === 'autismGenesTool') {
+      return;
+    }
+
+    if (this.nav.activeId === tabId) {
+      this.closeCurrentTab();
+    } else {
+      this.geneTabs.delete(tabId);
+    }
 
     event.preventDefault();
     event.stopImmediatePropagation();
@@ -70,7 +78,14 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
 
     const index = [...this.geneTabs].indexOf(this.nav.activeId);
     this.geneTabs.delete(this.nav.activeId);
-    this.openTabAtIndex(index);
+
+    if ([...this.geneTabs].length === 0) {
+      this.openHomeTab();
+    } else if ([...this.geneTabs].length === index) {
+      this.openLastTab();
+    } else {
+      this.openTabAtIndex(index);
+    }
   }
 
   openTabByKey(key) {
@@ -79,11 +94,11 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
     }
 
     if (key === '0' || key === '9') {
-      this.nav.select([...this.geneTabs][this.geneTabs.size - 1]);
+      this.openLastTab();
     } else if (key === '1' || key === '`') {
-      this.nav.select('autismGenesTool');
+      this.openHomeTab();
     } else if (Number(key) - 1 <= this.geneTabs.size) {
-      this.nav.select([...this.geneTabs][Number(key) - 2]);
+      this.openTabAtIndex(Number(key) - 2);
     }
   }
 }
