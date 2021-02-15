@@ -37,6 +37,7 @@ class FamilyType(Enum):
     MULTIGENERATIONAL = auto()
     SIMPLEX = auto()
     MULTIPLEX = auto()
+    OTHER = auto()
 
 
 class Person(object):
@@ -301,7 +302,40 @@ class Family(object):
 
     @property
     def family_type(self):
-        raise NotImplementedError()
+        has_grandparent = any([
+            person.role in (
+                Role.maternal_grandfather,
+                Role.maternal_grandmother,
+                Role.paternal_grandfather,
+                Role.paternal_grandmother
+            ) for person in self.persons.values()
+        ])
+
+        unaffected_parents = all([
+            person.status is Status.unaffected
+            for person in self.get_members_with_roles([Role.mom, Role.dad])
+        ])
+
+        affected_siblings = any([
+            person.status is Status.affected
+            for person in self.get_members_with_roles([Role.sib])
+        ])
+
+        if has_grandparent:
+            return FamilyType.MULTIGENERATIONAL
+        if unaffected_parents:
+            if len(self.persons) == 3:
+                return FamilyType.TRIO
+            elif len(self.persons) == 4 and not affected_siblings:
+                return FamilyType.QUAD
+            elif affected_siblings:
+                return FamilyType.MULTIPLEX
+        else:
+            if affected_siblings:
+                return FamilyType.MULTIPLEX
+            else:
+                return FamilyType.SIMPLEX
+        return FamilyType.OTHER
 
     @staticmethod
     def merge(l_fam: "Family", r_fam: "Family") -> "Family":
@@ -424,7 +458,12 @@ class FamiliesData(Mapping):
 
     @property
     def families_by_type(self):
-        raise NotImplementedError()
+        if not self._families_by_type:
+            for family_id, family in self._families.items():
+                self._families_by_type.setdefault(
+                    family.family_type, []
+                ).append(family_id)
+        return self._families_by_type
 
     @staticmethod
     def from_family_persons(family_persons):

@@ -11,21 +11,21 @@ def trio_persons(family_id="trio_family"):
             "person_id": "mom",
             "sex": "F",
             "role": "mom",
-            "status": 0
+            "status": 1
         }),
         Person(**{
             "family_id": family_id,
             "person_id": "dad",
             "sex": "M",
             "role": "dad",
-            "status": 0
+            "status": 1
         }),
         Person(**{
             "family_id": family_id,
             "person_id": "p1",
             "sex": "M",
             "role": "prb",
-            "status": 1
+            "status": 2
         }),
     ]
 
@@ -38,7 +38,7 @@ def quad_persons():
         "person_id": "s1",
         "sex": "M",
         "role": "sib",
-        "status": 0
+        "status": 1
     }))
     return persons
 
@@ -51,7 +51,7 @@ def multigenerational_persons():
         "person_id": "grandparent",
         "sex": "M",
         "role": str(Role.maternal_grandfather),
-        "status": 0
+        "status": 1
     }))
     return persons
 
@@ -59,8 +59,8 @@ def multigenerational_persons():
 @pytest.fixture
 def simplex_persons():
     persons = trio_persons("simplex_family")
-    persons[0]._status = 1
-    persons[0]._attributes["status"] = 1
+    persons[0]._status = 2
+    persons[0]._attributes["status"] = 2
     return persons
 
 
@@ -72,7 +72,7 @@ def multiplex_persons():
         "person_id": "s1",
         "sex": "M",
         "role": "sib",
-        "status": 1
+        "status": 2
     }))
     return persons
 
@@ -100,7 +100,7 @@ def test_family_type_multigenerational(role):
         "person_id": "grandparent",
         "sex": "U",
         "role": str(role),
-        "status": 0
+        "status": 1
     }))
     family = Family.from_persons(persons)
     assert family.family_type is FamilyType.MULTIGENERATIONAL
@@ -132,9 +132,9 @@ def test_families_data_families_by_type(
         }
     )
     assert families_data.families_by_type == {
-        FamilyType.QUAD: "quad_family",
-        FamilyType.TRIO: "trio_family",
-        FamilyType.MULTIGENERATIONAL: "multigenerational_family",
-        FamilyType.SIMPLEX: "simplex_family",
-        FamilyType.MULTIPLEX: "multiplex_family",
+        FamilyType.QUAD: ["quad_family"],
+        FamilyType.TRIO: ["trio_family"],
+        FamilyType.MULTIGENERATIONAL: ["multigenerational_family"],
+        FamilyType.SIMPLEX: ["simplex_family"],
+        FamilyType.MULTIPLEX: ["multiplex_family"],
     }
