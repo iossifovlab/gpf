@@ -128,25 +128,24 @@ class GenotypeData(ABC):
 
     @abstractmethod
     def query_summary_variants(
-        self,
-        regions=None,
-        genes=None,
-        effect_types=None,
-        family_ids=None,
-        person_ids=None,
-        person_set_collection=None,
-        inheritance=None,
-        roles=None,
-        sexes=None,
-        variant_type=None,
-        real_attr_filter=None,
-        ultra_rare=None,
-        return_reference=None,
-        return_unknown=None,
-        limit=None,
-        study_filters=None,
-        **kwargs,
-    ):
+            self,
+            regions=None,
+            genes=None,
+            effect_types=None,
+            family_ids=None,
+            person_ids=None,
+            person_set_collection=None,
+            inheritance=None,
+            roles=None,
+            sexes=None,
+            variant_type=None,
+            real_attr_filter=None,
+            ultra_rare=None,
+            return_reference=None,
+            return_unknown=None,
+            limit=None,
+            study_filters=None,
+            **kwargs):
         pass
 
     @abstractproperty
