@@ -1,6 +1,8 @@
 import copy
 import logging
 
+from typing import Dict
+from enum import Enum, auto
 from collections import defaultdict
 from collections.abc import Mapping
 from dae.utils.helpers import isnan
@@ -27,6 +29,14 @@ PEDIGREE_COLUMN_NAMES = {
     "proband": "proband",
     "not_sequenced": "not_sequenced",
 }
+
+
+class FamilyType(Enum):
+    TRIO = auto()
+    QUAD = auto()
+    MULTIGENERATIONAL = auto()
+    SIMPLEX = auto()
+    MULTIPLEX = auto()
 
 
 class Person(object):
@@ -289,6 +299,10 @@ class Family(object):
             )
         return self._samples_index
 
+    @property
+    def family_type(self):
+        raise NotImplementedError()
+
     @staticmethod
     def merge(l_fam: "Family", r_fam: "Family") -> "Family":
         assert l_fam.family_id == r_fam.family_id, \
@@ -363,6 +377,7 @@ class FamiliesData(Mapping):
         self._broken = {}
         self._person_ids_with_parents = None
         self._real_persons = None
+        self._families_by_type: Dict[str, str] = {}
 
     def redefine(self):
         error_msgs = []
@@ -406,6 +421,10 @@ class FamiliesData(Mapping):
                 if not p.generated:
                     self._real_persons[p.person_id] = p
         return self._real_persons
+
+    @property
+    def families_by_type(self):
+        raise NotImplementedError()
 
     @staticmethod
     def from_family_persons(family_persons):
