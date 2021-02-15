@@ -1,5 +1,6 @@
-<div *ngIf="showFloatingHeader" class="table-header-sticky-div" [style.min-width.px]="calculateMinWidth(columnsChildren)">
+<div *ngIf="showFloatingHeader" class="table-header-sticky-div">
     <gpf-table-view-header
+        style="display: table-header-group;"
         [columns]="columnsChildren"
         [(sortingInfo)]="sortingInfo">
     </gpf-table-view-header>
@@ -23,6 +24,7 @@
             [data]="data"
             [noScrollOptimization]="noScrollOptimization"
             [style.width]="column.columnWidth ? column.columnWidth : null"
+            [style.max-width]="column.columnWidth ? column.columnWidth : null"
             style="vertical-align: middle">
         </gpf-table-view-cell>
     </div>

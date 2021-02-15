@@ -1,6 +1,6 @@
 import { Component, OnChanges, SimpleChanges, Input, OnInit } from '@angular/core';
-import { CategoricalFilterState, CategoricalSelection } from '../pheno-filters/pheno-filters';
-import { PhenoFilter } from '../datasets/datasets';
+import { CategoricalFilterState, CategoricalSelection } from '../person-filters/person-filters';
+import { PersonFilter } from '../datasets/datasets';
 import { StateRestoreService } from '../store/state-restore.service';
 import { PhenoBrowserService } from 'app/pheno-browser/pheno-browser.service';
 import { DatasetsService } from 'app/datasets/datasets.service';
@@ -12,9 +12,10 @@ import { Observable } from 'rxjs';
   styleUrls: ['./categorical-filter.component.css']
 })
 export class CategoricalFilterComponent implements OnInit, OnChanges {
-  @Input() categoricalFilter: PhenoFilter;
+  @Input() categoricalFilter: PersonFilter;
   @Input() categoricalFilterState: CategoricalFilterState;
-  measureDescription$: Observable<Object>;
+  sourceDescription$: Observable<Object>;
+  valuesDomain: any = [];
 
   constructor(
     private datasetsService: DatasetsService,
@@ -24,9 +25,19 @@ export class CategoricalFilterComponent implements OnInit, OnChanges {
   }
 
   ngOnInit(): void {
-    this.measureDescription$ = this.phenoBrowserService.getMeasureDesciption(
-      this.datasetsService.getSelectedDatasetId(), this.categoricalFilter.measure
-    );
+
+    if (this.categoricalFilter.from === 'phenodb') {
+      this.sourceDescription$ = this.phenoBrowserService.getMeasureDescription(
+        this.datasetsService.getSelectedDatasetId(), this.categoricalFilter.source
+      );
+    } else if (this.categoricalFilter.from === 'pedigree') {
+      this.sourceDescription$ = this.datasetsService.getDatasetPedigreeColumnDetails(
+        this.datasetsService.getSelectedDatasetId(), this.categoricalFilter.source
+      );
+    }
+    this.sourceDescription$.subscribe(res => {
+      this.valuesDomain = res['values_domain'];
+    });
   }
 
   ngOnChanges(change: SimpleChanges) {
@@ -35,19 +46,17 @@ export class CategoricalFilterComponent implements OnInit, OnChanges {
         .getState(this.constructor.name + this.categoricalFilterState.id)
         .take(1)
         .subscribe(state => {
-          if (state['phenoFilters']) {
-            this.restoreCategoricalFilter(state['phenoFilters']);
+          if (state['personFilters']) {
+            this.restoreCategoricalFilter(state['personFilters']);
           }
         });
     }
   }
 
   restoreCategoricalFilter(state) {
-    const phenoFilterState = state
-      .find(f => f.id === this.categoricalFilterState.id);
-    if (phenoFilterState) {
-      this.categoricalFilterState.selection =
-        phenoFilterState.selection.slice();
+    const personFilterState = state.find(f => f.id === this.categoricalFilterState.id);
+    if (personFilterState) {
+      this.categoricalFilterState.selection = personFilterState.selection.slice();
     }
   }
 

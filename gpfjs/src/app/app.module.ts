@@ -67,7 +67,7 @@ import { RouteReuseStrategy, RouterModule, Routes } from '@angular/router';
 import { TaggingRouteReuseStrategy } from 'app/route-reuse.strategy';
 
 import { StateRestoreService } from './store/state-restore.service';
-import { PhenoFiltersComponent } from './pheno-filters/pheno-filters.component';
+import { PersonFiltersComponent } from './person-filters/person-filters.component';
 import { FamilyFiltersBlockComponent } from './family-filters-block/family-filters-block.component';
 import { ContinuousFilterComponent } from './continuous-filter/continuous-filter.component';
 import { MultiContinuousFilterComponent } from './multi-continuous-filter/multi-continuous-filter.component';
@@ -163,6 +163,8 @@ import { Ng2SearchPipeModule } from 'ng2-search-filter';
 import { AutismGeneProfilesBlockComponent } from './autism-gene-profiles-block/autism-gene-profiles-block.component';
 import { AutismGeneSingleProfileComponent } from './autism-gene-single-profile/autism-gene-single-profile.component';
 import { MiddleClickDirective } from './autism-gene-profiles/middle-click.directive';
+import { PersonFiltersBlockComponent } from './person-filters-block/person-filters-block.component';
+import { PersonIdsComponent } from './person-ids/person-ids.component';
 
 const appRoutes: Routes = [
   {
@@ -295,7 +297,7 @@ const appRoutes: Routes = [
     FullscreenLoadingComponent,
     EncodeUriComponentPipe,
     EnrichmentModelsBlockComponent,
-    PhenoFiltersComponent,
+    PersonFiltersComponent,
     FamilyFiltersBlockComponent,
     ContinuousFilterComponent,
     MultiContinuousFilterComponent,
@@ -367,6 +369,8 @@ const appRoutes: Routes = [
     AutismGeneProfilesBlockComponent,
     AutismGeneSingleProfileComponent,
     MiddleClickDirective,
+    PersonFiltersBlockComponent,
+    PersonIdsComponent,
   ],
   imports: [
     BrowserModule,

@@ -108,16 +108,4 @@ export class GpfTableComponent {
     const scrollIndices  = this.getScrollIndices();
     return this.dataSource.slice(scrollIndices[0], scrollIndices[1]);
   }
-
-  // Calculates min width for the table columns
-  calculateMinWidth(columns): number {
-    let totalColumnsWidth = 0;
-
-    // Removes the 'px' from the end of each column width
-    for (const column of columns._results) {
-      totalColumnsWidth += Number(column.columnWidth.substring(0, column.columnWidth.length - 2));
-    }
-
-    return totalColumnsWidth + 5; // The '+5' is a temporary fix because the table resizing functions are nondeterministic
-  }
 }
