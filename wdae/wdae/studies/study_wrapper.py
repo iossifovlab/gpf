@@ -650,7 +650,7 @@ class StudyWrapper(StudyWrapperBase):
             yield variant
 
     def query_summary_variants(self, **kwargs):
-        kwargs = self._transform_kwargs(**kwargs)
+        kwargs = self.query_transformer.transform_kwargs(**kwargs)
         limit = None
         if "limit" in kwargs:
             limit = kwargs["limit"]

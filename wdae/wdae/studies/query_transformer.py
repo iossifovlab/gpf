@@ -53,7 +53,7 @@ class QueryTransformer:
         range_start = gene_weights.get("rangeStart", None)
         range_end = gene_weights.get("rangeEnd", None)
 
-        if weight_name and weight_name in self.gene_weights_db:
+        if weight_name and weight_name in self.study_wrapper.gene_weights_db:
             weight = self.study_wrapper.gene_weights_db[
                 gene_weights.get("weight")
             ]
@@ -129,7 +129,7 @@ class QueryTransformer:
                 return ("frequency_filter", frequency_filter)
         return (None, None)
 
-    def _present_in_child_to_roles(present_in_child):
+    def _present_in_child_to_roles(self, present_in_child):
         roles_query = []
 
         if "proband only" in present_in_child:
@@ -160,7 +160,7 @@ class QueryTransformer:
             return roles_query[0]
         return OrNode(roles_query)
 
-    def _present_in_parent_to_roles(present_in_parent):
+    def _present_in_parent_to_roles(self, present_in_parent):
         roles_query = []
 
         if "mother only" in present_in_parent:
