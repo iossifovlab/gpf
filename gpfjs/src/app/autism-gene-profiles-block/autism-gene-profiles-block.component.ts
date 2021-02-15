@@ -78,7 +78,7 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
       return;
     }
 
-    if (key === '0') {
+    if (key === '0' || key === '9') {
       this.nav.select([...this.geneTabs][this.geneTabs.size - 1]);
     } else if (key === '1' || key === '`') {
       this.nav.select('autismGenesTool');
