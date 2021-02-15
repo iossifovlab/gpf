@@ -43,6 +43,7 @@ from dae.backends.storage.impala_genotype_storage import ImpalaGenotypeStorage
 from dae.gene.denovo_gene_set_collection_factory import \
     DenovoGeneSetCollectionFactory
 from dae.autism_gene_profile.statistic import AGPStatistic
+from dae.autism_gene_profile.db import AutismGeneProfileDB
 
 
 logging.basicConfig(
@@ -990,6 +991,11 @@ def agp_gpf_instance(fixtures_gpf_instance, mocker, sample_agp):
         "get_gene_set_ids",
         return_value=main_gene_sets
     )
+    fixtures_gpf_instance.__autism_gene_profile_db = \
+        AutismGeneProfileDB(
+            os.path.join(fixtures_gpf_instance.dae_db_dir, "agpdb"),
+            clear=True
+        )
     fixtures_gpf_instance._autism_gene_profile_db.clear_all_tables()
     fixtures_gpf_instance._autism_gene_profile_db.populate_data_tables(
         fixtures_gpf_instance)

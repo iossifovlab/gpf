@@ -84,7 +84,7 @@ def test_agpdb_get_gene_sets(temp_dbfile, agp_gpf_instance):
 
 
 def test_agpdb_insert_and_get_agp(temp_dbfile, agp_gpf_instance, sample_agp):
-    agpdb = AutismGeneProfileDB(temp_dbfile)
+    agpdb = AutismGeneProfileDB(temp_dbfile, clear=True)
     agpdb.populate_data_tables(agp_gpf_instance)
     agpdb.insert_agp(sample_agp)
     agp = agpdb.get_agp("CHD8")
