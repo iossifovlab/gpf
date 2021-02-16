@@ -1,0 +1,12 @@
+<div class="card">
+    <div class="card-header card-title">Family Types</div>
+    <div class="card-block" style="padding: 5px">
+        <div *ngFor="let item of allFamilyTypes">
+            <input type="checkbox" 
+            [checked]="familyTypes.familyTypes.indexOf(item) !== -1"
+            (change)="checkFamilyType(item, familyTypes.familyTypes.indexOf(item) !== -1)">
+            <span style="padding-left: 10px;">{{item}}</span>
+        </div>
+        <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
+    </div>
+</div>
