@@ -131,13 +131,34 @@ def wdae_gpf_instance(
         "datasets_api.permissions.get_gpf_instance",
         return_value=fixtures_wgpf_instance,
     )
+    wdae_gpf_instance.__autism_gene_profile_config = None
 
     return fixtures_wgpf_instance
 
 
 @pytest.fixture(scope="function")
 def wdae_gpf_instance_agp(
-        db, mocker, admin_client, wdae_gpf_instance, sample_agp):
+        db, mocker, admin_client, wgpf_instance, sample_agp,
+        global_dae_fixtures_dir):
+
+    wdae_gpf_instance = wgpf_instance(global_dae_fixtures_dir)
+    reload_datasets(wdae_gpf_instance)
+    mocker.patch(
+        "query_base.query_base.get_gpf_instance",
+        return_value=wdae_gpf_instance,
+    )
+    mocker.patch(
+        "gpf_instance.gpf_instance.get_gpf_instance",
+        return_value=wdae_gpf_instance,
+    )
+    mocker.patch(
+        "gene_sets.expand_gene_set_decorator.get_gpf_instance",
+        return_value=wdae_gpf_instance,
+    )
+    mocker.patch(
+        "datasets_api.permissions.get_gpf_instance",
+        return_value=wdae_gpf_instance,
+    )
 
     agp_config = Box({
         'gene_sets': ['CHD8 target genes'],
@@ -159,12 +180,10 @@ def wdae_gpf_instance_agp(
             })
         })
     })
-    mocker.patch.object(
-        WGPFInstance,
-        "_autism_gene_profile_config",
-        return_value=agp_config,
-        new_callable=mocker.PropertyMock
-    )
+    wdae_gpf_instance.__autism_gene_profile_config = agp_config
+    print("bbb")
+    print(wdae_gpf_instance.__autism_gene_profile_config)
+    print(wdae_gpf_instance._autism_gene_profile_config)
     main_gene_sets = {
         'CHD8 target genes',
         'FMRP Darnell',
