@@ -40,14 +40,6 @@ export class AutismGeneProfilesComponent implements OnInit, OnChanges {
     return datasetConfig.effects.length * datasetConfig.personSets.length;
   }
 
-  sortAlphabetically(array: string[]): string[] {
-    return array.sort((a, b) => {
-      if (a < b) { return -1; }
-      if (a > b) { return 1; }
-      return 0;
-   });
-  }
-
   handleMultipleSelectMenuApplyEvent($event) {
     if ($event.id === 'geneLists') {
       this.shownGeneLists = $event.data;

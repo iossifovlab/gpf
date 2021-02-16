@@ -47,7 +47,7 @@
 
       <tr style="height: 110px;">
         <th class="table-subheader" rowspan="2">Gene search</th>
-        <th class="table-subheader" rowspan="2" *ngFor="let geneList of sortAlphabetically(shownGeneLists)"><span class="vertical-text">{{geneList}}</span></th>
+        <th class="table-subheader" rowspan="2" *ngFor="let geneList of shownGeneLists"><span class="vertical-text">{{geneList}}</span></th>
         <th class="table-subheader" rowspan="2" *ngFor="let autismScore of shownAutismScores"><span class="vertical-text">{{autismScore}}</span></th>
         <th class="table-subheader" rowspan="2" *ngFor="let protectionScore of shownProtectionScores"><span class="vertical-text">{{protectionScore}}</span></th>
 
