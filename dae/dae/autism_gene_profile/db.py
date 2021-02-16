@@ -547,10 +547,7 @@ class AutismGeneProfileDB:
             else:
                 self.configuration = self.configuration.to_dict()
 
-            gene_lists = dict()
-            for idx, gs in enumerate(self.configuration["gene_sets"]):
-                gene_lists[idx] = gs
-            self.configuration["gene_lists"] = gene_lists
+            self.configuration["gene_lists"] = self.configuration["gene_sets"]
             for dataset in self.configuration["datasets"]:
                 dataset_dict = self.configuration["datasets"][dataset]
                 person_sets = dataset_dict["person_sets"]
