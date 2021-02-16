@@ -28,7 +28,7 @@ def handle_partial_permissions(user, dataset_id: str, request_data: dict):
     in order to filter variants from studies the user cannot access.
     """
 
-    request_data["study_filters"] = \
+    request_data["allowed_studies"] = \
         get_allowed_genotype_studies(user, dataset_id)
 
 

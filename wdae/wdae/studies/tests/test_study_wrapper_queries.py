@@ -101,7 +101,7 @@ def test_query_sexes_variants(
         iossifov_2014_wrappers, wrapper_type, sexes, count):
     study_wrapper = iossifov_2014_wrappers[wrapper_type]
     query = {
-        "sexes": sexes
+        "gender": sexes
     }
     variants = list(study_wrapper.get_variants_wdae_preview(query))
 
@@ -127,7 +127,7 @@ def test_query_variant_type_variants(
         iossifov_2014_wrappers, wrapper_type, variant_type, count):
     study_wrapper = iossifov_2014_wrappers[wrapper_type]
     query = {
-        "variant_type": variant_type
+        "variantTypes": variant_type
     }
     variants = list(study_wrapper.get_variants_wdae_preview(query))
 
