@@ -321,22 +321,19 @@ class StudyWrapper(StudyWrapperBase):
         "variant":
         lambda v: v.cshl_variant_full,
 
+        "position":
+        lambda v: [aa.position for aa in v.alt_alleles],
+
+        "reference":
+        lambda v: [aa.reference for aa in v.alt_alleles],
+
+        "alternative":
+        lambda v: [aa.alternative for aa in v.alt_alleles],
+
         "genotype":
         lambda v: [
             "/".join([str(g) for g in gt])
             for gt in v.family_genotype],
-
-        "effects":
-        lambda v: [ge2str(e) for e in v.effects],
-
-        "genes":
-        lambda v: [gene_effect_get_genes(e) for e in v.effects],
-
-        "worst_effect":
-        lambda v: [gene_effect_get_worst_effect(e) for e in v.effects],
-
-        "effect_details":
-        lambda v: [gd2str(e) for e in v.effects],
 
         "best_st":
         lambda v: [mat2str(v.best_state)],
@@ -350,7 +347,8 @@ class StudyWrapper(StudyWrapperBase):
             lambda m: m.person_id, v.members_in_order
         )),
 
-        "carrier_person_ids": lambda v: list(map(
+        "carrier_person_ids":
+        lambda v: list(map(
             lambda aa: list(filter(None, aa.variant_in_members)), v.alt_alleles
         )),
 
@@ -368,6 +366,18 @@ class StudyWrapper(StudyWrapperBase):
         lambda v: bool(
             Inheritance.denovo in v.inheritance_in_members
         ),
+
+        "effects":
+        lambda v: [ge2str(e) for e in v.effects],
+
+        "genes":
+        lambda v: [gene_effect_get_genes(e) for e in v.effects],
+
+        "worst_effect":
+        lambda v: [gene_effect_get_worst_effect(e) for e in v.effects],
+
+        "effect_details":
+        lambda v: [gd2str(e) for e in v.effects],
 
         "seen_in_affected":
         lambda v: bool(v.get_attribute("seen_in_status") in {2, 3}),
@@ -927,7 +937,10 @@ class StudyWrapper(StudyWrapperBase):
 
     def get_persons_phenotypes(self, person_ids: List[str]):
         result = list()
-        collection = self.person_set_collections["phenotype"]
+        collection = self.person_set_collections.get("phenotype")
+        if collection is None:
+            return result
+
         for pid in person_ids:
             result.append(collection.get_person_set_of_person(pid).id)
         return result
