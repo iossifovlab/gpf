@@ -48,29 +48,28 @@ class SummaryVariantsQueryBuilder(BaseQueryBuilder):
 
     def build_group_by(self):
         self._add_to_product(
-            "GROUP BY bucket_index, summary_index, variant_type")
+            "GROUP BY bucket_index, summary_index, allele_index, variant_type")
 
     def build_having(self, **kwargs):
         pass
 
     def build_where(
-        self,
-        regions=None,
-        genes=None,
-        effect_types=None,
-        family_ids=None,
-        person_ids=None,
-        inheritance=None,
-        roles=None,
-        sexes=None,
-        variant_type=None,
-        real_attr_filter=None,
-        ultra_rare=None,
-        frequency_filter=None,
-        return_reference=None,
-        return_unknown=None,
-        **kwargs
-    ):
+            self,
+            regions=None,
+            genes=None,
+            effect_types=None,
+            family_ids=None,
+            person_ids=None,
+            inheritance=None,
+            roles=None,
+            sexes=None,
+            variant_type=None,
+            real_attr_filter=None,
+            ultra_rare=None,
+            frequency_filter=None,
+            return_reference=None,
+            return_unknown=None,
+            **kwargs):
         where_clause = self._base_build_where(
             regions=regions,
             genes=genes,
