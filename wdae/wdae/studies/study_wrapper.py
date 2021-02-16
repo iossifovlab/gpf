@@ -988,9 +988,12 @@ class RemoteStudyWrapper(StudyWrapperBase):
     def get_variants_wdae_preview(self, query, max_variants_count=10000):
 
         study_filters = query.get("study_filters")
-        print("study_id:", self.study_id, "; study_filters:", study_filters)
+        logger.debug(
+            f"study_id: {self.study_id}; study_filters: {study_filters}")
         if study_filters is not None:
             del query["study_filters"]
+        if query.get("allowed_studies"):
+            del query["allowed_studies"]
 
             # if self.study_id not in study_filters:
             #     return

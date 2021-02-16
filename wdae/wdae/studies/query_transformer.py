@@ -358,7 +358,8 @@ class QueryTransformer:
             person_set_collections_query["checkedValues"]
         )
 
-        person_set_collection = self.genotype_data_study \
+        person_set_collection = self.study_wrapper\
+            .genotype_data_study \
             .get_person_set_collection(person_set_collection_id)
 
         if set(person_set_collection.person_sets.keys()) == \
@@ -463,21 +464,16 @@ class QueryTransformer:
                     kwargs["genes"] = []
                 kwargs["genes"] += genes
 
-        for key in list(kwargs.keys()):
-            if key in self.FILTER_RENAMES_MAP:
-                kwargs[self.FILTER_RENAMES_MAP[key]] = kwargs[key]
-                kwargs.pop(key)
-
-        if "sexes" in kwargs:
-            sexes = set(kwargs["sexes"])
+        if "gender" in kwargs:
+            sexes = set(kwargs["gender"])
             if sexes != set(["female", "male", "unspecified"]):
                 sexes = [ContainsNode(sex_converter(sex)) for sex in sexes]
-                kwargs["sexes"] = OrNode(sexes)
+                kwargs["gender"] = OrNode(sexes)
             else:
-                kwargs["sexes"] = None
+                kwargs["gender"] = None
 
-        if "variant_type" in kwargs:
-            variant_types = set(kwargs["variant_type"])
+        if "variantTypes" in kwargs:
+            variant_types = set(kwargs["variantTypes"])
 
             if variant_types != {"ins", "del", "sub", "CNV"}:
                 if "CNV" in variant_types:
@@ -489,27 +485,26 @@ class QueryTransformer:
                     ContainsNode(variant_type_converter(t))
                     for t in variant_types
                 ]
-                kwargs["variant_type"] = OrNode(variant_types)
+                kwargs["variantTypes"] = OrNode(variant_types)
             else:
-                del kwargs["variant_type"]
+                del kwargs["variantTypes"]
 
-        if "effect_types" in kwargs:
-            kwargs["effect_types"] = expand_effect_types(
-                kwargs["effect_types"]
+        if "effectTypes" in kwargs:
+            kwargs["effectTypes"] = expand_effect_types(
+                kwargs["effectTypes"]
             )
 
-        if "studyFilters" in kwargs:
-            if kwargs["studyFilters"]:
-                request = set([
-                    sf["studyId"] for sf in kwargs["studyFilters"]
-                ])
-                study_filters = kwargs.get("study_filters")
-                if study_filters is None:
-                    kwargs["study_filters"] = request
-                else:
-                    kwargs["study_filters"] = request & set(study_filters)
-            else:
-                del kwargs["studyFilters"]
+        if kwargs.get("studyFilters"):
+            request = set([
+                sf["studyId"] for sf in kwargs["studyFilters"]
+            ])
+            if kwargs.get("allowed_studies"):
+                request = request & set(kwargs.pop("allowed_studies"))
+            kwargs["study_filters"] = request
+
+            del kwargs["studyFilters"]
+        elif kwargs.get("allowed_studies"):
+            kwargs["study_filters"] = set(kwargs.pop("allowed_studies"))
 
         if "personFilters" in kwargs:
             person_filters = kwargs.pop("personFilters")
@@ -537,8 +532,9 @@ class QueryTransformer:
         if "familyTypes" in kwargs:
             for family_type in kwargs["familyTypes"]:
                 family_type = FamilyType.from_name(family_type)
-                family_ids_with_type = \
-                    self.families.families_by_type.get(family_type, set())
+                family_ids_with_type = self.study_wrapper\
+                    .families\
+                    .families_by_type.get(family_type, set())
                 if "familyIds" in kwargs:
                     family_ids_with_type = set.intersection(
                         family_ids_with_type, set(kwargs.pop("familyIds"))
@@ -555,4 +551,10 @@ class QueryTransformer:
             kwargs["affected_status"] = [
                 status.lower() for status in statuses
             ]
+
+        for key in list(kwargs.keys()):
+            if key in self.FILTER_RENAMES_MAP:
+                kwargs[self.FILTER_RENAMES_MAP[key]] = kwargs[key]
+                kwargs.pop(key)
+
         return kwargs

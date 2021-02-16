@@ -306,6 +306,8 @@ def test_mixed_dataset_rights_with_study_filters(db, user, user_client):
     res = response.streaming_content
     res = json.loads("".join(map(lambda x: x.decode("utf-8"), res)))
 
+    print(res)
+
     assert len(res) == 0
 
 # END: Adaptive datasets rights
