@@ -1,7 +1,7 @@
 import copy
 import logging
 
-from typing import Dict
+from typing import Dict, Set
 from enum import Enum, auto
 from collections import defaultdict
 from collections.abc import Mapping
@@ -38,6 +38,24 @@ class FamilyType(Enum):
     SIMPLEX = auto()
     MULTIPLEX = auto()
     OTHER = auto()
+
+    @staticmethod
+    def from_name(name: str):
+        assert isinstance(name, str)
+        name = name.lower()
+        if name == "trio":
+            return FamilyType.TRIO
+        elif name == "quad":
+            return FamilyType.QUAD
+        elif name == "multigenerational":
+            return FamilyType.MULTIGENERATIONAL
+        elif name == "simplex":
+            return FamilyType.SIMPLEX
+        elif name == "multiplex":
+            return FamilyType.MULTIPLEX
+        elif name == "other":
+            return FamilyType.OTHER
+        raise ValueError(f"unexpected family type name: {name}")
 
 
 class Person(object):
@@ -411,7 +429,7 @@ class FamiliesData(Mapping):
         self._broken = {}
         self._person_ids_with_parents = None
         self._real_persons = None
-        self._families_by_type: Dict[str, str] = {}
+        self._families_by_type: Dict[str, Set[str]] = {}
 
     def redefine(self):
         error_msgs = []
@@ -461,8 +479,8 @@ class FamiliesData(Mapping):
         if not self._families_by_type:
             for family_id, family in self._families.items():
                 self._families_by_type.setdefault(
-                    family.family_type, []
-                ).append(family_id)
+                    family.family_type, set()
+                ).add(family_id)
         return self._families_by_type
 
     @staticmethod

@@ -26,6 +26,7 @@ from dae.utils.effect_utils import (
 
 from dae.utils.regions import Region
 from dae.utils.person_filters import PhenoFilterBuilder
+from dae.pedigrees.family import FamilyType
 from dae.variants.attributes import Role, Inheritance, VariantDesc
 from dae.variants.family_variant import FamilyVariant
 
@@ -786,6 +787,17 @@ class StudyWrapper(StudyWrapperBase):
         if "personIds" in kwargs:
             kwargs["person_ids"] = kwargs["personIds"]
 
+        if "familyTypes" in kwargs:
+            for family_type in kwargs["familyTypes"]:
+                family_type = FamilyType.from_name(family_type)
+                family_ids_with_type = \
+                    self.families.families_by_type.get(family_type, set())
+                if "family_ids" in kwargs:
+                    family_ids_with_type = set.intersection(
+                        family_ids_with_type, set(kwargs.pop("family_ids"))
+                    )
+                kwargs["family_ids"] = family_ids_with_type
+
         if "inheritanceTypeFilter" in kwargs:
             kwargs["inheritance"].append(
                 "any({})".format(
@@ -1321,10 +1333,10 @@ class StudyWrapper(StudyWrapperBase):
         return reduce(set.intersection, result)
 
     def _transform_person_filters(self, kwargs):
-        matching_person_ids = self._transform_filters_to_ids(
-            kwargs.pop("personFilters")
-        )
-        if matching_person_ids is not None:
+        if kwargs["personFilters"]:
+            matching_person_ids = self._transform_filters_to_ids(
+                kwargs.pop("personFilters")
+            )
             if "person_ids" in kwargs:
                 matching_person_ids = set.intersection(
                     matching_person_ids, set(kwargs.pop("person_ids"))
@@ -1333,10 +1345,10 @@ class StudyWrapper(StudyWrapperBase):
         return kwargs
 
     def _transform_family_filters(self, kwargs):
-        matching_family_ids = self._transform_filters_to_ids(
-            kwargs.pop("familyFilters")
-        )
-        if matching_family_ids is not None:
+        if kwargs["familyFilters"]:
+            matching_family_ids = self._transform_filters_to_ids(
+                kwargs.pop("familyFilters")
+            )
             if "family_ids" in kwargs:
                 matching_family_ids = set.intersection(
                     matching_family_ids, set(kwargs.pop("family_ids"))
