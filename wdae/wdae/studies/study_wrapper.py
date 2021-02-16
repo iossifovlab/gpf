@@ -10,17 +10,12 @@ from abc import abstractmethod
 from box import Box
 
 from dae.utils.variant_utils import mat2str
-from dae.utils.dae_utils import (
-    split_iterable,
-    join_line,
-    members_in_order_get_family_structure,
-)
-from dae.utils.effect_utils import (
-    ge2str,
-    gd2str,
-    gene_effect_get_worst_effect,
-    gene_effect_get_genes,
-)
+from dae.utils.dae_utils import split_iterable, join_line
+
+from dae.utils.effect_utils import ge2str, \
+    gd2str, \
+    gene_effect_get_worst_effect, \
+    gene_effect_get_genes
 
 from dae.utils.person_filters import PhenoFilterBuilder
 from dae.variants.attributes import Role, Inheritance, VariantDesc
@@ -36,6 +31,10 @@ from studies.query_transformer import QueryTransformer
 
 
 logger = logging.getLogger(__name__)
+
+
+def members_in_order_get_family_structure(mio):
+    return [f"{p.role.name}:{p.sex.short()}:{p.status.name}" for p in mio]
 
 
 class StudyWrapperBase(GenotypeData):
@@ -348,9 +347,11 @@ class StudyWrapper(StudyWrapperBase):
         )),
 
         "carrier_person_ids":
-        lambda v: list(map(
-            lambda aa: list(filter(None, aa.variant_in_members)), v.alt_alleles
-        )),
+        lambda v: list(
+            map(
+                lambda aa: list(filter(None, aa.variant_in_members)),
+                v.alt_alleles
+            )),
 
         "carrier_person_attributes": lambda v: list(map(
             lambda aa: list(filter(None, members_in_order_get_family_structure(
