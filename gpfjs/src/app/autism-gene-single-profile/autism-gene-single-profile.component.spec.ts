@@ -1,4 +1,7 @@
+import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ConfigService } from 'app/config/config.service';
+import { GeneWeightsService } from 'app/gene-weights/gene-weights.service';
 
 import { AutismGeneSingleProfileComponent } from './autism-gene-single-profile.component';
 
@@ -8,7 +11,9 @@ describe('AutismGeneSingleProfileComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ AutismGeneSingleProfileComponent ]
+      declarations: [ AutismGeneSingleProfileComponent ],
+      providers: [ConfigService, GeneWeightsService],
+      imports: [HttpClientTestingModule]
     })
     .compileComponents();
   }));
