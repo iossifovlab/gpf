@@ -3,79 +3,79 @@ import pytest
 from dae.variants.attributes import Inheritance, Role
 from dae.backends.attributes_query import inheritance_query, role_query, \
     OrNode
-from studies.study_wrapper import StudyWrapper
+from studies.query_transformer import QueryTransformer
 
 
 @pytest.mark.parametrize(
-    "kwargs,inheritance,roles,accepted",
+    "present_in_child,present_in_parent,inheritance,roles,accepted",
     [
-        ({
-            "presentInChild": ["proband only"],
-            "presentInParent": {"presentInParent": ["neither"]},
-        }, [Inheritance.denovo], [Role.prb], True),
-        ({
-            "presentInChild": ["proband only"],
-            "presentInParent": {"presentInParent": ["neither"]},
-        }, [Inheritance.denovo], [Role.sib], False),
-        ({
-            "presentInChild": ["proband only"],
-            "presentInParent": {"presentInParent": ["neither"]},
-        }, [Inheritance.mendelian], [Role.prb], False),
-        ({
-            "presentInChild": ["proband only", "sibling only"],
-            "presentInParent": {"presentInParent": ["neither"]},
-        }, [Inheritance.denovo], [Role.prb], True),
-        ({
-            "presentInChild": ["proband only", "sibling only"],
-            "presentInParent": {"presentInParent": ["neither"]},
-        }, [Inheritance.denovo], [Role.sib], True),
-        ({
-            "presentInChild": ["proband only", "sibling only"],
-            "presentInParent": {"presentInParent": ["neither"]},
-        }, [Inheritance.denovo], [Role.prb, Role.sib], False),
-        ({
-            "presentInChild": [
-                "proband only", "sibling only", "proband and sibling"],
-            "presentInParent": {"presentInParent": ["neither"]},
-        }, [Inheritance.denovo], [Role.prb, Role.sib], True),
-        ({
-            "presentInChild": ["proband only"],
-            "presentInParent": {"presentInParent": ["mother only"]},
-        }, [Inheritance.mendelian], [Role.prb, Role.mom], True),
-        ({
-            "presentInChild": ["proband only"],
-            "presentInParent": {"presentInParent": ["mother only"]},
-        },
+        (
+            set(["proband only"]),
+            set(["neither"]),
+            [Inheritance.denovo], [Role.prb], True),
+        (
+            set(["proband only"]),
+            set(["neither"]),
+            [Inheritance.denovo], [Role.sib], False),
+        (
+            set(["proband only"]),
+            set(["neither"]),
+            [Inheritance.mendelian], [Role.prb], False),
+        (
+            set(["proband only", "sibling only"]),
+            set(["neither"]),
+            [Inheritance.denovo], [Role.prb], True),
+        (
+            set(["proband only", "sibling only"]),
+            set(["neither"]),
+            [Inheritance.denovo], [Role.sib], True),
+        (
+            set(["proband only", "sibling only"]),
+            set(["neither"]),
+            [Inheritance.denovo], [Role.prb, Role.sib], False),
+        (
+            set(["proband only", "sibling only", "proband and sibling"]),
+            set(["neither"]),
+            [Inheritance.denovo], [Role.prb, Role.sib], True),
+        (
+            set(["proband only"]),
+            set(["mother only"]),
+            [Inheritance.mendelian], [Role.prb, Role.mom], True),
+        (
+            set(["proband only"]),
+            set(["mother only"]),
             [Inheritance.denovo, Inheritance.mendelian],
             [Role.prb, Role.mom], True),
-        ({
-            "presentInChild": ["neither"],
-            "presentInParent": {"presentInParent": ["mother only"]},
-        },
+        (
+            set(["neither"]),
+            set(["mother only"]),
             [Inheritance.missing],
             [Role.mom], True),
     ]
 )
 def test_transform_present_in_child_and_present_in_parent(
-        kwargs, inheritance, roles, accepted):
+        present_in_child, present_in_parent, inheritance, roles, accepted):
 
-    StudyWrapper._transform_present_in_child_and_present_in_parent(kwargs)
-
-    rq = kwargs.get("roles")
-    assert rq is not None
+    rq = QueryTransformer._transform_present_in_child_and_parent_roles(
+        present_in_child, present_in_parent)
     rm = role_query.transform_tree_to_matcher(rq)
 
-    iq = kwargs.get("inheritance")
-    assert iq is not None
-    assert len(iq) == 1
+    iq = QueryTransformer._transform_present_in_child_and_parent_inheritance(
+        present_in_child, present_in_parent)
 
-    it = inheritance_query.transform_query_string_to_tree(iq[0])
+    assert iq is not None
+
+    print("roles query:      ", rq)
+    print("inheritance query:", iq)
+
+    it = inheritance_query.transform_query_string_to_tree(iq)
     im = inheritance_query.transform_tree_to_matcher(it)
 
-    if accepted:
-        assert rm.match(roles) and im.match(inheritance)
-    else:
-        assert not (rm.match(roles) and im.match(inheritance))
+    roles_matched = rm.match(roles)
+    inheritance_matched = im.match(inheritance)
+
+    assert (rm.match(roles) and im.match(inheritance)) == accepted, (
+        roles_matched, inheritance_matched)
 
 
 def test_attributes_query_roles():
@@ -86,11 +86,3 @@ def test_attributes_query_roles():
 
     result = rm.match([Role.prb])
     assert not result
-
-
-def test_transform_family_filters_to_ids():
-    pass
-
-
-def test_transform_person_filters_to_ids():
-    pass

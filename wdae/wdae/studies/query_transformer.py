@@ -78,13 +78,14 @@ class QueryTransformer:
 
         return (value, value_range)
 
+    @staticmethod
     def _transform_present_in_child_and_parent_roles(
-            self, present_in_child, present_in_parent):
+            present_in_child, present_in_parent):
         roles_query = []
         roles_query.append(
-            self._present_in_child_to_roles(present_in_child))
+            QueryTransformer._present_in_child_to_roles(present_in_child))
         roles_query.append(
-            self._present_in_parent_to_roles(present_in_parent))
+            QueryTransformer._present_in_parent_to_roles(present_in_parent))
         roles_query = list(filter(lambda rq: rq is not None, roles_query))
         if len(roles_query) == 2:
             roles_query = AndNode(roles_query)
@@ -95,8 +96,9 @@ class QueryTransformer:
 
         return roles_query
 
+    @staticmethod
     def _transform_present_in_child_and_parent_inheritance(
-            self, present_in_child, present_in_parent):
+            present_in_child, present_in_parent):
         inheritance = None
         if present_in_child == set(["neither"]) and \
                 present_in_parent != set(["neither"]):
@@ -109,8 +111,8 @@ class QueryTransformer:
                 Inheritance.denovo,
                 Inheritance.mendelian,
                 Inheritance.missing]
-        inheritance = [str(inh) for inh in inheritance]
-        return inheritance
+        inheritance = ",".join([str(inh) for inh in inheritance])
+        return f"any({inheritance})"
 
     def _transform_present_in_child_and_parent_frequency(
             self, present_in_child, present_in_parent,
@@ -129,7 +131,8 @@ class QueryTransformer:
                 return ("frequency_filter", frequency_filter)
         return (None, None)
 
-    def _present_in_child_to_roles(self, present_in_child):
+    @staticmethod
+    def _present_in_child_to_roles(present_in_child):
         roles_query = []
 
         if "proband only" in present_in_child:
@@ -160,7 +163,8 @@ class QueryTransformer:
             return roles_query[0]
         return OrNode(roles_query)
 
-    def _present_in_parent_to_roles(self, present_in_parent):
+    @staticmethod
+    def _present_in_parent_to_roles(present_in_parent):
         roles_query = []
 
         if "mother only" in present_in_parent:
@@ -311,7 +315,8 @@ class QueryTransformer:
                 )
         return matching_family_ids
 
-    def _add_inheritance_to_query(self, query, kwargs):
+    @staticmethod
+    def _add_inheritance_to_query(query, kwargs):
         if not query:
             return
         inheritance = kwargs.get("inheritance", [])
@@ -368,7 +373,6 @@ class QueryTransformer:
     # Not implemented:
     # callSet
     # minParentsCalled
-    # ultraRareOnly
     # TMM_ALL
     def transform_kwargs(self, **kwargs):
         logger.debug(f"kwargs in study wrapper: {kwargs}")
@@ -411,8 +415,7 @@ class QueryTransformer:
                 self._transform_present_in_child_and_parent_inheritance(
                     present_in_child, present_in_parent
                 )
-            self._add_inheritance_to_query(
-                "any({})".format(",".join(inheritance)), kwargs)
+            self._add_inheritance_to_query(inheritance, kwargs)
 
             if present_in_parent != {"neither"} and rarity is not None:
                 frequency_filter = kwargs.get("frequency_filter", [])
