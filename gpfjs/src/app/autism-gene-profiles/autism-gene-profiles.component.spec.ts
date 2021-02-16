@@ -69,4 +69,51 @@ describe('AutismGeneProfilesComponent', () => {
     mockDatasetConfig = {effects: [1, 2, 3, 4, 5], personSets: [1, 2, 3, 4, 6, 7, 8]};
     expect(component.calculateDatasetColspan(mockDatasetConfig)).toBe(35);
   });
+
+  it('should handle multiple select apply event', () => {
+    const dropDownMenuSpies = [];
+    component.ngbDropdownMenu = [
+      {dropdown: {close() {}}},
+      {dropdown: {close() {}}},
+      {dropdown: {close() {}}}
+    ] as any;
+    component.ngbDropdownMenu.forEach(menu => dropDownMenuSpies.push(spyOn(menu.dropdown, 'close')));
+
+    expect(component['shownGeneLists']).toEqual(undefined);
+    expect(component['shownAutismScores']).toEqual(undefined);
+    expect(component['shownProtectionScores']).toEqual(undefined);
+
+    component.handleMultipleSelectMenuApplyEvent({id: 'geneLists', data: ['fakeGeneLists']});
+    expect(component['shownGeneLists']).toEqual(['fakeGeneLists']);
+    expect(component['shownAutismScores']).toEqual(undefined);
+    expect(component['shownProtectionScores']).toEqual(undefined);
+    dropDownMenuSpies.forEach(spy => expect(spy).toHaveBeenCalledTimes(1));
+
+    component['shownGeneLists'] = undefined;
+
+    component.handleMultipleSelectMenuApplyEvent({id: 'autismScores', data: ['fakeAutismScores']});
+    expect(component['shownGeneLists']).toEqual(undefined);
+    expect(component['shownAutismScores']).toEqual((['fakeAutismScores']));
+    expect(component['shownProtectionScores']).toEqual(undefined);
+    dropDownMenuSpies.forEach(spy => expect(spy).toHaveBeenCalledTimes(2));
+
+    component['shownAutismScores'] = undefined;
+
+    component.handleMultipleSelectMenuApplyEvent({id: 'protectionScores', data: ['fakeProtectionScores']});
+    expect(component['shownGeneLists']).toEqual(undefined);
+    expect(component['shownAutismScores']).toEqual((undefined));
+    expect(component['shownProtectionScores']).toEqual(['fakeProtectionScores']);
+    dropDownMenuSpies.forEach(spy => expect(spy).toHaveBeenCalledTimes(3));
+  });
+
+  it('should emit create tab event', () => {
+    const expectedEmitValue = {geneSymbol: 'testGeneSymbol', openTab: true};
+
+    const emitSpy = spyOn(component.createTabEvent, 'emit').and.callFake(emitValue => {
+      expect(emitValue).toEqual(expectedEmitValue);
+    });
+
+    component.emitCreateTabEvent('testGeneSymbol', true);
+    expect(emitSpy).toHaveBeenCalled();
+  });
 });
