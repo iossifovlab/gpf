@@ -539,7 +539,13 @@ class AutismGeneProfileDB:
     def get_full_configuration(self, gpf_instance):
         if not self.configuration:
             self.configuration = \
-                gpf_instance._autism_gene_profile_config.to_dict()
+                gpf_instance._autism_gene_profile_config
+
+            if self.configuration is None:
+                self.configuration = dict()
+                return self.configuration
+            else:
+                self.configuration = self.configuration.to_dict()
 
             gene_lists = dict()
             for idx, gs in enumerate(self.configuration["gene_sets"]):

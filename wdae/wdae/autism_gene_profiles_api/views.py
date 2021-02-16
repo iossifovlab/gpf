@@ -11,7 +11,7 @@ LOGGER = logging.getLogger(__name__)
 class ConfigurationView(QueryBaseView):
     def get(self, request):
         configuration = self.gpf_instance.get_agp_configuration()
-        if not configuration:
+        if configuration is None:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         return Response(configuration)
