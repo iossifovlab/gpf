@@ -540,7 +540,11 @@ class AutismGeneProfileDB:
         if not self.configuration:
             self.configuration = \
                 gpf_instance._autism_gene_profile_config.to_dict()
-            self.configuration["gene_lists"] = self.configuration["gene_sets"]
+
+            gene_lists = dict()
+            for idx, gs in enumerate(self.configuration["gene_sets"]):
+                gene_lists[idx] = gs
+            self.configuration["gene_lists"] = gene_lists
             for dataset in self.configuration["datasets"]:
                 dataset_dict = self.configuration["datasets"][dataset]
                 person_sets = dataset_dict["person_sets"]
