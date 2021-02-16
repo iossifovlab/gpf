@@ -21,6 +21,10 @@ export class AutismGeneProfilesService {
     return this.http
     .get(this.config.baseUrl + this.configUrl)
     .map(res => {
+      if (Object.keys(res).length === 0) {
+        return;
+      }
+
       return AutismGeneToolConfig.fromJson(res);
     });
   }
