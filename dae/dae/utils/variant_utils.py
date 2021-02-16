@@ -60,6 +60,19 @@ def best2gt(best_state):
     return genotype
 
 
+def fgt2str(fgt, sep=";"):
+    result = []
+    for i in range(len(fgt)):
+        v0 = fgt[i][0]
+        v1 = fgt[i][1]
+        if v0 < 0:
+            v0 = "."
+        if v1 < 0:
+            v1 = "."
+        result.append(f"{v0}/{v1}")
+    return sep.join(result)
+
+
 def gt2str(gt):
     assert gt.shape[0] == 2
     result = []
@@ -74,8 +87,8 @@ def gt2str(gt):
     return ",".join(result)
 
 
-def str2gt(gts):
-    gts = gts.split(",")
+def str2gt(gts, split=","):
+    gts = gts.split(split)
     result = np.zeros(shape=(2,  len(gts)), dtype=GENOTYPE_TYPE)
 
     for col, pgts in enumerate(gts):

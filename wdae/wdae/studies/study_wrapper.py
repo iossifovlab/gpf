@@ -9,7 +9,7 @@ from abc import abstractmethod
 
 from box import Box
 
-from dae.utils.variant_utils import mat2str
+from dae.utils.variant_utils import mat2str, fgt2str
 from dae.utils.dae_utils import split_iterable, join_line
 
 from dae.utils.effect_utils import ge2str, \
@@ -34,7 +34,8 @@ logger = logging.getLogger(__name__)
 
 
 def members_in_order_get_family_structure(mio):
-    return [f"{p.role.name}:{p.sex.short()}:{p.status.name}" for p in mio]
+    return ";".join([
+        f"{p.role.name}:{p.sex.short()}:{p.status.name}" for p in mio])
 
 
 class StudyWrapperBase(GenotypeData):
@@ -318,7 +319,8 @@ class StudyWrapper(StudyWrapperBase):
         lambda v: v.cshl_location,
 
         "variant":
-        lambda v: v.cshl_variant_full,
+        lambda v: VariantDesc.combine([
+            aa.details.variant_desc for aa in v.alt_alleles]),
 
         "position":
         lambda v: [aa.position for aa in v.alt_alleles],
@@ -330,34 +332,35 @@ class StudyWrapper(StudyWrapperBase):
         lambda v: [aa.alternative for aa in v.alt_alleles],
 
         "genotype":
-        lambda v: [
-            "/".join([str(g) for g in gt])
-            for gt in v.family_genotype],
+        lambda v: [fgt2str(v.family_genotype)],
 
         "best_st":
         lambda v: [mat2str(v.best_state)],
 
         "family_structure":
-        lambda v: members_in_order_get_family_structure(
-            v.members_in_order
-        ),
+        lambda v: [members_in_order_get_family_structure(
+            v.members_in_order)],
 
-        "family_person_ids": lambda v: list(map(
+        "family_person_ids": 
+        lambda v: [";".join(list(map(
             lambda m: m.person_id, v.members_in_order
-        )),
+        )))],
 
         "carrier_person_ids":
         lambda v: list(
             map(
-                lambda aa: list(filter(None, aa.variant_in_members)),
+                lambda aa: ";".join(list(filter(None, aa.variant_in_members))),
                 v.alt_alleles
             )),
 
-        "carrier_person_attributes": lambda v: list(map(
-            lambda aa: list(filter(None, members_in_order_get_family_structure(
-                aa.variant_in_members_objects
-            ))), v.alt_alleles
-        )),
+        "carrier_person_attributes": 
+        lambda v: list(
+            map(
+                lambda aa: members_in_order_get_family_structure(
+                    filter(None, aa.variant_in_members_objects)
+                ),
+                v.alt_alleles
+            )),
 
         "inheritance_type": lambda v: list(map(
             lambda aa: aa.inheritance_in_members, v.alt_alleles
@@ -472,12 +475,6 @@ class StudyWrapper(StudyWrapperBase):
                     row_variant.append(phenotypes)
                 elif col_source == "study_phenotype":
                     row_variant.append(self.config.study_phenotype)
-                elif col_source == "variant":
-                    attribute = [
-                        aa.details.variant_desc for aa in v.alt_alleles]
-                    attribute = VariantDesc.combine(attribute)
-
-                    row_variant.append(",".join(attribute))
 
                 else:
                     if col_source in self.SPECIAL_ATTRS:
