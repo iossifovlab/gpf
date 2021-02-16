@@ -12,7 +12,7 @@ from dae.person_sets import PersonSetCollection
 from dae.utils.effect_utils import expand_effect_types
 
 
-LOGGER = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class GenotypeData(ABC):
@@ -128,25 +128,24 @@ class GenotypeData(ABC):
 
     @abstractmethod
     def query_summary_variants(
-        self,
-        regions=None,
-        genes=None,
-        effect_types=None,
-        family_ids=None,
-        person_ids=None,
-        person_set_collection=None,
-        inheritance=None,
-        roles=None,
-        sexes=None,
-        variant_type=None,
-        real_attr_filter=None,
-        ultra_rare=None,
-        return_reference=None,
-        return_unknown=None,
-        limit=None,
-        study_filters=None,
-        **kwargs,
-    ):
+            self,
+            regions=None,
+            genes=None,
+            effect_types=None,
+            family_ids=None,
+            person_ids=None,
+            person_set_collection=None,
+            inheritance=None,
+            roles=None,
+            sexes=None,
+            variant_type=None,
+            real_attr_filter=None,
+            ultra_rare=None,
+            return_reference=None,
+            return_unknown=None,
+            limit=None,
+            study_filters=None,
+            **kwargs):
         pass
 
     @abstractproperty
@@ -237,7 +236,7 @@ class GenotypeDataGroup(GenotypeData):
         **kwargs,
     ):
         variants_futures = list()
-        LOGGER.info(f"summary query - study_filters: {study_filters}")
+        logger.info(f"summary query - study_filters: {study_filters}")
 
         def get_summary_variants(genotype_data_study):
             return genotype_data_study.query_summary_variants(
@@ -297,7 +296,7 @@ class GenotypeDataGroup(GenotypeData):
                 if limit and len(variants) >= limit:
                     return
             elapsed = time.time() - started
-            LOGGER.info(
+            logger.info(
                 f"Processing study {future.study_id} "
                 f"elapsed: {elapsed:.3f}"
             )
@@ -327,7 +326,7 @@ class GenotypeDataGroup(GenotypeData):
             **kwargs):
 
         variants_futures = list()
-        LOGGER.info(f"study_filters: {study_filters}")
+        logger.info(f"study_filters: {study_filters}")
 
         def get_variants(genotype_data_study):
             return genotype_data_study.query_variants(
@@ -369,7 +368,7 @@ class GenotypeDataGroup(GenotypeData):
                 if limit and len(seen) >= limit:
                     return
             elapsed = time.time() - started
-            LOGGER.info(
+            logger.info(
                 f"processing study {future.study_id} "
                 f"elapsed: {elapsed:.3f}")
 
@@ -383,6 +382,10 @@ class GenotypeDataGroup(GenotypeData):
             return result
 
     def _build_families(self):
+        logger.info(
+            f"combining families in studies: "
+            f"{[st.study_id for st in self.studies]}")
+
         return FamiliesData.from_families(
             functools.reduce(
                 lambda x, y: GenotypeDataGroup._combine_families(x, y),
@@ -406,8 +409,8 @@ class GenotypeDataGroup(GenotypeData):
             except AssertionError:
                 import traceback
                 traceback.print_exc()
-
                 mismatched_families.append(sf)
+
         assert len(mismatched_families) == 0, mismatched_families
 
         return combined_dict
@@ -474,12 +477,12 @@ class GenotypeDataStudy(GenotypeData):
         if len(kwargs):
             # FIXME This will remain so it can be used for discovering
             # when excess kwargs are passed in order to fix such cases.
-            LOGGER.warning(
+            logger.warning(
                 "received excess keyword arguments when querying variants!")
-            LOGGER.warning(
+            logger.warning(
                 "kwargs received: {}".format(list(kwargs.keys())))
 
-        LOGGER.info(f"study_filters: {study_filters}")
+        logger.info(f"study_filters: {study_filters}")
 
         if study_filters is not None and self.study_id not in study_filters:
             return
@@ -540,12 +543,12 @@ class GenotypeDataStudy(GenotypeData):
         if len(kwargs):
             # FIXME This will remain so it can be used for discovering
             # when excess kwargs are passed in order to fix such cases.
-            LOGGER.warn(
+            logger.warn(
                 "received excess keyword arguments when querying variants!")
-            LOGGER.warn(
+            logger.warn(
                 "kwargs received: {}".format(list(kwargs.keys())))
 
-        LOGGER.info(f"study_filters: {study_filters}")
+        logger.info(f"study_filters: {study_filters}")
 
         if study_filters is not None and self.study_id not in study_filters:
             return

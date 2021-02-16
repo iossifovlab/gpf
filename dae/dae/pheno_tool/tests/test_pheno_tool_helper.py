@@ -63,8 +63,9 @@ mocked_study = Box(
             },
         },
         "query_variants": mocked_query_variants,
-        "_transform_filters_to_ids":
-        mocked_filter_transform,
+        "query_transformer": {
+            "_transform_filters_to_ids": mocked_filter_transform,
+        }
     }
 )
 
@@ -108,10 +109,10 @@ def test_genotype_data_persons_invalid_family_ids():
 
 
 def test_pheno_filter_persons(mocker):
-    mocker.spy(mocked_study, "_transform_filters_to_ids")
+    mocker.spy(mocked_study.query_transformer, "_transform_filters_to_ids")
     helper = PhenoToolHelper(mocked_study)
     helper.pheno_filter_persons([1])
-    mocked_study._transform_filters_to_ids \
+    mocked_study.query_transformer._transform_filters_to_ids \
         .assert_called_once_with([1])
 
 
