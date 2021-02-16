@@ -43,7 +43,6 @@ export class HistogramComponent implements OnInit, OnChanges {
   @Input() centerLabels: boolean;
   @Input() showMinMaxInput: boolean;
 
-  @Input() isInteractive = true;
 
   beforeRangeText: string;
   insideRangeText: string;
@@ -59,6 +58,12 @@ export class HistogramComponent implements OnInit, OnChanges {
 
   scaledBins: Array<number>;
   private resetRange = false;
+
+  @Input() isInteractive = true;
+  @Input() singleScoreValue: number;
+
+  scaleXAxis;
+  scaleYAxis;
 
   ngOnInit() {
     this.rangeStartSubject
@@ -216,12 +221,12 @@ export class HistogramComponent implements OnInit, OnChanges {
       .domain(Array.from(this.bars.keys()).map(x => x.toString()))
       .range([0, width]);
 
-    const y = this.logScaleY ?  d3.scaleLog() : d3.scaleLinear();
-    y.range([height, 0]).domain([1, d3.max(this.bars)]);
+    this.scaleYAxis = this.logScaleY ?  d3.scaleLog() : d3.scaleLinear();
+    this.scaleYAxis.range([height, 0]).domain([1, d3.max(this.bars)]);
 
     this.redrawXAxis(svg, width, height);
 
-    const leftAxis = d3.axisLeft(y);
+    const leftAxis = d3.axisLeft(this.scaleYAxis);
     leftAxis.ticks(3).tickFormat(d3.format('.0f'));
     svg.append('g')
         .call(leftAxis);
@@ -231,8 +236,8 @@ export class HistogramComponent implements OnInit, OnChanges {
       .style('fill', 'steelblue')
       .attr('x', (d: any) => this.xScale(d.index.toString()))
       .attr('width', this.xScale.bandwidth())
-      .attr('y', (d: any) => d.bar === 0 ? height : y(d.bar))
-      .attr('height', (d: any) => d.bar === 0 ? 0 : height -  y(d.bar));
+      .attr('y', (d: any) => d.bar === 0 ? height : this.scaleYAxis(d.bar))
+      .attr('height', (d: any) => d.bar === 0 ? 0 : height -  this.scaleYAxis(d.bar));
     this.svg = svg;
 
     this.colorBars();
@@ -260,12 +265,12 @@ export class HistogramComponent implements OnInit, OnChanges {
         axisX.push(width);
         axisVals.push(this.bins[this.bins.length - 1]);
     }
-    const scaleXAxis = d3.scaleThreshold().range(axisX).domain(axisVals);
+    this.scaleXAxis = d3.scaleThreshold().range(axisX).domain(axisVals);
 
     svg.append('g')
       .attr('transform', 'translate(0,' + height + ')')
       .call(
-        d3.axisBottom(scaleXAxis)
+        d3.axisBottom(this.scaleXAxis)
         .tickValues(this.xLabelsWithDefaultValue as any)
         .tickFormat((d, i) => this.xLabelsWithDefaultValue[i] as any));
   }
