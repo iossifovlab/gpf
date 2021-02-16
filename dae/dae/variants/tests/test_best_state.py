@@ -1,8 +1,30 @@
-import numpy as np
 import pytest
+
+import numpy as np
+from io import StringIO
 from dae.variants.variant import SummaryAllele
 from dae.variants.family_variant import FamilyAllele
 from dae.utils.variant_utils import GENOTYPE_TYPE
+
+from dae.pedigrees.loader import FamiliesLoader
+
+
+PED1 = """
+# SIMPLE TRIO
+familyId,    personId,    dadId,    momId,    sex,   status,    role
+f1,          d1,          0,        0,        1,     1,         dad
+f1,          m1,          0,        0,        2,     1,         mom
+f1,          p1,          d1,       m1,       1,     2,         prb
+"""
+
+
+@pytest.fixture(scope="function")
+def sample_family():
+    families_loader = FamiliesLoader(StringIO(PED1), ped_sep=",")
+    families = families_loader.load()
+    family = families["f1"]
+    assert len(family.trios) == 1
+    return family
 
 
 @pytest.mark.parametrize(
@@ -47,7 +69,7 @@ from dae.utils.variant_utils import GENOTYPE_TYPE
             1,
             3,
             np.array([[0, 1, 2], [0, 0, 0]], dtype=GENOTYPE_TYPE),
-            np.array([[2, 1, 1], [0, 1, 0], [0, 0, 1],], dtype=GENOTYPE_TYPE),
+            np.array([[2, 1, 1], [0, 1, 0], [0, 0, 1]], dtype=GENOTYPE_TYPE),
         ),
         (
             "chr1",

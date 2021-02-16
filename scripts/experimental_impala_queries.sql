@@ -1,3 +1,37 @@
+SELECT variants.bucket_index, variants.summary_index, variants.allele_index, variants.variant_type, `position`, variants.family_id, pedigree.status, inheritance_in_members 
+FROM data_hg38_production.SFARI_SPARK_WES_1_temp_variants as variants JOIN data_hg38_production.SFARI_SPARK_WES_1_temp_pedigree as pedigree 
+WHERE
+    ( (  variants.effect_gene_symbols in (  'CHD8'  )  ) ) 
+    AND ( (`chromosome` = 'chr14' AND ((`position` >= 21428145 AND `position` <= 21428145) ) )) 
+    AND ( (  variants.effect_types in ( 'missense' )  ) ) 
+    AND ( variants.allele_index > 0 ) AND ( variants.region_bin IN ('chr14_0') )
+    AND variants.variant_in_members = pedigree.person_id 
+
+SELECT variants.bucket_index, variants.summary_index, variants.variant_type, MIN(`position`), COUNT(DISTINCT variants.family_id), gpf_bit_or(pedigree.status) as status, gpf_or(BITAND(inheritance_in_members, 4)) 
+FROM data_hg38_production.SFARI_SPARK_WES_1_temp_variants as variants JOIN data_hg38_production.SFARI_SPARK_WES_1_temp_pedigree as pedigree 
+WHERE
+    ( (  variants.effect_gene_symbols in (  'CHD8'  )  ) ) 
+    AND ( (`chromosome` = 'chr14' AND ((`position` >= 21428145 AND `position` <= 21428145) ) )) 
+    AND ( (  variants.effect_types in ( 'missense' )  ) ) 
+    AND ( variants.allele_index > 0 ) AND ( variants.region_bin IN ('chr14_0') )
+    AND variants.variant_in_members = pedigree.person_id 
+GROUP BY bucket_index, summary_index, variant_type
+
+
+SELECT variants.bucket_index, variants.summary_index, variants.variant_type, MIN(`position`), COUNT(DISTINCT variants.family_id), gpf_bit_or(pedigree.status) as status, gpf_or(BITAND(inheritance_in_members, 4)) 
+FROM data_hg38_production.SFARI_SPARK_WES_1_temp_variants as variants JOIN data_hg38_production.SFARI_SPARK_WES_1_temp_pedigree as pedigree 
+WHERE
+    ( (  variants.effect_gene_symbols in (  'CHD8'  )  ) ) 
+    AND ( (`chromosome` = 'chr14' AND ((`position` >= 21428145 AND `position` <= 21428145) ) )) 
+    AND ( (  variants.effect_types in ( 'missense' )  ) ) 
+    AND ( BITAND(8, variants.inheritance_in_members) = 0 AND BITAND(32, variants.inheritance_in_members) = 0 ) AND ( BITAND(150, variants.inheritance_in_members) != 0 ) 
+    AND ( variants.allele_index > 0 ) AND ( variants.region_bin IN ('chr14_0') )
+    AND variants.variant_in_members = pedigree.person_id 
+GROUP BY bucket_index, summary_index, variant_type
+
+
+
+
 CREATE EXTERNAL TABLE data_hg38_production_202005.SFARI_SSC_WGS_2_variants (                                                                                                                 
   bucket_index INT COMMENT 'Inferred from Parquet file.',                                                                                                                                    
   chromosome STRING COMMENT 'Inferred from Parquet file.',                                                                                                                                   

@@ -63,14 +63,11 @@ class VariantScoreAnnotatorBase(VariantAnnotatorBase):
 
     def _fetch_scores(self, variant):
         scores = None
-        if variant.variant_type == VariantType.substitution:
+        if variant.variant_type & VariantType.substitution:
             scores = self.score_file.fetch_scores(
                 variant.chromosome, variant.position, variant.position
             )
-        elif variant.variant_type in set([
-                    VariantType.insertion, VariantType.deletion,
-                    VariantType.comp
-                ]):
+        elif variant.variant_type & VariantType.indel:
             scores = self.score_file.fetch_scores(
                 variant.chromosome,
                 variant.position,

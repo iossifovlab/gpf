@@ -3,10 +3,11 @@ Created on Mar 12, 2018
 
 @author: lubo
 """
+from dae.variants.attributes import VariantType
 import pytest
 
 from dae.utils.variant_utils import vcf2cshl, trim_str_back, \
-    tandem_repeat, tandem_repeat_unit
+    tandem_repeat
 from dae.utils.dae_utils import dae2vcf_variant
 
 
@@ -39,12 +40,11 @@ from dae.utils.dae_utils import dae2vcf_variant
     ])
 def test_vcf2cshl_variant_format(ref, alt, vt, pos, length):
 
-    ps, vs = vcf2cshl(1, ref, alt, trimmer=trim_str_back)
-    print(ps, vs)
+    vd = vcf2cshl(1, ref, alt, trimmer=trim_str_back)
 
-    assert ps == pos
-    assert str(vs) == vt
-    assert vs.length == length
+    assert vd.position == pos
+    assert str(vd) == vt
+    assert vd.length == length
 
 
 @pytest.mark.parametrize(
@@ -76,10 +76,10 @@ def test_vcf2cshl_variant_format(ref, alt, vt, pos, length):
     ])
 def test_vcf2cshl_variant_format2(ref, alt, vt, pos, length):
 
-    ps, vs = vcf2cshl(1, ref, alt, trimmer=trim_str_back)
-    assert ps == pos
-    assert str(vs) == vt
-    assert vs.length == length
+    vd = vcf2cshl(1, ref, alt, trimmer=trim_str_back)
+    assert vd.position == pos
+    assert str(vd) == vt
+    assert vd.length == length
 
 
 @pytest.mark.parametrize(
@@ -119,10 +119,10 @@ def test_vcf2cshl_variant_format2(ref, alt, vt, pos, length):
     ])
 def test_vcf2cshl_variant_format3(ref, alt, vt, pos, length):
 
-    ps, vs = vcf2cshl(1, ref, alt, trimmer=trim_str_back)
-    assert ps == pos
-    assert str(vs) == vt
-    assert vs.length == length
+    vd = vcf2cshl(1, ref, alt, trimmer=trim_str_back)
+    assert vd.position == pos
+    assert str(vd) == vt
+    assert vd.length == length
 
 
 def test_insert_long():
@@ -131,10 +131,9 @@ def test_insert_long():
         "CCCCCTCATCACCTCCCCAGCCACGGTGAGGACCCACCCTGGCATGATCT"
         "CCCCTCATCACCTCCCCAGCCACGGTGAGGACCCACCCTGGCATGATCT"
     )
-    ps, vs = vcf2cshl(1, ref, alt, trimmer=trim_str_back)
-    print(ps, vs)
+    vd = vcf2cshl(1, ref, alt, trimmer=trim_str_back)
 
-    assert ps == 2  # FIXME
+    assert vd.position == 2  # FIXME
 
 
 def test_cshl_to_vcf_problem(genome_2013):
@@ -151,13 +150,13 @@ def test_cshl_to_vcf_problem(genome_2013):
     assert reference == "G"
     assert alternative == "A"
 
-    position2, variant2 = vcf2cshl(
+    vd = vcf2cshl(
         position, reference, alternative, trimmer=trim_str_back
     )
 
-    assert position2 == position
-    assert str(variant2) == variant
-    assert variant2.length == 1
+    assert vd.position == position
+    assert str(vd) == variant
+    assert vd.length == 1
 
 
 def test_spark_v3_problems_check():
@@ -167,16 +166,16 @@ def test_spark_v3_problems_check():
     ref = "AGCCCCACCTTCCTCTCCTCCT"
     alt = "AGCCCCACCTTCCTCTCCTCCT" "GCCCCACCTTCCTCTCCTCCT"
 
-    pos1, var1 = vcf2cshl(position, ref, alt, trimmer=trim_str_back)
+    vd = vcf2cshl(position, ref, alt, trimmer=trim_str_back)
 
-    assert str(var1) == "ins(GCCCCACCTTCCTCTCCTCCT)"
-    assert pos1 == position + 1
+    assert str(vd) == "ins(GCCCCACCTTCCTCTCCTCCT)"
+    assert vd.position == position + 1
 
 
 @pytest.mark.parametrize(
     "chrom,position,ref,alt,unit,ref_repeats,alt_repeats", [
 
-        ("chr1", 13886145, 
+        ("chr1", 13886145,
          "ATCCATCCATCCATCCATCCATCCATCCATCC",
          "ATCCATCCATCCATCCATCCATCCATCCATCCATCC",
          "ATCC", 8, 9),
@@ -220,10 +219,17 @@ def test_spark_v3_problems_check():
 def test_tandem_repeat_unit(
         chrom, position, ref, alt, unit, ref_repeats, alt_repeats):
 
-    tr_unit, tr_ref, tr_alt = tandem_repeat_unit(ref, alt)
+    tr_unit, tr_ref, tr_alt = tandem_repeat(ref, alt)
     assert tr_unit is not None
     assert tr_ref is not None
     assert tr_alt is not None
     assert tr_unit == unit
     assert tr_ref == ref_repeats
     assert tr_alt == alt_repeats
+
+    vd = vcf2cshl(position, ref, alt)
+    assert vd.variant_type & VariantType.tandem_repeat
+    if ref_repeats < alt_repeats:
+        assert vd.variant_type & VariantType.insertion
+    elif ref_repeats > alt_repeats:
+        assert vd.variant_type & VariantType.deletion

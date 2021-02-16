@@ -226,7 +226,15 @@ class VariantsLoader(CLILoader):
 
     @classmethod
     def _arguments(cls):
-        return []
+        arguments = []
+        arguments.append(CLIArgument(
+            "--tandem-repeats-enable",
+            value_type=bool,
+            help_text="enable tandem repeats support",
+            action="store"
+        ))
+
+        return arguments
 
     @abstractmethod
     def full_variants_iterator(self):
