@@ -14,6 +14,7 @@ from dae.gpf_instance.gpf_instance import cached
 from gpf_instance.gpf_instance import WGPFInstance,\
     reload_datasets, load_gpf_instance
 from dae.genome.genomes_db import GenomesDB
+from dae.autism_gene_profile.db import AutismGeneProfileDB
 
 
 pytest_plugins = ["dae_conftests.dae_conftests"]
@@ -186,9 +187,15 @@ def wdae_gpf_instance_agp(
         "get_gene_set_ids",
         return_value=main_gene_sets
     )
+    wdae_gpf_instance.__autism_gene_profile_db = \
+        AutismGeneProfileDB(
+            os.path.join(wdae_gpf_instance.dae_db_dir, "agpdb"),
+            clear=True
+        )
     wdae_gpf_instance._autism_gene_profile_db.clear_all_tables()
     wdae_gpf_instance._autism_gene_profile_db.populate_data_tables(
         wdae_gpf_instance)
+    wdae_gpf_instance._autism_gene_profile_db.build_agp_view(wdae_gpf_instance)
     wdae_gpf_instance._autism_gene_profile_db.insert_agp(sample_agp)
 
     return wdae_gpf_instance
