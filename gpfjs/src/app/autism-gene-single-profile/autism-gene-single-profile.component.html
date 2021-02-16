@@ -4,15 +4,15 @@
 
   <table class="table table-bordered table-centered" style="width: 49%; float: left; margin-right: 15px;">
     <th [attr.colspan]="2" style="text-align: center;">Autism scores</th>
-    <tr *ngFor="let autismScore of gene.autismScores | keyvalue; let i = index" class="card-block">
+    <tr *ngFor="let autismScore of gene.autismScores | keyvalue" class="card-block">
       <td style="vertical-align: middle;">{{formatScoreName(autismScore.key)}}</td>
       <td>
-        <gpf-histogram *ngIf="autismScoreGeneWeights"
+        <gpf-histogram *ngIf="autismScoreGeneWeights && getAutismScoreGeneWeight(autismScore.key) as geneWeight"
           width="650" height="145"
-          [bins]="autismScoreGeneWeights[i].bins"
-          [bars]="autismScoreGeneWeights[i].bars"
-          [logScaleX]="autismScoreGeneWeights[i].logScaleX"
-          [logScaleY]="autismScoreGeneWeights[i].logScaleY"
+          [bins]="geneWeight.bins"
+          [bars]="geneWeight.bars"
+          [logScaleX]="geneWeight.logScaleX"
+          [logScaleY]="geneWeight.logScaleY"
           [showMinMaxInput]="false"
           [isInteractive]="false">
         </gpf-histogram>
@@ -22,15 +22,15 @@
 
   <table class="table table-bordered table-centered" style="width: 49%; float: left; margin-right: 15px;">
     <th [attr.colspan]="2" style="text-align: center;">Protection scores</th>
-    <tr *ngFor="let protectionScore of gene.protectionScores | keyvalue; let i = index" class="card-block">
+    <tr *ngFor="let protectionScore of gene.protectionScores | keyvalue" class="card-block">
       <td style="vertical-align: middle;">{{formatScoreName(protectionScore.key)}}</td>
       <td>
-        <gpf-histogram *ngIf="protectionScoreGeneWeights"
+        <gpf-histogram *ngIf="protectionScoreGeneWeights && getProtectionScoreGeneWeight(protectionScore.key) as geneWeight"
           width="650" height="145"
-          [bins]="protectionScoreGeneWeights[i].bins"
-          [bars]="protectionScoreGeneWeights[i].bars"
-          [logScaleX]="protectionScoreGeneWeights[i].logScaleX"
-          [logScaleY]="protectionScoreGeneWeights[i].logScaleY"
+          [bins]="geneWeight.bins"
+          [bars]="geneWeight.bars"
+          [logScaleX]="geneWeight.logScaleX"
+          [logScaleY]="geneWeight.logScaleY"
           [showMinMaxInput]="false"
           [isInteractive]="false">
         </gpf-histogram>

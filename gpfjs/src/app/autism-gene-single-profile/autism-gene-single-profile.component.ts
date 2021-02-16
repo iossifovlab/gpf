@@ -50,4 +50,12 @@ export class AutismGeneSingleProfileComponent implements OnInit, OnChanges {
   formatScoreName(score: string) {
     return score.split('_').join(' ');
   }
+
+  getAutismScoreGeneWeight(autismScoreKey: string): GeneWeights {
+    return this.autismScoreGeneWeights.find(weight => weight.weight === autismScoreKey);
+  }
+
+  getProtectionScoreGeneWeight(protectionScoreKey: string): GeneWeights {
+    return this.protectionScoreGeneWeights.find(weight => weight.weight === protectionScoreKey);
+  }
 }
