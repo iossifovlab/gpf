@@ -638,3 +638,9 @@ class FamiliesData(Mapping):
             roles = [Role.from_name(role) for role in roles]
 
         return list(filter(lambda m: m.role in roles, persons))
+
+    def families_of_persons(self, person_ids: Set[str]) -> Set[str]:
+        family_ids: Set[str] = set()
+        for person_id in person_ids:
+            family_ids.add(self.persons[person_id].family_id)
+        return family_ids

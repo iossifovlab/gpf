@@ -2,7 +2,7 @@ import pytest
 from dae.utils.person_filters import \
     PhenoFilterSet, \
     PhenoFilterRange, \
-    PhenoFilterBuilder
+    make_pheno_filter
 
 
 def test_pheno_filter_set_apply(fake_phenotype_data):
@@ -12,12 +12,12 @@ def test_pheno_filter_set_apply(fake_phenotype_data):
     measure = fake_phenotype_data.get_measure("i1.m5")
 
     pf = PhenoFilterSet(measure, {"catB", "catF"})
-    filtered_df = pf.apply(df)
+    filtered_df = pf._apply_to_df(df)
     assert len(filtered_df) == 77
     assert set(filtered_df["i1.m5"]) == {"catB", "catF"}
 
     pf = PhenoFilterSet(measure, ["catF"])
-    filtered_df = pf.apply(df)
+    filtered_df = pf._apply_to_df(df)
     assert len(filtered_df) == 33
     assert set(filtered_df["i1.m5"]) == {"catF"}
 
@@ -56,36 +56,36 @@ def test_pheno_filter_range_apply(fake_phenotype_data):
     measure = fake_phenotype_data.get_measure("i1.m1")
 
     pf = PhenoFilterRange(measure, (50, 70))
-    filtered_df = pf.apply(df)
+    filtered_df = pf._apply_to_df(df)
     assert len(filtered_df) == 44
     for value in list(filtered_df["i1.m1"]):
         assert value > 50.0 and value < 70.0
 
     pf = PhenoFilterRange(measure, [70, 80])
-    filtered_df = pf.apply(df)
+    filtered_df = pf._apply_to_df(df)
     assert len(filtered_df) == 30
     for value in list(filtered_df["i1.m1"]):
         assert value > 70.0 and value < 80.0
 
     pf = PhenoFilterRange(measure, (None, 70))
-    filtered_df = pf.apply(df)
+    filtered_df = pf._apply_to_df(df)
     assert len(filtered_df) == 53
     for value in list(filtered_df["i1.m1"]):
         assert value < 70.0
 
     pf = PhenoFilterRange(measure, (50, None))
-    filtered_df = pf.apply(df)
+    filtered_df = pf._apply_to_df(df)
     assert len(filtered_df) == 186
     for value in list(filtered_df["i1.m1"]):
         assert value > 50.0
 
     pf = PhenoFilterRange(measure, (None, None))
-    filtered_df = pf.apply(df)
+    filtered_df = pf._apply_to_df(df)
     assert len(filtered_df) == 195
 
     pf = PhenoFilterRange(measure, {50})
     print(df.head())
-    filtered_df = pf.apply(df)
+    filtered_df = pf._apply_to_df(df)
     assert len(filtered_df) == 0
 
 
@@ -112,50 +112,45 @@ def test_pheno_filter_range_values_range_type(fake_phenotype_data):
 
 
 def test_pheno_filter_builder_categorical(fake_phenotype_data):
-    pf_builder = PhenoFilterBuilder(fake_phenotype_data)
-    pf = pf_builder.make_filter({
+    pf = make_pheno_filter({
         "source": "i1.m5",
         "sourceType": "categorical",
         "selection": {"selection": {"catB", "catF"}}
-    })
+    }, fake_phenotype_data)
     assert isinstance(pf, PhenoFilterSet)
 
 
 def test_pheno_filter_builder_raw(fake_phenotype_data):
     with pytest.raises(AssertionError):
-        pf_builder = PhenoFilterBuilder(fake_phenotype_data)
-        pf_builder.make_filter({
+        make_pheno_filter({
             "source": "i1.m9",
             "sourceType": "categorical",
             "selection": {"selection": [0, 0]}
-        })
+        }, fake_phenotype_data)
 
 
 def test_pheno_filter_builder_continuous(fake_phenotype_data):
-    pf_builder = PhenoFilterBuilder(fake_phenotype_data)
-    pf = pf_builder.make_filter({
+    pf = make_pheno_filter({
         "source": "i1.m1",
         "sourceType": "continuous",
         "selection": {"min": 50, "max": 70}
-    })
+    }, fake_phenotype_data)
     assert isinstance(pf, PhenoFilterRange)
 
 
 def test_pheno_filter_builder_ordinal(fake_phenotype_data):
-    pf_builder = PhenoFilterBuilder(fake_phenotype_data)
-    pf = pf_builder.make_filter({
+    pf = make_pheno_filter({
         "source": "i1.m4",
         "sourceType": "continuous",
         "selection": {"min": 3, "max": 5}
-    })
+    }, fake_phenotype_data)
     assert isinstance(pf, PhenoFilterRange)
 
 
 def test_pheno_filter_builder_nonexistent_measure(fake_phenotype_data):
-    pfbuilder = PhenoFilterBuilder(fake_phenotype_data)
     with pytest.raises(AssertionError):
-        pfbuilder.make_filter({
+        make_pheno_filter({
             "source": "??.??",
             "sourceType": "continuous",
             "selection": {"min": 0, "max": 0}
-        })
+        }, fake_phenotype_data)
