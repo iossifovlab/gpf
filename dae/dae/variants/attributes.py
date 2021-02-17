@@ -311,7 +311,7 @@ class VariantType(enum.Enum):
     def from_value(value):
         if value is None:
             return None
-        return VariantType(value)
+        return VariantType(value & 0x3f)
 
     @staticmethod
     def is_cnv(vt):
