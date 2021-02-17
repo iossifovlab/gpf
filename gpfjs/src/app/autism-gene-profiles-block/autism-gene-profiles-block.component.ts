@@ -19,16 +19,14 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
       this.closeActiveTab();
     }
 
-    if (Number($event.key) || $event.key === '0' || $event.key === '`') {
+    if (
+      Number($event.key)
+      || $event.key === '0'
+      || $event.key === '`'
+      || $event.key === 'p'
+      || $event.key === 'n'
+    ) {
       this.openTabByKey($event.key);
-    }
-
-    if ($event.key === 'a' || $event.key === 'q' || $event.key === 'ArrowLeft') {
-      this.openPreviousTab();
-    }
-
-    if ($event.key === 'd' || $event.key === 'e' || $event.key === 'ArrowRight') {
-      this.openNextTab();
     }
   }
 
@@ -118,17 +116,21 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
     }
   }
 
-  openTabByKey(key) {
+  openTabByKey(key: string): void {
     if (this.geneTabs.size === 0) {
       return;
     }
 
-    if (key === '0' || key === '9') {
+    if (key === '9' || key === '0') {
       this.openLastTab();
-    } else if (key === '1' || key === '`') {
+    } else if (key === '`' || key === '1') {
       this.openHomeTab();
     } else if (Number(key) - 1 <= this.geneTabs.size) {
       this.openTabAtIndex(Number(key) - 2);
+    } else if (key === 'p') {
+      this.openPreviousTab();
+    } else if (key === 'n') {
+      this.openNextTab();
     }
   }
 }
