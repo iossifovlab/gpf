@@ -70,7 +70,7 @@ def test_user_client_get_dataset_details_remote(
         user_client, wdae_gpf_instance):
 
     response = user_client.get(
-        "/api/v3/datasets/details/REMOTE1_iossifov_2014")
+        "/api/v3/datasets/details/TEST_REMOTE_iossifov_2014")
 
     assert response
     assert response.status_code == 200

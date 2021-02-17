@@ -1,10 +1,13 @@
 import json
+import pytest
 
 from rest_framework import status
 
 
 PREVIEW_URL = "/api/v3/genotype_browser/preview"
 PREVIEW_VARIANTS_URL = "/api/v3/genotype_browser/preview/variants"
+
+pytestmark = pytest.mark.usefixtures("wdae_gpf_instance", "calc_gene_sets")
 
 
 def test_query_variants_remote(admin_client, remote_settings):
