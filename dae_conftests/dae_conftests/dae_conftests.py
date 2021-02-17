@@ -91,9 +91,12 @@ def default_dae_config(request):
     dae_conf_path = os.path.join(
         os.environ.get("DAE_DB_DIR", None), "DAE.conf"
     )
-    dae_config = GPFConfigParser.load_config(dae_conf_path, dae_conf_schema)
-    dae_config = GPFConfigParser.modify_tuple(
-        dae_config, {"studies_db": {"dir": studies_dirname}}
+    dae_config = GPFConfigParser.parse_config(dae_conf_path)
+    dae_config["studies_db"]["dir"] = studies_dirname
+    dae_config = GPFConfigParser.finalize_config(
+        dae_config,
+        dae_conf_schema,
+        config_filename=dae_conf_path
     )
     return dae_config
 
