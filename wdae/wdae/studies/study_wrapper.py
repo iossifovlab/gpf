@@ -483,9 +483,10 @@ class StudyWrapper(StudyWrapperBase):
                         self.person_set_collections.get("phenotype")
                     if phenotype_person_sets is None:
                         row_variant.append("-")
-                    fn = self.PHENOTYPE_ATTRS[col_source]
-                    row_variant.append(
-                        ",".join(fn(v, phenotype_person_sets)))
+                    else:
+                        fn = self.PHENOTYPE_ATTRS[col_source]
+                        row_variant.append(
+                            ",".join(fn(v, phenotype_person_sets)))
 
                 elif col_source == "study_phenotype":
                     row_variant.append(self.config.study_phenotype)
