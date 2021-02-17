@@ -329,11 +329,15 @@ class StudyWrapper(StudyWrapperBase):
         "best_st":
         lambda v: [mat2str(v.family_best_state)],
 
+        "family_person_attributes":
+        lambda v: [members_in_order_get_family_structure(
+            v.members_in_order)],
+
         "family_structure":
         lambda v: [members_in_order_get_family_structure(
             v.members_in_order)],
 
-        "family_person_ids": 
+        "family_person_ids":
         lambda v: [";".join(list(map(
             lambda m: m.person_id, v.members_in_order
         )))],

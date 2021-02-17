@@ -102,7 +102,7 @@ def phenotype_person_sets(variants_impl):
         ("position", [11548, 11548]),
         ("reference", ["T", "T"]),
         ("alternative", ['AA', 'CA']),
-        ("family_structure", [
+        ("family_person_attributes", [
             'paternal_grandfather:M:unaffected;'
             'paternal_grandmother:F:unaffected;'
             'mom:F:unaffected;'
