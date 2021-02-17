@@ -20,7 +20,7 @@ from dae.backends.attributes_query import (
     ContainsNode,
 )
 
-from dae.utils.person_filters import make_pedigree_filter, make_pheno_filter
+from dae.person_filters import make_pedigree_filter, make_pheno_filter
 
 logger = logging.getLogger(__name__)
 

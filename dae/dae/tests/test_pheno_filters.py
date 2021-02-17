@@ -1,5 +1,5 @@
 import pytest
-from dae.utils.person_filters import \
+from dae.person_filters import \
     PhenoFilterSet, \
     PhenoFilterRange, \
     make_pheno_filter
