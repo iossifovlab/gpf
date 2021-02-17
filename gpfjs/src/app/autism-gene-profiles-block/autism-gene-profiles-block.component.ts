@@ -16,11 +16,19 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
   @HostListener('window:keydown', ['$event'])
   keyEvent($event: KeyboardEvent) {
     if ($event.key === 'w') {
-      this.closeCurrentTab();
+      this.closeActiveTab();
     }
 
     if (Number($event.key) || $event.key === '0' || $event.key === '`') {
       this.openTabByKey($event.key);
+    }
+
+    if ($event.key === 'a' || $event.key === 'q' || $event.key === 'ArrowLeft') {
+      this.openPreviousTab();
+    }
+
+    if ($event.key === 'd' || $event.key === 'e' || $event.key === 'ArrowRight') {
+      this.openNextTab();
     }
   }
 
@@ -44,8 +52,30 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
     }
   }
 
+  getActiveTabIndex(): number {
+    return [...this.geneTabs].indexOf(this.nav.activeId);
+  }
+
   openHomeTab() {
     this.nav.select('autismGenesTool');
+  }
+
+  openPreviousTab() {
+    const index = this.getActiveTabIndex();
+
+    if (index > 0) {
+      this.openTabAtIndex(index - 1);
+    } else {
+      this.openHomeTab();
+    }
+  }
+
+  openNextTab() {
+    const index = this.getActiveTabIndex();
+
+    if (index + 1 < this.geneTabs.size) {
+      this.openTabAtIndex(index + 1);
+    }
   }
 
   openLastTab() {
@@ -62,7 +92,7 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
     }
 
     if (this.nav.activeId === tabId) {
-      this.closeCurrentTab();
+      this.closeActiveTab();
     } else {
       this.geneTabs.delete(tabId);
     }
@@ -71,12 +101,12 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
     event.stopImmediatePropagation();
   }
 
-  closeCurrentTab() {
+  closeActiveTab() {
     if (this.nav.activeId === 'autismGenesTool') {
       return;
     }
 
-    const index = [...this.geneTabs].indexOf(this.nav.activeId);
+    const index = this.getActiveTabIndex();
     this.geneTabs.delete(this.nav.activeId);
 
     if ([...this.geneTabs].length === 0) {
