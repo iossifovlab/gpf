@@ -102,22 +102,19 @@ class GPFConfigParser:
             raise ex
 
     @classmethod
-    def load_config(
-            cls, filename: str, schema: dict,
-            default_config_filename: str = None) -> NamedTuple:
-
-        assert os.path.exists(filename), f"{filename} does not exist!"
-
+    def finalize_config(
+        cls,
+        config: Dict[str, Any],
+        schema: dict,
+        default_config: Dict[str, Any] = None,
+        config_filename: str = None,
+    ) -> FrozenBox:
         validator = GPFConfigValidator(
-            schema, conf_dir=os.path.dirname(filename)
+            schema, conf_dir=os.path.dirname(config_filename)
         )
-
-        config = cls.parse_config(filename)
-        if default_config_filename:
-            default_config = cls.parse_config(default_config_filename)
+        if default_config is not None:
             config = recursive_dict_update(default_config, config)
-
-        assert validator.validate(config), (filename, validator.errors)
+        assert validator.validate(config), (config_filename, validator.errors)
         return FrozenBox(validator.document)
 
     @classmethod
@@ -126,6 +123,22 @@ class GPFConfigParser:
         assert ext in cls.filetype_parsers, f"Unsupported filetype {filename}!"
         file_contents = cls._get_file_contents(filename)
         return cls.filetype_parsers[ext](file_contents)  # type: ignore
+
+    @classmethod
+    def load_config(
+        cls,
+        filename: str,
+        schema: dict,
+        default_config_filename: str = None
+    ) -> FrozenBox:
+        assert os.path.exists(filename), f"{filename} does not exist!"
+        config = cls.parse_config(filename)
+        default_config = None
+        if default_config_filename:
+            default_config = cls.parse_config(default_config_filename)
+        return GPFConfigParser.finalize_config(
+            config, schema, default_config, filename
+        )
 
     @classmethod
     def load_directory_configs(
