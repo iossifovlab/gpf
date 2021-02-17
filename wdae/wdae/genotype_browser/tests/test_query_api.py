@@ -2,14 +2,10 @@ import copy
 import json
 import pytest
 
-from django.contrib.auth.models import Group
-from guardian.shortcuts import assign_perm
-
-from datasets_api.models import Dataset
 from datasets_api.permissions import add_group_perm_to_user, \
-    get_wdae_children, \
     add_group_perm_to_dataset
 from rest_framework import status
+
 
 pytestmark = pytest.mark.usefixtures("wdae_gpf_instance", "calc_gene_sets")
 
