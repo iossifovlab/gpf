@@ -303,15 +303,7 @@ class StudyWrapper(StudyWrapperBase):
     def __getattr__(self, name):
         return getattr(self.genotype_data_study, name)
 
-    STANDARD_ATTRS = {
-    }
-
-    STANDARD_ATTRS_LAMBDAS = {
-        key: lambda v, val=val: getattr(v, val)
-        for key, val in STANDARD_ATTRS.items()
-    }
-
-    SPECIAL_ATTRS_FORMAT = {
+    SPECIAL_ATTRS = {
         "family":
         lambda v: [v.family_id],
 
@@ -335,7 +327,7 @@ class StudyWrapper(StudyWrapperBase):
         lambda v: [fgt2str(v.family_genotype)],
 
         "best_st":
-        lambda v: [mat2str(v.best_state)],
+        lambda v: [mat2str(v.family_best_state)],
 
         "family_structure":
         lambda v: [members_in_order_get_family_structure(
@@ -362,13 +354,24 @@ class StudyWrapper(StudyWrapperBase):
                 v.alt_alleles
             )),
 
-        "inheritance_type": lambda v: list(map(
-            lambda aa: aa.inheritance_in_members, v.alt_alleles
-        )),
+        "inheritance_type":
+        lambda v: list(
+            map(
+                lambda aa:
+                "denovo"
+                if Inheritance.denovo in aa.inheritance_in_members
+                else "mendelian"
+                if Inheritance.mendelian in aa.inheritance_in_members
+                else "-",
+                v.alt_alleles)
+        ),
 
         "is_denovo":
-        lambda v: bool(
-            Inheritance.denovo in v.inheritance_in_members
+        lambda v: list(
+            map(
+                lambda aa:
+                Inheritance.denovo in aa.inheritance_in_members,
+                v.alt_alleles)
         ),
 
         "effects":
@@ -391,7 +394,22 @@ class StudyWrapper(StudyWrapperBase):
 
     }
 
-    SPECIAL_ATTRS = {**SPECIAL_ATTRS_FORMAT, **STANDARD_ATTRS_LAMBDAS}
+    PHENOTYPE_ATTRS = {
+        "family_phenotypes":
+        lambda v, phenotype_person_sets:
+        [
+            ':'.join([
+                phenotype_person_sets.get_person_set_of_person(mid).name
+                for mid in v.members_ids])
+        ],
+
+        "carrier_phenotypes":
+        lambda v, phenotype_person_sets:
+        [':'.join([
+            phenotype_person_sets.get_person_set_of_person(mid).name
+            for mid in filter(None, aa.variant_in_members)])
+         for aa in v.alt_alleles],
+    }
 
     def generate_pedigree(self, variant, person_set_collection):
         result = []
@@ -460,19 +478,15 @@ class StudyWrapper(StudyWrapperBase):
                             v, person_set_collection
                         )
                     )
-                elif col_source == "family_phenotypes":
-                    phenotypes = ':'.join(self.get_persons_phenotypes(list(map(
-                        lambda m: m.person_id, v.members_in_order
-                    ))))
-                    row_variant.append(phenotypes)
-                elif col_source == "carrier_phenotypes":
-                    phenotypes = list(map(
-                        lambda aa: ':'.join(self.get_persons_phenotypes(
-                            list(filter(None, aa.variant_in_members)))
-                        ),
-                        v.alt_alleles
-                    ))
-                    row_variant.append(phenotypes)
+                elif col_source in self.PHENOTYPE_ATTRS:
+                    phenotype_person_sets = \
+                        self.person_set_collections.get("phenotype")
+                    if phenotype_person_sets is None:
+                        row_variant.append("-")
+                    fn = self.PHENOTYPE_ATTRS[col_source]
+                    row_variant.append(
+                        ",".join(fn(v, phenotype_person_sets)))
+
                 elif col_source == "study_phenotype":
                     row_variant.append(self.config.study_phenotype)
 
@@ -932,16 +946,6 @@ class StudyWrapper(StudyWrapperBase):
             best_st,
             0,
         ]
-
-    def get_persons_phenotypes(self, person_ids: List[str]):
-        result = list()
-        collection = self.person_set_collections.get("phenotype")
-        if collection is None:
-            return result
-
-        for pid in person_ids:
-            result.append(collection.get_person_set_of_person(pid).id)
-        return result
 
 
 class RemoteStudyWrapper(StudyWrapperBase):
