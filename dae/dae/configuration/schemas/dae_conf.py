@@ -40,6 +40,16 @@ rsync_schema = {
     "remote_shell": {"type": "string", "default": None, 'nullable': True},
 }
 
+remote_schema = {
+    "id": {"type": "string"},
+    "host": {"type": "string"},
+    "gpf_prefix": {"type": "string"},
+    "base_url": {"type": "string"},
+    "port": {"type": "integer", "default": "8000"},
+    "user": {"type": "string"},
+    "password": {"type": "string"},
+}
+
 storage_schema = {
     "storage_type": {"type": "string", "allowed": ["impala", "filesystem"]},
     "dir": {
@@ -107,6 +117,10 @@ dae_conf_schema = {
                 "coerce": "abspath",
             }
         },
+    },
+    "remotes": {
+        "type": "list",
+        "valuesrules": {"type": "dict", "schema": remote_schema}
     },
     "gene_info_db": {"type": "dict", "schema": config_reference_schema},
     "default_study_config": {
