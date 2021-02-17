@@ -530,16 +530,20 @@ class QueryTransformer:
             kwargs["personIds"] = list(kwargs["personIds"])
 
         if "familyTypes" in kwargs:
+            family_ids_with_types = set()
             for family_type in kwargs["familyTypes"]:
                 family_type = FamilyType.from_name(family_type)
-                family_ids_with_type = self.study_wrapper\
-                    .families\
-                    .families_by_type.get(family_type, set())
-                if "familyIds" in kwargs:
-                    family_ids_with_type = set.intersection(
-                        family_ids_with_type, set(kwargs.pop("familyIds"))
+                family_ids_with_types = set.union(
+                    family_ids_with_types,
+                    self.study_wrapper.families.families_by_type.get(
+                        family_type, set()
                     )
-                kwargs["familyIds"] = family_ids_with_type
+                )
+            if "familyIds" in kwargs:
+                family_ids_with_types = set.intersection(
+                    family_ids_with_types, set(kwargs.pop("familyIds"))
+                )
+            kwargs["familyIds"] = family_ids_with_types
 
         if "inheritanceTypeFilter" in kwargs:
             kwargs["inheritance"].append(
