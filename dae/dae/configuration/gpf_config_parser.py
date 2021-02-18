@@ -102,7 +102,7 @@ class GPFConfigParser:
             raise ex
 
     @classmethod
-    def finalize_config(
+    def process_config(
         cls,
         config: Dict[str, Any],
         schema: dict,
@@ -136,7 +136,7 @@ class GPFConfigParser:
         default_config = None
         if default_config_filename:
             default_config = cls.parse_config(default_config_filename)
-        return GPFConfigParser.finalize_config(
+        return GPFConfigParser.process_config(
             config, schema, default_config, filename
         )
 

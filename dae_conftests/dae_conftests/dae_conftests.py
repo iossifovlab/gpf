@@ -106,7 +106,7 @@ def default_dae_config(request):
         dae_config["remotes"].append(remote_config)
     else:
         dae_config["remotes"][0] = remote_config
-    dae_config = GPFConfigParser.finalize_config(
+    dae_config = GPFConfigParser.process_config(
         dae_config,
         dae_conf_schema,
         config_filename=dae_conf_path
