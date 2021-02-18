@@ -220,11 +220,13 @@ study_config_schema = {
         "allowed": ["hg19", "hg38"],
         "required": True,
     },
+    "study_phenotype": {"type": "string"},
     "chr_prefix": {"type": "boolean", "required": True},
     "has_denovo": {"type": "boolean", "default": True},
     "has_transmitted": {"type": "boolean"},
     "has_complex": {"type": "boolean"},
     "has_cnv": {"type": "boolean"},
+    "has_tandem_repeat": {"type": "boolean"},
     "genotype_storage": {
         "type": "dict",
         "schema": genotype_storage_schema,

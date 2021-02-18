@@ -11,13 +11,38 @@ import pandas as pd
 import statsmodels.api as sm
 from scipy.stats.stats import ttest_ind
 
-from dae.pheno_tool.pheno_common import PhenoResult
 from dae.pheno.common import MeasureType
 from dae.variants.attributes import Role, Sex
 from dae.utils.effect_utils import EffectTypesMixin
 
 
 LOGGER = logging.getLogger(__name__)
+
+
+class PhenoResult(object):
+    def __init__(self):
+        self.pvalue = np.nan
+        self.positive_count = np.nan
+        self.positive_mean = np.nan
+        self.positive_deviation = np.nan
+        self.negative_count = np.nan
+        self.negative_mean = np.nan
+        self.negative_deviation = np.nan
+
+    def _set_positive_stats(self, p_count, p_mean, p_std):
+        self.positive_count = p_count
+        self.positive_mean = p_mean
+        self.positive_deviation = p_std
+
+    def _set_negative_stats(self, n_count, n_mean, n_std):
+        self.negative_count = n_count
+        self.negative_mean = n_mean
+        self.negative_deviation = n_std
+
+    def __repr__(self):
+        return "PhenoResult: pvalue={}; pos={} (neg={})".format(
+            self.pvalue, self.positive_count, self.negative_count
+        )
 
 
 class PhenoToolHelper(object):
@@ -65,9 +90,10 @@ class PhenoToolHelper(object):
         if not pheno_filters:
             return None
         assert isinstance(pheno_filters, list)
-        family_ids = self.genotype_data._transform_filters_to_ids(
-            pheno_filters
-        )
+        family_ids = \
+            self.genotype_data.query_transformer._transform_filters_to_ids(
+                pheno_filters
+            )
         return family_ids
 
     def genotype_data_variants(self, data):

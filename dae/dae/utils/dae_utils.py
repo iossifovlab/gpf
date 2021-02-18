@@ -49,7 +49,3 @@ def join_line(ln, sep="\t"):
     lm = map(lambda v: "; ".join(v) if isinstance(v, list) else v, ln)
     tl = map(lambda v: "" if v is None or v == "None" else str(v), lm)
     return sep.join(tl) + "\n"
-
-
-def members_in_order_get_family_structure(mio):
-    return "".join([f"{p.role.name}{p.sex.short()}" for p in mio])

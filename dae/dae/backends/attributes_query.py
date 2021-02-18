@@ -113,16 +113,6 @@ class BaseQueryTransformerMatcher(object):
         return self.transform(self.parse(expression))
 
 
-class QueryTransformerMatcher(BaseQueryTransformerMatcher):
-    def __init__(self, parser=PARSER, token_converter=None):
-        super(QueryTransformerMatcher, self).__init__(parser, token_converter)
-        self.transformer2 = QueryTreeToLambdaTransformer()
-
-    def transform_tree_to_matcher(self, tree):
-        matcher = self.transformer2.transform(tree)
-        return Matcher(tree, self.parser, matcher)
-
-
 class StringQueryToTreeTransformer(InlineTransformer):
     def __init__(self, parser=PARSER, token_converter=None):
         super(StringQueryToTreeTransformer, self).__init__()
@@ -282,6 +272,40 @@ class QueryTreeToLambdaTransformer(BaseTreeTransformer):
         return lambda x: any(f(x) for f in children)
 
 
+class QueryTreeToBitwiseLambdaTransformer(BaseTreeTransformer):
+    def ContainsNode(self, arg):
+        return lambda vals: any([arg & v for v in vals if v is not None])
+
+    def LessThanNode(self, arg):
+        raise NotImplementedError("unexpected bitwise query")
+
+    def GreaterThanNode(self, arg):
+        raise NotImplementedError("unexpected bitwise query")
+
+    def LessThanEqNode(self, arg):
+        raise NotImplementedError("unexpected bitwise query")
+
+    def GreaterThanEqNode(self, arg):
+        raise NotImplementedError("unexpected bitwise query")
+
+    def ElementOfNode(self, arg):
+        return lambda x: any([x & a for a in arg])
+
+    def EqualsNode(self, arg):
+        return lambda val: all([val & a for a in arg])
+
+    def NotNode(self, children):
+        assert len(children) == 1
+        child = children[0]
+        return lambda x: not child(x)
+
+    def AndNode(self, children):
+        return lambda x: all(child(x) for child in children)
+
+    def OrNode(self, children):
+        return lambda x: any(child(x) for child in children)
+
+
 def roles_converter(a):
     if not isinstance(a, Role):
         return Role.from_name(a)
@@ -304,19 +328,6 @@ def variant_type_converter(a):
     if not isinstance(a, VariantType):
         return VariantType.from_name(a)
     return a
-
-
-role_query = QueryTransformerMatcher(token_converter=roles_converter)
-
-sex_query = QueryTransformerMatcher(token_converter=sex_converter)
-
-inheritance_query = QueryTransformerMatcher(
-    token_converter=inheritance_converter
-)
-
-variant_type_query = QueryTransformerMatcher(
-    token_converter=variant_type_converter
-)
 
 
 class QueryTreeToSQLTransformer(BaseTreeTransformer):
@@ -526,3 +537,30 @@ class BitwiseTreeTransformer(Interpreter):
 
     def all(self, *args):
         return AndNode(args)
+
+
+class QueryTransformerMatcher(BaseQueryTransformerMatcher):
+    def __init__(
+            self, parser=PARSER, token_converter=None,
+            transformer2=QueryTreeToLambdaTransformer()):
+
+        super(QueryTransformerMatcher, self).__init__(parser, token_converter)
+        self.transformer2 = transformer2
+
+    def transform_tree_to_matcher(self, tree):
+        matcher = self.transformer2.transform(tree)
+        return Matcher(tree, self.parser, matcher)
+
+
+role_query = QueryTransformerMatcher(token_converter=roles_converter)
+
+sex_query = QueryTransformerMatcher(token_converter=sex_converter)
+
+inheritance_query = QueryTransformerMatcher(
+    token_converter=inheritance_converter
+)
+
+variant_type_query = QueryTransformerMatcher(
+    token_converter=variant_type_converter,
+    transformer2=QueryTreeToBitwiseLambdaTransformer()
+)

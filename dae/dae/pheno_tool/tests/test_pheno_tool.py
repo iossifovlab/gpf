@@ -1,8 +1,7 @@
 import pytest
 import pandas as pd
 from collections import Counter
-from dae.pheno_tool.tool import PhenoTool
-from dae.pheno_tool.pheno_common import PhenoResult
+from dae.pheno_tool.tool import PhenoResult, PhenoTool
 from dae.variants.attributes import Sex
 
 

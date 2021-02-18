@@ -319,7 +319,6 @@ class DenovoLoader(VariantsGenotypesLoader):
 
     @classmethod
     def parse_cli_arguments(cls, argv):
-        print(argv)
 
         if argv.denovo_location and (argv.denovo_chrom or argv.denovo_pos):
             print(
