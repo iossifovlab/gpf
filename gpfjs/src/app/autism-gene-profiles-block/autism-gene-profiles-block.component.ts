@@ -15,7 +15,7 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
 
   @HostListener('window:keydown', ['$event'])
   keyEvent($event: KeyboardEvent) {
-    if ($event.target['id'] === 'gene-search-input') {
+    if ($event.target['localName'] === 'input') {
       return;
     }
 
