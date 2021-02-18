@@ -1,8 +1,17 @@
 import pytest
+from dae.pheno.pheno_db import PhenotypeDataStudy
 from dae.person_filters import \
+    FamilyFilter, \
     PhenoFilterSet, \
     PhenoFilterRange, \
     make_pheno_filter
+
+
+@pytest.fixture
+def fake_phenotype_data(fixture_dirname):
+    pheno_data = PhenotypeDataStudy(fixture_dirname("fake_pheno_db/fake.db"))
+    pheno_data._load()
+    return pheno_data
 
 
 def test_pheno_filter_set_apply(fake_phenotype_data):
@@ -111,7 +120,7 @@ def test_pheno_filter_range_values_range_type(fake_phenotype_data):
         PhenoFilterRange(measure, {0, 1})
 
 
-def test_pheno_filter_builder_categorical(fake_phenotype_data):
+def test_make_pheno_filter_categorical(fake_phenotype_data):
     pf = make_pheno_filter({
         "source": "i1.m5",
         "sourceType": "categorical",
@@ -120,7 +129,7 @@ def test_pheno_filter_builder_categorical(fake_phenotype_data):
     assert isinstance(pf, PhenoFilterSet)
 
 
-def test_pheno_filter_builder_raw(fake_phenotype_data):
+def test_make_pheno_filter_raw(fake_phenotype_data):
     with pytest.raises(AssertionError):
         make_pheno_filter({
             "source": "i1.m9",
@@ -129,7 +138,7 @@ def test_pheno_filter_builder_raw(fake_phenotype_data):
         }, fake_phenotype_data)
 
 
-def test_pheno_filter_builder_continuous(fake_phenotype_data):
+def test_make_pheno_filter_continuous(fake_phenotype_data):
     pf = make_pheno_filter({
         "source": "i1.m1",
         "sourceType": "continuous",
@@ -138,7 +147,7 @@ def test_pheno_filter_builder_continuous(fake_phenotype_data):
     assert isinstance(pf, PhenoFilterRange)
 
 
-def test_pheno_filter_builder_ordinal(fake_phenotype_data):
+def test_make_pheno_filter_ordinal(fake_phenotype_data):
     pf = make_pheno_filter({
         "source": "i1.m4",
         "sourceType": "continuous",
@@ -147,10 +156,21 @@ def test_pheno_filter_builder_ordinal(fake_phenotype_data):
     assert isinstance(pf, PhenoFilterRange)
 
 
-def test_pheno_filter_builder_nonexistent_measure(fake_phenotype_data):
+def test_make_pheno_filter_nonexistent_measure(fake_phenotype_data):
     with pytest.raises(AssertionError):
         make_pheno_filter({
             "source": "??.??",
             "sourceType": "continuous",
             "selection": {"min": 0, "max": 0}
         }, fake_phenotype_data)
+
+
+def test_make_pheno_filter_family(fake_phenotype_data):
+    pf = make_pheno_filter({
+        "source": "i1.m4",
+        "sourceType": "continuous",
+        "selection": {"min": 3, "max": 5},
+        "role": "prb"
+    }, fake_phenotype_data)
+    assert isinstance(pf, FamilyFilter)
+    assert isinstance(pf.person_filter, PhenoFilterRange)
