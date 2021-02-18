@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnChanges, OnInit, Output, ViewChildren } from '@angular/core';
+import { Component, EventEmitter, HostListener, Input, OnChanges, OnInit, Output, ViewChildren } from '@angular/core';
 import { Observable } from 'rxjs';
 import { AutismGeneToolConfig, AutismGeneToolGene } from './autism-gene-profile';
 import { AutismGeneProfilesService } from './autism-gene-profiles.service';
@@ -14,11 +14,24 @@ export class AutismGeneProfilesComponent implements OnInit, OnChanges {
   @Output() createTabEvent = new EventEmitter();
   @ViewChildren(NgbDropdownMenu) ngbDropdownMenu: NgbDropdownMenu[];
 
-  private genes$: Observable<AutismGeneToolGene[]>;
-
+  private genes: AutismGeneToolGene[] = [];
   private shownGeneLists: string[];
   private shownAutismScores: string[];
   private shownProtectionScores: string[];
+
+  private pageIndex = 1;
+  private loadMoreGenes = true;
+  private scrollLoadThreshold = 1000;
+
+  @HostListener('window:scroll', ['$event'])
+  onWindowScroll(event: any) {
+    const currentScrollHeight = document.documentElement.scrollTop + document.documentElement.offsetHeight;
+    const totalScrollHeight = document.documentElement.scrollHeight;
+
+    if (this.loadMoreGenes && currentScrollHeight + this.scrollLoadThreshold >= totalScrollHeight) {
+      this.updateGenes();
+    }
+  }
 
   constructor(
     private autismGeneProfilesService: AutismGeneProfilesService,
@@ -33,7 +46,9 @@ export class AutismGeneProfilesComponent implements OnInit, OnChanges {
   }
 
   ngOnInit(): void {
-    this.genes$ = this.autismGeneProfilesService.getGenes();
+    this.autismGeneProfilesService.getGenes(this.pageIndex).take(1).subscribe(res => {
+      this.genes = this.genes.concat(res);
+    });
   }
 
   calculateDatasetColspan(datasetConfig) {
@@ -54,5 +69,15 @@ export class AutismGeneProfilesComponent implements OnInit, OnChanges {
 
   emitCreateTabEvent(geneSymbol: string, openTab: boolean): void {
     this.createTabEvent.emit({geneSymbol: geneSymbol, openTab: openTab});
+  }
+
+  updateGenes() {
+    this.loadMoreGenes = false;
+    this.pageIndex++;
+
+    this.autismGeneProfilesService.getGenes(this.pageIndex).take(1).subscribe(res => {
+      this.genes = this.genes.concat(res);
+      this.loadMoreGenes = Object.keys(res).length !== 0 ? true : false;
+    });
   }
 }

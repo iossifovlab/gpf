@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { ConfigService } from 'app/config/config.service';
 // tslint:disable-next-line:import-blacklist
@@ -29,11 +29,17 @@ export class AutismGeneProfilesService {
     });
   }
 
-  getGenes(): Observable<AutismGeneToolGene[]> {
+  getGenes(page: number): Observable<AutismGeneToolGene[]> {
+    let url = this.config.baseUrl + this.genesUrl;
+
+    const searchParams = new HttpParams().set('page', page.toString());
+    url += `?${searchParams}`;
+
     return this.http
-    .get(this.config.baseUrl + this.genesUrl)
-    .map(res => {
-      return (res as Array<Object>).map(gene => AutismGeneToolGene.fromJson(gene));
-    });
+      .get(url)
+      .map(res => {
+        return (res as Array<Object>)
+          .map(gene => AutismGeneToolGene.fromJson(gene));
+      });
   }
 }
