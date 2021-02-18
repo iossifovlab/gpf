@@ -93,12 +93,19 @@ def default_dae_config(request):
     )
     dae_config = GPFConfigParser.parse_config(dae_conf_path)
     dae_config["studies_db"]["dir"] = studies_dirname
-    dae_config["remotes"][0]["id"] = "TEST_REMOTE"
-    dae_config["remotes"][0]["host"] = "gpfremote"
-    dae_config["remotes"][0]["base_url"] = "api/v3"
-    dae_config["remotes"][0]["port"] = 21010
-    dae_config["remotes"][0]["user"] = "admin@iossifovlab.com"
-    dae_config["remotes"][0]["password"] = "secret"
+    remote_config = {
+        "id": "TEST_REMOTE",
+        "host": "gpfremote",
+        "base_url": "api/v3",
+        "port": 21010,
+        "user": "admin@iossifovlab.com",
+        "password": "secret",
+    }
+    if "remotes" not in dae_config:
+        dae_config["remotes"] = list()
+        dae_config["remotes"].append(remote_config)
+    else:
+        dae_config["remotes"][0] = remote_config
     dae_config = GPFConfigParser.finalize_config(
         dae_config,
         dae_conf_schema,
