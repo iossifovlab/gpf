@@ -47,10 +47,8 @@
 
       <tr style="height: 110px;">
         <th class="table-subheader" rowspan="2">
-          Gene search
-          <input #searchTerm (keyup)="search(searchTerm.value)"
-            id="search-field" class="form-control my-0 py-1"
-            type="text" placeholder="Search" aria-label="Search">
+          <input #searchTerm (keyup)="search(searchTerm.value)" id="search-field"
+            class="form-control" autocomplete="off" type="text" placeholder="Search gene" aria-label="Search gene">
         </th>
         <th class="table-subheader" rowspan="2" *ngFor="let geneList of shownGeneLists"><span class="vertical-text">{{geneList}}</span></th>
         <th class="table-subheader" rowspan="2" *ngFor="let autismScore of shownAutismScores"><span class="vertical-text">{{autismScore}}</span></th>
