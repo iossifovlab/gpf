@@ -437,7 +437,7 @@ class AlleleParquetSerializer:
             self.annotation_prop_serializers,
             self.family_prop_serializers,
             self.member_prop_serializers,
-            [{"family_variant_index": IntSerializer}],
+            {"family_variant_index": IntSerializer},
             scores_binary,
         ]
 
