@@ -29,10 +29,14 @@ export class AutismGeneProfilesService {
     });
   }
 
-  getGenes(page: number): Observable<AutismGeneToolGene[]> {
+  getGenes(page: number, geneSymbol: string): Observable<AutismGeneToolGene[]> {
     let url = this.config.baseUrl + this.genesUrl;
 
-    const searchParams = new HttpParams().set('page', page.toString());
+    let searchParams = new HttpParams().set('page', page.toString());
+    if (geneSymbol) {
+      searchParams = searchParams.append('symbol', geneSymbol);
+    }
+
     url += `?${searchParams}`;
 
     return this.http

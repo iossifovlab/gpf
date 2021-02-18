@@ -1,5 +1,5 @@
 import { Component, EventEmitter, HostListener, Input, OnChanges, OnInit, Output, ViewChildren } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, ReplaySubject } from 'rxjs';
 import { AutismGeneToolConfig, AutismGeneToolGene } from './autism-gene-profile';
 import { AutismGeneProfilesService } from './autism-gene-profiles.service';
 import { NgbDropdownMenu } from '@ng-bootstrap/ng-bootstrap';
@@ -22,6 +22,8 @@ export class AutismGeneProfilesComponent implements OnInit, OnChanges {
   private pageIndex = 1;
   private loadMoreGenes = true;
   private scrollLoadThreshold = 1000;
+
+  geneInput = '';
 
   @HostListener('window:scroll', ['$event'])
   onWindowScroll(event: any) {
@@ -75,9 +77,17 @@ export class AutismGeneProfilesComponent implements OnInit, OnChanges {
     this.loadMoreGenes = false;
     this.pageIndex++;
 
-    this.autismGeneProfilesService.getGenes(this.pageIndex).take(1).subscribe(res => {
+    this.autismGeneProfilesService.getGenes(this.pageIndex, this.geneInput).take(1).subscribe(res => {
       this.genes = this.genes.concat(res);
       this.loadMoreGenes = Object.keys(res).length !== 0 ? true : false;
     });
+  }
+
+  search(value: string) {
+    this.geneInput = value;
+    this.genes = [];
+    this.pageIndex = 0;
+
+    this.updateGenes();
   }
 }
