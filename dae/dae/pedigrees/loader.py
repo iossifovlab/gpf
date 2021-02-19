@@ -326,7 +326,6 @@ class FamiliesLoader(CLILoader):
                 ped_status: Status.from_name,
                 ped_generated: lambda v: str2bool(v),
                 ped_not_sequenced: lambda v: str2bool(v),
-                "missing": lambda v: str2bool(v),
                 ped_proband: lambda v: str2bool(v),
             },
             dtype=str,

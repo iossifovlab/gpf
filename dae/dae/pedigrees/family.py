@@ -143,7 +143,7 @@ class Person(object):
 
     @property
     def missing(self):
-        return self._attributes.get("missing", None)
+        return self.generated or self.not_sequenced
 
     @property
     def family_bin(self):
@@ -218,10 +218,6 @@ class Person(object):
             print(
                 f"{self} not_sequenced:",
                 self.not_sequenced, other.not_sequenced)
-        if self.missing != other.missing:
-            print(
-                f"{self} missing:",
-                self.missing, other.missing)
 
 
 class Family(object):
@@ -289,8 +285,7 @@ class Family(object):
         if self._members_in_order is None:
             self._members_in_order = list(
                 filter(
-                    lambda m:
-                    not (m.generated or m.not_sequenced or m.missing),
+                    lambda m: not m.missing,
                     self.persons.values())
             )
         return self._members_in_order

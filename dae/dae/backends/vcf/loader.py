@@ -89,10 +89,9 @@ class VcfFamiliesGenotypes(FamiliesGenotypes):
             if gt.shape[1] < len(family):
                 res = -1 * np.ones((gt.shape[0], len(family)), dtype=np.int8)
                 gt_column = 0
-                for family_index, member in enumerate(family.members_in_order):
-                    if not member.missing:
-                        res[:, family_index] = gt[:, gt_column]
-                        gt_column += 1
+                for family_index, _member in enumerate(family.members_in_order):
+                    res[:, family_index] = gt[:, gt_column]
+                    gt_column += 1
                 gt = res
 
             if is_all_reference_genotype(gt) and \
@@ -353,7 +352,8 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                             None
                         )
                     )
-                    person.set_attr("missing", True)
+                    person.set_attr("not_sequenced", True)
+                    counters["not_sequenced"] += 1
                 counters["missing"] += 1
 
         logger.warning(f"people stats: {counters}")
@@ -481,14 +481,17 @@ class SingleVcfLoader(VariantsGenotypesLoader):
 
             allele_index = np.stack(
                 [2 * sample_index, 2 * sample_index + 1]).reshape(
-                    [1, 2 * len(sample_index)], order="F")[0]
+                    [1, 2 * len(sample_index)], order="F")[0].astype(np.int)
 
             current_vcf = self.vcfs[vcf_index]
             samples_count = len(current_vcf.samples)
             logger.debug(
                 f"samples len: {samples_count}; "
                 f"gt_idxs: {len(vcf.gt_idxs)}; "
-                f"{set(vcf.gt_idxs)}")
+                f"{set(vcf.gt_idxs)}; "
+                f"allele_index: {allele_index}, "
+                f"{allele_index.dtype}, {[type(v) for v in allele_index]}")
+
             if len(vcf.gt_idxs) == samples_count and \
                     set(vcf.gt_idxs) == set([-1]):
                 gt_idxs = -1 * np.ones(2 * samples_count, dtype=np.int)

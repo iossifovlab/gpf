@@ -217,6 +217,12 @@ class FamilyAllele(Allele, FamilyDelegate):
                     continue
                 trio = self.family.trios[pid]
                 trio_index = self.family.members_index(trio)
+
+                # logger.debug(
+                #     f"family {self.family} trio {trio} indexes: {trio_index}; "
+                #     f"gt: {self.gt}"
+                # )
+
                 trio_gt = self.gt[:, trio_index]
                 if np.any(trio_gt == -1):
                     inh = Inheritance.unknown
