@@ -10,7 +10,7 @@ from dae.backends.vcf.loader import VcfLoader
 from dae.gpf_instance.gpf_instance import GPFInstance
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("ped2ped")
 
 
 def main(argv, gpf_instance=None):

@@ -1,3 +1,13 @@
+SELECT bucket_index, summary_index, variant_type, family_index, family_id, frequency_bin FROM data_hg38_production.SFARI_SPARK_WES_1_temp_variants 
+WHERE
+  ( (  effect_types in (  'nonsense' , 'frame-shift' , 'splice-site' , 'no-frame-shift-newStop'  )  ) )
+  AND ( (af_allele_count <= 1 or af_allele_count is null) )
+  AND ( allele_index > 0 ) 
+  LIMIT 10;
+
+
+
+
 SELECT variants.bucket_index, variants.summary_index, variants.allele_index, variants.variant_type, `position`, variants.family_id, pedigree.status, inheritance_in_members 
 FROM data_hg38_production.SFARI_SPARK_WES_1_temp_variants as variants JOIN data_hg38_production.SFARI_SPARK_WES_1_temp_pedigree as pedigree 
 WHERE

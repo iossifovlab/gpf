@@ -28,6 +28,7 @@ PEDIGREE_COLUMN_NAMES = {
     "generated": "generated",
     "proband": "proband",
     "not_sequenced": "not_sequenced",
+    "missing": "missing",
 }
 
 
@@ -99,6 +100,10 @@ class Person(object):
             (self, self._attributes)
         if self._attributes.get("not_sequenced"):
             value = self._attributes.get("not_sequenced")
+            if value == "None":
+                self._attributes["not_sequenced"] = None
+        if self._attributes.get("missing"):
+            value = self._attributes.get("missing")
             if value == "None":
                 self._attributes["not_sequenced"] = None
 
@@ -213,6 +218,10 @@ class Person(object):
             print(
                 f"{self} not_sequenced:",
                 self.not_sequenced, other.not_sequenced)
+        if self.missing != other.missing:
+            print(
+                f"{self} missing:",
+                self.missing, other.missing)
 
 
 class Family(object):
@@ -280,7 +289,8 @@ class Family(object):
         if self._members_in_order is None:
             self._members_in_order = list(
                 filter(
-                    lambda m: not (m.generated or m.not_sequenced),
+                    lambda m:
+                    not (m.generated or m.not_sequenced or m.missing),
                     self.persons.values())
             )
         return self._members_in_order
