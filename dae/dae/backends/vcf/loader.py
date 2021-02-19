@@ -339,17 +339,18 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                         f"person {person.person_id} marked as "
                         f"'not_sequenced'")
             else:
-                logger.warning(
-                    f"person {person} changed to missing")
+                if not person.missing:
+                    logger.info(
+                        f"person {person} changed to missing")
 
-                person.set_attr(
-                    "sample_index",
-                    (
-                        None,
-                        None
+                    person.set_attr(
+                        "sample_index",
+                        (
+                            None,
+                            None
+                        )
                     )
-                )
-                person.set_attr("missing", True)
+                    person.set_attr("missing", True)
                 counters["missing"] += 1
 
         logger.info(f"people stats: {counters}")
