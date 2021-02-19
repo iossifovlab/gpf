@@ -1,5 +1,5 @@
 import { Component, EventEmitter, HostListener, Input, OnChanges, OnInit, Output, ViewChildren } from '@angular/core';
-import { Observable, ReplaySubject } from 'rxjs';
+import { Subject } from 'rxjs';
 import { AutismGeneToolConfig, AutismGeneToolGene } from './autism-gene-profile';
 import { AutismGeneProfilesService } from './autism-gene-profiles.service';
 import { NgbDropdownMenu } from '@ng-bootstrap/ng-bootstrap';
@@ -24,6 +24,7 @@ export class AutismGeneProfilesComponent implements OnInit, OnChanges {
   private scrollLoadThreshold = 1000;
 
   geneInput = '';
+  searchKeystrokes$: Subject<string> = new Subject();
 
   @HostListener('window:scroll', ['$event'])
   onWindowScroll(event: any) {
@@ -51,6 +52,13 @@ export class AutismGeneProfilesComponent implements OnInit, OnChanges {
     this.autismGeneProfilesService.getGenes(this.pageIndex).take(1).subscribe(res => {
       this.genes = this.genes.concat(res);
     });
+
+    this.searchKeystrokes$
+      .debounceTime(250)
+      .distinctUntilChanged()
+      .subscribe(searchTerm => {
+        this.search(searchTerm);
+      });
   }
 
   calculateDatasetColspan(datasetConfig) {
@@ -89,5 +97,9 @@ export class AutismGeneProfilesComponent implements OnInit, OnChanges {
     this.pageIndex = 0;
 
     this.updateGenes();
+  }
+
+  sendKeystrokes(value: string) {
+    this.searchKeystrokes$.next(value);
   }
 }
