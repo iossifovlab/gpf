@@ -6,7 +6,7 @@ from dae.backends.vcf.loader import VcfLoader
 from dae.backends.impala.import_commons import Variants2ParquetTool
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("vcf2parquet")
 
 
 class Vcf2ParquetTool(Variants2ParquetTool):

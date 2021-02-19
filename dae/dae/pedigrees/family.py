@@ -289,7 +289,8 @@ class Family(object):
         if self._members_in_order is None:
             self._members_in_order = list(
                 filter(
-                    lambda m: not (m.generated or m.not_sequenced),
+                    lambda m:
+                    not (m.generated or m.not_sequenced or m.missing),
                     self.persons.values())
             )
         return self._members_in_order

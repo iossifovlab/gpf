@@ -314,6 +314,9 @@ class SingleVcfLoader(VariantsGenotypesLoader):
         not_sequenced = set()
         counters = Counter()
         for person in self.families.persons.values():
+            if person.generated:
+                counters["generated"] += 1
+                continue
 
             if person.sample_id in vcf_samples:
                 if person.sample_id in seen:
@@ -353,12 +356,12 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                     person.set_attr("missing", True)
                 counters["missing"] += 1
 
-        logger.info(f"people stats: {counters}")
+        logger.warning(f"people stats: {counters}")
 
         self.families.redefine()
         logger.warning(
             f"persons changed to not_sequenced {len(not_sequenced)}: "
-            f"{not_sequenced}")
+            f"{not_sequenced} in {self.filenames}")
 
     def _build_family_alleles_indexes(self):
         vcf_offsets = [0] * len(self.vcfs)
@@ -371,7 +374,8 @@ class SingleVcfLoader(VariantsGenotypesLoader):
 
         for family in self.families.values():
             samples_indexes = []
-            for vcf_index, sample_index in family.samples_index:
+            for person in family.members_in_order:
+                vcf_index, sample_index = person.sample_index
                 if vcf_index is None or sample_index is None:
                     assert vcf_index is None and sample_index is None
                     continue
