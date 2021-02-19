@@ -44,7 +44,7 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
     });
   }
 
-  createTabEventHandler($event) {
+  createTabEventHandler($event): void {
     const tabId: string = $event.geneSymbol;
     const openTab: boolean = $event.openTab;
 
@@ -58,11 +58,11 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
     return [...this.geneTabs].indexOf(this.nav.activeId);
   }
 
-  openHomeTab() {
+  openHomeTab(): void {
     this.nav.select('autismGenesTool');
   }
 
-  openPreviousTab() {
+  openPreviousTab(): void {
     const index = this.getActiveTabIndex();
 
     if (index > 0) {
@@ -72,7 +72,7 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
     }
   }
 
-  openNextTab() {
+  openNextTab(): void {
     const index = this.getActiveTabIndex();
 
     if (index + 1 < this.geneTabs.size) {
@@ -80,15 +80,15 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
     }
   }
 
-  openLastTab() {
+  openLastTab(): void {
     this.nav.select([...this.geneTabs][this.geneTabs.size - 1]);
   }
 
-  openTabAtIndex(index: number) {
+  openTabAtIndex(index: number): void {
     this.nav.select([...this.geneTabs][index]);
   }
 
-  closeTab(event: MouseEvent, tabId: string) {
+  closeTab(event: MouseEvent, tabId: string): void {
     if (tabId === 'autismGenesTool') {
       return;
     }
@@ -103,7 +103,7 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
     event.stopImmediatePropagation();
   }
 
-  closeActiveTab() {
+  closeActiveTab(): void {
     if (this.nav.activeId === 'autismGenesTool') {
       return;
     }
