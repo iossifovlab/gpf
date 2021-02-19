@@ -19,17 +19,17 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
       return;
     }
 
-    if ($event.key === 'w') {
-      this.closeActiveTab();
-    }
+    const key = $event.key;
 
-    if (
-      Number($event.key)
-      || $event.key === '0'
-      || $event.key === '`'
-      || $event.key === 'p'
-      || $event.key === 'n'
-    ) {
+    if (key === 'w') {
+      this.closeActiveTab();
+    } else if (
+        Number(key)
+        || key === '0'
+        || key === '`'
+        || key === 'p'
+        || key === 'n'
+      ) {
       this.openTabByKey($event.key);
     }
   }
