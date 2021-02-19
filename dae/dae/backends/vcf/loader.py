@@ -3,6 +3,8 @@ import itertools
 import glob
 import logging
 
+from collections import Counter
+
 import numpy as np
 
 from cyvcf2 import VCF
@@ -289,7 +291,8 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                     f"{intersection}")
 
             vcf_samples += vcf.samples
-        vcf_samples = np.array(vcf_samples)
+
+        logger.debug(f"vcf samples (all): {vcf_samples}")
 
         vcf_samples_order = [list(vcf.samples) for vcf in self.vcfs]
         vcf_samples = set(vcf_samples)
@@ -305,9 +308,11 @@ class SingleVcfLoader(VariantsGenotypesLoader):
 
         vcf_samples = vcf_samples.difference(missing_samples)
         assert vcf_samples.issubset(pedigree_samples)
+        logger.debug(f"vcf samples (matched): {vcf_samples}")
 
         seen = set()
         not_sequenced = set()
+        counters = Counter()
         for person in self.families.persons.values():
 
             if person.sample_id in vcf_samples:
@@ -323,15 +328,20 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                             )
                         )
                         seen.add(person.sample_id)
+                        counters["found"] += 1
                         break
             elif not self.fixed_pedigree:
                 if not person.generated and not person.not_sequenced:
                     not_sequenced.add(person.person_id)
                     person.set_attr("not_sequenced", True)
+                    counters["not_sequenced"] += 1
                     logger.warning(
                         f"person {person.person_id} marked as "
                         f"'not_sequenced'")
             else:
+                logger.warning(
+                    f"person {person} changed to missing")
+
                 person.set_attr(
                     "sample_index",
                     (
@@ -340,6 +350,9 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                     )
                 )
                 person.set_attr("missing", True)
+                counters["missing"] += 1
+
+        logger.info(f"people stats: {counters}")
 
         self.families.redefine()
         logger.warning(
@@ -376,13 +389,22 @@ class SingleVcfLoader(VariantsGenotypesLoader):
         self.independent = self.families.persons_without_parents()
         self.independent_indexes = []
 
+        logger.debug(f"independent persons: {len(self.independent)}")
         missing = 0
         for person in self.independent:
             if person.missing:
+                logger.debug(
+                    f"independent individual missing: "
+                    f"{person}; {person.missing}"
+                )
                 missing += 1
                 continue
             self.independent_indexes.append(person.sample_index)
         self.independent_indexes = np.array(tuple(self.independent_indexes))
+
+        logger.debug(
+            f"independent: found={len(self.independent_indexes)}; "
+            f"missing={missing}")
 
         assert len(self.independent_indexes) + missing == \
             len(self.independent), (
@@ -481,6 +503,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                 result[vcf_index]["n_alleles"][allele_index] += np.sum(
                     matched_alleles
                 )
+
         n_independent_parents = len(self.independent_indexes)
         n_parents_called = sum([r["n_parents_called"] for r in result])
         percent_parents_called = 0.0
@@ -511,7 +534,15 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                 "af_ref_allele_count": int(ref_n_alleles),
                 "af_ref_allele_freq": float(ref_allele_freq),
             }
+            logger.debug(
+                f"allele {allele}: "
+                f"n_independent_parents={n_independent_parents}; "
+                f"n_parents_called={n_parents_called}; "
+                f"n_alleles={n_alleles}; "
+                f"allele_freq={allele_freq}")
+            logger.debug(f"allele {allele} frequencies: {freq}")
             allele.update_attributes(freq)
+            logger.debug(f"allele {allele} attributes: {allele.attributes}")
 
     def _full_variants_iterator_impl(self, initial_summary_variant_index=0):
 
