@@ -1,22 +1,30 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { Component, ElementRef, EventEmitter, Input, OnChanges, OnInit, Output, ViewChild } from '@angular/core';
 
 @Component({
   selector: 'gpf-multiple-select-menu',
   templateUrl: './multiple-select-menu.component.html',
   styleUrls: ['./multiple-select-menu.component.css']
 })
-export class MultipleSelectMenuComponent implements OnInit {
+export class MultipleSelectMenuComponent implements OnInit, OnChanges {
   @Input() id: string;
   @Input() selectedItems: string[];
   @Input() allItems: string[];
   @Input() readonly minSelectCount = 0;
   @Output() applyEvent = new EventEmitter<{id: string, data: string[]}>();
+  @Input() focusInput: boolean;
+  @ViewChild('searchInput') searchInput: ElementRef;
 
   private checkUncheckAllButtonName = 'Uncheck all';
   private searchText: String;
   private checkboxDataArray: {id: string; isChecked: boolean}[];
 
   constructor() { }
+
+  ngOnChanges(): void {
+    if (this.focusInput) {
+      this.focusSearchInput();
+    }
+  }
 
   ngOnInit(): void {
     this.checkboxDataArray = this.toCheckboxDataArray(this.allItems);
@@ -54,5 +62,11 @@ export class MultipleSelectMenuComponent implements OnInit {
       id: this.id,
       data: this.checkboxDataArray.filter(item => item.isChecked).map(item => item.id)
     });
+  }
+
+  focusSearchInput() {
+    setTimeout(() => {
+      this.searchInput.nativeElement.focus();
+    },0); 
   }
 }

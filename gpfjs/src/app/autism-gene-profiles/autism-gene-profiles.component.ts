@@ -23,6 +23,10 @@ export class AutismGeneProfilesComponent implements OnInit, OnChanges {
   private loadMoreGenes = true;
   private scrollLoadThreshold = 1000;
 
+  private focusGeneListsInput: boolean;
+  private focusAutismScoresInput: boolean;
+  private focusProtectionScoresInput: boolean;
+
   geneInput = '';
   searchKeystrokes$: Subject<string> = new Subject();
 
@@ -102,4 +106,7 @@ export class AutismGeneProfilesComponent implements OnInit, OnChanges {
   sendKeystrokes(value: string) {
     this.searchKeystrokes$.next(value);
   }
+
+
+
 }

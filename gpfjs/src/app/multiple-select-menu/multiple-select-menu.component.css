@@ -1,0 +1,7 @@
+.form-control:focus {
+  box-shadow: inset 0 -1px 0 #ddd;
+}
+
+.form-control {
+  border-radius: 0;
+}

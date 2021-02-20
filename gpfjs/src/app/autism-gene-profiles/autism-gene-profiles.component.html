@@ -10,11 +10,11 @@
           <span>
             Gene lists
           </span>
-          <span ngbDropdown>
+          <span ngbDropdown (openChange)="focusGeneListsInput = $event;">
             <button class="dropdown-toggle btn navbar-toggler" ngbDropdownToggle style="float: right; border: 1px solid #dddddd; outline: none; font-size: 18px; width: 40px;">
               <span style="font-size: 14px;">&#9776;</span>
             </button>
-            <gpf-multiple-select-menu ngbDropdownMenu [id]="'geneLists'" [allItems]="config.geneLists" [selectedItems]="shownGeneLists" [minSelectCount]="1" (applyEvent)="handleMultipleSelectMenuApplyEvent($event)"></gpf-multiple-select-menu>
+            <gpf-multiple-select-menu ngbDropdownMenu [focusInput]="focusGeneListsInput" [id]="'geneLists'" [allItems]="config.geneLists" [selectedItems]="shownGeneLists" [minSelectCount]="1" (applyEvent)="handleMultipleSelectMenuApplyEvent($event)"></gpf-multiple-select-menu>
           </span>
         </th>
 
@@ -22,11 +22,11 @@
           <span>
             Autism scores
           </span>
-          <span ngbDropdown>
+          <span ngbDropdown (openChange)="focusAutismScoresInput = $event;">
             <button class="dropdown-toggle btn navbar-toggler" ngbDropdownToggle style="float: right; border: 1px solid #dddddd; outline: none; font-size: 18px; width: 40px;">
               <span style="font-size: 14px;">&#9776;</span>
             </button>
-            <gpf-multiple-select-menu ngbDropdownMenu [id]="'autismScores'" [allItems]="config.autismScores" [selectedItems]="shownAutismScores" [minSelectCount]="1" (applyEvent)="handleMultipleSelectMenuApplyEvent($event)"></gpf-multiple-select-menu>
+            <gpf-multiple-select-menu ngbDropdownMenu [focusInput]="focusAutismScoresInput" [id]="'autismScores'" [allItems]="config.autismScores" [selectedItems]="shownAutismScores" [minSelectCount]="1" (applyEvent)="handleMultipleSelectMenuApplyEvent($event)"></gpf-multiple-select-menu>
           </span>
         </th>
 
@@ -34,11 +34,11 @@
           <span>
             Protection scores
           </span>
-          <span ngbDropdown>
+          <span ngbDropdown (openChange)="focusProtectionScoresInput = $event;">
             <button class="dropdown-toggle btn navbar-toggler" ngbDropdownToggle style="float: right; border: 1px solid #dddddd; outline: none; font-size: 18px; width: 40px;">
               <span style="font-size: 14px;">&#9776;</span>
             </button>
-            <gpf-multiple-select-menu ngbDropdownMenu [id]="'protectionScores'" [allItems]="config.protectionScores" [selectedItems]="shownProtectionScores" [minSelectCount]="1" (applyEvent)="handleMultipleSelectMenuApplyEvent($event)"></gpf-multiple-select-menu>
+            <gpf-multiple-select-menu ngbDropdownMenu [focusInput]="focusProtectionScoresInput" [id]="'protectionScores'" [allItems]="config.protectionScores" [selectedItems]="shownProtectionScores" [minSelectCount]="1" (applyEvent)="handleMultipleSelectMenuApplyEvent($event)"></gpf-multiple-select-menu>
           </span>
         </th>
 
