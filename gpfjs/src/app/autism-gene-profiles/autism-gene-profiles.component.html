@@ -47,7 +47,7 @@
 
       <tr style="height: 110px;">
         <th class="table-subheader" rowspan="2">
-          <input #searchTerm (keyup)="sendKeystrokes(searchTerm.value)" id="gene-search-input"
+          <input #searchTerm autofocus="true" (keyup)="sendKeystrokes(searchTerm.value)" id="gene-search-input"
             class="form-control" autocomplete="off" type="text" placeholder="Search gene" aria-label="Search gene">
         </th>
         <th class="table-subheader" rowspan="2" *ngFor="let geneList of shownGeneLists"><span class="vertical-text">{{geneList}}</span></th>
