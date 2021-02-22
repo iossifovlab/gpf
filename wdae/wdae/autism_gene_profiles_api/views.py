@@ -34,9 +34,10 @@ class QueryProfilesView(QueryBaseView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
         symbol_like = data.get("symbol", None)
         sort_by = data.get("sortBy", None)
+        order = data.get("order", None)
 
         agps = self.gpf_instance.query_agp_statistics(
-            page, symbol_like, sort_by)
+            page, symbol_like, sort_by, order)
 
         if agps is None:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)

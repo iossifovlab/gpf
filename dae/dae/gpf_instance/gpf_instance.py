@@ -466,9 +466,10 @@ class GPFInstance(object):
             autism_scores, variant_counts
         )
 
-    def query_agp_statistics(self, page, symbol_like=None, sort_by=None):
+    def query_agp_statistics(
+            self, page, symbol_like=None, sort_by=None, order=None):
         rows = self._autism_gene_profile_db.query_agps(
-            page, symbol_like, sort_by
+            page, symbol_like, sort_by, order
         )
         statistics = list(map(
             self._agp_from_table_row,
