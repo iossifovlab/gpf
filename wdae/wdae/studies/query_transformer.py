@@ -20,6 +20,8 @@ from dae.backends.attributes_query import (
     ContainsNode,
 )
 
+from dae.person_filters import make_pedigree_filter, make_pheno_filter
+
 logger = logging.getLogger(__name__)
 
 
@@ -27,6 +29,7 @@ class QueryTransformer:
 
     FILTER_RENAMES_MAP = {
         "familyIds": "family_ids",
+        "personIds": "person_ids",
         "gender": "sexes",
         "geneSymbols": "genes",
         "variantTypes": "variant_type",
@@ -226,95 +229,24 @@ class QueryTransformer:
 
         return OrNode(roles_query)
 
-    def _transform_pedigree_filter_to_ids(self, pedigree_filter):
-        column = pedigree_filter["source"]
-        value = set(pedigree_filter["selection"]["selection"])
-        ped_df = self.study_wrapper.families.ped_df.loc[
-            self.study_wrapper.families.ped_df[column].astype(str).isin(value)
-        ]
-        if pedigree_filter.get("role"):
-            # Handle family filter
-            ped_df = ped_df.loc[
-                ped_df["role"].astype(str) == pedigree_filter["role"]
-            ]
-            ids = set(
-                self.study_wrapper.families.persons[person_id].family.family_id
-                for person_id in ped_df["person_id"]
-            )
-        else:
-            # Handle person filter
-            ids = set(
-                person_id for person_id in ped_df["person_id"]
-                if person_id in self.study_wrapper.families.persons
-            )
-        return ids
-
-    def _transform_pheno_filter_to_ids(self, pheno_filter_conf):
-        pheno_filter = self.study_wrapper.pheno_filter_builder.make_filter(
-            pheno_filter_conf
-        )
-        if pheno_filter_conf.get("role"):
-            # Handle family filter
-            persons = set(
-                p.person_id
-                for p in self.study_wrapper.families.persons_with_roles(
-                    roles=[pheno_filter_conf["role"]]
-                )
-            )
-            measure_df = pheno_filter.apply(
-                self.study_wrapper.phenotype_data.get_measure_values_df(
-                    pheno_filter_conf["source"],
-                    person_ids=persons,
-                )
-            )
-            ids = set(
-                self.study_wrapper.families.persons[person_id].family.family_id
-                for person_id in measure_df["person_id"]
-            )
-        else:
-            # Handle person filter
-            measure_df = pheno_filter.apply(
-                self.study_wrapper.phenotype_data.get_measure_values_df(
-                    pheno_filter_conf["source"]
-                )
-            )
-            ids = set(
-                person_id for person_id in measure_df["person_id"]
-                if person_id in self.study_wrapper.families.persons
-            )
-        return ids
-
     def _transform_filters_to_ids(self, filters: List[dict]) -> Set[str]:
         result = list()
         for filter_conf in filters:
+            roles = filter_conf.get("role") if "role" in filter_conf else None
             if filter_conf["from"] == "phenodb":
-                ids = self._transform_pheno_filter_to_ids(filter_conf)
+                ids = make_pheno_filter(
+                    filter_conf, self.study_wrapper.phenotype_data
+                ).apply(
+                    self.study_wrapper.families,
+                    self.study_wrapper.phenotype_data,
+                    roles
+                )
             else:
-                ids = self._transform_pedigree_filter_to_ids(filter_conf)
+                ids = make_pedigree_filter(filter_conf).apply(
+                    self.study_wrapper.families, roles
+                )
             result.append(ids)
         return reduce(set.intersection, result)
-
-    def _transform_person_filters(self, person_filters, person_ids=None):
-        matching_person_ids = self._transform_filters_to_ids(
-            person_filters
-        )
-        if matching_person_ids is not None:
-            if person_ids is not None:
-                matching_person_ids = set.intersection(
-                    matching_person_ids, set(person_ids)
-                )
-        return matching_person_ids
-
-    def _transform_family_filters(self, family_filters, family_ids=None):
-        matching_family_ids = self._transform_filters_to_ids(
-            family_filters
-        )
-        if matching_family_ids is not None:
-            if family_ids is not None:
-                matching_family_ids = set.intersection(
-                    matching_family_ids, set(family_ids)
-                )
-        return matching_family_ids
 
     @staticmethod
     def _add_inheritance_to_query(query, kwargs):
@@ -509,21 +441,27 @@ class QueryTransformer:
         if "personFilters" in kwargs:
             person_filters = kwargs.pop("personFilters")
             if person_filters:
-                person_ids = kwargs.pop("personIds", None)
-                matching_person_ids = self._transform_person_filters(
-                    person_filters, person_ids
+                matching_person_ids = self._transform_filters_to_ids(
+                    person_filters
                 )
-                if matching_person_ids is not None:
+                if matching_person_ids is not None and kwargs.get("personIds"):
+                    kwargs["personIds"] = set.intersection(
+                        matching_person_ids, set(kwargs.pop("personIds"))
+                    )
+                else:
                     kwargs["personIds"] = matching_person_ids
 
         if "familyFilters" in kwargs:
             family_filters = kwargs.pop("familyFilters")
             if family_filters:
-                family_ids = kwargs.pop("familyIds", None)
-                matching_family_ids = self._transform_family_filters(
-                    family_filters, family_ids
+                matching_family_ids = self._transform_filters_to_ids(
+                    family_filters
                 )
-                if matching_family_ids:
+                if matching_family_ids is not None and kwargs.get("familyIds"):
+                    kwargs["familyIds"] = set.intersection(
+                        matching_family_ids, set(kwargs.pop("familyIds"))
+                    )
+                else:
                     kwargs["familyIds"] = matching_family_ids
 
         if "personIds" in kwargs:

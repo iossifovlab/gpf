@@ -2,11 +2,15 @@
 individuals from a study or study group into various
 sets based on what value they have in a given mapping.
 """
+import logging
 
 from typing import Dict, NamedTuple, Set
 from dae.configuration.gpf_config_parser import FrozenBox
 from dae.pedigrees.family import Person, FamiliesData
 from dae.pheno.pheno_db import PhenotypeData, MeasureType
+
+
+logger = logging.getLogger(__name__)
 
 
 class PersonSet(NamedTuple):
@@ -76,7 +80,7 @@ class PersonSetCollection(NamedTuple):
         if matching_person_set is not None:
             return matching_person_set.color
 
-        print(
+        logger.warning(
             f"Person '{person.person_id}' could not be found in any"
             f" domain of '{person_set_collection.id}'!"
         )

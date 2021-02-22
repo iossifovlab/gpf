@@ -9,7 +9,6 @@ from box import Box
 from dae.utils.dae_utils import join_line
 from dae.utils.effect_utils import gene_effect_get_genes
 
-from dae.utils.person_filters import PhenoFilterBuilder
 from dae.variants.attributes import Role
 
 from dae.studies.study import GenotypeData
@@ -279,13 +278,9 @@ class StudyWrapper(StudyWrapperBase):
 
     def _init_pheno(self, pheno_db):
         self.phenotype_data = None
-        self.pheno_filter_builder = None
         if self.config.phenotype_data:
             self.phenotype_data = pheno_db.get_phenotype_data(
                 self.config.phenotype_data
-            )
-            self.pheno_filter_builder = PhenoFilterBuilder(
-                self.phenotype_data
             )
 
     def __getattr__(self, name):

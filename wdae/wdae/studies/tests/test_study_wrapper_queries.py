@@ -392,3 +392,66 @@ def test_query_gene_weights(
     variants = list(study_wrapper.get_variants_wdae_preview(query))
 
     assert len(variants) == count
+
+
+@pytest.mark.parametrize(
+    "wrapper_type",
+    [
+        "local",
+        "remote"
+    ]
+)
+def test_query_person_filters(iossifov_2014_wrappers, wrapper_type):
+    study_wrapper = iossifov_2014_wrappers[wrapper_type]
+    query = {
+        "personFilters": [
+            {
+                "source": "phenotype",
+                "sourceType": "categorical",
+                "selection": {"selection": ["unaffected"]},
+                "from": "pedigree",
+            }
+        ]
+    }
+    variants = list(study_wrapper.get_variants_wdae_preview(query))
+    assert len(variants) == 2287
+
+
+@pytest.mark.parametrize(
+    "wrapper_type",
+    [
+        "local",
+        "remote"
+    ]
+)
+def test_query_family_filters(iossifov_2014_wrappers, wrapper_type):
+    study_wrapper = iossifov_2014_wrappers[wrapper_type]
+    query = {
+        "familyFilters": [
+            {
+                "source": "sex",
+                "sourceType": "categorical",
+                "selection": {"selection": ["M"]},
+                "from": "pedigree",
+                "role": ["prb"],
+            }
+        ]
+    }
+    variants = list(study_wrapper.get_variants_wdae_preview(query))
+    assert len(variants) == 4805
+
+
+@pytest.mark.parametrize(
+    "wrapper_type",
+    [
+        "local",
+        "remote"
+    ]
+)
+def test_query_family_types(iossifov_2014_wrappers, wrapper_type):
+    study_wrapper = iossifov_2014_wrappers[wrapper_type]
+    query = {
+        "familyTypes": ["trio"]
+    }
+    variants = list(study_wrapper.get_variants_wdae_preview(query))
+    assert len(variants) == 885
