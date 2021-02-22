@@ -32,7 +32,6 @@ class AutismGeneProfileDB:
         if configuration is None:
             return dict()
 
-        configuration["gene_lists"] = configuration["gene_sets"]
         for dataset in configuration["datasets"]:
             dataset_dict = configuration["datasets"][dataset]
             person_sets = dataset_dict["person_sets"]
