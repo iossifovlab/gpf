@@ -3,7 +3,8 @@ import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { NgbNavModule } from '@ng-bootstrap/ng-bootstrap';
 import { AutismGeneProfilesComponent } from 'app/autism-gene-profiles/autism-gene-profiles.component';
 import { ConfigService } from 'app/config/config.service';
-import { time } from 'console';
+// tslint:disable-next-line:import-blacklist
+import { of } from 'rxjs';
 
 import { AutismGeneProfilesBlockComponent } from './autism-gene-profiles-block.component';
 
@@ -26,20 +27,41 @@ describe('AutismGeneProfilesBlockComponent', () => {
     fixture.detectChanges();
   });
 
+  it('should listen for key press events', () => {
+    const closeActiveTabSpy = spyOn(component, 'closeActiveTab');
+    const openTabByKeySpy = spyOn(component, 'openTabByKey');
+
+    let mockEvent = {key: 'w', target: {localName: 'input'}};
+    component.keyEvent(mockEvent as any);
+    expect(closeActiveTabSpy).not.toHaveBeenCalled();
+    expect(openTabByKeySpy).not.toHaveBeenCalled();
+
+    mockEvent = {key: 'w', target: {localName: 'notInput'}};
+    component.keyEvent(mockEvent as any);
+    expect(closeActiveTabSpy).toHaveBeenCalledTimes(1);
+    expect(openTabByKeySpy).not.toHaveBeenCalled();
+
+    const tabKeys = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '`', 'p', 'n'];
+    tabKeys.forEach(tabKey => {
+      mockEvent = {key: tabKey, target: {localName: 'notInput'}};
+      component.keyEvent(mockEvent as any);
+      expect(closeActiveTabSpy).toHaveBeenCalledTimes(1);
+      expect(openTabByKeySpy).toHaveBeenCalledWith(tabKey);
+    });
+  });
+
   it('should create', () => {
     expect(component).toBeTruthy();
   });
 
-  // it('should get config on initialization', () => {
-  //   spyOn(component['autismGeneProfilesService'], 'getConfig')
-  //    .and.returnValue(Observable.of('fakeConfig' as any));
+  it('should get config on initialization', () => {
+    spyOn(component['autismGeneProfilesService'], 'getConfig')
+     .and.returnValue( of('fakeConfig' as any));
 
-  //   expect(component['autismGeneProfilesConfig']).toEqual(undefined);
-  //   component.ngOnInit();
-  //   component['autismGeneProfilesService'].getConfig().take(1)
-  //    .subscribe(v => console.log(v));
-  //   expect(component['autismGeneProfilesConfig']).toEqual('fakeConfig');
-  // });
+    expect(component['autismGeneToolConfig']).toEqual(undefined);
+    component.ngOnInit();
+    expect(component['autismGeneToolConfig']).toEqual('fakeConfig');
+  });
 
   it('should create tab event handler', () => {
     const navSpy = spyOn(component['nav'], 'select').and.callFake(arg => {
@@ -206,33 +228,101 @@ describe('AutismGeneProfilesBlockComponent', () => {
     expect(stopImmediatePropagationSpy).toHaveBeenCalledTimes(2);
   });
 
-  // it('should close active tab', () => {
-  //   const mockSet = new Set();
-  //   mockSet.add('id1');
-  //   mockSet.add('id2');
-  //   mockSet.add('id3');
-  //   mockSet.add('id4');
-  //   component['geneTabs'] = mockSet as any;
+  it('should close active tab', () => {
+    const openHomeTabSpy = spyOn(component, 'openHomeTab');
+    const openLastTabSpy = spyOn(component, 'openLastTab');
+    const openTabAtIndexSpy = spyOn(component, 'openTabAtIndex');
 
-  //   const geneTabsDeleteSpy = spyOn(component['geneTabs'], 'delete').and.callFake(arg => {
-  //     expect(arg).toEqual('mockId');
-  //     return true;
-  //   });
-  //   const openHomeTabSpy = spyOn(component, 'openHomeTab');
-  //   const openLastTabSpy = spyOn(component, 'openLastTab');
-  //   const openTabAtIndexSpy = spyOn(component, 'openTabAtIndex').and.callFake(arg => {
-  //     expect(arg).toBe(54639824 - 1);
-  //   });
+    component['nav'] = {activeId: 'autismGenesTool'} as any;
+    component.closeActiveTab();
+    expect(openHomeTabSpy).not.toHaveBeenCalled();
+    expect(openLastTabSpy).not.toHaveBeenCalled();
+    expect(openTabAtIndexSpy).not.toHaveBeenCalled();
 
-  //   component['nav'] = {activeId: 'autismGenesTool'} as any;
-  //   component.closeActiveTab();
-  //   expect(geneTabsDeleteSpy).not.toHaveBeenCalled();
-  //   expect(openHomeTabSpy).not.toHaveBeenCalled();
-  //   expect(openLastTabSpy).not.toHaveBeenCalled();
-  //   expect(openTabAtIndexSpy).not.toHaveBeenCalled();
-  // });
+    component['geneTabs'].add('id1');
+    component['nav'] = {activeId: 'id1'} as any;
+    component.closeActiveTab();
+    expect(component['geneTabs'].has('id1')).toBe(false);
+    expect(openHomeTabSpy).toHaveBeenCalledTimes(1);
+    expect(openLastTabSpy).not.toHaveBeenCalled();
+    expect(openTabAtIndexSpy).not.toHaveBeenCalled();
 
-  // it('should open tab by key', () => {
+    component['geneTabs'].add('id1');
+    component['geneTabs'].add('id2');
+    component['nav'] = {activeId: 'id2'} as any;
 
-  // });
+    component.closeActiveTab();
+    expect(component['geneTabs'].has('id2')).toBe(false);
+    expect(openHomeTabSpy).toHaveBeenCalledTimes(1);
+    expect(openLastTabSpy).toHaveBeenCalledTimes(1);
+    expect(openTabAtIndexSpy).not.toHaveBeenCalled();
+
+    component['geneTabs'].add('id2');
+
+    component['nav'] = {activeId: 'id1'} as any;
+    component.closeActiveTab();
+    expect(component['geneTabs'].has('id1')).toBe(false);
+    expect(openHomeTabSpy).toHaveBeenCalledTimes(1);
+    expect(openLastTabSpy).toHaveBeenCalledTimes(1);
+    expect(openTabAtIndexSpy).toHaveBeenCalledWith(0);
+  });
+
+  it('should open tab by key', () => {
+    const openLastTabSpy = spyOn(component, 'openLastTab');
+    const openHomeTabSpy = spyOn(component, 'openHomeTab');
+    const openTabAtIndexSpy = spyOn(component, 'openTabAtIndex');
+    const openPreviousTabSpy = spyOn(component, 'openPreviousTab');
+    const openNextTabSpy = spyOn(component, 'openNextTab');
+
+    component.openTabByKey('n');
+    expect(openLastTabSpy).not.toHaveBeenCalled();
+    expect(openHomeTabSpy).not.toHaveBeenCalled();
+    expect(openTabAtIndexSpy).not.toHaveBeenCalled();
+    expect(openPreviousTabSpy).not.toHaveBeenCalled();
+    expect(openNextTabSpy).not.toHaveBeenCalled();
+
+    component['geneTabs'].add('id1');
+    component['geneTabs'].add('id2');
+    component['geneTabs'].add('id3');
+    component['geneTabs'].add('id4');
+
+    component.openTabByKey('9');
+    expect(openLastTabSpy).toHaveBeenCalledTimes(1);
+    component.openTabByKey('0');
+    expect(openLastTabSpy).toHaveBeenCalledTimes(2);
+
+    expect(openHomeTabSpy).not.toHaveBeenCalled();
+    expect(openTabAtIndexSpy).not.toHaveBeenCalled();
+    expect(openPreviousTabSpy).not.toHaveBeenCalled();
+    expect(openNextTabSpy).not.toHaveBeenCalled();
+
+    component.openTabByKey('`');
+    expect(openHomeTabSpy).toHaveBeenCalledTimes(1);
+    component.openTabByKey('1');
+    expect(openHomeTabSpy).toHaveBeenCalledTimes(2);
+
+    expect(openLastTabSpy).toHaveBeenCalledTimes(2);
+    expect(openTabAtIndexSpy).not.toHaveBeenCalled();
+    expect(openPreviousTabSpy).not.toHaveBeenCalled();
+    expect(openNextTabSpy).not.toHaveBeenCalled();
+
+    component.openTabByKey('2');
+    expect(openTabAtIndexSpy).toHaveBeenCalledWith(0);
+    component.openTabByKey('3');
+    expect(openTabAtIndexSpy).toHaveBeenCalledWith(1);
+
+    expect(openLastTabSpy).toHaveBeenCalledTimes(2);
+    expect(openHomeTabSpy).toHaveBeenCalledTimes(2);
+    expect(openPreviousTabSpy).not.toHaveBeenCalled();
+    expect(openNextTabSpy).not.toHaveBeenCalled();
+
+    component.openTabByKey('p');
+    expect(openPreviousTabSpy).toHaveBeenCalledTimes(1);
+    component.openTabByKey('n');
+    expect(openNextTabSpy).toHaveBeenCalledTimes(1);
+
+    expect(openLastTabSpy).toHaveBeenCalledTimes(2);
+    expect(openHomeTabSpy).toHaveBeenCalledTimes(2);
+    expect(openTabAtIndexSpy).toHaveBeenCalledTimes(2);
+  });
 });
