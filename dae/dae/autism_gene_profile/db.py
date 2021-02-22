@@ -1,4 +1,5 @@
 import logging
+from copy import copy
 
 from dae.autism_gene_profile.statistic import AGPStatistic
 from sqlalchemy import MetaData, create_engine
