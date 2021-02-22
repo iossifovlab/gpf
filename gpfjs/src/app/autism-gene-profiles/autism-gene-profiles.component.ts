@@ -1,4 +1,7 @@
-import { Component, EventEmitter, HostListener, Input, OnChanges, OnInit, Output, ViewChildren } from '@angular/core';
+import {
+  AfterViewInit, Component, ElementRef, EventEmitter, HostListener,
+  Input, OnChanges, OnInit, Output, ViewChild, ViewChildren
+} from '@angular/core';
 import { Subject } from 'rxjs';
 import { AutismGeneToolConfig, AutismGeneToolGene } from './autism-gene-profile';
 import { AutismGeneProfilesService } from './autism-gene-profiles.service';
@@ -7,9 +10,9 @@ import { NgbDropdownMenu } from '@ng-bootstrap/ng-bootstrap';
 @Component({
   selector: 'gpf-autism-gene-profiles',
   templateUrl: './autism-gene-profiles.component.html',
-  styleUrls: ['./autism-gene-profiles.component.css']
+  styleUrls: ['./autism-gene-profiles.component.css'],
 })
-export class AutismGeneProfilesComponent implements OnInit, OnChanges {
+export class AutismGeneProfilesComponent implements OnInit, OnChanges, AfterViewInit {
   @Input() config: AutismGeneToolConfig;
   @Output() createTabEvent = new EventEmitter();
   @ViewChildren(NgbDropdownMenu) ngbDropdownMenu: NgbDropdownMenu[];
@@ -29,6 +32,7 @@ export class AutismGeneProfilesComponent implements OnInit, OnChanges {
 
   geneInput = '';
   searchKeystrokes$: Subject<string> = new Subject();
+  @ViewChild('geneSearchInput') geneSearchInput: ElementRef;
 
   @HostListener('window:scroll', ['$event'])
   onWindowScroll(event: any) {
@@ -63,6 +67,10 @@ export class AutismGeneProfilesComponent implements OnInit, OnChanges {
       .subscribe(searchTerm => {
         this.search(searchTerm);
       });
+  }
+
+  ngAfterViewInit(): void {
+    this.focusGeneSearch();
   }
 
   calculateDatasetColspan(datasetConfig) {
@@ -107,6 +115,19 @@ export class AutismGeneProfilesComponent implements OnInit, OnChanges {
     this.searchKeystrokes$.next(value);
   }
 
+  async waitForGeneSearchToLoad() {
+    return new Promise<void>(resolve => {
+      setTimeout(() => {
+        if (this.geneSearchInput !== undefined) {
+          resolve();
+        }
+      }, 100);
+    });
+  }
 
-
+  focusGeneSearch() {
+    this.waitForGeneSearchToLoad().then(() => {
+      this.geneSearchInput.nativeElement.focus();
+    })
+  }
 }
