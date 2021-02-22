@@ -31,6 +31,7 @@ class AutismGeneProfileDB:
     def _build_configuration(self, configuration):
         if configuration is None:
             return dict()
+        configuration = copy(configuration)
 
         for dataset in configuration["datasets"]:
             dataset_dict = configuration["datasets"][dataset]

@@ -146,10 +146,12 @@ def main(gpf_instance=None, argv=None):
     duration = time.time() - start
     print(duration)
 
-    agpdb = AutismGeneProfileDB(args.dbfile, clear=True)
+    agpdb = AutismGeneProfileDB(
+        gpf_instance._autism_gene_profile_config, args.dbfile, clear=True
+    )
 
     agpdb.clear_all_tables()
-    agpdb.populate_data_tables(gpf_instance)
+    agpdb.populate_data_tables(gpf_instance.get_genotype_data_ids())
     logger.info("Inserting statistics into DB")
     agpdb.insert_agps(output)
     logger.info("Building AGP output view")
