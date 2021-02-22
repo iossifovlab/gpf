@@ -3,49 +3,39 @@ import traceback
 import json
 import logging
 
-from typing import List, Set, Dict
+from typing import List, Dict
 
-from functools import reduce
 from abc import abstractmethod
 
 from box import Box
 
-from dae.utils.variant_utils import mat2str
-from dae.utils.dae_utils import (
-    split_iterable,
-    join_line,
-    members_in_order_get_family_structure,
-)
-from dae.utils.effect_utils import (
-    expand_effect_types,
-    ge2str,
-    gd2str,
-    gene_effect_get_worst_effect,
-    gene_effect_get_genes,
-)
+from dae.utils.variant_utils import mat2str, fgt2str
+from dae.utils.dae_utils import split_iterable, join_line
 
-from dae.utils.regions import Region
+from dae.utils.effect_utils import ge2str, \
+    gd2str, \
+    gene_effect_get_worst_effect, \
+    gene_effect_get_genes
+
 from dae.utils.person_filters import PhenoFilterBuilder
 from dae.variants.attributes import Role, Inheritance, VariantDesc
 from dae.variants.family_variant import FamilyVariant
 
-from dae.backends.attributes_query import (
-    role_query,
-    variant_type_converter,
-    sex_converter,
-    AndNode,
-    NotNode,
-    OrNode,
-    ContainsNode,
-)
 from dae.studies.study import GenotypeData
 
 from dae.configuration.gpf_config_parser import GPFConfigParser, FrozenBox
 from dae.person_sets import PersonSetCollection
 from remote.remote_phenotype_data import RemotePhenotypeData
 
+from studies.query_transformer import QueryTransformer
+
 
 logger = logging.getLogger(__name__)
+
+
+def members_in_order_get_family_structure(mio):
+    return ";".join([
+        f"{p.role.name}:{p.sex.short()}:{p.status.name}" for p in mio])
 
 
 class StudyWrapperBase(GenotypeData):
@@ -145,6 +135,7 @@ class StudyWrapper(StudyWrapperBase):
         self._init_pheno(self.pheno_db)
 
         self.gene_weights_db = gene_weights_db
+        self.query_transformer = QueryTransformer(self)
 
     def is_group(self):
         return self.genotype_data_study.is_group()
@@ -312,24 +303,7 @@ class StudyWrapper(StudyWrapperBase):
     def __getattr__(self, name):
         return getattr(self.genotype_data_study, name)
 
-    FILTER_RENAMES_MAP = {
-        "familyIds": "family_ids",
-        "gender": "sexes",
-        "geneSymbols": "genes",
-        "variantTypes": "variant_type",
-        "effectTypes": "effect_types",
-        "regionS": "regions",
-    }
-
-    STANDARD_ATTRS = {
-    }
-
-    STANDARD_ATTRS_LAMBDAS = {
-        key: lambda v, val=val: getattr(v, val)
-        for key, val in STANDARD_ATTRS.items()
-    }
-
-    SPECIAL_ATTRS_FORMAT = {
+    SPECIAL_ATTRS = {
         "family":
         lambda v: [v.family_id],
 
@@ -337,12 +311,72 @@ class StudyWrapper(StudyWrapperBase):
         lambda v: v.cshl_location,
 
         "variant":
-        lambda v: v.cshl_variant_full,
+        lambda v: VariantDesc.combine([
+            aa.details.variant_desc for aa in v.alt_alleles]),
+
+        "position":
+        lambda v: [aa.position for aa in v.alt_alleles],
+
+        "reference":
+        lambda v: [aa.reference for aa in v.alt_alleles],
+
+        "alternative":
+        lambda v: [aa.alternative for aa in v.alt_alleles],
 
         "genotype":
-        lambda v: [
-            "/".join([str(g) for g in gt])
-            for gt in v.family_genotype],
+        lambda v: [fgt2str(v.family_genotype)],
+
+        "best_st":
+        lambda v: [mat2str(v.family_best_state)],
+
+        "family_person_attributes":
+        lambda v: [members_in_order_get_family_structure(
+            v.members_in_order)],
+
+        "family_structure":
+        lambda v: [members_in_order_get_family_structure(
+            v.members_in_order)],
+
+        "family_person_ids":
+        lambda v: [";".join(list(map(
+            lambda m: m.person_id, v.members_in_order
+        )))],
+
+        "carrier_person_ids":
+        lambda v: list(
+            map(
+                lambda aa: ";".join(list(filter(None, aa.variant_in_members))),
+                v.alt_alleles
+            )),
+
+        "carrier_person_attributes": 
+        lambda v: list(
+            map(
+                lambda aa: members_in_order_get_family_structure(
+                    filter(None, aa.variant_in_members_objects)
+                ),
+                v.alt_alleles
+            )),
+
+        "inheritance_type":
+        lambda v: list(
+            map(
+                lambda aa:
+                "denovo"
+                if Inheritance.denovo in aa.inheritance_in_members
+                else "mendelian"
+                if Inheritance.mendelian in aa.inheritance_in_members
+                else "-",
+                v.alt_alleles)
+        ),
+
+        "is_denovo":
+        lambda v: list(
+            map(
+                lambda aa:
+                Inheritance.denovo in aa.inheritance_in_members,
+                v.alt_alleles)
+        ),
 
         "effects":
         lambda v: [ge2str(e) for e in v.effects],
@@ -356,37 +390,6 @@ class StudyWrapper(StudyWrapperBase):
         "effect_details":
         lambda v: [gd2str(e) for e in v.effects],
 
-        "best_st":
-        lambda v: [mat2str(v.best_state)],
-
-        "family_structure":
-        lambda v: members_in_order_get_family_structure(
-            v.members_in_order
-        ),
-
-        "family_person_ids": lambda v: list(map(
-            lambda m: m.person_id, v.members_in_order
-        )),
-
-        "carrier_person_ids": lambda v: list(map(
-            lambda aa: list(filter(None, aa.variant_in_members)), v.alt_alleles
-        )),
-
-        "carrier_person_attributes": lambda v: list(map(
-            lambda aa: list(filter(None, members_in_order_get_family_structure(
-                aa.variant_in_members_objects
-            ))), v.alt_alleles
-        )),
-
-        "inheritance_type": lambda v: list(map(
-            lambda aa: aa.inheritance_in_members, v.alt_alleles
-        )),
-
-        "is_denovo":
-        lambda v: bool(
-            Inheritance.denovo in v.inheritance_in_members
-        ),
-
         "seen_in_affected":
         lambda v: bool(v.get_attribute("seen_in_status") in {2, 3}),
 
@@ -395,7 +398,22 @@ class StudyWrapper(StudyWrapperBase):
 
     }
 
-    SPECIAL_ATTRS = {**SPECIAL_ATTRS_FORMAT, **STANDARD_ATTRS_LAMBDAS}
+    PHENOTYPE_ATTRS = {
+        "family_phenotypes":
+        lambda v, phenotype_person_sets:
+        [
+            ':'.join([
+                phenotype_person_sets.get_person_set_of_person(mid).name
+                for mid in v.members_ids])
+        ],
+
+        "carrier_phenotypes":
+        lambda v, phenotype_person_sets:
+        [':'.join([
+            phenotype_person_sets.get_person_set_of_person(mid).name
+            for mid in filter(None, aa.variant_in_members)])
+         for aa in v.alt_alleles],
+    }
 
     def generate_pedigree(self, variant, person_set_collection):
         result = []
@@ -430,7 +448,9 @@ class StudyWrapper(StudyWrapperBase):
 
         return result
 
-    def _build_variant_row(self, v: FamilyVariant, column_descs: List[Dict], **kwargs):
+    def _build_variant_row(
+            self, v: FamilyVariant, column_descs: List[Dict], **kwargs):
+
         row_variant = []
         for col_desc in column_descs:
             try:
@@ -462,27 +482,18 @@ class StudyWrapper(StudyWrapperBase):
                             v, person_set_collection
                         )
                     )
-                elif col_source == "family_phenotypes":
-                    phenotypes = ':'.join(self.get_persons_phenotypes(list(map(
-                        lambda m: m.person_id, v.members_in_order
-                    ))))
-                    row_variant.append(phenotypes)
-                elif col_source == "carrier_phenotypes":
-                    phenotypes = list(map(
-                        lambda aa: ':'.join(self.get_persons_phenotypes(
-                            list(filter(None, aa.variant_in_members)))
-                        ),
-                        v.alt_alleles
-                    ))
-                    row_variant.append(phenotypes)
+                elif col_source in self.PHENOTYPE_ATTRS:
+                    phenotype_person_sets = \
+                        self.person_set_collections.get("phenotype")
+                    if phenotype_person_sets is None:
+                        row_variant.append("-")
+                    else:
+                        fn = self.PHENOTYPE_ATTRS[col_source]
+                        row_variant.append(
+                            ",".join(fn(v, phenotype_person_sets)))
+
                 elif col_source == "study_phenotype":
                     row_variant.append(self.config.study_phenotype)
-                elif col_source == "variant":
-                    attribute = [
-                        aa.details.variant_desc for aa in v.alt_alleles]
-                    attribute = VariantDesc.combine(attribute)
-
-                    row_variant.append(",".join(attribute))
 
                 else:
                     if col_source in self.SPECIAL_ATTRS:
@@ -618,7 +629,7 @@ class StudyWrapper(StudyWrapperBase):
         return wdae_download
 
     def get_gene_view_summary_variants(self, frequency_column, **kwargs):
-        kwargs = self._transform_kwargs(**kwargs)
+        kwargs = self.query_transformer.transform_kwargs(**kwargs)
         limit = None
         if "limit" in kwargs:
             limit = kwargs["limit"]
@@ -647,7 +658,7 @@ class StudyWrapper(StudyWrapperBase):
 
     def get_gene_view_summary_variants_download(
             self, frequency_column, **kwargs):
-        kwargs = self._transform_kwargs(**kwargs)
+        kwargs = self.query_transformer.transform_kwargs(**kwargs)
         limit = None
         if "limit" in kwargs:
             limit = kwargs["limit"]
@@ -690,116 +701,8 @@ class StudyWrapper(StudyWrapperBase):
         rows = variants_iterator(variants_from_studies)
         return map(join_line, itertools.chain([columns], rows))
 
-    # Not implemented:
-    # callSet
-    # minParentsCalled
-    # ultraRareOnly
-    # TMM_ALL
-    def _transform_kwargs(self, **kwargs):
-        logger.debug(f"kwargs in study wrapper: {kwargs}")
-        StudyWrapper._add_inheritance_to_query(
-            "not possible_denovo and not possible_omission",
-            kwargs
-        )
-
-        kwargs = self._add_people_with_people_group(kwargs)
-
-        if "uniqueFamilyVariants" in kwargs:
-            kwargs["unique_family_variants"] = kwargs["uniqueFamilyVariants"]
-            del kwargs["uniqueFamilyVariants"]
-
-        if "regions" in kwargs:
-            kwargs["regions"] = list(map(Region.from_str, kwargs["regions"]))
-
-        if "presentInChild" in kwargs or "presentInParent" in kwargs:
-            self._transform_present_in_child_and_present_in_parent(kwargs)
-
-        if "presentInRole" in kwargs:
-            self._transform_present_in_role(kwargs)
-
-        if (
-            "minAltFrequencyPercent" in kwargs
-            or "maxAltFrequencyPercent" in kwargs
-        ):
-            self._transform_min_max_alt_frequency(kwargs)
-
-        if "genomicScores" in kwargs:
-            self._transform_genomic_scores(kwargs)
-
-        if "geneWeights" in kwargs:
-            self._transform_gene_weights(kwargs)
-
-        for key in list(kwargs.keys()):
-            if key in self.FILTER_RENAMES_MAP:
-                kwargs[self.FILTER_RENAMES_MAP[key]] = kwargs[key]
-                kwargs.pop(key)
-
-        if "sexes" in kwargs:
-            sexes = set(kwargs["sexes"])
-            if sexes != set(["female", "male", "unspecified"]):
-                sexes = [ContainsNode(sex_converter(sex)) for sex in sexes]
-                kwargs["sexes"] = OrNode(sexes)
-            else:
-                kwargs["sexes"] = None
-
-        if "variant_type" in kwargs:
-            variant_types = set(kwargs["variant_type"])
-
-            if variant_types != {"ins", "del", "sub", "CNV"}:
-                if "CNV" in variant_types:
-                    variant_types.remove("CNV")
-                    variant_types.add("CNV+")
-                    variant_types.add("CNV-")
-
-                variant_types = [
-                    ContainsNode(variant_type_converter(t))
-                    for t in variant_types
-                ]
-                kwargs["variant_type"] = OrNode(variant_types)
-            else:
-                del kwargs["variant_type"]
-
-        if "effect_types" in kwargs:
-            kwargs["effect_types"] = expand_effect_types(
-                kwargs["effect_types"]
-            )
-
-        if "studyFilters" in kwargs:
-            if kwargs["studyFilters"]:
-                request = set([
-                    sf["studyId"] for sf in kwargs["studyFilters"]
-                ])
-                study_filters = kwargs.get("study_filters")
-                if study_filters is None:
-                    kwargs["study_filters"] = request
-                else:
-                    kwargs["study_filters"] = request & set(study_filters)
-            else:
-                del kwargs["studyFilters"]
-
-        if "personFilters" in kwargs:
-            kwargs = self._transform_person_filters(kwargs)
-
-        if "familyFilters" in kwargs:
-            kwargs = self._transform_family_filters(kwargs)
-
-        if "personIds" in kwargs:
-            kwargs["person_ids"] = kwargs["personIds"]
-
-        if "inheritanceTypeFilter" in kwargs:
-            kwargs["inheritance"].append(
-                "any({})".format(
-                    ",".join(kwargs["inheritanceTypeFilter"])))
-            kwargs.pop("inheritanceTypeFilter")
-        if "affectedStatus" in kwargs:
-            statuses = kwargs.pop("affectedStatus")
-            kwargs["affected_status"] = [
-                status.lower() for status in statuses
-            ]
-        return kwargs
-
     def query_variants(self, **kwargs):
-        kwargs = self._transform_kwargs(**kwargs)
+        kwargs = self.query_transformer.transform_kwargs(**kwargs)
         limit = None
         if "limit" in kwargs:
             limit = kwargs["limit"]
@@ -811,7 +714,7 @@ class StudyWrapper(StudyWrapperBase):
             yield variant
 
     def query_summary_variants(self, **kwargs):
-        kwargs = self._transform_kwargs(**kwargs)
+        kwargs = self.query_transformer.transform_kwargs(**kwargs)
         limit = None
         if "limit" in kwargs:
             limit = kwargs["limit"]
@@ -942,437 +845,6 @@ class StudyWrapper(StudyWrapperBase):
 
         return result
 
-    def _add_people_with_people_group(self, kwargs):
-
-        # TODO Rename peopleGroup kwarg to person_set_collections
-        # and all other, relevant keys in the kwargs dict
-
-        if kwargs.get("peopleGroup") is None:
-            return kwargs
-
-        person_set_collections_query = kwargs.pop("peopleGroup")
-        person_set_collection_id = person_set_collections_query["id"]
-        selected_person_set_ids = set(
-            person_set_collections_query["checkedValues"]
-        )
-
-        person_set_collection = self.genotype_data_study \
-            .get_person_set_collection(person_set_collection_id)
-
-        if set(person_set_collection.person_sets.keys()) == \
-                selected_person_set_ids:
-            return kwargs
-
-        person_set_collection_query = (
-            person_set_collection_id, selected_person_set_ids
-        )
-        kwargs["person_set_collection"] = person_set_collection_query
-        return kwargs
-
-    def _transform_genomic_scores(self, kwargs):
-        genomic_scores = kwargs.pop("genomicScores", [])
-
-        genomic_scores_filter = [
-            (score["metric"], (score["rangeStart"], score["rangeEnd"]))
-            for score in genomic_scores
-            # if score["rangeStart"] or score["rangeEnd"]
-        ]
-
-        if "real_attr_filter" not in kwargs:
-            kwargs["real_attr_filter"] = []
-        kwargs["real_attr_filter"] += genomic_scores_filter
-
-    def _transform_gene_weights(self, kwargs):
-        if not self.gene_weights_db:
-            return
-
-        gene_weights = kwargs.pop("geneWeights", {})
-
-        weight_name = gene_weights.get("weight", None)
-        range_start = gene_weights.get("rangeStart", None)
-        range_end = gene_weights.get("rangeEnd", None)
-
-        if weight_name and weight_name in self.gene_weights_db:
-            weight = self.gene_weights_db[gene_weights.get("weight")]
-
-            genes = weight.get_genes(range_start, range_end)
-
-            if "genes" not in kwargs:
-                kwargs["genes"] = []
-
-            kwargs["genes"] += list(genes)
-
-    def _transform_min_max_alt_frequency(self, kwargs):
-        min_value = None
-        max_value = None
-
-        if "minAltFrequencyPercent" in kwargs:
-            min_value = kwargs["minAltFrequencyPercent"]
-            kwargs.pop("minAltFrequencyPercent")
-
-        if "maxAltFrequencyPercent" in kwargs:
-            max_value = kwargs["maxAltFrequencyPercent"]
-            kwargs.pop("maxAltFrequencyPercent")
-
-        value_range = (min_value, max_value)
-
-        if value_range == (None, None):
-            return
-
-        if value_range[0] is None:
-            value_range = (float("-inf"), value_range[1])
-
-        if value_range[1] is None:
-            value_range = (value_range[0], float("inf"))
-
-        value = "af_allele_freq"
-        if "real_attr_filter" not in kwargs:
-            kwargs["real_attr_filter"] = []
-
-        kwargs["real_attr_filter"].append((value, value_range))
-
-    @staticmethod
-    def _transform_present_in_child_and_present_in_parent(kwargs):
-        if "presentInChild" in kwargs:
-            present_in_child = set(kwargs["presentInChild"])
-            kwargs.pop("presentInChild")
-        else:
-            present_in_child = set()
-
-        if "presentInParent" in kwargs:
-            present_in_parent = \
-                set(kwargs["presentInParent"]["presentInParent"])
-            rarity = kwargs["presentInParent"].get("rarity", None)
-            kwargs.pop("presentInParent")
-        else:
-            present_in_parent = set()
-            rarity = None
-
-        roles_query = []
-        roles_query.append(
-            StudyWrapper._present_in_child_to_roles(present_in_child))
-        roles_query.append(
-            StudyWrapper._present_in_parent_to_roles(present_in_parent))
-        roles_query = list(filter(lambda rq: rq is not None, roles_query))
-        if len(roles_query) == 2:
-            roles_query = AndNode(roles_query)
-        elif len(roles_query) == 1:
-            roles_query = roles_query[0]
-        else:
-            roles_query = None
-
-        StudyWrapper._add_roles_to_query(roles_query, kwargs)
-
-        inheritance = None
-        if present_in_child == set(["neither"]) and \
-                present_in_parent != set(["neither"]):
-            inheritance = [Inheritance.mendelian, Inheritance.missing]
-        elif present_in_child != set(["neither"]) and \
-                present_in_parent == set(["neither"]):
-            inheritance = [Inheritance.denovo]
-        else:
-            inheritance = [
-                Inheritance.denovo,
-                Inheritance.mendelian,
-                Inheritance.missing]
-        inheritance = [str(inh) for inh in inheritance]
-        StudyWrapper._add_inheritance_to_query(
-            "any({})".format(",".join(inheritance)), kwargs)
-
-        if present_in_parent == {"neither"}:
-            return
-
-        if rarity is not None:
-            ultra_rare = rarity.get("ultraRare", None)
-            ultra_rare = bool(ultra_rare)
-            if ultra_rare:
-                kwargs["ultra_rare"] = True
-            else:
-                max_alt_freq = rarity.get("maxFreq", None)
-                min_alt_freq = rarity.get("minFreq", None)
-                if min_alt_freq is not None or max_alt_freq is not None:
-                    frequency_filter = kwargs.get("frequency_filter", [])
-                    frequency_filter.append(
-                        ("af_allele_freq", (min_alt_freq, max_alt_freq))
-                    )
-                    kwargs["frequency_filter"] = frequency_filter
-
-    @staticmethod
-    def _present_in_child_to_roles(present_in_child):
-        roles_query = []
-
-        if "proband only" in present_in_child:
-            roles_query.append(AndNode(
-                [ContainsNode(Role.prb), NotNode(ContainsNode(Role.sib))]
-            ))
-
-        if "sibling only" in present_in_child:
-            roles_query.append(AndNode(
-                [NotNode(ContainsNode(Role.prb)), ContainsNode(Role.sib)]
-            ))
-
-        if "proband and sibling" in present_in_child:
-            roles_query.append(AndNode(
-                [ContainsNode(Role.prb), ContainsNode(Role.sib)]
-            ))
-
-        if "neither" in present_in_child:
-            roles_query.append(AndNode(
-                [
-                    NotNode(ContainsNode(Role.prb)),
-                    NotNode(ContainsNode(Role.sib)),
-                ]
-            ))
-        if len(roles_query) == 4 or len(roles_query) == 0:
-            return None
-        if len(roles_query) == 1:
-            return roles_query[0]
-        return OrNode(roles_query)
-
-    @staticmethod
-    def _present_in_parent_to_roles(present_in_parent):
-        roles_query = []
-
-        if "mother only" in present_in_parent:
-            roles_query.append(AndNode(
-                [
-                    NotNode(ContainsNode(Role.dad)),
-                    ContainsNode(Role.mom),
-                ]
-            ))
-
-        if "father only" in present_in_parent:
-            roles_query.append(AndNode(
-                [
-                    ContainsNode(Role.dad),
-                    NotNode(ContainsNode(Role.mom)),
-                ]
-            ))
-
-        if "mother and father" in present_in_parent:
-            roles_query.append(AndNode(
-                [ContainsNode(Role.dad), ContainsNode(Role.mom)]
-            ))
-
-        if "neither" in present_in_parent:
-            roles_query.append(AndNode(
-                [
-                    NotNode(ContainsNode(Role.dad)),
-                    NotNode(ContainsNode(Role.mom)),
-                ]
-            ))
-        if len(roles_query) == 4 or len(roles_query) == 0:
-            return None
-        if len(roles_query) == 1:
-            return roles_query[0]
-        return OrNode(roles_query)
-
-    @staticmethod
-    def _transform_present_in_parent(kwargs):
-        roles_query = []
-        present_in_parent = set(kwargs["presentInParent"]["presentInParent"])
-        rarity = kwargs["presentInParent"].get("rarity", None)
-
-        if present_in_parent != set(
-            ["father only", "mother only", "mother and father", "neither"]
-        ):
-
-            for filter_option in present_in_parent:
-                new_roles = None
-
-                if filter_option == "mother only":
-                    new_roles = AndNode(
-                        [
-                            NotNode(ContainsNode(Role.dad)),
-                            ContainsNode(Role.mom),
-                        ]
-                    )
-
-                if filter_option == "father only":
-                    new_roles = AndNode(
-                        [
-                            ContainsNode(Role.dad),
-                            NotNode(ContainsNode(Role.mom)),
-                        ]
-                    )
-
-                if filter_option == "mother and father":
-                    new_roles = AndNode(
-                        [ContainsNode(Role.dad), ContainsNode(Role.mom)]
-                    )
-
-                if filter_option == "neither":
-                    new_roles = AndNode(
-                        [
-                            NotNode(ContainsNode(Role.dad)),
-                            NotNode(ContainsNode(Role.mom)),
-                        ]
-                    )
-
-                if new_roles:
-                    roles_query.append(new_roles)
-        StudyWrapper._add_roles_to_query(roles_query, kwargs)
-
-        if rarity is not None:
-            ultra_rare = rarity.get("ultraRare", None)
-            ultra_rare = bool(ultra_rare)
-            if ultra_rare and present_in_parent != {"neither"}:
-                kwargs["ultra_rare"] = True
-            else:
-                max_alt_freq = rarity.get("maxFreq", None)
-                min_alt_freq = rarity.get("minFreq", None)
-                if min_alt_freq is not None or max_alt_freq is not None:
-                    real_attr_filter = kwargs.get("real_attr_filter", [])
-                    real_attr_filter.append(
-                        ("af_allele_freq", (min_alt_freq, max_alt_freq))
-                    )
-                    kwargs["real_attr_filter"] = real_attr_filter
-        kwargs.pop("presentInParent")
-
-    def _transform_present_in_role(self, kwargs):
-        roles_query = []
-
-        for pir_id, filter_options in kwargs["presentInRole"].items():
-
-            for filter_option in filter_options:
-                new_roles = None
-
-                if filter_option != "neither":
-                    new_roles = ContainsNode(Role.from_name(filter_option))
-
-                if filter_option == "neither":
-                    new_roles = AndNode(
-                        [
-                            NotNode(ContainsNode(Role.from_name(role)))
-                            for role in self.get_present_in_role(pir_id).roles
-                        ]
-                    )
-
-                if new_roles:
-                    roles_query.append(new_roles)
-
-        kwargs.pop("presentInRole")
-
-        self._add_roles_to_query(OrNode(roles_query), kwargs)
-
-    def _transform_pedigree_filter_to_ids(self, pedigree_filter):
-        column = pedigree_filter["source"]
-        value = set(pedigree_filter["selection"]["selection"])
-        ped_df = self.families.ped_df.loc[
-            self.families.ped_df[column].astype(str).isin(value)
-        ]
-        if pedigree_filter.get("role"):
-            # Handle family filter
-            ped_df = ped_df.loc[
-                ped_df["role"].astype(str) == pedigree_filter["role"]
-            ]
-            ids = set(
-                self.families.persons[person_id].family.family_id
-                for person_id in ped_df["person_id"]
-            )
-        else:
-            # Handle person filter
-            ids = set(
-                person_id for person_id in ped_df["person_id"]
-                if person_id in self.families.persons
-            )
-        return ids
-
-    def _transform_pheno_filter_to_ids(self, pheno_filter_conf):
-        pheno_filter = self.pheno_filter_builder.make_filter(pheno_filter_conf)
-        if pheno_filter_conf.get("role"):
-            # Handle family filter
-            persons = set(
-                p.person_id for p in self.families.persons_with_roles(
-                    roles=[pheno_filter_conf["role"]]
-                )
-            )
-            measure_df = pheno_filter.apply(
-                self.phenotype_data.get_measure_values_df(
-                    pheno_filter_conf["source"],
-                    person_ids=persons,
-                )
-            )
-            ids = set(
-                self.families.persons[person_id].family.family_id
-                for person_id in measure_df["person_id"]
-            )
-        else:
-            # Handle person filter
-            measure_df = pheno_filter.apply(
-                self.phenotype_data.get_measure_values_df(
-                    pheno_filter_conf["source"]
-                )
-            )
-            ids = set(
-                person_id for person_id in measure_df["person_id"]
-                if person_id in self.families.persons
-            )
-        return ids
-
-    def _transform_filters_to_ids(self, filters: List[dict]) -> Set[str]:
-        result = list()
-        for filter_conf in filters:
-            if filter_conf["from"] == "phenodb":
-                ids = self._transform_pheno_filter_to_ids(filter_conf)
-            else:
-                ids = self._transform_pedigree_filter_to_ids(filter_conf)
-            result.append(ids)
-        return reduce(set.intersection, result)
-
-    def _transform_person_filters(self, kwargs):
-        matching_person_ids = self._transform_filters_to_ids(
-            kwargs.pop("personFilters")
-        )
-        if matching_person_ids is not None:
-            if "person_ids" in kwargs:
-                matching_person_ids = set.intersection(
-                    matching_person_ids, set(kwargs.pop("person_ids"))
-                )
-            kwargs["person_ids"] = matching_person_ids
-        return kwargs
-
-    def _transform_family_filters(self, kwargs):
-        matching_family_ids = self._transform_filters_to_ids(
-            kwargs.pop("familyFilters")
-        )
-        if matching_family_ids is not None:
-            if "family_ids" in kwargs:
-                matching_family_ids = set.intersection(
-                    matching_family_ids, set(kwargs.pop("family_ids"))
-                )
-            kwargs["family_ids"] = matching_family_ids
-        return kwargs
-
-    @staticmethod
-    def _add_roles_to_query(query, kwargs):
-        if not query:
-            return
-
-        original_roles = kwargs.get("roles", None)
-        if original_roles is not None:
-            if isinstance(original_roles, str):
-                original_roles = role_query.transform_query_string_to_tree(
-                    original_roles
-                )
-            kwargs["roles"] = AndNode([original_roles, query])
-        else:
-            kwargs["roles"] = query
-
-    @staticmethod
-    def _add_inheritance_to_query(query, kwargs):
-        if not query:
-            return
-        inheritance = kwargs.get("inheritance", [])
-        if isinstance(inheritance, list):
-            inheritance.append(query)
-        elif isinstance(inheritance, str):
-            inheritance = [inheritance]
-            inheritance.append(query)
-        else:
-            raise ValueError(f"unexpected inheritance query {inheritance}")
-        kwargs["inheritance"] = inheritance
-
     def _get_legend_default_values(self):
         return [
             {
@@ -1480,13 +952,6 @@ class StudyWrapper(StudyWrapperBase):
             0,
         ]
 
-    def get_persons_phenotypes(self, person_ids: List[str]):
-        result = list()
-        collection = self.person_set_collections["phenotype"]
-        for pid in person_ids:
-            result.append(collection.get_person_set_of_person(pid).id)
-        return result
-
 
 class RemoteStudyWrapper(StudyWrapperBase):
 
@@ -1543,9 +1008,12 @@ class RemoteStudyWrapper(StudyWrapperBase):
     def get_variants_wdae_preview(self, query, max_variants_count=10000):
 
         study_filters = query.get("study_filters")
-        print("study_id:", self.study_id, "; study_filters:", study_filters)
+        logger.debug(
+            f"study_id: {self.study_id}; study_filters: {study_filters}")
         if study_filters is not None:
             del query["study_filters"]
+        if query.get("allowed_studies"):
+            del query["allowed_studies"]
 
             # if self.study_id not in study_filters:
             #     return

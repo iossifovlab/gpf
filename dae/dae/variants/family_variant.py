@@ -217,6 +217,12 @@ class FamilyAllele(Allele, FamilyDelegate):
                     continue
                 trio = self.family.trios[pid]
                 trio_index = self.family.members_index(trio)
+
+                # logger.debug(
+                #     f"family {self.family} trio {trio} indexes: {trio_index}; "
+                #     f"gt: {self.gt}"
+                # )
+
                 trio_gt = self.gt[:, trio_index]
                 if np.any(trio_gt == -1):
                     inh = Inheritance.unknown
@@ -509,31 +515,6 @@ class FamilyVariant(Variant, FamilyDelegate):
             )
         )
 
-    @property
-    def genotype(self):
-        """
-        Returns genotype using summary variant allele indexes.
-        """
-        return [list(self.gt[:, m]) for m in range(self.gt.shape[1])]
-
-    @property
-    def family_genotype(self):
-        """
-        Returns family genotype using family variant indexes.
-        """
-        gt2fgt = zip(self.allele_indexes, self.family_allele_indexes)
-        fgt = np.zeros(shape=self.gt.shape, dtype=np.int8)
-        for gi, fgi in gt2fgt:
-            fgt[self.gt == gi] = fgi
-
-        return [list(fgt[:, m]) for m in range(fgt.shape[1])]
-
-    @property
-    def genetic_model(self):
-        if self._genetic_model is None:
-            self._genetic_model = GeneticModel.autosomal
-        return self._genetic_model
-
     def gt_flatten(self):
         """
         Return genotype of the family variant flattened to 1-dimensional
@@ -560,12 +541,41 @@ class FamilyVariant(Variant, FamilyDelegate):
         return f"{output} {self.family_id} {mat2str(self.gt)}"
 
     @property
+    def genotype(self):
+        """
+        Returns genotype using summary variant allele indexes.
+        """
+        return [list(self.gt[:, m]) for m in range(self.gt.shape[1])]
+
+    @property
+    def family_genotype(self):
+        """
+        Returns family genotype using family variant indexes.
+        """
+        gt2fgt = zip(self.allele_indexes, self.family_allele_indexes)
+        fgt = np.zeros(shape=self.gt.shape, dtype=np.int8)
+        for gi, fgi in gt2fgt:
+            fgt[self.gt == gi] = fgi
+
+        return [list(fgt[:, m]) for m in range(fgt.shape[1])]
+
+    @property
+    def genetic_model(self):
+        if self._genetic_model is None:
+            self._genetic_model = GeneticModel.autosomal
+        return self._genetic_model
+
+    @property
     def best_state(self):
         if self._best_state is None:
             self._best_state = calculate_simple_best_state(
                 self.gt, self.allele_count
             )
         return self._best_state
+
+    @property
+    def family_best_state(self):
+        return self.best_state[self.allele_indexes, :]
 
     @property  # type: ignore
     @deprecated(details="Replace usage of `best_st` with `best_state`")

@@ -2,14 +2,10 @@ import copy
 import json
 import pytest
 
-from django.contrib.auth.models import Group
-from guardian.shortcuts import assign_perm
-
-from datasets_api.models import Dataset
 from datasets_api.permissions import add_group_perm_to_user, \
-    get_wdae_children, \
     add_group_perm_to_dataset
 from rest_framework import status
+
 
 pytestmark = pytest.mark.usefixtures("wdae_gpf_instance", "calc_gene_sets")
 
@@ -305,6 +301,8 @@ def test_mixed_dataset_rights_with_study_filters(db, user, user_client):
     assert status.HTTP_200_OK == response.status_code
     res = response.streaming_content
     res = json.loads("".join(map(lambda x: x.decode("utf-8"), res)))
+
+    print(res)
 
     assert len(res) == 0
 

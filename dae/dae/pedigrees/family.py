@@ -1,6 +1,8 @@
 import copy
 import logging
 
+from typing import Dict, Set
+from enum import Enum, auto
 from collections import defaultdict
 from collections.abc import Mapping
 from dae.utils.helpers import isnan
@@ -26,7 +28,35 @@ PEDIGREE_COLUMN_NAMES = {
     "generated": "generated",
     "proband": "proband",
     "not_sequenced": "not_sequenced",
+    "missing": "missing",
 }
+
+
+class FamilyType(Enum):
+    TRIO = auto()
+    QUAD = auto()
+    MULTIGENERATIONAL = auto()
+    SIMPLEX = auto()
+    MULTIPLEX = auto()
+    OTHER = auto()
+
+    @staticmethod
+    def from_name(name: str):
+        assert isinstance(name, str)
+        name = name.lower()
+        if name == "trio":
+            return FamilyType.TRIO
+        elif name == "quad":
+            return FamilyType.QUAD
+        elif name == "multigenerational":
+            return FamilyType.MULTIGENERATIONAL
+        elif name == "simplex":
+            return FamilyType.SIMPLEX
+        elif name == "multiplex":
+            return FamilyType.MULTIPLEX
+        elif name == "other":
+            return FamilyType.OTHER
+        raise ValueError(f"unexpected family type name: {name}")
 
 
 class Person(object):
@@ -72,6 +102,10 @@ class Person(object):
             value = self._attributes.get("not_sequenced")
             if value == "None":
                 self._attributes["not_sequenced"] = None
+        if self._attributes.get("missing"):
+            value = self._attributes.get("missing")
+            if value == "None":
+                self._attributes["not_sequenced"] = None
 
     def __repr__(self):
         decorator = ""
@@ -109,7 +143,7 @@ class Person(object):
 
     @property
     def missing(self):
-        return self._attributes.get("missing", None)
+        return self.generated or self.not_sequenced
 
     @property
     def family_bin(self):
@@ -251,7 +285,7 @@ class Family(object):
         if self._members_in_order is None:
             self._members_in_order = list(
                 filter(
-                    lambda m: not (m.generated or m.not_sequenced),
+                    lambda m: not m.missing,
                     self.persons.values())
             )
         return self._members_in_order
@@ -289,6 +323,43 @@ class Family(object):
             )
         return self._samples_index
 
+    @property
+    def family_type(self):
+        has_grandparent = any([
+            person.role in (
+                Role.maternal_grandfather,
+                Role.maternal_grandmother,
+                Role.paternal_grandfather,
+                Role.paternal_grandmother
+            ) for person in self.persons.values()
+        ])
+
+        unaffected_parents = all([
+            person.status is Status.unaffected
+            for person in self.get_members_with_roles([Role.mom, Role.dad])
+        ])
+
+        affected_siblings = any([
+            person.status is Status.affected
+            for person in self.get_members_with_roles([Role.sib])
+        ])
+
+        if has_grandparent:
+            return FamilyType.MULTIGENERATIONAL
+        if unaffected_parents:
+            if len(self.persons) == 3:
+                return FamilyType.TRIO
+            elif len(self.persons) == 4 and not affected_siblings:
+                return FamilyType.QUAD
+            elif affected_siblings:
+                return FamilyType.MULTIPLEX
+        else:
+            if affected_siblings:
+                return FamilyType.MULTIPLEX
+            else:
+                return FamilyType.SIMPLEX
+        return FamilyType.OTHER
+
     @staticmethod
     def merge(l_fam: "Family", r_fam: "Family") -> "Family":
         assert l_fam.family_id == r_fam.family_id, \
@@ -323,7 +394,7 @@ class Family(object):
             assert (l_person.sex == r_person.sex or
                     l_person.sex == Sex.unspecified or
                     r_person.sex == Sex.unspecified) \
-                and (l_person.role == r_person.role or 
+                and (l_person.role == r_person.role or
                      l_person.role == Role.unknown or
                      r_person.role == Role.unknown) \
                 and (l_person.family_id == r_person.family_id), \
@@ -369,6 +440,7 @@ class FamiliesData(Mapping):
         self._broken = {}
         self._person_ids_with_parents = None
         self._real_persons = None
+        self._families_by_type: Dict[str, Set[str]] = {}
 
     def redefine(self):
         error_msgs = []
@@ -412,6 +484,15 @@ class FamiliesData(Mapping):
                 if not p.generated:
                     self._real_persons[p.person_id] = p
         return self._real_persons
+
+    @property
+    def families_by_type(self):
+        if not self._families_by_type:
+            for family_id, family in self._families.items():
+                self._families_by_type.setdefault(
+                    family.family_type, set()
+                ).add(family_id)
+        return self._families_by_type
 
     @staticmethod
     def from_family_persons(family_persons):
