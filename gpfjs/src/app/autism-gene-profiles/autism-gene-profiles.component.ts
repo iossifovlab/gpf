@@ -128,6 +128,6 @@ export class AutismGeneProfilesComponent implements OnInit, OnChanges, AfterView
   focusGeneSearch() {
     this.waitForGeneSearchToLoad().then(() => {
       this.geneSearchInput.nativeElement.focus();
-    })
+    });
   }
 }
