@@ -337,7 +337,8 @@ def reload_datasets(gpf_instance):
         )
 
         genotype_data = gpf_instance.get_genotype_data(genotype_data_id)
-        print("genotype_data.studies:", genotype_data.studies)
+        if genotype_data is None:
+            continue
         if not genotype_data.studies:
             continue
 
