@@ -14,6 +14,10 @@ def main(argv, gpf_instance=None):
     parser.add_argument('--verbose', '-V', action='count', default=0)
 
     parser.add_argument(
+        '--dry-run', '-n',
+        action='store_true', default=None)
+
+    parser.add_argument(
         "--source-id",
         type=str,
         default=None,
@@ -72,14 +76,14 @@ def main(argv, gpf_instance=None):
     assert helpers.check_dataset_impala_tables(argv.source_id)
     assert helpers.check_dataset_impala_tables(argv.dest_id)
 
-    helpers.dataset_drop_impala_tables(argv.dest_id)
-    helpers.dataset_remove_hdfs_directory(argv.dest_id)
-
-    helpers.dataset_rename_hdfs_directory(argv.source_id, argv.dest_id)
-    helpers.dataset_recreate_impala_tables(argv.source_id, argv.dest_id)
-
-    helpers.dataset_drop_impala_tables(argv.source_id)
-    helpers.disable_study_config(argv.source_id)
+    helpers.dataset_drop_impala_tables(argv.dest_id, dry_run=argv.dry_run)
+    helpers.dataset_remove_hdfs_directory(argv.dest_id, dry_run=argv.dry_run)
+    helpers.dataset_rename_hdfs_directory(
+        argv.source_id, argv.dest_id, dry_run=argv.dry_run)
+    helpers.dataset_recreate_impala_tables(
+        argv.source_id, argv.dest_id, dry_run=argv.dry_run)
+    helpers.dataset_drop_impala_tables(argv.source_id, dry_run=argv.dry_run)
+    helpers.disable_study_config(argv.source_id, dry_run=argv.dry_run)
 
 
 if __name__ == "__main__":

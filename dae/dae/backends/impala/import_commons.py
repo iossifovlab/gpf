@@ -1408,17 +1408,21 @@ class DatasetHelpers:
         else:
             return (None, None)
 
-    def dataset_rename_hdfs_directory(self, old_id, new_id):
+    def dataset_rename_hdfs_directory(self, old_id, new_id, dry_run=None):
         source_dir, dest_dir = \
             self.check_dataset_rename_hdfs_directory(old_id, new_id)
-        assert source_dir is not None
-        assert dest_dir is not None
+        if not dry_run:
+            assert source_dir is not None
+            assert dest_dir is not None
 
         genotype_storage = self.get_genotype_storage(old_id)
         hdfs_helpers = genotype_storage.hdfs_helpers
-        hdfs_helpers.rename(source_dir, dest_dir)
 
-    def dataset_remove_hdfs_directory(self, dataset_id):
+        logger.info(f"going to rename {source_dir} to {dest_dir}")
+        if not dry_run:
+            hdfs_helpers.rename(source_dir, dest_dir)
+
+    def dataset_remove_hdfs_directory(self, dataset_id, dry_run=None):
         genotype_storage = self.get_genotype_storage(dataset_id)
         assert self.check_dataset_hdfs_directories(
             genotype_storage, dataset_id)
@@ -1428,13 +1432,16 @@ class DatasetHelpers:
         study_dir = genotype_storage.full_hdfs_path(
             genotype_storage.default_hdfs_study_path(dataset_id))
 
-        hdfs_helpers.delete(study_dir, recursive=True)
+        logger.info(f"going to remove HDFS directory: {study_dir}")
+        if not dry_run:
+            hdfs_helpers.delete(study_dir, recursive=True)
 
-    def dataset_recreate_impala_tables(self, old_id, new_id):
+    def dataset_recreate_impala_tables(self, old_id, new_id, dry_run=None):
         genotype_storage = self.get_genotype_storage(old_id)
 
         assert genotype_storage.is_impala()
-        assert self.check_dataset_hdfs_directories(genotype_storage, new_id)
+        if not dry_run:
+            assert self.check_dataset_hdfs_directories(genotype_storage, new_id)
 
         impala_db = genotype_storage.storage_config.impala.db
         impala_helpers = genotype_storage.impala_helpers
@@ -1449,9 +1456,13 @@ class DatasetHelpers:
 
         pedigree_table = config.genotype_storage.tables.pedigree
 
-        impala_helpers.recreate_table(
-            impala_db, pedigree_table,
-            new_pedigree_table, new_hdfs_pedigree)
+        logger.info(
+            f"going to recreate pedigree table {new_pedigree_table} "
+            f"from {new_hdfs_pedigree}")
+        if not dry_run:
+            impala_helpers.recreate_table(
+                impala_db, pedigree_table,
+                new_pedigree_table, new_hdfs_pedigree)
 
         variants_table = config.genotype_storage.tables.variants
         new_variants_table = None
@@ -1463,13 +1474,18 @@ class DatasetHelpers:
             new_variants_table = genotype_storage \
                 ._construct_variants_table(new_id)
 
-            impala_helpers.recreate_table(
-                impala_db, variants_table,
-                new_variants_table, new_hdfs_variants)
+            logger.info(
+                f"going to recreate variants table {new_variants_table} "
+                f"from {new_hdfs_variants}")
+
+            if not dry_run:
+                impala_helpers.recreate_table(
+                    impala_db, variants_table,
+                    new_variants_table, new_hdfs_variants)
 
         return new_pedigree_table, new_variants_table
 
-    def dataset_drop_impala_tables(self, dataset_id):
+    def dataset_drop_impala_tables(self, dataset_id, dry_run=None):
         assert self.check_dataset_impala_tables(dataset_id)
 
         genotype_storage = self.get_genotype_storage(dataset_id)
@@ -1480,13 +1496,21 @@ class DatasetHelpers:
         config = self.find_genotype_data_config(dataset_id)
 
         pedigree_table = config.genotype_storage.tables.pedigree
-        impala_helpers.drop_table(
-            impala_db, pedigree_table)
+        logger.info(
+            f"going to drop pedigree impala table "
+            f"{impala_db}.{pedigree_table}")
+        if not dry_run:
+            impala_helpers.drop_table(
+                impala_db, pedigree_table)
 
         variants_table = config.genotype_storage.tables.variants
         if variants_table is not None:
-            impala_helpers.drop_table(
-                impala_db, variants_table)
+            logger.info(
+                f"going to drop variants impala table "
+                f"{impala_db}.{pedigree_table}")
+            if not dry_run:
+                impala_helpers.drop_table(
+                    impala_db, variants_table)
 
     def check_dataset_impala_tables(self, dataset_id):
         genotype_storage = self.get_genotype_storage(dataset_id)
@@ -1566,9 +1590,12 @@ class DatasetHelpers:
 
         shutil.rmtree(config_dir)
 
-    def disable_study_config(self, dataset_id):
+    def disable_study_config(self, dataset_id, dry_run=None):
         config_file = self.find_genotype_data_config_file(dataset_id)
         config_dir = os.path.dirname(config_file)
 
-        os.rename(config_file, f"{config_file}_bak")
-        os.rename(config_dir, f"{config_dir}_bak")
+        logger.info(f"going to disable study_config {config_file}")
+
+        if not dry_run:
+            os.rename(config_file, f"{config_file}_bak")
+            os.rename(config_dir, f"{config_dir}_bak")
