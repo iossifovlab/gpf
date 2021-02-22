@@ -2,8 +2,11 @@ from dae.autism_gene_profile.db import AutismGeneProfileDB
 from sqlalchemy import inspect
 
 
-def test_agpdb_tables_building(temp_dbfile, agp_gpf_instance):
-    agpdb = AutismGeneProfileDB(temp_dbfile)
+def test_agpdb_tables_building(temp_dbfile, agp_config):
+    agpdb = AutismGeneProfileDB(
+        agp_config,
+        temp_dbfile
+    )
     inspector = inspect(agpdb.engine)
 
     table_columns = dict()
@@ -52,14 +55,17 @@ def test_agpdb_tables_building(temp_dbfile, agp_gpf_instance):
     print(table_columns)
 
 
-def test_agpdb_get_studies(temp_dbfile, agp_gpf_instance):
-    agpdb = AutismGeneProfileDB(temp_dbfile)
+def test_agpdb_get_studies(temp_dbfile, agp_gpf_instance, agp_config):
+    agpdb = AutismGeneProfileDB(
+        agp_config,
+        temp_dbfile
+    )
     study_ids = agpdb._get_study_ids().keys()
     assert len(study_ids) == 40
 
 
-def test_agpdb_get_gene_sets(temp_dbfile, agp_gpf_instance):
-    agpdb = AutismGeneProfileDB(temp_dbfile)
+def test_agpdb_get_gene_sets(temp_dbfile, agp_config, agp_gpf_instance):
+    agpdb = AutismGeneProfileDB(agp_config, temp_dbfile)
     gene_sets = set([gs[1] for gs in agpdb._get_gene_sets()])
     expected = {
         'CHD8 target genes',
@@ -81,9 +87,10 @@ def test_agpdb_get_gene_sets(temp_dbfile, agp_gpf_instance):
     assert gene_sets.difference(expected) == set()
 
 
-def test_agpdb_insert_and_get_agp(temp_dbfile, agp_gpf_instance, sample_agp):
-    agpdb = AutismGeneProfileDB(temp_dbfile, clear=True)
-    agpdb.populate_data_tables(agp_gpf_instance)
+def test_agpdb_insert_and_get_agp(
+        temp_dbfile, agp_gpf_instance, sample_agp, agp_config):
+    agpdb = AutismGeneProfileDB(agp_config, temp_dbfile, clear=True)
+    agpdb.populate_data_tables(agp_gpf_instance.get_genotype_data_ids())
     agpdb.insert_agp(sample_agp)
     agp = agpdb.get_agp("CHD8")
     assert agp.gene_sets == [
