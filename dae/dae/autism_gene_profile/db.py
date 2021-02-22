@@ -14,11 +14,11 @@ class AutismGeneProfileDB:
 
     PAGE_SIZE = 100
 
-    def __init__(self, dbfile, clear=False):
+    def __init__(self, configuration, dbfile, clear=False):
         self.dbfile = dbfile
         self.engine = create_engine("sqlite:///{}".format(dbfile))
         self.metadata = MetaData(self.engine)
-        self.configuration = None
+        self.configuration = self._build_configuration(configuration)
         self.build_gene_profile_db(clear)
         self._agp_view = None
 
@@ -27,6 +27,19 @@ class AutismGeneProfileDB:
         if self._agp_view is None:
             self._agp_view = Table("agp_view", self.metadata, autoload=True)
         return self._agp_view
+
+    def _build_configuration(self, configuration):
+        if configuration is None:
+            return dict()
+
+        configuration["gene_lists"] = configuration["gene_sets"]
+        for dataset in configuration["datasets"]:
+            dataset_dict = configuration["datasets"][dataset]
+            person_sets = dataset_dict["person_sets"]
+            dataset_dict["person_sets"] = [
+                ps["set_name"] for ps in person_sets
+            ]
+        return configuration
 
     def _get_autism_scores(self, gene_symbol_id):
         s = select([
@@ -305,15 +318,13 @@ class AutismGeneProfileDB:
             ),
         )
 
-    def build_agp_view(self, gpf_instance):
-        config = self.get_full_configuration(gpf_instance)
-
+    def build_agp_view(self):
         study_ids = self._get_study_ids()
         gene_set_ids = self._get_gene_set_ids()
         current_join = None
         select_cols = [self.gene_symbols.c.symbol_name]
 
-        for gs in config["gene_sets"]:
+        for gs in self.configuration["gene_sets"]:
             set_alias = gs
             table_alias = aliased(
                 self.gene_symbol_sets,
@@ -334,7 +345,7 @@ class AutismGeneProfileDB:
 
             select_cols.append(table_alias.c.present.label(set_alias))
 
-        for ps in config["protection_scores"]:
+        for ps in self.configuration["protection_scores"]:
             score_alias = f"protection_{ps}"
             table_alias = aliased(
                 self.protection_scores,
@@ -354,7 +365,7 @@ class AutismGeneProfileDB:
 
             select_cols.append(table_alias.c.score_value.label(score_alias))
 
-        for aus in config["autism_scores"]:
+        for aus in self.configuration["autism_scores"]:
             score_alias = f"autism_{aus}"
             table_alias = aliased(
                 self.autism_scores,
@@ -374,8 +385,8 @@ class AutismGeneProfileDB:
 
             select_cols.append(table_alias.c.score_value.label(score_alias))
 
-        for dataset_id, dataset in config["datasets"].items():
-            config_section = config["datasets"][dataset_id]
+        for dataset_id, dataset in self.configuration["datasets"].items():
+            config_section = self.configuration["datasets"][dataset_id]
             db_study_id = study_ids[dataset_id]
             for person_set in config_section["person_sets"]:
                 for effect_type in config_section["effects"]:
@@ -432,10 +443,9 @@ class AutismGeneProfileDB:
             connection.execute(delete(self.gene_symbols))
             connection.execute(delete(self.gene_sets))
 
-    def populate_data_tables(self, gpf_instance):
-        gene_sets = self.get_full_configuration(gpf_instance)["gene_sets"]
+    def populate_data_tables(self, studies):
+        gene_sets = self.configuration["gene_sets"]
         self._populate_gene_sets_table(gene_sets)
-        studies = gpf_instance.get_genotype_data_ids()
         self._populate_studies_table(studies)
 
     def insert_agp(self, agp):
@@ -549,23 +559,3 @@ class AutismGeneProfileDB:
                     if idx % 25 == 0:
                         logger.info(f"Inserted {idx}/{agp_count} AGPs into DB")
                 logger.info("Done!")
-
-    def get_full_configuration(self, gpf_instance):
-        if not self.configuration:
-            self.configuration = \
-                gpf_instance._autism_gene_profile_config
-
-            if self.configuration is None:
-                self.configuration = dict()
-                return self.configuration
-            else:
-                self.configuration = self.configuration.to_dict()
-
-            self.configuration["gene_lists"] = self.configuration["gene_sets"]
-            for dataset in self.configuration["datasets"]:
-                dataset_dict = self.configuration["datasets"][dataset]
-                person_sets = dataset_dict["person_sets"]
-                dataset_dict["person_sets"] = [
-                    ps["set_name"] for ps in person_sets
-                ]
-        return self.configuration

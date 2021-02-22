@@ -138,7 +138,10 @@ class GPFInstance(object):
     @property  # type: ignore
     @cached
     def _autism_gene_profile_db(self):
-        return AutismGeneProfileDB(os.path.join(self.dae_db_dir, "agpdb"))
+        return AutismGeneProfileDB(
+            self._autism_gene_profile_config.to_dict(),
+            os.path.join(self.dae_db_dir, "agpdb")
+        )
 
     def reload(self):
         reload_properties = [
@@ -424,7 +427,7 @@ class GPFInstance(object):
 
     # AGP
     def get_agp_configuration(self):
-        return self._autism_gene_profile_db.get_full_configuration(self)
+        return self._autism_gene_profile_db.configuration
 
     def get_agp_statistic(self, gene_symbol):
         return self._autism_gene_profile_db.get_agp(gene_symbol)
