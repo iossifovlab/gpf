@@ -137,7 +137,7 @@ class ResponseTransformer:
     def __init__(self, study_wrapper):
         self.study_wrapper = study_wrapper
 
-    def _add_additional_columns(self, variants_iterable):
+    def add_additional_columns(self, variants_iterable):
         for variants_chunk in split_iterable(
                 variants_iterable, self.STREAMING_CHUNK_SIZE):
 
@@ -159,19 +159,19 @@ class ResponseTransformer:
 
                 yield variant
 
-    def _add_additional_columns_summary(self, variants_iterable):
+    def add_additional_columns_summary(self, variants_iterable):
         for variants_chunk in split_iterable(
                 variants_iterable, self.STREAMING_CHUNK_SIZE):
 
             for variant in variants_chunk:
                 for allele in variant.alt_alleles:
-                    gene_weights_values = self._get_gene_weights_values(allele)
+                    gene_weights_values = self.study_wrapper._get_gene_weights_values(allele)
 
                     allele.update_attributes(gene_weights_values)
 
                 yield variant
 
-    def _build_variant_row(
+    def build_variant_row(
             self, v: FamilyVariant, column_descs: List[Dict], **kwargs):
 
         row_variant = []
@@ -294,9 +294,3 @@ class ResponseTransformer:
         ]
         rows = self.gene_view_summary_download_variants_iterator(variants, frequency_column)
         return map(join_line, itertools.chain([columns], rows))
-
-    def transform_variant(self, variant: FamilyVariant):
-        pass
-
-    def transform_variant_download(self, variant: FamilyVariant):
-        pass

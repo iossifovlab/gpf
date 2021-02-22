@@ -344,7 +344,7 @@ class StudyWrapper(StudyWrapperBase):
                 continue
 
             row_variant = []
-            row_variant = self.response_transformer._build_variant_row(
+            row_variant = self.response_transformer.build_variant_row(
                 v, sources, person_set_collection=person_set_collection)
 
             yield row_variant
@@ -442,7 +442,8 @@ class StudyWrapper(StudyWrapperBase):
             self.genotype_data_study.query_summary_variants(**kwargs), limit
         )
         for v in variants_from_studies:
-            yield self.response_transformer.transform_gene_view_summary_variant(v, frequency_column)
+            for a in self.response_transformer.transform_gene_view_summary_variant(v, frequency_column):
+                yield a
 
     def get_gene_view_summary_variants_download(
             self, frequency_column, **kwargs):
@@ -467,7 +468,7 @@ class StudyWrapper(StudyWrapperBase):
         variants_from_studies = itertools.islice(
             self.genotype_data_study.query_variants(**kwargs), limit
         )
-        for variant in self.response_transformer._add_additional_columns(variants_from_studies):
+        for variant in self.response_transformer.add_additional_columns(variants_from_studies):
             yield variant
 
     def query_summary_variants(self, **kwargs):
@@ -480,11 +481,11 @@ class StudyWrapper(StudyWrapperBase):
         variants_from_studies = itertools.islice(
             self.genotype_data_study.query_summary_variants(**kwargs), limit
         )
-        variants_with_additional_cols = self.response_transformer._add_additional_columns_summary(
+        variants_with_additional_cols = self.response_transformer.add_additional_columns_summary(
             variants_from_studies
         )
         for v in variants_with_additional_cols:
-            row_variant = self.response_transformer._build_variant_row(
+            row_variant = self.response_transformer.build_variant_row(
                 v, self.summary_preview_descs
             )
 
