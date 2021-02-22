@@ -3,7 +3,7 @@ import logging
 from dae.autism_gene_profile.statistic import AGPStatistic
 from sqlalchemy import MetaData, create_engine
 from sqlalchemy import Table, Column, Integer, String, Float, ForeignKey
-from sqlalchemy.sql import select, insert, join, delete, and_
+from sqlalchemy.sql import select, insert, join, delete, and_, desc, asc
 from sqlalchemy.orm import aliased
 from dae.utils.sql_utils import CreateView
 
@@ -183,10 +183,24 @@ class AutismGeneProfileDB:
             agps.append(self.get_agp(symbol))
         return agps
 
-    def query_agps(self, page, symbol_like=None, sort_by=None):
+    def _transform_sort_by(self, sort_by):
+        if sort_by.startswith("gene_list_"):
+            sort_by = sort_by[:10]
+        return sort_by
+
+    def query_agps(self, page, symbol_like=None, sort_by=None, order=None):
         s = self.agp_view.select()
+
         if symbol_like:
             s = s.where(self.agp_view.c.symbol_name.like(f"%{symbol_like}%"))
+
+        if sort_by is not None:
+            if order is None:
+                order = "desc"
+            sort_by = self._transform_sort_by(sort_by)
+            query_order_func = desc if order == "desc" else asc
+            s = s.order_by(query_order_func(sort_by))
+
         s = s.limit(self.PAGE_SIZE).offset(self.PAGE_SIZE*(page-1))
         with self.engine.connect() as connection:
             return connection.execute(s).fetchall()
