@@ -54,14 +54,12 @@ def test_agpdb_tables_building(temp_dbfile, agp_gpf_instance):
 
 def test_agpdb_get_studies(temp_dbfile, agp_gpf_instance):
     agpdb = AutismGeneProfileDB(temp_dbfile)
-    agpdb.populate_data_tables(agp_gpf_instance)
     study_ids = agpdb._get_study_ids().keys()
     assert len(study_ids) == 40
 
 
 def test_agpdb_get_gene_sets(temp_dbfile, agp_gpf_instance):
     agpdb = AutismGeneProfileDB(temp_dbfile)
-    agpdb.populate_data_tables(agp_gpf_instance)
     gene_sets = set([gs[1] for gs in agpdb._get_gene_sets()])
     expected = {
         'CHD8 target genes',
@@ -102,7 +100,32 @@ def test_agpdb_insert_and_get_agp(temp_dbfile, agp_gpf_instance, sample_agp):
 
     assert agp.variant_counts == {
         'f1_study': {
-            'affected': {'LGDS': 53, 'missense': 21, 'intron': 10},
-            'unaffected': {'LGDS': 43, 'missense': 51, 'intron': 70},
+            'phenotype1': {'synonymous': 53, 'missense': 21},
+            'unaffected': {'synonymous': 43, 'missense': 51},
         }
     }
+
+
+def test_agpdb_sort(agp_gpf_instance, sample_agp):
+    sample_agp.gene_symbol = "CHD7"
+    sample_agp.protection_scores["SFARI_gene_score"] = -11
+    agp_gpf_instance._autism_gene_profile_db.insert_agp(sample_agp)
+    stats_unsorted = agp_gpf_instance.query_agp_statistics(1)
+    stats_sorted = agp_gpf_instance.query_agp_statistics(
+        1, sort_by="protection_SFARI_gene_score", order="asc"
+    )
+    assert stats_unsorted[0].gene_symbol == "CHD8"
+    assert stats_unsorted[1].gene_symbol == "CHD7"
+
+    assert stats_sorted[0].gene_symbol == "CHD7"
+    assert stats_sorted[1].gene_symbol == "CHD8"
+
+    stats_sorted = agp_gpf_instance.query_agp_statistics(
+        1, sort_by="autism_SFARI_gene_score", order="desc"
+    )
+    stats_sorted = agp_gpf_instance.query_agp_statistics(
+        1, sort_by="f1_study_phenotype1_synonymous", order="desc"
+    )
+    stats_sorted = agp_gpf_instance.query_agp_statistics(
+        1, sort_by="CHD8 target genes", order="desc"
+    )

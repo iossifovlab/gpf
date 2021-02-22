@@ -942,7 +942,7 @@ def temp_dbfile(request):
 
 
 @pytest.fixture
-def agp_gpf_instance(fixtures_gpf_instance, mocker, sample_agp):
+def agp_gpf_instance(fixtures_gpf_instance, mocker, sample_agp, temp_dbfile):
     agp_config = Box({
         'gene_sets': ['CHD8 target genes'],
         'protection_scores': ['SFARI_gene_score', 'RVIS_rank', 'RVIS'],
@@ -993,12 +993,14 @@ def agp_gpf_instance(fixtures_gpf_instance, mocker, sample_agp):
     )
     fixtures_gpf_instance.__autism_gene_profile_db = \
         AutismGeneProfileDB(
-            os.path.join(fixtures_gpf_instance.dae_db_dir, "agpdb"),
+            temp_dbfile,
             clear=True
         )
+    print(temp_dbfile)
     fixtures_gpf_instance._autism_gene_profile_db.clear_all_tables()
     fixtures_gpf_instance._autism_gene_profile_db.populate_data_tables(
         fixtures_gpf_instance)
+    fixtures_gpf_instance._autism_gene_profile_db.build_agp_view(fixtures_gpf_instance)
     fixtures_gpf_instance._autism_gene_profile_db.insert_agp(sample_agp)
     return fixtures_gpf_instance
 
@@ -1014,8 +1016,8 @@ def sample_agp():
     }
     variant_counts = {
         'f1_study': {
-            'affected': {'LGDS': 53, 'missense': 21, 'intron': 10},
-            'unaffected': {'LGDS': 43, 'missense': 51, 'intron': 70},
+            'phenotype1': {'synonymous': 53, 'missense': 21},
+            'unaffected': {'synonymous': 43, 'missense': 51},
         }
     }
     return AGPStatistic(
