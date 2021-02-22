@@ -29,15 +29,23 @@ export class AutismGeneProfilesService {
     });
   }
 
-  getGenes(page: number, geneSymbol?: string): Observable<AutismGeneToolGene[]> {
+  getGenes(page: number, searchString?: string, sortBy?: string, order?: string): Observable<AutismGeneToolGene[]> {
     let url = this.config.baseUrl + this.genesUrl;
+    let params = new HttpParams().set('page', page.toString());
 
-    let searchParams = new HttpParams().set('page', page.toString());
-    if (geneSymbol) {
-      searchParams = searchParams.append('symbol', geneSymbol);
+    if (searchString) {
+      params = params.append('symbol', searchString);
     }
 
-    url += `?${searchParams}`;
+    if (sortBy) {
+      params = params.append('sortBy', sortBy);
+
+      if (order) {
+        params = params.append('order', order);
+      }
+    }
+
+    url += `?${params}`;
 
     return this.http
       .get(url)
