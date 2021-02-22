@@ -198,8 +198,8 @@ class AutismGeneProfileDB:
         return agps
 
     def _transform_sort_by(self, sort_by):
-        if sort_by.startswith("gene_list_"):
-            sort_by = sort_by[:10]
+        if sort_by.startswith("gene_set_"):
+            sort_by = sort_by[10:]
         return sort_by
 
     def query_agps(self, page, symbol_like=None, sort_by=None, order=None):
