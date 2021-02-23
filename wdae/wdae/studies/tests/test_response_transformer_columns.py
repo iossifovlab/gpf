@@ -5,7 +5,7 @@ from dae.utils.regions import Region
 from dae.configuration.gpf_config_parser import FrozenBox
 from dae.person_sets import PersonSetCollection
 
-from studies.study_wrapper import StudyWrapper
+from studies.response_transformer import ResponseTransformer
 
 
 def test_special_attrs_formatting(fixtures_wgpf_instance):
@@ -129,7 +129,7 @@ def phenotype_person_sets(variants_impl):
 )
 def test_special_attr_columns(v_impala, v_vcf, column, expected):
 
-    fn = StudyWrapper.response_transformer.SPECIAL_ATTRS[column]
+    fn = ResponseTransformer.SPECIAL_ATTRS[column]
 
     result = fn(v_impala)
     assert result == expected
@@ -140,7 +140,7 @@ def test_special_attr_columns(v_impala, v_vcf, column, expected):
 
 def test_reference_column(v_impala, v_vcf):
 
-    fn = StudyWrapper.response_transformer.SPECIAL_ATTRS["reference"]
+    fn = ResponseTransformer.SPECIAL_ATTRS["reference"]
     expected = ["T", "T"]
 
     result = fn(v_impala)
@@ -167,7 +167,7 @@ def test_phenotype_attr_columns(
 
     print(phenotype_person_sets)
 
-    fn = StudyWrapper.response_transformer.PHENOTYPE_ATTRS[column]
+    fn = ResponseTransformer.PHENOTYPE_ATTRS[column]
 
     result = fn(v_impala, phenotype_person_sets)
     assert result == expected
