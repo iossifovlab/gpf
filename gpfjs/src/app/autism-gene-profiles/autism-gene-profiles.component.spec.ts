@@ -177,10 +177,24 @@ describe('AutismGeneProfilesComponent', () => {
 
   it('should search for genes', () => {
     const updateGenesSpy = spyOn(component, 'updateGenes');
-    expect(component.geneInput).toEqual('');
+    expect(component.geneInput).toEqual(undefined);
     component.search('mockSearchString');
     expect(component.geneInput).toEqual('mockSearchString');
     expect(updateGenesSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('should sort with given parameters', () => {
+    const updateGenesSpy = spyOn(component, 'updateGenes');
+
+    component.sort('mockSortBy');
+    expect(component.sortBy).toEqual('mockSortBy');
+    expect(component.orderBy).toEqual(undefined);
+    expect(updateGenesSpy).toHaveBeenCalledTimes(1);
+
+    component.sort('mockSortBy', 'mockOrderBy');
+    expect(component.sortBy).toEqual('mockSortBy');
+    expect(component.orderBy).toEqual('mockOrderBy');
+    expect(updateGenesSpy).toHaveBeenCalledTimes(2);
   });
 
   it('should send keystrokes', () => {

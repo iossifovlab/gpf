@@ -6,6 +6,8 @@ import { Subject } from 'rxjs';
 import { AutismGeneToolConfig, AutismGeneToolGene } from './autism-gene-profile';
 import { AutismGeneProfilesService } from './autism-gene-profiles.service';
 import { NgbDropdownMenu } from '@ng-bootstrap/ng-bootstrap';
+import { environment } from 'environments/environment';
+
 
 @Component({
   selector: 'gpf-autism-gene-profiles',
@@ -30,9 +32,12 @@ export class AutismGeneProfilesComponent implements OnInit, OnChanges, AfterView
   private focusAutismScoresInput: boolean;
   private focusProtectionScoresInput: boolean;
 
-  geneInput = '';
+  geneInput: string;
   searchKeystrokes$: Subject<string> = new Subject();
   @ViewChild('geneSearchInput') geneSearchInput: ElementRef;
+
+  sortBy: string;
+  orderBy: string;
 
   @HostListener('window:scroll', ['$event'])
   onWindowScroll(event: any) {
@@ -97,9 +102,11 @@ export class AutismGeneProfilesComponent implements OnInit, OnChanges, AfterView
     this.loadMoreGenes = false;
     this.pageIndex++;
 
-    this.autismGeneProfilesService.getGenes(this.pageIndex, this.geneInput).take(1).subscribe(res => {
-      this.genes = this.genes.concat(res);
-      this.loadMoreGenes = Object.keys(res).length !== 0 ? true : false;
+    this.autismGeneProfilesService
+    .getGenes(this.pageIndex, this.geneInput, this.sortBy, this.orderBy)
+    .take(1).subscribe(res => {
+        this.genes = this.genes.concat(res);
+        this.loadMoreGenes = Object.keys(res).length !== 0 ? true : false;
     });
   }
 
@@ -129,5 +136,20 @@ export class AutismGeneProfilesComponent implements OnInit, OnChanges, AfterView
     this.waitForGeneSearchToLoad().then(() => {
       this.geneSearchInput.nativeElement.focus();
     });
+  }
+
+  sort(sortBy: string, orderBy?: string) {
+    this.sortBy = sortBy;
+    if (orderBy) {
+      this.orderBy = orderBy;
+    }
+    this.genes = [];
+    this.pageIndex = 0;
+
+    this.updateGenes();
+  }
+
+  get imgPathPrefix() {
+    return environment.imgPathPrefix;
   }
 }
