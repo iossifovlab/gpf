@@ -132,13 +132,17 @@ class ImpalaVariants:
                 )
 
                 for row in cursor:
+                    try:
+                        v = deserialize_row(row)
 
-                    v = deserialize_row(row)
+                        if v is None:
+                            continue
 
-                    if v is None:
+                        yield v
+                    except Exception as ex:
+                        logger.error("unable to deserialize summary variant")
+                        logger.exception(ex)
                         continue
-
-                    yield v
 
     def _family_variants_iterator(
             self,
@@ -202,12 +206,17 @@ class ImpalaVariants:
 
                 cursor.execute(query)
                 for row in cursor:
-                    v = deserialize_row(row)
+                    try:
+                        v = deserialize_row(row)
 
-                    if v is None:
+                        if v is None:
+                            continue
+
+                        yield v
+                    except Exception as ex:
+                        logger.error("unable to deserialize family variant")
+                        logger.exception(ex)
                         continue
-
-                    yield v
 
     def query_summary_variants(
             self,
