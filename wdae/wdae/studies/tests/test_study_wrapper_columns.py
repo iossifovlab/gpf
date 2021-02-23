@@ -129,7 +129,7 @@ def phenotype_person_sets(variants_impl):
 )
 def test_special_attr_columns(v_impala, v_vcf, column, expected):
 
-    fn = StudyWrapper.SPECIAL_ATTRS[column]
+    fn = StudyWrapper.response_transformer.SPECIAL_ATTRS[column]
 
     result = fn(v_impala)
     assert result == expected
@@ -140,7 +140,7 @@ def test_special_attr_columns(v_impala, v_vcf, column, expected):
 
 def test_reference_column(v_impala, v_vcf):
 
-    fn = StudyWrapper.SPECIAL_ATTRS["reference"]
+    fn = StudyWrapper.response_transformer.SPECIAL_ATTRS["reference"]
     expected = ["T", "T"]
 
     result = fn(v_impala)
@@ -167,7 +167,7 @@ def test_phenotype_attr_columns(
 
     print(phenotype_person_sets)
 
-    fn = StudyWrapper.PHENOTYPE_ATTRS[column]
+    fn = StudyWrapper.response_transformer.PHENOTYPE_ATTRS[column]
 
     result = fn(v_impala, phenotype_person_sets)
     assert result == expected
