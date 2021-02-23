@@ -18,7 +18,7 @@ export class AutismGeneProfilesComponent implements OnInit, OnChanges, AfterView
   @ViewChildren(NgbDropdownMenu) ngbDropdownMenu: NgbDropdownMenu[];
 
   private genes: AutismGeneToolGene[] = [];
-  private shownGeneLists: string[];
+  private shownGeneSets: string[];
   private shownAutismScores: string[];
   private shownProtectionScores: string[];
 
@@ -26,7 +26,7 @@ export class AutismGeneProfilesComponent implements OnInit, OnChanges, AfterView
   private loadMoreGenes = true;
   private scrollLoadThreshold = 1000;
 
-  private focusGeneListsInput: boolean;
+  private focusGeneSetsInput: boolean;
   private focusAutismScoresInput: boolean;
   private focusProtectionScoresInput: boolean;
 
@@ -50,7 +50,7 @@ export class AutismGeneProfilesComponent implements OnInit, OnChanges, AfterView
 
   ngOnChanges(): void {
     if (this.config) {
-      this.shownGeneLists = this.config['geneLists'];
+      this.shownGeneSets = this.config['geneSets'];
       this.shownAutismScores = this.config['autismScores'];
       this.shownProtectionScores = this.config['protectionScores'];
     }
@@ -78,8 +78,8 @@ export class AutismGeneProfilesComponent implements OnInit, OnChanges, AfterView
   }
 
   handleMultipleSelectMenuApplyEvent($event) {
-    if ($event.id === 'geneLists') {
-      this.shownGeneLists = $event.data;
+    if ($event.id === 'geneSets') {
+      this.shownGeneSets = $event.data;
     } else if ($event.id === 'autismScores') {
       this.shownAutismScores = $event.data;
     } else if ($event.id === 'protectionScores') {

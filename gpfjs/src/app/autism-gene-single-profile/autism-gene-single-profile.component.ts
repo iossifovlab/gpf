@@ -17,7 +17,7 @@ export class AutismGeneSingleProfileComponent implements OnInit, OnChanges {
   private gene$: Observable<AutismGeneToolGene>;
   private autismScoreGeneWeights: GeneWeights[];
   private protectionScoreGeneWeights: GeneWeights[];
-  private geneLists: string[];
+  private geneSets: string[];
 
   constructor(
     private autismGeneSingleProfileService: AutismGeneSingleProfileService,
@@ -26,7 +26,7 @@ export class AutismGeneSingleProfileComponent implements OnInit, OnChanges {
 
   ngOnChanges(): void {
     if (this.config) {
-      this.geneLists = this.config['geneLists'];
+      this.geneSets = this.config['geneSets'];
     }
   }
 

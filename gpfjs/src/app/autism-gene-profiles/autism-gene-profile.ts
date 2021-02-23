@@ -2,7 +2,7 @@ export class AutismGeneToolConfig {
   constructor(
     private autismScores: string[],
     private datasets: AutismGeneToolDataset[],
-    private geneLists: string[],
+    private geneSets: string[],
     private geneSymbols: string[],
     private protectionScores: string[],
   ) { }
@@ -11,7 +11,7 @@ export class AutismGeneToolConfig {
     return new AutismGeneToolConfig(
       json['autism_scores'],
       this.datasetsFromJson(json['datasets']),
-      json['gene_lists'],
+      json['gene_sets'],
       json['gene_symbols'],
       json['protection_scores']
     );

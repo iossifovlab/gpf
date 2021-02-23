@@ -6,15 +6,15 @@
           <span>Gene</span>
         </th>
 
-        <th class="table-main-header" [attr.colspan]="shownGeneLists.length">
+        <th class="table-main-header" [attr.colspan]="shownGeneSets.length">
           <span>
-            Gene lists
+            Gene sets
           </span>
-          <span ngbDropdown (openChange)="focusGeneListsInput = $event;">
+          <span ngbDropdown (openChange)="focusGeneSetsInput = $event;">
             <button class="dropdown-toggle btn navbar-toggler" ngbDropdownToggle style="float: right; border: 1px solid #dddddd; outline: none; font-size: 18px; width: 40px;">
               <span style="font-size: 14px;">&#9776;</span>
             </button>
-            <gpf-multiple-select-menu ngbDropdownMenu [focusInput]="focusGeneListsInput" [id]="'geneLists'" [allItems]="config.geneLists" [selectedItems]="shownGeneLists" [minSelectCount]="1" (applyEvent)="handleMultipleSelectMenuApplyEvent($event)"></gpf-multiple-select-menu>
+            <gpf-multiple-select-menu ngbDropdownMenu [focusInput]="focusGeneSetsInput" [id]="'geneSets'" [allItems]="config.geneSets" [selectedItems]="shownGeneSets" [minSelectCount]="1" (applyEvent)="handleMultipleSelectMenuApplyEvent($event)"></gpf-multiple-select-menu>
           </span>
         </th>
 
@@ -50,7 +50,7 @@
           <input #geneSearchInput (keyup)="sendKeystrokes(geneSearchInput.value)" id="gene-search-input"
             class="form-control" autocomplete="off" type="text" placeholder="Search gene" aria-label="Search gene">
         </th>
-        <th class="table-subheader" rowspan="2" *ngFor="let geneList of shownGeneLists"><span class="vertical-text">{{geneList}}</span></th>
+        <th class="table-subheader" rowspan="2" *ngFor="let geneSet of shownGeneSets"><span class="vertical-text">{{geneSet}}</span></th>
         <th class="table-subheader" rowspan="2" *ngFor="let autismScore of shownAutismScores"><span class="vertical-text">{{autismScore}}</span></th>
         <th class="table-subheader" rowspan="2" *ngFor="let protectionScore of shownProtectionScores"><span class="vertical-text">{{protectionScore}}</span></th>
 
@@ -73,8 +73,8 @@
           {{gene.geneSymbol}}
         </td>
 
-        <td *ngFor="let geneList of shownGeneLists">
-          <span *ngIf="gene.geneSets.indexOf(geneList) !== -1">&#10003;</span>
+        <td *ngFor="let geneSet of shownGeneSets">
+          <span *ngIf="gene.geneSets.indexOf(geneSet) !== -1">&#10003;</span>
         </td>
         
         <td *ngFor="let autismScore of shownAutismScores"> {{gene.autismScores.get(autismScore)}}</td>
