@@ -138,8 +138,11 @@ class GPFInstance(object):
     @property  # type: ignore
     @cached
     def _autism_gene_profile_db(self):
+        config = None if self._autism_gene_profile_config is None else\
+            self._autism_gene_profile_config.to_dict()
+
         return AutismGeneProfileDB(
-            self._autism_gene_profile_config.to_dict(),
+            config,
             os.path.join(self.dae_db_dir, "agpdb")
         )
 
