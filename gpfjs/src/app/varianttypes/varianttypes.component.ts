@@ -57,7 +57,7 @@ export class VarianttypesComponent extends QueryStateWithErrorsProvider
 
   variantTypesCheckValue(variantType: string, value: boolean): void {
     if (variantType === 'sub' || variantType === 'ins' || variantType === 'del' ||
-        variantType === 'CNV' || variantType === 'complex') {
+        variantType === 'CNV' || variantType === 'complex' || variantType === "TR") {
       if (!value) {
         this.selectedVariantTypes.add(variantType);
       } else {

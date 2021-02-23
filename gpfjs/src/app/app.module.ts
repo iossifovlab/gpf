@@ -158,6 +158,8 @@ import { GeneSymbolsWithSearchComponent } from './gene-symbols-with-search/gene-
 import { LoadingSpinnerComponent } from './loading-spinner/loading-spinner.component';
 import { DatasetNodeComponent } from './dataset-node/dataset-node.component';
 import { PersonFiltersBlockComponent } from './person-filters-block/person-filters-block.component';
+import { PersonIdsComponent } from './person-ids/person-ids.component';
+import { FamilyTypeFilterComponent } from './family-type-filter/family-type-filter.component';
 
 const appRoutes: Routes = [
   {
@@ -354,6 +356,8 @@ const appRoutes: Routes = [
     LoadingSpinnerComponent,
     DatasetNodeComponent,
     PersonFiltersBlockComponent,
+    PersonIdsComponent,
+    FamilyTypeFilterComponent,
   ],
   imports: [
     BrowserModule,

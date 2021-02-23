@@ -11,9 +11,10 @@
               <gpf-family-ids></gpf-family-ids>
           </ng-template>
       </li>
-      <li [ngbNavItem]="'advanced'" *ngIf="dataset?.genotypeBrowserConfig?.familyFilters && dataset.phenotypeData" id="advanced">
+      <li [ngbNavItem]="'advanced'" *ngIf="dataset?.genotypeBrowserConfig?.familyFilters" id="advanced">
           <a ngbNavLink>Advanced</a>
           <ng-template ngbNavContent>
+              <gpf-family-type-filter style="padding: 10px; padding-left: 50px; float: left"></gpf-family-type-filter>
               <gpf-person-filters
                 [dataset]="dataset"
                 [filters]="dataset?.genotypeBrowserConfig?.familyFilters"
