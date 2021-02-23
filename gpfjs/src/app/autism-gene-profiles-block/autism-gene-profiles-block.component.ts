@@ -26,7 +26,6 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
     } else if (
         Number(key)
         || key === '0'
-        || key === '`'
         || key === 'p'
         || key === 'n'
       ) {
@@ -125,9 +124,9 @@ export class AutismGeneProfilesBlockComponent implements OnInit {
       return;
     }
 
-    if (key === '9' || key === '0') {
+    if (key === '0') {
       this.openLastTab();
-    } else if (key === '`' || key === '1') {
+    } else if (key === '1') {
       this.openHomeTab();
     } else if (Number(key) - 1 <= this.geneTabs.size) {
       this.openTabAtIndex(Number(key) - 2);
