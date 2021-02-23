@@ -157,7 +157,7 @@ def main(gpf_instance=None, argv=None):
     logger.info("Inserting statistics into DB")
     agpdb.insert_agps(output)
     logger.info("Building AGP output view")
-    agpdb.build_agp_view(gpf_instance)
+    agpdb.build_agp_view()
     logger.info("Done")
 
 
