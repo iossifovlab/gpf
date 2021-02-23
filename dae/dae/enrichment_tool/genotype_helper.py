@@ -15,7 +15,7 @@ class GenotypeHelper(object):
 
         self._denovo_variants = self.genotype_data.query_variants(
             effect_types=effect_types,
-            inheritance=str(Inheritance.denovo.name))
+            inheritance=[str(Inheritance.denovo.name)])
         self._denovo_variants = list(self._denovo_variants)
 
         self._build_children_stats()
