@@ -139,7 +139,7 @@ def wdae_gpf_instance(
 @pytest.fixture(scope="function")
 def wdae_gpf_instance_agp(
         db, mocker, admin_client, wgpf_instance, sample_agp,
-        global_dae_fixtures_dir):
+        global_dae_fixtures_dir, agp_config):
 
     wdae_gpf_instance = wgpf_instance(global_dae_fixtures_dir)
     reload_datasets(wdae_gpf_instance)
@@ -160,30 +160,7 @@ def wdae_gpf_instance_agp(
         return_value=wdae_gpf_instance,
     )
 
-    agp_config = Box({
-        'gene_sets': ['CHD8 target genes'],
-        'protection_scores': ['SFARI_gene_score', 'RVIS_rank', 'RVIS'],
-        'autism_scores': ['SFARI_gene_score', 'RVIS_rank', 'RVIS'],
-        'datasets': Box({
-            'f1_study': Box({
-                'effects': ['synonymous', 'missense'],
-                'person_sets': [
-                    Box({
-                        'set_name': 'phenotype1',
-                        'collection_name': 'phenotype'
-                    }),
-                    Box({
-                        'set_name': 'unaffected',
-                        'collection_name': 'phenotype'
-                    }),
-                ]
-            })
-        })
-    })
     wdae_gpf_instance.__autism_gene_profile_config = agp_config
-    print("bbb")
-    print(wdae_gpf_instance.__autism_gene_profile_config)
-    print(wdae_gpf_instance._autism_gene_profile_config)
     main_gene_sets = {
         'CHD8 target genes',
         'FMRP Darnell',
@@ -208,13 +185,14 @@ def wdae_gpf_instance_agp(
     )
     wdae_gpf_instance.__autism_gene_profile_db = \
         AutismGeneProfileDB(
+            agp_config,
             os.path.join(wdae_gpf_instance.dae_db_dir, "agpdb"),
             clear=True
         )
     wdae_gpf_instance._autism_gene_profile_db.clear_all_tables()
     wdae_gpf_instance._autism_gene_profile_db.populate_data_tables(
-        wdae_gpf_instance)
-    wdae_gpf_instance._autism_gene_profile_db.build_agp_view(wdae_gpf_instance)
+        wdae_gpf_instance.get_genotype_data_ids())
+    wdae_gpf_instance._autism_gene_profile_db.build_agp_view()
     wdae_gpf_instance._autism_gene_profile_db.insert_agp(sample_agp)
 
     return wdae_gpf_instance

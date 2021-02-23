@@ -199,7 +199,7 @@ class AutismGeneProfileDB:
 
     def _transform_sort_by(self, sort_by):
         if sort_by.startswith("gene_set_"):
-            sort_by = sort_by[10:]
+            sort_by = sort_by.replace("gene_set_", "", 1)
         return sort_by
 
     def query_agps(self, page, symbol_like=None, sort_by=None, order=None):

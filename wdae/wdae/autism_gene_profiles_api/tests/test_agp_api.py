@@ -15,7 +15,6 @@ def test_configuration(admin_client):
     assert len(response.data["datasets"].keys()) == 1
     assert len(response.data["datasets"]["f1_study"]["effects"]) == 2
     assert len(response.data["datasets"]["f1_study"]["person_sets"]) == 2
-    assert len(response.data["gene_lists"]) == 1
     assert response.data["datasets"]["f1_study"]["person_sets"] == [
         "phenotype1", "unaffected"
     ]
