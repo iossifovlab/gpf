@@ -12,6 +12,10 @@ from dae.utils.effect_utils import ge2str, \
 from dae.variants.attributes import Inheritance, VariantDesc
 from dae.variants.variant import SummaryVariant
 from dae.variants.family_variant import FamilyVariant
+from dae.person_sets import PersonSetCollection
+
+
+logger = logging.getLogger(__name__)
 
 
 def members_in_order_get_family_structure(mio):
@@ -137,41 +141,137 @@ class ResponseTransformer:
     def __init__(self, study_wrapper):
         self.study_wrapper = study_wrapper
 
-    def add_additional_columns(self, variants_iterable):
-        for variants_chunk in split_iterable(
-                variants_iterable, self.STREAMING_CHUNK_SIZE):
+    def _get_all_pheno_values(self, family_ids):
+        if not self.study_wrapper.phenotype_data or not self.study_wrapper.pheno_column_slots:
+            return None
 
-            families = {variant.family_id for variant in variants_chunk}
+        pheno_column_names = []
+        pheno_column_dfs = []
+        for slot in self.study_wrapper.pheno_column_slots:
+            assert slot.role
+            persons = self.study_wrapper.families.persons_with_roles(
+                [slot.role], family_ids)
+            person_ids = [p.person_id for p in persons]
 
-            pheno_column_values = self.study_wrapper._get_all_pheno_values(families)
+            kwargs = {
+                "person_ids": list(person_ids),
+            }
 
-            for variant in variants_chunk:
-                pheno_values = self.study_wrapper._get_pheno_values_for_variant(
-                    variant, pheno_column_values
+            pheno_column_names.append(f"{slot.source}.{slot.role}")
+            pheno_column_dfs.append(
+                self.study_wrapper.phenotype_data.get_measure_values_df(
+                    slot.source, **kwargs
+                )
+            )
+
+        result = list(zip(pheno_column_dfs, pheno_column_names))
+        return result
+
+    def _get_pheno_values_for_variant(self, variant, pheno_column_values):
+        if not pheno_column_values:
+            return None
+
+        pheno_values = {}
+
+        for pheno_column_df, pheno_column_name in pheno_column_values:
+            variant_pheno_value_df = pheno_column_df[
+                pheno_column_df["person_id"].isin(variant.members_ids)
+            ]
+            variant_pheno_value_df.set_index("person_id", inplace=True)
+            assert len(variant_pheno_value_df.columns) == 1
+            column = variant_pheno_value_df.columns[0]
+
+            pheno_values[pheno_column_name] = ",".join(
+                variant_pheno_value_df[column].map(str).tolist()
+            )
+
+        return pheno_values
+
+    def _get_gene_weights_values(self, allele, default=None):
+        if not self.study_wrapper.gene_weight_column_sources:
+            return {}
+        genes = gene_effect_get_genes(allele.effects).split(";")
+        gene = genes[0]
+
+        gene_weights_values = {}
+        for gwc in self.study_wrapper.gene_weight_column_sources:
+            if gwc not in self.study_wrapper.gene_weights_db:
+                continue
+
+            gene_weights = self.study_wrapper.gene_weights_db[gwc]
+            if gene != "":
+                gene_weights_values[gwc] = gene_weights._to_dict().get(
+                    gene, default
+                )
+            else:
+                gene_weights_values[gwc] = default
+
+        return gene_weights_values
+
+    @staticmethod
+    def _get_wdae_member(member, person_set_collection, best_st):
+        return [
+            member.family_id,
+            member.person_id,
+            member.mom_id if member.mom_id else "0",
+            member.dad_id if member.dad_id else "0",
+            member.sex.short(),
+            str(member.role),
+            PersonSetCollection.get_person_color(
+                member, person_set_collection
+            ),
+            member.layout,
+            (member.generated or member.not_sequenced),
+            best_st,
+            0,
+        ]
+
+    def _generate_pedigree(self, variant, person_set_collection):
+        result = []
+        # best_st = np.sum(allele.gt == allele.allele_index, axis=0)
+        genotype = variant.family_genotype
+
+        missing_members = set()
+        for index, member in enumerate(variant.members_in_order):
+            try:
+                result.append(
+                    ResponseTransformer._get_wdae_member(
+                        member, person_set_collection,
+                        "/".join([
+                            str(v) for v in filter(
+                                lambda g: g != 0, genotype[index]
+                            )]
+                        )
+                    )
+                )
+            except IndexError:
+                import traceback
+                traceback.print_exc()
+                missing_members.add(member.person_id)
+                logger.error(f"{genotype}, {index}, {member}")
+
+        for member in variant.family.full_members:
+            if (member.generated or member.not_sequenced) \
+                    or (member.person_id in missing_members):
+                result.append(ResponseTransformer._get_wdae_member(
+                    member, person_set_collection, 0)
                 )
 
-                for allele in variant.alt_alleles:
-                    gene_weights_values = self.study_wrapper._get_gene_weights_values(allele)
-                    allele.update_attributes(gene_weights_values)
+        return result
 
-                    if pheno_values:
-                        allele.update_attributes(pheno_values)
-
-                yield variant
-
-    def add_additional_columns_summary(self, variants_iterable):
+    def _add_additional_columns_summary(self, variants_iterable):
         for variants_chunk in split_iterable(
                 variants_iterable, self.STREAMING_CHUNK_SIZE):
 
             for variant in variants_chunk:
                 for allele in variant.alt_alleles:
-                    gene_weights_values = self.study_wrapper._get_gene_weights_values(allele)
+                    gene_weights_values = self._get_gene_weights_values(allele)
 
                     allele.update_attributes(gene_weights_values)
 
                 yield variant
 
-    def build_variant_row(
+    def _build_variant_row(
             self, v: FamilyVariant, column_descs: List[Dict], **kwargs):
 
         row_variant = []
@@ -201,9 +301,7 @@ class ResponseTransformer:
                     person_set_collection = \
                         kwargs.get("person_set_collection")
                     row_variant.append(
-                        self.study_wrapper.generate_pedigree(
-                            v, person_set_collection
-                        )
+                        self._generate_pedigree(v, person_set_collection)
                     )
                 elif col_source in self.PHENOTYPE_ATTRS:
                     phenotype_person_sets = \
@@ -238,6 +336,25 @@ class ResponseTransformer:
 
         return row_variant
 
+    def _gene_view_summary_download_variants_iterator(
+        self, variants: List[SummaryVariant], frequency_column
+    ):
+        for v in variants:
+            for a in v.alt_alleles:
+                yield [
+                    a.cshl_location,
+                    a.position,
+                    a.end_position,
+                    a.chrom,
+                    a.get_attribute(frequency_column),
+                    gene_effect_get_worst_effect(a.effect),
+                    a.cshl_variant,
+                    a.get_attribute("family_variants_count"),
+                    a.get_attribute("seen_as_denovo"),
+                    a.get_attribute("seen_in_status") in {2, 3},
+                    a.get_attribute("seen_in_status") in {1, 3},
+                ]
+
     def transform_gene_view_summary_variant(self, variant: SummaryVariant, frequency_column):
         for a in variant.alt_alleles:
             yield {
@@ -257,25 +374,6 @@ class ResponseTransformer:
                     a.get_attribute("seen_in_status") in {1, 3},
             }
 
-    def gene_view_summary_download_variants_iterator(
-        self, variants: List[SummaryVariant], frequency_column
-    ):
-        for v in variants:
-            for a in v.alt_alleles:
-                yield [
-                    a.cshl_location,
-                    a.position,
-                    a.end_position,
-                    a.chrom,
-                    a.get_attribute(frequency_column),
-                    gene_effect_get_worst_effect(a.effect),
-                    a.cshl_variant,
-                    a.get_attribute("family_variants_count"),
-                    a.get_attribute("seen_as_denovo"),
-                    a.get_attribute("seen_in_status") in {2, 3},
-                    a.get_attribute("seen_in_status") in {1, 3},
-                ]
-
     def transform_gene_view_summary_variant_download(
         self, variants: List[SummaryVariant], frequency_column
     ):
@@ -294,3 +392,29 @@ class ResponseTransformer:
         ]
         rows = self.gene_view_summary_download_variants_iterator(variants, frequency_column)
         return map(join_line, itertools.chain([columns], rows))
+
+    def transform_variants(self, variants_iterable):
+        for variants_chunk in split_iterable(
+                variants_iterable, self.STREAMING_CHUNK_SIZE):
+
+            families = {variant.family_id for variant in variants_chunk}
+
+            pheno_column_values = self._get_all_pheno_values(families)
+
+            for variant in variants_chunk:
+                pheno_values = self._get_pheno_values_for_variant(
+                    variant, pheno_column_values
+                )
+
+                for allele in variant.alt_alleles:
+                    gene_weights_values = self._get_gene_weights_values(allele)
+                    allele.update_attributes(gene_weights_values)
+
+                    if pheno_values:
+                        allele.update_attributes(pheno_values)
+
+                yield variant
+
+    def transform_summary_variants(self, variants_iterable):
+        for v in self._add_additional_columns_summary(variants_iterable):
+            yield self._build_variant_row(v, self.study_wrapper.summary_preview_descs)

@@ -7,14 +7,12 @@ from abc import abstractmethod
 from box import Box
 
 from dae.utils.dae_utils import join_line
-from dae.utils.effect_utils import gene_effect_get_genes
 
 from dae.variants.attributes import Role
 
 from dae.studies.study import GenotypeData
 
 from dae.configuration.gpf_config_parser import GPFConfigParser, FrozenBox
-from dae.person_sets import PersonSetCollection
 from remote.remote_phenotype_data import RemotePhenotypeData
 
 from studies.query_transformer import QueryTransformer
@@ -286,39 +284,6 @@ class StudyWrapper(StudyWrapperBase):
     def __getattr__(self, name):
         return getattr(self.genotype_data_study, name)
 
-    def generate_pedigree(self, variant, person_set_collection):
-        result = []
-        # best_st = np.sum(allele.gt == allele.allele_index, axis=0)
-        genotype = variant.family_genotype
-
-        missing_members = set()
-        for index, member in enumerate(variant.members_in_order):
-            try:
-                result.append(
-                    self._get_wdae_member(
-                        member, person_set_collection,
-                        "/".join([
-                            str(v) for v in filter(
-                                lambda g: g != 0, genotype[index]
-                            )]
-                        )
-                    )
-                )
-            except IndexError:
-                import traceback
-                traceback.print_exc()
-                missing_members.add(member.person_id)
-                logger.error(f"{genotype}, {index}, {member}")
-
-        for member in variant.family.full_members:
-            if (member.generated or member.not_sequenced) \
-                    or (member.person_id in missing_members):
-                result.append(
-                    self._get_wdae_member(member, person_set_collection, 0)
-                )
-
-        return result
-
     def _query_variants_rows_iterator(
             self, sources, person_set_collection, **kwargs):
 
@@ -344,8 +309,9 @@ class StudyWrapper(StudyWrapperBase):
                 continue
 
             row_variant = []
-            row_variant = self.response_transformer.build_variant_row(
-                v, sources, person_set_collection=person_set_collection)
+            row_variant = self.response_transformer._build_variant_row(
+                v, sources, person_set_collection=person_set_collection
+            )
 
             yield row_variant
 
@@ -468,7 +434,7 @@ class StudyWrapper(StudyWrapperBase):
         variants_from_studies = itertools.islice(
             self.genotype_data_study.query_variants(**kwargs), limit
         )
-        for variant in self.response_transformer.add_additional_columns(variants_from_studies):
+        for variant in self.response_transformer.transform_variants(variants_from_studies):
             yield variant
 
     def query_summary_variants(self, **kwargs):
@@ -476,87 +442,12 @@ class StudyWrapper(StudyWrapperBase):
         limit = None
         if "limit" in kwargs:
             limit = kwargs["limit"]
-
         logger.info(f"query filters after translation: {kwargs}")
         variants_from_studies = itertools.islice(
             self.genotype_data_study.query_summary_variants(**kwargs), limit
         )
-        variants_with_additional_cols = self.response_transformer.add_additional_columns_summary(
-            variants_from_studies
-        )
-        for v in variants_with_additional_cols:
-            row_variant = self.response_transformer.build_variant_row(
-                v, self.summary_preview_descs
-            )
-
-            yield row_variant
-
-    def _get_pheno_values_for_variant(self, variant, pheno_column_values):
-        if not pheno_column_values:
-            return None
-
-        pheno_values = {}
-
-        for pheno_column_df, pheno_column_name in pheno_column_values:
-            variant_pheno_value_df = pheno_column_df[
-                pheno_column_df["person_id"].isin(variant.members_ids)
-            ]
-            variant_pheno_value_df.set_index("person_id", inplace=True)
-            assert len(variant_pheno_value_df.columns) == 1
-            column = variant_pheno_value_df.columns[0]
-
-            pheno_values[pheno_column_name] = ",".join(
-                variant_pheno_value_df[column].map(str).tolist()
-            )
-
-        return pheno_values
-
-    def _get_all_pheno_values(self, family_ids):
-        if not self.phenotype_data or not self.pheno_column_slots:
-            return None
-
-        pheno_column_names = []
-        pheno_column_dfs = []
-        for slot in self.pheno_column_slots:
-            assert slot.role
-            persons = self.families.persons_with_roles(
-                [slot.role], family_ids)
-            person_ids = [p.person_id for p in persons]
-
-            kwargs = {
-                "person_ids": list(person_ids),
-            }
-
-            pheno_column_names.append(f"{slot.source}.{slot.role}")
-            pheno_column_dfs.append(
-                self.phenotype_data.get_measure_values_df(
-                    slot.source, **kwargs
-                )
-            )
-
-        result = list(zip(pheno_column_dfs, pheno_column_names))
-        return result
-
-    def _get_gene_weights_values(self, allele, default=None):
-        if not self.gene_weight_column_sources:
-            return {}
-        genes = gene_effect_get_genes(allele.effects).split(";")
-        gene = genes[0]
-
-        gene_weights_values = {}
-        for gwc in self.gene_weight_column_sources:
-            if gwc not in self.gene_weights_db:
-                continue
-
-            gene_weights = self.gene_weights_db[gwc]
-            if gene != "":
-                gene_weights_values[gwc] = gene_weights._to_dict().get(
-                    gene, default
-                )
-            else:
-                gene_weights_values[gwc] = default
-
-        return gene_weights_values
+        for variant in self.response_transformer.transform_summary_variants(variants_from_studies):
+            yield variant
 
     def _get_roles_value(self, allele, roles):
         result = []
@@ -658,23 +549,6 @@ class StudyWrapper(StudyWrapperBase):
                 result["study_names"] = study_names
 
         return result
-
-    def _get_wdae_member(self, member, person_set_collection, best_st):
-        return [
-            member.family_id,
-            member.person_id,
-            member.mom_id if member.mom_id else "0",
-            member.dad_id if member.dad_id else "0",
-            member.sex.short(),
-            str(member.role),
-            PersonSetCollection.get_person_color(
-                member, person_set_collection
-            ),
-            member.layout,
-            (member.generated or member.not_sequenced),
-            best_st,
-            0,
-        ]
 
 
 class RemoteStudyWrapper(StudyWrapperBase):
