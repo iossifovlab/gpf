@@ -147,7 +147,9 @@ def main(gpf_instance=None, argv=None):
     print(duration)
 
     agpdb = AutismGeneProfileDB(
-        gpf_instance._autism_gene_profile_config, args.dbfile, clear=True
+        gpf_instance._autism_gene_profile_config.to_dict(),
+        args.dbfile,
+        clear=True
     )
 
     agpdb.clear_all_tables()
