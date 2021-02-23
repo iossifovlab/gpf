@@ -84,7 +84,7 @@ describe('AutismGeneProfilesComponent', () => {
 
     component.ngOnChanges();
 
-    expect(component['shownGeneLists']).toEqual(['fakeGeneList']);
+    expect(component['shownGeneSets']).toEqual(['fakeGeneList']);
     expect(component['shownAutismScores']).toEqual(['fakeAutismScore']);
     expect(component['shownProtectionScores']).toEqual(['fakeProtectionScore']);
   });
@@ -114,20 +114,20 @@ describe('AutismGeneProfilesComponent', () => {
     ] as any;
     component.ngbDropdownMenu.forEach(menu => dropDownMenuSpies.push(spyOn(menu.dropdown, 'close')));
 
-    expect(component['shownGeneLists']).toEqual(undefined);
+    expect(component['shownGeneSets']).toEqual(undefined);
     expect(component['shownAutismScores']).toEqual(undefined);
     expect(component['shownProtectionScores']).toEqual(undefined);
 
-    component.handleMultipleSelectMenuApplyEvent({id: 'geneLists', data: ['fakeGeneLists']});
-    expect(component['shownGeneLists']).toEqual(['fakeGeneLists']);
+    component.handleMultipleSelectMenuApplyEvent({id: 'geneSets', data: ['fakeGeneSets']});
+    expect(component['shownGeneSets']).toEqual(['fakeGeneSets']);
     expect(component['shownAutismScores']).toEqual(undefined);
     expect(component['shownProtectionScores']).toEqual(undefined);
     dropDownMenuSpies.forEach(spy => expect(spy).toHaveBeenCalledTimes(1));
 
-    component['shownGeneLists'] = undefined;
+    component['shownGeneSets'] = undefined;
 
     component.handleMultipleSelectMenuApplyEvent({id: 'autismScores', data: ['fakeAutismScores']});
-    expect(component['shownGeneLists']).toEqual(undefined);
+    expect(component['shownGeneSets']).toEqual(undefined);
     expect(component['shownAutismScores']).toEqual((['fakeAutismScores']));
     expect(component['shownProtectionScores']).toEqual(undefined);
     dropDownMenuSpies.forEach(spy => expect(spy).toHaveBeenCalledTimes(2));
@@ -135,7 +135,7 @@ describe('AutismGeneProfilesComponent', () => {
     component['shownAutismScores'] = undefined;
 
     component.handleMultipleSelectMenuApplyEvent({id: 'protectionScores', data: ['fakeProtectionScores']});
-    expect(component['shownGeneLists']).toEqual(undefined);
+    expect(component['shownGeneSets']).toEqual(undefined);
     expect(component['shownAutismScores']).toEqual((undefined));
     expect(component['shownProtectionScores']).toEqual(['fakeProtectionScores']);
     dropDownMenuSpies.forEach(spy => expect(spy).toHaveBeenCalledTimes(3));
