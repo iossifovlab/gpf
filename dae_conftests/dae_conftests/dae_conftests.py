@@ -91,9 +91,25 @@ def default_dae_config(request):
     dae_conf_path = os.path.join(
         os.environ.get("DAE_DB_DIR", None), "DAE.conf"
     )
-    dae_config = GPFConfigParser.load_config(dae_conf_path, dae_conf_schema)
-    dae_config = GPFConfigParser.modify_tuple(
-        dae_config, {"studies_db": {"dir": studies_dirname}}
+    dae_config = GPFConfigParser.parse_config(dae_conf_path)
+    dae_config["studies_db"]["dir"] = studies_dirname
+    remote_config = {
+        "id": "TEST_REMOTE",
+        "host": "gpfremote",
+        "base_url": "api/v3",
+        "port": 21010,
+        "user": "admin@iossifovlab.com",
+        "password": "secret",
+    }
+    if "remotes" not in dae_config:
+        dae_config["remotes"] = list()
+        dae_config["remotes"].append(remote_config)
+    else:
+        dae_config["remotes"][0] = remote_config
+    dae_config = GPFConfigParser.process_config(
+        dae_config,
+        dae_conf_schema,
+        config_filename=dae_conf_path
     )
     return dae_config
 

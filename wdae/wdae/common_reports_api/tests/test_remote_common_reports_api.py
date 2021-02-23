@@ -1,4 +1,7 @@
+import pytest
 from rest_framework import status
+
+pytestmark = pytest.mark.usefixtures("wdae_gpf_instance", "calc_gene_sets")
 
 
 def test_remote_variant_reports(admin_client, remote_settings):

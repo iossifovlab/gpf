@@ -33,8 +33,10 @@ class WGPFInstance(GPFInstance):
         self._remote_study_ids = dict()
         self._study_wrappers = dict()
 
-        if getattr(settings, "REMOTES", None):
-            for remote in settings.REMOTES:
+        remotes = self.dae_config.remotes
+
+        if remotes is not None:
+            for remote in remotes:
                 logger.info(f"Creating remote {remote}")
                 try:
                     client = RESTClient(
