@@ -560,6 +560,11 @@ class AlleleParquetSerializer:
             }
             sa.update_attributes(allele_attributes_data)
 
+        if not summary_alleles[0].is_reference_allele:
+            ref_allele = SummaryAllele.create_reference_allele(
+                summary_alleles[0])
+            summary_alleles = [ref_allele, *summary_alleles]
+
         sv = SummaryVariant(summary_alleles)
 
         extra_attributes = {}
