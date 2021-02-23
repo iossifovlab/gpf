@@ -1,6 +1,8 @@
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { ConfigService } from 'app/config/config.service';
+// tslint:disable-next-line:import-blacklist
+import { of } from 'rxjs';
 import { AutismGeneToolConfig } from './autism-gene-profile';
 
 import { AutismGeneProfilesComponent } from './autism-gene-profiles.component';
@@ -28,12 +30,45 @@ describe('AutismGeneProfilesComponent', () => {
     expect(component).toBeTruthy();
   });
 
+  it('should update genes on window scroll', () => {
+    const scrollTopSpy = spyOnProperty(document.documentElement, 'scrollTop');
+    const offsetHeightSpy = spyOnProperty(document.documentElement, 'offsetHeight');
+    const scrollHeightSpy = spyOnProperty(document.documentElement, 'scrollHeight');
+    const updateGenesSpy = spyOn(component, 'updateGenes');
+
+    component['loadMoreGenes'] = false;
+    component.onWindowScroll(undefined);
+    expect(updateGenesSpy).not.toHaveBeenCalled();
+
+    component['loadMoreGenes'] = true;
+    scrollTopSpy.and.returnValue(1000 - component['scrollLoadThreshold']);
+    offsetHeightSpy.and.returnValue(199);
+    scrollHeightSpy.and.returnValue(1200);
+    component.onWindowScroll(undefined);
+    expect(updateGenesSpy).not.toHaveBeenCalled();
+
+    offsetHeightSpy.and.returnValue(200);
+    component.onWindowScroll(undefined);
+    expect(updateGenesSpy).toHaveBeenCalledTimes(1);
+  });
+
   it('should get genes on initialization', () => {
+    component['genes'] = ['mockGene1', 'mockGene2', 'mockGene3'] as any;
     const getGenesSpy = spyOn(component['autismGeneProfilesService'], 'getGenes')
-      .and.returnValue('fakeGenesObservable' as any);
+      .and.returnValue(of(['mockGene4', 'mockGene5', 'mockGene6'] as any));
 
     component.ngOnInit();
-    expect((component['genes$'])).toEqual('fakeGenesObservable' as any);
+    expect(getGenesSpy).toHaveBeenCalledTimes(1);
+    expect((component['genes'])).toEqual([
+      'mockGene1', 'mockGene2', 'mockGene3', 'mockGene4', 'mockGene5', 'mockGene6'
+    ]);
+  });
+
+  it('should focus on gene search after view initialization', () => {
+    const focuseGeneSearchSpy = spyOn(component, 'focusGeneSearch');
+    expect(focuseGeneSearchSpy).not.toHaveBeenCalled();
+    component.ngAfterViewInit();
+    expect(focuseGeneSearchSpy).toHaveBeenCalledTimes(1);
   });
 
   it('should set table header data if config is passed', () => {
@@ -115,5 +150,42 @@ describe('AutismGeneProfilesComponent', () => {
 
     component.emitCreateTabEvent('testGeneSymbol', true);
     expect(emitSpy).toHaveBeenCalled();
+  });
+
+  it('should update genes', () => {
+    component['loadMoreGenes'] = true;
+    component['genes'] = ['mockGene1', 'mockGene2', 'mockGene3'] as any;
+    const getGenesSpy = spyOn(component['autismGeneProfilesService'], 'getGenes');
+
+    getGenesSpy.and.returnValue(of(['mockGene4', 'mockGene5', 'mockGene6'] as any));
+    component.updateGenes();
+    expect(getGenesSpy).toHaveBeenCalledTimes(1);
+    expect((component['genes'])).toEqual([
+      'mockGene1', 'mockGene2', 'mockGene3', 'mockGene4', 'mockGene5', 'mockGene6'
+    ]);
+    expect(component['loadMoreGenes']).toBe(true);
+
+
+    getGenesSpy.and.returnValue(of([] as any));
+    component.updateGenes();
+    expect(getGenesSpy).toHaveBeenCalledTimes(2);
+    expect((component['genes'])).toEqual([
+      'mockGene1', 'mockGene2', 'mockGene3', 'mockGene4', 'mockGene5', 'mockGene6'
+    ]);
+    expect(component['loadMoreGenes']).toBe(false);
+  });
+
+  it('should search for genes', () => {
+    const updateGenesSpy = spyOn(component, 'updateGenes');
+    expect(component.geneInput).toEqual('');
+    component.search('mockSearchString');
+    expect(component.geneInput).toEqual('mockSearchString');
+    expect(updateGenesSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('should send keystrokes', () => {
+    const searchKeystrokesNextSpy = spyOn(component.searchKeystrokes$, 'next');
+    component.sendKeystrokes('mockValue');
+    expect(searchKeystrokesNextSpy).toHaveBeenCalledWith('mockValue');
   });
 });
